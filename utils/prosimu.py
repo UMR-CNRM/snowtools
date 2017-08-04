@@ -14,7 +14,7 @@ from FileException import *
 # Fichier PRO.nc issu d'une simulation SURFEX post-traitée
 
 class prosimu():
-    def __init__(self,path):
+    def __init__(self,path,format='NETCDF3_CLASSIC'):
         
         if type(path) is list:
             for fichier in path:
@@ -22,7 +22,7 @@ class prosimu():
                     raise FileNameException(fichier)
             
                 else: 
-                    tempdataset=netCDF4.Dataset(fichier,"a",format='NETCDF3_CLASSIC')
+                    tempdataset=netCDF4.Dataset(fichier,"a",format=format)
                     tempdataset.variables["time"].calendar="standard"
                     tempdataset.close()
                     
@@ -35,14 +35,43 @@ class prosimu():
             self.path=path
             self.mfile=0
             try:
-                self.dataset=netCDF4.Dataset(path,"r",format='NETCDF3_CLASSIC')
+                self.dataset=netCDF4.Dataset(path,"r",format=format)
             except:
                 raise FileOpenException(path)
         else:
             raise FileNameException(path)
 
+    def listdim(self):
+        return init_forcing_file.dimensions.copy()
+
     def listvar(self):
         return self.dataset.variables.keys()
+
+    def getdimvar(self,varname):        
+        return np.array(self.dataset.variables[varname].dimensions)
+
+    def getrankvar(self,varname):        
+        return len(self.dataset.variables[varname].shape)
+    
+    def listattr(self,varname):
+        return self.dataset.variables[varname].ncattrs()
+    
+    def getattr(self,varname,attname):
+        return getattr(self.dataset.variables[varname],attname)
+    
+    def gettypevar(self,varname):
+        return dataset.variables[varname].dtype
+    
+    def getfillvalue(self,varname):
+        return self.dataset.variables[varname]._FillValue
+    
+    def infovar(self,varname):
+        # Vérification du nom de la variable
+        if not varname in self.listvar() :
+            raise VarNameException(varname,self.path)
+        
+        return self.gettypevar(varname),self.getrankvar(varname),self.getdimvar(varname),self.getfillvalue(varname),self.listattr(varname)     
+        
     
     def readtime_for_copy(self):
         time=self.dataset.variables["time"]
@@ -79,6 +108,8 @@ class prosimu():
                     var_extract=var[:,0,:]
                 elif rank==4:
                     var_extract=var[:,0,:,:] 
+                elif rank==5:
+                    var_extract=var[:,0,:,:,:]                    
             else:
                 if rank==0:
                     var_extract=var
@@ -90,6 +121,8 @@ class prosimu():
                     var_extract=var[:,:,:]
                 elif rank==4:                                
                     var_extract=var[:,:,:,:]
+                elif rank==5:
+                    var_extract = var[:,:,:,:,:]                    
         else:
             if "tile" in self.dataset.variables[varname].dimensions or 'Number_of_Tile' in self.dataset.variables[varname].dimensions:
                 if rank==1:
@@ -99,6 +132,8 @@ class prosimu():
                     var_extract=var[:,0,selectpoint]
                 elif rank==4:
                     var_extract=var[:,0,:,selectpoint] 
+                elif rank==5:
+                    var_extract=var[:,0,:,:,selectpoint]                       
             else:
                 if rank==0:
                     var_extract=var
@@ -110,15 +145,15 @@ class prosimu():
                     var_extract=var[:,:,selectpoint]
                 elif rank==4:                                
                     var_extract=var[:,:,:,selectpoint]            
-                
+                elif rank==5:
+                    var_extract = var[:,:,:,:,selectpoint] 
+
         return var_extract            
-        
-        
     
     def read(self,varname,fill2zero=False,selectpoint=-1,keepfillvalue=False):
         
         # Vérification du nom de la variable
-        if not varname in self.dataset.variables.keys() :
+        if not varname in self.listvar() :
             raise VarNameException(varname,self.path)
 
         # Sélection de la variable        
