@@ -28,6 +28,14 @@ class FileOpenException(Exception):
     
     def __str__(self):
         return "Impossible d'ouvrir le fichier : "+self.path
+
+class FileParseException(Exception):
+        
+    def __init__(self,path):
+        self.path = path
+    
+    def __str__(self):
+        return "Impossible to parse the xml file: "+self.path
     
 class VarNameException(Exception):
     
