@@ -290,11 +290,10 @@ class forcinput_select(forcinput_tomodify):
             # Some variables need to be saved for solar computations
             if varname in ["time"]:
                 savevar[varname]=init_forcing_file.readtime()
-            if varname in ["LAT","LON","aspect","slope","DIR_SWdown"]:
+            if varname in ["LAT","LON","aspect","slope","DIR_SWdown","massif_number"]:
                 savevar[varname]=var_array
             if varname == "massif_number":
                 save_array_dim=array_dim
-                savevar[varname]=var_array
 
         if not "LAT" in init_forcing_file.listvar():
             lat,lon=self.addCoord(new_forcing_file,savevar["massif_number"],save_array_dim,varFillvalue)
