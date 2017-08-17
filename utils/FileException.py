@@ -44,4 +44,22 @@ class TimeException(Exception):
         self.path = path
     
     def __str__(self):
-        return "Temps incohérent dans le fichier : "+self.path  
+        return "Temps incohérent dans le fichier : "+self.path
+
+class VarWriteException(Exception):
+    
+    def __init__(self,varname,varshape,varfileshape):
+        self.varname=varname
+        self.varshape=varshape
+        self.varfileshape=varfileshape
+    
+    def __str__(self):
+        return "Impossible to write the variable: "+self.varname+"\n"+\
+                "Shape of the variable in the code: "+str(self.varshape)+"\n"+\
+                "Shape of the variable in the file: "+str(self.varfileshape)
+    
+    
+    
+    
+    
+           

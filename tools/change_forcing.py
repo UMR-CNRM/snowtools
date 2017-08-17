@@ -211,7 +211,6 @@ class forcinput_select(forcinput_tomodify):
                             expo_1level=np.append(-1,expo_1level_notflat)
                         else:
                             expo_1level=expo_1level_notflat
-                        print expo_1level                          
  
                         if extendaspects:
                             var_array=np.tile(expo_1level,len(index_points))
@@ -286,12 +285,7 @@ class forcinput_select(forcinput_tomodify):
                     elif rank==5:
                         var[:,:,:,:,:]=var_array
             except:
-                print "impossible to fill a variable in the new forcing file :"
-                print varname
-                print var.shape
-                print var_array.shape
-                raise 
-                #print sys.exit(1)
+                raise VarWriteException(varname,var_array.shape,var.shape)
 
             # Some variables need to be saved for solar computations
             if varname in ["time"]:
