@@ -5,7 +5,7 @@ import os
 import sys
 import re
 import xml.dom.minidom
-
+from utils.FileException import FileNameException,FileParseException
 
 # M Lafaysse 04/08/2017
 # Give metadata about massifs used for avalanche hazard forecasting
@@ -111,20 +111,21 @@ class infomassifs() :
         self.dicPostesArea["all"]=self.dicPostesArea["alpes"]+self.dicPostesArea["pyrenees"]+self.dicPostesArea["corse"]
         
         self.missval=-99
-
-        # reading of the meta data file
-        try :
-            #Massiffile=open('/manto/willemet/METADATA.xml','r')
             
-            if os.path.isfile('METADATA.xml') or os.path.islink('METADATA.xml'):
-                metadata='METADATA.xml'
-            elif 'WHERE' in os.environ.keys():
-                if os.environ['WHERE']=="SOPRANO":
-                    metadata=os.environ['HOME_RO']+'/METADATA.xml'
-                else:
-                    metadata=os.environ['SNOWTOOLS_CEN']+'/DATA/METADATA.xml'
+        if os.path.isfile('METADATA.xml') or os.path.islink('METADATA.xml'):
+            metadata='METADATA.xml'
+        elif 'WHERE' in os.environ.keys():
+            if os.environ['WHERE']=="SOPRANO":
+                metadata=os.environ['HOME_RO']+'/METADATA.xml'
             else:
                 metadata=os.environ['SNOWTOOLS_CEN']+'/DATA/METADATA.xml'
+        else:
+            metadata=os.environ['SNOWTOOLS_CEN']+'/DATA/METADATA.xml'
+
+        if not (os.path.isfile(metadata) or os.path.islink(metadata)):
+            raise FileNameException(metadata)
+
+        try:
 
             self.caracLoc=xml.dom.minidom.parse(metadata)
             
@@ -137,7 +138,7 @@ class infomassifs() :
                 self.lonCenter[numMassif] = float(massif.getElementsByTagName("lonCenter")[0].childNodes[0].data)         
             
         except :
-            print "attention !!!!!! spatial information in xml file not found "
+            raise FileParseException(metadata)
 
 
     def getListMassif_of_region(self,area) :
