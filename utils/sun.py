@@ -1,7 +1,15 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import numpy as np
+import math
+
 class sun():
+
+    def __init__(self):
+        self.missingvalue=-9999999.
+
+
     def slope_aspect_correction(self,direct,time,lat_in,lon_in,aspect_in,slope_in,list_list_azim=None,list_list_mask=None,lnosof_surfex=False) :
        
         '''This routine corrects the direct solar radiation because due to explicit slope or surrounding masks
@@ -27,7 +35,7 @@ class sun():
 
 # M. Lafaysse : convert date in date at the middle of the time step to compute angles more representative of the fluxes
         deltatime=time[1]-time[0]
-        tab_time_date_2=time-deltatime/2
+        tab_time_date=time-deltatime/2
                 
 #        tab_time_date_2 = np.ones(tab_time_date.shape,datetime.datetime)
         
@@ -35,7 +43,7 @@ class sun():
         h_2 = np.ones(tab_time_date.shape,'f')
         for i in range(len(tab_time_date)):
 #            tab_time_date_2[i] = time_init + datetime.timedelta(seconds = tab_time_date[i])
-            j = tab_time_date_2[i].timetuple()
+            j = tab_time_date[i].timetuple()
             j_2[i] = j[7] # extract Julian day (integer)
             h_2[i] = j[3] # extrac time in day
 

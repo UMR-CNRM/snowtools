@@ -116,7 +116,7 @@ class infomassifs() :
         try :
             #Massiffile=open('/manto/willemet/METADATA.xml','r')
             
-            if os.path.isfile('METADATA.xml'):
+            if os.path.isfile('METADATA.xml') or os.path.islink('METADATA.xml'):
                 metadata='METADATA.xml'
             elif 'WHERE' in os.environ.keys():
                 if os.environ['WHERE']=="SOPRANO":

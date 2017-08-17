@@ -42,7 +42,7 @@ class prosimu():
             raise FileNameException(path)
 
     def listdim(self):
-        return init_forcing_file.dimensions.copy()
+        return self.dataset.dimensions.copy()
 
     def listvar(self):
         return self.dataset.variables.keys()
@@ -60,7 +60,7 @@ class prosimu():
         return getattr(self.dataset.variables[varname],attname)
     
     def gettypevar(self,varname):
-        return dataset.variables[varname].dtype
+        return self.dataset.variables[varname].dtype
     
     def getfillvalue(self,varname):
         return self.dataset.variables[varname]._FillValue

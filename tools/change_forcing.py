@@ -15,9 +15,13 @@ import netCDF4
 # For compatibility python 2 / python 3
 import six
 
+from utils.sun import sun
 from utils.prosimu import prosimu
 from utils.infomassifs import infomassifs
 from utils.FileException import *
+                       
+# A MODIFIER
+varFillValue = -9999999.
 
 class forcinput_tomodify:
     def __init__(self,forcin,forcout,*args,**kwargs):
@@ -33,9 +37,10 @@ class forcinput_tomodify:
         
         if not os.path.isfile(forcin):
             raise FileNameException(forcin)
-
+        
         dirout=os.path.dirname(forcout)
-        if not os.path.isdir(dirout):
+
+        if not (dirout == '' or os.path.isdir(dirout)) :
             raise DirNameException(dirout)
             
         init_forcing_file = prosimu(forcin)
@@ -76,7 +81,7 @@ class forcinput_select(forcinput_tomodify):
         dict_exp = {0:-1,1:0,2:45,3:90,4:135,5:180,6:225,7:270,8:315}
         list_exp_degres = [dict_exp[exp] for exp in list_exp]
 
-        init_massif_nb_sop = init_forcing.read("massif_number")
+        init_massif_nb_sop = init_forcing_file.read("massif_number")
         b_points_massif = np.in1d(init_massif_nb_sop,list_massif_number)
 
         init_alt = init_forcing_file.read("ZS")
@@ -84,7 +89,7 @@ class forcinput_select(forcinput_tomodify):
 
         init_slopes = init_forcing_file.read("slope")
         init_exp = init_forcing_file.read("aspect")
-
+        
         if "0" in liste_pentes:
             nb_slope_angles_notflat=len(liste_pentes)-1
             nb_aspect_angles_notflat=len(list_exp)-1
@@ -93,7 +98,7 @@ class forcinput_select(forcinput_tomodify):
             nb_slope_angles_notflat=len(liste_pentes)
             nb_aspect_angles_notflat=len(list_exp)
             nb_slopes_bylevel=nb_slope_angles_notflat*nb_aspect_angles_notflat
-            
+
         extendaspects= nb_slopes_bylevel>1 and np.all(init_exp==-1)
         extendslopes = not extendaspects and ( len(liste_pentes) > len(np.unique(init_slopes)) )
         
@@ -183,19 +188,20 @@ class forcinput_select(forcinput_tomodify):
         savevar={}
         
         listvar=init_forcing_file.listvar()
-        
+
         for varname in listvar:
-            
+
             vartype, rank, array_dim, varFillvalue, var_attrs = init_forcing_file.infovar(varname)
+
             if len(array_dim)>0:
                 index_dim_massif = np.where(array_dim == massif_dim_name)[0]
                 index_dim_nbpoints = np.where(array_dim == spatial_dim_name)[0]
+                var_array = init_forcing_file.read(varname)
             else:
                 index_dim_massif =[]
                 index_dim_nbpoints =[]          
-            
-            var_array = init_forcing_file.read(varname)
-                                        
+                var_array = init_forcing_file.read(varname).getValue() 
+     
             if len(index_dim_massif) == 1:
                 var_array = np.take(var_array,index_massif,index_dim_massif[0])
             if len(index_dim_nbpoints) == 1:
@@ -208,7 +214,8 @@ class forcinput_select(forcinput_tomodify):
                             expo_1level=np.append(-1,expo_1level_notflat)
                         else:
                             expo_1level=expo_1level_notflat
-                            
+                        print expo_1level                          
+ 
                         if extendaspects:
                             var_array=np.tile(expo_1level,len(index_points))
                         elif extendslopes:
@@ -260,15 +267,15 @@ class forcinput_select(forcinput_tomodify):
 #                             print indflat
 #                             print indnoflat
                             var_array=newvar_array[:]
-                        
+
             var = new_forcing_file.createVariable(varname,vartype,array_dim,fill_value=varFillValue)
+
             for attname in var_attrs:
                 if not attname == u'_FillValue':
                     setattr(var,attname,init_forcing_file.getattr(varname,attname))
             try:
                 if not (varname == "DIR_SWdown" and  ( extendaspects or extendslopes )):
                 # do not write direct solar radiations if aspects and slopes were extended because we need to recompute the values
-                    
                     if rank==0:
                         var[:]=var_array
                     elif rank==1:
@@ -286,17 +293,20 @@ class forcinput_select(forcinput_tomodify):
                 print varname
                 print var.shape
                 print var_array.shape
-                print sys.exit(1)
+                raise 
+                #print sys.exit(1)
 
             # Some variables need to be saved for solar computations
             if varname in ["time"]:
                 savevar[varname]=init_forcing_file.readtime()
-            if varname in ["LAT","LON","aspect","slope","DIR_SWdown","massif_number"]:
+            if varname in ["LAT","LON","aspect","slope","DIR_SWdown"]:
+                savevar[varname]=var_array
+            if varname == "massif_number":
+                save_array_dim=array_dim
                 savevar[varname]=var_array
 
-
-        if not "LAT" in init_forcing_file.variables.keys():
-            lat,lon=self.addCoord(new_forcing_file,savevar["massif_number"])
+        if not "LAT" in init_forcing_file.listvar():
+            lat,lon=self.addCoord(new_forcing_file,savevar["massif_number"],save_array_dim)
         else:
             lat=savevar["LAT"]
             lon=savevar["LON"]
@@ -306,7 +316,7 @@ class forcinput_select(forcinput_tomodify):
             direct=sun().slope_aspect_correction(savevar["DIR_SWdown"],savevar["time"],lat,lon,savevar["aspect"],savevar["slope"])
             new_forcing_file.variables["DIR_SWdown"][:]=direct
 
-    def addCoord(self,forcing,massifnumber):
+    def addCoord(self, forcing, massifnumber, dimension):
         '''Routine to add coordinates in the forcing file for the SAFRAN massifs'''
         
         INFOmassifs=infomassifs()
@@ -319,9 +329,14 @@ class forcinput_select(forcinput_tomodify):
             latlon=dicLatLon[massifnumber[point]]
             lat[point]=latlon[0]
             lon[point]=latlon[1]        
-        var = forcing.createVariable("LAT",massifnumber.dtype,massifnumber.dimensions,fill_value=massifnumber._FillValue)
+
+        var = forcing.createVariable("LAT", massifnumber.dtype, dimension, fill_value=varFillValue)
+        setattr(var, u'long_name', u'latitude')
+        setattr(var, u'units', u'degrees_north')
         var[:]=lat
-        var = forcing.createVariable("LON",massifnumber.dtype,massifnumber.dimensions,fill_value=massifnumber._FillValue)
+        var = forcing.createVariable("LON",massifnumber.dtype,dimension,fill_value=varFillValue)
+        setattr(var, u'long_name', u'longitude')
+        setattr(var, u'units', u'degrees_east')
         var[:]=lon
         
         return lat,lon
