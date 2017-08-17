@@ -19,9 +19,6 @@ from utils.sun import sun
 from utils.prosimu import prosimu
 from utils.infomassifs import infomassifs
 from utils.FileException import *
-                       
-# A MODIFIER
-varFillValue = -9999999.
 
 class forcinput_tomodify:
     def __init__(self,forcin,forcout,*args,**kwargs):
@@ -268,7 +265,7 @@ class forcinput_select(forcinput_tomodify):
 #                             print indnoflat
                             var_array=newvar_array[:]
 
-            var = new_forcing_file.createVariable(varname,vartype,array_dim,fill_value=varFillValue)
+            var = new_forcing_file.createVariable(varname,vartype,array_dim,fill_value=varFillvalue)
 
             for attname in var_attrs:
                 if not attname == u'_FillValue':
@@ -306,7 +303,7 @@ class forcinput_select(forcinput_tomodify):
                 savevar[varname]=var_array
 
         if not "LAT" in init_forcing_file.listvar():
-            lat,lon=self.addCoord(new_forcing_file,savevar["massif_number"],save_array_dim)
+            lat,lon=self.addCoord(new_forcing_file,savevar["massif_number"],save_array_dim,varFillvalue)
         else:
             lat=savevar["LAT"]
             lon=savevar["LON"]
@@ -316,7 +313,7 @@ class forcinput_select(forcinput_tomodify):
             direct=sun().slope_aspect_correction(savevar["DIR_SWdown"],savevar["time"],lat,lon,savevar["aspect"],savevar["slope"])
             new_forcing_file.variables["DIR_SWdown"][:]=direct
 
-    def addCoord(self, forcing, massifnumber, dimension):
+    def addCoord(self, forcing, massifnumber, dimension,varFillValue):
         '''Routine to add coordinates in the forcing file for the SAFRAN massifs'''
         
         INFOmassifs=infomassifs()
