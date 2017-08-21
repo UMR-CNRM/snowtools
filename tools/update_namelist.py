@@ -77,12 +77,11 @@ class update_surfex_namelist(object):
         # Loop over the lines of the old namelist. Copy everything but lines including the keys of the dictionnary
         # These lines are replaced by the values of the dictionnary
         for line in namSURFEX_base:
+            newline = line
             for key,value in six.iteritems(dic): 
                 if key in line:
-                    namSURFEX.write(value+'\n')
-                else:
-                    namSURFEX.write(line)
-        
+                    newline = value + '\n'
+            namSURFEX.write(newline)
         # Close both namelists
         namSURFEX_base.close()
         namSURFEX.close()
