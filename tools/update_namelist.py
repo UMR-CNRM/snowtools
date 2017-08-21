@@ -82,6 +82,7 @@ class update_surfex_namelist(object):
                 if key in line:
                     newline = value + '\n'
             namSURFEX.write(newline)
+            
         # Close both namelists
         namSURFEX_base.close()
         namSURFEX.close()
