@@ -99,6 +99,7 @@ class forcinput_select(forcinput_tomodify):
         extendaspects= nb_slopes_bylevel>1 and np.all(init_exp==-1)
         extendslopes = not extendaspects and ( len(liste_pentes) > len(np.unique(init_slopes)) )
         
+        print extendaspects,extendslopes
         
         if extendaspects:
             b_points_slope = np.in1d(init_slopes,[0])
@@ -109,16 +110,16 @@ class forcinput_select(forcinput_tomodify):
         else:
             b_points_slope = np.in1d(init_slopes,liste_pentes_int)            
             b_points_aspect = np.in1d(init_exp,list_exp_degres)
+
+        # Identify points to extract
+        index_points = np.where(b_points_massif * b_points_alt * b_points_slope * b_points_aspect)[0]
         
+        # It is possible to exclude somme massifs or elevations before duplicating the slopes
         if extendslopes:
-            points_to_duplicate = np.invert(np.in1d(init_exp,[-1]))
+            points_to_duplicate = np.invert(np.in1d(init_exp[index_points],[-1]))
             if "0" in liste_pentes:
                 liste_pentes_int.remove(0)
                 list_exp_degres.remove(-1)
-
-        
-        index_points = np.where(b_points_massif * b_points_alt * b_points_slope * b_points_aspect)[0]
-#         print b_points_massif,b_points_alt,b_points_slope,b_points_aspect
 
         init_forcing_file_dimensions = init_forcing_file.listdim()
 
@@ -330,5 +331,18 @@ class forcinput_select(forcinput_tomodify):
         var[:]=lon
         
         return lat,lon
-        
+    
+# For test    
+if __name__ == "__main__":
+            
+    list_massifs=range(1,24)
+    min_alt=600
+    max_alt=3600
+    list_pentes=["0","20","40"]
+    list_expo=xrange(0,9)
+    forcin=os.environ["HOME"]+"/FORCING_OLD.nc"
+    forcout=os.environ["HOME"]+"/FORCING_NEW.nc"
+    f=forcinput_select(forcin,forcout,list_massifs,min_alt,max_alt,list_pentes,list_expo)
+    
 
+    
