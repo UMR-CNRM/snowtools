@@ -75,7 +75,3 @@ class ModuleImportException(Exception):
     def __str__(self):
         return "Fail to import module :"+self.module+"\n"+\
             +self.message  
-    
-    
-    
-           
