@@ -271,7 +271,7 @@ class forcinput_select(forcinput_tomodify):
                 if not attname == u'_FillValue':
                     setattr(var,attname,init_forcing_file.getattr(varname,attname))
             try:
-                if not (varname == "DIR_SWdown" and  ( extendaspects or extendslopes )):
+                if not (varname in ["DIR_SWdown","SCA_SWdown"] and  ( extendaspects or extendslopes )):
                 # do not write direct solar radiations if aspects and slopes were extended because we need to recompute the values
                     if rank==0:
                         var[:]=var_array
@@ -291,7 +291,7 @@ class forcinput_select(forcinput_tomodify):
             # Some variables need to be saved for solar computations
             if varname in ["time"]:
                 savevar[varname]=init_forcing_file.readtime()
-            if varname in ["LAT","LON","aspect","slope","DIR_SWdown","massif_number"]:
+            if varname in ["LAT","LON","aspect","slope","DIR_SWdown","SCA_SWdown","massif_number"]:
                 savevar[varname]=var_array
             if varname == "massif_number":
                 save_array_dim=array_dim
@@ -304,9 +304,10 @@ class forcinput_select(forcinput_tomodify):
 
         # Compute new solar radiations according to the new values of slope and aspect
         if extendaspects or extendslopes:
-            direct=sun().slope_aspect_correction(savevar["DIR_SWdown"],savevar["time"],lat,lon,savevar["aspect"],savevar["slope"])
+            direct,diffus=sun().slope_aspect_correction(savevar["DIR_SWdown"],savevar["SCA_SWdown"],savevar["time"],lat,lon,savevar["aspect"],savevar["slope"])
             new_forcing_file.variables["DIR_SWdown"][:]=direct
-
+            new_forcing_file.variables["SCA_SWdown"][:]=diffus
+            
     def addCoord(self, forcing, massifnumber, dimension,varFillValue):
         '''Routine to add coordinates in the forcing file for the SAFRAN massifs'''
         

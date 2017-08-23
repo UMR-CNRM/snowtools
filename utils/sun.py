@@ -3,6 +3,12 @@
 
 import numpy as np
 import math
+from utils.FileException import ModuleImportException
+
+try:
+    from scipy.interpolate import interp1d
+except:
+    raise ModuleImportException("interp1d from scipy.interpolate","On profix and beaufix: module load gcc python openblas")
 
 class sun():
 
@@ -10,7 +16,7 @@ class sun():
         self.missingvalue=-9999999.
 
 
-    def slope_aspect_correction(self,direct,time,lat_in,lon_in,aspect_in,slope_in,list_list_azim=None,list_list_mask=None,lnosof_surfex=False) :
+    def slope_aspect_correction(self,direct,diffus,time,lat_in,lon_in,aspect_in,slope_in,list_list_azim=None,list_list_mask=None,lnosof_surfex=False) :
        
         '''This routine corrects the direct solar radiation because due to explicit slope or surrounding masks
           Input : array of direct solar radiation over an infinite flat surface (time,loc) or (time,x,y)
@@ -24,6 +30,8 @@ class sun():
           Output : corrected direct solar radiation'''
        
         tab_direct = direct[:]
+        tab_diffus = diffus[:]
+        tab_global = tab_direct+tab_diffus
    
         slope = self.upscale_tab(slope_in,tab_direct.shape )
         aspect = self.upscale_tab(aspect_in,tab_direct.shape )
@@ -116,11 +124,70 @@ class sun():
 #        Not used : ML comment this instruction
 #        ZCOSPS=(np.sin(ZLAT)*ZSINGA-ZSINDL)/(np.cos(ZLAT)*np.cos(ZGAMMA))
         
-        ZPSI = np.arcsin(ZSINPS)  # solar azimuth, 0. is South
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # Before summer 2017, we had this mistake :
+        # # # # ZPSI = np.arcsin(ZSINPS)  # solar azimuth, 0. is South # # # # # NEVER USE THIS WRONG FORMULA
+        # This gives a wrong trajectory in summer when the azimuth should be <90° or >270° 
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        
+        # The new computation of azimuth below is extracted from the theoricRadiation method
+        # Who knows where it comes from ?
+        
+        sunvector0=-np.sin(ZOMEGA)*np.cos(ZDELTA)  # component x of azimuth angle
+        sunvector1=np.sin(ZLAT)*np.cos(ZOMEGA)*np.cos(ZDELTA)-np.cos(ZLAT)*np.sin(ZDELTA) # component y of azimuth angle
+        sunvector2=np.cos(ZLAT)*np.cos(ZOMEGA)*np.cos(ZDELTA)+np.sin(ZLAT)*np.sin(ZDELTA)  # =cos of zenith angle
+        
+        sunvector2 = np.where(sunvector2<0.,0.,sunvector2)
+        mu = sunvector2  # mu = cos of zenith angle
+        
+        azimuth = np.where((sunvector0==0)&(sunvector1==0),0.,\
+        (np.pi)-np.arctan(sunvector0/sunvector1))
+        azimuth = np.where(sunvector1<=0.,np.pi + azimuth,azimuth)
+        azimuth = np.where(azimuth >= 2.*np.pi,azimuth - 2.*np.pi,azimuth)
+        
+#         # diffuse/global theorical ratio for clear sky (SBDART modelling by M. Dumont for Col de Porte)
+        a=-2.243613
+        b=5.199838
+        c=-4.472389
+        d=-0.276815
+#         
+        ratio_clearsky=np.exp(a * (mu**3)+b*(mu**2)+c*mu+d)
+        ratio_clearsky=np.where(ratio_clearsky<=1,ratio_clearsky,1)
+#         
+        # Note that it is not sufficient to apply the threshold on the ratio, it is necessary to apply a threshold to the direct radiation
+                
+        # Compute theorical maximum global radiation (clear sky) 
+        a3 = -0.25070845442
+        a2 =  0.56643807637
+        a1 =  0.620060537777
+        a0 = -0.025767794921
+         
+        ZTHEOR = ZRSI0 * (a3 * mu**3 + a2 * mu**2 + a1 * mu + a0 )
+        ZTHEOR=np.where(ZTHEOR<0.,0.,ZTHEOR)
+        
+        # Compute theorical components
+        theor_diffus=ratio_clearsky*ZTHEOR
+        theor_direct=ZTHEOR-theor_diffus
+        
+        # Apply a threshold to the direct radiation (can not exceed the theorical direct component, otherwise, the projection can provide very strange values        
+        tab_direct=np.where(tab_direct<=theor_direct,tab_direct,theor_direct)
+        
+        # Conserve energy by a transfer to the diffuse component
+        tab_diffus=tab_global-tab_direct
+                
+        # direct incident radiation (maximum value authorized is the theoretical maximum radiation)
+        ZRSI=tab_direct/ZSINGA
+        
+        # M Lafaysse : remove this threshold because there are controls in SAFRAN and because there are numerical issues at sunset.
+        ZRSI = np.where(ZRSI >= ZRSI0,ZRSI0,ZRSI)
 
         ##projection on slope/aspect surface - note that aspect is taken from North.
-        ZRSIP=ZRSI*(np.cos(ZGAMMA)*np.sin(slope)*np.cos(ZPSI-(math.pi + aspect))+ZSINGA*np.cos(slope))
-        ZRSIP = np.where(ZRSIP <=0., 0., ZRSIP)
+        #ZRSIP=ZRSI*(np.cos(ZGAMMA)*np.sin(slope)*np.cos(ZPSI - (np.pi + aspect))+ZSINGA*np.cos(slope))
+# 
+#         print "WRONG ZRSIP"
+#         print ZRSIP[t,:]        
+        ZRSIP=ZRSI*(np.cos(ZGAMMA)*np.sin(slope)*np.cos(azimuth - aspect)+ZSINGA*np.cos(slope))
+        ZRSIP = np.where(ZRSIP <=0., 0., ZRSIP)        
 
         # take solar masks into account 
         #(S. Morin 2014/06/27, taken from meteo.f90 in Crocus)
@@ -128,7 +195,7 @@ class sun():
         
         if not list_list_mask is None :
 
-            ZPSI1=(ZPSI+math.pi)*URD2DG   # solar azimuth, 0. is North (in contrast to ZPSI for which 0. is South)
+            ZPSI1=azimuth*URD2DG  # solar azimuth, 0. is North 
             ZMASK=np.zeros_like(ZPSI1)
          
             for i,list_azim in enumerate(list_list_azim):
@@ -143,7 +210,7 @@ class sun():
             # put the result back on the horizontal ; surfex will carry out the inverse operation.
             tab_direct = ZRSIP/np.cos(slope) #
 
-        return tab_direct
+        return tab_direct,tab_diffus
         
         
     # The two following routines from JM Willemet should be rewritten without the loops 

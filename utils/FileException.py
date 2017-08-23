@@ -66,7 +66,15 @@ class VarWriteException(Exception):
                 "Shape of the variable in the code: "+str(self.varshape)+"\n"+\
                 "Shape of the variable in the file: "+str(self.varfileshape)
     
+class ModuleImportException(Exception):
     
+    def __init__(self,module,message=""):
+        self.module=module
+        self.message=message
+        
+    def __str__(self):
+        return "Fail to import module :"+self.module+"\n"+\
+            +self.message  
     
     
     
