@@ -10,6 +10,7 @@ Created on 23 Aug. 2017
 import os
 # import sys
 import numpy as np
+# import datetime
 
 # For compatibility python 2 / python 3
 # import six
@@ -23,7 +24,7 @@ class prep_tomodify(object):
 
         # Names of the prognostic variables in the PREP netcdf file
         self.dict_prep = {'nsnowlayer': 'SN_VEG_N',
-                   'year': 'STCUR-YEAR',
+                   'year': 'DTCUR-YEAR',
                    'month': 'DTCUR-MONTH',
                    'day': 'DTCUR-DAY',
                    'time': 'DTCUR-TIME',
@@ -44,7 +45,7 @@ class prep_tomodify(object):
         self.prepfile = prosimu(prepfile,openmode="a")
         self.nsnowlayer=self.prepfile.read(self.dict_prep['nsnowlayer'])[0]
 
-    def apply_swe_threshold(self,swe_threshold):
+    def apply_swe_threshold(self,swe_threshold,closefile=False):
         '''Method to apply a threshold on snow water equivalent in a PREP.nc file'''
         for i in range(self.nsnowlayer):
             swe_layer,swe_layer_nc=self.prepfile.read(self.dict_prep['swe']+str(i+1),keepfillvalue=True,removetile=False,needmodif=True)
@@ -57,13 +58,32 @@ class prep_tomodify(object):
 
             swe_fromsurface+=swe_layer
         
-        self.close()       
+        if closefile:
+            self.close()       
+    
+    def change_date(self,newdate,closefile=False):
+        '''Method to change the date of a PREP file because a spinup is used to initialize the simulation
+           Input : newdate must be a datetime.datetime object'''
+        
+        year,yearnc=self.prepfile.read(self.dict_prep['year'],needmodif=True)
+        month,monthnc=self.prepfile.read(self.dict_prep['month'],needmodif=True)
+        day,daync=self.prepfile.read(self.dict_prep['day'],needmodif=True)
+        seconds,secondsnc=self.prepfile.read(self.dict_prep['time'],needmodif=True)
+        
+        yearnc[:]=newdate.year
+        monthnc[:]=newdate.month
+        daync[:]=newdate.day
+        secondsnc[:]=newdate.hour*3600
+        
+        if closefile:
+            self.close()         
         
     def close(self):
         self.prepfile.close()
         
 if __name__ == "__main__":
     prep=prep_tomodify("PREP.nc")
-    prep.apply_swe_threshold(swe_threshold=400)   
-        
+    prep.apply_swe_threshold(swe_threshold=400,closefile=True)
+#     newdate=datetime.datetime(2010,9,4,6)   
+#     prep.change_date(newdate,closefile=True)         
         
