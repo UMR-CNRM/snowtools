@@ -9,12 +9,13 @@ Created on 4 oct. 2012
 import os
 import netCDF4
 import numpy as np
+import sys
 from FileException import *
 
 # Fichier PRO.nc issu d'une simulation SURFEX post-traitée
 
 class prosimu():
-    def __init__(self,path,format='NETCDF3_CLASSIC'):
+    def __init__(self,path,format='NETCDF3_CLASSIC',openmode='r'):
         
         if type(path) is list:
             for fichier in path:
@@ -35,7 +36,7 @@ class prosimu():
             self.path=path
             self.mfile=0
             try:
-                self.dataset=netCDF4.Dataset(path,"r",format=format)
+                self.dataset=netCDF4.Dataset(path,openmode,format=format)
             except:
                 raise FileOpenException(path)
         else:
@@ -94,11 +95,16 @@ class prosimu():
             
         return np.array(netCDF4.num2date(time[:], time.units))
     
-    def extract(self,varname,var,selectpoint=-1):
+    def extract(self,varname,var,selectpoint=-1,removetile=True):
+        
+        if removetile:
+            needremovetile= "tile" in self.dataset.variables[varname].dimensions or 'Number_of_Tile' in self.dataset.variables[varname].dimensions
+        else:
+            needremovetile=False
         
         rank=len(var.shape)
         if selectpoint==-1:
-            if "tile" in self.dataset.variables[varname].dimensions or 'Number_of_Tile' in self.dataset.variables[varname].dimensions:
+            if needremovetile:
                 if rank==1:
                     # Pour cas de la variable tile dans comparaisons automatiques
                     var_extract=var[0]                 
@@ -124,7 +130,7 @@ class prosimu():
                 elif rank==5:
                     var_extract = var[:,:,:,:,:]                    
         else:
-            if "tile" in self.dataset.variables[varname].dimensions or 'Number_of_Tile' in self.dataset.variables[varname].dimensions:
+            if needremovetile:
                 if rank==1:
                     # Pour cas de la variable tile dans comparaisons automatiques
                     var_extract=var[0]                
@@ -150,24 +156,24 @@ class prosimu():
 
         return var_extract            
     
-    def read(self,varname,fill2zero=False,selectpoint=-1,keepfillvalue=False):
+    def read(self,varname,fill2zero=False,selectpoint=-1,keepfillvalue=False,removetile=True,needmodif=False):
         
         # Vérification du nom de la variable
         if not varname in self.listvar() :
             raise VarNameException(varname,self.path)
 
         # Sélection de la variable        
-        var=self.dataset.variables[varname]
+        varnc=self.dataset.variables[varname]
         
-        avail_fillvalue = "_FillValue" in var.ncattrs()
+        avail_fillvalue = "_FillValue" in varnc.ncattrs()
         if avail_fillvalue:
-            fillvalue=var._FillValue        
+            fillvalue=varnc._FillValue        
         
         # Sélection d'un point si demandé 
         # Suppression dimension tile si nécessaire
-        var=self.extract(varname, var, selectpoint=selectpoint)
+        var=self.extract(varname, varnc, selectpoint=selectpoint,removetile=removetile)
 
-         # Remplissage des valeurs manquantes si nécessaire         
+        # Remplissage des valeurs manquantes si nécessaire         
         if len(var.shape)>1 and not keepfillvalue:
             try:
                 if fill2zero:
@@ -190,9 +196,10 @@ class prosimu():
         else:
             array=var
 
-        array=var
-        # Lecture de la variable
-        return array
+        if needmodif:
+            return array,varnc
+        else:
+            return array
     
     # Pour compatibilité anciens codes, on conserve les routines obsolètes read1d et read2d
     def read1d(self,varname,fill2zero=False,indpoint=0):
