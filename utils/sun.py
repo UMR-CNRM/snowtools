@@ -16,7 +16,7 @@ class sun():
         self.missingvalue=-9999999.
 
 
-    def slope_aspect_correction(self,direct,diffus,time,lat_in,lon_in,aspect_in,slope_in,list_list_azim=None,list_list_mask=None,lnosof_surfex=False) :
+    def slope_aspect_correction(self,direct,diffus,time,lat_in,lon_in,aspect_in,slope_in,list_list_azim=None,list_list_mask=None,lnosof_surfex=True) :
        
         '''This routine corrects the direct solar radiation because due to explicit slope or surrounding masks
           Input : array of direct solar radiation over an infinite flat surface (time,loc) or (time,x,y)
@@ -205,9 +205,11 @@ class sun():
             ZRSIP = np.where(ZMASK > ZGAMMA*URD2DG,0.,ZRSIP) # set to zero direct radiation values when solar angle is below mask angle (computed as f(ZPSI1))  
 
         if lnosof_surfex:
+            #Now this is the normal case
             tab_direct = ZRSIP
         else:
-            # put the result back on the horizontal ; surfex will carry out the inverse operation.
+            # Not recommended
+            # put the result back on the horizontal ; surfex will carry out the inverse operation when lnosof=f.
             tab_direct = ZRSIP/np.cos(slope) #
 
         return tab_direct,tab_diffus
