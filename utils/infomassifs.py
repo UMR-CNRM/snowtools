@@ -140,6 +140,69 @@ class infomassifs() :
         except :
             raise FileParseException(metadata)
 
+    def region2massifs(self,region):
+        try:
+            massifs= [int(region)]
+            assert massifs in self.getListMassif_of_region("all")
+        except:
+            massifs=self.getListMassif_of_region(region)
+
+    def get_list_aspect(self,nclasses,liste_pentes):
+        if nclasses=="undef":
+            nclasses=8
+        else:
+            try:
+                nclasses=int(nclasses)
+                assert nclasses==2 or nclasses==4 or nclasses ==8 or nclasses==3 or nclasses%45==0
+            except:
+                print("Vous devez choisir un nombre de classes d'exposition de 2, 4, ou 8, ou bien exprimer l'exposition en degrés (0,45,90,135,180,225,270,315")
+                sys.exit(104)
+        
+        if liste_pentes==["0"]:
+            liste_expo=[0]
+        elif "0" in liste_pentes[0]:
+            if nclasses==8:
+                liste_expo=xrange(0,9) #plat+8 expos
+            elif nclasses==4:
+                liste_expo=[0,1,3,5,7] #plat-N-E-S-W
+            elif nclasses==2:
+                liste_expo=[0,1,5] #plat-nord-sud
+            elif nclasses==3:
+                liste_expo=[0,3,7]   # plat - ouest - est
+            elif nclasses%45==0:
+                liste_expo=[0,nclasses/45+1] # on impose une exposition en degrés                    
+        else:
+            if nclasses==8:
+                liste_expo=xrange(1,9) #8 expos
+            elif nclasses==4:
+                liste_expo=[1,3,5,7] #N-E-S-W
+            elif nclasses==2:
+                liste_expo=[1,5] #nord-sud
+            elif nclasses==3:
+                liste_expo=[3,7] # ouest - est   
+            elif nclasses%45==0:
+                liste_expo=[nclasses/45+1] # on impose une exposition en degrés
+
+        return liste_expo
+
+    def check_elevation(self,elevation):
+        try:
+            elevation=float(elevation)
+            assert elevation>=0 and elevation<=5100
+        except:
+            raise BaseException("The elevation is an integer in meters")
+        return elevation
+
+    def check_and_convert_min_max_elevation(self,altmin,altmax):
+        if altmin:
+            altmin=self.check_elevation(altmin)
+        if altmax:
+            altmax=self.check_elevation(altmax)
+        if altmin and altmax:
+            if altmin>altmax:
+                raise BaseException("The highest level "+str(altmax)+" must be higher than the lowest level "+str(altmin)+".")
+
+        return altmin,altmax
 
     def getListMassif_of_region(self,area) :
 

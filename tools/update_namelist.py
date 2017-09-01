@@ -3,13 +3,19 @@
 # Author: M. Lafaysse 24/05/2017
 # Recoding of functionalities of faitNAMetPGD in snowtools1 for projects snowtools2 and vortex
 
-from utils.prosimu import prosimu
+
+# General python modules
 import numpy as np
 import os
 import sys
 
 # For compatibility python 2 / python 3
 import six
+
+# Snowtools modules
+from utils.prosimu import prosimu
+from utils.dates import checkdatebefore,checkdateafter
+
 
 class update_surfex_namelist(object):
     """Class with routines to update SURFEX namelist"""
@@ -125,33 +131,4 @@ class update_surfex_namelist(object):
         namSURFEX_base.close()
         namSURFEX.close()
     
-class DateException(Exception):
-    
-    def __init__(self,message=""):
-        self.message=message
-    
-    def __str__(self):
-        return "Dates inconsitency : "+self.message
-    
-class EarlyDateException(DateException):
-    
-    def __init__(self,earlydate,date):
-        self.message=earlydate.strftime()+ "is before"+date.strftime()
-
-class LateDateException(DateException):
-    
-    def __init__(self,latedate,date):
-        self.message=latedate.strftime()+ "is after"+date.strftime()
-        
-def checkdatebefore(date,datemax):
-    if date> datemax:
-        raise LateDateException(date,datemax)
-
-def checkdateafter(date,datemin):
-    if date< datemin:
-        raise EarlyDateException(date,datemin)
-
-def checkdatebetween(date,datemin,datemax):
-    checkdateafter(date, datemin)
-    checkdatebefore(date, datemax)
 
