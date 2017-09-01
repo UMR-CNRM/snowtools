@@ -69,14 +69,11 @@ class forcinput_select(forcinput_tomodify):
                 
         ''' Modify a forcing file towards a prescribed geometry'''
         
-        (list_massif_number,min_alt,max_alt,liste_pentes,list_exp)=args[:][0]
+        (list_massif_number,min_alt,max_alt,liste_pentes,list_exp_degres)=args[:][0]
 
 #         print list_massif_number
 #         sys.exit()
         liste_pentes_int = map(int,liste_pentes)
-
-        dict_exp = {0:-1,1:0,2:45,3:90,4:135,5:180,6:225,7:270,8:315}
-        list_exp_degres = [dict_exp[exp] for exp in list_exp]
 
         init_massif_nb_sop = init_forcing_file.read("massif_number")
         b_points_massif = np.in1d(init_massif_nb_sop,list_massif_number)
@@ -89,11 +86,11 @@ class forcinput_select(forcinput_tomodify):
         
         if "0" in liste_pentes:
             nb_slope_angles_notflat=len(liste_pentes)-1
-            nb_aspect_angles_notflat=len(list_exp)-1
+            nb_aspect_angles_notflat=len(list_exp_degres)-1
             nb_slopes_bylevel=1+nb_slope_angles_notflat*nb_aspect_angles_notflat
         else:
             nb_slope_angles_notflat=len(liste_pentes)
-            nb_aspect_angles_notflat=len(list_exp)
+            nb_aspect_angles_notflat=len(list_exp_degres)
             nb_slopes_bylevel=nb_slope_angles_notflat*nb_aspect_angles_notflat
 
         extendaspects= nb_slopes_bylevel>1 and np.all(init_exp==-1)
@@ -113,7 +110,7 @@ class forcinput_select(forcinput_tomodify):
 
         # Identify points to extract
         index_points = np.where(b_points_massif * b_points_alt * b_points_slope * b_points_aspect)[0]
-        
+
         # It is possible to exclude somme massifs or elevations before duplicating the slopes
         if extendslopes:
             points_to_duplicate = np.invert(np.in1d(init_exp[index_points],[-1]))
@@ -172,13 +169,13 @@ class forcinput_select(forcinput_tomodify):
                 
             else:
                 len_dim = len(index_points)
-            print "create dimension :"+ spatial_dim_name +str(len_dim)
+            print "create dimension :"+ spatial_dim_name +" "+str(len_dim)
             len_dim_spatial=len_dim 
             new_forcing_file.createDimension(spatial_dim_name,len_dim)
             del init_forcing_file_dimensions[spatial_dim_name]                       
             
         for dimname,dim in six.iteritems(init_forcing_file_dimensions):
-            print "Create dimension "+dimname+str(len(dim))
+            print "Create dimension "+dimname+" "+str(len(dim))
             if not dimname=="time":
 #                 print len(dim)
                 new_forcing_file.createDimension(dimname,len(dim))

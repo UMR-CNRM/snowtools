@@ -27,7 +27,7 @@ class surfexrun(object):
     def __init__(self,datebegin,dateend,forcingpath,diroutput,
                  namelist=os.environ['SNOWTOOLS_CEN']+'/DATA/OPTIONS_V8_NEW_OUTPUTS_NC.nam',
                  execdir=".",
-                 threshold=-999,dirwork=None,datespinup=None,geolist=None):
+                 threshold=-999,dirwork=None,datespinup=None,geolist=[]):
 
         self.datebegin=datebegin
         self.dateend=dateend
@@ -100,7 +100,7 @@ class surfexrun(object):
         
         # 3. Preprocessing
         # 3.1 Modify the forcing if required
-        self.modify_forcing(self.geolist)
+        self.modify_forcing(*self.geolist)
         
         if firstrun:
             # 3.2 Build the appropriate namelist

@@ -114,6 +114,7 @@ class update_surfex_namelist(object):
                 namelistopen=line.split()[0][1:]
             else:
                 key_to_remove=[]
+                field_to_add_at_the_end=[]
                 for key,value in six.iteritems(dic):
                     (namelist,field)=value[:]
                     # If the namelist corresponds to the current namelist
@@ -125,14 +126,21 @@ class update_surfex_namelist(object):
                             key_to_remove.append(key)
 
                         elif "/" in line:
-                            # The field was not in the initial namelist, it must be added, as well as the / line to finish the namelist
-                            newline = field + '\n/\n'
-                            # Remove the field to update in the dictionnaryb=                            
+                            field_to_add_at_the_end.append(field)                           
                             key_to_remove.append(key)
                 
-                if "/" in line:
+                if "/" in line and len(field_to_add_at_the_end)>0:
                     # This is the end of the namelist.
-                    namelistopen=""                    
+                    namelistopen=""
+                    newline=""
+                    for i,field in enumerate(field_to_add_at_the_end):
+                        if i==len(field_to_add_at_the_end)-1:
+                            sep='\n/\n'
+                        else:
+                            sep=",\n"
+                        
+                        newline=newline+field+sep                   
+                        
                 
                 # Remove keys already written
                 map(dic.pop,key_to_remove)
