@@ -61,14 +61,14 @@ def save_file_const(path,name,newname=None,copy=False):
     else:
         raise DirNameException(path)    
     
-def save_file_date(path,prefix,datefile,newprefix=None):
+def save_file_date(path,prefix,datefile,newprefix=None,copy=False):
     
     if newprefix:
         savename=newprefix+"_"+datefile.strftime('%Y%m%d%H')+".nc"
     else:
         savename=prefix+"_"+datefile.strftime('%Y%m%d%H')+".nc"
         
-    save_file_const(path,prefix+".nc",savename)
+    save_file_const(path,prefix+".nc",savename,copy=copy)
 
     
 def save_file_period(path,prefix,datebegin,dateend,newprefix=None):
@@ -79,7 +79,11 @@ def save_file_period(path,prefix,datebegin,dateend,newprefix=None):
         savename=prefix+"_"+datebegin.strftime('%Y%m%d%H')+"_"+dateend.strftime('%Y%m%d%H')+".nc"
         
     save_file_const(path,prefix+".nc",savename)   
-    
+
+def get_file_const_or_crash(pathin,nameout):
+    if not get_file_const(pathin,nameout):
+        raise FileNameException(pathin)
+
 def get_file_const(pathin,nameout):
     if os.path.isfile(pathin):
         shutil.copy(pathin,nameout)

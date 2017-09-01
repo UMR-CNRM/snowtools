@@ -52,6 +52,7 @@ def check_and_convert_options(options):
         map(absolute_path,[options.forcing,options.namelist,options.diroutput,options.dirwork,options.exesurfex])
     
     options.exesurfex=check_surfex_exe(options.exesurfex)
+    print options.exesurfex
     
     # Check and conversion of geographical requirements
     if options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:
@@ -150,10 +151,12 @@ if __name__ == "__main__":
     if options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:
         run=tasks.runs.massifrun(options.datedeb,options.datefin,options.forcing,options.diroutput,threshold=options.threshold,
                              dirwork=options.dirwork,datespinup=options.datespinup,
+                             execdir=options.exesurfex,
                              geolist=[options.region,options.minlevel,options.maxlevel,options.slopes,options.aspects])
     else:
         run=tasks.runs.surfexrun(options.datedeb,options.datefin,options.forcing,options.diroutput,threshold=options.threshold,
-                             dirwork=options.dirwork,datespinup=options.datespinup)
+                             dirwork=options.dirwork,datespinup=options.datespinup,
+                             execdir=options.exesurfex)
 
     # Execute the run
     run.run()

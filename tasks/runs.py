@@ -16,7 +16,8 @@ from tools.change_forcing import forcinput_select
 from tools.change_prep import prep_tomodify
 from tools.update_namelist import update_surfex_namelist
 from tools.execute import callSurfexOrDie
-from utils.resources import get_file_period,get_file_date,get_file_const,save_file_period,save_file_date,save_file_const
+from utils.resources import get_file_period,get_file_date,get_file_const,save_file_period,save_file_date,save_file_const,\
+    get_file_const_or_crash
 
 
 class surfexrun(object):
@@ -87,12 +88,14 @@ class surfexrun(object):
         """Describe the sequence of instructions to run SURFEX"""
 
         if firstrun:
-            # 1. Create the working environment
+            # 1.1 Create the working environment
             self.create_env()
+            # 1.2 Get all constant files
+            self.get_all_consts()            
         
         # 2. Get the forcing
         self.get_forcing()
-        need_other_run= self.dateforcend>= self.dateend
+        need_other_run= self.dateforcend< self.dateend
         self.dateend_run=min(self.dateend,self.dateforcend)
         
         # 3. Preprocessing
@@ -101,8 +104,7 @@ class surfexrun(object):
         
         if firstrun:
             # 3.2 Build the appropriate namelist
-            get_file_const("OPTIONS.nam",self.namelist)
-            update_surfex_namelist(self.datebegin,updateloc=self.updateloc,dateforcbegin=self.dateforcbegin,dateforcend=self.dateforcend)
+            update_surfex_namelist(self.datebegin,dateend=self.dateend,updateloc=self.updateloc,dateforcbegin=self.dateforcbegin,dateforcend=self.dateforcend)
             # 3.3 Get the PGD file or generate it
             self.get_or_run_pgd()
         
@@ -113,33 +115,40 @@ class surfexrun(object):
         self.modify_prep()        
         
         # 4. Run OFFLINE
-        callSurfexOrDie("OFFLINE",moderun=self.moderun,nproc=self.nproc)
+        callSurfexOrDie(self.execdir+"/OFFLINE",moderun=self.moderun,nproc=self.nproc)
         
-        # Save outputs
+        # 5. Save outputs
         self.save_output()
         
         if need_other_run:
             # Recursive call to this routine while an other run is required, the next simulation starts at the end of the previous one.
             self.datebegin=self.dateforcend
             self.run(firstrun=False)
+
+    def get_all_consts(self):
+        get_file_const_or_crash(self.namelist,"OPTIONS.nam")
         
-        # 5. Save outputs 
+        for ecoclimap_file in ["ecoclimapI_covers_param.bin","ecoclimapII_eu_covers_param.bin"]:
+            get_file_const_or_crash(self.execdir+"/../MY_RUN/ECOCLIMAP/"+ecoclimap_file,ecoclimap_file)
+        
+        get_file_const_or_crash(self.execdir+"/../MY_RUN/DATA/CROCUS/drdt_bst_fit_60.nc","drdt_bst_fit_60.nc")
+          
     def get_forcing(self):
         ''' Look for a FORCING file including the starting date'''           
         self.dateforcbegin,self.dateforcend = get_file_period("FORCING",self.forcinpath,self.datebegin,self.dateend)
-
+        print self.dateforcbegin,self.dateforcend
     def get_or_run_pgd(self):
         ''' Look for a PGD file to configure the simulation or run PGD and save it'''        
-        findpgd = get_file_const("PGD.nc",self.dirprep)
+        findpgd = get_file_const(self.dirprep+"/PGD.nc","PGD.nc")
         if not findpgd:
-            callSurfexOrDie("PGD",moderun=self.moderun,nproc=self.nproc)
+            callSurfexOrDie(self.execdir+"/PGD",moderun=self.moderun,nproc=self.nproc)
             save_file_const(self.dirprep, "PGD.nc", copy=True) 
 
     def get_or_run_prep(self):
         ''' Look for a PREP file to restart the simulation or run PREP and save it'''
         findprep = get_file_date("PREP",self.dirprep,self.dateinit)
         if not findprep:
-            callSurfexOrDie("PREP",moderun=self.moderun,nproc=self.nproc) 
+            callSurfexOrDie(self.execdir+"/PREP",moderun=self.moderun,nproc=self.nproc) 
             save_file_date(self.dirprep,"PREP",self.dateinit,copy=True)
             
     def save_output(self):

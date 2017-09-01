@@ -15,19 +15,20 @@ import six
 # Snowtools modules
 from utils.prosimu import prosimu
 from utils.dates import checkdatebefore,checkdateafter
+from utils.FileException import FileNameException
 
 
 class update_surfex_namelist(object):
     """Class with routines to update SURFEX namelist"""
 
-    def __init__(self,datebegin,forcing="FORCING.nc",updateloc=True,dateforcbegin=None,dateforcend=None):
+    def __init__(self,datebegin,forcing="FORCING.nc",dateend=None,updateloc=True,dateforcbegin=None,dateforcend=None):
         """Call the subroutines for updating the SURFEX namelists. Updateloc is only optional."""
         dic=self.update_dates(datebegin)
         if updateloc:
             dic=self.updates_loc(forcing, dic)
             
         if dateforcbegin is not None:
-            self.update_forcingdates(datebegin, dateforcbegin, dateforcend, dic)
+            self.update_forcingdates(datebegin, dateend, dateforcbegin, dateforcend, dic)
             
         self.modify_namelist(dic)
     
@@ -43,7 +44,7 @@ class update_surfex_namelist(object):
         
         return dic
 
-    def update_forcingdates(self,datebegin,dateforcbegin,dateend,dateforcend,dic={}):
+    def update_forcingdates(self,datebegin,dateend, dateforcbegin,dateforcend,dic={}):
         """Dictionnary describing the lines to modify in SURFEX namelist for limiting the dates to read in a FORCING file longer than the simulation."""
         """The values of the dictionnary are tuples: first element is the name of the namelist, second element is the field itself."""
                 
@@ -71,15 +72,18 @@ class update_surfex_namelist(object):
         dlon1d=np.zeros_like(longitudes1d)+0.5
     
         # Strings to write in the namelist
-        dic["XY"] = ("NAM_LONLATVAL", "    XY = ")
-        dic["XX"] = ("NAM_LONLATVAL", "    XX = ")
-        dic["XDY"]= ("NAM_LONLATVAL", "    XDY = ")
-        dic["XDX"]= ("NAM_LONLATVAL", "    XDX = ")
+        dic["XY"] = ["NAM_LONLATVAL", "    XY = "]
+        dic["XX"] = ["NAM_LONLATVAL", "    XX = "]
+        dic["XDY"]= ["NAM_LONLATVAL", "    XDY = "]
+        dic["XDX"]= ["NAM_LONLATVAL", "    XDX = "]
     
         for val in latitudes1d : dic["XY"][1] = dic["XY"][1] + str(val) + ","
         for val in longitudes1d : dic["XX"][1] = dic["XX"][1] + str(val) + ","
         for val in dlat1d : dic["XDY"][1] = dic["XDY"][1] + str(val) + ","
         for val in dlon1d : dic["XDX"][1] = dic["XDX"][1] + str(val) + ","
+    
+        for key in ["XY","XX","XDY","XDX"]:
+            dic[key]=tuple(dic[key])
     
         #Number of simulation points
         dic["NPOINTS"] = ("NAM_LONLATVAL","    NPOINTS = " + str(len(longitudes1d)))
@@ -90,7 +94,7 @@ class update_surfex_namelist(object):
         """Routine to modify a reference SURFEX namelist according to a dictionnary of fields to modify."""    
 
         if not os.path.isfile("OPTIONS.nam"):
-            sys.exit("ERREUR A GERER")
+            raise FileNameException(os.getcwd()+"/OPTIONS.nam")
             
         os.rename("OPTIONS.nam","OPTIONS_base.nam")
         
@@ -99,7 +103,7 @@ class update_surfex_namelist(object):
                 
         # Open new namelist
         namSURFEX=open("OPTIONS.nam",'w')
-    
+        namelistopen=""
         # Loop over the lines of the old namelist. Copy everything but lines including the keys of the dictionnary
         # These lines are replaced by the values of the dictionnary
         for line in namSURFEX_base:
@@ -118,13 +122,18 @@ class update_surfex_namelist(object):
                             newline = field + '\n'
                             # Remove the field to update in the dictionnary
                             dic.pop(key)
+                            # Need to exit the loop, otherwise the next iteration will crash...
+                            break
                         elif "/" in line:
                             # This is the end of the namelist.
+                            namelistopen=""
                             # The field was not in the initial namelist, it must be added, as well as the / line to finish the namelist
                             newline = field + '\n\\\n'
                             # Remove the field to update in the dictionnaryb=                            
                             dic.pop(key)
-                            namelistopen=""
+                            # Need to exit the loop, otherwise the next iteration will crash...
+                            break                                                        
+
             # Write the new line in the new namelist
             namSURFEX.write(newline)    
         # Close both namelists
