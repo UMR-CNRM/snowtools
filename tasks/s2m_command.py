@@ -12,28 +12,19 @@ from optparse import OptionParser
 import os
 import sys
 
-# Check installation of snowtools package
-if not 'SNOWTOOLS_CEN' in os.environ.keys():
-    print "SNOWTOOLS_CEN environment variable is not defined."
-
-if not 'PYTHONPATH' in os.environ.keys():
-    print "PYTHONPATH environment variable is not defined."
-
-for rep in ["DATA","tasks","tools","utils"]:
-    if not os.path.isdir(os.environ["SNOWTOOLS_CEN"]+"/"+rep):
-        print "There is not a correct install of snowtools_git in directory "+os.environ["SNOWTOOLS_CEN"]
-        print "missing directory:"+rep
-
-if not os.environ["SNOWTOOLS_CEN"] in os.environ["PYTHONPATH"]:
-    print "PYTHONPATH environment variable must contain"+os.environ["SNOWTOOLS_CEN"]
-
+try:
+    from utils.resources import check_snowtools_install
+except:
+    raise 'Incorrect snowtools installation. Check the documentation.'
+check_snowtools_install()
+ 
 # Import snowtools modules
 from utils.dates import checkdateafter,check_and_convert_date
 from utils.resources import absolute_path,check_surfex_exe
 from utils.infomassifs import infomassifs
 import tasks.runs
 
-usage = "usage: %prog -o output_name -l list_members -f FORCINGDIR -s SPINUPDIR -n NAMELIST -b YYYY -e YYYY"
+usage = "usage: s2m -b begin_date -e end_date -f forcing [-o path_output] [-w workdir] [-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] [-c nb_classes_aspects] [-L Lower-altitude] [-U Upper-altitude] [-s surfex_exe_directory]"
 def exit_usage():
     sys.exit(usage)
 
@@ -41,6 +32,7 @@ def check_and_convert_options(options):
     
     for mandatory in [options.datedeb,options.datefin,options.forcing]:
         if not mandatory:
+            print "Missing mandatory option (-b -e -f)"
             exit_usage()
     
     # Controls and type conversions of dates
