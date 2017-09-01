@@ -51,8 +51,8 @@ class update_surfex_namelist(object):
         checkdateafter(datebegin,dateforcbegin)
         checkdatebefore(dateend,dateforcend)
         
-        if datebegin>dateforcbegin:
-            dic["LDELAYEDSTARTNC"]=("NAM_IO_OFFLINE","    LDELAYEDSTARTNC = T")
+        if datebegin>dateforcbegin or dateend<dateforcend:
+            dic["LDELAYEDSTART_NC"]=("NAM_IO_OFFLINE","    LDELAYEDSTART_NC = T")
         if dateend<dateforcend:
             dic["NDATESTOP"]=("NAM_IO_OFFLINE","    NDATESTOP = "+dateend.strftime("%Y, %m, %d, ")+str(dateend.hour*3600) )  
         
@@ -113,6 +113,7 @@ class update_surfex_namelist(object):
                 # Get the name of the namelist
                 namelistopen=line.split()[0][1:]
             else:
+                key_to_remove=[]
                 for key,value in six.iteritems(dic):
                     (namelist,field)=value[:]
                     # If the namelist corresponds to the current namelist
@@ -121,18 +122,21 @@ class update_surfex_namelist(object):
                             # Replace the line by the field 
                             newline = field + '\n'
                             # Remove the field to update in the dictionnary
-                            dic.pop(key)
-                            # Need to exit the loop, otherwise the next iteration will crash...
-                            break
+                            key_to_remove.append(key)
+
                         elif "/" in line:
-                            # This is the end of the namelist.
-                            namelistopen=""
                             # The field was not in the initial namelist, it must be added, as well as the / line to finish the namelist
-                            newline = field + '\n\\\n'
+                            newline = field + '\n/\n'
                             # Remove the field to update in the dictionnaryb=                            
-                            dic.pop(key)
-                            # Need to exit the loop, otherwise the next iteration will crash...
-                            break                                                        
+                            key_to_remove.append(key)
+                
+                if "/" in line:
+                    # This is the end of the namelist.
+                    namelistopen=""                    
+                
+                # Remove keys already written
+                map(dic.pop,key_to_remove)
+                                                                 
 
             # Write the new line in the new namelist
             namSURFEX.write(newline)    

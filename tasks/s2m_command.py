@@ -114,7 +114,7 @@ def parse_options(arguments):
                       help="path of the mother namelist - default: $EXESURFEX")
     
     parser.add_option("-w", "--workdir",
-                      action="store", type="string", dest="dirwork", default="output",
+                      action="store", type="string", dest="dirwork", default=None,
                       help="name of the output directory - default: output")    
 
     parser.add_option("-a", "--august_threshold",
