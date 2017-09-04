@@ -71,18 +71,16 @@ class forcinput_select(forcinput_tomodify):
         
         (list_massif_number,min_alt,max_alt,liste_pentes,list_exp_degres)=args[:][0]
 
-#         print list_massif_number
-#         sys.exit()
         liste_pentes_int = map(int,liste_pentes)
 
-        init_massif_nb_sop = init_forcing_file.read("massif_number")
+        init_massif_nb_sop = init_forcing_file.read("massif_number",keepfillvalue=True)
         b_points_massif = np.in1d(init_massif_nb_sop,list_massif_number)
 
-        init_alt = init_forcing_file.read("ZS")
+        init_alt = init_forcing_file.read("ZS",keepfillvalue=True)
         b_points_alt = (init_alt>=min_alt) * (init_alt<=max_alt)
 
-        init_slopes = init_forcing_file.read("slope")
-        init_exp = init_forcing_file.read("aspect")
+        init_slopes = init_forcing_file.read("slope",keepfillvalue=True)
+        init_exp = init_forcing_file.read("aspect",keepfillvalue=True)
         
         if "0" in liste_pentes:
             nb_slope_angles_notflat=len(liste_pentes)-1
@@ -129,7 +127,7 @@ class forcinput_select(forcinput_tomodify):
         
 
         if massif_dim_name in init_forcing_file_dimensions:
-            init_massif = init_forcing_file.read("massif")
+            init_massif = init_forcing_file.read("massif",keepfillvalue=True)
             index_massif = np.where(np.in1d(init_massif,list_massif_number))[0]            
             len_dim = len(index_massif)
             new_forcing_file.createDimension(massif_dim_name,len_dim)
@@ -191,11 +189,11 @@ class forcinput_select(forcinput_tomodify):
             if len(array_dim)>0:
                 index_dim_massif = np.where(array_dim == massif_dim_name)[0]
                 index_dim_nbpoints = np.where(array_dim == spatial_dim_name)[0]
-                var_array = init_forcing_file.read(varname)
+                var_array = init_forcing_file.read(varname,keepfillvalue=True)
             else:
                 index_dim_massif =[]
                 index_dim_nbpoints =[]          
-                var_array = init_forcing_file.read(varname).getValue() 
+                var_array = init_forcing_file.read(varname,keepfillvalue=True).getValue() 
      
             if len(index_dim_massif) == 1:
                 var_array = np.take(var_array,index_massif,index_dim_massif[0])

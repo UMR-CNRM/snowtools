@@ -52,13 +52,13 @@ def check_and_convert_options(options):
             
         options.region=INFOmassifs.region2massifs(options.region)
             
-        if options.slopes or options.aspects:
-            if options.slopes:
-                options.slopes=options.slopes.split(",")
-            else:
-                options.slopes=["0","20","40"]
-            options.aspects=INFOmassifs.get_list_aspect(options.aspects, options.slopes)
-            
+        if options.slopes:
+            options.slopes=options.slopes.split(",")        
+        else:
+            options.slopes=["0","20","40"]
+
+        options.aspects=INFOmassifs.get_list_aspect(options.aspects, options.slopes)
+         
         options.minlevel,options.maxlevel=INFOmassifs.check_and_convert_min_max_elevation(options.minlevel,options.maxlevel)
 
     return options

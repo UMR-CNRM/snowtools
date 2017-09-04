@@ -109,7 +109,7 @@ def get_file_const(pathin,nameout):
     else:
         return False
 
-def get_file_date(path,prefix,datefile):
+def get_file_date(prefix,path,datefile):
     
     namefile=prefix+"_"+datefile.strftime('%Y%m%d%H')+".nc"
     return get_file_const(path+"/"+namefile,prefix+".nc")        

@@ -29,17 +29,14 @@ class surfexrun(object):
                  execdir=".",
                  threshold=-999,dirwork=None,datespinup=None,geolist=[]):
 
-        self.datebegin=datebegin
-        self.dateend=dateend
-        self.forcinpath=forcingpath
+        # Convert arguments in attributes
+        for var in "datebegin","dateend","forcingpath","diroutput","namelist","execdir","threshold","geolist":
+            setattr(self,var,locals()[var])
+
         self.dateforcbegin=datebegin
         self.dateforcend=dateend
-        self.diroutput=diroutput   
-        self.namelist=namelist
-        self.execdir=execdir        
-        self.threshold=threshold
-        self.geolist=geolist
         self.updateloc=True
+        
         self.defaults_from_env()
         
         
@@ -91,22 +88,26 @@ class surfexrun(object):
             # 1.1 Create the working environment
             self.create_env()
             # 1.2 Get all constant files
-            self.get_all_consts()            
+            self.get_all_consts()
+        else:
+            self.updateloc=False            
         
-        # 2. Get the forcing
+        # 2. Get the forcing       
         self.get_forcing()
+
         need_other_run= self.dateforcend< self.dateend
         self.dateend_run=min(self.dateend,self.dateforcend)
-        
+                
         # 3. Preprocessing
         # 3.1 Modify the forcing if required
         self.modify_forcing(*self.geolist)
+ 
+        # 3.2 Build the appropriate namelist. At second run, only temporal modif
+        update_surfex_namelist(self.datebegin,dateend=self.dateend_run,updateloc=self.updateloc,dateforcbegin=self.dateforcbegin,dateforcend=self.dateforcend)
         
         if firstrun:
-            # 3.2 Build the appropriate namelist
-            update_surfex_namelist(self.datebegin,dateend=self.dateend,updateloc=self.updateloc,dateforcbegin=self.dateforcbegin,dateforcend=self.dateforcend)
             # 3.3 Get the PGD file or generate it
-            self.get_or_run_pgd()
+            self.get_or_run_pgd()           
         
         # 3.4 Get the PREP file or generate it            
         self.get_or_run_prep()
@@ -123,6 +124,7 @@ class surfexrun(object):
         if need_other_run:
             # Recursive call to this routine while an other run is required, the next simulation starts at the end of the previous one.
             self.datebegin=self.dateforcend
+            self.dateinit=self.dateforcend            
             self.run(firstrun=False)
 
     def get_all_consts(self):
@@ -135,8 +137,8 @@ class surfexrun(object):
           
     def get_forcing(self):
         ''' Look for a FORCING file including the starting date'''           
-        self.dateforcbegin,self.dateforcend = get_file_period("FORCING",self.forcinpath,self.datebegin,self.dateend)
-        print self.dateforcbegin,self.dateforcend
+        self.dateforcbegin,self.dateforcend = get_file_period("FORCING",self.forcingpath,self.datebegin,self.dateend)
+        
     def get_or_run_pgd(self):
         ''' Look for a PGD file to configure the simulation or run PGD and save it'''        
         findpgd = get_file_const(self.dirprep+"/PGD.nc","PGD.nc")
@@ -164,12 +166,12 @@ class surfexrun(object):
         ''' The PREP file needs to be modified if the init date differs from the starting date
          or if a threshold needs to be applied on snow water equivalent.'''
         
-        modif= (self.threshold>0 and self.datedeb.month==8 and self.datedeb.day==1) or self.datebegin != self.dateinit
+        modif= (self.threshold>0 and self.datebegin.month==8 and self.datebegin.day==1) or self.datebegin != self.dateinit
         
         if modif:
             prep=prep_tomodify("PREP.nc")
             
-            if self.datedeb.month==8 and self.datedeb.day==1:
+            if self.datebegin.month==8 and self.datebegin.day==1:
                 if self.threshold>0:
                     prep.apply_swe_threshold(400)
             
@@ -184,6 +186,10 @@ class massifrun(surfexrun):
         ''' Extract the simulation points in the forcing file.'''        
         os.rename("FORCING.nc","FORCING_base.nc")
         forcinput_select("FORCING_base.nc","FORCING.nc",list_massif_number,min_alt,max_alt,liste_pentes,list_exp)
+        
+    def save_output(self):
+        super(massifrun,self).save_output()
+        save_file_period(self.dirpro, "FORCING",self.datebegin,self.dateend_run)
         
 class griddedrun(surfexrun):
     """Class for a PC gridded SURFEX run for which the geometry is defined in the namelist"""
