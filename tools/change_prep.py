@@ -49,11 +49,9 @@ class prep_tomodify(object):
         '''Method to apply a threshold on snow water equivalent in a PREP.nc file'''
         for i in range(self.nsnowlayer):
             swe_layer,swe_layer_nc=self.prepfile.read(self.dict_prep['swe']+str(i+1),keepfillvalue=True,removetile=False,needmodif=True)
-            print swe_layer.shape
             if i==0:
                 swe_fromsurface=np.zeros_like(swe_layer)
             swe_layer=np.where(swe_fromsurface>swe_threshold,0,swe_layer)
-            print swe_layer_nc.shape, swe_layer.shape
             swe_layer_nc[:]=swe_layer[:]
 
             swe_fromsurface+=swe_layer

@@ -173,7 +173,7 @@ class surfexrun(object):
             
             if self.datebegin.month==8 and self.datebegin.day==1:
                 if self.threshold>0:
-                    prep.apply_swe_threshold(400)
+                    prep.apply_swe_threshold(self.threshold)
             
             if self.datebegin != self.dateinit:
                 prep.change_date(self.datebegin)
