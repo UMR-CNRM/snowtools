@@ -189,7 +189,7 @@ class massifrun(surfexrun):
         
     def save_output(self):
         super(massifrun,self).save_output()
-        save_file_period(self.dirpro, "FORCING",self.datebegin,self.dateend_run)
+        save_file_period(self.dirmeteo, "FORCING",self.dateforcbegin,self.dateforcend)
         
 class griddedrun(surfexrun):
     """Class for a PC gridded SURFEX run for which the geometry is defined in the namelist"""
