@@ -69,8 +69,9 @@ class forcinput_select(forcinput_tomodify):
                 
         ''' Modify a forcing file towards a prescribed geometry'''
         
-        (list_massif_number,min_alt,max_alt,liste_pentes,list_exp_degres)=args[:][0]
+        (list_massif_number,min_alt,max_alt,liste_pentes,list_exp)=args[:][0]
 
+        list_exp_degres=list_exp[:] # A copy is necessary to not modify this value in the calling module for next iteration
         liste_pentes_int = map(int,liste_pentes)
 
         init_massif_nb_sop = init_forcing_file.read("massif_number",keepfillvalue=True)

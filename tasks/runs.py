@@ -18,7 +18,7 @@ from tools.update_namelist import update_surfex_namelist
 from tools.execute import callSurfexOrDie
 from utils.resources import get_file_period,get_file_date,get_file_const,save_file_period,save_file_date,save_file_const,\
     get_file_const_or_crash
-
+from utils.FileException import DirFileException
 
 class surfexrun(object):
     
@@ -71,6 +71,9 @@ class surfexrun(object):
         
         # Note that it is not necessary to remove any existing working directory as the working directory is always new
         # (date in microseconds in the directory name)
+     
+        if os.path.isfile(self.diroutput):
+            raise DirFileException(self.diroutput)
      
         # Create all directories
         for directory in [self.dirmeteo,self.dirprep,self.dirpro,self.dirwork]:
