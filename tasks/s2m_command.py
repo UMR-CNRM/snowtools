@@ -11,6 +11,7 @@ Created on 30 Aug. 2017
 from optparse import OptionParser
 import os
 import sys
+from tools.initTG import clim
 
 try:
     from utils.resources import check_snowtools_install
@@ -67,6 +68,7 @@ def parse_options(arguments):
 
     parser = OptionParser(usage)
     
+    parser.add_option("-g", action="store_true", dest="ground",default=False)
     
     parser.add_option("-b", "--begin",
                       action="store", type="string", dest="datedeb", default=None,
@@ -137,6 +139,9 @@ if __name__ == "__main__":
 
     # Check option values and convert them in types suited for defining a run configuration
     options=check_and_convert_options(options)
+    
+    if options.ground:
+        clim(options.forcing,options.datedeb,options.datefin)
     
     # Define a run object
     if options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:

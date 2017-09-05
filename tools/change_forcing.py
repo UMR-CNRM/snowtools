@@ -327,7 +327,7 @@ class forcinput_select(forcinput_tomodify):
         setattr(var, u'units', u'degrees_east')
         var[:]=lon
         
-        return lat,lon
+        return lat,lon  
     
 # For test    
 if __name__ == "__main__":
