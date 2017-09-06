@@ -152,9 +152,8 @@
 &NAM_PREP_ISBA     XHUG_SURF = 0.10,
                    XHUG_ROOT = 0.10,
                    XHUG_DEEP = 0.10,
-                   XTG_SURF  = 288.71,
-                   XTG_ROOT  = 288.71,
-                   XTG_DEEP  = 288.71,
+                   CFILE_TG="init_TG.nc",
+                   CTYPE_TG="NETCDF"
 /
 &NAM_PREP_ISBA_SNOW    CSNOW = 'CRO',
                        NSNOW_LAYER = 50, 

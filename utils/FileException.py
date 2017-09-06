@@ -13,6 +13,14 @@ class DirNameException(Exception):
     def __str__(self):
         return "Unknown directory : "+self.path  
 
+class DirFileException(Exception):
+    
+    def __init__(self,path):
+        self.path = path
+    
+    def __str__(self):
+        return "The following path refers to a file instead of a directory: "+self.path  
+
 class FileNameException(Exception):
     
     def __init__(self,path):

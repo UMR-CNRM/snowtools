@@ -153,6 +153,7 @@ class surfexrun(object):
         ''' Look for a PREP file to restart the simulation or run PREP and save it'''
         findprep = get_file_date("PREP",self.dirprep,self.dateinit)
         if not findprep:
+            get_file_const_or_crash(self.dirprep+"/init_TG.nc","init_TG.nc")               
             callSurfexOrDie(self.execdir+"/PREP",moderun=self.moderun,nproc=self.nproc) 
             save_file_date(self.dirprep,"PREP",self.dateinit,copy=True)
             

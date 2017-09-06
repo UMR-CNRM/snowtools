@@ -11,24 +11,48 @@ Created on 5 Sept. 2017
 import os
 import numpy as np
 import netCDF4
+import datetime
 
 # snowtools modules
 from utils.prosimu import prosimu
-from utils.resources import get_file_period
+from utils.resources import get_file_period,save_file_const
+from tools.change_forcing import forcinput_select
+from utils.FileException import DirFileException
 
-def get_meteo_for_clim(forcingpath,datebegin,dateend,list_forcing=[]):
+def create_env(diroutput):
+    """Create working directory and directories to save outputs"""
     
+    # Note that it is not necessary to remove any existing working directory as the working directory is always new
+    # (date in microseconds in the directory name)
+ 
+    if os.path.isfile(diroutput):
+        raise DirFileException(diroutput)
+    dirprep=diroutput+"/prep"
+    dirwork=diroutput+"/workClim"+ datetime.datetime.today().strftime("%Y%m%d%H%M%S%f")
+    # Create all directories
+    for directory in [dirprep,dirwork]:
+        if not os.path.isdir(directory):
+            os.makedirs(directory)                
+        
+    # Change current directory to working directory
+    os.chdir(dirwork)
+
+def get_meteo_for_clim(forcingpath,datebegin,dateend,geolist,list_forcing=[]):
     
     dateforcbegin,dateforcend = get_file_period("FORCING",forcingpath,datebegin,dateend)
     forcing="FORCING_"+dateforcbegin.strftime('%Y%m%d%H')+"_"+dateforcend.strftime('%Y%m%d%H')+".nc"
     
+    if geolist:
+        os.rename("FORCING.nc","FORCING_base.nc")    
+        forcinput_select("FORCING_base.nc","FORCING.nc",*geolist)
+        
     os.rename("FORCING.nc",forcing)
     list_forcing.append(forcing)
     
     datebegin=dateforcend
     
     if dateforcend<dateend:
-        get_meteo_for_clim(forcingpath,datebegin,dateend,list_forcing=list_forcing)
+        get_meteo_for_clim(forcingpath,datebegin,dateend,geolist,list_forcing=list_forcing)
         
     return list_forcing
 
@@ -48,11 +72,25 @@ def generate_clim(list_forcing):
     
     var[:]=tclim
 
-def clim(forcingpath,datebegin,dateend):
-    list_forcing=get_meteo_for_clim(forcingpath,datebegin,dateend)
+def clim(options):
+    
+    
+    if options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:
+        geolist=[options.region,options.minlevel,options.maxlevel,options.slopes,options.aspects]
+    else:
+        geolist=None
+    
+    print options
+    
+    list_forcing=get_meteo_for_clim(options.forcing,options.datedeb,options.datefin,geolist)
     generate_clim(list_forcing)
+    
+    save_file_const(options.diroutput+"/prep","init_TG.nc")
+    
     for forcing in list_forcing:
         os.remove(forcing)
+
+
 
 if __name__ == "__main__":
     get_meteo_for_clim

@@ -141,7 +141,7 @@ if __name__ == "__main__":
     options=check_and_convert_options(options)
     
     if options.ground:
-        clim(options.forcing,options.datedeb,options.datefin)
+        clim(options)
     
     # Define a run object
     if options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:
