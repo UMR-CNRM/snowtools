@@ -69,6 +69,8 @@ class forcinput_select(forcinput_tomodify):
                 
         ''' Modify a forcing file towards a prescribed geometry'''
         
+        print "Modify forcing file towards the prescribed geometry:"
+        
         (list_massif_number,min_alt,max_alt,liste_pentes,list_exp)=args[:][0]
 
         list_exp_degres=list_exp[:] # A copy is necessary to not modify this value in the calling module for next iteration
@@ -95,7 +97,10 @@ class forcinput_select(forcinput_tomodify):
         extendaspects= nb_slopes_bylevel>1 and np.all(init_exp==-1)
         extendslopes = not extendaspects and ( len(liste_pentes) > len(np.unique(init_slopes)) )
         
-        print extendaspects,extendslopes
+        if extendaspects:
+            print "Extend aspects of the input forcing file"
+        if extendslopes:
+            print "Extend slopes of the input forcing file"
         
         if extendaspects:
             b_points_slope = np.in1d(init_slopes,[0])

@@ -59,7 +59,7 @@ def get_meteo_for_clim(forcingpath,datebegin,dateend,geolist,list_forcing=[]):
 def generate_clim(list_forcing):
        
     DataMeteo=prosimu(list_forcing)
-    Tair=DataMeteo.read("Tair")
+    Tair=DataMeteo.read("Tair",keepfillvalue=True)
     spatialdim=DataMeteo.getdimvar("Tair")[1:]
     tclim=np.mean(Tair,axis=0)
     
@@ -74,14 +74,13 @@ def generate_clim(list_forcing):
 
 def clim(options):
     
+    create_env(options.diroutput)
     
     if options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:
         geolist=[options.region,options.minlevel,options.maxlevel,options.slopes,options.aspects]
     else:
         geolist=None
-    
-    print options
-    
+        
     list_forcing=get_meteo_for_clim(options.forcing,options.datedeb,options.datefin,geolist)
     generate_clim(list_forcing)
     
@@ -89,8 +88,6 @@ def clim(options):
     
     for forcing in list_forcing:
         os.remove(forcing)
-
-
 
 if __name__ == "__main__":
     get_meteo_for_clim

@@ -69,7 +69,8 @@ def parse_options(arguments):
     parser = OptionParser(usage)
     
     parser.add_option("-g", action="store_true", dest="ground",default=False)
-    
+    parser.add_option("-G", action="store_true", dest="groundonly",default=False)
+       
     parser.add_option("-b", "--begin",
                       action="store", type="string", dest="datedeb", default=None,
                       help="Date to start the simulation (YYYYMMDD): MANDATORY OPTION")
@@ -140,20 +141,22 @@ if __name__ == "__main__":
     # Check option values and convert them in types suited for defining a run configuration
     options=check_and_convert_options(options)
     
-    if options.ground:
+    if options.ground or options.groundonly:
         clim(options)
     
-    # Define a run object
-    if options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:
-        run=tasks.runs.massifrun(options.datedeb,options.datefin,options.forcing,options.diroutput,threshold=options.threshold,
-                             dirwork=options.dirwork,datespinup=options.datespinup,
-                             execdir=options.exesurfex,
-                             geolist=[options.region,options.minlevel,options.maxlevel,options.slopes,options.aspects])
-    else:
-        run=tasks.runs.surfexrun(options.datedeb,options.datefin,options.forcing,options.diroutput,threshold=options.threshold,
-                             dirwork=options.dirwork,datespinup=options.datespinup,
-                             execdir=options.exesurfex)
-
-    # Execute the run
-    run.run()
+    if not options.groundonly:
+        
+        # Define a run object
+        if options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:
+            run=tasks.runs.massifrun(options.datedeb,options.datefin,options.forcing,options.diroutput,threshold=options.threshold,
+                                 dirwork=options.dirwork,datespinup=options.datespinup,
+                                 execdir=options.exesurfex,
+                                 geolist=[options.region,options.minlevel,options.maxlevel,options.slopes,options.aspects])
+        else:
+            run=tasks.runs.surfexrun(options.datedeb,options.datefin,options.forcing,options.diroutput,threshold=options.threshold,
+                                 dirwork=options.dirwork,datespinup=options.datespinup,
+                                 execdir=options.exesurfex)
+    
+        # Execute the run
+        run.run()
 
