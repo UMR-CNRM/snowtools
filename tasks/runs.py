@@ -106,7 +106,7 @@ class surfexrun(object):
         self.modify_forcing(*self.geolist)
  
         # 3.2 Build the appropriate namelist. At second run, only temporal modif
-        update_surfex_namelist(self.datebegin,dateend=self.dateend_run,updateloc=self.updateloc,dateforcbegin=self.dateforcbegin,dateforcend=self.dateforcend)
+        update_surfex_namelist(self.datebegin,dateend=self.dateend_run,updateloc=self.updateloc)
         
         if firstrun:
             # 3.3 Get the PGD file or generate it
@@ -152,8 +152,11 @@ class surfexrun(object):
     def get_or_run_prep(self):
         ''' Look for a PREP file to restart the simulation or run PREP and save it'''
         findprep = get_file_date("PREP",self.dirprep,self.dateinit)
+        
+        print "findprep=",findprep
+        
         if not findprep:
-            get_file_const_or_crash(self.dirprep+"/init_TG.nc","init_TG.nc")               
+            get_file_const_or_crash(self.dirprep+"/init_TG.nc","init_TG.nc")                                       
             callSurfexOrDie(self.execdir+"/PREP",moderun=self.moderun,nproc=self.nproc) 
             save_file_date(self.dirprep,"PREP",self.dateinit,copy=True)
             

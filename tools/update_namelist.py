@@ -21,14 +21,13 @@ from utils.FileException import FileNameException
 class update_surfex_namelist(object):
     """Class with routines to update SURFEX namelist"""
 
-    def __init__(self,datebegin,forcing="FORCING.nc",dateend=None,updateloc=True,dateforcbegin=None,dateforcend=None):
+    def __init__(self,datebegin,forcing="FORCING.nc",dateend=None,updateloc=True):
         """Call the subroutines for updating the SURFEX namelists. Updateloc is only optional."""
         dic=self.update_dates(datebegin)
         if updateloc:
             dic=self.updates_loc(forcing, dic)
             
-        if dateforcbegin is not None:
-            self.update_forcingdates(datebegin, dateend, dateforcbegin, dateforcend, dic)
+        self.update_forcingdates(datebegin, dateend, dic=dic)
             
         self.modify_namelist(dic)
     
@@ -44,10 +43,17 @@ class update_surfex_namelist(object):
         
         return dic
 
-    def update_forcingdates(self,datebegin,dateend, dateforcbegin,dateforcend,dic={}):
+    def update_forcingdates(self,datebegin,dateend, forcing="FORCING.nc",dic={}):
         """Dictionnary describing the lines to modify in SURFEX namelist for limiting the dates to read in a FORCING file longer than the simulation."""
         """The values of the dictionnary are tuples: first element is the name of the namelist, second element is the field itself."""
-                
+
+        forc=prosimu(forcing)
+        timeforc=forc.readtime()
+        forc.close()
+        
+        dateforcbegin=timeforc[0]
+        dateforcend=timeforc[-1]
+        
         checkdateafter(datebegin,dateforcbegin)
         checkdatebefore(dateend,dateforcend)
         
