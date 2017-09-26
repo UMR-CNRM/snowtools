@@ -63,7 +63,7 @@ def generate_clim(list_forcing):
     spatialdim=DataMeteo.getdimvar("Tair")[1:]
     tclim=np.mean(Tair,axis=0)   
     
-    initTGfile=netCDF4.Dataset("init_TG.nc","w")
+    initTGfile=netCDF4.Dataset("init_TG.nc","w",format='NETCDF3_CLASSIC')
     
     for i,dim in enumerate(spatialdim):
         initTGfile.createDimension(dim,Tair.shape[i+1])
