@@ -61,7 +61,7 @@ def generate_clim(list_forcing):
     DataMeteo=prosimu(list_forcing)
     Tair=DataMeteo.read("Tair",keepfillvalue=True)
     spatialdim=DataMeteo.getdimvar("Tair")[1:]
-    tclim=np.mean(Tair,axis=0)
+    tclim=np.mean(Tair,axis=0)   
     
     initTGfile=netCDF4.Dataset("init_TG.nc","w")
     
@@ -71,6 +71,8 @@ def generate_clim(list_forcing):
     var=initTGfile.createVariable("TG",float,spatialdim)
     
     var[:]=tclim
+
+    initTGfile.close()
 
 def clim(options):
     
