@@ -18,70 +18,70 @@ import numpy as np
 from utils.prosimu import prosimu
 from utils.FileException import FileNameException
 
+
 class prep_tomodify(object):
-    def __init__(self,prepfile):
-        '''Generic method to open a PREP.nc file ready to be modified'''     
+    def __init__(self, prepfile):
+        '''Generic method to open a PREP.nc file ready to be modified'''
 
         # Names of the prognostic variables in the PREP netcdf file
         self.dict_prep = {'nsnowlayer': 'SN_VEG_N',
-                   'year': 'DTCUR-YEAR',
-                   'month': 'DTCUR-MONTH',
-                   'day': 'DTCUR-DAY',
-                   'time': 'DTCUR-TIME',
-                   'swe': 'WSN_VEG',
-                   'rho': 'RSN_VEG',
-                   'pheat': 'HSN_VEG',
-                   'dopt': 'SG1_VEG',
-                   'spher': 'SG2_VEG',
-                   'hist': 'SHI_VEG',
-                   'age': 'SAG_VEG',
-                   'albedo': 'ASN_VEG',
-                   'tg': 'TG'
-                   }
-      
+                          'year': 'DTCUR-YEAR',
+                          'month': 'DTCUR-MONTH',
+                          'day': 'DTCUR-DAY',
+                          'time': 'DTCUR-TIME',
+                          'swe': 'WSN_VEG',
+                          'rho': 'RSN_VEG',
+                          'pheat': 'HSN_VEG',
+                          'dopt': 'SG1_VEG',
+                          'spher': 'SG2_VEG',
+                          'hist': 'SHI_VEG',
+                          'age': 'SAG_VEG',
+                          'albedo': 'ASN_VEG',
+                          'tg': 'TG'
+                          }
+
         if not os.path.isfile(prepfile):
             raise FileNameException(prepfile)
-            
-        self.prepfile = prosimu(prepfile,openmode="a")
-        self.nsnowlayer=self.prepfile.read(self.dict_prep['nsnowlayer'])[0]
 
-    def apply_swe_threshold(self,swe_threshold,closefile=False):
+        self.prepfile = prosimu(prepfile, openmode="a")
+        self.nsnowlayer = self.prepfile.read(self.dict_prep['nsnowlayer'])[0]
+
+    def apply_swe_threshold(self, swe_threshold, closefile=False):
         '''Method to apply a threshold on snow water equivalent in a PREP.nc file'''
         for i in range(self.nsnowlayer):
-            swe_layer,swe_layer_nc=self.prepfile.read(self.dict_prep['swe']+str(i+1),keepfillvalue=True,removetile=False,needmodif=True)
-            if i==0:
-                swe_fromsurface=np.zeros_like(swe_layer)
-            swe_layer=np.where(swe_fromsurface>swe_threshold,0,swe_layer)
-            swe_layer_nc[:]=swe_layer[:]
+            swe_layer, swe_layer_nc = self.prepfile.read(self.dict_prep['swe'] + str(i + 1), keepfillvalue=True, removetile=False, needmodif=True)
+            if i == 0:
+                swe_fromsurface = np.zeros_like(swe_layer)
+            swe_layer = np.where(swe_fromsurface > swe_threshold, 0, swe_layer)
+            swe_layer_nc[:] = swe_layer[:]
 
-            swe_fromsurface+=swe_layer
-        
+            swe_fromsurface += swe_layer
+
         if closefile:
-            self.close()       
-    
-    def change_date(self,newdate,closefile=False):
+            self.close()
+
+    def change_date(self, newdate, closefile=False):
         '''Method to change the date of a PREP file because a spinup is used to initialize the simulation
            Input : newdate must be a datetime.datetime object'''
-        
-        year,yearnc=self.prepfile.read(self.dict_prep['year'],needmodif=True)
-        month,monthnc=self.prepfile.read(self.dict_prep['month'],needmodif=True)
-        day,daync=self.prepfile.read(self.dict_prep['day'],needmodif=True)
-        seconds,secondsnc=self.prepfile.read(self.dict_prep['time'],needmodif=True)
-        
-        yearnc[:]=newdate.year
-        monthnc[:]=newdate.month
-        daync[:]=newdate.day
-        secondsnc[:]=newdate.hour*3600
-        
+        year, yearnc = self.prepfile.read(self.dict_prep['year'], needmodif=True)
+        month, monthnc = self.prepfile.read(self.dict_prep['month'], needmodif=True)
+        day, daync = self.prepfile.read(self.dict_prep['day'], needmodif=True)
+        seconds,secondsnc = self.prepfile.read(self.dict_prep['time'], needmodif=True)
+
+        yearnc[:] = newdate.year
+        monthnc[:] = newdate.month
+        daync[:] = newdate.day
+        secondsnc[:] = newdate.hour * 3600
+
         if closefile:
-            self.close()         
-        
+            self.close()
+
     def close(self):
         self.prepfile.close()
-        
+
+
 if __name__ == "__main__":
-    prep=prep_tomodify("PREP.nc")
-    prep.apply_swe_threshold(swe_threshold=400,closefile=True)
-#     newdate=datetime.datetime(2010,9,4,6)   
-#     prep.change_date(newdate,closefile=True)         
-        
+    prep = prep_tomodify("PREP.nc")
+    prep.apply_swe_threshold(swe_threshold=400, closefile=True)
+#     newdate=datetime.datetime(2010,9,4,6)
+#     prep.change_date(newdate,closefile=True)
