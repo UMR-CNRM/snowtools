@@ -156,11 +156,13 @@ if __name__ == "__main__":
             run = tasks.runs.massifrun(options.datedeb, options.datefin, options.forcing, options.diroutput, threshold=options.threshold,
                                        dirwork=options.dirwork, datespinup=options.datespinup,
                                        execdir=options.exesurfex,
+                                       namelist=options.namelist,
                                        geolist=[options.region, options.minlevel, options.maxlevel, options.slopes, options.aspects])
         else:
             run = tasks.runs.surfexrun(options.datedeb, options.datefin, options.forcing, options.diroutput, threshold=options.threshold,
                                        dirwork=options.dirwork, datespinup=options.datespinup,
-                                       execdir=options.exesurfex)
+                                       execdir=options.exesurfex,
+                                       namelist=options.namelist)
 
         # Execute the run
         run.run()
