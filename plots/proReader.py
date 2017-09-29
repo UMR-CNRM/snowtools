@@ -14,9 +14,10 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from EvoProfilPlot import plot_profil, plot_grains1D
 
+
 class ProReader:
     """
-    Definit un objet contenant : 
+    Definit un objet contenant :
      * date : liste des dates
      * lat, lon, alt, slope, aspect, nrstation (no station ou massif)
      * var : dictionnaire contenant toutes les variables 2D du fichier PRO
@@ -26,42 +27,39 @@ class ProReader:
        pour le point selectionne. La liste des variables disponibles est
        stockee dan ProReader.dico1D (avec correspondance noms SURFEX)
     """
-    
-    dico = {
-        'swe':('WSN_VEG', 'Snow Water Equivalent (m)'),
-        'rho':('SNOWRO', 'Density (kg/m3)'),
-        'pheat':('SNOWHEAT', 'Enthalpie (J/m2)'),
-        'age':('SNOWAGE', 'Age (days)'),
-        'g1':('SNOWGRAN1', 'Diametre optique (m)'),
-        'g2':('SNOWGRAN2', 'Spericite'),
-        'hist':('SNOWHIST', 'History'),
-        'temp':('SNOWTEMP', 'Temperature (K)'),
-        'tel':('SNOWLIQ', 'Liquid Water Content (kg/m3)'),
-        'ep':('SNOWDZ', 'Thickness (m)'),               # ne pas changer le nom
-        'dend':('SNOWDEND', 'Dendricity'),
-        'spher':('SNOWSPHER', 'Sphericity'),
-        'gs':('SNOWSIZE', 'Grain size (m)'),
-        'ssa':('SNOWSSA', 'SSA (m2/kg)'),
-        'grain':('SNOWTYPE', 'Grain type (EN)'),        # ne pas changer le nom
-        'ram':('SNOWRAM', 'RAM Resistance (daN)'),
-        'shear':('SNOWSHEAR', 'Shear Resistance (kPa)')
-        }
 
-    dico1D = {
-        'albedo': ('TALB_ISBA', 'Albedo'),
-        'tg1': ('TG1', 'Soil Temperature l1 (K)'),
-        'tg4': ('TG4', 'Soil Temperature l4 (K)'),
-        }
+    dico = {'swe': ('WSN_VEG', 'Snow Water Equivalent (m)'),
+            'rho': ('SNOWRO', 'Density (kg/m3)'),
+            'pheat': ('SNOWHEAT', 'Enthalpie (J/m2)'),
+            'age': ('SNOWAGE', 'Age (days)'),
+            'g1': ('SNOWGRAN1', 'Diametre optique (m)'),
+            'g2': ('SNOWGRAN2', 'Spericite'),
+            'hist': ('SNOWHIST', 'History'),
+            'temp': ('SNOWTEMP', 'Temperature (K)'),
+            'tel': ('SNOWLIQ', 'Liquid Water Content (kg/m3)'),
+            'ep': ('SNOWDZ', 'Thickness (m)'),               # ne pas changer le nom
+            'dend': ('SNOWDEND', 'Dendricity'),
+            'spher': ('SNOWSPHER', 'Sphericity'),
+            'gs': ('SNOWSIZE', 'Grain size (m)'),
+            'ssa': ('SNOWSSA', 'SSA (m2/kg)'),
+            'grain': ('SNOWTYPE', 'Grain type (EN)'),        # ne pas changer le nom
+            'ram': ('SNOWRAM', 'RAM Resistance (daN)'),
+            'shear': ('SNOWSHEAR', 'Shear Resistance (kPa)')
+            }
 
-    dico2 = {
-        'slope': 'slope', 
-        'aspect': 'aspect', 
-        'alt': 'ZS',
-        'lat': 'LAT', 
-        'lon': 'LON', 
-        'time': 'time'
-        }
-    
+    dico1D = {'albedo': ('TALB_ISBA', 'Albedo'),
+              'tg1': ('TG1', 'Soil Temperature l1 (K)'),
+              'tg4': ('TG4', 'Soil Temperature l4 (K)'),
+              }
+
+    dico2 = {'slope': 'slope',
+             'aspect': 'aspect',
+             'alt': 'ZS',
+             'lat': 'LAT',
+             'lon': 'LON',
+             'time': 'time'
+             }
+
     def __init__(self, ncfile=None, pro=None, ntime=1460, nsnowlayer=50, point=None ):
         """
         ProReader(ncfile=None, pro=None, ntime=1460, nsnowlayer=50, point=None ):
@@ -69,7 +67,7 @@ class ProReader:
          - ProReader(ncfile='path/to/ncfile', point=None) : A partir d'un fichier PRO
                 !! si le fichier contient plusieurs points de simulation, selection par point
                     - sous forme d'un entier
-                    - sous forme d'une recherche en passant un dictionnaire pouvant contenir les entrees : 
+                    - sous forme d'une recherche en passant un dictionnaire pouvant contenir les entrees :
                         * lat, latinf, latsup
                         * lon, loninf, lonsup
                         * alt, altinf, altsup
@@ -86,7 +84,7 @@ class ProReader:
             self.initFromMultiple(pro)
         else:
             self.initVoid(ntime, nsnowlayer)
-    
+
     def initVoid(self, ntime, nsnowlayer):
         self.ntime = ntime
         self.nsnowlayer = nsnowlayer
@@ -97,17 +95,17 @@ class ProReader:
         self.lon = 0
         self.nrstation = 0
         self.date = np.empty(ntime)
-        
+
         self.var = {}
-        for key in ProReader.dico.keys() :
-            self.var[key]=np.zeros((ntime, nsnowlayer))
-         
+        for key in ProReader.dico.keys():
+            self.var[key] = np.zeros((ntime, nsnowlayer))
+
         self.var1D = {}
-        for key in ProReader.dico1D.keys() :
-            self.var1D[key]=np.zeros(ntime)
-    
+        for key in ProReader.dico1D.keys():
+            self.var1D[key] = np.zeros(ntime)
+
     def initFromMultiple(self, pro):
-        self.ntime=0
+        self.ntime = 0
         for proi in pro:
             self.ntime += proi.ntime
         self.initVoid(self.ntime, pro[0].nsnowlayer)
@@ -118,24 +116,24 @@ class ProReader:
         self.lon = pro[0].alt
         self.nrstation = pro[0].alt
         datelist = [pro[0].date]
-        for i in range(1,len(pro)):
+        for i in range(1, len(pro)):
             datelist.append(pro[i].date)
         self.date = np.concatenate(datelist)
-        
-        for key in ProReader.dico.keys() :
-            cursor=0
+
+        for key in ProReader.dico.keys():
+            cursor = 0
             for i in range(len(pro)):
-                self.var[key][cursor:cursor+pro[i].ntime] = pro[i].var[key]
+                self.var[key][cursor:cursor + pro[i].ntime] = pro[i].var[key]
                 cursor += pro[i].ntime
-        for key in ProReader.dico1D.keys() :
-            cursor=0
+        for key in ProReader.dico1D.keys():
+            cursor = 0
             for i in range(len(pro)):
-                self.var1D[key][cursor:cursor+pro[i].ntime] = pro[i].var1D[key]
+                self.var1D[key][cursor:cursor + pro[i].ntime] = pro[i].var1D[key]
                 cursor += pro[i].ntime
 
     def initFromFile(self, ncfile, point=None):
         ff = prosimu(ncfile)
-        
+
         listvariables = ff.listvar()
         if(ProReader.dico2['slope'] in listvariables):
             slopetab = ff.read(ProReader.dico2['slope'])[:]
@@ -146,15 +144,15 @@ class ProReader:
         else:
             aspecttab = np.array([0])
         if(ProReader.dico2['aspect'] in listvariables):
-            alttab = ff.read(ProReader.dico2['alt'])[:] 
+            alttab = ff.read(ProReader.dico2['alt'])[:]
         else:
             alttab = np.array([0])
         if(ProReader.dico2['aspect'] in listvariables):
-            lattab = ff.read(ProReader.dico2['lat'])[:] 
+            lattab = ff.read(ProReader.dico2['lat'])[:]
         else:
             lattab = np.array([0])
         if(ProReader.dico2['aspect'] in listvariables):
-            lontab = ff.read(ProReader.dico2['lon'])[:] 
+            lontab = ff.read(ProReader.dico2['lon'])[:]
         else:
             lontab = np.array([0])
         self.date = ff.readtime()
@@ -164,51 +162,51 @@ class ProReader:
         elif(isinstance(point, dict)):
             cond = True
             if('lat' in point.keys()):
-                cond*=(lattab==point['lat'])
+                cond *= (lattab == point['lat'])
             if('latinf' in point.keys()):
-                cond*=(lattab>=point['latinf'])
+                cond *= (lattab >= point['latinf'])
             if('latsup' in point.keys()):
-                cond*=(lattab<=point['latsup'])
+                cond *= (lattab <= point['latsup'])
             if('lon' in point.keys()):
-                cond*=(lontab==point['lon'])
+                cond *= (lontab == point['lon'])
             if('loninf' in point.keys()):
-                cond*=(lontab>=point['loninf'])
+                cond *= (lontab >= point['loninf'])
             if('lonsup' in point.keys()):
-                cond*=(lontab<=point['lonsup'])
+                cond *= (lontab <= point['lonsup'])
             if('alt' in point.keys()):
-                cond*=(alttab==point['alt'])
+                cond *= (alttab == point['alt'])
             if('altinf' in point.keys()):
-                cond*=(alttab>=point['altinf'])
+                cond *= (alttab >= point['altinf'])
             if('altsup' in point.keys()):
-                cond*=(alttab<=point['altsup'])
+                cond *= (alttab <= point['altsup'])
             if('aspect' in point.keys()):
-                cond*=(aspecttab==point['aspect'])
+                cond *= (aspecttab == point['aspect'])
             if('aspectinf' in point.keys()):
-                cond*=(aspecttab>=point['aspectinf'])
+                cond *= (aspecttab >= point['aspectinf'])
             if('aspectsup' in point.keys()):
-                cond*=(aspecttab<=point['aspectsup'])
+                cond *= (aspecttab <= point['aspectsup'])
             if('slope' in point.keys()):
-                cond*=(slopetab==point['slope'])
+                cond *= (slopetab == point['slope'])
             if('slopeinf' in point.keys()):
-                cond*=(slopetab>=point['slopeinf'])
+                cond *= (slopetab >= point['slopeinf'])
             if('slopesup' in point.keys()):
-                cond*=(slopetab<=point['slopesup'])
+                cond *= (slopetab <= point['slopesup'])
             if('station' in point.keys()):
-                nrstationtab = ff.read('station')[:] 
-                cond*=(nrstationtab==point['station'])
+                nrstationtab = ff.read('station')[:]
+                cond *= (nrstationtab == point['station'])
             if('massif' in point.keys()):
-                nrmassiftab = ff.read('massif_number')[:] 
-                cond*=(nrmassiftab==point['massif'])
-            
+                nrmassiftab = ff.read('massif_number')[:]
+                cond *= (nrmassiftab == point['massif'])
+
             result = cond.nonzero()
-            if np.shape(result)[1]>1:
+            if np.shape(result)[1] > 1:
                 print "Warning : more than 1 simulation point for your query. 1st matching selected"
                 point = result[0][0]
-            elif np.shape(result)[1]==1:
+            elif np.shape(result)[1] == 1:
                 point = result[0][0]
             else:
                 print "ERROR : no simulation point for your query. 1st point selected"
-                point=0
+                point = 0
         else:
             point = 0
 
@@ -221,41 +219,41 @@ class ProReader:
         self.lat = lattab[point]
         self.lon = lontab[point]
         if('station' in ff.listvar()):
-            nrstationtab = ff.read('station')[:] 
+            nrstationtab = ff.read('station')[:]
             self.nrstation = nrstationtab[point]
         elif('massif_number' in ff.listvar()):
-            nrstationtab = ff.read('massif_number')[:] 
+            nrstationtab = ff.read('massif_number')[:]
             self.nrstation = nrstationtab[point]
         else:
             self.nrstation = 0
 
         # Extraction des data
         self.var = {}
-        for key, val in ProReader.dico.iteritems() :
+        for key, val in ProReader.dico.iteritems():
             if(val[0] in listvariables):
-                if(key=="swe"):
-                    self.var['swe']=ff.read(val[0], selectpoint=point)
+                if(key == "swe"):
+                    self.var['swe'] = ff.read(val[0], selectpoint=point)
                 else:
-                    self.var[key]=ff.read(val[0], selectpoint=point, fill2zero=True) # Fill2zero necessaire pour le plot
+                    self.var[key] = ff.read(val[0], selectpoint=point, fill2zero=True)  # Fill2zero necessaire pour le plot
             else:
                 print "WARNING : Variable %s not present in your PRO.nc file, %s (%s) not provided" % (val[0], key, val[1])
 
         self.var1D = {}
-        for key, val in ProReader.dico1D.iteritems() :
+        for key, val in ProReader.dico1D.iteritems():
             if(val[0] in listvariables):
-                self.var1D[key]=ff.read(val[0], selectpoint=point, fill2zero=True) # Fill2zero necessaire pour le plot
+                self.var1D[key] = ff.read(val[0], selectpoint=point, fill2zero=True)  # Fill2zero necessaire pour le plot
             else:
                 print "WARNING : Variable %s not present in your PRO.nc file, %s (%s) not provided" % (val[0], key, val[1])
-        
+
         self.ntime = np.shape(self.var['swe'])[0]
         self.nsnowlayer = np.shape(self.var['swe'])[1]
-    
+
     def get_htot(self):
         """
         Retourne la hauteur totale du manteau neigeux en fonction du temps
         """
         return np.nansum(self.var['ep'], axis=1)
-    
+
     def plot(self, axe, var, b=None, e=None, xlabel=True, legend=None, colormap='jet', real_layers=True):
         '''
         Trace la variable demandee sur la hauteur du manteau neigeux en fonction du temps
@@ -270,55 +268,55 @@ class ProReader:
         '''
         # Interpretation des entrees
         var = ProReader.varname(var)
-        
+
         def parsedate(date, datetab, default):
             if isinstance(date, str):
-                if len(date)==8:
+                if len(date) == 8:
                     pdate = dt.datetime.strptime(date, "%Y%m%d")
-                    date = datetab[(datetab>=pdate)][0]
-                elif len(date)==10:
+                    date = datetab[(datetab >= pdate)][0]
+                elif len(date) == 10:
                     pdate = dt.datetime.strptime(date, "%Y%m%d%H")
-                    date = datetab[(datetab>=pdate)][0]
+                    date = datetab[(datetab >= pdate)][0]
                 else:
-                    date=None
-            if date==None:
+                    date = None
+            if date is None:
                 date = default
             return date
 
         b = parsedate(b, self.date, self.date[0])
-        e = parsedate(e, self.date, self.date[self.ntime-1])
+        e = parsedate(e, self.date, self.date[self.ntime - 1])
 
-        if legend==None:
+        if legend is None:
             legend = ProReader.dico[var][1]
 
-        if var=='grain':
+        if var == 'grain':
             colormap = 'grains'
         else:
             colormap = colormap
-        
-        intime = (self.date>=b) * (self.date<=e)
+
+        intime = (self.date >= b) * (self.date <= e)
         # Trace par appel a plot_profil
         ep = self.var['ep'][intime]
         toplot = self.var[var][intime]
         if(real_layers):
             plot_profil(axe, ep, toplot, colormap=colormap, legend=legend)
             axe.set_ylabel('Hauteur (m)')
-            axe.set_ylim(0,np.max(np.nansum(ep, axis=1)))
+            axe.set_ylim(0, np.max(np.nansum(ep, axis=1)))
         else:
             ret = axe.pcolormesh(np.swapaxes(toplot, 0, 1), cmap=colormap)
             cbar = plt.colorbar(ret, ax=axe)
             cbar.set_label(legend)
             axe.set_ylabel('Couche numerique')
-            axe.set_ylim(0,self.nsnowlayer)
-        
-        axe.set_xlim(0,toplot.shape[0])
+            axe.set_ylim(0, self.nsnowlayer)
+
+        axe.set_xlim(0, toplot.shape[0])
         if(xlabel):
             def format_ticks(x, pos):
                 x = int(x)
-                if(x>=0 and x<toplot.shape[0]):
+                if(x >= 0 and x < toplot.shape[0]):
                     return self.date[intime][x].strftime('%Y-%m-%d %Hh')
                 else:
-                    return 'E' 
+                    return 'E'
             formatter = ticker.FuncFormatter(format_ticks)
             axe.xaxis.set_major_formatter(formatter)
             plt.setp(axe.xaxis.get_majorticklabels(), rotation=60)
@@ -336,33 +334,33 @@ class ProReader:
         '''
         # Interpretation des entrees
         var1D = ProReader.varname1D(var)
-        
+
         def parsedate(date, datetab, default):
             if isinstance(date, str):
-                if len(date)==8:
+                if len(date) == 8:
                     pdate = dt.datetime.strptime(date, "%Y%m%d")
-                    date = datetab[(datetab>=pdate)][0]
-                elif len(date)==10:
+                    date = datetab[(datetab >= pdate)][0]
+                elif len(date) == 10:
                     pdate = dt.datetime.strptime(date, "%Y%m%d%H")
-                    date = datetab[(datetab>=pdate)][0]
+                    date = datetab[(datetab >= pdate)][0]
                 else:
-                    date=None
-            if date==None:
+                    date = None
+            if date is None:
                 date = default
             return date
 
         b = parsedate(b, self.date, self.date[0])
-        e = parsedate(e, self.date, self.date[self.ntime-1])
+        e = parsedate(e, self.date, self.date[self.ntime - 1])
 
-        if legend==None:
+        if legend is None:
             legend = ProReader.dico1D[var1D][1]
 
-        intime = (self.date>=b) * (self.date<=e)
+        intime = (self.date >= b) * (self.date <= e)
         toplot = self.var1D[var1D][intime]
         xplot = self.date[intime]
         axe.plot_date(xplot, toplot, color)
         axe.set_ylabel(legend)
-            
+
     def plot_date(self, axe, var, date=None, legend=None, color='b', cbar_show=True):
         '''
         Trace la variable demandee sur la hauteur du manteau neigeux a une date donnee
@@ -374,46 +372,46 @@ class ProReader:
             cbar_show : Lors du plot des grains, affiche ou pas la colorbar
         '''
         var = ProReader.varname(var)
-        if legend==None:
+        if legend is None:
             legend = ProReader.dico[var][1]
+
         def parsedate(date, datetab, default):
             if isinstance(date, str):
-                if len(date)==8:
+                if len(date) == 8:
                     pdate = dt.datetime.strptime(date, "%Y%m%d")
-                    date = datetab[(datetab>=pdate)][0]
-                elif len(date)==10:
+                    date = datetab[(datetab >= pdate)][0]
+                elif len(date) == 10:
                     pdate = dt.datetime.strptime(date, "%Y%m%d%H")
-                    date = datetab[(datetab>=pdate)][0]
+                    date = datetab[(datetab >= pdate)][0]
                 else:
-                    date=None
-            if date==None:
+                    date = None
+            if date is None:
                 date = default
             return date
-        date = parsedate(date, self.date, self.date[self.ntime-1])
-        date = self.date[self.date>=date][0]
-        ep = self.var['ep'][self.date==date]
+        date = parsedate(date, self.date, self.date[self.ntime - 1])
+        date = self.date[self.date >= date][0]
+        ep = self.var['ep'][self.date == date]
         epc = np.cumsum(ep)
-        
-        if(var=='grain'):
-            plot_grains1D(axe, ep, self.var['grain'][self.date==date], legend=legend, cbar_show=cbar_show)
+
+        if(var == 'grain'):
+            plot_grains1D(axe, ep, self.var['grain'][self.date == date], legend=legend, cbar_show=cbar_show)
             locator0 = ticker.NullLocator()
             axe.xaxis.set_major_locator(locator0)
-            axe.set_xlim(0,1)
+            axe.set_xlim(0, 1)
         else:
-            pointsx = np.zeros(2*self.nsnowlayer+2)
-            pointsx[2:2*self.nsnowlayer+2:2]=epc
-            pointsx[3:2*self.nsnowlayer+2:2]=epc
-            pointsx[0:2]=0
-            pointsy = np.zeros(2*self.nsnowlayer+2)
-            pointsy[1:2*self.nsnowlayer:2]=self.var[var][self.date==date]
-            pointsy[2:2*self.nsnowlayer+1:2]=self.var[var][self.date==date]
+            pointsx = np.zeros(2 * self.nsnowlayer + 2)
+            pointsx[2:2 * self.nsnowlayer + 2:2] = epc
+            pointsx[3:2 * self.nsnowlayer + 2:2] = epc
+            pointsx[0:2] = 0
+            pointsy = np.zeros(2 * self.nsnowlayer + 2)
+            pointsy[1:2 * self.nsnowlayer:2] = self.var[var][self.date == date]
+            pointsy[2:2 * self.nsnowlayer + 1:2] = self.var[var][self.date == date]
             axe.plot(pointsy, pointsx, color=color)
             axe.set_xlabel(legend, color=color)
-            Max = np.nanmax(self.var[var][self.date==date]) if np.nanmax(self.var[var][self.date==date])>0 else 0
-            Min = np.nanmin(self.var[var][self.date==date]) if np.nanmin(self.var[var][self.date==date])<0 else 0
-            axe.set_xlim(Min,Max)
+            Max = np.nanmax(self.var[var][self.date == date]) if np.nanmax(self.var[var][self.date == date]) > 0 else 0
+            Min = np.nanmin(self.var[var][self.date == date]) if np.nanmin(self.var[var][self.date == date]) < 0 else 0
+            axe.set_xlim(Min, Max)
         axe.set_ylim(np.nansum(ep), 0)
-
 
     def varname(nom):
         '''
@@ -421,26 +419,26 @@ class ProReader:
         si l utilisateur entre le nom SURFEX
         Valable pour les variables 2D
         '''
-        if nom in ProReader.dico.keys() :
+        if nom in ProReader.dico.keys():
             return nom
         else:
             for key, val in ProReader.dico.iteritems():
-                if nom==val[0] :
+                if nom == val[0]:
                     return key
             return 'err'
     varname = staticmethod(varname)
-    
+
     def varname1D(nom):
         '''
         Permet de retrouver le nom de la variable recherchee
         si l utilisateur entre le nom SURFEX
         Valable pour les variables 1D
         '''
-        if nom in ProReader.dico1D.keys() :
+        if nom in ProReader.dico1D.keys():
             return nom
         else:
             for key, val in ProReader.dico1D.iteritems():
-                if nom==val[0] :
+                if nom == val[0]:
                     return key
             return 'err'
     varname1D = staticmethod(varname1D)
@@ -466,9 +464,9 @@ if __name__ == "__main__":
     parser.add_argument('--numeric', help="Trace sur les couches numeriques plutot que sur les couches reelles pour --plot (incompatible avec le trace du type de grains", dest='numeric', action="store_true")
     args = parser.parse_args()
     real_layers = not args.numeric
-    
+
     # Lecture des fichiers PRO
-    if(len(args.ncfile)==1):
+    if(len(args.ncfile) == 1):
         pro = ProReader(ncfile=args.ncfile[0], point=args.point)
     else:
         pro = []
@@ -479,35 +477,35 @@ if __name__ == "__main__":
     # Trace plot
     if(args.plot):
         for elem in args.plot:
-            if ProReader.varname(elem)=='err':
+            if ProReader.varname(elem) == 'err':
                 print "Erreur dans le nom de variable %s" % elem
                 exit(3)
-            if ProReader.varname(elem)=='grain':
-                real_layers=True
+            if ProReader.varname(elem) == 'grain':
+                real_layers = True
         length = len(args.plot)
-        if(length==0):
+        if(length == 0):
             fig1, ax1 = plt.subplots(1, 1, sharex=True, sharey=True)
             pro.plot(ax1, ProReader.dico.keys()[0], b=args.begin, e=args.end, real_layers=real_layers)
-        elif(length==1):
+        elif(length == 1):
             fig1, ax1 = plt.subplots(1, 1, sharex=True, sharey=True)
             pro.plot(ax1, args.plot[0], b=args.begin, e=args.end, real_layers=real_layers)
-        elif(length==2):    
+        elif(length == 2):
             fig1, (ax11, ax12) = plt.subplots(2, 1, sharex=True, sharey=True)
             pro.plot(ax11, args.plot[0], b=args.begin, e=args.end, real_layers=real_layers)
             pro.plot(ax12, args.plot[1], b=args.begin, e=args.end, real_layers=real_layers)
-        elif(length==3):
+        elif(length == 3):
             fig1, ((ax11, ax12), (ax13, ax14)) = plt.subplots(2, 2, sharex=True, sharey=True)
             pro.plot(ax11, args.plot[0], b=args.begin, e=args.end, real_layers=real_layers)
             pro.plot(ax12, args.plot[0], b=args.begin, e=args.end, real_layers=real_layers)
             pro.plot(ax13, args.plot[1], b=args.begin, e=args.end, real_layers=real_layers)
             pro.plot(ax14, args.plot[2], b=args.begin, e=args.end, real_layers=real_layers)
-        elif(length==4):
+        elif(length == 4):
             fig1, ((ax11, ax12), (ax13, ax14)) = plt.subplots(2, 2, sharex=True, sharey=True)
             pro.plot(ax11, args.plot[0], b=args.begin, e=args.end, real_layers=real_layers)
             pro.plot(ax12, args.plot[1], b=args.begin, e=args.end, real_layers=real_layers)
             pro.plot(ax13, args.plot[2], b=args.begin, e=args.end, real_layers=real_layers)
             pro.plot(ax14, args.plot[3], b=args.begin, e=args.end, real_layers=real_layers)
-        elif(length==5):
+        elif(length == 5):
             fig1, ((ax11, ax12, ax13), (ax14, ax15, ax16)) = plt.subplots(2, 3, sharex=True, sharey=True)
             pro.plot(ax11, args.plot[0], b=args.begin, e=args.end, real_layers=real_layers)
             pro.plot(ax12, args.plot[0], b=args.begin, e=args.end, real_layers=real_layers)
@@ -515,7 +513,7 @@ if __name__ == "__main__":
             pro.plot(ax14, args.plot[2], b=args.begin, e=args.end, real_layers=real_layers)
             pro.plot(ax15, args.plot[3], b=args.begin, e=args.end, real_layers=real_layers)
             pro.plot(ax16, args.plot[4], b=args.begin, e=args.end, real_layers=real_layers)
-        elif(length>=6):
+        elif(length >= 6):
             fig1, ((ax11, ax12, ax13), (ax14, ax15, ax16)) = plt.subplots(2, 3, sharex=True, sharey=True)
             pro.plot(ax11, args.plot[0], b=args.begin, e=args.end, real_layers=real_layers)
             pro.plot(ax12, args.plot[1], b=args.begin, e=args.end, real_layers=real_layers)
@@ -526,37 +524,37 @@ if __name__ == "__main__":
 
         if(args.title):
             fig1.suptitle(args.title, fontsize=14)
-            
+
     # Trace plot 1D
     if(args.plot1D):
         for elem in args.plot1D:
-            if ProReader.varname1D(elem)=='err':
+            if ProReader.varname1D(elem) == 'err':
                 print "Erreur dans le nom de variable %s" % elem
                 exit(3)
         length = len(args.plot1D)
-        if(length==0):
+        if(length == 0):
             fig1, ax1 = plt.subplots(1, 1, sharex=True, sharey=False)
             pro.plot1D(ax1, ProReader.dico1D.keys()[0], b=args.begin, e=args.end)
-        elif(length==1):
+        elif(length == 1):
             fig1, ax1 = plt.subplots(1, 1, sharex=True, sharey=False)
             pro.plot1D(ax1, args.plot1D[0], b=args.begin, e=args.end)
-        elif(length==2):    
+        elif(length == 2):
             fig1, (ax11, ax12) = plt.subplots(2, 1, sharex=True, sharey=False)
             pro.plot1D(ax11, args.plot1D[0], b=args.begin, e=args.end)
             pro.plot1D(ax12, args.plot1D[1], b=args.begin, e=args.end)
-        elif(length==3):
+        elif(length == 3):
             fig1, ((ax11, ax12), (ax13, ax14)) = plt.subplots(2, 2, sharex=True, sharey=False)
             pro.plot1D(ax11, args.plot1D[0], b=args.begin, e=args.end)
             pro.plot1D(ax12, args.plot1D[0], b=args.begin, e=args.end)
             pro.plot1D(ax13, args.plot1D[1], b=args.begin, e=args.end)
             pro.plot1D(ax14, args.plot1D[2], b=args.begin, e=args.end)
-        elif(length==4):
+        elif(length == 4):
             fig1, ((ax11, ax12), (ax13, ax14)) = plt.subplots(2, 2, sharex=True, sharey=False)
             pro.plot1D(ax11, args.plot1D[0], b=args.begin, e=args.end)
             pro.plot1D(ax12, args.plot1D[1], b=args.begin, e=args.end)
             pro.plot1D(ax13, args.plot1D[2], b=args.begin, e=args.end)
             pro.plot1D(ax14, args.plot1D[3], b=args.begin, e=args.end)
-        elif(length==5):
+        elif(length == 5):
             fig1, ((ax11, ax12, ax13), (ax14, ax15, ax16)) = plt.subplots(2, 3, sharex=True, sharey=False)
             pro.plot1D(ax11, args.plot1D[0], b=args.begin, e=args.end)
             pro.plot1D(ax12, args.plot1D[0], b=args.begin, e=args.end)
@@ -564,7 +562,7 @@ if __name__ == "__main__":
             pro.plot1D(ax14, args.plot1D[2], b=args.begin, e=args.end)
             pro.plot1D(ax15, args.plot1D[3], b=args.begin, e=args.end)
             pro.plot1D(ax16, args.plot1D[4], b=args.begin, e=args.end)
-        elif(length>=6):
+        elif(length >= 6):
             fig1, ((ax11, ax12, ax13), (ax14, ax15, ax16)) = plt.subplots(2, 3, sharex=True, sharey=False)
             pro.plot1D(ax11, args.plot1D[0], b=args.begin, e=args.end)
             pro.plot1D(ax12, args.plot1D[1], b=args.begin, e=args.end)
@@ -577,39 +575,39 @@ if __name__ == "__main__":
             fig1.suptitle(args.title, fontsize=14)
 
     # Trace dateplot
-    if(args.dateplot):  
+    if(args.dateplot):
         for elem in args.dateplot:
-            if ProReader.varname(elem)=='err':
+            if ProReader.varname(elem) == 'err':
                 print "Erreur dans le nom de variable %s" % elem
                 exit(3)
         length = len(args.dateplot)
-        if(length==0):
+        if(length == 0):
             fig2, ax2 = plt.subplots(1, 1, sharex=False, sharey=True)
             pro.plot_date(ax2, ProReader.dico.keys()[0], date=args.date)
             ax2.set_ylabel('Depth (m)')
-        elif(length==1):
+        elif(length == 1):
             fig2, ax2 = plt.subplots(1, 1, sharex=False, sharey=True)
             pro.plot_date(ax2, args.dateplot[0], date=args.date)
             ax2.set_ylabel('Depth (m)')
-        elif(length==2):    
+        elif(length == 2):
             fig2, (ax21, ax22) = plt.subplots(1, 2, sharex=False, sharey=True)
             pro.plot_date(ax21, args.dateplot[0], date=args.date)
             pro.plot_date(ax22, args.dateplot[1], date=args.date)
             ax21.set_ylabel('Depth (m)')
-        elif(length==3):
+        elif(length == 3):
             fig2, (ax21, ax22, ax23) = plt.subplots(1, 3, sharex=False, sharey=True)
             pro.plot_date(ax21, args.dateplot[0], date=args.date)
             pro.plot_date(ax22, args.dateplot[1], date=args.date)
             pro.plot_date(ax23, args.dateplot[2], date=args.date)
             ax21.set_ylabel('Depth (m)')
-        elif(length==4):
+        elif(length == 4):
             fig2, (ax21, ax22, ax23, ax24) = plt.subplots(1, 4, sharex=False, sharey=True)
             pro.plot_date(ax21, args.dateplot[0], date=args.date)
             pro.plot_date(ax22, args.dateplot[1], date=args.date)
             pro.plot_date(ax23, args.dateplot[2], date=args.date)
             pro.plot_date(ax24, args.dateplot[3], date=args.date)
             ax21.set_ylabel('Depth (m)')
-        elif(length==5):
+        elif(length == 5):
             fig2, ((ax21, ax22, ax23), (ax24, ax25, ax26)) = plt.subplots(2, 3, sharex=False, sharey=True)
             pro.plot_date(ax21, args.dateplot[0], date=args.date)
             pro.plot_date(ax22, args.dateplot[0], date=args.date)
@@ -619,7 +617,7 @@ if __name__ == "__main__":
             pro.plot_date(ax26, args.dateplot[4], date=args.date)
             ax21.set_ylabel('Depth (m)')
             ax24.set_ylabel('Depth (m)')
-        elif(length>=6):
+        elif(length >= 6):
             fig2, ((ax21, ax22, ax23), (ax24, ax25, ax26)) = plt.subplots(2, 3, sharex=False, sharey=True)
             pro.plot_date(ax21, args.dateplot[0], date=args.date)
             pro.plot_date(ax22, args.dateplot[1], date=args.date)
@@ -635,4 +633,3 @@ if __name__ == "__main__":
 
     if(args.plot or args.plot1D or args.dateplot):
         plt.show()
-    
