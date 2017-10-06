@@ -66,7 +66,9 @@ class prep_tomodify(object):
         year, yearnc = self.prepfile.read(self.dict_prep['year'], needmodif=True)
         month, monthnc = self.prepfile.read(self.dict_prep['month'], needmodif=True)
         day, daync = self.prepfile.read(self.dict_prep['day'], needmodif=True)
-        seconds,secondsnc = self.prepfile.read(self.dict_prep['time'], needmodif=True)
+        seconds, secondsnc = self.prepfile.read(self.dict_prep['time'], needmodif=True)
+
+        del year, month, day, seconds
 
         yearnc[:] = newdate.year
         monthnc[:] = newdate.month

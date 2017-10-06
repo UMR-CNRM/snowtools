@@ -84,6 +84,16 @@ class VarWriteException(Exception):
             "Shape of the variable in the file: " + str(self.varfileshape)
 
 
+class GeometryException(Exception):
+    def __init__(self, altmin, altmax):
+        self.altmin = altmin
+        self.altmax = altmax
+
+    def __str__(self):
+        return "The provided forcing file does not contain any point corresponding to your requirements." + \
+               "\n Elevation range in the file: " + str(self.altmin) + " - " + str(self.altmax)
+
+
 class ModuleImportException(Exception):
 
     def __init__(self, module, message=""):

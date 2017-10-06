@@ -24,7 +24,7 @@ class prosimu():
                     raise FileNameException(fichier)
 
                 else:
-                    tempdataset = netCDF4.Dataset(fichier, "a", format=ncformat)
+                    tempdataset = netCDF4.Dataset(fichier, "a")
                     tempdataset.variables["time"].calendar = "standard"
                     tempdataset.close()
 
@@ -37,11 +37,17 @@ class prosimu():
             self.path = path
             self.mfile = 0
             try:
-                self.dataset = netCDF4.Dataset(path, openmode, format=ncformat)
+                if openmode == "w":
+                    self.dataset = netCDF4.Dataset(path, openmode, format=ncformat)
+                else:
+                    self.dataset = netCDF4.Dataset(path, openmode)
             except:
                 raise FileOpenException(path)
         else:
             raise FileNameException(path)
+
+    def format(self):
+        return self.dataset.data_model
 
     def listdim(self):
         return self.dataset.dimensions.copy()

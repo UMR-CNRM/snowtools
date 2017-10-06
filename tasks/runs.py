@@ -17,7 +17,8 @@ from tools.change_prep import prep_tomodify
 from tools.update_namelist import update_surfex_namelist
 from tools.execute import callSurfexOrDie
 from utils.resources import get_file_period, get_file_date, get_file_const, save_file_period, save_file_date, save_file_const,\
-    get_file_const_or_crash
+    get_file_const_or_crash, ldd
+from utils.prosimu import prosimu
 from utils.FileException import DirFileException
 
 
@@ -33,6 +34,9 @@ class surfexrun(object):
         # Convert arguments in attributes
         for var in "datebegin", "dateend", "forcingpath", "diroutput", "namelist", "execdir", "threshold", "geolist":
             setattr(self, var, locals()[var])
+
+        mavariable = 12
+        mavariable = [mavariable, 8, 10, 12]
 
         self.dateforcbegin = datebegin
         self.dateforcend = dateend
@@ -60,11 +64,17 @@ class surfexrun(object):
             self.nproc = 40
             self.moderun = "MPI"
         else:
-            self.moderun = moderun
-            if moderun == "MPIRUN":
+            if "MPIAUTO" in os.readlink(self.execdir + "/OFFLINE"):
+                self.moderun = "MPIRUN"
+            else:
+                self.moderun = moderun
+
+            if self.moderun == "MPIRUN":
                 self.nproc = 8
             else:
                 self.nproc = 1
+
+        print "Type of run: " + self.moderun + " Number of processes " + str(self.nproc)
 
     def create_env(self):
         """Create working directory and directories to save outputs"""
@@ -141,6 +151,13 @@ class surfexrun(object):
     def get_forcing(self):
         ''' Look for a FORCING file including the starting date'''
         self.dateforcbegin, self.dateforcend = get_file_period("FORCING", self.forcingpath, self.datebegin, self.dateend)
+
+        f = prosimu("FORCING.nc")
+        print "FORMAT OF FORCING NETCDF FILE: " + f.format()
+        if f.format() != "NETCDF3_CLASSIC":
+            print "Check consistency with your SURFEX compilation (netcdf4 library required)."
+            print ldd(self.execdir + "/OFFLINE")
+        f.close()
 
     def get_or_run_pgd(self):
         ''' Look for a PGD file to configure the simulation or run PGD and save it'''

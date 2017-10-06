@@ -22,17 +22,21 @@ def callSystemOrDie(commande, errorcode=None):
 
 
 def callSurfexOrDie(commande, moderun="NORMAL", nproc=1, errorcode=None):
+
+    if ("PGD" in commande or "PREP" in commande) and moderun in ["MPI", "MPIRUN"]:
+        moderun = "MPISINGLE"
+
     if moderun in ["MPI", "MPIRUN"]:
-        if os.environ["MODERUN"] == "MPIRUN":
-            callSystemOrDie("mpirun -np " + nproc + " " + commande, errorcode=errorcode)
+        if moderun == "MPIRUN":
+            callSystemOrDie("mpirun -np " + str(nproc) + " " + commande, errorcode=errorcode)
         else:
             if "SLURM_NODES" in os.environ.keys():
-                callSystemOrDie("srun --nodes=" + os.environ["SLURM_NNODES"] + " --ntasks=" + nproc + " " + commande, errorcode=errorcode)
+                callSystemOrDie("srun --nodes=" + os.environ["SLURM_NNODES"] + " --ntasks=" + str(nproc) + " " + commande, errorcode=errorcode)
             else:
-                callSystemOrDie("srun --ntasks=" + nproc + " " + commande, errorcode=errorcode)
+                callSystemOrDie("srun --ntasks=" + str(nproc) + " " + commande, errorcode=errorcode)
 
     elif moderun == "MPISINGLE":
-        nproc = "1"
-        callSystemOrDie("mpirun -np " + nproc + " " + commande, errorcode=errorcode)
+        nproc = 1
+        callSystemOrDie("mpirun -np " + str(nproc) + " " + commande, errorcode=errorcode)
     else:
         callSystemOrDie(commande, errorcode=errorcode)

@@ -17,17 +17,12 @@ import six
 from utils.sun import sun
 from utils.prosimu import prosimu
 from utils.infomassifs import infomassifs
-from utils.FileException import FileNameException, DirNameException, VarWriteException
+from utils.FileException import FileNameException, DirNameException, VarWriteException, GeometryException
 
 
 class forcinput_tomodify:
     def __init__(self, forcin, forcout, *args, **kwargs):
         '''Generic method to open an initial forcing file to read and to create a modified forcing file'''
-
-        if 'forcenetcdf4' in kwargs.keys():
-            forcenetcdf4 = kwargs['forcenetcdf4']
-        else:
-            forcenetcdf4 = False
 
         if type(forcin) is int:
             forcin = str(forcin)
@@ -43,10 +38,7 @@ class forcinput_tomodify:
         init_forcing_file = prosimu(forcin)
         self.filename = forcin
 
-        if forcenetcdf4:
-            new_forcing_file = netCDF4.Dataset(forcout, "w", format='NETCDF4_CLASSIC')
-        else:
-            new_forcing_file = netCDF4.Dataset(forcout, "w", format='NETCDF3_CLASSIC')
+        new_forcing_file = netCDF4.Dataset(forcout, "w", format=init_forcing_file.format())
 
         self.modify(init_forcing_file, new_forcing_file, args)
 
@@ -79,6 +71,9 @@ class forcinput_select(forcinput_tomodify):
 
         init_alt = init_forcing_file.read("ZS", keepfillvalue=True)
         b_points_alt = (init_alt >= min_alt) * (init_alt <= max_alt)
+
+        if min_alt > np.max(init_alt) or max_alt < np.min(init_alt):
+            raise GeometryException(np.min(init_alt), np.max(init_alt))
 
         init_slopes = init_forcing_file.read("slope", keepfillvalue=True)
         init_exp = init_forcing_file.read("aspect", keepfillvalue=True)
@@ -273,6 +268,7 @@ class forcinput_select(forcinput_tomodify):
                     elif rank == 5:
                         var[:, :, :, :, :] = var_array
             except:
+                print var_array
                 raise VarWriteException(varname, var_array.shape, var.shape)
 
             # Some variables need to be saved for solar computations
