@@ -11,15 +11,18 @@ Created on 30 Aug. 2017
 from optparse import OptionParser
 import os
 import sys
-from tools.initTG import clim
 
 try:
     from utils.resources import check_snowtools_install
-except:
-    raise BaseException('Incorrect snowtools installation. Check the documentation.')
-check_snowtools_install()
+    check_snowtools_install()
+except Exception:
+    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+    print 'Incorrect snowtools installation. Check the documentation.'
+    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+    raise
 
 # Import snowtools modules
+from tools.initTG import clim
 from utils.dates import checkdateafter, check_and_convert_date
 from utils.resources import absolute_path, check_surfex_exe
 from utils.infomassifs import infomassifs

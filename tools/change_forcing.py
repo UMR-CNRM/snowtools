@@ -267,7 +267,7 @@ class forcinput_select(forcinput_tomodify):
                         var[:, :, :, :] = var_array
                     elif rank == 5:
                         var[:, :, :, :, :] = var_array
-            except:
+            except Exception:
                 print var_array
                 raise VarWriteException(varname, var_array.shape, var.shape)
 

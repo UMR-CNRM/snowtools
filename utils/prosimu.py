@@ -41,7 +41,7 @@ class prosimu():
                     self.dataset = netCDF4.Dataset(path, openmode, format=ncformat)
                 else:
                     self.dataset = netCDF4.Dataset(path, openmode)
-            except:
+            except Exception:
                 raise FileOpenException(path)
         else:
             raise FileNameException(path)
@@ -186,7 +186,7 @@ class prosimu():
                 else:
                     array = var.filled(fill_value=np.nan)
                     print "Fill data with np.nan for variable " + varname
-            except:
+            except Exception:
                 if avail_fillvalue:
                     if fill2zero:
                         array = np.where(var == fillvalue, 0, var)

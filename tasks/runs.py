@@ -70,7 +70,10 @@ class surfexrun(object):
                 self.moderun = moderun
 
             if self.moderun == "MPIRUN":
-                self.nproc = 8
+                if "NOFFLINE" in os.environ.keys():
+                    self.nproc = int(os.environ["NOFFLINE"])
+                else:
+                    self.nproc = 4
             else:
                 self.nproc = 1
 

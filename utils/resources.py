@@ -49,19 +49,29 @@ def check_surfex_exe(path):
 
 def check_snowtools_install():
     # Check installation of snowtools package
+    ValidInstall = True
+    issue = ""
     if 'SNOWTOOLS_CEN' not in os.environ.keys():
-        print "SNOWTOOLS_CEN environment variable is not defined."
+        issue += "SNOWTOOLS_CEN environment variable is not defined.\n"
+        ValidInstall = False
 
     if 'PYTHONPATH' not in os.environ.keys():
-        print "PYTHONPATH environment variable is not defined."
+        issue += "PYTHONPATH environment variable is not defined.\n"
+        ValidInstall = False
 
-    for rep in ["DATA", "tasks", "tools", "utils"]:
-        if not os.path.isdir(os.environ["SNOWTOOLS_CEN"] + "/" + rep):
-            print "There is not a correct install of snowtools_git in directory " + os.environ["SNOWTOOLS_CEN"]
-            print "missing directory:" + rep
+    if ValidInstall:
+        for rep in ["DATA", "tasks", "tools", "utils"]:
+            if not os.path.isdir(os.environ["SNOWTOOLS_CEN"] + "/" + rep):
+                issue += "There is not a correct install of snowtools_git in directory " + os.environ["SNOWTOOLS_CEN"] + "\n"
+                issue += "missing directory:" + rep + "\n"
+                ValidInstall = False
+    if ValidInstall:
+        if not os.environ["SNOWTOOLS_CEN"] in os.environ["PYTHONPATH"]:
+            issue += "PYTHONPATH environment variable must contain" + os.environ["SNOWTOOLS_CEN"] + "\n"
+            ValidInstall = False
 
-    if not os.environ["SNOWTOOLS_CEN"] in os.environ["PYTHONPATH"]:
-        print "PYTHONPATH environment variable must contain" + os.environ["SNOWTOOLS_CEN"]
+    if not ValidInstall:
+        raise Exception(issue + "Not a valid snowtools install !")
 
 
 def save_file_const(path, name, newname=None, copy=False):
