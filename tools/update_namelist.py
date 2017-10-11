@@ -22,13 +22,26 @@ class update_surfex_namelist(object):
 
     def __init__(self, datebegin, forcing="FORCING.nc", dateend=None, updateloc=True):
         """Call the subroutines for updating the SURFEX namelists. Updateloc is only optional."""
-        dic = self.update_dates(datebegin)
-        if updateloc:
-            dic = self.updates_loc(forcing, dic)
 
-        self.update_forcingdates(datebegin, dateend, dic=dic)
+        dic = self.update_mandatory_settings()
+
+        dic = self.update_dates(datebegin, dic=dic)
+        if updateloc:
+            dic = self.updates_loc(forcing, dic=dic)
+
+        dic = self.update_forcingdates(datebegin, dateend, dic=dic)
 
         self.modify_namelist(dic)
+
+    def update_mandatory_settings(self, dic={}):
+        """Force some options whose values are mandatory to be compatible with snowtools_git"""
+
+        dic["CSURF_FILETYPE"] = ("NAM_IO_OFFLINE", "        CSURF_FILETYPE = 'NC '")
+        dic["CFORCING_FILETYPE"] = ("NAM_IO_OFFLINE", "        CFORCING_FILETYPE = 'NETCDF'")
+        dic["CTIMESERIES_FILETYPE"] = ("NAM_IO_OFFLINE", "        CTIMESERIES_FILETYPE = 'NETCDF'")
+        dic["LRESTART"] = ("NAM_IO_OFFLINE", "        LRESTART = T")
+
+        return dic
 
     def update_dates(self, datebegin, dic={}):
         """Dictionnary describing the lines to modify in SURFEX namelist for defining the beginning of the simulation."""
@@ -59,6 +72,8 @@ class update_surfex_namelist(object):
             dic["LDELAYEDSTART_NC"] = ("NAM_IO_OFFLINE", "    LDELAYEDSTART_NC = T")
         if dateend < dateforcend:
             dic["NDATESTOP"] = ("NAM_IO_OFFLINE", "    NDATESTOP = " + dateend.strftime("%Y, %m, %d, ") + str(dateend.hour * 3600) )
+
+        return dic
 
     def updates_loc(self, forcing="FORCING.nc", dic={}):
         """Dictionnary describing the lines to modify in SURFEX namelist for defining the coordinates of the simulation points."""
