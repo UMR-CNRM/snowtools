@@ -87,7 +87,7 @@ def clim(options):
     else:
         geolist = None
 
-    list_forcing = get_meteo_for_clim(options.forcing, options.datedeb, options.datefin, geolist)
+    list_forcing = get_meteo_for_clim(options.forcing, options.datedeb, options.datefin, geolist, list_forcing=[])
     generate_clim(list_forcing)
 
     save_file_const(options.diroutput + "/prep", "init_TG.nc")

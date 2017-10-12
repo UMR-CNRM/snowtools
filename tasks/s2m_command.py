@@ -14,8 +14,12 @@ import sys
 
 try:
     from utils.resources import check_snowtools_install
+    from utils.resources import InstallException
     check_snowtools_install()
-except Exception:
+    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+    print 'Snowtools installation has been successfully checked.'
+    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+except ImportError or InstallException:
     print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
     print 'Incorrect snowtools installation. Check the documentation.'
     print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
@@ -141,10 +145,10 @@ def parse_options(arguments):
     return options
 
 
-if __name__ == "__main__":
+def execute(args):
 
     # Read the options provided by the user
-    options = parse_options(sys.argv)
+    options = parse_options(args)
 
     # Check option values and convert them in types suited for defining a run configuration
     options = check_and_convert_options(options)
@@ -169,3 +173,8 @@ if __name__ == "__main__":
 
         # Execute the run
         run.run()
+
+
+if __name__ == "__main__":
+    print sys.argv
+    execute(sys.argv)

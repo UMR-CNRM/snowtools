@@ -47,6 +47,14 @@ def check_surfex_exe(path):
     return path
 
 
+class InstallException(Exception):
+    def __init__(self, issue):
+        self.issue = issue
+
+    def __str__(self):
+        return self.issue + "Not a valid snowtools install !"
+
+
 def check_snowtools_install():
     # Check installation of snowtools package
     ValidInstall = True
@@ -71,7 +79,7 @@ def check_snowtools_install():
             ValidInstall = False
 
     if not ValidInstall:
-        raise Exception(issue + "Not a valid snowtools install !")
+        raise InstallException(issue)
 
 
 def save_file_const(path, name, newname=None, copy=False):
