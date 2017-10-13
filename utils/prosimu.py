@@ -47,7 +47,11 @@ class prosimu():
             raise FileNameException(path)
 
     def format(self):
-        return self.dataset.data_model
+        try:
+            return self.dataset.data_model
+        except AttributeError:
+            print "WARNING : old version of netCDF4 module. We cannot check the format of your forcing file. We assume that you provide a NETCDF3_CLASSIC file."
+            return 'NETCDF3_CLASSIC'
 
     def listdim(self):
         return self.dataset.dimensions.copy()
