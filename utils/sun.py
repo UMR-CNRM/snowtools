@@ -7,8 +7,10 @@ from utils.FileException import ModuleImportException
 
 try:
     from scipy.interpolate import interp1d
-except:
-    raise ModuleImportException("interp1d from scipy.interpolate", "On profix and beaufix: module load gcc python openblas")
+    import_scipy = True
+except ImportError:
+    import_scipy = False
+    print("WARNING : interp1d from scipy.interpolate not loaded", "On profix and beaufix: module load gcc python openblas")
 
 
 class sun():
@@ -83,7 +85,7 @@ class sun():
 
         slope, aspect = slope * UDG2RD, aspect * UDG2RD
 
-        # Time equation
+        # Time equationraise ModuleImportException("
         ZDT = VSOL1 * np.sin((VSOL2 * (VSOL3 * j - VSOL4)) * UDG2RD)\
             - VSOL5 * np.sin((VSOL3 * j - VSOL6) * UDG2RD)
 
@@ -188,6 +190,9 @@ class sun():
         # Matthieu 2014/09/16 : réécriture parce que les masques changent d'un point à l'autre
 
         if list_list_mask is not None:
+            if not import_scipy:
+                raise ModuleImportException("Module interp1d from scipy.interpolate has not been loaded", "On profix and beaufix: module load gcc python openblas")
+
             ZPSI1 = azimuth * URD2DG  # solar azimuth, 0. is North
             ZMASK = np.zeros_like(ZPSI1)
 
