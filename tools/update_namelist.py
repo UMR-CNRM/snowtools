@@ -66,7 +66,10 @@ class update_surfex_namelist(object):
         dateforcend = timeforc[-1]
 
         checkdateafter(datebegin, dateforcbegin)
-        checkdatebefore(dateend, dateforcend)
+        if dateend:
+            checkdatebefore(dateend, dateforcend)
+        else:
+            dateend = dateforcend
 
         if datebegin > dateforcbegin or dateend < dateforcend:
             dic["LDELAYEDSTART_NC"] = ("NAM_IO_OFFLINE", "    LDELAYEDSTART_NC = T")
