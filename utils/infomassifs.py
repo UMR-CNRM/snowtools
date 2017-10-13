@@ -10,6 +10,33 @@ from utils.FileException import FileNameException, FileParseException
 # Most routines are extracted from SCMtools in snowtools 1 (JM Willemet, M Lafaysse)
 
 
+class MassifError(Exception):
+
+    def __init__(self, massif):
+        self.massif = massif
+
+    def __str__(self):
+        return "Incorrect massif number :" + str(self.massif)
+
+
+class AspectError(Exception):
+    def __str__(self):
+        return "You must choose a number of aspect classes of 2, 4, or 8, or express one aspect in degrees (0,45,90,135,180,225,270,315)"
+
+
+class ElevationError(Exception):
+    def __str__(self):
+        return "The elevation is an integer in meters."
+
+
+class DomainError(Exception):
+    def __init__(self, area):
+        self.area = area
+
+    def __str__(self):
+        return "Le domaine " + self.area + " n est pas connu de l application."
+
+
 class infomassifs():
 
     def __init__(self):
@@ -140,8 +167,10 @@ class infomassifs():
             try:
                 massifs = [int(region)]
                 assert massifs in self.getListMassif_of_region("all")
-            except:
+            except ValueError:
                 massifs = self.getListMassif_of_region(region)
+            except AssertionError:
+                raise MassifError(massifs)
         else:
             massifs = self.getListMassif_of_region("all")
         return massifs
@@ -153,8 +182,8 @@ class infomassifs():
             try:
                 nclasses = int(nclasses)
                 assert nclasses == 2 or nclasses == 4 or nclasses == 8 or nclasses == 3 or nclasses % 45 == 0
-            except:
-                raise BaseException("Vous devez choisir un nombre de classes d'exposition de 2, 4, ou 8, ou bien exprimer l'exposition en degrés (0,45,90,135,180,225,270,315")
+            except ValueError or AssertionError:
+                raise AspectError
 
         if liste_pentes == ["0"]:
             liste_expo = [-1]
@@ -172,8 +201,12 @@ class infomassifs():
         try:
             elevation = float(elevation)
             assert elevation >= 0 and elevation <= 5100
-        except:
-            raise BaseException("The elevation is an integer in meters")
+        except AssertionError:
+            print "The provided elevation is not in the range of allowed elevations."
+            raise ElevationError
+        except ValueError:
+            raise ElevationError
+
         return elevation
 
     def check_and_convert_min_max_elevation(self, altmin, altmax):
@@ -195,10 +228,9 @@ class infomassifs():
 
         try:
             listMassif = self.dicArea[area]
-        except:
+        except KeyError:
             listMassif = []
-            raise BaseException("""le domaine " + area + " n est pas connu de l application"
-            Vérifiez le domaine ou mettre a jour SCMtools.""")
+            raise DomainError(area)
 
         return listMassif
 
@@ -206,10 +238,9 @@ class infomassifs():
 
         try:
             listPostes = self.dicPostesArea[area]
-        except:
+        except KeyError:
             listPostes = []
-            raise BaseException("""le domaine " + area + " n est pas connu de l application"
-            Vérifiez le domaine ou mettre a jour SCMtools.""")
+            raise DomainError(area)
 
         return listPostes
 
