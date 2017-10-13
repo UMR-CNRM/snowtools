@@ -66,11 +66,17 @@ class forcinput_select(forcinput_tomodify):
         list_exp_degres = list_exp[:]  # A copy is necessary to not modify this value in the calling module for next iteration
         liste_pentes_int = map(int, liste_pentes)
 
-        init_massif_nb_sop = init_forcing_file.read("massif_number", keepfillvalue=True)
-        b_points_massif = np.in1d(init_massif_nb_sop, list_massif_number)
+        listvar = init_forcing_file.listvar()
 
         init_alt = init_forcing_file.read("ZS", keepfillvalue=True)
         b_points_alt = (init_alt >= min_alt) * (init_alt <= max_alt)
+
+        if 'massif_number' in listvar:
+            init_massif_nb_sop = init_forcing_file.read("massif_number", keepfillvalue=True)
+            b_points_massif = np.in1d(init_massif_nb_sop, list_massif_number)
+        else:
+#             print list_massif_number
+            b_points_massif = b_points_alt[:]
 
         if min_alt > np.max(init_alt) or max_alt < np.min(init_alt):
             raise GeometryException(np.min(init_alt), np.max(init_alt))
@@ -174,7 +180,7 @@ class forcinput_select(forcinput_tomodify):
 
         savevar = {}
 
-        listvar = init_forcing_file.listvar()
+
 
         for varname in listvar:
 
