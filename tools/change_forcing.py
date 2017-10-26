@@ -75,7 +75,6 @@ class forcinput_select(forcinput_tomodify):
             init_massif_nb_sop = init_forcing_file.read("massif_number", keepfillvalue=True)
             b_points_massif = np.in1d(init_massif_nb_sop, list_massif_number)
         else:
-#             print list_massif_number
             b_points_massif = b_points_alt[:]
 
         if min_alt > np.max(init_alt) or max_alt < np.min(init_alt):
@@ -179,8 +178,6 @@ class forcinput_select(forcinput_tomodify):
                 new_forcing_file.createDimension(dimname, len(dim))
 
         savevar = {}
-
-
 
         for varname in listvar:
 

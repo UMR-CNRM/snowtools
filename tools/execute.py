@@ -7,22 +7,31 @@ Created on 9 oct. 2012
 '''
 
 import os
-import sys
+
+
+class SystemException(Exception):
+
+    def __init__(self, status, command, errorcode=None):
+        self.status = status
+        self.command = command
+
+    def __str__(self):
+        return "The following command fails with error code " + str(self.status) + ":\n" + self.command
 
 
 def callSystemOrDie(commande, errorcode=None):
+    '''Execute a system command and kill the current program if it fails.'''
+
     status = os.system(commande)
     if status != 0:
-        if type(errorcode) is int:
-            print("The following command fails with error code " + str(status) + ":\n" + commande)
-            sys.exit(errorcode)
-        else:
-            raise BaseException("The following command fails with error code " + str(status) + ":\n" + commande)
+        raise SystemException(status, commande)
     return status
 
 
 def callSurfexOrDie(commande, moderun="NORMAL", nproc=1, errorcode=None):
+    '''Execute a SURFEX binary'''
 
+    os.environ["OMP_NUM_THREADS"] = "1"
     if ("PGD" in commande or "PREP" in commande) and moderun in ["MPI", "MPIRUN"]:
         moderun = "MPISINGLE"
 

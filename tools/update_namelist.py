@@ -39,6 +39,8 @@ class update_surfex_namelist(object):
         dic["CSURF_FILETYPE"] = ("NAM_IO_OFFLINE", "        CSURF_FILETYPE = 'NC '")
         dic["CFORCING_FILETYPE"] = ("NAM_IO_OFFLINE", "        CFORCING_FILETYPE = 'NETCDF'")
         dic["CTIMESERIES_FILETYPE"] = ("NAM_IO_OFFLINE", "        CTIMESERIES_FILETYPE = 'NETCDF'")
+        dic["LWRITE_COORD"] = ("NAM_IO_OFFLINE", "        LWRITE_COORD=F")
+        dic["LWRITE_TOPO"] = ("NAM_IO_OFFLINE", "        LWRITE_TOPO=T")
         dic["LRESTART"] = ("NAM_IO_OFFLINE", "        LRESTART = T")
 
         return dic
