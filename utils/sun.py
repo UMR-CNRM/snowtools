@@ -85,7 +85,7 @@ class sun():
 
         slope, aspect = slope * UDG2RD, aspect * UDG2RD
 
-        # Time equationraise ModuleImportException("
+        # Time equation
         ZDT = VSOL1 * np.sin((VSOL2 * (VSOL3 * j - VSOL4)) * UDG2RD)\
             - VSOL5 * np.sin((VSOL3 * j - VSOL6) * UDG2RD)
 
