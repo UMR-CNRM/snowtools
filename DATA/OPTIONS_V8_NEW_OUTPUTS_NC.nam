@@ -165,7 +165,8 @@
                        CTIMESERIES_FILETYPE = 'NETCDF'   ,
                        LRESTART = T                      ,
                        XTSTEP_OUTPUT = 21600.            ,
-                       XTSTEP_SURF = 900.
+                       XTSTEP_SURF = 900.                ,
+                       LWRITE_COORD = T
 /
 &NAM_DIAG_SURFn        LSURF_BUDGET = T      ,
                        LRAD_BUDGET  = T      , 
@@ -212,7 +213,7 @@
   LSNOWDIMNC = T
   LRESETCUMUL = T
   LSELECT= T
-  CSELECT='time','TG1','WG1','WGI1','TG4','ASNOW_VEG',
+  CSELECT='time','ZS','aspect','slope','massif_num','TG1','WG1','WGI1','TG4','ASNOW_VEG',
 'WSN_VEG','SNOWRO','SNOWHEAT','SNOWAGE','SNOWTEMP','SNOWGRAN1','SNOWGRAN2','SNOWHIST',
 'RN_ISBA','H_ISBA','LE_ISBA','GFLUX_ISBA','DRAIN_ISBA','RUNOFF_ISBA','TALB_ISBA','TS_ISBA',
 'WSN_T_ISBA','DSN_T_ISBA','EVAP_ISBA','SNOMLT_ISBA',
