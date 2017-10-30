@@ -3,14 +3,18 @@
 
 import numpy as np
 import math
-from utils.FileException import ModuleImportException
 
-try:
-    from scipy.interpolate import interp1d
-    import_scipy = True
-except ImportError:
-    import_scipy = False
-    print("WARNING : interp1d from scipy.interpolate not loaded", "On profix and beaufix: module load gcc python openblas")
+
+def interp1d(x, y, tab):
+    '''Return the linear interpolation of y for the tab values of the x coordinate'''
+    '''Method designed to avoid the use of scipy.interpolate (avoid the dependency to an external module and environment problems on Bull)'''
+    ind_after = np.searchsorted(x, tab)
+    ind_before = ind_after - 1
+    x_before = np.take(x, ind_before)
+    x_after = np.take(x, ind_after)
+    y_before = np.take(y, ind_before)
+    y_after = np.take(y, ind_after)
+    return ((x_after - tab) * y_before + (tab - x_before) * y_after) / ((x_after - x_before) * 1.)
 
 
 class sun():
@@ -190,15 +194,12 @@ class sun():
         # Matthieu 2014/09/16 : réécriture parce que les masques changent d'un point à l'autre
 
         if list_list_mask is not None:
-            if not import_scipy:
-                raise ModuleImportException("Module interp1d from scipy.interpolate has not been loaded", "On profix and beaufix: module load gcc python openblas")
 
             ZPSI1 = azimuth * URD2DG  # solar azimuth, 0. is North
             ZMASK = np.zeros_like(ZPSI1)
 
             for i, list_azim in enumerate(list_list_azim):
-                f = interp1d(list_azim, list_list_mask[i])
-                ZMASK[:, i] = f(ZPSI1[:, i])
+                ZMASK[:, i] = interp1d(list_azim, list_list_mask[i], ZPSI1[:, i])
 
             ZRSIP = np.where(ZMASK > ZGAMMA * URD2DG, 0., ZRSIP)  # set to zero direct radiation values when solar angle is below mask angle (computed as f(ZPSI1))
 
