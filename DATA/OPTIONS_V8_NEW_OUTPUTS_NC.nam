@@ -1,4 +1,3 @@
-/
 &NAM_ISBA              XUNIF_CLAY    = 0.30          ,
                        XUNIF_SAND    = 0.60          ,
 	               XUNIF_RUNOFFB = 0.5           ,
@@ -116,7 +115,7 @@
                        XUNIF_ROOT_LIN = 0.05
                        XUNIF_ROOT_EXTINCTION = 0.943
 /
-&NAM_FRAC              LECOCLIMAP = F,
+&NAM_FRAC              LECOCLIMAP = .FALSE.,
                        XUNIF_SEA    = 0.,
                        XUNIF_WATER  = 0.,
                        XUNIF_TOWN   = 0.,
@@ -137,7 +136,7 @@
                        CWATER  = 'WATFLX' 
 /
 &NAM_ZS
-    LIMP_ZS = T  ,
+    LIMP_ZS = .TRUE.  ,
     YZSFILETYPE = 'NETCDF' ,
     YZS = 'FORCING.nc'
     YSLOPE = 'FORCING.nc'
@@ -157,44 +156,43 @@
 /
 &NAM_PREP_ISBA_SNOW    CSNOW = 'CRO',
                        NSNOW_LAYER = 50, 
-                       LSNOW_FRAC_TOT = T
+                       LSNOW_FRAC_TOT = .TRUE.
 /
-&NAM_IO_OFFLINE        LPRINT  = T                       ,
+&NAM_IO_OFFLINE        LPRINT  = .TRUE.,                       
                        CFORCING_FILETYPE =    'NETCDF'   ,
                        CSURF_FILETYPE =       'NC '   ,
                        CTIMESERIES_FILETYPE = 'NETCDF'   ,
-                       LRESTART = T                      ,
+                       LRESTART = .TRUE.                     ,
                        XTSTEP_OUTPUT = 21600.            ,
                        XTSTEP_SURF = 900.                ,
-                       LWRITE_COORD = T
+                       LWRITE_COORD = .TRUE.
 /
-&NAM_DIAG_SURFn        LSURF_BUDGET = T      ,
-                       LRAD_BUDGET  = T      , 
+&NAM_DIAG_SURFn        LSURF_BUDGET = .TRUE. ,
+                       LRAD_BUDGET  = .TRUE. , 
                        N2M          = 0      ,
-                       LCOEF        = F      ,
-                       LSURF_VARS   = F      , 
-                       LSURF_BUDGETC = T
+                       LCOEF        = .FALSE. ,
+                       LSURF_VARS   = .FALSE. , 
+                       LSURF_BUDGETC = .TRUE.
 /
-&NAM_DIAG_SURF_ATMn    LFRAC        = F 
+&NAM_DIAG_SURF_ATMn    LFRAC        = .FALSE. 
 /
-&NAM_DIAG_ISBAn        LPGD              = T , 
-                       LSURF_EVAP_BUDGET = T , 
-                       LSURF_MISC_BUDGET = T ,
-                       LPROSNOW          = T ,
-                       LVOLUMETRIC_SNOWLIQ = T,
-                       LWATER_BUDGET = T
+&NAM_DIAG_ISBAn        LPGD              = .TRUE. , 
+                       LSURF_EVAP_BUDGET = .TRUE. , 
+                       LSURF_MISC_BUDGET = .TRUE. ,
+                       LPROSNOW          = .TRUE. ,
+                       LVOLUMETRIC_SNOWLIQ = .TRUE.,
+                       LWATER_BUDGET = .TRUE.
 /
-&NAM_DIAG_TEBn         LSURF_MISC_BUDGET = F 
+&NAM_DIAG_TEBn         LSURF_MISC_BUDGET = .FALSE. 
 /
-/
-&NAM_SURF_ATM          LVERTSHIFT = F,
-                       LNOSOF = T,
-                       LSLOPE = T
+&NAM_SURF_ATM          LVERTSHIFT = .FALSE.,
+                       LNOSOF = .TRUE.,
+                       LSLOPE = .TRUE.
 /
 &NAM_ISBA_SNOWn
   CSNOWDRIFT='VI13'
-  LSNOWDRIFT_SUBLIM= F
-  LSNOW_ABS_ZENITH= F
+  LSNOWDRIFT_SUBLIM= .FALSE.
+  LSNOW_ABS_ZENITH= .FALSE.
   CSNOWMETAMO='C13'
   CSNOWRAD='B92'
 /
@@ -209,10 +207,10 @@
 /
 
 &NAM_WRITE_DIAG_SURFn
-  LPROVAR_TO_DIAG = T
-  LSNOWDIMNC = T
-  LRESETCUMUL = T
-  LSELECT= T
+  LPROVAR_TO_DIAG = .TRUE.
+  LSNOWDIMNC = .TRUE.
+  LRESETCUMUL = .TRUE.
+  LSELECT= .TRUE.
   CSELECT='time','ZS','aspect','slope','massif_num','TG1','WG1','WGI1','TG4','ASNOW_VEG',
 'WSN_VEG','SNOWRO','SNOWHEAT','SNOWAGE','SNOWTEMP','SNOWGRAN1','SNOWGRAN2','SNOWHIST',
 'RN_ISBA','H_ISBA','LE_ISBA','GFLUX_ISBA','DRAIN_ISBA','RUNOFF_ISBA','TALB_ISBA','TS_ISBA',

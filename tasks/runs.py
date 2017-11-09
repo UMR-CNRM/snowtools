@@ -14,7 +14,7 @@ import datetime
 # Snowtools modules
 from tools.change_forcing import forcinput_select
 from tools.change_prep import prep_tomodify
-from tools.update_namelist import update_surfex_namelist
+from tools.update_namelist import update_surfex_namelist_file
 from tools.execute import callSurfexOrDie
 from utils.resources import get_file_period, get_file_date, get_file_const, save_file_period, save_file_date, save_file_const,\
     get_file_const_or_crash, ldd
@@ -119,7 +119,7 @@ class surfexrun(object):
         self.modify_forcing(*self.geolist)
 
         # 3.2 Build the appropriate namelist. At second run, only temporal modif
-        update_surfex_namelist(self.datebegin, dateend=self.dateend_run, updateloc=self.updateloc)
+        update_surfex_namelist_file(self.datebegin, dateend=self.dateend_run, updateloc=self.updateloc)
 
         if firstrun:
             # 3.3 Get the PGD file or generate it

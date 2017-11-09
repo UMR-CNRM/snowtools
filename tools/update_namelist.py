@@ -8,170 +8,108 @@
 import numpy as np
 import os
 
-# For compatibility python 2 / python 3
-import six
-
 # Snowtools modules
 from utils.prosimu import prosimu
 from utils.dates import checkdatebefore, checkdateafter
 from utils.FileException import FileNameException
 
+from bronx.datagrip.namelist import NamelistParser
 
-class update_surfex_namelist(object):
-    """Class with routines to update SURFEX namelist"""
 
-    def __init__(self, datebegin, forcing="FORCING.nc", dateend=None, updateloc=True):
-        """Call the subroutines for updating the SURFEX namelists. Updateloc is only optional."""
+def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam", forcing="FORCING.nc", dateend=None, updateloc=True):
 
-        dic = self.update_mandatory_settings()
+    if not os.path.isfile(namelistfile):
+        raise FileNameException(os.getcwd() + "/OPTIONS.nam")
 
-        dic = self.update_dates(datebegin, dic=dic)
-        if updateloc:
-            dic = self.updates_loc(forcing, dic=dic)
+    os.rename(namelistfile, "OPTIONS_base.nam")
+    n = NamelistParser()
+    N = n.parse("OPTIONS_base.nam")
+    update_surfex_namelist_object(N, datebegin=datebegin, forcing=forcing, dateend=dateend, updateloc=updateloc)
+    namSURFEX = open(namelistfile, 'w')
+    namSURFEX.write(N.dumps())
+    namSURFEX.close()
 
-        dic = self.update_forcingdates(datebegin, dateend, dic=dic)
 
-        self.modify_namelist(dic)
+def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc", dateend=None, updateloc=True):
+    '''This function updates a NamelistSet object of the bronx module or a NamelistContents object of the vortex module.'''
 
-    def update_mandatory_settings(self, dic={}):
-        """Force some options whose values are mandatory to be compatible with snowtools_git"""
+    NamelistObject = update_mandatory_settings(NamelistObject)
+    NamelistObject = update_dates(NamelistObject, datebegin)
+    if updateloc:
+        NamelistObject = update_loc(NamelistObject, forcing)
+    NamelistObject = update_forcingdates(NamelistObject, datebegin, dateend, forcing=forcing)
 
-        dic["CSURF_FILETYPE"] = ("NAM_IO_OFFLINE", "        CSURF_FILETYPE = 'NC '")
-        dic["CFORCING_FILETYPE"] = ("NAM_IO_OFFLINE", "        CFORCING_FILETYPE = 'NETCDF'")
-        dic["CTIMESERIES_FILETYPE"] = ("NAM_IO_OFFLINE", "        CTIMESERIES_FILETYPE = 'NETCDF'")
-        dic["LWRITE_COORD"] = ("NAM_IO_OFFLINE", "        LWRITE_COORD=F")
-        dic["LWRITE_TOPO"] = ("NAM_IO_OFFLINE", "        LWRITE_TOPO=T")
-        dic["LRESTART"] = ("NAM_IO_OFFLINE", "        LRESTART = T")
+    return NamelistObject
 
-        return dic
 
-    def update_dates(self, datebegin, dic={}):
-        """Dictionnary describing the lines to modify in SURFEX namelist for defining the beginning of the simulation."""
-        """The values of the dictionnary are tuples: first element is the name of the namelist, second element is the field itself."""
+def update_mandatory_settings(NamelistObject):
+    '''Force some options whose values are mandatory to be compatible with snowtools_git'''
 
-        dic["NYEAR"] = ("NAM_PREP_SURF_ATM", "    NYEAR = " + str(datebegin.year))
-        dic["NMONTH"] = ("NAM_PREP_SURF_ATM", "    NMONTH = " + str(datebegin.month))
-        dic["NDAY"]  = ("NAM_PREP_SURF_ATM", "    NDAY = " + str(datebegin.day))
-        dic["XTIME"] = ("NAM_PREP_SURF_ATM", "    XTIME = " + str(datebegin.hour * 3600.))
+    NamelistObject["NAM_IO_OFFLINE"].CSURF_FILETYPE = "NC "
+    NamelistObject["NAM_IO_OFFLINE"].CFORCING_FILETYPE = "NETCDF"
+    NamelistObject["NAM_IO_OFFLINE"].CTIMESERIES_FILETYPE = "NETCDF"
+    NamelistObject["NAM_IO_OFFLINE"].LWRITE_COORD = False
+    NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = True
+    NamelistObject["NAM_IO_OFFLINE"].LRESTART = True
 
-        return dic
+    return NamelistObject
 
-    def update_forcingdates(self, datebegin, dateend, forcing="FORCING.nc", dic={}):
-        """Dictionnary describing the lines to modify in SURFEX namelist for limiting the dates to read in a FORCING file longer than the simulation."""
-        """The values of the dictionnary are tuples: first element is the name of the namelist, second element is the field itself."""
 
-        forc = prosimu(forcing)
-        timeforc = forc.readtime()
-        forc.close()
+def update_dates(NamelistObject, datebegin):
+    """Modify SURFEX namelist for defining the beginning of the simulation."""
 
-        dateforcbegin = timeforc[0]
-        dateforcend = timeforc[-1]
+    NamelistObject["NAM_PREP_SURF_ATM"].NYEAR = datebegin.year
+    NamelistObject["NAM_PREP_SURF_ATM"].NMONTH = datebegin.month
+    NamelistObject["NAM_PREP_SURF_ATM"].NDAY = datebegin.day
+    NamelistObject["NAM_PREP_SURF_ATM"].XTIME = datebegin.hour * 3600.
 
-        checkdateafter(datebegin, dateforcbegin)
-        if dateend:
-            checkdatebefore(dateend, dateforcend)
-        else:
-            dateend = dateforcend
+    return NamelistObject
 
-        if datebegin > dateforcbegin or dateend < dateforcend:
-            dic["LDELAYEDSTART_NC"] = ("NAM_IO_OFFLINE", "    LDELAYEDSTART_NC = T")
-        if dateend < dateforcend:
-            dic["NDATESTOP"] = ("NAM_IO_OFFLINE", "    NDATESTOP = " + dateend.strftime("%Y, %m, %d, ") + str(dateend.hour * 3600) )
 
-        return dic
+def update_loc(NamelistObject, forcing):
+    """modify SURFEX namelist for defining the coordinates of the simulation points."""
 
-    def updates_loc(self, forcing="FORCING.nc", dic={}):
-        """Dictionnary describing the lines to modify in SURFEX namelist for defining the coordinates of the simulation points."""
-        """The values of the dictionnary are tuples: first element is the name of the namelist, second element is the field itself."""
+    # Read coordinates in FORCING file
+    forc = prosimu(forcing)
+    latitudes1d = forc.read("LAT")
+    longitudes1d = forc.read("LON")
+    forc.close()
 
-        # Read coordinates in FORCING file
-        forc = prosimu(forcing)
-        latitudes1d = forc.read("LAT")
-        longitudes1d = forc.read("LON")
-        forc.close()
+    # Constant dlat/dlon
+    dlat1d = np.zeros_like(latitudes1d) + 0.5
+    dlon1d = np.zeros_like(longitudes1d) + 0.5
 
-        # Constant dlat/dlon
-        dlat1d = np.zeros_like(latitudes1d) + 0.5
-        dlon1d = np.zeros_like(longitudes1d) + 0.5
+    NamelistObject["NAM_LONLATVAL"].XY = list(latitudes1d)
+    NamelistObject["NAM_LONLATVAL"].XX = list(longitudes1d)
+    NamelistObject["NAM_LONLATVAL"].XDY = list(dlat1d)
+    NamelistObject["NAM_LONLATVAL"].XDX = list(dlon1d)
+    NamelistObject["NAM_LONLATVAL"].NPOINTS = len(longitudes1d)
 
-        # Strings to write in the namelist
-        dic["XY"] = ["NAM_LONLATVAL", "    XY = "]
-        dic["XX"] = ["NAM_LONLATVAL", "    XX = "]
-        dic["XDY"] = ["NAM_LONLATVAL", "    XDY = "]
-        dic["XDX"] = ["NAM_LONLATVAL", "    XDX = "]
+    return NamelistObject
 
-        for val in latitudes1d:
-            dic["XY"][1] = dic["XY"][1] + str(val) + ","
-        for val in longitudes1d:
-            dic["XX"][1] = dic["XX"][1] + str(val) + ","
-        for val in dlat1d:
-            dic["XDY"][1] = dic["XDY"][1] + str(val) + ","
-        for val in dlon1d:
-            dic["XDX"][1] = dic["XDX"][1] + str(val) + ","
 
-        for key in ["XY", "XX", "XDY", "XDX"]:
-            dic[key] = tuple(dic[key])
+def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"):
 
-        dic["NPOINTS"] = ("NAM_LONLATVAL", "    NPOINTS = " + str(len(longitudes1d)))
+    """modify SURFEX namelist for limiting the dates to read in a FORCING file longer than the simulation."""
 
-        return dic
+    forc = prosimu(forcing)
+    timeforc = forc.readtime()
+    forc.close()
 
-    def modify_namelist(self, dic):
-        """Routine to modify a reference SURFEX namelist according to a dictionnary of fields to modify."""
+    dateforcbegin = timeforc[0]
+    dateforcend = timeforc[-1]
 
-        if not os.path.isfile("OPTIONS.nam"):
-            raise FileNameException(os.getcwd() + "/OPTIONS.nam")
+    checkdateafter(datebegin, dateforcbegin)
+    if dateend:
+        checkdatebefore(dateend, dateforcend)
+    else:
+        dateend = dateforcend
 
-        os.rename("OPTIONS.nam", "OPTIONS_base.nam")
+    if datebegin > dateforcbegin or dateend < dateforcend:
+        NamelistObject["NAM_IO_OFFLINE"].LDELAYEDSTART_NC = True
 
-        # Open reference namelist
-        namSURFEX_base = open("OPTIONS_base.nam", 'r')
+    if dateend < dateforcend:
+        NamelistObject["NAM_IO_OFFLINE"].NDATESTOP = [dateend.year, dateend.month, dateend.day, dateend.hour * 3600]
 
-        # Open new namelist
-        namSURFEX = open("OPTIONS.nam", 'w')
-        namelistopen = ""
-        # Loop over the lines of the old namelist. Copy everything but lines including the keys of the dictionnary
-        # These lines are replaced by the values of the dictionnary
-        for line in namSURFEX_base:
-            newline = line
-            if "&NAM" in line:
-                # This is the opening key of the namelist
-                # Get the name of the namelist
-                namelistopen = line.split()[0][1:]
-            else:
-                key_to_remove = []
-                field_to_add_at_the_end = []
-                for key, value in six.iteritems(dic):
-                    (namelist, field) = value[:]
-                    # If the namelist corresponds to the current namelist
-                    if namelist == namelistopen:
-                        if key in line:
-                            # Replace the line by the field
-                            newline = field + '\n'
-                            # Remove the field to update in the dictionnary
-                            key_to_remove.append(key)
+    return NamelistObject
 
-                        elif "/" in line:
-                            field_to_add_at_the_end.append(field)
-                            key_to_remove.append(key)
-
-                if "/" in line and len(field_to_add_at_the_end) > 0:
-                    # This is the end of the namelist.
-                    namelistopen = ""
-                    newline = ""
-                    for i, field in enumerate(field_to_add_at_the_end):
-                        if i == len(field_to_add_at_the_end) - 1:
-                            sep = '\n/\n'
-                        else:
-                            sep = ",\n"
-
-                        newline = newline + field + sep
-
-                # Remove keys already written
-                map(dic.pop, key_to_remove)
-
-            # Write the new line in the new namelist
-            namSURFEX.write(newline)
-        # Close both namelists
-        namSURFEX_base.close()
-        namSURFEX.close()
