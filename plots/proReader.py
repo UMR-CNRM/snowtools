@@ -55,8 +55,8 @@ class ProReader:
     dico2 = {'slope': 'slope',
              'aspect': 'aspect',
              'alt': 'ZS',
-             'lat': 'LAT',
-             'lon': 'LON',
+             'lat': 'lat',
+             'lon': 'lon',
              'time': 'time'
              }
 
@@ -143,15 +143,15 @@ class ProReader:
             aspecttab = ff.read(ProReader.dico2['aspect'])[:]
         else:
             aspecttab = np.array([0])
-        if(ProReader.dico2['aspect'] in listvariables):
+        if(ProReader.dico2['alt'] in listvariables):
             alttab = ff.read(ProReader.dico2['alt'])[:]
         else:
             alttab = np.array([0])
-        if(ProReader.dico2['aspect'] in listvariables):
+        if(ProReader.dico2['lat'] in listvariables):
             lattab = ff.read(ProReader.dico2['lat'])[:]
         else:
             lattab = np.array([0])
-        if(ProReader.dico2['aspect'] in listvariables):
+        if(ProReader.dico2['lon'] in listvariables):
             lontab = ff.read(ProReader.dico2['lon'])[:]
         else:
             lontab = np.array([0])
