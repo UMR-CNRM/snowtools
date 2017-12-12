@@ -27,10 +27,10 @@ class s2mTest(unittest.TestCase):
         self.full_run("s2m -b 20101001 -e 20101002")
 
     def test_extract_domain(self):
-        self.full_run("s2m -b 20100801 -e 20100801 -U 2400")
+        self.full_run("s2m -b 20100801 -e 20110201 -U 2400")
 
     def test_extend_slopes(self):
-        self.full_run("s2m -b 20100801 -e 20100801 -l 0,20,40 -c 8")
+        self.full_run("s2m -b 20100801 -e 20110201 -l 0,20,40 -c 8")
 
 
 if __name__ == "__main__":
