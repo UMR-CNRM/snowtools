@@ -138,6 +138,10 @@ def parse_options(arguments):
                       action="store", type="int", dest="aspects", default=None,
                       help="name of the output directory - default: None")
 
+    parser.add_option("-E", "--extractforcing",
+                      action="store_true", dest="onlyextractforcing", default=False,
+                      help="name of the output directory - default: None")
+
     (options, args) = parser.parse_args(arguments)
 
     del args
@@ -160,11 +164,18 @@ def execute(args):
 
         # Define a run object
         if options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:
-            run = tasks.runs.massifrun(options.datedeb, options.datefin, options.forcing, options.diroutput, threshold=options.threshold,
-                                       dirwork=options.dirwork, datespinup=options.datespinup,
-                                       execdir=options.exesurfex,
-                                       namelist=options.namelist,
-                                       geolist=[options.region, options.minlevel, options.maxlevel, options.slopes, options.aspects])
+
+            if options.onlyextractforcing:
+                run = tasks.runs.massifextractforcing(options.datedeb, options.datefin, options.forcing, options.diroutput,
+                                                      dirwork=options.dirwork,
+                                                      geolist=[options.region, options.minlevel, options.maxlevel, options.slopes, options.aspects])
+            else:
+
+                run = tasks.runs.massifrun(options.datedeb, options.datefin, options.forcing, options.diroutput, threshold=options.threshold,
+                                           dirwork=options.dirwork, datespinup=options.datespinup,
+                                           execdir=options.exesurfex,
+                                           namelist=options.namelist,
+                                           geolist=[options.region, options.minlevel, options.maxlevel, options.slopes, options.aspects])
         else:
             run = tasks.runs.surfexrun(options.datedeb, options.datefin, options.forcing, options.diroutput, threshold=options.threshold,
                                        dirwork=options.dirwork, datespinup=options.datespinup,
@@ -175,6 +186,23 @@ def execute(args):
         run.run()
 
 
+def execute_through_vortex(args):
+
+    # Read the options provided by the user
+    options = parse_options(args)
+
+    # Check option values and convert them in types suited for defining a run configuration
+    options = check_and_convert_options(options)
+
+    # Cook vortex task
+
+
 if __name__ == "__main__":
     print sys.argv
-    execute(sys.argv)
+
+    machine = os.uname()[1]
+
+    if "beaufix" in machine or "prolix" in machine:
+        execute_through_vortex(sys.argv)
+    else:
+        execute(sys.argv)

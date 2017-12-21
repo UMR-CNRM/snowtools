@@ -115,12 +115,13 @@ class infomassifs():
         self.dicArea = {"isere": [7, 8, 12, 14, 15],  # les 5 massifs de l'Isère
                         "oisans": [15],
                         "lautaret": [12, 13, 15, 16],
-                        "alpes": range(1, 24),  # les 23 massifs des Alpes
+                        "alpes_F": range(1, 24),  # les 23 massifs des Alpes
+                        "alpes": range(1, 24) + [30],  # les 23 massifs des Alpes + Diablerets
                         "pyrenees_F": range(64, 75),
                         "pyrenees_E": range(80, 92),
                         "pyrenees": range(64, 75) + range(80, 92),
                         "corse": [40, 41],
-                        "all": range(1, 24) + range(40, 42) + range(64, 75) + range(80, 92)
+                        "all": range(1, 24) + [30] + range(40, 42) + range(64, 75) + range(80, 92)
                         }
 
         self.dicAltArea = {}
