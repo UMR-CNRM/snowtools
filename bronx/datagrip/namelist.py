@@ -27,6 +27,7 @@ import copy
 from decimal import Decimal
 import re
 import six
+import numpy
 
 #: No automatic export
 __all__ = []
@@ -400,7 +401,10 @@ class LiteralParser(object):
         if value == 0.:
             real = '0.'
         else:
-            real = '{0:.15G}'.format(value).replace('E', 'D')
+            if isinstance(value, numpy.float32):
+                real = '{0:.7G}'.format(value).replace('E', 'D')
+            else:
+                real = '{0:.15G}'.format(value).replace('E', 'D')
         if '.' not in real:
             real = re.sub('D', '.0D', real)
             if '.' not in real:
@@ -437,7 +441,7 @@ class LiteralParser(object):
             return self.encode_logical(value)
         elif isinstance(value, int):
             return self.encode_integer(value)
-        elif isinstance(value, float):
+        elif isinstance(value, float) or isinstance(value, numpy.float32):
             return self.encode_real(value)
         elif isinstance(value, Decimal):
             return self.encode_real(value)
