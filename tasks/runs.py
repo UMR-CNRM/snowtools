@@ -41,6 +41,7 @@ class surfexrun(object):
         self.dateforcbegin = datebegin
         self.dateforcend = dateend
         self.updateloc = True
+        self.onlyextractforcing = False
 
         self.defaults_from_env()
 
@@ -118,21 +119,22 @@ class surfexrun(object):
         # 3.1 Modify the forcing if required
         self.modify_forcing(*self.geolist)
 
-        # 3.2 Build the appropriate namelist. At second run, only temporal modif
-        update_surfex_namelist_file(self.datebegin, dateend=self.dateend_run, updateloc=self.updateloc)
+        if not self.onlyextractforcing:
+            # 3.2 Build the appropriate namelist. At second run, only temporal modif
+            update_surfex_namelist_file(self.datebegin, dateend=self.dateend_run, updateloc=self.updateloc)
 
-        if firstrun:
-            # 3.3 Get the PGD file or generate it
-            self.get_or_run_pgd()
+            if firstrun:
+                # 3.3 Get the PGD file or generate it
+                self.get_or_run_pgd()
 
-        # 3.4 Get the PREP file or generate it
-        self.get_or_run_prep()
+            # 3.4 Get the PREP file or generate it
+            self.get_or_run_prep()
 
-        # 3.5 Modify the initial conditions if required
-        self.modify_prep()
+            # 3.5 Modify the initial conditions if required
+            self.modify_prep()
 
-        # 4. Run OFFLINE
-        callSurfexOrDie(self.execdir + "/OFFLINE", moderun=self.moderun, nproc=self.nproc)
+            # 4. Run OFFLINE
+            callSurfexOrDie(self.execdir + "/OFFLINE", moderun=self.moderun, nproc=self.nproc)
 
         # 5. Save outputs
         self.save_output()
@@ -218,6 +220,21 @@ class massifrun(surfexrun):
     def save_output(self):
         super(massifrun, self).save_output()
         save_file_period(self.dirmeteo, "FORCING", self.dateforcbegin, self.dateforcend)
+
+
+class massifextractforcing(massifrun):
+    def __init__(self, datebegin, dateend, forcingpath, diroutput, dirwork=None, geolist=[]):
+        super(massifextractforcing, self).__init__(datebegin, dateend, forcingpath, diroutput, dirwork= dirwork, geolist= geolist)
+        self.onlyextractforcing = True
+
+    def save_output(self):
+        save_file_period(self.dirmeteo, "FORCING", self.dateforcbegin, self.dateforcend)
+
+    def defaults_from_env(self):
+        pass
+
+    def get_all_consts(self):
+        pass
 
 
 class griddedrun(surfexrun):
