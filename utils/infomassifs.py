@@ -166,8 +166,9 @@ class infomassifs():
     def region2massifs(self, region):
         if region:
             try:
-                massifs = [int(region)]
-                assert massifs in self.getListMassif_of_region("all")
+                massif = int(region)
+                assert massif in self.getListMassif_of_region("all")
+                massifs = [massif]
             except ValueError:
                 massifs = self.getListMassif_of_region(region)
             except AssertionError:
