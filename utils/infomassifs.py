@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import six
 import xml.dom.minidom
 from utils.FileException import FileNameException, FileParseException
 
@@ -123,6 +124,11 @@ class infomassifs():
                         "corse": [40, 41],
                         "all": range(1, 24) + [30] + range(40, 42) + range(64, 75) + range(80, 92)
                         }
+
+        for area, list_massifs in six.iteritems(self.dicArea.copy()):
+            self.dicArea[area + "_allslopes"] = list_massifs
+            self.dicArea[area + "_flat"] = list_massifs
+
 
         self.dicAltArea = {}
 

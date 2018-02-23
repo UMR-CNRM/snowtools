@@ -40,7 +40,7 @@ def exit_usage():
     sys.exit(usage)
 
 
-def check_and_convert_options(options):
+def check_and_convert_options(options, vortex=False):
 
     for mandatory in [options.datedeb, options.datefin, options.forcing]:
         if not mandatory:
@@ -62,7 +62,8 @@ def check_and_convert_options(options):
     if options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:
         INFOmassifs = infomassifs()
 
-        options.region = INFOmassifs.region2massifs(options.region)
+        if not vortex:
+            options.region = INFOmassifs.region2massifs(options.region)
 
         if options.slopes:
             options.slopes = options.slopes.split(",")
@@ -193,7 +194,7 @@ def execute_through_vortex(args):
     options = parse_options(args)
 
     # Check option values and convert them in types suited for defining a run configuration
-    options = check_and_convert_options(options)
+    options = check_and_convert_options(options, vortex=True)
 
     if not options.dirwork:
         if 'WORKDIR' in os.environ.keys():

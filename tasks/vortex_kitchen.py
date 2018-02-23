@@ -1,3 +1,6 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
 '''
 Created on 23 févr. 2018
 
@@ -40,17 +43,22 @@ class vortex_kitchen(object):
 
     def create_env(self):
         # Prepare environment
-        os.makedirs(self.workingdir)
+        if not os.path.isdir(self.workingdir):
+            os.makedirs(self.workingdir)
         os.chdir(self.workingdir)
 
-        os.symlink(os.environ["VORTEX"], "vortex")
-        os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks", "tasks")
+        if not os.path.islink("vortex"):
+            os.symlink(os.environ["VORTEX"], "vortex")
+        if not os.path.islink("tasks"):
+            os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks", "tasks")
 
         for directory in ["conf", "jobs"]:
-            os.mkdir(directory)
+            if not os.path.isdir(directory):
+                os.mkdir(directory)
 
         os.chdir("jobs")
-        os.symlink(os.environ["SNOWTOOLS_CEN"] + "/jobs/" + self.jobtemplate, self.jobtemplate)
+        if not os.path.isfile(self.jobtemplate):
+            os.symlink(os.environ["SNOWTOOLS_CEN"] + "/jobs/" + self.jobtemplate, self.jobtemplate)
 
     def create_conf(self, options):
         ''' Prepare configuration file from s2m options'''
@@ -70,9 +78,11 @@ class vortex_kitchen(object):
 
     def mkjob_command(self, options):
         return "../vortex/bin/mkjob.py -j name=rea_s2m task=vortex_tasks profile=rd-beaufix-mt jobassistant=cen datebegin="\
-            + options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + options.dateend.strftime("%Y%m%d%H%M") + "template=" + self.jobtemplate
+            + options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + options.datefin.strftime("%Y%m%d%H%M") + " template=" + self.jobtemplate
 
     def run(self, options):
+        mkjob = self.mkjob_command(options)
+        print "Run command: " + mkjob + "\n"
         os.system(self.mkjob_command(options))
 
 
