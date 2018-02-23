@@ -89,8 +89,11 @@ def get_list_dates_files(datebegin, dateend, duration):
             list_dates_begin_forcing.append(dateforc_begin)
             list_dates_end_forcing.append(dateforc_end)
             dateforc_begin = dateforc_end
-    list_dates_begin_pro = list_dates_begin_forcing
+    list_dates_begin_pro = list_dates_begin_forcing[:]
     list_dates_begin_pro[0] = max(list_dates_begin_forcing[0], datebegin)
-    list_dates_end_pro = list_dates_end_forcing
+    list_dates_end_pro = list_dates_end_forcing[:]
     list_dates_end_pro[-1] = min(list_dates_end_forcing[-1], dateend)
+    print "DEBUG"
+    print list_dates_begin_forcing
+    print list_dates_end_forcing
     return list_dates_begin_forcing, list_dates_end_forcing, list_dates_begin_pro, list_dates_end_pro

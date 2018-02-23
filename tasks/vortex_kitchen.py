@@ -62,13 +62,14 @@ class vortex_kitchen(object):
 
     def create_conf(self, options):
         ''' Prepare configuration file from s2m options'''
-        confname = self.vapp + "_" + self.vconf + ".ini"
+        confname = "../conf/" + self.vapp + "_" + self.vconf + ".ini"
         conffile = vortex_conf_file(confname, 'w')
 
         conffile.new_class("DEFAULT")
         conffile.write_field('meteo', 'safran')
         conffile.write_field('geometry', self.vconf)
         conffile.write_field('forcingid', 'reanalyse@lafaysse')
+        conffile.write_field('duration', 'yearly')
         conffile.write_field('xpid', self.xpid + '@' + os.getlogin())
         conffile.write_field('ntasks', 40)
         conffile.write_field('nprocs', 40)
