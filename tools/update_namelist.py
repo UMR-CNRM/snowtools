@@ -17,7 +17,7 @@ from bronx.datagrip.namelist import NamelistParser
 
 
 def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam", forcing="FORCING.nc", dateend=None, updateloc=True):
-
+    '''This function updates a namelist file through the bronx module.'''
     if not os.path.isfile(namelistfile):
         raise FileNameException(os.getcwd() + "/OPTIONS.nam")
 
@@ -112,4 +112,3 @@ def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"
         NamelistObject["NAM_IO_OFFLINE"].NDATESTOP = [dateend.year, dateend.month, dateend.day, dateend.hour * 3600]
 
     return NamelistObject
-

@@ -165,14 +165,20 @@ class infomassifs():
 
     def region2massifs(self, region):
         if region:
-            try:
-                massif = int(region)
-                assert massif in self.getListMassif_of_region("all")
-                massifs = [massif]
-            except ValueError:
-                massifs = self.getListMassif_of_region(region)
-            except AssertionError:
-                raise MassifError(massifs)
+            list_massifs = region.split(",")
+            if len(list_massifs) > 1:
+                massifs = map(int, list_massifs)
+                for massif in massifs:
+                    assert massif in self.getListMassif_of_region("all")
+            else:
+                try:
+                    massif = int(region)
+                    assert massif in self.getListMassif_of_region("all")
+                    massifs = [massif]
+                except ValueError:
+                    massifs = self.getListMassif_of_region(region)
+                except AssertionError:
+                    raise MassifError(massifs)
         else:
             massifs = self.getListMassif_of_region("all")
         return massifs

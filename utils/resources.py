@@ -27,7 +27,7 @@ def smart_copy(pathin, nameout):
     '''If pathin includes /home do a symbolic link because we probably are on the disk.
     Otherwise, do a hard copy of the file to improve computing times.'''
 
-    if pathin[0:5] == '/home':
+    if pathin[0:5] == '/home' or pathin[0:8] == '/scratch':
         os.symlink(pathin, nameout)
     else:
         shutil.copy(pathin, nameout)

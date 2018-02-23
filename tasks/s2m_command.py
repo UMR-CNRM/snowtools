@@ -31,6 +31,7 @@ from utils.dates import checkdateafter, check_and_convert_date
 from utils.resources import absolute_path, check_surfex_exe
 from utils.infomassifs import infomassifs
 import tasks.runs
+from tasks.vortex_kitchen import vortex_kitchen
 
 usage = "usage: s2m -b begin_date -e end_date -f forcing [-o path_output] [-w workdir] [-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] [-c nb_classes_aspects] [-L Lower-altitude] [-U Upper-altitude] [-s surfex_exe_directory]"
 
@@ -194,11 +195,18 @@ def execute_through_vortex(args):
     # Check option values and convert them in types suited for defining a run configuration
     options = check_and_convert_options(options)
 
+    if not options.dirwork:
+        if 'WORKDIR' in os.environ.keys():
+            options.dirwork = os.environ['WORKDIR']
+        else:
+            options.dirwork = "."
+
     # Cook vortex task
+    run = vortex_kitchen(options)
+    run.run(options)
 
 
 if __name__ == "__main__":
-    print sys.argv
 
     machine = os.uname()[1]
 
