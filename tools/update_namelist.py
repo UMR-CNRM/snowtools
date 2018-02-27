@@ -101,14 +101,15 @@ def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"
 
     checkdateafter(datebegin, dateforcbegin)
     if dateend:
-        checkdatebefore(dateend, dateforcend)
+#         checkdatebefore(dateend, dateforcend)
+        checkdateafter(dateend, dateforcbegin)
     else:
         dateend = dateforcend
 
     if datebegin > dateforcbegin or dateend < dateforcend:
         NamelistObject["NAM_IO_OFFLINE"].LDELAYEDSTART_NC = True
 
-    if dateend < dateforcend:
-        NamelistObject["NAM_IO_OFFLINE"].NDATESTOP = [dateend.year, dateend.month, dateend.day, dateend.hour * 3600]
+#     if dateend < dateforcend:
+    NamelistObject["NAM_IO_OFFLINE"].NDATESTOP = [dateend.year, dateend.month, dateend.day, dateend.hour * 3600]
 
     return NamelistObject

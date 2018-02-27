@@ -65,16 +65,25 @@ class vortex_kitchen(object):
         confname = "../conf/" + self.vapp + "_" + self.vconf + ".ini"
         conffile = vortex_conf_file(confname, 'w')
 
+        if options.model == 'safran' and options.forcing == 'reanalyse':
+            forcinglogin = 'lafaysse'
+        else:
+            forcinglogin = os.getlogin()
+
         conffile.new_class("DEFAULT")
-        conffile.write_field('meteo', 'safran')
+        conffile.write_field('meteo', options.model)
         conffile.write_field('geometry', self.vconf)
-        conffile.write_field('forcingid', 'reanalyse@lafaysse')
+        conffile.write_field('forcingid', options.forcing + '@' + forcinglogin)
         conffile.write_field('duration', 'yearly')
         conffile.write_field('xpid', self.xpid + '@' + os.getlogin())
         conffile.write_field('ntasks', 40)
         conffile.write_field('nprocs', 40)
         conffile.write_field('nnodes', 1)
         conffile.write_field('openmp', 1)
+        if options.namelist:
+            conffile.write_field('namelist', options.namelist)
+        if options.exesurfex:
+            conffile.write_field('exesurfex', options.exesurfex)
         conffile.close()
 
     def mkjob_command(self, options):

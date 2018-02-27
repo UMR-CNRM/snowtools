@@ -67,6 +67,21 @@ class Surfex_Vortex_Task(Task):
             print t.prompt, 'tb02 =', tb02
             print
 
+            self.sh.title('Toolbox input tb02')
+            tb02_a = toolbox.input(
+                alternate      = 'SurfexClim',
+                kind           = 'pgdnc',
+                nativefmt      = 'netcdf',
+                local          = 'PGD.nc',
+                experiment     = self.conf.xpid,
+                geometry       = self.conf.geometry,
+                model          = 'surfex',
+                namespace      = 'cenvortex.multi.fr',
+                fatal          = False,
+            ),
+            print t.prompt, 'tb02_a =', tb02_a
+            print
+
             self.sh.title('Toolbox input tb03')
             tb03 = toolbox.input(
                 role           = 'SnowpackInit',
@@ -84,7 +99,7 @@ class Surfex_Vortex_Task(Task):
             print
 
             if not tb03[0]:
-                tb03a = toolbox.input(
+                tbi = toolbox.input(
                     role           = 'initial values of ground temperature',
                     kind           = 'climTG',
                     nativefmt      = 'netcdf',
@@ -93,8 +108,23 @@ class Surfex_Vortex_Task(Task):
                     genv            = 'uenv:cen.01@CONST_CEN',
                     gvar           = 'climtg_[geometry::area]',
                     model          = 'surfex',
+                    fatal          = False
                 ),
-                print t.prompt, 'tb03a =', tb03a
+                print t.prompt, 'tbi =', tbi
+                print
+
+                tbi_a = toolbox.input(
+                    alternate      = 'initial values of ground temperature',
+                    kind           = 'climTG',
+                    nativefmt      = 'netcdf',
+                    local          = 'init_TG.nc',
+                    experiment     = self.conf.xpid,
+                    geometry       = self.conf.geometry,
+                    model          = 'surfex',
+                    namespace      = 'cenvortex.multi.fr',
+                ),
+
+                print t.prompt, 'tbi_a =', tbi_a
                 print
 
             self.sh.title('Toolbox input tb03b')
@@ -138,58 +168,111 @@ class Surfex_Vortex_Task(Task):
             print
 
             self.sh.title('Toolbox input tb05')
-            tb05 = toolbox.input(
-                role            = 'Nam_surfex',
-                source          = 'OPTIONS_default.nam',
-                genv            = 'uenv:cen.01@CONST_CEN',
-                kind            = 'namelist',
-                model           = 'surfex',
-                local           = 'OPTIONS.nam',
-            )
+            if self.conf.namelist:
+                tb05 = toolbox.input(
+                    role            = 'Nam_surfex',
+                    remote          = self.conf.namelist,
+                    kind            = 'namelist',
+                    model           = 'surfex',
+                    local           = 'OPTIONS.nam',
+                )
+            else:
+                tb05 = toolbox.input(
+                    role            = 'Nam_surfex',
+                    source          = 'OPTIONS_default.nam',
+                    genv            = 'uenv:cen.01@CONST_CEN',
+                    kind            = 'namelist',
+                    model           = 'surfex',
+                    local           = 'OPTIONS.nam',
+                )
+
             print t.prompt, 'tb05 =', tb05
             print
 
-            self.sh.title('Toolbox executable tb06= tbx1')
-            tb06 = tbx3 = toolbox.executable(
-                role           = 'Binary',
-                kind           = 'offline',
-                local          = 'OFFLINE',
-                model          = 'surfex',
-                genv           = 'uenv:cen.01@CONST_CEN',
-                gvar           = 'master_offline_mpi',
-            )
-
-            print t.prompt, 'tb06 =', tb06
-            print
-
-            if not tb02[0]:
-
-                self.sh.title('Toolbox executable tb07= tbx2')
-                tb07 = tbx1 = toolbox.executable(
+            if self.conf.exesurfex:
+                self.sh.title('Toolbox executable tb06= tbx1')
+                tb06 = tbx3 = toolbox.executable(
                     role           = 'Binary',
-                    kind           = 'buildpgd',
-                    local          = 'PGD',
+                    kind           = 'offline',
+                    local          = 'OFFLINE',
                     model          = 'surfex',
-                    genv           = 'uenv:cen.01@CONST_CEN',
-                    gvar           = 'master_pgd',
+                    remote          = self.conf.exesurfex + "/OFFLINE"
                 )
 
-                print t.prompt, 'tb07 =', tb07
+                print t.prompt, 'tb06 =', tb06
                 print
 
-            if not tb03[0]:
+                if not (tb02[0] or tb02_a[0]):
 
-                self.sh.title('Toolbox executable tb08= tbx3')
-                tb08 = tbx2 = toolbox.executable(
+                    self.sh.title('Toolbox executable tb07= tbx2')
+                    tb07 = tbx1 = toolbox.executable(
+                        role           = 'Binary',
+                        kind           = 'buildpgd',
+                        local          = 'PGD',
+                        model          = 'surfex',
+                        remote          = self.conf.exesurfex + "/PGD"
+                    )
+
+                    print t.prompt, 'tb07 =', tb07
+                    print
+
+                if not tb03[0]:
+
+                    self.sh.title('Toolbox executable tb08= tbx3')
+                    tb08 = tbx2 = toolbox.executable(
+                        role           = 'Binary',
+                        kind           = 'prep',
+                        local          = 'PREP',
+                        model          = 'surfex',
+                        remote          = self.conf.exesurfex + "/PREP"
+                    )
+
+                    print t.prompt, 'tb08 =', tb08
+                    print
+
+            else:
+
+                self.sh.title('Toolbox executable tb06= tbx1')
+                tb06 = tbx3 = toolbox.executable(
                     role           = 'Binary',
-                    kind           = 'prep',
-                    local          = 'PREP',
+                    kind           = 'offline',
+                    local          = 'OFFLINE',
                     model          = 'surfex',
                     genv           = 'uenv:cen.01@CONST_CEN',
+                    gvar           = 'master_offline_mpi',
                 )
 
-                print t.prompt, 'tb08 =', tb08
+                print t.prompt, 'tb06 =', tb06
                 print
+
+                if not (tb02[0] or tb02_a[0]):
+
+                    self.sh.title('Toolbox executable tb07= tbx2')
+                    tb07 = tbx1 = toolbox.executable(
+                        role           = 'Binary',
+                        kind           = 'buildpgd',
+                        local          = 'PGD',
+                        model          = 'surfex',
+                        genv           = 'uenv:cen.01@CONST_CEN',
+                        gvar           = 'master_pgd',
+                    )
+
+                    print t.prompt, 'tb07 =', tb07
+                    print
+
+                if not tb03[0]:
+
+                    self.sh.title('Toolbox executable tb08= tbx3')
+                    tb08 = tbx2 = toolbox.executable(
+                        role           = 'Binary',
+                        kind           = 'prep',
+                        local          = 'PREP',
+                        model          = 'surfex',
+                        genv           = 'uenv:cen.01@CONST_CEN',
+                    )
+
+                    print t.prompt, 'tb08 =', tb08
+                    print
 
         if 'compute' in self.steps:
 
@@ -197,36 +280,45 @@ class Surfex_Vortex_Task(Task):
             self.sh.title('Toolbox algo tb09a')
             tb09a = tbalgo1 = toolbox.algo(
                 kind         = 'surfex_preprocess',
-                date           = self.conf.datebegin,
+                datebegin    = self.conf.datebegin,
+                dateend      = self.conf.dateend,
                 forcingname  = firstforcing
             )
+            print t.prompt, 'tb09a =', tb09a
+            print
             tb09a.run()
 
             # Take care : PGD parallelization will be available in v8.1 --> nproc and ntasks will have to be set to 40
-            if not tb02[0]:
+            if not (tb02[0] or tb02_a[0]):
                 self.sh.title('Toolbox algo tb09 = PGD')
-                tb09 = tbalgo0 = toolbox.algo(
+                tb09 = tbalgo2 = toolbox.algo(
                     kind         = 'pgd_from_forcing',
                     forcingname  = firstforcing,
                 )
-                self.component_runner(tbalgo0, tbx1, mpiopts = dict(nn=1, nnp=1, np=1))
+                print t.prompt, 'tb09 =', tb09
+                print
+                self.component_runner(tbalgo2, tbx1, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
 
             # Take care : PREP parallelization will be available in v8.1 --> nproc and ntasks will have to be set to 40
             if not tb03[0]:
                 self.sh.title('Toolbox algo tb09 = PREP')
-                tb09 = tbalgo1 = toolbox.algo(
+                tb10 = tbalgo3 = toolbox.algo(
                     engine         = 'parallel',
                 )
-                self.component_runner(tbalgo1, tbx2, mpiopts = dict(nn=1, nnp=1, np=1))
+                print t.prompt, 'tb10 =', tb10
+                print
+                self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
 
             self.sh.title('Toolbox algo tb11 = OFFLINE')
-            tb11 = tbalgo3 = toolbox.algo(
+            tb11 = tbalgo4 = toolbox.algo(
                 engine         = 'parallel',
                 binary         = 'OFFLINE',
                 datebegin      = self.conf.datebegin,
                 dateend        = self.conf.dateend
             )
-            self.component_runner(tbalgo3, tbx3)
+            print t.prompt, 'tb11 =', tb11
+            print
+            self.component_runner(tbalgo4, tbx3)
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
 
@@ -236,7 +328,6 @@ class Surfex_Vortex_Task(Task):
                 tb19 = toolbox.output(
                     local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = self.conf.xpid,
-                    block          = 'surfex',
                     geometry       = self.conf.geometry,
                     datebegin      = datebegin,
                     dateend        = dateend,
@@ -253,7 +344,6 @@ class Surfex_Vortex_Task(Task):
                     local          = 'PREP_[date:ymdh].nc',
                     role           = 'SnowpackInit',
                     experiment     = self.conf.xpid,
-                    block          = 'surfex',
                     geometry       = self.conf.geometry,
                     date           = dateend,
                     period         = dateend,
@@ -263,4 +353,19 @@ class Surfex_Vortex_Task(Task):
                     namespace      = 'cenvortex.multi.fr',
                 ),
                 print t.prompt, 'tb20 =', tb20
+                print
+
+# The following condition does not work. --> Ask leffe how to do
+#                 if not (tb02[0] or tb02_a[0]):
+                tb21 = toolbox.output(
+                    role           = 'SurfexClim',
+                    kind           = 'pgdnc',
+                    nativefmt      = 'netcdf',
+                    local          = 'PGD.nc',
+                    experiment     = self.conf.xpid,
+                    geometry       = self.conf.geometry,
+                    model          = 'surfex',
+                    namespace      = 'cenvortex.multi.fr',
+                ),
+                print t.prompt, 'tb21 =', tb21
                 print

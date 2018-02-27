@@ -33,7 +33,7 @@ from utils.infomassifs import infomassifs
 import tasks.runs
 from tasks.vortex_kitchen import vortex_kitchen
 
-usage = "usage: s2m -b begin_date -e end_date -f forcing [-o path_output] [-w workdir] [-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] [-c nb_classes_aspects] [-L Lower-altitude] [-U Upper-altitude] [-s surfex_exe_directory]"
+usage = "usage: s2m -b begin_date -e end_date -f forcing [-m forcingmodel] [-o path_output] [-w workdir] [-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] [-c nb_classes_aspects] [-L Lower-altitude] [-U Upper-altitude] [-s surfex_exe_directory]"
 
 
 def exit_usage():
@@ -42,9 +42,14 @@ def exit_usage():
 
 def check_and_convert_options(options, vortex=False):
 
-    for mandatory in [options.datedeb, options.datefin, options.forcing]:
+    list_mandatory = [options.datedeb, options.datefin, options.forcing]
+
+    if vortex:
+        list_mandatory.append(options.model)
+
+    for mandatory in list_mandatory:
         if not mandatory:
-            print "Missing mandatory option (-b -e -f)"
+            print "Missing mandatory option : -b -e -f (or -m if you are using vortex)"
             exit_usage()
 
     # Controls and type conversions of dates
@@ -52,8 +57,12 @@ def check_and_convert_options(options, vortex=False):
     checkdateafter(options.datefin, options.datedeb)
 
     # Conversions of local paths in absolute paths
-    [options.forcing, options.namelist, options.diroutput, options.dirwork, options.exesurfex] = \
-        map(absolute_path, [options.forcing, options.namelist, options.diroutput, options.dirwork, options.exesurfex])
+    [options.namelist, options.dirwork, options.exesurfex] = \
+        map(absolute_path, [options.namelist, options.dirwork, options.exesurfex])
+
+    if not vortex:
+        [options.forcing, options.diroutput] = \
+            map(absolute_path, [options.forcing, options.diroutput])
 
     options.exesurfex = check_surfex_exe(options.exesurfex)
     print options.exesurfex
@@ -99,6 +108,10 @@ def parse_options(arguments):
     parser.add_option("-f", "--forcing",
                       action="store", type="string", dest="forcing", default=None,
                       help="path of the forcing file or of the directory with the forcing files - default: None")
+
+    parser.add_option("-m", "--model",
+                      action="store", type="string", dest="model", default=None,
+                      help="meteorological model used as forcing")
 
     parser.add_option("-x", "--spinupdate",
                       action="store", type="string", dest="datespinup", default=None,
