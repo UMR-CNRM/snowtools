@@ -155,7 +155,11 @@ def parse_options(arguments):
 
     parser.add_option("-E", "--extractforcing",
                       action="store_true", dest="onlyextractforcing", default=False,
-                      help="name of the output directory - default: None")
+                      help="only extract meteorological forcing - default: False")
+
+    parser.add_option("--grid",
+                      action="store_true", dest="gridsimul", default=False,
+                      help="This is a gridded simulation as defined in the namelist - default: False")
 
     (options, args) = parser.parse_args(arguments)
 
@@ -192,10 +196,16 @@ def execute(args):
                                            namelist=options.namelist,
                                            geolist=[options.region, options.minlevel, options.maxlevel, options.slopes, options.aspects])
         else:
-            run = tasks.runs.surfexrun(options.datedeb, options.datefin, options.forcing, options.diroutput, threshold=options.threshold,
-                                       dirwork=options.dirwork, datespinup=options.datespinup,
-                                       execdir=options.exesurfex,
-                                       namelist=options.namelist)
+            if options.gridsimul:
+                run = tasks.runs.griddedrun(options.datedeb, options.datefin, options.forcing, options.diroutput, threshold=options.threshold,
+                                            dirwork=options.dirwork, datespinup=options.datespinup,
+                                            execdir=options.exesurfex,
+                                            namelist=options.namelist)
+            else:
+                run = tasks.runs.surfexrun(options.datedeb, options.datefin, options.forcing, options.diroutput, threshold=options.threshold,
+                                           dirwork=options.dirwork, datespinup=options.datespinup,
+                                           execdir=options.exesurfex,
+                                           namelist=options.namelist)
 
         # Execute the run
         run.run()

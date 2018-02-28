@@ -8,6 +8,7 @@ Created on 23 févr. 2018
 '''
 
 import os
+import datetime
 
 from utils.resources import InstallException
 
@@ -84,16 +85,30 @@ class vortex_kitchen(object):
             conffile.write_field('namelist', options.namelist)
         if options.exesurfex:
             conffile.write_field('exesurfex', options.exesurfex)
+        conffile.write_field('threshold', options.threshold)
+        if options.datespinup:
+            conffile.write_field('datespinup', options.datespinup.strftime("%Y%m%d%H%M"))
+        else:
+            conffile.write_field('datespinup', options.datedeb.strftime("%Y%m%d%H%M"))
         conffile.close()
 
     def mkjob_command(self, options):
         return "../vortex/bin/mkjob.py -j name=rea_s2m task=vortex_tasks profile=rd-beaufix-mt jobassistant=cen datebegin="\
-            + options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + options.datefin.strftime("%Y%m%d%H%M") + " template=" + self.jobtemplate
+            + options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + options.datefin.strftime("%Y%m%d%H%M") + " template=" + self.jobtemplate\
+            + " time=" + self.walltime(options)
 
     def run(self, options):
         mkjob = self.mkjob_command(options)
         print "Run command: " + mkjob + "\n"
         os.system(self.mkjob_command(options))
+
+    def walltime(self, options):
+        if options.region in ["alp_allslopes", "pyr_allslopes"]:
+            minutes_peryear = 15
+        else:
+            minutes_peryear = 15
+
+        return str(datetime.timedelta(minutes=minutes_peryear) * max(1, (options.datefin.year - options.datedeb.year)))
 
 
 class vortex_conf_file(file):

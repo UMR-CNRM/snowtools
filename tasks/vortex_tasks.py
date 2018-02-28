@@ -314,13 +314,18 @@ class Surfex_Vortex_Task(Task):
                 engine         = 'parallel',
                 binary         = 'OFFLINE',
                 datebegin      = self.conf.datebegin,
-                dateend        = self.conf.dateend
+                dateend        = self.conf.dateend,
+                dateinit       = self.conf.datespinup,
+                threshold      = self.conf.threshold
             )
             print t.prompt, 'tb11 =', tb11
             print
             self.component_runner(tbalgo4, tbx3)
 
-        if 'backup' in self.steps or 'late-backup' in self.steps:
+        if 'backup' in self.steps:
+            pass
+
+        if 'late-backup' in self.steps:
 
             for p, datebegin in enumerate(list_dates_begin_pro):
                 dateend = list_dates_end_pro[p]
