@@ -11,6 +11,7 @@ import os
 import datetime
 
 from utils.resources import InstallException
+from Bio.Align.AlignInfo import alpha
 
 
 class vortex_kitchen(object):
@@ -103,12 +104,11 @@ class vortex_kitchen(object):
         os.system(self.mkjob_command(options))
 
     def walltime(self, options):
-        if options.region in ["alp_allslopes", "pyr_allslopes"]:
-            minutes_peryear = 15
-        else:
-            minutes_peryear = 15
 
-        return str(datetime.timedelta(minutes=minutes_peryear) * max(1, (options.datefin.year - options.datedeb.year)))
+        minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 2, pyr_flat = 2, cor_allslopes = 2, cor_flat = 1, postes = 2)
+        key = options.region if options.region in minutes_peryear.keys() else "alp_allslopes"
+
+        return str(datetime.timedelta(minutes=minutes_peryear[key]) * max(1, (options.datefin.year - options.datedeb.year)))
 
 
 class vortex_conf_file(file):
