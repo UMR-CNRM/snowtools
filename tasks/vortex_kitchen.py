@@ -11,8 +11,6 @@ import os
 import datetime
 
 from utils.resources import InstallException
-from Bio.Align.AlignInfo import alpha
-
 
 class vortex_kitchen(object):
     '''
