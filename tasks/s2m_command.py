@@ -43,13 +43,15 @@ def exit_usage():
 def check_and_convert_options(options, vortex=False):
 
     list_mandatory = [options.datedeb, options.datefin, options.forcing]
+    list_print = "-b -e -f"
 
     if vortex:
-        list_mandatory.append(options.model)
+        list_mandatory.extend([options.model, options.region])
+        list_print += " -m -r"
 
     for mandatory in list_mandatory:
         if not mandatory:
-            print "Missing mandatory option : -b -e -f (or -m if you are using vortex)"
+            print "Missing mandatory option: " + list_print
             exit_usage()
 
     # Controls and type conversions of dates
