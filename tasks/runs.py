@@ -12,7 +12,7 @@ import os
 import datetime
 
 # Snowtools modules
-from tools.change_forcing import forcinput_select
+from tools.change_forcing import forcinput_select, forcinput_applymask
 from tools.change_prep import prep_tomodify
 from tools.update_namelist import update_surfex_namelist_file
 from tools.execute import callSurfexOrDie
@@ -29,10 +29,10 @@ class surfexrun(object):
     def __init__(self, datebegin, dateend, forcingpath, diroutput,
                  namelist=os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8_NEW_OUTPUTS_NC.nam',
                  execdir=".",
-                 threshold=-999, dirwork=None, datespinup=None, geolist=[]):
+                 threshold=-999, dirwork=None, datespinup=None, geolist=[], addmask=False):
 
         # Convert arguments in attributes
-        for var in "datebegin", "dateend", "forcingpath", "diroutput", "namelist", "execdir", "threshold", "geolist":
+        for var in "datebegin", "dateend", "forcingpath", "diroutput", "namelist", "execdir", "threshold", "geolist", "addmask":
             setattr(self, var, locals()[var])
 
         mavariable = 12
@@ -118,6 +118,7 @@ class surfexrun(object):
         # 3. Preprocessing
         # 3.1 Modify the forcing if required
         self.modify_forcing(*self.geolist)
+        self.merge_forcing(self.addmask)
 
         if not self.onlyextractforcing:
             # 3.2 Build the appropriate namelist. At second run, only temporal modif
@@ -191,6 +192,10 @@ class surfexrun(object):
         ''' In the general case, the forcing file is not modified.'''
         pass
 
+    def merge_forcing(self, *args, **kwargs):
+        ''' In the general case, the forcing file is not modified.'''
+        pass
+
     def modify_prep(self):
         ''' The PREP file needs to be modified if the init date differs from the starting date
          or if a threshold needs to be applied on snow water equivalent.'''
@@ -216,6 +221,29 @@ class massifrun(surfexrun):
         ''' Extract the simulation points in the forcing file.'''
         os.rename("FORCING.nc", "FORCING_base.nc")
         forcinput_select("FORCING_base.nc", "FORCING.nc", list_massif_number, min_alt, max_alt, liste_pentes, list_exp)
+
+    def save_output(self):
+        super(massifrun, self).save_output()
+        save_file_period(self.dirmeteo, "FORCING", self.dateforcbegin, self.dateforcend)
+
+
+class postesrun(surfexrun):
+    """Class for a PC SAFRAN-SURFEX run on stations for which shadows must be applied"""
+
+    def get_forcing(self):
+        ''' Look for a FORCING file including the starting date'''
+        for i, path in enumerate(self.forcingpath):
+            self.dateforcbegin, self.dateforcend = get_file_period("FORCING", path, self.datebegin, self.dateend)
+            os.rename("FORCING.nc", "FORCING_" + str(i) + ".nc")
+
+    def merge_forcing(self, addmask):
+        ''' Extract the simulation points in the forcing file.'''
+        list_forcing = []
+        for i in range(0, len(self.forcingpath)):
+            list_forcing.append("FORCING_" + str(i) + ".nc")
+        print list_forcing
+        if addmask:
+            forcinput_applymask(list_forcing, "FORCING.nc")
 
     def save_output(self):
         super(massifrun, self).save_output()

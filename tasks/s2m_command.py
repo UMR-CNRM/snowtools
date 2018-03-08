@@ -159,6 +159,10 @@ def parse_options(arguments):
                       action="store_true", dest="onlyextractforcing", default=False,
                       help="only extract meteorological forcing - default: False")
 
+    parser.add_option("--addmask",
+                      action="store_true", dest="addmask", default=False,
+                      help="apply shadows on solar radiation from surrounding masks")
+
     parser.add_option("--grid",
                       action="store_true", dest="gridsimul", default=False,
                       help="This is a gridded simulation as defined in the namelist - default: False")
@@ -184,7 +188,14 @@ def execute(args):
     if not options.groundonly:
 
         # Define a run object
-        if options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:
+        if type(options.forcing) is list:
+            run = tasks.runs.postesrun(options.datedeb, options.datefin, options.forcing, options.diroutput, threshold=options.threshold,
+                                       dirwork=options.dirwork, datespinup=options.datespinup,
+                                       execdir=options.exesurfex,
+                                       namelist=options.namelist,
+                                       addmask=True)
+
+        elif options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:
 
             if options.onlyextractforcing:
                 run = tasks.runs.massifextractforcing(options.datedeb, options.datefin, options.forcing, options.diroutput,

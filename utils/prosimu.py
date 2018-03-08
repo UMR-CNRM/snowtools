@@ -59,6 +59,9 @@ class prosimu():
     def listvar(self):
         return self.dataset.variables.keys()
 
+    def getlendim(self, dimname):
+        return len(self.dataset.dimensions[dimname])
+
     def getdimvar(self, varname):
         return np.array(self.dataset.variables[varname].dimensions)
 

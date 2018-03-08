@@ -16,8 +16,24 @@ from utils.FileException import FileNameException, DirNameException
 
 def absolute_path(pathin):
     '''Convert a local path in a absolute path'''
+
     if pathin:
-        if pathin[0] != "/":
+
+        if "," in pathin:
+            print pathin
+            list_pathin = pathin.split(",")
+            print list_pathin
+            list_pathout = []
+            print "loop"
+            for pathin in list_pathin:
+                print pathin
+                if pathin[0] != "/":
+                    pathin = os.getcwd() + "/" + pathin
+                list_pathout.append(pathin)
+            print list_pathout
+            return list_pathout
+
+        elif pathin[0] != "/":
             pathin = os.getcwd() + "/" + pathin
 
     return pathin
