@@ -12,7 +12,8 @@ import os
 import datetime
 
 # Snowtools modules
-from tools.change_forcing import forcinput_select, forcinput_applymask
+from tools.change_forcing import forcinput_select, forcinput_applymask,\
+    forcinput_tomerge
 from tools.change_prep import prep_tomodify
 from tools.update_namelist import update_surfex_namelist_file
 from tools.execute import callSurfexOrDie
@@ -241,12 +242,13 @@ class postesrun(surfexrun):
         list_forcing = []
         for i in range(0, len(self.forcingpath)):
             list_forcing.append("FORCING_" + str(i) + ".nc")
-        print list_forcing
         if addmask:
             forcinput_applymask(list_forcing, "FORCING.nc")
+        else:
+            forcinput_tomerge(list_forcing, "FORCING.nc")
 
     def save_output(self):
-        super(massifrun, self).save_output()
+        super(postesrun, self).save_output()
         save_file_period(self.dirmeteo, "FORCING", self.dateforcbegin, self.dateforcend)
 
 

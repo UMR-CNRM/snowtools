@@ -53,42 +53,6 @@ class forcinput_tomerge:
         new_forcing_file.close()
 
     def merge(self, init_forcing_file, new_forcing_file, *args):
-        pass
-
-
-class forcinput_tomodify:
-    def __init__(self, forcin, forcout, *args, **kwargs):
-        '''Generic method to open an initial forcing file to read and to create a modified forcing file'''
-
-        if type(forcin) is int:
-            forcin = str(forcin)
-
-        if not os.path.isfile(forcin):
-            raise FileNameException(forcin)
-
-        dirout = os.path.dirname(forcout)
-
-        if not (dirout == '' or os.path.isdir(dirout)):
-            raise DirNameException(dirout)
-
-        init_forcing_file = prosimu(forcin)
-        self.filename = forcin
-
-        new_forcing_file = netCDF4.Dataset(forcout, "w", format=init_forcing_file.format())
-
-        self.modify(init_forcing_file, new_forcing_file, args)
-
-        init_forcing_file.close()
-        new_forcing_file.close()
-
-    def modify(self, init_forcing_file, new_forcing_file, *args):
-        pass
-
-
-class forcinput_applymask(forcinput_tomerge):
-    '''Class for flat forcing files for which we need to apply shadows and projections of solar radiation'''
-
-    def merge(self, init_forcing_file, new_forcing_file, *args):
 
         spatial_dim_name = "Number_of_points"
 
@@ -143,7 +107,7 @@ class forcinput_applymask(forcinput_tomerge):
 
                     var_array = unitfile.read(varname, keepfillvalue=True)
 
-                    if varname in ["LAT", "LON", "aspect", "slope", "DIR_SWdown", "SCA_SWdown", "massif_number"]:
+                    if varname in ["LAT", "LON", "aspect", "slope", "DIR_SWdown", "SCA_SWdown", "massif_number", "station"]:
                         savevar[varname + str(i)] = var_array
 
                     if varname not in ["DIR_SWdown", "SCA_SWdown"]:
@@ -156,10 +120,69 @@ class forcinput_applymask(forcinput_tomerge):
                 var[:] = unitfile.read(varname)
 
         for i, unitfile in enumerate(init_forcing_file):
-            direct_array, diffus_array = sun().slope_aspect_correction(savevar["DIR_SWdown" + str(i)], savevar["SCA_SWdown" + str(i)], time, savevar["LAT" + str(i)],
-                                                                       savevar["LON" + str(i)], savevar["aspect" + str(i)], savevar["slope" + str(i)], list_list_azim=None, list_list_mask=None, lnosof_surfex=True)
+            direct_array, diffus_array = self.compute_solar_radiations(time, savevar, i)
             direct[:, spatial_index[i][0]:spatial_index[i][1] + 1] = direct_array[:, :]
             diffus[:, spatial_index[i][0]:spatial_index[i][1] + 1] = diffus_array[:, :]
+
+    def compute_solar_radiations(self, time, savevar, i):
+        return savevar["DIR_SWdown" + str(i)], savevar["SCA_SWdown" + str(i)]
+
+
+class forcinput_applymask(forcinput_tomerge):
+    def compute_solar_radiations(self, time, savevar, i):
+
+        if "station" + str(i) in savevar.keys():
+            INFO = infomassifs()
+            list_list_azim = []
+            list_list_mask = []
+            print "ACCOUNT FOR SURROUNDING MASKS FOR THE FOLLOWING STATIONS:"
+            for poste in map(self.stringstation, list(savevar["station" + str(i)])):
+                azim, mask = INFO.maskposte(poste)
+                list_list_azim.append(azim)
+                list_list_mask.append(mask)
+                if not azim == [0, 360]:
+                    print poste, INFO.nameposte(poste)
+        else:
+            list_list_azim = None
+            list_list_mask = None
+
+        return sun().slope_aspect_correction(savevar["DIR_SWdown" + str(i)], savevar["SCA_SWdown" + str(i)], time, savevar["LAT" + str(i)],
+                                             savevar["LON" + str(i)], savevar["aspect" + str(i)], savevar["slope" + str(i)], list_list_azim=list_list_azim, list_list_mask=list_list_mask, lnosof_surfex=True)
+
+    def stringstation(self, station):
+        station = str(station)
+        if len(station) == 7:
+            station = "0" + station
+        return station
+
+
+class forcinput_tomodify:
+    def __init__(self, forcin, forcout, *args, **kwargs):
+        '''Generic method to open an initial forcing file to read and to create a modified forcing file'''
+
+        if type(forcin) is int:
+            forcin = str(forcin)
+
+        if not os.path.isfile(forcin):
+            raise FileNameException(forcin)
+
+        dirout = os.path.dirname(forcout)
+
+        if not (dirout == '' or os.path.isdir(dirout)):
+            raise DirNameException(dirout)
+
+        init_forcing_file = prosimu(forcin)
+        self.filename = forcin
+
+        new_forcing_file = netCDF4.Dataset(forcout, "w", format=init_forcing_file.format())
+
+        self.modify(init_forcing_file, new_forcing_file, args)
+
+        init_forcing_file.close()
+        new_forcing_file.close()
+
+    def modify(self, init_forcing_file, new_forcing_file, *args):
+        pass
 
 
 class forcinput_select(forcinput_tomodify):
