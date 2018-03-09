@@ -7,6 +7,7 @@
 # General python modules
 import numpy as np
 import os
+import six
 
 # Snowtools modules
 from utils.prosimu import prosimu
@@ -30,7 +31,7 @@ def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam", forcing="
     namSURFEX.close()
 
 
-def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc", dateend=None, updateloc=True):
+def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc", dateend=None, updateloc=True, physicaloptions={}, snowparameters={}):
     '''This function updates a NamelistSet object of the bronx module or a NamelistContents object of the vortex module.'''
 
     NamelistObject = update_mandatory_settings(NamelistObject)
@@ -38,6 +39,9 @@ def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc
     if updateloc:
         NamelistObject = update_loc(NamelistObject, forcing)
     NamelistObject = update_forcingdates(NamelistObject, datebegin, dateend, forcing=forcing)
+
+    NamelistObject = update_physicaloptions(NamelistObject, **physicaloptions)
+    NamelistObject = update_snowparameters(NamelistObject, **snowparameters)
 
     return NamelistObject
 
@@ -111,5 +115,27 @@ def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"
 
 #     if dateend < dateforcend:
     NamelistObject["NAM_IO_OFFLINE"].NDATESTOP = [dateend.year, dateend.month, dateend.day, dateend.hour * 3600]
+
+    return NamelistObject
+
+
+def update_physicaloptions(NamelistObject, **kwargs):
+
+    for key, value in six.iteritems(kwargs):
+        if key.upper() in ["CSNOWDRIFT", "LSNOWDRIFT_SUBLIM", "LSNOW_ABS_ZENITH", "CSNOWMETAMO", "CSNOWRAD", "CSNOWFALL", "CSNOWCOND", "CSNOWHOLD", "CSNOWCOMP", "CSNOWZREF"]:
+            setattr(NamelistObject["NAM_ISBA_SNOWn"], key.upper(), value)
+
+    return NamelistObject
+
+
+def update_snowparameters(NamelistObject, **kwargs):
+
+    for key, value in six.iteritems(kwargs):
+        if key.upper() in ["XZ0SN", "XZ0HSN", "XTAU_LW"]:
+            setattr(NamelistObject["NAM_SURF_CSTS"], key.upper(), value)
+        elif key.upper() in ["XALBICE1", "XALBICE2", "XALBICE3", "XRHOTHRESHOLD_ICE", "XZ0ICEZ0SNOW", "XVAGING_GLACIER", "XVAGING_NOGLACIER", "XVVISC3", "X_RI_MAX"]:
+            setattr(NamelistObject["NAM_SURF_SNOW_CSTS"], key.upper(), value)
+        else:
+            print "IGNORE FIELD " + key + " : not in namelist."
 
     return NamelistObject
