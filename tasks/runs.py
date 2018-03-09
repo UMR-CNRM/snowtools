@@ -272,3 +272,14 @@ class griddedrun(surfexrun):
     def __init__(self, datebegin, dateend, forcingpath, threshold=-999):
         super(griddedrun, self).__init__(datebegin, dateend, forcingpath, threshold=threshold)
         self.updateloc = False
+
+    def get_all_consts(self):
+        super(griddedrun, self).get_all_consts()
+
+        if "DIRDATAPGD" in os.environ.keys():
+            dirdatapgd = os.environ["DIRDATAPGD"]
+        else:
+            dirdatapgd = "/manto/lafaysse/FILES_PGD"
+
+        for fic in os.listdir(dirdatapgd):
+            get_file_const_or_crash(dirdatapgd + "/" + fic, fic)
