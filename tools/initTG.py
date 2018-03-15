@@ -41,7 +41,8 @@ def create_env(diroutput):
 
 def get_meteo_for_clim(forcingpath, datebegin, dateend, geolist, list_forcing=[]):
 
-    forcingpath = list(forcingpath)
+    if type(forcingpath) is str:
+        forcingpath = [forcingpath]
     list_forcing_tomerge = []
 
     for i, path in enumerate(forcingpath):
@@ -52,7 +53,7 @@ def get_meteo_for_clim(forcingpath, datebegin, dateend, geolist, list_forcing=[]
     if len(forcingpath) > 1:
         forcinput_applymask(list_forcing_tomerge, "FORCING.nc")
     else:
-        os.rename("FORCING_1.nc", "FORCING.nc")
+        os.rename("FORCING_0.nc", "FORCING.nc")
 
     if geolist:
         os.rename("FORCING.nc", "FORCING_base.nc")
