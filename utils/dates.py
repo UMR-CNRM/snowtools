@@ -24,6 +24,15 @@ class DateException(Exception):
         return "Dates inconsitency : " + self.message
 
 
+class WallTimeException(Exception):
+
+    def __init__(self, duration):
+        self.duration = duration
+
+    def __str__(self):
+        return "Walltime is longer than 24 hours: " + str(self.duration)
+
+
 class EarlyDateException(DateException):
 
     def __init__(self, earlydate, date):

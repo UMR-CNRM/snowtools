@@ -167,6 +167,22 @@ def parse_options(arguments):
                       action="store_true", dest="gridsimul", default=False,
                       help="This is a gridded simulation as defined in the namelist - default: False")
 
+    parser.add_option("--escroc",
+                      action="store", type="string", dest="escroc", default=None,
+                      help="ESCROC subensemble")
+
+    parser.add_option("--nmembers",
+                      action="store", type="int", dest="nmembers", default=None,
+                      help="Number of members")
+
+    parser.add_option("--startmember",
+                      action="store", type="int", dest="startmember", default=None,
+                      help="Number of first member")
+
+    parser.add_option("--nnodes",
+                      action="store", type="int", dest="nnodes", default=1,
+                      help="Number of nodes")
+
     (options, args) = parser.parse_args(arguments)
 
     del args
