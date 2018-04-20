@@ -45,7 +45,7 @@ def parse_options(arguments):
 
     parser.add_option("--action",
                       action="store", type="string", dest="action", default=None,
-                      help="spinup, run")
+                      help="spinup, run, scores")
 
     parser.add_option("--escroc",
                       action="store", type="string", dest="escroc", default=None,
@@ -61,10 +61,35 @@ if __name__ == '__main__':
     options = parse_options(sys.argv)
 
     if options.action == "spinup":
-        commande = "python $SNOWTOOLS_CEN/tasks/s2m_command.py -g -o " + "SPINUP_" + options.site + " -f /home/lafaysse/data/ESM-SnowMIP/" + options.site + "/meteo -b " + bdate[options.site] + " -e " + edate[options.site] + " -x " + edate[options.site] + " -n /home/lafaysse/data/ESM-SnowMIP/OPTIONS_" + options.site + ".nam -s /home/lafaysse/SURFEX/lafaysse_fromV8trunk_withmeb/exe"
+        commande = "python $SNOWTOOLS_CEN/tasks/s2m_command.py -g -o " + "SPINUP_" + options.site + " -f /home/lafaysse/data/ESM-SnowMIP/" + options.site + "/meteo -b " + bdate[options.site] + " -e " + edate[options.site] + " -n /home/lafaysse/data/ESM-SnowMIP/OPTIONS_" + options.site + ".nam -s /home/lafaysse/SURFEX/lafaysse_fromV8trunk_withmeb/exe"
 
     elif options.action == "run":
-        commande = "python $SNOWTOOLS_CEN/tasks/s2m_command.py --escroc=" + options.escroc + " --nnodes=15 -o " + options.escroc + " --nmembers=7776 -m ESM-SnowMIP -f meteo -r " + options.site + " -b " + bdate[options.site] + " -e " + edate[options.site] + " -x " + edate[options.site] + " -n ESM-SnowMIP/OPTIONS_" + options.site + ".nam -s /home/cnrm_other/cen/mrns/lafaysse/SURFEX/lafaysse_fromV8trunk_withmeb/exe_hybride"
+        if options.escroc == "E1":
+            nmembers = 7776
+            nnodes = 15
+            namelist = "ESM-SnowMIP/OPTIONS_" + options.site + ".nam"
+        elif options.escroc == "E2":
+            nmembers = 35
+            nnodes = 1
+            namelist = "ESM-SnowMIP/OPTIONS_" + options.site + ".nam"
+        elif options.escroc == "E2CLEAR":
+            nmembers = 35
+            nnodes = 1
+            namelist = "ESM-SnowMIP/OPTIONS_CLEAR" + options.site + ".nam"
+        elif options.escroc == "Crocus":
+            nmembers = 1
+            nnodes = 1
+            
+        commande = "python $SNOWTOOLS_CEN/tasks/s2m_command.py --escroc=" + options.escroc + " --nnodes=" + str(nnodes) + " -o " + options.escroc + " --nmembers=" + str(nmembers) + " -m ESM-SnowMIP -f meteo -r " + options.site + " -b " + bdate[options.site] + " -e " + edate[options.site] + " -x " + edate[options.site] + " -n ESM-SnowMIP/OPTIONS_" + options.site + ".nam -s /home/cnrm_other/cen/mrns/lafaysse/SURFEX/lafaysse_fromV8trunk_withmeb/exe_hybride"
+
+    elif options.action == "scores":
+        if options.escroc == "E1":
+            nmembers = 7776
+        elif options.escroc == "E2":
+            nmembers = 35            
+        elif options.escroc == "Crocus":
+            nmembers = 1        
+        commande = "python $SNOWTOOLS_CEN/tasks/s2m_command.py --scores --escroc=" + options.escroc + " --nnodes=1 -o " + options.escroc + " --nmembers=" + str(nmembers) + " -m ESM-SnowMIP -f meteo -r " + options.site + " -b " + bdate[options.site] + " -e " + edate[options.site] + " -s /home/cnrm_other/cen/mrns/lafaysse/SURFEX/lafaysse_fromV8trunk_withmeb/exe_hybride"
 
     else:
         print "No action to do."

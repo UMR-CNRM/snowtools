@@ -171,6 +171,10 @@ def parse_options(arguments):
                       action="store", type="string", dest="escroc", default=None,
                       help="ESCROC subensemble")
 
+    parser.add_option("--scores",
+                      action="store_true", dest="scores", default=False,
+                      help="ESCROC scores")
+
     parser.add_option("--nmembers",
                       action="store", type="int", dest="nmembers", default=None,
                       help="Number of members")

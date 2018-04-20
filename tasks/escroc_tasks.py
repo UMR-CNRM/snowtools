@@ -107,7 +107,7 @@ class Escroc_Vortex_Task(Task):
             tb03_s = toolbox.input(
                 alternate      = 'SnowpackInit',
                 local          = 'PREP.nc',
-                experiment     = 'spinup@' + os.getlogin(),
+                experiment     = 'spinup@lafaysse',
                 geometry       = self.conf.geometry,
                 date           = self.conf.datespinup,
                 intent         = 'inout',
@@ -335,6 +335,12 @@ class Escroc_Vortex_Task(Task):
                 self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
 
             self.sh.title('Toolbox algo tb11 = OFFLINE')
+            
+            if self.conf.subensemble == 'Crocus':
+                ntasks=1
+            else:
+                ntasks=40 * int(self.conf.nnodes)
+            
             tb11 = tbalgo4 = toolbox.algo(
                 engine         = 'blind',
                 binary         = 'OFFLINE',
@@ -345,7 +351,7 @@ class Escroc_Vortex_Task(Task):
                 threshold      = self.conf.threshold,
                 members        = footprints.util.rangex(members),
                 subensemble    = self.conf.subensemble if hasattr(self.conf, "subensemble")  else "E2",
-                ntasks         = 40 * int(self.conf.nnodes)
+                ntasks         = ntasks
             )
             print t.prompt, 'tb11 =', tb11
             print
@@ -405,4 +411,3 @@ class Escroc_Vortex_Task(Task):
                 ),
                 print t.prompt, 'tb21 =', tb21
                 print
-

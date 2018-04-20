@@ -121,7 +121,12 @@ class vortex_kitchen(object):
     def mkjob_command(self, options, jobname=None):
         if options.escroc:
             jobname = jobname if jobname else 'escroc'
-            reftask = "escroc_tasks"
+            if options.scores:
+                #reftask  = "scores_task"
+                #reftask = "optim_task"
+                reftask = "crps_task"
+            else:
+                reftask = "escroc_tasks"
             nnodes = 1
         else:
             jobname = 'rea_s2m'
@@ -164,7 +169,10 @@ class vortex_kitchen(object):
         minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 2, pyr_flat = 2, cor_allslopes = 2, cor_flat = 1, postes = 2)
 
         for site_snowmip in ["cdp", "oas", "obs", "ojp", "rme", "sap", "snb", "sod", "swa", "wfj"]:
-            minutes_peryear[site_snowmip] = 2
+            if options.scores:
+                minutes_peryear[site_snowmip] = 0.2
+            else:
+                minutes_peryear[site_snowmip] = 4
 
         key = options.region if options.region in minutes_peryear.keys() else "alp_allslopes"
 
