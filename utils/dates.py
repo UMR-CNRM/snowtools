@@ -24,6 +24,15 @@ class DateException(Exception):
         return "Dates inconsitency : " + self.message
 
 
+class WallTimeException(Exception):
+
+    def __init__(self, duration):
+        self.duration = duration
+
+    def __str__(self):
+        return "Walltime is longer than 24 hours: " + str(self.duration)
+
+
 class EarlyDateException(DateException):
 
     def __init__(self, earlydate, date):
@@ -73,3 +82,42 @@ def check_and_convert_date(datearg):
             FormatDateException(datearg)
     else:
         return datearg
+
+
+def get_list_dates_files(datebegin, dateend, duration):
+    list_dates_begin_forcing = []
+    list_dates_end_forcing = []
+    if duration == "yearly":
+        if datebegin.month >= 8:
+            dateforc_begin = datetime.datetime(datebegin.year, 8, 1, 6, 0, 0)
+        else:
+            dateforc_begin = datetime.datetime(datebegin.year - 1, 8, 1, 6, 0, 0)
+        dateforc_end = dateforc_begin
+        while dateforc_end < dateend:
+            dateforc_end = dateforc_begin.replace(year= dateforc_begin.year + 1)
+            list_dates_begin_forcing.append(dateforc_begin)
+            list_dates_end_forcing.append(dateforc_end)
+            dateforc_begin = dateforc_end
+    elif duration == "monthly":
+        dateforc_begin = datetime.datetime(datebegin.year, datebegin.month, 1, 6, 0, 0)
+        dateforc_end = dateforc_begin
+        while dateforc_end < dateend:
+            if dateforc_begin.month == 12:
+                dateforc_end = dateforc_begin.replace(year= dateforc_begin.year + 1, month= 1)
+            else:
+                dateforc_end = dateforc_begin.replace(month= dateforc_begin.month + 1)
+            list_dates_begin_forcing.append(dateforc_begin)
+            list_dates_end_forcing.append(dateforc_end)
+            dateforc_begin = dateforc_end
+    elif duration == "full":
+        list_dates_begin_forcing.append(datebegin)
+        list_dates_end_forcing.append(dateend)
+
+    list_dates_begin_pro = list_dates_begin_forcing[:]
+    list_dates_begin_pro[0] = max(list_dates_begin_forcing[0], datebegin)
+    list_dates_end_pro = list_dates_end_forcing[:]
+    list_dates_end_pro[-1] = min(list_dates_end_forcing[-1], dateend)
+    print "DEBUG"
+    print list_dates_begin_forcing
+    print list_dates_end_forcing
+    return list_dates_begin_forcing, list_dates_end_forcing, list_dates_begin_pro, list_dates_end_pro

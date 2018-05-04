@@ -16,7 +16,7 @@ import datetime
 # snowtools modules
 from utils.prosimu import prosimu
 from utils.resources import get_file_period, save_file_const
-from tools.change_forcing import forcinput_select
+from tools.change_forcing import forcinput_select, forcinput_applymask
 from utils.FileException import DirFileException
 
 
@@ -41,13 +41,25 @@ def create_env(diroutput):
 
 def get_meteo_for_clim(forcingpath, datebegin, dateend, geolist, list_forcing=[]):
 
-    dateforcbegin, dateforcend = get_file_period("FORCING", forcingpath, datebegin, dateend)
-    forcing = "FORCING_" + dateforcbegin.strftime('%Y%m%d%H') + "_" + dateforcend.strftime('%Y%m%d%H') + ".nc"
+    if type(forcingpath) is str:
+        forcingpath = [forcingpath]
+    list_forcing_tomerge = []
+
+    for i, path in enumerate(forcingpath):
+        dateforcbegin, dateforcend = get_file_period("FORCING", path, datebegin, dateend)
+        os.rename("FORCING.nc", "FORCING_" + str(i) + ".nc")
+        list_forcing_tomerge.append("FORCING_" + str(i) + ".nc")
+
+    if len(forcingpath) > 1:
+        forcinput_applymask(list_forcing_tomerge, "FORCING.nc")
+    else:
+        os.rename("FORCING_0.nc", "FORCING.nc")
 
     if geolist:
         os.rename("FORCING.nc", "FORCING_base.nc")
         forcinput_select("FORCING_base.nc", "FORCING.nc", *geolist)
 
+    forcing = "FORCING_" + str(i) + "_" + dateforcbegin.strftime('%Y%m%d%H') + "_" + dateforcend.strftime('%Y%m%d%H') + ".nc"
     os.rename("FORCING.nc", forcing)
     list_forcing.append(forcing)
 

@@ -18,6 +18,142 @@ from utils.sun import sun
 from utils.prosimu import prosimu
 from utils.infomassifs import infomassifs
 from utils.FileException import FileNameException, DirNameException, VarWriteException, GeometryException
+from utils.dates import TypeException
+
+
+class forcinput_tomerge:
+    def __init__(self, forcin, forcout, *args, **kwargs):
+        '''Generic method to open merge multiple forcing files'''
+
+        if type(forcin) is list:
+            forcin = map(str, forcin)
+        else:
+            raise TypeException(type(forcin), list)
+
+        init_forcing_file = []
+
+        for ficin in forcin:
+            if os.path.isfile(ficin):
+                init_forcing_file.append(prosimu(ficin))
+            else:
+                raise FileNameException(ficin)
+
+        dirout = os.path.dirname(forcout)
+
+        if not (dirout == '' or os.path.isdir(dirout)):
+            raise DirNameException(dirout)
+
+        new_forcing_file = netCDF4.Dataset(forcout, "w", format=init_forcing_file[0].format())
+
+        self.merge(init_forcing_file, new_forcing_file, args)
+
+        for openedfic in init_forcing_file:
+            openedfic.close()
+
+        new_forcing_file.close()
+
+    def merge(self, init_forcing_file, new_forcing_file, *args):
+
+        spatial_dim_name = "Number_of_points"
+
+        index_deb = 0
+        len_dim = 0
+        spatial_index = []
+        for unitfile in init_forcing_file:
+
+            dim_file = unitfile.getlendim(spatial_dim_name)
+            index_end = index_deb + dim_file - 1
+            spatial_index.append((index_deb, index_end))
+
+            len_dim += dim_file
+            index_deb = index_end + 1
+
+        new_forcing_file.createDimension("time", None)
+        new_forcing_file.createDimension(spatial_dim_name, len_dim)
+
+        dictdim = init_forcing_file[0].listdim()
+
+        del dictdim["time"]
+        del dictdim[spatial_dim_name]
+
+        for dimname, dim in six.iteritems(dictdim):
+            print "Create dimension " + dimname + " " + str(len(dim))
+            new_forcing_file.createDimension(dimname, len(dim))
+
+        time = init_forcing_file[0].readtime()
+
+        listvar = init_forcing_file[0].listvar()
+        savevar = {}
+
+        for varname in listvar:
+            print varname
+            vartype, rank, array_dim, varFillvalue, var_attrs = init_forcing_file[0].infovar(varname)
+            if varname == "DIR_SWdown":
+                direct = new_forcing_file.createVariable(varname, vartype, array_dim, fill_value=varFillvalue)
+                var = direct
+            elif varname == "SCA_SWdown":
+                diffus = new_forcing_file.createVariable(varname, vartype, array_dim, fill_value=varFillvalue)
+                var = diffus
+            else:
+                var = new_forcing_file.createVariable(varname, vartype, array_dim, fill_value=varFillvalue)
+
+            for attname in var_attrs:
+                if not attname == u'_FillValue':
+                    setattr(var, attname, init_forcing_file[0].getattr(varname, attname))
+
+            if rank >= 1 and spatial_dim_name in array_dim:
+
+                for i, unitfile in enumerate(init_forcing_file):
+
+                    var_array = unitfile.read(varname, keepfillvalue=True)
+
+                    if varname in ["LAT", "LON", "aspect", "slope", "DIR_SWdown", "SCA_SWdown", "massif_number", "station"]:
+                        savevar[varname + str(i)] = var_array
+
+                    if varname not in ["DIR_SWdown", "SCA_SWdown"]:
+                        if rank == 1:
+                            var[spatial_index[i][0]:spatial_index[i][1] + 1] = var_array[:]
+                        elif rank == 2:
+                            var[:, spatial_index[i][0]:spatial_index[i][1] + 1] = var_array[:, :]
+
+            else:
+                var[:] = unitfile.read(varname)
+
+        for i, unitfile in enumerate(init_forcing_file):
+            direct_array, diffus_array = self.compute_solar_radiations(time, savevar, i)
+            direct[:, spatial_index[i][0]:spatial_index[i][1] + 1] = direct_array[:, :]
+            diffus[:, spatial_index[i][0]:spatial_index[i][1] + 1] = diffus_array[:, :]
+
+    def compute_solar_radiations(self, time, savevar, i):
+        return savevar["DIR_SWdown" + str(i)], savevar["SCA_SWdown" + str(i)]
+
+
+class forcinput_applymask(forcinput_tomerge):
+    def compute_solar_radiations(self, time, savevar, i):
+
+        if "station" + str(i) in savevar.keys():
+            INFO = infomassifs()
+            list_list_azim = []
+            list_list_mask = []
+            print "ACCOUNT FOR SURROUNDING MASKS FOR THE FOLLOWING STATIONS:"
+            for poste in map(self.stringstation, list(savevar["station" + str(i)])):
+                azim, mask = INFO.maskposte(poste)
+                list_list_azim.append(azim)
+                list_list_mask.append(mask)
+                if not azim == [0, 360]:
+                    print poste, INFO.nameposte(poste)
+        else:
+            list_list_azim = None
+            list_list_mask = None
+
+        return sun().slope_aspect_correction(savevar["DIR_SWdown" + str(i)], savevar["SCA_SWdown" + str(i)], time, savevar["LAT" + str(i)],
+                                             savevar["LON" + str(i)], savevar["aspect" + str(i)], savevar["slope" + str(i)], list_list_azim=list_list_azim, list_list_mask=list_list_mask, lnosof_surfex=True)
+
+    def stringstation(self, station):
+        station = str(station)
+        if len(station) == 7:
+            station = "0" + station
+        return station
 
 
 class forcinput_tomodify:

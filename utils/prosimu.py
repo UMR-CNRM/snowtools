@@ -44,6 +44,9 @@ class prosimu():
             except Exception:
                 raise FileOpenException(path)
         else:
+            print "I am going to crash because there is a filename exception"
+            print path
+            print type(path)
             raise FileNameException(path)
 
     def format(self):
@@ -58,6 +61,9 @@ class prosimu():
 
     def listvar(self):
         return self.dataset.variables.keys()
+
+    def getlendim(self, dimname):
+        return len(self.dataset.dimensions[dimname])
 
     def getdimvar(self, varname):
         return np.array(self.dataset.variables[varname].dimensions)
@@ -180,24 +186,25 @@ class prosimu():
         # Sélection d'un point si demandé
         # Suppression dimension tile si nécessaire
         var = self.extract(varname, varnc, selectpoint=selectpoint, removetile=removetile)
-
+        print "shape"
+        print var.shape
         # Remplissage des valeurs manquantes si nécessaire
-        if len(var.shape) > 1 and not keepfillvalue:
+        if (len(var.shape) > 1 or (len(var.shape) == 1 and var.shape[0] > 1)) and not keepfillvalue:
             try:
                 if fill2zero:
                     array = var.filled(fill_value=0)
-                    print "Fill data with 0 for variable " + varname
+                    print "Fill missing data with 0 for variable " + varname
                 else:
                     array = var.filled(fill_value=np.nan)
-                    print "Fill data with np.nan for variable " + varname
+                    print "Fill missing data with np.nan for variable " + varname
             except Exception:
                 if avail_fillvalue:
                     if fill2zero:
                         array = np.where(var == fillvalue, 0, var)
-                        print "Fill data with 0 for variable " + varname + " (old method)"
+                        print "Fill missing data with 0 for variable " + varname + " (old method)"
                     else:
                         array = np.where(var == fillvalue, np.nan, var)
-                        print "Fill data with np.nan for variable " + varname + " (old method)"
+                        print "Fill missing data with np.nan for variable " + varname + " (old method)"
                 else:
                     print "Unable to fill data with 0 or np.nan for variable " + varname
 
@@ -211,7 +218,7 @@ class prosimu():
 
     # Pour compatibilité anciens codes, on conserve les routines obsolètes read1d et read2d
     def read1d(self, varname, fill2zero=False, indpoint=0):
-        return self.read(varname, fill2zero=fill2zero, indpoint=indpoint)
+        return self.read(varname, fill2zero=fill2zero, selectpoint=indpoint)
 
     def read2d(self, varname, fill2zero=False):
         return self.read(varname, fill2zero=fill2zero)

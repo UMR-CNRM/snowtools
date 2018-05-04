@@ -12,7 +12,7 @@ import tasks.s2m_command as s2m
 class s2mTest(unittest.TestCase):
 
     def setUp(self):
-        forcingtest = os.environ["SNOWTOOLS_CEN"] + "/DATA/FORCING_test.nc"
+        forcingtest = os.environ["SNOWTOOLS_CEN"] + "/DATA/FORCING_test_base.nc"
         diroutput = os.environ["SNOWTOOLS_CEN"] + "/tests/output" + datetime.datetime.today().strftime("%Y%m%d%H%M%S%f")
         self.commonoptions = " -f " + forcingtest + " -o " + diroutput + " -g"
 

@@ -31,19 +31,27 @@ from utils.dates import checkdateafter, check_and_convert_date
 from utils.resources import absolute_path, check_surfex_exe
 from utils.infomassifs import infomassifs
 import tasks.runs
+from tasks.vortex_kitchen import vortex_kitchen
 
-usage = "usage: s2m -b begin_date -e end_date -f forcing [-o path_output] [-w workdir] [-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] [-c nb_classes_aspects] [-L Lower-altitude] [-U Upper-altitude] [-s surfex_exe_directory]"
+usage = "usage: s2m -b begin_date -e end_date -f forcing [-m forcingmodel] [-o path_output] [-w workdir] [-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] [-c nb_classes_aspects] [-L Lower-altitude] [-U Upper-altitude] [-s surfex_exe_directory]"
 
 
 def exit_usage():
     sys.exit(usage)
 
 
-def check_and_convert_options(options):
+def check_and_convert_options(options, vortex=False):
 
-    for mandatory in [options.datedeb, options.datefin, options.forcing]:
+    list_mandatory = [options.datedeb, options.datefin, options.forcing]
+    list_print = "-b -e -f"
+
+    if vortex:
+        list_mandatory.extend([options.model, options.region])
+        list_print += " -m -r"
+
+    for mandatory in list_mandatory:
         if not mandatory:
-            print "Missing mandatory option (-b -e -f)"
+            print "Missing mandatory option: " + list_print
             exit_usage()
 
     # Controls and type conversions of dates
@@ -51,8 +59,12 @@ def check_and_convert_options(options):
     checkdateafter(options.datefin, options.datedeb)
 
     # Conversions of local paths in absolute paths
-    [options.forcing, options.namelist, options.diroutput, options.dirwork, options.exesurfex] = \
-        map(absolute_path, [options.forcing, options.namelist, options.diroutput, options.dirwork, options.exesurfex])
+    [options.namelist, options.dirwork, options.exesurfex] = \
+        map(absolute_path, [options.namelist, options.dirwork, options.exesurfex])
+
+    if not vortex:
+        [options.forcing, options.diroutput] = \
+            map(absolute_path, [options.forcing, options.diroutput])
 
     options.exesurfex = check_surfex_exe(options.exesurfex)
     print options.exesurfex
@@ -61,7 +73,8 @@ def check_and_convert_options(options):
     if options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:
         INFOmassifs = infomassifs()
 
-        options.region = INFOmassifs.region2massifs(options.region)
+        if not vortex:
+            options.region = INFOmassifs.region2massifs(options.region)
 
         if options.slopes:
             options.slopes = options.slopes.split(",")
@@ -97,6 +110,10 @@ def parse_options(arguments):
     parser.add_option("-f", "--forcing",
                       action="store", type="string", dest="forcing", default=None,
                       help="path of the forcing file or of the directory with the forcing files - default: None")
+
+    parser.add_option("-m", "--model",
+                      action="store", type="string", dest="model", default=None,
+                      help="meteorological model used as forcing")
 
     parser.add_option("-x", "--spinupdate",
                       action="store", type="string", dest="datespinup", default=None,
@@ -140,7 +157,35 @@ def parse_options(arguments):
 
     parser.add_option("-E", "--extractforcing",
                       action="store_true", dest="onlyextractforcing", default=False,
-                      help="name of the output directory - default: None")
+                      help="only extract meteorological forcing - default: False")
+
+    parser.add_option("--addmask",
+                      action="store_true", dest="addmask", default=False,
+                      help="apply shadows on solar radiation from surrounding masks")
+
+    parser.add_option("--grid",
+                      action="store_true", dest="gridsimul", default=False,
+                      help="This is a gridded simulation as defined in the namelist - default: False")
+
+    parser.add_option("--escroc",
+                      action="store", type="string", dest="escroc", default=None,
+                      help="ESCROC subensemble")
+
+    parser.add_option("--scores",
+                      action="store_true", dest="scores", default=False,
+                      help="ESCROC scores")
+
+    parser.add_option("--nmembers",
+                      action="store", type="int", dest="nmembers", default=None,
+                      help="Number of members")
+
+    parser.add_option("--startmember",
+                      action="store", type="int", dest="startmember", default=None,
+                      help="Number of first member")
+
+    parser.add_option("--nnodes",
+                      action="store", type="int", dest="nnodes", default=1,
+                      help="Number of nodes")
 
     (options, args) = parser.parse_args(arguments)
 
@@ -163,7 +208,14 @@ def execute(args):
     if not options.groundonly:
 
         # Define a run object
-        if options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:
+        if type(options.forcing) is list:
+            run = tasks.runs.postesrun(options.datedeb, options.datefin, options.forcing, options.diroutput, threshold=options.threshold,
+                                       dirwork=options.dirwork, datespinup=options.datespinup,
+                                       execdir=options.exesurfex,
+                                       namelist=options.namelist,
+                                       addmask=True)
+
+        elif options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:
 
             if options.onlyextractforcing:
                 run = tasks.runs.massifextractforcing(options.datedeb, options.datefin, options.forcing, options.diroutput,
@@ -177,10 +229,16 @@ def execute(args):
                                            namelist=options.namelist,
                                            geolist=[options.region, options.minlevel, options.maxlevel, options.slopes, options.aspects])
         else:
-            run = tasks.runs.surfexrun(options.datedeb, options.datefin, options.forcing, options.diroutput, threshold=options.threshold,
-                                       dirwork=options.dirwork, datespinup=options.datespinup,
-                                       execdir=options.exesurfex,
-                                       namelist=options.namelist)
+            if options.gridsimul:
+                run = tasks.runs.griddedrun(options.datedeb, options.datefin, options.forcing, options.diroutput, threshold=options.threshold,
+                                            dirwork=options.dirwork, datespinup=options.datespinup,
+                                            execdir=options.exesurfex,
+                                            namelist=options.namelist)
+            else:
+                run = tasks.runs.surfexrun(options.datedeb, options.datefin, options.forcing, options.diroutput, threshold=options.threshold,
+                                           dirwork=options.dirwork, datespinup=options.datespinup,
+                                           execdir=options.exesurfex,
+                                           namelist=options.namelist)
 
         # Execute the run
         run.run()
@@ -192,13 +250,20 @@ def execute_through_vortex(args):
     options = parse_options(args)
 
     # Check option values and convert them in types suited for defining a run configuration
-    options = check_and_convert_options(options)
+    options = check_and_convert_options(options, vortex=True)
+
+    if not options.dirwork:
+        if 'WORKDIR' in os.environ.keys():
+            options.dirwork = os.environ['WORKDIR']
+        else:
+            options.dirwork = "."
 
     # Cook vortex task
+    run = vortex_kitchen(options)
+    run.run(options)
 
 
 if __name__ == "__main__":
-    print sys.argv
 
     machine = os.uname()[1]
 

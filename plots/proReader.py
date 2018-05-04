@@ -213,11 +213,16 @@ class ProReader:
         print "Lecture fichier %s" % ncfile
         print "Point %i selectionne\n" % point
 
-        self.slope = slopetab[point]
-        self.aspect = aspecttab[point]
-        self.alt = alttab[point]
-        self.lat = lattab[point]
-        self.lon = lontab[point]
+        if 'slope' in ff.listvar():
+            self.slope = slopetab[point]
+        if 'aspect' in ff.listvar():
+            self.aspect = aspecttab[point]
+        if 'ZS' in ff.listvar():
+            self.alt = alttab[point]
+        if 'LAT' in ff.listvar():
+            self.lat = lattab[point]
+        if 'LON' in ff.listvar():
+            self.lon = lontab[point]
         if('station' in ff.listvar()):
             nrstationtab = ff.read('station')[:]
             self.nrstation = nrstationtab[point]
@@ -254,7 +259,7 @@ class ProReader:
         """
         return np.nansum(self.var['ep'], axis=1)
 
-    def plot(self, axe, var, b=None, e=None, xlabel=True, legend=None, colormap='jet', real_layers=True):
+    def plot(self, axe, var, b=None, e=None, xlabel=True, legend=None, colormap='jet', real_layers=True, addcolorbar=True):
         '''
         Trace la variable demandee sur la hauteur du manteau neigeux en fonction du temps
             axe : matplotlib.Axe
@@ -299,14 +304,15 @@ class ProReader:
         ep = self.var['ep'][intime]
         toplot = self.var[var][intime]
         if(real_layers):
-            plot_profil(axe, ep, toplot, colormap=colormap, legend=legend)
-            axe.set_ylabel('Hauteur (m)')
+            print axe, ep, toplot
+            plot_profil(axe, ep, toplot, colormap=colormap, legend=legend, addcolorbar=addcolorbar)
+            axe.set_ylabel('Height (m)')
             axe.set_ylim(0, np.max(np.nansum(ep, axis=1)))
         else:
             ret = axe.pcolormesh(np.swapaxes(toplot, 0, 1), cmap=colormap)
             cbar = plt.colorbar(ret, ax=axe)
             cbar.set_label(legend)
-            axe.set_ylabel('Couche numerique')
+            axe.set_ylabel('Numerical layer')
             axe.set_ylim(0, self.nsnowlayer)
 
         axe.set_xlim(0, toplot.shape[0])
@@ -314,13 +320,15 @@ class ProReader:
             def format_ticks(x, pos):
                 x = int(x)
                 if(x >= 0 and x < toplot.shape[0]):
-                    return self.date[intime][x].strftime('%Y-%m-%d %Hh')
+#                     return self.date[intime][x].strftime('%Y-%m-%d %Hh')
+                    return self.date[intime][x].strftime('%Y-%m-%d')
+
                 else:
                     return 'E'
             formatter = ticker.FuncFormatter(format_ticks)
             axe.xaxis.set_major_formatter(formatter)
             plt.setp(axe.xaxis.get_majorticklabels(), rotation=60)
-            plt.tight_layout()
+#             plt.tight_layout()
 
     def plot1D(self, axe, var, b=None, e=None, legend=None, color='bo'):
         '''

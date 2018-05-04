@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import six
 import xml.dom.minidom
 from utils.FileException import FileNameException, FileParseException
 
@@ -124,6 +125,11 @@ class infomassifs():
                         "all": range(1, 24) + [30] + range(40, 42) + range(64, 75) + range(80, 92)
                         }
 
+        for area, list_massifs in six.iteritems(self.dicArea.copy()):
+            self.dicArea[area + "_allslopes"] = list_massifs
+            self.dicArea[area + "_flat"] = list_massifs
+
+
         self.dicAltArea = {}
 
         self.dicPostesArea = {}
@@ -165,13 +171,20 @@ class infomassifs():
 
     def region2massifs(self, region):
         if region:
-            try:
-                massifs = [int(region)]
-                assert massifs in self.getListMassif_of_region("all")
-            except ValueError:
-                massifs = self.getListMassif_of_region(region)
-            except AssertionError:
-                raise MassifError(massifs)
+            list_massifs = region.split(",")
+            if len(list_massifs) > 1:
+                massifs = map(int, list_massifs)
+                for massif in massifs:
+                    assert massif in self.getListMassif_of_region("all")
+            else:
+                try:
+                    massif = int(region)
+                    assert massif in self.getListMassif_of_region("all")
+                    massifs = [massif]
+                except ValueError:
+                    massifs = self.getListMassif_of_region(region)
+                except AssertionError:
+                    raise MassifError(massifs)
         else:
             massifs = self.getListMassif_of_region("all")
         return massifs
