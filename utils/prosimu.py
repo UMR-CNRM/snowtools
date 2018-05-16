@@ -206,6 +206,7 @@ class prosimu():
                         array = np.where(var == fillvalue, np.nan, var)
                         print "Fill missing data with np.nan for variable " + varname + " (old method)"
                 else:
+                    array = var
                     print "Unable to fill data with 0 or np.nan for variable " + varname
 
         else:
