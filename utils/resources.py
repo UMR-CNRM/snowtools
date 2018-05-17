@@ -139,7 +139,8 @@ def get_file_const_or_crash(pathin, nameout):
 
 def get_file_const(pathin, nameout):
     if os.path.isfile(pathin):
-        shutil.copy(pathin, nameout)
+        print pathin
+        smart_copy(pathin, nameout)
         return True
     else:
         return False
