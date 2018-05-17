@@ -269,8 +269,8 @@ class massifextractforcing(massifrun):
 
 class griddedrun(surfexrun):
     """Class for a PC gridded SURFEX run for which the geometry is defined in the namelist"""
-    def __init__(self, datebegin, dateend, forcingpath, threshold=-999):
-        super(griddedrun, self).__init__(datebegin, dateend, forcingpath, threshold=threshold)
+    def __init__(self, *args, **kwargs):
+        super(griddedrun, self).__init__(*args, **kwargs)
         self.updateloc = False
 
     def get_all_consts(self):
