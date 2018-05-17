@@ -81,7 +81,10 @@ class prosimu():
         return self.dataset.variables[varname].dtype
 
     def getfillvalue(self, varname):
-        return self.dataset.variables[varname]._FillValue
+        if hasattr(self.dataset.variables[varname], "_FillValue"):
+            return self.dataset.variables[varname]._FillValue
+        else:
+            return None
 
     def infovar(self, varname):
         # Vérification du nom de la variable
