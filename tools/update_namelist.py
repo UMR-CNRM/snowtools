@@ -56,8 +56,6 @@ def update_mandatory_settings(NamelistObject):
     NamelistObject["NAM_IO_OFFLINE"].CSURF_FILETYPE = "NC "
     NamelistObject["NAM_IO_OFFLINE"].CFORCING_FILETYPE = "NETCDF"
     NamelistObject["NAM_IO_OFFLINE"].CTIMESERIES_FILETYPE = "NETCDF"
-    NamelistObject["NAM_IO_OFFLINE"].LWRITE_COORD = False
-    NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = True
     NamelistObject["NAM_IO_OFFLINE"].LRESTART = True
 
     return NamelistObject
@@ -92,6 +90,10 @@ def update_loc(NamelistObject, forcing):
     NamelistObject["NAM_LONLATVAL"].XDY = list(dlat1d)
     NamelistObject["NAM_LONLATVAL"].XDX = list(dlon1d)
     NamelistObject["NAM_LONLATVAL"].NPOINTS = len(longitudes1d)
+
+    NamelistObject["NAM_IO_OFFLINE"].LWRITE_COORD = False
+    NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = True
+
 
     return NamelistObject
 
