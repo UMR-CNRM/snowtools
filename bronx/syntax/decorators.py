@@ -68,6 +68,17 @@ def printargs(func):
     return echo_func_args
 
 
+@nicedeco
+def unicode_filter(func):
+    """This decorator force unicode when a string is returned."""
+    def unicode_func(*args, **kw):
+        out = func(*args, **kw)
+        if isinstance(out, str):
+            out = unicode(out)
+        return out
+    return unicode_func
+
+
 def timelimit(logger, nbsec):
     """This decorator warn if the function is more than ``nbsec`` seconds long."""
     @nicedeco

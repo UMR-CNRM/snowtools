@@ -33,8 +33,7 @@ def set_figax(figure=None, ax=None,
         else:
             ax = figure.gca()
     elif ax is not None and figure is not None:
-        if ax not in figure.axes:
-            raise ('*over*: inconsistency between given fig and ax')
+        assert ax in figure.axes, '*over*: inconsistency between given fig and ax'
     elif figure is ax is None:
         figure, ax = plt.subplots(**subplots_kw)
     return (figure, ax)
