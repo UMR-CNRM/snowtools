@@ -10,7 +10,7 @@ import re
 import csv
 from csv import *
 
-from extract_obs import question
+from .extract_obs import question
 
 import xml.etree.ElementTree as ET
 
@@ -32,7 +32,7 @@ if __name__ == "__main__":
             code=row[0]
             
 
-        if not code in maskSim2.keys():
+        if not code in list(maskSim2.keys()):
             azimSim2[code]=[]         
             maskSim2[code]=[]
         azimSim2[code].append(row[1])
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     for site in root[1]:
         code=site.find("number").text.strip()
 
-        if code in maskSim2.keys():
+        if code in list(maskSim2.keys()):
             attazim=ET.SubElement(site, "azimut")
             attmask=ET.SubElement(site, "mask")
             attsource=ET.SubElement(site, "source_mask")

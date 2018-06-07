@@ -72,14 +72,14 @@ class surfexrun(object):
                 self.moderun = moderun
 
             if self.moderun == "MPIRUN":
-                if "NOFFLINE" in os.environ.keys():
+                if "NOFFLINE" in list(os.environ.keys()):
                     self.nproc = int(os.environ["NOFFLINE"])
                 else:
                     self.nproc = 4
             else:
                 self.nproc = 1
 
-        print "Type of run: " + self.moderun + " Number of processes " + str(self.nproc)
+        print("Type of run: " + self.moderun + " Number of processes " + str(self.nproc))
 
     def create_env(self):
         """Create working directory and directories to save outputs"""
@@ -160,10 +160,10 @@ class surfexrun(object):
         self.dateforcbegin, self.dateforcend = get_file_period("FORCING", self.forcingpath, self.datebegin, self.dateend)
 
         f = prosimu("FORCING.nc")
-        print "FORMAT OF FORCING NETCDF FILE: " + f.format()
+        print("FORMAT OF FORCING NETCDF FILE: " + f.format())
         if f.format() != "NETCDF3_CLASSIC":
-            print "Check consistency with your SURFEX compilation (netcdf4 library required)."
-            print ldd(self.execdir + "/OFFLINE")
+            print("Check consistency with your SURFEX compilation (netcdf4 library required).")
+            print(ldd(self.execdir + "/OFFLINE"))
         f.close()
 
     def get_or_run_pgd(self):
@@ -177,7 +177,7 @@ class surfexrun(object):
         ''' Look for a PREP file to restart the simulation or run PREP and save it'''
         findprep = get_file_date("PREP", self.dirprep, self.dateinit)
 
-        print "findprep=", findprep
+        print("findprep=", findprep)
 
         if not findprep:
             get_file_const_or_crash(self.dirprep + "/init_TG.nc", "init_TG.nc")
@@ -276,10 +276,11 @@ class griddedrun(surfexrun):
     def get_all_consts(self):
         super(griddedrun, self).get_all_consts()
 
-        if "DIRDATAPGD" in os.environ.keys():
+        if "DIRDATAPGD" in list(os.environ.keys()):
             dirdatapgd = os.environ["DIRDATAPGD"]
         else:
             dirdatapgd = "/manto/lafaysse/FILES_PGD"
 
+        print(os.listdir(dirdatapgd))
         for fic in os.listdir(dirdatapgd):
             get_file_const_or_crash(dirdatapgd + "/" + fic, fic)

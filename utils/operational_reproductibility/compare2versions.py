@@ -37,13 +37,13 @@ def compare2files(name1, name2, checktime=True):
         mindiff, maxdiff = np.min(difftime), np.max(difftime)
 
         if mindiff == datetime.timedelta(0) and maxdiff == datetime.timedelta(0):
-            print "TIME CONFORME"
+            print("TIME CONFORME")
         else:
-            print "TIME NON CONFORME !!  min=" + str(mindiff) + " : max=" + str(maxdiff)
+            print("TIME NON CONFORME !!  min=" + str(mindiff) + " : max=" + str(maxdiff))
 
     for varname in listvar2:
         if varname not in listvar1:
-            print varname + " is missing in first file"
+            print(varname + " is missing in first file")
 
     for varname in listvar1:
         if varname != "time":
@@ -57,11 +57,11 @@ def compare2files(name1, name2, checktime=True):
                     mindiff, maxdiff, meandiff = np.nanmin(diff), np.nanmax(diff), nanmean(diff.flatten())
 
                     if mindiff == 0 and maxdiff == 0:
-                        print varname + " : CONFORME"
+                        print(varname + " : CONFORME")
                     else:
-                        print varname + " : mean=" + str(meandiff) + " : min=" + str(mindiff) + " : max=" + str(maxdiff)
+                        print(varname + " : mean=" + str(meandiff) + " : min=" + str(mindiff) + " : max=" + str(maxdiff))
             else:
-                print varname + " is missing in second file"
+                print(varname + " is missing in second file")
 
 
 if len(sys.argv) == 1:
@@ -108,7 +108,7 @@ else:
                 intname = basename + mode1 + ".nc"
                 opename = basename + mode2 + ".nc"
 
-                print "\n***********************************************************************"
-                print "PRODUIT " + str(prod) + " DATEPIVOT " + datepivot + " ECHEANCE " + ech
-                print "***********************************************************************"
+                print("\n***********************************************************************")
+                print("PRODUIT " + str(prod) + " DATEPIVOT " + datepivot + " ECHEANCE " + ech)
+                print("***********************************************************************")
                 compare2files(intname, opename, checktime=checktime)

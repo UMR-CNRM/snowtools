@@ -33,7 +33,7 @@ class Escroc_Vortex_Task(Task):
         list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
 
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 1
-        members = range(startmember, int(self.conf.nmembers) + startmember) if hasattr( self.conf, "nmembers") else range(1, 36)
+        members = list(range(startmember, int(self.conf.nmembers) + startmember)) if hasattr( self.conf, "nmembers") else list(range(1, 36))
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
             for p, datebegin in enumerate(list_dates_begin_forc):
@@ -50,11 +50,11 @@ class Escroc_Vortex_Task(Task):
                     dateend        = dateend,
                     nativefmt      = 'netcdf',
                     kind           = 'MeteorologicalForcing',
-                    model          = 'safran',
                     namespace      = 'cenvortex.multi.fr',
+                    model          = 'obs',
                 ),
-                print t.prompt, 'tb01 =', tb01
-                print
+                print(t.prompt, 'tb01 =', tb01)
+                print()
 
             self.sh.title('Toolbox input tb02')
             tb02 = toolbox.input(
@@ -68,8 +68,8 @@ class Escroc_Vortex_Task(Task):
                 model          = 'surfex',
                 fatal          = False,
             ),
-            print t.prompt, 'tb02 =', tb02
-            print
+            print(t.prompt, 'tb02 =', tb02)
+            print()
 
             self.sh.title('Toolbox input tb02')
             tb02_a = toolbox.input(
@@ -83,8 +83,8 @@ class Escroc_Vortex_Task(Task):
                 namespace      = 'cenvortex.multi.fr',
                 fatal          = False,
             ),
-            print t.prompt, 'tb02_a =', tb02_a
-            print
+            print(t.prompt, 'tb02_a =', tb02_a)
+            print()
 
             self.sh.title('Toolbox input tb03')
             tb03 = toolbox.input(
@@ -100,8 +100,8 @@ class Escroc_Vortex_Task(Task):
                 namespace      = 'cenvortex.multi.fr',
                 fatal          = False,
             ),
-            print t.prompt, 'tb03 =', tb03
-            print
+            print(t.prompt, 'tb03 =', tb03)
+            print()
 
             self.sh.title('Toolbox input tb03_s')
             tb03_s = toolbox.input(
@@ -117,8 +117,8 @@ class Escroc_Vortex_Task(Task):
                 namespace      = 'cenvortex.multi.fr',
                 fatal          = False,
             ),
-            print t.prompt, 'tb03_s =', tb03_s
-            print
+            print(t.prompt, 'tb03_s =', tb03_s)
+            print()
 
 
 #             if not tb03[0]:
@@ -161,8 +161,8 @@ class Escroc_Vortex_Task(Task):
                 source         = 'ecoclimap1',
                 model          = 'surfex',
             ),
-            print t.prompt, 'tb03b =', tb03b
-            print
+            print(t.prompt, 'tb03b =', tb03b)
+            print()
 
             self.sh.title('Toolbox input tb03c')
             tb03c = toolbox.input(
@@ -175,8 +175,8 @@ class Escroc_Vortex_Task(Task):
                 source         = 'ecoclimap2',
                 model          = 'surfex',
             ),
-            print t.prompt, 'tb03c =', tb03c
-            print
+            print(t.prompt, 'tb03c =', tb03c)
+            print()
 
             self.sh.title('Toolbox input tb04')
             tb04 = toolbox.input(
@@ -187,8 +187,8 @@ class Escroc_Vortex_Task(Task):
                 local           = 'drdt_bst_fit_60.nc',
                 model          = 'surfex',
             )
-            print t.prompt, 'tb04 =', tb04
-            print
+            print(t.prompt, 'tb04 =', tb04)
+            print()
 
             self.sh.title('Toolbox input tb05')
             if hasattr(self.conf, "namelist"):
@@ -209,8 +209,8 @@ class Escroc_Vortex_Task(Task):
                     local           = 'OPTIONS.nam',
                 )
 
-            print t.prompt, 'tb05 =', tb05
-            print
+            print(t.prompt, 'tb05 =', tb05)
+            print()
 
             if hasattr(self.conf, "exesurfex"):
                 self.sh.title('Toolbox executable tb06= tbx1')
@@ -222,8 +222,8 @@ class Escroc_Vortex_Task(Task):
                     remote          = self.conf.exesurfex + "/OFFLINE"
                 )
 
-                print t.prompt, 'tb06 =', tb06
-                print
+                print(t.prompt, 'tb06 =', tb06)
+                print()
 
 #                 if not (tb02[0] or tb02_a[0]):
                 if not (tb02_a[0]):
@@ -237,8 +237,8 @@ class Escroc_Vortex_Task(Task):
                         remote          = self.conf.exesurfex + "/PGD"
                     )
 
-                    print t.prompt, 'tb07 =', tb07
-                    print
+                    print(t.prompt, 'tb07 =', tb07)
+                    print()
 
                 if not (tb03[0] or tb03_s[0]):
 
@@ -251,8 +251,8 @@ class Escroc_Vortex_Task(Task):
                         remote          = self.conf.exesurfex + "/PREP"
                     )
 
-                    print t.prompt, 'tb08 =', tb08
-                    print
+                    print(t.prompt, 'tb08 =', tb08)
+                    print()
 
             else:
 
@@ -266,8 +266,8 @@ class Escroc_Vortex_Task(Task):
                     gvar           = 'master_offline_mpi',
                 )
 
-                print t.prompt, 'tb06 =', tb06
-                print
+                print(t.prompt, 'tb06 =', tb06)
+                print()
 
                 if not (tb02[0] or tb02_a[0]):
 
@@ -281,8 +281,8 @@ class Escroc_Vortex_Task(Task):
                         gvar           = 'master_pgd',
                     )
 
-                    print t.prompt, 'tb07 =', tb07
-                    print
+                    print(t.prompt, 'tb07 =', tb07)
+                    print()
 
                 if not (tb03[0] or tb03_s[0]):
 
@@ -295,8 +295,8 @@ class Escroc_Vortex_Task(Task):
                         genv           = 'uenv:cen.01@CONST_CEN',
                     )
 
-                    print t.prompt, 'tb08 =', tb08
-                    print
+                    print(t.prompt, 'tb08 =', tb08)
+                    print()
 
         if 'compute' in self.steps:
 
@@ -308,8 +308,8 @@ class Escroc_Vortex_Task(Task):
                 dateend      = self.conf.dateend,
                 forcingname  = firstforcing
             )
-            print t.prompt, 'tb09a =', tb09a
-            print
+            print(t.prompt, 'tb09a =', tb09a)
+            print()
             tb09a.run()
 
             # Take care : PGD parallelization will be available in v8.1 --> nproc and ntasks will have to be set to 40
@@ -320,8 +320,8 @@ class Escroc_Vortex_Task(Task):
                     kind         = 'pgd_from_forcing',
                     forcingname  = firstforcing,
                 )
-                print t.prompt, 'tb09 =', tb09
-                print
+                print(t.prompt, 'tb09 =', tb09)
+                print()
                 self.component_runner(tbalgo2, tbx1, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
 
             # Take care : PREP parallelization will be available in v8.1 --> nproc and ntasks will have to be set to 40
@@ -330,8 +330,8 @@ class Escroc_Vortex_Task(Task):
                 tb10 = tbalgo3 = toolbox.algo(
                     engine         = 'parallel',
                 )
-                print t.prompt, 'tb10 =', tb10
-                print
+                print(t.prompt, 'tb10 =', tb10)
+                print()
                 self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
 
             self.sh.title('Toolbox algo tb11 = OFFLINE')
@@ -353,8 +353,8 @@ class Escroc_Vortex_Task(Task):
                 subensemble    = self.conf.subensemble if hasattr(self.conf, "subensemble")  else "E2",
                 ntasks         = ntasks
             )
-            print t.prompt, 'tb11 =', tb11
-            print
+            print(t.prompt, 'tb11 =', tb11)
+            print()
             self.component_runner(tbalgo4, tbx3)
 
         if 'backup' in self.steps:
@@ -377,8 +377,8 @@ class Escroc_Vortex_Task(Task):
                     model          = 'surfex',
                     namespace      = 'cenvortex.multi.fr',
                 ),
-                print t.prompt, 'tb19 =', tb19
-                print
+                print(t.prompt, 'tb19 =', tb19)
+                print()
 
                 self.sh.title('Toolbox output tb20')
                 tb20 = toolbox.output(
@@ -394,8 +394,8 @@ class Escroc_Vortex_Task(Task):
                     model          = 'surfex',
                     namespace      = 'cenvortex.multi.fr',
                 ),
-                print t.prompt, 'tb20 =', tb20
-                print
+                print(t.prompt, 'tb20 =', tb20)
+                print()
 
 # The following condition does not work. --> Ask leffe how to do
 #                 if not (tb02[0] or tb02_a[0]):
@@ -409,5 +409,5 @@ class Escroc_Vortex_Task(Task):
                     model          = 'surfex',
                     namespace      = 'cenvortex.multi.fr',
                 ),
-                print t.prompt, 'tb21 =', tb21
-                print
+                print(t.prompt, 'tb21 =', tb21)
+                print()

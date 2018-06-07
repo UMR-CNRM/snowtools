@@ -40,7 +40,7 @@ class vortex_kitchen(object):
 
     def check_vortex_install(self):
 
-        if "VORTEX" not in os.environ.keys():
+        if "VORTEX" not in list(os.environ.keys()):
             raise InstallException("VORTEX environment variable must be defined towards a valid vortex install.")
 
     def create_env(self):
@@ -140,7 +140,7 @@ class vortex_kitchen(object):
     def mkjob_list_commands(self, options):
         if options.escroc and options.nnodes > 1:
             mkjob_list = []
-            print "loop"
+            print("loop")
             for node in range(1, options.nnodes + 1):
                 mkjob_list.append(self.mkjob_command(options, jobname='escrocN' + str(node)))
 
@@ -153,7 +153,7 @@ class vortex_kitchen(object):
         mkjob_list = self.mkjob_list_commands(options)
 
         for mkjob in mkjob_list:
-            print "Run command: " + mkjob + "\n"
+            print("Run command: " + mkjob + "\n")
             os.system(mkjob)
 
     def walltime(self, options):
@@ -174,7 +174,7 @@ class vortex_kitchen(object):
             else:
                 minutes_peryear[site_snowmip] = 4
 
-        key = options.region if options.region in minutes_peryear.keys() else "alp_allslopes"
+        key = options.region if options.region in list(minutes_peryear.keys()) else "alp_allslopes"
 
         estimation = datetime.timedelta(minutes=minutes_peryear[key]) * max(1, (options.datefin.year - options.datedeb.year)) * (1 + nmembers / (40 * options.nnodes) )
 
@@ -184,10 +184,16 @@ class vortex_kitchen(object):
             return str(estimation)
 
 
-class vortex_conf_file(file):
+class vortex_conf_file(object):
+    # NB: Inheriting from file object is not allowed in python 3
+    def __init__(self, filename, mode='w'):
+        self.fileobject = open(filename, mode)
 
     def new_class(self, name):
         self.write("[" + name + "]\n")
 
     def write_field(self, fieldname, value):
         self.write(fieldname + " = " + str(value) + "\n")
+
+    def close(self):
+        self.fileobject.close()

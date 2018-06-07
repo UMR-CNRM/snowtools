@@ -92,7 +92,7 @@ if __name__ == '__main__':
         commande = "python $SNOWTOOLS_CEN/tasks/s2m_command.py --scores --escroc=" + options.escroc + " --nnodes=1 -o " + options.escroc + " --nmembers=" + str(nmembers) + " -m ESM-SnowMIP -f meteo -r " + options.site + " -b " + bdate[options.site] + " -e " + edate[options.site] + " -s /home/cnrm_other/cen/mrns/lafaysse/SURFEX/lafaysse_fromV8trunk_withmeb/exe_hybride"
 
     else:
-        print "No action to do."
+        print("No action to do.")
         sys.exit(0)
-    print commande
+    print(commande)
     os.system(commande)

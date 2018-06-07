@@ -74,7 +74,7 @@ if __name__ == "__main__":
     for code in sorted(name.keys()):
 
         if code not in SitesExistants:
-            print "ajout du site : ", name[code]
+            print("ajout du site : ", name[code])
 
             metadataout.write('\t<Site>\n')
             metadataout.write('\t\t<name> ' + name[code] + ' </name>\n')
@@ -101,27 +101,27 @@ if __name__ == "__main__":
                 massif_base = -1
 
             if alti[code] != alti_base:
-                print "WARNING ALTITUDE : " + code
-                print alti[code], alti_base
+                print("WARNING ALTITUDE : " + code)
+                print(alti[code], alti_base)
 
             if aspect[code] != expo_base:
-                print "WARNING ASPECT : " + code
-                print aspect[code], expo_base
+                print("WARNING ASPECT : " + code)
+                print(aspect[code], expo_base)
 
             if slope[code] != slope_base:
-                print "WARNING SLOPE : " + code
-                print slope[code], slope_base
+                print("WARNING SLOPE : " + code)
+                print(slope[code], slope_base)
 
             if lat[code] != lati_base:
-                print "WARNING LATITUDE : " + code
-                print lat[code], lati_base
+                print("WARNING LATITUDE : " + code)
+                print(lat[code], lati_base)
 
             if lon[code] != longi_base:
-                print "WARNING LONGITUDE : " + code
-                print lon[code], longi_base
+                print("WARNING LONGITUDE : " + code)
+                print(lon[code], longi_base)
 
             if massif[code] != massif_base:
-                print "UPDATE MASSIF NUMBER : " + code
+                print("UPDATE MASSIF NUMBER : " + code)
                 list_update.append(code)
                 metadataout.write('\t<Site>\n')
                 metadataout.write('\t\t<name> ' + name[code] + ' </name>\n')

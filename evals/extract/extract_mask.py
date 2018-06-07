@@ -9,7 +9,7 @@ import re
 
 import csv
 
-from extract_obs import question
+from evals.extract.extract_obs import question
 
 from lxml import etree as ET
 # import xml.etree.ElementTree as ET
@@ -35,12 +35,12 @@ if __name__ == "__main__":
     mask = {}
     source = {}
     for row in r:
-        print row
+        print(row)
         if re.match("^\d{7}$", row[0]):
             code = "0" + row[0]
         else:
             code = row[0]
-        if code not in mask.keys():
+        if code not in list(mask.keys()):
             azim[code] = []
             mask[code] = []
             list_mask_in_bdclim.append(code)
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     r = csv.reader(objcsv, delimiter=" ", skipinitialspace=True)
 
     for row in r:
-        print row
+        print(row)
         if re.match("^\d{7}$", row[0]):
                 code = "0" + row[0]
         else:
@@ -78,7 +78,7 @@ if __name__ == "__main__":
         if code in list_mask_in_bdclim or code in list_mal_geolocalises:
             continue
 
-        if code not in mask.keys():
+        if code not in list(mask.keys()):
             azim[code] = []
             mask[code] = []
             source[code] = "IGN"
@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
     for site in root[1]:
         code = site.find("number").text.strip()
-        if code in mask.keys():
+        if code in list(mask.keys()):
             attazim = ET.SubElement(site, "azimut")
             attmask = ET.SubElement(site, "mask")
             attsource = ET.SubElement(site, "source_mask")
