@@ -44,7 +44,6 @@ Formats hypothesis:
 
 # TODO: Activate unicode_literals but check that it still works with Olive
 # experiments and when sending emails.
-# TODO: In the core of Vortex, change vortex.tools.date to bronx.stdtypes.date
 from __future__ import print_function, absolute_import, division  # , unicode_literals
 
 import calendar
@@ -221,13 +220,66 @@ def daterange(start, end=None, step='P1D'):
         if not isinstance(end, Date):
             end = Date(end)
 
+    start, end = sorted((start, end))
+
     if not isinstance(step, Period):
         step = Period(step)
+
+    if step.total_seconds() < 0:
+        step = Period(step.length)
 
     rollingdate = start
     while rollingdate <= end:
         yield rollingdate
         rollingdate += step
+
+def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
+    """Extended date range expansion.
+    
+    TODO: example.
+    """
+
+    rangevalues = list()
+
+    pstarts = ([str(s) for s in start]
+              if isinstance(start, (list, tuple)) else str(start).split(','))
+
+    for pstart in pstarts:
+        actualrange = re.split('[-/]', pstart)
+        realstart = Date(actualrange.pop(0))
+
+        if actualrange:
+            realend = Date(actualrange.pop(0))
+        elif end is None:
+            realend = realstart
+        else:
+            realend = Date(end)
+
+        if actualrange:
+            realstep = Period(actualrange.pop())
+        elif step is None:
+            realstep = Period('PT1H')
+        else:
+            realstep = Period(step)
+
+        if shift is not None:
+            realshift = Period(shift)
+            realstart += realshift
+            realend   += realshift
+
+        pvalues = daterange(realstart, realend, realstep)
+
+        if pvalues:
+            if fmt is not None:
+                pvalues = [getattr(x, fmt) for x in pvalues]
+                if callable(pvalues[0]):
+                    pvalues = [x() for x in pvalues]
+            if prefix is not None:
+                    pvalues = [ prefix + str(x) for x in pvalues ]
+
+        rangevalues.extend(pvalues)
+
+    return sorted(set(rangevalues))
 
 
 class Period(datetime.timedelta):
@@ -354,7 +406,7 @@ class Period(datetime.timedelta):
             ld = [0, top.hour * 3600 + top.minute * 60]
         elif len(args) < 2 and (isinstance(top, int) or isinstance(top, float)):
             ld = [0, top]
-        elif isinstance(top, int) and len(args) == 2:
+        elif isinstance(top, int) and len(args)> 1:
             ld = list(args)
         elif isinstance(top, six.string_types):
             ld = [0, Period._parse(top)]
@@ -421,6 +473,21 @@ class Period(datetime.timedelta):
     def time(self):
         """Return a :class:`Time` object."""
         return Time(0, int(self.total_seconds()) // 60)
+
+    @property
+    def hms(self):
+        """Nicely formatted HH:MM:SS string."""
+        hours, mins = divmod(self.length, 3600)
+        mins, seconds = divmod(mins, 60)
+        return '{0:02d}:{1:02d}:{2:02d}'.format(hours, mins, seconds)
+
+    @property
+    def hmscompact(self):
+        """Compact HHMMSS string."""
+        return self.hms.replace(':', '')
+
+    def __str__(self):
+        return self.isoformat()
 
 
 class _GetattrCalculatorMixin(object):
@@ -701,6 +768,11 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         return self.strftime('%y%m%d%H')
 
     @property
+    def ymd6h(self):
+        """YYMMDDHH formated string with HH=6:00."""
+        return self.replace(hour=6).strftime('%Y%m%d%H')
+
+    @property
     def ymdhm(self):
         """YYYYMMDDHHMM formated string."""
         return self.strftime('%Y%m%d%H%M')
@@ -709,6 +781,10 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
     def ymdhms(self):
         """YYYYMMDDHHMMSS formated string."""
         return self.strftime('%Y%m%d%H%M%S')
+
+    def stamp(self):
+        """Compact concatenation up to microseconds."""
+        return self.ymdhms + '{0:06d}'.format(self.microsecond)
 
     @property
     def hm(self):
@@ -881,6 +957,17 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         else:
             out = a - 'P1D'
         return out.ymd
+
+    def nivologyseason(self):
+        """Return the nivology season of a current date"""
+        if self.month < 8:
+            season_begin = datetime.datetime(self.year - 1, 8, 1)
+            season_end   = datetime.datetime(self.year, 7, 31)
+        else:
+            season_begin = datetime.datetime(self.year, 8, 1)
+            season_end   = datetime.datetime(self.year + 1, 7, 31)
+
+        return season_begin.strftime('%y') + season_end.strftime('%y')
 
 
 class Time(_GetattrCalculatorMixin):
@@ -1253,9 +1340,15 @@ class Month(object):
             try:
                 tmpdate = Date(*args)
             except (ValueError, TypeError):
-                raise ValueError('Could not create a Month from values provided %s', str(args))
+                try:
+                    self._month = int(args[0])
+                    if not (1 <= self._month <= 12):
+                        raise ValueError('Not a valid month: {}'.format(self._month))
+                    tmpday = 1
+                except (ValueError, TypeError):
+                    raise ValueError('Could not create a Month from values provided %s', str(args))
             else:
-                self._month, self._year = tmpdate.month, tmpdate.year
+                self._month, self._year, tmpday = tmpdate.month, tmpdate.year, tmpdate.day
             # Process the modifiers
             if mmod:
                 if mmod.group(1) == 'next':
@@ -1263,7 +1356,7 @@ class Month(object):
                 elif mmod.group(1) == 'prev':
                     delta = -1
                 elif mmod.group(1) == 'closest':
-                    if tmpdate.day > 15:
+                    if tmpday > 15:
                         delta = 1
                     else:
                         delta = -1

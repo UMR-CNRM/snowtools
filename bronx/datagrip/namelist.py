@@ -115,7 +115,8 @@ _CHAR_LITERAL_CONSTANT = "(?:" + "(?:" + _KIND_PARAM + "_)?" + "'[^']*'" + "|" +
 
 # Logical
 _LOGICAL_LITERAL_CONSTANT = "(?:" + r"\.TRUE\." + "(?:_" + _KIND_PARAM + ")?" + "|" + \
-                            r"\.FALSE\." + "(?:_" + _KIND_PARAM + ")?" + ")"
+                            r"\.FALSE\." + "(?:_" + _KIND_PARAM + ")?" + "|" + \
+                            "[TF]" + ")"
 
 # Constants
 _LITERAL_CONSTANT = "(?:" + _SIGNED_INT_LITERAL_CONSTANT + "|" + _BOZ_LITERAL_CONSTANT + "|" + \
@@ -241,8 +242,8 @@ class LiteralParser(object):
                  re_complex   = '^' + _COMPLEX_LITERAL_CONSTANT + '$',
                  re_character = '^' + _CHAR_LITERAL_CONSTANT + '$',
                  re_logical   = '^' + _LOGICAL_LITERAL_CONSTANT + '$',
-                 re_true      = r'\.T(?:RUE)?\.',
-                 re_false     = r'\.F(?:ALSE)?\.'):
+                 re_true      = r'\.T(?:RUE)?\.|T',
+                 re_false     = r'\.F(?:ALSE)?\.|F'):
         self._re_flags     = re_flags
         self._re_integer   = re_integer
         self._re_boz       = re_boz
@@ -1143,17 +1144,19 @@ class NamelistParser(object):
                 break
         return NamelistSet(namelists)
 
-    def _namelist_clean(self, dirty_source):
+    def _namelist_clean(self, dirty_source, extraclean=()):
         """Removes spaces and comments before data."""
         cleaner_source = self.clean.sub('', dirty_source)
         while cleaner_source != dirty_source:
             dirty_source = cleaner_source
             cleaner_source = self.clean.sub('', dirty_source)
+            for cleaner in extraclean:
+                cleaner_source = cleaner.sub('', cleaner_source)
         return cleaner_source
 
     def _namelist_block_parse(self, source):
         """Parse a block of namelist."""
-        source = self._namelist_clean(source)
+        source = self._namelist_clean(source, extraclean=(self.endblock, ))
         block_name = self.bname.match(source[1:]).group(0)
         source = self._namelist_clean(source[1 + len(block_name):])
         namelist = NamelistBlock(block_name)
@@ -1163,7 +1166,7 @@ class NamelistParser(object):
 
         while source:
 
-            if self.entry.match(source):
+            if self.entry.match(source) and not self._LOGICAL_LCRE.match(source):
                 # Got a new entry in the namelist block
                 if current:
                     namelist.update({current: values})
