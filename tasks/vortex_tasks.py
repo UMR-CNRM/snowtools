@@ -314,6 +314,7 @@ class Surfex_Vortex_Task(Task):
             tb11 = tbalgo4 = toolbox.algo(
                 engine         = 'parallel',
                 binary         = 'OFFLINE',
+                kind           = 'deterministic',
                 datebegin      = self.conf.datebegin,
                 dateend        = self.conf.dateend,
                 dateinit       = self.conf.datespinup,
