@@ -31,6 +31,7 @@ class Ensemble_Surfex_Task(S2Mtask):
         t = self.ticket
 
         datebegin, dateend = self.get_period()
+        rundate_forcing = self.get_rundate_forcing()
         rundate_prep = self.get_rundate_prep()
         list_geometry = self.get_list_geometry()
 
@@ -47,7 +48,7 @@ class Ensemble_Surfex_Task(S2Mtask):
                 source_conf    = '4dvarfr',
                 experiment     = self.conf.forcingid,
                 geometry       = list_geometry,
-                date           = self.conf.rundate,
+                date           = rundate_forcing,
                 datebegin      = datebegin,
                 dateend        = dateend,
                 nativefmt      = 'netcdf',
