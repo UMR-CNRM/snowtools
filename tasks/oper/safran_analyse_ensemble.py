@@ -32,7 +32,7 @@ class Safran(S2Mtask):
         t = self.ticket
 
         datebegin, dateend = self.get_period()
-        duration = (dateend - datebegin).hour
+        ndays = (dateend - datebegin).days
 #       list_geometry = self.get_list_geometry()
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
@@ -48,7 +48,7 @@ class Safran(S2Mtask):
                 kind           = 'observations',
                 stage          = 'safrane',
                 nativefmt      = 'ascii',
-                date           = ['{0:s}/-PT{1:s}/+PT[term]H'.format(datebegin.ymd6h, str(24 * i)) for i in range(duration // 24)],
+                date           = ['{0:s}/-PT{1:s}H/+PT[term]H'.format(datebegin.ymd6h, str(24 * i)) for i in range(ndays)],
                 term           = footprints.util.rangex(self.conf.ana_terms),
                 local          = 'S[date:yymdh]',
                 model          = self.conf.model,
@@ -69,7 +69,7 @@ class Safran(S2Mtask):
                 kind           = 'observations',
                 stage          = 'sypluie',
                 nativefmt      = 'ascii',
-                date           = ['{0:s}/-PT{1:s}/+PT[term]H'.format(datebegin.ymd6h, str(24 * i)) for i in range(duration // 24)],
+                date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(24 * i)) for i in range(ndays)],
                 local          = 'R[date:yymdh]',
                 model          = self.conf.model,
                 namespace      = 'cendev.soprano.fr',
@@ -89,7 +89,7 @@ class Safran(S2Mtask):
                 kind           = 'observations',
                 stage          = 'safrane',
                 nativefmt      = 'ascii',
-                date           = ['{0:s}/-PT{1:s}/+PT[term]H'.format(dateend.ymd6h, str(24 * i)) for i in range(duration // 24)],
+                date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(24 * i)) for i in range(ndays)],
                 local          = 'T[date:yymdh]',
                 model          = self.conf.model,
                 namespace      = 'cendev.soprano.fr',
@@ -109,7 +109,7 @@ class Safran(S2Mtask):
                 kind           = 'observations',
                 stage          = 'safrane',
                 nativefmt      = 'ascii',
-                date           = ['{0:s}/-PT{1:s}/+PT[term]H'.format(datebegin.ymd6h, str(24 * i)) for i in range(duration // 24)],
+                date           = ['{0:s}/-PT{1:s}H/+PT[term]H'.format(datebegin.ymd6h, str(24 * i)) for i in range(ndays)],
                 term           = footprints.util.rangex(self.conf.ana_terms),
                 local          = 'A[date:yymdh]',
                 model          = self.conf.model,
@@ -130,7 +130,7 @@ class Safran(S2Mtask):
                 kind           = 'observations',
                 stage          = 'safrane',
                 nativefmt      = 'ascii',
-                date           = ['{0:s}/-PT{1:s}/+PT[term]H'.format(dateend.ymd6h, str(24 * i)) for i in range(duration // 24)],
+                date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(24 * i)) for i in range(ndays)],
                 local          = 'N[date:yymdh]',
                 model          = self.conf.model,
                 namespace      = 'cendev.soprano.fr',
@@ -325,14 +325,19 @@ class Safran(S2Mtask):
             print t.prompt, 'tb16 =', tb16
             print
 
-            # 1) Ebauche issue de l'analyse ARPEGE
+            # I- ARPEGE (J-5) -> J
+            # --------------------
+
+            # I.1- EBAUCHE issue des A6 des réseaux 0/6/12/18h (J-n) d'assimilation d'ARPEGE et l'A6 du réseau 0h J si présente pour couvrir (J-5) 6h -> J 6h
             self.sh.title('Toolbox input tb17_a')
-            tb17_a = toolbox.input(
+            tb07_a = toolbox.input(
                 role           = 'Ebauche',
-                local          = 'mb035/P[date:addcumul_yymdh]',
+                # local          = 'mb035/P[date:addcumul_yymdh]',
+                local          = 'mb035/P[date::yymdh]_[cumul:hour]',
                 experiment     = self.conf.xpid,
                 block          = self.conf.guess_block,
-                date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, duration + 6, self.conf.cumul)],
+                cutoff         = 'assimilation',
+                date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
                 cumul          = self.conf.cumul,
                 nativefmt      = 'ascii',
                 kind           = 'guess',
@@ -342,16 +347,17 @@ class Safran(S2Mtask):
                 namespace      = self.conf.namespace,
                 fatal          = False,
             ),
-            print t.prompt, 'tb17_a =', tb17_a
+            print t.prompt, 'tb17_a =', tb07_a
             print
 
+            # I.2- EBAUCHE issue de la P6 du réseau 0h J de production d'ARPEGE
             # Si l'A6 du réseau 0h J n'est pas là (cas du run de 3h) on prend la P6 du réseau 0h J
             # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur 6h homogène avec le cumul dans les fichiers d'assimilation
             self.sh.title('Toolbox input tb17_b')
-            tb17_b = toolbox.input(
+            tb07_b = toolbox.input(
                 alternate      = 'Ebauche',
-                local          = 'mb035/P[date:addcumul_yymdh]',
-                cutoff         = 'production',
+                # local          = 'mb035/P[date:addcumul_yymdh]',
+                local          = 'mb035/P[date::yymdh]_[cumul:hour]',
                 experiment     = self.conf.xpid,
                 block          = self.conf.guess_block,
                 date           = '{0:s}/-PT[cumul:hour]H'.format(dateend.ymd6h),
@@ -363,22 +369,25 @@ class Safran(S2Mtask):
                 source_conf    = self.conf.deterministic_conf,
                 namespace      = self.conf.namespace,
             ),
-            print t.prompt, 'tb17_b =', tb17_b
+            print t.prompt, 'tb17_b =', tb07_b
             print
 
+            # II- PEARP (J-5) -> J
+            # --------------------
 
-            # 2) EBAUCHE issue des prevision P0, P6, P12, P18 et P24 du réseau 6h (J-1) de la PEARP pour couvrir (J-1) 6h -> J 6h 
+            # II.1 EBAUCHE issue des prevision P0/P6/P12/P18/P24 du réseau 6h (J-n) de la PEARP pour couvrir (J-5) 6h -> (J-1) 6h
             # RQ : on ne peut pas mélanger des resources issues de runs différents pour conserver des cumuls de précipitations cohérents
             self.sh.title('Toolbox input tb18_a')
             tb18_a = toolbox.input(
                 role           = 'Ebauche',
-                local          = 'mb[member]/P[date:addcumul_yymdh]',
+                # local          = 'mb[member]/P[date:addcumul_yymdh]',
+                local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
                 term           = '[cumul]',
                 experiment     = self.conf.xpid,
                 block          = self.conf.guess_block,
                 cutoff         = 'production',
-                date           = ['{0:s}/-PT{1:s}H/-PT36H'.format(dateend.ymd6h, str(24 * i)) for i in range(duration // 24)],
-                cumul          = footprints.util.rangex(12, 42, self.conf.cumul),
+                date           = ['{0:s}/+PT{1:s}H'.format(datebegin.ymd6h, str(24 * i)) for i in range(ndays)],
+                cumul          = footprints.util.rangex(0, 24, self.conf.cumul),
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -684,7 +693,9 @@ class Safran(S2Mtask):
                 experiment     = self.conf.xpid,
                 format         = 'ascii',
                 kind           = 'listing',
-                local          = ['mb{0:3d}/{glob:a:\w+}.out'.format(x) for x in footprints.util.rangex(self.conf.pearp_members)],
+                local          = 'mb{glob:a:\d+}/{glob:b:\w+}.out',
+                seta           = '[glob:a]',
+                member         = '[seta]',
                 namespace      = self.conf.namespace,
                 task           = '[local]',
                 date           = self.conf.rundate.ymdh,
@@ -699,7 +710,9 @@ class Safran(S2Mtask):
                 experiment     = self.conf.xpid,
                 format         = 'ascii',
                 kind           = 'listing',
-                local          = ['mb{0:3d}/{glob:a:\w+}.out'.format(x) for x in footprints.util.rangex(self.conf.pearp_members)],
+                local          = 'mb{glob:a:\d+}/liste_obs_{glob:b:\w+}',
+                seta           = '[glob:a]',
+                member         = '[seta]',
                 namespace      = self.conf.namespace,
                 task           = '[local]',
                 date           = self.conf.rundate.ymdh,
