@@ -84,7 +84,7 @@ def check_and_convert_date(datearg):
         return datearg
 
 
-def get_list_dates_files(datebegin, dateend, duration):
+def get_list_dates_files(datebegin, dateend, duration, listDateStop=None):
     list_dates_begin_forcing = []
     list_dates_end_forcing = []
     if duration == "yearly":
@@ -112,12 +112,24 @@ def get_list_dates_files(datebegin, dateend, duration):
     elif duration == "full":
         list_dates_begin_forcing.append(datebegin)
         list_dates_end_forcing.append(dateend)
+    if listDateStop is None:  # bc added for SODA stop dates
+        list_dates_begin_pro = list_dates_begin_forcing[:]
+        list_dates_begin_pro[0] = max(list_dates_begin_forcing[0], datebegin)
+        list_dates_end_pro = list_dates_end_forcing[:]
+        list_dates_end_pro[-1] = min(list_dates_end_forcing[-1], dateend)
+    else:
+        list_dates_begin_pro = listDateStop[:]
+        list_dates_begin_pro.insert(0, max(list_dates_begin_forcing[0], datebegin))
+        list_dates_end_pro = listDateStop[:]
+        list_dates_end_pro.append(min(list_dates_end_forcing[-1], dateend))
 
-    list_dates_begin_pro = list_dates_begin_forcing[:]
-    list_dates_begin_pro[0] = max(list_dates_begin_forcing[0], datebegin)
-    list_dates_end_pro = list_dates_end_forcing[:]
-    list_dates_end_pro[-1] = min(list_dates_end_forcing[-1], dateend)
-    print "DEBUG"
+    print " begforc /n endforc /n begpro /n end pro"
     print list_dates_begin_forcing
+    print
     print list_dates_end_forcing
+    print
+    print list_dates_begin_pro
+    print
+    print list_dates_end_pro
+
     return list_dates_begin_forcing, list_dates_end_forcing, list_dates_begin_pro, list_dates_end_pro
