@@ -138,7 +138,6 @@ class PrepSafran(S2Mtask):
                 vconf          = self.conf.vconf,
                 engine         = 'exec',
                 kind           = 'guess',
-                terms          = footprints.util.rangex(self.conf.ana_terms),
                 interpreter    = script[0].resource.language,
                 ntasks         = self.conf.ntasks,
                 members        = footprints.util.rangex(self.conf.members)
@@ -194,6 +193,7 @@ class PrepSafran(S2Mtask):
                     source_conf    = self.conf.eps_conf,
                     namespace      = self.conf.namespace,
                     member         = footprints.util.rangex(self.conf.pearp_members),
+                    fatal          = False,
                 ),
                 print t.prompt, 'tb06 =', tb06
                 print

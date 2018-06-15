@@ -178,7 +178,7 @@ class Safran(S2Mtask):
                 geometry        = '[gdomain]',
                 kind            = 'listeo',
                 model           = self.conf.model,
-                local           = 'listeo',
+                local           = 'listeo' if self.conf.vconf == 'alp' else 'lysteo',
             )
             print t.prompt, 'tb09 =', tb09
             print
@@ -266,6 +266,20 @@ class Safran(S2Mtask):
             print t.prompt, 'tb13 =', tb13
             print
 
+            self.sh.title('Toolbox input tb13')
+            tb13 = toolbox.input(
+                role            = 'Nam_analyse',
+                source          = 'namelist_analyse_[geometry]',
+                geometry        = self.conf.vconf,
+                genv            = self.conf.cycle,
+                kind            = 'namelist',
+                model           = self.conf.model,
+                local           = 'ANALYSE',
+                fatal           = False,
+            )
+            print t.prompt, 'tb13 =', tb13
+            print
+
             self.sh.title('Toolbox input tb14')
             tb14 = toolbox.input(
                 role            = 'Nam_melange',
@@ -292,20 +306,6 @@ class Safran(S2Mtask):
 #            )
 #            print t.prompt, 'tb15 =', tb15
 #            print
-
-            self.sh.title('Toolbox input tb16')
-            tb16 = toolbox.input(
-                role            = 'Nam_analyse',
-                source          = 'namelist_analyse_[geometry]',
-                geometry        = self.conf.vconf,
-                genv            = self.conf.cycle,
-                kind            = 'namelist',
-                model           = self.conf.model,
-                local           = 'ANALYSE',
-                fatal           = False,
-            )
-            print t.prompt, 'tb16 =', tb16
-            print
 
             self.sh.title('Toolbox input tb16')
             tb16 = toolbox.input(
@@ -342,7 +342,6 @@ class Safran(S2Mtask):
             self.sh.title('Toolbox input tb17_a')
             tb07_a = toolbox.input(
                 role           = 'Ebauche',
-                # local          = 'mb035/P[date:addcumul_yymdh]',
                 local          = 'mb035/P[date::yymdh]_[cumul:hour]',
                 experiment     = self.conf.xpid,
                 block          = self.conf.guess_block,
@@ -367,7 +366,6 @@ class Safran(S2Mtask):
             self.sh.title('Toolbox input tb17_b')
             tb07_b = toolbox.input(
                 alternate      = 'Ebauche',
-                # local          = 'mb035/P[date:addcumul_yymdh]',
                 local          = 'mb035/P[date::yymdh]_[cumul:hour]',
                 experiment     = self.conf.xpid,
                 block          = self.conf.guess_block,
@@ -400,7 +398,7 @@ class Safran(S2Mtask):
                 geometry        = self.conf.vconf,
                 cutoff         = 'production',
                 date           = ['{0:s}/+PT{1:s}H'.format(datebegin.ymd6h, str(24 * i)) for i in range(ndays)],
-                cumul          = footprints.util.rangex(0, 24, self.conf.cumul),
+                cumul          = footprints.util.rangex(0, 24, 3),
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -408,30 +406,10 @@ class Safran(S2Mtask):
                 source_conf    = self.conf.eps_conf,
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
+                fatal          = False,
             ),
             print t.prompt, 'tb18_a =', tb18_a
             print
-
-#            self.sh.title('Toolbox output tb19_b')
-#            tb18_b = toolbox.input(
-#                role           = 'Ebauche',
-#                local          = 'mb[member]/P[date:yymdh]_[term:hour]_[vconf]',
-#                #geometry       = self.conf.domains,
-#                #vconf          = '[geometry::area]',
-#                experiment     = self.conf.xpid,
-#                block          = self.conf.guess_block,
-#                date           = '{0:s}/-PT12H'.format(self.conf.rundate.ymdh),
-#                term           = footprints.util.rangex(3, 12, 6),
-#                nativefmt      = 'ascii',
-#                kind           = 'guess',
-#                model          = 'safran',
-#                source_app     = self.conf.source_app,
-#                source_conf    = self.conf.eps_conf,
-#                namespace      = self.conf.namespace,
-#                member         = footprints.util.rangex(self.conf.pearp_members),
-#            ),
-#            print t.prompt, 'tb18_b =', tb18_b
-#            print
 
             self.sh.title('Toolbox executable tb17 = tbx1')
             tb17 = tbx1 = toolbox.executable(
@@ -601,6 +579,7 @@ class Safran(S2Mtask):
                 kind           = 'MeteorologicalForcing',
                 source_app     = 'arpege',
                 source_conf    = '4dvarfr',
+                cutoff         = 'assimilation',
                 local          = 'mb035/FORCING_massif.nc',
                 experiment     = self.conf.xpid,
                 block          = 'massifs',
@@ -620,6 +599,7 @@ class Safran(S2Mtask):
                 kind           = 'MeteorologicalForcing',
                 source_app     = 'arpege',
                 source_conf    = '4dvarfr',
+                cutoff         = 'assimilation',
                 local          = 'mb035/FORCING_postes.nc',
                 experiment     = self.conf.xpid,
                 block          = 'postes',
@@ -639,9 +619,10 @@ class Safran(S2Mtask):
                 kind           = 'MeteorologicalForcing',
                 source_app     = 'arpege',
                 source_conf    = 'pearp',
+                cutoff         = 'assimilation',
                 local          = 'mb[member]/FORCING_massif.nc',
                 experiment     = self.conf.xpid,
-                block          = 'massif',
+                block          = 'massifs',
                 geometry        = self.conf.vconf,
                 nativefmt      = 'netcdf',
                 model          = self.conf.model,
@@ -659,6 +640,7 @@ class Safran(S2Mtask):
                 kind           = 'MeteorologicalForcing',
                 source_app     = 'arpege',
                 source_conf    = 'pearp',
+                cutoff         = 'assimilation',
                 local          = 'mb[member]/FORCING_postes.nc',
                 experiment     = self.conf.xpid,
                 block          = 'postes',
@@ -678,6 +660,7 @@ class Safran(S2Mtask):
                 role           = 'Listing',
                 block          = 'listing',
                 experiment     = self.conf.xpid,
+                cutoff         = 'assimilation',
                 geometry        = self.conf.vconf,
                 format         = 'ascii',
                 kind           = 'listing',
@@ -695,6 +678,7 @@ class Safran(S2Mtask):
                 block          = 'listing',
                 experiment     = self.conf.xpid,
                 geometry        = self.conf.vconf,
+                cutoff         = 'assimilation',
                 format         = 'ascii',
                 kind           = 'listing',
                 local          = 'mb035/liste_obs_{glob:a:\w+}',
@@ -711,6 +695,7 @@ class Safran(S2Mtask):
                 block          = 'listing',
                 experiment     = self.conf.xpid,
                 geometry        = self.conf.vconf,
+                cutoff         = 'assimilation',
                 format         = 'ascii',
                 kind           = 'listing',
                 local          = 'mb{glob:a:\d+}/{glob:b:\w+}.out',
@@ -729,6 +714,7 @@ class Safran(S2Mtask):
                 block          = 'listing',
                 experiment     = self.conf.xpid,
                 geometry        = self.conf.vconf,
+                cutoff         = 'assimilation',
                 format         = 'ascii',
                 kind           = 'listing',
                 local          = 'mb{glob:a:\d+}/liste_obs_{glob:b:\w+}',

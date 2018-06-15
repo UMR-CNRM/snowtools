@@ -57,6 +57,7 @@ class PrepSafran(S2Mtask):
                 model          = '[vapp]',
                 vapp           = self.conf.source_app,
                 vconf          = self.conf.deterministic_conf,
+                fatal          = False,
             )
             print t.prompt, 'tb01 =', tbarp
             print
@@ -82,6 +83,7 @@ class PrepSafran(S2Mtask):
                 model          = '[vapp]',
                 vapp           = self.conf.source_app,
                 vconf          = self.conf.eps_conf,
+                fatal          = False,
             )
             print t.prompt, 'tb02 =', tbpearp
             print
@@ -140,6 +142,7 @@ class PrepSafran(S2Mtask):
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
                 namespace      = self.conf.namespace,
+                fatal          = False,
             ),
             print t.prompt, 'tb05 =', tb05
             print
@@ -161,6 +164,7 @@ class PrepSafran(S2Mtask):
                 source_conf    = self.conf.eps_conf,
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
+                fatal          = False,
             ),
             print t.prompt, 'tb06 =', tb06
             print

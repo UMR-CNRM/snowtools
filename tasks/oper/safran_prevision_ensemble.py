@@ -82,6 +82,7 @@ class Safran(S2Mtask):
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
                 namespace      = self.conf.namespace,
+                fatal          = False,
             ),
             print t.prompt, 'tb01b =', tb01b
             print
@@ -108,6 +109,7 @@ class Safran(S2Mtask):
                 source_conf    = self.conf.eps_conf,
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
+                fatal          = False,
             ),
             print t.prompt, 'tb02a =', tb02a
             print
@@ -129,6 +131,7 @@ class Safran(S2Mtask):
                 source_conf    = self.conf.eps_conf,
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
+                fatal          = False,
             ),
             print t.prompt, 'tb02b =', tb02b
             print
@@ -151,7 +154,7 @@ class Safran(S2Mtask):
                 genv            = self.conf.cycle,
                 kind            = 'listeml',
                 model           = self.conf.model,
-                local           = 'listeml' if self.conf.vconf == 'alp' else 'lysteml',
+                local           = 'listeml',
                 geometry        = self.conf.vconf,
             )
             print t.prompt, 'tb04 =', tb04
