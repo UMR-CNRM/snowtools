@@ -5,13 +5,14 @@ Created on 22 mai 2018
 '''
 import numpy as np
 
+
 class ESCROC_subensembles(dict):
     '''Define the different subensembles of ESCROC and provide the corresponding namelist components'''
 
     def __init__(self, subensemble, members):
 
-        self.dicoptrad = {"B60": "B92", "B10": "B92", "TAR": "TA3", "TA+": "TA4"}
-        self.dicageing = {"B60": 60, "B10": 10, "B120": 120, "B180": 180, "B240": 240, "TAR": 60, "TA+": 60}
+        self.dicoptrad = {"B60": "B92", "B10": "B92", "TAR": "TA3", "TA+": "TA4", "T17": "T17"}
+        self.dicageing = {"B60": 60., "B10": 10., "B120": 120., "B180": 180., "B240": 240., "TAR": 60., "TA+": 60., "T17": 60.}
 
         self.dicoptturb = {"RIL": "RIL", "RI1": "RIL", "RI2": "RIL", "M98": "M98"}
 

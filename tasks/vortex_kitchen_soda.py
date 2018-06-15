@@ -11,7 +11,7 @@ import shutil
 
 from utils.resources import InstallException
 from utils.dates import WallTimeException
-from vortex_kitchen import vortex_conf_file, walltime
+from tasks.vortex_kitchen import vortex_conf_file, walltime
 
 
 class vortex_kitchen_soda(object):

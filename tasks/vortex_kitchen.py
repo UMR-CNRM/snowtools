@@ -196,16 +196,17 @@ def walltime(options):
             else:
                 return str(estimation)
 
-lass vortex_conf_file(object):
+
+class vortex_conf_file(object):
     # NB: Inheriting from file object is not allowed in python 3
     def __init__(self, filename, mode='w'):
         self.fileobject = open(filename, mode)
 
     def new_class(self, name):
-        self.write("[" + name + "]\n")
+        self.fileobject.write("[" + name + "]\n")
 
     def write_field(self, fieldname, value):
-        self.write(fieldname + " = " + str(value) + "\n")
+        self.fileobject.write(fieldname + " = " + str(value) + "\n")
 
     def close(self):
         self.fileobject.close()
