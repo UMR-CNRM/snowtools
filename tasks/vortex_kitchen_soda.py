@@ -139,7 +139,10 @@ class vortex_kitchen_soda(object):
                 conffile.write_field('nmembersnode', options.nmembers)
             if options.startmember:
                 conffile.write_field('startmember', options.startmember)
-
+        
+        if options.writesx:
+            conffile.write_field('writesx', options.writesx)
+        
         conffile.close()
 
     def mkjob_soda(self, options):

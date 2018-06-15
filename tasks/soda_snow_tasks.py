@@ -70,7 +70,7 @@ class SodaSnow_Vortex_Task(Task):
                 forcExp = 'yearlyforcingjesus@cluzetb'
             for mb in members:
                 # we fetch forcing files into the members directories using the remainder function %
-                forcingdir = mb % int(self.conf.nforcing)  # bc offset ? before was +1
+                forcingdir = mb % int(self.conf.nforcing)
                 print forcingdir
                 for p, datebegin in enumerate(list_dates_begin_forc):
                     dateend = list_dates_end_forc[p]
@@ -543,10 +543,55 @@ class SodaSnow_Vortex_Task(Task):
                 ),
                 print t.prompt, 'tb21 =', tb21
                 print
-
+                
+                if self.conf.writesx is not None:
+                    self.sh.title('Toolbox output tb20an_sx')
+                    tb20_b = toolbox.output(
+                        local          = localan,
+                        role           = 'SnowpackInit',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        date           = dateend,
+                        period         = dateend,
+                        member         = members,
+                        nativefmt      = 'netcdf',
+                        kind           = 'SnowpackState',
+                        model          = 'surfex',
+                        namespace      = 'cenvortex.sxcen.fr',
+                        storage        = 'sxcen.cnrm.meteo.fr',
+                        rootpath       = self.conf.writesx,
+                        stage          = '_an',
+                        fatal          = False  # doesn't exist if openloop
+                    ),
+                    print t.prompt, 'tb20an_sx =', tb20_b
+                    print
+    
+    
+                    self.sh.title('Toolbox output tb21bg_sx')
+                    tb21_b = toolbox.output(
+                        local          = localbg,
+                        role           = 'SnowpackInit',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        date           = dateend,
+                        period         = dateend,
+                        member         = members,
+                        nativefmt      = 'netcdf',
+                        kind           = 'SnowpackState',
+                        model          = 'surfex',
+                        namespace      = 'cenvortex.sxcen.fr',
+                        storage        = 'sxcen.cnrm.meteo.fr',
+                        rootpath       = self.conf.writesx,
+                        stage          = '_bg',
+                        fatal          = False
+                    ),
+                    print t.prompt, 'tb21 =', tb21_b
+                    print
+    
 # The following condition does not work. --> Ask leffe how to do
 #                 if not (tb02[0] or tb02_a[0]):
-                tb21 = toolbox.output(
+                self.sh.title('Toolbox output tb22')
+                tb22 = toolbox.output(
                     role           = 'SurfexClim',
                     kind           = 'pgdnc',
                     nativefmt      = 'netcdf',
@@ -556,5 +601,5 @@ class SodaSnow_Vortex_Task(Task):
                     model          = 'surfex',
                     namespace      = 'cenvortex.multi.fr',
                 ),
-                print t.prompt, 'tb21 =', tb21
+                print t.prompt, 'tb22 =', tb22
                 print
