@@ -30,7 +30,7 @@ class Escroc_Optim_Task(Task):
         list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
 
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 1
-        members = range(startmember, int(self.conf.nmembers) + startmember) if hasattr( self.conf, "nmembers") else range(1, 36)
+        members = list(range(startmember, int(self.conf.nmembers) + startmember)) if hasattr( self.conf, "nmembers") else list(range(1, 36))
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
@@ -49,8 +49,8 @@ class Escroc_Optim_Task(Task):
                 namespace      = 'cenvortex.multi.fr',
             ),
 
-            print t.prompt, 'tb01 =', tb01
-            print
+            print(t.prompt, 'tb01 =', tb01)
+            print()
 
             for p, datebegin in enumerate(list_dates_begin_pro):
                 dateend = list_dates_end_pro[p]
@@ -67,8 +67,8 @@ class Escroc_Optim_Task(Task):
                     model          = 'surfex',
                     namespace      = 'cenvortex.multi.fr',
                 ),
-                print t.prompt, 'tb02 =', tb02
-                print
+                print(t.prompt, 'tb02 =', tb02)
+                print()
 
         if 'compute' in self.steps:
 
@@ -84,8 +84,8 @@ class Escroc_Optim_Task(Task):
                 ntasks         = 1,
                 niter          = 1
             )
-            print t.prompt, 'tb03 =', tb03
-            print
+            print(t.prompt, 'tb03 =', tb03)
+            print()
             tb03.run()
 
         if 'backup' in self.steps:
@@ -105,5 +105,5 @@ class Escroc_Optim_Task(Task):
                 model          = 'surfex',
                 namespace      = 'cenvortex.multi.fr',
             ),
-            print t.prompt, 'tb04 =', tb04
-            print
+            print(t.prompt, 'tb04 =', tb04)
+            print()

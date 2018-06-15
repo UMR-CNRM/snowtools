@@ -17,13 +17,13 @@ try:
     from utils.resources import InstallException
     print os.environ["SNOWTOOLS_CEN"]
     check_snowtools_install()
-    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-    print 'Snowtools installation has been successfully checked.'
-    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+    print('Snowtools installation has been successfully checked.')
+    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
 except ImportError or InstallException:
-    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
-    print 'Incorrect snowtools installation. Check the documentation.'
-    print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+    print('Incorrect snowtools installation. Check the documentation.')
+    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
     raise
 
 # Import snowtools modules
@@ -53,23 +53,23 @@ def check_and_convert_options(options, vortex=False):
 
     for mandatory in list_mandatory:
         if not mandatory:
-            print "Missing mandatory option: " + list_print
+            print("Missing mandatory option: " + list_print)
             exit_usage()
 
     # Controls and type conversions of dates
-    [options.datedeb, options.datefin, options.datespinup] = map(check_and_convert_date, [options.datedeb, options.datefin, options.datespinup])
+    [options.datedeb, options.datefin, options.datespinup] = list(map(check_and_convert_date, [options.datedeb, options.datefin, options.datespinup]))
     checkdateafter(options.datefin, options.datedeb)
 
     # Conversions of local paths in absolute paths
     [options.namelist, options.dirwork, options.exesurfex] = \
-        map(absolute_path, [options.namelist, options.dirwork, options.exesurfex])
+        list(map(absolute_path, [options.namelist, options.dirwork, options.exesurfex]))
 
     if not vortex:
         [options.forcing, options.diroutput] = \
-            map(absolute_path, [options.forcing, options.diroutput])
+            list(map(absolute_path, [options.forcing, options.diroutput]))
 
     options.exesurfex = check_surfex_exe(options.exesurfex)
-    print options.exesurfex
+    print(options.exesurfex)
 
     # Check and conversion of geographical requirements
     if options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:
@@ -273,7 +273,7 @@ def execute_through_vortex(args):
     options = check_and_convert_options(options, vortex=True)
 
     if not options.dirwork:
-        if 'WORKDIR' in os.environ.keys():
+        if 'WORKDIR' in list(os.environ.keys()):
             options.dirwork = os.environ['WORKDIR']
         else:
             options.dirwork = "."

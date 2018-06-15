@@ -77,7 +77,7 @@ class infomassifs():
 
         # nouveau vers ancien massif
         self.dicnewoldmassif = {}
-        for oldmas in self.dicoldnewmassif.keys():
+        for oldmas in list(self.dicoldnewmassif.keys()):
             self.dicnewoldmassif[self.dicoldnewmassif[oldmas]] = oldmas
 
         self.dicoldnewmassifPyr = { 1: 64,
@@ -104,25 +104,25 @@ class infomassifs():
                                     71: 90,
                                     72: 91}
         self.dicnewoldmassifPyr = {}
-        for oldmas in self.dicoldnewmassifPyr.keys():
+        for oldmas in list(self.dicoldnewmassifPyr.keys()):
             self.dicnewoldmassifPyr[self.dicoldnewmassifPyr[oldmas]] = oldmas
 
         # Exposition (rose de 360) vers numero d expositions
         self.dicExpo2Numexpo = {}
-        for numexpo in self.dicexpo.keys():
+        for numexpo in list(self.dicexpo.keys()):
             self.dicExpo2Numexpo[self.dicexpo[numexpo]] = numexpo
 
         # dictionnaire referencant une liste de massif par une chaine de caractere
         self.dicArea = {"isere": [7, 8, 12, 14, 15],  # les 5 massifs de l'Isère
                         "oisans": [15],
                         "lautaret": [12, 13, 15, 16],
-                        "alpes_F": range(1, 24),  # les 23 massifs des Alpes
-                        "alpes": range(1, 24) + [30],  # les 23 massifs des Alpes + Diablerets
-                        "pyrenees_F": range(64, 75),
-                        "pyrenees_E": range(80, 92),
-                        "pyrenees": range(64, 75) + range(80, 92),
+                        "alpes_F": list(range(1, 24)),  # les 23 massifs des Alpes
+                        "alpes": list(range(1, 24)) + [30],  # les 23 massifs des Alpes + Diablerets
+                        "pyrenees_F": list(range(64, 75)),
+                        "pyrenees_E": list(range(80, 92)),
+                        "pyrenees": list(range(64, 75)) + list(range(80, 92)),
                         "corse": [40, 41],
-                        "all": range(1, 24) + [30] + range(40, 42) + range(64, 75) + range(80, 92)
+                        "all": list(range(1, 24)) + [30] + list(range(40, 42)) + list(range(64, 75)) + list(range(80, 92))
                         }
 
         for area, list_massifs in six.iteritems(self.dicArea.copy()):
@@ -143,7 +143,7 @@ class infomassifs():
 
         if os.path.isfile('METADATA.xml') or os.path.islink('METADATA.xml'):
             metadata = 'METADATA.xml'
-        elif 'WHERE' in os.environ.keys():
+        elif 'WHERE' in list(os.environ.keys()):
             if os.environ['WHERE'] == "SOPRANO":
                 metadata = os.environ['HOME_RO'] + '/METADATA.xml'
             else:
@@ -173,7 +173,7 @@ class infomassifs():
         if region:
             list_massifs = region.split(",")
             if len(list_massifs) > 1:
-                massifs = map(int, list_massifs)
+                massifs = list(map(int, list_massifs))
                 for massif in massifs:
                     assert massif in self.getListMassif_of_region("all")
             else:
@@ -205,7 +205,7 @@ class infomassifs():
             if nclasses % 45 == 0:
                 liste_expo = [nclasses]  # on impose une exposition en degrés
             else:
-                liste_expo = list(xrange(0, 360, 360 / nclasses))
+                liste_expo = list(range(0, 360, 360 // nclasses))
             if "0" in liste_pentes[0]:
                 liste_expo = [-1] + liste_expo
 
@@ -216,7 +216,7 @@ class infomassifs():
             elevation = float(elevation)
             assert elevation >= 0 and elevation <= 5100
         except AssertionError:
-            print "The provided elevation is not in the range of allowed elevations."
+            print("The provided elevation is not in the range of allowed elevations.")
             raise ElevationError
         except ValueError:
             raise ElevationError
@@ -260,7 +260,7 @@ class infomassifs():
 
     def getStringOldMassif(self, numMassif):
 
-        if 'NUMMASSIF' in os.environ.keys():
+        if 'NUMMASSIF' in list(os.environ.keys()):
             oldnumero = os.environ['NUMMASSIF'] == "OLD"
         else:
             oldnumero = False
@@ -449,13 +449,13 @@ class infomassifs():
         print("Massifs connus :")
         self.__ligneplus()
         for massif in sorted(dicNumMassif):
-            print (str(massif) + ": " + dicNumMassif[massif])
+            print((str(massif) + ": " + dicNumMassif[massif]))
 
         self.__ligneplus()
         print("Régions connues :")
         self.__ligneplus()
         for area in sorted(self.dicArea):
-            print area + ": " + str(self.dicArea[area])
+            print(area + ": " + str(self.dicArea[area]))
 
     def __ligneplus(self):
-        print "+" * 50
+        print("+" * 50)

@@ -23,13 +23,13 @@ class DeterminsticScores(object):
 
     def diff(self):
         '''Vector of difference between simulations and observations'''
-        print "sim"
-        print self.simCommon.shape
-        print self.simCommon
-        print "obs"
-        print self.obsCommon.shape
-        print self.obsCommon
-        print np.isnan(self.obsCommon)
+        print("sim")
+        print(self.simCommon.shape)
+        print(self.simCommon)
+        print("obs")
+        print(self.obsCommon.shape)
+        print(self.obsCommon)
+        print(np.isnan(self.obsCommon))
         return self.simCommon - self.obsCommon
 
     def squarediff(self):
@@ -62,7 +62,7 @@ class DeterminsticScores(object):
     def read_var_ifpresent(self, dataNc, varname, convert1d=False):
         
         if varname not in dataNc.listvar():
-            if varname in ESMSnowMIP_alternate_varnames.keys():
+            if varname in list(ESMSnowMIP_alternate_varnames.keys()):
                 varname = ESMSnowMIP_alternate_varnames[varname]
         
         if varname in dataNc.listvar():
@@ -133,9 +133,9 @@ class DeterministicScores_Heterogeneous(DeterministicScores_Mask):
         '''
         Constructor for observations and simulations covering different periods, times provided
         '''
-        print "extract common vectors"
+        print("extract common vectors")
         self.extract_common_vectors(timeObs, timeSim, obs, sim)
-        print "fin extract common vectors"
+        print("fin extract common vectors")
 
     def extract_common_vectors(self, timeObs, timeSim, obs, sim):
         '''Extract common date between observations and simulations'''
@@ -145,20 +145,20 @@ class DeterministicScores_Heterogeneous(DeterministicScores_Mask):
             winter[i] = t.month >= self.startwinter or t.month <= self.endwinter
 
         # First reduce observation vector to available observations and winter
-        print "number of obs"
-        print len(timeObs)
-        print "number of obs in winter"
-        print np.sum(winter)
-        print "number of valid obs"
-        print type(obs)
-        print obs[:]
-        print type(obs[0])
-        print np.isnan(obs)
-        print type(np.isnan(obs))
-        print np.sum(np.invert(np.isnan(obs)))
+        print("number of obs")
+        print(len(timeObs))
+        print("number of obs in winter")
+        print(np.sum(winter))
+        print("number of valid obs")
+        print(type(obs))
+        print(obs[:])
+        print(type(obs[0]))
+        print(np.isnan(obs))
+        print(type(np.isnan(obs)))
+        print(np.sum(np.invert(np.isnan(obs))))
         indObs_ok = np.invert(np.isnan(obs)) & winter
-        print "number of valid obs in winter"
-        print np.sum(indObs_ok)
+        print("number of valid obs in winter")
+        print(np.sum(indObs_ok))
         timeObs_ok = timeObs[indObs_ok]
         obs_ok = obs[indObs_ok]
 
@@ -186,24 +186,24 @@ class S2M_DeterministicScores_Heterogeneous(DeterministicScores_Heterogeneous, S
 
     def __init__(self, profile, obsfile, varname):
 
-        print "open file"
-        print profile
-        print type(profile)
+        print("open file")
+        print(profile)
+        print(type(profile))
         dataSim = prosimu(profile)
-        print "read time"
+        print("read time")
         timeSim = dataSim.readtime()
-        print "read var"
+        print("read var")
         varSim = self.read_sim_ifpresent(dataSim, self.varsimname(varname))
-        print "close file"
+        print("close file")
         dataSim.close()
 
-        print "open obs"
+        print("open obs")
         dataObs = prosimu(obsfile)
         timeObs = dataObs.readtime()
         varObs = self.read_var_ifpresent(dataObs, self.varobsname(varname))
         dataObs.close()
-        print "close obs"
-        print varObs.shape
+        print("close obs")
+        print(varObs.shape)
         self.timeSim = timeSim
         self.timeObs = timeObs
 

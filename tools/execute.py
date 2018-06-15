@@ -39,7 +39,7 @@ def callSurfexOrDie(commande, moderun="NORMAL", nproc=1, errorcode=None):
         if moderun == "MPIRUN":
             callSystemOrDie("mpirun -np " + str(nproc) + " " + commande, errorcode=errorcode)
         else:
-            if "SLURM_NODES" in os.environ.keys():
+            if "SLURM_NODES" in list(os.environ.keys()):
                 callSystemOrDie("srun --nodes=" + os.environ["SLURM_NNODES"] + " --ntasks=" + str(nproc) + " " + commande, errorcode=errorcode)
             else:
                 callSystemOrDie("srun --ntasks=" + str(nproc) + " " + commande, errorcode=errorcode)

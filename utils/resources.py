@@ -20,17 +20,17 @@ def absolute_path(pathin):
     if pathin:
 
         if "," in pathin:
-            print pathin
+            print(pathin)
             list_pathin = pathin.split(",")
-            print list_pathin
+            print(list_pathin)
             list_pathout = []
-            print "loop"
+            print("loop")
             for pathin in list_pathin:
-                print pathin
+                print(pathin)
                 if pathin[0] != "/":
                     pathin = os.getcwd() + "/" + pathin
                 list_pathout.append(pathin)
-            print list_pathout
+            print(list_pathout)
             return list_pathout
 
         elif pathin[0] != "/":
@@ -53,7 +53,7 @@ def smart_copy(pathin, nameout):
 
 def check_surfex_exe(path):
     if not path:
-        if "EXESURFEX" in os.environ.keys():
+        if "EXESURFEX" in list(os.environ.keys()):
             path = os.environ["EXESURFEX"]
         else:
             raise BaseException("A directory for SURFEX executables must be defined either with -s option or with $EXESURFEX")
@@ -77,11 +77,11 @@ def check_snowtools_install():
     # Check installation of snowtools package
     ValidInstall = True
     issue = ""
-    if 'SNOWTOOLS_CEN' not in os.environ.keys():
+    if 'SNOWTOOLS_CEN' not in list(os.environ.keys()):
         issue += "SNOWTOOLS_CEN environment variable is not defined.\n"
         ValidInstall = False
 
-    if 'PYTHONPATH' not in os.environ.keys():
+    if 'PYTHONPATH' not in list(os.environ.keys()):
         issue += "PYTHONPATH environment variable is not defined.\n"
         ValidInstall = False
 
@@ -141,7 +141,7 @@ def get_file_const_or_crash(pathin, nameout):
 
 def get_file_const(pathin, nameout):
     if os.path.isfile(pathin):
-        print pathin
+        print(pathin)
         smart_copy(pathin, nameout)
         return True
     else:

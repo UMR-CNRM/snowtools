@@ -134,7 +134,7 @@ class ESCROC_EnsembleScores(EnsembleScores):
     def read_var_ifpresent(self, dataNc, varname, convert1d=False):
         
         if varname not in dataNc.listvar():
-            if varname in ESMSnowMIP_alternate_varnames.keys():
+            if varname in list(ESMSnowMIP_alternate_varnames.keys()):
                 varname = ESMSnowMIP_alternate_varnames[varname]
         
         if varname in dataNc.listvar():
@@ -167,7 +167,7 @@ class ESCROC_EnsembleScores(EnsembleScores):
     def read(self, profiles, obsfile, varname):
                 
         for p,profile in enumerate(profiles):
-            print "open file " + profile
+            print("open file " + profile)
             dataSim = prosimu(profile)
             if p==0:
                 timeSim = dataSim.readtime()
@@ -175,16 +175,16 @@ class ESCROC_EnsembleScores(EnsembleScores):
 
             varSim = self.read_sim_ifpresent(dataSim, self.varsimname(varname))
             ensemble[p, :] = varSim
-            print "close file"
+            print("close file")
             dataSim.close()
 
-        print "open obs"
+        print("open obs")
         dataObs = prosimu(obsfile)
         timeObs = dataObs.readtime()
         varObs = self.read_var_ifpresent(dataObs, self.varobsname(varname))
         dataObs.close()
-        print "close obs"
-        print varObs.shape
+        print("close obs")
+        print(varObs.shape)
         
         '''Extract common date between observations and simulations'''
         # Identify winter period
@@ -194,8 +194,8 @@ class ESCROC_EnsembleScores(EnsembleScores):
 
         # First reduce observation vector to available observations and winter
         indObs_ok = np.invert(np.isnan(varObs)) & winter
-        print "number of valid obs in winter"
-        print np.sum(indObs_ok)
+        print("number of valid obs in winter")
+        print(np.sum(indObs_ok))
         timeObs_ok = timeObs[indObs_ok]
         obs_ok = varObs[indObs_ok]
 

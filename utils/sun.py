@@ -222,25 +222,25 @@ class sun():
         shapein = len(var.shape)
 
         if len(theshape) == 2:
-            for i in xrange(0, var.shape[0]):
+            for i in range(0, var.shape[0]):
                 bigvar[:, i] = var[i]
         elif len(theshape) == 3:
             if shapein == 2:
-                for ilat in xrange(0, var.shape[0]):
-                    for ilon in xrange(0, var.shape[1]):
+                for ilat in range(0, var.shape[0]):
+                    for ilon in range(0, var.shape[1]):
                         bigvar[:, ilat, ilon] = var[ilat, ilon]
             elif shapein == 1:
-                for i in xrange(0, var.shape[0]):
+                for i in range(0, var.shape[0]):
                     bigvar[:, :, i] = var[i]
         elif len(theshape) == 4:
-            for i in xrange(0, var.shape[0]):
+            for i in range(0, var.shape[0]):
                 bigvar[:, :, :, i] = var[i]
         elif len(theshape) == 5:
-            for ilat in xrange(0, var.shape[0]):
-                for ilon in xrange(0, var.shape[1]):
+            for ilat in range(0, var.shape[0]):
+                for ilon in range(0, var.shape[1]):
                     bigvar[:, :, :, ilat, ilon] = var[ilat, ilon]
         else:
-            print "error on indices in upscale_tab"
+            print("error on indices in upscale_tab")
 
         return bigvar
 
@@ -250,14 +250,14 @@ class sun():
         bigvar = np.ma.zeros(theshape)
 
         if len(theshape) == 2:
-            for i in xrange(0, theshape[1]):
+            for i in range(0, theshape[1]):
                 bigvar[:, i] = var[:]
         elif len(theshape) == 3:
-            for ilat in xrange(0, theshape[1]):
-                for ilon in xrange(0, theshape[2]):
+            for ilat in range(0, theshape[1]):
+                for ilon in range(0, theshape[2]):
                     bigvar[:, ilat, ilon] = var[:]
 
         else:
-            print "error on indices in upscale_tab_time"
+            print("error on indices in upscale_tab_time")
 
         return bigvar

@@ -26,7 +26,7 @@ class forcinput_tomerge:
         '''Generic method to open merge multiple forcing files'''
 
         if type(forcin) is list:
-            forcin = map(str, forcin)
+            forcin = list(map(str, forcin))
         else:
             raise TypeException(type(forcin), list)
 
@@ -77,7 +77,7 @@ class forcinput_tomerge:
         del dictdim[spatial_dim_name]
 
         for dimname, dim in six.iteritems(dictdim):
-            print "Create dimension " + dimname + " " + str(len(dim))
+            print("Create dimension " + dimname + " " + str(len(dim)))
             new_forcing_file.createDimension(dimname, len(dim))
 
         time = init_forcing_file[0].readtime()
@@ -86,7 +86,7 @@ class forcinput_tomerge:
         savevar = {}
 
         for varname in listvar:
-            print varname
+            print(varname)
             vartype, rank, array_dim, varFillvalue, var_attrs = init_forcing_file[0].infovar(varname)
             if varname == "DIR_SWdown":
                 direct = new_forcing_file.createVariable(varname, vartype, array_dim, fill_value=varFillvalue)
@@ -98,7 +98,7 @@ class forcinput_tomerge:
                 var = new_forcing_file.createVariable(varname, vartype, array_dim, fill_value=varFillvalue)
 
             for attname in var_attrs:
-                if not attname == u'_FillValue':
+                if not attname == '_FillValue':
                     setattr(var, attname, init_forcing_file[0].getattr(varname, attname))
 
             if rank >= 1 and spatial_dim_name in array_dim:
@@ -131,17 +131,17 @@ class forcinput_tomerge:
 class forcinput_applymask(forcinput_tomerge):
     def compute_solar_radiations(self, time, savevar, i):
 
-        if "station" + str(i) in savevar.keys():
+        if "station" + str(i) in list(savevar.keys()):
             INFO = infomassifs()
             list_list_azim = []
             list_list_mask = []
-            print "ACCOUNT FOR SURROUNDING MASKS FOR THE FOLLOWING STATIONS:"
+            print("ACCOUNT FOR SURROUNDING MASKS FOR THE FOLLOWING STATIONS:")
             for poste in map(self.stringstation, list(savevar["station" + str(i)])):
                 azim, mask = INFO.maskposte(poste)
                 list_list_azim.append(azim)
                 list_list_mask.append(mask)
                 if not azim == [0, 360]:
-                    print poste, INFO.nameposte(poste)
+                    print(poste, INFO.nameposte(poste))
         else:
             list_list_azim = None
             list_list_mask = None
@@ -171,18 +171,142 @@ class forcinput_tomodify:
         if not (dirout == '' or os.path.isdir(dirout)):
             raise DirNameException(dirout)
 
-        init_forcing_file = prosimu(forcin)
         self.filename = forcin
 
-        new_forcing_file = netCDF4.Dataset(forcout, "w", format=init_forcing_file.format())
-
-        self.modify(init_forcing_file, new_forcing_file, args)
+        if forcin == forcout:
+            init_forcing_file = prosimu(forcin, openmode='r+')
+            self.modify(init_forcing_file, init_forcing_file, args)
+        else:
+            init_forcing_file = prosimu(forcin)
+            new_forcing_file = netCDF4.Dataset(forcout, "w", format=init_forcing_file.format())
+            self.modify(init_forcing_file, new_forcing_file, args)
 
         init_forcing_file.close()
-        new_forcing_file.close()
+
+        if forcin != forcout:
+            new_forcing_file.close()
 
     def modify(self, init_forcing_file, new_forcing_file, *args):
         pass
+
+    def add_massif_variables(self, init_forcing_file, new_forcing_file, savevar={}):
+
+        # if new_forcing_file is prosimu instance, take the dataset class instead
+        if type(new_forcing_file) is not netCDF4.Dataset:
+            new_forcing_file = new_forcing_file.dataset
+
+        self.create_massif_dimension(init_forcing_file, new_forcing_file, savevar)
+        if "isoZeroAltitude" not in list(new_forcing_file.variables.keys()):
+            self.add_iso_zero(init_forcing_file, new_forcing_file, savevar)
+        if "rainSnowLimit" not in list(new_forcing_file.variables.keys()):
+            self.add_snow_rain_limit(init_forcing_file, new_forcing_file, savevar)
+
+    def create_massif_dimension(self, init_forcing_file, new_forcing_file, savevar):
+        massif_dim_name = "massif"
+
+        if "massif_number" in list(savevar.keys()):
+            self.massif_number = list(map(int, savevar["massif_number"]))
+        else:
+            self.massif_number = list(map(int, init_forcing_file.read("massif_number")))
+        self.list_massifs = np.unique(self.massif_number)
+        self.nmassifs = len(self.list_massifs)
+
+        if massif_dim_name not in new_forcing_file.dimensions.copy():
+            new_forcing_file.createDimension(massif_dim_name, self.nmassifs)
+            var = new_forcing_file.createVariable(massif_dim_name, 'i4', ["massif"], fill_value=0)
+            var[:] = self.list_massifs[:]
+
+        if "slope" in list(savevar.keys()):
+            self.slope = savevar["slope"]
+        else:
+            self.slope = init_forcing_file.read("slope")
+
+        if "ZS" in list(savevar.keys()):
+            self.zs = savevar["ZS"]
+        else:
+            self.zs = init_forcing_file.read("ZS")
+
+    def add_snow_rain_limit(self, init_forcing_file, new_forcing_file, savevar):
+
+        if "Snowf" in list(savevar.keys()):
+            snowf = savevar["Snowf"]
+        else:
+            snowf = init_forcing_file.read("Snowf")
+
+        if "Snowf" in list(savevar.keys()):
+            rainf = savevar["Rainf"]
+        else:
+            rainf = init_forcing_file.read("Rainf")
+
+        ntime = snowf.shape[0]
+        lpn = np.empty((ntime, self.nmassifs))
+
+        for m, massif in enumerate(self.list_massifs):
+            indflat = (self.slope == 0.) & (self.massif_number == massif)
+            altitude = self.zs[indflat]
+            rain_full = rainf[:, indflat]
+            snow_full = snowf[:, indflat]
+
+            phase = np.where(snow_full > 0, -1, np.where(rain_full > 0, 1, 0))
+
+            lowestlevelindex = np.argmin(phase, axis=1)
+            lpn_temp = altitude[lowestlevelindex] + 150
+
+            lpn_temp = np.where(snow_full[:, 0] > 0., -3, lpn_temp)
+            lpn_temp = np.where(rain_full[:, -1] > 0., -2, lpn_temp)
+            lpn_temp = np.where(rain_full[:, -1] + snow_full[:, -1] < 1.E-8, -1, lpn_temp)
+
+            lpn[:, m] = lpn_temp
+        var = new_forcing_file.createVariable("rainSnowLimit", 'float', ["time", "massif"], fill_value=-9999.)
+        var[:] = lpn
+
+    def add_iso_zero(self, init_forcing_file, new_forcing_file, savevar):
+        zero = 273.15
+
+        if "Tair" in list(savevar.keys()):
+            tair = savevar["Tair"]
+        else:
+            tair = init_forcing_file.read("Tair")
+
+        ntime = tair.shape[0]
+        isozero = np.empty((ntime, self.nmassifs))
+
+        for m, massif in enumerate(self.list_massifs):
+            indflat = (self.slope == 0.) & (self.massif_number == massif)
+            altitude = self.zs[indflat]
+            tair_full = tair[:, indflat]
+
+            # Série temporelle des plus petites valeurs positives
+            temp_array = np.where(tair_full < zero, 999, tair_full)
+            lowestpositive = np.min(temp_array, axis=1)
+            indexbelow = np.argmin(temp_array, axis=1)
+            zlow = altitude[indexbelow]
+
+            # Série temporelle des plus grandes valeurs négatives
+            temp_array = np.where(tair_full >= zero, -999, tair_full)
+            greaternegative = np.max(temp_array, axis=1)
+            indexabove = np.argmax(temp_array, axis=1)
+            zup = altitude[indexabove]
+
+            # Cas général: interpolation linéaire
+            isozero_temp = ((lowestpositive - 273.15) * zup + (273.15 - greaternegative) * zlow ) / (lowestpositive - greaternegative)
+            # Iso zéro en dessous du niveau minimal connu
+            isozero_temp = np.where(lowestpositive >= 900., -3, isozero_temp)
+            # Iso zéro au dessus du niveau maximal connu
+            isozero_temp = np.where(greaternegative <= -900., -2, isozero_temp)
+
+            isozero[:, m] = isozero_temp
+
+        var = new_forcing_file.createVariable("isoZeroAltitude", 'float', ["time", "massif"], fill_value=-9999.)
+        var[:] = isozero
+
+    def addfirstdimension(self, array, length):
+        return np.tile(array, (length, 1))
+
+
+class forcinput_addmeteomassif(forcinput_tomodify):
+    def modify(self, init_forcing_file, new_forcing_file, *args):
+        self.add_massif_variables(init_forcing_file, new_forcing_file)
 
 
 class forcinput_select(forcinput_tomodify):
@@ -195,12 +319,12 @@ class forcinput_select(forcinput_tomodify):
 
         ''' Modify a forcing file towards a prescribed geometry'''
 
-        print "Modify forcing file towards the prescribed geometry:"
+        print("Modify forcing file towards the prescribed geometry:")
 
         (list_massif_number, min_alt, max_alt, liste_pentes, list_exp) = args[:][0]
 
         list_exp_degres = list_exp[:]  # A copy is necessary to not modify this value in the calling module for next iteration
-        liste_pentes_int = map(int, liste_pentes)
+        liste_pentes_int = list(map(int, liste_pentes))
 
         listvar = init_forcing_file.listvar()
 
@@ -232,9 +356,9 @@ class forcinput_select(forcinput_tomodify):
         extendslopes = not extendaspects and ( len(liste_pentes) > len(np.unique(init_slopes)) )
 
         if extendaspects:
-            print "Extend aspects of the input forcing file"
+            print("Extend aspects of the input forcing file")
         if extendslopes:
-            print "Extend slopes of the input forcing file"
+            print("Extend slopes of the input forcing file")
 
         if extendaspects:
             b_points_slope = np.in1d(init_slopes, [0])
@@ -303,13 +427,13 @@ class forcinput_select(forcinput_tomodify):
 #                 print len_dim
             else:
                 len_dim = len(index_points)
-            print "create dimension :" + spatial_dim_name + " " + str(len_dim)
+            print("create dimension :" + spatial_dim_name + " " + str(len_dim))
             len_dim_spatial = len_dim
             new_forcing_file.createDimension(spatial_dim_name, len_dim)
             del init_forcing_file_dimensions[spatial_dim_name]
 
         for dimname, dim in six.iteritems(init_forcing_file_dimensions):
-            print "Create dimension " + dimname + " " + str(len(dim))
+            print("Create dimension " + dimname + " " + str(len(dim)))
             if not dimname == "time":
                 new_forcing_file.createDimension(dimname, len(dim))
 
@@ -389,7 +513,7 @@ class forcinput_select(forcinput_tomodify):
             var = new_forcing_file.createVariable(varname, vartype, array_dim, fill_value=varFillvalue)
 
             for attname in var_attrs:
-                if not attname == u'_FillValue':
+                if not attname == '_FillValue':
                     setattr(var, attname, init_forcing_file.getattr(varname, attname))
             try:
                 if not (varname in ["DIR_SWdown", "SCA_SWdown"] and ( extendaspects or extendslopes )):
@@ -407,13 +531,13 @@ class forcinput_select(forcinput_tomodify):
                     elif rank == 5:
                         var[:, :, :, :, :] = var_array
             except Exception:
-                print var_array
+                print(var_array)
                 raise VarWriteException(varname, var_array.shape, var.shape)
 
             # Some variables need to be saved for solar computations
             if varname in ["time"]:
                 savevar[varname] = init_forcing_file.readtime()
-            if varname in ["LAT", "LON", "aspect", "slope", "DIR_SWdown", "SCA_SWdown", "massif_number"]:
+            if varname in ["LAT", "LON", "ZS", "aspect", "slope", "DIR_SWdown", "SCA_SWdown", "massif_number", "Tair", "Rainf", "Snowf"]:
                 savevar[varname] = var_array
             if varname == "massif_number":
                 save_array_dim = array_dim
@@ -430,6 +554,8 @@ class forcinput_select(forcinput_tomodify):
             new_forcing_file.variables["DIR_SWdown"][:] = direct
             new_forcing_file.variables["SCA_SWdown"][:] = diffus
 
+        self.add_massif_variables(init_forcing_file, new_forcing_file, savevar=savevar)
+
     def addCoord(self, forcing, massifnumber, dimension, varFillValue):
         '''Routine to add coordinates in the forcing file for the SAFRAN massifs'''
         INFOmassifs = infomassifs()
@@ -444,12 +570,12 @@ class forcinput_select(forcinput_tomodify):
             lon[point] = latlon[1]
 
         var = forcing.createVariable("LAT", massifnumber.dtype, dimension, fill_value=varFillValue)
-        setattr(var, u'long_name', u'latitude')
-        setattr(var, u'units', u'degrees_north')
+        setattr(var, 'long_name', 'latitude')
+        setattr(var, 'units', 'degrees_north')
         var[:] = lat
         var = forcing.createVariable("LON", massifnumber.dtype, dimension, fill_value=varFillValue)
-        setattr(var, u'long_name', u'longitude')
-        setattr(var, u'units', u'degrees_east')
+        setattr(var, 'long_name', 'longitude')
+        setattr(var, 'units', 'degrees_east')
         var[:] = lon
 
         return lat, lon
@@ -457,11 +583,17 @@ class forcinput_select(forcinput_tomodify):
 
 # For test
 if __name__ == "__main__":
-    list_massifs = range(1, 24)
-    min_alt = 600
-    max_alt = 3600
-    list_pentes = ["0", "20", "40"]
-    list_expo = xrange(0, 9)
-    forcin = os.environ["HOME"] + "/FORCING_OLD.nc"
-    forcout = os.environ["HOME"] + "/FORCING_NEW.nc"
-    f = forcinput_select(forcin, forcout, list_massifs, min_alt, max_alt, list_pentes, list_expo)
+#     list_massifs = range(1, 24)
+#     min_alt = 600
+#     max_alt = 3600
+#     list_pentes = ["0", "20", "40"]
+#     list_expo = xrange(0, 9)
+#     forcin = os.environ["HOME"] + "/FORCING_OLD.nc"
+#     forcout = os.environ["HOME"] + "/FORCING_NEW.nc"
+#     f = forcinput_select(forcin, forcout, list_massifs, min_alt, max_alt, list_pentes, list_expo)
+
+    import glob
+    import shutil
+    for forcing in glob.glob("FORCING*.nc"):
+#         shutil.copy(forcing, "old" + forcing)ll 
+        f = forcinput_addmeteomassif(forcing, forcing)

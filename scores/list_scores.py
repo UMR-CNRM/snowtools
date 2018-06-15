@@ -61,17 +61,17 @@ class ESCROC_list_scores(object):
         tab_scores = np.empty((len(list_scores), len(list_var)), float)
 
         for v, varname in enumerate(list_var):
-            print "before read"
+            print("before read")
             self.read_data(profile, obsfile, varname)
-            print "after read"
-            print list_scores
+            print("after read")
+            print(list_scores)
             for s, score in enumerate(list_scores):
-                print "compute score" + score
+                print("compute score" + score)
                 if score == "bias":
-                    print "compute bias"
+                    print("compute bias")
                     tab_scores[s, v] = self.scores.bias()
                 elif score == "rmse":
-                    print "compute rmse"
+                    print("compute rmse")
                     tab_scores[s, v] = self.scores.rmse()
                 elif score == "mae":
                     tab_scores[s, v] = self.scores.mae()
@@ -101,8 +101,8 @@ class scores_file(netCDF4.Dataset):
 
     def write(self, scorename, scoretab):
         self.createVariable(scorename, 'f8', ('member', 'variable', 'stat'))
-        print "write the following table"
-        print scoretab[:, :, :]
+        print("write the following table")
+        print(scoretab[:, :, :])
         self.variables[scorename][:, :, :] = scoretab[:, :, :]
 
 class ensemble_scores_file(netCDF4.Dataset):

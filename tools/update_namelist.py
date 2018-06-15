@@ -40,9 +40,9 @@ def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc
         NamelistObject = update_loc(NamelistObject, forcing)
     NamelistObject = update_forcingdates(NamelistObject, datebegin, dateend, forcing=forcing)
 
-    print type(physicaloptions), type(snowparameters)
+    print(type(physicaloptions), type(snowparameters))
 
-    print physicaloptions
+    print(physicaloptions)
 
     NamelistObject = update_physicaloptions(NamelistObject, **physicaloptions)
     NamelistObject = update_snowparameters(NamelistObject, **snowparameters)
@@ -145,7 +145,7 @@ def update_snowparameters(NamelistObject, **kwargs):
         elif key.upper() in ["XCVHEATF"]:
             setattr(NamelistObject["NAM_ISBAn"], key.upper(), value)
         else:
-            print "IGNORE FIELD " + key + " : not in namelist."
+            print("IGNORE FIELD " + key + " : not in namelist.")
 
     return NamelistObject
 
