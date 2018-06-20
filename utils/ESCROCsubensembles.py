@@ -79,7 +79,7 @@ class ESCROC_subensembles(dict):
         # random draw (whithout replacement) of nmembers members in the whole population
         # be careful +1 because starts from 0
         memberslist = 1 + np.random.choice(len(snowflist) * len(metamlist) * len(radlist) * len(turblist) * len(condlist) * len(holdlist) * len(complist) * len(cvlist) + 1, len(members), replace = False)
-        print memberslist
+        print(memberslist)
 
         mb = 0
         for snowfall in snowflist:

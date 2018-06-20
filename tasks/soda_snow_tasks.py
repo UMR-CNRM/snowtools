@@ -41,37 +41,37 @@ class SodaSnow_Vortex_Task(Task):
                 dt = Date(check_and_convert_date(str(dt)))
                 if dt < self.conf.dateend:
                     assDates.append(dt)
-            print "assimilation sequence, dates"
-            print assDates
+            print("assimilation sequence, dates")
+            print(assDates)
         except AttributeError:
-            print 'openloop simulation whitout pauses'
+            print('openloop simulation whitout pauses')
 
         list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = \
             get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration, assDates)
-        print '````````````````````````````````````````````````````````````````````````````````````````'
-        print 'list datesbg'
-        print list_dates_begin_pro
-        print
-        print list_dates_end_pro
-        print '````````````````````````````````````````````````````````````````````````````````````````'
+        print('````````````````````````````````````````````````````````````````````````````````````````')
+        print('list datesbg')
+        print(list_dates_begin_pro)
+        print()
+        print(list_dates_end_pro)
+        print('````````````````````````````````````````````````````````````````````````````````````````')
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 1
-        members = range(startmember, int(self.conf.nmembers) + startmember) if hasattr( self.conf, "nmembers") else range(1, 36)
+        members = list(range(startmember, int(self.conf.nmembers) + startmember)) if hasattr( self.conf, "nmembers") else list(range(1, 36))
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
             # we fetch forcing files into the members directories using the remainder function %
             # since we usually have more members than forcing files, we loop over forcing files
             # -> some will be used more than others
-            print self.conf.vapp
-            print self.conf.vconf
+            print(self.conf.vapp)
+            print(self.conf.vconf)
             if self.conf.duration == "monthly":
-                print 'monthly'
+                print('monthly')
                 forcExp = 'forcingjesus@cluzetb'
             else:
                 forcExp = 'yearlyforcingjesus@cluzetb'
             for mb in members:
                 # we fetch forcing files into the members directories using the remainder function %
                 forcingdir = mb % int(self.conf.nforcing)
-                print forcingdir
+                print(forcingdir)
                 for p, datebegin in enumerate(list_dates_begin_forc):
                     dateend = list_dates_end_forc[p]
 
@@ -92,8 +92,8 @@ class SodaSnow_Vortex_Task(Task):
                         model          = 'safran',
                         namespace      = 'cenvortex.multi.fr',
                     ),
-                    print t.prompt, 'tb01 =', tb01
-                    print
+                    print(t.prompt, 'tb01 =', tb01)
+                    print()
 
                 # self.sh.title('Toolbox input tb01')
                 #  tb01 = toolbox.input(  # doesn't work since it tries all combinations of element btw the 2 date lists...
@@ -125,8 +125,8 @@ class SodaSnow_Vortex_Task(Task):
                 model          = 'surfex',
                 fatal          = False,
             ),
-            print t.prompt, 'tb02 =', tb02
-            print
+            print(t.prompt, 'tb02 =', tb02)
+            print()
 
             self.sh.title('Toolbox input tb02_a')  # normal to fail if pgd in diroutput
             tb02_a = toolbox.input(
@@ -140,8 +140,8 @@ class SodaSnow_Vortex_Task(Task):
                 namespace      = 'cenvortex.multi.fr',
                 fatal          = False,
             ),
-            print t.prompt, 'tb02_a =', tb02_a
-            print
+            print(t.prompt, 'tb02_a =', tb02_a)
+            print()
             
             self.sh.title('Toolbox input tb02_s')  # this step should work if PGD properly in spinup on hendrix
             tb02_s = toolbox.input(
@@ -155,8 +155,8 @@ class SodaSnow_Vortex_Task(Task):
                 namespace      = 'cenvortex.multi.fr',
                 fatal          = False,
             ),
-            print t.prompt, 'tb02_s =', tb02_s
-            print
+            print(t.prompt, 'tb02_s =', tb02_s)
+            print()
 
             self.sh.title('Toolbox input tb03')
             tb03 = toolbox.input(
@@ -172,8 +172,8 @@ class SodaSnow_Vortex_Task(Task):
                 namespace      = 'cenvortex.multi.fr',
                 fatal          = False,
             ),
-            print t.prompt, 'tb03 =', tb03
-            print
+            print(t.prompt, 'tb03 =', tb03)
+            print()
 
             self.sh.title('Toolbox input tb03_s')
             tb03_s = toolbox.input(
@@ -189,8 +189,8 @@ class SodaSnow_Vortex_Task(Task):
                 namespace      = 'cenvortex.multi.fr',
                 fatal          = False,
             ),
-            print t.prompt, 'tb03_s =', tb03_s
-            print
+            print(t.prompt, 'tb03_s =', tb03_s)
+            print()
 
 
 #             if not tb03[0]:
@@ -232,8 +232,8 @@ class SodaSnow_Vortex_Task(Task):
                 source         = 'ecoclimap1',
                 model          = 'surfex',
             ),
-            print t.prompt, 'tb03b =', tb03b
-            print
+            print(t.prompt, 'tb03b =', tb03b)
+            print()
 
             self.sh.title('Toolbox input tb03c')
             tb03c = toolbox.input(
@@ -246,8 +246,8 @@ class SodaSnow_Vortex_Task(Task):
                 source         = 'ecoclimap2',
                 model          = 'surfex',
             ),
-            print t.prompt, 'tb03c =', tb03c
-            print
+            print(t.prompt, 'tb03c =', tb03c)
+            print()
 
             self.sh.title('Toolbox input tb04')
             tb04 = toolbox.input(
@@ -258,8 +258,8 @@ class SodaSnow_Vortex_Task(Task):
                 local           = 'drdt_bst_fit_60.nc',
                 model          = 'surfex',
             )
-            print t.prompt, 'tb04 =', tb04
-            print
+            print(t.prompt, 'tb04 =', tb04)
+            print()
 
             self.sh.title('Toolbox input tb05')
             tb05 = toolbox.input(
@@ -269,8 +269,8 @@ class SodaSnow_Vortex_Task(Task):
                 model           = 'surfex',
                 local           = 'OPTIONS.nam',
             )
-            print t.prompt, 'tb05 =', tb05
-            print
+            print(t.prompt, 'tb05 =', tb05)
+            print()
 
             if self.conf.openloop == 'off':
                 self.sh.title('Toolbox input tobs')
@@ -289,8 +289,8 @@ class SodaSnow_Vortex_Task(Task):
                     stage           = '1date',
                     fatal           = False
                 )
-                print t.prompt, 'tobs =', tobs
-                print
+                print(t.prompt, 'tobs =', tobs)
+                print()
 
             if hasattr(self.conf, "exesurfex"):
                 self.sh.title('Toolbox executable tb06= tbx1')
@@ -302,8 +302,8 @@ class SodaSnow_Vortex_Task(Task):
                     remote          = self.conf.exesurfex + "/OFFLINE"
                 )
 
-                print t.prompt, 'tb06 =', tb06
-                print
+                print(t.prompt, 'tb06 =', tb06)
+                print()
 #                 if not (tb02[0] or tb02_a[0]):
                 if not (tb02_a[0]):
 
@@ -316,8 +316,8 @@ class SodaSnow_Vortex_Task(Task):
                         remote          = self.conf.exesurfex + "/PGD"
                     )
 
-                    print t.prompt, 'tb07 =', tb07
-                    print
+                    print(t.prompt, 'tb07 =', tb07)
+                    print()
 
                 if not (tb03[0] or tb03_s[0]):
 
@@ -330,8 +330,8 @@ class SodaSnow_Vortex_Task(Task):
                         remote          = self.conf.exesurfex + "/PREP"
                     )
 
-                    print t.prompt, 'tb08 =', tb08
-                    print
+                    print(t.prompt, 'tb08 =', tb08)
+                    print()
 
                 self.sh.title('Toolbox executable tb08_s= tbx4')
                 tb08_s = tbx4 = toolbox.executable(
@@ -342,11 +342,11 @@ class SodaSnow_Vortex_Task(Task):
                     remote          = self.conf.exesurfex + "/SODA"
                 )
 
-                print t.prompt, 'tb08_s =', tb08_s
-                print
+                print(t.prompt, 'tb08_s =', tb08_s)
+                print()
 #                 if not (tb02[0] or tb02_a[0]):
             else:
-                print 'you fool ! you should prescribe a --exesurfex path to your s2m command !'
+                print('you fool ! you should prescribe a --exesurfex path to your s2m command !')
 
         if 'compute' in self.steps:
             # force first forcing to the first forcing of first member 0001 doesn't work on several nodes...
@@ -365,8 +365,8 @@ class SodaSnow_Vortex_Task(Task):
                 forcingname  = firstforcing,
                 nmembers = self.conf.nmembers,
             )
-            print t.prompt, 'tb09a =', tb09a
-            print
+            print(t.prompt, 'tb09a =', tb09a)
+            print()
             tb09a.run()
 
             # Take care : PGD parallelization will be available in v8.1 --> nproc and ntasks will have to be set to 40
@@ -377,8 +377,8 @@ class SodaSnow_Vortex_Task(Task):
                     kind         = 'pgd_from_forcing',
                     forcingname  = firstforcing,
                 )
-                print t.prompt, 'tb09 =', tb09
-                print
+                print(t.prompt, 'tb09 =', tb09)
+                print()
                 self.component_runner(tbalgo2, tbx1, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
 
             # Take care : PREP parallelization will be available in v8.1 --> nproc and ntasks will have to be set to 40
@@ -387,8 +387,8 @@ class SodaSnow_Vortex_Task(Task):
                 tb10 = tbalgo3 = toolbox.algo(
                     engine         = 'parallel',
                 )
-                print t.prompt, 'tb10 =', tb10
-                print
+                print(t.prompt, 'tb10 =', tb10)
+                print()
                 self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
 
             if self.conf.subensemble == 'Crocus':
@@ -398,7 +398,7 @@ class SodaSnow_Vortex_Task(Task):
                 ntasksEsc = min(self.conf.nmembers, 40)
             # assimilation loop
             datestart = self.conf.datebegin
-            print assDates
+            print(assDates)
             for dateassim in assDates:
                 self.sh.title('Toolbox algo tb11 = OFFLINE')
 
@@ -418,8 +418,8 @@ class SodaSnow_Vortex_Task(Task):
                     nforcing       = self.conf.nforcing,
                 )
 
-                print t.prompt, 'tb11 =', tb11
-                print
+                print(t.prompt, 'tb11 =', tb11)
+                print()
                 self.component_runner(tbalgo4, tbx3)
 
                 if self.conf.openloop == 'off' and os.path.exists('workSODA/OBSERVATIONS_' + dateassim.ymdHh + '.nc'):  # test of obs exists/successfully downloaded
@@ -434,8 +434,8 @@ class SodaSnow_Vortex_Task(Task):
                         dateassim      = dateassim,
                         members        = footprints.util.rangex(members),
                     )
-                    print t.prompt, 'tb11_s =', tb11_s
-                    print
+                    print(t.prompt, 'tb11_s =', tb11_s)
+                    print()
                     self.component_runner(tbalgo4s, tbx4, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
 
                 # increment the date
@@ -458,8 +458,8 @@ class SodaSnow_Vortex_Task(Task):
                 confvapp       = self.conf.vapp,
                 confvconf      =self.conf.vconf
             )
-            print t.prompt, 'tb11_f =', tb11_f
-            print
+            print(t.prompt, 'tb11_f =', tb11_f)
+            print()
             self.component_runner(tbalgo4f, tbx3)
 
         if 'backup' in self.steps:
@@ -478,11 +478,11 @@ class SodaSnow_Vortex_Task(Task):
             for p, datebegin in enumerate(list_dates_begin_pro):
                 dateend = list_dates_end_pro[p]
 
-                print
-                print'test'
-                print 'workSODA/OBSERVATIONS_' + Date(dateend).ymdHh + '.nc'
-                print
-                print
+                print()
+                print('test')
+                print('workSODA/OBSERVATIONS_' + Date(dateend).ymdHh + '.nc')
+                print()
+                print()
                 if self.conf.openloop == 'on' or not os.path.exists('workSODA/OBSERVATIONS_' + Date(dateend).ymdHh + '.nc'):  # openloop or noobs/final step
                     localan = 'NONE'
                     localbg = 'mb[member]/PREP_[date:ymdh].nc'
@@ -511,8 +511,8 @@ class SodaSnow_Vortex_Task(Task):
                                 block           = 'obs',
                                 fatal           = False
                             )
-                            print t.prompt, 'tobsout =', tobsout
-                            print
+                            print(t.prompt, 'tobsout =', tobsout)
+                            print()
 
                 self.sh.title('Toolbox output tb19')
                 tb19 = toolbox.output(
@@ -527,8 +527,8 @@ class SodaSnow_Vortex_Task(Task):
                     model          = 'surfex',
                     namespace      = 'cenvortex.multi.fr',
                 ),
-                print t.prompt, 'tb19 =', tb19
-                print
+                print(t.prompt, 'tb19 =', tb19)
+                print()
 
                 self.sh.title('Toolbox output tb20an')
                 tb20 = toolbox.output(
@@ -546,8 +546,8 @@ class SodaSnow_Vortex_Task(Task):
                     stage          = '_an',
                     fatal          = False  # doesn't exist if openloop
                 ),
-                print t.prompt, 'tb20 =', tb20
-                print
+                print(t.prompt, 'tb20 =', tb20)
+                print()
 
                 self.sh.title('Toolbox output tb21bg')
                 tb21 = toolbox.output(
@@ -565,8 +565,8 @@ class SodaSnow_Vortex_Task(Task):
                     stage          = '_bg',
                     fatal          = False
                 ),
-                print t.prompt, 'tb21 =', tb21
-                print
+                print(t.prompt, 'tb21 =', tb21)
+                print()
 
                 if hasattr(self.conf, 'writesx'):
                     self.sh.title('Toolbox output tb20an_sx')
@@ -587,8 +587,8 @@ class SodaSnow_Vortex_Task(Task):
                         stage          = '_an',
                         fatal          = False  # doesn't exist if openloop
                     ),
-                    print t.prompt, 'tb20an_sx =', tb20_b
-                    print
+                    print(t.prompt, 'tb20an_sx =', tb20_b)
+                    print()
 
                     self.sh.title('Toolbox output tb21bg_sx')
                     tb21_b = toolbox.output(
@@ -608,8 +608,8 @@ class SodaSnow_Vortex_Task(Task):
                         stage          = '_bg',
                         fatal          = False,
                     ),
-                    print t.prompt, 'tb21 =', tb21_b
-                    print
+                    print(t.prompt, 'tb21 =', tb21_b)
+                    print()
                     self.sh.title('Toolbox output tbconf')
                     tbconf = toolbox.output(
                         kind           = 'ini_file',
@@ -621,8 +621,8 @@ class SodaSnow_Vortex_Task(Task):
                         vconf          = self.conf.vconf,
                         fatal          = False,
                     ),
-                    print t.prompt, 'tbconf =', tbconf
-                    print
+                    print(t.prompt, 'tbconf =', tbconf)
+                    print()
 
             if hasattr(self.conf, 'writesx'):
                 self.sh.title('Toolbox output tb23')
@@ -636,8 +636,8 @@ class SodaSnow_Vortex_Task(Task):
                     local           = 'OPTIONS.nam',
                     fatal           = False,
                 )
-                print t.prompt, 'tb23 =', tb23
-                print
+                print(t.prompt, 'tb23 =', tb23)
+                print()
 
 
                 
