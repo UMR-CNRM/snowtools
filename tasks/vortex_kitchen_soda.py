@@ -81,12 +81,14 @@ class vortex_kitchen_soda(object):
         conffile.write_field('meteo', options.model)
         conffile.write_field('geometry', self.vconf)
         conffile.write_field('nforcing', options.nforcing)
-
+        conffile.write_field('datedeb', options.datedeb)
+        conffile.write_field('datefin', options.datefin)
+        conffile.write_field('subensemble', options.escroc)
+        if options.threshold:
+            conffile.write_field('threshold', options.threshold)
         if not options.sodamonthly:  # for now on soda works only with yearly forcing files
-            conffile.write_field('subensemble', options.escroc)
             conffile.write_field('duration', 'yearly')
         else:
-            conffile.write_field('subensemble', options.escroc)
             conffile.write_field('duration', 'monthly')
 
         conffile.write_field('xpid', self.xpid + '@' + os.getlogin())
@@ -134,15 +136,14 @@ class vortex_kitchen_soda(object):
                 startmember += nmembers_this_node
 
         else:
-            conffile.write_field('nnodes', options.nnodes)
             if options.nmembers:
                 conffile.write_field('nmembersnode', options.nmembers)
             if options.startmember:
                 conffile.write_field('startmember', options.startmember)
-        
+
         if options.writesx:
             conffile.write_field('writesx', options.writesx)
-        
+
         conffile.close()
 
     def mkjob_soda(self, options):

@@ -56,7 +56,7 @@ class SodaSnow_Vortex_Task(Task):
         print '````````````````````````````````````````````````````````````````````````````````````````'
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 1
         members = range(startmember, int(self.conf.nmembers) + startmember) if hasattr( self.conf, "nmembers") else range(1, 36)
-        # fpmembers = footprints.FPList(members)
+
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
             # we fetch forcing files into the members directories using the remainder function %
             # since we usually have more members than forcing files, we loop over forcing files
@@ -157,7 +157,6 @@ class SodaSnow_Vortex_Task(Task):
             ),
             print t.prompt, 'tb02_s =', tb02_s
             print
-
 
             self.sh.title('Toolbox input tb03')
             tb03 = toolbox.input(
@@ -273,26 +272,25 @@ class SodaSnow_Vortex_Task(Task):
             print t.prompt, 'tb05 =', tb05
             print
 
-            self.sh.title('Toolbox input tobs')
-            tobs = toolbox.input(
-                geometry        = self.conf.geometry,
-                nativefmt       = 'netcdf',
-                # dateobs         = self.conf.assimdates,
-                dateobs         = assDates,
-                # datebegin       = dateass3.strftime('%Y%m%d%H'),
-                model           = 'obs',
-                part            = 'MODIS',
-                kind            = 'SnowObservations',
-                namespace       = 'cenvortex.multi.fr',
-                experiment      = 'obs@cluzetb',
-                local           = 'workSODA/OBSERVATIONS_[dateobs:ymdHh].nc',
-                # local           = 'workSODA/OBSERVATIONS_' + dateass3.strftime('%Y%m%d%H') + '.nc',  
-                # format          = 'netcdf',
-                stage           = '1date',
-                fatal           = False
-            )
-            print t.prompt, 'tobs =', tobs
-            print
+            if self.conf.openloop == 'off':
+                self.sh.title('Toolbox input tobs')
+                tobs = toolbox.input(
+                    geometry        = self.conf.geometry,
+                    nativefmt       = 'netcdf',
+                    # dateobs         = self.conf.assimdates,
+                    dateobs         = assDates,
+                    # datebegin       = dateass3.strftime('%Y%m%d%H'),
+                    model           = 'obs',
+                    part            = 'MODIS',
+                    kind            = 'SnowObservations',
+                    namespace       = 'cenvortex.multi.fr',
+                    experiment      = 'obs@cluzetb',
+                    local           = 'workSODA/OBSERVATIONS_[dateobs:ymdHh].nc',
+                    stage           = '1date',
+                    fatal           = False
+                )
+                print t.prompt, 'tobs =', tobs
+                print
 
             if hasattr(self.conf, "exesurfex"):
                 self.sh.title('Toolbox executable tb06= tbx1')
@@ -457,6 +455,8 @@ class SodaSnow_Vortex_Task(Task):
                 subensemble    = self.conf.subensemble if hasattr(self.conf, "subensemble")  else "EZob",
                 ntasks         = ntasksEsc,
                 nforcing       = self.conf.nforcing,
+                confvapp       = self.conf.vapp,
+                confvconf      =self.conf.vconf
             )
             print t.prompt, 'tb11_f =', tb11_f
             print
@@ -489,6 +489,30 @@ class SodaSnow_Vortex_Task(Task):
                 else:  # usual soda step
                     localan = 'mb[member]/PREP_[date:ymdh].nc'
                     localbg = 'mb[member]/PREP_[date:ymdh]_bg.nc'
+
+                    if os.path.exists('workSODA/OBSERVATIONS_' + Date(dateend).ymdHh + '.nc'):
+                        locObs = 'workSODA/obs_MODIS_' + self.conf.geometry.area + '_' + Date(dateend).ymdHh + '.nc'
+                        os.rename('workSODA/OBSERVATIONS_' + Date(dateend).ymdHh + '.nc', locObs )
+                        if hasattr(self.conf, 'writesx'):
+                            self.sh.title('Toolbox output tobsOUT_sx')
+                            tobsout = toolbox.output(
+                                local = locObs,
+                                geometry        = self.conf.geometry,
+                                nativefmt       = 'netcdf',
+                                dateobs         = dateend,
+                                model           = 'obs',
+                                part            = 'MODIS',
+                                kind            = 'SnowObservations',
+                                namespace       = 'cenvortex.sxcen.fr',
+                                storage         = 'sxcen.cnrm.meteo.fr',
+                                rootpath = self.conf.writesx,
+                                experiment      = self.conf.xpid,
+                                stage           = '1date',
+                                block           = 'obs',
+                                fatal           = False
+                            )
+                            print t.prompt, 'tobsout =', tobsout
+                            print
 
                 self.sh.title('Toolbox output tb19')
                 tb19 = toolbox.output(
@@ -543,8 +567,8 @@ class SodaSnow_Vortex_Task(Task):
                 ),
                 print t.prompt, 'tb21 =', tb21
                 print
-                
-                if self.conf.writesx is not None:
+
+                if hasattr(self.conf, 'writesx'):
                     self.sh.title('Toolbox output tb20an_sx')
                     tb20_b = toolbox.output(
                         local          = localan,
@@ -565,8 +589,7 @@ class SodaSnow_Vortex_Task(Task):
                     ),
                     print t.prompt, 'tb20an_sx =', tb20_b
                     print
-    
-    
+
                     self.sh.title('Toolbox output tb21bg_sx')
                     tb21_b = toolbox.output(
                         local          = localbg,
@@ -583,23 +606,38 @@ class SodaSnow_Vortex_Task(Task):
                         storage        = 'sxcen.cnrm.meteo.fr',
                         rootpath       = self.conf.writesx,
                         stage          = '_bg',
-                        fatal          = False
+                        fatal          = False,
                     ),
                     print t.prompt, 'tb21 =', tb21_b
                     print
-    
-# The following condition does not work. --> Ask leffe how to do
-#                 if not (tb02[0] or tb02_a[0]):
-                self.sh.title('Toolbox output tb22')
-                tb22 = toolbox.output(
-                    role           = 'SurfexClim',
-                    kind           = 'pgdnc',
-                    nativefmt      = 'netcdf',
-                    local          = 'PGD.nc',
-                    experiment     = self.conf.xpid,
-                    geometry       = self.conf.geometry,
-                    model          = 'surfex',
-                    namespace      = 'cenvortex.multi.fr',
-                ),
-                print t.prompt, 'tb22 =', tb22
+                    self.sh.title('Toolbox output tbconf')
+                    tbconf = toolbox.output(
+                        kind           = 'ini_file',
+                        namespace      = 'cenvortex.sxcen.fr',
+                        storage        = 'sxcen.cnrm.meteo.fr',
+                        experiment     = self.conf.xpid,
+                        local          = self.conf.vapp + '_' + self.conf.vconf + '.ini',
+                        vapp           = self.conf.vapp,
+                        vconf          = self.conf.vconf,
+                        fatal          = False,
+                    ),
+                    print t.prompt, 'tbconf =', tbconf
+                    print
+
+            if hasattr(self.conf, 'writesx'):
+                self.sh.title('Toolbox output tb23')
+                tb23 = toolbox.output(
+                    role            = 'Nam_surfex',
+                    namespace       = 'cenvortex.sxcen.fr',
+                    storage         = 'sxcen.cnrm.meteo.fr',
+                    experiment      = self.conf.xpid,
+                    kind            = 'cen_namelist',
+                    model           = 'surfex',
+                    local           = 'OPTIONS.nam',
+                    fatal           = False,
+                )
+                print t.prompt, 'tb23 =', tb23
                 print
+
+
+                
