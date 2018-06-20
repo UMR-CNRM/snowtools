@@ -80,6 +80,7 @@ class vortex_kitchen_soda(object):
 
         conffile.write_field('meteo', options.model)
         conffile.write_field('geometry', self.vconf)
+        conffile.write_field('forcing', options.forcing)
         conffile.write_field('nforcing', options.nforcing)
         conffile.write_field('datedeb', options.datedeb)
         conffile.write_field('datefin', options.datefin)

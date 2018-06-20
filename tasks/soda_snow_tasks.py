@@ -12,8 +12,7 @@ from utils.dates import get_list_dates_files, check_and_convert_date
 import footprints
 import os
 import datetime
-import numpy as np
-
+import shutil
 
 def setup(t, **kw):
     return Driver(
@@ -63,11 +62,8 @@ class SodaSnow_Vortex_Task(Task):
             # -> some will be used more than others
             print(self.conf.vapp)
             print(self.conf.vconf)
-            if self.conf.duration == "monthly":
-                print('monthly')
-                forcExp = 'forcingjesus@cluzetb'
-            else:
-                forcExp = 'yearlyforcingjesus@cluzetb'
+
+            forcExp = self.conf.forcing + '@' + os.environ['USER']          
             for mb in members:
                 # we fetch forcing files into the members directories using the remainder function %
                 forcingdir = mb % int(self.conf.nforcing)
@@ -149,7 +145,7 @@ class SodaSnow_Vortex_Task(Task):
                 kind           = 'pgdnc',
                 nativefmt      = 'netcdf',
                 local          = 'PGD.nc',
-                experiment     = 'spinup@cluzetb',
+                experiment     = 'spinup@' + os.environ['USER'],
                 geometry       = self.conf.geometry,
                 model          = 'surfex',
                 namespace      = 'cenvortex.multi.fr',
@@ -179,7 +175,7 @@ class SodaSnow_Vortex_Task(Task):
             tb03_s = toolbox.input(
                 alternate      = 'SnowpackInit',
                 local          = 'PREP.nc',
-                experiment     = 'spinup@cluzetb',
+                experiment     = 'spinup@' + os.environ['USER'],
                 geometry       = self.conf.geometry,
                 date           = self.conf.datespinup,
                 intent         = 'inout',
@@ -284,7 +280,7 @@ class SodaSnow_Vortex_Task(Task):
                     part            = 'MODIS',
                     kind            = 'SnowObservations',
                     namespace       = 'cenvortex.multi.fr',
-                    experiment      = 'obs@cluzetb',
+                    experiment      = 'obs@' + os.environ['USER'],
                     local           = 'workSODA/OBSERVATIONS_[dateobs:ymdHh].nc',
                     stage           = '1date',
                     fatal           = False
@@ -399,6 +395,7 @@ class SodaSnow_Vortex_Task(Task):
             # assimilation loop
             datestart = self.conf.datebegin
             print(assDates)
+            stopstep = 1
             for dateassim in assDates:
                 self.sh.title('Toolbox algo tb11 = OFFLINE')
 
@@ -416,11 +413,14 @@ class SodaSnow_Vortex_Task(Task):
                     subensemble    = self.conf.subensemble if hasattr(self.conf, "subensemble")  else "EZob",
                     ntasks         = ntasksEsc,
                     nforcing       = self.conf.nforcing,
+                    stopcount      = stopstep,
+                    confvapp       = self.conf.vapp,
+                    confvconf      = self.conf.vconf,
                 )
-
                 print(t.prompt, 'tb11 =', tb11)
                 print()
                 self.component_runner(tbalgo4, tbx3)
+                stopstep += 1
 
                 if self.conf.openloop == 'off' and os.path.exists('workSODA/OBSERVATIONS_' + dateassim.ymdHh + '.nc'):  # test of obs exists/successfully downloaded
 
@@ -455,8 +455,9 @@ class SodaSnow_Vortex_Task(Task):
                 subensemble    = self.conf.subensemble if hasattr(self.conf, "subensemble")  else "EZob",
                 ntasks         = ntasksEsc,
                 nforcing       = self.conf.nforcing,
+                stopcount      = stopstep,
                 confvapp       = self.conf.vapp,
-                confvconf      =self.conf.vconf
+                confvconf      = self.conf.vconf,
             )
             print(t.prompt, 'tb11_f =', tb11_f)
             print()
