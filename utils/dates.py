@@ -123,13 +123,13 @@ def get_list_dates_files(datebegin, dateend, duration, listDateStop=None):
         list_dates_end_pro = listDateStop[:]
         list_dates_end_pro.append(min(list_dates_end_forcing[-1], dateend))
 
-    print " begforc /n endforc /n begpro /n end pro"
-    print list_dates_begin_forcing
-    print
-    print list_dates_end_forcing
-    print
-    print list_dates_begin_pro
-    print
-    print list_dates_end_pro
+    print (" begforc /n endforc /n begpro /n end pro")
+    print (list_dates_begin_forcing)
+    print()
+    print (list_dates_end_forcing)
+    print()
+    print (list_dates_begin_pro)
+    print()
+    print (list_dates_end_pro)
 
     return list_dates_begin_forcing, list_dates_end_forcing, list_dates_begin_pro, list_dates_end_pro

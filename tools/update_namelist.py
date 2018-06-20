@@ -121,7 +121,7 @@ def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"
 
 #     if dateend < dateforcend:
     NamelistObject["NAM_IO_OFFLINE"].NDATESTOP = [dateend.year, dateend.month, dateend.day, dateend.hour * 3600]
-    print "Ndatestop set to {0}{1}{2}{3}".format(dateend.year, dateend.month, dateend.day, dateend.hour)
+    print ("Ndatestop set to {0}{1}{2}{3}".format(dateend.year, dateend.month, dateend.day, dateend.hour))
 
     return NamelistObject
 
@@ -154,8 +154,8 @@ def update_nmembers(NamelistObject, nmembers):
 
     if nmembers is not None:
         setattr(NamelistObject["NAM_ENS"], 'NENS', nmembers)
-        print "NENS set to {}".format(nmembers)
+        print ("NENS set to {}".format(nmembers))
     else:
-            print "IGNORE FIELD NENS : not in namelist."
+            print ("IGNORE FIELD NENS : not in namelist.")
 
     return NamelistObject
