@@ -15,7 +15,7 @@ import sys
 try:
     from utils.resources import check_snowtools_install
     from utils.resources import InstallException
-    print os.environ["SNOWTOOLS_CEN"]
+    print (os.environ["SNOWTOOLS_CEN"])
     check_snowtools_install()
     print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
     print('Snowtools installation has been successfully checked.')
@@ -289,10 +289,10 @@ def execute_through_vortex(args):
         run = vortex_kitchen_soda(options)
         run.run(options)
     elif options.soda and not options.escroc:
-        print "soda should run with escroc option"
+        print ("soda should run with escroc option")
     else:
-        print "Well done. No run, no bug."
-        print "Try --escroc or --soda if you like to play. "
+        print ("Well done. No run, no bug.")
+        print ("Try --escroc or --soda if you like to play. ")
 
 if __name__ == "__main__":
 

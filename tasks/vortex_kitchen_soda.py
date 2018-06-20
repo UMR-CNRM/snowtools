@@ -70,10 +70,10 @@ class vortex_kitchen_soda(object):
         confname = "../conf/" + self.vapp + "_" + self.vconf + ".ini"  # this file already exists if options.soda
 
         if os.path.exists(confname):
-            print 'remove vortex conf_file'
+            print ('remove vortex conf_file')
             os.remove(confname)
 
-        print 'copy conf file to vortex path'
+        print ('copy conf file to vortex path')
         shutil.copyfile(options.soda, confname)
 
         conffile = vortex_conf_file(confname, 'a')
@@ -157,6 +157,6 @@ class vortex_kitchen_soda(object):
     def run(self, options):
         mkjob_list = self.mkjob_soda(options)
         for mkjob in mkjob_list:
-            print "Run command: " + mkjob + "\n"
+            print ("Run command: " + mkjob + "\n")
             os.system(mkjob)
 
