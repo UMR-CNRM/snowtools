@@ -15,6 +15,7 @@ import sys
 try:
     from utils.resources import check_snowtools_install
     from utils.resources import InstallException
+    print (os.environ["SNOWTOOLS_CEN"])
     check_snowtools_install()
     print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
     print('Snowtools installation has been successfully checked.')
@@ -32,6 +33,7 @@ from utils.resources import absolute_path, check_surfex_exe
 from utils.infomassifs import infomassifs
 import tasks.runs
 from tasks.vortex_kitchen import vortex_kitchen
+from tasks.vortex_kitchen_soda import vortex_kitchen_soda
 
 usage = "usage: s2m -b begin_date -e end_date -f forcing [-m forcingmodel] [-o path_output] [-w workdir] [-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] [-c nb_classes_aspects] [-L Lower-altitude] [-U Upper-altitude] [-s surfex_exe_directory]"
 
@@ -187,6 +189,27 @@ def parse_options(arguments):
                       action="store", type="int", dest="nnodes", default=1,
                       help="Number of nodes")
 
+    parser.add_option("--soda",
+                      action="store", type='string', dest="soda", default=None,
+                      help="ESCROC-SODA assimilation sequence activation and ABSOLUTE path to conf (assimdates (file)")
+    parser.add_option("--nforcing",
+                      action="store", type="int", dest="nforcing", default=1,
+                      help="Number of members of forcing files")
+    parser.add_option("--sodamonthly",
+                      action="store_true", dest="sodamonthly", default=False,
+                      help="activation of SODA with monthly forcing files" )
+
+    parser.add_option("--openloop",
+                      action="store_true", dest="openloop", default=False,
+                      help="OFFLINE inout at assimdates without assim")
+
+    parser.add_option("--walltime",
+                      action="store", type = "int", dest="walltime", default = None,
+                      help="specify your job walltime (useful for debugging on sev. nodes)")
+    parser.add_option("--writesx",
+                      action="store", type = "str", dest="writesx", default = None,
+                      help="specify the root path (.../vortex) where you'd like to store PREP files on sxcen")
+
     (options, args) = parser.parse_args(arguments)
 
     del args
@@ -259,8 +282,17 @@ def execute_through_vortex(args):
             options.dirwork = "."
 
     # Cook vortex task
-    run = vortex_kitchen(options)
-    run.run(options)
+    if options.escroc and not options.soda:
+        run = vortex_kitchen(options)
+        run.run(options)
+    if options.soda and options.escroc:
+        run = vortex_kitchen_soda(options)
+        run.run(options)
+    elif options.soda and not options.escroc:
+        print ("soda should run with escroc option")
+    else:
+        print ("Well done. No run, no bug.")
+        print ("Try --escroc or --soda if you like to play. ")
 
 
 if __name__ == "__main__":

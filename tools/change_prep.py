@@ -16,7 +16,7 @@ import numpy as np
 # import six
 
 from utils.prosimu import prosimu
-from utils.FileException import FileNameException
+from utils.FileException import FileNameException, VarNameException
 
 
 class prep_tomodify(object):
@@ -45,18 +45,31 @@ class prep_tomodify(object):
 
         self.prepfile = prosimu(prepfile, openmode="a")
         self.nsnowlayer = self.prepfile.read(self.dict_prep['nsnowlayer'])[0]
+        try:
+            _, _ = self.prepfile.read(self.dict_prep['swe'] + str(1), keepfillvalue=True, removetile=False, needmodif=True)
+            self.layerdim = False
+        except VarNameException:  # layer is a dimension in the file
+            self.layerdim = True
 
     def apply_swe_threshold(self, swe_threshold, closefile=False):
         '''Method to apply a threshold on snow water equivalent in a PREP.nc file'''
-        for i in range(self.nsnowlayer):
-            swe_layer, swe_layer_nc = self.prepfile.read(self.dict_prep['swe'] + str(i + 1), keepfillvalue=True, removetile=False, needmodif=True)
-            if i == 0:
-                swe_fromsurface = np.zeros_like(swe_layer)
-            swe_layer = np.where(swe_fromsurface > swe_threshold, 0, swe_layer)
-            swe_layer_nc[:] = swe_layer[:]
+        if not self.layerdim:
+            for i in range(self.nsnowlayer):
+                swe_layer, swe_layer_nc = self.prepfile.read(self.dict_prep['swe'] + str(i + 1), keepfillvalue=True, removetile=False, needmodif=True)
+                if i == 0:
+                    swe_fromsurface = np.zeros_like(swe_layer)
+                swe_layer = np.where(swe_fromsurface > swe_threshold, 0, swe_layer)
+                swe_layer_nc[:] = swe_layer[:]
 
-            swe_fromsurface += swe_layer
-
+                swe_fromsurface += swe_layer
+        else:
+            swe_layer, swe_layer_nc = self.prepfile.read(self.dict_prep['swe'], keepfillvalue=True, removetile=False, needmodif=True)
+            swe_layer = np.squeeze(swe_layer)
+            swe_fromsurface = np.zeros_like(swe_layer[0, :])
+            for i in range(self.nsnowlayer):
+                swe_layer[i, :] = np.where(swe_fromsurface > swe_threshold, 0, swe_layer[i, :])
+                swe_layer_nc[0, i, :] = swe_layer[i, :]
+                swe_fromsurface += swe_layer[i, :]
         if closefile:
             self.close()
 
@@ -85,5 +98,3 @@ class prep_tomodify(object):
 if __name__ == "__main__":
     prep = prep_tomodify("PREP.nc")
     prep.apply_swe_threshold(swe_threshold=400, closefile=True)
-#     newdate=datetime.datetime(2010,9,4,6)
-#     prep.change_date(newdate,closefile=True)
