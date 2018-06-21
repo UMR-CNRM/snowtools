@@ -385,7 +385,7 @@ class Safran(S2Mtask):
             # II- PEARP (J-5) -> J
             # --------------------
 
-            # II.1 EBAUCHE issue des prevision P0/P6/P12/P18/P24 du réseau 6h (J-n) de la PEARP pour couvrir (J-5) 6h -> (J-1) 6h
+            # II.1 EBAUCHE issue des prevision P0/P3/P6/P9/P12/P15/P18/P21/P24 du réseau 6h (J-n) de la PEARP pour couvrir (J-5) 6h -> (J-1) 6h
             # RQ : on ne peut pas mélanger des resources issues de runs différents pour conserver des cumuls de précipitations cohérents
             self.sh.title('Toolbox input tb18_a')
             tb18_a = toolbox.input(
@@ -398,7 +398,7 @@ class Safran(S2Mtask):
                 geometry        = self.conf.vconf,
                 cutoff         = 'production',
                 date           = ['{0:s}/+PT{1:s}H'.format(datebegin.ymd6h, str(24 * i)) for i in range(ndays)],
-                cumul          = footprints.util.rangex(0, 24, 3),
+                cumul          = footprints.util.rangex('0-24-3'),
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -557,6 +557,7 @@ class Safran(S2Mtask):
             tb26 = tbalgo6 = toolbox.algo(
                 engine         = 'blind',
                 kind           = 'sytist',
+                execution      = 'analysis',
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
                 members        = footprints.util.rangex(self.conf.members),

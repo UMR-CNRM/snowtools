@@ -140,7 +140,8 @@ class PrepSafran(S2Mtask):
                 kind           = 'guess',
                 interpreter    = script[0].resource.language,
                 ntasks         = self.conf.ntasks,
-                members        = footprints.util.rangex(self.conf.members)
+                members        = footprints.util.rangex(self.conf.members),
+                terms          = footprints.util.rangex(self.conf.ana_terms),
             )
             print t.prompt, 'tb04 =', expresso
             print
