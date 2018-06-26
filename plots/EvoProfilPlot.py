@@ -12,10 +12,10 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib import collections
 from matplotlib.colors import BoundaryNorm
-from . import Dictionnaries
+import Dictionnaries
 
 
-def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=None, legend=None, addcolorbar=True):
+def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=None, legend=None):
     """
     Trace le profil de value en fonction du temps avec les epaisseurs reelles de couches
     """
@@ -57,15 +57,14 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
     rect.set_clim(vmin, vmax)
     ax.add_collection(rect)
     ax.autoscale_view()
-    if addcolorbar:
-        cbar = plt.colorbar(rect, ax=ax)
+    cbar = plt.colorbar(rect, ax=ax)
 
-        if colormap == 'grains':
-            labels = Dictionnaries.MEPRA_labels
-            cbar.set_ticks(np.arange(np.shape(labels)[0]))
-            cbar.ax.set_yticklabels(labels)
-        if(legend):
-            cbar.set_label(legend)
+    if colormap == 'grains':
+        labels = Dictionnaries.MEPRA_labels
+        cbar.set_ticks(np.arange(np.shape(labels)[0]))
+        cbar.ax.set_yticklabels(labels)
+    if(legend):
+        cbar.set_label(legend)
 
 
 def plot_grains1D(ax, dz, value, legend=None, cbar_show=True):

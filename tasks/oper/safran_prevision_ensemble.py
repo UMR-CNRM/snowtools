@@ -74,14 +74,15 @@ class Safran(S2Mtask):
                 experiment     = self.conf.xpid,
                 block          = self.conf.guess_block,
                 geometry       = self.conf.vconf,
-                date           = '{0:s}/-PT6H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms, shift=6),
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[2:27],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
                 namespace      = self.conf.namespace,
+                fatal          = False,
             ),
             print t.prompt, 'tb01b =', tb01b
             print
@@ -108,6 +109,7 @@ class Safran(S2Mtask):
                 source_conf    = self.conf.eps_conf,
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
+                fatal          = False,
             ),
             print t.prompt, 'tb02a =', tb02a
             print
@@ -121,7 +123,7 @@ class Safran(S2Mtask):
                 block          = self.conf.guess_block,
                 geometry       = self.conf.vconf,
                 date           = '{0:s}/+PT12H'.format(datebegin.ymdh),
-                cumul          = footprints.util.rangex(self.conf.prv_terms, shift=12),
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[4:28],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -129,6 +131,7 @@ class Safran(S2Mtask):
                 source_conf    = self.conf.eps_conf,
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
+                fatal          = False,
             ),
             print t.prompt, 'tb02b =', tb02b
             print
@@ -151,7 +154,7 @@ class Safran(S2Mtask):
                 genv            = self.conf.cycle,
                 kind            = 'listeml',
                 model           = self.conf.model,
-                local           = 'listeml' if self.conf.vconf == 'alp' else 'lysteml',
+                local           = 'listeml',
                 geometry        = self.conf.vconf,
             )
             print t.prompt, 'tb04 =', tb04
@@ -392,6 +395,7 @@ class Safran(S2Mtask):
             tb18 = tbalgo4 = toolbox.algo(
                 engine         = 'blind',
                 kind           = 'sytist',
+                execution      = 'forecast',
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
                 members        = footprints.util.rangex(self.conf.members),
