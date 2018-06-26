@@ -84,16 +84,22 @@ def update_loc(NamelistObject, forcing):
     # Constant dlat/dlon
     dlat1d = np.zeros_like(latitudes1d) + 0.5
     dlon1d = np.zeros_like(longitudes1d) + 0.5
-
-    NamelistObject["NAM_LONLATVAL"].XY = list(latitudes1d)
-    NamelistObject["NAM_LONLATVAL"].XX = list(longitudes1d)
-    NamelistObject["NAM_LONLATVAL"].XDY = list(dlat1d)
-    NamelistObject["NAM_LONLATVAL"].XDX = list(dlon1d)
-    NamelistObject["NAM_LONLATVAL"].NPOINTS = len(longitudes1d)
-
+    if NamelistObject["NAM_PGD_GRID"].CGRID == "LONLATVAL":
+        NamelistObject["NAM_LONLATVAL"].XY = list(latitudes1d)
+        NamelistObject["NAM_LONLATVAL"].XX = list(longitudes1d)
+        NamelistObject["NAM_LONLATVAL"].XDY = list(dlat1d)
+        NamelistObject["NAM_LONLATVAL"].XDX = list(dlon1d)
+        NamelistObject["NAM_LONLATVAL"].NPOINTS = len(longitudes1d)
+    else:
+        print('no updateloc necessary for distributed simulations')
+        print(NamelistObject["NAM_PGD_GRID"].CGRID)
     NamelistObject["NAM_IO_OFFLINE"].LWRITE_COORD = False
-    NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = True
 
+	# another special patch/bugfix for distributed simulations (then CGRID==IGN)
+	if NamelistObject["NAM_PGD_GRID"].CGRID =="IGN":
+    	NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = False
+	else:
+    	NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = True
 
     return NamelistObject
 

@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
 '''
 Created on 22 mai 2018
 
@@ -38,7 +40,7 @@ class SodaSnow_Vortex_Task(Task):
         try:
             for dt in self.conf.assimdates:
                 dt = Date(check_and_convert_date(str(dt)))
-                if dt < self.conf.dateend:
+                if dt < self.conf.dateend and dt > self.conf.datebegin:
                     assDates.append(dt)
             print("assimilation sequence, dates")
             print(assDates)
@@ -47,12 +49,6 @@ class SodaSnow_Vortex_Task(Task):
 
         list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = \
             get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration, assDates)
-        print('````````````````````````````````````````````````````````````````````````````````````````')
-        print('list datesbg')
-        print(list_dates_begin_pro)
-        print()
-        print(list_dates_end_pro)
-        print('````````````````````````````````````````````````````````````````````````````````````````')
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 1
         members = list(range(startmember, int(self.conf.nmembers) + startmember)) if hasattr( self.conf, "nmembers") else list(range(1, 36))
 
@@ -63,10 +59,14 @@ class SodaSnow_Vortex_Task(Task):
             print(self.conf.vapp)
             print(self.conf.vconf)
 
-            forcExp = self.conf.forcing + '@' + os.environ['USER']          
+            forcExp = self.conf.forcing + '@' + os.environ['USER']
             for mb in members:
                 # we fetch forcing files into the members directories using the remainder function %
-                forcingdir = mb % int(self.conf.nforcing)
+                gg = mb % int(self.conf.nforcing)
+                if gg != 0:
+                    forcingdir = gg
+                else:
+                    forcingdir = int(self.conf.nforcing)
                 print(forcingdir)
                 for p, datebegin in enumerate(list_dates_begin_forc):
                     dateend = list_dates_end_forc[p]
@@ -91,24 +91,6 @@ class SodaSnow_Vortex_Task(Task):
                     print(t.prompt, 'tb01 =', tb01)
                     print()
 
-                # self.sh.title('Toolbox input tb01')
-                #  tb01 = toolbox.input(  # doesn't work since it tries all combinations of element btw the 2 date lists...
-                #     role           = 'Forcing',
-                #     local          = 'mb{0:04d}'.format(mb) + '/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                #     vapp           = self.conf.meteo,
-                #     experiment     = 'forcingjesus@cluzetb',
-                #     member         = '{0:04d}'.format(forcingdir),
-                #     geometry       = self.conf.geometry,
-                #     datebegin      = list_dates_begin_forc,
-                #     dateend        = list_dates_end_forc,
-                #     nativefmt      = 'netcdf',
-                #     kind           = 'MeteorologicalForcing',
-                #     model          = 'safran',
-                #     namespace      = 'cenvortex.multi.fr',
-                # ),
-                # print t.prompt, 'tb01 =', tb01
-                # print
-                #
             self.sh.title('Toolbox input tb02')  # normal to fail if pgd in diroutput
             tb02 = toolbox.input(
                 role           = 'SurfexClim',
@@ -188,35 +170,6 @@ class SodaSnow_Vortex_Task(Task):
             print(t.prompt, 'tb03_s =', tb03_s)
             print()
 
-
-#             if not tb03[0]:
-# #                 tbi = toolbox.input(
-# #                     role           = 'initial values of ground temperature',
-# #                     kind           = 'climTG',
-# #                     nativefmt      = 'netcdf',
-# #                     local          = 'init_TG.nc',
-# #                     geometry       = self.conf.geometry,
-# #                     genv            = 'uenv:cen.01@CONST_CEN',
-# #                     gvar           = 'climtg_[geometry::area]',
-# #                     model          = 'surfex',
-# #                     fatal          = False
-# #                 ),
-# #                 print t.prompt, 'tbi =', tbi
-# #                 print
-#
-#                 tbi_a = toolbox.input(
-#                     alternate      = 'initial values of ground temperature',
-#                     kind           = 'climTG',
-#                     nativefmt      = 'netcdf',
-#                     local          = 'init_TG.nc',
-#                     experiment     = self.conf.xpid,
-#                     geometry       = self.conf.geometry,
-#                     model          = 'surfex',
-#                     namespace      = 'cenvortex.multi.fr',
-#                 ),
-#
-#                 print t.prompt, 'tbi_a =', tbi_a
-#                 print
             self.sh.title('Toolbox input tb03b')
             tb03b = toolbox.input(
                 role           = 'Surfex cover parameters',
@@ -273,9 +226,7 @@ class SodaSnow_Vortex_Task(Task):
                 tobs = toolbox.input(
                     geometry        = self.conf.geometry,
                     nativefmt       = 'netcdf',
-                    # dateobs         = self.conf.assimdates,
                     dateobs         = assDates,
-                    # datebegin       = dateass3.strftime('%Y%m%d%H'),
                     model           = 'obs',
                     part            = 'MODIS',
                     kind            = 'SnowObservations',
@@ -340,18 +291,11 @@ class SodaSnow_Vortex_Task(Task):
 
                 print(t.prompt, 'tb08_s =', tb08_s)
                 print()
-#                 if not (tb02[0] or tb02_a[0]):
             else:
                 print('you fool ! you should prescribe a --exesurfex path to your s2m command !')
 
         if 'compute' in self.steps:
             # force first forcing to the first forcing of first member 0001 doesn't work on several nodes...
-            # print
-            # print ' ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-            # print self.conf.startmember  # is it really the case ??????
-            # print '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
-            # print
-            # firstforcing = 'mb{0:04d}'.format(int(str(self.conf.startmember))) + '/FORCING_' + list_dates_begin_forc[0].strftime("%Y%m%d%H") + "_" + list_dates_end_forc[0].strftime("%Y%m%d%H") + ".nc"
             firstforcing = 'mb0001/FORCING_' + list_dates_begin_forc[0].strftime("%Y%m%d%H") + "_" + list_dates_end_forc[0].strftime("%Y%m%d%H") + ".nc"
             self.sh.title('Toolbox algo tb09a')
             tb09a = tbalgo1 = toolbox.algo(
@@ -365,6 +309,7 @@ class SodaSnow_Vortex_Task(Task):
             print()
             tb09a.run()
 
+ 
             # Take care : PGD parallelization will be available in v8.1 --> nproc and ntasks will have to be set to 40
 #             if not (tb02[0] or tb02_a[0]):
             if not tb02_a[0]:
@@ -468,7 +413,7 @@ class SodaSnow_Vortex_Task(Task):
 
         if 'late-backup' in self.steps:
 
-            #                                local        -->           remote
+            #                                 local              -->     remote
             # SODA        obs | analysis    PREP_YYYYMMDDHH.nc        PREP_YYYYMMDDHH_an.nc
             # ----            | background  PREP_YYYYMMDDYHH_bg.nc    PREP_YYYYMMDDHH_bg.nc
             # ----      noobs | analysis    NONE                      NONE
@@ -616,6 +561,7 @@ class SodaSnow_Vortex_Task(Task):
                         kind           = 'ini_file',
                         namespace      = 'cenvortex.sxcen.fr',
                         storage        = 'sxcen.cnrm.meteo.fr',
+                        rootpath       = self.conf.writesx,
                         experiment     = self.conf.xpid,
                         local          = self.conf.vapp + '_' + self.conf.vconf + '.ini',
                         vapp           = self.conf.vapp,
@@ -632,6 +578,7 @@ class SodaSnow_Vortex_Task(Task):
                     namespace       = 'cenvortex.sxcen.fr',
                     storage         = 'sxcen.cnrm.meteo.fr',
                     experiment      = self.conf.xpid,
+                    rootpath       = self.conf.writesx,
                     kind            = 'cen_namelist',
                     model           = 'surfex',
                     local           = 'OPTIONS.nam',
