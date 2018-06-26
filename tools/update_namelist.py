@@ -95,11 +95,11 @@ def update_loc(NamelistObject, forcing):
         print(NamelistObject["NAM_PGD_GRID"].CGRID)
     NamelistObject["NAM_IO_OFFLINE"].LWRITE_COORD = False
 
-	# another special patch/bugfix for distributed simulations (then CGRID==IGN)
-	if NamelistObject["NAM_PGD_GRID"].CGRID =="IGN":
-    	NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = False
-	else:
-    	NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = True
+    # another special patch/bugfix for distributed simulations (then CGRID==IGN)
+    if NamelistObject["NAM_PGD_GRID"].CGRID =="IGN":
+        NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = False
+    else:
+        NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = True
 
     return NamelistObject
 
