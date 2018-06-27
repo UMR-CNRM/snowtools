@@ -31,18 +31,19 @@ class massif_simu(prosimu):
         print "Compute massif-scale natural avalanche hazard indexes"
 
         slope_natural_risk = self.read(self.SurfexNatRiskName).astype('int')
-        ntime = slope_natural_risk.shape[0]
         aspect = self.read("aspect")
         altitude = self.read("ZS")
         massif_number = self.read(self.massif_var_name).astype('int')
-        massif_number[:] = 3
         list_massifs = np.unique(massif_number)
         list_aspects = np.unique(aspect[aspect >= 0])
-        naspects = len(list_aspects)
-        nmassifs = len(list_massifs)
         minlevel = 1500.
         maxlevel = 3000.
+
+        ntime = slope_natural_risk.shape[0]
+        naspects = len(list_aspects)
+        nmassifs = len(list_massifs)
         nlevels = int((maxlevel - minlevel) / 300.) + 1
+
         weights = [0, 0, 1, 2, 4, 8, 0]
 
         if self.massif_dim_name not in self.listdim():
