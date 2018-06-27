@@ -3,6 +3,7 @@ Created on 22 mai 2018
 
 @author: lafaysse
 '''
+import numpy as np
 
 
 class ESCROC_subensembles(dict):
@@ -10,8 +11,8 @@ class ESCROC_subensembles(dict):
 
     def __init__(self, subensemble, members):
 
-        self.dicoptrad = {"B60": "B92", "B10": "B92", "TAR": "TA3", "TA+": "TA4"}
-        self.dicageing = {"B60": 60, "B10": 10, "B120": 120, "B180": 180, "B240": 240, "TAR": 60, "TA+": 60}
+        self.dicoptrad = {"B60": "B92", "B10": "B92", "TAR": "TA3", "TA+": "TA4", "T17": "T17"}
+        self.dicageing = {"B60": 60., "B10": 10., "B120": 120., "B180": 180., "B240": 240., "TAR": 60., "TA+": 60., "T17": 60.}
 
         self.dicoptturb = {"RIL": "RIL", "RI1": "RIL", "RI2": "RIL", "M98": "M98"}
 
@@ -20,13 +21,19 @@ class ESCROC_subensembles(dict):
         self.dicxcvheatf = {"CV50000": 1.0, "CV30000": 0.6, "CV10000": 0.2}
 
         if subensemble == "E1":
-            self.physical_options, self.snow_parameters = self.E1(members)
+            self.physical_options, self.snow_parameters, self.members = self.E1(members)
+
+        elif subensemble == "E1tartes":
+            self.physical_options, self.snow_parameters, self.members = self.E1tartes(members)
+
+        elif subensemble == "E1notartes":
+            self.physical_options, self.snow_parameters, self.members = self.E1notartes(members)
 
         elif subensemble in ["E2", "E2CLEAR"]:
-            self.physical_options, self.snow_parameters = self.E2(members)
+            self.physical_options, self.snow_parameters, self.members = self.E2(members)
 
         elif subensemble in ["Crocus"]:
-            self.physical_options, self.snow_parameters = self.Crocus(members)
+            self.physical_options, self.snow_parameters, self.members = self.Crocus(members)
 
     def E1(self, members):
 
@@ -49,8 +56,88 @@ class ESCROC_subensembles(dict):
                                                 physical_options.append(po)
                                                 snow_parameters.append(sp)
 
-        return physical_options, snow_parameters
+        return physical_options, snow_parameters, members
 
+    def E1tartes(self, members):
+        """
+        E1tartes is a random draw inside the big Tartes ensemble
+        members is a sorted list of members id (ex 1...35)
+
+        /!\ member identities will be different from one run to another
+
+        """
+        physical_options = []
+        snow_parameters = []
+        snowflist = ['V12', 'S02', 'A76']
+        metamlist = ['C13', 'F06', 'S-F']
+        radlist = ['T17']
+        turblist = ['RIL', 'RI1', 'RI2', 'M98']
+        condlist = ['Y81', 'I02']
+        holdlist = ['B92', 'SPK', 'B02']
+        complist = ['B92', 'S14', 'T11']
+        cvlist = ['CV10000', 'CV30000', 'CV50000']
+        # random draw (whithout replacement) of nmembers members in the whole population
+        # be careful +1 because starts from 0
+        memberslist = 1 + np.random.choice(len(snowflist) * len(metamlist) * len(radlist) * len(turblist) * len(condlist) * len(holdlist) * len(complist) * len(cvlist) + 1, len(members), replace = False)
+        print(memberslist)
+
+        mb = 0
+        for snowfall in snowflist:
+            for metamo in metamlist:
+                for radiation in radlist:
+                    for turb in turblist:
+                        for cond in condlist:
+                            for holding in holdlist:
+                                for compaction in complist:
+                                    for cv in cvlist:
+                                            mb += 1
+                                            if mb in memberslist:
+                                                po, sp = self.convert_options(snowfall, metamo, radiation, turb, cond, holding, compaction, cv)
+                                                physical_options.append(po)
+                                                snow_parameters.append(sp)
+
+        return physical_options, snow_parameters, memberslist
+
+    def E1notartes(self, members):
+        """
+        /!\ quasi duplicate from E1tartes
+        E1notartes is a duplicate from E1 with T17 replaced by B92
+
+        /!\ member identities will be different from one run to another
+
+        """
+        physical_options = []
+        snow_parameters = []
+        snowflist = ['V12', 'S02', 'A76']
+        metamlist = ['C13', 'F06', 'S-F']
+        radlist = ['B60']
+        turblist = ['RIL', 'RI1', 'RI2', 'M98']
+        condlist = ['Y81', 'I02']
+        holdlist = ['B92', 'SPK', 'B02']
+        complist = ['B92', 'S14', 'T11']
+        cvlist = ['CV10000', 'CV30000', 'CV50000']
+        # random draw (whithout replacement) of nmembers members in the whole population
+        # be careful +1 because starts from 0
+        memberslist = 1 + np.random.choice(len(snowflist) * len(metamlist) * len(radlist) * len(turblist) * len(condlist) * len(holdlist) * len(complist) * len(cvlist) + 1, len(members), replace = False)
+        print(memberslist)
+
+        mb = 0
+        for snowfall in snowflist:
+            for metamo in metamlist:
+                for radiation in radlist:
+                    for turb in turblist:
+                        for cond in condlist:
+                            for holding in holdlist:
+                                for compaction in complist:
+                                    for cv in cvlist:
+                                            mb += 1
+                                            if mb in memberslist:
+                                                po, sp = self.convert_options(snowfall, metamo, radiation, turb, cond, holding, compaction, cv)
+                                                physical_options.append(po)
+                                                snow_parameters.append(sp)
+
+        return physical_options, snow_parameters, memberslist
+        
     def E2(self, members):
 
         members = {1: ['V12', 'C13', 'B60', 'RI1', 'Y81', 'SPK', 'B92', 'CV30000'],
@@ -98,7 +185,7 @@ class ESCROC_subensembles(dict):
             physical_options.append(po)
             snow_parameters.append(sp)
 
-        return physical_options, snow_parameters
+        return physical_options, snow_parameters, members
 
     def Crocus(self, members):
 
@@ -113,7 +200,7 @@ class ESCROC_subensembles(dict):
             physical_options.append(po)
             snow_parameters.append(sp)
 
-        return physical_options, snow_parameters
+        return physical_options, snow_parameters, members
 
     def convert_options(self, snowfall, metamo, radiation, turb, cond, holding, compaction, cv):
 

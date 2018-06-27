@@ -31,7 +31,7 @@ def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam", forcing="
     namSURFEX.close()
 
 
-def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc", dateend=None, updateloc=True, physicaloptions={}, snowparameters={}):
+def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc", dateend=None, updateloc=True, physicaloptions={}, snowparameters={}, nmembers=None):
     '''This function updates a NamelistSet object of the bronx module or a NamelistContents object of the vortex module.'''
 
     NamelistObject = update_mandatory_settings(NamelistObject)
@@ -46,7 +46,7 @@ def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc
 
     NamelistObject = update_physicaloptions(NamelistObject, **physicaloptions)
     NamelistObject = update_snowparameters(NamelistObject, **snowparameters)
-
+    NamelistObject = update_nmembers(NamelistObject, nmembers)
     return NamelistObject
 
 
@@ -84,16 +84,22 @@ def update_loc(NamelistObject, forcing):
     # Constant dlat/dlon
     dlat1d = np.zeros_like(latitudes1d) + 0.5
     dlon1d = np.zeros_like(longitudes1d) + 0.5
-
-    NamelistObject["NAM_LONLATVAL"].XY = list(latitudes1d)
-    NamelistObject["NAM_LONLATVAL"].XX = list(longitudes1d)
-    NamelistObject["NAM_LONLATVAL"].XDY = list(dlat1d)
-    NamelistObject["NAM_LONLATVAL"].XDX = list(dlon1d)
-    NamelistObject["NAM_LONLATVAL"].NPOINTS = len(longitudes1d)
-
+    if NamelistObject["NAM_PGD_GRID"].CGRID == "LONLATVAL":
+        NamelistObject["NAM_LONLATVAL"].XY = list(latitudes1d)
+        NamelistObject["NAM_LONLATVAL"].XX = list(longitudes1d)
+        NamelistObject["NAM_LONLATVAL"].XDY = list(dlat1d)
+        NamelistObject["NAM_LONLATVAL"].XDX = list(dlon1d)
+        NamelistObject["NAM_LONLATVAL"].NPOINTS = len(longitudes1d)
+    else:
+        print('no updateloc necessary for distributed simulations')
+        print(NamelistObject["NAM_PGD_GRID"].CGRID)
     NamelistObject["NAM_IO_OFFLINE"].LWRITE_COORD = False
-    NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = True
 
+    # another special patch/bugfix for distributed simulations (then CGRID==IGN)
+    if NamelistObject["NAM_PGD_GRID"].CGRID =="IGN":
+        NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = False
+    else:
+        NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = True
 
     return NamelistObject
 
@@ -121,6 +127,7 @@ def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"
 
 #     if dateend < dateforcend:
     NamelistObject["NAM_IO_OFFLINE"].NDATESTOP = [dateend.year, dateend.month, dateend.day, dateend.hour * 3600]
+    print ("Ndatestop set to {0}{1}{2}{3}".format(dateend.year, dateend.month, dateend.day, dateend.hour))
 
     return NamelistObject
 
@@ -145,5 +152,16 @@ def update_snowparameters(NamelistObject, **kwargs):
             setattr(NamelistObject["NAM_ISBAn"], key.upper(), value)
         else:
             print("IGNORE FIELD " + key + " : not in namelist.")
+
+    return NamelistObject
+
+
+def update_nmembers(NamelistObject, nmembers):
+
+    if nmembers is not None:
+        setattr(NamelistObject["NAM_ENS"], 'NENS', nmembers)
+        print ("NENS set to {}".format(nmembers))
+    else:
+            print ("IGNORE FIELD NENS : not in namelist.")
 
     return NamelistObject

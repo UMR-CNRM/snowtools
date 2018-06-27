@@ -9,6 +9,7 @@ Created on 23 févr. 2018
 
 import os, sys
 import datetime
+import shutil
 
 from utils.resources import InstallException
 from utils.dates import WallTimeException
@@ -122,8 +123,8 @@ class vortex_kitchen(object):
         if options.escroc:
             jobname = jobname if jobname else 'escroc'
             if options.scores:
-                #reftask  = "scores_task"
-                #reftask = "optim_task"
+                # reftask  = "scores_task"
+                # reftask = "optim_task"
                 reftask = "crps_task"
             else:
                 reftask = "escroc_tasks"
@@ -134,7 +135,7 @@ class vortex_kitchen(object):
             nnodes = options.nnodes
         return "../vortex/bin/mkjob.py -j name=" + jobname + " task=" + reftask + " profile=rd-beaufix-mt jobassistant=cen datebegin="\
             + options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + options.datefin.strftime("%Y%m%d%H%M") + " template=" + self.jobtemplate\
-            + " time=" + self.walltime(options)\
+            + " time=" + walltime(options)\
             + " nnodes=" + str(nnodes)
 
     def mkjob_list_commands(self, options):
@@ -156,32 +157,44 @@ class vortex_kitchen(object):
             print("Run command: " + mkjob + "\n")
             os.system(mkjob)
 
-    def walltime(self, options):
 
-        if options.escroc:
-            if options.nmembers:
-                nmembers = options.nmembers
-            elif options.escroc == "E2":
-                nmembers = 35
+def walltime(options):
+
+        if options.walltime:
+            return str(options.walltime)
+
         else:
-            nmembers = 1
+            if options.escroc:
+                if options.nmembers:
+                    nmembers = options.nmembers
+                elif options.escroc == "E2":
+                    nmembers = 35
+                else:
+                    raise Exception("don't forget to specify escroc ensemble or --nmembers")
 
-        minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 2, pyr_flat = 2, cor_allslopes = 2, cor_flat = 1, postes = 2)
-
-        for site_snowmip in ["cdp", "oas", "obs", "ojp", "rme", "sap", "snb", "sod", "swa", "wfj"]:
-            if options.scores:
-                minutes_peryear[site_snowmip] = 0.2
             else:
-                minutes_peryear[site_snowmip] = 4
+                nmembers = 1
+            # minutes per year for one member computing all points
+            minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 2, pyr_flat = 2, cor_allslopes = 2, cor_flat = 1, postes = 2,
+                                   lautaret = 120, lautaretreduc = 5)
 
-        key = options.region if options.region in list(minutes_peryear.keys()) else "alp_allslopes"
+            for site_snowmip in ["cdp", "oas", "obs", "ojp", "rme", "sap", "snb", "sod", "swa", "wfj"]:
+                if options.scores:
+                    minutes_peryear[site_snowmip] = 0.2
+                else:
+                    minutes_peryear[site_snowmip] = 4
 
-        estimation = datetime.timedelta(minutes=minutes_peryear[key]) * max(1, (options.datefin.year - options.datedeb.year)) * (1 + nmembers / (40 * options.nnodes) )
+            for massif_safran in range(1, 100):
+                minutes_peryear[str(massif_safran)] = 90
 
-        if estimation >= datetime.timedelta(hours=24):
-            raise WallTimeException(estimation)
-        else:
-            return str(estimation)
+            key = options.region if options.region in list(minutes_peryear.keys()) else "alp_allslopes"
+
+            estimation = datetime.timedelta(minutes=minutes_peryear[key]) * max(1, (options.datefin.year - options.datedeb.year)) * (1 + nmembers / (40 * options.nnodes) )
+
+            if estimation >= datetime.timedelta(hours=24):
+                raise WallTimeException(estimation)
+            else:
+                return str(estimation)
 
 
 class vortex_conf_file(object):
@@ -190,10 +203,10 @@ class vortex_conf_file(object):
         self.fileobject = open(filename, mode)
 
     def new_class(self, name):
-        self.write("[" + name + "]\n")
+        self.fileobject.write("[" + name + "]\n")
 
     def write_field(self, fieldname, value):
-        self.write(fieldname + " = " + str(value) + "\n")
+        self.fileobject.write(fieldname + " = " + str(value) + "\n")
 
     def close(self):
         self.fileobject.close()
