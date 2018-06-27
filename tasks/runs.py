@@ -17,6 +17,7 @@ from tools.change_forcing import forcinput_select, forcinput_applymask,\
 from tools.change_prep import prep_tomodify
 from tools.update_namelist import update_surfex_namelist_file
 from tools.execute import callSurfexOrDie
+from tools.massif_diags import massif_simu
 from utils.resources import get_file_period, get_file_date, get_file_const, save_file_period, save_file_date, save_file_const,\
     get_file_const_or_crash, ldd
 from utils.prosimu import prosimu
@@ -28,7 +29,7 @@ class surfexrun(object):
     """Class for any SURFEX run"""
 
     def __init__(self, datebegin, dateend, forcingpath, diroutput,
-                 namelist=os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8_NEW_OUTPUTS_NC.nam',
+                 namelist=os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam',
                  execdir=".",
                  threshold=-999, dirwork=None, datespinup=None, geolist=[], addmask=False):
 
@@ -138,6 +139,9 @@ class surfexrun(object):
             # 4. Run OFFLINE
             callSurfexOrDie(self.execdir + "/OFFLINE", moderun=self.moderun, nproc=self.nproc)
 
+            # 5. Post-processing if required
+            self.postprocess()
+
         # 5. Save outputs
         self.save_output()
 
@@ -215,6 +219,10 @@ class surfexrun(object):
 
             prep.close()
 
+    def postprocess(self):
+        profile = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode='a')
+        profile.massif_natural_risk()
+        profile.close()
 
 class massifrun(surfexrun):
     """Class for a PC massif SAFRAN-SURFEX run for which the geometry needs to be modified"""

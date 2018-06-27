@@ -115,7 +115,8 @@ class prosimu():
     def extract(self, varname, var, selectpoint=-1, removetile=True):
 
         if removetile:
-            needremovetile = "tile" in self.dataset.variables[varname].dimensions or 'Number_of_Tile' in self.dataset.variables[varname].dimensions
+            vardims = self.dataset.variables[varname].dimensions
+            needremovetile = "tile" in vardims or 'Number_of_Tile' in vardims or 'Number_of_Patches' in vardims
         else:
             needremovetile = False
 
@@ -189,8 +190,8 @@ class prosimu():
         # Sélection d'un point si demandé
         # Suppression dimension tile si nécessaire
         var = self.extract(varname, varnc, selectpoint=selectpoint, removetile=removetile)
-        print("shape")
-        print(var.shape)
+#         print("shape")
+#         print(var.shape)
         # Remplissage des valeurs manquantes si nécessaire
         if (len(var.shape) > 1 or (len(var.shape) == 1 and var.shape[0] > 1)) and not keepfillvalue:
             try:
