@@ -34,7 +34,7 @@ class massif_simu(prosimu):
         fillvalue = self.getfillvalue(self.SurfexNatRiskName)
         aspect = self.read("aspect", keepfillvalue=True)
         altitude = self.read("ZS", keepfillvalue=True)
-        massif_number = self.read(self.massif_var_name).astype('int')
+        massif_number = self.read(self.massif_var_name, keepfillvalue=True).astype('int')
         list_massifs = np.unique(massif_number)
         list_aspects = np.unique(aspect[aspect >= 0])
         minlevel = 1500.
