@@ -7,7 +7,7 @@ Created on 7 nov. 2017
 from vortex.layout.nodes import Driver, Task
 from vortex import toolbox
 from utils.dates import get_list_dates_files
-import footprints
+
 
 def setup(t, **kw):
     return Driver(

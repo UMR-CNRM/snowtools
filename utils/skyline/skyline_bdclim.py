@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
-import numpy
 import gdal
 import csv
 import time
 import os
-from pylab import *
+import sys
+import math
+import numpy as np
+import matplotlib.pyplot as plt
 from osgeo import ogr, osr
 
 # Code Hugue François / Marie Dumont automatiquement normalisé pep8 mais qui gagnerait à être pythonisé.
@@ -22,8 +24,8 @@ rastinit = img.GetGeoTransform()
 step = int((rastinit[1] + (-rastinit[5])) / 2)  # for further use in line interpolation
 
 # x,y geographic reference matrix
-imgx = numpy.zeros((1, img.RasterXSize)).astype(numpy.float)
-imgy = numpy.zeros((img.RasterYSize, 1)).astype(numpy.float)
+imgx = np.zeros((1, img.RasterXSize)).astype(np.float)
+imgy = np.zeros((img.RasterYSize, 1)).astype(np.float)
 for i in range(0, imgx.shape[1]):
     imgx[0, i] = rastinit[0] + (i * rastinit[1])
 for i in range(0, imgy.shape[0]):
@@ -51,11 +53,11 @@ viewmax = 20000  # 20 km
 
 # construction du vecteur d'entree
 file_in = open(listing, 'r')
-in_file = loadtxt(file_in, dtype={'names': ('numposte', 'alt', 'massif', 'nom', 'lat', 'lon'), 'formats': (int, int, int, '|S24', float, float)})
-print(size(in_file))
+in_file = np.loadtxt(file_in, dtype={'names': ('numposte', 'alt', 'massif', 'nom', 'lat', 'lon'), 'formats': (int, int, int, '|S24', float, float)})
+print(np.size(in_file))
 file_in.close()
 
-n = int(size(in_file))
+n = int(np.size(in_file))
 
 # wsta=[["Tignes",1004464.1,6490813.1],
 # ["Autrans-Prairie",900929.9,6460461.4],
@@ -92,8 +94,8 @@ for k in range(n):
     point.Transform(transform)
     coord = point.ExportToWkt()
     # print coord
-    xx = floor(point.GetX())
-    yy = floor(point.GetY())
+    xx = math.floor(point.GetX())
+    yy = math.floor(point.GetY())
     print(xx, yy)
     ####
 
@@ -110,21 +112,21 @@ for k in range(n):
     if ymax >= max(imgy):
         minrow = 0
     else:
-        minrow = numpy.unique(numpy.argwhere(imgy == ymax))[1]
+        minrow = np.unique(np.argwhere(imgy == ymax))[1]
     if ymin <= min(imgy):
         maxrow = imgy.shape[0]
     else:
-        maxrow = numpy.unique(numpy.argwhere(imgy == ymin))[1]
+        maxrow = np.unique(np.argwhere(imgy == ymin))[1]
     if xmin <= min(imgx[0, ]):
         mincol = 0
     else:
-        mincol = numpy.unique(numpy.argwhere(imgx == xmin))[1]
+        mincol = np.unique(np.argwhere(imgx == xmin))[1]
     if xmax >= max(imgx[0, ]):
         maxcol = imgx.shape[1]
     else:
-        maxcol = numpy.unique(numpy.argwhere(imgx == xmax))[1]
-        starow = maxrow - numpy.unique(numpy.argwhere(imgy == stay))[1]
-        stacol = numpy.unique(numpy.argwhere(imgx == stax))[1] - mincol
+        maxcol = np.unique(np.argwhere(imgx == xmax))[1]
+        starow = maxrow - np.unique(np.argwhere(imgy == stay))[1]
+        stacol = np.unique(np.argwhere(imgx == stax))[1] - mincol
         starow = starow.astype('int64')
         stacol = stacol.astype('int64')
         sta_xy = (stax + (rastinit[1] / 2), stay + (rastinit[5] / 2))
@@ -141,7 +143,7 @@ for k in range(n):
     # Get all intersected cells on azimuth
     for azimut in range(0, 360, 5):
         i = 0
-        angle = numpy.zeros((1, (viewmax / step) - 1)).astype(numpy.float)  # initialize container for angles
+        angle = np.zeros((1, (viewmax / step) - 1)).astype(np.float)  # initialize container for angles
         points = []  # initialize container for points
         pt_dist = []
         for dist in range(step, viewmax, step):
@@ -153,10 +155,10 @@ for k in range(n):
         # get row col information
             if ptx < xmax and ptx > xmin:
                 x = rastinit[0] + ((math.floor((ptx - rastinit[0]) / rastinit[1])) * rastinit[1])
-                ptcol = numpy.unique(numpy.argwhere(imgx == x))[1] - mincol
+                ptcol = np.unique(np.argwhere(imgx == x))[1] - mincol
             if pty < ymax and pty > ymin:
                 y = rastinit[3] - ((math.ceil((rastinit[3] - pty) / rastinit[5])) * rastinit[5])
-                ptrow = numpy.unique(numpy.argwhere(imgy == y))[1] - minrow
+                ptrow = np.unique(np.argwhere(imgy == y))[1] - minrow
                 ptrc = (ptrow, ptcol)
             # print dist, height[ptrc]-height[sta_rc], x,y, stax, stay, ptrc, sta_rc
             # calculate corresponding angle to reach the height of pt
@@ -173,7 +175,7 @@ for k in range(n):
             i = i + 1
         # print in_stat[0], azimut, max(angle[0,])
         # append each azimut to final data for weather station
-        data = (in_stat[0], azimut, max(angle[0, ]), points[numpy.argwhere(angle == max(angle[0, ]))[0][1]][0], points[numpy.argwhere(angle == max(angle[0, ]))[0][1]][1])
+        data = (in_stat[0], azimut, max(angle[0, ]), points[np.argwhere(angle == max(angle[0, ]))[0][1]][0], points[np.argwhere(angle == max(angle[0, ]))[0][1]][1])
         final_data.append(data)
         # print(data)
         az = az + [azimut]
@@ -182,25 +184,25 @@ for k in range(n):
     # final_data.append((final_data[0][0], 360, final_data[0][2], final_data[0][3], final_data[0][4]))
 
 # insert values into new table for the given weather station
-    az = array(az, 'float')
-    anglee = array(anglee, 'float')
+    az = np.array(az, 'float')
+    anglee = np.array(anglee, 'float')
     for values in final_data:
         stawriter.writerow([values[0], values[1], values[2]])
     final_data = None
     print(in_stat[3], "done")
     # print az, anglee
-    fig = figure()
+    fig = plt.figure()
     a = fig.add_subplot(111, polar=True)
     rmax = max(40., max(anglee))
     # print rmax-anglee
-    a.fill(az * pi / 180., rmax - anglee, '-ob', alpha=0.5, edgecolor='b')
+    a.fill(az * math.pi / 180., rmax - anglee, '-ob', alpha=0.5, edgecolor='b')
     a.set_rmax(rmax)
     a.set_rgrids([0.01, 10., 20., 30., float(int(rmax))], [str(int(rmax)), '30', '20', '10', '0'])
     a.set_thetagrids([0., 45., 90., 135., 180., 225., 270., 315.], ["N", "NE", "E", "SE", "S", "SW", "W", "NW"])
     a.set_title(in_stat[3] + ' alt mnt:' + str(z_alt) + ' m alt poste:' + str(in_stat[1]))
     a.set_theta_zero_location('N')
     a.set_theta_direction(-1)
-    savefig('output/' + str(in_stat[0]) + '_skyline.png')
+    plt.savefig('output/' + str(in_stat[0]) + '_skyline.png')
     # show()
     # check de latitude
     diff = z_alt - in_stat[1]

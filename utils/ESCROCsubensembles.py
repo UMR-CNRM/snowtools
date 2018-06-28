@@ -137,7 +137,7 @@ class ESCROC_subensembles(dict):
                                                 snow_parameters.append(sp)
 
         return physical_options, snow_parameters, memberslist
-        
+
     def E2(self, members):
 
         members = {1: ['V12', 'C13', 'B60', 'RI1', 'Y81', 'SPK', 'B92', 'CV30000'],

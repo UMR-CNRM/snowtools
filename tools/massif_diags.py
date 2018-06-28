@@ -28,9 +28,10 @@ class massif_simu(prosimu):
         if not np.any(slope == 40.):
             return
 
-        print "Compute massif-scale natural avalanche hazard indexes"
+        print ("Compute massif-scale natural avalanche hazard indexes")
 
         slope_natural_risk = self.read(self.SurfexNatRiskName).astype('int')
+        fillvalue = self.getfillvalue(self.SurfexNatRiskName)
         aspect = self.read("aspect")
         altitude = self.read("ZS")
         massif_number = self.read(self.massif_var_name).astype('int')
@@ -61,5 +62,5 @@ class massif_simu(prosimu):
                 else:
                     risk_array[:, :, l, m] = np.nan
 
-        var = self.dataset.createVariable(self.MassifRiskName, 'i4', ["time", "massif"], fill_value=-1)
+        var = self.dataset.createVariable(self.MassifRiskName, 'float', ["time", "massif"], fill_value=fillvalue)
         var[:] = np.max(np.nanmean(risk_array, axis=2), axis=1)

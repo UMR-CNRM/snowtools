@@ -8,7 +8,7 @@ from vortex.layout.nodes import Driver, Task
 from vortex import toolbox
 from utils.dates import get_list_dates_files
 import footprints
-import os
+
 
 def setup(t, **kw):
     return Driver(
@@ -135,7 +135,7 @@ class Escroc_Vortex_Task(Task):
 # #                 ),
 # #                 print t.prompt, 'tbi =', tbi
 # #                 print
-# 
+#
 #                 tbi_a = toolbox.input(
 #                     alternate      = 'initial values of ground temperature',
 #                     kind           = 'climTG',
@@ -335,12 +335,12 @@ class Escroc_Vortex_Task(Task):
                 self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
 
             self.sh.title('Toolbox algo tb11 = OFFLINE')
-            
+
             if self.conf.subensemble == 'Crocus':
-                ntasks=1
+                ntasks = 1
             else:
-                ntasks=40 * int(self.conf.nnodes)
-            
+                ntasks = 40 * int(self.conf.nnodes)
+
             tb11 = tbalgo4 = toolbox.algo(
                 engine         = 'blind',
                 binary         = 'OFFLINE',

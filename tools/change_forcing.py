@@ -579,21 +579,3 @@ class forcinput_select(forcinput_tomodify):
         var[:] = lon
 
         return lat, lon
-
-
-# For test
-if __name__ == "__main__":
-#     list_massifs = range(1, 24)
-#     min_alt = 600
-#     max_alt = 3600
-#     list_pentes = ["0", "20", "40"]
-#     list_expo = xrange(0, 9)
-#     forcin = os.environ["HOME"] + "/FORCING_OLD.nc"
-#     forcout = os.environ["HOME"] + "/FORCING_NEW.nc"
-#     f = forcinput_select(forcin, forcout, list_massifs, min_alt, max_alt, list_pentes, list_expo)
-
-    import glob
-    import shutil
-    for forcing in glob.glob("FORCING*.nc"):
-#         shutil.copy(forcing, "old" + forcing)ll 
-        f = forcinput_addmeteomassif(forcing, forcing)

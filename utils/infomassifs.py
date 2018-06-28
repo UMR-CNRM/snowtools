@@ -129,7 +129,6 @@ class infomassifs():
             self.dicArea[area + "_allslopes"] = list_massifs
             self.dicArea[area + "_flat"] = list_massifs
 
-
         self.dicAltArea = {}
 
         self.dicPostesArea = {}
@@ -166,7 +165,7 @@ class infomassifs():
                 self.latCenter[numMassif] = float(massif.getElementsByTagName("latCenter")[0].childNodes[0].data)
                 self.lonCenter[numMassif] = float(massif.getElementsByTagName("lonCenter")[0].childNodes[0].data)
 
-        except:
+        except Exception:
             raise FileParseException(metadata)
 
     def region2massifs(self, region):
@@ -301,7 +300,7 @@ class infomassifs():
             if str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip() == num_poste:
                 try:
                     massif = int(poste.getElementsByTagName("massif")[0].childNodes[0].data)
-                except:
+                except Exception:
                     massif = -1
                 break
         return massif
@@ -332,7 +331,7 @@ class infomassifs():
                             listmask.insert(0, listmask[-1])
                         else:
                             listmask.insert(0, 0)
-                except:
+                except Exception:
                     listazi = [0, 360]
                     listmask = [0, 0]
                 break

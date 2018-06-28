@@ -10,7 +10,7 @@ import os
 import netCDF4
 import numpy as np
 import sys
-from .FileException import FileNameException, FileOpenException, VarNameException, TimeException
+from utils.FileException import FileNameException, FileOpenException, VarNameException, TimeException
 
 # Fichier PRO.nc issu d'une simulation SURFEX post-traitée
 
@@ -173,7 +173,7 @@ class prosimu():
                         var_extract = var[:, :, :, selectpoint]
                     elif rank == 5:
                         var_extract = var[:, :, :, :, selectpoint]
-                        
+
         else:  # if isPrep, no time dimension, tile is the first dim
             if selectpoint == -1:
                 if needremovetile:

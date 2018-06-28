@@ -7,9 +7,8 @@ Created on 23 févr. 2018
 @author: lafaysse
 '''
 
-import os, sys
+import os
 import datetime
-import shutil
 
 from utils.resources import InstallException
 from utils.dates import WallTimeException

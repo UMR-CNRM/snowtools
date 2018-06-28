@@ -224,6 +224,7 @@ class surfexrun(object):
         profile.massif_natural_risk()
         profile.close()
 
+
 class massifrun(surfexrun):
     """Class for a PC massif SAFRAN-SURFEX run for which the geometry needs to be modified"""
     def modify_forcing(self, list_massif_number, min_alt, max_alt, liste_pentes, list_exp):
