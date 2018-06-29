@@ -9,7 +9,7 @@ from utils.prosimu import prosimu
 
 ESMSnowMIP_dicvarnames = dict(snowdepth="snd_auto", snowswe="snw_auto", snowdepthman="snd_man", snowsweman="snw_man", tsurf="ts", albedo="albs")
 ESMSnowMIP_alternate_varnames = dict(snd_auto="snd_can_auto")
-    
+
 SURFEX_dicvarnames = dict(snowdepth="DSN_T_ISBA", snowswe="WSN_T_ISBA", snowdepthman="DSN_T_ISBA", snowsweman="WSN_T_ISBA", tsurf="TS_ISBA", albedo="ASN_ISBA")
 
 
@@ -60,11 +60,11 @@ class DeterminsticScores(object):
         return np.mean(np.abs(self.diffCommon))
 
     def read_var_ifpresent(self, dataNc, varname, convert1d=False):
-        
+
         if varname not in dataNc.listvar():
             if varname in list(ESMSnowMIP_alternate_varnames.keys()):
                 varname = ESMSnowMIP_alternate_varnames[varname]
-        
+
         if varname in dataNc.listvar():
             if convert1d:
                 array = dataNc.read1d(varname)
@@ -263,5 +263,3 @@ class ESMSnowMIP_DeterministicScores_Time(S2M_DeterministicScores_Time, ESMSnowM
 
 class ESMSnowMIP_DeterministicScores_Heterogeneous(S2M_DeterministicScores_Heterogeneous, ESMSnowMIP):
     pass
-
-    

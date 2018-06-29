@@ -10,7 +10,7 @@ import os
 import netCDF4
 import numpy as np
 import sys
-from .FileException import FileNameException, FileOpenException, VarNameException, TimeException
+from utils.FileException import FileNameException, FileOpenException, VarNameException, TimeException
 
 # Fichier PRO.nc issu d'une simulation SURFEX post-traitée
 
@@ -116,11 +116,11 @@ class prosimu():
     def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime = True):
 
         if removetile:
-            needremovetile = "tile" in self.dataset.variables[varname].dimensions or 'Number_of_Tile' in self.dataset.variables[varname].dimensions
+            vardims = self.dataset.variables[varname].dimensions
+            needremovetile = "tile" in vardims or 'Number_of_Tile' in vardims or 'Number_of_Patches' in vardims
         else:
             needremovetile = False
-        print('DEBUG')
-        print(var.shape)
+
         rank = len(var.shape)
         if hasTime is True:
             if selectpoint == -1:
@@ -173,7 +173,7 @@ class prosimu():
                         var_extract = var[:, :, :, selectpoint]
                     elif rank == 5:
                         var_extract = var[:, :, :, :, selectpoint]
-                        
+
         else:  # if isPrep, no time dimension, tile is the first dim
             if selectpoint == -1:
                 if needremovetile:
@@ -248,8 +248,8 @@ class prosimu():
             var = self.extract(varname, varnc, selectpoint=selectpoint, removetile=removetile, hasTime=False)
         else:
             var = self.extract(varname, varnc, selectpoint=selectpoint, removetile=removetile)
-        print("shape")
-        print(var.shape)
+        # print("shape")
+        # print(var.shape)
         # Remplissage des valeurs manquantes si nécessaire
         if (len(var.shape) > 1 or (len(var.shape) == 1 and var.shape[0] > 1)) and not keepfillvalue:
             try:

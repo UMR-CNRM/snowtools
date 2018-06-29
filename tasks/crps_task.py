@@ -8,8 +8,7 @@ from vortex.layout.nodes import Driver, Task
 from vortex import toolbox
 from utils.dates import get_list_dates_files
 import footprints
-import os
-import sys
+
 
 def setup(t, **kw):
     return Driver(
@@ -96,7 +95,7 @@ class Escroc_Optim_Task(Task):
             self.sh.title('Toolbox output tb04')
             tb04 = toolbox.output(
                 local          = 'scores.nc',
-                experiment     = "optim_" + self.conf.xpid, 
+                experiment     = "optim_" + self.conf.xpid,
                 geometry       = self.conf.geometry,
                 datebegin      = self.conf.datebegin,
                 dateend        = self.conf.dateend,

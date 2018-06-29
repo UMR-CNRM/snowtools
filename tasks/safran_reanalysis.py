@@ -7,7 +7,6 @@ __all__ = []
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-import vortex
 from vortex import toolbox
 from vortex.layout.nodes import Driver
 from cen.layout.nodes import S2Mtask
@@ -120,7 +119,6 @@ class Safran(S2Mtask):
     #             print t.prompt, 'tb18_a =', tb18_a
     #             print
 
-
                 self.sh.title('Toolbox input tb01')
                 tb01 = toolbox.input(
                     role           = 'ObsSynop',
@@ -142,7 +140,7 @@ class Safran(S2Mtask):
                 )
                 print t.prompt, 'tb01 =', tb01
                 print
-    
+
                 self.sh.title('Toolbox input tb02')
                 tb02 = toolbox.input(
                     role           = 'ObsRR',
@@ -163,7 +161,7 @@ class Safran(S2Mtask):
                 )
                 print t.prompt, 'tb02 =', tb02
                 print
-    
+
                 self.sh.title('Toolbox input tb03')
                 tb03 = toolbox.input(
                     role           = 'HourlyObs',
@@ -184,7 +182,7 @@ class Safran(S2Mtask):
                 )
                 print t.prompt, 'tb03 =', tb03
                 print
-    
+
                 self.sh.title('Toolbox input tb04')
                 tb04 = toolbox.input(
                     role           = 'ObsRS',
@@ -229,7 +227,6 @@ class Safran(S2Mtask):
                 print
 
                 rundate = rundate + Period(days=1)
-
 
             self.sh.title('Toolbox input tb07')
             tb07 = toolbox.input(
@@ -422,7 +419,6 @@ class Safran(S2Mtask):
             print t.prompt, 'tb16 =', tb16
             print
 
-
             self.sh.title('Toolbox executable tb17 = tbx1')
             tb17 = tbx1 = toolbox.executable(
                 role           = 'Binary',
@@ -514,7 +510,7 @@ class Safran(S2Mtask):
                 kind           = 'syrpluie',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
-                #members        = footprints.util.rangex(self.conf.members),
+                # members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
             )
             print t.prompt, 'tb23 =', tb23
@@ -528,7 +524,7 @@ class Safran(S2Mtask):
                 kind           = 'sypluie',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
-                #members        = footprints.util.rangex(self.conf.members),
+                # members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
             )
             print t.prompt, 'tb23 =', tb23
@@ -542,7 +538,7 @@ class Safran(S2Mtask):
                 kind           = 'syvapr',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
-                #members        = footprints.util.rangex(self.conf.members),
+                # members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
             )
             print t.prompt, 'tb24 =', tb24
@@ -556,7 +552,7 @@ class Safran(S2Mtask):
                 kind           = 'syvafi',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
-                #members        = footprints.util.rangex(self.conf.members),
+                # members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
             )
             print t.prompt, 'tb25 =', tb25
@@ -571,7 +567,7 @@ class Safran(S2Mtask):
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
                 execution      = 'analysis',
-                #members        = footprints.util.rangex(self.conf.members),
+                # members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
             )
             print t.prompt, 'tb26 =', tb26
@@ -592,7 +588,7 @@ class Safran(S2Mtask):
                 source_app     = 'arpege',
                 source_conf    = '4dvarfr',
                 cutoff         = 'assimilation',
-                #local          = 'mb035/FORCING_massif.nc',
+                # local          = 'mb035/FORCING_massif.nc',
                 local          = 'FORCING_massif.nc',
                 experiment     = self.conf.xpid,
                 block          = 'massifs',
@@ -613,7 +609,7 @@ class Safran(S2Mtask):
                 source_app     = 'arpege',
                 source_conf    = '4dvarfr',
                 cutoff         = 'assimilation',
-                #local          = 'mb035/FORCING_postes.nc',
+                # local          = 'mb035/FORCING_postes.nc',
                 local          = 'FORCING_postes.nc',
                 experiment     = self.conf.xpid,
                 block          = 'postes',
@@ -647,7 +643,7 @@ class Safran(S2Mtask):
 #             ),
 #             print t.prompt, 'tb29 =', tb27
 #             print
-# 
+#
 #             self.sh.title('Toolbox output tb30')
 #             tb27 = toolbox.output(
 #                 role           = 'Ana_postes',
@@ -678,11 +674,11 @@ class Safran(S2Mtask):
                 geometry        = self.conf.vconf,
                 format         = 'ascii',
                 kind           = 'listing',
-                #local          = 'mb035/{glob:a:\w+}.out',
+                # local          = 'mb035/{glob:a:\w+}.out',
                 local          = '{glob:a:\w+}.out',
                 namespace      = self.conf.cennamespace,
                 task           = '[local]',
-                #date           = self.conf.rundate.ymdh,
+                # date           = self.conf.rundate.ymdh,
             )
             print t.prompt, 'tb31 =', tb28
             print
@@ -696,11 +692,11 @@ class Safran(S2Mtask):
                 cutoff         = 'assimilation',
                 format         = 'ascii',
                 kind           = 'listing',
-                #local          = 'mb035/liste_obs_{glob:a:\w+}',
+                # local          = 'mb035/liste_obs_{glob:a:\w+}',
                 local          = 'liste_obs_{glob:a:\w+}',
                 namespace      = self.conf.cennamespace,
                 task           = '[local]',
-                #date           = self.conf.rundate.ymdh,
+                # date           = self.conf.rundate.ymdh,
             )
             print t.prompt, 'tb32 =', tb29
             print
@@ -723,7 +719,7 @@ class Safran(S2Mtask):
 #             )
 #             print t.prompt, 'tb33 =', tb28
 #             print
-# 
+#
 #             self.sh.title('Toolbox output tb34')
 #             tb29 = toolbox.output(
 #                 role           = 'Liste_obs',
@@ -742,7 +738,6 @@ class Safran(S2Mtask):
 #             )
 #             print t.prompt, 'tb34 =', tb29
 #             print
-    
 
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')

@@ -5,12 +5,10 @@ Created on 14 juin 2018
 
 @author: cluzetb
 '''
-import os, sys
-import datetime
+import os
 import shutil
 
 from utils.resources import InstallException
-from utils.dates import WallTimeException
 from tasks.vortex_kitchen import vortex_conf_file, walltime
 
 
@@ -161,4 +159,3 @@ class vortex_kitchen_soda(object):
         for mkjob in mkjob_list:
             print ("Run command: " + mkjob + "\n")
             os.system(mkjob)
-

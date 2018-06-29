@@ -7,13 +7,12 @@ __all__ = []
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-import vortex
-
 from vortex import toolbox
 from vortex.layout.nodes import Driver
 from cen.layout.nodes import S2Mtask
 
 from bronx.stdtypes.date import Period
+
 
 def setup(t, **kw):
     return Driver(
@@ -55,7 +54,7 @@ class PrepSafran(S2Mtask):
                     kind           = 'gridpoint',
                     suite          = 'oper',
                     cutoff         = 'assimilation',
-                    #local          = 'mb035/ARPEGE[date::addterm_ymdh]',
+                    # local          = 'mb035/ARPEGE[date::addterm_ymdh]',
                     local          = 'mb0[date::dd]/ARPEGE[date::ymdh]_[term::hour]',
                     date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
@@ -134,7 +133,7 @@ class PrepSafran(S2Mtask):
                 genv        = 'uenv:s2m.01@vernaym',
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                #rawopts     = ' -o -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
+                # rawopts     = ' -o -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
                 rawopts     = ' -o -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp)]))),
             )
             print t.prompt, 'tb03 =', tb03
@@ -154,7 +153,7 @@ class PrepSafran(S2Mtask):
                 members        = footprints.util.rangex(1, 31, 1),
                 interpreter    = script[0].resource.language,
                 ntasks         = self.conf.ntasks,
-                #members        = footprints.util.rangex(self.conf.members)
+                # members        = footprints.util.rangex(self.conf.members)
             )
             print t.prompt, 'tb04 =', expresso
             print
@@ -173,7 +172,7 @@ class PrepSafran(S2Mtask):
                 self.sh.title('Toolbox output tb05a')
                 tb05a = toolbox.output(
                     role           = 'Ebauche',
-                    #local          = 'mb[date::day]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
+                    # local          = 'mb[date::day]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
                     local          = 'mb0[date::dd]/ARPEGE[date::ymdh]_[term::hour]',
                     geometry       = self.conf.domains,
                     vconf          = '[geometry::area]',
@@ -191,7 +190,7 @@ class PrepSafran(S2Mtask):
                 ),
                 print t.prompt, 'tb05a =', tb05a
                 print
-    
+
     #             self.sh.title('Toolbox output tb05b')
     #             tb05b = toolbox.output(
     #                 role           = 'Ebauche',
@@ -213,7 +212,7 @@ class PrepSafran(S2Mtask):
     #             ),
     #             print t.prompt, 'tb05b =', tb05b
     #             print
-    
+
     #             self.sh.title('Toolbox output tb06')
     #             tb06 = toolbox.output(
     #                 role           = 'Ebauche',

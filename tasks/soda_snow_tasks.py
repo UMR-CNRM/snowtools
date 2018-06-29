@@ -13,8 +13,7 @@ from bronx.stdtypes.date import Date
 from utils.dates import get_list_dates_files, check_and_convert_date
 import footprints
 import os
-import datetime
-import shutil
+
 
 def setup(t, **kw):
     return Driver(
@@ -120,7 +119,7 @@ class SodaSnow_Vortex_Task(Task):
             ),
             print(t.prompt, 'tb02_a =', tb02_a)
             print()
-            
+
             self.sh.title('Toolbox input tb02_s')  # this step should work if PGD properly in spinup on hendrix
             tb02_s = toolbox.input(
                 alternate      = 'SurfexClim',
@@ -309,7 +308,6 @@ class SodaSnow_Vortex_Task(Task):
             print()
             tb09a.run()
 
- 
             # Take care : PGD parallelization will be available in v8.1 --> nproc and ntasks will have to be set to 40
 #             if not (tb02[0] or tb02_a[0]):
             if not tb02_a[0]:
@@ -586,6 +584,3 @@ class SodaSnow_Vortex_Task(Task):
                 )
                 print(t.prompt, 'tb23 =', tb23)
                 print()
-
-
-                
