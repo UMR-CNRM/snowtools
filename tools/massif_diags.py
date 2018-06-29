@@ -40,11 +40,15 @@ class massif_simu(prosimu):
         massif_number = self.read(self.massif_var_name, keepfillvalue=True).astype('int')
         list_massifs = np.unique(massif_number)
         list_aspects = np.unique(aspect[aspect >= 0])
+
         minlevel = 1500.
         maxlevel = 3000.
 
         ntime = slope_natural_risk.shape[0]
         naspects = len(list_aspects)
+
+        self.warnings(np.min(altitude), np.max(altitude), minlevel, maxlevel, naspects, list_aspects)
+
         nmassifs = len(list_massifs)
         nlevels = int((maxlevel - minlevel) / 300.) + 1
 
@@ -68,3 +72,16 @@ class massif_simu(prosimu):
         var = self.dataset.createVariable(self.MassifRiskName, 'float', ["time", self.massif_dim_name], fill_value=fillvalue)
 
         var[:, :] = np.max(np.nanmean(risk_array, axis=2), axis=1)
+
+    def warnings(self, minaltitude, maxaltitude, minlevel, maxlevel, naspects, list_aspects):
+        if minaltitude > minlevel:
+            print ("WARNING: the massif-scale natural avalanche hazard index is not computed with all expected elevations")
+            print ("Lowest available level: " + str(minaltitude))
+
+        if maxaltitude < maxlevel:
+            print ("WARNING: the massif-scale natural avalanche hazard index is not computed with all expected elevations")
+            print ("Lowest available level: " + str(maxaltitude))
+
+        if naspects != 8:
+            print ("WARNING: the massif-scale natural avalanche hazard index is not computed with 8 aspect classes")
+            print ("Available aspects: " + str(list_aspects))
