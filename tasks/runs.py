@@ -96,6 +96,9 @@ class surfexrun(object):
             if not os.path.isdir(directory):
                 os.makedirs(directory)
 
+        # Save initial directory to go back at the end
+        self.initcurrentdirectory = os.getcwd()
+
         # Change current directory to working directory
         os.chdir(self.dirwork)
 
@@ -150,6 +153,8 @@ class surfexrun(object):
             self.datebegin = self.dateforcend
             self.dateinit = self.dateforcend
             self.run(firstrun=False)
+        else:
+            os.chdir(self.initcurrentdirectory)
 
     def get_all_consts(self):
         get_file_const_or_crash(self.namelist, "OPTIONS.nam")
