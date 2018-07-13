@@ -174,7 +174,7 @@ class PrepSafran(S2Mtask):
                 tb05a = toolbox.output(
                     role           = 'Ebauche',
                     #local          = 'mb[date::day]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
-                    local          = 'mb0[date::dd]/ARPEGE[date::ymdh]_[term::hour]',
+                    local          = 'mb0[date::dd]/ARPEGE[date::ymdh]_[cumul::hour]',
                     geometry       = self.conf.domains,
                     vconf          = '[geometry::area]',
                     cutoff         = 'assimilation',

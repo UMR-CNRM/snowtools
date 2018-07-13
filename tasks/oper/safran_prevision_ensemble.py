@@ -223,6 +223,19 @@ class Safran(S2Mtask):
             print t.prompt, 'tb09 =', tb09
             print
 
+            self.sh.title('Toolbox input tb14')
+            tb14 = toolbox.input(
+                role            = 'Nam_adapt',
+                source          = 'namelist_adapt',
+                geometry        = self.conf.vconf,
+                genv            = self.conf.cycle,
+                kind            = 'namelist',
+                model           = self.conf.model,
+                local           = 'ADAPT',
+            )
+            print t.prompt, 'tb14 =', tb14
+            print
+
             self.sh.title('Toolbox input tb10')
             tb10 = toolbox.input(
                 role            = 'Nam_melange',

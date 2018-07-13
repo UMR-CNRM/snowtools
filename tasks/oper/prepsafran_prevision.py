@@ -35,23 +35,25 @@ class PrepSafran(S2Mtask):
 
         t = self.ticket
         datebegin, dateend = self.get_period()
+        t.env.setvar('DATADIR', '/scratch/mtool/vernaym/cache')
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
             # I- ARPEGE
             # Récupération des échéances de 6h à 102h du réseau 0h J d'ARPEGE
             # On traite les échéances en 2 membres distincts pour optimiser le temps de calcul
-            self.sh.title('Toolbox input tb01')
+            self.sh.title('Toolbox input tb01_a')
             tbarp = toolbox.input(
                 alternate      = 'Gridpoint',
                 format         = 'grib',
-                geometry       = self.conf.cpl_geometry,
+                geometry       = self.conf.arpege_geometry,
                 kind           = 'gridpoint',
                 suite          = 'oper',
                 cutoff         = 'production',
                 local          = 'mb035/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[2:14],
+                term           = footprints.util.rangex(self.conf.prv_terms)[0:7],
+                # namespace      = 'oper.inline.fr',
                 namespace      = 'oper.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
@@ -63,17 +65,86 @@ class PrepSafran(S2Mtask):
             print t.prompt, 'tb01 =', tbarp
             print
 
-            self.sh.title('Toolbox input tb01')
+            self.sh.title('Toolbox input tb01_b')
             tbarp.extend(toolbox.input(
                 alternate      = 'Gridpoint',
                 format         = 'grib',
-                geometry       = self.conf.cpl_geometry,
+                geometry       = self.conf.arpege_geometry,
                 kind           = 'gridpoint',
                 suite          = 'oper',
                 cutoff         = 'production',
                 local          = 'mb036/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[15:27],
+                term           = footprints.util.rangex(self.conf.prv_terms)[7:14],
+                # namespace      = 'oper.inline.fr',
+                namespace      = 'oper.multi.fr',
+                nativefmt      = '[format]',
+                origin         = 'historic',
+                model          = '[vapp]',
+                vapp           = self.conf.source_app,
+                vconf          = self.conf.deterministic_conf,
+                fatal          = False,
+            ))
+            print t.prompt, 'tb01 =', tbarp
+            print
+
+            self.sh.title('Toolbox input tb01_c')
+            tbarp.extend(toolbox.input(
+                alternate      = 'Gridpoint',
+                format         = 'grib',
+                geometry       = self.conf.arpege_geometry,
+                kind           = 'gridpoint',
+                suite          = 'oper',
+                cutoff         = 'production',
+                local          = 'mb037/ARPEGE[date::addterm_ymdh]',
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                term           = footprints.util.rangex(self.conf.prv_terms)[14:21],
+                namespace      = 'oper.inline.fr',
+                nativefmt      = '[format]',
+                origin         = 'historic',
+                model          = '[vapp]',
+                vapp           = self.conf.source_app,
+                vconf          = self.conf.deterministic_conf,
+                fatal          = False,
+            ))
+            print t.prompt, 'tb01 =', tbarp
+            print
+
+            self.sh.title('Toolbox input tb01_d')
+            tbarp.extend(toolbox.input(
+                alternate      = 'Gridpoint',
+                format         = 'grib',
+                geometry       = self.conf.arpege_geometry,
+                kind           = 'gridpoint',
+                suite          = 'oper',
+                cutoff         = 'production',
+                local          = 'mb038/ARPEGE[date::addterm_ymdh]',
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                term           = footprints.util.rangex(self.conf.prv_terms)[21:27],
+                # namespace      = 'oper.inline.fr',
+                namespace      = 'oper.multi.fr',
+                nativefmt      = '[format]',
+                origin         = 'historic',
+                model          = '[vapp]',
+                vapp           = self.conf.source_app,
+                vconf          = self.conf.deterministic_conf,
+                fatal          = False,
+            ))
+            print t.prompt, 'tb01 =', tbarp
+            print
+
+            self.sh.title('Toolbox input tb01_e')
+            tbarp.extend(toolbox.input(
+                alternate      = 'Gridpoint',
+                format         = 'grib',
+                geometry       = self.conf.arpege_geometry,
+                kind           = 'gridpoint',
+                suite          = 'oper',
+                cutoff         = 'production',
+                local          = 'mb039/ARPEGE[date::addterm_ymdh]',
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                term           = footprints.util.rangex(self.conf.prv_terms)[27:33],
+                # namespace      = 'oper.inline.fr',
                 namespace      = 'oper.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
@@ -87,18 +158,43 @@ class PrepSafran(S2Mtask):
 
             # II- PEARP
             # Récupération du réseau P18 (J-1) pour couvrir J 6h -> (J+4) 6h
-            self.sh.title('Toolbox input tb02')
+            self.sh.title('Toolbox input tb02_a')
             tbpearp = toolbox.input(
                 role           = 'Gridpoint',
                 block          = 'forecast',
                 suite          = 'oper',
                 cutoff         = 'production',
                 format         = 'grib',
-                geometry       = self.conf.cpl_geometry,
+                geometry       = self.conf.pearp_geometry,
                 kind           = 'gridpoint',
                 local          = 'mb[member]/PEARP[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[4:28],
+                term           = footprints.util.rangex(self.conf.prv_terms)[2:17],
+                member         = footprints.util.rangex(self.conf.pearp_members),
+                # namespace      = 'oper.inline.fr',
+                namespace      = 'vortex.multi.fr',
+                nativefmt      = '[format]',
+                origin         = 'historic',
+                model          = '[vapp]',
+                vapp           = self.conf.source_app,
+                vconf          = self.conf.eps_conf,
+                fatal          = False,
+            )
+            print t.prompt, 'tb02 =', tbpearp
+            print
+
+            self.sh.title('Toolbox input tb02_b')
+            tbpearp = toolbox.input(
+                role           = 'Gridpoint',
+                block          = 'forecast',
+                suite          = 'oper',
+                cutoff         = 'production',
+                format         = 'grib',
+                geometry       = self.conf.pearp_geometry,
+                kind           = 'gridpoint',
+                local          = 'mb[member]/PEARP[date::addterm_ymdh]',
+                date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
+                term           = footprints.util.rangex(self.conf.prv_terms)[18:35:2],
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 namespace      = 'vortex.multi.fr',
                 nativefmt      = '[format]',
