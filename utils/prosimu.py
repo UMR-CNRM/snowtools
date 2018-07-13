@@ -10,7 +10,7 @@ import os
 import netCDF4
 import numpy as np
 import sys
-from .FileException import FileNameException, FileOpenException, VarNameException, TimeException
+from utils.FileException import FileNameException, FileOpenException, VarNameException, TimeException
 
 # Fichier PRO.nc issu d'une simulation SURFEX post-traitée
 
@@ -25,7 +25,8 @@ class prosimu():
 
                 else:
                     tempdataset = netCDF4.Dataset(fichier, "a")
-                    tempdataset.variables["time"].calendar = "standard"
+                    if "time" in list(tempdataset.variables.keys()):
+                        tempdataset.variables["time"].calendar = "standard"
                     tempdataset.close()
 
             self.dataset = netCDF4.MFDataset(path, "r")
@@ -112,64 +113,118 @@ class prosimu():
 
         return np.array(netCDF4.num2date(time[:], time.units))
 
-    def extract(self, varname, var, selectpoint=-1, removetile=True):
+    def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime = True):
 
         if removetile:
-            needremovetile = "tile" in self.dataset.variables[varname].dimensions or 'Number_of_Tile' in self.dataset.variables[varname].dimensions
+            vardims = self.dataset.variables[varname].dimensions
+            needremovetile = "tile" in vardims or 'Number_of_Tile' in vardims or 'Number_of_Patches' in vardims
         else:
             needremovetile = False
 
         rank = len(var.shape)
-        if selectpoint == -1:
-            if needremovetile:
-                if rank == 1:
-                    # Pour cas de la variable tile dans comparaisons automatiques
-                    var_extract = var[0]
-                if rank == 2:
-                    var_extract = var[:, 0]
-                elif rank == 3:
-                    var_extract = var[:, 0, :]
-                elif rank == 4:
-                    var_extract = var[:, 0, :, :]
-                elif rank == 5:
-                    var_extract = var[:, 0, :, :, :]
+        if hasTime is True:
+            if selectpoint == -1:
+                if needremovetile:
+                    if rank == 1:
+                        # Pour cas de la variable tile dans comparaisons automatiques
+                        var_extract = var[0]
+                    if rank == 2:
+                        var_extract = var[:, 0]
+                    elif rank == 3:
+                        var_extract = var[:, 0, :]
+                    elif rank == 4:
+                        var_extract = var[:, 0, :, :]
+                    elif rank == 5:
+                        var_extract = var[:, 0, :, :, :]
+                else:
+                    if rank == 0:
+                        var_extract = var
+                    elif rank == 1:
+                        var_extract = var[:]
+                    elif rank == 2:
+                        var_extract = var[:, :]
+                    elif rank == 3:
+                        var_extract = var[:, :, :]
+                    elif rank == 4:
+                        var_extract = var[:, :, :, :]
+                    elif rank == 5:
+                        var_extract = var[:, :, :, :, :]
             else:
-                if rank == 0:
-                    var_extract = var
-                elif rank == 1:
-                    var_extract = var[:]
-                elif rank == 2:
-                    var_extract = var[:, :]
-                elif rank == 3:
-                    var_extract = var[:, :, :]
-                elif rank == 4:
-                    var_extract = var[:, :, :, :]
-                elif rank == 5:
-                    var_extract = var[:, :, :, :, :]
-        else:
-            if needremovetile:
-                if rank == 1:
-                    # Pour cas de la variable tile dans comparaisons automatiques
-                    var_extract = var[0]
-                elif rank == 3:
-                    var_extract = var[:, 0, selectpoint]
-                elif rank == 4:
-                    var_extract = var[:, 0, :, selectpoint]
-                elif rank == 5:
-                    var_extract = var[:, 0, :, :, selectpoint]
+                if needremovetile:
+                    if rank == 1:
+                        # Pour cas de la variable tile dans comparaisons automatiques
+                        var_extract = var[0]
+                    elif rank == 3:
+                        var_extract = var[:, 0, selectpoint]
+                    elif rank == 4:
+                        var_extract = var[:, 0, :, selectpoint]
+                    elif rank == 5:
+                        var_extract = var[:, 0, :, :, selectpoint]
+                else:
+                    if rank == 0:
+                        var_extract = var
+                    elif rank == 1:
+                        var_extract = var[selectpoint]
+                    elif rank == 2:
+                        var_extract = var[:, selectpoint]
+                    elif rank == 3:
+                        var_extract = var[:, :, selectpoint]
+                    elif rank == 4:
+                        var_extract = var[:, :, :, selectpoint]
+                    elif rank == 5:
+                        var_extract = var[:, :, :, :, selectpoint]
+
+        else:  # if isPrep, no time dimension, tile is the first dim
+            if selectpoint == -1:
+                if needremovetile:
+                    if rank == 1:
+                        # Pour cas de la variable tile dans comparaisons automatiques
+                        var_extract = var[0]
+                    if rank == 2:
+                        var_extract = var[0, :]
+                    elif rank == 3:
+                        var_extract = var[0, :, :]
+                    elif rank == 4:
+                        var_extract = var[0, :, :, :]
+                    elif rank == 5:
+                        var_extract = var[0, :, :, :, :]
+                else:
+                    if rank == 0:
+                        var_extract = var
+                    elif rank == 1:
+                        var_extract = var[:]
+                    elif rank == 2:
+                        var_extract = var[:, :]
+                    elif rank == 3:
+                        var_extract = var[:, :, :]
+                    elif rank == 4:
+                        var_extract = var[:, :, :, :]
+                    elif rank == 5:
+                        var_extract = var[:, :, :, :, :]
             else:
-                if rank == 0:
-                    var_extract = var
-                elif rank == 1:
-                    var_extract = var[selectpoint]
-                elif rank == 2:
-                    var_extract = var[:, selectpoint]
-                elif rank == 3:
-                    var_extract = var[:, :, selectpoint]
-                elif rank == 4:
-                    var_extract = var[:, :, :, selectpoint]
-                elif rank == 5:
-                    var_extract = var[:, :, :, :, selectpoint]
+                if needremovetile:
+                    if rank == 1:
+                        # Pour cas de la variable tile dans comparaisons automatiques
+                        var_extract = var[0]
+                    elif rank == 3:
+                        var_extract = var[0, :, selectpoint]
+                    elif rank == 4:
+                        var_extract = var[0, :, :, selectpoint]
+                    elif rank == 5:
+                        var_extract = var[0, :, :, :, selectpoint]
+                else:
+                    if rank == 0:
+                        var_extract = var
+                    elif rank == 1:
+                        var_extract = var[selectpoint]
+                    elif rank == 2:
+                        var_extract = var[:, selectpoint]
+                    elif rank == 3:
+                        var_extract = var[:, :, selectpoint]
+                    elif rank == 4:
+                        var_extract = var[:, :, :, selectpoint]
+                    elif rank == 5:
+                        var_extract = var[:, :, :, :, selectpoint]
 
         return var_extract
 
@@ -188,9 +243,13 @@ class prosimu():
 
         # Sélection d'un point si demandé
         # Suppression dimension tile si nécessaire
-        var = self.extract(varname, varnc, selectpoint=selectpoint, removetile=removetile)
-        print("shape")
-        print(var.shape)
+        # gestion time/pas time en dimension (prep files)
+        if "time" not in list(self.dataset.variables.keys()):
+            var = self.extract(varname, varnc, selectpoint=selectpoint, removetile=removetile, hasTime=False)
+        else:
+            var = self.extract(varname, varnc, selectpoint=selectpoint, removetile=removetile)
+        # print("shape")
+        # print(var.shape)
         # Remplissage des valeurs manquantes si nécessaire
         if (len(var.shape) > 1 or (len(var.shape) == 1 and var.shape[0] > 1)) and not keepfillvalue:
             try:

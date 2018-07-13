@@ -92,6 +92,9 @@ def generate_clim(list_forcing):
 
 def clim(options):
 
+    # Save initial directory to go back at the end
+    initcurrentdirectory = os.getcwd()
+
     create_env(options.diroutput)
 
     if options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:
@@ -106,3 +109,6 @@ def clim(options):
 
     for forcing in list_forcing:
         os.remove(forcing)
+
+    # Back to initial directory
+    os.chdir(initcurrentdirectory)

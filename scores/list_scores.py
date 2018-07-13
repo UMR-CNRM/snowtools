@@ -52,7 +52,7 @@ class ESCROC_list_scores(object):
 #             else:
         self.scores = ESMSnowMIP_DeterministicScores_Heterogeneous(profile, obsfile, varname)
 #             self.timeread = True
-# 
+#
 #             self.obsread[varname] = self.scores.obsCommon
 #             self.masksim[varname] = self.scores.modelMask
 
@@ -105,6 +105,7 @@ class scores_file(netCDF4.Dataset):
         print(scoretab[:, :, :])
         self.variables[scorename][:, :, :] = scoretab[:, :, :]
 
+
 class ensemble_scores_file(netCDF4.Dataset):
 
     def __init__(self, *args, **kwargs):
@@ -116,8 +117,8 @@ class ensemble_scores_file(netCDF4.Dataset):
         self.createDimension("members", None)
 
     def write_members(self, members):
-        self.createVariable("members", 'int', ('iteration','members'))
-        self.variables["members"][:,:] = members
+        self.createVariable("members", 'int', ('iteration', 'members'))
+        self.variables["members"][:, :] = members
 
     def write(self, scorename, scoretab):
         self.createVariable(scorename, 'f8', ('iteration'))

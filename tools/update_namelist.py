@@ -11,7 +11,7 @@ import six
 
 # Snowtools modules
 from utils.prosimu import prosimu
-from utils.dates import checkdatebefore, checkdateafter
+from utils.dates import checkdateafter
 from utils.FileException import FileNameException
 
 from bronx.datagrip.namelist import NamelistParser
@@ -75,25 +75,30 @@ def update_dates(NamelistObject, datebegin):
 def update_loc(NamelistObject, forcing):
     """modify SURFEX namelist for defining the coordinates of the simulation points."""
 
-    # Read coordinates in FORCING file
-    forc = prosimu(forcing)
-    latitudes1d = forc.read("LAT")
-    longitudes1d = forc.read("LON")
-    forc.close()
+    if NamelistObject["NAM_PGD_GRID"].CGRID == "LONLATVAL":
+        # Read coordinates in FORCING file
+        forc = prosimu(forcing)
+        latitudes1d = forc.read("LAT")
+        longitudes1d = forc.read("LON")
+        forc.close()
 
-    # Constant dlat/dlon
-    dlat1d = np.zeros_like(latitudes1d) + 0.5
-    dlon1d = np.zeros_like(longitudes1d) + 0.5
+        # Constant dlat/dlon
+        dlat1d = np.zeros_like(latitudes1d) + 0.5
+        dlon1d = np.zeros_like(longitudes1d) + 0.5
 
-    NamelistObject["NAM_LONLATVAL"].XY = list(latitudes1d)
-    NamelistObject["NAM_LONLATVAL"].XX = list(longitudes1d)
-    NamelistObject["NAM_LONLATVAL"].XDY = list(dlat1d)
-    NamelistObject["NAM_LONLATVAL"].XDX = list(dlon1d)
-    NamelistObject["NAM_LONLATVAL"].NPOINTS = len(longitudes1d)
+        NamelistObject["NAM_LONLATVAL"].XY = list(latitudes1d)
+        NamelistObject["NAM_LONLATVAL"].XX = list(longitudes1d)
+        NamelistObject["NAM_LONLATVAL"].XDY = list(dlat1d)
+        NamelistObject["NAM_LONLATVAL"].XDX = list(dlon1d)
+        NamelistObject["NAM_LONLATVAL"].NPOINTS = len(longitudes1d)
 
     NamelistObject["NAM_IO_OFFLINE"].LWRITE_COORD = False
-    NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = True
 
+    # another special patch/bugfix for distributed simulations (then CGRID==IGN)
+    if NamelistObject["NAM_PGD_GRID"].CGRID == "IGN":
+        NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = False
+    else:
+        NamelistObject["NAM_IO_OFFLINE"].LWRITE_TOPO = True
 
     return NamelistObject
 
@@ -111,7 +116,6 @@ def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"
 
     checkdateafter(datebegin, dateforcbegin)
     if dateend:
-#         checkdatebefore(dateend, dateforcend)
         checkdateafter(dateend, dateforcbegin)
     else:
         dateend = dateforcend

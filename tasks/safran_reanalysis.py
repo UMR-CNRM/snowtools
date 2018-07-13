@@ -7,7 +7,6 @@ __all__ = []
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-import vortex
 from vortex import toolbox
 from vortex.layout.nodes import Driver
 from cen.layout.nodes import S2Mtask
@@ -107,7 +106,7 @@ class Safran(S2Mtask):
                     print
 
                 self.sh.title('Toolbox input tb02')
-                tb01 = toolbox.input(
+                tb02 = toolbox.input(
                     role           = 'ObsSynop',
                     part           = 'synop',
                     block          = 'observations',
@@ -124,7 +123,7 @@ class Safran(S2Mtask):
                     namespace      = 's2m.archive.fr',
                     fatal          = False,
                 )
-                print t.prompt, 'tb01 =', tb01
+                print t.prompt, 'tb02 =', tb02
                 print
 
                 self.sh.title('Toolbox input tb03')
@@ -167,6 +166,28 @@ class Safran(S2Mtask):
                 print t.prompt, 'tb03 =', tb03
                 print
 
+                self.sh.title('Toolbox input tb04')
+                tb04 = toolbox.input(
+                    role           = 'ObsRS',
+                    part           = 'radiosondage',
+                    block          = 'observations',
+                    experiment     = self.conf.xpid,
+                    geometry       = self.conf.vconf,
+                    suite          = 'oper',
+                    fatal          = False,
+                    kind           = 'observations',
+                    stage          = 'safrane',
+                    nativefmt      = 'ascii',
+                    date           = '{0:s}/-PT24H/+PT[term]H'.format(datebegin.ymd6h),
+                    term           = footprints.util.rangex(self.conf.ana_terms),
+                    local          = 'A[date:yymdh]',
+                    model          = self.conf.model,
+                    namespace      = 'cendev.soprano.fr',
+                    storage        = 'guppy.meteo.fr',
+                )
+                print t.prompt, 'tb04 =', tb04
+                print
+
                 self.sh.title('Toolbox input tb05')
                 tb05 = toolbox.input(
                     role           = 'ObsNeb',
@@ -187,9 +208,65 @@ class Safran(S2Mtask):
                 print t.prompt, 'tb05 =', tb05
                 print
 
-                self.sh.title('Toolbox input tb07')
-                tb07 = toolbox.input(
-                    role            = 'ListeMassif',
+                rundate = rundate + Period(days=1)
+
+            self.sh.title('Toolbox input tb07')
+            tb07 = toolbox.input(
+                role            = 'ListeMassif',
+                genv            = self.conf.cycle,
+                gdomain         = self.conf.vconf,
+                geometry        = '[gdomain]',
+                kind            = 'listem',
+                model           = self.conf.model,
+                local           = 'listem',
+            )
+            print t.prompt, 'tb07 =', tb07
+            print
+
+            self.sh.title('Toolbox input tb08')
+            tb08 = toolbox.input(
+                role            = 'ListeLimitesMassif',
+                genv            = self.conf.cycle,
+                gdomain         = self.conf.vconf,
+                geometry        = '[gdomain]',
+                kind            = 'listeml',
+                model           = self.conf.model,
+                local           = 'listeml',
+            )
+            print t.prompt, 'tb08 =', tb08
+            print
+
+            self.sh.title('Toolbox input tb09')
+            tb09 = toolbox.input(
+                role            = 'ListePost',
+                genv            = self.conf.cycle,
+                gdomain         = self.conf.vconf,
+                geometry        = '[gdomain]',
+                kind            = 'listeo',
+                model           = self.conf.model,
+                local           = 'listeo' if self.conf.vconf == 'alp' else 'lysteo',
+            )
+            print t.prompt, 'tb09 =', tb09
+            print
+
+            self.sh.title('Toolbox input tb09')
+            tb09 = toolbox.input(
+                role            = 'carac_post',
+                genv            = self.conf.cycle,
+                gdomain         = self.conf.vconf,
+                geometry        = '[gdomain]',
+                kind            = 'carpost',
+                model           = self.conf.model,
+                local           = 'carpost.tar',
+            )
+            print t.prompt, 'tb09 =', tb09
+            print
+
+            if not self.conf.vconf == 'cor':
+
+                self.sh.title('Toolbox input tb10')
+                tb10 = toolbox.input(
+                    role            = 'MoyRRmensuelles',
                     genv            = self.conf.cycle,
                     gdomain         = self.conf.vconf,
                     geometry        = '[gdomain]',

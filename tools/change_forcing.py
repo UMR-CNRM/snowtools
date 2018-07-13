@@ -559,15 +559,15 @@ class forcinput_select(forcinput_tomodify):
     def addCoord(self, forcing, massifnumber, dimension, varFillValue):
         '''Routine to add coordinates in the forcing file for the SAFRAN massifs'''
         INFOmassifs = infomassifs()
-        dicLatLon = INFOmassifs.getAllMassifLatLon()
+        dicLonLat = INFOmassifs.getAllMassifLatLon()
 
         lat = np.empty_like(massifnumber)
         lon = np.empty_like(massifnumber)
 
         for point in range(0, len(massifnumber)):
-            latlon = dicLatLon[massifnumber[point]]
-            lat[point] = latlon[0]
-            lon[point] = latlon[1]
+            lonlat = dicLonLat[massifnumber[point]]
+            lat[point] = lonlat[1]
+            lon[point] = lonlat[0]
 
         var = forcing.createVariable("LAT", massifnumber.dtype, dimension, fill_value=varFillValue)
         setattr(var, 'long_name', 'latitude')
@@ -579,21 +579,3 @@ class forcinput_select(forcinput_tomodify):
         var[:] = lon
 
         return lat, lon
-
-
-# For test
-if __name__ == "__main__":
-#     list_massifs = range(1, 24)
-#     min_alt = 600
-#     max_alt = 3600
-#     list_pentes = ["0", "20", "40"]
-#     list_expo = xrange(0, 9)
-#     forcin = os.environ["HOME"] + "/FORCING_OLD.nc"
-#     forcout = os.environ["HOME"] + "/FORCING_NEW.nc"
-#     f = forcinput_select(forcin, forcout, list_massifs, min_alt, max_alt, list_pentes, list_expo)
-
-    import glob
-    import shutil
-    for forcing in glob.glob("FORCING*.nc"):
-#         shutil.copy(forcing, "old" + forcing)ll 
-        f = forcinput_addmeteomassif(forcing, forcing)

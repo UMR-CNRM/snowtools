@@ -8,8 +8,7 @@ from vortex.layout.nodes import Driver, Task
 from vortex import toolbox
 from utils.dates import get_list_dates_files
 import footprints
-import os
-import sys
+
 
 def setup(t, **kw):
     return Driver(
