@@ -4,9 +4,10 @@ Created on 7 nov. 2017
 @author: lafaysse
 '''
 
-from vortex.layout.nodes import Driver
-from cen.layout.nodes import S2Mtask
+from vortex.layout.nodes import Driver, Task
+from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
+from bronx.stdtypes.date import daterange, yesterday, tomorrow
 import footprints
 
 
@@ -21,7 +22,7 @@ def setup(t, **kw):
     )
 
 
-class Ensemble_Surfex_Task(S2Mtask):
+class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
     '''
 
     '''
@@ -42,7 +43,7 @@ class Ensemble_Surfex_Task(S2Mtask):
             self.sh.title('Toolbox input tb01')
             tb01 = toolbox.input(
                 role           = 'Forcing',
-                local          = 'mb0035/[geometry]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if self.conf.geometry.area == 'postes' else 'mb0035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                local          = 'mb035/[geometry]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if self.conf.geometry.area == 'postes' else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                 vapp           = self.conf.vapp,
                 vconf          = '[geometry:area]',
                 block          = "postes" if self.conf.geometry.area == 'postes' else "massifs",
@@ -110,9 +111,10 @@ class Ensemble_Surfex_Task(S2Mtask):
                 geometry       = self.conf.geometry,
                 datevalidity   = datebegin,
                 date           = rundate_prep,
+                member         = 35,
                 intent         = 'inout',
                 nativefmt      = 'netcdf',
-                kind           = 'SnowpackState',
+                kind           = 'PREP',
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
                 fatal          = True,
@@ -194,15 +196,15 @@ class Ensemble_Surfex_Task(S2Mtask):
 
             tb09 = tbalgo1 = toolbox.algo(
                 engine         = 'blind',
-                binary         = 'OFFLINE',
                 kind           = "ensmeteo",
                 datebegin      = datebegin,
                 dateend        = dateend,
                 dateinit       = datebegin,
                 threshold      = self.conf.threshold,
                 members        = footprints.util.rangex(members),
-                geometry       = self.conf.geometry,
-                ntasks         = 40
+                geometry       = list_geometry,
+                ntasks         = 40,
+                daily          = not self.conf.previ,
             )
             print(t.prompt, 'tb09 =', tb09)
             print()
@@ -239,8 +241,8 @@ class Ensemble_Surfex_Task(S2Mtask):
                 block          = 'pro',
                 geometry       = self.conf.geometry,
                 date           = self.conf.rundate,
-                datebegin      = datebegin,
-                dateend        = dateend,
+                datebegin      = datebegin if self.conf.previ else '[dateend]/-PT24H',
+                dateend        = dateend if self.conf.previ else list(daterange(tomorrow(base=datebegin), dateend)),
                 member         = members,
                 nativefmt      = 'netcdf',
                 kind           = 'SnowpackSimulation',
@@ -253,16 +255,16 @@ class Ensemble_Surfex_Task(S2Mtask):
 
             self.sh.title('Toolbox output tb12')
             tb12 = toolbox.output(
-                local          = 'mb[member]/PREP_[date:ymdh].nc',
+                local          = 'mb[member]/PREP_[datevalidity:ymdh].nc',
                 role           = 'SnowpackInit',
                 experiment     = self.conf.xpid,
                 block          = 'prep',
                 geometry       = self.conf.geometry,
-                datevalidity   = dateend,
+                datevalidity   = dateend if self.conf.previ else list(daterange(tomorrow(base=datebegin), dateend)),
                 date           = self.conf.rundate,
                 member         = members,
                 nativefmt      = 'netcdf',
-                kind           = 'SnowpackState',
+                kind           = 'PREP',
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
                 cutoff         = 'production' if self.conf.previ else 'assimilation',

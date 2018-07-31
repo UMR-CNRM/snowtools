@@ -118,10 +118,13 @@ class infomassifs():
                         "lautaret": [12, 13, 15, 16],
                         "alpes_F": list(range(1, 24)),  # les 23 massifs des Alpes
                         "alpes": list(range(1, 24)) + [30],  # les 23 massifs des Alpes + Diablerets
+                        "alp": list(range(1, 24)) + [30],  # les 23 massifs des Alpes + Diablerets
                         "pyrenees_F": list(range(64, 75)),
                         "pyrenees_E": list(range(80, 92)),
                         "pyrenees": list(range(64, 75)) + list(range(80, 92)),
+                        "pyr": list(range(64, 75)) + list(range(80, 92)),
                         "corse": [40, 41],
+                        "cor": [40, 41],
                         "all": list(range(1, 24)) + [30] + list(range(40, 42)) + list(range(64, 75)) + list(range(80, 92))
                         }
 

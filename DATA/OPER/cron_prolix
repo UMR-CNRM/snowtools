@@ -1,0 +1,6 @@
+30 03 s2m --oper -r alp_allslopes
+45 03 s2m --oper --forecast -r alp_allslopes
+30 06 s2m --oper -r alp_allslopes
+45 06 s2m --oper --forecast -r alp_allslopes
+30 09 s2m --oper -r alp_allslopes
+45 09 s2m --oper --forecast -r alp_allslopes

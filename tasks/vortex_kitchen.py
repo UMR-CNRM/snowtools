@@ -33,7 +33,12 @@ class vortex_kitchen(object):
         self.workingdir = options.dirwork + "/" + self.vapp + "/" + self.vconf
 
         self.xpid = options.diroutput
-        self.jobtemplate = "job-vortex-default.py"
+        if options.oper:
+            self.jobtemplate = "job-s2m-oper.py"
+            self.profile = "rd-prolix-mt"
+        else:
+            self.jobtemplate = "job-vortex-default.py"
+            self.profile = "rd-beaufix-mt"
 
         self.create_env()
         self.create_conf(options)
@@ -64,7 +69,16 @@ class vortex_kitchen(object):
 
     def create_conf(self, options):
         ''' Prepare configuration file from s2m options'''
-        confname = "../conf/" + self.vapp + "_" + self.vconf + ".ini"
+        conffilename = self.vapp + "_" + self.vconf + ".ini"
+        confname = "../conf/" + conffilename
+
+        if options.oper:
+            if not os.path.islink(confname):
+                # Operational case : the configuration files are provided : only create a symbolic link in the appropriate directory
+                os.symlink(os.environ['SNOWTOOLS_CEN'] + "/DATA/OPER/" + conffilename, confname)
+            return
+
+        # General case: create the configuration file from s2m options
         conffile = vortex_conf_file(confname, 'w')
 
         if options.model == 'safran' and options.forcing == 'reanalyse':
@@ -119,23 +133,33 @@ class vortex_kitchen(object):
         conffile.close()
 
     def mkjob_command(self, options, jobname=None):
-        if options.escroc:
-            jobname = jobname if jobname else 'escroc'
-            if options.scores:
-                # reftask  = "scores_task"
-                # reftask = "optim_task"
-                reftask = "crps_task"
-            else:
-                reftask = "escroc_tasks"
+        if options.oper:
+            reftask = "ensemble_surfex_tasks"
             nnodes = 1
+            period = "rundate=" + options.datedeb.strftime("%Y%m%d%H%M")
+            # Note that the jobname is used to discriminate self.conf.previ in vortex task
+            if options.forecast:
+                jobname = "surfex_forecast"
+            else:
+                jobname = "surfex_analysis"
         else:
-            jobname = 'rea_s2m'
-            reftask = "vortex_tasks"
-            nnodes = options.nnodes
-        return "../vortex/bin/mkjob.py -j name=" + jobname + " task=" + reftask + " profile=rd-beaufix-mt jobassistant=cen datebegin="\
-            + options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + options.datefin.strftime("%Y%m%d%H%M") + " template=" + self.jobtemplate\
-            + " time=" + walltime(options)\
-            + " nnodes=" + str(nnodes)
+            period = "datebegin=" + options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + options.datefin.strftime("%Y%m%d%H%M")
+            if options.escroc:
+                jobname = jobname if jobname else 'escroc'
+                if options.scores:
+                    # reftask  = "scores_task"
+                    # reftask = "optim_task"
+                    reftask = "crps_task"
+                else:
+                    reftask = "escroc_tasks"
+                nnodes = 1
+            else:
+                jobname = 'rea_s2m'
+                reftask = "vortex_tasks"
+                nnodes = options.nnodes
+
+        return "../vortex/bin/mkjob.py -j name=" + jobname + " task=" + reftask + " profile=" + self.profile + " jobassistant=cen " + period +\
+               " template=" + self.jobtemplate + " time=" + walltime(options) + " nnodes=" + str(nnodes)
 
     def mkjob_list_commands(self, options):
         if options.escroc and options.nnodes > 1:
@@ -161,6 +185,9 @@ def walltime(options):
 
         if options.walltime:
             return str(options.walltime)
+
+        elif options.oper:
+            return str(datetime.timedelta(minutes=5))
 
         else:
             if options.escroc:
