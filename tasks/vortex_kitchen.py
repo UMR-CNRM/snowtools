@@ -29,6 +29,7 @@ class vortex_kitchen(object):
         # Initialization of vortex variables
         self.vapp = "s2m"
         self.vconf = options.region
+        self.oper = options.oper
 
         self.workingdir = options.dirwork + "/" + self.vapp + "/" + self.vconf
 
@@ -56,8 +57,12 @@ class vortex_kitchen(object):
 
         if not os.path.islink("vortex"):
             os.symlink(os.environ["VORTEX"], "vortex")
+
         if not os.path.islink("tasks"):
-            os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks", "tasks")
+            if self.oper:
+                os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/oper", "tasks")
+            else:
+                os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks", "tasks")
 
         for directory in ["conf", "jobs"]:
             if not os.path.isdir(directory):
@@ -187,7 +192,7 @@ def walltime(options):
             return str(options.walltime)
 
         elif options.oper:
-            return str(datetime.timedelta(minutes=5))
+            return str(datetime.timedelta(minutes=10))
 
         else:
             if options.escroc:

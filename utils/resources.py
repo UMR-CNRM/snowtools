@@ -11,6 +11,7 @@ This module contains all file manipulations.
 
 import os
 import shutil
+import datetime
 from utils.FileException import FileNameException, DirNameException
 
 
@@ -155,6 +156,7 @@ def get_file_date(prefix, path, datefile):
 
 
 def get_file_period(prefix, path, datebegin, dateend):
+
     if os.path.isfile(path):
         smart_copy(path, prefix + ".nc")
         return datebegin, dateend
@@ -164,6 +166,15 @@ def get_file_period(prefix, path, datebegin, dateend):
         if os.path.isfile(fullperiodfile):
             smart_copy(fullperiodfile, prefix + ".nc")
             return datebegin, dateend
+
+        # Alternative files :
+        daybefore = datebegin - datetime.timedelta(days=1)
+        alternatefile = path + "/" + prefix + "_" + daybefore.strftime('%Y%m%d%H') + "_" + dateend.strftime('%Y%m%d%H') + ".nc"
+        if os.path.isfile(alternatefile):
+            smart_copy(alternatefile, prefix + ".nc")
+            return daybefore, dateend
+        else:
+            "NOT AVAILABLE !!!!!!!"
 
         # Attempt to find a yearly file
         if datebegin.month >= 8:
