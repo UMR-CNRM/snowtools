@@ -38,11 +38,8 @@ def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc
     NamelistObject = update_dates(NamelistObject, datebegin)
     if updateloc:
         NamelistObject = update_loc(NamelistObject, forcing)
+
     NamelistObject = update_forcingdates(NamelistObject, datebegin, dateend, forcing=forcing)
-
-    print(type(physicaloptions), type(snowparameters))
-
-    print(physicaloptions)
 
     NamelistObject = update_physicaloptions(NamelistObject, **physicaloptions)
     NamelistObject = update_snowparameters(NamelistObject, **snowparameters)
@@ -114,6 +111,9 @@ def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"
     dateforcbegin = timeforc[0]
     dateforcend = timeforc[-1]
 
+    print ("DATES OF THE FORCING FILE:", dateforcbegin, dateforcend)
+    print ("PRESCRIBED SIMULATION DATES:", datebegin, dateend)
+
     checkdateafter(datebegin, dateforcbegin)
     if dateend:
         checkdateafter(dateend, dateforcbegin)
@@ -125,7 +125,6 @@ def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"
 
 #     if dateend < dateforcend:
     NamelistObject["NAM_IO_OFFLINE"].NDATESTOP = [dateend.year, dateend.month, dateend.day, dateend.hour * 3600]
-    print ("Ndatestop set to {0}{1}{2}{3}".format(dateend.year, dateend.month, dateend.day, dateend.hour))
 
     return NamelistObject
 

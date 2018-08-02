@@ -44,7 +44,7 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb01')
             tb01 = toolbox.input(
                 role           = 'Forcing',
-                local          = 'mb035/[geometry]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if self.conf.geometry.area == 'postes' else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if self.conf.geometry.area == 'postes' else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                 vapp           = self.conf.vapp,
                 vconf          = '[geometry:area]',
                 block          = block_safran,
@@ -68,7 +68,7 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb01b')
             tb01b = toolbox.input(
                 role           = 'Forcing',
-                local          = 'mb[member]/[geometry]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if self.conf.geometry.area == 'postes' else 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                local          = 'mb[member]/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if self.conf.geometry.area == 'postes' else 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                 vapp           = self.conf.vapp,
                 vconf          = '[geometry:area]',
                 block          = block_safran,
