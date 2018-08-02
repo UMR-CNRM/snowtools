@@ -1,18 +1,24 @@
-15 03 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r alp_allslopes > cron_alp_allslopes_ana1.out 2>&1
-15 03 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r pyr_allslopes > cron_pyr_allslopes_ana1.out 2>&1
-15 03 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r cor_allslopes > cron_cor_allslopes_ana1.out 2>&1
-55 03 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r alp_allslopes > cron_alp_allslopes_for1.out 2>&1
-55 03 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r pyr_allslopes > cron_pyr_allslopes_for1.out 2>&1
-55 03 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r cor_allslopes > cron_cor_allslopes_for1.out 2>&1
-40 06 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r alp_allslopes > cron_alp_allslopes_ana2.out 2>&1
-40 06 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r pyr_allslopes > cron_pyr_allslopes_ana2.out 2>&1
-40 06 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r cor_allslopes > cron_cor_allslopes_ana2.out 2>&1
-50 06 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r alp_allslopes > cron_alp_allslopes_for2.out 2>&1
-50 06 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r pyr_allslopes > cron_pyr_allslopes_for2.out 2>&1
-50 06 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r cor_allslopes > cron_cor_allslopes_for2.out 2>&1
-40 09 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r alp_allslopes > cron_alp_allslopes_ana3.out 2>&1
-40 09 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r pyr_allslopes > cron_pyr_allslopes_ana3.out 2>&1
-40 09 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r cor_allslopes > cron_cor_allslopes_ana3.out 2>&1
-50 09 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r alp_allslopes > cron_alp_allslopes_for3.out 2>&1
-50 09 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r pyr_allslopes > cron_pyr_allslopes_for3.out 2>&1
-50 09 * * * . /etc/profile ; . /etc/bashrc ; . .bash_profile ; . .bashrc ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r cor_allslopes > cron_cor_allslopes_for3.out 2>&1
+15 03 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r alp_allslopes > cron_alp_allslopes_ana1.out 2>&1
+15 03 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r pyr_allslopes > cron_pyr_allslopes_ana1.out 2>&1
+15 03 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r cor_allslopes > cron_cor_allslopes_ana1.out 2>&1
+15 03 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r postes > cron_postes_ana1.out 2>&1
+55 03 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r alp_allslopes > cron_alp_allslopes_for1.out 2>&1
+55 03 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r pyr_allslopes > cron_pyr_allslopes_for1.out 2>&1
+55 03 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r cor_allslopes > cron_cor_allslopes_for1.out 2>&1
+55 03 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r postes > cron_postes_for1.out 2>&1
+40 06 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r alp_allslopes > cron_alp_allslopes_ana2.out 2>&1
+40 06 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r pyr_allslopes > cron_pyr_allslopes_ana2.out 2>&1
+40 06 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r cor_allslopes > cron_cor_allslopes_ana2.out 2>&1
+40 06 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r postes > cron_postes_ana2.out 2>&1
+50 06 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r alp_allslopes > cron_alp_allslopes_for2.out 2>&1
+50 06 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r pyr_allslopes > cron_pyr_allslopes_for2.out 2>&1
+50 06 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r cor_allslopes > cron_cor_allslopes_for2.out 2>&1
+50 06 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r postes > cron_postes_for2.out 2>&1
+40 09 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r alp_allslopes > cron_alp_allslopes_ana3.out 2>&1
+40 09 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r pyr_allslopes > cron_pyr_allslopes_ana3.out 2>&1
+40 09 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r cor_allslopes > cron_cor_allslopes_ana3.out 2>&1
+40 09 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r postes > cron_postes_ana3.out 2>&1
+50 09 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r alp_allslopes > cron_alp_allslopes_for3.out 2>&1
+50 09 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r pyr_allslopes > cron_pyr_allslopes_for3.out 2>&1
+50 09 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r cor_allslopes > cron_cor_allslopes_for3.out 2>&1
+50 09 * * * . ~/.bash_profile ; module load python ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r postes > cron_postes_for3.out 2>&1
