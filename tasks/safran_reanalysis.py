@@ -8,8 +8,8 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex import toolbox
-from vortex.layout.nodes import Driver
-from cen.layout.nodes import S2Mtask
+from vortex.layout.nodes import Driver, Task
+from cen.layout.nodes import S2MTaskMixIn
 
 from bronx.stdtypes.date import Period, Date
 
@@ -25,7 +25,7 @@ def setup(t, **kw):
     )
 
 
-class Safran(S2Mtask):
+class Safran(Task, S2MTaskMixIn):
 
     def process(self):
         """Safran analysis"""
@@ -33,12 +33,34 @@ class Safran(S2Mtask):
         t = self.ticket
 
         rundate = self.conf.datebegin
-        while rundate <= self.conf.dateend:
 
-            datebegin = rundate
-            dateend = rundate + Period(days=1)
+        if 'early-fetch' in self.steps:
 
-            if 'early-fetch' in self.steps or 'fetch' in self.steps:
+            if self.conf.datebegin < Date(year=2002, month=8, day=1):
+
+                # Avant 2002 on utilise des guess issus de era40
+                self.sh.title('Toolbox input tb01')
+                tb07_a = toolbox.input(
+                    role           = 'Ebauche',
+                    # local          = 'mb035/P[date::yymdh]_[cumul:hour]',
+                    local          = 'cep_[date:nivologyseason]',
+                    remote         = '/home/vernaym/s2m/[local]',
+                    hostname       = 'hendrix.meteo.fr',
+                    unknownflow    = True,
+                    date           = self.conf.datebegin.ymdh,
+                    tube           = 'ftp',
+                    username       = 'vernaym',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    cutoff         = 'assimilation',
+                ),
+                print t.prompt, 'tb17_a =', tb07_a
+                print
+
+            while rundate <= self.conf.dateend:
+
+                datebegin = rundate
+                dateend = rundate + Period(days=1)
 
                 # A partir de la saison 2017-2018 on prend les guess produits par Vortex
                 if datebegin >= Date(year=2018, month=8, day=1):
@@ -50,7 +72,7 @@ class Safran(S2Mtask):
                         local          = 'P[date::yymdh]_[cumul:hour]',
                         experiment     = self.conf.xpid,
                         block          = self.conf.guess_block,
-                        geometry        = self.conf.vconf,
+                        geometry       = self.conf.vconf,
                         cutoff         = 'assimilation',
                         date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 30, self.conf.cumul)],
                         cumul          = self.conf.cumul,
@@ -75,42 +97,25 @@ class Safran(S2Mtask):
                         geometry        = self.conf.vconf,
                         cutoff         = 'assimilation',
                         date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 30, 6)],
+                        cumul          = self.conf.cumul,
                         nativefmt      = 'ascii',
                         kind           = 'guess',
                         model          = 'safran',
-                        source_app     = 'arpage',
+                        source_app     = 'arpege',
                         source_conf    = '4dvarfr',
                         namespace      = 's2m.archive.fr',
                     ),
                     print t.prompt, 'tb17_a =', tb07_a
                     print
 
-                # Avant 2002 on utilise des guess issus de era40
-                else:
-
-                    self.sh.title('Toolbox input tb01')
-                    tb07_a = toolbox.input(
-                        role           = 'Ebauche',
-                        # local          = 'mb035/P[date::yymdh]_[cumul:hour]',
-                        local          = 'cep_[date::nivologyseason]',
-                        cutoff         = 'assimilation',
-                        date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 30, 6)],
-                        nativefmt      = 'ascii',
-                        kind           = 'guess',
-                        model          = 'safran',
-                        source_app     = 'cep',
-                        source_conf    = 'era40',
-                        namespace      = 's2m.archive.fr',
-                    ),
-                    print t.prompt, 'tb17_a =', tb07_a
-                    print
-
+                # TODO : Gérer le fait de ne pas prendre le fichier 2 de 6h le 01/08
                 self.sh.title('Toolbox input tb02')
                 tb02 = toolbox.input(
                     role           = 'ObsSynop',
                     part           = 'synop',
                     block          = 'observations',
                     experiment     = self.conf.xpid,
+                    cutoff         = 'assimilation',
                     geometry       = self.conf.vconf,
                     suite          = 'oper',
                     kind           = 'observations',
@@ -132,9 +137,9 @@ class Safran(S2Mtask):
                     part           = 'precipitation',
                     block          = 'observations',
                     experiment     = self.conf.xpid,
+                    cutoff         = 'assimilation',
                     geometry       = self.conf.vconf,
                     suite          = 'oper',
-                    fatal          = False,
                     kind           = 'observations',
                     stage          = 'sypluie',
                     nativefmt      = 'ascii',
@@ -152,9 +157,9 @@ class Safran(S2Mtask):
                     part           = 'hourlyobs',
                     block          = 'observations',
                     experiment     = self.conf.xpid,
+                    cutoff         = 'assimilation',
                     geometry       = self.conf.vconf,
                     suite          = 'oper',
-                    fatal          = False,
                     kind           = 'observations',
                     stage          = 'safrane',
                     nativefmt      = 'ascii',
@@ -172,9 +177,9 @@ class Safran(S2Mtask):
                     part           = 'radiosondage',
                     block          = 'observations',
                     experiment     = self.conf.xpid,
+                    cutoff         = 'assimilation',
                     geometry       = self.conf.vconf,
                     suite          = 'oper',
-                    fatal          = False,
                     kind           = 'observations',
                     stage          = 'safrane',
                     nativefmt      = 'ascii',
@@ -184,6 +189,7 @@ class Safran(S2Mtask):
                     model          = self.conf.model,
                     namespace      = 'cendev.soprano.fr',
                     storage        = 'guppy.meteo.fr',
+                    fatal          = False,
                 )
                 print t.prompt, 'tb04 =', tb04
                 print
@@ -194,21 +200,26 @@ class Safran(S2Mtask):
                     part           = 'nebulosity',
                     block          = 'observations',
                     experiment     = self.conf.xpid,
+                    cutoff         = 'assimilation',
                     geometry       = self.conf.vconf,
                     suite          = 'oper',
-                    fatal          = False,
                     kind           = 'observations',
                     stage          = 'safrane',
                     nativefmt      = 'ascii',
                     date           = datebegin.ymd6h,
                     local          = 'N[date:yymdh]',
                     model          = self.conf.model,
-                    namespace      = 's2m.archive.fr',
+                    namespace      = 'cendev.soprano.fr',
+                    storage        = 'guppy.meteo.fr',
+                    fatal          = False,
                 )
                 print t.prompt, 'tb05 =', tb05
                 print
 
                 rundate = rundate + Period(days=1)
+
+
+        if 'fetch' in self.steps:
 
             self.sh.title('Toolbox input tb07')
             tb07 = toolbox.input(
@@ -244,7 +255,7 @@ class Safran(S2Mtask):
                 geometry        = '[gdomain]',
                 kind            = 'listeo',
                 model           = self.conf.model,
-                local           = 'listeo' if self.conf.vconf == 'alp' else 'lysteo',
+                local           = 'listeo',
             )
             print t.prompt, 'tb09 =', tb09
             print
@@ -262,252 +273,200 @@ class Safran(S2Mtask):
             print t.prompt, 'tb09 =', tb09
             print
 
-            if not self.conf.vconf == 'cor':
+            self.sh.title('Toolbox input tb12')
+            tb12 = toolbox.input(
+                role            = 'BlackList',
+                genv            = self.conf.cycle,
+                gdomain         = self.conf.vconf,
+                geometry        = '[gdomain]',
+                kind            = 'blacklist',
+                model           = self.conf.model,
+                local           = 'BLACK',
+                fatal           = False,
+            )
+            print t.prompt, 'tb12 =', tb12
+            print
 
-                self.sh.title('Toolbox input tb10')
-                tb10 = toolbox.input(
-                    role            = 'MoyRRmensuelles',
-                    genv            = self.conf.cycle,
-                    gdomain         = self.conf.vconf,
-                    geometry        = '[gdomain]',
-                    kind            = 'listem',
-                    model           = self.conf.model,
-                    local           = 'listem',
-                )
-                print t.prompt, 'tb07 =', tb07
-                print
+            self.sh.title('Toolbox input tb12')
+            tb12 = toolbox.input(
+                role            = 'Clim',
+                genv            = self.conf.cycle,
+                gdomain         = self.conf.vconf,
+                geometry        = '[gdomain]',
+                kind            = 'icrccm',
+                model           = self.conf.model,
+                local           = 'icrccm.don',
+            )
+            print t.prompt, 'tb12 =', tb12
+            print
 
-                self.sh.title('Toolbox input tb08')
-                tb08 = toolbox.input(
-                    role            = 'ListeLimitesMassif',
-                    genv            = self.conf.cycle,
-                    gdomain         = self.conf.vconf,
-                    geometry        = '[gdomain]',
-                    kind            = 'listeml',
-                    model           = self.conf.model,
-                    local           = 'listeml',
-                )
-                print t.prompt, 'tb08 =', tb08
-                print
+            self.sh.title('Toolbox input tb13')
+            tb13 = toolbox.input(
+                role            = 'Nam_sorties',
+                source          = 'namelist_sorties_[geometry]',
+                geometry        = self.conf.vconf,
+                genv            = self.conf.cycle,
+                kind            = 'namelist',
+                model           = self.conf.model,
+                local           = 'SORTIES',
+                fatal           = False,
+            )
+            print t.prompt, 'tb13 =', tb13
+            print
 
-                self.sh.title('Toolbox input tb09')
-                tb09 = toolbox.input(
-                    role            = 'ListePost',
-                    genv            = self.conf.cycle,
-                    gdomain         = self.conf.vconf,
-                    geometry        = '[gdomain]',
-                    kind            = 'listeo',
-                    model           = self.conf.model,
-                    local           = 'listeo' if self.conf.vconf == 'alp' else 'lysteo',
-                )
-                print t.prompt, 'tb09 =', tb09
-                print
+            self.sh.title('Toolbox input tb13')
+            tb13 = toolbox.input(
+                role            = 'Nam_analyse',
+                source          = 'namelist_analyse_[geometry]',
+                geometry        = self.conf.vconf,
+                genv            = self.conf.cycle,
+                kind            = 'namelist',
+                model           = self.conf.model,
+                local           = 'ANALYSE',
+                fatal           = False,
+            )
+            print t.prompt, 'tb13 =', tb13
+            print
 
-                self.sh.title('Toolbox input tb09')
-                tb09 = toolbox.input(
-                    role            = 'carac_post',
-                    genv            = self.conf.cycle,
-                    gdomain         = self.conf.vconf,
-                    geometry        = '[gdomain]',
-                    kind            = 'carpost',
-                    model           = self.conf.model,
-                    local           = 'carpost.tar',
-                )
-                print t.prompt, 'tb09 =', tb09
-                print
+            self.sh.title('Toolbox input tb14')
+            tb14 = toolbox.input(
+                role            = 'Nam_adapt',
+                source          = 'namelist_adapt',
+                geometry        = self.conf.vconf,
+                genv            = self.conf.cycle,
+                kind            = 'namelist',
+                model           = self.conf.model,
+                local           = 'ADAPT',
+            )
+            print t.prompt, 'tb14 =', tb14
+            print
 
-                if not self.conf.vconf == 'cor':
+            self.sh.title('Toolbox input tb14')
+            tb14 = toolbox.input(
+                role            = 'Nam_melange',
+                source          = 'namelist_melange_[geometry]',
+                geometry        = self.conf.vconf,
+                genv            = self.conf.cycle,
+                kind            = 'namelist',
+                model           = self.conf.model,
+                local           = 'MELANGE',
+                fatal           = False,
+            )
+            print t.prompt, 'tb14 =', tb14
+            print
 
-                    self.sh.title('Toolbox input tb12')
-                    tb12 = toolbox.input(
-                        role            = 'BlackList',
-                        genv            = self.conf.cycle,
-                        gdomain         = self.conf.vconf,
-                        geometry        = '[gdomain]',
-                        kind            = 'blacklist',
-                        model           = self.conf.model,
-                        local           = 'BLACK',
-                        fatal           = False,
-                    )
-                    print t.prompt, 'tb12 =', tb12
-                    print
+            self.sh.title('Toolbox input tb16')
+            tb16 = toolbox.input(
+                role            = 'Nam_observr',
+                source          = 'namelist_observr_[geometry]',
+                geometry        = self.conf.vconf,
+                genv            = self.conf.cycle,
+                kind            = 'namelist',
+                model           = self.conf.model,
+                local           = 'OBSERVR',
+                fatal           = False,
+            )
+            print t.prompt, 'tb16 =', tb16
+            print
 
-                self.sh.title('Toolbox input tb12')
-                tb12 = toolbox.input(
-                    role            = 'Clim',
-                    genv            = self.conf.cycle,
-                    gdomain         = self.conf.vconf,
-                    geometry        = '[gdomain]',
-                    kind            = 'icrccm',
-                    model           = self.conf.model,
-                    local           = 'icrccm.don',
-                )
-                print t.prompt, 'tb12 =', tb12
-                print
+            self.sh.title('Toolbox input tb16')
+            tb16 = toolbox.input(
+                role            = 'Nam_ebauche',
+                source          = 'namelist_ebauche_[geometry]',
+                geometry        = self.conf.vconf,
+                genv            = self.conf.cycle,
+                kind            = 'namelist',
+                model           = self.conf.model,
+                local           = 'EBAUCHE',
+            )
+            print t.prompt, 'tb16 =', tb16
+            print
 
-                self.sh.title('Toolbox input tb13')
-                tb13 = toolbox.input(
-                    role            = 'Nam_sorties',
-                    source          = 'namelist_sorties_[geometry]',
-                    geometry        = self.conf.vconf,
-                    genv            = self.conf.cycle,
-                    kind            = 'namelist',
-                    model           = self.conf.model,
-                    local           = 'SORTIES',
-                    fatal           = False,
-                )
-                print t.prompt, 'tb13 =', tb13
-                print
+            self.sh.title('Toolbox executable tb17 = tbx1')
+            tb17 = tbx1 = toolbox.executable(
+                role           = 'Binary',
+                genv           = self.conf.cycle,
+                kind           = 'intercep',
+                local          = 'intercep_era40',
+                model          = self.conf.model,
+            )
+            print t.prompt, 'tb17 =', tb17
+            print
 
-                self.sh.title('Toolbox input tb13')
-                tb13 = toolbox.input(
-                    role            = 'Nam_analyse',
-                    source          = 'namelist_analyse_[geometry]',
-                    geometry        = self.conf.vconf,
-                    genv            = self.conf.cycle,
-                    kind            = 'namelist',
-                    model           = self.conf.model,
-                    local           = 'ANALYSE',
-                    fatal           = False,
-                )
-                print t.prompt, 'tb13 =', tb13
-                print
+            self.sh.title('Toolbox executable tb17 = tbx1')
+            tb17 = tbx1 = toolbox.executable(
+                role           = 'Binary',
+                genv           = self.conf.cycle,
+                kind           = 'safrane',
+                local          = 'safrane',
+                model          = self.conf.model,
+            )
+            print t.prompt, 'tb17 =', tb17
+            print
 
-                self.sh.title('Toolbox input tb14')
-                tb14 = toolbox.input(
-                    role            = 'Nam_adapt',
-                    source          = 'namelist_adapt',
-                    geometry        = self.conf.vconf,
-                    genv            = self.conf.cycle,
-                    kind            = 'namelist',
-                    model           = self.conf.model,
-                    local           = 'ADAPT',
-                )
-                print t.prompt, 'tb14 =', tb14
-                print
+            self.sh.title('Toolbox executable tb18 = tbx2')
+            tb18 = tbx2 = toolbox.executable(
+                role           = 'Binary',
+                genv           = self.conf.cycle,
+                kind           = 'syrpluie',
+                local          = 'syrpluie',
+                model          = self.conf.model,
+            )
+            print t.prompt, 'tb18 =', tb18
+            print
 
-                self.sh.title('Toolbox input tb14')
-                tb14 = toolbox.input(
-                    role            = 'Nam_melange',
-                    source          = 'namelist_melange_[geometry]',
-                    geometry        = self.conf.vconf,
-                    genv            = self.conf.cycle,
-                    kind            = 'namelist',
-                    model           = self.conf.model,
-                    local           = 'MELANGE',
-                    fatal           = False,
-                )
-                print t.prompt, 'tb14 =', tb14
-                print
+            self.sh.title('Toolbox executable tb18_b = tbx3')
+            tb18_b = tbx3 = toolbox.executable(
+                role           = 'Binary',
+                genv           = self.conf.cycle,
+                kind           = 'sypluie',
+                local          = 'sypluie',
+                model          = self.conf.model,
+            )
+            print t.prompt, 'tb18_b =', tb18_b
+            print
 
-                self.sh.title('Toolbox input tb16')
-                tb16 = toolbox.input(
-                    role            = 'Nam_observr',
-                    source          = 'namelist_observr_[geometry]',
-                    geometry        = self.conf.vconf,
-                    genv            = self.conf.cycle,
-                    kind            = 'namelist',
-                    model           = self.conf.model,
-                    local           = 'OBSERVR',
-                    fatal           = False,
-                )
-                print t.prompt, 'tb16 =', tb16
-                print
+            self.sh.title('Toolbox executable tb19 = tbx4')
+            tb19 = tbx4 = toolbox.executable(
+                role           = 'Binary',
+                genv           = self.conf.cycle,
+                kind           = 'syvapr',
+                local          = 'syvapr',
+                model          = self.conf.model,
+            )
+            print t.prompt, 'tb19 =', tb19
+            print
 
-                self.sh.title('Toolbox input tb16')
-                tb16 = toolbox.input(
-                    role            = 'Nam_ebauche',
-                    source          = 'namelist_ebauche_[geometry]',
-                    geometry        = self.conf.vconf,
-                    genv            = self.conf.cycle,
-                    kind            = 'namelist',
-                    model           = self.conf.model,
-                    local           = 'EBAUCHE',
-                )
-                print t.prompt, 'tb16 =', tb16
-                print
+            self.sh.title('Toolbox executable tb20 = tbx5')
+            tb20 = tbx5 = toolbox.executable(
+                role           = 'Binary',
+                genv           = self.conf.cycle,
+                kind           = 'syvafi',
+                local          = 'syvafi',
+                model          = self.conf.model,
+            )
+            print t.prompt, 'tb20 =', tb20
+            print
 
-                self.sh.title('Toolbox executable tb17 = tbx1')
-                tb17 = tbx1 = toolbox.executable(
-                    role           = 'Binary',
-                    genv           = self.conf.cycle,
-                    kind           = 'intercep',
-                    local          = 'intercep_era40',
-                    model          = self.conf.model,
-                )
-                print t.prompt, 'tb17 =', tb17
-                print
+            self.sh.title('Toolbox executable tb21 = tbx6')
+            tb21 = tbx6 = toolbox.executable(
+                role           = 'Binary',
+                genv           = self.conf.cycle,
+                kind           = 'sytist',
+                local          = 'sytist',
+                model          = self.conf.model,
+            )
+            print t.prompt, 'tb21 =', tb21
+            print
 
-                self.sh.title('Toolbox executable tb17 = tbx1')
-                tb17 = tbx1 = toolbox.executable(
-                    role           = 'Binary',
-                    genv           = self.conf.cycle,
-                    kind           = 'safrane',
-                    local          = 'safrane',
-                    model          = self.conf.model,
-                )
-                print t.prompt, 'tb17 =', tb17
-                print
+        if 'compute' in self.steps:
 
-                self.sh.title('Toolbox executable tb18 = tbx2')
-                tb18 = tbx2 = toolbox.executable(
-                    role           = 'Binary',
-                    genv           = self.conf.cycle,
-                    kind           = 'syrpluie',
-                    local          = 'syrpluie',
-                    model          = self.conf.model,
-                )
-                print t.prompt, 'tb18 =', tb18
-                print
+            rundate = self.conf.datebegin
 
-                self.sh.title('Toolbox executable tb18_b = tbx3')
-                tb18_b = tbx3 = toolbox.executable(
-                    role           = 'Binary',
-                    genv           = self.conf.cycle,
-                    kind           = 'sypluie',
-                    local          = 'sypluie',
-                    model          = self.conf.model,
-                )
-                print t.prompt, 'tb18_b =', tb18_b
-                print
+            while rundate <= self.conf.dateend:
 
-                self.sh.title('Toolbox executable tb19 = tbx4')
-                tb19 = tbx4 = toolbox.executable(
-                    role           = 'Binary',
-                    genv           = self.conf.cycle,
-                    kind           = 'syvapr',
-                    local          = 'syvapr',
-                    model          = self.conf.model,
-                )
-                print t.prompt, 'tb19 =', tb19
-                print
-
-                self.sh.title('Toolbox executable tb20 = tbx5')
-                tb20 = tbx5 = toolbox.executable(
-                    role           = 'Binary',
-                    genv           = self.conf.cycle,
-                    kind           = 'syvafi',
-                    local          = 'syvafi',
-                    model          = self.conf.model,
-                )
-                print t.prompt, 'tb20 =', tb20
-                print
-
-                self.sh.title('Toolbox executable tb21 = tbx6')
-                tb21 = tbx6 = toolbox.executable(
-                    role           = 'Binary',
-                    genv           = self.conf.cycle,
-                    kind           = 'sytist',
-                    local          = 'sytist',
-                    model          = self.conf.model,
-                )
-                print t.prompt, 'tb21 =', tb21
-                print
-
-            if 'fetch' in self.steps:
-                pass
-
-            if 'compute' in self.steps:
+                datebegin = rundate
+                dateend = rundate + Period(days=1)
 
                 if datebegin <= Date(year=2002, month=7, day=31):
 
@@ -607,11 +566,14 @@ class Safran(S2Mtask):
 
                 self.component_runner(tbalgo6, tbx6)
 
-            if 'backup' in self.steps or 'late-backup' in self.steps:
+        if 'backup' in self.steps or 'late-backup' in self.steps:
 
-                pass
+            rundate = self.conf.datebegin
 
-            if 'late-backup' in self.steps:
+            while rundate <= self.conf.dateend:
+
+                datebegin = rundate
+                dateend = rundate + Period(days=1)
 
                 self.sh.title('Toolbox output tb27')
                 tb27 = toolbox.output(
@@ -627,8 +589,8 @@ class Safran(S2Mtask):
                     geometry        = self.conf.vconf,
                     nativefmt      = 'netcdf',
                     model          = self.conf.model,
-                    datebegin      = self.conf.datebegin.ymd6h,
-                    dateend        = self.conf.dateend.ymd6h,
+                    datebegin      = datebegin.ymd6h,
+                    dateend        = dateend.ymd6h,
                     namespace      = self.conf.cennamespace,
                 ),
                 print t.prompt, 'tb27 =', tb27
@@ -648,8 +610,8 @@ class Safran(S2Mtask):
                     geometry        = self.conf.vconf,
                     nativefmt      = 'netcdf',
                     model          = self.conf.model,
-                    datebegin      = self.conf.datebegin.ymd6h,
-                    dateend        = self.conf.dateend.ymd6h,
+                    datebegin      = datebegin.ymd6h,
+                    dateend        = dateend.ymd6h,
                     namespace      = self.conf.cennamespace,
                 ),
                 print t.prompt, 'tb28 =', tb27
@@ -733,7 +695,7 @@ class Safran(S2Mtask):
                 print t.prompt, 'tb32 =', tb29
                 print
 
-            rundate = rundate + Period(days=1)
+                rundate = dateend
 
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')

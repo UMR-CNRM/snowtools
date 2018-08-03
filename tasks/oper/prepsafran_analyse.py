@@ -9,8 +9,8 @@ logger = footprints.loggers.getLogger(__name__)
 
 import vortex
 from vortex import toolbox
-from vortex.layout.nodes import Driver
-from cen.layout.nodes import S2Mtask
+from vortex.layout.nodes import Driver, Task
+from cen.layout.nodes import S2MTaskMixIn
 
 
 def setup(t, **kw):
@@ -24,7 +24,7 @@ def setup(t, **kw):
     )
 
 
-class PrepSafran(S2Mtask):
+class PrepSafran(Task, S2MTaskMixIn):
 
     def process(self):
         """Preparation of SAFRAN input files"""
