@@ -6,6 +6,7 @@ Useful decorators.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 import time
 
@@ -58,7 +59,7 @@ def disabled(func):  # @UnusedVariable
 def printargs(func):
     """This decorator prints out the arguments passed to a function before calling it."""
     argnames = func.func_code.co_varnames[:func.func_code.co_argcount]
-    fname = func.func_name
+    fname = func.__name__
 
     def echo_func_args(*args, **kw):
         print('> > >', fname, '(', ', '.join(
@@ -74,7 +75,7 @@ def unicode_filter(func):
     def unicode_func(*args, **kw):
         out = func(*args, **kw)
         if isinstance(out, str):
-            out = unicode(out)
+            out = six.text_type(out)
         return out
     return unicode_func
 
@@ -88,7 +89,7 @@ def timelimit(logger, nbsec):
             results = func(*args, **kw)
             tt = time.time() - t0
             if tt >= nbsec:
-                logger.warn('Function %s took %f seconds', func.func_name, tt)
+                logger.warn('Function %s took %f seconds', func.__name__, tt)
             return results
         return timed_func
     return internal_decorator

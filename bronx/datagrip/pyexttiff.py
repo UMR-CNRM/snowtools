@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
-from __future__ import print_function, absolute_import, division  # , unicode_literals
-
 """
 This module aims at reading tiff with private IFDs.
 It uses PIL for image reading.
@@ -11,12 +9,14 @@ This module uses code from pylibtiff (https://pypi.python.org/pypi/libtiff,
 https://code.google.com/p/pylibtiff or https://github.com/hmeine/pylibtiff)
 """
 
-import os
-import StringIO
-import numpy
-import mmap
-import PIL.Image
+from __future__ import print_function, absolute_import, division  # , unicode_literals
 import six
+
+import io
+import mmap
+import numpy
+import os
+import PIL.Image
 
 
 class PyexttiffError(Exception):
@@ -94,8 +94,8 @@ class TiffFile(object):
 
         *method* is the method used to read data:
 
-            * 1: f=open(..., 'rb') ; numpy.frombuffer(f.read(), dtype=numpy.ubyte)
-            * 2: f=open(..., 'rb') ; numpy.ndarray(buffer=mmap(f), dtype=numpy.ubyte)
+            * 1: f=io.open(..., 'rb') ; numpy.frombuffer(f.read(), dtype=numpy.ubyte)
+            * 2: f=io.open(..., 'rb') ; numpy.ndarray(buffer=mmap(f), dtype=numpy.ubyte)
             * 3: same as 2 but with modifications allowed - DANGEROUS
 
         """
@@ -108,14 +108,14 @@ class TiffFile(object):
 
         # Reading file
         if method == 1:
-            with open(filename, 'rb') as f:
+            with io.open(filename, 'rb') as f:
                 self._data = numpy.frombuffer(f.read(), dtype=numpy.ubyte)
         elif method == 2:
-            self._fileHandle = open(filename, 'rb')
+            self._fileHandle = io.open(filename, 'rb')
             mm = mmap.mmap(self._fileHandle.fileno(), 0, prot=mmap.PROT_READ)
             self._data = numpy.ndarray(shape=(mm.size(),), buffer=mm, dtype=numpy.ubyte)
         elif method == 3:
-            self._fileHandle = open(filename, 'r+b')
+            self._fileHandle = io.open(filename, 'r+b')
             mm = mmap.mmap(self._fileHandle.fileno(), 0)
             self._data = numpy.ndarray(shape=(mm.size(),), buffer=mm, dtype=numpy.ubyte)
         else:
@@ -217,7 +217,7 @@ class TiffFile(object):
         """
         Returns the stringio representeing the buffer.
         """
-        return StringIO.StringIO(self.get_buffer())
+        return six.StringIO(self.get_buffer())
 
     def get_PILImage(self):
         """

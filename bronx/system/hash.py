@@ -6,9 +6,10 @@ Interface to the Python's :mod:`hashlib` module that generates hashes on files, 
 """
 
 from __future__ import print_function, division, absolute_import, unicode_literals
-
 import six
+
 import hashlib
+import io
 import os
 
 
@@ -67,13 +68,13 @@ class HashAdapter(object):
         """
         if isinstance(input_file, six.string_types):
             # input_file should be a file path
-            with open(input_file, 'rb') as i_fh:
+            with io.open(input_file, 'rb') as i_fh:
                 h = self._hinstance_from_fh(i_fh)
         elif hasattr(input_file, 'seek') and hasattr(input_file, 'read'):
             # input_file should be a file like object
             input_file.seek(0)
             h = self._hinstance_from_fh(input_file)
-        return h.hexdigest()
+        return six.text_type(h.hexdigest())
 
     def file2hash_fh(self, input_file):
         """Returns a File-like object that contains a hash string
@@ -91,7 +92,7 @@ class HashAdapter(object):
         :param input_file: Path to a file or opened File-like object
         :param output_file: Path to the output file
         """
-        with open(output_file, 'w') as o_fh:
+        with io.open(output_file, 'w') as o_fh:
             o_fh.write(self.file2hash(input_file))
         return output_file
 
@@ -114,7 +115,7 @@ class HashAdapter(object):
         # Get the reference hash string
         if isinstance(reference, six.string_types):
             if os.path.isfile(reference):
-                with open(reference, 'r') as i_fh:
+                with io.open(reference, 'r') as i_fh:
                     hashref = self._read_hashline(i_fh)
             else:
                 hashref = reference

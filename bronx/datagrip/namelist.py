@@ -18,14 +18,15 @@ This module contains:
 Inital author: Joris Picot (2010-12-08 / CERFACS)
 """
 
-# TODO: Activate unicode_literals but check that it still works with Olive
-# experiments and when sending emails.
-from __future__ import print_function, absolute_import, division  # , unicode_literals
+from __future__ import print_function, absolute_import, division, unicode_literals
+import six
 
 import collections
 import copy
 from decimal import Decimal
+import io
 import re
+
 import six
 import numpy
 
@@ -195,8 +196,8 @@ class LiteralParser(object):
         >>> x = lp.parse('.true.')
         >>> print(x)
         True
-        >>> type(x)
-        <type 'bool'>
+        >>> type(x).__name__
+        'bool'
         >>> x = lp.parse('2.')
         >>> print(x)
         2
@@ -205,33 +206,33 @@ class LiteralParser(object):
         >>> x = lp.parse('Z"1F"')
         >>> print(x)
         31
-        >>> type(x)
-        <type 'int'>
+        >>> type(x).__name__
+        'int'
 
         The reverse operation could be achieved through a specific encodingfunction:
 
         >>> x = 2
-        >>> lp.encode_real(x)
-        '2.'
-        >>> lp.encode_integer(x)
-        '2'
-        >>> lp.encode_complex(x)
-        '(2.,0.)'
-        >>> lp.encode_logical(x)
-        '.TRUE.'
+        >>> print(lp.encode_real(x))
+        2.
+        >>> print(lp.encode_integer(x))
+        2
+        >>> print(lp.encode_complex(x))
+        (2.,0.)
+        >>> print(lp.encode_logical(x))
+        .TRUE.
 
         It is possible to rely on the internal python type to decide which
         is the appropriate encoding through the generic :meth:`encode` method:
 
         >>> x = 2
-        >>> lp.encode(x)
-        '2'
+        >>> print(lp.encode(x))
+        2
         >>> z = 1 - 2j
-        >>> lp.encode(z)
-        '(1.,-2.)'
+        >>> print(lp.encode(z))
+        (1.,-2.)
         >>> x = 2.
-        >>> lp.encode(x)
-        '2.'
+        >>> print(lp.encode(x))
+        2.
 
     """
     def __init__(self,
@@ -389,12 +390,12 @@ class LiteralParser(object):
     @staticmethod
     def encode_integer(value):
         """Returns the string form of the integer ``value``."""
-        return str(value)
+        return six.text_type(value)
 
     @staticmethod
     def encode_boz(value):
         """Returns the string form of the BOZ ``value``."""
-        return str(value)
+        return six.text_type(value)
 
     @staticmethod
     def encode_real(value):
@@ -454,7 +455,7 @@ class LiteralParser(object):
             raise ValueError("Type %s cannot be FORTRAN encoded" % type(value))
 
 
-class NamelistBlock(object):
+class NamelistBlock(collections.MutableMapping):
     """
     This class represent a FORTRAN namelist block.
 
@@ -490,11 +491,11 @@ class NamelistBlock(object):
         Entry B: Value is 2.0
         Entry TEXT: Value is MyBad
         >>> for k, v in nb1.items():
-        ...     print('Entry {:s}: Value is {!s}'.format(k, v))
+        ...     print('Entry {:s}: Value is {!s}'.format(k, v))  # doctest: +ELLIPSIS
         ...
         Entry A: Value is [1]
         Entry B: Value is [2.0]
-        Entry TEXT: Value is ['MyBad']
+        Entry TEXT: Value is [...'MyBad']
         >>> del nb1.B
 
         An exemple of namelist blocks merge:
@@ -529,10 +530,10 @@ class NamelistBlock(object):
 
     """
 
-    _RE_FREEMACRO = re.compile(r'^' + _UNDERSCORE + r'{2}(.*)' + _UNDERSCORE + r'{2}$')
+    _RE_FREEMACRO = re.compile(r'^' + _FREEMACRONAME + r'$')
 
     def __init__(self, name='UNKNOWN'):
-        self.__dict__['_name'] = name
+        self.__dict__['_name'] = name.upper()
         self.__dict__['_keys'] = list()
         self.__dict__['_pool'] = dict()
         self.__dict__['_mods'] = set()
@@ -552,8 +553,8 @@ class NamelistBlock(object):
         self.__dict__.update(state)
 
     def set_name(self, name):
-        """Change the namelist block anme."""
-        self.__dict__['_name'] = name
+        """Change the namelist block name."""
+        self.__dict__['_name'] = name.upper()
 
     @property
     def name(self):
@@ -582,6 +583,12 @@ class NamelistBlock(object):
         varname = varname.upper()
         if not isinstance(value, list):
             value = [value, ]
+        # Automatically add free macros to the macro list
+        for v in [self._RE_FREEMACRO.match(v) for v in value
+                  if isinstance(v, six.string_types)]:
+            if v and v.group('NAME') not in self.macros():
+                self.addmacro(v.group('NAME'))
+        # Process the given value...
         self._pool[varname] = value
         if varname not in self._keys:
             if index is None:
@@ -731,15 +738,16 @@ class NamelistBlock(object):
         self.addmacro(macro, value)
         self._declared_subs.add(macro)
 
-    def _possible_macroname(self, item):
-        """Find wether *item* is a macro or not."""
+    def possible_macroname(self, item):
+        """Find whether *item* is a macro or not."""
         if item in self._declared_subs:
             return item
-        elif isinstance(item, six.string_types) and self._RE_FREEMACRO.match(item):
-            itemized = self._RE_FREEMACRO.sub(r'\1', item)
-            if itemized in self._subs:
-                return itemized
-        return None
+        elif isinstance(item, six.string_types):
+            fm_match = self._RE_FREEMACRO.match(item)
+            if fm_match:
+                return fm_match.group('NAME') if fm_match else None
+        else:
+            return None
 
     def nice(self, item, literal=None):
         """Nice encoded value of the item, possibly substitute with macros."""
@@ -758,14 +766,22 @@ class NamelistBlock(object):
                 itemli = itemli[1:]
         else:
             itemli = item
-        macroname = self._possible_macroname(itemli)
+        macroname = self.possible_macroname(itemli)
         if macroname is not None:
-            if self._subs[macroname] is None:
+            if self._subs.get(macroname, None) is None:
                 return item
             else:
-                return literal.encode(self._subs[macroname])
+                macrovalue = self._subs[macroname]
+                if isinstance(macrovalue, (list, tuple)):
+                    return ','.join([literal.encode(value) for value in macrovalue])
+                else:
+                    return literal.encode(self._subs[macroname])
         else:
             return literal.encode(item)
+
+    def dumps_values(self, key, literal=None):
+        """Nice encoded values (incl. list of)."""
+        return ','.join([self.nice(value, literal) for value in self._pool[key]])
 
     def dumps(self, literal=None, sorting=NO_SORTING):
         """
@@ -776,7 +792,7 @@ class NamelistBlock(object):
                         :py:data:`SECOND_ORDER_SORTING` (sort only within indexes or attributes
                         of the same variable: usefull with arrays).
         """
-        namout = " &{0:s}\n".format(self.name.upper())
+        namout = " &{0:s}\n".format(self.name)
         if literal is None:
             if self._literal is None:
                 self.__dict__['_literal'] = LiteralParser()
@@ -819,8 +835,8 @@ class NamelistBlock(object):
         else:
             keylist = self._keys
         for key in keylist:
-            value_strings = [self.nice(value, literal) for value in self._pool[key]]
-            namout += '   {0:s}={1:s},\n'.format(key, ','.join(value_strings))
+            value_strings = self.dumps_values(key, literal=literal)
+            namout += '   {0:s}={1:s},\n'.format(key, value_strings)
         return namout + " /\n"
 
     def merge(self, delta):
@@ -907,8 +923,8 @@ class NamelistSet(collections.MutableMapping):
 
     def __init__(self, blocks_set=None):
         """
-        :param list blocks_set: A list of :class:`NamelistBlock` objects (if
-                                missing, an empty list is assumed).
+        :param list[NamelistBlock] blocks_set: A list of :class:`NamelistBlock` objects (if
+                                               missing, an empty list is assumed).
         """
         # For later use
         self._automkblock = 1
@@ -929,7 +945,7 @@ class NamelistSet(collections.MutableMapping):
             self._mapping_dict[nb.name] = nb
 
     def __contains__(self, key):
-        return key in self._mapping_dict
+        return key.upper() in self._mapping_dict
 
     def __len__(self):
         return len(self._mapping_dict)
@@ -939,10 +955,11 @@ class NamelistSet(collections.MutableMapping):
             yield nbk
 
     def __getitem__(self, key):
-        return self._mapping_dict[key]
+        return self._mapping_dict[key.upper()]
 
     def __setitem__(self, key, value):
         assert isinstance(value, NamelistBlock)
+        key = key.upper()
         if value.name != key:
             # To be safe...
             value = copy.deepcopy(value)
@@ -950,7 +967,7 @@ class NamelistSet(collections.MutableMapping):
         self._mapping_dict[key] = value
 
     def __delitem__(self, key):
-        del self._mapping_dict[key]
+        del self._mapping_dict[key.upper()]
 
     def add(self, namblock):
         """Add a namelist block object to the present namelist set.
@@ -1196,7 +1213,6 @@ class NamelistParser(object):
 
             elif self.freemacro_eol.match(source):
                 rmatch = self.freemacro_eol.match(source)
-                namelist.addmacro(rmatch.group('NAME'), None)
                 values.append(rmatch.group(0))
                 source = self._namelist_clean(source[len(rmatch.group(0)):])
                 if self.comma.match(source):
@@ -1268,9 +1284,8 @@ class NamelistParser(object):
         if isinstance(obj, six.string_types):
             if not self.block.search(obj):
                 obj = obj.strip()
-                iod = open(obj, 'r')
-                obj = iod.read()
-                iod.close()
+                with io.open(obj, 'r') as iod:
+                    obj = iod.read()
             return self._namelist_parse(obj)
 
         elif hasattr(obj, 'seek') and hasattr(obj, 'read'):

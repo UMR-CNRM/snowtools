@@ -11,13 +11,15 @@ the /proc/cpuinfo virtual file.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 import abc
 from collections import namedtuple, defaultdict
 from functools import partial
+import io
 import locale
 import re
-import six
+
 import os
 import subprocess
 
@@ -190,7 +192,7 @@ class LinuxCpusInfo(CpusInfo):
             self._cpus = dict()
             cpu_n = None
             cpu = None
-            with open(self._INFOFILE) as infofd:
+            with io.open(self._INFOFILE, 'r') as infofd:
                 for line in infofd:
                     # Detect the begining of a new CPU description
                     cpumatch = self._CPU_RE.match(line)
@@ -228,7 +230,7 @@ def get_affinity(pid=None):
         raise CpusToolUnavailableError('No {:s} command on this system.'.format(AFFINITY_CMD))
     loc_cmd = locale.getdefaultlocale() or ('unknown', 'ascii')
     uni_out = t_out.decode(loc_cmd[1], 'replace')  # Unicode stuff...
-    binproc = int(_re_get_out.match(uni_out).group('binproc'), 16)  # It's hexadeciaml
+    binproc = int(_re_get_out.match(uni_out).group('binproc'), 16)  # It's hexadecimal
     binlist = list()
     while binproc:
         binlist.append(binproc % 2)

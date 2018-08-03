@@ -8,14 +8,15 @@ See the :class:`DataStore` class docstring for an example.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-
-#: No automatic export
-__all__ = []
+import six
 
 import collections
 import functools
-import six
+import io
 import pickle
+
+#: No automatic export
+__all__ = []
 
 
 class _DataStoreEntryKey(object):
@@ -256,7 +257,7 @@ class DataStore(object):
             at the object creation time is used).
         """
         thefile = dumpfile or self._pickle_dumpfile
-        with open(thefile, 'wb') as pfh:
+        with io.open(thefile, 'wb') as pfh:
             pickle.dump((self._store, self._lock), pfh,
                         protocol=self._PICKLE_PROTOCOL)
 
@@ -268,7 +269,7 @@ class DataStore(object):
         """
         # Get the pickle file contents
         thefile = dumpfile or self._pickle_dumpfile
-        with open(thefile, 'rb') as pfh:
+        with io.open(thefile, 'rb') as pfh:
             unpickled = pickle.load(pfh)
         # Build the new store dictionary
         newstore = dict()

@@ -6,11 +6,11 @@ Meteo France specific system related tools.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+from six import StringIO
 
 import ftplib
 import netrc
 import re
-from six import StringIO
 import uuid
 
 import footprints.loggers

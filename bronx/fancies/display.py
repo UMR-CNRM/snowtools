@@ -6,8 +6,9 @@ Various tools designed for interactive scripts.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-
 import six
+
+import collections
 import sys
 
 #: No automatic export
@@ -22,7 +23,7 @@ def printstatus(step, end, refresh_freq=1):
     :param end: the final loop step
     :param refresh_freq: the frequency in % at which reprinting status.
     """
-    status = step * 100. / end
+    status = int(step * 100. / end)
     if status % refresh_freq == 0:
         sys.stdout.write('{:>{width}}%'.format(int(status), width=3))
         sys.stdout.flush()
@@ -44,9 +45,9 @@ def query_yes_no_quit(question, default="yes"):
 
     :example: Ask something to someone...
 
-        >>> answer = query_yes_no_quit('Do you want to continue ?', default='yes')
+        >>> answer = query_yes_no_quit('Do you want to continue ?', default='yes') # doctest: +SKIP
         Do you want to continue ? [Y/n/q] Y
-        >>> answer
+        >>> answer # doctest: +SKIP
         u'yes'
 
     from: http://code.activestate.com/recipes/577097/
@@ -76,3 +77,69 @@ def query_yes_no_quit(question, default="yes"):
             return valid[choice]
         else:
             sys.stdout.write("Please respond with 'yes', 'no' or 'quit'.\n")
+
+
+def print_tablelike(fmt, *args, **kwargs):
+    """Left align all strings in order to have a well aligned output.
+
+    :param str fmt: The format string used for each of the output lines
+    :param str output_callback: The function to call for each output line (default: ``print``)
+    :param str preserve_last: If *True* and if the last column is of string type,
+                              leave it untouched (i.e. unaligned) (default: ``True``)
+
+    Simple examples::
+
+        >>> print_tablelike('{:s} = {:d}', ['a', 'bcde', 'f'], [1, 2, 3])
+        a    = 1
+        bcde = 2
+        f    = 3
+
+    If one wants to write somewhere else::
+
+        >>> outlist = list()
+        >>> print_tablelike('{:s} = {:d}', ['a', 'bcde', 'f'], [1, 2, 3], output_callback=outlist.append)
+        >>> for l in outlist:
+        ...     print(l)
+        a    = 1
+        bcde = 2
+        f    = 3
+
+    By default, if the last column consists of string, it is un-aligned::
+
+        >>> print_tablelike('{:s} = << {:s} >>', ['a', 'bcde', 'f'], ['a', 'bcde', 'f'])
+        a    = << a >>
+        bcde = << bcde >>
+        f    = << f >>
+
+    If one wants to align it::
+
+        >>> print_tablelike('{:s} = << {:s} >>', ['a', 'bcde', 'f'], ['a', 'bcde', 'f'], preserve_last=False)
+        a    = << a    >>
+        bcde = << bcde >>
+        f    = << f    >>
+    """
+    cb = kwargs.pop('output_callback', print)
+    plast = kwargs.pop('preserve_last', True)
+    datasize = None
+    newargs = list()
+    for i, arg in enumerate(args):
+        assert issubclass(type(arg), collections.Iterable), \
+            "Each of the positional arguments must be iterable."
+        assert issubclass(type(arg), collections.Sized), \
+            "Each of the positional arguments must have a query-able size."
+        if datasize is None:
+            datasize = len(arg)
+        else:
+            assert len(arg) == datasize, "Size inconsistency between arguments"
+        if all([isinstance(s, six.string_types) for s in arg]) and (not plast or i < len(args) - 1):
+            maxlen = max([len(s) for s in arg])
+            newargs.append([("{:<" + str(maxlen) + "s}").format(s) for s in arg])
+        else:
+            newargs.append(arg)
+    for args in zip(* newargs):
+        cb(fmt.format(* args))
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
