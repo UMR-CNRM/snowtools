@@ -117,7 +117,7 @@ class forcinput_tomerge:
                             var[:, spatial_index[i][0]:spatial_index[i][1] + 1] = var_array[:, :]
 
             else:
-                var[:] = unitfile.read(varname)
+                var[:] = unitfile.read(varname, keepfillvalue=True)[:]
 
         for i, unitfile in enumerate(init_forcing_file):
             direct_array, diffus_array = self.compute_solar_radiations(time, savevar, i)
