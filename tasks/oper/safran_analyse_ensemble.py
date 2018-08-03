@@ -9,8 +9,8 @@ logger = footprints.loggers.getLogger(__name__)
 
 import vortex
 from vortex import toolbox
-from vortex.layout.nodes import Driver
-from cen.layout.nodes import S2Mtask
+from vortex.layout.nodes import Driver, Task
+from cen.layout.nodes import S2MTaskMixIn
 
 
 def setup(t, **kw):
@@ -24,7 +24,7 @@ def setup(t, **kw):
     )
 
 
-class Safran(S2Mtask):
+class Safran(Task, S2MTaskMixIn):
 
     def process(self):
         """Safran analysis"""
@@ -178,7 +178,8 @@ class Safran(S2Mtask):
                 geometry        = '[gdomain]',
                 kind            = 'listeo',
                 model           = self.conf.model,
-                local           = 'listeo' if self.conf.vconf == 'alp' else 'lysteo',
+                # local           = 'listeo' if self.conf.vconf == 'alp' else 'lysteo',
+                local           = 'listeo',
             )
             print t.prompt, 'tb09 =', tb09
             print
@@ -411,7 +412,8 @@ class Safran(S2Mtask):
                 geometry        = self.conf.vconf,
                 cutoff         = 'production',
                 date           = ['{0:s}/+PT{1:s}H'.format(datebegin.ymd6h, str(24 * i)) for i in range(ndays)],
-                cumul          = footprints.util.rangex('0-24-3'),
+                cumul          = footprints.util.rangex(self.conf.ana_terms),
+                # cumul          = footprints.util.rangex('0-24-3'),
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',

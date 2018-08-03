@@ -9,8 +9,8 @@ logger = footprints.loggers.getLogger(__name__)
 
 import vortex
 from vortex import toolbox
-from vortex.layout.nodes import Driver
-from cen.layout.nodes import S2Mtask
+from vortex.layout.nodes import Driver, Task
+from cen.layout.nodes import S2MTaskMixIn
 
 
 def setup(t, **kw):
@@ -24,7 +24,7 @@ def setup(t, **kw):
     )
 
 
-class PrepSafran(S2Mtask):
+class PrepSafran(Task, S2MTaskMixIn):
 
     def refill(self):
 
@@ -53,8 +53,8 @@ class PrepSafran(S2Mtask):
                 local          = 'mb035/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[0:7],
-                # namespace      = 'oper.inline.fr',
-                namespace      = 'oper.multi.fr',
+                namespace      = 'oper.inline.fr',
+                #namespace      = 'oper.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
                 model          = '[vapp]',
@@ -76,8 +76,8 @@ class PrepSafran(S2Mtask):
                 local          = 'mb036/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[7:14],
-                # namespace      = 'oper.inline.fr',
-                namespace      = 'oper.multi.fr',
+                namespace      = 'oper.inline.fr',
+                #namespace      = 'oper.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
                 model          = '[vapp]',
@@ -121,8 +121,8 @@ class PrepSafran(S2Mtask):
                 local          = 'mb038/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[21:27],
-                # namespace      = 'oper.inline.fr',
-                namespace      = 'oper.multi.fr',
+                namespace      = 'oper.inline.fr',
+                #namespace      = 'oper.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
                 model          = '[vapp]',
@@ -144,8 +144,8 @@ class PrepSafran(S2Mtask):
                 local          = 'mb039/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[27:33],
-                # namespace      = 'oper.inline.fr',
-                namespace      = 'oper.multi.fr',
+                namespace      = 'oper.inline.fr',
+                #namespace      = 'oper.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
                 model          = '[vapp]',
@@ -184,7 +184,7 @@ class PrepSafran(S2Mtask):
             print
 
             self.sh.title('Toolbox input tb02_b')
-            tbpearp = toolbox.input(
+            tbpearp.extend(toolbox.input(
                 role           = 'Gridpoint',
                 block          = 'forecast',
                 suite          = 'oper',
@@ -203,7 +203,7 @@ class PrepSafran(S2Mtask):
                 vapp           = self.conf.source_app,
                 vconf          = self.conf.eps_conf,
                 fatal          = False,
-            )
+            ))
             print t.prompt, 'tb02 =', tbpearp
             print
 
@@ -245,7 +245,7 @@ class PrepSafran(S2Mtask):
 
         if 'late-backup' in self.steps:
 
-            self.sh.title('Toolbox output tb05')
+            self.sh.title('Toolbox output tb05a')
             tb05 = toolbox.output(
                 role           = 'Ebauche',
                 local          = 'mb035/P[date:yymdh]_[cumul:hour]_[vconf]_production',
@@ -254,7 +254,7 @@ class PrepSafran(S2Mtask):
                 geometry       = self.conf.domains,
                 vconf          = '[geometry::area]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[2:14],
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[0:7],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -263,7 +263,7 @@ class PrepSafran(S2Mtask):
                 namespace      = self.conf.namespace,
                 fatal          = False,
             ),
-            print t.prompt, 'tb05 =', tb05
+            print t.prompt, 'tb05a =', tb05
             print
 
             self.sh.title('Toolbox output tb05b')
@@ -275,7 +275,7 @@ class PrepSafran(S2Mtask):
                 geometry       = self.conf.domains,
                 vconf          = '[geometry::area]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[15:27],
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[7:14],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -287,7 +287,70 @@ class PrepSafran(S2Mtask):
             print t.prompt, 'tb05b =', tb05b
             print
 
-            self.sh.title('Toolbox output tb06')
+            self.sh.title('Toolbox output tb05c')
+            tb05 = toolbox.output(
+                role           = 'Ebauche',
+                local          = 'mb037/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                experiment     = self.conf.xpid,
+                block          = self.conf.block,
+                geometry       = self.conf.domains,
+                vconf          = '[geometry::area]',
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[14:21],
+                nativefmt      = 'ascii',
+                kind           = 'guess',
+                model          = 'safran',
+                source_app     = self.conf.source_app,
+                source_conf    = self.conf.deterministic_conf,
+                namespace      = self.conf.namespace,
+                fatal          = False,
+            ),
+            print t.prompt, 'tb05c =', tb05
+            print
+
+            self.sh.title('Toolbox output tb05d')
+            tb05b = toolbox.output(
+                role           = 'Ebauche',
+                local          = 'mb038/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                experiment     = self.conf.xpid,
+                block          = self.conf.block,
+                geometry       = self.conf.domains,
+                vconf          = '[geometry::area]',
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[21:27],
+                nativefmt      = 'ascii',
+                kind           = 'guess',
+                model          = 'safran',
+                source_app     = self.conf.source_app,
+                source_conf    = self.conf.deterministic_conf,
+                namespace      = self.conf.namespace,
+                fatal          = False,
+            ),
+            print t.prompt, 'tb05d =', tb05b
+            print
+
+            self.sh.title('Toolbox output tb05e')
+            tb05b = toolbox.output(
+                role           = 'Ebauche',
+                local          = 'mb039/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                experiment     = self.conf.xpid,
+                block          = self.conf.block,
+                geometry       = self.conf.domains,
+                vconf          = '[geometry::area]',
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[27:33],
+                nativefmt      = 'ascii',
+                kind           = 'guess',
+                model          = 'safran',
+                source_app     = self.conf.source_app,
+                source_conf    = self.conf.deterministic_conf,
+                namespace      = self.conf.namespace,
+                fatal          = False,
+            ),
+            print t.prompt, 'tb05e =', tb05b
+            print
+
+            self.sh.title('Toolbox output tb06a')
             tb06 = toolbox.output(
                 role           = 'Ebauche',
                 local          = 'mb[member]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
@@ -296,7 +359,7 @@ class PrepSafran(S2Mtask):
                 geometry       = self.conf.domains,
                 vconf          = '[geometry::area]',
                 date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[4:28],
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[2:17],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -306,8 +369,31 @@ class PrepSafran(S2Mtask):
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 fatal          = False,
             ),
-            print t.prompt, 'tb06 =', tb06
+            print t.prompt, 'tb06a =', tb06
             print
+
+            self.sh.title('Toolbox output tb06b')
+            tb06 = toolbox.output(
+                role           = 'Ebauche',
+                local          = 'mb[member]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                experiment     = self.conf.xpid,
+                block          = self.conf.block,
+                geometry       = self.conf.domains,
+                vconf          = '[geometry::area]',
+                date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[18:35:2],
+                nativefmt      = 'ascii',
+                kind           = 'guess',
+                model          = 'safran',
+                source_app     = self.conf.source_app,
+                source_conf    = self.conf.eps_conf,
+                namespace      = self.conf.namespace,
+                member         = footprints.util.rangex(self.conf.pearp_members),
+                fatal          = False,
+            ),
+            print t.prompt, 'tb06b =', tb06
+            print
+
 
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')

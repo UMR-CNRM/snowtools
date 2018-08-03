@@ -9,8 +9,8 @@ logger = footprints.loggers.getLogger(__name__)
 
 import vortex
 from vortex import toolbox
-from vortex.layout.nodes import Driver
-from cen.layout.nodes import S2Mtask
+from vortex.layout.nodes import Driver, Task
+from cen.layout.nodes import S2MTaskMixIn
 
 
 def setup(t, **kw):
@@ -24,7 +24,7 @@ def setup(t, **kw):
     )
 
 
-class Safran(S2Mtask):
+class Safran(Task, S2MTaskMixIn):
 
     def process(self):
         """Safran"""
@@ -166,7 +166,7 @@ class Safran(S2Mtask):
                 genv            = self.conf.cycle,
                 kind            = 'listeo',
                 model           = self.conf.model,
-                local           = 'listeo' if self.conf.vconf == 'alp' else 'lysteo',
+                local           = 'listeo',
                 geometry        = self.conf.vconf,
             )
             print t.prompt, 'tb05 =', tb05

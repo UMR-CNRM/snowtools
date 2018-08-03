@@ -8,8 +8,8 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex import toolbox
-from vortex.layout.nodes import Driver
-from cen.layout.nodes import S2Mtask
+from vortex.layout.nodes import Driver, Task
+from cen.layout.nodes import S2MTaskMixIn
 
 from bronx.stdtypes.date import Period
 
@@ -25,7 +25,7 @@ def setup(t, **kw):
     )
 
 
-class PrepSafran(S2Mtask):
+class PrepSafran(Task, S2MTaskMixIn):
 
     def refill(self):
 
@@ -50,7 +50,7 @@ class PrepSafran(S2Mtask):
                 tbarp.extend(toolbox.input(
                     role           = 'Gridpoint',
                     format         = 'grib',
-                    geometry       = self.conf.cpl_geometry,
+                    geometry       = self.conf.arpege_geometry,
                     kind           = 'gridpoint',
                     suite          = 'oper',
                     cutoff         = 'assimilation',
@@ -173,7 +173,7 @@ class PrepSafran(S2Mtask):
                 tb05a = toolbox.output(
                     role           = 'Ebauche',
                     #local          = 'mb[date::day]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
-                    local          = 'mb0[date::dd]/ARPEGE[date::ymdh]_[cumul::hour]',
+                    local          = 'mb0[date::dd]/P[date::yymdh]_[cumul::hour]_[vconf]_assimilation',
                     geometry       = self.conf.domains,
                     vconf          = '[geometry::area]',
                     cutoff         = 'assimilation',
@@ -186,7 +186,8 @@ class PrepSafran(S2Mtask):
                     model          = 'safran',
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
-                    namespace      = self.conf.namespace,
+                    namespace      = 's2m.archive.fr',
+                    # namespace      = self.conf.namespace,
                 ),
                 print t.prompt, 'tb05a =', tb05a
                 print
