@@ -29,7 +29,7 @@ class surfexrun(object):
     """Class for any SURFEX run"""
 
     def __init__(self, datebegin, dateend, forcingpath, diroutput,
-                 namelist=os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam',
+                 namelist=os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8_NEW_OUTPUTS_NC.nam',
                  execdir=".",
                  threshold=-999, dirwork=None, datespinup=None, geolist=[], addmask=False):
 
