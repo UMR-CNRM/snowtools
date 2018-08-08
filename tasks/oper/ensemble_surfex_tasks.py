@@ -107,13 +107,13 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb03')
             tb03 = toolbox.input(
                 role           = 'SnowpackInit',
-                local          = 'PREP.nc',
+                local          = 'mb[member]/PREP.nc',
                 block          = 'prep',
                 experiment     = self.conf.xpid,
                 geometry       = self.conf.geometry,
                 datevalidity   = datebegin,
                 date           = rundate_prep,
-                member         = 35,
+                member         = members,
                 intent         = 'inout',
                 nativefmt      = 'netcdf',
                 kind           = 'PREP',
