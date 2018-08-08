@@ -132,7 +132,7 @@ def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"
 def update_physicaloptions(NamelistObject, **kwargs):
 
     for key, value in six.iteritems(kwargs):
-        if key.upper() in ["CSNOWDRIFT", "LSNOWDRIFT_SUBLIM", "LSNOW_ABS_ZENITH", "CSNOWMETAMO", "CSNOWRAD", "CSNOWFALL", "CSNOWCOND", "CSNOWHOLD", "CSNOWCOMP", "CSNOWZREF"]:
+        if key.upper() in ["CSNOWDRIFT", "LSNOWDRIFT_SUBLIM", "LSNOW_ABS_ZENITH", "CSNOWMETAMO", "CSNOWRAD", "CSNOWFALL", "CSNOWCOND", "CSNOWHOLD", "CSNOWCOMP", "CSNOWZREF", "LSNOWSYTRON"]:
             setattr(NamelistObject["NAM_ISBA_SNOWn"], key.upper(), value)
 
     return NamelistObject

@@ -176,6 +176,17 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
                 local           = 'OPTIONS.nam',
             )
 
+            self.sh.title('Toolbox input tb07')
+
+            tb07 = toolbox.input(
+                role            = 'Nam_surfex',
+                source          = 'OPTIONS_sytron.nam',
+                genv            = 'uenv:cen.01@CONST_CEN',
+                kind            = 'namelist',
+                model           = 'surfex',
+                local           = 'OPTIONS_sytron.nam',
+            )
+
             print(t.prompt, 'tb07 =', tb07)
             print()
 
@@ -198,7 +209,7 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
 
             tb09 = tbalgo1 = toolbox.algo(
                 engine         = 'blind',
-                kind           = "ensmeteo",
+                kind           = "ensmeteo+sytron",
                 datebegin      = datebegin,
                 dateend        = dateend,
                 dateinit       = datebegin,
