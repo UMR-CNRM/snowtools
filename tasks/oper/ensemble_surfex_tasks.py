@@ -7,7 +7,7 @@ Created on 7 nov. 2017
 from vortex.layout.nodes import Driver, Task
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
-from bronx.stdtypes.date import daterange, yesterday, tomorrow
+from bronx.stdtypes.date import daterange, yesterday, tomorrow, Period
 import footprints
 
 
@@ -33,7 +33,7 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
 
         datebegin, dateend = self.get_period()
         rundate_forcing = self.get_rundate_forcing()
-        rundate_prep = self.get_rundate_prep()
+        rundate_prep, alternate_rundate_prep = self.get_rundate_prep()
         list_geometry = self.get_list_geometry()
         source_safran, block_safran = self.get_source_safran()
 
@@ -119,11 +119,36 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
                 kind           = 'PREP',
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
-                fatal          = True,
+                fatal          = False,
                 cutoff         = 'assimilation'
             ),
             print(t.prompt, 'tb03 =', tb03)
             print()
+
+            for i, alternate_prep in enumerate(alternate_rundate_prep):
+
+                fatal = i == len(alternate_rundate_prep) - 1
+
+                self.sh.title('Toolbox input tb03b')
+                tb03b = toolbox.input(
+                    alternate      = 'SnowpackInit',
+                    local          = 'mb[member]/PREP.nc',
+                    block          = 'prep',
+                    experiment     = self.conf.xpid,
+                    geometry       = self.conf.geometry,
+                    datevalidity   = datebegin,
+                    date           = alternate_prep[0],
+                    member         = members,
+                    intent         = 'inout',
+                    nativefmt      = 'netcdf',
+                    kind           = 'PREP',
+                    model          = 'surfex',
+                    namespace      = 'vortex.multi.fr',
+                    fatal          = fatal,
+                    cutoff         = alternate_prep[1]
+                ),
+                print(t.prompt, 'tb03b =', tb03b)
+                print()
 
             self.sh.title('Toolbox input tb04')
             tb04 = toolbox.input(
