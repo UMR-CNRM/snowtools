@@ -36,34 +36,34 @@ class Safran(Task, S2MTaskMixIn):
 
         if 'early-fetch' in self.steps:
 
-            if self.conf.datebegin < Date(year=2002, month=8, day=1):
-
-                # Avant 2002 on utilise des guess issus de era40
-                self.sh.title('Toolbox input tb01')
-                tb07_a = toolbox.input(
-                    role           = 'Ebauche',
-                    # local          = 'mb035/P[date::yymdh]_[cumul:hour]',
-                    local          = 'cep_[date:nivologyseason]',
-                    remote         = '/home/vernaym/s2m/[local]',
-                    hostname       = 'hendrix.meteo.fr',
-                    unknownflow    = True,
-                    date           = self.conf.datebegin.ymdh,
-                    tube           = 'ftp',
-                    username       = 'vernaym',
-                    kind           = 'guess',
-                    model          = 'safran',
-                    cutoff         = 'assimilation',
-                ),
-                print t.prompt, 'tb17_a =', tb07_a
-                print
-
             while rundate <= self.conf.dateend:
 
                 datebegin = rundate
                 dateend = rundate + Period(days=1)
 
+                if datebegin < Date(year=2002, month=8, day=1):
+
+                    # Avant 2002 on utilise des guess issus de era40
+                    self.sh.title('Toolbox input tb01')
+                    tb07_a = toolbox.input(
+                        role           = 'Ebauche',
+                        # local          = 'mb035/P[date::yymdh]_[cumul:hour]',
+                        local          = 'cep_[date:nivologyseason]',
+                        remote         = '/home/vernaym/s2m/[local]',
+                        hostname       = 'hendrix.meteo.fr',
+                        unknownflow    = True,
+                        date           = self.conf.datebegin.ymdh,
+                        tube           = 'ftp',
+                        username       = 'vernaym',
+                        kind           = 'guess',
+                        model          = 'safran',
+                        cutoff         = 'assimilation',
+                    ),
+                    print t.prompt, 'tb17_a =', tb07_a
+                    print
+
                 # A partir de la saison 2017-2018 on prend les guess produits par Vortex
-                if datebegin >= Date(year=2018, month=8, day=1):
+                elif datebegin >= Date(year=2018, month=8, day=1):
                     # I.1- EBAUCHE issue des A6 des réseaux 0/6/12/18h (J-n) d'assimilation d'ARPEGE et l'A6 du réseau 0h J si présente pour couvrir (J-n) 6h -> J 6h
                     self.sh.title('Toolbox input tb01')
                     tb07_a = toolbox.input(
@@ -87,7 +87,7 @@ class Safran(Task, S2MTaskMixIn):
                     print
 
                 # Entre 2002 et 2017 on utilise des guess ARPEGE archivés
-                elif datebegin >= Date(year=2002, month=8, day=1):
+                else:
 
                     self.sh.title('Toolbox input tb01')
                     tb07_a = toolbox.input(
@@ -462,6 +462,8 @@ class Safran(Task, S2MTaskMixIn):
         if 'compute' in self.steps:
 
             rundate = self.conf.datebegin
+            seasons = self.get_seasons()
+
 
             while rundate <= self.conf.dateend:
 
