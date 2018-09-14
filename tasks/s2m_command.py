@@ -303,17 +303,14 @@ def execute_through_vortex(args):
             options.dirwork = "."
 
     # Cook vortex task
-    if options.oper or options.escroc and not options.soda:
+    if not options.soda:
         run = vortex_kitchen(options)
         run.run(options)
-    elif options.soda and options.escroc:
+    elif options.escroc:
         run = vortex_kitchen_soda(options)
         run.run(options)
-    elif options.soda and not options.escroc:
-        print ("soda should run with escroc option")
     else:
-        print ("Well done. No run, no bug.")
-        print ("Try --escroc or --soda if you like to play. ")
+        print ("soda should run with escroc option")
 
 
 if __name__ == "__main__":
