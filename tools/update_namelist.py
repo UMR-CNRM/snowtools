@@ -60,6 +60,13 @@ def update_mandatory_settings(NamelistObject):
     NamelistObject["NAM_IO_OFFLINE"].CTIMESERIES_FILETYPE = "NETCDF"
     NamelistObject["NAM_IO_OFFLINE"].LRESTART = True
 
+    '''The following options are necessary to output homogeneous fluxes among the Crocus community'''
+    '''(fluxes averaged over the output time step)'''
+    NamelistObject["NAM_DIAG_SURFn"].LSURF_BUDGET = True
+    NamelistObject["NAM_DIAG_SURFn"].LSURF_BUDGETC = True
+    NamelistObject["NAM_DIAG_SURFn"].LRESET_BUDGETC = True
+    NamelistObject["NAM_WRITE_DIAG_SURFn"].LRESETCUMUL = True
+
     return NamelistObject
 
 
