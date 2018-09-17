@@ -252,7 +252,7 @@ def execute(args):
     if not options.groundonly:
 
         # Define a run object
-        if type(options.forcing) is list:
+        if type(options.forcing) is list or options.addmask:
             run = tasks.runs.postesrun(options.datedeb, options.datefin, options.forcing, options.diroutput, threshold=options.threshold,
                                        dirwork=options.dirwork, datespinup=options.datespinup,
                                        execdir=options.exesurfex,
