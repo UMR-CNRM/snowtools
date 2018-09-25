@@ -31,8 +31,10 @@ def callSystemOrDie(commande, errorcode=None):
 def callSurfexOrDie(commande, moderun="NORMAL", nproc=1, errorcode=None):
     '''Execute a SURFEX binary'''
 
-    # Without the following line, the worse segmentation faults you can ever imagine
-    os.system("ulimit -s unlimited")
+    # Without the following lines, the worse segmentation faults you can ever imagine
+    # Equivalent to bash command ulimit -s unlimited
+    import resource
+    resource.setrlimit(resource.RLIMIT_STACK, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
 
     os.environ["OMP_NUM_THREADS"] = "1"
     if ("PGD" in commande or "PREP" in commande) and moderun in ["MPI", "MPIRUN"]:
