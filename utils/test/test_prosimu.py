@@ -16,10 +16,11 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class TestProSimu(unittest.TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         # fichier au nouveau format de la chaîne
         path_new = os.path.join(THIS_DIR,'data','pro_2018080306_2018080406.nc')
-        self.ps = prosimu(path_new)
+        cls.ps = prosimu(path_new)
 
     def test_get_points_intargs(self):
         points = self.ps.get_points(ZS=2100,slope=20,massif_num=5)
@@ -64,13 +65,13 @@ class TestProSimu(unittest.TestCase):
 
 
 
-
 class TestProSimuWithCache(unittest.TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         path_new = os.path.join(THIS_DIR,'data','pro_2018080306_2018080406.nc')
-        self.ps = prosimu(path_new)
-        self.ps.force_read_in_cache()
+        cls.ps = prosimu(path_new)
+        cls.ps.force_read_in_cache()
 
     def test_cache(self):
         self.assertIn('SNOWSSA',self.ps.varcache.keys(),"Le cache est incomplet")
@@ -99,10 +100,11 @@ class TestProSimuWithCache(unittest.TestCase):
 
 class TestProSimuOld(unittest.TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         # fichier au nouveau format de la chaîne
         path_old = os.path.join(THIS_DIR,'data','old_PRO_20180807032000_002400.nc')
-        self.ps = prosimu_old(path_old)
+        cls.ps = prosimu_old(path_old)
 
 
     def test_get_points_intargs(self):
@@ -145,11 +147,12 @@ class TestProSimuOld(unittest.TestCase):
 
 class TestProSimuOldWithCache(unittest.TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         # fichier au nouveau format de la chaîne
         path_old = os.path.join(THIS_DIR,'data','old_PRO_20180807032000_002400.nc')
-        self.ps = prosimu_old(path_old)
-        self.ps.force_read_in_cache()
+        cls.ps = prosimu_old(path_old)
+        cls.ps.force_read_in_cache()
 
     def test_cache(self):
         self.assertIn('SNOWSSA',self.ps.varcache.keys(),"Le cache est incomplet")
