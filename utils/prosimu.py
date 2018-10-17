@@ -10,7 +10,7 @@ import os
 import netCDF4
 import numpy as np
 import sys
-from utils.FileException import FileNameException, FileOpenException, VarNameException, TimeException
+from utils.FileException import FileNameException, FileOpenException, VarNameException, TimeException, MultipleValueException
 
 # Fichier PRO.nc issu d'une simulation SURFEX post-traitée
 
@@ -30,6 +30,12 @@ class prosimu():
 
 
     def __init__(self, path, ncformat='NETCDF3_CLASSIC', openmode='r'):
+        """
+        forceread : si True force lors de la lecture d'une variable par la
+        méthode read_var à mettre l'ensemble des données de cette variable en
+        cache - utile lorsque de grands nombre d'accès à la même variable sont
+        nécessaires
+        """
         if type(path) is list:
             for fichier in path:
                 if not os.path.isfile(fichier):
@@ -62,7 +68,28 @@ class prosimu():
             print(type(path))
             raise FileNameException(path)
 
+        self.varcache = {}
 
+        self.timedim = range(len(self.dataset.dimensions['time']))
+        self.pointsdim = range(len(self.dataset.dimensions[self.Number_of_points]))
+
+
+    def force_read_in_cache(self):
+        """
+        Force la lecture des variables du netcdf sous forme de tableau numpy.
+        Ces tableaux sont stockés dans l'attribut varcache de la classe
+        Le cache est utilisé par la méthode read_var, son utilisation n'est pas
+        implémentée pour les autres méthodes
+        Utile lorsque de nombreuses lectures _de la même variable sont requises
+        """
+        self.varcache = {}
+        for varname,var in self.dataset.variables.items():
+            slices = []
+            dims = var.dimensions
+            for dimname in dims:
+                slices.append(slice(None))
+            slices = tuple(slices)
+            self.varcache[varname] = var[slices]
 
     def format(self):
         try:
@@ -127,90 +154,65 @@ class prosimu():
 
         return np.array(netCDF4.num2date(time[:], time.units))
 
-    def get_range(self,dimname,conditions):
+
+    def get_time(self,time_asdatetime):
         """
-        Pour plus de lisibilité
+        Renvoie l'indice de la dimension time correspondant au datetime donné en
+        argument
         """
-        if dimname not in conditions:
-            # si dimension n'est pas dans les arguments d'appel, on met le range
-            # complet de la dimension
-            ncdim=self.dataset.dimensions[dimname]
-            return np.arange(ncdim.size)
-        if dimname in self.listvar():
-            # s'il existe une variable contenant des valeurs pour la dimension,
-            # le filtrage se fait sur les valeurs
-            dimvar = self.dataset.variables[dimname]
-            if hasattr(conditions[dimname],'__iter__'):
-                # filtrage sur un ensemble de valeurs (tout itérable)
-                return np.where(
-                    np.isin(dimvar[:],conditions[dimname]))[0]
-            else:
-                # cas d'une valeur unique
-                return np.where(dimvar[:] == conditions[dimname])[0][0]
-        # dans tous les autres cas
-        return conditions[dimname]
+        return np.where( self.readtime() == time_asdatetime )[0][0]
 
 
     def read_var(self,variable_name,**kwargs):
         """
         variable_name : nom de la variable
-        **kwargs : spécifier la sous-sélection sous la forme variable=iterable
-        ou variable est le nom d'une dimension, ou d'une variable du netcdf
-
-        et iterable est un itérable contenant les valeurs auxquelles on veut restreindre
-        la lecture
-        Retourne : un tableau numpy
+        **kwargs : spécifier la sous-sélection sous la forme  dimname = value
+        ou dimname est le nom de la dimension d'intéret, value est une valeur
+        numérique ou un objet slice python pour récupérer une plage de valeurs
+        Retourne : un tableau numpy.ma.MaskedArray (on peut toujours remplacer
+        les éléments masqués par un indicateur de valeur manquante - pas
+        implémenté)
 
         Exemples:
-            snowtemp = prosimu.read_var('SNOWTEMP',time=0,Number_of_points = np.arange(100,125))
-            snowtemp2 = prosimu.read_var('SNOWTEMP',ZS=3600,slope = [0,20])
+            snowtemp = prosimu.read_var('SNOWTEMP',time=0,Number_of_points = slice(100,125))
+            snowtemp = prosimu.read_var('SNOWTEMP',time= slice(0,10,2), Number_of_points=1,snow_layer=slice(0,10))
+            etc...
+        peut-être utilisé en combinaison avec les méthodes get_point et get_time
+        pour récupérer un point / un instant donné :
+            snowtemp = prosimu.read_var('SNOWTEMP',time=self.get_time(datetime(2018,3,1,9)),
+                                         Number_of_points = self.get_point(massif_num=3,slope=20,ZS=4500,aspect=0))
         """
         # Gestion des noms de dimensions différents entre ancien et nouveau
         # format
         condition_points = kwargs.get('Number_of_points')
-        condition_patches = kwargs.get('Number_of_patches')
-        if condition_points:
+        condition_patches = kwargs.get('Number_of_Patches')
+        if condition_points is not None:
             del kwargs['Number_of_points']
             kwargs[self.Number_of_points] = condition_points
-        if condition_patches:
+        if condition_patches is not None:
             del kwargs['Number_of_Patches']
             kwargs[self.Number_of_Patches] = condition_patches
-
         # valeurs par défaut
         if self.Number_of_Patches not in kwargs.keys():
             kwargs[self.Number_of_Patches] = 0
         # contrôles des arguments d'appel de la méthode
         if variable_name not in self.listvar():
             raise VarNameException(variable_name, self.path)
-        # cas particulier des variables permettant un filtrage géographique
-        geo_keys = [key for key in kwargs.keys()
-                    if ((key in self.dataset.variables.keys())
-                    and (self.dataset.variables[key].dimensions == (self.Number_of_points,)))]
-        points_restriction = self.get_points(**{key:kwargs[key] for key in geo_keys})
-        if self.Number_of_points in kwargs:
-            nop = kwargs[self.Number_of_points]
-            if not(hasattr(nop,'__iter__')):
-                nop = [nop]
-            kwargs[self.Number_of_points] = list(set(points_restriction).intersection(nop))
-        else:
-            kwargs[self.Number_of_points] = points_restriction
-        # le filtrage
-        localisation_variables = \
-            [varname
-             for varname,var in self.dataset.variables.iteritems()
-             if var.dimensions == (self.Number_of_points,)]
-        for name,value in kwargs.iteritems():
-            if not(name in  set(self.dataset.dimensions.keys()).union(localisation_variables)):
-                raise TypeError(
-                    "%s n'est ni une dimension ni une variable du dataset autorisant le filtrage"%(name,))
-        slices = []
         ncvariable = self.dataset.variables[variable_name]
+        if variable_name in self.varcache:
+            ncvariable_data = self.varcache[variable_name]
+        else:
+            ncvariable_data = self.dataset.variables[variable_name]
         dims = ncvariable.dimensions
+        slices = []
         for dimname in dims:
-            slices.append(self.get_range(dimname,kwargs))
+            slices.append(kwargs.get(dimname,slice(None)))
         slices = tuple(slices)
-        return ncvariable[slices]
-
+        result = ncvariable_data[slices]
+        if (isinstance(result,np.ma.core.MaskedConstant) or
+            not(isinstance(result,np.ma.core.MaskedArray))):
+            result = np.ma.MaskedArray(result)
+        return result
 
     def get_points(self,**kwargs):
         """
@@ -227,6 +229,20 @@ class prosimu():
         for varname,values in kwargs.iteritems():
             locations_bool = np.logical_and(locations_bool,np.isin(self.dataset.variables[varname],values))
         return np.where(locations_bool)[0]
+
+
+    def get_point(self,**kwargs):
+        """
+        get_points mais pour un seul point - exception si plusieurs points ou
+        aucun dans la réponse
+        """
+        point_list = self.get_points(**kwargs)
+        if len(point_list) > 1:
+            raise MultipleValueException()
+        elif len(point_list) == 0:
+            raise IndexError('No point matching the selection')
+        return point_list[0]
+
 
 
     def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime = True):
@@ -429,3 +445,16 @@ class prosimu():
 
     def moytempo(self, precip, nstep, start=0):
         return self.integration(precip, nstep, start=start) / nstep
+
+
+
+class prosimu_old(prosimu):
+    """
+    In the old operationnal format (before 2018), some dimensions have different
+    names, this class allows to deal with them easily
+    """
+
+    Number_of_points = 'location'
+    Number_of_Patches = 'tile'
+
+
