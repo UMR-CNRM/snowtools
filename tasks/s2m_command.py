@@ -143,8 +143,8 @@ def parse_options(arguments):
                       help="path of the file with the list of physical options - default: alpes")
 
     parser.add_option("-n", "--namelist",
-                      action="store", type="string", dest="namelist", default=os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8_NEW_OUTPUTS_NC.nam',
-                      help="path of the mother namelist - default: " + os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8_NEW_OUTPUTS_NC.nam')
+                      action="store", type="string", dest="namelist", default=os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam',
+                      help="path of the mother namelist - default: " + os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam')
 
     parser.add_option("-s", "--surfexexec",
                       action="store", type="string", dest="exesurfex", default=None,
