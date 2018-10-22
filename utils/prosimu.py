@@ -224,7 +224,7 @@ class prosimu():
         nop = np.arange(len(self.dataset.dimensions[self.Number_of_points]))
         locations_bool = np.ones(len(nop))
         for varname, values in kwargs.iteritems():
-            locations_bool = np.logical_and(locations_bool, np.isin(self.dataset.variables[varname], values))
+            locations_bool = np.logical_and(locations_bool, np.in1d(self.dataset.variables[varname], values))
         return np.where(locations_bool)[0]
 
     def get_point(self, **kwargs):
