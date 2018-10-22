@@ -7,7 +7,6 @@ __all__ = []
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-import vortex
 from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
 from cen.layout.nodes import S2MTaskMixIn
@@ -364,12 +363,12 @@ class Safran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox algo tb15 = SAFRANE')
             tb15 = tbalgo1 = toolbox.algo(
-                engine         = 'blind',
+                engine         = 's2m',
                 kind           = 'safrane',
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
-                members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
+                execution      = 'forecast',
             )
             print t.prompt, 'tb15 =', tb15
             print
@@ -378,12 +377,12 @@ class Safran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox algo tb16 = SYRPLUIE')
             tb16 = tbalgo2 = toolbox.algo(
-                engine         = 'blind',
+                engine         = 's2m',
                 kind           = 'syrpluie',
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
-                members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
+                execution      = 'forecast',
             )
             print t.prompt, 'tb16 =', tb16
             print
@@ -392,12 +391,12 @@ class Safran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox algo tb17 = SYRMRR')
             tb17 = tbalgo3 = toolbox.algo(
-                engine         = 'blind',
+                engine         = 's2m',
                 kind           = 'syrmrr',
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
-                members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
+                execution      = 'forecast',
             )
             print t.prompt, 'tb17 =', tb17
             print
@@ -406,13 +405,12 @@ class Safran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox algo tb18 = SYTIST')
             tb18 = tbalgo4 = toolbox.algo(
-                engine         = 'blind',
+                engine         = 's2m',
                 kind           = 'sytist',
-                execution      = 'forecast',
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
-                members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
+                execution      = 'forecast',
             )
             print t.prompt, 'tb18 =', tb18
             print
@@ -431,7 +429,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind           = 'MeteorologicalForcing',
                 source_app     = 'arpege',
                 source_conf    = '4dvarfr',
-                local          = 'mb035/FORCING_massif.nc',
+                local          = 'mb035/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                 experiment     = self.conf.xpid,
                 block          = 'massifs',
                 geometry       = self.conf.vconf,
@@ -450,7 +448,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind           = 'MeteorologicalForcing',
                 source_app     = 'arpege',
                 source_conf    = '4dvarfr',
-                local          = 'mb035/FORCING_postes.nc',
+                local          = 'mb035/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                 experiment     = self.conf.xpid,
                 block          = 'postes',
                 geometry       = self.conf.vconf,
@@ -469,7 +467,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind           = 'MeteorologicalForcing',
                 source_app     = 'arpege',
                 source_conf    = 'pearp',
-                local          = 'mb[member]/FORCING_massif.nc',
+                local          = 'mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                 experiment     = self.conf.xpid,
                 block          = 'massifs',
                 geometry       = self.conf.vconf,
@@ -489,7 +487,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind           = 'MeteorologicalForcing',
                 source_app     = 'arpege',
                 source_conf    = 'pearp',
-                local          = 'mb035/FORCING_postes.nc',
+                local          = 'mb035/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                 experiment     = self.conf.xpid,
                 block          = 'postes',
                 geometry       = self.conf.vconf,
@@ -553,24 +551,5 @@ class Safran(Task, S2MTaskMixIn):
             print t.prompt, 'tb33 =', tb28
             print
 
-            self.sh.title('Toolbox output tb34')
-            tb29 = toolbox.output(
-                role           = 'Liste_obs',
-                block          = 'listing',
-                experiment     = self.conf.xpid,
-                geometry       = self.conf.vconf,
-                format         = 'ascii',
-                kind           = 'listing',
-                local          = 'mb{glob:a:\d+}/liste_obs_{glob:b:\w+}',
-                seta           = '[glob:a]',
-                member         = '[seta]',
-                namespace      = self.conf.namespace,
-                task           = '[local]',
-                date           = self.conf.rundate.ymdh,
-            )
-            print t.prompt, 'tb34 =', tb29
-            print
-
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')
- 
