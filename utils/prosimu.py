@@ -17,7 +17,6 @@ from utils.FileException import FileNameException, FileOpenException, VarNameExc
 
 class prosimu():
 
-
     # Variables permettant de gérer un nom de dimension différent dans un
     # fichier netcdf (par exemple si on veut lire un fichier dans l'ancien
     # format de la chaîne ou Number_of_points s'appelle location:
@@ -27,7 +26,6 @@ class prosimu():
     # (pris en compte dans la méthode read_var seulement)
     Number_of_points = 'Number_of_points'
     Number_of_Patches = 'Number_of_Patches'
-
 
     def __init__(self, path, ncformat='NETCDF3_CLASSIC', openmode='r'):
         """
@@ -70,9 +68,14 @@ class prosimu():
 
         self.varcache = {}
 
-        self.timedim = range(len(self.dataset.dimensions['time']))
-        self.pointsdim = range(len(self.dataset.dimensions[self.Number_of_points]))
-
+        if "time" in self.dataset.dimensions:
+            self.timedim = range(len(self.dataset.dimensions['time']))
+        else:
+            self.timedim = None
+        if self.Number_of_points in self.dataset.dimensions:
+            self.pointsdim = range(len(self.dataset.dimensions[self.Number_of_points]))
+        else:
+            self.pointsdim = None
 
     def force_read_in_cache(self):
         """
@@ -83,7 +86,7 @@ class prosimu():
         Utile lorsque de nombreuses lectures _de la même variable sont requises
         """
         self.varcache = {}
-        for varname,var in self.dataset.variables.items():
+        for varname, var in self.dataset.variables.items():
             slices = []
             dims = var.dimensions
             for dimname in dims:
@@ -154,16 +157,14 @@ class prosimu():
 
         return np.array(netCDF4.num2date(time[:], time.units))
 
-
-    def get_time(self,time_asdatetime):
+    def get_time(self, time_asdatetime):
         """
         Renvoie l'indice de la dimension time correspondant au datetime donné en
         argument
         """
         return np.where( self.readtime() == time_asdatetime )[0][0]
 
-
-    def read_var(self,variable_name,**kwargs):
+    def read_var(self, variable_name, **kwargs):
         """
         variable_name : nom de la variable
         **kwargs : spécifier la sous-sélection sous la forme  dimname = value
@@ -206,32 +207,27 @@ class prosimu():
         dims = ncvariable.dimensions
         slices = []
         for dimname in dims:
-            slices.append(kwargs.get(dimname,slice(None)))
+            slices.append(kwargs.get(dimname, slice(None)))
         slices = tuple(slices)
         result = ncvariable_data[slices]
-        if (isinstance(result,np.ma.core.MaskedConstant) or
-            not(isinstance(result,np.ma.core.MaskedArray))):
+        if (isinstance(result, np.ma.core.MaskedConstant) or not(isinstance(result, np.ma.core.MaskedArray))):
             result = np.ma.MaskedArray(result)
         return result
 
-    def get_points(self,**kwargs):
+    def get_points(self, **kwargs):
         """
         Renvoie les valeurs de la dimension Number_of_points correspondant à une
         sous-selection de variables aspect,ZS,massif_num,slope
         """
-        if not( all(
-            [(self.dataset.variables[varname].dimensions == (self.Number_of_points,))
-            for varname in kwargs.keys()]
-        )):
+        if not( all([(self.dataset.variables[varname].dimensions == (self.Number_of_points,)) for varname in kwargs.keys()])):
             raise TypeError("""Le filtrage ne peut se faire que sur des variables géographiques (ZS, slope, aspect, massif_num)""")
         nop = np.arange(len(self.dataset.dimensions[self.Number_of_points]))
         locations_bool = np.ones(len(nop))
-        for varname,values in kwargs.iteritems():
-            locations_bool = np.logical_and(locations_bool,np.isin(self.dataset.variables[varname],values))
+        for varname, values in kwargs.iteritems():
+            locations_bool = np.logical_and(locations_bool, np.isin(self.dataset.variables[varname], values))
         return np.where(locations_bool)[0]
 
-
-    def get_point(self,**kwargs):
+    def get_point(self, **kwargs):
         """
         get_points mais pour un seul point - exception si plusieurs points ou
         aucun dans la réponse
@@ -242,8 +238,6 @@ class prosimu():
         elif len(point_list) == 0:
             raise IndexError('No point matching the selection')
         return point_list[0]
-
-
 
     def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime = True):
 
@@ -411,7 +405,6 @@ class prosimu():
         else:
             return array
 
-
     # Pour compatibilité anciens codes, on conserve les routines obsolètes read1d et read2d
 
     def read1d(self, varname, fill2zero=False, indpoint=0):
@@ -445,7 +438,6 @@ class prosimu():
 
     def moytempo(self, precip, nstep, start=0):
         return self.integration(precip, nstep, start=start) / nstep
-
 
 
 class prosimu_old(prosimu):
