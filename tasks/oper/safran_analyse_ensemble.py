@@ -355,7 +355,7 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb17_a')
             tb17_a = toolbox.input(
                 role           = 'Ebauche',
-                local          = 'mb035/P[date::yymdh]_[cumul:hour]',
+                local          = 'mb035/P[date::addcumul_yymdh]',
                 experiment     = self.conf.xpid,
                 block          = self.conf.guess_block,
                 geometry        = self.conf.vconf,
@@ -379,7 +379,7 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb17_b')
             tb17_b = toolbox.input(
                 alternate      = 'Ebauche',
-                local          = 'mb035/P[date::yymdh]_[cumul:hour]',
+                local          = 'mb035/P[date::addcumul_yymdh]',
                 experiment     = self.conf.xpid,
                 block          = self.conf.guess_block,
                 geometry       = self.conf.vconf,
@@ -401,13 +401,13 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb17_c')
             tb17_c = toolbox.input(
                 alternate      = 'Ebauche',
-                local          = 'mb035/P[date::yymdh]_[cumul:hour]',
+                local          = 'mb035/P[date::addcumul_yymdh]',
                 experiment     = self.conf.xpid,
                 block          = self.conf.guess_block,
                 geometry       = self.conf.vconf,
                 cutoff         = 'production',
-                date           = '{0:s}/-PT30H'.format(dateend.ymd6h),
-                cumul          = footprints.util.rangex('30-54-6'),
+                date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(30, ndays * 24 + 6, 24)],
+                cumul          = footprints.util.rangex('6-30-6'),
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
