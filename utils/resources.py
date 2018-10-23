@@ -47,6 +47,8 @@ def smart_copy(pathin, nameout):
     if pathin[0:5] == '/home' or pathin[0:8] == '/scratch':
         if os.path.islink(nameout):
             os.remove(nameout)
+        if os.path.isfile(nameout):
+            os.remove(nameout)
         os.symlink(pathin, nameout)
     else:
         shutil.copy(pathin, nameout)
