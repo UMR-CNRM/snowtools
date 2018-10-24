@@ -64,13 +64,13 @@ class PrepSafran(Task, S2MTaskMixIn):
                 tbpearp.extend(toolbox.input(
                     role           = 'Gridpoint',
                     kind           = 'gridpoint',
-                    remote         = '/home/bjoly/REFV2.0/[date::ymdh]/fc_[member%03]/EUROC25.[date::ymdh].[term:fmthour]',
-                    hostname       = 'hendrix.meteo.fr',
-                    tube           = 'ftp',
                     username       = 'vernaym',
                     cutoff         = 'production',
                     format         = 'grib',
                     nativefmt      = '[format]',
+                    experiment     = 'reforecast@vernaym',
+                    block          = 'refill',
+                    namespace      = 'vortex.cache.fr',
                     geometry       = self.conf.pearp_geometry,
                     local          = 'mb{0:=01d}[member%02]/PEARP[date::ymdh]_[term:fmthour]'.format(m),
                     origin         = 'historic',
@@ -81,7 +81,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vapp           = self.conf.source_app,
                     vconf          = self.conf.eps_conf,
                 ))
-                print t.prompt, 'tb01 =', tbpearp
+                print t.prompt, 'tb01'
                 print
 
                 rundate = rundate + Period(days=1)
