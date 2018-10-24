@@ -34,6 +34,8 @@ class ESCROC_subensembles(dict):
 
         elif subensemble in ["Crocus"]:
             self.physical_options, self.snow_parameters, self.members = self.Crocus(members)
+        else:
+            raise Exception("The subensemble selected is not defined in ESCROCsubensembles.py")
 
     def E1(self, members):
 

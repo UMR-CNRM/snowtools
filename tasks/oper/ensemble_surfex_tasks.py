@@ -233,8 +233,8 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
             self.sh.title('Toolbox algo tb09 = OFFLINE')
 
             tb09 = tbalgo1 = toolbox.algo(
-                engine         = 'blind',
-                kind           = "ensmeteo+sytron",
+                engine         = 's2m',
+                kind           = "ensmeteo" if self.conf.geometry.area == 'postes' else "ensmeteo+sytron",
                 datebegin      = datebegin,
                 dateend        = dateend,
                 dateinit       = datebegin,
