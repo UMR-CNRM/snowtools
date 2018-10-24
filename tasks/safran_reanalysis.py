@@ -114,6 +114,7 @@ class Safran(Task, S2MTaskMixIn):
                             kind           = 'guess',
                             model          = 'safran',
                             now            = True,
+                            fatal          = False,
                         ),
                         print t.prompt, 'tb01_c =', tb01_c
                         print
@@ -164,6 +165,7 @@ class Safran(Task, S2MTaskMixIn):
                         kind           = 'guess',
                         model          = 'safran',
                         now            = True,
+                        fatal          = False,
                     ),
                     print t.prompt, 'tb01 =', tb01
                     print
