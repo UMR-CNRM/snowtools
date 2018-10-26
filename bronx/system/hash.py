@@ -19,7 +19,7 @@ class HashAdapter(object):
     files, File objects or strings.
     """
 
-    _PREFERED_BLOCKSIZE = 8 * 1024 * 1024  # 8 Mb
+    _PREFERRED_BLOCKSIZE = 8 * 1024 * 1024  # 8 Mb
 
     def __init__(self, algorithm):
         """
@@ -50,7 +50,7 @@ class HashAdapter(object):
     def _hinstance_from_fh(self, i_fh):
         """Return a new Hash object computed from the *i_fh* File object."""
         h = self._hinstance()
-        actual_bsize = max(self._PREFERED_BLOCKSIZE // h.block_size, 1) * h.block_size
+        actual_bsize = max(self._PREFERRED_BLOCKSIZE // h.block_size, 1) * h.block_size
         block = i_fh.read(actual_bsize)
         while block:
             h.update(block)

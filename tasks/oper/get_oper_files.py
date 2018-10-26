@@ -10,11 +10,13 @@ from bronx.stdtypes.date import Date, daterange, tomorrow
 
 
 class config(object):
-    rundate = Date(2018, 8, 3, 3)    # Run date can be at 3TU, 6TU, 9TU
+    rundate = Date(2018, 10, 26, 3)    # Run date can be at 3TU, 6TU, 9TU
     previ = False  # False for analysis, True for forecast
     xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
-    list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']  # List of extracted geometries
-    list_members = [35]  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+#     list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']  # List of extracted geometries
+    list_geometry = ['alp_allslopes', 'cor_allslopes', 'postes']  # List of extracted geometries
+
+    list_members = range(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
 
 
 class S2MExtractor(S2MTaskMixIn):
@@ -44,8 +46,9 @@ class S2MExtractor(S2MTaskMixIn):
             cutoff         = 'production' if self.conf.previ else 'assimilation',
         )
 
-        print(tb01[0].quickview())
-        tb01[0].get()
+        for rh in tb01:
+            print(rh.quickview())
+            rh.get()
 
         tb02 = toolbox.input(
             vapp           = 's2m',
@@ -65,8 +68,9 @@ class S2MExtractor(S2MTaskMixIn):
             cutoff         = 'production' if self.conf.previ else 'assimilation',
         )
 
-        print(tb02[0].quickview())
-        tb02[0].get()
+        for rh in tb02:
+            print(rh.quickview())
+            rh.get()
 
 
 if __name__ == "__main__":

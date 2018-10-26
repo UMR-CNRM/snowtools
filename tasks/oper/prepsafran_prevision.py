@@ -7,7 +7,6 @@ __all__ = []
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-import vortex
 from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
 from cen.layout.nodes import S2MTaskMixIn
@@ -53,8 +52,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 local          = 'mb035/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[0:7],
-                namespace      = 'oper.inline.fr',
-                #namespace      = 'oper.multi.fr',
+                #namespace      = 'oper.inline.fr',
+                namespace      = 'oper.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
                 model          = '[vapp]',
@@ -76,8 +75,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 local          = 'mb036/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[7:14],
-                namespace      = 'oper.inline.fr',
-                #namespace      = 'oper.multi.fr',
+                #namespace      = 'oper.inline.fr',
+                namespace      = 'oper.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
                 model          = '[vapp]',
@@ -99,7 +98,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 local          = 'mb037/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[14:21],
-                namespace      = 'oper.inline.fr',
+                #namespace      = 'oper.inline.fr',
+                namespace      = 'oper.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
                 model          = '[vapp]',
@@ -121,8 +121,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 local          = 'mb038/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[21:27],
-                namespace      = 'oper.inline.fr',
-                #namespace      = 'oper.multi.fr',
+                #namespace      = 'oper.inline.fr',
+                namespace      = 'oper.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
                 model          = '[vapp]',
@@ -144,8 +144,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 local          = 'mb039/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[27:33],
-                namespace      = 'oper.inline.fr',
-                #namespace      = 'oper.multi.fr',
+                #namespace      = 'oper.inline.fr',
+                namespace      = 'oper.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
                 model          = '[vapp]',
@@ -157,7 +157,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             print
 
             # II- PEARP
-            # Récupération du réseau P18 (J-1) pour couvrir J 6h -> (J+4) 6h
+            # Récupération du réseau 18h (J-1) pour couvrir J 6h -> (J+4) 6h
             self.sh.title('Toolbox input tb02_a')
             tbpearp = toolbox.input(
                 role           = 'Gridpoint',
@@ -171,7 +171,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[2:17],
                 member         = footprints.util.rangex(self.conf.pearp_members),
-                # namespace      = 'oper.inline.fr',
                 namespace      = 'vortex.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
@@ -214,7 +213,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = 'uenv:s2m.01@vernaym',
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -o -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
+                rawopts     = ' -o -a -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
             )
             print t.prompt, 'tb03 =', tb03
             print
@@ -261,7 +260,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
                 namespace      = self.conf.namespace,
-                fatal          = False,
             ),
             print t.prompt, 'tb05a =', tb05
             print
@@ -282,7 +280,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
                 namespace      = self.conf.namespace,
-                fatal          = False,
             ),
             print t.prompt, 'tb05b =', tb05b
             print
@@ -303,7 +300,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
                 namespace      = self.conf.namespace,
-                fatal          = False,
             ),
             print t.prompt, 'tb05c =', tb05
             print
@@ -324,7 +320,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
                 namespace      = self.conf.namespace,
-                fatal          = False,
             ),
             print t.prompt, 'tb05d =', tb05b
             print
@@ -345,7 +340,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
                 namespace      = self.conf.namespace,
-                fatal          = False,
             ),
             print t.prompt, 'tb05e =', tb05b
             print
@@ -367,7 +361,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 source_conf    = self.conf.eps_conf,
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
-                fatal          = False,
             ),
             print t.prompt, 'tb06a =', tb06
             print
@@ -389,7 +382,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 source_conf    = self.conf.eps_conf,
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
-                fatal          = False,
             ),
             print t.prompt, 'tb06b =', tb06
             print

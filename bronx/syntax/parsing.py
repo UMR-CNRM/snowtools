@@ -86,8 +86,8 @@ class StringDecoder(object):
       ``dict(production:dict(0:102 12:24) assim:dict(0:6 12:6))``
     * Dictionaries and lists can be mixed:
       ``dict(production:dict(0:0,96,102 12:3,6,24) assim:dict(0:0,3,6 12:0,3,6))``
-    * ``dict(production:&(prodconf) assim:&(assimconf))`` will be decoded as a
-      dictionary where ``&(prodconf)`` and ``&(assimconf)`` are replaced by
+    * ``dict(production:&{prodconf} assim:&{assimconf})`` will be decoded as a
+      dictionary where ``&{prodconf}`` and ``&{assimconf}`` are replaced by
       entries *prodconf* and *assimconf* returned by the **substitution_cb**
       callback (see the explanation below for more details).
 

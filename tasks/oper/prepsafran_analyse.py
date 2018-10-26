@@ -166,7 +166,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = 'uenv:s2m.01@vernaym',
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -o -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
+                rawopts     = ' -o -a -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
             )
             print t.prompt, 'tb03 =', tb03
             print
@@ -205,7 +205,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     role           = 'Ebauche',
                     local          = 'mb035/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
                     geometry       = self.conf.domains,
-                    vconf          = '[geometry::area]',
+                    vconf          = '[geometry:area]',
                     experiment     = self.conf.xpid,
                     block          = self.conf.block,
                     date           = '{0:s}/-PT12H'.format(self.conf.rundate.ymd6h),
@@ -225,7 +225,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     role           = 'Ebauche',
                     local          = 'mb036/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
                     geometry       = self.conf.domains,
-                    vconf          = '[geometry::area]',
+                    vconf          = '[geometry:area]',
                     experiment     = self.conf.xpid,
                     block          = self.conf.block,
                     date           = '{0:s}/-PT18H'.format(self.conf.rundate.ymd6h),
@@ -245,7 +245,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     role           = 'Ebauche',
                     local          = 'mb037/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
                     geometry       = self.conf.domains,
-                    vconf          = '[geometry::area]',
+                    vconf          = '[geometry:area]',
                     experiment     = self.conf.xpid,
                     block          = self.conf.block,
                     date           = '{0:s}/-PT24H'.format(self.conf.rundate.ymd6h),
@@ -260,12 +260,66 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print t.prompt, 'tb05_c =', tb05
                 print
 
-                self.sh.title('Toolbox output tb06')
+                ###############################################################################
+                # A SUPPRIMER DANS LA TACHE OPER
+                ###############################################################################
+#                 self.sh.title('Toolbox output tb06_a')
+#                 tb05 = toolbox.output(
+#                     role           = 'Ebauche',
+#                     local          = 'mb035/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
+#                     namespace      = 's2m.archive.fr',
+#                     geometry       = self.conf.domains,
+#                     #vconf          = '[geometry:area]',
+#                     vconf          = self.conf.vconf,
+#                     date           = '{0:s}/-PT12H'.format(self.conf.rundate.ymd6h),
+#                     cumul          = self.conf.cumul,
+#                     nativefmt      = 'ascii',
+#                     kind           = 'guess',
+#                     model          = 'safran',
+#                 ),
+#                 print t.prompt, 'tb05_a =', tb05
+#                 print
+#
+#                 self.sh.title('Toolbox output tb06_b')
+#                 tb05 = toolbox.output(
+#                     role           = 'Ebauche',
+#                     local          = 'mb036/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
+#                     namespace      = 's2m.archive.fr',
+#                     geometry       = self.conf.domains,
+#                     vconf          = '[geometry:area]',
+#                     date           = '{0:s}/-PT18H'.format(self.conf.rundate.ymd6h),
+#                     cumul          = self.conf.cumul,
+#                     nativefmt      = 'ascii',
+#                     kind           = 'guess',
+#                     model          = 'safran',
+#                 ),
+#                 print t.prompt, 'tb05_b =', tb05
+#                 print
+#
+#                 self.sh.title('Toolbox output tb06_c')
+#                 tb05 = toolbox.output(
+#                     role           = 'Ebauche',
+#                     local          = 'mb037/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
+#                     namespace      = 's2m.archive.fr',
+#                     geometry       = self.conf.domains,
+#                     vconf          = '[geometry:area]',
+#                     date           = '{0:s}/-PT24H'.format(self.conf.rundate.ymd6h),
+#                     cumul          = self.conf.cumul,
+#                     nativefmt      = 'ascii',
+#                     kind           = 'guess',
+#                     model          = 'safran',
+#                 ),
+#                 print t.prompt, 'tb05_c =', tb05
+#                 print
+
+                ##################################################################################
+
+                self.sh.title('Toolbox output tb07')
                 tb06 = toolbox.output(
                     role           = 'Ebauche',
                     local          = 'mb[member]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                     geometry       = self.conf.domains,
-                    vconf          = '[geometry::area]',
+                    vconf          = '[geometry:area]',
                     experiment     = self.conf.xpid,
                     block          = self.conf.block,
                     cutoff         = 'production',
@@ -278,7 +332,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                     source_conf    = self.conf.eps_conf,
                     namespace      = self.conf.namespace,
                     member         = footprints.util.rangex(self.conf.pearp_members),
-                    fatal          = False,
                 ),
                 print t.prompt, 'tb06 =', tb06
                 print
@@ -290,7 +343,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     role           = 'Ebauche',
                     local          = 'mb035/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
                     geometry       = self.conf.domains,
-                    vconf          = '[geometry::area]',
+                    vconf          = '[geometry:area]',
                     experiment     = self.conf.xpid,
                     block          = self.conf.block,
                     date           = '{0:s}/-PT6H'.format(self.conf.rundate.ymd6h),
@@ -304,6 +357,27 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ),
                 print t.prompt, 'tb05 =', tb05
                 print
+
+#                 ###############################################################################
+#                 # A SUPPRIMER DANS LA TACHE OPER
+#                 ###############################################################################
+#                 self.sh.title('Toolbox output tb06')
+#                 tb05 = toolbox.output(
+#                     role           = 'Ebauche',
+#                     local          = 'mb035/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
+#                     namespace      = 's2m.archive.fr',
+#                     geometry       = self.conf.domains,
+#                     vconf          = '[geometry:area]',
+#                     date           = '{0:s}/-PT6H'.format(self.conf.rundate.ymd6h),
+#                     cumul          = self.conf.cumul,
+#                     nativefmt      = 'ascii',
+#                     kind           = 'guess',
+#                     model          = 'safran',
+#                     fatal          = False,
+#                 ),
+#                 print t.prompt, 'tb05 =', tb05
+#                 print
+#                 ################################################################################
 
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')

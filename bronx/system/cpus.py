@@ -41,7 +41,7 @@ class CpusToolUnavailableError(Exception):
 
 @six.add_metaclass(abc.ABCMeta)
 class CpusInfo(object):
-    '''Provide various informations about CPUs (abstract class).'''
+    """Provide various informations about CPUs (abstract class)."""
 
     def __init__(self):
         self._cpus = None
@@ -49,12 +49,12 @@ class CpusInfo(object):
 
     @abc.abstractproperty
     def cpus(self):
-        '''The raw dictionary of the system's CPUs.'''
+        """The raw dictionary of the system's CPUs."""
         pass
 
     @property
     def cpus_hierarchy(self):
-        '''A hierarchical view of CPUs.
+        """A hierarchical view of CPUs.
 
         This returns a dictionary with the following structure::
 
@@ -62,7 +62,7 @@ class CpusInfo(object):
 
         For a given socket_id and core_id, the list of cpuIDs shows all of the
         virtual CPUs associated to the physical core.
-        '''
+        """
         if self._cpus_hierarchy is None:
             hierarchy = defaultdict(partial(defaultdict, list))
             for icpu, cpu in self.cpus.items():
@@ -72,29 +72,29 @@ class CpusInfo(object):
 
     @property
     def nphysical_cores(self):
-        '''The total number of physical cores on this system.'''
+        """The total number of physical cores on this system."""
         return len(set([(c.socket_id, c.core_id) for c in self.cpus.values()]))
 
     @property
     def nvirtual_cores(self):
-        '''The total number of virtual cores on this system.'''
+        """The total number of virtual cores on this system."""
         return len(self.cpus)
 
     @property
     def nsockets(self):
-        '''The number of sockets on this system.'''
+        """The number of sockets on this system."""
         return len(self.cpus_hierarchy)
 
     @property
     def nphysical_cores_per_socket(self):
-        '''The number of physical cores per socket.'''
+        """The number of physical cores per socket."""
         ncores = set([len(socket) for socket in self.cpus_hierarchy.values()])
         assert len(ncores) == 1
         return ncores.pop()
 
     @property
     def smt_threads(self):
-        '''The Simultaneous MultiThreading threads count.'''
+        """The Simultaneous MultiThreading threads count."""
         nsmt = set([len(core)
                     for socket in self.cpus_hierarchy.values()
                     for core in socket.values()])
@@ -169,7 +169,7 @@ class CpusInfo(object):
 
 
 class LinuxCpusInfo(CpusInfo):
-    '''Provide various informations about CPUs based on the /proc/cpuinfo file.'''
+    """Provide various informations about CPUs based on the /proc/cpuinfo file."""
 
     _INFOFILE_CHECK = True
     _INFOFILE = '/proc/cpuinfo'
@@ -184,10 +184,10 @@ class LinuxCpusInfo(CpusInfo):
 
     @property
     def cpus(self):
-        '''The dictionary of the system's CPUs.
+        """The dictionary of the system's CPUs.
 
         If needed, process /proc/cpuinfo to get all the necessary data.
-        '''
+        """
         if self._cpus is None:
             self._cpus = dict()
             cpu_n = None

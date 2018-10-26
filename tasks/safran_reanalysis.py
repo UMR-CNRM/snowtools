@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-
 __all__ = []
 
 import footprints
@@ -11,7 +10,9 @@ from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
 from cen.layout.nodes import S2MTaskMixIn
 
-from bronx.stdtypes.date import Period, Date
+from vortex.tools.systems import ExecutionError
+
+from bronx.stdtypes.date import Date, Period
 
 
 def setup(t, **kw):
@@ -33,191 +34,160 @@ class Safran(Task, S2MTaskMixIn):
         t = self.ticket
 
         rundate = self.conf.datebegin
+        list_dates = self.get_list_seasons(self.conf.datebegin, self.conf.dateend)
+        if len(list_dates) > 40:
+            raise ExecutionError("Too many years")
 
         if 'early-fetch' in self.steps:
 
-            if self.conf.datebegin < Date(year=2002, month=8, day=1):
-
-                # Avant 2002 on utilise des guess issus de era40
-                self.sh.title('Toolbox input tb01')
-                tb07_a = toolbox.input(
-                    role           = 'Ebauche',
-                    # local          = 'mb035/P[date::yymdh]_[cumul:hour]',
-                    local          = 'cep_[date:nivologyseason]',
-                    remote         = '/home/vernaym/s2m/[local]',
-                    hostname       = 'hendrix.meteo.fr',
-                    unknownflow    = True,
-                    date           = self.conf.datebegin.ymdh,
-                    tube           = 'ftp',
-                    username       = 'vernaym',
-                    kind           = 'guess',
-                    model          = 'safran',
-                    cutoff         = 'assimilation',
-                ),
-                print t.prompt, 'tb17_a =', tb07_a
-                print
-
-            while rundate <= self.conf.dateend:
-
+            m = 0
+            for rundate in list_dates:
+                m = m + 1
                 datebegin = rundate
-                dateend = rundate + Period(days=1)
+                dateend = rundate.replace(year = rundate.year + 1)
+#                dateend = rundate + Period(years=1)
+                season = datebegin.nivologyseason()
+                next_season = dateend.nivologyseason()
 
-                # A partir de la saison 2017-2018 on prend les guess produits par Vortex
-                if datebegin >= Date(year=2018, month=8, day=1):
-                    # I.1- EBAUCHE issue des A6 des réseaux 0/6/12/18h (J-n) d'assimilation d'ARPEGE et l'A6 du réseau 0h J si présente pour couvrir (J-n) 6h -> J 6h
-                    self.sh.title('Toolbox input tb01')
-                    tb07_a = toolbox.input(
+                if datebegin < Date(year=2002, month=8, day=1):
+
+                    y1 = datebegin.year
+                    y2 = dateend.year
+
+                    # Avant 2002 on utilise des guess issus de era40
+                    self.sh.title('Toolbox input tb01_a - ' + datebegin.ymdh)
+                    tb01_a = toolbox.input(
                         role           = 'Ebauche',
                         # local          = 'mb035/P[date::yymdh]_[cumul:hour]',
-                        local          = 'P[date::yymdh]_[cumul:hour]',
-                        experiment     = self.conf.xpid,
-                        block          = self.conf.guess_block,
-                        geometry       = self.conf.vconf,
-                        cutoff         = 'assimilation',
-                        date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 30, self.conf.cumul)],
-                        cumul          = self.conf.cumul,
-                        nativefmt      = 'ascii',
+                        local          = 'cep{0:d}_{1:d}'.format(y1, y2),
+                        remote         = '/home/vernaym/s2m/cep/cep_{0:s}'.format(season),
+                        hostname       = 'hendrix.meteo.fr',
+                        unknownflow    = True,
+                        # date           = rundate.ymd6h,
+                        tube           = 'ftp',
+                        username       = 'vernaym',
                         kind           = 'guess',
                         model          = 'safran',
-                        source_app     = 'arpege',
-                        source_conf    = '4dvarfr',
-                        namespace      = 'vortex.multi.fr',
+                        cutoff         = 'assimilation',
+                        now            = True,
                     ),
-                    print t.prompt, 'tb17_a =', tb07_a
+                    print t.prompt, 'tb01_a =', tb01_a
                     print
 
-                # Entre 2002 et 2017 on utilise des guess ARPEGE archivés
-                elif datebegin >= Date(year=2002, month=8, day=1):
+                    # On doit prendre les guess de la saison suivante pour y trouver les 01/08 de l'année A+1...
+                    # NE PAS REFAIRE CETTE ERREUR LORS D'UNE FUTURE GENERATION DES GUESS
+                    if dateend < Date(2002, 8, 1):
 
-                    self.sh.title('Toolbox input tb01')
-                    tb07_a = toolbox.input(
+                        self.sh.title('Toolbox input tb01_b - ' + dateend.ymdh)
+                        tb01_b = toolbox.input(
+                            role           = 'Ebauche',
+                            # local          = 'mb035/P[date::yymdh]_[cumul:hour]',
+                            local          = 'cep{0:d}_{1:d}'.format(y1 + 1, y2 + 1),
+                            remote         = '/home/vernaym/s2m/cep/cep_{0:s}'.format(next_season),
+                            hostname       = 'hendrix.meteo.fr',
+                            unknownflow    = True,
+                            # date           = rundate.ymd6h,
+                            tube           = 'ftp',
+                            username       = 'vernaym',
+                            kind           = 'guess',
+                            model          = 'safran',
+                            cutoff         = 'assimilation',
+                            now            = True,
+                        ),
+                        print t.prompt, 'tb01_b =', tb01_b
+                        print
+
+                    elif dateend.ymd == '20020801':
+
+                        self.sh.title('Toolbox input tb01 - ' + dateend.ymdh)
+                        tb01_c = toolbox.input(
+                            role           = 'Ebauche',
+                            local          = 'mb{0:03d}/p{1:s}.tar'.format(m, next_season),
+                            remote         = '/home/vernaym/s2m/[geometry]/guess/p{0:s}.tar'.format(next_season),
+                            hostname       = 'hendrix.meteo.fr',
+                            unknownflow    = True,
+                            username       = 'vernaym',
+                            tube           = 'ftp',
+                            geometry       = self.conf.vconf,
+                            cumul          = self.conf.cumul,
+                            nativefmt      = 'ascii',
+                            kind           = 'guess',
+                            model          = 'safran',
+                            now            = True,
+                            fatal          = False,
+                        ),
+                        print t.prompt, 'tb01_c =', tb01_c
+                        print
+
+#                 # A partir de la saison 2017-2018 on prend les guess produits par Vortex
+#                 elif datebegin >= Date(year=2018, month=8, day=1):
+#                     # I.1- EBAUCHE issue des A6 des réseaux 0/6/12/18h (J-n) d'assimilation d'ARPEGE et l'A6 du réseau 0h J si présente pour couvrir (J-n) 6h -> J 6h
+#                     self.sh.title('Toolbox input tb01')
+#                     tb07_a = toolbox.input(
+#                         role           = 'Ebauche',
+#                         # local          = 'mb035/P[date::yymdh]_[cumul:hour]',
+#                         #local          = 'P[date::yymdh]_[cumul:hour]',
+#                         local          = 'p[date:nivologyseason].tar',
+#                         remote         = '/home/vernaym/s2m/cep/[local]',
+#                         hostname       = 'hendrix.meteo.fr',
+#                         unknownflow    = True,
+#                         username       = 'vernaym',
+#                         #experiment     = self.conf.xpid,
+#                         #block          = self.conf.guess_block,
+#                         #geometry       = self.conf.vconf,
+#                         #cutoff         = 'assimilation',
+#                         date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 30, self.conf.cumul)],
+#                         cumul          = self.conf.cumul,
+#                         nativefmt      = 'ascii',
+#                         kind           = 'guess',
+#                         model          = 'safran',
+#                         #source_app     = 'arpege',
+#                         #source_conf    = '4dvarfr',
+#                         #namespace      = 'vortex.multi.fr',
+#                     ),
+#                     print t.prompt, 'tb17_a =', tb07_a
+#                     print
+
+                # Entre 2002 et 2017 on utilise des guess ARPEGE archivés
+                else:
+                    self.sh.title('Toolbox input tb01 - ' + datebegin.ymdh)
+                    tb01 = toolbox.input(
                         role           = 'Ebauche',
-                        # local          = 'mb035/P[date::yymdh]_[cumul:hour]',
-                        local          = 'P[date::yymdh]',
-                        geometry        = self.conf.vconf,
-                        cutoff         = 'assimilation',
-                        date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 30, 6)],
+                        local          = 'mb{0:03d}/p{1:s}.tar'.format(m, season),
+                        remote         = '/home/vernaym/s2m/[geometry]/guess/p{0:s}.tar'.format(season),
+                        hostname       = 'hendrix.meteo.fr',
+                        unknownflow    = True,
+                        username       = 'vernaym',
+                        tube           = 'ftp',
+                        geometry       = self.conf.vconf,
                         cumul          = self.conf.cumul,
                         nativefmt      = 'ascii',
                         kind           = 'guess',
                         model          = 'safran',
-                        source_app     = 'arpege',
-                        source_conf    = '4dvarfr',
-                        namespace      = 's2m.archive.fr',
+                        now            = True,
+                        fatal          = False,
                     ),
-                    print t.prompt, 'tb17_a =', tb07_a
+                    print t.prompt, 'tb01 =', tb01
                     print
 
                 # TODO : Gérer le fait de ne pas prendre le fichier 2 de 6h le 01/08
-                self.sh.title('Toolbox input tb02')
+                self.sh.title('Toolbox input tb02 - ' + datebegin.ymdh)
                 tb02 = toolbox.input(
-                    role           = 'ObsSynop',
-                    part           = 'synop',
-                    block          = 'observations',
-                    experiment     = self.conf.xpid,
-                    cutoff         = 'assimilation',
+                    role           = 'Observations',
+                    part           = 'all',
                     geometry       = self.conf.vconf,
-                    suite          = 'oper',
                     kind           = 'observations',
-                    stage          = 'safrane',
                     nativefmt      = 'ascii',
-                    date           = '{0:s}/+PT[term]H'.format(rundate.ymd6h),
-                    term           = footprints.util.rangex(self.conf.ana_terms),
-                    local          = 'S[date:yymdh]',
+                    unknownflow    = True,
+                    local          = 'mb{0:03d}/rs{1:s}.tar'.format(m, season),
+                    remote         = '/home/vernaym/s2m/[geometry]/obs/rs{0:s}.tar'.format(season),
+                    hostname       = 'hendrix.meteo.fr',
+                    tube           = 'ftp',
                     model          = self.conf.model,
-                    namespace      = 's2m.archive.fr',
-                    fatal          = False,
+                    now            = True,
                 )
                 print t.prompt, 'tb02 =', tb02
                 print
-
-                self.sh.title('Toolbox input tb03')
-                tb02 = toolbox.input(
-                    role           = 'ObsRR',
-                    part           = 'precipitation',
-                    block          = 'observations',
-                    experiment     = self.conf.xpid,
-                    cutoff         = 'assimilation',
-                    geometry       = self.conf.vconf,
-                    suite          = 'oper',
-                    kind           = 'observations',
-                    stage          = 'sypluie',
-                    nativefmt      = 'ascii',
-                    date           = dateend.ymd6h,
-                    local          = 'R[date:yymdh]',
-                    model          = self.conf.model,
-                    namespace      = 's2m.archive.fr',
-                )
-                print t.prompt, 'tb02 =', tb02
-                print
-
-                self.sh.title('Toolbox input tb03')
-                tb03 = toolbox.input(
-                    role           = 'HourlyObs',
-                    part           = 'hourlyobs',
-                    block          = 'observations',
-                    experiment     = self.conf.xpid,
-                    cutoff         = 'assimilation',
-                    geometry       = self.conf.vconf,
-                    suite          = 'oper',
-                    kind           = 'observations',
-                    stage          = 'safrane',
-                    nativefmt      = 'ascii',
-                    date           = datebegin.ymd6h,
-                    local          = 'T[date:yymdh]',
-                    model          = self.conf.model,
-                    namespace      = 's2m.archive.fr',
-                )
-                print t.prompt, 'tb03 =', tb03
-                print
-
-                self.sh.title('Toolbox input tb04')
-                tb04 = toolbox.input(
-                    role           = 'ObsRS',
-                    part           = 'radiosondage',
-                    block          = 'observations',
-                    experiment     = self.conf.xpid,
-                    cutoff         = 'assimilation',
-                    geometry       = self.conf.vconf,
-                    suite          = 'oper',
-                    kind           = 'observations',
-                    stage          = 'safrane',
-                    nativefmt      = 'ascii',
-                    date           = '{0:s}/-PT24H/+PT[term]H'.format(datebegin.ymd6h),
-                    term           = footprints.util.rangex(self.conf.ana_terms),
-                    local          = 'A[date:yymdh]',
-                    model          = self.conf.model,
-                    namespace      = 'cendev.soprano.fr',
-                    storage        = 'guppy.meteo.fr',
-                    fatal          = False,
-                )
-                print t.prompt, 'tb04 =', tb04
-                print
-
-                self.sh.title('Toolbox input tb05')
-                tb05 = toolbox.input(
-                    role           = 'ObsNeb',
-                    part           = 'nebulosity',
-                    block          = 'observations',
-                    experiment     = self.conf.xpid,
-                    cutoff         = 'assimilation',
-                    geometry       = self.conf.vconf,
-                    suite          = 'oper',
-                    kind           = 'observations',
-                    stage          = 'safrane',
-                    nativefmt      = 'ascii',
-                    date           = datebegin.ymd6h,
-                    local          = 'N[date:yymdh]',
-                    model          = self.conf.model,
-                    namespace      = 'cendev.soprano.fr',
-                    storage        = 'guppy.meteo.fr',
-                    fatal          = False,
-                )
-                print t.prompt, 'tb05 =', tb05
-                print
-
-                rundate = rundate + Period(days=1)
-
 
         if 'fetch' in self.steps:
 
@@ -247,6 +217,32 @@ class Safran(Task, S2MTaskMixIn):
             print t.prompt, 'tb08 =', tb08
             print
 
+            self.sh.title('Toolbox input tb08')
+            tb08 = toolbox.input(
+                role            = 'NormalesClimTT',
+                genv            = self.conf.cycle,
+                gdomain         = self.conf.vconf,
+                geometry        = '[gdomain]',
+                kind            = 'NORELmt',
+                model           = self.conf.model,
+                local           = 'NORELmt',
+            )
+            print t.prompt, 'tb08 =', tb08
+            print
+
+#             self.sh.title('Toolbox input tb08')
+#             tb08 = toolbox.input(
+#                 role            = 'NormalesClim',
+#                 genv            = self.conf.cycle,
+#                 gdomain         = self.conf.vconf,
+#                 geometry        = '[gdomain]',
+#                 kind            = 'NORELm',
+#                 model           = self.conf.model,
+#                 local           = 'NORELm',
+#             )
+#             print t.prompt, 'tb08 =', tb08
+#             print
+
             self.sh.title('Toolbox input tb09')
             tb09 = toolbox.input(
                 role            = 'ListePost',
@@ -259,6 +255,46 @@ class Safran(Task, S2MTaskMixIn):
             )
             print t.prompt, 'tb09 =', tb09
             print
+
+            self.sh.title('Toolbox input tb09')
+            tb09 = toolbox.input(
+                role            = 'MoyennesMensuellesRR',
+                genv            = self.conf.cycle,
+                gdomain         = self.conf.vconf,
+                geometry        = '[gdomain]',
+                kind            = 'NORELot',
+                model           = self.conf.model,
+                local           = 'NORELot',
+            )
+            print t.prompt, 'tb09 =', tb09
+            print
+
+            self.sh.title('Toolbox input tb09')
+            tb09 = toolbox.input(
+                role            = 'SurfZ',
+                genv            = self.conf.cycle,
+                gdomain         = self.conf.vconf,
+                geometry        = '[gdomain]',
+                kind            = 'surfz',
+                model           = self.conf.model,
+                local           = 'surfz',
+                nativefmt       = 'ascii',
+            )
+            print t.prompt, 'tb09 =', tb09
+            print
+
+#             self.sh.title('Toolbox input tb09')
+#             tb09 = toolbox.input(
+#                 role            = 'MoyennesMensuellesRR_TT',
+#                 genv            = self.conf.cycle,
+#                 gdomain         = self.conf.vconf,
+#                 geometry        = '[gdomain]',
+#                 kind            = 'NORELo',
+#                 model           = self.conf.model,
+#                 local           = 'NORELo',
+#             )
+#             print t.prompt, 'tb09 =', tb09
+#             print
 
             self.sh.title('Toolbox input tb09')
             tb09 = toolbox.input(
@@ -285,6 +321,19 @@ class Safran(Task, S2MTaskMixIn):
                 fatal           = False,
             )
             print t.prompt, 'tb12 =', tb12
+            print
+
+            self.sh.title('Toolbox input tb11')
+            tb11 = toolbox.input(
+                role            = 'Clim',
+                genv            = self.conf.cycle,
+                gdomain         = self.conf.vconf,
+                geometry        = '[gdomain]',
+                kind            = 'rsclim',
+                model           = self.conf.model,
+                local           = 'rsclim.don',
+            )
+            print t.prompt, 'tb11 =', tb11
             print
 
             self.sh.title('Toolbox input tb12')
@@ -382,8 +431,8 @@ class Safran(Task, S2MTaskMixIn):
             print t.prompt, 'tb16 =', tb16
             print
 
-            self.sh.title('Toolbox executable tb17 = tbx1')
-            tb17 = tbx1 = toolbox.executable(
+            self.sh.title('Toolbox executable tb17 = tbx0')
+            tb17 = tbx0 = toolbox.executable(
                 role           = 'Binary',
                 genv           = self.conf.cycle,
                 kind           = 'intercep',
@@ -397,7 +446,7 @@ class Safran(Task, S2MTaskMixIn):
             tb17 = tbx1 = toolbox.executable(
                 role           = 'Binary',
                 genv           = self.conf.cycle,
-                kind           = 'safrane',
+                kind           = 'safrane_dev',
                 local          = 'safrane',
                 model          = self.conf.model,
             )
@@ -405,21 +454,21 @@ class Safran(Task, S2MTaskMixIn):
             print
 
             self.sh.title('Toolbox executable tb18 = tbx2')
-            tb18 = tbx2 = toolbox.executable(
+            tbx2 = toolbox.executable(
                 role           = 'Binary',
                 genv           = self.conf.cycle,
-                kind           = 'syrpluie',
+                kind           = 'syrpluie_dev',
                 local          = 'syrpluie',
                 model          = self.conf.model,
             )
-            print t.prompt, 'tb18 =', tb18
+            print t.prompt, 'tb18 =', tbx2
             print
 
             self.sh.title('Toolbox executable tb18_b = tbx3')
             tb18_b = tbx3 = toolbox.executable(
                 role           = 'Binary',
                 genv           = self.conf.cycle,
-                kind           = 'sypluie',
+                kind           = 'sypluie_dev',
                 local          = 'sypluie',
                 model          = self.conf.model,
             )
@@ -430,7 +479,7 @@ class Safran(Task, S2MTaskMixIn):
             tb19 = tbx4 = toolbox.executable(
                 role           = 'Binary',
                 genv           = self.conf.cycle,
-                kind           = 'syvapr',
+                kind           = 'syvapr_dev',
                 local          = 'syvapr',
                 model          = self.conf.model,
             )
@@ -441,7 +490,7 @@ class Safran(Task, S2MTaskMixIn):
             tb20 = tbx5 = toolbox.executable(
                 role           = 'Binary',
                 genv           = self.conf.cycle,
-                kind           = 'syvafi',
+                kind           = 'syvafi_dev',
                 local          = 'syvafi',
                 model          = self.conf.model,
             )
@@ -452,7 +501,7 @@ class Safran(Task, S2MTaskMixIn):
             tb21 = tbx6 = toolbox.executable(
                 role           = 'Binary',
                 genv           = self.conf.cycle,
-                kind           = 'sytist',
+                kind           = 'sytist_dev',
                 local          = 'sytist',
                 model          = self.conf.model,
             )
@@ -461,129 +510,139 @@ class Safran(Task, S2MTaskMixIn):
 
         if 'compute' in self.steps:
 
-            rundate = self.conf.datebegin
+            if self.conf.datebegin < Date(2002, 8, 1):
 
-            while rundate <= self.conf.dateend:
-
-                datebegin = rundate
-                dateend = rundate + Period(days=1)
-
-                if datebegin <= Date(year=2002, month=7, day=31):
-
-                    self.sh.title('Toolbox algo tb22 = INTERCEP')
-                    tb22 = tbalgo1 = toolbox.algo(
-                        engine         = 'blind',
-                        kind           = 'intercep',
-                        datebegin      = self.conf.datebegin.ymd6h,
-                        dateend        = self.conf.dateend.ymd6h,
-                        ntasks         = self.conf.ntasks,
-                    )
-                    print t.prompt, 'tb22 =', tb22
-                    print
-
-                # NB : La date des executions est fixée à J-1 car l'analyse SAFRAN va de J-1 6h à J 6H
-                self.sh.title('Toolbox algo tb22 = SAFRANE')
-                tb22 = tbalgo1 = toolbox.algo(
-                    engine         = 'blind',
-                    kind           = 'safrane',
+                self.sh.title('Toolbox algo tb22 = INTERCEP')
+                tb22 = tbalgo0 = toolbox.algo(
+                    engine         = 's2m',
+                    kind           = 'intercep',
                     datebegin      = self.conf.datebegin.ymd6h,
                     dateend        = self.conf.dateend.ymd6h,
                     ntasks         = self.conf.ntasks,
+                    execution      = 'reanalysis',
                 )
                 print t.prompt, 'tb22 =', tb22
                 print
 
-                self.component_runner(tbalgo1, tbx1)
+                self.component_runner(tbalgo0, tbx0)
 
-                self.sh.title('Toolbox algo tb23 = SYRPLUIE')
-                tb23 = tbalgo2 = toolbox.algo(
-                    engine         = 'blind',
-                    kind           = 'syrpluie',
-                    datebegin      = self.conf.datebegin.ymd6h,
-                    dateend        = self.conf.dateend.ymd6h,
-                    # members        = footprints.util.rangex(self.conf.members),
-                    ntasks         = self.conf.ntasks,
-                )
-                print t.prompt, 'tb23 =', tb23
-                print
+            # NB : La date des executions est fixée à J-1 car l'analyse SAFRAN va de J-1 6h à J 6H
+            self.sh.title('Toolbox algo tb22 = SAFRANE')
+            tb22 = tbalgo1 = toolbox.algo(
+                engine         = 's2m',
+                kind           = 'safrane',
+                datebegin      = self.conf.datebegin.ymd6h,
+                dateend        = self.conf.dateend.ymd6h,
+                ntasks         = self.conf.ntasks,
+                execution      = 'reanalysis',
+            )
+            print t.prompt, 'tb22 =', tb22
+            print
 
-                self.component_runner(tbalgo2, tbx2)
+            self.component_runner(tbalgo1, tbx1)
 
-                self.sh.title('Toolbox algo tb23_b = SYPLUIE')
-                tb23 = tbalgo3 = toolbox.algo(
-                    engine         = 'blind',
-                    kind           = 'sypluie',
-                    datebegin      = self.conf.datebegin.ymd6h,
-                    dateend        = self.conf.dateend.ymd6h,
-                    # members        = footprints.util.rangex(self.conf.members),
-                    ntasks         = self.conf.ntasks,
-                )
-                print t.prompt, 'tb23 =', tb23
-                print
+#             self.sh.title('Toolbox algo tb23 = SYRPLUIE')
+#             tb23 = tbalgo2 = toolbox.algo(
+#                 engine         = 's2m',
+#                 kind           = 'syrpluie',
+#                 datebegin      = self.conf.datebegin.ymd6h,
+#                 dateend        = self.conf.dateend.ymd6h,
+#                 # members        = footprints.util.rangex(self.conf.members),
+#                 ntasks         = self.conf.ntasks,
+#                 execution      = 'reanalysis',
+#             )
+#             print t.prompt, 'tb23 =', tb23
+#             print
+#
+#             self.component_runner(tbalgo2, tbx2)
 
-                self.component_runner(tbalgo3, tbx3)
+            self.sh.title('Toolbox algo tb23_b = SYPLUIE')
+            tb23 = tbalgo3 = toolbox.algo(
+                engine         = 's2m',
+                kind           = 'sypluie',
+                datebegin      = self.conf.datebegin.ymd6h,
+                dateend        = self.conf.dateend.ymd6h,
+                # members        = footprints.util.rangex(self.conf.members),
+                ntasks         = self.conf.ntasks,
+                execution      = 'reanalysis',
+            )
+            print t.prompt, 'tb23 =', tb23
+            print
 
-                self.sh.title('Toolbox algo tb24 = SYVAPR')
-                tb24 = tbalgo4 = toolbox.algo(
-                    engine         = 'blind',
-                    kind           = 'syvapr',
-                    datebegin      = self.conf.datebegin.ymd6h,
-                    dateend        = self.conf.dateend.ymd6h,
-                    # members        = footprints.util.rangex(self.conf.members),
-                    ntasks         = self.conf.ntasks,
-                )
-                print t.prompt, 'tb24 =', tb24
-                print
+            self.component_runner(tbalgo3, tbx3)
 
-                self.component_runner(tbalgo4, tbx4)
+            self.sh.title('Toolbox algo tb24 = SYVAPR')
+            tb24 = tbalgo4 = toolbox.algo(
+                engine         = 's2m',
+                kind           = 'syvapr',
+                datebegin      = self.conf.datebegin.ymd6h,
+                dateend        = self.conf.dateend.ymd6h,
+                # members        = footprints.util.rangex(self.conf.members),
+                ntasks         = self.conf.ntasks,
+                execution      = 'reanalysis',
+            )
+            print t.prompt, 'tb24 =', tb24
+            print
 
-                self.sh.title('Toolbox algo tb25 = SYVAFI')
-                tb25 = tbalgo5 = toolbox.algo(
-                    engine         = 'blind',
-                    kind           = 'syvafi',
-                    datebegin      = self.conf.datebegin.ymd6h,
-                    dateend        = self.conf.dateend.ymd6h,
-                    # members        = footprints.util.rangex(self.conf.members),
-                    ntasks         = self.conf.ntasks,
-                )
-                print t.prompt, 'tb25 =', tb25
-                print
+            self.component_runner(tbalgo4, tbx4)
 
-                self.component_runner(tbalgo5, tbx5)
+            self.sh.title('Toolbox algo tb25 = SYVAFI')
+            tb25 = tbalgo5 = toolbox.algo(
+                engine         = 's2m',
+                kind           = 'syvafi',
+                datebegin      = self.conf.datebegin.ymd6h,
+                dateend        = self.conf.dateend.ymd6h,
+                # members        = footprints.util.rangex(self.conf.members),
+                ntasks         = self.conf.ntasks,
+                execution      = 'reanalysis',
+            )
+            print t.prompt, 'tb25 =', tb25
+            print
 
-                self.sh.title('Toolbox algo tb26 = SYTIST')
-                tb26 = tbalgo6 = toolbox.algo(
-                    engine         = 'blind',
-                    kind           = 'sytist',
-                    datebegin      = self.conf.datebegin.ymd6h,
-                    dateend        = self.conf.dateend.ymd6h,
-                    execution      = 'analysis',
-                    # members        = footprints.util.rangex(self.conf.members),
-                    ntasks         = self.conf.ntasks,
-                )
-                print t.prompt, 'tb26 =', tb26
-                print
+            self.component_runner(tbalgo5, tbx5)
 
-                self.component_runner(tbalgo6, tbx6)
+            self.sh.title('Toolbox algo tb26 = SYTIST')
+            tb26 = tbalgo6 = toolbox.algo(
+                engine         = 's2m',
+                kind           = 'sytist',
+                datebegin      = self.conf.datebegin.ymd6h,
+                dateend        = self.conf.dateend.ymd6h,
+                # members        = footprints.util.rangex(self.conf.members),
+                ntasks         = self.conf.ntasks,
+                execution      = 'reanalysis',
+            )
+            print t.prompt, 'tb26 =', tb26
+            print
 
-        if 'backup' in self.steps or 'late-backup' in self.steps:
+            self.component_runner(tbalgo6, tbx6)
 
-            rundate = self.conf.datebegin
+        if 'late-backup' in self.steps:
 
-            while rundate <= self.conf.dateend:
-
+            m = 0
+            for rundate in list_dates:
+                m = m + 1
                 datebegin = rundate
-                dateend = rundate + Period(days=1)
+                dateend = min(datebegin.replace(year=datebegin.year + 1), self.conf.dateend)
+
+                if rundate >= Date(2002, 8, 1):
+                    source_app = 'arpege'
+                    source_conf = '4dvarfr'
+                else:
+                    source_app = 'ifs'
+                    source_conf = 'era40'
+
+                y1 = datebegin.year
+                y2 = y1 + 1
 
                 self.sh.title('Toolbox output tb27')
                 tb27 = toolbox.output(
                     role           = 'Ana_massifs',
                     kind           = 'MeteorologicalForcing',
-                    source_app     = 'arpege',
-                    source_conf    = '4dvarfr',
+                    source_app     = source_app,
+                    source_conf    = source_conf,
                     cutoff         = 'assimilation',
                     # local          = 'mb035/FORCING_massif.nc',
-                    local          = 'FORCING_massif.nc',
+                    local          = 'mb{0:03d}/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(m),
                     experiment     = self.conf.xpid,
                     block          = 'massifs',
                     geometry        = self.conf.vconf,
@@ -591,7 +650,8 @@ class Safran(Task, S2MTaskMixIn):
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
-                    namespace      = self.conf.cennamespace,
+                    namespace      = self.conf.namespace,
+                    namebuild      = 'flat@cen',
                 ),
                 print t.prompt, 'tb27 =', tb27
                 print
@@ -600,11 +660,11 @@ class Safran(Task, S2MTaskMixIn):
                 tb27 = toolbox.output(
                     role           = 'Ana_postes',
                     kind           = 'MeteorologicalForcing',
-                    source_app     = 'arpege',
-                    source_conf    = '4dvarfr',
+                    source_app     = source_app,
+                    source_conf    = source_conf,
                     cutoff         = 'assimilation',
                     # local          = 'mb035/FORCING_postes.nc',
-                    local          = 'FORCING_postes.nc',
+                    local          = 'mb{0:03d}/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(m),
                     experiment     = self.conf.xpid,
                     block          = 'postes',
                     geometry        = self.conf.vconf,
@@ -612,90 +672,29 @@ class Safran(Task, S2MTaskMixIn):
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
-                    namespace      = self.conf.cennamespace,
+                    namespace      = self.conf.namespace,
+                    namebuild      = 'flat@cen',
                 ),
                 print t.prompt, 'tb28 =', tb27
-                print
-
-    #             self.sh.title('Toolbox output tb29')
-    #             tb27 = toolbox.output(
-    #                 role           = 'Ana_massifs',
-    #                 kind           = 'MeteorologicalForcing',
-    #                 source_app     = 'arpege',
-    #                 source_conf    = 'pearp',
-    #                 cutoff         = 'assimilation',
-    #                 local          = 'mb[member]/FORCING_massif.nc',
-    #                 experiment     = self.conf.xpid,
-    #                 block          = 'massifs',
-    #                 geometry        = self.conf.vconf,
-    #                 nativefmt      = 'netcdf',
-    #                 model          = self.conf.model,
-    #                 datebegin      = datebegin.ymd6h,
-    #                 dateend        = dateend.ymd6h,
-    #                 namespace      = self.conf.namespace,
-    #                 member         = footprints.util.rangex(self.conf.pearp_members),
-    #             ),
-    #             print t.prompt, 'tb29 =', tb27
-    #             print
-    #
-    #             self.sh.title('Toolbox output tb30')
-    #             tb27 = toolbox.output(
-    #                 role           = 'Ana_postes',
-    #                 kind           = 'MeteorologicalForcing',
-    #                 source_app     = 'arpege',
-    #                 source_conf    = 'pearp',
-    #                 cutoff         = 'assimilation',
-    #                 local          = 'mb[member]/FORCING_postes.nc',
-    #                 experiment     = self.conf.xpid,
-    #                 block          = 'postes',
-    #                 geometry        = self.conf.vconf,
-    #                 nativefmt      = 'netcdf',
-    #                 model          = self.conf.model,
-    #                 datebegin      = datebegin.ymd6h,
-    #                 dateend        = dateend.ymd6h,
-    #                 namespace      = self.conf.namespace,
-    #                 member         = footprints.util.rangex(self.conf.pearp_members),
-    #             ),
-    #             print t.prompt, 'tb30 =', tb27
-    #             print
-
-                self.sh.title('Toolbox output tb31')
-                tb28 = toolbox.output(
-                    role           = 'Listing',
-                    block          = 'listing',
-                    experiment     = self.conf.xpid,
-                    cutoff         = 'assimilation',
-                    geometry        = self.conf.vconf,
-                    format         = 'ascii',
-                    kind           = 'listing',
-                    # local          = 'mb035/{glob:a:\w+}.out',
-                    local          = '{glob:a:\w+}.out',
-                    namespace      = self.conf.cennamespace,
-                    task           = '[local]',
-                    # date           = self.conf.rundate.ymdh,
-                )
-                print t.prompt, 'tb31 =', tb28
                 print
 
                 self.sh.title('Toolbox output tb32')
                 tb29 = toolbox.output(
                     role           = 'Liste_obs',
-                    block          = 'listing',
+                    block          = 'liste_obs/{0:s}_{1:s}'.format(datebegin.ymd6h, dateend.ymd6h),
                     experiment     = self.conf.xpid,
                     geometry        = self.conf.vconf,
                     cutoff         = 'assimilation',
                     format         = 'ascii',
                     kind           = 'listing',
                     # local          = 'mb035/liste_obs_{glob:a:\w+}',
-                    local          = 'liste_obs_{glob:a:\w+}',
-                    namespace      = self.conf.cennamespace,
+                    local          = 'mb{0:03d}'.format(m) + '/liste_obs_{glob:a:\w+}',
+                    namespace      = self.conf.namespace,
                     task           = '[local]',
+                    namebuild      = 'flat@cen',
                     # date           = self.conf.rundate.ymdh,
                 )
                 print t.prompt, 'tb32 =', tb29
                 print
 
-                rundate = dateend
-
-            from vortex.tools.systems import ExecutionError
             raise ExecutionError('')
