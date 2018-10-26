@@ -896,6 +896,11 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         """Semi-compact representation for vortex paths."""
         return self.strftime('%Y%m%dT%H%M') + six.text_type(cutoff)[0].upper()
 
+    @property
+    def stdvortex(self):
+        """Semi-compact representation for vortex paths (without cutoff)."""
+        return self.strftime('%Y%m%dT%H%M')
+
     def reallynice(self):
         """Nice and verbose string representation."""
         return self.strftime("%A %d. %B %Y, at %H:%M:%S")

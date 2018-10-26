@@ -15,17 +15,17 @@ logger = footprints.loggers.getLogger(__name__)
 
 
 class SignalInterruptError(Exception):
-    '''Exception raised when a system signal is caught.'''
+    """Exception raised when a system signal is caught."""
     pass
 
 
 class SignalInterruptHandler(object):
-    '''Handler class to deal with system signals.'''
+    """Handler class to deal with system signals."""
 
     def __init__(self, signals=(signal.SIGHUP, signal.SIGINT, signal.SIGQUIT,
                                 signal.SIGTRAP, signal.SIGABRT, signal.SIGFPE,
                                 signal.SIGUSR1, signal.SIGUSR2, signal.SIGTERM)):
-        '''
+        """
 
         :param signals: list/tuple of signals that will be caught
 
@@ -67,7 +67,7 @@ class SignalInterruptHandler(object):
 
             # In this portion of the script the python shell will abruptly stop if
             # a signal is received
-        '''
+        """
 
         self._signals = signals
         self._original_handlers = {}
@@ -82,16 +82,16 @@ class SignalInterruptHandler(object):
 
     @property
     def signals(self):
-        '''List of the signals catched by the signal handlers.'''
+        """List of the signals catched by the signal handlers."""
         return list(self._signals)
 
     @property
     def active(self):
-        '''Are the singal handlers active ?'''
+        """Are the singal handlers active ?"""
         return self._active
 
     def activate(self):
-        '''Activate the signal handlers.'''
+        """Activate the signal handlers."""
         if not self._active:
             def handler(signum, frame):
                 self.deactivate()
@@ -106,7 +106,7 @@ class SignalInterruptHandler(object):
         self._active = True
 
     def deactivate(self):
-        '''Deactivate the signal handlers and restore the previous ones.'''
+        """Deactivate the signal handlers and restore the previous ones."""
         if self._active:
             for sig in self.signals:
                 signal.signal(sig, self._original_handlers[sig])

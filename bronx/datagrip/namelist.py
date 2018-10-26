@@ -27,8 +27,13 @@ from decimal import Decimal
 import io
 import re
 
-import six
-import numpy
+from bronx.syntax.externalcode import ExternalCodeImportChecker
+
+# Numpy is not mandatory
+npchecker = ExternalCodeImportChecker('numpy')
+with npchecker as npregister:
+    import numpy as np
+    npregister.update(version=np.__version__)
 
 #: No automatic export
 __all__ = []
@@ -130,6 +135,31 @@ NO_SORTING = 0
 FIRST_ORDER_SORTING = 1
 #: Sort only within indexes or attributes of the same key.
 SECOND_ORDER_SORTING = 2
+
+#: Recognised formats...
+_INT_TYPES = [int]
+_F16_TYPES = []
+_F32_TYPES = []
+_F64_TYPES = [float, Decimal]
+_C64_TYPES = []
+_C128_TYPES = [complex]
+
+if npchecker.is_available():
+    # If NumPy is available, also recognise the associated data types
+    _INT_TYPES.extend([np.int8, np.int16, np.int32, np.int64,
+                       np.uint8, np.uint16, np.uint32, np.uint64, ])
+    _F16_TYPES.extend([np.float16, ])
+    _F32_TYPES.extend([np.float32, ])
+    _F64_TYPES.extend([np.float64, ])
+    _C64_TYPES.extend([np.complex64, ])
+    _C128_TYPES.extend([np.complex128, ])
+
+_INT_TYPES = tuple(_INT_TYPES)
+_F16_TYPES = tuple(_F16_TYPES)
+_F32_TYPES = tuple(_F32_TYPES)
+_F64_TYPES = tuple(_F64_TYPES)
+_C64_TYPES = tuple(_C64_TYPES)
+_C128_TYPES = tuple(_C128_TYPES)
 
 
 class LiteralParser(object):
@@ -398,24 +428,22 @@ class LiteralParser(object):
         return six.text_type(value)
 
     @staticmethod
-    def encode_real(value):
+    def encode_real(value, fmt='{0:.15G}'):
         """Returns the string form of the real ``value``."""
         if value == 0.:
             real = '0.'
         else:
-            if isinstance(value, numpy.float32):
-                real = '{0:.7G}'.format(value).replace('E', 'D')
-            else:
-                real = '{0:.15G}'.format(value).replace('E', 'D')
+            real = fmt.format(value).replace('E', 'D')
         if '.' not in real:
             real = re.sub('D', '.0D', real)
             if '.' not in real:
                 real += '.'
         return real.rstrip('0')
 
-    def encode_complex(self, value):
+    def encode_complex(self, value, fmt='{0:.15G}'):
         """Returns the string form of the complex ``value``."""
-        return "(%s,%s)" % (self.encode_real(value.real), self.encode_real(value.imag))
+        return "({:s},{:s})".format(self.encode_real(value.real, fmt),
+                                    self.encode_real(value.imag, fmt))
 
     @staticmethod
     def encode_character(value):
@@ -441,14 +469,18 @@ class LiteralParser(object):
         """Returns the string form of the specified ``value`` according to its type."""
         if isinstance(value, bool):
             return self.encode_logical(value)
-        elif isinstance(value, int):
+        elif isinstance(value, _INT_TYPES):
             return self.encode_integer(value)
-        elif isinstance(value, float) or isinstance(value, numpy.float32):
-            return self.encode_real(value)
-        elif isinstance(value, Decimal):
-            return self.encode_real(value)
-        elif isinstance(value, complex):
-            return self.encode_complex(value)
+        elif isinstance(value, _F16_TYPES):
+            return self.encode_real(value, fmt='{0:.3G}')
+        elif isinstance(value, _F32_TYPES):
+            return self.encode_real(value, fmt='{0:.7G}')
+        elif isinstance(value, _F64_TYPES):
+            return self.encode_real(value, fmt='{0:.15G}')
+        elif isinstance(value, _C64_TYPES):
+            return self.encode_complex(value, fmt='{0:.7G}')
+        elif isinstance(value, _C128_TYPES):
+            return self.encode_complex(value, fmt='{0:.15G}')
         elif isinstance(value, six.string_types):
             return self.encode_character(value)
         else:
