@@ -40,10 +40,6 @@ def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc
         NamelistObject = update_loc(NamelistObject, forcing)
     NamelistObject = update_forcingdates(NamelistObject, datebegin, dateend, forcing=forcing)
 
-    print(type(physicaloptions), type(snowparameters))
-
-    print(physicaloptions)
-
     NamelistObject = update_physicaloptions(NamelistObject, **physicaloptions)
     NamelistObject = update_snowparameters(NamelistObject, **snowparameters)
     NamelistObject = update_nmembers(NamelistObject, nmembers)
@@ -125,7 +121,7 @@ def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"
 
 #     if dateend < dateforcend:
     NamelistObject["NAM_IO_OFFLINE"].NDATESTOP = [dateend.year, dateend.month, dateend.day, dateend.hour * 3600]
-    print ("Ndatestop set to {0}{1}{2}{3}".format(dateend.year, dateend.month, dateend.day, dateend.hour))
+    print ("Ndatestop set to " + dateend.strftime("%Y-%m-%d-%H"))
 
     return NamelistObject
 
@@ -159,7 +155,4 @@ def update_nmembers(NamelistObject, nmembers):
     if nmembers is not None:
         setattr(NamelistObject["NAM_ENS"], 'NENS', nmembers)
         print ("NENS set to {}".format(nmembers))
-    else:
-            print ("IGNORE FIELD NENS : not in namelist.")
-
     return NamelistObject

@@ -40,7 +40,7 @@ class EnsembleScores(object):
         CRPSVector = np.ones(len(self.obsCommon))
         for obs in self.obsCommon:
             # cumulated distribution function
-            # Heaviside function for obs 
+            # Heaviside function for obs
             obsCDF = 0
             ensembleCDF = 0
             precPrevision = 0
@@ -90,41 +90,38 @@ class EnsembleScores(object):
         CRPS = np.mean(np.ma.masked_invalid(CRPSVector))
         return CRPS
 
-
     def meanEnsemble(self):
             # deal with only some members valid
 
         return np.ma.masked_invalid(self.ensCommon).mean(axis=0)
-                                
-                                
+
     def dispersionEnsemble(self):
-        
+        """
+        spread over all dates
+        """
         NbMembres = self.ensCommon.shape[0]
-        
-        meanCommon=self.meanEnsemble()
-        
+
+        meanCommon = self.meanEnsemble()
 
         dispersion = np.zeros(NbMembres)
-        k=0
+        k = 0
 
         for model in self.ensCommon:
-            #model is not masked_array but meanCommon is so the difference is masked_array
+            # model is not masked_array but meanCommon is so the difference is masked_array
             # so the mean is computed only on valid dates
             model = np.ma.masked_invalid(model)
-                    
-            dispersion[k]=np.mean((model - meanCommon)**2)
-            k+=1
-        
+
+            dispersion[k] = np.mean((model - meanCommon)**2)
+            k += 1
 
         disp = np.sqrt(np.mean(dispersion))
 
         diffMean = meanCommon - self.obsCommon
-        
-        rmseMean=np.sqrt(np.mean(np.square(diffMean)))
-        
-        
-        return disp, rmseMean, disp/rmseMean
-    
+
+        rmseMean = np.sqrt(np.mean(np.square(diffMean)))
+
+        return disp, rmseMean, disp / rmseMean
+
 
 class ESCROC_EnsembleScores(EnsembleScores):
 
@@ -132,11 +129,11 @@ class ESCROC_EnsembleScores(EnsembleScores):
         self.read(profiles, obsfile, varname)
 
     def read_var_ifpresent(self, dataNc, varname, convert1d=False):
-        
+
         if varname not in dataNc.listvar():
             if varname in list(ESMSnowMIP_alternate_varnames.keys()):
                 varname = ESMSnowMIP_alternate_varnames[varname]
-        
+
         if varname in dataNc.listvar():
             if convert1d:
                 array = dataNc.read1d(varname)
@@ -165,13 +162,13 @@ class ESCROC_EnsembleScores(EnsembleScores):
         return ESMSnowMIP_dicvarnames[varname]
 
     def read(self, profiles, obsfile, varname):
-                
-        for p,profile in enumerate(profiles):
+
+        for p, profile in enumerate(profiles):
             print("open file " + profile)
             dataSim = prosimu(profile)
-            if p==0:
+            if p == 0:
                 timeSim = dataSim.readtime()
-                ensemble = np.empty((len(profiles),len(timeSim)),"float")
+                ensemble = np.empty((len(profiles), len(timeSim)), "float")
 
             varSim = self.read_sim_ifpresent(dataSim, self.varsimname(varname))
             ensemble[p, :] = varSim
@@ -185,7 +182,7 @@ class ESCROC_EnsembleScores(EnsembleScores):
         dataObs.close()
         print("close obs")
         print(varObs.shape)
-        
+
         '''Extract common date between observations and simulations'''
         # Identify winter period
         winter = np.empty_like(timeObs, 'bool')
@@ -201,7 +198,6 @@ class ESCROC_EnsembleScores(EnsembleScores):
 
         maskSim = np.in1d(timeSim, timeObs_ok)
         maskObs = np.in1d(timeObs_ok, timeSim)
-        
 
         self.obsCommon = obs_ok[maskObs]
-        self.ensCommon = ensemble[:, maskSim]        
+        self.ensCommon = ensemble[:, maskSim]

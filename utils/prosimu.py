@@ -116,11 +116,9 @@ class prosimu():
     def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime = True):
 
         if removetile:
-            vardims = self.dataset.variables[varname].dimensions
-            needremovetile = "tile" in vardims or 'Number_of_Tile' in vardims or 'Number_of_Patches' in vardims
+            needremovetile = "tile" in self.dataset.variables[varname].dimensions or 'Number_of_Tile' in self.dataset.variables[varname].dimensions
         else:
             needremovetile = False
-
         rank = len(var.shape)
         if hasTime is True:
             if selectpoint == -1:
@@ -173,7 +171,7 @@ class prosimu():
                         var_extract = var[:, :, :, selectpoint]
                     elif rank == 5:
                         var_extract = var[:, :, :, :, selectpoint]
-
+                        
         else:  # if isPrep, no time dimension, tile is the first dim
             if selectpoint == -1:
                 if needremovetile:
@@ -248,28 +246,26 @@ class prosimu():
             var = self.extract(varname, varnc, selectpoint=selectpoint, removetile=removetile, hasTime=False)
         else:
             var = self.extract(varname, varnc, selectpoint=selectpoint, removetile=removetile)
-        # print("shape")
-        # print(var.shape)
         # Remplissage des valeurs manquantes si nécessaire
         if (len(var.shape) > 1 or (len(var.shape) == 1 and var.shape[0] > 1)) and not keepfillvalue:
             try:
                 if fill2zero:
                     array = var.filled(fill_value=0)
-                    print("Fill missing data with 0 for variable " + varname)
+                    # print("Fill missing data with 0 for variable " + varname)
                 else:
                     array = var.filled(fill_value=np.nan)
-                    print("Fill missing data with np.nan for variable " + varname)
+                    # print("Fill missing data with np.nan for variable " + varname)
             except Exception:
                 if avail_fillvalue:
                     if fill2zero:
                         array = np.where(var == fillvalue, 0, var)
-                        print("Fill missing data with 0 for variable " + varname + " (old method)")
+                        # print("Fill missing data with 0 for variable " + varname + " (old method)")
                     else:
                         array = np.where(var == fillvalue, np.nan, var)
-                        print("Fill missing data with np.nan for variable " + varname + " (old method)")
+                        # print("Fill missing data with np.nan for variable " + varname + " (old method)")
                 else:
                     array = var
-                    print("Unable to fill data with 0 or np.nan for variable " + varname)
+                    # print("Unable to fill data with 0 or np.nan for variable " + varname)
 
         else:
             array = var

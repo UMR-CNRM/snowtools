@@ -37,7 +37,7 @@ class SodaSnow_Vortex_Task(Task):
         assDates = []
 
         try:
-            for dt in self.conf.assimdates:
+            for dt in self.conf.assimdates: # /!\ bug when only 1 assim date ?
                 dt = Date(check_and_convert_date(str(dt)))
                 if dt < self.conf.dateend and dt > self.conf.datebegin:
                     assDates.append(dt)
@@ -353,7 +353,7 @@ class SodaSnow_Vortex_Task(Task):
                     dateinit       = self.conf.datespinup,
                     threshold      = self.conf.threshold,
                     members        = footprints.util.rangex(members),
-                    subensemble    = self.conf.subensemble if hasattr(self.conf, "subensemble")  else "EZob",
+                    subensemble    = self.conf.subensemble if hasattr(self.conf, "subensemble")  else "E1Tartes",
                     ntasks         = ntasksEsc,
                     nforcing       = self.conf.nforcing,
                     stopcount      = stopstep,
@@ -395,7 +395,7 @@ class SodaSnow_Vortex_Task(Task):
                 dateinit       = self.conf.datespinup,
                 threshold      = self.conf.threshold,
                 members        = footprints.util.rangex(members),
-                subensemble    = self.conf.subensemble if hasattr(self.conf, "subensemble")  else "EZob",
+                subensemble    = self.conf.subensemble if hasattr(self.conf, "subensemble")  else "E1Tartes",
                 ntasks         = ntasksEsc,
                 nforcing       = self.conf.nforcing,
                 stopcount      = stopstep,
