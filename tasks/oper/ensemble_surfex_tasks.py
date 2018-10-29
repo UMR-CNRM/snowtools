@@ -4,9 +4,10 @@ Created on 7 nov. 2017
 @author: lafaysse
 '''
 
-from vortex.layout.nodes import Driver
-from cen.layout.nodes import S2Mtask
+from vortex.layout.nodes import Driver, Task
+from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
+from bronx.stdtypes.date import daterange, yesterday, tomorrow, Period
 import footprints
 
 
@@ -21,7 +22,7 @@ def setup(t, **kw):
     )
 
 
-class Ensemble_Surfex_Task(S2Mtask):
+class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
     '''
 
     '''
@@ -32,8 +33,9 @@ class Ensemble_Surfex_Task(S2Mtask):
 
         datebegin, dateend = self.get_period()
         rundate_forcing = self.get_rundate_forcing()
-        rundate_prep = self.get_rundate_prep()
+        rundate_prep, alternate_rundate_prep = self.get_rundate_prep()
         list_geometry = self.get_list_geometry()
+        source_safran, block_safran = self.get_source_safran()
 
         pearpmembers, members = self.get_list_members()
 
@@ -42,21 +44,22 @@ class Ensemble_Surfex_Task(S2Mtask):
             self.sh.title('Toolbox input tb01')
             tb01 = toolbox.input(
                 role           = 'Forcing',
-                local          = 'mb0035/[geometry]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if self.conf.geometry.area == 'postes' else 'mb0035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if self.conf.geometry.area == 'postes' else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                 vapp           = self.conf.vapp,
                 vconf          = '[geometry:area]',
-                block          = "postes" if self.conf.geometry.area == 'postes' else "massifs",
-                source_app     = 'arpege',
-                source_conf    = '4dvarfr',
-                experiment     = self.conf.forcingid,
+                block          = block_safran,
+                member         = 35 if source_safran == 's2m' else None,
+                source_app     = 'arpege' if source_safran == 'safran' else None,
+                source_conf    = '4dvarfr' if source_safran == 'safran' else None,
+                experiment     = self.conf.forcingid  if source_safran == 'safran' else self.conf.xpid,
                 geometry       = list_geometry,
                 date           = rundate_forcing,
-                datebegin      = datebegin,
+                datebegin      = datebegin if source_safran == 'safran' else yesterday(base=datebegin),
                 dateend        = dateend,
                 nativefmt      = 'netcdf',
                 kind           = 'MeteorologicalForcing',
                 namespace      = 'vortex.multi.fr',
-                model          = 'safran',
+                model          = source_safran,
                 cutoff         = 'production' if self.conf.previ else 'assimilation'
             ),
             print(t.prompt, 'tb01 =', tb01)
@@ -65,22 +68,22 @@ class Ensemble_Surfex_Task(S2Mtask):
             self.sh.title('Toolbox input tb01b')
             tb01b = toolbox.input(
                 role           = 'Forcing',
-                local          = 'mb[member]/[geometry]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if self.conf.geometry.area == 'postes' else 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                local          = 'mb[member]/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if self.conf.geometry.area == 'postes' else 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                 vapp           = self.conf.vapp,
                 vconf          = '[geometry:area]',
-                block          = "postes" if self.conf.geometry.area == 'postes' else "massifs",
-                source_app     = 'arpege',
-                source_conf    = 'pearp',
-                experiment     = self.conf.forcingid,
+                block          = block_safran,
+                source_app     = 'arpege' if source_safran == 'safran' else None,
+                source_conf    = 'pearp' if source_safran == 'safran' else None,
+                experiment     = self.conf.forcingid  if source_safran == 'safran' else self.conf.xpid,
                 geometry       = list_geometry,
-                date           = self.conf.rundate,
-                datebegin      = datebegin,
+                date           = rundate_forcing,
+                datebegin      = datebegin if source_safran == 'safran' else yesterday(base=datebegin),
                 dateend        = dateend,
                 member         = pearpmembers,
                 nativefmt      = 'netcdf',
                 kind           = 'MeteorologicalForcing',
                 namespace      = 'vortex.multi.fr',
-                model          = 'safran',
+                model          = source_safran,
                 cutoff         = 'production' if self.conf.previ else 'assimilation'
             ),
             print(t.prompt, 'tb01b =', tb01b)
@@ -104,22 +107,48 @@ class Ensemble_Surfex_Task(S2Mtask):
             self.sh.title('Toolbox input tb03')
             tb03 = toolbox.input(
                 role           = 'SnowpackInit',
-                local          = 'PREP.nc',
+                local          = 'mb[member]/PREP.nc',
                 block          = 'prep',
                 experiment     = self.conf.xpid,
                 geometry       = self.conf.geometry,
                 datevalidity   = datebegin,
                 date           = rundate_prep,
+                member         = members,
                 intent         = 'inout',
                 nativefmt      = 'netcdf',
-                kind           = 'SnowpackState',
+                kind           = 'PREP',
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
-                fatal          = True,
+                fatal          = False,
                 cutoff         = 'assimilation'
             ),
             print(t.prompt, 'tb03 =', tb03)
             print()
+
+            for i, alternate_prep in enumerate(alternate_rundate_prep):
+
+                fatal = i == len(alternate_rundate_prep) - 1
+
+                self.sh.title('Toolbox input tb03b')
+                tb03b = toolbox.input(
+                    alternate      = 'SnowpackInit',
+                    local          = 'mb[member]/PREP.nc',
+                    block          = 'prep',
+                    experiment     = self.conf.xpid,
+                    geometry       = self.conf.geometry,
+                    datevalidity   = datebegin,
+                    date           = alternate_prep[0],
+                    member         = members,
+                    intent         = 'inout',
+                    nativefmt      = 'netcdf',
+                    kind           = 'PREP',
+                    model          = 'surfex',
+                    namespace      = 'vortex.multi.fr',
+                    fatal          = fatal,
+                    cutoff         = alternate_prep[1]
+                ),
+                print(t.prompt, 'tb03b =', tb03b)
+                print()
 
             self.sh.title('Toolbox input tb04')
             tb04 = toolbox.input(
@@ -172,6 +201,17 @@ class Ensemble_Surfex_Task(S2Mtask):
                 local           = 'OPTIONS.nam',
             )
 
+            self.sh.title('Toolbox input tb07')
+
+            tb07 = toolbox.input(
+                role            = 'Nam_surfex',
+                source          = 'OPTIONS_sytron.nam',
+                genv            = 'uenv:cen.01@CONST_CEN',
+                kind            = 'namelist',
+                model           = 'surfex',
+                local           = 'OPTIONS_sytron.nam',
+            )
+
             print(t.prompt, 'tb07 =', tb07)
             print()
 
@@ -193,16 +233,16 @@ class Ensemble_Surfex_Task(S2Mtask):
             self.sh.title('Toolbox algo tb09 = OFFLINE')
 
             tb09 = tbalgo1 = toolbox.algo(
-                engine         = 'blind',
-                binary         = 'OFFLINE',
-                kind           = "ensmeteo",
+                engine         = 's2m',
+                kind           = "ensmeteo" if self.conf.geometry.area == 'postes' else "ensmeteo+sytron",
                 datebegin      = datebegin,
                 dateend        = dateend,
                 dateinit       = datebegin,
                 threshold      = self.conf.threshold,
                 members        = footprints.util.rangex(members),
-                geometry       = self.conf.geometry,
-                ntasks         = 40
+                geometry       = list_geometry,
+                ntasks         = 40,
+                daily          = not self.conf.previ,
             )
             print(t.prompt, 'tb09 =', tb09)
             print()
@@ -212,25 +252,27 @@ class Ensemble_Surfex_Task(S2Mtask):
             pass
 
         if 'late-backup' in self.steps:
-
-            self.sh.title('Toolbox output tb10')
-            tb10 = toolbox.output(
-                local          = 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                experiment     = self.conf.xpid,
-                block          = 'meteo',
-                geometry       = self.conf.geometry,
-                date           = self.conf.rundate,
-                datebegin      = datebegin,
-                dateend        = dateend,
-                member         = members,
-                nativefmt      = 'netcdf',
-                kind           = 'MeteorologicalForcing',
-                model          = 'surfex',
-                namespace      = 'vortex.multi.fr',
-                cutoff         = 'production' if self.conf.previ else 'assimilation',
-            ),
-            print(t.prompt, 'tb10 =', tb10)
-            print()
+            print "source_safran"
+            print source_safran
+            if source_safran != 's2m':
+                self.sh.title('Toolbox output tb10')
+                tb10 = toolbox.output(
+                    local          = 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    experiment     = self.conf.xpid,
+                    block          = 'meteo',
+                    geometry       = self.conf.geometry,
+                    date           = self.conf.rundate,
+                    datebegin      = datebegin,
+                    dateend        = dateend,
+                    member         = members,
+                    nativefmt      = 'netcdf',
+                    kind           = 'MeteorologicalForcing',
+                    model          = 's2m',
+                    namespace      = 'vortex.multi.fr',
+                    cutoff         = 'production' if self.conf.previ else 'assimilation',
+                ),
+                print(t.prompt, 'tb10 =', tb10)
+                print()
 
             self.sh.title('Toolbox output tb11')
             tb11 = toolbox.output(
@@ -239,8 +281,8 @@ class Ensemble_Surfex_Task(S2Mtask):
                 block          = 'pro',
                 geometry       = self.conf.geometry,
                 date           = self.conf.rundate,
-                datebegin      = datebegin,
-                dateend        = dateend,
+                datebegin      = datebegin if self.conf.previ else '[dateend]/-PT24H',
+                dateend        = dateend if self.conf.previ else list(daterange(tomorrow(base=datebegin), dateend)),
                 member         = members,
                 nativefmt      = 'netcdf',
                 kind           = 'SnowpackSimulation',
@@ -253,16 +295,16 @@ class Ensemble_Surfex_Task(S2Mtask):
 
             self.sh.title('Toolbox output tb12')
             tb12 = toolbox.output(
-                local          = 'mb[member]/PREP_[date:ymdh].nc',
+                local          = 'mb[member]/PREP_[datevalidity:ymdh].nc',
                 role           = 'SnowpackInit',
                 experiment     = self.conf.xpid,
                 block          = 'prep',
                 geometry       = self.conf.geometry,
-                datevalidity   = dateend,
+                datevalidity   = dateend if self.conf.previ else list(daterange(tomorrow(base=datebegin), dateend)),
                 date           = self.conf.rundate,
                 member         = members,
                 nativefmt      = 'netcdf',
-                kind           = 'SnowpackState',
+                kind           = 'PREP',
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
                 cutoff         = 'production' if self.conf.previ else 'assimilation',

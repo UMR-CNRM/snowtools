@@ -11,6 +11,7 @@ Created on 30 Aug. 2017
 from optparse import OptionParser
 import os
 import sys
+import datetime
 
 try:
     from utils.resources import check_snowtools_install
@@ -44,21 +45,32 @@ def exit_usage():
 
 def check_and_convert_options(options, vortex=False):
 
-    list_mandatory = [options.datedeb, options.datefin, options.forcing]
-    list_print = "-b -e -f"
+    if options.oper:
+        list_mandatory = [options.region]
+        list_print = "-r"
+    else:
+        list_mandatory = [options.datedeb, options.datefin, options.forcing]
+        list_print = "-b -e -f"
 
-    if vortex:
-        list_mandatory.extend([options.model, options.region])
-        list_print += " -m -r"
+        if vortex:
+            list_mandatory.extend([options.model, options.region])
+            list_print += " -m -r"
 
     for mandatory in list_mandatory:
         if not mandatory:
             print("Missing mandatory option: " + list_print)
             exit_usage()
 
-    # Controls and type conversions of dates
-    [options.datedeb, options.datefin, options.datespinup] = list(map(check_and_convert_date, [options.datedeb, options.datefin, options.datespinup]))
-    checkdateafter(options.datefin, options.datedeb)
+    if options.oper:
+        if options.datedeb:
+            options.datedeb = check_and_convert_date(options.datedeb)
+        else:
+            # If rundate is not prescribed, get it from the current time.
+            options.datedeb = datetime.datetime.today().replace(minute=0, second=0, microsecond=0)
+    else:
+        # Controls and type conversions of dates
+        [options.datedeb, options.datefin, options.datespinup] = list(map(check_and_convert_date, [options.datedeb, options.datefin, options.datespinup]))
+        checkdateafter(options.datefin, options.datedeb)
 
     # Conversions of local paths in absolute paths
     [options.namelist, options.dirwork, options.exesurfex] = \
@@ -68,8 +80,9 @@ def check_and_convert_options(options, vortex=False):
         [options.forcing, options.diroutput] = \
             list(map(absolute_path, [options.forcing, options.diroutput]))
 
-    options.exesurfex = check_surfex_exe(options.exesurfex)
-    print(options.exesurfex)
+    if not options.oper:
+        options.exesurfex = check_surfex_exe(options.exesurfex)
+        print(options.exesurfex)
 
     # Check and conversion of geographical requirements
     if options.region or options.slopes or options.aspects or options.minlevel or options.maxlevel:
@@ -103,7 +116,7 @@ def parse_options(arguments):
 
     parser.add_option("-e", "--end",
                       action="store", type="string", dest="datefin", default=None,
-                      help="Date to finish the simulation (YYYYMMDD): MANDATORY OPTION")
+                      help="Date to finish the simulation (YYYYMMDD): MANDATORY OPTION (unless --oper)")
 
     parser.add_option("-o", "--output",
                       action="store", type="string", dest="diroutput", default="output",
@@ -164,6 +177,14 @@ def parse_options(arguments):
     parser.add_option("--addmask",
                       action="store_true", dest="addmask", default=False,
                       help="apply shadows on solar radiation from surrounding masks")
+
+    parser.add_option("--oper",
+                      action="store_true", dest="oper", default=False,
+                      help="Operational chain")
+
+    parser.add_option("--forecast",
+                      action="store_true", dest="forecast", default=False,
+                      help="To separate analysis and forecast modes")
 
     parser.add_option("--grid",
                       action="store_true", dest="gridsimul", default=False,
@@ -231,7 +252,7 @@ def execute(args):
     if not options.groundonly:
 
         # Define a run object
-        if type(options.forcing) is list:
+        if type(options.forcing) is list or options.addmask:
             run = tasks.runs.postesrun(options.datedeb, options.datefin, options.forcing, options.diroutput, threshold=options.threshold,
                                        dirwork=options.dirwork, datespinup=options.datespinup,
                                        execdir=options.exesurfex,
@@ -282,17 +303,14 @@ def execute_through_vortex(args):
             options.dirwork = "."
 
     # Cook vortex task
-    if options.escroc and not options.soda:
+    if not options.soda:
         run = vortex_kitchen(options)
         run.run(options)
-    if options.soda and options.escroc:
+    elif options.escroc:
         run = vortex_kitchen_soda(options)
         run.run(options)
-    elif options.soda and not options.escroc:
-        print ("soda should run with escroc option")
     else:
-        print ("Well done. No run, no bug.")
-        print ("Try --escroc or --soda if you like to play. ")
+        print ("soda should run with escroc option")
 
 
 if __name__ == "__main__":

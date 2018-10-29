@@ -11,8 +11,8 @@ the :class:`LinuxMemInfo`.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-
 import six
+
 import abc
 import os
 import resource
@@ -68,7 +68,7 @@ class LinuxMemInfo(MemInfo):
 
     def __init__(self):
         # The RAM size in bytes
-        self._system_RAM = os.sysconf(b'SC_PAGE_SIZE') * os.sysconf(b'SC_PHYS_PAGES')
+        self._system_RAM = os.sysconf(str('SC_PAGE_SIZE')) * os.sysconf(str('SC_PHYS_PAGES'))
 
     def process_maxRSS(self, unit=DEFAULT_MEM_UNIT):
         """

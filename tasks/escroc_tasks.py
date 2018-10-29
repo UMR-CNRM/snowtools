@@ -7,6 +7,7 @@ Created on 7 nov. 2017
 from vortex.layout.nodes import Driver, Task
 from vortex import toolbox
 from utils.dates import get_list_dates_files
+from bronx.stdtypes.date import Date
 import footprints
 
 
@@ -50,8 +51,10 @@ class Escroc_Vortex_Task(Task):
                     dateend        = dateend,
                     nativefmt      = 'netcdf',
                     kind           = 'MeteorologicalForcing',
-                    namespace      = 'cenvortex.multi.fr',
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
                     model          = 'obs',
+                    block          = 'meteo',
                 ),
                 print(t.prompt, 'tb01 =', tb01)
                 print()
@@ -80,7 +83,9 @@ class Escroc_Vortex_Task(Task):
                 experiment     = self.conf.xpid,
                 geometry       = self.conf.geometry,
                 model          = 'surfex',
-                namespace      = 'cenvortex.multi.fr',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'pgd',
                 fatal          = False,
             ),
             print(t.prompt, 'tb02_a =', tb02_a)
@@ -95,9 +100,11 @@ class Escroc_Vortex_Task(Task):
                 date           = self.conf.datespinup,
                 intent         = 'inout',
                 nativefmt      = 'netcdf',
-                kind           = 'SnowpackState',
+                kind           = 'PREP',
                 model          = 'surfex',
-                namespace      = 'cenvortex.multi.fr',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'prep',
                 fatal          = False,
             ),
             print(t.prompt, 'tb03 =', tb03)
@@ -112,9 +119,11 @@ class Escroc_Vortex_Task(Task):
                 date           = self.conf.datespinup,
                 intent         = 'inout',
                 nativefmt      = 'netcdf',
-                kind           = 'SnowpackState',
+                kind           = 'PREP',
                 model          = 'surfex',
-                namespace      = 'cenvortex.multi.fr',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'prep',
                 fatal          = False,
             ),
             print(t.prompt, 'tb03_s =', tb03_s)
@@ -263,7 +272,7 @@ class Escroc_Vortex_Task(Task):
                     local          = 'OFFLINE',
                     model          = 'surfex',
                     genv           = 'uenv:cen.01@CONST_CEN',
-                    gvar           = 'master_offline_mpi',
+                    gvar           = 'master_offline_nompi',
                 )
 
                 print(t.prompt, 'tb06 =', tb06)
@@ -278,7 +287,7 @@ class Escroc_Vortex_Task(Task):
                         local          = 'PGD',
                         model          = 'surfex',
                         genv           = 'uenv:cen.01@CONST_CEN',
-                        gvar           = 'master_pgd',
+                        gvar           = 'master_pgd_nompi',
                     )
 
                     print(t.prompt, 'tb07 =', tb07)
@@ -342,14 +351,16 @@ class Escroc_Vortex_Task(Task):
                 ntasks = 40 * int(self.conf.nnodes)
 
             tb11 = tbalgo4 = toolbox.algo(
-                engine         = 'blind',
-                binary         = 'OFFLINE',
                 kind           = "escroc",
+                engine         = 's2m',
+                verbose        = True,
+                binary         = 'OFFLINE',
                 datebegin      = self.conf.datebegin,
                 dateend        = self.conf.dateend,
-                dateinit       = self.conf.datespinup,
+                dateinit       = Date(self.conf.datespinup),
                 threshold      = self.conf.threshold,
                 members        = footprints.util.rangex(members),
+                geometry       = [self.conf.geometry.area],
                 subensemble    = self.conf.subensemble if hasattr(self.conf, "subensemble")  else "E2",
                 ntasks         = ntasks
             )
@@ -366,7 +377,7 @@ class Escroc_Vortex_Task(Task):
                 dateend = list_dates_end_pro[p]
                 self.sh.title('Toolbox output tb19')
                 tb19 = toolbox.output(
-                    local          = 'mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    local          = 'mb[member%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
                     datebegin      = datebegin,
@@ -375,14 +386,16 @@ class Escroc_Vortex_Task(Task):
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
                     model          = 'surfex',
-                    namespace      = 'cenvortex.multi.fr',
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'pro',
                 ),
                 print(t.prompt, 'tb19 =', tb19)
                 print()
 
                 self.sh.title('Toolbox output tb20')
                 tb20 = toolbox.output(
-                    local          = 'mb[member]/PREP_[date:ymdh].nc',
+                    local          = 'mb[member%04d]/PREP_[date:ymdh].nc',
                     role           = 'SnowpackInit',
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
@@ -390,9 +403,11 @@ class Escroc_Vortex_Task(Task):
                     period         = dateend,
                     member         = members,
                     nativefmt      = 'netcdf',
-                    kind           = 'SnowpackState',
+                    kind           = 'PREP',
                     model          = 'surfex',
-                    namespace      = 'cenvortex.multi.fr',
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'prep',
                 ),
                 print(t.prompt, 'tb20 =', tb20)
                 print()
@@ -407,7 +422,9 @@ class Escroc_Vortex_Task(Task):
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
                     model          = 'surfex',
-                    namespace      = 'cenvortex.multi.fr',
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'pgd',
                 ),
                 print(t.prompt, 'tb21 =', tb21)
                 print()

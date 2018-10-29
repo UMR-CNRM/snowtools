@@ -9,6 +9,7 @@ The name of this module is directly inspired from the eponym C library.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import io
 from contextlib import contextmanager
 import os
 import sys
@@ -72,7 +73,7 @@ def redirected_stdio(module=sys, stdio='stdout', to=os.devnull):
         os.dup2(to.fileno(), fd)  # fd writes to 'to' file
         setattr(module, stdio, os.fdopen(fd, 'w'))  # Python writes to fd
     with os.fdopen(os.dup(fd), 'w') as old_stdio:
-        with open(to, 'w') as f:
+        with io.open(to, 'w') as f:
             _redirect_stdout(f)
         try:
             yield  # allow code to be run with the redirected stdio

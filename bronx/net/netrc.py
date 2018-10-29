@@ -19,6 +19,7 @@ This code has been extacted from Python 3.5 and two patches have been applied:
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import io
 import os
 import re
 import shlex
@@ -88,7 +89,7 @@ class netrc:
         self.hosts = {}
         self.allhosts = {}
         self.macros = {}
-        with open(file) as fp:
+        with io.open(file, 'r') as fp:
             self._parse(file, fp, default_netrc)
 
     def _parse(self, file, fp, default_netrc):

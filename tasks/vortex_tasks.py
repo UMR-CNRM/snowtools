@@ -7,6 +7,7 @@ Created on 7 nov. 2017
 from vortex.layout.nodes import Driver, Task
 from vortex import toolbox
 from utils.dates import get_list_dates_files
+from bronx.stdtypes.date import Date
 
 
 def setup(t, **kw):
@@ -47,7 +48,9 @@ class Surfex_Vortex_Task(Task):
                     nativefmt      = 'netcdf',
                     kind           = 'MeteorologicalForcing',
                     model          = 'safran',
-                    namespace      = 'cenvortex.multi.fr',
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'meteo',
                 ),
                 print(t.prompt, 'tb01 =', tb01)
                 print()
@@ -76,7 +79,9 @@ class Surfex_Vortex_Task(Task):
                 experiment     = self.conf.xpid,
                 geometry       = self.conf.geometry,
                 model          = 'surfex',
-                namespace      = 'cenvortex.multi.fr',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'pgd',
                 fatal          = False,
             ),
             print(t.prompt, 'tb02_a =', tb02_a)
@@ -91,9 +96,11 @@ class Surfex_Vortex_Task(Task):
                 date           = self.conf.datespinup,
                 intent         = 'inout',
                 nativefmt      = 'netcdf',
-                kind           = 'SnowpackState',
+                kind           = 'PREP',
                 model          = 'surfex',
-                namespace      = 'cenvortex.multi.fr',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'prep',
                 fatal          = False,
             ),
             print(t.prompt, 'tb03 =', tb03)
@@ -122,7 +129,9 @@ class Surfex_Vortex_Task(Task):
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
                     model          = 'surfex',
-                    namespace      = 'cenvortex.multi.fr',
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'prep',
                 ),
 
                 print(t.prompt, 'tbi_a =', tbi_a)
@@ -255,7 +264,7 @@ class Surfex_Vortex_Task(Task):
                         local          = 'PGD',
                         model          = 'surfex',
                         genv           = 'uenv:cen.01@CONST_CEN',
-                        gvar           = 'master_pgd',
+                        gvar           = 'master_pgd_mpi',
                     )
 
                     print(t.prompt, 'tb07 =', tb07)
@@ -270,6 +279,7 @@ class Surfex_Vortex_Task(Task):
                         local          = 'PREP',
                         model          = 'surfex',
                         genv           = 'uenv:cen.01@CONST_CEN',
+                        gvar           = 'master_prep_mpi',
                     )
 
                     print(t.prompt, 'tb08 =', tb08)
@@ -317,7 +327,7 @@ class Surfex_Vortex_Task(Task):
                 kind           = 'deterministic',
                 datebegin      = self.conf.datebegin,
                 dateend        = self.conf.dateend,
-                dateinit       = self.conf.datespinup,
+                dateinit       = Date(self.conf.datespinup),
                 threshold      = self.conf.threshold
             )
             print(t.prompt, 'tb11 =', tb11)
@@ -341,7 +351,9 @@ class Surfex_Vortex_Task(Task):
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
                     model          = 'surfex',
-                    namespace      = 'cenvortex.multi.fr',
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'pro',
                 ),
                 print(t.prompt, 'tb19 =', tb19)
                 print()
@@ -355,9 +367,11 @@ class Surfex_Vortex_Task(Task):
                     date           = dateend,
                     period         = dateend,
                     nativefmt      = 'netcdf',
-                    kind           = 'SnowpackState',
+                    kind           = 'PREP',
                     model          = 'surfex',
-                    namespace      = 'cenvortex.multi.fr',
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'prep',
                 ),
                 print(t.prompt, 'tb20 =', tb20)
                 print()
@@ -372,7 +386,8 @@ class Surfex_Vortex_Task(Task):
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
                     model          = 'surfex',
-                    namespace      = 'cenvortex.multi.fr',
-                ),
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'pgd'),
                 print(t.prompt, 'tb21 =', tb21)
                 print()

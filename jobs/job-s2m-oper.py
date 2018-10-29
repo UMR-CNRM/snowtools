@@ -58,7 +58,7 @@ rd_iniconf  = '{0:s}/conf/{1:s}_{2:s}.ini'.format(appbase,
 rd_rundate   = bronx.stdtypes.date.Date($rundate)
 ja = footprints.proxy.jobassistant(kind = 'generic',
                                    modules = footprints.stdtypes.FPSet((
-                                       'common', 'gco', 'olive', 'cen',
+                                       'common', 'gco', 'olive', 'cen', 'iga',
                                        'vortex.tools.lfi', 'vortex.tools.odb',
                                        'common.util.usepygram')),
                                    addons = footprints.stdtypes.FPSet(('lfi', 'iopoll', 'odb')),

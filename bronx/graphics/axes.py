@@ -67,9 +67,9 @@ def set_nice_time_axis(axis, xy,
         z_min = axis.axis()[2]
         z_max = axis.axis()[3]
     if dt_min is None:
-        dt_min = mdates.date2num(z_min)
+        dt_min = mdates.num2date(z_min)
     if dt_max is None:
-        dt_max = mdates.date2num(z_max)
+        dt_max = mdates.num2date(z_max)
     datetimerange = dt_max - dt_min
 
     dayhourformatter = mdates.DateFormatter('%Y-%m-%d\n%H:%M:%S')
