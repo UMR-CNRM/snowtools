@@ -227,9 +227,14 @@ def parse_options(arguments):
     parser.add_option("--walltime",
                       action="store", type = "int", dest="walltime", default = None,
                       help="specify your job walltime (useful for debugging on sev. nodes)")
+    
     parser.add_option("--writesx",
                       action="store", type = "str", dest="writesx", default = None,
                       help="specify the root path (.../vortex) where you'd like to store PREP files on sxcen")
+
+    parser.add_option("--sensor",
+                      action="store", type = "str", dest="sensor", default = "MODIS",
+                      help="specify the sensor name of the obs you want to assimilate")
 
     (options, args) = parser.parse_args(arguments)
 
