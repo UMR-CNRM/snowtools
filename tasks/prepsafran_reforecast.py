@@ -54,10 +54,6 @@ class PrepSafran(Task, S2MTaskMixIn):
             rundate = datebegin
             while rundate <= dateend:
 
-                if d == day_per_worker:
-                    m = m + 1
-                    d = 0
-
                 # I- PEARP
                 # Récupération du réseau P18 (J-1) pour couvrir J 6h -> (J+4) 6h
                 self.sh.title('Toolbox input tb01')
@@ -86,6 +82,9 @@ class PrepSafran(Task, S2MTaskMixIn):
 
                 rundate = rundate + Period(days=1)
 
+                if d == day_per_worker:
+                    m = m + 1
+                    d = 0
                 d = d + 1
 
             self.sh.title('Toolbox input tb02 = PRE-TRAITEMENT FORCAGE script')
@@ -113,7 +112,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 terms          = footprints.util.rangex(self.conf.prv_terms),
                 interpreter    = script[0].resource.language,
                 ntasks         = self.conf.ntasks,
-                members        = footprints.util.rangex(self.conf.members)
             )
             print t.prompt, 'tb03 =', expresso
             print
@@ -126,14 +124,15 @@ class PrepSafran(Task, S2MTaskMixIn):
 
         if 'late-backup' in self.steps:
 
+            d = 0
+            m = 0
             rundate = datebegin
-
             while rundate <= dateend:
 
                 self.sh.title('Toolbox output tb04')
                 tb04 = toolbox.output(
                     role           = 'Ebauche',
-                    local          = 'mb[member]/P[date:yymdh]_[cumul:hour]_[vconf]_reforecast',
+                    local          = 'mb{0:=01d}[member%02]/P[date:yymdh]_[cumul:hour]_[vconf]_reforecast'.format(m),
                     experiment     = self.conf.xpid,
                     block          = self.conf.guess_block,
                     geometry       = self.conf.domains,
@@ -147,11 +146,15 @@ class PrepSafran(Task, S2MTaskMixIn):
                     source_conf    = self.conf.eps_conf,
                     namespace      = self.conf.namespace,
                     member         = footprints.util.rangex(self.conf.pearp_members),
-                    namebuild      = 'flat@cen'
                 ),
                 print t.prompt, 'tb04 =', tb04
                 print
 
-                rundate = rundate + Period(days=4)
+                rundate = rundate + Period(days=1)
+
+                if d == day_per_worker:
+                    m = m + 1
+                    d = 0
+                d = d + 1
 
             raise ExecutionError('')
