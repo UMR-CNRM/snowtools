@@ -48,7 +48,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind           = 'observations',
                 stage          = 'safrane',
                 nativefmt      = 'ascii',
-                date           = ['{0:s}/-PT{1:s}H/+PT[term]H'.format(dateend.ymd6h, str(24 * i)) for i in range(ndays)],
+                date           = ['{0:s}/-PT{1:s}H/+PT[term]H'.format(dateend.ymd6h, str(24 * (i + 1))) for i in range(ndays)],
                 term           = footprints.util.rangex(self.conf.ana_terms),
                 local          = 'S[date:yymdh]',
                 model          = self.conf.model,
@@ -112,7 +112,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind           = 'observations',
                 stage          = 'safrane',
                 nativefmt      = 'ascii',
-                date           = ['{0:s}/-PT{1:s}H/+PT[term]H'.format(dateend.ymd6h, str(24 * i)) for i in range(ndays)],
+                date           = ['{0:s}/-PT{1:s}H/+PT[term]H'.format(dateend.ymd6h, str(24 * (i + 1))) for i in range(ndays)],
                 term           = footprints.util.rangex(self.conf.ana_terms),
                 local          = 'A[date:yymdh]',
                 model          = self.conf.model,
@@ -710,7 +710,7 @@ class Safran(Task, S2MTaskMixIn):
             print
 
             self.sh.title('Toolbox output tb32')
-            tb32= toolbox.output(
+            tb32 = toolbox.output(
                 role           = 'Liste_obs',
                 block          = 'listing',
                 experiment     = self.conf.xpid,
