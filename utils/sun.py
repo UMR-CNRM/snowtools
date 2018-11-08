@@ -22,7 +22,7 @@ class sun():
     def __init__(self):
         self.missingvalue = -9999999.
 
-    def slope_aspect_correction(self, direct, diffus, time, lat_in, lon_in, aspect_in, slope_in, list_list_azim=None, list_list_mask=None, lnosof_surfex=True):
+    def slope_aspect_correction(self, direct, diffus, time, lat_in, lon_in, aspect_in, slope_in, list_list_azim=None, list_list_mask=None, lnosof_surfex=True, convert_time = True, return_angles = False):
 
         '''This routine corrects the direct solar radiation because due to explicit slope or surrounding masks
           Input : array of direct solar radiation over an infinite flat surface (time,loc) or (time,x,y)
@@ -31,10 +31,10 @@ class sun():
                   longitude vector
                   aspect vector
                   slope vector
-          Optional input : list of azimuths and height of masks
+          Optional input : list of azimuths and height of masks on each point(radian or degrees ?)
           Optional input : lnosof_surfex (subgrid orography deactivated in Surfex)
-          Output : corrected direct solar radiation'''
-
+          Output : corrected direct solar radiation
+		  Optional Output : angular positions of sun'''
         tab_direct = direct[:]
         tab_diffus = diffus[:]
         tab_global = tab_direct + tab_diffus
@@ -46,11 +46,12 @@ class sun():
         lat = self.upscale_tab(lat_in, tab_direct.shape )
 
         # extraction of date and computation of fractional Julian day, j_2 (1 january is 0)
-
-# M. Lafaysse : convert date in date at the middle of the time step to compute angles more representative of the fluxes
-        deltatime = time[1] - time[0]
-        tab_time_date = time - deltatime / 2
-
+        if convert_time is True:
+        # M. Lafaysse : convert date in date at the middle of the time step to compute angles more representative of the fluxes
+            deltatime = time[1] - time[0]
+            tab_time_date = time - deltatime / 2
+        else:
+            tab_time_date = time
         j_2 = np.ones(tab_time_date.shape, 'f')
         h_2 = np.ones(tab_time_date.shape, 'f')
         for i in range(len(tab_time_date)):
@@ -200,7 +201,6 @@ class sun():
 
             for i, list_azim in enumerate(list_list_azim):
                 ZMASK[:, i] = interp1d(list_azim, list_list_mask[i], ZPSI1[:, i])
-
             ZRSIP = np.where(ZMASK > ZGAMMA * URD2DG, 0., ZRSIP)  # set to zero direct radiation values when solar angle is below mask angle (computed as f(ZPSI1))
 
         if lnosof_surfex:
@@ -210,9 +210,10 @@ class sun():
             # Not recommended
             # put the result back on the horizontal ; surfex will carry out the inverse operation when lnosof=f.
             tab_direct = ZRSIP / np.cos(slope)
-
-        return tab_direct, tab_diffus
-
+        if return_angles:
+            return tab_direct, tab_diffus, ZGAMMA, azimuth
+        else:
+            return tab_direct, tab_diffus
     # The two following routines from JM Willemet should be rewritten without the loops
     def upscale_tab(self, var, theshape):
 

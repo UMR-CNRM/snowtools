@@ -140,6 +140,36 @@ def print_tablelike(fmt, *args, **kwargs):
         cb(fmt.format(* args))
 
 
+def join_list_in_proper_english(a_list, l_fmt='{!s}'):
+    """Join a list using commas + a final 'and' word if needed.
+
+    :param a_list: any iterable object to be concatenated
+    :param str a_fmt: The Python's format applied to each **a_list** item
+
+    :example: Ask something to someone...
+
+        >>> print(join_list_in_proper_english(['a', 'b', 'c']))
+        a, b and c
+        >>> print(join_list_in_proper_english('abc'))  # Any iterable can be used
+        a, b and c
+        >>> print(join_list_in_proper_english(['a', 'b']))
+        a and b
+        >>> print(join_list_in_proper_english(['a', ]))
+        a
+        >>> print(join_list_in_proper_english([]))
+        <BLANKLINE>
+
+    """
+    a_list = [l_fmt.format(i) for i in a_list]
+    if len(a_list) >= 2:
+        outstr = ', '.join(a_list[:-1]) + ' and ' + a_list[-1]
+    elif a_list:
+        outstr = a_list[-1]
+    else:
+        outstr = ''
+    return outstr
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
