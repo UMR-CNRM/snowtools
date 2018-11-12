@@ -35,7 +35,8 @@ class SodaSnow_Vortex_Task(Task):
 
         t = self.ticket
         assDates = []
-
+        if hasattr(self.conf, 's2dates'):
+            self.conf.assimdates = sorted(self.conf.assimdates + self.conf.s2dates)
         try:
             for dt in self.conf.assimdates:  # /!\ bug when only 1 assim date ?
                 dt = Date(check_and_convert_date(str(dt)))
@@ -49,7 +50,25 @@ class SodaSnow_Vortex_Task(Task):
         list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = \
             get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration, assDates)
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 1
+
+        # ESCROC members identity selection :
+        # members is the rep numbers
+        # mbids is the ESCROC identity of the member
         members = list(range(startmember, int(self.conf.nmembers) + startmember)) if hasattr( self.conf, "nmembers") else list(range(1, 36))
+
+        if 'E1' in self.conf.subensemble:
+            # if user-provider list of escroc configurations in conf file, use it :
+            if hasattr(self.conf, 'membersId'):
+                mbids = map(int, self.conf.membersId)
+                self.conf.randomDraw = False
+            else:  # else randomly draw a set of escroc configs and save it in conf file (for twin experiments)
+                mbids = footprints.util.rangex(members)
+                self.conf.randomDraw = True
+
+        else:
+            mbids = footprints.util.rangex(members)
+            self.conf.randomDraw = False
+
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
             # we fetch forcing files into the members directories using the remainder function %
@@ -231,7 +250,32 @@ class SodaSnow_Vortex_Task(Task):
             print(t.prompt, 'tb05 =', tb05)
             print()
 
+            takeConf = '/scratch/work/'  + os.environ['USER'] + '/' + self.conf.vapp + '/' + self.conf.vconf + '/conf/' + self.conf.vapp + '_' + self.conf.vconf + '.ini'
+            self.sh.title('Toolbox input tbconf')
+            tbconf = toolbox.input(
+                kind           = 'ini_file',
+                # namespace      = 'vortex.sxcen.fr',
+                # namebuild      = 'flat@cen',
+                # block          = 'conf',
+                # storage        = 'sxcen.cnrm.meteo.fr',
+                # rootpath       = self.conf.writesx,
+                # experiment     = self.conf.xpid,
+                local          = self.conf.vapp + '_' + self.conf.vconf + '.ini',
+                vapp           = self.conf.vapp,
+                vconf          = self.conf.vconf,
+                remote         = takeConf,
+                model          ='surfex',
+                role           = 'Conf_file',
+                intent = 'inout',
+                # fatal          = False,
+            )
+            print(t.prompt, 'tbCONFIN =', tbconf)
+            print()
+
             if self.conf.openloop == 'off':
+                if hasattr(self.conf, 's2dates'):
+                    # in case s2dates are specified, check for s2 obs.
+                    self.conf.sensor = list(set(self.conf.sensor).add('SENTINEL2'))
                 self.sh.title('Toolbox input tobs')
                 for dt in assDates:  # painful loop only to prevent vortex to look for all possible combination of datebegin/dateend
                     tobs = toolbox.input(
@@ -350,11 +394,13 @@ class SodaSnow_Vortex_Task(Task):
             else:  # to check, it's not clear obvious to me yet -> mem. saturation if 35 members on a node. need to reduce consumption and members/node
                 # ntasksEsc = 40 * int(self.conf.nnodes)
                 ntasksEsc = min(self.conf.nmembers, 40)
+
             # assimilation loop
             datestart = self.conf.datebegin
-            print(assDates)
             stopstep = 1
-            for dateassim in assDates:
+            findates = assDates + [self.conf.dateend]
+            print ('findates', findates)
+            for dateassim in findates:
                 self.sh.title('Toolbox algo tb11 = OFFLINE')
 
                 # forcing files attribution (mixing ) in offline algocomp
@@ -368,11 +414,12 @@ class SodaSnow_Vortex_Task(Task):
                     dateend        = datestop,
                     dateinit       = Date(self.conf.datespinup),
                     threshold      = self.conf.threshold,
-                    members        = footprints.util.rangex(members),
+                    members        = mbids,
                     geometry       = [self.conf.geometry.area],
-                    subensemble    = self.conf.subensemble if hasattr(self.conf, "subensemble")  else "E1Tartes",
+                    subensemble    = self.conf.subensemble,
                     ntasks         = ntasksEsc,
                     nforcing       = self.conf.nforcing,
+                    randomDraw     = self.conf.randomDraw,
                     stopcount      = stopstep,            # possibly useless
                     confvapp       = self.conf.vapp,      # """"
                     confvconf      = self.conf.vconf,     # """"
@@ -393,7 +440,7 @@ class SodaSnow_Vortex_Task(Task):
                             binary         = 'SODA',
                             kind           = "s2m_soda",
                             dateassim      = dateassim,
-                            members        = footprints.util.rangex(members),
+                            members        = mbids,
                         )
                         print(t.prompt, 'tb11_s =', tb11_s)
                         print()
@@ -407,7 +454,7 @@ class SodaSnow_Vortex_Task(Task):
                         
                 # increment the date
                 datestart = datestop
-
+            """
             # last propagation -> better include in the above loop
             self.sh.title('Toolbox algo tb11_f = OFFLINE')
             tb11_f = tbalgo4f = toolbox.algo(
@@ -418,19 +465,20 @@ class SodaSnow_Vortex_Task(Task):
                 dateend        = self.conf.dateend,
                 dateinit       = Date(self.conf.datespinup),
                 threshold      = self.conf.threshold,
-                members        = footprints.util.rangex(members),
+                members        = mbids,
                 geometry       = [self.conf.geometry.area],
                 subensemble    = self.conf.subensemble if hasattr(self.conf, "subensemble")  else "E1Tartes",
                 ntasks         = ntasksEsc,
                 nforcing       = self.conf.nforcing,
+                randomDraw     = self.conf.randomDraw,
                 stopcount      = stopstep,              # possibly useless
-                confvapp       = self.conf.vapp,        # """"
-                confvconf      = self.conf.vconf,       # """"
+                confvapp       = self.conf.vapp,        # "
+                confvconf      = self.conf.vconf,       # "
             )
             print(t.prompt, 'tb11_f =', tb11_f)
             print()
             self.component_runner(tbalgo4f, tbx3)
-
+            """
         if 'backup' in self.steps:
             pass
 
@@ -592,26 +640,55 @@ class SodaSnow_Vortex_Task(Task):
                     ),
                     print(t.prompt, 'tb21 =', tb21_b)
                     print()
-                    self.sh.title('Toolbox output tbconf')
-                    tbconf = toolbox.output(
-                        kind           = 'ini_file',
-                        namespace      = 'vortex.sxcen.fr',
-                        namebuild      = 'flat@cen',
-                        block          = 'conf',
-                        storage        = 'sxcen.cnrm.meteo.fr',
-                        rootpath       = self.conf.writesx,
-                        experiment     = self.conf.xpid,
-                        local          = self.conf.vapp + '_' + self.conf.vconf + '.ini',
-                        vapp           = self.conf.vapp,
-                        vconf          = self.conf.vconf,
-                        fatal          = False,
+            # conf file and namelist to hendrix
+            self.sh.title('Toolbox output tbconf')
+            tbconf = toolbox.output(
+                kind           = 'ini_file',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'conf',
+                experiment     = self.conf.xpid,
+                local          = self.conf.vapp + '_' + self.conf.vconf + '.ini',
+                vapp           = self.conf.vapp,
+                vconf          = self.conf.vconf,
+                fatal          = False,
 
-                    ),
-                    print(t.prompt, 'tbconf =', tbconf)
-                    print()
-
+            ),
+            print(t.prompt, 'tbconf =', tbconf)
+            print()
+            self.sh.title('Toolbox output tb23')
+            tb23 = toolbox.output(
+                role            = 'Nam_surfex',
+                namespace       = 'vortex.multi.fr',
+                namebuild       = 'flat@cen',
+                block           = 'conf',
+                experiment      = self.conf.xpid,
+                kind            = 'namelist',
+                model           = 'surfex',
+                local           = 'OPTIONS.nam',
+                fatal           = False,
+            )
+            
+            # conf file and namelist to sxcen
             if hasattr(self.conf, 'writesx'):
-                self.sh.title('Toolbox output tb23')
+                self.sh.title('Toolbox output tbconf_sx')
+                tbconf = toolbox.output(
+                    kind           = 'ini_file',
+                    namespace      = 'vortex.sxcen.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'conf',
+                    storage        = 'sxcen.cnrm.meteo.fr',
+                    rootpath       = self.conf.writesx,
+                    experiment     = self.conf.xpid,
+                    local          = self.conf.vapp + '_' + self.conf.vconf + '.ini',
+                    vapp           = self.conf.vapp,
+                    vconf          = self.conf.vconf,
+                    fatal          = False,
+
+                ),
+                print(t.prompt, 'tbconf =', tbconf)
+                print()
+                self.sh.title('Toolbox output tb23_sx')
                 tb23 = toolbox.output(
                     role            = 'Nam_surfex',
                     namespace       = 'vortex.sxcen.fr',

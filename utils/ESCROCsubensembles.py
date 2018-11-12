@@ -9,7 +9,7 @@ import numpy as np
 class ESCROC_subensembles(dict):
     '''Define the different subensembles of ESCROC and provide the corresponding namelist components'''
 
-    def __init__(self, subensemble, members):
+    def __init__(self, subensemble, members, randomDraw = False):
 
         self.dicoptrad = {"B60": "B92", "B10": "B92", "TAR": "TA3", "TA+": "TA4", "T17": "T17"}
         self.dicageing = {"B60": 60., "B10": 10., "B120": 120., "B180": 180., "B240": 240., "TAR": 60., "TA+": 60., "T17": 60.}
@@ -21,13 +21,13 @@ class ESCROC_subensembles(dict):
         self.dicxcvheatf = {"CV50000": 1.0, "CV30000": 0.6, "CV10000": 0.2}
 
         if subensemble == "E1":
-            self.physical_options, self.snow_parameters, self.members = self.E1(members)
+            self.physical_options, self.snow_parameters, self.members = self.E1(members, randomDraw)
 
         elif subensemble == "E1tartes":
-            self.physical_options, self.snow_parameters, self.members = self.E1tartes(members)
+            self.physical_options, self.snow_parameters, self.members = self.E1tartes(members, randomDraw)
 
         elif subensemble == "E1notartes":
-            self.physical_options, self.snow_parameters, self.members = self.E1notartes(members)
+            self.physical_options, self.snow_parameters, self.members = self.E1notartes(members, randomDraw)
 
         elif subensemble in ["E2", "E2CLEAR"]:
             self.physical_options, self.snow_parameters, self.members = self.E2(members)
@@ -37,106 +37,63 @@ class ESCROC_subensembles(dict):
         else:
             raise Exception("The subensemble selected is not defined in ESCROCsubensembles.py")
 
-    def E1(self, members):
+    def E1(self, members, randomDraw = False):
 
-        physical_options = []
-        snow_parameters = []
-        mb = 0
+        self.snowflist = ['V12', 'S02', 'A76']
+        self.metamlist = ['C13', 'F06', 'S-F']
+        self.radlist = ['B60', 'B10', 'TAR', 'TA+']
+        self.turblist = ['RIL', 'RI1', 'RI2', 'M98']
+        self.condlist = ['Y81', 'I02']
+        self.holdlist = ['B92', 'SPK', 'B02']
+        self.complist = ['B92', 'S14', 'T11']
+        self.cvlist = ['CV10000', 'CV30000', 'CV50000']
 
-        for snowfall in ['V12', 'S02', 'A76']:
-            for metamo in ['C13', 'F06', 'S-F']:
-                for radiation in ['B60', 'B10', 'TAR', 'TA+']:
-                    for turb in ['RIL', 'RI1', 'RI2', 'M98']:
-                        for cond in ['Y81', 'I02']:
-                            for holding in ['B92', 'SPK', 'B02']:
-                                for compaction in ['B92', 'S14', 'T11']:
-                                    for cv in ['CV10000', 'CV30000', 'CV50000']:
+        physical_options, snow_parameters, memberslist = self.drawMembers(members, randomDraw)
 
-                                            mb += 1
-                                            if mb in members:
-                                                po, sp = self.convert_options(snowfall, metamo, radiation, turb, cond, holding, compaction, cv)
-                                                physical_options.append(po)
-                                                snow_parameters.append(sp)
+        return physical_options, snow_parameters, memberslist
 
-        return physical_options, snow_parameters, members
-
-    def E1tartes(self, members):
+    def E1tartes(self, members, randomDraw):
         """
         E1tartes is a random draw inside the big Tartes ensemble
         members is a sorted list of members id (ex 1...35)
 
         /!\ member identities will be different from one run to another
 
+        NEW : 12/11/18 :
+                activate/deactivate random draw
+
         """
-        physical_options = []
-        snow_parameters = []
-        snowflist = ['V12', 'S02', 'A76']
-        metamlist = ['C13', 'F06', 'S-F']
-        radlist = ['T17']
-        turblist = ['RIL', 'RI1', 'RI2', 'M98']
-        condlist = ['Y81', 'I02']
-        holdlist = ['B92', 'SPK', 'B02']
-        complist = ['B92', 'S14', 'T11']
-        cvlist = ['CV10000', 'CV30000', 'CV50000']
-        # random draw (whithout replacement) of nmembers members in the whole population
-        # be careful +1 because starts from 0
-        memberslist = 1 + np.random.choice(len(snowflist) * len(metamlist) * len(radlist) * len(turblist) * len(condlist) * len(holdlist) * len(complist) * len(cvlist), len(members), replace = False)
-        print(memberslist)
 
-        mb = 0
-        for snowfall in snowflist:
-            for metamo in metamlist:
-                for radiation in radlist:
-                    for turb in turblist:
-                        for cond in condlist:
-                            for holding in holdlist:
-                                for compaction in complist:
-                                    for cv in cvlist:
-                                            mb += 1
-                                            if mb in memberslist:
-                                                po, sp = self.convert_options(snowfall, metamo, radiation, turb, cond, holding, compaction, cv)
-                                                physical_options.append(po)
-                                                snow_parameters.append(sp)
+        self.snowflist = ['V12', 'S02', 'A76']
+        self.metamlist = ['C13', 'F06', 'S-F']
+        self.radlist = ['T17']
+        self.turblist = ['RIL', 'RI1', 'RI2', 'M98']
+        self.condlist = ['Y81', 'I02']
+        self.holdlist = ['B92', 'SPK', 'B02']
+        self.complist = ['B92', 'S14', 'T11']
+        self.cvlist = ['CV10000', 'CV30000', 'CV50000']
 
+        physical_options, snow_parameters, memberslist = self.drawMembers(members, randomDraw)
         return physical_options, snow_parameters, memberslist
 
-    def E1notartes(self, members):
+    def E1notartes(self, members, randomDraw):
         """
         /!\ quasi duplicate from E1tartes
         E1notartes is a duplicate from E1 with T17 replaced by B92
 
         /!\ member identities will be different from one run to another
+        the returned models are randomly drawn among E1notartes
 
         """
-        physical_options = []
-        snow_parameters = []
-        snowflist = ['V12', 'S02', 'A76']
-        metamlist = ['C13', 'F06', 'S-F']
-        radlist = ['B60']
-        turblist = ['RIL', 'RI1', 'RI2', 'M98']
-        condlist = ['Y81', 'I02']
-        holdlist = ['B92', 'SPK', 'B02']
-        complist = ['B92', 'S14', 'T11']
-        cvlist = ['CV10000', 'CV30000', 'CV50000']
-        # random draw (whithout replacement) of nmembers members in the whole population
-        # be careful +1 because starts from 0
-        memberslist = 1 + np.random.choice(len(snowflist) * len(metamlist) * len(radlist) * len(turblist) * len(condlist) * len(holdlist) * len(complist) * len(cvlist), len(members), replace = False)
-        print(memberslist)
-
-        mb = 0
-        for snowfall in snowflist:
-            for metamo in metamlist:
-                for radiation in radlist:
-                    for turb in turblist:
-                        for cond in condlist:
-                            for holding in holdlist:
-                                for compaction in complist:
-                                    for cv in cvlist:
-                                            mb += 1
-                                            if mb in memberslist:
-                                                po, sp = self.convert_options(snowfall, metamo, radiation, turb, cond, holding, compaction, cv)
-                                                physical_options.append(po)
-                                                snow_parameters.append(sp)
+        self.snowflist = ['V12', 'S02', 'A76']
+        self.metamlist = ['C13', 'F06', 'S-F']
+        self.radlist = ['B60']
+        self.turblist = ['RIL', 'RI1', 'RI2', 'M98']
+        self.condlist = ['Y81', 'I02']
+        self.holdlist = ['B92', 'SPK', 'B02']
+        self.complist = ['B92', 'S14', 'T11']
+        self.cvlist = ['CV10000', 'CV30000', 'CV50000']
+        physical_options, snow_parameters, memberslist = self.drawMembers(members, randomDraw)
 
         return physical_options, snow_parameters, memberslist
 
@@ -203,6 +160,33 @@ class ESCROC_subensembles(dict):
             snow_parameters.append(sp)
 
         return physical_options, snow_parameters, members
+
+    def drawMembers(self, members, randomDraw):
+        # if randomDraw : random draw (whithout replacement) of len(members) in the whole population
+        # else: returns the members corresponding to members
+        # be careful +1 because starts from 0
+        if randomDraw:
+            memberslist = 1 + np.random.choice(len(self.snowflist) * len(self.metamlist) * len(self.radlist) * len(self.turblist) * len(self.condlist) * len(self.holdlist) * len(self.complist) * len(self.cvlist), len(members), replace = False)
+        else:
+            memberslist = members
+        print(memberslist)
+        physical_options = []
+        snow_parameters = []
+        mb = 0
+        for snowfall in self.snowflist:
+            for metamo in self.metamlist:
+                for radiation in self.radlist:
+                    for turb in self.turblist:
+                        for cond in self.condlist:
+                            for holding in self.holdlist:
+                                for compaction in self.complist:
+                                    for cv in self.cvlist:
+                                            mb += 1
+                                            if mb in memberslist:
+                                                po, sp = self.convert_options(snowfall, metamo, radiation, turb, cond, holding, compaction, cv)
+                                                physical_options.append(po)
+                                                snow_parameters.append(sp)
+        return physical_options, snow_parameters, memberslist
 
     def convert_options(self, snowfall, metamo, radiation, turb, cond, holding, compaction, cv):
 
