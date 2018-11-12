@@ -48,7 +48,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind           = 'observations',
                 stage          = 'safrane',
                 nativefmt      = 'ascii',
-                date           = ['{0:s}/-PT{1:s}H/+PT[term]H'.format(datebegin.ymd6h, str(24 * i)) for i in range(ndays)],
+                date           = ['{0:s}/-PT{1:s}H/+PT[term]H'.format(dateend.ymd6h, str(24 * (i + 1))) for i in range(ndays)],
                 term           = footprints.util.rangex(self.conf.ana_terms),
                 local          = 'S[date:yymdh]',
                 model          = self.conf.model,
@@ -112,7 +112,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind           = 'observations',
                 stage          = 'safrane',
                 nativefmt      = 'ascii',
-                date           = ['{0:s}/-PT{1:s}H/+PT[term]H'.format(datebegin.ymd6h, str(24 * i)) for i in range(ndays)],
+                date           = ['{0:s}/-PT{1:s}H/+PT[term]H'.format(dateend.ymd6h, str(24 * (i + 1))) for i in range(ndays)],
                 term           = footprints.util.rangex(self.conf.ana_terms),
                 local          = 'A[date:yymdh]',
                 model          = self.conf.model,
@@ -631,7 +631,7 @@ class Safran(Task, S2MTaskMixIn):
             print
 
             self.sh.title('Toolbox output tb28')
-            tb27 = toolbox.output(
+            tb28 = toolbox.output(
                 role           = 'Ana_postes',
                 kind           = 'MeteorologicalForcing',
                 source_app     = 'arpege',
@@ -647,11 +647,11 @@ class Safran(Task, S2MTaskMixIn):
                 dateend        = dateend.ymd6h,
                 namespace      = self.conf.namespace,
             ),
-            print t.prompt, 'tb28 =', tb27
+            print t.prompt, 'tb28 =', tb28
             print
 
             self.sh.title('Toolbox output tb29')
-            tb27 = toolbox.output(
+            tb29 = toolbox.output(
                 role           = 'Ana_massifs',
                 kind           = 'MeteorologicalForcing',
                 source_app     = 'arpege',
@@ -668,11 +668,11 @@ class Safran(Task, S2MTaskMixIn):
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
             ),
-            print t.prompt, 'tb29 =', tb27
+            print t.prompt, 'tb29 =', tb29
             print
 
             self.sh.title('Toolbox output tb30')
-            tb27 = toolbox.output(
+            tb30 = toolbox.output(
                 role           = 'Ana_postes',
                 kind           = 'MeteorologicalForcing',
                 source_app     = 'arpege',
@@ -689,11 +689,11 @@ class Safran(Task, S2MTaskMixIn):
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
             ),
-            print t.prompt, 'tb30 =', tb27
+            print t.prompt, 'tb30 =', tb30
             print
 
             self.sh.title('Toolbox output tb31')
-            tb28 = toolbox.output(
+            tb31 = toolbox.output(
                 role           = 'Listing',
                 block          = 'listing',
                 experiment     = self.conf.xpid,
@@ -706,11 +706,11 @@ class Safran(Task, S2MTaskMixIn):
                 task           = '[local]',
                 date           = self.conf.rundate.ymdh,
             )
-            print t.prompt, 'tb31 =', tb28
+            print t.prompt, 'tb31 =', tb31
             print
 
             self.sh.title('Toolbox output tb32')
-            tb29 = toolbox.output(
+            tb32 = toolbox.output(
                 role           = 'Liste_obs',
                 block          = 'listing',
                 experiment     = self.conf.xpid,
@@ -723,11 +723,11 @@ class Safran(Task, S2MTaskMixIn):
                 task           = '[local]',
                 date           = self.conf.rundate.ymdh,
             )
-            print t.prompt, 'tb32 =', tb29
+            print t.prompt, 'tb32 =', tb32
             print
 
             self.sh.title('Toolbox output tb33')
-            tb28 = toolbox.output(
+            tb33 = toolbox.output(
                 role           = 'Listing',
                 block          = 'listing',
                 experiment     = self.conf.xpid,
@@ -742,11 +742,11 @@ class Safran(Task, S2MTaskMixIn):
                 task           = '[local]',
                 date           = self.conf.rundate.ymdh,
             )
-            print t.prompt, 'tb33 =', tb28
+            print t.prompt, 'tb33 =', tb33
             print
 
             self.sh.title('Toolbox output tb34')
-            tb29 = toolbox.output(
+            tb34 = toolbox.output(
                 role           = 'Liste_obs',
                 block          = 'listing',
                 experiment     = self.conf.xpid,
@@ -761,7 +761,7 @@ class Safran(Task, S2MTaskMixIn):
                 task           = '[local]',
                 date           = self.conf.rundate.ymdh,
             )
-            print t.prompt, 'tb34 =', tb29
+            print t.prompt, 'tb34 =', tb34
             print
 
             from vortex.tools.systems import ExecutionError
