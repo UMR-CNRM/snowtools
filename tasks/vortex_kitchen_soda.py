@@ -10,6 +10,7 @@ import shutil
 
 from utils.resources import InstallException
 from tasks.vortex_kitchen import vortex_conf_file, walltime
+from tools.update_namelist import update_surfex_namelist_file
 
 
 class vortex_kitchen_soda(object):
@@ -36,6 +37,7 @@ class vortex_kitchen_soda(object):
         self.jobtemplate = "job-vortex-default.py"
 
         self.create_env(options)
+        self.enforce_nmembers(options)
         self.create_conf(options)
 
     def check_vortex_install(self):
@@ -61,6 +63,11 @@ class vortex_kitchen_soda(object):
         os.chdir("jobs")
         if not os.path.isfile(self.jobtemplate):
             os.symlink(os.environ["SNOWTOOLS_CEN"] + "/jobs/" + self.jobtemplate, self.jobtemplate)
+            
+    def enforce_nmembers(self, options):
+        """enforce NENS in the namelist to the presecribed s2m argument value. Mandatory for SODA"""
+        # options.namelist is already an absolute path.
+        update_surfex_namelist_file(options.datedeb, namelistfile=options.namelist, dateend=options.datefin, updateloc=False, nmembers = options.nmembers)
 
     def create_conf(self, options):
         ''' Prepare configuration file from s2m options'''
@@ -142,6 +149,10 @@ class vortex_kitchen_soda(object):
 
         if options.writesx:
             conffile.write_field('writesx', options.writesx)
+
+        if options.soda:
+            print options.sensor
+            conffile.write_field('sensor', options.sensor)
 
         conffile.close()
 

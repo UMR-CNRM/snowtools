@@ -17,21 +17,25 @@ from utils.FileException import FileNameException
 from bronx.datagrip.namelist import NamelistParser
 
 
-def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam", forcing="FORCING.nc", dateend=None, updateloc=True):
+def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam", forcing="FORCING.nc", dateend=None, updateloc=True, nmembers = None):
     '''This function updates a namelist file through the bronx module.'''
     if not os.path.isfile(namelistfile):
         raise FileNameException(os.getcwd() + "/OPTIONS.nam")
-
-    os.rename(namelistfile, "OPTIONS_base.nam")
     n = NamelistParser()
-    N = n.parse("OPTIONS_base.nam")
-    update_surfex_namelist_object(N, datebegin=datebegin, forcing=forcing, dateend=dateend, updateloc=updateloc)
+
+    if nmembers is None:  # this doesn't work on beaufix.
+        os.rename(namelistfile, "OPTIONS_base.nam")
+        N = n.parse("OPTIONS_base.nam")
+        update_surfex_namelist_object(N, datebegin=datebegin, forcing=forcing, dateend=dateend, updateloc=updateloc)
+    else:
+        N = n.parse(namelistfile)
+        update_namelist_object_nmembers(N, nmembers)
     namSURFEX = open(namelistfile, 'w')
     namSURFEX.write(N.dumps())
     namSURFEX.close()
 
 
-def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc", dateend=None, updateloc=True, physicaloptions={}, snowparameters={}, nmembers=None):
+def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc", dateend=None, updateloc=True, physicaloptions={}, snowparameters={}):
     '''This function updates a NamelistSet object of the bronx module or a NamelistContents object of the vortex module.'''
 
     NamelistObject = update_mandatory_settings(NamelistObject)
@@ -43,7 +47,6 @@ def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc
 
     NamelistObject = update_physicaloptions(NamelistObject, **physicaloptions)
     NamelistObject = update_snowparameters(NamelistObject, **snowparameters)
-    NamelistObject = update_nmembers(NamelistObject, nmembers)
     return NamelistObject
 
 
@@ -168,7 +171,7 @@ def update_snowparameters(NamelistObject, **kwargs):
     return NamelistObject
 
 
-def update_nmembers(NamelistObject, nmembers):
+def update_namelist_object_nmembers(NamelistObject, nmembers):
 
     if nmembers is not None:
         check_or_create_block(NamelistObject, "NAM_ENS")

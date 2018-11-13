@@ -63,7 +63,7 @@ class Safran(Task, S2MTaskMixIn):
                 print
 
                 # A modifier au pas de temps journalier
-                rundate = rundate + Period(days=4)
+                rundate = rundate + Period(days=1)
 
             self.sh.title('Toolbox input tb03')
             tb03 = toolbox.input(
@@ -300,6 +300,7 @@ class Safran(Task, S2MTaskMixIn):
                 tb15 = tbalgo1 = toolbox.algo(
                     engine         = 's2m',
                     kind           = 'safrane',
+                    execution      = 'reforecast',
                     datebegin      = rundate.ymd6h,
                     dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
                     ntasks         = self.conf.ntasks,
@@ -314,6 +315,7 @@ class Safran(Task, S2MTaskMixIn):
                 tb16 = tbalgo2 = toolbox.algo(
                     engine         = 's2m',
                     kind           = 'syrpluie',
+                    execution      = 'reforecast',
                     datebegin      = rundate.ymd6h,
                     dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
                     ntasks         = self.conf.ntasks,
@@ -327,6 +329,7 @@ class Safran(Task, S2MTaskMixIn):
                 tb17 = tbalgo3 = toolbox.algo(
                     engine         = 's2m',
                     kind           = 'syrmrr',
+                    execution      = 'reforecast',
                     datebegin      = rundate.ymd6h,
                     dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
                     ntasks         = self.conf.ntasks,
@@ -340,7 +343,7 @@ class Safran(Task, S2MTaskMixIn):
                 tb18 = tbalgo4 = toolbox.algo(
                     engine         = 's2m',
                     kind           = 'sytist',
-                    execution      = 'forecast',
+                    execution      = 'reforecast',
                     datebegin      = rundate.ymd6h,
                     dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
                     ntasks         = self.conf.ntasks,
@@ -350,16 +353,7 @@ class Safran(Task, S2MTaskMixIn):
 
                 self.component_runner(tbalgo4, tbx4)
 
-                rundate = rundate + Period(days=4)
-
-        if 'backup' in self.steps or 'late-backup' in self.steps:
-
-            pass
-
-        if 'late-backup' in self.steps:
-
-            rundate = datebegin
-            while rundate <= dateend:
+                season = rundate.nivologyseason()
 
                 self.sh.title('Toolbox output tb27')
                 tb27 = toolbox.output(
@@ -369,13 +363,13 @@ class Safran(Task, S2MTaskMixIn):
                     source_conf    = 'pearp',
                     local          = 'mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = self.conf.xpid,
-                    block          = 'massifs',
+                    block          = 'massifs/{0:s}'.format(season),
                     geometry       = self.conf.vconf,
                     nativefmt      = 'netcdf',
                     model          = self.conf.model,
                     datebegin      = rundate.ymd6h,
                     dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
-                    namespace      = self.conf.namespace,
+                    namespace      = 'vortex.cache.fr',
                     member         = footprints.util.rangex(self.conf.members),
                     namebuild      = 'flat@cen',
                 ),
@@ -390,39 +384,75 @@ class Safran(Task, S2MTaskMixIn):
                     source_conf    = 'pearp',
                     local          = 'mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = self.conf.xpid,
-                    block          = 'postes',
+                    block          = 'postes/{0:s}'.format(season),
                     geometry       = self.conf.vconf,
                     nativefmt      = 'netcdf',
                     model          = self.conf.model,
                     datebegin      = rundate.ymd6h,
                     dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
-                    namespace      = self.conf.namespace,
+                    namespace      = 'vortex.cache.fr',
                     member         = footprints.util.rangex(self.conf.members),
                     namebuild      = 'flat@cen',
                 ),
                 print t.prompt, 'tb28 =', tb27
                 print
 
-                rundate = rundate + Period(days=4)
+                rundate = rundate + Period(days=1)
 
-            self.sh.title('Toolbox output tb34')
-            tb29 = toolbox.output(
-                role           = 'Liste_obs',
-                block          = 'listing',
-                experiment     = self.conf.xpid,
-                geometry       = self.conf.vconf,
-                format         = 'ascii',
-                kind           = 'listing',
-                local          = 'mb{glob:a:\d+}/liste_obs_{glob:b:\w+}',
-                seta           = '[glob:a]',
-                member         = '[seta]',
-                namespace      = self.conf.namespace,
-                task           = '[local]',
-                date           = self.conf.rundate.ymdh,
-            )
-            print t.prompt, 'tb34 =', tb29
-            print
+        if 'backup' in self.steps or 'late-backup' in self.steps:
 
+            pass
+
+        if 'late-backup' in self.steps:
+
+            rundate = datebegin
+            while rundate <= dateend:
+
+                season = rundate.nivologyseason()
+
+                self.sh.title('Toolbox output tb27')
+                tb27 = toolbox.output(
+                    role           = 'Prv_massifs',
+                    kind           = 'MeteorologicalForcing',
+                    source_app     = 'arpege',
+                    source_conf    = 'pearp',
+                    local          = 'mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                    experiment     = self.conf.xpid,
+                    block          = 'massifs/{0:s}'.format(season),
+                    geometry       = self.conf.vconf,
+                    nativefmt      = 'netcdf',
+                    model          = self.conf.model,
+                    datebegin      = rundate.ymd6h,
+                    dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
+                    namespace      = 'vortex.archive.fr',
+                    member         = footprints.util.rangex(self.conf.members),
+                    namebuild      = 'flat@cen',
+                ),
+                print t.prompt, 'tb27 =', tb27
+                print
+
+                self.sh.title('Toolbox output tb28')
+                tb27 = toolbox.output(
+                    role           = 'Prv_postes',
+                    kind           = 'MeteorologicalForcing',
+                    source_app     = 'arpege',
+                    source_conf    = 'pearp',
+                    local          = 'mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                    experiment     = self.conf.xpid,
+                    block          = 'postes/{0:s}'.format(season),
+                    geometry       = self.conf.vconf,
+                    nativefmt      = 'netcdf',
+                    model          = self.conf.model,
+                    datebegin      = rundate.ymd6h,
+                    dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
+                    namespace      = 'vortex.archive.fr',
+                    member         = footprints.util.rangex(self.conf.members),
+                    namebuild      = 'flat@cen',
+                ),
+                print t.prompt, 'tb28 =', tb27
+                print
+
+                rundate = rundate + Period(days=1)
 
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')

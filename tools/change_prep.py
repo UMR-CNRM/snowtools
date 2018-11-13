@@ -45,31 +45,17 @@ class prep_tomodify(object):
 
         self.prepfile = prosimu(prepfile, openmode="a")
         self.nsnowlayer = self.prepfile.read(self.dict_prep['nsnowlayer'])[0]
-        try:
-            _, _ = self.prepfile.read(self.dict_prep['swe'] + str(1), keepfillvalue=True, removetile=False, needmodif=True)
-            self.layerdim = False
-        except VarNameException:  # layer is a dimension in the file
-            self.layerdim = True
 
     def apply_swe_threshold(self, swe_threshold, closefile=False):
         '''Method to apply a threshold on snow water equivalent in a PREP.nc file'''
-        if not self.layerdim:
-            for i in range(self.nsnowlayer):
-                swe_layer, swe_layer_nc = self.prepfile.read(self.dict_prep['swe'] + str(i + 1), keepfillvalue=True, removetile=False, needmodif=True)
-                if i == 0:
-                    swe_fromsurface = np.zeros_like(swe_layer)
-                swe_layer = np.where(swe_fromsurface > swe_threshold, 0, swe_layer)
-                swe_layer_nc[:] = swe_layer[:]
+        for i in range(self.nsnowlayer):
+            swe_layer, swe_layer_nc = self.prepfile.read(self.dict_prep['swe'] + str(i + 1), keepfillvalue=True, removetile=False, needmodif=True)
+            if i == 0:
+                swe_fromsurface = np.zeros_like(swe_layer)
+            swe_layer = np.where(swe_fromsurface > swe_threshold, 0, swe_layer)
+            swe_layer_nc[:] = swe_layer[:]
 
-                swe_fromsurface += swe_layer
-        else:
-            swe_layer, swe_layer_nc = self.prepfile.read(self.dict_prep['swe'], keepfillvalue=True, removetile=False, needmodif=True)
-            swe_layer = np.squeeze(swe_layer)
-            swe_fromsurface = np.zeros_like(swe_layer[0, :])
-            for i in range(self.nsnowlayer):
-                swe_layer[i, :] = np.where(swe_fromsurface > swe_threshold, 0, swe_layer[i, :])
-                swe_layer_nc[0, i, :] = swe_layer[i, :]
-                swe_fromsurface += swe_layer[i, :]
+            swe_fromsurface += swe_layer
         if closefile:
             self.close()
 
