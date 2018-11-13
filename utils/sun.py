@@ -4,6 +4,8 @@
 import numpy as np
 import math
 
+from utils.resources import print_used_memory
+
 
 def interp1d(x, y, tab):
     '''Return the linear interpolation of y for the tab values of the x coordinate'''
@@ -210,6 +212,8 @@ class sun():
             # Not recommended
             # put the result back on the horizontal ; surfex will carry out the inverse operation when lnosof=f.
             tab_direct = ZRSIP / np.cos(slope)
+
+        print_used_memory()
 
         return tab_direct, tab_diffus
 
