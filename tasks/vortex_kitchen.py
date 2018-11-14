@@ -86,8 +86,8 @@ class vortex_kitchen(object):
         # General case: create the configuration file from s2m options
         conffile = vortex_conf_file(confname, 'w')
 
-        if options.model == 'safran' and options.forcing == 'reanalyse':
-            forcinglogin = 'lafaysse'
+        if options.model == 'safran' and options.forcing == 'reanalysis':
+            forcinglogin = 'vernaym'
         else:
             forcinglogin = os.getlogin()
 
@@ -115,6 +115,9 @@ class vortex_kitchen(object):
             conffile.write_field('datespinup', options.datespinup.strftime("%Y%m%d%H%M"))
         else:
             conffile.write_field('datespinup', options.datedeb.strftime("%Y%m%d%H%M"))
+
+        if options.ground:
+            conffile.write_field('climground', options.ground)
 
         # ESCROC on several nodes
         if options.escroc and options.nnodes > 1 and options.nmembers:

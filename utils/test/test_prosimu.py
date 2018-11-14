@@ -4,7 +4,7 @@
 
 import unittest
 #from src.s2mpostproc import unmask,S2MReader,S2M2Synopsis
-from snowtools_git.utils.prosimu import prosimu,prosimu_old
+from utils.prosimu import prosimu,prosimu_old
 import numpy
 from unittest import skip
 from datetime import datetime
