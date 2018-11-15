@@ -10,7 +10,7 @@ import os
 import netCDF4
 import numpy as np
 import sys
-from snowtools_git.utils.FileException import FileNameException, FileOpenException, VarNameException, TimeException, MultipleValueException
+from utils.FileException import FileNameException, FileOpenException, VarNameException, TimeException, MultipleValueException
 
 # Fichier PRO.nc issu d'une simulation SURFEX post-traitée
 
