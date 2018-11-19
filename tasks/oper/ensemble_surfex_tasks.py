@@ -9,6 +9,7 @@ from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 from bronx.stdtypes.date import daterange, yesterday, tomorrow, Period
 import footprints
+from vortex.algo.components import DelayedAlgoComponentError
 
 
 def setup(t, **kw):
@@ -27,6 +28,29 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
 
     '''
 
+    def report_execution_error(self, exc):
+        '''Define the behaviour in case of errors'''
+        '''For S2M chain, the errors do not raise exception if the deterministic run or if more than 30 members are available'''
+        nerrors = len(list(enumerate(exc)))
+        determinitic_error = False
+        for i, e in enumerate(exc):
+            if hasattr(e, 'subdir'):
+                if 'mb035' in e.subdir:
+                    determinitic_error = True
+
+        accept_errors = not determinitic_error or nerrors < 5
+
+        if accept_errors:
+            print ("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            print ("ALERT :" + str(nerrors) + " members produced a delayed exception.")
+            print ("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            print (str(exc))
+            print ("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
+            return True  # Mask the exception and allows the code to exit normally
+        else:
+            return False   # The delayed exception will be raised to stop execution
+
     def process(self):
 
         t = self.ticket
@@ -44,7 +68,7 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb01')
             tb01 = toolbox.input(
                 role           = 'Forcing',
-                local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if self.conf.geometry.area == 'postes' else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                 vapp           = self.conf.vapp,
                 vconf          = '[geometry:area]',
                 block          = block_safran,
@@ -68,7 +92,7 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb01b')
             tb01b = toolbox.input(
                 role           = 'Forcing',
-                local          = 'mb[member]/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if self.conf.geometry.area == 'postes' else 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                local          = 'mb[member]/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                 vapp           = self.conf.vapp,
                 vconf          = '[geometry:area]',
                 block          = block_safran,
@@ -246,6 +270,7 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
             )
             print(t.prompt, 'tb09 =', tb09)
             print()
+
             self.component_runner(tbalgo1, tbx1)
 
         if 'backup' in self.steps:
@@ -270,6 +295,7 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
                     model          = 's2m',
                     namespace      = 'vortex.multi.fr',
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
+                    fatal          = False
                 ),
                 print(t.prompt, 'tb10 =', tb10)
                 print()
@@ -289,6 +315,7 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
                 cutoff         = 'production' if self.conf.previ else 'assimilation',
+                fatal          = False
             ),
             print(t.prompt, 'tb11 =', tb11)
             print()
@@ -308,6 +335,7 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
                 cutoff         = 'production' if self.conf.previ else 'assimilation',
+                fatal          = False
             ),
             print(t.prompt, 'tb12 =', tb12)
             print()

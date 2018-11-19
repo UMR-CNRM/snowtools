@@ -36,7 +36,7 @@ class sun():
           Optional input : list of azimuths and height of masks on each point(radian or degrees ?)
           Optional input : lnosof_surfex (subgrid orography deactivated in Surfex)
           Output : corrected direct solar radiation
-		  Optional Output : angular positions of sun'''
+          Optional Output : angular positions of sun'''
         tab_direct = direct[:]
         tab_diffus = diffus[:]
         tab_global = tab_direct + tab_diffus
@@ -214,7 +214,6 @@ class sun():
             tab_direct = ZRSIP / np.cos(slope)
 
         print_used_memory()
-
 
         if return_angles:
             return tab_direct, tab_diffus, ZGAMMA, azimuth
