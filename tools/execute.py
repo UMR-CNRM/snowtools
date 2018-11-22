@@ -33,8 +33,10 @@ def callSurfexOrDie(commande, moderun="NORMAL", nproc=1, errorcode=None):
 
     # Without the following lines, the worse segmentation faults you can ever imagine
     # Equivalent to bash command ulimit -s unlimited
+    # Take care : some systems do not allow to force resource.RLIMIT_STACK at resource.RLIM_INFINITY, so it is safer to get the system hard limit first.
     import resource
-    resource.setrlimit(resource.RLIMIT_STACK, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+    soft, hard = resource.getrlimit(resource.RLIMIT_STACK)
+    resource.setrlimit(resource.RLIMIT_STACK, (hard, hard))
 
     os.environ["OMP_NUM_THREADS"] = "1"
     if ("PGD" in commande or "PREP" in commande) and moderun in ["MPI", "MPIRUN"]:
