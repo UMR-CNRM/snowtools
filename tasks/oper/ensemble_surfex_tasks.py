@@ -9,6 +9,7 @@ from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 from bronx.stdtypes.date import daterange, yesterday, tomorrow, Period
 import footprints
+from vortex.algo.components import DelayedAlgoComponentError
 
 
 def setup(t, **kw):
@@ -22,10 +23,12 @@ def setup(t, **kw):
     )
 
 
-class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
+class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
     '''
 
     '''
+
+    filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
 
     def process(self):
 
@@ -44,7 +47,7 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb01')
             tb01 = toolbox.input(
                 role           = 'Forcing',
-                local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if self.conf.geometry.area == 'postes' else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                 vapp           = self.conf.vapp,
                 vconf          = '[geometry:area]',
                 block          = block_safran,
@@ -68,7 +71,7 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb01b')
             tb01b = toolbox.input(
                 role           = 'Forcing',
-                local          = 'mb[member]/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if self.conf.geometry.area == 'postes' else 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                local          = 'mb[member]/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                 vapp           = self.conf.vapp,
                 vconf          = '[geometry:area]',
                 block          = block_safran,
@@ -246,6 +249,7 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
             )
             print(t.prompt, 'tb09 =', tb09)
             print()
+
             self.component_runner(tbalgo1, tbx1)
 
         if 'backup' in self.steps:
@@ -270,6 +274,7 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
                     model          = 's2m',
                     namespace      = 'vortex.multi.fr',
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
+                    fatal          = False
                 ),
                 print(t.prompt, 'tb10 =', tb10)
                 print()
@@ -289,6 +294,7 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
                 cutoff         = 'production' if self.conf.previ else 'assimilation',
+                fatal          = False
             ),
             print(t.prompt, 'tb11 =', tb11)
             print()
@@ -308,6 +314,7 @@ class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
                 cutoff         = 'production' if self.conf.previ else 'assimilation',
+                fatal          = False
             ),
             print(t.prompt, 'tb12 =', tb12)
             print()

@@ -242,7 +242,8 @@ class prosimu():
     def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime = True):
 
         if removetile:
-            needremovetile = "tile" in self.dataset.variables[varname].dimensions or 'Number_of_Tile' in self.dataset.variables[varname].dimensions
+            vardims = self.dataset.variables[varname].dimensions
+            needremovetile = "tile" in vardims or 'Number_of_Tile' in vardims or 'Number_of_Patches' in vardims
         else:
             needremovetile = False
         rank = len(var.shape)
