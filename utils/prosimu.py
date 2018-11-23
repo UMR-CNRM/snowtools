@@ -10,7 +10,7 @@ import os
 import netCDF4
 import numpy as np
 import sys
-from FileException import FileNameException, FileOpenException, VarNameException, TimeException, MultipleValueException
+from .FileException import FileNameException, FileOpenException, VarNameException, TimeException, MultipleValueException
 
 # Fichier PRO.nc issu d'une simulation SURFEX post-traitée
 
@@ -210,8 +210,8 @@ class prosimu():
             slices.append(kwargs.get(dimname, slice(None)))
         slices = tuple(slices)
         result = ncvariable_data[slices]
-        if (isinstance(result, np.ma.core.MaskedConstant) or not(isinstance(result, np.ma.core.MaskedArray))):
-            result = np.ma.MaskedArray(result)
+        # if (isinstance(result, np.ma.core.MaskedConstant) or not(isinstance(result, np.ma.core.MaskedArray))):
+            # result = np.ma.MaskedArray(result)
         return result
 
     def get_points(self, **kwargs):
