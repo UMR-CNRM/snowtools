@@ -25,6 +25,9 @@ from utils.resources import print_used_memory
 
 
 class forcinput_tomerge:
+
+    printmemory = False
+
     def __init__(self, forcin, forcout, *args, **kwargs):
         '''Generic method to open merge multiple forcing files'''
 
@@ -90,7 +93,8 @@ class forcinput_tomerge:
 
         for varname in listvar:
             print(varname)
-            print_used_memory()
+            if self.printmemory:
+                print_used_memory()
             vartype, rank, array_dim, varFillvalue, var_attrs = init_forcing_file[0].infovar(varname)
             if varname == "DIR_SWdown":
                 direct = new_forcing_file.createVariable(varname, vartype, array_dim, fill_value=varFillvalue)
@@ -161,6 +165,9 @@ class forcinput_applymask(forcinput_tomerge):
 
 
 class forcinput_tomodify:
+
+    printmemory = False
+
     def __init__(self, forcin, forcout, *args, **kwargs):
         '''Generic method to open an initial forcing file to read and to create a modified forcing file'''
 
@@ -396,7 +403,7 @@ class forcinput_select(forcinput_tomodify):
         # It is possible to exclude somme massifs or elevations before duplicating the slopes
         if extendslopes:
             points_to_duplicate = np.invert(np.in1d(init_exp[index_points], [-1]))
-            #if "0" in liste_pentes:
+            # if "0" in liste_pentes:
             liste_pentes_int.remove(0)
             list_exp_degres.remove(-1)
 
@@ -461,8 +468,9 @@ class forcinput_select(forcinput_tomodify):
 
         for varname in listvar:
             print(varname)
-            print_used_memory()
-            print datetime.datetime.today()
+            if self.printmemory:
+                print_used_memory()
+                print datetime.datetime.today()
             vartype, rank, array_dim, varFillvalue, var_attrs = init_forcing_file.infovar(varname)
 
             if len(array_dim) > 0:
@@ -543,7 +551,7 @@ class forcinput_select(forcinput_tomodify):
                     setattr(var, attname, init_forcing_file.getattr(varname, attname))
             try:
                 if not (varname in ["DIR_SWdown", "SCA_SWdown"] and ( extendaspects or extendslopes )):
-#                     print "BEFORE WRITE", datetime.datetime.today()
+                    # print "BEFORE WRITE", datetime.datetime.today()
 
                     # do not write direct solar radiations if aspects and slopes were extended because we need to recompute the values
                     if rank == 0:
