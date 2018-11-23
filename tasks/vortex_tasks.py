@@ -509,10 +509,10 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                         dateend        = dateend,
                         nativefmt      = 'netcdf',
                         kind           = 'MeteorologicalForcing',
-                        model          = 'surfex',
+                        model          = 's2m',
                         namespace      = 'vortex.multi.fr',
                         namebuild      = 'flat@cen',
-                        block          = 'pro',
+                        block          = 'meteo',
                     ),
                     print(t.prompt, 'tb19 =', tb19)
                     print()

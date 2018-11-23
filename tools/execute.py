@@ -35,7 +35,7 @@ def callSurfexOrDie(commande, moderun="NORMAL", nproc=1, errorcode=None):
     # Equivalent to bash command ulimit -s unlimited
     # Take care : some systems do not allow to force resource.RLIMIT_STACK at resource.RLIM_INFINITY, so it is safer to get the system hard limit first.
     import resource
-    soft, hard = resource.getrlimit(resource.RLIMIT_STACK)
+    soft, hard = resource.getrlimit(resource.RLIMIT_STACK)  # @UnusedVariable
     resource.setrlimit(resource.RLIMIT_STACK, (hard, hard))
 
     os.environ["OMP_NUM_THREADS"] = "1"
