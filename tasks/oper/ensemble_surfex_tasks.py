@@ -23,33 +23,12 @@ def setup(t, **kw):
     )
 
 
-class Ensemble_Surfex_Task(Task, S2MTaskMixIn):
+class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
     '''
 
     '''
 
-    def report_execution_error(self, exc):
-        '''Define the behaviour in case of errors'''
-        '''For S2M chain, the errors do not raise exception if the deterministic run or if more than 30 members are available'''
-        nerrors = len(list(enumerate(exc)))
-        determinitic_error = False
-        for i, e in enumerate(exc):
-            if hasattr(e, 'subdir'):
-                if 'mb035' in e.subdir:
-                    determinitic_error = True
-
-        accept_errors = not determinitic_error or nerrors < 5
-
-        if accept_errors:
-            print ("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            print ("ALERT :" + str(nerrors) + " members produced a delayed exception.")
-            print ("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            print (str(exc))
-            print ("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
-            return True  # Mask the exception and allows the code to exit normally
-        else:
-            return False   # The delayed exception will be raised to stop execution
+    filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
 
     def process(self):
 

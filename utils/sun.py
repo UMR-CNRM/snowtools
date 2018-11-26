@@ -21,6 +21,8 @@ def interp1d(x, y, tab):
 
 class sun():
 
+    printmemory = False
+
     def __init__(self):
         self.missingvalue = -9999999.
 
@@ -49,7 +51,7 @@ class sun():
 
         # extraction of date and computation of fractional Julian day, j_2 (1 january is 0)
         if convert_time is True:
-        # M. Lafaysse : convert date in date at the middle of the time step to compute angles more representative of the fluxes
+            # M. Lafaysse : convert date in date at the middle of the time step to compute angles more representative of the fluxes
             deltatime = time[1] - time[0]
             tab_time_date = time - deltatime / 2
         else:
@@ -213,7 +215,8 @@ class sun():
             # put the result back on the horizontal ; surfex will carry out the inverse operation when lnosof=f.
             tab_direct = ZRSIP / np.cos(slope)
 
-        print_used_memory()
+        if self.printmemory:
+            print_used_memory()
 
         if return_angles:
             return tab_direct, tab_diffus, ZGAMMA, azimuth

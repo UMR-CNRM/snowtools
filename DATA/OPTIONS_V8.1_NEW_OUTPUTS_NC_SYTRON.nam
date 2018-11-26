@@ -227,7 +227,7 @@
                        CSURF_FILETYPE =       'NC '   ,
                        CTIMESERIES_FILETYPE = 'NETCDF'   ,
                        LRESTART = .TRUE.                     ,
-                       XTSTEP_OUTPUT = 21600.            ,
+                       XTSTEP_OUTPUT = 10800.            ,
                        XTSTEP_SURF = 900.                ,
                        LWRITE_COORD = .TRUE.
 /

@@ -4,7 +4,7 @@
 
 import unittest
 #from src.s2mpostproc import unmask,S2MReader,S2M2Synopsis
-from utils.prosimu import prosimu,prosimu_old
+from snowtools_git.utils.prosimu import prosimu,prosimu_old
 import numpy
 from unittest import skip
 from datetime import datetime
@@ -48,16 +48,6 @@ class TestProSimu(unittest.TestCase):
         snowtemp = self.ps.read_var('SNOWTEMP',time=0)
         self.assertEqual(snowtemp.shape, (50,4471),"Attendu : 50 couches, 4471 points")
 
-    def test_read_var_onepoint(self):
-        """
-        Cas ou le résultat est de dimension 0
-        """
-        snowtemp = self.ps.read_var('SNOWTEMP',time = 0, snow_layer = 0, Number_of_points = 392)
-        self.assertIsInstance(snowtemp,numpy.ma.core.MaskedArray)
-        # même quand il n'y a qu'un seul élément dans la réponse, on veut un
-        # masked array dans un souci d'homogénéïté
-        self.assertNotIsInstance(snowtemp,numpy.ma.core.MaskedConstant)
-
     def test_read_var_sliceargs(self):
         snowtemp = self.ps.read_var(
             'SNOWTEMP',time = 1,Number_of_points = slice(600,690,2))
@@ -79,16 +69,6 @@ class TestProSimuWithCache(unittest.TestCase):
     def test_read_var_intargs(self):
         snowtemp = self.ps.read_var('SNOWTEMP',time=0)
         self.assertEqual(snowtemp.shape, (50,4471),"Attendu : 50 couches, 4471 points")
-
-    def test_read_var_onepoint(self):
-        """
-        Cas ou le résultat est de dimension 0
-        """
-        snowtemp = self.ps.read_var('SNOWTEMP',time = 0, snow_layer = 0, Number_of_points = 392)
-        self.assertIsInstance(snowtemp,numpy.ma.core.MaskedArray)
-        # même quand il n'y a qu'un seul élément dans la réponse, on veut un
-        # masked array dans un souci d'homogénéïté
-        self.assertNotIsInstance(snowtemp,numpy.ma.core.MaskedConstant)
 
     def test_read_var_sliceargs(self):
         snowtemp = self.ps.read_var(
@@ -128,16 +108,6 @@ class TestProSimuOld(unittest.TestCase):
         snowtemp = self.ps.read_var('SNOWTEMP',time=0)
         self.assertEqual(snowtemp.shape, (50,3179),"Attendu : 50 couches, 3179 points")
 
-    def test_read_var_onepoint(self):
-        """
-        Cas ou le résultat est de dimension 0
-        """
-        snowtemp = self.ps.read_var('SNOWTEMP',time = 0, snow_layer = 0, Number_of_points = 392)
-        self.assertIsInstance(snowtemp,numpy.ma.core.MaskedArray)
-        # même quand il n'y a qu'un seul élément dans la réponse, on veut un
-        # masked array dans un souci d'homogénéïté
-        self.assertNotIsInstance(snowtemp,numpy.ma.core.MaskedConstant)
-
     def test_read_var_sliceargs(self):
         snowtemp = self.ps.read_var(
             'SNOWTEMP',time = 1,Number_of_points = slice(600,690,2))
@@ -160,16 +130,6 @@ class TestProSimuOldWithCache(unittest.TestCase):
     def test_read_var_intargs(self):
         snowtemp = self.ps.read_var('SNOWTEMP',time=0)
         self.assertEqual(snowtemp.shape, (50,3179),"Attendu : 50 couches, 3179 points")
-
-    def test_read_var_onepoint(self):
-        """
-        0 dimensionnnal array case
-        """
-        snowtemp = self.ps.read_var('SNOWTEMP',time = 0, snow_layer = 0, Number_of_points = 392)
-        self.assertIsInstance(snowtemp,numpy.ma.core.MaskedArray)
-        # même quand il n'y a qu'un seul élément dans la réponse, on veut un
-        # masked array dans un souci d'homogénéïté
-        self.assertNotIsInstance(snowtemp,numpy.ma.core.MaskedConstant)
 
     def test_read_var_sliceargs(self):
         snowtemp = self.ps.read_var(
