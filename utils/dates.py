@@ -79,7 +79,7 @@ def check_and_convert_date(datearg):
         elif len(datearg) == 14:
             return datetime.datetime(int(datearg[0:4]), int(datearg[4:6]), int(datearg[6:8]), int(datearg[8:10]), int(datearg[10:12]), int(datearg[12:14]))
         else:
-            FormatDateException(datearg)
+            raise FormatDateException(datearg)
     else:
         return datearg
 
