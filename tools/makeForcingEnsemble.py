@@ -18,6 +18,7 @@ IN:
     -nmembers  : size of the ensemble
     -o : writing output in o
     -startmember : number of the first disturbed file
+    --brutalImp : brutal factors for impurities
 Reference : Charrois et al., 2016
 """
 import netCDF4
@@ -322,8 +323,10 @@ def MakeForEnsemble( f, po, nmembers, o, startmember=1, brutal=False):
         oMb = o + '/mb' + str(outN)
         if not os.path.exists(oMb):
             os.mkdir(oMb)
+            if not os.path.exists(oMb + '/meteo'):
+                os.mkdir(oMb + '/meteo')
 
-        outFOR = oMb + '/' + bn
+        outFOR = oMb + '/meteo/' + bn
         print(outFOR)
         shutil.copy( f, outFOR )
 
