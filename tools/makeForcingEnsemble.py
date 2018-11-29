@@ -238,12 +238,12 @@ def addNoise2Impur( f, varName, sigma, tau, dt, semiDistrib = False, brutal=Fals
             # /100 x1 (too much BC in MOCAGE)
             logstdFact = 1
             meanFact = -1
-        else:
+        else:  # Case for Dust
             # /10*10 (no clue about Dust)
             logstdFact = 1
             meanFact = 0
         fact = np.random.normal(meanFact, logstdFact, 1)
-        YY = np.exp(fact) * np.ones((nT, ), float)
+        YY = 10**fact * np.ones((nT, ), float)
     if semiDistrib:
         YY = np.reshape(YY, (np.shape(var)[0], 1))
     else:
