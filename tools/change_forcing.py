@@ -167,6 +167,7 @@ class forcinput_applymask(forcinput_tomerge):
 class forcinput_tomodify:
 
     printmemory = False
+    formatout = "NETCDF4_CLASSIC"
 
     def __init__(self, forcin, forcout, *args, **kwargs):
         '''Generic method to open an initial forcing file to read and to create a modified forcing file'''
@@ -190,7 +191,7 @@ class forcinput_tomodify:
         else:
             init_forcing_file = prosimu(forcin)
             print "INFO INPUT FORCING FILE FORMAT: " + init_forcing_file.format()
-            new_forcing_file = netCDF4.Dataset(forcout, "w", format="NETCDF4_CLASSIC")
+            new_forcing_file = netCDF4.Dataset(forcout, "w", format=self.formatout)
             self.modify(init_forcing_file, new_forcing_file, args)
 
         init_forcing_file.close()
@@ -628,3 +629,135 @@ class forcinput_select(forcinput_tomodify):
         var[:] = lon
 
         return lat, lon
+
+
+class forcinput_ESMSnowMIP(forcinput_tomodify):
+
+    formatout = "NETCDF3_CLASSIC"
+
+    def upscale_tab_time(self, var, theshape):
+
+        # array slope can be considered at the same shape than the other arrays (simplify matricial traitment)
+        bigvar = np.ma.zeros(theshape)
+
+        if len(theshape) == 2:
+            for i in xrange(0, theshape[1]):
+                bigvar[:, i] = var[:]
+        elif len(theshape) == 3:
+            for ilat in xrange(0, theshape[1]):
+                for ilon in xrange(0, theshape[2]):
+                    bigvar[:, ilat, ilon] = var[:]
+
+        else:
+            print "error on indices in upscale_tab_time"
+
+        return bigvar
+
+    def modify(self, init_forcing_file, new_forcing_file, *args):
+
+        site = os.path.basename(self.filename)[11:14]
+        source = os.path.basename(self.filename)[4:10]
+        if site == "cdp":
+            const = {"LAT": 45.3, "LON": 5.77, "ZS": 1325, "slope": 0, "aspect": -1, "ZREF": 37, "UREF": 38, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            if source == "insitu":
+                timeshift = 0
+            elif source == "gswp3c":
+                timeshift = -1
+        if site == "oas":
+            const = {"LAT": 53.63, "LON": -106.2, "ZS": 600, "slope": 0, "aspect": -1, "ZREF": 37, "UREF": 38, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            if source == "insitu":
+                timeshift = 6
+            elif source == "gswp3c":
+                timeshift = -1
+        elif site == "obs":
+            const = {"LAT": 53.99, "LON": -105.12, "ZS": 629, "slope": 0, "aspect": -1, "ZREF": 25, "UREF": 26, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            if source == "insitu":
+                timeshift = 6
+            elif source == "gswp3c":
+                timeshift = -1
+        elif site == "ojp":
+            const = {"LAT": 53.92, "LON": -104.69, "ZS": 579, "slope": 0, "aspect": -1, "ZREF": 28, "UREF": 29, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            if source == "insitu":
+                timeshift = 6
+            elif source == "gswp3c":
+                timeshift = -1
+        elif site == "rme":
+            const = {"LAT": 43.19, "LON": -116.78, "ZS": 2060, "slope": 0, "aspect": -1, "ZREF": 3, "UREF": 3, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            if source == "insitu":
+                timeshift = 7
+            elif source == "gswp3c":
+                timeshift = -1
+        elif site == "sap":
+            const = {"LAT": 43.08, "LON": 141.34, "ZS": 15, "slope": 0, "aspect": -1, "ZREF": 1.5, "UREF": 1.5, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            if source == "insitu":
+                timeshift = -9
+            elif source == "gswp3c":
+                timeshift = -1
+        elif site == "snb":
+            const = {"LAT": 37.91, "LON": -107.73, "ZS": 3714, "slope": 0, "aspect": -1, "ZREF": 3.8, "UREF": 4, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            if source == "insitu":
+                timeshift = 7
+            elif source == "gswp3c":
+                timeshift = -1
+        elif site == "sod":
+            const = {"LAT": 67.37, "LON": 26.63, "ZS": 179, "slope": 0, "aspect": -1, "ZREF": 2, "UREF": 2, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            if source == "insitu":
+                timeshift = 0
+            elif source == "gswp3c":
+                timeshift = -1
+        elif site == "swa":
+            const = {"LAT": 37.91, "LON": -107.71, "ZS": 3371, "slope": 0, "aspect": -1, "ZREF": 3.4, "UREF": 3.8, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            if source == "insitu":
+                timeshift = 7
+            elif source == "gswp3c":
+                timeshift = -1
+        elif site == "wfj":
+            const = {"LAT": 46.82962, "LON": 9.80934, "ZS": 2540, "slope": 0, "aspect": -1, "ZREF": 4.5, "UREF": 5.5, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            if source == "insitu":
+                timeshift = 0
+            elif source == "gswp3c":
+                timeshift = -1
+
+        if source == "gswp3c":
+            timeshift = -1
+            const["ZREF"] = 2.
+            const["UREF"] = 10.
+
+        const["PSurf"] = 101325 * ((288 - 0.0065 * const["ZS"]) / 288)**5.255
+
+        new_forcing_file.createDimension("time", None)
+        new_forcing_file.createDimension("Number_of_points", 1)
+
+        for varname, ncvar in init_forcing_file.dataset.variables.iteritems():
+            var_array = ncvar[:]
+            if varname == "time":
+                var = new_forcing_file.createVariable(varname, 'd', ("time"), fill_value=-9999999.)
+                time_array = var_array[:] + timeshift
+                var[:] = time_array
+                unit_time = getattr(ncvar, "units")
+            elif varname == "SWdown":
+                vardir = new_forcing_file.createVariable("DIR_SWdown", 'd', ("time", "Number_of_points"), fill_value=-9999999.)
+                setattr(vardir, "long_name", "Direct downward shortwave radiation")
+                vardif = new_forcing_file.createVariable("SCA_SWdown", 'd', ("time", "Number_of_points"), fill_value=-9999999.)
+                setattr(vardif, "long_name", "Diffuse downward shortwave radiation")
+                vardir[:, 0], vardif[:, 0] = sun().directdiffus(var_array, netCDF4.num2date(time_array, unit_time), const["LAT"], const["LON"], const["slope"], const["aspect"], site)
+            else:
+                var = new_forcing_file.createVariable(varname, 'd', ("time", "Number_of_points"), fill_value=-9999999.)
+                var[:, 0] = var_array[:]
+
+            if varname != "SWdown":
+                for attname in ncvar.ncattrs():
+                    setattr(var, attname, getattr(ncvar, attname))
+
+        frc = new_forcing_file.createVariable('FRC_TIME_STP', 'd', fill_value=-999999)
+        frc[:] = 3600.
+
+        for varname in ["LAT", "LON", "ZS", "slope", "aspect", "ZREF", "UREF"]:
+            var = new_forcing_file.createVariable(varname, 'd', ("Number_of_points"), fill_value=-9999999.)
+            var[:] = const[varname]
+
+        for varname in ["PSurf", "CO2air", "Wind_DIR"]:
+            var = new_forcing_file.createVariable(varname, 'd', ("time", "Number_of_points"), fill_value=-9999999.)
+            var[:, 0] = const[varname]
+
+        return False
