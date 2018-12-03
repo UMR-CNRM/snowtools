@@ -99,11 +99,12 @@ class S2MExtractor(S2MTaskMixIn):
                     experiment     = self.conf.xpid,
                     block          = 'pro',
                     geometry       = self.conf.geometry,
+                    date           = '[datebegin]',
                     datebegin      = datebegin,
                     dateend        = dateend,
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
-                    model          = 's2m',
+                    model          = 'surfex',
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
                 )
