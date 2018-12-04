@@ -36,7 +36,7 @@ class SodaSnow_Vortex_Task(Task):
         t = self.ticket
         assDates = []
         if hasattr(self.conf, 's2dates'):
-            self.conf.assimdates = sorted(self.conf.assimdates + self.conf.s2dates)
+            self.conf.assimdates = sorted(list(set(self.conf.assimdates + self.conf.s2dates)))  # be careful for duplicated dates !!
         try:
             for dt in self.conf.assimdates:  # /!\ bug when only 1 assim date ?
                 dt = Date(check_and_convert_date(str(dt)))
