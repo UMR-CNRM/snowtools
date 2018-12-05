@@ -186,6 +186,10 @@ def parse_options(arguments):
                       action="store_true", dest="forecast", default=False,
                       help="To separate analysis and forecast modes")
 
+    parser.add_option("--dailyprep",
+                      action="store_true", dest="dailyprep", default=False,
+                      help="Split reanalysis day by day to prepare initial conditions for reforecast")
+
     parser.add_option("--grid",
                       action="store_true", dest="gridsimul", default=False,
                       help="This is a gridded simulation as defined in the namelist - default: False")
@@ -225,8 +229,8 @@ def parse_options(arguments):
                       help="OFFLINE inout at assimdates without assim")
 
     parser.add_option("--walltime",
-                      action="store", type = "int", dest="walltime", default = None,
-                      help="specify your job walltime (useful for debugging on sev. nodes)")
+                      action="store", type = "string", dest="walltime", default = None,
+                      help="specify your job walltime (format hh:mm:ss)")
 
     parser.add_option("--writesx",
                       action="store", type = "str", dest="writesx", default = None,
