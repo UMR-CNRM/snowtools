@@ -17,13 +17,6 @@ from .FileException import FileNameException, FileOpenException, VarNameExceptio
 
 class prosimu():
 
-    # Variables permettant de gérer un nom de dimension différent dans un
-    # fichier netcdf (par exemple si on veut lire un fichier dans l'ancien
-    # format de la chaîne ou Number_of_points s'appelle location:
-    # > pro = prosimu(monnetcdf)
-    # > pro.Number_of_points = 'location'
-    # et voilà
-    # (pris en compte dans la méthode read_var seulement)
     Number_of_points = 'Number_of_points'
     Number_of_Patches = 'Number_of_Patches'
 
