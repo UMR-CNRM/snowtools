@@ -179,3 +179,46 @@ def update_namelist_object_nmembers(NamelistObject, nmembers):
         print ("NENS set to {}".format(nmembers))
 
     return NamelistObject
+
+
+def update_namelist_var(namelist_file, data_file):
+
+    ''' This function was implemented by C. Carmagnola in December 2018 (PROSNOW project).
+    It reads "water consumption data for snowmaking" from an external file (data_file) and updates a namelist (namelist_file) accordingly.'''
+
+    # Read data from an external file
+
+    if not os.path.isfile(data_file):
+        raise FileNameException(data_file)
+
+    mdat = open(data_file)
+    var_tbc = []
+
+    for line in mdat:
+        maliste = line.split()
+        var_tbc = var_tbc + [maliste[1]]
+
+    for i in range(len(var_tbc)):
+        var_tbc[i] = int(var_tbc[i])
+
+#     print "Water consumption for snowmaking (kg/m2) - In external file:"
+#     print var_tbc
+#     print "--------------"
+
+    # Put data from an external file into the namelist
+
+    if not os.path.isfile(namelist_file):
+        raise FileNameException(namelist_file)
+
+    n = NamelistParser()
+    NamelistObject = n.parse(namelist_file)
+
+    check_or_create_block(NamelistObject, "XPROD_SCHEME")
+    NamelistObject["NAM_SURF_SNOW_CSTS"].XPROD_SCHEME = var_tbc
+
+#     print "Water consumption for snowmaking (kg/m2) - In namelist:"
+#     print NamelistObject["NAM_SURF_SNOW_CSTS"].XPROD_SCHEME
+
+    namSURFEX = open(namelist_file, 'w')
+    namSURFEX.write(NamelistObject.dumps())
+    namSURFEX.close()
