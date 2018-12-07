@@ -631,6 +631,135 @@ class forcinput_select(forcinput_tomodify):
         return lat, lon
 
 
+class forcinput_extract(forcinput_tomodify):
+
+    ''' This class was implemented by C. Carmagnola in November 2018 (PROSNOW project).
+    It allows to extract from an original forcing file all the variables corresponding to a pre-defined list of points. '''
+
+    def modify(self, init_forcing_file, new_forcing_file, *args):
+
+        ''' Modify a forcing file towards a prescribed geometry:
+        - init_forcing_file = initial forcing file (input)
+        - new_forcing_file  = new forcing file (output)
+        - *args             = .txt file containing the list of points to be extracted '''
+
+        # Read data from file
+
+        if not os.path.isfile(args[0][0]):
+            raise FileNameException(args[0][0])
+
+        mdat = open(args[0][0])
+
+        list_massif_number, list_alt, list_asp, list_slo = np.loadtxt(mdat, delimiter=' ', usecols=(2, 1, 6, 7), unpack=True)
+
+#         print "Points to be extracted:"
+#         print "massif = " + str(list_massif_number)
+#         print "elevation = " + str(list_alt)
+#         print "aspect = " + str(list_asp)
+#         print "slope = " + str(list_slo)
+#         print "---------------"
+
+        # Variables
+
+        listvar = init_forcing_file.listvar()
+
+        # Massif / Elevation / Aspect / Slope
+
+        init_massif_nb_sop = init_forcing_file.read("massif_number", keepfillvalue=True)
+        init_alt = init_forcing_file.read("ZS", keepfillvalue=True)
+        init_exp = init_forcing_file.read("aspect", keepfillvalue=True)
+        init_slopes = init_forcing_file.read("slope", keepfillvalue=True)
+
+        list_asp_degres = list_asp[:]
+        list_slo_int = list(map(int, list_slo))
+
+        # Indices
+
+        index_points = np.zeros(len(list_massif_number), 'int')
+
+        for i, j in ((a, b) for a in range(len(init_massif_nb_sop)) for b in range(len(list_massif_number))):
+            if init_massif_nb_sop[i] == list_massif_number[j] and init_alt[i] == list_alt[j] and init_slopes[i] == list_slo_int[j] and init_exp[i] == list_asp_degres[j]:
+                index_points[j] = i
+
+#         print "Indices:"
+#         print index_points
+#         print "---------------"
+
+        # Create dimension
+
+        init_forcing_file_dimensions = init_forcing_file.listdim()
+
+        massif_dim_name = "massif"
+        nbpoints_dim_name = "Number_of_points"
+        loc_dim_name = "location"
+
+        new_forcing_file.createDimension("time", None)
+
+        if massif_dim_name in init_forcing_file_dimensions:
+            init_massif = init_forcing_file.read("massif", keepfillvalue=True)
+            index_massif = np.where(np.in1d(init_massif, list_massif_number))[0]
+            len_dim = len(index_massif)
+            new_forcing_file.createDimension(massif_dim_name, len_dim)
+            del init_forcing_file_dimensions[massif_dim_name]
+
+        if nbpoints_dim_name in init_forcing_file_dimensions:
+            spatial_dim_name = nbpoints_dim_name
+        elif loc_dim_name in init_forcing_file_dimensions:
+            spatial_dim_name = loc_dim_name
+        else:
+            spatial_dim_name = "missing"
+
+        if spatial_dim_name in init_forcing_file_dimensions:
+            len_dim = len(index_points)
+#             print (spatial_dim_name + ": ")
+#             print str(len_dim)
+            new_forcing_file.createDimension(spatial_dim_name, len_dim)
+            del init_forcing_file_dimensions[spatial_dim_name]
+
+        # Fill new file
+
+        for varname in listvar:
+
+            vartype, rank, array_dim, varFillvalue, var_attrs = init_forcing_file.infovar(varname)
+
+            if len(array_dim) > 0:
+                index_dim_massif = np.where(array_dim == massif_dim_name)[0]
+                index_dim_nbpoints = np.where(array_dim == spatial_dim_name)[0]
+                var_array = init_forcing_file.read(varname, keepfillvalue=True)
+            else:
+                index_dim_massif = []
+                index_dim_nbpoints = []
+                var_array = init_forcing_file.read(varname, keepfillvalue=True).getValue()
+
+            if len(index_dim_massif) == 1:
+                var_array = np.take(var_array, index_massif, index_dim_massif[0])
+            if len(index_dim_nbpoints) == 1:
+                var_array = np.take(var_array, index_points, index_dim_nbpoints[0])
+
+            var = new_forcing_file.createVariable(varname, vartype, array_dim, fill_value=varFillvalue)
+
+            for attname in var_attrs:
+                if not attname == '_FillValue':
+                    setattr(var, attname, init_forcing_file.getattr(varname, attname))
+            try:
+                if not (varname in ["DIR_SWdown", "SCA_SWdown"]):
+                    if rank == 0:
+                        var[:] = var_array
+                    elif rank == 1:
+                        var[:] = var_array
+                    elif rank == 2:
+                        var[:, :] = var_array
+                    elif rank == 3:
+                        var[:, :, :] = var_array
+                    elif rank == 4:
+                        var[:, :, :, :] = var_array
+                    elif rank == 5:
+                        var[:, :, :, :, :] = var_array
+            except Exception:
+                print(var_array)
+                raise VarWriteException(varname, var_array.shape, var.shape)
+
+
 class forcinput_ESMSnowMIP(forcinput_tomodify):
 
     formatout = "NETCDF3_CLASSIC"
