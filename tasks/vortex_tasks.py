@@ -86,6 +86,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     model          = 'safran',
                     datebegin      = datebegin,
                     dateend        = dateend,
+                    intent         = 'inout',
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
                 ),
