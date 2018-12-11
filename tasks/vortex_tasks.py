@@ -7,7 +7,7 @@ Created on 7 nov. 2017
 from vortex.layout.nodes import Driver, Task
 from vortex import toolbox
 from utils.dates import get_list_dates_files
-from bronx.stdtypes.date import Date
+from bronx.stdtypes.date import Date, daterange, tomorrow
 from cen.layout.nodes import S2MTaskMixIn
 
 
@@ -30,7 +30,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
     def process(self):
 
         t = self.ticket
-        list_geometry = self.get_list_geometry()
+        list_geometry = self.get_list_geometry(meteo=self.conf.meteo)
+        source_safran, block_safran = self.get_source_safran(meteo=self.conf.meteo)
         list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
 
         print (list_dates_begin_forc)
@@ -38,6 +39,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
 
         if not hasattr(self.conf, "climground"):
             self.conf.climground = False
+        if not hasattr(self.conf, "dailyprep"):
+            self.conf.dailyprep = False
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
             for p, datebegin in enumerate(list_dates_begin_forc):
@@ -72,17 +75,18 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     kind           = 'MeteorologicalForcing',
                     vapp           = self.conf.meteo,
                     vconf          = '[geometry:area]',
-                    source_app     = source_app,
-                    source_conf    = source_conf,
+                    source_app     = source_app if source_safran == 'safran' else None,
+                    source_conf    = source_conf if source_safran == 'safran' else None,
                     cutoff         = 'assimilation',
-                    local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if self.conf.geometry.area == 'postes' else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = self.conf.forcingid,
-                    block          = 'postes' if self.conf.geometry.area == 'postes' else 'massifs',
+                    block          = block_safran,
                     geometry        = list_geometry,
                     nativefmt      = 'netcdf',
                     model          = 'safran',
                     datebegin      = datebegin,
                     dateend        = dateend,
+                    intent         = 'inout',
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
                 ),
@@ -371,7 +375,6 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print()
                 tb09b.run()
 
-
             firstforcing = 'FORCING_' + list_dates_begin_forc[0].strftime("%Y%m%d%H") + "_" + list_dates_end_forc[0].strftime("%Y%m%d%H") + ".nc"
             self.sh.title('Toolbox algo tb09a')
             tb09a = tbalgo1 = toolbox.algo(
@@ -413,7 +416,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 datebegin      = self.conf.datebegin,
                 dateend        = self.conf.dateend,
                 dateinit       = Date(self.conf.datespinup),
-                threshold      = self.conf.threshold
+                threshold      = self.conf.threshold,
+                daily          = self.conf.dailyprep
             )
             print(t.prompt, 'tb11 =', tb11)
             print()
@@ -436,8 +440,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
-                    datebegin      = datebegin,
-                    dateend        = dateend,
+                    datebegin      = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
+                    dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
                     model          = 'surfex',
@@ -454,8 +458,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     role           = 'SnowpackInit',
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
-                    date           = dateend,
-                    period         = dateend,
+                    date           = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
                     nativefmt      = 'netcdf',
                     kind           = 'PREP',
                     model          = 'surfex',

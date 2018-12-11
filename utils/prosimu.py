@@ -10,20 +10,13 @@ import os
 import netCDF4
 import numpy as np
 import sys
-from FileException import FileNameException, FileOpenException, VarNameException, TimeException, MultipleValueException
+from .FileException import FileNameException, FileOpenException, VarNameException, TimeException, MultipleValueException
 
 # Fichier PRO.nc issu d'une simulation SURFEX post-traitée
 
 
 class prosimu():
 
-    # Variables permettant de gérer un nom de dimension différent dans un
-    # fichier netcdf (par exemple si on veut lire un fichier dans l'ancien
-    # format de la chaîne ou Number_of_points s'appelle location:
-    # > pro = prosimu(monnetcdf)
-    # > pro.Number_of_points = 'location'
-    # et voilà
-    # (pris en compte dans la méthode read_var seulement)
     Number_of_points = 'Number_of_points'
     Number_of_Patches = 'Number_of_Patches'
 
@@ -210,8 +203,8 @@ class prosimu():
             slices.append(kwargs.get(dimname, slice(None)))
         slices = tuple(slices)
         result = ncvariable_data[slices]
-        if (isinstance(result, np.ma.core.MaskedConstant) or not(isinstance(result, np.ma.core.MaskedArray))):
-            result = np.ma.MaskedArray(result)
+        # if (isinstance(result, np.ma.core.MaskedConstant) or not(isinstance(result, np.ma.core.MaskedArray))):
+            # result = np.ma.MaskedArray(result)
         return result
 
     def get_points(self, **kwargs):

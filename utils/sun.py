@@ -21,6 +21,8 @@ def interp1d(x, y, tab):
 
 class sun():
 
+    printmemory = False
+
     def __init__(self):
         self.missingvalue = -9999999.
 
@@ -49,7 +51,7 @@ class sun():
 
         # extraction of date and computation of fractional Julian day, j_2 (1 january is 0)
         if convert_time is True:
-        # M. Lafaysse : convert date in date at the middle of the time step to compute angles more representative of the fluxes
+            # M. Lafaysse : convert date in date at the middle of the time step to compute angles more representative of the fluxes
             deltatime = time[1] - time[0]
             tab_time_date = time - deltatime / 2
         else:
@@ -213,7 +215,8 @@ class sun():
             # put the result back on the horizontal ; surfex will carry out the inverse operation when lnosof=f.
             tab_direct = ZRSIP / np.cos(slope)
 
-        print_used_memory()
+        if self.printmemory:
+            print_used_memory()
 
         if return_angles:
             return tab_direct, tab_diffus, ZGAMMA, azimuth
@@ -268,3 +271,140 @@ class sun():
             print("error on indices in upscale_tab_time")
 
         return bigvar
+
+    def coszenith(self, tab_time_date, lat, lon, slope, aspect):
+
+        j_2 = np.ones(tab_time_date.shape, 'f')
+        h_2 = np.ones(tab_time_date.shape, 'f')
+        for i in range(len(tab_time_date)):
+            #            tab_time_date_2[i] = time_init + datetime.timedelta(seconds = tab_time_date[i])
+            j = tab_time_date[i].timetuple()
+            j_2[i] = j[7]  # extract Julian day (integer)
+            h_2[i] = j[3]  # extrac time in day
+
+        print tab_time_date.shape
+        j = self.upscale_tab_time(j_2, (tab_time_date.shape[0], 1))
+        h = self.upscale_tab_time(h_2, (tab_time_date.shape[0], 1))
+
+        # all tabs now have the same dimension, which is that of tab_direct.
+        # method from crocus meteo.f90 original file (v2.4)
+
+        # variables needed for solar computations
+
+        VSOL1 = 9.9,
+        VSOL2 = 2.,
+        VSOL3 = .986,
+        VSOL4 = 100.,
+        VSOL5 = 7.7,
+        VSOL6 = 2.,
+        VSOL7 = .4,
+        VSOL8 = 80.,
+        VSOL9 = 1370.,
+        VSOL10 = 11.7,
+        VSOL11 = 15.,
+        VSOL12 = .001,
+        UDG2RD = math.pi / 180.
+        NUZENI = 12.
+        UH2LON = 15.
+        NUH2M = 60.
+        UEPSI = 0.001
+        URD2DG = 180. / math.pi
+
+        # Conversion of slope and aspect to rad:
+
+        slope, aspect = slope * UDG2RD, aspect * UDG2RD
+
+        # Time equation
+        ZDT = VSOL1 * np.sin((VSOL2 * (VSOL3 * j - VSOL4)) * UDG2RD)\
+            - VSOL5 * np.sin((VSOL3 * j - VSOL6) * UDG2RD)
+
+        # sun declination
+        ZSINDL = VSOL7 * np.sin(UDG2RD * (VSOL3 * j - VSOL8))
+        ZDELTA = np.arcsin(ZSINDL)
+
+        # theoretical maximum radiation
+        ZRSI0 = VSOL9 * (1. - ZSINDL / VSOL10)
+
+        # solar angular time
+        ZOMEGA = VSOL11 * (h - NUZENI + ZDT / NUH2M + lon / UH2LON) * UDG2RD
+
+        # solar angular height
+
+        ZLAT = lat * UDG2RD
+        ZSINGA = np.sin(ZLAT) * ZSINDL + np.cos(ZLAT) * np.cos(ZDELTA) * np.cos(ZOMEGA)
+        ZSINGA = np.where(ZSINGA < UEPSI, VSOL12, ZSINGA)
+        ZGAMMA = np.arcsin(ZSINGA)
+
+        return np.cos(math.pi / 2. - ZGAMMA)
+
+    def directdiffus(self, SWglo, time, lat, lon, slope, aspect, site):
+
+        # Clear sky decomposition by Marie Dumont
+        if site == "wfj":
+            a = -2.449042
+            b = 5.639542
+            c = -4.745762
+            d = -0.555133
+        elif site == "snb":
+            a = -2.492804
+            b = 5.743704
+            c = -4.870253
+            d = -0.464349
+        elif site == "swa":
+            a = -2.481555
+            b = 5.717005
+            c = -4.838604
+            d = -0.484631
+        elif site == "sap":
+            a = -1.444924
+            b = 3.506267
+            c = -3.342956
+            d = 0.050087
+        elif site == "sod":
+            a = -2.171899
+            b = 5.040324
+            c = -4.335702
+            d = -0.256246
+        elif site == "rme":
+            a = -2.375236
+            b = 5.481626
+            c = -4.653772
+            d = -0.421807
+        elif site == "oas":
+            a = -2.252006
+            b = 5.208891
+            c = -4.443042
+            d = -0.339813
+        elif site == "obs":
+            a = -2.254170
+            b = 5.213592
+            c = -4.446855
+            d = -0.340464
+        elif site == "ojp":
+            a = -2.250787
+            b = 5.205990
+            c = -4.440420
+            d = -0.339316
+        elif site == "cdp":
+            a = -2.243613
+            b = 5.199838
+            c = -4.472389
+            d = -0.276815
+
+        coszenith = self.coszenith(time, lat, lon, slope, aspect)[:, 0]
+
+        ratio = np.exp(a * (coszenith**3) + b * (coszenith**2) + c * coszenith + d)
+
+        print coszenith.shape
+        print ratio.shape
+        print SWglo.shape
+
+        SWdif = np.where(ratio <= 1, ratio * SWglo, SWglo)
+        SWdir = SWglo - SWdif
+
+        ndays = 264
+
+        for hour in range(1, 24):
+            print hour, coszenith[ndays * 24 + hour - 1], ratio[ndays * 24 + hour - 1], SWdir[ndays * 24 + hour - 1], SWdif[ndays * 24 + hour - 1], SWglo[ndays * 24 + hour - 1]
+
+        return SWdir, SWdif

@@ -119,6 +119,9 @@ class vortex_kitchen(object):
         if options.ground:
             conffile.write_field('climground', options.ground)
 
+        if options.dailyprep:
+            conffile.write_field('dailyprep', options.dailyprep)
+
         # ESCROC on several nodes
         if options.escroc and options.nnodes > 1 and options.nmembers:
             nmembers_per_node = options.nmembers / options.nnodes + 1
@@ -192,7 +195,7 @@ class vortex_kitchen(object):
 def walltime(options):
 
         if options.walltime:
-            return str(options.walltime)
+            return options.walltime
 
         elif options.oper:
             return str(datetime.timedelta(minutes=10))
