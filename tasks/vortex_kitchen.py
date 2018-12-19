@@ -74,7 +74,7 @@ class vortex_kitchen(object):
 
     def create_conf(self, options):
         ''' Prepare configuration file from s2m options'''
-        conffilename = self.vapp + "_" + self.vconf + ".ini"
+        conffilename = self.vapp + "_" + self.vconf + "_" + self.xpid + ".ini"
         confname = "../conf/" + conffilename
 
         if options.oper:
@@ -86,7 +86,7 @@ class vortex_kitchen(object):
         # General case: create the configuration file from s2m options
         conffile = vortex_conf_file(confname, 'w')
 
-        if options.model == 'safran' and options.forcing == 'reanalysis':
+        if options.model == 'safran':
             forcinglogin = 'vernaym'
         else:
             forcinglogin = os.getlogin()
@@ -164,13 +164,18 @@ class vortex_kitchen(object):
                 else:
                     reftask = "escroc_tasks"
                 nnodes = 1
+            elif options.forecast:
+                jobname = "surfex_forecast"
+                reftask = "ensemble_surfex_reforecast"
+                nnodes = 1
             else:
                 jobname = 'rea_s2m'
                 reftask = "vortex_tasks"
                 nnodes = options.nnodes
 
         return "../vortex/bin/mkjob.py -j name=" + jobname + " task=" + reftask + " profile=" + self.profile + " jobassistant=cen " + period +\
-               " template=" + self.jobtemplate + " time=" + walltime(options) + " nnodes=" + str(nnodes)
+               " template=" + self.jobtemplate + " time=" + walltime(options) + " nnodes=" + str(nnodes) +\
+               " taskconf=" + self.xpid
 
     def mkjob_list_commands(self, options):
         if options.escroc and options.nnodes > 1:

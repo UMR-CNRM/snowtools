@@ -53,8 +53,8 @@ rd_vconf    = '$vconf'
 rd_member   = $member
 rd_xpid     = '$xpid'
 rd_jobname  = '$name'
-rd_iniconf  = '{0:s}/conf/{1:s}_{2:s}.ini'.format(appbase, 
-                                                        rd_vapp, rd_vconf)
+rd_iniconf  = '{0:s}/conf/{1:s}_{2:s}{3:s}.ini'.format(appbase, 
+                                                        rd_vapp, rd_vconf, '$taskconf')
 rd_datebegin = bronx.stdtypes.date.Date("$datebegin")
 rd_dateend   = bronx.stdtypes.date.Date("$dateend")
 rd_rundate   = bronx.stdtypes.date.Date("$datebegin")
