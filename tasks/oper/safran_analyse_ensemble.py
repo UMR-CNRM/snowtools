@@ -25,6 +25,8 @@ def setup(t, **kw):
 
 class Safran(Task, S2MTaskMixIn):
 
+    filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
+
     def process(self):
         """Safran analysis"""
 
@@ -303,6 +305,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind            = 'namelist',
                 model           = self.conf.model,
                 local           = 'ADAPT',
+                fatal          = False,
             )
             print t.prompt, 'tb14 =', tb14
             print
@@ -414,6 +417,7 @@ class Safran(Task, S2MTaskMixIn):
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
                 namespace      = self.conf.namespace,
+                fatal          = False,
             ),
             print t.prompt, 'tb17_c =', tb17_c
             print
@@ -667,6 +671,7 @@ class Safran(Task, S2MTaskMixIn):
                 dateend        = dateend.ymd6h,
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
+                fatal          = False,
             ),
             print t.prompt, 'tb29 =', tb29
             print
@@ -688,6 +693,7 @@ class Safran(Task, S2MTaskMixIn):
                 dateend        = dateend.ymd6h,
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
+                fatal          = False,
             ),
             print t.prompt, 'tb30 =', tb30
             print
@@ -741,6 +747,7 @@ class Safran(Task, S2MTaskMixIn):
                 namespace      = self.conf.namespace,
                 task           = '[local]',
                 date           = self.conf.rundate.ymdh,
+                fatal          = False,
             )
             print t.prompt, 'tb33 =', tb33
             print
@@ -760,6 +767,7 @@ class Safran(Task, S2MTaskMixIn):
                 namespace      = self.conf.namespace,
                 task           = '[local]',
                 date           = self.conf.rundate.ymdh,
+                fatal          = False,
             )
             print t.prompt, 'tb34 =', tb34
             print

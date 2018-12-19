@@ -237,12 +237,12 @@ def addNoise2Impur( f, varName, sigma, tau, dt, semiDistrib = False, brutal=Fals
     else:  # brutal : multiply all timesteps by a random factor following a lognormal law
         if '1' in varName:  # case for BC
             # /100 x1 (too much BC in MOCAGE)
+            logstdFact = 1   # BE CAREFUL MEMBER 1 (not modified)
+            meanFact = -2    # WILL BE AN OUTLIER
+        else:  # Case for Dust
+            # /10*10 (no clue about Dust) -> (1,0),
             logstdFact = 1
             meanFact = -1
-        else:  # Case for Dust
-            # /10*10 (no clue about Dust)
-            logstdFact = 1
-            meanFact = 0
         fact = np.random.normal(meanFact, logstdFact, 1)
         YY = 10**fact * np.ones((nT, ), float)
     if semiDistrib:
@@ -329,8 +329,8 @@ def MakeForEnsemble( f, po, nmembers, o, startmember=1, brutal=False):
         outFOR = oMb + '/meteo/' + bn
         print(outFOR)
         shutil.copy( f, outFOR )
-
-        if i != startmember:
+        print brutal
+        if brutal or (not brutal and i != startmember):  # brutal : mb0001 is not a control anymore.
 
             # generate disturbed forcing
             FORCING = netCDF4.Dataset(outFOR, 'a')

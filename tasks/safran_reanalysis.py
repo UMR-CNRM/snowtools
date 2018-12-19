@@ -28,6 +28,8 @@ def setup(t, **kw):
 
 class Safran(Task, S2MTaskMixIn):
 
+    filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
+
     def process(self):
         """Safran analysis"""
 
@@ -187,6 +189,25 @@ class Safran(Task, S2MTaskMixIn):
                     now            = True,
                 )
                 print t.prompt, 'tb02 =', tb02
+                print
+
+                self.sh.title('Toolbox input tb03 - ' + datebegin.ymdh)
+                tb03 = toolbox.input(
+                    role           = 'Observations',
+                    part           = 'all',
+                    geometry       = self.conf.vconf,
+                    kind           = 'observations',
+                    nativefmt      = 'ascii',
+                    unknownflow    = True,
+                    local          = 'mb{0:03d}/n{1:s}.tar'.format(m, season),
+                    remote         = '/home/vernaym/s2m/[geometry]/obs/n{0:s}.tar'.format(season),
+                    hostname       = 'hendrix.meteo.fr',
+                    tube           = 'ftp',
+                    model          = self.conf.model,
+                    now            = True,
+                    fatal          = False,
+                )
+                print t.prompt, 'tb03 =', tb03
                 print
 
         if 'fetch' in self.steps:
