@@ -104,7 +104,7 @@ def check_and_convert_options(options, vortex=False):
 
 
 def parse_options(arguments):
-
+    #
     parser = OptionParser(usage)
 
     parser.add_option("-g", action="store_true", dest="ground", default=False)
