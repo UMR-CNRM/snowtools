@@ -12,7 +12,7 @@ from cen.layout.nodes import S2MTaskMixIn
 
 from vortex.tools.systems import ExecutionError
 
-from bronx.stdtypes.date import Date, Period
+from bronx.stdtypes.date import Date
 
 
 def setup(t, **kw):
