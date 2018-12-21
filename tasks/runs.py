@@ -245,16 +245,23 @@ class massifrun(surfexrun):
 class postesrun(surfexrun):
     """Class for a PC SAFRAN-SURFEX run on stations for which shadows must be applied"""
 
+    @property
+    def forcingpathlist(self):
+        if type(self.forcingpath) is list:
+            return self.forcingpath
+        else:
+            return [self.forcingpath]
+
     def get_forcing(self):
         ''' Look for a FORCING file including the starting date'''
-        for i, path in enumerate(self.forcingpath):
+        for i, path in enumerate(self.forcingpathlist):
             self.dateforcbegin, self.dateforcend = get_file_period("FORCING", path, self.datebegin, self.dateend)
             os.rename("FORCING.nc", "FORCING_" + str(i) + ".nc")
 
     def merge_forcing(self, addmask):
         ''' Extract the simulation points in the forcing file.'''
         list_forcing = []
-        for i in range(0, len(self.forcingpath)):
+        for i in range(0, len(self.forcingpathlist)):
             list_forcing.append("FORCING_" + str(i) + ".nc")
         if addmask:
             forcinput_applymask(list_forcing, "FORCING.nc")
