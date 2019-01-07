@@ -51,8 +51,8 @@ class PrepSafran(Task, S2MTaskMixIn):
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
             tbpearp = list()
-            d = 0
-            m = 0
+#             d = 0
+#             m = 0
             rundate = datebegin
             while rundate <= dateend:
 
@@ -70,7 +70,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     block          = 'refill',
                     namespace      = 'vortex.cache.fr',
                     geometry       = self.conf.pearp_geometry,
-                    local          = 'mb{0:=01d}[member%02]/PEARP[date::ymdh]_[term:fmthour]'.format(m),
+                    local          = '[date::ymdh]/mb[member%03]/PEARP[date::ymdh]_[term:fmthour]',
                     origin         = 'historic',
                     date           = '{0:s}/-PT12H'.format(rundate.ymd6h),
                     term           = footprints.util.rangex(self.conf.prv_terms),
@@ -84,10 +84,10 @@ class PrepSafran(Task, S2MTaskMixIn):
 
                 rundate = rundate + Period(days=1)
 
-                if d == day_per_worker:
-                    m = m + 1
-                    d = 0
-                d = d + 1
+#                 if d == day_per_worker:
+#                     m = m + 1
+#                     d = 0
+#                 d = d + 1
 
             self.sh.title('Toolbox input tb02 = PRE-TRAITEMENT FORCAGE script')
             tb02 = script = toolbox.input(
@@ -114,6 +114,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 terms          = footprints.util.rangex(self.conf.prv_terms),
                 interpreter    = script[0].resource.language,
                 ntasks         = self.conf.ntasks,
+                reforecast     = True,
             )
             print t.prompt, 'tb03 =', expresso
             print
@@ -125,16 +126,16 @@ class PrepSafran(Task, S2MTaskMixIn):
             pass
 
         if 'late-backup' in self.steps:
-
-            d = 0
-            m = 0
+            
+#            d = 0
+#            m = 0
             rundate = datebegin
             while rundate <= dateend:
 
                 self.sh.title('Toolbox output tb04')
                 tb04 = toolbox.output(
                     role           = 'Ebauche',
-                    local          = 'mb{0:=01d}[member%02]/P[date:yymdh]_[cumul:hour]_[vconf]_reforecast'.format(m),
+                    local          = '[date::ymdh]/mb[member%03]/P[date:yymdh]_[cumul:hour]_[vconf]_reforecast',
                     experiment     = self.conf.xpid,
                     block          = self.conf.guess_block,
                     geometry       = self.conf.domains,
@@ -146,7 +147,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     model          = 'safran',
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.eps_conf,
-                    namespace      = self.conf.namespace,
+                    namespace      = 'vortex.cache.fr',
                     member         = footprints.util.rangex(self.conf.pearp_members),
                 ),
                 print t.prompt, 'tb04 =', tb04
@@ -154,9 +155,9 @@ class PrepSafran(Task, S2MTaskMixIn):
 
                 rundate = rundate + Period(days=1)
 
-                if d == day_per_worker:
-                    m = m + 1
-                    d = 0
-                d = d + 1
+#                if d == day_per_worker:
+#                    m = m + 1
+#                    d = 0
+#                d = d + 1
 
             raise ExecutionError('')
