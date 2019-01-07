@@ -74,7 +74,7 @@ class vortex_kitchen(object):
 
     def create_conf(self, options):
         ''' Prepare configuration file from s2m options'''
-        conffilename = self.vapp + "_" + self.vconf + "_" + self.xpid + ".ini"
+        conffilename = self.vapp + "_" + self.vconf + "_" + self.xpid + options.datedeb.strftime("%Y") + ".ini"
         confname = "../conf/" + conffilename
 
         if options.oper:
@@ -175,7 +175,7 @@ class vortex_kitchen(object):
 
         return "../vortex/bin/mkjob.py -j name=" + jobname + " task=" + reftask + " profile=" + self.profile + " jobassistant=cen " + period +\
                " template=" + self.jobtemplate + " time=" + walltime(options) + " nnodes=" + str(nnodes) +\
-               " taskconf=" + self.xpid
+               " taskconf=" + self.xpid + options.datedeb.strftime("%Y")
 
     def mkjob_list_commands(self, options):
         if options.escroc and options.nnodes > 1:
