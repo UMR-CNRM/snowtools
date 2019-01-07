@@ -1064,6 +1064,7 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
             out = a - 'P1D'
         return out.ymd
 
+    @property
     def nivologyseason(self):
         """Return the nivology season of a current date"""
         if self.month < 8:
