@@ -149,7 +149,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             tb03a = toolbox.input(
                 alternate      = 'SnowpackInit',
                 local          = 'PREP.nc',
-                experiment     = 'spinup@lafaysse',
+                experiment     = 'spinup@' + t.env.getvar("USER"),
                 geometry       = self.conf.geometry,
                 date           = self.conf.datespinup,
                 intent         = 'inout',
