@@ -32,6 +32,12 @@ class Safran(Task, S2MTaskMixIn):
 
         t = self.ticket
 
+        def tb01_generic_hook1(t, rh):
+            sh = t.sh
+            tarname = sh.path.basename(rh.container.localpath())
+            if sh.is_tarfile(tarname):
+                sh.untar(tarname)
+
         datebegin, dateend = self.get_period()
         ndays = (dateend - datebegin).days
 #       list_geometry = self.get_list_geometry()
@@ -40,89 +46,111 @@ class Safran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox input tb01')
             tb01 = toolbox.input(
-                role           = 'ObsSynop',
-                part           = 'synop',
+                role           = 'Observations',
                 block          = 'observations',
                 experiment     = self.conf.xpid,
+                vapp           = 's2m',
                 geometry       = self.conf.vconf,
                 suite          = 'oper',
-                fatal          = False,
-                kind           = 'observations',
-                stage          = 'safrane',
-                nativefmt      = 'ascii',
-                date           = ['{0:s}/-PT{1:s}H/+PT[term]H'.format(dateend.ymd6h, str(24 * (i + 1))) for i in range(ndays)],
-                term           = footprints.util.rangex(self.conf.ana_terms),
-                local          = 'S[date:yymdh]',
-                model          = self.conf.model,
-                namespace      = 'cendev.soprano.fr',
-                storage        = 'guppy.meteo.fr',
+                kind           = 'packedobs',
+                date           = self.conf.rundate.ymdh,
+                begindate      = datebegin.ymd6h,
+                enddate        = dateend.ymd6h,
+                local          = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
+                model          = 'safran',
+                namespace      = 'vortex.archive.fr',
+                cutoff         = 'assimilation',
+                now            = True,
+                hook_autohook1 = (tb01_generic_hook1, ),
             )
             print t.prompt, 'tb01 =', tb01
             print
 
-            self.sh.title('Toolbox input tb02')
-            tb02 = toolbox.input(
-                role           = 'ObsRR',
-                part           = 'precipitation',
-                block          = 'observations',
-                experiment     = self.conf.xpid,
-                geometry       = self.conf.vconf,
-                suite          = 'oper',
-                fatal          = False,
-                kind           = 'observations',
-                stage          = 'sypluie',
-                nativefmt      = 'ascii',
-                date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(24 * i)) for i in range(ndays)],
-                local          = 'R[date:yymdh]',
-                model          = self.conf.model,
-                namespace      = 'cendev.soprano.fr',
-                storage        = 'guppy.meteo.fr',
-            )
-            print t.prompt, 'tb02 =', tb02
-            print
-
-            self.sh.title('Toolbox input tb03')
-            tb03 = toolbox.input(
-                role           = 'HourlyObs',
-                part           = 'hourlyobs',
-                block          = 'observations',
-                experiment     = self.conf.xpid,
-                geometry       = self.conf.vconf,
-                suite          = 'oper',
-                fatal          = False,
-                kind           = 'observations',
-                stage          = 'safrane',
-                nativefmt      = 'ascii',
-                date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(24 * i)) for i in range(ndays)],
-                local          = 'T[date:yymdh]',
-                model          = self.conf.model,
-                namespace      = 'cendev.soprano.fr',
-                storage        = 'guppy.meteo.fr',
-            )
-            print t.prompt, 'tb03 =', tb03
-            print
-
-            self.sh.title('Toolbox input tb04')
-            tb04 = toolbox.input(
-                role           = 'ObsRS',
-                part           = 'radiosondage',
-                block          = 'observations',
-                experiment     = self.conf.xpid,
-                geometry       = self.conf.vconf,
-                suite          = 'oper',
-                fatal          = False,
-                kind           = 'observations',
-                stage          = 'safrane',
-                nativefmt      = 'ascii',
-                date           = ['{0:s}/-PT{1:s}H/+PT[term]H'.format(dateend.ymd6h, str(24 * (i + 1))) for i in range(ndays)],
-                term           = footprints.util.rangex(self.conf.ana_terms),
-                local          = 'A[date:yymdh]',
-                model          = self.conf.model,
-                namespace      = 'cendev.soprano.fr',
-                storage        = 'guppy.meteo.fr',
-            )
-            print t.prompt, 'tb04 =', tb04
-            print
+#             self.sh.title('Toolbox input tb01')
+#             tb01 = toolbox.input(
+#                 role           = 'ObsSynop',
+#                 part           = 'synop',
+#                 block          = 'observations',
+#                 experiment     = self.conf.xpid,
+#                 geometry       = self.conf.vconf,
+#                 suite          = 'oper',
+#                 fatal          = False,
+#                 kind           = 'observations',
+#                 stage          = 'safrane',
+#                 nativefmt      = 'ascii',
+#                 date           = ['{0:s}/-PT{1:s}H/+PT[term]H'.format(dateend.ymd6h, str(24 * (i + 1))) for i in range(ndays)],
+#                 term           = footprints.util.rangex(self.conf.ana_terms),
+#                 local          = 'S[date:yymdh]',
+#                 model          = self.conf.model,
+#                 namespace      = 'cendev.soprano.fr',
+#                 storage        = 'guppy.meteo.fr',
+#             )
+#             print t.prompt, 'tb01 =', tb01
+#             print
+#
+#             self.sh.title('Toolbox input tb02')
+#             tb02 = toolbox.input(
+#                 role           = 'ObsRR',
+#                 part           = 'precipitation',
+#                 block          = 'observations',
+#                 experiment     = self.conf.xpid,
+#                 geometry       = self.conf.vconf,
+#                 suite          = 'oper',
+#                 fatal          = False,
+#                 kind           = 'observations',
+#                 stage          = 'sypluie',
+#                 nativefmt      = 'ascii',
+#                 date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(24 * i)) for i in range(ndays)],
+#                 local          = 'R[date:yymdh]',
+#                 model          = self.conf.model,
+#                 namespace      = 'cendev.soprano.fr',
+#                 storage        = 'guppy.meteo.fr',
+#             )
+#             print t.prompt, 'tb02 =', tb02
+#             print
+#
+#             self.sh.title('Toolbox input tb03')
+#             tb03 = toolbox.input(
+#                 role           = 'HourlyObs',
+#                 part           = 'hourlyobs',
+#                 block          = 'observations',
+#                 experiment     = self.conf.xpid,
+#                 geometry       = self.conf.vconf,
+#                 suite          = 'oper',
+#                 fatal          = False,
+#                 kind           = 'observations',
+#                 stage          = 'safrane',
+#                 nativefmt      = 'ascii',
+#                 date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(24 * i)) for i in range(ndays)],
+#                 local          = 'T[date:yymdh]',
+#                 model          = self.conf.model,
+#                 namespace      = 'cendev.soprano.fr',
+#                 storage        = 'guppy.meteo.fr',
+#             )
+#             print t.prompt, 'tb03 =', tb03
+#             print
+#
+#             self.sh.title('Toolbox input tb04')
+#             tb04 = toolbox.input(
+#                 role           = 'ObsRS',
+#                 part           = 'radiosondage',
+#                 block          = 'observations',
+#                 experiment     = self.conf.xpid,
+#                 geometry       = self.conf.vconf,
+#                 suite          = 'oper',
+#                 fatal          = False,
+#                 kind           = 'observations',
+#                 stage          = 'safrane',
+#                 nativefmt      = 'ascii',
+#                 date           = ['{0:s}/-PT{1:s}H/+PT[term]H'.format(dateend.ymd6h, str(24 * (i + 1))) for i in range(ndays)],
+#                 term           = footprints.util.rangex(self.conf.ana_terms),
+#                 local          = 'A[date:yymdh]',
+#                 model          = self.conf.model,
+#                 namespace      = 'cendev.soprano.fr',
+#                 storage        = 'guppy.meteo.fr',
+#             )
+#             print t.prompt, 'tb04 =', tb04
+#             print
 
             self.sh.title('Toolbox input tb05')
             tb05 = toolbox.input(
