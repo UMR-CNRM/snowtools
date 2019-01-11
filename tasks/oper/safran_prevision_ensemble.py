@@ -478,7 +478,7 @@ class Safran(Task, S2MTaskMixIn):
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
                 namespace      = self.conf.namespace,
-                member         = footprints.util.rangex(self.conf.members),
+                member         = footprints.util.rangex(self.conf.pearp_members),
             ),
             print t.prompt, 'tb27 =', tb27
             print
@@ -489,7 +489,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind           = 'MeteorologicalForcing',
                 source_app     = 'arpege',
                 source_conf    = 'pearp',
-                local          = 'mb035/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                local          = 'mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                 experiment     = self.conf.xpid,
                 block          = 'postes',
                 geometry       = self.conf.vconf,
@@ -498,7 +498,7 @@ class Safran(Task, S2MTaskMixIn):
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
                 namespace      = self.conf.namespace,
-                member         = footprints.util.rangex(self.conf.members),
+                member         = footprints.util.rangex(self.conf.pearp_members),
             ),
             print t.prompt, 'tb28 =', tb27
             print
