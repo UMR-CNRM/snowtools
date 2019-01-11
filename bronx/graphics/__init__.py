@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Graphical tools.
+Graphical tools (mostly related to matplotlib).
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division

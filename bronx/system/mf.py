@@ -13,10 +13,9 @@ import netrc
 import re
 import uuid
 
-import footprints.loggers
+from bronx.fancies import loggers
 
-
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 #: No automatic export
 __all__ = []

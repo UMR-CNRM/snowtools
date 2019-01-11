@@ -25,15 +25,15 @@ import io
 import cmd
 import pickle
 
-
 import footprints
 
 from bronx.stdtypes.history import PrivateHistory as Histo
+from bronx.fancies import loggers, dump
 from bronx.fancies.colors import termcolors
 from bronx.fancies.wrapcmd import WrapCmdLineArgs
 import bronx.fancies.multicfg  # @UnusedImport
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class StdColorFilter(object):
@@ -302,12 +302,12 @@ class ExtendedCmdLiner(CmdLiner):
     @WrapCmdLineArgs(addhelp=True)
     def do_cfginfo(self, **opts):
         """Display the parsed configuration file information."""
-        self.stdlog(footprints.dump.fulldump(self.cfg.info))
+        self.stdlog(dump.fulldump(self.cfg.info))
 
     @WrapCmdLineArgs(addhelp=True)
     def do_cfgdefaults(self, **opts):
         """Display defaults value extracted from the configuration file."""
-        self.stdlog(footprints.dump.fulldump(self.cfg.defaults))
+        self.stdlog(dump.fulldump(self.cfg.defaults))
 
     @WrapCmdLineArgs(addhelp=True)
     def do_cfgtmp(self, **opts):
@@ -315,7 +315,7 @@ class ExtendedCmdLiner(CmdLiner):
         Display internal temporary values stored while processing the
         configuration file.
         """
-        self.stdlog(footprints.dump.fulldump(self.cfg.tmp))
+        self.stdlog(dump.fulldump(self.cfg.tmp))
 
     @WrapCmdLineArgs('grep', 'discard', addhelp=True)
     def do_excluded(self, **opts):

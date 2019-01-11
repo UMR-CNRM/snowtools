@@ -79,6 +79,8 @@ class StringDecoder(object):
 
     * ``toto`` will be decoded as ``toto``
     * ``1,2,3`` will be decoded as a list of strings ``['1', '2', '3']``
+    * ``list(1,2,3)`` will be decoded as a list of strings ``['1', '2', '3']``
+    * ``list(1)`` will be decoded as a list of strings ``['1', ]``
     * ``int(1,2,3)`` will decoded as a list of ints ``[1, 2, 3]``
     * ``dict(prod:1 assim:2)`` will be decoded as a dictionary of strings
       ``dict(prod='1', assim='2')``
@@ -90,6 +92,7 @@ class StringDecoder(object):
       dictionary where ``&{prodconf}`` and ``&{assimconf}`` are replaced by
       entries *prodconf* and *assimconf* returned by the **substitution_cb**
       callback (see the explanation below for more details).
+    * ``xbool(on)`` will be decoded as ``True``
 
     Multiple spaces and line breaks are ignored and removed during the decoding.
 
@@ -116,7 +119,7 @@ class StringDecoder(object):
 
     """
 
-    BUILDERS = ['dict', ]
+    BUILDERS = ['dict', 'list', 'xbool']
 
     def __init__(self, substitution_cb=None, with_cache=True):
         self._subcb = substitution_cb
@@ -223,6 +226,20 @@ class StringDecoder(object):
         """Build a dictionary from the **value** string."""
         return {k: self._value_expand(v, remap, subs)
                 for k, v in six.iteritems(self._sparser(value, itemsep=' ', keysep=':'))}
+
+    def _build_xbool(self, value, remap, subs):
+        """Build a boolean from the **value** string."""
+        val = self._value_expand(value, remap, subs)
+        if isinstance(val, six.string_types):
+            val = bool(re.match(r'^\s*(?:[1-9]\d*|ok|on|true|yes|y)\s*$', val, flags=re.IGNORECASE))
+        else:
+            val = bool(val)
+        return val
+
+    def _build_list(self, value, remap, subs):
+        """Build a list from the **value** string."""
+        separeted = self._sparser(value, itemsep=',')
+        return [self._value_expand(v, remap, subs) for v in separeted]
 
     def _value_expand(self, value, remap, subs):
         """Recursively expand the configuration file's string."""

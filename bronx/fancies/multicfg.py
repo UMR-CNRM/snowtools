@@ -24,9 +24,10 @@ import yaml
 
 import footprints
 
+from bronx.fancies import loggers, fscrawler
 from bronx.stdtypes import date
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def _construct_yaml_str(self, node):
@@ -37,25 +38,6 @@ def _construct_yaml_str(self, node):
 
 yaml.Loader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
 yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
-
-
-def upfirst(subpath='work', thispath=None):
-    """Return first directory matching subpath in specified or current path."""
-    if thispath is None:
-        try:
-            thispath = os.getcwd()
-        except OSError as e:
-            logger.error('getcwd failed: %s.', str(e))
-            thispath = ''
-    found = None
-    while thispath and not found:
-        if os.path.isdir(os.path.join(thispath, subpath)):
-            found = os.path.join(thispath, subpath)
-        else:
-            if thispath == '/':
-                break
-            thispath = os.path.dirname(thispath)
-    return found
 
 
 class MultiFileCfg(footprints.FootprintBase):
@@ -94,7 +76,7 @@ class MultiFileCfg(footprints.FootprintBase):
         super(MultiFileCfg, self).__init__(*args, **kw)
         self._cfgtmp  = dict()
         self._cfgload = dict()
-        self._cfgpath = upfirst(self.cfgdir, thispath=self.cfgroot)
+        self._cfgpath = fscrawler.upfirst(self.cfgdir, thispath=self.cfgroot)
         self._cfgstack = glob.glob(self.cfgfullpath())
         self._cfgstack.sort()
         self.select()

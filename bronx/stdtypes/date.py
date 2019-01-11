@@ -42,15 +42,15 @@ Formats hypothesis:
       * PT15H10M55S <=> is a 15 hours, 10 minutes and 55 seconds period
 """
 
-# TODO: Activate unicode_literals but check that it still works with Olive
-# experiments and when sending emails.
 from __future__ import print_function, absolute_import, division, unicode_literals
+
 import six
 
 import calendar
 import datetime
 import functools
 import inspect
+import locale
 import operator
 import re
 
@@ -261,7 +261,10 @@ def daterange(start, end=None, step='P1D'):
 
 
 def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
-    """Extended date range expansion.
+    """Extended date range expansion (returns a list).
+
+    Except when ``fmt`` or ``prefix`` are specified, a list of :class:`Date`
+    objects is returned.
 
     :func:`daterange` accepts many arguments combinations::
 
@@ -297,6 +300,12 @@ def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
         ...            fmt='ymdh')  # doctest: +NORMALIZE_WHITESPACE,+ELLIPSIS
         [...'2017010100', ...'2017011500', ...'2017012900',
          ...'2017060100', ...'2017061500', ...'2017062900', ...'2017122500']
+
+    Formatting the date as a string depending on the *fmt* format string::
+
+        >>> daterangex('2017010100-2017013100-P14D,2017060100-2017063000-P14D,2017122500',
+        ...            fmt='{0.year:04d}')  # doctest: +NORMALIZE_WHITESPACE,+ELLIPSIS
+        [...'2017']
 
     Adding a *prefix* before the date string::
 
@@ -338,16 +347,226 @@ def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
         pvalues = daterange(realstart, realend, realstep)
 
         if pvalues:
+
             if fmt is not None:
-                pvalues = [getattr(x, fmt) for x in pvalues]
-                if callable(pvalues[0]):
-                    pvalues = [x() for x in pvalues]
+                if fmt.startswith('%'):
+                    fmt = '{0:' + fmt[1:] + '}'
+                if '{' in fmt and '}' in fmt:
+                    pvalues = [fmt.format(x, i + 1, type(x).__name__)
+                               for i, x in enumerate(pvalues)]
+                else:
+                    pvalues = [getattr(x, fmt) for x in pvalues]
+                    if callable(pvalues[0]):
+                        pvalues = [x() for x in pvalues]
+
             if prefix is not None:
                     pvalues = [ prefix + six.text_type(x) for x in pvalues ]
 
         rangevalues.extend(pvalues)
 
     return sorted(set(rangevalues))
+
+
+def timerangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
+    """Extended time range expansion (returns a list).
+
+    Except when ``fmt`` or ``prefix`` are specified, a list of :class:`Time`
+    objects is returned.
+
+    When ``start`` is already a complex definition (as a string), ``end`` and
+    ``step`` only apply as default when the sub-definition in ``start`` does not
+    contain any ``end`` or ``step`` value.
+
+    Basic examples::
+
+        >>> timerangex(0, 12, 3)
+        [Time(0, 0), Time(3, 0), Time(6, 0), Time(9, 0), Time(12, 0)]
+        >>> timerangex('0-12-3')
+        [Time(0, 0), Time(3, 0), Time(6, 0), Time(9, 0), Time(12, 0)]
+        >>> timerangex('0-12-3', shift=24)
+        [Time(24, 0), Time(27, 0), Time(30, 0), Time(33, 0), Time(36, 0)]
+        >>> timerangex(0, 12, 3, shift=24)
+        [Time(24, 0), Time(27, 0), Time(30, 0), Time(33, 0), Time(36, 0)]
+        >>> print(', '.join(timerangex('0-12-3', shift=24, fmt='{0.hour:03d}')))
+        024, 027, 030, 033, 036
+        >>> print(', '.join(timerangex('0-12-3', shift=24, fmt='fmthm')))
+        0024:00, 0027:00, 0030:00, 0033:00, 0036:00
+
+    Hour/Minutes examples::
+
+        >>> timerangex(0, 3, '0:30')
+        [Time(0, 0), Time(0, 30), Time(1, 0), Time(1, 30), Time(2, 0), Time(2, 30), Time(3, 0)]
+        >>> timerangex('0:00', '3:00', '0:30')
+        [Time(0, 0), Time(0, 30), Time(1, 0), Time(1, 30), Time(2, 0), Time(2, 30), Time(3, 0)]
+        >>> timerangex(0, 3, '0:30', shift=24)
+        [Time(24, 0), Time(24, 30), Time(25, 0), Time(25, 30), Time(26, 0), Time(26, 30), Time(27, 0)]
+
+    It also works with negative values::
+
+        >>> timerangex(3, 0,'-0:30')
+        [Time(0, 0), Time(0, 30), Time(1, 0), Time(1, 30), Time(2, 0), Time(2, 30), Time(3, 0)]
+        >>> timerangex(-3, 0,'0:30')
+        [Time(-3, 0), Time(-2, -30), Time(-2, 0), Time(-1, -30), Time(-1, 0), Time(0, -30), Time(0, 0)]
+        >>> timerangex(-3, 0, 1)
+        [Time(-3, 0), Time(-2, 0), Time(-1, 0), Time(0, 0)]
+
+    With complex strings::
+
+        >>> timerangex('0-12-3,18-36-6,48')
+        [Time(0, 0), Time(3, 0), Time(6, 0), Time(9, 0), Time(12, 0), Time(18, 0), Time(24, 0), Time(30, 0), Time(36, 0), Time(48, 0)]
+    """
+    rangevalues = list()
+
+    # Very strange case of an empty range
+    if start is None:
+        return list()
+
+    pstarts = ([six.text_type(s) for s in start]
+               if isinstance(start, (list, tuple)) else six.text_type(start).split(','))
+    for pstart in pstarts:
+
+        realstart = pstart
+        if pstart.startswith('-'):
+            realstart = '__MINUS__' + pstart[1:]
+
+        if '--' in realstart:
+            realstart = realstart.replace('--', '/__MINUS__').replace('-', '/')
+        realstart = realstart.replace('-', '/')
+        realstart = realstart.replace('__MINUS__', '-')
+        actualrange = realstart.split('/')
+        realstart = Time(actualrange[0])
+
+        if len(actualrange) > 1:
+            realend = actualrange[1]
+        elif end is None:
+            realend = realstart
+        else:
+            realend = end
+        realend = Time(realend)
+
+        if len(actualrange) > 2:
+            realstep = actualrange[2]
+        elif step is None:
+            realstep = 1
+        else:
+            realstep = step
+        realstep = Time(realstep)
+
+        if shift is not None:
+            realshift = Time(shift)
+            realstart += realshift
+            realend   += realshift
+
+        signstep = int(realstep > 0) * 2 - 1
+        pvalues = [ realstart ]
+        while signstep * (pvalues[-1] - realend) < 0:
+            pvalues.append(pvalues[-1] + realstep)
+        if signstep * (pvalues[-1] - realend) > 0:
+            pvalues.pop()
+
+        pvalues.sort()
+
+        if fmt is not None:
+            if '{' in fmt and '}' in fmt:
+                pvalues = [fmt.format(x, i + 1, type(x).__name__)
+                           for i, x in enumerate(pvalues)]
+            else:
+                pvalues = [getattr(x, fmt) for x in pvalues]
+                if callable(pvalues[0]):
+                    pvalues = [x() for x in pvalues]
+
+        if prefix is not None:
+            pvalues = [prefix + six.text_type(x) for x in pvalues]
+
+        rangevalues.extend(pvalues)
+
+    return sorted(set(rangevalues))
+
+
+def timeintrangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
+    """Extended range expansion  (returns a list).
+
+    This function is built on top of :func:`timerangex`. It uses the
+    :class:`TimeInt` class instead of the :class:`Time` class. Practically, if
+    the 'range' is just made of basic integers (e.g. just hours), a list of
+    integers is returned. If minutes are needed, a list of string formated as
+    'hhhh:mm' is returned.
+
+    When ``start`` is already a complex definition (as a string), ``end`` and
+    ``step`` only apply as default when the sub-definition in ``start`` does not
+    contain any ``end`` or ``step`` value.
+
+    Basic examples::
+
+        >>> timeintrangex(0, 12, 3)
+        [0, 3, 6, 9, 12]
+        >>> timeintrangex('0-12-3')
+        [0, 3, 6, 9, 12]
+        >>> timeintrangex('0-12-3', shift=24)
+        [24, 27, 30, 33, 36]
+        >>> timeintrangex(0, 12, 3, shift=24)
+        [24, 27, 30, 33, 36]
+        >>> print(', '.join(timeintrangex('0-12-3', shift=24, fmt='%03d')))
+        024, 027, 030, 033, 036
+
+    Hour/Minutes examples::
+
+        >>> print(', '.join(timeintrangex(0, 3, '0:30')))
+        0000:00, 0000:30, 0001:00, 0001:30, 0002:00, 0002:30, 0003:00
+        >>> print(', '.join(timeintrangex('0:00', '3:00', '0:30')))
+        0000:00, 0000:30, 0001:00, 0001:30, 0002:00, 0002:30, 0003:00
+        >>> print(', '.join(timeintrangex(0, 3, '0:30', shift=24)))
+        0024:00, 0024:30, 0025:00, 0025:30, 0026:00, 0026:30, 0027:00
+
+    It also works with negative values::
+
+        >>> print(', '.join(timeintrangex(3, 0,'-0:30')))
+        0000:00, 0000:30, 0001:00, 0001:30, 0002:00, 0002:30, 0003:00
+        >>> print(', '.join(timeintrangex(-3, 0,'0:30')))
+        -0000:30, -0001:00, -0001:30, -0002:00, -0002:30, -0003:00, 0000:00
+        >>> timeintrangex(-3, 0, 1)
+        [-3, -2, -1, 0]
+
+    With complex strings::
+
+        >>> timeintrangex('0-12-3,18-36-6,48')
+        [0, 3, 6, 9, 12, 18, 24, 30, 36, 48]
+    """
+
+    pstarts = ([six.text_type(s) for s in start]
+               if isinstance(start, (list, tuple)) else six.text_type(start).split(','))
+    auto_prefix = None
+    auto_pstarts = list()
+    for pstart in pstarts:
+        if re.search('_', pstart):
+            auto_prefix, realstart = pstart.split('_')
+            auto_prefix += '_'
+            auto_pstarts.append(realstart)
+    if auto_prefix:
+        prefix = auto_prefix
+        start = auto_pstarts
+
+    trx = timerangex(start, end=end, step=step, shift=shift)
+
+    if all([isinstance(x, Time) for x in trx]):
+        trx = [TimeInt(x) for x in trx]
+        if all([ x.is_int() for x in trx ]):
+            pvalues = [x.value for x in trx]
+        else:
+            pvalues = [x.str_time for x in trx]
+    else:
+        pvalues = trx
+
+    if fmt is not None:
+        if fmt.startswith('%'):
+            fmt = '{0:' + fmt[1:] + '}'
+        pvalues = [fmt.format(x, i + 1, type(x).__name__)
+                   for i, x in enumerate(pvalues)]
+
+    if prefix is not None:
+        pvalues = [ prefix + six.text_type(x) for x in pvalues ]
+
+    return sorted(pvalues)
 
 
 class Period(datetime.timedelta):
@@ -822,7 +1041,13 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         return self.hour in (0, 6, 12, 18)
 
     def strftime(self, *kargs, **kwargs):
-        return six.text_type(super(Date, self).strftime(*kargs, **kwargs))
+        rstr = super(Date, self).strftime(*kargs, **kwargs)
+        if six.PY2:
+            renc = (locale.getlocale(locale.LC_TIME)[1] or
+                    locale.getlocale()[1] or 'utf-8')
+            return rstr.decode(encoding=renc)
+        else:
+            return rstr
 
     @property
     def julian(self):
@@ -1064,6 +1289,7 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
             out = a - 'P1D'
         return out.ymd
 
+    @property
     def nivologyseason(self):
         """Return the nivology season of a current date"""
         if self.month < 8:
@@ -1167,6 +1393,8 @@ class Time(_GetattrCalculatorMixin):
             self._hour, self._minute = zz.hour, zz.minute
         elif isinstance(top, datetime.time) or isinstance(top, Time):
             self._hour, self._minute = top.hour, top.minute
+        elif isinstance(top, TimeInt):
+            self._hour, self._minute = top.ti, top.tm
         elif isinstance(top, Period):
             newtime = top.time()
             self._hour, self._minute = newtime.hour, newtime.minute
@@ -1177,6 +1405,7 @@ class Time(_GetattrCalculatorMixin):
                 newtime = Period(top).time()
                 self._hour, self._minute = newtime.hour, newtime.minute
             else:
+                top = re.sub(r'^(-?):(\d+)$', r'\g<1>0:\g<2>', top)
                 thesign = -2 * int(bool(re.match(r'^-', top))) + 1
                 ld = [thesign * int(x) for x in re.split('[-:hHTZ]+', top) if re.match(r'\d+$', x)]
         else:
@@ -1344,6 +1573,83 @@ class Time(_GetattrCalculatorMixin):
     def nice(self, t):
         """Kept for backward compatibility. Plesae do not use."""
         return '{0:04d}'.format(t)
+
+
+def _delegate_op_to_timeobj(proxymethods):
+
+    def delegate(cls):
+
+        def make_proxy_mtd(real_pmethod):
+            def a_pmethod(self, other):
+                rv = getattr(self._timeobj, real_pmethod)(other)
+                if isinstance(rv, Time):
+                    rv = TimeInt(rv)
+                return rv
+            a_pmethod.__name__ = real_pmethod
+            return a_pmethod
+
+        for pmethod in proxymethods:
+            real_pmethod = str('__' + pmethod + '__')
+            setattr(cls, real_pmethod, make_proxy_mtd(real_pmethod))
+
+        return cls
+
+    return delegate
+
+
+@_delegate_op_to_timeobj(['eq', 'ne', 'lt', 'le', 'gt', 'ge',
+                          'add', 'radd', 'sub', 'rsub', 'mul', 'rmul'])
+class TimeInt(int):
+    """Extended integer able to handle simple integers or integer plus minutes.
+
+    In the later case, the first integer is not limited to 24
+    """
+
+    def __new__(cls, ti, tm=None):
+        if tm is None:
+            if isinstance(ti, Time):
+                timeobj = ti
+            else:
+                timeobj = Time(ti)
+        else:
+            timeobj = Time(ti, tm)
+
+        obj = int.__new__(cls, timeobj.hour)
+        obj._timeobj = timeobj
+        obj._int = timeobj.minute == 0
+        return obj
+
+    @property
+    def ti(self):
+        return self._timeobj.hour
+
+    @property
+    def tm(self):
+        return self._timeobj.minute
+
+    def is_int(self):
+        return self.tm == 0
+
+    @property
+    def str_time(self):
+        return self._timeobj.fmthm
+
+    def __str__(self):
+        if self.is_int():
+            return six.text_type(self.ti)
+        else:
+            return self.str_time
+
+    def __hash__(self):
+        return hash(self._timeobj)
+
+    @property
+    def realtype(self):
+        return 'int' if self.is_int() else 'time'
+
+    @property
+    def value(self):
+        return self.ti if self.is_int() else six.text_type(self)
 
 
 @functools.total_ordering

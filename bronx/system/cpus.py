@@ -23,9 +23,9 @@ import re
 import os
 import subprocess
 
-import footprints
+from bronx.fancies import loggers
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 #: Data about a given CPU

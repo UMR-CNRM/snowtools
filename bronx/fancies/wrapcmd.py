@@ -21,9 +21,10 @@ import textwrap
 
 import footprints
 
+from bronx.fancies import loggers
 import bronx.fancies.arguments  # @UnusedImport
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 DEFAULT_PARSER_KIND = 'full'
 

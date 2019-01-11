@@ -7,11 +7,12 @@ This module handles advanced signal catching.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import logging
 import signal
 
-import footprints
+from bronx.fancies import loggers
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class SignalInterruptError(Exception):
@@ -24,10 +25,12 @@ class SignalInterruptHandler(object):
 
     def __init__(self, signals=(signal.SIGHUP, signal.SIGINT, signal.SIGQUIT,
                                 signal.SIGTRAP, signal.SIGABRT, signal.SIGFPE,
-                                signal.SIGUSR1, signal.SIGUSR2, signal.SIGTERM)):
+                                signal.SIGUSR1, signal.SIGUSR2, signal.SIGTERM),
+                 emitlogs=True):
         """
 
         :param signals: list/tuple of signals that will be caught
+        :param emitlogs: emit log messages
 
         For each of the signals specified to the class constructor, this
         signal handler is able to switch on and off a customised signal
@@ -72,6 +75,7 @@ class SignalInterruptHandler(object):
         self._signals = signals
         self._original_handlers = {}
         self._active = False
+        self._emitlogs = emitlogs
 
     def __enter__(self):
         self.activate()
@@ -90,19 +94,24 @@ class SignalInterruptHandler(object):
         """Are the singal handlers active ?"""
         return self._active
 
+    def _logstuff(self, level, message, *kargs):
+        """Emit a log emssage if need be."""
+        if self._emitlogs:
+            logger.log(level, message, *kargs)
+
     def activate(self):
         """Activate the signal handlers."""
         if not self._active:
             def handler(signum, frame):
                 self.deactivate()
-                logger.error('Signal %d was caught.', signum)
+                self._logstuff(logging.ERROR, 'Signal %d was caught.', signum)
                 if signum == signal.SIGINT:
                     raise KeyboardInterrupt()
                 else:
                     raise SignalInterruptError('Signal {:d} was caught.'.format(signum))
             for sig in self.signals:
                 self._original_handlers[sig] = signal.signal(sig, handler)
-                logger.info('Customised signal handler installed for signal %d', sig)
+                self._logstuff(logging.INFO, 'Customised signal handler installed for signal %d', sig)
         self._active = True
 
     def deactivate(self):
@@ -110,5 +119,5 @@ class SignalInterruptHandler(object):
         if self._active:
             for sig in self.signals:
                 signal.signal(sig, self._original_handlers[sig])
-                logger.info('Original signal handler restored for signal %d', sig)
+                self._logstuff(logging.INFO, 'Original signal handler restored for signal %d', sig)
         self._active = False

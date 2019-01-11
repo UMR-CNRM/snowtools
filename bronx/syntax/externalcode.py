@@ -53,10 +53,10 @@ from distutils.version import LooseVersion
 import traceback
 import types
 
+from bronx.fancies import loggers
 from bronx.fancies.display import join_list_in_proper_english
-import footprints
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class ExternalCodeUnavailableError(Exception):

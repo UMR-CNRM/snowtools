@@ -18,9 +18,10 @@ import re
 
 import footprints
 
+from bronx.fancies import loggers
 from bronx.stdtypes import date
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class ArgumentParser(footprints.FootprintBase):
@@ -209,7 +210,7 @@ class DefinedArgumentParser(ArgumentParser):
             help     = 'Logging level',
             choices  = ('debug', 'info', 'warning', 'error', 'critical'),
             default  = 'warning',
-            callback = footprints.loggers.setGlobalLevel,
+            callback = loggers.setGlobalLevel,
         )
 
     def add_defined_focus(self):

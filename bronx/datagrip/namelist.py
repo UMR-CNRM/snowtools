@@ -27,15 +27,13 @@ from decimal import Decimal
 import io
 import re
 
-# from bronx.syntax.externalcode import ExternalCodeImportChecker
-#
-# # Numpy is not mandatory
-# npchecker = ExternalCodeImportChecker('numpy')
-# with npchecker as npregister:
-#     import numpy as np
-#     npregister.update(version=np.__version__)
+from bronx.syntax.externalcode import ExternalCodeImportChecker
 
-import numpy as np
+# Numpy is not mandatory
+npchecker = ExternalCodeImportChecker('numpy')
+with npchecker as npregister:
+    import numpy as np
+    npregister.update(version=np.__version__)
 
 #: No automatic export
 __all__ = []
@@ -146,8 +144,7 @@ _F64_TYPES = [float, Decimal]
 _C64_TYPES = []
 _C128_TYPES = [complex]
 
-if True:
-#if npchecker.is_available():
+if npchecker.is_available():
     # If NumPy is available, also recognise the associated data types
     _INT_TYPES.extend([np.int8, np.int16, np.int32, np.int64,
                        np.uint8, np.uint16, np.uint32, np.uint64, ])
