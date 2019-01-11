@@ -26,27 +26,12 @@ def setup(t, **kw):
 
 class Safran(Task, S2MTaskMixIn):
 
-    def get_list_dates(self, datebegin, dateend):
-        # list_dates_begin = list()
-        list_rundate = list()
-        d = datebegin
-        while d <= dateend:
-            # list_dates_begin.append(d - Period(hours=12))
-            list_rundate.append('{0:s}'.format(d.yymdh))
-            d = d + Period(days=1)
-
-        return list_rundate
-
-    filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
-
     def process(self):
         """Safran"""
 
         t = self.ticket
         datebegin = self.conf.datebegin.replace(hour=6)
         dateend = self.conf.dateend.replace(hour=6)
-        list_rundate = self.get_list_dates(datebegin, dateend)
-        print('DBUG', list_rundate)
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
@@ -435,7 +420,7 @@ class Safran(Task, S2MTaskMixIn):
                     model          = self.conf.model,
                     datebegin      = rundate.ymd6h,
                     dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
-                    namespace      = 'vortex.archive.fr',
+                    namespace      = 'vortex.multi.fr',
                     member         = footprints.util.rangex(self.conf.members),
                     namebuild      = 'flat@cen',
                 ),
@@ -456,7 +441,7 @@ class Safran(Task, S2MTaskMixIn):
                     model          = self.conf.model,
                     datebegin      = rundate.ymd6h,
                     dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
-                    namespace      = 'vortex.archive.fr',
+                    namespace      = 'vortex.multi.fr',
                     member         = footprints.util.rangex(self.conf.members),
                     namebuild      = 'flat@cen',
                 ),
