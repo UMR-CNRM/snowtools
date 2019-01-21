@@ -35,8 +35,15 @@ class SodaSnow_Vortex_Task(Task):
 
         t = self.ticket
         assDates = []
+        if type(self.conf.assimdates) is unicode:  # if only 1 date, it's a unicode. Must be converted to list.
+            self.conf.assimdates = [self.conf.assimdates]
+
         if hasattr(self.conf, 's2dates'):
+            if type(self.conf.s2dates) is unicode:  # if only 1 date, it's a unicode. Must be converted to list.
+                self.conf.s2dates = [self.conf.s2dates]
             self.conf.assimdates = sorted(list(set(self.conf.assimdates + self.conf.s2dates)))  # be careful for duplicated dates !!
+        else:
+            self.conf.assimdates = sorted(list(set(self.conf.assimdates)))
         try:
             for dt in self.conf.assimdates:  # /!\ bug when only 1 assim date ?
                 dt = Date(check_and_convert_date(str(dt)))
