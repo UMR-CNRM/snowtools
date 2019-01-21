@@ -134,6 +134,26 @@ class GeometryException(Exception):
         return "The provided forcing file does not contain any point corresponding to your requirements." + \
                "\n Elevation range in the file: " + str(self.altmin) + " - " + str(self.altmax)
 
+    def __reduce__(self):
+        red = list(super(GeometryException, self).__reduce__())
+        red[1] = (self.altmin, self.altmax)  # Les arguments qui seront passes a __init__
+        return tuple(red)
+
+
+class MassifException(Exception):
+    def __init__(self, massifrequest, massifavail):
+        self.massifrequest = massifrequest
+        self.massifavail = massifavail
+
+    def __str__(self):
+        return "The provided forcing file does not contain any point corresponding to your requirements." + \
+               "\n Requested massifs: " + str(self.massifrequest) + \
+               "\n Available massifs: " + str(self.massifavail)
+
+    def __reduce__(self):
+        red = list(super(GeometryException, self).__reduce__())
+        red[1] = (self.massifrequest, self.massifavail)  # Les arguments qui seront passes a __init__
+        return tuple(red)
 
 class ModuleImportException(Exception):
 
