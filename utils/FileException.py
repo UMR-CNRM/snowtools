@@ -148,7 +148,7 @@ class MassifException(Exception):
     def __str__(self):
         return "The provided forcing file does not contain any point corresponding to your requirements." + \
                "\n Requested massifs: " + str(self.massifrequest) + \
-               "\n Available massifs: " + str(self.massifavail)
+               "\n Available massifs in the provided forcing files (-f): " + str(self.massifavail)
 
     def __reduce__(self):
         red = list(super(GeometryException, self).__reduce__())
