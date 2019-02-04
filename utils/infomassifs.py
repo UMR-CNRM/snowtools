@@ -283,7 +283,7 @@ class infomassifs():
     def infoposte(self, num_poste):
 
         for poste in self.caracLoc.documentElement.getElementsByTagName("Site"):
-            if str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip() == num_poste:
+            if str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip() == '%08d' % int(num_poste):
                 lati = float(poste.getElementsByTagName("lat")[0].childNodes[0].data)
                 longi = float(poste.getElementsByTagName("lon")[0].childNodes[0].data)
                 alti = float(poste.getElementsByTagName("altitude")[0].childNodes[0].data)
@@ -309,9 +309,8 @@ class infomassifs():
         return massif
 
     def nameposte(self, num_poste):
-
         for poste in self.caracLoc.documentElement.getElementsByTagName("Site"):
-            if str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip() == num_poste:
+            if str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip() == '%08d' % int(num_poste):
                 name = poste.getElementsByTagName("name")[0].childNodes[0].data
                 break
         return name.encode("utf-8")
@@ -392,7 +391,6 @@ class infomassifs():
         return self.getMassifName(self.getMassifFromLatLon(lat, lon, tagname), tagname).strip()
 
     def getMassifName(self, num_massif, tagname="Massif"):
-
         for massif in self.caracLoc.documentElement.getElementsByTagName(tagname):
             if int(massif.getElementsByTagName("number")[0].childNodes[0].data) == num_massif:
                 massifName = massif.getElementsByTagName("name")[0].childNodes[0].data

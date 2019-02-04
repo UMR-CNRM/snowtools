@@ -1,3 +1,6 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
 '''
 Created on 30 Aug. 2017
 
@@ -9,10 +12,17 @@ import datetime
 
 class TypeException(Exception):
     def __init__(self, typein, typerequired):
-            self.message = "Type provided: " + str(typein) + " Type expected: " + str(typerequired)
+        self.typein = typein
+        self.typerequired = typerequired
+        self.message = "Type provided: " + str(typein) + " Type expected: " + str(typerequired)
 
     def __str__(self):
         return "Argument type exception:\n" + self.message
+
+    def __reduce__(self):
+        red = list(super(TypeException, self).__reduce__())
+        red[1] = (self.typein, self.typerequired)  # Les arguments qui seront passes a __init__
+        return tuple(red)
 
 
 class DateException(Exception):
@@ -36,13 +46,27 @@ class WallTimeException(Exception):
 class EarlyDateException(DateException):
 
     def __init__(self, earlydate, date):
+        self.earlydate = earlydate
+        self.date = date
         self.message = earlydate.strftime("%Y-%m-%d %H:%M:%S") + " is before " + date.strftime("%Y-%m-%d %H:%M:%S")
+
+    def __reduce__(self):
+        red = list(super(EarlyDateException, self).__reduce__())
+        red[1] = (self.earlydate, self.date)  # Les arguments qui seront passes a __init__
+        return tuple(red)
 
 
 class LateDateException(DateException):
 
     def __init__(self, latedate, date):
+        self.latedate = latedate
+        self.date = date
         self.message = latedate.strftime("%Y-%m-%d %H:%M:%S") + " is after " + date.strftime("%Y-%m-%d %H:%M:%S")
+
+    def __reduce__(self):
+        red = list(super(LateDateException, self).__reduce__())
+        red[1] = (self.latedate, self.date)  # Les arguments qui seront passes a __init__
+        return tuple(red)
 
 
 class FormatDateException(DateException):
@@ -69,7 +93,7 @@ def checkdatebetween(date, datemin, datemax):
 def check_and_convert_date(datearg):
 
     if datearg:
-        if not type(datearg) is str:
+        if type(datearg) not in [str, unicode]:
             raise TypeException(type(datearg), str)
 
         if len(datearg) == 8:
@@ -82,6 +106,10 @@ def check_and_convert_date(datearg):
             raise FormatDateException(datearg)
     else:
         return datearg
+
+
+def pretty_date(datetimeobject):
+    return datetimeobject.strftime("%A %d %B %Y à %H:%M")
 
 
 def get_list_dates_files(datebegin, dateend, duration, listDateStop=None):
