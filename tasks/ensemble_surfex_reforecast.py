@@ -34,7 +34,6 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
 
         t = self.ticket
 
-        
         listrundate = list(daterange(self.conf.datebegin, self.conf.dateend))
         list_geometry = self.get_list_geometry()
         source_safran, block_safran = self.get_source_safran()
@@ -202,9 +201,9 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
             tb09 = tbalgo1 = toolbox.algo(
                 engine         = 's2m',
                 kind           = "ensmeteo" if self.conf.geometry.area == 'postes' else "ensmeteo+sytron",
-                datebegin      = listrundate,
-                dateinit       = listrundate,
-                dateend        = listrundate,
+                multidates     = True,
+                datebegin      = self.conf.datebegin,
+                dateend        = self.conf.dateend,
                 threshold      = self.conf.threshold,
                 members        = footprints.util.rangex(pearpmembers),
                 geometry       = list_geometry,
