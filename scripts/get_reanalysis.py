@@ -14,7 +14,7 @@ from vortex import toolbox
 from bronx.stdtypes.date import Date
 from utils.dates import get_list_dates_files
 
-usage = "usage: python get_reanalysis.py --geometry=xxx [--byear=YYYY] [--eyear=YYYY] [--meteo] [--snow]"
+usage = "usage: python get_reanalysis.py --geometry=xxx [--byear=YYYY] [--eyear=YYYY] [--meteo] [--snow] [--nativemeteo]"
 
 
 def parse_options(arguments):
@@ -36,6 +36,10 @@ def parse_options(arguments):
                       action="store_true", dest="meteo", default=False,
                       help="Extract meteorological forcing files")
 
+    parser.add_option("--nativemeteo",
+                      action="store_true", dest="nativemeteo", default=False,
+                      help="Extract native meteorological forcing files")
+
     parser.add_option("--snow",
                       action="store_true", dest="snow", default=False,
                       help="Extract snowpack model output files")
@@ -48,6 +52,7 @@ def parse_options(arguments):
 class config(object):
 
     xpid = "reanalysis@lafaysse"  #
+    xpid_native = "reanalysis@vernaym"
     duration = "yearly"
 
     def __init__(self):
@@ -56,6 +61,7 @@ class config(object):
         self.dateend = Date(options.eyear, 8, 1, 6)
         self.geometry = options.geometry
         self.meteo = options.meteo
+        self.nativemeteo = options.nativemeteo
         self.snow = options.snow
 
 
@@ -67,6 +73,40 @@ class S2MExtractor(S2MTaskMixIn):
     def get(self):
 
         list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
+
+        if self.conf.nativemeteo:
+            for p, datebegin in enumerate(list_dates_begin_forc):
+                dateend = list_dates_end_forc[p]
+
+                if datebegin >= Date(2002, 8, 1):
+                    source_app = 'arpege'
+                    source_conf = '4dvarfr'
+                else:
+                    source_app = 'ifs'
+                    source_conf = 'era40'
+
+                tb01 = toolbox.input(
+                    vapp           = 'safran',
+                    vconf          = self.conf.geometry,
+                    local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    experiment     = self.conf.xpid_native,
+                    block          = 'postes',
+                    source_app     = source_app,
+                    source_conf    = source_conf,
+                    geometry       = self.conf.geometry,
+                    date           = '[datebegin]',
+                    datebegin      = datebegin,
+                    dateend        = dateend,
+                    nativefmt      = 'netcdf',
+                    kind           = 'MeteorologicalForcing',
+                    model          = 'safran',
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
+                )
+
+                for rh in tb01:
+                    print(rh.quickview())
+                    rh.get()
 
         if self.conf.meteo:
             for p, datebegin in enumerate(list_dates_begin_forc):
