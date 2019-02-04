@@ -39,6 +39,8 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
         rundate_prep, alternate_rundate_prep = self.get_rundate_prep()
         list_geometry = self.get_list_geometry()
         source_safran, block_safran = self.get_source_safran()
+        alternate_safran, alternate_block, alternate_geometry = self.get_alternate_safran()
+        exceptional_save_forcing = False
 
         pearpmembers, members = self.get_list_members()
 
@@ -63,10 +65,38 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 kind           = 'MeteorologicalForcing',
                 namespace      = 'vortex.multi.fr',
                 model          = source_safran,
-                cutoff         = 'production' if self.conf.previ else 'assimilation'
+                cutoff         = 'production' if self.conf.previ else 'assimilation',
+                fatal          = False
             ),
             print(t.prompt, 'tb01 =', tb01)
             print()
+
+            if not any(tb01) and source_safran == "s2m":  # alernate case if forcing not available in s2m task
+
+                self.sh.title('Toolbox input tb01a')
+                tb01a = toolbox.input(
+                    alternate      = 'Forcing',
+                    local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    vapp           = self.conf.vapp,
+                    vconf          = '[geometry:area]',
+                    block          = alternate_block,
+                    member         = None,
+                    source_app     = 'arpege',
+                    source_conf    = '4dvarfr',
+                    experiment     = self.conf.forcingid,
+                    geometry       = alternate_geometry,
+                    date           = rundate_forcing,
+                    datebegin      = yesterday(base=datebegin),
+                    dateend        = dateend,
+                    nativefmt      = 'netcdf',
+                    kind           = 'MeteorologicalForcing',
+                    namespace      = 'vortex.multi.fr',
+                    model          = alternate_safran,
+                    cutoff         = 'production' if self.conf.previ else 'assimilation',
+                    fatal          = False
+                ),
+                print(t.prompt, 'tb01a =', tb01a)
+                print()
 
             self.sh.title('Toolbox input tb01b')
             tb01b = toolbox.input(
@@ -87,10 +117,50 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 kind           = 'MeteorologicalForcing',
                 namespace      = 'vortex.multi.fr',
                 model          = source_safran,
-                cutoff         = 'production' if self.conf.previ else 'assimilation'
+                cutoff         = 'production' if self.conf.previ else 'assimilation',
+                fatal          = False
             ),
             print(t.prompt, 'tb01b =', tb01b)
             print()
+
+            if not any(tb01b) and source_safran == "s2m":  # alernate case if forcing not available in s2m task
+
+                self.sh.title('Toolbox input tb01c')
+                tb01c = toolbox.input(
+                    alternate           = 'Forcing',
+                    local          = 'mb[member]/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    vapp           = self.conf.vapp,
+                    vconf          = '[geometry:area]',
+                    block          = alternate_block,
+                    source_app     = 'arpege',
+                    source_conf    = 'pearp',
+                    experiment     = self.conf.forcingid,
+                    geometry       = alternate_geometry,
+                    date           = rundate_forcing,
+                    datebegin      = yesterday(base=datebegin),
+                    dateend        = dateend,
+                    member         = pearpmembers,
+                    nativefmt      = 'netcdf',
+                    kind           = 'MeteorologicalForcing',
+                    namespace      = 'vortex.multi.fr',
+                    model          = alternate_safran,
+                    cutoff         = 'production' if self.conf.previ else 'assimilation',
+                    fatal          = False
+                ),
+                print(t.prompt, 'tb01c =', tb01c)
+                print()
+
+            print (any(tb01), any(tb01b))
+
+            if not any(tb01) and not any(tb01b) and source_safran == 's2m':
+                print ('MODE SECOURS')
+                print(any(tb01a), any(tb01c))
+
+                if (any(tb01a) or any(tb01c)):
+                    print ("EXCEPTIONAL SAVE FORCING")
+                    exceptional_save_forcing = True
+                    list_geometry = alternate_geometry[:]
+                    print (list_geometry)
 
             self.sh.title('Toolbox input tb02')
             tb02 = toolbox.input(
@@ -256,9 +326,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
             pass
 
         if 'late-backup' in self.steps:
-            print "source_safran"
-            print source_safran
-            if source_safran != 's2m':
+            if source_safran != 's2m' or exceptional_save_forcing:
                 self.sh.title('Toolbox output tb10')
                 tb10 = toolbox.output(
                     local          = 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
