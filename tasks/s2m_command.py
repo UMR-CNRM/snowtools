@@ -66,7 +66,9 @@ def check_and_convert_options(options, vortex=False):
             options.datedeb = check_and_convert_date(options.datedeb)
         else:
             # If rundate is not prescribed, get it from the current time.
-            options.datedeb = datetime.datetime.today().replace(minute=0, second=0, microsecond=0)
+            today = datetime.datetime.today()
+            newhour = today.hour - today.hour % 3
+            options.datedeb = today.replace(hour=newhour, minute=0, second=0, microsecond=0)
     else:
         # Controls and type conversions of dates
         [options.datedeb, options.datefin, options.datespinup] = list(map(check_and_convert_date, [options.datedeb, options.datefin, options.datespinup]))
