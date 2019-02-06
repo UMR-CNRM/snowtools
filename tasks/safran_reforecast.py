@@ -404,7 +404,7 @@ class Safran(Task, S2MTaskMixIn):
 
             rundate = datebegin
             while rundate <= dateend:
-                season = rundate.nivologyseason()
+                season = rundate.nivologyseason
 
                 self.sh.title('Toolbox output tb27')
                 tb27 = toolbox.output(
