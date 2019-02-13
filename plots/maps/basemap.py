@@ -2,61 +2,51 @@
 # -*- coding: utf-8 -*-
 
 import os
+import matplotlib
 from matplotlib.collections import PatchCollection
-from matplotlib.patches import Polygon
+from matplotlib.patches import Polygon, Rectangle
 import matplotlib.pyplot as plt
 import mpl_toolkits.basemap.pyproj as pyproj
 from mpl_toolkits.basemap import Basemap
 import numpy as np
-from PIL import Image
 from utils import shapefile
 from utils.infomassifs import infomassifs
 from osgeo import osr
 
-
-class Mplfigure(object):
-
-    def set_title(self, title):
-        if "map" in dir(self):
-            plt.title(title, fontsize=10)
-        elif "plot" in dir(self):
-            self.plot.set_title(title, fontsize=10)
-
-    def set_suptitle(self, suptitle):
-        self.fig.suptitle(suptitle, fontsize=10)
-
-    def getlogo(self):
-        return Image.open(os.environ["SNOWTOOLS_CEN"] + "/DATA/logoMF15.jpg")
-
-    def addlogo(self):
-        logo = self.getlogo()
-        width, height = logo.size
-        sizefig = self.fig.get_size_inches()
-        widthfig = sizefig[0] * 100
-        heightfig = sizefig[1] * 100
-
-        if "map" in dir(self):
-            self.fig.figimage(logo, widthfig - width, int(0.92 * heightfig) - height)
-        else:
-            self.fig.figimage(logo, widthfig - width, 0)
-
-    def save(self, figname):
-        plt.savefig(figname)
-        self.fig.clear()
-
-    def close(self):
-        plt.close(self.fig)
+from plots.abstracts.figures import Mplfigure
 
 
 class _Map_massifs(Mplfigure):
     """ Implicit class that defines a generic massif map"""
 
+    legendok = False
+
     def __init__(self, *args, **kw):
+
+        self.openfigure()
+        self.map = self.getmap(self.latmin, self.latmax, self.lonmin, self.lonmax)
+
         self.map.drawcoastlines(linewidth=1)
 #        self.map.drawcountries()
         self.map.drawmapboundary()
         # Get massif shapes
         self.getshapes()
+
+        self.dicLonLatMassif = self.getLonLatMassif()
+
+    def openfigure(self):
+        self.fig = plt.figure(figsize=(self.width, self.height))
+
+    def save(self, *args, **kwargs):
+        super(_Map_massifs, self).save(*args, **kwargs)
+#         if hasattr(self, 'p'):
+#             self.p.remove()
+        if hasattr(self, 'text'):
+            for textelm in self.text:
+                textelm.remove()
+
+        if hasattr(self, 'r'):
+            self.r.remove()
 
     def getshapes(self):
         shapefile_path = os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')
@@ -117,37 +107,29 @@ class _Map_massifs(Mplfigure):
         im = infomassifs()
         return infomassifs.getAllMassifLatLon(im)
 
+    def getdeport(self, num):
+        if num in self.deport.keys():
+            return self.deport[num]
+        else:
+            return (0, 0)
+
+    def getTextColor(self, var, **kwargs):
+        color = 'black'
+        if 'seuiltext' in kwargs.keys():
+            if var >= kwargs['seuiltext']:
+                color = 'white'
+        return color
+
     def plot_background(self):
 
         mypatches = []
         self.dicLonLatMassif = self.getLonLatMassif()
         for i, massif in enumerate(self.shapes):
-            polygon_to_map = True
-            force_barycentre = True
-            num = self.records(i)[1]  # lecture de l'attribut num_opp
+            XYplot, Xbary, Ybary = self.getxy(massif, self.dicLonLatMassif, i)  # @UnusedVariable
+            mypatches.append(Polygon(XYplot, alpha=1.0, fill=False, visible=True))
 
-            # TO DO : gestion des autres cas
-#             # Pyrénées
-#             if num>=64 and num<=74:
-#                 num=num-63
-#             elif num>=80:
-#                 num=num-68
-#             if self.area in ["alpes_CNR"] and i+1 in list_num:
-#                 polygon_to_map=True
-#                 force_barycentre=False
-#                 num=num+1
-#             else:
-#                 polygon_to_map=False
-#                 force_barycentre=False
-
-            if polygon_to_map:
-                XYplot, Xbary, Ybary = self.getxy(massif, self.dicLonLatMassif, i)
-                poly = Polygon(XYplot, alpha=1.0, fill=False, visible=True)
-
-                mypatches.append(poly)
-                plt.gca().add_patch(poly)
-
-        p = PatchCollection(mypatches, cmap=plt.get_cmap('jet'), alpha=1.0)
+        self.p = PatchCollection(mypatches)
+        plt.gca().add_collection(self.p)
 
     def addpoints(self, labels, lon, lat):
         x, y = self.map(lon, lat)
@@ -161,11 +143,244 @@ class _Map_massifs(Mplfigure):
     def fillmassif(self, num_massif):
         for i, massif in enumerate(self.shapes):
             num = self.records(i)[1]
-            print num
             if num == num_massif:
-                XYplot, Xbary, Ybary = self.getxy(massif, self.dicLonLatMassif, i)
+                XYplot, Xbary, Ybary = self.getxy(massif, self.dicLonLatMassif, i)  # @UnusedVariable
                 poly = Polygon(XYplot, facecolor='0.9', alpha=1.0, fill=True, visible=True)
                 plt.gca().add_patch(poly)
+
+    def init_massifs(self, **kwargs):
+
+        # This routine draw the contours of the polygons and initialize a colormap
+        if 'palette' in kwargs.keys():
+            if 'ncolors' in kwargs.keys():
+                self.palette = plt.get_cmap(kwargs['palette'], kwargs['ncolors'])
+            else:
+                self.palette = plt.get_cmap(kwargs['palette'])
+        else:
+            self.palette = plt.get_cmap('jet')
+
+        self.palette.set_bad(color='grey')
+        self.palette.set_under(color='grey')
+
+        self.norm = self.normpalette(**kwargs)
+
+        mypatches = []
+        for i, massif in enumerate(self.shapes):
+            XYplot, Xbary, Ybary = self.getxy(massif, self.dicLonLatMassif, i)
+            mypatches.append(Polygon(XYplot))
+
+        self.p = PatchCollection(np.array(mypatches), cmap=self.palette, alpha=1.0)
+        self.p.set_norm(self.norm)
+
+        plt.gca().add_collection(self.p)
+
+    def empty_massifs(self, **kwargs):
+        self.p.set_facecolor('white')
+
+    def draw_massifs(self, massifref, variablein, **kwargs):
+        # This routine fills the polygons with a color
+        # depending on the value of variablein associated with the massif number provided in massifref
+        # It is not required to provide a value for all massifs
+        if 'convert_unit' in kwargs.keys():
+            variable = variablein[:] * kwargs['convert_unit']
+        else:
+            variable = variablein[:]
+
+        myvalues = []
+        for i, massif in enumerate(self.shapes):  # @UnusedVariable
+            num = self.records(i)[1]
+            indmassif = massifref == num
+
+            if np.sum(indmassif) == 1:
+                myvalues.append(variable[indmassif][0])
+            else:
+                myvalues.append(-999)
+
+        self.p.set_array(np.array(myvalues))
+
+        if not self.legendok:
+            self.legend(self.p, **kwargs)
+
+    def reset_massifs(self, **kwargs):
+        self.p.remove()
+        self.legendok = False
+        if hasattr(self, 'infos'):
+            for elm in self.infos:
+                elm.remove()
+
+    def plot_center_massif(self, massifref, *args, **kwargs):
+
+        nvar = len(args)
+
+        listvar = self.convertunit(*args, **kwargs)
+        formatString = self.getformatstring(**kwargs)
+
+        self.text = []
+
+        textcolor = 'black'
+
+        for i, massif in enumerate(self.shapes):
+            num = self.records(i)[1]
+
+            indmassif = massifref == num
+
+            XYplot, Xbary, Ybary = self.getxy(massif, self.dicLonLatMassif, i)
+            if np.sum(indmassif) == 1:
+                infos = ''
+                for v, variable in enumerate(listvar):
+                    infos += formatString % variable[indmassif][0]
+                    if v < nvar - 1:
+                        infos += "-"
+
+                    if (nvar == 3 and v == 1 ) or nvar == 1:
+                        textcolor = self.getTextColor(variable[indmassif][0], **kwargs)
+
+                self.text.append(plt.text(Xbary, Ybary, infos, horizontalalignment='center', verticalalignment='center', color = textcolor))
+
+    def rectangle_massif(self, massifref, list_quantiles, list_values, ncol=1, **kwargs):
+        width = 50000.
+        height = 20000.
+
+        if 'palette' in kwargs.keys():
+            if 'ncolors' in kwargs.keys():
+                self.palette = plt.get_cmap(kwargs['palette'], kwargs['ncolors'])
+            else:
+                self.palette = plt.get_cmap(kwargs['palette'])
+        else:
+            self.palette = plt.get_cmap('jet')
+
+        self.palette.set_bad(color='grey')
+        self.palette.set_under(color='grey')
+
+        self.norm = self.normpalette(**kwargs)
+
+        nvar = len(list_values)
+        nrows = nvar / ncol
+        listvar = self.convertunit(*list_values, **kwargs)
+        formatString = self.getformatstring(**kwargs)
+
+        self.text = []
+        mypatches = []
+        myvalues = []
+
+        for i, massif in enumerate(self.shapes):
+            num = self.records(i)[1]
+
+            indmassif = massifref == num
+
+            XYplot, Xbary, Ybary = self.getxy(massif, self.dicLonLatMassif, i)
+            if np.sum(indmassif) == 1:
+
+                (xdeport, ydeport) = self.getdeport(num)
+
+                for i, thisvar in enumerate(listvar):
+                    myvalues.append(thisvar[indmassif][0])
+                    infos = formatString % thisvar[indmassif][0]
+                    xmin = Xbary - width / 2. + (1. * i % nrows) / nrows * width + xdeport
+                    ymin = Ybary - height / 2. + (1. * (i / nrows)) / ncol * height + ydeport
+                    partialwidth = width / nrows
+                    partialheight = height / ncol
+
+#                     print massif
+#                     print xmin, ymin, partialwidth, partialheight, nrows, ncol
+
+                    mypatches.append(Rectangle((int(xmin), int(ymin)), int(partialwidth), int(partialheight)))
+
+                    textcolor = self.getTextColor(thisvar[indmassif][0], **kwargs)
+
+                    self.text.append(plt.text(xmin + partialwidth / 2, ymin + partialheight / 2, infos, horizontalalignment='center',
+                                              verticalalignment='center', color=textcolor))
+#                     if i == 3:
+#                         self.text.append(plt.text(xmin - partialwidth / 2, ymin , str(num), horizontalalignment='center', verticalalignment='center'))
+
+        self.r = PatchCollection(mypatches, cmap=self.palette, alpha=1.0)
+
+        self.r.set_norm(self.norm)
+
+        plt.gca().add_collection(self.r)
+
+        self.r.set_array(np.array(myvalues))
+
+        if not self.legendok:
+            self.legend(self.r, **kwargs)
+
+    def convertunit(self, *args, **kwargs):
+        listvar = []
+        for variablein in args:
+            if 'convert_unit' in kwargs.keys():
+                variable = variablein[:] * kwargs['convert_unit']
+            else:
+                variable = variablein[:]
+            listvar.append(variable)
+        return listvar
+
+    def getformatstring(self, **kwargs):
+        if 'format' in kwargs.keys():
+            return kwargs['format']
+        else:
+            return '%i'
+
+    def legend(self, polygons, **kwargs):
+
+        currentaxis = plt.gca()
+
+        cax = self.fig.add_axes(self.legendpos)
+        self.cbar = self.fig.colorbar(polygons, cax=cax)
+
+        if 'ticks' in kwargs.keys():
+            self.cbar.set_ticks(range(0, len(kwargs['ticks'])))
+            self.cbar.set_ticklabels(kwargs['ticks'])
+            fontsize = 10
+        else:
+            fontsize = 20
+
+        for t in self.cbar.ax.get_yticklabels():
+            t.set_fontsize(fontsize)
+
+        if 'label' in kwargs.keys():
+            self.cbar.set_label(kwargs['label'], fontsize=20)
+
+        plt.sca(currentaxis)
+
+        self.legendok = True
+
+    def add_north_south_info(self):
+        if hasattr(self, "infoswidth"):
+            width = self.infoswidth
+        else:
+            width = 80000
+        if hasattr(self, "infosheight"):
+            height = self.infosheight
+        else:
+            height = 60000
+
+        self.infos = []
+
+        self.infos.append(Rectangle(self.infospos, width, height / 2, fill=False))
+        self.infos.append(Rectangle((self.infospos[0], self.infospos[1] + height / 2), width, height / 2, fill=False))
+
+        for rect in self.infos:
+            plt.gca().add_patch(rect)
+
+        self.infos.append(plt.text(self.infospos[0] + 5000, self.infospos[1] + height * (5. / 6.), "Versant Nord"))
+        self.infos.append(plt.text(self.infospos[0] + 5000, self.infospos[1] + height * (4. / 6.), "Q20 - Q50 -Q80"))
+
+        self.infos.append(plt.text(self.infospos[0] + 5000, self.infospos[1] + height * (2. / 6.), "Versant Sud"))
+        self.infos.append(plt.text(self.infospos[0] + 5000, self.infospos[1] + height * (1. / 6.), "Q20 - Q50 -Q80"))
+
+
+    def normpalette(self, **kwargs):
+        # Bornes pour légende
+        if 'forcemin' in kwargs.keys():
+            vmin = kwargs['forcemin']
+        else:
+            vmin = 0
+        if 'forcemax' in kwargs.keys():
+            vmax = kwargs['forcemax']
+        else:
+            vmax = 100
+
+        return matplotlib.colors.Normalize(vmax=vmax, vmin=vmin)
 
     def set_scale(self):
         # Il y a un bug dans Basemap qui oblige à bricoler l'échelle.
@@ -189,11 +404,21 @@ class Map_alpes(_Map_massifs):
         self.area = 'alpes'
         self.width = 10
         self.height = 10
-        self.latmin = 43.85
-        self.latmax = 46.6  # 46.5
-        self.lonmin = 5.1
-        self.lonmax = 8.1  # 7.9
+#         self.latmin = 43.85
+#         self.latmax = 46.6  # 46.5
+#         self.lonmin = 5.1
+#         self.lonmax = 8.1  # 7.9
+
+        self.latmin = 43.9
+        self.latmax = 46.5
+        self.lonmin = 5.2
+        self.lonmax = 7.9
+
         self.legendpos = [0.81, 0.15, 0.03, 0.6]
+        self.infospos = (205000, 330000)
+
+        self.deport = {2: (-10000, 0), 3: (10000, 0), 6: (20000, 0), 7: (-20000, 10000), 9: (15000, -10000), 11: (15000, -10000),
+                       13: (15000, 0), 17: (15000, 0), 18: (-20000, -10000), 19: (0, -5000), 20: (0, -5000), 21: (0, -10000)}
 
         self.fig = plt.figure(figsize=(self.width, self.height))
         self.map = self.getmap(self.latmin, self.latmax, self.lonmin, self.lonmax)
@@ -207,14 +432,22 @@ class Map_pyrenees(_Map_massifs):
         self.area = 'pyrenees'
         self.width = 14
         self.height = 5.8
-        self.latmin = 42.0
-        self.latmax = 43.3
-        self.lonmin = -1.9
-        self.lonmax = 2.9
-        self.legendpos = [0.9, 0.10, 0.03, 0.7]
+#         self.latmin = 42.0
+#         self.latmax = 43.3
+#         self.lonmin = -1.9
+#         self.lonmax = 2.9
 
-        self.fig = plt.figure(figsize=(self.width, self.height))
-        self.map = self.getmap(self.latmin, self.latmax, self.lonmin, self.lonmax)
+        self.latmin = 42.1
+        self.latmax = 43.5
+        self.lonmin = -2.0
+        self.lonmax = 3.0
+
+        self.legendpos = [0.9, 0.10, 0.03, 0.7]
+        self.infospos = (450000, 140000)
+
+        self.deport = {67: (10000, 20000), 68: (0, 5000), 69: (0, 10000), 72: (20000, 20000), 74: (25000, 0), 82: (-15000, -40000),
+                       84: (-10000, -30000), 85: (0, -5000), 87: (-5000, -40000), 88: (25000, -5000), 89: (15000, -15000),
+                       90: (-25000, 5000), 91: (10000, -5000)}
 
         super(Map_pyrenees, self).__init__()
 
@@ -228,11 +461,15 @@ class Map_corse(_Map_massifs):
         self.latmin = 41.3
         self.latmax = 43.1
         self.lonmin = 8.4
-        self.lonmax = 9.7
-        self.legendpos = [0.81, 0.15, 0.03, 0.6]
+        self.lonmax = 9.6
 
-        self.fig = plt.figure(figsize=(self.width, self.height))
-        self.map = self.getmap(self.latmin, self.latmax, self.lonmin, self.lonmax)
+        self.legendpos = [0.81, 0.15, 0.03, 0.6]
+        self.infospos = (15000, 215000)
+
+        self.infoswidth = 50000
+        self.infosheight = 50000
+
+        self.deport = {}
 
         super(Map_corse, self).__init__()
 

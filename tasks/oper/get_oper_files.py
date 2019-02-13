@@ -22,11 +22,16 @@ class config(object):
 class S2MExtractor(S2MTaskMixIn):
 
     def __init__(self, conf):
+        toolbox.active_now = True
         self.conf = conf
+        self.datebegin, self.dateend = self.get_period()
 
     def get(self):
+        meteo_outputs = self.get_meteo()
+        snow_outputs = self.get_snow()
+        return meteo_outputs, snow_outputs
 
-        datebegin, dateend = self.get_period()
+    def get_meteo(self):
 
         tb01 = toolbox.input(
             vapp           = 's2m',
@@ -36,19 +41,21 @@ class S2MExtractor(S2MTaskMixIn):
             block          = 'meteo',
             geometry       = self.conf.list_geometry,
             date           = self.conf.rundate,
-            datebegin      = datebegin,
-            dateend        = dateend,
+            datebegin      = self.datebegin,
+            dateend        = self.dateend,
             member         = self.conf.list_members,
             nativefmt      = 'netcdf',
             kind           = 'MeteorologicalForcing',
             model          = 's2m',
             namespace      = 'vortex.multi.fr',
             cutoff         = 'production' if self.conf.previ else 'assimilation',
+            intent         = 'in',
+            fatal          = False
         )
 
-        for rh in tb01:
-            print(rh.quickview())
-            rh.get()
+        return self.get_std(tb01)
+
+    def get_snow(self):
 
         tb02 = toolbox.input(
             vapp           = 's2m',
@@ -58,19 +65,33 @@ class S2MExtractor(S2MTaskMixIn):
             block          = 'pro',
             geometry       = self.conf.list_geometry,
             date           = self.conf.rundate,
-            datebegin      = datebegin if self.conf.previ else '[dateend]/-PT24H',
-            dateend        = dateend if self.conf.previ else list(daterange(tomorrow(base=datebegin), dateend)),
+            datebegin      = self.datebegin if self.conf.previ else '[dateend]/-PT24H',
+            dateend        = self.dateend if self.conf.previ else list(daterange(tomorrow(base=self.datebegin), self.dateend)),
             member         = self.conf.list_members,
             nativefmt      = 'netcdf',
             kind           = 'SnowpackSimulation',
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
             cutoff         = 'production' if self.conf.previ else 'assimilation',
+            intent         = 'in',
+            fatal          = False
+
         )
 
-        for rh in tb02:
-            print(rh.quickview())
-            rh.get()
+        return self.get_std(tb02)
+
+    def get_std(self, tb):
+
+        list_output = {}
+        for rh in tb:
+#             print(rh.quickview())
+#             rh.get()
+            if rh.check():
+                if rh.resource.geometry.area not in list_output.keys():
+                    list_output[rh.resource.geometry.area] = []
+                list_output[rh.resource.geometry.area].append(rh.container.filename)
+
+        return list_output
 
 
 if __name__ == "__main__":

@@ -66,94 +66,8 @@ class Safran(Task, S2MTaskMixIn):
             print t.prompt, 'tb01 =', tb01
             print
 
-#             self.sh.title('Toolbox input tb01')
-#             tb01 = toolbox.input(
-#                 role           = 'ObsSynop',
-#                 part           = 'synop',
-#                 block          = 'observations',
-#                 experiment     = self.conf.xpid,
-#                 geometry       = self.conf.vconf,
-#                 suite          = 'oper',
-#                 fatal          = False,
-#                 kind           = 'observations',
-#                 stage          = 'safrane',
-#                 nativefmt      = 'ascii',
-#                 date           = ['{0:s}/-PT{1:s}H/+PT[term]H'.format(dateend.ymd6h, str(24 * (i + 1))) for i in range(ndays)],
-#                 term           = footprints.util.rangex(self.conf.ana_terms),
-#                 local          = 'S[date:yymdh]',
-#                 model          = self.conf.model,
-#                 namespace      = 'cendev.soprano.fr',
-#                 storage        = 'guppy.meteo.fr',
-#             )
-#             print t.prompt, 'tb01 =', tb01
-#             print
-#
-#             self.sh.title('Toolbox input tb02')
-#             tb02 = toolbox.input(
-#                 role           = 'ObsRR',
-#                 part           = 'precipitation',
-#                 block          = 'observations',
-#                 experiment     = self.conf.xpid,
-#                 geometry       = self.conf.vconf,
-#                 suite          = 'oper',
-#                 fatal          = False,
-#                 kind           = 'observations',
-#                 stage          = 'sypluie',
-#                 nativefmt      = 'ascii',
-#                 date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(24 * i)) for i in range(ndays)],
-#                 local          = 'R[date:yymdh]',
-#                 model          = self.conf.model,
-#                 namespace      = 'cendev.soprano.fr',
-#                 storage        = 'guppy.meteo.fr',
-#             )
-#             print t.prompt, 'tb02 =', tb02
-#             print
-#
-#             self.sh.title('Toolbox input tb03')
-#             tb03 = toolbox.input(
-#                 role           = 'HourlyObs',
-#                 part           = 'hourlyobs',
-#                 block          = 'observations',
-#                 experiment     = self.conf.xpid,
-#                 geometry       = self.conf.vconf,
-#                 suite          = 'oper',
-#                 fatal          = False,
-#                 kind           = 'observations',
-#                 stage          = 'safrane',
-#                 nativefmt      = 'ascii',
-#                 date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(24 * i)) for i in range(ndays)],
-#                 local          = 'T[date:yymdh]',
-#                 model          = self.conf.model,
-#                 namespace      = 'cendev.soprano.fr',
-#                 storage        = 'guppy.meteo.fr',
-#             )
-#             print t.prompt, 'tb03 =', tb03
-#             print
-#
-#             self.sh.title('Toolbox input tb04')
-#             tb04 = toolbox.input(
-#                 role           = 'ObsRS',
-#                 part           = 'radiosondage',
-#                 block          = 'observations',
-#                 experiment     = self.conf.xpid,
-#                 geometry       = self.conf.vconf,
-#                 suite          = 'oper',
-#                 fatal          = False,
-#                 kind           = 'observations',
-#                 stage          = 'safrane',
-#                 nativefmt      = 'ascii',
-#                 date           = ['{0:s}/-PT{1:s}H/+PT[term]H'.format(dateend.ymd6h, str(24 * (i + 1))) for i in range(ndays)],
-#                 term           = footprints.util.rangex(self.conf.ana_terms),
-#                 local          = 'A[date:yymdh]',
-#                 model          = self.conf.model,
-#                 namespace      = 'cendev.soprano.fr',
-#                 storage        = 'guppy.meteo.fr',
-#             )
-#             print t.prompt, 'tb04 =', tb04
-#             print
-
-            self.sh.title('Toolbox input tb05')
-            tb05 = toolbox.input(
+            self.sh.title('Toolbox input tb02')
+            tb02 = toolbox.input(
                 role           = 'ObsNeb',
                 part           = 'nebulosity',
                 block          = 'observations',
@@ -170,11 +84,11 @@ class Safran(Task, S2MTaskMixIn):
                 namespace      = 'cendev.soprano.fr',
                 storage        = 'guppy.meteo.fr',
             )
-            print t.prompt, 'tb05 =', tb05
+            print t.prompt, 'tb02 =', tb02
             print
 
-            self.sh.title('Toolbox input tb07')
-            tb07 = toolbox.input(
+            self.sh.title('Toolbox input tb03')
+            tb03 = toolbox.input(
                 role            = 'ListeMassif',
                 genv            = self.conf.cycle,
                 gdomain         = self.conf.vconf,
@@ -183,11 +97,11 @@ class Safran(Task, S2MTaskMixIn):
                 model           = self.conf.model,
                 local           = 'listem',
             )
-            print t.prompt, 'tb07 =', tb07
+            print t.prompt, 'tb03 =', tb03
             print
 
-            self.sh.title('Toolbox input tb08')
-            tb08 = toolbox.input(
+            self.sh.title('Toolbox input tb04')
+            tb04 = toolbox.input(
                 role            = 'ListeLimitesMassif',
                 genv            = self.conf.cycle,
                 gdomain         = self.conf.vconf,
@@ -196,11 +110,11 @@ class Safran(Task, S2MTaskMixIn):
                 model           = self.conf.model,
                 local           = 'listeml',
             )
-            print t.prompt, 'tb08 =', tb08
+            print t.prompt, 'tb04 =', tb04
             print
 
-            self.sh.title('Toolbox input tb09')
-            tb09 = toolbox.input(
+            self.sh.title('Toolbox input tb05')
+            tb05 = toolbox.input(
                 role            = 'ListePost',
                 genv            = self.conf.cycle,
                 gdomain         = self.conf.vconf,
@@ -210,11 +124,11 @@ class Safran(Task, S2MTaskMixIn):
                 # local           = 'listeo' if self.conf.vconf == 'alp' else 'lysteo',
                 local           = 'listeo',
             )
-            print t.prompt, 'tb09 =', tb09
+            print t.prompt, 'tb05 =', tb05
             print
 
-            self.sh.title('Toolbox input tb09')
-            tb09 = toolbox.input(
+            self.sh.title('Toolbox input tb06')
+            tb06 = toolbox.input(
                 role            = 'carac_post',
                 genv            = self.conf.cycle,
                 gdomain         = self.conf.vconf,
@@ -223,13 +137,13 @@ class Safran(Task, S2MTaskMixIn):
                 model           = self.conf.model,
                 local           = 'carpost.tar',
             )
-            print t.prompt, 'tb09 =', tb09
+            print t.prompt, 'tb06 =', tb06
             print
 
             if not self.conf.vconf == 'cor':
 
-                self.sh.title('Toolbox input tb10')
-                tb10 = toolbox.input(
+                self.sh.title('Toolbox input tb07')
+                tb07 = toolbox.input(
                     role            = 'MoyRRmensuelles',
                     genv            = self.conf.cycle,
                     gdomain         = self.conf.vconf,
@@ -239,11 +153,11 @@ class Safran(Task, S2MTaskMixIn):
                     local           = 'NORELmt',
                     fatal           = False,
                 )
-                print t.prompt, 'tb10 =', tb10
+                print t.prompt, 'tb07 =', tb07
                 print
 
-                self.sh.title('Toolbox input tb12')
-                tb12 = toolbox.input(
+                self.sh.title('Toolbox input tb08')
+                tb08 = toolbox.input(
                     role            = 'BlackList',
                     genv            = self.conf.cycle,
                     gdomain         = self.conf.vconf,
@@ -253,11 +167,11 @@ class Safran(Task, S2MTaskMixIn):
                     local           = 'BLACK',
                     fatal           = False,
                 )
-                print t.prompt, 'tb12 =', tb12
+                print t.prompt, 'tb08 =', tb08
                 print
 
-            self.sh.title('Toolbox input tb11')
-            tb11 = toolbox.input(
+            self.sh.title('Toolbox input tb09')
+            tb09 = toolbox.input(
                 role            = 'Clim',
                 genv            = self.conf.cycle,
                 gdomain         = self.conf.vconf,
@@ -266,11 +180,11 @@ class Safran(Task, S2MTaskMixIn):
                 model           = self.conf.model,
                 local           = 'rsclim.don',
             )
-            print t.prompt, 'tb11 =', tb11
+            print t.prompt, 'tb09 =', tb09
             print
 
-            self.sh.title('Toolbox input tb12')
-            tb12 = toolbox.input(
+            self.sh.title('Toolbox input tb10')
+            tb10 = toolbox.input(
                 role            = 'Clim',
                 genv            = self.conf.cycle,
                 gdomain         = self.conf.vconf,
@@ -279,11 +193,11 @@ class Safran(Task, S2MTaskMixIn):
                 model           = self.conf.model,
                 local           = 'icrccm.don',
             )
-            print t.prompt, 'tb12 =', tb12
+            print t.prompt, 'tb10 =', tb10
             print
 
-            self.sh.title('Toolbox input tb13')
-            tb13 = toolbox.input(
+            self.sh.title('Toolbox input tb11')
+            tb11 = toolbox.input(
                 role            = 'Nam_sorties',
                 source          = 'namelist_sorties_[geometry]',
                 geometry        = self.conf.vconf,
@@ -293,11 +207,11 @@ class Safran(Task, S2MTaskMixIn):
                 local           = 'SORTIES',
                 fatal           = False,
             )
-            print t.prompt, 'tb13 =', tb13
+            print t.prompt, 'tb11 =', tb11
             print
 
-            self.sh.title('Toolbox input tb13')
-            tb13 = toolbox.input(
+            self.sh.title('Toolbox input tb12')
+            tb12 = toolbox.input(
                 role            = 'Nam_analyse',
                 source          = 'namelist_analyse_[geometry]',
                 geometry        = self.conf.vconf,
@@ -307,11 +221,11 @@ class Safran(Task, S2MTaskMixIn):
                 local           = 'ANALYSE',
                 fatal           = False,
             )
-            print t.prompt, 'tb13 =', tb13
+            print t.prompt, 'tb12 =', tb12
             print
 
-            self.sh.title('Toolbox input tb14')
-            tb14 = toolbox.input(
+            self.sh.title('Toolbox input tb13')
+            tb13 = toolbox.input(
                 role            = 'Nam_melange',
                 source          = 'namelist_melange_[geometry]',
                 geometry        = self.conf.vconf,
@@ -321,7 +235,7 @@ class Safran(Task, S2MTaskMixIn):
                 local           = 'MELANGE',
                 fatal           = False,
             )
-            print t.prompt, 'tb14 =', tb14
+            print t.prompt, 'tb13 =', tb13
             print
 
             self.sh.title('Toolbox input tb14')
@@ -338,21 +252,8 @@ class Safran(Task, S2MTaskMixIn):
             print t.prompt, 'tb14 =', tb14
             print
 
-#            self.sh.title('Toolbox input tb15')
-#            tb15 = toolbox.input(
-#                role            = 'Nam_impress',
-#                source          = 'namelist_impress_{0:s}'.format(self.conf.geometry.area),
-#                genv            = self.conf.cycle,
-#                kind            = 'namelist',
-#                model           = self.conf.model,
-#                local           = 'IMPRESS',
-#                fatal           = False,
-#            )
-#            print t.prompt, 'tb15 =', tb15
-#            print
-
-            self.sh.title('Toolbox input tb16')
-            tb16 = toolbox.input(
+            self.sh.title('Toolbox input tb15')
+            tb15 = toolbox.input(
                 role            = 'Nam_observr',
                 source          = 'namelist_observr_[geometry]',
                 geometry        = self.conf.vconf,
@@ -362,7 +263,7 @@ class Safran(Task, S2MTaskMixIn):
                 local           = 'OBSERVR',
                 fatal           = False,
             )
-            print t.prompt, 'tb16 =', tb16
+            print t.prompt, 'tb15 =', tb15
             print
 
             self.sh.title('Toolbox input tb16')
@@ -428,7 +329,7 @@ class Safran(Task, S2MTaskMixIn):
             print t.prompt, 'tb17_b =', tb17_b
             print
 
-            # En dernier recours on essaye le réseau de production de 0h J-1
+            # I.3- En dernier recours on essaye le réseau de production de 0h J-1
             self.sh.title('Toolbox input tb17_c')
             tb17_c = toolbox.input(
                 alternate      = 'Ebauche',
@@ -453,7 +354,7 @@ class Safran(Task, S2MTaskMixIn):
             # II- PEARP (J-5) -> J
             # --------------------
 
-            # II.1 EBAUCHE issue des prevision P0/P6/P12/P18/P24 du réseau 6h (J-n) de la PEARP pour couvrir (J-5) 6h -> (J-1) 6h
+            # II.1- EBAUCHE issue des prevision P0/P6/P12/P18/P24 du réseau 6h (J-n) de la PEARP pour couvrir (J-5) 6h -> (J-1) 6h
             # RQ : on ne peut pas mélanger des resources issues de runs différents pour conserver des cumuls de précipitations cohérents
             self.sh.title('Toolbox input tb18_a')
             tb18_a = toolbox.input(
@@ -478,6 +379,31 @@ class Safran(Task, S2MTaskMixIn):
                 fatal          = False,
             ),
             print t.prompt, 'tb18_a =', tb18_a
+            print
+
+            # II.2- Si le réseau de production de 6h n'est pas là, on utilise le réseau de 18h de la veille
+            self.sh.title('Toolbox input tb18_b')
+            tb18_b = toolbox.input(
+                alternate      = 'Ebauche',
+                # local          = 'mb[member]/P[date:addcumul_yymdh]',
+                local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
+                term           = '[cumul]',
+                experiment     = self.conf.xpid,
+                block          = self.conf.guess_block,
+                geometry        = self.conf.vconf,
+                cutoff         = 'production',
+                date           = ['{0:s}/+PT{1:s}H/-PT12H'.format(datebegin.ymd6h, str(24 * i)) for i in range(ndays)],
+                cumul          = footprints.util.rangex(self.conf.ana_terms, shift=12),
+                nativefmt      = 'ascii',
+                kind           = 'guess',
+                model          = 'safran',
+                source_app     = self.conf.source_app,
+                source_conf    = self.conf.eps_conf,
+                namespace      = self.conf.namespace,
+                member         = footprints.util.rangex(self.conf.pearp_members),
+                fatal          = False,
+            ),
+            print t.prompt, 'tb18_b =', tb18_b
             print
 
             self.sh.title('Toolbox executable tb17 = tbx1')

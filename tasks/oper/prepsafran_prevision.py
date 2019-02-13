@@ -42,10 +42,10 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             # I- ARPEGE
             # Récupération des échéances de 6h à 102h du réseau 0h J d'ARPEGE
-            # On traite les échéances en 2 membres distincts pour optimiser le temps de calcul
+            # On traite les échéances en 5 membres distincts pour optimiser le temps de calcul
             self.sh.title('Toolbox input tb01_a')
             tbarp = toolbox.input(
-                alternate      = 'Gridpoint',
+                role           = 'Gridpoint',
                 format         = 'grib',
                 geometry       = self.conf.arpege_geometry,
                 kind           = 'gridpoint',
@@ -54,7 +54,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 local          = 'mb035/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[0:7],
-                #namespace      = 'oper.inline.fr',
                 namespace      = 'oper.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
@@ -68,7 +67,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox input tb01_b')
             tbarp.extend(toolbox.input(
-                alternate      = 'Gridpoint',
+                role           = 'Gridpoint',
                 format         = 'grib',
                 geometry       = self.conf.arpege_geometry,
                 kind           = 'gridpoint',
@@ -77,7 +76,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 local          = 'mb036/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[7:14],
-                #namespace      = 'oper.inline.fr',
                 namespace      = 'oper.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
@@ -91,7 +89,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox input tb01_c')
             tbarp.extend(toolbox.input(
-                alternate      = 'Gridpoint',
+                role           = 'Gridpoint',
                 format         = 'grib',
                 geometry       = self.conf.arpege_geometry,
                 kind           = 'gridpoint',
@@ -100,7 +98,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 local          = 'mb037/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[14:21],
-                #namespace      = 'oper.inline.fr',
                 namespace      = 'oper.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
@@ -114,7 +111,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox input tb01_d')
             tbarp.extend(toolbox.input(
-                alternate      = 'Gridpoint',
+                role           = 'Gridpoint',
                 format         = 'grib',
                 geometry       = self.conf.arpege_geometry,
                 kind           = 'gridpoint',
@@ -123,7 +120,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 local          = 'mb038/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[21:27],
-                #namespace      = 'oper.inline.fr',
                 namespace      = 'oper.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
@@ -137,7 +133,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox input tb01_e')
             tbarp.extend(toolbox.input(
-                alternate      = 'Gridpoint',
+                role           = 'Gridpoint',
                 format         = 'grib',
                 geometry       = self.conf.arpege_geometry,
                 kind           = 'gridpoint',
@@ -146,7 +142,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 local          = 'mb039/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[27:33],
-                #namespace      = 'oper.inline.fr',
                 namespace      = 'oper.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
@@ -233,7 +228,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 terms          = footprints.util.rangex(self.conf.prv_terms),
                 interpreter    = script[0].resource.language,
                 ntasks         = self.conf.ntasks,
-                members        = footprints.util.rangex(self.conf.members)
+                members        = footprints.util.rangex(self.conf.members),
+                extendpypath = ['/home/gmap/mrpe/mary/public/eccodes_python'] + [self.sh.path.join(self.conf.rootapp, d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site']],
             )
             print t.prompt, 'tb04 =', expresso
             print
@@ -387,7 +383,6 @@ class PrepSafran(Task, S2MTaskMixIn):
             ),
             print t.prompt, 'tb06b =', tb06
             print
-
 
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')

@@ -18,7 +18,7 @@ import six
 from utils.sun import sun
 from utils.prosimu import prosimu
 from utils.infomassifs import infomassifs
-from utils.FileException import FileNameException, DirNameException, VarWriteException, GeometryException
+from utils.FileException import FileNameException, DirNameException, VarWriteException, GeometryException, MassifException
 from utils.dates import TypeException
 
 from utils.resources import print_used_memory
@@ -348,6 +348,8 @@ class forcinput_select(forcinput_tomodify):
         if 'massif_number' in listvar:
             init_massif_nb_sop = init_forcing_file.read("massif_number", keepfillvalue=True)
             b_points_massif = np.in1d(init_massif_nb_sop, list_massif_number)
+            if np.sum(b_points_massif) == 0:
+                raise MassifException(list_massif_number, list(set(init_massif_nb_sop)))
         else:
             b_points_massif = b_points_alt[:]
 
@@ -421,6 +423,10 @@ class forcinput_select(forcinput_tomodify):
             init_massif = init_forcing_file.read("massif", keepfillvalue=True)
             index_massif = np.where(np.in1d(init_massif, list_massif_number))[0]
             len_dim = len(index_massif)
+
+            if len_dim == 0:
+                raise MassifException(list_massif_number, init_massif)
+
             new_forcing_file.createDimension(massif_dim_name, len_dim)
             del init_forcing_file_dimensions[massif_dim_name]
 

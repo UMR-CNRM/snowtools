@@ -198,8 +198,9 @@ class sun():
         # (S. Morin 2014/06/27, taken from meteo.f90 in Crocus)
         # Matthieu 2014/09/16 : réécriture parce que les masques changent d'un point à l'autre
 
-        if list_list_mask is not None:
+        svg_direct = tab_direct[:]
 
+        if list_list_mask is not None:
             ZPSI1 = azimuth * URD2DG  # solar azimuth, 0. is North
             ZMASK = np.zeros_like(ZPSI1)
 
@@ -282,7 +283,6 @@ class sun():
             j_2[i] = j[7]  # extract Julian day (integer)
             h_2[i] = j[3]  # extrac time in day
 
-        print tab_time_date.shape
         j = self.upscale_tab_time(j_2, (tab_time_date.shape[0], 1))
         h = self.upscale_tab_time(h_2, (tab_time_date.shape[0], 1))
 
@@ -395,16 +395,12 @@ class sun():
 
         ratio = np.exp(a * (coszenith**3) + b * (coszenith**2) + c * coszenith + d)
 
-        print coszenith.shape
-        print ratio.shape
-        print SWglo.shape
-
         SWdif = np.where(ratio <= 1, ratio * SWglo, SWglo)
         SWdir = SWglo - SWdif
 
         ndays = 264
 
-        for hour in range(1, 24):
-            print hour, coszenith[ndays * 24 + hour - 1], ratio[ndays * 24 + hour - 1], SWdir[ndays * 24 + hour - 1], SWdif[ndays * 24 + hour - 1], SWglo[ndays * 24 + hour - 1]
+#         for hour in range(1, 24):
+#             print hour, coszenith[ndays * 24 + hour - 1], ratio[ndays * 24 + hour - 1], SWdir[ndays * 24 + hour - 1], SWdif[ndays * 24 + hour - 1], SWglo[ndays * 24 + hour - 1]
 
         return SWdir, SWdif
