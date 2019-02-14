@@ -6,11 +6,12 @@ Created on dec. 2018
 @author: Vernay
 '''
 
-import footprints
+import vortex
 
-from cen.layout.nodes import S2MTaskMixIn
+import footprints
 from vortex import toolbox
 from vortex.layout.nodes import Task
+from cen.layout.nodes import S2MTaskMixIn
 
 from bronx.stdtypes.date import Date, Period
 from utils.dates import get_list_dates_files
@@ -24,15 +25,16 @@ class ReforecastExtractor(Task, S2MTaskMixIn):
     def get_list_dates(self):
 
         list_dates = list()
-        for year in range(1994,2017):
-            list_dates.append([Date(year, 11, 1, 6, 0, 0), Date(year+1, 4, 30, 6, 0, 0)])
+#        for year in range(1994,2017):
+        for year in [2017]:
+            list_dates.append([Date(year, 12, 6, 6, 0, 0), Date(year+1, 4, 30, 6, 0, 0)])
         return list_dates
 
     def process(self):
 
         xpid     = 'reforecast@lafaysse'
         geometry = 'postes'
-        members  = footprints.util.rangex(0,9)
+        members  = footprints.util.rangex(0,35)
         vapp     = 's2m'
         cutoff   = 'production'
 
@@ -139,5 +141,7 @@ if __name__ == "__main__":
 #    os.chdir('/home/vernaym/workdir')
     os.chdir('/manto/nousuj/reforecast')
 
-    RFE = ReforecastExtractor()
+    t = vortex.ticket()
+
+    RFE = ReforecastExtractor(ticket=t)
     RFE.process()
