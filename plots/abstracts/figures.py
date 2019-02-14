@@ -24,6 +24,10 @@ class Mplfigure(object):
     def set_suptitle(self, suptitle):
         self.fig.suptitle(suptitle, fontsize=10)
 
+    def set_figsize(self, width, height):
+        fig = plt.gcf()
+        fig.set_size_inches(width, height)
+
     def getlogo(self):
         return Image.open(os.environ["SNOWTOOLS_CEN"] + "/plots/logos/logoMF15.jpg")
 

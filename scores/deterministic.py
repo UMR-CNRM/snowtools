@@ -21,15 +21,12 @@ class DeterminsticScores(object):
     startwinter = 10
     endwinter = 6
 
+    def nvalues(self):
+        '''Number of values accounted for in scores computation'''
+        return len(self.simCommon)
+
     def diff(self):
         '''Vector of difference between simulations and observations'''
-        print("sim")
-        print(self.simCommon.shape)
-        print(self.simCommon)
-        print("obs")
-        print(self.obsCommon.shape)
-        print(self.obsCommon)
-        print(np.isnan(self.obsCommon))
         return self.simCommon - self.obsCommon
 
     def squarediff(self):
@@ -133,9 +130,7 @@ class DeterministicScores_Heterogeneous(DeterministicScores_Mask):
         '''
         Constructor for observations and simulations covering different periods, times provided
         '''
-        print("extract common vectors")
         self.extract_common_vectors(timeObs, timeSim, obs, sim)
-        print("fin extract common vectors")
 
     def extract_common_vectors(self, timeObs, timeSim, obs, sim):
         '''Extract common date between observations and simulations'''
@@ -145,31 +140,26 @@ class DeterministicScores_Heterogeneous(DeterministicScores_Mask):
             winter[i] = t.month >= self.startwinter or t.month <= self.endwinter
 
         # First reduce observation vector to available observations and winter
-        print("number of obs")
-        print(len(timeObs))
-        print("number of obs in winter")
-        print(np.sum(winter))
-        print("number of valid obs")
-        print(type(obs))
-        print(obs[:])
-        print(type(obs[0]))
-        print(np.isnan(obs))
-        print(type(np.isnan(obs)))
-        print(np.sum(np.invert(np.isnan(obs))))
+
         indObs_ok = np.invert(np.isnan(obs)) & winter
-        print("number of valid obs in winter")
-        print(np.sum(indObs_ok))
         timeObs_ok = timeObs[indObs_ok]
         obs_ok = obs[indObs_ok]
 
+        timeObs_unique, indObs_unique = np.unique(timeObs_ok, return_index=True)
+        obs_unique = obs_ok[indObs_unique]
+
         indSim_ok = np.invert(np.isnan(sim))
+
         timeSim_ok = timeSim[indSim_ok]
         sim_ok = sim[indSim_ok]
 
-        maskSim = np.in1d(timeSim_ok, timeObs_ok)
-        maskObs = np.in1d(timeObs_ok, timeSim_ok)
+        timeSim_unique, indSim_unique = np.unique(timeSim_ok, return_index=True)
+        sim_unique = sim_ok[indSim_unique]
 
-        super(DeterministicScores_Heterogeneous, self).extract_common_vectors(maskObs, maskSim, obs_ok, sim_ok)
+        maskSim = np.in1d(timeSim_unique, timeObs_unique)
+        maskObs = np.in1d(timeObs_unique, timeSim_unique)
+
+        super(DeterministicScores_Heterogeneous, self).extract_common_vectors(maskObs, maskSim, obs_unique, sim_unique)
 
 
 class S2M_Score(object):
@@ -186,24 +176,15 @@ class S2M_DeterministicScores_Heterogeneous(DeterministicScores_Heterogeneous, S
 
     def __init__(self, profile, obsfile, varname):
 
-        print("open file")
-        print(profile)
-        print(type(profile))
         dataSim = prosimu(profile)
-        print("read time")
         timeSim = dataSim.readtime()
-        print("read var")
         varSim = self.read_sim_ifpresent(dataSim, self.varsimname(varname))
-        print("close file")
         dataSim.close()
 
-        print("open obs")
         dataObs = prosimu(obsfile)
         timeObs = dataObs.readtime()
         varObs = self.read_var_ifpresent(dataObs, self.varobsname(varname))
         dataObs.close()
-        print("close obs")
-        print(varObs.shape)
         self.timeSim = timeSim
         self.timeObs = timeObs
 

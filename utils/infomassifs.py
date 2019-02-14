@@ -290,6 +290,27 @@ class infomassifs():
                 break
         return lati, longi, alti
 
+    def altiposte(self, num_poste):
+
+        if not hasattr(self, 'dicaltistations'):
+            self.dicaltistations = self.altiallstations()
+
+        return self.dicaltistations[num_poste]
+
+#         for poste in self.caracLoc.documentElement.getElementsByTagName("Site"):
+#             if str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip() == '%08d' % int(num_poste):
+#                 alti = float(poste.getElementsByTagName("altitude")[0].childNodes[0].data)
+#                 break
+#         return alti
+
+    def altiallstations(self):
+
+        dicalti = {}
+        for poste in self.caracLoc.documentElement.getElementsByTagName("Site"):
+            dicalti[str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip()] = float(poste.getElementsByTagName("altitude")[0].childNodes[0].data)
+
+        return dicalti
+
     def exposlopeposte(self, num_poste):
         for poste in self.caracLoc.documentElement.getElementsByTagName("Site"):
             if str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip() == num_poste:
