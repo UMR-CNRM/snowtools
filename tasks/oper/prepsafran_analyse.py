@@ -332,6 +332,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
                     namespace      = self.conf.namespace,
+                    fatal          = False,
                 ),
                 print t.prompt, 'tb05_b =', tb05_b
                 print
@@ -372,6 +373,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
                     namespace      = self.conf.namespace,
+                    fatal          = False,
                 ),
                 print t.prompt, 'tb06_b =', tb06_b
                 print
@@ -412,6 +414,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
                     namespace      = self.conf.namespace,
+                    fatal          = False,
                 ),
                 print t.prompt, 'tb07_b =', tb07_b
                 print
@@ -456,6 +459,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     source_conf    = self.conf.eps_conf,
                     namespace      = self.conf.namespace,
                     member         = footprints.util.rangex(self.conf.pearp_members),
+                    fatal          = False,
                 ),
                 print t.prompt, 'tb08_b =', tb08_b
                 print
