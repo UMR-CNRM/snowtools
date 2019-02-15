@@ -10,7 +10,7 @@ Module for preparing/faking/ observations within crocO framework
 import os
 import sys
 import shutil
-from Code.Dev.evalSODA.util import Pgd, convertdate
+from utilcrocO import Pgd, convertdate
 from utilcrocO import setlistvars_obs, setlistvars_var, setSubsetclasses,\
     dictvarsPrep, dictvarsWrite
 import netCDF4
@@ -24,6 +24,7 @@ class SemiDistributed(object):
     _abstract = True
     
     def __init__(self, pgdPath = 'PGD.nc'):
+        
         self.pgd = Pgd(pgdPath)
         self.isloaded = False
 
@@ -51,7 +52,10 @@ class Obs(SemiDistributed):
         
         # set list of vars
         # self.listvar = setlistvars_obs(options.vars)
-        self.listvar = options.vars
+        if type(options.vars) is not list:
+            self.listvar = [options.vars]
+        else:
+            self.listvar = options.vars
         # self.listvars_write = setlistvars_obs(options.vars)
         
     def prepare(self):
@@ -71,9 +75,14 @@ class Obs(SemiDistributed):
     
     def create_new(self, options):
         self.New = netCDF4.Dataset(self.sodaName, 'w')
-        _, mask = self.subset_classes(self.pgd, options)
-        self.copydimsvars(self.Raw, self.New, self.listvar, mask=mask)
-        self.computeratio(self.Raw, self.New, self.listvar, mask=mask)
+        print self.listvar
+        if options.distr is False:
+            _, mask = self.subset_classes(self.pgd, options)
+            self.copydimsvars(self.Raw, self.New, self.listvar, mask=mask)
+            self.computeratio(self.Raw, self.New, self.listvar, mask=mask)
+        
+        else:
+            self.copydimsvars(self.Raw, self.New, self.listvar,)
 
     def subset_classes(self, pgd, options):
         """
@@ -125,7 +134,7 @@ class Synthetic(Obs):
         '''
         for dimName, dim in Raw.dimensions.iteritems():
             New.createDimension(dimName, len(dim) if not dim.isunlimited() else None)
-        for name in nameVars: # name in arg format (b*, r**...)
+        for name in nameVars:  # name in arg format (b*, r**...)
             # print name
             # print Raw.variables.keys()
             prepName = self.dictVarsRead[name]
