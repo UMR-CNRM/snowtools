@@ -37,6 +37,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
         datebegin, dateend = self.get_period()
         rundate_forcing = self.get_rundate_forcing()
         rundate_prep, alternate_rundate_prep = self.get_rundate_prep()
+
         list_geometry = self.get_list_geometry()
         source_safran, block_safran = self.get_source_safran()
         alternate_safran, alternate_block, alternate_geometry = self.get_alternate_safran()
@@ -314,7 +315,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 threshold      = self.conf.threshold,
                 members        = footprints.util.rangex(members),
                 geometry       = list_geometry,
-                ntasks         = 40,
+                ntasks         = 10 if self.conf.rundate.hour == self.monthly_analysis_time else 40,
                 daily          = not self.conf.previ,
             )
             print(t.prompt, 'tb09 =', tb09)

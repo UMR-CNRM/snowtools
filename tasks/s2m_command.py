@@ -188,6 +188,10 @@ def parse_options(arguments):
                       action="store_true", dest="forecast", default=False,
                       help="To separate analysis and forecast modes")
 
+    parser.add_option("--reinit",
+                      action="store_true", dest="reinit", default=False,
+                      help="To reinitialize operational analyses with a reanalysis")
+
     parser.add_option("--dailyprep",
                       action="store_true", dest="dailyprep", default=False,
                       help="Split reanalysis day by day to prepare initial conditions for reforecast")
