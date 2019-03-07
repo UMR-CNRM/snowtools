@@ -74,7 +74,10 @@ class vortex_kitchen(object):
 
     def create_conf(self, options):
         ''' Prepare configuration file from s2m options'''
-        conffilename = self.vapp + "_" + self.vconf + "_" + self.xpid + options.datedeb.strftime("%Y") + ".ini"
+        if options.oper:
+            conffilename = self.vapp + "_" + self.vconf + ".ini"
+        else:
+            conffilename = self.vapp + "_" + self.vconf + "_" + self.xpid + options.datedeb.strftime("%Y") + ".ini"
         confname = "../conf/" + conffilename
 
         if options.oper:
@@ -149,7 +152,9 @@ class vortex_kitchen(object):
             nnodes = 1
             period = "rundate=" + options.datedeb.strftime("%Y%m%d%H%M")
             # Note that the jobname is used to discriminate self.conf.previ in vortex task
-            if options.forecast:
+            if options.reinit:
+                jobname = "surfex_reinit"
+            elif options.forecast:
                 jobname = "surfex_forecast"
             else:
                 jobname = "surfex_analysis"

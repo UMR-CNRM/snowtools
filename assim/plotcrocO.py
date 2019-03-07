@@ -8,10 +8,9 @@ Created on 6 févr. 2019
 import numpy as np
 import matplotlib.pyplot as plt
 from utilcrocO import setSubsetclasses
-from Code.Dev.evalSODA.util import colorbar
+from utilcrocO import colorbar
 import os
 from matplotlib.cm import ScalarMappable
-
 
 class Pie(object):
     '''

@@ -138,14 +138,21 @@ class _Map_massifs(Mplfigure):
             self.plot(xpt, ypt, label)
 
     def plot(self, xpt, ypt, label=None):
-        self.map.plot(xpt, ypt, marker='.', color="red")
+        if label is not None:
+            self.map.plot(xpt, ypt)
+            plt.text(xpt, ypt, label, color="red")
+        else:
+            self.map.plot(xpt, ypt, marker='.', color="red")
 
-    def fillmassif(self, num_massif):
+    def fillmassif(self, num_massif, value=None):
         for i, massif in enumerate(self.shapes):
             num = self.records(i)[1]
             if num == num_massif:
                 XYplot, Xbary, Ybary = self.getxy(massif, self.dicLonLatMassif, i)  # @UnusedVariable
-                poly = Polygon(XYplot, facecolor='0.9', alpha=1.0, fill=True, visible=True)
+                if value is not None:
+                    poly = Polygon(XYplot, facecolor=str(value), alpha=1.0, fill=True, visible=True)
+                else:
+                    poly = Polygon(XYplot, facecolor='0.9', alpha=1.0, fill=True, visible=True)
                 plt.gca().add_patch(poly)
 
     def init_massifs(self, **kwargs):
@@ -173,6 +180,29 @@ class _Map_massifs(Mplfigure):
         self.p.set_norm(self.norm)
 
         plt.gca().add_collection(self.p)
+
+    def highlight_massif(self, massifs, fillvalues, **kwargs):
+        mypatches = []
+        myvalues = []
+        if not isinstance(massifs, list):
+            massifs = [massifs, ]
+
+        if not isinstance(fillvalues, list):
+            fillvalues = [fillvalues, ]
+
+        for i, shape in enumerate(self.shapes):
+            if self.records(i)[1] in massifs:
+                num = self.records(i)[1]
+                indmassif = massifs == num
+                XYplot, Xbary, Ybary = self.getxy(shape, self.dicLonLatMassif, i)
+                mypatches.append(Polygon(XYplot))
+                myvalues.append(fillvalues[indmassif])
+
+        self.m = PatchCollection(np.array(mypatches), cmap=self.palette, alpha=1.0)
+        self.m.set_edgecolor('red')
+        self.m.set_facecolor(self.palette(self.norm(np.array(myvalues))))
+
+        plt.gca().add_collection(self.m)
 
     def empty_massifs(self, **kwargs):
         self.p.set_facecolor('white')
@@ -368,7 +398,6 @@ class _Map_massifs(Mplfigure):
         self.infos.append(plt.text(self.infospos[0] + 5000, self.infospos[1] + height * (2. / 6.), "Versant Sud"))
         self.infos.append(plt.text(self.infospos[0] + 5000, self.infospos[1] + height * (1. / 6.), "Q20 - Q50 -Q80"))
 
-
     def normpalette(self, **kwargs):
         # Bornes pour légende
         if 'forcemin' in kwargs.keys():
@@ -483,10 +512,11 @@ class Map_massif(_Map_massifs):
             self.area = 'pyrenees'
         else:
             self.area = 'corse'
-        self.width = 10
-        self.height = 10
+        self.width = 13
+        self.height = 13
         self.getshapes()
         self.get_map_dimensions(num_massif)
+        self.legendpos = [0.81, 0.15, 0.03, 0.6]
 
         self.fig = plt.figure(figsize=(self.width, self.height))
         self.map = self.getmap(self.latmin, self.latmax, self.lonmin, self.lonmax)
@@ -501,13 +531,8 @@ class Map_massif(_Map_massifs):
             num = self.records(i)[1]
             if num == num_massif:
                 barycentre = self.dicLonLatMassif[num]
-        self.lonmin = barycentre[0] - 0.6
-        self.lonmax = barycentre[0] + 0.6
-        self.latmin = barycentre[1] - 0.6
-        self.latmax = barycentre[1] + 0.6
-
-    def plot(self, xpt, ypt, label=None):
-        super(Map_massif, self).plot(xpt, ypt, label)
-        # Pour ajouter le nom du poste :
-        plt.text(xpt, ypt, label)
+        self.lonmin = barycentre[0] - 0.65
+        self.lonmax = barycentre[0] + 0.65
+        self.latmin = barycentre[1] - 0.65
+        self.latmax = barycentre[1] + 0.65
 

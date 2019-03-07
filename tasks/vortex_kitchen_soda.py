@@ -151,7 +151,7 @@ class vortex_kitchen_soda(object):
             conffile.write_field('writesx', options.writesx)
 
         if options.soda:
-            print options.sensor
+            print (options.sensor)
             conffile.write_field('sensor', options.sensor)
 
         conffile.close()

@@ -7,6 +7,8 @@ Created on 4 déc. 2018
 @author: lafaysse
 '''
 
+import six
+
 from plots.abstracts.figures import Mplfigure
 from matplotlib import pyplot as plt
 from matplotlib.dates import HourLocator, DayLocator, MonthLocator, YearLocator, DateFormatter
@@ -39,9 +41,15 @@ class temporalplot(Mplfigure):
         self.finalize(timeOut, **kwargs)
 
     def add_line(self, timeOut, varOut, **kwargs):
-        self.set_default("fmt", "-", kwargs)
-        self.set_default("color", "red", kwargs)
-        self.plot.plot_date(timeOut, varOut, **kwargs)
+
+        linesargs = {}
+        for key, value in six.iteritems(kwargs):
+            if key not in ['forcemin', 'forcemax', 'ylabel', 'fillcolor']:
+                linesargs[key] = value
+
+        self.set_default("fmt", "-", linesargs)
+        self.set_default("color", "red", linesargs)
+        self.plot.plot_date(timeOut, varOut, **linesargs)
 
     def add_points(self, timeOut, varOut, **kwargs):
         self.set_default("fmt", "s", kwargs)
@@ -85,15 +93,30 @@ class temporalplot(Mplfigure):
 
 class temporalplotSim(temporalplot):
     def draw(self, timeSim, varSim, **kwargs):
-        self.add_line(timeSim, varSim, label="S2M")
+        if 'label' in kwargs.keys():
+            label = kwargs['label']
+        else:
+            label = 'S2M'
+        self.add_line(timeSim, varSim, label=label)
         super(temporalplotSim, self).draw(timeSim, **kwargs)
 
 
 class temporalplotObsSim(temporalplot):
     def draw(self, timeObs, varObs, timeSim, varSim, **kwargs):
         self.add_points(timeObs, varObs, label="Observations")
-        self.add_line(timeSim, varSim, label="S2M")
+        if 'label' in kwargs.keys():
+            label = kwargs['label']
+        else:
+            label = 'S2M'
+        self.add_line(timeSim, varSim, label=label)
         super(temporalplotObsSim, self).draw(timeSim, **kwargs)
+
+
+class temporalplotObsMultipleSims(temporalplot):
+    def draw(self, timeObs, varObs, timeSim, varSim, **kwargs):
+        self.add_points(timeObs, varObs, label="Observations")
+        self.set_default("label", "S2M", kwargs)
+        self.add_line(timeSim, varSim, **kwargs)
 
 
 class temporalplot2Axes(temporalplot):

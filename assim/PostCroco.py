@@ -12,7 +12,7 @@ from Ensemble import PrepEnsBg, PrepEnsAn
 from Operators import PrepEnsOperator
 import matplotlib.pyplot as plt
 from utilcrocO import setSubsetclasses
-from Code.Dev.evalSODA.util import niceName
+from utilcrocO import niceName
 import numpy as np
 
 class PostCroco(object):

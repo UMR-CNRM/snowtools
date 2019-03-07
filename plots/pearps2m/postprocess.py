@@ -537,6 +537,7 @@ class EnsembleOperDiagsStations(EnsembleOperDiags, EnsembleStation):
 if __name__ == "__main__":
 
     c = config()
+    os.chdir(c.diroutput)
     S2ME = S2MExtractor(c)
     snow_members = S2ME.get_snow()
 
