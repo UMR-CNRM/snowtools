@@ -190,7 +190,7 @@ class forcinput_tomodify:
             self.modify(init_forcing_file, init_forcing_file, args)
         else:
             init_forcing_file = prosimu(forcin)
-            print "INFO INPUT FORCING FILE FORMAT: " + init_forcing_file.format()
+            print ("INFO INPUT FORCING FILE FORMAT: " + init_forcing_file.format())
             new_forcing_file = netCDF4.Dataset(forcout, "w", format=self.formatout)
             self.modify(init_forcing_file, new_forcing_file, args)
 
@@ -477,7 +477,7 @@ class forcinput_select(forcinput_tomodify):
             print(varname)
             if self.printmemory:
                 print_used_memory()
-                print datetime.datetime.today()
+                print (datetime.datetime.today())
             vartype, rank, array_dim, varFillvalue, var_attrs = init_forcing_file.infovar(varname)
 
             if len(array_dim) > 0:
@@ -573,7 +573,7 @@ class forcinput_select(forcinput_tomodify):
                         var[:, :, :, :] = var_array
                     elif rank == 5:
                         var[:, :, :, :, :] = var_array
-                    print "AFTER WRITE", datetime.datetime.today()
+                    print ("AFTER WRITE", datetime.datetime.today())
 
             except Exception:
                 print(var_array)
@@ -595,9 +595,9 @@ class forcinput_select(forcinput_tomodify):
 
         # Compute new solar radiations according to the new values of slope and aspect
         if extendaspects or extendslopes:
-            print "BEFORE RADIATION COMPUTATIONS", datetime.datetime.today()
+            print ("BEFORE RADIATION COMPUTATIONS", datetime.datetime.today())
             direct, diffus = sun().slope_aspect_correction(savevar["DIR_SWdown"], savevar["SCA_SWdown"], savevar["time"], lat, lon, savevar["aspect"], savevar["slope"])
-            print "AFTER RADIATION COMPUTATIONS", datetime.datetime.today()
+            print ("AFTER RADIATION COMPUTATIONS", datetime.datetime.today())
             new_forcing_file.variables["DIR_SWdown"][:] = direct
             new_forcing_file.variables["SCA_SWdown"][:] = diffus
             del savevar["DIR_SWdown"]
@@ -605,10 +605,10 @@ class forcinput_select(forcinput_tomodify):
             del savevar["time"]
             del savevar["aspect"]
 
-            print "AFTER WRITE RADIATIONS", datetime.datetime.today()
+            print ("AFTER WRITE RADIATIONS", datetime.datetime.today())
 
         self.add_massif_variables(init_forcing_file, new_forcing_file, savevar=savevar)
-        print "AFTER MASSIF VARIABLES", datetime.datetime.today()
+        print ("AFTER MASSIF VARIABLES", datetime.datetime.today())
 
         del savevar
 
@@ -784,7 +784,7 @@ class forcinput_ESMSnowMIP(forcinput_tomodify):
                     bigvar[:, ilat, ilon] = var[:]
 
         else:
-            print "error on indices in upscale_tab_time"
+            print ("error on indices in upscale_tab_time")
 
         return bigvar
 
