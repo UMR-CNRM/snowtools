@@ -281,6 +281,6 @@ def print_used_memory():
     S2_ind = mem_G1.index(' ')
     mem_U = mem_G1[0:S2_ind]
     mem_F = mem_G1[S2_ind + 8:]
-    print 'Used Memory = ' + mem_U + ' MB'
-    print 'Free Memory = ' + mem_F + ' MB'
-    print 'Total Memory = ' + mem_T + ' MB'
+    print ('Used Memory = ' + mem_U + ' MB')
+    print ('Free Memory = ' + mem_F + ' MB')
+    print ('Total Memory = ' + mem_T + ' MB')
