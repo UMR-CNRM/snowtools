@@ -748,7 +748,6 @@ class forcinput_extract(forcinput_tomodify):
                 if not attname == '_FillValue':
                     setattr(var, attname, init_forcing_file.getattr(varname, attname))
             try:
-                if not (varname in ["DIR_SWdown", "SCA_SWdown"]):
                     if rank == 0:
                         var[:] = var_array
                     elif rank == 1:
@@ -896,3 +895,9 @@ class forcinput_ESMSnowMIP(forcinput_tomodify):
             var[:, 0] = const[varname]
 
         return False
+
+
+# Test
+
+# if __name__ == "__main__":
+#     my_forc = forcinput_extract("/home/carmagnolac/CMC/CEN/4_SIMUL/Change_forcing/input_FORCING_2016112306_2016112406.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Change_forcing/output_FORCING_2016112306_2016112406.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Change_forcing/SRUs_LesSaisies.txt")

@@ -222,3 +222,9 @@ def update_namelist_var(namelist_file, data_file):
     namSURFEX = open(namelist_file, 'w')
     namSURFEX.write(NamelistObject.dumps())
     namSURFEX.close()
+
+
+# Test
+
+# if __name__ == "__main__":
+#     update_namelist_var("/home/carmagnolac/CMC/CEN/4_SIMUL/Crocus-Resort_SIMS/namelists/OPTIONS_V8.1_3.nam","/home/carmagnolac/CMC/CEN/4_SIMUL/Crocus-Resort_SIMS/Obs/2_measurements/TechnoAlpin_SAISIES.txt")
