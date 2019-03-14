@@ -675,7 +675,28 @@ class SodaSnow_Vortex_Task(Task):
                 local           = 'OPTIONS.nam',
                 fatal           = False,
             )
-            
+            print(t.prompt, 'tb23 =', tb23)
+            print()
+            # Resample files to hendrix
+            for p, datebegin in enumerate(list_dates_begin_pro):
+                
+                dateend = list_dates_end_pro[p]
+                if os.path.exists('workSODA/PART_' + Date(dateend).ymdh + '.txt'):
+                    self.sh.title('Toolbox output tb24')
+                    tb24 = toolbox.output(
+                        model           = 'PART',
+                        namebuild       = 'flat@cen',
+                        namespace      = 'vortex.multi.fr',
+                        fatal           = True,
+                        dateassim       = dateend,
+                        block           = 'workSODA',
+                        experiment = self.conf.xpid,
+                        filename = 'workSODA/PART_' + Date(dateend).ymdh + '.txt',
+                    )
+                    print(t.prompt, 'tb24 =', tb24)
+                    print()
+                else: 
+                    print('workSODA/PART_' + Date(dateend).ymdh + '.txt doesnot exist')
             # conf file and namelist to sxcen
             if hasattr(self.conf, 'writesx'):
                 self.sh.title('Toolbox output tbconf_sx')

@@ -8,7 +8,7 @@ Created on 30 Aug. 2017
 '''
 
 import datetime
-
+from six import string_types
 
 class TypeException(Exception):
     def __init__(self, typein, typerequired):
@@ -93,7 +93,7 @@ def checkdatebetween(date, datemin, datemax):
 def check_and_convert_date(datearg):
 
     if datearg:
-        if type(datearg) not in [str, unicode]:
+        if not isinstance(datearg,string_types):
             raise TypeException(type(datearg), str)
 
         if len(datearg) == 8:
