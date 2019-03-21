@@ -141,19 +141,19 @@ class ProReader_mini:
         if('massif_num' in listvariables):
             massiftab = ff.read('massif_num')[:]
         else:
-            massiftab = np.array([0])
+            massiftab = np.array([-10.])
         if('ZS' in listvariables):
             alttab = ff.read('ZS')[:]
         else:
-            alttab = np.array([0])
+            alttab = np.array([-10.])
         if('slope' in listvariables):
             slopetab = ff.read('slope')[:]
         else:
-            slopetab = np.array([0])
+            slopetab = np.array([-10.])
         if('aspect' in listvariables):
             aspecttab = ff.read('aspect')[:]
         else:
-            aspecttab = np.array([0])
+            aspecttab = np.array([-10.])
             
         return np.vstack((massiftab,alttab,slopetab,aspecttab))
     
@@ -244,6 +244,8 @@ class ProReader_mini:
                     return self.date[intime][x].strftime('%Y-%m-%d')
                 else:
                     return 'E'
+            #formatter = ticker.FuncFormatter(lambda x, pos: (int(x) >= 0 and int(x) < toplot.shape[0]) and \
+            #                                 self.date[intime][int(x)].strftime('%Y-%m-%d'))
             formatter = ticker.FuncFormatter(format_ticks)
             axe.xaxis.set_major_formatter(formatter)
             axe.xaxis.set_major_locator(ticker.MaxNLocator(6))
@@ -423,6 +425,7 @@ class ProReader_mini:
         left_x = self.var['SNOWRAM'][self.date == date].ravel()[::-1]
         right_x = np.zeros(shape=bottom_y.shape[0], dtype='int')
         left_x=left_x[(ep > 0).ravel()[::-1]]
+        left_x=np.where(left_x > 0.5, left_x, 0.5)
 
         vertices = np.zeros(shape=(bottom_y.shape[0], 4, 2))
         vertices[:, 0, 0] = right_x
