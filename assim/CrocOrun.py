@@ -18,6 +18,7 @@ from Ensemble import PrepEnsBg, PrepEnsAn
 import matplotlib.pyplot as plt
 from Operators import PrepEnsOperator
 from PostCroco import PostCroco
+import numpy as np
 
 class CrocOrun(object):
     '''
@@ -68,7 +69,6 @@ class CrocOrun(object):
         """
         set soda environment for each date (=path): -PGD, links to preps, namelist, ecoclimap etc.
         """
-
         
         os.chdir(path)
         # Prepare the PGD and PREP for assim
@@ -112,7 +112,6 @@ class CrocOrun(object):
         N['NAM_IO_OFFLINE'].LWRITE_TOPO = False
         
         # update assim vars in the namelist
-        
         # NAM_ENS
         N['NAM_ENS'].NENS = options.nmembers
         
@@ -124,11 +123,13 @@ class CrocOrun(object):
             N.newblock('NAM_VAR')
         if 'NAM_ASSIM' not in N.keys():
             N.newblock('NAM_ASSIM')
-        N['NAM_OBS'].NOBSTYPE = len(sodaobs)
+            
+        N['NAM_OBS'].NOBSTYPE = np.size(sodaobs)
         N['NAM_OBS'].COBS_M = sodaobs
         N['NAM_OBS'].XERROBS_M = set_errors(sodaobs)
         N['NAM_OBS'].XERROBS_FACTOR_M = set_factors(sodaobs, options.fact)
         N['NAM_OBS'].NNCO = [1] * len(sodaobs)
+        N['NAM_OBS'].CFILE_FORMAT_OBS = "NC    "
 
         # NAM_VAR
         sodavar = setlistvars_var(options.vars)
@@ -140,6 +141,11 @@ class CrocOrun(object):
         N['NAM_ASSIM'].LSEMIDISTR_CROCUS = not(options.sodadistr)
         N['NAM_ASSIM'].LASSIM = True
         N['NAM_ASSIM'].CASSIM_ISBA = 'PF   '
+        
+        N['NAM_ASSIM'].LEXTRAP_SEA = False
+        N['NAM_ASSIM'].LEXTRAP_WATER = False
+        N['NAM_ASSIM'].LEXTRAP_NATURE = False
+        N['NAM_ASSIM'].LWATERTG2 = True
         
         namSURFEX = open('OPTIONS.nam', 'w')
         namSURFEX.write(N.dumps())
