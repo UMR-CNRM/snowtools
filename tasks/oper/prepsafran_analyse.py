@@ -260,7 +260,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = 'uenv:s2m.01@vernaym',
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -o -a -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
+                rawopts     = ' -o -a -i IDW -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
             )
             print t.prompt, 'tb03 =', tb03
             print
