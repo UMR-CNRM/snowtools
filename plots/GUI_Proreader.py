@@ -47,6 +47,7 @@ class GUI_Proplot:
         self.boolzoom=False
         self.boolzoomdate=False
         self.bool_profil=False
+        self.bool_layer=False
         self.figclear=True
         self.first_profil=True
         self.width_rect=0.01
@@ -185,9 +186,9 @@ class GUI_Proplot:
             self.ax2.clear()
             if self.profil_complet:
                 self.ax3.clear()
-                self.pro.plot_date_complet(self.ax2, self.ax3, self.variable_souris, date_souris, hauteur_souris, cbar_show=self.first_profil)    
+                self.pro.plot_date_complet(self.ax2, self.ax3, self.variable_souris, date_souris, hauteur_souris, cbar_show=self.first_profil, bool_layer=self.bool_layer)    
             else:
-                self.pro.plot_date(self.ax2, self.variable_souris, date_souris, hauteur_souris)
+                self.pro.plot_date(self.ax2, self.variable_souris, date_souris, hauteur_souris, bool_layer=self.bool_layer)
             self.Canevas2.draw()
             self.buttonSave2.config(state='normal',command=self.Save_profil)
             self.buttonSave4.config(state='normal',command=self.Pickle_profil)
@@ -208,9 +209,9 @@ class GUI_Proplot:
 
             if self.profil_complet:
                 self.ax3.clear()
-                self.pro.plot_date_complet(self.ax2, self.ax3, self.variable_souris, date_souris, hauteur_souris, top=top_zoom, cbar_show=self.first_profil)
+                self.pro.plot_date_complet(self.ax2, self.ax3, self.variable_souris, date_souris, hauteur_souris, cbar_show=self.first_profil, top=top_zoom, bool_layer=self.bool_layer)
             else:    
-                self.pro.plot_date(self.ax2, self.variable_souris, date_souris, hauteur_souris, top=top_zoom)
+                self.pro.plot_date(self.ax2, self.variable_souris, date_souris, hauteur_souris, top=top_zoom, bool_layer=self.bool_layer)
 
             self.Canevas2.draw()
             plt.close(self.fig2)
@@ -539,8 +540,10 @@ class GUI_Proplot:
         print(self.variable)
         if ('snow_layer' in ff.getdimvar(self.variable)):
             self.pro.plot(self.ax1, self.variable, self.datedeb, self.datefin, real_layers=True,legend=self.variable)
+            self.bool_layer=True
         else:
             self.pro.plot1D(self.ax1, self.variable, self.datedeb, self.datefin, legend=self.variable)
+            self.bool_layer=False
         self.Canevas.draw()
         self.Canevas.mpl_connect('motion_notify_event', self.motion)
         self.Canevas.mpl_connect('button_press_event', self.on_button_press)

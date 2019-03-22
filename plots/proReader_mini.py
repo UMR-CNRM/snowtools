@@ -301,7 +301,7 @@ class ProReader_mini:
 
         axe.set_ylabel(legend)
 
-    def plot_date(self, axe, var, date=None, hauteur=None, legend=None, color='b', cbar_show=True, top=None):
+    def plot_date(self, axe, var, date=None, hauteur=None, legend=None, color='b', cbar_show=True, top=None, bool_layer=False):
     
         if legend is None:
             legend = var
@@ -352,7 +352,8 @@ class ProReader_mini:
             Min = np.nanmin(self.var[var][self.date == date]) if np.nanmax(self.var[var][self.date == date]) < ProReader_mini.dico[var][0] else ProReader_mini.dico[var][0]
         axe.set_xlim(Min, Max)
         
-        axe.axhline(y=hauteur, color='black', linestyle='-')
+        if bool_layer:
+            axe.axhline(y=hauteur, color='black', linestyle='-')
             
         if top is None:
             Max_y = ProReader_mini.get_topplot(self,var)
@@ -360,7 +361,7 @@ class ProReader_mini:
             Max_y = top
         axe.set_ylim(0,Max_y)
         
-    def plot_date_complet(self, axe, axe2, var, date=None, hauteur=None, legend=None, color='b', cbar_show=False, top=None):
+    def plot_date_complet(self, axe, axe2, var, date=None, hauteur=None, legend=None, color='b', cbar_show=False, top=None, bool_layer=False):
     
         if legend is None:
             legend = var
@@ -412,7 +413,8 @@ class ProReader_mini:
             Min = np.nanmin(self.var[var][self.date == date]) if np.nanmax(self.var[var][self.date == date]) < ProReader_mini.dico[var][0] else ProReader_mini.dico[var][0]
         axe.set_xlim(Min, Max)
         
-        axe.axhline(y=hauteur, color='black', linestyle='-')
+        if bool_layer:
+            axe.axhline(y=hauteur, color='black', linestyle='-')
 
         if top is None:
             Max_y = ProReader_mini.get_topplot(self,var)
