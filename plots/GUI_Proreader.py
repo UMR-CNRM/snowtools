@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# script bonjour.py
 from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
@@ -21,10 +20,10 @@ import matplotlib.backends.backend_tkagg as tkagg
 from matplotlib.figure import Figure
 
 from utils.prosimu import prosimu
+from utils.infomassifs import infomassifs
 import proReader_mini
 
-from utils.infomassifs import infomassifs
-
+import pickle
 
 class GUI_Proplot:
     def __init__(self,master):
@@ -67,123 +66,112 @@ class GUI_Proplot:
         self.valeur_choisie1=''
         self.valeur_choisie2=''
         self.message_filedialog='Importer un fichier PRO'
-        self.message_1_pt='Un seul point possible'
-        self.message_show_title='choix du point'
-        self.message_show=' choix possibles pour le point'
-        self.message_ask=' choix possibles. Voulez-vous directement choisir le point ?'
         
         self.menubar = Menu(master)
         self.filemenu = Menu(self.menubar, tearoff=0)
         self.filemenu.add_command(label='French', command=self.toFrench)
         self.filemenu.add_command(label='English', command=self.toEnglish)
         self.menubar.add_cascade(label='Change Language', menu=self.filemenu)
-        
+
         master.config(menu=self.menubar)
-
+        
         self.buttonQuit = Button(master,text='Quitter', command = master.quit)
-
-        self.buttonOpenFile = Button(master,  text='Ouvrir un fichier',command=self.Ouvrir)
-
         self.buttonPlot = Button(master,  text='Tracer graphe', state='disabled')
-        
         self.buttonRaz = Button(master,  text='Remise à zéro', state='disabled')
-        
         self.buttonSave1 = Button(master,  text='Sauver graphe', state='disabled')
-        
         self.buttonSave2 = Button(master,  text='Sauver profil', state='disabled')
-
-        self.label_var=Label(master,text='Variable à tracer')
-        self.combobox = ttk.Combobox(master, state = 'disabled')
+        self.buttonSave3 = Button(master,  text='Pickle graphe', state='disabled')
+        self.buttonSave4 = Button(master,  text='Pickle profil', state='disabled')
+        self.label_var=Label(master,text='2: Variable à tracer')
+        self.combobox = ttk.Combobox(master, state = 'disabled', values = '')
         style = ttk.Style()
         style.configure('TCombobox', postoffset=(0,0,200,0))
-        self.combobox.bind('<<ComboboxSelected>>', self.recup)
-
-        self.label_choix_profil=Label(master,text='Choix variable profil')
+        self.label_choix_profil=Label(master,text='3: Choix variable profil')
         self.combobox_choix_profil = ttk.Combobox(master, state = 'disabled', values = '')
-
-        self.label_reduce1=Label(master,text='1: Choix massif')
+        self.label_reduce1=Label(master,text='4: Choix massif')
         self.combobox_reduce1 = ttk.Combobox(master, state = 'disabled', values = '')
-        
-        self.label_reduce2=Label(master,text='2: Choix altitude')
+        self.label_reduce2=Label(master,text='5: Choix altitude')
         self.combobox_reduce2 = ttk.Combobox(master, state = 'disabled', values = '')
-
-        self.label_reduce3=Label(master,text='3: Choix angle de pente')
+        self.label_reduce3=Label(master,text='6: Choix angle de pente')
         self.combobox_reduce3 = ttk.Combobox(master, state = 'disabled', values = '')
-        
-        self.label_reduce4=Label(master,text='4: Choix orientation')
+        self.label_reduce4=Label(master,text='7: Choix orientation')
         self.combobox_reduce4 = ttk.Combobox(master, state = 'disabled', values = '')
-
         self.fig1, self.ax1 = plt.subplots(1, 1, sharex=True, sharey=True)
         self.Canevas = FigureCanvasTkAgg(self.fig1,master)
-
         self.fig2, self.ax2 = plt.subplots(1, 1, sharex=True, sharey=True)
         self.ax3=self.ax2.twiny()
         self.Canevas2 = FigureCanvasTkAgg(self.fig2,master)
-        
-        ##########################################################
-        # PLACEMENT BOUTONS, LISTES DEFILANTES, ETC...
-        ##########################################################
+        self.buttonOpenFile = Button(master,  text='1: Ouvrir un fichier',command=self.Ouvrir)
 
-        def onsize(event):
-            largeur = master.winfo_width()/self.taille_x
-            hauteur = master.winfo_height()/self.taille_y
-            self.buttonQuit.place(x=750*largeur, y=660*hauteur)
-            self.buttonOpenFile.place(x=5*largeur, y=5*hauteur)
-            self.buttonPlot.place(x=475*largeur, y=5*hauteur)
-            self.buttonRaz.place(x=750*largeur, y=5*hauteur)
-            self.buttonSave1.place(x=750*largeur, y=60*hauteur)
-            self.buttonSave2.place(x=750*largeur, y=110*hauteur)
-            
-            self.label_var.place(x=200*largeur,y=5*hauteur)
-            self.combobox.place(x=200*largeur, y=20*hauteur)
-            self.label_choix_profil.place(x=450*largeur,y=100*hauteur)
-            self.combobox_choix_profil.place(x=450*largeur, y=115*hauteur)
-            self.label_reduce1.place(x=5*largeur,y=50*hauteur)
-            self.combobox_reduce1.place(x=5*largeur, y=65*hauteur)
-            self.label_reduce2.place(x=200*largeur,y=50*hauteur)
-            self.combobox_reduce2.place(x=200*largeur, y=65*hauteur)
-            self.label_reduce3.place(x=5*largeur,y=100*hauteur)
-            self.combobox_reduce3.place(x=5*largeur, y=115*hauteur)
-            self.label_reduce4.place(x=200*largeur,y=100*hauteur)
-            self.combobox_reduce4.place(x=200*largeur, y=115*hauteur)
-            self.Canevas.get_tk_widget().place(x=3*largeur,y=150*hauteur,width=502*largeur, height=500*hauteur)
-            self.Canevas2.get_tk_widget().place(x=504*largeur,y=150*hauteur,width=390*largeur, height=500*hauteur)
-
-        master.bind('<Configure>', onsize)
+        master.bind('<Configure>', self.onsize_test)
         self.make_list_massif()
         
+    ##########################################################
+    # PLACEMENT BOUTONS, LISTES DEFILANTES, ETC...
+    ##########################################################
+     
+    def onsize_test(self,event):
+        largeur = self.master.winfo_width()/self.taille_x
+        hauteur = self.master.winfo_height()/self.taille_y
+        self.buttonQuit.place(x=750*largeur, y=660*hauteur)
+        self.buttonOpenFile.place(x=5*largeur, y=5*hauteur)
+        self.buttonPlot.place(x=750*largeur, y=100*hauteur)
+        self.buttonRaz.place(x=750*largeur, y=5*hauteur)
+        self.buttonSave1.place(x=5*largeur, y=660*hauteur)
+        self.buttonSave2.place(x=155*largeur, y=660*hauteur)
+        self.buttonSave3.place(x=305*largeur, y=660*hauteur)
+        self.buttonSave4.place(x=455*largeur, y=660*hauteur)
+        self.label_var.place(x=200*largeur,y=5*hauteur)
+        self.combobox.place(x=200*largeur, y=20*hauteur)
+        self.label_choix_profil.place(x=400*largeur,y=5*hauteur)
+        self.combobox_choix_profil.place(x=400*largeur, y=20*hauteur)
+        self.Canevas.get_tk_widget().place(x=3*largeur,y=150*hauteur,width=502*largeur, height=500*hauteur)
+        self.Canevas2.get_tk_widget().place(x=504*largeur,y=150*hauteur,width=390*largeur, height=500*hauteur)
+        self.label_reduce1.place(x=75*largeur,y=50*hauteur)
+        self.combobox_reduce1.place(x=75*largeur, y=65*hauteur)
+        self.label_reduce2.place(x=270*largeur,y=50*hauteur)
+        self.combobox_reduce2.place(x=270*largeur, y=65*hauteur)
+        self.label_reduce3.place(x=470*largeur,y=50*hauteur)
+        self.combobox_reduce3.place(x=470*largeur, y=65*hauteur)
+        self.label_reduce4.place(x=670*largeur,y=50*hauteur)
+        self.combobox_reduce4.place(x=670*largeur, y=65*hauteur)
+
     ##########################################################
     # TRADUCTION
     ##########################################################
     def toFrench(self):
         self.buttonQuit.config(text='Quitter')
-        self.buttonOpenFile.config(text='Ouvrir un fichier')
+        self.buttonOpenFile.config(text='1: Ouvrir un fichier')
         self.buttonPlot.config(text='Tracer graphe')
         self.buttonRaz.config(text='Remise à zéro')
         self.buttonSave1.config(text='Sauver graphe')
         self.buttonSave2.config(text='Sauver profil')
-        self.label_var.config(text='Variable à tracer')
-        self.label_choix_profil.config(text='Choix variable profil')
-        self.label_reduce1.config(text='1: Choix massif')
-        self.label_reduce2.config(text='2: Choix altitude')
-        self.label_reduce3.config(text='3: Choix angle de pente')
-        self.label_reduce4.config(text='4: Choix orientation')
+        self.buttonSave3.config(text='Pickle graphe')
+        self.buttonSave4.config(text='Pickle profil')
+        self.label_var.config(text='2: Variable à tracer')
+        self.label_choix_profil.config(text='3: Choix variable profil')
+        self.label_reduce1.config(text='4: Choix massif')
+        self.label_reduce2.config(text='5: Choix altitude')
+        self.label_reduce3.config(text='6: Choix angle de pente')
+        self.label_reduce4.config(text='7: Choix orientation')
         
         self.message_filedialog='Importer un fichier PRO'
 
     def toEnglish(self):
         self.buttonQuit.config(text='Exit')
-        self.buttonOpenFile.config(text='Open File')
+        self.buttonOpenFile.config(text='1: Open File')
         self.buttonPlot.config(text='Plot')
         self.buttonRaz.config(text='Reset')
         self.buttonSave1.config(text='Save graph')
         self.buttonSave2.config(text='Save profile')
-        self.label_var.config(text='Variable to plot')
-        self.label_choix_profil.config(text='Variable for Profile')
-        self.label_reduce1.config(text='1: Choose massif')
-        self.label_reduce2.config(text='2: Choose altitude')
-        self.label_reduce3.config(text='3: Choose slope')
-        self.label_reduce4.config(text='4: Choose orientation')
+        self.buttonSave3.config(text='Pickle graph')
+        self.buttonSave4.config(text='Pickle profile')
+        self.label_var.config(text='2: Variable to plot')
+        self.label_choix_profil.config(text='3: Variable for Profile')
+        self.label_reduce1.config(text='4: Choose massif')
+        self.label_reduce2.config(text='5: Choose altitude')
+        self.label_reduce3.config(text='6: Choose slope')
+        self.label_reduce4.config(text='7: Choose orientation')
         
         self.message_filedialog='Import a PRO File'
         
@@ -193,20 +181,22 @@ class GUI_Proplot:
     def motion(self,event):
         if (event.inaxes == self.ax1):
             date_souris=self.date[min(math.floor(event.xdata),len(self.date)-1)]
+            hauteur_souris=event.ydata
             self.ax2.clear()
             if self.profil_complet:
                 self.ax3.clear()
-                self.pro.plot_date_complet(self.ax2, self.ax3,self.variable_souris, date_souris,cbar_show=self.first_profil)    
+                self.pro.plot_date_complet(self.ax2, self.ax3, self.variable_souris, date_souris, hauteur_souris, cbar_show=self.first_profil)    
             else:
-                self.pro.plot_date(self.ax2, self.variable_souris, date_souris)
+                self.pro.plot_date(self.ax2, self.variable_souris, date_souris, hauteur_souris)
             self.Canevas2.draw()
             self.buttonSave2.config(state='normal',command=self.Save_profil)
+            self.buttonSave4.config(state='normal',command=self.Pickle_profil)
             plt.close(self.fig2)
             self.first_profil=False
             
     def motion_zoom(self,event):
         if (event.inaxes == self.ax1):
-            
+            hauteur_souris=event.ydata
             if self.boolzoom:
                 ecart=self.datedeb-self.date1_zoom_old
                 date_souris=self.date[min(math.floor(event.xdata),len(self.date)-1)]-ecart
@@ -218,9 +208,9 @@ class GUI_Proplot:
 
             if self.profil_complet:
                 self.ax3.clear()
-                self.pro.plot_date_complet(self.ax2, self.ax3,self.variable_souris, date_souris,top=top_zoom,cbar_show=self.first_profil)
+                self.pro.plot_date_complet(self.ax2, self.ax3, self.variable_souris, date_souris, hauteur_souris, top=top_zoom, cbar_show=self.first_profil)
             else:    
-                self.pro.plot_date(self.ax2, self.variable_souris, date_souris,top=top_zoom)
+                self.pro.plot_date(self.ax2, self.variable_souris, date_souris, hauteur_souris, top=top_zoom)
 
             self.Canevas2.draw()
             plt.close(self.fig2)
@@ -338,6 +328,8 @@ class GUI_Proplot:
         self.buttonPlot.config(state='disabled')
         self.buttonSave1.config(state='disabled')
         self.buttonSave2.config(state='disabled')
+        self.buttonSave3.config(state='disabled')
+        self.buttonSave4.config(state='disabled')
         self.figclear=True
         self.first_profil=True
         
@@ -385,16 +377,8 @@ class GUI_Proplot:
             print(self.variable)
             if self.bool_profil:
                 self.pro = proReader_mini.ProReader_mini(ncfile=self.filename, var=self.variable, point=int(self.point_choisi),var_sup=self.var_sup)
-            self.reduce1(self)
-
-        def suite_one_point(event):
-            variable_for_pres=self.combobox.get()
-            self.variable=self.liste_variable[self.liste_variable_for_pres.index(variable_for_pres)]
-            self.var_sup.append(self.variable)
-            self.point_choisi=0
-            print(self.variable)
-            if self.bool_profil:
-                self.pro = proReader_mini.ProReader_mini(ncfile=self.filename, var=self.variable, point=0,var_sup=self.var_sup)
+            '''self.reduce1(self)'''
+                
             ff = prosimu(self.filename)
             self.profil_complet=False
             if ({'SNOWTYPE','SNOWRAM'}.issubset(set(ff.listvar()))):
@@ -409,12 +393,9 @@ class GUI_Proplot:
             self.combobox_choix_profil.config(values = liste_pres)
             self.combobox_choix_profil.config(state = "readonly")
             self.combobox_choix_profil.bind('<<ComboboxSelected>>', self.choix_profil)
-            
+
         self.combobox.config(state ='readonly', values=self.liste_variable_for_pres)
-        if (len(self.Tableau[0])+len(self.Tableau[1])+len(self.Tableau[2])+len(self.Tableau[3])==4):
-            self.combobox.bind('<<ComboboxSelected>>', suite_one_point)
-        else:
-            self.combobox.bind('<<ComboboxSelected>>', suite)  
+        self.combobox.bind('<<ComboboxSelected>>', suite)
 
     def make_list_massif(self):
         self.list_massif_num=[]
@@ -500,21 +481,6 @@ class GUI_Proplot:
         orientation=self.combobox_reduce4.get()
         self.list_choix[3]=float(orientation)
         self.choix_point()
-
-        ff = prosimu(self.filename)
-        self.profil_complet=False
-        if ({'SNOWTYPE','SNOWRAM'}.issubset(set(ff.listvar()))):
-            self.profil_complet=True
-            
-        liste_pres=[]
-        liste=list(set(ff.listvar())-{'SNOWTYPE','SNOWRAM'})
-        for var in liste:
-            if 'snow_layer' in list(ff.getdimvar(var)):
-                liste_pres.append(self.liste_variable_for_pres[self.liste_variable.index(var)])
-
-        self.combobox_choix_profil.config(values = liste_pres)
-        self.combobox_choix_profil.config(state = "readonly")
-        self.combobox_choix_profil.bind('<<ComboboxSelected>>', self.choix_profil)
         
     ##########################################################
     # CHOIX VARIABLE PROFIL
@@ -526,9 +492,33 @@ class GUI_Proplot:
             self.var_sup.extend([self.variable_souris,'SNOWTYPE','SNOWRAM'])
         else:
             self.var_sup.append(self.variable_souris)
-        self.pro = proReader_mini.ProReader_mini(ncfile=self.filename, var=self.variable, point=int(self.point_choisi),var_sup=self.var_sup)
-        self.buttonPlot.config(state='normal',command=self.Plotage)
         self.bool_profil=True
+        
+        if (len(self.Tableau[0])+len(self.Tableau[1])+len(self.Tableau[2])+len(self.Tableau[3])==4):
+            self.point_choisi=0
+            self.combobox_reduce1.config(state = 'disabled', values = '')
+            self.combobox_reduce2.config(state = 'disabled', values = '')
+            self.combobox_reduce3.config(state = 'disabled', values = '')
+            self.combobox_reduce4.config(state = 'disabled', values = '')
+            if self.Tableau[0]==[-10.]:
+                self.combobox_reduce1.set('inconnu')
+            else:
+                self.combobox_reduce1.set(self.Tableau[0][0])
+            if self.Tableau[1]==[-10.]:
+                self.combobox_reduce2.set('inconnu')
+            else:
+                self.combobox_reduce2.set(self.Tableau[1][0])
+            if self.Tableau[2]==[-10.]:
+                self.combobox_reduce3.set('inconnu')
+            else:
+                self.combobox_reduce3.set(self.Tableau[2][0])
+            if self.Tableau[3]==[-10.]:
+                self.combobox_reduce4.set('inconnu')
+            else:
+                self.combobox_reduce4.set(self.Tableau[3][0])
+            self.buttonPlot.config(state='normal',command=self.Plotage)
+        else:
+            self.reduce1(self)
         
     ##########################################################
     # TRACE
@@ -559,6 +549,7 @@ class GUI_Proplot:
         plt.close(self.fig1)
         self.buttonRaz.config(state='normal',command=self.raz)
         self.buttonSave1.config(state='normal',command=self.Save_plot)
+        #self.buttonSave3.config(state='normal',command=self.Pickle_plot)
         self.figclear=False
         
     ##########################################################
@@ -589,6 +580,28 @@ class GUI_Proplot:
 
         if filename:
             return self.fig2.savefig(filename,bbox_inches='tight')
+        
+    def Pickle_plot(self):
+        self.file_opt = options = {}
+        options['filetypes'] = [('all files', '.*')]
+
+        options['initialfile'] = 'mypicklefile'
+        #options['parent'] = root
+        filename = tkinter.filedialog.asksaveasfilename(**self.file_opt)
+
+        if filename:
+            return pickle.dump(self.fig1, open(filename, 'wb'))
+        
+    def Pickle_profil(self):
+        self.file_opt = options = {}
+        options['filetypes'] = [('all files', '.*')]
+
+        options['initialfile'] = 'mypicklefile'
+        #options['parent'] = root
+        filename = tkinter.filedialog.asksaveasfilename(**self.file_opt)
+
+        if filename:
+            return pickle.dump(self.fig2, open(filename, 'wb'))
 
 if __name__ == '__main__':
     # Création de la fenêtre principale (main window)
