@@ -48,8 +48,8 @@ class Safran(Task, S2MTaskMixIn):
                 datebegin = rundate
                 dateend = rundate.replace(year = rundate.year + 1)
 #                dateend = rundate + Period(years=1)
-                season = datebegin.nivologyseason()
-                next_season = dateend.nivologyseason()
+                season = datebegin.nivologyseason
+                next_season = dateend.nivologyseason
 
                 if datebegin < Date(year=2002, month=8, day=1):
 
@@ -105,7 +105,7 @@ class Safran(Task, S2MTaskMixIn):
                         tb01_c = toolbox.input(
                             role           = 'Ebauche',
                             local          = 'mb{0:03d}/p{1:s}.tar'.format(m, next_season),
-                            remote         = '/home/vernaym/s2m/[geometry]/guess/p{0:s}.tar'.format(next_season),
+                            remote         = '/home/vernaym/s2m/[geometry]/{0:s}/p{1:s}.tar'.format(self.conf.guess_block, next_season),
                             hostname       = 'hendrix.meteo.fr',
                             unknownflow    = True,
                             username       = 'vernaym',
@@ -156,7 +156,7 @@ class Safran(Task, S2MTaskMixIn):
                     tb01 = toolbox.input(
                         role           = 'Ebauche',
                         local          = 'mb{0:03d}/p{1:s}.tar'.format(m, season),
-                        remote         = '/home/vernaym/s2m/[geometry]/guess/p{0:s}.tar'.format(season),
+                        remote         = '/home/vernaym/s2m/[geometry]/{0:s}/p{1:s}.tar'.format(self.conf.guess_block, season),
                         hostname       = 'hendrix.meteo.fr',
                         unknownflow    = True,
                         username       = 'vernaym',
@@ -234,19 +234,6 @@ class Safran(Task, S2MTaskMixIn):
                 kind            = 'listeml',
                 model           = self.conf.model,
                 local           = 'listeml',
-            )
-            print t.prompt, 'tb08 =', tb08
-            print
-
-            self.sh.title('Toolbox input tb08')
-            tb08 = toolbox.input(
-                role            = 'NormalesClimTT',
-                genv            = self.conf.cycle,
-                gdomain         = self.conf.vconf,
-                geometry        = '[gdomain]',
-                kind            = 'NORELmt',
-                model           = self.conf.model,
-                local           = 'NORELmt',
             )
             print t.prompt, 'tb08 =', tb08
             print
@@ -330,19 +317,34 @@ class Safran(Task, S2MTaskMixIn):
             print t.prompt, 'tb09 =', tb09
             print
 
-            self.sh.title('Toolbox input tb12')
-            tb12 = toolbox.input(
-                role            = 'BlackList',
-                genv            = self.conf.cycle,
-                gdomain         = self.conf.vconf,
-                geometry        = '[gdomain]',
-                kind            = 'blacklist',
-                model           = self.conf.model,
-                local           = 'BLACK',
-                fatal           = False,
-            )
-            print t.prompt, 'tb12 =', tb12
-            print
+            if not self.conf.vconf == 'cor':
+
+                self.sh.title('Toolbox input tb12')
+                tb12 = toolbox.input(
+                    role            = 'BlackList',
+                    genv            = self.conf.cycle,
+                    gdomain         = self.conf.vconf,
+                    geometry        = '[gdomain]',
+                    kind            = 'blacklist',
+                    model           = self.conf.model,
+                    local           = 'BLACK',
+                    fatal           = False,
+                )
+                print t.prompt, 'tb12 =', tb12
+                print
+
+                self.sh.title('Toolbox input tb08')
+                tb08 = toolbox.input(
+                    role            = 'NormalesClimTT',
+                    genv            = self.conf.cycle,
+                    gdomain         = self.conf.vconf,
+                    geometry        = '[gdomain]',
+                    kind            = 'NORELmt',
+                    model           = self.conf.model,
+                    local           = 'NORELmt',
+                )
+                print t.prompt, 'tb08 =', tb08
+                print
 
             self.sh.title('Toolbox input tb11')
             tb11 = toolbox.input(
@@ -540,7 +542,8 @@ class Safran(Task, S2MTaskMixIn):
                     datebegin      = self.conf.datebegin.ymd6h,
                     dateend        = self.conf.dateend.ymd6h,
                     ntasks         = self.conf.ntasks,
-                    execution      = 'reanalysis',
+                    #execution      = 'reanalysis',
+                    execution      = 'analysis',
                 )
                 print t.prompt, 'tb22 =', tb22
                 print
@@ -555,27 +558,29 @@ class Safran(Task, S2MTaskMixIn):
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
                 ntasks         = self.conf.ntasks,
-                execution      = 'reanalysis',
+                #execution      = 'reanalysis',
+                execution      = 'analysis',
             )
             print t.prompt, 'tb22 =', tb22
             print
 
             self.component_runner(tbalgo1, tbx1)
 
-#             self.sh.title('Toolbox algo tb23 = SYRPLUIE')
-#             tb23 = tbalgo2 = toolbox.algo(
-#                 engine         = 's2m',
-#                 kind           = 'syrpluie',
-#                 datebegin      = self.conf.datebegin.ymd6h,
-#                 dateend        = self.conf.dateend.ymd6h,
-#                 # members        = footprints.util.rangex(self.conf.members),
-#                 ntasks         = self.conf.ntasks,
-#                 execution      = 'reanalysis',
-#             )
-#             print t.prompt, 'tb23 =', tb23
-#             print
-#
-#             self.component_runner(tbalgo2, tbx2)
+            self.sh.title('Toolbox algo tb23 = SYRPLUIE')
+            tb23 = tbalgo2 = toolbox.algo(
+                engine         = 's2m',
+                kind           = 'syrpluie',
+                datebegin      = self.conf.datebegin.ymd6h,
+                dateend        = self.conf.dateend.ymd6h,
+                # members        = footprints.util.rangex(self.conf.members),
+                ntasks         = self.conf.ntasks,
+                #execution      = 'reanalysis',
+                execution      = 'analysis',
+            )
+            print t.prompt, 'tb23 =', tb23
+            print
+
+            self.component_runner(tbalgo2, tbx2)
 
             self.sh.title('Toolbox algo tb23_b = SYPLUIE')
             tb23 = tbalgo3 = toolbox.algo(
@@ -585,7 +590,8 @@ class Safran(Task, S2MTaskMixIn):
                 dateend        = self.conf.dateend.ymd6h,
                 # members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
-                execution      = 'reanalysis',
+                #execution      = 'reanalysis',
+                execution      = 'analysis',
             )
             print t.prompt, 'tb23 =', tb23
             print
@@ -600,7 +606,8 @@ class Safran(Task, S2MTaskMixIn):
                 dateend        = self.conf.dateend.ymd6h,
                 # members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
-                execution      = 'reanalysis',
+                #execution      = 'reanalysis',
+                execution      = 'analysis',
             )
             print t.prompt, 'tb24 =', tb24
             print
@@ -615,7 +622,8 @@ class Safran(Task, S2MTaskMixIn):
                 dateend        = self.conf.dateend.ymd6h,
                 # members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
-                execution      = 'reanalysis',
+                #execution      = 'reanalysis',
+                execution      = 'analysis',
             )
             print t.prompt, 'tb25 =', tb25
             print
@@ -630,7 +638,8 @@ class Safran(Task, S2MTaskMixIn):
                 dateend        = self.conf.dateend.ymd6h,
                 # members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
-                execution      = 'reanalysis',
+                #execution      = 'reanalysis',
+                execution      = 'analysis',
             )
             print t.prompt, 'tb26 =', tb26
             print
@@ -665,7 +674,7 @@ class Safran(Task, S2MTaskMixIn):
                     # local          = 'mb035/FORCING_massif.nc',
                     local          = 'mb{0:03d}/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(m),
                     experiment     = self.conf.xpid,
-                    block          = 'massifs',
+                    block          = 'with_rr_arpege',
                     geometry        = self.conf.vconf,
                     nativefmt      = 'netcdf',
                     model          = self.conf.model,
@@ -687,7 +696,7 @@ class Safran(Task, S2MTaskMixIn):
                     # local          = 'mb035/FORCING_postes.nc',
                     local          = 'mb{0:03d}/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(m),
                     experiment     = self.conf.xpid,
-                    block          = 'postes',
+                    block          = 'with_rr_arpege',
                     geometry        = self.conf.vconf,
                     nativefmt      = 'netcdf',
                     model          = self.conf.model,
@@ -707,7 +716,7 @@ class Safran(Task, S2MTaskMixIn):
                     geometry        = self.conf.vconf,
                     cutoff         = 'assimilation',
                     format         = 'ascii',
-                    kind           = 'listing',
+                    kind           = 'with_rr_arpege',
                     # local          = 'mb035/liste_obs_{glob:a:\w+}',
                     local          = 'mb{0:03d}'.format(m) + '/liste_obs_{glob:a:\w+}',
                     namespace      = self.conf.namespace,
