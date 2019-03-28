@@ -8,10 +8,9 @@ Created on 6 févr. 2019
 import numpy as np
 import matplotlib.pyplot as plt
 from utilcrocO import setSubsetclasses
-from Code.Dev.evalSODA.util import colorbar
+from utilcrocO import colorbar
 import os
 from matplotlib.cm import ScalarMappable
-
 
 class Pie(object):
     '''
@@ -25,10 +24,10 @@ class Pie(object):
             os.mkdir('../pie/')
         self.sdObj = sdObj
         self.sdObj.load()  # -> it is not always loaded (ex. of synth obs)
-        self.sel = np.unique(self.sdObj.pgd.elevClass)
+        self.sel = np.unique(self.sdObj.pgd.elev)
         self.ssl = sdObj.options.classesS
         self.sas = 'all'
-        self.rmax = float(np.max(self.sdObj.pgd.elevClass)) + 300.
+        self.rmax = float(np.max(self.sdObj.pgd.elev)) + 300.
 
         self.dictlims ={'b1':[-0.2,0.2],'b2':[-0.2,0.2],'b3':[-0.2,0.2],'b4':[-0.2,0.2],'b5':[-0.2,0.2],'b6':[-0.2,0.2],'b7':[-0.2,0.2],'sd': [-1.,1.]}
         if focusCl is not None:
@@ -47,13 +46,16 @@ class Pie(object):
         if ax is None:
             # fig, ax = plt.subplots(len(self.sdObj.listvar), len(self.ssl), subplot_kw=dict(polar=True))
             fig = plt.figure()
+        else:
+            fig = plt.gcf()
+
         for i, slope in enumerate(self.ssl):
             
             _, mask = setSubsetclasses(self.sdObj.pgd, self.sel, self.sas, slope, )
             for iax, var in enumerate(self.sdObj.listvar):
 
-                radii = np.ma.masked_array(self.rmax - self.sdObj.pgd.elevClass, mask = np.invert(mask)).compressed()
-                theta = np.ma.masked_array(self.sdObj.pgd.aspectClass*np.pi/180.-np.pi/N, mask = np.invert(mask)).compressed()
+                radii = np.ma.masked_array(self.rmax - self.sdObj.pgd.elev, mask = np.invert(mask)).compressed()
+                theta = np.ma.masked_array(self.sdObj.pgd.aspect*np.pi/180.-np.pi/N, mask = np.invert(mask)).compressed()
     
                 data = np.ma.masked_invalid(self.sdObj.data[var])
                 
@@ -73,11 +75,11 @@ class Pie(object):
                     ax.set_xticklabels([])
                     if hasattr(self, 'focusCl'):
                         for cl in self.focusCl:
-                            if self.sdObj.pgd.aspectClass[cl] <0.01:
+                            if self.sdObj.pgd.aspect[cl] <0.01:
                                 print 'zbraaaa'
-                                print (self.sdObj.pgd.aspectClass[cl]*np.pi/180.- np.pi/N)
-                                print  self.sdObj.pgd.elevClass[cl]
-                                ax.scatter(1./len(self.sel+1), (self.rmax - self.sdObj.pgd.elevClass[cl]-300)/300.,
+                                print (self.sdObj.pgd.aspect[cl]*np.pi/180.- np.pi/N)
+                                print  self.sdObj.pgd.elev[cl]
+                                ax.scatter(1./len(self.sel+1), (self.rmax - self.sdObj.pgd.elev[cl]-300)/300.,
                                            color = 'r', zorder = 10, s=6)
                     
                 else:  # 20 (or maybe 40)
@@ -98,13 +100,13 @@ class Pie(object):
                     # if the constructor is provided a focus Cl, print x in it
                     if hasattr(self, 'focusCl'):
                         for cl in self.focusCl:
-                            if self.sdObj.pgd.aspectClass[cl] >0.01:  # filter out flat classes
+                            if self.sdObj.pgd.aspect[cl] >0.01:  # filter out flat classes
                                 print 'ok'
-                                print (self.sdObj.pgd.aspectClass[cl]*np.pi/180.- np.pi/N)
-                                print  self.sdObj.pgd.elevClass[cl]
-                                #ax[iax, len(self.ssl) - 1].scatter(self.sdObj.pgd.aspectClass[cl]*np.pi/180., self.rmax - self.sdObj.pgd.elevClass[cl]-150.,
+                                print (self.sdObj.pgd.aspect[cl]*np.pi/180.- np.pi/N)
+                                print  self.sdObj.pgd.elev[cl]
+                                #ax[iax, len(self.ssl) - 1].scatter(self.sdObj.pgd.aspect[cl]*np.pi/180., self.rmax - self.sdObj.pgd.elev[cl]-150.,
                                 #                                   marker = '.', color = 'r', zorder = 10, linewidths=3)
-                                ax.scatter(self.sdObj.pgd.aspectClass[cl]*np.pi/180., self.rmax - self.sdObj.pgd.elevClass[cl]-150.,
+                                ax.scatter(self.sdObj.pgd.aspect[cl]*np.pi/180., self.rmax - self.sdObj.pgd.elev[cl]-150.,
                                                                    marker = '.', color = 'r', zorder = 10, linewidths=3)
                     ax.set_xticklabels(['N', 'NE','E', 'SE', 'S', 'SW', 'W', 'NW'])
                     ax.set_yticks(self.sel-450.)

@@ -9,7 +9,7 @@ import os
 from SemiDistributed import Synthetic, Real, PrepBg, PrepAbs
 import datetime
 import shutil
-from Code.Dev.evalSODA.util import convertdate
+from utilcrocO import convertdate
 from utilcrocO import setlistvars_obs, setlistvars_var, set_errors, set_factors,\
     setSubsetclasses
 from bronx.datagrip.namelist import NamelistParser
@@ -18,6 +18,7 @@ from Ensemble import PrepEnsBg, PrepEnsAn
 import matplotlib.pyplot as plt
 from Operators import PrepEnsOperator
 from PostCroco import PostCroco
+import numpy as np
 
 class CrocOrun(object):
     '''
@@ -29,17 +30,19 @@ class CrocOrun(object):
         self.options = options
         self.options.dates = [self.options.dates]
         self.conf = conf
-        self.xpdir = '/home/cluzetb/vortexpath/s2m/' + self.options.vconf + '/' + self.options.xpid + '/'
-        self.xpidobsdir = '/home/cluzetb/vortexpath/s2m/' + self.options.vconf + '/obs/' + self.options.xpidobs + '/'
+        self.xpdir =  self.options.vortexpath + '/s2m/' + self.options.vconf + '/' + self.options.xpid + '/'
+        self.xpidobsdir = self.options.vortexpath + '/s2m/' + self.options.vconf + '/obs/' + self.options.xpidobs + '/'
         self.crocodir = self.xpdir + 'crocO/'
-        
-        self.conf.assimdates = map(str, self.conf.assimdates)
+        if type(self.conf.assimdates) is unicode:
+            self.conf.assimdates = [str(self.conf.assimdates)]
+        else:
+            self.conf.assimdates = map(str, self.conf.assimdates)
         self.mblist = ['mb{0:04d}'.format(mb) for mb in range(1, 36)]
         
-        if self.options.mpi is True:
+        if self.options.mpi is True: # for cesar, change here the day you want to test mpi
             self.exesurfex = '/home/cluzetb/SURFEX_V81/cen_release/exe_mpi/'
         else:
-            self.exesurfex = '/home/cluzetb/SURFEX_V81/cen_release/exe/'
+            self.exesurfex = os.environ['EXESURFEX']
         
         # setup all dirs
         self.setup()
@@ -59,13 +62,13 @@ class CrocOrun(object):
                 self.prepare_sodaenv(dd)
             else:
                 print 'prescribed date ' + dd + 'does not exist in the experiment, remove it.'
+                print self.conf.assimdates
                 self.options.dates.remove(dd)
 
     def prepare_sodaenv(self, path):
         """
         set soda environment for each date (=path): -PGD, links to preps, namelist, ecoclimap etc.
         """
-
         
         os.chdir(path)
         # Prepare the PGD and PREP for assim
@@ -75,7 +78,8 @@ class CrocOrun(object):
                 os.symlink(self.xpdir + mb + '/bg/PREP_' + path + '.nc', 'PREP_' + dateAssSoda + '_PF_ENS' + str(imb + 1) + '.nc')
         if not os.path.exists('PREP.nc'):
             os.symlink('PREP_' + dateAssSoda + '_PF_ENS1.nc', 'PREP.nc')
-            os.symlink('/home/cluzetb/vortexpath/s2m/12/spinup_V81/PGD.nc', 'PGD.nc')
+        if not os.path.exists('PGD.nc'):
+            os.symlink(self.options.vortexpath + '/s2m/' + self.options.vconf + '/spinup/pgd/PGD_' + self.options.vconf + '.nc', 'PGD.nc')
 
         # Prepare and check the namelist (LWRITE_TOPO must be false for SODA)
         if not os.path.exists('OPTIONS.nam'):
@@ -89,7 +93,7 @@ class CrocOrun(object):
             # flanner stuff
             os.symlink(self.exesurfex + '/../MY_RUN//DATA/CROCUS/drdt_bst_fit_60.nc', 'drdt_bst_fit_60.nc')
         if not os.path.exists('soda.exe'):
-            os.symlink(self.exesurfex + 'SODA', 'soda.exe')
+            os.symlink(self.exesurfex + '/SODA', 'soda.exe')
 
         # prepare (get or fake) the obs
         self.prepare_obs(path)
@@ -108,17 +112,24 @@ class CrocOrun(object):
         N['NAM_IO_OFFLINE'].LWRITE_TOPO = False
         
         # update assim vars in the namelist
-        
         # NAM_ENS
         N['NAM_ENS'].NENS = options.nmembers
         
         # NAM_OBS
         sodaobs = setlistvars_obs(options.vars)
-        N['NAM_OBS'].NOBSTYPE = len(sodaobs)
+        if 'NAM_OBS' not in N.keys():
+            N.newblock('NAM_OBS')
+        if 'NAM_VAR' not in N.keys():
+            N.newblock('NAM_VAR')
+        if 'NAM_ASSIM' not in N.keys():
+            N.newblock('NAM_ASSIM')
+            
+        N['NAM_OBS'].NOBSTYPE = np.size(sodaobs)
         N['NAM_OBS'].COBS_M = sodaobs
         N['NAM_OBS'].XERROBS_M = set_errors(sodaobs)
         N['NAM_OBS'].XERROBS_FACTOR_M = set_factors(sodaobs, options.fact)
         N['NAM_OBS'].NNCO = [1] * len(sodaobs)
+        N['NAM_OBS'].CFILE_FORMAT_OBS = "NC    "
 
         # NAM_VAR
         sodavar = setlistvars_var(options.vars)
@@ -128,7 +139,14 @@ class CrocOrun(object):
         
         # NAM_ASSIM
         N['NAM_ASSIM'].LSEMIDISTR_CROCUS = not(options.sodadistr)
-
+        N['NAM_ASSIM'].LASSIM = True
+        N['NAM_ASSIM'].CASSIM_ISBA = 'PF   '
+        
+        N['NAM_ASSIM'].LEXTRAP_SEA = False
+        N['NAM_ASSIM'].LEXTRAP_WATER = False
+        N['NAM_ASSIM'].LEXTRAP_NATURE = False
+        N['NAM_ASSIM'].LWATERTG2 = True
+        
         namSURFEX = open('OPTIONS.nam', 'w')
         namSURFEX.write(N.dumps())
         namSURFEX.close()

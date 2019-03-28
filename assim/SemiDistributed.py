@@ -10,7 +10,7 @@ Module for preparing/faking/ observations within crocO framework
 import os
 import sys
 import shutil
-from Code.Dev.evalSODA.util import Pgd, convertdate
+from utilcrocO import Pgd, convertdate
 from utilcrocO import setlistvars_obs, setlistvars_var, setSubsetclasses,\
     dictvarsPrep, dictvarsWrite
 import netCDF4
@@ -50,8 +50,11 @@ class Obs(SemiDistributed):
         self.sodaName = 'OBSERVATIONS_' + convertdate(date).strftime('%y%m%dH%H') + '.nc'
         
         # set list of vars
-        # self.listvar = setlistvars_obs(options.vars)
-        self.listvar = options.vars
+        #self.listvar = setlistvars_obs(options.vars)
+        if type(options.vars) is not list:
+            self.listvar = [options.vars]
+        else:
+            self.listvar = options.vars
         # self.listvars_write = setlistvars_obs(options.vars)
         
     def prepare(self):
@@ -71,9 +74,13 @@ class Obs(SemiDistributed):
     
     def create_new(self, options):
         self.New = netCDF4.Dataset(self.sodaName, 'w')
-        _, mask = self.subset_classes(self.pgd, options)
-        self.copydimsvars(self.Raw, self.New, self.listvar, mask=mask)
-        self.computeratio(self.Raw, self.New, self.listvar, mask=mask)
+        if options.distr is False:
+            _, mask = self.subset_classes(self.pgd, options)
+            self.copydimsvars(self.Raw, self.New, self.listvar, mask=mask)
+            self.computeratio(self.Raw, self.New, self.listvar, mask=mask)
+        
+        else:
+            self.copydimsvars(self.Raw, self.New, self.listvar,)
 
     def subset_classes(self, pgd, options):
         """
@@ -109,8 +116,8 @@ class Synthetic(Obs):
             draw = random.choice(range(1, options.nmembers+1))
             self.path = xpdir + 'mb{0:04d}'.format(draw) + '/bg/PREP_' + date + '.nc'
             self.ptinom = 'synth' + 'mb{0:04d}'.format(draw)
-        if 'sd' not in self.listvar:
-            self.listvar.append('sd')  # add total SD
+        #if 'sd' not in self.listvar: # I think I managed to make it work without these two lines...to check.
+        #    self.listvar.append('sd')  # add total SD
         self.dictVarsRead = dictvarsPrep()
         self.dictVarsWrite = dictvarsWrite()
         self.loadDict = dictvarsWrite()
@@ -125,7 +132,7 @@ class Synthetic(Obs):
         '''
         for dimName, dim in Raw.dimensions.iteritems():
             New.createDimension(dimName, len(dim) if not dim.isunlimited() else None)
-        for name in nameVars: # name in arg format (b*, r**...)
+        for name in nameVars:  # name in arg format (b*, r**...)
             # print name
             # print Raw.variables.keys()
             prepName = self.dictVarsRead[name]
@@ -181,12 +188,13 @@ class Prep(SemiDistributed):
         SemiDistributed.__init__(self)
         self.options = options
         self.listvar = options.vars
-        if 'sd' not in self.listvar:
-            self.listvar.append('sd')  # add total SD
+        if 'sd' not in self.listvar: # Cesar. I Don't get that.
+            self.listvar.append('DEP_TOT')  # add total SD
         self.listvar_soda = setlistvars_var(options.vars)
         self.dictVarsRead = dictvarsPrep()
         self.dictVarsWrite = dictvarsWrite()
         self.loadDict = dictvarsPrep()
+
 class PrepBg(Prep):
     def __init__(self, date, mbid, options):
         Prep.__init__(self, options)

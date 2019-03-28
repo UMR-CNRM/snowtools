@@ -90,6 +90,40 @@ def addNoise2Snowf( f, sigma, tau, dt, semiDistrib = False):
     return f
 
 
+def addNoise2Rainf( f, sigma, tau, dt, semiDistrib = False):
+    """
+    Add noise with temporal correlation.
+    """
+    print('Treating variable : Rainf')
+    var = f.variables['Rainf']
+    nT = np.shape(var)[0]  # time length
+
+    xx = np.zeros(nT, float)
+    XX = np.zeros(nT, float)
+    YY = np.zeros(nT, float)
+
+    phi = np.exp( - dt / tau)
+    sig2 = (1 - phi * phi)
+    sig = np.sqrt(sig2)
+    epsilon = np.random.normal(0., sig, nT)
+
+    for ii in range(nT):
+        xx[ii] = phi * xx[ii - 1] + epsilon[ii]
+        XX[ii] = xx[ii] * 0.7
+        YY[ii] = 1 + XX[ii]
+        while YY[ii] < 0 or YY[ii] > 2:
+            epsilon[ii] = np.random.normal(0., sig)
+            xx[ii] = phi * xx[ii - 1] + epsilon[ii]
+            XX[ii] = xx[ii] * 0.7
+            YY[ii] = 1 + XX[ii]
+    if semiDistrib:
+        YY = np.reshape(YY, (nT, 1))
+    else:
+        YY = np.reshape(YY, (nT, 1, 1))
+    var[:] = var[:] * YY
+
+    return f
+
 def addNoise2DIR_SWdown( f, sigma, tau, dt, semiDistrib = False):
     """
     Add noise with temporal correlation.
@@ -237,8 +271,8 @@ def addNoise2Impur( f, varName, sigma, tau, dt, semiDistrib = False, brutal=Fals
     else:  # brutal : multiply all timesteps by a random factor following a lognormal law
         if '1' in varName:  # case for BC
             # /100 x1 (too much BC in MOCAGE)
-            logstdFact = 1   # BE CAREFUL MEMBER 1 (not modified)
-            meanFact = -2    # WILL BE AN OUTLIER
+            logstdFact = 1
+            meanFact = -2
         else:  # Case for Dust
             # /10*10 (no clue about Dust) -> (1,0),
             logstdFact = 1
@@ -344,7 +378,11 @@ def MakeForEnsemble( f, po, nmembers, o, startmember=1, brutal=False):
             # Disturb Snowf
             if param['Snowf'][0] != 0:
                 FORCING = addNoise2Snowf( FORCING, param['Snowf'][0], param['Snowf'][1], dt, semiDistrib = semiDistrib)
-
+                
+            # Disturb Rainf
+            if param['Rainf'][0] != 0:
+                FORCING = addNoise2Rainf( FORCING, param['Rainf'][0], param['Rainf'][1], dt, semiDistrib = semiDistrib)
+                
             # Disturb SWdown
             if param['DIR_SWdown'][0] != 0:
                 FORCING = addNoise2DIR_SWdown( FORCING, param['DIR_SWdown'][0], param['DIR_SWdown'][1], dt, semiDistrib = semiDistrib)

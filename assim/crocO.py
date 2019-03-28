@@ -11,9 +11,10 @@ perform local tests/dev of SODA based on :
 
 '''
 from optparse import OptionParser
-from Code.Dev.evalSODA.util import read_conf
+from utilcrocO import read_conf
 import sys
 import time
+import os
 from CrocOrun import CrocOrun
 usage = 'crocO --opts'
 
@@ -53,7 +54,7 @@ def parse_options(arguments):
                       action = 'store_true', dest = 'distr', default = False,
                       help = 'specify if your simulation is distributed or not')
     parser.add_option("--vars", type = 'string', action="callback", callback=callvars, default = 'all',
-                      help="specify analysis variables separated by commas : b1,b.., b7 for MODIS bands, scf")
+                      help="specify analysis variables separated by commas : b1,b.., b7 for MODIS bands, scf, sd for snowdepth")
     parser.add_option("--fact", type = float, action = 'callback', callback = callvars, default = 1.,
                       help = ' set multiplicative factors for the observation errors')
     parser.add_option("--classesS", type = 'string', action="callback", callback=callvars, default = '0,20,40',
@@ -87,8 +88,11 @@ def callvars(option, opt, value, parser):
 
 def execute(args):
     options = parse_options(args)
-
-    rootdir = '/home/cluzetb/vortexpath/' + options.vapp + '/' + options.vconf + '/'
+    if 'VORTEXPATH' not in os.environ.keys():
+        raise Exception('you must export VORTEXPATH to the root of your local vortex xps.')
+    else:
+        options.vortexpath = os.environ['VORTEXPATH']
+    rootdir = options.vortexpath + '/' + options.vapp + '/' + options.vconf + '/'
     conf = read_conf(rootdir + options.xpid + '/conf/' + options.vapp + '_' + options.vconf + '.ini')
     run = CrocOrun(options, conf)
     if options.todo =='corr':
