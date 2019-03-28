@@ -11,6 +11,7 @@ the /proc/cpuinfo virtual file.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+
 import six
 
 import abc
@@ -26,7 +27,6 @@ import subprocess
 from bronx.fancies import loggers
 
 logger = loggers.getLogger(__name__)
-
 
 #: Data about a given CPU
 CpuInfo = namedtuple('CpuInfo', ('socket_id', 'core_id'))
@@ -47,7 +47,8 @@ class CpusInfo(object):
         self._cpus = None
         self._cpus_hierarchy = None
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cpus(self):
         """The raw dictionary of the system's CPUs."""
         pass
@@ -198,7 +199,7 @@ class LinuxCpusInfo(CpusInfo):
                     cpumatch = self._CPU_RE.match(line)
                     if cpumatch:
                         if cpu_n is not None:
-                            self._cpus[cpu_n] = CpuInfo(** cpu)
+                            self._cpus[cpu_n] = CpuInfo(**cpu)
                         cpu_n = int(cpumatch.group(1))
                         cpu = dict()
                         continue
@@ -215,7 +216,7 @@ class LinuxCpusInfo(CpusInfo):
                         cpu['core_id'] = int(cpucorematch.group(1))
                         continue
             if cpu_n is not None:
-                            self._cpus[cpu_n] = CpuInfo(** cpu)
+                self._cpus[cpu_n] = CpuInfo(**cpu)
         return self._cpus
 
 
@@ -228,8 +229,8 @@ def get_affinity(pid=None):
         t_out = subprocess.check_output([AFFINITY_CMD, '-p', str(pid)])
     except OSError:
         raise CpusToolUnavailableError('No {:s} command on this system.'.format(AFFINITY_CMD))
-    loc_cmd = locale.getdefaultlocale() or ('unknown', 'ascii')
-    uni_out = t_out.decode(loc_cmd[1], 'replace')  # Unicode stuff...
+    locencode = locale.getdefaultlocale()[1] or 'ascii'
+    uni_out = t_out.decode(locencode, 'replace')  # Unicode stuff...
     binproc = int(_re_get_out.match(uni_out).group('binproc'), 16)  # It's hexadecimal
     binlist = list()
     while binproc:

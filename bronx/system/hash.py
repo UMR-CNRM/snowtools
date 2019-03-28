@@ -59,7 +59,10 @@ class HashAdapter(object):
 
     def _read_hashline(self, i_fh):
         """Read a one line hashfile."""
-        return i_fh.readline().split(' ')[0]
+        rawstr = i_fh.readline()
+        if isinstance(rawstr, bytes):
+            rawstr = rawstr.decode(encoding='ascii', errors='ignore')
+        return rawstr.split(' ')[0]
 
     def file2hash(self, input_file):
         """Returns a hash string.
@@ -81,8 +84,8 @@ class HashAdapter(object):
 
         :param input_file: Path to a file or opened File-like object
         """
-        output = six.StringIO()
-        output.write(self.file2hash(input_file))
+        output = six.BytesIO()
+        output.write(self.file2hash(input_file).encode(encoding='utf-8'))
         output.seek(0)
         return output
 
@@ -92,7 +95,7 @@ class HashAdapter(object):
         :param input_file: Path to a file or opened File-like object
         :param output_file: Path to the output file
         """
-        with io.open(output_file, 'w') as o_fh:
+        with io.open(output_file, 'w', encoding='utf-8') as o_fh:
             o_fh.write(self.file2hash(input_file))
         return output_file
 
@@ -102,7 +105,7 @@ class HashAdapter(object):
         :param input_data: Data on which the hash is computed
         """
         h = self._hinstance()
-        h.update(str(input_data).encode())
+        h.update(str(input_data).encode(encoding='utf-8'))
         return h.hexdigest()
 
     def filecheck(self, input_file, reference):
@@ -115,7 +118,7 @@ class HashAdapter(object):
         # Get the reference hash string
         if isinstance(reference, six.string_types):
             if os.path.isfile(reference):
-                with io.open(reference, 'r') as i_fh:
+                with io.open(reference, 'r', encoding='utf-8') as i_fh:
                     hashref = self._read_hashline(i_fh)
             else:
                 hashref = reference

@@ -121,10 +121,12 @@ class StringDecoder(object):
 
     BUILDERS = ['dict', 'list', 'xbool']
 
+    _XBOOL_RE = re.compile(r'^\s*(?:[1-9]\d*|ok|on|true|yes|y)\s*$', flags=re.IGNORECASE)
+
     def __init__(self, substitution_cb=None, with_cache=True):
         self._subcb = substitution_cb
         # Regexes used in utility methods
-        self._builders_re = {k: re.compile(r'^' + k + '\((.*)\)$')
+        self._builders_re = {k: re.compile(r'^' + k + r'\((.*)\)$')
                              for k in self.BUILDERS}
         self._sub1_re = re.compile(r'[&\$]\{(\w+)\}')
         self._sub2_re = re.compile(r'[&\$]\{(\w+)\}$')
@@ -143,6 +145,7 @@ class StringDecoder(object):
             self._cache[key] = value
 
     def remap_int(self, value):
+        """Convert all values to integers."""
         try:
             value = int(value)
         except ValueError:
@@ -150,13 +153,26 @@ class StringDecoder(object):
         return value
 
     def remap_float(self, value):
+        """Convert all values to floats."""
         try:
             value = float(value)
         except ValueError:
             pass
         return value
 
+    def remap_xbool(self, value):
+        """Convert all values to booleans."""
+        if isinstance(value, six.string_types):
+            value = bool(self._XBOOL_RE.match(value))
+        else:
+            try:
+                value = bool(value)
+            except ValueError:
+                pass
+        return value
+
     def remap_default(self, value):
+        """Convert all values: default cas. Does nothing."""
         return value
 
     @staticmethod
@@ -231,7 +247,7 @@ class StringDecoder(object):
         """Build a boolean from the **value** string."""
         val = self._value_expand(value, remap, subs)
         if isinstance(val, six.string_types):
-            val = bool(re.match(r'^\s*(?:[1-9]\d*|ok|on|true|yes|y)\s*$', val, flags=re.IGNORECASE))
+            val = bool(self._XBOOL_RE.match(value))
         else:
             val = bool(val)
         return val
@@ -248,15 +264,15 @@ class StringDecoder(object):
             sub_m = self._sub2_re.match(value)
             if sub_m is not None:
                 return subs[sub_m.group(1)]
+            # lists...
+            separeted = self._sparser(value, itemsep=',')
+            if len(separeted) > 1:
+                return [self._value_expand(v, remap, subs) for v in separeted]
             # complex builders...
             for b, bre in six.iteritems(self._builders_re):
                 value_m = bre.match(value)
                 if value_m is not None:
                     return getattr(self, '_build_' + b)(value_m.group(1), remap, subs)
-            # lists...
-            separeted = self._sparser(value, itemsep=',')
-            if len(separeted) > 1:
-                return [self._value_expand(v, remap, subs) for v in separeted]
             # None ?
             if value == 'None':
                 return None
@@ -314,11 +330,16 @@ class StringDecoder(object):
         # Check if a type cast is needed, remove spaces, ...
         rmap = 'default'
         rmap_m = re.match(r'^(\w+)\((.*)\)$', value)
-        if (rmap_m is not None) and (rmap_m.group(1) not in self.BUILDERS):
+        if rmap_m is not None:
             (rmap, value) = rmap_m.groups()
             rmap = rmap.lower()
-        if not hasattr(self, 'remap_' + rmap):
-            raise StringDecoderRemapError(rmap)
+            if not hasattr(self, 'remap_' + rmap):
+                if rmap in self.BUILDERS:
+                    # Ok, reset everything...
+                    rmap = 'default'
+                    value = rmap_m.group(0)
+                else:
+                    raise StringDecoderRemapError(rmap)
         remap = getattr(self, 'remap_' + rmap)
         # Resolve substitutions first
         subs = self._substitute_solver(value, u_subs)

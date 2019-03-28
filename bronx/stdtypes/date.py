@@ -54,6 +54,8 @@ import locale
 import operator
 import re
 
+from bronx.syntax.decorators import secure_getattr
+
 #: No automatic export
 __all__ = []
 
@@ -151,9 +153,9 @@ def easter(year=None):
     h = (c - c // 4 - (8 * c + 13) // 25 + 19 * g + 15) % 30
     i = h - (h // 28) * (1 - (29 // (h + 1)) * ((21 - g) // 11))
     j = (year + year // 4 + i + 2 - c + c // 4) % 7
-    l = i - j
-    month = 3 + (l + 40) // 44
-    day = l + 28 - 31 * (month // 4)
+    k = i - j
+    month = 3 + (k + 40) // 44
+    day = k + 28 - 31 * (month // 4)
     return Date(year, month, day)
 
 
@@ -161,7 +163,7 @@ def easter(year=None):
 local_date_functions = dict([
     (x.__name__, x)
     for x in locals().values()
-    if inspect.isfunction(x) and x.__doc__.startswith('Return the date')
+    if inspect.isfunction(x) and x.__doc__ and x.__doc__.startswith('Return the date')
 ])
 
 if six.PY2:
@@ -171,7 +173,7 @@ if six.PY2:
 
 def mkisodate(datestr):
     """A crude attempt to reshape the iso8601 format."""
-    l = list(re.sub(' ?(UTC|GMT)$', '', datestr.strip()))
+    l = list(re.sub(r' ?(UTC|GMT)$', '', datestr.strip()))
     if len(l) > 4 and l[4] != '-':
         l[4:4] = ['-', ]
     if len(l) > 7 and l[7] != '-':
@@ -656,28 +658,28 @@ class Period(datetime.timedelta):
         These four objects are identical::
 
             >>> Period(days=2, hours=1, seconds=30)
-            Period(2, 3630)
+            Period(days=2, seconds=3630)
             >>> Period('P2DT1H30S')
-            Period(2, 3630)
+            Period(days=2, seconds=3630)
             >>> Period(176430)
-            Period(2, 3630)
+            Period(days=2, seconds=3630)
             >>> Period(2, 3630)
-            Period(2, 3630)
+            Period(days=2, seconds=3630)
 
         Addition and subtraction are implemented (if the other operand is not a
         :class:`Period` object, a conversion is attempted)::
 
             >>> Period('PT6H') + Period('PT6H')
-            Period(0, 43200)
+            Period(seconds=43200)
             >>> Period('PT6H') + 'PT6H'
-            Period(0, 43200)
+            Period(seconds=43200)
             >>> Period('PT6H') + 43200
-            Period(0, 64800)
+            Period(seconds=64800)
 
         Multiplication (by an integer) is implemented::
 
             >>> Period('PT6H') * 2
-            Period(0, 43200)
+            Period(seconds=43200)
 
         Comparison operators are all available.
         """
@@ -784,6 +786,22 @@ class Period(datetime.timedelta):
     def __str__(self):
         return self.isoformat()
 
+    def __repr__(self):
+        """Python changes the repr for timedelta between 3.5 and 3.7
+
+        This forces the 3.7 way for all versions.
+        """
+        args = []
+        if self.days:
+            args.append("days=%d" % self.days)
+        if self.seconds:
+            args.append("seconds=%d" % self.seconds)
+        if self.microseconds:
+            args.append("microseconds=%d" % self.microseconds)
+        if not args:
+            args.append('0')
+        return "%s(%s)" % (self.__class__.__name__, ', '.join(args))
+
 
 class _GetattrCalculatorMixin(object):
     """This Mixin class adds the capability to do computations using fake methods.
@@ -826,6 +844,7 @@ class _GetattrCalculatorMixin(object):
                 return factor * proxyclass(t)
             return _calculator_op_proxy
 
+    @secure_getattr
     def __getattr__(self, name):
         """Proxy to additions and subtractions (used in footprint's replacement).
 
@@ -964,9 +983,9 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
             >>> Date('2017010100') - 'PT12H'
             Date(2016, 12, 31, 12, 0)
             >>> Date('2017010100') - Date('2017010212')
-            Period(-2, 43200)
+            Period(days=-2, seconds=43200)
             >>> Date('2017010100') - '2017010212'
-            Period(-2, 43200)
+            Period(days=-2, seconds=43200)
 
         Comparison operators are all available.
 
@@ -1093,6 +1112,10 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
     def ymdhms(self):
         """YYYYMMDDHHMMSS formated string."""
         return self.strftime('%Y%m%d%H%M%S')
+
+    @property
+    def mmddhh(self):
+        return self.strftime('%m%d%H')
 
     def stamp(self):
         """Compact concatenation up to microseconds."""
@@ -1435,9 +1458,11 @@ class Time(_GetattrCalculatorMixin):
         """The number of minutes"""
         return self._minute
 
-    def __deepcopy__(self, memo):  # @UnusedVariable
+    def __deepcopy__(self, memo):
         """Clone of the current :class:`Time` object."""
-        return Time(self.hour, self.minute)
+        newinstance = Time(self.hour, self.minute)
+        memo[id(self)] = newinstance
+        return newinstance
 
     def __repr__(self):
         """Standard hour-minute representation."""

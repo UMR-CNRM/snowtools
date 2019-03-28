@@ -135,7 +135,7 @@ class TiffFile(object):
         # Decoding header - magic number
         magic = self._get_uint16(2)
         if magic != 42:
-            raise IOError('wrong magic number for TIFF file: %s' % (magic))
+            raise IOError('wrong magic number for TIFF file: %s' % magic)
 
         # Decoding header - first IFD offset
         IFD0offset = self._get_uint32(4)

@@ -31,10 +31,22 @@ class _DataStoreEntryKey(object):
         self._kind = kind
         self._extras = kwargs
         try:
-            self._hash = hash(tuple([kind, ] +
-                                    [(k, v) for k, v in six.iteritems(self._extras)]))
+            self._hash = self._compute_hash()
         except TypeError:
             raise TypeError('kind and extra arguments values must be hashable.')
+
+    def _compute_hash(self):
+        """Get the hash values (it's precomputed)."""
+        return hash(tuple([self._kind, ] +
+                          [(k, v) for k, v in sorted(self._extras.items())]))
+
+    def __getstate__(self):
+        return dict(_kind=self._kind, _extras=self._extras)
+
+    def __setstate__(self, state):
+        self._kind = state['_kind']
+        self._extras = state['_extras']
+        self._hash = self._compute_hash()
 
     def __repr__(self):
         """Return a string representation of the present object."""

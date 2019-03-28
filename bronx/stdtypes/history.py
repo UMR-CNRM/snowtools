@@ -64,7 +64,7 @@ class PrivateHistory(object):
         # Simple searches are possible
         >>> hst.grep('a tup') # doctest: +ELLIPSIS
         [(4, datetime.datetime(...), (...'Entry 4', ...'as a tuple'))]
-        >>> hst.match(r'En\w+\s+[24]') # doctest: +ELLIPSIS
+        >>> hst.match(r'En\\w+\\s+[24]') # doctest: +ELLIPSIS
         [(2, datetime.datetime(...), (...'Entry 2',)), (4, datetime.datetime(...), (...'Entry 4', ...'as a tuple'))]
 
         # Formatted output are do-able

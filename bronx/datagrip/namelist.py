@@ -19,14 +19,17 @@ Inital author: Joris Picot (2010-12-08 / CERFACS)
 """
 
 from __future__ import print_function, absolute_import, division, unicode_literals
-import six
 
 import collections
 import copy
-from decimal import Decimal
 import io
 import re
+from decimal import Decimal
 
+import six
+
+from bronx.compat.moves import collections_abc
+from bronx.syntax.decorators import secure_getattr
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 
 # Numpy is not mandatory
@@ -265,6 +268,7 @@ class LiteralParser(object):
         2.
 
     """
+
     def __init__(self,
                  re_flags     = _RE_FLAGS,
                  re_integer   = '^' + _SIGNED_INT_LITERAL_CONSTANT + '$',
@@ -487,7 +491,7 @@ class LiteralParser(object):
             raise ValueError("Type %s cannot be FORTRAN encoded" % type(value))
 
 
-class NamelistBlock(collections.MutableMapping):
+class NamelistBlock(collections_abc.MutableMapping):
     """
     This class represent a FORTRAN namelist block.
 
@@ -580,10 +584,6 @@ class NamelistBlock(collections.MutableMapping):
         st['_literal'] = None  # It's recreated on the fly when needed...
         return st
 
-    def __setstate__(self, state):
-        """For deepcopy and pickle."""
-        self.__dict__.update(state)
-
     def set_name(self, name):
         """Change the namelist block name."""
         self.__dict__['_name'] = name.upper()
@@ -656,6 +656,7 @@ class NamelistBlock(collections.MutableMapping):
         """Get ``varname`` variable's value (this is not case sensitive)."""
         return self.getvar(varname)
 
+    @secure_getattr
     def __getattr__(self, varname):
         """Get ``varname`` variable's value (this is not case sensitive)."""
         return self.getvar(varname)
@@ -849,6 +850,7 @@ class NamelistBlock(collections.MutableMapping):
                         else:
                             split_k.append(int(strindexes))
                 return tuple(split_k)
+
             if sorting == FIRST_ORDER_SORTING:
                 keylist = sorted(self._keys, key=str2tup)
             elif sorting == SECOND_ORDER_SORTING:
@@ -887,7 +889,7 @@ class NamelistBlock(collections.MutableMapping):
             self._declared_subs.update(delta._declared_subs)
 
 
-class NamelistSet(collections.MutableMapping):
+class NamelistSet(collections_abc.MutableMapping):
     """A set of namelist blocks (see :class:`NamelistBlock`).
 
     This class defines all the methods of a usual Python's dictionary. The
@@ -1205,7 +1207,7 @@ class NamelistParser(object):
 
     def _namelist_block_parse(self, source):
         """Parse a block of namelist."""
-        source = self._namelist_clean(source, extraclean=(self.endblock, ))
+        source = self._namelist_clean(source, extraclean=(self.endblock,))
         block_name = self.bname.match(source[1:]).group(0)
         source = self._namelist_clean(source[1 + len(block_name):])
         namelist = NamelistBlock(block_name)

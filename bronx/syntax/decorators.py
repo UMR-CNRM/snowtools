@@ -93,3 +93,20 @@ def timelimit(logger, nbsec):
             return results
         return timed_func
     return internal_decorator
+
+
+@nicedeco
+def secure_getattr(func):
+    """
+    This decorator is to be used on __getattr__ methods to ensure that essential
+    method such as __getstate__/__setstate__ are not looked for.
+    """
+    def secured_getattr(self, key):
+        # Avoid nasty interactions when copying/pickling
+        if key in ('__deepcopy__', '__copy__',
+                   '__getinitargs__', '__getnewargs__', '__getnewargs_ex__', '__getstate__',
+                   '__setstate__'):
+            raise AttributeError(key)
+        else:
+            return func(self, key)
+    return secured_getattr

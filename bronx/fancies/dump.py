@@ -35,10 +35,10 @@ Example::
 
     >>> print(tdumper.cleandump(somelist)) # doctest: +ELLIPSIS
           [dict(
-                  akey = ...Foo::1, 
-                  bkey = ['item1', 'item2'], 
+                  akey = ...Foo::1,
+                  bkey = ['item1', 'item2'],
                   ckey = dict(
-                      other = 1, 
+                      other = 1,
                       sutff = 2,
                   ),
               ), 'a_string', ['another', 'list', (1, 2, 3)]]
@@ -87,10 +87,10 @@ Example::
     # Interface functions can be used to obtain quickly a text dump
     >>> print(fulldump(somelist)) # doctest: +ELLIPSIS
           [dict(
-                  akey = ...Foo::1, 
-                  bkey = ['item1', 'item2'], 
+                  akey = ...Foo::1,
+                  bkey = ['item1', 'item2'],
                   ckey = dict(
-                      other = 1, 
+                      other = 1,
                       sutff = 2,
                   ),
               ), 'a_string', ['another', 'list', (1, 2, 3)]]

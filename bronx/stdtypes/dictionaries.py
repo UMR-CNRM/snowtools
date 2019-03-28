@@ -9,7 +9,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import six
 
-import collections
+from bronx.compat.moves import collections_abc
 
 
 class Foo(object):
@@ -17,6 +17,7 @@ class Foo(object):
     Protected C-struct like class... for gathering anything.
     Internal dict methods could be called through i_*methodname* protection.
     """
+
     def __init__(self, **kw):
         self.__dict__.update(kw)
 
@@ -33,7 +34,7 @@ class Foo(object):
         return str(self.__dict__)
 
 
-class ReadOnlyDict(collections.Mapping):
+class ReadOnlyDict(collections_abc.Mapping):
     """A type of read-only dictionary.
 
     Example::
@@ -178,4 +179,5 @@ class UpperCaseDict(SpecialDict):
 
 if __name__ == '__main__':
     import doctest
+
     doctest.testmod()

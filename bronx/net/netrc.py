@@ -166,7 +166,7 @@ class netrc:
                                 ("~/.netrc file owner (%s) does not match"
                                  " current user (%s)") % (fowner, user),
                                 file, lexer.lineno)
-                        if (prop.st_mode & (stat.S_IRWXG | stat.S_IRWXO)):
+                        if prop.st_mode & (stat.S_IRWXG | stat.S_IRWXO):
                             raise NetrcParseError(
                                 "~/.netrc access too permissive: access"
                                 " permissions must restrict access to only"

@@ -8,7 +8,7 @@ Various tools designed for interactive scripts.
 from __future__ import print_function, absolute_import, unicode_literals, division
 import six
 
-import collections
+from bronx.compat.moves import collections_abc
 import sys
 
 #: No automatic export
@@ -123,9 +123,9 @@ def print_tablelike(fmt, *args, **kwargs):
     datasize = None
     newargs = list()
     for i, arg in enumerate(args):
-        assert issubclass(type(arg), collections.Iterable), \
+        assert issubclass(type(arg), collections_abc.Iterable), \
             "Each of the positional arguments must be iterable."
-        assert issubclass(type(arg), collections.Sized), \
+        assert issubclass(type(arg), collections_abc.Sized), \
             "Each of the positional arguments must have a query-able size."
         if datasize is None:
             datasize = len(arg)

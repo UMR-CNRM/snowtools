@@ -15,7 +15,7 @@ from bronx.fancies import loggers
 logger = loggers.getLogger(__name__)
 
 
-class SignalInterruptError(Exception):
+class SignalInterruptError(BaseException):
     """Exception raised when a system signal is caught."""
     pass
 
@@ -104,7 +104,9 @@ class SignalInterruptHandler(object):
         if not self._active:
             def handler(signum, frame):
                 self.deactivate()
-                self._logstuff(logging.ERROR, 'Signal %d was caught.', signum)
+                self._logstuff(logging.ERROR,
+                    'Signal %d was caught. All original signal handler are restored.',
+                    signum)
                 if signum == signal.SIGINT:
                     raise KeyboardInterrupt()
                 else:
@@ -118,6 +120,6 @@ class SignalInterruptHandler(object):
         """Deactivate the signal handlers and restore the previous ones."""
         if self._active:
             for sig in self.signals:
-                signal.signal(sig, self._original_handlers[sig])
+                signal.signal(sig, self._original_handlers[sig] or signal.SIG_DFL)
                 self._logstuff(logging.INFO, 'Original signal handler restored for signal %d', sig)
         self._active = False
