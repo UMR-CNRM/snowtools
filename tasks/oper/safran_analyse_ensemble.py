@@ -382,29 +382,31 @@ class Safran(Task, S2MTaskMixIn):
             print
 
             # II.2- Si le réseau de production de 6h n'est pas là, on utilise le réseau de 18h de la veille
-            self.sh.title('Toolbox input tb18_b')
-            tb18_b = toolbox.input(
-                alternate      = 'Ebauche',
-                # local          = 'mb[member]/P[date:addcumul_yymdh]',
-                local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
-                term           = '[cumul]',
-                experiment     = self.conf.xpid,
-                block          = self.conf.guess_block,
-                geometry        = self.conf.vconf,
-                cutoff         = 'production',
-                date           = ['{0:s}/+PT{1:s}H/-PT12H'.format(datebegin.ymd6h, str(24 * i)) for i in range(ndays)],
-                cumul          = footprints.util.rangex(self.conf.ana_terms, shift=12),
-                nativefmt      = 'ascii',
-                kind           = 'guess',
-                model          = 'safran',
-                source_app     = self.conf.source_app,
-                source_conf    = self.conf.eps_conf,
-                namespace      = self.conf.namespace,
-                member         = footprints.util.rangex(self.conf.pearp_members),
-                fatal          = False,
-            ),
-            print t.prompt, 'tb18_b =', tb18_b
-            print
+            # PROBLEME : le nom dans 'local' change donc on passe dans l'alternate même si la ressource voulue 
+            # est déjà présente
+#             self.sh.title('Toolbox input tb18_b')
+#             tb18_b = toolbox.input(
+#                 alternate      = 'Ebauche',
+#                 # local          = 'mb[member]/P[date:addcumul_yymdh]',
+#                 local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
+#                 term           = '[cumul]',
+#                 experiment     = self.conf.xpid,
+#                 block          = self.conf.guess_block,
+#                 geometry        = self.conf.vconf,
+#                 cutoff         = 'production',
+#                 date           = ['{0:s}/+PT{1:s}H/-PT12H'.format(datebegin.ymd6h, str(24 * i)) for i in range(ndays)],
+#                 cumul          = footprints.util.rangex(self.conf.ana_terms, shift=12),
+#                 nativefmt      = 'ascii',
+#                 kind           = 'guess',
+#                 model          = 'safran',
+#                 source_app     = self.conf.source_app,
+#                 source_conf    = self.conf.eps_conf,
+#                 namespace      = self.conf.namespace,
+#                 member         = footprints.util.rangex(self.conf.pearp_members),
+#                 fatal          = False,
+#             ),
+#             print t.prompt, 'tb18_b =', tb18_b
+#             print
 
             self.sh.title('Toolbox executable tb17 = tbx1')
             tb17 = tbx1 = toolbox.executable(
