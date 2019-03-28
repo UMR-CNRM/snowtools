@@ -131,18 +131,23 @@ class _Map_massifs(Mplfigure):
         self.p = PatchCollection(mypatches)
         plt.gca().add_collection(self.p)
 
-    def addpoints(self, labels, lon, lat):
+    def addpoints(self, lon, lat, labels=None, color='black', marker=None):
         x, y = self.map(lon, lat)
         # self.map.plot(x, y, marker='o', color="red")
-        for label, xpt, ypt in zip(labels, x, y):
-            self.plot(xpt, ypt, label)
-
-    def plot(self, xpt, ypt, label=None):
-        if label is not None:
-            self.map.plot(xpt, ypt)
-            plt.text(xpt, ypt, label, color="red")
+        if labels is not None:
+            for label, xpt, ypt in zip(labels, x, y):
+                self.plot(xpt, ypt, label=label, color=color, marker=marker)
         else:
-            self.map.plot(xpt, ypt, marker='.', color="red")
+            for xpt, ypt in zip(x, y):
+                self.plot(x, y, marker=marker, color=color)
+
+    def plot(self, xpt, ypt, label=None, color=None, marker=None):
+
+        if label is not None:
+            self.map.plot(xpt, ypt, marker=marker, color=color)
+            plt.text(xpt, ypt, label, color=color, horizontalalignment='center', verticalalignment='baseline')
+        else:
+            self.map.plot(xpt, ypt, marker=marker, color=color, linestyle = 'None')
 
     def fillmassif(self, num_massif, value=None):
         for i, massif in enumerate(self.shapes):
@@ -508,17 +513,28 @@ class Map_massif(_Map_massifs):
     def __init__(self, num_massif, *args, **kw):
         if num_massif <= 24:
             self.area = 'alpes'
+            self.width = 7.5
+            self.height = 9
+            self.legendpos = [0.91, 0.15, 0.03, 0.6]
         elif num_massif >= 64:
             self.area = 'pyrenees'
+            self.width = 10
+            self.height = 6
+            self.legendpos = [0.91, 0.15, 0.03, 0.6]
         else:
             self.area = 'corse'
-        self.width = 13
-        self.height = 13
+            self.width = 6.5
+            self.height = 7.5
+            self.legendpos = [0.89, 0.15, 0.03, 0.6]
+
         self.getshapes()
         self.get_map_dimensions(num_massif)
-        self.legendpos = [0.81, 0.15, 0.03, 0.6]
 
         self.fig = plt.figure(figsize=(self.width, self.height))
+
+        self.fig.subplots_adjust(bottom=0.005, left=0.005, top=0.95, right=0.9)
+
+
         self.map = self.getmap(self.latmin, self.latmax, self.lonmin, self.lonmax)
         self.map.drawcoastlines(linewidth=1)
 #        self.map.drawcountries()
@@ -531,8 +547,14 @@ class Map_massif(_Map_massifs):
             num = self.records(i)[1]
             if num == num_massif:
                 barycentre = self.dicLonLatMassif[num]
-        self.lonmin = barycentre[0] - 0.65
-        self.lonmax = barycentre[0] + 0.65
-        self.latmin = barycentre[1] - 0.65
-        self.latmax = barycentre[1] + 0.65
+        if self.area in ['alpes', 'corse']:
+            dlat = 0.55
+            dlon = 0.65
+        elif self.area == 'pyrenees':
+            dlat = 0.5
+            dlon = 1.3
 
+        self.lonmin = barycentre[0] - dlon
+        self.lonmax = barycentre[0] + dlon
+        self.latmin = barycentre[1] - dlat
+        self.latmax = barycentre[1] + dlat
