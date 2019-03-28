@@ -190,8 +190,8 @@
       <altMax> 3000 </altMax>
     </Massif>
     <Massif>
-      <name> Alpes-Azur </name>
-      <nameRed> alpes-a </nameRed>
+      <name> Haut-Var-Haut-Verdon </name>
+      <nameRed> Ht_Var-Ver </nameRed>
       <number> 22 </number>
       <latCenter> 44.12458 </latCenter>
       <lonCenter> 6.79647 </lonCenter>
@@ -208,7 +208,7 @@
       <altMax> 3000 </altMax>
     </Massif>
     <Massif>
-      <name> diablerets </name>
+      <name> Diablerets </name>
       <nameRed> diabler </nameRed>
       <number> 30 </number>
       <latCenter> 46.39 </latCenter>
