@@ -31,7 +31,7 @@ class CrocOrun(object):
         self.options.dates = [self.options.dates]
         self.conf = conf
         self.xpdir =  self.options.vortexpath + '/s2m/' + self.options.vconf + '/' + self.options.xpid + '/'
-        self.xpidobsdir = self.options.vortexpath + '/s2m/' + self.options.vconf + '/obs/' + self.options.xpidobs + '/'
+        self.xpidobsdir = self.options.vortexpath + '/s2m/' + self.options.vconf + '/obs/' + self.options.sensor + '/'
         self.crocodir = self.xpdir + 'crocO/'
         if type(self.conf.assimdates) is unicode:
             self.conf.assimdates = [str(self.conf.assimdates)]
@@ -159,7 +159,7 @@ class CrocOrun(object):
             # synthetic obs is generated from mbsynth at time date
             self.obs = Synthetic(self.xpdir, date, self.options)
         else:
-            # real obs are obtained in xpidobs
+            # real obs are obtained in xpidobsdir
             self.obs = Real(self.xpidobsdir, date, self.options)
         self.obs.prepare()
         
@@ -173,6 +173,6 @@ class CrocOrun(object):
             
             
     def post_proc(self, options):
-        postp = PostCroco(self.xpdir, options)
+        postp = PostCroco(self.xpdir, self.xpidobsdir, options)
         postp.run()
 

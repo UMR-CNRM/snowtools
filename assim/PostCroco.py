@@ -6,7 +6,7 @@ Created on 11 févr. 2019
 @author: cluzetb
 '''
 import os
-from SemiDistributed import PrepBg, PrepAbs, Synthetic, Obs
+from SemiDistributed import PrepBg, PrepAbs, Synthetic, Real, Obs
 from plotcrocO import Pie
 from Ensemble import PrepEnsBg, PrepEnsAn
 from Operators import PrepEnsOperator
@@ -141,10 +141,11 @@ class PostCroco(object):
                     
                     # Read the obs
                     if (self.options.synth >= 0):
-                        OBS = Synthetic(self.xpdir, dd, self.options)
+                        OBS = Synthetic(self.xpdirobs, dd, self.options)
                         OBS.load()
-                    else:
-                        OBS = Obs(self.xpdir, dd, self.options)
+                    else:                        
+                        OBS = Real(self.xpidobsdir, dd, self.options)
+                        OBS.load()
                         
                     stepZ = 100
                     minZ = np.floor(np.min(OBS.pgd.elev)/stepZ)*stepZ

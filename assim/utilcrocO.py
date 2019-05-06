@@ -68,14 +68,14 @@ def dictvarsPrep():
             'b4': 'SPM_VEG4', 'b5': 'SPM_VEG5', 'b6': 'SPM_VEG6',
             'b7': 'SPM_VEG7',
             'r53': 'r53', 'r52': 'r52', 'r51': 'r51', 'r54': 'r54', 'r21': 'r21', 'r23': 'r23', 'r24': 'r24',
-            'sd':'DEP_TOT'}
+            'DEP':'DEP_TOT'}
     
 def dictvarsWrite():
     return {'b1': 'B1', 'b2': 'B2', 'b3': 'B3',
             'b4': 'B4', 'b5': 'B5', 'b6': 'B6',
             'b7': 'B7',
             'r53': 'r53', 'r52': 'r52', 'r51': 'r51', 'r54': 'r54', 'r21': 'r21', 'r23': 'r23', 'r24': 'r24',
-            'sd':'DEP_TOT'}
+            'DEP':'DEP'}
 
 
 def niceName(pgd, cl, tolist = False):
@@ -129,7 +129,7 @@ def setlistvars_obs(arg):
     """
     gg = dictvarsWrite()
     if arg == 'all':
-        listvar = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'DEP_TOT' ]
+        listvar = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'DEP']
     else:
         listvar = []
         for var in arg:
@@ -140,15 +140,15 @@ def setlistvars_var(arg):
     """
     BC 6/02/19
     convert a crocO argument options.vars into a list of VAR variables names in soda format
-    TODO : same stuff for SD/ SCF etc.
+    TODO : same stuff for DEP/ SCF etc.
     """
     if arg == 'all':
-        listvar = ['PB1', 'PB2', 'PB3', 'PB4', 'PB5', 'PB6', 'PB7', 'DEP_TOT']
+        listvar = ['PB1', 'PB2', 'PB3', 'PB4', 'PB5', 'PB6', 'PB7', 'DEP']
     else:
         listvar = []
         for var in arg:
-            if (var=='sd'):
-                listvar.append('DEP_TOT')
+            if (var=='DEP'):
+                listvar.append('DEP')
             else:
                 listvar.append('P' + var.upper())  # 'b*' -> 'PB*'
     return listvar
@@ -188,7 +188,7 @@ def set_errors(argsoda):
     set soda canonical errors for the prescribed vars (Wright et al., Charrois et al.)
     '''
     
-    dicterrors = {'B1': 0.00071, 'B2': 0.00046, 'B3': 0.00056, 'B4': 0.00056, 'B5': 0.002, 'B6': 0.0015, 'B7': 0.00078, 'SCF': 0.2, 'DEP_TOT': 0.2}
+    dicterrors = {'B1': 0.00071, 'B2': 0.00046, 'B3': 0.00056,'B4': 0.00056, 'B5': 0.002, 'B6': 0.0015, 'B7': 0.00078, 'SCF': 0.2, 'DEP': 0.1}
     ret = []
     for el in argsoda:
         ret.append(dicterrors[el])
