@@ -132,7 +132,7 @@ class Synthetic(Obs):
     """
     Class describing synthetic obs
     """  
-    def __init__(self, xpdir, date, options, nmembers = 35):
+    def __init__(self, xpiddir, date, options, nmembers = 35):
         '''
         Constructor
         '''
@@ -140,12 +140,12 @@ class Synthetic(Obs):
         
         self.date = date
         if options.synth > 0:
-            self.path = xpdir + 'mb{0:04d}'.format(options.synth) + '/bg/PREP_' + date + '.nc'
+            self.path = xpiddir + 'mb{0:04d}'.format(options.synth) + '/bg/PREP_' + date + '.nc'
             self.ptinom = 'synth' + 'mb{0:04d}'.format(options.synth)
         else:
             # randomly draw a member
             draw = random.choice(range(1, options.nmembers+1))
-            self.path = xpdir + 'mb{0:04d}'.format(draw) + '/bg/PREP_' + date + '.nc'
+            self.path = xpiddir + 'mb{0:04d}'.format(draw) + '/bg/PREP_' + date + '.nc'
             self.ptinom = 'synth' + 'mb{0:04d}'.format(draw)
         #if 'DEP' not in self.listvar: # I think I managed to make it work without these two lines...to check.
         #    self.listvar.append('DEP')  # add total DEP
