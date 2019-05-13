@@ -438,11 +438,14 @@ class LiteralParser(object):
             real = '0.'
         else:
             real = fmt.format(value).replace('E', 'D')
-        if '.' not in real:
-            real = re.sub('D', '.0D', real)
             if '.' not in real:
-                real += '.'
-        return real.rstrip('0')
+                real = re.sub('D', '.0D', real)
+                if '.' not in real:
+                    real += '.'
+        if 'D' in real:
+            return real
+        else:
+            return real.rstrip('0')
 
     def encode_complex(self, value, fmt='{0:.15G}'):
         """Returns the string form of the complex ``value``."""
