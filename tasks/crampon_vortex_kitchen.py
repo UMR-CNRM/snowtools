@@ -191,7 +191,7 @@ class crampon_vortex_kitchen(object):
 
     def mkjob_crampon(self, options):
         jobname = 'crampon'
-        reftask = 'crampon_multinode'
+        reftask = 'crampon_driver'
         nnodes = options.nnodes
         return ["../vortex/bin/mkjob.py -j name=" + jobname + " task=" + reftask + " profile=rd-beaufix-mt jobassistant=cen datebegin=" +
                 options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + options.datefin.strftime("%Y%m%d%H%M") + " template=" + self.jobtemplate +

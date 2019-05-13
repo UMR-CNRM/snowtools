@@ -105,7 +105,7 @@ def check_and_convert_options(options, vortex=False):
 
 
 def parse_options(arguments):
-    
+
     parser = OptionParser(usage)
 
     parser.add_option("-g", action="store_true", dest="ground", default=False)
@@ -226,7 +226,7 @@ def parse_options(arguments):
                       action="store", type="int", dest="nforcing", default=1,
                       help="Number of members of forcing files")
     parser.add_option("--cramponmonthly",
-                      action="store_true", dest="sodamonthly", default=False,
+                      action="store_true", dest="cramponmonthly", default=False,
                       help="activation of CRAMPON with monthly forcing files (not possible yet)." )
 
     parser.add_option("--openloop",
@@ -317,7 +317,7 @@ def execute_through_vortex(args):
             options.dirwork = "."
 
     # Cook vortex task
-    if not options.soda:
+    if not options.crampon:
         run = vortex_kitchen(options)
         run.run(options)
     elif options.escroc:
