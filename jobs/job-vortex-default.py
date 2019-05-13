@@ -83,11 +83,15 @@ try:
 except Exception as trouble:
     ja.fulltraceback(trouble)
     ja.rescue()
-    #MTOOL include files=epilog.step
-    #MTOOL include files=submit.last
+    if ja.subjob_tag is None:  # BC include changes from lf_multi_jobs job_bullx2-mtool-default.tpl
+        #MTOOL include files=epilog.step
+        #MTOOL include files=submit.last
+        pass
 
 finally:
-    #MTOOL include files=epilog.clean.step
+    if ja.subjob_tag is None:
+        #MTOOL include files=epilog.clean.step
+        pass
     ja.finalise()
     ja.close()
     print 'Bye bye research...'

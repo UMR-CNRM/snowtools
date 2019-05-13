@@ -34,8 +34,7 @@ from utils.resources import absolute_path, check_surfex_exe
 from utils.infomassifs import infomassifs
 import tasks.runs
 from tasks.vortex_kitchen import vortex_kitchen
-from tasks.vortex_kitchen_soda import vortex_kitchen_soda
-
+from tasks.crampon_vortex_kitchen import crampon_vortex_kitchen
 usage = "usage: s2m -b begin_date -e end_date -f forcing [-m forcingmodel] [-o path_output] [-w workdir] [-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] [-c nb_classes_aspects] [-L Lower-altitude] [-U Upper-altitude] [-s surfex_exe_directory]"
 
 
@@ -220,15 +219,15 @@ def parse_options(arguments):
                       action="store", type="int", dest="nnodes", default=1,
                       help="Number of nodes")
 
-    parser.add_option("--soda",
-                      action="store", type='string', dest="soda", default=None,
-                      help="ESCROC-SODA assimilation sequence activation and ABSOLUTE path to conf (assimdates (file)")
+    parser.add_option("--crampon",
+                      action="store", type='string', dest="crampon", default=None,
+                      help="CRAMPON assimilation sequence activation and ABSOLUTE path to conf (assimdates (file)")
     parser.add_option("--nforcing",
                       action="store", type="int", dest="nforcing", default=1,
                       help="Number of members of forcing files")
-    parser.add_option("--sodamonthly",
+    parser.add_option("--cramponmonthly",
                       action="store_true", dest="sodamonthly", default=False,
-                      help="activation of SODA with monthly forcing files" )
+                      help="activation of CRAMPON with monthly forcing files (not possible yet)." )
 
     parser.add_option("--openloop",
                       action="store_true", dest="openloop", default=False,
@@ -322,7 +321,7 @@ def execute_through_vortex(args):
         run = vortex_kitchen(options)
         run.run(options)
     elif options.escroc:
-        run = vortex_kitchen_soda(options)
+        run = crampon_vortex_kitchen(options)
         run.run(options)
     else:
         print ("soda should run with escroc option")
