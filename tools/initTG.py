@@ -87,6 +87,7 @@ def generate_clim(list_forcing):
 
     var[:] = tclim
 
+    DataMeteo.close()
     initTGfile.close()
 
 
