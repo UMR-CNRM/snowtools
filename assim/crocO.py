@@ -29,9 +29,6 @@ def parse_options(arguments):
     parser.add_option("-d",
                       action = 'store', type = 'string', dest='dates', default = None,
                       help = "specify assimilation dates to try")
-    parser.add_option("--xpidobs",
-                      action="store", type="string", dest="xpidobs", default="obs",
-                      help="xpidobs of the soda-vortex task")
     # parser.add_option("--evid",
     #                   action="store", type="string", dest="evid", default="",
     #                   help="xpev (useful for pickle save")
@@ -54,7 +51,7 @@ def parse_options(arguments):
                       action = 'store_true', dest = 'distr', default = False,
                       help = 'specify if your simulation is distributed or not')
     parser.add_option("--vars", type = 'string', action="callback", callback=callvars, default = 'all',
-                      help="specify analysis variables separated by commas : b1,b.., b7 for MODIS bands, scf, sd for snowdepth")
+                      help="specify analysis variables separated by commas : b1,b.., b7 for MODIS bands, scf, DEP for snowdepth")
     parser.add_option("--fact", type = float, action = 'callback', callback = callvars, default = 1.,
                       help = ' set multiplicative factors for the observation errors')
     parser.add_option("--classesS", type = 'string', action="callback", callback=callvars, default = '0,20,40',
@@ -75,6 +72,9 @@ def parse_options(arguments):
     parser.add_option('--synth',
                       action = 'store', dest = 'synth', type = int, default = None,
                       help ='choose member as a synthetic observation. TODO : 0 for random.')
+    parser.add_option('--sensor',
+                      action = 'store', dest = 'sensor', type = 'string', default = None,
+                      help ='provide sensor name for OBS reading (MODIS, pleiades...).')
     (options, args) = parser.parse_args(arguments)
 
     del args

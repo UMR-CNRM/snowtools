@@ -30,9 +30,9 @@ class CrocOrun(object):
         self.options = options
         self.options.dates = [self.options.dates]
         self.conf = conf
-        self.xpdir =  self.options.vortexpath + '/s2m/' + self.options.vconf + '/' + self.options.xpid + '/'
-        self.xpidobsdir = self.options.vortexpath + '/s2m/' + self.options.vconf + '/obs/' + self.options.xpidobs + '/'
-        self.crocodir = self.xpdir + 'crocO/'
+        self.xpiddir =  self.options.vortexpath + '/s2m/' + self.options.vconf + '/' + self.options.xpid + '/'
+        self.xpidobsdir = self.options.vortexpath + '/s2m/' + self.options.vconf + '/obs/' + self.options.sensor + '/'
+        self.crocodir = self.xpiddir + 'crocO/'
         if type(self.conf.assimdates) is unicode:
             self.conf.assimdates = [str(self.conf.assimdates)]
         else:
@@ -75,7 +75,7 @@ class CrocOrun(object):
         dateAssSoda = convertdate(path).strftime('%y%m%dH%H')
         for imb, mb in enumerate(self.mblist):
             if not os.path.exists('PREP_' + path + '_PF_ENS' + str(imb + 1) + '.nc'):
-                os.symlink(self.xpdir + mb + '/bg/PREP_' + path + '.nc', 'PREP_' + dateAssSoda + '_PF_ENS' + str(imb + 1) + '.nc')
+                os.symlink(self.xpiddir + mb + '/bg/PREP_' + path + '.nc', 'PREP_' + dateAssSoda + '_PF_ENS' + str(imb + 1) + '.nc')
         if not os.path.exists('PREP.nc'):
             os.symlink('PREP_' + dateAssSoda + '_PF_ENS1.nc', 'PREP.nc')
         if not os.path.exists('PGD.nc'):
@@ -83,7 +83,7 @@ class CrocOrun(object):
 
         # Prepare and check the namelist (LWRITE_TOPO must be false for SODA)
         if not os.path.exists('OPTIONS.nam'):
-            shutil.copyfile(self.xpdir + 'conf/namelist.surfex.foo', 'OPTIONS_base.nam')
+            shutil.copyfile(self.xpiddir + 'conf/namelist.surfex.foo', 'OPTIONS_base.nam')
         self.check_namelist_soda(self.options)
 
         # prepare ecoclimap binaries
@@ -157,9 +157,9 @@ class CrocOrun(object):
         """
         if self.options.synth is not None:
             # synthetic obs is generated from mbsynth at time date
-            self.obs = Synthetic(self.xpdir, date, self.options)
+            self.obs = Synthetic(self.xpiddir, date, self.options)
         else:
-            # real obs are obtained in xpidobs
+            # real obs are obtained in xpidobsdir
             self.obs = Real(self.xpidobsdir, date, self.options)
         self.obs.prepare()
         
@@ -173,6 +173,6 @@ class CrocOrun(object):
             
             
     def post_proc(self, options):
-        postp = PostCroco(self.xpdir, options)
+        postp = PostCroco(self.xpiddir, self.xpidobsdir, options)
         postp.run()
 
