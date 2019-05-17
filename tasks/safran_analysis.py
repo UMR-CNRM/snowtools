@@ -30,6 +30,46 @@ class Safran(Task, S2MTaskMixIn):
 
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
 
+    def input_obs(self, t, datebegin, rundir, season):
+
+        # TODO : Gérer le fait de ne pas prendre le fichier 2 de 6h le 01/08
+        self.sh.title('Toolbox input tb02 - ' + datebegin.ymdh)
+        tb02 = toolbox.input(
+            role           = 'Observations',
+            part           = 'all',
+            geometry       = self.conf.vconf,
+            kind           = 'observations',
+            nativefmt      = 'ascii',
+            unknownflow    = True,
+            local          = '{0:s}/rs{1:s}.tar'.format(rundir, season),
+            remote         = '/home/vernaym/s2m/[geometry]/obs/rs{0:s}.tar'.format(season),
+            hostname       = 'hendrix.meteo.fr',
+            tube           = 'ftp',
+            model          = self.conf.model,
+            now            = True,
+        )
+        print t.prompt, 'tb02 =', tb02
+        print
+
+        self.sh.title('Toolbox input tb03 - ' + datebegin.ymdh)
+        tb03 = toolbox.input(
+            role           = 'Observations',
+            part           = 'all',
+            geometry       = self.conf.vconf,
+            kind           = 'observations',
+            nativefmt      = 'ascii',
+            unknownflow    = True,
+            local          = '{0:s}/n{1:s}.tar'.format(rundir, season),
+            remote         = '/home/vernaym/s2m/[geometry]/obs/n{0:s}.tar'.format(season),
+            hostname       = 'hendrix.meteo.fr',
+            tube           = 'ftp',
+            model          = self.conf.model,
+            now            = True,
+            fatal          = False,
+        )
+        print t.prompt, 'tb03 =', tb03
+        print
+
     def process(self):
         """Safran analysis"""
 
@@ -41,17 +81,18 @@ class Safran(Task, S2MTaskMixIn):
         if len(list_dates) > 40:
             raise ExecutionError("Too many years")
 
-        if 'early-fetch' in self.steps:
+        if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
             if 'guess_path' in self.conf:
-                m = 0
                 for rundate in list_dates:
-                    m = m + 1
                     datebegin = max(rundate, self.conf.datebegin)
                     dateend = min(datebegin.replace(year=datebegin.year + 1), self.conf.dateend)
                     season = datebegin.nivologyseason
+                    y1 = datebegin.year
+                    y2 = dateend.year
+                    rundir = '{0:d}{1:d}'.format(y1, y2)
 
-                    if ':' in self.conf.guess_path:
+                    if 'hendrix:' in self.conf.guess_path or 'hendrix.meteo.fr:' in self.conf.guess_path:
                         hostname = 'hendrix.meteo.fr'
                         if '@' in self.conf.guess_path.split(':')[0]:
                             username = self.conf.guess_path.split(':')[0].split('@')[0]
@@ -59,12 +100,12 @@ class Safran(Task, S2MTaskMixIn):
                             username = None
                         y1 = datebegin.year
                         y2 = dateend.year
-                        actual_path = self.conf.guess_path.rstrip('hendrix:')
+                        actual_path = self.conf.guess_path.split(':')[1].rstrip('/')
 
                         self.sh.title('Toolbox input tb01')
                         tb01 = toolbox.input(
                             role           = 'Ebauche',
-                            local          = '{0:d}{1:d}.tar'.format(y1, y2),
+                            local          = '{0:s}/{0:s}.tar'.format(rundir),
                             remote         = '{0:s}/{1:s}.tar'.format(actual_path, season),
                             hostname       = hostname,
                             username       = username,
@@ -85,7 +126,7 @@ class Safran(Task, S2MTaskMixIn):
                         tb01 = toolbox.input(
                             role           = 'Ebauche',
                             remote         = '{0:s}/P[date:yymdh]'.format(self.conf.guess_path),
-                            local          = 'mb{0:03d}/P[date:yymdh]'.format(m),
+                            local          = '{0:d}/P[date:yymdh]'.format(rundir),
                             kind           = 'guess',
                             model          = 'safran',
                             cutoff         = 'assimilation',
@@ -102,7 +143,7 @@ class Safran(Task, S2MTaskMixIn):
                         tb01 = toolbox.input(
                             alternate      = 'Ebauche',
                             remote         = '{0:s}/{1:s}/P[date:yymdh]'.format(self.conf.guess_path, season),
-                            local          = 'mb{0:03d}/P[date:yymdh]'.format(m),
+                            local          = '{0:d}/P[date:yymdh]'.format(rundir),
                             kind           = 'guess',
                             model          = 'safran',
                             cutoff         = 'assimilation',
@@ -118,7 +159,7 @@ class Safran(Task, S2MTaskMixIn):
                         tb01 = toolbox.input(
                             alternate      = 'Ebauche',
                             remote         = '{0:s}/E[date:yymdh]'.format(self.conf.guess_path),
-                            local          = 'mb{0:03d}/P[date:yymdh]'.format(m),
+                            local          = '{0:d}/P[date:yymdh]'.format(rundir),
                             kind           = 'guess',
                             model          = 'safran',
                             cutoff         = 'assimilation',
@@ -134,7 +175,7 @@ class Safran(Task, S2MTaskMixIn):
                         tb01 = toolbox.input(
                             alternate      = 'Ebauche',
                             remote         = '{0:s}/{1:s}/E[date:yymdh]'.format(self.conf.guess_path, season),
-                            local          = 'mb{0:03d}/P[date:yymdh]'.format(m),
+                            local          = '{0:d}/P[date:yymdh]'.format(rundir),
                             kind           = 'guess',
                             model          = 'safran',
                             cutoff         = 'assimilation',
@@ -146,16 +187,19 @@ class Safran(Task, S2MTaskMixIn):
                         print t.prompt, 'tb01_d =', tb01
                         print
 
+                    self.input_obs(t, datebegin, rundir, season)
+
             else:
 
-                m = 0
                 for rundate in list_dates:
-                    m = m + 1
                     datebegin = rundate
                     dateend = rundate.replace(year = rundate.year + 1)
 #                    dateend = rundate + Period(years=1)
                     season = datebegin.nivologyseason
                     next_season = dateend.nivologyseason
+                    y1 = datebegin.year
+                    y2 = dateend.year
+                    rundir = '{0:d}{1:d}'.format(y1, y2)
 
                     if datebegin < Date(year=2002, month=8, day=1):
 
@@ -210,7 +254,7 @@ class Safran(Task, S2MTaskMixIn):
                             self.sh.title('Toolbox input tb01 - ' + dateend.ymdh)
                             tb01_c = toolbox.input(
                                 role           = 'Ebauche',
-                                local          = 'mb{0:03d}/p{1:s}.tar'.format(m, next_season),
+                                local          = '{0:d}/p{2:s}.tar'.format(rundir, next_season),
                                 remote         = '/home/vernaym/s2m/[geometry]/{0:s}/p{1:s}.tar'.format(self.conf.guess_block, next_season),
                                 hostname       = 'hendrix.meteo.fr',
                                 unknownflow    = True,
@@ -261,7 +305,7 @@ class Safran(Task, S2MTaskMixIn):
                         self.sh.title('Toolbox input tb01 - ' + datebegin.ymdh)
                         tb01 = toolbox.input(
                             role           = 'Ebauche',
-                            local          = 'mb{0:03d}/p{1:s}.tar'.format(m, season),
+                            local          = '{0:d}/p{1:s}.tar'.format(rundir, season),
                             remote         = '/home/vernaym/s2m/[geometry]/{0:s}/p{1:s}.tar'.format(self.conf.guess_block, season),
                             hostname       = 'hendrix.meteo.fr',
                             unknownflow    = True,
@@ -278,45 +322,7 @@ class Safran(Task, S2MTaskMixIn):
                         print t.prompt, 'tb01 =', tb01
                         print
 
-                # TODO : Gérer le fait de ne pas prendre le fichier 2 de 6h le 01/08
-                self.sh.title('Toolbox input tb02 - ' + datebegin.ymdh)
-                tb02 = toolbox.input(
-                    role           = 'Observations',
-                    part           = 'all',
-                    geometry       = self.conf.vconf,
-                    kind           = 'observations',
-                    nativefmt      = 'ascii',
-                    unknownflow    = True,
-                    local          = 'mb{0:03d}/rs{1:s}.tar'.format(m, season),
-                    remote         = '/home/vernaym/s2m/[geometry]/obs/rs{0:s}.tar'.format(season),
-                    hostname       = 'hendrix.meteo.fr',
-                    tube           = 'ftp',
-                    model          = self.conf.model,
-                    now            = True,
-                )
-                print t.prompt, 'tb02 =', tb02
-                print
-
-                self.sh.title('Toolbox input tb03 - ' + datebegin.ymdh)
-                tb03 = toolbox.input(
-                    role           = 'Observations',
-                    part           = 'all',
-                    geometry       = self.conf.vconf,
-                    kind           = 'observations',
-                    nativefmt      = 'ascii',
-                    unknownflow    = True,
-                    local          = 'mb{0:03d}/n{1:s}.tar'.format(m, season),
-                    remote         = '/home/vernaym/s2m/[geometry]/obs/n{0:s}.tar'.format(season),
-                    hostname       = 'hendrix.meteo.fr',
-                    tube           = 'ftp',
-                    model          = self.conf.model,
-                    now            = True,
-                    fatal          = False,
-                )
-                print t.prompt, 'tb03 =', tb03
-                print
-
-        if 'fetch' in self.steps:
+                self.input_obs(t, datebegin, rundir, season)
 
             self.sh.title('Toolbox input tb07')
             tb07 = toolbox.input(
@@ -560,16 +566,16 @@ class Safran(Task, S2MTaskMixIn):
             print t.prompt, 'tb16 =', tb16
             print
 
-            self.sh.title('Toolbox executable tb17 = tbx0')
-            tb17 = tbx0 = toolbox.executable(
-                role           = 'Binary',
-                genv           = self.conf.cycle,
-                kind           = 'intercep',
-                local          = 'intercep_era40',
-                model          = self.conf.model,
-            )
-            print t.prompt, 'tb17 =', tb17
-            print
+#             self.sh.title('Toolbox executable tb17 = tbx0')
+#             tb17 = tbx0 = toolbox.executable(
+#                 role           = 'Binary',
+#                 genv           = self.conf.cycle,
+#                 kind           = 'intercep',
+#                 local          = 'intercep_era40',
+#                 model          = self.conf.model,
+#             )
+#             print t.prompt, 'tb17 =', tb17
+#             print
 
             self.sh.title('Toolbox executable tb17 = tbx1')
             tb17 = tbx1 = toolbox.executable(
@@ -639,22 +645,21 @@ class Safran(Task, S2MTaskMixIn):
 
         if 'compute' in self.steps:
 
-            if self.conf.datebegin < Date(2002, 8, 1):
-
-                self.sh.title('Toolbox algo tb22 = INTERCEP')
-                tb22 = tbalgo0 = toolbox.algo(
-                    engine         = 's2m',
-                    kind           = 'intercep',
-                    datebegin      = self.conf.datebegin.ymd6h,
-                    dateend        = self.conf.dateend.ymd6h,
-                    ntasks         = self.conf.ntasks,
-                    # execution      = 'reanalysis',
-                    execution      = 'analysis',
-                )
-                print t.prompt, 'tb22 =', tb22
-                print
-
-                self.component_runner(tbalgo0, tbx0)
+#             if self.conf.datebegin < Date(2002, 8, 1):
+# 
+#                 self.sh.title('Toolbox algo tb22 = INTERCEP')
+#                 tb22 = tbalgo0 = toolbox.algo(
+#                     engine         = 's2m',
+#                     kind           = 'intercep',
+#                     datebegin      = self.conf.datebegin.ymd6h,
+#                     dateend        = self.conf.dateend.ymd6h,
+#                     ntasks         = self.conf.ntasks,
+#                     # execution      = 'reanalysis',
+#                     execution      = 'analysis',
+#                 )
+#                 print t.prompt, 'tb22 =', tb22
+#                 print
+#                 self.component_runner(tbalgo0, tbx0)
 
             # NB : La date des executions est fixée à J-1 car l'analyse SAFRAN va de J-1 6h à J 6H
             self.sh.title('Toolbox algo tb22 = SAFRANE')
@@ -664,29 +669,29 @@ class Safran(Task, S2MTaskMixIn):
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
                 ntasks         = self.conf.ntasks,
-                # execution      = 'reanalysis',
-                execution      = 'analysis',
+                execution      = 'reanalysis',
+                # execution      = 'analysis',
             )
             print t.prompt, 'tb22 =', tb22
             print
 
             self.component_runner(tbalgo1, tbx1)
 
-            self.sh.title('Toolbox algo tb23 = SYRPLUIE')
-            tb23 = tbalgo2 = toolbox.algo(
-                engine         = 's2m',
-                kind           = 'syrpluie',
-                datebegin      = self.conf.datebegin.ymd6h,
-                dateend        = self.conf.dateend.ymd6h,
-                # members        = footprints.util.rangex(self.conf.members),
-                ntasks         = self.conf.ntasks,
-                # execution      = 'reanalysis',
-                execution      = 'analysis',
-            )
-            print t.prompt, 'tb23 =', tb23
-            print
-
-            self.component_runner(tbalgo2, tbx2)
+#             self.sh.title('Toolbox algo tb23 = SYRPLUIE')
+#             tb23 = tbalgo2 = toolbox.algo(
+#                 engine         = 's2m',
+#                 kind           = 'syrpluie',
+#                 datebegin      = self.conf.datebegin.ymd6h,
+#                 dateend        = self.conf.dateend.ymd6h,
+#                 # members        = footprints.util.rangex(self.conf.members),
+#                 ntasks         = self.conf.ntasks,
+#                 execution      = 'reanalysis',
+#                 # execution      = 'analysis',
+#             )
+#             print t.prompt, 'tb23 =', tb23
+#             print
+# 
+#             self.component_runner(tbalgo2, tbx2)
 
             self.sh.title('Toolbox algo tb23_b = SYPLUIE')
             tb23 = tbalgo3 = toolbox.algo(
@@ -696,8 +701,8 @@ class Safran(Task, S2MTaskMixIn):
                 dateend        = self.conf.dateend.ymd6h,
                 # members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
-                # execution      = 'reanalysis',
-                execution      = 'analysis',
+                execution      = 'reanalysis',
+                # execution      = 'analysis',
             )
             print t.prompt, 'tb23 =', tb23
             print
@@ -712,8 +717,8 @@ class Safran(Task, S2MTaskMixIn):
                 dateend        = self.conf.dateend.ymd6h,
                 # members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
-                # execution      = 'reanalysis',
-                execution      = 'analysis',
+                execution      = 'reanalysis',
+                # execution      = 'analysis',
             )
             print t.prompt, 'tb24 =', tb24
             print
@@ -728,8 +733,8 @@ class Safran(Task, S2MTaskMixIn):
                 dateend        = self.conf.dateend.ymd6h,
                 # members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
-                # execution      = 'reanalysis',
-                execution      = 'analysis',
+                execution      = 'reanalysis',
+                # execution      = 'analysis',
             )
             print t.prompt, 'tb25 =', tb25
             print
@@ -744,8 +749,8 @@ class Safran(Task, S2MTaskMixIn):
                 dateend        = self.conf.dateend.ymd6h,
                 # members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
-                # execution      = 'reanalysis',
-                execution      = 'analysis',
+                execution      = 'reanalysis',
+                # execution      = 'analysis',
             )
             print t.prompt, 'tb26 =', tb26
             print
@@ -754,149 +759,156 @@ class Safran(Task, S2MTaskMixIn):
 
         if 'late-backup' in self.steps:
 
-            m = 0
             for rundate in list_dates:
-                m = m + 1
                 datebegin = rundate
                 dateend = min(datebegin.replace(year=datebegin.year + 1), self.conf.dateend)
+                y1 = datebegin.year
+                y2 = dateend.year
+                rundir = '{0:d}{1:d}'.format(y1, y2)
 
-                if 'savedir' in self.conf:
-
-                    if self.conf.savedir.statswith('hendrix'):
-                        hostname = 'hendrix.meteo.fr'
-                        tube     = 'ftp'
-                    else:
-                        hostname = 'localhost'
-                        tube     = 'file'
-
-                    self.sh.title('Toolbox output tb27')
-                    tb27 = toolbox.output(
-                        role           = 'Ana_massifs',
-                        kind           = 'MeteorologicalForcing',
-                        # source_app     = source_app,
-                        # source_conf    = source_conf,
-                        cutoff         = 'assimilation',
-                        remote         = '{0:s}/[local]'.format(self.conf.savedir),
-                        hostname       = hostname,
-                        tube           = tube,
-                        local          = 'mb{0:03d}/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(m),
-                        nativefmt      = 'netcdf',
-                        model          = self.conf.model,
-                        datebegin      = datebegin.ymd6h,
-                        dateend        = dateend.ymd6h,
-                        exepcted       = False,
-                    ),
-                    print t.prompt, 'tb27 =', tb27
-                    print
-
-                    self.sh.title('Toolbox output tb28')
-                    tb27 = toolbox.output(
-                        role           = 'Ana_postes',
-                        kind           = 'MeteorologicalForcing',
-                        # source_app     = source_app,
-                        # source_conf    = source_conf,
-                        cutoff         = 'assimilation',
-                        remote         = '{0:s}/[local]'.format(self.conf.savedir),
-                        hostname       = hostname,
-                        tube           = tube,
-                        local          = 'mb{0:03d}/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(m),
-                        nativefmt      = 'netcdf',
-                        model          = self.conf.model,
-                        datebegin      = datebegin.ymd6h,
-                        dateend        = dateend.ymd6h,
-                    ),
-                    print t.prompt, 'tb28 =', tb27
-                    print
-
-                    self.sh.title('Toolbox output tb32')
-                    tb29 = toolbox.output(
-                        role           = 'Liste_obs',
-                        cutoff         = 'assimilation',
-                        format         = 'ascii',
-                        kind           = 'listing',
-                        remote         = '{0:s}/liste_obs_{glob:a:\w+}'.format(self.conf.savedir),
-                        hostname       = hostname,
-                        tube           = tube,
-                        # local          = 'mb035/liste_obs_{glob:a:\w+}',
-                        local          = 'mb{0:03d}'.format(m) + '/liste_obs_{glob:a:\w+}',
-                        task           = '[local]',
-                    )
-                    print t.prompt, 'tb32 =', tb29
-                    print
-
-                else:
-
+                if 'source_app' not in self.conf:
                     if rundate >= Date(2002, 8, 1):
                         source_app = 'arpege'
                         source_conf = '4dvarfr'
                     else:
                         source_app = 'ifs'
                         source_conf = 'era40'
+                else:
+                    source_app = self.conf.source_app
+                    source_conf = self.conf.source_conf
 
-                    y1 = datebegin.year
-                    y2 = y1 + 1
+                self.sh.title('Toolbox output tb27')
+                tb27 = toolbox.output(
+                    role           = 'Ana_massifs',
+                    kind           = 'MeteorologicalForcing',
+                    source_app     = source_app,
+                    source_conf    = source_conf,
+                    cutoff         = 'assimilation',
+                    # local          = 'mb035/FORCING_massif.nc',
+                    local          = '{0:s}/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(rundir),
+                    experiment     = self.conf.xpid,
+                    block          = 'massifs',
+                    geometry        = self.conf.vconf,
+                    nativefmt      = 'netcdf',
+                    model          = self.conf.model,
+                    datebegin      = datebegin.ymd6h,
+                    dateend        = dateend.ymd6h,
+                    namespace      = self.conf.namespace,
+                    namebuild      = 'flat@cen',
+                ),
+                print t.prompt, 'tb27 =', tb27
+                print
 
-                    self.sh.title('Toolbox output tb27')
-                    tb27 = toolbox.output(
-                        role           = 'Ana_massifs',
-                        kind           = 'MeteorologicalForcing',
-                        source_app     = source_app,
-                        source_conf    = source_conf,
-                        cutoff         = 'assimilation',
-                        # local          = 'mb035/FORCING_massif.nc',
-                        local          = 'mb{0:03d}/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(m),
-                        experiment     = self.conf.xpid,
-                        block          = 'massifs',
-                        geometry        = self.conf.vconf,
-                        nativefmt      = 'netcdf',
-                        model          = self.conf.model,
-                        datebegin      = datebegin.ymd6h,
-                        dateend        = dateend.ymd6h,
-                        namespace      = self.conf.namespace,
-                        namebuild      = 'flat@cen',
-                    ),
-                    print t.prompt, 'tb27 =', tb27
-                    print
+                self.sh.title('Toolbox output tb28')
+                tb27 = toolbox.output(
+                    role           = 'Ana_postes',
+                    kind           = 'MeteorologicalForcing',
+                    source_app     = source_app,
+                    source_conf    = source_conf,
+                    cutoff         = 'assimilation',
+                    # local          = 'mb035/FORCING_postes.nc',
+                    local          = '{0:s}/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(rundir),
+                    experiment     = self.conf.xpid,
+                    block          = 'postes',
+                    geometry        = self.conf.vconf,
+                    nativefmt      = 'netcdf',
+                    model          = self.conf.model,
+                    datebegin      = datebegin.ymd6h,
+                    dateend        = dateend.ymd6h,
+                    namespace      = self.conf.namespace,
+                    namebuild      = 'flat@cen',
+                ),
+                print t.prompt, 'tb28 =', tb27
+                print
 
-                    self.sh.title('Toolbox output tb28')
-                    tb27 = toolbox.output(
-                        role           = 'Ana_postes',
-                        kind           = 'MeteorologicalForcing',
-                        source_app     = source_app,
-                        source_conf    = source_conf,
-                        cutoff         = 'assimilation',
-                        # local          = 'mb035/FORCING_postes.nc',
-                        local          = 'mb{0:03d}/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(m),
-                        experiment     = self.conf.xpid,
-                        block          = 'postes',
-                        geometry        = self.conf.vconf,
-                        nativefmt      = 'netcdf',
-                        model          = self.conf.model,
-                        datebegin      = datebegin.ymd6h,
-                        dateend        = dateend.ymd6h,
-                        namespace      = self.conf.namespace,
-                        namebuild      = 'flat@cen',
-                    ),
-                    print t.prompt, 'tb28 =', tb27
-                    print
+                self.sh.title('Toolbox output tb32')
+                tb29 = toolbox.output(
+                    role           = 'Liste_obs',
+                    block          = 'liste_obs/{0:s}_{1:s}'.format(datebegin.ymd6h, dateend.ymd6h),
+                    experiment     = self.conf.xpid,
+                    geometry        = self.conf.vconf,
+                    cutoff         = 'assimilation',
+                    format         = 'ascii',
+                    kind           = 'listing',
+                    # local          = 'mb035/liste_obs_{glob:a:\w+}',
+                    local          = '{0:s}/liste_obs_{glob:a:\w+}'.format(rundir),
+                    namespace      = self.conf.namespace,
+                    task           = '[local]',
+                    namebuild      = 'flat@cen',
+                    # date           = self.conf.rundate.ymdh,
+                )
+                print t.prompt, 'tb32 =', tb29
+                print
 
-                    self.sh.title('Toolbox output tb32')
-                    tb29 = toolbox.output(
-                        role           = 'Liste_obs',
-                        block          = 'liste_obs/{0:s}_{1:s}'.format(datebegin.ymd6h, dateend.ymd6h),
-                        experiment     = self.conf.xpid,
-                        geometry        = self.conf.vconf,
-                        cutoff         = 'assimilation',
-                        format         = 'ascii',
-                        kind           = 'listing',
-                        # local          = 'mb035/liste_obs_{glob:a:\w+}',
-                        local          = 'mb{0:03d}'.format(m) + '/liste_obs_{glob:a:\w+}',
-                        namespace      = self.conf.namespace,
-                        task           = '[local]',
-                        namebuild      = 'flat@cen',
-                        # date           = self.conf.rundate.ymdh,
-                    )
-                    print t.prompt, 'tb32 =', tb29
-                    print
 
-            raise ExecutionError('')
+#                 if 'savedir' in self.conf:
+# 
+#                     if 'hendrix:' in self.conf.savedir or 'hendrix.meteo.fr:' in self.conf.savedir:
+#                         hostname = 'hendrix.meteo.fr'
+#                         tube     = 'ftp'
+#                         if '@' in self.conf.guess_path.split(':')[0]:
+#                             username = self.conf.guess_path.split(':')[0].split('@')[0]
+#                         else:
+#                             username = None
+#                         actual_path = self.conf.savedir.split(':')[1].rstrip('/')
+#                     else:
+#                         hostname = 'localhost'
+#                         tube     = 'file'
+#                         actual_path = self.conf.savedir
+# 
+#                     self.sh.title('Toolbox output tb27')
+#                     tb27 = toolbox.output(
+#                         role           = 'Ana_massifs',
+#                         kind           = 'MeteorologicalForcing',
+#                         # source_app     = source_app,
+#                         # source_conf    = source_conf,
+#                         cutoff         = 'assimilation',
+#                         remote         = '{0:s}/[local]'.format(actual_path),
+#                         hostname       = hostname,
+#                         tube           = tube,
+#                         local          = '{0:s}/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(rundir),
+#                         nativefmt      = 'netcdf',
+#                         model          = self.conf.model,
+#                         datebegin      = datebegin.ymd6h,
+#                         dateend        = dateend.ymd6h,
+#                     ),
+#                     print t.prompt, 'tb27 =', tb27
+#                     print
+# 
+#                     self.sh.title('Toolbox output tb28')
+#                     tb27 = toolbox.output(
+#                         role           = 'Ana_postes',
+#                         kind           = 'MeteorologicalForcing',
+#                         # source_app     = source_app,
+#                         # source_conf    = source_conf,
+#                         cutoff         = 'assimilation',
+#                         remote         = '{0:s}/[local]'.format(actual_path),
+#                         hostname       = hostname,
+#                         tube           = tube,
+#                         local          = '{0:s}/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(rundir),
+#                         nativefmt      = 'netcdf',
+#                         model          = self.conf.model,
+#                         datebegin      = datebegin.ymd6h,
+#                         dateend        = dateend.ymd6h,
+#                     ),
+#                     print t.prompt, 'tb28 =', tb27
+#                     print
+# 
+# #                     self.sh.title('Toolbox output tb32')
+# #                     tb29 = toolbox.output(
+# #                         role           = 'Liste_obs',
+# #                         cutoff         = 'assimilation',
+# #                         format         = 'ascii',
+# #                         kind           = 'listing',
+# #                         remote         = '{0:s}/liste_obs_{glob:a:\w+}'.format(actual_path),
+# #                         hostname       = hostname,
+# #                         tube           = tube,
+# #                         # local          = 'mb035/liste_obs_{glob:a:\w+}',
+# #                         local          = '{0:s}/liste_obs_{glob:a:\w+}'.format(rundir),
+# #                         task           = '[local]',
+# #                     )
+# #                     print t.prompt, 'tb32 =', tb29
+# #                     print
+# 
+#                 else:
+            # raise ExecutionError('')

@@ -363,6 +363,7 @@ class Vortex_conf_file(object):
         self.set_field("DEFAULT", 'cutoff', self.options.cutoff)
         self.set_field("DEFAULT", 'model', 'safran')
         self.set_field("DEFAULT", 'cycle', 'uenv:s2m.01@vernaym')
+        self.set_field("DEFAULT", 'namespace', 'vortex.multi.fr')
         if self.options.namelist:
             self.set_field("DEFAULT", 'namelist', self.options.namelist)
         if self.options.guess:
@@ -373,8 +374,6 @@ class Vortex_conf_file(object):
             self.set_field("DEFAULT", 'executables', self.options.executables)
         if self.options.savedir:
             self.set_field("DEFAULT", 'savedir', self.options.savedir)
-        else:
-            self.set_field("DEFAULT", 'namespace', 'vortex.multi.fr')
         if self.options.cpl_model:
-            self.set_field("DEFAULT", 'cpl_vapp', self.options.cpl_model[0])
-            self.set_field("DEFAULT", 'cpl_vconf', self.options.cpl_model[1])
+            self.set_field("DEFAULT", 'source_app', self.options.cpl_model[0])
+            self.set_field("DEFAULT", 'source_conf', self.options.cpl_model[1])

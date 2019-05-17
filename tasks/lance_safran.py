@@ -42,7 +42,7 @@ class Safran_command(_S2M_command):
                             'or in a subdirectory named after the season (format nnNN). To get archive files from hendrix,'
                             'the path must start with "hendrix:" or with "username@hendrix:"')
         parser.add_argument('-C', '--cpl_model', nargs=2, help='Couple of additional informations concerning the guess (model, configuration, grid,...)).'
-                            'For example "-C era5 025. This information can be used to generate a proper Vortex Forcing name if the option -s is not used (recommended).' )
+                            'For example "-C era5 025". This information can be used to generate a proper Vortex Forcing name if the option -s is not used (recommended).' )
         parser.add_argument('-w', '--workdir', dest='dirwork', help="name of the output directory")
         parser.add_argument('-s', '--savedir', help='Specify an output directory to store generated files. To store files on hendrix, the path must start'
                             'with "hendrix:". It is recommended not to use this option, the SAFRAN forcing will then be stored on a proper Vortex cache.')
