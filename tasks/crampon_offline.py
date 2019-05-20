@@ -113,12 +113,38 @@ class Offline_Task(Crampon_Task):
 
             # ############# FETCH PREPS : either 1 spinup (firstloop=True, could be moved to early-fetch) or a list of PREPS ##########
             if not firstloop:  # else, got it in the early step on hendrix
-                for mb in self.conf.membersnode:
-                    self.sh.title('Toolbox input tb03_lan')
-                    tb03_lan = toolbox.input(
+                dmembersnode = {str(mb): mb for mb in self.conf.membersnode}
+                dlocal_names = {str(mb): 'mb{0:04d}'.format(mb) + '/PREP.nc'
+                                for mb in self.conf.membersnode}
+                self.sh.title('Toolbox input tb03_lan')
+                tb03_lan = toolbox.input(
+                    alternate      = 'SnowpackInit',
+                    realmember     = self.conf.membersnode,
+                    member         = dict(realmember=dmembersnode),
+                    local          = dict(realmember = dlocal_names),  # local prep name does not hold the date at the moment
+                    experiment     = self.conf.xpid,
+                    geometry       = self.conf.geometry,
+                    date           = self.conf.stopdate_prev,
+                    intent         = 'inout',
+                    nativefmt      = 'netcdf',
+                    kind           = 'PREP',
+                    model          = 'surfex',
+                    namespace      = 'vortex.cache.fr',  # get it on the cache from last loop
+                    namebuild      = 'flat@cen',
+                    block          = 'an',          # get it on cache @mb****/an
+                    stage          = '_an',
+                    fatal          = False,
+                ),
+                print(t.prompt, 'tb03_lan =', tb03_lan)
+                print()
+                # if the analysis didn't succeed/openloop (no PREP in analysis rep.), get the BG preps.
+                if not tb03_lan[0]:
+                    
+                    self.sh.title('Toolbox input tb03_lbg')
+                    tb03_lbg = toolbox.input(
                         alternate      = 'SnowpackInit',
-                        member         = mb,
-                        local          = 'mb{0:04d}'.format(mb) + '/PREP.nc',  # local prep name does not hold the date at the moment
+                        member         = dict(realmember=dmembersnode),
+                        local          = dict(realmember = dlocal_names),  # local prep name does not hold the date at the moment
                         experiment     = self.conf.xpid,
                         geometry       = self.conf.geometry,
                         date           = self.conf.stopdate_prev,
@@ -128,35 +154,12 @@ class Offline_Task(Crampon_Task):
                         model          = 'surfex',
                         namespace      = 'vortex.cache.fr',  # get it on the cache from last loop
                         namebuild      = 'flat@cen',
-                        block          = 'an',          # get it on cache @mb****/an
-                        stage          = '_an',
-                        fatal          = False,
+                        block          = 'bg',          # get it on cache @mb****/bg
+                        stage          = '_bg',
+                        fatal          = True,          # this must succeed.
                     ),
-                    print(t.prompt, 'tb03_lan =', tb03_lan)
+                    print(t.prompt, 'tb03_lbg =', tb03_lbg)
                     print()
-                # if the analysis didn't succeed/openloop (no PREP in analysis rep.), get the BG preps.
-                if not tb03_lan[0]:
-                    for mb in self.conf.membersnode:
-                        self.sh.title('Toolbox input tb03_lbg')
-                        tb03_lbg = toolbox.input(
-                            alternate      = 'SnowpackInit',
-                            member         = mb,
-                            local          = 'mb{0:04d}'.format(mb) + '/PREP.nc',  # local prep name does not hold the date at the moment
-                            experiment     = self.conf.xpid,
-                            geometry       = self.conf.geometry,
-                            date           = self.conf.stopdate_prev,
-                            intent         = 'inout',
-                            nativefmt      = 'netcdf',
-                            kind           = 'PREP',
-                            model          = 'surfex',
-                            namespace      = 'vortex.cache.fr',  # get it on the cache from last loop
-                            namebuild      = 'flat@cen',
-                            block          = 'bg',          # get it on cache @mb****/bg
-                            stage          = '_bg',
-                            fatal          = True,          # this must succeed.
-                        ),
-                        print(t.prompt, 'tb03_lbg =', tb03_lbg)
-                        print()
 
         if 'compute' in self.steps:
             # force first forcing to the first forcing of first member 0001 doesn't work on several nodes...
@@ -202,10 +205,6 @@ class Offline_Task(Crampon_Task):
                 # ntasks         = ntasksEsc,  # not consistent with the self.conf.membersnode
                 ntasks         = nmembersnode,  # BC 18/04/19 more consistent
                 nforcing       = self.conf.nforcing,
-                #randomDraw     = self.conf.randomDraw,
-                stopcount      = stopstep,            # possibly useless
-                confvapp       = self.conf.vapp,      # """"
-                confvconf      = self.conf.vconf,     # """"
             )
             print(t.prompt, 'tb11 =', tb11)
             print()
