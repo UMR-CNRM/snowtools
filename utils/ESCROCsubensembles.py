@@ -169,7 +169,6 @@ class ESCROC_subensembles(dict):
             memberslist = 1 + np.random.choice(len(self.snowflist) * len(self.metamlist) * len(self.radlist) * len(self.turblist) * len(self.condlist) * len(self.holdlist) * len(self.complist) * len(self.cvlist), len(members), replace = False)
         else:
             memberslist = members
-        print(memberslist)
         physical_options = []
         snow_parameters = []
         mb = 0
