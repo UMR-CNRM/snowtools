@@ -105,7 +105,7 @@ class vortex_kitchen(object):
                 if hasattr(self.options, 'confname'):
                     conffilename = self.options.confname.rstrip('.ini') + ".ini"
                 else:
-                    conffilename = self.options.vapp + "_" + self.options.vconf + "_" + self.options.xpid + self.options.datedeb.strftime("%Y") + ".ini"
+                    conffilename = self.options.vapp + "_" + self.options.vconf + "_" + self.options.datedeb.strftime("%Y") + ".ini"
 
             if hasattr(self.options, 'soda'):
 
@@ -142,6 +142,7 @@ class vortex_kitchen(object):
                 self.jobname = "surfex_forecast"
             else:
                 self.jobname = "surfex_analysis"
+            confcomplement = ''
         else:
             period = "datebegin=" + self.options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + self.options.datefin.strftime("%Y%m%d%H%M")
             if self.options.escroc:
@@ -161,10 +162,10 @@ class vortex_kitchen(object):
                 self.jobname = 'rea_s2m'
                 self.reftask = "vortex_tasks"
                 nnodes = self.options.nnodes
+            confcomplement = " taskconf=" + self.options.datedeb.strftime("%Y")
 
         return "../vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + " profile=" + self.profile + " jobassistant=cen " + period +\
-               " template=" + self.jobtemplate + " time=" + self.walltime() + " nnodes=" + str(nnodes) +\
-               " taskconf=" + self.options.xpid + self.options.datedeb.strftime("%Y")
+               " template=" + self.jobtemplate + " time=" + self.walltime() + " nnodes=" + str(nnodes) + confcomplement
 
     def mkjob_list_commands(self):
 
@@ -231,7 +232,7 @@ class vortex_kitchen(object):
             else:
                 nmembers = 1
             # minutes per year for one member computing all points
-            minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 2, pyr_flat = 2, cor_allslopes = 2, cor_flat = 1, postes = 2,
+            minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 5, pyr_flat = 5, cor_allslopes = 5, cor_flat = 1, postes = 5,
                                    lautaret = 120, lautaretreduc = 5)
 
             for site_snowmip in ["cdp", "oas", "obs", "ojp", "rme", "sap", "snb", "sod", "swa", "wfj"]:
@@ -338,7 +339,11 @@ class Vortex_conf_file(object):
             forcinglogin = os.getlogin()
 
         self.set_field("DEFAULT", 'meteo', self.options.model)
-        self.set_field("DEFAULT", 'forcingid', self.options.forcing + '@' + forcinglogin)
+
+        lf = self.options.forcing.split('/')
+        self.set_field("DEFAULT", 'forcingid', lf[0] + '@' + forcinglogin)
+        self.set_field("DEFAULT", 'blockin', '/'.join(lf[1:]))
+
         self.set_field("DEFAULT", 'duration', 'yearly')
 
         if self.options.namelist:
