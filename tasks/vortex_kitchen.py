@@ -97,7 +97,11 @@ class vortex_kitchen(object):
         conffile.new_class("DEFAULT")
         conffile.write_field('meteo', options.model)
         conffile.write_field('geometry', self.vconf)
-        conffile.write_field('forcingid', options.forcing + '@' + forcinglogin)
+
+        lf = options.forcing.split('/')
+
+        conffile.write_field('forcingid', lf[0] + '@' + forcinglogin)
+        conffile.write_field('blockin', '/'.join(lf[1:]))
 
         if options.escroc:
             conffile.write_field('subensemble', options.escroc)
@@ -158,6 +162,8 @@ class vortex_kitchen(object):
                 jobname = "surfex_forecast"
             else:
                 jobname = "surfex_analysis"
+            confcomplement = ''
+
         else:
             period = "datebegin=" + options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + options.datefin.strftime("%Y%m%d%H%M")
             if options.escroc:
@@ -178,9 +184,11 @@ class vortex_kitchen(object):
                 reftask = "vortex_tasks"
                 nnodes = options.nnodes
 
+            confcomplement = " taskconf=" + self.xpid + options.datedeb.strftime("%Y")
+
         return "../vortex/bin/mkjob.py -j name=" + jobname + " task=" + reftask + " profile=" + self.profile + " jobassistant=cen " + period +\
                " template=" + self.jobtemplate + " time=" + walltime(options) + " nnodes=" + str(nnodes) +\
-               " taskconf=" + self.xpid + options.datedeb.strftime("%Y")
+               confcomplement
 
     def mkjob_list_commands(self, options):
         if options.escroc and options.nnodes > 1:
@@ -222,7 +230,7 @@ def walltime(options):
             else:
                 nmembers = 1
             # minutes per year for one member computing all points
-            minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 2, pyr_flat = 2, cor_allslopes = 2, cor_flat = 1, postes = 2,
+            minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 5, pyr_flat = 5, cor_allslopes = 5, cor_flat = 1, postes = 5,
                                    lautaret = 120, lautaretreduc = 5)
 
             for site_snowmip in ["cdp", "oas", "obs", "ojp", "rme", "sap", "snb", "sod", "swa", "wfj"]:
