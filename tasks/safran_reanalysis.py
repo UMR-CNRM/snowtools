@@ -566,21 +566,21 @@ class Safran(Task, S2MTaskMixIn):
 
             self.component_runner(tbalgo1, tbx1)
 
-            self.sh.title('Toolbox algo tb23 = SYRPLUIE')
-            tb23 = tbalgo2 = toolbox.algo(
-                engine         = 's2m',
-                kind           = 'syrpluie',
-                datebegin      = self.conf.datebegin.ymd6h,
-                dateend        = self.conf.dateend.ymd6h,
-                # members        = footprints.util.rangex(self.conf.members),
-                ntasks         = self.conf.ntasks,
-                #execution      = 'reanalysis',
-                execution      = 'analysis',
-            )
-            print t.prompt, 'tb23 =', tb23
-            print
-
-            self.component_runner(tbalgo2, tbx2)
+#             self.sh.title('Toolbox algo tb23 = SYRPLUIE')
+#             tb23 = tbalgo2 = toolbox.algo(
+#                 engine         = 's2m',
+#                 kind           = 'syrpluie',
+#                 datebegin      = self.conf.datebegin.ymd6h,
+#                 dateend        = self.conf.dateend.ymd6h,
+#                 # members        = footprints.util.rangex(self.conf.members),
+#                 ntasks         = self.conf.ntasks,
+#                 #execution      = 'reanalysis',
+#                 execution      = 'analysis',
+#             )
+#             print t.prompt, 'tb23 =', tb23
+#             print
+# 
+#             self.component_runner(tbalgo2, tbx2)
 
             self.sh.title('Toolbox algo tb23_b = SYPLUIE')
             tb23 = tbalgo3 = toolbox.algo(

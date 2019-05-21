@@ -840,6 +840,7 @@ class Safran(Task, S2MTaskMixIn):
 #                 print t.prompt, 'tb32 =', tb29
 #                 print
 #
+
 #                 if 'savedir' in self.conf:
 # 
 #                     if 'hendrix:' in self.conf.savedir or 'hendrix.meteo.fr:' in self.conf.savedir:

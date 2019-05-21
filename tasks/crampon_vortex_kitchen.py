@@ -9,7 +9,7 @@ import os
 import shutil
 
 from utils.resources import InstallException
-from tasks.vortex_kitchen import vortex_conf_file, walltime
+from tasks.vortex_kitchen import Vortex_conf_file
 from tools.update_namelist import update_surfex_namelist_file
 import numpy as np
 from utils.ESCROCsubensembles import ESCROC_subensembles
@@ -83,7 +83,7 @@ class crampon_vortex_kitchen(object):
         print ('copy conf file to vortex path')
         shutil.copyfile(options.crampon, confname)
 
-        conffile = vortex_conf_file(confname, 'a')
+        conffile = Vortex_conf_file(confname, 'a')
 
         conffile.write_field('meteo', options.model)
         conffile.write_field('geometry', self.vconf)
