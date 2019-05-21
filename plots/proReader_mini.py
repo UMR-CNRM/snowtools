@@ -906,13 +906,25 @@ class ProReader_membre:
         place_mb0 = arborescence.find('mb0')
         nom_fichier = ncfile.replace(arborescence + separateur,'')
         
+        if len(arborescence)==place_mb0+5 or arborescence[place_mb0+5] == separateur:
+                nb_chiffre = 3
+        elif len(arborescence)==place_mb0+6 or arborescence[place_mb0+6] == separateur:
+                nb_chiffre = 4
+        
         nmembre = 0
-        while ('mb'+'%03d' %nmembre) in os.listdir(arborescence[:place_mb0]):
-            nmembre = nmembre + 1
-            if nmembre > 100:
-                break
-                print('more than 100 members. Pb of directory possible. If not, must change indexes in proReader_mini')
-
+        if nb_chiffre == 3:
+            while ('mb'+'%03d' %nmembre) in os.listdir(arborescence[:place_mb0]):
+                nmembre = nmembre + 1
+                if nmembre > 100:
+                    break
+                    print('more than 100 members. Pb of directory possible. If not, must change indexes in proReader_mini')
+        elif nb_chiffre == 4:
+            while ('mb'+'%04d' %nmembre) in os.listdir(arborescence[:place_mb0]):
+                nmembre = nmembre + 1
+                if nmembre > 100:
+                    break
+                    print('more than 100 members. Pb of directory possible. If not, must change indexes in proReader_mini')
+                    
         # Preparation des data: mise en place des dictionnaires
         self.var_membre = {}
         self.var1D_membre = {}
@@ -938,9 +950,12 @@ class ProReader_membre:
         self.date = ff.readtime()
 
         for nb_m in range(nmembre):
-            chaine = 'mb'+'%03d' %nb_m
-            path_for_nc = arborescence[:place_mb0] + chaine + arborescence[place_mb0+5:]+separateur+nom_fichier
-            
+            if nb_chiffre == 3:
+                chaine = 'mb'+'%03d' %nb_m
+                path_for_nc = arborescence[:place_mb0] + chaine + arborescence[place_mb0+5:]+separateur+nom_fichier
+            elif nb_chiffre == 4:
+                chaine = 'mb'+'%04d' %nb_m
+                path_for_nc = arborescence[:place_mb0] + chaine + arborescence[place_mb0+6:]+separateur+nom_fichier            
             #path pour nc = arborescence jusqu'à mb + les 3 chiffres + le séparateur ('/' ou '\')  + le nom du fichier supposé tjrs le même
         
             ff = prosimu(path_for_nc)  
