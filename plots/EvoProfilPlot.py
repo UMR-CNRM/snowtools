@@ -53,6 +53,11 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
         cmap = cm.gray_r
         Vmin = max(np.amin(value),0.0000000001)
         Vmax = min(np.amax(value),1)
+        norm = LogNorm(vmin=Vmin, vmax=Vmax)    
+    elif colormap == 'echelle_log_sahara':
+        cmap = cm.gist_heat_r
+        Vmin = max(np.amin(value),0.0000000001)
+        Vmax = min(np.amax(value),1)
         norm = LogNorm(vmin=Vmin, vmax=Vmax)
     else:
         norm = None

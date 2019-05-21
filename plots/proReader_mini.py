@@ -218,8 +218,10 @@ class ProReader_mini:
             colormap = 'grains'
         elif var == 'SNOWTEMP':
             colormap = 'RdBu_r'
-        elif 'SNOWIMP' in var:
+        elif 'SNOWIMP1' in var:
             colormap = 'echelle_log'
+        elif 'SNOWIMP2' in var:
+            colormap = 'echelle_log_sahara'
         else:
             colormap = colormap
 
@@ -366,7 +368,10 @@ class ProReader_mini:
             
         axe.plot(pointsy[::-1], np.subtract(pointsx[-1],pointsx[::-1]), color=color)
         #axe.set(title=date.strftime('%Y-%m-%d %Hh'))
-        axe.set_xlabel(date.strftime('%Y-%m-%d %Hh'))
+        if ('SNOWIMP' in var):
+            axe.set_xlabel('log10 for x    ' + date.strftime('%Y-%m-%d %Hh'))
+        else:
+            axe.set_xlabel(date.strftime('%Y-%m-%d %Hh'))
 
         axe.xaxis.set_major_locator(ticker.MaxNLocator(5))
         plt.setp(axe.xaxis.get_majorticklabels(),size='small')
@@ -897,10 +902,12 @@ class ProReader_membre:
     def initFromFile(self, ncfile, var=None, point=None, var_sup=[]):
         ff = prosimu(ncfile)
         arborescence = os.path.dirname(ncfile)
-        separateur = arborescence[-6] # suivant les OS, '/' ou '\' => devrait éviter des soucis
+        separateur = ncfile.replace(os.path.dirname(ncfile),'')[0] # suivant les OS, '/' ou '\' => devrait éviter des soucis
+        place_mb0 = arborescence.find('mb0')
+        nom_fichier = ncfile.replace(arborescence + separateur,'')
         
         nmembre = 0
-        while ('mb'+'%03d' %nmembre) in os.listdir(arborescence[:-6]):
+        while ('mb'+'%03d' %nmembre) in os.listdir(arborescence[:place_mb0]):
             nmembre = nmembre + 1
             if nmembre > 100:
                 break
@@ -931,8 +938,9 @@ class ProReader_membre:
         self.date = ff.readtime()
 
         for nb_m in range(nmembre):
-            chaine = '%03d' %nb_m
-            path_for_nc = arborescence[:-3] + chaine + separateur + ncfile.replace(arborescence + separateur,'')
+            chaine = 'mb'+'%03d' %nb_m
+            path_for_nc = arborescence[:place_mb0] + chaine + arborescence[place_mb0+5:]+separateur+nom_fichier
+            
             #path pour nc = arborescence jusqu'à mb + les 3 chiffres + le séparateur ('/' ou '\')  + le nom du fichier supposé tjrs le même
         
             ff = prosimu(path_for_nc)  
