@@ -6,7 +6,7 @@ Created on 11 oct. 2017
 import unittest
 import os
 import datetime
-import tasks.s2m_command as s2m
+from tasks.s2m_command import Surfex_command as s2m
 
 
 class s2mTest(unittest.TestCase):
@@ -21,7 +21,7 @@ class s2mTest(unittest.TestCase):
 
     def full_run(self, shortcommand):
         command = shortcommand + self.commonoptions
-        s2m.execute(command.split())
+        s2m(command.split())
 
     def test_delayed_period(self):
         self.full_run("s2m -b 20101001 -e 20101002")

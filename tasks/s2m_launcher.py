@@ -35,7 +35,7 @@ class _S2M_command(object):
         # Read the options provided by the user
         self.options = self.parse_options(args)
         self.check_mandatory_arguments(**{'--surfex': 'surfex', '--safran': 'safran',
-                                          '-r': 'region', '--oper': 'oper'})
+                                          '--oper': 'oper'})
         self.execute()
 
     def parse_options(self, arguments):

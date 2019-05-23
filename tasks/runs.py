@@ -31,7 +31,7 @@ class surfexrun(object):
     def __init__(self, datebegin, dateend, forcingpath, diroutput,
                  namelist=os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam',
                  execdir=".",
-                 threshold=-999, dirwork=None, datespinup=None, geolist=[], addmask=False):
+                 threshold=-999, workdir=None, datespinup=None, geolist=[], addmask=False):
 
         # Convert arguments in attributes
         for var in "datebegin", "dateend", "forcingpath", "diroutput", "namelist", "execdir", "threshold", "geolist", "addmask":
@@ -47,10 +47,10 @@ class surfexrun(object):
         self.dirmeteo = self.diroutput + "/meteo"
         self.dirprep = self.diroutput + "/prep"
         self.dirpro = self.diroutput + "/pro"
-        if dirwork:
-            self.dirwork = dirwork + "/workSurfex" + datetime.datetime.today().strftime("%Y%m%d%H%M%S%f")
+        if workdir:
+            self.workdir = workdir + "/workSurfex" + datetime.datetime.today().strftime("%Y%m%d%H%M%S%f")
         else:
-            self.dirwork = self.diroutput + "/workSurfex" + datetime.datetime.today().strftime("%Y%m%d%H%M%S%f")
+            self.workdir = self.diroutput + "/workSurfex" + datetime.datetime.today().strftime("%Y%m%d%H%M%S%f")
 
         if datespinup:
             self.dateinit = datespinup
@@ -89,7 +89,7 @@ class surfexrun(object):
             raise DirFileException(self.diroutput)
 
         # Create all directories
-        for directory in [self.dirmeteo, self.dirprep, self.dirpro, self.dirwork]:
+        for directory in [self.dirmeteo, self.dirprep, self.dirpro, self.workdir]:
             if not os.path.isdir(directory):
                 os.makedirs(directory)
 
@@ -97,7 +97,7 @@ class surfexrun(object):
         self.initcurrentdirectory = os.getcwd()
 
         # Change current directory to working directory
-        os.chdir(self.dirwork)
+        os.chdir(self.workdir)
 
     def run(self, firstrun=True):
 
@@ -271,8 +271,8 @@ class postesrun(surfexrun):
 
 
 class massifextractforcing(massifrun):
-    def __init__(self, datebegin, dateend, forcingpath, diroutput, dirwork=None, geolist=[]):
-        super(massifextractforcing, self).__init__(datebegin, dateend, forcingpath, diroutput, dirwork= dirwork, geolist= geolist)
+    def __init__(self, datebegin, dateend, forcingpath, diroutput, workdir=None, geolist=[]):
+        super(massifextractforcing, self).__init__(datebegin, dateend, forcingpath, diroutput, workdir= workdir, geolist= geolist)
         self.onlyextractforcing = True
 
     def save_output(self):

@@ -49,8 +49,10 @@ class Surfex_command(_S2M_command):
 
         else:
             self.check_mandatory_arguments(**{'-b': 'datedeb', '-e': 'datefin', '-f': 'forcing'})
-            self.options.exesurfex = check_surfex_exe(self.options.exesurfex)
-            print(self.options.exesurfex)
+
+            if not self.options.onlyextractforcing:
+                self.options.exesurfex = check_surfex_exe(self.options.exesurfex)
+                print(self.options.exesurfex)
 
             # Controls and type conversions of dates
             [self.options.datedeb, self.options.datefin, self.options.datespinup] = list(map(check_and_convert_date, [self.options.datedeb, self.options.datefin, self.options.datespinup]))
