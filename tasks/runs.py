@@ -37,9 +37,6 @@ class surfexrun(object):
         for var in "datebegin", "dateend", "forcingpath", "diroutput", "namelist", "execdir", "threshold", "geolist", "addmask":
             setattr(self, var, locals()[var])
 
-        mavariable = 12
-        mavariable = [mavariable, 8, 10, 12]
-
         self.dateforcbegin = datebegin
         self.dateforcend = dateend
         self.updateloc = True
