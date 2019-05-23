@@ -483,11 +483,11 @@ class forcinput_select(forcinput_tomodify):
             if len(array_dim) > 0:
                 index_dim_massif = np.where(array_dim == massif_dim_name)[0]
                 index_dim_nbpoints = np.where(array_dim == spatial_dim_name)[0]
-                var_array = init_forcing_file.read(varname, keepfillvalue=True)
+                var_array = init_forcing_file.read(varname, keepfillvalue=True, removetile=False)
             else:
                 index_dim_massif = []
                 index_dim_nbpoints = []
-                var_array = init_forcing_file.read(varname, keepfillvalue=True).getValue()
+                var_array = init_forcing_file.read(varname, keepfillvalue=True, removetile=False).getValue()
 
             if len(index_dim_massif) == 1:
                 var_array = np.take(var_array, index_massif, index_dim_massif[0])
