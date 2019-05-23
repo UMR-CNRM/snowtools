@@ -328,7 +328,8 @@ class forcinput_select(forcinput_tomodify):
     M Lafaysse added a treatement to increase the number of slopes (July 2016)
     M Lafaysse added a treatment to create coordinates for direct compatibilty with the new SAFRAN output (August 2017)'''
 
-    massifvarname = 'massif_number'
+    def massifvarname(self):
+        return 'massif_number'
 
     def modify(self, init_forcing_file, new_forcing_file, *args):
 
@@ -347,8 +348,8 @@ class forcinput_select(forcinput_tomodify):
         init_alt = init_forcing_file.read("ZS", keepfillvalue=True)
         b_points_alt = (init_alt >= min_alt) * (init_alt <= max_alt)
 
-        if self.massifvarname in listvar:
-            init_massif_nb_sop = init_forcing_file.read(self.massifvarname, keepfillvalue=True)
+        if self.massifvarname() in listvar:
+            init_massif_nb_sop = init_forcing_file.read(self.massifvarname(), keepfillvalue=True)
             b_points_massif = np.in1d(init_massif_nb_sop, list_massif_number)
             if np.sum(b_points_massif) == 0:
                 raise MassifException(list_massif_number, list(set(init_massif_nb_sop)))
@@ -643,7 +644,8 @@ class forcinput_select(forcinput_tomodify):
 
 
 class proselect(forcinput_select):
-    massivarname = 'massif_num'
+    def massifvarname(self):
+        return 'massif_num'
 
 
 class forcinput_extract(forcinput_tomodify):
