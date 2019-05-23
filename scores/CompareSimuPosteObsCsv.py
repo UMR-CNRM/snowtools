@@ -25,7 +25,7 @@ from plots.temporal.chrono import temporalplotObsMultipleSims
 from plots.boxplots.boxplots import boxplots_bydepartment, boxplots_byelevation, boxplots_byyear
 from scores.deterministic import DeterministicScores_Heterogeneous
 
-usage = "CompareSimuPosteObsCsv.py -b YYYYMMDD -e YYYYMMDD --dirsim=dirsim1,dirsim2 --labels=label1,labe2 --dirplot=dirplot --format=pdf,png,eps --yearly"
+usage = "CompareSimuPosteObsCsv.py [--scores] [--plot] -b YYYYMMDD -e YYYYMMDD --dirsim=dirsim1,dirsim2 --labels=label1,labe2 --dirplot=dirplot --format=pdf,png,eps --yearly"
 
 default = dict(fileobs="/manto/lafaysse/data/csv/OBS_19832017.csv",
                dirsim='/era40/vortex/s2m/postes/reanalysis/pro')
