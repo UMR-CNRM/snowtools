@@ -181,6 +181,10 @@ class Surfex_command(_S2M_command):
                           action="store_true", dest="reinit", default=False,
                           help="To reinitialize operational analyses with a reanalysis")
 
+        parser.add_option("--monthlyreanalysis",
+                          action="store_true", dest="monthlyreanalysis", default=False,
+                          help="Run monthly reanalysis")
+
         parser.add_option("--dailyprep",
                           action="store_true", dest="dailyprep", default=False,
                           help="Split reanalysis day by day to prepare initial conditions for reforecast")
