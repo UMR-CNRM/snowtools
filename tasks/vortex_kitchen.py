@@ -42,10 +42,14 @@ class vortex_kitchen(object):
 
         if self.options.oper:
             self.jobtemplate = "job-s2m-oper.py"
-            self.profile = "rd-prolix-mt"
         else:
             self.jobtemplate = "job-vortex-default.py"
+
+        machine = os.uname()[1]
+        if "beaufix" in machine:
             self.profile = "rd-beaufix-mt"
+        if "prolix" in machine:
+            self.profile = "rd-prolix-mt"
 
         self.execute()
 
@@ -107,15 +111,9 @@ class vortex_kitchen(object):
                 else:
                     conffilename = self.options.vapp + "_" + self.options.vconf + "_" + self.options.datedeb.strftime("%Y") + ".ini"
 
-            if hasattr(self.options, 'soda'):
-
-                if os.path.exists(conffilename):
-                    print ('remove vortex conf_file')
-                    os.remove(conffilename)
-
-                if self.options.soda:
-                    print ('copy conf file to vortex path')
-                    shutil.copyfile(self.options.soda, conffilename)
+            if self.options.soda:
+                print ('copy conf file to vortex path')
+                shutil.copyfile(self.options.soda, conffilename)
 
         elif self.options.safran:
             if self.options.oper:
@@ -125,14 +123,21 @@ class vortex_kitchen(object):
 
         fullname = '/'.join([self.confdir, conffilename])
 
-        self.conf_file = Vortex_conf_file(self.options, fullname)
-        self.conf_file.create_conf()
+        if not self.options.oper:
+            self.conf_file = Vortex_conf_file(self.options, fullname)
+            self.conf_file.create_conf()
+            self.conf_file.write_file()
+            self.conf_file.close()
+
         os.chdir(self.workingdir)
 
     def mkjob_command(self, jobname=None):
 
         if self.options.oper:
-            self.reftask = "ensemble_surfex_tasks"
+            if self.options.monthlyreanalysis:
+                self.reftask = "monthly_surfex_reanalysis"
+            else:
+                self.reftask = "ensemble_surfex_tasks"
             nnodes = 1
             period = "rundate=" + self.options.datedeb.strftime("%Y%m%d%H%M")
             # Note that the jobname is used to discriminate self.conf.previ in vortex task
@@ -202,10 +207,7 @@ class vortex_kitchen(object):
         else:
             mkjob_list = [self.mkjob_safran(), ]
 
-        self.conf_file.add_block(self.jobname)
-        self.conf_file.add_block(self.reftask)
-        self.conf_file.write_file()
-        self.conf_file.close()
+
 
         os.chdir(self.jobdir)
         for mkjob in mkjob_list:
@@ -333,7 +335,9 @@ class Vortex_conf_file(object):
 
     def surfex_variables(self):
 
-        if self.options.model == 'safran':
+        if '@' in self.options.forcing:
+            self.options.forcing, forcinglogin = self.options.forcing.split('@')
+        elif self.options.model == 'safran':
             forcinglogin = 'vernaym'
         else:
             forcinglogin = os.getlogin()
