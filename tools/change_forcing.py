@@ -328,6 +328,8 @@ class forcinput_select(forcinput_tomodify):
     M Lafaysse added a treatement to increase the number of slopes (July 2016)
     M Lafaysse added a treatment to create coordinates for direct compatibilty with the new SAFRAN output (August 2017)'''
 
+    massifvarname = 'massif_number'
+
     def modify(self, init_forcing_file, new_forcing_file, *args):
 
         ''' Modify a forcing file towards a prescribed geometry'''
@@ -345,8 +347,8 @@ class forcinput_select(forcinput_tomodify):
         init_alt = init_forcing_file.read("ZS", keepfillvalue=True)
         b_points_alt = (init_alt >= min_alt) * (init_alt <= max_alt)
 
-        if 'massif_number' in listvar:
-            init_massif_nb_sop = init_forcing_file.read("massif_number", keepfillvalue=True)
+        if self.massifvarname in listvar:
+            init_massif_nb_sop = init_forcing_file.read(self.massifvarname, keepfillvalue=True)
             b_points_massif = np.in1d(init_massif_nb_sop, list_massif_number)
             if np.sum(b_points_massif) == 0:
                 raise MassifException(list_massif_number, list(set(init_massif_nb_sop)))
@@ -573,7 +575,7 @@ class forcinput_select(forcinput_tomodify):
                         var[:, :, :, :] = var_array
                     elif rank == 5:
                         var[:, :, :, :, :] = var_array
-                    print ("AFTER WRITE", datetime.datetime.today())
+#                     print ("AFTER WRITE", datetime.datetime.today())
 
             except Exception:
                 print(var_array)
@@ -587,6 +589,9 @@ class forcinput_select(forcinput_tomodify):
             if varname == "massif_number":
                 save_array_dim = array_dim
 
+        if 'snow_layer' in init_forcing_file_dimensions:
+            return
+
         if "LAT" not in init_forcing_file.listvar():
             lat, lon = self.addCoord(new_forcing_file, savevar["massif_number"], save_array_dim, varFillvalue)
         else:
@@ -595,9 +600,9 @@ class forcinput_select(forcinput_tomodify):
 
         # Compute new solar radiations according to the new values of slope and aspect
         if extendaspects or extendslopes:
-            print ("BEFORE RADIATION COMPUTATIONS", datetime.datetime.today())
+#             print ("BEFORE RADIATION COMPUTATIONS", datetime.datetime.today())
             direct, diffus = sun().slope_aspect_correction(savevar["DIR_SWdown"], savevar["SCA_SWdown"], savevar["time"], lat, lon, savevar["aspect"], savevar["slope"])
-            print ("AFTER RADIATION COMPUTATIONS", datetime.datetime.today())
+#             print ("AFTER RADIATION COMPUTATIONS", datetime.datetime.today())
             new_forcing_file.variables["DIR_SWdown"][:] = direct
             new_forcing_file.variables["SCA_SWdown"][:] = diffus
             del savevar["DIR_SWdown"]
@@ -635,6 +640,10 @@ class forcinput_select(forcinput_tomodify):
         var[:] = lon
 
         return lat, lon
+
+
+class proselect(forcinput_select):
+    massivarname = 'massif_num'
 
 
 class forcinput_extract(forcinput_tomodify):
