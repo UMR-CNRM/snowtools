@@ -21,7 +21,7 @@ from bronx.stdtypes.date import Date, today
 from tasks.oper.get_oper_files import S2MExtractor
 from utils.prosimu import prosimu
 from utils.dates import check_and_convert_date, pretty_date
-from plots.temporal.chrono import spaghettis_with_det
+from plots.temporal.chrono import spaghettis_with_det, spaghettis
 from plots.maps.basemap import Map_alpes, Map_pyrenees, Map_corse
 from utils.infomassifs import infomassifs
 
@@ -52,7 +52,6 @@ class config(object):
     previ = True  # False for analysis, True for forecast
     xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
     list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
-#     list_geometry = ['pyr_allslopes']
 
     list_members = range(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
 
@@ -139,7 +138,7 @@ class Ensemble(object):
         else:
             return self.simufiles[0].read_var(varname, Number_of_points = self.indpoints)
 
-    def proba(self, varname, seuilinf=-999999999, seuilsup=999999999):
+    def probability(self, varname, seuilinf=-999999999, seuilsup=999999999):
 
         if varname not in self.ensemble.keys():
             self.read(varname)
@@ -156,6 +155,20 @@ class Ensemble(object):
 
         quantile = np.where(np.isnan(self.ensemble[varname][:, :, 0]), np.nan, np.percentile(self.ensemble[varname], level, axis=2))
         return quantile
+
+    def mean(self, varname):
+
+        if varname not in self.ensemble.keys():
+            self.read(varname)
+
+        return np.nanmean(self.ensemble[varname], axis=2)
+
+    def spread(self, varname):
+
+        if varname not in self.ensemble.keys():
+            self.read(varname)
+
+        return np.nanstd(self.ensemble[varname], axis=2)
 
     def close(self):
         for member in self.simufiles:
@@ -282,6 +295,7 @@ class EnsembleOperDiags(EnsembleDiags):
     formatplot = 'png'
 
     attributes = dict(
+        PP_SD_1DY_ISBA = dict(convert_unit= 1., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)'),
         SD_1DY_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)'),
         SD_3DY_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 72h (cm)'),
         RAMSOND_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur mobilisable (cm)'),
@@ -309,7 +323,10 @@ class EnsembleOperDiags(EnsembleDiags):
 
             list_filenames, list_titles = self.get_metadata(nolevel = self.attributes[var]['nolevel'])
 
-            s = spaghettis_with_det(self.time)
+            if hasattr(self, 'inddeterministic'):
+                s = spaghettis_with_det(self.time)
+            else:
+                s = spaghettis(self.time)
             settings = self.attributes[var].copy()
             if 'label' in self.attributes[var].keys():
                 settings['ylabel'] = self.attributes[var]['label']
@@ -327,7 +344,11 @@ class EnsembleOperDiags(EnsembleDiags):
                     qmed = self.quantiles[var][1][:, point]
                     qmax = self.quantiles[var][2][:, point]
 
-                s.draw(self.time, allmembers[:, self.inddeterministic], allmembers, qmin, qmed, qmax, **settings)
+                if hasattr(self, 'inddeterministic'):
+                    s.draw(self.time, allmembers[:, self.inddeterministic], allmembers, qmin, qmed, qmax, **settings)
+                else:
+                    s.draw(self.time, allmembers, qmin, qmed, qmax, **settings)
+
                 s.set_title(list_titles[point])
                 s.set_suptitle(suptitle)
                 s.addlogo()
@@ -348,7 +369,11 @@ class EnsembleOperDiags(EnsembleDiags):
 
             list_filenames, list_titles = self.get_metadata(nolevel = self.attributes[var]['nolevel'])
 
-            s = spaghettis_with_det(self.time)
+            if hasattr(self, 'inddeterministic'):
+                s = spaghettis_with_det(self.time)
+            else:
+                s = spaghettis(self.time)
+
             settings = self.attributes[var].copy()
             if 'label' in self.attributes[var].keys():
                 settings['ylabel'] = self.attributes[var]['label']
@@ -368,9 +393,13 @@ class EnsembleOperDiags(EnsembleDiags):
                     settings['colorquantiles'] = list_colors[p]
                     settings['colormembers'] = list_colors[p]
                     if 'labels' in kwargs.keys():
-                        settings['commonlabel'] = kwargs['labels'][p] 
+                        settings['commonlabel'] = kwargs['labels'][p]
 
-                    s.draw(self.time, allmembers[:, self.inddeterministic], allmembers, qmin, qmed, qmax, **settings)
+                    if hasattr(self, 'inddeterministic'):
+                        s.draw(self.time, allmembers[:, self.inddeterministic], allmembers, qmin, qmed, qmax, **settings)
+                    else:
+                        s.draw(self.time, allmembers, qmin, qmed, qmax, **settings)
+
                 s.set_title(list_titles[point])
                 s.set_suptitle(suptitle)
                 s.addlogo()

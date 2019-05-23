@@ -321,7 +321,7 @@ class infomassifs():
 
     def massifposte(self, num_poste):
         for poste in self.caracLoc.documentElement.getElementsByTagName("Site"):
-            if str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip() == num_poste:
+            if str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip() == '%08d' % int(num_poste):
                 try:
                     massif = int(poste.getElementsByTagName("massif")[0].childNodes[0].data)
                 except Exception:
