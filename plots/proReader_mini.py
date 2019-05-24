@@ -926,8 +926,7 @@ class ProReader_membre:
                     break
                     print('more than 100 members. Pb of directory possible. If not, must change indexes in proReader_mini')
             nmembre = nmembre-1
-          
-        print(nmembre)      
+
         # Preparation des data: mise en place des dictionnaires
         self.var_membre = {}
         self.var1D_membre = {}
@@ -937,7 +936,6 @@ class ProReader_membre:
 
         a = ff.read('SNOWDZ')
         liste = [nmembre] + list(a.shape)
-        print(liste)
         self.ntime = a.shape[0]
         self.nsnowlayer = a.shape[1]
 
@@ -1077,11 +1075,11 @@ class ProReader_membre:
             eptop = self.var_membre['SNOWDZ'][:,intime,:]
         else:
             eptop = self.var_membre['SNOWDZ'][:,:,:]
-        
+
         if(real_layers):
             plot_profil(axe, ep, toplot, colormap=colormap, legend=legend, cbar_show=cbar_show)
             axe.set_ylabel('Hauteur (m)')
-            axe.set_ylim(0, np.max(np.nansum(eptop,axis=1)))
+            axe.set_ylim(0, np.max(np.nansum(eptop,axis=-1)))
         else:
             if(cbar_show):
                 ret = axe.pcolormesh(np.swapaxes(toplot, 0, 1), cmap=colormap)
