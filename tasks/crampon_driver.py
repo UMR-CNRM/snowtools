@@ -26,7 +26,7 @@ def setup(t, **kw):
                     WorkshareFamily(
                         tag='offline',
                         ticket = t,
-                        workshareconf='members,allids',
+                        workshareconf='members,membersId',
                         worksharename='membersnode,idsnode',
                         worksharesize=10,
                         worksharelimit='nnodes',

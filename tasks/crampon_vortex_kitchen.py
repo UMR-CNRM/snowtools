@@ -33,13 +33,14 @@ class crampon_vortex_kitchen(object):
         self.vapp = "s2m"
         self.vconf = options.region
 
-        self.workingdir = options.dirwork + "/" + self.vapp + "/" + self.vconf
-
-        self.xpid = options.diroutput
+        self.xpid = options.diroutput + '@' + os.getlogin()
+        self.workingdir = options.dirwork + "/" + self.xpid + "/" + self.vapp + "/" + self.vconf
         self.jobtemplate = "job-vortex-default.py"
 
+        options.confcomplement = self.xpid + options.datedeb.strftime("%Y")
+
         self.create_env(options)
-        self.enforce_nmembers(options)  # this must be moved to the preprocess step of offline I think.
+        self.prepare_namelist(options)  # this must be moved to the preprocess step of offline I think.
         self.create_conf(options)
 
     def check_vortex_install(self):
@@ -66,21 +67,27 @@ class crampon_vortex_kitchen(object):
         if not os.path.isfile(self.jobtemplate):
             os.symlink(os.environ["SNOWTOOLS_CEN"] + "/jobs/" + self.jobtemplate, self.jobtemplate)
 
+    def prepare_namelist(self, options):
+        self.namelist = self.workingdir + '/OPTIONS_' + options.confcomplement + '.nam'
+        shutil.copyfile(options.namelist, self.namelist)
+
+        self.enforce_nmembers(options)
+
     def enforce_nmembers(self, options):
         """enforce NENS in the namelist to the presecribed s2m argument value. Mandatory for SODA"""
         # options.namelist is already an absolute path.
-        update_surfex_namelist_file(options.datedeb, namelistfile=options.namelist, dateend=options.datefin, updateloc=False, nmembers = options.nmembers)
+        update_surfex_namelist_file(options.datedeb, namelistfile=self.namelist, dateend=options.datefin, updateloc=False, nmembers = options.nmembers)
 
     def create_conf(self, options):
         ''' Prepare configuration file from s2m options'''
-
-        confname = "../conf/" + self.vapp + "_" + self.vconf + ".ini"  # this file already exists if options.crampon
+        # append naming specificities to prevent concurrent tasks from erasing files.
+        confname = "../conf/" + self.vapp + "_" + self.vconf + "_" + options.confcomplement + ".ini"
 
         if os.path.exists(confname):
             print ('remove vortex conf_file')
             os.remove(confname)
 
-        print ('copy conf file to vortex path')
+        print ('copy conf file to $WORKDIR')
         shutil.copyfile(options.crampon, confname)
 
         conffile = vortex_conf_file(confname, 'a')
@@ -91,6 +98,7 @@ class crampon_vortex_kitchen(object):
         conffile.write_field('nforcing', options.nforcing)
         conffile.write_field('datedeb', options.datedeb)
         conffile.write_field('datefin', options.datefin)
+        conffile.write_field('confcomplement', options.confcomplement)  # put confcomplement un the conf itself for hendrix fetching -_-
 
         # ########### READ THE USER-PROVIDED conf file ##########################
         # -> in order to append datefin to assimdates and remove the exceding dates.
@@ -118,7 +126,7 @@ class crampon_vortex_kitchen(object):
         conffile.write_field('members', 'rangex(start:1 end:' + str(options.nmembers) + ')')
         if 'E1' in options.escroc:
             if hasattr(confObj, 'membersId'):
-                membersId = confObj.membersId
+                membersId = np.array(map(int, confObj.membersId))
             else:
                 escroc = ESCROC_subensembles(options.escroc, allmembers, randomDraw = True)
                 membersId = escroc.members
@@ -127,7 +135,7 @@ class crampon_vortex_kitchen(object):
             membersId = escroc.members
 
         # ######################################################################
-        conffile.write_field('allids', ','.join(map(str, membersId)))
+        conffile.write_field('membersId', ','.join(map(str, membersId)))
         conffile.write_field('subensemble', options.escroc)
         if options.threshold:
             conffile.write_field('threshold', options.threshold)
@@ -136,7 +144,8 @@ class crampon_vortex_kitchen(object):
         else:
             conffile.write_field('duration', 'monthly')
 
-        conffile.write_field('xpid', self.xpid + '@' + os.getlogin())
+        conffile.write_field('xpid', self.xpid)
+        conffile.write_field('workingdir', self.workingdir)
 
         if options.openloop:
             options.op = 'on'
@@ -148,7 +157,7 @@ class crampon_vortex_kitchen(object):
             conffile.write_field('sensor', options.sensor)
         conffile.write_field('openmp', 1)
         if options.namelist:
-            conffile.write_field('namelist', options.namelist)
+            conffile.write_field('namelist', self.namelist)
         if options.exesurfex:
             conffile.write_field('exesurfex', options.exesurfex)
         if options.writesx:
@@ -193,10 +202,11 @@ class crampon_vortex_kitchen(object):
         jobname = 'crampon'
         reftask = 'crampon_driver'
         nnodes = options.nnodes
+        
         return ["../vortex/bin/mkjob.py -j name=" + jobname + " task=" + reftask + " profile=rd-beaufix-mt jobassistant=cen datebegin=" +
                 options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + options.datefin.strftime("%Y%m%d%H%M") + " template=" + self.jobtemplate +
                 " time=" + walltime(options) +
-                " nnodes=" + str(nnodes)]
+                " nnodes=" + str(nnodes) + " taskconf=" + options.confcomplement]
 
     def run(self, options):
         mkjob_list = self.mkjob_crampon(options)

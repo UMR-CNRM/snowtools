@@ -104,17 +104,12 @@ class Crampon_Task(Task):
         )
         print(t.prompt, 'tb05 =', tb05)
         print()
-
-        takeConf = '/scratch/work/'  + os.environ['USER'] + '/' + self.conf.vapp + '/' + self.conf.vconf + '/conf/' + self.conf.vapp + '_' + self.conf.vconf + '.ini'
+        # each task has its specific conf file on /scratch to avoid overwriting.
+        takeConf = self.conf.workingdir + '/conf/' + self.conf.vapp + '_' + self.conf.vconf +\
+            '_' + self.conf.confcomplement + '.ini'
         self.sh.title('Toolbox input tbconf')
         tbconf = toolbox.input(
             kind           = 'ini_file',
-            # namespace      = 'vortex.sxcen.fr',
-            # namebuild      = 'flat@cen',
-            # block          = 'conf',
-            # storage        = 'sxcen.cnrm.meteo.fr',
-            # rootpath       = self.conf.writesx,
-            # experiment     = self.conf.xpid,
             local          = self.conf.vapp + '_' + self.conf.vconf + '.ini',
             vapp           = self.conf.vapp,
             vconf          = self.conf.vconf,
@@ -122,9 +117,7 @@ class Crampon_Task(Task):
             model          ='surfex',
             role           = 'Conf_file',
             intent = 'inout',
-            # fatal          = False,
+            fatal = True,
         )
         print(t.prompt, 'tbCONFIN =', tbconf)
         print()
-
-

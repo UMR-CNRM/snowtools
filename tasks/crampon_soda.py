@@ -327,7 +327,7 @@ class Soda_Task(Crampon_Task):
                     if os.path.exists('workSODA/IMASK_' + Date(assDate).ymdh + '.txt'):
                         self.sh.title('Toolbox output tb243_sx')
                         tb243 = toolbox.output(
-                            model           = 'IMASL',
+                            model           = 'IMASK',
                             namebuild       = 'flat@cen',
                             namespace       = 'vortex.sxcen.fr',
                             storage         = 'sxcen.cnrm.meteo.fr',

@@ -139,10 +139,11 @@ class Offline_Task(Crampon_Task):
                 print()
                 # if the analysis didn't succeed/openloop (no PREP in analysis rep.), get the BG preps.
                 if not tb03_lan[0]:
-                    
+
                     self.sh.title('Toolbox input tb03_lbg')
                     tb03_lbg = toolbox.input(
                         alternate      = 'SnowpackInit',
+                        realmember     = self.conf.membersnode,
                         member         = dict(realmember=dmembersnode),
                         local          = dict(realmember = dlocal_names),  # local prep name does not hold the date at the moment
                         experiment     = self.conf.xpid,
