@@ -463,8 +463,9 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
 
         if 'late-backup' in self.steps:
 
-            for p, datebegin in enumerate(list_dates_begin_pro):
-                dateend = list_dates_end_pro[p]
+            if oneforcing:
+                datebegin = self.conf.datebegin
+                dateend = self.conf.dateend
                 self.sh.title('Toolbox output tb19')
                 tb19 = toolbox.output(
                     local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
@@ -498,6 +499,43 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 ),
                 print(t.prompt, 'tb20 =', tb20)
                 print()
+            else:
+
+                for p, datebegin in enumerate(list_dates_begin_pro):
+                    dateend = list_dates_end_pro[p]
+                    self.sh.title('Toolbox output tb19')
+                    tb19 = toolbox.output(
+                        local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        datebegin      = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
+                        dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                        nativefmt      = 'netcdf',
+                        kind           = 'SnowpackSimulation',
+                        model          = 'surfex',
+                        namespace      = 'vortex.multi.fr',
+                        namebuild      = 'flat@cen',
+                        block          = 'pro',
+                    ),
+                    print(t.prompt, 'tb19 =', tb19)
+                    print()
+    
+                    self.sh.title('Toolbox output tb20')
+                    tb20 = toolbox.output(
+                        local          = 'PREP_[date:ymdh].nc',
+                        role           = 'SnowpackInit',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        date           = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                        nativefmt      = 'netcdf',
+                        kind           = 'PREP',
+                        model          = 'surfex',
+                        namespace      = 'vortex.multi.fr',
+                        namebuild      = 'flat@cen',
+                        block          = 'prep',
+                    ),
+                    print(t.prompt, 'tb20 =', tb20)
+                    print()
 
 # The following condition does not work. --> Ask leffe how to do
 #                 if not (tb02[0] or tb02_a[0]):
