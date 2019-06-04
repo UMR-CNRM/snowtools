@@ -43,56 +43,83 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             self.conf.dailyprep = False
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
-            for p, datebegin in enumerate(list_dates_begin_forc):
-                dateend = list_dates_end_forc[p]
 
-                if datebegin >= Date(2002, 8, 1):
-                    source_app = 'arpege'
-                    source_conf = '4dvarfr'
-                else:
-                    source_app = 'ifs'
-                    source_conf = 'era40'
+            tb01 = toolbox.input(
+                role           = 'Forcing',
+                kind           = 'MeteorologicalForcing',
+                vapp           = self.conf.meteo,
+                vconf          = '[geometry:area]',
+                source_app     = 'arpege' if source_safran == 'safran' else None,
+                source_conf    = '4dvarfr' if source_safran == 'safran' else None,
+                cutoff         = 'assimilation',
+                local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                experiment     = self.conf.forcingid,
+                block          = block_safran,
+                geometry        = list_geometry,
+                nativefmt      = 'netcdf',
+                model          = 'safran',
+                datebegin      = self.conf.datebegin,
+                dateend        = self.conf.dateend,
+                intent         = 'inout',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                fatal          = False,
+            ),
 
-                self.sh.title('Toolbox input tb01')
-#                 tb01 = toolbox.input(
-#                     role           = 'Forcing',
-#                     local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-#                     vapp           = self.conf.meteo,
-#                     experiment     = self.conf.forcingid,
-#                     geometry       = self.conf.geometry,
-#                     datebegin      = datebegin,
-#                     dateend        = dateend,
-#                     nativefmt      = 'netcdf',
-#                     kind           = 'MeteorologicalForcing',
-#                     model          = 'safran',
-#                     namespace      = 'vortex.multi.fr',
-#                     namebuild      = 'flat@cen',
-#                     block          = 'meteo',
-#                 ),
-
-                tb01 = toolbox.input(
-                    role           = 'Forcing',
-                    kind           = 'MeteorologicalForcing',
-                    vapp           = self.conf.meteo,
-                    vconf          = '[geometry:area]',
-                    source_app     = source_app if source_safran == 'safran' else None,
-                    source_conf    = source_conf if source_safran == 'safran' else None,
-                    cutoff         = 'assimilation',
-                    local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                    experiment     = self.conf.forcingid,
-                    block          = block_safran,
-                    geometry        = list_geometry,
-                    nativefmt      = 'netcdf',
-                    model          = 'safran',
-                    datebegin      = datebegin,
-                    dateend        = dateend,
-                    intent         = 'inout',
-                    namespace      = 'vortex.multi.fr',
-                    namebuild      = 'flat@cen',
-                ),
-
-                print(t.prompt, 'tb01 =', tb01)
-                print()
+            if tb01[0]:
+                oneforcing = True
+            else:
+                oneforcing = False
+                for p, datebegin in enumerate(list_dates_begin_forc):
+                    dateend = list_dates_end_forc[p]
+    
+                    if datebegin >= Date(2002, 8, 1):
+                        source_app = 'arpege'
+                        source_conf = '4dvarfr'
+                    else:
+                        source_app = 'ifs'
+                        source_conf = 'era40'
+    
+                    self.sh.title('Toolbox input tb01')
+    #                 tb01 = toolbox.input(
+    #                     role           = 'Forcing',
+    #                     local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+    #                     vapp           = self.conf.meteo,
+    #                     experiment     = self.conf.forcingid,
+    #                     geometry       = self.conf.geometry,
+    #                     datebegin      = datebegin,
+    #                     dateend        = dateend,
+    #                     nativefmt      = 'netcdf',
+    #                     kind           = 'MeteorologicalForcing',
+    #                     model          = 'safran',
+    #                     namespace      = 'vortex.multi.fr',
+    #                     namebuild      = 'flat@cen',
+    #                     block          = 'meteo',
+    #                 ),
+    
+                    tb01 = toolbox.input(
+                        role           = 'Forcing',
+                        kind           = 'MeteorologicalForcing',
+                        vapp           = self.conf.meteo,
+                        vconf          = '[geometry:area]',
+                        source_app     = source_app if source_safran == 'safran' else None,
+                        source_conf    = source_conf if source_safran == 'safran' else None,
+                        cutoff         = 'assimilation',
+                        local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        experiment     = self.conf.forcingid,
+                        block          = block_safran,
+                        geometry        = list_geometry,
+                        nativefmt      = 'netcdf',
+                        model          = 'safran',
+                        datebegin      = datebegin,
+                        dateend        = dateend,
+                        intent         = 'inout',
+                        namespace      = 'vortex.multi.fr',
+                        namebuild      = 'flat@cen',
+                    ),
+    
+                    print(t.prompt, 'tb01 =', tb01)
+                    print()
 
             self.sh.title('Toolbox input tb02')
             tb02 = toolbox.input(
@@ -375,7 +402,10 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print()
                 tb09b.run()
 
-            firstforcing = 'FORCING_' + list_dates_begin_forc[0].strftime("%Y%m%d%H") + "_" + list_dates_end_forc[0].strftime("%Y%m%d%H") + ".nc"
+            if oneforcing:
+                firstforcing = 'FORCING_' + self.conf.datebegin.strftime("%Y%m%d%H") + "_" + self.conf.dateend.strftime("%Y%m%d%H") + ".nc"
+            else:
+                firstforcing = 'FORCING_' + list_dates_begin_forc[0].strftime("%Y%m%d%H") + "_" + list_dates_end_forc[0].strftime("%Y%m%d%H") + ".nc"
             self.sh.title('Toolbox algo tb09a')
             tb09a = tbalgo1 = toolbox.algo(
                 kind         = 'surfex_preprocess',
