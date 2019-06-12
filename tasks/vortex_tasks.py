@@ -463,25 +463,30 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
 
         if 'late-backup' in self.steps:
 
-            if oneforcing:
-                datebegin = self.conf.datebegin
-                dateend = self.conf.dateend
-                self.sh.title('Toolbox output tb19')
-                tb19 = toolbox.output(
-                    local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-                    experiment     = self.conf.xpid,
-                    geometry       = self.conf.geometry,
-                    datebegin      = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
-                    dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
-                    nativefmt      = 'netcdf',
-                    kind           = 'SnowpackSimulation',
-                    model          = 'surfex',
-                    namespace      = 'vortex.multi.fr',
-                    namebuild      = 'flat@cen',
-                    block          = 'pro',
-                ),
-                print(t.prompt, 'tb19 =', tb19)
-                print()
+            # First we try to save a PRO file covering the whole simulation period if present
+            datebegin = self.conf.datebegin
+            dateend = self.conf.dateend
+            self.sh.title('Toolbox output tb19')
+            tb19 = toolbox.output(
+                local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                experiment     = self.conf.xpid,
+                geometry       = self.conf.geometry,
+                datebegin      = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
+                dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                nativefmt      = 'netcdf',
+                kind           = 'SnowpackSimulation',
+                model          = 'surfex',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'pro',
+                fatal          = False
+            ),
+            print(t.prompt, 'tb19 =', tb19)
+            print()
+
+            if tb19[0]:
+                # Only one pro file for the whole simulation period
+                # Save only one prep at the end of the simulation
 
                 self.sh.title('Toolbox output tb20')
                 tb20 = toolbox.output(
@@ -499,7 +504,9 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 ),
                 print(t.prompt, 'tb20 =', tb20)
                 print()
+
             else:
+                # PRO not available for the whole simulation period: try to save yearly files
 
                 for p, datebegin in enumerate(list_dates_begin_pro):
                     dateend = list_dates_end_pro[p]
@@ -519,7 +526,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     ),
                     print(t.prompt, 'tb19 =', tb19)
                     print()
-    
+
                     self.sh.title('Toolbox output tb20')
                     tb20 = toolbox.output(
                         local          = 'PREP_[date:ymdh].nc',
