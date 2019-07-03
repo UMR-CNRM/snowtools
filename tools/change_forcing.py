@@ -585,16 +585,16 @@ class forcinput_select(forcinput_tomodify):
             # Some variables need to be saved for solar computations
             if varname in ["time"]:
                 savevar[varname] = init_forcing_file.readtime()
-            if varname in ["LAT", "LON", "ZS", "aspect", "slope", "DIR_SWdown", "SCA_SWdown", "massif_number", "Tair", "Rainf", "Snowf"]:
+            if varname in ["LAT", "LON", "ZS", "aspect", "slope", "DIR_SWdown", "SCA_SWdown", self.massifvarname(), "Tair", "Rainf", "Snowf"]:
                 savevar[varname] = var_array
-            if varname == "massif_number":
+            if varname == self.massifvarname():
                 save_array_dim = array_dim
 
         if 'snow_layer' in init_forcing_file_dimensions:
             return
 
         if "LAT" not in init_forcing_file.listvar():
-            lat, lon = self.addCoord(new_forcing_file, savevar["massif_number"], save_array_dim, varFillvalue)
+            lat, lon = self.addCoord(new_forcing_file, savevar[self.massifvarname()], save_array_dim, varFillvalue)
         else:
             lat = savevar["LAT"]
             lon = savevar["LON"]
@@ -646,6 +646,9 @@ class forcinput_select(forcinput_tomodify):
 class proselect(forcinput_select):
     def massifvarname(self):
         return 'massif_num'
+
+    def add_massif_variables(self, init_forcing_file, new_forcing_file, savevar={}):
+        pass
 
 
 class forcinput_extract(forcinput_tomodify):

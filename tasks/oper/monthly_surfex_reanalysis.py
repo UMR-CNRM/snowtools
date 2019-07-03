@@ -87,7 +87,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
             self.sh.title('Toolbox input tb03')
             tb03 = toolbox.input(
                 role           = 'SnowpackInit',
-                local          = 'mb[member]/PREP.nc',
+                local          = 'PREP.nc',
                 block          = 'prep',
                 experiment     = self.conf.xpid,
                 geometry       = self.conf.geometry,
@@ -171,7 +171,6 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
             print()
 
             self.sh.title('Toolbox input tb07')
-
             tb07 = toolbox.input(
                 role            = 'Nam_surfex',
                 source          = 'OPTIONS_default.nam',
