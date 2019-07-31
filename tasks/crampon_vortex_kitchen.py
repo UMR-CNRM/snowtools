@@ -13,7 +13,7 @@ from tasks.vortex_kitchen import vortex_conf_file, walltime
 from tools.update_namelist import update_surfex_namelist_file
 import numpy as np
 from utils.ESCROCsubensembles import ESCROC_subensembles
-
+import time
 
 class crampon_vortex_kitchen(object):
     '''
@@ -127,6 +127,37 @@ class crampon_vortex_kitchen(object):
         if 'E1' in options.escroc:
             if hasattr(confObj, 'membersId'):
                 membersId = np.array(map(int, confObj.membersId))
+
+                # in case of synthetic assimilation, need to replace the synthetic escroc member.
+                if options.synth is not None:
+                    # warning in case of misspecification of --synth
+                    print('\n\n\n')
+                    print(' /!\/!\/!\/!\ CAUTION /!\/!\/!\/!\/!\ ')
+                    print('Please check that the --synth argument')
+                    print('corresponds to the openloop member    ')
+                    print('used to generate the observations     ')
+                    print('otherwise this would artificially     ')
+                    print('generate excellent results            ')
+                    print('by letting the truth member to stay   ')
+                    print('in the assimilation experiment        ')
+                    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+                    print('\n\n\n')
+                    time.sleep(3)
+                    # workaround to know the size of the ensemble
+                    sizeE1 = ESCROC_subensembles(options.escroc, allmembers, randomDraw = True).size
+                    membersId[options.synth - 1] = 1 + np.random.choice(sizeE1, 1)
+                    conffile.write_field('synth', options.synth)
+                else:  # real observations assimilation
+                    # warning in case of performing a synthetic experiment
+                    # but forgetting to specify the synthetic member
+                    print('\n\n\n')
+                    print(' /!\/!\/!\/!\ CAUTION /!\/!\/!\/!\/!\ ')
+                    print('If youre performing a SYNTHETIC EXPERIMENT')
+                    print('you MUST specify the synthetic member     ')
+                    print('to eliminate from the ensemble')
+                    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+                    print('\n\n\n')
+                    time.sleep(3)
             else:
                 escroc = ESCROC_subensembles(options.escroc, allmembers, randomDraw = True)
                 membersId = escroc.members
@@ -174,7 +205,7 @@ class crampon_vortex_kitchen(object):
 
         # new entry for Loopfamily on offline parallel tasks:
         conffile.write_field('offlinetasks', ','.join(map(str, range(1, options.nnodes + 1))))
-        
+
         # this line is mandatory to ensure the use of subjobs:
         # place it in the field offline for parallelization of the offlines LoopFamily only
         conffile.new_class('offline')
@@ -202,7 +233,7 @@ class crampon_vortex_kitchen(object):
         jobname = 'crampon'
         reftask = 'crampon_driver'
         nnodes = options.nnodes
-        
+
         return ["../vortex/bin/mkjob.py -j name=" + jobname + " task=" + reftask + " profile=rd-beaufix-mt jobassistant=cen datebegin=" +
                 options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + options.datefin.strftime("%Y%m%d%H%M") + " template=" + self.jobtemplate +
                 " time=" + walltime(options) +

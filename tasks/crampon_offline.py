@@ -13,7 +13,10 @@ from bronx.stdtypes.date import Date
 import os
 from tasks.crampon_common import Crampon_Task
 from utils.dates import get_list_dates_files, check_and_convert_date
-from random import shuffle
+# from random import shuffle
+import numpy as np
+from copy import copy
+import random
 
 
 class Offline_Task(Crampon_Task):
@@ -34,10 +37,11 @@ class Offline_Task(Crampon_Task):
         nmembersnode = len(self.conf.membersnode)
         idsnode = map(int, self.conf.idsnode)
 
-        # in case of synthetic assimilation, shuffle it to prevent the truth to appear.
-        # within each node only, not btw them.
-        if self.conf.openloop == 'off' and self.conf.sensor == 'SYNTH':
-            shuffle(idsnode)
+        # BC 31/07/19 this produces noise deteriorating the spread so remove it.
+        # # in case of synthetic assimilation, shuffle it to prevent the truth to appear.
+        # # within each node only, not btw them.
+        # if self.conf.openloop == 'off' and self.conf.sensor == 'SYNTH':
+        #     shuffle(idsnode)
         # ################## STEP.01 #################################################
         # separate early-fetch (constant files, get at the beginning of the simulation)
         # and fetch (get it as the simulation goes along)
@@ -53,6 +57,15 @@ class Offline_Task(Crampon_Task):
 
             forcExp = self.conf.forcing + '@' + os.environ['USER']
             meteo_members = {str(m): ((m - 1) % int(self.conf.nforcing)) + 1 for m in self.conf.membersnode}
+
+            # in case of synthetic assimilation, replace the synthetic truth's forcing by another randomly drawn from the rest.
+            if hasattr(self.conf, 'synth'):
+                gg = range(1, int(self.conf.nforcing) + 1)
+                synth = str(int(self.conf.synth))
+
+                if synth in meteo_members.keys():  # because here we work by nodes
+                    gg.remove(meteo_members[synth])
+                meteo_members[synth] = random.choice(gg)
             local_names = {str(m): 'mb{0:04d}'.format(m) + '/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                            for m in self.conf.membersnode}
             self.sh.title('Toolbox input tb01')

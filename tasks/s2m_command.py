@@ -245,6 +245,10 @@ def parse_options(arguments):
                       action="store", type = "str", dest="sensor", default = "MODIS",
                       help="specify the sensor name of the obs you want to assimilate")
 
+    parser.add_option("--synth",
+                      action="store", type = "int", dest="synth", default = None,
+                      help="activate synthetic assimilation and set the synthetic member to remove and replace (starting from 1)")
+
     (options, args) = parser.parse_args(arguments)
 
     del args
