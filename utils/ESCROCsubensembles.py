@@ -47,7 +47,8 @@ class ESCROC_subensembles(dict):
         self.holdlist = ['B92', 'SPK', 'B02']
         self.complist = ['B92', 'S14', 'T11']
         self.cvlist = ['CV10000', 'CV30000', 'CV50000']
-
+        
+        self.size = len(self.snowflist) * len(self.metamlist) * len(self.radlist) * len(self.turblist) * len(self.condlist) * len(self.holdlist) * len(self.complist) * len(self.cvlist)
         physical_options, snow_parameters, memberslist = self.drawMembers(members, randomDraw)
 
         return physical_options, snow_parameters, memberslist
@@ -72,7 +73,7 @@ class ESCROC_subensembles(dict):
         self.holdlist = ['B92', 'SPK', 'B02']
         self.complist = ['B92', 'S14', 'T11']
         self.cvlist = ['CV10000', 'CV30000', 'CV50000']
-
+        self.size = len(self.snowflist) * len(self.metamlist) * len(self.radlist) * len(self.turblist) * len(self.condlist) * len(self.holdlist) * len(self.complist) * len(self.cvlist)
         physical_options, snow_parameters, memberslist = self.drawMembers(members, randomDraw)
         return physical_options, snow_parameters, memberslist
 
@@ -93,6 +94,7 @@ class ESCROC_subensembles(dict):
         self.holdlist = ['B92', 'SPK', 'B02']
         self.complist = ['B92', 'S14', 'T11']
         self.cvlist = ['CV10000', 'CV30000', 'CV50000']
+        self.size = len(self.snowflist) * len(self.metamlist) * len(self.radlist) * len(self.turblist) * len(self.condlist) * len(self.holdlist) * len(self.complist) * len(self.cvlist)
         physical_options, snow_parameters, memberslist = self.drawMembers(members, randomDraw)
 
         return physical_options, snow_parameters, memberslist
@@ -143,7 +145,7 @@ class ESCROC_subensembles(dict):
             po, sp = self.convert_options(*allmembers[mb])
             physical_options.append(po)
             snow_parameters.append(sp)
-
+        self.size = 35
         return physical_options, snow_parameters, members
 
     def Crocus(self, members):
@@ -166,7 +168,7 @@ class ESCROC_subensembles(dict):
         # else: returns the members corresponding to members
         # be careful +1 because starts from 0
         if randomDraw:
-            memberslist = 1 + np.random.choice(len(self.snowflist) * len(self.metamlist) * len(self.radlist) * len(self.turblist) * len(self.condlist) * len(self.holdlist) * len(self.complist) * len(self.cvlist), len(members), replace = False)
+            memberslist = 1 + np.random.choice(self.size, len(members), replace = False)
         else:
             memberslist = members
         physical_options = []
