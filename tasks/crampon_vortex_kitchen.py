@@ -14,6 +14,8 @@ from tools.update_namelist import update_surfex_namelist_file
 import numpy as np
 from utils.ESCROCsubensembles import ESCROC_subensembles
 import time
+import random
+
 
 class crampon_vortex_kitchen(object):
     '''
@@ -128,7 +130,9 @@ class crampon_vortex_kitchen(object):
             if hasattr(confObj, 'membersId'):
                 membersId = np.array(map(int, confObj.membersId))
 
-                # in case of synthetic assimilation, need to replace the synthetic escroc member.
+                # in case of synthetic assimilation, need to:
+                #    - replace the synthetic escroc member
+                #    - draw a substitution forcing
                 if options.synth is not None:
                     # warning in case of misspecification of --synth
                     print('\n\n\n')
@@ -142,22 +146,33 @@ class crampon_vortex_kitchen(object):
                     print('in the assimilation experiment        ')
                     print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
                     print('\n\n\n')
-                    time.sleep(3)
+                    time.sleep(2)
                     # workaround to know the size of the ensemble
                     sizeE1 = ESCROC_subensembles(options.escroc, allmembers, randomDraw = True).size
                     membersId[options.synth - 1] = 1 + np.random.choice(sizeE1, 1)
                     conffile.write_field('synth', options.synth)
+
+                    # draw a substitution forcing
+                    meteo_members = {str(m): ((m - 1) % int(options.nforcing)) + 1 for m in range(options.nmembers)}
+                    if hasattr(confObj, 'meteo_draw'):
+                        meteo_draw = confObj.meteo_draw
+                    else:
+                        meteo_draw = meteo_members[str(options.synth)]
+                    while meteo_draw == meteo_members[str(options.synth)]:
+                        meteo_draw = random.choice(range(1, int(options.nforcing) + 1))
+                    print('mto draw', meteo_draw)
+                    conffile.write_field('meteo_draw', meteo_draw)
                 else:  # real observations assimilation
                     # warning in case of performing a synthetic experiment
                     # but forgetting to specify the synthetic member
                     print('\n\n\n')
                     print(' /!\/!\/!\/!\ CAUTION /!\/!\/!\/!\/!\ ')
-                    print('If youre performing a SYNTHETIC EXPERIMENT')
+                    print("If you're performing a SYNTHETIC EXPERIMENT")
                     print('you MUST specify the synthetic member     ')
                     print('to eliminate from the ensemble')
                     print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
                     print('\n\n\n')
-                    time.sleep(3)
+                    time.sleep(2)
             else:
                 escroc = ESCROC_subensembles(options.escroc, allmembers, randomDraw = True)
                 membersId = escroc.members

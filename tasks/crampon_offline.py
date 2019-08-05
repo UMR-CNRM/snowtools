@@ -59,13 +59,15 @@ class Offline_Task(Crampon_Task):
             meteo_members = {str(m): ((m - 1) % int(self.conf.nforcing)) + 1 for m in self.conf.membersnode}
 
             # in case of synthetic assimilation, replace the synthetic truth's forcing by another randomly drawn from the rest.
-            if hasattr(self.conf, 'synth'):
-                gg = range(1, int(self.conf.nforcing) + 1)
-                synth = str(int(self.conf.synth))
-
-                if synth in meteo_members.keys():  # because here we work by nodes
-                    gg.remove(meteo_members[synth])
-                meteo_members[synth] = random.choice(gg)
+            # if hasattr(self.conf, 'synth'):
+            #     gg = range(1, int(self.conf.nforcing) + 1)
+            #     synth = str(int(self.conf.synth))
+            #
+            #     if synth in meteo_members.keys():  # because here we work by nodes
+            #         gg.remove(meteo_members[synth])
+            #     meteo_members[synth] = random.choice(gg)
+            synth = str(int(self.conf.synth))
+            meteo_members[synth] = self.conf.meteo_draw
             local_names = {str(m): 'mb{0:04d}'.format(m) + '/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                            for m in self.conf.membersnode}
             self.sh.title('Toolbox input tb01')
