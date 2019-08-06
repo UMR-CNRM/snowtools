@@ -149,7 +149,9 @@ class crampon_vortex_kitchen(object):
                     time.sleep(2)
                     # workaround to know the size of the ensemble
                     sizeE1 = ESCROC_subensembles(options.escroc, allmembers, randomDraw = True).size
-                    membersId[options.synth - 1] = 1 + np.random.choice(sizeE1, 1)
+                    # draw a member, excluding any ESCROC member already present in the ensemble.
+                    membersId[options.synth - 1] = np.random.choice([e for e in range(1, sizeE1 + 1) if e not in membersId])
+
                     conffile.write_field('synth', options.synth)
 
                     # draw a substitution forcing
