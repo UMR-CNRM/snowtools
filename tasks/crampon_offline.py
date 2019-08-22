@@ -66,8 +66,9 @@ class Offline_Task(Crampon_Task):
             #     if synth in meteo_members.keys():  # because here we work by nodes
             #         gg.remove(meteo_members[synth])
             #     meteo_members[synth] = random.choice(gg)
-            synth = str(int(self.conf.synth))
-            meteo_members[synth] = self.conf.meteo_draw
+            if hasattr(self.conf, 'synth'):
+                synth = str(int(self.conf.synth))
+                meteo_members[synth] = self.conf.meteo_draw
             local_names = {str(m): 'mb{0:04d}'.format(m) + '/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                            for m in self.conf.membersnode}
             self.sh.title('Toolbox input tb01')

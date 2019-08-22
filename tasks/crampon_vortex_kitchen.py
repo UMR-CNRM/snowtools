@@ -31,6 +31,9 @@ class crampon_vortex_kitchen(object):
         # Check if a vortex installation is defined
         self.check_vortex_install()
 
+        # check the options consistency
+        self.check_options(options)
+
         # Initialization of vortex variables
         self.vapp = "s2m"
         self.vconf = options.region
@@ -50,6 +53,24 @@ class crampon_vortex_kitchen(object):
         if "VORTEX" not in os.environ.keys():
             raise InstallException("VORTEX environment variable must be defined towards a valid vortex install.")
 
+    def check_options(self, options):
+        
+        if options.openloop:
+            if (options.synth is not None) or  (options.real is True):
+                print('''
+                --openloop, --synth <mbid> and --real are exclusive arguments.
+                so please chose one of them only.
+                      '''
+                      )
+                raise Exception
+        elif (options.synth is None and options.real is False):
+            print('''
+            Either you\'re running an assimilation experiment with (1) real data or (2) with synthetic from previous openloop
+            (1) specify --real to s2m
+            (2) use --synth <mbid> (starting from 1)
+                to specify which member is the synthetic one in order to remove and replace it.
+                 ''')
+            raise Exception
     def create_env(self, options):
         # Prepare environment
         if not os.path.isdir(self.workingdir):
