@@ -13,10 +13,6 @@ from bronx.stdtypes.date import Date
 import os
 from tasks.crampon_common import Crampon_Task
 from utils.dates import get_list_dates_files, check_and_convert_date
-# from random import shuffle
-import numpy as np
-from copy import copy
-import random
 
 
 class Offline_Task(Crampon_Task):

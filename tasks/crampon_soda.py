@@ -22,14 +22,14 @@ class Soda_Task(Crampon_Task):
 
         # ##### PREPARE common stuff with the offline task ###########
 
-        t, firstloop, lastloop, assDate, = self.prepare_common()
+        t, firstloop, _, assDate, = self.prepare_common()
         # if 'early-fetch' in self.steps or 'fetch' in self.steps:
         if 'early-fetch' in self.steps:
             # ################# FETCH CONSTANT FILES #############
             # 17/04/19 -> keep a workSODA rep for backward compatibility
             # AND sake of simplicity, even though it is not needed anymore.
 
-            self.get_common_consts(firstloop, self.conf.members)  # soda gets ALL members, not only membersnode. 
+            self.get_common_consts(firstloop, self.conf.members)  # soda gets ALL members, not only membersnode.
 
             # ################# FETCH EXECUTABLE ###############
             self.sh.title('Toolbox executable tb08_s= tbx4')
@@ -232,7 +232,6 @@ class Soda_Task(Crampon_Task):
                     print(t.prompt, 'tb243 =', tb243)
                     print()
 
-
             # ########### PUT OBSERVATIONS SXCEN ####################################
             if os.path.exists('workSODA/OBSERVATIONS_' + Date(assDate).ymdHh + '.nc'):
                 locObs = 'workSODA/obs_' + self.conf.sensor + '_' + self.conf.geometry.area + '_' + Date(assDate).ymdHh + '.nc'
@@ -306,7 +305,7 @@ class Soda_Task(Crampon_Task):
                         print()
                     else:
                         print('workSODA/PART_' + Date(assDate).ymdh + '.txt doesnot exist')
-                        
+
                     if os.path.exists('workSODA/BG_CORR_' + Date(assDate).ymdh + '.txt'):
                         self.sh.title('Toolbox output tb242_sx')
                         tb242 = toolbox.output(
@@ -323,7 +322,7 @@ class Soda_Task(Crampon_Task):
                         )
                         print(t.prompt, 'tb242 =', tb242)
                         print()
-                        
+
                     if os.path.exists('workSODA/IMASK_' + Date(assDate).ymdh + '.txt'):
                         self.sh.title('Toolbox output tb243_sx')
                         tb243 = toolbox.output(
@@ -340,4 +339,3 @@ class Soda_Task(Crampon_Task):
                         )
                         print(t.prompt, 'tb24 3=', tb243)
                         print()
-

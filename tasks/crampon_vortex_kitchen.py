@@ -54,9 +54,9 @@ class crampon_vortex_kitchen(object):
             raise InstallException("VORTEX environment variable must be defined towards a valid vortex install.")
 
     def check_options(self, options):
-        
+
         if options.openloop:
-            if (options.synth is not None) or  (options.real is True):
+            if (options.synth is not None) or (options.real is True):
                 print('''
                 --openloop, --synth <mbid> and --real are exclusive arguments.
                 so please chose one of them only.
@@ -71,6 +71,7 @@ class crampon_vortex_kitchen(object):
                 to specify which member is the synthetic one in order to remove and replace it.
                  ''')
             raise Exception
+
     def create_env(self, options):
         # Prepare environment
         if not os.path.isdir(self.workingdir):
@@ -208,10 +209,8 @@ class crampon_vortex_kitchen(object):
         conffile.write_field('subensemble', options.escroc)
         if options.threshold:
             conffile.write_field('threshold', options.threshold)
-        if not options.cramponmonthly:  # for now on CRAMPON only works with yearly forcing files
-            conffile.write_field('duration', 'yearly')
-        else:
-            conffile.write_field('duration', 'monthly')
+        # for now on CRAMPON only works with yearly forcing files
+        conffile.write_field('duration', 'yearly')
 
         conffile.write_field('xpid', self.xpid)
         conffile.write_field('workingdir', self.workingdir)

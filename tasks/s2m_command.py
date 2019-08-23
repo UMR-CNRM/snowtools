@@ -222,7 +222,7 @@ def parse_options(arguments):
     parser.add_option("--crampon",
                       action="store", type='string', dest="crampon", default=None,
                       help="CRAMPON assimilation sequence activation and ABSOLUTE path to conf (assimdates (file)")
-    
+
     parser.add_option("--nforcing",
                       action="store", type="int", dest="nforcing", default=1,
                       help="Number of members of forcing files")
@@ -248,9 +248,8 @@ def parse_options(arguments):
                       help="activate synthetic assimilation and set the synthetic member to remove and replace (starting from 1)")
 
     parser.add_option("--real",
-                      action="store_True", dest="real", default = False,
+                      action="store_true", dest="real", default = False,
                       help="activate real assimilation")
-
 
     (options, args) = parser.parse_args(arguments)
 
