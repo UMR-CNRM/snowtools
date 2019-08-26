@@ -11,6 +11,7 @@ import netCDF4
 import numpy as np
 import sys
 from .FileException import FileNameException, FileOpenException, VarNameException, TimeException, MultipleValueException
+from utils.S2M_standard_file import StandardCROCUS
 
 # Fichier PRO.nc issu d'une simulation SURFEX post-traitée
 
@@ -48,9 +49,9 @@ class prosimu():
             self.mfile = 0
             try:
                 if openmode == "w":
-                    self.dataset = netCDF4.Dataset(path, openmode, format=ncformat)
+                    self.dataset = StandardCROCUS(path, openmode, format=ncformat)
                 else:
-                    self.dataset = netCDF4.Dataset(path, openmode)
+                    self.dataset = StandardCROCUS(path, openmode)
             except Exception:
                 raise FileOpenException(path)
         else:

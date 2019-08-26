@@ -224,6 +224,8 @@ class surfexrun(object):
     def postprocess(self):
         profile = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode='a')
         profile.massif_natural_risk()
+        profile.dataset.GlobalAttributes()
+        profile.dataset.add_standard_names()
         profile.close()
 
 

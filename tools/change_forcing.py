@@ -22,6 +22,7 @@ from utils.FileException import FileNameException, DirNameException, VarWriteExc
 from utils.dates import TypeException
 
 from utils.resources import print_used_memory
+from utils.S2M_standard_file import StandardSAFRAN
 
 
 class forcinput_tomerge:
@@ -49,12 +50,15 @@ class forcinput_tomerge:
         if not (dirout == '' or os.path.isdir(dirout)):
             raise DirNameException(dirout)
 
-        new_forcing_file = netCDF4.Dataset(forcout, "w", format=init_forcing_file[0].format())
+        new_forcing_file = StandardSAFRAN(forcout, "w", format=init_forcing_file[0].format())
 
         self.merge(init_forcing_file, new_forcing_file, args)
 
         for openedfic in init_forcing_file:
             openedfic.close()
+
+        new_forcing_file.GlobalAttributes()
+        new_forcing_file.add_standard_names()
 
         new_forcing_file.close()
 
@@ -191,12 +195,14 @@ class forcinput_tomodify:
         else:
             init_forcing_file = prosimu(forcin)
             print ("INFO INPUT FORCING FILE FORMAT: " + init_forcing_file.format())
-            new_forcing_file = netCDF4.Dataset(forcout, "w", format=self.formatout)
+            new_forcing_file = StandardSAFRAN(forcout, "w", format=self.formatout)
             self.modify(init_forcing_file, new_forcing_file, args)
 
         init_forcing_file.close()
 
         if forcin != forcout:
+            new_forcing_file.GlobalAttributes()
+            new_forcing_file.add_standard_names()
             new_forcing_file.close()
 
     def modify(self, init_forcing_file, new_forcing_file, *args):
@@ -205,7 +211,7 @@ class forcinput_tomodify:
     def add_massif_variables(self, init_forcing_file, new_forcing_file, savevar={}):
 
         # if new_forcing_file is prosimu instance, take the dataset class instead
-        if type(new_forcing_file) is not netCDF4.Dataset:
+        if type(new_forcing_file) not in [netCDF4.Dataset, StandardSAFRAN]:
             new_forcing_file = new_forcing_file.dataset
 
         self.create_massif_dimension(init_forcing_file, new_forcing_file, savevar)
