@@ -199,6 +199,52 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
             print(t.prompt, 'tb03 =', tb03)
             print()
 
+
+            # Les conditions initiales de secours seront utilisees par n'importe quel membre n ayant aucune condition initiale
+            # On tente le run deterministe
+            self.sh.title('Toolbox input tb03c')
+            tb03c = toolbox.input(
+                role           = 'SnowpackInitSecours',
+                local          = 'PREP.nc',
+                block          = 'prep',
+                experiment     = self.conf.xpid,
+                geometry       = self.conf.geometry,
+                datevalidity   = datebegin,
+                date           = rundate_prep,
+                member         = 35,
+                intent         = 'inout',
+                nativefmt      = 'netcdf',
+                kind           = 'PREP',
+                model          = 'surfex',
+                namespace      = 'vortex.multi.fr',
+                fatal          = False,
+                cutoff         = 'assimilation'
+            ),
+            print(t.prompt, 'tb03 =', tb03c)
+            print()
+
+            # On tente la reanalyse S2M
+            self.sh.title('Toolbox input tb03e')
+            tb03e = toolbox.input(
+                alternate           = 'SnowpackInitSecours',
+                local          = 'PREP.nc',
+                experiment     = 'reanalysis@lafaysse',
+                geometry       = self.conf.geometry,
+                date           = datebegin,
+                intent         = 'inout',
+                nativefmt      = 'netcdf',
+                kind           = 'PREP',
+                model          = 'surfex',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'prep',
+                fatal          = False,
+                )
+
+            print(t.prompt, 'tb03 =', tb03e)
+            print()
+
+
             for i, alternate_prep in enumerate(alternate_rundate_prep):
 
                 fatal = i == len(alternate_rundate_prep) - 1
@@ -218,11 +264,35 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     kind           = 'PREP',
                     model          = 'surfex',
                     namespace      = 'vortex.multi.fr',
-                    fatal          = fatal,
+                    fatal          = False,
                     cutoff         = alternate_prep[1]
                 ),
                 print(t.prompt, 'tb03b =', tb03b)
                 print()
+
+
+                self.sh.title('Toolbox input tb03d')
+                tb03d = toolbox.input(
+                    alternate      = 'SnowpackInitSecours',
+                    local          = 'PREP.nc',
+                    block          = 'prep',
+                    experiment     = self.conf.xpid,
+                    geometry       = self.conf.geometry,
+                    datevalidity   = datebegin,
+                    date           = rundate_prep,
+                    member         = 35,
+                    intent         = 'inout',
+                    nativefmt      = 'netcdf',
+                    kind           = 'PREP',
+                    model          = 'surfex',
+                    namespace      = 'vortex.multi.fr',
+                    fatal          = False,
+                    cutoff         = 'assimilation'
+                ),
+                print(t.prompt, 'tb03 =', tb03d)
+                print()
+
+
 
             self.sh.title('Toolbox input tb04')
             tb04 = toolbox.input(
@@ -296,7 +366,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 local          = 'OFFLINE',
                 model          = 'surfex',
                 genv           = 'uenv:cen.01@CONST_CEN',
-                gvar           = 'master_offline_nompi',
+                gvar           = 'master_surfex_offline_nompi',
             )
 
             print(t.prompt, 'tb08 =', tb08)
@@ -315,7 +385,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 threshold      = self.conf.threshold,
                 members        = footprints.util.rangex(members),
                 geometry       = list_geometry,
-                ntasks         = 10 if self.conf.rundate.hour == self.monthly_analysis_time else 40,
+                ntasks         = 6 if self.conf.rundate.hour == self.monthly_analysis_time else 40,
                 daily          = not self.conf.previ,
             )
             print(t.prompt, 'tb09 =', tb09)
