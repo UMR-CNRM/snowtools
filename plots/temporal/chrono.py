@@ -82,7 +82,7 @@ class temporalplot(Mplfigure):
         else:
             interval = ndays / (15 * 365) + 1
             self.plot.xaxis.set_major_locator(YearLocator(interval))
-            formatDate = '%d %b\n%Y'
+            formatDate = '%Y'
 
         self.plot.xaxis.set_major_formatter(DateFormatter(formatDate))
 
@@ -132,6 +132,33 @@ class temporalplot2Axes(temporalplot):
     def addLegendAx2(self, location="upper right"):
 
         self.ax2.legend(loc=location)
+
+
+class prettyensemble(temporalplot):
+
+    figsize = (15, 4.5)
+
+    def __init__(self, *args, **kwargs):
+        super(prettyensemble, self).__init__(*args, **kwargs)
+#         self.fig.subplots_adjust(top=0.85)
+        self.fig.subplots_adjust()
+
+    def draw(self, timeSim, qmin, qmed, qmax, **kwargs):
+
+        if 'colorquantiles' not in kwargs.keys():
+            kwargs['colorquantiles'] = 'red'
+        if 'colormembers' not in kwargs.keys():
+            kwargs['colormembers'] = 'blue'
+
+        medianlabel = u"Median"
+        quantileslabel = u"Q10-Q90"
+        if 'commonlabel' in kwargs.keys():
+            medianlabel += " " + kwargs['commonlabel']
+            quantileslabel += " " + kwargs['commonlabel']
+
+        self.plot.plot_date(timeSim, qmed, "-", color=kwargs['colorquantiles'], linewidth=kwargs['linewidth'], label=medianlabel)
+        self.plot.fill_between(timeSim, qmin, qmax, color=kwargs['colorquantiles'], alpha=kwargs['alpha'], label=quantileslabel)
+        super(prettyensemble, self).draw(timeSim, **kwargs)
 
 
 class spaghettis(temporalplot):
