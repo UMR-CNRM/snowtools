@@ -488,6 +488,41 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 # Only one pro file for the whole simulation period
                 # Save only one prep at the end of the simulation
 
+                self.sh.title('Toolbox output tb19')
+                tb19bis = toolbox.output(
+                    local          = 'CUMUL_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    experiment     = self.conf.xpid,
+                    geometry       = self.conf.geometry,
+                    datebegin      = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
+                    dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                    nativefmt      = 'netcdf',
+                    kind           = 'SnowpackSimulation',
+                    model          = 'surfex',
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'cumul',
+                    fatal          = False
+                ),
+                print(t.prompt, 'tb19bis =', tb19bis)
+                print()
+
+                tb19ter = toolbox.output(
+                    local          = 'DIAG_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    experiment     = self.conf.xpid,
+                    geometry       = self.conf.geometry,
+                    datebegin      = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
+                    dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                    nativefmt      = 'netcdf',
+                    kind           = 'SnowpackSimulation',
+                    model          = 'surfex',
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'diag',
+                    fatal          = False
+                ),
+                print(t.prompt, 'tb19bis =', tb19bis)
+                print()
+
                 self.sh.title('Toolbox output tb20')
                 tb20 = toolbox.output(
                     local          = 'PREP_[date:ymdh].nc',
@@ -525,6 +560,40 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                         block          = 'pro',
                     ),
                     print(t.prompt, 'tb19 =', tb19)
+                    print()
+
+                    tb19b = toolbox.output(
+                        local          = 'DIAG_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        datebegin      = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
+                        dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                        nativefmt      = 'netcdf',
+                        kind           = 'SnowpackSimulation',
+                        model          = 'surfex',
+                        namespace      = 'vortex.multi.fr',
+                        namebuild      = 'flat@cen',
+                        block          = 'diag',
+                        fatal          = False,
+                    ),
+                    print(t.prompt, 'tb19b =', tb19b)
+                    print()
+
+                    tb19c = toolbox.output(
+                        local          = 'CUMUL_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        datebegin      = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
+                        dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                        nativefmt      = 'netcdf',
+                        kind           = 'SnowpackSimulation',
+                        model          = 'surfex',
+                        namespace      = 'vortex.multi.fr',
+                        namebuild      = 'flat@cen',
+                        block          = 'cumul',
+                        fatal          = False,
+                    ),
+                    print(t.prompt, 'tb19c =', tb19c)
                     print()
 
                     self.sh.title('Toolbox output tb20')
