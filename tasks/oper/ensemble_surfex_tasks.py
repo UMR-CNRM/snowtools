@@ -178,102 +178,11 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
             print(t.prompt, 'tb02 =', tb02)
             print()
 
-            self.sh.title('Toolbox input tb03')
-            tb03 = toolbox.input(
-                role           = 'SnowpackInit',
-                local          = 'mb[member]/PREP.nc',
-                block          = 'prep',
-                experiment     = self.conf.xpid,
-                geometry       = self.conf.geometry,
-                datevalidity   = datebegin,
-                date           = rundate_prep,
-                member         = members,
-                intent         = 'inout',
-                nativefmt      = 'netcdf',
-                kind           = 'PREP',
-                model          = 'surfex',
-                namespace      = 'vortex.multi.fr',
-                fatal          = False,
-                cutoff         = 'assimilation'
-            ),
-            print(t.prompt, 'tb03 =', tb03)
-            print()
-
-
-            # Les conditions initiales de secours seront utilisees par n'importe quel membre n ayant aucune condition initiale
-            # On tente le run deterministe
-            self.sh.title('Toolbox input tb03c')
-            tb03c = toolbox.input(
-                role           = 'SnowpackInitSecours',
-                local          = 'PREP.nc',
-                block          = 'prep',
-                experiment     = self.conf.xpid,
-                geometry       = self.conf.geometry,
-                datevalidity   = datebegin,
-                date           = rundate_prep,
-                member         = 35,
-                intent         = 'inout',
-                nativefmt      = 'netcdf',
-                kind           = 'PREP',
-                model          = 'surfex',
-                namespace      = 'vortex.multi.fr',
-                fatal          = False,
-                cutoff         = 'assimilation'
-            ),
-            print(t.prompt, 'tb03 =', tb03c)
-            print()
-
-            # On tente la reanalyse S2M
-            self.sh.title('Toolbox input tb03e')
-            tb03e = toolbox.input(
-                alternate           = 'SnowpackInitSecours',
-                local          = 'PREP.nc',
-                experiment     = 'reanalysis@lafaysse',
-                geometry       = self.conf.geometry,
-                date           = datebegin,
-                intent         = 'inout',
-                nativefmt      = 'netcdf',
-                kind           = 'PREP',
-                model          = 'surfex',
-                namespace      = 'vortex.multi.fr',
-                namebuild      = 'flat@cen',
-                block          = 'prep',
-                fatal          = False,
-                )
-
-            print(t.prompt, 'tb03 =', tb03e)
-            print()
-
-
-            for i, alternate_prep in enumerate(alternate_rundate_prep):
-
-                fatal = i == len(alternate_rundate_prep) - 1
-
-                self.sh.title('Toolbox input tb03b')
-                tb03b = toolbox.input(
-                    alternate      = 'SnowpackInit',
-                    local          = 'mb[member]/PREP.nc',
-                    block          = 'prep',
-                    experiment     = self.conf.xpid,
-                    geometry       = self.conf.geometry,
-                    datevalidity   = datebegin,
-                    date           = alternate_prep[0],
-                    member         = members,
-                    intent         = 'inout',
-                    nativefmt      = 'netcdf',
-                    kind           = 'PREP',
-                    model          = 'surfex',
-                    namespace      = 'vortex.multi.fr',
-                    fatal          = False,
-                    cutoff         = alternate_prep[1]
-                ),
-                print(t.prompt, 'tb03b =', tb03b)
-                print()
-
-
-                self.sh.title('Toolbox input tb03d')
-                tb03d = toolbox.input(
-                    alternate      = 'SnowpackInitSecours',
+            if self.conf.previ:
+                # Forecasts are all initialized by the deterministic analysis (member=35)
+                self.sh.title('Toolbox input tb03c')
+                tb03 = toolbox.input(
+                    role           = 'SnowpackInit',
                     local          = 'PREP.nc',
                     block          = 'prep',
                     experiment     = self.conf.xpid,
@@ -289,10 +198,125 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     fatal          = False,
                     cutoff         = 'assimilation'
                 ),
-                print(t.prompt, 'tb03 =', tb03d)
+                print(t.prompt, 'tb03 =', tb03)
                 print()
 
+                # Previous runs can replace if the expected run is missing
+                for i, alternate_prep in enumerate(alternate_rundate_prep):
+                    self.sh.title('Toolbox input tb03c')
+                    tb03b = toolbox.input(
+                        alternate      = 'SnowpackInit',
+                        local          = 'PREP.nc',
+                        block          = 'prep',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        datevalidity   = datebegin,
+                        date           = alternate_prep[0],
+                        member         = 35,
+                        intent         = 'inout',
+                        nativefmt      = 'netcdf',
+                        kind           = 'PREP',
+                        model          = 'surfex',
+                        namespace      = 'vortex.multi.fr',
+                        fatal          = False,
+                        cutoff         = alternate_prep[1]
+                    ),
+                    print(t.prompt, 'tb03b =', tb03b)
+                    print()
 
+            else:
+                # Analyses are initialized by the corresponding members of the previous run
+                self.sh.title('Toolbox input tb03')
+                tb03 = toolbox.input(
+                    role           = 'SnowpackInit',
+                    local          = 'mb[member]/PREP.nc',
+                    block          = 'prep',
+                    experiment     = self.conf.xpid,
+                    geometry       = self.conf.geometry,
+                    datevalidity   = datebegin,
+                    date           = rundate_prep,
+                    member         = members,
+                    intent         = 'inout',
+                    nativefmt      = 'netcdf',
+                    kind           = 'PREP',
+                    model          = 'surfex',
+                    namespace      = 'vortex.multi.fr',
+                    fatal          = False,
+                    cutoff         = 'assimilation'
+                ),
+                print(t.prompt, 'tb03 =', tb03)
+                print()
+
+                # Previous runs can replace if the expected run is missing
+                for i, alternate_prep in enumerate(alternate_rundate_prep):
+
+                    # fatal = i == len(alternate_rundate_prep) - 1
+
+                    self.sh.title('Toolbox input tb03b')
+                    tb03b = toolbox.input(
+                        alternate      = 'SnowpackInit',
+                        local          = 'mb[member]/PREP.nc',
+                        block          = 'prep',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        datevalidity   = datebegin,
+                        date           = alternate_prep[0],
+                        member         = members,
+                        intent         = 'inout',
+                        nativefmt      = 'netcdf',
+                        kind           = 'PREP',
+                        model          = 'surfex',
+                        namespace      = 'vortex.multi.fr',
+                        fatal          = False,
+                        cutoff         = alternate_prep[1]
+                    ),
+                    print(t.prompt, 'tb03b =', tb03b)
+                    print()
+
+                    # We also get the SnowPackInitSecours resource in case some members are still missing:
+                    # It will only be used by the members without any initial condition from recent runs.
+                    # First we try the deterministic run:
+                    self.sh.title('Toolbox input tb03c')
+                    tb03c = toolbox.input(
+                        role           = 'SnowpackInitSecours',
+                        local          = 'PREP.nc',
+                        block          = 'prep',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        datevalidity   = datebegin,
+                        date           = rundate_prep,
+                        member         = 35,
+                        intent         = 'inout',
+                        nativefmt      = 'netcdf',
+                        kind           = 'PREP',
+                        model          = 'surfex',
+                        namespace      = 'vortex.multi.fr',
+                        fatal          = False,
+                        cutoff         = 'assimilation'
+                    ),
+                    print(t.prompt, 'tb03c =', tb03c)
+                    print()
+
+                    # Last chance is the reanalysis if even the deterministic run is stopped:
+                    self.sh.title('Toolbox input tb03e')
+                    tb03d = toolbox.input(
+                        alternate      = 'SnowpackInitSecours',
+                        local          = 'PREP.nc',
+                        experiment     = 'reanalysis@lafaysse',
+                        geometry       = self.conf.geometry,
+                        date           = datebegin,
+                        intent         = 'inout',
+                        nativefmt      = 'netcdf',
+                        kind           = 'PREP',
+                        model          = 'surfex',
+                        namespace      = 'vortex.multi.fr',
+                        namebuild      = 'flat@cen',
+                        block          = 'prep',
+                        fatal          = False,
+                    )
+
+                    print(t.prompt, 'tb03d =', tb03d)
+                    print()
 
             self.sh.title('Toolbox input tb04')
             tb04 = toolbox.input(
