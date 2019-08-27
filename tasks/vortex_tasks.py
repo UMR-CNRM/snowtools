@@ -121,28 +121,45 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb01 =', tb01)
                     print()
 
+#             self.sh.title('Toolbox input tb02')
+#             tb02 = toolbox.input(
+#                 role           = 'SurfexClim',
+#                 kind           = 'pgdnc',
+#                 nativefmt      = 'netcdf',
+#                 local          = 'PGD.nc',
+#                 geometry       = self.conf.geometry,
+#                 genv            = 'uenv:cen.01@CONST_CEN',
+#                 gvar           = 'pgd_[geometry::area]',
+#                 model          = 'surfex',
+#                 fatal          = False,
+#             ),
+#             print(t.prompt, 'tb02 =', tb02)
+#             print()
+
             self.sh.title('Toolbox input tb02')
             tb02 = toolbox.input(
-                role           = 'SurfexClim',
+                role      = 'SurfexClim',
                 kind           = 'pgdnc',
                 nativefmt      = 'netcdf',
                 local          = 'PGD.nc',
+                experiment     = self.conf.xpid,
                 geometry       = self.conf.geometry,
-                genv            = 'uenv:cen.01@CONST_CEN',
-                gvar           = 'pgd_[geometry::area]',
                 model          = 'surfex',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'pgd',
                 fatal          = False,
             ),
-            print(t.prompt, 'tb02 =', tb02)
+            print(t.prompt, 'tb02_a =', tb02)
             print()
 
-            self.sh.title('Toolbox input tb02')
+            self.sh.title('Toolbox input tb02a')
             tb02_a = toolbox.input(
                 alternate      = 'SurfexClim',
                 kind           = 'pgdnc',
                 nativefmt      = 'netcdf',
                 local          = 'PGD.nc',
-                experiment     = self.conf.xpid,
+                experiment     = 'spinup@' + t.env.getvar("USER"),
                 geometry       = self.conf.geometry,
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
