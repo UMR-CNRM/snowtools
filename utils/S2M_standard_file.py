@@ -27,7 +27,7 @@ class _StandardNC(netCDF4.Dataset):
         self.id = 'reanalysis_2019'
         self.naming_authority = 'fr.umr-cnrm.cen'
         self.acknowledgement = 'Many contributors have developed and maintained the codes until today. The full list of contributors can be found in the associated publications. CNRM is a research unit of Météo-France and CNRS. CNRM/CEN, is part of LabEX OSUG@2020 (ANR10 LABX56).'
-        self.standard_name_vocabulary = 'SURFEX (non-standard vocabulary)'
+        self.standard_name_vocabulary = 'CF Standard Name Table v67'
         self.date_created = datetime.datetime.today().replace(second=0, microsecond=0).isoformat()
         self.creator_name = "CNRM / Centre d'Etudes de la Neige"
         self.creator_type = 'institution'
@@ -43,6 +43,8 @@ class _StandardNC(netCDF4.Dataset):
         self.platform = 'MODELS_ANALYSES.REANALYSIS_MODELS'
         self.platform_vocabulary = 'GCMD,AERIS'
         self.processing_level = 'L4'
+
+        self.comment = 'This reanalysis is provided on a semi-distributed grid based on relatively homogeneous areas called massifs where the variability of meteorological and snow conditions are assumed to depend only on elevation, aspect and slope. A metadata shapefile is associated with these data to describe the massif names and contours.'
 
         lat, lon, alti = self.get_coord()
 
@@ -95,12 +97,23 @@ class _StandardNC(netCDF4.Dataset):
 
         return self.variables[latname], self.variables[lonname], self.variables[altiname]
 
+    def special_long_names(self):
+
+        massifname = self.getmassifname()
+        longnames = dict()
+        longnames[massifname] = 'SAFRAN massif number. Metadata are provided in the associated shapefile.'
+
+        return longnames
+
     def add_standard_names(self):
 
         dicstd = self.standard_names()
+        diclong = self.special_long_names()
         for varname in self.variables.keys():
             if varname in dicstd.keys():
                 self.variables[varname].standard_name = dicstd[varname]
+            if varname in diclong.keys():
+                self.variables[varname].long_name = diclong[varname]
 
 
 class StandardSAFRAN(_StandardNC):
@@ -117,6 +130,9 @@ class StandardSAFRAN(_StandardNC):
 
     def getlonname(self):
         return 'LON'
+
+    def getmassifname(self):
+        return 'massif_number'
 
     def standard_names(self):
 
@@ -160,6 +176,26 @@ class StandardCROCUS(_StandardNC):
     def getlonname(self):
         return 'longitude'
 
+    def getmassifname(self):
+        return 'massif_num'
+
+    def getsoilgrid(self):
+        from bronx.datagrip.namelist import NamelistParser
+        n = NamelistParser()
+        N = n.parse("OPTIONS.nam")
+        bottom = map(float, N['NAM_ISBA'].XSOILGRID)
+        top = [0] + bottom[:-1]
+        self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
+
+    def soil_long_names(self, varname):
+        import re
+        layer = int(re.search(r'\d+', varname).group()) - 1
+
+        if not hasattr(self, 'soilgrid'):
+            self.getsoilgrid()
+
+        return '(depth %.4f m)' % self.soilgrid[layer]
+
     def standard_names(self):
 
         dicfather = super(StandardCROCUS, self).standard_names()
@@ -190,3 +226,11 @@ class StandardCROCUS(_StandardNC):
         dicfather.update(dicson)
 
         return dicfather
+
+    def add_standard_names(self):
+        super(StandardCROCUS, self).add_standard_names()
+        for varname in self.variables.keys():
+            if varname[0:2] in ['TG', 'WG']:
+                if hasattr(self.variables[varname], 'long_name'):
+                    self.variables[varname].long_name = self.variables[varname].long_name + self.soil_long_names(varname)
+

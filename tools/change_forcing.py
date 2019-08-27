@@ -277,6 +277,8 @@ class forcinput_tomodify:
 
             lpn[:, m] = lpn_temp
         var = new_forcing_file.createVariable("rainSnowLimit", 'float', ["time", "massif"], fill_value=-9999.)
+        var.long_name = 'Rain-snow transition altitude (resolution 300 m). -1 if no precipitation; -2 if above the top of the massif; -3 if below the bottom of the massif.'
+        var.units = 'm'
         var[:] = lpn
 
     def add_iso_zero(self, init_forcing_file, new_forcing_file, savevar):
@@ -317,6 +319,8 @@ class forcinput_tomodify:
             isozero[:, m] = isozero_temp
 
         var = new_forcing_file.createVariable("isoZeroAltitude", 'float', ["time", "massif"], fill_value=-9999.)
+        var.long_name = 'Freezing level altitude obtained by interpolation from SAFRAN standard levels. -2 if above the top of the massif ; -3 if below the bottom of the massif.'
+        var.units = 'm'
         var[:] = isozero
 
     def addfirstdimension(self, array, length):
