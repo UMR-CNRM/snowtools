@@ -24,7 +24,7 @@ class _StandardNC(netCDF4.Dataset):
         self.keywords = 'MOUNTAINS'
         self.keywords_vocabulary = 'GCMD'
         self.Conventions = 'ACDD-1.3,CF-1.7'
-        self.id = 'reanalysis_2019'
+        self.id = 's2m_reanalysis_2019'
         self.naming_authority = 'fr.umr-cnrm.cen'
         self.acknowledgement = 'Many contributors have developed and maintained the codes until today. The full list of contributors can be found in the associated publications. CNRM is a research unit of Météo-France and CNRS. CNRM/CEN, is part of LabEX OSUG@2020 (ANR10 LABX56).'
         self.standard_name_vocabulary = 'CF Standard Name Table v67'
