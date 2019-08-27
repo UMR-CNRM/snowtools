@@ -351,7 +351,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     local          = 'OFFLINE',
                     model          = 'surfex',
                     genv           = 'uenv:cen.01@CONST_CEN',
-                    gvar           = 'master_offline_mpi',
+                    gvar           = 'master_surfex_offline_mpi',
                 )
 
                 print(t.prompt, 'tb06 =', tb06)
