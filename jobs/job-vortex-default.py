@@ -48,6 +48,7 @@ e = t.env
 
 import $package.$task as todo
 
+rd_rootapp  = '$appbase'
 rd_vapp     = '$vapp'
 rd_vconf    = '$vconf'
 rd_member   = $member

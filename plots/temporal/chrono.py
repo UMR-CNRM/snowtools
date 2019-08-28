@@ -35,7 +35,12 @@ class temporalplot(Mplfigure):
             self.plot.set_ylim([kwargs['forcemin'], kwargs['forcemax']])
 
         if 'ylabel' in kwargs.keys():
-            self.plot.set_ylabel(kwargs['ylabel'])
+            label = kwargs.pop('ylabel')
+            if 'ycolor' in kwargs.keys():
+                color = kwargs['ycolor']
+            else:
+                color = 'black'
+            self.plot.set_ylabel(label, color=color)
 
     def draw(self, timeOut, *args, **kwargs):
         self.finalize(timeOut, **kwargs)
@@ -79,6 +84,10 @@ class temporalplot(Mplfigure):
             interval = ndays / 365 + 1
             self.plot.xaxis.set_major_locator(MonthLocator(range(1, 13, interval), 1))
             formatDate = '%d %b\n%Y'
+        elif ndays >= (30 * 365):
+            interval = ndays / (5 * 365) + 1
+            self.plot.xaxis.set_major_locator(YearLocator(interval))
+            formatDate = '%Y'
         else:
             interval = ndays / (15 * 365) + 1
             self.plot.xaxis.set_major_locator(YearLocator(interval))
@@ -94,10 +103,10 @@ class temporalplot(Mplfigure):
 class temporalplotSim(temporalplot):
     def draw(self, timeSim, varSim, **kwargs):
         if 'label' in kwargs.keys():
-            label = kwargs['label']
+            label = kwargs.pop('label')
         else:
             label = 'S2M'
-        self.add_line(timeSim, varSim, label=label)
+        self.add_line(timeSim, varSim, label=label, **kwargs)
         super(temporalplotSim, self).draw(timeSim, **kwargs)
 
 
@@ -121,17 +130,18 @@ class temporalplotObsMultipleSims(temporalplot):
 
 class temporalplot2Axes(temporalplot):
 
-    def addAx2(self, labelAx2):
+    def addAx2(self, labelAx2, color='black', **kw):
         self.ax2 = self.plot.twinx()
-        self.ax2.set_ylabel(labelAx2)
+        if 'forcemin' in kw.keys() and 'forcemax' in kw.keys():
+            self.ax2.set_ylim(kw['forcemin'], kw['forcemax'])
+        self.ax2.tick_params('y', colors=color)
+        self.ax2.set_ylabel(labelAx2, color=color)
 
-    def addVarAx2(self, timeOut, varAx2, label, color='red'):
-
-        self.ax2.plot_date(timeOut, varAx2, "-", label=label, color=color)
+    def addVarAx2(self, timeOut, varAx2, label, color='red', linestyle="-", **kw):
+        self.ax2.plot_date(timeOut, varAx2, linestyle, label=label, color=color, **kw)
 
     def addLegendAx2(self, location="upper right"):
-
-        self.ax2.legend(loc=location)
+        self.ax2.legend(loc=location, fontsize="x-small")
 
 
 class prettyensemble(temporalplot):
