@@ -14,6 +14,7 @@ from utils.infomassifs import infomassifs
 from osgeo import osr
 
 from plots.abstracts.figures import Mplfigure
+from Scientific.Visualization.Chimera import color
 
 
 class _Map_massifs(Mplfigure):
@@ -243,7 +244,7 @@ class _Map_massifs(Mplfigure):
             for elm in self.infos:
                 elm.remove()
 
-    def plot_center_massif(self, massifref, *args, **kwargs):
+    def plot_center_massif(self, massifref, textcolor=None, *args, **kwargs):
 
         nvar = len(args)
 
@@ -251,8 +252,6 @@ class _Map_massifs(Mplfigure):
         formatString = self.getformatstring(**kwargs)
 
         self.text = []
-
-        textcolor = 'black'
 
         for i, massif in enumerate(self.shapes):
             num = self.records(i)[1]
@@ -267,8 +266,14 @@ class _Map_massifs(Mplfigure):
                     if v < nvar - 1:
                         infos += "-"
 
-                    if (nvar == 3 and v == 1 ) or nvar == 1:
-                        textcolor = self.getTextColor(variable[indmassif][0], **kwargs)
+                    if textcolor is None:
+                        if (nvar == 3 and v == 1 ) or nvar == 1:
+                            textcolor = self.getTextColor(variable[indmassif][0], **kwargs)
+                        else:
+                            textcolor = 'black'
+
+                    if 'unit' in kwargs.keys():
+                        infos += kwargs['unit']
 
                 self.text.append(plt.text(Xbary, Ybary, infos, horizontalalignment='center', verticalalignment='center', color = textcolor))
 
