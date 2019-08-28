@@ -10,7 +10,7 @@ import re
 import csv
 from csv import *
 
-from .extract_obs import question
+from evals.extract.extract_rr_mens import question
 
 import xml.etree.ElementTree as ET
 

@@ -73,8 +73,10 @@ class config(object):
 
 class Ensemble(object):
 
-    spatialdim = "Number_of_points"
-    ensemble = {}
+    def __init__(self):
+
+        self.spatialdim = "Number_of_points"
+        self.ensemble = {}
 
     def open(self, listmembers):
         self.simufiles = []
@@ -270,8 +272,11 @@ class EnsembleStation(Ensemble):
 
 class EnsembleDiags(Ensemble):
 
-    proba = {}
-    quantiles = {}
+    def __init__(self):
+
+        self.proba = {}
+        self.quantiles = {}
+        super(EnsembleDiags, self).__init__()
 
     def diags(self, list_var, list_quantiles, list_seuils):
         for var in list_var:

@@ -90,7 +90,7 @@ class S2MExtractor(S2MTaskMixIn):
                     vconf          = self.conf.geometry,
                     local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = self.conf.xpid_native,
-                    block          = 'postes',
+                    block          = 'massifs',
                     source_app     = source_app,
                     source_conf    = source_conf,
                     geometry       = self.conf.geometry,

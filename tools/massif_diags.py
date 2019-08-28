@@ -70,6 +70,8 @@ class massif_simu(prosimu):
                     risk_array[:, :, l, m] = np.nan
 
         var = self.dataset.createVariable(self.MassifRiskName, 'float', ["time", self.massif_dim_name], fill_value=fillvalue)
+        var.long_name = 'Massif-scale index of natural avalanche hazard. Definition provided in http://dx.doi.org/10.3189/172756401781819292'
+        var.units = '0-8'
 
         var[:, :] = np.max(np.nanmean(risk_array, axis=2), axis=1)
 

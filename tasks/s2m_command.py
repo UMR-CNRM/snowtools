@@ -285,9 +285,14 @@ class Surfex_command(_S2M_command):
             elif self.options.region or self.options.slopes or self.options.aspects or self.options.minlevel or self.options.maxlevel:
 
                 if self.options.onlyextractforcing:
-                    run = tasks.runs.massifextractforcing(self.options.datedeb, self.options.datefin, self.options.forcing, self.options.diroutput,
+                    if 'pro' in self.options.forcing or 'PRO' in self.options.forcing:
+                        run = tasks.runs.massifextractpro(self.options.datedeb, self.options.datefin, self.options.forcing, self.options.diroutput,
                                                           workdir=self.options.workdir,
                                                           geolist=[self.options.region, self.options.minlevel, self.options.maxlevel, self.options.slopes, self.options.aspects])
+                    else:
+                        run = tasks.runs.massifextractforcing(self.options.datedeb, self.options.datefin, self.options.forcing, self.options.diroutput,
+                                                              workdir=self.options.workdir,
+                                                              geolist=[self.options.region, self.options.minlevel, self.options.maxlevel, self.options.slopes, self.options.aspects])
                 else:
 
                     run = tasks.runs.massifrun(self.options.datedeb, self.options.datefin, self.options.forcing, self.options.diroutput, threshold=self.options.threshold,

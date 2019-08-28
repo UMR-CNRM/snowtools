@@ -13,7 +13,7 @@ import datetime
 
 # Snowtools modules
 from tools.change_forcing import forcinput_select, forcinput_applymask,\
-    forcinput_tomerge
+    forcinput_tomerge, proselect
 from tools.change_prep import prep_tomodify
 from tools.update_namelist import update_surfex_namelist_file
 from tools.execute import callSurfexOrDie
@@ -224,6 +224,8 @@ class surfexrun(object):
     def postprocess(self):
         profile = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode='a')
         profile.massif_natural_risk()
+        profile.dataset.GlobalAttributes()
+        profile.dataset.add_standard_names()
         profile.close()
 
 
@@ -277,6 +279,30 @@ class massifextractforcing(massifrun):
 
     def save_output(self):
         save_file_period(self.dirmeteo, "FORCING", self.dateforcbegin, self.dateforcend)
+
+    def defaults_from_env(self):
+        pass
+
+    def get_all_consts(self):
+        pass
+
+
+class massifextractpro(massifrun):
+    def __init__(self, datebegin, dateend, forcingpath, diroutput, workdir=None, geolist=[]):
+        super(massifextractpro, self).__init__(datebegin, dateend, forcingpath, diroutput, workdir= workdir, geolist= geolist)
+        self.onlyextractforcing = True
+
+    def get_forcing(self):
+        ''' Look for a PRO file including the starting date'''
+        self.dateforcbegin, self.dateforcend = get_file_period("PRO", self.forcingpath, self.datebegin, self.dateend)
+
+    def modify_forcing(self, list_massif_number, min_alt, max_alt, liste_pentes, list_exp):
+        ''' Extract the simulation points in the forcing file.'''
+        os.rename("PRO.nc", "PRO_base.nc")
+        proselect("PRO_base.nc", "PRO.nc", list_massif_number, min_alt, max_alt, liste_pentes, list_exp)
+
+    def save_output(self):
+        save_file_period(self.dirpro, "PRO", self.dateforcbegin, self.dateforcend)
 
     def defaults_from_env(self):
         pass

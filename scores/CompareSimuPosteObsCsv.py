@@ -27,7 +27,7 @@ from scores.deterministic import DeterministicScores_Heterogeneous
 
 usage = "CompareSimuPosteObsCsv.py [--scores] [--plot] -b YYYYMMDD -e YYYYMMDD --dirsim=dirsim1,dirsim2 --labels=label1,labe2 --dirplot=dirplot --format=pdf,png,eps --yearly"
 
-default = dict(fileobs="/manto/lafaysse/data/csv/OBS_19832017.csv",
+default = dict(fileobs="/manto/lafaysse/data/csv/OBS_1983080100_2019053123.csv",
                dirsim='/era40/vortex/s2m/postes/reanalysis/pro')
 
 IM = infomassifs()

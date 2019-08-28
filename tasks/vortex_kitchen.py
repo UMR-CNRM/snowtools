@@ -333,6 +333,13 @@ class Vortex_conf_file(object):
                 self.set_field(newblock, 'nmembers', nmembers_this_node)
                 startmember += nmembers_this_node
 
+        else:
+            self.set_field("DEFAULT", 'nnodes', self.options.nnodes)
+            if self.options.nmembers:
+                self.set_field("DEFAULT", 'nmembers', self.options.nmembers)
+            if self.options.startmember:
+                self.set_field("DEFAULT", 'startmember', self.options.startmember)
+
     def surfex_variables(self):
 
         if '@' in self.options.forcing:
@@ -346,7 +353,9 @@ class Vortex_conf_file(object):
 
         lf = self.options.forcing.split('/')
         self.set_field("DEFAULT", 'forcingid', lf[0] + '@' + forcinglogin)
-        self.set_field("DEFAULT", 'blockin', '/'.join(lf[1:]))
+
+        if len(lf) > 1:
+            self.set_field("DEFAULT", 'blockin', '/'.join(lf[1:]))
 
         self.set_field("DEFAULT", 'duration', 'yearly')
 

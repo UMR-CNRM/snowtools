@@ -29,7 +29,7 @@ class ESCROC_subensembles(dict):
         elif subensemble == "E1notartes":
             self.physical_options, self.snow_parameters, self.members = self.E1notartes(members, randomDraw)
 
-        elif subensemble in ["E2", "E2CLEAR"]:
+        elif subensemble in ["E2", "E2open"]:
             self.physical_options, self.snow_parameters, self.members = self.E2(members)
 
         elif subensemble in ["Crocus"]:

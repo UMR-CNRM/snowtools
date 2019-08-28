@@ -22,6 +22,7 @@ from utils.FileException import FileNameException, DirNameException, VarWriteExc
 from utils.dates import TypeException
 
 from utils.resources import print_used_memory
+from utils.S2M_standard_file import StandardSAFRAN
 
 
 class forcinput_tomerge:
@@ -49,12 +50,15 @@ class forcinput_tomerge:
         if not (dirout == '' or os.path.isdir(dirout)):
             raise DirNameException(dirout)
 
-        new_forcing_file = netCDF4.Dataset(forcout, "w", format=init_forcing_file[0].format())
+        new_forcing_file = StandardSAFRAN(forcout, "w", format=init_forcing_file[0].format())
 
         self.merge(init_forcing_file, new_forcing_file, args)
 
         for openedfic in init_forcing_file:
             openedfic.close()
+
+        new_forcing_file.GlobalAttributes()
+        new_forcing_file.add_standard_names()
 
         new_forcing_file.close()
 
@@ -191,12 +195,14 @@ class forcinput_tomodify:
         else:
             init_forcing_file = prosimu(forcin)
             print ("INFO INPUT FORCING FILE FORMAT: " + init_forcing_file.format())
-            new_forcing_file = netCDF4.Dataset(forcout, "w", format=self.formatout)
+            new_forcing_file = StandardSAFRAN(forcout, "w", format=self.formatout)
             self.modify(init_forcing_file, new_forcing_file, args)
 
         init_forcing_file.close()
 
         if forcin != forcout:
+            new_forcing_file.GlobalAttributes()
+            new_forcing_file.add_standard_names()
             new_forcing_file.close()
 
     def modify(self, init_forcing_file, new_forcing_file, *args):
@@ -205,7 +211,7 @@ class forcinput_tomodify:
     def add_massif_variables(self, init_forcing_file, new_forcing_file, savevar={}):
 
         # if new_forcing_file is prosimu instance, take the dataset class instead
-        if type(new_forcing_file) is not netCDF4.Dataset:
+        if type(new_forcing_file) not in [netCDF4.Dataset, StandardSAFRAN]:
             new_forcing_file = new_forcing_file.dataset
 
         self.create_massif_dimension(init_forcing_file, new_forcing_file, savevar)
@@ -271,6 +277,8 @@ class forcinput_tomodify:
 
             lpn[:, m] = lpn_temp
         var = new_forcing_file.createVariable("rainSnowLimit", 'float', ["time", "massif"], fill_value=-9999.)
+        var.long_name = 'Rain-snow transition altitude (resolution 300 m). -1 if no precipitation; -2 if above the top of the massif; -3 if below the bottom of the massif.'
+        var.units = 'm'
         var[:] = lpn
 
     def add_iso_zero(self, init_forcing_file, new_forcing_file, savevar):
@@ -311,6 +319,8 @@ class forcinput_tomodify:
             isozero[:, m] = isozero_temp
 
         var = new_forcing_file.createVariable("isoZeroAltitude", 'float', ["time", "massif"], fill_value=-9999.)
+        var.long_name = 'Freezing level altitude obtained by interpolation from SAFRAN standard levels. -2 if above the top of the massif ; -3 if below the bottom of the massif.'
+        var.units = 'm'
         var[:] = isozero
 
     def addfirstdimension(self, array, length):
@@ -327,6 +337,9 @@ class forcinput_select(forcinput_tomodify):
     M Lafaysse generalized the method to both FORCING and PRO files (June 2016)
     M Lafaysse added a treatement to increase the number of slopes (July 2016)
     M Lafaysse added a treatment to create coordinates for direct compatibilty with the new SAFRAN output (August 2017)'''
+
+    def massifvarname(self):
+        return 'massif_number'
 
     def modify(self, init_forcing_file, new_forcing_file, *args):
 
@@ -345,8 +358,8 @@ class forcinput_select(forcinput_tomodify):
         init_alt = init_forcing_file.read("ZS", keepfillvalue=True)
         b_points_alt = (init_alt >= min_alt) * (init_alt <= max_alt)
 
-        if 'massif_number' in listvar:
-            init_massif_nb_sop = init_forcing_file.read("massif_number", keepfillvalue=True)
+        if self.massifvarname() in listvar:
+            init_massif_nb_sop = init_forcing_file.read(self.massifvarname(), keepfillvalue=True)
             b_points_massif = np.in1d(init_massif_nb_sop, list_massif_number)
             if np.sum(b_points_massif) == 0:
                 raise MassifException(list_massif_number, list(set(init_massif_nb_sop)))
@@ -573,7 +586,7 @@ class forcinput_select(forcinput_tomodify):
                         var[:, :, :, :] = var_array
                     elif rank == 5:
                         var[:, :, :, :, :] = var_array
-                    print ("AFTER WRITE", datetime.datetime.today())
+#                     print ("AFTER WRITE", datetime.datetime.today())
 
             except Exception:
                 print(var_array)
@@ -582,22 +595,25 @@ class forcinput_select(forcinput_tomodify):
             # Some variables need to be saved for solar computations
             if varname in ["time"]:
                 savevar[varname] = init_forcing_file.readtime()
-            if varname in ["LAT", "LON", "ZS", "aspect", "slope", "DIR_SWdown", "SCA_SWdown", "massif_number", "Tair", "Rainf", "Snowf"]:
+            if varname in ["LAT", "LON", "ZS", "aspect", "slope", "DIR_SWdown", "SCA_SWdown", self.massifvarname(), "Tair", "Rainf", "Snowf"]:
                 savevar[varname] = var_array
-            if varname == "massif_number":
+            if varname == self.massifvarname():
                 save_array_dim = array_dim
 
+        if 'snow_layer' in init_forcing_file_dimensions:
+            return
+
         if "LAT" not in init_forcing_file.listvar():
-            lat, lon = self.addCoord(new_forcing_file, savevar["massif_number"], save_array_dim, varFillvalue)
+            lat, lon = self.addCoord(new_forcing_file, savevar[self.massifvarname()], save_array_dim, varFillvalue)
         else:
             lat = savevar["LAT"]
             lon = savevar["LON"]
 
         # Compute new solar radiations according to the new values of slope and aspect
         if extendaspects or extendslopes:
-            print ("BEFORE RADIATION COMPUTATIONS", datetime.datetime.today())
+#             print ("BEFORE RADIATION COMPUTATIONS", datetime.datetime.today())
             direct, diffus = sun().slope_aspect_correction(savevar["DIR_SWdown"], savevar["SCA_SWdown"], savevar["time"], lat, lon, savevar["aspect"], savevar["slope"])
-            print ("AFTER RADIATION COMPUTATIONS", datetime.datetime.today())
+#             print ("AFTER RADIATION COMPUTATIONS", datetime.datetime.today())
             new_forcing_file.variables["DIR_SWdown"][:] = direct
             new_forcing_file.variables["SCA_SWdown"][:] = diffus
             del savevar["DIR_SWdown"]
@@ -635,6 +651,14 @@ class forcinput_select(forcinput_tomodify):
         var[:] = lon
 
         return lat, lon
+
+
+class proselect(forcinput_select):
+    def massifvarname(self):
+        return 'massif_num'
+
+    def add_massif_variables(self, init_forcing_file, new_forcing_file, savevar={}):
+        pass
 
 
 class forcinput_extract(forcinput_tomodify):
