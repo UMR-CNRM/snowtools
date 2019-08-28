@@ -543,7 +543,14 @@ class forcinput_select(forcinput_tomodify):
                         elif extendslopes:
                             newvar_array = np.empty((var_array.shape[0], len_dim_spatial), vartype)
                             newvar_array[:, indflat] = var_array[:, ~points_to_duplicate]
-                            newvar_array[:, indnoflat] = np.repeat(var_array[:, points_to_duplicate], 1 + nslopes_to_create, axis=1)
+
+                            # WE CAN NOT USE NP.REPEAT IN THAT CASE BECAUSE WE WANT TO DUPICATE SEQUENCES OF 8 ASPECTS
+                            # WITH THE ASPECT VARYING FASTER THAN THE SLOPE ANGLE.
+                            # USE NP.SPLIT TO SEPARATE EACH MASSIF-ELEVATION (GROUPS OF 8 ASPECTS), THEN USE NP.TILE TO DUPICATE THE SLOPES,
+                            # FINALLY NP.HSTACK CONCATENATE THE SEQUENCES ALONG THE LAST DIMENSION
+
+                            newvar_array[:, indnoflat] = np.hstack(np.tile(np.split(var_array[:, points_to_duplicate], len(indflat), axis=1), 1 + nslopes_to_create))
+
                             del var_array
                             var_array = newvar_array
 
@@ -553,9 +560,10 @@ class forcinput_select(forcinput_tomodify):
                         elif extendslopes:
                             newvar_array = np.empty(len_dim_spatial)
                             newvar_array[indflat] = var_array[~points_to_duplicate]
-#                             print "nslopes_to_create"
-#                             print nslopes_to_create
-                            newvar_array[indnoflat] = np.repeat(var_array[points_to_duplicate], 1 + nslopes_to_create)
+
+                            # THIS IS EQUIVALENT TO THE SEQUENCE ABOVE FOR RANK 2 VARIABLES
+                            newvar_array[indnoflat] = np.tile(np.array(np.split(var_array[points_to_duplicate], len(indflat))), 1 + nslopes_to_create).flatten()
+
 
 #                             print indflat
 #                             print indnoflat
