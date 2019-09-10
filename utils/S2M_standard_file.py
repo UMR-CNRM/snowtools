@@ -183,7 +183,7 @@ class StandardCROCUS(_StandardNC):
         from bronx.datagrip.namelist import NamelistParser
         n = NamelistParser()
         N = n.parse("OPTIONS.nam")
-        bottom = map(float, N['NAM_ISBA'].XSOILGRID)
+        bottom = list(map(float, N['NAM_ISBA'].XSOILGRID))
         top = [0] + bottom[:-1]
         self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
 
