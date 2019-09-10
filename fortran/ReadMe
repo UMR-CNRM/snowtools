@@ -1,0 +1,31 @@
+
+In beaufix type the commands :
+
+  module load intel
+  module load intelmpi
+  module load netcdf/4.4.0
+  ulimit -s unlimited
+  export I_MPI_PMI_LIBRARY=/usr/lib64/libpmi.so
+
+
+I/O Files : (The names input.nc, GRID.nc, outpout.nc are fixed in the program)
+
+  1. Create a link for the Safran file     ==> ln -s safran_file.nc input.nc   
+  2. Create a link for the reference grid  ==> ln -s ref_grid.nc    GRID.nc   
+  3. The result file                       ==>  output.nc   
+  
+Compile and run 
+  make
+  srun -nX  ./main ; X number of processors
+
+
+WARNING: 
+  Files must be netCDF-4 : To convert type ==> nccopy -k netCDF-4 in.nc out.nc
+  
+  
+===============================================================================
+Test case  : 
+  Three reference grids are provided :
+  1.  ALPS.nc is a 2D grid with (lat,lon) dimensions
+  2.  DEM.nc  is a 2D grid with (x,y) dimensions
+  3.  ALPS1D.nc is a 1D grid with (Number_of_points) dimension
