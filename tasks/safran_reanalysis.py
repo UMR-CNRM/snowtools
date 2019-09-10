@@ -635,6 +635,7 @@ class Safran(Task, S2MTaskMixIn):
                 # members        = footprints.util.rangex(self.conf.members),
                 ntasks         = self.conf.ntasks,
                 execution      = self.conf.execution,
+                metadata       = 'StandardSAFRAN',
             )
             print t.prompt, 'tb26 =', tb26
             print
