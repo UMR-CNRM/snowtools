@@ -176,14 +176,7 @@ class _StandardNC(netCDF4.Dataset):
                 self.variables[varname].long_name = diclong[varname]
 
 
-class StandardSAFRAN(_StandardNC):
-
-    def GlobalAttributes(self):
-        super(StandardSAFRAN, self).GlobalAttributes()
-        self.title = self.title + ": meteorological variables"
-        self.source = 'SAFRAN git tag ' + self.id
-        self.summary = self.summary + ' This file provides the SAFRAN meteorological fields'
-        self.keywords = self.keywords + ',INCOMING SOLAR RADIATION,LONGWAVE RADIATION,SHORTWAVE RADIATION,AIR TEMPERATURE,SURFACE TEMPERATURE,ABSOLUTE HUMIDITY,RELATIVE HUMIDITY,WIND DIRECTION,WIND SPEED,SURFACE WINDS,RAIN,LIQUID PRECIPITATION,HOURLY PRECIPITATION AMOUNT,SOLID PRECIPITATION'
+class StandardSAFRANetMET(_StandardNC):
 
     def getlatname(self):
         return 'LAT'
@@ -191,12 +184,9 @@ class StandardSAFRAN(_StandardNC):
     def getlonname(self):
         return 'LON'
 
-    def getmassifname(self):
-        return 'massif_number'
-
     def standard_names(self):
 
-        dicfather = super(StandardSAFRAN, self).standard_names()
+        dicfather = super(StandardSAFRANetMET, self).standard_names()
 
         dicson = dict(PSurf = 'surface_air_pressure',
                       Tair  = 'air_temperature',
@@ -219,6 +209,29 @@ class StandardSAFRAN(_StandardNC):
         dicfather.update(dicson)
 
         return dicfather
+
+
+class StandardSAFRAN(StandardSAFRANetMET):
+
+    def GlobalAttributes(self):
+        super(StandardSAFRAN, self).GlobalAttributes()
+        self.title = self.title + ": meteorological variables"
+        self.source = 'SAFRAN git tag ' + self.id
+        self.summary = self.summary + ' This file provides the SAFRAN meteorological fields'
+        self.keywords = self.keywords + ',INCOMING SOLAR RADIATION,LONGWAVE RADIATION,SHORTWAVE RADIATION,AIR TEMPERATURE,SURFACE TEMPERATURE,ABSOLUTE HUMIDITY,RELATIVE HUMIDITY,WIND DIRECTION,WIND SPEED,SURFACE WINDS,RAIN,LIQUID PRECIPITATION,HOURLY PRECIPITATION AMOUNT,SOLID PRECIPITATION'
+
+    def getmassifname(self):
+        return 'massif_number'
+
+
+class StandardCDP(StandardSAFRANetMET):
+
+    def GlobalAttributes(self):
+        super(StandardCDP, self).GlobalAttributes()
+        self.title = self.title + ": meteorological variables"
+        self.source = 'SAFRAN git tag ' + self.id
+        self.summary = self.summary + ' This file provides the Col de Porte observed meteorological fields, completed with SAFRAN'
+        self.keywords = self.keywords + ',INCOMING SOLAR RADIATION,LONGWAVE RADIATION,SHORTWAVE RADIATION,AIR TEMPERATURE,SURFACE TEMPERATURE,ABSOLUTE HUMIDITY,RELATIVE HUMIDITY,WIND DIRECTION,WIND SPEED,SURFACE WINDS,RAIN,LIQUID PRECIPITATION,HOURLY PRECIPITATION AMOUNT,SOLID PRECIPITATION'
 
 
 class StandardPROSNOW(StandardSAFRAN):

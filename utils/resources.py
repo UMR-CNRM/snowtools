@@ -179,7 +179,7 @@ def get_file_period(prefix, path, datebegin, dateend):
             "NOT AVAILABLE !!!!!!!"
 
         # Attempt to find a yearly file
-        if datebegin.month >= 8:
+        if datebegin.month >= 8 and datebegin.day >= 1 and datebegin.hour >= 6:
             dateyear_beg = datebegin.replace(month=8, day=1, hour=6)
             dateyear_end = datebegin.replace(year=datebegin.year + 1, month=8, day=1, hour=6)
         else:

@@ -290,6 +290,21 @@ class infomassifs():
                 break
         return lati, longi, alti
 
+    def infoposte_extensive(self, num_poste):
+
+        for poste in self.caracLoc.documentElement.getElementsByTagName("Site"):
+            if str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip() == '%08d' % int(num_poste):
+                lati = float(poste.getElementsByTagName("lat")[0].childNodes[0].data)
+                longi = float(poste.getElementsByTagName("lon")[0].childNodes[0].data)
+                alti = float(poste.getElementsByTagName("altitude")[0].childNodes[0].data)
+                uref = float(poste.getElementsByTagName("uref")[0].childNodes[0].data)
+                zref = float(poste.getElementsByTagName("zref")[0].childNodes[0].data)
+                aspect = float(poste.getElementsByTagName("aspect")[0].childNodes[0].data)
+                slope = float(poste.getElementsByTagName("slope")[0].childNodes[0].data)
+                nom = (poste.getElementsByTagName("name")[0].childNodes[0].data).encode("utf-8")
+                break
+        return lati, longi, alti, uref, zref, aspect, slope, nom
+
     def altiposte(self, num_poste):
 
         if not hasattr(self, 'dicaltistations'):
@@ -313,7 +328,7 @@ class infomassifs():
 
     def exposlopeposte(self, num_poste):
         for poste in self.caracLoc.documentElement.getElementsByTagName("Site"):
-            if str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip() == num_poste:
+            if str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip() == '%08d' % int(num_poste):
                 aspect = float(poste.getElementsByTagName("aspect")[0].childNodes[0].data)
                 slope = float(poste.getElementsByTagName("slope")[0].childNodes[0].data)
                 break
