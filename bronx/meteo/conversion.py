@@ -9,7 +9,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import numpy
 
-from .constants import Rd, Rv
+from .constants import Rd, Rv, T0
 
 
 #: No automatic export
@@ -36,3 +36,35 @@ def q2R(q, ql=0., qi=0., qr=0., qs=0., qg=0.):
     qg = numpy.array(qg)
     R = Rd + (Rv - Rd) * q - Rd * (ql + qi + qr + qs + qg)
     return R
+
+def ZEW(Tair) :
+    # CALCULATION OF THE SATURATION WATER VAPOUR PRESSURE (Pa)
+    # Tair in degre Kelvin
+    # GOFF AND GRATCH FORMULA
+    TATO = Tair / T0
+    TOTA = T0 / Tair
+    Z = numpy.log(10) * (10.79574 * (1 - TOTA)
+                      +  1.50475E-4 * (1. - numpy.exp( numpy.log(10) * (-8.2969) * ( TATO - 1)  ) )
+                                     +  0.42873E-3 * (numpy.exp( numpy.log(10) * 4.76955 * (1- TOTA) ) - 1 )
+                  + 0.78614 ) +  5.028 * numpy.log(TOTA)
+
+    return 100 * numpy.exp(Z)
+
+def HUMrelHUMspec(Tair, HUMREL,pressure) :
+    ZE = ZEW(Tair )
+    ZE1 = ( HUMREL / 100 ) * ZE
+    ZMR = 0.62198 * ZE1 / (pressure - ZE1)
+    try :
+        ZQ = 1 / (1 + 1/ZMR)
+    except :
+        print("!!!!!!   problem with conversion of the humidity")
+        for i,ze1 in enumerate(ZE1) :
+            if ze1 == 0. :
+                print("     null hunidity is set to 5 for the " + i + "eme date  ")
+                print("")
+                ze1 = 5
+            zmr = 0.62198 * ze1 / (pressure[i] - ze1)
+            zq = 1 / (1 + 1/zmr)
+            ZQ[i] = zq
+
+    return ZQ
