@@ -1,4 +1,4 @@
-PROGRAM INTERPOLATE_SAFRAN_MPI_PC
+PROGRAM INTERPOLATE_SAFRAN
 ! 
 USE NETCDF
 !
@@ -66,15 +66,15 @@ INTEGER :: NX_PROC, IXSTART
 INTEGER :: NY_PROC, IYSTART
 INTEGER :: NPOINT_PROC, IPSTART
 !
-INTEGER::ID,IV,IA,IT,IDIN,COUNTER,INZ ! loop counter
+INTEGER::ID,IV,IA,IT,IDIN,IDOUT, COUNTER,INZ ! loop counter
+!
+INTEGER :: ITODELETE
 !
 COMM = MPI_COMM_WORLD
 CALL MPI_INIT(IERR)
 CALL MPI_COMM_RANK(COMM, PROC_ID, IERR)
 CALL MPI_COMM_SIZE(COMM, NPROC, IERR)
 !
-!WARNING: to use MPI files must be netCDF-4
-! To convert classic file nccopy -k netCDF-4 in.nc out.nc
 HFILENAMEIN ='input.nc'
 HFILENAMEG =  'GRID.nc'
 HFILENAMEOUT = 'output.nc'
@@ -129,7 +129,7 @@ VAR_ID_DIMS_OUT=0
 !
 ! Get dimension names, lengths
 DO ID=1,INDIM
-  CALL CHECK(NF90_Inquire_Dimension(FILE_ID_IN,ID,DIM_NAME_IN(ID),DIM_SIZE_IN(ID)), &
+  CALL CHECK(NF90_INQUIRE_DIMENSION(FILE_ID_IN,ID,DIM_NAME_IN(ID),DIM_SIZE_IN(ID)), &
              "Cannot get dim size "//TRIM(HFILENAMEIN))  
   ! Get dimensions identifiers of netcdf input file
   CALL CHECK(NF90_INQ_DIMID(FILE_ID_IN,DIM_NAME_IN(ID), DIM_ID_IN(ID)), &
@@ -139,7 +139,7 @@ ENDDO
 !
 !NF90_Inquire_Variable  get variable names, types, shapes
 DO IV=1,INVAR
-  CALL CHECK(NF90_Inquire_Variable(FILE_ID_IN, IV,VAR_NAME_IN(IV)), &
+  CALL CHECK(NF90_INQUIRE_VARIABLE(FILE_ID_IN, IV,VAR_NAME_IN(IV)), &
             "Cannot get variables name from ids "//TRIM(HFILENAMEIN))
   VAR_ID_IN(IV)=IV
   
@@ -160,57 +160,68 @@ CALL READ_NC(FILE_ID_IN,IZSIN,IMASSIFIN,IASPECTIN)
 CALL INDICES2D(ZZSOUT,IMASSIFOUT,ZASPECTOUT,IZSIN,IMASSIFIN,&
                    IASPECTIN,IINDICESBAS,IINDICESHAUT)       
 !  
+IDOUT = 1
 DO ID=1,INDIM
   ! Define dimensions in output file
   IF (DIM_NAME_IN(ID) == 'Number_of_points') THEN
     ! Change spatial dimension
     IF (IRANK==1) THEN
-      DIM_SIZE_OUT(ID)=GRID_DIM_REF(1)
-      CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),GRID_DIM_REF(1),DIM_ID_OUT(ID)), "Cannot def dim  "//TRIM(HFILENAMEOUT))
-       ILLOC_ID=   DIM_ID_OUT(ID) 
+      DIM_SIZE_OUT(IDOUT)=GRID_DIM_REF(1)
+      CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),GRID_DIM_REF(1),DIM_ID_OUT(IDOUT)), "Cannot def dim  "//TRIM(HFILENAMEOUT))
+       ILLOC_ID=   DIM_ID_OUT(IDOUT) 
+       IDOUT =IDOUT+1
     ELSEIF (IRANK==2) THEN
-      DIM_SIZE_OUT(ID)=GRID_DIM_REF(2)
-      DIM_SIZE_OUT(id+1)=GRID_DIM_REF(1)
+      DIM_SIZE_OUT(IDOUT)=GRID_DIM_REF(2)
+      DIM_SIZE_OUT(IDOUT+1)=GRID_DIM_REF(1)
       IF (GRID_TYPE == "LL") THEN 
         !
-        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,'lat',DIM_SIZE_OUT(ID),DIM_ID_OUT(ID)), &
+        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,'lat',DIM_SIZE_OUT(IDOUT),DIM_ID_OUT(IDOUT)), &
       "Cannot def dim lat  "//TRIM(HFILENAMEOUT))
-        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,'lon',DIM_SIZE_OUT(id+1),DIM_ID_OUT(id+1)) , &
+        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,'lon',DIM_SIZE_OUT(IDOUT+1),DIM_ID_OUT(IDOUT+1)) , &
        "Cannot def dim lon  "//TRIM(HFILENAMEOUT))    
        !
       ELSEIF (GRID_TYPE == "XY") THEN 
         !
-        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,'y',DIM_SIZE_OUT(ID),DIM_ID_OUT(ID)), &
+        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,'y',DIM_SIZE_OUT(IDOUT),DIM_ID_OUT(IDOUT)), &
       "Cannot def dim y  "//TRIM(HFILENAMEOUT))
-        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,'x',DIM_SIZE_OUT(id+1),DIM_ID_OUT(id+1)) , &
+        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,'x',DIM_SIZE_OUT(IDOUT+1),DIM_ID_OUT(IDOUT+1)) , &
        "Cannot def dim x  "//TRIM(HFILENAMEOUT))
         !
       ELSE
         STOP "INCORRECT TYPE OF GRID"
       ENDIF
-        ILLOC_ID=   DIM_ID_OUT(ID) 
+      ILLOC_ID=   DIM_ID_OUT(IDOUT) 
+      IDOUT = IDOUT + 2
     ELSE
       STOP 'INCORRECT RANK OF OUTPUT GRID'
     END IF
     !
   ELSEIF (DIM_NAME_IN(ID) == 'time') THEN
     ! Need to to distinguish because of the unlimited dimension
-    DIM_SIZE_OUT(ID)=DIM_SIZE_IN(ID)
+    DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
     CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),NF90_UNLIMITED, &
-        DIM_ID_OUT(ID)), "def time out")
-    ITIMEID= DIM_ID_OUT(ID) 
+        DIM_ID_OUT(IDOUT)), "def time out")
+    ITIMEID= DIM_ID_OUT(IDOUT)
+    IDOUT = IDOUT + 1
     !
+  ELSEIF(DIM_NAME_IN(ID) == 'massif') THEN
+    DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+    CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
+    DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
+    ITODELETE = IDOUT
+    IDOUT = IDOUT+1
   ELSE
-    ! We suppose that other dimension are reading after Number_of_point and time
-    ! Keep unchanged other dimensions
+    !
     IF (IRANK==1) THEN
-      DIM_SIZE_OUT(ID)=DIM_SIZE_IN(ID)
+      DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
       CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
-          DIM_ID_OUT(ID)) , "Cannot def dim "//TRIM(HFILENAMEOUT))
+          DIM_ID_OUT(IDOUT)) , "Cannot def dim "//TRIM(HFILENAMEOUT))
+      IDOUT = IDOUT + 1
     ELSEIF (IRANK==2) THEN
-      DIM_SIZE_OUT(ID+1)=DIM_SIZE_IN(ID)
+      DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
       CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
-      DIM_ID_OUT(ID+1)),"Cannot def dim "//TRIM(HFILENAMEOUT))
+      DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
+      IDOUT = IDOUT +1
     ELSE
       STOP 'INCORRECT RANK OF OUTPUT GRID'
     ENDIF
@@ -218,29 +229,39 @@ DO ID=1,INDIM
   !
 END DO
 !
-DO IV=1,INVAR
-  DO IDIN=1,INDIM
-    DO ID=1,INDIM+1
-      ! identify output dimension id and input dimension id
-      IF (VAR_ID_DIMS_IN(IDIN,IV)==DIM_ID_OUT(ID)) THEN
-        IF (IRANK==1) THEN 
-          VAR_ID_DIMS_OUT(ID,IV) = DIM_ID_OUT(ID)
-        ELSEIF (IRANK==2) THEN 
-! We suppose that other dimension are reading after Number_of_point and time
+IF (IRANK==1) THEN 
+  DO IV=1,INVAR
+    DO IDIN=1,INDIM
+      DO ID=1,INDIM+1      
+        ! identify output dimension id and input dimension id
+        IF (VAR_ID_DIMS_IN(IDIN,IV)==DIM_ID_OUT(ID)) &
+            VAR_ID_DIMS_OUT(ID,IV) = DIM_ID_OUT(ID)
+      ENDDO
+    ENDDO
+  ENDDO
+ELSE IF (IRANK==2) THEN
+  DO IV=1,INVAR
+    DO IDIN=1,INDIM
+      DO ID=1,INDIM+1        
+        IF (VAR_ID_DIMS_IN(IDIN,IV)==DIM_ID_OUT(ID)) THEN
           IF (DIM_NAME_IN(ID) == 'time') THEN
-            VAR_ID_DIMS_OUT(ID,IV) = DIM_ID_OUT(ID)
+            VAR_ID_DIMS_OUT(ITIMEID,IV) = DIM_ID_OUT(ITIMEID)
           ELSEIF (DIM_NAME_IN(ID) == 'Number_of_points')THEN
-            VAR_ID_DIMS_OUT(ID,IV) = DIM_ID_OUT(ID)
+            VAR_ID_DIMS_OUT(ILLOC_ID,IV) = DIM_ID_OUT(ILLOC_ID)
             ! if 2d output grid add second coordinate in variable dimensions
-            VAR_ID_DIMS_OUT(ID+1,IV)= DIM_ID_OUT(ID+1)
+            VAR_ID_DIMS_OUT(ILLOC_ID+1,IV)= DIM_ID_OUT(ILLOC_ID+1)
           ELSE
-            VAR_ID_DIMS_OUT(ID+1,IV) = DIM_ID_OUT(ID+1)
+            IF (DIM_ID_OUT(ID) .GE. ILLOC_ID+1 ) THEN
+              VAR_ID_DIMS_OUT(ID+1,IV) = DIM_ID_OUT(ID+1)          
+            ELSE
+              VAR_ID_DIMS_OUT(ID,IV) = DIM_ID_OUT(ID)
+            ENDIF
           ENDIF
         ENDIF
-      END IF
-    END DO
-  END DO
-ENDDO
+      ENDDO
+    ENDDO
+  ENDDO
+ENDIF
 ! 
 IF(IRANK==2) THEN 
   IF (GRID_TYPE == "LL") THEN 
@@ -267,6 +288,7 @@ ENDIF
 ! dimension must come last on the list of dimids. 
 !And must not has an element equal to zero
 DO IV=1,INVAR
+  IF (ANY( VAR_ID_DIMS_OUT(:,IV) .EQ. ITODELETE))CYCLE
   COUNTER=0
   DO ID = 1,INDIM+1
     IF (VAR_ID_DIMS_OUT(ID,IV) .NE. 0) &
@@ -326,9 +348,9 @@ NTIME =  DIM_SIZE_IN(1)/100
 CALL TIME_PROC_DISTRIBUTOR(NTIME,PROC_ID,NPROC,ITSTART,NTIME_PROC)
 ALLOCATE(VALUE_TIME(NTIME_PROC))  
 DO IV=1,INVAR
-  
+  IF (ANY( VAR_ID_DIMS_OUT(:,IV) .EQ. ITODELETE))CYCLE
 !  !Unlimited dimensions require collective writes
-  call CHECK(NF90_VAR_PAR_ACCESS(FILE_ID_OUT, VAR_ID_OUT(IV), nf90_collective),&
+  CALL CHECK(NF90_VAR_PAR_ACCESS(FILE_ID_OUT, VAR_ID_OUT(IV), nf90_collective),&
                     "collective write")
                 
   IF (VAR_NAME_IN(IV) == "time") THEN
@@ -388,6 +410,7 @@ DO IV=1,INVAR
     CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZSCAIN),"Cannot get var"//TRIM(HFILENAMEIN))
     !
     CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZSCAIN),"Cannot put var"//TRIM(HFILENAMEOUT))
+    !
   ELSEIF (ALL(VAR_ID_DIMS_IN(:,IV) .NE. ILLOC_ID) .AND. &
           ALL(VAR_ID_DIMS_IN(:,IV) .NE.ITIMEID))THEN !NO TIME DIM and NOGRID DIM
     !
@@ -478,11 +501,11 @@ DEALLOCATE(DIM_ID_OUT)
 DEALLOCATE(DIM_SIZE_OUT)
 !
 ! close output file
-CALL CHECK(NF90_close(FILE_ID_OUT),"Cannot close file "//TRIM(HFILENAMEOUT))
+CALL CHECK(NF90_CLOSE(FILE_ID_OUT),"Cannot close file "//TRIM(HFILENAMEOUT))
 ! close grid file
-CALL CHECK(NF90_close(FILE_ID_GEO),"Cannot close file"//TRIM(HFILENAMEG))
+CALL CHECK(NF90_CLOSE(FILE_ID_GEO),"Cannot close file"//TRIM(HFILENAMEG))
 ! close input file
-CALL CHECK(NF90_close(FILE_ID_IN),"Cannot close file"//TRIM(HFILENAMEIN))
+CALL CHECK(NF90_CLOSE(FILE_ID_IN),"Cannot close file"//TRIM(HFILENAMEIN))
 !
 CALL MPI_FINALIZE(IERR)
 !
@@ -493,14 +516,14 @@ INTEGER,INTENT(IN) :: IPROC_ID, INPROC, ITIMEDIM
 INTEGER ,INTENT(OUT):: ISTART, ITIMEDIMPROC
 !
 ITIMEDIMPROC = ITIMEDIM/INPROC
-if(IPROC_ID == 0)  then
+IF(IPROC_ID == 0)  THEN
   ISTART=1
-else
+ELSE
   ISTART = (IPROC_ID)*ITIMEDIMPROC+1
-endif
-if(IPROC_ID == INPROC-1) then
-  ITIMEDIMPROC = ITIMEDIMPROC +mod(ITIMEDIM,INPROC)
-endif
+ENDIF
+IF(IPROC_ID == INPROC-1) THEN
+  ITIMEDIMPROC = ITIMEDIMPROC +MOD(ITIMEDIM,INPROC)
+ENDIF
 END SUBROUTINE 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE XY_PROC_DISTRIBUTOR(IXYDIM,IPROC_ID, INPROC,IIXSTART, INX_PROC,IIYSTART, INY_PROC)
@@ -508,7 +531,7 @@ INTEGER ,INTENT(IN) :: IPROC_ID, INPROC
 INTEGER,DIMENSION(2),INTENT(IN) ::  IXYDIM
 INTEGER ,INTENT(OUT):: IIXSTART, INX_PROC,IIYSTART, INY_PROC
 !
-IF (INPROC > 1 ) then
+IF (INPROC > 1 ) THEN
 
   INX_PROC = IXYDIM(1)/2
   IF (MOD(IPROC_ID,2) .EQ. 0) THEN 
@@ -518,7 +541,7 @@ IF (INPROC > 1 ) then
     INX_PROC = INX_PROC +MOD(IXYDIM(1),2)
   ENDIF
   !
-  INY_PROC = IXYDIM(2)/floor(REAL(INPROC/2.))
+  INY_PROC = IXYDIM(2)/FLOOR(REAL(INPROC/2.))
   !
   IF (MOD(IPROC_ID,2) .EQ. 0) THEN 
        IIYSTART =(IPROC_ID/2)* INY_PROC+1
@@ -526,13 +549,13 @@ IF (INPROC > 1 ) then
        IIYSTART =((IPROC_ID-1)/2)* INY_PROC+1
   ENDIF
   !
-  IF ( mod(INPROC,2) .ne. 0 .AND. IPROC_ID == INPROC-1) then
+  IF ( MOD(INPROC,2) .NE. 0 .AND. IPROC_ID == INPROC-1) THEN
     INY_PROC = MOD(IXYDIM(2),(INPROC/2))
     INX_PROC = IXYDIM(1)
     IIXSTART = 1
-  ELSEIF ( mod(INPROC,2) .EQ. 0 .AND. (IPROC_ID == INPROC-1 .OR. IPROC_ID == INPROC-2))THEN 
+  ELSEIF ( MOD(INPROC,2) .EQ. 0 .AND. (IPROC_ID == INPROC-1 .OR. IPROC_ID == INPROC-2))THEN 
     INY_PROC = INY_PROC +MOD(IXYDIM(2),(INPROC/2))
-  endif
+  ENDIF
   !
 ELSE
   INY_PROC= IXYDIM(2)
@@ -548,16 +571,16 @@ INTEGER ,INTENT(IN) :: IPROC_ID, INPROC
 INTEGER,DIMENSION(2),INTENT(IN) ::  IPDIM
 INTEGER ,INTENT(OUT):: IIPSTART,INP_PROC
 !
-IF (INPROC > 1 ) then
+IF (INPROC > 1 ) THEN
   !
-  IF ( mod(IPDIM(1),INPROC) .EQ. 0 ) then
+  IF ( MOD(IPDIM(1),INPROC) .EQ. 0 ) THEN
     INP_PROC = IPDIM(1)/INPROC
     IIPSTART= (IPROC_ID*INP_PROC)+1
-  ELSEIF (  mod(IPDIM(1),INPROC) .NE. 0)THEN 
-    INP_PROC = floor(IPDIM(1)/REAL(INPROC))
+  ELSEIF (  MOD(IPDIM(1),INPROC) .NE. 0)THEN 
+    INP_PROC = FLOOR(IPDIM(1)/REAL(INPROC))
     IIPSTART= (IPROC_ID*INP_PROC)+1
     IF (IPROC_ID == INPROC-1)THEN
-      INP_PROC = INP_PROC + mod(IPDIM(1),INPROC)
+      INP_PROC = INP_PROC + MOD(IPDIM(1),INPROC)
     ENDIF    
   ENDIF
   !
@@ -701,7 +724,7 @@ ELSEIF(IRANK == 2)THEN
   ELSE
     STOP "GRID 2D NOT TRAITED"
   ENDIF
-  
+  !
 ENDIF
 !
 END SUBROUTINE READ_OUTPUT_GRID
@@ -818,7 +841,7 @@ LOGICAL, INTENT(OUT) :: LASPECT
 !
 LASPECT = .FALSE.
 IF (KASPECTIN .EQ. 0.)THEN
-  IF (PASPECTOUT .EQ. 0. .OR. PASPECTOUT .GT. 337.5 ) LASPECT = .TRUE.
+  IF (PASPECTOUT .LT. 22.5 .OR. PASPECTOUT .GT. 337.5 ) LASPECT = .TRUE.
 ELSEIF (KASPECTIN .LT. 0. .AND. PASPECTOUT .GE. 0. )THEN
   LASPECT = .FALSE.
 ELSEIF ((PASPECTOUT .GE. KASPECTIN .AND. PASPECTOUT .LE. KASPECTIN+22.5) .OR. &
@@ -1115,5 +1138,5 @@ SUBROUTINE CHECK(STATUS,LINE)
   END IF
 END SUBROUTINE CHECK
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-END PROGRAM INTERPOLATE_SAFRAN_MPI_PC
+END PROGRAM INTERPOLATE_SAFRAN
 
