@@ -9,6 +9,7 @@ import tkinter.filedialog
 import math
 import datetime
 import numpy as np
+from itertools import chain
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -70,6 +71,7 @@ class GraphStandard(Toplevel):
         self.valeur_choisie2=''
         self.message_filedialog='Importer un fichier PRO'
         self.type_graphique=1
+        self.ChoixPossible = [True, True, True, True]
         
         self.menubar = Menu()
         self.filemenu = Menu(self.menubar, tearoff=0)
@@ -348,9 +350,10 @@ class GraphStandard(Toplevel):
         self.combobox_reduce3.set('')
         self.combobox_reduce4.config(state = 'disabled', values = '')
         self.combobox_reduce4.set('')
-        self.list_choix=[None,None,None,None]
-        self.var_sup=[]
-        self.bool_profil=False
+        self.list_choix = [None, None, None, None]
+        self.var_sup = []
+        self.bool_profil = False
+        self.ChoixPossible = [True, True, True, True]
 
     def refresh_all_plot(self):
         largeur = self.winfo_width()/self.taille_x
@@ -477,65 +480,113 @@ class GraphStandard(Toplevel):
     # CHOIX POINT
     ##########################################################
     def reduce1(self,event):
-        self.combobox_reduce1.config(state = "readonly")
-        liste=[]
-        for it_massif in list(set(self.Tableau[0,:])):
-            indice=self.list_massif_num.index(it_massif)
-            liste.append(self.list_massif_nom[indice])
-        self.combobox_reduce1.config(values = liste)
-        self.combobox_reduce1.bind('<<ComboboxSelected>>', self.reduce2)
-        if self.bool_profil:
-            self.choix_point()
+        if self.ChoixPossible[0]:
+            self.combobox_reduce1.config(state = "readonly")
+            liste=[]
+            for it_massif in list(set(self.Tableau[0])):
+                indice=self.list_massif_num.index(it_massif)
+                liste.append(self.list_massif_nom[indice])
+            self.combobox_reduce1.config(values = liste)
+            self.combobox_reduce1.bind('<<ComboboxSelected>>', self.reduce2)
+            if self.bool_profil:
+                self.choix_point()
+        else:
+            self.reduce2(self)
+
 
     def reduce2(self,event):
-        self.combobox_reduce2.config(state = "readonly")
-        nom_massif=self.combobox_reduce1.get()
-        indice=self.list_massif_nom.index(nom_massif)
-        num_massif=self.list_massif_num[indice]
-        self.list_choix[0]=float(num_massif)
-        liste=list(set(self.Tableau[1,self.Tableau[0,:]==num_massif]))
-        self.combobox_reduce2.config(values = liste)
-        self.combobox_reduce2.bind('<<ComboboxSelected>>', self.reduce3)
-        if self.bool_profil:       
-            self.choix_point()    
+        if self.ChoixPossible[1]:
+            self.combobox_reduce2.config(state = "readonly")
+            n = len(self.Tableau[0])
+            if self.ChoixPossible[0]:
+                nom_massif = self.combobox_reduce1.get()
+                indice = self.list_massif_nom.index(nom_massif)
+                num_massif = self.list_massif_num[indice]
+                self.list_choix[0] = float(num_massif)
+                A = ( self.Tableau[0] == ([self.list_choix[0]]*n) )
+                indices = A
+            else:
+                indices = np.asarray([True]*n)
+
+            liste = list(set(self.Tableau[1,indices]))
+            self.combobox_reduce2.config(values = liste)
+            self.combobox_reduce2.bind('<<ComboboxSelected>>', self.reduce3)
+            if self.bool_profil:       
+                self.choix_point()
+        else:
+            self.reduce3(self)
         
     def reduce3(self,event):
-        self.combobox_reduce3.config(state = "readonly")
-        altitude=self.combobox_reduce2.get()
-        self.list_choix[1]=float(altitude)
-        n=len(self.Tableau[0,:])
-        A=self.Tableau[0,:]==[self.list_choix[0]]*n
-        B=self.Tableau[1,:]==[self.list_choix[1]]*n
-        indices = A & B
-        
-        liste=list(set(self.Tableau[2,indices]))
-        self.combobox_reduce3.config(values = liste)
-        self.combobox_reduce3.bind('<<ComboboxSelected>>', self.reduce4)
-        if self.bool_profil:
-            self.choix_point()
-        
-    def reduce4(self,event):
-        self.combobox_reduce4.config(state = "readonly")
-        pente=self.combobox_reduce3.get()
-        self.list_choix[2]=float(pente)
-        n=len(self.Tableau[0,:])
-        A=self.Tableau[0,:]==[self.list_choix[0]]*n
-        B=self.Tableau[1,:]==[self.list_choix[1]]*n
-        C=self.Tableau[2,:]==[self.list_choix[2]]*n
-        indices = A & B & C
+        if self.ChoixPossible[2]:
+            self.combobox_reduce3.config(state = "readonly")
+            n = len(self.Tableau[0])
+            if self.ChoixPossible[1]:
+                altitude = self.combobox_reduce2.get()
+                self.list_choix[1] = float(altitude)
+                B = ( self.Tableau[1] == ([self.list_choix[1]]*n) )
+            else:
+                B = np.asarray([True]*n)
+            if self.ChoixPossible[0]:
+                A = ( self.Tableau[0] == ([self.list_choix[0]]*n) )
+            else:
+                A = np.asarray([True]*n)
+            indices = A & B
 
-        liste=list(set(self.Tableau[3,indices]))
-        self.combobox_reduce4.config(values = liste)
-        self.combobox_reduce4.bind('<<ComboboxSelected>>', self.finalisation_reduce)
-        if self.bool_profil:
-            self.choix_point()
+            liste = list(set(self.Tableau[2,indices]))
+            self.combobox_reduce3.config(values = liste)
+            self.combobox_reduce3.bind('<<ComboboxSelected>>', self.reduce4)
+            if self.bool_profil:
+                self.choix_point()
+        else:
+            self.reduce4(self)
+
+    def reduce4(self,event):
+        if self.ChoixPossible[3]:
+            self.combobox_reduce4.config(state = "readonly")
+            n = len(self.Tableau[0])
+            if self.ChoixPossible[2]:
+                pente = self.combobox_reduce3.get()
+                self.list_choix[2] = float(pente)
+                C = self.Tableau[2,:]==[self.list_choix[2]]*n
+            else:
+                C = np.asarray([True]*n)
+            if self.ChoixPossible[1]:
+                B = ( self.Tableau[1] == ([self.list_choix[1]]*n) )
+            else:
+                B = np.asarray([True]*n)
+            if self.ChoixPossible[0]:
+                A = ( self.Tableau[0] == ([self.list_choix[0]]*n) )
+            else:
+                A = np.asarray([True]*n)
+            indices = A & B & C
+
+            liste = list(set(self.Tableau[3,indices]))
+            self.combobox_reduce4.config(values = liste)
+            self.combobox_reduce4.bind('<<ComboboxSelected>>', self.finalisation_reduce)
+            if self.bool_profil:
+                self.choix_point()
+        else:
+            self.finalisation_reduce(self)
 
     def choix_point(self):
-        n=len(self.Tableau[0,:])
-        A=self.Tableau[0,:]==[self.list_choix[0]]*n
-        B=self.Tableau[1,:]==[self.list_choix[1]]*n
-        C=self.Tableau[2,:]==[self.list_choix[2]]*n
-        D=self.Tableau[3,:]==[self.list_choix[3]]*n
+        n = len(self.Tableau[0])
+        if self.ChoixPossible[0]:
+            A = ( self.Tableau[0] == ([self.list_choix[0]]*n) )
+        else:
+            A = np.asarray([True]*n)
+        if self.ChoixPossible[1]:
+            B = ( self.Tableau[1] == ([self.list_choix[1]]*n) )
+        else:
+            B = np.asarray([True]*n)
+        if self.ChoixPossible[2]:
+            C = ( self.Tableau[2] == ([self.list_choix[2]]*n) )
+        else:
+            C = np.asarray([True]*n)
+        if self.ChoixPossible[3]:
+            D = ( self.Tableau[3] == ([self.list_choix[3]]*n) )
+        else:
+            D = np.asarray([True]*n)
+
         indices = A & B & C & D
         if True not in list(indices):
             self.buttonPlot.config(state='disabled')
@@ -545,8 +596,9 @@ class GraphStandard(Toplevel):
                 self.buttonPlot.config(state='normal',command=self.Plotage)
         
     def finalisation_reduce(self,event):
-        orientation=self.combobox_reduce4.get()
-        self.list_choix[3]=float(orientation)
+        if self.ChoixPossible[3]:
+            orientation = self.combobox_reduce4.get()
+            self.list_choix[3] = float(orientation)
         self.choix_point()
         
     ##########################################################
@@ -560,30 +612,52 @@ class GraphStandard(Toplevel):
         else:
             self.var_sup.append(self.variable_souris)
         self.bool_profil=True
-        
-        if (len(self.Tableau[0])+len(self.Tableau[1])+len(self.Tableau[2])+len(self.Tableau[3])==4):
+
+        # Cas 1 seul point
+        if (len(self.Tableau[0])==1):
             self.point_choisi=0
             self.combobox_reduce1.config(state = 'disabled', values = '')
             self.combobox_reduce2.config(state = 'disabled', values = '')
             self.combobox_reduce3.config(state = 'disabled', values = '')
             self.combobox_reduce4.config(state = 'disabled', values = '')
-            if self.Tableau[0]==[-10.]:
+            if self.Tableau[0]==[-10]:
                 self.combobox_reduce1.set('inconnu')
             else:
                 self.combobox_reduce1.set(self.Tableau[0][0])
-            if self.Tableau[1]==[-10.]:
+            if self.Tableau[1]==[-10]:
                 self.combobox_reduce2.set('inconnu')
             else:
                 self.combobox_reduce2.set(self.Tableau[1][0])
-            if self.Tableau[2]==[-10.]:
+            if self.Tableau[2]==[-10]:
                 self.combobox_reduce3.set('inconnu')
             else:
                 self.combobox_reduce3.set(self.Tableau[2][0])
-            if self.Tableau[3]==[-10.]:
+            if self.Tableau[3]==[-10]:
                 self.combobox_reduce4.set('inconnu')
             else:
                 self.combobox_reduce4.set(self.Tableau[3][0])
             self.buttonPlot.config(state='normal',command=self.Plotage)
+
+        # Cas plusieurs points mais des champs absents
+        elif -10 in set(self.Tableau[0]).union(set(self.Tableau[1]),set(self.Tableau[2]),set(self.Tableau[3])) :
+            if -10 in set(self.Tableau[0]):
+                self.combobox_reduce1.config(state = 'disabled', values = '')
+                self.combobox_reduce1.set('inconnu')
+                self.ChoixPossible[0] = False
+            if -10 in set(self.Tableau[1]):
+                self.combobox_reduce2.config(state = 'disabled', values = '')
+                self.combobox_reduce2.set('inconnu')
+                self.ChoixPossible[1] = False
+            if -10 in set(self.Tableau[2]):
+                self.combobox_reduce3.config(state = 'disabled', values = '')
+                self.combobox_reduce3.set('inconnu')
+                self.ChoixPossible[2] = False
+            if -10 in set(self.Tableau[3]):
+                self.combobox_reduce4.config(state = 'disabled', values = '')
+                self.combobox_reduce4.set('inconnu')
+                self.ChoixPossible[3] = False
+            self.reduce1(self)
+        # Cas plusieurs points sans pb
         else:
             self.reduce1(self)
         
