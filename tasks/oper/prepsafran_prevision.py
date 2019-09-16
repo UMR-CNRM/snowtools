@@ -54,7 +54,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 cutoff         = 'production',
                 local          = 'mb035/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[0:7],
+                term           = footprints.util.rangex(self.conf.prv_terms)[2:9],
                 namespace      = 'vortex.multi.fr',
                 block          = 'forecast',
                 nativefmt      = '[format]',
@@ -78,7 +78,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 cutoff         = 'production',
                 local          = 'mb036/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[7:14],
+                term           = footprints.util.rangex(self.conf.prv_terms)[9:16],
                 namespace      = 'vortex.multi.fr',
                 block          = 'forecast',
                 nativefmt      = '[format]',
@@ -102,7 +102,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 cutoff         = 'production',
                 local          = 'mb037/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[14:21],
+                term           = footprints.util.rangex(self.conf.prv_terms)[16:23],
                 namespace      = 'vortex.multi.fr',
                 block          = 'forecast',
                 nativefmt      = '[format]',
@@ -126,7 +126,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 cutoff         = 'production',
                 local          = 'mb038/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[21:27],
+                term           = footprints.util.rangex(self.conf.prv_terms)[23:29],
                 namespace      = 'vortex.multi.fr',
                 block          = 'forecast',
                 nativefmt      = '[format]',
@@ -150,7 +150,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 cutoff         = 'production',
                 local          = 'mb039/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[27:33],
+                term           = footprints.util.rangex(self.conf.prv_terms)[29:35],
                 namespace      = 'vortex.multi.fr',
                 block          = 'forecast',
                 nativefmt      = '[format]',
@@ -165,7 +165,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             # II- PEARP
             # Récupération du réseau 18h (J-1) pour couvrir J 6h -> (J+4) 6h
-            self.sh.title('Toolbox input tb02_a')
+            self.sh.title('Toolbox input tb02a')
             tbpearp = toolbox.input(
                 role           = 'Gridpoint',
                 block          = 'forecast',
@@ -176,7 +176,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 kind           = 'gridpoint',
                 local          = 'mb[member]/PEARP[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[2:17],
+                term           = footprints.util.rangex(self.conf.prv_terms)[4:19],
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 namespace      = 'vortex.multi.fr',
                 nativefmt      = '[format]',
@@ -186,10 +186,10 @@ class PrepSafran(Task, S2MTaskMixIn):
                 vconf          = self.conf.eps_conf,
                 fatal          = False,
             )
-            print t.prompt, 'tb02 =', tbpearp
+            print t.prompt, 'tb02a =', tbpearp
             print
 
-            self.sh.title('Toolbox input tb02_b')
+            self.sh.title('Toolbox input tb02b')
             tbpearp.extend(toolbox.input(
                 role           = 'Gridpoint',
                 block          = 'forecast',
@@ -200,7 +200,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 kind           = 'gridpoint',
                 local          = 'mb[member]/PEARP[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[18:35:2],
+                term           = footprints.util.rangex(self.conf.prv_terms)[20:38:2],
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 namespace      = 'vortex.multi.fr',
                 nativefmt      = '[format]',
@@ -210,7 +210,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 vconf          = self.conf.eps_conf,
                 fatal          = False,
             ))
-            print t.prompt, 'tb02 =', tbpearp
+            print t.prompt, 'tb02b =', tbpearp
             print
 
             self.sh.title('Toolbox input tb04 = PRE-TRAITEMENT FORCAGE script')
@@ -261,7 +261,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 geometry       = self.conf.domains,
                 vconf          = '[geometry::area]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[0:7],
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[2:9],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -281,7 +281,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 geometry       = self.conf.domains,
                 vconf          = '[geometry::area]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[7:14],
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[9:16],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -301,7 +301,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 geometry       = self.conf.domains,
                 vconf          = '[geometry::area]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[14:21],
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[16:23],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -321,7 +321,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 geometry       = self.conf.domains,
                 vconf          = '[geometry::area]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[21:27],
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[23:29],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -341,7 +341,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 geometry       = self.conf.domains,
                 vconf          = '[geometry::area]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[27:33],
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[29:35],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -361,7 +361,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 geometry       = self.conf.domains,
                 vconf          = '[geometry::area]',
                 date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[2:17],
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[4:19],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -382,7 +382,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 geometry       = self.conf.domains,
                 vconf          = '[geometry::area]',
                 date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[18:35:2],
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[20:38:2],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',

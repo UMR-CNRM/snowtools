@@ -76,7 +76,7 @@ class Safran(Task, S2MTaskMixIn):
                 block          = self.conf.guess_block,
                 geometry       = self.conf.vconf,
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[2:27],
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[2:35],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -124,7 +124,7 @@ class Safran(Task, S2MTaskMixIn):
                 block          = self.conf.guess_block,
                 geometry       = self.conf.vconf,
                 date           = '{0:s}/+PT12H'.format(datebegin.ymdh),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[4:28],
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[4:19],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -135,6 +135,27 @@ class Safran(Task, S2MTaskMixIn):
                 fatal          = False,
             ),
             print t.prompt, 'tb02b =', tb02b
+            print
+
+            self.sh.title('Toolbox intput tb02c')
+            tb02c = toolbox.input(
+                role           = 'Ebauche',
+                local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
+                experiment     = self.conf.xpid,
+                block          = self.conf.guess_block,
+                geometry       = self.conf.vconf,
+                date           = '{0:s}/+PT12H'.format(datebegin.ymdh),
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[20:38:2],
+                nativefmt      = 'ascii',
+                kind           = 'guess',
+                model          = 'safran',
+                source_app     = self.conf.source_app,
+                source_conf    = self.conf.eps_conf,
+                namespace      = self.conf.namespace,
+                member         = footprints.util.rangex(self.conf.pearp_members),
+                fatal          = False,
+            ),
+            print t.prompt, 'tb02c =', tb02c
             print
 
             self.sh.title('Toolbox input tb03')
