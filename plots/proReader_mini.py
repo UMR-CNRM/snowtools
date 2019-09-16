@@ -138,20 +138,28 @@ class ProReader_mini:
         listvariables = ff.listvar()
         if('massif_num' in listvariables):
             massiftab = ff.read('massif_num')[:]
+        elif ff.Number_of_points in ff.dataset.dimensions and len(ff.pointsdim) > 1:
+            massiftab = np.array([-10] * len(ff.pointsdim))
         else:
-            massiftab = np.array([-10.])
+            massiftab = np.array([-10])
         if('ZS' in listvariables):
             alttab = ff.read('ZS')[:]
+        elif ff.Number_of_points in ff.dataset.dimensions and len(ff.pointsdim) > 1:
+            alttab = np.array([-10] * len(ff.pointsdim))
         else:
-            alttab = np.array([-10.])
+            alttab = np.array([-10])
         if('slope' in listvariables):
             slopetab = ff.read('slope')[:]
+        elif ff.Number_of_points in ff.dataset.dimensions and len(ff.pointsdim) > 1:
+            slopetab = np.array([-10] * len(ff.pointsdim))
         else:
-            slopetab = np.array([-10.])
+            slopetab = np.array([-10])
         if('aspect' in listvariables):
             aspecttab = ff.read('aspect')[:]
+        elif ff.Number_of_points in ff.dataset.dimensions and len(ff.pointsdim) > 1:
+            aspecttab = np.array([-10] * len(ff.pointsdim))
         else:
-            aspecttab = np.array([-10.])
+            aspecttab = np.array([-10])
             
         return np.vstack((massiftab,alttab,slopetab,aspecttab))
     
