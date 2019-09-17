@@ -7,22 +7,23 @@ Created on 27 mars 2019
 Vortex task performing up to 40 offline runs in parallel on a single node
 
 '''
-from vortex import toolbox
 from bronx.stdtypes.date import Date
 import os
-from tasks.crampon_common import Crampon_Task
+from tasks.crampon_common import _Crampon_Task
+
+from vortex import toolbox
 
 
-class Soda_Task(Crampon_Task):
+class Soda_Task(_Crampon_Task):
     '''
     classdocs
     '''
 
     def process(self):
-
+        t = self.ticket
         # ##### PREPARE common stuff with the offline task ###########
 
-        t, firstloop, _, assDate, = self.prepare_common()
+        firstloop, _, assDate, = self.prepare_common()
         # if 'early-fetch' in self.steps or 'fetch' in self.steps:
         if 'early-fetch' in self.steps:
             # ################# FETCH CONSTANT FILES #############

@@ -6,15 +6,15 @@ Run a CRAMPON assimilation sequence on a multinode
 @author: cluzetb
 '''
 import os
-import shutil
-
-from utils.resources import InstallException
-from tasks.vortex_kitchen import vortex_conf_file, walltime
-from tools.update_namelist import update_surfex_namelist_file
-import numpy as np
-from utils.ESCROCsubensembles import ESCROC_subensembles
-import time
 import random
+import shutil
+from tasks.vortex_kitchen import vortex_conf_file, walltime
+import time
+from tools.update_namelist import update_surfex_namelist_file
+from utils.ESCROCsubensembles import ESCROC_subensembles
+from utils.resources import InstallException
+
+import numpy as np
 
 
 class crampon_vortex_kitchen(object):
@@ -102,6 +102,37 @@ class crampon_vortex_kitchen(object):
         # options.namelist is already an absolute path.
         update_surfex_namelist_file(options.datedeb, namelistfile=self.namelist, dateend=options.datefin, updateloc=False, nmembers = options.nmembers)
 
+    def replace_member(self, options, allmembers, membersId):
+        # warning in case of misspecification of --synth
+        print('\n\n\n')
+        print(' /!\/!\/!\/!\ CAUTION /!\/!\/!\/!\/!\ ')
+        print('Please check that the --synth argument')
+        print('corresponds to the openloop member    ')
+        print('used to generate the observations     ')
+        print('otherwise this would artificially     ')
+        print('generate excellent results            ')
+        print('by letting the truth member to stay   ')
+        print('in the assimilation experiment        ')
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        print('\n\n\n')
+        time.sleep(2)
+        # workaround to know the size of the ensemble
+        sizeE1 = ESCROC_subensembles(options.escroc, allmembers, randomDraw = True).size
+        # draw a member, excluding any ESCROC member already present in the ensemble.
+        membersId[options.synth - 1] = np.random.choice([e for e in range(1, sizeE1 + 1) if e not in membersId])
+        return membersId
+
+    def draw_meteo(self, options, confObj):
+        meteo_members = {str(m): ((m - 1) % int(options.nforcing)) + 1 for m in range(options.nmembers)}
+        if hasattr(confObj, 'meteo_draw'):
+            meteo_draw = confObj.meteo_draw
+        else:
+            meteo_draw = meteo_members[str(options.synth)]
+        while meteo_draw == meteo_members[str(options.synth)]:
+            meteo_draw = random.choice(range(1, int(options.nforcing) + 1))
+        print('mto draw', meteo_draw)
+        return meteo_draw
+
     def create_conf(self, options):
         ''' Prepare configuration file from s2m options'''
         # append naming specificities to prevent concurrent tasks from erasing files.
@@ -156,36 +187,15 @@ class crampon_vortex_kitchen(object):
                 #    - replace the synthetic escroc member
                 #    - draw a substitution forcing
                 if options.synth is not None:
-                    # warning in case of misspecification of --synth
-                    print('\n\n\n')
-                    print(' /!\/!\/!\/!\ CAUTION /!\/!\/!\/!\/!\ ')
-                    print('Please check that the --synth argument')
-                    print('corresponds to the openloop member    ')
-                    print('used to generate the observations     ')
-                    print('otherwise this would artificially     ')
-                    print('generate excellent results            ')
-                    print('by letting the truth member to stay   ')
-                    print('in the assimilation experiment        ')
-                    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-                    print('\n\n\n')
-                    time.sleep(2)
-                    # workaround to know the size of the ensemble
-                    sizeE1 = ESCROC_subensembles(options.escroc, allmembers, randomDraw = True).size
-                    # draw a member, excluding any ESCROC member already present in the ensemble.
-                    membersId[options.synth - 1] = np.random.choice([e for e in range(1, sizeE1 + 1) if e not in membersId])
 
+                    # replace ESCROC member
+                    membersId = self.replace_member( options, allmembers, membersId)
                     conffile.write_field('synth', options.synth)
 
                     # draw a substitution forcing
-                    meteo_members = {str(m): ((m - 1) % int(options.nforcing)) + 1 for m in range(options.nmembers)}
-                    if hasattr(confObj, 'meteo_draw'):
-                        meteo_draw = confObj.meteo_draw
-                    else:
-                        meteo_draw = meteo_members[str(options.synth)]
-                    while meteo_draw == meteo_members[str(options.synth)]:
-                        meteo_draw = random.choice(range(1, int(options.nforcing) + 1))
-                    print('mto draw', meteo_draw)
+                    meteo_draw = self.draw_meteo(options, confObj)
                     conffile.write_field('meteo_draw', meteo_draw)
+
                 else:  # real observations assimilation
                     # warning in case of performing a synthetic experiment
                     # but forgetting to specify the synthetic member
@@ -198,8 +208,17 @@ class crampon_vortex_kitchen(object):
                     print('\n\n\n')
                     time.sleep(2)
             else:
-                escroc = ESCROC_subensembles(options.escroc, allmembers, randomDraw = True)
-                membersId = escroc.members
+                if options.synth is not None:
+                    # here, no prescribed members: only need to substitute meteo.
+                    escroc = ESCROC_subensembles(options.escroc, allmembers, randomDraw = True)
+                    membersId = escroc.members
+
+                    # draw a substitution forcing
+                    meteo_draw = self.draw_meteo(options, confObj)
+                    conffile.write_field('meteo_draw', meteo_draw)
+                else:
+                    escroc = ESCROC_subensembles(options.escroc, allmembers, randomDraw = True)
+                    membersId = escroc.members
         else:
             escroc = ESCROC_subensembles(options.escroc, allmembers)
             membersId = escroc.members

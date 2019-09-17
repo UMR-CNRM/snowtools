@@ -7,9 +7,11 @@ Created on 27 mars 2019
 task for running SODA-SNOW sequence on HPC MULTINODE
 '''
 
-from vortex.layout.nodes import Driver, WorkshareFamily, LoopFamily
-from tasks.crampon_soda import Soda_Task
+from tasks.crampon_common import Crampon_In
 from tasks.crampon_offline import Offline_Task
+from tasks.crampon_soda import Soda_Task
+
+from vortex.layout.nodes import Driver, WorkshareFamily, LoopFamily
 
 
 def setup(t, **kw):
@@ -17,6 +19,10 @@ def setup(t, **kw):
         tag = 'CRAMPON_sequence',  # change the tag ?
         ticket = t,
         nodes = [
+            # fetching common files
+            Crampon_In(tag='common', ticket=t, **kw),
+
+            # assim sequence
             LoopFamily(
                 tag='dates',
                 ticket=t,

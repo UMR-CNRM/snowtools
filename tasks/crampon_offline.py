@@ -8,26 +8,24 @@ Vortex task performing up to 40 offline runs in parallel on a single node
 
 '''
 
-from vortex import toolbox
 from bronx.stdtypes.date import Date
 import os
-from tasks.crampon_common import Crampon_Task
+from tasks.crampon_common import _Crampon_Task
 from utils.dates import get_list_dates_files, check_and_convert_date
 
+from vortex import toolbox
 
-class Offline_Task(Crampon_Task):
+
+class Offline_Task(_Crampon_Task):
     '''
     classdocs
     '''
 
     def process(self):
+        t = self.ticket
+
         # ##### PREPARE common stuff with the offline task ###########
-        t, firstloop, lastloop, _, = self.prepare_common()
-        date_begin_forc, date_end_forc, _, _ = \
-            get_list_dates_files(self.conf.datebegin, Date(check_and_convert_date(self.conf.stopdate)), self.conf.duration)  # each one of these items has only one item
-        date_begin_forc = date_begin_forc[0]
-        date_end_forc = date_end_forc[0]  # replace one-item list by item.
-        print('sequence dates', date_begin_forc, date_end_forc)
+        firstloop, lastloop, _, = self.prepare_common()
 
         # ####  set members configurations ##################
         nmembersnode = len(self.conf.membersnode)
@@ -41,52 +39,13 @@ class Offline_Task(Crampon_Task):
         # ################## STEP.01 #################################################
         # separate early-fetch (constant files, get at the beginning of the simulation)
         # and fetch (get it as the simulation goes along)
+        # common consts are handled with symbolic links in the common directory
+
         # ############################################################################
         if 'early-fetch' in self.steps:
             # ############ FETCH COMMON CONST #####################################
             # -> duplicated with soda task -< make a class method
             self.get_common_consts(firstloop, self.conf.membersnode)
-
-            # ############## FETCH FORCINGS #######################################
-            # we fetch forcing files into the members directories using the remainder function %
-            # since we usually have more members than forcing files, we loop over forcing files
-
-            forcExp = self.conf.forcing + '@' + os.environ['USER']
-            meteo_members = {str(m): ((m - 1) % int(self.conf.nforcing)) + 1 for m in self.conf.membersnode}
-
-            # in case of synthetic assimilation, replace the synthetic truth's forcing by another randomly drawn from the rest.
-            # if hasattr(self.conf, 'synth'):
-            #     gg = range(1, int(self.conf.nforcing) + 1)
-            #     synth = str(int(self.conf.synth))
-            #
-            #     if synth in meteo_members.keys():  # because here we work by nodes
-            #         gg.remove(meteo_members[synth])
-            #     meteo_members[synth] = random.choice(gg)
-            if hasattr(self.conf, 'synth'):
-                synth = str(int(self.conf.synth))
-                meteo_members[synth] = self.conf.meteo_draw
-            local_names = {str(m): 'mb{0:04d}'.format(m) + '/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
-                           for m in self.conf.membersnode}
-            self.sh.title('Toolbox input tb01')
-            tb01 = toolbox.input(
-                role           = 'Forcing',
-                realmember     = self.conf.membersnode,
-                local          = dict(realmember= local_names),
-                vapp           = self.conf.meteo,
-                experiment     = forcExp,
-                member         = dict(realmember= meteo_members),
-                geometry       = self.conf.geometry,
-                datebegin      = date_begin_forc,
-                dateend        = date_end_forc,
-                nativefmt      = 'netcdf',
-                kind           = 'MeteorologicalForcing',
-                model          = 'safran',
-                namespace      = 'vortex.multi.fr',
-                namebuild      = 'flat@cen',  # ???
-                block          = 'meteo'
-            ),
-            print(t.prompt, 'tb01 =', tb01)
-            print()
 
             if firstloop:  # if firstloop, get it early on hendrix
 
@@ -181,11 +140,16 @@ class Offline_Task(Crampon_Task):
 
         if 'compute' in self.steps:
             # force first forcing to the first forcing of first member 0001 doesn't work on several nodes...
-            firstforcing = 'mb{0:04d}'.format(self.conf.membersnode[0]) + '/FORCING_' + date_begin_forc.strftime("%Y%m%d%H") +\
+            date_begin_forc, date_end_forc, _, _ = \
+                get_list_dates_files(self.conf.datebegin, Date(check_and_convert_date(self.conf.stopdate)), self.conf.duration)  # each one of these items has only one item
+            date_begin_forc = date_begin_forc[0]
+            date_end_forc = date_end_forc[0]  # replace one-item list by item.
+            print('yolo', os.getcwd())
+            firstforcing = '../../../common/mb{0:04d}'.format(self.conf.membersnode[0]) + '/FORCING_' + date_begin_forc.strftime("%Y%m%d%H") +\
                 "_" + date_end_forc.strftime("%Y%m%d%H") + ".nc"
             self.sh.title('Toolbox algo tb09a')
 
-            tb09a = tbalgo1 = toolbox.algo(
+            tb09a = toolbox.algo(
                 kind         = 'surfex_preprocess',
                 datebegin    = self.conf.stopdate_prev,
                 dateend      = self.conf.stopdate,
@@ -230,7 +194,7 @@ class Offline_Task(Crampon_Task):
             stopstep += 1
 
         if 'backup' in self.steps:
-            # ########### PUT PREP FILES ###########
+            # ########### PUT PREP FILES FOR SODA ###########
             localbg = 'mb[member%04d]/PREP_[date:ymdh].nc'
             self.sh.title('Toolbox output tb21bg')
             tb21 = toolbox.output(
@@ -253,23 +217,6 @@ class Offline_Task(Crampon_Task):
             print(t.prompt, 'tb21 =', tb21)
             print()
 
-            # conf file to hendrix (updated/erased at each loop
-            self.sh.title('Toolbox output tbconf')
-            tbconf = toolbox.output(
-                kind           = 'ini_file',
-                namespace      = 'vortex.archive.fr',
-                namebuild      = 'flat@cen',
-                block          = 'conf',
-                experiment     = self.conf.xpid,
-                local          = self.conf.vapp + '_' + self.conf.vconf + '.ini',
-                vapp           = self.conf.vapp,
-                vconf          = self.conf.vconf,
-                fatal          = False,
-
-            ),
-            print(t.prompt, 'tbconf =', tbconf)
-            print()
-
         if 'late-backup' in self.steps:
 
             # ########### PUT PREP FILES ###########
@@ -286,7 +233,7 @@ class Offline_Task(Crampon_Task):
                 nativefmt      = 'netcdf',
                 kind           = 'PREP',
                 model          = 'surfex',
-                namespace      = 'vortex.multi.fr',
+                namespace      = 'vortex.archive.fr',
                 namebuild      = 'flat@cen',
                 block          = 'bg',
                 stage          = '_bg',
@@ -295,7 +242,7 @@ class Offline_Task(Crampon_Task):
             print(t.prompt, 'tb21 =', tb21)
             print()
 
-            # ########### PUT PRO FILES ###########
+            # ########### PUT PRO FILE ###########
             self.sh.title('Toolbox output tb19')
             tb19 = toolbox.output(
                 local          = 'mb[member%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
@@ -303,7 +250,7 @@ class Offline_Task(Crampon_Task):
                 geometry       = self.conf.geometry,
                 datebegin      = self.conf.stopdate_prev,
                 dateend        = self.conf.stopdate,
-                member         = self.conf.membersnode,  # BC 21/03/19 probably replace by mbids
+                member         = self.conf.membersnode,
                 nativefmt      = 'netcdf',
                 kind           = 'SnowpackSimulation',
                 model          = 'surfex',
@@ -314,7 +261,10 @@ class Offline_Task(Crampon_Task):
             print(t.prompt, 'tb19 =', tb19)
             print()
 
+            # PREP and PRO to SXCEN ############"
             if hasattr(self.conf, 'writesx'):
+
+                # PUT PREP FILES SXCEN
                 self.sh.title('Toolbox output tb21bg_sx')
                 tb21_b = toolbox.output(
                     local          = localbg,
@@ -338,7 +288,28 @@ class Offline_Task(Crampon_Task):
                 print(t.prompt, 'tb21bg_sx =', tb21_b)
                 print()
 
-            # fetch namelist only if lastloop
+                # PUT PRO FILE SX
+                self.sh.title('Toolbox output tb19_sx')
+                tb19 = toolbox.output(
+                    local          = 'mb[member%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    experiment     = self.conf.xpid,
+                    geometry       = self.conf.geometry,
+                    datebegin      = self.conf.stopdate_prev,
+                    dateend        = self.conf.stopdate,
+                    member         = self.conf.membersnode,
+                    nativefmt      = 'netcdf',
+                    kind           = 'SnowpackSimulation',
+                    model          = 'surfex',
+                    namespace      = 'vortex.sxcen.fr',
+                    storage        = 'sxcen.cnrm.meteo.fr',
+                    rootpath       = self.conf.writesx,
+                    namebuild      = 'flat@cen',
+                    block          = 'pro',
+                ),
+                print(t.prompt, 'tb19 =', tb19)
+                print()
+
+            # fetch namelist &conf file only if lastloop
             if lastloop:
                 self.sh.title('Toolbox output tb23')
                 tb23 = toolbox.output(
@@ -371,27 +342,8 @@ class Offline_Task(Crampon_Task):
                 print(t.prompt, 'tbconf =', tbconf)
                 print()
 
-            # conf file and namelist to sxcen
-            if hasattr(self.conf, 'writesx'):
-                self.sh.title('Toolbox output tbconf_sx')
-                tbconf = toolbox.output(
-                    kind           = 'ini_file',
-                    namespace      = 'vortex.sxcen.fr',
-                    namebuild      = 'flat@cen',
-                    block          = 'conf',
-                    storage        = 'sxcen.cnrm.meteo.fr',
-                    rootpath       = self.conf.writesx,
-                    experiment     = self.conf.xpid,
-                    local          = self.conf.vapp + '_' + self.conf.vconf + '.ini',
-                    vapp           = self.conf.vapp,
-                    vconf          = self.conf.vconf,
-                    fatal          = False,
-
-                ),
-                print(t.prompt, 'tbconf =', tbconf)
-                print()
-                # fetch namelist only if lastloop
-                if lastloop:
+                # namelist & conf to sxcen
+                if hasattr(self.conf, 'writesx'):
                     self.sh.title('Toolbox output tb23_sx')
                     tb23 = toolbox.output(
                         role            = 'Nam_surfex',
@@ -407,4 +359,21 @@ class Offline_Task(Crampon_Task):
                         fatal           = False,
                     )
                     print(t.prompt, 'tb23 =', tb23)
+                    print()
+
+                    self.sh.title('Toolbox output tbconf_sx')
+                    tbconf = toolbox.output(
+                        kind           = 'ini_file',
+                        namespace      = 'vortex.sxcen.fr',
+                        namebuild      = 'flat@cen',
+                        block          = 'conf',
+                        storage        = 'sxcen.cnrm.meteo.fr',
+                        rootpath       = self.conf.writesx,
+                        experiment     = self.conf.xpid,
+                        local          = self.conf.vapp + '_' + self.conf.vconf + '.ini',
+                        vapp           = self.conf.vapp,
+                        vconf          = self.conf.vconf,
+                        fatal          = False,
+                    ),
+                    print(t.prompt, 'tbconf =', tbconf)
                     print()

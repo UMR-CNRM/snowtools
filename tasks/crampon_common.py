@@ -5,16 +5,22 @@ Created on 17 avr. 2019
 
 @author: cluzetb
 '''
-from vortex.layout.nodes import Task
-from vortex import toolbox
 from bronx.stdtypes.date import Date
-from utils.dates import check_and_convert_date
 import os
+from utils.dates import check_and_convert_date, get_list_dates_files
+
+from vortex import toolbox
+from vortex.layout.nodes import Task
 
 
-class Crampon_Task(Task):
+class _Crampon_Task(Task):
+    """
+    Task used to fetch common consts btw OFFLINE dates (forcings) and SODA
+
+
+    """
+
     def prepare_common(self):
-        t = self.ticket
 
         # set dates.
         # /!\ No handling of sentinel2 dates for the moment (should be put up to the familyloop)
@@ -31,7 +37,7 @@ class Crampon_Task(Task):
         else:
             assDate = Date(check_and_convert_date(self.conf.stopdate))
 
-        return t, firstloop, lastloop, assDate
+        return firstloop, lastloop, assDate
 
     def get_common_consts(self, firstloop, members):
         t = self.ticket
@@ -121,3 +127,50 @@ class Crampon_Task(Task):
         )
         print(t.prompt, 'tbCONFIN =', tbconf)
         print()
+
+
+class Crampon_In(_Crampon_Task):
+    """
+    Task used to fetch common consts btw OFFLINE dates (forcings) and SODA
+
+
+    """
+
+    def process(self):
+        t = self.ticket
+        if 'early-fetch' in self.steps:
+            # ############## FETCH FORCINGS #######################################
+            # we fetch forcing files into the members directories using the remainder function %
+            # since we usually have more members than forcing files, we loop over forcing files
+            date_begin_forc, date_end_forc, _, _ = \
+                get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)  # each one of these items has only one item
+            date_begin_forc = date_begin_forc[0]
+            date_end_forc = date_end_forc[0]  # replace one-item list by item.
+            forcExp = self.conf.forcing + '@' + os.environ['USER']
+            meteo_members = {str(m): ((m - 1) % int(self.conf.nforcing)) + 1 for m in self.conf.members}
+
+            if hasattr(self.conf, 'synth'):
+                synth = str(int(self.conf.synth))
+                meteo_members[synth] = self.conf.meteo_draw
+            local_names = {str(m): 'mb{0:04d}'.format(m) + '/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
+                           for m in self.conf.members}
+            self.sh.title('Toolbox input tb01')
+            tb01 = toolbox.input(
+                role           = 'Forcing',
+                realmember     = self.conf.members,
+                local          = dict(realmember= local_names),
+                vapp           = self.conf.meteo,
+                experiment     = forcExp,
+                member         = dict(realmember= meteo_members),
+                geometry       = self.conf.geometry,
+                datebegin      = date_begin_forc,
+                dateend        = date_end_forc,
+                nativefmt      = 'netcdf',
+                kind           = 'MeteorologicalForcing',
+                model          = 'safran',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',  # ???
+                block          = 'meteo'
+            ),
+            print(t.prompt, 'tb01 =', tb01)
+            print()
