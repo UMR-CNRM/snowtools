@@ -151,10 +151,16 @@ def get_file_const(pathin, nameout):
         return False
 
 
-def get_file_date(prefix, path, datefile):
+def get_file_date(prefix, path, datefile, raiseexception = False):
 
     namefile = prefix + "_" + datefile.strftime('%Y%m%d%H') + ".nc"
-    return get_file_const(path + "/" + namefile, prefix + ".nc")
+
+    success = get_file_const(path + "/" + namefile, prefix + ".nc")
+
+    if raiseexception and not success:
+        raise FileNameException(path + "/" + namefile)
+
+    return success
 
 
 def get_file_period(prefix, path, datebegin, dateend):
@@ -179,7 +185,7 @@ def get_file_period(prefix, path, datebegin, dateend):
             "NOT AVAILABLE !!!!!!!"
 
         # Attempt to find a yearly file
-        if datebegin.month >= 8:
+        if datebegin.month >= 8 and datebegin.day >= 1 and datebegin.hour >= 6:
             dateyear_beg = datebegin.replace(month=8, day=1, hour=6)
             dateyear_end = datebegin.replace(year=datebegin.year + 1, month=8, day=1, hour=6)
         else:
