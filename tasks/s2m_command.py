@@ -67,8 +67,14 @@ class Surfex_command(_S2M_command):
 
     def set_geo(self, vortex):
 
+        #
+        self.interpol = os.path.isfile(self.options.region)
+        if self.interpol:
+            self.options.region = absolute_path(self.options.region)
+            self.interpol = True
+
         # Check and conversion of geographical requirements
-        if self.options.region or self.options.slopes or self.options.aspects or self.options.minlevel or self.options.maxlevel:
+        elif self.options.region or self.options.slopes or self.options.aspects or self.options.minlevel or self.options.maxlevel:
             INFOmassifs = infomassifs()
 
             if not vortex:
@@ -281,7 +287,12 @@ class Surfex_command(_S2M_command):
                                            execdir=self.options.exesurfex,
                                            namelist=self.options.namelist,
                                            addmask=True)
-
+            elif self.interpol:
+                run = tasks.runs.interpolrun(self.options.datedeb, self.options.datefin, self.options.forcing, self.options.diroutput, threshold=self.options.threshold,
+                                             workdir=self.options.workdir, datespinup=self.options.datespinup, geolist=[self.options.region],
+                                             execdir=self.options.exesurfex,
+                                             namelist=self.options.namelist,
+                                             addmask=True)
             elif self.options.region or self.options.slopes or self.options.aspects or self.options.minlevel or self.options.maxlevel:
 
                 if self.options.onlyextractforcing:

@@ -18,7 +18,7 @@ from utils.prosimu import prosimu
 from utils.resources import get_file_period, save_file_const
 from tools.change_forcing import forcinput_select, forcinput_applymask
 from utils.FileException import DirFileException
-
+from tools.execute import callSurfexOrDie
 
 def create_env(diroutput):
     """Create working directory and directories to save outputs"""
@@ -56,8 +56,15 @@ def get_meteo_for_clim(forcingpath, datebegin, dateend, geolist, list_forcing=[]
         os.rename("FORCING_0.nc", "FORCING.nc")
 
     if geolist:
-        os.rename("FORCING.nc", "FORCING_base.nc")
-        forcinput_select("FORCING_base.nc", "FORCING.nc", *geolist)
+        if os.path.isfile(geolist[0]):
+            os.rename("FORCING.nc", "input.nc")
+            if not os.path.islink('GRID.nc'):
+                os.symlink(geolist[0], "GRID.nc")
+            callSurfexOrDie(os.environ['SNOWTOOLS_CEN'] + "/fortran/interpol", moderun='MPIRUN', nproc=4)
+            os.rename("output.nc", "FORCING.nc")
+        else:
+            os.rename("FORCING.nc", "FORCING_base.nc")
+            forcinput_select("FORCING_base.nc", "FORCING.nc", *geolist)
 
     forcing = "FORCING_" + str(i) + "_" + dateforcbegin.strftime('%Y%m%d%H') + "_" + dateforcend.strftime('%Y%m%d%H') + ".nc"
     os.rename("FORCING.nc", forcing)

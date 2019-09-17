@@ -63,11 +63,20 @@ class surfexrun(object):
         if "beaufix" in machine or "prolix" in machine:
             self.nproc = 40
             self.moderun = "MPI"
+            self.modeinterpol = "MPI"
         else:
             if "MPIAUTO" in os.readlink(self.execdir + "/OFFLINE"):
                 self.moderun = "MPIRUN"
             else:
                 self.moderun = moderun
+
+            if os.path.islink(os.environ['SNOWTOOLS_CEN'] + "/fortran/interpol"):
+                if "MPIAUTO" in os.readlink(os.environ['SNOWTOOLS_CEN'] + "/fortran/interpol"):
+                    self.modeinterpol = "MPIRUN"
+                else:
+                    self.modeinterpol = moderun
+            else:
+                self.modeinterpol = "NOTCOMPILED"
 
             if self.moderun == "MPIRUN":
                 if "NOFFLINE" in list(os.environ.keys()):
@@ -76,6 +85,14 @@ class surfexrun(object):
                     self.nproc = 4
             else:
                 self.nproc = 1
+
+            if self.modeinterpol == "MPIRUN":
+                if "NINTERPOL" in list(os.environ.keys()):
+                    self.ninterpol = int(os.environ["NINTERPOL"])
+                else:
+                    self.ninterpol = 4
+            else:
+                self.ninterpol = 1
 
         print("Type of run: " + self.moderun + " Number of processes " + str(self.nproc))
 
@@ -269,6 +286,21 @@ class postesrun(surfexrun):
 
     def save_output(self):
         super(postesrun, self).save_output()
+        save_file_period(self.dirmeteo, "FORCING", self.dateforcbegin, self.dateforcend)
+
+
+class interpolrun(surfexrun):
+
+    def modify_forcing(self, *args):
+        os.rename("FORCING.nc", "input.nc")
+        print (args)
+        if not os.path.islink('GRID.nc'):
+            os.symlink(args[0], "GRID.nc")
+        callSurfexOrDie(os.environ['SNOWTOOLS_CEN'] + "/fortran/interpol", moderun=self.modeinterpol, nproc=self.ninterpol)
+        os.rename("output.nc", "FORCING.nc")
+
+    def save_output(self):
+        super(interpolrun, self).save_output()
         save_file_period(self.dirmeteo, "FORCING", self.dateforcbegin, self.dateforcend)
 
 
