@@ -56,7 +56,7 @@ def get_meteo_for_clim(forcingpath, datebegin, dateend, geolist, list_forcing=[]
         os.rename("FORCING_0.nc", "FORCING.nc")
 
     if geolist:
-        if os.path.isfile(geolist[0]):
+        if type(geolist[0]) is str and os.path.isfile(geolist[0]):
             os.rename("FORCING.nc", "input.nc")
             if not os.path.islink('GRID.nc'):
                 os.symlink(geolist[0], "GRID.nc")

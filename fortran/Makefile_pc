@@ -1,4 +1,5 @@
-
+export VER_MPI=MPIAUTO
+export ARCH=LXgfortran
 
 
 ifeq "$(VER_MPI)" "NOMPI"

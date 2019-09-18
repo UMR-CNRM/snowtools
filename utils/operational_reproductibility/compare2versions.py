@@ -116,17 +116,8 @@ class ComparisonNetcdf(object):
                     var1 = file1.read(varname)
                     var2 = file2.read(varname)
 
-#                     if len(var1.shape) != 0:
                     diff = var1[:] - var2[:]
                     mindiff, maxdiff, meandiff = np.nanmin(diff), np.nanmax(diff), nanmean(diff.flatten())
-#                     else:
-#                         # Specific management of 0d variables, otherwise the operation is not supported
-#                         var1 = var1[...]
-#                         var2 = var2[...]
-#                         print var1.shape
-#                         mindiff = maxdiff = meandiff = var1 - var2
-#                         print type(var1)
-#                         print type(mindiff)
 
                     if mindiff == 0 and maxdiff == 0:
                         self.report(varname + " : CONFORME")
@@ -191,6 +182,7 @@ class ComparisonNetcdf(object):
         return conform
 
 
+# The following class is not useful for vortex but is temporarily used while netcdf comparison is not implemented in the diff toolbox.
 class ComparisonS2MIntDev(ComparisonNetcdf):
 
     pathint = "/chaine/mxpt001/vortex/mtool/cache/vortex/s2m"

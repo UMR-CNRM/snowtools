@@ -68,7 +68,10 @@ class Surfex_command(_S2M_command):
     def set_geo(self, vortex):
 
         #
-        self.interpol = os.path.isfile(self.options.region)
+        if self.options.region:
+            self.interpol = os.path.isfile(self.options.region)
+        else:
+            self.interpol = False
         if self.interpol:
             self.options.region = absolute_path(self.options.region)
             self.interpol = True
