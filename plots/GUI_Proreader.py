@@ -9,7 +9,8 @@ import tkinter.filedialog
 import math
 import datetime
 import numpy as np
-from itertools import chain
+import argparse
+import sys
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -30,7 +31,7 @@ constante_sampling = proReader_mini.constante_sampling
 
 class GraphStandard(Toplevel):
     def __init__(self,**Arguments):
-        Toplevel.__init__(self, **Arguments)
+        Toplevel.__init__(self)
         self.title('GUI PROreader CEN')
         
         self.taille_x=900
@@ -51,6 +52,7 @@ class GraphStandard(Toplevel):
         #self.boolzoomdate=False
         self.bool_profil=False
         self.bool_layer=False
+        self.bool_ligne_commande = False
         self.figclear=True
         self.first_profil=True
         self.width_rect=0.01
@@ -111,7 +113,54 @@ class GraphStandard(Toplevel):
 
         self.bind('<Configure>', self.onsize_test)
         self.make_list_massif()
-        
+        if len(Arguments) > 0:
+            self.filename = Arguments.get('filename')
+            self.variable = Arguments.get('variable')
+            self.var_sup = [Arguments.get('profil')]
+            self.variable_souris = Arguments.get('profil')
+
+            self.point_choisi = 0
+			
+            ff = prosimu(self.filename)
+            self.date=ff.readtime()
+            self.datedeb=self.date[0]
+            self.datefin=self.date[len(self.date)-1]
+            if len(self.date) > constante_sampling: 
+                messagebox.showinfo('Time > '+str(constante_sampling), 'automatic sampling to avoid too long treatment')
+            self.pro = proReader_mini.ProReader_mini(ncfile=self.filename, var=self.variable, point=int(self.point_choisi),var_sup=self.var_sup)
+            self.Tableau=self.pro.get_choix(self.filename)
+			
+            if self.Tableau[0][self.point_choisi] >0: 
+                self.combobox_reduce1.set(self.list_massif_nom[self.list_massif_num.index(self.Tableau[0][self.point_choisi])])
+            else:
+                self.combobox_reduce1.set('inconnu')
+            self.combobox_reduce2.set(str(self.pro.alt))
+            self.combobox_reduce3.set(str(self.pro.slope))
+            self.combobox_reduce4.set(str(self.pro.aspect))
+            self.combobox_choix_profil.set(self.var_sup)
+            self.combobox.set(self.variable)
+
+			
+            listvariables = ff.listvar()
+            for i in range(len(listvariables)):
+                if(listvariables[i]==(listvariables[i].upper()) and listvariables[i]!='ZS'):
+                    if ff.getattr(listvariables[i],'long_name')!='':
+                        self.liste_variable_for_pres.append(ff.getattr(listvariables[i],'long_name'))
+                        self.liste_variable.append(listvariables[i])
+                    else:
+                        self.liste_variable_for_pres.append(listvariables[i])
+                        self.liste_variable.append(listvariables[i])
+            self.combobox.config(state ='readonly', values=self.liste_variable_for_pres)
+            self.combobox.bind('<<ComboboxSelected>>', self.liste_profil)
+
+            self.profil_complet=False
+            if ({'SNOWTYPE','SNOWRAM'}.issubset(set(ff.listvar()))):
+                self.profil_complet=True
+                self.var_sup.extend([self.variable_souris,'SNOWTYPE','SNOWRAM'])
+
+            self.bool_ligne_commande = True
+            self.test_presence_champs()
+
     ##########################################################
     # PLACEMENT BOUTONS, LISTES DEFILANTES, ETC...
     ##########################################################
@@ -212,12 +261,6 @@ class GraphStandard(Toplevel):
             return
         if (event.inaxes == self.ax1):
             hauteur_souris=event.ydata
-            '''if self.boolzoom:
-                ecart=self.datedeb-self.date1_zoom_old
-                date_souris=self.date[min(math.floor(event.xdata),len(self.date)-1)]-ecart
-            else:
-                ecart=self.datedeb-self.date1_zoom
-                date_souris=self.date[min(math.floor(event.xdata),len(self.date)-1)]-ecart'''
             date_souris=self.date[min(np.where(self.intime)[0][int(math.floor(event.xdata))],len(self.date)-1)]
             self.ax2.clear()
             top_zoom=self.pro.get_topplot(self.variable, self.date1_zoom, self.date2_zoom)
@@ -239,12 +282,6 @@ class GraphStandard(Toplevel):
             self.boolzoom=True
             self.x_date1_zoom=event.xdata
             self.date1_zoom = self.date[min(np.where(self.intime)[0][int(math.floor(event.xdata))],len(self.date)-1)]
-            '''if self.boolzoomdate:
-                ecart=self.datedeb-self.date1_zoom
-                self.date1_zoom_old=self.date1_zoom
-                self.date1_zoom=self.date[min(math.floor(event.xdata),len(self.date)-1)]-ecart
-            else:
-                self.date1_zoom=self.date[min(math.floor(event.xdata),len(self.date)-1)]'''
             bottom, top = self.ax1.get_ylim()
             self.rectangle_choix=self.ax1.add_patch(matplotlib.patches.Rectangle((self.x_date1_zoom, bottom), self.width_rect, top-bottom,alpha=0.1))
             self.Canevas.draw()
@@ -271,15 +308,6 @@ class GraphStandard(Toplevel):
             self.width_rect=0.01
             
             self.date2_zoom = self.date[min(np.where(self.intime)[0][int(math.floor(event.xdata))],len(self.date)-1)]
-
-            '''if self.boolzoomdate:
-                ecart=self.datedeb-self.date1_zoom_old
-                self.date2_zoom=self.date[min(math.floor(event.xdata),len(self.date)-1)]-ecart
-            else:
-                self.date2_zoom=self.date[min(math.floor(event.xdata),len(self.date)-1)]
-
-            self.boolzoomdate=True'''
-            
             largeur = self.winfo_width()/self.taille_x
             hauteur = self.winfo_height()/self.taille_y
             
@@ -354,6 +382,7 @@ class GraphStandard(Toplevel):
         self.var_sup = []
         self.bool_profil = False
         self.ChoixPossible = [True, True, True, True]
+        self.bool_ligne_commande = False
 
     def refresh_all_plot(self):
         largeur = self.winfo_width()/self.taille_x
@@ -391,8 +420,6 @@ class GraphStandard(Toplevel):
     # RECUPERATION FICHIER
     ##########################################################
     def Ouvrir(self):
-        
-        
         try:
             # call a dummy dialog with an impossible option to initialize the file
             # dialog without really getting a dialog window; this will throw a
@@ -406,10 +433,7 @@ class GraphStandard(Toplevel):
             tk.call('set', '::tk::dialog::file::showHiddenVar', '0')
         except:
             pass
-        
-        
-        
-        
+      
         self.filename = tkinter.filedialog.askopenfilename(title=self.message_filedialog,filetypes=[('PRO files','.nc'),('all files','.*')])
         print(self.filename)
         self.raz()
@@ -439,33 +463,32 @@ class GraphStandard(Toplevel):
     ##########################################################
     # CHOIX VARIABLE
     ##########################################################
-    def recup(self,event):
-        def suite(event):
-            variable_for_pres=self.combobox.get()
-            self.variable=self.liste_variable[self.liste_variable_for_pres.index(variable_for_pres)]
-            self.var_sup.append(self.variable)
-            print(self.variable)
-            if self.bool_profil:
-                self.pro = proReader_mini.ProReader_mini(ncfile=self.filename, var=self.variable, point=int(self.point_choisi),var_sup=self.var_sup)
-            '''self.reduce1(self)'''
+    def liste_profil(self, event):
+        variable_for_pres=self.combobox.get()
+        self.variable=self.liste_variable[self.liste_variable_for_pres.index(variable_for_pres)]
+        self.var_sup.append(self.variable)
+        print(self.variable)
+        if self.bool_profil:
+            self.pro = proReader_mini.ProReader_mini(ncfile=self.filename, var=self.variable, point=int(self.point_choisi),var_sup=self.var_sup)
                 
-            ff = prosimu(self.filename)
-            self.profil_complet=False
-            if ({'SNOWTYPE','SNOWRAM'}.issubset(set(ff.listvar()))):
+        ff = prosimu(self.filename)
+        self.profil_complet=False
+        if ({'SNOWTYPE','SNOWRAM'}.issubset(set(ff.listvar()))):
                 self.profil_complet=True
             
-            liste_pres=[]
-            liste=list(set(ff.listvar())-{'SNOWTYPE','SNOWRAM'})
-            for var in liste:
-                if 'snow_layer' in list(ff.getdimvar(var)):
-                    liste_pres.append(self.liste_variable_for_pres[self.liste_variable.index(var)])
+        liste_pres=[]
+        liste=list(set(ff.listvar())-{'SNOWTYPE','SNOWRAM'})
+        for var in liste:
+            if 'snow_layer' in list(ff.getdimvar(var)):
+                liste_pres.append(self.liste_variable_for_pres[self.liste_variable.index(var)])
 
-            self.combobox_choix_profil.config(values = liste_pres)
-            self.combobox_choix_profil.config(state = "readonly")
-            self.combobox_choix_profil.bind('<<ComboboxSelected>>', self.choix_profil)
-            
+        self.combobox_choix_profil.config(values = liste_pres)
+        self.combobox_choix_profil.config(state = "readonly")
+        self.combobox_choix_profil.bind('<<ComboboxSelected>>', self.choix_profil)
+
+    def recup(self,event):            
         self.combobox.config(state ='readonly', values=self.liste_variable_for_pres)
-        self.combobox.bind('<<ComboboxSelected>>', suite)
+        self.combobox.bind('<<ComboboxSelected>>', self.liste_profil)
 
     def make_list_massif(self):
         self.list_massif_num=[]
@@ -602,18 +625,10 @@ class GraphStandard(Toplevel):
         self.choix_point()
         
     ##########################################################
-    # CHOIX VARIABLE PROFIL
+    # TEST PRESENCE-ABSENCE DE PARAMETRE
     ##########################################################
-    def choix_profil(self,event):
-        variable_souris_for_pres=self.combobox_choix_profil.get()
-        self.variable_souris=self.liste_variable[self.liste_variable_for_pres.index(variable_souris_for_pres)]
-        if self.profil_complet:
-            self.var_sup.extend([self.variable_souris,'SNOWTYPE','SNOWRAM'])
-        else:
-            self.var_sup.append(self.variable_souris)
-        self.bool_profil=True
-
-        # Cas 1 seul point
+    def test_presence_champs(self):
+    # Cas 1 seul point
         if (len(self.Tableau[0])==1):
             self.point_choisi=0
             self.combobox_reduce1.config(state = 'disabled', values = '')
@@ -657,9 +672,28 @@ class GraphStandard(Toplevel):
                 self.combobox_reduce4.set('inconnu')
                 self.ChoixPossible[3] = False
             self.reduce1(self)
+            if self.bool_ligne_commande:
+                self.Plotage()
+
         # Cas plusieurs points sans pb
         else:
             self.reduce1(self)
+        if self.bool_ligne_commande:
+            self.Plotage()
+        
+    ##########################################################
+    # CHOIX VARIABLE PROFIL
+    ##########################################################
+    def choix_profil(self,event):
+        variable_souris_for_pres=self.combobox_choix_profil.get()
+        self.variable_souris=self.liste_variable[self.liste_variable_for_pres.index(variable_souris_for_pres)]
+        if self.profil_complet:
+            self.var_sup.extend([self.variable_souris,'SNOWTYPE','SNOWRAM'])
+        else:
+            self.var_sup.append(self.variable_souris)
+        self.bool_profil=True
+		
+        self.test_presence_champs()
         
     ##########################################################
     # TRACE
@@ -1880,15 +1914,17 @@ class GestionFenetre(Frame):
         self.master.buttongraphe_standard = Button(self.master,text='Standard Graph', command = self.graphe1)
         self.master.buttongraphe_massif = Button(self.master,text='Massif Graph', command = self.graphe2)
         self.master.buttongraphe_membre = Button(self.master,text='Member Graph', command = self.graphe3)
+        self.master.buttonquit = Button(self.master,text='Quitter', command = quit)
         
         self.master.bind('<Configure>', self.onsize_master)
         
     def onsize_master(self,event):
         largeur_master = self.master.winfo_width()/self.master.taille_x_master
         hauteur_master = self.master.winfo_height()/self.master.taille_y_master
-        self.master.buttongraphe_standard.place(x=20*largeur_master, y=20*hauteur_master)
-        self.master.buttongraphe_massif.place(x=20*largeur_master, y= 80*hauteur_master)
-        self.master.buttongraphe_membre.place(x=20*largeur_master, y=140*hauteur_master)
+        self.master.buttongraphe_standard.place(x=20*largeur_master, y=15*hauteur_master)
+        self.master.buttongraphe_massif.place(x=20*largeur_master, y= 65*hauteur_master)
+        self.master.buttongraphe_membre.place(x=20*largeur_master, y=115*hauteur_master)
+        self.master.buttonquit.place(x=150*largeur_master, y=165*hauteur_master)
         
     def graphe1(self):
         self.fen1=GraphStandard()
@@ -1898,10 +1934,36 @@ class GestionFenetre(Frame):
             
     def graphe3(self):
         self.fen3=GraphMembre()
-        
+
+def parseArguments():
+    # Create argument parser
+    parser = argparse.ArgumentParser()
+
+    # Optional arguments
+    parser.add_argument("-f", "--filename", help="Name for input file", type=str)
+    parser.add_argument("-v", "--variable", help="Variable to plot", type=str, default = 'SNOWSSA')
+    parser.add_argument("-p", "--profil", help="Variable for profil plot", type=str, default = 'SNOWTEMP')
+
+    # Print version
+    parser.add_argument("--version", action="version", version='%(prog)s - Version 1.0')
+    # Parse arguments
+    args = parser.parse_args()
+
+    return args
 
 if __name__ == '__main__':
-    # Lancement du gestionnaire d'événements
-    GestionFenetre().mainloop()
+    if len(sys.argv) > 1: 
+        args = parseArguments()
+        filename = args.filename
+        variable = args.variable
+        profil = args.profil
+
+        dic_option = {'filename': filename, 'variable': variable, 'profil': profil}
+        fenetre = GraphStandard(**dic_option)
+        GestionFenetre().mainloop()
+
+    else: 
+        # Lancement du gestionnaire d'événements
+        GestionFenetre().mainloop()
     
 
