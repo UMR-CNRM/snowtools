@@ -18,7 +18,8 @@ import six
 from utils.sun import sun
 from utils.prosimu import prosimu
 from utils.infomassifs import infomassifs
-from utils.FileException import FileNameException, DirNameException, VarWriteException, GeometryException, MassifException
+# Take care : exceptions have to been imported with snowtools prefix to be recognized by vortex
+from snowtools.utils.FileException import FileNameException, DirNameException, VarWriteException, GeometryException, MassifException, TimeListException
 from utils.dates import TypeException
 
 from utils.resources import print_used_memory
@@ -45,6 +46,8 @@ class forcinput_tomerge:
             else:
                 raise FileNameException(ficin)
 
+        self.checktime(init_forcing_file, forcin)
+
         dirout = os.path.dirname(forcout)
 
         if not (dirout == '' or os.path.isdir(dirout)):
@@ -61,6 +64,15 @@ class forcinput_tomerge:
         new_forcing_file.add_standard_names()
 
         new_forcing_file.close()
+
+    def checktime(self, init_forcing_file, forcin):
+
+        dimtime = []
+        for unitfile in init_forcing_file:
+            dimtime.append(unitfile.getlendim("time"))
+
+        if len(set(dimtime)) > 1:
+            raise TimeListException(forcin, dimtime)
 
     def merge(self, init_forcing_file, new_forcing_file, *args):
 
