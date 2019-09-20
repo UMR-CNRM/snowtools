@@ -266,10 +266,10 @@ ENDIF
 ! 
 IF(IRANK==2) THEN 
   IF (GRID_TYPE == "LL") THEN 
-    CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,"latitude",NF90_DOUBLE,& 
+    CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,"LAT",NF90_DOUBLE,& 
         DIM_ID_OUT(ILLOC_ID),VAR_ID_OUT(INVAR+1)),"Cannot def var latitude")
     !      
-    CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,"longitude",NF90_DOUBLE,& 
+    CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,"LON",NF90_DOUBLE,& 
         DIM_ID_OUT(ILLOC_ID+1),VAR_ID_OUT(INVAR+2)),"Cannot def var longitude")             
   ELSEIF (GRID_TYPE == "XY") THEN 
     !
@@ -289,7 +289,8 @@ ENDIF
 ! dimension must come last on the list of dimids. 
 !And must not has an element equal to zero
 DO IV=1,INVAR
-  IF (ANY( VAR_ID_DIMS_OUT(:,IV) .EQ. ITODELETE))CYCLE
+  IF (ANY( VAR_ID_DIMS_OUT(:,IV) .EQ. ITODELETE) .OR. &
+  (GRID_TYPE == "LL" .AND. (VAR_NAME_IN(IV) == "LAT" .OR. VAR_NAME_IN(IV) == "LON")))CYCLE
   COUNTER=0
   DO ID = 1,INDIM+1
     IF (VAR_ID_DIMS_OUT(ID,IV) .NE. 0) &
@@ -309,11 +310,7 @@ DO IV=1,INVAR
           REAL_DIM(counter:1:-1),VAR_ID_OUT(IV)),& 
           "Cannot def var "//TRIM(VAR_NAME_IN(IV)))      
   DEALLOCATE(REAL_DIM)
-END DO
-!
-!copy attributes from infile to outfile
-DO IV=1,INVAR
-  IF (ANY( VAR_ID_DIMS_OUT(:,IV) .EQ. ITODELETE))CYCLE
+  !copy attributes from infile to outfile
   DO IA=1,INATT(IV)
     CALL CHECK(NF90_INQ_ATTNAME(FILE_ID_IN,VAR_ID_IN(IV),IA,ATT_NAME)," Cannot get att name")
     !
@@ -351,6 +348,7 @@ CALL TIME_PROC_DISTRIBUTOR(NTIME,PROC_ID,NPROC,ITSTART,NTIME_PROC)
 ALLOCATE(VALUE_TIME(NTIME_PROC))  
 DO IV=1,INVAR
   IF (ANY( VAR_ID_DIMS_OUT(:,IV) .EQ. ITODELETE))CYCLE
+  IF (GRID_TYPE == "LL" .AND. (VAR_NAME_IN(IV) == "LAT" .OR. VAR_NAME_IN(IV) == "LON"))  CYCLE
 !  !Unlimited dimensions require collective writes
   CALL CHECK(NF90_VAR_PAR_ACCESS(FILE_ID_OUT, VAR_ID_OUT(IV), nf90_collective),&
                     "collective write")
@@ -435,7 +433,7 @@ DO IV=1,INVAR
     ! 
     CALL INTERPOLZS2D(ZVAROUTXYT,ZVARINT,IINDICESBAS,IINDICESHAUT,&
     ZZSOUT,IZSIN)
-    !  
+    !
     IF (IRANK ==1 )THEN 
       ALLOCATE(ZVAROUTXYT1D(NX_PROC,NTIME))
       ZVAROUTXYT1D = ZVAROUTXYT(:,1,:)
@@ -501,6 +499,30 @@ DEALLOCATE(VAR_ID_DIMS_OUT)
 DEALLOCATE(DIM_NAME_OUT)
 DEALLOCATE(DIM_ID_OUT)
 DEALLOCATE(DIM_SIZE_OUT)
+!
+DEALLOCATE(ZZSOUT)
+DEALLOCATE(IMASSIFOUT)
+DEALLOCATE(ZASPECTOUT)
+DEALLOCATE(ZSLOPEOUT)
+IF(IRANK == 1)THEN
+  DEALLOCATE(ZLATOUT)
+  DEALLOCATE(ZLONOUT)
+ELSEIF(IRANK == 2)THEN
+  IF (GRID_TYPE == "LL") THEN
+    DEALLOCATE(ZLATOUT)
+    DEALLOCATE(ZLONOUT)
+  ELSEIF (GRID_TYPE == "XY") THEN
+    DEALLOCATE(ZYOUT)
+    DEALLOCATE(ZXOUT)
+  ENDIF
+ENDIF
+!
+DEALLOCATE(IZSIN)
+DEALLOCATE(IMASSIFIN)
+DEALLOCATE(IASPECTIN)
+!
+DEALLOCATE(IINDICESBAS)
+DEALLOCATE(IINDICESHAUT)
 !
 ! close output file
 CALL CHECK(NF90_CLOSE(FILE_ID_OUT),"Cannot close file "//TRIM(HFILENAMEOUT))
@@ -608,6 +630,9 @@ CHARACTER(LEN=2)::GT !GRID TYPE
 !INTEGER::IDVARG ! nc variable identifier
 INTEGER::IDVARGZS,IDVARGMASSIF,IDVARGASPECT,IDVARSLOPE,IDVARLAT,IDVARLON,IDY,IDX ! nc variable identifier
 INTEGER,DIMENSION(:),ALLOCATABLE::IDDIMSVARG ! dimension ids of nc variable
+!
+DOUBLE PRECISION,DIMENSION(:,:),ALLOCATABLE :: PX2D,PY2D
+!
 INTEGER::ID ! dimension loop counter
 !
 CHARACTER(*),PARAMETER::HZS='ZS'
@@ -634,6 +659,7 @@ DO ID=1,IRANK
   CALL CHECK(NF90_INQUIRE_DIMENSION(FILE_ID_GEO,IDDIMSVARG(ID),len=ILENDIM(ID),&
                     name=DIM_NAME_OUT(ID)), "Cannot get dim "//TRIM(HFILENAMEG))
 END DO
+DEALLOCATE(IDDIMSVARG)
 !
 IF(IRANK == 2)THEN
   IF (ANY(DIM_NAME_OUT(:) .EQ. "x"))THEN
@@ -654,20 +680,6 @@ ENDIF
 !
 ALLOCATE(PZSOUT(NX_PROC,NY_PROC))
 ALLOCATE(KMASSIFOUT(NX_PROC,NY_PROC))
-ALLOCATE(PASPECTOUT(NX_PROC,NY_PROC))
-ALLOCATE(PSLOPEOUT(NX_PROC,NY_PROC))
-IF(IRANK == 1)THEN 
-  ALLOCATE(PLATOUT(NPOINT_PROC))
-  ALLOCATE(PLONOUT(NPOINT_PROC))
-ELSEIF(IRANK == 2)THEN
-  IF(GT == "XY") THEN ! X Y GRID
-    ALLOCATE(PYOUT(NY_PROC))
-    ALLOCATE(PXOUT(NX_PROC))
-  ELSEIF (GT == "LL") THEN ! LAT LON GRID
-    ALLOCATE(PLATOUT(NY_PROC))
-    ALLOCATE(PLONOUT(NX_PROC))
-  ENDIF
-ENDIF
 !
 CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARGZS,PZSOUT, &
    start =(/IXSTART,IYSTART/) , count = (/NX_PROC,NY_PROC/)), "Cannot read "//HZS)
@@ -679,8 +691,13 @@ IF (NF90_INQ_VARID(FILE_ID_GEO,HMASSIF,IDVARGMASSIF) == NF90_NOERR) THEN
 ELSE
   KMASSIFOUT = 1
 ENDIF
+!
+ALLOCATE(PASPECTOUT(NX_PROC,NY_PROC))
+ALLOCATE(PSLOPEOUT(NX_PROC,NY_PROC))
 IF(IRANK == 1)THEN
   !
+  ALLOCATE(PLATOUT(NPOINT_PROC))
+  ALLOCATE(PLONOUT(NPOINT_PROC))
   IF(NF90_INQ_VARID(FILE_ID_GEO,HASPECT,IDVARGASPECT) .EQ. NF90_NOERR ) THEN
     CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARGASPECT,PASPECTOUT , &
      start =(/IXSTART,IYSTART/) , count = (/NX_PROC,NY_PROC/)), &
@@ -700,6 +717,8 @@ IF(IRANK == 1)THEN
   !
 ELSEIF(IRANK == 2)THEN
   IF (GT == "XY") THEN  !X Y GRID
+    ALLOCATE(PYOUT(NY_PROC))
+    ALLOCATE(PXOUT(NX_PROC))
     !Y
     CALL CHECK(NF90_INQ_VARID(FILE_ID_GEO,HY,IDY), "Cannot find "//HY)
     CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDY,PYOUT, &
@@ -710,7 +729,10 @@ ELSEIF(IRANK == 2)THEN
                start =(/IXSTART/) , count = (/NX_PROC/)), "Cannot read "//HX)
     ! Calcul slope, aspect
     CALL EXPLICIT_SLOPE(PXOUT,PYOUT,PZSOUT,PSLOPEOUT,PASPECTOUT)
+    !   
   ELSEIF (GT == "LL") THEN  !LAT LON GRID
+    ALLOCATE(PLATOUT(NY_PROC))
+    ALLOCATE(PLONOUT(NX_PROC))
     !LAT
     CALL CHECK(NF90_INQ_VARID(FILE_ID_GEO,HLAT,IDVARLAT), "Cannot find "//HLAT)
     
@@ -722,7 +744,12 @@ ELSEIF(IRANK == 2)THEN
     CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARLON,PLONOUT, &
                start =(/IXSTART/) , count = (/NX_PROC/)), "Cannot read "//HLON)
     ! Calcul slope, aspect
-    CALL EXPLICIT_SLOPE(PLONOUT,PLATOUT,PZSOUT,PSLOPEOUT,PASPECTOUT)
+    ALLOCATE(PX2D(NX_PROC,NY_PROC))
+    ALLOCATE(PY2D(NX_PROC,NY_PROC))
+    CALL XY_IGN(PLATOUT,PLONOUT,PX2D,PY2D)
+    CALL EXPLICIT_SLOPE_LAT_LON(PX2D,PY2D,PZSOUT,PSLOPEOUT,PASPECTOUT)
+    DEALLOCATE(PX2D)
+    DEALLOCATE(PY2D)
   ELSE
     STOP "GRID 2D NOT TRAITED"
   ENDIF
@@ -761,6 +788,7 @@ DO ID=1,IRANKNC
   CALL CHECK(NF90_INQUIRE_DIMENSION(IDFICNC,IDDIMSVARG(ID),len=ILENDIM(ID)),&
                   "Cannot find dim")
 END DO
+DEALLOCATE(IDDIMSVARG)
 !
 ALLOCATE(KZSIN(ILENDIM(1)))
 ALLOCATE(KMASSIFIN(ILENDIM(1)))
@@ -796,7 +824,7 @@ INTEGER :: ININ    ! dimension of input collection of points
 INTEGER::JI,JX,JY ! loop counters
 INTEGER::JDIFFZS ! elevation difference between output point and input point
 !
-LOGICAL :: GASPECT
+LOGICAL :: GASPECT, GISFLAT
 INTEGER, PARAMETER::JPRESOL_ELEV = 300 ! elevation resolution of input collection of points
 !
 INX=SIZE(PZSOUT, 1)
@@ -808,15 +836,18 @@ ALLOCATE(KINDICESHAUT(INX,INY))
 KINDICESBAS=0
 KINDICESHAUT=0
 !
+GISFLAT = .FALSE.
+IF (ALL(KASPECTIN .EQ. -1)) GISFLAT = .TRUE.
 DO JX=1,INX
   DO JY=1,INY
     DO JI=1,ININ
         IF (KMASSIFIN(JI) /= KMASSIFOUT(JX,JY)) CYCLE
-        ! Massif is fine
-        !IF (KASPECTIN(JI) /= PASPECTOUT(JX,JY))  CYCLE
+        !Evaluate the aspet only if the input domain is not flat
+        IF (.NOT. GISFLAT) THEN
         CALL EVALUATE_ASPECT (KASPECTIN(JI),PASPECTOUT(JX,JY),GASPECT)
         IF (.NOT. GASPECT) CYCLE
-        ! Aspect is fine
+        ENDIF
+        !
         JDIFFZS = KZSIN(JI) - PZSOUT(JX,JY)
         IF (JDIFFZS < -JPRESOL_ELEV) THEN
             CYCLE
@@ -979,6 +1010,70 @@ ENDIF
 !
 END SUBROUTINE LATLON_IGN
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE XY_IGN(PLAT,PLON,PX,PY)
+!
+!!****  *XY_IGN * - Routine to compute Lambert coordinates   
+!    
+DOUBLE PRECISION, DIMENSION(:), INTENT(IN):: PLON, PLAT
+                                           ! returned geographic latitudes and 
+                                           ! longitudes of the processed points 
+                                           ! (degrees).
+DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT):: PX,PY
+                                           ! given conformal coordinates of the 
+                                           ! processed points (meters);
+!
+REAL :: ZPI180, ZPI4, ZECC2
+REAL :: ZWRK     ! working arrays
+REAL :: ZLATRAD, ZLONRAD ! longitude and latitude in radians
+REAL :: ZGAMMA
+REAL :: ZLATFI           ! Isometric latitude
+REAL :: ZR               ! length of arc meridian line projection
+INTEGER :: JI,JJ
+DOUBLE PRECISION ,SAVE :: XPI   = 4.*ATAN(1.) 
+DOUBLE PRECISION ,SAVE :: XE    = 0.08181919112 ! premiere excentricité
+DOUBLE PRECISION ,SAVE :: XN    = 0.7256077650  ! exposant de projection (n) 
+DOUBLE PRECISION ,SAVE :: XC    = 11754255.426  ! constante de projection (c)(m)
+DOUBLE PRECISION ,SAVE :: XXS   = 700000.000    ! X en projection du Pôle (Xs)(m)
+DOUBLE PRECISION ,SAVE :: XYS   = 12655612.050  ! Y en projection du Pôle (Ys)(m)
+DOUBLE PRECISION ,SAVE :: XLON0 = 3.            ! 3° Est Greenwitch pour L93
+!
+ZPI180 = XPI / 180.
+ZPI4 = XPI / 4.
+ZECC2 = XE / 2.
+!
+DO JI=1,SIZE(PLON)
+  DO JJ=1,SIZE(PLAT)
+    !
+    IF (PLON(JI) > 180.) THEN
+      ZLONRAD = (PLON(JI) - 360. - XLON0) * ZPI180
+    ELSE
+      ZLONRAD = (PLON(JI) - XLON0) * ZPI180
+    ENDIF
+    !
+    ZLATRAD = PLAT(JJ) * ZPI180
+    !
+    !*       2.     Calcul of the isometric latitude :
+    !               ----------------------------------
+    !
+    ZWRK   = SIN(ZLATRAD) * XE  
+    !
+    ZLATFI  = LOG(TAN(ZPI4 + ZLATRAD / 2.)) + ( (LOG(1-ZWRK)-LOG(1+ZWRK)) * ZECC2)
+    !
+    !*       3.     Calcul of the lambert II coordinates X and Y
+    !               ---------------------------------------------
+    !
+    ZR      = EXP(- XN * ZLATFI) * XC
+    !
+    ZGAMMA  = XN * ZLONRAD
+    !
+    PX(JI,JJ) = XXS + SIN(ZGAMMA) * ZR
+    PY(JI,JJ) = XYS- COS(ZGAMMA) * ZR   
+    !    
+  ENDDO
+ENDDO
+!
+END SUBROUTINE XY_IGN
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE EXPLICIT_SLOPE(PX,PY,PZS,PSSO_SLOPE,PSSO_DIR)
 DOUBLE PRECISION, DIMENSION(:),   INTENT(IN) :: PX,PY
                                            ! given conformal coordinates of the 
@@ -1050,10 +1145,10 @@ ALLOCATE(ZXHAT (INNX))
 ALLOCATE(ZYHAT (INNY))
 !
 DO JX=1,INNX
-  ZXHAT(JX) = (px(2)-px(1))*JX
+  ZXHAT(JX) = (PX(2)-PX(1))*JX
 END DO
 DO JY=1,INNY
-  ZYHAT(JY) = (py(2)-py(1))*JY
+  ZYHAT(JY) = (PY(2)-PY(1))*JY
 END DO
 !-------------------------------------------------------------------------------
 !
@@ -1109,7 +1204,7 @@ DO JJ=IJB,IJE
     END DO
     !
     !equivalent tangent slope of a homogeneous surface with the same area
-    PSSO_SLOPE(JI-JPHEXT,JJ-JPHEXT)=SQRT(ZSURF**2.-1.)
+    PSSO_SLOPE(JI-JPHEXT,JJ-JPHEXT)=ATAN(SQRT(ZSURF**2.-1.))*(180./XPI)
     !
     !Calcul de SSO_DIR via formules(9),(10)et (15) de Zevenbergen and Thorne,1987
     ! SSO_DIR en degré from north between 0 and 360 (North = 0°, East = 90 °, South = 180 °, West = 270 °)
@@ -1117,7 +1212,6 @@ DO JJ=IJB,IJE
                  / (ZXHAT(JI+1)-ZXHAT(JI))
     ZDIRY=(  ZZSL(JI,JJ+1) - ZZSL(JI,JJ-1) ) &
                  / (ZYHAT(JJ+1)-ZYHAT(JJ))
-    
     PSSO_DIR(JI-JPHEXT,JJ-JPHEXT)=( 1.5*XPI - ATAN2( ZDIRY, ZDIRX + SIGN(1.E-30,ZDIRX) ) )*(180.0/XPI)
     IF (PSSO_DIR(JI-JPHEXT,JJ-JPHEXT) > 360.0) THEN
         PSSO_DIR(JI-JPHEXT,JJ-JPHEXT) = PSSO_DIR(JI-JPHEXT,JJ-JPHEXT) - 360.0
@@ -1127,8 +1221,163 @@ END DO
 
 DEALLOCATE(ZZSL)
 DEALLOCATE(ZZS_XY)
+DEALLOCATE(ZXHAT)
+DEALLOCATE(ZYHAT)
 !
 END SUBROUTINE EXPLICIT_SLOPE
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE EXPLICIT_SLOPE_LAT_LON(PX,PY,PZS,PSSO_SLOPE,PSSO_DIR)
+DOUBLE PRECISION, DIMENSION(:,:),   INTENT(IN) :: PX,PY
+                                           ! given conformal coordinates of the 
+                                           ! processed points (meters);
+DOUBLE PRECISION,DIMENSION(:,:),INTENT(IN)::PZS ! resolved model orography
+DOUBLE PRECISION,DIMENSION(:,:),INTENT(OUT)::PSSO_SLOPE ! resolved slope tangent
+DOUBLE PRECISION,DIMENSION(:,:),INTENT(OUT)::PSSO_DIR ! resolved aspect
+!
+INTEGER :: IX       ! number of points in X direction
+INTEGER :: IY       ! number of points in Y direction
+!
+INTEGER :: INNX !  number of points in X direction for large domain
+INTEGER :: INNY !  number of points in Y direction for large domain
+!
+INTEGER :: JX       ! loop counter
+INTEGER :: JY       ! loop counter
+!
+DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: ZZS_XY        ! orography at southwest corner of the mesh
+DOUBLE PRECISION, DIMENSION(:,:),ALLOCATABLE  :: ZZSL          ! orography in a 2D array
+DOUBLE PRECISION, DIMENSION(:,:),ALLOCATABLE    :: ZXHAT, ZYHAT  ! X Y coordinate
+!
+DOUBLE PRECISION,    PARAMETER :: XPI=4.*ATAN(1.)  ! Pi
+INTEGER, PARAMETER :: JPHEXT = 1 ! number of points around the physical domain
+!
+DOUBLE PRECISION    :: ZDZSDX   ! slope in X and Y direction
+DOUBLE PRECISION    :: ZDZSDY   ! of a triangle surface
+DOUBLE PRECISION    :: ZSURF    ! surface of 4 triangles
+REAL    :: ZDIRX , ZDIRY   ! slope in X and Y direction of a grid point for aspect calculus
+!
+INTEGER :: IIB, IIE, IJB, IJE
+INTEGER :: JI, JJ, JB
+INTEGER :: JT
+!-------------------------------------------------------------------------------
+!
+!*          Gets the geometry of the grid
+!          -----------------------------
+!
+IX = SIZE(PX,1)
+IY = SIZE(PY,2)
+!
+INNX=IX+2
+INNY=IY+2
+!
+ALLOCATE(ZZSL (INNX,INNY))
+!
+ZZSL(2:INNX-1,2:INNY-1) = PZS(:,:)
+ZZSL(1,:) = ZZSL(2,:)
+ZZSL(INNX,:) = ZZSL(INNX-1,:)
+ZZSL(:,1) = ZZSL(:,2)
+ZZSL(:,INNY) = ZZSL(:,INNY-1)
+
+!------------------------------------------------------------------------------------------
+!
+!*        Orography of SW corner of grid meshes
+!         -------------------------------------
+!
+ALLOCATE(ZZS_XY (INNX,INNY))
+!
+ZZS_XY(2:INNX,2:INNY) = 0.25*(  ZZSL(2:INNX,2:INNY)   + ZZSL(1:INNX-1,2:INNY)   &
+                          + ZZSL(2:INNX,1:INNY-1) + ZZSL(1:INNX-1,1:INNY-1) )
+!
+ZZS_XY(1,:) = ZZS_XY(2,:)
+ZZS_XY(:,1) = ZZS_XY(:,2)
+!
+!*      Initialize Grid meshes
+!       -----------
+!
+ALLOCATE(ZXHAT (INNX, INNY))
+ALLOCATE(ZYHAT (INNX, INNY))
+!
+DO JX=2,INNX-1
+  DO JY=2,INNY-1
+    ZXHAT(JX,JY) = ABS(PX(JX-1,JY-1)-PX(1,JY-1))
+    ZYHAT(JX,JY) = ABS(PY(JX-1,JY-1)-PY(JX-1,1))
+  END DO
+END DO
+!
+!-------------------------------------------------------------------------------
+!
+IIB= 1+JPHEXT
+IIE=INNX-JPHEXT
+IJB=1+JPHEXT
+IJE=INNY-JPHEXT
+!
+!*       1.    LOOP ON GRID MESHES
+!              -------------------
+!
+!* discretization of the grid mesh in four triangles
+!
+DO JJ=IJB,IJE
+  DO JI=IIB,IIE
+    ZSURF=0.
+    DO JT=1,4
+!
+!* slopes in x and y
+!
+      SELECT CASE (JT)
+        CASE (1)
+          ZDZSDX=(    2.* ZZSL   (JI,JJ)                   &
+                   - (ZZS_XY(JI,JJ)+ZZS_XY(JI,JJ+1)) )    &
+                 / (ZXHAT(JI+1,JJ)-ZXHAT(JI,JJ))
+          ZDZSDY=(  ZZS_XY(JI,JJ+1) - ZZS_XY(JI,JJ) )     &
+                 / (ZYHAT(JI,JJ+1)-ZYHAT(JI,JJ))
+        CASE (2)
+           ZDZSDX=(  ZZS_XY(JI+1,JJ+1) -ZZS_XY(JI,JJ+1))  &
+                 / (ZXHAT(JI+1,JJ)-ZXHAT(JI,JJ))
+           ZDZSDY=(  (ZZS_XY(JI+1,JJ+1)+ZZS_XY(JI,JJ+1))  &
+                     - 2.* ZZSL (JI,JJ) )                  &
+                 / (ZYHAT(JI,JJ+1)-ZYHAT(JI,JJ))
+        CASE (3)
+          ZDZSDX=(  (ZZS_XY(JI+1,JJ)+ZZS_XY(JI+1,JJ+1))   &
+                   - 2.* ZZSL(JI,JJ)                    )  &
+                 / (ZXHAT(JI+1,JJ)-ZXHAT(JI,JJ))
+          ZDZSDY=(  ZZS_XY(JI+1,JJ+1) - ZZS_XY(JI+1,JJ) ) &
+                 / (ZYHAT(JI,JJ+1)-ZYHAT(JI,JJ))
+        CASE (4)
+           ZDZSDX=(  ZZS_XY(JI+1,JJ) - ZZS_XY(JI,JJ) )    &
+                 / (ZXHAT(JI+1,JJ)-ZXHAT(JI,JJ))
+           ZDZSDY=(  2.* ZZSL(JI,JJ)                       &
+                   - (ZZS_XY(JI+1,JJ)+ZZS_XY(JI,JJ)) )    &
+                 / (ZYHAT(JI,JJ+1)-ZYHAT(JI,JJ))
+      END SELECT
+      !
+      ! If slope is higher than 60 degrees : numerical problems
+      ZDZSDX=MIN(2.0,MAX(-2.0,ZDZSDX))
+      ZDZSDY=MIN(2.0,MAX(-2.0,ZDZSDY))
+     ! total surface of 4 triangles
+      ZSURF=ZSURF+0.25*SQRT(1. + ZDZSDX**2. + ZDZSDY**2.)
+    END DO
+    !
+    !equivalent tangent slope of a homogeneous surface with the same area
+    PSSO_SLOPE(JI-JPHEXT,JJ-JPHEXT)=ATAN(SQRT(ZSURF**2.-1.))*(180./XPI)
+    !
+    !Calcul de SSO_DIR via formules(9),(10)et (15) de Zevenbergen and Thorne,1987
+    ! SSO_DIR en degré from north between 0 and 360 (North = 0°, East = 90 °, South = 180 °, West = 270 °)
+    ZDIRX=(  ZZSL(JI+1,JJ) -ZZSL(JI-1,JJ))  &
+                 / (ZXHAT(JI+1,JJ)-ZXHAT(JI,JJ))
+    ZDIRY=(  ZZSL(JI,JJ+1) - ZZSL(JI,JJ-1) ) &
+                 / (ZYHAT(JI,JJ+1)-ZYHAT(JI,JJ))
+    PSSO_DIR(JI-JPHEXT,JJ-JPHEXT)=( 1.5*XPI - ATAN2( ZDIRY, ZDIRX + SIGN(1.E-30,ZDIRX) ) )*(180.0/XPI)
+    IF (PSSO_DIR(JI-JPHEXT,JJ-JPHEXT) > 360.0) THEN
+        PSSO_DIR(JI-JPHEXT,JJ-JPHEXT) = PSSO_DIR(JI-JPHEXT,JJ-JPHEXT) - 360.0
+    ENDIF
+  END DO
+END DO
+!
+DEALLOCATE(ZZSL)
+DEALLOCATE(ZZS_XY)
+DEALLOCATE(ZXHAT)
+DEALLOCATE(ZYHAT)
+!
+END SUBROUTINE EXPLICIT_SLOPE_LAT_LON
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE CHECK(STATUS,LINE)
   INTEGER, INTENT ( IN) :: STATUS
