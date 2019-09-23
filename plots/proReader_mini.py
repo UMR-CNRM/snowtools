@@ -254,9 +254,6 @@ class ProReader_mini:
             cbar.set_label(legend)
             axe.set_ylabel('Couche numerique')
             axe.set_ylim(0, self.nsnowlayer)
-            
-            
-            
 
         axe.set_xlim(0, toplot.shape[0])
         if(xlabel):

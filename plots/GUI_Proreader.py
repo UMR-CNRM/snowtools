@@ -23,6 +23,7 @@ from matplotlib.figure import Figure
 
 from utils.prosimu import prosimu
 from utils.infomassifs import infomassifs
+from utils.dates import check_and_convert_date
 import proReader_mini
 
 import pickle
@@ -118,9 +119,8 @@ class GraphStandard(Toplevel):
             self.variable = Arguments.get('variable')
             self.var_sup = [Arguments.get('profil')]
             self.variable_souris = Arguments.get('profil')
-
             self.point_choisi = 0
-			
+
             ff = prosimu(self.filename)
             self.date=ff.readtime()
             self.datedeb=self.date[0]
@@ -745,7 +745,7 @@ class GraphStandard(Toplevel):
         self.buttonSave1.config(state='normal',command=self.Save_plot)
         #self.buttonSave3.config(state='normal',command=self.Pickle_plot)
         self.figclear=False
-        
+
     ##########################################################
     # SAUVEGARDE
     ##########################################################
@@ -1935,14 +1935,27 @@ class GestionFenetre(Frame):
     def graphe3(self):
         self.fen3=GraphMembre()
 
+
 def parseArguments():
     # Create argument parser
     parser = argparse.ArgumentParser()
 
     # Optional arguments
-    parser.add_argument("-f", "--filename", help="Name for input file", type=str)
-    parser.add_argument("-v", "--variable", help="Variable to plot", type=str, default = 'SNOWSSA')
+    #parser.add_argument("-f", "--filename", help="Name for input file", type=str)
+    parser.add_argument('filename', nargs='?', help="Name for input file", type=str)
+
     parser.add_argument("-p", "--profil", help="Variable for profil plot", type=str, default = 'SNOWTEMP')
+    parser.add_argument("-v", "--variable", help="Variable to plot", type=str, default = 'SNOWSSA')
+
+    parser.add_argument("-n", "--NOGUI", help="Option to save graph without GUI", type=bool, default = False)
+    parser.add_argument("-a", "--alt", help="altitude", type = int)
+    parser.add_argument("-as", "--aspect", help="aspect", type = int)
+    parser.add_argument("-d", "--date", help="Date for plot (useful for massif and member plots)", type=str, default = 2001010106)
+    parser.add_argument("-m", "--massif", help="massif", type = int, default = 999)
+    parser.add_argument("-o", "--out", help="name for graph to save", type=str, default = 'out.png')
+    parser.add_argument("-s", "--slope", help="slope for massif graph", type=int)
+    parser.add_argument("-t", "--type", help="type of graph (standard, massif, membre)", type=str, default = 'standard')
+
 
     # Print version
     parser.add_argument("--version", action="version", version='%(prog)s - Version 1.0')
@@ -1951,16 +1964,141 @@ def parseArguments():
 
     return args
 
+def ChoixPointMassif(ff, altitude, aspect, massif, slope):
+    listvariables = ff.listvar()
+
+    if('massif_num' in listvariables):
+        massiftab = ff.read('massif_num')[:]
+    elif ff.Number_of_points in ff.dataset.dimensions and len(ff.pointsdim) > 1:
+        massiftab = np.array([-10] * len(ff.pointsdim))
+    else:
+        massiftab = np.array([-10])
+    if('ZS' in listvariables):
+        alttab = ff.read('ZS')[:]
+    elif ff.Number_of_points in ff.dataset.dimensions and len(ff.pointsdim) > 1:
+        alttab = np.array([-10] * len(ff.pointsdim))
+    else:
+        alttab = np.array([-10])
+    if('slope' in listvariables):
+        slopetab = ff.read('slope')[:]
+    elif ff.Number_of_points in ff.dataset.dimensions and len(ff.pointsdim) > 1:
+        slopetab = np.array([-10] * len(ff.pointsdim))
+    else:
+        slopetab = np.array([-10])
+    if('aspect' in listvariables):
+        aspecttab = ff.read('aspect')[:]
+    elif ff.Number_of_points in ff.dataset.dimensions and len(ff.pointsdim) > 1:
+        aspecttab = np.array([-10] * len(ff.pointsdim))
+    else:
+        aspecttab = np.array([-10])
+    #if('lat' in listvariables):
+    #    lattab = ff.read('lat')[:]
+    #elif ff.Number_of_points in ff.dataset.dimensions and len(ff.pointsdim) > 1:
+    #    lattab = np.array([-10] * len(ff.pointsdim))
+    #else:
+    #    lattab = np.array([-10])
+    #if('lon' in listvariables):
+    #    lontab = ff.read('lon')[:]
+    #elif ff.Number_of_points in ff.dataset.dimensions and len(ff.pointsdim) > 1:
+    #    lontab = np.array([-10] * len(ff.pointsdim))
+    #else:
+    #    lontab = np.array([-10])
+
+    n = len(alttab[:])
+    A = (alttab[:] == [altitude]*n)
+    B = (aspecttab[:] == [aspect]*n)
+    C = (massiftab[:] == [massif]*n)
+    D = (slopetab[:] == [slope]*n)
+    if massif == 999:
+        indices = A & B & D
+    else:
+        indices = A & B & C & D
+    if True not in list(indices):
+        print('Aucun choix de point correspondant -> PB')
+    else:
+        liste_points = [i for i, x in enumerate(indices) if x == True]
+
+    return liste_points
+
+
+def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph, altitude, aspect, massif, slope):
+    ff = prosimu(filename)
+    liste_points = ChoixPointMassif(ff, altitude, aspect, massif, slope)
+
+    if type_graph == 'standard':
+        date = ff.readtime()
+        datedeb = date[0]
+        datefin = date[len(date)-1]
+        if len(date) > constante_sampling: 
+            print('Time > '+str(constante_sampling), 'automatic sampling to avoid too long treatment')
+        pro = proReader_mini.ProReader_mini(ncfile = filename, var = variable, point = liste_points[0] ,var_sup = [])
+        fig1, ax1 = plt.subplots(1, 1, sharex=True, sharey=True)
+        if ('snow_layer' in ff.getdimvar(variable)):
+            intime = pro.plot(ax1, variable, datedeb, datefin, real_layers=True,legend = variable)
+        elif('bands' in ff.getdimvar(variable)):
+            pro.plot1D_bande(ax1, variable, datedeb, legend = variable)
+        else:
+            intime = pro.plot1D(ax1, variable, datedeb, datefin, legend = variable)
+
+    if type_graph == 'massif':
+        liste_points = ChoixPointMassif(ff, altitude, aspect, massif, slope)
+        list_massif_num = []
+        list_massif_nom = []
+        IM=infomassifs()
+        listmassif = IM.getListMassif_of_region('all')
+        for massif in listmassif:
+            list_massif_num.append(massif)
+            list_massif_nom.append(str(IM.getMassifName(massif).decode('UTF-8')))
+        pro = proReader_mini.ProReader_massif(ncfile=filename, var=variable, liste_points = liste_points, var_sup = [])
+        fig1, ax1 = plt.subplots(1, 1, sharex=True, sharey=True)
+        ff = prosimu(filename)
+
+        liste_massif_pour_legende=[]
+        if ('massif_num' in ff.listvar()):
+            nrstationtab = ff.read('massif_num')[:]
+            for num in liste_points:
+                indice = list_massif_num.index(nrstationtab[num])
+                liste_massif_pour_legende.append(list_massif_nom[indice])
+        if ('snow_layer' in ff.getdimvar(variable)):
+            pro.plot_massif(ax1, variable, date = date_massif_membre, real_layers = True, legend = variable, legend_x = liste_massif_pour_legende, cbar_show = True)
+        else:
+            pro.plot1D_massif(ax1, variable, date = date_massif_membre, legend = variable, legend_x = liste_massif_pour_legende)
+
+    if type_graph == 'membre':
+        pro = proReader_mini.ProReader_membre(ncfile = filename, var = variable, point = liste_points[0], var_sup = [])
+        fig1, ax1 = plt.subplots(1, 1, sharex=True, sharey=True)
+        if ('snow_layer' in ff.getdimvar(variable)):
+            pro.plot_membre(ax1, variable, date = date_massif_membre, real_layers = True, legend = variable, cbar_show = True)
+        else:
+            pro.plot1D_membre(ax1, variable, date = date_massif_membre, legend = variable)
+
+    plt.savefig(out_name)
+    plt.close(fig1)
+
 if __name__ == '__main__':
     if len(sys.argv) > 1: 
         args = parseArguments()
+        # argument for command line call
         filename = args.filename
-        variable = args.variable
         profil = args.profil
+        variable = args.variable
 
-        dic_option = {'filename': filename, 'variable': variable, 'profil': profil}
-        fenetre = GraphStandard(**dic_option)
-        GestionFenetre().mainloop()
+        # argument for saving graph without GUI
+        NOGUI = args.NOGUI
+        altitude = args.alt
+        aspect = args.aspect
+        date_massif_membre = check_and_convert_date(str(args.date))
+        massif = args.massif
+        out_name = args.out
+        slope = args.slope
+        type_graph = args.type
+
+        if NOGUI:
+            Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph, altitude, aspect, massif, slope) 
+        else:
+            dic_option = {'filename': filename, 'variable': variable, 'profil': profil}
+            fenetre = GraphStandard(**dic_option)
+            GestionFenetre().mainloop()
 
     else: 
         # Lancement du gestionnaire d'événements
