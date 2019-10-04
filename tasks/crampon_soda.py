@@ -232,6 +232,21 @@ class Soda_Task(_Crampon_Task):
                     )
                     print(t.prompt, 'tb243 =', tb243)
                     print()
+                # ########## inflation FILE ON HENDRIX ########################################
+                if os.path.exists('workSODA/ALPHA_' + Date(assDate).ymdh + '.txt'):
+                    self.sh.title('Toolbox output tb244')
+                    tb244 = toolbox.output(
+                        model           = 'ALPHA',
+                        namebuild       = 'flat@cen',
+                        namespace      = 'vortex.multi.fr',
+                        fatal           = False,
+                        dateassim       = assDate,
+                        block           = 'workSODA',
+                        experiment = self.conf.xpid,
+                        filename = 'workSODA/ALPHA_' + Date(assDate).ymdh + '.txt',
+                    )
+                    print(t.prompt, 'tb244 =', tb244)
+                    print()
 
             # ########### PUT OBSERVATIONS SXCEN ####################################
             if os.path.exists('workSODA/OBSERVATIONS_' + Date(assDate).ymdHh + '.nc'):
@@ -260,7 +275,6 @@ class Soda_Task(_Crampon_Task):
                     )
                     print(t.prompt, 'tobsout =', tobsout)
                     print()
-
                 # ############## PREP FILES SXCEN #######################################
                 if hasattr(self.conf, 'writesx'):
                     self.sh.title('Toolbox output tb20an_sx')
@@ -339,4 +353,21 @@ class Soda_Task(_Crampon_Task):
                             filename        = 'workSODA/IMASK_' + Date(assDate).ymdh + '.txt',
                         )
                         print(t.prompt, 'tb24 3=', tb243)
+                        print()
+
+                    if os.path.exists('workSODA/ALPHA_' + Date(assDate).ymdh + '.txt'):
+                        self.sh.title('Toolbox output tb244_sx')
+                        tb244 = toolbox.output(
+                            model           = 'ALPHA',
+                            namebuild       = 'flat@cen',
+                            namespace       = 'vortex.sxcen.fr',
+                            storage         = 'sxcen.cnrm.meteo.fr',
+                            rootpath        = self.conf.writesx,
+                            fatal           = False,
+                            dateassim       = assDate,
+                            block           = 'workSODA',
+                            experiment      = self.conf.xpid,
+                            filename        = 'workSODA/ALPHA_' + Date(assDate).ymdh + '.txt',
+                        )
+                        print(t.prompt, 'tb244=', tb244)
                         print()

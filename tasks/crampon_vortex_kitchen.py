@@ -241,7 +241,8 @@ class crampon_vortex_kitchen(object):
         conffile.write_field('openloop', options.op)
 
         if options.crampon:
-            conffile.write_field('sensor', options.sensor)
+            if hasattr(options, 'sensor'):
+                conffile.write_field('sensor', options.sensor)
         conffile.write_field('openmp', 1)
         if options.namelist:
             conffile.write_field('namelist', self.namelist)

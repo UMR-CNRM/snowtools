@@ -8,10 +8,19 @@ Created on 30 Aug. 2017
 '''
 
 # General python modules
+import datetime
 from optparse import OptionParser
 import os
 import sys
-import datetime
+# Import snowtools modules
+from tasks.crampon_vortex_kitchen import crampon_vortex_kitchen
+import tasks.runs
+from tasks.vortex_kitchen import vortex_kitchen
+from tools.initTG import clim
+from utils.dates import checkdateafter, check_and_convert_date
+from utils.infomassifs import infomassifs
+from utils.resources import absolute_path, check_surfex_exe
+
 
 try:
     from utils.resources import check_snowtools_install
@@ -27,14 +36,7 @@ except ImportError or InstallException:
     print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
     raise
 
-# Import snowtools modules
-from tools.initTG import clim
-from utils.dates import checkdateafter, check_and_convert_date
-from utils.resources import absolute_path, check_surfex_exe
-from utils.infomassifs import infomassifs
-import tasks.runs
-from tasks.vortex_kitchen import vortex_kitchen
-from tasks.crampon_vortex_kitchen import crampon_vortex_kitchen
+
 usage = "usage: s2m -b begin_date -e end_date -f forcing [-m forcingmodel] [-o path_output] [-w workdir] [-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] [-c nb_classes_aspects] [-L Lower-altitude] [-U Upper-altitude] [-s surfex_exe_directory]"
 
 
@@ -240,7 +242,7 @@ def parse_options(arguments):
                       help="specify the root path (.../vortex) where you'd like to store PREP files on sxcen")
 
     parser.add_option("--sensor",
-                      action="store", type = "str", dest="sensor", default = "MODIS",
+                      action="store", type = "str", dest="sensor", default = None,
                       help="specify the sensor name of the obs you want to assimilate")
 
     parser.add_option("--synth",

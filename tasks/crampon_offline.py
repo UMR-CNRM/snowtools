@@ -63,7 +63,7 @@ class Offline_Task(_Crampon_Task):
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
                     block          = 'prep',
-                    fatal          = False,
+                    fatal          = True,
                 ),
                 print(t.prompt, 'tb03_s =', tb03_s)
                 print()
