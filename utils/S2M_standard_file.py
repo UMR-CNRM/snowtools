@@ -127,7 +127,12 @@ class _StandardNC(netCDF4.Dataset):
             except Exception:
                 raise VarNameException(latname, self.path)
 
-        return self.variables[latname], self.variables[lonname], self.variables[altiname]
+        if altiname in self.variables.keys():
+            alti = self.variables[altiname]
+        else:
+            alti = np.nan
+
+        return self.variables[latname], self.variables[lonname], alti
 
     def addCoord(self):
         '''Routine to add coordinates in the forcing file for the SAFRAN massifs'''
