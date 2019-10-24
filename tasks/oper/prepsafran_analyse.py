@@ -4,12 +4,13 @@
 
 __all__ = []
 
+from cen.layout.nodes import S2MTaskMixIn
 import footprints
-logger = footprints.loggers.getLogger(__name__)
-
 from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
-from cen.layout.nodes import S2MTaskMixIn
+
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 def setup(t, **kw):
@@ -34,14 +35,18 @@ class PrepSafran(Task, S2MTaskMixIn):
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
+            tbarp = list()
+
             if self.conf.rundate.hour == 3:
 
                 # I- Guess ARPEGE (= "36eme membre")
                 # ----------------------------------
 
                 # RUN 3h : Recuperation de A6 du réseau H-6 pour H in [6, 12, 18] (J-1) (on utilisera la P6 du réseau 0h J pour le dernier guess)
+                # On cherche d'abord sur le cache inline
+                # RQ : on ne peut pas utiliser le namespace multi car les fichiers sur hendrix n'ont pas de filtername...
                 self.sh.title('Toolbox input tb01_a')
-                tbarp = toolbox.input(
+                tbarp.extend(toolbox.input(
                     role           = 'Gridpoint',
                     format         = 'grib',
                     geometry       = self.conf.arpege_geometry,
@@ -52,19 +57,44 @@ class PrepSafran(Task, S2MTaskMixIn):
                     date           = '{0:s}/-PT12H'.format(self.conf.rundate.ymd6h),
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = 'vortex.cache.fr',
                     block          = 'forecast',
                     nativefmt      = '[format]',
                     origin         = 'historic',
                     model          = '[vapp]',
                     vapp           = self.conf.source_app,
                     vconf          = self.conf.deterministic_conf,
-                    fatal          = True,
-                )
+                    fatal          = False,
+                ))
                 print t.prompt, 'tb01_a =', tbarp
                 print
 
+                # Deuxième tentative sur hendrix
                 self.sh.title('Toolbox input tb01_b')
+                tbarp.extend(toolbox.input(
+                    alternate      = 'Gridpoint',
+                    format         = 'grib',
+                    geometry       = self.conf.arpege_geometry,
+                    kind           = 'gridpoint',
+                    suite          = 'oper',
+                    local          = 'mb035/ARPEGE[date::addterm_ymdh]',
+                    date           = '{0:s}/-PT12H'.format(self.conf.rundate.ymd6h),
+                    # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
+                    term           = self.conf.cumul,
+                    namespace      = 'vortex.archive.fr',
+                    block          = 'forecast',
+                    nativefmt      = '[format]',
+                    origin         = 'historic',
+                    model          = '[vapp]',
+                    vapp           = self.conf.source_app,
+                    vconf          = self.conf.deterministic_conf,
+                    fatal          = False,
+                ))
+                print t.prompt, 'tb01_b =', tbarp
+                print
+
+                # Mode secours : On récupère la P6 inline...
+                self.sh.title('Toolbox input tb01_c')
                 tbarp.extend(toolbox.input(
                     alternate      = 'Gridpoint',
                     format         = 'grib',
@@ -77,7 +107,32 @@ class PrepSafran(Task, S2MTaskMixIn):
                     date           = '{0:s}/-PT12H'.format(self.conf.rundate.ymd6h),
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = 'vortex.cache.fr',
+                    block          = 'forecast',
+                    nativefmt      = '[format]',
+                    origin         = 'historic',
+                    model          = '[vapp]',
+                    vapp           = self.conf.source_app,
+                    vconf          = self.conf.deterministic_conf,
+                    fatal          = False,
+                ))
+                print t.prompt, 'tb01_c =', tbarp
+                print
+
+                # ... ou sur Hendrix
+                self.sh.title('Toolbox input tb01_d')
+                tbarp.extend(toolbox.input(
+                    alternate      = 'Gridpoint',
+                    format         = 'grib',
+                    geometry       = self.conf.arpege_geometry,
+                    kind           = 'gridpoint',
+                    suite          = 'oper',
+                    cutoff         = 'production',
+                    local          = 'mb035/ARPEGE[date::addterm_ymdh]',
+                    date           = '{0:s}/-PT12H'.format(self.conf.rundate.ymd6h),
+                    # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
+                    term           = self.conf.cumul,
+                    namespace      = 'vortex.archive.fr',
                     block          = 'forecast',
                     nativefmt      = '[format]',
                     origin         = 'historic',
@@ -86,7 +141,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = True,
                 ))
-                print t.prompt, 'tb01_b =', tbarp
+                print t.prompt, 'tb01_d =', tbarp
                 print
 
                 self.sh.title('Toolbox input tb02_a')
@@ -101,19 +156,43 @@ class PrepSafran(Task, S2MTaskMixIn):
                     date           = '{0:s}/-PT18H'.format(self.conf.rundate.ymd6h),
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = 'vortex.cache.fr',
                     block          = 'forecast',
                     nativefmt      = '[format]',
                     origin         = 'historic',
                     model          = '[vapp]',
                     vapp           = self.conf.source_app,
                     vconf          = self.conf.deterministic_conf,
-                    fatal          = True,
+                    fatal          = False,
                 ))
                 print t.prompt, 'tb02_a =', tbarp
                 print
 
                 self.sh.title('Toolbox input tb02_b')
+                tbarp.extend(toolbox.input(
+                    alternate      = 'Gridpoint',
+                    format         = 'grib',
+                    geometry       = self.conf.arpege_geometry,
+                    kind           = 'gridpoint',
+                    suite          = 'oper',
+                    local          = 'mb036/ARPEGE[date::addterm_ymdh]',
+                    date           = '{0:s}/-PT18H'.format(self.conf.rundate.ymd6h),
+                    # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
+                    term           = self.conf.cumul,
+                    namespace      = 'vortex.archive.fr',
+                    block          = 'forecast',
+                    nativefmt      = '[format]',
+                    origin         = 'historic',
+                    model          = '[vapp]',
+                    vapp           = self.conf.source_app,
+                    vconf          = self.conf.deterministic_conf,
+                    fatal          = False,
+                ))
+                print t.prompt, 'tb02_b =', tbarp
+                print
+
+                # Mode secours :
+                self.sh.title('Toolbox input tb02_c')
                 tbarp.extend(toolbox.input(
                     alternate      = 'Gridpoint',
                     format         = 'grib',
@@ -126,7 +205,31 @@ class PrepSafran(Task, S2MTaskMixIn):
                     date           = '{0:s}/-PT18H'.format(self.conf.rundate.ymd6h),
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = 'vortex.cache.fr',
+                    block          = 'forecast',
+                    nativefmt      = '[format]',
+                    origin         = 'historic',
+                    model          = '[vapp]',
+                    vapp           = self.conf.source_app,
+                    vconf          = self.conf.deterministic_conf,
+                    fatal          = False,
+                ))
+                print t.prompt, 'tb02_c =', tbarp
+                print
+
+                self.sh.title('Toolbox input tb02_d')
+                tbarp.extend(toolbox.input(
+                    alternate      = 'Gridpoint',
+                    format         = 'grib',
+                    geometry       = self.conf.arpege_geometry,
+                    kind           = 'gridpoint',
+                    suite          = 'oper',
+                    cutoff         = 'production',
+                    local          = 'mb036/ARPEGE[date::addterm_ymdh]',
+                    date           = '{0:s}/-PT18H'.format(self.conf.rundate.ymd6h),
+                    # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
+                    term           = self.conf.cumul,
+                    namespace      = 'vortex.archive.fr',
                     block          = 'forecast',
                     nativefmt      = '[format]',
                     origin         = 'historic',
@@ -135,7 +238,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = True,
                 ))
-                print t.prompt, 'tb02_b =', tbarp
+                print t.prompt, 'tb02_d =', tbarp
                 print
 
                 self.sh.title('Toolbox input tb03_a')
@@ -150,19 +253,42 @@ class PrepSafran(Task, S2MTaskMixIn):
                     date           = '{0:s}/-PT24H'.format(self.conf.rundate.ymd6h),
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = 'vortex.cache.fr',
                     block          = 'forecast',
                     nativefmt      = '[format]',
                     origin         = 'historic',
                     model          = '[vapp]',
                     vapp           = self.conf.source_app,
                     vconf          = self.conf.deterministic_conf,
-                    fatal          = True,
+                    fatal          = False,
                 ))
                 print t.prompt, 'tb03_a =', tbarp
                 print
 
                 self.sh.title('Toolbox input tb03_b')
+                tbarp.extend(toolbox.input(
+                    alternate      = 'Gridpoint',
+                    format         = 'grib',
+                    geometry       = self.conf.arpege_geometry,
+                    kind           = 'gridpoint',
+                    suite          = 'oper',
+                    local          = 'mb037/ARPEGE[date::addterm_ymdh]',
+                    date           = '{0:s}/-PT24H'.format(self.conf.rundate.ymd6h),
+                    # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
+                    term           = self.conf.cumul,
+                    namespace      = 'vortex.archive.fr',
+                    block          = 'forecast',
+                    nativefmt      = '[format]',
+                    origin         = 'historic',
+                    model          = '[vapp]',
+                    vapp           = self.conf.source_app,
+                    vconf          = self.conf.deterministic_conf,
+                    fatal          = False,
+                ))
+                print t.prompt, 'tb03_b =', tbarp
+                print
+
+                self.sh.title('Toolbox input tb03_c')
                 tbarp.extend(toolbox.input(
                     alternate      = 'Gridpoint',
                     format         = 'grib',
@@ -175,7 +301,31 @@ class PrepSafran(Task, S2MTaskMixIn):
                     date           = '{0:s}/-PT24H'.format(self.conf.rundate.ymd6h),
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = 'vortex.cache.fr',
+                    block          = 'forecast',
+                    nativefmt      = '[format]',
+                    origin         = 'historic',
+                    model          = '[vapp]',
+                    vapp           = self.conf.source_app,
+                    vconf          = self.conf.deterministic_conf,
+                    fatal          = False,
+                ))
+                print t.prompt, 'tb03_c =', tbarp
+                print
+
+                self.sh.title('Toolbox input tb03_d')
+                tbarp.extend(toolbox.input(
+                    alternate      = 'Gridpoint',
+                    format         = 'grib',
+                    geometry       = self.conf.arpege_geometry,
+                    kind           = 'gridpoint',
+                    suite          = 'oper',
+                    cutoff         = 'production',
+                    local          = 'mb037/ARPEGE[date::addterm_ymdh]',
+                    date           = '{0:s}/-PT24H'.format(self.conf.rundate.ymd6h),
+                    # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
+                    term           = self.conf.cumul,
+                    namespace      = 'vortex.archive.fr',
                     block          = 'forecast',
                     nativefmt      = '[format]',
                     origin         = 'historic',
@@ -184,7 +334,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = True,
                 ))
-                print t.prompt, 'tb03_b =', tbarp
+                print t.prompt, 'tb03_d =', tbarp
                 print
 
                 # II- Guess PEARP (membres 0 à 34)
@@ -240,7 +390,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             else:
 
-                # RUN 9h : Récupération de A6 du réseau d'assimilation d'ARPEGE de 0h
+                # RUN 9h : Récupération de A6 du réseau d'assimilation d'ARPEGE de 0h inline...
                 self.sh.title('Toolbox input tb01')
                 tbarp = toolbox.input(
                     role           = 'Gridpoint',
@@ -254,7 +404,31 @@ class PrepSafran(Task, S2MTaskMixIn):
                     date           = '{0:s}/-PT6H'.format(self.conf.rundate.ymd6h),
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = 'vortex.cache.fr',
+                    nativefmt      = '[format]',
+                    origin         = 'historic',
+                    model          = '[vapp]',
+                    vapp           = self.conf.source_app,
+                    vconf          = self.conf.deterministic_conf,
+                    fatal          = True,
+                )
+                print t.prompt, 'tb01 =', tbarp
+                print
+
+                # ...ou sur hendrix
+                self.sh.title('Toolbox input tb01')
+                tbarp = toolbox.input(
+                    role           = 'Gridpoint',
+                    block          = 'forecast',
+                    format         = 'grib',
+                    geometry       = self.conf.arpege_geometry,
+                    kind           = 'gridpoint',
+                    suite          = 'oper',
+                    local          = 'mb035/ARPEGE[date::addterm_ymdh]',
+                    date           = '{0:s}/-PT6H'.format(self.conf.rundate.ymd6h),
+                    # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
+                    term           = self.conf.cumul,
+                    namespace      = 'vortex.archive.fr',
                     nativefmt      = '[format]',
                     origin         = 'historic',
                     model          = '[vapp]',
