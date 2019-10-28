@@ -411,6 +411,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 geometry       = list_geometry,
                 ntasks         = 6 if self.conf.rundate.hour == self.monthly_analysis_time else 40,
                 daily          = not self.conf.previ,
+                verbose        = True,
             )
             print(t.prompt, 'tb09 =', tb09)
             print()
@@ -442,6 +443,28 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 print(t.prompt, 'tb10 =', tb10)
                 print()
 
+#                 self.sh.title('Toolbox diff tb10')
+#                 tb10 = toolbox.diff(
+#                     local          = 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+#                     experiment     = 'oper',
+#                     block          = 'meteo',
+#                     geometry       = self.conf.geometry.area.replace("_allslopes", ""),
+#                     vconf          = '[geometry::area]',
+#                     date           = self.conf.rundate,
+#                     datebegin      = datebegin,
+#                     dateend        = dateend,
+#                     member         = members,
+#                     nativefmt      = 'netcdf',
+#                     kind           = 'MeteorologicalForcing',
+#                     model          = 's2m',
+#                     namespace      = 'vortex.multi.fr',
+#                     cutoff         = 'production' if self.conf.previ else 'assimilation',
+#                     fatal          = False
+#                 ),
+# 
+#                 print(t.prompt, 'tb10 =', tb10)
+#                 print()
+
             self.sh.title('Toolbox output tb11')
             tb11 = toolbox.output(
                 local          = 'mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
@@ -462,6 +485,27 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
             print(t.prompt, 'tb11 =', tb11)
             print()
 
+#             self.sh.title('Toolbox diff tb11')
+#             tb11 = toolbox.diff(
+#                 local          = 'mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+#                 experiment     = 'oper',
+#                 block          = 'pro',
+#                 geometry       = self.conf.geometry.area.replace("_allslopes", ""),
+#                 vconf          = '[geometry::area]',
+#                 date           = self.conf.rundate,
+#                 datebegin      = datebegin if self.conf.previ else '[dateend]/-PT24H',
+#                 dateend        = dateend if self.conf.previ else list(daterange(tomorrow(base=datebegin), dateend)),
+#                 member         = members,
+#                 nativefmt      = 'netcdf',
+#                 kind           = 'SnowpackSimulation',
+#                 model          = 'surfex',
+#                 namespace      = 'vortex.multi.fr',
+#                 cutoff         = 'production' if self.conf.previ else 'assimilation',
+#                 fatal          = False
+#             ),
+#             print(t.prompt, 'tb11 =', tb11)
+#             print()
+
             self.sh.title('Toolbox output tb12')
             tb12 = toolbox.output(
                 local          = 'mb[member]/PREP_[datevalidity:ymdh].nc',
@@ -481,3 +525,24 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
             ),
             print(t.prompt, 'tb12 =', tb12)
             print()
+
+#             self.sh.title('Toolbox diff tb12')
+#             tb12 = toolbox.diff(
+#                 local          = 'mb[member]/PREP_[datevalidity:ymdh].nc',
+#                 role           = 'SnowpackInit',
+#                 experiment     = 'oper',
+#                 block          = 'prep',
+#                 geometry       = self.conf.geometry.area.replace("_allslopes", ""),
+#                 vconf          = '[geometry::area]',
+#                 datevalidity   = dateend if self.conf.previ else list(daterange(tomorrow(base=datebegin), dateend)),
+#                 date           = self.conf.rundate,
+#                 member         = members,
+#                 nativefmt      = 'netcdf',
+#                 kind           = 'PREP',
+#                 model          = 'surfex',
+#                 namespace      = 'vortex.multi.fr',
+#                 cutoff         = 'production' if self.conf.previ else 'assimilation',
+#                 fatal          = False
+#             ),
+#             print(t.prompt, 'tb12 =', tb12)
+#             print()
