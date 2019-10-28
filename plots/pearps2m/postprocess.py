@@ -25,6 +25,8 @@ from plots.temporal.chrono import spaghettis_with_det, spaghettis
 from plots.maps.basemap import Map_alpes, Map_pyrenees, Map_corse
 from utils.infomassifs import infomassifs
 
+import footprints
+
 usage = "usage: python postprocess.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]"
 
 
@@ -53,7 +55,7 @@ class config(object):
     xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
     list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
 
-    list_members = range(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+    list_members = footprints.util.rangex(0, 35)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
 
     def __init__(self):
         options = parse_options(sys.argv)
@@ -420,9 +422,8 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
     levelmax = 4800
     levelmin = 0
 
-    list_var_map = 'naturalIndex', 'SD_1DY_ISBA', 'SD_3DY_ISBA', 'SNOMLT_ISBA' 
+    list_var_map = 'naturalIndex', 'SD_1DY_ISBA', 'SD_3DY_ISBA', 'SNOMLT_ISBA'
     list_var_spag = 'naturalIndex', 'DSN_T_ISBA', 'WSN_T_ISBA', 'SNOMLT_ISBA'
-
 
     def pack_maps(self, domain, suptitle, diroutput = "."):
 
@@ -458,6 +459,7 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
                     qmax = self.quantiles[var][2][t, indalti]
 
                     m.draw_massifs(massif[indalti], qmed, **self.attributes[var])
+
                     m.plot_center_massif(massif[indalti], qmin, qmed, qmax, **self.attributes[var])
 
                     title = "pour le " + pretty_date(self.time[t]).decode('utf-8')
@@ -610,8 +612,8 @@ if __name__ == "__main__":
             ENS.close()
             del ENS
 
-            print E.list_var_spag
-            print E.list_var_map
+            print (E.list_var_spag)
+            print (E.list_var_map)
 
         E.close()
         del E

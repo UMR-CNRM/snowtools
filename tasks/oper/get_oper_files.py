@@ -9,6 +9,7 @@ from vortex import toolbox
 from bronx.stdtypes.date import Date, daterange, tomorrow, today
 from optparse import OptionParser
 from utils.dates import check_and_convert_date
+import footprints
 import sys
 import six
 
@@ -21,7 +22,7 @@ class configdev(object):
     xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
     list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']  # List of extracted geometries
 
-    list_members = range(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+    list_members = footprints.util.rangex(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
 
 
 class config(object):
@@ -30,7 +31,7 @@ class config(object):
     xpid = "oper"
     list_geometry = ['alp', 'pyr', 'cor', 'postes']  # List of extracted geometries
 
-    list_members = range(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+    list_members = footprints.util.rangex(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
 
 
 def parse_options(arguments):
