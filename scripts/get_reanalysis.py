@@ -29,7 +29,7 @@ def parse_options(arguments):
                       help="First year of extraction")
 
     parser.add_option("--eyear",
-                      action="store", type="int", dest="eyear", default=2018,
+                      action="store", type="int", dest="eyear", default=2019,
                       help="Last year of extraction")
 
     parser.add_option("--meteo",
