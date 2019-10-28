@@ -57,7 +57,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 experiment     = self.conf.forcingid  if source_safran == 'safran' else self.conf.xpid,
                 geometry       = list_geometry,
                 date           = rundate_forcing,
-                datebegin      = datebegin if source_safran == 'safran' else yesterday(base=datebegin),
+                datebegin      = datebegin,
                 dateend        = dateend,
                 nativefmt      = 'netcdf',
                 kind           = 'MeteorologicalForcing',
@@ -68,6 +68,31 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
             ),
             print(t.prompt, 'tb01 =', tb01)
             print()
+
+            self.sh.title('Toolbox input tb01')
+            tb01b = toolbox.input(
+                alternate           = 'Forcing',
+                local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                vapp           = self.conf.vapp,
+                vconf          = '[geometry:area]',
+                block          = block_safran,
+                source_app     = 'arpege' if source_safran == 'safran' else None,
+                source_conf    = '4dvarfr' if source_safran == 'safran' else None,
+                experiment     = self.conf.forcingid  if source_safran == 'safran' else self.conf.xpid,
+                geometry       = list_geometry,
+                date           = rundate_forcing,
+                datebegin      = yesterday(base=datebegin),
+                dateend        = dateend,
+                nativefmt      = 'netcdf',
+                kind           = 'MeteorologicalForcing',
+                namespace      = 'vortex.multi.fr',
+                model          = source_safran,
+                cutoff         = 'production' if self.conf.previ else 'assimilation',
+                fatal          = True
+            ),
+            print(t.prompt, 'tb01b =', tb01b)
+            print()
+
 
             self.sh.title('Toolbox input tb02')
             tb02 = toolbox.input(
@@ -107,7 +132,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
 
             for i, alternate_prep in enumerate(alternate_rundate_prep):
 
-                fatal = i == len(alternate_rundate_prep) - 1
+                # fatal = i == len(alternate_rundate_prep) - 1
 
                 self.sh.title('Toolbox input tb03b')
                 tb03b = toolbox.input(
@@ -124,11 +149,32 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                     kind           = 'PREP',
                     model          = 'surfex',
                     namespace      = 'vortex.multi.fr',
-                    fatal          = fatal,
+                    fatal          = False,
                     cutoff         = alternate_prep[1]
                 ),
                 print(t.prompt, 'tb03b =', tb03b)
                 print()
+
+            # Last chance is the reanalysis if even the deterministic run was stopped:
+            self.sh.title('Toolbox input tb03e')
+            tb03d = toolbox.input(
+                alternate      = 'SnowpackInit',
+                local          = 'PREP.nc',
+                experiment     = 'reanalysis@lafaysse',
+                geometry       = self.conf.geometry,
+                date           = datebegin,
+                intent         = 'inout',
+                nativefmt      = 'netcdf',
+                kind           = 'PREP',
+                model          = 'surfex',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'prep',
+                fatal          = True,
+            )
+
+            print(t.prompt, 'tb03d =', tb03d)
+            print()
 
             self.sh.title('Toolbox input tb04')
             tb04 = toolbox.input(
@@ -190,7 +236,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 local          = 'OFFLINE',
                 model          = 'surfex',
                 genv           = 'uenv:cen.01@CONST_CEN',
-                gvar           = 'master_offline_mpi',
+                gvar           = 'master_surfex_offline_mpi',
             )
 
             print(t.prompt, 'tb08 =', tb08)
@@ -212,7 +258,11 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
             print()
             tb09.run()
 
-            firstforcing = 'FORCING_' + datebegin.strftime("%Y%m%d%H") + "_" + dateend.strftime("%Y%m%d%H") + ".nc"
+            if tb01[0]:
+                firstforcing = 'FORCING_' + datebegin.strftime("%Y%m%d%H") + "_" + dateend.strftime("%Y%m%d%H") + ".nc"
+            elif tb01b[0]:
+                firstforcing = 'FORCING_' + yesterday(base=datebegin).strftime("%Y%m%d%H") + "_" + dateend.strftime("%Y%m%d%H") + ".nc"
+
             self.sh.title('Toolbox algo tb09a')
             tb10 = tbalgo2 = toolbox.algo(
                 kind         = 'surfex_preprocess',
