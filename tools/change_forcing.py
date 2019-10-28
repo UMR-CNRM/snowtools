@@ -23,7 +23,7 @@ from snowtools.utils.FileException import FileNameException, DirNameException, V
 from utils.dates import TypeException
 
 from utils.resources import print_used_memory
-from utils.S2M_standard_file import StandardSAFRAN
+from utils.S2M_standard_file import StandardSAFRAN, StandardCROCUS
 
 
 class forcinput_tomerge:
@@ -207,7 +207,7 @@ class forcinput_tomodify:
         else:
             init_forcing_file = prosimu(forcin)
             print ("INFO INPUT FORCING FILE FORMAT: " + init_forcing_file.format())
-            new_forcing_file = StandardSAFRAN(forcout, "w", format=self.formatout)
+            new_forcing_file = self.StandardFILE(forcout, "w", format=self.formatout)
             self.modify(init_forcing_file, new_forcing_file, args)
 
         init_forcing_file.close()
@@ -216,6 +216,9 @@ class forcinput_tomodify:
             new_forcing_file.GlobalAttributes()
             new_forcing_file.add_standard_names()
             new_forcing_file.close()
+
+    def StandardFILE(self, *args, **kwargs):
+        return StandardSAFRAN(*args, **kwargs)
 
     def modify(self, init_forcing_file, new_forcing_file, *args):
         pass
@@ -679,6 +682,9 @@ class proselect(forcinput_select):
 
     def add_massif_variables(self, init_forcing_file, new_forcing_file, savevar={}):
         pass
+
+    def StandardFILE(self, *args, **kwargs):
+        return StandardCROCUS(*args, **kwargs)
 
 
 class forcinput_extract(forcinput_tomodify):

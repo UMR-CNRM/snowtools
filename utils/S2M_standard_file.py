@@ -6,6 +6,7 @@ Created on 20 août 2019
 @author: lafaysse
 '''
 
+import os
 import netCDF4
 import datetime
 import numpy as np
@@ -340,8 +341,9 @@ class StandardCROCUS(_StandardNC):
 
     def add_standard_names(self):
         super(StandardCROCUS, self).add_standard_names()
-        for varname in self.variables.keys():
-            if varname[0:2] in ['TG', 'WG']:
-                if hasattr(self.variables[varname], 'long_name'):
-                    self.variables[varname].long_name = self.variables[varname].long_name + self.soil_long_names(varname)
+        if os.path.isfile("OPTIONS.nam"):
+            for varname in self.variables.keys():
+                if varname[0:2] in ['TG', 'WG']:
+                    if hasattr(self.variables[varname], 'long_name'):
+                        self.variables[varname].long_name = self.variables[varname].long_name + self.soil_long_names(varname)
 
