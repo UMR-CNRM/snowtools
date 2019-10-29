@@ -52,8 +52,14 @@ def parse_options(arguments):
 
 class config(object):
     previ = True  # False for analysis, True for forecast
-    xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
-    list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
+
+    # Operational chain
+    xpid = "oper"
+    list_geometry = ['alp', 'pyr', 'cor', 'postes']
+
+    # Development chain
+    # xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
+    # list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
 
     list_members = footprints.util.rangex(0, 35)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
 
