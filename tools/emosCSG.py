@@ -15,14 +15,14 @@ import os
 import netCDF4
 from scipy.stats import gamma
 
-from plots.pearps2m.postprocess import config, _EnsembleMassif, EnsembleOperDiagsFlatMassif
+from plots.pearps2m.postprocess import config, Ensemble, EnsembleOperDiagsFlatMassif, EnsembleStation
 from tasks.oper.get_oper_files import S2MExtractor
 from utils.FileException import DirNameException
 
 from utils.dates import pretty_date
 
 
-class postprocess_ensemble(_EnsembleMassif):
+class postprocess_ensemble(Ensemble):
 
     newsnow_var_name = 'SD_1DY_ISBA'
     location_dim_name = 'Number_of_points'
@@ -48,12 +48,29 @@ class postprocess_ensemble(_EnsembleMassif):
         for dim in dims_out:
             if dim == "decile":
                 dimlen = self.nquantiles
+            elif dim == "time":
+                dimlen = None
             elif dim == self.location_dim_name:
                 dimlen = self.npoints
             else:
                 dimlen = self.simufiles[0].getlendim(dim)
 
             newdataset.createDimension(dim, dimlen)
+
+        timevar = newdataset.createVariable("time", 'double', ('time'), fill_value=fillvalue)
+        timevar.units = 'hours since 2019-08-01 06:00:00'
+        timevar[:] = netCDF4.date2num(self.time, timevar.units)
+
+        print (self.geo)
+        if self.geo == 'massifs':
+            massifvar = newdataset.createVariable("massif_num", 'i4', (self.location_dim_name), fill_value=fillvalue)
+            massifvar[:] = self.get_massifdim()
+        elif self.geo == 'stations':
+            stationsvar = newdataset.createVariable("station", 'i4', (self.location_dim_name), fill_value=fillvalue)
+            stationsvar[:] = self.get_station()
+
+        zsvar = newdataset.createVariable("ZS", 'float', (self.location_dim_name), fill_value=fillvalue)
+        zsvar[:] = self.get_alti()
 
         var = newdataset.createVariable("PP_" + self.newsnow_var_name, 'float', dims_out, fill_value=fillvalue)
 
@@ -100,7 +117,7 @@ class postprocess_ensemble(_EnsembleMassif):
 
         # Read raw forecast metadata
 
-        if "station" in self.simufiles[0].listvar():
+        if self.geo == "stations":
             station = self.simufiles[0].read_var("station")
             massif_number = map(self.InfoMassifs.massifposte, station)
         else:
@@ -203,6 +220,9 @@ class postprocess_massif(postprocess_ensemble, EnsembleOperDiagsFlatMassif):
     levelmax = 3000
     list_var_map = ['PP_SD_1DY_ISBA']
 
+class postprocess_stations(postprocess_ensemble, EnsembleStation):
+
+    pass
 
 if __name__ == "__main__":
 
@@ -219,7 +239,7 @@ if __name__ == "__main__":
     for domain in list_domains:
 
         if domain == "postes":
-            E = postprocess_ensemble()
+            E = postprocess_stations()
         else:
             E = postprocess_massif()
 
