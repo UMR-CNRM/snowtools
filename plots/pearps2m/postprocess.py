@@ -189,10 +189,18 @@ class Ensemble(object):
         indpoints = self.select_points()
         return indpoints, indpoints
 
+    def get_alti(self):
+        if not hasattr(self, "alti"):
+            self.alti = self.read_geovar("ZS")
+        return self.alti
 
 class _EnsembleMassif(Ensemble):
 
     InfoMassifs = infomassifs()
+
+    @property
+    def geo(self):
+        return "massifs" 
 
     def read(self, varname):
         if varname == 'naturalIndex':
@@ -202,11 +210,6 @@ class _EnsembleMassif(Ensemble):
                 self.ensemble[varname][:, :, m] = member.read_var(varname)
         else:
             super(_EnsembleMassif, self).read(varname)
-
-    def get_alti(self):
-        if not hasattr(self, "alti"):
-            self.alti = self.read_geovar("ZS")
-        return self.alti
 
     def get_aspect(self):
         if not hasattr(self, "aspect"):
@@ -265,9 +268,16 @@ class EnsembleStation(Ensemble):
 
     InfoMassifs = infomassifs()
 
+    @property
+    def geo(self):
+        return "stations"
+
+    def get_station(self):
+        return self.simufiles[0].read_var("station", Number_of_points = self.indpoints)
+
     def get_metadata(self, **kwargs):
         alti = self.simufiles[0].read_var("ZS", Number_of_points = self.indpoints)
-        station = self.simufiles[0].read_var("station", Number_of_points = self.indpoints)
+        station = self.get_station()
 
         return map(self.build_filename, station, alti), map(self.build_title, station, alti)
 
@@ -425,7 +435,7 @@ class EnsembleOperDiags(EnsembleDiags):
 
 class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
 
-    levelmax = 4800
+    levelmax = 3900
     levelmin = 0
 
     list_var_map = 'naturalIndex', 'SD_1DY_ISBA', 'SD_3DY_ISBA', 'SNOMLT_ISBA'
@@ -485,7 +495,7 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
 
 class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMassif):
 
-    levelmax = 4800
+    levelmax = 3900
     levelmin = 0
     versants = [u'Nord 40°', u'Sud 40°']
     list_var_spag = []
