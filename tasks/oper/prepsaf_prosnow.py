@@ -4,12 +4,14 @@
 
 __all__ = []
 
+from cen.layout.nodes import S2MTaskMixIn
 import footprints
-logger = footprints.loggers.getLogger(__name__)
-
 from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
-from cen.layout.nodes import S2MTaskMixIn
+
+
+logger = footprints.loggers.getLogger(__name__)
+
 
 
 def setup(t, **kw):
@@ -85,7 +87,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = 'uenv:s2m.01@vernaym',
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -o -a -d prosnow  -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbpearp)]))),
+                rawopts     = ' -o -a -d prosnow -i IDW -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbpearp)]))),
             )
             print t.prompt, 'tb03 =', tb03
             print
