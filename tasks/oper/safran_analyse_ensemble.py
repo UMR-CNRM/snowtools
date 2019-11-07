@@ -670,29 +670,29 @@ class Safran(Task, S2MTaskMixIn):
             print t.prompt, 'tb28 =', tb28
             print
 
-            self.sh.title('Toolbox output tb29')
-            tb29 = toolbox.output(
-                role           = 'Ana_massifs',
-                kind           = 'MeteorologicalForcing',
-                source_app     = 'arpege',
-                source_conf    = 'pearp',
-                cutoff         = 'assimilation',
-                local          = 'mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
-                experiment     = self.conf.xpid,
-                block          = 'massifs',
-                geometry        = self.conf.vconf,
-                nativefmt      = 'netcdf',
-                model          = self.conf.model,
-                datebegin      = datebegin.ymd6h,
-                dateend        = dateend.ymd6h,
-                namespace      = self.conf.namespace,
-                member         = footprints.util.rangex(self.conf.pearp_members),
-                fatal          = False,
-            ),
-            print t.prompt, 'tb29 =', tb29
-            print
-
             if self.conf.rundate.hour != 12:
+
+                self.sh.title('Toolbox output tb29')
+                tb29 = toolbox.output(
+                    role           = 'Ana_massifs',
+                    kind           = 'MeteorologicalForcing',
+                    source_app     = 'arpege',
+                    source_conf    = 'pearp',
+                    cutoff         = 'assimilation',
+                    local          = 'mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                    experiment     = self.conf.xpid,
+                    block          = 'massifs',
+                    geometry        = self.conf.vconf,
+                    nativefmt      = 'netcdf',
+                    model          = self.conf.model,
+                    datebegin      = datebegin.ymd6h,
+                    dateend        = dateend.ymd6h,
+                    namespace      = self.conf.namespace,
+                    member         = footprints.util.rangex(self.conf.pearp_members),
+                    fatal          = False,
+                ),
+                print t.prompt, 'tb29 =', tb29
+                print
 
                 self.sh.title('Toolbox output tb29_diff')
                 tb29_diff = toolbox.diff(
@@ -716,29 +716,27 @@ class Safran(Task, S2MTaskMixIn):
                 print t.prompt, 'tb29_diff =', tb29_diff
                 print
 
-            self.sh.title('Toolbox output tb30')
-            tb30 = toolbox.output(
-                role           = 'Ana_postes',
-                kind           = 'MeteorologicalForcing',
-                source_app     = 'arpege',
-                source_conf    = 'pearp',
-                cutoff         = 'assimilation',
-                local          = 'mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
-                experiment     = self.conf.xpid,
-                block          = 'postes',
-                geometry        = self.conf.vconf,
-                nativefmt      = 'netcdf',
-                model          = self.conf.model,
-                datebegin      = datebegin.ymd6h,
-                dateend        = dateend.ymd6h,
-                namespace      = self.conf.namespace,
-                member         = footprints.util.rangex(self.conf.pearp_members),
-                fatal          = False,
-            ),
-            print t.prompt, 'tb30 =', tb30
-            print
-
-            if self.conf.rundate.hour != 12:
+                self.sh.title('Toolbox output tb30')
+                tb30 = toolbox.output(
+                    role           = 'Ana_postes',
+                    kind           = 'MeteorologicalForcing',
+                    source_app     = 'arpege',
+                    source_conf    = 'pearp',
+                    cutoff         = 'assimilation',
+                    local          = 'mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                    experiment     = self.conf.xpid,
+                    block          = 'postes',
+                    geometry        = self.conf.vconf,
+                    nativefmt      = 'netcdf',
+                    model          = self.conf.model,
+                    datebegin      = datebegin.ymd6h,
+                    dateend        = dateend.ymd6h,
+                    namespace      = self.conf.namespace,
+                    member         = footprints.util.rangex(self.conf.pearp_members),
+                    fatal          = False,
+                ),
+                print t.prompt, 'tb30 =', tb30
+                print
 
                 self.sh.title('Toolbox output tb31')
                 tb31 = toolbox.output(
