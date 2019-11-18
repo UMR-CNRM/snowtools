@@ -33,7 +33,9 @@ class vortex_kitchen(object):
             self.options.vapp = "safran"
         else:
             self.options.vapp = "s2m"
-        self.options.vconf = self.options.region
+
+        self.split_geo()
+
         if hasattr(self.options, 'diroutput'):
             self.options.xpid = self.options.diroutput
         self.workingdir = "/".join([self.options.workdir, self.options.xpid, self.options.vapp, self.options.vconf])
@@ -207,8 +209,6 @@ class vortex_kitchen(object):
         else:
             mkjob_list = [self.mkjob_safran(), ]
 
-
-
         os.chdir(self.jobdir)
         for mkjob in mkjob_list:
             print("Run command: " + mkjob + "\n")
@@ -254,6 +254,13 @@ class vortex_kitchen(object):
                 raise WallTimeException(estimation)
             else:
                 return str(estimation)
+
+    def split_geo(self):
+        if ':' in self.options.region:
+            self.options.interpol = True
+            self.options.geoin, self.options.vconf, self.options.gridout = self.options.region.split(':')
+        else:
+            self.options.vconf = self.options.region
 
 
 class Vortex_conf_file(object):
@@ -374,6 +381,11 @@ class Vortex_conf_file(object):
 
         if self.options.dailyprep:
             self.set_field("DEFAULT", 'dailyprep', self.options.dailyprep)
+
+        if self.options.interpol:
+            self.set_field("DEFAULT", 'interpol', self.options.interpol)
+            self.set_field("DEFAULT", 'gridout', self.options.gridout)
+            self.set_field("DEFAULT", 'geoin', self.options.geoin)
 
     def safran_variables(self):
 
