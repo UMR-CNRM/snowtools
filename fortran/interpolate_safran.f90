@@ -55,6 +55,7 @@ REAL,DIMENSION(:,:,:,:),ALLOCATABLE:: ZVAROUTXYT
 REAL,DIMENSION(:,:,:),ALLOCATABLE:: ZVAROUTXYT1D
 !
 INTEGER :: NPATCH, NPATCHID
+INTEGER :: NDECILE, IDECILEID
 !
 DOUBLE PRECISION ,DIMENSION(:,:),ALLOCATABLE:: ZVARLATLON
 !ID of spatial and time dimension in input file 
@@ -83,6 +84,8 @@ IMASSIFTODELETE = -1
 ILAYERTODELETE = -1
 NPATCHID = -1
 NPATCH = 1
+IDECILEID = -1
+NDECILE = 1
 !
 LL_VARNAME(1)= "LON"
 LL_VARNAME(2)= "LAT"
@@ -240,6 +243,13 @@ DO ID=1,INDIM
     NPATCH = DIM_SIZE_IN(ID) 
     NPATCHID =  IDOUT  
     IDOUT = IDOUT+1
+  ELSEIF(DIM_NAME_IN(ID) == 'decile') THEN
+    DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+    CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
+    DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
+    NDECILE = DIM_SIZE_IN(ID) 
+    IDECILEID =  IDOUT  
+    IDOUT = IDOUT+1    
   ELSE
     !
     IF (IRANK==1) THEN
@@ -359,7 +369,7 @@ ENDIF
 !
 NTIME =  DIM_SIZE_OUT(ITIMEID)
 ALLOCATE(VALUE_TIME(NTIME))  
-ntime = ntime/100
+ntime = ntime
 !
 DO IV=1,INVAR
   IF (ANY( VAR_ID_DIMS_OUT(:,IV) .EQ. IMASSIFTODELETE ).OR.              &
@@ -420,13 +430,13 @@ DO IV=1,INVAR
     !
     CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARINT),"Cannot get var"//TRIM(HFILENAMEIN))
     !
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARINT),"Cannot put var"//TRIM(HFILENAMEOUT))
+    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARINT),"Q Cannot put var"//TRIM(HFILENAMEOUT))
     DEALLOCATE(ZVARINT)
     !
   ELSEIF (ALL(VAR_ID_DIMS_OUT(:,IV) == 0))THEN !SCALAR
     CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZSCAIN),"Cannot get var"//TRIM(HFILENAMEIN))
     !
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZSCAIN),"Cannot put var"//TRIM(HFILENAMEOUT))
+    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZSCAIN),"R Cannot put var"//TRIM(HFILENAMEOUT))
     !
   ELSEIF (ALL(VAR_ID_DIMS_OUT(:,IV) .NE. ILLOC_ID) .AND. &
           ALL(VAR_ID_DIMS_OUT(:,IV) .NE.ITIMEID))THEN !NO TIME DIM and NOGRID DIM
@@ -435,51 +445,89 @@ DO IV=1,INVAR
     !
     CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARIN),"Cannot get var"//TRIM(HFILENAMEIN))
     !
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARIN),"Cannot put var"//TRIM(HFILENAMEOUT))
+    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARIN),"S Cannot put var"//TRIM(HFILENAMEOUT))
     !
     DEALLOCATE(ZVARIN)
   ELSEIF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. ILLOC_ID) .AND. &
           ANY(VAR_ID_DIMS_OUT(:,IV) .EQ.ITIMEID))THEN !TIME and GRID DIM
-    !  
-    ALLOCATE(ZVARINT(DIM_SIZE_IN(ILLOC_ID),NPATCH,NTIME))
-    ALLOCATE(ZVAROUTXYT(NX_PROC,NY_PROC,NPATCH,NTIME))
+    !
+    IF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. IDECILEID)) THEN
+      ALLOCATE(ZVARINT(NDECILE,DIM_SIZE_IN(ILLOC_ID),NTIME))
+      ALLOCATE(ZVAROUTXYT(NDECILE,NX_PROC,NY_PROC,NTIME))      
+    ELSE
+      ALLOCATE(ZVARINT(DIM_SIZE_IN(ILLOC_ID),NPATCH,NTIME))
+      ALLOCATE(ZVAROUTXYT(NX_PROC,NY_PROC,NPATCH,NTIME))
+    ENDIF
+    
     IF (ALL(VAR_ID_DIMS_OUT(:,IV) .NE. NPATCHID)) THEN 
 !      !  Read variable
-      CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARINT, &
-      start =(/1,1/), count = (/DIM_SIZE_IN(ILLOC_ID),NTIME/)) &
-      ,"Cannot get var"//TRIM(HFILENAMEIN))
+      IF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. IDECILEID)) THEN
+      ! case (time, Number_of_points, decile)
+        CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARINT, &
+        start =(/1,1,1/), count = (/NDECILE,DIM_SIZE_IN(ILLOC_ID),NTIME/)) &
+        ,"Cannot get var"//TRIM(HFILENAMEIN))      
+      ELSE
+        ! standard case (time, Number_of_points)
+        CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARINT, &
+        start =(/1,1/), count = (/DIM_SIZE_IN(ILLOC_ID),NTIME/)) &
+        ,"Cannot get var"//TRIM(HFILENAMEIN))
+      ENDIF
     ELSE
+      ! case (time, Number_of_Patches, Number_of_points)
       CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARINT, &
       start =(/1,1,1/), count = (/DIM_SIZE_IN(ILLOC_ID),NPATCH,NTIME/)) &
       ,"Cannot get var"//TRIM(HFILENAMEIN))
     ENDIF
-    ! 
-    CALL INTERPOLZS2D(ZVAROUTXYT,ZVARINT,IINDICESBAS,IINDICESHAUT,&
-    ZZSOUT,IZSIN)
+    !
+    IF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. IDECILEID)) THEN
+      CALL INTERPOLZS2DDIMBEFORE(ZVAROUTXYT,ZVARINT,IINDICESBAS,IINDICESHAUT,&
+      ZZSOUT,IZSIN)    
+    ELSE
+      CALL INTERPOLZS2D(ZVAROUTXYT,ZVARINT,IINDICESBAS,IINDICESHAUT,&
+      ZZSOUT,IZSIN)
+    ENDIF
     !
     IF (IRANK ==1 )THEN 
       ALLOCATE(ZVAROUTXYT1D(NX_PROC,NPATCH,NTIME))
       ZVAROUTXYT1D = ZVAROUTXYT(:,1,:,:)
       ! Write variable
-      IF (ALL(VAR_ID_DIMS_OUT(:,IV) .NE. NPATCHID)) THEN 
-        CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT1D,  &
-        start =(/IXSTART,1/) ,count = (/NX_PROC,NTIME/)),&
-        "Cannot put var"//TRIM(HFILENAMEOUT))
+      IF (ALL(VAR_ID_DIMS_OUT(:,IV) .NE. NPATCHID)) THEN
+        IF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. IDECILEID)) THEN
+          ! case (time, Number_of_points, decile)
+          CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT1D,  &
+          start =(/1,IXSTART,1/) ,count = (/NDECILE,NX_PROC,NTIME/)),&
+          "T Cannot put var"//TRIM(HFILENAMEOUT))          
+        ELSE
+          ! standard case (time, Number_of_points)
+          CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT1D,  &
+          start =(/IXSTART,1/) ,count = (/NX_PROC,NTIME/)),&
+          "U Cannot put var"//TRIM(HFILENAMEOUT))
+        ENDIF
       ELSE
+        ! case (time, Number_of_Patches, Number_of_points)
         CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT1D,  &
         start =(/IXSTART,1,1/) ,count = (/NX_PROC,NPATCH,NTIME/)),&
-        "Cannot put var"//TRIM(HFILENAMEOUT))
+        "V Cannot put var"//TRIM(HFILENAMEOUT))
       ENDIF
       DEALLOCATE(ZVAROUTXYT1D)
     ELSEIF( IRANK == 2)THEN 
       IF (ALL(VAR_ID_DIMS_OUT(:,IV) .NE. NPATCHID)) THEN 
-        CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
-        start =(/IXSTART,IYSTART,1/) ,count = (/NX_PROC,NY_PROC,NTIME/)),&
-        "Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+        ! case (time, x, y, decile)
+        IF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. IDECILEID)) THEN
+          CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+          start =(/1,IXSTART,IYSTART,1/) ,count = (/NDECILE,NX_PROC,NY_PROC,NTIME/)),&
+          "W Cannot put var "//TRIM(VAR_NAME_IN(IV)))        
+        ELSE
+          ! standard case (time, x, y) 
+          CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+          start =(/IXSTART,IYSTART,1/) ,count = (/NX_PROC,NY_PROC,NTIME/)),&
+          "X Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+        ENDIF
       ELSE
+        ! case (time, Number_of_Patches, x, y)      
         CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
         start =(/IXSTART,IYSTART,1,1/) ,count = (/NX_PROC,NY_PROC,NPATCH,NTIME/)),&
-        "Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+        "Y Cannot put var "//TRIM(VAR_NAME_IN(IV)))
       ENDIF
     ENDIF
     !
@@ -502,14 +550,14 @@ DO IV=1,INVAR
     ! Write variable
     CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUT2D,  &
     start =(/IXSTART,IYSTART,1/) ,count = (/NX_PROC,NY_PROC,NPATCH/)),&
-    "Cannot put var"//TRIM(HFILENAMEOUT))
+    "Z Cannot put var"//TRIM(HFILENAMEOUT))
     !
     DEALLOCATE(ZVARIN)
     DEALLOCATE(ZVAROUT2D)
     !
   ELSE
     !
-    PRINT*, VAR_NAME_IN(IV),  VAR_ID_DIMS_OUT(:,IV), "DIMMENSION VAR NON TRAITER"
+    PRINT*, VAR_NAME_IN(IV),  VAR_ID_DIMS_OUT(:,IV), "DIMMENSION VAR NON TRAITEE"
     !
   ENDIF
 !
@@ -953,6 +1001,43 @@ DO JX=1,KNX
 END DO
 !
 END SUBROUTINE INTERPOLZS2D
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+SUBROUTINE INTERPOLZS2DDIMBEFORE(PVAROUT,PVARIN,KINDBAS,KINDHAUT,PZSGRID,KZSSAFRAN)
+! Linear interpolation between SAFRAN elevation levels over 2D grids
+
+REAL,DIMENSION(:,:,:,:),INTENT(OUT)::PVAROUT
+REAL,DIMENSION(:,:,:),INTENT(IN)::PVARIN
+INTEGER,DIMENSION(:,:),INTENT(IN)::KINDBAS,KINDHAUT
+DOUBLE PRECISION,DIMENSION(:,:),INTENT(IN)::PZSGRID
+INTEGER,DIMENSION(:),INTENT(IN)::KZSSAFRAN
+REAL ::ZA,ZB,ZC
+INTEGER::JX,JY,JT,JP !Loop counters
+INTEGER::KNX,KNY,KNSAFRAN,KNT,KNP
+!
+KNX=SIZE(PVAROUT,2)
+KNY=SIZE(PVAROUT,3)
+KNSAFRAN=SIZE(PVARIN,2)
+KNP = SIZE(PVAROUT,1)
+KNT=SIZE(PVARIN,3)
+!
+PVAROUT = 0.
+DO JX=1,KNX
+    DO JY=1,KNY
+      ! Interpolation parameters constant over time
+      ZA = PZSGRID(JX,JY) - KZSSAFRAN(KINDBAS(JX,JY))
+      ZB = KZSSAFRAN(KINDHAUT(JX,JY)) - PZSGRID(JX,JY)
+      ZC = 1.*(KZSSAFRAN(KINDHAUT(JX,JY))-KZSSAFRAN(KINDBAS(JX,JY)))
+      !
+      DO JP=1,KNP
+
+        DO JT=1,KNT      
+          PVAROUT(JP, JX,JY,JT)= (ZA*PVARIN(JP,KINDHAUT(JX,JY),JT)+ZB*PVARIN(JP,KINDBAS(JX,JY),JT))/ZC 
+        END DO
+      ENDDO
+    END DO
+END DO
+!
+END SUBROUTINE INTERPOLZS2DDIMBEFORE
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE INTERPOLZS2DNOTIME(PVAROUT,PVARIN,KINDBAS,KINDHAUT,PZSGRID,KZSSAFRAN)
 ! Linear interpolation between SAFRAN elevation levels over 2D grids
