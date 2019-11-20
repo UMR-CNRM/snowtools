@@ -87,7 +87,7 @@ def decoupe_periode(date_entree_debut, date_entree_fin):
         path_add = path_add.replace(list_path_met[-1][-13:-9], str(int(list_path_met[-1][-13:-9])+1))
         list_path_met.append(path_add)
         date_tour = date_tour + relativedelta(months = +12)
-    
+
     if list_date_fin[-1] < date_entree_fin:
         list_date_debut.append(list_date_fin[-1])
         list_date_fin.append(list_date_fin[-1] + relativedelta(months = +12))
@@ -124,14 +124,14 @@ def read_info_met(filename, date_debut, date_fin):
         elif (line[2] == '/' and passage1 and passage2 == False):
             date2_met = int(line[6:10] + line[3:5] + line[0:2] + line[11:13] + line[14:16] + line[17:19])
             last_date_met = int(last_line[6:10] + last_line[3:5] + last_line[0:2] + last_line[11:13] + last_line[14:16] + last_line[17:19])
-            passage2 = True     
+            passage2 = True
         elif (line[2] != '/' and passage1 and passage2 == False):
             date2_met = int(line[0:13])
             last_date_met = int(last_line[0:13])
             passage2 = True
         elif passage1 and passage2:
             break
-    
+
     # for special case DD/MM/YYYY HH:M
     if len(str(date_debut_met))%2 != 0:
         date_debut_met = date_debut_met/10
@@ -161,11 +161,11 @@ def read_info_met(filename, date_debut, date_fin):
 
 def recup_cdp(date_time_deb, date_time_fin, pas_de_temps):
     # Récupération sur les bases de données CDP:
-    # Structure des bases: cdp60mn pour l'année en cours et un peu plus. Ensuite, mis dans cdp9293, cdp9394 etc... jusqu'à cdp1516
-    # A partir de la saison 16-17, chgt de nom de base cdp60mn_1617 et changement de nom des variables
-    # Au 4 septembre 2019, on est à cdp60mn_1617 jusqu'au 1er août 2017 et ensuite sur cdp60mn mais la bascule de données vers 
-    # cdp60mn_1718 est proche !! 
-    date_change_2016 = check_and_convert_date(str(2016080100)) # EN DUR et fixe
+    # Structure des bases: cdp60mn pour l'année en cours et un peu plus. Ensuite, mis dans cdp9293, cdp9394 etc... jusqu'à cdp1415
+    # A partir de la saison 15-16, chgt de nom de base cdp60mn_1516 et changement de nom des variables
+    # Au 4 septembre 2019, on est à cdp60mn_1617 jusqu'au 1er août 2017 et ensuite sur cdp60mn mais la bascule de données vers
+    # cdp60mn_1718 est proche !!
+    date_change_2015 = check_and_convert_date(str(2015080100)) # EN DUR et fixe
     date_change_base60mn = check_and_convert_date(str(2017080100)) # EN DUR mais doit changer à chaque bascule de données de cdp60mn vers cdp60mn_****
 
     ###############################################################################################
@@ -176,7 +176,7 @@ def recup_cdp(date_time_deb, date_time_fin, pas_de_temps):
     date_1er_aout = datetime.datetime(date_time_fin.year,8,1,0,0)
 
     # Cas "standards": date_time_fin avant le 1er aout 00h
-    if (date_change_2016 >= date_time_fin) and (date_time_fin <= date_1er_aout):
+    if (date_change_2015 >= date_time_fin) and (date_time_fin <= date_1er_aout):
         nom_base = 'cdp' + str(date_time_fin.year - 1)[2:4] + str(date_time_fin.year)[2:4]
         nom_var = 'baro,dvent'
     elif (date_change_base60mn >= date_time_fin) and (date_time_fin <= date_1er_aout):
@@ -186,7 +186,7 @@ def recup_cdp(date_time_deb, date_time_fin, pas_de_temps):
         nom_base = 'cdp60mn'
         nom_var = 'p_ptb330_v1,dd_meca_10mn_10m'
     # Cas où YYYY080106 => d'abord récupérer les données sur l'année passée
-    elif (date_time_fin > date_1er_aout) and date_time_fin.year <= date_change_2016.year:
+    elif (date_time_fin > date_1er_aout) and date_time_fin.year <= date_change_2015.year:
         nom_base = 'cdp' + str(date_time_fin.year - 1)[2:4] + str(date_time_fin.year)[2:4]
         nom_var = 'baro,dvent'
     elif (date_time_fin > date_1er_aout) and date_time_fin.year <= date_change_base60mn.year:
@@ -206,7 +206,7 @@ def recup_cdp(date_time_deb, date_time_fin, pas_de_temps):
     port = '5433'
     conn= psycopg2.connect(database=database, user=user, host = host, port=port)
     cursor= conn.cursor()
-    cursor.execute(command)  
+    cursor.execute(command)
     data = np.array(cursor.fetchall())
 
     # Cas où YYYY080106 => ensuite récupérer les données sur l'année en cours
@@ -229,7 +229,7 @@ def recup_cdp(date_time_deb, date_time_fin, pas_de_temps):
         port = '5433'
         conn= psycopg2.connect(database=database, user=user, host = host, port=port)
         cursor= conn.cursor()
-        cursor.execute(command)  
+        cursor.execute(command)
         data_supp = np.array(cursor.fetchall())
 
         # concatenation en enlevant une ligne pour éviter de dupliquer la valeur YYYY080100
@@ -245,7 +245,7 @@ def recup_cdp(date_time_deb, date_time_fin, pas_de_temps):
         data[:,1] = np.where(data[:,1] < 840, 863.827, data[:,1])
         data[:,1] = 100. * data[:,1].astype(float)
 
-        # correction frustre des données de direction du vent 
+        # correction frustre des données de direction du vent
         data[:,2] = np.where(data[:,2] < 0, 0, data[:,2])
         data[:,2] = np.where(data[:,2] > 360, 360, data[:,2])
 
@@ -278,11 +278,11 @@ def open_met_file_and_create_tab(filename, option_recup, date_entree_debut, date
     # date          tempe       wind     humrel   precip    phase    LWdown   DIR_SWdown  SCA_SWdown  NEB
     #2017080100      20.0       1.7        45      0.00      0.00    334.40      0.47      1.31      0.00
 
-    # Les MET de 2015_2016 => 12 champs 
+    # Les MET de 2015_2016 => 12 champs
     #  date (2 champs)    nrart     Tair        ff        RH        RR     phase        LW     SWdir     SWdif       Neb
     #01/08/2015 00:0         1      12.2       0.9        90       0.8       0.0     355.3       0.0       0.0       0.8
 
-    # Les MET avant 2014_2015 (inclus) => 11 champs 
+    # Les MET avant 2014_2015 (inclus) => 11 champs
     # Date          ART.  T   Vent Hum RRtot SS/RRtot IR  Soldr Soldf Neb
     #2014092000      1  12.8  0.6  95  0.80 0.00   357.8   0.0   0.0 0.79
     if nb_ligne_bas > 0:
@@ -364,8 +364,8 @@ def open_met_file_and_create_tab(filename, option_recup, date_entree_debut, date
                 elif year < 2015 or (year == 2015 and month <= 7):
                     Tableau_retour_time_nbpoint[i,4] = float(File_entree[i,7]) + 10.0
                 else:
-                    Tableau_retour_time_nbpoint[i,4] = float(File_entree[i,7]) 
-        
+                    Tableau_retour_time_nbpoint[i,4] = float(File_entree[i,7])
+
             Tableau_retour_time_nbpoint[:,0] = float(CO2air)
             Tableau_retour_time_nbpoint[:,1] = File_entree[:,8].astype(float)
             Tableau_retour_time_nbpoint[:,2] = float(1) #flag à 1 dans ce cas-là
@@ -405,7 +405,7 @@ def recup_safran(date_1,date_2,pas, site):
 
     forcing = path + '/FORCING_' + date_b.strftime('%Y%m%d%H') + '_' + date_e.strftime('%Y%m%d%H') + '.nc'
     fic = prosimu(forcing)
-    
+
     Tableau_retour_time_nbpoint = np.zeros((len(Liste_date),14))
     # Dans l'ordre: CO2air, DIR_SWdown, Flag_in_situ, Humrel, LWdown, NEB, PSurf, Qair, Rainf, SCA_SWdown, Snowf, Tair, Wind, Wind_DIR
 
@@ -430,7 +430,7 @@ def recup_safran(date_1,date_2,pas, site):
     return Liste_date, Tableau_retour_time_nbpoint
 
 def recup_last_value_safran(date,site,date_1):
-    path = '/era40/vortex/s2m/postes/reanalysis/meteo/' 
+    path = '/era40/vortex/s2m/postes/reanalysis/meteo/'
     date_b, date_e = get_file_period('FORCING', path, date_1,date)
     forcing = path +'/FORCING_' + date_b.strftime('%Y%m%d%H') + '_' + date_e.strftime('%Y%m%d%H') + '.nc'
     fic = prosimu(forcing)
@@ -491,11 +491,11 @@ def compilation_ttes_periodes(date_entree_debut, date_entree_fin, site, option_r
             L_dates_1, Tab_time_nbpoint_1, pas_1 = complete_obs_with_model_1period(list_path_met[i], option_recup, list_date_debut[i], list_date_fin[i], site)
             pas = pas_1
         else:
-            print(str(list_date_debut[i]) + ' - ' + str(list_date_fin[i])) 
+            print(str(list_date_debut[i]) + ' - ' + str(list_date_fin[i]))
             L_dates_1, Tab_time_nbpoint_1 = recup_safran(list_date_debut[i], list_date_fin[i], pas, site)
 
         L.extend(L_dates_1)
-        Tab_time_point = np.vstack((Tab_time_point,Tab_time_nbpoint_1)) 
+        Tab_time_point = np.vstack((Tab_time_point,Tab_time_nbpoint_1))
 
     # Rajouter test de fin entre date_entree_fin et L[-1] a l'interieur de la fonction
     if L[-1] != date_entree_fin:
@@ -506,7 +506,7 @@ def compilation_ttes_periodes(date_entree_debut, date_entree_fin, site, option_r
     return L, Tab_time_point, pas
 
 def create_netcdf(output, Liste_dates, Tableau_valeurs_time_nbpoint, Tableau_valeurs_nbpoint, first_date, pas):
-    newname = output 
+    newname = output
     fic_forcing = StandardCDP(newname, 'w',format='NETCDF4_CLASSIC')
     fic_forcing.createDimension('time',None)
     fic_forcing.createDimension('Number_of_points',1)
@@ -532,7 +532,7 @@ def create_netcdf(output, Liste_dates, Tableau_valeurs_time_nbpoint, Tableau_val
 
     Liste_nom_nbpoint = ['LAT', 'LON', 'UREF', 'ZREF', 'ZS', 'aspect', 'slope']
     Liste_unite_nbpoint = [ 'degrees_north', 'degrees_east', 'm', 'm', 'm', 'degrees from north', 'degrees from horizontal']
-    Liste_longname_nbpoint = ['latitude', 'longitude', 'Reference_Height_for_Wind', 'Reference_Height', 'altitude', 
+    Liste_longname_nbpoint = ['latitude', 'longitude', 'Reference_Height_for_Wind', 'Reference_Height', 'altitude',
                                'slope aspect', 'slope angle']
 
     for i in range(len(Liste_nom_time_nbpoint)):
