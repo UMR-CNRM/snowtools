@@ -311,13 +311,13 @@ class ProReader_mini:
         # pas très pythonique: faire un truc avec np.apply_along_axis(np.searchsorted, 1, ep_from, height)
         if direction == 'down':
             for i in np.arange(np.alen(ep_from_topsnow)):
-                if ep_from_topsnow[i,:].searchsorted(float(height)) < int(ep.shape[1]):
+                if ep_from_topsnow[i,:].searchsorted(float(height)) < int(ep.shape[1]) and float(height) < ep_from_ground[i,-1]:
                     y.append(toplot[i, ep_from_topsnow[i,:].searchsorted(float(height))])
                 else:
                     y.append(None)
         if direction == 'up':
             for i in np.arange(np.alen(ep_from_ground)):
-                if ep_from_ground[i,:].searchsorted(float(height)) > 0:
+                if ep_from_ground[i,:].searchsorted(float(height)) > 0  and float(height) < ep_from_ground[i,-1]:
                     y.append(toplot[i, int(ep.shape[1])-ep_from_ground[i,:].searchsorted(float(height))])
                 else:
                     y.append(None)          
