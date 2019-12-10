@@ -272,6 +272,77 @@ class ProReader_mini:
     
         return intime
 
+    def plot_height(self, axe, var, b=None, e=None, xlabel=True, legend=None, color='b', direction='up', height=10.):
+        '''
+        Trace la variable demandee au niveau de la hauteur du manteau neigeux demandée (direction up = hauteur mesurée depuis la terre, 
+        direction down = hauteur mesurée depuis le point le plus haut du manteau neigeux) en fonction du temps
+            axe : matplotlib.Axe
+            var : string, nom variable a afficher
+            b : date debut affichage, datetime format or string YYYYMMDD ou YYYYMMDDHH
+            e : date fin affichage, datetime format or string YYYYMMDD ou YYYYMMDDHH
+            xlabel : True (default) ou False, affichage xlabel
+            legend : legende colorbar, legende automatique par defaut
+            color : string, color name
+            direction : 'up' or 'down' suivant que l'on prenne la hauteur depuis la couche de neige au sommet ou depuis le sol sous la neige
+            height : hauteur
+        '''
+        b = self.parsedate(b, self.date, self.date[0])
+        e = self.parsedate(e, self.date, self.date[self.ntime - 1])
+
+        if legend is None:
+            legend = var
+
+        intime = (self.date >= b) * (self.date <= e)
+        
+        if len(np.where(intime)[0]) > constante_sampling:
+            sampling = int(len(np.where(intime)[0])/constante_sampling)+1
+            intime_t=np.zeros(len(intime),dtype=bool)
+            intime_t[np.where(intime)[0][0]:np.where(intime)[0][len(np.where(intime)[0])-1]:sampling]=True
+            intime = intime_t
+        
+        # 1) Prendre les épaisseurs et les sommer puis voir pour quel indice on dépasse la valeur height
+        # 2) On fait cela pour chaque date
+        ep = self.var['SNOWDZ'][intime]
+        toplot = self.var[var][intime]
+        y = []
+        ep_from_ground = 100 * np.cumsum(ep[:, ::-1], axis=1)
+        ep_from_topsnow = 100 * np.cumsum(ep, axis=1)
+
+        # pas très pythonique: faire un truc avec np.apply_along_axis(np.searchsorted, 1, ep_from, height)
+        if direction == 'down':
+            for i in np.arange(np.alen(ep_from_topsnow)):
+                if ep_from_topsnow[i,:].searchsorted(float(height)) < int(ep.shape[1]):
+                    y.append(toplot[i, ep_from_topsnow[i,:].searchsorted(float(height))])
+                else:
+                    y.append(None)
+        if direction == 'up':
+            for i in np.arange(np.alen(ep_from_ground)):
+                if ep_from_ground[i,:].searchsorted(float(height)) > 0:
+                    y.append(toplot[i, int(ep.shape[1])-ep_from_ground[i,:].searchsorted(float(height))])
+                else:
+                    y.append(None)          
+
+        y_out = [y[i] if y[i] != 0 else None for i in range(len(y))]
+
+        xplot = range(toplot.shape[0])
+        axe.plot(xplot, y_out, color)
+        axe.set_xlim(0, toplot.shape[0])
+        
+        def format_ticks(x, pos):
+            x = int(x)
+            if(x >= 0 and x < toplot.shape[0]):
+                return self.date[intime][x].strftime('%Y-%m-%d')
+            else:
+                return 'E'
+        formatter = ticker.FuncFormatter(format_ticks)
+        axe.xaxis.set_major_formatter(formatter)
+        axe.xaxis.set_major_locator(ticker.MaxNLocator(5))
+        plt.setp(axe.xaxis.get_majorticklabels(),size='small')
+
+        axe.set_ylabel(legend)
+        
+        return intime
+
     def plot1D(self, axe, var, b=None, e=None, legend=None, color='b.'):
         '''
         Trace la variable demandee en fonction du temps
