@@ -549,7 +549,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox output tb06_b')
                 tb06_b = toolbox.output(
                     alternate      = 'Ebauche',
-                    local          = 'mb036/P[date:yymdh]_[cumul:hour]_[vconf]production',
+                    local          = 'mb036/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                     geometry       = self.conf.domains,
                     vconf          = '[geometry:area]',
                     experiment     = self.conf.xpid,
@@ -590,7 +590,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox output tb07_b')
                 tb07_b = toolbox.output(
                     alternate      = 'Ebauche',
-                    local          = 'mb037/P[date:yymdh]_[cumul:hour]_[vconf]production',
+                    local          = 'mb037/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                     geometry       = self.conf.domains,
                     vconf          = '[geometry:area]',
                     experiment     = self.conf.xpid,
