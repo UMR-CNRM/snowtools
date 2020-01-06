@@ -102,27 +102,6 @@ class Safran(Task, S2MTaskMixIn):
                 print t.prompt, 'tb01 =', tb01
                 print
 
-#             self.sh.title('Toolbox input tb02')
-#             tb02 = toolbox.input(
-#                 role           = 'ObsNeb',
-#                 part           = 'nebulosity',
-#                 block          = 'observations',
-#                 experiment     = self.conf.xpid,
-#                 geometry       = self.conf.vconf,
-#                 suite          = 'oper',
-#                 fatal          = False,
-#                 kind           = 'observations',
-#                 stage          = 'safrane',
-#                 nativefmt      = 'ascii',
-#                 date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(24 * i)) for i in range(ndays)],
-#                 local          = 'N[date:yymdh]',
-#                 model          = self.conf.model,
-#                 namespace      = 'cendev.soprano.fr',
-#                 storage        = 'guppy.meteo.fr',
-#             )
-#             print t.prompt, 'tb02 =', tb02
-#             print
-
             self.sh.title('Toolbox input tb03')
             tb03 = toolbox.input(
                 role            = 'ListeMassif',
@@ -316,78 +295,103 @@ class Safran(Task, S2MTaskMixIn):
             print t.prompt, 'tb16 =', tb16
             print
 
-            # I- ARPEGE (J-5) -> J ou (J-1) -> J
-            # --------------------
+            if self.conf.rundate.hour == 12:
 
-            # I.1- EBAUCHE issue des A6 des réseaux 0/6/12/18h (J-n) d'assimilation d'ARPEGE et l'A6 du réseau 0h J si présente pour couvrir (J-n) 6h -> J 6h
-            self.sh.title('Toolbox input tb17_a')
-            tb17_a = toolbox.input(
-                role           = 'Ebauche',
-                local          = 'mb035/P[date::addcumul_yymdh]',
-                experiment     = self.conf.xpid,
-                block          = self.conf.guess_block,
-                geometry        = self.conf.vconf,
-                cutoff         = 'assimilation',
-                date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
-                cumul          = self.conf.cumul,
-                nativefmt      = 'ascii',
-                kind           = 'guess',
-                model          = 'safran',
-                source_app     = self.conf.source_app,
-                source_conf    = self.conf.deterministic_conf,
-                namespace      = self.conf.namespace,
-                fatal          = False,
-            ),
-            print t.prompt, 'tb17_a =', tb17_a
-            print
+                # Récupération de l'archive contenant tous les guess depuis le début de la saison
+                self.sh.title('Toolbox input tb01')
+                tb17 = toolbox.input(
+                    role           = 'Reanalyse',
+                    local          = 'guess.tar',
+                    experiment     = self.conf.xpid,
+                    block          = 'guess',
+                    nativefmt      = 'tar',
+                    fatal          = False,
+                    kind           = 'packedguess',
+                    model          = 'safran',
+                    hook_autohook1 = (tb01_generic_hook1, ),
+                    date           = '{0:s}/-PT24H'.format(self.conf.rundate.ymdh),
+                    vapp           = self.conf.vapp,
+                    vconf          = self.conf.vconf,
+                    begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
+                    enddate        = '{0:s}/+PT72H'.format(dateend.ymd6h),
+                    geometry       = self.conf.vconf,
+                    intent         = 'inout',
+                )
+                print t.prompt, 'tb01 =', tb01
+                print
 
-            # I.2- EBAUCHE issue de la P6 du réseau H-6 de production d'ARPEGE
-            # Si l'A6 du réseau H n'est pas là on prend la P6 du réseau H-6h
-            # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur 6h homogène avec le cumul dans les fichiers d'assimilation
-            self.sh.title('Toolbox input tb17_b')
-            tb17_b = toolbox.input(
-                alternate      = 'Ebauche',
-                local          = 'mb035/P[date::addcumul_yymdh]',
-                experiment     = self.conf.xpid,
-                block          = self.conf.guess_block,
-                geometry       = self.conf.vconf,
-                cutoff         = 'production',
-                date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
-                cumul          = self.conf.cumul,
-                nativefmt      = 'ascii',
-                kind           = 'guess',
-                model          = 'safran',
-                source_app     = self.conf.source_app,
-                source_conf    = self.conf.deterministic_conf,
-                namespace      = self.conf.namespace,
-                fatal          = False,
-            ),
-            print t.prompt, 'tb17_b =', tb17_b
-            print
+            else:
 
-            # I.3- En dernier recours on essaye le réseau de production de 0h J-1
-            self.sh.title('Toolbox input tb17_c')
-            tb17_c = toolbox.input(
-                alternate      = 'Ebauche',
-                local          = 'mb035/P[date::addcumul_yymdh]',
-                experiment     = self.conf.xpid,
-                block          = self.conf.guess_block,
-                geometry       = self.conf.vconf,
-                cutoff         = 'production',
-                date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(30, ndays * 24 + 6, 24)],
-                cumul          = footprints.util.rangex('6-30-6'),
-                nativefmt      = 'ascii',
-                kind           = 'guess',
-                model          = 'safran',
-                source_app     = self.conf.source_app,
-                source_conf    = self.conf.deterministic_conf,
-                namespace      = self.conf.namespace,
-                fatal          = False,
-            ),
-            print t.prompt, 'tb17_c =', tb17_c
-            print
+                # I- ARPEGE (J-5) -> J ou (J-1) -> J
+                # --------------------
+                # I.1- EBAUCHE issue des A6 des réseaux 0/6/12/18h (J-n) d'assimilation d'ARPEGE et l'A6 du réseau 0h J si présente pour couvrir (J-n) 6h -> J 6h
+                self.sh.title('Toolbox input tb17_a')
+                tb17_a = toolbox.input(
+                    role           = 'Ebauche',
+                    local          = 'mb035/P[date::addcumul_yymdh]',
+                    experiment     = self.conf.xpid,
+                    block          = self.conf.guess_block,
+                    geometry        = self.conf.vconf,
+                    cutoff         = 'assimilation',
+                    date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
+                    cumul          = self.conf.cumul,
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.deterministic_conf,
+                    namespace      = self.conf.namespace,
+                    fatal          = False,
+                ),
+                print t.prompt, 'tb17_a =', tb17_a
+                print
 
-            if self.conf.rundate.hour != 12:
+                # I.2- EBAUCHE issue de la P6 du réseau H-6 de production d'ARPEGE
+                # Si l'A6 du réseau H n'est pas là on prend la P6 du réseau H-6h
+                # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur 6h homogène avec le cumul dans les fichiers d'assimilation
+                self.sh.title('Toolbox input tb17_b')
+                tb17_b = toolbox.input(
+                    alternate      = 'Ebauche',
+                    local          = 'mb035/P[date::addcumul_yymdh]',
+                    experiment     = self.conf.xpid,
+                    block          = self.conf.guess_block,
+                    geometry       = self.conf.vconf,
+                    cutoff         = 'production',
+                    date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
+                    cumul          = self.conf.cumul,
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.deterministic_conf,
+                    namespace      = self.conf.namespace,
+                    fatal          = False,
+                ),
+                print t.prompt, 'tb17_b =', tb17_b
+                print
+
+                # I.3- En dernier recours on essaye le réseau de production de 0h J-1
+                self.sh.title('Toolbox input tb17_c')
+                tb17_c = toolbox.input(
+                    alternate      = 'Ebauche',
+                    local          = 'mb035/P[date::addcumul_yymdh]',
+                    experiment     = self.conf.xpid,
+                    block          = self.conf.guess_block,
+                    geometry       = self.conf.vconf,
+                    cutoff         = 'production',
+                    date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(30, ndays * 24 + 6, 24)],
+                    cumul          = footprints.util.rangex('6-30-6'),
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.deterministic_conf,
+                    namespace      = self.conf.namespace,
+                    fatal          = False,
+                ),
+                print t.prompt, 'tb17_c =', tb17_c
+                print
+
 
                 # II- PEARP (J-5) -> J
                 # --------------------
