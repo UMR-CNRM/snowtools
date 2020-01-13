@@ -17,7 +17,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 from utils.prosimu import prosimu
-from utils.obscsv import obscsv
+from utils.obscsv import obscsv, multiplecsv
 from utils.resources import absolute_path, get_file_period
 from utils.dates import checkdateafter, check_and_convert_date
 from utils.infomassifs import infomassifs
@@ -45,7 +45,7 @@ def parse_options(arguments):
                       help="First year of extraction")
 
     parser.add_option("-e", "--end",
-                      action="store", type="string", dest="dateend", default="2018080106",
+                      action="store", type="string", dest="dateend", default="2019080106",
                       help="Last year of extraction")
 
     parser.add_option("--dirsim",
@@ -75,6 +75,10 @@ def parse_options(arguments):
     parser.add_option("--scores",
                       action="store_true", dest="scores", default=False,
                       help="Compute scores")
+
+    parser.add_option("--sim2",
+                      action="store_true", dest="sim2", default=False,
+                      help="Specific case of SIM2 evaluations")
 
     (options, args) = parser.parse_args(arguments)
     del args
@@ -224,6 +228,48 @@ def fullplots(datebegin, dateend, dataObs):
         C.plot()
 
 
+def fullplotsSIM2(datebegin, dateend, dataObs):
+
+    list_list_pro = []
+
+    for d, dirsim in enumerate(options.dirsim):
+        list_list_pro.append([])
+
+    print ("Get simulation files")
+
+    prefix = dict(sim2_interp = "SIM_NEW_",
+                  sim2_nointerp = "SIM_NEW_NO_INTERP_",
+                  simref = "")
+
+    for year in range(datebegin.year, dateend.year):
+
+        stringyear = str(year) + str(year + 1)
+
+        for d, dirsim in enumerate(options.dirsim):
+
+            proname = dirsim + "/" + prefix[os.path.basename(dirsim)] + "hauteur_neige_" + stringyear
+
+            list_list_pro[d].append(proname)
+
+    C = ComparisonSimObsSIM2(dataObs)
+
+    for d, dirsim in enumerate(options.dirsim):
+        print ("Read simulation files from " + dirsim)
+        C.read_sim(list_list_pro[d])
+
+    if options.labels:
+        C.set_sim_labels(map(str.strip, options.labels.split(',')))
+
+    if options.scores:
+        print ("Compute scores")
+        C.scores()
+        C.allboxplots()
+
+    if options.plot:
+        print ("Draw plots")
+        C.plot()
+
+
 class ComparisonSimObs(object):
 
     def __init__(self, dataObs):
@@ -267,6 +313,7 @@ class ComparisonSimObs(object):
         if dateproend - dateprobegin > datetime.timedelta(days = 1000):
             myplot.set_figsize(15, 4)
 
+        nivose = 0
         for s, station in enumerate(self.listStations):
             available_sim = []
             for indSim in range(0, self.nsim):
@@ -281,16 +328,22 @@ class ComparisonSimObs(object):
 
             if any(available_sim):
 
+                if 'NIVOSE' in build_title(station):
+                    nivose += 1
+
                 if self.nsim > 1:
                     myplot.set_title(build_title(station))
                 if self.nsim == 1 and hasattr(self, 'bias') and hasattr(self, 'rmse'):
-                    myplot.set_title(build_title_with_scores(station, self.bias[s], self.rmse[s]))
+                    myplot.set_title(build_title_with_scores(station, self.bias[0, s], self.rmse[0, s]))
 
                 plotfilename = options.dirplot + "/" + station + "_" + dateprobegin.strftime("%Y") + "_" + dateproend.strftime("%Y") + "." + options.format
 
                 myplot.finalize(timeOut, ylabel="Snow depth (cm)")
                 print ('plot ' + plotfilename)
                 myplot.save(plotfilename, formatout=options.format)
+
+        print ("NUMBER OF NIVOSE")
+        print (nivose)
 
     def scores(self):
 
@@ -324,11 +377,23 @@ class ComparisonSimObs(object):
 
         periodObs = (timeObs > min(self.timeSim[indSim])) & (timeObs < max(self.timeSim[indSim]))
 
+        winter = np.empty_like(periodObs)
+        for i, t in enumerate(timeObs):
+            winter[i] = (t.month >= 10) or (t.month <= 6)
+
+        periodObs = periodObs & winter
+
         availObs = np.sum(sdObs[periodObs] > 0) > 5
+        
+        
+        #print type(self.SimStations[indSim])
+        
         ind = self.SimStations[indSim] == int(station)
         availSim = np.sum(ind) == 1
 
         availCommon = availObs and availSim
+
+        print np.sum(availCommon)
 
         if availCommon:
             return availCommon, timeObs[periodObs], self.timeSim[indSim], sdObs[periodObs], np.squeeze(self.sdSim[indSim][:, ind])
@@ -371,7 +436,7 @@ class ComparisonSimObs(object):
             kwargs['fillcolor'] = self.list_colors[indSim]
             b1.draw(stations[valid], list_scores[indSim, valid], nsimu=self.nsim, **kwargs)
 
-            print list_scores[indSim, valid].shape
+            #print list_scores[indSim, valid].shape
 
         kwargs['label'] = self.list_labels
         b1.finalize(nsimu=self.nsim, **kwargs)
@@ -399,6 +464,28 @@ class ComparisonSimObs(object):
         b2.close()
 
 
+class ComparisonSimObsSIM2(ComparisonSimObs):
+
+    def read_sim(self, listpro):
+
+        self.dataSim = multiplecsv(listpro)
+        self.dataSim.read()
+        self.dataSim.close()
+
+        listStationsSim = self.dataSim.getListStations()
+        self.timeSim.append(self.dataSim.get(listStationsSim[0], "time"))
+
+        sdSim = np.empty((len(self.timeSim[-1]), len(listStationsSim)))
+
+        for s, station in enumerate(listStationsSim):
+            sdSim[:, s] = self.dataSim.get(station, "SNOWDEPTH")  # cm
+
+        self.sdSim.append(sdSim)
+
+        self.SimStations.append(np.array(map(int, listStationsSim)))
+        self.nsim = len(self.sdSim)
+
+
 if __name__ == "__main__":
     options = parse_options(sys.argv)
     options = check_and_convert_options(options)
@@ -408,7 +495,10 @@ if __name__ == "__main__":
     dataObs.read()
     dataObs.close()
 
-    if options.yearly:
+    if options.sim2:
+        print ("full comparison for SIM2")
+        fullplotsSIM2(options.datebegin, options.dateend, dataObs)
+    elif options.yearly:
         print ("yearly comparisons")
         yearlyplots(options.datebegin, options.dateend, dataObs)
 
