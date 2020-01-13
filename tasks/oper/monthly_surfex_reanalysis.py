@@ -63,7 +63,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 kind           = 'MeteorologicalForcing',
                 namespace      = 'vortex.multi.fr',
                 model          = source_safran,
-                cutoff         = 'production' if self.conf.previ else 'assimilation',
+                cutoff         = 'assimilation',
                 fatal          = True
             ),
             print(t.prompt, 'tb01 =', tb01)
@@ -280,7 +280,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                     kind           = 'MeteorologicalForcing',
                     model          = 's2m',
                     namespace      = 'vortex.multi.fr',
-                    cutoff         = 'production' if self.conf.previ else 'assimilation',
+                    cutoff         = 'assimilation',
                     fatal          = False
                 ),
                 print(t.prompt, 'tb10 =', tb10)
@@ -299,12 +299,13 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 kind           = 'SnowpackSimulation',
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
-                cutoff         = 'production' if self.conf.previ else 'assimilation',
+                cutoff         = 'assimilation',
                 fatal          = False
             ),
             print(t.prompt, 'tb11 =', tb11)
             print()
 
+            # Prep file is saved directly in the 03h run output of the same day in order to update initial conditions for the next day
             self.sh.title('Toolbox output tb12')
             tb12 = toolbox.output(
                 local          = 'PREP_[datevalidity:ymdh].nc',
@@ -313,13 +314,14 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 block          = 'prep',
                 geometry       = self.conf.geometry,
                 datevalidity   = dateend,
-                date           = self.conf.rundate,
+                date           = self.conf.rundate.replace(hour = self.nightruntime.hour),
+                member         = 35,
                 nativefmt      = 'netcdf',
                 kind           = 'PREP',
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
-                cutoff         = 'production' if self.conf.previ else 'assimilation',
-                fatal          = False
+                cutoff         = 'assimilation',
+                fatal          = True
             ),
             print(t.prompt, 'tb12 =', tb12)
             print()
