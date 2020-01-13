@@ -37,6 +37,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
         datebegin, dateend = self.get_period()
         rundate_forcing = self.get_rundate_forcing()
         rundate_prep, alternate_rundate_prep = self.get_rundate_prep()
+        member_init = self.get_oper_member_prep()
 
         list_geometry = self.get_list_geometry()
         source_safran, block_safran = self.get_source_safran()
@@ -189,7 +190,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     geometry       = self.conf.geometry,
                     datevalidity   = datebegin,
                     date           = rundate_prep,
-                    member         = 35,
+                    member         = member_init,
                     intent         = 'inout',
                     nativefmt      = 'netcdf',
                     kind           = 'PREP',
@@ -212,7 +213,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                         geometry       = self.conf.geometry,
                         datevalidity   = datebegin,
                         date           = alternate_prep[0],
-                        member         = 35,
+                        member         = member_init,
                         intent         = 'inout',
                         nativefmt      = 'netcdf',
                         kind           = 'PREP',
