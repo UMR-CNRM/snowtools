@@ -52,6 +52,8 @@ class vortex_kitchen(object):
             self.profile = "rd-beaufix-mt"
         if "prolix" in machine:
             self.profile = "rd-prolix-mt"
+        if "epona" in machine:
+            self.profile = "rd-epona-mt"
 
         self.execute()
 
@@ -260,6 +262,7 @@ class vortex_kitchen(object):
             self.options.interpol = True
             self.options.geoin, self.options.vconf, self.options.gridout = self.options.region.split(':')
         else:
+            self.options.interpol = False
             self.options.vconf = self.options.region
 
 

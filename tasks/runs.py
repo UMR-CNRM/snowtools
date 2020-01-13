@@ -60,6 +60,10 @@ class surfexrun(object):
     def defaults_from_env(self, moderun="NORMAL"):
         machine = os.uname()[1]
 
+        if "epona" in machine:
+            self.nproc = 128
+            self.moderun = "MPI"
+            self.modeinterpol = "MPI"
         if "beaufix" in machine or "prolix" in machine:
             self.nproc = 40
             self.moderun = "MPI"
