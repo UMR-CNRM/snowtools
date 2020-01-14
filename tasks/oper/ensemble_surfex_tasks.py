@@ -37,7 +37,6 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
         datebegin, dateend = self.get_period()
         rundate_forcing = self.get_rundate_forcing()
         rundate_prep, alternate_rundate_prep = self.get_rundate_prep()
-        member_init = self.get_oper_member_prep()
 
         list_geometry = self.get_list_geometry()
         source_safran, block_safran = self.get_source_safran()
@@ -190,7 +189,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     geometry       = self.conf.geometry,
                     datevalidity   = datebegin,
                     date           = rundate_prep,
-                    member         = member_init,
+                    member         = 35,
                     intent         = 'inout',
                     nativefmt      = 'netcdf',
                     kind           = 'PREP',
@@ -213,7 +212,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                         geometry       = self.conf.geometry,
                         datevalidity   = datebegin,
                         date           = alternate_prep[0],
-                        member         = member_init,
+                        member         = 35,
                         intent         = 'inout',
                         nativefmt      = 'netcdf',
                         kind           = 'PREP',
@@ -224,6 +223,53 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     ),
                     print(t.prompt, 'tb03b =', tb03b)
                     print()
+
+                if not self.conf.geometry.area == "postes":
+                    # SYTRON forecasts are initialized by the SYTRON analysis (member=36)                    
+                    self.sh.title('Toolbox input tb03c')
+                    tb03 = toolbox.input(
+                        role           = 'SnowpackInit',
+                        local          = 'mb[member]/PREP.nc',
+                        block          = 'prep',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        datevalidity   = datebegin,
+                        date           = rundate_prep,
+                        member         = 36,
+                        intent         = 'inout',
+                        nativefmt      = 'netcdf',
+                        kind           = 'PREP',
+                        model          = 'surfex',
+                        namespace      = 'vortex.multi.fr',
+                        fatal          = False,
+                        cutoff         = 'assimilation'
+                    ),
+                    print(t.prompt, 'tb03 =', tb03)
+                    print()
+    
+                    # Previous runs can replace if the expected run is missing
+                    for i, alternate_prep in enumerate(alternate_rundate_prep):
+                        self.sh.title('Toolbox input tb03c')
+                        tb03b = toolbox.input(
+                            alternate      = 'SnowpackInit',
+                            local          = 'mb[member]/PREP.nc',
+                            block          = 'prep',
+                            experiment     = self.conf.xpid,
+                            geometry       = self.conf.geometry,
+                            datevalidity   = datebegin,
+                            date           = alternate_prep[0],
+                            member         = 36,
+                            intent         = 'inout',
+                            nativefmt      = 'netcdf',
+                            kind           = 'PREP',
+                            model          = 'surfex',
+                            namespace      = 'vortex.multi.fr',
+                            fatal          = False,
+                            cutoff         = alternate_prep[1]
+                        ),
+                        print(t.prompt, 'tb03b =', tb03b)
+                        print()                    
+
 
             else:
                 # Analyses are initialized by the corresponding members of the previous run
