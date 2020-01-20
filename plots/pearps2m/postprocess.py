@@ -54,11 +54,11 @@ class config(object):
     list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
 #     list_geometry = ['pyr_allslopes']
 
-    list_members = range(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+    list_members = list(range(0, 36))  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
 
     def __init__(self):
         options = parse_options(sys.argv)
-        options.datebegin, options.dateend = map(check_and_convert_date, [options.datebegin, options.dateend])
+        options.datebegin, options.dateend = list(map(check_and_convert_date, [options.datebegin, options.dateend]))
         if options.datebegin.hour == 0:
             self.rundate = options.datebegin.replace(hour=6)
         else:
@@ -92,7 +92,7 @@ class Ensemble(object):
         self.nech = len(self.time)
 
     def select_points(self):
-        indpoints = range(0, self.simufiles[0].getlendim(self.spatialdim))
+        indpoints = list(range(0, self.simufiles[0].getlendim(self.spatialdim)))
         return indpoints
 
     def get_npoints(self):
@@ -141,7 +141,7 @@ class Ensemble(object):
 
     def proba(self, varname, seuilinf=-999999999, seuilsup=999999999):
 
-        if varname not in self.ensemble.keys():
+        if varname not in list(self.ensemble.keys()):
             self.read(varname)
 
         condition = (self.ensemble[varname] > seuilinf) & (self.ensemble[varname] < seuilsup)
@@ -151,7 +151,7 @@ class Ensemble(object):
 
     def quantile(self, varname, level):
 
-        if varname not in self.ensemble.keys():
+        if varname not in list(self.ensemble.keys()):
             self.read(varname)
 
         quantile = np.where(np.isnan(self.ensemble[varname][:, :, 0]), np.nan, np.percentile(self.ensemble[varname], level, axis=2))
@@ -209,7 +209,7 @@ class _EnsembleMassif(Ensemble):
             alti = self.get_alti()
             massif = self.get_massifdim()
 
-        return map(self.build_filename, massif, alti), map(self.build_title, massif, alti)
+        return list(map(self.build_filename, massif, alti)), list(map(self.build_title, massif, alti))
 
     def build_filename(self, massif, alti):
         filename = str(massif)
@@ -218,9 +218,9 @@ class _EnsembleMassif(Ensemble):
         return filename
 
     def build_title(self, massif, alti):
-        title = unicode(self.InfoMassifs.getMassifName(massif).decode("utf-8"))
+        title = str(self.InfoMassifs.getMassifName(massif).decode("utf-8"))
         if alti:
-            title += u" " + unicode(int(alti)) + u" m"
+            title += " " + str(int(alti)) + " m"
         return title
 
 
@@ -246,13 +246,13 @@ class EnsembleStation(Ensemble):
         alti = self.simufiles[0].read_var("ZS", Number_of_points = self.indpoints)
         station = self.simufiles[0].read_var("station", Number_of_points = self.indpoints)
 
-        return map(self.build_filename, station, alti), map(self.build_title, station, alti)
+        return list(map(self.build_filename, station, alti)), list(map(self.build_title, station, alti))
 
     def build_filename(self, station, alti):
         return '%08d' % station
 
     def build_title(self, station, alti):
-        return unicode(self.InfoMassifs.nameposte(station).decode("utf-8")) + u" " + unicode(int(alti)) + u" m"
+        return str(self.InfoMassifs.nameposte(station).decode("utf-8")) + " " + str(int(alti)) + " m"
 
 
 class EnsembleDiags(Ensemble):
@@ -262,7 +262,7 @@ class EnsembleDiags(Ensemble):
 
     def diags(self, list_var, list_quantiles, list_seuils):
         for var in list_var:
-            if var in list_seuils.keys():
+            if var in list(list_seuils.keys()):
                 for seuil in list_seuils[var]:
                     self.proba[(var, seuil)] = self.proba(var, seuilsup=seuil)
 
@@ -282,17 +282,17 @@ class EnsembleOperDiags(EnsembleDiags):
     formatplot = 'png'
 
     attributes = dict(
-        SD_1DY_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)'),
-        SD_3DY_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 72h (cm)'),
-        RAMSOND_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur mobilisable (cm)'),
-        NAT_LEV = dict(forcemin=-0.5, forcemax=5.5, palette='YlOrRd', ncolors=6, label=u'Risque naturel', ticks=[u'Très faible', u'Faible', u'Mod. A', u'Mod. D', u'Fort', u'Très fort']),
-        naturalIndex = dict(forcemin=0., forcemax=8., palette='YlOrRd', label=u'Indice de risque naturel', format= '%.1f', nolevel=True),
-        DSN_T_ISBA  = dict(convert_unit= 100., label=u'Hauteur de neige (cm)'),
-        WSN_T_ISBA  = dict(label=u'Equivalent en eau (kg/m2)'),
-        SNOMLT_ISBA  = dict(convert_unit= 3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Ecoulement en 3h (kg/m2/3h)'),
-        WET_TH_ISBA  = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur humide (cm)'),
-        REFRZTH_ISBA  = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur regelée (cm)'),
-        RAINF_ISBA   = dict(convert_unit= 3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Pluie en 3h (kg/m2/3h)'),
+        SD_1DY_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label='Epaisseur de neige fraîche en 24h (cm)'),
+        SD_3DY_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label='Epaisseur de neige fraîche en 72h (cm)'),
+        RAMSOND_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label='Epaisseur mobilisable (cm)'),
+        NAT_LEV = dict(forcemin=-0.5, forcemax=5.5, palette='YlOrRd', ncolors=6, label='Risque naturel', ticks=['Très faible', 'Faible', 'Mod. A', 'Mod. D', 'Fort', 'Très fort']),
+        naturalIndex = dict(forcemin=0., forcemax=8., palette='YlOrRd', label='Indice de risque naturel', format= '%.1f', nolevel=True),
+        DSN_T_ISBA  = dict(convert_unit= 100., label='Hauteur de neige (cm)'),
+        WSN_T_ISBA  = dict(label='Equivalent en eau (kg/m2)'),
+        SNOMLT_ISBA  = dict(convert_unit= 3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label='Ecoulement en 3h (kg/m2/3h)'),
+        WET_TH_ISBA  = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label='Epaisseur humide (cm)'),
+        REFRZTH_ISBA  = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label='Epaisseur regelée (cm)'),
+        RAINF_ISBA   = dict(convert_unit= 3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label='Pluie en 3h (kg/m2/3h)'),
     )
 
     list_q = [20, 50, 80]
@@ -304,19 +304,19 @@ class EnsembleOperDiags(EnsembleDiags):
 
         for var in self.list_var_spag:
 
-            if 'nolevel' not in self.attributes[var].keys():
+            if 'nolevel' not in list(self.attributes[var].keys()):
                 self.attributes[var]['nolevel'] = False
 
             list_filenames, list_titles = self.get_metadata(nolevel = self.attributes[var]['nolevel'])
 
             s = spaghettis_with_det(self.time)
             settings = self.attributes[var].copy()
-            if 'label' in self.attributes[var].keys():
+            if 'label' in list(self.attributes[var].keys()):
                 settings['ylabel'] = self.attributes[var]['label']
             npoints = self.quantiles[var][0][0, :].shape[0]
 
             for point in range(0, npoints):
-                if 'convert_unit' in self.attributes[var].keys():
+                if 'convert_unit' in list(self.attributes[var].keys()):
                     allmembers = self.ensemble[var][:, point, :] * self.attributes[var]['convert_unit']
                     qmin = self.quantiles[var][0][:, point] * self.attributes[var]['convert_unit']
                     qmed = self.quantiles[var][1][:, point] * self.attributes[var]['convert_unit']
@@ -343,19 +343,19 @@ class EnsembleOperDiags(EnsembleDiags):
 
         for var in self.list_var_spag_2points:
 
-            if 'nolevel' not in self.attributes[var].keys():
+            if 'nolevel' not in list(self.attributes[var].keys()):
                 self.attributes[var]['nolevel'] = False
 
             list_filenames, list_titles = self.get_metadata(nolevel = self.attributes[var]['nolevel'])
 
             s = spaghettis_with_det(self.time)
             settings = self.attributes[var].copy()
-            if 'label' in self.attributes[var].keys():
+            if 'label' in list(self.attributes[var].keys()):
                 settings['ylabel'] = self.attributes[var]['label']
 
             for pair in list_pairs:
                 for p, point in enumerate(pair):
-                    if 'convert_unit' in self.attributes[var].keys():
+                    if 'convert_unit' in list(self.attributes[var].keys()):
                         allmembers = self.ensemble[var][:, point, :] * self.attributes[var]['convert_unit']
                         qmin = self.quantiles[var][0][:, point] * self.attributes[var]['convert_unit']
                         qmed = self.quantiles[var][1][:, point] * self.attributes[var]['convert_unit']
@@ -367,7 +367,7 @@ class EnsembleOperDiags(EnsembleDiags):
                         qmax = self.quantiles[var][2][:, point]
                     settings['colorquantiles'] = list_colors[p]
                     settings['colormembers'] = list_colors[p]
-                    if 'labels' in kwargs.keys():
+                    if 'labels' in list(kwargs.keys()):
                         settings['commonlabel'] = kwargs['labels'][p] 
 
                     s.draw(self.time, allmembers[:, self.inddeterministic], allmembers, qmin, qmed, qmax, **settings)
@@ -400,7 +400,7 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
         m = map_generic[domain[0:3]]()
         for var in self.list_var_map:
             m.init_massifs(**self.attributes[var])
-            if 'nolevel' not in self.attributes[var].keys():
+            if 'nolevel' not in list(self.attributes[var].keys()):
                 self.attributes[var]['nolevel'] = False
             if self.attributes[var]['nolevel']:
                 list_loop_alti = [0]
@@ -445,7 +445,7 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
 
     levelmax = 4800
     levelmin = 0
-    versants = [u'Nord 40°', u'Sud 40°']
+    versants = ['Nord 40°', 'Sud 40°']
     list_var_spag = []
     list_var_spag_2points = ['RAMSOND_ISBA', 'NAT_LEV', 'WET_TH_ISBA', 'REFRZTH_ISBA']
     list_var_map = ['RAMSOND_ISBA', 'NAT_LEV', 'WET_TH_ISBA', 'REFRZTH_ISBA']
@@ -456,7 +456,7 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
 
     def get_pairs_ns(self):
         alti = self.get_alti()
-        aspect = np.array(map(int, self.get_aspect()))
+        aspect = np.array(list(map(int, self.get_aspect())))
         massif = self.get_massifdim()
 
         if not hasattr(self, 'list_pairs'):
@@ -542,9 +542,9 @@ if __name__ == "__main__":
     snow_members = S2ME.get_snow()
 
     locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
-    suptitle = u'Prévisions PEARP-S2M du ' + pretty_date(S2ME.conf.rundate).decode('utf-8')
+    suptitle = 'Prévisions PEARP-S2M du ' + pretty_date(S2ME.conf.rundate).decode('utf-8')
 
-    list_domains = snow_members.keys()
+    list_domains = list(snow_members.keys())
 
     for domain in list_domains:
         if domain == 'postes':
@@ -576,8 +576,8 @@ if __name__ == "__main__":
             ENS.close()
             del ENS
 
-            print E.list_var_spag
-            print E.list_var_map
+            print(E.list_var_spag)
+            print(E.list_var_map)
 
         E.close()
         del E

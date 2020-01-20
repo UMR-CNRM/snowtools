@@ -5,7 +5,7 @@
 Various tools designed for interactive scripts.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+
 import six
 
 from bronx.compat.moves import collections_abc
@@ -73,7 +73,7 @@ def query_yes_no_quit(question, default="yes"):
         choice = six.moves.input().lower()
         if default is not None and choice == '':
             return default
-        elif choice in valid.keys():
+        elif choice in list(valid.keys()):
             return valid[choice]
         else:
             sys.stdout.write("Please respond with 'yes', 'no' or 'quit'.\n")

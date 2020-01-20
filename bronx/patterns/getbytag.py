@@ -48,7 +48,7 @@ Basic example (see :class:`GetByTag` class documentation for more advanced featu
 
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
+
 
 import six
 
@@ -166,7 +166,7 @@ class GetByTag(object):
     @classmethod
     def tag_check(cls, tag):
         """Check if the tag is in list of actual keys of the objects instanciated."""
-        return (tag in cls._tag_table.keys())
+        return (tag in list(cls._tag_table.keys()))
 
     @classmethod
     def tag_focus(cls, select='default'):

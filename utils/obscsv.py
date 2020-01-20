@@ -38,7 +38,7 @@ class multiplecsv(object):
                     row[0] = "0" + row[0]
 
                 if re.match("^\d{8}\d?$", row[0]):
-                    if not row[0] in self._data.keys():
+                    if not row[0] in list(self._data.keys()):
                         self._data[row[0]] = {}
                         self._data[row[0]]["time"] = []
                         self._data[row[0]]["SNOWDEPTH"] = []
@@ -51,13 +51,13 @@ class multiplecsv(object):
                     if len(row) >= 4:
                         self._data[row[0]]["SNOWSWE"].append(float(row[3].replace(",", ".")))
                 else:
-                    print "station ignorée :" + row[0]
+                    print("station ignorée :" + row[0])
 
         return True
 
     def get(self, station, varname):
-        if station in self._data.keys():
-            if varname in self._data[station].keys():
+        if station in list(self._data.keys()):
+            if varname in list(self._data[station].keys()):
                 return np.array(self._data[station][varname])
             else:
                 raise BaseException(varname + "is not a valid observed variable")
@@ -102,7 +102,7 @@ class obscsv(object):
                 row[0] = "0" + row[0]
 
             if re.match("^\d{8}\d?$", row[0]):
-                if not row[0] in self._data.keys():
+                if not row[0] in list(self._data.keys()):
                     self._data[row[0]] = {}
                     self._data[row[0]]["time"] = []
                     self._data[row[0]]["SNOWDEPTH"] = []
@@ -115,16 +115,16 @@ class obscsv(object):
                 if len(row) >= 4:
                     self._data[row[0]]["SNOWSWE"].append(float(row[3].replace(",", ".")))
             else:
-                print "station ignorée :" + row[0]
+                print("station ignorée :" + row[0])
 
-        for station in self._data.keys():
-            for varname in self._data[station].keys():
+        for station in list(self._data.keys()):
+            for varname in list(self._data[station].keys()):
                 self._data[station][varname] = np.array(self._data[station][varname])
         return True
 
     def get(self, station, varname):
-        if station in self._data.keys():
-            if varname in self._data[station].keys():
+        if station in list(self._data.keys()):
+            if varname in list(self._data[station].keys()):
                 return self._data[station][varname]
             else:
                 raise BaseException(varname + "is not a valid observed variable")

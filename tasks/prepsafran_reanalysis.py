@@ -83,8 +83,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     #vconf          = self.conf.deterministic_conf,
                     #fatal          = False,
                 ))
-                print t.prompt, 'tb01_a =', tbarp
-                print
+                print(t.prompt, 'tb01_a =', tbarp)
+                print()
 
 #                 self.sh.title('Toolbox input tb01')
 #                 tbarp.extend(toolbox.input(
@@ -206,8 +206,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # rawopts     = ' -o -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
                 rawopts     = '-a -r -d {0:s} -f {1:s}'.format(self.conf.vconf, ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)])))),
             )
-            print t.prompt, 'tb03 =', tb03
-            print
+            print(t.prompt, 'tb03 =', tb03)
+            print()
 
         if 'fetch' in self.steps:
             pass
@@ -225,8 +225,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ntasks         = self.conf.ntasks,
                 # members        = footprints.util.rangex(self.conf.members)
             )
-            print t.prompt, 'tb04 =', expresso
-            print
+            print(t.prompt, 'tb04 =', expresso)
+            print()
 
             self.component_runner(expresso, script, fortran = False)
 
@@ -266,8 +266,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 #now            = True,
 
             ),
-            print t.prompt, 'tb05 =', tb05
-            print
+            print(t.prompt, 'tb05 =', tb05)
+            print()
 
 #                 self.sh.title('Toolbox output tb06')
 #                 tb06 = toolbox.output(

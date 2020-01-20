@@ -17,7 +17,7 @@ This code has been extacted from Python 3.5 and two patches have been applied:
 # Proposed patch applied: https://bugs.python.org/issue11416
 # LFM: netrc._passwd_clean regex introduced to remove matching quotes
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+
 
 import io
 import os
@@ -205,13 +205,13 @@ class netrc:
         (This discards comments and may reorder the entries.)
         """
         rep = ""
-        for host, attrlist in self.allhosts.items():
+        for host, attrlist in list(self.allhosts.items()):
             for attrs in attrlist:
                 rep = rep + "machine " + host + "\n\tlogin " + repr(attrs[0]) + "\n"
                 if attrs[1]:
                     rep = rep + "account " + repr(attrs[1])
                 rep = rep + "\tpassword " + repr(attrs[2]) + "\n"
-        for macro in self.macros.keys():
+        for macro in list(self.macros.keys()):
             rep = rep + "macdef " + macro + "\n"
             for line in self.macros[macro]:
                 rep = rep + line
@@ -220,4 +220,4 @@ class netrc:
 
 
 if __name__ == '__main__':
-    print(netrc())
+    print((netrc()))

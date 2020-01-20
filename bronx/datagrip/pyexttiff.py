@@ -9,7 +9,7 @@ This module uses code from pylibtiff (https://pypi.python.org/pypi/libtiff,
 https://code.google.com/p/pylibtiff or https://github.com/hmeine/pylibtiff)
 """
 
-from __future__ import print_function, absolute_import, division  # , unicode_literals
+  # , unicode_literals
 import six
 
 import io
@@ -36,7 +36,7 @@ class TiffFile(object):
                   6: 'SBYTE', 7: 'UNDEFINED', 8: 'SSHORT', 9: 'SLONG', 10: 'SRATIONAL',
                   11: 'FLOAT', 12: 'DOUBLE',
                   }
-    _name2type = dict((v, k) for k, v in _type2name.items())
+    _name2type = dict((v, k) for k, v in list(_type2name.items()))
     _name2type['SHORT|LONG'] = _name2type['LONG']
     _name2type['LONG|SHORT'] = _name2type['LONG']
     _type2bytes = {1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 6: 1, 7: 1, 8: 2, 9: 4, 10: 8, 11: 4, 12: 8}
@@ -60,7 +60,7 @@ class TiffFile(object):
 
         @property
         def type2dt(self):
-            return dict((k, numpy.dtype(v).newbyteorder('<')) for k, v in TiffFile._type2dtype.items())
+            return dict((k, numpy.dtype(v).newbyteorder('<')) for k, v in list(TiffFile._type2dtype.items()))
 
     class _BigEndianNumpyDTypes(object):
         uint8 = numpy.dtype('>u1')
@@ -78,7 +78,7 @@ class TiffFile(object):
 
         @property
         def type2dt(self):
-            return dict((k, numpy.dtype(v).newbyteorder('>')) for k, v in TiffFile._type2dtype.items())
+            return dict((k, numpy.dtype(v).newbyteorder('>')) for k, v in list(TiffFile._type2dtype.items()))
 
     def __init__(self, filename, subIFDpaths=[], method=1):
         """ Opens a tiff file, reads header and IFDs.

@@ -8,12 +8,13 @@ Vortex task performing up to 40 offline runs in parallel on a single node
 
 '''
 
-from bronx.stdtypes.date import Date
 import os
-from tasks.crampon_common import _Crampon_Task
-from utils.dates import get_list_dates_files, check_and_convert_date
 
 from vortex import toolbox
+
+from bronx.stdtypes.date import Date
+from tasks.crampon_common import _Crampon_Task
+from utils.dates import get_list_dates_files, check_and_convert_date
 
 
 class Offline_Task(_Crampon_Task):
@@ -29,7 +30,7 @@ class Offline_Task(_Crampon_Task):
 
         # ####  set members configurations ##################
         nmembersnode = len(self.conf.membersnode)
-        idsnode = map(int, self.conf.idsnode)
+        idsnode = list(map(int, self.conf.idsnode))
 
         # BC 31/07/19 this produces noise deteriorating the spread so remove it.
         # # in case of synthetic assimilation, shuffle it to prevent the truth to appear.
@@ -218,7 +219,11 @@ class Offline_Task(_Crampon_Task):
             print()
 
         if 'late-backup' in self.steps:
-
+            # if fetchnig to sxcen, must be done file/file to prevent from having too many simultaneous transfers
+            storage = ['hendrix.meteo.fr']
+            enforcesync = dict(storage={'hendrix.meteo.fr': False, 'sxcen.cnrm.meteo.fr': True})
+            if self.conf.writesx == 'on':
+                storage.append('sxcen.cnrm.meteo.fr')
             # ########### PUT PREP FILES ###########
             localbg = 'mb[member%04d]/PREP_[date:ymdh].nc'
             self.sh.title('Toolbox output tb21bg')
@@ -234,6 +239,8 @@ class Offline_Task(_Crampon_Task):
                 kind           = 'PREP',
                 model          = 'surfex',
                 namespace      = 'vortex.archive.fr',
+                storage        = storage,
+                enforcesync    = enforcesync,
                 namebuild      = 'flat@cen',
                 block          = 'bg',
                 stage          = '_bg',
@@ -255,59 +262,13 @@ class Offline_Task(_Crampon_Task):
                 kind           = 'SnowpackSimulation',
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
+                storage        = storage,
+                enforcesync    = enforcesync,
                 namebuild      = 'flat@cen',
                 block          = 'pro',
             ),
             print(t.prompt, 'tb19 =', tb19)
             print()
-
-            # PREP and PRO to SXCEN ############"
-            if hasattr(self.conf, 'writesx'):
-
-                # PUT PREP FILES SXCEN
-                self.sh.title('Toolbox output tb21bg_sx')
-                tb21_b = toolbox.output(
-                    local          = localbg,
-                    role           = 'SnowpackInit',
-                    experiment     = self.conf.xpid,
-                    geometry       = self.conf.geometry,
-                    date           = self.conf.stopdate,
-                    period         = self.conf.stopdate,  # BC 27/03 wtf
-                    member         = self.conf.membersnode,  # BC 21/03/19 probably replace by mbids
-                    nativefmt      = 'netcdf',
-                    kind           = 'PREP',
-                    model          = 'surfex',
-                    namespace      = 'vortex.sxcen.fr',
-                    namebuild      = 'flat@cen',
-                    block          = 'bg',
-                    storage        = 'sxcen.cnrm.meteo.fr',
-                    rootpath       = self.conf.writesx,
-                    stage          = '_bg',
-                    fatal          = False,
-                ),
-                print(t.prompt, 'tb21bg_sx =', tb21_b)
-                print()
-
-                # PUT PRO FILE SX
-                self.sh.title('Toolbox output tb19_sx')
-                tb19 = toolbox.output(
-                    local          = 'mb[member%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-                    experiment     = self.conf.xpid,
-                    geometry       = self.conf.geometry,
-                    datebegin      = self.conf.stopdate_prev,
-                    dateend        = self.conf.stopdate,
-                    member         = self.conf.membersnode,
-                    nativefmt      = 'netcdf',
-                    kind           = 'SnowpackSimulation',
-                    model          = 'surfex',
-                    namespace      = 'vortex.sxcen.fr',
-                    storage        = 'sxcen.cnrm.meteo.fr',
-                    rootpath       = self.conf.writesx,
-                    namebuild      = 'flat@cen',
-                    block          = 'pro',
-                ),
-                print(t.prompt, 'tb19 =', tb19)
-                print()
 
             # fetch namelist &conf file only if lastloop
             if lastloop:
@@ -315,6 +276,8 @@ class Offline_Task(_Crampon_Task):
                 tb23 = toolbox.output(
                     role            = 'Nam_surfex',
                     namespace       = 'vortex.multi.fr',
+                    storage        = storage,
+                    enforcesync    = enforcesync,
                     namebuild       = 'flat@cen',
                     block           = 'conf',
                     experiment      = self.conf.xpid,
@@ -331,6 +294,8 @@ class Offline_Task(_Crampon_Task):
                 tbconf = toolbox.output(
                     kind           = 'ini_file',
                     namespace      = 'vortex.multi.fr',
+                    storage        = storage,
+                    enforcesync    = enforcesync,
                     namebuild      = 'flat@cen',
                     block          = 'conf',
                     experiment     = self.conf.xpid,
@@ -341,39 +306,3 @@ class Offline_Task(_Crampon_Task):
                 ),
                 print(t.prompt, 'tbconf =', tbconf)
                 print()
-
-                # namelist & conf to sxcen
-                if hasattr(self.conf, 'writesx'):
-                    self.sh.title('Toolbox output tb23_sx')
-                    tb23 = toolbox.output(
-                        role            = 'Nam_surfex',
-                        namespace       = 'vortex.sxcen.fr',
-                        namebuild       = 'flat@cen',
-                        block           = 'conf',
-                        storage         = 'sxcen.cnrm.meteo.fr',
-                        experiment      = self.conf.xpid,
-                        rootpath        = self.conf.writesx,
-                        kind            = 'namelist',
-                        model           = 'surfex',
-                        local           = 'OPTIONS.nam',
-                        fatal           = False,
-                    )
-                    print(t.prompt, 'tb23 =', tb23)
-                    print()
-
-                    self.sh.title('Toolbox output tbconf_sx')
-                    tbconf = toolbox.output(
-                        kind           = 'ini_file',
-                        namespace      = 'vortex.sxcen.fr',
-                        namebuild      = 'flat@cen',
-                        block          = 'conf',
-                        storage        = 'sxcen.cnrm.meteo.fr',
-                        rootpath       = self.conf.writesx,
-                        experiment     = self.conf.xpid,
-                        local          = self.conf.vapp + '_' + self.conf.vconf + '.ini',
-                        vapp           = self.conf.vapp,
-                        vconf          = self.conf.vconf,
-                        fatal          = False,
-                    ),
-                    print(t.prompt, 'tbconf =', tbconf)
-                    print()

@@ -5,7 +5,7 @@
 This module handles advanced signal catching.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+
 
 import logging
 import signal

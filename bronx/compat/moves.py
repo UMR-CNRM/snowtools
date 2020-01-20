@@ -5,7 +5,7 @@
 Compatibility for modules or attributes that move or change their name across versions of Python
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+
 
 import abc
 import re

@@ -238,7 +238,7 @@ def parse_options(arguments):
                       help="specify your job walltime (format hh:mm:ss)")
 
     parser.add_option("--writesx",
-                      action="store", type = "str", dest="writesx", default = None,
+                      action="store_true", dest="writesx", default = False,
                       help="specify the root path (.../vortex) where you'd like to store PREP files on sxcen")
 
     parser.add_option("--sensor",

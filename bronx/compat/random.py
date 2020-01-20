@@ -9,11 +9,11 @@ If you do not care about random number generation reproducibility, please use
 the bare :class:`random.Random` class.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+
 import six
 
 from math import log as _log, ceil as _ceil
-import random as _barerandom
+from . import random as _barerandom
 
 if six.PY3:
 
@@ -114,7 +114,7 @@ if six.PY3:
             if random is None:
                 random = self.random
             _int = int
-            for i in reversed(range(1, len(x))):
+            for i in reversed(list(range(1, len(x)))):
                 # pick an element in x[:i+1] with which to exchange x[i]
                 j = _int(random() * (i + 1))
                 x[i], x[j] = x[j], x[i]

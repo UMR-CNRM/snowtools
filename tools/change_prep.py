@@ -135,7 +135,7 @@ def insert_snow_depth(date_obs, folder_3_points, folder_4_measurements, folder_5
             if date == date_obs:
                 Fic = folder_5_obs + '/OBS_' + date.strftime('%Y%m%d') + '.nc'
                 Fnc = Dataset(Fic, 'a', format = "NETCDF4")
-                DSN_T_ISBA = Fnc.variables[u'DSN_T_ISBA']
+                DSN_T_ISBA = Fnc.variables['DSN_T_ISBA']
 
                 if float(r[5]) >= 0.:
                     ind = int(r[3]) - 1

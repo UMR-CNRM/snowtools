@@ -5,7 +5,7 @@
 Useful decorators.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+
 import six
 
 import time
@@ -58,13 +58,13 @@ def disabled(func):  # @UnusedVariable
 @nicedeco
 def printargs(func):
     """This decorator prints out the arguments passed to a function before calling it."""
-    argnames = func.func_code.co_varnames[:func.func_code.co_argcount]
+    argnames = func.__code__.co_varnames[:func.__code__.co_argcount]
     fname = func.__name__
 
     def echo_func_args(*args, **kw):
-        print('> > >', fname, '(', ', '.join(
+        print(('> > >', fname, '(', ', '.join(
             '%s=%r' % entry
-            for entry in zip(argnames, args) + kw.items()), ')')
+            for entry in list(zip(argnames, args)) + list(kw.items())), ')'))
         return func(*args, **kw)
     return echo_func_args
 

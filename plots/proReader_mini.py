@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from matplotlib import collections
 from matplotlib.colors import BoundaryNorm
-from EvoProfilPlot import plot_profil
-import Dictionnaries
+from .EvoProfilPlot import plot_profil
+from . import Dictionnaries
 
 constante_sampling = 1000
 zero_C=273.15
@@ -291,7 +291,7 @@ class ProReader_mini:
             intime = intime_t
         
         toplot = self.var1D[var][intime]
-        xplot = range(toplot.shape[0])
+        xplot = list(range(toplot.shape[0]))
         axe.plot(xplot, toplot, color)
         axe.set_xlim(0, toplot.shape[0])
         
@@ -374,7 +374,7 @@ class ProReader_mini:
         Max = np.nanmax(self.var[var][self.date == date]) if np.nanmax(self.var[var][self.date == date]) > 0 else 0
         Min = np.nanmin(self.var[var][self.date == date]) if np.nanmin(self.var[var][self.date == date]) < 0 else 0
             
-        if (var in dico.keys()):
+        if (var in list(dico.keys())):
             Max = np.nanmax(self.var[var][self.date == date]) if np.nanmax(self.var[var][self.date == date]) > dico[var][1] else dico[var][1]
             Min = np.nanmin(self.var[var][self.date == date]) if np.nanmax(self.var[var][self.date == date]) < dico[var][0] else dico[var][0]
         axe.set_xlim(Min, Max)
@@ -425,7 +425,7 @@ class ProReader_mini:
         Max = np.nanmax(self.var[var][self.date == date]) if np.nanmax(self.var[var][self.date == date]) > 0 else 0
         Min = np.nanmin(self.var[var][self.date == date]) if np.nanmin(self.var[var][self.date == date]) < 0 else 0
 
-        if (var in dico.keys()):
+        if (var in list(dico.keys())):
             Max = np.nanmax(self.var[var][self.date == date]) if np.nanmax(self.var[var][self.date == date]) > dico[var][1] else dico[var][1]
             Min = np.nanmin(self.var[var][self.date == date]) if np.nanmax(self.var[var][self.date == date]) < dico[var][0] else dico[var][0]
         axe.set_xlim(Min, Max)
@@ -694,7 +694,7 @@ class ProReader_massif:
             legend = var
 
         toplot = self.var1D_massif[var][intime,:]
-        xplot = range(toplot.shape[0])
+        xplot = list(range(toplot.shape[0]))
         axe.plot(xplot, toplot, color)
         axe.set_xlim(0, toplot.shape[0])
         axe.set_ylim(0, np.nanmax(self.var1D_massif[var][:,:]))
@@ -759,7 +759,7 @@ class ProReader_massif:
         Max = np.nanmax(self.var_massif[var][intime,:,massif]) if np.nanmax(self.var_massif[var][intime,:,massif]) > 0 else 0
         Min = np.nanmin(self.var_massif[var][intime,:,massif]) if np.nanmin(self.var_massif[var][intime,:,massif]) < 0 else 0
             
-        if (var in dico.keys()):
+        if (var in list(dico.keys())):
             Max = np.nanmax(self.var_massif[var][intime,:,massif]) if np.nanmax(self.var_massif[var][intime,:,massif]) > dico[var][1] else dico[var][1]
             Min = np.nanmin(self.var_massif[var][intime,:,massif]) if np.nanmax(self.var_massif[var][intime,:,massif]) < dico[var][0] else dico[var][0]
         axe.set_xlim(Min, Max)
@@ -818,7 +818,7 @@ class ProReader_massif:
         Max = np.nanmax(self.var_massif[var][intime,:,massif]) if np.nanmax(self.var_massif[var][intime,:,massif]) > 0 else 0
         Min = np.nanmin(self.var_massif[var][intime,:,massif]) if np.nanmin(self.var_massif[var][intime,:,massif]) < 0 else 0
 
-        if (var in dico.keys()):
+        if (var in list(dico.keys())):
             Max = np.nanmax(self.var_massif[var][intime,:,massif]) if np.nanmax(self.var_massif[var][intime,:,massif]) > dico[var][1] else dico[var][1]
             Min = np.nanmin(self.var_massif[var][intime,:,massif]) if np.nanmax(self.var_massif[var][intime,:,massif]) < dico[var][0] else dico[var][0]
         axe.set_xlim(Min, Max)
@@ -1089,7 +1089,7 @@ class ProReader_membre:
             legend = var
 
         toplot = self.var1D_membre[var][:,intime]
-        xplot = range(toplot.shape[0])
+        xplot = list(range(toplot.shape[0]))
         axe.plot(xplot, toplot, color)
         axe.set_xlim(0, toplot.shape[0])
         axe.set_ylim(0, np.nanmax(self.var1D_membre[var][:,:]))
@@ -1141,7 +1141,7 @@ class ProReader_membre:
         Max = np.nanmax(self.var_membre[var][membre,intime,:]) if np.nanmax(self.var_membre[var][membre,intime,:]) > 0 else 0
         Min = np.nanmin(self.var_membre[var][membre,intime,:]) if np.nanmin(self.var_membre[var][membre,intime,:]) < 0 else 0
             
-        if (var in dico.keys()):
+        if (var in list(dico.keys())):
             Max = np.nanmax(self.var_membre[var][membre,intime,:]) if np.nanmax(self.var_membre[var][membre,intime,:]) > dico[var][1] else dico[var][1]
             Min = np.nanmin(self.var_membre[var][membre,intime,:]) if np.nanmax(self.var_membre[var][membre,intime,:]) < dico[var][0] else dico[var][0]
         axe.set_xlim(Min, Max)
@@ -1200,7 +1200,7 @@ class ProReader_membre:
         Max = np.nanmax(self.var_membre[var][membre,intime,:]) if np.nanmax(self.var_membre[var][membre,intime,:]) > 0 else 0
         Min = np.nanmin(self.var_membre[var][membre,intime,:]) if np.nanmin(self.var_membre[var][membre,intime,:]) < 0 else 0
 
-        if (var in dico.keys()):
+        if (var in list(dico.keys())):
             Max = np.nanmax(self.var_membre[var][membre,intime,:]) if np.nanmax(self.var_membre[var][membre,intime,:]) > dico[var][1] else dico[var][1]
             Min = np.nanmin(self.var_membre[var][membre,intime,:]) if np.nanmax(self.var_membre[var][membre,intime,:]) < dico[var][0] else dico[var][0]
         axe.set_xlim(Min, Max)

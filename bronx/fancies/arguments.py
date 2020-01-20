@@ -10,7 +10,7 @@ TODO: Add a simple unittest
              changes will be made in future versions. DO NOT USE YET.
 
 """
-from __future__ import absolute_import, unicode_literals, print_function, division
+
 import six
 
 import argparse

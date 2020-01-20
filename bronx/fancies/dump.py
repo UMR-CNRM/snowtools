@@ -97,7 +97,7 @@ Example::
 
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
+
 
 import six
 
@@ -322,7 +322,7 @@ class XmlDomDumper(JsonableDumper):
         return {'builtin': super(XmlDomDumper, self)._dump_builtin(obj, level, nextline)}
 
     def _xdump_dict(self, xdoc, xroot, obj, myname):
-        for k, v in sorted(obj.items(), key=lambda x: x[0]):
+        for k, v in sorted(list(obj.items()), key=lambda x: x[0]):
             if not isinstance(v, list):
                 if myname in self._named_nodes:
                     xnode = xdoc.createElement(myname)
@@ -613,7 +613,7 @@ def lightdump(obj, break_before_dict_key=True, break_before_dict_value=False):
             six.text_type(k),
             d._indent(1, break_before_dict_value),
             six.text_type(v)
-        ) for k, v in sorted(obj.items(), key=lambda x: x[0])
+        ) for k, v in sorted(list(obj.items()), key=lambda x: x[0])
     ]
     return ''.join(items)
 

@@ -7,7 +7,7 @@ Implementations may be not the most efficient or
 thread-safe proof ones.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+
 
 import bronx.fancies.loggers
 

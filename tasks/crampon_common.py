@@ -5,12 +5,13 @@ Created on 17 avr. 2019
 
 @author: cluzetb
 '''
-from bronx.stdtypes.date import Date
 import os
-from utils.dates import check_and_convert_date, get_list_dates_files
 
+from bronx.stdtypes.date import Date
 from vortex import toolbox
 from vortex.layout.nodes import Task
+
+from utils.dates import check_and_convert_date, get_list_dates_files
 
 
 class _Crampon_Task(Task):
@@ -150,8 +151,12 @@ class Crampon_In(_Crampon_Task):
             meteo_members = {str(m): ((m - 1) % int(self.conf.nforcing)) + 1 for m in self.conf.members}
 
             if hasattr(self.conf, 'synth'):
-                synth = str(int(self.conf.synth))
-                meteo_members[synth] = self.conf.meteo_draw
+                # strange case when the synth member comes from a larger openloop (ex 160) than the current experiment (ex 40)
+                print(self.conf.synth)
+                print(self.conf.nmembers)
+                if int(self.conf.synth) <= int(self.conf.nmembers):
+                    synth = str(int(self.conf.synth))
+                    meteo_members[synth] = self.conf.meteo_draw
             local_names = {str(m): 'mb{0:04d}'.format(m) + '/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                            for m in self.conf.members}
             self.sh.title('Toolbox input tb01')

@@ -16,7 +16,7 @@ class config(object):
 #     list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']  # List of extracted geometries
     list_geometry = ['alp_allslopes', 'cor_allslopes', 'postes']  # List of extracted geometries
 
-    list_members = range(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+    list_members = list(range(0, 36))  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
 
 
 class S2MExtractor(S2MTaskMixIn):
@@ -87,7 +87,7 @@ class S2MExtractor(S2MTaskMixIn):
 #             print(rh.quickview())
 #             rh.get()
             if rh.check():
-                if rh.resource.geometry.area not in list_output.keys():
+                if rh.resource.geometry.area not in list(list_output.keys()):
                     list_output[rh.resource.geometry.area] = []
                 list_output[rh.resource.geometry.area].append(rh.container.filename)
 

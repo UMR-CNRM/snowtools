@@ -7,7 +7,7 @@ A simplified key/value embedded-database.
 See the :class:`DataStore` class docstring for an example.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+
 import six
 
 import collections
@@ -253,7 +253,7 @@ class DataStore(object):
         :param dict extras: Any key/value pairs that describe the expected data
         """
         grep = self.grep(kind, extras)
-        for k in grep.keys():
+        for k in list(grep.keys()):
             if not self._lock[k] or force:
                 self._index_remove(k)
                 del self._store[k]
@@ -302,7 +302,7 @@ class DataStore(object):
 
     def keys(self):
         """Return the list of available keys in this DataStore."""
-        return self._store.keys()
+        return list(self._store.keys())
 
     def __iter__(self):
         """Iterate over the DataStore's items."""

@@ -5,7 +5,7 @@ Created on 20 mars 2018
 '''
 from optparse import OptionParser
 from tools.change_forcing import forcinput_ESMSnowMIP
-from post_snowmip import ESMSnowMIP_output
+from .post_snowmip import ESMSnowMIP_output
 import os
 import sys
 import shutil

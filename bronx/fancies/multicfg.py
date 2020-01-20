@@ -15,7 +15,7 @@ TODO: unittest
 
 """
 
-from __future__ import absolute_import, unicode_literals, print_function, division
+
 
 import os
 import glob
@@ -36,8 +36,8 @@ def _construct_yaml_str(self, node):
     return self.construct_scalar(node)
 
 
-yaml.Loader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
-yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:str', _construct_yaml_str)
+yaml.Loader.add_constructor('tag:yaml.org,2002:str', _construct_yaml_str)
+yaml.SafeLoader.add_constructor('tag:yaml.org,2002:str', _construct_yaml_str)
 
 
 class MultiFileCfg(footprints.FootprintBase):
@@ -176,7 +176,7 @@ class OpTableCfg(MultiFileCfg):
         return data
 
     def expandall(self, data):
-        for k, v in data.items():
+        for k, v in list(data.items()):
             if k.endswith('_period'):
                 data[k] = date.Period(v)
             elif k.endswith('_term') or k == 'terms':
@@ -191,7 +191,7 @@ class OpTableCfg(MultiFileCfg):
         """Upgrade run hours to `date.Time` objects."""
         for vapp in self.models():
             for vconf in self.notexcluded(self.info[vapp]):
-                for cutoff in self.notexcluded(self.info[vapp][vconf].keys()):
+                for cutoff in self.notexcluded(list(self.info[vapp][vconf].keys())):
                     for run in self.info[vapp][vconf][cutoff] or tuple():
                         self.info[vapp][vconf][cutoff][date.Time(run).fmthm] = self.info[vapp][vconf][cutoff].pop(run)
 
@@ -200,7 +200,7 @@ class OpTableCfg(MultiFileCfg):
         return self.tmp.get('maxterm')
 
     def models(self, **kw):
-        return self.notexcluded(self.info.keys())
+        return self.notexcluded(list(self.info.keys()))
 
     def vapps(self, **kw):
         return [vapp + '-' + vconf
@@ -222,9 +222,9 @@ class OpTableCfg(MultiFileCfg):
         c = set()
         for vapp in self.models():
             for vconf in self.notexcluded(self.info[vapp]):
-                c.update(self.notexcluded(self.info[vapp][vconf].keys()))
+                c.update(self.notexcluded(list(self.info[vapp][vconf].keys())))
         return list(c)
 
     def locations(self, **kw):
         """List of storage location (probably: disk and arch)."""
-        return self.defaults['locations'].keys()
+        return list(self.defaults['locations'].keys())

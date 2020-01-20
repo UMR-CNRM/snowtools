@@ -47,7 +47,7 @@ Example of that also checks a version number::
 
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+
 
 from distutils.version import LooseVersion
 import traceback
@@ -55,6 +55,7 @@ import types
 
 from bronx.fancies import loggers
 from bronx.fancies.display import join_list_in_proper_english
+import collections
 
 logger = loggers.getLogger(__name__)
 
@@ -97,7 +98,7 @@ class ExternalCodeImportChecker(object):
     def _kwargs_check(self, kwargs):
         """Check that the kwargs dictionary fits !"""
         accumulate = True
-        for k, v in kwargs.items():
+        for k, v in list(kwargs.items()):
             if k in ('version', 'v'):
                 accumulate = accumulate and self._version_check(v)
             else:
@@ -146,7 +147,7 @@ class ExternalCodeImportChecker(object):
 
         direct_deco = False
         if kargs:
-            if callable(kargs[0]):
+            if isinstance(kargs[0], collections.Callable):
                 direct_deco = True
             else:
                 raise ValueError("kargs needs to be a callable")

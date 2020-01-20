@@ -775,11 +775,11 @@ class forcinput_ESMSnowMIP(forcinput_tomodify):
         bigvar = np.ma.zeros(theshape)
 
         if len(theshape) == 2:
-            for i in xrange(0, theshape[1]):
+            for i in range(0, theshape[1]):
                 bigvar[:, i] = var[:]
         elif len(theshape) == 3:
-            for ilat in xrange(0, theshape[1]):
-                for ilon in xrange(0, theshape[2]):
+            for ilat in range(0, theshape[1]):
+                for ilon in range(0, theshape[2]):
                     bigvar[:, ilat, ilon] = var[:]
 
         else:
@@ -862,7 +862,7 @@ class forcinput_ESMSnowMIP(forcinput_tomodify):
         new_forcing_file.createDimension("time", None)
         new_forcing_file.createDimension("Number_of_points", 1)
 
-        for varname, ncvar in init_forcing_file.dataset.variables.iteritems():
+        for varname, ncvar in list(init_forcing_file.dataset.variables.items()):
             var_array = ncvar[:]
             if varname == "time":
                 var = new_forcing_file.createVariable(varname, 'd', ("time"), fill_value=-9999999.)

@@ -21,12 +21,14 @@ IN:
     --brutalImp : brutal factors for impurities
 Reference : Charrois et al., 2016
 """
-import netCDF4
-import os
-import shutil
-import numpy as np
 import argparse
 import csv
+import os
+import shutil
+
+import netCDF4
+
+import numpy as np
 
 
 def addNoise2Tair( f, sigma, tau, dt, semiDistrib = False):
@@ -276,8 +278,10 @@ def addNoise2Impur( f, varName, sigma, tau, dt, semiDistrib = False, brutal=Fals
         else:  # Case for Dust
             # /10*10 (no clue about Dust) -> (1,0),
             logstdFact = 1
-            meanFact = -1
+            meanFact = 0
         fact = np.random.normal(meanFact, logstdFact, 1)
+        # BC 24/10/19 toggle on the following line for baseline experiment.
+        # fact = meanFact
         YY = 10**fact * np.ones((nT, ), float)
     if semiDistrib:
         YY = np.reshape(YY, (np.shape(var)[0], 1))
@@ -290,7 +294,6 @@ def addNoise2Impur( f, varName, sigma, tau, dt, semiDistrib = False, brutal=Fals
 
 
 def convertPrecipPhase( f, semiDistrib = False):
-
     """
     Convert precipitation to solid or liquid according to the disturbed temperature.
     """
@@ -319,13 +322,13 @@ def convertPrecipPhase( f, semiDistrib = False):
 
 def MakeForEnsemble( f, po, nmembers, o, startmember=1, brutal=False):
 
-    print ''
+    print('')
     print(' -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - ')
     print('Start generating forcing ensemble')
     print(' -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - ')
-    print ''
+    print('')
     print(' Reference forcing : ' + f)
-    print ''
+    print('')
 
     if not os.path.exists(o):  # creates o
         os.mkdir(o)
@@ -339,7 +342,7 @@ def MakeForEnsemble( f, po, nmembers, o, startmember=1, brutal=False):
     param = {}
     with open(po, mode = 'r') as csv_file:
         csv_reader = csv.DictReader(csv_file)
-        print 'Param value'
+        print('Param value')
         for row in csv_reader:
             param[row['varName']] = [float(row['std']), float(row['tau'])]
             print(str(row['varName']) + ' | std : ' + str(param[row['varName']][0]) + ' | tau : ' + str(param[row['varName']][1]))
@@ -351,7 +354,7 @@ def MakeForEnsemble( f, po, nmembers, o, startmember=1, brutal=False):
 
         outN = str(i).zfill(nL)
 
-        print ''
+        print('')
         print('Generating forcing number : ' + outN)
 
         oMb = o + '/mb' + str(outN)
@@ -363,7 +366,7 @@ def MakeForEnsemble( f, po, nmembers, o, startmember=1, brutal=False):
         outFOR = oMb + '/meteo/' + bn
         print(outFOR)
         shutil.copy( f, outFOR )
-        print brutal
+        print(brutal)
         if brutal or (not brutal and i != startmember):  # brutal : mb0001 is not a control anymore.
 
             # generate disturbed forcing
@@ -378,11 +381,11 @@ def MakeForEnsemble( f, po, nmembers, o, startmember=1, brutal=False):
             # Disturb Snowf
             if param['Snowf'][0] != 0:
                 FORCING = addNoise2Snowf( FORCING, param['Snowf'][0], param['Snowf'][1], dt, semiDistrib = semiDistrib)
-                
+
             # Disturb Rainf
             if param['Rainf'][0] != 0:
                 FORCING = addNoise2Rainf( FORCING, param['Rainf'][0], param['Rainf'][1], dt, semiDistrib = semiDistrib)
-                
+
             # Disturb SWdown
             if param['DIR_SWdown'][0] != 0:
                 FORCING = addNoise2DIR_SWdown( FORCING, param['DIR_SWdown'][0], param['DIR_SWdown'][1], dt, semiDistrib = semiDistrib)
@@ -426,5 +429,5 @@ if __name__ == "__main__":
     parser.add_argument("-o", dest = "o")
     parser.add_argument("--brutalImp", dest = 'brutalImp', default = False, action = "store_true",)
     args = parser.parse_args()
-    print args.brutalImp
+    print(args.brutalImp)
     MakeForEnsemble( args.f, args.p, args.nmembers, args.o, args.startmember, brutal = args.brutalImp)

@@ -8,13 +8,13 @@ Run a CRAMPON assimilation sequence on a multinode
 import os
 import random
 import shutil
-from tasks.vortex_kitchen import vortex_conf_file, walltime
 import time
+
+import numpy as np
+from tasks.vortex_kitchen import vortex_conf_file, walltime
 from tools.update_namelist import update_surfex_namelist_file
 from utils.ESCROCsubensembles import ESCROC_subensembles
 from utils.resources import InstallException
-
-import numpy as np
 
 
 class crampon_vortex_kitchen(object):
@@ -50,7 +50,7 @@ class crampon_vortex_kitchen(object):
 
     def check_vortex_install(self):
 
-        if "VORTEX" not in os.environ.keys():
+        if "VORTEX" not in list(os.environ.keys()):
             raise InstallException("VORTEX environment variable must be defined towards a valid vortex install.")
 
     def check_options(self, options):
@@ -100,6 +100,8 @@ class crampon_vortex_kitchen(object):
     def enforce_nmembers(self, options):
         """enforce NENS in the namelist to the presecribed s2m argument value. Mandatory for SODA"""
         # options.namelist is already an absolute path.
+        if options.nmembers is None:
+            raise Exception('please specify the number of members for this run')
         update_surfex_namelist_file(options.datedeb, namelistfile=self.namelist, dateend=options.datefin, updateloc=False, nmembers = options.nmembers)
 
     def replace_member(self, options, allmembers, membersId):
@@ -129,7 +131,7 @@ class crampon_vortex_kitchen(object):
         else:
             meteo_draw = meteo_members[str(options.synth)]
         while meteo_draw == meteo_members[str(options.synth)]:
-            meteo_draw = random.choice(range(1, int(options.nforcing) + 1))
+            meteo_draw = random.choice(list(range(1, int(options.nforcing) + 1)))
         print('mto draw', meteo_draw)
         return meteo_draw
 
@@ -139,10 +141,10 @@ class crampon_vortex_kitchen(object):
         confname = "../conf/" + self.vapp + "_" + self.vconf + "_" + options.confcomplement + ".ini"
 
         if os.path.exists(confname):
-            print ('remove vortex conf_file')
+            print('remove vortex conf_file')
             os.remove(confname)
 
-        print ('copy conf file to $WORKDIR')
+        print('copy conf file to $WORKDIR')
         shutil.copyfile(options.crampon, confname)
 
         conffile = vortex_conf_file(confname, 'a')
@@ -164,7 +166,7 @@ class crampon_vortex_kitchen(object):
         import bisect
 
         confObj = read_conf(confname)
-        intdates = map(int, confObj.assimdates)
+        intdates = list(map(int, confObj.assimdates))
         intdatefin = int(options.datefin.strftime("%Y%m%d%H"))
         intdates.sort()
         bisect.insort(intdates, intdatefin)
@@ -177,24 +179,28 @@ class crampon_vortex_kitchen(object):
         # check if members ids were specified
         # if so, do nothing (later in the script, will be reparted between the nodes)
         # else, draw it.
-        allmembers = range(1, options.nmembers + 1)
+        allmembers = list(range(1, options.nmembers + 1))
         conffile.write_field('members', 'rangex(start:1 end:' + str(options.nmembers) + ')')
         if 'E1' in options.escroc:
             if hasattr(confObj, 'membersId'):
-                membersId = np.array(map(int, confObj.membersId))
+                membersId = np.array(list(map(int, confObj.membersId)))
 
                 # in case of synthetic assimilation, need to:
                 #    - replace the synthetic escroc member
                 #    - draw a substitution forcing
                 if options.synth is not None:
 
-                    # replace ESCROC member
-                    membersId = self.replace_member( options, allmembers, membersId)
-                    conffile.write_field('synth', options.synth)
+                    # strange case when the synth member comes from a larger openloop (ex 160) than the current experiment (ex 40)
+                    if options.synth > options.nmembers:
+                        conffile.write_field('synth', options.synth)
+                    else:
+                        # replace ESCROC member
+                        membersId = self.replace_member(options, allmembers, membersId)
+                        conffile.write_field('synth', options.synth)
 
-                    # draw a substitution forcing
-                    meteo_draw = self.draw_meteo(options, confObj)
-                    conffile.write_field('meteo_draw', meteo_draw)
+                        # draw a substitution forcing
+                        meteo_draw = self.draw_meteo(options, confObj)
+                        conffile.write_field('meteo_draw', meteo_draw)
 
                 else:  # real observations assimilation
                     # warning in case of performing a synthetic experiment
@@ -219,12 +225,12 @@ class crampon_vortex_kitchen(object):
                 else:
                     escroc = ESCROC_subensembles(options.escroc, allmembers, randomDraw = True)
                     membersId = escroc.members
+                conffile.write_field('membersId', ','.join(map(str, membersId)))
         else:
             escroc = ESCROC_subensembles(options.escroc, allmembers)
             membersId = escroc.members
+            conffile.write_field('membersId', ','.join(map(str, membersId)))
 
-        # ######################################################################
-        conffile.write_field('membersId', ','.join(map(str, membersId)))
         conffile.write_field('subensemble', options.escroc)
         if options.threshold:
             conffile.write_field('threshold', options.threshold)
@@ -249,9 +255,11 @@ class crampon_vortex_kitchen(object):
         if options.exesurfex:
             conffile.write_field('exesurfex', options.exesurfex)
         if options.writesx:
-            conffile.write_field('writesx', options.writesx)
+            options.sx = 'on'
+        else:
+            options.sx = 'off'
+        conffile.write_field('writesx', options.sx)
 
-        conffile.write_field('threshold', options.threshold)
         if options.datespinup:
             conffile.write_field('datespinup', options.datespinup.strftime("%Y%m%d%H%M"))
         else:
@@ -261,7 +269,7 @@ class crampon_vortex_kitchen(object):
         conffile.write_field('nnodes', options.nnodes)
 
         # new entry for Loopfamily on offline parallel tasks:
-        conffile.write_field('offlinetasks', ','.join(map(str, range(1, options.nnodes + 1))))
+        conffile.write_field('offlinetasks', ','.join(map(str, list(range(1, options.nnodes + 1)))))
 
         # this line is mandatory to ensure the use of subjobs:
         # place it in the field offline for parallelization of the offlines LoopFamily only
@@ -299,5 +307,5 @@ class crampon_vortex_kitchen(object):
     def run(self, options):
         mkjob_list = self.mkjob_crampon(options)
         for mkjob in mkjob_list:
-            print ("Run command: " + mkjob + "\n")
+            print("Run command: " + mkjob + "\n")
             os.system(mkjob)

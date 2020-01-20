@@ -10,7 +10,7 @@ only concrete implementation is the :class:`LinuxCpusInfo` class that relies on
 the /proc/cpuinfo virtual file.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+
 
 import six
 
@@ -66,7 +66,7 @@ class CpusInfo(object):
         """
         if self._cpus_hierarchy is None:
             hierarchy = defaultdict(partial(defaultdict, list))
-            for icpu, cpu in self.cpus.items():
+            for icpu, cpu in list(self.cpus.items()):
                 hierarchy[cpu.socket_id][cpu.core_id].append(icpu)
             self._cpus_hierarchy = hierarchy
         return self._cpus_hierarchy
@@ -74,7 +74,7 @@ class CpusInfo(object):
     @property
     def nphysical_cores(self):
         """The total number of physical cores on this system."""
-        return len(set([(c.socket_id, c.core_id) for c in self.cpus.values()]))
+        return len(set([(c.socket_id, c.core_id) for c in list(self.cpus.values())]))
 
     @property
     def nvirtual_cores(self):
@@ -89,7 +89,7 @@ class CpusInfo(object):
     @property
     def nphysical_cores_per_socket(self):
         """The number of physical cores per socket."""
-        ncores = set([len(socket) for socket in self.cpus_hierarchy.values()])
+        ncores = set([len(socket) for socket in list(self.cpus_hierarchy.values())])
         assert len(ncores) == 1
         return ncores.pop()
 
@@ -97,8 +97,8 @@ class CpusInfo(object):
     def smt_threads(self):
         """The Simultaneous MultiThreading threads count."""
         nsmt = set([len(core)
-                    for socket in self.cpus_hierarchy.values()
-                    for core in socket.values()])
+                    for socket in list(self.cpus_hierarchy.values())
+                    for core in list(socket.values())])
         assert len(nsmt) == 1
         return nsmt.pop()
 

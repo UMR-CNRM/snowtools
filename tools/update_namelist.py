@@ -51,7 +51,7 @@ def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc
 
 
 def check_or_create_block(NamelistObject, blockname):
-    if blockname not in NamelistObject.keys():
+    if blockname not in list(NamelistObject.keys()):
         NamelistObject.newblock(blockname)
 
 

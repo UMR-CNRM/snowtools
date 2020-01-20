@@ -11,7 +11,7 @@ TODO: unittest
 
 """
 
-from __future__ import absolute_import, unicode_literals, print_function, division
+
 import six
 
 import re
@@ -126,7 +126,7 @@ class WrapCmdLineArgs(object):
                 return
             options.update(kw)
             objcmd.logflag = options.get('report')
-            for item, pstore in self.opts.items():  # @UnusedVariable
+            for item, pstore in list(self.opts.items()):  # @UnusedVariable
                 options[pstore.dest] = pstore.callback(options[pstore.dest])
             return f(objcmd, **options)
 

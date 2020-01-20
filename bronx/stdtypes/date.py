@@ -42,7 +42,7 @@ Formats hypothesis:
       * PT15H10M55S <=> is a 15 hours, 10 minutes and 55 seconds period
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
+
 
 import six
 
@@ -55,6 +55,7 @@ import operator
 import re
 
 from bronx.syntax.decorators import secure_getattr
+import collections
 
 #: No automatic export
 __all__ = []
@@ -162,7 +163,7 @@ def easter(year=None):
 #: The list of helper date functions
 local_date_functions = dict([
     (x.__name__, x)
-    for x in locals().values()
+    for x in list(locals().values())
     if inspect.isfunction(x) and x.__doc__ and x.__doc__.startswith('Return the date')
 ])
 
@@ -197,7 +198,7 @@ def mkisodate(datestr):
 def stardates():
     """Nice dump of predefined dates functions."""
     for k, v in sorted(local_date_functions.items()):
-        print(k.ljust(12), v())
+        print((k.ljust(12), v()))
 
 
 def guess(*args):
@@ -358,7 +359,7 @@ def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
                                for i, x in enumerate(pvalues)]
                 else:
                     pvalues = [getattr(x, fmt) for x in pvalues]
-                    if callable(pvalues[0]):
+                    if isinstance(pvalues[0], collections.Callable):
                         pvalues = [x() for x in pvalues]
 
             if prefix is not None:
@@ -474,7 +475,7 @@ def timerangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
                            for i, x in enumerate(pvalues)]
             else:
                 pvalues = [getattr(x, fmt) for x in pvalues]
-                if callable(pvalues[0]):
+                if isinstance(pvalues[0], collections.Callable):
                     pvalues = [x() for x in pvalues]
 
         if prefix is not None:
@@ -631,14 +632,14 @@ class Period(datetime.timedelta):
         else:
             sign = 1
 
-        for k, v in values.items():
+        for k, v in list(values.items()):
             if not v:
                 values[k] = 0
             else:
                 values[k] = int(v[:-1])
 
         secs = 0
-        for k, v in values.items():
+        for k, v in list(values.items()):
             secs += Period._adder(k, v)
 
         return sign * secs
@@ -861,12 +862,12 @@ class _GetattrCalculatorMixin(object):
             basics = dmatch['basics'].rstrip('_').split('_')
             fmt = dmatch['fmt']
             proxies = [self._basic_calculator_proxy(basic) for basic in basics]
-            fancy = any([callable(proxy) for proxy in proxies])
+            fancy = any([isinstance(proxy, collections.Callable) for proxy in proxies])
             if fancy:
                 def _combi_proxy(guess, extra):
                     newobj = self
                     for proxy in proxies:
-                        newobj += proxy(guess, extra) if callable(proxy) else proxy
+                        newobj += proxy(guess, extra) if isinstance(proxy, collections.Callable) else proxy
                     return newobj if fmt is None else getattr(newobj, fmt)
                 return _combi_proxy
             else:

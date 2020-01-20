@@ -18,7 +18,7 @@ This module contains:
 Inital author: Joris Picot (2010-12-08 / CERFACS)
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
+
 
 import collections
 import copy
@@ -710,12 +710,12 @@ class NamelistBlock(collections_abc.MutableMapping):
 
     def values(self):
         """Returns the values of the internal pool of variables."""
-        return self._pool.values()
+        return list(self._pool.values())
 
     def items(self):
         """Iterate over the namelist block's variables."""
         if six.PY3:
-            return self.iteritems()
+            return iter(list(self.items()))
         else:
             return [(k, self._pool[k]) for k in self._keys]
 
@@ -756,7 +756,7 @@ class NamelistBlock(collections_abc.MutableMapping):
 
     def macros(self):
         """Returns list of used macros in this block."""
-        return self._subs.keys()
+        return list(self._subs.keys())
 
     def declaredmacros(self):
         """Returns list of old-style declared macros in this block."""
@@ -988,7 +988,7 @@ class NamelistSet(collections_abc.MutableMapping):
         return len(self._mapping_dict)
 
     def __iter__(self):
-        for nbk in self._mapping_dict.keys():
+        for nbk in list(self._mapping_dict.keys()):
             yield nbk
 
     def __getitem__(self, key):
@@ -1038,7 +1038,7 @@ class NamelistSet(collections_abc.MutableMapping):
         Set macro value for further substitution (in all of the
         namelist blocks).
         """
-        for namblock in filter(lambda x: item in x.macros(), self.values()):
+        for namblock in [x for x in list(self.values()) if item in x.macros()]:
             namblock.addmacro(item, value)
 
     def merge(self, delta, rmkeys=None, rmblocks=None, clblocks=None):
@@ -1047,7 +1047,7 @@ class NamelistSet(collections_abc.MutableMapping):
         provided.
         """
         assert isinstance(delta, NamelistSet) or delta == dict()
-        for namblock in delta.values():
+        for namblock in list(delta.values()):
             if namblock.name in self:
                 self[namblock.name].merge(namblock)
             else:
@@ -1078,7 +1078,7 @@ class NamelistSet(collections_abc.MutableMapping):
                             for nblock_k in sorted(self.keys())])
         else:
             return ''.join([nblock.dumps(sorting=sorting)
-                            for nblock in self.values()])
+                            for nblock in list(self.values())])
 
     def as_dict(self, deepcopy=False):
         """Return the actual namelist set as a dictionary."""

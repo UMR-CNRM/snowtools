@@ -6,7 +6,7 @@ Tools to handle changes in some context.
 
 Changes could be creation, deletion, modification.
 """
-from __future__ import absolute_import, division, print_function, unicode_literals
+
 
 from bronx.compat.moves import collections_abc
 
@@ -165,7 +165,7 @@ class Tracker(object):
             args = ('deleted', 'created', 'updated', 'unchanged')
         for section in args:
             sectionset = getattr(self, section)
-            print('Section {0:s}: {1:s}'.format(section, ', '.join([str(x) for x in sectionset])))
+            print(('Section {0:s}: {1:s}'.format(section, ', '.join([str(x) for x in sectionset]))))
 
     def differences(self):
         """Dump only created, deleted and updated items."""

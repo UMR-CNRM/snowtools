@@ -8,7 +8,7 @@ TODO: Add an usage example
 TODO: Add a simple unittest
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+
 import six
 
 import re

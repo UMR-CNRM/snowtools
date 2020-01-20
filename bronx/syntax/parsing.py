@@ -5,11 +5,12 @@
 Parsing tools.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+
 import six
 
 import itertools
 import re
+import collections
 
 
 #: No automatic export
@@ -28,7 +29,7 @@ def str2dict(string, try_convert=None):
     d = {e[0].strip(): e[1].strip()
          for e in [i.replace('=', ':').split(':', 1) for i in string.split(',')]}
     if try_convert is not None:
-        for k, v in d.items():
+        for k, v in list(d.items()):
             try:
                 d[k] = try_convert(v)
             except ValueError:
@@ -295,7 +296,7 @@ class StringDecoder(object):
                 raise StringDecoderSubstError(sub, "Cyclic substitution detected")
             sublist.append(sub)
         # Check the callback
-        if sublist and not callable(self._subcb):
+        if sublist and not isinstance(self._subcb, collections.Callable):
             raise StringDecoderSubstError(sublist[0], "The Callback is not callable")
         # Compute the possible substitutions
         u_subs = dict()

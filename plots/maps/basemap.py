@@ -93,7 +93,7 @@ class _Map_massifs(Mplfigure):
         # ATTENTION :
         # X Y au sens de la figure
         X, Y = self.map(lonlat[:, 0], lonlat[:, 1])
-        XYplot = zip(X, Y)
+        XYplot = list(zip(X, Y))
 
         num = self.records(index)[1]  # lecture de l'attribut num_opp
 
@@ -108,14 +108,14 @@ class _Map_massifs(Mplfigure):
         return infomassifs.getAllMassifLatLon(im)
 
     def getdeport(self, num):
-        if num in self.deport.keys():
+        if num in list(self.deport.keys()):
             return self.deport[num]
         else:
             return (0, 0)
 
     def getTextColor(self, var, **kwargs):
         color = 'black'
-        if 'seuiltext' in kwargs.keys():
+        if 'seuiltext' in list(kwargs.keys()):
             if var >= kwargs['seuiltext']:
                 color = 'white'
         return color
@@ -163,8 +163,8 @@ class _Map_massifs(Mplfigure):
     def init_massifs(self, **kwargs):
 
         # This routine draw the contours of the polygons and initialize a colormap
-        if 'palette' in kwargs.keys():
-            if 'ncolors' in kwargs.keys():
+        if 'palette' in list(kwargs.keys()):
+            if 'ncolors' in list(kwargs.keys()):
                 self.palette = plt.get_cmap(kwargs['palette'], kwargs['ncolors'])
             else:
                 self.palette = plt.get_cmap(kwargs['palette'])
@@ -216,7 +216,7 @@ class _Map_massifs(Mplfigure):
         # This routine fills the polygons with a color
         # depending on the value of variablein associated with the massif number provided in massifref
         # It is not required to provide a value for all massifs
-        if 'convert_unit' in kwargs.keys():
+        if 'convert_unit' in list(kwargs.keys()):
             variable = variablein[:] * kwargs['convert_unit']
         else:
             variable = variablein[:]
@@ -276,8 +276,8 @@ class _Map_massifs(Mplfigure):
         width = 50000.
         height = 20000.
 
-        if 'palette' in kwargs.keys():
-            if 'ncolors' in kwargs.keys():
+        if 'palette' in list(kwargs.keys()):
+            if 'ncolors' in list(kwargs.keys()):
                 self.palette = plt.get_cmap(kwargs['palette'], kwargs['ncolors'])
             else:
                 self.palette = plt.get_cmap(kwargs['palette'])
@@ -342,7 +342,7 @@ class _Map_massifs(Mplfigure):
     def convertunit(self, *args, **kwargs):
         listvar = []
         for variablein in args:
-            if 'convert_unit' in kwargs.keys():
+            if 'convert_unit' in list(kwargs.keys()):
                 variable = variablein[:] * kwargs['convert_unit']
             else:
                 variable = variablein[:]
@@ -350,7 +350,7 @@ class _Map_massifs(Mplfigure):
         return listvar
 
     def getformatstring(self, **kwargs):
-        if 'format' in kwargs.keys():
+        if 'format' in list(kwargs.keys()):
             return kwargs['format']
         else:
             return '%i'
@@ -362,8 +362,8 @@ class _Map_massifs(Mplfigure):
         cax = self.fig.add_axes(self.legendpos)
         self.cbar = self.fig.colorbar(polygons, cax=cax)
 
-        if 'ticks' in kwargs.keys():
-            self.cbar.set_ticks(range(0, len(kwargs['ticks'])))
+        if 'ticks' in list(kwargs.keys()):
+            self.cbar.set_ticks(list(range(0, len(kwargs['ticks']))))
             self.cbar.set_ticklabels(kwargs['ticks'])
             fontsize = 10
         else:
@@ -372,7 +372,7 @@ class _Map_massifs(Mplfigure):
         for t in self.cbar.ax.get_yticklabels():
             t.set_fontsize(fontsize)
 
-        if 'label' in kwargs.keys():
+        if 'label' in list(kwargs.keys()):
             self.cbar.set_label(kwargs['label'], fontsize=20)
 
         plt.sca(currentaxis)
@@ -405,11 +405,11 @@ class _Map_massifs(Mplfigure):
 
     def normpalette(self, **kwargs):
         # Bornes pour légende
-        if 'forcemin' in kwargs.keys():
+        if 'forcemin' in list(kwargs.keys()):
             vmin = kwargs['forcemin']
         else:
             vmin = 0
-        if 'forcemax' in kwargs.keys():
+        if 'forcemax' in list(kwargs.keys()):
             vmax = kwargs['forcemax']
         else:
             vmax = 100

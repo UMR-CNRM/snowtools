@@ -64,7 +64,7 @@ class TestProSimuWithCache(unittest.TestCase):
         cls.ps.force_read_in_cache()
 
     def test_cache(self):
-        self.assertIn('SNOWSSA',self.ps.varcache.keys(),"Le cache est incomplet")
+        self.assertIn('SNOWSSA',list(self.ps.varcache.keys()),"Le cache est incomplet")
 
     def test_read_var_intargs(self):
         snowtemp = self.ps.read_var('SNOWTEMP',time=0)
@@ -125,7 +125,7 @@ class TestProSimuOldWithCache(unittest.TestCase):
         cls.ps.force_read_in_cache()
 
     def test_cache(self):
-        self.assertIn('SNOWSSA',self.ps.varcache.keys(),"Le cache est incomplet")
+        self.assertIn('SNOWSSA',list(self.ps.varcache.keys()),"Le cache est incomplet")
 
     def test_read_var_intargs(self):
         snowtemp = self.ps.read_var('SNOWTEMP',time=0)

@@ -5,7 +5,7 @@
 Structure or dictionary like classes for miscellaneous usage.
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
+
 
 import six
 
@@ -102,14 +102,14 @@ class SpecialDict(dict):
     def show(self, ljust=24):
         """Print the actual values of the dictionary."""
         for k in sorted(self.keys()):
-            print('+', k.ljust(ljust), '=', self.get(k))
+            print(('+', k.ljust(ljust), '=', self.get(k)))
 
     def update(self, *args, **kw):
         """Extended dictionary update with args as dict and extra keywords."""
         args = list(args)
         args.append(kw)
         for objiter in args:
-            for k, v in objiter.items():
+            for k, v in list(objiter.items()):
                 self.__setitem__(k, v)
 
     def __call__(self, **kw):

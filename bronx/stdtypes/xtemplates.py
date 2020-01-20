@@ -7,7 +7,7 @@ A templating system for nested dictionaries and lists.
 The :class:`DefaultTemplate` class should be used directly. See its documentation.
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
+
 
 import six
 
@@ -158,7 +158,7 @@ class DefaultTemplate(object):
             else:
                 # This is a normal dictionary
                 return {self._recursive_render(k, subs): self._recursive_render(v, subs)
-                        for k, v in tpl.items()}
+                        for k, v in list(tpl.items())}
 
         elif isinstance(tpl, list):
             return [self._recursive_render(v, subs) for v in tpl]
@@ -192,7 +192,7 @@ class DefaultTemplate(object):
             allowed = subs.copy()
             for lvar in lvariables:
                 allowed[lvar] = None
-            for v in lextras.values():
+            for v in list(lextras.values()):
                 self._sls.check(v, ** allowed)
         else:
             raise TemplateLoopRenderingError('The __extra_vars__ key must be a dictionary')
@@ -213,7 +213,7 @@ class DefaultTemplate(object):
                     n_subs[n + '_next'] = ivars_n[0][i] if ivars_n[0] is not None else None
             # Populate extra variables
             e_subs = n_subs.copy()
-            for k, v in lextras.items():
+            for k, v in list(lextras.items()):
                 e_subs[k] = self._sls(v, ** n_subs)
             n_subs.update(e_subs)
             # Let's expand !

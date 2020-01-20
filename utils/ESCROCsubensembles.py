@@ -185,8 +185,6 @@ class ESCROC_subensembles(dict):
                                         mb += 1
                                         if mb in memberslist:
                                             ind = list(memberslist).index(mb)
-                                            print(ind)
-                                            print(mb)
                                             po, sp = self.convert_options(
                                                 snowfall, metamo, radiation, turb, cond, holding, compaction, cv)
                                             physical_options[ind] = po

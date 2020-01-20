@@ -6,15 +6,18 @@ Created on 4 oct. 2012
 
 @author: lafaysse
 '''
+import glob
 import os
-import netCDF4
-import numpy as np
 import sys
+
+import netCDF4
+
+import numpy as np
+
 from .FileException import FileNameException, FileOpenException, VarNameException, TimeException, MultipleValueException
 
+
 # Fichier PRO.nc issu d'une simulation SURFEX post-traitée
-
-
 class prosimu():
 
     Number_of_points = 'Number_of_points'
@@ -27,7 +30,9 @@ class prosimu():
         cache - utile lorsque de grands nombre d'accès à la même variable sont
         nécessaires
         """
-        if type(path) is list:
+        if type(path) is list or len(glob.glob(path)) > 1:  # BC add the possibility to give wildcards to prosimu
+            if type(path) is not list:
+                path = sorted(glob.glob(path))
             for fichier in path:
                 if not os.path.isfile(fichier):
                     raise FileNameException(fichier)
@@ -62,11 +67,11 @@ class prosimu():
         self.varcache = {}
 
         if "time" in self.dataset.dimensions:
-            self.timedim = range(len(self.dataset.dimensions['time']))
+            self.timedim = list(range(len(self.dataset.dimensions['time'])))
         else:
             self.timedim = None
         if self.Number_of_points in self.dataset.dimensions:
-            self.pointsdim = range(len(self.dataset.dimensions[self.Number_of_points]))
+            self.pointsdim = list(range(len(self.dataset.dimensions[self.Number_of_points])))
         else:
             self.pointsdim = None
 
@@ -79,7 +84,7 @@ class prosimu():
         Utile lorsque de nombreuses lectures _de la même variable sont requises
         """
         self.varcache = {}
-        for varname, var in self.dataset.variables.items():
+        for varname, var in list(self.dataset.variables.items()):
             slices = []
             dims = var.dimensions
             for dimname in dims:
@@ -187,7 +192,7 @@ class prosimu():
             del kwargs['Number_of_Patches']
             kwargs[self.Number_of_Patches] = condition_patches
         # valeurs par défaut
-        if self.Number_of_Patches not in kwargs.keys():
+        if self.Number_of_Patches not in list(kwargs.keys()):
             kwargs[self.Number_of_Patches] = 0
         # contrôles des arguments d'appel de la méthode
         if variable_name not in self.listvar():
@@ -204,7 +209,7 @@ class prosimu():
         slices = tuple(slices)
         result = ncvariable_data[slices]
         # if (isinstance(result, np.ma.core.MaskedConstant) or not(isinstance(result, np.ma.core.MaskedArray))):
-            # result = np.ma.MaskedArray(result)
+        # result = np.ma.MaskedArray(result)
         return result
 
     def get_points(self, **kwargs):
@@ -212,11 +217,11 @@ class prosimu():
         Renvoie les valeurs de la dimension Number_of_points correspondant à une
         sous-selection de variables aspect,ZS,massif_num,slope
         """
-        if not( all([(self.dataset.variables[varname].dimensions == (self.Number_of_points,)) for varname in kwargs.keys()])):
+        if not( all([(self.dataset.variables[varname].dimensions == (self.Number_of_points,)) for varname in list(kwargs.keys())])):
             raise TypeError("""Le filtrage ne peut se faire que sur des variables géographiques (ZS, slope, aspect, massif_num)""")
         nop = np.arange(len(self.dataset.dimensions[self.Number_of_points]))
         locations_bool = np.ones(len(nop))
-        for varname, values in kwargs.iteritems():
+        for varname, values in list(kwargs.items()):
             locations_bool = np.logical_and(locations_bool, np.in1d(self.dataset.variables[varname], values))
         return np.where(locations_bool)[0]
 
@@ -438,5 +443,3 @@ class prosimu_old(prosimu):
 
     Number_of_points = 'location'
     Number_of_Patches = 'tile'
-
-

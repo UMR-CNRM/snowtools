@@ -22,7 +22,7 @@ from matplotlib.figure import Figure
 
 from utils.prosimu import prosimu
 from utils.infomassifs import infomassifs
-import proReader_mini
+from . import proReader_mini
 
 import pickle
 

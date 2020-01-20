@@ -103,7 +103,7 @@ def check_and_convert_options(options, vortex=False):
 
 def build_title(station):
     lati, longi, alti = IM.infoposte(station)  # @UnusedVariable
-    return unicode(IM.nameposte(station).decode("utf-8")) + u" " + unicode(int(alti)) + u" m"
+    return str(IM.nameposte(station).decode("utf-8")) + " " + str(int(alti)) + " m"
 
 
 def build_title_with_scores(station, bias, rmse):
@@ -127,7 +127,7 @@ def yearlyplots(datebegin, dateend, dataObs):
                 C.read_sim("PRO.nc")
 
         if options.labels:
-            C.set_sim_labels(map(str.strip, options.labels.split(',')))
+            C.set_sim_labels(list(map(str.strip, options.labels.split(','))))
 
         if options.scores:
             C.scores()
@@ -176,7 +176,7 @@ def boxplots_yearly(list_years, list_nvalues, list_scores, list_colors, list_lab
     b.finalize(nsimu=nsim, **kwargs)
 
     plotfilename = options.dirplot + "/" + label + "_years." + options.format
-    print ('plot ' + plotfilename)
+    print(('plot ' + plotfilename))
     b.save(plotfilename, formatout=options.format)
 
     b.close()
@@ -212,7 +212,7 @@ def fullplots(datebegin, dateend, dataObs):
         C.read_sim(list_list_pro[d])
 
     if options.labels:
-        C.set_sim_labels(map(str.strip, options.labels.split(',')))
+        C.set_sim_labels(list(map(str.strip, options.labels.split(','))))
 
     if options.scores:
         print ("Compute scores")
@@ -241,7 +241,7 @@ class ComparisonSimObs(object):
 
         self.listStations = list(set(listStations) & set(listSitesMetadata))
 
-        self.elevations = map(IM.altiposte, self.listStations)
+        self.elevations = list(map(IM.altiposte, self.listStations))
 
         self.nstations = len(self.listStations)
 
@@ -312,7 +312,7 @@ class ComparisonSimObs(object):
 
     def allboxplots(self):
 
-        arrayStations = np.array(map(int, self.listStations))
+        arrayStations = np.array(list(map(int, self.listStations)))
 
         self.boxplots_scores(arrayStations, np.array(self.elevations), self.bias, 'bias', ylabel='Bias (cm)')
         self.boxplots_scores(arrayStations, np.array(self.elevations), self.rmse, 'rmse', ylabel='RMSE (cm)')
@@ -359,19 +359,19 @@ class ComparisonSimObs(object):
 
         valid = self.nvalues[0, :] >= 0
 
-        print 'number of obs'
-        print np.sum(valid)
+        print('number of obs')
+        print(np.sum(valid))
 
         for indSim in range(0, self.nsim):
             valid = (self.nvalues[indSim, :] > 10) & (valid)
-            print 'number of obs with ' + str(indSim + 1) + "available simulation(s)"
-            print np.sum(valid)
+            print('number of obs with ' + str(indSim + 1) + "available simulation(s)")
+            print(np.sum(valid))
 
         for indSim in range(0, self.nsim):
             kwargs['fillcolor'] = self.list_colors[indSim]
             b1.draw(stations[valid], list_scores[indSim, valid], nsimu=self.nsim, **kwargs)
 
-            print list_scores[indSim, valid].shape
+            print(list_scores[indSim, valid].shape)
 
         kwargs['label'] = self.list_labels
         b1.finalize(nsimu=self.nsim, **kwargs)

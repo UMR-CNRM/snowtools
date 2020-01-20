@@ -5,7 +5,7 @@
 Making things pretty.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+
 
 import pprint
 import six
@@ -27,7 +27,7 @@ def smooth_string(s, escaped_characters={' ': '_',
                                and their replacement in case.
     """
     result = str(s).strip()
-    for repl in escaped_characters.items():
+    for repl in list(escaped_characters.items()):
         result = result.replace(*repl)
     return result
 

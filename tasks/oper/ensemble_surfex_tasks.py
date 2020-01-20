@@ -151,7 +151,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 print(t.prompt, 'tb01c =', tb01c)
                 print()
 
-            print (any(tb01), any(tb01b))
+            print(any(tb01), any(tb01b))
 
             if not any(tb01) and not any(tb01b) and source_safran == 's2m':
                 print ('MODE SECOURS')

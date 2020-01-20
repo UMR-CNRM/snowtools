@@ -38,7 +38,7 @@ class boxplots(Mplfigure):
 
         self.bp.append(self.plot.boxplot(list_scores, notch=True, bootstrap=1000, showfliers=False, patch_artist=True, **boxplotargs))
 
-        if 'fillcolor' in kwargs.keys():
+        if 'fillcolor' in list(kwargs.keys()):
 
             for element in ['boxes', 'whiskers', 'fliers', 'means', 'medians', 'caps']:
                 plt.setp(self.bp[-1][element], color='black')
@@ -67,15 +67,15 @@ class boxplots(Mplfigure):
         for bp in self.bp:
             list_legend.append(bp['boxes'][0])
 
-        if 'label' in kwargs.keys():
+        if 'label' in list(kwargs.keys()):
             self.plot.legend(list_legend, kwargs['label'], loc="upper left", fontsize="small")
 
     def set_yaxis(self, **kwargs):
 
-        if 'forcemin' in kwargs.keys() and 'forcemax' in kwargs.keys():
+        if 'forcemin' in list(kwargs.keys()) and 'forcemax' in list(kwargs.keys()):
             self.plot.set_ylim([kwargs['forcemin'], kwargs['forcemax']])
 
-        if 'ylabel' in kwargs.keys():
+        if 'ylabel' in list(kwargs.keys()):
             self.plot.set_ylabel(kwargs['ylabel'])
 
 
@@ -106,17 +106,17 @@ class boxplots_bydepartment(boxplots):
 
             inddep = inddep & france
 
-            print dep, np.sum(inddep)
+            print(dep, np.sum(inddep))
 
             list_scores.append(scores[inddep])
 
         kwargs['labels'] = list_dep_uniq
 
-        kwargs['positions'] = range(self.indsimu, 1 + len(list_dep_uniq) * nsimu, nsimu)
+        kwargs['positions'] = list(range(self.indsimu, 1 + len(list_dep_uniq) * nsimu, nsimu))
 
-        print kwargs['positions']
+        print(kwargs['positions'])
 
-        self.plot.set_xlabel(u'Département')
+        self.plot.set_xlabel('Département')
         super(boxplots_bydepartment, self).draw(list_scores, **kwargs)
         self.indsimu += 1
 
@@ -135,11 +135,11 @@ class boxplots_byelevation(boxplots):
         for (minlevel, maxlevel) in list_levels:
             list_scores.append(scores[(elevations >= minlevel) & (elevations < maxlevel)])
 
-        kwargs['labels'] = map(self.label_elevation, list_levels)
+        kwargs['labels'] = list(map(self.label_elevation, list_levels))
 
-        kwargs['positions'] = range(self.indsimu, 1 + len(list_levels) * nsimu, nsimu)
+        kwargs['positions'] = list(range(self.indsimu, 1 + len(list_levels) * nsimu, nsimu))
 
-        self.plot.set_xlabel(u'Elevation')
+        self.plot.set_xlabel('Elevation')
         super(boxplots_byelevation, self).draw(list_scores, **kwargs)
         self.indsimu += 1
 
@@ -150,7 +150,7 @@ class boxplots_byyear(boxplots):
 
         nyears = len(list_years)
         stepticks = nyears / 15 + 1
-        list_years_str = map(str, list_years)
+        list_years_str = list(map(str, list_years))
 
         list_labels = []
         for y, year in enumerate(list_years_str):
@@ -159,17 +159,17 @@ class boxplots_byyear(boxplots):
             else:
                 list_labels.append("")
 
-        print list_labels
+        print(list_labels)
 
         kwargs['labels'] = list_labels
 
-        kwargs['positions'] = range(self.indsimu, 1 + len(list_labels) * nsimu, nsimu)
+        kwargs['positions'] = list(range(self.indsimu, 1 + len(list_labels) * nsimu, nsimu))
 
         print ('debug')
         print (nsimu)
-        print (kwargs['positions'])
+        print(kwargs['positions'])
 
-        self.plot.set_xlabel(u'Year')
+        self.plot.set_xlabel('Year')
         super(boxplots_byyear, self).draw(list_scores, **kwargs)
         self.indsimu += 1
 

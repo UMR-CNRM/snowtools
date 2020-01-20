@@ -13,7 +13,7 @@ given to action-methods of the dispatcher.
 
 """
 
-from __future__ import absolute_import, unicode_literals, print_function, division
+
 import six
 
 import os
@@ -104,7 +104,7 @@ class CmdLiner(cmd.Cmd):
     def report(self, info):
         """Append ``info`` to the logfile."""
         with io.open(self.logfile, 'a') as fd:
-            fd.write(six.text_type(info).rstrip() + u'\n')
+            fd.write(six.text_type(info).rstrip() + '\n')
 
     def emptyline(self):
         """Just do nothing when line is empty."""
@@ -133,9 +133,9 @@ class CmdLiner(cmd.Cmd):
         if kw.get('raw', False):
             print(text)
         else:
-            print(termcolors.colored(text,
+            print((termcolors.colored(text,
                                      fgcolor=kw.get('fgcolor', self.fgcolor),
-                                     setfont=kw.get('setfont', 'bold')))
+                                     setfont=kw.get('setfont', 'bold'))))
         if self.logflag:
             self.report(termcolors.clean(text))
 
@@ -176,9 +176,9 @@ class CmdLiner(cmd.Cmd):
     @WrapCmdLineArgs('_all', addhelp=True)
     def do_echo(self, **opts):
         """Display all the registered arguments and their default values."""
-        invopts = {v.dest: v for v in self.defined_opts.values()}
-        maxname = max([len(x.optname) for x in invopts.values()])
-        maxclean = max([len(x.optclean) for x in invopts.values()])
+        invopts = {v.dest: v for v in list(self.defined_opts.values())}
+        maxname = max([len(x.optname) for x in list(invopts.values())])
+        maxclean = max([len(x.optclean) for x in list(invopts.values())])
         for k, v in sorted(opts.items()):
             storeaction = invopts.get(k)
             if storeaction.optclean == storeaction.optname:

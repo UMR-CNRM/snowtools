@@ -116,7 +116,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                 namebuild      = 'flat@cen',
                 fatal          = True,
             ),
-            print(t.prompt, 'tb03 =', tb03)
+            print((t.prompt, 'tb03 =', tb03))
             print()
 
             self.sh.title('Toolbox input tb04')
@@ -130,7 +130,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                 source         = 'ecoclimap1',
                 model          = 'surfex',
             ),
-            print(t.prompt, 'tb04 =', tb04)
+            print((t.prompt, 'tb04 =', tb04))
             print()
 
             self.sh.title('Toolbox input tb05')
@@ -144,7 +144,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                 source         = 'ecoclimap2',
                 model          = 'surfex',
             ),
-            print(t.prompt, 'tb05 =', tb05)
+            print((t.prompt, 'tb05 =', tb05))
             print()
 
             self.sh.title('Toolbox input tb06')
@@ -156,7 +156,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                 local           = 'drdt_bst_fit_60.nc',
                 model          = 'surfex',
             )
-            print(t.prompt, 'tb06 =', tb06)
+            print((t.prompt, 'tb06 =', tb06))
             print()
 
             self.sh.title('Toolbox input tb07')
@@ -219,8 +219,8 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
             pass
 
         if 'late-backup' in self.steps:
-            print "source_safran"
-            print source_safran
+            print("source_safran")
+            print(source_safran)
             if source_safran != 's2m':
                 self.sh.title('Toolbox output tb10')
                 tb10 = toolbox.output(

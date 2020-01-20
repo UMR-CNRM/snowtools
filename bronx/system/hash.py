@@ -5,7 +5,7 @@
 Interface to the Python's :mod:`hashlib` module that generates hashes on files, strings, ...
 """
 
-from __future__ import print_function, division, absolute_import, unicode_literals
+
 import six
 
 import hashlib

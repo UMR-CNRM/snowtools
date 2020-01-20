@@ -12,7 +12,7 @@ import numpy as np
 import datetime as dt
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-from EvoProfilPlot import plot_profil, plot_grains1D
+from .EvoProfilPlot import plot_profil, plot_grains1D
 
 
 class ProReader:
@@ -97,11 +97,11 @@ class ProReader:
         self.date = np.empty(ntime)
 
         self.var = {}
-        for key in ProReader.dico.keys():
+        for key in list(ProReader.dico.keys()):
             self.var[key] = np.zeros((ntime, nsnowlayer))
 
         self.var1D = {}
-        for key in ProReader.dico1D.keys():
+        for key in list(ProReader.dico1D.keys()):
             self.var1D[key] = np.zeros(ntime)
 
     def initFromMultiple(self, pro):
@@ -120,12 +120,12 @@ class ProReader:
             datelist.append(pro[i].date)
         self.date = np.concatenate(datelist)
 
-        for key in ProReader.dico.keys():
+        for key in list(ProReader.dico.keys()):
             cursor = 0
             for i in range(len(pro)):
                 self.var[key][cursor:cursor + pro[i].ntime] = pro[i].var[key]
                 cursor += pro[i].ntime
-        for key in ProReader.dico1D.keys():
+        for key in list(ProReader.dico1D.keys()):
             cursor = 0
             for i in range(len(pro)):
                 self.var1D[key][cursor:cursor + pro[i].ntime] = pro[i].var1D[key]
@@ -161,57 +161,57 @@ class ProReader:
             point = point
         elif(isinstance(point, dict)):
             cond = True
-            if('lat' in point.keys()):
+            if('lat' in list(point.keys())):
                 cond *= (lattab == point['lat'])
-            if('latinf' in point.keys()):
+            if('latinf' in list(point.keys())):
                 cond *= (lattab >= point['latinf'])
-            if('latsup' in point.keys()):
+            if('latsup' in list(point.keys())):
                 cond *= (lattab <= point['latsup'])
-            if('lon' in point.keys()):
+            if('lon' in list(point.keys())):
                 cond *= (lontab == point['lon'])
-            if('loninf' in point.keys()):
+            if('loninf' in list(point.keys())):
                 cond *= (lontab >= point['loninf'])
-            if('lonsup' in point.keys()):
+            if('lonsup' in list(point.keys())):
                 cond *= (lontab <= point['lonsup'])
-            if('alt' in point.keys()):
+            if('alt' in list(point.keys())):
                 cond *= (alttab == point['alt'])
-            if('altinf' in point.keys()):
+            if('altinf' in list(point.keys())):
                 cond *= (alttab >= point['altinf'])
-            if('altsup' in point.keys()):
+            if('altsup' in list(point.keys())):
                 cond *= (alttab <= point['altsup'])
-            if('aspect' in point.keys()):
+            if('aspect' in list(point.keys())):
                 cond *= (aspecttab == point['aspect'])
-            if('aspectinf' in point.keys()):
+            if('aspectinf' in list(point.keys())):
                 cond *= (aspecttab >= point['aspectinf'])
-            if('aspectsup' in point.keys()):
+            if('aspectsup' in list(point.keys())):
                 cond *= (aspecttab <= point['aspectsup'])
-            if('slope' in point.keys()):
+            if('slope' in list(point.keys())):
                 cond *= (slopetab == point['slope'])
-            if('slopeinf' in point.keys()):
+            if('slopeinf' in list(point.keys())):
                 cond *= (slopetab >= point['slopeinf'])
-            if('slopesup' in point.keys()):
+            if('slopesup' in list(point.keys())):
                 cond *= (slopetab <= point['slopesup'])
-            if('station' in point.keys()):
+            if('station' in list(point.keys())):
                 nrstationtab = ff.read('station')[:]
                 cond *= (nrstationtab == point['station'])
-            if('massif' in point.keys()):
+            if('massif' in list(point.keys())):
                 nrmassiftab = ff.read('massif_number')[:]
                 cond *= (nrmassiftab == point['massif'])
 
             result = cond.nonzero()
             if np.shape(result)[1] > 1:
-                print "Warning : more than 1 simulation point for your query. 1st matching selected"
+                print("Warning : more than 1 simulation point for your query. 1st matching selected")
                 point = result[0][0]
             elif np.shape(result)[1] == 1:
                 point = result[0][0]
             else:
-                print "ERROR : no simulation point for your query. 1st point selected"
+                print("ERROR : no simulation point for your query. 1st point selected")
                 point = 0
         else:
             point = 0
 
-        print "Lecture fichier %s" % ncfile
-        print "Point %i selectionne\n" % point
+        print("Lecture fichier %s" % ncfile)
+        print("Point %i selectionne\n" % point)
 
         self.slope = slopetab[point]
         self.aspect = aspecttab[point]
@@ -229,21 +229,21 @@ class ProReader:
 
         # Extraction des data
         self.var = {}
-        for key, val in ProReader.dico.iteritems():
+        for key, val in list(ProReader.dico.items()):
             if(val[0] in listvariables):
                 if(key == "swe"):
                     self.var['swe'] = ff.read(val[0], selectpoint=point)
                 else:
                     self.var[key] = ff.read(val[0], selectpoint=point, fill2zero=True)  # Fill2zero necessaire pour le plot
             else:
-                print "WARNING : Variable %s not present in your PRO.nc file, %s (%s) not provided" % (val[0], key, val[1])
+                print("WARNING : Variable %s not present in your PRO.nc file, %s (%s) not provided" % (val[0], key, val[1]))
 
         self.var1D = {}
-        for key, val in ProReader.dico1D.iteritems():
+        for key, val in list(ProReader.dico1D.items()):
             if(val[0] in listvariables):
                 self.var1D[key] = ff.read(val[0], selectpoint=point, fill2zero=True)  # Fill2zero necessaire pour le plot
             else:
-                print "WARNING : Variable %s not present in your PRO.nc file, %s (%s) not provided" % (val[0], key, val[1])
+                print("WARNING : Variable %s not present in your PRO.nc file, %s (%s) not provided" % (val[0], key, val[1]))
 
         self.ntime = np.shape(self.var['swe'])[0]
         self.nsnowlayer = np.shape(self.var['swe'])[1]
@@ -419,10 +419,10 @@ class ProReader:
         si l utilisateur entre le nom SURFEX
         Valable pour les variables 2D
         '''
-        if nom in ProReader.dico.keys():
+        if nom in list(ProReader.dico.keys()):
             return nom
         else:
-            for key, val in ProReader.dico.iteritems():
+            for key, val in list(ProReader.dico.items()):
                 if nom == val[0]:
                     return key
             return 'err'
@@ -434,10 +434,10 @@ class ProReader:
         si l utilisateur entre le nom SURFEX
         Valable pour les variables 1D
         '''
-        if nom in ProReader.dico1D.keys():
+        if nom in list(ProReader.dico1D.keys()):
             return nom
         else:
-            for key, val in ProReader.dico1D.iteritems():
+            for key, val in list(ProReader.dico1D.items()):
                 if nom == val[0]:
                     return key
             return 'err'
@@ -455,8 +455,8 @@ if __name__ == "__main__":
     parser.add_argument('--point', help="Numero du point a lire dans le cas d'un fichier avec plusieurs points de simulation. Par defaut, le premier point sera lu.", type=int, dest='point')
     parser.add_argument('-b', '--begin', help="Date de debut, format YYYYMMDD ou YYYYMMDDHH", type=str, dest='begin')
     parser.add_argument('-e', '--end', help="Date de fin, format YYYYMMDD ou YYYYMMDDHH", type=str, dest='end')
-    parser.add_argument('-p', '--plot', help="liste d'au plus 6 elemnts a afficher\n Variables SURFEX ou dans la liste suivante : \n %s" % ProReader.dico.keys(), type=str, nargs='*', dest='plot')
-    parser.add_argument('--plot1D', help="liste d'au plus 6 elemnts a afficher\n Variables SURFEX ou dans la liste suivante : \n %s" % ProReader.dico1D.keys(), type=str, nargs='*', dest='plot1D')
+    parser.add_argument('-p', '--plot', help="liste d'au plus 6 elemnts a afficher\n Variables SURFEX ou dans la liste suivante : \n %s" % list(ProReader.dico.keys()), type=str, nargs='*', dest='plot')
+    parser.add_argument('--plot1D', help="liste d'au plus 6 elemnts a afficher\n Variables SURFEX ou dans la liste suivante : \n %s" % list(ProReader.dico1D.keys()), type=str, nargs='*', dest='plot1D')
     parser.add_argument('-d', '--date', help="Date pour l'option --dateplot, format YYYYMMDD ou YYYYMMDDHH", type=str, dest='date')
     parser.add_argument('--dateplot', help="Liste des elements to plot (meme liste que --plot).\nLa date correspond a la date --date ou a defaut, la derniere date du fichier.", type=str, nargs='+', dest='dateplot')
     parser.add_argument('--title', help="Titre pour --plot", dest='title')
@@ -478,14 +478,14 @@ if __name__ == "__main__":
     if(args.plot):
         for elem in args.plot:
             if ProReader.varname(elem) == 'err':
-                print "Erreur dans le nom de variable %s" % elem
+                print("Erreur dans le nom de variable %s" % elem)
                 exit(3)
             if ProReader.varname(elem) == 'grain':
                 real_layers = True
         length = len(args.plot)
         if(length == 0):
             fig1, ax1 = plt.subplots(1, 1, sharex=True, sharey=True)
-            pro.plot(ax1, ProReader.dico.keys()[0], b=args.begin, e=args.end, real_layers=real_layers)
+            pro.plot(ax1, list(ProReader.dico.keys())[0], b=args.begin, e=args.end, real_layers=real_layers)
         elif(length == 1):
             fig1, ax1 = plt.subplots(1, 1, sharex=True, sharey=True)
             pro.plot(ax1, args.plot[0], b=args.begin, e=args.end, real_layers=real_layers)
@@ -529,12 +529,12 @@ if __name__ == "__main__":
     if(args.plot1D):
         for elem in args.plot1D:
             if ProReader.varname1D(elem) == 'err':
-                print "Erreur dans le nom de variable %s" % elem
+                print("Erreur dans le nom de variable %s" % elem)
                 exit(3)
         length = len(args.plot1D)
         if(length == 0):
             fig1, ax1 = plt.subplots(1, 1, sharex=True, sharey=False)
-            pro.plot1D(ax1, ProReader.dico1D.keys()[0], b=args.begin, e=args.end)
+            pro.plot1D(ax1, list(ProReader.dico1D.keys())[0], b=args.begin, e=args.end)
         elif(length == 1):
             fig1, ax1 = plt.subplots(1, 1, sharex=True, sharey=False)
             pro.plot1D(ax1, args.plot1D[0], b=args.begin, e=args.end)
@@ -578,12 +578,12 @@ if __name__ == "__main__":
     if(args.dateplot):
         for elem in args.dateplot:
             if ProReader.varname(elem) == 'err':
-                print "Erreur dans le nom de variable %s" % elem
+                print("Erreur dans le nom de variable %s" % elem)
                 exit(3)
         length = len(args.dateplot)
         if(length == 0):
             fig2, ax2 = plt.subplots(1, 1, sharex=False, sharey=True)
-            pro.plot_date(ax2, ProReader.dico.keys()[0], date=args.date)
+            pro.plot_date(ax2, list(ProReader.dico.keys())[0], date=args.date)
             ax2.set_ylabel('Depth (m)')
         elif(length == 1):
             fig2, ax2 = plt.subplots(1, 1, sharex=False, sharey=True)

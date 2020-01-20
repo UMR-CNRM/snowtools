@@ -9,9 +9,10 @@ Created on 30 Aug. 2017
 This module contains all file manipulations.
 '''
 
+import datetime
 import os
 import shutil
-import datetime
+
 from utils.FileException import FileNameException, DirNameException
 
 

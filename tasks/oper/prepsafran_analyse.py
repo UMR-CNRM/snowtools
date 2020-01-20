@@ -59,8 +59,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = True,
                 )
-                print t.prompt, 'tb01_a =', tbarp
-                print
+                print(t.prompt, 'tb01_a =', tbarp)
+                print()
 
                 self.sh.title('Toolbox input tb01_b')
                 tbarp.extend(toolbox.input(
@@ -82,8 +82,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = True,
                 ))
-                print t.prompt, 'tb01_b =', tbarp
-                print
+                print(t.prompt, 'tb01_b =', tbarp)
+                print()
 
                 self.sh.title('Toolbox input tb02_a')
                 tbarp.extend(toolbox.input(
@@ -104,8 +104,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = True,
                 ))
-                print t.prompt, 'tb02_a =', tbarp
-                print
+                print(t.prompt, 'tb02_a =', tbarp)
+                print()
 
                 self.sh.title('Toolbox input tb02_b')
                 tbarp.extend(toolbox.input(
@@ -127,8 +127,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = True,
                 ))
-                print t.prompt, 'tb02_b =', tbarp
-                print
+                print(t.prompt, 'tb02_b =', tbarp)
+                print()
 
                 self.sh.title('Toolbox input tb03_a')
                 tbarp.extend(toolbox.input(
@@ -149,8 +149,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = True,
                 ))
-                print t.prompt, 'tb03_a =', tbarp
-                print
+                print(t.prompt, 'tb03_a =', tbarp)
+                print()
 
                 self.sh.title('Toolbox input tb03_b')
                 tbarp.extend(toolbox.input(
@@ -172,8 +172,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = True,
                 ))
-                print t.prompt, 'tb03_b =', tbarp
-                print
+                print(t.prompt, 'tb03_b =', tbarp)
+                print()
 
                 # II- Guess PEARP (membres 0 à 34)
                 # --------------------------------
@@ -199,8 +199,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vapp           = self.conf.source_app,
                     vconf          = self.conf.eps_conf,
                 )
-                print t.prompt, 'tb04_a =', tbpearp
-                print
+                print(t.prompt, 'tb04_a =', tbpearp)
+                print()
 
                 # Alternate : récupération des prévi P12 à P36 du réseau 18h (J-2) pour l'analyse (J-1) 6h -> J 6h
                 self.sh.title('Toolbox input tb04_b')
@@ -223,8 +223,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vapp           = self.conf.source_app,
                     vconf          = self.conf.eps_conf,
                 )
-                print t.prompt, 'tb04_b =', tbpearp
-                print
+                print(t.prompt, 'tb04_b =', tbpearp)
+                print()
 
             else:
 
@@ -248,8 +248,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = True,
                 )
-                print t.prompt, 'tb01 =', tbarp
-                print
+                print(t.prompt, 'tb01 =', tbarp)
+                print()
 
                 tbpearp = list()
 
@@ -262,8 +262,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 language    = 'python',
                 rawopts     = ' -o -a -i IDW -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
             )
-            print t.prompt, 'tb03 =', tb03
-            print
+            print(t.prompt, 'tb03 =', tb03)
+            print()
 
         if 'fetch' in self.steps:
 
@@ -283,8 +283,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 terms          = footprints.util.rangex(self.conf.ana_terms),
                 extendpypath = ['/home/gmap/mrpe/mary/public/eccodes_python'] + [self.sh.path.join(self.conf.rootapp, d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site']],
             )
-            print t.prompt, 'tb04 =', expresso
-            print
+            print(t.prompt, 'tb04 =', expresso)
+            print(°
 
             self.component_runner(expresso, script, fortran = False)
 
@@ -313,8 +313,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     source_conf    = self.conf.deterministic_conf,
                     namespace      = self.conf.namespace,
                 ),
-                print t.prompt, 'tb05_a =', tb05_a
-                print
+                print(t.prompt, 'tb05_a =', tb05_a)
+                print()
 
                 self.sh.title('Toolbox output tb05_b')
                 tb05_b = toolbox.output(
@@ -334,8 +334,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     fatal          = False,
                 ),
-                print t.prompt, 'tb05_b =', tb05_b
-                print
+                print(t.prompt, 'tb05_b =', tb05_b)
+                print()
 
                 self.sh.title('Toolbox output tb06_a')
                 tb06_a = toolbox.output(
@@ -354,8 +354,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     source_conf    = self.conf.deterministic_conf,
                     namespace      = self.conf.namespace,
                 ),
-                print t.prompt, 'tb06_a =', tb06_a
-                print
+                print(t.prompt, 'tb06_a =', tb06_a)
+                print()
 
                 self.sh.title('Toolbox output tb06_b')
                 tb06_b = toolbox.output(
@@ -375,8 +375,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     fatal          = False,
                 ),
-                print t.prompt, 'tb06_b =', tb06_b
-                print
+                print(t.prompt, 'tb06_b =', tb06_b)
+                print()
 
                 self.sh.title('Toolbox output tb07_a')
                 tb07_a = toolbox.output(
@@ -395,8 +395,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     source_conf    = self.conf.deterministic_conf,
                     namespace      = self.conf.namespace,
                 ),
-                print t.prompt, 'tb07_a =', tb07_a
-                print
+                print(t.prompt, 'tb07_a =', tb07_a)
+                print(°
 
                 self.sh.title('Toolbox output tb07_b')
                 tb07_b = toolbox.output(
@@ -416,8 +416,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     fatal          = False,
                 ),
-                print t.prompt, 'tb07_b =', tb07_b
-                print
+                print(t.prompt, 'tb07_b =', tb07_b)
+                print()
 
                 self.sh.title('Toolbox output tb08_a')
                 tb08_a = toolbox.output(
@@ -438,8 +438,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     member         = footprints.util.rangex(self.conf.pearp_members),
                 ),
-                print t.prompt, 'tb08_a =', tb08_a
-                print
+                print(t.prompt, 'tb08_a =', tb08_a)
+                print()
 
                 self.sh.title('Toolbox output tb08_b')
                 tb08_b = toolbox.output(
@@ -461,8 +461,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     member         = footprints.util.rangex(self.conf.pearp_members),
                     fatal          = False,
                 ),
-                print t.prompt, 'tb08_b =', tb08_b
-                print
+                print(t.prompt, 'tb08_b =', tb08_b)
+                print()
 
             else:
 
@@ -483,8 +483,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     source_conf    = self.conf.deterministic_conf,
                     namespace      = self.conf.namespace,
                 ),
-                print t.prompt, 'tb05 =', tb05
-                print
+                print(t.prompt, 'tb05 =', tb05)
+                print()
 
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')

@@ -7,11 +7,12 @@ Created on 27 mars 2019
 Vortex task performing up to 40 offline runs in parallel on a single node
 
 '''
-from bronx.stdtypes.date import Date
 import os
-from tasks.crampon_common import _Crampon_Task
 
+from bronx.stdtypes.date import Date
 from vortex import toolbox
+
+from tasks.crampon_common import _Crampon_Task
 
 
 class Soda_Task(_Crampon_Task):
@@ -61,7 +62,7 @@ class Soda_Task(_Crampon_Task):
                 experiment      = 'obs@' + os.environ['USER'],
                 local           = 'workSODA/OBSERVATIONS_[datebegin:ymdHh].nc',
                 stage           = '1date',
-                fatal           = False
+                fatal           = True
             )
             print(t.prompt, 'tobs =', tobs)
             print()
@@ -137,7 +138,7 @@ class Soda_Task(_Crampon_Task):
                 localan = 'mb[member%04d]/PREP_[date:ymdh].nc'
                 # localbg = 'mb[member%04d]/PREP_[date:ymdh]_bg.nc'
 
-            self.sh.title('Toolbox output tb20an')
+            self.sh.title('Toolbox output ')
             tb20 = toolbox.output(
                 local          = localan,
                 role           = 'SnowpackInit',
@@ -162,9 +163,14 @@ class Soda_Task(_Crampon_Task):
             # @TODO for the actualization of the conf file.
 
         if 'late-backup' in self.steps:
+            # if fetchnig to sxcen, must be done file/file to prevent from having too many simultaneous transfers
+            storage = ['hendrix.meteo.fr']
+            enforcesync = dict(storage={'hendrix.meteo.fr': False, 'sxcen.cnrm.meteo.fr': True})
+            if self.conf.writesx == 'on':
+                storage.append('sxcen.cnrm.meteo.fr')
             if os.path.exists('workSODA/OBSERVATIONS_' + Date(assDate).ymdHh + '.nc'):
                 # ########### PUT PREP FILES HENDRIX ######################################
-                self.sh.title('Toolbox output tb20an')
+                self.sh.title('Toolbox output ')
                 tb20 = toolbox.output(
                     local          = localan,
                     role           = 'SnowpackInit',
@@ -177,6 +183,8 @@ class Soda_Task(_Crampon_Task):
                     kind           = 'PREP',
                     model          = 'surfex',
                     namespace      = 'vortex.multi.fr',
+                    storage        = storage,
+                    enforcesync    = enforcesync,
                     namebuild      = 'flat@cen',
                     block          = 'an',
                     stage          = '_an',
@@ -194,6 +202,9 @@ class Soda_Task(_Crampon_Task):
                         model           = 'PART',
                         namebuild       = 'flat@cen',
                         namespace      = 'vortex.multi.fr',
+                        storage        = storage,
+                        enforcesync    = enforcesync,
+                        storetrack     = False,
                         fatal           = True,
                         dateassim       = assDate,
                         block           = 'workSODA',
@@ -209,6 +220,8 @@ class Soda_Task(_Crampon_Task):
                         model           = 'BG_CORR',
                         namebuild       = 'flat@cen',
                         namespace      = 'vortex.multi.fr',
+                        storage        = storage,
+                        enforcesync    = enforcesync,
                         fatal           = True,
                         dateassim       = assDate,
                         block           = 'workSODA',
@@ -224,6 +237,9 @@ class Soda_Task(_Crampon_Task):
                         model           = 'IMASK',
                         namebuild       = 'flat@cen',
                         namespace      = 'vortex.multi.fr',
+                        storage        = storage,
+                        enforcesync    = enforcesync,
+                        storetrack     = False,
                         fatal           = True,
                         dateassim       = assDate,
                         block           = 'workSODA',
@@ -239,6 +255,8 @@ class Soda_Task(_Crampon_Task):
                         model           = 'ALPHA',
                         namebuild       = 'flat@cen',
                         namespace      = 'vortex.multi.fr',
+                        storage        = storage,
+                        enforcesync    = enforcesync,
                         fatal           = False,
                         dateassim       = assDate,
                         block           = 'workSODA',
@@ -247,127 +265,3 @@ class Soda_Task(_Crampon_Task):
                     )
                     print(t.prompt, 'tb244 =', tb244)
                     print()
-
-            # ########### PUT OBSERVATIONS SXCEN ####################################
-            if os.path.exists('workSODA/OBSERVATIONS_' + Date(assDate).ymdHh + '.nc'):
-                locObs = 'workSODA/obs_' + self.conf.sensor + '_' + self.conf.geometry.area + '_' + Date(assDate).ymdHh + '.nc'
-                os.rename('workSODA/OBSERVATIONS_' + Date(assDate).ymdHh + '.nc', locObs )
-                if hasattr(self.conf, 'writesx'):
-                    self.sh.title('Toolbox output tobsOUT_sx')
-                    tobsout = toolbox.output(
-                        local = locObs,
-                        geometry        = self.conf.geometry,
-                        nativefmt       = 'netcdf',
-                        datebegin       = assDate,
-                        dateend         = assDate,
-                        model           = 'obs',
-                        part            = self.conf.sensor,
-                        kind            = 'SnowObservations',
-                        namespace       = 'vortex.sxcen.fr',
-                        namebuild       = 'flat@cen',
-                        storage         = 'sxcen.cnrm.meteo.fr',
-                        rootpath        = self.conf.writesx,
-                        experiment      = self.conf.xpid,
-                        stage           = '1date',
-                        # block         = 'obs',
-                        block           = self.conf.sensor,
-                        fatal           = False
-                    )
-                    print(t.prompt, 'tobsout =', tobsout)
-                    print()
-                # ############## PREP FILES SXCEN #######################################
-                if hasattr(self.conf, 'writesx'):
-                    self.sh.title('Toolbox output tb20an_sx')
-                    tb20_b = toolbox.output(
-                        local          = localan,
-                        role           = 'SnowpackInit',
-                        experiment     = self.conf.xpid,
-                        geometry       = self.conf.geometry,
-                        date           = assDate,
-                        period         = assDate,
-                        member         = self.conf.members,  # BC 21/03/19 probably replace by mbids
-                        nativefmt      = 'netcdf',
-                        kind           = 'PREP',
-                        model          = 'surfex',
-                        namespace      = 'vortex.sxcen.fr',
-                        namebuild      = 'flat@cen',
-                        block          = 'an',
-                        storage        = 'sxcen.cnrm.meteo.fr',
-                        rootpath       = self.conf.writesx,
-                        stage          = '_an',
-                        fatal          = False  # doesn't exist if openloop
-                    ),
-                    print(t.prompt, 'tb20an_sx =', tb20_b)
-                    print()
-
-                # ########## PF TXT FILES SXCEN ########################################
-                if hasattr(self.conf, 'writesx'):
-                    if os.path.exists('workSODA/PART_' + Date(assDate).ymdh + '.txt'):
-                        self.sh.title('Toolbox output tb24_sx')
-                        tb24 = toolbox.output(
-                            model           = 'PART',
-                            namebuild       = 'flat@cen',
-                            namespace       = 'vortex.sxcen.fr',
-                            storage         = 'sxcen.cnrm.meteo.fr',
-                            rootpath        = self.conf.writesx,
-                            fatal           = False,
-                            dateassim       = assDate,
-                            block           = 'workSODA',
-                            experiment      = self.conf.xpid,
-                            filename        = 'workSODA/PART_' + Date(assDate).ymdh + '.txt',
-                        )
-                        print(t.prompt, 'tb24 =', tb24)
-                        print()
-                    else:
-                        print('workSODA/PART_' + Date(assDate).ymdh + '.txt doesnot exist')
-
-                    if os.path.exists('workSODA/BG_CORR_' + Date(assDate).ymdh + '.txt'):
-                        self.sh.title('Toolbox output tb242_sx')
-                        tb242 = toolbox.output(
-                            model           = 'BG_CORR',
-                            namebuild       = 'flat@cen',
-                            namespace       = 'vortex.sxcen.fr',
-                            storage         = 'sxcen.cnrm.meteo.fr',
-                            rootpath        = self.conf.writesx,
-                            fatal           = False,
-                            dateassim       = assDate,
-                            block           = 'workSODA',
-                            experiment      = self.conf.xpid,
-                            filename        = 'workSODA/BG_CORR_' + Date(assDate).ymdh + '.txt',
-                        )
-                        print(t.prompt, 'tb242 =', tb242)
-                        print()
-
-                    if os.path.exists('workSODA/IMASK_' + Date(assDate).ymdh + '.txt'):
-                        self.sh.title('Toolbox output tb243_sx')
-                        tb243 = toolbox.output(
-                            model           = 'IMASK',
-                            namebuild       = 'flat@cen',
-                            namespace       = 'vortex.sxcen.fr',
-                            storage         = 'sxcen.cnrm.meteo.fr',
-                            rootpath        = self.conf.writesx,
-                            fatal           = False,
-                            dateassim       = assDate,
-                            block           = 'workSODA',
-                            experiment      = self.conf.xpid,
-                            filename        = 'workSODA/IMASK_' + Date(assDate).ymdh + '.txt',
-                        )
-                        print(t.prompt, 'tb24 3=', tb243)
-                        print()
-
-                    if os.path.exists('workSODA/ALPHA_' + Date(assDate).ymdh + '.txt'):
-                        self.sh.title('Toolbox output tb244_sx')
-                        tb244 = toolbox.output(
-                            model           = 'ALPHA',
-                            namebuild       = 'flat@cen',
-                            namespace       = 'vortex.sxcen.fr',
-                            storage         = 'sxcen.cnrm.meteo.fr',
-                            rootpath        = self.conf.writesx,
-                            fatal           = False,
-                            dateassim       = assDate,
-                            block           = 'workSODA',
-                            experiment      = self.conf.xpid,
-                            filename        = 'workSODA/ALPHA_' + Date(assDate).ymdh + '.txt',
-                        )
-                        print(t.prompt, 'tb244=', tb244)
-                        print()

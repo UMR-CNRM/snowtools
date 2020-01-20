@@ -13,7 +13,7 @@ import matplotlib.cm as cm
 from matplotlib import collections
 from matplotlib.colors import BoundaryNorm
 from matplotlib.colors import LogNorm
-import Dictionnaries
+from . import Dictionnaries
 
 
 def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=None, legend=None, cbar_show=True):
