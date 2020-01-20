@@ -271,12 +271,11 @@ END DO
 !
 IF (IRANK==1) THEN 
   DO IV=1,INVAR
-    DO IDIN=1,INDIM
-      DO ID=1,INDIM+1      
+    DO I=1,COUNT(VAR_ID_DIMS_IN(:,IV)/=0)  
         ! identify output dimension id and input dimension id
-        IF (VAR_ID_DIMS_IN(IDIN,IV)==DIM_ID_OUT(ID)) &
-            VAR_ID_DIMS_OUT(ID,IV) = DIM_ID_OUT(ID)
-      ENDDO
+        CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT,DIM_NAME_IN(VAR_ID_DIMS_IN(I,IV)),ID) ,&
+            "Cannot get metadata for a variable")
+        VAR_ID_DIMS_OUT(I,IV) = ID
     ENDDO
   ENDDO
 ELSE IF (IRANK==2) THEN
