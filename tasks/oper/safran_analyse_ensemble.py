@@ -13,7 +13,6 @@ from vortex.layout.nodes import Driver, Task
 logger = footprints.loggers.getLogger(__name__)
 
 
-
 def setup(t, **kw):
     return Driver(
         tag    = 'safran',
@@ -62,10 +61,10 @@ class Safran(Task, S2MTaskMixIn):
                     enddate        = dateend.ymd6h,
                     local          = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
                     model          = 'safran',
-                    #hostname       = 'guppy.meteo.fr',
-                    #username       = 'vernaym',
-                    #tube           = 'ftp',
-                    #remote         = '/home/mrns/vernaym/extraction_obs/oper/observations_safran_[vconf]_[date::ymdh].tar',
+                    # hostname       = 'guppy.meteo.fr',
+                    # username       = 'vernaym',
+                    # tube           = 'ftp',
+                    # remote         = '/home/mrns/vernaym/extraction_obs/oper/observations_safran_[vconf]_[date::ymdh].tar',
                     namespace      = 'vortex.archive.fr',
                     cutoff         = 'assimilation',
                     now            = True,
@@ -79,9 +78,9 @@ class Safran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox input tb01')
                 tb01 = toolbox.input(
                     role           = 'Observations',
-                    #block          = 'observations',
-                    #experiment     = self.conf.xpid,
-                    #vapp           = 's2m',
+                    # block          = 'observations',
+                    # experiment     = self.conf.xpid,
+                    # vapp           = 's2m',
                     geometry       = self.conf.vconf,
                     suite          = 'oper',
                     kind           = 'packedobs',
@@ -94,7 +93,7 @@ class Safran(Task, S2MTaskMixIn):
                     username       = 'vernaym',
                     tube           = 'ftp',
                     remote         = '/home/mrns/vernaym/extraction_obs/oper/observations_safran_[vconf]_[date::ymdh].tar',
-                    #namespace      = 'vortex.archive.fr',
+                    # namespace      = 'vortex.archive.fr',
                     cutoff         = 'assimilation',
                     now            = True,
                     hook_autohook1 = (tb01_generic_hook1, ),
@@ -298,9 +297,9 @@ class Safran(Task, S2MTaskMixIn):
             if self.conf.rundate.hour == 12:
 
                 # Récupération de l'archive contenant tous les guess depuis le début de la saison
-                self.sh.title('Toolbox input tb01')
+                self.sh.title('Toolbox input tb17')
                 tb17 = toolbox.input(
-                    role           = 'Reanalyse',
+                    role           = 'Ebauche',
                     local          = 'guess.tar',
                     experiment     = self.conf.xpid,
                     block          = 'guess',
@@ -317,7 +316,7 @@ class Safran(Task, S2MTaskMixIn):
                     geometry       = self.conf.vconf,
                     intent         = 'inout',
                 )
-                print t.prompt, 'tb01 =', tb01
+                print t.prompt, 'tb17 =', tb17
                 print
 
             else:
@@ -392,7 +391,6 @@ class Safran(Task, S2MTaskMixIn):
                 print t.prompt, 'tb17_c =', tb17_c
                 print
 
-
                 # II- PEARP (J-5) -> J
                 # --------------------
                 # II.1- EBAUCHE issue des prevision P0/P6/P12/P18/P24 du réseau 6h (J-n) de la PEARP pour couvrir (J-5) 6h -> (J-1) 6h
@@ -423,7 +421,7 @@ class Safran(Task, S2MTaskMixIn):
                 print
 
                 # II.2- Si le réseau de production de 6h n'est pas là, on utilise le réseau de 18h de la veille
-                # PROBLEME : le nom dans 'local' change donc on passe dans l'alternate même si la ressource voulue 
+                # PROBLEME : le nom dans 'local' change donc on passe dans l'alternate même si la ressource voulue
                 # est déjà présente
     #             self.sh.title('Toolbox input tb18_b')
     #             tb18_b = toolbox.input(
@@ -611,6 +609,11 @@ class Safran(Task, S2MTaskMixIn):
 
         if 'late-backup' in self.steps:
 
+            if self.conf.rundate.hour == 12:
+                deterministicdir = ''
+            else:
+                deterministicdir = 'mb035/'
+
             self.sh.title('Toolbox output tb27')
             tb27 = toolbox.output(
                 role           = 'Ana_massifs',
@@ -618,7 +621,7 @@ class Safran(Task, S2MTaskMixIn):
                 source_app     = 'arpege',
                 source_conf    = '4dvarfr',
                 cutoff         = 'assimilation',
-                local          = 'mb035/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                local          = deterministicdir + 'FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                 experiment     = self.conf.xpid,
                 block          = 'massifs',
                 geometry        = self.conf.vconf,
@@ -661,7 +664,7 @@ class Safran(Task, S2MTaskMixIn):
                 source_app     = 'arpege',
                 source_conf    = '4dvarfr',
                 cutoff         = 'assimilation',
-                local          = 'mb035/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                local          = deterministicdir + 'FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                 experiment     = self.conf.xpid,
                 block          = 'postes',
                 geometry        = self.conf.vconf,
@@ -742,100 +745,59 @@ class Safran(Task, S2MTaskMixIn):
                 print t.prompt, 'tb30 =', tb30
                 print
 
-                self.sh.title('Toolbox output tb31')
-                tb31 = toolbox.output(
-                    role           = 'Listing',
-                    block          = 'listing',
-                    experiment     = self.conf.xpid,
-                    cutoff         = 'assimilation',
-                    geometry        = self.conf.vconf,
-                    format         = 'ascii',
-                    kind           = 'listing',
-                    local          = 'mb035/{glob:a:\w+}.out',
-                    namespace      = self.conf.namespace,
-                    task           = '[local]',
-                    date           = self.conf.rundate.ymdh,
-                )
-                print t.prompt, 'tb31 =', tb31
-                print
+            self.sh.title('Toolbox output tb31')
+            tb31 = toolbox.output(
+                role           = 'Listing',
+                block          = 'listing',
+                experiment     = self.conf.xpid,
+                cutoff         = 'assimilation',
+                geometry        = self.conf.vconf,
+                format         = 'ascii',
+                kind           = 'listing',
+                local          = deterministicdir + '{glob:a:\w+}.out',
+                namespace      = self.conf.namespace,
+                task           = '[local]',
+                date           = self.conf.rundate.ymdh,
+            )
+            print t.prompt, 'tb31 =', tb31
+            print
 
-                self.sh.title('Toolbox output tb32')
-                tb32 = toolbox.output(
-                    role           = 'Liste_obs',
-                    block          = 'listing',
-                    experiment     = self.conf.xpid,
-                    geometry        = self.conf.vconf,
-                    cutoff         = 'assimilation',
-                    format         = 'ascii',
-                    kind           = 'listing',
-                    local          = 'mb035/liste_obs_{glob:a:\w+}',
-                    namespace      = self.conf.namespace,
-                    task           = '[local]',
-                    date           = self.conf.rundate.ymdh,
-                )
-                print t.prompt, 'tb32 =', tb32
-                print
+            self.sh.title('Toolbox output tb32')
+            tb32 = toolbox.output(
+                role           = 'Liste_obs',
+                block          = 'listing',
+                experiment     = self.conf.xpid,
+                geometry        = self.conf.vconf,
+                cutoff         = 'assimilation',
+                format         = 'ascii',
+                kind           = 'listing',
+                local          = deterministicdir + 'liste_obs_{glob:a:\w+}',
+                namespace      = self.conf.namespace,
+                task           = '[local]',
+                date           = self.conf.rundate.ymdh,
+            )
+            print t.prompt, 'tb32 =', tb32
+            print
 
-                self.sh.title('Toolbox output tb33')
-                tb33 = toolbox.output(
-                    role           = 'Listing',
-                    block          = 'listing',
-                    experiment     = self.conf.xpid,
-                    geometry        = self.conf.vconf,
-                    cutoff         = 'assimilation',
-                    format         = 'ascii',
-                    kind           = 'listing',
-                    local          = 'mb{glob:a:\d+}/{glob:b:\w+}.out',
-                    seta           = '[glob:a]',
-                    member         = '[seta]',
-                    namespace      = self.conf.namespace,
-                    task           = '[local]',
-                    date           = self.conf.rundate.ymdh,
-                    fatal          = False,
-                )
-                print t.prompt, 'tb33 =', tb33
-                print
-
-                self.sh.title('Toolbox output tb34')
-                tb34 = toolbox.output(
-                    role           = 'Liste_obs',
-                    block          = 'listing',
-                    experiment     = self.conf.xpid,
-                    geometry        = self.conf.vconf,
-                    cutoff         = 'assimilation',
-                    format         = 'ascii',
-                    kind           = 'listing',
-                    local          = 'mb{glob:a:\d+}/liste_obs_{glob:b:\w+}',
-                    seta           = '[glob:a]',
-                    member         = '[seta]',
-                    namespace      = self.conf.namespace,
-                    task           = '[local]',
-                    date           = self.conf.rundate.ymdh,
-                    fatal          = False,
-                )
-                print t.prompt, 'tb34 =', tb34
-                print
-
-                self.sh.title('Toolbox output tb35')
-                tb35 = toolbox.output(
-                    role           = 'Observations',
-                    block          = 'observations',
-                    experiment     = self.conf.xpid,
-                    vapp           = 's2m',
-                    geometry       = self.conf.vconf,
-                    suite          = 'oper',
-                    kind           = 'packedobs',
-                    date           = self.conf.rundate.ymdh,
-                    begindate      = datebegin.ymd6h,
-                    enddate        = dateend.ymd6h,
-                    local          = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
-                    model          = 'safran',
-                    namespace      = self.conf.namespace,
-                    cutoff         = 'assimilation',
-                )
-                print t.prompt, 'tb35 =', tb35
-                print
-
+            self.sh.title('Toolbox output tb33')
+            tb33 = toolbox.output(
+                role           = 'Observations',
+                block          = 'observations',
+                experiment     = self.conf.xpid,
+                vapp           = 's2m',
+                geometry       = self.conf.vconf,
+                suite          = 'oper',
+                kind           = 'packedobs',
+                date           = self.conf.rundate.ymdh,
+                begindate      = datebegin.ymd6h,
+                enddate        = dateend.ymd6h,
+                local          = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
+                model          = 'safran',
+                namespace      = self.conf.namespace,
+                cutoff         = 'assimilation',
+            )
+            print t.prompt, 'tb33 =', tb33
+            print
 
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')
