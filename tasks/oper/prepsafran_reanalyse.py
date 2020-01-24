@@ -82,7 +82,7 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 block          = 'guess',
                 geometry       = self.conf.vconf,
                 cutoff         = 'assimilation',
-                date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 30, self.conf.cumul)],
+                date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(6, 30, self.conf.cumul)],
                 cumul          = self.conf.cumul,
                 nativefmt      = 'ascii',
                 kind           = 'guess',
