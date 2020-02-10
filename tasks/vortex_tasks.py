@@ -311,8 +311,9 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     model = 'surfex',
                     local = 'GRID.nc',
                 )
-
-            print(t.prompt, 'tbgrid =', tbgrid)
+                print(t.prompt, 'tbgrid =', tbgrid)
+            else:
+                print(t.prompt, 'tbgrid = undefined')
             print()
 
             if self.conf.exesurfex:
