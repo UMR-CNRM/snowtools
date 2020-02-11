@@ -16,7 +16,7 @@ from bronx.patterns import getbytag
 
 
 class PrivateHistory(object):
-    """Multi-purpose history like object.
+    r"""Multi-purpose history like object.
 
     Items added to an History object are recorded along with a number (starting
     from 1 and incremented each time an item is added) and a timestamp.
@@ -56,16 +56,19 @@ class PrivateHistory(object):
         4
 
         # It is iterable and individual elements can be accessed
-        >>> list(hst) # doctest: +ELLIPSIS
-        [(2, datetime.datetime(...), (...'Entry 2',)), (3, datetime.datetime(...), (...'Entry 3',)), (4, datetime.datetime(...), (...'Entry 4', ...'as a tuple'))]
+        >>> list(hst) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        [(2, datetime.datetime(...), (...'Entry 2',)),
+         (3, datetime.datetime(...), (...'Entry 3',)),
+         (4, datetime.datetime(...), (...'Entry 4', ...'as a tuple'))]
         >>> hst[3] # doctest: +ELLIPSIS
         (3, datetime.datetime(...), (...'Entry 3',))
 
         # Simple searches are possible
         >>> hst.grep('a tup') # doctest: +ELLIPSIS
         [(4, datetime.datetime(...), (...'Entry 4', ...'as a tuple'))]
-        >>> hst.match(r'En\\w+\\s+[24]') # doctest: +ELLIPSIS
-        [(2, datetime.datetime(...), (...'Entry 2',)), (4, datetime.datetime(...), (...'Entry 4', ...'as a tuple'))]
+        >>> hst.match(r'En\w+\s+[24]') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        [(2, datetime.datetime(...), (...'Entry 2',)),
+         (4, datetime.datetime(...), (...'Entry 4', ...'as a tuple'))]
 
         # Formatted output are do-able
         >>> hst.show()
@@ -195,7 +198,7 @@ class PrivateHistory(object):
         """
         if end is None:
             end = self._count
-        return [ (c, t, i) for c, t, i in self._history if start <= c <= end ]
+        return [(c, t, i) for c, t, i in self._history if start <= c <= end]
 
     def _fmt_timer(self, stamp, force=False):
         """Return a formatted string of the time stamp suitable for history log."""
@@ -246,9 +249,13 @@ class PrivateHistory(object):
         if focus is None:
             focus = self.stamp()
         for c, t, i in self.getaround(focus, delta):
-            print('[{0:{size}d}]{1:s} : {2:s}'.format(c, self._fmt_timer(t, force=True), self.nice(i), size=self._sizefmt))
+            print('[{0:{size}d}]{1:s} : {2:s}'.format(c,
+                                                      self._fmt_timer(t, force=True),
+                                                      self.nice(i),
+                                                      size=self._sizefmt))
 
     def __call__(self):
+        """Display the whole history as a numbered list."""
         return self.show()
 
     @property

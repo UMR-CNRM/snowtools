@@ -179,6 +179,7 @@ class LinuxCpusInfo(CpusInfo):
     _COREID_RE = re.compile(r'^core id\s*:\s*(\d+)\b')
 
     def __new__(cls):
+        """Check the the /proc/cpuinfo file exists before going on."""
         if cls._INFOFILE_CHECK and not os.path.exists(cls._INFOFILE):
             raise CpusToolUnavailableError('The {:s} file was not found'.format(cls._INFOFILE))
         return super(LinuxCpusInfo, cls).__new__(cls)

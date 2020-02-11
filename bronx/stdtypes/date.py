@@ -15,10 +15,10 @@ Formats hypothesis:
 1. Ideally dates and times should be represented as a valid ISO 8601 strings.
    Here are a few exemples:
 
-       * 2016-01-01 or 20160101 (for a date)
-       * 12:00, 1200, 12:00:00 or 120000 (for a time)
-       * A combination of both: 2016-01-01T12:00
-       * Optionally the time zone indicator: 2016-01-01T12:00Z
+    * 2016-01-01 or 20160101 (for a date)
+    * 12:00, 1200, 12:00:00 or 120000 (for a time)
+    * A combination of both: 2016-01-01T12:00
+    * Optionally the time zone indicator: 2016-01-01T12:00Z
 
 2. For a date, the following will also be accepted yyyymmdd[hh[mn[ss]]] with
    yyyy as the year in 4 numbers, mm as the month in 2 numbers, dd as the
@@ -26,20 +26,20 @@ Formats hypothesis:
 
 3. For time periods, the following convention applies:
 
-      * P starts an ISO 8601 Period definition
-      * nY, the number of years (n positive integer),
-      * nM, the number of months (n positive integer),
-      * nD, the number of days (n positive integer),
-      * T as a time separator,
-      * nH, the number of hours (n positive integer),
-      * nM, the number of minutes (n positive integer),
-      * nS, the number of seconds (n positive integer)
+    * P starts an ISO 8601 Period definition
+    * nY, the number of years (n positive integer),
+    * nM, the number of months (n positive integer),
+    * nD, the number of days (n positive integer),
+    * T as a time separator,
+    * nH, the number of hours (n positive integer),
+    * nM, the number of minutes (n positive integer),
+    * nS, the number of seconds (n positive integer)
 
    Examples:
+    * P1Y <=> is a 1 year period
+    * P20D <=> is a 20 days period
+    * PT15H10M55S <=> is a 15 hours, 10 minutes and 55 seconds period
 
-      * P1Y <=> is a 1 year period
-      * P20D <=> is a 20 days period
-      * PT15H10M55S <=> is a 15 hours, 10 minutes and 55 seconds period
 """
 
 from __future__ import print_function, absolute_import, division, unicode_literals
@@ -173,25 +173,25 @@ if six.PY2:
 
 def mkisodate(datestr):
     """A crude attempt to reshape the iso8601 format."""
-    l = list(re.sub(r' ?(UTC|GMT)$', '', datestr.strip()))
-    if len(l) > 4 and l[4] != '-':
-        l[4:4] = ['-', ]
-    if len(l) > 7 and l[7] != '-':
-        l[7:7] = ['-', ]
-    if len(l) > 10 and l[10] != 'T':
-        if l[10] in (' ', '-', 'H'):
-            l[10] = 'T'
+    ldate = list(re.sub(r' ?(UTC|GMT)$', '', datestr.strip()))
+    if len(ldate) > 4 and ldate[4] != '-':
+        ldate[4:4] = ['-', ]
+    if len(ldate) > 7 and ldate[7] != '-':
+        ldate[7:7] = ['-', ]
+    if len(ldate) > 10 and ldate[10] != 'T':
+        if ldate[10] in (' ', '-', 'H'):
+            ldate[10] = 'T'
         else:
-            l[10:10] = ['T', ]
-    if 10 < len(l) <= 13:
-        l.extend(['0', '0'])
-    if len(l) > 13 and l[13] != ':':
-        l[13:13] = [':', ]
-    if len(l) > 16 and l[16] != ':':
-        l[16:16] = [':', ]
-    if len(l) > 13 and l[-1] != 'Z':
-        l.append('Z')
-    return ''.join(l)
+            ldate[10:10] = ['T', ]
+    if 10 < len(ldate) <= 13:
+        ldate.extend(['0', '0'])
+    if len(ldate) > 13 and ldate[13] != ':':
+        ldate[13:13] = [':', ]
+    if len(ldate) > 16 and ldate[16] != ':':
+        ldate[16:16] = [':', ]
+    if len(ldate) > 13 and ldate[-1] != 'Z':
+        ldate.append('Z')
+    return ''.join(ldate)
 
 
 def stardates():
@@ -238,7 +238,6 @@ def daterange(start, end=None, step='P1D'):
          Date(2017, 1, 10, 0, 0), Date(2017, 1, 11, 0, 0)]
 
     """
-
     if not isinstance(start, Date):
         start = Date(start)
 
@@ -279,11 +278,15 @@ def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
 
     *lists*, *tuples* or comma-separated string can be provided::
 
-        >>> daterangex(['2017010100-2017013100-P14D', '2017060100-2017063000-P14D', '2017122500'])  # doctest: +NORMALIZE_WHITESPACE
+        >>> daterangex(['2017010100-2017013100-P14D',
+        ...             '2017060100-2017063000-P14D',
+        ...             '2017122500'])  # doctest: +NORMALIZE_WHITESPACE
         [Date(2017, 1, 1, 0, 0), Date(2017, 1, 15, 0, 0), Date(2017, 1, 29, 0, 0),
          Date(2017, 6, 1, 0, 0), Date(2017, 6, 15, 0, 0), Date(2017, 6, 29, 0, 0),
          Date(2017, 12, 25, 0, 0)]
-        >>> daterangex('2017010100-2017013100-P14D,2017060100-2017063000-P14D,2017122500')  # doctest: +NORMALIZE_WHITESPACE
+        >>> daterangex('2017010100-2017013100-P14D,' +
+        ...            '2017060100-2017063000-P14D,' +
+        ...            '2017122500')  # doctest: +NORMALIZE_WHITESPACE
         [Date(2017, 1, 1, 0, 0), Date(2017, 1, 15, 0, 0), Date(2017, 1, 29, 0, 0),
          Date(2017, 6, 1, 0, 0), Date(2017, 6, 15, 0, 0), Date(2017, 6, 29, 0, 0),
          Date(2017, 12, 25, 0, 0)]
@@ -317,7 +320,6 @@ def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
          ...'loop2017060100', ...'loop2017061500', ...'loop2017062900', ...'loop2017122500']
 
     """
-
     rangevalues = list()
 
     pstarts = ([six.text_type(s) for s in start]
@@ -344,7 +346,7 @@ def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
         if shift is not None:
             realshift = Period(shift)
             realstart += realshift
-            realend   += realshift
+            realend += realshift
 
         pvalues = daterange(realstart, realend, realstep)
 
@@ -362,7 +364,7 @@ def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
                         pvalues = [x() for x in pvalues]
 
             if prefix is not None:
-                    pvalues = [ prefix + six.text_type(x) for x in pvalues ]
+                pvalues = [prefix + six.text_type(x) for x in pvalues]
 
         rangevalues.extend(pvalues)
 
@@ -414,8 +416,9 @@ def timerangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
 
     With complex strings::
 
-        >>> timerangex('0-12-3,18-36-6,48')
-        [Time(0, 0), Time(3, 0), Time(6, 0), Time(9, 0), Time(12, 0), Time(18, 0), Time(24, 0), Time(30, 0), Time(36, 0), Time(48, 0)]
+        >>> timerangex('0-12-3,18-36-6,48')  # doctest: +NORMALIZE_WHITESPACE
+        [Time(0, 0), Time(3, 0), Time(6, 0), Time(9, 0), Time(12, 0), Time(18, 0),
+         Time(24, 0), Time(30, 0), Time(36, 0), Time(48, 0)]
     """
     rangevalues = list()
 
@@ -457,10 +460,10 @@ def timerangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
         if shift is not None:
             realshift = Time(shift)
             realstart += realshift
-            realend   += realshift
+            realend += realshift
 
         signstep = int(realstep > 0) * 2 - 1
-        pvalues = [ realstart ]
+        pvalues = [realstart, ]
         while signstep * (pvalues[-1] - realend) < 0:
             pvalues.append(pvalues[-1] + realstep)
         if signstep * (pvalues[-1] - realend) > 0:
@@ -534,7 +537,6 @@ def timeintrangex(start, end=None, step=None, shift=None, fmt=None, prefix=None)
         >>> timeintrangex('0-12-3,18-36-6,48')
         [0, 3, 6, 9, 12, 18, 24, 30, 36, 48]
     """
-
     pstarts = ([six.text_type(s) for s in start]
                if isinstance(start, (list, tuple)) else six.text_type(start).split(','))
     auto_prefix = None
@@ -552,7 +554,7 @@ def timeintrangex(start, end=None, step=None, shift=None, fmt=None, prefix=None)
 
     if all([isinstance(x, Time) for x in trx]):
         trx = [TimeInt(x) for x in trx]
-        if all([ x.is_int() for x in trx ]):
+        if all([x.is_int() for x in trx]):
             pvalues = [x.value for x in trx]
         else:
             pvalues = [x.str_time for x in trx]
@@ -566,7 +568,7 @@ def timeintrangex(start, end=None, step=None, shift=None, fmt=None, prefix=None)
                    for i, x in enumerate(pvalues)]
 
     if prefix is not None:
-        pvalues = [ prefix + six.text_type(x) for x in pvalues ]
+        pvalues = [prefix + six.text_type(x) for x in pvalues]
 
     return sorted(pvalues)
 
@@ -577,7 +579,7 @@ class Period(datetime.timedelta):
     with iso8601 capabilities.
     """
 
-    _my_re  = re.compile(
+    _my_re = re.compile(
         r'(?P<X>[+-]?P)(?P<Y>[0-9]+([,.][0-9]+)?Y)?'
         r'(?P<M>[0-9]+([,.][0-9]+)?M)?'
         r'(?P<W>[0-9]+([,.][0-9]+)?W)?'
@@ -1122,6 +1124,11 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         return self.ymdhms + '{0:06d}'.format(self.microsecond)
 
     @property
+    def mm(self):
+        """MM (month) formated string."""
+        return self.strftime('%m')
+
+    @property
     def hm(self):
         """HHMM formated string."""
         return self.strftime('%H%M')
@@ -1135,6 +1142,11 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
     def hh(self):
         """HH formated string."""
         return self.strftime('%H')
+
+    @property
+    def h(self):
+        """H formated string."""
+        return self.strftime('%-H')
 
     def compact(self):
         """Compact concatenation of date values, up to the second (YYYYMMDDHHSS)."""
@@ -1317,10 +1329,10 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         """Return the nivology season of a current date"""
         if self.month < 8:
             season_begin = datetime.datetime(self.year - 1, 8, 1)
-            season_end   = datetime.datetime(self.year, 7, 31)
+            season_end = datetime.datetime(self.year, 7, 31)
         else:
             season_begin = datetime.datetime(self.year, 8, 1)
-            season_end   = datetime.datetime(self.year + 1, 7, 31)
+            season_end = datetime.datetime(self.year + 1, 7, 31)
 
         return season_begin.strftime('%y') + season_end.strftime('%y')
 
@@ -1563,6 +1575,24 @@ class Time(_GetattrCalculatorMixin):
         return self.__mul__(other)
 
     @property
+    def dhm(self):
+        """Return a tuple with the number of (days, hours, minutes)."""
+        totalminutes = int(self)
+        sign = -1 if totalminutes < 0 else 1
+        totalminutes = abs(totalminutes)
+        days = totalminutes // 1440
+        hours = (totalminutes % 1440) // 60
+        minutes = (totalminutes % 60)
+        return (sign * days, sign * hours, sign * minutes)
+
+    @property
+    def fmtdhm(self):
+        """DDHHMM formated string."""
+        (days, hours, minutes) = self.dhm
+        sign = '-' if int(self) < 0 else ''
+        return '{0:s}{1:02d}{2:02d}{3:02d}'.format(sign, abs(days), abs(hours), abs(minutes))
+
+    @property
     def fmth(self):
         """HHHH formated string."""
         return self._formatted_str('{0:s}{1:04d}')
@@ -1584,8 +1614,19 @@ class Time(_GetattrCalculatorMixin):
 
     @property
     def fmtraw(self):
-        """HHHH:MM formated string."""
+        """HHHHMM formated string."""
         return self._formatted_str('{0:s}{1:04d}{2:02d}')
+
+    @property
+    def fmtraw2(self):
+        """HHHHHHHHMM formated string."""
+        return self._formatted_str('{0:s}{1:08d}{2:02d}')
+
+    @property
+    def notnull(self):
+        if self.hour != 0 or self.minute != 0:
+            return 1
+        return 0
 
     def isoformat(self):
         """Almost ISO representation (HH:MM)."""
@@ -1887,7 +1928,6 @@ class Month(object):
         an integer (number of months), a :class:`Period` object , or a string
         that can be converted to a :class:`Period` object
         """
-
         if isinstance(delta, int):
             return self.__add__(-1 * delta)
         elif not isinstance(delta, datetime.timedelta):

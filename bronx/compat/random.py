@@ -40,7 +40,6 @@ if six.PY3:
 
             :note: This is a cut&paste of the old Python2 code !
             """
-
             # This code is a bit messy to make it fast for the
             # common case while still doing adequate error checking.
             istart = _int(start)
@@ -110,7 +109,6 @@ if six.PY3:
             float in [0.0, 1.0); by default, the standard random.random.
 
             """
-
             if random is None:
                 random = self.random
             _int = int
@@ -136,7 +134,6 @@ if six.PY3:
             This is especially fast and space efficient for sampling from a
             large population:   sample(xrange(10000000), 60)
             """
-
             # Sampling without replacement entails tracking either potential
             # selections (the pool) in a list or previous selections in a set.
 
@@ -146,7 +143,6 @@ if six.PY3:
             # a larger number of selections, the pool tracking method is
             # preferred since the list takes less space than the
             # set and it doesn't suffer from frequent reselections.
-
             n = len(population)
             if not 0 <= k <= n:
                 raise ValueError("sample larger than population")
