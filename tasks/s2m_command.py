@@ -260,6 +260,10 @@ class Surfex_command(_S2M_command):
                           action="store", type = "str", dest="sensor", default = "MODIS",
                           help="specify the sensor name of the obs you want to assimilate")
 
+        parser.add_option("--ntasks",
+                          action="store", type="int", dest="ntasks", default=40,
+                          help="Number of tasks (and procs) per node.")
+
         (options, args) = parser.parse_args(arguments)
 
         del args
