@@ -194,7 +194,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
             self.sh.title('Toolbox input tb07')
             tb07 = toolbox.input(
                 role            = 'Nam_surfex',
-                source          = 'OPTIONS_default.nam',
+                source          = 'OPTIONS_reanalysis.nam',
                 genv            = 'uenv:cen.01@CONST_CEN',
                 kind            = 'namelist',
                 model           = 'surfex',
