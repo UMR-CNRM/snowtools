@@ -160,7 +160,7 @@ class _StandardNC(netCDF4.Dataset):
         
         inProj = Proj(init=epsg)
         outProj = Proj(init='epsg:4326')
-        lon, lat = transform(inProj,outProj,x,y)
+        lon, lat = transform(inProj,outProj,np.array(x),np.array(y))
 
         return lat, lon
 
