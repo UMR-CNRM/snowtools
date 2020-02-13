@@ -10,7 +10,7 @@ import os
 import netCDF4
 import datetime
 import numpy as np
-from utils.FileException import VarNameException
+from utils.FileException import VarNameException, UnknownGridTypeException
 from utils.infomassifs import infomassifs
 
 
@@ -121,19 +121,48 @@ class _StandardNC(netCDF4.Dataset):
         latname = self.getlatname()
         lonname = self.getlonname()
         altiname = "ZS"
+        xname, yname = self.getcoordname()
 
-        if not (set([latname, lonname]).issubset(set(self.variables.keys()))):
-            try:
-                self.addCoord()
-            except Exception:
-                raise VarNameException(latname, self.path)
+        if (set([latname, lonname]).issubset(set(self.variables.keys()))):
+            lat, lon = self.variables[latname], self.variables[lonname]
+        else:
+            if (set([xname, yname]).issubset(set(self.variables.keys()))):
+                lat, lon = self.xy2latlon(self.variables[xname], self.variables[yname])
+            else:
+                try:
+                    self.addCoord()
+                    lat, lon = self.variables[latname], self.variables[lonname]
+                except Exception:
+                    raise VarNameException(latname, self.path)
 
         if altiname in self.variables.keys():
             alti = self.variables[altiname]
         else:
             alti = np.nan
 
-        return self.variables[latname], self.variables[lonname], alti
+        return lat, lon, alti
+
+    def xy2latlon(self, x, y):
+        # TO BE CHANGED
+        from pyproj import Proj, transform
+        from bronx.datagrip.namelist import NamelistParser
+        n = NamelistParser()
+        N = n.parse("OPTIONS.nam")
+        gridtype = N['NAM_PGD_GRID'].CGRID
+        if gridtype == "IGN":
+            projtype = N['NAM_IGN'].CLAMBERT
+            if projtype == 'L93':
+                epsg = 'epsg:2154'
+            else:
+                raise UnknownGridTypeException(gridtype, projtype)
+        else:
+            raise UnknownGridTypeException(gridtype,"")
+        
+        inProj = Proj(init=epsg)
+        outProj = Proj(init='epsg:4326')
+        lon, lat = transform(inProj,outProj,x,y)
+
+        return lat, lon
 
     def addCoord(self):
         '''Routine to add coordinates in the forcing file for the SAFRAN massifs'''
@@ -189,6 +218,9 @@ class StandardSAFRANetMET(_StandardNC):
 
     def getlonname(self):
         return 'LON'
+
+    def getcoordname(self):
+        return 'x', 'y'
 
     def standard_names(self):
 
@@ -287,6 +319,9 @@ class StandardCROCUS(_StandardNC):
 
     def getlonname(self):
         return 'longitude'
+
+    def getcoordname(self):
+        return 'xx', 'yy'
 
     def getmassifname(self):
         return 'massif_num'
