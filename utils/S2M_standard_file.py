@@ -12,7 +12,7 @@ import datetime
 import numpy as np
 from utils.FileException import VarNameException, UnknownGridTypeException
 from utils.infomassifs import infomassifs
-
+from utils.prosimu import prosimu
 
 class _StandardNC(netCDF4.Dataset):
     '''
@@ -160,7 +160,10 @@ class _StandardNC(netCDF4.Dataset):
         
         inProj = Proj(init=epsg)
         outProj = Proj(init='epsg:4326')
-        lon, lat = transform(inProj,outProj,np.array(x),np.array(y))
+        
+        XX, YY =np.meshgrid(np.array(x),np.array(y))
+
+        lon, lat = transform(inProj,outProj,XX,YY)        
 
         return lat, lon
 
@@ -330,9 +333,20 @@ class StandardCROCUS(_StandardNC):
         from bronx.datagrip.namelist import NamelistParser
         n = NamelistParser()
         N = n.parse("OPTIONS.nam")
-        bottom = list(map(float, N['NAM_ISBA'].XSOILGRID))
-        top = [0] + bottom[:-1]
-        self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
+        if 'XSOILGRID' in N['NAM_ISBA']:
+            bottom = list(map(float, N['NAM_ISBA'].XSOILGRID))
+            top = [0] + bottom[:-1]
+            self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
+        else:
+            pgd = prosimu("PGD.nc")
+            nlayers = pgd.read("GROUND_LAYER")
+            bottom = []
+            for layer in range(1, nlayers+1):
+                bottom.append(pgd.read('SOILGRID' + str(layer)))
+            top = [0] + bottom[:-1]
+            self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
+
+            pgd.close()
 
     def soil_long_names(self, varname):
         import re
@@ -341,7 +355,10 @@ class StandardCROCUS(_StandardNC):
         if not hasattr(self, 'soilgrid'):
             self.getsoilgrid()
 
-        return '(depth %.4f m)' % self.soilgrid[layer]
+        if self.soilgrid:
+            return '(depth %.4f m)' % self.soilgrid[layer]
+        else:
+            return ''
 
     def standard_names(self):
 
