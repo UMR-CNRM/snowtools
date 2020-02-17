@@ -342,7 +342,7 @@ class StandardCROCUS(_StandardNC):
                 pgd = prosimu("PGD.nc")
                 nlayers = pgd.read("GROUND_LAYER")
                 bottom = []
-                for layer in range(1, nlayers+1):
+                for layer in range(1, nlayers[0]+1):
                     bottom.append(pgd.read('SOILGRID' + str(layer)))
                 top = [0] + bottom[:-1]
                 self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
