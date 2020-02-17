@@ -297,7 +297,7 @@ class forcinput_tomodify:
         var[:] = lpn
 
     def add_iso_zero(self, init_forcing_file, new_forcing_file, savevar):
-        zero = 273.15
+        zero = 273.16
 
         if "Tair" in list(savevar.keys()):
             tair = savevar["Tair"]
@@ -310,26 +310,38 @@ class forcinput_tomodify:
         for m, massif in enumerate(self.list_massifs):
             indflat = (self.slope == 0.) & (self.massif_number == massif)
             altitude = self.zs[indflat]
+            zmax = np.max(altitude)
+
             tair_full = tair[:, indflat]
+            # Temperature of the level just above
+            # Last column will not be used but is necessary to conform shapes.
+            tair_full_up = np.concatenate((tair_full[:,1:], np.zeros_like(tair_full[:,0:1]) + 999),axis=1)
 
-            # Série temporelle des plus petites valeurs positives
-            temp_array = np.where(tair_full < zero, 999, tair_full)
-            lowestpositive = np.min(temp_array, axis=1)
-            indexbelow = np.argmin(temp_array, axis=1)
-            zlow = altitude[indexbelow]
+            # Store both temperatures in the same variable
+            x = (tair_full * 100.).astype('int')  + tair_full_up / 1000.
 
-            # Série temporelle des plus grandes valeurs négatives
-            temp_array = np.where(tair_full >= zero, -999, tair_full)
-            greaternegative = np.max(temp_array, axis=1)
-            indexabove = np.argmax(temp_array, axis=1)
-            zup = altitude[indexabove]
+            # Elevations with positive temperatures
+            # Decimal part represents the temperature of the correponding level and the temperature above
+            altipos = np.where(tair_full > zero, altitude + x / 100000., -999.)
 
-            # Cas général: interpolation linéaire
-            isozero_temp = ((lowestpositive - 273.15) * zup + (273.15 - greaternegative) * zlow ) / (lowestpositive - greaternegative)
-            # Iso zéro en dessous du niveau minimal connu
-            isozero_temp = np.where(lowestpositive >= 900., -3, isozero_temp)
-            # Iso zéro au dessus du niveau maximal connu
-            isozero_temp = np.where(greaternegative <= -900., -2, isozero_temp)
+            # Identify the maximum level of positive temperature
+            z = np.max(altipos, axis=1)
+
+            # Separate elevation and group of temperatures
+            y, zlow = np.modf(z)
+            zup = zlow + 300
+
+            # Separate and reconstruct both temperatures
+            ttempup,ttemplow = np.modf(y*100000)
+
+            tlow=np.where(ttemplow > 0., ttemplow / 100., -999.) # Temperature of the level just below freezing level
+            tup=np.where(ttempup > 0., ttempup * 1000., -998.) # Temperature of the level just above freezing level
+            # Note that in cases of missing values, tup and tlow must be different to avoid a division by 0 just after
+
+            # Freezing level is computed with a linear interpolation.
+            isozero_temp = ((tlow - zero) * zup + (zero - tup) * zlow ) / (tlow - tup)
+            isozero_temp = np.where(zlow == -999., -3, isozero_temp) # Freezing level below the lowest level
+            isozero_temp = np.where(zlow == zmax, -2, isozero_temp) # Freezing level above the lowest level
 
             isozero[:, m] = isozero_temp
 
