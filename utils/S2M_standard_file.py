@@ -12,7 +12,6 @@ import datetime
 import numpy as np
 from utils.FileException import VarNameException, UnknownGridTypeException
 from utils.infomassifs import infomassifs
-from utils.prosimu import prosimu
 
 class _StandardNC(netCDF4.Dataset):
     '''
@@ -338,15 +337,17 @@ class StandardCROCUS(_StandardNC):
             top = [0] + bottom[:-1]
             self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
         else:
-            pgd = prosimu("PGD.nc")
-            nlayers = pgd.read("GROUND_LAYER")
-            bottom = []
-            for layer in range(1, nlayers+1):
-                bottom.append(pgd.read('SOILGRID' + str(layer)))
-            top = [0] + bottom[:-1]
-            self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
-
-            pgd.close()
+            from utils.prosimu import prosimu
+            if os.path.isfile("PGD.nc"):
+                pgd = prosimu("PGD.nc")
+                nlayers = pgd.read("GROUND_LAYER")
+                bottom = []
+                for layer in range(1, nlayers+1):
+                    bottom.append(pgd.read('SOILGRID' + str(layer)))
+                top = [0] + bottom[:-1]
+                self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
+    
+                pgd.close()
 
     def soil_long_names(self, varname):
         import re
@@ -355,7 +356,7 @@ class StandardCROCUS(_StandardNC):
         if not hasattr(self, 'soilgrid'):
             self.getsoilgrid()
 
-        if self.soilgrid:
+        if hasattr(self, 'soilgrid'):
             return '(depth %.4f m)' % self.soilgrid[layer]
         else:
             return ''
