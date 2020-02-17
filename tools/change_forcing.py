@@ -284,7 +284,7 @@ class forcinput_tomodify:
             phase = np.where(snow_full > 0, -1, np.where(rain_full > 0, 1, 0))
 
             lowestlevelindex = np.argmin(phase, axis=1)
-            lpn_temp = altitude[lowestlevelindex] + 150
+            lpn_temp = altitude[lowestlevelindex] - 150
 
             lpn_temp = np.where(snow_full[:, 0] > 0., -3, lpn_temp)
             lpn_temp = np.where(rain_full[:, -1] > 0., -2, lpn_temp)
