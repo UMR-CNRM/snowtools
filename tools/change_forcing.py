@@ -280,6 +280,7 @@ class forcinput_tomodify:
             altitude = self.zs[indflat]
             rain_full = rainf[:, indflat]
             snow_full = snowf[:, indflat]
+            preciptot = rain_full + snow_full
 
             phase = np.where(snow_full > 0, -1, np.where(rain_full > 0, 1, 0))
 
@@ -288,7 +289,7 @@ class forcinput_tomodify:
 
             lpn_temp = np.where(snow_full[:, 0] > 0., -3, lpn_temp)
             lpn_temp = np.where(rain_full[:, -1] > 0., -2, lpn_temp)
-            lpn_temp = np.where(rain_full[:, -1] + snow_full[:, -1] < 1.E-8, -1, lpn_temp)
+            lpn_temp = np.where(np.all(preciptot<2.E-4, axis=1) & np.any(preciptot < 1.E-8, axis=1), -1, lpn_temp)
 
             lpn[:, m] = lpn_temp
         var = new_forcing_file.createVariable("rainSnowLimit", 'float', ["time", "massif"], fill_value=-9999.)
