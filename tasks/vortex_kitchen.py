@@ -20,6 +20,9 @@ class vortex_kitchen(object):
     Interface between s2m command line and vortex utilities (tasks and mk_jobs)
     '''
 
+    default_ntasks = dict(beaufix=40, prolix=40, epona=128)
+    dicprofiles = dict(beaufix="rd-beaufix-mt", prolix="rd-prolix-mt", epona="rd-epona-mt")
+
     def __init__(self, options):
         '''
         Constructor
@@ -48,14 +51,14 @@ class vortex_kitchen(object):
             self.jobtemplate = "job-vortex-default.py"
 
         machine = os.uname()[1]
-        if "beaufix" in machine:
-            self.profile = "rd-beaufix-mt"
-        if "prolix" in machine:
-            self.profile = "rd-prolix-mt"
-        if "epona" in machine:
-            self.profile = "rd-epona-mt"
+        self.profile = self.dicprofiles[machine]
+        self.define_ntasks(machine)
 
         self.execute()
+
+    def define_ntasks(self, machine):
+        if not self.options.ntasks:
+            self.options.ntasks = self.default_ntasks[machine]
 
     def execute(self):
 
