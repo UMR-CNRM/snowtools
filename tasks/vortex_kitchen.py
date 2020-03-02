@@ -48,14 +48,22 @@ class vortex_kitchen(object):
             self.jobtemplate = "job-vortex-default.py"
 
         machine = os.uname()[1]
-        if "beaufix" in machine:
+        if 'beaufix' in machine:
             self.profile = "rd-beaufix-mt"
-        if "prolix" in machine:
+        elif 'prolix' in machine:
             self.profile = "rd-prolix-mt"
-        if "epona" in machine:
-            self.profile = "rd-epona-mt"
+        elif 'epona' in machine:
+            self.profile = "rd-epona-mt"            
+        self.define_ntasks(machine)
 
         self.execute()
+
+    def define_ntasks(self, machine):
+        if not self.options.ntasks:
+            if 'beaufix' in machine or 'prolix' in machine:
+                self.options.ntasks = 40
+            elif 'epona' in machine:
+                self.options.ntasks = 128
 
     def execute(self):
 
