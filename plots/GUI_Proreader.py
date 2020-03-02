@@ -75,6 +75,7 @@ class GraphStandard(Toplevel):
         self.message_filedialog='Importer un fichier PRO'
         self.type_graphique=1
         self.ChoixPossible = [True, True, True, True]
+        self.type_fichier = ''
         
         self.menubar = Menu()
         self.filemenu = Menu(self.menubar, tearoff=0)
@@ -321,7 +322,9 @@ class GraphStandard(Toplevel):
             self.fig2, self.ax2 = plt.subplots(1, 1, sharex=True, sharey=True)
             self.ax3=self.ax2.twiny()
             self.first_profil=True
-            self.Canevas2.get_tk_widget().destroy()
+            # Chez Neige ( + sur le Mac de Pascal), le Canevas2.destroy amene un segmentation fault 11 => on a commente et c'est bon...
+            # Ce serait quand même bien de savoir ce qu'il se passe... 
+            #self.Canevas2.get_tk_widget().destroy()
             self.Canevas2 = FigureCanvasTkAgg(self.fig2,self)
             self.Canevas2.get_tk_widget().place(x=505*largeur,y=150*hauteur,width=200*largeur, height=500*hauteur)
         
@@ -447,10 +450,17 @@ class GraphStandard(Toplevel):
         
         self.pro = proReader_mini.ProReader_mini(ncfile=self.filename)
         listvariables = ff.listvar()
+        list_var_non_plot = ['time', 'slope', 'aspect', 'ZS', 'massif_num', 'latitude', 'longitude',
+                             'Projection_Type', 'station', 'massif', 'naturalIndex']
         self.Tableau=self.pro.get_choix(self.filename)
-
+        
+        if 'SNOWDZ' in listvariables:
+            self.type_fichier = 'PRO'
+        elif 'Dsnw' in listvariables:
+            self.type_fichier = 'FSM'
+                    
         for i in range(len(listvariables)):
-            if(listvariables[i]==(listvariables[i].upper()) and listvariables[i]!='ZS'):
+            if(ff.listvar()[i] not in list_var_non_plot):
                 if ff.getattr(listvariables[i],'long_name')!='':
                     self.liste_variable_for_pres.append(ff.getattr(listvariables[i],'long_name'))
                     self.liste_variable.append(listvariables[i])
@@ -630,7 +640,10 @@ class GraphStandard(Toplevel):
     def test_presence_champs(self):
     # Cas 1 seul point
         if (len(self.Tableau[0])==1):
-            self.point_choisi=0
+            if self.type_fichier == 'PRO':
+                self.point_choisi=0
+            elif self.type_fichier == 'FSM':
+                self.point_choisi=-1
             self.combobox_reduce1.config(state = 'disabled', values = '')
             self.combobox_reduce2.config(state = 'disabled', values = '')
             self.combobox_reduce3.config(state = 'disabled', values = '')
@@ -2771,7 +2784,7 @@ def parseArguments():
     parser.add_argument("-t", "--type", help="type of graph (standard, massif, membre)", type=str, default = 'standard')
 
     parser.add_argument("-dir", "--direction", help="direction for plot (up or down, useful for height plots)", type=str, default = 'up')
-    parser.add_argument("-h", "--height", help="centimeters for height plots", type = int, default = 10)
+    parser.add_argument("--height", help="centimeters for height plots", type = int, default = 10)
 
     # Print version
     parser.add_argument("--version", action="version", version='%(prog)s - Version 1.0')

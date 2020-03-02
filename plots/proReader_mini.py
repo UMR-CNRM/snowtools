@@ -37,8 +37,12 @@ dico = {'WSN_VEG':(0,40),
             'ACC_RAT':(0,50),
             'NAT_RAT':(0,200),
             'SNOWIMP1':(-10,0),
-            'SNOWIMP2':(-10,0)
-            }
+            'SNOWIMP2':(-10,0), 
+            'lqsn':(0,100),
+            'rgrn':(0,0.004),
+            'snowrho':(0,500),
+            'tsnl':(238,274)
+}
 
 class ProReader_mini:
     """
@@ -57,8 +61,18 @@ class ProReader_mini:
 
     def initFromFile(self, ncfile, var=None, point=None, var_sup=[], liste_points=[]):
         ff = prosimu(ncfile)
-
         listvariables = ff.listvar()
+        
+        if 'SNOWDZ' in listvariables:
+            self.var_utile = 'SNOWDZ'
+            self.type_fichier = 'PRO'
+        elif 'Dsnw' in listvariables:
+            self.var_utile = 'Dsnw'
+            self.type_fichier = 'FSM'
+        else:
+            print('Lack of Necessary variable: SNOWDZ for PRO or Dsnw for FSM. Something will go wrong')
+        
+        
         if('slope' in listvariables):
             slopetab = ff.read('slope')[:]
         else:
@@ -84,13 +98,15 @@ class ProReader_mini:
         if(isinstance(var, str)):
             var = var
         else:
-            var = 'SNOWDZ'
+            var = self.var_utile
 
         # Selection du point d interet
         if(isinstance(point, int)):
             point = point
-        else:
+        elif self.type_fichier == 'PRO':
             point = 0
+        elif self.type_fichier == 'FSM':
+            point = -1
             
         print ("Lecture fichier %s" % ncfile)
         print ("Variable %s selectionnee\n" % var)
@@ -115,12 +131,11 @@ class ProReader_mini:
         # Extraction des data
         self.var = {}
         self.var1D = {}
-        list_var_necessaire = list(set(['SNOWDZ','SNOWTEMP',var]).union(set(var_sup)))
-        if (('SNOWDZ' or 'SNOWTEMP' or var) not in ff.listvar()):
-            print("Une variable (SNOWDZ, SNOWTEMP ou "+var+") est absente de ce fichier PRO.\n Sa présence est nécessaire. Plantage assuré")
-    
+        list_var_non_plot = ['time', 'slope', 'aspect', 'ZS', 'massif_num', 'latitude', 'longitude',
+                             'Projection_Type', 'station', 'massif', 'naturalIndex']
+
         for i in range(len(ff.listvar())):
-            if(ff.listvar()[i]==(ff.listvar()[i].upper()) and ff.listvar()[i]!='ZS' and (ff.listvar()[i] in list_var_necessaire)):
+            if(ff.listvar()[i] not in list_var_non_plot):
                 if ('snow_layer' in ff.getdimvar(ff.listvar()[i])):
                     if(ff.listvar()[i] == 'WSN_VEG'):
                         self.var['WSN_VEG'] = ff.read(ff.listvar()[i], selectpoint=point)
@@ -129,8 +144,8 @@ class ProReader_mini:
                 else:
                     self.var1D[ff.listvar()[i]] = ff.read(ff.listvar()[i], selectpoint=point, fill2zero=True)  # Fill2zero necessaire pour le plot
 
-        self.ntime = np.shape(self.var['SNOWDZ'])[0]
-        self.nsnowlayer = np.shape(self.var['SNOWDZ'])[1]
+        self.ntime = np.shape(self.var[self.var_utile])[0]
+        self.nsnowlayer = np.shape(self.var[self.var_utile])[1]
     
     def get_choix(self, ncfile):
         ff = prosimu(ncfile)
@@ -187,7 +202,7 @@ class ProReader_mini:
         e = self.parsedate(e, self.date, self.date[self.ntime - 1])
         
         intime = (self.date >= b) * (self.date <= e)
-        ep = self.var['SNOWDZ'][intime]
+        ep = self.var[self.var_utile][intime]
         return np.max(np.nansum(ep, axis=1))
     
     def parsedate(self,date, datetab, default):
@@ -224,7 +239,7 @@ class ProReader_mini:
 
         if var == 'SNOWTYPE':
             colormap = 'grains'
-        elif var == 'SNOWTEMP':
+        elif var == 'SNOWTEMP' or var =='tsnl':
             colormap = 'RdBu_r'
         elif 'SNOWIMP1' in var:
             colormap = 'echelle_log'
@@ -242,7 +257,7 @@ class ProReader_mini:
             intime = intime_t
         
         # Trace par appel a plot_profil
-        ep = self.var['SNOWDZ'][intime]
+        ep = self.var[self.var_utile][intime]
         toplot = self.var[var][intime]
         if(real_layers):
             plot_profil(axe, ep, toplot, colormap=colormap, legend=legend)
@@ -302,7 +317,7 @@ class ProReader_mini:
         
         # 1) Prendre les épaisseurs et les sommer puis voir pour quel indice on dépasse la valeur height
         # 2) On fait cela pour chaque date
-        ep = self.var['SNOWDZ'][intime]
+        ep = self.var[self.var_utile][intime]
         toplot = self.var[var][intime]
         y = []
         ep_from_ground = 100 * np.cumsum(ep[:, ::-1], axis=1)
@@ -422,7 +437,7 @@ class ProReader_mini:
 
         date = self.parsedate(date, self.date, self.date[self.ntime - 1])
         date = self.date[self.date >= date][0]
-        ep = self.var['SNOWDZ'][self.date == date]
+        ep = self.var[self.var_utile][self.date == date]
         epc = np.cumsum(ep)
 
         pointsx = np.zeros(2 * self.nsnowlayer + 2)
@@ -436,7 +451,7 @@ class ProReader_mini:
         pointsy=np.delete(pointsy,0)
         pointsx=np.delete(pointsx,0)
             
-        if (var == 'SNOWTEMP'):
+        if (var == 'SNOWTEMP' or var =='tsnl'):
             pointsy=np.where(pointsy > MIN_temp ,pointsy,zero_C)
         if ('SNOWIMP' in var):
             pointsy = np.where(pointsy > 10**(-10) , pointsy, 10**(-10))
@@ -476,7 +491,7 @@ class ProReader_mini:
 
         date = self.parsedate(date, self.date, self.date[self.ntime - 1])
         date = self.date[self.date >= date][0]
-        ep = self.var['SNOWDZ'][self.date == date]
+        ep = self.var[self.var_utile][self.date == date]
         epc = np.cumsum(ep)
 
         # Tracé du profil    
@@ -491,7 +506,7 @@ class ProReader_mini:
         pointsy=np.delete(pointsy,0)
         pointsx=np.delete(pointsx,0)
 
-        if (var == 'SNOWTEMP'):
+        if (var == 'SNOWTEMP' or var == 'tsnl'):
             pointsy=np.where(pointsy > MIN_temp ,pointsy,zero_C)
         if ('SNOWIMP' in var):
             pointsy = np.where(pointsy > 10**(-10) , pointsy, 10**(-10))
