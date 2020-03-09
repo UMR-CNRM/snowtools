@@ -2169,6 +2169,8 @@ class GraphMembre(Toplevel):
         self.message_filedialog='Importer un fichier PRO'
         self.type_graphique=1
         self.ChoixPossible = [True, True, True, True]
+        self.type_fichier = ''
+        self.old_date = None
         
         self.menubar = Menu()
         self.filemenu = Menu(self.menubar, tearoff=0)
@@ -2310,6 +2312,11 @@ class GraphMembre(Toplevel):
         self.clik_zoom=False
     
     def motion(self,event):
+        if self.bool_no_snowlayer:
+            if self.date_motion != self.old_date:
+                print(self.date_motion)
+                self.old_date = self.date_motion
+            return
         if (event.inaxes == self.ax1):
             membre_souris=min(math.floor(event.xdata),self.nmembre-1)
             hauteur_souris=event.ydata
@@ -2390,16 +2397,23 @@ class GraphMembre(Toplevel):
         self.datedeb=self.date[0]
         self.datefin=self.date[len(self.date)-1]
         
-        if len(self.date) > 1000: 
+        if len(self.date) > constante_sampling: 
             messagebox.showinfo('Time > 1000', 'automatic sampling to avoid too long treatment')
 
         self.pro = proReader_mini.ProReader_membre(ncfile=self.filename)
         self.nmembre = self.pro.nb_membre
         listvariables = ff.listvar()
+        list_var_non_plot = ['time', 'slope', 'aspect', 'ZS', 'massif_num', 'latitude', 'longitude',
+                             'Projection_Type', 'station', 'massif', 'naturalIndex']
         self.Tableau=self.pro.get_choix(self.filename)
+        
+        if 'SNOWDZ' in listvariables:
+            self.type_fichier = 'PRO'
+        elif 'Dsnw' or 'ts' or 'tsns' in listvariables:
+            self.type_fichier = 'FSM'
 
         for i in range(len(listvariables)):
-            if(listvariables[i]==(listvariables[i].upper()) and listvariables[i]!='ZS'):
+            if(ff.listvar()[i] not in list_var_non_plot):
                 if ff.getattr(listvariables[i],'long_name')!='':
                     self.liste_variable_for_pres.append(ff.getattr(listvariables[i],'long_name'))
                     self.liste_variable.append(listvariables[i])
@@ -2431,10 +2445,14 @@ class GraphMembre(Toplevel):
             for var in liste:
                 if 'snow_layer' in list(ff.getdimvar(var)):
                     liste_pres.append(self.liste_variable_for_pres[self.liste_variable.index(var)])
-
-            self.combobox_choix_profil.config(values = liste_pres)
-            self.combobox_choix_profil.config(state = "readonly")
-            self.combobox_choix_profil.bind('<<ComboboxSelected>>', self.choix_profil)
+            if liste_pres != []:
+                self.bool_no_snowlayer = False
+                self.combobox_choix_profil.config(values = liste_pres)
+                self.combobox_choix_profil.config(state = "readonly")
+                self.combobox_choix_profil.bind('<<ComboboxSelected>>', self.choix_profil)                
+            else:
+                self.bool_no_snowlayer = True
+                self.choix_profil(self)
             
         self.combobox.config(state ='readonly', values=self.liste_variable_for_pres)
         self.combobox.bind('<<ComboboxSelected>>', suite)
@@ -2577,17 +2595,22 @@ class GraphMembre(Toplevel):
     # CHOIX VARIABLE PROFIL
     ##########################################################
     def choix_profil(self,event):
-        variable_souris_for_pres=self.combobox_choix_profil.get()
-        self.variable_souris=self.liste_variable[self.liste_variable_for_pres.index(variable_souris_for_pres)]
-        if self.profil_complet:
-            self.var_sup.extend([self.variable_souris,'SNOWTYPE','SNOWRAM'])
-        else:
-            self.var_sup.append(self.variable_souris)
-        self.bool_profil=True
-
+        if self.bool_no_snowlayer == False:
+            variable_souris_for_pres=self.combobox_choix_profil.get()
+            self.variable_souris=self.liste_variable[self.liste_variable_for_pres.index(variable_souris_for_pres)]
+            if self.profil_complet:
+                self.var_sup.extend([self.variable_souris,'SNOWTYPE','SNOWRAM'])
+            else:
+                self.var_sup.append(self.variable_souris)
+            self.bool_profil=True
+        else: 
+            self.bool_profil=False
         # Cas 1 seul point
         if (len(self.Tableau[0])) == 1:
-            self.point_choisi = 0
+            if self.type_fichier == 'PRO':
+                self.point_choisi = 0
+            elif self.type_fichier == 'FSM':
+                self.point_choisi = -1
             self.combobox_reduce1.config(state = 'disabled', values = '')
             self.combobox_reduce2.config(state = 'disabled', values = '')
             self.combobox_reduce3.config(state = 'disabled', values = '')
