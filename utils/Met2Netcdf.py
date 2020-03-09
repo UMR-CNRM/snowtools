@@ -249,7 +249,7 @@ def recup_cdp(date_time_deb, date_time_fin, pas_de_temps):
                     data[i,1] = 863.827
                 data[i,1] = 100 * data[i,1]
             else:
-                data[i,1] = 863.827
+                data[i,1] = 86382.7
         # correction frustre des données de direction du vent       
             if data[i,2] != None:
                 if data[i,2] < 0:
@@ -367,7 +367,7 @@ def open_met_file_and_create_tab(filename, option_recup, date_entree_debut, date
         if len(File_entree[0,:]) == 10:
             for i in range(len(File_entree[:,0])):
                 #Tableau_retour_time_nbpoint[i,7] = HUMrelHUMspec(float(File_entree[i,1]) + T0, float(File_entree[i,3]), PSurf[i])
-                Tableau_retour_time_nbpoint[i,7] = Thermo(['v', 'c'], dict(P=PSurf[i], Huw=float(File_entree[i,3])/100., T=float(File_entree[i,1]) + T0, rc=0)).get('qv')
+                Tableau_retour_time_nbpoint[i,7] = Thermo(['v', 'c'], dict(P=PSurf[i], Huw=float(File_entree[i,3]), T=float(File_entree[i,1]) + T0, rc=0)).get('qv')
                 Tableau_retour_time_nbpoint[i,8] = float(File_entree[i,4])*(1 - float(File_entree[i,5])) / pas_de_temps_met
                 Tableau_retour_time_nbpoint[i,10] = float(File_entree[i,4])*float(File_entree[i,5]) / pas_de_temps_met
 
@@ -386,7 +386,7 @@ def open_met_file_and_create_tab(filename, option_recup, date_entree_debut, date
         elif len(File_entree[0,:]) == 11:
             for i in range(len(File_entree[:,0])):
                 #Tableau_retour_time_nbpoint[i,7] = HUMrelHUMspec(float(File_entree[i,2]) + T0, float(File_entree[i,4]), PSurf[i])
-                Tableau_retour_time_nbpoint[i,7] = Thermo(['v', 'c'], dict(P=PSurf[i], Huw=float(File_entree[i,4])/100., T=float(File_entree[i,2]) + T0, rc=0)).get('qv')
+                Tableau_retour_time_nbpoint[i,7] = Thermo(['v', 'c'], dict(P=PSurf[i], Huw=float(File_entree[i,4]), T=float(File_entree[i,2]) + T0, rc=0)).get('qv')
                 Tableau_retour_time_nbpoint[i,8] = float(File_entree[i,5])*(1 - float(File_entree[i,6])) / pas_de_temps_met
                 Tableau_retour_time_nbpoint[i,10] = float(File_entree[i,5])*float(File_entree[i,6]) / pas_de_temps_met
                 year = int(File_entree[i,0][0:4])
@@ -412,7 +412,7 @@ def open_met_file_and_create_tab(filename, option_recup, date_entree_debut, date
         elif len(File_entree[0,:]) == 12:
             for i in range(len(File_entree[:,0])):
                 #Tableau_retour_time_nbpoint[i,7] = HUMrelHUMspec(float(File_entree[i,3]) + T0, float(File_entree[i,5]), PSurf[i])
-                Tableau_retour_time_nbpoint[i,7] = Thermo(['v', 'c'], dict(P=PSurf[i], Huw=float(File_entree[i,5])/100., T=float(File_entree[i,3]) + T0, rc=0)).get('qv')
+                Tableau_retour_time_nbpoint[i,7] = Thermo(['v', 'c'], dict(P=PSurf[i], Huw=float(File_entree[i,5]), T=float(File_entree[i,3]) + T0, rc=0)).get('qv')
                 Tableau_retour_time_nbpoint[i,8] = float(File_entree[i,6])*(1 - float(File_entree[i,7])) / pas_de_temps_met
                 Tableau_retour_time_nbpoint[i,10] = float(File_entree[i,6])*float(File_entree[i,7]) / pas_de_temps_met
 
