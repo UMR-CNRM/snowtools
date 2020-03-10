@@ -73,9 +73,10 @@ class GraphStandard(Toplevel):
         self.valeur_choisie1=''
         self.valeur_choisie2=''
         self.message_filedialog='Importer un fichier PRO'
-        self.type_graphique=1
+        #self.type_graphique=1
         self.ChoixPossible = [True, True, True, True]
         self.type_fichier = ''
+        self.stop_right_click = False
         
         self.menubar = Menu()
         self.filemenu = Menu(self.menubar, tearoff=0)
@@ -238,8 +239,8 @@ class GraphStandard(Toplevel):
     ##########################################################
     # GESTION DU PROFIL INTERACTIF
     ##########################################################
-    def motion(self,event):
-        if self.bool_desactive_motion:
+    def motion(self,event):     
+        if self.bool_desactive_motion or self.stop_right_click:
             return
         if (event.inaxes == self.ax1):
             #date_souris=self.date[min(math.floor(event.xdata),len(self.date)-1)]
@@ -258,7 +259,7 @@ class GraphStandard(Toplevel):
             self.first_profil=False
             
     def motion_zoom(self,event):
-        if self.bool_desactive_motion:
+        if self.bool_desactive_motion or self.stop_right_click:
             return
         if (event.inaxes == self.ax1):
             hauteur_souris=event.ydata
@@ -277,7 +278,10 @@ class GraphStandard(Toplevel):
             self.first_profil=False
             
     def on_button_press(self, event):
-        if self.bool_desactive_motion:
+        if (event.button > 1):
+            self.stop_right_click = not self.stop_right_click
+            return
+        if self.bool_desactive_motion or self.stop_right_click:
             return
         if (event.inaxes == self.ax1):
             self.boolzoom=True
@@ -288,7 +292,7 @@ class GraphStandard(Toplevel):
             self.Canevas.draw()
 
     def on_move_press(self, event):
-        if self.bool_desactive_motion:
+        if self.bool_desactive_motion or self.stop_right_click:
             return
         if self.boolzoom is False:
             return
@@ -303,10 +307,12 @@ class GraphStandard(Toplevel):
             self.Canevas.flush_events()
 
     def on_button_release(self, event):
-        if self.bool_desactive_motion:
+        if self.bool_desactive_motion or self.stop_right_click:
+            return
+        if (event.button > 1):
             return
         if (event.inaxes == self.ax1):
-            self.width_rect=0.01
+            self.width_rect = 0.01
             
             self.date2_zoom = self.date[min(np.where(self.intime)[0][int(math.floor(event.xdata))],len(self.date)-1)]
             largeur = self.winfo_width()/self.taille_x
