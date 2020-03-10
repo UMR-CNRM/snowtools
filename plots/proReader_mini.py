@@ -34,8 +34,8 @@ dico = {'WSN_VEG':(0,40),
             'SNOWSHEAR':(0,30),
             'RSN_VEG':(0,600),
             'ASN_VEG':(0,300),
-            'ACC_RAT':(0,50),
-            'NAT_RAT':(0,200),
+            'ACC_RAT':(0,20),
+            'NAT_RAT':(0,20),
             'SNOWIMP1':(-10,0),
             'SNOWIMP2':(-10,0), 
             'lqsn':(0,100),
@@ -246,6 +246,8 @@ class ProReader_mini:
             colormap = 'echelle_log'
         elif 'SNOWIMP2' in var:
             colormap = 'echelle_log_sahara'
+        elif 'NAT_RAT' or 'ACC_RAT' in var:
+            colormap = 'ratio_cisaillement'
         else:
             colormap = colormap
 

@@ -13,6 +13,7 @@ import matplotlib.cm as cm
 from matplotlib import collections
 from matplotlib.colors import BoundaryNorm
 from matplotlib.colors import LogNorm
+import matplotlib.colors as colors
 import Dictionnaries
 
 
@@ -20,6 +21,15 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
     """
     Trace le profil de value en fonction du temps avec les epaisseurs reelles de couches
     """
+    
+    class MidpointNormalize(colors.Normalize):
+        def __init__(self, vmin=None, vmax=None, vcenter=None, clip=False):
+            self.vcenter = vcenter
+            colors.Normalize.__init__(self, vmin, vmax, clip)
+
+        def __call__(self, value, clip=None):
+            x, y = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1]
+            return np.ma.masked_array(np.interp(value, x, y))
 
     if myrange:
         value = np.clip(value, myrange[0], myrange[1])
@@ -59,6 +69,15 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
         Vmin = max(np.amin(value),0.0000000001)
         Vmax = min(np.amax(value),1)
         norm = LogNorm(vmin=Vmin, vmax=Vmax)
+    elif colormap == 'ratio_cisaillement':
+        cmap = cm.get_cmap('viridis')
+        Vmin = max(np.amin(value),0.0000000001)
+        Vmax = min(np.amax(value),1)
+        if Vmax < 8:
+            norm = None
+        else:
+            Vmax = min(Vmax,20)
+            norm = MidpointNormalize(vmin=Vmin, vcenter=4, vmax=Vmax)
     else:
         norm = None
         cmap = cm.get_cmap(colormap)
