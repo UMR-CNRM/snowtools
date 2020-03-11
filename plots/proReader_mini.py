@@ -246,7 +246,7 @@ class ProReader_mini:
             colormap = 'echelle_log'
         elif 'SNOWIMP2' in var:
             colormap = 'echelle_log_sahara'
-        elif 'NAT_RAT' or 'ACC_RAT' in var:
+        elif 'NAT_RAT' in var or 'ACC_RAT' in var:
             colormap = 'ratio_cisaillement'
         else:
             colormap = colormap

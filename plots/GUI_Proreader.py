@@ -7,7 +7,6 @@ from tkinter import ttk
 import tkinter.filedialog
 
 import math
-import datetime
 import numpy as np
 import argparse
 import sys
@@ -16,10 +15,6 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.widgets import RectangleSelector
-from matplotlib.backend_bases import cursors
-import matplotlib.backends.backend_tkagg as tkagg
-from matplotlib.figure import Figure
 
 from utils.prosimu import prosimu
 from utils.infomassifs import infomassifs
@@ -2950,8 +2945,8 @@ if __name__ == '__main__':
         out_name = args.out
         slope = args.slope
         type_graph = args.type
-        direction = args.direction
-        hauteur = args.hauteur
+        #direction = args.direction
+        #hauteur = args.hauteur
 
         if NOGUI:
             Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph, altitude, aspect, massif, slope) 
