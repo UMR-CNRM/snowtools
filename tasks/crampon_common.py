@@ -8,10 +8,9 @@ Created on 17 avr. 2019
 import os
 
 from bronx.stdtypes.date import Date
+from utils.dates import check_and_convert_date, get_list_dates_files
 from vortex import toolbox
 from vortex.layout.nodes import Task
-
-from utils.dates import check_and_convert_date, get_list_dates_files
 
 
 class _Crampon_Task(Task):
@@ -57,7 +56,7 @@ class _Crampon_Task(Task):
             namespace      = 'vortex.multi.fr',
             namebuild      = 'flat@cen',
             block          = 'pgd',
-            fatal          = False,
+            fatal          = True,
         ),
         print(t.prompt, 'tb02_s =', tb02_s)
         print()
@@ -179,3 +178,219 @@ class Crampon_In(_Crampon_Task):
             ),
             print(t.prompt, 'tb01 =', tb01)
             print()
+
+
+class Crampon_Out(Task):
+    '''
+    BC 21/01/20
+    (Dirty) Post-Processing Task to concatenate/compress Pro files and PREP into 2 Pickle file.
+    This solution drastically reduces the number of transfered files and the volume of transfers.
+    '''
+
+    def process(self):
+        t = self.ticket
+        if 'early-fetch' in self.steps:
+            self.sh.title('Toolbox input tb02_s')  # this step should work if PGD properly in spinup on hendrix
+            tb02_s = toolbox.input(
+                alternate      = 'SurfexClim',
+                kind           = 'pgdnc',
+                nativefmt      = 'netcdf',
+                local          = 'crocO/pickle/PGD.nc',
+                # member         = '{0:04d}'.format(forcingdir),
+                experiment     = 'spinup@' + os.environ['USER'],
+                geometry       = self.conf.geometry,
+                model          = 'surfex',
+                namespace      = 'vortex.cache.fr',
+                namebuild      = 'flat@cen',
+                block          = 'pgd',
+                fatal          = False,
+            ),
+            # each task has its specific conf file on /scratch to avoid overwriting.
+            takeConf = self.conf.workingdir + '/conf/' + self.conf.vapp + '_' + self.conf.vconf +\
+                '_' + self.conf.confcomplement + '.ini'
+            self.sh.title('Toolbox input tbconf')
+            tbconf = toolbox.input(
+                kind           = 'ini_file',
+                local          = self.conf.vapp + '_' + self.conf.vconf + '.ini',
+                vapp           = self.conf.vapp,
+                vconf          = self.conf.vconf,
+                remote         = takeConf,
+                model          ='surfex',
+                role           = 'Conf_file',
+                intent = 'inout',
+                fatal = True,
+            )
+            print(t.prompt, 'tbCONFIN =', tbconf)
+            print()
+            self.sh.title('Toolbox input tb05')
+            tb05 = toolbox.input(
+                role            = 'Nam_surfex',
+                remote          = self.conf.namelist,
+                kind            = 'namelist',
+                model           = 'surfex',
+                local           = 'conf/OPTIONS.nam',
+            )
+            print(t.prompt, 'tb05 =', tb05)
+            print()
+        if 'fetch' in self.steps:
+            # dirty loops to start with
+
+            self.sh.title('Toolbox input PP1')
+
+            self.conf.begprodates = [self.conf.datedeb] + self.conf.stopdates
+            self.conf.endprodates = self.conf.stopdates
+            for datebegin, dateend in zip(self.conf.begprodates, self.conf.endprodates):
+                for mb in self.conf.members:
+
+                    tbinpp1 = toolbox.input(
+                        local          = 'mb[member%04d]/pro/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        datebegin      = datebegin,
+                        date           = datebegin,
+                        dateend        = dateend,
+                        member         = mb,
+                        nativefmt      = 'netcdf',
+                        kind           = 'SnowpackSimulation',
+                        model          = 'surfex',
+                        namespace      = 'vortex.multi.fr',
+                        intent         = 'inout',
+                        namebuild      = 'flat@cen',
+                        block          = 'pro',
+                        Fatal = True,
+                    ),
+                    print(t.prompt, 'tbinpp1 = ', tbinpp1)
+                    print()
+                dmembers = {str(mb): mb for mb in self.conf.members}
+                dlocal_names_bg = {str(mb): 'mb{0:04d}'.format(mb) + '/bg/PREP_[date:ymdh].nc'
+                                   for mb in self.conf.members}
+
+                self.sh.title('Toolbox input PP2_ol')
+                tbinpp2 = toolbox.input(
+                    alternate      = 'SnowpackInit',
+                    realmember     = self.conf.members,
+                    member         = dict(realmember= dmembers),
+                    local          = dict(realmember= dlocal_names_bg),
+                    experiment     = self.conf.xpid,
+                    geometry       = self.conf.geometry,
+                    date           = dateend,
+                    intent         = 'inout',
+                    nativefmt      = 'netcdf',
+                    kind           = 'PREP',
+                    model          = 'surfex',
+                    namespace      = 'vortex.cache.fr',  # get it on the cache from last loop
+                    namebuild      = 'flat@cen',
+                    block          = 'bg',          # get it on cache @mb****/bg
+                    stage          = '_bg',
+                    fatal          = True,
+                ),
+                print(t.prompt, 'tbinpp2 = ', tbinpp2)
+                print()
+                dlocal_names_an = {str(mb): 'mb{0:04d}'.format(mb) + '/an/PREP_[date:ymdh].nc'
+                                   for mb in self.conf.members}
+                if self.conf.openloop == 'off':
+                    if dateend != self.conf.stopdates[-1]:
+                        self.sh.title('Toolbox input PP2_an')
+                        tbinpp2 = toolbox.input(
+                            alternate      = 'SnowpackInit',
+                            realmember     = self.conf.members,
+                            member         = dict(realmember= dmembers),
+                            local          = dict(realmember= dlocal_names_an),
+                            experiment     = self.conf.xpid,
+                            geometry       = self.conf.geometry,
+                            date           = dateend,
+                            intent         = 'inout',
+                            nativefmt      = 'netcdf',
+                            kind           = 'PREP',
+                            model          = 'surfex',
+                            namespace      = 'vortex.cache.fr',  # get it on the cache from last loop
+                            namebuild      = 'flat@cen',
+                            block          = 'an',          # get it on cache @mb****/bg
+                            stage          = '_an',
+                            fatal          = True,
+                        ),
+                        print(t.prompt, 'tbinpp2 = ', tbinpp2)
+                        print()
+        if 'compute' in self.steps:
+            self.sh.title('Toolbox Algo pp')
+            tbalgopp1 = toolbox.algo(
+                kind = 'picklepro',
+                engine = 's2m',
+                vapp           = self.conf.vapp,
+                vconf          = self.conf.vconf,
+            )
+            print(t.prompt, 'tbalgopp1 = ', tbalgopp1)
+            print()
+            tbalgopp1.run()
+        if 'late-backup' in self.steps:
+            # if fetchnig to sxcen, must be done file/file to prevent from having too many simultaneous transfers
+            storage = ['hendrix.meteo.fr']
+            enforcesync = dict(storage={'hendrix.meteo.fr': False, 'sxcen.cnrm.meteo.fr': True})
+            if self.conf.writesx == 'on':
+                storage.append('sxcen.cnrm.meteo.fr')
+            # FETCHING PRO pickle FILES
+            self.sh.title('Toolbox Algo pro pickle output')
+            tb_outpppro = toolbox.output(
+                model          = 'ensProOl' if self.conf.openloop == 'on' else 'ensProAn',
+                namebuild      = 'flat@cen',
+                namespace      = 'vortex.archive.fr',
+                storage        = storage,
+                enforcesync    = enforcesync,
+                storetrack     = False,
+                fatal          = True,
+                block          = 'crocO/beaufix',
+                experiment     = self.conf.xpid,
+                filename       = 'crocO/pickle/ensPro' + ('Ol' if self.conf.openloop == 'on' else 'An') + '.pkl',
+            )
+            print(t.prompt, 'tboutpro =', tb_outpppro)
+            print()
+
+            # # FETCHING PREP pickle FILES
+            for assDate in self.conf.stopdates[0:-1]:
+                if self.conf.openloop == 'on':
+                    tb_outppol = toolbox.output(
+                        model          = 'ol',
+                        namebuild      = 'flat@cen',
+                        namespace      = 'vortex.archive.fr',
+                        storage        = storage,
+                        enforcesync    = enforcesync,
+                        storetrack     = False,
+                        fatal          = True,
+                        dateassim      = assDate,
+                        block          = 'crocO/beaufix',
+                        experiment     = self.conf.xpid,
+                        filename       = 'crocO/pickle/ol_{0}.pkl'.format(assDate),
+                    )
+                    print(t.prompt, 'tboutol =', tb_outppol)
+                    print()
+                else:
+                    tb_outppbg = toolbox.output(
+                        model          = 'bg',
+                        namebuild      = 'flat@cen',
+                        namespace      = 'vortex.archive.fr',
+                        storage        = storage,
+                        enforcesync    = enforcesync,
+                        storetrack     = False,
+                        fatal          = True,
+                        dateassim      = assDate,
+                        block          = 'crocO/beaufix',
+                        experiment     = self.conf.xpid,
+                        filename       = 'crocO/pickle/bg_{0}.pkl'.format(assDate),
+                    )
+                    print(t.prompt, 'tboutbg =', tb_outppbg)
+                    print()
+                    tb_outppan = toolbox.output(
+                        model          = 'an',
+                        namebuild      = 'flat@cen',
+                        namespace      = 'vortex.archive.fr',
+                        storage        = storage,
+                        enforcesync    = enforcesync,
+                        storetrack     = False,
+                        fatal          = True,
+                        dateassim      = assDate,
+                        block          = 'crocO/beaufix',
+                        experiment     = self.conf.xpid,
+                        filename       = 'crocO/pickle/an_{0}.pkl'.format(assDate),
+                    )
+                    print(t.prompt, 'tboutbg =', tb_outppan)
+                    print()

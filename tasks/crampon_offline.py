@@ -218,57 +218,56 @@ class Offline_Task(_Crampon_Task):
             print(t.prompt, 'tb21 =', tb21)
             print()
 
+            if self.conf.pickleit == 'on':
+
+                # bc displaced because now we pickle the files instead of transferring it.
+                # ########### PUT PRO FILE ###########
+                self.sh.title('Toolbox output tb19')
+                tb19 = toolbox.output(
+                    local          = 'mb[member%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    experiment     = self.conf.xpid,
+                    geometry       = self.conf.geometry,
+                    datebegin      = self.conf.stopdate_prev,
+                    dateend        = self.conf.stopdate,
+                    member         = self.conf.membersnode,
+                    nativefmt      = 'netcdf',
+                    kind           = 'SnowpackSimulation',
+                    model          = 'surfex',
+                    namespace      = 'vortex.cache.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'pro',
+                ),
+                print(t.prompt, 'tb19 =', tb19)
+                print()
+
         if 'late-backup' in self.steps:
             # if fetchnig to sxcen, must be done file/file to prevent from having too many simultaneous transfers
             storage = ['hendrix.meteo.fr']
             enforcesync = dict(storage={'hendrix.meteo.fr': False, 'sxcen.cnrm.meteo.fr': True})
             if self.conf.writesx == 'on':
                 storage.append('sxcen.cnrm.meteo.fr')
-            # ########### PUT PREP FILES ###########
-            localbg = 'mb[member%04d]/PREP_[date:ymdh].nc'
-            self.sh.title('Toolbox output tb21bg')
-            tb21 = toolbox.output(
-                local          = localbg,
-                role           = 'SnowpackInit',
-                experiment     = self.conf.xpid,
-                geometry       = self.conf.geometry,
-                date           = self.conf.stopdate,
-                period         = self.conf.stopdate,
-                member         = self.conf.membersnode,
-                nativefmt      = 'netcdf',
-                kind           = 'PREP',
-                model          = 'surfex',
-                namespace      = 'vortex.archive.fr',
-                storage        = storage,
-                enforcesync    = enforcesync,
-                namebuild      = 'flat@cen',
-                block          = 'bg',
-                stage          = '_bg',
-                fatal          = False
-            ),
-            print(t.prompt, 'tb21 =', tb21)
-            print()
 
-            # ########### PUT PRO FILE ###########
-            self.sh.title('Toolbox output tb19')
-            tb19 = toolbox.output(
-                local          = 'mb[member%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-                experiment     = self.conf.xpid,
-                geometry       = self.conf.geometry,
-                datebegin      = self.conf.stopdate_prev,
-                dateend        = self.conf.stopdate,
-                member         = self.conf.membersnode,
-                nativefmt      = 'netcdf',
-                kind           = 'SnowpackSimulation',
-                model          = 'surfex',
-                namespace      = 'vortex.multi.fr',
-                storage        = storage,
-                enforcesync    = enforcesync,
-                namebuild      = 'flat@cen',
-                block          = 'pro',
-            ),
-            print(t.prompt, 'tb19 =', tb19)
-            print()
+            if self.conf.pickleit == 'off':
+
+                # bc displaced because now we pickle the files instead of transferring it.
+                # ########### PUT PRO FILE ###########
+                self.sh.title('Toolbox output tb19')
+                tb19 = toolbox.output(
+                    local          = 'mb[member%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    experiment     = self.conf.xpid,
+                    geometry       = self.conf.geometry,
+                    datebegin      = self.conf.stopdate_prev,
+                    dateend        = self.conf.stopdate,
+                    member         = self.conf.membersnode,
+                    nativefmt      = 'netcdf',
+                    kind           = 'SnowpackSimulation',
+                    model          = 'surfex',
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'pro',
+                ),
+                print(t.prompt, 'tb19 =', tb19)
+                print()
 
             # fetch namelist &conf file only if lastloop
             if lastloop:

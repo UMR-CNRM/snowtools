@@ -106,37 +106,38 @@ class EnsembleScores(object):
         oi_nbmb = len(self.obsCommon)
         evenement = 0
         for obs in self.obsCommon:
-            # Number of valid members at this date
-            valid = np.ma.masked_invalid(ensCommon[:, evenement])
-            ens = valid.compressed()
-            NValid = np.ma.count(valid)
+            if not np.ma.is_masked(obs):
+                # Number of valid members at this date
+                valid = np.ma.masked_invalid(ensCommon[:, evenement])
+                ens = valid.compressed()
+                NValid = np.ma.count(valid)
 
-            if NValid > 0:
-                # obs smaller than all
-                if obs < ens[0]:
-                    ai[0] += 0.
-                    bi[0] += ens[0] - obs
-                    oi_0 += 1.
-                # obs bigger than all
-                elif obs > ens[nbmb - 1]:
-                    ai[nbmb] += obs - ens[nbmb - 1]
-                    bi[nbmb] += 0.
-                    oi_nbmb -= 1.
-                # obs within
-                for i in range(1, nbmb - 1):
-                    if obs >= ens[i]:
-                        ai[i] += ens[i] - ens[i - 1]
-                        bi[i] += 0.
-                    elif (ens[i] > obs) and (obs >= ens[i - 1]):
-                        ai[i] += obs - ens[i - 1]
-                        bi[i] += ens[i] - obs
-                    elif obs < ens[i - 1]:
-                        ai[i] += 0.
-                        bi[i] += ens[i] - ens[i - 1]
-                    else:
-                        raise Exception
-            else:
-                raise Exception
+                if NValid > 0:
+                    # obs smaller than all
+                    if obs < ens[0]:
+                        ai[0] += 0.
+                        bi[0] += ens[0] - obs
+                        oi_0 += 1.
+                    # obs bigger than all
+                    elif obs > ens[nbmb - 1]:
+                        ai[nbmb] += obs - ens[nbmb - 1]
+                        bi[nbmb] += 0.
+                        oi_nbmb -= 1.
+                    # obs within
+                    for i in range(1, nbmb - 1):
+                        if obs >= ens[i]:
+                            ai[i] += ens[i] - ens[i - 1]
+                            bi[i] += 0.
+                        elif (ens[i] > obs) and (obs >= ens[i - 1]):
+                            ai[i] += obs - ens[i - 1]
+                            bi[i] += ens[i] - obs
+                        elif obs < ens[i - 1]:
+                            ai[i] += 0.
+                            bi[i] += ens[i] - ens[i - 1]
+                        else:
+                            raise Exception
+                else:
+                    raise Exception
             evenement += 1
         ai_avg = ai / len(self.obsCommon)
         bi_avg = bi / len(self.obsCommon)

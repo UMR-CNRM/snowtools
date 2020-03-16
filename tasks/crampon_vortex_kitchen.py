@@ -54,7 +54,6 @@ class crampon_vortex_kitchen(object):
             raise InstallException("VORTEX environment variable must be defined towards a valid vortex install.")
 
     def check_options(self, options):
-
         if options.openloop:
             if (options.synth is not None) or (options.real is True):
                 print('''
@@ -64,13 +63,12 @@ class crampon_vortex_kitchen(object):
                       )
                 raise Exception
         elif (options.synth is None and options.real is False):
-            print('''
+            raise Exception('''
             Either you\'re running an assimilation experiment with (1) real data or (2) with synthetic from previous openloop
             (1) specify --real to s2m
             (2) use --synth <mbid> (starting from 1)
                 to specify which member is the synthetic one in order to remove and replace it.
                  ''')
-            raise Exception
 
     def create_env(self, options):
         # Prepare environment
@@ -162,7 +160,7 @@ class crampon_vortex_kitchen(object):
         # -> in order to check if membersIDs were specified.
 
         # local import since there are dependencies with vortex.
-        from assim.utilcrocO import read_conf
+        from utilcrocO import read_conf
         import bisect
 
         confObj = read_conf(confname)
@@ -245,6 +243,11 @@ class crampon_vortex_kitchen(object):
         else:
             options.op = 'off'
         conffile.write_field('openloop', options.op)
+        if options.pickleit:
+            options.pickl = 'on'
+        else:
+            options.pickl = 'off'
+        conffile.write_field('pickleit', options.pickl)
 
         if options.crampon:
             if hasattr(options, 'sensor'):

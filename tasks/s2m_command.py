@@ -25,7 +25,7 @@ from utils.resources import absolute_path, check_surfex_exe
 try:
     from utils.resources import check_snowtools_install
     from utils.resources import InstallException
-    print (os.environ["SNOWTOOLS_CEN"])
+    print(os.environ["SNOWTOOLS_CEN"])
     check_snowtools_install()
     print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
     print('Snowtools installation has been successfully checked.')
@@ -252,6 +252,9 @@ def parse_options(arguments):
     parser.add_option("--real",
                       action="store_true", dest="real", default = False,
                       help="activate real assimilation")
+    parser.add_option("--pickleit",
+                      action="store_true", dest = "pickleit", default = False,
+                      help ="pickle the output of sims instead of transferring outputs")
 
     (options, args) = parser.parse_args(arguments)
 
@@ -332,7 +335,7 @@ def execute_through_vortex(args):
         run = crampon_vortex_kitchen(options)
         run.run(options)
     else:
-        print ("soda should run with escroc option")
+        print("soda should run with escroc option")
 
 
 if __name__ == "__main__":

@@ -43,7 +43,8 @@ class prosimu():
                         tempdataset.variables["time"].calendar = "standard"
                     tempdataset.close()
 
-            self.dataset = netCDF4.MFDataset(path, "r")
+            # BC 20/02/20: useless "r" mode in MFDataset caused a ValueError on beaufix (netCDF4__version=1.0.6)
+            self.dataset = netCDF4.MFDataset(path)
             self.path = path[0]
             self.mfile = 1
 
