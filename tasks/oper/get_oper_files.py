@@ -58,7 +58,7 @@ class configcommand(config):
 
     def __init__(self, options):
         if options.dev:
-            for key, var in six.iteritems(configdev().vars()):
+            for key, var in six.iteritems(vars(configdev())):
                 setattr(self, key, var)
 
         self.rundate = check_and_convert_date(options.datebegin)
