@@ -299,7 +299,8 @@ class Surfex_command(_S2M_command):
                                              workdir=self.options.workdir, datespinup=self.options.datespinup, geolist=[self.options.region],
                                              execdir=self.options.exesurfex,
                                              namelist=self.options.namelist,
-                                             addmask=True)
+                                             addmask=True,
+                                             onlyextractforcing=self.options.onlyextractforcing)
             elif self.options.region or self.options.slopes or self.options.aspects or self.options.minlevel or self.options.maxlevel:
 
                 if self.options.onlyextractforcing:

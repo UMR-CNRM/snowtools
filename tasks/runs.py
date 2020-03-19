@@ -29,17 +29,16 @@ class surfexrun(object):
 
     def __init__(self, datebegin, dateend, forcingpath, diroutput,
                  namelist=os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam',
-                 execdir=".",
+                 execdir=".", onlyextractforcing = False,
                  threshold=-999, workdir=None, datespinup=None, geolist=[], addmask=False):
 
         # Convert arguments in attributes
-        for var in "datebegin", "dateend", "forcingpath", "diroutput", "namelist", "execdir", "threshold", "geolist", "addmask":
+        for var in "datebegin", "dateend", "forcingpath", "diroutput", "namelist", "execdir", "onlyextractforcing", "threshold", "geolist", "addmask":
             setattr(self, var, locals()[var])
 
         self.dateforcbegin = datebegin
         self.dateforcend = dateend
         self.updateloc = True
-        self.onlyextractforcing = False
 
         self.defaults_from_env()
 
@@ -68,11 +67,14 @@ class surfexrun(object):
             self.moderun = "MPI"
             self.modeinterpol = "MPI"
         else:
-            if "MPIAUTO" in os.readlink(self.execdir + "/OFFLINE"):
-                self.moderun = "MPIRUN"
+            print self.onlyextractforcing
+            if not self.onlyextractforcing:
+                if "MPIAUTO" in os.readlink(self.execdir + "/OFFLINE"):
+                    self.moderun = "MPIRUN"
+                else:
+                    self.moderun = moderun
             else:
                 self.moderun = moderun
-
             if os.path.islink(os.environ['SNOWTOOLS_CEN'] + "/fortran/interpol"):
                 if "MPIAUTO" in os.readlink(os.environ['SNOWTOOLS_CEN'] + "/fortran/interpol"):
                     self.modeinterpol = "MPIRUN"
@@ -176,10 +178,11 @@ class surfexrun(object):
     def get_all_consts(self):
         get_file_const_or_crash(self.namelist, "OPTIONS.nam")
 
-        for ecoclimap_file in ["ecoclimapI_covers_param.bin", "ecoclimapII_eu_covers_param.bin"]:
-            get_file_const_or_crash(self.execdir + "/../MY_RUN/ECOCLIMAP/" + ecoclimap_file, ecoclimap_file)
+        if not self.onlyextractforcing:
+            for ecoclimap_file in ["ecoclimapI_covers_param.bin", "ecoclimapII_eu_covers_param.bin"]:
+                get_file_const_or_crash(self.execdir + "/../MY_RUN/ECOCLIMAP/" + ecoclimap_file, ecoclimap_file)
 
-        get_file_const_or_crash(self.execdir + "/../MY_RUN/DATA/CROCUS/drdt_bst_fit_60.nc", "drdt_bst_fit_60.nc")
+            get_file_const_or_crash(self.execdir + "/../MY_RUN/DATA/CROCUS/drdt_bst_fit_60.nc", "drdt_bst_fit_60.nc")
 
     def get_forcing(self):
         ''' Look for a FORCING file including the starting date'''
@@ -187,9 +190,9 @@ class surfexrun(object):
 
         f = prosimu("FORCING.nc")
         print("FORMAT OF FORCING NETCDF FILE: " + f.format())
-        if f.format() != "NETCDF3_CLASSIC":
-            print("Check consistency with your SURFEX compilation (netcdf4 library required).")
-            print(ldd(self.execdir + "/OFFLINE"))
+        #if f.format() != "NETCDF3_CLASSIC":
+        #    print("Check consistency with your SURFEX compilation (netcdf4 library required).")
+        #    print(ldd(self.execdir + "/OFFLINE"))
         f.close()
 
     def get_or_run_pgd(self):
@@ -303,7 +306,8 @@ class interpolrun(surfexrun):
         os.rename("output.nc", "FORCING.nc")
 
     def save_output(self):
-        super(interpolrun, self).save_output()
+        if not self.onlyextractforcing:
+            super(interpolrun, self).save_output()
         save_file_period(self.dirmeteo, "FORCING", self.dateforcbegin, self.dateforcend)
 
 
