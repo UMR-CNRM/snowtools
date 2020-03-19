@@ -13,7 +13,7 @@ from utils.prosimu import prosimu
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from utils.dates import check_and_convert_date
-from bronx.meteo.conversion import ZEW, HUMrelHUMspec
+from bronx.meteo.thermo import Thermo
 from bronx.meteo.constants import T0
 from utils.infomassifs import infomassifs
 
@@ -35,7 +35,7 @@ def recup_donnees_site(nom_site):
 
 def message_accueil(option_bool, nom_site):
     if option_bool:
-        print('\nCompletion des donnees MET avec Pression et Direction du vent du site ' + nom_site +'\n')
+        print('\nCompletion des donnees MET avec Pression et Direction du vent du site ' + str(nom_site) +'\n')
     print('#########################################################')
     print('# A verifier/modifier dans le code:')
     print('# - chemin des MET: /mesure_data/col_de_porte/met\n')
@@ -54,7 +54,7 @@ def parseArguments():
     parser.add_argument("-o", "--output", help="Name for output file", type=str, default='out.nc')
     parser.add_argument('-r', "--recup", help="Option for recup PSurf in database.", type=lambda x: (str(x).lower() in ['true', 'yes', '1']), default=True)
     parser.add_argument("-b", "--begin", help="Beginning date for nc file", type=str, default ='1993080106')
-    parser.add_argument("-e", "--end", help="Ending date for nc file", type=str, default ='2018080106')
+    parser.add_argument("-e", "--end", help="Ending date for nc file", type=str, default ='2019080106')
     parser.add_argument("-s", "--site", help="Site location", type=str, default='38472403')
 
     # Print version
@@ -134,11 +134,11 @@ def read_info_met(filename, date_debut, date_fin):
 
     # for special case DD/MM/YYYY HH:M
     if len(str(date_debut_met))%2 != 0:
-        date_debut_met = date_debut_met/10
+        date_debut_met = int(date_debut_met/10)
     if len(str(date2_met))%2 != 0:
-        date2_met = date2_met/10
+        date2_met = int(date2_met/10)
     if len(str(last_date_met))%2 != 0:
-        last_date_met = last_date_met/10
+        last_date_met = int(last_date_met/10)
 
     pas_de_temps = int( ( check_and_convert_date(str(date2_met)) - check_and_convert_date(str(date_debut_met)) ).total_seconds() )
 
@@ -212,7 +212,7 @@ def recup_cdp(date_time_deb, date_time_fin, pas_de_temps):
     # Cas où YYYY080106 => ensuite récupérer les données sur l'année en cours
     # a) récupérer dans la base de données d'après les 5h manquantes
     # b) concaténer les données.
-    if (date_time_fin > date_1er_aout):
+    if (date_time_fin > date_1er_aout and nom_base != 'cdp60mn'):
         nom_var = 'p_ptb330_v1,dd_meca_10mn_10m'
         if date_time_fin.year < date_change_base60mn.year:
             nom_base = 'cdp60mn_' + str(date_time_fin.year)[2:4] + str(date_time_fin.year + 1)[2:4]
@@ -241,13 +241,33 @@ def recup_cdp(date_time_deb, date_time_fin, pas_de_temps):
 
     # correction frustre des données pression + changement d'unité (hPa en Pa)
     if (len(data[:])  != 0):
-        data[:,1] = np.where(data[:,1] > 890, 863.827, data[:,1])
-        data[:,1] = np.where(data[:,1] < 840, 863.827, data[:,1])
-        data[:,1] = 100. * data[:,1].astype(float)
+        for i in range(len(data[:,0])):
+            if data[i,1] != None:
+                if data[i,1] > 890:
+                    data[i,1] = 863.827
+                if data[i,1] < 840:
+                    data[i,1] = 863.827
+                data[i,1] = 100 * data[i,1]
+            else:
+                data[i,1] = 86382.7
+        # correction frustre des données de direction du vent       
+            if data[i,2] != None:
+                if data[i,2] < 0:
+                    data[i,2] = 0
+                if data[i,2] > 360:
+                    data[i,2] = 360
+            else:
+                data[i,2] = 0
+                    
+    # correction frustre des données pression + changement d'unité (hPa en Pa) ne marche pas en python3 ?
+    #if (len(data[:])  != 0):
+        #data[:,1] = np.where(data[:,1] > 890, 863.827, data[:,1])
+        #data[:,1] = np.where(data[:,1] < 840, 863.827, data[:,1])
+        #data[:,1] = 100. * data[:,1].astype(float)
 
-        # correction frustre des données de direction du vent
-        data[:,2] = np.where(data[:,2] < 0, 0, data[:,2])
-        data[:,2] = np.where(data[:,2] > 360, 360, data[:,2])
+        # correction frustre des données de direction du vent ne marche pas en python3 ?
+        #data[:,2] = np.where(data[:,2] < 0, 0, data[:,2])
+        #data[:,2] = np.where(data[:,2] > 360, 360, data[:,2])
 
     return data
 
@@ -291,8 +311,18 @@ def open_met_file_and_create_tab(filename, option_recup, date_entree_debut, date
         fileLines=metfile.readlines()[nb_ligne_entete:]
     metfile.close()
 
-    File_entree = np.genfromtxt(fileLines, dtype='string')
-
+    #File_entree = np.genfromtxt(fileLines, dtype='string')
+    File_entree = np.loadtxt(fileLines,dtype='str')
+    
+    if sys.version_info[0] == 3:
+        for i in range(len(File_entree[:,0])):
+            for j in range(len(File_entree[0,:])):
+                File_entree[i,j] = File_entree[i,j][2:-1]
+        '''if 'MET_2015' in filename: 
+            for i in range(len(File_entree[:,0])):
+                File_entree[i,0] = File_entree[i,0][:-2]'''
+    
+    
     Tableau_retour_time_nbpoint = np.zeros((len(fileLines),14))
     # Dans l'ordre: CO2air, DIR_SWdown, Flag_in_situ, Humrel, LWdown, NEB, PSurf, Qair, Rainf, SCA_SWdown, Snowf, Tair, Wind, Wind_DIR
 
@@ -304,7 +334,7 @@ def open_met_file_and_create_tab(filename, option_recup, date_entree_debut, date
                 Liste_date.append(check_and_convert_date(File_entree[i,0]))
         elif len(File_entree[0,:]) == 11:
             for i in range(len(File_entree[:,0])):
-                Liste_date.append(check_and_convert_date(File_entree[i,0]))
+                Liste_date.append(check_and_convert_date(File_entree[i,0] ))
         elif len(File_entree[0,:]) == 12:
             for i in range(len(File_entree[:,0])):
                 line = File_entree[i,0]
@@ -336,7 +366,8 @@ def open_met_file_and_create_tab(filename, option_recup, date_entree_debut, date
 
         if len(File_entree[0,:]) == 10:
             for i in range(len(File_entree[:,0])):
-                Tableau_retour_time_nbpoint[i,7] = HUMrelHUMspec(float(File_entree[i,1]) + T0, float(File_entree[i,3]), PSurf[i])
+                #Tableau_retour_time_nbpoint[i,7] = HUMrelHUMspec(float(File_entree[i,1]) + T0, float(File_entree[i,3]), PSurf[i])
+                Tableau_retour_time_nbpoint[i,7] = Thermo(['v', 'c'], dict(P=PSurf[i], Huw=float(File_entree[i,3]), T=float(File_entree[i,1]) + T0, rc=0)).get('qv')
                 Tableau_retour_time_nbpoint[i,8] = float(File_entree[i,4])*(1 - float(File_entree[i,5])) / pas_de_temps_met
                 Tableau_retour_time_nbpoint[i,10] = float(File_entree[i,4])*float(File_entree[i,5]) / pas_de_temps_met
 
@@ -354,11 +385,12 @@ def open_met_file_and_create_tab(filename, option_recup, date_entree_debut, date
 
         elif len(File_entree[0,:]) == 11:
             for i in range(len(File_entree[:,0])):
-                Tableau_retour_time_nbpoint[i,7] = HUMrelHUMspec(float(File_entree[i,2]) + T0, float(File_entree[i,4]), PSurf[i])
+                #Tableau_retour_time_nbpoint[i,7] = HUMrelHUMspec(float(File_entree[i,2]) + T0, float(File_entree[i,4]), PSurf[i])
+                Tableau_retour_time_nbpoint[i,7] = Thermo(['v', 'c'], dict(P=PSurf[i], Huw=float(File_entree[i,4]), T=float(File_entree[i,2]) + T0, rc=0)).get('qv')
                 Tableau_retour_time_nbpoint[i,8] = float(File_entree[i,5])*(1 - float(File_entree[i,6])) / pas_de_temps_met
                 Tableau_retour_time_nbpoint[i,10] = float(File_entree[i,5])*float(File_entree[i,6]) / pas_de_temps_met
-                year = File_entree[i,0][0:4]
-                month = File_entree[i,0][4:6]
+                year = int(File_entree[i,0][0:4])
+                month = int(File_entree[i,0][4:6])
                 if year < 2010 or (year == 2010 and month <= 11):
                     Tableau_retour_time_nbpoint[i,4] = float(File_entree[i,7]) - 10.0
                 elif year < 2015 or (year == 2015 and month <= 7):
@@ -379,7 +411,8 @@ def open_met_file_and_create_tab(filename, option_recup, date_entree_debut, date
 
         elif len(File_entree[0,:]) == 12:
             for i in range(len(File_entree[:,0])):
-                Tableau_retour_time_nbpoint[i,7] = HUMrelHUMspec(float(File_entree[i,3]) + T0, float(File_entree[i,5]), PSurf[i])
+                #Tableau_retour_time_nbpoint[i,7] = HUMrelHUMspec(float(File_entree[i,3]) + T0, float(File_entree[i,5]), PSurf[i])
+                Tableau_retour_time_nbpoint[i,7] = Thermo(['v', 'c'], dict(P=PSurf[i], Huw=float(File_entree[i,5]), T=float(File_entree[i,3]) + T0, rc=0)).get('qv')
                 Tableau_retour_time_nbpoint[i,8] = float(File_entree[i,6])*(1 - float(File_entree[i,7])) / pas_de_temps_met
                 Tableau_retour_time_nbpoint[i,10] = float(File_entree[i,6])*float(File_entree[i,7]) / pas_de_temps_met
 
@@ -481,7 +514,7 @@ def complete_obs_with_model_1period(filename, option_recup, date_entree_debut, d
 
 def compilation_ttes_periodes(date_entree_debut, date_entree_fin, site, option_recup):
     date_first_met = datetime.datetime(1993,8,1,6) # EN DUR
-    date_last_met = datetime.datetime(2018,8,1,6) # EN DUR
+    date_last_met = datetime.datetime(2019,8,1,6) # EN DUR
     list_path_met, list_date_debut, list_date_fin = decoupe_periode(date_entree_debut, date_entree_fin)
     pas = 3600 # EN DUR
     L=[]

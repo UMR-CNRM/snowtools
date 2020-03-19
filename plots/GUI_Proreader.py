@@ -7,7 +7,6 @@ from tkinter import ttk
 import tkinter.filedialog
 
 import math
-import datetime
 import numpy as np
 import argparse
 import sys
@@ -16,10 +15,6 @@ import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.widgets import RectangleSelector
-from matplotlib.backend_bases import cursors
-import matplotlib.backends.backend_tkagg as tkagg
-from matplotlib.figure import Figure
 
 from utils.prosimu import prosimu
 from utils.infomassifs import infomassifs
@@ -73,8 +68,10 @@ class GraphStandard(Toplevel):
         self.valeur_choisie1=''
         self.valeur_choisie2=''
         self.message_filedialog='Importer un fichier PRO'
-        self.type_graphique=1
+        #self.type_graphique=1
         self.ChoixPossible = [True, True, True, True]
+        self.type_fichier = ''
+        self.stop_right_click = False
         
         self.menubar = Menu()
         self.filemenu = Menu(self.menubar, tearoff=0)
@@ -237,8 +234,8 @@ class GraphStandard(Toplevel):
     ##########################################################
     # GESTION DU PROFIL INTERACTIF
     ##########################################################
-    def motion(self,event):
-        if self.bool_desactive_motion:
+    def motion(self,event):     
+        if self.bool_desactive_motion or self.stop_right_click:
             return
         if (event.inaxes == self.ax1):
             #date_souris=self.date[min(math.floor(event.xdata),len(self.date)-1)]
@@ -257,7 +254,7 @@ class GraphStandard(Toplevel):
             self.first_profil=False
             
     def motion_zoom(self,event):
-        if self.bool_desactive_motion:
+        if self.bool_desactive_motion or self.stop_right_click:
             return
         if (event.inaxes == self.ax1):
             hauteur_souris=event.ydata
@@ -276,7 +273,10 @@ class GraphStandard(Toplevel):
             self.first_profil=False
             
     def on_button_press(self, event):
-        if self.bool_desactive_motion:
+        if (event.button > 1):
+            self.stop_right_click = not self.stop_right_click
+            return
+        if self.bool_desactive_motion or self.stop_right_click:
             return
         if (event.inaxes == self.ax1):
             self.boolzoom=True
@@ -287,7 +287,7 @@ class GraphStandard(Toplevel):
             self.Canevas.draw()
 
     def on_move_press(self, event):
-        if self.bool_desactive_motion:
+        if self.bool_desactive_motion or self.stop_right_click:
             return
         if self.boolzoom is False:
             return
@@ -302,10 +302,12 @@ class GraphStandard(Toplevel):
             self.Canevas.flush_events()
 
     def on_button_release(self, event):
-        if self.bool_desactive_motion:
+        if self.bool_desactive_motion or self.stop_right_click:
+            return
+        if (event.button > 1):
             return
         if (event.inaxes == self.ax1):
-            self.width_rect=0.01
+            self.width_rect = 0.01
             
             self.date2_zoom = self.date[min(np.where(self.intime)[0][int(math.floor(event.xdata))],len(self.date)-1)]
             largeur = self.winfo_width()/self.taille_x
@@ -321,7 +323,9 @@ class GraphStandard(Toplevel):
             self.fig2, self.ax2 = plt.subplots(1, 1, sharex=True, sharey=True)
             self.ax3=self.ax2.twiny()
             self.first_profil=True
-            self.Canevas2.get_tk_widget().destroy()
+            # Chez Neige ( + sur le Mac de Pascal), le Canevas2.destroy amene un segmentation fault 11 => on a commente et c'est bon...
+            # Ce serait quand même bien de savoir ce qu'il se passe... 
+            #self.Canevas2.get_tk_widget().destroy()
             self.Canevas2 = FigureCanvasTkAgg(self.fig2,self)
             self.Canevas2.get_tk_widget().place(x=505*largeur,y=150*hauteur,width=200*largeur, height=500*hauteur)
         
@@ -447,10 +451,17 @@ class GraphStandard(Toplevel):
         
         self.pro = proReader_mini.ProReader_mini(ncfile=self.filename)
         listvariables = ff.listvar()
+        list_var_non_plot = ['time', 'slope', 'aspect', 'ZS', 'massif_num', 'latitude', 'longitude',
+                             'Projection_Type', 'station', 'massif', 'naturalIndex']
         self.Tableau=self.pro.get_choix(self.filename)
-
+        
+        if 'SNOWDZ' in listvariables:
+            self.type_fichier = 'PRO'
+        elif 'Dsnw' in listvariables:
+            self.type_fichier = 'FSM'
+                    
         for i in range(len(listvariables)):
-            if(listvariables[i]==(listvariables[i].upper()) and listvariables[i]!='ZS'):
+            if(ff.listvar()[i] not in list_var_non_plot):
                 if ff.getattr(listvariables[i],'long_name')!='':
                     self.liste_variable_for_pres.append(ff.getattr(listvariables[i],'long_name'))
                     self.liste_variable.append(listvariables[i])
@@ -630,7 +641,10 @@ class GraphStandard(Toplevel):
     def test_presence_champs(self):
     # Cas 1 seul point
         if (len(self.Tableau[0])==1):
-            self.point_choisi=0
+            if self.type_fichier == 'PRO':
+                self.point_choisi=0
+            elif self.type_fichier == 'FSM':
+                self.point_choisi=-1
             self.combobox_reduce1.config(state = 'disabled', values = '')
             self.combobox_reduce2.config(state = 'disabled', values = '')
             self.combobox_reduce3.config(state = 'disabled', values = '')
@@ -2156,6 +2170,8 @@ class GraphMembre(Toplevel):
         self.message_filedialog='Importer un fichier PRO'
         self.type_graphique=1
         self.ChoixPossible = [True, True, True, True]
+        self.type_fichier = ''
+        self.old_date = None
         
         self.menubar = Menu()
         self.filemenu = Menu(self.menubar, tearoff=0)
@@ -2297,6 +2313,11 @@ class GraphMembre(Toplevel):
         self.clik_zoom=False
     
     def motion(self,event):
+        if self.bool_no_snowlayer:
+            if self.date_motion != self.old_date:
+                print(self.date_motion)
+                self.old_date = self.date_motion
+            return
         if (event.inaxes == self.ax1):
             membre_souris=min(math.floor(event.xdata),self.nmembre-1)
             hauteur_souris=event.ydata
@@ -2377,16 +2398,23 @@ class GraphMembre(Toplevel):
         self.datedeb=self.date[0]
         self.datefin=self.date[len(self.date)-1]
         
-        if len(self.date) > 1000: 
+        if len(self.date) > constante_sampling: 
             messagebox.showinfo('Time > 1000', 'automatic sampling to avoid too long treatment')
 
         self.pro = proReader_mini.ProReader_membre(ncfile=self.filename)
         self.nmembre = self.pro.nb_membre
         listvariables = ff.listvar()
+        list_var_non_plot = ['time', 'slope', 'aspect', 'ZS', 'massif_num', 'latitude', 'longitude',
+                             'Projection_Type', 'station', 'massif', 'naturalIndex']
         self.Tableau=self.pro.get_choix(self.filename)
+        
+        if 'SNOWDZ' in listvariables:
+            self.type_fichier = 'PRO'
+        elif 'Dsnw' or 'ts' or 'tsns' in listvariables:
+            self.type_fichier = 'FSM'
 
         for i in range(len(listvariables)):
-            if(listvariables[i]==(listvariables[i].upper()) and listvariables[i]!='ZS'):
+            if(ff.listvar()[i] not in list_var_non_plot):
                 if ff.getattr(listvariables[i],'long_name')!='':
                     self.liste_variable_for_pres.append(ff.getattr(listvariables[i],'long_name'))
                     self.liste_variable.append(listvariables[i])
@@ -2418,10 +2446,14 @@ class GraphMembre(Toplevel):
             for var in liste:
                 if 'snow_layer' in list(ff.getdimvar(var)):
                     liste_pres.append(self.liste_variable_for_pres[self.liste_variable.index(var)])
-
-            self.combobox_choix_profil.config(values = liste_pres)
-            self.combobox_choix_profil.config(state = "readonly")
-            self.combobox_choix_profil.bind('<<ComboboxSelected>>', self.choix_profil)
+            if liste_pres != []:
+                self.bool_no_snowlayer = False
+                self.combobox_choix_profil.config(values = liste_pres)
+                self.combobox_choix_profil.config(state = "readonly")
+                self.combobox_choix_profil.bind('<<ComboboxSelected>>', self.choix_profil)                
+            else:
+                self.bool_no_snowlayer = True
+                self.choix_profil(self)
             
         self.combobox.config(state ='readonly', values=self.liste_variable_for_pres)
         self.combobox.bind('<<ComboboxSelected>>', suite)
@@ -2564,17 +2596,22 @@ class GraphMembre(Toplevel):
     # CHOIX VARIABLE PROFIL
     ##########################################################
     def choix_profil(self,event):
-        variable_souris_for_pres=self.combobox_choix_profil.get()
-        self.variable_souris=self.liste_variable[self.liste_variable_for_pres.index(variable_souris_for_pres)]
-        if self.profil_complet:
-            self.var_sup.extend([self.variable_souris,'SNOWTYPE','SNOWRAM'])
-        else:
-            self.var_sup.append(self.variable_souris)
-        self.bool_profil=True
-
+        if self.bool_no_snowlayer == False:
+            variable_souris_for_pres=self.combobox_choix_profil.get()
+            self.variable_souris=self.liste_variable[self.liste_variable_for_pres.index(variable_souris_for_pres)]
+            if self.profil_complet:
+                self.var_sup.extend([self.variable_souris,'SNOWTYPE','SNOWRAM'])
+            else:
+                self.var_sup.append(self.variable_souris)
+            self.bool_profil=True
+        else: 
+            self.bool_profil=False
         # Cas 1 seul point
         if (len(self.Tableau[0])) == 1:
-            self.point_choisi = 0
+            if self.type_fichier == 'PRO':
+                self.point_choisi = 0
+            elif self.type_fichier == 'FSM':
+                self.point_choisi = -1
             self.combobox_reduce1.config(state = 'disabled', values = '')
             self.combobox_reduce2.config(state = 'disabled', values = '')
             self.combobox_reduce3.config(state = 'disabled', values = '')
@@ -2771,7 +2808,7 @@ def parseArguments():
     parser.add_argument("-t", "--type", help="type of graph (standard, massif, membre)", type=str, default = 'standard')
 
     parser.add_argument("-dir", "--direction", help="direction for plot (up or down, useful for height plots)", type=str, default = 'up')
-    parser.add_argument("-h", "--height", help="centimeters for height plots", type = int, default = 10)
+    parser.add_argument("--height", help="centimeters for height plots", type = int, default = 10)
 
     # Print version
     parser.add_argument("--version", action="version", version='%(prog)s - Version 1.0')
@@ -2908,8 +2945,8 @@ if __name__ == '__main__':
         out_name = args.out
         slope = args.slope
         type_graph = args.type
-        direction = args.direction
-        hauteur = args.hauteur
+        #direction = args.direction
+        #hauteur = args.hauteur
 
         if NOGUI:
             Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph, altitude, aspect, massif, slope) 

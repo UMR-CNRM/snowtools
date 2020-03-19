@@ -34,11 +34,16 @@ dico = {'WSN_VEG':(0,40),
             'SNOWSHEAR':(0,30),
             'RSN_VEG':(0,600),
             'ASN_VEG':(0,300),
-            'ACC_RAT':(0,50),
-            'NAT_RAT':(0,200),
+            'ACC_RAT':(0,20),
+            'NAT_RAT':(0,20),
             'SNOWIMP1':(-10,0),
-            'SNOWIMP2':(-10,0)
-            }
+            'SNOWIMP2':(-10,0), 
+            'lqsn':(0,100),
+            'rgrn':(0,0.004),
+            'snowrho':(0,500),
+            'tsnl':(238,274),
+            'ts':(238,294)
+}
 
 class ProReader_mini:
     """
@@ -57,8 +62,18 @@ class ProReader_mini:
 
     def initFromFile(self, ncfile, var=None, point=None, var_sup=[], liste_points=[]):
         ff = prosimu(ncfile)
-
         listvariables = ff.listvar()
+        
+        if 'SNOWDZ' in listvariables:
+            self.var_utile = 'SNOWDZ'
+            self.type_fichier = 'PRO'
+        elif 'Dsnw' in listvariables:
+            self.var_utile = 'Dsnw'
+            self.type_fichier = 'FSM'
+        else:
+            print('Lack of Necessary variable: SNOWDZ for PRO or Dsnw for FSM. Something will go wrong')
+        
+        
         if('slope' in listvariables):
             slopetab = ff.read('slope')[:]
         else:
@@ -84,13 +99,15 @@ class ProReader_mini:
         if(isinstance(var, str)):
             var = var
         else:
-            var = 'SNOWDZ'
+            var = self.var_utile
 
         # Selection du point d interet
         if(isinstance(point, int)):
             point = point
-        else:
+        elif self.type_fichier == 'PRO':
             point = 0
+        elif self.type_fichier == 'FSM':
+            point = -1
             
         print ("Lecture fichier %s" % ncfile)
         print ("Variable %s selectionnee\n" % var)
@@ -115,12 +132,11 @@ class ProReader_mini:
         # Extraction des data
         self.var = {}
         self.var1D = {}
-        list_var_necessaire = list(set(['SNOWDZ','SNOWTEMP',var]).union(set(var_sup)))
-        if (('SNOWDZ' or 'SNOWTEMP' or var) not in ff.listvar()):
-            print("Une variable (SNOWDZ, SNOWTEMP ou "+var+") est absente de ce fichier PRO.\n Sa présence est nécessaire. Plantage assuré")
-    
+        list_var_non_plot = ['time', 'slope', 'aspect', 'ZS', 'massif_num', 'latitude', 'longitude',
+                             'Projection_Type', 'station', 'massif', 'naturalIndex']
+
         for i in range(len(ff.listvar())):
-            if(ff.listvar()[i]==(ff.listvar()[i].upper()) and ff.listvar()[i]!='ZS' and (ff.listvar()[i] in list_var_necessaire)):
+            if(ff.listvar()[i] not in list_var_non_plot):
                 if ('snow_layer' in ff.getdimvar(ff.listvar()[i])):
                     if(ff.listvar()[i] == 'WSN_VEG'):
                         self.var['WSN_VEG'] = ff.read(ff.listvar()[i], selectpoint=point)
@@ -129,8 +145,8 @@ class ProReader_mini:
                 else:
                     self.var1D[ff.listvar()[i]] = ff.read(ff.listvar()[i], selectpoint=point, fill2zero=True)  # Fill2zero necessaire pour le plot
 
-        self.ntime = np.shape(self.var['SNOWDZ'])[0]
-        self.nsnowlayer = np.shape(self.var['SNOWDZ'])[1]
+        self.ntime = np.shape(self.var[self.var_utile])[0]
+        self.nsnowlayer = np.shape(self.var[self.var_utile])[1]
     
     def get_choix(self, ncfile):
         ff = prosimu(ncfile)
@@ -187,7 +203,7 @@ class ProReader_mini:
         e = self.parsedate(e, self.date, self.date[self.ntime - 1])
         
         intime = (self.date >= b) * (self.date <= e)
-        ep = self.var['SNOWDZ'][intime]
+        ep = self.var[self.var_utile][intime]
         return np.max(np.nansum(ep, axis=1))
     
     def parsedate(self,date, datetab, default):
@@ -224,12 +240,14 @@ class ProReader_mini:
 
         if var == 'SNOWTYPE':
             colormap = 'grains'
-        elif var == 'SNOWTEMP':
+        elif var == 'SNOWTEMP' or var =='tsnl':
             colormap = 'RdBu_r'
         elif 'SNOWIMP1' in var:
             colormap = 'echelle_log'
         elif 'SNOWIMP2' in var:
             colormap = 'echelle_log_sahara'
+        elif 'NAT_RAT' in var or 'ACC_RAT' in var:
+            colormap = 'ratio_cisaillement'
         else:
             colormap = colormap
 
@@ -242,7 +260,7 @@ class ProReader_mini:
             intime = intime_t
         
         # Trace par appel a plot_profil
-        ep = self.var['SNOWDZ'][intime]
+        ep = self.var[self.var_utile][intime]
         toplot = self.var[var][intime]
         if(real_layers):
             plot_profil(axe, ep, toplot, colormap=colormap, legend=legend)
@@ -302,7 +320,7 @@ class ProReader_mini:
         
         # 1) Prendre les épaisseurs et les sommer puis voir pour quel indice on dépasse la valeur height
         # 2) On fait cela pour chaque date
-        ep = self.var['SNOWDZ'][intime]
+        ep = self.var[self.var_utile][intime]
         toplot = self.var[var][intime]
         y = []
         ep_from_ground = 100 * np.cumsum(ep[:, ::-1], axis=1)
@@ -422,7 +440,7 @@ class ProReader_mini:
 
         date = self.parsedate(date, self.date, self.date[self.ntime - 1])
         date = self.date[self.date >= date][0]
-        ep = self.var['SNOWDZ'][self.date == date]
+        ep = self.var[self.var_utile][self.date == date]
         epc = np.cumsum(ep)
 
         pointsx = np.zeros(2 * self.nsnowlayer + 2)
@@ -436,7 +454,7 @@ class ProReader_mini:
         pointsy=np.delete(pointsy,0)
         pointsx=np.delete(pointsx,0)
             
-        if (var == 'SNOWTEMP'):
+        if (var == 'SNOWTEMP' or var =='tsnl'):
             pointsy=np.where(pointsy > MIN_temp ,pointsy,zero_C)
         if ('SNOWIMP' in var):
             pointsy = np.where(pointsy > 10**(-10) , pointsy, 10**(-10))
@@ -476,7 +494,7 @@ class ProReader_mini:
 
         date = self.parsedate(date, self.date, self.date[self.ntime - 1])
         date = self.date[self.date >= date][0]
-        ep = self.var['SNOWDZ'][self.date == date]
+        ep = self.var[self.var_utile][self.date == date]
         epc = np.cumsum(ep)
 
         # Tracé du profil    
@@ -491,7 +509,7 @@ class ProReader_mini:
         pointsy=np.delete(pointsy,0)
         pointsx=np.delete(pointsx,0)
 
-        if (var == 'SNOWTEMP'):
+        if (var == 'SNOWTEMP' or var == 'tsnl'):
             pointsy=np.where(pointsy > MIN_temp ,pointsy,zero_C)
         if ('SNOWIMP' in var):
             pointsy = np.where(pointsy > 10**(-10) , pointsy, 10**(-10))
@@ -977,46 +995,68 @@ class ProReader_membre:
 
     def initFromFile(self, ncfile, var=None, point=None, var_sup=[]):
         ff = prosimu(ncfile)
+        
+        if 'SNOWDZ' in ff.listvar():
+            self.var_utile = 'SNOWDZ'
+            self.type_fichier = 'PRO'
+        elif 'Dsnw' in ff.listvar():
+            self.var_utile = 'Dsnw'
+            self.type_fichier = 'FSM'
+        elif 'tsns' in ff.listvar():
+            self.var_utile = 'tsns'
+            self.type_fichier = 'FSM'
+        else:
+            print('Lack of Necessary variable: SNOWDZ for PRO or Dsnw for FSM. Something will go wrong')        
+        
         arborescence = os.path.dirname(ncfile)
-        separateur = ncfile.replace(os.path.dirname(ncfile),'')[0] # suivant les OS, '/' ou '\' => devrait éviter des soucis
+        separateur = ncfile.replace(os.path.dirname(ncfile),'')[0] # suivant les OS, '/' ou '\' => devrait éviter des soucis    
         place_mb0 = arborescence.find('mb0')
         nom_fichier = ncfile.replace(arborescence + separateur,'')
-        
-        if len(arborescence)==place_mb0+5 or arborescence[place_mb0+5] == separateur:
-                nb_chiffre = 3
-        elif len(arborescence)==place_mb0+6 or arborescence[place_mb0+6] == separateur:
-                nb_chiffre = 4
-        
-        if nb_chiffre == 3:
-            nmembre = 0
-            while ('mb'+'%03d' %nmembre) in os.listdir(arborescence[:place_mb0]):
-                nmembre = nmembre + 1
-                if nmembre > 100:
-                    break
-                    print('more than 100 members. Pb of directory possible. If not, must change indexes in proReader_mini')
-        elif nb_chiffre == 4:
-            nmembre = 1
-            while ('mb'+'%04d' %nmembre) in os.listdir(arborescence[:place_mb0]):
-                nmembre = nmembre + 1
-                if nmembre > 100:
-                    break
-                    print('more than 100 members. Pb of directory possible. If not, must change indexes in proReader_mini')
-            nmembre = nmembre-1
 
+        if self.type_fichier == 'PRO':
+            if len(arborescence)==place_mb0+5 or arborescence[place_mb0+5] == separateur:
+                    nb_chiffre = 3
+            elif len(arborescence)==place_mb0+6 or arborescence[place_mb0+6] == separateur:
+                    nb_chiffre = 4
+        
+            if nb_chiffre == 3:
+                nmembre = 0
+                while ('mb'+'%03d' %nmembre) in os.listdir(arborescence[:place_mb0]):
+                    nmembre = nmembre + 1
+                    if nmembre > 100:
+                        break
+                        print('more than 100 members. Pb of directory possible. If not, must change indexes in proReader_mini')
+            elif nb_chiffre == 4:
+                nmembre = 1
+                while ('mb'+'%04d' %nmembre) in os.listdir(arborescence[:place_mb0]):
+                    nmembre = nmembre + 1
+                    if nmembre > 100:
+                        break
+                        print('more than 100 members. Pb of directory possible. If not, must change indexes in proReader_mini')
+                nmembre = nmembre-1
+
+        elif self.type_fichier == 'FSM':
+            nmembre = 0
+            while ('FSM'+'%02d' %nmembre + nom_fichier[5:]) in os.listdir(arborescence):
+                    nmembre = nmembre + 1
+                    if nmembre > 100:
+                        break
+                        print('more than 100 members. Pb of directory possible. If not, must change indexes in proReader_mini')
+        
         # Preparation des data: mise en place des dictionnaires
         self.var_membre = {}
         self.var1D_membre = {}
-        list_var_necessaire_membre = list(set(['SNOWDZ','SNOWTEMP',var]).union(set(var_sup)))
-        if (('SNOWDZ' or 'SNOWTEMP' or var) not in ff.listvar()):
-            print("Une variable (SNOWDZ, SNOWTEMP ou "+var+") est absente de ce fichier PRO.\n Sa présence est nécessaire. Plantage assuré")
-
-        a = ff.read('SNOWDZ')
+        list_var_non_plot = ['time', 'slope', 'aspect', 'ZS', 'massif_num', 'latitude', 'longitude',
+                             'Projection_Type', 'station', 'massif', 'naturalIndex']
+        
+        a = ff.read(self.var_utile)
         liste = [nmembre] + list(a.shape)
         self.ntime = a.shape[0]
-        self.nsnowlayer = a.shape[1]
+        if self.var_utile != 'tsns':
+            self.nsnowlayer = a.shape[1]
 
         for i in range(len(ff.listvar())):
-            if(ff.listvar()[i]==(ff.listvar()[i].upper()) and ff.listvar()[i]!='ZS' and (ff.listvar()[i] in list_var_necessaire_membre)):
+            if (ff.listvar()[i] not in list_var_non_plot):
                 if ('snow_layer' in ff.getdimvar(ff.listvar()[i])):
                     if(ff.listvar()[i] == 'WSN_VEG'):
                         self.var_membre['WSN_VEG'] = np.ma.masked_where(np.zeros(tuple(liste[0:3])) < -1, np.zeros(tuple(liste[0:3])))
@@ -1028,13 +1068,14 @@ class ProReader_membre:
         self.date = ff.readtime()
 
         for nb_m in range(nmembre):
-            if nb_chiffre == 3:
+            if self.type_fichier == 'PRO' and nb_chiffre == 3:
                 chaine = 'mb'+'%03d' %nb_m
                 path_for_nc = arborescence[:place_mb0] + chaine + arborescence[place_mb0+5:] + separateur + nom_fichier
-            elif nb_chiffre == 4:
+            elif self.type_fichier == 'PRO' and nb_chiffre == 4:
                 chaine = 'mb'+'%04d' %(nb_m+1)
                 path_for_nc = arborescence[:place_mb0] + chaine + arborescence[place_mb0+6:] + separateur + nom_fichier
-                print(path_for_nc)            
+            elif self.type_fichier == 'FSM':
+                path_for_nc = arborescence + separateur + 'FSM' +'%02d' %nb_m + nom_fichier[5:]
             #path pour nc = arborescence jusqu'à mb + les 3 chiffres + le séparateur ('/' ou '\')  + le nom du fichier supposé tjrs le même
         
             ff = prosimu(path_for_nc)  
@@ -1042,13 +1083,15 @@ class ProReader_membre:
             if(isinstance(var, str)):
                 var = var
             else:
-                var = 'SNOWDZ'
-
+                var = self.var_utile
+                
             # Selection du point d interet
             if(isinstance(point, int)):
                 point = point
-            else:
+            elif self.type_fichier == 'PRO':
                 point = 0
+            elif self.type_fichier == 'FSM':
+                point = -1
 
             print ("Lecture fichier %s" % path_for_nc)
             if nb_m ==0:
@@ -1056,14 +1099,17 @@ class ProReader_membre:
 
             # Extraction des data
             for i in range(len(ff.listvar())):
-                if(ff.listvar()[i]==(ff.listvar()[i].upper()) and ff.listvar()[i]!='ZS' and (ff.listvar()[i] in list_var_necessaire_membre)):
+                if (ff.listvar()[i] not in list_var_non_plot):
                     if ('snow_layer' in ff.getdimvar(ff.listvar()[i])):
                         if(ff.listvar()[i] == 'WSN_VEG'):
                             self.var_membre['WSN_VEG'][nb_m,:,:] = ff.read_var(ff.listvar()[i], Number_of_points = point)
                         else:
                             self.var_membre[ff.listvar()[i]][nb_m,:,:] = ff.read_var(ff.listvar()[i], Number_of_points = point, fill2zero=True)
+                    elif ('soil_layer' in ff.getdimvar(ff.listvar()[i]) and self.type_fichier == 'FSM'):
+                        self.var1D_membre[ff.listvar()[i]][nb_m,:] = ff.read_var(ff.listvar()[i], Number_of_points = point, fill2zero=True)[:,0]
                     else:
                         self.var1D_membre[ff.listvar()[i]][nb_m,:] = ff.read_var(ff.listvar()[i], Number_of_points = point, fill2zero=True)
+
                         
         return nmembre
 
@@ -1110,11 +1156,11 @@ class ProReader_membre:
         return np.vstack((massiftab,alttab,slopetab,aspecttab))
     
     def get_topplot_membre(self,var):
-        ep = self.var_membre['SNOWDZ'][:,:,:]
+        ep = self.var_membre[self.var_utile][:,:,:]
         return np.max(np.nansum(ep, axis=2))
     
     def get_topplot_membre_date(self,var,date, b=None, e=None):
-        ep = self.var_membre['SNOWDZ'][:,self.date == date,:]
+        ep = self.var_membre[self.var_utile][:,self.date == date,:]
         return np.max(np.nansum(ep, axis=2))
     
     def plot_membre(self, axe, var, date=None, xlabel=True, legend=None, colormap='viridis', real_layers=True, cbar_show=False, top_zoom=False):
@@ -1133,7 +1179,7 @@ class ProReader_membre:
 
         if var == 'SNOWTYPE':
             colormap = 'grains'
-        elif var == 'SNOWTEMP':
+        elif var == 'SNOWTEMP' or var =='tsnl':
             colormap = 'RdBu_r'
         else:
             colormap = colormap
@@ -1144,13 +1190,13 @@ class ProReader_membre:
         b = self.parsedate(date, self.date, self.date[0])
         intime=list(self.date == b).index(True)
 
-        ep = self.var_membre['SNOWDZ'][:,intime,:]
+        ep = self.var_membre[self.var_utile][:,intime,:]
         toplot = self.var_membre[var][:,intime,:]
         
         if top_zoom:
-            eptop = self.var_membre['SNOWDZ'][:,intime,:]
+            eptop = self.var_membre[self.var_utile][:,intime,:]
         else:
-            eptop = self.var_membre['SNOWDZ'][:,:,:]
+            eptop = self.var_membre[self.var_utile][:,:,:]
 
         if(real_layers):
             plot_profil(axe, ep, toplot, colormap=colormap, legend=legend, cbar_show=cbar_show)
@@ -1194,7 +1240,11 @@ class ProReader_membre:
         xplot = range(toplot.shape[0])
         axe.plot(xplot, toplot, color)
         axe.set_xlim(0, toplot.shape[0])
-        axe.set_ylim(0, np.nanmax(self.var1D_membre[var][:,:]))
+        
+        if (var in dico.keys()):
+            axe.set_ylim(dico[var][0], dico[var][1])
+        else:
+            axe.set_ylim(0, np.nanmax(self.var1D_membre[var][:,:]))
 
         axe.xaxis.set_major_locator(ticker.MaxNLocator(5))
 
@@ -1212,7 +1262,7 @@ class ProReader_membre:
         intime=list(self.date == b).index(True)
         
         
-        ep = self.var_membre['SNOWDZ'][membre,intime,:]
+        ep = self.var_membre[self.var_utile][membre,intime,:]
         epc = np.cumsum(ep)
 
         pointsx = np.zeros(2 * self.nsnowlayer + 2)
@@ -1229,7 +1279,7 @@ class ProReader_membre:
         pointsy=np.delete(pointsy,1)
         pointsx=np.delete(pointsx,1)
             
-        if (var == 'SNOWTEMP'):
+        if (var == 'SNOWTEMP' or var =='tsnl'):
             pointsy=np.where(pointsy > MIN_temp ,pointsy,zero_C)
         axe.plot(pointsy[::-1], np.subtract(pointsx[-1],pointsx[::-1]), color=color)
         #axe.set(title=date.strftime('%Y-%m-%d %Hh'))
@@ -1272,7 +1322,7 @@ class ProReader_membre:
         b = self.parsedate(date, self.date, self.date[0])
         intime=list(self.date == b).index(True)
         
-        ep = self.var_membre['SNOWDZ'][membre,intime,:].filled(fill_value=0)
+        ep = self.var_membre[self.var_utile][membre,intime,:].filled(fill_value=0)
         epc = np.cumsum(ep)
        
         # Tracé du profil    
@@ -1290,7 +1340,7 @@ class ProReader_membre:
         pointsy=np.delete(pointsy,1)
         pointsx=np.delete(pointsx,1)
 
-        if (var == 'SNOWTEMP'):
+        if var == 'SNOWTEMP' or var =='tsnl':
             pointsy=np.where(pointsy > MIN_temp ,pointsy,zero_C)
         axe.plot(pointsy[::-1], np.subtract(pointsx[-1],pointsx[::-1]), color=color)
         axe.set_xlabel('membre: '+str(membre))
