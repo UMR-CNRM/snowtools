@@ -11,6 +11,7 @@ from tkinter import Label
 from tkinter import IntVar
 from tkinter import messagebox
 from tkinter import ttk
+from tkinter import Tk
 import tkinter.filedialog
 
 import math
@@ -36,10 +37,14 @@ constante_sampling = proReader_mini.constante_sampling
 # Modele de fenetre graphique dont les autres heritent
 #######################################################
 class Graph(Toplevel):
-    def __init__(self, **Arguments):
-        Toplevel.__init__(self)
+    def __init__(self, parent, **Arguments):
+        Toplevel.__init__(self, parent)
+        self.transient(parent)
+        self.grab_set()
+
         # Initialisation variables
         self.title('GUI PROreader CEN')        
+        self.protocol("WM_DELETE_WINDOW", quit)
         self.taille_x = 900
         self.taille_y = 700
         self.geometry('900x700')
@@ -77,6 +82,8 @@ class Graph(Toplevel):
         self.stop_right_click = False
         self.bool_ligne_commande = False
         self.clik_zoom = False
+        self.largeur = self.winfo_width()/self.taille_x
+        self.hauteur = self.winfo_height()/self.taille_y
 
         # Boutons communs a toutes les fenetres
         self.buttonQuit = Button(self, text = 'Quitter', command = quit)
@@ -114,6 +121,9 @@ class Graph(Toplevel):
 
         self.make_list_massif()
         self.bind('<Configure>', self.onsize_test)
+        self.bind('<Control-o>', self.recup)
+        self.bind('<Escape>', quit)
+        self.bind('<Control-q>', quit)
         if len(Arguments) > 0:
             self.ini_ligne_commande(**Arguments)
 
@@ -277,20 +287,6 @@ class Graph(Toplevel):
 
     # RECUPERATION FICHIER
     def Ouvrir(self):
-        try:
-            # call a dummy dialog with an impossible option to initialize the file
-            # dialog without really getting a dialog window; this will throw a
-            # TclError, so we need a try...except :
-            try:
-                tk.call('tk_getOpenFile', '-foobarbaz')
-            except TclError:
-                pass
-            # now set the magic variables accordingly
-            tk.call('set', '::tk::dialog::file::showHiddenBtn', '1')
-            tk.call('set', '::tk::dialog::file::showHiddenVar', '0')
-        except:
-            pass
-      
         self.filename = tkinter.filedialog.askopenfilename(title = self.message_filedialog, filetypes = [('PRO files','.nc'),('all files','.*')])
         self.raz()
 
@@ -719,8 +715,8 @@ class Graph(Toplevel):
 ################################################################################################
 #############################################################################################'''
 class GraphStandard(Graph):
-    def __init__(self,**Arguments):
-        Graph.__init__(self,**Arguments)
+    def __init__(self, parent, **Arguments):
+        Graph.__init__(self, parent, **Arguments)
         self.boolzoom = False
         self.list_choix = [None, None, None, None]
         self.point_choisi = ''
@@ -841,7 +837,7 @@ class GraphStandard(Graph):
             self.pro = proReader_mini.ProReader_standard(ncfile=self.filename, var=self.variable, point=int(self.point_choisi),var_sup=self.var_sup)
         Graph.liste_profil(self)
 
-    def recup(self):
+    def recup(self, *args):
         Graph.Ouvrir(self)
         self.Tableau=self.pro.get_choix(self.filename)
         self.combobox.config(state ='readonly', values=self.liste_variable_for_pres)
@@ -913,8 +909,8 @@ class GraphStandard(Graph):
 #############################################################################################'''
 
 class GraphHeight(Graph):
-    def __init__(self,**Arguments):
-        Graph.__init__(self)
+    def __init__(self, parent, **Arguments):
+        Graph.__init__(self, parent)
         self.boolzoom = False
         self.list_choix = [None, None, None, None]
         self.point_choisi=''
@@ -1131,8 +1127,8 @@ class GraphHeight(Graph):
 ################################################################################################
 #############################################################################################'''
 class GraphMassif(Graph):
-    def __init__(self,**Arguments):
-        Graph.__init__(self)
+    def __init__(self, parent, **Arguments):
+        Graph.__init__(self, parent)
         self.date_motion = None
         self.list_choix = [None, None, None]
         self.liste_points = ''
@@ -1381,8 +1377,8 @@ class GraphMassif(Graph):
 ################################################################################################
 #############################################################################################'''
 class GraphMembre(Graph):
-    def __init__(self,**Arguments):
-        Graph.__init__(self)
+    def __init__(self,parent, **Arguments):
+        Graph.__init__(self, parent)
         self.date_motion = None
         self.list_choix = [None,None,None,None]
         self.ChoixPossible = [True, True, True, True]
@@ -1568,8 +1564,10 @@ class GraphMembre(Graph):
 class GestionFenetre(Frame):
     'In order to choose which graph will be drawn: standard, by massif, by members'
     def __init__(self):
-        Frame.__init__(self)
+        self.root = Tk()
+        Frame.__init__(self, self.root)
         self.master.title('GUI PROreader CEN')
+        self.master.protocol("WM_DELETE_WINDOW", self.close)
         self.master.geometry('250x200+200+200')
         self.master.taille_x_master = 250
         self.master.taille_y_master = 280
@@ -1579,6 +1577,12 @@ class GestionFenetre(Frame):
         self.master.buttongraphe_hauteur = Button(self.master,text = 'Height Graph', command = self.graphe4)
         self.master.buttonquit = Button(self.master,text='Quitter', command = quit)
         self.master.bind('<Configure>', self.onsize_master)
+        self.master.bind('<Escape>', self.close)
+        self.master.bind('<Control-q>', self.close)
+        self.master.bind('<Alt-s>', self.graphe1)
+        self.master.bind('<Alt-m>', self.graphe2)
+        self.master.bind('<Alt-e>', self.graphe3)
+        self.master.bind('<Alt-h>', self.graphe4)
 
     def onsize_master(self, event):
         largeur_master = self.master.winfo_width()/self.master.taille_x_master
@@ -1589,17 +1593,20 @@ class GestionFenetre(Frame):
         self.master.buttongraphe_hauteur.place(x = 20*largeur_master, y = 165*hauteur_master)
         self.master.buttonquit.place(x = 150*largeur_master, y = 215*hauteur_master)
         
-    def graphe1(self):
-        self.fen1 = GraphStandard()
+    def graphe1(self, *args):
+        self.fen1 = GraphStandard(self)
             
-    def graphe2(self):
-        self.fen2 = GraphMassif()
+    def graphe2(self, *args):
+        self.fen2 = GraphMassif(self)
             
-    def graphe3(self):
-        self.fen3 = GraphMembre()
+    def graphe3(self, *args):
+        self.fen3 = GraphMembre(self)
 
-    def graphe4(self):
-        self.fen4 = GraphHeight()
+    def graphe4(self, *args):
+        self.fen4 = GraphHeight(self)
+
+    def close(self, *args):
+        self.root.destroy()
 
 def parseArguments():
     # Create argument parser
@@ -1612,18 +1619,18 @@ def parseArguments():
     parser.add_argument("-p", "--profil", help = "Variable for profil plot", type=str, default = 'SNOWTEMP')
     parser.add_argument("-v", "--variable", help = "Variable to plot", type=str, default = 'SNOWSSA')
 
-    parser.add_argument("-n", "--NOGUI", help = "Option to save graph without GUI", type=bool, default = False)
-    parser.add_argument("-a", "--alt", help = "altitude", type = int, default = 0)
-    parser.add_argument("-as", "--aspect", help = "aspect", type = int, default = 0)
+    parser.add_argument("-n", "--NOGUI", help = "Option to save graph without GUI", action='store_true', default = False)
+    parser.add_argument("-a", "--alt", help = "altitude", type = int)
+    parser.add_argument("-as", "--aspect", help = "aspect", type = int)
     parser.add_argument("-d", "--date", help = "Date for plot (useful for massif and member plots)", type=str, default = 2001010106)
-    parser.add_argument("-m", "--massif", help = "massif", type = int, default = 999)
+    parser.add_argument("-m", "--massif", help = "massif", type = int)
     parser.add_argument("-o", "--out", help = "name for graph to save", type=str, default = 'out.png')
-    parser.add_argument("-s", "--slope", help = "slope for massif graph", type=int, default = 20)
+    parser.add_argument("-s", "--slope", help = "slope for massif graph", type=int)
     parser.add_argument("-t", "--type", help = "type of graph (standard, massif, membre, height)", type=str, default = 'standard')
 
     parser.add_argument("-dir", "--direction", help = "direction for plot (up or down, useful for height plots)", type=str, default = 'up')
     parser.add_argument("--hauteur", help = "centimeters for height plots", type = int, default = 10)
-    parser.add_argument("--point", help = "point number", type = int, default = 0)
+    parser.add_argument("--point", help = "point number", type = int)
 
     # Print version
     parser.add_argument("--version", action="version", version='%(prog)s - Version 1.0')
@@ -1634,48 +1641,43 @@ def parseArguments():
 
 def ChoixPointMassif(ff, altitude, aspect, massif, slope):
     listvariables = ff.listvar()
-    if('massif_num' in listvariables):
-        massiftab = ff.read('massif_num')[:]
-    elif ff.Number_of_points in ff.dataset.dimensions and len(ff.pointsdim) > 1:
-        massiftab = np.array([-10] * len(ff.pointsdim))
-    else:
-        massiftab = np.array([-10])
-    if('ZS' in listvariables):
-        alttab = ff.read('ZS')[:]
-    elif ff.Number_of_points in ff.dataset.dimensions and len(ff.pointsdim) > 1:
-        alttab = np.array([-10] * len(ff.pointsdim))
-    else:
-        alttab = np.array([-10])
-    if('slope' in listvariables):
-        slopetab = ff.read('slope')[:]
-    elif ff.Number_of_points in ff.dataset.dimensions and len(ff.pointsdim) > 1:
-        slopetab = np.array([-10] * len(ff.pointsdim))
-    else:
-        slopetab = np.array([-10])
-    if('aspect' in listvariables):
-        aspecttab = ff.read('aspect')[:]
-    elif ff.Number_of_points in ff.dataset.dimensions and len(ff.pointsdim) > 1:
-        aspecttab = np.array([-10] * len(ff.pointsdim))
-    else:
-        aspecttab = np.array([-10])
-    n = len(alttab[:])
-    A = (alttab[:] == [altitude]*n)
-    B = (aspecttab[:] == [aspect]*n)
-    C = (massiftab[:] == [massif]*n)
-    D = (slopetab[:] == [slope]*n)
-    if massif == 999:
-        indices = A & B & D
-    else:
-        indices = A & B & C & D
-    if True not in list(indices):
+    choice = []
+    if massif is not None:
+        if('massif_num' in listvariables):
+            massiftab = ff.read('massif_num')[:]
+            choice.append(massiftab==massif)
+    if altitude is not None:
+        if('ZS' in listvariables):
+            alttab = ff.read('ZS')[:]
+            choice.append(alttab==altitude)
+    if slope is not None :
+        if('slope' in listvariables):
+            slopetab = ff.read('slope')[:]
+            choice.append(slopetab==slope)
+    if aspect is not None:
+        if('aspect' in listvariables):
+            aspecttab = ff.read('aspect')[:]
+            choice.append(aspecttab==aspect)
+    if len(choice)==0:
+        print('No data to select point. Choose 0 !')
+        return [0]
+    allcriteria = choice[0]
+    for i in range(1,len(choice)):
+        allcriteria = np.logical_and(allcriteria, choice[i])
+    indices = np.where(allcriteria)[0]
+    if len(indices) == 0:
         print('Aucun choix de point correspondant -> PB')
+        #  TODO: We may exit with an error code here  <06-04-20, Léo Viallon-Galinier> # 
+        print('Use point 0 instead')
+        return [0]
     else:
-        return [i for i, x in enumerate(indices) if x == True]
+        return indices
 
 
 def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph, altitude, aspect, massif, slope, direction_coupe, hauteur_coupe):
     ff = prosimu(filename)
     liste_points = ChoixPointMassif(ff, altitude, aspect, massif, slope)
+    print(liste_points)
 
     if type_graph == 'standard':
         date = ff.readtime()
@@ -1757,19 +1759,23 @@ if __name__ == '__main__':
         hauteur_coupe = args.hauteur
         point = args.point
 
-        if (altitude != 0 or aspect != 0 or slope != 20 or massif != '999') and point == 0:
+        if (altitude is not None or aspect is not None or slope is not None or massif is not None) and point is None:
             ff = prosimu(filename)
             point = ChoixPointMassif(ff, altitude, aspect, massif, slope)[0]
+            ff.close()
+        if point is None:
+            point = 0
 
         if NOGUI:
             Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph, altitude, aspect, massif, slope, direction_coupe, hauteur_coupe)
         else:
             dic_option = {'filename': filename, 'variable': variable, 'profil': profil, 'point': point}
+            mainw = GestionFenetre()
             if type_graph == 'height':
-                fenetre = GraphHeight(**dic_option)
+                fenetre = GraphHeight(mainw.root, **dic_option)
             else:
-                fenetre = GraphStandard(**dic_option)
-            GestionFenetre().mainloop()
+                fenetre = GraphStandard(mainw.root, **dic_option)
+            mainw.mainloop()
 
     else: 
         # Lancement du gestionnaire d'événements
