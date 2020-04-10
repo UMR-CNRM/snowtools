@@ -14,10 +14,19 @@ from tkinter import ttk
 from tkinter import Tk
 import tkinter.filedialog
 
+import logging
+logger = logging.getLogger()
+logger.setLevel(logging.WARNING)
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter('%(levelname)s :: %(message)s'))
+console_handler.setLevel(logging.DEBUG)
+logger.addHandler(console_handler)
+
 import math
 import numpy as np
 import argparse
 import sys
+import os.path
 
 import matplotlib
 matplotlib.use('TkAgg')
@@ -287,7 +296,11 @@ class Graph(Toplevel):
 
     # RECUPERATION FICHIER
     def Ouvrir(self):
-        self.filename = tkinter.filedialog.askopenfilename(title = self.message_filedialog, filetypes = [('PRO files','.nc'),('all files','.*')])
+        selectedfilename = tkinter.filedialog.askopenfilename(title = self.message_filedialog, filetypes = [('PRO files','.nc'),('all files','.*')])
+        if selectedfilename == '':
+            logger.info('No file selected. Ignore.')
+            return
+        self.filename = selectedfilename
         self.raz()
 
         self.ff = prosimu(self.filename)
@@ -832,7 +845,7 @@ class GraphStandard(Graph):
         variable_for_pres=self.combobox.get()
         self.variable=self.liste_variable[self.liste_variable_for_pres.index(variable_for_pres)]
         self.var_sup.append(self.variable)
-        print(self.variable)
+        logger.info('Variable {} selected'.format(self.variable))
         if self.bool_profil:
             self.pro = proReader_mini.ProReader_standard(ncfile=self.filename, var=self.variable, point=int(self.point_choisi),var_sup=self.var_sup)
         Graph.liste_profil(self)
@@ -862,7 +875,7 @@ class GraphStandard(Graph):
         self.Canevas.get_tk_widget().destroy()
         self.Canevas = FigureCanvasTkAgg(self.fig1,self)
         self.Canevas.get_tk_widget().place(x = 3*self.largeur, y = 150*self.hauteur, width = 502*self.largeur, height = 500*self.hauteur)
-        print(self.variable)
+        logger.info('Variable {} selected'.format(self.variable))
         if ('snow_layer' in self.ff.getdimvar(self.variable)):
             self.intime = self.pro.plot(self.ax1, self.variable, self.datedeb, self.datefin, real_layers = True, legend = self.variable)
             self.bool_layer = True
@@ -1056,7 +1069,7 @@ class GraphHeight(Graph):
         variable_for_pres = self.combobox.get()
         self.variable = self.liste_variable[self.liste_variable_for_pres.index(variable_for_pres)]
         self.var_sup.append(self.variable)
-        print(self.variable)
+        logger.info('Variable {} selected'.format(self.variable))
         self.combobox_choix_direction.config(state = "readonly")
         self.combobox_choix_direction.bind('<<ComboboxSelected>>', self.finalisation_dirhauteur)
 
@@ -1098,7 +1111,7 @@ class GraphHeight(Graph):
         self.Canevas.get_tk_widget().destroy()
         self.Canevas = FigureCanvasTkAgg(self.fig1,self)
         self.Canevas.get_tk_widget().place(x = 3*self.largeur, y = 150*self.hauteur, width = 502*self.largeur, height = 500*self.hauteur)
-        print(self.variable)
+        logger.info('Variable {} selected'.format(self.variable))
         self.intime = self.pro.plot(self.ax1, self.variable, self.datedeb, self.datefin, legend = self.variable,
                                            direction_cut = self.direction_coupe, height_cut = self.hauteur_coupe)
         self.bool_layer = False
@@ -1238,7 +1251,7 @@ class GraphMassif(Graph):
         variable_for_pres = self.combobox.get()
         self.variable = self.liste_variable[self.liste_variable_for_pres.index(variable_for_pres)]
         self.var_sup.append(self.variable)
-        print(self.variable)
+        logger.info('Variable {} selected'.format(self.variable))
         if self.bool_profil:
             self.pro = proReader_mini.ProReader_massif(ncfile = self.filename, var = self.variable, liste_points = self.liste_points, var_sup = self.var_sup)
 
@@ -1341,7 +1354,7 @@ class GraphMassif(Graph):
         self.Canevas.get_tk_widget().destroy()
         self.Canevas = FigureCanvasTkAgg(self.fig1,self)
         self.Canevas.get_tk_widget().place(x = 3*self.largeur, y = 150*self.hauteur, width = 502*self.largeur, height = 500*self.hauteur)
-        print(self.variable)
+        logger.info('Variable {} selected'.format(self.variable))
         self.liste_massif_pour_legende=[]
         if ('massif_num' in self.ff.listvar()):
             nrstationtab = self.ff.read('massif_num')[:]
@@ -1469,7 +1482,7 @@ class GraphMembre(Graph):
             return
         if self.bool_no_snowlayer:
             if self.date_motion != self.old_date:
-                print(self.date_motion)
+                logger.info('Date {} selected'.format(self.date_motion))
                 self.old_date = self.date_motion
             return
         if (event.inaxes == self.ax1):
@@ -1504,7 +1517,7 @@ class GraphMembre(Graph):
         variable_for_pres = self.combobox.get()
         self.variable = self.liste_variable[self.liste_variable_for_pres.index(variable_for_pres)]
         self.var_sup.append(self.variable)
-        print(self.variable)
+        self.info('Variable {} selected'.format(self.variable))
         if self.bool_profil:
             self.pro = proReader_mini.ProReader_membre(ncfile = self.filename, var = self.variable, point = int(self.point_choisi), var_sup = self.var_sup)
 
@@ -1534,7 +1547,7 @@ class GraphMembre(Graph):
         self.Canevas.get_tk_widget().destroy()
         self.Canevas = FigureCanvasTkAgg(self.fig1,self)
         self.Canevas.get_tk_widget().place(x = 3*self.largeur, y = 150*self.hauteur, width = 502*self.largeur, height = 500*self.hauteur)
-        print(self.variable)
+        logger.info('Variable {} selected'.format(self.variable))
         if ('snow_layer' in self.ff.getdimvar(self.variable)):
             self.pro.plot_membre(self.ax1, self.variable, date = None, real_layers = True, legend = self.variable, cbar_show = True)
             self.bool_layer = True
@@ -1634,12 +1647,14 @@ def parseArguments():
 
     # Print version
     parser.add_argument("--version", action="version", version='%(prog)s - Version 1.0')
+    # Logging options
+    parser.add_argument("--debug", action="store_true", help="Set logging to debug.")
     # Parse arguments
     args = parser.parse_args()
 
     return args
 
-def ChoixPointMassif(ff, altitude, aspect, massif, slope):
+def ChoixPointMassif(ff, altitude, aspect, massif, slope, exitonerror=False):
     listvariables = ff.listvar()
     choice = []
     if massif is not None:
@@ -1659,16 +1674,17 @@ def ChoixPointMassif(ff, altitude, aspect, massif, slope):
             aspecttab = ff.read('aspect')[:]
             choice.append(aspecttab==aspect)
     if len(choice)==0:
-        print('No data to select point. Choose 0 !')
+        logger.warning('No data to select point. Choose 0 !')
         return [0]
     allcriteria = choice[0]
     for i in range(1,len(choice)):
         allcriteria = np.logical_and(allcriteria, choice[i])
     indices = np.where(allcriteria)[0]
     if len(indices) == 0:
-        print('Aucun choix de point correspondant -> PB')
-        #  TODO: We may exit with an error code here  <06-04-20, Léo Viallon-Galinier> # 
-        print('Use point 0 instead')
+        logger.error('Aucun choix de point correspondant -> PB. Use point 0')
+        if exitonerror:
+            ff.close()
+            exit(2)
         return [0]
     else:
         return indices
@@ -1685,7 +1701,7 @@ def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph
         datefin = date[len(date)-1]
         if len(date) > constante_sampling: 
             print('Time > '+str(constante_sampling), 'automatic sampling to avoid too long treatment')
-        pro = proReader_mini.ProReader_standard(ncfile = filename, var = variable, point = liste_points[0], var_sup = [])
+        pro = proReader_mini.ProReader_standard(ncfile = filename, var = variable, point = int(liste_points[0]), var_sup = [])
         fig1, ax1 = plt.subplots(1, 1, sharex = True, sharey = True)
         if ('snow_layer' in ff.getdimvar(variable)):
             intime = pro.plot(ax1, variable, datedeb, datefin, real_layers = True,legend = variable)
@@ -1700,7 +1716,7 @@ def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph
         datefin = date[len(date)-1]
         if len(date) > constante_sampling: 
             print('Time > '+str(constante_sampling), 'automatic sampling to avoid too long treatment')
-        pro = proReader_mini.ProReader_height(ncfile = filename, var = variable, point = liste_points[0], var_sup = [])
+        pro = proReader_mini.ProReader_height(ncfile = filename, var = variable, point = int(liste_points[0]), var_sup = [])
         fig1, ax1 = plt.subplots(1, 1, sharex = True, sharey = True)
         intime = pro.plot(ax1, variable, datedeb, datefin, legend = variable, direction_cut = direction_coupe, height_cut = hauteur_coupe)
 
@@ -1727,7 +1743,7 @@ def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph
             pro.plot1D_massif(ax1, variable, date = date_massif_membre, legend = variable, legend_x = liste_massif_pour_legende)
 
     if type_graph == 'membre':
-        pro = proReader_mini.ProReader_membre(ncfile = filename, var = variable, point = liste_points[0], var_sup = [])
+        pro = proReader_mini.ProReader_membre(ncfile = filename, var = variable, point = int(liste_points[0]), var_sup = [])
         fig1, ax1 = plt.subplots(1, 1, sharex = True, sharey = True)
         if ('snow_layer' in ff.getdimvar(variable)):
             pro.plot_membre(ax1, variable, date = date_massif_membre, real_layers = True, legend = variable, cbar_show = True)
@@ -1759,13 +1775,41 @@ if __name__ == '__main__':
         hauteur_coupe = args.hauteur
         point = args.point
 
+        # Logging options
+        if args.debug:
+            logger.setLevel(logging.DEBUG)
+
+        # Is there a filename provided. In case yes, is it a correct filename
+        if filename is None:
+            GestionFenetre().mainloop()
+            exit(0)
+        else:
+            if not os.path.isfile(filename):
+                logger.critical('Provided filename does not exist ({})'.format(filename))
+                exit(1)
+
+        # Get point of interest
         if (altitude is not None or aspect is not None or slope is not None or massif is not None) and point is None:
             ff = prosimu(filename)
-            point = ChoixPointMassif(ff, altitude, aspect, massif, slope)[0]
+            point = ChoixPointMassif(ff, altitude, aspect, massif, slope, exitonerror=True)[0]
             ff.close()
         if point is None:
             point = 0
 
+        # check variables exist
+        if variable is not None or profil is not None:
+            ff=prosimu(filename)
+            if variable is not None and variable not in ff.listvar():
+                logger.critical('Variable {} does not exist in {}'.format(variable, filename))
+                ff.close()
+                exit(3)
+            if profil is not None and profil not in ff.listvar():
+                logger.critical('Variable {} does not exist in {}'.format(variable, filename))
+                exit(3)
+                ff.close()
+            ff.close()
+
+        # Launch the app or save the figure
         if NOGUI:
             Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph, altitude, aspect, massif, slope, direction_coupe, hauteur_coupe)
         else:

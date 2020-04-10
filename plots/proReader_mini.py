@@ -18,6 +18,9 @@ from matplotlib.colors import BoundaryNorm
 from EvoProfilPlot import plot_profil
 import Dictionnaries
 
+import logging
+logger = logging.getLogger()
+
 constante_sampling = 1000
 zero_C=273.15
 MIN_temp=220
@@ -70,7 +73,7 @@ class ProReader_abstract:
             self.var_utile = 'Dsnw'
             self.type_fichier = 'FSM'
         else:
-            print('Lack of Necessary variable: SNOWDZ for PRO or Dsnw for FSM. Something will go wrong')
+            logger.error('Lack of Necessary variable: SNOWDZ for PRO or Dsnw for FSM. Something will go wrong')
 
         if('slope' in listvariables):
             slopetab = ff.read('slope')[:]
@@ -107,9 +110,9 @@ class ProReader_abstract:
         elif self.type_fichier == 'FSM':
             point = -1
 
-        print ("Lecture fichier %s" % ncfile)
-        print ("Variable %s selectionnee\n" % var)
-        print ("Point %i selectionne\n" % point)
+        logger.info("Lecture fichier %s" % ncfile)
+        logger.info("Variable %s selectionnee" % var)
+        logger.info("Point %i selectionne" % point)
 
         self.slope = slopetab[point]
         self.aspect = aspecttab[point]
@@ -986,7 +989,7 @@ class ProReader_membre(ProReader_abstract):
             self.var_utile = 'tsns'
             self.type_fichier = 'FSM'
         else:
-            print('Lack of Necessary variable: SNOWDZ for PRO or Dsnw for FSM. Something will go wrong')        
+            logger.error('Lack of Necessary variable: SNOWDZ for PRO or Dsnw for FSM. Something will go wrong')        
         
         arborescence = os.path.dirname(ncfile)
         separateur = ncfile.replace(os.path.dirname(ncfile),'')[0] # suivant les OS, '/' ou '\' => devrait éviter des soucis    
@@ -1005,14 +1008,14 @@ class ProReader_membre(ProReader_abstract):
                     nmembre = nmembre + 1
                     if nmembre > 100:
                         break
-                        print('more than 100 members. Pb of directory possible. If not, must change indexes in proReader_mini')
+                        logger.warning('more than 100 members. Pb of directory possible. If not, must change indexes in proReader_mini')
             elif nb_chiffre == 4:
                 nmembre = 1
                 while ('mb'+'%04d' %nmembre) in os.listdir(arborescence[:place_mb0]):
                     nmembre = nmembre + 1
                     if nmembre > 100:
                         break
-                        print('more than 100 members. Pb of directory possible. If not, must change indexes in proReader_mini')
+                        logger.warning('more than 100 members. Pb of directory possible. If not, must change indexes in proReader_mini')
                 nmembre = nmembre-1
 
         elif self.type_fichier == 'FSM':
@@ -1021,7 +1024,7 @@ class ProReader_membre(ProReader_abstract):
                     nmembre = nmembre + 1
                     if nmembre > 100:
                         break
-                        print('more than 100 members. Pb of directory possible. If not, must change indexes in proReader_mini')
+                        logger.warning('more than 100 members. Pb of directory possible. If not, must change indexes in proReader_mini')
         
         # Preparation des data: mise en place des dictionnaires
         self.var_membre = {}
@@ -1073,9 +1076,9 @@ class ProReader_membre(ProReader_abstract):
             elif self.type_fichier == 'FSM':
                 point = -1
 
-            print ("Lecture fichier %s" % path_for_nc)
+            logger.info("Lecture fichier %s" % path_for_nc)
             if nb_m ==0:
-                print ("Variable %s selectionnee\n" % var)
+                logger.info("Variable %s selectionnee" % var)
 
             # Extraction des data
             for i in range(len(ff.listvar())):
