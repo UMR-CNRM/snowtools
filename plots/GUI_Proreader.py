@@ -1683,8 +1683,7 @@ def ChoixPointMassif(ff, altitude, aspect, massif, slope, exitonerror=False):
     if len(indices) == 0:
         logger.error('Aucun choix de point correspondant -> PB. Use point 0')
         if exitonerror:
-            ff.close()
-            exit(2)
+            sys.exit(2)
         return [0]
     else:
         return indices
@@ -1782,32 +1781,28 @@ if __name__ == '__main__':
         # Is there a filename provided. In case yes, is it a correct filename
         if filename is None:
             GestionFenetre().mainloop()
-            exit(0)
+            sys.exit(0)
         else:
             if not os.path.isfile(filename):
                 logger.critical('Provided filename does not exist ({})'.format(filename))
-                exit(1)
+                sys.exit(1)
 
         # Get point of interest
         if (altitude is not None or aspect is not None or slope is not None or massif is not None) and point is None:
-            ff = prosimu(filename)
-            point = ChoixPointMassif(ff, altitude, aspect, massif, slope, exitonerror=True)[0]
-            ff.close()
+            with prosimu(filename) as ff:
+                point = ChoixPointMassif(ff, altitude, aspect, massif, slope, exitonerror=True)[0]
         if point is None:
             point = 0
 
         # check variables exist
         if variable is not None or profil is not None:
-            ff=prosimu(filename)
-            if variable is not None and variable not in ff.listvar():
-                logger.critical('Variable {} does not exist in {}'.format(variable, filename))
-                ff.close()
-                exit(3)
-            if profil is not None and profil not in ff.listvar():
-                logger.critical('Variable {} does not exist in {}'.format(variable, filename))
-                exit(3)
-                ff.close()
-            ff.close()
+            with prosimu(filename) as ff:
+                if variable is not None and variable not in ff.listvar():
+                    logger.critical('Variable {} does not exist in {}'.format(variable, filename))
+                    sys.exit(3)
+                if profil is not None and profil not in ff.listvar():
+                    logger.critical('Variable {} does not exist in {}'.format(variable, filename))
+                    sys.exit(3)
 
         # Launch the app or save the figure
         if NOGUI:
