@@ -6,7 +6,7 @@ Created on 27 mars 2019
 @author: cluzetb
 task for running SODA-SNOW sequence on HPC MULTINODE
 '''
-from tasks.crampon_common import Crampon_In, Crampon_Out
+from tasks.crampon_common import Crampon_In
 from tasks.crampon_offline import Offline_Task
 from tasks.crampon_soda import Soda_Task
 from vortex.layout.nodes import Driver, WorkshareFamily, LoopFamily
@@ -30,7 +30,7 @@ def setup(t, **kw):
                     WorkshareFamily(
                         tag='offline',
                         ticket = t,
-                        workshareconf='members,membersId',
+                        workshareconf='members,members_id',
                         worksharename='membersnode,idsnode',
                         worksharesize=10,
                         worksharelimit='nnodes',
@@ -43,7 +43,7 @@ def setup(t, **kw):
                 loopconf='stopdates',  # stopdates = assimdates.append(enddate)
                 loopsuffix='+d{:s}',  # format the loop iterator (assimdate(s) as itself ( a string)
                 **kw),
-            Crampon_Out(tag = 'pp_out', ticket = t, active_callback=lambda s: 'on' in s.conf.pickleit, **kw)
+            # Crampon_Out(tag = 'pp_out', ticket = t, active_callback=lambda s: 'on' in s.conf.pickleit, **kw)
         ],
         options=kw
     )

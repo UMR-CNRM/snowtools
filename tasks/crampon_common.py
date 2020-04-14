@@ -5,9 +5,8 @@ Created on 17 avr. 2019
 
 @author: cluzetb
 '''
-import os
-
 from bronx.stdtypes.date import Date
+import os
 from utils.dates import check_and_convert_date, get_list_dates_files
 from vortex import toolbox
 from vortex.layout.nodes import Task
@@ -195,7 +194,7 @@ class Crampon_Out(Task):
                 alternate      = 'SurfexClim',
                 kind           = 'pgdnc',
                 nativefmt      = 'netcdf',
-                local          = 'crocO/pickle/PGD.nc',
+                local          = 'crampon/pickle/PGD.nc',
                 # member         = '{0:04d}'.format(forcingdir),
                 experiment     = 'spinup@' + os.environ['USER'],
                 geometry       = self.conf.geometry,

@@ -124,7 +124,7 @@ class EnsembleScores(object):
                         bi[nbmb] += 0.
                         oi_nbmb -= 1.
                     # obs within
-                    for i in range(1, nbmb - 1):
+                    for i in range(1, nbmb):
                         if obs >= ens[i]:
                             ai[i] += ens[i] - ens[i - 1]
                             bi[i] += 0.
@@ -143,7 +143,7 @@ class EnsembleScores(object):
         bi_avg = bi / len(self.obsCommon)
         gi_avg = np.zeros(np.shape(ai_avg))
         oi_avg = np.zeros(np.shape(ai_avg))
-        for i in range(1, nbmb - 1):
+        for i in range(1, nbmb):
             gi_avg[i] = ai_avg[i] + bi_avg[i]
             if gi_avg[i] > 0.:
                 oi_avg[i] = bi_avg[i] / gi_avg[i]
@@ -158,7 +158,7 @@ class EnsembleScores(object):
         Reli = np.nansum(gi_avg * (oi_avg - pi)**2)
         Resol = np.nansum(gi_avg * oi_avg * (1. - oi_avg))
 
-        return (CRPS, Reli, Resol )
+        return (CRPS, Reli, Resol)
 
     def meanEnsemble(self):
             # deal with only some members valid

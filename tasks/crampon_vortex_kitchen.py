@@ -8,13 +8,13 @@ Run a CRAMPON assimilation sequence on a multinode
 import os
 import random
 import shutil
-import time
-
-import numpy as np
 from tasks.vortex_kitchen import vortex_conf_file, walltime
+import time
 from tools.update_namelist import update_surfex_namelist_file
 from utils.ESCROCsubensembles import ESCROC_subensembles
 from utils.resources import InstallException
+
+import numpy as np
 
 
 class crampon_vortex_kitchen(object):
@@ -102,7 +102,7 @@ class crampon_vortex_kitchen(object):
             raise Exception('please specify the number of members for this run')
         update_surfex_namelist_file(options.datedeb, namelistfile=self.namelist, dateend=options.datefin, updateloc=False, nmembers = options.nmembers)
 
-    def replace_member(self, options, allmembers, membersId):
+    def replace_member(self, options, allmembers, members_id):
         # warning in case of misspecification of --synth
         print('\n\n\n')
         print(' /!\/!\/!\/!\ CAUTION /!\/!\/!\/!\/!\ ')
@@ -119,8 +119,8 @@ class crampon_vortex_kitchen(object):
         # workaround to know the size of the ensemble
         sizeE1 = ESCROC_subensembles(options.escroc, allmembers, randomDraw = True).size
         # draw a member, excluding any ESCROC member already present in the ensemble.
-        membersId[options.synth - 1] = np.random.choice([e for e in range(1, sizeE1 + 1) if e not in membersId])
-        return membersId
+        members_id[options.synth - 1] = np.random.choice([e for e in range(1, sizeE1 + 1) if e not in members_id])
+        return members_id
 
     def draw_meteo(self, options, confObj):
         meteo_members = {str(m): ((m - 1) % int(options.nforcing)) + 1 for m in range(options.nmembers)}
@@ -157,10 +157,10 @@ class crampon_vortex_kitchen(object):
 
         # ########### READ THE USER-PROVIDED conf file ##########################
         # -> in order to append datefin to assimdates and remove the exceding dates.
-        # -> in order to check if membersIDs were specified.
+        # -> in order to check if members_ids were specified.
 
         # local import since there are dependencies with vortex.
-        from utilcrocO import read_conf
+        from utilcrampon import read_conf
         import bisect
 
         confObj = read_conf(confname)
@@ -170,18 +170,20 @@ class crampon_vortex_kitchen(object):
         bisect.insort(intdates, intdatefin)
         intdates = np.array(intdates)
         intdates = intdates[intdates <= intdatefin]
-        stopdates = ",".join(map(str, intdates))
-        print('stopdates', stopdates)
-        conffile.write_field('stopdates', stopdates)
+        print('stopdates', intdates)
+        intdates = intdates.tolist()
+        conffile.write_field('stopdates', intdates)
 
         # check if members ids were specified
         # if so, do nothing (later in the script, will be reparted between the nodes)
         # else, draw it.
         allmembers = list(range(1, options.nmembers + 1))
+
+        # BC 01/04/20: this rangeX will cause us some trouble...
         conffile.write_field('members', 'rangex(start:1 end:' + str(options.nmembers) + ')')
         if 'E1' in options.escroc:
-            if hasattr(confObj, 'membersId'):
-                membersId = np.array(list(map(int, confObj.membersId)))
+            if hasattr(confObj, 'members_id'):
+                members_id = np.array(list(map(int, confObj.members_id)))
 
                 # in case of synthetic assimilation, need to:
                 #    - replace the synthetic escroc member
@@ -193,7 +195,7 @@ class crampon_vortex_kitchen(object):
                         conffile.write_field('synth', options.synth)
                     else:
                         # replace ESCROC member
-                        membersId = self.replace_member(options, allmembers, membersId)
+                        members_id = self.replace_member(options, allmembers, members_id)
                         conffile.write_field('synth', options.synth)
 
                         # draw a substitution forcing
@@ -215,19 +217,19 @@ class crampon_vortex_kitchen(object):
                 if options.synth is not None:
                     # here, no prescribed members: only need to substitute meteo.
                     escroc = ESCROC_subensembles(options.escroc, allmembers, randomDraw = True)
-                    membersId = escroc.members
+                    members_id = escroc.members
 
                     # draw a substitution forcing
                     meteo_draw = self.draw_meteo(options, confObj)
                     conffile.write_field('meteo_draw', meteo_draw)
                 else:
                     escroc = ESCROC_subensembles(options.escroc, allmembers, randomDraw = True)
-                    membersId = escroc.members
-                conffile.write_field('membersId', ','.join(map(str, membersId)))
+                    members_id = escroc.members
+                conffile.write_field('members_id', members_id)
         else:
             escroc = ESCROC_subensembles(options.escroc, allmembers)
-            membersId = escroc.members
-            conffile.write_field('membersId', ','.join(map(str, membersId)))
+            members_id = escroc.members
+            conffile.write_field('members_id', members_id)
 
         conffile.write_field('subensemble', options.escroc)
         if options.threshold:
@@ -272,7 +274,7 @@ class crampon_vortex_kitchen(object):
         conffile.write_field('nnodes', options.nnodes)
 
         # new entry for Loopfamily on offline parallel tasks:
-        conffile.write_field('offlinetasks', ','.join(map(str, list(range(1, options.nnodes + 1)))))
+        conffile.write_field('offlinetasks', list(range(1, options.nnodes + 1)))
 
         # this line is mandatory to ensure the use of subjobs:
         # place it in the field offline for parallelization of the offlines LoopFamily only
@@ -302,7 +304,7 @@ class crampon_vortex_kitchen(object):
         reftask = 'crampon_driver'
         nnodes = options.nnodes
 
-        return ["../vortex/bin/mkjob.py -j name=" + jobname + " task=" + reftask + " profile=rd-beaufix-mt jobassistant=cen datebegin=" +
+        return ["python ../vortex/bin/mkjob.py -j name=" + jobname + " task=" + reftask + " profile=rd-beaufix-mt jobassistant=cen datebegin=" +
                 options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + options.datefin.strftime("%Y%m%d%H%M") + " template=" + self.jobtemplate +
                 " time=" + walltime(options) +
                 " nnodes=" + str(nnodes) + " taskconf=" + options.confcomplement]

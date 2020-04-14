@@ -7,11 +7,10 @@ Created on 23 févr. 2018
 @author: lafaysse
 '''
 
-import os
 import datetime
-
-from utils.resources import InstallException
+import os
 from utils.dates import WallTimeException
+from utils.resources import InstallException
 
 
 class vortex_kitchen(object):
@@ -212,44 +211,44 @@ class vortex_kitchen(object):
 
 def walltime(options):
 
-        if options.walltime:
-            return options.walltime
+    if options.walltime:
+        return options.walltime
 
-        elif options.oper:
-            return str(datetime.timedelta(minutes=10))
+    elif options.oper:
+        return str(datetime.timedelta(minutes=10))
+
+    else:
+        if options.escroc:
+            if options.nmembers:
+                nmembers = options.nmembers
+            elif options.escroc == "E2":
+                nmembers = 35
+            else:
+                raise Exception("don't forget to specify escroc ensemble or --nmembers")
 
         else:
-            if options.escroc:
-                if options.nmembers:
-                    nmembers = options.nmembers
-                elif options.escroc == "E2":
-                    nmembers = 35
-                else:
-                    raise Exception("don't forget to specify escroc ensemble or --nmembers")
+            nmembers = 1
+        # minutes per year for one member computing all points
+        minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 5, pyr_flat = 5, cor_allslopes = 5, cor_flat = 1, postes = 5,
+                               lautaret = 120, lautaretreduc = 5)
 
+        for site_snowmip in ["cdp", "oas", "obs", "ojp", "rme", "sap", "snb", "sod", "swa", "wfj"]:
+            if options.scores:
+                minutes_peryear[site_snowmip] = 0.2
             else:
-                nmembers = 1
-            # minutes per year for one member computing all points
-            minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 5, pyr_flat = 5, cor_allslopes = 5, cor_flat = 1, postes = 5,
-                                   lautaret = 120, lautaretreduc = 5)
+                minutes_peryear[site_snowmip] = 4
 
-            for site_snowmip in ["cdp", "oas", "obs", "ojp", "rme", "sap", "snb", "sod", "swa", "wfj"]:
-                if options.scores:
-                    minutes_peryear[site_snowmip] = 0.2
-                else:
-                    minutes_peryear[site_snowmip] = 4
+        for massif_safran in range(1, 100):
+            minutes_peryear[str(massif_safran)] = 90
 
-            for massif_safran in range(1, 100):
-                minutes_peryear[str(massif_safran)] = 90
+        key = options.region if options.region in list(minutes_peryear.keys()) else "alp_allslopes"
 
-            key = options.region if options.region in list(minutes_peryear.keys()) else "alp_allslopes"
+        estimation = datetime.timedelta(minutes=minutes_peryear[key]) * max(1, (options.datefin.year - options.datedeb.year)) * (1 + nmembers / (40 * options.nnodes) )
 
-            estimation = datetime.timedelta(minutes=minutes_peryear[key]) * max(1, (options.datefin.year - options.datedeb.year)) * (1 + nmembers / (40 * options.nnodes) )
-
-            if estimation >= datetime.timedelta(hours=24):
-                raise WallTimeException(estimation)
-            else:
-                return str(estimation)
+        if estimation >= datetime.timedelta(hours=24):
+            raise WallTimeException(estimation)
+        else:
+            return str(estimation)
 
 
 class vortex_conf_file(object):
@@ -261,6 +260,8 @@ class vortex_conf_file(object):
         self.fileobject.write("[" + name + "]\n")
 
     def write_field(self, fieldname, value):
+        if isinstance(value, list):
+            value = ','.join(map(str, value))
         self.fileobject.write(fieldname + " = " + str(value) + "\n")
 
     def close(self):

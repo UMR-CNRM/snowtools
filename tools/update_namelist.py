@@ -117,7 +117,6 @@ def update_loc(NamelistObject, forcing):
 
 
 def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"):
-
     """modify SURFEX namelist for limiting the dates to read in a FORCING file longer than the simulation."""
 
     forc = prosimu(forcing)
@@ -176,7 +175,7 @@ def update_namelist_object_nmembers(NamelistObject, nmembers):
     if nmembers is not None:
         check_or_create_block(NamelistObject, "NAM_ENS")
         setattr(NamelistObject["NAM_ENS"], 'NENS', nmembers)
-        print ("NENS set to {}".format(nmembers))
+        print("NENS set to {}".format(nmembers))
 
     return NamelistObject
 
