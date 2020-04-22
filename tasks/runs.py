@@ -67,7 +67,6 @@ class surfexrun(object):
             self.moderun = "MPI"
             self.modeinterpol = "MPI"
         else:
-            print self.onlyextractforcing
             if not self.onlyextractforcing:
                 if "MPIAUTO" in os.readlink(self.execdir + "/OFFLINE"):
                     self.moderun = "MPIRUN"
@@ -358,12 +357,12 @@ class griddedrun(surfexrun):
 
     def get_all_consts(self):
         super(griddedrun, self).get_all_consts()
+        if not os.path.isfile(self.dirprep + "/PGD.nc"):
+            if "DIRDATAPGD" in list(os.environ.keys()):
+                dirdatapgd = os.environ["DIRDATAPGD"]
+            else:
+                dirdatapgd = "/manto/lafaysse/FILES_PGD"
 
-        if "DIRDATAPGD" in list(os.environ.keys()):
-            dirdatapgd = os.environ["DIRDATAPGD"]
-        else:
-            dirdatapgd = "/manto/lafaysse/FILES_PGD"
-
-        print(os.listdir(dirdatapgd))
-        for fic in os.listdir(dirdatapgd):
-            get_file_const_or_crash(dirdatapgd + "/" + fic, fic)
+            print(os.listdir(dirdatapgd))
+            for fic in os.listdir(dirdatapgd):
+                get_file_const_or_crash(dirdatapgd + "/" + fic, fic)
