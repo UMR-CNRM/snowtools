@@ -13,7 +13,7 @@ from optparse import OptionParser
 import os
 import sys
 # Import snowtools modules
-from tasks.crampon_vortex_kitchen import crampon_vortex_kitchen
+from tasks.crocO_vortex_kitchen import crocO_vortex_kitchen
 import tasks.runs
 from tasks.vortex_kitchen import vortex_kitchen
 from tools.initTG import clim
@@ -221,9 +221,9 @@ def parse_options(arguments):
                       action="store", type="int", dest="nnodes", default=1,
                       help="Number of nodes")
 
-    parser.add_option("--crampon",
-                      action="store", type='string', dest="crampon", default=None,
-                      help="CRAMPON assimilation sequence activation and ABSOLUTE path to conf (assimdates (file)")
+    parser.add_option("--croco",
+                      action="store", type='string', dest="croco", default=None,
+                      help="CrocO assimilation sequence activation and ABSOLUTE path to conf (assimdates (file)")
 
     parser.add_option("--nforcing",
                       action="store", type="int", dest="nforcing", default=1,
@@ -328,11 +328,11 @@ def execute_through_vortex(args):
             options.dirwork = "."
 
     # Cook vortex task
-    if not options.crampon:
+    if not options.croco:
         run = vortex_kitchen(options)
         run.run(options)
     elif options.escroc:
-        run = crampon_vortex_kitchen(options)
+        run = crocO_vortex_kitchen(options)
         run.run(options)
     else:
         print("soda should run with escroc option")

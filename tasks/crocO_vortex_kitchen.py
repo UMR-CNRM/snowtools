@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 '''
 Created on 21  mars 2019
-Run a CRAMPON assimilation sequence on a multinode
+Run a CrocO assimilation sequence on a multinode
 @author: cluzetb
 '''
 import os
@@ -17,10 +17,10 @@ from utils.resources import InstallException
 import numpy as np
 
 
-class crampon_vortex_kitchen(object):
+class crocO_vortex_kitchen(object):
     '''
     Interface between s2m command line and vortex utilities (tasks and mk_jobs)
-    crampon_multinode
+    crocO_multinode
     based on vortex_kitchen from M. Lafaysse
     '''
 
@@ -143,7 +143,7 @@ class crampon_vortex_kitchen(object):
             os.remove(confname)
 
         print('copy conf file to $WORKDIR')
-        shutil.copyfile(options.crampon, confname)
+        shutil.copyfile(options.croco, confname)
 
         conffile = vortex_conf_file(confname, 'a')
 
@@ -160,7 +160,7 @@ class crampon_vortex_kitchen(object):
         # -> in order to check if members_ids were specified.
 
         # local import since there are dependencies with vortex.
-        from utilcrampon import read_conf
+        from utilcroco import read_conf
         import bisect
 
         confObj = read_conf(confname)
@@ -234,7 +234,7 @@ class crampon_vortex_kitchen(object):
         conffile.write_field('subensemble', options.escroc)
         if options.threshold:
             conffile.write_field('threshold', options.threshold)
-        # for now on CRAMPON only works with yearly forcing files
+        # for now on CrocO only works with yearly forcing files
         conffile.write_field('duration', 'yearly')
 
         conffile.write_field('xpid', self.xpid)
@@ -251,7 +251,7 @@ class crampon_vortex_kitchen(object):
             options.pickl = 'off'
         conffile.write_field('pickleit', options.pickl)
 
-        if options.crampon:
+        if options.croco:
             if hasattr(options, 'sensor'):
                 conffile.write_field('sensor', options.sensor)
         conffile.write_field('openmp', 1)
@@ -281,7 +281,7 @@ class crampon_vortex_kitchen(object):
         conffile.new_class('offline')
         conffile.write_field('paralleljobs_kind', 'slurm:ssh')
 
-        if options.crampon and options.nmembers and options.op:
+        if options.croco and options.nmembers and options.op:
 
             # soda works with all members at the same time on one node only.
             conffile.new_class('soda')
@@ -299,9 +299,9 @@ class crampon_vortex_kitchen(object):
 
         conffile.close()
 
-    def mkjob_crampon(self, options):
-        jobname = 'crampon'
-        reftask = 'crampon_driver'
+    def mkjob_crocO(self, options):
+        jobname = 'croco'
+        reftask = 'crocO_driver'
         nnodes = options.nnodes
 
         return ["python ../vortex/bin/mkjob.py -j name=" + jobname + " task=" + reftask + " profile=rd-beaufix-mt jobassistant=cen datebegin=" +
@@ -310,7 +310,7 @@ class crampon_vortex_kitchen(object):
                 " nnodes=" + str(nnodes) + " taskconf=" + options.confcomplement]
 
     def run(self, options):
-        mkjob_list = self.mkjob_crampon(options)
+        mkjob_list = self.mkjob_crocO(options)
         for mkjob in mkjob_list:
             print("Run command: " + mkjob + "\n")
             os.system(mkjob)

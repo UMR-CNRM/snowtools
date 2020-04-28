@@ -6,19 +6,19 @@ Created on 27 mars 2019
 @author: cluzetb
 task for running SODA-SNOW sequence on HPC MULTINODE
 '''
-from tasks.crampon_common import Crampon_In
-from tasks.crampon_offline import Offline_Task
-from tasks.crampon_soda import Soda_Task
+from tasks.crocO_common import CrocO_In
+from tasks.crocO_offline import Offline_Task
+from tasks.crocO_soda import Soda_Task
 from vortex.layout.nodes import Driver, WorkshareFamily, LoopFamily
 
 
 def setup(t, **kw):
     return Driver(
-        tag = 'CRAMPON_sequence',  # change the tag ?
+        tag = 'CrocO_sequence',  # change the tag ?
         ticket = t,
         nodes = [
             # fetching common files
-            Crampon_In(tag='common', ticket=t, **kw),
+            CrocO_In(tag='common', ticket=t, **kw),
 
             # assim sequence
             LoopFamily(
@@ -43,7 +43,7 @@ def setup(t, **kw):
                 loopconf='stopdates',  # stopdates = assimdates.append(enddate)
                 loopsuffix='+d{:s}',  # format the loop iterator (assimdate(s) as itself ( a string)
                 **kw),
-            # Crampon_Out(tag = 'pp_out', ticket = t, active_callback=lambda s: 'on' in s.conf.pickleit, **kw)
+            # CrocO_Out(tag = 'pp_out', ticket = t, active_callback=lambda s: 'on' in s.conf.pickleit, **kw)
         ],
         options=kw
     )

@@ -13,11 +13,11 @@ import os
 from vortex import toolbox
 
 from bronx.stdtypes.date import Date
-from tasks.crampon_common import _Crampon_Task
+from tasks.crocO_common import _CrocO_Task
 from utils.dates import get_list_dates_files, check_and_convert_date
 
 
-class Offline_Task(_Crampon_Task):
+class Offline_Task(_CrocO_Task):
     '''
     classdocs
     '''
@@ -175,7 +175,7 @@ class Offline_Task(_Crampon_Task):
             tb11 = tbalgo4 = toolbox.algo(
                 engine         = 's2m',
                 binary         = 'OFFLINE',
-                kind           = "crampon",
+                kind           = "croco",
                 verbose        = True,
                 datebegin      = self.conf.stopdate_prev,
                 dateend        = self.conf.stopdate,

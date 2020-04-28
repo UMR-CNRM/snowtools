@@ -12,10 +12,10 @@ import os
 from bronx.stdtypes.date import Date
 from vortex import toolbox
 
-from tasks.crampon_common import _Crampon_Task
+from tasks.crocO_common import _CrocO_Task
 
 
-class Soda_Task(_Crampon_Task):
+class Soda_Task(_CrocO_Task):
     '''
     classdocs
     '''

@@ -12,7 +12,7 @@ from vortex import toolbox
 from vortex.layout.nodes import Task
 
 
-class _Crampon_Task(Task):
+class _CrocO_Task(Task):
     """
     Task used to fetch common consts btw OFFLINE dates (forcings) and SODA
 
@@ -128,7 +128,7 @@ class _Crampon_Task(Task):
         print()
 
 
-class Crampon_In(_Crampon_Task):
+class CrocO_In(_CrocO_Task):
     """
     Task used to fetch common consts btw OFFLINE dates (forcings) and SODA
 
@@ -179,7 +179,7 @@ class Crampon_In(_Crampon_Task):
             print()
 
 
-class Crampon_Out(Task):
+class CrocO_Out(Task):
     '''
     BC 21/01/20
     (Dirty) Post-Processing Task to concatenate/compress Pro files and PREP into 2 Pickle file.
@@ -194,7 +194,7 @@ class Crampon_Out(Task):
                 alternate      = 'SurfexClim',
                 kind           = 'pgdnc',
                 nativefmt      = 'netcdf',
-                local          = 'crampon/pickle/PGD.nc',
+                local          = 'crocO/pickle/PGD.nc',
                 # member         = '{0:04d}'.format(forcingdir),
                 experiment     = 'spinup@' + os.environ['USER'],
                 geometry       = self.conf.geometry,
