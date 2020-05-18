@@ -41,7 +41,7 @@ def message_accueil(option_bool, nom_site):
     print('# - chemin des MET: /mesure_data/col_de_porte/met\n')
     print('# - format des MET: MET_YYYY_YYYY+1_fmt (ex MET_2000_2001_fmt)\n')
     print('# - chemin des reanalyses SAFRAN: /era40/vortex/s2m/postes/reanalysis/meteo\n')
-    print('# - etat de la base de donnees du Col de Porte: cdp60mn_1617 puis cdp60mn a partir du 01082017\n')
+    print('# - etat de la base de donnees du Col de Porte: cdp60mn_1819 puis cdp60mn a partir du 01082019\n')
     print('# ! la base CdP change a priori tous les ans ! => modifier la seconde ligne de la fonction recup_cdp (vers ligne 165-170)')
     print('# Si vous faites des modifs, penser aussi à changer ce message (fonction message_accueil)')
     print('#########################################################')
@@ -166,7 +166,7 @@ def recup_cdp(date_time_deb, date_time_fin, pas_de_temps):
     # Au 4 septembre 2019, on est à cdp60mn_1617 jusqu'au 1er août 2017 et ensuite sur cdp60mn mais la bascule de données vers
     # cdp60mn_1718 est proche !!
     date_change_2015 = check_and_convert_date(str(2015080100)) # EN DUR et fixe
-    date_change_base60mn = check_and_convert_date(str(2017080100)) # EN DUR mais doit changer à chaque bascule de données de cdp60mn vers cdp60mn_****
+    date_change_base60mn = check_and_convert_date(str(2019080100)) # EN DUR mais doit changer à chaque bascule de données de cdp60mn vers cdp60mn_****
 
     ###############################################################################################
     # A partir du MET_2015_2016, on a des années complètes 1er août 00h vers 1er août 00h pour les met
