@@ -732,7 +732,7 @@ class GraphStandard(Graph):
         Graph.__init__(self, parent, **Arguments)
         self.boolzoom = False
         self.list_choix = [None, None, None, None]
-        self.point_choisi = ''
+        self.point_choisi = 0
         self.ChoixPossible = [True, True, True, True]
         self.type_fichier = ''
 
@@ -926,7 +926,7 @@ class GraphHeight(Graph):
         Graph.__init__(self, parent)
         self.boolzoom = False
         self.list_choix = [None, None, None, None]
-        self.point_choisi=''
+        self.point_choisi = 0
         self.ChoixPossible = [True, True, True, True]
         
         self.buttonExportData = Button(self,  text = 'Export data', state = 'disabled')
