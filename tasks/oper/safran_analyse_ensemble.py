@@ -287,20 +287,22 @@ class Safran(Task, S2MTaskMixIn):
             )
             print t.prompt, 'tb14 =', tb14
             print
+            
+            if self.conf.vconf == 'pyr':
 
-            self.sh.title('Toolbox input tb15')
-            tb15 = toolbox.input(
-                role            = 'Nam_observr',
-                source          = 'namelist_observr_[geometry]',
-                geometry        = self.conf.vconf,
-                genv            = self.conf.cycle,
-                kind            = 'namelist',
-                model           = self.conf.model,
-                local           = 'OBSERVR',
-                fatal           = False,
-            )
-            print t.prompt, 'tb15 =', tb15
-            print
+                self.sh.title('Toolbox input tb15')
+                tb15 = toolbox.input(
+                    role            = 'Nam_observr',
+                    source          = 'namelist_observr_[geometry]',
+                    geometry        = self.conf.vconf,
+                    genv            = self.conf.cycle,
+                    kind            = 'namelist',
+                    model           = self.conf.model,
+                    local           = 'OBSERVR',
+                    fatal           = False,
+                )
+                print t.prompt, 'tb15 =', tb15
+                print
 
             self.sh.title('Toolbox input tb16')
             tb16 = toolbox.input(
@@ -320,26 +322,77 @@ class Safran(Task, S2MTaskMixIn):
             # --------------------
 
             # I.1- EBAUCHE issue des A6 des réseaux 0/6/12/18h (J-n) d'assimilation d'ARPEGE et l'A6 du réseau 0h J si présente pour couvrir (J-n) 6h -> J 6h
-            self.sh.title('Toolbox input tb17_a')
-            tb17_a = toolbox.input(
-                role           = 'Ebauche',
-                local          = 'mb035/P[date::addcumul_yymdh]',
-                experiment     = self.conf.xpid,
-                block          = self.conf.guess_block,
-                geometry        = self.conf.vconf,
-                cutoff         = 'assimilation',
-                date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
-                cumul          = self.conf.cumul,
-                nativefmt      = 'ascii',
-                kind           = 'guess',
-                model          = 'safran',
-                source_app     = self.conf.source_app,
-                source_conf    = self.conf.deterministic_conf,
-                namespace      = self.conf.namespace,
-                fatal          = False,
-            ),
-            print t.prompt, 'tb17_a =', tb17_a
-            print
+
+            if self.conf.rundate.hour == 6:
+
+                # Au moment du run de 6h le réseau d'assimilation d'ARPEGE de 0h J n'a pas encore tourné.
+                # Pour éviter de passer systématiquement dans l'alternate et recevoir des mails d'alerte on prend directement la P6
+                # du réseau de production de 0h d'ARPEGE 
+
+                self.sh.title('Toolbox input tb17_a1')
+                tb17_a1 = toolbox.input(
+                    role           = 'Ebauche',
+                    local          = 'mb035/P[date::addcumul_yymdh]',
+                    experiment     = self.conf.xpid,
+                    block          = self.conf.guess_block,
+                    geometry        = self.conf.vconf,
+                    cutoff         = 'assimilation',
+                    date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(12, ndays * 24 + 6, self.conf.cumul)],
+                    cumul          = self.conf.cumul,
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.deterministic_conf,
+                    namespace      = 'vortex.cache.fr',
+                    fatal          = False,
+                ),
+                print t.prompt, 'tb17_a1 =', tb17_a1
+                print
+                
+                self.sh.title('Toolbox input tb17_a2')
+                tb17_a2 = toolbox.input(
+                    role           = 'Ebauche',
+                    local          = 'mb035/P[date::addcumul_yymdh]',
+                    experiment     = self.conf.xpid,
+                    block          = self.conf.guess_block,
+                    geometry        = self.conf.vconf,
+                    cutoff         = 'production',
+                    date           = '{0:s}/-PT6H'.format(dateend.ymd6h),
+                    cumul          = self.conf.cumul,
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.deterministic_conf,
+                    namespace      = 'vortex.cache.fr',
+                    fatal          = False,
+                ),
+                print t.prompt, 'tb17_a2 =', tb17_a2
+                print
+
+            else:
+
+                self.sh.title('Toolbox input tb17_a')
+                tb17_a = toolbox.input(
+                    role           = 'Ebauche',
+                    local          = 'mb035/P[date::addcumul_yymdh]',
+                    experiment     = self.conf.xpid,
+                    block          = self.conf.guess_block,
+                    geometry        = self.conf.vconf,
+                    cutoff         = 'assimilation',
+                    date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
+                    cumul          = self.conf.cumul,
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.deterministic_conf,
+                    namespace      = self.conf.namespace,
+                    fatal          = False,
+                ),
+                print t.prompt, 'tb17_a =', tb17_a
+                print
 
             # I.2- EBAUCHE issue de la P6 du réseau H-6 de production d'ARPEGE
             # Si l'A6 du réseau H n'est pas là on prend la P6 du réseau H-6h
