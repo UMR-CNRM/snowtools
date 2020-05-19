@@ -566,6 +566,8 @@ class Safran(Task, S2MTaskMixIn):
 
             if self.conf.execution == 'analysis':
 
+                # Cas d'une execution où l'on veut utiliser les rr ARPEGE comme guess
+                # A lancer avec un job_name=with_rr_arpege (cf fichier de conf)
                 self.sh.title('Toolbox algo tb23 = SYRPLUIE')
                 tb23 = tbalgo2 = toolbox.algo(
                     engine         = 's2m',
