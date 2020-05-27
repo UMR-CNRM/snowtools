@@ -210,7 +210,27 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print(t.prompt, 'tb03a =', tb03a)
             print()
 
-            if not tb03[0] and not tb03a[0] and not self.conf.climground:
+
+            self.sh.title('Toolbox input tb03')
+            tb03a2 = toolbox.input(
+                alternate      = 'SnowpackInit',
+                local          = 'PREP.nc',
+                experiment     = 'reanalysis@lafaysse',
+                geometry       = self.conf.geometry,
+                date           = self.conf.datespinup,
+                intent         = 'inout',
+                nativefmt      = 'netcdf',
+                kind           = 'PREP',
+                model          = 'surfex',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'prep',
+                fatal          = False,
+            ),
+            print(t.prompt, 'tb03a2 =', tb03a2)
+            print()
+
+            if not tb03[0] and not tb03a[0] and not tb03a2[0] and not self.conf.climground:
                 tbi = toolbox.input(
                     role           = 'initial values of ground temperature',
                     kind           = 'climTG',
@@ -343,7 +363,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb07 =', tb07)
                     print()
 
-                if not tb03[0] and not tb03a[0]:
+                if not tb03[0] and not tb03a[0] and not tb03a2[0]:
 
                     self.sh.title('Toolbox executable tb08= tbx3')
                     tb08 = tbx2 = toolbox.executable(
@@ -387,7 +407,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb07 =', tb07)
                     print()
 
-                if not tb03[0] and not tb03a[0]:
+                if not tb03[0] and not tb03a[0] and not tb03a2[0]:
 
                     self.sh.title('Toolbox executable tb08= tbx3')
                     tb08 = tbx2 = toolbox.executable(
@@ -487,14 +507,14 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 self.component_runner(tbalgo2, tbx1, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
 
             # Take care : PREP parallelization will be available in v8.1 --> nproc and ntasks will have to be set to 40
-            if not tb03[0] and not tb03a[0]:
+            if not tb03[0] and not tb03a[0] and not tb03a2[0]:
                 self.sh.title('Toolbox algo tb09 = PREP')
                 tb10 = tbalgo3 = toolbox.algo(
                     engine         = 'parallel',
                 )
                 print(t.prompt, 'tb10 =', tb10)
                 print()
-                self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
+                self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=2, ntasks=2))
 
             self.sh.title('Toolbox algo tb11 = OFFLINE')
             tb11 = tbalgo4 = toolbox.algo(
