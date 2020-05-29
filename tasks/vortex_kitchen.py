@@ -68,6 +68,7 @@ class vortex_kitchen(object):
     def execute(self):
 
         self.create_env()
+        self.init_job_task()
         self.set_conf_file()
         self.run()
 
@@ -103,6 +104,62 @@ class vortex_kitchen(object):
             os.symlink(os.environ["SNOWTOOLS_CEN"] + "/jobs/" + self.jobtemplate, self.jobtemplate)
         os.chdir(self.workingdir)
 
+    def init_job_task(self, jobname=None):
+        if self.options.surfex:
+            self.init_job_task_surfex(jobname=jobname)
+        else:
+            self.init_job_task_safran()
+
+    def init_job_task_surfex(self, jobname=None):
+        if self.options.oper:
+            if self.options.monthlyreanalysis:
+                self.reftask = "monthly_surfex_reanalysis"
+            else:
+                self.reftask = "ensemble_surfex_tasks"
+            self.nnodes = 1
+            self.period = "rundate=" + self.options.datedeb.strftime("%Y%m%d%H%M")
+            # Note that the jobname is used to discriminate self.conf.previ in vortex task
+            if self.options.reinit:
+                self.jobname = "surfex_reinit"
+            elif self.options.forecast:
+                self.jobname = "surfex_forecast"
+            else:
+                self.jobname = "surfex_analysis"
+            self.confcomplement = ''
+        else:
+            self.period = " rundate=" + self.options.datedeb.strftime("%Y%m%d%H%M") + " datebegin=" + self.options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + self.options.datefin.strftime("%Y%m%d%H%M")
+            if self.options.escroc:
+                self.jobname = jobname if jobname else 'escroc'
+                if self.options.scores:
+                    # self.reftask  = "scores_task"
+                    # self.reftask = "optim_task"
+                    self.reftask = "crps_task"
+                else:
+                    self.reftask = "escroc_tasks"
+                self.nnodes = 1
+            elif self.options.forecast:
+                self.jobname = "surfex_forecast"
+                self.reftask = "ensemble_surfex_reforecast"
+                self.nnodes = 1
+            else:
+                self.jobname = 'rea_s2m'
+                self.reftask = "vortex_tasks"
+                self.nnodes = self.options.nnodes
+            self.confcomplement = " taskconf=" + self.options.datedeb.strftime("%Y")        
+
+    def init_job_task_safran(self):
+        if self.options.oper:
+            pass
+        else:
+            self.jobname = "ana_saf"
+            self.reftask = "safran_analysis"
+            self.period = " rundate=" + self.options.datedeb.strftime("%Y%m%d") + \
+                " datebegin=" + self.options.datedeb.strftime("%Y%m%d") + \
+                " dateend=" + self.options.datefin.strftime("%Y%m%d")
+        self.nnodes = 1
+        self.confcomplement = ""
+        
+            
     def set_conf_file(self):
 
         os.chdir(self.confdir)
@@ -137,52 +194,19 @@ class vortex_kitchen(object):
 
         if not self.options.oper:
             self.conf_file = Vortex_conf_file(self.options, fullname)
-            self.conf_file.create_conf()
+            self.conf_file.create_conf(jobname=self.jobname)
             self.conf_file.write_file()
             self.conf_file.close()
 
         os.chdir(self.workingdir)
 
-    def mkjob_command(self, jobname=None):
+    def mkjob_command(self):
 
-        if self.options.oper:
-            if self.options.monthlyreanalysis:
-                self.reftask = "monthly_surfex_reanalysis"
-            else:
-                self.reftask = "ensemble_surfex_tasks"
-            nnodes = 1
-            period = "rundate=" + self.options.datedeb.strftime("%Y%m%d%H%M")
-            # Note that the jobname is used to discriminate self.conf.previ in vortex task
-            if self.options.reinit:
-                self.jobname = "surfex_reinit"
-            elif self.options.forecast:
-                self.jobname = "surfex_forecast"
-            else:
-                self.jobname = "surfex_analysis"
-            confcomplement = ''
-        else:
-            period = "datebegin=" + self.options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + self.options.datefin.strftime("%Y%m%d%H%M")
-            if self.options.escroc:
-                self.jobname = jobname if jobname else 'escroc'
-                if self.options.scores:
-                    # self.reftask  = "scores_task"
-                    # self.reftask = "optim_task"
-                    self.reftask = "crps_task"
-                else:
-                    self.reftask = "escroc_tasks"
-                nnodes = 1
-            elif self.options.forecast:
-                self.jobname = "surfex_forecast"
-                self.reftask = "ensemble_surfex_reforecast"
-                nnodes = 1
-            else:
-                self.jobname = 'rea_s2m'
-                self.reftask = "vortex_tasks"
-                nnodes = self.options.nnodes
-            confcomplement = " taskconf=" + self.options.datedeb.strftime("%Y")
+        #return "../vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + " profile=" + self.profile + " #jobassistant=cen " + self.period +\
+        #       " template=" + self.jobtemplate + " time=" + self.walltime() + " nnodes=" + str(self.nnodes) + self.confcomplement
 
-        return "../vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + " profile=" + self.profile + " jobassistant=cen " + period +\
-               " template=" + self.jobtemplate + " time=" + self.walltime() + " nnodes=" + str(nnodes) + confcomplement
+        return "../vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + " profile=" + self.profile + " jobassistant=cen " + self.period +\
+                " time=" + self.walltime() + " nnodes=" + str(self.nnodes) + self.confcomplement
 
     def mkjob_list_commands(self):
 
@@ -196,28 +220,9 @@ class vortex_kitchen(object):
         else:
             return [self.mkjob_command()]
 
-    def mkjob_safran(self):
-
-        if self.options.oper:
-            pass
-        else:
-            self.jobname = "ana_saf"
-            self.reftask = "safran_analysis"
-
-        print("../vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + " profile=" + self.profile + " jobassistant=cen " +
-              " template=" + self.jobtemplate + " time=" + self.walltime() + " datebegin=" + self.options.datedeb.strftime("%Y%m%d") +
-              " dateend=" + self.options.datefin.strftime("%Y%m%d"))
-
-        return "../vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + " profile=" + self.profile + " jobassistant=cen " + \
-               " template=" + self.jobtemplate + " time=" + self.walltime() + " datebegin=" + self.options.datedeb.strftime("%Y%m%d") + \
-               " dateend=" + self.options.datefin.strftime("%Y%m%d")
-
     def run(self):
-
-        if self.options.surfex:
-            mkjob_list = self.mkjob_list_commands()
-        else:
-            mkjob_list = [self.mkjob_safran(), ]
+        
+        mkjob_list = self.mkjob_list_commands()
 
         os.chdir(self.jobdir)
         for mkjob in mkjob_list:
@@ -301,9 +306,10 @@ class Vortex_conf_file(object):
     def close(self):
         self.fileobject.close()
 
-    def create_conf(self):
+    def create_conf(self, jobname):
         ''' Prepare configuration file from s2m options'''
         self.default_variables()
+        self.add_block(jobname)
         if self.options.surfex:
             self.create_conf_surfex()
         elif self.options.safran:
