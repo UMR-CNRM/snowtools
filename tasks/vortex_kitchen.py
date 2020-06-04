@@ -54,6 +54,8 @@ class vortex_kitchen(object):
             self.profile = "rd-prolix-mt"
         elif 'epona' in machine:
             self.profile = "rd-epona-mt"            
+        elif 'belenos' in machine:
+            self.profile = "rd-belenos-mt" 
         self.define_ntasks(machine)
 
         self.execute()
@@ -62,7 +64,7 @@ class vortex_kitchen(object):
         if not self.options.ntasks:
             if 'beaufix' in machine or 'prolix' in machine:
                 self.options.ntasks = 40
-            elif 'epona' in machine:
+            elif 'epona' in machine or 'belenos' in machine:
                 self.options.ntasks = 128
 
     def execute(self):
