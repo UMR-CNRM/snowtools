@@ -113,7 +113,7 @@ class _StandardNC(netCDF4.Dataset):
 
         time = self.variables["time"]
 
-        return np.array(netCDF4.num2date(time[:], time.units))
+        return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False, only_use_python_datetimes=True))
 
     def get_coord(self):
 
