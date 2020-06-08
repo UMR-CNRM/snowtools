@@ -106,7 +106,7 @@ class boxplots_bydepartment(boxplots):
 
             inddep = inddep & france
 
-            print dep, np.sum(inddep)
+            print (dep, np.sum(inddep))
 
             list_scores.append(scores[inddep])
 
@@ -114,7 +114,7 @@ class boxplots_bydepartment(boxplots):
 
         kwargs['positions'] = range(self.indsimu, 1 + len(list_dep_uniq) * nsimu, nsimu)
 
-        print kwargs['positions']
+        print (kwargs['positions'])
 
         self.plot.set_xlabel(u'Département')
         super(boxplots_bydepartment, self).draw(list_scores, **kwargs)
@@ -159,7 +159,7 @@ class boxplots_byyear(boxplots):
             else:
                 list_labels.append("")
 
-        print list_labels
+        print (list_labels)
 
         kwargs['labels'] = list_labels
 

@@ -393,7 +393,7 @@ class ComparisonSimObs(object):
 
         availCommon = availObs and availSim
 
-        print np.sum(availCommon)
+        print (np.sum(availCommon))
 
         if availCommon:
             return availCommon, timeObs[periodObs], self.timeSim[indSim], sdObs[periodObs], np.squeeze(self.sdSim[indSim][:, ind])
@@ -424,13 +424,13 @@ class ComparisonSimObs(object):
 
         valid = self.nvalues[0, :] >= 0
 
-        print 'number of obs'
-        print np.sum(valid)
+        print ('number of obs')
+        print (np.sum(valid))
 
         for indSim in range(0, self.nsim):
             valid = (self.nvalues[indSim, :] > 10) & (valid)
-            print 'number of obs with ' + str(indSim + 1) + "available simulation(s)"
-            print np.sum(valid)
+            print ('number of obs with ' + str(indSim + 1) + "available simulation(s)")
+            print (np.sum(valid))
 
         for indSim in range(0, self.nsim):
             kwargs['fillcolor'] = self.list_colors[indSim]
