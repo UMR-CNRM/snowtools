@@ -18,6 +18,7 @@
 # Build host: $mkhost
 # Build opts: $mkopts
 
+#MTOOL set host=${target}
 #MTOOL setconf files=targets.[this:host]
 #MTOOL set logtarget=[this:frontend]
 #MTOOL set fetch=[this:frontend]
@@ -90,7 +91,7 @@ finally:
     #MTOOL include files=epilog.clean.step
     ja.finalise()
     ja.close()
-    print 'Bye bye research...'
+    print ('Bye bye research...')
 
 #MTOOL step id=fetch target=[this:fetch]
 #MTOOL step id=compute target=[this:compute]
