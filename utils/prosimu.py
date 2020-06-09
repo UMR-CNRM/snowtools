@@ -12,6 +12,7 @@ import numpy as np
 import sys
 from .FileException import FileNameException, FileOpenException, VarNameException, TimeException, MultipleValueException
 from utils.S2M_standard_file import StandardCROCUS
+import six
 
 # Fichier PRO.nc issu d'une simulation SURFEX post-traitée
 
@@ -148,8 +149,10 @@ class prosimu():
             # time=time_base
         else:
             time = self.dataset.variables["time"]
-
-        return np.array(netCDF4.num2date(time[:], time.units))
+        if netCDF4.__version__ >= '1.4.0':
+            return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False, only_use_python_datetimes=True))
+        else:
+            return np.array(netCDF4.num2date(time[:], time.units))
 
     def get_time(self, time_asdatetime):
         """
@@ -217,7 +220,7 @@ class prosimu():
             raise TypeError("""Le filtrage ne peut se faire que sur des variables géographiques (ZS, slope, aspect, massif_num)""")
         nop = np.arange(len(self.dataset.dimensions[self.Number_of_points]))
         locations_bool = np.ones(len(nop))
-        for varname, values in kwargs.iteritems():
+        for varname, values in six.iteritems(kwargs):
             locations_bool = np.logical_and(locations_bool, np.in1d(self.dataset.variables[varname], values))
         return np.where(locations_bool)[0]
 
@@ -429,6 +432,12 @@ class prosimu():
 
     def moytempo(self, precip, nstep, start=0):
         return self.integration(precip, nstep, start=start) / nstep
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, e_type, e_value, e_traceback):
+        self.close()
 
 
 class prosimu_old(prosimu):

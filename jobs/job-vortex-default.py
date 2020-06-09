@@ -18,6 +18,7 @@
 # Build host: $mkhost
 # Build opts: $mkopts
 
+#MTOOL set host=${target}
 #MTOOL setconf files=targets.[this:host]
 #MTOOL set logtarget=[this:frontend]
 #MTOOL set fetch=[this:frontend]

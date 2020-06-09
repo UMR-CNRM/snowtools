@@ -10,9 +10,8 @@ import os
 import netCDF4
 import datetime
 import numpy as np
-from utils.FileException import VarNameException
+from utils.FileException import VarNameException, UnknownGridTypeException
 from utils.infomassifs import infomassifs
-
 
 class _StandardNC(netCDF4.Dataset):
     '''
@@ -114,26 +113,61 @@ class _StandardNC(netCDF4.Dataset):
 
         time = self.variables["time"]
 
-        return np.array(netCDF4.num2date(time[:], time.units))
+        if netCDF4.__version__ >= '1.4.0':
+            return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False, only_use_python_datetimes=True))
+        else:
+            return np.array(netCDF4.num2date(time[:], time.units))
 
     def get_coord(self):
 
         latname = self.getlatname()
         lonname = self.getlonname()
         altiname = "ZS"
+        xname, yname = self.getcoordname()
 
-        if not (set([latname, lonname]).issubset(set(self.variables.keys()))):
-            try:
-                self.addCoord()
-            except Exception:
-                raise VarNameException(latname, self.path)
+        if (set([latname, lonname]).issubset(set(self.variables.keys()))):
+            lat, lon = self.variables[latname], self.variables[lonname]
+        else:
+            if (set([xname, yname]).issubset(set(self.variables.keys()))):
+                lat, lon = self.xy2latlon(self.variables[xname], self.variables[yname])
+            else:
+                try:
+                    self.addCoord()
+                    lat, lon = self.variables[latname], self.variables[lonname]
+                except Exception:
+                    raise VarNameException(latname, self.path)
 
         if altiname in self.variables.keys():
             alti = self.variables[altiname]
         else:
             alti = np.nan
 
-        return self.variables[latname], self.variables[lonname], alti
+        return lat, lon, alti
+
+    def xy2latlon(self, x, y):
+        # TO BE CHANGED
+        from pyproj import Proj, transform
+        from bronx.datagrip.namelist import NamelistParser
+        n = NamelistParser()
+        N = n.parse("OPTIONS.nam")
+        gridtype = N['NAM_PGD_GRID'].CGRID
+        if gridtype == "IGN":
+            projtype = N['NAM_IGN'].CLAMBERT
+            if projtype == 'L93':
+                epsg = 'epsg:2154'
+            else:
+                raise UnknownGridTypeException(gridtype, projtype)
+        else:
+            raise UnknownGridTypeException(gridtype,"")
+        
+        inProj = Proj(init=epsg)
+        outProj = Proj(init='epsg:4326')
+        
+        XX, YY =np.meshgrid(np.array(x),np.array(y))
+
+        lon, lat = transform(inProj,outProj,XX,YY)        
+
+        return lat, lon
 
     def addCoord(self):
         '''Routine to add coordinates in the forcing file for the SAFRAN massifs'''
@@ -189,6 +223,9 @@ class StandardSAFRANetMET(_StandardNC):
 
     def getlonname(self):
         return 'LON'
+
+    def getcoordname(self):
+        return 'x', 'y'
 
     def standard_names(self):
 
@@ -288,6 +325,9 @@ class StandardCROCUS(_StandardNC):
     def getlonname(self):
         return 'longitude'
 
+    def getcoordname(self):
+        return 'xx', 'yy'
+
     def getmassifname(self):
         return 'massif_num'
 
@@ -295,9 +335,22 @@ class StandardCROCUS(_StandardNC):
         from bronx.datagrip.namelist import NamelistParser
         n = NamelistParser()
         N = n.parse("OPTIONS.nam")
-        bottom = list(map(float, N['NAM_ISBA'].XSOILGRID))
-        top = [0] + bottom[:-1]
-        self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
+        if 'XSOILGRID' in N['NAM_ISBA']:
+            bottom = list(map(float, N['NAM_ISBA'].XSOILGRID))
+            top = [0] + bottom[:-1]
+            self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
+        else:
+            from utils.prosimu import prosimu
+            if os.path.isfile("PGD.nc"):
+                pgd = prosimu("PGD.nc")
+                nlayers = pgd.read("GROUND_LAYER")
+                bottom = []
+                for layer in range(1, nlayers[0]+1):
+                    bottom.append(pgd.read('SOILGRID' + str(layer))[0])
+                top = [0] + bottom[:-1]
+                self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
+    
+                pgd.close()
 
     def soil_long_names(self, varname):
         import re
@@ -306,7 +359,10 @@ class StandardCROCUS(_StandardNC):
         if not hasattr(self, 'soilgrid'):
             self.getsoilgrid()
 
-        return '(depth %.4f m)' % self.soilgrid[layer]
+        if hasattr(self, 'soilgrid'):
+            return '(depth %.4f m)' % self.soilgrid[layer]
+        else:
+            return ''
 
     def standard_names(self):
 

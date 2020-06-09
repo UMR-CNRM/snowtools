@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 '''
@@ -31,7 +31,7 @@ class Surfex_command(_S2M_command):
 
     def execute(self):
         machine = os.uname()[1]
-        if "beaufix" in machine or "prolix" in machine:
+        if "beaufix" in machine or "prolix" in machine or "epona" in machine or "belenos" in machine:
             self.execute_through_vortex()
         else:
             self.execute_without_vortex()
@@ -260,6 +260,10 @@ class Surfex_command(_S2M_command):
                           action="store", type = "str", dest="sensor", default = "MODIS",
                           help="specify the sensor name of the obs you want to assimilate")
 
+        parser.add_option("--ntasks",
+                          action="store", type="int", dest="ntasks", default=None,
+                          help="Number of tasks (and procs) per node.")
+
         (options, args) = parser.parse_args(arguments)
 
         del args
@@ -295,7 +299,8 @@ class Surfex_command(_S2M_command):
                                              workdir=self.options.workdir, datespinup=self.options.datespinup, geolist=[self.options.region],
                                              execdir=self.options.exesurfex,
                                              namelist=self.options.namelist,
-                                             addmask=True)
+                                             addmask=True,
+                                             onlyextractforcing=self.options.onlyextractforcing)
             elif self.options.region or self.options.slopes or self.options.aspects or self.options.minlevel or self.options.maxlevel:
 
                 if self.options.onlyextractforcing:

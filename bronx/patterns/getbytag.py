@@ -67,6 +67,7 @@ class GetByTagMeta(type):
     """
 
     def __new__(cls, n, b, d):
+        """Create a new class object."""
         logger.debug('Base class for getbytag usage "%s / %s", bc = ( %s ), internal = %s', cls, n, b, d)
         if d.setdefault('_tag_topcls', True):
             d['_tag_table'] = dict()
@@ -77,6 +78,7 @@ class GetByTagMeta(type):
         return realnew
 
     def __call__(self, *args, **kw):
+        """Create a new class object."""
         return self.__new__(self, *args, **kw)
 
 
@@ -117,7 +119,7 @@ class GetByTag(object):
         if tag is None:
             if args:
                 args = list(args)
-                tag  = args.pop(0)
+                tag = args.pop(0)
             else:
                 tag = cls._tag_default
         tag = cls.tag_clean(tag)
@@ -141,6 +143,7 @@ class GetByTag(object):
 
     @property
     def tag(self):
+        """The current object's tag."""
         return self._tag
 
     @classmethod

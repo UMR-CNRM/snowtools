@@ -7,6 +7,17 @@ Created on 25 June 2018
 @author: lafaysse
 '''
 
+# The following lines are necessary with a French environment and python 2 to avoid a bronx crash when calling vortex
+# on months with an accent (Février, Décembre)
+#---------------------------------------------------------- 
+import sys
+import codecs
+if sys.version_info.major == 2:  # Python2 only
+    import codecs
+    sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
+    sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
+#---------------------------------------------------------- 
+
 import locale
 import rpy2.robjects as robjects
 import numpy as np
@@ -71,6 +82,9 @@ class postprocess_ensemble(Ensemble):
 
         zsvar = newdataset.createVariable("ZS", 'float', (self.location_dim_name), fill_value=fillvalue)
         zsvar[:] = self.get_alti()
+
+        aspectvar = newdataset.createVariable("aspect", 'float', (self.location_dim_name), fill_value=fillvalue)
+        aspectvar[:] = self.get_aspect()
 
         var = newdataset.createVariable("PP_" + self.newsnow_var_name, 'float', dims_out, fill_value=fillvalue)
 
@@ -220,9 +234,11 @@ class postprocess_massif(postprocess_ensemble, EnsembleOperDiagsFlatMassif):
     levelmax = 3000
     list_var_map = ['PP_SD_1DY_ISBA']
 
+
 class postprocess_stations(postprocess_ensemble, EnsembleStation):
 
     pass
+
 
 if __name__ == "__main__":
 

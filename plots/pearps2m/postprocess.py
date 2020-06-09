@@ -7,6 +7,17 @@ Created on 6 déc. 2018
 @author: lafaysse
 '''
 
+# The following lines are necessary with a French environment and python 2 to avoid a bronx crash when calling vortex
+# on months with an accent (Février, Décembre)
+#---------------------------------------------------------- 
+import sys
+import codecs
+if sys.version_info.major == 2:  # Python2 only
+    import codecs
+    sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
+    sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
+#---------------------------------------------------------- 
+
 import locale
 
 import os
@@ -194,6 +205,12 @@ class Ensemble(object):
             self.alti = self.read_geovar("ZS")
         return self.alti
 
+    def get_aspect(self):
+        if not hasattr(self, "aspect"):
+            self.aspect = self.read_geovar("aspect")
+        return self.aspect
+
+
 class _EnsembleMassif(Ensemble):
 
     InfoMassifs = infomassifs()
@@ -210,11 +227,6 @@ class _EnsembleMassif(Ensemble):
                 self.ensemble[varname][:, :, m] = member.read_var(varname)
         else:
             super(_EnsembleMassif, self).read(varname)
-
-    def get_aspect(self):
-        if not hasattr(self, "aspect"):
-            self.aspect = self.read_geovar("aspect")
-        return self.aspect
 
     def get_massifdim(self):
         if not hasattr(self, "massifdim"):

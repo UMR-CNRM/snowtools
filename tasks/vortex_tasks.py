@@ -37,6 +37,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         print (list_dates_begin_forc)
         print (type(list_dates_begin_forc[0]))
 
+        if not hasattr(self.conf, "interpol"):
+            self.conf.interpol = False
         if not hasattr(self.conf, "climground"):
             self.conf.climground = False
         if not hasattr(self.conf, "dailyprep"):
@@ -208,7 +210,27 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print(t.prompt, 'tb03a =', tb03a)
             print()
 
-            if not tb03[0] and not tb03a[0] and not self.conf.climground:
+
+            self.sh.title('Toolbox input tb03')
+            tb03a2 = toolbox.input(
+                alternate      = 'SnowpackInit',
+                local          = 'PREP.nc',
+                experiment     = 'reanalysis@lafaysse',
+                geometry       = self.conf.geometry,
+                date           = self.conf.datespinup,
+                intent         = 'inout',
+                nativefmt      = 'netcdf',
+                kind           = 'PREP',
+                model          = 'surfex',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'prep',
+                fatal          = False,
+            ),
+            print(t.prompt, 'tb03a2 =', tb03a2)
+            print()
+
+            if not tb03[0] and not tb03a[0] and not tb03a2[0] and not self.conf.climground:
                 tbi = toolbox.input(
                     role           = 'initial values of ground temperature',
                     kind           = 'climTG',
@@ -301,6 +323,19 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print(t.prompt, 'tb05 =', tb05)
             print()
 
+            if self.conf.interpol:
+                tbgrid = toolbox.input(
+                    role = 'gridout',
+                    remote = self.conf.gridout,
+                    kind = 'interpolgrid',
+                    model = 'surfex',
+                    local = 'GRID.nc',
+                )
+                print(t.prompt, 'tbgrid =', tbgrid)
+            else:
+                print(t.prompt, 'tbgrid = undefined')
+            print()
+
             if self.conf.exesurfex:
                 self.sh.title('Toolbox executable tb06= tbx1')
                 tb06 = tbx3 = toolbox.executable(
@@ -328,7 +363,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb07 =', tb07)
                     print()
 
-                if not tb03[0] and not tb03a[0]:
+                if not tb03[0] and not tb03a[0] and not tb03a2[0]:
 
                     self.sh.title('Toolbox executable tb08= tbx3')
                     tb08 = tbx2 = toolbox.executable(
@@ -372,7 +407,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb07 =', tb07)
                     print()
 
-                if not tb03[0] and not tb03a[0]:
+                if not tb03[0] and not tb03a[0] and not tb03a2[0]:
 
                     self.sh.title('Toolbox executable tb08= tbx3')
                     tb08 = tbx2 = toolbox.executable(
@@ -386,6 +421,19 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
 
                     print(t.prompt, 'tb08 =', tb08)
                     print()
+
+            if self.conf.interpol:
+                tbI = tbxi = toolbox.executable(
+                    role           = 'Binary',
+                    kind           = 'offline',
+                    local          = 'INTERPOL',
+                    model          = 'surfex',
+                    genv           = 'uenv:cen.01@CONST_CEN',
+                    gvar           = 'master_interpol_mpi',
+                )
+
+                print(t.prompt, 'tbI =', tbI)
+                print()
 
         if 'compute' in self.steps:
 
@@ -408,6 +456,19 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb09a =', tb09a)
                 print()
                 tb09a.run()
+
+            elif self.conf.meteo == 'interpolsafran':
+
+                self.sh.title('Toolbox algo tb09a')
+                tb09a = tbalgo1 = toolbox.algo(
+                    engine         = 'parallel',
+                    binary         = 'INTERPOL',
+                    kind           = 'deterministic'
+                )
+                print(t.prompt, 'tb09a =', tb09a)
+                print()
+
+                self.component_runner(tbalgo1, tbxi)
 
             if self.conf.climground:
                 self.sh.title('Toolbox algo tb09a')
@@ -446,14 +507,14 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 self.component_runner(tbalgo2, tbx1, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
 
             # Take care : PREP parallelization will be available in v8.1 --> nproc and ntasks will have to be set to 40
-            if not tb03[0] and not tb03a[0]:
+            if not tb03[0] and not tb03a[0] and not tb03a2[0]:
                 self.sh.title('Toolbox algo tb09 = PREP')
                 tb10 = tbalgo3 = toolbox.algo(
                     engine         = 'parallel',
                 )
                 print(t.prompt, 'tb10 =', tb10)
                 print()
-                self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
+                self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=2, ntasks=2))
 
             self.sh.title('Toolbox algo tb11 = OFFLINE')
             tb11 = tbalgo4 = toolbox.algo(
@@ -661,7 +722,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb22 =', tb22)
                 print()
 
-            if self.conf.meteo == 'safran':
+            if self.conf.meteo == 'safran' or self.conf.interpol:
                 for p, datebegin in enumerate(list_dates_begin_forc):
                     dateend = list_dates_end_forc[p]
                     self.sh.title('Toolbox output tb19')

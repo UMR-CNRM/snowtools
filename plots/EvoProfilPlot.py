@@ -11,8 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib import collections
-from matplotlib.colors import BoundaryNorm
-from matplotlib.colors import LogNorm
+import matplotlib.colors as colors
 import Dictionnaries
 
 
@@ -20,6 +19,15 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
     """
     Trace le profil de value en fonction du temps avec les epaisseurs reelles de couches
     """
+    
+    class MidpointNormalize(colors.Normalize):
+        def __init__(self, vmin=None, vmax=None, vcenter=None, clip=False):
+            self.vcenter = vcenter
+            colors.Normalize.__init__(self, vmin, vmax, clip)
+
+        def __call__(self, value, clip=None):
+            x, y = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1]
+            return np.ma.masked_array(np.interp(value, x, y))
 
     if myrange:
         value = np.clip(value, myrange[0], myrange[1])
@@ -46,19 +54,47 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
     if colormap == 'grains':
         cmap = Dictionnaries.grain_colormap
         bounds = np.linspace(-0.5, 14.5, 16)
-        norm = BoundaryNorm(bounds, cmap.N)
+        norm = colors.BoundaryNorm(bounds, cmap.N)
         vmin = -0.5
         vmax = 14.5
     elif colormap == 'echelle_log':
         cmap = cm.gray_r
         Vmin = max(np.amin(value),0.0000000001)
         Vmax = min(np.amax(value),1)
-        norm = LogNorm(vmin=Vmin, vmax=Vmax)    
+        norm = colors.LogNorm(vmin=Vmin, vmax=Vmax)    
     elif colormap == 'echelle_log_sahara':
         cmap = cm.gist_heat_r
         Vmin = max(np.amin(value),0.0000000001)
         Vmax = min(np.amax(value),1)
-        norm = LogNorm(vmin=Vmin, vmax=Vmax)
+        norm = colors.LogNorm(vmin=Vmin, vmax=Vmax)
+    elif colormap == 'ratio_cisaillement':
+        cmap = cm.get_cmap('viridis')
+        Vmin = 0
+        Vmax = 20
+        norm = colors.Normalize(vmin=0, vmax=Vmax, clip=True)
+        # Generating a colormap from given cmap with:
+        # 0 -> 1 pink
+        # 1 -> 2 red
+        # 2 -> 3 orange
+        # 3 -> 4 yellow
+        # 4 -> 20 given cmap
+        customcmap = {
+                'red':[(0,1,1), (0.05, 1, 1), (0.1, 1, 1), (0.15, 1, 1)],
+                'green':[(0,0,0), (0.05, 0, 0), (0.1, 0.55, 0.65), (0.15, 1, 1)],
+                'blue':[(0,1,1), (0.05, 0.4, 0), (0.1, 0, 0), (0.15, 0, 0)]
+                }
+        cmapl = len(cmap.colors)
+        start = 0.16
+        for i in range(cmapl):
+            if i==cmapl-1:
+                x=1
+            else:
+                x = start + i*(1-start)/cmapl
+            iuse = cmapl - i -1
+            customcmap['red'].append((x, cmap.colors[iuse][0], cmap.colors[iuse][0]))
+            customcmap['green'].append((x, cmap.colors[iuse][1], cmap.colors[iuse][1]))
+            customcmap['blue'].append((x, cmap.colors[iuse][2], cmap.colors[iuse][2]))
+        cmap = colors.LinearSegmentedColormap('ratio_cisaillment', customcmap)
     else:
         norm = None
         cmap = cm.get_cmap(colormap)
@@ -105,7 +141,7 @@ def plot_grains1D(ax, dz, value, legend=None, cbar_show=True):
 
     cmap = Dictionnaries.grain_colormap
     bounds = np.linspace(-0.5, 14.5, 16)
-    norm = BoundaryNorm(bounds, cmap.N)
+    norm = colors.BoundaryNorm(bounds, cmap.N)
     vmin = -0.5
     vmax = 14.5
 

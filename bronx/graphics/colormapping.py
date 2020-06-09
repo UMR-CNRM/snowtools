@@ -17,7 +17,7 @@ __all__ = []
 
 
 def read_cmap(sourcefile):
-    """
+    r"""
     Read and creates a custom Colormap from a set of RGB colors in a file with the
     following formating::
 

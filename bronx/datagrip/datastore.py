@@ -262,7 +262,7 @@ class DataStore(object):
                 raise RuntimeError("This entry already exists and is read-only.")
         return grep
 
-    def pickle_dump(self, dumpfile = None):
+    def pickle_dump(self, dumpfile=None):
         """Pickle the content of the current DataStore and write it to disk.
 
         :param str dumpfile: Path to the dump file (if `None`, the default provided
@@ -273,7 +273,7 @@ class DataStore(object):
             pickle.dump((self._store, self._lock), pfh,
                         protocol=self._PICKLE_PROTOCOL)
 
-    def pickle_load(self, dumpfile = None):
+    def pickle_load(self, dumpfile=None):
         """Read a pickle dump file from disk and refill the current DataStore.
 
         :param str dumpfile: Path to the dump file (if `None`, the default provided

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-"""
+r"""
 A personal implementation of the Observer design pattern.
 
 Using the factory :func:`get` should provide a convenient way to register
@@ -38,7 +38,7 @@ Example::
     ...     def delobsitem(self, item, info):
     ...         self.log.append(('DEL', item.id, info['status']))
     ...     def __str__(self):
-    ...         return '\\n'.join(['{:s} {:6s} status={!s}'.format(*s) for s in self.log])
+    ...         return '\n'.join(['{:s} {:6s} status={!s}'.format(*s) for s in self.log])
     ...
 
     # Create an observer object and register it to the observer board
@@ -162,7 +162,7 @@ class SecludedObserverBoard(object):
 
     def __init__(self):
         self._listen = catalog.Catalog(weak=True)
-        self._items  = catalog.Catalog(weak=True)
+        self._items = catalog.Catalog(weak=True)
 
     def __deepcopy__(self, memo):
         """No deepcopy expected, so ``self`` is returned."""

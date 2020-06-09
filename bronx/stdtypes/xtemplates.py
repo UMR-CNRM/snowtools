@@ -53,7 +53,8 @@ class DefaultTemplate(object):
         ...                         __loopiterator__='zip(members, physics)',
         ...                         __loopvariables__='member, physic',
         ...                         __body__=dict(kind='member_spec',
-        ...                                       msg='{{"Member number: {:03d} next one is {!s}".format(member, member_next)}}',
+        ...                                       msg=('{{"Member number: {:03d} next one is {!s}"' +
+        ...                                            '.format(member, member_next)}}'),
         ...                                       member='{{member}}',
         ...                                       physic_id='{{physic}}',
         ...                                       terms=dict(__bronx_tpl_engine__='loop',
@@ -183,7 +184,7 @@ class DefaultTemplate(object):
         if '__body__' not in tpl:
             raise TemplateLoopRenderingError('The __body__ key is required')
         literator = self._sls(tpl['__loopiterator__'], ** subs)
-        lvariables = re.split('\s*,\s*', tpl['__loopvariables__'])
+        lvariables = re.split(r'\s*,\s*', tpl['__loopvariables__'])
         lbody = tpl['__body__']
         lbodyfirst = tpl.get('__body_first__', lbody)
         lbodylast = tpl.get('__body_last__', lbody)

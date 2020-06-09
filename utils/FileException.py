@@ -158,6 +158,19 @@ class GeometryException(Exception):
         red[1] = (self.altmin, self.altmax)  # Les arguments qui seront passes a __init__
         return tuple(red)
 
+class UnknownGridTypeException(Exception):
+    def __init__(self, gridtype, projtype):
+        self.gridtype = gridtype
+        self.projtype = projtype
+
+    def __str__(self):
+        return "The grid or projection type is not implemented:" + str(self.gridtype) + " - " + str(self.projtype)
+
+    def __reduce__(self):
+        red = list(super(UnknownGridTypeException, self).__reduce__())
+        red[1] = (self.gridtype, self.projtype)  # Les arguments qui seront passes a __init__
+        return tuple(red)
+
 
 class MassifException(Exception):
     def __init__(self, massifrequest, massifavail):
