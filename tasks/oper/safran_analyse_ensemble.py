@@ -13,7 +13,6 @@ from vortex.layout.nodes import Driver, Task
 logger = footprints.loggers.getLogger(__name__)
 
 
-
 def setup(t, **kw):
     return Driver(
         tag    = 'safran',
@@ -62,10 +61,10 @@ class Safran(Task, S2MTaskMixIn):
                     enddate        = dateend.ymd6h,
                     local          = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
                     model          = 'safran',
-                    #hostname       = 'guppy.meteo.fr',
-                    #username       = 'vernaym',
-                    #tube           = 'ftp',
-                    #remote         = '/home/mrns/vernaym/extraction_obs/oper/observations_safran_[vconf]_[date::ymdh].tar',
+                    # hostname       = 'guppy.meteo.fr',
+                    # username       = 'vernaym',
+                    # tube           = 'ftp',
+                    # remote         = '/home/mrns/vernaym/extraction_obs/oper/observations_safran_[vconf]_[date::ymdh].tar',
                     namespace      = 'vortex.archive.fr',
                     cutoff         = 'assimilation',
                     now            = True,
@@ -79,9 +78,9 @@ class Safran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox input tb01')
                 tb01 = toolbox.input(
                     role           = 'Observations',
-                    #block          = 'observations',
-                    #experiment     = self.conf.xpid,
-                    #vapp           = 's2m',
+                    # block          = 'observations',
+                    # experiment     = self.conf.xpid,
+                    # vapp           = 's2m',
                     geometry       = self.conf.vconf,
                     suite          = 'oper',
                     kind           = 'packedobs',
@@ -94,34 +93,13 @@ class Safran(Task, S2MTaskMixIn):
                     username       = 'vernaym',
                     tube           = 'ftp',
                     remote         = '/home/mrns/vernaym/extraction_obs/oper/observations_safran_[vconf]_[date::ymdh].tar',
-                    #namespace      = 'vortex.archive.fr',
+                    # namespace      = 'vortex.archive.fr',
                     cutoff         = 'assimilation',
                     now            = True,
                     hook_autohook1 = (tb01_generic_hook1, ),
                 )
                 print t.prompt, 'tb01 =', tb01
                 print
-
-#             self.sh.title('Toolbox input tb02')
-#             tb02 = toolbox.input(
-#                 role           = 'ObsNeb',
-#                 part           = 'nebulosity',
-#                 block          = 'observations',
-#                 experiment     = self.conf.xpid,
-#                 geometry       = self.conf.vconf,
-#                 suite          = 'oper',
-#                 fatal          = False,
-#                 kind           = 'observations',
-#                 stage          = 'safrane',
-#                 nativefmt      = 'ascii',
-#                 date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(24 * i)) for i in range(ndays)],
-#                 local          = 'N[date:yymdh]',
-#                 model          = self.conf.model,
-#                 namespace      = 'cendev.soprano.fr',
-#                 storage        = 'guppy.meteo.fr',
-#             )
-#             print t.prompt, 'tb02 =', tb02
-#             print
 
             self.sh.title('Toolbox input tb03')
             tb03 = toolbox.input(
@@ -316,78 +294,102 @@ class Safran(Task, S2MTaskMixIn):
             print t.prompt, 'tb16 =', tb16
             print
 
-            # I- ARPEGE (J-5) -> J ou (J-1) -> J
-            # --------------------
+            if self.conf.rundate.hour == 12:
 
-            # I.1- EBAUCHE issue des A6 des réseaux 0/6/12/18h (J-n) d'assimilation d'ARPEGE et l'A6 du réseau 0h J si présente pour couvrir (J-n) 6h -> J 6h
-            self.sh.title('Toolbox input tb17_a')
-            tb17_a = toolbox.input(
-                role           = 'Ebauche',
-                local          = 'mb035/P[date::addcumul_yymdh]',
-                experiment     = self.conf.xpid,
-                block          = self.conf.guess_block,
-                geometry        = self.conf.vconf,
-                cutoff         = 'assimilation',
-                date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
-                cumul          = self.conf.cumul,
-                nativefmt      = 'ascii',
-                kind           = 'guess',
-                model          = 'safran',
-                source_app     = self.conf.source_app,
-                source_conf    = self.conf.deterministic_conf,
-                namespace      = self.conf.namespace,
-                fatal          = False,
-            ),
-            print t.prompt, 'tb17_a =', tb17_a
-            print
+                # Récupération de l'archive contenant tous les guess depuis le début de la saison
+                self.sh.title('Toolbox input tb17')
+                tb17 = toolbox.input(
+                    role           = 'Ebauche',
+                    local          = 'guess.tar',
+                    experiment     = self.conf.xpid,
+                    block          = 'guess',
+                    nativefmt      = 'tar',
+                    fatal          = False,
+                    kind           = 'packedguess',
+                    model          = 'safran',
+                    hook_autohook1 = (tb01_generic_hook1, ),
+                    date           = '{0:s}/-PT24H'.format(self.conf.rundate.ymdh),
+                    vapp           = self.conf.vapp,
+                    vconf          = self.conf.vconf,
+                    begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
+                    enddate        = '{0:s}/+PT72H'.format(dateend.ymd6h),
+                    geometry       = self.conf.vconf,
+                    intent         = 'inout',
+                )
+                print t.prompt, 'tb17 =', tb17
+                print
 
-            # I.2- EBAUCHE issue de la P6 du réseau H-6 de production d'ARPEGE
-            # Si l'A6 du réseau H n'est pas là on prend la P6 du réseau H-6h
-            # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur 6h homogène avec le cumul dans les fichiers d'assimilation
-            self.sh.title('Toolbox input tb17_b')
-            tb17_b = toolbox.input(
-                alternate      = 'Ebauche',
-                local          = 'mb035/P[date::addcumul_yymdh]',
-                experiment     = self.conf.xpid,
-                block          = self.conf.guess_block,
-                geometry       = self.conf.vconf,
-                cutoff         = 'production',
-                date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
-                cumul          = self.conf.cumul,
-                nativefmt      = 'ascii',
-                kind           = 'guess',
-                model          = 'safran',
-                source_app     = self.conf.source_app,
-                source_conf    = self.conf.deterministic_conf,
-                namespace      = self.conf.namespace,
-                fatal          = False,
-            ),
-            print t.prompt, 'tb17_b =', tb17_b
-            print
+            else:
 
-            # I.3- En dernier recours on essaye le réseau de production de 0h J-1
-            self.sh.title('Toolbox input tb17_c')
-            tb17_c = toolbox.input(
-                alternate      = 'Ebauche',
-                local          = 'mb035/P[date::addcumul_yymdh]',
-                experiment     = self.conf.xpid,
-                block          = self.conf.guess_block,
-                geometry       = self.conf.vconf,
-                cutoff         = 'production',
-                date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(30, ndays * 24 + 6, 24)],
-                cumul          = footprints.util.rangex('6-30-6'),
-                nativefmt      = 'ascii',
-                kind           = 'guess',
-                model          = 'safran',
-                source_app     = self.conf.source_app,
-                source_conf    = self.conf.deterministic_conf,
-                namespace      = self.conf.namespace,
-                fatal          = False,
-            ),
-            print t.prompt, 'tb17_c =', tb17_c
-            print
+                # I- ARPEGE (J-5) -> J ou (J-1) -> J
+                # --------------------
+                # I.1- EBAUCHE issue des A6 des réseaux 0/6/12/18h (J-n) d'assimilation d'ARPEGE et l'A6 du réseau 0h J si présente pour couvrir (J-n) 6h -> J 6h
+                self.sh.title('Toolbox input tb17_a')
+                tb17_a = toolbox.input(
+                    role           = 'Ebauche',
+                    local          = 'mb035/P[date::addcumul_yymdh]',
+                    experiment     = self.conf.xpid,
+                    block          = self.conf.guess_block,
+                    geometry        = self.conf.vconf,
+                    cutoff         = 'assimilation',
+                    date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
+                    cumul          = self.conf.cumul,
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.deterministic_conf,
+                    namespace      = self.conf.namespace,
+                    fatal          = False,
+                ),
+                print t.prompt, 'tb17_a =', tb17_a
+                print
 
-            if self.conf.rundate.hour != 12:
+                # I.2- EBAUCHE issue de la P6 du réseau H-6 de production d'ARPEGE
+                # Si l'A6 du réseau H n'est pas là on prend la P6 du réseau H-6h
+                # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur 6h homogène avec le cumul dans les fichiers d'assimilation
+                self.sh.title('Toolbox input tb17_b')
+                tb17_b = toolbox.input(
+                    alternate      = 'Ebauche',
+                    local          = 'mb035/P[date::addcumul_yymdh]',
+                    experiment     = self.conf.xpid,
+                    block          = self.conf.guess_block,
+                    geometry       = self.conf.vconf,
+                    cutoff         = 'production',
+                    date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
+                    cumul          = self.conf.cumul,
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.deterministic_conf,
+                    namespace      = self.conf.namespace,
+                    fatal          = False,
+                ),
+                print t.prompt, 'tb17_b =', tb17_b
+                print
+
+                # I.3- En dernier recours on essaye le réseau de production de 0h J-1
+                self.sh.title('Toolbox input tb17_c')
+                tb17_c = toolbox.input(
+                    alternate      = 'Ebauche',
+                    local          = 'mb035/P[date::addcumul_yymdh]',
+                    experiment     = self.conf.xpid,
+                    block          = self.conf.guess_block,
+                    geometry       = self.conf.vconf,
+                    cutoff         = 'production',
+                    date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(30, ndays * 24 + 6, 24)],
+                    cumul          = footprints.util.rangex('6-30-6'),
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.deterministic_conf,
+                    namespace      = self.conf.namespace,
+                    fatal          = False,
+                ),
+                print t.prompt, 'tb17_c =', tb17_c
+                print
 
                 # II- PEARP (J-5) -> J
                 # --------------------
@@ -419,7 +421,7 @@ class Safran(Task, S2MTaskMixIn):
                 print
 
                 # II.2- Si le réseau de production de 6h n'est pas là, on utilise le réseau de 18h de la veille
-                # PROBLEME : le nom dans 'local' change donc on passe dans l'alternate même si la ressource voulue 
+                # PROBLEME : le nom dans 'local' change donc on passe dans l'alternate même si la ressource voulue
                 # est déjà présente
     #             self.sh.title('Toolbox input tb18_b')
     #             tb18_b = toolbox.input(
@@ -607,6 +609,11 @@ class Safran(Task, S2MTaskMixIn):
 
         if 'late-backup' in self.steps:
 
+            if self.conf.rundate.hour == 12:
+                deterministicdir = ''
+            else:
+                deterministicdir = 'mb035/'
+
             self.sh.title('Toolbox output tb27')
             tb27 = toolbox.output(
                 role           = 'Ana_massifs',
@@ -614,7 +621,7 @@ class Safran(Task, S2MTaskMixIn):
                 source_app     = 'arpege',
                 source_conf    = '4dvarfr',
                 cutoff         = 'assimilation',
-                local          = 'mb035/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                local          = deterministicdir + 'FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                 experiment     = self.conf.xpid,
                 block          = 'massifs',
                 geometry        = self.conf.vconf,
@@ -657,7 +664,7 @@ class Safran(Task, S2MTaskMixIn):
                 source_app     = 'arpege',
                 source_conf    = '4dvarfr',
                 cutoff         = 'assimilation',
-                local          = 'mb035/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                local          = deterministicdir + 'FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                 experiment     = self.conf.xpid,
                 block          = 'postes',
                 geometry        = self.conf.vconf,
@@ -670,29 +677,29 @@ class Safran(Task, S2MTaskMixIn):
             print t.prompt, 'tb28 =', tb28
             print
 
-            self.sh.title('Toolbox output tb29')
-            tb29 = toolbox.output(
-                role           = 'Ana_massifs',
-                kind           = 'MeteorologicalForcing',
-                source_app     = 'arpege',
-                source_conf    = 'pearp',
-                cutoff         = 'assimilation',
-                local          = 'mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
-                experiment     = self.conf.xpid,
-                block          = 'massifs',
-                geometry        = self.conf.vconf,
-                nativefmt      = 'netcdf',
-                model          = self.conf.model,
-                datebegin      = datebegin.ymd6h,
-                dateend        = dateend.ymd6h,
-                namespace      = self.conf.namespace,
-                member         = footprints.util.rangex(self.conf.pearp_members),
-                fatal          = False,
-            ),
-            print t.prompt, 'tb29 =', tb29
-            print
-
             if self.conf.rundate.hour != 12:
+
+                self.sh.title('Toolbox output tb29')
+                tb29 = toolbox.output(
+                    role           = 'Ana_massifs',
+                    kind           = 'MeteorologicalForcing',
+                    source_app     = 'arpege',
+                    source_conf    = 'pearp',
+                    cutoff         = 'assimilation',
+                    local          = 'mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                    experiment     = self.conf.xpid,
+                    block          = 'massifs',
+                    geometry        = self.conf.vconf,
+                    nativefmt      = 'netcdf',
+                    model          = self.conf.model,
+                    datebegin      = datebegin.ymd6h,
+                    dateend        = dateend.ymd6h,
+                    namespace      = self.conf.namespace,
+                    member         = footprints.util.rangex(self.conf.pearp_members),
+                    fatal          = False,
+                ),
+                print t.prompt, 'tb29 =', tb29
+                print
 
                 self.sh.title('Toolbox output tb29_diff')
                 tb29_diff = toolbox.diff(
@@ -716,103 +723,81 @@ class Safran(Task, S2MTaskMixIn):
                 print t.prompt, 'tb29_diff =', tb29_diff
                 print
 
-            self.sh.title('Toolbox output tb30')
-            tb30 = toolbox.output(
-                role           = 'Ana_postes',
-                kind           = 'MeteorologicalForcing',
-                source_app     = 'arpege',
-                source_conf    = 'pearp',
-                cutoff         = 'assimilation',
-                local          = 'mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                self.sh.title('Toolbox output tb30')
+                tb30 = toolbox.output(
+                    role           = 'Ana_postes',
+                    kind           = 'MeteorologicalForcing',
+                    source_app     = 'arpege',
+                    source_conf    = 'pearp',
+                    cutoff         = 'assimilation',
+                    local          = 'mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                    experiment     = self.conf.xpid,
+                    block          = 'postes',
+                    geometry        = self.conf.vconf,
+                    nativefmt      = 'netcdf',
+                    model          = self.conf.model,
+                    datebegin      = datebegin.ymd6h,
+                    dateend        = dateend.ymd6h,
+                    namespace      = self.conf.namespace,
+                    member         = footprints.util.rangex(self.conf.pearp_members),
+                    fatal          = False,
+                ),
+                print t.prompt, 'tb30 =', tb30
+                print
+
+            self.sh.title('Toolbox output tb31')
+            tb31 = toolbox.output(
+                role           = 'Listing',
+                block          = 'listing',
                 experiment     = self.conf.xpid,
-                block          = 'postes',
+                cutoff         = 'assimilation',
                 geometry        = self.conf.vconf,
-                nativefmt      = 'netcdf',
-                model          = self.conf.model,
-                datebegin      = datebegin.ymd6h,
-                dateend        = dateend.ymd6h,
+                format         = 'ascii',
+                kind           = 'listing',
+                local          = deterministicdir + '{glob:a:\w+}.out',
                 namespace      = self.conf.namespace,
-                member         = footprints.util.rangex(self.conf.pearp_members),
-                fatal          = False,
-            ),
-            print t.prompt, 'tb30 =', tb30
+                task           = '[local]',
+                date           = self.conf.rundate.ymdh,
+            )
+            print t.prompt, 'tb31 =', tb31
             print
 
-            if self.conf.rundate.hour != 12:
+            self.sh.title('Toolbox output tb32')
+            tb32 = toolbox.output(
+                role           = 'Liste_obs',
+                block          = 'listing',
+                experiment     = self.conf.xpid,
+                geometry        = self.conf.vconf,
+                cutoff         = 'assimilation',
+                format         = 'ascii',
+                kind           = 'listing',
+                local          = deterministicdir + 'liste_obs_{glob:a:\w+}',
+                namespace      = self.conf.namespace,
+                task           = '[local]',
+                date           = self.conf.rundate.ymdh,
+            )
+            print t.prompt, 'tb32 =', tb32
+            print
 
-                self.sh.title('Toolbox output tb31')
-                tb31 = toolbox.output(
-                    role           = 'Listing',
-                    block          = 'listing',
-                    experiment     = self.conf.xpid,
-                    cutoff         = 'assimilation',
-                    geometry        = self.conf.vconf,
-                    format         = 'ascii',
-                    kind           = 'listing',
-                    local          = 'mb035/{glob:a:\w+}.out',
-                    namespace      = self.conf.namespace,
-                    task           = '[local]',
-                    date           = self.conf.rundate.ymdh,
-                )
-                print t.prompt, 'tb31 =', tb31
-                print
-
-                self.sh.title('Toolbox output tb32')
-                tb32 = toolbox.output(
-                    role           = 'Liste_obs',
-                    block          = 'listing',
-                    experiment     = self.conf.xpid,
-                    geometry        = self.conf.vconf,
-                    cutoff         = 'assimilation',
-                    format         = 'ascii',
-                    kind           = 'listing',
-                    local          = 'mb035/liste_obs_{glob:a:\w+}',
-                    namespace      = self.conf.namespace,
-                    task           = '[local]',
-                    date           = self.conf.rundate.ymdh,
-                )
-                print t.prompt, 'tb32 =', tb32
-                print
-
-                self.sh.title('Toolbox output tb33')
-                tb33 = toolbox.output(
-                    role           = 'Listing',
-                    block          = 'listing',
-                    experiment     = self.conf.xpid,
-                    geometry        = self.conf.vconf,
-                    cutoff         = 'assimilation',
-                    format         = 'ascii',
-                    kind           = 'listing',
-                    local          = 'mb{glob:a:\d+}/{glob:b:\w+}.out',
-                    seta           = '[glob:a]',
-                    member         = '[seta]',
-                    namespace      = self.conf.namespace,
-                    task           = '[local]',
-                    date           = self.conf.rundate.ymdh,
-                    fatal          = False,
-                )
-                print t.prompt, 'tb33 =', tb33
-                print
-
-                self.sh.title('Toolbox output tb34')
-                tb34 = toolbox.output(
-                    role           = 'Liste_obs',
-                    block          = 'listing',
-                    experiment     = self.conf.xpid,
-                    geometry        = self.conf.vconf,
-                    cutoff         = 'assimilation',
-                    format         = 'ascii',
-                    kind           = 'listing',
-                    local          = 'mb{glob:a:\d+}/liste_obs_{glob:b:\w+}',
-                    seta           = '[glob:a]',
-                    member         = '[seta]',
-                    namespace      = self.conf.namespace,
-                    task           = '[local]',
-                    date           = self.conf.rundate.ymdh,
-                    fatal          = False,
-                )
-                print t.prompt, 'tb34 =', tb34
-                print
+            self.sh.title('Toolbox output tb33')
+            tb33 = toolbox.output(
+                role           = 'Observations',
+                block          = 'observations',
+                experiment     = self.conf.xpid,
+                vapp           = 's2m',
+                geometry       = self.conf.vconf,
+                suite          = 'oper',
+                kind           = 'packedobs',
+                date           = self.conf.rundate.ymdh,
+                begindate      = datebegin.ymd6h,
+                enddate        = dateend.ymd6h,
+                local          = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
+                model          = 'safran',
+                namespace      = self.conf.namespace,
+                cutoff         = 'assimilation',
+            )
+            print t.prompt, 'tb33 =', tb33
+            print
 
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')
