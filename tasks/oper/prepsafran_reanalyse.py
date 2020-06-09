@@ -48,30 +48,32 @@ class Reanalyses(OpTask, S2MTaskMixIn):
 
         if 'early-fetch' in self.steps:
 
-            # Récupération de l'archive de la veille
-            self.sh.title('Toolbox input tb01')
-            tb01 = toolbox.input(
-                role           = 'Reanalyse',
-                local          = 'p{0:s}_{1:s}.tar'.format(season, self.conf.vconf),
-                experiment     = self.conf.xpid,
-                block          = 'guess',
-                nativefmt      = 'tar',
-                fatal          = False,
-                kind           = 'packedguess',
-                model          = 'safran',
-                hook_autohook1 = (tb01_generic_hook1, ),
-                date           = '{0:s}/-PT24H'.format(self.conf.rundate.ymdh),
-                vapp           = self.conf.vapp,
-                vconf          = self.conf.vconf,
-                # datebegin renvoie le 01/08, on veut aussi les guess du 31/07
-                begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
-                # dateend renvoie à J-4 (la réanalyse se fait seulement jusqu'à J-4 pour l'initialisation de SURFEX avec le réseau de 3h J+1)
-                enddate        = '{0:s}/+PT72H'.format(dateend.ymd6h),
-                geometry       = self.conf.vconf,
-                intent         = 'inout',
+            if not (self.conf.rundate.month() == 8 and self.conf.rundate.day == 1):
+
+                # Récupération de l'archive de la veille
+                self.sh.title('Toolbox input tb01')
+                tb01 = toolbox.input(
+                    role           = 'Reanalyse',
+                    local          = 'p{0:s}_{1:s}.tar'.format(season, self.conf.vconf),
+                    experiment     = self.conf.xpid,
+                    block          = 'guess',
+                    nativefmt      = 'tar',
+                    fatal          = True,
+                    kind           = 'packedguess',
+                    model          = 'safran',
+                    hook_autohook1 = (tb01_generic_hook1, ),
+                    date           = '{0:s}/-PT24H'.format(self.conf.rundate.ymdh),
+                    vapp           = self.conf.vapp,
+                    vconf          = self.conf.vconf,
+                    # datebegin renvoie le 01/08, on veut aussi les guess du 31/07
+                    begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
+                    # dateend renvoie à J-4 (la réanalyse se fait seulement jusqu'à J-4 pour l'initialisation de SURFEX avec le réseau de 3h J+1)
+                    enddate        = '{0:s}/+PT72H'.format(dateend.ymd6h),
+                    geometry       = self.conf.vconf,
+                    intent         = 'inout',
                 )
-            print t.prompt, 'tb01 =', tb01
-            print
+                print t.prompt, 'tb01 =', tb01
+                print
 
             # Récupération des guess de la veille à ajouter à l'archive
             self.sh.title('Toolbox input tb02')
@@ -108,7 +110,6 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 experiment     = self.conf.xpid,
                 block          = 'guess',
                 nativefmt      = 'tar',
-                delayed        = True,
                 namespace      = 'vortex.multi.fr',
                 geometry       = self.conf.vconf,
                 begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
@@ -117,6 +118,7 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 date           = '{0:s}'.format(self.conf.rundate.ymdh),
                 vapp           = self.conf.vapp,
                 vconf          = self.conf.vconf,
+                fatal          = True,
                 )
             print t.prompt, 'tb03 =', tb03
             print
