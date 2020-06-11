@@ -360,6 +360,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     model          = '[vapp]',
                     vapp           = self.conf.source_app,
                     vconf          = self.conf.eps_conf,
+                    fatal          = False,
                 )
                 print t.prompt, 'tb04_a =', tbpearp
                 print
@@ -410,7 +411,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     model          = '[vapp]',
                     vapp           = self.conf.source_app,
                     vconf          = self.conf.deterministic_conf,
-                    fatal          = True,
+                    fatal          = False,
                 )
                 print t.prompt, 'tb01 =', tbarp
                 print
@@ -418,7 +419,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # ...ou sur hendrix
                 self.sh.title('Toolbox input tb01')
                 tbarp = toolbox.input(
-                    role           = 'Gridpoint',
+                    alternate      = 'Gridpoint',
                     block          = 'forecast',
                     format         = 'grib',
                     geometry       = self.conf.arpege_geometry,
@@ -548,7 +549,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox output tb06_b')
                 tb06_b = toolbox.output(
                     alternate      = 'Ebauche',
-                    local          = 'mb036/P[date:yymdh]_[cumul:hour]_[vconf]production',
+                    local          = 'mb036/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                     geometry       = self.conf.domains,
                     vconf          = '[geometry:area]',
                     experiment     = self.conf.xpid,
@@ -589,7 +590,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox output tb07_b')
                 tb07_b = toolbox.output(
                     alternate      = 'Ebauche',
-                    local          = 'mb037/P[date:yymdh]_[cumul:hour]_[vconf]production',
+                    local          = 'mb037/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                     geometry       = self.conf.domains,
                     vconf          = '[geometry:area]',
                     experiment     = self.conf.xpid,
