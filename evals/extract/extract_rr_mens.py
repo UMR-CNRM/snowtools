@@ -15,7 +15,7 @@ import csv
 from extract_obs import question 
 
 def usage():
-    print("USAGE extract_obs.py datedeb datefin [appendfile]")
+    print("USAGE extract_rr_mens.py datedeb datefin massif")
     print("format des dates : YYYYMMDD")
     sys.exit(1)
 
@@ -27,19 +27,17 @@ if __name__ == "__main__":
         usage()
     datedeb = sys.argv[1] + "00"
     datefin = sys.argv[2] + "23"
-    append = len(sys.argv) == 4
-    if append:
-        appendfile = sys.argv[3]
+    massif_nivo = sys.argv[3]
 
     # II.1.1 construction de la question pour les postes nivo pour la HTN
     # ---------------------------------------------------------------------------
     # On prend toutes les heures
 
     question1 = question("question_jesus.q")
-    question1.set_fileout("RRJESUS.obs")
+    question1.set_fileout("RRmassif" + str(massif_nivo) + ".obs")
     question1.set_varout(["dat", "mensq.num_poste", "poste_nivo.nom_usuel", "rr", "rr_me", "nbrr"])
     question1.set_tables(["MENSQ", "POSTE_NIVO"])
-    question1.set_joincondition("MENSQ.NUM_POSTE = POSTE_NIVO.NUM_POSTE and (massif_nivo = 12 or massif_nivo = 13 or massif_nivo = 15 or massif_nivo = 16)")
+    question1.set_joincondition("MENSQ.NUM_POSTE = POSTE_NIVO.NUM_POSTE and massif_nivo = " + str(massif_nivo))
     question1.set_period_monthly(datedeb, datefin)
     question1.set_order(["dat", "num_poste"])
     question1.run()
