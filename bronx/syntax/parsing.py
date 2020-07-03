@@ -357,3 +357,46 @@ class StringDecoder(object):
                 value = self._fullprocessing(clean_value, u_subs)
                 self._cache_put(hashkey, value)
         return value
+
+
+_re_xitem = re.compile(r'(?<=,)([^,]+?)(?:\[([-\d,]+)\])?(?:,|$)')
+
+
+def xlist_strings(xlist):
+    """Some kind off handy coma-separated list (see the examples).
+
+    Examples::
+
+        >>> print(','. join(xlist_strings('host')))
+        host
+        >>> print(','. join(xlist_strings('host1,host2')))
+        host1,host2
+        >>> print(','. join(xlist_strings('host[1,2]')))
+        host1,host2
+        >>> print(','. join(xlist_strings('host[1-4]')))
+        host1,host2,host3,host4
+        >>> print(','. join(xlist_strings('fake[1-2,6],host[11,1-4,0]')))
+        fake1,fake2,fake6,host11,host1,host2,host3,host4,host0
+        >>> print(','. join(xlist_strings('fake[1-2-6]')))  # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        ...
+        ValueError: Malformed xlist: fake[1-2-6]
+
+    """
+    final = list()
+    for mgroup in _re_xitem.finditer(',' + xlist):
+        for item in (mgroup.group(2) or '').split(','):
+            interval = item.split('-', 2)
+            if len(interval) == 1:
+                final.append(mgroup.group(1) + item)
+            elif len(interval) == 2:
+                final.extend([mgroup.group(1) + str(i) for i in range(int(interval[0]),
+                                                                      int(interval[1]) + 1)])
+            else:
+                raise ValueError('Malformed xlist: {!s}'.format(xlist))
+    return final
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

@@ -8,6 +8,154 @@ Various concrete implementations may be provided since the mechanism to retrieve
 information on CPUs is not portable across platforms. At the present time, the
 only concrete implementation is the :class:`LinuxCpusInfo` class that relies on
 the /proc/cpuinfo virtual file.
+
+On Epona (2x AMD Rome socket with 64 cores each)::
+
+    >>> cpu_i = LinuxCpusInfo()
+    >>> cpu_i.nphysical_cores
+    128
+    >>> cpu_i.nvirtual_cores
+    128
+    >>> cpu_i.nsockets
+    2
+    >>> cpu_i.nphysical_cores_per_socket
+    64
+    >>> cpu_i.smt_threads
+    1
+    >>> import pprint
+    >>> pprint.pprint(cpu_i.cpus_hierarchy)
+    defaultdict(functools.partial(<class 'collections.defaultdict'>, <class 'list'>),
+                {0: defaultdict(<class 'list'>,
+                                {0: [0],
+                                 1: [1],
+                                 2: [2],
+                                 3: [3],
+                                 4: [4],
+                                 5: [5],
+                                 6: [6],
+                                 7: [7],
+                                 8: [8],
+                                 9: [9],
+                                 10: [10],
+                                 11: [11],
+                                 12: [12],
+                                 13: [13],
+                                 14: [14],
+                                 15: [15],
+                                 16: [16],
+                                 17: [17],
+                                 18: [18],
+                                 19: [19],
+                                 20: [20],
+                                 21: [21],
+                                 22: [22],
+                                 23: [23],
+                                 24: [24],
+                                 25: [25],
+                                 26: [26],
+                                 27: [27],
+                                 28: [28],
+                                 29: [29],
+                                 30: [30],
+                                 31: [31],
+                                 32: [32],
+                                 33: [33],
+                                 34: [34],
+                                 35: [35],
+                                 36: [36],
+                                 37: [37],
+                                 38: [38],
+                                 39: [39],
+                                 40: [40],
+                                 41: [41],
+                                 42: [42],
+                                 43: [43],
+                                 44: [44],
+                                 45: [45],
+                                 46: [46],
+                                 47: [47],
+                                 48: [48],
+                                 49: [49],
+                                 50: [50],
+                                 51: [51],
+                                 52: [52],
+                                 53: [53],
+                                 54: [54],
+                                 55: [55],
+                                 56: [56],
+                                 57: [57],
+                                 58: [58],
+                                 59: [59],
+                                 60: [60],
+                                 61: [61],
+                                 62: [62],
+                                 63: [63]}),
+                 1: defaultdict(<class 'list'>,
+                                {0: [64],
+                                 1: [65],
+                                 2: [66],
+                                 3: [67],
+                                 4: [68],
+                                 5: [69],
+                                 6: [70],
+                                 7: [71],
+                                 8: [72],
+                                 9: [73],
+                                 10: [74],
+                                 11: [75],
+                                 12: [76],
+                                 13: [77],
+                                 14: [78],
+                                 15: [79],
+                                 16: [80],
+                                 17: [81],
+                                 18: [82],
+                                 19: [83],
+                                 20: [84],
+                                 21: [85],
+                                 22: [86],
+                                 23: [87],
+                                 24: [88],
+                                 25: [89],
+                                 26: [90],
+                                 27: [91],
+                                 28: [92],
+                                 29: [93],
+                                 30: [94],
+                                 31: [95],
+                                 32: [96],
+                                 33: [97],
+                                 34: [98],
+                                 35: [99],
+                                 36: [100],
+                                 37: [101],
+                                 38: [102],
+                                 39: [103],
+                                 40: [104],
+                                 41: [105],
+                                 42: [106],
+                                 43: [107],
+                                 44: [108],
+                                 45: [109],
+                                 46: [110],
+                                 47: [111],
+                                 48: [112],
+                                 49: [113],
+                                 50: [114],
+                                 51: [115],
+                                 52: [116],
+                                 53: [117],
+                                 54: [118],
+                                 55: [119],
+                                 56: [120],
+                                 57: [121],
+                                 58: [122],
+                                 59: [123],
+                                 60: [124],
+                                 61: [125],
+                                 62: [126],
+                                 63: [127]})})
+
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -46,6 +194,7 @@ class CpusInfo(object):
     def __init__(self):
         self._cpus = None
         self._cpus_hierarchy = None
+        self._physical_cores_smtthreads = None
 
     @property
     @abc.abstractmethod
@@ -66,7 +215,7 @@ class CpusInfo(object):
         """
         if self._cpus_hierarchy is None:
             hierarchy = defaultdict(partial(defaultdict, list))
-            for icpu, cpu in self.cpus.items():
+            for icpu, cpu in sorted(self.cpus.items()):
                 hierarchy[cpu.socket_id][cpu.core_id].append(icpu)
             self._cpus_hierarchy = hierarchy
         return self._cpus_hierarchy
@@ -101,6 +250,16 @@ class CpusInfo(object):
                     for core in socket.values()])
         assert len(nsmt) == 1
         return nsmt.pop()
+
+    @property
+    def physical_cores_smtthreads(self):
+        """For each physical core, associate the first CPUid and its siblings"""
+        if self._physical_cores_smtthreads is None:
+            self._physical_cores_smtthreads = dict()
+            for socket in self.cpus_hierarchy.values():
+                for core in socket.values():
+                    self._physical_cores_smtthreads[core[0]] = core[1:]
+        return self._physical_cores_smtthreads
 
     def raw_cpulist(self, bsize=1):
         """Re-arrange the list of CPUs in a very simple way.
@@ -221,38 +380,55 @@ class LinuxCpusInfo(CpusInfo):
         return self._cpus
 
 
-def get_affinity(pid=None):
-    """Get the cpu affinity of a process. Returns None if no affinity is set."""
-    if pid is None:
-        pid = os.getpid()
-    _re_get_out = re.compile(r'.*:\s*(?P<binproc>[0-9a-f]+)\s*$')
-    try:
-        t_out = subprocess.check_output([AFFINITY_CMD, '-p', str(pid)])
-    except OSError:
-        raise CpusToolUnavailableError('No {:s} command on this system.'.format(AFFINITY_CMD))
-    locencode = locale.getdefaultlocale()[1] or 'ascii'
-    uni_out = t_out.decode(locencode, 'replace')  # Unicode stuff...
-    binproc = int(_re_get_out.match(uni_out).group('binproc'), 16)  # It's hexadecimal
-    binlist = list()
-    while binproc:
-        binlist.append(binproc % 2)
-        binproc = binproc >> 1
-    list_of_cpus = [i for i, v in enumerate(binlist) if v]
-    return list_of_cpus
+if six.PY2:
 
+    def get_affinity(pid=None):
+        """Get the cpu affinity of a process. Returns None if no affinity is set."""
+        if pid is None:
+            pid = os.getpid()
+        _re_get_out = re.compile(r'.*:\s*(?P<binproc>[0-9a-f]+)\s*$')
+        try:
+            t_out = subprocess.check_output([AFFINITY_CMD, '-p', str(pid)])
+        except OSError:
+            raise CpusToolUnavailableError('No {:s} command on this system.'.format(AFFINITY_CMD))
+        locencode = locale.getdefaultlocale()[1] or 'ascii'
+        uni_out = t_out.decode(locencode, 'replace')  # Unicode stuff...
+        binproc = int(_re_get_out.match(uni_out).group('binproc'), 16)  # It's hexadecimal
+        binlist = list()
+        while binproc:
+            binlist.append(binproc % 2)
+            binproc = binproc >> 1
+        list_of_cpus = [i for i, v in enumerate(binlist) if v]
+        return set(list_of_cpus)
 
-def set_affinity(cpus, pid=None):
-    """Set the cpu affinity of a process."""
-    if pid is None:
-        pid = os.getpid()
-    if isinstance(cpus, int):
-        cpus = [cpus]
-    cpus = ','.join([str(c) for c in cpus])
-    try:
-        subprocess.check_output([AFFINITY_CMD, '-p', '--cpu-list', cpus, str(pid)], stderr=subprocess.STDOUT)
-    except OSError:
-        raise CpusToolUnavailableError('No {:s} command on this system.'.format(AFFINITY_CMD))
-    except subprocess.CalledProcessError as e:
-        logger.error(str(e))
-        logger.error("stdout/stderr: %s", e.output)
-        raise
+    def set_affinity(cpus, pid=None):
+        """Set the cpu affinity of a process."""
+        if pid is None:
+            pid = os.getpid()
+        if isinstance(cpus, int):
+            cpus = [cpus]
+        cpus = ','.join([str(c) for c in cpus])
+        try:
+            subprocess.check_output([AFFINITY_CMD, '-p', '--cpu-list', cpus, str(pid)], stderr=subprocess.STDOUT)
+        except OSError:
+            raise CpusToolUnavailableError('No {:s} command on this system.'.format(AFFINITY_CMD))
+        except subprocess.CalledProcessError as e:
+            logger.error(str(e))
+            logger.error("stdout/stderr: %s", e.output)
+            raise
+
+else:
+
+    def get_affinity(pid=None):
+        """Get the cpu affinity of a process. Returns None if no affinity is set."""
+        if pid is None:
+            pid = 0
+        return os.sched_getaffinity(pid)
+
+    def set_affinity(cpus, pid=None):
+        """Set the cpu affinity of a process."""
+        if pid is None:
+            pid = 0
+        if isinstance(cpus, int):
+            cpus = [cpus]
+        os.sched_setaffinity(pid, cpus)
