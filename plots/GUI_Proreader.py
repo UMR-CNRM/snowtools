@@ -42,9 +42,9 @@ import pickle
 
 constante_sampling = proReader_mini.constante_sampling
 
-#######################################################
-# Modele de fenetre graphique dont les autres heritent
-#######################################################
+########################################################
+# Modele de fenetre graphique dont les autres heritent #
+########################################################
 class Graph(Toplevel):
     def __init__(self, parent, **Arguments):
         Toplevel.__init__(self, parent)
@@ -103,6 +103,8 @@ class Graph(Toplevel):
         self.buttonSave3 = Button(self, text = 'Pickle graphe', state = 'disabled')
         self.buttonSave4 = Button(self, text = 'Pickle profil', state = 'disabled')
 
+        self.buttonOpenFile = Button(self,  text='1: Ouvrir un fichier', command = self.recup)
+
         # Combobox communs a toutes les fenetres
         style = ttk.Style()
         style.configure('TCombobox', postoffset = (0,0,200,0))
@@ -129,7 +131,7 @@ class Graph(Toplevel):
         self.Canevas2 = FigureCanvasTkAgg(self.fig2, self)
 
         self.make_list_massif()
-        self.bind('<Configure>', self.onsize_test)
+        self.bind('<Configure>', lambda x: Graph.onsize_test(self, x))
         self.bind('<Control-o>', self.recup)
         self.bind('<Escape>', quit)
         self.bind('<Control-q>', quit)
@@ -176,7 +178,8 @@ class Graph(Toplevel):
         self.buttonPlot.config(state = 'normal', command = self.Plotage)
 
         if len(self.date) > constante_sampling: 
-            messagebox.showinfo('Time > '+str(constante_sampling), 'automatic sampling to avoid too long treatment')
+            print("Init")
+            messagebox.showinfo('Time > '+str(constante_sampling), 'Information: automatic sampling to avoid too long treatment')
 
     # CREER LISTE DES VARIABLES POUR COMBOBOX
     def creer_liste_variable(self):
@@ -308,7 +311,7 @@ class Graph(Toplevel):
         self.datedeb = self.date[0]
         self.datefin = self.date[len(self.date)-1]
         if len(self.date) > constante_sampling: 
-            messagebox.showinfo('Time > '+str(constante_sampling), 'automatic sampling to avoid too long treatment')
+            messagebox.showinfo('Time > '+str(constante_sampling), 'Information: automatic sampling to avoid too long treatment')
 
         listvariables = self.ff.listvar()
         list_var_non_plot = ['time', 'slope', 'aspect', 'ZS', 'massif_num', 'latitude', 'longitude', 'lat', 'lon',
@@ -365,10 +368,10 @@ class Graph(Toplevel):
 
     # TEST PRESENCE-ABSENCE DE PARAMETRE
     def test_presence_champs_4_params(self):
-    # Cas 1 seul point
+        # Cas 1 seul point
         if (len(self.Tableau[0]) == 1):
-            '''if self.type_fichier == 'PRO':
-                self.point_choisi=0'''
+            if self.type_fichier == 'PRO':
+                self.point_choisi=0
             if self.type_fichier == 'FSM':
                 self.point_choisi=-1
             self.combobox_reduce1.config(state = 'disabled', values = '')
@@ -718,15 +721,16 @@ class Graph(Toplevel):
             return pickle.dump(self.fig2, open(filename, 'wb'))
 
 
-'''#############################################################################################
 ################################################################################################
-#
-#
-#
-#
-#
 ################################################################################################
-#############################################################################################'''
+#                                                                                              #
+#                                                                                              #
+#                             Standard graph                                                   #
+#                                                                                              #
+#                                                                                              #
+################################################################################################
+################################################################################################
+
 class GraphStandard(Graph):
     def __init__(self, parent, **Arguments):
         Graph.__init__(self, parent, **Arguments)
@@ -743,14 +747,13 @@ class GraphStandard(Graph):
         self.label_reduce3 = Label(self, text = '6: Choix angle de pente')
         self.label_reduce4 = Label(self, text = '7: Choix orientation')
         self.combobox_reduce1 = ttk.Combobox(self, state = 'disabled', values = '')
-        self.buttonOpenFile = Button(self,  text='1: Ouvrir un fichier', command = self.recup)
         self.bind('<Configure>', self.onsize_test)
 
         if len(Arguments) > 0:
             self.ini_ligne_commande_interne(**Arguments)
 
     def ini_ligne_commande_interne(self, **Arguments):
-        Graph.ini_ligne_commande(self,**Arguments)
+        #Graph.ini_ligne_commande(self,**Arguments)
         self.pro = proReader_mini.ProReader_standard(ncfile = self.filename, var = self.variable, point = int(self.point_choisi), var_sup = self.var_sup)
         self.Tableau = self.pro.get_choix(self.filename)
         if self.Tableau[0][self.point_choisi] >0: 
@@ -911,15 +914,15 @@ class GraphStandard(Graph):
         self.figclear = False
 
         
-'''#############################################################################################
 ################################################################################################
-#
-#
-#
-#
-#
 ################################################################################################
-#############################################################################################'''
+#                                                                                              #
+#                                                                                              #
+#                             Height graph                                                     #
+#                                                                                              #
+#                                                                                              #
+################################################################################################
+################################################################################################
 
 class GraphHeight(Graph):
     def __init__(self, parent, **Arguments):
@@ -943,7 +946,6 @@ class GraphHeight(Graph):
         self.label_reduce3 = Label(self,text='8: Choix angle de pente')
         self.label_reduce4 = Label(self,text='9: Choix orientation')
 
-        self.buttonOpenFile = Button(self,  text = '1: Ouvrir un fichier', command = self.recup)
         self.bind('<Configure>', self.onsize_test)
 
         if len(Arguments) > 0:
@@ -1130,15 +1132,16 @@ class GraphHeight(Graph):
         self.figclear = False
 
         
-'''#############################################################################################
 ################################################################################################
-#
-#
-#
-#
-#
 ################################################################################################
-#############################################################################################'''
+#                                                                                              #
+#                                                                                              #
+#                             Massif graph                                                     #
+#                                                                                              #
+#                                                                                              #
+################################################################################################
+################################################################################################
+
 class GraphMassif(Graph):
     def __init__(self, parent, **Arguments):
         Graph.__init__(self, parent)
@@ -1152,7 +1155,6 @@ class GraphMassif(Graph):
         self.label_reduce3 = Label(self,text = '5: Choix angle de pente')
         self.label_reduce4 = Label(self,text = '6: Choix orientation')
 
-        self.buttonOpenFile = Button(self,  text = '1: Ouvrir un fichier', command = self.recup)
         self.bind('<Configure>', self.onsize_test)
         
     ##########################################################
@@ -1380,15 +1382,16 @@ class GraphMassif(Graph):
         self.clik_zoom = False
 
 
-'''#############################################################################################
 ################################################################################################
-#
-#
-#
-#
-#
 ################################################################################################
-#############################################################################################'''
+#                                                                                              #
+#                                                                                              #
+#                             Membre graph                                                     #
+#                                                                                              #
+#                                                                                              #
+################################################################################################
+################################################################################################
+
 class GraphMembre(Graph):
     def __init__(self,parent, **Arguments):
         Graph.__init__(self, parent)
@@ -1406,7 +1409,6 @@ class GraphMembre(Graph):
         self.label_reduce4 = Label(self,text = '7: Choix orientation')
 
         self.combobox_reduce1 = ttk.Combobox(self, state = 'disabled', values = '')
-        self.buttonOpenFile = Button(self,  text = '1: Ouvrir un fichier', command = self.recup)
         self.bind('<Configure>', self.onsize_test)
         
     ##########################################################
@@ -1565,15 +1567,17 @@ class GraphMembre(Graph):
         #self.buttonSave3.config(state = 'normal', command = self.Pickle_plot)
         self.figclear = False
         self.clik_zoom = False
-'''#############################################################################################
+
 ################################################################################################
-#
-#
-#
-#
-#
 ################################################################################################
-#############################################################################################'''
+#                                                                                              #
+#                                                                                              #
+#                   Generic tools and command line interpretation                              #
+#                                                                                              #
+#                                                                                              #
+################################################################################################
+################################################################################################
+
 class GestionFenetre(Frame):
     'In order to choose which graph will be drawn: standard, by massif, by members'
     def __init__(self):
@@ -1635,7 +1639,7 @@ def parseArguments():
     parser.add_argument("-n", "--NOGUI", help = "Option to save graph without GUI", action='store_true', default = False)
     parser.add_argument("-a", "--alt", help = "altitude", type = int)
     parser.add_argument("-as", "--aspect", help = "aspect", type = int)
-    parser.add_argument("-d", "--date", help = "Date for plot (useful for massif and member plots)", type=str, default = 2001010106)
+    parser.add_argument("-d", "--date", help = "Date for plot (useful for massif and member plots)", type=str, default = '2001010106')
     parser.add_argument("-m", "--massif", help = "massif", type = int)
     parser.add_argument("-o", "--out", help = "name for graph to save", type=str, default = 'out.png')
     parser.add_argument("-s", "--slope", help = "slope for massif graph", type=int)
@@ -1644,6 +1648,7 @@ def parseArguments():
     parser.add_argument("-dir", "--direction", help = "direction for plot (up or down, useful for height plots)", type=str, default = 'up')
     parser.add_argument("--hauteur", help = "centimeters for height plots", type = int, default = 10)
     parser.add_argument("--point", help = "point number", type = int)
+    parser.add_argument("--sampling", help = "Maximum time length before subsampling (-1 is never)", type = int)
 
     # Print version
     parser.add_argument("--version", action="version", version='%(prog)s - Version 1.0')
@@ -1699,7 +1704,7 @@ def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph
         datedeb = date[0]
         datefin = date[len(date)-1]
         if len(date) > constante_sampling: 
-            print('Time > '+str(constante_sampling), 'automatic sampling to avoid too long treatment')
+            print('Time > '+str(constante_sampling), 'Information: automatic sampling to avoid too long treatment')
         pro = proReader_mini.ProReader_standard(ncfile = filename, var = variable, point = int(liste_points[0]), var_sup = [])
         fig1, ax1 = plt.subplots(1, 1, sharex = True, sharey = True)
         if ('snow_layer' in ff.getdimvar(variable)):
@@ -1714,7 +1719,7 @@ def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph
         datedeb = date[0]
         datefin = date[len(date)-1]
         if len(date) > constante_sampling: 
-            print('Time > '+str(constante_sampling), 'automatic sampling to avoid too long treatment')
+            print('Time > '+str(constante_sampling), 'Information: automatic sampling to avoid too long treatment')
         pro = proReader_mini.ProReader_height(ncfile = filename, var = variable, point = int(liste_points[0]), var_sup = [])
         fig1, ax1 = plt.subplots(1, 1, sharex = True, sharey = True)
         intime = pro.plot(ax1, variable, datedeb, datefin, legend = variable, direction_cut = direction_coupe, height_cut = hauteur_coupe)
@@ -1778,6 +1783,11 @@ if __name__ == '__main__':
         if args.debug:
             logger.setLevel(logging.DEBUG)
 
+        # Sampling options
+        if args.sampling:
+            constante_sampling = args.sampling if args.sampling > 0 else float("inf")
+            proReader_mini.constante_sampling = constante_sampling
+
         # Is there a filename provided. In case yes, is it a correct filename
         if filename is None:
             GestionFenetre().mainloop()
@@ -1801,7 +1811,7 @@ if __name__ == '__main__':
                     logger.critical('Variable {} does not exist in {}'.format(variable, filename))
                     sys.exit(3)
                 if profil is not None and profil not in ff.listvar():
-                    logger.critical('Variable {} does not exist in {}'.format(variable, filename))
+                    logger.critical('Variable {} does not exist in {}'.format(profil, filename))
                     sys.exit(3)
 
         # Launch the app or save the figure
