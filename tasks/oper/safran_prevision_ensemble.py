@@ -44,7 +44,7 @@ class Safran(Task, S2MTaskMixIn):
             tb01a = toolbox.input(
                 role           = 'Ebauche',
                 local          = 'mb035/P[date::yymdh]_[cumul:hour]',
-                experiment     = self.conf.xpid,
+                experiment     = self.conf.xpid_guess,
                 block          = self.conf.guess_block,
                 geometry       = self.conf.vconf,
                 cutoff         = 'assimilation',
@@ -72,7 +72,7 @@ class Safran(Task, S2MTaskMixIn):
             tb01b = toolbox.input(
                 role           = 'Ebauche',
                 local          = 'mb035/P[date::yymdh]_[cumul:hour]',
-                experiment     = self.conf.xpid,
+                experiment     = self.conf.xpid_guess,
                 block          = self.conf.guess_block,
                 geometry       = self.conf.vconf,
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
@@ -98,7 +98,7 @@ class Safran(Task, S2MTaskMixIn):
             tb02a = toolbox.input(
                 role           = 'Ebauche',
                 local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
-                experiment     = self.conf.xpid,
+                experiment     = self.conf.xpid_guess,
                 block          = self.conf.guess_block,
                 geometry       = self.conf.vconf,
                 date           = '{0:s}'.format(datebegin.ymd6h),
@@ -120,7 +120,7 @@ class Safran(Task, S2MTaskMixIn):
             tb02b = toolbox.input(
                 role           = 'Ebauche',
                 local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
-                experiment     = self.conf.xpid,
+                experiment     = self.conf.xpid_guess,
                 block          = self.conf.guess_block,
                 geometry       = self.conf.vconf,
                 date           = '{0:s}/+PT12H'.format(datebegin.ymdh),
@@ -141,7 +141,7 @@ class Safran(Task, S2MTaskMixIn):
             tb02c = toolbox.input(
                 role           = 'Ebauche',
                 local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
-                experiment     = self.conf.xpid,
+                experiment     = self.conf.xpid_guess,
                 block          = self.conf.guess_block,
                 geometry       = self.conf.vconf,
                 date           = '{0:s}/+PT12H'.format(datebegin.ymdh),

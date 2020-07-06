@@ -328,7 +328,7 @@ class Safran(Task, S2MTaskMixIn):
                 tb17_a = toolbox.input(
                     role           = 'Ebauche',
                     local          = 'mb035/P[date::addcumul_yymdh]',
-                    experiment     = self.conf.xpid,
+                    experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,
                     geometry        = self.conf.vconf,
                     cutoff         = 'assimilation',
@@ -352,7 +352,7 @@ class Safran(Task, S2MTaskMixIn):
                 tb17_b = toolbox.input(
                     alternate      = 'Ebauche',
                     local          = 'mb035/P[date::addcumul_yymdh]',
-                    experiment     = self.conf.xpid,
+                    experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,
                     geometry       = self.conf.vconf,
                     cutoff         = 'production',
@@ -374,7 +374,7 @@ class Safran(Task, S2MTaskMixIn):
                 tb17_c = toolbox.input(
                     alternate      = 'Ebauche',
                     local          = 'mb035/P[date::addcumul_yymdh]',
-                    experiment     = self.conf.xpid,
+                    experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,
                     geometry       = self.conf.vconf,
                     cutoff         = 'production',
@@ -401,7 +401,7 @@ class Safran(Task, S2MTaskMixIn):
                     # local          = 'mb[member]/P[date:addcumul_yymdh]',
                     local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
                     term           = '[cumul]',
-                    experiment     = self.conf.xpid,
+                    experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,
                     geometry        = self.conf.vconf,
                     cutoff         = 'production',
