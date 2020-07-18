@@ -7,6 +7,7 @@ Created on 3 aug. 2018
 @author: lafaysse
 '''
 
+import os
 import sys
 from optparse import OptionParser
 from cen.layout.nodes import S2MTaskMixIn
@@ -44,6 +45,10 @@ def parse_options(arguments):
                       action="store_true", dest="snow", default=False,
                       help="Extract snowpack model output files")
 
+    parser.add_option("--xpid",
+                      action="store", dest="xpid", default=None,
+                      help="Specific xpid")
+
     (options, args) = parser.parse_args(arguments)
     del args
     return options
@@ -63,6 +68,11 @@ class config(object):
         self.meteo = options.meteo
         self.nativemeteo = options.nativemeteo
         self.snow = options.snow
+        if options.xpid:
+            if '@' in options.xpid:
+                self.xpid = options.xpid
+            else:
+                self.xpid = options.xpid + '@' + os.getlogin()
 
 
 class S2MExtractor(S2MTaskMixIn):
