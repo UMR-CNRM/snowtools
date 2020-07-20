@@ -465,7 +465,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 vconf          = self.conf.vconf,
                 engine         = 'exec',
                 kind           = 'guess',
-                # interpreter    = script[0].resource.language,
                 interpreter    = 'current',
                 ntasks         = self.conf.ntasks,
                 members        = footprints.util.rangex(self.conf.members),
