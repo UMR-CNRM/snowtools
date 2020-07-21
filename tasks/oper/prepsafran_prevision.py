@@ -13,7 +13,6 @@ from vortex.layout.nodes import Driver, Task
 logger = footprints.loggers.getLogger(__name__)
 
 
-
 def setup(t, **kw):
     return Driver(
         tag    = 'pearp2safran',
@@ -42,74 +41,67 @@ class PrepSafran(Task, S2MTaskMixIn):
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
-            tbarp = list()
-            tbpearp = list()
-            member = 0
-
             # I- ARPEGE
             # Récupération des échéances de 6h à 102h du réseau 0h J d'ARPEGE
             # On traite les échéances en les considérant comme des membres distincts pour paralléliser les calculs
-            for echeance in footprints.util.rangex(self.conf.prv_terms)[2:35]:
 
-                # On essaye d'abord sur le cache inline
-                self.sh.title('Toolbox input tbarp_inline, ech {0:03d}H'.format(echeance))
-                tbarp.extend(toolbox.input(
-                    role           = 'Gridpoint',
-                    format         = 'grib',
-                    geometry       = self.conf.arpege_geometry,
-                    kind           = 'gridpoint',
-                    filtername     = 'concatenate',
-                    suite          = 'oper',
-                    cutoff         = 'production',
-                    local          = 'ARP_{0:03d}/ARPEGE[date::addterm_ymdh]'.format(echeance),
-                    date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                    term           = echeance,
-                    namespace      = 'vortex.cache.fr',
-                    block          = 'forecast',
-                    nativefmt      = '[format]',
-                    origin         = 'historic',
-                    model          = '[vapp]',
-                    vapp           = self.conf.source_app,
-                    vconf          = self.conf.deterministic_conf,
-                    fatal          = False,
-                ))
-                print t.prompt, 'tb01 =', tbarp
-                print
+            # On essaye d'abord sur le cache inline
+            self.sh.title('Toolbox input tbarp_inline')
+            tbarp = toolbox.input(
+                role           = 'Gridpoint',
+                format         = 'grib',
+                geometry       = self.conf.arpege_geometry,
+                kind           = 'gridpoint',
+                filtername     = 'concatenate',
+                suite          = 'oper',
+                cutoff         = 'production',
+                local          = 'ARP_[term:hour]/ARPEGE[date::addterm_ymdh]',
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                term           = footprints.util.rangex(self.conf.prv_terms)[2:35],
+                namespace      = 'vortex.cache.fr',
+                block          = 'forecast',
+                nativefmt      = '[format]',
+                origin         = 'historic',
+                model          = '[vapp]',
+                vapp           = self.conf.source_app,
+                vconf          = self.conf.deterministic_conf,
+                fatal          = False,
+            )
+            print t.prompt, 'tb01 =', tbarp
+            print
 
-                # En cas de bascule les fichiers ont pu ne pas être phasés, on essaye alors sur Hendrix. 
-                # Les fichiers sur Hendrix n'ont pas de filtername "concatenate" --> A voir avec IGA
-                self.sh.title('Toolbox input tbarp_arch, ech {0:03d}H'.format(echeance))
-                tbarp.extend(toolbox.input(
-                    alternate      = 'Gridpoint',
-                    format         = 'grib',
-                    geometry       = self.conf.arpege_geometry,
-                    kind           = 'gridpoint',
-                    suite          = 'oper',
-                    cutoff         = 'production',
-                    local          = 'ARP_{0:03d}/ARPEGE[date::addterm_ymdh]'.format(echeance),
-                    date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                    term           = echeance,
-                    namespace      = 'vortex.archive.fr',
-                    block          = 'forecast',
-                    nativefmt      = '[format]',
-                    origin         = 'historic',
-                    model          = '[vapp]',
-                    vapp           = self.conf.source_app,
-                    vconf          = self.conf.deterministic_conf,
-                    fatal          = False,
-                ))
-                print t.prompt, 'tb01 =', tbarp
-                print
-
-                member = member + 1
+            # En cas de bascule les fichiers ont pu ne pas être phasés, on essaye alors sur Hendrix.
+            # Les fichiers sur Hendrix n'ont pas de filtername "concatenate" --> A voir avec IGA
+            self.sh.title('Toolbox input tbarp_arch')
+            tbarp.extend(toolbox.input(
+                alternate      = 'Gridpoint',
+                format         = 'grib',
+                geometry       = self.conf.arpege_geometry,
+                kind           = 'gridpoint',
+                suite          = 'oper',
+                cutoff         = 'production',
+                local          = 'ARP_[term:hour]/ARPEGE[date::addterm_ymdh]',
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                term           = footprints.util.rangex(self.conf.prv_terms)[2:35],
+                namespace      = 'vortex.archive.fr',
+                block          = 'forecast',
+                nativefmt      = '[format]',
+                origin         = 'historic',
+                model          = '[vapp]',
+                vapp           = self.conf.source_app,
+                vconf          = self.conf.deterministic_conf,
+                fatal          = True,
+            ))
+            print t.prompt, 'tb01 =', tbarp
+            print
 
             # II- PEARP
             # Récupération du réseau 18h (J-1) pour couvrir J 6h -> (J+4) 6h
             # On veut donc les échéances de 12h à 108h
             # Il reste 120-33=87 coeurs à utiliser, on peut donc diviser les échéances en 2 pour utiliser
             # 35*2=70 coeurs de calcul, il restera 17 coeurs non utilisés
-            self.sh.title('Toolbox input tbpearp_inline')
-            tbpearp.extend(toolbox.input(
+            self.sh.title('Toolbox input tbpearp_inline J1/J2')
+            tbpearp = toolbox.input(
                 role           = 'Gridpoint',
                 block          = 'forecast',
                 suite          = 'oper',
@@ -117,7 +109,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 format         = 'grib',
                 geometry       = self.conf.pearp_geometry,
                 kind           = 'gridpoint',
-                local          = 'PEARP_1[member]/PEARP[date::addterm_ymdh]',
+                local          = 'PEARP_[member]_[term:hour]/PEARP[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[4:19],
                 member         = footprints.util.rangex(self.conf.pearp_members),
@@ -128,11 +120,11 @@ class PrepSafran(Task, S2MTaskMixIn):
                 vapp           = self.conf.source_app,
                 vconf          = self.conf.eps_conf,
                 fatal          = False,
-            ))
+            )
             print t.prompt, 'tb02 =', tbpearp
             print
 
-            self.sh.title('Toolbox input tbpearp_archive')
+            self.sh.title('Toolbox input tbpearp_archive J1/J2')
             tbpearp.extend(toolbox.input(
                 alternate      = 'Gridpoint',
                 block          = 'forecast',
@@ -141,7 +133,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 format         = 'grib',
                 geometry       = self.conf.pearp_geometry,
                 kind           = 'gridpoint',
-                local          = 'PEARP_1[member]/PEARP[date::addterm_ymdh]',
+                local          = 'PEARP_[member]_[term:hour]/PEARP[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[4:19],
                 member         = footprints.util.rangex(self.conf.pearp_members),
@@ -156,7 +148,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             print t.prompt, 'tb02 =', tbpearp
             print
 
-            self.sh.title('Toolbox input tbpearp_inline')
+            self.sh.title('Toolbox input tbpearp_inline J3/J4')
             tbpearp.extend(toolbox.input(
                 role           = 'Gridpoint',
                 block          = 'forecast',
@@ -165,7 +157,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 format         = 'grib',
                 geometry       = self.conf.pearp_geometry,
                 kind           = 'gridpoint',
-                local          = 'PEARP_2[member]/PEARP[date::addterm_ymdh]',
+                local          = 'PEARP_[member]_[term:hour]/PEARP[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[20:38:2],
                 member         = footprints.util.rangex(self.conf.pearp_members),
@@ -180,7 +172,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             print t.prompt, 'tb02 =', tbpearp
             print
 
-            self.sh.title('Toolbox input tbpearp_archive')
+            self.sh.title('Toolbox input tbpearp_archive J3/J4')
             tbpearp.extend(toolbox.input(
                 alternate      = 'Gridpoint',
                 block          = 'forecast',
@@ -189,7 +181,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 format         = 'grib',
                 geometry       = self.conf.pearp_geometry,
                 kind           = 'gridpoint',
-                local          = 'PEARP_2[member]/PEARP[date::addterm_ymdh]',
+                local          = 'PEARP_[member]_[term:hour]/PEARP[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[20:38:2],
                 member         = footprints.util.rangex(self.conf.pearp_members),
@@ -229,7 +221,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 interpreter    = 'current',
                 terms          = footprints.util.rangex(self.conf.prv_terms),
                 ntasks         = self.conf.ntasks,
-                members        = footprints.util.rangex(self.conf.members),
             )
             print t.prompt, 'tb04 =', expresso
             print
@@ -242,33 +233,33 @@ class PrepSafran(Task, S2MTaskMixIn):
 
         if 'late-backup' in self.steps:
 
-            member = 0
-            for echeance in footprints.util.rangex(self.conf.prv_terms)[2:35]:
+            # On ne plante que si les guess issus d'ARPEGE n'ont pas pu être générés
 
-                self.sh.title('Toolbox output tb05')
-                tb05 = toolbox.output(
-                    role           = 'Ebauche',
-                    local          = 'ARP_{0:03d}/P[date:yymdh]_[cumul:hour]_[vconf]_production'.format(echeance),
-                    experiment     = self.conf.xpid,
-                    block          = self.conf.block,
-                    geometry       = self.conf.domains,
-                    vconf          = '[geometry::area]',
-                    date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                    cumul          = echeance,
-                    nativefmt      = 'ascii',
-                    kind           = 'guess',
-                    model          = 'safran',
-                    source_app     = self.conf.source_app,
-                    source_conf    = self.conf.deterministic_conf,
-                    namespace      = self.conf.namespace,
-                ),
-                print t.prompt, 'tb05a =', tb05
-                print
+            self.sh.title('Toolbox output tb05')
+            tb05 = toolbox.output(
+                role           = 'Ebauche',
+                local          = 'ARP_[cumul:hour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                experiment     = self.conf.xpid,
+                block          = self.conf.block,
+                geometry       = self.conf.domains,
+                vconf          = '[geometry::area]',
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[2:35],
+                nativefmt      = 'ascii',
+                kind           = 'guess',
+                model          = 'safran',
+                source_app     = self.conf.source_app,
+                source_conf    = self.conf.deterministic_conf,
+                namespace      = self.conf.namespace,
+                fatal          = True,
+            ),
+            print t.prompt, 'tb05a =', tb05
+            print
 
             self.sh.title('Toolbox output tb06a')
-            tb06 = toolbox.output(
+            tb06a = toolbox.output(
                 role           = 'Ebauche',
-                local          = 'PEARP_1[member]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                local          = 'PEARP_[member]_[cumul:hour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                 experiment     = self.conf.xpid,
                 block          = self.conf.block,
                 geometry       = self.conf.domains,
@@ -282,14 +273,15 @@ class PrepSafran(Task, S2MTaskMixIn):
                 source_conf    = self.conf.eps_conf,
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
+                fatal          = False,
             ),
-            print t.prompt, 'tb06a =', tb06
+            print t.prompt, 'tb06a =', tb06a
             print
 
             self.sh.title('Toolbox output tb06b')
-            tb06 = toolbox.output(
+            tb06b = toolbox.output(
                 role           = 'Ebauche',
-                local          = 'PEARP_2[member]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                local          = 'PEARP_[member]_[cumul:hour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                 experiment     = self.conf.xpid,
                 block          = self.conf.block,
                 geometry       = self.conf.domains,
@@ -303,8 +295,9 @@ class PrepSafran(Task, S2MTaskMixIn):
                 source_conf    = self.conf.eps_conf,
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
+                fatal          = False,
             ),
-            print t.prompt, 'tb06b =', tb06
+            print t.prompt, 'tb06b =', tb06b
             print
 
             from vortex.tools.systems import ExecutionError
