@@ -53,7 +53,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 geometry       = self.conf.arpege_geometry,
                 kind           = 'gridpoint',
                 filtername     = 'concatenate',
-                suite          = 'oper',
+                suite          = self.conf.suite,
                 cutoff         = 'production',
                 local          = 'ARP_[term:hour]/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
@@ -78,7 +78,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 format         = 'grib',
                 geometry       = self.conf.arpege_geometry,
                 kind           = 'gridpoint',
-                suite          = 'oper',
+                suite          = self.conf.suite,
                 cutoff         = 'production',
                 local          = 'ARP_[term:hour]/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
@@ -104,7 +104,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             tbpearp = toolbox.input(
                 role           = 'Gridpoint',
                 block          = 'forecast',
-                suite          = 'oper',
+                suite          = self.conf.suite,
                 cutoff         = 'production',
                 format         = 'grib',
                 geometry       = self.conf.pearp_geometry,
@@ -128,7 +128,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             tbpearp.extend(toolbox.input(
                 alternate      = 'Gridpoint',
                 block          = 'forecast',
-                suite          = 'oper',
+                suite          = self.conf.suite,
                 cutoff         = 'production',
                 format         = 'grib',
                 geometry       = self.conf.pearp_geometry,
@@ -152,7 +152,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             tbpearp.extend(toolbox.input(
                 role           = 'Gridpoint',
                 block          = 'forecast',
-                suite          = 'oper',
+                suite          = self.conf.suite,
                 cutoff         = 'production',
                 format         = 'grib',
                 geometry       = self.conf.pearp_geometry,
@@ -176,7 +176,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             tbpearp.extend(toolbox.input(
                 alternate      = 'Gridpoint',
                 block          = 'forecast',
-                suite          = 'oper',
+                suite          = self.conf.suite,
                 cutoff         = 'production',
                 format         = 'grib',
                 geometry       = self.conf.pearp_geometry,

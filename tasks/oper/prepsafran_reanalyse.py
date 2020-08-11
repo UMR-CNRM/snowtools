@@ -48,7 +48,7 @@ class Reanalyses(OpTask, S2MTaskMixIn):
 
         if 'early-fetch' in self.steps:
 
-            if not (self.conf.rundate.month() == 8 and self.conf.rundate.day == 1):
+            if not (self.conf.rundate.month == 8 and self.conf.rundate.day == 1):
 
                 # Récupération de l'archive de la veille
                 self.sh.title('Toolbox input tb01')

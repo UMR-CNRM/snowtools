@@ -53,7 +53,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     geometry       = self.conf.arpege_geometry,
                     kind           = 'gridpoint',
                     filtername     = 'concatenate',
-                    suite          = 'oper',
+                    suite          = self.conf.suite,
                     local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
                     date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 24, self.conf.cumul)],
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
@@ -77,7 +77,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     format         = 'grib',
                     geometry       = self.conf.arpege_geometry,
                     kind           = 'gridpoint',
-                    suite          = 'oper',
+                    suite          = self.conf.suite,
                     local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
                     date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 24, self.conf.cumul)],
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
@@ -102,7 +102,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     geometry       = self.conf.arpege_geometry,
                     kind           = 'gridpoint',
                     filtername     = 'concatenate',
-                    suite          = 'oper',
+                    suite          = self.conf.suite,
                     cutoff         = 'production',
                     local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
                     date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 24, self.conf.cumul)],
@@ -127,7 +127,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     format         = 'grib',
                     geometry       = self.conf.arpege_geometry,
                     kind           = 'gridpoint',
-                    suite          = 'oper',
+                    suite          = self.conf.suite,
                     cutoff         = 'production',
                     local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
                     date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 24, self.conf.cumul)],
@@ -153,7 +153,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 tbpearp = toolbox.input(
                     role           = 'Gridpoint',
                     block          = 'forecast',
-                    suite          = 'oper',
+                    suite          = self.conf.suite,
                     cutoff         = 'production',
                     format         = 'grib',
                     geometry       = self.conf.pearp_geometry,
@@ -187,7 +187,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     geometry       = self.conf.arpege_geometry,
                     kind           = 'gridpoint',
                     filtername     = 'concatenate',
-                    suite          = 'oper',
+                    suite          = self.conf.suite,
                     local          = 'ARPEGE[date::addterm_ymdh]',
                     date           = '{0:s}/-PT6H'.format(self.conf.rundate.ymd6h),
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
@@ -211,7 +211,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     format         = 'grib',
                     geometry       = self.conf.arpege_geometry,
                     kind           = 'gridpoint',
-                    suite          = 'oper',
+                    suite          = self.conf.suite,
                     local          = 'ARPEGE[date::addterm_ymdh]',
                     date           = '{0:s}/-PT6H'.format(self.conf.rundate.ymd6h),
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip

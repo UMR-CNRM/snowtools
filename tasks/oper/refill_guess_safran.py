@@ -45,16 +45,18 @@ class PrepSafran(Task, S2MTaskMixIn):
         """Preparation of SAFRAN input files"""
 
         t = self.ticket
+        # En laçant cette tâche au réseau de 12h on obtient datebegin=1er aout precedent et dateend=J-4
+        datebegin, dateend = self.get_period()
 
         if 'early-fetch' in self.steps:
 
             tbarp   = list()
             missing_dates = list()
-            rundate = self.conf.datebegin
-            while rundate <= self.conf.dateend:
+            rundate = datebegin
+            while rundate < dateend + Period(days=4):
 
                 # 1. Check if guess file already exists
-                self.sh.title('Toolbox input tb01')
+                self.sh.title('Toolbox input guess {0:s}'.format(rundate.ymdh))
                 tb01 = toolbox.input(
                     role           = 'Ebauche',
                     local          = '[date::ymdh]/P[date::addcumul_yymdh]',
@@ -84,8 +86,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     # Recuperation de A6 du réseau H-6 pour H in [0, 6, 12, 18]
                     if rundate < Date(2019, 7, 1, 0):
 
-                        self.sh.title('Toolbox input tb02')
-                        tbarp.extend(toolbox.input(
+                        self.sh.title('Toolbox input ARPEGE {0:s}'.format(rundate.ymdh))
+                        tb02 = toolbox.input(
                             role           = 'Gridpoint',
                             format         = 'grib',
                             geometry       = 'euroc25',
@@ -108,13 +110,13 @@ class PrepSafran(Task, S2MTaskMixIn):
                             vapp           = self.conf.source_app,
                             vconf          = self.conf.deterministic_conf,
                             fatal          = False,
-                        ))
-                        print t.prompt, 'tbarp =', tbarp
+                        )
+                        print t.prompt, 'tb02 =', tb02
                         print
 
                     else:
 
-                        self.sh.title('Toolbox input tb02')
+                        self.sh.title('Toolbox input arpege {0:s}'.format(rundate.ymdh))
                         tb02 = toolbox.input(
                             role           = 'Gridpoint',
                             format         = 'grib',
@@ -143,7 +145,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                         if len(tb02) == 5:
                             tbarp.extend(tb02)
                         else:
-                            self.sh.title('Toolbox input tb02')
+                            # En dernier recours on va chercher si une extraction BDAP a été faite pour les dates plus anciennes
+                            self.sh.title('Toolbox input BDAP {0:s}'.format(rundate.ymdh))
                             tbarp.extend(toolbox.input(
                                 role           = 'Gridpoint',
                                 format         = 'grib',
@@ -178,36 +181,19 @@ class PrepSafran(Task, S2MTaskMixIn):
             print t.prompt, 'tb03 =', tb03
             print
 
-#             self.sh.title('Toolbox input tb04 = PRE-TRAITEMENT FORCAGE script')
-#             tb03 = script = toolbox.input(
-#                 role        = 'pretraitement',
-#                 local       = 'makeP.py',
-#                 genv        = 'uenv:s2m.01@vernaym',
-#                 kind        = 's2m_filtering_grib',
-#                 language    = 'python',
-#                 # rawopts     = ' -o -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
-#                 rawopts     = '-a -r -d {0:s} -f {1:s}'.format(self.conf.vconf, ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)])))),
-#             )
-#             print t.prompt, 'tb03 =', tb03
-#             print
-
         if 'fetch' in self.steps:
             pass
 
         if 'compute' in self.steps:
-
 
             self.sh.title('Toolbox algo tb04')
             expresso = toolbox.algo(
                 vconf          = self.conf.vconf,
                 engine         = 'exec',
                 kind           = 'guess',
-                # interpreter    = script[0].resource.language,
                 interpreter    = 'current',
                 ntasks         = self.conf.ntasks,
-                members        = footprints.util.rangex(self.conf.members),
                 terms          = footprints.util.rangex(self.conf.ana_terms),
-                extendpypath = ['/home/gmap/mrpe/mary/public/eccodes_python'] + [self.sh.path.join(self.conf.rootapp, d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site']],
             )
             print t.prompt, 'tb04 =', expresso
             print
@@ -235,7 +221,7 @@ class PrepSafran(Task, S2MTaskMixIn):
         if 'late-backup' in self.steps:
 
             # WARNING : The following only works for a 1-year execution and one domain
-            season = self.conf.datebegin.nivologyseason
+            season = Date.nivologyseason.fget(self.conf.rundate)
             #for dom in self.conf.domains:
             #tarname = 'p{0:s}_{1:s}.tar'.format(season, self.conf.domains)
             tarname = 'p{0:s}_{1:s}.tar'.format(season, self.conf.vconf)
@@ -250,22 +236,21 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox output tb05')
             tb05 = toolbox.output(
-                role           = 'Ebauche',
+                role           = 'Reanalyses',
+                kind           = 'packedguess',
                 local          = tarname,
-                remote         = '/home/vernaym/s2m/[geometry]/guess/p{0:s}_[geometry].tar'.format(season),
-                hostname       = 'hendrix.meteo.fr',
-                unknownflow    = True,
-                username       = 'vernaym',
-                tube           = 'ftp',
+                experiment     = self.conf.xpid,
+                block          = 'guess',
+                nativefmt      = 'tar',
+                namespace      = 'vortex.multi.fr',
                 geometry       = self.conf.vconf,
-                #geometry       = self.conf.domains,
-                cumul          = self.conf.cumul,
-                cutoff         = 'assimilation',
-                nativefmt      = 'ascii',
-                kind           = 'guess',
+                begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
+                enddate        = '{0:s}/+PT96H'.format(dateend.ymd6h),
                 model          = 'safran',
-                #now            = True,
-
+                date           = '{0:s}'.format(self.conf.rundate.ymdh),
+                vapp           = self.conf.vapp,
+                vconf          = self.conf.vconf,
+                fatal          = True,
             ),
             print t.prompt, 'tb05 =', tb05
             print
@@ -278,7 +263,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 tb06 = toolbox.output(
                     role           = 'Ebauche',
                     local          = '[date::ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
-                    geometry       = self.conf.domains,
+                    geometry       = self.conf.vconf,
                     vapp           = 's2m',
                     vconf          = '[geometry:area]',
                     experiment     = 'OPER@vernaym',
