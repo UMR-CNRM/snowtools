@@ -285,6 +285,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
                     namespace      = self.conf.namespace,
+                    fatal          = False,
                 ),
                 print t.prompt, 'tb05_a =', tb05
                 print
