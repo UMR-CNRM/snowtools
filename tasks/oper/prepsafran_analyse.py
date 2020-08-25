@@ -42,7 +42,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # I- Guess ARPEGE (= "36eme membre")
                 # ----------------------------------
 
-                # RUN 3h : Recuperation de A6 des réseaux 6H, 12H et 18H (J-1).
+                # RUN 3h : Recuperation de A6 des réseaux 6H, 12H et 18H (J-1). 
+                # On récupère aussi le réseau 0H (J-1) qui a normalement déjà été extrait par la tâche prepsaf de 9h de la veille par sécurité
                 # SAFRAN utilisera la P6 du réseau 0h J pour le dernier guess en attendant que l'analyse soit disponible (réseau 9h)
                 # On cherche d'abord sur le cache inline puis sur hendrix
                 # RQ : on ne peut pas utiliser le namespace multi car les fichiers sur hendrix n'ont pas de filtername...
@@ -55,7 +56,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     filtername     = 'concatenate',
                     suite          = self.conf.suite,
                     local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
-                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 24, self.conf.cumul)],
+                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
                     namespace      = 'vortex.cache.fr',
@@ -79,7 +80,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     kind           = 'gridpoint',
                     suite          = self.conf.suite,
                     local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
-                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 24, self.conf.cumul)],
+                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
                     namespace      = 'vortex.archive.fr',
@@ -105,7 +106,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     suite          = self.conf.suite,
                     cutoff         = 'production',
                     local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
-                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 24, self.conf.cumul)],
+                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
                     namespace      = 'vortex.cache.fr',
@@ -130,7 +131,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     suite          = self.conf.suite,
                     cutoff         = 'production',
                     local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
-                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 24, self.conf.cumul)],
+                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
                     namespace      = 'vortex.archive.fr',
@@ -277,7 +278,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = '[geometry:area]',
                     experiment     = self.conf.xpid,
                     block          = self.conf.block,
-                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 24, self.conf.cumul)],
+                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
                     cumul          = self.conf.cumul,
                     nativefmt      = 'ascii',
                     kind           = 'guess',
@@ -298,7 +299,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = '[geometry:area]',
                     experiment     = self.conf.xpid,
                     block          = self.conf.block,
-                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 24, self.conf.cumul)],
+                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
                     cumul          = self.conf.cumul,
                     nativefmt      = 'ascii',
                     kind           = 'guess',
