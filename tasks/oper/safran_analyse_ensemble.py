@@ -51,10 +51,9 @@ class Safran(Task, S2MTaskMixIn):
                 tb01 = toolbox.input(
                     role           = 'Observations',
                     block          = 'observations',
-                    experiment     = self.conf.xpid,
+                    experiment     = 'OPER@vernaym',
                     vapp           = 's2m',
                     geometry       = self.conf.vconf,
-                    suite          = 'oper',
                     kind           = 'packedobs',
                     date           = self.conf.rundate.ymdh,
                     begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
