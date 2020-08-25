@@ -22,3 +22,7 @@
 30 10 * * * . ~/.bash_profile ; export WORKDIR=/scratch/work/`whoami` ; module load python/2.7.17 ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r pyr_allslopes > cron_pyr_allslopes_for3.out 2>&1
 30 10 * * * . ~/.bash_profile ; export WORKDIR=/scratch/work/`whoami` ; module load python/2.7.17 ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r cor_allslopes > cron_cor_allslopes_for3.out 2>&1
 30 10 * * * . ~/.bash_profile ; export WORKDIR=/scratch/work/`whoami` ; module load python/2.7.17 ; python $HOME/snowtools_git/tasks/s2m_command.py --oper --forecast -r postes > cron_postes_for3.out 2>&1
+00 21 22 * * . ~/.bash_profile ; export WORKDIR=/scratch/work/`whoami` ; module load python/2.7.17 ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r alp_allslopes --monthlyreanalysis > cron_alp_allslopes_monthly.out 2>&1
+00 21 22 * * . ~/.bash_profile ; export WORKDIR=/scratch/work/`whoami` ; module load python/2.7.17 ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r pyr_allslopes --monthlyreanalysis > cron_pyr_allslopes_monthly.out 2>&1
+00 21 22 * * . ~/.bash_profile ; export WORKDIR=/scratch/work/`whoami` ; module load python/2.7.17 ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r cor_allslopes --monthlyreanalysis > cron_cor_allslopes_monthly.out 2>&1
+00 21 22 * * . ~/.bash_profile ; export WORKDIR=/scratch/work/`whoami` ; module load python/2.7.17 ; python $HOME/snowtools_git/tasks/s2m_command.py --oper -r postes --monthlyreanalysis > cron_postes_monthly.out 2>&1
