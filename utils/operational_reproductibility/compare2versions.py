@@ -16,7 +16,7 @@ import numpy as np
 
 import netCDF4
 
-from scipy.stats import nanmean
+from scipy import nanmean
 from utils.FileException import FileNameException, VarNameException
 
 # Not necessary to transfer in vortex
@@ -422,7 +422,8 @@ if __name__ == "__main__":
 
     if options.new and options.old:
         C = ComparisonNetcdf()
-        C.compare2files(options.new, options.old)
+        checktime = 'prep' not in options.new
+        C.compare2files(options.new, options.old, checktime=checktime)
     elif options.datebegin and options.dateend:
         conform = True
         if options.fast:
