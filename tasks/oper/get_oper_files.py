@@ -49,6 +49,10 @@ def parse_options(arguments):
                       action="store_true", dest="dev", default=False,
                       help="Dev chain instead of operational chain")
 
+    parser.add_option("--deterministic",
+                      action="store_true", dest="deterministic", default=False,
+                      help="Dev chain instead of operational chain")
+
     (options, args) = parser.parse_args(arguments)  # @UnusedVariable
 
     return options
@@ -63,6 +67,8 @@ class configcommand(config):
 
         self.rundate = check_and_convert_date(options.datebegin)
 
+        if options.deterministic:
+            self.list_members = footprints.util.rangex(35, 35)
 
 class configcommanddev(configdev):
 
