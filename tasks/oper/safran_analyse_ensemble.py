@@ -633,28 +633,26 @@ class Safran(Task, S2MTaskMixIn):
             print t.prompt, 'tb27 =', tb27
             print
 
-            if self.conf.rundate.hour != 12:
-
-                self.sh.title('Toolbox output tb27_diff')
-                tb27_diff = toolbox.diff(
-                    role           = 'Ana_massifs',
-                    kind           = 'MeteorologicalForcing',
-                    source_app     = 'arpege',
-                    source_conf    = '4dvarfr',
-                    cutoff         = 'assimilation',
-                    local          = 'mb035/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
-                    experiment     = self.conf.diff_xpid,
-                    block          = 'massifs',
-                    geometry        = self.conf.vconf,
-                    nativefmt      = 'netcdf',
-                    model          = self.conf.model,
-                    datebegin      = datebegin.ymd6h,
-                    dateend        = dateend.ymd6h,
-                    namespace      = self.conf.namespace,
-                    fatal          = False,
-                ),
-                print t.prompt, 'tb27_diff =', tb27_diff
-                print
+            self.sh.title('Toolbox output tb27_diff')
+            tb27_diff = toolbox.diff(
+                role           = 'Ana_massifs',
+                kind           = 'MeteorologicalForcing',
+                source_app     = 'arpege',
+                source_conf    = '4dvarfr',
+                cutoff         = 'assimilation',
+                local          = deterministicdir + 'FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                experiment     = self.conf.diff_xpid,
+                block          = 'massifs',
+                geometry        = self.conf.vconf,
+                nativefmt      = 'netcdf',
+                model          = self.conf.model,
+                datebegin      = datebegin.ymd6h,
+                dateend        = dateend.ymd6h,
+                namespace      = self.conf.namespace,
+                fatal          = False,
+            ),
+            print t.prompt, 'tb27_diff =', tb27_diff
+            print
 
             self.sh.title('Toolbox output tb28')
             tb28 = toolbox.output(
