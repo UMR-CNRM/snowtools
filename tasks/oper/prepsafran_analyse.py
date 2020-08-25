@@ -42,7 +42,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # I- Guess ARPEGE (= "36eme membre")
                 # ----------------------------------
 
-                # RUN 3h : Recuperation de A6 des réseaux 6H, 12H et 18H (J-1). 
+                # RUN 3h : Recuperation de A6 des réseaux 6H, 12H et 18H (J-1).
                 # On récupère aussi le réseau 0H (J-1) qui a normalement déjà été extrait par la tâche prepsaf de 9h de la veille par sécurité
                 # SAFRAN utilisera la P6 du réseau 0h J pour le dernier guess en attendant que l'analyse soit disponible (réseau 9h)
                 # On cherche d'abord sur le cache inline puis sur hendrix

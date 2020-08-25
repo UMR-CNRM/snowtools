@@ -4,25 +4,21 @@
 
 __all__ = []
 
+from bronx.stdtypes.date import Date
+from bronx.stdtypes.date import Period
+from cen.layout.nodes import S2MTaskMixIn
 import footprints
-logger = footprints.loggers.getLogger(__name__)
-
+import glob
 import os
-
+import tarfile
 from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
-from cen.layout.nodes import S2MTaskMixIn
-from vortex.tools.systems import System
 
-from bronx.stdtypes.date import Date
-
-import tarfile
-import glob
-
-from bronx.stdtypes.date import Period
+logger = footprints.loggers.getLogger(__name__)
 
 
 def setup(t, **kw):
+
     return Driver(
         tag    = 'pearp2safran',
         ticket = t,
@@ -52,15 +48,17 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             tbarp   = list()
             missing_dates = list()
-            rundate = datebegin
-            while rundate < dateend + Period(days=4):
+            # On veut commencer les guess au 31/07 6h
+            rundate = datebegin - Period(days=1)
+            # On peut s'arrêter à J-4
+            while rundate < dateend:
 
                 # 1. Check if guess file already exists
                 self.sh.title('Toolbox input guess {0:s}'.format(rundate.ymdh))
                 tb01 = toolbox.input(
                     role           = 'Ebauche',
                     local          = '[date::ymdh]/P[date::addcumul_yymdh]',
-                    #geometry       = self.conf.domains,
+                    # geometry       = self.conf.domains,
                     geometry       = self.conf.vconf,
                     vapp           = 's2m',
                     vconf          = '[geometry:area]',
@@ -82,7 +80,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 
                 if len(tb01[0]) < 5:
 
-                    # 2. Get ARPEGE file 
+                    # 2. Get ARPEGE file
                     # Recuperation de A6 du réseau H-6 pour H in [0, 6, 12, 18]
                     if rundate < Date(2019, 7, 1, 0):
 
@@ -96,11 +94,11 @@ class PrepSafran(Task, S2MTaskMixIn):
                             date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                             term           = self.conf.cumul,
                             nativefmt      = '[format]',
-                            #remote         = '/home/mrns/vernaym/extraction_bdap/[vconf]/arpege_[date::ymdh]_[term::hour].grib',
-                            #hostname       = 'guppy.meteo.fr',
-                            #tube           = 'ftp',
-                            #origin         = 'arpege',
-                            #fatal          = False,
+                            # remote         = '/home/mrns/vernaym/extraction_bdap/[vconf]/arpege_[date::ymdh]_[term::hour].grib',
+                            # hostname       = 'guppy.meteo.fr',
+                            # tube           = 'ftp',
+                            # origin         = 'arpege',
+                            # fatal          = False,
                             suite          = 'oper',
                             cutoff         = 'assimilation',
                             # local          = 'mb035/ARPEGE[date::addterm_ymdh]',
@@ -122,7 +120,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             format         = 'grib',
                             geometry       = 'glob025',
                             kind           = 'gridpoint',
-                            #filtername     = 'concatenate',
+                            # filtername     = 'concatenate',
                             suite          = 'oper',
                             local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
                             date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
@@ -165,7 +163,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             print t.prompt, 'tbarp =', tbarp
                             print
 
-                        missing_dates.append(rundate) 
+                        missing_dates.append(rundate)
 
                 rundate = rundate + Period(days=1)
 
@@ -222,15 +220,15 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             # WARNING : The following only works for a 1-year execution and one domain
             season = Date.nivologyseason.fget(self.conf.rundate)
-            #for dom in self.conf.domains:
-            #tarname = 'p{0:s}_{1:s}.tar'.format(season, self.conf.domains)
+            # for dom in self.conf.domains:
+            # tarname = 'p{0:s}_{1:s}.tar'.format(season, self.conf.domains)
             tarname = 'p{0:s}_{1:s}.tar'.format(season, self.conf.vconf)
-            #thisdir = os.getcwd()
+            # thisdir = os.getcwd()
             with tarfile.open(tarname, mode='w') as tarfic:
                 for f in glob.glob('*/P????????'):
-                    #oldname = os.path.basename(f).split('_')[0]
-                    #date = Date.strptime(oldname[1:], '%y%m%d%H') + Period(hours=6)
-                    #arcname = 'P{0:s}'.format(date.yymdh)
+                    # oldname = os.path.basename(f).split('_')[0]
+                    # date = Date.strptime(oldname[1:], '%y%m%d%H') + Period(hours=6)
+                    # arcname = 'P{0:s}'.format(date.yymdh)
                     arcname = os.path.basename(f)
                     tarfic.add(f, arcname=arcname)
 
@@ -244,10 +242,10 @@ class PrepSafran(Task, S2MTaskMixIn):
                 nativefmt      = 'tar',
                 namespace      = 'vortex.multi.fr',
                 geometry       = self.conf.vconf,
-                begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
-                enddate        = '{0:s}/+PT96H'.format(dateend.ymd6h),
+                begindate      = datebegin.ymd6h,
+                enddate        = dateend.ymd6h,
                 model          = 'safran',
-                date           = '{0:s}'.format(self.conf.rundate.ymdh),
+                date           = self.conf.rundate.ymdh,
                 vapp           = self.conf.vapp,
                 vconf          = self.conf.vconf,
                 fatal          = True,
@@ -256,7 +254,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             print
 
             for f in glob.glob('*/ARPEGE*'):
-                
+
                 rundate = Date(f.split('/')[0])
 
                 self.sh.title('Toolbox output tb06')
@@ -280,7 +278,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ),
                 print t.prompt, 'tb06 =', tb06
                 print
-
 
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')

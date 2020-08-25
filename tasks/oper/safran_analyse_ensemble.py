@@ -311,8 +311,8 @@ class Safran(Task, S2MTaskMixIn):
                     date           = '{0:s}/-PT24H'.format(self.conf.rundate.ymdh),
                     vapp           = self.conf.vapp,
                     vconf          = self.conf.vconf,
-                    begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
-                    enddate        = '{0:s}/+PT72H'.format(dateend.ymd6h),
+                    begindate      = datebegin.ymd6h,
+                    enddate        = '{0:s}/-PT24H'.format(dateend.ymd6h),
                     geometry       = self.conf.vconf,
                     intent         = 'inout',
                 )
