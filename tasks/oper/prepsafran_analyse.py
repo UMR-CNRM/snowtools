@@ -295,6 +295,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 tb05 = toolbox.output(
                     alternate      = 'Ebauche',
                     local          = 'ARP_[date:ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                    cutoff         = 'production',
                     geometry       = self.conf.domains,
                     vconf          = '[geometry:area]',
                     experiment     = self.conf.xpid,
