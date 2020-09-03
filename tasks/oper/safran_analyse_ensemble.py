@@ -74,7 +74,7 @@ class Safran(Task, S2MTaskMixIn):
 
             else:
 
-                self.sh.title('Toolbox input tb01')
+                self.sh.title('Toolbox input tb01_a')
                 tb01 = toolbox.input(
                     role           = 'Observations',
                     # block          = 'observations',
@@ -98,6 +98,28 @@ class Safran(Task, S2MTaskMixIn):
                     hook_autohook1 = (tb01_generic_hook1, ),
                 )
                 print t.prompt, 'tb01 =', tb01
+                print
+
+                # Dans le cas d'une execution sur une date ancienne le cache de guppy est nettoyé,
+                # il faut donc aller chercher les obs sur hendrix
+                self.sh.title('Toolbox output tb01_b')
+                tb01_b = toolbox.output(
+                    alternate      = 'Observations',
+                    block          = 'observations',
+                    experiment     = self.conf.xpid,
+                    vapp           = 's2m',
+                    geometry       = self.conf.vconf,
+                    suite          = 'oper',
+                    kind           = 'packedobs',
+                    date           = self.conf.rundate.ymdh,
+                    begindate      = datebegin.ymd6h,
+                    enddate        = dateend.ymd6h,
+                    local          = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
+                    model          = 'safran',
+                    namespace      = self.conf.namespace,
+                    cutoff         = 'assimilation',
+                )
+                print t.prompt, 'tb01_b =', tb01_b
                 print
 
             self.sh.title('Toolbox input tb03')
