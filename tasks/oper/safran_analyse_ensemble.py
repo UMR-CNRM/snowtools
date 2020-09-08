@@ -771,12 +771,13 @@ class Safran(Task, S2MTaskMixIn):
                 experiment     = self.conf.xpid,
                 cutoff         = 'assimilation',
                 geometry        = self.conf.vconf,
-                format         = 'ascii',
-                kind           = 'listing',
-                local          = deterministicdir + '{glob:a:\w+}.out',
+                kind           = 'packedlisting',
+                begindate      = datebegin.ymd6h,
+                enddate        = dateend.ymd6h,
+                local          = deterministicdir + 'listings_safran_[begindate::ymdh]_[enddate::ymdh].tar.gz',
+                format         = 'tar',
+                model          = 'safran',
                 namespace      = self.conf.namespace,
-                task           = '[local]',
-                date           = self.conf.rundate.ymdh,
             )
             print t.prompt, 'tb31 =', tb31
             print
@@ -788,12 +789,13 @@ class Safran(Task, S2MTaskMixIn):
                 experiment     = self.conf.xpid,
                 geometry        = self.conf.vconf,
                 cutoff         = 'assimilation',
-                format         = 'ascii',
-                kind           = 'listing',
-                local          = deterministicdir + 'liste_obs_{glob:a:\w+}',
+                kind           = 'listobs',
+                begindate      = datebegin.ymd6h,
+                enddate        = dateend.ymd6h,
+                local          = deterministicdir + 'liste_obs_[begindate::ymdh]_[enddate::ymdh].tar.gz',
+                format         = 'tar',
+                model          = 'safran',
                 namespace      = self.conf.namespace,
-                task           = '[local]',
-                date           = self.conf.rundate.ymdh,
             )
             print t.prompt, 'tb32 =', tb32
             print

@@ -612,30 +612,15 @@ class Safran(Task, S2MTaskMixIn):
                 block          = 'listing',
                 experiment     = self.conf.xpid,
                 geometry       = self.conf.vconf,
-                format         = 'ascii',
-                kind           = 'listing',
-                local          = 'mb035/{glob:a:\w+}.out',
+                kind           = 'packedlisting',
+                begindate      = datebegin.ymd6h,
+                enddate        = dateend.ymd6h,
+                local          = 'mb035/listings_safran_[begindate::ymdh]_[enddate::ymdh].tar.gz',
+                format         = 'tar',
+                model          = 'safran',
                 namespace      = self.conf.namespace,
-                task           = '[local]',
-                date           = self.conf.rundate.ymdh,
             )
             print t.prompt, 'tb31 =', tb28
-            print
-
-            self.sh.title('Toolbox output tb32')
-            tb29 = toolbox.output(
-                role           = 'Liste_obs',
-                block          = 'listing',
-                experiment     = self.conf.xpid,
-                geometry       = self.conf.vconf,
-                format         = 'ascii',
-                kind           = 'listing',
-                local          = 'mb035/liste_obs_{glob:a:\w+}',
-                namespace      = self.conf.namespace,
-                task           = '[local]',
-                date           = self.conf.rundate.ymdh,
-            )
-            print t.prompt, 'tb32 =', tb29
             print
 
             self.sh.title('Toolbox output tb33')
@@ -644,14 +629,14 @@ class Safran(Task, S2MTaskMixIn):
                 block          = 'listing',
                 experiment     = self.conf.xpid,
                 geometry       = self.conf.vconf,
-                format         = 'ascii',
-                kind           = 'listing',
-                local          = 'mb{glob:a:\d+}/{glob:b:\w+}.out',
+                kind           = 'packedlisting',
+                begindate      = datebegin.ymd6h,
+                enddate        = dateend.ymd6h,
+                local          = 'mb{glob:a:\d+}/listings_safran_[begindate::ymdh]_[enddate::ymdh].tar.gz',
+                format         = 'tar',
                 seta           = '[glob:a]',
                 member         = '[seta]',
                 namespace      = self.conf.namespace,
-                task           = '[local]',
-                date           = self.conf.rundate.ymdh,
             )
             print t.prompt, 'tb33 =', tb28
             print
