@@ -96,7 +96,7 @@ class Graph(Toplevel):
         self.hauteur = self.winfo_height()/self.taille_y
 
         # Boutons communs a toutes les fenetres
-        self.buttonQuit = Button(self, text = 'Quitter', command = lambda x: self.destroy())
+        self.buttonQuit = Button(self, text = 'Quitter', command = self.close_window)
         self.buttonPlot = Button(self, text = 'Tracer graphe', state = 'disabled')
         self.buttonRaz = Button(self, text = 'Remise à zéro', state = 'disabled')
         self.buttonSave1 = Button(self, text = 'Sauver graphe', state = 'disabled')
@@ -134,10 +134,13 @@ class Graph(Toplevel):
         self.make_list_massif()
         self.bind('<Configure>', lambda x: Graph.onsize_test(self, x))
         self.bind('<Control-o>', self.recup)
-        self.bind('<Escape>', lambda x: self.destroy())
-        self.bind('<Control-q>', lambda x: self.destroy())
+        self.bind('<Escape>', self.close_window)
+        self.bind('<Control-q>', self.close_window)
         if len(Arguments) > 0:
             self.ini_ligne_commande(**Arguments)
+
+    def close_window(self, *args):
+        self.destroy()
 
     # POUR APPEL EN LIGNE DE COMMANDE
     def ini_ligne_commande(self, **Arguments):
