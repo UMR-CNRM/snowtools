@@ -109,12 +109,14 @@ class _StandardNC(netCDF4.Dataset):
     def readtime(self):
         # Vérification du nom de la variable
         if "time" not in list(self.variables.keys()):
-            raise VarNameException("time", self.path)
+            raise VarNameException("time", self.filepath())
 
         time = self.variables["time"]
 
         if netCDF4.__version__ >= '1.4.0':
             return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False, only_use_python_datetimes=True))
+        elif netCDF4.__version__ >= '1.5.3':
+            return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False))
         else:
             return np.array(netCDF4.num2date(time[:], time.units))
 
@@ -135,7 +137,7 @@ class _StandardNC(netCDF4.Dataset):
                     self.addCoord()
                     lat, lon = self.variables[latname], self.variables[lonname]
                 except Exception:
-                    raise VarNameException(latname, self.path)
+                    raise VarNameException(latname, self.filepath())
 
         if altiname in self.variables.keys():
             alti = self.variables[altiname]
