@@ -6,12 +6,15 @@ Created on 20 août 2019
 @author: lafaysse
 '''
 
-import os
-import netCDF4
 import datetime
+import os
+
+import netCDF4
+
 import numpy as np
 from utils.FileException import VarNameException, UnknownGridTypeException
 from utils.infomassifs import infomassifs
+
 
 class _StandardNC(netCDF4.Dataset):
     '''
@@ -48,8 +51,6 @@ class _StandardNC(netCDF4.Dataset):
 
         self.contributor_name = 'Matthieu Vernay ; Matthieu Lafaysse; Emmanuel Riggi-Carrolo'
         self.contributor_role = 'Matthieu Vernay develops the SAFRAN analysis and forecast system ; Matthieu Lafaysse develops the SURFEX-ISBA/Crocus snowpack model ; Emmanuel Riggi-Carrolo set up the operational environment.'
-
-
 
     def GlobalAttributes(self):
 
@@ -113,10 +114,10 @@ class _StandardNC(netCDF4.Dataset):
 
         time = self.variables["time"]
 
-        if netCDF4.__version__ >= '1.4.0':
-            return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False, only_use_python_datetimes=True))
-        elif netCDF4.__version__ >= '1.5.3':
+        if netCDF4.__version__ >= '1.5.3':
             return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False))
+        elif netCDF4.__version__ >= '1.4.0':
+            return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False, only_use_python_datetimes=True))
         else:
             return np.array(netCDF4.num2date(time[:], time.units))
 
@@ -160,14 +161,14 @@ class _StandardNC(netCDF4.Dataset):
             else:
                 raise UnknownGridTypeException(gridtype, projtype)
         else:
-            raise UnknownGridTypeException(gridtype,"")
-        
+            raise UnknownGridTypeException(gridtype, "")
+
         inProj = Proj(init=epsg)
         outProj = Proj(init='epsg:4326')
-        
-        XX, YY =np.meshgrid(np.array(x),np.array(y))
 
-        lon, lat = transform(inProj,outProj,XX,YY)        
+        XX, YY = np.meshgrid(np.array(x), np.array(y))
+
+        lon, lat = transform(inProj, outProj, XX, YY)
 
         return lat, lon
 
@@ -347,11 +348,11 @@ class StandardCROCUS(_StandardNC):
                 pgd = prosimu("PGD.nc")
                 nlayers = pgd.read("GROUND_LAYER")
                 bottom = []
-                for layer in range(1, nlayers[0]+1):
+                for layer in range(1, nlayers[0] + 1):
                     bottom.append(pgd.read('SOILGRID' + str(layer))[0])
                 top = [0] + bottom[:-1]
                 self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
-    
+
                 pgd.close()
 
     def soil_long_names(self, varname):
@@ -404,4 +405,3 @@ class StandardCROCUS(_StandardNC):
                 if varname[0:2] in ['TG', 'WG']:
                     if hasattr(self.variables[varname], 'long_name'):
                         self.variables[varname].long_name = self.variables[varname].long_name + self.soil_long_names(varname)
-
