@@ -116,7 +116,7 @@ class Safran(Task, S2MTaskMixIn):
             print
 
             # P12 à P108 du réseau 18h (J-1)
-            self.sh.title('Toolbox intput tb02b')
+            self.sh.title('Toolbox intput tb02')
             tb02b = toolbox.input(
                 role           = 'Ebauche',
                 local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
@@ -124,7 +124,7 @@ class Safran(Task, S2MTaskMixIn):
                 block          = self.conf.guess_block,
                 geometry       = self.conf.vconf,
                 date           = '{0:s}/+PT12H'.format(datebegin.ymdh),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[4:19],
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[4:38],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -135,27 +135,6 @@ class Safran(Task, S2MTaskMixIn):
                 fatal          = False,
             ),
             print t.prompt, 'tb02b =', tb02b
-            print
-
-            self.sh.title('Toolbox intput tb02c')
-            tb02c = toolbox.input(
-                role           = 'Ebauche',
-                local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
-                experiment     = self.conf.xpid_guess,
-                block          = self.conf.guess_block,
-                geometry       = self.conf.vconf,
-                date           = '{0:s}/+PT12H'.format(datebegin.ymdh),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[20:38:2],
-                nativefmt      = 'ascii',
-                kind           = 'guess',
-                model          = 'safran',
-                source_app     = self.conf.source_app,
-                source_conf    = self.conf.eps_conf,
-                namespace      = self.conf.namespace,
-                member         = footprints.util.rangex(self.conf.pearp_members),
-                fatal          = False,
-            ),
-            print t.prompt, 'tb02c =', tb02c
             print
 
             self.sh.title('Toolbox input tb03')
