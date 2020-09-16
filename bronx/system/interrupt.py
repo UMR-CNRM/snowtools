@@ -71,7 +71,6 @@ class SignalInterruptHandler(object):
             # In this portion of the script the python shell will abruptly stop if
             # a signal is received
         """
-
         self._signals = signals
         self._original_handlers = {}
         self._active = False
@@ -105,8 +104,8 @@ class SignalInterruptHandler(object):
             def handler(signum, frame):
                 self.deactivate()
                 self._logstuff(logging.ERROR,
-                    'Signal %d was caught. All original signal handler are restored.',
-                    signum)
+                               'Signal %d was caught. All original signal handler are restored.',
+                               signum)
                 if signum == signal.SIGINT:
                     raise KeyboardInterrupt()
                 else:

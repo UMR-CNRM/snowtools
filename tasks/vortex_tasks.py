@@ -37,85 +37,131 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         print (list_dates_begin_forc)
         print (type(list_dates_begin_forc[0]))
 
+        if not hasattr(self.conf, "interpol"):
+            self.conf.interpol = False
         if not hasattr(self.conf, "climground"):
             self.conf.climground = False
         if not hasattr(self.conf, "dailyprep"):
             self.conf.dailyprep = False
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
-            for p, datebegin in enumerate(list_dates_begin_forc):
-                dateend = list_dates_end_forc[p]
 
-                if datebegin >= Date(2002, 8, 1):
-                    source_app = 'arpege'
-                    source_conf = '4dvarfr'
-                else:
-                    source_app = 'ifs'
-                    source_conf = 'era40'
+            tb01 = toolbox.input(
+                role           = 'Forcing',
+                kind           = 'MeteorologicalForcing',
+                vapp           = self.conf.meteo,
+                vconf          = '[geometry:area]',
+                source_app     = 'arpege' if source_safran == 'safran' else None,
+                source_conf    = '4dvarfr' if source_safran == 'safran' else None,
+                cutoff         = 'assimilation',
+                local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                experiment     = self.conf.forcingid,
+                block          = block_safran,
+                geometry        = list_geometry,
+                nativefmt      = 'netcdf',
+                model          = 'safran',
+                datebegin      = self.conf.datebegin,
+                dateend        = self.conf.dateend,
+                intent         = 'inout',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                fatal          = False,
+            ),
 
-                self.sh.title('Toolbox input tb01')
-#                 tb01 = toolbox.input(
-#                     role           = 'Forcing',
-#                     local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-#                     vapp           = self.conf.meteo,
-#                     experiment     = self.conf.forcingid,
-#                     geometry       = self.conf.geometry,
-#                     datebegin      = datebegin,
-#                     dateend        = dateend,
-#                     nativefmt      = 'netcdf',
-#                     kind           = 'MeteorologicalForcing',
-#                     model          = 'safran',
-#                     namespace      = 'vortex.multi.fr',
-#                     namebuild      = 'flat@cen',
-#                     block          = 'meteo',
-#                 ),
+            if tb01[0]:
+                oneforcing = True
+            else:
+                oneforcing = False
+                for p, datebegin in enumerate(list_dates_begin_forc):
+                    dateend = list_dates_end_forc[p]
+    
+                    if datebegin >= Date(2002, 8, 1):
+                        source_app = 'arpege'
+                        source_conf = '4dvarfr'
+                    else:
+                        source_app = 'ifs'
+                        source_conf = 'era40'
+    
+                    self.sh.title('Toolbox input tb01')
+    #                 tb01 = toolbox.input(
+    #                     role           = 'Forcing',
+    #                     local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+    #                     vapp           = self.conf.meteo,
+    #                     experiment     = self.conf.forcingid,
+    #                     geometry       = self.conf.geometry,
+    #                     datebegin      = datebegin,
+    #                     dateend        = dateend,
+    #                     nativefmt      = 'netcdf',
+    #                     kind           = 'MeteorologicalForcing',
+    #                     model          = 'safran',
+    #                     namespace      = 'vortex.multi.fr',
+    #                     namebuild      = 'flat@cen',
+    #                     block          = 'meteo',
+    #                 ),
+    
+                    tb01 = toolbox.input(
+                        role           = 'Forcing',
+                        kind           = 'MeteorologicalForcing',
+                        vapp           = self.conf.meteo,
+                        vconf          = '[geometry:area]',
+                        source_app     = source_app if source_safran == 'safran' else None,
+                        source_conf    = source_conf if source_safran == 'safran' else None,
+                        cutoff         = 'assimilation',
+                        local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        experiment     = self.conf.forcingid,
+                        block          = block_safran,
+                        geometry        = list_geometry,
+                        nativefmt      = 'netcdf',
+                        model          = 'safran',
+                        datebegin      = datebegin,
+                        dateend        = dateend,
+                        intent         = 'inout',
+                        namespace      = 'vortex.multi.fr',
+                        namebuild      = 'flat@cen',
+                    ),
+    
+                    print(t.prompt, 'tb01 =', tb01)
+                    print()
 
-                tb01 = toolbox.input(
-                    role           = 'Forcing',
-                    kind           = 'MeteorologicalForcing',
-                    vapp           = self.conf.meteo,
-                    vconf          = '[geometry:area]',
-                    source_app     = source_app if source_safran == 'safran' else None,
-                    source_conf    = source_conf if source_safran == 'safran' else None,
-                    cutoff         = 'assimilation',
-                    local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                    experiment     = self.conf.forcingid,
-                    block          = block_safran,
-                    geometry        = list_geometry,
-                    nativefmt      = 'netcdf',
-                    model          = 'safran',
-                    datebegin      = datebegin,
-                    dateend        = dateend,
-                    intent         = 'inout',
-                    namespace      = 'vortex.multi.fr',
-                    namebuild      = 'flat@cen',
-                ),
-
-                print(t.prompt, 'tb01 =', tb01)
-                print()
+#             self.sh.title('Toolbox input tb02')
+#             tb02 = toolbox.input(
+#                 role           = 'SurfexClim',
+#                 kind           = 'pgdnc',
+#                 nativefmt      = 'netcdf',
+#                 local          = 'PGD.nc',
+#                 geometry       = self.conf.geometry,
+#                 genv            = 'uenv:cen.01@CONST_CEN',
+#                 gvar           = 'pgd_[geometry::area]',
+#                 model          = 'surfex',
+#                 fatal          = False,
+#             ),
+#             print(t.prompt, 'tb02 =', tb02)
+#             print()
 
             self.sh.title('Toolbox input tb02')
             tb02 = toolbox.input(
-                role           = 'SurfexClim',
+                role      = 'SurfexClim',
                 kind           = 'pgdnc',
                 nativefmt      = 'netcdf',
                 local          = 'PGD.nc',
+                experiment     = self.conf.xpid,
                 geometry       = self.conf.geometry,
-                genv            = 'uenv:cen.01@CONST_CEN',
-                gvar           = 'pgd_[geometry::area]',
                 model          = 'surfex',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'pgd',
                 fatal          = False,
             ),
-            print(t.prompt, 'tb02 =', tb02)
+            print(t.prompt, 'tb02_a =', tb02)
             print()
 
-            self.sh.title('Toolbox input tb02')
+            self.sh.title('Toolbox input tb02a')
             tb02_a = toolbox.input(
                 alternate      = 'SurfexClim',
                 kind           = 'pgdnc',
                 nativefmt      = 'netcdf',
                 local          = 'PGD.nc',
-                experiment     = self.conf.xpid,
+                experiment     = 'spinup@' + t.env.getvar("USER"),
                 geometry       = self.conf.geometry,
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
@@ -164,7 +210,27 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print(t.prompt, 'tb03a =', tb03a)
             print()
 
-            if not tb03[0] and not tb03a[0] and not self.conf.climground:
+
+            self.sh.title('Toolbox input tb03')
+            tb03a2 = toolbox.input(
+                alternate      = 'SnowpackInit',
+                local          = 'PREP.nc',
+                experiment     = 'reanalysis@lafaysse',
+                geometry       = self.conf.geometry,
+                date           = self.conf.datespinup,
+                intent         = 'inout',
+                nativefmt      = 'netcdf',
+                kind           = 'PREP',
+                model          = 'surfex',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'prep',
+                fatal          = False,
+            ),
+            print(t.prompt, 'tb03a2 =', tb03a2)
+            print()
+
+            if not tb03[0] and not tb03a[0] and not tb03a2[0] and not self.conf.climground:
                 tbi = toolbox.input(
                     role           = 'initial values of ground temperature',
                     kind           = 'climTG',
@@ -257,6 +323,19 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print(t.prompt, 'tb05 =', tb05)
             print()
 
+            if self.conf.interpol:
+                tbgrid = toolbox.input(
+                    role = 'gridout',
+                    remote = self.conf.gridout,
+                    kind = 'interpolgrid',
+                    model = 'surfex',
+                    local = 'GRID.nc',
+                )
+                print(t.prompt, 'tbgrid =', tbgrid)
+            else:
+                print(t.prompt, 'tbgrid = undefined')
+            print()
+
             if self.conf.exesurfex:
                 self.sh.title('Toolbox executable tb06= tbx1')
                 tb06 = tbx3 = toolbox.executable(
@@ -284,7 +363,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb07 =', tb07)
                     print()
 
-                if not tb03[0] and not tb03a[0]:
+                if not tb03[0] and not tb03a[0] and not tb03a2[0]:
 
                     self.sh.title('Toolbox executable tb08= tbx3')
                     tb08 = tbx2 = toolbox.executable(
@@ -307,7 +386,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     local          = 'OFFLINE',
                     model          = 'surfex',
                     genv           = 'uenv:cen.01@CONST_CEN',
-                    gvar           = 'master_offline_mpi',
+                    gvar           = 'master_surfex_offline_mpi',
                 )
 
                 print(t.prompt, 'tb06 =', tb06)
@@ -328,7 +407,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb07 =', tb07)
                     print()
 
-                if not tb03[0] and not tb03a[0]:
+                if not tb03[0] and not tb03a[0] and not tb03a2[0]:
 
                     self.sh.title('Toolbox executable tb08= tbx3')
                     tb08 = tbx2 = toolbox.executable(
@@ -343,6 +422,19 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb08 =', tb08)
                     print()
 
+            if self.conf.interpol:
+                tbI = tbxi = toolbox.executable(
+                    role           = 'Binary',
+                    kind           = 'offline',
+                    local          = 'INTERPOL',
+                    model          = 'surfex',
+                    genv           = 'uenv:cen.01@CONST_CEN',
+                    gvar           = 'master_interpol_mpi',
+                )
+
+                print(t.prompt, 'tbI =', tbI)
+                print()
+
         if 'compute' in self.steps:
 
             if self.conf.meteo == "safran":
@@ -355,8 +447,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 tb09a = tbalgo1 = toolbox.algo(
                     engine         = 's2m',
                     kind         = 'prepareforcing',
-                    datebegin    = [list_dates_begin_forc],
-                    dateend      = [list_dates_end_forc],
+                    datebegin    = list_dates_begin_forc,
+                    dateend      = list_dates_end_forc,
                     ntasks       = ntasks,
                     geometry_in     = list_geometry,
                     geometry_out     = self.conf.geometry.area
@@ -364,6 +456,19 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb09a =', tb09a)
                 print()
                 tb09a.run()
+
+            elif self.conf.meteo == 'interpolsafran':
+
+                self.sh.title('Toolbox algo tb09a')
+                tb09a = tbalgo1 = toolbox.algo(
+                    engine         = 'parallel',
+                    binary         = 'INTERPOL',
+                    kind           = 'deterministic'
+                )
+                print(t.prompt, 'tb09a =', tb09a)
+                print()
+
+                self.component_runner(tbalgo1, tbxi)
 
             if self.conf.climground:
                 self.sh.title('Toolbox algo tb09a')
@@ -375,7 +480,10 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print()
                 tb09b.run()
 
-            firstforcing = 'FORCING_' + list_dates_begin_forc[0].strftime("%Y%m%d%H") + "_" + list_dates_end_forc[0].strftime("%Y%m%d%H") + ".nc"
+            if oneforcing:
+                firstforcing = 'FORCING_' + self.conf.datebegin.strftime("%Y%m%d%H") + "_" + self.conf.dateend.strftime("%Y%m%d%H") + ".nc"
+            else:
+                firstforcing = 'FORCING_' + list_dates_begin_forc[0].strftime("%Y%m%d%H") + "_" + list_dates_end_forc[0].strftime("%Y%m%d%H") + ".nc"
             self.sh.title('Toolbox algo tb09a')
             tb09a = tbalgo1 = toolbox.algo(
                 kind         = 'surfex_preprocess',
@@ -399,14 +507,14 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 self.component_runner(tbalgo2, tbx1, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
 
             # Take care : PREP parallelization will be available in v8.1 --> nproc and ntasks will have to be set to 40
-            if not tb03[0] and not tb03a[0]:
+            if not tb03[0] and not tb03a[0] and not tb03a2[0]:
                 self.sh.title('Toolbox algo tb09 = PREP')
                 tb10 = tbalgo3 = toolbox.algo(
                     engine         = 'parallel',
                 )
                 print(t.prompt, 'tb10 =', tb10)
                 print()
-                self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
+                self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=2, ntasks=2))
 
             self.sh.title('Toolbox algo tb11 = OFFLINE')
             tb11 = tbalgo4 = toolbox.algo(
@@ -433,11 +541,34 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
 
         if 'late-backup' in self.steps:
 
-            for p, datebegin in enumerate(list_dates_begin_pro):
-                dateend = list_dates_end_pro[p]
+            # First we try to save a PRO file covering the whole simulation period if present
+            datebegin = self.conf.datebegin
+            dateend = self.conf.dateend
+            self.sh.title('Toolbox output tb19')
+            tb19 = toolbox.output(
+                local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                experiment     = self.conf.xpid,
+                geometry       = self.conf.geometry,
+                datebegin      = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
+                dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                nativefmt      = 'netcdf',
+                kind           = 'SnowpackSimulation',
+                model          = 'surfex',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'pro',
+                fatal          = False
+            ),
+            print(t.prompt, 'tb19 =', tb19)
+            print()
+
+            if tb19[0]:
+                # Only one pro file for the whole simulation period
+                # Save only one prep at the end of the simulation
+
                 self.sh.title('Toolbox output tb19')
-                tb19 = toolbox.output(
-                    local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                tb19bis = toolbox.output(
+                    local          = 'CUMUL_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
                     datebegin      = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
@@ -447,9 +578,27 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     model          = 'surfex',
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
-                    block          = 'pro',
+                    block          = 'cumul',
+                    fatal          = False
                 ),
-                print(t.prompt, 'tb19 =', tb19)
+                print(t.prompt, 'tb19bis =', tb19bis)
+                print()
+
+                tb19ter = toolbox.output(
+                    local          = 'DIAG_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    experiment     = self.conf.xpid,
+                    geometry       = self.conf.geometry,
+                    datebegin      = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
+                    dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                    nativefmt      = 'netcdf',
+                    kind           = 'SnowpackSimulation',
+                    model          = 'surfex',
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'diag',
+                    fatal          = False
+                ),
+                print(t.prompt, 'tb19bis =', tb19bis)
                 print()
 
                 self.sh.title('Toolbox output tb20')
@@ -468,6 +617,79 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 ),
                 print(t.prompt, 'tb20 =', tb20)
                 print()
+
+            else:
+                # PRO not available for the whole simulation period: try to save yearly files
+
+                for p, datebegin in enumerate(list_dates_begin_pro):
+                    dateend = list_dates_end_pro[p]
+                    self.sh.title('Toolbox output tb19')
+                    tb19 = toolbox.output(
+                        local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        datebegin      = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
+                        dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                        nativefmt      = 'netcdf',
+                        kind           = 'SnowpackSimulation',
+                        model          = 'surfex',
+                        namespace      = 'vortex.multi.fr',
+                        namebuild      = 'flat@cen',
+                        block          = 'pro',
+                    ),
+                    print(t.prompt, 'tb19 =', tb19)
+                    print()
+
+                    tb19b = toolbox.output(
+                        local          = 'DIAG_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        datebegin      = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
+                        dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                        nativefmt      = 'netcdf',
+                        kind           = 'SnowpackSimulation',
+                        model          = 'surfex',
+                        namespace      = 'vortex.multi.fr',
+                        namebuild      = 'flat@cen',
+                        block          = 'diag',
+                        fatal          = False,
+                    ),
+                    print(t.prompt, 'tb19b =', tb19b)
+                    print()
+
+                    tb19c = toolbox.output(
+                        local          = 'CUMUL_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        datebegin      = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
+                        dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                        nativefmt      = 'netcdf',
+                        kind           = 'SnowpackSimulation',
+                        model          = 'surfex',
+                        namespace      = 'vortex.multi.fr',
+                        namebuild      = 'flat@cen',
+                        block          = 'cumul',
+                        fatal          = False,
+                    ),
+                    print(t.prompt, 'tb19c =', tb19c)
+                    print()
+
+                    self.sh.title('Toolbox output tb20')
+                    tb20 = toolbox.output(
+                        local          = 'PREP_[date:ymdh].nc',
+                        role           = 'SnowpackInit',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        date           = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                        nativefmt      = 'netcdf',
+                        kind           = 'PREP',
+                        model          = 'surfex',
+                        namespace      = 'vortex.multi.fr',
+                        namebuild      = 'flat@cen',
+                        block          = 'prep',
+                    ),
+                    print(t.prompt, 'tb20 =', tb20)
+                    print()
 
 # The following condition does not work. --> Ask leffe how to do
 #                 if not (tb02[0] or tb02_a[0]):
@@ -500,7 +722,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb22 =', tb22)
                 print()
 
-            if self.conf.meteo == 'safran':
+            if self.conf.meteo == 'safran' or self.conf.interpol:
                 for p, datebegin in enumerate(list_dates_begin_forc):
                     dateend = list_dates_end_forc[p]
                     self.sh.title('Toolbox output tb19')

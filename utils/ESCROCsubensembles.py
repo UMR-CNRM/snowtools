@@ -29,7 +29,7 @@ class ESCROC_subensembles(dict):
         elif subensemble == "E1notartes":
             self.physical_options, self.snow_parameters, self.members = self.E1notartes(members, randomDraw)
 
-        elif subensemble in ["E2", "E2CLEAR"]:
+        elif subensemble in ["E2", "E2open"]:
             self.physical_options, self.snow_parameters, self.members = self.E2(members)
 
         elif subensemble in ["Crocus"]:
@@ -169,7 +169,6 @@ class ESCROC_subensembles(dict):
             memberslist = 1 + np.random.choice(len(self.snowflist) * len(self.metamlist) * len(self.radlist) * len(self.turblist) * len(self.condlist) * len(self.holdlist) * len(self.complist) * len(self.cvlist), len(members), replace = False)
         else:
             memberslist = members
-        print(memberslist)
         physical_options = []
         snow_parameters = []
         mb = 0

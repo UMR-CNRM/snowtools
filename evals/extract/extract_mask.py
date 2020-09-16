@@ -9,7 +9,7 @@ import re
 
 import csv
 
-from evals.extract.extract_obs import question
+from evals.extract.extract_rr_mens import question
 
 from lxml import etree as ET
 # import xml.etree.ElementTree as ET

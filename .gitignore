@@ -5,3 +5,6 @@
 *~
 tests/output*
 snowtools
+oper_tag
+tag
+*.swp

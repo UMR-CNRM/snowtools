@@ -22,6 +22,7 @@ class Foo(object):
         self.__dict__.update(kw)
 
     def as_dict(self):
+        """Returns the object's content as a dictionary."""
         return self.__dict__
 
     def __getattr__(self, attr):

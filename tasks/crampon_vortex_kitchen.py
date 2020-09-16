@@ -1,23 +1,25 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-Created on 14 juin 2018
-
+Created on 21  mars 2019
+Run a CRAMPON assimilation sequence on a multinode
 @author: cluzetb
 '''
 import os
 import shutil
 
 from utils.resources import InstallException
-from tasks.vortex_kitchen import vortex_conf_file, walltime
+from tasks.vortex_kitchen import Vortex_conf_file
 from tools.update_namelist import update_surfex_namelist_file
+import numpy as np
+from utils.ESCROCsubensembles import ESCROC_subensembles
 
 
-class vortex_kitchen_soda(object):
+class crampon_vortex_kitchen(object):
     '''
     Interface between s2m command line and vortex utilities (tasks and mk_jobs)
-    SODA case
-    based on vortex_soda from M. Lafaysse
+    crampon_multinode
+    based on vortex_kitchen from M. Lafaysse
     '''
 
     def __init__(self, options):
@@ -37,7 +39,7 @@ class vortex_kitchen_soda(object):
         self.jobtemplate = "job-vortex-default.py"
 
         self.create_env(options)
-        self.enforce_nmembers(options)
+        self.enforce_nmembers(options)  # this must be moved to the preprocess step of offline I think.
         self.create_conf(options)
 
     def check_vortex_install(self):
@@ -63,7 +65,7 @@ class vortex_kitchen_soda(object):
         os.chdir("jobs")
         if not os.path.isfile(self.jobtemplate):
             os.symlink(os.environ["SNOWTOOLS_CEN"] + "/jobs/" + self.jobtemplate, self.jobtemplate)
-            
+
     def enforce_nmembers(self, options):
         """enforce NENS in the namelist to the presecribed s2m argument value. Mandatory for SODA"""
         # options.namelist is already an absolute path.
@@ -72,16 +74,16 @@ class vortex_kitchen_soda(object):
     def create_conf(self, options):
         ''' Prepare configuration file from s2m options'''
 
-        confname = "../conf/" + self.vapp + "_" + self.vconf + ".ini"  # this file already exists if options.soda
+        confname = "../conf/" + self.vapp + "_" + self.vconf + ".ini"  # this file already exists if options.crampon
 
         if os.path.exists(confname):
             print ('remove vortex conf_file')
             os.remove(confname)
 
         print ('copy conf file to vortex path')
-        shutil.copyfile(options.soda, confname)
+        shutil.copyfile(options.crampon, confname)
 
-        conffile = vortex_conf_file(confname, 'a')
+        conffile = Vortex_conf_file(confname, 'a')
 
         conffile.write_field('meteo', options.model)
         conffile.write_field('geometry', self.vconf)
@@ -89,76 +91,107 @@ class vortex_kitchen_soda(object):
         conffile.write_field('nforcing', options.nforcing)
         conffile.write_field('datedeb', options.datedeb)
         conffile.write_field('datefin', options.datefin)
+
+        # ########### READ THE USER-PROVIDED conf file ##########################
+        # -> in order to append datefin to assimdates and remove the exceding dates.
+        # -> in order to check if membersIDs were specified.
+
+        # local import since there are dependencies with vortex.
+        from assim.utilcrocO import read_conf
+        import bisect
+
+        confObj = read_conf(confname)
+        intdates = map(int, confObj.assimdates)
+        intdatefin = int(options.datefin.strftime("%Y%m%d%H"))
+        intdates.sort()
+        bisect.insort(intdates, intdatefin)
+        intdates = np.array(intdates)
+        intdates = intdates[intdates <= intdatefin]
+        stopdates = ",".join(map(str, intdates))
+        print('stopdates', stopdates)
+        conffile.write_field('stopdates', stopdates)
+
+        # check if members ids were specified
+        # if so, do nothing (later in the script, will be reparted between the nodes)
+        # else, draw it.
+        allmembers = range(1, options.nmembers + 1)
+        conffile.write_field('members', 'rangex(start:1 end:' + str(options.nmembers) + ')')
+        if 'E1' in options.escroc:
+            if hasattr(confObj, 'membersId'):
+                membersId = confObj.membersId
+            else:
+                escroc = ESCROC_subensembles(options.escroc, allmembers, randomDraw = True)
+                membersId = escroc.members
+        else:
+            escroc = ESCROC_subensembles(options.escroc, allmembers)
+            membersId = escroc.members
+
+        # ######################################################################
+        conffile.write_field('allids', ','.join(map(str, membersId)))
         conffile.write_field('subensemble', options.escroc)
         if options.threshold:
             conffile.write_field('threshold', options.threshold)
-        if not options.sodamonthly:  # for now on soda works only with yearly forcing files
+        if not options.cramponmonthly:  # for now on CRAMPON only works with yearly forcing files
             conffile.write_field('duration', 'yearly')
         else:
             conffile.write_field('duration', 'monthly')
 
         conffile.write_field('xpid', self.xpid + '@' + os.getlogin())
-        conffile.write_field('ntasks', 40 )
-        conffile.write_field('nprocs', 40 )
 
         if options.openloop:
-            conffile.write_field('openloop', 'on')
+            options.op = 'on'
         else:
-            conffile.write_field('openloop', 'off')
+            options.op = 'off'
+        conffile.write_field('openloop', options.op)
+
+        if options.crampon:
+            conffile.write_field('sensor', options.sensor)
         conffile.write_field('openmp', 1)
         if options.namelist:
             conffile.write_field('namelist', options.namelist)
         if options.exesurfex:
             conffile.write_field('exesurfex', options.exesurfex)
+        if options.writesx:
+            conffile.write_field('writesx', options.writesx)
+
         conffile.write_field('threshold', options.threshold)
         if options.datespinup:
             conffile.write_field('datespinup', options.datespinup.strftime("%Y%m%d%H%M"))
         else:
             conffile.write_field('datespinup', options.datedeb.strftime("%Y%m%d%H%M"))
 
-        """
-        if options.escroc and options.nnodes > 1 and options.nmembers:
-            nmembers_per_node = options.nmembers / options.nnodes + 1
-            startmember = options.startmember if options.startmember else 1
-            for node in range(1, options.nnodes + 1):
-                nmembers_this_node = min(nmembers_per_node, options.nmembers - startmember + 1)
-                conffile.new_class('escrocN' + str(node))
-                conffile.write_field('nnodes', 1)
-                conffile.write_field('startmember', startmember)
-                conffile.write_field('nmembers', nmembers_this_node)
-                startmember += nmembers_this_node
-        """
-
         conffile.write_field('nmembers', options.nmembers)
         conffile.write_field('nnodes', options.nnodes)
-        if options.soda and options.nnodes > 1 and options.nmembers:
-            nmembers_per_node = options.nmembers / options.nnodes + 1
-            startmember = options.startmember if options.startmember else 1
-            for node in range(1, options.nnodes + 1):
-                nmembers_this_node = min(nmembers_per_node, options.nmembers - startmember + 1)
-                conffile.new_class('sodaN' + str(node))
-                conffile.write_field('startmember', startmember)
-                conffile.write_field('nmembersnode', nmembers_this_node)
-                startmember += nmembers_this_node
+
+        # new entry for Loopfamily on offline parallel tasks:
+        conffile.write_field('offlinetasks', ','.join(map(str, range(1, options.nnodes + 1))))
+        
+        # this line is mandatory to ensure the use of subjobs:
+        # place it in the field offline for parallelization of the offlines LoopFamily only
+        conffile.new_class('offline')
+        conffile.write_field('paralleljobs_kind', 'slurm:ssh')
+
+        if options.crampon and options.nmembers and options.op:
+
+            # soda works with all members at the same time on one node only.
+            conffile.new_class('soda')
+            conffile.write_field('nmembersnode', options.nmembers)
+            conffile.write_field('startmember', 1)
+            conffile.write_field('ntasks', 1)  # one task only for sure
+
+            # BC 18/04/19 nprocs could be set to 40
+            # but I doubt this would save much time and it would be risky too.
+            # so far, SODA should work in MPI, but it's risky...
+            conffile.write_field('nprocs', 1)
 
         else:
-            if options.nmembers:
-                conffile.write_field('nmembersnode', options.nmembers)
-            if options.startmember:
-                conffile.write_field('startmember', options.startmember)
-
-        if options.writesx:
-            conffile.write_field('writesx', options.writesx)
-
-        if options.soda:
-            print (options.sensor)
-            conffile.write_field('sensor', options.sensor)
+            raise Exception('please specify a conf file and a number of members to run.')
 
         conffile.close()
 
-    def mkjob_soda(self, options):
-        jobname = 'escroc_soda'
-        reftask = 'soda_snow_tasks'
+    def mkjob_crampon(self, options):
+        jobname = 'crampon'
+        reftask = 'crampon_driver'
         nnodes = options.nnodes
         return ["../vortex/bin/mkjob.py -j name=" + jobname + " task=" + reftask + " profile=rd-beaufix-mt jobassistant=cen datebegin=" +
                 options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + options.datefin.strftime("%Y%m%d%H%M") + " template=" + self.jobtemplate +
@@ -166,7 +199,7 @@ class vortex_kitchen_soda(object):
                 " nnodes=" + str(nnodes)]
 
     def run(self, options):
-        mkjob_list = self.mkjob_soda(options)
+        mkjob_list = self.mkjob_crampon(options)
         for mkjob in mkjob_list:
             print ("Run command: " + mkjob + "\n")
             os.system(mkjob)

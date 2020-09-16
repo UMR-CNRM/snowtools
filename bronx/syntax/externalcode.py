@@ -143,7 +143,6 @@ class ExternalCodeImportChecker(object):
 
         :param kwargs: A dictionary of requirements to check for
         """
-
         direct_deco = False
         if kargs:
             if callable(kargs[0]):

@@ -56,10 +56,18 @@ class MemInfo(object):
 
     @abc.abstractmethod
     def process_maxRSS(self, unit=DEFAULT_MEM_UNIT):
+        """
+        Get Maximum Resident Set Size (i.e. maximum memory used at one moment)
+        used by of the process.
+        """
         pass
 
     @abc.abstractmethod
     def children_maxRSS(self, unit=DEFAULT_MEM_UNIT):
+        """
+        Get Maximum Resident Set Size (i.e. maximum memory used at one moment)
+        of the process children.
+        """
         pass
 
 

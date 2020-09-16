@@ -20,10 +20,12 @@ import six
 from utils.sun import sun
 from utils.prosimu import prosimu
 from utils.infomassifs import infomassifs
-from utils.FileException import FileNameException, DirNameException, VarWriteException, GeometryException, MassifException
+# Take care : exceptions have to been imported with snowtools prefix to be recognized by vortex
+from snowtools.utils.FileException import FileNameException, DirNameException, VarWriteException, GeometryException, MassifException, TimeListException
 from utils.dates import TypeException
 
 from utils.resources import print_used_memory
+from utils.S2M_standard_file import StandardSAFRAN, StandardCROCUS
 
 
 class forcinput_tomerge:
@@ -46,19 +48,33 @@ class forcinput_tomerge:
             else:
                 raise FileNameException(ficin)
 
+        self.checktime(init_forcing_file, forcin)
+
         dirout = os.path.dirname(forcout)
 
         if not (dirout == '' or os.path.isdir(dirout)):
             raise DirNameException(dirout)
 
-        new_forcing_file = netCDF4.Dataset(forcout, "w", format=init_forcing_file[0].format())
+        new_forcing_file = StandardSAFRAN(forcout, "w", format=init_forcing_file[0].format())
 
         self.merge(init_forcing_file, new_forcing_file, args)
 
         for openedfic in init_forcing_file:
             openedfic.close()
 
+        new_forcing_file.GlobalAttributes()
+        new_forcing_file.add_standard_names()
+
         new_forcing_file.close()
+
+    def checktime(self, init_forcing_file, forcin):
+
+        dimtime = []
+        for unitfile in init_forcing_file:
+            dimtime.append(unitfile.getlendim("time"))
+
+        if len(set(dimtime)) > 1:
+            raise TimeListException(forcin, dimtime)
 
     def merge(self, init_forcing_file, new_forcing_file, *args):
 
@@ -189,17 +205,22 @@ class forcinput_tomodify:
 
         if forcin == forcout:
             init_forcing_file = prosimu(forcin, openmode='r+')
-            self.modify(forcin, forcin, args)
+            self.modify(init_forcing_file, init_forcing_file, args)
         else:
             init_forcing_file = prosimu(forcin)
             print ("INFO INPUT FORCING FILE FORMAT: " + init_forcing_file.format())
-            new_forcing_file = netCDF4.Dataset(forcout, "w", format=self.formatout)
+            new_forcing_file = self.StandardFILE(forcout, "w", format=self.formatout)
             self.modify(init_forcing_file, new_forcing_file, args)
 
         init_forcing_file.close()
 
         if forcin != forcout:
+            new_forcing_file.GlobalAttributes()
+            new_forcing_file.add_standard_names()
             new_forcing_file.close()
+
+    def StandardFILE(self, *args, **kwargs):
+        return StandardSAFRAN(*args, **kwargs)
 
     def modify(self, init_forcing_file, new_forcing_file, *args):
         pass
@@ -207,7 +228,7 @@ class forcinput_tomodify:
     def add_massif_variables(self, init_forcing_file, new_forcing_file, savevar={}):
 
         # if new_forcing_file is prosimu instance, take the dataset class instead
-        if type(new_forcing_file) is not netCDF4.Dataset:
+        if type(new_forcing_file) not in [netCDF4.Dataset, StandardSAFRAN]:
             new_forcing_file = new_forcing_file.dataset
 
         self.create_massif_dimension(init_forcing_file, new_forcing_file, savevar)
@@ -261,22 +282,25 @@ class forcinput_tomodify:
             altitude = self.zs[indflat]
             rain_full = rainf[:, indflat]
             snow_full = snowf[:, indflat]
+            preciptot = rain_full + snow_full
 
             phase = np.where(snow_full > 0, -1, np.where(rain_full > 0, 1, 0))
 
             lowestlevelindex = np.argmin(phase, axis=1)
-            lpn_temp = altitude[lowestlevelindex] + 150
+            lpn_temp = altitude[lowestlevelindex] - 150
 
             lpn_temp = np.where(snow_full[:, 0] > 0., -3, lpn_temp)
             lpn_temp = np.where(rain_full[:, -1] > 0., -2, lpn_temp)
-            lpn_temp = np.where(rain_full[:, -1] + snow_full[:, -1] < 1.E-8, -1, lpn_temp)
+            lpn_temp = np.where(np.all(preciptot<2.E-4, axis=1) & np.any(preciptot < 1.E-8, axis=1), -1, lpn_temp)
 
             lpn[:, m] = lpn_temp
         var = new_forcing_file.createVariable("rainSnowLimit", 'float', ["time", "massif"], fill_value=-9999.)
+        var.long_name = 'Rain-snow transition altitude (resolution 300 m). -1 if no precipitation; -2 if above the top of the massif; -3 if below the bottom of the massif.'
+        var.units = 'm'
         var[:] = lpn
 
     def add_iso_zero(self, init_forcing_file, new_forcing_file, savevar):
-        zero = 273.15
+        zero = 273.16
 
         if "Tair" in list(savevar.keys()):
             tair = savevar["Tair"]
@@ -289,30 +313,44 @@ class forcinput_tomodify:
         for m, massif in enumerate(self.list_massifs):
             indflat = (self.slope == 0.) & (self.massif_number == massif)
             altitude = self.zs[indflat]
+            zmax = np.max(altitude)
+
             tair_full = tair[:, indflat]
+            # Temperature of the level just above
+            # Last column will not be used but is necessary to conform shapes.
+            tair_full_up = np.concatenate((tair_full[:,1:], np.zeros_like(tair_full[:,0:1]) + 999),axis=1)
 
-            # Série temporelle des plus petites valeurs positives
-            temp_array = np.where(tair_full < zero, 999, tair_full)
-            lowestpositive = np.min(temp_array, axis=1)
-            indexbelow = np.argmin(temp_array, axis=1)
-            zlow = altitude[indexbelow]
+            # Store both temperatures in the same variable
+            x = (tair_full * 100.).astype('int')  + tair_full_up / 1000.
 
-            # Série temporelle des plus grandes valeurs négatives
-            temp_array = np.where(tair_full >= zero, -999, tair_full)
-            greaternegative = np.max(temp_array, axis=1)
-            indexabove = np.argmax(temp_array, axis=1)
-            zup = altitude[indexabove]
+            # Elevations with positive temperatures
+            # Decimal part represents the temperature of the correponding level and the temperature above
+            altipos = np.where(tair_full > zero, altitude + x / 100000., -999.)
 
-            # Cas général: interpolation linéaire
-            isozero_temp = ((lowestpositive - 273.15) * zup + (273.15 - greaternegative) * zlow ) / (lowestpositive - greaternegative)
-            # Iso zéro en dessous du niveau minimal connu
-            isozero_temp = np.where(lowestpositive >= 900., -3, isozero_temp)
-            # Iso zéro au dessus du niveau maximal connu
-            isozero_temp = np.where(greaternegative <= -900., -2, isozero_temp)
+            # Identify the maximum level of positive temperature
+            z = np.max(altipos, axis=1)
+
+            # Separate elevation and group of temperatures
+            y, zlow = np.modf(z)
+            zup = zlow + 300
+
+            # Separate and reconstruct both temperatures
+            ttempup,ttemplow = np.modf(y*100000)
+
+            tlow=np.where(ttemplow > 0., ttemplow / 100., -999.) # Temperature of the level just below freezing level
+            tup=np.where(ttempup > 0., ttempup * 1000., -998.) # Temperature of the level just above freezing level
+            # Note that in cases of missing values, tup and tlow must be different to avoid a division by 0 just after
+
+            # Freezing level is computed with a linear interpolation.
+            isozero_temp = ((tlow - zero) * zup + (zero - tup) * zlow ) / (tlow - tup)
+            isozero_temp = np.where(zlow == -999., -3, isozero_temp) # Freezing level below the lowest level
+            isozero_temp = np.where(zlow == zmax, -2, isozero_temp) # Freezing level above the lowest level
 
             isozero[:, m] = isozero_temp
 
         var = new_forcing_file.createVariable("isoZeroAltitude", 'float', ["time", "massif"], fill_value=-9999.)
+        var.long_name = 'Freezing level altitude obtained by interpolation from SAFRAN standard levels. -2 if above the top of the massif ; -3 if below the bottom of the massif.'
+        var.units = 'm'
         var[:] = isozero
 
     def addfirstdimension(self, array, length):
@@ -329,6 +367,9 @@ class forcinput_select(forcinput_tomodify):
     M Lafaysse generalized the method to both FORCING and PRO files (June 2016)
     M Lafaysse added a treatement to increase the number of slopes (July 2016)
     M Lafaysse added a treatment to create coordinates for direct compatibilty with the new SAFRAN output (August 2017)'''
+
+    def massifvarname(self):
+        return 'massif_number'
 
     def modify(self, init_forcing_file, new_forcing_file, *args):
 
@@ -347,8 +388,8 @@ class forcinput_select(forcinput_tomodify):
         init_alt = init_forcing_file.read("ZS", keepfillvalue=True)
         b_points_alt = (init_alt >= min_alt) * (init_alt <= max_alt)
 
-        if 'massif_number' in listvar:
-            init_massif_nb_sop = init_forcing_file.read("massif_number", keepfillvalue=True)
+        if self.massifvarname() in listvar:
+            init_massif_nb_sop = init_forcing_file.read(self.massifvarname(), keepfillvalue=True)
             b_points_massif = np.in1d(init_massif_nb_sop, list_massif_number)
             if np.sum(b_points_massif) == 0:
                 raise MassifException(list_massif_number, list(set(init_massif_nb_sop)))
@@ -485,11 +526,11 @@ class forcinput_select(forcinput_tomodify):
             if len(array_dim) > 0:
                 index_dim_massif = np.where(array_dim == massif_dim_name)[0]
                 index_dim_nbpoints = np.where(array_dim == spatial_dim_name)[0]
-                var_array = init_forcing_file.read(varname, keepfillvalue=True)
+                var_array = init_forcing_file.read(varname, keepfillvalue=True, removetile=False)
             else:
                 index_dim_massif = []
                 index_dim_nbpoints = []
-                var_array = init_forcing_file.read(varname, keepfillvalue=True).getValue()
+                var_array = init_forcing_file.read(varname, keepfillvalue=True, removetile=False).getValue()
 
             if len(index_dim_massif) == 1:
                 var_array = np.take(var_array, index_massif, index_dim_massif[0])
@@ -532,7 +573,14 @@ class forcinput_select(forcinput_tomodify):
                         elif extendslopes:
                             newvar_array = np.empty((var_array.shape[0], len_dim_spatial), vartype)
                             newvar_array[:, indflat] = var_array[:, ~points_to_duplicate]
-                            newvar_array[:, indnoflat] = np.repeat(var_array[:, points_to_duplicate], 1 + nslopes_to_create, axis=1)
+
+                            # WE CAN NOT USE NP.REPEAT IN THAT CASE BECAUSE WE WANT TO DUPICATE SEQUENCES OF 8 ASPECTS
+                            # WITH THE ASPECT VARYING FASTER THAN THE SLOPE ANGLE.
+                            # USE NP.SPLIT TO SEPARATE EACH MASSIF-ELEVATION (GROUPS OF 8 ASPECTS), THEN USE NP.TILE TO DUPICATE THE SLOPES,
+                            # FINALLY NP.HSTACK CONCATENATE THE SEQUENCES ALONG THE LAST DIMENSION
+
+                            newvar_array[:, indnoflat] = np.hstack(np.tile(np.split(var_array[:, points_to_duplicate], len(indflat), axis=1), 1 + nslopes_to_create))
+
                             del var_array
                             var_array = newvar_array
 
@@ -542,9 +590,10 @@ class forcinput_select(forcinput_tomodify):
                         elif extendslopes:
                             newvar_array = np.empty(len_dim_spatial)
                             newvar_array[indflat] = var_array[~points_to_duplicate]
-#                             print "nslopes_to_create"
-#                             print nslopes_to_create
-                            newvar_array[indnoflat] = np.repeat(var_array[points_to_duplicate], 1 + nslopes_to_create)
+
+                            # THIS IS EQUIVALENT TO THE SEQUENCE ABOVE FOR RANK 2 VARIABLES
+                            newvar_array[indnoflat] = np.tile(np.array(np.split(var_array[points_to_duplicate], len(indflat))), 1 + nslopes_to_create).flatten()
+
 
 #                             print indflat
 #                             print indnoflat
@@ -575,7 +624,7 @@ class forcinput_select(forcinput_tomodify):
                         var[:, :, :, :] = var_array
                     elif rank == 5:
                         var[:, :, :, :, :] = var_array
-                    print ("AFTER WRITE", datetime.datetime.today())
+#                     print ("AFTER WRITE", datetime.datetime.today())
 
             except Exception:
                 print(var_array)
@@ -584,22 +633,25 @@ class forcinput_select(forcinput_tomodify):
             # Some variables need to be saved for solar computations
             if varname in ["time"]:
                 savevar[varname] = init_forcing_file.readtime()
-            if varname in ["LAT", "LON", "ZS", "aspect", "slope", "DIR_SWdown", "SCA_SWdown", "massif_number", "Tair", "Rainf", "Snowf"]:
+            if varname in ["LAT", "LON", "ZS", "aspect", "slope", "DIR_SWdown", "SCA_SWdown", self.massifvarname(), "Tair", "Rainf", "Snowf"]:
                 savevar[varname] = var_array
-            if varname == "massif_number":
+            if varname == self.massifvarname():
                 save_array_dim = array_dim
 
+        if 'snow_layer' in init_forcing_file_dimensions:
+            return
+
         if "LAT" not in init_forcing_file.listvar():
-            lat, lon = self.addCoord(new_forcing_file, savevar["massif_number"], save_array_dim, varFillvalue)
+            lat, lon = self.addCoord(new_forcing_file, savevar[self.massifvarname()], save_array_dim, varFillvalue)
         else:
             lat = savevar["LAT"]
             lon = savevar["LON"]
 
         # Compute new solar radiations according to the new values of slope and aspect
         if extendaspects or extendslopes:
-            print ("BEFORE RADIATION COMPUTATIONS", datetime.datetime.today())
+#             print ("BEFORE RADIATION COMPUTATIONS", datetime.datetime.today())
             direct, diffus = sun().slope_aspect_correction(savevar["DIR_SWdown"], savevar["SCA_SWdown"], savevar["time"], lat, lon, savevar["aspect"], savevar["slope"])
-            print ("AFTER RADIATION COMPUTATIONS", datetime.datetime.today())
+#             print ("AFTER RADIATION COMPUTATIONS", datetime.datetime.today())
             new_forcing_file.variables["DIR_SWdown"][:] = direct
             new_forcing_file.variables["SCA_SWdown"][:] = diffus
             del savevar["DIR_SWdown"]
@@ -637,6 +689,18 @@ class forcinput_select(forcinput_tomodify):
         var[:] = lon
 
         return lat, lon
+
+
+class proselect(forcinput_select):
+    def massifvarname(self):
+        return 'massif_num'
+
+    def add_massif_variables(self, init_forcing_file, new_forcing_file, savevar={}):
+        pass
+
+    def StandardFILE(self, *args, **kwargs):
+        return StandardCROCUS(*args, **kwargs)
+
 
 
 class forcinput_ESMSnowMIP(forcinput_tomodify):
@@ -771,245 +835,7 @@ class forcinput_ESMSnowMIP(forcinput_tomodify):
         return False
 
 
-class forcinput_extract(forcinput_tomodify):
-
-    ''' This class was implemented by C. Carmagnola in November 2018 (PROSNOW project).
-    It allows to extract from an original forcing file all the variables corresponding to a pre-defined list of points. '''
-
-    def modify(self, init_forcing_file, new_forcing_file, *args):
-
-        ''' Modify a forcing file towards a prescribed geometry:
-        - init_forcing_file = initial forcing file (input)
-        - new_forcing_file  = new forcing file (output)
-        - *args             = .txt file containing the list of points to be extracted '''
-
-        # Read data from file
-
-        if not os.path.isfile(args[0][0]):
-            raise FileNameException(args[0][0])
-
-        mdat = open(args[0][0])
-
-        list_massif_number, list_sru, list_alt, list_asp, list_slo = np.loadtxt(mdat, delimiter=' ', usecols=(2, 3, 1, 6, 7), unpack=True)
-
-#         print "Points to be extracted:"
-#         print "massif = " + str(list_massif_number)
-#         print "elevation = " + str(list_alt)
-#         print "aspect = " + str(list_asp)
-#         print "slope = " + str(list_slo)
-#         print "---------------"
-
-        # Variables
-
-        listvar = init_forcing_file.listvar()
-        listvar.append(u'stations')
-
-        # Massif / Elevation / Aspect / Slope
-
-        init_massif_nb_sop = init_forcing_file.read("massif_number", keepfillvalue=True)
-        init_alt = init_forcing_file.read("ZS", keepfillvalue=True)
-        init_exp = init_forcing_file.read("aspect", keepfillvalue=True)
-        init_slopes = init_forcing_file.read("slope", keepfillvalue=True)
-
-        list_asp_degres = list_asp[:]
-        list_slo_int = list(map(int, list_slo))
-
-        # Indices
-
-        index_points = np.zeros(len(list_massif_number), 'int')
-
-        for i, j in ((a, b) for a in range(len(init_massif_nb_sop)) for b in range(len(list_massif_number))):
-            if init_massif_nb_sop[i] == list_massif_number[j] and init_alt[i] == list_alt[j] and init_slopes[i] == list_slo_int[j] and init_exp[i] == list_asp_degres[j]:
-                index_points[j] = i
-
-#         print "Indices:"
-#         print index_points
-#         print "---------------"
-
-        # Create dimension
-
-        init_forcing_file_dimensions = init_forcing_file.listdim()
-
-        massif_dim_name = "massif"
-        nbpoints_dim_name = "Number_of_points"
-        loc_dim_name = "location"
-
-        new_forcing_file.createDimension("time", None)
-
-        if massif_dim_name in init_forcing_file_dimensions:
-            init_massif = init_forcing_file.read("massif", keepfillvalue=True)
-            index_massif = np.where(np.in1d(init_massif, list_massif_number))[0]
-            len_dim = len(index_massif)
-            new_forcing_file.createDimension(massif_dim_name, len_dim)
-            del init_forcing_file_dimensions[massif_dim_name]
-
-        if nbpoints_dim_name in init_forcing_file_dimensions:
-            spatial_dim_name = nbpoints_dim_name
-        elif loc_dim_name in init_forcing_file_dimensions:
-            spatial_dim_name = loc_dim_name
-        else:
-            spatial_dim_name = "missing"
-
-        if spatial_dim_name in init_forcing_file_dimensions:
-            len_dim = len(index_points)
-            new_forcing_file.createDimension(spatial_dim_name, len_dim)
-            del init_forcing_file_dimensions[spatial_dim_name]
-
-#             print (spatial_dim_name + ": ")
-#             print str(len_dim)
-
-        # Fill new file
-
-        for varname in listvar:
-
-            # Variable containing the sru numbers
-
-            if varname == 'stations':
-
-                vartype      = 'float32'
-                rank         = 1
-                array_dim    = [u'Number_of_points']
-                varFillvalue = -1e+07
-                var_attrs    = [u'_FillValue', u'long_name', u'units']
-
-                var    = new_forcing_file.createVariable(varname, vartype, array_dim, fill_value=varFillvalue)
-                var[:] = list_sru
-
-            # All other variables
-
-            else:
-
-                vartype, rank, array_dim, varFillvalue, var_attrs = init_forcing_file.infovar(varname)
-
-                if len(array_dim) > 0:
-                    index_dim_massif = np.where(array_dim == massif_dim_name)[0]
-                    index_dim_nbpoints = np.where(array_dim == spatial_dim_name)[0]
-                    var_array = init_forcing_file.read(varname, keepfillvalue=True)
-
-                else:
-                    index_dim_massif = []
-                    index_dim_nbpoints = []
-                    var_array = init_forcing_file.read(varname, keepfillvalue=True).getValue()
-
-                if len(index_dim_massif) == 1:
-                    var_array = np.take(var_array, index_massif, index_dim_massif[0])
-                if len(index_dim_nbpoints) == 1:
-                    var_array = np.take(var_array, index_points, index_dim_nbpoints[0])
-
-                var = new_forcing_file.createVariable(varname, vartype, array_dim, fill_value=varFillvalue)
-
-                for attname in var_attrs:
-                    if not attname == '_FillValue':
-                        setattr(var, attname, init_forcing_file.getattr(varname, attname))
-                try:
-                        if rank == 0:
-                            var[:] = var_array
-                        elif rank == 1:
-                            var[:] = var_array
-                        elif rank == 2:
-                            var[:, :] = var_array
-                        elif rank == 3:
-                            var[:, :, :] = var_array
-                        elif rank == 4:
-                            var[:, :, :, :] = var_array
-                        elif rank == 5:
-                            var[:, :, :, :, :] = var_array
-                except Exception:
-                    print(var_array)
-                    raise VarWriteException(varname, var_array.shape, var.shape)
-
-
-class forcinput_changedates(forcinput_tomodify):
-
-    ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).
-    It allows to change the dates of a forcing file from the climatology '''
-
-    def modify(self, init_forcing_file, new_forcing_file, *args):
-
-        ''' Modify a forcing file towards a prescribed geometry:
-        - init_forcing_file = initial forcing file (input)
-        - new_forcing_file  = new forcing file (output) - same name as input!
-        - *args             = date of beginning of new forcing file '''
-
-        # Open file
-        file_name = netCDF4.Dataset(init_forcing_file, "a")
-        nc_time = file_name.variables["time"]
-        nc_unit = file_name.variables["time"].units
-
-        # Compute new time
-        date_time_old = num2date(nc_time[:], units = nc_unit)
-        delta = args[0][0] - date_time_old[0]
-        date_time_new = date_time_old + delta
-
-        # Prints 1/2
-        print 'Time delta:'
-        print delta
-        print "--------------"
-        print 'Old time (date):'
-        print date_time_old
-        print 'Old time (netcdf):'
-        print nc_time[:]
-        print "--------------"
-
-        # Insert new time in file
-        nc_time[:] = date2num(date_time_new, units = nc_unit)
-
-        # Prints 2/2
-        print 'New time (date):'
-        print date_time_new
-        print 'New time (netcdf):'
-        print nc_time[:]
-
-        # Close file
-        file_name.close()
-
-
 # Test
 
 # if __name__ == "__main__":
-#     forcinput_extract("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/2_change_forcing/input_FORCING_2018080106_2019080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/2_change_forcing/output_FORCING_2018080106_2019080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/1_get_from_API/SRU_soldeu.txt")
-#     forcinput_extract("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/1_saisies/2_change_forcing/input_FORCING_2014080106_2015080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/1_saisies/2_change_forcing/output_FORCING_2014080106_2015080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/1_saisies/1_get_from_API/SRU_saisies.txt")
-#     forcinput_extract("/home/carmagnolacMC/CEN/4_SIMUL/Vortex/1_saisies/2_change_forcing/input_FORCING_2016080106_2017080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/1_saisies/2_change_forcing/output_FORCING_2016080106_2017080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/1_saisies/1_get_from_API/SRU_saisies.txt")
-#     forcinput_extract("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/1_saisies/2_change_forcing/input_FORCING_2018080106_2019080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/1_saisies/2_change_forcing/output_FORCING_2018080106_2019080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/1_saisies/1_get_from_API/SRU_saisies.txt")
-#     forcinput_extract("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/2_plagne/2_change_forcing/input_FORCING_2014080106_2015080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/2_plagne/2_change_forcing/output_FORCING_2014080106_2015080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/2_plagne/1_get_from_API/SRU_plagne.txt")
-#     forcinput_extract("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/2_plagne/2_change_forcing/input_FORCING_2016080106_2017080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/2_plagne/2_change_forcing/output_FORCING_2016080106_2017080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/2_plagne/1_get_from_API/SRU_plagne.txt")
-#     forcinput_extract("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/2_plagne/2_change_forcing/input_FORCING_2018080106_2019080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/2_plagne/2_change_forcing/output_FORCING_2018080106_2019080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/2_plagne/1_get_from_API/SRU_plagne.txt")
-
-# if __name__ == "__main__":
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb000/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb000/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb001/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb001/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb002/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb002/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb003/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb003/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb004/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb004/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb005/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb005/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb006/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb006/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb007/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb007/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb008/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb008/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb009/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb009/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb010/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb010/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb011/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb011/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb012/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb012/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb013/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb013/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb014/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb014/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb015/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb015/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb016/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb016/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb017/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb017/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb018/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb018/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb019/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb019/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb020/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb020/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb021/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb021/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb022/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb022/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb023/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb023/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb024/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb024/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb025/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb025/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb026/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb026/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb027/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb027/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb028/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb028/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb029/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb029/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb030/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb030/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb031/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb031/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb032/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb032/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb033/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb033/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb034/meteo/FORCING_2019121906_2020062906.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/3_soldeu/7_clim/mb034/meteo/FORCING_2019121906_2020062906.nc", datetime.datetime(2019, 8, 1, 6, 0))
-#     forcinput_changedates("/home/carmagnolac/Desktop/FORCING_2016.nc", "/home/carmagnolac/Desktop/FORCING_2016.nc", datetime.datetime(2018, 8, 1, 6, 0))
-
+#     my_forc = forcinput_extract("/home/carmagnolac/CMC/CEN/4_SIMUL/Change_forcing/input_FORCING_2016112306_2016112406.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Change_forcing/output_FORCING_2016112306_2016112406.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Change_forcing/SRUs_LesSaisies.txt")

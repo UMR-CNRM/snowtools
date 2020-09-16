@@ -6,7 +6,7 @@ Created on 11 févr. 2019
 @author: cluzetb
 '''
 import os
-from SemiDistributed import PrepBg, PrepAbs, Synthetic, Obs
+from SemiDistributed import PrepBg, PrepAbs, Synthetic, Real, Obs
 from plotcrocO import Pie
 from Ensemble import PrepEnsBg, PrepEnsAn
 from Operators import PrepEnsOperator
@@ -22,12 +22,13 @@ class PostCroco(object):
     '''
 
 
-    def __init__(self, xpdir, options):
+    def __init__(self, xpiddir, xpidobsdir, options):
         '''
         
         '''
         self.options = options
-        self.xpdir = xpdir
+        self.xpiddir = xpiddir
+        self.xpidobsdir = xpidobsdir
     def run(self):
         if self.options.todo=='pievar':
             for dd in self.options.dates:
@@ -44,7 +45,7 @@ class PostCroco(object):
                 os.chdir(dd)
                 pb = PrepEnsBg(self.options, dd)
                 # pa = PrepEnsAn(self.options, dd)
-                obs = Synthetic(self.xpdir, dd, self.options)  # load pre-existing Synthetic, don't generate it.
+                obs = Synthetic(self.xpiddir, dd, self.options)  # load pre-existing Synthetic, don't generate it.
                 op = PrepEnsOperator(pb, sdObj=obs)
                 corr = op.m21diff(reverse=True)
                 subset, mask = setSubsetclasses(pb.ens[1].pgd, self.options.classesE, self.options.classesA, self.options.classesS)
@@ -70,7 +71,7 @@ class PostCroco(object):
                     pa = PrepEnsAn(self.options, dd)
                     pa.median(ptinombase = 'an')
                     
-                    obs = Synthetic(self.xpdir, dd, self.options)
+                    obs = Synthetic(self.xpiddir, dd, self.options)
                     
                     fig, ax = plt.subplots(len(pb.median.data.keys()), 3, subplot_kw=dict(polar=True))
                     piemedb =  Pie(pb.median)
@@ -141,10 +142,11 @@ class PostCroco(object):
                     
                     # Read the obs
                     if (self.options.synth >= 0):
-                        OBS = Synthetic(self.xpdir, dd, self.options)
+                        OBS = Synthetic(self.xpidobsdir, dd, self.options)
                         OBS.load()
-                    else:
-                        OBS = Obs(self.xpdir, dd, self.options)
+                    else:                        
+                        OBS = Real(self.xpidobsdir, dd, self.options)
+                        OBS.load()
                         
                     stepZ = 100
                     minZ = np.floor(np.min(OBS.pgd.elev)/stepZ)*stepZ
@@ -159,13 +161,13 @@ class PostCroco(object):
                     for idx,bin_Z_lower in enumerate(binZ):
                             # missing a filter on no data ! which is set to min(elev) in PGD.elev I think
                             f = np.where( (OBS.pgd.elev > bin_Z_lower) & (OBS.pgd.elev < bin_Z_lower+stepZ) )
-                            tmp = OBS.data['sd'][0,f[0]]
+                            tmp = OBS.data['DEP'][0,f[0]]
                             OBS_mean[idx] = np.mean(tmp)
                             for mb in range(1, BG.nmembers + 1):
-                                tmp = BG.stack['sd'][mb-1,f]
+                                tmp = BG.stack['DEP'][mb-1,f]
                                 BG_mean[idx,mb-1] = np.mean(tmp)
                                 
-                                tmp = AN.stack['sd'][mb-1,f]
+                                tmp = AN.stack['DEP'][mb-1,f]
                                 AN_mean[idx,mb-1] = np.mean(tmp)
                     
                     plt.figure()

@@ -33,7 +33,7 @@ class ArgumentParser(footprints.FootprintBase):
     as footprint attributes.
     """
 
-    _abstract  = True
+    _abstract = True
     _collector = ('argparser',)
     _footprint = dict(
         info = 'Abstract Argument Parser',
@@ -159,78 +159,78 @@ class DefinedArgumentParser(ArgumentParser):
 
     def add_defined_report(self):
         return dict(
-            options  = '--report',
-            help     = 'Report output of the command to the logfile',
-            action   = 'store_true',
+            options='--report',
+            help='Report output of the command to the logfile',
+            action='store_true',
         )
 
     def add_defined_grep(self):
         return dict(
-            options  = '--grep',
-            help     = 'Grep list items',
-            metavar  = 'regex',
-            nargs    = '+',
-            type     = str,
-            default  = '.',
-            callback = self.mkregex,
+            options='--grep',
+            help='Grep list items',
+            metavar='regex',
+            nargs='+',
+            type=str,
+            default='.',
+            callback=self.mkregex,
         )
 
     def add_defined_discard(self):
         return dict(
-            options  = '--discard',
-            help     = 'Black list items',
-            metavar  = 'item',
-            nargs    = '+',
-            type     = str,
-            default  = None,
-            callback = self.mktuple,
+            options='--discard',
+            help='Black list items',
+            metavar='item',
+            nargs='+',
+            type=str,
+            default=None,
+            callback=self.mktuple,
         )
 
     def add_defined_only(self):
         return dict(
-            options  = '--only',
-            help     = 'White list items',
-            metavar  = 'item',
-            nargs    = '+',
-            type     = str,
-            default  = None,
-            callback = self.mktuple,
+            options='--only',
+            help='White list items',
+            metavar='item',
+            nargs='+',
+            type=str,
+            default=None,
+            callback=self.mktuple,
         )
 
     def add_defined_resize(self):
         return dict(
-            options  = '--resize',
-            help     = 'Resize history logfile.',
-            metavar  = 'length',
-            type     = int,
-            default  = 999,
+            options='--resize',
+            help='Resize history logfile.',
+            metavar='length',
+            type=int,
+            default=999,
         )
 
     def add_defined_loglevel(self):
         return dict(
-            options  = '--loglevel',
-            help     = 'Logging level',
-            choices  = ('debug', 'info', 'warning', 'error', 'critical'),
-            default  = 'warning',
-            callback = loggers.setGlobalLevel,
+            options='--loglevel',
+            help='Logging level',
+            choices=('debug', 'info', 'warning', 'error', 'critical'),
+            default='warning',
+            callback=loggers.setGlobalLevel,
         )
 
     def add_defined_focus(self):
         return dict(
-            options  = '--focus',
-            help     = 'Focus history on a date value',
-            metavar  = 'datestr',
-            type     = date.Date,
-            default  = None,
+            options='--focus',
+            help='Focus history on a date value',
+            metavar='datestr',
+            type=date.Date,
+            default=None,
         )
 
     def add_defined_delta(self):
         return dict(
-            options  = '--delta',
-            help     = 'A delta value given as an integer (mostly seconds).',
-            metavar  = 'int',
-            type     = int,
-            default  = None,
+            options='--delta',
+            help='A delta value given as an integer (mostly seconds).',
+            metavar='int',
+            type=int,
+            default=None,
         )
 
     @classmethod
@@ -261,50 +261,50 @@ class CfgExtendedArguments(object):
 
     def add_defined_cfgname(self):
         return dict(
-            options  = '--cfgname',
-            help     = 'Cfg files radical',
-            metavar  = 'name',
-            default  = None,
+            options='--cfgname',
+            help='Cfg files radical',
+            metavar='name',
+            default=None,
         )
 
     def add_defined_cfgtag(self):
         return dict(
-            options  = '--cfgtag',
-            help     = 'Cfg files tag',
-            metavar  = 'tag',
-            default  = 'default',
+            options='--cfgtag',
+            help='Cfg files tag',
+            metavar='tag',
+            default='default',
         )
 
     def add_defined_cfgdir(self):
         return dict(
-            options  = '--cfgdir',
-            help     = 'Cfg files directory name',
-            metavar  = 'path',
-            default  = 'conf',
+            options='--cfgdir',
+            help='Cfg files directory name',
+            metavar='path',
+            default='conf',
         )
 
     def add_defined_cfgroot(self):
         return dict(
-            options  = '--cfgroot',
-            help     = 'Cfg files root path',
-            metavar  = 'path',
-            default  = None,
+            options='--cfgroot',
+            help='Cfg files root path',
+            metavar='path',
+            default=None,
         )
 
     def add_defined_cfgext(self):
         return dict(
-            options  = '--cfgext',
-            help     = 'Cfg extension filename',
-            metavar  = 'str',
-            default  = 'yaml',
+            options='--cfgext',
+            help='Cfg extension filename',
+            metavar='str',
+            default='yaml',
         )
 
     def add_defined_cfgfile(self):
         return dict(
-            options  = '--cfgfile',
-            help     = 'Cfg full file path',
-            metavar  = 'path',
-            default  = None,
+            options='--cfgfile',
+            help='Cfg full file path',
+            metavar='path',
+            default=None,
         )
 
 
@@ -322,162 +322,162 @@ class MeteoExtendedArguments(object):
 
     def add_defined_date(self):
         return dict(
-            options  = ('-d', '--date'),
-            help     = 'Date value',
-            metavar  = 'datestr',
-            type     = date.Date,
-            default  = None,
+            options=('-d', '--date'),
+            help='Date value',
+            metavar='datestr',
+            type=date.Date,
+            default=None,
         )
 
     def add_defined_xdate(self):
         return dict(
-            options  = ('-d', '--date'),
-            help     = 'Extended date range',
-            metavar  = 'datestr',
-            type     = str,
-            default  = date.synop().ymdhm,
-            callback = date.daterangex,
+            options=('-d', '--date'),
+            help='Extended date range',
+            metavar='datestr',
+            type=str,
+            default=date.synop().ymdhm,
+            callback=date.daterangex,
         )
 
     def add_defined_time(self):
         return dict(
-            options  = ('-t', '--time'),
-            help     = 'Time value',
-            metavar  = 'timestr',
-            type     = date.Time,
-            default  = date.Time(1),
+            options=('-t', '--time'),
+            help='Time value',
+            metavar='timestr',
+            type=date.Time,
+            default=date.Time(1),
         )
 
     def add_defined_xtime(self):
         return dict(
-            options  = ('-t', '--time'),
-            help     = 'Extended time range',
-            metavar  = 'timestr',
-            type     = str,
-            default  = date.Time(1),
-            callback = self.mktimelist,
+            options=('-t', '--time'),
+            help='Extended time range',
+            metavar='timestr',
+            type=str,
+            default=date.Time(1),
+            callback=self.mktimelist,
         )
 
     def add_defined_period(self):
         return dict(
-            options  = ('-p', '--period'),
-            help     = 'Period value',
-            metavar  = 'periodstr',
-            type     = date.Period,
-            default  = date.Period('PT1H'),
+            options=('-p', '--period'),
+            help='Period value',
+            metavar='periodstr',
+            type=date.Period,
+            default=date.Period('PT1H'),
         )
 
     def add_defined_xperiod(self):
         return dict(
-            options  = ('-p', '--period'),
-            help     = 'Extended period range (in minutes)',
-            metavar  = 'periodstr',
-            type     = str,
-            default  = '60',
-            callback = self.mkperiodlist,
+            options=('-p', '--period'),
+            help='Extended period range (in minutes)',
+            metavar='periodstr',
+            type=str,
+            default='60',
+            callback=self.mkperiodlist,
         )
 
     def add_defined_suite(self):
         return dict(
-            options  = ('-s', '--suite'),
-            help     = 'Op suite',
-            metavar  = 'suite',
-            choices  = ('oper', 'dble', 'test'),
-            default  = 'oper',
+            options=('-s', '--suite'),
+            help='Op suite',
+            metavar='suite',
+            choices=('oper', 'dble', 'test'),
+            default='oper',
         )
 
     def add_defined_model(self):
         return dict(
-            options  = ('-m', '--model', '--vapp'),
-            help     = 'Vortex application name',
-            metavar  = 'vapp[-vconf]',
-            nargs    = '+',
-            default  = 'arome',
-            callback = self.mktuple,
+            options=('-m', '--model', '--vapp'),
+            help='Vortex application name',
+            metavar='vapp[-vconf]',
+            nargs='+',
+            default='arome',
+            callback=self.mktuple,
         )
 
     def add_defined_cutoff(self):
         return dict(
-            options  = ('-c', '--cutoff'),
-            help     = 'Cutoff',
-            metavar  = 'cutoff-name',
-            nargs    = '+',
-            choices  = ('production', 'assim'),
-            default  = 'production',
-            callback = self.mktuple,
+            options=('-c', '--cutoff'),
+            help='Cutoff',
+            metavar='cutoff-name',
+            nargs='+',
+            choices=('production', 'assim'),
+            default='production',
+            callback=self.mktuple,
         )
 
     def add_defined_term(self):
         return dict(
-            options  = ('-t', '--term'),
-            help     = 'Term',
-            metavar  = 'term',
-            type     = date.Time,
-            default  = None,
+            options=('-t', '--term'),
+            help='Term',
+            metavar='term',
+            type=date.Time,
+            default=None,
         )
 
     def add_defined_xterm(self):
         return dict(
-            options  = ('-t', '--term'),
-            help     = 'Extended terms range',
-            metavar  = 'termstr',
-            default  = date.Time(1),
-            callback = self.mktimelist,
+            options=('-t', '--term'),
+            help='Extended terms range',
+            metavar='termstr',
+            default=date.Time(1),
+            callback=self.mktimelist,
         )
 
     def add_defined_step(self):
         return dict(
-            options  = '--step',
-            help     = 'Time step',
-            metavar  = 'time',
-            type     = date.Time,
-            default  = date.Time('01:00'),
+            options='--step',
+            help='Time step',
+            metavar='time',
+            type=date.Time,
+            default=date.Time('01:00'),
         )
 
     def add_defined_kind(self):
         return dict(
-            options  = '--kind',
-            help     = 'Resource kind',
-            metavar  = 'kind',
-            default  = None,
+            options='--kind',
+            help='Resource kind',
+            metavar='kind',
+            default=None,
         )
 
     def add_defined_namespace(self):
         return dict(
-            options  = '--namespace',
-            help     = 'Resource namespace',
-            metavar  = 'name',
-            default  = None,
+            options='--namespace',
+            help='Resource namespace',
+            metavar='name',
+            default=None,
         )
 
     def add_defined_datacheck(self):
         return dict(
-            options  = '--datacheck',
-            help     = 'Activate inline check of metadata',
-            action   = 'store_true',
+            options='--datacheck',
+            help='Activate inline check of metadata',
+            action='store_true',
         )
 
     def add_defined_filename(self):
         return dict(
-            options  = '--filename',
-            help     = 'Container filename',
-            metavar  = 'name',
-            default  = None,
+            options='--filename',
+            help='Container filename',
+            metavar='name',
+            default=None,
         )
 
     def add_defined_remote(self):
         return dict(
-            options  = '--remote',
-            help     = 'Remote resource filename',
-            metavar  = 'name',
-            default  = None,
+            options='--remote',
+            help='Remote resource filename',
+            metavar='name',
+            default=None,
         )
 
     def add_defined_incore(self):
         return dict(
-            options  = '--incore',
-            help     = 'Select an incore memory container',
-            action   = 'store_true',
+            options='--incore',
+            help='Select an incore memory container',
+            action='store_true',
         )
 
     @classmethod
@@ -488,7 +488,7 @@ class MeteoExtendedArguments(object):
     @classmethod
     def mkperiodlist(cls, value):
         """Return a list of date.Period values from an extended period range value in minutes."""
-        return [date.Period('PT' + six.text_type(x ) + 'M') for x in footprints.util.rangex(value)]
+        return [date.Period('PT' + six.text_type(x) + 'M') for x in footprints.util.rangex(value)]
 
 
 class CfgMeteoArgumentParser(DefinedArgumentParser, CfgExtendedArguments, MeteoExtendedArguments):
@@ -505,7 +505,7 @@ class CfgMeteoArgumentParser(DefinedArgumentParser, CfgExtendedArguments, MeteoE
 
     def add_defined_mine(self):
         return dict(
-            options  = '--mine',
-            help     = 'Give a name to the mine to digg in.',
-            default  = 'op',
+            options='--mine',
+            help='Give a name to the mine to digg in.',
+            default='op',
         )

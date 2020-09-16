@@ -75,9 +75,11 @@ class Catalog(object):
     weak = property(_get_weak, _set_weak)
 
     def items(self):
-        """
+        """Catalog items.
+
         In python2, a list that contains a copy of the catalog items. In python3;
-        an iterator over catalog items."""
+        an iterator over catalog items.
+        """
         return list(self) if six.PY2 else iter(self)
 
     def __iter__(self):

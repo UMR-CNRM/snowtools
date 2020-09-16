@@ -7,6 +7,17 @@ Created on 6 déc. 2018
 @author: lafaysse
 '''
 
+# The following lines are necessary with a French environment and python 2 to avoid a bronx crash when calling vortex
+# on months with an accent (Février, Décembre)
+#---------------------------------------------------------- 
+import sys
+import codecs
+if sys.version_info.major == 2:  # Python2 only
+    import codecs
+    sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
+    sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
+#---------------------------------------------------------- 
+
 import locale
 
 import os
@@ -21,9 +32,11 @@ from bronx.stdtypes.date import Date, today
 from tasks.oper.get_oper_files import S2MExtractor
 from utils.prosimu import prosimu
 from utils.dates import check_and_convert_date, pretty_date
-from plots.temporal.chrono import spaghettis_with_det
+from plots.temporal.chrono import spaghettis_with_det, spaghettis
 from plots.maps.basemap import Map_alpes, Map_pyrenees, Map_corse
 from utils.infomassifs import infomassifs
+
+import footprints
 
 usage = "usage: python postprocess.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]"
 
@@ -50,11 +63,16 @@ def parse_options(arguments):
 
 class config(object):
     previ = True  # False for analysis, True for forecast
-    xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
-    list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
-#     list_geometry = ['pyr_allslopes']
 
-    list_members = range(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+    # Operational chain
+    xpid = "oper"
+    list_geometry = ['alp', 'pyr', 'cor', 'postes']
+
+    # Development chain
+    # xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
+    # list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
+
+    list_members = footprints.util.rangex(0, 35)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
 
     def __init__(self):
         options = parse_options(sys.argv)
@@ -74,8 +92,10 @@ class config(object):
 
 class Ensemble(object):
 
-    spatialdim = "Number_of_points"
-    ensemble = {}
+    def __init__(self):
+
+        self.spatialdim = "Number_of_points"
+        self.ensemble = {}
 
     def open(self, listmembers):
         self.simufiles = []
@@ -139,7 +159,7 @@ class Ensemble(object):
         else:
             return self.simufiles[0].read_var(varname, Number_of_points = self.indpoints)
 
-    def proba(self, varname, seuilinf=-999999999, seuilsup=999999999):
+    def probability(self, varname, seuilinf=-999999999, seuilsup=999999999):
 
         if varname not in self.ensemble.keys():
             self.read(varname)
@@ -157,6 +177,20 @@ class Ensemble(object):
         quantile = np.where(np.isnan(self.ensemble[varname][:, :, 0]), np.nan, np.percentile(self.ensemble[varname], level, axis=2))
         return quantile
 
+    def mean(self, varname):
+
+        if varname not in self.ensemble.keys():
+            self.read(varname)
+
+        return np.nanmean(self.ensemble[varname], axis=2)
+
+    def spread(self, varname):
+
+        if varname not in self.ensemble.keys():
+            self.read(varname)
+
+        return np.nanstd(self.ensemble[varname], axis=2)
+
     def close(self):
         for member in self.simufiles:
             member.close()
@@ -165,20 +199,6 @@ class Ensemble(object):
     def get_metadata(self):
         indpoints = self.select_points()
         return indpoints, indpoints
-
-
-class _EnsembleMassif(Ensemble):
-
-    InfoMassifs = infomassifs()
-
-    def read(self, varname):
-        if varname == 'naturalIndex':
-            nmassifs = len(self.get_massifvar())
-            self.ensemble[varname] = np.empty([self.nech, nmassifs, self.nmembers])
-            for m, member in enumerate(self.simufiles):
-                self.ensemble[varname][:, :, m] = member.read_var(varname)
-        else:
-            super(_EnsembleMassif, self).read(varname)
 
     def get_alti(self):
         if not hasattr(self, "alti"):
@@ -189,6 +209,24 @@ class _EnsembleMassif(Ensemble):
         if not hasattr(self, "aspect"):
             self.aspect = self.read_geovar("aspect")
         return self.aspect
+
+
+class _EnsembleMassif(Ensemble):
+
+    InfoMassifs = infomassifs()
+
+    @property
+    def geo(self):
+        return "massifs" 
+
+    def read(self, varname):
+        if varname == 'naturalIndex':
+            nmassifs = len(self.get_massifvar())
+            self.ensemble[varname] = np.empty([self.nech, nmassifs, self.nmembers])
+            for m, member in enumerate(self.simufiles):
+                self.ensemble[varname][:, :, m] = member.read_var(varname)
+        else:
+            super(_EnsembleMassif, self).read(varname)
 
     def get_massifdim(self):
         if not hasattr(self, "massifdim"):
@@ -242,9 +280,16 @@ class EnsembleStation(Ensemble):
 
     InfoMassifs = infomassifs()
 
+    @property
+    def geo(self):
+        return "stations"
+
+    def get_station(self):
+        return self.simufiles[0].read_var("station", Number_of_points = self.indpoints)
+
     def get_metadata(self, **kwargs):
         alti = self.simufiles[0].read_var("ZS", Number_of_points = self.indpoints)
-        station = self.simufiles[0].read_var("station", Number_of_points = self.indpoints)
+        station = self.get_station()
 
         return map(self.build_filename, station, alti), map(self.build_title, station, alti)
 
@@ -257,8 +302,11 @@ class EnsembleStation(Ensemble):
 
 class EnsembleDiags(Ensemble):
 
-    proba = {}
-    quantiles = {}
+    def __init__(self):
+
+        self.proba = {}
+        self.quantiles = {}
+        super(EnsembleDiags, self).__init__()
 
     def diags(self, list_var, list_quantiles, list_seuils):
         for var in list_var:
@@ -282,6 +330,7 @@ class EnsembleOperDiags(EnsembleDiags):
     formatplot = 'png'
 
     attributes = dict(
+        PP_SD_1DY_ISBA = dict(convert_unit= 1., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)'),
         SD_1DY_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)'),
         SD_3DY_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 72h (cm)'),
         RAMSOND_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur mobilisable (cm)'),
@@ -309,7 +358,10 @@ class EnsembleOperDiags(EnsembleDiags):
 
             list_filenames, list_titles = self.get_metadata(nolevel = self.attributes[var]['nolevel'])
 
-            s = spaghettis_with_det(self.time)
+            if hasattr(self, 'inddeterministic'):
+                s = spaghettis_with_det(self.time)
+            else:
+                s = spaghettis(self.time)
             settings = self.attributes[var].copy()
             if 'label' in self.attributes[var].keys():
                 settings['ylabel'] = self.attributes[var]['label']
@@ -327,7 +379,11 @@ class EnsembleOperDiags(EnsembleDiags):
                     qmed = self.quantiles[var][1][:, point]
                     qmax = self.quantiles[var][2][:, point]
 
-                s.draw(self.time, allmembers[:, self.inddeterministic], allmembers, qmin, qmed, qmax, **settings)
+                if hasattr(self, 'inddeterministic'):
+                    s.draw(self.time, allmembers[:, self.inddeterministic], allmembers, qmin, qmed, qmax, **settings)
+                else:
+                    s.draw(self.time, allmembers, qmin, qmed, qmax, **settings)
+
                 s.set_title(list_titles[point])
                 s.set_suptitle(suptitle)
                 s.addlogo()
@@ -348,7 +404,11 @@ class EnsembleOperDiags(EnsembleDiags):
 
             list_filenames, list_titles = self.get_metadata(nolevel = self.attributes[var]['nolevel'])
 
-            s = spaghettis_with_det(self.time)
+            if hasattr(self, 'inddeterministic'):
+                s = spaghettis_with_det(self.time)
+            else:
+                s = spaghettis(self.time)
+
             settings = self.attributes[var].copy()
             if 'label' in self.attributes[var].keys():
                 settings['ylabel'] = self.attributes[var]['label']
@@ -368,9 +428,13 @@ class EnsembleOperDiags(EnsembleDiags):
                     settings['colorquantiles'] = list_colors[p]
                     settings['colormembers'] = list_colors[p]
                     if 'labels' in kwargs.keys():
-                        settings['commonlabel'] = kwargs['labels'][p] 
+                        settings['commonlabel'] = kwargs['labels'][p]
 
-                    s.draw(self.time, allmembers[:, self.inddeterministic], allmembers, qmin, qmed, qmax, **settings)
+                    if hasattr(self, 'inddeterministic'):
+                        s.draw(self.time, allmembers[:, self.inddeterministic], allmembers, qmin, qmed, qmax, **settings)
+                    else:
+                        s.draw(self.time, allmembers, qmin, qmed, qmax, **settings)
+
                 s.set_title(list_titles[point])
                 s.set_suptitle(suptitle)
                 s.addlogo()
@@ -383,12 +447,11 @@ class EnsembleOperDiags(EnsembleDiags):
 
 class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
 
-    levelmax = 4800
+    levelmax = 3900
     levelmin = 0
 
-    list_var_map = 'naturalIndex', 'SD_1DY_ISBA', 'SD_3DY_ISBA', 'SNOMLT_ISBA' 
+    list_var_map = 'naturalIndex', 'SD_1DY_ISBA', 'SD_3DY_ISBA', 'SNOMLT_ISBA'
     list_var_spag = 'naturalIndex', 'DSN_T_ISBA', 'WSN_T_ISBA', 'SNOMLT_ISBA'
-
 
     def pack_maps(self, domain, suptitle, diroutput = "."):
 
@@ -424,6 +487,7 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
                     qmax = self.quantiles[var][2][t, indalti]
 
                     m.draw_massifs(massif[indalti], qmed, **self.attributes[var])
+
                     m.plot_center_massif(massif[indalti], qmin, qmed, qmax, **self.attributes[var])
 
                     title = "pour le " + pretty_date(self.time[t]).decode('utf-8')
@@ -443,7 +507,7 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
 
 class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMassif):
 
-    levelmax = 4800
+    levelmax = 3900
     levelmin = 0
     versants = [u'Nord 40°', u'Sud 40°']
     list_var_spag = []
@@ -576,8 +640,8 @@ if __name__ == "__main__":
             ENS.close()
             del ENS
 
-            print E.list_var_spag
-            print E.list_var_map
+            print (E.list_var_spag)
+            print (E.list_var_map)
 
         E.close()
         del E

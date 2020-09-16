@@ -18,6 +18,7 @@
 # Build host: $mkhost
 # Build opts: $mkopts
 
+#MTOOL set host=${target}
 #MTOOL setconf files=targets.[this:host]
 #MTOOL set logtarget=[this:frontend]
 #MTOOL set fetch=[this:frontend]
@@ -48,6 +49,7 @@ e = t.env
 
 import $package.$task as todo
 
+rd_rootapp  = '$appbase'
 rd_vapp     = '$vapp'
 rd_vconf    = '$vconf'
 rd_member   = $member
@@ -83,11 +85,17 @@ try:
 except Exception as trouble:
     ja.fulltraceback(trouble)
     ja.rescue()
-    #MTOOL include files=epilog.step
-    #MTOOL include files=submit.last
+    if hasattr(ja, 'subjob_tag'):
+        if ja.subjob_tag is None:  # BC include changes from lf_multi_jobs job_bullx2-mtool-default.tpl
+            #MTOOL include files=epilog.step
+            #MTOOL include files=submit.last
+            pass
 
 finally:
-    #MTOOL include files=epilog.clean.step
+    if hasattr(ja, 'subjob_tag'):
+        if ja.subjob_tag is None:
+            #MTOOL include files=epilog.clean.step
+            pass
     ja.finalise()
     ja.close()
     print 'Bye bye research...'

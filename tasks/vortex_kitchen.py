@@ -9,6 +9,7 @@ Created on 23 févr. 2018
 
 import os
 import datetime
+import shutil
 
 from utils.resources import InstallException
 from utils.dates import WallTimeException
@@ -25,24 +26,53 @@ class vortex_kitchen(object):
         '''
         # Check if a vortex installation is defined
         self.check_vortex_install()
+        self.options = options
 
         # Initialization of vortex variables
-        self.vapp = "s2m"
-        self.vconf = options.region
-        self.oper = options.oper
+        if self.options.safran:
+            self.options.vapp = "safran"
+        else:
+            self.options.vapp = "s2m"
 
-        self.workingdir = options.dirwork + "/" + self.vapp + "/" + self.vconf
+        self.split_geo()
 
-        self.xpid = options.diroutput
-        if options.oper:
+        if hasattr(self.options, 'diroutput'):
+            self.options.xpid = self.options.diroutput
+        self.workingdir = "/".join([self.options.workdir, self.options.xpid, self.options.vapp, self.options.vconf])
+        self.confdir    = "/".join([self.workingdir, 'conf'])
+        self.jobdir     = "/".join([self.workingdir, "jobs"])
+
+        if self.options.oper:
             self.jobtemplate = "job-s2m-oper.py"
-            self.profile = "rd-prolix-mt"
         else:
             self.jobtemplate = "job-vortex-default.py"
+
+        machine = os.uname()[1]
+        if 'beaufix' in machine:
             self.profile = "rd-beaufix-mt"
+        elif 'prolix' in machine:
+            self.profile = "rd-prolix-mt"
+        elif 'epona' in machine:
+            self.profile = "rd-epona-mt"            
+        elif 'belenos' in machine:
+            self.profile = "rd-belenos-mt" 
+        self.define_ntasks(machine)
+
+        self.execute()
+
+    def define_ntasks(self, machine):
+        if not self.options.ntasks:
+            if 'beaufix' in machine or 'prolix' in machine:
+                self.options.ntasks = 40
+            elif 'epona' in machine or 'belenos' in machine:
+                self.options.ntasks = 80 # optimum constaté pour la réanalyse Alpes avec léger dépeuplement parmi les 128 coeurs.
+
+    def execute(self):
 
         self.create_env()
-        self.create_conf(options)
+        self.init_job_task()
+        self.set_conf_file()
+        self.run()
 
     def check_vortex_install(self):
 
@@ -58,8 +88,11 @@ class vortex_kitchen(object):
         if not os.path.islink("vortex"):
             os.symlink(os.environ["VORTEX"], "vortex")
 
+        if not os.path.islink("snowtools"):
+            os.symlink(os.environ["SNOWTOOLS_CEN"], "snowtools")
+
         if not os.path.islink("tasks"):
-            if self.oper:
+            if self.options.oper:
                 os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/oper", "tasks")
             else:
                 os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks", "tasks")
@@ -71,150 +104,146 @@ class vortex_kitchen(object):
         os.chdir("jobs")
         if not os.path.isfile(self.jobtemplate):
             os.symlink(os.environ["SNOWTOOLS_CEN"] + "/jobs/" + self.jobtemplate, self.jobtemplate)
+        os.chdir(self.workingdir)
 
-    def create_conf(self, options):
-        ''' Prepare configuration file from s2m options'''
-        if options.oper:
-            conffilename = self.vapp + "_" + self.vconf + ".ini"
+    def init_job_task(self, jobname=None):
+        if self.options.surfex:
+            self.init_job_task_surfex(jobname=jobname)
         else:
-            conffilename = self.vapp + "_" + self.vconf + "_" + self.xpid + options.datedeb.strftime("%Y") + ".ini"
-        confname = "../conf/" + conffilename
+            self.init_job_task_safran()
 
-        if options.oper:
-            if not os.path.islink(confname):
-                # Operational case : the configuration files are provided : only create a symbolic link in the appropriate directory
-                os.symlink(os.environ['SNOWTOOLS_CEN'] + "/DATA/OPER/" + conffilename, confname)
-            return
-
-        # General case: create the configuration file from s2m options
-        conffile = vortex_conf_file(confname, 'w')
-
-        if options.model == 'safran':
-            forcinglogin = 'vernaym'
-        else:
-            forcinglogin = os.getlogin()
-
-        conffile.new_class("DEFAULT")
-        conffile.write_field('meteo', options.model)
-        conffile.write_field('geometry', self.vconf)
-        conffile.write_field('forcingid', options.forcing + '@' + forcinglogin)
-
-        if options.escroc:
-            conffile.write_field('subensemble', options.escroc)
-            conffile.write_field('duration', 'full')
-        else:
-            conffile.write_field('duration', 'yearly')
-        conffile.write_field('xpid', self.xpid + '@' + os.getlogin())
-        conffile.write_field('ntasks', 40 )
-        conffile.write_field('nprocs', 40 )
-
-        conffile.write_field('openmp', 1)
-        if options.namelist:
-            conffile.write_field('namelist', options.namelist)
-        if options.exesurfex:
-            conffile.write_field('exesurfex', options.exesurfex)
-        conffile.write_field('threshold', options.threshold)
-        if options.datespinup:
-            conffile.write_field('datespinup', options.datespinup.strftime("%Y%m%d%H%M"))
-        else:
-            conffile.write_field('datespinup', options.datedeb.strftime("%Y%m%d%H%M"))
-
-        if options.ground:
-            conffile.write_field('climground', options.ground)
-
-        if options.dailyprep:
-            conffile.write_field('dailyprep', options.dailyprep)
-
-        # ESCROC on several nodes
-        if options.escroc and options.nnodes > 1 and options.nmembers:
-            nmembers_per_node = options.nmembers / options.nnodes + 1
-            startmember = options.startmember if options.startmember else 1
-            for node in range(1, options.nnodes + 1):
-                nmembers_this_node = min(nmembers_per_node, options.nmembers - startmember + 1)
-                conffile.write_field('nnodes', 1)
-                conffile.new_class('escrocN' + str(node))
-                conffile.write_field('startmember', startmember)
-                conffile.write_field('nmembers', nmembers_this_node)
-                startmember += nmembers_this_node
-
-        else:
-            conffile.write_field('nnodes', options.nnodes)
-            if options.nmembers:
-                conffile.write_field('nmembers', options.nmembers)
-            if options.startmember:
-                conffile.write_field('startmember', options.startmember)
-
-        conffile.close()
-
-    def mkjob_command(self, options, jobname=None):
-        if options.oper:
-            reftask = "ensemble_surfex_tasks"
-            nnodes = 1
-            period = "rundate=" + options.datedeb.strftime("%Y%m%d%H%M")
+    def init_job_task_surfex(self, jobname=None):
+        if self.options.oper:
+            if self.options.monthlyreanalysis:
+                self.reftask = "monthly_surfex_reanalysis"
+            else:
+                self.reftask = "ensemble_surfex_tasks"
+            self.nnodes = 1
+            self.period = "rundate=" + self.options.datedeb.strftime("%Y%m%d%H%M")
             # Note that the jobname is used to discriminate self.conf.previ in vortex task
-            if options.reinit:
-                jobname = "surfex_reinit"
-            elif options.forecast:
-                jobname = "surfex_forecast"
+            if self.options.reinit:
+                self.jobname = "surfex_reinit"
+            elif self.options.forecast:
+                self.jobname = "surfex_forecast"
             else:
-                jobname = "surfex_analysis"
+                self.jobname = "surfex_analysis"
+            self.confcomplement = ''
         else:
-            period = "datebegin=" + options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + options.datefin.strftime("%Y%m%d%H%M")
-            if options.escroc:
-                jobname = jobname if jobname else 'escroc'
-                if options.scores:
-                    # reftask  = "scores_task"
-                    # reftask = "optim_task"
-                    reftask = "crps_task"
+            self.period = " rundate=" + self.options.datedeb.strftime("%Y%m%d%H%M") + " datebegin=" + self.options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + self.options.datefin.strftime("%Y%m%d%H%M")
+            if self.options.escroc:
+                self.jobname = jobname if jobname else 'escroc'
+                if self.options.scores:
+                    # self.reftask  = "scores_task"
+                    # self.reftask = "optim_task"
+                    self.reftask = "crps_task"
                 else:
-                    reftask = "escroc_tasks"
-                nnodes = 1
-            elif options.forecast:
-                jobname = "surfex_forecast"
-                reftask = "ensemble_surfex_reforecast"
-                nnodes = 1
+                    self.reftask = "escroc_tasks"
+                self.nnodes = 1
+            elif self.options.forecast:
+                self.jobname = "surfex_forecast"
+                self.reftask = "ensemble_surfex_reforecast"
+                self.nnodes = 1
             else:
-                jobname = 'rea_s2m'
-                reftask = "vortex_tasks"
-                nnodes = options.nnodes
+                self.jobname = 'rea_s2m'
+                self.reftask = "vortex_tasks"
+                self.nnodes = self.options.nnodes
+            self.confcomplement = " taskconf=" + self.options.datedeb.strftime("%Y")        
 
-        return "../vortex/bin/mkjob.py -j name=" + jobname + " task=" + reftask + " profile=" + self.profile + " jobassistant=cen " + period +\
-               " template=" + self.jobtemplate + " time=" + walltime(options) + " nnodes=" + str(nnodes) +\
-               " taskconf=" + self.xpid + options.datedeb.strftime("%Y")
+    def init_job_task_safran(self):
+        if self.options.oper:
+            pass
+        else:
+            self.jobname = "ana_saf"
+            self.reftask = "safran_analysis"
+            self.period = " rundate=" + self.options.datedeb.strftime("%Y%m%d") + \
+                " datebegin=" + self.options.datedeb.strftime("%Y%m%d") + \
+                " dateend=" + self.options.datefin.strftime("%Y%m%d")
+        self.nnodes = 1
+        self.confcomplement = ""
+        
+            
+    def set_conf_file(self):
 
-    def mkjob_list_commands(self, options):
-        if options.escroc and options.nnodes > 1:
+        os.chdir(self.confdir)
+        if self.options.surfex:
+            if self.options.oper:
+                conffilename = self.options.vapp + "_" + self.options.vconf + ".ini"
+                if not os.path.islink(conffilename):
+                    # Operational case : the configuration files are provided : only create a symbolic link in the appropriate directory
+                    if os.path.exists("../snowtools/DATA/OPER/" + conffilename):
+                        os.symlink("../snowtools/DATA/OPER/" + conffilename, conffilename)
+                    elif os.path.exists("../snowtools/conf/" + conffilename):
+                        os.symlink("../snowtools/conf/" + conffilename, conffilename)
+                    else:
+                        print("WARNING : No conf file found in snowtools")
+            else:
+                if hasattr(self.options, 'confname'):
+                    conffilename = self.options.confname.rstrip('.ini') + ".ini"
+                else:
+                    conffilename = self.options.vapp + "_" + self.options.vconf + "_" + self.options.datedeb.strftime("%Y") + ".ini"
+
+            if self.options.soda:
+                print ('copy conf file to vortex path')
+                shutil.copyfile(self.options.soda, conffilename)
+
+        elif self.options.safran:
+            if self.options.oper:
+                pass
+            else:
+                conffilename = self.options.vapp + "_" + self.options.vconf + ".ini"
+
+        fullname = '/'.join([self.confdir, conffilename])
+
+        if not self.options.oper:
+            self.conf_file = Vortex_conf_file(self.options, fullname)
+            self.conf_file.create_conf(jobname=self.jobname)
+            self.conf_file.write_file()
+            self.conf_file.close()
+
+        os.chdir(self.workingdir)
+
+    def mkjob_command(self):
+
+        #return "../vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + " profile=" + self.profile + " #jobassistant=cen " + self.period +\
+        #       " template=" + self.jobtemplate + " time=" + self.walltime() + " nnodes=" + str(self.nnodes) + self.confcomplement
+
+        return "../vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + " profile=" + self.profile + " jobassistant=cen " + self.period +\
+                " time=" + self.walltime() + " nnodes=" + str(self.nnodes) + self.confcomplement
+
+    def mkjob_list_commands(self):
+
+        if self.options.escroc and self.options.nnodes > 1:
             mkjob_list = []
             print("loop")
-            for node in range(1, options.nnodes + 1):
-                mkjob_list.append(self.mkjob_command(options, jobname='escrocN' + str(node)))
+            for node in range(1, self.options.nnodes + 1):
+                mkjob_list.append(self.mkjob_command(jobname='escrocN' + str(node)))
 
             return mkjob_list
         else:
-            return [self.mkjob_command(options)]
+            return [self.mkjob_command()]
 
-    def run(self, options):
+    def run(self):
+        
+        mkjob_list = self.mkjob_list_commands()
 
-        mkjob_list = self.mkjob_list_commands(options)
-
+        os.chdir(self.jobdir)
         for mkjob in mkjob_list:
             print("Run command: " + mkjob + "\n")
             os.system(mkjob)
 
+    def walltime(self):
 
-def walltime(options):
+        if self.options.walltime:
+            return self.options.walltime
 
-        if options.walltime:
-            return options.walltime
-
-        elif options.oper:
+        elif self.options.oper:
             return str(datetime.timedelta(minutes=10))
 
         else:
-            if options.escroc:
-                if options.nmembers:
-                    nmembers = options.nmembers
-                elif options.escroc == "E2":
+            if self.options.escroc:
+                if self.options.nmembers:
+                    nmembers = self.options.nmembers
+                elif self.options.escroc == "E2":
                     nmembers = 35
                 else:
                     raise Exception("don't forget to specify escroc ensemble or --nmembers")
@@ -222,11 +251,11 @@ def walltime(options):
             else:
                 nmembers = 1
             # minutes per year for one member computing all points
-            minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 2, pyr_flat = 2, cor_allslopes = 2, cor_flat = 1, postes = 2,
+            minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 5, pyr_flat = 5, cor_allslopes = 5, cor_flat = 1, postes = 5,
                                    lautaret = 120, lautaretreduc = 5)
 
             for site_snowmip in ["cdp", "oas", "obs", "ojp", "rme", "sap", "snb", "sod", "swa", "wfj"]:
-                if options.scores:
+                if self.options.scores:
                     minutes_peryear[site_snowmip] = 0.2
                 else:
                     minutes_peryear[site_snowmip] = 4
@@ -234,26 +263,166 @@ def walltime(options):
             for massif_safran in range(1, 100):
                 minutes_peryear[str(massif_safran)] = 90
 
-            key = options.region if options.region in list(minutes_peryear.keys()) else "alp_allslopes"
+            key = self.options.region if self.options.region in list(minutes_peryear.keys()) else "alp_allslopes"
 
-            estimation = datetime.timedelta(minutes=minutes_peryear[key]) * max(1, (options.datefin.year - options.datedeb.year)) * (1 + nmembers / (40 * options.nnodes) )
+            estimation = datetime.timedelta(minutes=minutes_peryear[key]) * max(1, (self.options.datefin.year - self.options.datedeb.year)) * (1 + nmembers / (40 * self.options.nnodes) )
 
             if estimation >= datetime.timedelta(hours=24):
                 raise WallTimeException(estimation)
             else:
                 return str(estimation)
 
+    def split_geo(self):
+        if ':' in self.options.region:
+            self.options.interpol = True
+            self.options.geoin, self.options.vconf, self.options.gridout = self.options.region.split(':')
+        else:
+            self.options.interpol = False
+            self.options.vconf = self.options.region
 
-class vortex_conf_file(object):
+
+class Vortex_conf_file(object):
     # NB: Inheriting from file object is not allowed in python 3
-    def __init__(self, filename, mode='w'):
+    def __init__(self, options, filename, mode='w'):
+        self.name = filename
+        self.options = options
         self.fileobject = open(filename, mode)
+        self.blocks = dict()
 
-    def new_class(self, name):
-        self.fileobject.write("[" + name + "]\n")
+    def add_block(self, name):
+        self.blocks[name] = dict()
 
-    def write_field(self, fieldname, value):
-        self.fileobject.write(fieldname + " = " + str(value) + "\n")
+    def set_field(self, blockname, fieldname, value):
+        if blockname not in self.blocks.keys():
+            self.add_block(blockname)
+        # WARNING : we reset the field value if it already existed
+        self.blocks[blockname][fieldname] = value
+
+    def write_file(self):
+        for blockname in self.blocks:
+            self.fileobject.write("[" + blockname + "]\n")
+            for fieldname, value in self.blocks[blockname].items():
+                self.fileobject.write(fieldname + " = " + str(value) + "\n")
+            self.fileobject.write("\n")
 
     def close(self):
         self.fileobject.close()
+
+    def create_conf(self, jobname):
+        ''' Prepare configuration file from s2m options'''
+        self.default_variables()
+        self.add_block(jobname)
+        if self.options.surfex:
+            self.create_conf_surfex()
+        elif self.options.safran:
+            self.create_conf_safran()
+
+    def create_conf_surfex(self):
+        self.surfex_variables()
+        # ESCROC on several nodes
+        if self.options.escroc:
+            self.escroc_variables()
+        else:
+            self.set_field("DEFAULT", 'nnodes', self.options.nnodes)
+            if self.options.nmembers:
+                self.set_field("DEFAULT", 'nmembers', self.options.nmembers)
+            if self.options.startmember:
+                self.set_field("DEFAULT", 'startmember', self.options.startmember)
+        if self.options.soda:
+            self.soda_variables(self.options)
+
+    def create_conf_safran(self):
+        self.safran_variables()
+
+    def default_variables(self):
+
+        self.set_field("DEFAULT", 'xpid', self.options.xpid + '@' + os.getlogin())
+        self.set_field("DEFAULT", 'ntasks', self.options.ntasks )
+        self.set_field("DEFAULT", 'nprocs', self.options.ntasks )
+        self.set_field("DEFAULT", 'openmp', 1)
+        self.set_field("DEFAULT", 'geometry', self.options.vconf)
+
+    def escroc_variables(self):
+
+        self.set_field("DEFAULT", 'subensemble', self.options.escroc)
+        self.set_field("DEFAULT", 'duration', 'full')
+
+        if self.options.nnodes > 1 and self.options.nmembers:
+
+            nmembers_per_node = self.options.nmembers / self.options.nnodes + 1
+            startmember = self.options.startmember if self.options.startmember else 1
+            for node in range(1, self.options.nnodes + 1):
+                nmembers_this_node = min(nmembers_per_node, self.options.nmembers - startmember + 1)
+                self.set_field("DEFAULT", 'nnodes', 1)
+                newblock = "escrocN" + str(node)
+                self.set_field(newblock, 'startmember', startmember)
+                self.set_field(newblock, 'nmembers', nmembers_this_node)
+                startmember += nmembers_this_node
+
+        else:
+            self.set_field("DEFAULT", 'nnodes', self.options.nnodes)
+            if self.options.nmembers:
+                self.set_field("DEFAULT", 'nmembers', self.options.nmembers)
+            if self.options.startmember:
+                self.set_field("DEFAULT", 'startmember', self.options.startmember)
+
+    def surfex_variables(self):
+
+        if '@' in self.options.forcing:
+            self.options.forcing, forcinglogin = self.options.forcing.split('@')
+        elif self.options.model == 'safran':
+            forcinglogin = 'vernaym'
+        else:
+            forcinglogin = os.getlogin()
+
+        self.set_field("DEFAULT", 'meteo', self.options.model)
+
+        lf = self.options.forcing.split('/')
+        self.set_field("DEFAULT", 'forcingid', lf[0] + '@' + forcinglogin)
+
+        if len(lf) > 1:
+            self.set_field("DEFAULT", 'blockin', '/'.join(lf[1:]))
+
+        self.set_field("DEFAULT", 'duration', 'yearly')
+
+        if self.options.namelist:
+            self.set_field("DEFAULT", 'namelist', self.options.namelist)
+        if self.options.exesurfex:
+            self.set_field("DEFAULT", 'exesurfex', self.options.exesurfex)
+        self.set_field("DEFAULT", 'threshold', self.options.threshold)
+        if self.options.datespinup:
+            self.set_field("DEFAULT", 'datespinup', self.options.datespinup.strftime("%Y%m%d%H%M"))
+        else:
+            self.set_field("DEFAULT", 'datespinup', self.options.datedeb.strftime("%Y%m%d%H%M"))
+
+        if self.options.ground:
+            self.set_field("DEFAULT", 'climground', self.options.ground)
+
+        if self.options.dailyprep:
+            self.set_field("DEFAULT", 'dailyprep', self.options.dailyprep)
+
+        if self.options.interpol:
+            self.set_field("DEFAULT", 'interpol', self.options.interpol)
+            self.set_field("DEFAULT", 'gridout', self.options.gridout)
+            self.set_field("DEFAULT", 'geoin', self.options.geoin)
+
+    def safran_variables(self):
+
+        self.set_field("DEFAULT", 'cumul', 6)
+        self.set_field("DEFAULT", 'cutoff', self.options.cutoff)
+        self.set_field("DEFAULT", 'model', 'safran')
+        self.set_field("DEFAULT", 'cycle', 'uenv:s2m.01@vernaym')
+        self.set_field("DEFAULT", 'namespace', 'vortex.multi.fr')
+        if self.options.namelist:
+            self.set_field("DEFAULT", 'namelist', self.options.namelist)
+        if self.options.guess:
+            self.set_field("DEFAULT", 'guess_path', self.options.guess)
+        else:
+            self.set_field("DEFAULT", 'guess_block', 'guess')
+        if self.options.executables:
+            self.set_field("DEFAULT", 'executables', self.options.executables)
+        if self.options.savedir:
+            self.set_field("DEFAULT", 'savedir', self.options.savedir)
+        if self.options.cpl_model:
+            self.set_field("DEFAULT", 'source_app', self.options.cpl_model[0])
+            self.set_field("DEFAULT", 'source_conf', self.options.cpl_model[1])

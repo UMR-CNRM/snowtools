@@ -46,7 +46,7 @@ class MultiFileCfg(footprints.FootprintBase):
     Filenames should be ``cfgname-cfgtag-*.cfgext``
     """
 
-    _abstract  = True
+    _abstract = True
     _collector = ('ymlconf',)
     _footprint = dict(
         info = 'Default Multi YAML files configuration manager.',
@@ -74,7 +74,7 @@ class MultiFileCfg(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         logger.debug('Abstract multicfg init %s', self.__class__)
         super(MultiFileCfg, self).__init__(*args, **kw)
-        self._cfgtmp  = dict()
+        self._cfgtmp = dict()
         self._cfgload = dict()
         self._cfgpath = fscrawler.upfirst(self.cfgdir, thispath=self.cfgroot)
         self._cfgstack = glob.glob(self.cfgfullpath())
@@ -133,7 +133,7 @@ class MultiFileCfg(footprints.FootprintBase):
             self._cfginfo, self._cfgraw, self._cfgexcluded, self._cfgdefaults = self._cfgload[self._cfgfile]
         else:
             with io.open(self._cfgfile, 'rb') as fd:
-                self._cfginfo = self.cfgclean(yaml.load(fd))
+                self._cfginfo = self.cfgclean(yaml.load(fd, Loader=yaml.SafeLoader))
                 fd.seek(0, os.SEEK_SET)
                 self._cfgraw = fd.read()
             self._cfgexcluded = set(self._cfginfo.pop('excluded', list()))

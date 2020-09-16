@@ -252,8 +252,6 @@ class _Map_massifs(Mplfigure):
 
         self.text = []
 
-        textcolor = 'black'
-
         for i, massif in enumerate(self.shapes):
             num = self.records(i)[1]
 
@@ -267,8 +265,16 @@ class _Map_massifs(Mplfigure):
                     if v < nvar - 1:
                         infos += "-"
 
-                    if (nvar == 3 and v == 1 ) or nvar == 1:
-                        textcolor = self.getTextColor(variable[indmassif][0], **kwargs)
+                    if 'textcolor' in kwargs.keys():
+                        textcolor = kwargs['textcolor']
+                    else:
+                        if (nvar == 3 and v == 1 ) or nvar == 1:
+                            textcolor = self.getTextColor(variable[indmassif][0], **kwargs)
+                        else:
+                            textcolor = 'black'
+
+                    if 'unit' in kwargs.keys():
+                        infos += kwargs['unit']
 
                 self.text.append(plt.text(Xbary, Ybary, infos, horizontalalignment='center', verticalalignment='center', color = textcolor))
 

@@ -59,20 +59,20 @@ class Escroc_Vortex_Task(Task):
                 print(t.prompt, 'tb01 =', tb01)
                 print()
 
-            self.sh.title('Toolbox input tb02')
-            tb02 = toolbox.input(
-                role           = 'SurfexClim',
-                kind           = 'pgdnc',
-                nativefmt      = 'netcdf',
-                local          = 'PGD.nc',
-                geometry       = self.conf.geometry,
-                genv            = 'uenv:cen.01@CONST_CEN',
-                gvar           = 'pgd_[geometry::area]',
-                model          = 'surfex',
-                fatal          = False,
-            ),
-            print(t.prompt, 'tb02 =', tb02)
-            print()
+#             self.sh.title('Toolbox input tb02')
+#             tb02 = toolbox.input(
+#                 role           = 'SurfexClim',
+#                 kind           = 'pgdnc',
+#                 nativefmt      = 'netcdf',
+#                 local          = 'PGD.nc',
+#                 geometry       = self.conf.geometry,
+#                 genv            = 'uenv:cen.01@CONST_CEN',
+#                 gvar           = 'pgd_[geometry::area]',
+#                 model          = 'surfex',
+#                 fatal          = False,
+#             ),
+#             print(t.prompt, 'tb02 =', tb02)
+#             print()
 
             self.sh.title('Toolbox input tb02')
             tb02_a = toolbox.input(
@@ -105,7 +105,7 @@ class Escroc_Vortex_Task(Task):
                 namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
                 block          = 'prep',
-                fatal          = False,
+                fatal          = True,
             ),
             print(t.prompt, 'tb03 =', tb03)
             print()

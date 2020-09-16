@@ -30,7 +30,9 @@ collections_abc.__doc__ = "Compatibility module for abstract classes that move f
 @six.add_metaclass(abc.ABCMeta)
 class re_Pattern(object):
     """Mimics Python3.7 re.Pattern behaviour."""
+
     def __new__(self, *args, **kwargs):
+        """This is an abstract class."""
         raise TypeError("cannot create 're.Pattern' instances.")
 
 

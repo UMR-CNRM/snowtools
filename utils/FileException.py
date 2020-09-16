@@ -38,7 +38,6 @@ class DirFileException(Exception):
 class FileNameException(Exception):
 
     def __init__(self, path):
-        print("in init FileNameException")
         self.path = path
 
     def __str__(self):
@@ -107,6 +106,26 @@ class TimeException(Exception):
         return tuple(red)
 
 
+class TimeListException(Exception):
+
+    def __init__(self, path, dimtime):
+        self.path = path
+        self.dimtime = dimtime
+
+    def __str__(self):
+
+        info = ""
+        for p, path in enumerate(self.path):
+            info += path + ":" + str(self.dimtime[p]) + " dates\n"
+
+        return "Times do not have consistent lengths in the different files to merge :\n" + info
+
+    def __reduce__(self):
+        red = list(super(TimeListException, self).__reduce__())
+        red[1] = (self.path, self.dimtime)  # Les arguments qui seront passes a __init__
+        return tuple(red)
+
+
 class VarWriteException(Exception):
 
     def __init__(self, varname, varshape, varfileshape):
@@ -139,6 +158,19 @@ class GeometryException(Exception):
         red[1] = (self.altmin, self.altmax)  # Les arguments qui seront passes a __init__
         return tuple(red)
 
+class UnknownGridTypeException(Exception):
+    def __init__(self, gridtype, projtype):
+        self.gridtype = gridtype
+        self.projtype = projtype
+
+    def __str__(self):
+        return "The grid or projection type is not implemented:" + str(self.gridtype) + " - " + str(self.projtype)
+
+    def __reduce__(self):
+        red = list(super(UnknownGridTypeException, self).__reduce__())
+        red[1] = (self.gridtype, self.projtype)  # Les arguments qui seront passes a __init__
+        return tuple(red)
+
 
 class MassifException(Exception):
     def __init__(self, massifrequest, massifavail):
@@ -155,6 +187,7 @@ class MassifException(Exception):
         red[1] = (self.massifrequest, self.massifavail)  # Les arguments qui seront passes a __init__
         return tuple(red)
 
+
 class ModuleImportException(Exception):
 
     def __init__(self, module, message=""):
@@ -166,8 +199,7 @@ class ModuleImportException(Exception):
             +self.message
 
 
-
 class MultipleValueException(Exception):
 
     def __str__(self):
-        return  "Multiple values match the selection"
+        return "Multiple values match the selection"

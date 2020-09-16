@@ -81,7 +81,7 @@ class TiffFile(object):
             return dict((k, numpy.dtype(v).newbyteorder('>')) for k, v in TiffFile._type2dtype.items())
 
     def __init__(self, filename, subIFDpaths=[], method=1):
-        """ Opens a tiff file, reads header and IFDs.
+        """Opens a tiff file, reads header and IFDs.
 
         *filename* is the filename containing the tiff
 
@@ -99,7 +99,6 @@ class TiffFile(object):
             * 3: same as 2 but with modifications allowed - DANGEROUS
 
         """
-
         self._filename = filename
         self._subIFDpaths = subIFDpaths
         self._fileHandle = None
@@ -185,7 +184,8 @@ class TiffFile(object):
                 offsetValues = numpy.array([offsetValues])
                 nbBytesPerStrip = numpy.array([nbBytesPerStrip])
             if nbRows / nbRowsPerStrip + (1 if nbRows % nbRowsPerStrip != 0 else 0) != len(offsetValues):
-                raise PyexttiffError("Total number of rows, strip numbers and number of rows per strips are not consistent.")
+                raise PyexttiffError("Total number of rows, " +
+                                     "strip numbers and number of rows per strips are not consistent.")
             data = []
             for i in range(len(offsetValues)):
                 data.append(self._get_values(offsetValues[i], 1, nbBytesPerStrip[i]))
@@ -250,7 +250,8 @@ class TiffFile(object):
             dtype = self.dtypes.type2dt.get(typ)
             size = TiffFile._type2bytes.get(typ)
             if dtype is None or size is None:
-                raise PyexttiffError('_get_values: incomplete info for type=%r [%r]: dtype=%s, bytes=%s\n' % (typ, ntyp, dtype, size))
+                raise PyexttiffError(('_get_values: incomplete info for type=%r [%r]: ' +
+                                      'dtype=%s, bytes=%s\n') % (typ, ntyp, dtype, size))
         result = self.get_data()[offset:offset + size * count].view(dtype=dtype)
         return result
 

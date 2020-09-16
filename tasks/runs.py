@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # -*- coding: utf-8 -*-
 
 '''
@@ -13,7 +12,7 @@ import datetime
 
 # Snowtools modules
 from tools.change_forcing import forcinput_select, forcinput_applymask,\
-    forcinput_tomerge
+    forcinput_tomerge, proselect
 from tools.change_prep import prep_tomodify
 from tools.update_namelist import update_surfex_namelist_file
 from tools.execute import callSurfexOrDie
@@ -30,30 +29,26 @@ class surfexrun(object):
 
     def __init__(self, datebegin, dateend, forcingpath, diroutput,
                  namelist=os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam',
-                 execdir=".",
-                 threshold=-999, dirwork=None, datespinup=None, geolist=[], addmask=False):
+                 execdir=".", onlyextractforcing = False,
+                 threshold=-999, workdir=None, datespinup=None, geolist=[], addmask=False):
 
         # Convert arguments in attributes
-        for var in "datebegin", "dateend", "forcingpath", "diroutput", "namelist", "execdir", "threshold", "geolist", "addmask":
+        for var in "datebegin", "dateend", "forcingpath", "diroutput", "namelist", "execdir", "onlyextractforcing", "threshold", "geolist", "addmask":
             setattr(self, var, locals()[var])
-
-        mavariable = 12
-        mavariable = [mavariable, 8, 10, 12]
 
         self.dateforcbegin = datebegin
         self.dateforcend = dateend
         self.updateloc = True
-        self.onlyextractforcing = False
 
         self.defaults_from_env()
 
         self.dirmeteo = self.diroutput + "/meteo"
         self.dirprep = self.diroutput + "/prep"
         self.dirpro = self.diroutput + "/pro"
-        if dirwork:
-            self.dirwork = dirwork + "/workSurfex" + datetime.datetime.today().strftime("%Y%m%d%H%M%S%f")
+        if workdir:
+            self.workdir = workdir + "/workSurfex" + datetime.datetime.today().strftime("%Y%m%d%H%M%S%f")
         else:
-            self.dirwork = self.diroutput + "/workSurfex" + datetime.datetime.today().strftime("%Y%m%d%H%M%S%f")
+            self.workdir = self.diroutput + "/workSurfex" + datetime.datetime.today().strftime("%Y%m%d%H%M%S%f")
 
         if datespinup:
             self.dateinit = datespinup
@@ -63,14 +58,29 @@ class surfexrun(object):
     def defaults_from_env(self, moderun="NORMAL"):
         machine = os.uname()[1]
 
+        if "epona" in machine or "belenos" in machine:
+            self.nproc = 128
+            self.moderun = "MPI"
+            self.modeinterpol = "MPI"
         if "beaufix" in machine or "prolix" in machine:
             self.nproc = 40
             self.moderun = "MPI"
+            self.modeinterpol = "MPI"
         else:
-            if "MPIAUTO" in os.readlink(self.execdir + "/OFFLINE"):
-                self.moderun = "MPIRUN"
+            if not self.onlyextractforcing:
+                if "MPIAUTO" in os.readlink(self.execdir + "/OFFLINE"):
+                    self.moderun = "MPIRUN"
+                else:
+                    self.moderun = moderun
             else:
                 self.moderun = moderun
+            if os.path.islink(os.environ['SNOWTOOLS_CEN'] + "/fortran/interpol"):
+                if "MPIAUTO" in os.readlink(os.environ['SNOWTOOLS_CEN'] + "/fortran/interpol"):
+                    self.modeinterpol = "MPIRUN"
+                else:
+                    self.modeinterpol = moderun
+            else:
+                self.modeinterpol = "NOTCOMPILED"
 
             if self.moderun == "MPIRUN":
                 if "NOFFLINE" in list(os.environ.keys()):
@@ -79,6 +89,14 @@ class surfexrun(object):
                     self.nproc = 4
             else:
                 self.nproc = 1
+
+            if self.modeinterpol == "MPIRUN":
+                if "NINTERPOL" in list(os.environ.keys()):
+                    self.ninterpol = int(os.environ["NINTERPOL"])
+                else:
+                    self.ninterpol = 4
+            else:
+                self.ninterpol = 1
 
         print("Type of run: " + self.moderun + " Number of processes " + str(self.nproc))
 
@@ -92,7 +110,7 @@ class surfexrun(object):
             raise DirFileException(self.diroutput)
 
         # Create all directories
-        for directory in [self.dirmeteo, self.dirprep, self.dirpro, self.dirwork]:
+        for directory in [self.dirmeteo, self.dirprep, self.dirpro, self.workdir]:
             if not os.path.isdir(directory):
                 os.makedirs(directory)
 
@@ -100,7 +118,7 @@ class surfexrun(object):
         self.initcurrentdirectory = os.getcwd()
 
         # Change current directory to working directory
-        os.chdir(self.dirwork)
+        os.chdir(self.workdir)
 
     def run(self, firstrun=True):
 
@@ -159,10 +177,11 @@ class surfexrun(object):
     def get_all_consts(self):
         get_file_const_or_crash(self.namelist, "OPTIONS.nam")
 
-        for ecoclimap_file in ["ecoclimapI_covers_param.bin", "ecoclimapII_eu_covers_param.bin"]:
-            get_file_const_or_crash(self.execdir + "/../MY_RUN/ECOCLIMAP/" + ecoclimap_file, ecoclimap_file)
+        if not self.onlyextractforcing:
+            for ecoclimap_file in ["ecoclimapI_covers_param.bin", "ecoclimapII_eu_covers_param.bin"]:
+                get_file_const_or_crash(self.execdir + "/../MY_RUN/ECOCLIMAP/" + ecoclimap_file, ecoclimap_file)
 
-        get_file_const_or_crash(self.execdir + "/../MY_RUN/DATA/CROCUS/drdt_bst_fit_60.nc", "drdt_bst_fit_60.nc")
+            get_file_const_or_crash(self.execdir + "/../MY_RUN/DATA/CROCUS/drdt_bst_fit_60.nc", "drdt_bst_fit_60.nc")
 
     def get_forcing(self):
         ''' Look for a FORCING file including the starting date'''
@@ -170,9 +189,9 @@ class surfexrun(object):
 
         f = prosimu("FORCING.nc")
         print("FORMAT OF FORCING NETCDF FILE: " + f.format())
-        if f.format() != "NETCDF3_CLASSIC":
-            print("Check consistency with your SURFEX compilation (netcdf4 library required).")
-            print(ldd(self.execdir + "/OFFLINE"))
+        #if f.format() != "NETCDF3_CLASSIC":
+        #    print("Check consistency with your SURFEX compilation (netcdf4 library required).")
+        #    print(ldd(self.execdir + "/OFFLINE"))
         f.close()
 
     def get_or_run_pgd(self):
@@ -227,6 +246,8 @@ class surfexrun(object):
     def postprocess(self):
         profile = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode='a')
         profile.massif_natural_risk()
+        profile.dataset.GlobalAttributes()
+        profile.dataset.add_standard_names()
         profile.close()
 
 
@@ -273,13 +294,53 @@ class postesrun(surfexrun):
         save_file_period(self.dirmeteo, "FORCING", self.dateforcbegin, self.dateforcend)
 
 
+class interpolrun(surfexrun):
+
+    def modify_forcing(self, *args):
+        os.rename("FORCING.nc", "input.nc")
+        print (args)
+        if not os.path.islink('GRID.nc'):
+            os.symlink(args[0], "GRID.nc")
+        callSurfexOrDie(os.environ['SNOWTOOLS_CEN'] + "/fortran/interpol", moderun=self.modeinterpol, nproc=self.ninterpol)
+        os.rename("output.nc", "FORCING.nc")
+
+    def save_output(self):
+        if not self.onlyextractforcing:
+            super(interpolrun, self).save_output()
+        save_file_period(self.dirmeteo, "FORCING", self.dateforcbegin, self.dateforcend)
+
+
 class massifextractforcing(massifrun):
-    def __init__(self, datebegin, dateend, forcingpath, diroutput, dirwork=None, geolist=[]):
-        super(massifextractforcing, self).__init__(datebegin, dateend, forcingpath, diroutput, dirwork= dirwork, geolist= geolist)
+    def __init__(self, datebegin, dateend, forcingpath, diroutput, workdir=None, geolist=[]):
+        super(massifextractforcing, self).__init__(datebegin, dateend, forcingpath, diroutput, workdir= workdir, geolist= geolist)
         self.onlyextractforcing = True
 
     def save_output(self):
         save_file_period(self.dirmeteo, "FORCING", self.dateforcbegin, self.dateforcend)
+
+    def defaults_from_env(self):
+        pass
+
+    def get_all_consts(self):
+        pass
+
+
+class massifextractpro(massifrun):
+    def __init__(self, datebegin, dateend, forcingpath, diroutput, workdir=None, geolist=[]):
+        super(massifextractpro, self).__init__(datebegin, dateend, forcingpath, diroutput, workdir= workdir, geolist= geolist)
+        self.onlyextractforcing = True
+
+    def get_forcing(self):
+        ''' Look for a PRO file including the starting date'''
+        self.dateforcbegin, self.dateforcend = get_file_period("PRO", self.forcingpath, self.datebegin, self.dateend)
+
+    def modify_forcing(self, list_massif_number, min_alt, max_alt, liste_pentes, list_exp):
+        ''' Extract the simulation points in the forcing file.'''
+        os.rename("PRO.nc", "PRO_base.nc")
+        proselect("PRO_base.nc", "PRO.nc", list_massif_number, min_alt, max_alt, liste_pentes, list_exp)
+
+    def save_output(self):
+        save_file_period(self.dirpro, "PRO", self.dateforcbegin, self.dateforcend)
 
     def defaults_from_env(self):
         pass
@@ -296,12 +357,12 @@ class griddedrun(surfexrun):
 
     def get_all_consts(self):
         super(griddedrun, self).get_all_consts()
+        if not os.path.isfile(self.dirprep + "/PGD.nc"):
+            if "DIRDATAPGD" in list(os.environ.keys()):
+                dirdatapgd = os.environ["DIRDATAPGD"]
+            else:
+                dirdatapgd = "/manto/lafaysse/FILES_PGD"
 
-        if "DIRDATAPGD" in list(os.environ.keys()):
-            dirdatapgd = os.environ["DIRDATAPGD"]
-        else:
-            dirdatapgd = "/manto/lafaysse/FILES_PGD"
-
-        print(os.listdir(dirdatapgd))
-        for fic in os.listdir(dirdatapgd):
-            get_file_const_or_crash(dirdatapgd + "/" + fic, fic)
+            print(os.listdir(dirdatapgd))
+            for fic in os.listdir(dirdatapgd):
+                get_file_const_or_crash(dirdatapgd + "/" + fic, fic)

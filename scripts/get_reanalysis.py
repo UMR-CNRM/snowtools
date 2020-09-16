@@ -7,6 +7,7 @@ Created on 3 aug. 2018
 @author: lafaysse
 '''
 
+import os
 import sys
 from optparse import OptionParser
 from cen.layout.nodes import S2MTaskMixIn
@@ -29,7 +30,7 @@ def parse_options(arguments):
                       help="First year of extraction")
 
     parser.add_option("--eyear",
-                      action="store", type="int", dest="eyear", default=2018,
+                      action="store", type="int", dest="eyear", default=2019,
                       help="Last year of extraction")
 
     parser.add_option("--meteo",
@@ -43,6 +44,10 @@ def parse_options(arguments):
     parser.add_option("--snow",
                       action="store_true", dest="snow", default=False,
                       help="Extract snowpack model output files")
+
+    parser.add_option("--xpid",
+                      action="store", dest="xpid", default=None,
+                      help="Specific xpid")
 
     (options, args) = parser.parse_args(arguments)
     del args
@@ -63,6 +68,11 @@ class config(object):
         self.meteo = options.meteo
         self.nativemeteo = options.nativemeteo
         self.snow = options.snow
+        if options.xpid:
+            if '@' in options.xpid:
+                self.xpid = options.xpid
+            else:
+                self.xpid = options.xpid + '@' + os.getlogin()
 
 
 class S2MExtractor(S2MTaskMixIn):
@@ -90,7 +100,7 @@ class S2MExtractor(S2MTaskMixIn):
                     vconf          = self.conf.geometry,
                     local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = self.conf.xpid_native,
-                    block          = 'postes',
+                    block          = 'massifs',
                     source_app     = source_app,
                     source_conf    = source_conf,
                     geometry       = self.conf.geometry,

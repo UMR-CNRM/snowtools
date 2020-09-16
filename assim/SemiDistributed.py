@@ -91,38 +91,7 @@ class Obs(SemiDistributed):
         else:
             subset, mask = setSubsetclasses(pgd, options.classesE, options.classesA, options.classesS)
         return subset, mask
-
-    def close(self):
-        self.Raw.close()
-        self.New.close()
-
-
-class Synthetic(Obs):
-    """
-    Class describing synthetic obs
-    """  
-    def __init__(self, xpdir, date, options, nmembers = 35):
-        '''
-        Constructor
-        '''
-        Obs.__init__(self, date, options)
-        
-        self.date = date
-        if options.synth > 0:
-            self.path = xpdir + 'mb{0:04d}'.format(options.synth) + '/bg/PREP_' + date + '.nc'
-            self.ptinom = 'synth' + 'mb{0:04d}'.format(options.synth)
-        else:
-            # randomly draw a member
-            draw = random.choice(range(1, options.nmembers+1))
-            self.path = xpdir + 'mb{0:04d}'.format(draw) + '/bg/PREP_' + date + '.nc'
-            self.ptinom = 'synth' + 'mb{0:04d}'.format(draw)
-        #if 'sd' not in self.listvar: # I think I managed to make it work without these two lines...to check.
-        #    self.listvar.append('sd')  # add total SD
-        self.dictVarsRead = dictvarsPrep()
-        self.dictVarsWrite = dictvarsWrite()
-        self.loadDict = dictvarsWrite()
-        self.isloaded = False
-        
+    
     def copydimsvars(self, Raw, New, nameVars, mask = None):
         '''
         BC 5/02/19 from maskSentinel2.py
@@ -154,6 +123,37 @@ class Synthetic(Obs):
                     print np.shape(np.invert(np.squeeze(mask)))
                     tmp[0, np.invert(np.squeeze(mask))] = np.nan  # I'd rather set it to fillValue but it is not understood by SODA as far as I know
         
+    def close(self):
+        self.Raw.close()
+        self.New.close()
+
+
+class Synthetic(Obs):
+    """
+    Class describing synthetic obs
+    """  
+    def __init__(self, xpiddir, date, options, nmembers = 35):
+        '''
+        Constructor
+        '''
+        Obs.__init__(self, date, options)
+        
+        self.date = date
+        if options.synth > 0:
+            self.path = xpiddir + 'mb{0:04d}'.format(options.synth) + '/bg/PREP_' + date + '.nc'
+            self.ptinom = 'synth' + 'mb{0:04d}'.format(options.synth)
+        else:
+            # randomly draw a member
+            draw = random.choice(range(1, options.nmembers+1))
+            self.path = xpiddir + 'mb{0:04d}'.format(draw) + '/bg/PREP_' + date + '.nc'
+            self.ptinom = 'synth' + 'mb{0:04d}'.format(draw)
+        #if 'DEP' not in self.listvar: # I think I managed to make it work without these two lines...to check.
+        #    self.listvar.append('DEP')  # add total DEP
+        self.dictVarsRead = dictvarsPrep()
+        self.dictVarsWrite = dictvarsWrite()
+        self.loadDict = dictvarsWrite()
+        self.isloaded = False
+ 
     def computeratio(self, Raw, New, nameVars, mask = None):
         listrat = [r for r in nameVars if 'R' in r]
         
@@ -172,13 +172,18 @@ class Real(Obs):
     Class describing real obs
     TODO : pursue implementation
     """
-    def __init__(self, xpidobsdir, date, options):
+    def __init__(self, xpidobsdir, date, options): 
         '''
         Constructor
         '''
         Obs.__init__(self, date, options)
-        self.path = xpidobsdir + 'obs_MODIS_grandes_rousses_' + date + '.nc'
-    
+        self.path = xpidobsdir + 'obs_' + options.sensor + '_' + options.vconf + '_' + date + '.nc'
+        
+        self.dictVarsRead = dictvarsWrite()
+        self.dictVarsWrite = dictvarsWrite()
+        self.loadDict = dictvarsWrite()
+        self.isloaded = False
+        
 class Prep(SemiDistributed):
     """
     class describing Prep (background) and/or analysis 
@@ -188,8 +193,8 @@ class Prep(SemiDistributed):
         SemiDistributed.__init__(self)
         self.options = options
         self.listvar = options.vars
-        if 'sd' not in self.listvar: # Cesar. I Don't get that.
-            self.listvar.append('DEP_TOT')  # add total SD
+        if 'DEP' not in self.listvar:
+            self.listvar.append('DEP') 
         self.listvar_soda = setlistvars_var(options.vars)
         self.dictVarsRead = dictvarsPrep()
         self.dictVarsWrite = dictvarsWrite()

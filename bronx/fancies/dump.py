@@ -46,8 +46,11 @@ Example::
     # The Jsonable Dumper will produce something that can safely be dumped to
     # a JSON File
     >>> jdumper = JsonableDumper(tag='testdumper')
-    >>> jdumper.cleandump(somelist) # doctest: +ELLIPSIS
-    [{'akey': ...'...Foo::1', 'bkey': [...'item1', ...'item2'], 'ckey': {'sutff': 2, 'other': 1}}, ...'a_string', [...'another', ...'list', [1, 2, 3]]]
+    >>> jdumper.cleandump(somelist) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    [{'akey': ...'...Foo::1',
+      'bkey': [...'item1', ...'item2'],
+      'ckey': {'sutff': 2, 'other': 1}}, ...
+     'a_string', [...'another', ...'list', [1, 2, 3]]]
 
     # The XML Dumper returns a xml.dom's Document object
     >>> xdumper = XmlDomDumper()

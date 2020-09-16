@@ -44,40 +44,40 @@ __all__ = []
 _RE_FLAGS = re.IGNORECASE + re.DOTALL
 
 # Processor
-_LETTER             = "[A-Z]"
-_DIGIT              = "[0-9]"
-_UNDERSCORE         = "[_]"
-_LETTER_UNDERSCORE  = "[A-Z_]"
+_LETTER = "[A-Z]"
+_DIGIT = "[0-9]"
+_UNDERSCORE = "[_]"
+_LETTER_UNDERSCORE = "[A-Z_]"
 _SPECIAL_CHARACTERS = "[ =+-*/(),.':!\"%&;<>?$]"
-_OTHER_CHARACTERS   = "[^A-Z0-9_ =+-*/(),.':!\"%&;<>?$]"
+_OTHER_CHARACTERS = "[^A-Z0-9_ =+-*/(),.':!\"%&;<>?$]"
 _GRAPHIC_CHARACTERS = ".|\n"
 
 _ALPHANUMERIC_CHARACTER = "[A-Z0-9_]"
-_CHARACTER              = "[A-Z0-9_ =+-*/(),.':!\"%&;<>?$]"
+_CHARACTER = "[A-Z0-9_ =+-*/(),.':!\"%&;<>?$]"
 
 # Low-lever
-_QUOTE      = "'"
-_DQUOTE     = '"'
+_QUOTE = "'"
+_DQUOTE = '"'
 _STRDELIM_B = "(?P<STRB>[" + _QUOTE + _DQUOTE + "])"
 _STRDELIM_E = "(?(STRB)[" + _QUOTE + _DQUOTE + "])"
-_NAME       = _LETTER + _ALPHANUMERIC_CHARACTER + '*'
-_MACRONAME  = (_STRDELIM_B + r'?\$?' +
-               "(?P<NAME>" + _LETTER_UNDERSCORE + _ALPHANUMERIC_CHARACTER + '*' + ")" +
-               _STRDELIM_E)
-_FREEMACRONAME  = (_STRDELIM_B + r'?' + _UNDERSCORE + r'{2}' +
-                   "(?P<NAME>" + _LETTER + _ALPHANUMERIC_CHARACTER + '*' + ")" +
-                   _UNDERSCORE + r'{2}' + _STRDELIM_E)
+_NAME = _LETTER + _ALPHANUMERIC_CHARACTER + '*'
+_MACRONAME = (_STRDELIM_B + r'?\$?' +
+              "(?P<NAME>" + _LETTER_UNDERSCORE + _ALPHANUMERIC_CHARACTER + '*' + ")" +
+              _STRDELIM_E)
+_FREEMACRONAME = (_STRDELIM_B + r'?' + _UNDERSCORE + r'{2}' +
+                  "(?P<NAME>" + _LETTER + _ALPHANUMERIC_CHARACTER + '*' + ")" +
+                  _UNDERSCORE + r'{2}' + _STRDELIM_E)
 
 # Operators
-_POWER_OP  = "[*][*]"
-_MULT_OP   = "[*/]"
-_ADD_OP    = "[+-]"
+_POWER_OP = "[*][*]"
+_MULT_OP = "[*/]"
+_ADD_OP = "[+-]"
 _CONCAT_OP = "[/][/]"
-_REL_OP    = r"\.EQ\.|\.NE\.|\.LT\.|\.GT\.|\.GE\.|[=][=]|[/][=]|[<]|[<][=]|[>]|[>][=]"
-_NOT_OP    = r"\.NOT\."
-_AND_OP    = r"\.AND\."
-_OR_OP     = r"\.OR\."
-_EQUIV_OP  = r"\.EQV\.|\.NEQV\."
+_REL_OP = r"\.EQ\.|\.NE\.|\.LT\.|\.GT\.|\.GE\.|[=][=]|[/][=]|[<]|[<][=]|[>]|[>][=]"
+_NOT_OP = r"\.NOT\."
+_AND_OP = r"\.AND\."
+_OR_OP = r"\.OR\."
+_EQUIV_OP = r"\.EQV\.|\.NEQV\."
 _INTRINSIC_OPERATOR = '|'.join((_POWER_OP, _MULT_OP, _ADD_OP, _CONCAT_OP, _REL_OP, _NOT_OP,
                                 _AND_OP, _OR_OP, _EQUIV_OP))
 
@@ -85,37 +85,37 @@ _INTRINSIC_OPERATOR = '|'.join((_POWER_OP, _MULT_OP, _ADD_OP, _CONCAT_OP, _REL_O
 _LABEL = _DIGIT + "{1,5}"
 
 # Integers
-_SIGN                        = "[+-]"
-_DIGIT_STRING                = _DIGIT + "+"
-_SIGNED_DIGIT_STRING         = _SIGN + "?" + _DIGIT_STRING
-_KIND_PARAM                  = "[A-Z0-9]+"
-_INT_LITERAL_CONSTANT        = _DIGIT_STRING + "(?:_" + _KIND_PARAM + ")?"
+_SIGN = "[+-]"
+_DIGIT_STRING = _DIGIT + "+"
+_SIGNED_DIGIT_STRING = _SIGN + "?" + _DIGIT_STRING
+_KIND_PARAM = "[A-Z0-9]+"
+_INT_LITERAL_CONSTANT = _DIGIT_STRING + "(?:_" + _KIND_PARAM + ")?"
 _SIGNED_INT_LITERAL_CONSTANT = _SIGN + "?" + _INT_LITERAL_CONSTANT
 
 # BOZ
-_BINARY_DIGIT         = "[0-1]"
-_OCTAL_DIGIT          = "[0-7]"
-_HEX_DIGIT            = "[ABCDEF0-9]"
-_BINARY_CONSTANT      = "B" + "(?:'|\")" + _BINARY_DIGIT + "+" + "(?:'|\")"
-_OCTAL_CONSTANT       = "O" + "(?:'|\")" + _OCTAL_DIGIT + "+" + "(?:'|\")"
-_HEX_CONSTANT         = "Z" + "(?:'|\")" + _HEX_DIGIT + "+" + "(?:'|\")"
+_BINARY_DIGIT = "[0-1]"
+_OCTAL_DIGIT = "[0-7]"
+_HEX_DIGIT = "[ABCDEF0-9]"
+_BINARY_CONSTANT = "B" + "(?:'|\")" + _BINARY_DIGIT + "+" + "(?:'|\")"
+_OCTAL_CONSTANT = "O" + "(?:'|\")" + _OCTAL_DIGIT + "+" + "(?:'|\")"
+_HEX_CONSTANT = "Z" + "(?:'|\")" + _HEX_DIGIT + "+" + "(?:'|\")"
 _BOZ_LITERAL_CONSTANT = "(?:" + _BINARY_CONSTANT + "|" + _OCTAL_CONSTANT + "|" + _HEX_CONSTANT + ")"
 
 # Real
-_SIGNIFICAND                  = "(?:" + _DIGIT_STRING + r"\." + "(?:" + _DIGIT_STRING + ")?" + \
-                                "|" + r"\." + _DIGIT_STRING + ")"
-_EXPONENT_LETTER              = "[DE]"
-_EXPONENT                     = _SIGNED_DIGIT_STRING
-_REAL_LITERAL_CONSTANT        = "(?:" + _SIGNIFICAND + "(?:" + _EXPONENT_LETTER + _EXPONENT + \
-                                ")?" + "(?:_" + _KIND_PARAM + ")?" + "|" + _DIGIT_STRING +    \
-                                _EXPONENT_LETTER + _EXPONENT + "(?:_" + _KIND_PARAM + ")?" + ")"
+_SIGNIFICAND = "(?:" + _DIGIT_STRING + r"\." + "(?:" + _DIGIT_STRING + ")?" + \
+               "|" + r"\." + _DIGIT_STRING + ")"
+_EXPONENT_LETTER = "[DE]"
+_EXPONENT = _SIGNED_DIGIT_STRING
+_REAL_LITERAL_CONSTANT = "(?:" + _SIGNIFICAND + "(?:" + _EXPONENT_LETTER + _EXPONENT + \
+                         ")?" + "(?:_" + _KIND_PARAM + ")?" + "|" + _DIGIT_STRING + \
+                         _EXPONENT_LETTER + _EXPONENT + "(?:_" + _KIND_PARAM + ")?" + ")"
 _SIGNED_REAL_LITERAL_CONSTANT = _SIGN + "?" + _REAL_LITERAL_CONSTANT
 
 # Complex
-_REAL_PART                = "(?:" + _SIGNED_INT_LITERAL_CONSTANT + "|" + \
-                            _SIGNED_REAL_LITERAL_CONSTANT + ")"
-_IMAG_PART                = "(?:" + _SIGNED_INT_LITERAL_CONSTANT + "|" + \
-                            _SIGNED_REAL_LITERAL_CONSTANT + ")"
+_REAL_PART = "(?:" + _SIGNED_INT_LITERAL_CONSTANT + "|" + \
+             _SIGNED_REAL_LITERAL_CONSTANT + ")"
+_IMAG_PART = "(?:" + _SIGNED_INT_LITERAL_CONSTANT + "|" + \
+             _SIGNED_REAL_LITERAL_CONSTANT + ")"
 _COMPLEX_LITERAL_CONSTANT = "[(]" + _REAL_PART + "," + _IMAG_PART + "[)]"
 
 # Character
@@ -270,24 +270,24 @@ class LiteralParser(object):
     """
 
     def __init__(self,
-                 re_flags     = _RE_FLAGS,
-                 re_integer   = '^' + _SIGNED_INT_LITERAL_CONSTANT + '$',
-                 re_boz       = '^' + _BOZ_LITERAL_CONSTANT + '$',
-                 re_real      = '^' + _SIGNED_REAL_LITERAL_CONSTANT + '$',
-                 re_complex   = '^' + _COMPLEX_LITERAL_CONSTANT + '$',
-                 re_character = '^' + _CHAR_LITERAL_CONSTANT + '$',
-                 re_logical   = '^' + _LOGICAL_LITERAL_CONSTANT + '$',
-                 re_true      = r'\.T(?:RUE)?\.|T',
-                 re_false     = r'\.F(?:ALSE)?\.|F'):
-        self._re_flags     = re_flags
-        self._re_integer   = re_integer
-        self._re_boz       = re_boz
-        self._re_real      = re_real
-        self._re_complex   = re_complex
+                 re_flags=_RE_FLAGS,
+                 re_integer='^' + _SIGNED_INT_LITERAL_CONSTANT + '$',
+                 re_boz='^' + _BOZ_LITERAL_CONSTANT + '$',
+                 re_real='^' + _SIGNED_REAL_LITERAL_CONSTANT + '$',
+                 re_complex='^' + _COMPLEX_LITERAL_CONSTANT + '$',
+                 re_character='^' + _CHAR_LITERAL_CONSTANT + '$',
+                 re_logical='^' + _LOGICAL_LITERAL_CONSTANT + '$',
+                 re_true=r'\.T(?:RUE)?\.|T',
+                 re_false=r'\.F(?:ALSE)?\.|F'):
+        self._re_flags = re_flags
+        self._re_integer = re_integer
+        self._re_boz = re_boz
+        self._re_real = re_real
+        self._re_complex = re_complex
         self._re_character = re_character
-        self._re_logical   = re_logical
-        self._re_true      = re_true
-        self._re_false     = re_false
+        self._re_logical = re_logical
+        self._re_true = re_true
+        self._re_false = re_false
         self._log = list()
         self._recompile()
 
@@ -438,11 +438,14 @@ class LiteralParser(object):
             real = '0.'
         else:
             real = fmt.format(value).replace('E', 'D')
-        if '.' not in real:
-            real = re.sub('D', '.0D', real)
             if '.' not in real:
-                real += '.'
-        return real.rstrip('0')
+                real = re.sub('D', '.0D', real)
+                if '.' not in real:
+                    real += '.'
+        if 'D' in real:
+            return real
+        else:
+            return real.rstrip('0')
 
     def encode_complex(self, value, fmt='{0:.15G}'):
         """Returns the string form of the complex ``value``."""
@@ -1124,18 +1127,18 @@ class NamelistParser(object):
     """
 
     def __init__(self,
-                 literal  = LiteralParser(),
-                 macros = None,
-                 re_flags = None,
-                 re_clean = r"^(\s+|![^\n]*\n)",
-                 re_block = r'&.*/',
-                 re_endblock = r"^/(end)?",
-                 re_bname = _NAME,
-                 re_entry = _LETTER + r'[ A-Z0-9_,\%\(\):]*' + r"(?=\s*=)",
-                 re_macro = _MACRONAME,
-                 re_freemacro = _FREEMACRONAME,
-                 re_endol = r"(?=\s*(,|/|\n))",
-                 re_comma = r"\s*,"):
+                 literal=LiteralParser(),
+                 macros=None,
+                 re_flags=None,
+                 re_clean=r"^(\s+|![^\n]*\n)",
+                 re_block=r'&.*/',
+                 re_endblock=r"^/(end)?",
+                 re_bname=_NAME,
+                 re_entry=_LETTER + r'[ A-Z0-9_,\%\(\):]*' + r"(?=\s*=)",
+                 re_macro=_MACRONAME,
+                 re_freemacro=_FREEMACRONAME,
+                 re_endol=r"(?=\s*(,|/|\n))",
+                 re_comma=r"\s*,"):
         self._literal = literal
         if macros:
             self._declaredmacros = set(macros)
