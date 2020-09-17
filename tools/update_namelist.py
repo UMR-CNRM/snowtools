@@ -197,7 +197,7 @@ def update_namelist_var(namelist_file, data_file):
         maliste = line.split()
         var_tbc = var_tbc + [maliste[2]]
 
-    print var_tbc
+    print (var_tbc)
 
     for i in range(len(var_tbc)):
         var_tbc[i] = float(var_tbc[i])
