@@ -153,8 +153,15 @@ class infomassifs():
         else:
             metadata = os.environ['SNOWTOOLS_CEN'] + '/DATA/METADATA.xml'
 
+        if not (os.path.isfile(metadata) or os.path.islink(metadata)) and os.path.isfile('./DATA/METADATA.xml'):
+            metadata =  './DATA/METADATA.xml'
+
         if not (os.path.isfile(metadata) or os.path.islink(metadata)):
-            raise FileNameException(metadata)
+            try:
+                import importlib.resources # Python > 3.7
+                metadata = importlib.resources.open_text('DATA', 'METADATA.txt', encoding='utf-8', errors='strict')
+            except:
+                raise FileNameException(metadata)
 
         try:
 

@@ -149,7 +149,7 @@ class prosimu():
             # time=time_base
         else:
             time = self.dataset.variables["time"]
-        if netCDF4.__version__ >= '1.4.0':
+        if netCDF4.__version__ >= '1.5.4':
             return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False, only_use_python_datetimes=True))
         else:
             return np.array(netCDF4.num2date(time[:], time.units))

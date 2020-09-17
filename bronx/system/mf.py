@@ -6,7 +6,7 @@ Meteo France specific system related tools.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-from six import StringIO
+from six import BytesIO
 
 import ftplib
 import netrc
@@ -65,8 +65,8 @@ def prestage(resource_paths,
                                  'staging_request',
                                  uuid.uuid4().hex[:8],  # [:8] safe enough ?
                                  'MIG'])
-    f = StringIO()
-    f.writelines(request)
+    f = BytesIO()
+    f.writelines([line.encode('utf-8') for line in request])
     f.seek(0)
     ftp.cwd(stagedir)
     ftp.storbinary('STOR ' + request_filename, f)

@@ -65,7 +65,7 @@ class vortex_kitchen(object):
             if 'beaufix' in machine or 'prolix' in machine:
                 self.options.ntasks = 40
             elif 'epona' in machine or 'belenos' in machine:
-                self.options.ntasks = 128
+                self.options.ntasks = 80 # optimum constaté pour la réanalyse Alpes avec léger dépeuplement parmi les 128 coeurs.
 
     def execute(self):
 
