@@ -4,11 +4,13 @@ Created on 7 nov. 2017
 @author: lafaysse
 '''
 
-from vortex.layout.nodes import Driver, Task
-from vortex import toolbox
-from utils.dates import get_list_dates_files
 from bronx.stdtypes.date import Date
+from cen.layout.nodes import S2MTaskMixIn
 import footprints
+from vortex import toolbox
+from vortex.layout.nodes import Driver, Task
+
+from utils.dates import get_list_dates_files
 
 
 def setup(t, **kw):
@@ -22,7 +24,7 @@ def setup(t, **kw):
     )
 
 
-class Escroc_Vortex_Task(Task):
+class Escroc_Vortex_Task(Task, S2MTaskMixIn):
     '''
 
     '''
