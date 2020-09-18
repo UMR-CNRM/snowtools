@@ -114,7 +114,7 @@ class _StandardNC(netCDF4.Dataset):
 
         time = self.variables["time"]
 
-        if netCDF4.__version__ >= '1.5.3':
+        if netCDF4.__version__ >= '1.4.2':
             return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False))
         elif netCDF4.__version__ >= '1.4.0':
             return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False, only_use_python_datetimes=True))
@@ -176,7 +176,10 @@ class _StandardNC(netCDF4.Dataset):
         '''Routine to add coordinates in the forcing file for the SAFRAN massifs'''
         INFOmassifs = infomassifs()
         dicLonLat = INFOmassifs.getAllMassifLatLon()
-        massifnumber = self.variables['massif_number']
+        if netCDF4.__version__ >= '1.4.2':
+            massifnumber = self.variables['massif_number'][:]
+        else:
+            massifnumber = self.variables['massif_number']
 
         lat = np.empty(massifnumber.shape, np.float)
         lon = np.empty(massifnumber.shape, np.float)
