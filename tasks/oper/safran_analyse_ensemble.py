@@ -205,6 +205,9 @@ class Safran(Task, S2MTaskMixIn):
                 print t.prompt, 'tb08 =', tb08
                 print
 
+            # WARNING : Les ressoucres rsclim et icrccm ne servent pas dans le cas nominal mais
+            # consituent un mode secours pour SAFRAN si il rencontre un problème pour faire son guess
+            # A partir des fichiers P
             self.sh.title('Toolbox input tb09')
             tb09 = toolbox.input(
                 role            = 'Clim',

@@ -98,9 +98,8 @@ class PrepSafran(Task, S2MTaskMixIn):
             # II- PEARP
             # Récupération du réseau 18h (J-1) pour couvrir J 6h -> (J+4) 6h
             # On veut donc les échéances de 12h à 108h
-            # Il reste 120-33=87 coeurs à utiliser, on peut donc diviser les échéances en 2 pour utiliser
-            # 35*2=70 coeurs de calcul, il restera 17 coeurs non utilisés
-            self.sh.title('Toolbox input tbpearp_inline J1/J2')
+            # Désormais toutes les échéances tri-horaire sont disponible
+            self.sh.title('Toolbox input tbpearp_inline')
             tbpearp = toolbox.input(
                 role           = 'Gridpoint',
                 block          = 'forecast',
@@ -111,7 +110,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 kind           = 'gridpoint',
                 local          = 'PEARP_[member]_[term:hour]/PEARP[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[4:19],
+                term           = footprints.util.rangex(self.conf.prv_terms)[4:38],
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 namespace      = 'vortex.cache.fr',
                 nativefmt      = '[format]',
@@ -124,7 +123,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             print t.prompt, 'tb02 =', tbpearp
             print
 
-            self.sh.title('Toolbox input tbpearp_archive J1/J2')
+            self.sh.title('Toolbox input tbpearp_archive')
             tbpearp.extend(toolbox.input(
                 alternate      = 'Gridpoint',
                 block          = 'forecast',
@@ -135,55 +134,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 kind           = 'gridpoint',
                 local          = 'PEARP_[member]_[term:hour]/PEARP[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[4:19],
-                member         = footprints.util.rangex(self.conf.pearp_members),
-                namespace      = 'vortex.archive.fr',
-                nativefmt      = '[format]',
-                origin         = 'historic',
-                model          = '[vapp]',
-                vapp           = self.conf.source_app,
-                vconf          = self.conf.eps_conf,
-                fatal          = False,
-            ))
-            print t.prompt, 'tb02 =', tbpearp
-            print
-
-            self.sh.title('Toolbox input tbpearp_inline J3/J4')
-            tbpearp.extend(toolbox.input(
-                role           = 'Gridpoint',
-                block          = 'forecast',
-                suite          = self.conf.suite,
-                cutoff         = 'production',
-                format         = 'grib',
-                geometry       = self.conf.pearp_geometry,
-                kind           = 'gridpoint',
-                local          = 'PEARP_[member]_[term:hour]/PEARP[date::addterm_ymdh]',
-                date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[20:38:2],
-                member         = footprints.util.rangex(self.conf.pearp_members),
-                namespace      = 'vortex.cache.fr',
-                nativefmt      = '[format]',
-                origin         = 'historic',
-                model          = '[vapp]',
-                vapp           = self.conf.source_app,
-                vconf          = self.conf.eps_conf,
-                fatal          = False,
-            ))
-            print t.prompt, 'tb02 =', tbpearp
-            print
-
-            self.sh.title('Toolbox input tbpearp_archive J3/J4')
-            tbpearp.extend(toolbox.input(
-                alternate      = 'Gridpoint',
-                block          = 'forecast',
-                suite          = self.conf.suite,
-                cutoff         = 'production',
-                format         = 'grib',
-                geometry       = self.conf.pearp_geometry,
-                kind           = 'gridpoint',
-                local          = 'PEARP_[member]_[term:hour]/PEARP[date::addterm_ymdh]',
-                date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[20:38:2],
+                term           = footprints.util.rangex(self.conf.prv_terms)[4:38],
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 namespace      = 'vortex.archive.fr',
                 nativefmt      = '[format]',
