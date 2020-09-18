@@ -51,10 +51,9 @@ class Safran(Task, S2MTaskMixIn):
                 tb01 = toolbox.input(
                     role           = 'Observations',
                     block          = 'observations',
-                    experiment     = self.conf.xpid,
+                    experiment     = 'OPER@vernaym',
                     vapp           = 's2m',
                     geometry       = self.conf.vconf,
-                    suite          = 'oper',
                     kind           = 'packedobs',
                     date           = self.conf.rundate.ymdh,
                     begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
@@ -75,7 +74,7 @@ class Safran(Task, S2MTaskMixIn):
 
             else:
 
-                self.sh.title('Toolbox input tb01')
+                self.sh.title('Toolbox input tb01_a')
                 tb01 = toolbox.input(
                     role           = 'Observations',
                     # block          = 'observations',
@@ -99,6 +98,28 @@ class Safran(Task, S2MTaskMixIn):
                     hook_autohook1 = (tb01_generic_hook1, ),
                 )
                 print t.prompt, 'tb01 =', tb01
+                print
+
+                # Dans le cas d'une execution sur une date ancienne le cache de guppy est nettoyé,
+                # il faut donc aller chercher les obs sur hendrix
+                self.sh.title('Toolbox output tb01_b')
+                tb01_b = toolbox.output(
+                    alternate      = 'Observations',
+                    block          = 'observations',
+                    experiment     = self.conf.xpid,
+                    vapp           = 's2m',
+                    geometry       = self.conf.vconf,
+                    suite          = 'oper',
+                    kind           = 'packedobs',
+                    date           = self.conf.rundate.ymdh,
+                    begindate      = datebegin.ymd6h,
+                    enddate        = dateend.ymd6h,
+                    local          = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
+                    model          = 'safran',
+                    namespace      = self.conf.namespace,
+                    cutoff         = 'assimilation',
+                )
+                print t.prompt, 'tb01_b =', tb01_b
                 print
 
             self.sh.title('Toolbox input tb03')
@@ -311,8 +332,8 @@ class Safran(Task, S2MTaskMixIn):
                     date           = '{0:s}/-PT24H'.format(self.conf.rundate.ymdh),
                     vapp           = self.conf.vapp,
                     vconf          = self.conf.vconf,
-                    begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
-                    enddate        = '{0:s}/+PT72H'.format(dateend.ymd6h),
+                    begindate      = datebegin.ymd6h,
+                    enddate        = '{0:s}/-PT24H'.format(dateend.ymd6h),
                     geometry       = self.conf.vconf,
                     intent         = 'inout',
                 )
@@ -328,7 +349,7 @@ class Safran(Task, S2MTaskMixIn):
                 tb17_a = toolbox.input(
                     role           = 'Ebauche',
                     local          = 'mb035/P[date::addcumul_yymdh]',
-                    experiment     = self.conf.xpid,
+                    experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,
                     geometry        = self.conf.vconf,
                     cutoff         = 'assimilation',
@@ -352,7 +373,7 @@ class Safran(Task, S2MTaskMixIn):
                 tb17_b = toolbox.input(
                     alternate      = 'Ebauche',
                     local          = 'mb035/P[date::addcumul_yymdh]',
-                    experiment     = self.conf.xpid,
+                    experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,
                     geometry       = self.conf.vconf,
                     cutoff         = 'production',
@@ -374,7 +395,7 @@ class Safran(Task, S2MTaskMixIn):
                 tb17_c = toolbox.input(
                     alternate      = 'Ebauche',
                     local          = 'mb035/P[date::addcumul_yymdh]',
-                    experiment     = self.conf.xpid,
+                    experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,
                     geometry       = self.conf.vconf,
                     cutoff         = 'production',
@@ -401,7 +422,7 @@ class Safran(Task, S2MTaskMixIn):
                     # local          = 'mb[member]/P[date:addcumul_yymdh]',
                     local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
                     term           = '[cumul]',
-                    experiment     = self.conf.xpid,
+                    experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,
                     geometry        = self.conf.vconf,
                     cutoff         = 'production',
@@ -634,28 +655,26 @@ class Safran(Task, S2MTaskMixIn):
             print t.prompt, 'tb27 =', tb27
             print
 
-            if self.conf.rundate.hour != 12:
-
-                self.sh.title('Toolbox output tb27_diff')
-                tb27_diff = toolbox.diff(
-                    role           = 'Ana_massifs',
-                    kind           = 'MeteorologicalForcing',
-                    source_app     = 'arpege',
-                    source_conf    = '4dvarfr',
-                    cutoff         = 'assimilation',
-                    local          = 'mb035/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
-                    experiment     = 'oper',
-                    block          = 'massifs',
-                    geometry        = self.conf.vconf,
-                    nativefmt      = 'netcdf',
-                    model          = self.conf.model,
-                    datebegin      = datebegin.ymd6h,
-                    dateend        = dateend.ymd6h,
-                    namespace      = self.conf.namespace,
-                    fatal          = False,
-                ),
-                print t.prompt, 'tb27_diff =', tb27_diff
-                print
+            self.sh.title('Toolbox output tb27_diff')
+            tb27_diff = toolbox.diff(
+                role           = 'Ana_massifs',
+                kind           = 'MeteorologicalForcing',
+                source_app     = 'arpege',
+                source_conf    = '4dvarfr',
+                cutoff         = 'assimilation',
+                local          = deterministicdir + 'FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                experiment     = self.conf.diff_xpid,
+                block          = 'massifs',
+                geometry        = self.conf.vconf,
+                nativefmt      = 'netcdf',
+                model          = self.conf.model,
+                datebegin      = datebegin.ymd6h,
+                dateend        = dateend.ymd6h,
+                namespace      = self.conf.namespace,
+                fatal          = False,
+            ),
+            print t.prompt, 'tb27_diff =', tb27_diff
+            print
 
             self.sh.title('Toolbox output tb28')
             tb28 = toolbox.output(
@@ -709,7 +728,7 @@ class Safran(Task, S2MTaskMixIn):
                     source_conf    = 'pearp',
                     cutoff         = 'assimilation',
                     local          = 'mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
-                    experiment     = 'oper',
+                    experiment     = self.conf.diff_xpid,
                     block          = 'massifs',
                     geometry        = self.conf.vconf,
                     nativefmt      = 'netcdf',
@@ -752,12 +771,13 @@ class Safran(Task, S2MTaskMixIn):
                 experiment     = self.conf.xpid,
                 cutoff         = 'assimilation',
                 geometry        = self.conf.vconf,
-                format         = 'ascii',
-                kind           = 'listing',
-                local          = deterministicdir + '{glob:a:\w+}.out',
+                kind           = 'packedlisting',
+                begindate      = datebegin.ymd6h,
+                enddate        = dateend.ymd6h,
+                local          = deterministicdir + 'listings_safran_[begindate::ymdh]_[enddate::ymdh].tar.gz',
+                format         = 'tar',
+                model          = 'safran',
                 namespace      = self.conf.namespace,
-                task           = '[local]',
-                date           = self.conf.rundate.ymdh,
             )
             print t.prompt, 'tb31 =', tb31
             print
@@ -769,12 +789,13 @@ class Safran(Task, S2MTaskMixIn):
                 experiment     = self.conf.xpid,
                 geometry        = self.conf.vconf,
                 cutoff         = 'assimilation',
-                format         = 'ascii',
-                kind           = 'listing',
-                local          = deterministicdir + 'liste_obs_{glob:a:\w+}',
+                kind           = 'listobs',
+                begindate      = datebegin.ymd6h,
+                enddate        = dateend.ymd6h,
+                local          = deterministicdir + 'liste_obs_[begindate::ymdh]_[enddate::ymdh].tar.gz',
+                format         = 'tar',
+                model          = 'safran',
                 namespace      = self.conf.namespace,
-                task           = '[local]',
-                date           = self.conf.rundate.ymdh,
             )
             print t.prompt, 'tb32 =', tb32
             print
