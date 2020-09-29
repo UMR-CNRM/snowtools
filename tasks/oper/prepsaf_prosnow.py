@@ -41,7 +41,7 @@ class PrepSafran(Task, S2MTaskMixIn):
         t.env.setvar('DATADIR', '/scratch/mtool/vernaym/cache')
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
-            
+
             self.sh.title('Toolbox input tb01')
             tbpearp = toolbox.input(
                 role           = 'Gridpoint',
@@ -84,7 +84,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             tb03 = script = toolbox.input(
                 role        = 'pretraitement',
                 local       = 'makeP.py',
-                genv        = 'uenv:s2m.01@vernaym',
+                genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
                 rawopts     = ' -o -a -d prosnow -i IDW -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbpearp)]))),
@@ -103,10 +103,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 engine         = 'exec',
                 kind           = 'guess',
                 terms          = footprints.util.rangex(self.conf.prv_terms),
-                interpreter    = script[0].resource.language,
+                interpreter    = 'current',
                 ntasks         = self.conf.ntasks,
-                members        = footprints.util.rangex(self.conf.members),
-                extendpypath = ['/home/gmap/mrpe/mary/public/eccodes_python'] + [self.sh.path.join(self.conf.rootapp, d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site']],
             )
             print t.prompt, 'tb04 =', expresso
             print
