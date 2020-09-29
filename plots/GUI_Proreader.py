@@ -225,6 +225,10 @@ class Graph(Toplevel):
             logger.warning('Could not parse massif metadata')
             self.list_massif_num = list(range(100))
             self.list_massif_nom = list(range(100))
+        except:
+            logger.warning('Error while loading massif metadata')
+            self.list_massif_num = list(range(100))
+            self.list_massif_nom = list(range(100))
 
     # PLACEMENT BOUTON - COMBOBOX - ETC... COMMUN
     def onsize_test(self, event):
