@@ -10,7 +10,7 @@ import datetime
 import os
 
 import netCDF4
-import ConfigParser
+from six.moves import configparser as ConfigParser
 
 import numpy as np
 from utils.FileException import VarNameException, UnknownGridTypeException, FileNameException
