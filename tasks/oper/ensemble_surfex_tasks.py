@@ -458,6 +458,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 geometry       = list_geometry,
                 ntasks         = 6 if self.conf.rundate.hour == self.monthly_analysis_time else 40,
                 daily          = not self.conf.previ,
+                taskset        = "numapacked_taskset",
                 verbose        = True,
             )
             print(t.prompt, 'tb09 =', tb09)

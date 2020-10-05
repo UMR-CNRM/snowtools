@@ -36,6 +36,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from utils.prosimu import prosimu
 from utils.infomassifs import infomassifs
 from utils.dates import check_and_convert_date
+from utils.FileException import FileNameException, FileParseException
 import proReader_mini
 
 import pickle
@@ -95,7 +96,7 @@ class Graph(Toplevel):
         self.hauteur = self.winfo_height()/self.taille_y
 
         # Boutons communs a toutes les fenetres
-        self.buttonQuit = Button(self, text = 'Quitter', command = quit)
+        self.buttonQuit = Button(self, text = 'Quitter', command = self.close_window)
         self.buttonPlot = Button(self, text = 'Tracer graphe', state = 'disabled')
         self.buttonRaz = Button(self, text = 'Remise à zéro', state = 'disabled')
         self.buttonSave1 = Button(self, text = 'Sauver graphe', state = 'disabled')
@@ -133,10 +134,13 @@ class Graph(Toplevel):
         self.make_list_massif()
         self.bind('<Configure>', lambda x: Graph.onsize_test(self, x))
         self.bind('<Control-o>', self.recup)
-        self.bind('<Escape>', quit)
-        self.bind('<Control-q>', quit)
+        self.bind('<Escape>', self.close_window)
+        self.bind('<Control-q>', self.close_window)
         if len(Arguments) > 0:
             self.ini_ligne_commande(**Arguments)
+
+    def close_window(self, *args):
+        self.destroy()
 
     # POUR APPEL EN LIGNE DE COMMANDE
     def ini_ligne_commande(self, **Arguments):
@@ -159,7 +163,7 @@ class Graph(Toplevel):
             self.type_fichier = 'FSM'
             self.point_choisi = -1
         else:
-            print('we suppose this is a PRO file without SNOWDZ')
+            logger.warn('We suppose this is a PRO file without SNOWDZ')
             self.type_fichier = 'PRO'
             self.point_choisi = 0
         if Arguments.get('point') != 0:
@@ -178,7 +182,7 @@ class Graph(Toplevel):
         self.buttonPlot.config(state = 'normal', command = self.Plotage)
 
         if len(self.date) > constante_sampling: 
-            print("Init")
+            logger.info("Init with automatic sampling")
             messagebox.showinfo('Time > '+str(constante_sampling), 'Information: automatic sampling to avoid too long treatment')
 
     # CREER LISTE DES VARIABLES POUR COMBOBOX
@@ -207,11 +211,20 @@ class Graph(Toplevel):
     def make_list_massif(self):
         self.list_massif_num = []
         self.list_massif_nom = []
-        IM = infomassifs()
-        listmassif = IM.getListMassif_of_region('all')
-        for massif in listmassif:
-            self.list_massif_num.append(massif)
-            self.list_massif_nom.append(str(IM.getMassifName(massif).decode('UTF-8')))
+        try:
+            IM = infomassifs()
+            listmassif = IM.getListMassif_of_region('all')
+            for massif in listmassif:
+                self.list_massif_num.append(massif)
+                self.list_massif_nom.append(str(IM.getMassifName(massif).decode('UTF-8')))
+        except FileNameException:
+            logger.warning('Could not find massif metadata')
+            self.list_massif_num = list(range(100))
+            self.list_massif_nom = list(range(100))
+        except FileParseException:
+            logger.warning('Could not parse massif metadata')
+            self.list_massif_num = list(range(100))
+            self.list_massif_nom = list(range(100))
 
     # PLACEMENT BOUTON - COMBOBOX - ETC... COMMUN
     def onsize_test(self, event):
@@ -300,9 +313,9 @@ class Graph(Toplevel):
     # RECUPERATION FICHIER
     def Ouvrir(self):
         selectedfilename = tkinter.filedialog.askopenfilename(title = self.message_filedialog, filetypes = [('PRO files','.nc'),('all files','.*')])
-        if selectedfilename == '':
+        if len(selectedfilename)==0:
             logger.info('No file selected. Ignore.')
-            return
+            return None
         self.filename = selectedfilename
         self.raz()
 
@@ -332,6 +345,7 @@ class Graph(Toplevel):
                     self.liste_variable.append(listvariables[i])
 
         self.pro = proReader_mini.ProReader_standard(ncfile=self.filename)
+        return self.filename
 
     # CHOIX VARIABLE PROFIL
     def choix_profil(self, event):
@@ -854,10 +868,10 @@ class GraphStandard(Graph):
         Graph.liste_profil(self)
 
     def recup(self, *args):
-        Graph.Ouvrir(self)
-        self.Tableau=self.pro.get_choix(self.filename)
-        self.combobox.config(state ='readonly', values=self.liste_variable_for_pres)
-        self.combobox.bind('<<ComboboxSelected>>', self.liste_profil)
+        if Graph.Ouvrir(self) is not None:
+            self.Tableau=self.pro.get_choix(self.filename)
+            self.combobox.config(state ='readonly', values=self.liste_variable_for_pres)
+            self.combobox.bind('<<ComboboxSelected>>', self.liste_profil)
 
     ##########################################################
     # TEST PRESENCE-ABSENCE DE PARAMETRE
@@ -870,8 +884,7 @@ class GraphStandard(Graph):
     ##########################################################
     def Plotage(self):
         self.boolzoom = False
-        if not self.bool_ligne_commande:
-            self.pro = proReader_mini.ProReader_standard(ncfile = self.filename, var = self.variable, point = int(self.point_choisi),var_sup = self.var_sup)
+        self.pro = proReader_mini.ProReader_standard(ncfile = self.filename, var = self.variable, point = int(self.point_choisi),var_sup = self.var_sup)
         self.fig1.clear()
         self.ax1.clear()
         self.fig1, self.ax1 = plt.subplots(1, 1, sharex = True, sharey = True)
@@ -1089,10 +1102,10 @@ class GraphHeight(Graph):
         Graph.liste_profil(self)
 
     def recup(self):
-        Graph.Ouvrir(self)
-        self.Tableau=self.pro.get_choix(self.filename)
-        self.combobox.config(state ='readonly', values = self.liste_variable_for_pres)
-        self.combobox.bind('<<ComboboxSelected>>', self.recup_direction)
+        if Graph.Ouvrir(self) is not None:
+            self.Tableau=self.pro.get_choix(self.filename)
+            self.combobox.config(state ='readonly', values = self.liste_variable_for_pres)
+            self.combobox.bind('<<ComboboxSelected>>', self.recup_direction)
 
     ##########################################################
     # TEST PRESENCE-ABSENCE DE PARAMETRE
@@ -1260,10 +1273,10 @@ class GraphMassif(Graph):
         Graph.liste_profil(self)
 
     def recup(self):
-        Graph.Ouvrir(self)
-        self.Tableau = self.pro.get_choix_ss_massif(self.filename)
-        self.combobox.config(state ='readonly', values = self.liste_variable_for_pres)
-        self.combobox.bind('<<ComboboxSelected>>', self.liste_profil)
+        if Graph.Ouvrir(self) is not None:
+            self.Tableau = self.pro.get_choix_ss_massif(self.filename)
+            self.combobox.config(state ='readonly', values = self.liste_variable_for_pres)
+            self.combobox.bind('<<ComboboxSelected>>', self.liste_profil)
 
     ##########################################################
     # CHOIX POINT
@@ -1526,10 +1539,10 @@ class GraphMembre(Graph):
         Graph.liste_profil(self)
 
     def recup(self):
-        Graph.Ouvrir(self)
-        self.Tableau = self.pro.get_choix(self.filename)            
-        self.combobox.config(state = 'readonly', values = self.liste_variable_for_pres)
-        self.combobox.bind('<<ComboboxSelected>>', self.liste_profil)
+        if Graph.Ouvrir(self) is not None:
+            self.Tableau = self.pro.get_choix(self.filename)            
+            self.combobox.config(state = 'readonly', values = self.liste_variable_for_pres)
+            self.combobox.bind('<<ComboboxSelected>>', self.liste_profil)
             
     ##########################################################
     # TEST PRESENCE-ABSENCE DE PARAMETRE
@@ -1623,9 +1636,9 @@ class GestionFenetre(Frame):
         self.fen4 = GraphHeight(self)
 
     def close(self, *args):
-        self.root.destroy()
+        self.quit()
 
-def parseArguments():
+def parseArguments(args):
     # Create argument parser
     parser = argparse.ArgumentParser()
 
@@ -1655,7 +1668,7 @@ def parseArguments():
     # Logging options
     parser.add_argument("--debug", action="store_true", help="Set logging to debug.")
     # Parse arguments
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     return args
 
@@ -1697,14 +1710,13 @@ def ChoixPointMassif(ff, altitude, aspect, massif, slope, exitonerror=False):
 def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph, altitude, aspect, massif, slope, direction_coupe, hauteur_coupe):
     ff = prosimu(filename)
     liste_points = ChoixPointMassif(ff, altitude, aspect, massif, slope)
-    print(liste_points)
 
     if type_graph == 'standard':
         date = ff.readtime()
         datedeb = date[0]
         datefin = date[len(date)-1]
         if len(date) > constante_sampling: 
-            print('Time > '+str(constante_sampling), 'Information: automatic sampling to avoid too long treatment')
+            logger.warn('Time > {}: automatic sampling to avoid too long treatment'.format(constante_sampling))
         pro = proReader_mini.ProReader_standard(ncfile = filename, var = variable, point = int(liste_points[0]), var_sup = [])
         fig1, ax1 = plt.subplots(1, 1, sharex = True, sharey = True)
         if ('snow_layer' in ff.getdimvar(variable)):
@@ -1719,7 +1731,7 @@ def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph
         datedeb = date[0]
         datefin = date[len(date)-1]
         if len(date) > constante_sampling: 
-            print('Time > '+str(constante_sampling), 'Information: automatic sampling to avoid too long treatment')
+            logger.warn('Time > {}: automatic sampling to avoid too long treatment'.format(constante_sampling))
         pro = proReader_mini.ProReader_height(ncfile = filename, var = variable, point = int(liste_points[0]), var_sup = [])
         fig1, ax1 = plt.subplots(1, 1, sharex = True, sharey = True)
         intime = pro.plot(ax1, variable, datedeb, datefin, legend = variable, direction_cut = direction_coupe, height_cut = hauteur_coupe)
@@ -1757,9 +1769,10 @@ def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph
     plt.savefig(out_name)
     plt.close(fig1)
 
-if __name__ == '__main__':
+def main(version='undefined', args=None):
+    args = args if args is not None else sys.argv[1:]
     if len(sys.argv) > 1: 
-        args = parseArguments()
+        args = parseArguments(args)
 
         # argument for command line call
         filename = args.filename
@@ -1782,6 +1795,8 @@ if __name__ == '__main__':
         # Logging options
         if args.debug:
             logger.setLevel(logging.DEBUG)
+        
+        logger.info('GUI_Proreader version {}'.format(version))
 
         # Sampling options
         if args.sampling:
@@ -1829,3 +1844,6 @@ if __name__ == '__main__':
     else: 
         # Lancement du gestionnaire d'événements
         GestionFenetre().mainloop()
+
+if __name__ == '__main__':
+    main(version='git_master')
