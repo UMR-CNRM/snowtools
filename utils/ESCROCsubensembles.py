@@ -32,6 +32,9 @@ class ESCROC_subensembles(dict):
         elif subensemble in ["E2", "E2open"]:
             self.physical_options, self.snow_parameters, self.members = self.E2(members)
 
+        elif subensemble in ["E2Tartes", "E2tartes"]: # Tuzet et al TC 2020
+            self.physical_options, self.snow_parameters, self.members = self.E2tartes(members)
+
         elif subensemble in ["Crocus"]:
             self.physical_options, self.snow_parameters, self.members = self.Crocus(members)
         else:
@@ -134,6 +137,55 @@ class ESCROC_subensembles(dict):
                       33: ['A76', 'S-F', 'B10', 'RI2', 'I02', 'B92', 'B92', 'CV30000'],
                       34: ['A76', 'S-F', 'B60', 'RIL', 'Y81', 'SPK', 'S14', 'CV50000'],
                       35: ['A76', 'S-F', 'B60', 'RI1', 'Y81', 'SPK', 'B92', 'CV30000']}
+
+        physical_options = []
+        snow_parameters = []
+
+        for mb in members:
+
+            po, sp = self.convert_options(*allmembers[mb])
+            physical_options.append(po)
+            snow_parameters.append(sp)
+
+        return physical_options, snow_parameters, members
+
+    def E2tartes(self, members):
+
+        allmembers = {1: ['V12', 'C13', 'T17', 'RI1', 'Y81', 'SPK', 'B92', 'CV30000'],
+                      2: ['V12', 'C13', 'T17', 'RI1', 'I02', 'B92', 'S14', 'CV30000'],
+                      3: ['V12', 'C13', 'T17', 'RI2', 'Y81', 'B92', 'S14', 'CV30000'],
+                      4: ['V12', 'C13', 'T17', 'RIL', 'Y81', 'B92', 'B92', 'CV30000'],
+                      5: ['V12', 'C13', 'T17', 'RI1', 'I02', 'SPK', 'T11', 'CV50000'],
+                      6: ['V12', 'C13', 'T17', 'RI2', 'I02', 'SPK', 'S14', 'CV50000'],
+                      7: ['V12', 'C13', 'T17', 'RI1', 'I02', 'SPK', 'B92', 'CV30000'],
+                      8: ['V12', 'F06', 'T17', 'RIL', 'Y81', 'B92', 'S14', 'CV30000'],
+                      9: ['V12', 'F06', 'T17', 'RIL', 'Y81', 'SPK', 'S14', 'CV50000'],
+                      10: ['V12', 'F06', 'T17', 'RIL', 'I02', 'B92', 'T11', 'CV50000'],
+                      11: ['V12', 'S-F', 'T17', 'RI1', 'I02', 'B92', 'S14', 'CV30000'],
+                      12: ['V12', 'S-F', 'T17', 'RI2', 'I02', 'SPK', 'B92', 'CV30000'],
+                      13: ['V12', 'S-F', 'T17', 'RIL', 'Y81', 'SPK', 'S14', 'CV50000'],
+                      14: ['V12', 'S-F', 'T17', 'RIL', 'Y81', 'SPK', 'S14', 'CV30000'],
+                      15: ['V12', 'S-F', 'T17', 'M98', 'Y81', 'SPK', 'B92', 'CV30000'],
+                      16: ['V12', 'S-F', 'T17', 'RIL', 'I02', 'SPK', 'B92', 'CV30000'],
+                      17: ['S02', 'C13', 'T17', 'M98', 'Y81', 'B92', 'S14', 'CV30000'],
+                      18: ['S02', 'C13', 'T17', 'RI1', 'I02', 'B92', 'B92', 'CV30000'],
+                      19: ['S02', 'F06', 'T17', 'RIL', 'Y81', 'B92', 'S14', 'CV50000'],
+                      20: ['S02', 'F06', 'T17', 'M98', 'I02', 'B92', 'B92', 'CV30000'],
+                      21: ['S02', 'F06', 'T17', 'M98', 'I02', 'SPK', 'B92', 'CV30000'],
+                      22: ['S02', 'F06', 'T17', 'RI1', 'Y81', 'SPK', 'B92', 'CV30000'],
+                      23: ['S02', 'F06', 'T17', 'RIL', 'I02', 'SPK', 'B92', 'CV30000'],
+                      24: ['S02', 'F06', 'T17', 'RI1', 'I02', 'SPK', 'B92', 'CV30000'],
+                      25: ['S02', 'S-F', 'T17', 'RIL', 'I02', 'B92', 'B92', 'CV50000'],
+                      26: ['S02', 'S-F', 'T17', 'RIL', 'I02', 'SPK', 'S14', 'CV50000'],
+                      27: ['S02', 'S-F', 'T17', 'RI1', 'I02', 'SPK', 'B92', 'CV30000'],
+                      28: ['S02', 'S-F', 'T17', 'RIL', 'I02', 'SPK', 'S14', 'CV50000'],
+                      29: ['A76', 'F06', 'T17', 'M98', 'I02', 'B02', 'S14', 'CV30000'],
+                      30: ['A76', 'F06', 'T17', 'M98', 'I02', 'SPK', 'B92', 'CV30000'],
+                      31: ['A76', 'F06', 'T17', 'RIL', 'I02', 'B92', 'B92', 'CV30000'],
+                      32: ['A76', 'S-F', 'T17', 'RIL', 'Y81', 'B92', 'B92', 'CV30000'],
+                      33: ['A76', 'S-F', 'T17', 'RI2', 'I02', 'B92', 'B92', 'CV30000'],
+                      34: ['A76', 'S-F', 'T17', 'RIL', 'Y81', 'SPK', 'S14', 'CV50000'],
+                      35: ['A76', 'S-F', 'T17', 'RI1', 'Y81', 'SPK', 'B92', 'CV30000']}
 
         physical_options = []
         snow_parameters = []

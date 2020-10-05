@@ -243,7 +243,7 @@ class vortex_kitchen(object):
             if self.options.escroc:
                 if self.options.nmembers:
                     nmembers = self.options.nmembers
-                elif self.options.escroc == "E2":
+                elif self.options.escroc == "E2" or self.options.escroc == "E2tartes":
                     nmembers = 35
                 else:
                     raise Exception("don't forget to specify escroc ensemble or --nmembers")
