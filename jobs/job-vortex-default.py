@@ -98,7 +98,7 @@ finally:
             pass
     ja.finalise()
     ja.close()
-    print 'Bye bye research...'
+    print ('Bye bye research...')
 
 #MTOOL step id=fetch target=[this:fetch]
 #MTOOL step id=compute target=[this:compute]
