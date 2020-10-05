@@ -11,8 +11,6 @@ import os, csv
 import numpy as np
 import datetime
 import netCDF4
-from netCDF4 import Dataset, num2date, date2num
-
 
 # For compatibility python 2 / python 3
 import six
@@ -1001,28 +999,12 @@ class forcinput_changedates(forcinput_tomodify):
         nc_unit = file_name.variables["time"].units
 
         # Compute new time
-        date_time_old = num2date(nc_time[:], units = nc_unit)
+        date_time_old = netCDF4.num2date(nc_time[:], units = nc_unit)
         delta = args[0][0] - date_time_old[0]
         date_time_new = date_time_old + delta
 
-        # Prints 1/2
-#         print 'Time delta:'
-#         print delta
-#         print "--------------"
-#         print 'Old time (date):'
-#         print date_time_old
-#         print 'Old time (netcdf):'
-#         print nc_time[:]
-#         print "--------------"
-
         # Insert new time in file
-        nc_time[:] = date2num(date_time_new, units = nc_unit)
-
-        # Prints 2/2
-#         print 'New time (date):'
-#         print date_time_new
-#         print 'New time (netcdf):'
-#         print nc_time[:]
+        nc_time[:] = netCDF4.date2num(date_time_new, units = nc_unit)
 
         # Close file
         file_name.close()
