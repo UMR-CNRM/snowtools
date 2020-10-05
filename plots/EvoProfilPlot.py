@@ -51,6 +51,7 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
 
     vertices = vertices[(dz > 0).ravel()]
 
+    extend='neither'
     if colormap == 'grains':
         cmap = Dictionnaries.grain_colormap
         bounds = np.linspace(-0.5, 14.5, 16)
@@ -60,13 +61,19 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
     elif colormap == 'echelle_log':
         cmap = cm.gray_r
         Vmin = max(np.amin(value),0.0000000001)
-        Vmax = min(np.amax(value),1)
+        Vmax = min(max(0.000000001, np.amax(value)),1)
         norm = colors.LogNorm(vmin=Vmin, vmax=Vmax)    
+        cmap.set_under('#fff2fd')
+        extend='min'
     elif colormap == 'echelle_log_sahara':
+        print('OK')
         cmap = cm.gist_heat_r
         Vmin = max(np.amin(value),0.0000000001)
-        Vmax = min(np.amax(value),1)
+        Vmax = min(max(0.000000001, np.amax(value)),1)
+        value[value==0] = Vmin/2
         norm = colors.LogNorm(vmin=Vmin, vmax=Vmax)
+        cmap.set_under('#fff2fd')
+        extend='min'
     elif colormap == 'ratio_cisaillement':
         cmap = cm.get_cmap('viridis')
         Vmin = 0
@@ -106,7 +113,7 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
     ax.autoscale_view()
     
     if cbar_show:
-        cbar = plt.colorbar(rect, ax=ax)
+        cbar = plt.colorbar(rect, ax=ax, extend=extend)
 
         if colormap == 'grains':
             labels = Dictionnaries.MEPRA_labels
