@@ -66,7 +66,6 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
         cmap.set_under('#fff2fd')
         extend='min'
     elif colormap == 'echelle_log_sahara':
-        print('OK')
         cmap = cm.gist_heat_r
         Vmin = max(np.amin(value),0.0000000001)
         Vmax = min(max(0.000000001, np.amax(value)),1)

@@ -192,8 +192,8 @@ class Graph(Toplevel):
                              'Projection_Type', 'station', 'massif', 'naturalIndex']
         for i in range(len(listvariables)):
             if (listvariables[i] not in list_var_non_plot):
-                if self.ff.getattr(listvariables[i],'long_name') != '':
-                    self.liste_variable_for_pres.append(self.ff.getattr(listvariables[i],'long_name'))
+                if 'long_name' in self.ff.listattr(listvariables[i]) and self.ff.getattr(listvariables[i],'long_name') != '':
+                    self.liste_variable_for_pres.append('{} ({})'.format(self.ff.getattr(listvariables[i],'long_name'), listvariables[i]))
                     self.liste_variable.append(listvariables[i])
                 else:
                     self.liste_variable_for_pres.append(listvariables[i])
@@ -204,6 +204,7 @@ class Graph(Toplevel):
         self.profil_complet = False
         # MODIFIER POUR FSM ???
         if ({'SNOWTYPE', 'SNOWRAM'}.issubset(set(self.ff.listvar()))):
+        #if ({'SNOWTYPE'}.issubset(set(self.ff.listvar()))):
             self.profil_complet = True
             self.var_sup.extend([self.variable_souris, 'SNOWTYPE', 'SNOWRAM'])
 
@@ -341,8 +342,8 @@ class Graph(Toplevel):
                     
         for i in range(len(listvariables)):
             if(self.ff.listvar()[i] not in list_var_non_plot):
-                if self.ff.getattr(listvariables[i],'long_name') != '':
-                    self.liste_variable_for_pres.append(self.ff.getattr(listvariables[i],'long_name'))
+                if 'long_name' in self.ff.listattr(listvariables[i]) and self.ff.getattr(listvariables[i],'long_name') != '':
+                    self.liste_variable_for_pres.append('{} ({})'.format(self.ff.getattr(listvariables[i],'long_name'), listvariables[i]))
                     self.liste_variable.append(listvariables[i])
                 else:
                     self.liste_variable_for_pres.append(listvariables[i])

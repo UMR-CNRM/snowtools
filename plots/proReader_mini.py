@@ -393,10 +393,13 @@ class ProReader_abstract:
         bottom_y = bottom_y[(ep > 0).ravel()[::-1]]
         top_y = np.append(bottom_y[1:], epc_inv[0])
 
-        left_x = self.var['SNOWRAM'][self.date == date].ravel()[::-1]
+        if 'SNOWRAM' in self.var:
+            left_x = self.var['SNOWRAM'][self.date == date].ravel()[::-1]
+            left_x = left_x[(ep > 0).ravel()[::-1]]
+            left_x = np.where(left_x > 0.5, left_x, 0.5)
+        else:
+            left_x = np.zeros(shape=bottom_y.shape[0], dtype='int') + 30
         right_x = np.zeros(shape=bottom_y.shape[0], dtype='int')
-        left_x = left_x[(ep > 0).ravel()[::-1]]
-        left_x = np.where(left_x > 0.5, left_x, 0.5)
 
         vertices = np.zeros(shape=(bottom_y.shape[0], 4, 2))
         vertices[:, 0, 0] = right_x
@@ -920,10 +923,13 @@ class ProReader_massif(ProReader_abstract):
         bottom_y = bottom_y[(ep > 0).ravel()[::-1]]
         top_y=np.append(bottom_y[1:],epc_inv[0])
 
-        left_x = self.var['SNOWRAM'][intime,:,massif].ravel()[::-1]
+        if 'SNOWRAM' in self.var:
+            left_x = self.var['SNOWRAM'][intime,:,massif].ravel()[::-1]
+            left_x=left_x[(ep > 0).ravel()[::-1]]
+            left_x=np.where(left_x > 0.5, left_x, 0.5)
+        else:
+            left_x = np.zeros(shape=bottom_y.shape[0], dtype='int')+30
         right_x = np.zeros(shape=bottom_y.shape[0], dtype='int')
-        left_x=left_x[(ep > 0).ravel()[::-1]]
-        left_x=np.where(left_x > 0.5, left_x, 0.5)
 
         vertices = np.zeros(shape=(bottom_y.shape[0], 4, 2))
         vertices[:, 0, 0] = right_x
@@ -1320,10 +1326,13 @@ class ProReader_membre(ProReader_abstract):
         bottom_y = bottom_y[(ep > 0).ravel()[::-1]]
         top_y=np.append(bottom_y[1:],epc_inv[0])
 
-        left_x = self.var_membre['SNOWRAM'][membre,intime,:].ravel()[::-1]
+        if 'SNOWRAM' in self.var:
+            left_x = self.var_membre['SNOWRAM'][membre,intime,:].ravel()[::-1]
+            left_x=left_x[(ep > 0).ravel()[::-1]]
+            left_x=np.where(left_x > 0.5, left_x, 0.5)
+        else:
+            left_x = np.zeros(shape=bottom_y.shape[0], dtype='int') + 30
         right_x = np.zeros(shape=bottom_y.shape[0], dtype='int')
-        left_x=left_x[(ep > 0).ravel()[::-1]]
-        left_x=np.where(left_x > 0.5, left_x, 0.5)
 
         vertices = np.zeros(shape=(bottom_y.shape[0], 4, 2))
         vertices[:, 0, 0] = right_x
