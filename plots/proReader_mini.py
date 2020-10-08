@@ -54,15 +54,15 @@ class ProReader_abstract:
     Permet d'être utilisé par GUI_Proreader.py pour tracé interactif.
     Pour plus d'information sur le code de ProReader_mini, aller directement voir l'aide de Proreader.py
     """
-    def __init__(self, ncfile=None, var=None, point=None, var_sup=[], liste_points=[]):
+    def __init__(self, ncfile=None, var=None, point=None, liste_points=[]):
         """
          - ProReader_GUI(ncfile='path/to/ncfile', var=None, point=None) : A partir d'un fichier PRO
                 !! si le fichier contient plusieurs points de simulation, selection par point sous forme d'un entier
                 !! si le fichier contient plusieurs variables, selection par variable sous forme d'une chaine de caractère
         """
-        self.initFromFile(ncfile, var=var, point=point, var_sup=var_sup, liste_points=liste_points)
+        self.initFromFile(ncfile, var=var, point=point, liste_points=liste_points)
 
-    def initFromFile(self, ncfile, var=None, point=None, var_sup=[], liste_points=[]):
+    def initFromFile(self, ncfile, var=None, point=None, liste_points=[]):
         ff = prosimu(ncfile)
         listvariables = ff.listvar()
         
@@ -974,15 +974,15 @@ class ProReader_membre(ProReader_abstract):
     Permet d'être utilisé par GUI_Proreader.py pour tracé interactif.
     Pour plus d'information sur le code de ProReader_mini, aller directement voir l'aide de Proreader.py
     """
-    def __init__(self, ncfile=None, var=None, point=None, var_sup=[]):
+    def __init__(self, ncfile=None, var=None, point=None):
         """
          - ProReader_GUI(ncfile='path/to/ncfile', var=None, point=None) : A partir d'un fichier PRO
                 !! si le fichier contient plusieurs points de simulation, selection par point sous forme d'un entier
                 !! si le fichier contient plusieurs variables, selection par variable sous forme d'une chaine de caractère
         """
-        self.nb_membre = self.initFromFile(ncfile, var=var, point=point, var_sup=var_sup)
+        self.nb_membre = self.initFromFile(ncfile, var=var, point=point)
 
-    def initFromFile(self, ncfile, var=None, point=None, var_sup=[]):
+    def initFromFile(self, ncfile, var=None, point=None):
         ff = prosimu(ncfile)
         
         if 'SNOWDZ' in ff.listvar():
