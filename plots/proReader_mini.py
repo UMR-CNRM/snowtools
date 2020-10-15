@@ -474,7 +474,9 @@ class ProReader_standard(ProReader_abstract):
         if var == 'SNOWTYPE':
             colormap = 'grains'
         elif var == 'SNOWTEMP' or var =='tsnl':
-            colormap = 'RdBu_r'
+            colormap = 'tempK'
+        elif var == 'SNOWLIQ':
+            colormap = 'lwc'
         elif 'SNOWIMP1' in var:
             colormap = 'echelle_log'
         elif 'SNOWIMP2' in var:
@@ -701,7 +703,7 @@ class ProReader_massif(ProReader_abstract):
         if var == 'SNOWTYPE':
             colormap = 'grains'
         elif var == 'SNOWTEMP':
-            colormap = 'RdBu_r'
+            colormap = 'tempK'
         else:
             colormap = colormap
             
@@ -1130,7 +1132,7 @@ class ProReader_membre(ProReader_abstract):
         if var == 'SNOWTYPE':
             colormap = 'grains'
         elif var == 'SNOWTEMP' or var =='tsnl':
-            colormap = 'RdBu_r'
+            colormap = 'tempK'
         else:
             colormap = colormap
             

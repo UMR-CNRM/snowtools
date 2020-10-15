@@ -101,6 +101,23 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
             customcmap['green'].append((x, cmap.colors[iuse][1], cmap.colors[iuse][1]))
             customcmap['blue'].append((x, cmap.colors[iuse][2], cmap.colors[iuse][2]))
         cmap = colors.LinearSegmentedColormap('ratio_cisaillment', customcmap)
+    elif colormap == 'tempK':
+        Vmax = 273.15
+        Vmin=Vmax-40 if vmax is None else vmin
+        norm = colors.Normalize(vmin=Vmin, vmax=Vmax)
+        value[value<Vmin] = Vmin
+        cmap = cm.get_cmap('RdBu_r')
+        cmap.set_over((0.32,0.0,0.097))
+        extend='max'
+    elif colormap == 'lwc':
+        cmap = cm.get_cmap('viridis')
+        Vmin = 0
+        Vmax= 35 if vmax is None else vmax
+        norm = colors.Normalize(vmin=Vmin, vmax=Vmax)
+        value[value>Vmax] = Vmax
+        value[value==0] = -1
+        cmap.set_under('#fff2fd')
+        extend='min'
     else:
         norm = None
         cmap = cm.get_cmap(colormap)
