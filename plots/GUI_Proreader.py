@@ -83,7 +83,6 @@ class Graph(Toplevel):
         self.Tableau = ''
         self.var_choix1 = ''
         self.var_choix2 = ''
-        self.var_sup = []
         self.valeur_choisie1 = ''
         self.valeur_choisie2 = ''
         self.message_filedialog = 'Importer un fichier PRO'
@@ -146,7 +145,6 @@ class Graph(Toplevel):
     def ini_ligne_commande(self, **Arguments):
         self.filename = Arguments.get('filename')
         self.variable = Arguments.get('variable')
-        self.var_sup = [Arguments.get('profil')]
         self.variable_souris = Arguments.get('profil')
 
         self.ff = prosimu(self.filename)
@@ -192,8 +190,8 @@ class Graph(Toplevel):
                              'Projection_Type', 'station', 'massif', 'naturalIndex']
         for i in range(len(listvariables)):
             if (listvariables[i] not in list_var_non_plot):
-                if self.ff.getattr(listvariables[i],'long_name') != '':
-                    self.liste_variable_for_pres.append(self.ff.getattr(listvariables[i],'long_name'))
+                if 'long_name' in self.ff.listattr(listvariables[i]) and self.ff.getattr(listvariables[i],'long_name') != '':
+                    self.liste_variable_for_pres.append('{} ({})'.format(self.ff.getattr(listvariables[i],'long_name'), listvariables[i]))
                     self.liste_variable.append(listvariables[i])
                 else:
                     self.liste_variable_for_pres.append(listvariables[i])
@@ -203,9 +201,8 @@ class Graph(Toplevel):
 
         self.profil_complet = False
         # MODIFIER POUR FSM ???
-        if ({'SNOWTYPE', 'SNOWRAM'}.issubset(set(self.ff.listvar()))):
+        if 'SNOWTYPE' in self.ff.listvar():
             self.profil_complet = True
-            self.var_sup.extend([self.variable_souris, 'SNOWTYPE', 'SNOWRAM'])
 
     # INITIALISER LA LISTE DES MASSIFS
     def make_list_massif(self):
@@ -286,7 +283,6 @@ class Graph(Toplevel):
         self.combobox_reduce4.config(state = 'disabled', values = '')
         self.combobox_reduce4.set('')
         # Variables
-        self.var_sup = []
         self.bool_profil = False
         self.bool_ligne_commande = False
         self.liste_variable=[]
@@ -341,8 +337,8 @@ class Graph(Toplevel):
                     
         for i in range(len(listvariables)):
             if(self.ff.listvar()[i] not in list_var_non_plot):
-                if self.ff.getattr(listvariables[i],'long_name') != '':
-                    self.liste_variable_for_pres.append(self.ff.getattr(listvariables[i],'long_name'))
+                if 'long_name' in self.ff.listattr(listvariables[i]) and self.ff.getattr(listvariables[i],'long_name') != '':
+                    self.liste_variable_for_pres.append('{} ({})'.format(self.ff.getattr(listvariables[i],'long_name'), listvariables[i]))
                     self.liste_variable.append(listvariables[i])
                 else:
                     self.liste_variable_for_pres.append(listvariables[i])
@@ -356,10 +352,6 @@ class Graph(Toplevel):
         if self.bool_no_snowlayer == False:
             variable_souris_for_pres = self.combobox_choix_profil.get()
             self.variable_souris = self.liste_variable[self.liste_variable_for_pres.index(variable_souris_for_pres)]
-            if self.profil_complet:
-                self.var_sup.extend([self.variable_souris,'SNOWTYPE','SNOWRAM'])
-            else:
-                self.var_sup.append(self.variable_souris)
             self.bool_profil = True
         else: 
             self.bool_profil = False
@@ -368,7 +360,8 @@ class Graph(Toplevel):
     # LISTE VARIABLES DU PROFIL
     def liste_profil(self):
         self.profil_complet = False
-        if ({'SNOWTYPE','SNOWRAM'}.issubset(set(self.ff.listvar()))):
+        #if ({'SNOWTYPE','SNOWRAM'}.issubset(set(self.ff.listvar()))):
+        if 'SNOWTYPE' in self.ff.listvar():
                 self.profil_complet = True
         liste_pres = []
         liste = list(set(self.ff.listvar())-{'SNOWTYPE','SNOWRAM'})
@@ -772,7 +765,7 @@ class GraphStandard(Graph):
 
     def ini_ligne_commande_interne(self, **Arguments):
         #Graph.ini_ligne_commande(self,**Arguments)
-        self.pro = proReader_mini.ProReader_standard(ncfile = self.filename, var = self.variable, point = int(self.point_choisi), var_sup = self.var_sup)
+        self.pro = proReader_mini.ProReader_standard(ncfile = self.filename, var = self.variable, point = int(self.point_choisi))
         self.Tableau = self.pro.get_choix(self.filename)
         if self.Tableau[0][self.point_choisi] >0: 
             self.combobox_reduce1.set(self.list_massif_nom[self.list_massif_num.index(self.Tableau[0][self.point_choisi])])
@@ -781,7 +774,7 @@ class GraphStandard(Graph):
         self.combobox_reduce2.set(str(self.pro.alt))
         self.combobox_reduce3.set(str(self.pro.slope))
         self.combobox_reduce4.set(str(self.pro.aspect))
-        self.combobox_choix_profil.set(self.var_sup)
+        self.combobox_choix_profil.set(Arguments.get('profil'))
         self.combobox.set(self.variable)
         self.combobox_reduce1.config(state = "readonly")
 
@@ -865,10 +858,9 @@ class GraphStandard(Graph):
     def liste_profil(self, event):
         variable_for_pres=self.combobox.get()
         self.variable=self.liste_variable[self.liste_variable_for_pres.index(variable_for_pres)]
-        self.var_sup.append(self.variable)
         logger.info('Variable {} selected'.format(self.variable))
         if self.bool_profil:
-            self.pro = proReader_mini.ProReader_standard(ncfile=self.filename, var=self.variable, point=int(self.point_choisi),var_sup=self.var_sup)
+            self.pro = proReader_mini.ProReader_standard(ncfile=self.filename, var=self.variable, point=int(self.point_choisi))
         Graph.liste_profil(self)
 
     def recup(self, *args):
@@ -888,7 +880,7 @@ class GraphStandard(Graph):
     ##########################################################
     def Plotage(self):
         self.boolzoom = False
-        self.pro = proReader_mini.ProReader_standard(ncfile = self.filename, var = self.variable, point = int(self.point_choisi),var_sup = self.var_sup)
+        self.pro = proReader_mini.ProReader_standard(ncfile = self.filename, var = self.variable, point = int(self.point_choisi))
         self.fig1.clear()
         self.ax1.clear()
         self.fig1, self.ax1 = plt.subplots(1, 1, sharex = True, sharey = True)
@@ -970,7 +962,7 @@ class GraphHeight(Graph):
 
     def ini_ligne_commande_interne(self, **Arguments):
         Graph.ini_ligne_commande(self, **Arguments)
-        self.pro = proReader_mini.ProReader_height(ncfile = self.filename, var = self.variable, point = int(self.point_choisi), var_sup = self.var_sup)
+        self.pro = proReader_mini.ProReader_height(ncfile = self.filename, var = self.variable, point = int(self.point_choisi))
         self.Tableau = self.pro.get_choix(self.filename)
         if 'direction' in Arguments.keys():
             self.direction_coupe = Arguments.get('direction')
@@ -984,7 +976,7 @@ class GraphHeight(Graph):
         self.combobox_reduce2.set(str(self.pro.alt))
         self.combobox_reduce3.set(str(self.pro.slope))
         self.combobox_reduce4.set(str(self.pro.aspect))
-        self.combobox_choix_profil.set(self.var_sup)
+        self.combobox_choix_profil.set(Arguments.get('profil'))
         self.combobox.set(self.variable)
         self.combobox_choix_direction.set(str(self.direction_coupe))
         self.combobox_choix_hauteur.set(str(self.hauteur_coupe))
@@ -1087,7 +1079,6 @@ class GraphHeight(Graph):
     def recup_direction(self, event):
         variable_for_pres = self.combobox.get()
         self.variable = self.liste_variable[self.liste_variable_for_pres.index(variable_for_pres)]
-        self.var_sup.append(self.variable)
         logger.info('Variable {} selected'.format(self.variable))
         self.combobox_choix_direction.config(state = "readonly")
         self.combobox_choix_direction.bind('<<ComboboxSelected>>', self.finalisation_dirhauteur)
@@ -1101,7 +1092,7 @@ class GraphHeight(Graph):
     def liste_profil(self, event):
         self.hauteur_coupe = self.combobox_choix_hauteur.get()
         if self.bool_profil:
-            self.pro = proReader_mini.ProReader_height(ncfile = self.filename, var = self.variable, point = int(self.point_choisi), var_sup = self.var_sup)
+            self.pro = proReader_mini.ProReader_height(ncfile = self.filename, var = self.variable, point = int(self.point_choisi))
 
         Graph.liste_profil(self)
 
@@ -1123,7 +1114,7 @@ class GraphHeight(Graph):
     def Plotage(self):
         self.boolzoom = False
         if not self.bool_ligne_commande:
-            self.pro = proReader_mini.ProReader_height(ncfile = self.filename, var = self.variable, point = int(self.point_choisi), var_sup = self.var_sup)
+            self.pro = proReader_mini.ProReader_height(ncfile = self.filename, var = self.variable, point = int(self.point_choisi))
         self.fig1.clear()
         self.ax1.clear()
         self.fig1, self.ax1 = plt.subplots(1, 1, sharex = True, sharey = True)
@@ -1269,10 +1260,9 @@ class GraphMassif(Graph):
     def liste_profil(self, event):
         variable_for_pres = self.combobox.get()
         self.variable = self.liste_variable[self.liste_variable_for_pres.index(variable_for_pres)]
-        self.var_sup.append(self.variable)
         logger.info('Variable {} selected'.format(self.variable))
         if self.bool_profil:
-            self.pro = proReader_mini.ProReader_massif(ncfile = self.filename, var = self.variable, liste_points = self.liste_points, var_sup = self.var_sup)
+            self.pro = proReader_mini.ProReader_massif(ncfile = self.filename, var = self.variable, liste_points = self.liste_points)
 
         Graph.liste_profil(self)
 
@@ -1366,7 +1356,7 @@ class GraphMassif(Graph):
     # TRACE
     ##########################################################
     def Plotage(self):
-        self.pro = proReader_mini.ProReader_massif(ncfile = self.filename, var = self.variable, liste_points = self.liste_points, var_sup = self.var_sup)
+        self.pro = proReader_mini.ProReader_massif(ncfile = self.filename, var = self.variable, liste_points = self.liste_points)
         self.fig1.clear()
         self.ax1.clear()
         self.fig1, self.ax1 = plt.subplots(1, 1, sharex = True, sharey = True)
@@ -1535,10 +1525,9 @@ class GraphMembre(Graph):
     def liste_profil(self, event):
         variable_for_pres = self.combobox.get()
         self.variable = self.liste_variable[self.liste_variable_for_pres.index(variable_for_pres)]
-        self.var_sup.append(self.variable)
         self.info('Variable {} selected'.format(self.variable))
         if self.bool_profil:
-            self.pro = proReader_mini.ProReader_membre(ncfile = self.filename, var = self.variable, point = int(self.point_choisi), var_sup = self.var_sup)
+            self.pro = proReader_mini.ProReader_membre(ncfile = self.filename, var = self.variable, point = int(self.point_choisi))
 
         Graph.liste_profil(self)
 
@@ -1558,7 +1547,7 @@ class GraphMembre(Graph):
     # TRACE
     ##########################################################
     def Plotage(self):
-        self.pro = proReader_mini.ProReader_membre(ncfile=self.filename, var = self.variable, point = int(self.point_choisi), var_sup = self.var_sup)
+        self.pro = proReader_mini.ProReader_membre(ncfile=self.filename, var = self.variable, point = int(self.point_choisi))
         self.nmembre = self.pro.nb_membre
         self.fig1.clear()
         self.ax1.clear()
@@ -1642,7 +1631,7 @@ class GestionFenetre(Frame):
     def close(self, *args):
         self.quit()
 
-def parseArguments(args):
+def parseArguments(args, version='undefined'):
     # Create argument parser
     parser = argparse.ArgumentParser()
 
@@ -1668,7 +1657,7 @@ def parseArguments(args):
     parser.add_argument("--sampling", help = "Maximum time length before subsampling (-1 is never)", type = int)
 
     # Print version
-    parser.add_argument("--version", action="version", version='%(prog)s - Version 1.0')
+    parser.add_argument("--version", action="version", version='%(prog)s - version '+str(version))
     # Logging options
     parser.add_argument("--debug", action="store_true", help="Set logging to debug.")
     # Parse arguments
@@ -1721,7 +1710,7 @@ def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph
         datefin = date[len(date)-1]
         if len(date) > constante_sampling: 
             logger.warn('Time > {}: automatic sampling to avoid too long treatment'.format(constante_sampling))
-        pro = proReader_mini.ProReader_standard(ncfile = filename, var = variable, point = int(liste_points[0]), var_sup = [])
+        pro = proReader_mini.ProReader_standard(ncfile = filename, var = variable, point = int(liste_points[0]))
         fig1, ax1 = plt.subplots(1, 1, sharex = True, sharey = True)
         if ('snow_layer' in ff.getdimvar(variable)):
             intime = pro.plot(ax1, variable, datedeb, datefin, real_layers = True,legend = variable)
@@ -1736,7 +1725,7 @@ def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph
         datefin = date[len(date)-1]
         if len(date) > constante_sampling: 
             logger.warn('Time > {}: automatic sampling to avoid too long treatment'.format(constante_sampling))
-        pro = proReader_mini.ProReader_height(ncfile = filename, var = variable, point = int(liste_points[0]), var_sup = [])
+        pro = proReader_mini.ProReader_height(ncfile = filename, var = variable, point = int(liste_points[0]))
         fig1, ax1 = plt.subplots(1, 1, sharex = True, sharey = True)
         intime = pro.plot(ax1, variable, datedeb, datefin, legend = variable, direction_cut = direction_coupe, height_cut = hauteur_coupe)
 
@@ -1748,7 +1737,7 @@ def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph
         for massif in listmassif:
             list_massif_num.append(massif)
             list_massif_nom.append(str(IM.getMassifName(massif).decode('UTF-8')))
-        pro = proReader_mini.ProReader_massif(ncfile = filename, var = variable, liste_points = liste_points, var_sup = [])
+        pro = proReader_mini.ProReader_massif(ncfile = filename, var = variable, liste_points = liste_points)
         fig1, ax1 = plt.subplots(1, 1, sharex = True, sharey = True)
 
         liste_massif_pour_legende=[]
@@ -1763,7 +1752,7 @@ def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph
             pro.plot1D_massif(ax1, variable, date = date_massif_membre, legend = variable, legend_x = liste_massif_pour_legende)
 
     if type_graph == 'membre':
-        pro = proReader_mini.ProReader_membre(ncfile = filename, var = variable, point = int(liste_points[0]), var_sup = [])
+        pro = proReader_mini.ProReader_membre(ncfile = filename, var = variable, point = int(liste_points[0]))
         fig1, ax1 = plt.subplots(1, 1, sharex = True, sharey = True)
         if ('snow_layer' in ff.getdimvar(variable)):
             pro.plot_membre(ax1, variable, date = date_massif_membre, real_layers = True, legend = variable, cbar_show = True)
@@ -1776,7 +1765,7 @@ def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph
 def main(version='undefined', args=None):
     args = args if args is not None else sys.argv[1:]
     if len(sys.argv) > 1: 
-        args = parseArguments(args)
+        args = parseArguments(args, version=version)
 
         # argument for command line call
         filename = args.filename
@@ -1850,4 +1839,4 @@ def main(version='undefined', args=None):
         GestionFenetre().mainloop()
 
 if __name__ == '__main__':
-    main(version='git_master')
+    main(version='1.0.git_master')

@@ -150,11 +150,10 @@ class infomassifs():
                 metadata = os.environ['HOME_RO'] + '/METADATA.xml'
             else:
                 metadata = os.environ['SNOWTOOLS_CEN'] + '/DATA/METADATA.xml'
-        else:
+        elif 'SNOWTOOLS_CEN' in list(os.environ.keys()):
             metadata = os.environ['SNOWTOOLS_CEN'] + '/DATA/METADATA.xml'
-
-        if not (os.path.isfile(metadata) or os.path.islink(metadata)) and os.path.isfile('./DATA/METADATA.xml'):
-            metadata =  './DATA/METADATA.xml'
+        else:
+            metadata = './DATA/METADATA.xml'
 
         if not (os.path.isfile(metadata) or os.path.islink(metadata)):
             try:
