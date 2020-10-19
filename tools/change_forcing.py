@@ -400,20 +400,21 @@ class forcinput_select(forcinput_tomodify):
         init_slopes = init_forcing_file.read("slope", keepfillvalue=True)
         init_exp = init_forcing_file.read("aspect", keepfillvalue=True)
 
-        extendslopes = (len(np.unique(init_slopes)) == 1) and (init_slopes[0] != liste_pentes[0])
-        # print extendslopes
-        if "0" in liste_pentes or extendslopes:
-            nb_slope_angles_notflat = len(liste_pentes) - 1
-            nb_aspect_angles_notflat = len(list_exp_degres) - 1
-            nb_slopes_bylevel = 1 + nb_slope_angles_notflat * nb_aspect_angles_notflat
+        # list_pentes is the user-defined target
+        if "0" in liste_pentes:
+            nb_slope_angles_notflat = len(liste_pentes) - 1  # Number of target slopes excluding flat
+            nb_aspect_angles_notflat = len(list_exp_degres) - 1  # Number of target aspects excluding flat
+            nb_slopes_bylevel = 1 + nb_slope_angles_notflat * nb_aspect_angles_notflat  # Number of slopes for a given elevation level
         else:
-            nb_slope_angles_notflat = len(liste_pentes)
-            nb_aspect_angles_notflat = len(list_exp_degres)
-            nb_slopes_bylevel = nb_slope_angles_notflat * nb_aspect_angles_notflat
+            nb_slope_angles_notflat = len(liste_pentes)  # Number of target slopes excluding flat
+            nb_aspect_angles_notflat = len(list_exp_degres)  # Number of target aspects excluding flat
+            nb_slopes_bylevel = nb_slope_angles_notflat * nb_aspect_angles_notflat  # Number of slopes for a given elevation level
 
         # print nb_slopes_bylevel, nb_slope_angles_notflat, nb_aspect_angles_notflat
 
+        # Extend aspects mode only if input file have only -1 aspects
         extendaspects = nb_slopes_bylevel > 1 and np.all(init_exp == -1)
+        # Extend slopes if input file already have several aspects but we want more slope values
         extendslopes = not extendaspects and ( len(liste_pentes) > len(np.unique(init_slopes)) )
 
         if extendaspects:
@@ -422,34 +423,28 @@ class forcinput_select(forcinput_tomodify):
             print("Extend slopes of the input forcing file")
 
         if extendaspects:
+            # Indexes of points to extract: only flat values if create new aspects
             b_points_slope = np.in1d(init_slopes, [0])
             b_points_aspect = np.in1d(init_exp, [-1])
-            if "0" in liste_pentes:
-                liste_pentes_int.remove(0)
-                list_exp_degres.remove(-1)
+
         else:
-            # print init_slopes
-            # print liste_pentes_int
-
-            if "0" not in liste_pentes:
-                liste_pentes_int.append(0)
-
+            # Indexes of points to extract: can be a subset of available slopes or the whole available slopes
             b_points_slope = np.in1d(init_slopes, liste_pentes_int)
             b_points_aspect = np.in1d(init_exp, list_exp_degres)
 
         # Identify points to extract
-        # print np.sum(b_points_massif)
-        # print np.sum(b_points_alt)
-        # print np.sum(b_points_slope)
-        # print np.sum(b_points_aspect)
         index_points = np.where(b_points_massif * b_points_alt * b_points_slope * b_points_aspect)[0]
 
-        # It is possible to exclude somme massifs or elevations before duplicating the slopes
         if extendslopes:
+            # Points to duplicate correspond to all indexes but -1 aspect
             points_to_duplicate = np.invert(np.in1d(init_exp[index_points], [-1]))
-            # if "0" in liste_pentes:
-            liste_pentes_int.remove(0)
-            list_exp_degres.remove(-1)
+
+        if extendaspects or extendslopes:
+            # In these cases, we remove flat cases of output slopes list because it is dealt in a specific way
+            if "0" in liste_pentes:
+                liste_pentes_int.remove(0)
+            if -1 in list_exp_degres:
+                list_exp_degres.remove(-1)
 
         init_forcing_file_dimensions = init_forcing_file.listdim()
 
@@ -489,17 +484,9 @@ class forcinput_select(forcinput_tomodify):
                 nslopes_to_create = len(liste_pentes) - 2
                 len_dim = len(index_points) + np.sum(points_to_duplicate) * nslopes_to_create
 
-#                 print nb_slope_angles_notflat*len(list_exp_degres)+1
-#                 print nb_slope_angles_notflat
-#                 print len(list_exp_degres)
-#                 print list_exp_degres
-#                 sys.exit()
-
                 indflat = np.arange(0, len_dim, nb_slope_angles_notflat * len(list_exp_degres) + 1)
                 indnoflat = np.delete(np.arange(0, len_dim, 1), indflat)
-#                 print len(indflat)
-#                 print len(indnoflat)
-#                 print len_dim
+
             else:
                 len_dim = len(index_points)
             print("create dimension :" + spatial_dim_name + " " + str(len_dim))

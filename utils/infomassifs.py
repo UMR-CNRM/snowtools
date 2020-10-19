@@ -215,7 +215,7 @@ class infomassifs():
                 liste_expo = [nclasses]  # on impose une exposition en degrés
             else:
                 liste_expo = list(range(0, 360, 360 // nclasses))
-            if "0" in liste_pentes[0]:
+            if "0" in liste_pentes:
                 liste_expo = [-1] + liste_expo
 
         return liste_expo
