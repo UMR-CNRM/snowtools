@@ -1525,7 +1525,7 @@ class GraphMembre(Graph):
     def liste_profil(self, event):
         variable_for_pres = self.combobox.get()
         self.variable = self.liste_variable[self.liste_variable_for_pres.index(variable_for_pres)]
-        self.info('Variable {} selected'.format(self.variable))
+        logger.info('Variable {} selected'.format(self.variable))
         if self.bool_profil:
             self.pro = proReader_mini.ProReader_membre(ncfile = self.filename, var = self.variable, point = int(self.point_choisi))
 
