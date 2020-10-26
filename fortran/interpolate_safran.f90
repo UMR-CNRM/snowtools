@@ -7,7 +7,7 @@ IMPLICIT NONE
 include 'mpif.h'
 !
 !!!!! Files properties
-CHARACTER(LEN=28):: HFILENAMEIN, HFILENAMEOUT ,HFILENAMEG     ! Name of the field file.
+CHARACTER(LEN=100):: HFILENAMEIN, HFILENAMEOUT ,HFILENAMEG     ! Name of the field file.
 INTEGER::FILE_ID_IN, FILE_ID_OUT ,FILE_ID_GEO! id of input ,output and geometrie netcdf file
 !
 !!!!! Dim properties
@@ -107,8 +107,12 @@ OPEN(UNIT=INAM_UNIT, ACTION='READ', STATUS='OLD', IOSTAT=IOS, FILE='interpolate_
 IF (IOS .EQ. 0) THEN
   CALL READ_NML(INAM_UNIT)
   PRINT*, 'namelist test ', LMULTIINPUT
+  PRINT*, NNUMBER_INPUT_GRIDS
+  PRINT*, 'HFILEIN ', HFILEIN, 'HGRIDIN ', HGRIDIN
+  PRINT*, 'HFILESIN ', HFILESIN, 'HGRIDSIN ', HGRIDSIN
 ELSE
   PRINT*, 'WARNING: no namelist interpolate_safran.nam provided. Continue with default settings.'
+
 END IF
 CLOSE(INAM_UNIT)
 !
@@ -1555,7 +1559,33 @@ END SUBROUTINE CHECK
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: KNAMUNIT
 
-    READ(UNIT=KNAMUNIT,NML=NAM_SWITCHES_INT)
+    INTEGER :: IOS
+
+    READ(UNIT=KNAMUNIT,NML=NAM_SWITCHES_INT, IOSTAT=IOS)
+    IF (IOS .NE. 0) THEN
+      PRINT*, IOS
+      STOP 'ERROR reading namelist NAM_SWITCHES_INT'
+    END IF
+    ! If multiinput is wanted, read the number of inputs wanted, allocate the filename arrays and
+    ! read the input filenames and the associated grid filenames
+    IF (LMULTIINPUT) THEN
+      READ(UNIT=KNAMUNIT, NML=NAM_MULTIIN_SETTING, IOSTAT=IOS)
+      IF (IOS .NE. 0) THEN
+        STOP 'ERROR reading namelist NAM_MULTIIN_SETTING'
+      END IF
+      ALLOCATE(HFILESIN(NNUMBER_INPUT_GRIDS), HGRIDSIN(NNUMBER_INPUT_GRIDS))
+      READ(UNIT=KNAMUNIT, NML=NAM_FILENAMES_MULTI_IN, IOSTAT=IOS)
+      IF (IOS .NE. 0) THEN
+        PRINT*, IOS, HFILESIN, HGRIDSIN, SHAPE(HGRIDSIN), OTHER
+        STOP 'ERROR reading namelist NAM_FILENAMES_MULTI_IN'
+      END IF
+    ! otherwise read the filenames in a scalar variable
+    ELSE
+      READ(UNIT=KNAMUNIT, NML=NAM_FILENAMES_SINGLE_IN, IOSTAT=IOS)
+      IF (IOS .NE. 0) THEN
+        PRINT*, 'WARNING: problem reading namelist NAM_FILENAMES_SINGLE_IN, continue with default file names'
+      END IF
+    END IF
 
   END SUBROUTINE READ_NML
 !  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
