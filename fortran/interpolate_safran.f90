@@ -1,6 +1,7 @@
 PROGRAM INTERPOLATE_SAFRAN
 ! 
 USE NETCDF
+USE MODN_INTERPOL_SAFRAN
 !
 IMPLICIT NONE
 include 'mpif.h'
@@ -70,6 +71,8 @@ INTEGER :: NY_PROC, IYSTART
 INTEGER :: NPOINT_PROC, IPSTART
 !
 INTEGER::ID,IV,IA,IT,IDIN,IDOUT,INZ ! loop counter
+INTEGER :: IOS ! status indicator
+INTEGER :: INAM_UNIT
 !
 INTEGER :: IMASSIFTODELETE, ILAYERTODELETE, I
 LOGICAL :: AFTERLOC
@@ -97,6 +100,17 @@ LL_VARNAME(4)= "longitude"
 HFILENAMEIN ='input.nc'
 HFILENAMEG =  'GRID.nc'
 HFILENAMEOUT = 'output.nc'
+
+! Open namelist
+INAM_UNIT = 21
+OPEN(UNIT=INAM_UNIT, ACTION='READ', STATUS='OLD', IOSTAT=IOS, FILE='interpolate_safran.nam')
+IF (IOS .EQ. 0) THEN
+  CALL READ_NML(INAM_UNIT)
+  PRINT*, 'namelist test ', LMULTIINPUT
+ELSE
+  PRINT*, 'WARNING: no namelist interpolate_safran.nam provided. Continue with default settings.'
+END IF
+CLOSE(INAM_UNIT)
 !
 ! Open input file
 CALL CHECK(NF90_OPEN(HFILENAMEIN,  IOR(NF90_NOWRITE, NF90_MPIIO),FILE_ID_IN, &
@@ -1536,5 +1550,14 @@ SUBROUTINE CHECK(STATUS,LINE)
   END IF
 END SUBROUTINE CHECK
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  SUBROUTINE READ_NML(KNAMUNIT)
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: KNAMUNIT
+
+    READ(UNIT=KNAMUNIT,NML=NAM_SWITCHES_INT)
+
+  END SUBROUTINE READ_NML
+!  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 END PROGRAM INTERPOLATE_SAFRAN
 
