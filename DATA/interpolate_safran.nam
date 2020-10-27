@@ -1,5 +1,23 @@
 &NAM_SWITCHES_INT
-    LMULTIINPUT = .TRUE.
+    LMULTIINPUT = .FALSE.,
+    LMULTIOUTPUT = .TRUE.
 /
-&NAM_FILES_INT
+&NAM_FILENAMES_SINGLE_IN
+    HFILEIN = 'PRO_2020092706_2020092806_zeroslope_cor.nc',
+    HGRIDIN = 'CORSE.nc'
+/
+&NAM_MULTIIN_SETTING
+    NNUMBER_INPUT_GRIDS = 3
+/
+&NAM_FILENAMES_MULTI_IN
+    HFILESIN = "PRO_2020092706_2020092806_zeroslope_alps.nc", "PRO_2020092706_2020092806_zeroslope_cor.nc", "PRO_2020092706_2020092806_zeroslope_pyr.nc"
+    HGRIDSIN = "ALPS.nc", "CORSE.nc", "PYRENNES.nc"
+/
+&NAM_FILENAMES_SINGLE_OUT
+    HFILEOUT = 'output_cor.nc'
+/
+&NAM_FILENAMES_MULTI_OUT
+    HFILESOUT = "output_mulitin_zeroslope_input_alps.nc", "output_mulitin_zeroslope_input_cor.nc", "output_mulitin_zeroslope_input_pyr.nc"
+/
+&OTHER_STUFF
 /
