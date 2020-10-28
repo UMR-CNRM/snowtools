@@ -55,6 +55,9 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 # TODO :
                 # L'archive devrait couvrir la période allant du 31/07 précendent à 6h jusqu'à J-1 6h bien que
                 # la réanalyse mensuelle n'utilise les guess que jusqu'à J-4 6h
+
+                # TODO : Ajouter un mode secours en récupérant les archives de J-2, J-3,... et en les complètant
+                # avec les guess manquants
                 self.sh.title('Toolbox input tb01')
                 tb01 = toolbox.input(
                     role           = 'Reanalyse',
@@ -86,6 +89,28 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 block          = 'guess',
                 geometry       = self.conf.vconf,
                 cutoff         = 'assimilation',
+                date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 30, self.conf.cumul)],
+                cumul          = self.conf.cumul,
+                nativefmt      = 'ascii',
+                kind           = 'guess',
+                model          = 'safran',
+                source_app     = self.conf.source_app,
+                source_conf    = self.conf.deterministic_conf,
+                namespace      = 'vortex.cache.fr',
+                fatal          = True,
+            ),
+            print t.prompt, 'tb02 =', tb02
+            print
+
+            # Mode secours : on prend la prévision correspondante
+            self.sh.title('Toolbox input tb02')
+            tb02 = toolbox.input(
+                alternate      = 'Ebauche',
+                local          = 'P[date::addcumul_yymdh]',
+                experiment     = self.conf.xpid,
+                block          = 'guess',
+                geometry       = self.conf.vconf,
+                cutoff         = 'prevision',
                 date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 30, self.conf.cumul)],
                 cumul          = self.conf.cumul,
                 nativefmt      = 'ascii',

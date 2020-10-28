@@ -50,8 +50,10 @@ class PrepSafran(Task, S2MTaskMixIn):
             missing_dates = list()
             # On veut commencer les guess au 31/07 6h
             rundate = datebegin - Period(days=1)
-            # On peut s'arrêter à J-4
-            while rundate < dateend:
+            # On s'arrête à J-4 pour produire le même fichier que le 'refill' journalier
+            # TODO --> il serait plus logique d'aller jusqu'à 6H (J) pour avoir un mode secours
+            # ==> Modification simultanéee de prepsaf_reana ET safran_ana (12H) 
+            while rundate < dateend + Period(days=4):
 
                 # 1. Check if guess file already exists
                 self.sh.title('Toolbox input guess {0:s}'.format(rundate.ymdh))
