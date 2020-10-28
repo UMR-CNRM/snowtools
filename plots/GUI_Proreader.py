@@ -1407,6 +1407,7 @@ class GraphMembre(Graph):
         self.ChoixPossible = [True, True, True, True]
         self.type_fichier = ''
         self.old_date = None
+        self.plotted_once = False
 
         self.label_var = Label(self,text = '2: Variable à tracer')
         self.label_choix_profil = Label(self,text = '3: Choix variable profil')
@@ -1476,7 +1477,10 @@ class GraphMembre(Graph):
         self.clik_zoom = True
     
     def update_plot(self,value):
-        self.date_motion = self.date[int(value)]
+        if value is not None :
+            self.date_motion = self.date[int(value)]
+        elif not hasattr(self, 'date_motion'):
+            self.date_motion = self.date[0]
         self.ax1.clear()
         if ('snow_layer' in self.ff.getdimvar(self.variable)):
             self.pro.plot_membre(self.ax1, self.variable, date = self.date_motion, real_layers = True, legend = self.variable, cbar_show = False)
@@ -1525,9 +1529,11 @@ class GraphMembre(Graph):
     def liste_profil(self, event):
         variable_for_pres = self.combobox.get()
         self.variable = self.liste_variable[self.liste_variable_for_pres.index(variable_for_pres)]
-        self.info('Variable {} selected'.format(self.variable))
-        if self.bool_profil:
-            self.pro = proReader_mini.ProReader_membre(ncfile = self.filename, var = self.variable, point = int(self.point_choisi))
+        logger.info('Variable {} selected'.format(self.variable))
+        #  FIXME: Could not stay here, this is called each time a combobox is selected and read all netCDF files wiath all variables !  <23-10-20, Léo Viallon-Galinier> # 
+        # Temporarily removed (is this have a reason to be here ?)
+        #if self.bool_profil:
+        #    self.pro = proReader_mini.ProReader_membre(ncfile = self.filename, var = self.variable, point = int(self.point_choisi))
 
         Graph.liste_profil(self)
 
@@ -1547,7 +1553,11 @@ class GraphMembre(Graph):
     # TRACE
     ##########################################################
     def Plotage(self):
-        self.pro = proReader_mini.ProReader_membre(ncfile=self.filename, var = self.variable, point = int(self.point_choisi))
+        if not self.plotted_once:
+            #  TODO: This have not be checked, but it may not be necessary to re_read all files all the time ! This is quite long for members.
+            # If not necessary everywhere should be simplified everywhere ! ProReader_member (at least) seem to read all data. <23-10-20, Léo Viallon-Galinier> # 
+            self.pro = proReader_mini.ProReader_membre(ncfile=self.filename, var = self.variable, point = int(self.point_choisi))
+            self.plotted_once  = True
         self.nmembre = self.pro.nb_membre
         self.fig1.clear()
         self.ax1.clear()
@@ -1573,6 +1583,7 @@ class GraphMembre(Graph):
         #self.buttonSave3.config(state = 'normal', command = self.Pickle_plot)
         self.figclear = False
         self.clik_zoom = False
+        self.update_plot(None)
 
 ################################################################################################
 ################################################################################################

@@ -13,6 +13,8 @@ import matplotlib.cm as cm
 from matplotlib import collections
 import matplotlib.colors as colors
 import Dictionnaries
+import logging
+logger = logging.getLogger()
 
 
 def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=None, legend=None, cbar_show=True):
@@ -51,6 +53,13 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
 
     vertices = vertices[(dz > 0).ravel()]
 
+    maxval = np.ma.is_masked(np.nanmax(value))
+    minval = np.ma.is_masked(np.nanmin(value))
+    if np.ma.is_masked(maxval):
+        maxval=1
+    if np.ma.is_masked(minval):
+        minval=0.1
+
     extend='neither'
     if colormap == 'grains':
         cmap = Dictionnaries.grain_colormap
@@ -60,16 +69,16 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
         vmax = 14.5
     elif colormap == 'echelle_log':
         cmap = cm.gray_r
-        Vmin = max(np.amin(value),0.0000000001)
-        Vmax = min(max(0.000000001, np.amax(value)),1)
+        Vmin = max(minval,0.0000000001)
+        Vmax = min(max(0.000000001, maxval),1)
         norm = colors.LogNorm(vmin=Vmin, vmax=Vmax)    
         cmap.set_under('#fff2fd')
         extend='min'
     elif colormap == 'echelle_log_sahara':
         cmap = cm.gist_heat_r
-        Vmin = max(np.amin(value),0.0000000001)
-        Vmax = min(max(0.000000001, np.amax(value)),1)
-        value[value==0] = Vmin/2
+        Vmin = max(minval,0.0000000001)
+        Vmax = min(max(0.000000001, maxval),1)
+        value = value.clip(Vmin/2,Vmax)
         norm = colors.LogNorm(vmin=Vmin, vmax=Vmax)
         cmap.set_under('#fff2fd')
         extend='min'
