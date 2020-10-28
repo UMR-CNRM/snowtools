@@ -321,6 +321,10 @@ class Safran(Task, S2MTaskMixIn):
             if self.conf.rundate.hour == 12:
 
                 # Récupération de l'archive contenant tous les guess depuis le début de la saison
+                # TODO : a modifier en même temps que prepsaf_reana et refill_guess_safran
+                # pour que l'archive contenant les guess aille jusqu'à J, même si SAFRAN n'utilise pas
+                # les guess des 4 derniers jours (réanalyse mensuelle jusqu'à J-4)
+                # Cela permettrait d'avoir des modes secours
                 self.sh.title('Toolbox input tb17')
                 tb17 = toolbox.input(
                     role           = 'Ebauche',
@@ -394,28 +398,30 @@ class Safran(Task, S2MTaskMixIn):
                 print
 
                 # I.3- En dernier recours on essaye le réseau de production de 0h J-1
-                self.sh.title('Toolbox input tb17_c')
-                tb17_c = toolbox.input(
-                    alternate      = 'Ebauche',
-                    local          = 'mb035/P[date::addcumul_yymdh]',
-                    experiment     = self.conf.xpid_guess,
-                    block          = self.conf.guess_block,
-                    geometry       = self.conf.vconf,
-                    cutoff         = 'production',
-                    date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(30, ndays * 24 + 6, 24)],
-                    cumul          = footprints.util.rangex('6-30-6'),
-                    nativefmt      = 'ascii',
-                    kind           = 'guess',
-                    model          = 'safran',
-                    source_app     = self.conf.source_app,
-                    source_conf    = self.conf.deterministic_conf,
-                    namespace      = self.conf.namespace,
-                    fatal          = False,
-                ),
-                print t.prompt, 'tb17_c =', tb17_c
-                print
+                # PROBLEME : le nom dans 'local' change donc on passe dans l'alternate même si la ressource voulue
+                # est déjà présente
+#                self.sh.title('Toolbox input tb17_c')
+#                 tb17_c = toolbox.input(
+#                     alternate      = 'Ebauche',
+#                     local          = 'mb035/P[date::addcumul_yymdh]',
+#                     experiment     = self.conf.xpid_guess,
+#                     block          = self.conf.guess_block,
+#                     geometry       = self.conf.vconf,
+#                     cutoff         = 'production',
+#                     date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(30, ndays * 24 + 6, 24)],
+#                     cumul          = footprints.util.rangex('6-30-6'),
+#                     nativefmt      = 'ascii',
+#                     kind           = 'guess',
+#                     model          = 'safran',
+#                     source_app     = self.conf.source_app,
+#                     source_conf    = self.conf.deterministic_conf,
+#                     namespace      = self.conf.namespace,
+#                     fatal          = False,
+#                 ),
+#                 print t.prompt, 'tb17_c =', tb17_c
+#                 print
 
-                # II- PEARP (J-5) -> J
+                # II- PEARP (J-5) -> (J-1) ou (J-1) -> J
                 # --------------------
                 # II.1- EBAUCHE issue des prevision P0/P6/P12/P18/P24 du réseau 6h (J-n) de la PEARP pour couvrir (J-5) 6h -> (J-1) 6h
                 # RQ : on ne peut pas mélanger des resources issues de runs différents pour conserver des cumuls de précipitations cohérents
