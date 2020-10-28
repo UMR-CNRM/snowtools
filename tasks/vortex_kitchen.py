@@ -7,12 +7,12 @@ Created on 23 févr. 2018
 @author: lafaysse
 '''
 
-import os
 import datetime
+import os
 import shutil
 
-from utils.resources import InstallException
 from utils.dates import WallTimeException
+from utils.resources import InstallException
 
 
 class vortex_kitchen(object):
@@ -64,8 +64,11 @@ class vortex_kitchen(object):
         if not self.options.ntasks:
             if 'beaufix' in machine or 'prolix' in machine:
                 self.options.ntasks = 40
-            elif 'epona' in machine or 'belenos' in machine:
-                self.options.ntasks = 128
+            elif any(host in machine for host in ['epona', 'belenos', 'taranis']):
+                if self.options.safran:
+                    self.options.ntasks = 120
+                else:
+                    self.options.ntasks = 80 # optimum constaté pour la réanalyse Alpes avec léger dépeuplement parmi les 128 coeurs.
 
     def execute(self):
 
@@ -212,7 +215,7 @@ class vortex_kitchen(object):
 
     def mkjob_list_commands(self):
 
-        if self.options.escroc and self.options.nnodes > 1:
+        if not self.options.safran and (self.options.escroc and self.options.nnodes > 1):
             mkjob_list = []
             print("loop")
             for node in range(1, self.options.nnodes + 1):
@@ -223,7 +226,7 @@ class vortex_kitchen(object):
             return [self.mkjob_command()]
 
     def run(self):
-        
+
         mkjob_list = self.mkjob_list_commands()
 
         os.chdir(self.jobdir)
@@ -266,6 +269,8 @@ class vortex_kitchen(object):
             key = self.options.region if self.options.region in list(minutes_peryear.keys()) else "alp_allslopes"
 
             estimation = datetime.timedelta(minutes=minutes_peryear[key]) * max(1, (self.options.datefin.year - self.options.datedeb.year)) * (1 + nmembers / (40 * self.options.nnodes) )
+
+            #!!!! Ne marche pas à tous les coups... 
 
             if estimation >= datetime.timedelta(hours=24):
                 raise WallTimeException(estimation)
