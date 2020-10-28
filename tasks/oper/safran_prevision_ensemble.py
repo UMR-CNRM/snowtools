@@ -61,7 +61,9 @@ class Safran(Task, S2MTaskMixIn):
             print t.prompt, 'tb01a =', tb01a
             print
 
-            # L'A6 du réseau 0h J n'est pas là pour le run de 3h, on prend la P6 du réseau 0h J
+            # L'A6 du réseau 0h J n'est génaralement pas encore là pour le run de 3h, SAFRAN utilisera alors la P6
+            # du réseau 0h J récupérée dans la TB suivante car également utilisée pour la prévision de J à J+1.
+            # En l'état même si l'A6 du réseau 0h est présente, elle sera écrasée par la P6 qui porte le même nom...
             # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur 6h homogène avec le cumul dans les fichiers d'assimilation
             # P6 du réseau 0h (J)
 
@@ -278,19 +280,21 @@ class Safran(Task, S2MTaskMixIn):
             print t.prompt, 'tb12 =', tb12
             print
 
-            self.sh.title('Toolbox input tb13')
-            tb13 = toolbox.input(
-                role            = 'Nam_observr',
-                source          = 'namelist_observr_[geometry]',
-                geometry        = self.conf.vconf,
-                genv            = self.conf.cycle,
-                kind            = 'namelist',
-                model           = self.conf.model,
-                local           = 'OBSERVR',
-                fatal           = False,
-            )
-            print t.prompt, 'tb13 =', tb13
-            print
+            if self.conf.vconf == 'pyr':
+
+                self.sh.title('Toolbox input tb13')
+                tb13 = toolbox.input(
+                    role            = 'Nam_observr',
+                    source          = 'namelist_observr_[geometry]',
+                    geometry        = self.conf.vconf,
+                    genv            = self.conf.cycle,
+                    kind            = 'namelist',
+                    model           = self.conf.model,
+                    local           = 'OBSERVR',
+                    fatal           = False,
+                )
+                print t.prompt, 'tb13 =', tb13
+                print
 
             self.sh.title('Toolbox input tb14')
             tb14 = toolbox.input(
