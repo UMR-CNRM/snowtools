@@ -150,11 +150,17 @@ class infomassifs():
                 metadata = os.environ['HOME_RO'] + '/METADATA.xml'
             else:
                 metadata = os.environ['SNOWTOOLS_CEN'] + '/DATA/METADATA.xml'
-        else:
+        elif 'SNOWTOOLS_CEN' in list(os.environ.keys()):
             metadata = os.environ['SNOWTOOLS_CEN'] + '/DATA/METADATA.xml'
+        else:
+            metadata = './DATA/METADATA.xml'
 
         if not (os.path.isfile(metadata) or os.path.islink(metadata)):
-            raise FileNameException(metadata)
+            try:
+                import importlib.resources # Python > 3.7
+                metadata = importlib.resources.open_text('DATA', 'METADATA.txt', encoding='utf-8', errors='strict')
+            except:
+                raise FileNameException(metadata)
 
         try:
 
@@ -208,7 +214,7 @@ class infomassifs():
                 liste_expo = [nclasses]  # on impose une exposition en degrés
             else:
                 liste_expo = list(range(0, 360, 360 // nclasses))
-            if "0" in liste_pentes[0]:
+            if "0" in liste_pentes:
                 liste_expo = [-1] + liste_expo
 
         return liste_expo

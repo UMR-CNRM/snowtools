@@ -20,18 +20,14 @@ class configdev(object):
     rundate = Date(2018, 10, 26, 3)    # Run date can be at 3TU, 6TU, 9TU
     previ = False  # False for analysis, True for forecast
     xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
-    list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']  # List of extracted geometries
-
-    list_members = footprints.util.rangex(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+    list_geometry = ["alp", "pyr", "cor", "postes"]
 
 
 class config(object):
     rundate = Date(2018, 10, 26, 3)    # Run date can be at 3TU, 6TU, 9TU
     previ = False  # False for analysis, True for forecast
     xpid = "oper"
-    list_geometry = ['alp', 'pyr', 'cor', 'postes']  # List of extracted geometries
-
-    list_members = footprints.util.rangex(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+    list_geometry = ["alp", "pyr", "cor", "postes"]
 
 
 def parse_options(arguments):
@@ -49,9 +45,17 @@ def parse_options(arguments):
                       action="store_true", dest="dev", default=False,
                       help="Dev chain instead of operational chain")
 
-    parser.add_option("--deterministic",
-                      action="store_true", dest="deterministic", default=False,
-                      help="Dev chain instead of operational chain")
+    parser.add_option("-r",
+                      action="store", type="string", dest="region", default='all',
+                      help="alp, pyr, cor, postes, all")
+    
+    parser.add_option("--meteo",
+                      action="store_true", dest="meteo", default=True,
+                      help="Extract meteorological forcing files")    
+
+    parser.add_option("--snow",
+                      action="store_true", dest="snow", default=True,
+                      help="Extract snowpack model output files")
 
     (options, args) = parser.parse_args(arguments)  # @UnusedVariable
 
@@ -61,20 +65,25 @@ def parse_options(arguments):
 class configcommand(config):
 
     def __init__(self, options):
-        if options.dev:
-            for key, var in six.iteritems(vars(configdev())):
-                setattr(self, key, var)
-
         self.rundate = check_and_convert_date(options.datebegin)
-
-        if options.deterministic:
-            self.list_members = footprints.util.rangex(35, 35)
+        
+        if not options.region == "all":
+            self.list_geometry = options.region
+            
+        self.meteo = options.meteo
+        self.snow = options.snow
 
 class configcommanddev(configdev):
 
-    def __init__(self):
+    def __init__(self, options):
         self.rundate = check_and_convert_date(options.datebegin)
 
+        if not options.region == "all":
+            self.list_geometry = options.region
+
+        self.meteo = options.meteo
+        self.snow = options.snow
+        
 
 class S2MExtractor(S2MTaskMixIn):
 
@@ -84,8 +93,15 @@ class S2MExtractor(S2MTaskMixIn):
         self.datebegin, self.dateend = self.get_period()
 
     def get(self):
-        meteo_outputs = self.get_meteo()
-        snow_outputs = self.get_snow()
+        if self.meteo:
+            meteo_outputs = self.get_meteo()
+        else:
+            meteo_outputs = None
+        if self.snow:
+            snow_outputs = self.get_snow()
+        else:
+            snow_outputs = None
+
         return meteo_outputs, snow_outputs
 
     def get_meteo(self):
@@ -93,21 +109,20 @@ class S2MExtractor(S2MTaskMixIn):
         tb01 = toolbox.input(
             vapp           = 's2m',
             vconf          = '[geometry::area]',
-            local          = '[geometry::area]/[date:ymdh]/mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+            local          = '[geometry::area]/[date:ymdh]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment     = self.conf.xpid,
             block          = 'meteo',
             geometry       = self.conf.list_geometry,
             date           = self.conf.rundate,
             datebegin      = self.datebegin,
             dateend        = self.dateend,
-            member         = self.conf.list_members,
             nativefmt      = 'netcdf',
             kind           = 'MeteorologicalForcing',
             model          = 's2m',
             namespace      = 'vortex.multi.fr',
             cutoff         = 'production' if self.conf.previ else 'assimilation',
             intent         = 'in',
-            fatal          = False
+            fatal          = True
         )
 
         return self.get_std(tb01)
@@ -117,21 +132,20 @@ class S2MExtractor(S2MTaskMixIn):
         tb02 = toolbox.input(
             vapp           = 's2m',
             vconf          = '[geometry::area]',
-            local          = '[geometry::area]/[date:ymdh]/mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+            local          = '[geometry::area]/[date:ymdh]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment     = self.conf.xpid,
             block          = 'pro',
             geometry       = self.conf.list_geometry,
             date           = self.conf.rundate,
-            datebegin      = self.datebegin if self.conf.previ else '[dateend]/-PT24H',
-            dateend        = self.dateend if self.conf.previ else list(daterange(tomorrow(base=self.datebegin), self.dateend)),
-            member         = self.conf.list_members,
+            datebegin      = self.datebegin,
+            dateend        = self.dateend,
             nativefmt      = 'netcdf',
             kind           = 'SnowpackSimulation',
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
             cutoff         = 'production' if self.conf.previ else 'assimilation',
             intent         = 'in',
-            fatal          = False
+            fatal          = True
 
         )
 
@@ -154,5 +168,8 @@ class S2MExtractor(S2MTaskMixIn):
 if __name__ == "__main__":
 
     options = parse_options(sys.argv)
-    S2ME = S2MExtractor(conf=configcommand(options))
+    if options.dev:
+        S2ME = S2MExtractor(conf=configcommanddev(options))
+    else:
+        S2ME = S2MExtractor(conf=configcommand(options))
     S2ME.get()

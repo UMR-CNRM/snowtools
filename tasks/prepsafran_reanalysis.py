@@ -4,22 +4,17 @@
 
 __all__ = []
 
+from bronx.stdtypes.date import Date
+from bronx.stdtypes.date import Period
+from cen.layout.nodes import S2MTaskMixIn
 import footprints
-logger = footprints.loggers.getLogger(__name__)
-
+import glob
 import os
-
+import tarfile
 from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
-from cen.layout.nodes import S2MTaskMixIn
-from vortex.tools.systems import System
 
-from bronx.stdtypes.date import Date
-
-import tarfile
-import glob
-
-from bronx.stdtypes.date import Period
+logger = footprints.loggers.getLogger(__name__)
 
 
 def setup(t, **kw):
@@ -49,6 +44,7 @@ class PrepSafran(Task, S2MTaskMixIn):
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
             tbarp   = list()
+            interp = ' -i IDW'
             rundate = self.conf.datebegin
             while rundate <= self.conf.dateend:
 
@@ -63,7 +59,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     experiment     = 'OPER@vernaym',
                     cutoff         = 'assimilation',
                     block          = self.conf.guess_block,
-                    date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                    date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                     cumul          = self.conf.cumul,
                     nativefmt      = 'ascii',
                     kind           = 'guess',
@@ -80,8 +76,10 @@ class PrepSafran(Task, S2MTaskMixIn):
 
                     # 2. Get ARPEGE file 
                     # Recuperation de A6 du réseau H-6 pour H in [0, 6, 12, 18]
-                    if rundate < Date(2019, 7, 1, 0):
 
+                    if rundate >= Date(2018, 7, 1) and rundate < Date(2019, 7, 1, 0):
+                        # Sorties de la chaine ARPEGE oper en ksh, disponibles jusqu'ai 01/07/2018 à la date du 08/08/2020
+                        # Date à revoir en fonction de la durée de rétention sur hendrix
                         self.sh.title('Toolbox input tb02')
                         tbarp.extend(toolbox.input(
                             role           = 'Gridpoint',
@@ -89,7 +87,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             geometry       = 'euroc25',
                             kind           = 'gridpoint',
                             local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
-                            date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                            date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                             term           = self.conf.cumul,
                             nativefmt      = '[format]',
                             #remote         = '/home/mrns/vernaym/extraction_bdap/[vconf]/arpege_[date::ymdh]_[term::hour].grib',
@@ -110,7 +108,58 @@ class PrepSafran(Task, S2MTaskMixIn):
                         print t.prompt, 'tb02 =', tbarp
                         print
 
+                    elif rundate < Date(2018, 7, 1):
+                        # Pour les dates les plus anciennes aucun archivage sur hendrix n'est disponible
+                        # Il faut alors extraire les champs des guess depuis la BDPE avec le script 
+                        # creation_fichiers_RST.py sur guppy
+
+                        self.sh.title('Toolbox input tb02')
+                        tbarp.extend(toolbox.input(
+                            role           = 'Gridpoint',
+                            format         = 'grib',
+                            geometry       = 'euroc25',
+                            kind           = 'gridpoint',
+                            local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
+                            date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                            term           = self.conf.cumul,
+                            nativefmt      = '[format]',
+                            remote         = '/home/mrns/vernaym/extraction_bdap/[vconf]/arpege_[date::ymdh]_[term::hour].grib',
+                            hostname       = 'guppy.meteo.fr',
+                            tube           = 'ftp',
+                            origin         = 'arpege',
+                            fatal          = False,
+                            #suite          = 'oper',
+                            #cutoff         = 'assimilation',
+                            # local          = 'mb035/ARPEGE[date::addterm_ymdh]',
+                            #namespace      = 'oper.multi.fr',
+                            #origin         = 'historic',
+                            #model          = '[vapp]',
+                            #vapp           = self.conf.source_app,
+                            #vconf          = self.conf.deterministic_conf,
+                            #fatal          = False,
+                        ))
+                        print t.prompt, 'tb02 =', tbarp
+                        print
+
+
+                        self.sh.title('Toolbox input tb_ebauche')
+                        tb_ebauche = toolbox.input(
+                            role            = 'Nam_ebauche',
+                            source          = 'namelist_ebauche_[geometry]',
+                            geometry        = self.conf.vconf,
+                            genv            = self.conf.cycle,
+                            kind            = 'namelist',
+                            model           = self.conf.model,
+                            local           = 'EBAUCHE_[vconf]',
+                        )
+                        print t.prompt, 'tb_tb_ebauche =', tb_ebauche
+                        print
+                        
+                        interp = ''
+
                     else:
+                        # Pour les dates les plus récentes les sorties de la chaine ARPEGE oper en vortex sont 
+                        # normalement disponibles sur hendrix
 
                         self.sh.title('Toolbox input tb02')
                         tbarp.extend(toolbox.input(
@@ -121,7 +170,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             #filtername     = 'concatenate',
                             suite          = 'oper',
                             local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
-                            date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                            date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                             # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                             term           = self.conf.cumul,
                             namespace      = 'vortex.multi.fr',
@@ -143,10 +192,10 @@ class PrepSafran(Task, S2MTaskMixIn):
             tb03 = script = toolbox.input(
                 role        = 'pretraitement',
                 local       = 'makeP.py',
-                genv        = 'uenv:s2m.01@vernaym',
+                genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -a -d {0:s} -i IDW -f '.format(self.conf.vconf) + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp)]))),
+                rawopts     = '{0:s} -a -d {1:s} -f '.format(interp, self.conf.vconf) + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp)]))),
             )
             print t.prompt, 'tb03 =', tb03
             print
@@ -176,12 +225,9 @@ class PrepSafran(Task, S2MTaskMixIn):
                 vconf          = self.conf.vconf,
                 engine         = 'exec',
                 kind           = 'guess',
-                # interpreter    = script[0].resource.language,
                 interpreter    = 'current',
                 ntasks         = self.conf.ntasks,
-                members        = footprints.util.rangex(self.conf.members),
                 terms          = footprints.util.rangex(self.conf.ana_terms),
-                extendpypath = ['/home/gmap/mrpe/mary/public/eccodes_python'] + [self.sh.path.join(self.conf.rootapp, d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site']],
             )
             print t.prompt, 'tb04 =', expresso
             print
@@ -235,8 +281,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
-                #now            = True,
-
+                date           = self.conf.dateend.ymd6h,
             ),
             print t.prompt, 'tb05 =', tb05
             print

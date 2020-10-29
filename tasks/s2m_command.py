@@ -31,7 +31,7 @@ class Surfex_command(_S2M_command):
 
     def execute(self):
         machine = os.uname()[1]
-        if "beaufix" in machine or "prolix" in machine or "epona" in machine:
+        if "beaufix" in machine or "prolix" in machine or "epona" in machine or "belenos" in machine:
             self.execute_through_vortex()
         else:
             self.execute_without_vortex()
@@ -263,6 +263,10 @@ class Surfex_command(_S2M_command):
         parser.add_option("--ntasks",
                           action="store", type="int", dest="ntasks", default=None,
                           help="Number of tasks (and procs) per node.")
+
+        parser.add_option("--debug",
+                          action="store_true", dest="debug", default=False,
+                          help="Debug task with files available on server")
 
         (options, args) = parser.parse_args(arguments)
 

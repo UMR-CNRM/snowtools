@@ -57,6 +57,7 @@ import six
 
 import contextlib
 import logging
+import sys
 
 from bronx.syntax.decorators import nicedeco
 
@@ -136,6 +137,50 @@ def contextboundGlobalLevel(level):
         finally:
             for a_logger, level in zip(known_roots, known_levels):
                 a_logger.setLevel(level)
+
+
+@contextlib.contextmanager
+def contextboundRedirectStdout(outputs=None):
+    """Within this context manager, redirect all the outputs to a StringIO object."""
+    if outputs is None:
+        outputs = six.StringIO()
+    # Tweak the default console
+    global console
+    prev_console = console
+    console = logging.StreamHandler(stream=outputs)
+    console.setLevel(logging.DEBUG)
+    console.setFormatter(formats['default'])
+    # Tweak the various root loggers
+    roots_todo = dict()
+    for lname in roots:
+        alogger = logging.getLogger(lname)
+        shandlers = [h for h in alogger.handlers
+                     if (isinstance(h, logging.StreamHandler) and
+                         h.stream in (sys.stderr, sys.stdout))]
+
+        for ahandler in shandlers:
+            alogger.removeHandler(ahandler)
+        outputs_handler = logging.StreamHandler(stream=outputs)
+        outputs_handler.setFormatter(shandlers[0].formatter)
+        outputs_handler.setLevel(max([h.level for h in shandlers]))
+        alogger.addHandler(outputs_handler)
+        roots_todo[alogger] = (shandlers, outputs_handler)
+    try:
+        yield outputs
+    finally:
+        # Restore the previous default console
+        for lname in roots:
+            alogger = logging.getLogger(lname)
+            shandlers = [h for h in alogger.handlers if h is console]
+            for ahandler in shandlers:
+                alogger.removeHandler(console)
+                alogger.addHandler(prev_console)
+        console = prev_console
+        # Restore all the other stream loggers
+        for alogger, (shandlers, outputs_handler) in roots_todo.items():
+            alogger.removeHandler(outputs_handler)
+            for ahandler in shandlers:
+                alogger.addHandler(ahandler)
 
 
 def fdecoGlobalLevel(level):

@@ -37,7 +37,6 @@ def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam", forcing="
 
 def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc", dateend=None, updateloc=True, physicaloptions={}, snowparameters={}):
     '''This function updates a NamelistSet object of the bronx module or a NamelistContents object of the vortex module.'''
-
     NamelistObject = update_mandatory_settings(NamelistObject)
     NamelistObject = update_dates(NamelistObject, datebegin)
     if updateloc:
@@ -186,7 +185,7 @@ def update_namelist_var(namelist_file, data_file):
     ''' This function was implemented by C. Carmagnola in December 2018 (PROSNOW project).
     It reads "water consumption data for snowmaking" from an external file (data_file) and updates a namelist (namelist_file) accordingly.'''
 
-    # Read data from an external file
+    # 1) Read data from an external file
 
     if not os.path.isfile(data_file):
         raise FileNameException(data_file)
@@ -196,16 +195,16 @@ def update_namelist_var(namelist_file, data_file):
 
     for line in mdat:
         maliste = line.split()
-        var_tbc = var_tbc + [maliste[1]]
+        var_tbc = var_tbc + [maliste[2]]
 
     for i in range(len(var_tbc)):
-        var_tbc[i] = int(var_tbc[i])
+        var_tbc[i] = float(var_tbc[i])
 
 #     print "Water consumption for snowmaking (kg/m2) - In external file:"
 #     print var_tbc
 #     print "--------------"
 
-    # Put data from an external file into the namelist
+    # 2) Put data from an external file into the namelist
 
     if not os.path.isfile(namelist_file):
         raise FileNameException(namelist_file)
@@ -223,8 +222,11 @@ def update_namelist_var(namelist_file, data_file):
     namSURFEX.write(NamelistObject.dumps())
     namSURFEX.close()
 
+    os.system('cp ' + namelist_file + ' OPTIONS.nam')
+
 
 # Test
 
 # if __name__ == "__main__":
-#     update_namelist_var("/home/carmagnolac/CMC/CEN/4_SIMUL/Crocus-Resort_SIMS/namelists/OPTIONS_V8.1_3.nam","/home/carmagnolac/CMC/CEN/4_SIMUL/Crocus-Resort_SIMS/Obs/2_measurements/TechnoAlpin_SAISIES.txt")
+#     update_namelist_var("/home/carmagnolac/Desktop/OPTIONS_V8.1_1h_0.nam", "/home/carmagnolac/Desktop/Technoalpin_saisies.txt")
+
