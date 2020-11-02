@@ -53,8 +53,8 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
 
     vertices = vertices[(dz > 0).ravel()]
 
-    maxval = np.ma.is_masked(np.nanmax(value))
-    minval = np.ma.is_masked(np.nanmin(value))
+    maxval = np.nanmax(value)
+    minval = np.nanmin(value)
     if np.ma.is_masked(maxval):
         maxval=1
     if np.ma.is_masked(minval):
