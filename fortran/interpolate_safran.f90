@@ -128,17 +128,17 @@ DO JINFILE = 1,NNUMBER_INPUT_GRIDS
 ! Open input file
   CALL CHECK(NF90_OPEN(HFILESIN(JINFILE), IOR(NF90_NOWRITE, NF90_MPIIO), FILE_ID_IN, &
                     comm = COMM, info = MPI_INFO_NULL), &
-                    "Cannot open file "//TRIM(HFILENAMEIN))
+                    "Cannot open file "//TRIM(HFILESIN(JINFILE)))
 !
 ! Open output file 
   CALL CHECK(NF90_create(HFILESOUT(JINFILE),IOR(IOR(NF90_NETCDF4,NF90_CLASSIC_MODEL),NF90_MPIIO),FILE_ID_OUT, &
                        comm = COMM, info = MPI_INFO_NULL),&
-                       "Cannot open file "//TRIM(HFILENAMEOUT))
+                       "Cannot open file "//TRIM(HFILESOUT(JINFILE)))
 !
 ! Open grid file
   CALL CHECK(NF90_OPEN(HGRIDSIN(JINFILE), IOR(NF90_NOWRITE, NF90_MPIIO), FILE_ID_GEO, &
                      comm = COMM, info = MPI_INFO_NULL),&
-                     "Cannot open file"//TRIM(HFILENAMEG))
+                     "Cannot open file"//TRIM(HGRIDSIN(JINFILE)))
 !
 ! Get number of dimensions and variables in the input file
   CALL CHECK(NF90_INQUIRE(FILE_ID_IN, INDIM, INVAR),"Cannot get file informations"//TRIM(HFILENAMEIN))
