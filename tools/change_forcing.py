@@ -29,6 +29,7 @@ from utils.S2M_standard_file import StandardSAFRAN, StandardCROCUS
 class forcinput_tomerge:
 
     printmemory = False
+    formatout = "NETCDF4_CLASSIC"
 
     def __init__(self, forcin, forcout, *args, **kwargs):
         '''Generic method to open merge multiple forcing files'''
@@ -53,7 +54,7 @@ class forcinput_tomerge:
         if not (dirout == '' or os.path.isdir(dirout)):
             raise DirNameException(dirout)
 
-        new_forcing_file = StandardSAFRAN(forcout, "w", format=init_forcing_file[0].format())
+        new_forcing_file = StandardSAFRAN(forcout, "w", format=self.formatout)
 
         self.merge(init_forcing_file, new_forcing_file, args)
 
