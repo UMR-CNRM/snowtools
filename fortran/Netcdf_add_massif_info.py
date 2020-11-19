@@ -11,10 +11,12 @@ import numpy as np
 import netCDF4 as nc
 from netCDF4 import Dataset
 import pandas as pd
-
+import pyproj
 
 import shapefile
 from shapely.geometry import shape, Point, Polygon, MultiPolygon
+from shapely.ops import transform
+from functools import partial
 
 import matplotlib.pyplot as plt
 
@@ -56,8 +58,13 @@ ZS = ftot.variables['ZS'][:,:]
 r = shapefile.Reader('/home/radanovicss/Interpol_hauteur_neige/Massifs_shapes/massifs_Lbrt93_2019')
 shapes = r.shapes() # get the shapes
 print(len(shapes))
+## prepare coordinate transformation from Lambert 93 to lon/lat
 
+#project = pyproj.Transformer.from_proj(pyproj.Proj(init='epsg:2154'),
+#        pyproj.Proj(init='epsg:4326'))
 
+project = partial(pyproj.transform, pyproj.Proj(init='epsg:2154'),
+        pyproj.Proj(init='epsg:4326'))
 
 ## 3- Create variable and fill in with massif number
 massif_num=np.zeros((lons.shape[0],lats.shape[0]))
@@ -74,25 +81,33 @@ for nb in range(0,len(shapes)):
     first = geomet[nb] #will extract the first polygon to a new object
     poly1_info = first.record #will show you the attributes
     M_nb=poly1_info[0]
-    
+    polygon2 = transform(project, polygon)
+    #print(M_nb)
+    #print(polygon2)
+    #raise RuntimeError
+
     #Select point into the polygone and add massif info
     for i in range(0,lons.shape[0]):
+        #print(i)
         for j in range(0,lats.shape[0]):
             point = Point(lons[i], lats[j])
-            R = polygon.contains(point)
+           # print(point)
+            R = polygon2.contains(point)
+            #print(R)
             if R:
+               # print(M_nb)
                 massif_num[i,j]=M_nb
           
             
 ## 4- Check results if you want            
 results=np.transpose(massif_num)        
-plt.imshow(results);
-plt.colorbar()
-plt.show()   
+#plt.imshow(results);
+#plt.colorbar()
+#plt.show()   
    
-plt.imshow(ZS);
-plt.colorbar()
-plt.show()  
+#plt.imshow(ZS);
+#plt.colorbar()
+#plt.show()  
 
 
 #%% 5- Save netcdf file
@@ -109,12 +124,12 @@ B=outputs.createVariable('longitude', np.float64,('lon',), fill_value=-9999)
 C=outputs.createVariable('massif_num', np.float64, ('lat', 'lon'), fill_value=-9999)
 D=outputs.createVariable('ZS', np.float64, ('lat', 'lon'), fill_value=-9999)
 
-num=np.flip(results,0)
-Z=np.flip(ZS,0)
+# num=np.flipud(results)
+# Z=np.flipud(ZS)
 outputs["latitude"][:,] = lats
 outputs["longitude"][:,] = lons
-outputs["massif_num"][:,:] = num
-outputs["ZS"][:,:] = Z
+outputs["massif_num"][:,:] = results #num
+outputs["ZS"][:,:] = ZS # Z
 
 A.setncatts({'long_name': u"latitude",\
                 'units': u"degrees_north"})    
