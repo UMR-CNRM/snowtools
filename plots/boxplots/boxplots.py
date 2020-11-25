@@ -92,7 +92,15 @@ class boxplots_bydepartment(boxplots):
 #         list_dep_uniq = list(set(list_dep))
 #         list_dep_uniq.sort()
 
+<<<<<<< HEAD
         list_dep_uniq = ['74', '73', '38, 26', '05', '04, 06', '64, 65', '31, 09', '66, 99', '20']
+=======
+        list_dep_uniq = dict(
+                Alps = ['74', '73', '38, 26', '05', '04, 06'],
+                Pyrenees = ['64, 65', '31, 09', '66, 99'],
+                Corsica = ['20'],
+            )
+>>>>>>> plots
 
         for dep in list_dep_uniq:
 

@@ -540,7 +540,6 @@ class Map_massif(_Map_massifs):
 
         self.fig.subplots_adjust(bottom=0.005, left=0.005, top=0.95, right=0.9)
 
-
         self.map = self.getmap(self.latmin, self.latmax, self.lonmin, self.lonmax)
         self.map.drawcoastlines(linewidth=1)
 #        self.map.drawcountries()

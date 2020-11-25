@@ -6,7 +6,6 @@
 # Script simplifié pour obtenir un format obs.csv depuis la BDCLIM
 
 import sys, os
-import string
 import re
 import datetime
 
@@ -41,13 +40,13 @@ class question(object):
         self.fichier.write("\o " + name + "\n")
 
     def set_varout(self, listvar):
-        self.fichier.write("select " + string.join(listvar, ",") + "\n")
+        self.fichier.write("select " + ",".join(listvar) + "\n")
 
     def set_order(self, listvar):
-        self.fichier.write("order by " + string.join(listvar, ",") + ";\n")
+        self.fichier.write("order by " + ",".join(listvar) + ";\n")
 
     def set_tables(self, listtables):
-        self.fichier.write("from " + string.join(listtables, " join ") + "\n")
+        self.fichier.write("from " + " join ".join(listtables) + "\n")
 
     def set_period(self, datedeb, datefin):
         self.fichier.write("    where DAT between to_timestamp('" + datedeb + "','YYYYMMDDHH24')\n")
@@ -77,12 +76,12 @@ if __name__ == "__main__":
     if append:
         appendfile = sys.argv[3]
 
-    # II.1.1 construction de la question pour les postes nivo pour la HTN
-    # ---------------------------------------------------------------------------
+    # II.1.1 construction de la question pour tous les postes sauf les sondages pour la HTN
+    # -------------------------------------------------------------------------------------
     # On prend toutes les heures
 
 
-    question1 = question("question_nivometeo.q")
+    question1 = question("question_allHTN.q")
     question1.set_fileout("HTN.obs")
     question1.set_varout(["to_char(dat,'YYYY-MM-DD-HH24-MI')", "h.num_poste", "neigetot", "type_nivo"])
     question1.set_tables(["H", "POSTE_NIVO"])
@@ -105,7 +104,7 @@ if __name__ == "__main__":
         ficname = "OBS_" + datedeb + "_" + datefin + ".csv"
  
     c = csv.writer(open(ficname, "wb"), delimiter=";")
-    c.writerow(['NUMPOST', 'Date UTC', "HTN cm"])
+    c.writerow(['NUMPOST', 'Date UTC', "HTN cm", "type_nivo"])
  
     if append:
         csvold = open("old.csv", "r")
