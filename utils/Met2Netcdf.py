@@ -344,7 +344,7 @@ def open_met_file_and_create_tab(filename, option_recup, date_entree_debut, date
                 Liste_date.append(check_and_convert_date(date))
 
         # Recuperation de PSurf et Wind_DIR sur table CdP, sinon, valeurs par défaut
-        if option_recup and site =='38472403':
+        if option_recup and site =='38472401':
             data_cdp = recup_cdp(first_date,last_date,pas_de_temps_met)
             # traitement du cas où des valeurs sont absentes de la table CdP
             if len(data_cdp[:]) == 0:
@@ -435,11 +435,7 @@ def recup_safran(date_1,date_2,pas, site):
     path = '/era40/vortex/s2m/postes/reanalysis/meteo/' # EN DUR
 
     Liste_date = [date_1 + datetime.timedelta(seconds=x) for x in range(0, int((date_2 - date_1).total_seconds()),pas)]
-    print(date_1)
-    print(date_2)
     date_b, date_e = get_file_period('FORCING', path, date_1, date_2)
-    print(date_b)
-    print(date_e)
 
 
     forcing = path + '/FORCING_' + date_b.strftime('%Y%m%d%H') + '_' + date_e.strftime('%Y%m%d%H') + '.nc'
