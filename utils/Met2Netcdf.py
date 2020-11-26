@@ -23,7 +23,7 @@ from utils.infomassifs import infomassifs
 def recup_donnees_site(nom_site):
     IM = infomassifs()
     LAT, LON, ZS, UREF, ZREF, aspect, slope, name = IM.infoposte_extensive(nom_site)
-    Tab_point = np.zeros(7)
+    Tab_point = np.zeros(8)
     Tab_point[0] = float(LAT)
     Tab_point[1] = float(LON)
     Tab_point[2] = float(UREF)
@@ -31,6 +31,7 @@ def recup_donnees_site(nom_site):
     Tab_point[4] = float(ZS)
     Tab_point[5] = float(aspect)
     Tab_point[6] = float(slope)
+    Tab_point[7] = int(nom_site)
     return Tab_point, name
 
 def message_accueil(option_bool, nom_site):
@@ -55,7 +56,7 @@ def parseArguments():
     parser.add_argument('-r', "--recup", help="Option for recup PSurf in database.", type=lambda x: (str(x).lower() in ['true', 'yes', '1']), default=True)
     parser.add_argument("-b", "--begin", help="Beginning date for nc file", type=str, default ='1993080106')
     parser.add_argument("-e", "--end", help="Ending date for nc file", type=str, default ='2019080106')
-    parser.add_argument("-s", "--site", help="Site location", type=str, default='38472403')
+    parser.add_argument("-s", "--site", help="Site location", type=str, default='38472401')
 
     # Print version
     parser.add_argument("--version", action="version", version='%(prog)s - Version 1.0')
@@ -434,7 +435,12 @@ def recup_safran(date_1,date_2,pas, site):
     path = '/era40/vortex/s2m/postes/reanalysis/meteo/' # EN DUR
 
     Liste_date = [date_1 + datetime.timedelta(seconds=x) for x in range(0, int((date_2 - date_1).total_seconds()),pas)]
+    print(date_1)
+    print(date_2)
     date_b, date_e = get_file_period('FORCING', path, date_1, date_2)
+    print(date_b)
+    print(date_e)
+
 
     forcing = path + '/FORCING_' + date_b.strftime('%Y%m%d%H') + '_' + date_e.strftime('%Y%m%d%H') + '.nc'
     fic = prosimu(forcing)
@@ -514,7 +520,7 @@ def complete_obs_with_model_1period(filename, option_recup, date_entree_debut, d
 
 def compilation_ttes_periodes(date_entree_debut, date_entree_fin, site, option_recup):
     date_first_met = datetime.datetime(1993,8,1,6) # EN DUR
-    date_last_met = datetime.datetime(2019,8,1,6) # EN DUR
+    date_last_met = datetime.datetime(2020,8,1,6) # EN DUR
     list_path_met, list_date_debut, list_date_fin = decoupe_periode(date_entree_debut, date_entree_fin)
     pas = 3600 # EN DUR
     L=[]
@@ -563,10 +569,10 @@ def create_netcdf(output, Liste_dates, Tableau_valeurs_time_nbpoint, Tableau_val
                       'Rainfall Rate', 'Surface Incident Diffuse Shortwave Radiation', 'Snowfall Rate','Near Surface Air Temperature',
                       'Wind Speed', 'Wind Direction']
 
-    Liste_nom_nbpoint = ['LAT', 'LON', 'UREF', 'ZREF', 'ZS', 'aspect', 'slope']
-    Liste_unite_nbpoint = [ 'degrees_north', 'degrees_east', 'm', 'm', 'm', 'degrees from north', 'degrees from horizontal']
+    Liste_nom_nbpoint = ['LAT', 'LON', 'UREF', 'ZREF', 'ZS', 'aspect', 'slope', 'station']
+    Liste_unite_nbpoint = [ 'degrees_north', 'degrees_east', 'm', 'm', 'm', 'degrees from north', 'degrees from horizontal', '']
     Liste_longname_nbpoint = ['latitude', 'longitude', 'Reference_Height_for_Wind', 'Reference_Height', 'altitude',
-                               'slope aspect', 'slope angle']
+                               'slope aspect', 'slope angle', 'OMM code of the station']
 
     for i in range(len(Liste_nom_time_nbpoint)):
         fic_nc = fic_forcing.createVariable(Liste_nom_time_nbpoint[i],'f', ('time','Number_of_points'), fill_value=-9999999)
