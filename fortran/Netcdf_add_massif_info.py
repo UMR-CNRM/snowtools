@@ -124,8 +124,8 @@ B=outputs.createVariable('longitude', np.float64,('lon',), fill_value=-9999)
 C=outputs.createVariable('massif_num', np.float64, ('lat', 'lon'), fill_value=-9999)
 D=outputs.createVariable('ZS', np.float64, ('lat', 'lon'), fill_value=-9999)
 
-# num=np.flipud(results)
-# Z=np.flipud(ZS)
+num=np.flipud(results)
+Z=np.flipud(ZS)
 outputs["latitude"][:,] = lats
 outputs["longitude"][:,] = lons
 outputs["massif_num"][:,:] = results #num

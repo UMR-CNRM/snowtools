@@ -31,4 +31,4 @@ m.set_clim(1., 91.)
 m.cmap.set_under(color='w', alpha=0)
 plt.colorbar(m, boundaries=np.linspace(1, 92, 92), orientation="horizontal")
 #
-plt.savefig('massif_alpha.png')
+plt.savefig('massif_alpha2.png')
