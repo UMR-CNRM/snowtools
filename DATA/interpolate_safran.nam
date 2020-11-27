@@ -3,8 +3,8 @@
     LMULTIOUTPUT = .FALSE.
 /
 &NAM_FILENAMES_SINGLE_IN
-    HFILEIN = 'PRO_2020092706_2020092806_zeroslope_alps.nc',
-    HGRIDIN = 'alpha4.nc'
+    HFILEIN = 'PRO_2020092706_2020092806_zeroslope_cor.nc',
+    HGRIDIN = 'alpha_massifs.nc'
 /
 &NAM_MULTIIN_SETTING
     NNUMBER_INPUT_GRIDS = 1
@@ -14,7 +14,7 @@
     HGRIDSIN = "ALPS.nc", "CORSE.nc", "PYRENNES.nc"
 /
 &NAM_FILENAMES_SINGLE_OUT
-    HFILEOUT = 'output_alp_alpha.nc'
+    HFILEOUT = 'output_cor_alpha.nc'
 /
 &NAM_FILENAMES_MULTI_OUT
     HFILESOUT = "output_mulitin_zeroslope_input_alps.nc", "output_mulitin_zeroslope_input_cor.nc", "output_mulitin_zeroslope_input_pyr.nc"
