@@ -108,6 +108,28 @@ class output_test():
         # #
         # plt.savefig('test_alps_terrain.png')
 
+    def snowtest(self):
+        lats = self.ftot.variables['LAT'][:]
+        lons = self.ftot.variables['LON'][:]
+        snowcomp = self.fcomp.variables['SD_1DY_ISBA'][:, :, :]
+        complats = self.fcomp.variables['LAT'][:]
+        complons = self.fcomp.variables['LON'][:]
+        compmassif = self.fcomp.variables['massif_num'][:, :]
+
+        lat_inds = np.where((lats > self.lat_bnds[0]) & (lats < self.lat_bnds[1]))
+        lon_inds = np.where((lons > self.lon_bnds[0]) & (lons < self.lon_bnds[1]))
+        snow_region = self.ftot.variables['SD_1DY_ISBA'][:, np.min(lat_inds):np.max(lat_inds) + 1,
+                      np.min(lon_inds):np.max(lon_inds) + 1]
+        massif_region = self.ftot.variables['massif_num'][np.min(lat_inds):np.max(lat_inds) + 1,
+                        np.min(lon_inds):np.max(lon_inds) + 1]
+        massif_diff = massif_region - np.flipud(compmassif)
+        for i in range(snowcomp.shape[0]):
+            snowdiff = snow_region[i,:,:] - np.flipud(snowcomp[i,:,:])
+            # print(snowdiff.shape)
+            print(i, np.sum(snowdiff), sum(snowdiff[massif_diff==0]))
+
+
+
 # def test_pyr():
 
     # ALPS
@@ -116,19 +138,22 @@ class output_test():
 # lat_bnds, lon_bnds = [42.07, 43.18], [-1.63, 2.71]
 # CORSE
 # lat_bnds, lon_bnds = [41.69, 42.56], [8.779, 9.279]
-# alp_test = output_test("output_alp_alpha.nc", "output_original_version_zeroslope_input_alps.nc",
-#                        lat_bnds=[43.909, 46.42], lon_bnds = [5.19, 7.77],
-#                        figname='diff_test_alps_to_alpha_diffbrute.png')
+alp_test = output_test("output_alp_alpha.nc", "output_original_version_zeroslope_input_alps.nc",
+                       lat_bnds=[43.909, 46.42], lon_bnds = [5.19, 7.77],
+                       figname='diff_test_alps_to_alpha_diffbrute.png')
+alp_test.snowtest()
 # pyr_test = output_test("output_pyr_alpha.nc", "output_original_version_zeroslope_input_pyr.nc",
 #                        lat_bnds=[42.07, 43.18], lon_bnds = [-1.63, 2.71],
 #                        figname='diff_test_pyr_to_alpha_diffbrute.png')
-# pyr_test.test()
+# # pyr_test.test()
+# pyr_test.snowtest()
 
 #corse_test = output_test("output_cor_alpha.nc", "output_original_version_zeroslope_input_cor.nc",
 #                        lat_bnds=[41.69, 42.56], lon_bnds = [8.779, 9.279],
 #                        figname='diff_test_cor_to_alpha_flipped.png')
 # corse_test.test()
-corse_massiftest = output_test("output_cor_alpha.nc", "output_original_version_zeroslope_input_cor.nc",
-                       lat_bnds=[41.69, 42.56], lon_bnds = [8.779, 9.279],
-                       figname='massif_comp_test_cor_to_alpha_flipped.png')
-corse_massiftest.test()
+# corse_massiftest = output_test("/home/radanovicss/Interpol_hauteur_neige/Results/Alpha_output_file_test/output_cor_alpha.nc", "output_original_version_zeroslope_input_cor.nc",
+#                        lat_bnds=[41.69, 42.56], lon_bnds = [8.779, 9.279],
+#                        figname='massif_comp_test_cor_to_alpha_flipped.png')
+# #corse_massiftest.test()
+# corse_massiftest.snowtest()
