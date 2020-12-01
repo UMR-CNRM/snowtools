@@ -111,12 +111,13 @@ ELSE
   HFILESIN(1) = HFILENAMEIN
   HGRIDSIN(1) = HFILENAMEG
   HFILESOUT(1) = HFILENAMEOUT
-  NNUMBER_INPUT_GRIDS = 1
+  NNUMBER_INPUT_FILES = 1
+  NNUMBER_OUTPUT_GRIDS = 1
 END IF
 CLOSE(INAM_UNIT)
 
 ! loop over input files
-DO JINFILE = 1,NNUMBER_INPUT_GRIDS
+DO JINFILE = 1,NNUMBER_INPUT_FILES
   IMASSIFTODELETE = -1
   ILAYERTODELETE = -1
   NPATCHID = -1
@@ -1587,27 +1588,46 @@ END SUBROUTINE CHECK
       STOP 'ERROR reading namelist NAM_SWITCHES_INT'
     END IF
     ! If multiinput is wanted, read the number of inputs wanted, allocate the filename arrays and
-    ! read the input filenames and the associated grid filenames
+    ! read the input filenames
     IF (LMULTIINPUT) THEN
       READ(UNIT=KNAMUNIT, NML=NAM_MULTIIN_SETTING, IOSTAT=IOS)
       IF (IOS .NE. 0) THEN
         STOP 'ERROR reading namelist NAM_MULTIIN_SETTING'
       END IF
-      ALLOCATE(HFILESIN(NNUMBER_INPUT_GRIDS), HGRIDSIN(NNUMBER_INPUT_GRIDS))
+      ALLOCATE(HFILESIN(NNUMBER_INPUT_FILES))
       READ(UNIT=KNAMUNIT, NML=NAM_FILENAMES_MULTI_IN, IOSTAT=IOS)
       IF (IOS .NE. 0) THEN
-        PRINT*, IOS, HFILESIN, HGRIDSIN, SHAPE(HGRIDSIN)
+        PRINT*, IOS, HFILESIN
         STOP 'ERROR reading namelist NAM_FILENAMES_MULTI_IN'
       END IF
       IF (LMULTIOUTPUT) THEN
-        ALLOCATE(HFILESOUT(NNUMBER_INPUT_GRIDS))
+        READ(UNIT=KNAMUNIT, NML=NAM_MULTIOUT_SETTING, IOSTAT=IOS)
+        IF (IOS .NE. 0) THEN
+          PRINT*, IOS
+          STOP 'ERROR reading namelist NAM_MULTIOUT_SETTING'
+        END IF
+        ! check if number of input files equals number of output grids
+        IF (NNUMBER_OUTPUT_GRIDS .NE. NNUMBER_INPUT_FILES) THEN
+          STOP 'ERROR for multiinput and multioutput the number of output grids must equal the number of input files. &
+                  & Check namelist settings'
+        END IF
+        ALLOCATE(HFILESOUT(NNUMBER_OUTPUT_GRIDS), HGRIDSIN(NNUMBER_OUTPUT_GRIDS))
+        ! read the output file names and the associated grid filenames
         READ(KNAMUNIT,NML=NAM_FILENAMES_MULTI_OUT, IOSTAT=IOS)
         IF (IOS .NE. 0) THEN
+          PRINT*, IOS, HFILESOUT, HGRIDSIN, SHAPE(HGRIDSIN)
           STOP 'ERROR reading namelist NAM_FILENAMES_MULTI_OUT'
         END IF
       ELSE
-        STOP 'ERROR Single output not yet implemented with multiple inputs. Check namelist settings'
-        ALLOCATE(HFILESOUT(1))
+        ! STOP 'ERROR Single output not yet implemented with multiple inputs. Check namelist settings'
+        ALLOCATE(HFILESOUT(1), HGRIDSIN(1))
+        READ(KNAMUNIT, NML=NAM_FILENAMES_SINGLE_OUT, IOSTAT=IOS)
+        IF (IOS .NE. 0) THEN
+          PRINT*, IOS, HFILEOUT, HGRIDIN
+          STOP 'ERROR reading namelist NAM_FILENAMES_SINGLE_OUT'
+        END IF
+        HGRIDSIN(1) = HGRIDIN
+        HFILESOUT(1) = HFILEOUT
       END IF
     ! otherwise read the filenames in a scalar variable
     ELSE
@@ -1615,9 +1635,8 @@ END SUBROUTINE CHECK
       IF (IOS .NE. 0) THEN
         STOP 'ERROR: problem reading namelist NAM_FILENAMES_SINGLE_IN'
       END IF
-      ALLOCATE(HFILESIN(1), HGRIDSIN(1))
+      ALLOCATE(HFILESIN(1))
       HFILESIN(1) = HFILEIN
-      HGRIDSIN(1) = HGRIDIN
       IF (LMULTIOUTPUT) THEN
         STOP 'ERROR: Output of multiple files not supported for a single input. Check namelist settings'
       ELSE
@@ -1625,12 +1644,15 @@ END SUBROUTINE CHECK
         IF (IOS .NE. 0) THEN
           STOP 'ERROR: problem reading namelist NAM_FILENAMES_SINGLE_OUT'
         END IF
-        ALLOCATE(HFILESOUT(1))
+        ALLOCATE(HFILESOUT(1), HGRIDSIN(1))
         HFILESOUT(1) = HFILEOUT
+        HGRIDSIN(1) = HGRIDIN
       END IF
 
     END IF
-
+    ! PRINT*, HFILESOUT
+    ! PRINT*, HFILESIN
+    ! PRINT*, HGRIDSIN
   END SUBROUTINE READ_NML
 !  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 END PROGRAM INTERPOLATE_SAFRAN
