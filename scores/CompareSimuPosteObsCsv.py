@@ -27,7 +27,7 @@ from scores.deterministic import DeterministicScores_Heterogeneous
 
 usage = "CompareSimuPosteObsCsv.py [--scores] [--plot] -b YYYYMMDD -e YYYYMMDD --dirsim=dirsim1,dirsim2 --labels=label1,labe2 --dirplot=dirplot --format=pdf,png,eps --yearly"
 
-default = dict(fileobs="/manto/lafaysse/data/csv/OBS_1983080100_2019053123.csv",
+default = dict(fileobs="/home/vernaym/extraction_obs_htn/OBS_1983080100_2020080123.csv",
                dirsim='/era40/vortex/s2m/postes/reanalysis/pro')
 
 IM = infomassifs()
@@ -364,7 +364,7 @@ class ComparisonSimObs(object):
                     self.nvalues[indSim, s] = scores.nvalues()
                     self.bias[indSim, s] = scores.bias()
                     self.rmse[indSim, s] = scores.rmse()
-                    self.meansd[indSim, s] = scores.meanSim
+                    self.meansd[indSim, s] = scores.meansim
 
     def allboxplots(self):
 
@@ -435,7 +435,8 @@ class ComparisonSimObs(object):
             print np.sum(valid)
 
         for indSim in range(0, self.nsim):
-            kwargs['fillcolor'] = self.list_colors[indSim]
+            #kwargs['fillcolor'] = self.list_colors[indSim]
+            kwargs['fillcolor'] = self.list_colors
             b1.draw(stations[valid], list_scores[indSim, valid], nsimu=self.nsim, **kwargs)
 
             #print list_scores[indSim, valid].shape
@@ -452,11 +453,11 @@ class ComparisonSimObs(object):
 
         for indSim in range(0, self.nsim):
             valid = self.nvalues[indSim, :] > 10
-            kwargs['fillcolor'] = self.list_colors[indSim]
-            kwargs['label'] = self.list_labels[indSim]
+            kwargs['fillcolor'] = self.list_colors
 
             b2.draw(elevations[valid], list_scores[indSim, valid], nsimu=self.nsim, **kwargs)
 
+        kwargs['legend'] = False 
         kwargs['label'] = self.list_labels
         b2.finalize(nsimu=self.nsim, **kwargs)
         plotfilename = options.dirplot + "/" + label + "_elevations." + options.format

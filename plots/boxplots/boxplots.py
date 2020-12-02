@@ -43,8 +43,11 @@ class boxplots(Mplfigure):
             for element in ['boxes', 'whiskers', 'fliers', 'means', 'medians', 'caps']:
                 plt.setp(self.bp[-1][element], color='black')
 
-            for patch in self.bp[-1]['boxes']:
-                patch.set_facecolor(kwargs['fillcolor'])
+            for ind,patch in enumerate(self.bp[-1]['boxes']):
+                if isinstance(kwargs['fillcolor'], list):
+                    patch.set_facecolor(kwargs['fillcolor'][ind])
+                else:
+                    patch.set_facecolor('blue')
                 patch.set_alpha(0.5)
 
     def finalize(self, nsimu=1, **kwargs):
@@ -63,9 +66,14 @@ class boxplots(Mplfigure):
         self.plot.grid(axis='y')
         plt.tight_layout()
 
-        list_legend = []
-        for bp in self.bp:
-            list_legend.append(bp['boxes'][0])
+        if 'legend' in list(kwargs.keys()):
+            list_legend = []
+            for bp in self.bp:
+                list_legend.append(bp['boxes'][0])
+        else:
+            print (len(self.bp))
+            print (self.bp[0])
+            list_legend = [self.bp[0]['boxes'][0], self.bp[0]['boxes'][5], self.bp[0]['boxes'][8]]
 
         if 'label' in kwargs.keys():
             self.plot.legend(list_legend, kwargs['label'], loc="upper left", fontsize="small")
@@ -92,18 +100,17 @@ class boxplots_bydepartment(boxplots):
 #         list_dep_uniq = list(set(list_dep))
 #         list_dep_uniq.sort()
 
-<<<<<<< HEAD
+#        list_dep_uniq = dict(
+#                Alps = ['74', '73', '38, 26', '05', '04, 06'],
+#                Pyrenees = ['64, 65', '31, 09', '66, 99'],
+#                Corsica = ['20'],
+#            )
         list_dep_uniq = ['74', '73', '38, 26', '05', '04, 06', '64, 65', '31, 09', '66, 99', '20']
-=======
-        list_dep_uniq = dict(
-                Alps = ['74', '73', '38, 26', '05', '04, 06'],
-                Pyrenees = ['64, 65', '31, 09', '66, 99'],
-                Corsica = ['20'],
-            )
->>>>>>> plots
+        # Color Alps departments in red, Pyr ones in blue and Corsica ones in green 
+        # There should be a better way to set that
+        kwargs['fillcolor'] = ['red']*5 + ['blue']*3 + ['green']
 
         for dep in list_dep_uniq:
-
             if ',' in dep:
                 deps = dep.split(',')
                 inddep = np.array(list_dep) == -999
@@ -114,17 +121,15 @@ class boxplots_bydepartment(boxplots):
 
             inddep = inddep & france
 
-            print dep, np.sum(inddep)
-
             list_scores.append(scores[inddep])
 
         kwargs['labels'] = list_dep_uniq
 
         kwargs['positions'] = range(self.indsimu, 1 + len(list_dep_uniq) * nsimu, nsimu)
 
-        print kwargs['positions']
+        print (kwargs['positions'])
 
-        self.plot.set_xlabel(u'Département')
+        self.plot.set_xlabel(u'Department')
         super(boxplots_bydepartment, self).draw(list_scores, **kwargs)
         self.indsimu += 1
 
@@ -167,7 +172,7 @@ class boxplots_byyear(boxplots):
             else:
                 list_labels.append("")
 
-        print list_labels
+        print (list_labels)
 
         kwargs['labels'] = list_labels
 

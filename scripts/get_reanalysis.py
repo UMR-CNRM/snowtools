@@ -73,6 +73,11 @@ class config(object):
                 self.xpid = options.xpid
             else:
                 self.xpid = options.xpid + '@' + os.getlogin()
+        if options.xpid_native:
+            if '@' in options.xpid_native:
+                self.xpid_native = options.xpid_native
+            else:
+                self.xpid_native = options.xpid_native + '@' + os.getlogin()
 
 
 class S2MExtractor(S2MTaskMixIn):
