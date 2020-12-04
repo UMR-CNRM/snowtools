@@ -56,6 +56,17 @@ class DeterminsticScores(object):
 
         return np.mean(np.abs(self.diffCommon))
 
+    @property
+    def meanobs(self):
+        '''Mean observation value over the common period.'''
+        return np.mean(self.obsCommon)
+    
+    @property
+    def meansim(self):
+        '''Mean simulation value over the common period.'''
+        return np.mean(self.simCommon)
+
+
     def read_var_ifpresent(self, dataNc, varname, convert1d=False):
 
         if varname not in dataNc.listvar():

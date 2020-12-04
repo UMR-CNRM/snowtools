@@ -292,10 +292,11 @@ class ComparisonSimObs(object):
         self.nstations = len(self.listStations)
 
         # Default labels
-        self.set_sim_labels(['New', 'Old', '', '', ''])
+#        self.set_sim_labels(['New', 'Old', '', '', ''])
+        self.set_sim_labels(['Alps', 'Pyrenees', 'Corsica', '', ''])
 
         # Default colors
-        self.set_sim_colors(['blue', 'red', 'grey', 'orange', 'green'])
+        self.set_sim_colors(['red', 'blue', 'grey', 'orange', 'green'])
 
     def set_sim_colors(self, list_colors):
         self.list_colors = list_colors
@@ -350,6 +351,7 @@ class ComparisonSimObs(object):
         self.nvalues = np.zeros((self.nsim, self.nstations))
         self.bias = np.zeros((self.nsim, self.nstations))
         self.rmse = np.zeros((self.nsim, self.nstations))
+        self.meansd = np.zeros((self.nsim, self.nstations))
 
         for s, station in enumerate(self.listStations):
 
@@ -362,6 +364,7 @@ class ComparisonSimObs(object):
                     self.nvalues[indSim, s] = scores.nvalues()
                     self.bias[indSim, s] = scores.bias()
                     self.rmse[indSim, s] = scores.rmse()
+                    self.meansd[indSim, s] = scores.meanSim
 
     def allboxplots(self):
 
@@ -369,6 +372,7 @@ class ComparisonSimObs(object):
 
         self.boxplots_scores(arrayStations, np.array(self.elevations), self.bias, 'bias', ylabel='Bias (cm)')
         self.boxplots_scores(arrayStations, np.array(self.elevations), self.rmse, 'rmse', ylabel='RMSE (cm)')
+        self.boxplots_scores(arrayStations, np.array(self.elevations), self.meansd, 'mean_SD', ylabel='Mean Snow Depth (cm)')
 
     def get_obs_sim(self, station, indSim):
 
@@ -392,8 +396,6 @@ class ComparisonSimObs(object):
         availSim = np.sum(ind) == 1
 
         availCommon = availObs and availSim
-
-        print (np.sum(availCommon))
 
         if availCommon:
             return availCommon, timeObs[periodObs], self.timeSim[indSim], sdObs[periodObs], np.squeeze(self.sdSim[indSim][:, ind])
