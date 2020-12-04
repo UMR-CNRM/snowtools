@@ -364,8 +364,8 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
 #                 datebegin      = [list_dates_begin_forc],
 #                 dateend        = [list_dates_end_forc],
                 # '''2) Real-time'''
-                datebegin      = [[self.conf.datebegin]],
-                dateend        = [[self.conf.dateend]],
+                datebegin      = [self.conf.datebegin],
+                dateend        = [self.conf.dateend],
                 ntasks         = ntasks,
                 geometry_in    = list_geometry,
                 geometry_out   = 'allslopes',

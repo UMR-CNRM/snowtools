@@ -11,8 +11,6 @@ import os, csv
 import numpy as np
 import datetime
 import netCDF4
-from netCDF4 import Dataset, num2date, date2num
-
 
 # For compatibility python 2 / python 3
 import six
@@ -31,6 +29,7 @@ from utils.S2M_standard_file import StandardSAFRAN, StandardCROCUS
 class forcinput_tomerge:
 
     printmemory = False
+    formatout = "NETCDF4_CLASSIC"
 
     def __init__(self, forcin, forcout, *args, **kwargs):
         '''Generic method to open merge multiple forcing files'''
@@ -55,7 +54,7 @@ class forcinput_tomerge:
         if not (dirout == '' or os.path.isdir(dirout)):
             raise DirNameException(dirout)
 
-        new_forcing_file = StandardSAFRAN(forcout, "w", format=init_forcing_file[0].format())
+        new_forcing_file = StandardSAFRAN(forcout, "w", format=self.formatout)
 
         self.merge(init_forcing_file, new_forcing_file, args)
 
@@ -402,20 +401,21 @@ class forcinput_select(forcinput_tomodify):
         init_slopes = init_forcing_file.read("slope", keepfillvalue=True)
         init_exp = init_forcing_file.read("aspect", keepfillvalue=True)
 
-        extendslopes = (len(np.unique(init_slopes)) == 1) and (init_slopes[0] != liste_pentes[0])
-        # print extendslopes
-        if "0" in liste_pentes or extendslopes:
-            nb_slope_angles_notflat = len(liste_pentes) - 1
-            nb_aspect_angles_notflat = len(list_exp_degres) - 1
-            nb_slopes_bylevel = 1 + nb_slope_angles_notflat * nb_aspect_angles_notflat
+        # list_pentes is the user-defined target
+        if "0" in liste_pentes:
+            nb_slope_angles_notflat = len(liste_pentes) - 1  # Number of target slopes excluding flat
+            nb_aspect_angles_notflat = len(list_exp_degres) - 1  # Number of target aspects excluding flat
+            nb_slopes_bylevel = 1 + nb_slope_angles_notflat * nb_aspect_angles_notflat  # Number of slopes for a given elevation level
         else:
-            nb_slope_angles_notflat = len(liste_pentes)
-            nb_aspect_angles_notflat = len(list_exp_degres)
-            nb_slopes_bylevel = nb_slope_angles_notflat * nb_aspect_angles_notflat
+            nb_slope_angles_notflat = len(liste_pentes)  # Number of target slopes excluding flat
+            nb_aspect_angles_notflat = len(list_exp_degres)  # Number of target aspects excluding flat
+            nb_slopes_bylevel = nb_slope_angles_notflat * nb_aspect_angles_notflat  # Number of slopes for a given elevation level
 
         # print nb_slopes_bylevel, nb_slope_angles_notflat, nb_aspect_angles_notflat
 
+        # Extend aspects mode only if input file have only -1 aspects
         extendaspects = nb_slopes_bylevel > 1 and np.all(init_exp == -1)
+        # Extend slopes if input file already have several aspects but we want more slope values
         extendslopes = not extendaspects and ( len(liste_pentes) > len(np.unique(init_slopes)) )
 
         if extendaspects:
@@ -424,34 +424,28 @@ class forcinput_select(forcinput_tomodify):
             print("Extend slopes of the input forcing file")
 
         if extendaspects:
+            # Indexes of points to extract: only flat values if create new aspects
             b_points_slope = np.in1d(init_slopes, [0])
             b_points_aspect = np.in1d(init_exp, [-1])
-            if "0" in liste_pentes:
-                liste_pentes_int.remove(0)
-                list_exp_degres.remove(-1)
+
         else:
-            # print init_slopes
-            # print liste_pentes_int
-
-            if "0" not in liste_pentes:
-                liste_pentes_int.append(0)
-
+            # Indexes of points to extract: can be a subset of available slopes or the whole available slopes
             b_points_slope = np.in1d(init_slopes, liste_pentes_int)
             b_points_aspect = np.in1d(init_exp, list_exp_degres)
 
         # Identify points to extract
-        # print np.sum(b_points_massif)
-        # print np.sum(b_points_alt)
-        # print np.sum(b_points_slope)
-        # print np.sum(b_points_aspect)
         index_points = np.where(b_points_massif * b_points_alt * b_points_slope * b_points_aspect)[0]
 
-        # It is possible to exclude somme massifs or elevations before duplicating the slopes
         if extendslopes:
+            # Points to duplicate correspond to all indexes but -1 aspect
             points_to_duplicate = np.invert(np.in1d(init_exp[index_points], [-1]))
-            # if "0" in liste_pentes:
-            liste_pentes_int.remove(0)
-            list_exp_degres.remove(-1)
+
+        if extendaspects or extendslopes:
+            # In these cases, we remove flat cases of output slopes list because it is dealt in a specific way
+            if "0" in liste_pentes:
+                liste_pentes_int.remove(0)
+            if -1 in list_exp_degres:
+                list_exp_degres.remove(-1)
 
         init_forcing_file_dimensions = init_forcing_file.listdim()
 
@@ -491,17 +485,9 @@ class forcinput_select(forcinput_tomodify):
                 nslopes_to_create = len(liste_pentes) - 2
                 len_dim = len(index_points) + np.sum(points_to_duplicate) * nslopes_to_create
 
-#                 print nb_slope_angles_notflat*len(list_exp_degres)+1
-#                 print nb_slope_angles_notflat
-#                 print len(list_exp_degres)
-#                 print list_exp_degres
-#                 sys.exit()
-
                 indflat = np.arange(0, len_dim, nb_slope_angles_notflat * len(list_exp_degres) + 1)
                 indnoflat = np.delete(np.arange(0, len_dim, 1), indflat)
-#                 print len(indflat)
-#                 print len(indnoflat)
-#                 print len_dim
+
             else:
                 len_dim = len(index_points)
             print("create dimension :" + spatial_dim_name + " " + str(len_dim))
@@ -835,7 +821,186 @@ class forcinput_ESMSnowMIP(forcinput_tomodify):
         return False
 
 
+class forcinput_extract(forcinput_tomodify):
+
+    ''' This class was implemented by C. Carmagnola in November 2018 (PROSNOW project).
+    It allows to extract from an original forcing file all the variables corresponding to a pre-defined list of points. '''
+
+    def modify(self, init_forcing_file, new_forcing_file, *args):
+
+        ''' Modify a forcing file towards a prescribed geometry:
+        - init_forcing_file = initial forcing file (input)
+        - new_forcing_file  = new forcing file (output)
+        - *args             = .txt file containing the list of points to be extracted '''
+
+        # Read data from file
+
+        if not os.path.isfile(args[0][0]):
+            raise FileNameException(args[0][0])
+
+        mdat = open(args[0][0])
+
+        list_massif_number, list_sru, list_alt, list_asp, list_slo = np.loadtxt(mdat, delimiter=' ', usecols=(2, 3, 1, 6, 7), unpack=True)
+
+#         print "Points to be extracted:"
+#         print "massif = " + str(list_massif_number)
+#         print "elevation = " + str(list_alt)
+#         print "aspect = " + str(list_asp)
+#         print "slope = " + str(list_slo)
+#         print "---------------"
+
+        # Variables
+
+        listvar = init_forcing_file.listvar()
+        listvar.append(u'stations')
+
+        # Massif / Elevation / Aspect / Slope
+
+        init_massif_nb_sop = init_forcing_file.read("massif_number", keepfillvalue=True)
+        init_alt = init_forcing_file.read("ZS", keepfillvalue=True)
+        init_exp = init_forcing_file.read("aspect", keepfillvalue=True)
+        init_slopes = init_forcing_file.read("slope", keepfillvalue=True)
+
+        list_asp_degres = list_asp[:]
+        list_slo_int = list(map(int, list_slo))
+
+        # Indices
+
+        index_points = np.zeros(len(list_massif_number), 'int')
+
+        for i, j in ((a, b) for a in range(len(init_massif_nb_sop)) for b in range(len(list_massif_number))):
+            if init_massif_nb_sop[i] == list_massif_number[j] and init_alt[i] == list_alt[j] and init_slopes[i] == list_slo_int[j] and init_exp[i] == list_asp_degres[j]:
+                index_points[j] = i
+
+#         print "Indices:"
+#         print index_points
+#         print "---------------"
+
+        # Create dimension
+
+        init_forcing_file_dimensions = init_forcing_file.listdim()
+
+        massif_dim_name = "massif"
+        nbpoints_dim_name = "Number_of_points"
+        loc_dim_name = "location"
+
+        new_forcing_file.createDimension("time", None)
+
+        if massif_dim_name in init_forcing_file_dimensions:
+            init_massif = init_forcing_file.read("massif", keepfillvalue=True)
+            index_massif = np.where(np.in1d(init_massif, list_massif_number))[0]
+            len_dim = len(index_massif)
+            new_forcing_file.createDimension(massif_dim_name, len_dim)
+            del init_forcing_file_dimensions[massif_dim_name]
+
+        if nbpoints_dim_name in init_forcing_file_dimensions:
+            spatial_dim_name = nbpoints_dim_name
+        elif loc_dim_name in init_forcing_file_dimensions:
+            spatial_dim_name = loc_dim_name
+        else:
+            spatial_dim_name = "missing"
+
+        if spatial_dim_name in init_forcing_file_dimensions:
+            len_dim = len(index_points)
+            new_forcing_file.createDimension(spatial_dim_name, len_dim)
+            del init_forcing_file_dimensions[spatial_dim_name]
+
+#             print (spatial_dim_name + ": ")
+#             print str(len_dim)
+
+        # Fill new file
+
+        for varname in listvar:
+
+            # Variable containing the sru numbers
+
+            if varname == 'stations':
+
+                vartype      = 'float32'
+                rank         = 1
+                array_dim    = [u'Number_of_points']
+                varFillvalue = -1e+07
+                var_attrs    = [u'_FillValue', u'long_name', u'units']
+
+                var    = new_forcing_file.createVariable(varname, vartype, array_dim, fill_value=varFillvalue)
+                var[:] = list_sru
+
+            # All other variables
+
+            else:
+
+                vartype, rank, array_dim, varFillvalue, var_attrs = init_forcing_file.infovar(varname)
+
+                if len(array_dim) > 0:
+                    index_dim_massif = np.where(array_dim == massif_dim_name)[0]
+                    index_dim_nbpoints = np.where(array_dim == spatial_dim_name)[0]
+                    var_array = init_forcing_file.read(varname, keepfillvalue=True)
+
+                else:
+                    index_dim_massif = []
+                    index_dim_nbpoints = []
+                    var_array = init_forcing_file.read(varname, keepfillvalue=True).getValue()
+
+                if len(index_dim_massif) == 1:
+                    var_array = np.take(var_array, index_massif, index_dim_massif[0])
+                if len(index_dim_nbpoints) == 1:
+                    var_array = np.take(var_array, index_points, index_dim_nbpoints[0])
+
+                var = new_forcing_file.createVariable(varname, vartype, array_dim, fill_value=varFillvalue)
+
+                for attname in var_attrs:
+                    if not attname == '_FillValue':
+                        setattr(var, attname, init_forcing_file.getattr(varname, attname))
+                try:
+                        if rank == 0:
+                            var[:] = var_array
+                        elif rank == 1:
+                            var[:] = var_array
+                        elif rank == 2:
+                            var[:, :] = var_array
+                        elif rank == 3:
+                            var[:, :, :] = var_array
+                        elif rank == 4:
+                            var[:, :, :, :] = var_array
+                        elif rank == 5:
+                            var[:, :, :, :, :] = var_array
+                except Exception:
+                    print(var_array)
+                    raise VarWriteException(varname, var_array.shape, var.shape)
+
+
+class forcinput_changedates(forcinput_tomodify):
+
+    ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).
+    It allows to change the dates of a forcing file from the climatology '''
+
+    def modify(self, init_forcing_file, new_forcing_file, *args):
+
+        ''' Modify a forcing file towards a prescribed geometry:
+        - init_forcing_file = initial forcing file (input)
+        - new_forcing_file  = new forcing file (output) - same name as input!
+        - *args             = date of beginning of new forcing file '''
+
+        # Open file
+        file_name = netCDF4.Dataset(init_forcing_file.path, "a")
+        nc_time = file_name.variables["time"]
+        nc_unit = file_name.variables["time"].units
+
+        # Compute new time
+        date_time_old = netCDF4.num2date(nc_time[:], units = nc_unit)
+        delta = args[0][0] - date_time_old[0]
+        date_time_new = date_time_old + delta
+
+        # Insert new time in file
+        nc_time[:] = netCDF4.date2num(date_time_new, units = nc_unit)
+
+        # Close file
+        file_name.close()
+
+
 # Test
 
 # if __name__ == "__main__":
-#     my_forc = forcinput_extract("/home/carmagnolac/CMC/CEN/4_SIMUL/Change_forcing/input_FORCING_2016112306_2016112406.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Change_forcing/output_FORCING_2016112306_2016112406.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Change_forcing/SRUs_LesSaisies.txt")
+#     forcinput_extract("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/1_saisies/2_change_forcing/input_FORCING_2018080106_2019080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/1_saisies/2_change_forcing/output_FORCING_2018080106_2019080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/1_saisies/1_get_from_API/SRU_saisies.txt")
+#     forcinput_changedates("/home/carmagnolac/Desktop/output_FORCING_2018080106_2019080106.nc", "/home/carmagnolac/Desktop/output_FORCING_2018080106_2019080106.nc", datetime.datetime(2019, 8, 1, 6, 0))
+

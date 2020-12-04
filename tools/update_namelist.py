@@ -197,8 +197,6 @@ def update_namelist_var(namelist_file, data_file):
         maliste = line.split()
         var_tbc = var_tbc + [maliste[2]]
 
-    print (var_tbc)
-
     for i in range(len(var_tbc)):
         var_tbc[i] = float(var_tbc[i])
 
@@ -230,5 +228,5 @@ def update_namelist_var(namelist_file, data_file):
 # Test
 
 # if __name__ == "__main__":
-#     update_namelist_var("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex_3_SD/2_namelists/OPTIONS_V8.1_0.nam", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex_3_SD/4_measurements/Technoalpin_saisies.txt")
+#     update_namelist_var("/home/carmagnolac/Desktop/OPTIONS_V8.1_1h_0.nam", "/home/carmagnolac/Desktop/Technoalpin_saisies.txt")
 

@@ -277,20 +277,22 @@ class Safran(Task, S2MTaskMixIn):
             )
             print t.prompt, 'tb12 =', tb12
             print
+            
+            if self.conf.vconf == 'pyr':
 
-            self.sh.title('Toolbox input tb13')
-            tb13 = toolbox.input(
-                role            = 'Nam_observr',
-                source          = 'namelist_observr_[geometry]',
-                geometry        = self.conf.vconf,
-                genv            = self.conf.cycle,
-                kind            = 'namelist',
-                model           = self.conf.model,
-                local           = 'OBSERVR',
-                fatal           = False,
-            )
-            print t.prompt, 'tb13 =', tb13
-            print
+                self.sh.title('Toolbox input tb13')
+                tb13 = toolbox.input(
+                    role            = 'Nam_observr',
+                    source          = 'namelist_observr_[geometry]',
+                    geometry        = self.conf.vconf,
+                    genv            = self.conf.cycle,
+                    kind            = 'namelist',
+                    model           = self.conf.model,
+                    local           = 'OBSERVR',
+                    fatal           = False,
+                )
+                print t.prompt, 'tb13 =', tb13
+                print
 
             self.sh.title('Toolbox input tb14')
             tb14 = toolbox.input(

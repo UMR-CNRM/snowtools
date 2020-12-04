@@ -143,6 +143,10 @@ class vortex_kitchen(object):
                 self.jobname = "surfex_forecast"
                 self.reftask = "ensemble_surfex_reforecast"
                 self.nnodes = 1
+            elif self.options.debug:
+                self.jobname = 'debug_s2m'
+                self.reftask = 'debug_tasks'
+                self.nnodes = self.options.nnodes              
             else:
                 self.jobname = 'rea_s2m'
                 self.reftask = "vortex_tasks"
@@ -243,7 +247,7 @@ class vortex_kitchen(object):
             if self.options.escroc:
                 if self.options.nmembers:
                     nmembers = self.options.nmembers
-                elif self.options.escroc == "E2":
+                elif len(self.options.escroc) >=2 and self.options.escroc[0:2] == "E2": # E2, E2MIP, E2tartes, E2MIPtartes
                     nmembers = 35
                 else:
                     raise Exception("don't forget to specify escroc ensemble or --nmembers")
@@ -368,20 +372,23 @@ class Vortex_conf_file(object):
 
     def surfex_variables(self):
 
-        if '@' in self.options.forcing:
-            self.options.forcing, forcinglogin = self.options.forcing.split('@')
-        elif self.options.model == 'safran':
-            forcinglogin = 'vernaym'
+        if self.options.debug:
+            self.set_field("DEFAULT", 'forcingid', self.options.forcing)
         else:
-            forcinglogin = os.getlogin()
+            if '@' in self.options.forcing:
+                self.options.forcing, forcinglogin = self.options.forcing.split('@')
+            elif self.options.model == 'safran':
+                forcinglogin = 'vernaym'
+            else:
+                forcinglogin = os.getlogin()
+
+            lf = self.options.forcing.split('/')
+            self.set_field("DEFAULT", 'forcingid', lf[0] + '@' + forcinglogin)
+
+            if len(lf) > 1:
+                self.set_field("DEFAULT", 'blockin', '/'.join(lf[1:]))
 
         self.set_field("DEFAULT", 'meteo', self.options.model)
-
-        lf = self.options.forcing.split('/')
-        self.set_field("DEFAULT", 'forcingid', lf[0] + '@' + forcinglogin)
-
-        if len(lf) > 1:
-            self.set_field("DEFAULT", 'blockin', '/'.join(lf[1:]))
 
         self.set_field("DEFAULT", 'duration', 'yearly')
 
