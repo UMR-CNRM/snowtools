@@ -264,6 +264,10 @@ class Surfex_command(_S2M_command):
                           action="store", type="int", dest="ntasks", default=None,
                           help="Number of tasks (and procs) per node.")
 
+        parser.add_option("--debug",
+                          action="store_true", dest="debug", default=False,
+                          help="Debug task with files available on server")
+
         (options, args) = parser.parse_args(arguments)
 
         del args

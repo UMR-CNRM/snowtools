@@ -1,12 +1,13 @@
 PROGRAM INTERPOLATE_SAFRAN
 ! 
 USE NETCDF
+USE MODN_INTERPOL_SAFRAN
 !
 IMPLICIT NONE
 include 'mpif.h'
 !
 !!!!! Files properties
-CHARACTER(LEN=28):: HFILENAMEIN, HFILENAMEOUT ,HFILENAMEG     ! Name of the field file.
+CHARACTER(LEN=100):: HFILENAMEIN, HFILENAMEOUT ,HFILENAMEG     ! Name of the field file.
 INTEGER::FILE_ID_IN, FILE_ID_OUT ,FILE_ID_GEO! id of input ,output and geometrie netcdf file
 !
 !!!!! Dim properties
@@ -69,7 +70,9 @@ INTEGER :: NX_PROC, IXSTART
 INTEGER :: NY_PROC, IYSTART
 INTEGER :: NPOINT_PROC, IPSTART
 !
-INTEGER::ID,IV,IA,IT,IDIN,IDOUT,INZ ! loop counter
+INTEGER::ID,IV,IA,IT,IDIN,IDOUT,INZ, JINFILE ! loop counter
+INTEGER :: IOS ! status indicator
+INTEGER :: INAM_UNIT
 !
 INTEGER :: IMASSIFTODELETE, ILAYERTODELETE, I
 LOGICAL :: AFTERLOC
@@ -82,12 +85,7 @@ CALL MPI_INIT(IERR)
 CALL MPI_COMM_RANK(COMM, PROC_ID, IERR)
 CALL MPI_COMM_SIZE(COMM, NPROC, IERR)
 !
-IMASSIFTODELETE = -1
-ILAYERTODELETE = -1
-NPATCHID = -1
-NPATCH = 1
-IDECILEID = -1
-NDECILE = 1
+
 !
 LL_VARNAME(1)= "LON"
 LL_VARNAME(2)= "LAT"
@@ -97,525 +95,559 @@ LL_VARNAME(4)= "longitude"
 HFILENAMEIN ='input.nc'
 HFILENAMEG =  'GRID.nc'
 HFILENAMEOUT = 'output.nc'
+
+! Open namelist
+INAM_UNIT = 21
+OPEN(UNIT=INAM_UNIT, ACTION='READ', STATUS='OLD', IOSTAT=IOS, FILE='interpolate_safran.nam')
+IF (IOS .EQ. 0) THEN
+  CALL READ_NML(INAM_UNIT)
+!  PRINT*, 'namelist test ', LMULTIINPUT
+!  PRINT*, NNUMBER_INPUT_GRIDS
+!  PRINT*, 'HFILEIN ', HFILEIN, 'HGRIDIN ', HGRIDIN
+!  PRINT*, 'HFILESIN ', HFILESIN, 'HGRIDSIN ', HGRIDSIN
+ELSE
+  PRINT*, 'WARNING: no namelist interpolate_safran.nam provided. Continue with default settings.'
+  ALLOCATE(HFILESIN(1), HGRIDSIN(1), HFILESOUT(1))
+  HFILESIN(1) = HFILENAMEIN
+  HGRIDSIN(1) = HFILENAMEG
+  HFILESOUT(1) = HFILENAMEOUT
+  NNUMBER_INPUT_GRIDS = 1
+END IF
+CLOSE(INAM_UNIT)
+
+! loop over input files
+DO JINFILE = 1,NNUMBER_INPUT_GRIDS
+  IMASSIFTODELETE = -1
+  ILAYERTODELETE = -1
+  NPATCHID = -1
+  NPATCH = 1
+  IDECILEID = -1
+  NDECILE = 1
+  ! PRINT*, IMASSIFTODELETE, ILAYERTODELETE, NPATCHID, NPATCH, IDECILEID, NDECILE
 !
 ! Open input file
-CALL CHECK(NF90_OPEN(HFILENAMEIN,  IOR(NF90_NOWRITE, NF90_MPIIO),FILE_ID_IN, &
-                    comm = COMM, info = MPI_INFO_NULL),&
+  CALL CHECK(NF90_OPEN(HFILESIN(JINFILE), IOR(NF90_NOWRITE, NF90_MPIIO), FILE_ID_IN, &
+                    comm = COMM, info = MPI_INFO_NULL), &
                     "Cannot open file "//TRIM(HFILENAMEIN))
 !
 ! Open output file 
-CALL CHECK(NF90_create(HFILENAMEOUT,IOR(IOR(NF90_NETCDF4,NF90_CLASSIC_MODEL),NF90_MPIIO),FILE_ID_OUT, &
+  CALL CHECK(NF90_create(HFILESOUT(JINFILE),IOR(IOR(NF90_NETCDF4,NF90_CLASSIC_MODEL),NF90_MPIIO),FILE_ID_OUT, &
                        comm = COMM, info = MPI_INFO_NULL),&
                        "Cannot open file "//TRIM(HFILENAMEOUT))
 !
 ! Open grid file
-CALL CHECK(NF90_OPEN(HFILENAMEG, IOR(NF90_NOWRITE, NF90_MPIIO), FILE_ID_GEO, & 
+  CALL CHECK(NF90_OPEN(HGRIDSIN(JINFILE), IOR(NF90_NOWRITE, NF90_MPIIO), FILE_ID_GEO, &
                      comm = COMM, info = MPI_INFO_NULL),&
                      "Cannot open file"//TRIM(HFILENAMEG))
 !
 ! Get number of dimensions and variables in the input file
-CALL CHECK(NF90_INQUIRE(FILE_ID_IN, INDIM, INVAR),"Cannot get file informations"//TRIM(HFILENAMEIN))
+  CALL CHECK(NF90_INQUIRE(FILE_ID_IN, INDIM, INVAR),"Cannot get file informations"//TRIM(HFILENAMEIN))
 !
 ! Allocate descriptors of netcdf input file
 !!DIM properties
-ALLOCATE(DIM_NAME_IN(INDIM))
-ALLOCATE(DIM_ID_IN(INDIM))
-ALLOCATE(DIM_SIZE_IN(INDIM))
+  ALLOCATE(DIM_NAME_IN(INDIM))
+  ALLOCATE(DIM_ID_IN(INDIM))
+  ALLOCATE(DIM_SIZE_IN(INDIM))
 !!VAR properties
-ALLOCATE(VAR_NAME_IN(INVAR))
-ALLOCATE(VAR_ID_IN(INVAR))
-ALLOCATE(VAR_TYPE_IN(INVAR))
-ALLOCATE(VAR_NDIMS_IN(INVAR))
-ALLOCATE(VAR_ID_DIMS_IN(INDIM, INVAR))
-ALLOCATE(INATT(INVAR))
+  ALLOCATE(VAR_NAME_IN(INVAR))
+  ALLOCATE(VAR_ID_IN(INVAR))
+  ALLOCATE(VAR_TYPE_IN(INVAR))
+  ALLOCATE(VAR_NDIMS_IN(INVAR))
+  ALLOCATE(VAR_ID_DIMS_IN(INDIM, INVAR))
+  ALLOCATE(INATT(INVAR))
 !
 ! Allocate descriptors of netcdf output file
 !!DIM properties
-ALLOCATE(DIM_NAME_OUT(INDIM+1))
-ALLOCATE(DIM_ID_OUT(INDIM+1))
-ALLOCATE(DIM_SIZE_OUT(INDIM+1))
+  ALLOCATE(DIM_NAME_OUT(INDIM+1))
+  ALLOCATE(DIM_ID_OUT(INDIM+1))
+  ALLOCATE(DIM_SIZE_OUT(INDIM+1))
 !! VAR
-ALLOCATE(VAR_ID_OUT(INVAR+2))
-ALLOCATE(VAR_ID_DIMS_OUT(INDIM+1, INVAR+2))
+  ALLOCATE(VAR_ID_OUT(INVAR+2))
+  ALLOCATE(VAR_ID_DIMS_OUT(INDIM+1, INVAR+2))
 !
-VAR_ID_IN = 0
-VAR_NDIMS_IN = 0
-VAR_ID_DIMS_IN =0
-DIM_ID_OUT = 0
-DIM_SIZE_OUT = 0
-VAR_ID_OUT = 0
-VAR_ID_DIMS_OUT=0
+  VAR_ID_IN = 0
+  VAR_NDIMS_IN = 0
+  VAR_ID_DIMS_IN =0
+  DIM_ID_OUT = 0
+  DIM_SIZE_OUT = 0
+  VAR_ID_OUT = 0
+  VAR_ID_DIMS_OUT=0
 
 !
 ! Get dimension names, lengths
-DO ID=1,INDIM
-  CALL CHECK(NF90_INQUIRE_DIMENSION(FILE_ID_IN,ID,DIM_NAME_IN(ID),DIM_SIZE_IN(ID)), &
-             "Cannot get dim size "//TRIM(HFILENAMEIN))  
-  ! Get dimensions identifiers of netcdf input file
-  CALL CHECK(NF90_INQ_DIMID(FILE_ID_IN,DIM_NAME_IN(ID), DIM_ID_IN(ID)), &
+  DO ID=1,INDIM
+    CALL CHECK(NF90_INQUIRE_DIMENSION(FILE_ID_IN,ID,DIM_NAME_IN(ID),DIM_SIZE_IN(ID)), &
+            "Cannot get dim size "//TRIM(HFILENAMEIN))
+    ! Get dimensions identifiers of netcdf input file
+    CALL CHECK(NF90_INQ_DIMID(FILE_ID_IN,DIM_NAME_IN(ID), DIM_ID_IN(ID)), &
             "Cannot get variables dim ids "//TRIM(HFILENAMEIN))
-  !
-ENDDO
+    !
+  ENDDO
 !
 !NF90_Inquire_Variable  get variable names, types, shapes
-DO IV=1,INVAR
-  CALL CHECK(NF90_INQUIRE_VARIABLE(FILE_ID_IN, IV,VAR_NAME_IN(IV)), &
+  DO IV=1,INVAR
+    CALL CHECK(NF90_INQUIRE_VARIABLE(FILE_ID_IN, IV,VAR_NAME_IN(IV)), &
             "Cannot get variables name from ids "//TRIM(HFILENAMEIN))
-  VAR_ID_IN(IV)=IV
-  
-  ! Get variable metadata
-  CALL CHECK(NF90_INQUIRE_VARIABLE(FILE_ID_IN,VAR_ID_IN(IV),VAR_NAME_IN(IV),&
-          VAR_TYPE_IN(IV),VAR_NDIMS_IN(IV),VAR_ID_DIMS_IN(:,IV),INATT(IV)) ,&
-          "Cannot get metadata for a variable")
-ENDDO
+    VAR_ID_IN(IV)=IV
+
+    ! Get variable metadata
+    CALL CHECK(NF90_INQUIRE_VARIABLE(FILE_ID_IN,VAR_ID_IN(IV),VAR_NAME_IN(IV),&
+            VAR_TYPE_IN(IV),VAR_NDIMS_IN(IV),VAR_ID_DIMS_IN(:,IV),INATT(IV)) ,&
+            "Cannot get metadata for a variable")
+  ENDDO
 !
 ! Get interpolation informations
 !Read altitude massif numbers and aspects
-CALL READ_OUTPUT_GRID(FILE_ID_GEO,ZZSOUT,IMASSIFOUT,ZASPECTOUT,IRANK, &
-                    GRID_TYPE,GRID_DIM_REF,ZLATOUT,ZLONOUT,ZYOUT,ZXOUT,&
-                    ZSLOPEOUT)
-! open a file FORCING.nc by massif, altitude, aspect 
-CALL READ_NC(FILE_ID_IN,IZSIN,IMASSIFIN,IASPECTIN)
-!
-CALL INDICES2D(ZZSOUT,IMASSIFOUT,ZASPECTOUT,IZSIN,IMASSIFIN,&
-                   IASPECTIN,IINDICESBAS,IINDICESHAUT)       
-!  
-IDOUT = 1
-DO ID=1,INDIM
-  ! Define dimensions in output file
-  IF (DIM_NAME_IN(ID) == 'Number_of_points') THEN
-    ! Change spatial dimension
-    IF (IRANK==1) THEN
-      DIM_SIZE_OUT(IDOUT)=GRID_DIM_REF(1)
-      CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),GRID_DIM_REF(1),DIM_ID_OUT(IDOUT)), &
-                 "Cannot def dim  "//TRIM(HFILENAMEOUT))
-       ILLOC_ID=   DIM_ID_OUT(IDOUT) 
-       IDOUT =IDOUT+1
-    ELSEIF (IRANK==2) THEN
-      DIM_SIZE_OUT(IDOUT)=GRID_DIM_REF(2)
-      DIM_SIZE_OUT(IDOUT+1)=GRID_DIM_REF(1)
-      IF (GRID_TYPE == "LL") THEN 
-        !
-        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,'lat',DIM_SIZE_OUT(IDOUT),DIM_ID_OUT(IDOUT)), &
-      "Cannot def dim lat  "//TRIM(HFILENAMEOUT))
-        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,'lon',DIM_SIZE_OUT(IDOUT+1),DIM_ID_OUT(IDOUT+1)) , &
-       "Cannot def dim lon  "//TRIM(HFILENAMEOUT))    
-       !
-      ELSEIF (GRID_TYPE == "XY") THEN 
-        !
-        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,'y',DIM_SIZE_OUT(IDOUT),DIM_ID_OUT(IDOUT)), &
-      "Cannot def dim y  "//TRIM(HFILENAMEOUT))
-        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,'x',DIM_SIZE_OUT(IDOUT+1),DIM_ID_OUT(IDOUT+1)) , &
-       "Cannot def dim x  "//TRIM(HFILENAMEOUT))
-        !
+  CALL READ_OUTPUT_GRID(FILE_ID_GEO,ZZSOUT,IMASSIFOUT,ZASPECTOUT,IRANK, &
+          GRID_TYPE,GRID_DIM_REF,ZLATOUT,ZLONOUT,ZYOUT,ZXOUT,&
+          ZSLOPEOUT)
+!  IF (JINFILE == 2) THEN
+!    PRINT*, ZSLOPEOUT
+!  END IF
+  ! open a file FORCING.nc by massif, altitude, aspect
+  CALL READ_NC(FILE_ID_IN,IZSIN,IMASSIFIN,IASPECTIN)
+  !
+  CALL INDICES2D(ZZSOUT,IMASSIFOUT,ZASPECTOUT,IZSIN,IMASSIFIN,&
+          IASPECTIN,IINDICESBAS,IINDICESHAUT)
+  !
+  IDOUT = 1
+  DO ID=1,INDIM
+    ! Define dimensions in output file
+    IF (DIM_NAME_IN(ID) == 'Number_of_points') THEN
+      ! Change spatial dimension
+      IF (IRANK==1) THEN
+        DIM_SIZE_OUT(IDOUT)=GRID_DIM_REF(1)
+        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),GRID_DIM_REF(1),DIM_ID_OUT(IDOUT)), &
+                "Cannot def dim  "//TRIM(HFILENAMEOUT))
+        ILLOC_ID=   DIM_ID_OUT(IDOUT)
+        IDOUT =IDOUT+1
+      ELSEIF (IRANK==2) THEN
+        DIM_SIZE_OUT(IDOUT)=GRID_DIM_REF(2)
+        DIM_SIZE_OUT(IDOUT+1)=GRID_DIM_REF(1)
+        IF (GRID_TYPE == "LL") THEN
+          !
+          CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,'lat',DIM_SIZE_OUT(IDOUT),DIM_ID_OUT(IDOUT)), &
+                  "Cannot def dim lat  "//TRIM(HFILENAMEOUT))
+          CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,'lon',DIM_SIZE_OUT(IDOUT+1),DIM_ID_OUT(IDOUT+1)) , &
+                  "Cannot def dim lon  "//TRIM(HFILENAMEOUT))
+          !
+        ELSEIF (GRID_TYPE == "XY") THEN
+          !
+          CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,'y',DIM_SIZE_OUT(IDOUT),DIM_ID_OUT(IDOUT)), &
+                  "Cannot def dim y  "//TRIM(HFILENAMEOUT))
+          CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,'x',DIM_SIZE_OUT(IDOUT+1),DIM_ID_OUT(IDOUT+1)) , &
+                  "Cannot def dim x  "//TRIM(HFILENAMEOUT))
+          !
+        ELSE
+          STOP "INCORRECT TYPE OF GRID"
+        ENDIF
+        ILLOC_ID=   DIM_ID_OUT(IDOUT)
+        IDOUT = IDOUT + 2
       ELSE
-        STOP "INCORRECT TYPE OF GRID"
-      ENDIF
-      ILLOC_ID=   DIM_ID_OUT(IDOUT) 
-      IDOUT = IDOUT + 2
+        STOP 'INCORRECT RANK OF OUTPUT GRID'
+      END IF
+      !
+    ELSEIF (DIM_NAME_IN(ID) == 'time') THEN
+      ! Need to to distinguish because of the unlimited dimension
+      DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),NF90_UNLIMITED, &
+              DIM_ID_OUT(IDOUT)), "def time out")
+      ITIMEID= DIM_ID_OUT(IDOUT)
+      IDOUT = IDOUT + 1
+      !
+    ELSEIF(DIM_NAME_IN(ID) == 'massif') THEN
+      DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
+              DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
+      IMASSIFTODELETE = IDOUT
+      IDOUT = IDOUT+1
+      !
+    ELSEIF(DIM_NAME_IN(ID) == 'snow_layer') THEN
+      DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
+              DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
+      ILAYERTODELETE = IDOUT
+      IDOUT = IDOUT+1
+    ELSEIF(DIM_NAME_IN(ID) == 'Number_of_Patches') THEN
+      DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
+              DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
+      NPATCH = DIM_SIZE_IN(ID)
+      NPATCHID =  IDOUT
+      IDOUT = IDOUT+1
+    ELSEIF(DIM_NAME_IN(ID) == 'decile') THEN
+      DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
+              DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
+      NDECILE = DIM_SIZE_IN(ID)
+      IDECILEID =  IDOUT
+      IDOUT = IDOUT+1
     ELSE
-      STOP 'INCORRECT RANK OF OUTPUT GRID'
+      !
+      IF (IRANK==1) THEN
+        DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
+                DIM_ID_OUT(IDOUT)) , "Cannot def dim "//TRIM(HFILENAMEOUT))
+        IDOUT = IDOUT + 1
+      ELSEIF (IRANK==2) THEN
+        DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
+                DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
+        IDOUT = IDOUT +1
+      ELSE
+        STOP 'INCORRECT RANK OF OUTPUT GRID'
+      ENDIF
     END IF
     !
-  ELSEIF (DIM_NAME_IN(ID) == 'time') THEN
-    ! Need to to distinguish because of the unlimited dimension
-    DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
-    CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),NF90_UNLIMITED, &
-        DIM_ID_OUT(IDOUT)), "def time out")
-    ITIMEID= DIM_ID_OUT(IDOUT)
-    IDOUT = IDOUT + 1
-    !
-  ELSEIF(DIM_NAME_IN(ID) == 'massif') THEN
-    DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
-    CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
-    DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
-    IMASSIFTODELETE = IDOUT 
-    IDOUT = IDOUT+1
-    !
-  ELSEIF(DIM_NAME_IN(ID) == 'snow_layer') THEN
-    DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
-    CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
-    DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
-    ILAYERTODELETE = IDOUT    
-    IDOUT = IDOUT+1
-  ELSEIF(DIM_NAME_IN(ID) == 'Number_of_Patches') THEN
-    DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
-    CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
-    DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
-    NPATCH = DIM_SIZE_IN(ID) 
-    NPATCHID =  IDOUT  
-    IDOUT = IDOUT+1
-  ELSEIF(DIM_NAME_IN(ID) == 'decile') THEN
-    DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
-    CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
-    DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
-    NDECILE = DIM_SIZE_IN(ID) 
-    IDECILEID =  IDOUT  
-    IDOUT = IDOUT+1    
-  ELSE
-    !
-    IF (IRANK==1) THEN
-      DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
-      CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
-          DIM_ID_OUT(IDOUT)) , "Cannot def dim "//TRIM(HFILENAMEOUT))
-      IDOUT = IDOUT + 1
-    ELSEIF (IRANK==2) THEN
-      DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
-      CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
-      DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
-      IDOUT = IDOUT +1
-    ELSE
-      STOP 'INCORRECT RANK OF OUTPUT GRID'
-    ENDIF
-  END IF 
-  !
-END DO
+  END DO
 !
-IF (IRANK==1) THEN 
-  DO IV=1,INVAR
-    DO I=1,COUNT(VAR_ID_DIMS_IN(:,IV)/=0)  
+  IF (IRANK==1) THEN
+    DO IV=1,INVAR
+      DO I=1,COUNT(VAR_ID_DIMS_IN(:,IV)/=0)
         ! identify output dimension id and input dimension id
         CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT,DIM_NAME_IN(VAR_ID_DIMS_IN(I,IV)),ID) ,&
-            "Cannot get metadata for a variable")
+                "Cannot get metadata for a variable")
         VAR_ID_DIMS_OUT(I,IV) = ID
+      ENDDO
     ENDDO
-  ENDDO
-ELSE IF (IRANK==2) THEN
-  DO IV=1,INVAR
-    AFTERLOC = .FALSE.
-    DO I=1,COUNT(VAR_ID_DIMS_IN(:,IV)/=0)
-      IF (VAR_ID_DIMS_IN(I,IV)/=0) THEN 
-        IF (DIM_NAME_IN(VAR_ID_DIMS_IN(I,IV)) == 'Number_of_points')THEN
-          AFTERLOC= .TRUE.
-          VAR_ID_DIMS_OUT(I,IV)= ILLOC_ID+1
-          VAR_ID_DIMS_OUT(I+1,IV)= ILLOC_ID
-        ELSE
-          CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT,DIM_NAME_IN(VAR_ID_DIMS_IN(I,IV)),ID) ,&
-            "Cannot get metadata for a variable")
-          IF (AFTERLOC)THEN
-            VAR_ID_DIMS_OUT(I+1,IV) = ID
+  ELSE IF (IRANK==2) THEN
+    DO IV=1,INVAR
+      AFTERLOC = .FALSE.
+      DO I=1,COUNT(VAR_ID_DIMS_IN(:,IV)/=0)
+        IF (VAR_ID_DIMS_IN(I,IV)/=0) THEN
+          IF (DIM_NAME_IN(VAR_ID_DIMS_IN(I,IV)) == 'Number_of_points')THEN
+            AFTERLOC= .TRUE.
+            VAR_ID_DIMS_OUT(I,IV)= ILLOC_ID+1
+            VAR_ID_DIMS_OUT(I+1,IV)= ILLOC_ID
           ELSE
-            VAR_ID_DIMS_OUT(I,IV) = ID
+            CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT,DIM_NAME_IN(VAR_ID_DIMS_IN(I,IV)),ID) ,&
+                    "Cannot get metadata for a variable")
+            IF (AFTERLOC)THEN
+              VAR_ID_DIMS_OUT(I+1,IV) = ID
+            ELSE
+              VAR_ID_DIMS_OUT(I,IV) = ID
+            ENDIF
           ENDIF
         ENDIF
-      ENDIF
+      ENDDO
     ENDDO
-  ENDDO
-ENDIF
-! 
-IF(IRANK==2) THEN 
-  IF (GRID_TYPE == "LL") THEN 
-    CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,"LAT",NF90_DOUBLE,& 
-        DIM_ID_OUT(ILLOC_ID),VAR_ID_OUT(INVAR+1)),"Cannot def var latitude")
-    !      
-    CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,"LON",NF90_DOUBLE,& 
-        DIM_ID_OUT(ILLOC_ID+1),VAR_ID_OUT(INVAR+2)),"Cannot def var longitude")             
-  ELSEIF (GRID_TYPE == "XY") THEN 
-    !
-    CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,"y",NF90_DOUBLE,& 
-        DIM_ID_OUT(ILLOC_ID),VAR_ID_OUT(INVAR+1)),"Cannot def var y")
-    !      
-    CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,"x",NF90_DOUBLE,& 
-        DIM_ID_OUT(ILLOC_ID+1),VAR_ID_OUT(INVAR+2)),"Cannot def var x")         
-    !
-  ELSE
-    STOP "INCORRECT TYPE OF GRID 2D"
   ENDIF
-ENDIF
+! 
+  IF(IRANK==2) THEN
+    IF (GRID_TYPE == "LL") THEN
+      CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,"LAT",NF90_DOUBLE,&
+              DIM_ID_OUT(ILLOC_ID),VAR_ID_OUT(INVAR+1)),"Cannot def var latitude")
+      !
+      CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,"LON",NF90_DOUBLE,&
+              DIM_ID_OUT(ILLOC_ID+1),VAR_ID_OUT(INVAR+2)),"Cannot def var longitude")
+    ELSEIF (GRID_TYPE == "XY") THEN
+      !
+      CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,"y",NF90_DOUBLE,&
+              DIM_ID_OUT(ILLOC_ID),VAR_ID_OUT(INVAR+1)),"Cannot def var y")
+      !
+      CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,"x",NF90_DOUBLE,&
+              DIM_ID_OUT(ILLOC_ID+1),VAR_ID_OUT(INVAR+2)),"Cannot def var x")
+      !
+    ELSE
+      STOP "INCORRECT TYPE OF GRID 2D"
+    ENDIF
+  ENDIF
 !
 ! The dim ids array is used to pass the dim ids of the dimensions of
 ! the netCDF variables. In Fortran, the unlimited
 ! dimension must come last on the list of dimids. 
 !And must not has an element equal to zero
-DO IV=1,INVAR
-  IF (ANY( VAR_ID_DIMS_OUT(:,IV) .EQ. IMASSIFTODELETE ).OR.              &
-      ANY( VAR_ID_DIMS_OUT(:,IV) .EQ. ILAYERTODELETE ).OR.               &
-      (GRID_TYPE == "LL" .AND.  ANY(VAR_NAME_IN(IV).EQ. LL_VARNAME))) CYCLE
-  ! Create variable in output file
-  CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,VAR_NAME_IN(IV),VAR_TYPE_IN(IV), & 
-          PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0),VAR_ID_OUT(IV)),& 
-          "Cannot def var "//TRIM(VAR_NAME_IN(IV)))      
-  !copy attributes from infile to outfile
-  DO IA=1,INATT(IV)
-    CALL CHECK(NF90_INQ_ATTNAME(FILE_ID_IN,VAR_ID_IN(IV),IA,ATT_NAME)," Cannot get att name")
-    !
-    CALL CHECK(NF90_COPY_ATT(FILE_ID_IN, VAR_ID_IN(IV),ATT_NAME, FILE_ID_OUT, VAR_ID_OUT(IV)), &
-               "Cannot copy att from infile to outfile")
-    !
+  DO IV=1,INVAR
+    IF (ANY( VAR_ID_DIMS_OUT(:,IV) .EQ. IMASSIFTODELETE ).OR.              &
+            ANY( VAR_ID_DIMS_OUT(:,IV) .EQ. ILAYERTODELETE ).OR.               &
+            (GRID_TYPE == "LL" .AND.  ANY(VAR_NAME_IN(IV).EQ. LL_VARNAME))) CYCLE
+    ! Create variable in output file
+    CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,VAR_NAME_IN(IV),VAR_TYPE_IN(IV), &
+            PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0),VAR_ID_OUT(IV)),&
+            "Cannot def var "//TRIM(VAR_NAME_IN(IV)))
+    !copy attributes from infile to outfile
+    DO IA=1,INATT(IV)
+      CALL CHECK(NF90_INQ_ATTNAME(FILE_ID_IN,VAR_ID_IN(IV),IA,ATT_NAME)," Cannot get att name")
+      !
+      CALL CHECK(NF90_COPY_ATT(FILE_ID_IN, VAR_ID_IN(IV),ATT_NAME, FILE_ID_OUT, VAR_ID_OUT(IV)), &
+              "Cannot copy att from infile to outfile")
+      !
+    ENDDO
   ENDDO
-ENDDO
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!End of definition of output file
-CALL CHECK(NF90_ENDDEF(FILE_ID_OUT),"Cannot end of definition of output file")
-IF(IRANK == 2 )THEN 
-  IF (GRID_TYPE == "LL") THEN 
-    !lat
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+1),ZLATOUT ,& 
-                start= (/1/) ,count =(/NY/)),"Cannot put lat")
-    ! lon     
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+2),ZLONOUT ,& 
-                start= (/1/) ,count =(/NX/)),"Cannot put lon") 
-  ELSEIF (GRID_TYPE == "XY") THEN
-    !y
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+1),ZYOUT ,& 
-                start= (/1/) ,count =(/NY/)),"Cannot put y")
-    !x     
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+2),ZXOUT ,& 
-                start= (/1/) ,count =(/NX/)),"Cannot put x") 
-                
-  ELSE
-    STOP "INCORRECT TYPE OF GRID 2D"
+  CALL CHECK(NF90_ENDDEF(FILE_ID_OUT),"Cannot end of definition of output file")
+  IF(IRANK == 2 )THEN
+    IF (GRID_TYPE == "LL") THEN
+      !lat
+      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+1),ZLATOUT ,&
+              start= (/1/) ,count =(/NY/)),"Cannot put lat")
+      ! lon
+      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+2),ZLONOUT ,&
+              start= (/1/) ,count =(/NX/)),"Cannot put lon")
+    ELSEIF (GRID_TYPE == "XY") THEN
+      !y
+      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+1),ZYOUT ,&
+              start= (/1/) ,count =(/NY/)),"Cannot put y")
+      !x
+      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+2),ZXOUT ,&
+              start= (/1/) ,count =(/NX/)),"Cannot put x")
+
+    ELSE
+      STOP "INCORRECT TYPE OF GRID 2D"
+    ENDIF
   ENDIF
-ENDIF
 !
-NTIME =  DIM_SIZE_OUT(ITIMEID)
-ALLOCATE(VALUE_TIME(NTIME))  
-ntime = ntime
-!
-DO IV=1,INVAR
-  IF (ANY( VAR_ID_DIMS_OUT(:,IV) .EQ. IMASSIFTODELETE ).OR.              &
-      ANY( VAR_ID_DIMS_OUT(:,IV) .EQ. ILAYERTODELETE ).OR.               &
-      (GRID_TYPE == "LL" .AND.  ANY(VAR_NAME_IN(IV).EQ. LL_VARNAME))) CYCLE
-!  !Unlimited dimensions require collective writes
-  CALL CHECK(NF90_VAR_PAR_ACCESS(FILE_ID_OUT, VAR_ID_OUT(IV), nf90_collective),&
-                    "collective write")
-                
-  IF (VAR_NAME_IN(IV) == "time") THEN
-    !
-    CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),VALUE_TIME &
-     , start =(/1/), count = (/NTIME/)) &
-     ,"Cannot get var time")
-    !    
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),VALUE_TIME  &
-    , start = (/1/), count =(/NTIME/) ),"Cannot put var time")
-    !
-  ELSEIF (VAR_NAME_IN(IV) == "ZS") THEN
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZZSOUT , &
+  NTIME =  DIM_SIZE_OUT(ITIMEID)
+  ALLOCATE(VALUE_TIME(NTIME))
+  ntime = ntime
+  !
+  DO IV=1,INVAR
+    IF (ANY( VAR_ID_DIMS_OUT(:,IV) .EQ. IMASSIFTODELETE ).OR.              &
+            ANY( VAR_ID_DIMS_OUT(:,IV) .EQ. ILAYERTODELETE ).OR.               &
+            (GRID_TYPE == "LL" .AND.  ANY(VAR_NAME_IN(IV).EQ. LL_VARNAME))) CYCLE
+    !  !Unlimited dimensions require collective writes
+    CALL CHECK(NF90_VAR_PAR_ACCESS(FILE_ID_OUT, VAR_ID_OUT(IV), nf90_collective),&
+            "collective write")
+
+    IF (VAR_NAME_IN(IV) == "time") THEN
+      !
+      CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),VALUE_TIME &
+              , start =(/1/), count = (/NTIME/)) &
+              ,"Cannot get var time")
+      !
+      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),VALUE_TIME  &
+              , start = (/1/), count =(/NTIME/) ),"Cannot put var time")
+      !
+    ELSEIF (VAR_NAME_IN(IV) == "ZS") THEN
+      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZZSOUT , &
               start =(/IXSTART,IYSTART/), count = (/NX_PROC,NY_PROC/)), &
               "Cannot put var ZS")
-  ELSEIF (VAR_NAME_IN(IV) == "aspect") THEN
-    !ZASPECTOUT = Proc_id
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZASPECTOUT, &
-    start =(/1,1/), count = (/NX,NY/)), &
-    "Cannot put var aspect")
-  ELSEIF (VAR_NAME_IN(IV) == "slope") THEN
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZSLOPEOUT, &
-    start =(/1,1/), count = (/NX,NY/)), &
-    "Cannot put var slope")
-  ELSEIF (VAR_NAME_IN(IV) == "massif_number" .OR. VAR_NAME_IN(IV) == "massif_num") THEN
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),IMASSIFOUT, &
-    start =(/IXSTART,IYSTART/), count = (/NX_PROC,NY_PROC/)), &
-    "Cannot put var massif_number")
-  ELSEIF (VAR_NAME_IN(IV) == "LAT" .AND. GRID_TYPE == "XY") THEN
-    !    
-    ALLOCATE(ZVARLATLON(NX,NY))
-    CALL LATLON_IGN(ZXOUT,ZYOUT,PLAT=ZVARLATLON)
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARLATLON , &
+    ELSEIF (VAR_NAME_IN(IV) == "aspect") THEN
+      !ZASPECTOUT = Proc_id
+      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZASPECTOUT, &
+              start =(/1,1/), count = (/NX,NY/)), &
+              "Cannot put var aspect")
+    ELSEIF (VAR_NAME_IN(IV) == "slope") THEN
+      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZSLOPEOUT, &
+              start =(/1,1/), count = (/NX,NY/)), &
+              "Cannot put var slope")
+    ELSEIF (VAR_NAME_IN(IV) == "massif_number" .OR. VAR_NAME_IN(IV) == "massif_num") THEN
+      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),IMASSIFOUT, &
+              start =(/IXSTART,IYSTART/), count = (/NX_PROC,NY_PROC/)), &
+              "Cannot put var massif_number")
+    ELSEIF (VAR_NAME_IN(IV) == "LAT" .AND. GRID_TYPE == "XY") THEN
+      !
+      ALLOCATE(ZVARLATLON(NX,NY))
+      CALL LATLON_IGN(ZXOUT,ZYOUT,PLAT=ZVARLATLON)
+      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARLATLON , &
               start =(/1,1/), count = (/NX,NY/)), &
               "Cannot put var LAT")
-    DEALLOCATE(ZVARLATLON)
-!!    !
-  ELSEIF (VAR_NAME_IN(IV) == "LON" .AND. GRID_TYPE == "XY") THEN
-    !
-    ALLOCATE(ZVARLATLON(NX,NY))
-    CALL LATLON_IGN(ZXOUT,ZYOUT,PLON=ZVARLATLON)       
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARLATLON , &
+      DEALLOCATE(ZVARLATLON)
+      !!    !
+    ELSEIF (VAR_NAME_IN(IV) == "LON" .AND. GRID_TYPE == "XY") THEN
+      !
+      ALLOCATE(ZVARLATLON(NX,NY))
+      CALL LATLON_IGN(ZXOUT,ZYOUT,PLON=ZVARLATLON)
+      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARLATLON , &
               start =(/1,1/), count = (/NX,NY/)), &
               "Cannot put var LON")
-    DEALLOCATE(ZVARLATLON)
-    ! 
-  ELSEIF (ALL(VAR_ID_DIMS_OUT(:,IV) .NE. ILLOC_ID) .AND. &
-          ANY(VAR_ID_DIMS_OUT(:,IV) .EQ.ITIMEID))THEN !TIME DIM and NOGRID DIM
-    !
-    ALLOCATE(ZVARINT(DIM_SIZE_IN(VAR_ID_DIMS_IN(1,IV)),NPATCH,NTIME))   
-    !
-    CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARINT),"Cannot get var"//TRIM(HFILENAMEIN))
-    !
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARINT),"Q Cannot put var"//TRIM(HFILENAMEOUT))
-    DEALLOCATE(ZVARINT)
-    !
-  ELSEIF (ALL(VAR_ID_DIMS_OUT(:,IV) == 0))THEN !SCALAR
-    CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZSCAIN),"Cannot get var"//TRIM(HFILENAMEIN))
-    !
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZSCAIN),"R Cannot put var"//TRIM(HFILENAMEOUT))
-    !
-  ELSEIF (ALL(VAR_ID_DIMS_OUT(:,IV) .NE. ILLOC_ID) .AND. &
-          ALL(VAR_ID_DIMS_OUT(:,IV) .NE.ITIMEID))THEN !NO TIME DIM and NOGRID DIM
-    !
-    ALLOCATE(ZVARIN(DIM_SIZE_IN(VAR_ID_DIMS_IN(1,IV)),NPATCH))
-    !
-    CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARIN),"Cannot get var"//TRIM(HFILENAMEIN))
-    !
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARIN),"S Cannot put var"//TRIM(HFILENAMEOUT))
-    !
-    DEALLOCATE(ZVARIN)
-  ELSEIF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. ILLOC_ID) .AND. &
-          ANY(VAR_ID_DIMS_OUT(:,IV) .EQ.ITIMEID))THEN !TIME and GRID DIM
-    !
-    IF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. IDECILEID)) THEN
-      ALLOCATE(ZVARINT(NDECILE,DIM_SIZE_IN(ILLOC_ID),NTIME))
-      ALLOCATE(ZVAROUTXYT(NDECILE,NX_PROC,NY_PROC,NTIME))      
-    ELSE
-      ALLOCATE(ZVARINT(DIM_SIZE_IN(ILLOC_ID),NPATCH,NTIME))
-      ALLOCATE(ZVAROUTXYT(NX_PROC,NY_PROC,NPATCH,NTIME))
-    ENDIF
-    
-    IF (ALL(VAR_ID_DIMS_OUT(:,IV) .NE. NPATCHID)) THEN 
-!      !  Read variable
+      DEALLOCATE(ZVARLATLON)
+      !
+    ELSEIF (ALL(VAR_ID_DIMS_OUT(:,IV) .NE. ILLOC_ID) .AND. &
+            ANY(VAR_ID_DIMS_OUT(:,IV) .EQ.ITIMEID))THEN !TIME DIM and NOGRID DIM
+      !
+      ALLOCATE(ZVARINT(DIM_SIZE_IN(VAR_ID_DIMS_IN(1,IV)),NPATCH,NTIME))
+      !
+      CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARINT),"Cannot get var"//TRIM(HFILENAMEIN))
+      !
+      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARINT),"Q Cannot put var"//TRIM(HFILENAMEOUT))
+      DEALLOCATE(ZVARINT)
+      !
+    ELSEIF (ALL(VAR_ID_DIMS_OUT(:,IV) == 0))THEN !SCALAR
+      CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZSCAIN),"Cannot get var"//TRIM(HFILENAMEIN))
+      !
+      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZSCAIN),"R Cannot put var"//TRIM(HFILENAMEOUT))
+      !
+    ELSEIF (ALL(VAR_ID_DIMS_OUT(:,IV) .NE. ILLOC_ID) .AND. &
+            ALL(VAR_ID_DIMS_OUT(:,IV) .NE.ITIMEID))THEN !NO TIME DIM and NOGRID DIM
+      !
+      ALLOCATE(ZVARIN(DIM_SIZE_IN(VAR_ID_DIMS_IN(1,IV)),NPATCH))
+      !
+      CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARIN),"Cannot get var"//TRIM(HFILENAMEIN))
+      !
+      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARIN),"S Cannot put var"//TRIM(HFILENAMEOUT))
+      !
+      DEALLOCATE(ZVARIN)
+    ELSEIF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. ILLOC_ID) .AND. &
+            ANY(VAR_ID_DIMS_OUT(:,IV) .EQ.ITIMEID))THEN !TIME and GRID DIM
+      !
       IF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. IDECILEID)) THEN
-      ! case (time, Number_of_points, decile)
-        CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARINT, &
-        start =(/1,1,1/), count = (/NDECILE,DIM_SIZE_IN(ILLOC_ID),NTIME/)) &
-        ,"Cannot get var"//TRIM(HFILENAMEIN))      
+        ALLOCATE(ZVARINT(NDECILE,DIM_SIZE_IN(ILLOC_ID),NTIME))
+        ALLOCATE(ZVAROUTXYT(NDECILE,NX_PROC,NY_PROC,NTIME))
       ELSE
-        ! standard case (time, Number_of_points)
-        CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARINT, &
-        start =(/1,1/), count = (/DIM_SIZE_IN(ILLOC_ID),NTIME/)) &
-        ,"Cannot get var"//TRIM(HFILENAMEIN))
+        ALLOCATE(ZVARINT(DIM_SIZE_IN(ILLOC_ID),NPATCH,NTIME))
+        ALLOCATE(ZVAROUTXYT(NX_PROC,NY_PROC,NPATCH,NTIME))
       ENDIF
-    ELSE
-      ! case (time, Number_of_Patches, Number_of_points)
-      CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARINT, &
-      start =(/1,1,1/), count = (/DIM_SIZE_IN(ILLOC_ID),NPATCH,NTIME/)) &
-      ,"Cannot get var"//TRIM(HFILENAMEIN))
-    ENDIF
-    !
-    IF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. IDECILEID)) THEN
-      CALL INTERPOLZS2DDIMBEFORE(ZVAROUTXYT,ZVARINT,IINDICESBAS,IINDICESHAUT,&
-      ZZSOUT,IZSIN)    
-    ELSE
-      CALL INTERPOLZS2D(ZVAROUTXYT,ZVARINT,IINDICESBAS,IINDICESHAUT,&
-      ZZSOUT,IZSIN)
-    ENDIF
-    !
-    IF (IRANK ==1 )THEN 
-      ALLOCATE(ZVAROUTXYT1D(NX_PROC,NPATCH,NTIME))
-      ZVAROUTXYT1D = XUNDEF
-      ZVAROUTXYT1D = ZVAROUTXYT(:,1,:,:)
-      ! Write variable
+
       IF (ALL(VAR_ID_DIMS_OUT(:,IV) .NE. NPATCHID)) THEN
+        !      !  Read variable
         IF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. IDECILEID)) THEN
           ! case (time, Number_of_points, decile)
-          CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT1D,  &
-          start =(/1,IXSTART,1/) ,count = (/NDECILE,NX_PROC,NTIME/)),&
-          "T Cannot put var"//TRIM(HFILENAMEOUT))          
+          CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARINT, &
+                  start =(/1,1,1/), count = (/NDECILE,DIM_SIZE_IN(ILLOC_ID),NTIME/)) &
+                  ,"Cannot get var"//TRIM(HFILENAMEIN))
         ELSE
           ! standard case (time, Number_of_points)
-          CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT1D,  &
-          start =(/IXSTART,1/) ,count = (/NX_PROC,NTIME/)),&
-          "U Cannot put var"//TRIM(HFILENAMEOUT))
+          CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARINT, &
+                  start =(/1,1/), count = (/DIM_SIZE_IN(ILLOC_ID),NTIME/)) &
+                  ,"Cannot get var"//TRIM(HFILENAMEIN))
         ENDIF
       ELSE
         ! case (time, Number_of_Patches, Number_of_points)
-        CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT1D,  &
-        start =(/IXSTART,1,1/) ,count = (/NX_PROC,NPATCH,NTIME/)),&
-        "V Cannot put var"//TRIM(HFILENAMEOUT))
+        CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARINT, &
+                start =(/1,1,1/), count = (/DIM_SIZE_IN(ILLOC_ID),NPATCH,NTIME/)) &
+                ,"Cannot get var"//TRIM(HFILENAMEIN))
       ENDIF
-      DEALLOCATE(ZVAROUTXYT1D)
-    ELSEIF( IRANK == 2)THEN 
-      IF (ALL(VAR_ID_DIMS_OUT(:,IV) .NE. NPATCHID)) THEN 
-        ! case (time, x, y, decile)
-        IF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. IDECILEID)) THEN
-          CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
-          start =(/1,IXSTART,IYSTART,1/) ,count = (/NDECILE,NX_PROC,NY_PROC,NTIME/)),&
-          "W Cannot put var "//TRIM(VAR_NAME_IN(IV)))        
-        ELSE
-          ! standard case (time, x, y) 
-          CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
-          start =(/IXSTART,IYSTART,1/) ,count = (/NX_PROC,NY_PROC,NTIME/)),&
-          "X Cannot put var "//TRIM(VAR_NAME_IN(IV)))
-        ENDIF
+      !
+      IF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. IDECILEID)) THEN
+        CALL INTERPOLZS2DDIMBEFORE(ZVAROUTXYT,ZVARINT,IINDICESBAS,IINDICESHAUT,&
+                ZZSOUT,IZSIN)
       ELSE
-        ! case (time, Number_of_Patches, x, y)      
-        CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
-        start =(/IXSTART,IYSTART,1,1/) ,count = (/NX_PROC,NY_PROC,NPATCH,NTIME/)),&
-        "Y Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+        CALL INTERPOLZS2D(ZVAROUTXYT,ZVARINT,IINDICESBAS,IINDICESHAUT,&
+                ZZSOUT,IZSIN)
       ENDIF
+      !
+      IF (IRANK ==1 )THEN
+        ALLOCATE(ZVAROUTXYT1D(NX_PROC,NPATCH,NTIME))
+        ZVAROUTXYT1D = XUNDEF
+        ZVAROUTXYT1D = ZVAROUTXYT(:,1,:,:)
+        ! Write variable
+        IF (ALL(VAR_ID_DIMS_OUT(:,IV) .NE. NPATCHID)) THEN
+          IF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. IDECILEID)) THEN
+            ! case (time, Number_of_points, decile)
+            CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT1D,  &
+                    start =(/1,IXSTART,1/) ,count = (/NDECILE,NX_PROC,NTIME/)),&
+                    "T Cannot put var"//TRIM(HFILENAMEOUT))
+          ELSE
+            ! standard case (time, Number_of_points)
+            CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT1D,  &
+                    start =(/IXSTART,1/) ,count = (/NX_PROC,NTIME/)),&
+                    "U Cannot put var"//TRIM(HFILENAMEOUT))
+          ENDIF
+        ELSE
+          ! case (time, Number_of_Patches, Number_of_points)
+          CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT1D,  &
+                  start =(/IXSTART,1,1/) ,count = (/NX_PROC,NPATCH,NTIME/)),&
+                  "V Cannot put var"//TRIM(HFILENAMEOUT))
+        ENDIF
+        DEALLOCATE(ZVAROUTXYT1D)
+      ELSEIF( IRANK == 2)THEN
+        IF (ALL(VAR_ID_DIMS_OUT(:,IV) .NE. NPATCHID)) THEN
+          ! case (time, x, y, decile)
+          IF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. IDECILEID)) THEN
+            CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+                    start =(/1,IXSTART,IYSTART,1/) ,count = (/NDECILE,NX_PROC,NY_PROC,NTIME/)),&
+                    "W Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+          ELSE
+            ! standard case (time, x, y)
+            CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+                    start =(/IXSTART,IYSTART,1/) ,count = (/NX_PROC,NY_PROC,NTIME/)),&
+                    "X Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+          ENDIF
+        ELSE
+          ! case (time, Number_of_Patches, x, y)
+          CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+                  start =(/IXSTART,IYSTART,1,1/) ,count = (/NX_PROC,NY_PROC,NPATCH,NTIME/)),&
+                  "Y Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+        ENDIF
+      ENDIF
+      !
+      DEALLOCATE(ZVARINT)
+      DEALLOCATE(ZVAROUTXYT)
+      !
+    ELSEIF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. ILLOC_ID ) .AND. &
+            ALL(VAR_ID_DIMS_OUT(:,IV) .NE. ITIMEID))THEN !GRID DIM
+      !
+      ALLOCATE(ZVARIN(DIM_SIZE_IN(ILLOC_ID),NPATCH))
+      ALLOCATE(ZVAROUT2D(NX_PROC,NY_PROC,NPATCH))
+      ZVAROUT2D = XUNDEF
+      !  Read variable
+      CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARIN, &
+              start =(/1,1/), count = (/DIM_SIZE_IN(ILLOC_ID),NPATCH/)) &
+              ,"Cannot get var"//TRIM(HFILENAMEIN))
+      !
+      CALL INTERPOLZS2DNOTIME(ZVAROUT2D,ZVARIN,IINDICESBAS,IINDICESHAUT,&
+              ZZSOUT,IZSIN)
+      !
+      ! Write variable
+      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUT2D,  &
+              start =(/IXSTART,IYSTART,1/) ,count = (/NX_PROC,NY_PROC,NPATCH/)),&
+              "Z Cannot put var"//TRIM(HFILENAMEOUT))
+      !
+      DEALLOCATE(ZVARIN)
+      DEALLOCATE(ZVAROUT2D)
+      !
+    ELSE
+      !
+      PRINT*, VAR_NAME_IN(IV),  VAR_ID_DIMS_OUT(:,IV), "DIMMENSION VAR NON TRAITEE"
+      !
     ENDIF
     !
-    DEALLOCATE(ZVARINT)
-    DEALLOCATE(ZVAROUTXYT)
-    !
-  ELSEIF (ANY(VAR_ID_DIMS_OUT(:,IV) .EQ. ILLOC_ID ) .AND. &
-          ALL(VAR_ID_DIMS_OUT(:,IV) .NE. ITIMEID))THEN !GRID DIM
-    !      
-    ALLOCATE(ZVARIN(DIM_SIZE_IN(ILLOC_ID),NPATCH))
-    ALLOCATE(ZVAROUT2D(NX_PROC,NY_PROC,NPATCH))
-    ZVAROUT2D = XUNDEF
-    !  Read variable
-    CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARIN, &
-    start =(/1,1/), count = (/DIM_SIZE_IN(ILLOC_ID),NPATCH/)) &
-    ,"Cannot get var"//TRIM(HFILENAMEIN))
-    ! 
-    CALL INTERPOLZS2DNOTIME(ZVAROUT2D,ZVARIN,IINDICESBAS,IINDICESHAUT,&
-    ZZSOUT,IZSIN)
-    !
-    ! Write variable
-    CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUT2D,  &
-    start =(/IXSTART,IYSTART,1/) ,count = (/NX_PROC,NY_PROC,NPATCH/)),&
-    "Z Cannot put var"//TRIM(HFILENAMEOUT))
-    !
-    DEALLOCATE(ZVARIN)
-    DEALLOCATE(ZVAROUT2D)
-    !
-  ELSE
-    !
-    PRINT*, VAR_NAME_IN(IV),  VAR_ID_DIMS_OUT(:,IV), "DIMMENSION VAR NON TRAITEE"
-    !
-  ENDIF
-!
-ENDDO
-DEALLOCATE(VALUE_TIME)
-!
-DEALLOCATE(DIM_NAME_IN)
-DEALLOCATE(DIM_ID_IN)
-DEALLOCATE(DIM_SIZE_IN)
-!
-!!VAR properties
-DEALLOCATE(VAR_NAME_IN)
-DEALLOCATE(VAR_ID_IN)
-DEALLOCATE(VAR_TYPE_IN)
-DEALLOCATE(VAR_NDIMS_IN)
-DEALLOCATE(VAR_ID_DIMS_IN)
-DEALLOCATE(INATT)
-!
-DEALLOCATE(VAR_ID_OUT)
-DEALLOCATE(VAR_ID_DIMS_OUT)
-!
-DEALLOCATE(DIM_NAME_OUT)
-DEALLOCATE(DIM_ID_OUT)
-DEALLOCATE(DIM_SIZE_OUT)
-!
-DEALLOCATE(ZZSOUT)
-DEALLOCATE(IMASSIFOUT)
-DEALLOCATE(ZASPECTOUT)
-DEALLOCATE(ZSLOPEOUT)
-IF(IRANK == 1)THEN
-  DEALLOCATE(ZLATOUT)
-  DEALLOCATE(ZLONOUT)
-ELSEIF(IRANK == 2)THEN
-  IF (GRID_TYPE == "LL") THEN
+  ENDDO
+  DEALLOCATE(VALUE_TIME)
+  !
+  DEALLOCATE(DIM_NAME_IN)
+  DEALLOCATE(DIM_ID_IN)
+  DEALLOCATE(DIM_SIZE_IN)
+  !
+  !!VAR properties
+  DEALLOCATE(VAR_NAME_IN)
+  DEALLOCATE(VAR_ID_IN)
+  DEALLOCATE(VAR_TYPE_IN)
+  DEALLOCATE(VAR_NDIMS_IN)
+  DEALLOCATE(VAR_ID_DIMS_IN)
+  DEALLOCATE(INATT)
+  !
+  DEALLOCATE(VAR_ID_OUT)
+  DEALLOCATE(VAR_ID_DIMS_OUT)
+  !
+  DEALLOCATE(DIM_NAME_OUT)
+  DEALLOCATE(DIM_ID_OUT)
+  DEALLOCATE(DIM_SIZE_OUT)
+  !
+  DEALLOCATE(ZZSOUT)
+  DEALLOCATE(IMASSIFOUT)
+  DEALLOCATE(ZASPECTOUT)
+  DEALLOCATE(ZSLOPEOUT)
+  IF(IRANK == 1)THEN
     DEALLOCATE(ZLATOUT)
     DEALLOCATE(ZLONOUT)
-  ELSEIF (GRID_TYPE == "XY") THEN
-    DEALLOCATE(ZYOUT)
-    DEALLOCATE(ZXOUT)
+  ELSEIF(IRANK == 2)THEN
+    IF (GRID_TYPE == "LL") THEN
+      DEALLOCATE(ZLATOUT)
+      DEALLOCATE(ZLONOUT)
+    ELSEIF (GRID_TYPE == "XY") THEN
+      DEALLOCATE(ZYOUT)
+      DEALLOCATE(ZXOUT)
+    ENDIF
   ENDIF
-ENDIF
-!
-DEALLOCATE(IZSIN)
-DEALLOCATE(IMASSIFIN)
-DEALLOCATE(IASPECTIN)
-!
-DEALLOCATE(IINDICESBAS)
-DEALLOCATE(IINDICESHAUT)
-!
-! close output file
-CALL CHECK(NF90_CLOSE(FILE_ID_OUT),"Cannot close file "//TRIM(HFILENAMEOUT))
-! close grid file
-CALL CHECK(NF90_CLOSE(FILE_ID_GEO),"Cannot close file"//TRIM(HFILENAMEG))
-! close input file
-CALL CHECK(NF90_CLOSE(FILE_ID_IN),"Cannot close file"//TRIM(HFILENAMEIN))
+  !
+  DEALLOCATE(IZSIN)
+  DEALLOCATE(IMASSIFIN)
+  DEALLOCATE(IASPECTIN)
+  !
+  DEALLOCATE(IINDICESBAS)
+  DEALLOCATE(IINDICESHAUT)
+  !
+  ! close output file
+  CALL CHECK(NF90_CLOSE(FILE_ID_OUT),"Cannot close file "//TRIM(HFILENAMEOUT))
+  ! close grid file
+  CALL CHECK(NF90_CLOSE(FILE_ID_GEO),"Cannot close file"//TRIM(HFILENAMEG))
+  ! close input file
+  CALL CHECK(NF90_CLOSE(FILE_ID_IN),"Cannot close file"//TRIM(HFILENAMEIN))
+  ! PRINT*, IMASSIFTODELETE, ILAYERTODELETE, NPATCHID, NPATCH, IDECILEID, NDECILE
+END DO ! loop over input files (domains)
 !
 CALL MPI_FINALIZE(IERR)
 !
@@ -825,11 +857,13 @@ ELSEIF(IRANK == 2)THEN
     ALLOCATE(PX2D(NX,NY))
     ALLOCATE(PY2D(NX,NY))
     CALL XY_IGN(PLATOUT,PLONOUT,PX2D,PY2D)
+
     ALLOCATE(PZSALL(NX,NY))
     !maybe a gather from all procs is more efficient ?
     CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARGZS,PZSALL, &
        start =(/1,1/) , count = (/NX,NY/)), "Cannot read all "//HZS)
     CALL EXPLICIT_SLOPE_LAT_LON(PX2D,PY2D,PZSALL,PSLOPEOUT,PASPECTOUT)
+
     DEALLOCATE(PZSALL)    
     DEALLOCATE(PX2D)
     DEALLOCATE(PY2D)
@@ -1442,6 +1476,8 @@ ZZS_XY(:,1) = ZZS_XY(:,2)
 !
 ALLOCATE(ZXHAT (INNX, INNY))
 ALLOCATE(ZYHAT (INNX, INNY))
+ZXHAT = 0.
+ZYHAT = 0.
 !
 DO JX=2,INNX-1
   DO JY=2,INNY-1
@@ -1503,6 +1539,7 @@ DO JJ=IJB,IJE
       ZSURF=ZSURF+0.25*SQRT(1. + ZDZSDX**2. + ZDZSDY**2.)
     END DO
     !
+
     !equivalent tangent slope of a homogeneous surface with the same area
     PSSO_SLOPE(JI-JPHEXT,JJ-JPHEXT)=ATAN(SQRT(ZSURF**2.-1.))*(180./XPI)
     !
@@ -1518,6 +1555,7 @@ DO JJ=IJB,IJE
     ENDIF
   END DO
 END DO
+
 !
 DEALLOCATE(ZZSL)
 DEALLOCATE(ZZS_XY)
@@ -1536,5 +1574,64 @@ SUBROUTINE CHECK(STATUS,LINE)
   END IF
 END SUBROUTINE CHECK
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  SUBROUTINE READ_NML(KNAMUNIT)
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: KNAMUNIT
+
+    INTEGER :: IOS
+
+    READ(UNIT=KNAMUNIT,NML=NAM_SWITCHES_INT, IOSTAT=IOS)
+    IF (IOS .NE. 0) THEN
+      PRINT*, IOS
+      STOP 'ERROR reading namelist NAM_SWITCHES_INT'
+    END IF
+    ! If multiinput is wanted, read the number of inputs wanted, allocate the filename arrays and
+    ! read the input filenames and the associated grid filenames
+    IF (LMULTIINPUT) THEN
+      READ(UNIT=KNAMUNIT, NML=NAM_MULTIIN_SETTING, IOSTAT=IOS)
+      IF (IOS .NE. 0) THEN
+        STOP 'ERROR reading namelist NAM_MULTIIN_SETTING'
+      END IF
+      ALLOCATE(HFILESIN(NNUMBER_INPUT_GRIDS), HGRIDSIN(NNUMBER_INPUT_GRIDS))
+      READ(UNIT=KNAMUNIT, NML=NAM_FILENAMES_MULTI_IN, IOSTAT=IOS)
+      IF (IOS .NE. 0) THEN
+        PRINT*, IOS, HFILESIN, HGRIDSIN, SHAPE(HGRIDSIN)
+        STOP 'ERROR reading namelist NAM_FILENAMES_MULTI_IN'
+      END IF
+      IF (LMULTIOUTPUT) THEN
+        ALLOCATE(HFILESOUT(NNUMBER_INPUT_GRIDS))
+        READ(KNAMUNIT,NML=NAM_FILENAMES_MULTI_OUT, IOSTAT=IOS)
+        IF (IOS .NE. 0) THEN
+          STOP 'ERROR reading namelist NAM_FILENAMES_MULTI_OUT'
+        END IF
+      ELSE
+        STOP 'ERROR Single output not yet implemented with multiple inputs. Check namelist settings'
+        ALLOCATE(HFILESOUT(1))
+      END IF
+    ! otherwise read the filenames in a scalar variable
+    ELSE
+      READ(UNIT=KNAMUNIT, NML=NAM_FILENAMES_SINGLE_IN, IOSTAT=IOS)
+      IF (IOS .NE. 0) THEN
+        STOP 'ERROR: problem reading namelist NAM_FILENAMES_SINGLE_IN'
+      END IF
+      ALLOCATE(HFILESIN(1), HGRIDSIN(1))
+      HFILESIN(1) = HFILEIN
+      HGRIDSIN(1) = HGRIDIN
+      IF (LMULTIOUTPUT) THEN
+        STOP 'ERROR: Output of multiple files not supported for a single input. Check namelist settings'
+      ELSE
+        READ(UNIT=KNAMUNIT, NML=NAM_FILENAMES_SINGLE_OUT, IOSTAT=IOS)
+        IF (IOS .NE. 0) THEN
+          STOP 'ERROR: problem reading namelist NAM_FILENAMES_SINGLE_OUT'
+        END IF
+        ALLOCATE(HFILESOUT(1))
+        HFILESOUT(1) = HFILEOUT
+      END IF
+
+    END IF
+
+  END SUBROUTINE READ_NML
+!  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 END PROGRAM INTERPOLATE_SAFRAN
 

@@ -576,6 +576,8 @@ class Safran(Task, S2MTaskMixIn):
 
             if self.conf.execution == 'analysis':
 
+                # Cas d'une execution où l'on veut utiliser les rr ARPEGE comme guess
+                # A lancer avec un job_name=with_rr_arpege (cf fichier de conf)
                 self.sh.title('Toolbox algo tb23 = SYRPLUIE')
                 tb23 = tbalgo2 = toolbox.algo(
                     engine         = 's2m',
@@ -678,7 +680,7 @@ class Safran(Task, S2MTaskMixIn):
                     source_conf    = source_conf,
                     cutoff         = 'assimilation',
                     # local          = 'mb035/FORCING_massif.nc',
-                    local          = '{0:s}/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(season),
+                    local          = '{0:d}/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(y1),
                     experiment     = self.conf.xpid,
                     block          = 'massifs',
                     geometry        = self.conf.vconf,
@@ -686,6 +688,7 @@ class Safran(Task, S2MTaskMixIn):
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
+                    date           = dateend.ymd6h,
                     namespace      = self.conf.namespace,
                     namebuild      = 'flat@cen',
                 ),
@@ -700,7 +703,7 @@ class Safran(Task, S2MTaskMixIn):
                     source_conf    = source_conf,
                     cutoff         = 'assimilation',
                     # local          = 'mb035/FORCING_postes.nc',
-                    local          = '{0:s}/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(season),
+                    local          = '{0:d}/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(y1),
                     experiment     = self.conf.xpid,
                     block          = 'postes',
                     geometry        = self.conf.vconf,
@@ -708,6 +711,7 @@ class Safran(Task, S2MTaskMixIn):
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
+                    date           = dateend.ymd6h,
                     namespace      = self.conf.namespace,
                     namebuild      = 'flat@cen',
                 ),
@@ -726,7 +730,8 @@ class Safran(Task, S2MTaskMixIn):
                     kind           = 'listobs',
                     begindate      = datebegin.ymd6h,
                     enddate        = dateend.ymd6h,
-                    local          = '{0:s}/liste_obs_[begindate::ymd6h]_[enddate::ymd6h].tar.gz'.format(season),
+                    date           = dateend.ymd6h,
+                    local          = '{0:d}/liste_obs_[begindate::ymd6h]_[enddate::ymd6h].tar.gz'.format(y1),
                     namespace      = self.conf.namespace,
                     namebuild      = 'flat@cen',
                 )

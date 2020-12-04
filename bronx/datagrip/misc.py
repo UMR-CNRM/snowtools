@@ -9,6 +9,8 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import csv
 import io
+import yaml
+from collections import OrderedDict
 
 #: No automatic export
 __all__ = []
@@ -43,3 +45,20 @@ def read_dict_in_CSV(filename):
                 field_dict.append(fd)
 
     return field_dict, file_priority
+
+
+class OrderedYAMLLoader(yaml.SafeLoader):
+    """Loader for YAML that returns an OrderedDict."""
+    def __init__(self, *args, **kwargs):
+        def _dict_constructor(loader, node):
+            return OrderedDict(loader.construct_pairs(node))
+        self.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+                             _dict_constructor)
+        super(OrderedYAMLLoader, self).__init__(*args, **kwargs)
+
+
+def load_ordered_yaml(filename):
+    """Proxy to load with OrderedYAMLLoader."""
+    with io.open(filename, 'r') as yamlfh:
+        odict = yaml.load(yamlfh, Loader=OrderedYAMLLoader)
+    return odict

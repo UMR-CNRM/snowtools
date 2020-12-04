@@ -54,15 +54,15 @@ class ProReader_abstract:
     Permet d'être utilisé par GUI_Proreader.py pour tracé interactif.
     Pour plus d'information sur le code de ProReader_mini, aller directement voir l'aide de Proreader.py
     """
-    def __init__(self, ncfile=None, var=None, point=None, var_sup=[], liste_points=[]):
+    def __init__(self, ncfile=None, var=None, point=None, liste_points=[]):
         """
          - ProReader_GUI(ncfile='path/to/ncfile', var=None, point=None) : A partir d'un fichier PRO
                 !! si le fichier contient plusieurs points de simulation, selection par point sous forme d'un entier
                 !! si le fichier contient plusieurs variables, selection par variable sous forme d'une chaine de caractère
         """
-        self.initFromFile(ncfile, var=var, point=point, var_sup=var_sup, liste_points=liste_points)
+        self.initFromFile(ncfile, var=var, point=point, liste_points=liste_points)
 
-    def initFromFile(self, ncfile, var=None, point=None, var_sup=[], liste_points=[]):
+    def initFromFile(self, ncfile, var=None, point=None, liste_points=[]):
         ff = prosimu(ncfile)
         listvariables = ff.listvar()
         
@@ -393,10 +393,13 @@ class ProReader_abstract:
         bottom_y = bottom_y[(ep > 0).ravel()[::-1]]
         top_y = np.append(bottom_y[1:], epc_inv[0])
 
-        left_x = self.var['SNOWRAM'][self.date == date].ravel()[::-1]
+        if 'SNOWRAM' in self.var:
+            left_x = self.var['SNOWRAM'][self.date == date].ravel()[::-1]
+            left_x = left_x[(ep > 0).ravel()[::-1]]
+            left_x = np.where(left_x > 0.5, left_x, 0.5)
+        else:
+            left_x = np.zeros(shape=bottom_y.shape[0], dtype='int') + 30
         right_x = np.zeros(shape=bottom_y.shape[0], dtype='int')
-        left_x = left_x[(ep > 0).ravel()[::-1]]
-        left_x = np.where(left_x > 0.5, left_x, 0.5)
 
         vertices = np.zeros(shape=(bottom_y.shape[0], 4, 2))
         vertices[:, 0, 0] = right_x
@@ -468,18 +471,7 @@ class ProReader_standard(ProReader_abstract):
         if legend is None:
             legend = var
 
-        if var == 'SNOWTYPE':
-            colormap = 'grains'
-        elif var == 'SNOWTEMP' or var =='tsnl':
-            colormap = 'RdBu_r'
-        elif 'SNOWIMP1' in var:
-            colormap = 'echelle_log'
-        elif 'SNOWIMP2' in var:
-            colormap = 'echelle_log_sahara'
-        elif 'NAT_RAT' in var or 'ACC_RAT' in var:
-            colormap = 'ratio_cisaillement'
-        else:
-            colormap = colormap
+        colormap = get_colormap(var, colormap)
 
         intime = (self.date >= b) * (self.date <= e)
         
@@ -695,12 +687,7 @@ class ProReader_massif(ProReader_abstract):
         if legend is None:
             legend = var
 
-        if var == 'SNOWTYPE':
-            colormap = 'grains'
-        elif var == 'SNOWTEMP':
-            colormap = 'RdBu_r'
-        else:
-            colormap = colormap
+        colormap = get_colormap(var, colormap)
             
         if date is None:
             date=self.date[0]
@@ -920,10 +907,13 @@ class ProReader_massif(ProReader_abstract):
         bottom_y = bottom_y[(ep > 0).ravel()[::-1]]
         top_y=np.append(bottom_y[1:],epc_inv[0])
 
-        left_x = self.var['SNOWRAM'][intime,:,massif].ravel()[::-1]
+        if 'SNOWRAM' in self.var:
+            left_x = self.var['SNOWRAM'][intime,:,massif].ravel()[::-1]
+            left_x=left_x[(ep > 0).ravel()[::-1]]
+            left_x=np.where(left_x > 0.5, left_x, 0.5)
+        else:
+            left_x = np.zeros(shape=bottom_y.shape[0], dtype='int')+30
         right_x = np.zeros(shape=bottom_y.shape[0], dtype='int')
-        left_x=left_x[(ep > 0).ravel()[::-1]]
-        left_x=np.where(left_x > 0.5, left_x, 0.5)
 
         vertices = np.zeros(shape=(bottom_y.shape[0], 4, 2))
         vertices[:, 0, 0] = right_x
@@ -968,15 +958,15 @@ class ProReader_membre(ProReader_abstract):
     Permet d'être utilisé par GUI_Proreader.py pour tracé interactif.
     Pour plus d'information sur le code de ProReader_mini, aller directement voir l'aide de Proreader.py
     """
-    def __init__(self, ncfile=None, var=None, point=None, var_sup=[]):
+    def __init__(self, ncfile=None, var=None, point=None):
         """
          - ProReader_GUI(ncfile='path/to/ncfile', var=None, point=None) : A partir d'un fichier PRO
                 !! si le fichier contient plusieurs points de simulation, selection par point sous forme d'un entier
                 !! si le fichier contient plusieurs variables, selection par variable sous forme d'une chaine de caractère
         """
-        self.nb_membre = self.initFromFile(ncfile, var=var, point=point, var_sup=var_sup)
+        self.nb_membre = self.initFromFile(ncfile, var=var, point=point)
 
-    def initFromFile(self, ncfile, var=None, point=None, var_sup=[]):
+    def initFromFile(self, ncfile, var=None, point=None):
         ff = prosimu(ncfile)
         
         if 'SNOWDZ' in ff.listvar():
@@ -1091,7 +1081,9 @@ class ProReader_membre(ProReader_abstract):
                     elif ('soil_layer' in ff.getdimvar(ff.listvar()[i]) and self.type_fichier == 'FSM'):
                         self.var1D_membre[ff.listvar()[i]][nb_m,:] = ff.read_var(ff.listvar()[i], Number_of_points = point, fill2zero=True)[:,0]
                     else:
-                        self.var1D_membre[ff.listvar()[i]][nb_m,:] = ff.read_var(ff.listvar()[i], Number_of_points = point, fill2zero=True)
+                        data = ff.read_var(ff.listvar()[i], Number_of_points = point, fill2zero=True)
+                        if len(data.shape)==1:
+                            self.var1D_membre[ff.listvar()[i]][nb_m,:] = data
 
         return nmembre
 
@@ -1121,12 +1113,7 @@ class ProReader_membre(ProReader_abstract):
         if legend is None:
             legend = var
 
-        if var == 'SNOWTYPE':
-            colormap = 'grains'
-        elif var == 'SNOWTEMP' or var =='tsnl':
-            colormap = 'RdBu_r'
-        else:
-            colormap = colormap
+        colormap = get_colormap(var, colormap)
             
         if date is None:
             date=self.date[0]
@@ -1320,10 +1307,13 @@ class ProReader_membre(ProReader_abstract):
         bottom_y = bottom_y[(ep > 0).ravel()[::-1]]
         top_y=np.append(bottom_y[1:],epc_inv[0])
 
-        left_x = self.var_membre['SNOWRAM'][membre,intime,:].ravel()[::-1]
+        if 'SNOWRAM' in self.var_membre:
+            left_x = self.var_membre['SNOWRAM'][membre,intime,:].ravel()[::-1]
+            left_x=left_x[(ep > 0).ravel()[::-1]]
+            left_x=np.where(left_x > 0.5, left_x, 0.5)
+        else:
+            left_x = np.zeros(shape=bottom_y.shape[0], dtype='int') + 30
         right_x = np.zeros(shape=bottom_y.shape[0], dtype='int')
-        left_x=left_x[(ep > 0).ravel()[::-1]]
-        left_x=np.where(left_x > 0.5, left_x, 0.5)
 
         vertices = np.zeros(shape=(bottom_y.shape[0], 4, 2))
         vertices[:, 0, 0] = right_x
@@ -1356,3 +1346,21 @@ class ProReader_membre(ProReader_abstract):
             labels = Dictionnaries.MEPRA_labels
             cbar.set_ticks(np.arange(np.shape(labels)[0]))
             cbar.ax.set_yticklabels(labels)
+
+
+def get_colormap(var, default):
+    if var == 'SNOWTYPE':
+        colormap = 'grains'
+    elif var == 'SNOWTEMP' or var =='tsnl':
+        colormap = 'tempK'
+    elif var == 'SNOWLIQ':
+        colormap = 'lwc'
+    elif 'SNOWIMP1' in var:
+        colormap = 'echelle_log'
+    elif 'SNOWIMP2' in var:
+        colormap = 'echelle_log_sahara'
+    elif 'NAT_RAT' in var or 'ACC_RAT' in var:
+        colormap = 'ratio_cisaillement'
+    else:
+        colormap = default
+    return colormap

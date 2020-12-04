@@ -1628,6 +1628,12 @@ class Time(_GetattrCalculatorMixin):
             return 1
         return 0
 
+    @property
+    def isnull(self):
+        if self.hour == 0 and self.minute == 0:
+            return 1
+        return 0
+
     def isoformat(self):
         """Almost ISO representation (HH:MM)."""
         return six.text_type(self)

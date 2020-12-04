@@ -279,7 +279,7 @@ class Safran(Task, S2MTaskMixIn):
             )
             print t.prompt, 'tb12 =', tb12
             print
-
+            
             if self.conf.vconf == 'pyr':
 
                 self.sh.title('Toolbox input tb13')
