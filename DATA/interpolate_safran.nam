@@ -1,6 +1,6 @@
 &NAM_SWITCHES_INT
     LMULTIINPUT = .TRUE.,
-    LMULTIOUTPUT = .TRUE.
+    LMULTIOUTPUT = .FALSE.
 /
 &NAM_FILENAMES_SINGLE_IN
     HFILEIN = 'PRO_2020092706_2020092806_zeroslope_cor.nc',
@@ -12,10 +12,10 @@
     HFILESIN = "PRO_2020092706_2020092806_zeroslope_alps.nc", "PRO_2020092706_2020092806_zeroslope_cor.nc", "PRO_2020092706_2020092806_zeroslope_pyr.nc"
 /
 &NAM_MULTIOUT_SETTING
-    NNUMBER_OUTPUT_GRIDS = 3
+    NNUMBER_OUTPUT_GRIDS = 1
 /
 &NAM_FILENAMES_SINGLE_OUT
-    HFILEOUT = 'new_nml_single_in_single_out_cor.nc'
+    HFILEOUT = 'test_vars_in_file_multi_in_single_out_cor.nc'
     HGRIDIN = "CORSE.nc" !'alpha_massifs.nc'
 /
 &NAM_FILENAMES_MULTI_OUT

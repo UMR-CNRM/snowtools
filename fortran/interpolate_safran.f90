@@ -18,6 +18,7 @@ INTEGER,DIMENSION(:),ALLOCATABLE:: DIM_SIZE_IN, DIM_SIZE_OUT ! size of dimension
 !!!!! Var properties
 INTEGER,DIMENSION(:),ALLOCATABLE::VAR_ID_IN, VAR_ID_OUT ! id of variables
 CHARACTER(LEN=20),DIMENSION(:),ALLOCATABLE::VAR_NAME_IN ! name of variables
+CHARACTER(LEN=20) :: VARNAME_LOC ! temporary variable for variable name
 INTEGER,DIMENSION(:),ALLOCATABLE::VAR_TYPE_IN ! type of variables
 INTEGER,DIMENSION(:),ALLOCATABLE::VAR_NDIMS_IN ! variables domensions
 !
@@ -49,8 +50,8 @@ INTEGER,DIMENSION(:,:),ALLOCATABLE::IINDICESBAS,IINDICESHAUT
 INTEGER,DIMENSION(:),ALLOCATABLE:: VALUE_TIME, VALUE_TIME_OLD
 INTEGER,DIMENSION(:),ALLOCATABLE::  IVARIN
 REAL,DIMENSION(:,:),ALLOCATABLE::  ZVARIN
-REAL,DIMENSION(:,:,:),ALLOCATABLE::  ZVARINT
-REAL ::  ZSCAIN
+REAL,DIMENSION(:,:,:),ALLOCATABLE::  ZVARINT, ZVARINT_TMP
+REAL ::  ZSCAIN, ZSCAIN_TMP
 REAL,DIMENSION(:,:,:),ALLOCATABLE:: ZVAROUT2D
 REAL,DIMENSION(:,:,:,:),ALLOCATABLE:: ZVAROUTXYT
 REAL,DIMENSION(:,:,:),ALLOCATABLE:: ZVAROUTXYT1D
@@ -71,6 +72,7 @@ INTEGER :: NY_PROC, IYSTART
 INTEGER :: NPOINT_PROC, IPSTART
 !
 INTEGER::ID,IV,IA,IT,IDIN,IDOUT,INZ, JINFILE ! loop counter
+INTEGER :: IV_TMP
 INTEGER :: IOS ! status indicator
 INTEGER :: INAM_UNIT
 !
@@ -416,7 +418,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
   END IF
   ALLOCATE(VALUE_TIME(NTIME))
   !
-  ! 01/12/2020 check from here on for changes for the multi-in single-out case
+  ! 14/12/2020 check for proper (de-)allocation of the time variable
   DO IV=1,INVAR
     IF (ANY( VAR_ID_DIMS_OUT(:,IV) .EQ. IMASSIFTODELETE ).OR.              &
             ANY( VAR_ID_DIMS_OUT(:,IV) .EQ. ILAYERTODELETE ).OR.               &
@@ -426,7 +428,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
             "collective write")
 
     IF (VAR_NAME_IN(IV) == "time") THEN
-      !
+      ! time variable
       IF (LMULTIOUTPUT .OR. (JINFILE .EQ. 1)) THEN
         CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),VALUE_TIME &
               , start =(/1/), count = (/NTIME/)) &
@@ -438,45 +440,57 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
         CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),VALUE_TIME &
               , start =(/1/), count = (/NTIME/)) &
               ,"Cannot get var time")
-        IF (VALUE_TIME .NE. VALUE_TIME_OLD) THEN
+        IF (ANY((VALUE_TIME - VALUE_TIME_OLD) .NE. 0)) THEN
           STOP "ERROR: Multiple inputs on a single output grid must be valid for the same time steps"
         END IF
       END IF
       !
     ELSEIF (VAR_NAME_IN(IV) == "ZS") THEN
-      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZZSOUT , &
+      IF (LMULTIOUTPUT .OR. (JINFILE .EQ. 1)) THEN
+        CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZZSOUT , &
               start =(/IXSTART,IYSTART/), count = (/NX_PROC,NY_PROC/)), &
               "Cannot put var ZS")
+      END IF
     ELSEIF (VAR_NAME_IN(IV) == "aspect") THEN
       !ZASPECTOUT = Proc_id
-      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZASPECTOUT, &
+      IF (LMULTIOUTPUT .OR. (JINFILE .EQ. 1)) THEN
+        CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZASPECTOUT, &
               start =(/1,1/), count = (/NX,NY/)), &
               "Cannot put var aspect")
+      END IF
     ELSEIF (VAR_NAME_IN(IV) == "slope") THEN
-      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZSLOPEOUT, &
+      IF (LMULTIOUTPUT .OR. (JINFILE .EQ. 1)) THEN
+        CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZSLOPEOUT, &
               start =(/1,1/), count = (/NX,NY/)), &
               "Cannot put var slope")
+      END IF
     ELSEIF (VAR_NAME_IN(IV) == "massif_number" .OR. VAR_NAME_IN(IV) == "massif_num") THEN
-      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),IMASSIFOUT, &
+      IF (LMULTIOUTPUT .OR. (JINFILE .EQ. 1)) THEN
+        CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),IMASSIFOUT, &
               start =(/IXSTART,IYSTART/), count = (/NX_PROC,NY_PROC/)), &
               "Cannot put var massif_number")
+      END IF
     ELSEIF (VAR_NAME_IN(IV) == "LAT" .AND. GRID_TYPE == "XY") THEN
       !
-      ALLOCATE(ZVARLATLON(NX,NY))
-      CALL LATLON_IGN(ZXOUT,ZYOUT,PLAT=ZVARLATLON)
-      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARLATLON , &
-              start =(/1,1/), count = (/NX,NY/)), &
-              "Cannot put var LAT")
-      DEALLOCATE(ZVARLATLON)
+      IF (LMULTIOUTPUT .OR. (JINFILE .EQ. 1)) THEN
+        ALLOCATE(ZVARLATLON(NX,NY))
+        CALL LATLON_IGN(ZXOUT,ZYOUT,PLAT=ZVARLATLON)
+        CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARLATLON , &
+                start =(/1,1/), count = (/NX,NY/)), &
+                "Cannot put var LAT")
+        DEALLOCATE(ZVARLATLON)
+      END IF
       !!    !
     ELSEIF (VAR_NAME_IN(IV) == "LON" .AND. GRID_TYPE == "XY") THEN
       !
-      ALLOCATE(ZVARLATLON(NX,NY))
-      CALL LATLON_IGN(ZXOUT,ZYOUT,PLON=ZVARLATLON)
-      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARLATLON , &
-              start =(/1,1/), count = (/NX,NY/)), &
-              "Cannot put var LON")
-      DEALLOCATE(ZVARLATLON)
+      IF (LMULTIOUTPUT .OR. (JINFILE .EQ. 1)) THEN
+        ALLOCATE(ZVARLATLON(NX,NY))
+        CALL LATLON_IGN(ZXOUT,ZYOUT,PLON=ZVARLATLON)
+        CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARLATLON , &
+                start =(/1,1/), count = (/NX,NY/)), &
+                "Cannot put var LON")
+        DEALLOCATE(ZVARLATLON)
+      END IF
       !
     ELSEIF (ALL(VAR_ID_DIMS_OUT(:,IV) .NE. ILLOC_ID) .AND. &
             ANY(VAR_ID_DIMS_OUT(:,IV) .EQ.ITIMEID))THEN !TIME DIM and NOGRID DIM
@@ -484,18 +498,45 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       ALLOCATE(ZVARINT(DIM_SIZE_IN(VAR_ID_DIMS_IN(1,IV)),NPATCH,NTIME))
       !
       CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARINT),"Cannot get var"//TRIM(HFILENAMEIN))
+      IF (LMULTIOUTPUT .OR. (JINFILE .EQ. 1)) THEN
       !
-      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARINT),"Q Cannot put var"//TRIM(HFILENAMEOUT))
-      DEALLOCATE(ZVARINT)
+        CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARINT),"Q Cannot put var"//TRIM(HFILENAMEOUT))
+        DEALLOCATE(ZVARINT)
+      ELSE
+        ALLOCATE(ZVARINT_TMP(DIM_SIZE_IN(VAR_ID_DIMS_IN(1,IV)),NPATCH,NTIME))
+        CALL CHECK(NF90_INQ_VARID(FILE_ID_OUT, VAR_NAME_IN(IV), IV_TMP), &
+                "Cannot inquire variable id for "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+        CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVARINT_TMP), &
+                "Q cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+        IF (ANY((ZVARINT - ZVARINT_TMP) .NE. 0)) THEN
+          PRINT*, "Problem with variable ", VAR_NAME_IN(IV)
+          STOP "ERROR: Multiple inputs on a single output grid must have equal values for variable "
+        END IF
+        DEALLOCATE(ZVARINT, ZVARINT_TMP)
+      END IF
       !
     ELSEIF (ALL(VAR_ID_DIMS_OUT(:,IV) == 0))THEN !SCALAR
+      PRINT*, "scalar variable found", VAR_NAME_IN(IV)
       CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZSCAIN),"Cannot get var"//TRIM(HFILENAMEIN))
       !
-      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZSCAIN),"R Cannot put var"//TRIM(HFILENAMEOUT))
+      IF (LMULTIOUTPUT .OR. (JINFILE .EQ. 1)) THEN
+        CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZSCAIN),"R Cannot put var"//TRIM(HFILENAMEOUT))
+      ELSE
+        CALL CHECK(NF90_INQ_VARID(FILE_ID_OUT, VAR_NAME_IN(IV), IV_TMP), &
+                "Cannot inquire variable id for "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+        CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZSCAIN_TMP), &
+                "R cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+        IF ((ZSCAIN - ZSCAIN_TMP) .NE. 0) THEN
+          PRINT*, "Problem with variable ", VAR_NAME_IN(IV)
+          STOP "ERROR: Multiple inputs on a single output grid must have equal values for variable "
+        END IF
+      END IF
       !
+      ! 14/12/2020 check from here on for changes for the multi-in single-out case
     ELSEIF (ALL(VAR_ID_DIMS_OUT(:,IV) .NE. ILLOC_ID) .AND. &
             ALL(VAR_ID_DIMS_OUT(:,IV) .NE.ITIMEID))THEN !NO TIME DIM and NOGRID DIM
       !
+      ! PRINT*, "variable with no time dimension and no grid dimension found"
       ALLOCATE(ZVARIN(DIM_SIZE_IN(VAR_ID_DIMS_IN(1,IV)),NPATCH))
       !
       CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARIN),"Cannot get var"//TRIM(HFILENAMEIN))
