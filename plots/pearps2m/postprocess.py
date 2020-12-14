@@ -9,24 +9,24 @@ Created on 6 déc. 2018
 
 # The following lines are necessary with a French environment and python 2 to avoid a bronx crash when calling vortex
 # on months with an accent (Février, Décembre)
-#---------------------------------------------------------- 
+# ----------------------------------------------------------
 import sys
-import codecs
 if sys.version_info.major == 2:  # Python2 only
     import codecs
     sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
     sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
-#---------------------------------------------------------- 
+# ----------------------------------------------------------
 
 import locale
 
 import os
-import sys
 from optparse import OptionParser
 import numpy as np
 
 import matplotlib
 matplotlib.use('Agg')
+
+from collections import Counter, defaultdict
 
 from bronx.stdtypes.date import Date, today
 from tasks.oper.get_oper_files import S2MExtractor
@@ -65,9 +65,12 @@ class config(object):
     previ = True  # False for analysis, True for forecast
 
     # Operational chain
-    xpid = "oper"
-    list_geometry = ['alp', 'pyr', 'cor', 'postes']
+    xpid = "mirr"
+    alternate_xpid = ["oper", "OPER@lafaysse"]
+    #alternate_xpid = ["oper"]
 
+    list_geometry = ['alp', 'pyr', 'cor', 'postes']
+    alternate_list_geometry = [['alp', 'pyr', 'cor', 'postes'], ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']]
     # Development chain
     # xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
     # list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
@@ -217,7 +220,7 @@ class _EnsembleMassif(Ensemble):
 
     @property
     def geo(self):
-        return "massifs" 
+        return "massifs"
 
     def read(self, varname):
         if varname == 'naturalIndex':
@@ -603,14 +606,27 @@ if __name__ == "__main__":
     c = config()
     os.chdir(c.diroutput)
     S2ME = S2MExtractor(c)
-    snow_members = S2ME.get_snow()
+    snow_members, snow_xpid = S2ME.get_snow()
+
+    dict_chaine = defaultdict(str)
+    dict_chaine['OPER'] = ' (oper)'
+    dict_chaine['MIRR'] = ' (miroir)'
+    dict_chaine['OPER@lafaysse'] = ' (dev)'
+    # undefined xpid is possible because it is allowed by defaultdict
 
     locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
-    suptitle = u'Prévisions PEARP-S2M du ' + pretty_date(S2ME.conf.rundate).decode('utf-8')
 
     list_domains = snow_members.keys()
 
     for domain in list_domains:
+
+        suptitle = u'Prévisions PEARP-S2M du ' + pretty_date(S2ME.conf.rundate).decode('utf-8')
+        # Identify the prevailing xpid in the obtained resources and adapt the title
+        count = Counter(snow_xpid[domain])
+        prevailing_xpid = count.most_common(1)[0][0]
+        suffixe_suptitle = dict_chaine[prevailing_xpid]
+        suptitle += suffixe_suptitle
+
         if domain == 'postes':
             E = EnsembleOperDiagsStations()
         else:
