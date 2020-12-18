@@ -435,8 +435,8 @@ class ComparisonSimObs(object):
             print (np.sum(valid))
 
         for indSim in range(0, self.nsim):
-            #kwargs['fillcolor'] = self.list_colors[indSim]
-            kwargs['fillcolor'] = self.list_colors
+            # Les couleurs sont gérées dans la class boxplot directement -> à revoir
+            #kwargs['fillcolor'] = self.list_colors
             b1.draw(stations[valid], list_scores[indSim, valid], nsimu=self.nsim, **kwargs)
 
             #print list_scores[indSim, valid].shape
@@ -453,8 +453,7 @@ class ComparisonSimObs(object):
 
         for indSim in range(0, self.nsim):
             valid = self.nvalues[indSim, :] > 10
-            kwargs['fillcolor'] = self.list_colors
-
+            kwargs['fillcolor'] = self.list_colors[indSim]
             b2.draw(elevations[valid], list_scores[indSim, valid], nsimu=self.nsim, **kwargs)
 
         kwargs['legend'] = False 
