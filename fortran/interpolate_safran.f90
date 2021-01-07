@@ -52,8 +52,8 @@ INTEGER,DIMENSION(:),ALLOCATABLE::  IVARIN
 REAL,DIMENSION(:,:),ALLOCATABLE::  ZVARIN, ZVARIN_TMP
 REAL,DIMENSION(:,:,:),ALLOCATABLE::  ZVARINT, ZVARINT_TMP
 REAL ::  ZSCAIN, ZSCAIN_TMP
-REAL,DIMENSION(:,:,:),ALLOCATABLE:: ZVAROUT2D
-REAL,DIMENSION(:,:,:,:),ALLOCATABLE:: ZVAROUTXYT
+REAL,DIMENSION(:,:,:),ALLOCATABLE:: ZVAROUT2D, ZVAROUT2D_OLD
+REAL,DIMENSION(:,:,:,:),ALLOCATABLE:: ZVAROUTXYT, ZVAROUTXYT_OLD
 REAL,DIMENSION(:,:,:),ALLOCATABLE:: ZVAROUTXYT1D, ZVAROUTXYT1D_OLD
 !
 INTEGER :: NPATCH, NPATCHID
@@ -424,8 +424,9 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
             ANY( VAR_ID_DIMS_OUT(:,IV) == ILAYERTODELETE ).OR.               &
             (GRID_TYPE == "LL" .AND.  ANY(VAR_NAME_IN(IV) == LL_VARNAME))) CYCLE
     !  !Unlimited dimensions require collective writes
+    ! 07/01/2021 fix collective write error for multiinput and single output case
     CALL CHECK(NF90_VAR_PAR_ACCESS(FILE_ID_OUT, VAR_ID_OUT(IV), nf90_collective),&
-            "collective write")
+            "collective write"//VAR_NAME_IN(IV)//HFILESIN(JINFILE))
 
     IF (VAR_NAME_IN(IV) == "time") THEN
       ! time variable
@@ -560,9 +561,15 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       IF (ANY(VAR_ID_DIMS_OUT(:,IV) == IDECILEID)) THEN
         ALLOCATE(ZVARINT(NDECILE,DIM_SIZE_IN(ILLOC_ID),NTIME))
         ALLOCATE(ZVAROUTXYT(NDECILE,NX_PROC,NY_PROC,NTIME))
+        IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
+          ALLOCATE(ZVAROUTXYT_OLD(NDECILE,NX_PROC,NY_PROC,NTIME))
+        END IF
       ELSE
         ALLOCATE(ZVARINT(DIM_SIZE_IN(ILLOC_ID),NPATCH,NTIME))
         ALLOCATE(ZVAROUTXYT(NX_PROC,NY_PROC,NPATCH,NTIME))
+        IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
+          ALLOCATE(ZVAROUTXYT_OLD(NX_PROC,NY_PROC,NPATCH,NTIME))
+        END IF
       ENDIF
 
       IF (ALL(VAR_ID_DIMS_OUT(:,IV) /= NPATCHID)) THEN
@@ -595,6 +602,10 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       !
       IF (IRANK == 1) THEN
         ALLOCATE(ZVAROUTXYT1D(NX_PROC,NPATCH,NTIME))
+         ! allocate old variable
+        IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
+          ALLOCATE(ZVAROUTXYT1D_OLD(NX_PROC,NPATCH,NTIME))
+        END IF
         ZVAROUTXYT1D = XUNDEF
         ZVAROUTXYT1D = ZVAROUTXYT(:,1,:,:)
         ! Write variable
@@ -602,8 +613,6 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
           IF (ANY(VAR_ID_DIMS_OUT(:,IV) == IDECILEID)) THEN
             ! case (time, Number_of_points, decile)
             IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
-              ! allocate old variable
-              ALLOCATE(ZVAROUTXYT1D_OLD(NX_PROC,NPATCH,NTIME))
               ! read old variable
               CALL CHECK(NF90_INQ_VARID(FILE_ID_OUT, VAR_NAME_IN(IV), IV_TMP), &
                 "Cannot inquire variable id for "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
@@ -611,41 +620,93 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
                 "T cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
               ! fusion of old and new variable
               WHERE (ZVAROUTXYT1D == XUNDEF) ZVAROUTXYT1D = ZVAROUTXYT1D_OLD
-              ! CALL FUSE_FLD_3D(ZVAROUTXYT1D_OLD, ZVAROUTXYT1D, XUNDEF)
               ! write fusioned variable
             END IF
             CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT1D,  &
                     start = (/1,IXSTART,1/), count = (/NDECILE,NX_PROC,NTIME/)), &
                     "T Cannot put var"//TRIM(HFILENAMEOUT))
           ELSE
-            ! 04/01/2021 check from here on for changes for the multi-in single-out case
+            ! 07/01/2021 don't forget to test 1D case
             ! standard case (time, Number_of_points)
+            IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
+              ! read old variable
+              CALL CHECK(NF90_INQ_VARID(FILE_ID_OUT, VAR_NAME_IN(IV), IV_TMP), &
+                "Cannot inquire variable id for "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+              CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT1D_OLD(:,1,:)), &
+                "U cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+              ! fusion of old and new variable
+              WHERE (ZVAROUTXYT1D == XUNDEF) ZVAROUTXYT1D = ZVAROUTXYT1D_OLD
+              ! write fusioned variable
+            END IF
             CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT1D,  &
                     start =(/IXSTART,1/) ,count = (/NX_PROC,NTIME/)),&
                     "U Cannot put var"//TRIM(HFILENAMEOUT))
           ENDIF
         ELSE
           ! case (time, Number_of_Patches, Number_of_points)
+          IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
+              ! read old variable
+              CALL CHECK(NF90_INQ_VARID(FILE_ID_OUT, VAR_NAME_IN(IV), IV_TMP), &
+                "Cannot inquire variable id for "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+              CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT1D_OLD), &
+                "V cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+              ! fusion of old and new variable
+              WHERE (ZVAROUTXYT1D == XUNDEF) ZVAROUTXYT1D = ZVAROUTXYT1D_OLD
+              ! write fusioned variable
+            END IF
           CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT1D,  &
                   start =(/IXSTART,1,1/) ,count = (/NX_PROC,NPATCH,NTIME/)),&
                   "V Cannot put var"//TRIM(HFILENAMEOUT))
         ENDIF
         DEALLOCATE(ZVAROUTXYT1D)
+        IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
+          DEALLOCATE(ZVAROUTXYT1D_OLD)
+        END IF
       ELSEIF( IRANK == 2)THEN
         IF (ALL(VAR_ID_DIMS_OUT(:,IV) /= NPATCHID)) THEN
           ! case (time, x, y, decile)
           IF (ANY(VAR_ID_DIMS_OUT(:,IV) == IDECILEID)) THEN
+            IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
+              ! read old variable
+              CALL CHECK(NF90_INQ_VARID(FILE_ID_OUT, VAR_NAME_IN(IV), IV_TMP), &
+                "Cannot inquire variable id for "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+              CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD), &
+                "W cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+              ! fusion of old and new variable
+              WHERE (ZVAROUTXYT == XUNDEF) ZVAROUTXYT = ZVAROUTXYT_OLD
+              ! write fusioned variable
+            END IF
             CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
                     start =(/1,IXSTART,IYSTART,1/) ,count = (/NDECILE,NX_PROC,NY_PROC,NTIME/)),&
                     "W Cannot put var "//TRIM(VAR_NAME_IN(IV)))
           ELSE
             ! standard case (time, x, y)
+            IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
+              ! read old variable
+              CALL CHECK(NF90_INQ_VARID(FILE_ID_OUT, VAR_NAME_IN(IV), IV_TMP), &
+                "Cannot inquire variable id for "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+              CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD(:,:,1,:)), &
+                "X cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+              ! fusion of old and new variable
+              WHERE (ZVAROUTXYT == XUNDEF) ZVAROUTXYT = ZVAROUTXYT_OLD
+              ! write fusioned variable
+            END IF
             CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
                     start =(/IXSTART,IYSTART,1/) ,count = (/NX_PROC,NY_PROC,NTIME/)),&
                     "X Cannot put var "//TRIM(VAR_NAME_IN(IV)))
           ENDIF
         ELSE
           ! case (time, Number_of_Patches, x, y)
+          IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
+              ! read old variable
+              CALL CHECK(NF90_INQ_VARID(FILE_ID_OUT, VAR_NAME_IN(IV), IV_TMP), &
+                "Cannot inquire variable id for "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+              CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD), &
+                "Y cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+              ! fusion of old and new variable
+              WHERE (ZVAROUTXYT == XUNDEF) ZVAROUTXYT = ZVAROUTXYT_OLD
+              ! write fusioned variable
+            END IF
           CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
                   start =(/IXSTART,IYSTART,1,1/) ,count = (/NX_PROC,NY_PROC,NPATCH,NTIME/)),&
                   "Y Cannot put var "//TRIM(VAR_NAME_IN(IV)))
@@ -654,12 +715,18 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       !
       DEALLOCATE(ZVARINT)
       DEALLOCATE(ZVAROUTXYT)
+      IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
+        DEALLOCATE(ZVAROUTXYT_OLD)
+      END IF
       !
     ELSEIF (ANY(VAR_ID_DIMS_OUT(:,IV) == ILLOC_ID ) .AND. &
             ALL(VAR_ID_DIMS_OUT(:,IV) /= ITIMEID))THEN !GRID DIM
       !
       ALLOCATE(ZVARIN(DIM_SIZE_IN(ILLOC_ID),NPATCH))
       ALLOCATE(ZVAROUT2D(NX_PROC,NY_PROC,NPATCH))
+      IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
+        ALLOCATE(ZVAROUT2D_OLD(NX_PROC,NY_PROC,NPATCH))
+      END IF
       ZVAROUT2D = XUNDEF
       !  Read variable
       CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),ZVARIN, &
@@ -669,6 +736,16 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       CALL INTERPOLZS2DNOTIME(ZVAROUT2D,ZVARIN,IINDICESBAS,IINDICESHAUT,&
               ZZSOUT,IZSIN)
       !
+      IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
+        ! read old variable
+        CALL CHECK(NF90_INQ_VARID(FILE_ID_OUT, VAR_NAME_IN(IV), IV_TMP), &
+                "Cannot inquire variable id for "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+        CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUT2D_OLD), &
+                "Z cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+              ! fusion of old and new variable
+        WHERE (ZVAROUT2D == XUNDEF) ZVAROUT2D = ZVAROUT2D_OLD
+              ! write fusioned variable
+      END IF
       ! Write variable
       CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUT2D,  &
               start =(/IXSTART,IYSTART,1/) ,count = (/NX_PROC,NY_PROC,NPATCH/)),&
@@ -676,6 +753,9 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       !
       DEALLOCATE(ZVARIN)
       DEALLOCATE(ZVAROUT2D)
+      IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
+        DEALLOCATE(ZVAROUT2D_OLD)
+      END IF
       !
     ELSE
       !
@@ -684,6 +764,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
     ENDIF
     !
   ENDDO
+  ! 07/01/2021 check proper allocation/deallocation for multi-input single-output case
   IF (JINFILE == 1) THEN
     VALUE_TIME_OLD = VALUE_TIME
   END IF
@@ -701,29 +782,31 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
   DEALLOCATE(VAR_ID_DIMS_IN)
   DEALLOCATE(INATT)
   !
-  DEALLOCATE(VAR_ID_OUT)
-  DEALLOCATE(VAR_ID_DIMS_OUT)
   !
-  DEALLOCATE(DIM_NAME_OUT)
-  DEALLOCATE(DIM_ID_OUT)
-  DEALLOCATE(DIM_SIZE_OUT)
+  IF (LMULTIOUTPUT .OR. (JINFILE == NNUMBER_INPUT_FILES)) THEN
+    DEALLOCATE(VAR_ID_OUT)
+    DEALLOCATE(VAR_ID_DIMS_OUT)
   !
-  DEALLOCATE(ZZSOUT)
-  DEALLOCATE(IMASSIFOUT)
-  DEALLOCATE(ZASPECTOUT)
-  DEALLOCATE(ZSLOPEOUT)
-  IF(IRANK == 1)THEN
-    DEALLOCATE(ZLATOUT)
-    DEALLOCATE(ZLONOUT)
-  ELSEIF(IRANK == 2)THEN
-    IF (GRID_TYPE == "LL") THEN
+    DEALLOCATE(DIM_NAME_OUT)
+    DEALLOCATE(DIM_ID_OUT)
+    DEALLOCATE(DIM_SIZE_OUT)
+    DEALLOCATE(ZZSOUT)
+    DEALLOCATE(IMASSIFOUT)
+    DEALLOCATE(ZASPECTOUT)
+    DEALLOCATE(ZSLOPEOUT)
+    IF(IRANK == 1)THEN
       DEALLOCATE(ZLATOUT)
       DEALLOCATE(ZLONOUT)
-    ELSEIF (GRID_TYPE == "XY") THEN
-      DEALLOCATE(ZYOUT)
-      DEALLOCATE(ZXOUT)
+    ELSEIF(IRANK == 2)THEN
+      IF (GRID_TYPE == "LL") THEN
+        DEALLOCATE(ZLATOUT)
+        DEALLOCATE(ZLONOUT)
+      ELSEIF (GRID_TYPE == "XY") THEN
+        DEALLOCATE(ZYOUT)
+        DEALLOCATE(ZXOUT)
+      ENDIF
     ENDIF
-  ENDIF
+  END IF
   !
   DEALLOCATE(IZSIN)
   DEALLOCATE(IMASSIFIN)
@@ -732,8 +815,10 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
   DEALLOCATE(IINDICESBAS)
   DEALLOCATE(IINDICESHAUT)
   !
+  IF (LMULTIOUTPUT .OR. (JINFILE == NNUMBER_INPUT_FILES)) THEN
   ! close output file
-  CALL CHECK(NF90_CLOSE(FILE_ID_OUT),"Cannot close file "//TRIM(HFILENAMEOUT))
+    CALL CHECK(NF90_CLOSE(FILE_ID_OUT),"Cannot close file "//TRIM(HFILENAMEOUT))
+  END IF
   ! close grid file
   CALL CHECK(NF90_CLOSE(FILE_ID_GEO),"Cannot close file"//TRIM(HFILENAMEG))
   ! close input file

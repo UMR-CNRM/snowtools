@@ -9,14 +9,14 @@
     NNUMBER_INPUT_FILES = 3
 /
 &NAM_FILENAMES_MULTI_IN
-    HFILESIN = "PRO_2020092706_2020092806_zeroslope_alps.nc", "PRO_2020092706_2020092806_zeroslope_cor.nc", "PRO_2020092706_2020092806_zeroslope_pyr.nc"
+    HFILESIN =  "PRO_2020092706_2020092806_zeroslope_cor.nc", "PRO_2020092706_2020092806_zeroslope_alps.nc", "PRO_2020092706_2020092806_zeroslope_pyr.nc"
 /
 &NAM_MULTIOUT_SETTING
     NNUMBER_OUTPUT_GRIDS = 1
 /
 &NAM_FILENAMES_SINGLE_OUT
-    HFILEOUT = 'test_vars_in_file_multi_in_single_out_cor.nc'
-    HGRIDIN = "CORSE.nc" !'alpha_massifs.nc'
+    HFILEOUT = 'test_v1_multi_in_single_out_alpha.nc'
+    HGRIDIN = 'alpha_massifs.nc' !"CORSE_1D.nc" !'alpha_massifs_1d.nc' !
 /
 &NAM_FILENAMES_MULTI_OUT
     HFILESOUT = "new_nml_multi_in_multi_out_alps.nc", "new_nml_multi_in_multi_out_cor.nc", "new_nml_multi_in_multi_out_pyr.nc"
