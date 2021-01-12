@@ -13,7 +13,7 @@ import shutil
 
 from utils.resources import InstallException
 from utils.dates import WallTimeException
-
+from bronx.stdtypes.date import Period
 
 class vortex_kitchen(object):
     '''
@@ -241,7 +241,7 @@ class vortex_kitchen(object):
             return self.options.walltime
 
         elif self.options.oper:
-            return str(datetime.timedelta(minutes=10))
+            return Period(minutes=10).hms
 
         else:
             if self.options.escroc:
@@ -269,12 +269,12 @@ class vortex_kitchen(object):
 
             key = self.options.region if self.options.region in list(minutes_peryear.keys()) else "alp_allslopes"
 
-            estimation = datetime.timedelta(minutes=minutes_peryear[key]) * max(1, (self.options.datefin.year - self.options.datedeb.year)) * (1 + nmembers / (40 * self.options.nnodes) )
+            estimation = Period(minutes=minutes_peryear[key]) * max(1, (self.options.datefin.year - self.options.datedeb.year)) * (1 + nmembers / (40 * self.options.nnodes) )
 
             if estimation >= datetime.timedelta(hours=24):
                 raise WallTimeException(estimation)
             else:
-                return str(estimation)
+                return estimation.hms
 
     def split_geo(self):
         if ':' in self.options.region:
