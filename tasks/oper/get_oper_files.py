@@ -119,7 +119,7 @@ class S2MExtractor(S2MTaskMixIn):
                     list_geometry = self.conf.alternate_list_geometry[a]
                 else:
                     list_geometry = self.conf.list_geometry
-                tb01a = toolbox.input(
+                tb01.extend(toolbox.input(
                     alternate      = 'Forcing',
                     vapp           = 's2m',
                     vconf          = '[geometry::area]',
@@ -138,7 +138,7 @@ class S2MExtractor(S2MTaskMixIn):
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
                     intent         = 'in',
                     fatal          = False
-                )
+                ))
 
         return self.get_std(tb01)
 
@@ -173,7 +173,7 @@ class S2MExtractor(S2MTaskMixIn):
                 else:
                     list_geometry = self.conf.list_geometry
 
-                tb02a = toolbox.input(
+                tb02.extend(toolbox.input(
                     alternate      = 'pro',
                     vapp           = 's2m',
                     vconf          = '[geometry::area]',
@@ -193,7 +193,7 @@ class S2MExtractor(S2MTaskMixIn):
                     intent         = 'in',
                     fatal          = False
 
-                )
+                ))
 
         return self.get_std(tb02)
 
