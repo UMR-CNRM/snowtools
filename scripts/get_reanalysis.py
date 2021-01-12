@@ -17,6 +17,7 @@ from utils.dates import get_list_dates_files
 
 usage = "usage: python get_reanalysis.py --geometry=xxx [--byear=YYYY] [--eyear=YYYY] [--meteo] [--snow] [--nativemeteo]"
 
+toolbox.active_now = True # permet de se passer de l'attribut now=True dans les toolbox
 
 def parse_options(arguments):
     parser = OptionParser(usage)
@@ -117,11 +118,12 @@ class S2MExtractor(S2MTaskMixIn):
                     model          = 'safran',
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
+                    #now            = True,
                 )
 
-                for rh in tb01:
-                    print(rh.quickview())
-                    rh.get()
+#                for rh in tb01:
+#                    print(rh.quickview())
+#                    rh.get()
 
         if self.conf.meteo:
             for p, datebegin in enumerate(list_dates_begin_forc):
@@ -141,11 +143,12 @@ class S2MExtractor(S2MTaskMixIn):
                     model          = 's2m',
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
+                    #now            = True,
                 )
 
-                for rh in tb01:
-                    print(rh.quickview())
-                    rh.get()
+#                for rh in tb01:
+#                    print(rh.quickview())
+#                    rh.get()
 
         if self.conf.snow:
             for p, datebegin in enumerate(list_dates_begin_pro):
@@ -165,11 +168,12 @@ class S2MExtractor(S2MTaskMixIn):
                     model          = 'surfex',
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
+                    #now            = True,
                 )
 
-                for rh in tb02:
-                    print(rh.quickview())
-                    rh.get()
+#                for rh in tb02:
+#                    print(rh.quickview())
+#                    rh.get()
 
 
 if __name__ == "__main__":
