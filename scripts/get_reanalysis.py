@@ -13,7 +13,7 @@ from optparse import OptionParser
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 from bronx.stdtypes.date import Date
-from utils.dates import get_list_dates_files
+from utils.dates import get_list_dates_files, get_dic_dateend
 
 usage = "usage: python get_reanalysis.py --geometry=xxx [--byear=YYYY] [--eyear=YYYY] [--meteo] [--snow] [--nativemeteo]"
 
@@ -89,91 +89,81 @@ class S2MExtractor(S2MTaskMixIn):
     def get(self):
 
         list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
+        dict_dates_end_forc = get_dic_dateend(list_dates_begin_forc, list_dates_end_forc)
+        dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
+        dict_source_app_safran, dict_source_conf_safran = self.get_safran_sources(list_dates_begin_forc)
 
         if self.conf.nativemeteo:
-            for p, datebegin in enumerate(list_dates_begin_forc):
-                dateend = list_dates_end_forc[p]
 
-                if datebegin >= Date(2002, 8, 1):
-                    source_app = 'arpege'
-                    source_conf = '4dvarfr'
-                else:
-                    source_app = 'ifs'
-                    source_conf = 'era40'
+            tb01 = toolbox.input(
+                vapp           = 'safran',
+                vconf          = self.conf.geometry,
+                local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                experiment     = self.conf.xpid_native,
+                block          = 'massifs',
+                source_app     = dict_source_app_safran,
+                source_conf    = dict_source_conf_safran,
+                geometry       = self.conf.geometry,
+                date           = '[datebegin]',
+                datebegin      = list_dates_begin_forc,
+                dateend        = dict_dates_end_forc,
+                nativefmt      = 'netcdf',
+                kind           = 'MeteorologicalForcing',
+                model          = 'safran',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                #now            = True,
+            )
 
-                tb01 = toolbox.input(
-                    vapp           = 'safran',
-                    vconf          = self.conf.geometry,
-                    local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                    experiment     = self.conf.xpid_native,
-                    block          = 'massifs',
-                    source_app     = source_app,
-                    source_conf    = source_conf,
-                    geometry       = self.conf.geometry,
-                    date           = '[datebegin]',
-                    datebegin      = datebegin,
-                    dateend        = dateend,
-                    nativefmt      = 'netcdf',
-                    kind           = 'MeteorologicalForcing',
-                    model          = 'safran',
-                    namespace      = 'vortex.multi.fr',
-                    namebuild      = 'flat@cen',
-                    #now            = True,
-                )
-
-#                for rh in tb01:
-#                    print(rh.quickview())
-#                    rh.get()
+#            for rh in tb01:
+#                print(rh.quickview())
+#                rh.get()
 
         if self.conf.meteo:
-            for p, datebegin in enumerate(list_dates_begin_forc):
-                dateend = list_dates_end_forc[p]
-                tb01 = toolbox.input(
-                    vapp           = 's2m',
-                    vconf          = self.conf.geometry,
-                    local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                    experiment     = self.conf.xpid,
-                    block          = 'meteo',
-                    geometry       = self.conf.geometry,
-                    date           = '[datebegin]',
-                    datebegin      = datebegin,
-                    dateend        = dateend,
-                    nativefmt      = 'netcdf',
-                    kind           = 'MeteorologicalForcing',
-                    model          = 's2m',
-                    namespace      = 'vortex.multi.fr',
-                    namebuild      = 'flat@cen',
-                    #now            = True,
-                )
+            tb01 = toolbox.input(
+                vapp           = 's2m',
+                vconf          = self.conf.geometry,
+                local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                experiment     = self.conf.xpid,
+                block          = 'meteo',
+                geometry       = self.conf.geometry,
+                date           = '[datebegin]',
+                datebegin      = list_dates_begin_forc,
+                dateend        = dict_dates_end_forc,
+                nativefmt      = 'netcdf',
+                kind           = 'MeteorologicalForcing',
+                model          = 's2m',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                #now            = True,
+            )
 
-#                for rh in tb01:
-#                    print(rh.quickview())
-#                    rh.get()
+#            for rh in tb01:
+#                print(rh.quickview())
+#                rh.get()
 
         if self.conf.snow:
-            for p, datebegin in enumerate(list_dates_begin_pro):
-                dateend = list_dates_end_pro[p]
-                tb02 = toolbox.input(
-                    vapp           = 's2m',
-                    vconf          = self.conf.geometry,
-                    local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-                    experiment     = self.conf.xpid,
-                    block          = 'pro',
-                    geometry       = self.conf.geometry,
-                    date           = '[datebegin]',
-                    datebegin      = datebegin,
-                    dateend        = dateend,
-                    nativefmt      = 'netcdf',
-                    kind           = 'SnowpackSimulation',
-                    model          = 'surfex',
-                    namespace      = 'vortex.multi.fr',
-                    namebuild      = 'flat@cen',
-                    #now            = True,
-                )
+            tb02 = toolbox.input(
+                vapp           = 's2m',
+                vconf          = self.conf.geometry,
+                local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                experiment     = self.conf.xpid,
+                block          = 'pro',
+                geometry       = self.conf.geometry,
+                date           = '[datebegin]',
+                datebegin      = list_dates_begin_pro,
+                dateend        = dict_dates_end_pro,
+                nativefmt      = 'netcdf',
+                kind           = 'SnowpackSimulation',
+                model          = 'surfex',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                #now            = True,
+            )
 
-#                for rh in tb02:
-#                    print(rh.quickview())
-#                    rh.get()
+#            for rh in tb02:
+#                print(rh.quickview())
+#                rh.get()
 
 
 if __name__ == "__main__":
