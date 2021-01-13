@@ -7,9 +7,9 @@ Created on 30 Aug. 2017
 @author: lafaysse
 '''
 
-import datetime
 from six import string_types
 from bronx.stdtypes.date import Date
+
 
 class TypeException(Exception):
     def __init__(self, typein, typerequired):
@@ -94,7 +94,7 @@ def checkdatebetween(date, datemin, datemax):
 def check_and_convert_date(datearg):
 
     if datearg:
-        if not isinstance(datearg,string_types):
+        if not isinstance(datearg, string_types):
             raise TypeException(type(datearg), str)
 
         if len(datearg) == 8:

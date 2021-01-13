@@ -620,7 +620,7 @@ if __name__ == "__main__":
 
     for domain in list_domains:
 
-        suptitle = u'Prévisions PEARP-S2M du ' + pretty_date(S2ME.conf.rundate).decode('utf-8')
+        suptitle = u'Prévisions PEARP-S2M du ' + pretty_date(S2ME.conf.rundate)  # S2ME.conf.rundate is a Date object --> strftime already calls decode method
         # Identify the prevailing xpid in the obtained resources and adapt the title
         count = Counter(snow_xpid[domain])
         prevailing_xpid = count.most_common(1)[0][0]
