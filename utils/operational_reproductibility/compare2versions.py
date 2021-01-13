@@ -422,7 +422,7 @@ if __name__ == "__main__":
 
     if options.new and options.old:
         C = ComparisonNetcdf()
-        checktime = 'prep' not in options.new
+        checktime = 'prep' not in options.new and 'PGD' not in options.new and 'pgd' not in options.new and 'PREP' not in options.new
         C.compare2files(options.new, options.old, checktime=checktime)
     elif options.datebegin and options.dateend:
         conform = True
