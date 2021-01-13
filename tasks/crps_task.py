@@ -26,7 +26,7 @@ class Escroc_Optim_Task(Task):
     def process(self):
 
         t = self.ticket
-        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
+        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)  # pylint: disable=possibly-unused-variable
         dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
 
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 1
@@ -71,7 +71,7 @@ class Escroc_Optim_Task(Task):
         if 'compute' in self.steps:
 
             self.sh.title('Toolbox algo tb03 = scores')
-            tb03 = tbalgo1 = toolbox.algo(
+            tb03 = toolbox.algo(
                 engine         = 'blind',
                 kind           = "optim_escroc",
                 datebegin      = self.conf.datebegin,

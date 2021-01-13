@@ -158,6 +158,7 @@ class GeometryException(Exception):
         red[1] = (self.altmin, self.altmax)  # Les arguments qui seront passes a __init__
         return tuple(red)
 
+
 class UnknownGridTypeException(Exception):
     def __init__(self, gridtype, projtype):
         self.gridtype = gridtype

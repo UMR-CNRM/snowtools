@@ -17,7 +17,8 @@ from utils.dates import get_list_dates_files, get_dic_dateend
 
 usage = "usage: python get_reanalysis.py --geometry=xxx [--byear=YYYY] [--eyear=YYYY] [--meteo] [--snow] [--nativemeteo]"
 
-toolbox.active_now = True # permet de se passer de l'attribut now=True dans les toolbox
+toolbox.active_now = True  # permet de se passer de l'attribut now=True dans les toolbox
+
 
 def parse_options(arguments):
     parser = OptionParser(usage)
@@ -95,7 +96,7 @@ class S2MExtractor(S2MTaskMixIn):
 
         if self.conf.nativemeteo:
 
-            tb01 = toolbox.input(
+            tb01 = toolbox.input(  # pylint: disable=possibly-unused-variable
                 vapp           = 'safran',
                 vconf          = self.conf.geometry,
                 local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
@@ -112,7 +113,7 @@ class S2MExtractor(S2MTaskMixIn):
                 model          = 'safran',
                 namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
-                #now            = True,
+                # now            = True,
             )
 
 #            for rh in tb01:
@@ -120,7 +121,7 @@ class S2MExtractor(S2MTaskMixIn):
 #                rh.get()
 
         if self.conf.meteo:
-            tb01 = toolbox.input(
+            tb01 = toolbox.input(  # pylint: disable=possibly-unused-variable
                 vapp           = 's2m',
                 vconf          = self.conf.geometry,
                 local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
@@ -135,7 +136,7 @@ class S2MExtractor(S2MTaskMixIn):
                 model          = 's2m',
                 namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
-                #now            = True,
+                # now            = True,
             )
 
 #            for rh in tb01:
@@ -143,7 +144,7 @@ class S2MExtractor(S2MTaskMixIn):
 #                rh.get()
 
         if self.conf.snow:
-            tb02 = toolbox.input(
+            tb02 = toolbox.input(  # pylint: disable=possibly-unused-variable
                 vapp           = 's2m',
                 vconf          = self.conf.geometry,
                 local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
@@ -158,7 +159,7 @@ class S2MExtractor(S2MTaskMixIn):
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
-                #now            = True,
+                # now            = True,
             )
 
 #            for rh in tb02:

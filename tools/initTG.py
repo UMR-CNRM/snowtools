@@ -20,6 +20,7 @@ from tools.change_forcing import forcinput_select, forcinput_applymask
 from utils.FileException import DirFileException
 from tools.execute import callSurfexOrDie
 
+
 def create_env(diroutput):
     """Create working directory and directories to save outputs"""
 

@@ -28,7 +28,7 @@ matplotlib.use('Agg')
 
 from collections import Counter, defaultdict
 
-from bronx.stdtypes.date import Date, today
+from bronx.stdtypes.date import today
 from tasks.oper.get_oper_files import S2MExtractor
 from utils.prosimu import prosimu
 from utils.dates import check_and_convert_date, pretty_date
@@ -67,7 +67,7 @@ class config(object):
     # Operational chain
     xpid = "mirr"
     alternate_xpid = ["oper", "OPER@lafaysse"]
-    #alternate_xpid = ["oper"]
+    # alternate_xpid = ["oper"]
 
     list_geometry = ['alp', 'pyr', 'cor', 'postes']
     alternate_list_geometry = [['alp', 'pyr', 'cor', 'postes'], ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']]
@@ -547,7 +547,7 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
 
         map_generic = dict(alp = Map_alpes, pyr = Map_pyrenees, cor = Map_corse)
 
-        list_pairs = self.get_pairs_ns()
+        list_pairs = self.get_pairs_ns()  # pylint: disable=possibly-unused-variable
 
         alti = self.get_alti()
         aspect = self.get_aspect()
@@ -577,7 +577,7 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
                 for t in range(0, self.nech):
                     list_values = []
                     for indalti in list_indalti:
-                        for q, quantile in enumerate(self.list_q):
+                        for q, quantile in enumerate(self.list_q):  # pylint: disable=possibly-unused-variable
                             list_values.append(self.quantiles[var][q][t, indalti])
 
                     m.rectangle_massif(massif[indalti], self.list_q, list_values, ncol=2, **self.attributes[var])
