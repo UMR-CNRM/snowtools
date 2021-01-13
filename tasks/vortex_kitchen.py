@@ -15,6 +15,7 @@ from utils.resources import InstallException
 from utils.dates import WallTimeException
 from bronx.stdtypes.date import Period
 
+
 class vortex_kitchen(object):
     '''
     Interface between s2m command line and vortex utilities (tasks and mk_jobs)
@@ -52,10 +53,10 @@ class vortex_kitchen(object):
             self.profile = "rd-beaufix-mt"
         elif 'prolix' in machine:
             self.profile = "rd-prolix-mt"
-        elif 'epona' in machine:
-            self.profile = "rd-epona-mt"            
+        elif 'taranis' in machine:
+            self.profile = "rd-taranis-mt"
         elif 'belenos' in machine:
-            self.profile = "rd-belenos-mt" 
+            self.profile = "rd-belenos-mt"
         self.define_ntasks(machine)
 
         self.execute()
@@ -64,8 +65,8 @@ class vortex_kitchen(object):
         if not self.options.ntasks:
             if 'beaufix' in machine or 'prolix' in machine:
                 self.options.ntasks = 40
-            elif 'epona' in machine or 'belenos' in machine:
-                self.options.ntasks = 80 # optimum constaté pour la réanalyse Alpes avec léger dépeuplement parmi les 128 coeurs.
+            elif 'taranis' in machine or 'belenos' in machine:
+                self.options.ntasks = 80  # optimum constaté pour la réanalyse Alpes avec léger dépeuplement parmi les 128 coeurs.
 
     def execute(self):
 
@@ -146,12 +147,12 @@ class vortex_kitchen(object):
             elif self.options.debug:
                 self.jobname = 'debug_s2m'
                 self.reftask = 'debug_tasks'
-                self.nnodes = self.options.nnodes              
+                self.nnodes = self.options.nnodes
             else:
                 self.jobname = 'rea_s2m'
                 self.reftask = "vortex_tasks"
                 self.nnodes = self.options.nnodes
-            self.confcomplement = " taskconf=" + self.options.datedeb.strftime("%Y")        
+            self.confcomplement = " taskconf=" + self.options.datedeb.strftime("%Y")
 
     def init_job_task_safran(self):
         if self.options.oper:
@@ -164,8 +165,7 @@ class vortex_kitchen(object):
                 " dateend=" + self.options.datefin.strftime("%Y%m%d")
         self.nnodes = 1
         self.confcomplement = ""
-        
-            
+
     def set_conf_file(self):
 
         os.chdir(self.confdir)
@@ -208,11 +208,8 @@ class vortex_kitchen(object):
 
     def mkjob_command(self):
 
-        #return "../vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + " profile=" + self.profile + " #jobassistant=cen " + self.period +\
-        #       " template=" + self.jobtemplate + " time=" + self.walltime() + " nnodes=" + str(self.nnodes) + self.confcomplement
-
         return "../vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + " profile=" + self.profile + " jobassistant=cen " + self.period +\
-                " time=" + self.walltime() + " nnodes=" + str(self.nnodes) + self.confcomplement
+            " time=" + self.walltime() + " nnodes=" + str(self.nnodes) + self.confcomplement
 
     def mkjob_list_commands(self):
 
@@ -227,7 +224,7 @@ class vortex_kitchen(object):
             return [self.mkjob_command()]
 
     def run(self):
-        
+
         mkjob_list = self.mkjob_list_commands()
 
         os.chdir(self.jobdir)
@@ -247,7 +244,7 @@ class vortex_kitchen(object):
             if self.options.escroc:
                 if self.options.nmembers:
                     nmembers = self.options.nmembers
-                elif len(self.options.escroc) >=2 and self.options.escroc[0:2] == "E2": # E2, E2MIP, E2tartes, E2MIPtartes
+                elif len(self.options.escroc) >= 2 and self.options.escroc[0:2] == "E2":  # E2, E2MIP, E2tartes, E2MIPtartes
                     nmembers = 35
                 else:
                     raise Exception("don't forget to specify escroc ensemble or --nmembers")
