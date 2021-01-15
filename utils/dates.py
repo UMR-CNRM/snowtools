@@ -7,8 +7,9 @@ Created on 30 Aug. 2017
 @author: lafaysse
 '''
 
-import datetime
 from six import string_types
+from bronx.stdtypes.date import Date
+
 
 class TypeException(Exception):
     def __init__(self, typein, typerequired):
@@ -93,15 +94,15 @@ def checkdatebetween(date, datemin, datemax):
 def check_and_convert_date(datearg):
 
     if datearg:
-        if not isinstance(datearg,string_types):
+        if not isinstance(datearg, string_types):
             raise TypeException(type(datearg), str)
 
         if len(datearg) == 8:
-            return datetime.datetime(int(datearg[0:4]), int(datearg[4:6]), int(datearg[6:8]), 6, 0, 0)
+            return Date(int(datearg[0:4]), int(datearg[4:6]), int(datearg[6:8]), 6, 0, 0)
         elif len(datearg) == 10:
-            return datetime.datetime(int(datearg[0:4]), int(datearg[4:6]), int(datearg[6:8]), int(datearg[8:10]), 0, 0)
+            return Date(int(datearg[0:4]), int(datearg[4:6]), int(datearg[6:8]), int(datearg[8:10]), 0, 0)
         elif len(datearg) == 14:
-            return datetime.datetime(int(datearg[0:4]), int(datearg[4:6]), int(datearg[6:8]), int(datearg[8:10]), int(datearg[10:12]), int(datearg[12:14]))
+            return Date(int(datearg[0:4]), int(datearg[4:6]), int(datearg[6:8]), int(datearg[8:10]), int(datearg[10:12]), int(datearg[12:14]))
         else:
             raise FormatDateException(datearg)
     else:
@@ -117,9 +118,9 @@ def get_list_dates_files(datebegin, dateend, duration, listDateStop=None):
     list_dates_end_forcing = []
     if duration == "yearly":
         if datebegin.month >= 8:
-            dateforc_begin = datetime.datetime(datebegin.year, 8, 1, 6, 0, 0)
+            dateforc_begin = Date(datebegin.year, 8, 1, 6, 0, 0)
         else:
-            dateforc_begin = datetime.datetime(datebegin.year - 1, 8, 1, 6, 0, 0)
+            dateforc_begin = Date(datebegin.year - 1, 8, 1, 6, 0, 0)
         dateforc_end = dateforc_begin
         while dateforc_end < dateend:
             dateforc_end = dateforc_begin.replace(year= dateforc_begin.year + 1)
@@ -127,7 +128,7 @@ def get_list_dates_files(datebegin, dateend, duration, listDateStop=None):
             list_dates_end_forcing.append(dateforc_end)
             dateforc_begin = dateforc_end
     elif duration == "monthly":
-        dateforc_begin = datetime.datetime(datebegin.year, datebegin.month, 1, 6, 0, 0)
+        dateforc_begin = Date(datebegin.year, datebegin.month, 1, 6, 0, 0)
         dateforc_end = dateforc_begin
         while dateforc_end < dateend:
             if dateforc_begin.month == 12:
@@ -152,3 +153,8 @@ def get_list_dates_files(datebegin, dateend, duration, listDateStop=None):
         list_dates_end_pro.append(min(list_dates_end_forcing[-1], dateend))
 
     return list_dates_begin_forcing, list_dates_end_forcing, list_dates_begin_pro, list_dates_end_pro
+
+
+def get_dic_dateend(list_dates_begin, list_dates_end):
+    # For footprints, to not combine all datebegin values with all dateend values, dictionnaries are necessary for dateend
+    return dict(datebegin= {str(k): v for k, v in zip(list_dates_begin, list_dates_end)})

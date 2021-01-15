@@ -6,7 +6,7 @@ Created on 7 nov. 2017
 
 from vortex.layout.nodes import Driver, Task
 from vortex import toolbox
-from utils.dates import get_list_dates_files
+from utils.dates import get_list_dates_files, get_dic_dateend
 import footprints
 
 
@@ -26,7 +26,8 @@ class Escroc_Optim_Task(Task):
     def process(self):
 
         t = self.ticket
-        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
+        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)  # pylint: disable=possibly-unused-variable
+        dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
 
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 1
         members = list(range(startmember, int(self.conf.nmembers) + startmember)) if hasattr( self.conf, "nmembers") else list(range(1, 36))
@@ -51,28 +52,26 @@ class Escroc_Optim_Task(Task):
             print(t.prompt, 'tb01 =', tb01)
             print()
 
-            for p, datebegin in enumerate(list_dates_begin_pro):
-                dateend = list_dates_end_pro[p]
-                self.sh.title('Toolbox output tb02')
-                tb02 = toolbox.input(
-                    local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh]_mb[member].nc',
-                    experiment     = self.conf.xpid,
-                    geometry       = self.conf.geometry,
-                    datebegin      = datebegin,
-                    dateend        = dateend,
-                    member         = members,
-                    nativefmt      = 'netcdf',
-                    kind           = 'SnowpackSimulation',
-                    model          = 'surfex',
-                    namespace      = 'cenvortex.multi.fr',
-                ),
-                print(t.prompt, 'tb02 =', tb02)
-                print()
+            self.sh.title('Toolbox output tb02')
+            tb02 = toolbox.input(
+                local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh]_mb[member].nc',
+                experiment     = self.conf.xpid,
+                geometry       = self.conf.geometry,
+                datebegin      = list_dates_begin_pro,
+                dateend        = dict_dates_end_pro,
+                member         = members,
+                nativefmt      = 'netcdf',
+                kind           = 'SnowpackSimulation',
+                model          = 'surfex',
+                namespace      = 'cenvortex.multi.fr',
+            ),
+            print(t.prompt, 'tb02 =', tb02)
+            print()
 
         if 'compute' in self.steps:
 
             self.sh.title('Toolbox algo tb03 = scores')
-            tb03 = tbalgo1 = toolbox.algo(
+            tb03 = toolbox.algo(
                 engine         = 'blind',
                 kind           = "optim_escroc",
                 datebegin      = self.conf.datebegin,

@@ -25,11 +25,11 @@ class ESMSnowMIP_output:
         dicvar_xlvtt = {"esn": "LESL_ISBA", "evspsblveg": "LEV_ISBA", "tran": "LETR_ISBA"}
         dicvar_xlstt = {"sbl": "LES_ISBA"}
 
-        dicvarsnow_direct = {"tsn": "SNOWTEMP", "SNOWDZ": "SNOWDZ"}
+        # dicvarsnow_direct = {"tsn": "SNOWTEMP", "SNOWDZ": "SNOWDZ"}
 
-        dicvar_ = {"hfls": "LE_ISBA", "hfsbl": "LEI_ISBA", "hfss": "H_ISBA", "rlus": "LWU_ISBA", "rsus": "SWU_ISBA", "evspsbl": "EVAP_ISBA",
-                   "mrrob": "DRAIN_ISBA", "mrros": "RUNOFF_ISBA", "snmsl": "SNOMLT_ISBA", "albs": "TALB_ISBA", "albsn": "ASN_ISBA", "cw": "WR",
-                   "snc": "PSN_ISBA", "snd": "DSN_T_ISBA", "snw": "WSN_T_ISBA", "snwc": "WRVN", "tcs": "TV", "ts": "TS_ISBA"}
+        # dicvar_= {"hfls": "LE_ISBA", "hfsbl": "LEI_ISBA", "hfss": "H_ISBA", "rlus": "LWU_ISBA", "rsus": "SWU_ISBA", "evspsbl": "EVAP_ISBA",
+        #           "mrrob": "DRAIN_ISBA", "mrros": "RUNOFF_ISBA", "snmsl": "SNOMLT_ISBA", "albs": "TALB_ISBA", "albsn": "ASN_ISBA", "cw": "WR",
+        #           "snc": "PSN_ISBA", "snd": "DSN_T_ISBA", "snw": "WSN_T_ISBA", "snwc": "WRVN", "tcs": "TV", "ts": "TS_ISBA"}
 
         dicvar_units = {"hfls": "W.m-2", "hfsbl": "W.m-2", "hfss": "W.m-2", "rlus": "W.m-2", "rsus": "W.m-2", "evspsbl": "kg.m-2.s-1",
                         "mrrob": "kg.m-2.s-1", "mrros": "kg.m-2.s-1", "snmsl": "kg.m-2.s-1", "albs": "", "albsn": "", "cw": "kg.m-2",
