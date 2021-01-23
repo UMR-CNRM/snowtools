@@ -192,6 +192,10 @@ class PrepSafran(Task, S2MTaskMixIn):
                 engine         = 'exec',
                 kind           = 'guess',
                 interpreter    = 'current',
+                # Need to extend pythonpath to be independant of the user environment
+                # The vortex-build environment already set up the pythonpath (see jobassistant plugin) but the script is 
+                # eventually launched in a 'user-defined' environment
+                extendpypath = [self.sh.path.join(self.conf.rootapp, d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site', 'epygram/eccodes_python']],
                 ntasks         = self.conf.ntasks,
                 terms          = footprints.util.rangex(self.conf.ana_terms),
             )
