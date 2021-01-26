@@ -31,7 +31,7 @@ class Surfex_command(_S2M_command):
 
     def execute(self):
         machine = os.uname()[1]
-        if "beaufix" in machine or "prolix" in machine or "epona" in machine or "belenos" in machine:
+        if "beaufix" in machine or "prolix" in machine or "taranis" in machine or "belenos" in machine:
             self.execute_through_vortex()
         else:
             self.execute_without_vortex()

@@ -26,7 +26,8 @@ class question(object):
 
 # BDCLIM POSTGRESQL
         self.fichier.write("\\a\n")
-        self.fichier.write("\\t\n")
+        # Uncomment the following line if you DON'T want column names
+#        self.fichier.write("\\t\n")
         self.fichier.write("\\unset ECHO\n")
         self.fichier.write("\\pset footer\n")
         self.fichier.write("\\pset format unaligned\n")

@@ -10,7 +10,7 @@ import footprints
 from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
 
-from utils.dates import get_list_dates_files
+from utils.dates import get_list_dates_files, get_dic_dateend
 
 
 def setup(t, **kw):
@@ -34,32 +34,32 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
         t = self.ticket
 
         list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
+        dict_dates_end_forc = get_dic_dateend(list_dates_begin_forc, list_dates_end_forc)
+        dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
 
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 1
         members = list(range(startmember, int(self.conf.nmembers) + startmember)) if hasattr( self.conf, "nmembers") else list(range(1, 36))
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
-            for p, datebegin in enumerate(list_dates_begin_forc):
-                dateend = list_dates_end_forc[p]
 
-                self.sh.title('Toolbox input tb01')
-                tb01 = toolbox.input(
-                    role           = 'Forcing',
-                    local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                    vapp           = self.conf.meteo,
-                    experiment     = self.conf.forcingid,
-                    geometry       = self.conf.geometry,
-                    datebegin      = datebegin,
-                    dateend        = dateend,
-                    nativefmt      = 'netcdf',
-                    kind           = 'MeteorologicalForcing',
-                    namespace      = 'vortex.multi.fr',
-                    namebuild      = 'flat@cen',
-                    model          = 'obs',
-                    block          = 'meteo',
-                ),
-                print(t.prompt, 'tb01 =', tb01)
-                print()
+            self.sh.title('Toolbox input tb01')
+            tb01 = toolbox.input(
+                role           = 'Forcing',
+                local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                vapp           = self.conf.meteo,
+                experiment     = self.conf.forcingid,
+                geometry       = self.conf.geometry,
+                datebegin      = list_dates_begin_forc,
+                dateend        = dict_dates_end_forc,
+                nativefmt      = 'netcdf',
+                kind           = 'MeteorologicalForcing',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                model          = 'obs',
+                block          = 'meteo',
+            ),
+            print(t.prompt, 'tb01 =', tb01)
+            print()
 
 #             self.sh.title('Toolbox input tb02')
 #             tb02 = toolbox.input(
@@ -375,58 +375,55 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
 
         if 'late-backup' in self.steps:
 
-            for p, datebegin in enumerate(list_dates_begin_pro):
-                dateend = list_dates_end_pro[p]
-                self.sh.title('Toolbox output tb19')
-                tb19 = toolbox.output(
-                    local          = 'mb[member%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-                    experiment     = self.conf.xpid,
-                    geometry       = self.conf.geometry,
-                    datebegin      = datebegin,
-                    dateend        = dateend,
-                    member         = members,
-                    nativefmt      = 'netcdf',
-                    kind           = 'SnowpackSimulation',
-                    model          = 'surfex',
-                    namespace      = 'vortex.multi.fr',
-                    namebuild      = 'flat@cen',
-                    block          = 'pro',
-                ),
-                print(t.prompt, 'tb19 =', tb19)
-                print()
+            self.sh.title('Toolbox output tb19')
+            tb19 = toolbox.output(
+                local          = 'mb[member%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                experiment     = self.conf.xpid,
+                geometry       = self.conf.geometry,
+                datebegin      = list_dates_begin_pro,
+                dateend        = dict_dates_end_pro,
+                member         = members,
+                nativefmt      = 'netcdf',
+                kind           = 'SnowpackSimulation',
+                model          = 'surfex',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'pro',
+            ),
+            print(t.prompt, 'tb19 =', tb19)
+            print()
 
-                self.sh.title('Toolbox output tb20')
-                tb20 = toolbox.output(
-                    local          = 'mb[member%04d]/PREP_[date:ymdh].nc',
-                    role           = 'SnowpackInit',
-                    experiment     = self.conf.xpid,
-                    geometry       = self.conf.geometry,
-                    date           = dateend,
-                    period         = dateend,
-                    member         = members,
-                    nativefmt      = 'netcdf',
-                    kind           = 'PREP',
-                    model          = 'surfex',
-                    namespace      = 'vortex.multi.fr',
-                    namebuild      = 'flat@cen',
-                    block          = 'prep',
-                ),
-                print(t.prompt, 'tb20 =', tb20)
-                print()
+            self.sh.title('Toolbox output tb20')
+            tb20 = toolbox.output(
+                local          = 'mb[member%04d]/PREP_[date:ymdh].nc',
+                role           = 'SnowpackInit',
+                experiment     = self.conf.xpid,
+                geometry       = self.conf.geometry,
+                date           = list_dates_end_pro,
+                member         = members,
+                nativefmt      = 'netcdf',
+                kind           = 'PREP',
+                model          = 'surfex',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'prep',
+            ),
+            print(t.prompt, 'tb20 =', tb20)
+            print()
 
 # The following condition does not work. --> Ask leffe how to do
 #                 if not (tb02[0] or tb02_a[0]):
-                tb21 = toolbox.output(
-                    role           = 'SurfexClim',
-                    kind           = 'pgdnc',
-                    nativefmt      = 'netcdf',
-                    local          = 'PGD.nc',
-                    experiment     = self.conf.xpid,
-                    geometry       = self.conf.geometry,
-                    model          = 'surfex',
-                    namespace      = 'vortex.multi.fr',
-                    namebuild      = 'flat@cen',
-                    block          = 'pgd',
-                ),
-                print(t.prompt, 'tb21 =', tb21)
-                print()
+            tb21 = toolbox.output(
+                role           = 'SurfexClim',
+                kind           = 'pgdnc',
+                nativefmt      = 'netcdf',
+                local          = 'PGD.nc',
+                experiment     = self.conf.xpid,
+                geometry       = self.conf.geometry,
+                model          = 'surfex',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'pgd',
+            ),
+            print(t.prompt, 'tb21 =', tb21)
+            print()

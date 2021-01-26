@@ -27,7 +27,7 @@ from scores.deterministic import DeterministicScores_Heterogeneous
 
 usage = "CompareSimuPosteObsCsv.py [--scores] [--plot] -b YYYYMMDD -e YYYYMMDD --dirsim=dirsim1,dirsim2 --labels=label1,labe2 --dirplot=dirplot --format=pdf,png,eps --yearly"
 
-default = dict(fileobs="/manto/lafaysse/data/csv/OBS_1983080100_2019053123.csv",
+default = dict(fileobs="/home/vernaym/extraction_obs_htn/OBS_1983080100_2020080123.csv",
                dirsim='/era40/vortex/s2m/postes/reanalysis/pro')
 
 IM = infomassifs()
@@ -292,10 +292,11 @@ class ComparisonSimObs(object):
         self.nstations = len(self.listStations)
 
         # Default labels
-        self.set_sim_labels(['New', 'Old', '', '', ''])
+#        self.set_sim_labels(['New', 'Old', '', '', ''])
+        self.set_sim_labels(['Alps', 'Pyrenees', 'Corsica', '', ''])
 
         # Default colors
-        self.set_sim_colors(['blue', 'red', 'grey', 'orange', 'green'])
+        self.set_sim_colors(['red', 'blue', 'grey', 'orange', 'green'])
 
     def set_sim_colors(self, list_colors):
         self.list_colors = list_colors
@@ -350,6 +351,7 @@ class ComparisonSimObs(object):
         self.nvalues = np.zeros((self.nsim, self.nstations))
         self.bias = np.zeros((self.nsim, self.nstations))
         self.rmse = np.zeros((self.nsim, self.nstations))
+        self.meansd = np.zeros((self.nsim, self.nstations))
 
         for s, station in enumerate(self.listStations):
 
@@ -362,6 +364,7 @@ class ComparisonSimObs(object):
                     self.nvalues[indSim, s] = scores.nvalues()
                     self.bias[indSim, s] = scores.bias()
                     self.rmse[indSim, s] = scores.rmse()
+                    self.meansd[indSim, s] = scores.meansim
 
     def allboxplots(self):
 
@@ -369,6 +372,7 @@ class ComparisonSimObs(object):
 
         self.boxplots_scores(arrayStations, np.array(self.elevations), self.bias, 'bias', ylabel='Bias (cm)')
         self.boxplots_scores(arrayStations, np.array(self.elevations), self.rmse, 'rmse', ylabel='RMSE (cm)')
+        self.boxplots_scores(arrayStations, np.array(self.elevations), self.meansd, 'mean_SD', ylabel='Mean Snow Depth (cm)')
 
     def get_obs_sim(self, station, indSim):
 
@@ -392,8 +396,6 @@ class ComparisonSimObs(object):
         availSim = np.sum(ind) == 1
 
         availCommon = availObs and availSim
-
-        print (np.sum(availCommon))
 
         if availCommon:
             return availCommon, timeObs[periodObs], self.timeSim[indSim], sdObs[periodObs], np.squeeze(self.sdSim[indSim][:, ind])
@@ -433,7 +435,8 @@ class ComparisonSimObs(object):
             print (np.sum(valid))
 
         for indSim in range(0, self.nsim):
-            kwargs['fillcolor'] = self.list_colors[indSim]
+            # Les couleurs sont gérées dans la class boxplot directement -> à revoir
+            #kwargs['fillcolor'] = self.list_colors
             b1.draw(stations[valid], list_scores[indSim, valid], nsimu=self.nsim, **kwargs)
 
             #print list_scores[indSim, valid].shape
@@ -451,10 +454,9 @@ class ComparisonSimObs(object):
         for indSim in range(0, self.nsim):
             valid = self.nvalues[indSim, :] > 10
             kwargs['fillcolor'] = self.list_colors[indSim]
-            kwargs['label'] = self.list_labels[indSim]
-
             b2.draw(elevations[valid], list_scores[indSim, valid], nsimu=self.nsim, **kwargs)
 
+        kwargs['legend'] = False 
         kwargs['label'] = self.list_labels
         b2.finalize(nsimu=self.nsim, **kwargs)
         plotfilename = options.dirplot + "/" + label + "_elevations." + options.format
