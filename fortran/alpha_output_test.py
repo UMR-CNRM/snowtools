@@ -9,12 +9,13 @@ from matplotlib import cm
 import cartopy.crs as ccrs
 
 class output_test():
-    def __init__(self, outputfile, outputreffile, lat_bnds, lon_bnds, figname):
+    def __init__(self, outputfile, outputreffile, lat_bnds, lon_bnds, figname, flip=True):
         self.ftot = Dataset(outputfile)
         self.fcomp = Dataset(outputreffile)
         self.lat_bnds = lat_bnds
         self.lon_bnds = lon_bnds
         self.figname = figname
+        self.flip = flip
 
     def test(self):
         massif = self.ftot.variables['massif_num'][:, :]
@@ -29,7 +30,7 @@ class output_test():
         compZS = self.fcomp.variables['ZS'][:,:]
         compmassif = self.fcomp.variables['massif_num'][:, :]
 
-        print(complons)
+        # print(complons)
         print(complats.min(), complats.max())
         print(complons.min(), complons.max())
 
@@ -38,13 +39,18 @@ class output_test():
         lon_inds = np.where((lons > self.lon_bnds[0]) & (lons < self.lon_bnds[1]))
         snow_region = self.ftot.variables['SD_1DY_ISBA'][7, np.min(lat_inds):np.max(lat_inds)+1,np.min(lon_inds):np.max(lon_inds)+1]
         massif_region = massif[np.min(lat_inds):np.max(lat_inds)+1,np.min(lon_inds):np.max(lon_inds)+1]
-        print(lons[np.min(lon_inds):np.max(lon_inds)+1])
+        # print(lons[np.min(lon_inds):np.max(lon_inds)+1])
         print(snow_region.shape)
         print(snowcomp.shape)
-        diff = snow_region - np.flipud(snowcomp)
-        massif_diff = massif_region - np.flipud(compmassif)
+        if self.flip:
+            diff = snow_region - np.flipud(snowcomp)
+            massif_diff = massif_region - np.flipud(compmassif)
+        else:
+            diff = snow_region - snowcomp
+            massif_diff = massif_region - compmassif
 
         print(massif_diff.min(), massif_diff.max())
+        print(len(diff[diff!=0]))
         # print(diff[diff < 999999].max())
         # print(np.unique(massif))
 
@@ -64,36 +70,36 @@ class output_test():
         # #
         # plt.savefig('snow_test_alps_to_alpha.png')
 
-        # ax = plt.axes(projection=ccrs.PlateCarree())
-        # plt.pcolormesh(complons, complats, compZS, transform=ccrs.PlateCarree(), cmap=cm.terrain) #gist_earth
-        # plt.pcolormesh(complons, complats, snow_alps, vmin=-0.0001,
-        #              transform=ccrs.PlateCarree(), cmap=cm.seismic)
-        #
-        # ax.gridlines(draw_labels=True)
-        # # plt.imshow(massif);
-        # m = plt.cm.ScalarMappable(cmap=cm.seismic)
-        # m.set_array(diff)
-        # m.set_clim(-0.0001, snowcomp.max())
-        # m.cmap.set_under(color='w', alpha=0)
-        # plt.colorbar(m, orientation="horizontal")
-        # #
-        # plt.savefig('diff_test_alps_to_alpha.png')
-
-
         ax = plt.axes(projection=ccrs.PlateCarree())
-        plt.pcolormesh(complons, complats, np.flipud(compZS), transform=ccrs.PlateCarree(), cmap=cm.terrain) #gist_earth
-        plt.pcolormesh(complons, complats, np.flipud(compmassif), #alpha=0.4, # vmin=-1, vmax=1,
+        plt.pcolormesh(complons, complats, compZS, transform=ccrs.PlateCarree(), cmap=cm.terrain) #gist_earth
+        plt.pcolormesh(complons, complats, diff, vmin=-0.0001,
                      transform=ccrs.PlateCarree(), cmap=cm.seismic)
 
         ax.gridlines(draw_labels=True)
         # plt.imshow(massif);
         m = plt.cm.ScalarMappable(cmap=cm.seismic)
-        m.set_array(compmassif)
-        # m.set_clim(-1.000, 1)
-        # m.cmap.set_over(color='w', alpha=0)
+        m.set_array(diff)
+        m.set_clim(-0.0001, snowcomp.max())
+        m.cmap.set_under(color='w', alpha=0)
         plt.colorbar(m, orientation="horizontal")
         #
         plt.savefig(self.figname)
+
+
+        # ax = plt.axes(projection=ccrs.PlateCarree())
+        # plt.pcolormesh(complons, complats, np.flipud(compZS), transform=ccrs.PlateCarree(), cmap=cm.terrain) #gist_earth
+        # plt.pcolormesh(complons, complats, np.flipud(compmassif), #alpha=0.4, # vmin=-1, vmax=1,
+        #              transform=ccrs.PlateCarree(), cmap=cm.seismic)
+        #
+        # ax.gridlines(draw_labels=True)
+        # # plt.imshow(massif);
+        # m = plt.cm.ScalarMappable(cmap=cm.seismic)
+        # m.set_array(compmassif)
+        # # m.set_clim(-1.000, 1)
+        # # m.cmap.set_over(color='w', alpha=0)
+        # plt.colorbar(m, orientation="horizontal")
+        # #
+        # plt.savefig(self.figname)
 
         # ax = plt.axes(projection=ccrs.PlateCarree())
         # plt.pcolormesh(complons, complats, compZS, transform=ccrs.PlateCarree(), cmap=cm.terrain) #gist_eart
@@ -122,11 +128,19 @@ class output_test():
                       np.min(lon_inds):np.max(lon_inds) + 1]
         massif_region = self.ftot.variables['massif_num'][np.min(lat_inds):np.max(lat_inds) + 1,
                         np.min(lon_inds):np.max(lon_inds) + 1]
-        massif_diff = massif_region - np.flipud(compmassif)
+        if self.flip:
+            massif_diff = massif_region - np.flipud(compmassif)
+        else:
+            massif_diff = massif_region - compmassif
         for i in range(snowcomp.shape[0]):
-            snowdiff = snow_region[i,:,:] - np.flipud(snowcomp[i,:,:])
+            if self.flip:
+                snowdiff = snow_region[i,:,:] - np.flipud(snowcomp[i,:,:])
+            else:
+                snowdiff = snow_region[i, :, :] - snowcomp[i, :, :]
             # print(snowdiff.shape)
-            print(i, np.sum(snowdiff), sum(snowdiff[massif_diff==0]))
+            print(i, np.sum(snowdiff), sum(snowdiff[massif_diff==0]),
+                  np.min(snow_region[i, :, :]), np.min(snowcomp[i,:,:]),
+                  np.max(snow_region[i,:,:]), np.max(snowcomp[i,:,:]))
 
 
 
@@ -138,20 +152,27 @@ class output_test():
 # lat_bnds, lon_bnds = [42.07, 43.18], [-1.63, 2.71]
 # CORSE
 # lat_bnds, lon_bnds = [41.69, 42.56], [8.779, 9.279]
-alp_test = output_test("output_alp_alpha.nc", "output_original_version_zeroslope_input_alps.nc",
-                       lat_bnds=[43.909, 46.42], lon_bnds = [5.19, 7.77],
-                       figname='diff_test_alps_to_alpha_diffbrute.png')
-alp_test.snowtest()
-# pyr_test = output_test("output_pyr_alpha.nc", "output_original_version_zeroslope_input_pyr.nc",
-#                        lat_bnds=[42.07, 43.18], lon_bnds = [-1.63, 2.71],
-#                        figname='diff_test_pyr_to_alpha_diffbrute.png')
-# # pyr_test.test()
-# pyr_test.snowtest()
+# alp_test = output_test("dev_multiin_singleout_test_single_in_single_out_alps.nc",
+#                        "output_mulitin_zeroslope_input_alps.nc",
+#                        lat_bnds=[43.909, 46.42], lon_bnds = [5.19, 7.77],
+#                        figname='diff_test_alps_to_alps_dev_multiin_singleout_alps.png',
+#                        flip=False)
+# alp_test.snowtest()
+# alp_test.test()
+pyr_test = output_test("dev_multiin_singleout_test_single_in_single_out_pyr.nc",
+                       "output_mulitin_zeroslope_input_pyr.nc",
+                       lat_bnds=[42.07, 43.18], lon_bnds = [-1.63, 2.71],
+                       figname='diff_test_pyr_to_pyr_dev_multiin_singleout_pyr.png',
+                       flip=False)
+pyr_test.test()
+pyr_test.snowtest()
 
-#corse_test = output_test("output_cor_alpha.nc", "output_original_version_zeroslope_input_cor.nc",
+# corse_test = output_test("test_v2_multi_in_single_out_alpha.nc",
+#                          "output_mulitin_zeroslope_input_cor.nc",
 #                        lat_bnds=[41.69, 42.56], lon_bnds = [8.779, 9.279],
-#                        figname='diff_test_cor_to_alpha_flipped.png')
+#                        figname='diff_test_all_to_alpha_dev_multiin_singleout_cor.png', flip=True)
 # corse_test.test()
+# corse_test.snowtest()
 # corse_massiftest = output_test("/home/radanovicss/Interpol_hauteur_neige/Results/Alpha_output_file_test/output_cor_alpha.nc", "output_original_version_zeroslope_input_cor.nc",
 #                        lat_bnds=[41.69, 42.56], lon_bnds = [8.779, 9.279],
 #                        figname='massif_comp_test_cor_to_alpha_flipped.png')

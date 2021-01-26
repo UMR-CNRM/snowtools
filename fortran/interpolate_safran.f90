@@ -14,6 +14,7 @@ INTEGER::FILE_ID_IN, FILE_ID_OUT ,FILE_ID_GEO! id of input ,output and geometrie
 CHARACTER(LEN=20),DIMENSION(:),ALLOCATABLE::DIM_NAME_IN, DIM_NAME_OUT! name of dimensions
 INTEGER,DIMENSION(:),ALLOCATABLE:: DIM_ID_IN, DIM_ID_OUT ! id of dimensions
 INTEGER,DIMENSION(:),ALLOCATABLE:: DIM_SIZE_IN, DIM_SIZE_OUT ! size of dimensions
+INTEGER :: IMASSIVE_DIM_SIZE_OUT ! dimension length of massif dimension is determ
 !
 !!!!! Var properties
 INTEGER,DIMENSION(:),ALLOCATABLE::VAR_ID_IN, VAR_ID_OUT ! id of variables
@@ -71,7 +72,7 @@ INTEGER :: NX_PROC, IXSTART
 INTEGER :: NY_PROC, IYSTART
 INTEGER :: NPOINT_PROC, IPSTART
 !
-INTEGER::ID,IV,IA,IT,IDIN,IDOUT,INZ, JINFILE ! loop counter
+INTEGER::ID,IV,IA,IT,IDIN,IDOUT,INZ, JINFILE, IM ! loop counter
 INTEGER :: IV_TMP
 INTEGER :: IOS ! status indicator
 INTEGER :: INAM_UNIT
@@ -176,11 +177,11 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
     ALLOCATE(VAR_ID_OUT(INVAR+2))
     ALLOCATE(VAR_ID_DIMS_OUT(INDIM+1, INVAR+2))
 
-    DIM_ID_OUT = 0
-    DIM_SIZE_OUT = 0
     VAR_ID_OUT = 0
     VAR_ID_DIMS_OUT=0
   END IF
+  DIM_ID_OUT = 0
+  DIM_SIZE_OUT = 0
 !
 !
 ! Get dimension names, lengths
@@ -211,6 +212,16 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
     CALL READ_OUTPUT_GRID(FILE_ID_GEO,ZZSOUT,IMASSIFOUT,ZASPECTOUT,IRANK, &
           GRID_TYPE,GRID_DIM_REF,ZLATOUT,ZLONOUT,ZYOUT,ZXOUT,&
           ZSLOPEOUT)
+    PRINT*, MINVAL(IMASSIFOUT,MASK=IMASSIFOUT/=0), MAXVAL(IMASSIFOUT)
+    IMASSIVE_DIM_SIZE_OUT = 2
+    DO IM = MINVAL(IMASSIFOUT,MASK=IMASSIFOUT/=0)+1, MAXVAL(IMASSIFOUT)-1
+      IF (ANY(IMASSIFOUT == IM)) THEN
+        IMASSIVE_DIM_SIZE_OUT = IMASSIVE_DIM_SIZE_OUT + 1
+      ELSE
+        PRINT*, IM
+      END IF
+    END DO
+    ! IMASSIVE_DIM_SIZE_OUT = (MAXVAL(IMASSIFOUT) - MINVAL(IMASSIFOUT,MASK=IMASSIFOUT/=0)) + 1 ! to define the "massif" dimension in the output file
 !  IF (JINFILE == 2) THEN
 !    PRINT*, ZSLOPEOUT
 !  END IF
@@ -222,21 +233,26 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
   CALL INDICES2D(ZZSOUT,IMASSIFOUT,ZASPECTOUT,IZSIN,IMASSIFIN,&
           IASPECTIN,IINDICESBAS,IINDICESHAUT)
   !
-  IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
-    IDOUT = 1
-    DO ID=1,INDIM
+  IDOUT = 1
+  DO ID=1,INDIM
     ! Define dimensions in output file
-      IF (DIM_NAME_IN(ID) == 'Number_of_points') THEN
+    IF (DIM_NAME_IN(ID) == 'Number_of_points') THEN
       ! Change spatial dimension
-        IF (IRANK==1) THEN
-          DIM_SIZE_OUT(IDOUT)=GRID_DIM_REF(1)
+      IF (IRANK==1) THEN
+        DIM_SIZE_OUT(IDOUT)=GRID_DIM_REF(1)
+        IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
           CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),GRID_DIM_REF(1),DIM_ID_OUT(IDOUT)), &
                 "Cannot def dim  "//TRIM(HFILENAMEOUT))
-          ILLOC_ID=   DIM_ID_OUT(IDOUT)
-          IDOUT =IDOUT+1
-        ELSEIF (IRANK==2) THEN
-          DIM_SIZE_OUT(IDOUT)=GRID_DIM_REF(2)
-          DIM_SIZE_OUT(IDOUT+1)=GRID_DIM_REF(1)
+        ELSE
+          CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT, DIM_NAME_IN(ID), DIM_ID_OUT(IDOUT)), &
+                  "Cannot inquire dimid "//DIM_NAME_IN(ID)//" in "//TRIM(HFILENAMEOUT))
+        END IF
+        ILLOC_ID=   DIM_ID_OUT(IDOUT)
+        IDOUT =IDOUT+1
+      ELSEIF (IRANK==2) THEN
+        DIM_SIZE_OUT(IDOUT)=GRID_DIM_REF(2)
+        DIM_SIZE_OUT(IDOUT+1)=GRID_DIM_REF(1)
+        IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
           IF (GRID_TYPE == "LL") THEN
           !
             CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,'lat',DIM_SIZE_OUT(IDOUT),DIM_ID_OUT(IDOUT)), &
@@ -254,98 +270,148 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
           ELSE
             STOP "INCORRECT TYPE OF GRID"
           ENDIF
-          ILLOC_ID=   DIM_ID_OUT(IDOUT)
-          IDOUT = IDOUT + 2
         ELSE
-          STOP 'INCORRECT RANK OF OUTPUT GRID'
+          IF (GRID_TYPE == "LL") THEN
+            CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT, 'lat', DIM_ID_OUT(IDOUT)), &
+                  "Cannot inquire dimid for lat in "//TRIM(HFILENAMEOUT))
+            CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT, 'lon', DIM_ID_OUT(IDOUT+1)), &
+                  "Cannot inquire dimid for lon in "//TRIM(HFILENAMEOUT))
+          ELSEIF (GRID_TYPE == "XY") THEN
+            CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT, 'y', DIM_ID_OUT(IDOUT)), &
+                  "Cannot inquire dimid for y in "//TRIM(HFILENAMEOUT))
+            CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT, 'x', DIM_ID_OUT(IDOUT+1)), &
+                  "Cannot inquire dimid for x in "//TRIM(HFILENAMEOUT))
+          END IF
         END IF
+          ILLOC_ID = DIM_ID_OUT(IDOUT)
+          IDOUT = IDOUT + 2
+      ELSE
+        STOP 'INCORRECT RANK OF OUTPUT GRID'
+      END IF
+
       !
-      ELSEIF (DIM_NAME_IN(ID) == 'time') THEN
+    ELSEIF (DIM_NAME_IN(ID) == 'time') THEN
       ! Need to to distinguish because of the unlimited dimension
-        DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
         CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),NF90_UNLIMITED, &
               DIM_ID_OUT(IDOUT)), "def time out")
-        ITIMEID= DIM_ID_OUT(IDOUT)
-        IDOUT = IDOUT + 1
-      !
-      ELSEIF(DIM_NAME_IN(ID) == 'massif') THEN
-        DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
-        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
-              DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
-        IMASSIFTODELETE = IDOUT
-        IDOUT = IDOUT+1
-      !
-      ELSEIF(DIM_NAME_IN(ID) == 'snow_layer') THEN
-        DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
-        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
-              DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
-        ILAYERTODELETE = IDOUT
-        IDOUT = IDOUT+1
-      ELSEIF(DIM_NAME_IN(ID) == 'Number_of_Patches') THEN
-        DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
-        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
-              DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
-        NPATCH = DIM_SIZE_IN(ID)
-        NPATCHID =  IDOUT
-        IDOUT = IDOUT+1
-      ELSEIF(DIM_NAME_IN(ID) == 'decile') THEN
-        DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
-        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
-              DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
-        NDECILE = DIM_SIZE_IN(ID)
-        IDECILEID =  IDOUT
-        IDOUT = IDOUT+1
       ELSE
+        CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT, 'time', DIM_ID_OUT(IDOUT)), &
+                  "Cannot inquire dimid for time in "//TRIM(HFILENAMEOUT))
+      END IF
+      ITIMEID= DIM_ID_OUT(IDOUT)
+      IDOUT = IDOUT + 1
       !
-        IF (IRANK==1) THEN
-          DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+    ELSEIF(DIM_NAME_IN(ID) == 'massif') THEN
+      DIM_SIZE_OUT(IDOUT) = IMASSIVE_DIM_SIZE_OUT !DIM_SIZE_IN(ID)
+      IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
+        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_OUT(IDOUT),&
+              DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
+      ELSE
+        CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT, 'massif', DIM_ID_OUT(IDOUT)), &
+                  "Cannot inquire dimid for massif in "//TRIM(HFILENAMEOUT))
+      END IF
+      IMASSIFTODELETE = DIM_ID_OUT(IDOUT)
+      IDOUT = IDOUT+1
+      !
+    ELSEIF(DIM_NAME_IN(ID) == 'snow_layer') THEN
+      DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
+        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
+              DIM_ID_OUT(IDOUT)),"Cannot def dim snow_layer in "//TRIM(HFILENAMEOUT))
+      ELSE
+        CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT, 'snow_layer', DIM_ID_OUT(IDOUT)), &
+                  "Cannot inquire dimid for snow_layer in "//TRIM(HFILENAMEOUT))
+      END IF
+      ILAYERTODELETE = DIM_ID_OUT(IDOUT)
+      IDOUT = IDOUT+1
+    ELSEIF(DIM_NAME_IN(ID) == 'Number_of_Patches') THEN
+      DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
+        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
+              DIM_ID_OUT(IDOUT)),"Cannot def dim "//DIM_NAME_IN(ID)//' in '//TRIM(HFILENAMEOUT))
+      ELSE
+        CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT, 'Number_of_Patches', DIM_ID_OUT(IDOUT)), &
+                  "Cannot inquire dimid for Number_of_Patches in "//TRIM(HFILENAMEOUT))
+      END IF
+      NPATCH = DIM_SIZE_IN(ID)
+      NPATCHID =  DIM_ID_OUT(IDOUT)
+      IDOUT = IDOUT+1
+    ELSEIF(DIM_NAME_IN(ID) == 'decile') THEN
+      DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
+        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
+              DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
+      ELSE
+        CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT, 'decile', DIM_ID_OUT(IDOUT)), &
+                  "Cannot inquire dimid for decile in "//TRIM(HFILENAMEOUT))
+      END IF
+      NDECILE = DIM_SIZE_IN(ID)
+      IDECILEID =  DIM_ID_OUT(IDOUT)
+      IDOUT = IDOUT+1
+    ELSE
+      !
+      IF (IRANK==1) THEN
+        DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+        IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
           CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
-                DIM_ID_OUT(IDOUT)) , "Cannot def dim "//TRIM(HFILENAMEOUT))
-          IDOUT = IDOUT + 1
-        ELSEIF (IRANK==2) THEN
-          DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+                DIM_ID_OUT(IDOUT)) , "Cannot def dim "//DIM_NAME_IN(ID)//' in '//TRIM(HFILENAMEOUT))
+        ELSE
+          CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT, DIM_NAME_IN(ID), DIM_ID_OUT(IDOUT)), &
+                  "Cannot inquire dimid for "//DIM_NAME_IN(ID)//" in "//TRIM(HFILENAMEOUT))
+        END IF
+        IDOUT = IDOUT + 1
+      ELSEIF (IRANK==2) THEN
+        DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+        IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
           CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
                 DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
-          IDOUT = IDOUT +1
         ELSE
-          STOP 'INCORRECT RANK OF OUTPUT GRID'
-        ENDIF
-      END IF
+          CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT, DIM_NAME_IN(ID), DIM_ID_OUT(IDOUT)), &
+                  "Cannot inquire dimid for "//DIM_NAME_IN(ID)//" in "//TRIM(HFILENAMEOUT))
+        END IF
+        IDOUT = IDOUT +1
+      ELSE
+        STOP 'INCORRECT RANK OF OUTPUT GRID'
+      ENDIF
+    END IF
     !
-    END DO
+  END DO
 !
-    IF (IRANK==1) THEN
-      DO IV=1,INVAR
-        DO I=1,COUNT(VAR_ID_DIMS_IN(:,IV)/=0)
+  IF (IRANK==1) THEN
+    DO IV=1,INVAR
+      DO I=1,COUNT(VAR_ID_DIMS_IN(:,IV)/=0)
         ! identify output dimension id and input dimension id
-          CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT,DIM_NAME_IN(VAR_ID_DIMS_IN(I,IV)),ID) ,&
+        CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT,DIM_NAME_IN(VAR_ID_DIMS_IN(I,IV)),ID) ,&
                 "Cannot get metadata for a variable")
-          VAR_ID_DIMS_OUT(I,IV) = ID
-        ENDDO
+        VAR_ID_DIMS_OUT(I,IV) = ID
       ENDDO
-    ELSE IF (IRANK==2) THEN
-      DO IV=1,INVAR
-        AFTERLOC = .FALSE.
-        DO I=1,COUNT(VAR_ID_DIMS_IN(:,IV)/=0)
-          IF (VAR_ID_DIMS_IN(I,IV)/=0) THEN
-            IF (DIM_NAME_IN(VAR_ID_DIMS_IN(I,IV)) == 'Number_of_points')THEN
-              AFTERLOC= .TRUE.
-              VAR_ID_DIMS_OUT(I,IV)= ILLOC_ID+1
-              VAR_ID_DIMS_OUT(I+1,IV)= ILLOC_ID
-            ELSE
-              CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT,DIM_NAME_IN(VAR_ID_DIMS_IN(I,IV)),ID) ,&
+    ENDDO
+  ELSE IF (IRANK==2) THEN
+    DO IV=1,INVAR
+      AFTERLOC = .FALSE.
+      DO I=1,COUNT(VAR_ID_DIMS_IN(:,IV)/=0)
+        IF (VAR_ID_DIMS_IN(I,IV)/=0) THEN
+          IF (DIM_NAME_IN(VAR_ID_DIMS_IN(I,IV)) == 'Number_of_points') THEN
+            AFTERLOC= .TRUE.
+            VAR_ID_DIMS_OUT(I,IV) = ILLOC_ID+1
+            VAR_ID_DIMS_OUT(I+1,IV) = ILLOC_ID
+          ELSE
+            CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT,DIM_NAME_IN(VAR_ID_DIMS_IN(I,IV)),ID) ,&
                       "Cannot get metadata for a variable")
-              IF (AFTERLOC)THEN
-                VAR_ID_DIMS_OUT(I+1,IV) = ID
-              ELSE
-                VAR_ID_DIMS_OUT(I,IV) = ID
-              ENDIF
+            IF (AFTERLOC)THEN
+              VAR_ID_DIMS_OUT(I+1,IV) = ID
+            ELSE
+              VAR_ID_DIMS_OUT(I,IV) = ID
             ENDIF
           ENDIF
-        ENDDO
+        ENDIF
       ENDDO
-    ENDIF
-! 
+    ENDDO
+  ENDIF
+!
+  IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
     IF(IRANK==2) THEN
       IF (GRID_TYPE == "LL") THEN
         CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,"LAT",NF90_DOUBLE,&
@@ -365,11 +431,13 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
         STOP "INCORRECT TYPE OF GRID 2D"
       ENDIF
     ENDIF
+
 !
 ! The dim ids array is used to pass the dim ids of the dimensions of
 ! the netCDF variables. In Fortran, the unlimited
 ! dimension must come last on the list of dimids. 
-!And must not has an element equal to zero
+!And must not have an element equal to zero
+    PRINT*, IMASSIFTODELETE
     DO IV=1,INVAR
       IF (ANY( VAR_ID_DIMS_OUT(:,IV) == IMASSIFTODELETE ).OR.              &
               ANY( VAR_ID_DIMS_OUT(:,IV) == ILAYERTODELETE ).OR.               &
@@ -415,7 +483,8 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
     NTIME =  DIM_SIZE_OUT(ITIMEID)
     ALLOCATE(VALUE_TIME_OLD(NTIME))
     ntime = ntime
-  END IF
+  ENDIF
+
   ALLOCATE(VALUE_TIME(NTIME))
   !
   ! 14/12/2020 check for proper (de-)allocation of the time variable
@@ -784,6 +853,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
   !
   !
   IF (LMULTIOUTPUT .OR. (JINFILE == NNUMBER_INPUT_FILES)) THEN
+    DEALLOCATE(VALUE_TIME_OLD)
     DEALLOCATE(VAR_ID_OUT)
     DEALLOCATE(VAR_ID_DIMS_OUT)
   !
@@ -818,9 +888,9 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
   IF (LMULTIOUTPUT .OR. (JINFILE == NNUMBER_INPUT_FILES)) THEN
   ! close output file
     CALL CHECK(NF90_CLOSE(FILE_ID_OUT),"Cannot close file "//TRIM(HFILENAMEOUT))
+    ! close grid file
+    CALL CHECK(NF90_CLOSE(FILE_ID_GEO),"Cannot close file"//TRIM(HFILENAMEG))
   END IF
-  ! close grid file
-  CALL CHECK(NF90_CLOSE(FILE_ID_GEO),"Cannot close file"//TRIM(HFILENAMEG))
   ! close input file
   CALL CHECK(NF90_CLOSE(FILE_ID_IN),"Cannot close file"//TRIM(HFILENAMEIN))
   ! PRINT*, IMASSIFTODELETE, ILAYERTODELETE, NPATCHID, NPATCH, IDECILEID, NDECILE
