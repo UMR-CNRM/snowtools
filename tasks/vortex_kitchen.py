@@ -49,11 +49,7 @@ class vortex_kitchen(object):
             self.jobtemplate = "job-vortex-default.py"
 
         machine = os.uname()[1]
-        if 'beaufix' in machine:
-            self.profile = "rd-beaufix-mt"
-        elif 'prolix' in machine:
-            self.profile = "rd-prolix-mt"
-        elif 'taranis' in machine:
+        if 'taranis' in machine:
             self.profile = "rd-taranis-mt"
         elif 'belenos' in machine:
             self.profile = "rd-belenos-mt"
@@ -63,9 +59,7 @@ class vortex_kitchen(object):
 
     def define_ntasks(self, machine):
         if not self.options.ntasks:
-            if 'beaufix' in machine or 'prolix' in machine:
-                self.options.ntasks = 40
-            elif 'taranis' in machine or 'belenos' in machine:
+            if 'taranis' in machine or 'belenos' in machine:
                 self.options.ntasks = 80  # optimum constaté pour la réanalyse Alpes avec léger dépeuplement parmi les 128 coeurs.
 
     def execute(self):
