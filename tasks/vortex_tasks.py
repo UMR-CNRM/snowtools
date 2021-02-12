@@ -434,8 +434,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 tb09a = tbalgo1 = toolbox.algo(
                     engine         = 's2m',
                     kind         = 'prepareforcing',
-                    datebegin    = list_dates_begin_forc,
-                    dateend      = list_dates_end_forc,
+                    datebegin    = list_dates_begin_forc if not oneforcing else [self.conf.datebegin],
+                    dateend      = list_dates_end_forc if not oneforcing else [self.conf.dateend],
                     ntasks       = ntasks,
                     geometry_in     = list_geometry,
                     geometry_out     = self.conf.geometry.area
