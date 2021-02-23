@@ -93,11 +93,11 @@ class S2MExtractor(S2MTaskMixIn):
         self.datebegin, self.dateend = self.get_period()
 
     def get(self):
-        if self.meteo:
+        if self.conf.meteo:
             meteo_outputs = self.get_meteo()
         else:
             meteo_outputs = None
-        if self.snow:
+        if self.conf.snow:
             snow_outputs = self.get_snow()
         else:
             snow_outputs = None
