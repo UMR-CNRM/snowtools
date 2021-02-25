@@ -65,19 +65,17 @@ class boxplots(Mplfigure):
         self.plot.grid(axis='y')
         plt.tight_layout()
 
-        if 'legend' in list(kwargs.keys()):
-            if kwargs['legend'] == False:
-                list_legend = None
-            else:
-                list_legend = []
-                for bp in self.bp:
-                    list_legend.append(bp['boxes'][0])
+        if nsimu > 1:
+            list_legend = []
+            for bp in self.bp:
+                list_legend.append(bp['boxes'][0])
         else:
-            print (len(self.bp))
-            print (self.bp[0])
-            list_legend = [self.bp[0]['boxes'][0], self.bp[0]['boxes'][5], self.bp[0]['boxes'][8]]
+            if isinstance(kwargs['fillcolor'], list):
+                l = kwargs['fillcolor']
+                indexes = [l.index(x) for x in set(l)]
+                list_legend = [self.bp[0]['boxes'][indexes]]
 
-        if 'label' in kwargs.keys() and list_legend is not None:
+        if 'label' in kwargs.keys():
             self.plot.legend(list_legend, kwargs['label'], loc="upper right", fontsize=20)
 
     def set_yaxis(self, **kwargs):
