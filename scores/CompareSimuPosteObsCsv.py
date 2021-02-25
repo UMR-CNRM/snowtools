@@ -457,7 +457,6 @@ class ComparisonSimObs(object):
             kwargs['fillcolor'] = self.list_colors[indSim]
             b2.draw(elevations[valid], list_scores[indSim, valid], nsimu=self.nsim, **kwargs)
 
-        kwargs['legend'] = False 
         kwargs['label'] = self.list_labels
         b2.finalize(nsimu=self.nsim, **kwargs)
         plotfilename = options.dirplot + "/" + label + "_elevations." + options.format
