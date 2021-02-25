@@ -10,7 +10,8 @@ import os
 import netCDF4
 import numpy as np
 import sys
-from .FileException import FileNameException, FileOpenException, VarNameException, TimeException, MultipleValueException
+from .FileException import FileNameException, DirNameException, FileOpenException, VarNameException, TimeException,\
+    MultipleValueException
 from utils.S2M_standard_file import StandardCROCUS
 import six
 
@@ -56,10 +57,18 @@ class prosimu():
             except Exception:
                 raise FileOpenException(path)
         else:
-            print("I am going to crash because there is a filename exception")
-            print(path)
-            print(type(path))
-            raise FileNameException(path)
+            if openmode == "w":
+                if os.path.isdir(os.path.basename(path)):
+                    self.dataset = StandardCROCUS(path, openmode, format=ncformat)
+                    self.path = path
+                    self.mfile = 0
+                else:
+                    raise DirNameException(path)
+            else:
+                print("I am going to crash because there is a filename exception")
+                print(path)
+                print(type(path))
+                raise FileNameException(path)
 
         self.varcache = {}
 
