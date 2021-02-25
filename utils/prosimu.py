@@ -58,12 +58,16 @@ class prosimu():
                 raise FileOpenException(path)
         else:
             if openmode == "w":
-                if os.path.isdir(os.path.basename(path)):
-                    self.dataset = StandardCROCUS(path, openmode, format=ncformat)
-                    self.path = path
-                    self.mfile = 0
-                else:
-                    raise DirNameException(path)
+                dirname = os.path.dirname(path)
+
+                if len(dirname) > 0:
+                    if not os.path.isdir(dirname):
+                        raise DirNameException(path)
+
+                self.dataset = StandardCROCUS(path, openmode, format=ncformat)
+                self.path = path
+                self.mfile = 0
+
             else:
                 print("I am going to crash because there is a filename exception")
                 print(path)
