@@ -436,7 +436,7 @@ class ComparisonSimObs(object):
 
         for indSim in range(0, self.nsim):
 
-            kwargs['fillcolor'] = self.list_colors
+            kwargs['fillcolor'] = self.list_colors[indSim]
             # if nsimu == 1 can be overwrited in the boxplot class
             b1.draw(stations[valid], list_scores[indSim, valid], nsimu=self.nsim, **kwargs)
 
