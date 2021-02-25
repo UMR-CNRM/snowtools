@@ -42,12 +42,11 @@ class boxplots(Mplfigure):
             for element in ['boxes', 'whiskers', 'fliers', 'means', 'medians', 'caps']:
                 plt.setp(self.bp[-1][element], color='black')
 
-            for ind,patch in enumerate(self.bp[-1]['boxes']):
+            for ind, patch in enumerate(self.bp[-1]['boxes']):
                 if isinstance(kwargs['fillcolor'], list):
                     patch.set_facecolor(kwargs['fillcolor'][ind])
                 else:
-                    # Il serait plus logique de mettre kwargs['fillcolor']
-                    patch.set_facecolor('blue')
+                    patch.set_facecolor(kwargs['fillcolor'])
                 patch.set_alpha(0.5)
 
     def finalize(self, nsimu=1, **kwargs):
@@ -103,9 +102,11 @@ class boxplots_bydepartment(boxplots):
         france = [len(s) == 8 for s in stringstations]
 
         list_dep_uniq = ['74', '73', '38,26', '05', '04,06', '64,65', '31,09', '66,99', '20']
-        # Color Alps departments in red, Pyr ones in blue and Corsica ones in green 
-        # There should be a better way to set that
-        kwargs['fillcolor'] = ['red']*5 + ['blue']*3 + ['green']
+
+        if nsimu == 1:
+            # Color Alps departments in red, Pyr ones in blue and Corsica ones in green
+            # There should be a better way to set that
+            kwargs['fillcolor'] = ['red']*5 + ['blue']*3 + ['green']
 
         for dep in list_dep_uniq:
             if ',' in dep:
