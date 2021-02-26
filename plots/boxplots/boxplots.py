@@ -42,12 +42,11 @@ class boxplots(Mplfigure):
             for element in ['boxes', 'whiskers', 'fliers', 'means', 'medians', 'caps']:
                 plt.setp(self.bp[-1][element], color='black')
 
-            for ind,patch in enumerate(self.bp[-1]['boxes']):
+            for ind, patch in enumerate(self.bp[-1]['boxes']):
                 if isinstance(kwargs['fillcolor'], list):
                     patch.set_facecolor(kwargs['fillcolor'][ind])
                 else:
-                    # Il serait plus logique de mettre kwargs['fillcolor']
-                    patch.set_facecolor('blue')
+                    patch.set_facecolor(kwargs['fillcolor'])
                 patch.set_alpha(0.5)
 
     def finalize(self, nsimu=1, **kwargs):
@@ -66,19 +65,17 @@ class boxplots(Mplfigure):
         self.plot.grid(axis='y')
         plt.tight_layout()
 
-        if 'legend' in list(kwargs.keys()):
-            if kwargs['legend'] == False:
-                list_legend = None
-            else:
-                list_legend = []
-                for bp in self.bp:
-                    list_legend.append(bp['boxes'][0])
+        if nsimu > 1:
+            list_legend = []
+            for bp in self.bp:
+                list_legend.append(bp['boxes'][0])
         else:
-            print (len(self.bp))
-            print (self.bp[0])
-            list_legend = [self.bp[0]['boxes'][0], self.bp[0]['boxes'][5], self.bp[0]['boxes'][8]]
+            if isinstance(kwargs['fillcolor'], list):
+                l = kwargs['fillcolor']
+                indexes = [l.index(x) for x in set(l)]
+                list_legend = [self.bp[0]['boxes'][indexes]]
 
-        if 'label' in kwargs.keys() and list_legend is not None:
+        if 'label' in kwargs.keys():
             self.plot.legend(list_legend, kwargs['label'], loc="upper right", fontsize=20)
 
     def set_yaxis(self, **kwargs):
@@ -103,9 +100,11 @@ class boxplots_bydepartment(boxplots):
         france = [len(s) == 8 for s in stringstations]
 
         list_dep_uniq = ['74', '73', '38,26', '05', '04,06', '64,65', '31,09', '66,99', '20']
-        # Color Alps departments in red, Pyr ones in blue and Corsica ones in green 
-        # There should be a better way to set that
-        kwargs['fillcolor'] = ['red']*5 + ['blue']*3 + ['green']
+
+        if nsimu == 1:
+            # Color Alps departments in red, Pyr ones in blue and Corsica ones in green
+            # There should be a better way to set that
+            kwargs['fillcolor'] = ['red']*5 + ['blue']*3 + ['green']
 
         for dep in list_dep_uniq:
             if ',' in dep:

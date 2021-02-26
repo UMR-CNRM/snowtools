@@ -51,6 +51,10 @@ def parse_options(arguments):
                       action="store", dest="xpid", default=None,
                       help="Specific xpid")
 
+    parser.add_option("--xpid_native",
+                      action="store", dest="xpid_native", default=None,
+                      help="Specific xpid")
+
     (options, args) = parser.parse_args(arguments)
     del args
     return options

@@ -18,7 +18,7 @@ from tools.update_namelist import update_surfex_namelist_file
 from tools.execute import callSurfexOrDie
 from tools.massif_diags import massif_simu
 from utils.resources import get_file_period, get_file_date, get_file_const, save_file_period, save_file_date, save_file_const,\
-    get_file_const_or_crash  # , ldd
+    get_file_const_or_crash, ldd
 from utils.prosimu import prosimu
 from utils.FileException import DirFileException
 
@@ -60,10 +60,6 @@ class surfexrun(object):
 
         if "taranis" in machine or "belenos" in machine:
             self.nproc = 128
-            self.moderun = "MPI"
-            self.modeinterpol = "MPI"
-        if "beaufix" in machine or "prolix" in machine:
-            self.nproc = 40
             self.moderun = "MPI"
             self.modeinterpol = "MPI"
         else:
@@ -189,7 +185,7 @@ class surfexrun(object):
 
         f = prosimu("FORCING.nc")
         print("FORMAT OF FORCING NETCDF FILE: " + f.format())
-        # if f.format() != "NETCDF3_CLASSIC":
+        #if f.format() != "NETCDF3_CLASSIC":
         #    print("Check consistency with your SURFEX compilation (netcdf4 library required).")
         #    print(ldd(self.execdir + "/OFFLINE"))
         f.close()
@@ -290,7 +286,8 @@ class postesrun(surfexrun):
             forcinput_tomerge(list_forcing, "FORCING.nc")
 
     def save_output(self):
-        super(postesrun, self).save_output()
+        if not self.onlyextractforcing:
+            super(postesrun, self).save_output()
         save_file_period(self.dirmeteo, "FORCING", self.dateforcbegin, self.dateforcend)
 
 
