@@ -22,6 +22,7 @@ import locale
 import os
 from optparse import OptionParser
 import numpy as np
+import netCDF4
 
 import matplotlib
 matplotlib.use('Agg')
@@ -33,8 +34,13 @@ from tasks.oper.get_oper_files import S2MExtractor
 from utils.prosimu import prosimu
 from utils.dates import check_and_convert_date, pretty_date
 from plots.temporal.chrono import spaghettis_with_det, spaghettis
-from plots.maps.basemap import Map_alpes, Map_pyrenees, Map_corse
+
 from utils.infomassifs import infomassifs
+from utils.FileException import DirNameException
+from bronx.syntax.externalcode import ExternalCodeImportChecker
+echecker = ExternalCodeImportChecker('plots')
+with echecker:
+    from plots.maps.basemap import Map_alpes, Map_pyrenees, Map_corse
 
 import footprints
 
@@ -101,6 +107,7 @@ class Ensemble(object):
         self.ensemble = {}
 
     def open(self, listmembers):
+        print(listmembers)
         self.simufiles = []
         for m, member in enumerate(listmembers):
             self.simufiles.append(prosimu(member))
@@ -108,6 +115,7 @@ class Ensemble(object):
                 self.inddeterministic = m
 
         self.nmembers = len(self.simufiles)
+        print(self.nmembers)
         self.time = self.simufiles[0].readtime()
 
         self.indpoints = self.select_points()
@@ -448,6 +456,7 @@ class EnsembleOperDiags(EnsembleDiags):
             s.close()
 
 
+@echecker.disabled_if_unavailable
 class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
 
     levelmax = 3900
@@ -507,7 +516,7 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
                     print (plotname + " is available.")
             m.reset_massifs()
 
-
+@echecker.disabled_if_unavailable
 class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMassif):
 
     levelmax = 3900
@@ -599,6 +608,73 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
 class EnsembleOperDiagsStations(EnsembleOperDiags, EnsembleStation):
     list_var_map = []
     list_var_spag = ['DSN_T_ISBA', 'WSN_T_ISBA', 'RAMSOND_ISBA', 'WET_TH_ISBA', 'REFRZTH_ISBA', 'SNOMLT_ISBA']
+
+
+class EnsemblePostproc(_EnsembleMassif):
+
+    def __init__(self, ensemble, variables, inputfiles, outfile):
+        print(inputfiles)
+        super(EnsemblePostproc, self).__init__()
+        self.ensemble = ensemble
+        self.variables = variables
+        self.ensemble.open(inputfiles)
+        self.outfile = outfile
+        self.standardvars = ['time', 'ZS', 'aspect', 'slope', 'massif_num', 'longitude', 'latitude']
+
+    def create_outfile(self):
+        # if not os.path.isdir(self.outfile):
+        # print(self.outfile)
+        #     raise DirNameException(self.outfile)
+        self.outdataset = prosimu(self.outfile.localpath(), ncformat='NETCDF4_CLASSIC', openmode='w')
+        # self.outdataset = netCDF4.Dataset(self.outfile.localpath(), openmode="wb", format='NETCDF4_CLASSIC')
+        #os.system('touch("PRO_post_2020092706_2020092806.nc")')
+        #self.outdataset = netCDF4.Dataset('PRO_post_2020092706_2020092806.nc', openmode="w", format='NETCDF4_CLASSIC')
+
+    def init_outfile(self):
+        # copy global attributes all at once via dictionary
+        self.outdataset.dataset.setncatts(self.ensemble.simufiles[0].dataset.__dict__)
+        # copy dimensions
+        for name, dimension in self.ensemble.simufiles[0].dataset.dimensions.items():
+            self.outdataset.dataset.createDimension(
+                name, (len(dimension) if not dimension.isunlimited() else None))
+        print(self.outdataset.listdim())
+
+        # copy standard variables
+        for name, variable in self.ensemble.simufiles[0].dataset.variables.items():
+            if name in self.standardvars:
+                x = self.outdataset.dataset.createVariable(name, variable.datatype, variable.dimensions)
+                # copy variable attributes without _FillValue since this causes an error
+                for att in self.ensemble.simufiles[0].listattr(name):
+                    if att != '_FillValue':
+                        print(self.ensemble.simufiles[0].getattr(name, att))
+                        self.outdataset.dataset[name].setncatts({att:self.ensemble.simufiles[0].getattr(name, att)})
+                self.outdataset.dataset[name][:] = self.ensemble.simufiles[0].dataset[name][:]
+                print('data copied')
+        print(self.outdataset.listvar())
+
+    def postprocess(self):
+        self.create_outfile()
+        self.init_outfile()
+        print('init done')
+        self.median()
+        print('median done')
+        self.outdataset.close()
+        self.ensemble.close()
+
+    def median(self):
+        print('entered median')
+        for name, variable in self.ensemble.simufiles[0].dataset.variables.items():
+            if name in self.variables:
+                median = self.ensemble.quantile(name, 50)
+                x = self.outdataset.dataset.createVariable(name, variable.datatype, variable.dimensions)
+                # copy variable attributes all at once via dictionary, but without _FillValue
+                attdict = self.ensemble.simufiles[0].dataset[name].__dict__
+                attdict.pop('_FillValue', None)
+                self.outdataset.dataset[name].setncatts(attdict)
+                print(self.outdataset.dataset[name][:].size)
+                print(median.size)
+                self.outdataset.dataset[name][:] = median[:]
+
 
 
 if __name__ == "__main__":

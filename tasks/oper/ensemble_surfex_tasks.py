@@ -10,6 +10,7 @@ from vortex import toolbox
 from bronx.stdtypes.date import daterange, yesterday, tomorrow, Period
 import footprints
 from vortex.algo.components import DelayedAlgoComponentError
+from plots.pearps2m.postprocess import Ensemble
 
 
 def setup(t, **kw):
@@ -17,7 +18,8 @@ def setup(t, **kw):
         tag = 'Surfex_Parallel',
         ticket = t,
         nodes = [
-            Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw),
+            #Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw),
+            Four_Seasons_Task(tag='S2m_pp_Task', ticket=t, **kw),
         ],
         options=kw
     )
@@ -151,10 +153,10 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 print(t.prompt, 'tb01c =', tb01c)
                 print()
 
-            print (any(tb01), any(tb01b))
+            print(any(tb01), any(tb01b))
 
             if not any(tb01) and not any(tb01b) and source_safran == 's2m':
-                print ('MODE SECOURS')
+                print('MODE SECOURS')
                 print(any(tb01a), any(tb01c))
 
                 if (any(tb01a) or any(tb01c)):
@@ -594,3 +596,90 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
 #             ),
 #             print(t.prompt, 'tb12 =', tb12)
 #             print()
+
+class Four_Seasons_Task(S2MTaskMixIn, Task):
+    '''
+    Post-processing task for the 4 seasons bulletin. Uses S2m ensemble forecasts based on PEARP.
+    Calculates ensemble median for the 12hourly and 1day snow accumulation for the moment.
+    '''
+
+    def process(self):
+
+        t = self.ticket
+
+        datebegin, dateend = self.get_period()
+        rundate_forcing = self.get_rundate_forcing()
+        rundate_prep, alternate_rundate_prep = self.get_rundate_prep()
+        # list_geometry = self.get_list_geometry()
+
+        pearpmembers, members = self.get_list_members(sytron=False)
+
+        if 'early-fetch' in self.steps or 'fetch' in self.steps:
+
+            self.sh.title('Toolbox input tb01')
+            tb01 = toolbox.input(
+                role        = 'Crocus Forecast',
+                local       = 'mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                experiment  = self.conf.xpid,
+                block       = 'pro',
+                geometry    = self.conf.geometry,
+                date        = self.conf.rundate,
+                datebegin   = datebegin if self.conf.previ else '[dateend]/-PT24H',
+                dateend     = dateend if self.conf.previ else list(daterange(tomorrow(base=datebegin), dateend)),
+                member      = members,
+                nativefmt   = 'netcdf',
+                kind        = 'SnowpackSimulation',
+                model       = 'surfex',
+                namespace   = 'vortex.multi.fr',
+                cutoff      = 'production' if self.conf.previ else 'assimilation',
+                fatal       = False
+            ),
+            print(t.prompt, 'tb01 =', tb01)
+            print()
+
+        if 'compute' in self.steps:
+            self.sh.title('Toolbox algo tb02 = Postprocessing')
+
+            tb02 = tbalgo1 = toolbox.algo(
+                kind        = "s2m_postproc",
+                varnames    = ['SD_12H_ISBA', 'SD_1DY_ISBA'],
+                datebegin   = datebegin,
+                dateend     = dateend,
+                dateinit    = datebegin,
+                threshold=self.conf.threshold,
+                engine      = 's2m',
+                members     = footprints.util.rangex(members),
+                ntasks      = 1,
+                outfilename = './PRO_post_[datebegin:ymdh]_[dateend:ymdh].nc'
+            )
+            print(t.prompt, 'tb02 =', tb02)
+            print()
+
+            self.component_runner(tbalgo1)
+
+        if 'backup' in self.steps:
+            pass
+
+        if 'late-backup' in self.steps:
+
+            self.sh.title('Toolbox output tb03')
+            tb03 = toolbox.output(
+                role        = 'Postproc_output',
+                intent      = 'out',
+                promised    = True,
+                local       = 'PRO_post_[datebegin:ymdh]_[dateend:ymdh].nc',
+                experiment  = self.conf.xpid_postpr,
+                block       = 'postproc',
+                geometry    = self.conf.geometry,
+                date        = self.conf.rundate,
+                datebegin   = datebegin if self.conf.previ else '[dateend]/-PT24H',
+                dateend     = dateend if self.conf.previ else list(daterange(tomorrow(base=datebegin), dateend)),
+                nativefmt   = 'netcdf',
+                kind        = 'SnowpackSimulation',
+                model       = 'postproc',
+                namespace   = 'vortex.multi.fr',
+                cutoff      = 'production' if self.conf.previ else 'assimilation',
+                fatal       = True
+            ),
+            print(t.prompt, 'tb03 =', tb03)
+            print()
