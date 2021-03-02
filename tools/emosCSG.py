@@ -9,14 +9,13 @@ Created on 25 June 2018
 
 # The following lines are necessary with a French environment and python 2 to avoid a bronx crash when calling vortex
 # on months with an accent (Février, Décembre)
-#---------------------------------------------------------- 
+# ----------------------------------------------------------
 import sys
-import codecs
 if sys.version_info.major == 2:  # Python2 only
     import codecs
     sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
     sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
-#---------------------------------------------------------- 
+# ----------------------------------------------------------
 
 import locale
 import rpy2.robjects as robjects
@@ -99,7 +98,7 @@ class postprocess_ensemble(Ensemble):
         newdataset.close()
 
     def read_emos_param(self, filename='EMOS_HN.Rdata'):
-        robj = robjects.r.load(filename)
+        robj = robjects.r.load(filename)  # pylint: disable=possibly-unused-variable
         self.reg_coef = robjects.r['par.reg']
         self.clim_par = robjects.r['par.climo']
 

@@ -17,14 +17,14 @@ usage = "usage: get_oper_files.py [-b YYYYMMDD] [--previ]"
 
 
 class configdev(object):
-    rundate = Date(2018, 10, 26, 3)    # Run date can be at 3TU, 6TU, 9TU
+    rundate = Date(2021, 03, 22, 12)    # Run date can be at 3TU, 6TU, 9TU
     previ = False  # False for analysis, True for forecast
     xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
     list_geometry = ["alp", "pyr", "cor", "postes"]
 
 
 class config(object):
-    rundate = Date(2018, 10, 26, 3)    # Run date can be at 3TU, 6TU, 9TU
+    rundate = Date(2021, 03, 22, 12)    # Run date can be at 3TU, 6TU, 9TU
     previ = False  # False for analysis, True for forecast
     xpid = "oper"
     list_geometry = ["alp", "pyr", "cor", "postes"]
@@ -93,11 +93,11 @@ class S2MExtractor(S2MTaskMixIn):
         self.datebegin, self.dateend = self.get_period()
 
     def get(self):
-        if self.meteo:
+        if self.conf.meteo:
             meteo_outputs = self.get_meteo()
         else:
             meteo_outputs = None
-        if self.snow:
+        if self.conf.snow:
             snow_outputs = self.get_snow()
         else:
             snow_outputs = None

@@ -13,6 +13,7 @@ import shutil
 
 from utils.dates import WallTimeException
 from utils.resources import InstallException
+from bronx.stdtypes.date import Period
 
 
 class vortex_kitchen(object):
@@ -48,27 +49,18 @@ class vortex_kitchen(object):
             self.jobtemplate = "job-vortex-default.py"
 
         machine = os.uname()[1]
-        if 'beaufix' in machine:
-            self.profile = "rd-beaufix-mt"
-        elif 'prolix' in machine:
-            self.profile = "rd-prolix-mt"
-        elif 'epona' in machine:
-            self.profile = "rd-epona-mt"            
+        if 'taranis' in machine:
+            self.profile = "rd-taranis-mt"
         elif 'belenos' in machine:
-            self.profile = "rd-belenos-mt" 
+            self.profile = "rd-belenos-mt"
         self.define_ntasks(machine)
 
         self.execute()
 
     def define_ntasks(self, machine):
         if not self.options.ntasks:
-            if 'beaufix' in machine or 'prolix' in machine:
-                self.options.ntasks = 40
-            elif any(host in machine for host in ['epona', 'belenos', 'taranis']):
-                if self.options.safran:
-                    self.options.ntasks = 120
-                else:
-                    self.options.ntasks = 80 # optimum constaté pour la réanalyse Alpes avec léger dépeuplement parmi les 128 coeurs.
+            if 'taranis' in machine or 'belenos' in machine:
+                self.options.ntasks = 80  # optimum constaté pour la réanalyse Alpes avec léger dépeuplement parmi les 128 coeurs.
 
     def execute(self):
 
@@ -149,12 +141,12 @@ class vortex_kitchen(object):
             elif self.options.debug:
                 self.jobname = 'debug_s2m'
                 self.reftask = 'debug_tasks'
-                self.nnodes = self.options.nnodes              
+                self.nnodes = self.options.nnodes
             else:
                 self.jobname = 'rea_s2m'
                 self.reftask = "vortex_tasks"
                 self.nnodes = self.options.nnodes
-            self.confcomplement = " taskconf=" + self.options.datedeb.strftime("%Y")        
+            self.confcomplement = " taskconf=" + self.options.datedeb.strftime("%Y")
 
     def init_job_task_safran(self):
         if self.options.oper:
@@ -167,8 +159,7 @@ class vortex_kitchen(object):
                 " dateend=" + self.options.datefin.strftime("%Y%m%d")
         self.nnodes = 1
         self.confcomplement = ""
-        
-            
+
     def set_conf_file(self):
 
         os.chdir(self.confdir)
@@ -211,11 +202,8 @@ class vortex_kitchen(object):
 
     def mkjob_command(self):
 
-        #return "../vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + " profile=" + self.profile + " #jobassistant=cen " + self.period +\
-        #       " template=" + self.jobtemplate + " time=" + self.walltime() + " nnodes=" + str(self.nnodes) + self.confcomplement
-
         return "../vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + " profile=" + self.profile + " jobassistant=cen " + self.period +\
-                " time=" + self.walltime() + " nnodes=" + str(self.nnodes) + self.confcomplement
+            " time=" + self.walltime() + " nnodes=" + str(self.nnodes) + self.confcomplement
 
     def mkjob_list_commands(self):
 
@@ -244,13 +232,13 @@ class vortex_kitchen(object):
             return self.options.walltime
 
         elif self.options.oper:
-            return str(datetime.timedelta(minutes=10))
+            return Period(minutes=10).hms
 
         else:
             if self.options.escroc:
                 if self.options.nmembers:
                     nmembers = self.options.nmembers
-                elif len(self.options.escroc) >=2 and self.options.escroc[0:2] == "E2": # E2, E2MIP, E2tartes, E2MIPtartes
+                elif len(self.options.escroc) >= 2 and self.options.escroc[0:2] == "E2":  # E2, E2MIP, E2tartes, E2MIPtartes
                     nmembers = 35
                 else:
                     raise Exception("don't forget to specify escroc ensemble or --nmembers")
@@ -272,14 +260,14 @@ class vortex_kitchen(object):
 
             key = self.options.region if self.options.region in list(minutes_peryear.keys()) else "alp_allslopes"
 
-            estimation = datetime.timedelta(minutes=minutes_peryear[key]) * max(1, (self.options.datefin.year - self.options.datedeb.year)) * (1 + nmembers / (40 * self.options.nnodes) )
+            estimation = Period(minutes=minutes_peryear[key]) * max(1, (self.options.datefin.year - self.options.datedeb.year)) * (1 + nmembers / (40 * self.options.nnodes) )
 
             #!!!! Ne marche pas à tous les coups... 
 
             if estimation >= datetime.timedelta(hours=24):
                 raise WallTimeException(estimation)
             else:
-                return str(estimation)
+                return estimation.hms
 
     def split_geo(self):
         if ':' in self.options.region:

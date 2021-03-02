@@ -8,3 +8,6 @@ snowtools
 oper_tag
 tag
 *.swp
+fortran/interpol_MPIAUTO
+fortran/interpol
+fortran/*.o

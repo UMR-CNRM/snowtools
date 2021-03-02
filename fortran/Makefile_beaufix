@@ -16,14 +16,14 @@ INC_NETCDF    ?= -I${CDF_PATH}/include -I${HDF_PATH}/include -I${SZIP_PATH}/incl
 LIB_NETCDF    ?= -L${CDF_PATH}/lib -lnetcdff -lnetcdf -L${HDF_PATH}/lib -lhdf5_hl -lhdf5  -L${SZIP_PATH}/lib -lsz  -L${ZLIB_PATH}/lib -lz  -lcurl -Wl,-rpath,${CDF_PATH}/lib -Wl,-rpath,$(HDF_PATH)/lib -Wl,-rpath,$(SZIP_PATH)/lib -Wl,-rpath,$(ZLIB_PATH)/lib
 
 LDFLAGS= $(INC_NETCDF) $(LIB_NETCDF)
-
+SOURCES = interpolate_safran.f90 modd_interpol_safran.f90 modn_interpol_safran.f90
 
 all:  $(EXEC1)
 
 interpolate_safran.o : interpolate_safran.f90
 	$(F90) $(CFLAGS) $(OPT) $< -o $@ $(LDFLAGS)
 
-$(EXEC1): interpolate_safran.o 
+$(EXEC1): $(subst .f90,.o,$(SOURCES))
 	$(F90) $(OPT) $^ -o $@ $(LDFLAGS)
 
 
@@ -33,3 +33,11 @@ clean:
 
 mrproper: clean
 	rm -f $(EXEC1)
+
+%.o : %.f90
+	$(F90) $(CFLAGS) $(OPT) $< -o $@ $(LDFLAGS)
+	@touch $@
+
+
+interpolate_safran.o : modn_interpol_safran.o
+modn_interpol_safran.o : modd_interpol_safran.o

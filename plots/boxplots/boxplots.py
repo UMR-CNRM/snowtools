@@ -11,7 +11,6 @@ import numpy as np
 import six
 
 from matplotlib import pyplot as plt
-import matplotlib.ticker as mticker
 
 from plots.abstracts.figures import Mplfigure
 
@@ -33,7 +32,7 @@ class boxplots(Mplfigure):
 
         boxplotargs = dict()
         for key, value in six.iteritems(kwargs):
-            if key not in ['forcemin', 'forcemax', 'label', 'ylabel', 'fillcolor']:
+            if key not in ['forcemin', 'forcemax', 'label', 'ylabel', 'fillcolor', 'fontsize']:
                 boxplotargs[key] = value
 
         self.bp.append(self.plot.boxplot(list_scores, notch=True, bootstrap=1000, showfliers=False, patch_artist=True, **boxplotargs))
@@ -43,8 +42,11 @@ class boxplots(Mplfigure):
             for element in ['boxes', 'whiskers', 'fliers', 'means', 'medians', 'caps']:
                 plt.setp(self.bp[-1][element], color='black')
 
-            for patch in self.bp[-1]['boxes']:
-                patch.set_facecolor(kwargs['fillcolor'])
+            for ind, patch in enumerate(self.bp[-1]['boxes']):
+                if isinstance(kwargs['fillcolor'], list):
+                    patch.set_facecolor(kwargs['fillcolor'][ind])
+                else:
+                    patch.set_facecolor(kwargs['fillcolor'])
                 patch.set_alpha(0.5)
 
     def finalize(self, nsimu=1, **kwargs):
@@ -56,27 +58,35 @@ class boxplots(Mplfigure):
         firsttick = self.firstboxposition + (nsimu - 1) / 2.
 
         self.plot.set_xticks(np.arange(firsttick, nboxes + 1, nsimu))
-
+        plt.setp(self.plot.get_xticklabels(), fontsize=18)
         self.plot.set_xlim((self.firstboxposition - 1, nboxes + 1))
 
         self.set_yaxis(**kwargs)
         self.plot.grid(axis='y')
         plt.tight_layout()
 
-        list_legend = []
-        for bp in self.bp:
-            list_legend.append(bp['boxes'][0])
+        if nsimu > 1:
+            list_legend = []
+            for bp in self.bp:
+                list_legend.append(bp['boxes'][0])
+        else:
+            if isinstance(kwargs['fillcolor'], list):
+                l = kwargs['fillcolor']
+                indexes = [l.index(x) for x in set(l)]
+                list_legend = [self.bp[0]['boxes'][indexes]]
 
         if 'label' in kwargs.keys():
-            self.plot.legend(list_legend, kwargs['label'], loc="upper left", fontsize="small")
+            self.plot.legend(list_legend, kwargs['label'], loc="upper right", fontsize=20)
 
     def set_yaxis(self, **kwargs):
 
         if 'forcemin' in kwargs.keys() and 'forcemax' in kwargs.keys():
             self.plot.set_ylim([kwargs['forcemin'], kwargs['forcemax']])
-
+        
         if 'ylabel' in kwargs.keys():
-            self.plot.set_ylabel(kwargs['ylabel'])
+            self.plot.set_ylabel(kwargs['ylabel'], fontsize=20)
+
+        plt.setp(self.plot.get_yticklabels(), fontsize=18)
 
 
 class boxplots_bydepartment(boxplots):
@@ -89,17 +99,14 @@ class boxplots_bydepartment(boxplots):
 
         france = [len(s) == 8 for s in stringstations]
 
-#         list_dep_uniq = list(set(list_dep))
-#         list_dep_uniq.sort()
+        list_dep_uniq = ['74', '73', '38,26', '05', '04,06', '64,65', '31,09', '66,99', '20']
 
-        list_dep_uniq = dict(
-                Alps = ['74', '73', '38, 26', '05', '04, 06'],
-                Pyrenees = ['64, 65', '31, 09', '66, 99'],
-                Corsica = ['20'],
-            )
+        if nsimu == 1:
+            # Color Alps departments in red, Pyr ones in blue and Corsica ones in green
+            # There should be a better way to set that
+            kwargs['fillcolor'] = ['red']*5 + ['blue']*3 + ['green']
 
         for dep in list_dep_uniq:
-
             if ',' in dep:
                 deps = dep.split(',')
                 inddep = np.array(list_dep) == -999
@@ -110,17 +117,13 @@ class boxplots_bydepartment(boxplots):
 
             inddep = inddep & france
 
-            print (dep, np.sum(inddep))
-
             list_scores.append(scores[inddep])
 
         kwargs['labels'] = list_dep_uniq
 
         kwargs['positions'] = range(self.indsimu, 1 + len(list_dep_uniq) * nsimu, nsimu)
 
-        print (kwargs['positions'])
-
-        self.plot.set_xlabel(u'Département')
+        self.plot.set_xlabel(u'Department', fontsize=20)
         super(boxplots_bydepartment, self).draw(list_scores, **kwargs)
         self.indsimu += 1
 
@@ -140,10 +143,10 @@ class boxplots_byelevation(boxplots):
             list_scores.append(scores[(elevations >= minlevel) & (elevations < maxlevel)])
 
         kwargs['labels'] = map(self.label_elevation, list_levels)
-
+        kwargs['fontsize'] = 18
         kwargs['positions'] = range(self.indsimu, 1 + len(list_levels) * nsimu, nsimu)
 
-        self.plot.set_xlabel(u'Elevation')
+        self.plot.set_xlabel(u'Elevation', fontsize=20)
         super(boxplots_byelevation, self).draw(list_scores, **kwargs)
         self.indsimu += 1
 
@@ -173,7 +176,7 @@ class boxplots_byyear(boxplots):
         print (nsimu)
         print (kwargs['positions'])
 
-        self.plot.set_xlabel(u'Year')
+        self.plot.set_xlabel(u'Year', fontsize=20)
         super(boxplots_byyear, self).draw(list_scores, **kwargs)
         self.indsimu += 1
 

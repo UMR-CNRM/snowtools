@@ -14,7 +14,6 @@ from vortex.layout.nodes import Task
 from cen.layout.nodes import S2MTaskMixIn
 
 from bronx.stdtypes.date import Date, Period
-from utils.dates import get_list_dates_files
 import os
 
 toolbox.active_now = True
@@ -27,21 +26,20 @@ class ReforecastExtractor(Task, S2MTaskMixIn):
         list_dates = list()
 #        for year in range(1994,2017):
         for year in [2017]:
-            list_dates.append([Date(year, 12, 6, 6, 0, 0), Date(year+1, 4, 30, 6, 0, 0)])
+            list_dates.append([Date(year, 12, 6, 6, 0, 0), Date(year + 1, 4, 30, 6, 0, 0)])
         return list_dates
 
     def process(self):
 
         xpid     = 'reforecast@lafaysse'
         geometry = 'postes'
-        members  = footprints.util.rangex(0,35)
+        members  = footprints.util.rangex(0, 35)
         vapp     = 's2m'
         cutoff   = 'production'
 
-
         list_dates = self.get_list_dates()
 
-        missing_files = list()
+        missing_files = list()  # pylint: disable=possibly-unused-variable
         for datebegin, dateend in list_dates:
             rundate = datebegin
 
@@ -49,7 +47,7 @@ class ReforecastExtractor(Task, S2MTaskMixIn):
 
                 print('Running date {0:s}'.format(rundate.ymdh))
 
-                tb01 = toolbox.input(
+                tb01 = toolbox.input(  # pylint: disable=possibly-unused-variable
                     local          = 'meteo/mb[member%03d]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = 'reforecast@lafaysse',
                     block          = 'meteo',
@@ -92,7 +90,7 @@ class ReforecastExtractor(Task, S2MTaskMixIn):
 #                 for forcing in tb02[0]:
 #                     forcing.put()
 
-                tb03 = toolbox.input(
+                tb03 = toolbox.input(  # pylint: disable=possibly-unused-variable
                     local          = 'pro/mb[member%03d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = xpid,
                     block          = 'pro',
@@ -138,7 +136,7 @@ class ReforecastExtractor(Task, S2MTaskMixIn):
 
 if __name__ == "__main__":
 
-#    os.chdir('/home/vernaym/workdir')
+    # os.chdir('/home/vernaym/workdir')
     os.chdir('/manto/nousuj/reforecast')
 
     t = vortex.ticket()

@@ -198,8 +198,6 @@ class sun():
         # (S. Morin 2014/06/27, taken from meteo.f90 in Crocus)
         # Matthieu 2014/09/16 : réécriture parce que les masques changent d'un point à l'autre
 
-        svg_direct = tab_direct[:]
-
         if list_list_mask is not None:
             ZPSI1 = azimuth * URD2DG  # solar azimuth, 0. is North
             ZMASK = np.zeros_like(ZPSI1)
@@ -308,7 +306,6 @@ class sun():
         UH2LON = 15.
         NUH2M = 60.
         UEPSI = 0.001
-        URD2DG = 180. / math.pi
 
         # Conversion of slope and aspect to rad:
 
@@ -323,7 +320,7 @@ class sun():
         ZDELTA = np.arcsin(ZSINDL)
 
         # theoretical maximum radiation
-        ZRSI0 = VSOL9 * (1. - ZSINDL / VSOL10)
+        ZRSI0 = VSOL9 * (1. - ZSINDL / VSOL10)  # pylint: disable=possibly-unused-variable
 
         # solar angular time
         ZOMEGA = VSOL11 * (h - NUZENI + ZDT / NUH2M + lon / UH2LON) * UDG2RD
@@ -397,8 +394,6 @@ class sun():
 
         SWdif = np.where(ratio <= 1, ratio * SWglo, SWglo)
         SWdir = SWglo - SWdif
-
-        ndays = 264
 
 #         for hour in range(1, 24):
 #             print hour, coszenith[ndays * 24 + hour - 1], ratio[ndays * 24 + hour - 1], SWdir[ndays * 24 + hour - 1], SWdif[ndays * 24 + hour - 1], SWglo[ndays * 24 + hour - 1]

@@ -31,7 +31,7 @@ class Surfex_command(_S2M_command):
 
     def execute(self):
         machine = os.uname()[1]
-        if "beaufix" in machine or "prolix" in machine or "epona" in machine or "belenos" in machine:
+        if "taranis" in machine or "belenos" in machine:
             self.execute_through_vortex()
         else:
             self.execute_without_vortex()
@@ -297,7 +297,7 @@ class Surfex_command(_S2M_command):
                                            workdir=self.options.workdir, datespinup=self.options.datespinup,
                                            execdir=self.options.exesurfex,
                                            namelist=self.options.namelist,
-                                           addmask=True)
+                                           addmask=True, onlyextractforcing=self.options.onlyextractforcing)
             elif self.interpol:
                 run = tasks.runs.interpolrun(self.options.datedeb, self.options.datefin, self.options.forcing, self.options.diroutput, threshold=self.options.threshold,
                                              workdir=self.options.workdir, datespinup=self.options.datespinup, geolist=[self.options.region],

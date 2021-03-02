@@ -58,12 +58,8 @@ class surfexrun(object):
     def defaults_from_env(self, moderun="NORMAL"):
         machine = os.uname()[1]
 
-        if "epona" in machine or "belenos" in machine:
+        if "taranis" in machine or "belenos" in machine:
             self.nproc = 128
-            self.moderun = "MPI"
-            self.modeinterpol = "MPI"
-        if "beaufix" in machine or "prolix" in machine:
-            self.nproc = 40
             self.moderun = "MPI"
             self.modeinterpol = "MPI"
         else:
@@ -290,7 +286,8 @@ class postesrun(surfexrun):
             forcinput_tomerge(list_forcing, "FORCING.nc")
 
     def save_output(self):
-        super(postesrun, self).save_output()
+        if not self.onlyextractforcing:
+            super(postesrun, self).save_output()
         save_file_period(self.dirmeteo, "FORCING", self.dateforcbegin, self.dateforcend)
 
 
