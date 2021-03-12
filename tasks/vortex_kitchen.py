@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 23 févr. 2018
 
 @author: lafaysse
-'''
+"""
 
 import os
 import datetime
@@ -17,14 +17,14 @@ from bronx.stdtypes.date import Period
 
 
 class vortex_kitchen(object):
-    '''
+    """
     Interface between s2m command line and vortex utilities (tasks and mk_jobs)
-    '''
+    """
 
     def __init__(self, options):
-        '''
+        """
         Constructor
-        '''
+        """
         # Check if a vortex installation is defined
         self.check_vortex_install()
         self.options = options
@@ -125,7 +125,9 @@ class vortex_kitchen(object):
                 self.jobname = "surfex_analysis"
             self.confcomplement = ''
         else:
-            self.period = " rundate=" + self.options.datedeb.strftime("%Y%m%d%H%M") + " datebegin=" + self.options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + self.options.datefin.strftime("%Y%m%d%H%M")
+            self.period = " rundate=" + self.options.datedeb.strftime("%Y%m%d%H%M") + " datebegin=" + \
+                          self.options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + \
+                          self.options.datefin.strftime("%Y%m%d%H%M")
             if self.options.escroc:
                 self.jobname = jobname if jobname else 'escroc'
                 if self.options.scores:
@@ -168,7 +170,8 @@ class vortex_kitchen(object):
             if self.options.oper:
                 conffilename = self.options.vapp + "_" + self.options.vconf + ".ini"
                 if not os.path.islink(conffilename):
-                    # Operational case : the configuration files are provided : only create a symbolic link in the appropriate directory
+                    # Operational case : the configuration files are provided :
+                    # only create a symbolic link in the appropriate directory
                     if os.path.exists("../snowtools/DATA/OPER/" + conffilename):
                         os.symlink("../snowtools/DATA/OPER/" + conffilename, conffilename)
                     elif os.path.exists("../snowtools/conf/" + conffilename):
@@ -179,10 +182,11 @@ class vortex_kitchen(object):
                 if hasattr(self.options, 'confname'):
                     conffilename = self.options.confname.rstrip('.ini') + ".ini"
                 else:
-                    conffilename = self.options.vapp + "_" + self.options.vconf + "_" + self.options.datedeb.strftime("%Y") + ".ini"
+                    conffilename = self.options.vapp + "_" + self.options.vconf + "_" + \
+                                   self.options.datedeb.strftime("%Y") + ".ini"
 
             if self.options.soda:
-                print ('copy conf file to vortex path')
+                print('copy conf file to vortex path')
                 shutil.copyfile(self.options.soda, conffilename)
 
         elif self.options.safran:
@@ -240,7 +244,8 @@ class vortex_kitchen(object):
             if self.options.escroc:
                 if self.options.nmembers:
                     nmembers = self.options.nmembers
-                elif len(self.options.escroc) >= 2 and self.options.escroc[0:2] == "E2":  # E2, E2MIP, E2tartes, E2MIPtartes
+                elif len(self.options.escroc) >= 2 and self.options.escroc[0:2] == "E2":
+                    # E2, E2MIP, E2tartes, E2MIPtartes
                     nmembers = 35
                 else:
                     raise Exception("don't forget to specify escroc ensemble or --nmembers")
@@ -248,7 +253,8 @@ class vortex_kitchen(object):
             else:
                 nmembers = 1
             # minutes per year for one member computing all points
-            minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 5, pyr_flat = 5, cor_allslopes = 5, cor_flat = 1, postes = 5,
+            minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 5, pyr_flat = 5,
+                                   cor_allslopes = 5, cor_flat = 1, postes = 5,
                                    lautaret = 120, lautaretreduc = 5)
 
             for site_snowmip in ["cdp", "oas", "obs", "ojp", "rme", "sap", "snb", "sod", "swa", "wfj"]:
@@ -262,7 +268,9 @@ class vortex_kitchen(object):
 
             key = self.options.region if self.options.region in list(minutes_peryear.keys()) else "alp_allslopes"
 
-            estimation = Period(minutes=minutes_peryear[key]) * max(1, (self.options.datefin.year - self.options.datedeb.year)) * (1 + nmembers / (40 * self.options.nnodes) )
+            estimation = Period(minutes=minutes_peryear[key]) * \
+                         max(1, (self.options.datefin.year - self.options.datedeb.year)) * \
+                         (1 + nmembers / (40 * self.options.nnodes))
 
             if estimation >= datetime.timedelta(hours=24):
                 raise WallTimeException(estimation)
@@ -306,7 +314,7 @@ class Vortex_conf_file(object):
         self.fileobject.close()
 
     def create_conf(self, jobname):
-        ''' Prepare configuration file from s2m options'''
+        """ Prepare configuration file from s2m options"""
         self.default_variables()
         self.add_block(jobname)
         if self.options.surfex:
@@ -334,8 +342,8 @@ class Vortex_conf_file(object):
     def default_variables(self):
 
         self.set_field("DEFAULT", 'xpid', self.options.xpid + '@' + os.getlogin())
-        self.set_field("DEFAULT", 'ntasks', self.options.ntasks )
-        self.set_field("DEFAULT", 'nprocs', self.options.ntasks )
+        self.set_field("DEFAULT", 'ntasks', self.options.ntasks)
+        self.set_field("DEFAULT", 'nprocs', self.options.ntasks)
         self.set_field("DEFAULT", 'openmp', 1)
         self.set_field("DEFAULT", 'geometry', self.options.vconf)
 
