@@ -6,7 +6,7 @@ Created on 9 oct. 2012
 '''
 
 import os
-
+import sys
 
 class SystemException(Exception):
 
@@ -33,9 +33,11 @@ def callSurfexOrDie(commande, moderun="NORMAL", nproc=1, errorcode=None):
     # Without the following lines, the worse segmentation faults you can ever imagine
     # Equivalent to bash command ulimit -s unlimited
     # Take care : some systems do not allow to force resource.RLIMIT_STACK at resource.RLIM_INFINITY, so it is safer to get the system hard limit first.
-    import resource
-    soft, hard = resource.getrlimit(resource.RLIMIT_STACK)  # @UnusedVariable
-    resource.setrlimit(resource.RLIMIT_STACK, (hard, hard))
+    # Moreover, this can not be done on MacOS
+    if sys.platform != 'darwin':
+        import resource
+        soft, hard = resource.getrlimit(resource.RLIMIT_STACK)  # @UnusedVariable
+        resource.setrlimit(resource.RLIMIT_STACK, (hard, hard))
 
     os.environ["OMP_NUM_THREADS"] = "1"
     if ("PGD" in commande or "PREP" in commande) and moderun in ["MPI", "MPIRUN"]:
