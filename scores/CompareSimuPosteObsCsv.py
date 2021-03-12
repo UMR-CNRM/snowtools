@@ -68,6 +68,10 @@ def parse_options(arguments):
                       action="store_true", dest="yearly", default=False,
                       help="Yearly plots")
 
+    parser.add_option("--decade",
+                      action="store_true", dest="decade", default=False,
+                      help="Decade plots")
+
     parser.add_option("--plot",
                       action="store_true", dest="plot", default=False,
                       help="Plot")
@@ -152,6 +156,50 @@ def yearlyplots(datebegin, dateend, dataObs):
         boxplots_yearly(list_years, yearly_nvalues, yearly_bias, list_colors = C.list_colors, list_labels = C.list_labels, label='bias', ylabel='Bias (cm)')
         boxplots_yearly(list_years, yearly_nvalues, yearly_rmse, list_colors = C.list_colors, list_labels = C.list_labels, label='rmse', ylabel='RMSE (cm)')
 
+def decadeplots(datebegin, dateend, dataObs):
+    datepro = datebegin
+
+    yearly_nvalues = []
+    yearly_bias = []
+    yearly_rmse = []
+    list_years = [1980, 1990, 2000, 2010]
+
+
+
+    for dec in list_years:
+        C = ComparisonSimObs(dataObs)
+        datepro = datetime.datetime(dec, 8, 1, 6)
+        list_pro = []
+        for d, dirsim in enumerate(options.dirsim):
+            list_pro.append([])
+        for y in range(10):
+            for d, dirsim in enumerate(options.dirsim):
+                dateprobegin, dateproend = get_file_period("PRO", dirsim, datepro, dateend)
+                i = len(list_pro[d])
+                proname = "PRO_part" + str(i) + "_simu" + str(d) + ".nc"
+                #os.rename("PRO.nc", proname)
+                list_pro[d].append(proname)
+            datepro = dateproend
+
+        for d, dirsim in enumerate(options.dirsim):
+            if options.plot or options.scores:
+                C.read_sim(list_pro[d])
+
+        if options.labels:
+            C.set_sim_labels(map(str.strip, options.labels.split(',')))
+
+        if options.scores:
+            C.scores()
+            yearly_nvalues.append(C.nvalues)
+            yearly_bias.append(C.bias)
+            yearly_rmse.append(C.rmse)
+
+        if options.plot:
+            C.plot()
+
+    if options.scores:
+        boxplots_yearly(list_years, yearly_nvalues, yearly_bias, list_colors = C.list_colors, list_labels = C.list_labels, label='bias', ylabel='Bias (cm)')
+        boxplots_yearly(list_years, yearly_nvalues, yearly_rmse, list_colors = C.list_colors, list_labels = C.list_labels, label='rmse', ylabel='RMSE (cm)')
 
 def boxplots_yearly(list_years, list_nvalues, list_scores, list_colors, list_labels, label, **kwargs):
 
@@ -503,7 +551,9 @@ if __name__ == "__main__":
     elif options.yearly:
         print ("yearly comparisons")
         yearlyplots(options.datebegin, options.dateend, dataObs)
-
+    elif options.decade:
+        print ("decade comparisons")
+        decadeplots(options.datebegin, options.dateend, dataObs)
     else:
         print ("full comparison")
         fullplots(options.datebegin, options.dateend, dataObs)
