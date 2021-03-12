@@ -67,7 +67,6 @@ class prosimu():
                 self.dataset = StandardCROCUS(path, openmode, format=ncformat)
                 self.path = path
                 self.mfile = 0
-
             else:
                 print("I am going to crash because there is a filename exception")
                 print(path)

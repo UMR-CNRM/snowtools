@@ -8,6 +8,24 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import cartopy.crs as ccrs
 
+class test_medianfile():
+    def __init__(self, outputfile, outputreffile):
+        self.ftest = Dataset(outputfile)
+        self.fref = Dataset(outputreffile)
+
+    def test(self):
+        snowcomp = self.ftest.variables['SD_1DY_ISBA'][:, :]
+        snowref = self.fref.variables['SD_1DY_ISBA'][:, :]
+        #points = self.fref.variables['']
+
+        diff = snowcomp - snowref
+        for time in range(7):
+            print(time, snowcomp[time,:].min(), snowcomp[time,:].max())
+            print(time, snowref[time,:].min(), snowref[time,:].max())
+            print(time, diff[time,:].min(), diff[time,:].max())
+            plt.plot(diff[time,:])
+            plt.show()
+
 class output_test():
     def __init__(self, outputfile, outputreffile, lat_bnds, lon_bnds, figname, flip=True):
         self.ftot = Dataset(outputfile)
@@ -143,6 +161,12 @@ class output_test():
                   np.max(snow_region[i,:,:]), np.max(snowcomp[i,:,:]))
 
 
+test_median = test_medianfile("/home/radanovicss/Hauteur_neige_median/Out_Belenos/postproc_2020092706_2020092806.nc",
+                              "/home/radanovicss/Hauteur_neige_median/Out_Belenos/cdo_median_numpy_2020092706_2020092806.nc")
+test_median.test()
+# test_mb000 = test_medianfile("/home/radanovicss/Hauteur_neige_median/Out_Belenos/pro_2020092706_2020092806.nc",
+#                              "/home/radanovicss/Hauteur_neige_median/PRO_2020092706_2020092806_mb000.nc")
+# test_mb000.test()
 
 # def test_pyr():
 
@@ -159,13 +183,13 @@ class output_test():
 #                        flip=False)
 # alp_test.snowtest()
 # alp_test.test()
-pyr_test = output_test("dev_multiin_singleout_test_single_in_single_out_pyr.nc",
-                       "output_mulitin_zeroslope_input_pyr.nc",
-                       lat_bnds=[42.07, 43.18], lon_bnds = [-1.63, 2.71],
-                       figname='diff_test_pyr_to_pyr_dev_multiin_singleout_pyr.png',
-                       flip=False)
-pyr_test.test()
-pyr_test.snowtest()
+# pyr_test = output_test("dev_multiin_singleout_test_single_in_single_out_pyr.nc",
+#                        "output_mulitin_zeroslope_input_pyr.nc",
+#                        lat_bnds=[42.07, 43.18], lon_bnds = [-1.63, 2.71],
+#                        figname='diff_test_pyr_to_pyr_dev_multiin_singleout_pyr.png',
+#                        flip=False)
+# pyr_test.test()
+# pyr_test.snowtest()
 
 # corse_test = output_test("test_v2_multi_in_single_out_alpha.nc",
 #                          "output_mulitin_zeroslope_input_cor.nc",
