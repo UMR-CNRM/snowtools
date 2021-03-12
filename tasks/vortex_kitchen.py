@@ -60,7 +60,8 @@ class vortex_kitchen(object):
     def define_ntasks(self, machine):
         if not self.options.ntasks:
             if 'taranis' in machine or 'belenos' in machine:
-                self.options.ntasks = 80  # optimum constaté pour la réanalyse Alpes avec léger dépeuplement parmi les 128 coeurs.
+                self.options.ntasks = 80
+                # optimum constaté pour la réanalyse Alpes avec léger dépeuplement parmi les 128 coeurs.
 
     def execute(self):
 
@@ -202,7 +203,8 @@ class vortex_kitchen(object):
 
     def mkjob_command(self):
 
-        return "../vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + " profile=" + self.profile + " jobassistant=cen " + self.period +\
+        return "../vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + " profile=" + \
+               self.profile + " jobassistant=cen " + self.period +\
             " time=" + self.walltime() + " nnodes=" + str(self.nnodes) + self.confcomplement
 
     def mkjob_list_commands(self):

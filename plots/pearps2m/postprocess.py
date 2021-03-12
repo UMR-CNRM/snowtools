@@ -1,11 +1,13 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 6 déc. 2018
 
 @author: lafaysse
-'''
+"""
+
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 # The following lines are necessary with a French environment and python 2 to avoid a bronx crash when calling vortex
 # on months with an accent (Février, Décembre)
@@ -30,7 +32,10 @@ matplotlib.use('Agg')
 from collections import Counter, defaultdict
 
 from bronx.stdtypes.date import today
-from tasks.oper.get_oper_files import S2MExtractor
+try:
+    from tasks.oper.get_oper_files import S2MExtractor
+except ImportError:
+    from tasks.get_oper_files import S2MExtractor
 from utils.prosimu import prosimu
 from utils.dates import check_and_convert_date, pretty_date
 from plots.temporal.chrono import spaghettis_with_det, spaghettis
@@ -59,7 +64,8 @@ def parse_options(arguments):
                       help="Last year of extraction")
 
     parser.add_option("-o",
-                      action="store", type="string", dest="diroutput", default="/cnrm/cen/users/NO_SAVE/lafaysse/PEARPS2M",
+                      action="store", type="string", dest="diroutput",
+                      default="/cnrm/cen/users/NO_SAVE/lafaysse/PEARPS2M",
                       help="Output directory")
 
     (options, args) = parser.parse_args(arguments)  # @UnusedVariable
@@ -76,7 +82,8 @@ class config(object):
     # alternate_xpid = ["oper"]
 
     list_geometry = ['alp', 'pyr', 'cor', 'postes']
-    alternate_list_geometry = [['alp', 'pyr', 'cor', 'postes'], ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']]
+    alternate_list_geometry = [['alp', 'pyr', 'cor', 'postes'],
+                               ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']]
     # Development chain
     # xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
     # list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
@@ -140,7 +147,7 @@ class Ensemble(object):
 
         self.ensemble[varname] = np.empty([self.nech, self.npoints, self.nmembers])
         for m, member in enumerate(self.simufiles):
-            print ("read " + varname + " for member" + str(m))
+            print("read " + varname + " for member" + str(m))
             import datetime
             before = datetime.datetime.today()
 
@@ -178,14 +185,16 @@ class Ensemble(object):
         condition = (self.ensemble[varname] > seuilinf) & (self.ensemble[varname] < seuilsup)
         probability = np.sum(condition, axis=2) / (1. * self.nmembers)
 
-        return np.where(np.isnan(self.ensemble[varname][:, :, 0]), np.nan, probability)  # On renvoit des nan quand ensemble n'est pas défini
+        return np.where(np.isnan(self.ensemble[varname][:, :, 0]), np.nan, probability)
+        # On renvoit des nan quand ensemble n'est pas défini
 
     def quantile(self, varname, level):
 
         if varname not in self.ensemble.keys():
             self.read(varname)
 
-        quantile = np.where(np.isnan(self.ensemble[varname][:, :, 0]), np.nan, np.percentile(self.ensemble[varname], level, axis=2))
+        quantile = np.where(np.isnan(self.ensemble[varname][:, :, 0]), np.nan,
+                            np.percentile(self.ensemble[varname], level, axis=2))
         return quantile
 
     def mean(self, varname):
@@ -267,9 +276,9 @@ class _EnsembleMassif(Ensemble):
         return filename
 
     def build_title(self, massif, alti):
-        title = unicode(self.InfoMassifs.getMassifName(massif).decode("utf-8"))
+        title = str(self.InfoMassifs.getMassifName(massif).decode("utf-8"))
         if alti:
-            title += u" " + unicode(int(alti)) + u" m"
+            title += u" " + str(int(alti)) + u" m"
         return title
 
 
@@ -282,9 +291,11 @@ class EnsembleFlatMassif(_EnsembleMassif):
 class EnsembleNorthSouthMassif(_EnsembleMassif):
 
     def select_points(self):
-        # return np.sort(np.concatenate((self.simufiles[0].get_points(aspect = 0, slope = 40), self.simufiles[0].get_points(aspect = 180, slope = 40))))
+        # return np.sort(np.concatenate((self.simufiles[0].get_points(aspect = 0, slope = 40),
+        # self.simufiles[0].get_points(aspect = 180, slope = 40))))
         # TAKE CARE : It is extremely more efficient to read regular sections of the netcdf files
-        return (self.simufiles[0].get_points(aspect = 0, slope = 40), self.simufiles[0].get_points(aspect = 180, slope = 40))
+        return (self.simufiles[0].get_points(aspect = 0, slope = 40),
+                self.simufiles[0].get_points(aspect = 180, slope = 40))
 
 
 class EnsembleStation(Ensemble):
@@ -308,7 +319,7 @@ class EnsembleStation(Ensemble):
         return '%08d' % station
 
     def build_title(self, station, alti):
-        return unicode(self.InfoMassifs.nameposte(station).decode("utf-8")) + u" " + unicode(int(alti)) + u" m"
+        return str(self.InfoMassifs.nameposte(station).decode("utf-8")) + u" " + str(int(alti)) + u" m"
 
 
 class EnsembleDiags(Ensemble):
@@ -328,7 +339,7 @@ class EnsembleDiags(Ensemble):
         for var in list_var:
             self.quantiles[var] = []
             for quantile in list_quantiles:
-                print ("Compute quantile " + str(quantile) + " for variable " + var)
+                print("Compute quantile " + str(quantile) + " for variable " + var)
                 self.quantiles[var].append(self.quantile(var, quantile))
 
     def close(self):
@@ -612,20 +623,20 @@ class EnsembleOperDiagsStations(EnsembleOperDiags, EnsembleStation):
 
 class EnsemblePostproc(_EnsembleMassif):
 
-    def __init__(self, ensemble, variables, inputfiles, outfile):
+    def __init__(self, ensemble, variables, inputfiles, datebegin, dateend):
         print(inputfiles)
         super(EnsemblePostproc, self).__init__()
         self.ensemble = ensemble
         self.variables = variables
         self.ensemble.open(inputfiles)
-        self.outfile = outfile
+        self.outfile = 'PRO_post_{0}_{1}.nc'.format(datebegin.ymdh, dateend.ymdh)
         self.standardvars = ['time', 'ZS', 'aspect', 'slope', 'massif_num', 'longitude', 'latitude']
 
     def create_outfile(self):
         # if not os.path.isdir(self.outfile):
         # print(self.outfile)
         #     raise DirNameException(self.outfile)
-        self.outdataset = prosimu(self.outfile.localpath(), ncformat='NETCDF4_CLASSIC', openmode='w')
+        self.outdataset = prosimu(self.outfile, ncformat='NETCDF4_CLASSIC', openmode='w')
         # self.outdataset = netCDF4.Dataset(self.outfile.localpath(), openmode="wb", format='NETCDF4_CLASSIC')
         #os.system('touch("PRO_post_2020092706_2020092806.nc")')
         #self.outdataset = netCDF4.Dataset('PRO_post_2020092706_2020092806.nc', openmode="w", format='NETCDF4_CLASSIC')
@@ -642,12 +653,14 @@ class EnsemblePostproc(_EnsembleMassif):
         # copy standard variables
         for name, variable in self.ensemble.simufiles[0].dataset.variables.items():
             if name in self.standardvars:
-                x = self.outdataset.dataset.createVariable(name, variable.datatype, variable.dimensions)
+                fillval = self.ensemble.simufiles[0].getfillvalue(name)
+                x = self.outdataset.dataset.createVariable(name, variable.datatype, variable.dimensions,
+                                                           fill_value=fillval)
                 # copy variable attributes without _FillValue since this causes an error
                 for att in self.ensemble.simufiles[0].listattr(name):
                     if att != '_FillValue':
                         print(self.ensemble.simufiles[0].getattr(name, att))
-                        self.outdataset.dataset[name].setncatts({att:self.ensemble.simufiles[0].getattr(name, att)})
+                        self.outdataset.dataset[name].setncatts({att: self.ensemble.simufiles[0].getattr(name, att)})
                 self.outdataset.dataset[name][:] = self.ensemble.simufiles[0].dataset[name][:]
                 print('data copied')
         print(self.outdataset.listvar())
@@ -666,7 +679,9 @@ class EnsemblePostproc(_EnsembleMassif):
         for name, variable in self.ensemble.simufiles[0].dataset.variables.items():
             if name in self.variables:
                 median = self.ensemble.quantile(name, 50)
-                x = self.outdataset.dataset.createVariable(name, variable.datatype, variable.dimensions)
+                fillval = self.ensemble.simufiles[0].getfillvalue(name)
+                x = self.outdataset.dataset.createVariable(name, variable.datatype, variable.dimensions,
+                                                           fill_value=fillval)
                 # copy variable attributes all at once via dictionary, but without _FillValue
                 attdict = self.ensemble.simufiles[0].dataset[name].__dict__
                 attdict.pop('_FillValue', None)
