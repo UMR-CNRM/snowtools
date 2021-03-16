@@ -663,7 +663,6 @@ class Four_Seasons_Task(S2MTaskMixIn, Task):
             tb03 = toolbox.output(
                 role        = 'Postproc_output',
                 intent      = 'out',
-                promised    = True,
                 local       = 'PRO_post_[datebegin:ymdh]_[dateend:ymdh].nc',
                 experiment  = self.conf.xpid_postpr,
                 block       = 'postproc',
