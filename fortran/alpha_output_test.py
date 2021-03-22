@@ -161,9 +161,9 @@ class output_test():
                   np.max(snow_region[i,:,:]), np.max(snowcomp[i,:,:]))
 
 
-test_median = test_medianfile("/home/radanovicss/Hauteur_neige_median/Out_Belenos/postproc_2020092706_2020092806.nc",
-                              "/home/radanovicss/Hauteur_neige_median/Out_Belenos/cdo_median_numpy_2020092706_2020092806.nc")
-test_median.test()
+# test_median = test_medianfile("/home/radanovicss/Hauteur_neige_median/Out_Belenos/postproc_2020092706_2020092806.nc",
+#                               "/home/radanovicss/Hauteur_neige_median/Out_Belenos/cdo_median_numpy_2020092706_2020092806.nc")
+# test_median.test()
 # test_mb000 = test_medianfile("/home/radanovicss/Hauteur_neige_median/Out_Belenos/pro_2020092706_2020092806.nc",
 #                              "/home/radanovicss/Hauteur_neige_median/PRO_2020092706_2020092806_mb000.nc")
 # test_mb000.test()
@@ -171,18 +171,18 @@ test_median.test()
 # def test_pyr():
 
     # ALPS
-  #  lat_bnds, lon_bnds = [43.909, 46.42], [5.19, 7.77]
+# lat_bnds, lon_bnds = [43.909, 46.42], [5.19, 7.77]
 # PYRENNEES
 # lat_bnds, lon_bnds = [42.07, 43.18], [-1.63, 2.71]
 # CORSE
 # lat_bnds, lon_bnds = [41.69, 42.56], [8.779, 9.279]
-# alp_test = output_test("dev_multiin_singleout_test_single_in_single_out_alps.nc",
-#                        "output_mulitin_zeroslope_input_alps.nc",
-#                        lat_bnds=[43.909, 46.42], lon_bnds = [5.19, 7.77],
-#                        figname='diff_test_alps_to_alps_dev_multiin_singleout_alps.png',
-#                        flip=False)
-# alp_test.snowtest()
-# alp_test.test()
+alp_test = output_test("test_ignore_missval_for_interpolation_alps.nc",
+                       "output_original_version_zeroslope_input_alps.nc",
+                       lat_bnds=[43.909, 46.42], lon_bnds = [5.19, 7.77],
+                       figname='diff_test_ignore_missval_alps.png',
+                       flip=False)
+alp_test.snowtest()
+alp_test.test()
 # pyr_test = output_test("dev_multiin_singleout_test_single_in_single_out_pyr.nc",
 #                        "output_mulitin_zeroslope_input_pyr.nc",
 #                        lat_bnds=[42.07, 43.18], lon_bnds = [-1.63, 2.71],

@@ -1,1 +1,1 @@
-Makefile_pc
+Makefile_pc_mag6

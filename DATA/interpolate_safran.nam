@@ -1,9 +1,9 @@
 &NAM_SWITCHES_INT
     LMULTIINPUT = .FALSE.,
-    LMULTIOUTPUT = .TRUE.
+    LMULTIOUTPUT = .FALSE.
 /
 &NAM_FILENAMES_SINGLE_IN
-    HFILEIN = "PRO_2020092706_2020092806_zeroslope_cor.nc",
+    HFILEIN = "PRO_2020092706_2020092806_zeroslope_alps.nc",
 /
 &NAM_MULTIIN_SETTING
     NNUMBER_INPUT_FILES = 3
@@ -15,8 +15,8 @@
     NNUMBER_OUTPUT_GRIDS = 3
 /
 &NAM_FILENAMES_SINGLE_OUT
-    HFILEOUT = "dev_multiin_singleout_test_single_in_single_out_cor.nc" !'test_v2_multi_in_single_out_alpha.nc'
-    HGRIDIN = "CORSE.nc" !"PYRENNES.nc" !"ALPS.nc" !'alpha_massifs.nc' !"CORSE_1D.nc" !'alpha_massifs_1d.nc' !
+    HFILEOUT = "test_ignore_missval_for_interpolation_alps.nc" !'test_v2_multi_in_single_out_alpha.nc'
+    HGRIDIN = "ALPS.nc" ! "CORSE.nc" !"PYRENNES.nc" !'alpha_massifs.nc' !"CORSE_1D.nc" !'alpha_massifs_1d.nc' !
 /
 &NAM_FILENAMES_MULTI_OUT
     HFILESOUT = "dev_multiin_singleout_test_multi_in_multi_out_cor.nc", "dev_multiin_singleout_test_multi_in_multi_out_alps.nc", "dev_multiin_singleout_test_multi_in_multi_out_pyr.nc"
