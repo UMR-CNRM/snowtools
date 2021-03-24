@@ -158,7 +158,7 @@ class infomassifs():
         if not (os.path.isfile(metadata) or os.path.islink(metadata)):
             try:
                 import importlib.resources # Python > 3.7
-                metadata = importlib.resources.open_text('DATA', 'METADATA.txt', encoding='utf-8', errors='strict')
+                metadata = importlib.resources.open_text('DATA', 'METADATA.xml', encoding='utf-8', errors='strict')
             except:
                 raise FileNameException(metadata)
 
@@ -355,7 +355,7 @@ class infomassifs():
             if str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip() == '%08d' % int(num_poste):
                 name = poste.getElementsByTagName("name")[0].childNodes[0].data
                 break
-        return name.encode("utf-8")
+        return name  # type unicode in python2
 
     def maskposte(self, num_poste):
         for poste in self.caracLoc.documentElement.getElementsByTagName("Site"):
@@ -438,7 +438,7 @@ class infomassifs():
                 massifName = massif.getElementsByTagName("name")[0].childNodes[0].data
                 break
 
-        return massifName.encode("utf-8")
+        return massifName  # in python2 this is type unicode
 
     def getAllMassifLatLon(self, tagname="Massif"):
         self.dicMassifLatLon = {}

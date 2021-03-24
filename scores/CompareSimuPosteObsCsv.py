@@ -107,7 +107,8 @@ def check_and_convert_options(options, vortex=False):
 
 def build_title(station):
     lati, longi, alti = IM.infoposte(station)  # @UnusedVariable
-    return unicode(IM.nameposte(station).decode("utf-8")) + u" " + unicode(int(alti)) + u" m"
+    # nameposte provides unicode and matplotlib expects unicode
+    return IM.nameposte(station) + u" %d m" % int(alti)
 
 
 def build_title_with_scores(station, bias, rmse):

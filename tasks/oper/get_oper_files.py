@@ -122,7 +122,7 @@ class S2MExtractor(S2MTaskMixIn):
                 tb01.extend(toolbox.input(
                     alternate      = 'Forcing',
                     vapp           = 's2m',
-                    vconf          = '[geometry::area]',
+                    vconf          = '[geometry::iganame]',
                     local          = '[geometry::iganame]/[date:ymdh]/mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = alternate_xpid,
                     block          = 'meteo',
@@ -143,11 +143,11 @@ class S2MExtractor(S2MTaskMixIn):
         return self.get_std(tb01)
 
     def get_snow(self):
-
+        import cen
         tb02 = toolbox.input(
             role           = 'pro',
             vapp           = 's2m',
-            vconf          = '[geometry::area]',
+            vconf          = '[geometry::iganame]',
             local          = '[geometry::iganame]/[date:ymdh]/mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment     = self.conf.xpid,
             block          = 'pro',

@@ -32,10 +32,9 @@ matplotlib.use('Agg')
 from collections import Counter, defaultdict
 
 from bronx.stdtypes.date import today
-try:
-    from tasks.oper.get_oper_files import S2MExtractor
-except ImportError:
-    from tasks.get_oper_files import S2MExtractor
+
+from tasks.oper.get_oper_files import S2MExtractor
+
 from utils.prosimu import prosimu
 from utils.dates import check_and_convert_date, pretty_date
 from plots.temporal.chrono import spaghettis_with_det, spaghettis
@@ -77,13 +76,13 @@ class config(object):
     previ = True  # False for analysis, True for forecast
 
     # Operational chain
-    xpid = "mirr"
-    alternate_xpid = ["oper", "OPER@lafaysse"]
+    xpid = "oper"
+    alternate_xpid = ["OPER@lafaysse"]
     # alternate_xpid = ["oper"]
 
-    list_geometry = ['alp', 'pyr', 'cor', 'postes']
-    alternate_list_geometry = [['alp', 'pyr', 'cor', 'postes'],
-                               ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']]
+    list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
+    # list_geometry = ['alp', 'pyr', 'cor', 'postes']
+    alternate_list_geometry = [['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']]
     # Development chain
     # xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
     # list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
@@ -276,10 +275,11 @@ class _EnsembleMassif(Ensemble):
         return filename
 
     def build_title(self, massif, alti):
-        title = str(self.InfoMassifs.getMassifName(massif).decode("utf-8"))
+        title = self.InfoMassifs.getMassifName(massif)  # type unicode
+        print (type(title))
         if alti:
-            title += u" " + str(int(alti)) + u" m"
-        return title
+            title += u" %d m" % int(alti)
+        return title  # matplotlib needs unicode
 
 
 class EnsembleFlatMassif(_EnsembleMassif):
@@ -319,7 +319,9 @@ class EnsembleStation(Ensemble):
         return '%08d' % station
 
     def build_title(self, station, alti):
-        return str(self.InfoMassifs.nameposte(station).decode("utf-8")) + u" " + str(int(alti)) + u" m"
+        # nameposte gives unicode
+        # matplotlib expects unicode
+        return self.InfoMassifs.nameposte(station) + u" %d m" % int(alti)
 
 
 class EnsembleDiags(Ensemble):
