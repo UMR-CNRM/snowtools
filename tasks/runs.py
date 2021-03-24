@@ -358,7 +358,7 @@ class griddedrun(surfexrun):
             if "DIRDATAPGD" in list(os.environ.keys()):
                 dirdatapgd = os.environ["DIRDATAPGD"]
             else:
-                dirdatapgd = "/manto/lafaysse/FILES_PGD"
+                dirdatapgd = "/rd/cenfic2/manto/lafaysse/FILES_PGD"
 
             print(os.listdir(dirdatapgd))
             for fic in os.listdir(dirdatapgd):

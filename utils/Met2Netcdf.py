@@ -34,6 +34,9 @@ def recup_donnees_site(nom_site):
     Tab_point[7] = int(nom_site)
     return Tab_point, name
 
+def path_safran():
+    return "/rd/cenfic2/era40/vortex/s2m/postes/reanalysis/meteo"
+
 def message_accueil(option_bool, nom_site):
     if option_bool:
         print('\nCompletion des donnees MET avec Pression et Direction du vent du site ' + str(nom_site) +'\n')
@@ -41,7 +44,7 @@ def message_accueil(option_bool, nom_site):
     print('# A verifier/modifier dans le code:')
     print('# - chemin des MET: /mesure_data/col_de_porte/met\n')
     print('# - format des MET: MET_YYYY_YYYY+1_fmt (ex MET_2000_2001_fmt)\n')
-    print('# - chemin des reanalyses SAFRAN: /era40/vortex/s2m/postes/reanalysis/meteo\n')
+    print('# - chemin des reanalyses SAFRAN: ' + path_safran() + '\n')
     print('# - etat de la base de donnees du Col de Porte: cdp60mn_1819 puis cdp60mn a partir du 01082019\n')
     print('# ! la base CdP change a priori tous les ans ! => modifier la seconde ligne de la fonction recup_cdp (vers ligne 165-170)')
     print('# Si vous faites des modifs, penser aussi à changer ce message (fonction message_accueil)')
@@ -432,7 +435,7 @@ def open_met_file_and_create_tab(filename, option_recup, date_entree_debut, date
     return Liste_date, Tableau_retour_time_nbpoint
 
 def recup_safran(date_1,date_2,pas, site):
-    path = '/era40/vortex/s2m/postes/reanalysis/meteo/' # EN DUR
+    path = path_safran()  # EN DUR
 
     Liste_date = [date_1 + datetime.timedelta(seconds=x) for x in range(0, int((date_2 - date_1).total_seconds()),pas)]
     date_b, date_e = get_file_period('FORCING', path, date_1, date_2)
@@ -465,7 +468,7 @@ def recup_safran(date_1,date_2,pas, site):
     return Liste_date, Tableau_retour_time_nbpoint
 
 def recup_last_value_safran(date,site,date_1):
-    path = '/era40/vortex/s2m/postes/reanalysis/meteo/'
+    path = path_safran()
     date_b, date_e = get_file_period('FORCING', path, date_1,date)
     forcing = path +'/FORCING_' + date_b.strftime('%Y%m%d%H') + '_' + date_e.strftime('%Y%m%d%H') + '.nc'
     fic = prosimu(forcing)
