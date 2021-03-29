@@ -7,6 +7,9 @@ from netCDF4 import Dataset
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import cartopy.crs as ccrs
+import matplotlib
+print(matplotlib.__version__)
+
 
 class test_medianfile():
     def __init__(self, outputfile, outputreffile):
@@ -48,10 +51,10 @@ class test_pro():
         timesmall = self.smallfile.variables['time'][:]
         print(snowsmall.shape)
         print(snowbig.shape)
-        snowtrans = np.transpose(snowbig_sel)
-        snowtrans = snowtrans.reshape(snowsmall.shape)
+        # snowtrans = np.transpose(snowbig_sel)
+        # snowtrans = snowtrans.reshape(snowsmall.shape)
         # snowtrans = snowtrans[:, ::17]
-        diff = snowsmall - snowtrans
+        diff = snowsmall - snowbig_sel
         for time in range(7):
             print(time, snowsmall[time, :].min(), snowsmall[time, :].max())
             print(time, snowbig_sel[time, :].min(), snowbig_sel[time, :].max())
@@ -137,6 +140,7 @@ class output_test():
         if self.doubleflip:
             diff = np.flipud(diff)
             massif_diff = np.flipud(massif_diff)
+            compZS = np.flipud(compZS)
 
         print(massif_diff.min(), massif_diff.max())
         print(len(diff[diff!=0]))
@@ -159,17 +163,20 @@ class output_test():
         # #
         # plt.savefig('snow_test_alps_to_alpha.png')
         lim = max(diff.max(), abs(diff.min()))
+        print(diff.max(), diff.min())
         ax = plt.axes(projection=ccrs.PlateCarree())
-        plt.pcolormesh(complons, complats, compZS, transform=ccrs.PlateCarree(), cmap=cm.terrain) #gist_earth
+        # X,Y = np.meshgrid(complons, complats)
+        # print(complons.shape)
+        plt.pcolormesh(complons, complats, compZS, transform=ccrs.PlateCarree(), cmap=cm.terrain) #gist_earth ,
         plt.pcolormesh(complons, complats, diff, vmin=-lim, vmax=lim,
                      transform=ccrs.PlateCarree(), cmap=cm.seismic)
 
         ax.gridlines(draw_labels=True)
         m = plt.cm.ScalarMappable(cmap=cm.seismic)
         m.set_array(diff)
-
-        m.set_clim(-lim, lim)
-        m.cmap.set_under(color='w', alpha=0)
+        #
+        # m.set_clim(-lim, lim)
+        # m.cmap.set_under(color='w', alpha=0)
         plt.colorbar(m, orientation="horizontal")
         #
         plt.savefig(self.figname)
@@ -238,9 +245,9 @@ class output_test():
 # test_mb000 = test_medianfile("/home/radanovicss/Hauteur_neige_median/Out_Belenos/pro_2020092706_2020092806.nc",
 #                              "/home/radanovicss/Hauteur_neige_median/PRO_2020092706_2020092806_mb000.nc")
 # test_mb000.test()
-test_input = test_pro("PRO_2020092706_2020092806_mb035_alps.nc",
-                      "PRO_2020092706_2020092806_mb035_zeroslope_mslab_alps.nc")
-test_input.test()
+# test_input = test_pro("PRO_2020092706_2020092806_mb035_alps.nc",
+#                       "PRO_2020092706_2020092806_mb035_zeroslope_alps.nc")
+# test_input.test()
 
 # def test_pyr():
 
@@ -250,13 +257,13 @@ test_input.test()
 # lat_bnds, lon_bnds = [42.07, 43.18], [-1.63, 2.71]
 # CORSE
 # lat_bnds, lon_bnds = [41.69, 42.56], [8.779, 9.279]
-# alp_test = output_test("test_ignore_nonzeroslopes_allslopes_alps.nc",
-#                        "test_ignore_nonzeroslopes_zeroslopes_alps.nc",
-#                        lat_bnds=[43.909, 46.42], lon_bnds = [5.19, 7.77],
-#                        figname='diff_test_ignore_nonzeroslopes_alps.png',
-#                        flip=False, doubleflip=True)
+alp_test = output_test("test_ignore_nonzeroslopes_allslopes_alps.nc",
+                       "test_ignore_nonzeroslopes_zeroslopes_alps.nc",
+                       lat_bnds=[43.909, 46.42], lon_bnds = [5.19, 7.77],
+                       figname='diff_test_ignore_nonzeroslopes_alps.png',
+                       flip=False, doubleflip=True)
 # alp_test.snowtest()
-# alp_test.test()
+alp_test.test()
 # alp_test.slope_visu('resolved_slopes_alps.png')
 # pyr_test = output_test("dev_multiin_singleout_test_single_in_single_out_pyr.nc",
 #                        "output_mulitin_zeroslope_input_pyr.nc",
