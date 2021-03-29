@@ -1,0 +1,56 @@
+export VER_MPI=MPIAUTO
+export ARCH=LXgfortran
+.SUFFIXES:
+
+ifeq "$(VER_MPI)" "NOMPI"
+F90= gfortran -pg
+CC = gcc
+EXEC1 =interpol_NOMPI
+else
+F90 = mpif90
+CC  = mpicc
+EXEC1 =interpol_MPIAUTO
+endif
+
+OPT = -O2 -g 
+CFLAGS = -c  
+LINK = interpol
+
+
+##############################################################################
+#links interne libraries
+
+#NETCDF = /opt/netcdf4/netcdf-c-4.4.1.1
+#NETCDF_FORTRAN = /opt/netcdf4/netcdf-fortran-4.4.4
+#HDF = /opt/netcdf4/hdf5-1.8.19
+
+#LDFLAGS=-I${NETCDF_FORTRAN}/include -Wl,-rpath,${NETCDF_FORTRAN}/lib:${NETCDF}/lib:${HDF}/lib -L${NETCDF_FORTRAN}/lib -lnetcdff -L${NETCDF}/lib -lnetcdf -L${HDF}/lib -lhdf5_hl -lhdf5 -fopenmp -Wl,-warn-once -ldl -lrt
+LDFLAGS=-I${SRCSURFEX}/LIB/netcdf4/netcdf-fortran-4.4.4-${ARCH}-${VER_MPI}/include -L${SRCSURFEX}/LIB/grib_api-1.17.0-Source-${ARCH}/lib -L${SRCSURFEX}/LIB/grib_api-1.17.0-Source-${ARCH}/lib64 -lgrib_api_f90 -lgrib_api -Wl,-rpath,${SRCSURFEX}/LIB/grib_api-1.17.0-Source-${ARCH}/lib -Wl,-rpath,${SRCSURFEX}/LIB/netcdf4/netcdf-fortran-4.4.4-${ARCH}-${VER_MPI}/lib:${SRCSURFEX}/LIB/netcdf4/netcdf-4.4.1-${ARCH}-${VER_MPI}/lib:${SRCSURFEX}/LIB/netcdf4/hdf5-1.8.17-${ARCH}-${VER_MPI}/lib:${SRCSURFEX}/LIB/netcdf4/szip-2.1-${ARCH}-${VER_MPI}/lib:${SRCSURFEX}/LIB/netcdf4/zlib-1.2.8-${ARCH}-${VER_MPI}/lib:${SRCSURFEX}/LIB/netcdf4/curl-7.50.1-${ARCH}-${VER_MPI}/lib -L${SRCSURFEX}/LIB/netcdf4/netcdf-fortran-4.4.4-${ARCH}-${VER_MPI}/lib -lnetcdff -L${SRCSURFEX}/LIB/netcdf4/netcdf-4.4.1-${ARCH}-${VER_MPI}/lib -lnetcdf -L${SRCSURFEX}/LIB/netcdf4/hdf5-1.8.17-${ARCH}-${VER_MPI}/lib -lhdf5_hl -lhdf5 -L${SRCSURFEX}/LIB/netcdf4/szip-2.1-${ARCH}-${VER_MPI}/lib -lsz -L${SRCSURFEX}/LIB/netcdf4/zlib-1.2.8-${ARCH}-${VER_MPI}/lib -lz -L${SRCSURFEX}/LIB/netcdf4/curl-7.50.1-${ARCH}-${VER_MPI}/lib -lcurl -fopenmp -Wl,-warn-once -ldl -lrt
+
+SOURCES = interpolate_safran.f90 modd_interpol_safran.f90 modn_interpol_safran.f90
+
+all:  $(EXEC1)
+
+modd_interpol_safran.o : modd_interpol_safran.f90
+	$(F90) $(CFLAGS) $(OPT) $< -o $@ $(LDFLAGS)
+interpolate_safran.o : interpolate_safran.f90
+	$(F90) $(CFLAGS) $(OPT) $< -o $@ $(LDFLAGS)
+
+$(EXEC1): $(subst .f90,.o,$(SOURCES)) #interpolate_safran.o
+	$(F90) $(OPT) $^ -o $@ $(LDFLAGS)
+	ln -fs $(EXEC1) $(LINK)
+
+clean:
+	rm -f *.o *.mod *.MOD
+	rm -f *~
+
+mrproper: clean
+	rm -f $(EXEC1)
+
+%.o : %.f90
+	$(F90) $(CFLAGS) $(OPT) $< -o $@ $(LDFLAGS)
+	@touch $@
+
+
+interpolate_safran.o : modn_interpol_safran.o
+modn_interpol_safran.o : modd_interpol_safran.o
