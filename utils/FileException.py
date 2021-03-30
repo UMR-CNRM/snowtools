@@ -174,7 +174,7 @@ class UnknownGridTypeException(Exception):
 
 
 class VarDimensionException(Exception):
-    def __init__(self, varname, var, expectedrank = 1)
+    def __init__(self, varname, var, expectedrank = 1):
         self.varname = varname
         self.var = var
         self.expectedrank = expectedrank
