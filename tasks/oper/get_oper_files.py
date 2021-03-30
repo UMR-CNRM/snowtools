@@ -30,8 +30,8 @@ class config(object):
     rundate = Date(2018, 10, 26, 3)    # Run date can be at 3TU, 6TU, 9TU
     previ = False  # False for analysis, True for forecast
     xpid = "oper"
-    list_geometry = ['alp', 'pyr', 'cor', 'postes']  # List of extracted geometries
-
+    list_geometry = ['alp_allslopes']
+    list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']  # converted later with iganame property
     list_members = footprints.util.rangex(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
 
 
