@@ -71,9 +71,18 @@ class temporalplot(Mplfigure):
         duration = timeOut[-1] - timeOut[0]
         ndays = duration.days
 
-        if ndays <= 5:
+        if ndays <= 2:
+            self.plot.xaxis.set_major_locator(HourLocator([0, 6, 12, 18]))
+            formatDate = '%d/%m\n%Hh'
+        if ndays <= 4:
             self.plot.xaxis.set_major_locator(HourLocator([0, 12]))
-            formatDate = '%d/%m %Hh'
+            formatDate = '%d/%m\n%Hh'
+        elif ndays <= 10:
+            self.plot.xaxis.set_major_locator(DayLocator(range(1, 31, 1)))
+            formatDate = '%d %b\n%Y'
+        elif ndays <= 30:
+            self.plot.xaxis.set_major_locator(DayLocator(range(1, 31, 3)))
+            formatDate = '%d %b\n%Y'
         elif ndays <= 90:
             self.plot.xaxis.set_major_locator(DayLocator([1, 11, 21]))
             formatDate = '%d %b\n%Y'
