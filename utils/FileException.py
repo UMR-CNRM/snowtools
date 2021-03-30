@@ -173,6 +173,20 @@ class UnknownGridTypeException(Exception):
         return tuple(red)
 
 
+class VarDimensionException(Exception):
+    def __init__(self, varname, var, expectedrank = 1)
+        self.varname = varname
+        self.var = var
+        self.expectedrank = expectedrank
+
+    def __str__(self):
+        return "Variable " + self.varname + " has rank " + str(len(self.var.shape)) + " instead of " + str(self.expectedrank)
+
+    def __reduce__(self):
+        red = list(super(VarDimensionException, self).__reduce__())
+        red[1] = (self.varname, self.var, self.expectedrank)
+        return tuple(red)
+
 class MassifException(Exception):
     def __init__(self, massifrequest, massifavail):
         self.massifrequest = massifrequest

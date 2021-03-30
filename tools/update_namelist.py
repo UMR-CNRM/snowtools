@@ -12,7 +12,7 @@ import six
 # Snowtools modules
 from utils.prosimu import prosimu
 from utils.dates import checkdateafter
-from utils.FileException import FileNameException
+from utils.FileException import FileNameException, VarDimensionException
 
 from bronx.datagrip.namelist import NamelistParser
 
@@ -93,6 +93,12 @@ def update_loc(NamelistObject, forcing):
         latitudes1d = forc.read("LAT")
         longitudes1d = forc.read("LON")
         forc.close()
+
+        if len(latitudes1d.shape) > 1:
+            raise VarDimensionException("LAT", latitudes1d)
+
+        if len(longitudes1d.shape) > 1:
+            raise VarDimensionException("LON", longitudes1d)
 
         # Constant dlat/dlon
         dlat1d = np.zeros_like(latitudes1d) + 0.5
