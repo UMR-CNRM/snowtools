@@ -18,7 +18,7 @@ def setup(t, **kw):
             tag = 'Surfex_Parallel',
             ticket = t,
             nodes = [
-                    Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw),
+                   # Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw),
                     Four_Seasons_Task(tag='S2m_pp_Task', ticket=t, **kw)],
             options=kw
         )
