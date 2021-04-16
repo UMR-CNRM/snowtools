@@ -7,6 +7,9 @@ from netCDF4 import Dataset
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import cartopy.crs as ccrs
+from cartopy import config
+from snowtools.utils import prosimu
+from snowtools.plots.maps.cartopy import Map_alpes, MultiMap_Alps
 
 class test_medianfile():
     def __init__(self, outputfile, outputreffile):
@@ -231,6 +234,46 @@ class output_test():
                   np.min(snow_region[i, :, :]), np.min(snowcomp[i,:,:]),
                   np.max(snow_region[i,:,:]), np.max(snowcomp[i,:,:]))
 
+print(config)
+attributes = dict(
+    PP_SD_1DY_ISBA = dict(convert_unit= 1., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)'),
+    SD_1DY_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=10., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)'),
+    SD_3DY_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 72h (cm)'),
+    RAMSOND_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur mobilisable (cm)'),
+    NAT_LEV = dict(forcemin=-0.5, forcemax=5.5, palette='YlOrRd', ncolors=6, label=u'Risque naturel', ticks=[u'Très faible', u'Faible', u'Mod. A', u'Mod. D', u'Fort', u'Très fort']),
+    naturalIndex = dict(forcemin=0., forcemax=8., palette='YlOrRd', label=u'Indice de risque naturel', format= '%.1f', nolevel=True),
+    DSN_T_ISBA  = dict(convert_unit= 100., label=u'Hauteur de neige (cm)'),
+    WSN_T_ISBA  = dict(label=u'Equivalent en eau (kg/m2)'),
+    SNOMLT_ISBA  = dict(convert_unit= 3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Ecoulement en 3h (kg/m2/3h)'),
+    WET_TH_ISBA  = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur humide (cm)'),
+    REFRZTH_ISBA  = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur regelée (cm)'),
+    RAINF_ISBA   = dict(convert_unit= 3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Pluie en 3h (kg/m2/3h)'),
+)
+postproc = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/Percentiles/postproc_2020092806_2020100206.nc")
+print(postproc.listvar(), postproc.listdim())
+points = postproc.get_points(aspect = -1, ZS=2100)
+postproc_flat = postproc.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
+massifs = postproc.read('massif_num', selectpoint=points)
+massifs2 = postproc.read('massif_num')
+print(np.unique(massifs))
+print(postproc_flat.shape, massifs.shape)
+m = Map_alpes(geofeatures=True)
+m.init_massifs(**attributes['SD_1DY_ISBA'])
+m.draw_massifs(massifs,postproc_flat[1,:,8], **attributes['SD_1DY_ISBA'])
+m.set_maptitle("2020092812 percentile 90")
+m.set_figtitle("2100m")
+
+m.save("cartopy_massifs.png", formatout="png")
+m.close()
+
+lo = MultiMap_Alps(nrow=3, ncol=3, geofeatures=True)
+lo.init_massifs(**attributes['SD_1DY_ISBA'])
+lo.draw_massifs(massifs,postproc_flat[1,:,:], axis=1, **attributes['SD_1DY_ISBA'])
+lo.set_figtitle("SD_1DY_ISBA 2020092812 2100m")
+titles = ['Percentile {0}'.format(i) for i in range(10, 100, 10)]
+lo.set_maptitle(titles)
+lo.save("cartopy_massifs_multi.png", formatout="png")
+
 
 # test_median = test_medianfile("/home/radanovicss/Hauteur_neige_median/Out_Belenos/postproc_2020092706_2020092806.nc",
 #                               "/home/radanovicss/Hauteur_neige_median/Out_Belenos/cdo_median_numpy_2020092706_2020092806.nc")
@@ -238,9 +281,9 @@ class output_test():
 # test_mb000 = test_medianfile("/home/radanovicss/Hauteur_neige_median/Out_Belenos/pro_2020092706_2020092806.nc",
 #                              "/home/radanovicss/Hauteur_neige_median/PRO_2020092706_2020092806_mb000.nc")
 # test_mb000.test()
-test_input = test_pro("PRO_2020092706_2020092806_mb035_alps.nc",
-                      "PRO_2020092706_2020092806_mb035_zeroslope_mslab_alps.nc")
-test_input.test()
+# test_input = test_pro("PRO_2020092706_2020092806_mb035_alps.nc",
+#                       "PRO_2020092706_2020092806_mb035_zeroslope_mslab_alps.nc")
+# test_input.test()
 
 # def test_pyr():
 
