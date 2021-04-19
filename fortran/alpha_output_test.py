@@ -318,13 +318,13 @@ m.set_figtitle("1800m")
 m.save("cartopy_massifs_2021041318_cor.png", formatout="png")
 m.close()
 
-lo = MultiMap_Cor(nrow=3, ncol=3, geofeatures=True)
+lo = MultiMap_Cor(nrow=3, ncol=3, geofeatures=False)
 lo.init_massifs(**attributes['SD_1DY_ISBA'])
 lo.draw_massifs(massifs, postproc_flat[27,:,:], axis=1, **attributes['SD_1DY_ISBA'])
 lo.set_figtitle("SD_1DY_ISBA 2021041318 1800m")
 titles = ['Percentile {0}'.format(i) for i in range(10, 100, 10)]
 lo.set_maptitle(titles)
-lo.save("cartopy_massifs_multi_2021041318_cor.png", formatout="png")
+lo.save("cartopy_massifs_multi_2021041318_cor_geofalse.png", formatout="png")
 
 
 # test_median = test_medianfile("/home/radanovicss/Hauteur_neige_median/Out_Belenos/postproc_2020092706_2020092806.nc",
