@@ -74,7 +74,7 @@ class _Map_massifs(Mplfigure):
         # Définit les bords de la carte
         ax.set_extent([self.lonmin, self.lonmax, self.latmin, self.latmax])
         if self.geofeatures:
-            ax.add_feature(cartopy.feature.LAND)
+            ax.add_feature(cartopy.feature.LAND, facecolor='wheat')
             ax.add_feature(cartopy.feature.OCEAN)
             ax.add_feature(cartopy.feature.COASTLINE)
             ax.add_feature(cartopy.feature.BORDERS, linestyle=':')
