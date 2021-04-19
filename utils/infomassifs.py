@@ -441,6 +441,7 @@ class infomassifs():
         return massifName  # in python2 this is type unicode
 
     def getAllMassifLatLon(self, tagname="Massif"):
+        """returns dict with key = Massif Number, value = (lon, lat) """
         self.dicMassifLatLon = {}
         dicLonLatMassif = {}
         for massif in self.caracLoc.documentElement.getElementsByTagName(tagname):

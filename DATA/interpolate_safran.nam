@@ -1,5 +1,5 @@
 &NAM_SWITCHES_INT
-    LMULTIINPUT = .FALSE.,
+    LMULTIINPUT = .TRUE.,
     LMULTIOUTPUT = .FALSE.
 /
 &NAM_FILENAMES_SINGLE_IN
@@ -9,14 +9,14 @@
     NNUMBER_INPUT_FILES = 3
 /
 &NAM_FILENAMES_MULTI_IN
-    HFILESIN =  "PRO_2020092706_2020092806_zeroslope_cor.nc", "PRO_2020092706_2020092806_zeroslope_alps.nc", "PRO_2020092706_2020092806_zeroslope_pyr.nc"
+    HFILESIN =  "PRO_2020092706_2020092806_mb035_cor.nc", "PRO_2020092706_2020092806_mb035_alps.nc", "PRO_2020092706_2020092806_mb035_pyr.nc"
 /
 &NAM_MULTIOUT_SETTING
     NNUMBER_OUTPUT_GRIDS = 3
 /
 &NAM_FILENAMES_SINGLE_OUT
-    HFILEOUT = "test_ignore_nonzeroslopes_zeroslopes_alps.nc" !"test_ignore_nonzeroslopes_allslopes_alps.nc" !'test_v2_multi_in_single_out_alpha.nc'
-    HGRIDIN = "ALPS.nc" ! "CORSE.nc" !"PYRENNES.nc" !'alpha_massifs.nc' !"CORSE_1D.nc" !'alpha_massifs_1d.nc' !
+    HFILEOUT = "alpha_2020092706_2020092806_mb035.nc" !"test_ignore_nonzeroslopes_zeroslopes_alps.nc" !"test_ignore_nonzeroslopes_allslopes_alps.nc" !'test_v2_multi_in_single_out_alpha.nc'
+    HGRIDIN = 'alpha_massifs.nc' ! "ALPS.nc" ! "CORSE.nc" !"PYRENNES.nc" !"CORSE_1D.nc" !'alpha_massifs_1d.nc' !
 /
 &NAM_FILENAMES_MULTI_OUT
     HFILESOUT = "dev_multiin_singleout_test_multi_in_multi_out_cor.nc", "dev_multiin_singleout_test_multi_in_multi_out_alps.nc", "dev_multiin_singleout_test_multi_in_multi_out_pyr.nc"
