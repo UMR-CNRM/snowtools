@@ -13,7 +13,23 @@ Usage :
 example :
 create a Map instance for the Alps. Map_alpes can take optional kwargs.
 m = Map_alpes(kwargs)
+m = Map_alpes(geofeatures=True)
+with geofeatures = True, borders, rivers and lakes are drawn on the map, the land and ocean polygons are colored.
+at the first use cartopy tries to download the necessary data on the fly and saves them.
+If this doesn't succeed for some reason (proxy or certificate issues for example), you can manually download the
+shapefiles from NaturalEarth https://www.naturalearthdata.com/ and store them in cartopys 'data_dir'.
+To see where cartopy will look for the data do :
+from cartopy import config
+print(config['data_dir'])
+The result might be for example :
+$HOME/.local/share/cartopy (I'll abbreviate with $data_dir)
+files containing borders are then stored in
+$data_dir/shapefiles/natural_earth/cultural/
+files containing land, ocean river and lake features are stored in
+$data_dir/shapefiles/natural_earth/physical/
+
 m.init_massifs(palette='Reds')
+
 
 """
 
@@ -26,10 +42,9 @@ import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
 import cartopy.feature
 from plots.abstracts.figures import Mplfigure
-import pyproj
 import fiona
-from osgeo import osr
 from utils.infomassifs import infomassifs
+
 
 # dummy class in order to be able to create an ccrs.CRS instance from a proj4/fiona.crs dictionary
 class MyCRS(ccrs.CRS):
