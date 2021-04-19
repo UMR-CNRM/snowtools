@@ -237,14 +237,10 @@ class Map_alpes(_Map_massifs):
         # print(kw)
         super(Map_alpes, self).__init__(*args, **kw)
 
-class MultiMap_Alps(Map_alpes):
 
-    def __init__(self, nrow=1, ncol=1, *args, **kw):
-        kw['getmap'] = False
-        self.nrow = nrow
-        self.ncol = ncol
-        self.nsubplots = nrow*ncol
-        super(MultiMap_Alps, self).__init__(*args, **kw)
+class _MultiMap(_Map_massifs):
+
+    def init_maps(self, *args, **kw):
         for self.iax in range(self.nsubplots):
             self.maps.flat[self.iax] = self.getmap(self.latmin, self.latmax, self.lonmin, self.lonmax, **kw)
             self.maps.flat[self.iax].coastlines(linewidth=1)
@@ -259,15 +255,98 @@ class MultiMap_Alps(Map_alpes):
 
     def openfigure(self):
         self.fig, self.maps = plt.subplots(nrows=self.nrow, ncols=self.ncol, sharex=True, sharey=True,
-                                           figsize=(self.width, self.height))
+                                       figsize=(self.width, self.height))
 
     def set_maptitle(self, title):
         """Set title on top of each subplot"""
         if len(title) == self.nsubplots:
             for i in range(self.nsubplots):
-                self.maps.flat[i].set_title(title[i], fontsize=14, pad=5)
+                self.maps.flat[i].set_title(title[i], fontsize=14, pad=self.titlepad)
         elif len(title) == 1:
             for i in range(self.nsubplots):
-                self.maps.flat[i].set_title(title, fontsize=14, pad=5)
+                self.maps.flat[i].set_title(title, fontsize=14, pad=self.titlepad)
         else:
             print("Warning: can not set map titles. len(title) must be either equal to the number of subplots or == 1.")
+
+
+class MultiMap_Alps(_MultiMap, Map_alpes):
+
+    def __init__(self, nrow=1, ncol=1, *args, **kw):
+        kw['getmap'] = False
+        self.nrow = nrow
+        self.ncol = ncol
+        self.nsubplots = nrow*ncol
+        self.titlepad = 5
+        super(MultiMap_Alps, self).__init__(*args, **kw)
+        self.init_maps(*args, **kw)
+
+
+class Map_pyrenees(_Map_massifs):
+
+    def __init__(self, *args, **kw):
+        self.area = 'pyrenees'
+        self.width = 14
+        self.height = 5.8
+
+        self.latmin = 42.0
+        self.latmax = 43.3
+        self.lonmin = -2.0
+        self.lonmax = 3.0
+
+        self.mappos=[0.05, 0.06, 0.8, 0.8]
+        self.legendpos = [0.9, 0.13, 0.03, 0.7]
+        self.infospos = (450000, 140000)
+
+        self.deport = {67: (10000, 20000), 68: (0, 5000), 69: (0, 10000), 72: (20000, 20000), 74: (25000, 0), 82: (-15000, -40000),
+                       84: (-10000, -30000), 85: (0, -5000), 87: (-5000, -40000), 88: (25000, -5000), 89: (15000, -15000),
+                       90: (-25000, 5000), 91: (10000, -5000)}
+
+        super(Map_pyrenees, self).__init__(*args, **kw)
+
+
+class MultiMap_Pyr(_MultiMap, Map_pyrenees):
+
+    def __init__(self, nrow=1, ncol=1, *args, **kw):
+        kw['getmap'] = False
+        self.nrow = nrow
+        self.ncol = ncol
+        self.nsubplots = nrow*ncol
+        self.titlepad = 0
+        super(MultiMap_Pyr, self).__init__(*args, **kw)
+        self.init_maps(*args, **kw)
+
+
+class Map_corse(_Map_massifs):
+
+    def __init__(self, *args, **kw):
+        self.area = 'corse'
+        self.width = 10
+        self.height = 10
+        self.latmin = 41.3
+        self.latmax = 43.1
+        self.lonmin = 8.4
+        self.lonmax = 9.6
+
+        self.mappos=[0.05, 0.06, 0.8, 0.8]
+        self.legendpos = [0.81, 0.15, 0.03, 0.6]
+        self.infospos = (15000, 215000)
+
+        self.infoswidth = 50000
+        self.infosheight = 50000
+
+        self.deport = {}
+
+        super(Map_corse, self).__init__(*args, **kw)
+
+
+class MultiMap_Cor(_MultiMap, Map_corse):
+
+    def __init__(self, nrow=1, ncol=1, *args, **kw):
+        kw['getmap'] = False
+        self.nrow = nrow
+        self.ncol = ncol
+        self.nsubplots = nrow*ncol
+        self.titlepad = 5
+        super(MultiMap_Cor, self).__init__(*args, **kw)
+        self.init_maps(*args, **kw)
+        self.legendpos = [0.85, 0.15, 0.03, 0.6]

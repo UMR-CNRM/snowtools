@@ -9,7 +9,7 @@ from matplotlib import cm
 import cartopy.crs as ccrs
 from cartopy import config
 from snowtools.utils import prosimu
-from snowtools.plots.maps.cartopy import Map_alpes, MultiMap_Alps
+from snowtools.plots.maps.cartopy import Map_alpes, MultiMap_Alps, Map_pyrenees, MultiMap_Pyr, Map_corse, MultiMap_Cor
 
 class test_medianfile():
     def __init__(self, outputfile, outputreffile):
@@ -249,30 +249,82 @@ attributes = dict(
     REFRZTH_ISBA  = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur regelée (cm)'),
     RAINF_ISBA   = dict(convert_unit= 3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Pluie en 3h (kg/m2/3h)'),
 )
-postproc = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/Percentiles/postproc_2021041006_2021041406.nc")
+# postproc = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/Percentiles/Alp/postproc_2021041006_2021041406.nc")
+# print(postproc.listvar(), postproc.listdim())
+# points = postproc.get_points(aspect = -1, ZS=2100)
+# postproc_flat = postproc.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
+# massifs = postproc.read('massif_num', selectpoint=points)
+# massifs2 = postproc.read('massif_num')
+# print(np.unique(massifs))
+# print(postproc_flat.shape, massifs.shape, postproc_flat[5, :, :].max())
+# m = Map_alpes(geofeatures=True)
+# m.init_massifs(**attributes['SD_1DY_ISBA'])
+# m.draw_massifs(massifs,postproc_flat[5,:,8], **attributes['SD_1DY_ISBA'])
+# m.set_maptitle("2021041112 percentile 90")
+# m.set_figtitle("2100m")
+#
+# m.save("cartopy_massifs_2021041112_alps.png", formatout="png")
+# m.close()
+#
+# lo = MultiMap_Alps(nrow=3, ncol=3, geofeatures=True)
+# lo.init_massifs(**attributes['SD_1DY_ISBA'])
+# lo.draw_massifs(massifs,postproc_flat[5,:,:], axis=1, **attributes['SD_1DY_ISBA'])
+# lo.set_figtitle("SD_1DY_ISBA 2021041112 2100m")
+# titles = ['Percentile {0}'.format(i) for i in range(10, 100, 10)]
+# lo.set_maptitle(titles)
+# lo.save("cartopy_massifs_multi_2021041112_alps.png", formatout="png")
+
+# postproc = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/Percentiles/Pyr/postproc_2021041006_2021041406.nc")
+# print(postproc.listvar(), postproc.listdim())
+# points = postproc.get_points(aspect = -1, ZS=1800)
+# postproc_flat = postproc.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
+# massifs = postproc.read('massif_num', selectpoint=points)
+# massifs2 = postproc.read('massif_num')
+# print(np.unique(massifs))
+# print(postproc_flat.shape, massifs.shape)
+# # [print(i, postproc_flat[i, :, :].max()) for i in range(32)]
+# m = Map_pyrenees(geofeatures=True)
+# m.init_massifs(**attributes['SD_1DY_ISBA'])
+# m.draw_massifs(massifs,postproc_flat[16,:,8], **attributes['SD_1DY_ISBA'])
+# m.set_maptitle("2021041212 percentile 90")
+# m.set_figtitle("1800m")
+#
+# m.save("cartopy_massifs_2021041212_pyr.png", formatout="png")
+# m.close()
+#
+# lo = MultiMap_Pyr(nrow=3, ncol=3, geofeatures=True)
+# lo.init_massifs(**attributes['SD_1DY_ISBA'])
+# lo.draw_massifs(massifs, postproc_flat[16,:,:], axis=1, **attributes['SD_1DY_ISBA'])
+# lo.set_figtitle("SD_1DY_ISBA 2021041212 1800m")
+# titles = ['Percentile {0}'.format(i) for i in range(10, 100, 10)]
+# lo.set_maptitle(titles)
+# lo.save("cartopy_massifs_multi_2021041212_pyr.png", formatout="png")
+
+postproc = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/Percentiles/Cor/postproc_2021041006_2021041406.nc")
 print(postproc.listvar(), postproc.listdim())
-points = postproc.get_points(aspect = -1, ZS=2100)
+points = postproc.get_points(aspect = -1, ZS=1800)
 postproc_flat = postproc.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
 massifs = postproc.read('massif_num', selectpoint=points)
 massifs2 = postproc.read('massif_num')
 print(np.unique(massifs))
-print(postproc_flat.shape, massifs.shape, postproc_flat[5, :, :].max())
-m = Map_alpes(geofeatures=True)
+print(postproc_flat.shape, massifs.shape)
+#[print(i, postproc_flat[i, :, :].max()) for i in range(32)]
+m = Map_corse(geofeatures=True)
 m.init_massifs(**attributes['SD_1DY_ISBA'])
-m.draw_massifs(massifs,postproc_flat[5,:,8], **attributes['SD_1DY_ISBA'])
-m.set_maptitle("2021041112 percentile 90")
-m.set_figtitle("2100m")
+m.draw_massifs(massifs, postproc_flat[27,:,8], **attributes['SD_1DY_ISBA'])
+m.set_maptitle("2021041318 percentile 90")
+m.set_figtitle("1800m")
 
-m.save("cartopy_massifs_2021041112_alps.png", formatout="png")
+m.save("cartopy_massifs_2021041318_cor.png", formatout="png")
 m.close()
 
-lo = MultiMap_Alps(nrow=3, ncol=3, geofeatures=True)
+lo = MultiMap_Cor(nrow=3, ncol=3, geofeatures=True)
 lo.init_massifs(**attributes['SD_1DY_ISBA'])
-lo.draw_massifs(massifs,postproc_flat[5,:,:], axis=1, **attributes['SD_1DY_ISBA'])
-lo.set_figtitle("SD_1DY_ISBA 2021041112 2100m")
+lo.draw_massifs(massifs, postproc_flat[27,:,:], axis=1, **attributes['SD_1DY_ISBA'])
+lo.set_figtitle("SD_1DY_ISBA 2021041318 1800m")
 titles = ['Percentile {0}'.format(i) for i in range(10, 100, 10)]
 lo.set_maptitle(titles)
-lo.save("cartopy_massifs_multi_2021041112_alps.png", formatout="png")
+lo.save("cartopy_massifs_multi_2021041318_cor.png", formatout="png")
 
 
 # test_median = test_medianfile("/home/radanovicss/Hauteur_neige_median/Out_Belenos/postproc_2020092706_2020092806.nc",
