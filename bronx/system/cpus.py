@@ -9,7 +9,7 @@ information on CPUs is not portable across platforms. At the present time, the
 only concrete implementation is the :class:`LinuxCpusInfo` class that relies on
 the /proc/cpuinfo virtual file.
 
-On Epona (2x AMD Rome socket with 64 cores each)::
+On Belenos (2x AMD Rome socket with 64 cores each)::
 
     >>> cpu_i = LinuxCpusInfo()
     >>> cpu_i.nphysical_cores

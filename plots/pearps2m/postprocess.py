@@ -33,12 +33,6 @@ from collections import Counter, defaultdict
 
 from bronx.stdtypes.date import today
 
-# in the operational case get_oper_files is in tasks directly
-try:
-    from tasks.oper.get_oper_files import S2MExtractor
-except ImportError:
-    from tasks.get_oper_files import S2MExtractor
-
 from utils.prosimu import prosimu
 from utils.dates import check_and_convert_date, pretty_date
 from plots.temporal.chrono import spaghettis_with_det, spaghettis
@@ -722,6 +716,10 @@ class EnsemblePostproc(_EnsembleMassif):
 
 
 if __name__ == "__main__":
+
+    # The following class has a vortex-dependence
+    # Should not import than above to avoid problems when importing the module from vortex
+    from tasks.oper.get_oper_files import S2MExtractor
 
     c = config()
     os.chdir(c.diroutput)
