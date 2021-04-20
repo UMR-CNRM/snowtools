@@ -223,6 +223,16 @@ class _Map_massifs(Mplfigure):
         """Set title on top of the figure"""
         self.fig.suptitle(title, fontsize=20)
 
+    def draw_mesh(self, lons, lats, field, **kwargs):
+        self.map.pcolormesh(lons, lats, field, transform=ccrs.PlateCarree(), cmap=self.palette)
+        # prepare colorbar
+        self.m = plt.cm.ScalarMappable(cmap=self.palette)
+        self.m.set_array(np.array(field))
+        self.m.set_clim(self.vmin, self.vmax)
+
+        if not self.legendok:
+            self.legend(self.m, **kwargs)
+
 
 class Map_alpes(_Map_massifs):
 
