@@ -78,7 +78,7 @@ INTEGER :: IV_TMP
 INTEGER :: IOS ! status indicator
 INTEGER :: INAM_UNIT
 !
-INTEGER :: IMASSIFTODELETE, ILAYERTODELETE, I
+INTEGER :: IMASSIFTODELETE, ILAYERTODELETE, I, status
 LOGICAL :: AFTERLOC
 LOGICAL :: LPRINT
 CHARACTER(LEN=10),DIMENSION(4) :: LL_VARNAME
@@ -490,6 +490,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
   ALLOCATE(VALUE_TIME(NTIME))
   !
   DO IV=1,INVAR
+    PRINT*, VAR_NAME_IN(IV)
     IF (ANY( VAR_ID_DIMS_OUT(:,IV) == IMASSIFTODELETE ).OR.              &
             ANY( VAR_ID_DIMS_OUT(:,IV) == ILAYERTODELETE ).OR.               &
             (GRID_TYPE == "LL" .AND.  ANY(VAR_NAME_IN(IV) == LL_VARNAME))) CYCLE
@@ -506,6 +507,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       !
         CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),VALUE_TIME  &
               , start = (/1/), count =(/NTIME/) ),"Cannot put var time")
+        !PRINT*, VALUE_TIME
       ELSE
         CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),VALUE_TIME &
               , start =(/1/), count = (/NTIME/)) &
@@ -750,9 +752,14 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
               WHERE (ZVAROUTXYT == XUNDEF) ZVAROUTXYT = ZVAROUTXYT_OLD
               ! write fusioned variable
             END IF
+            PRINT*, "before put", SHAPE(ZVAROUTXYT)
+            status = NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+            start =(/1,IXSTART,IYSTART,1/) ,count = (/NDECILE,NX_PROC,NY_PROC,NTIME/))
+            PRINT*, status
             CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
                     start =(/1,IXSTART,IYSTART,1/) ,count = (/NDECILE,NX_PROC,NY_PROC,NTIME/)),&
                     "W Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+            PRINT*, "after put"
           ELSE
             ! standard case (time, x, y)
             IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
