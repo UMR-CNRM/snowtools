@@ -1,0 +1,48 @@
+F90 = mpiifort
+CC  = mpiicc
+EXEC1 =interpol_MPIAUTO
+
+OPT = -O2
+CFLAGS = -c  
+LINK = interpol
+
+
+##############################################################################
+#links interne libraries
+
+
+VINTEL         = /opt/softs/libraries/ICC_2018.5.274
+NETCDF         = ${VINTEL}/netcdf_par-4.7.1
+NETCDF_FORTRAN = ${VINTEL}/netcdf_par-4.7.1
+HDF            = ${VINTEL}/phdf5-1.10.5
+
+LDFLAGS=-I${NETCDF_FORTRAN}/include -Wl,-rpath,${NETCDF_FORTRAN}/lib:${NETCDF}/lib:${HDF}/lib -L${NETCDF_FORTRAN}/lib -lnetcdff -L${NETCDF}/lib -lnetcdf -L${HDF}/lib -lhdf5_hl -lhdf5 -fopenmp -Wl,-warn-once -ldl -lrt 
+
+
+SOURCES = interpolate_safran.f90 modd_interpol_safran.f90 modn_interpol_safran.f90
+
+all:  $(EXEC1)
+
+#modd_interpol_safran.o : modd_interpol_safran.f90
+#	$(F90) $(CFLAGS) $(OPT) $< -o $@ $(LDFLAGS)
+#interpolate_safran.o : interpolate_safran.f90
+#	$(F90) $(CFLAGS) $(OPT) $< -o $@ $(LDFLAGS)
+
+$(EXEC1): $(subst .f90,.o,$(SOURCES)) #interpolate_safran.o
+	$(F90) $(OPT) $^ -o $@ $(LDFLAGS)
+	ln -fs $(EXEC1) $(LINK)
+
+clean:
+	rm -f *.o *.mod *.MOD
+	rm -f *~
+
+mrproper: clean
+	rm -f $(EXEC1)
+
+%.o : %.f90
+	$(F90) $(CFLAGS) $(OPT) $< -o $@ $(LDFLAGS)
+	@touch $@
+
+
+interpolate_safran.o : modn_interpol_safran.o
+modn_interpol_safran.o : modd_interpol_safran.o
