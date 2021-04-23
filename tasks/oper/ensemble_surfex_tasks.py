@@ -37,9 +37,12 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
     """
 
     """
-
+    # Filter of errors to be applied in both oper and dev cases
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
+    # only in dev for CEN, to be defined for IGA
     report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
+    # only in dev for CEN, keep IGA method for oper
+    report_execution_error = S2MTaskMixIn.s2moper_report_execution_error
 
     def process(self):
 
