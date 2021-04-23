@@ -35,6 +35,7 @@ m.init_massifs(palette='Reds')
 
 import os
 import numpy as np
+import itertools
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -44,6 +45,7 @@ import cartopy.feature
 from plots.abstracts.figures import Mplfigure
 import fiona
 from utils.infomassifs import infomassifs
+
 
 
 # dummy class in order to be able to create an ccrs.CRS instance from a proj4/fiona.crs dictionary
@@ -335,6 +337,44 @@ class Map_pyrenees(_Map_massifs):
 
         super(Map_pyrenees, self).__init__(*args, **kw)
 
+
+class MapFrance(_Map_massifs):
+
+    def __init__(self, *args, **kw):
+        self.area = ['alpes', 'pyrenees', 'corse']
+        self.width = 15
+        self.height = 11
+
+        self.latmin = 41.3
+        self.latmax = 51.5
+        self.lonmin = -5.
+        self.lonmax = 9.6
+
+        self.mappos=[0.05, 0.06, 0.8, 0.8]
+        self.legendpos = [0.9, 0.13, 0.03, 0.7]
+        self.infospos = (450000, 140000)
+
+        self.deport = {2: (-10000, 0), 3: (10000, 0), 6: (20000, 0), 7: (-20000, 10000), 9: (15000, -10000), 11: (15000, -10000),
+                       13: (15000, 0), 17: (15000, 0), 18: (-20000, -10000), 19: (0, -5000), 20: (0, -5000), 21: (0, -10000),
+                       67: (10000, 20000), 68: (0, 5000), 69: (0, 10000), 72: (20000, 20000), 74: (25000, 0), 82: (-15000, -40000),
+                       84: (-10000, -30000), 85: (0, -5000), 87: (-5000, -40000), 88: (25000, -5000), 89: (15000, -15000),
+                       90: (-25000, 5000), 91: (10000, -5000)}
+
+        super(MapFrance, self).__init__(*args, **kw)
+
+    def getshapes(self):
+        shapefile_path = os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')
+        filenames = ['massifs_{0:s}.shp'.format(iarea) for iarea in self.area]
+        self.shapefile = [shpreader.Reader(os.path.join(shapefile_path, filename)) for filename in filenames]
+        # Informations sur la projection
+        sh = fiona.open(os.path.join(shapefile_path, filenames[0]))
+        # Projection du shapefile
+        self.shpProj = sh.crs
+        # print(sh.crs)
+
+        # géométries
+        # records is a generator object. Each record contains a geometry, its attributes and bounds
+        self.records = itertools.chain([shapefile.records() for shapefile in self.shapefile])
 
 class MultiMap_Pyr(_MultiMap, Map_pyrenees):
 

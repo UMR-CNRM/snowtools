@@ -796,7 +796,8 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
             PRINT*, "before put", SHAPE(ZVAROUTXYT)
             IF (LTIMECHUNK) THEN
               DO I=1, NTIME
-                CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+                !PRINT*, I, MAXVAL(ZVAROUTXYT(:,:,:,I))
+                CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT(:,:,:,I),  &
                         start =(/1,IXSTART,IYSTART,I/) ,count = (/NDECILE,NX_PROC,NY_PROC,1/)),&
                         "W Cannot put var "//TRIM(VAR_NAME_IN(IV)))
               END DO
@@ -830,7 +831,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
             END IF
             IF (LTIMECHUNK) THEN
               DO I=1, NTIME
-                CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+                CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT(:,:,:,I),  &
                         start =(/IXSTART,IYSTART,I/) ,count = (/NX_PROC,NY_PROC,1/)),&
                         "X Cannot put var "//TRIM(VAR_NAME_IN(IV)))
               END DO
@@ -865,7 +866,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
           END IF
           IF (LTIMECHUNK) THEN
             DO I=1, NTIME
-              CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+              CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT(:,:,:,I),  &
                       start =(/IXSTART,IYSTART,1,I/) ,count = (/NX_PROC,NY_PROC,NPATCH,1/)),&
                       "Y Cannot put var "//TRIM(VAR_NAME_IN(IV)))
             END DO
