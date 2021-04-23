@@ -336,9 +336,12 @@ attributes = dict(
 # lo.save("cartopy_massifs_multi_2021041318_cor_geofalse.png", formatout="png")
 
 indata = Alphafile("grid_postproc_2021041006_2021041406_cor.nc")
+print(indata.snow[27,:,:,8].max(), indata.snow[27,:,:,8].min())
 m = Map_corse(geofeatures=True)
 m.init_massifs(**attributes['SD_1DY_ISBA'])
-m.draw_mesh(indata.lons, indata.lats, indata.snow[27,:,:,8])
+m.draw_mesh(indata.lons, indata.lats, np.flipud(indata.snow[27,:,:,8]), **attributes['SD_1DY_ISBA'])
+m.set_figtitle("SD_1DY_ISBA 2021041318")
+m.set_maptitle("Percentile 90")
 m.save("grid_postproc_p90_2021041318_cor.png", formatout="png")
 m.close()
 

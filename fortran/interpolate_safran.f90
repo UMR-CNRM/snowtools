@@ -13,7 +13,7 @@ INTEGER::FILE_ID_IN, FILE_ID_OUT ,FILE_ID_GEO! id of input ,output and geometrie
 !!!!! Dim properties
 CHARACTER(LEN=20),DIMENSION(:),ALLOCATABLE::DIM_NAME_IN, DIM_NAME_OUT! name of dimensions
 INTEGER,DIMENSION(:),ALLOCATABLE:: DIM_ID_IN, DIM_ID_OUT ! id of dimensions
-INTEGER,DIMENSION(:),ALLOCATABLE:: DIM_SIZE_IN, DIM_SIZE_OUT ! size of dimensions
+INTEGER,DIMENSION(:),ALLOCATABLE:: DIM_SIZE_IN, DIM_SIZE_OUT, DIM_CHUNK_OUT ! size of dimensions
 INTEGER :: IMASSIVE_DIM_SIZE_OUT ! dimension length of massif dimension is determ
 !
 !!!!! Var properties
@@ -118,6 +118,9 @@ ELSE
   HFILESOUT(1) = HFILENAMEOUT
   NNUMBER_INPUT_FILES = 1
   NNUMBER_OUTPUT_GRIDS = 1
+  LTIMECHUNK = .FALSE.
+  NLONCHUNKSIZE = 100
+  NLATCHUNKSIZE = 100
 END IF
 CLOSE(INAM_UNIT)
 
@@ -175,9 +178,11 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
     ALLOCATE(DIM_NAME_OUT(INDIM+1))
     ALLOCATE(DIM_ID_OUT(INDIM+1))
     ALLOCATE(DIM_SIZE_OUT(INDIM+1))
+    ALLOCATE(DIM_CHUNK_OUT(INDIM+1))
 !! VAR
     ALLOCATE(VAR_ID_OUT(INVAR+2))
     ALLOCATE(VAR_ID_DIMS_OUT(INDIM+1, INVAR+2))
+
 
     VAR_ID_OUT = 0
     VAR_ID_DIMS_OUT=0
@@ -242,6 +247,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       ! Change spatial dimension
       IF (IRANK==1) THEN
         DIM_SIZE_OUT(IDOUT)=GRID_DIM_REF(1)
+        DIM_CHUNK_OUT(IDOUT)=MIN(GRID_DIM_REF(1), NLONCHUNKSIZE*NLATCHUNKSIZE)
         IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
           CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),GRID_DIM_REF(1),DIM_ID_OUT(IDOUT)), &
                 "Cannot def dim  "//TRIM(HFILENAMEOUT))
@@ -254,6 +260,9 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       ELSEIF (IRANK==2) THEN
         DIM_SIZE_OUT(IDOUT)=GRID_DIM_REF(2)
         DIM_SIZE_OUT(IDOUT+1)=GRID_DIM_REF(1)
+        PRINT*, NLATCHUNKSIZE, NLONCHUNKSIZE
+        DIM_CHUNK_OUT(IDOUT)=MIN(GRID_DIM_REF(2), NLATCHUNKSIZE)
+        DIM_CHUNK_OUT(IDOUT+1)=MIN(GRID_DIM_REF(1), NLONCHUNKSIZE)
         IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
           IF (GRID_TYPE == "LL") THEN
           !
@@ -295,9 +304,12 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
     ELSEIF (DIM_NAME_IN(ID) == 'time') THEN
       ! Need to to distinguish because of the unlimited dimension
       DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      DIM_CHUNK_OUT(IDOUT) = 1
       IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
         CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),NF90_UNLIMITED, &
               DIM_ID_OUT(IDOUT)), "def time out")
+!        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_OUT(IDOUT), &
+!                DIM_ID_OUT(IDOUT)), "def time out")
       ELSE
         CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT, 'time', DIM_ID_OUT(IDOUT)), &
                   "Cannot inquire dimid for time in "//TRIM(HFILENAMEOUT))
@@ -307,6 +319,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       !
     ELSEIF(DIM_NAME_IN(ID) == 'massif') THEN
       DIM_SIZE_OUT(IDOUT) = IMASSIVE_DIM_SIZE_OUT !DIM_SIZE_IN(ID)
+      DIM_CHUNK_OUT(IDOUT) = IMASSIVE_DIM_SIZE_OUT
       IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
         CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_OUT(IDOUT),&
               DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
@@ -319,6 +332,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       !
     ELSEIF(DIM_NAME_IN(ID) == 'snow_layer') THEN
       DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      DIM_CHUNK_OUT(IDOUT) = DIM_SIZE_OUT(IDOUT)
       IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
         CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
               DIM_ID_OUT(IDOUT)),"Cannot def dim snow_layer in "//TRIM(HFILENAMEOUT))
@@ -330,6 +344,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       IDOUT = IDOUT+1
     ELSEIF(DIM_NAME_IN(ID) == 'Number_of_Patches') THEN
       DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      DIM_CHUNK_OUT(IDOUT) = DIM_SIZE_OUT(IDOUT)
       IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
         CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
               DIM_ID_OUT(IDOUT)),"Cannot def dim "//DIM_NAME_IN(ID)//' in '//TRIM(HFILENAMEOUT))
@@ -342,6 +357,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       IDOUT = IDOUT+1
     ELSEIF(DIM_NAME_IN(ID) == 'decile') THEN
       DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      DIM_CHUNK_OUT(IDOUT) = DIM_SIZE_OUT(IDOUT)
       IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
         CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
               DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
@@ -356,6 +372,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       !
       IF (IRANK==1) THEN
         DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+        DIM_CHUNK_OUT(IDOUT) = DIM_SIZE_OUT(IDOUT)
         IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
           CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
                 DIM_ID_OUT(IDOUT)) , "Cannot def dim "//DIM_NAME_IN(ID)//' in '//TRIM(HFILENAMEOUT))
@@ -366,6 +383,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
         IDOUT = IDOUT + 1
       ELSEIF (IRANK==2) THEN
         DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+        DIM_CHUNK_OUT(IDOUT) = DIM_SIZE_OUT(IDOUT)
         IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
           CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
                 DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
@@ -445,8 +463,11 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
               ANY( VAR_ID_DIMS_OUT(:,IV) == ILAYERTODELETE ).OR.               &
               (GRID_TYPE == "LL" .AND.  ANY(VAR_NAME_IN(IV) == LL_VARNAME))) CYCLE
       ! Create variable in output file
+      ! PRINT*, DIM_CHUNK_OUT, VAR_NAME_IN(IV), VAR_ID_DIMS_OUT(:,IV)
+      ! PRINT*, DIM_CHUNK_OUT(PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0))
       CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,VAR_NAME_IN(IV),VAR_TYPE_IN(IV), &
-              PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0),VAR_ID_OUT(IV)),&
+              PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0),VAR_ID_OUT(IV), &
+              chunksizes=DIM_CHUNK_OUT(PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0))),&
               "Cannot def var "//TRIM(VAR_NAME_IN(IV)))
       !copy attributes from infile to outfile
       DO IA=1,INATT(IV)
@@ -633,13 +654,22 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
         ALLOCATE(ZVARINT(NDECILE,DIM_SIZE_IN(ILLOC_ID),NTIME))
         ALLOCATE(ZVAROUTXYT(NDECILE,NX_PROC,NY_PROC,NTIME))
         IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
-          ALLOCATE(ZVAROUTXYT_OLD(NDECILE,NX_PROC,NY_PROC,NTIME))
+          IF (LTIMECHUNK) THEN
+            ALLOCATE(ZVAROUTXYT_OLD(NDECILE,NX_PROC,NY_PROC,1))
+          ELSE
+            ALLOCATE(ZVAROUTXYT_OLD(NDECILE,NX_PROC,NY_PROC,NTIME))
+          END IF
+
         END IF
       ELSE
         ALLOCATE(ZVARINT(DIM_SIZE_IN(ILLOC_ID),NPATCH,NTIME))
         ALLOCATE(ZVAROUTXYT(NX_PROC,NY_PROC,NPATCH,NTIME))
         IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
-          ALLOCATE(ZVAROUTXYT_OLD(NX_PROC,NY_PROC,NPATCH,NTIME))
+          IF (LTIMECHUNK) THEN
+            ALLOCATE(ZVAROUTXYT_OLD(NX_PROC,NY_PROC,NPATCH,1))
+          ELSE
+            ALLOCATE(ZVAROUTXYT_OLD(NX_PROC,NY_PROC,NPATCH,NTIME))
+          END IF
         END IF
       ENDIF
 
@@ -746,19 +776,35 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
               ! read old variable
               CALL CHECK(NF90_INQ_VARID(FILE_ID_OUT, VAR_NAME_IN(IV), IV_TMP), &
                 "Cannot inquire variable id for "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
-              CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD), &
-                "W cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
-              ! fusion of old and new variable
-              WHERE (ZVAROUTXYT == XUNDEF) ZVAROUTXYT = ZVAROUTXYT_OLD
+              IF (LTIMECHUNK) THEN
+                DO I=1, NTIME
+                  CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD, start =(/1,IXSTART,IYSTART,I/) ,&
+                          count = (/NDECILE,NX_PROC,NY_PROC,1/)), &
+                  "W cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+                ! fusion of old and new variable
+                  WHERE (ZVAROUTXYT(:,:,:,I) == XUNDEF) ZVAROUTXYT(:,:,:,I) = ZVAROUTXYT_OLD(:,:,:,1)
+
+                END DO
+              ELSE
+                CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD), &
+                        "W cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+                ! fusion of old and new variable
+                WHERE (ZVAROUTXYT == XUNDEF) ZVAROUTXYT = ZVAROUTXYT_OLD
+              END IF
               ! write fusioned variable
             END IF
             PRINT*, "before put", SHAPE(ZVAROUTXYT)
-            status = NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
-            start =(/1,IXSTART,IYSTART,1/) ,count = (/NDECILE,NX_PROC,NY_PROC,NTIME/))
-            PRINT*, status
-            CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+            IF (LTIMECHUNK) THEN
+              DO I=1, NTIME
+                CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+                        start =(/1,IXSTART,IYSTART,I/) ,count = (/NDECILE,NX_PROC,NY_PROC,1/)),&
+                        "W Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+              END DO
+            ELSE
+              CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
                     start =(/1,IXSTART,IYSTART,1/) ,count = (/NDECILE,NX_PROC,NY_PROC,NTIME/)),&
                     "W Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+            END IF
             PRINT*, "after put"
           ELSE
             ! standard case (time, x, y)
@@ -766,15 +812,34 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
               ! read old variable
               CALL CHECK(NF90_INQ_VARID(FILE_ID_OUT, VAR_NAME_IN(IV), IV_TMP), &
                 "Cannot inquire variable id for "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
-              CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD(:,:,1,:)), &
-                "X cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
-              ! fusion of old and new variable
-              WHERE (ZVAROUTXYT == XUNDEF) ZVAROUTXYT = ZVAROUTXYT_OLD
+              IF (LTIMECHUNK) THEN
+                DO I=1, NTIME
+                  CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD(:,:,1,:), start =(/IXSTART,IYSTART,I/),&
+                          count = (/NX_PROC,NY_PROC,1/)), &
+                          "X cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+                  ! fusion of old and new variable
+                  WHERE (ZVAROUTXYT(:,:,:,I) == XUNDEF) ZVAROUTXYT(:,:,:,I) = ZVAROUTXYT_OLD(:,:,:,1)
+                END DO
+              ELSE
+                CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD(:,:,1,:)), &
+                  "X cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+                ! fusion of old and new variable
+                WHERE (ZVAROUTXYT == XUNDEF) ZVAROUTXYT = ZVAROUTXYT_OLD
+              END IF
               ! write fusioned variable
             END IF
-            CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
-                    start =(/IXSTART,IYSTART,1/) ,count = (/NX_PROC,NY_PROC,NTIME/)),&
-                    "X Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+            IF (LTIMECHUNK) THEN
+              DO I=1, NTIME
+                CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+                        start =(/IXSTART,IYSTART,I/) ,count = (/NX_PROC,NY_PROC,1/)),&
+                        "X Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+              END DO
+            ELSE
+              CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+                      start =(/IXSTART,IYSTART,1/) ,count = (/NX_PROC,NY_PROC,NTIME/)),&
+                      "X Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+            END IF
+
           ENDIF
         ELSE
           ! case (time, Number_of_Patches, x, y)
@@ -782,15 +847,34 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
               ! read old variable
               CALL CHECK(NF90_INQ_VARID(FILE_ID_OUT, VAR_NAME_IN(IV), IV_TMP), &
                 "Cannot inquire variable id for "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
-              CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD), &
-                "Y cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
-              ! fusion of old and new variable
-              WHERE (ZVAROUTXYT == XUNDEF) ZVAROUTXYT = ZVAROUTXYT_OLD
+              IF (LTIMECHUNK) THEN
+                DO I=1, NTIME
+                  CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD, start =(/IXSTART,IYSTART,1,I/), &
+                          count = (/NX_PROC,NY_PROC,NPATCH,1/)), &
+                          "Y cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+                  ! fusion of old and new variable
+                  WHERE (ZVAROUTXYT(:,:,:,I) == XUNDEF) ZVAROUTXYT(:,:,:,I) = ZVAROUTXYT_OLD(:,:,:,1)
+                END DO
+              ELSE
+                CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD), &
+                        "Y cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+                ! fusion of old and new variable
+                WHERE (ZVAROUTXYT == XUNDEF) ZVAROUTXYT = ZVAROUTXYT_OLD
+              END IF
               ! write fusioned variable
-            END IF
-          CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
-                  start =(/IXSTART,IYSTART,1,1/) ,count = (/NX_PROC,NY_PROC,NPATCH,NTIME/)),&
-                  "Y Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+          END IF
+          IF (LTIMECHUNK) THEN
+            DO I=1, NTIME
+              CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+                      start =(/IXSTART,IYSTART,1,I/) ,count = (/NX_PROC,NY_PROC,NPATCH,1/)),&
+                      "Y Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+            END DO
+          ELSE
+            CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+                    start =(/IXSTART,IYSTART,1,1/) ,count = (/NX_PROC,NY_PROC,NPATCH,NTIME/)),&
+                    "Y Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+          END IF
+
         ENDIF
       ENDIF
       !
@@ -1948,6 +2032,11 @@ END SUBROUTINE CHECK
         HGRIDSIN(1) = HGRIDIN
       END IF
 
+    END IF
+    READ(UNIT=KNAMUNIT,NML=NAM_OTHER_STUFF, IOSTAT=IOS)
+    IF (IOS /= 0) THEN
+      PRINT*, IOS, LTIMECHUNK, NLONCHUNKSIZE, NLATCHUNKSIZE
+      STOP 'ERROR reading namelist NAM_OTHER_STUFF'
     END IF
     ! PRINT*, HFILESOUT
     ! PRINT*, HFILESIN
