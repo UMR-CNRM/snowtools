@@ -17,7 +17,7 @@ from utils.prosimu import prosimu
 from utils.infomassifs import infomassifs
 from plots.temporal.chrono import temporalplot2Axes, temporalsubplot
 from plots.abstracts.figures import MultiPlots
-from bronx.stdtypes.date import Date
+from bronx.stdtypes.date import Date, daterange
 
 commonpath = "/cnrm/cen/users/NO_SAVE/lafaysse/oper/alp"
 # commonpath = "/home/lafaysse"
@@ -34,16 +34,14 @@ commonpath = "/cnrm/cen/users/NO_SAVE/lafaysse/oper/alp"
 #              u'Anciens listings, obs temps réel', u'Oper 03TU', u'Oper 09TU']
 # colorsims = ['green', 'cyan', 'blue', 'red', 'orange', 'black', 'gray']
 
-simuls = [commonpath + "/reanalyse_nouveau_listeo_obs_temps_reel/PRO_2020080106_2021013006.nc",
-          commonpath + "/reanalyse_anciens_liste_obs_temps_reel/PRO_2020080106_2021013006.nc",]
+simuls = [commonpath + "/oper/PRO_2020112606_2021042106.nc",
+          commonpath + "/2021042212/PRO_2020080106_2021041806.nc"]
 
-labelsims = [u'Réanalyse, sans EDF-NIVO',
-             u'Run oper, avec EDF-NIVO']
+labelsims = [u'Ana oper ', u'Réa mens ']
 
 
 
 colorsims = ['green', 'orange', 'blue', 'red', 'cyan', 'black', 'gray']
-colorsims = ['cyan', 'red']
 
 
 linestyles = ['-', '--']
@@ -52,28 +50,26 @@ dept = {0: u"Haute-Savoie", 1: u"Savoie", 2: u"Isère", 3: u"Hautes-Alpes", 4: u
 list_massifs = {0: [1, 2, 3], 1: [4, 5, 6, 9, 10, 11], 2: [7, 8, 12, 14, 15], 3: [13, 16, 17, 18, 19],
                 4: [20, 21, 22, 23]}
 
-dept = {0: u"Haute-Tarentaise"}
-list_massifs = {0: [6]}
+#dept = {0: u"Haute-Tarentaise"}
+#list_massifs = {0: [6]}
 
 nrows=len(list_massifs.keys())
 
+list_alti = [1800, 2700]
+ncols = len(list_alti)
 
-MP = MultiPlots(nrows=nrows, ncols=1)
+MP = MultiPlots(nrows=nrows, ncols=ncols)
 TSP = dict()
-for i in range(0, nrows):
-    TSP[i] = temporalsubplot(MP.subplots, i, 1)
 
-# plot.addAx2(u'SWE ($kg m^{-2}$)')
-# plot.addAx2(u'Epaisseur mobilisable à 2400 m (m)')
+for i in range(0, nrows):
+    for j in range(0, ncols):
+        TSP[(i,j)] = temporalsubplot(MP.subplots, i, j)
 
 I = infomassifs()
 
 
 for s, simul in enumerate(simuls):
     pro = prosimu(simul)
-
-
-
 
     for massif in I.getListMassif_of_region('alp'):
 
@@ -89,57 +85,33 @@ for s, simul in enumerate(simuls):
 
         print (i, index)
 
+        for j, alti in enumerate(list_alti):
 
-        selectpoint = pro.get_point(massif_num=massif, ZS=2400, aspect=-1)
-        selectpoint2 = pro.get_point(massif_num=6, ZS=1800, aspect=-1)
-        timeSim = pro.readtime()
-        period = timeSim > Date(2020, 12, 1, 0)
-        timeSim = timeSim[period]
+            try:
+                selectpoint = pro.get_point(massif_num=massif, ZS=alti, aspect=-1)
+            except IndexError:
+                continue
 
-        # epmobil = pro.read_var('RAMSOND_ISBA', Number_of_points=selectpoint)
+            timeSim = pro.readtime()
+            period = timeSim > Date(2020, 12, 1, 0)
+            timeSim = timeSim[period]
 
-        swe = pro.read_var('WSN_T_ISBA', Number_of_points=selectpoint)
-        swe1800 = pro.read_var('WSN_T_ISBA', Number_of_points=selectpoint2)
-        # risk = pro.read_var('naturalIndex', massif=6)
+            swe = pro.read_var('WSN_T_ISBA', Number_of_points=selectpoint)
+            swe = swe[period]
 
-        # epmobil = epmobil[period]
-        swe = swe[period]
-        swe1800 = swe1800[period]
-        # risk = risk[period]
+            if s==0:
+                label = I.getMassifName(massif)
+            else:
+                label = ""
 
-        print("Massif:")
-        print (massif)
-
-
-
-        # plot.add_line(timeSim, risk, label=labelsims[s], color=colorsims[s])
-        #if s==0:
-        #    TSP[i].add_line(timeSim, swe, label= I.getMassifName(massif), color=colorsims[index], linestyle=linestyles[s])
-        #else:
-        #    TSP[i].add_line(timeSim, swe, color=colorsims[index], linestyle=linestyles[s])
-
-        TSP[i].add_line(timeSim, swe, label= labelsims[s] + u" 2400 m", color=colorsims[s], linestyle='-')
+            TSP[(i, j)].add_line(timeSim, swe, label= label, color=colorsims[index], linestyle=linestyles[s])
 
 
-        TSP[i].add_line(timeSim, swe1800, label=labelsims[s] + u" 1800 m", color=colorsims[s], linestyle='dotted')
-        #  plot.addVarAx2(timeSim, epmobil, label='NEW', color=colorsims[s], linestyle="--")
-
-        # if s == len(simuls) - 2:
-        #     nextinitswe = swe[timeSim == Date(2021, 1, 28, 9)] - swe[0]
-        #
-        # if s == len(simuls) - 1:
-        #     initswe = nextinitswe
-        # else:
-        #     initswe = 0
-
-        # plot.addVarAx2(timeSim, swe - swe[0] + initswe, label='NEW', color=colorsims[s], linestyle="--")
-
-        # plot.set_yaxis(ylabel="IRNAM", forcemin=0, forcemax=8)
-
-        TSP[i].set_yaxis(ylabel=u"SWE ($kg \quad m^{-2}$)")
+            TSP[(i, j)].set_yaxis(ylabel=u"SWE ($kg \quad m^{-2}$)")
 
 for i in range(0, nrows):
-    TSP[i].set_title(dept[i])
-    TSP[i].finalize(timeSim, fontsize='xx-small')
+    for j, alti in enumerate(list_alti):
+        TSP[(i, j)].set_title(dept[i] + " - " + str(alti) + "m")
+        TSP[(i, j)].finalize(timeSim, fontsize='xx-small')
 
-MP.save(commonpath + "/reanalyse_nouveaux_listeo/plot.pdf", formatout="pdf")
+MP.save(commonpath + "/oper/impact_comod5324.pdf", formatout="pdf")

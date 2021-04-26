@@ -49,3 +49,16 @@ class Mplfigure(object):
     def close(self):
         self.fig.clear()
         plt.close(self.fig)
+
+
+class MultiPlots(Mplfigure):
+    def __init__(self, **kwargs):
+        kwargs.setdefault("nrows", 1)
+        kwargs.setdefault("ncols", 1)
+        kwargs.setdefault("figsize", (5 * kwargs["ncols"], 4 * kwargs["nrows"]))
+        self.fig, self.subplots = plt.subplots(nrows=kwargs["nrows"], ncols=kwargs["ncols"], figsize=kwargs["figsize"])
+
+
+class MultiPlotsMassifs(MultiPlots):
+    def __init__(self, **kwargs):
+        super(MultiPlotsMassifs, self).__init__(self, **kwargs)
