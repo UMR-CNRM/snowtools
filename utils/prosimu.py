@@ -248,7 +248,7 @@ class prosimu():
             raise IndexError('No point matching the selection')
         return point_list[0]
 
-    def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime = True):
+    def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime = True, hasDecile = False):
 
         if removetile:
             vardims = self.dataset.variables[varname].dimensions
@@ -256,8 +256,12 @@ class prosimu():
         else:
             needremovetile = False
         rank = len(var.shape)
+        try:
+            selectpointtest = all(selectpoint == -1)
+        except TypeError:
+            selectpointtest = selectpoint == -1
         if hasTime is True:
-            if selectpoint == -1:
+            if selectpointtest:
                 if needremovetile:
                     if rank == 1:
                         # Pour cas de la variable tile dans comparaisons automatiques
@@ -284,32 +288,57 @@ class prosimu():
                     elif rank == 5:
                         var_extract = var[:, :, :, :, :]
             else:
-                if needremovetile:
-                    if rank == 1:
-                        # Pour cas de la variable tile dans comparaisons automatiques
-                        var_extract = var[0]
-                    elif rank == 3:
-                        var_extract = var[:, 0, selectpoint]
-                    elif rank == 4:
-                        var_extract = var[:, 0, :, selectpoint]
-                    elif rank == 5:
-                        var_extract = var[:, 0, :, :, selectpoint]
+                if hasDecile:
+                    if needremovetile:
+                        if rank == 1:
+                            # Pour cas de la variable tile dans comparaisons automatiques
+                            var_extract = var[0]
+                        elif rank == 3:
+                            var_extract = var[:, 0, selectpoint]
+                        elif rank == 4:
+                            var_extract = var[:, 0, selectpoint, :]
+                        elif rank == 5:
+                            var_extract = var[:, 0, :, selectpoint, :]
+                    else:
+                        if rank == 0:
+                            var_extract = var
+                        elif rank == 1:
+                            var_extract = var[selectpoint]
+                        elif rank == 2:
+                            var_extract = var[:, selectpoint]
+                        elif rank == 3:
+                            var_extract = var[:, selectpoint, :]
+                        elif rank == 4:
+                            var_extract = var[:, :, selectpoint, :]
+                        elif rank == 5:
+                            var_extract = var[:, :, :, selectpoint, :]
                 else:
-                    if rank == 0:
-                        var_extract = var
-                    elif rank == 1:
-                        var_extract = var[selectpoint]
-                    elif rank == 2:
-                        var_extract = var[:, selectpoint]
-                    elif rank == 3:
-                        var_extract = var[:, :, selectpoint]
-                    elif rank == 4:
-                        var_extract = var[:, :, :, selectpoint]
-                    elif rank == 5:
-                        var_extract = var[:, :, :, :, selectpoint]
+                    if needremovetile:
+                        if rank == 1:
+                            # Pour cas de la variable tile dans comparaisons automatiques
+                            var_extract = var[0]
+                        elif rank == 3:
+                            var_extract = var[:, 0, selectpoint]
+                        elif rank == 4:
+                            var_extract = var[:, 0, :, selectpoint]
+                        elif rank == 5:
+                            var_extract = var[:, 0, :, :, selectpoint]
+                    else:
+                        if rank == 0:
+                            var_extract = var
+                        elif rank == 1:
+                            var_extract = var[selectpoint]
+                        elif rank == 2:
+                            var_extract = var[:, selectpoint]
+                        elif rank == 3:
+                            var_extract = var[:, :, selectpoint]
+                        elif rank == 4:
+                            var_extract = var[:, :, :, selectpoint]
+                        elif rank == 5:
+                            var_extract = var[:, :, :, :, selectpoint]
 
         else:  # if isPrep, no time dimension, tile is the first dim
-            if selectpoint == -1:
+            if selectpointtest:
                 if needremovetile:
                     if rank == 1:
                         # Pour cas de la variable tile dans comparaisons automatiques
@@ -362,7 +391,8 @@ class prosimu():
 
         return var_extract
 
-    def read(self, varname, fill2zero=False, selectpoint=-1, keepfillvalue=False, removetile=True, needmodif=False):
+    def read(self, varname, fill2zero=False, selectpoint=-1, keepfillvalue=False, removetile=True, needmodif=False,
+             hasDecile = False):
 
         # Vérification du nom de la variable
         if varname not in self.listvar():
@@ -379,9 +409,10 @@ class prosimu():
         # Suppression dimension tile si nécessaire
         # gestion time/pas time en dimension (prep files)
         if "time" not in list(self.dataset.variables.keys()):
-            var = self.extract(varname, varnc, selectpoint=selectpoint, removetile=removetile, hasTime=False)
+            var = self.extract(varname, varnc, selectpoint=selectpoint, removetile=removetile, hasTime=False,
+                               hasDecile=hasDecile)
         else:
-            var = self.extract(varname, varnc, selectpoint=selectpoint, removetile=removetile)
+            var = self.extract(varname, varnc, selectpoint=selectpoint, removetile=removetile, hasDecile=hasDecile)
         # Remplissage des valeurs manquantes si nécessaire
         if (len(var.shape) > 1 or (len(var.shape) == 1 and var.shape[0] > 1)) and not keepfillvalue:
             try:

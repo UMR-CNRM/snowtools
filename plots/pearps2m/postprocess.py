@@ -33,8 +33,6 @@ from collections import Counter, defaultdict
 
 from bronx.stdtypes.date import today
 
-from tasks.oper.get_oper_files import S2MExtractor
-
 from utils.prosimu import prosimu
 from utils.dates import check_and_convert_date, pretty_date
 from plots.temporal.chrono import spaghettis_with_det, spaghettis
@@ -625,7 +623,7 @@ class EnsembleOperDiagsStations(EnsembleOperDiags, EnsembleStation):
 
 class EnsemblePostproc(_EnsembleMassif):
 
-    def __init__(self, ensemble, variables, inputfiles, datebegin, dateend):
+    def __init__(self, ensemble, variables, inputfiles, datebegin, dateend, decile=range(10,100,10)):
         print(inputfiles)
         super(EnsemblePostproc, self).__init__()
         self.ensemble = ensemble
@@ -633,15 +631,13 @@ class EnsemblePostproc(_EnsembleMassif):
         self.ensemble.open(inputfiles)
         self.outfile = 'PRO_post_{0}_{1}.nc'.format(datebegin.ymdh, dateend.ymdh)
         self.standardvars = ['time', 'ZS', 'aspect', 'slope', 'massif_num', 'longitude', 'latitude']
+        self.decile = decile
 
     def create_outfile(self):
         # if not os.path.isdir(self.outfile):
         # print(self.outfile)
         #     raise DirNameException(self.outfile)
         self.outdataset = prosimu(self.outfile, ncformat='NETCDF4_CLASSIC', openmode='w')
-        # self.outdataset = netCDF4.Dataset(self.outfile.localpath(), openmode="wb", format='NETCDF4_CLASSIC')
-        #os.system('touch("PRO_post_2020092706_2020092806.nc")')
-        #self.outdataset = netCDF4.Dataset('PRO_post_2020092706_2020092806.nc', openmode="w", format='NETCDF4_CLASSIC')
 
     def init_outfile(self):
         # copy global attributes all at once via dictionary
@@ -671,10 +667,35 @@ class EnsemblePostproc(_EnsembleMassif):
         self.create_outfile()
         self.init_outfile()
         print('init done')
-        self.median()
-        print('median done')
+        # self.median()
+        # print('median done')
+        self.deciles()
         self.outdataset.close()
         self.ensemble.close()
+
+    def deciles(self):
+        # create decile dimension
+        self.outdataset.dataset.createDimension('decile', len(self.decile))
+        # create decile variable
+        x = self.outdataset.dataset.createVariable('decile', 'i4', 'decile')
+        self.outdataset.dataset['decile'][:] = self.decile[:]
+        atts = {'long_name': "Percentiles of the ensemble forecast"}
+        self.outdataset.dataset['decile'].setncatts(atts)
+        for name, variable in self.ensemble.simufiles[0].dataset.variables.items():
+            if name in self.variables:
+                # calculate deciles
+                vardecile = self.ensemble.quantile(name, self.decile)
+                # get decile axis in the right place
+                vardecile = np.moveaxis(vardecile, 0, -1)
+                fillval = self.ensemble.simufiles[0].getfillvalue(name)
+                x = self.outdataset.dataset.createVariable(name, variable.datatype, variable.dimensions + ('decile',),
+                                                           fill_value=fillval)
+                # copy variable attributes all at once via dictionary, but without _FillValue
+                attdict = self.ensemble.simufiles[0].dataset[name].__dict__
+                attdict.pop('_FillValue', None)
+                self.outdataset.dataset[name].setncatts(attdict)
+                print(vardecile.shape)
+                self.outdataset.dataset[name][:] = vardecile[:]
 
     def median(self):
         print('entered median')
@@ -695,6 +716,10 @@ class EnsemblePostproc(_EnsembleMassif):
 
 
 if __name__ == "__main__":
+
+    # The following class has a vortex-dependence
+    # Should not import than above to avoid problems when importing the module from vortex
+    from tasks.oper.get_oper_files import S2MExtractor
 
     c = config()
     os.chdir(c.diroutput)

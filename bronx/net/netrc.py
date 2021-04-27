@@ -74,11 +74,6 @@ class netrc:
            Dictionary mapping host names to ``(login, account, password)`` tuples.  The
            'default' entry, if any, is represented as a pseudo-host by that name.
 
-        .. attribute:: netrc.hosts
-
-           Dictionary mapping host names to ``(login, account, password)`` tuples.  The
-           'default' entry, if any, is represented as a pseudo-host by that name.
-
         """
         default_netrc = file is None
         if file is None:

@@ -17,14 +17,14 @@ usage = "usage: get_oper_files.py [-b YYYYMMDD] [--previ]"
 
 
 class configdev(object):
-    rundate = Date(2021, 03, 22, 12)    # Run date can be at 3TU, 6TU, 9TU
+    rundate = Date(2021, 3, 22, 12)    # Run date can be at 3TU, 6TU, 9TU
     previ = False  # False for analysis, True for forecast
     xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
     list_geometry = ["alp", "pyr", "cor", "postes"]
 
 
 class config(object):
-    rundate = Date(2021, 03, 22, 12)    # Run date can be at 3TU, 6TU, 9TU
+    rundate = Date(2021, 3, 22, 12)    # Run date can be at 3TU, 6TU, 9TU
     previ = False  # False for analysis, True for forecast
     xpid = "oper"
     list_geometry = ["alp", "pyr", "cor", "postes"]
