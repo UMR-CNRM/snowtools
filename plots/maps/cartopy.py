@@ -84,6 +84,10 @@ class _Map_massifs(Mplfigure):
             self.geofeatures = kwargs['geofeatures']
         else:
             self.geofeatures = False
+        if 'bgimage' in kwargs.keys():
+            self.bgimage = kwargs['bgimage']
+        else:
+            self.bgimage = False
         if hasattr(self, 'nrow') and hasattr(self, 'ncol') and hasattr(self, 'iax'):
             ax = plt.subplot(self.nrow, self.ncol, self.iax+1, projection=ccrs.PlateCarree())
         else:
@@ -97,6 +101,9 @@ class _Map_massifs(Mplfigure):
             ax.add_feature(cartopy.feature.BORDERS, linestyle=':')
             ax.add_feature(cartopy.feature.LAKES, alpha=0.5)
             ax.add_feature(cartopy.feature.RIVERS)
+        elif self.bgimage:
+            os.environ["CARTOPY_USER_BACKGROUNDS"] = os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')
+            ax.background_img(resolution="high")
         return ax
 
     def openfigure(self):

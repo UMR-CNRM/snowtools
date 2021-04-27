@@ -348,12 +348,12 @@ attributes = dict(
 indata = Alphafile("grid_postproc_2021041006_2021041406_all2alpha_testwrite2.nc")
 # for i in range(32):
 #     print(i, indata.snow[i,:,:].max(), indata.snow[i,:,:].min())
-m = MapFrance(geofeatures=True)
+m = MapFrance(geofeatures=False, bgimage=True)
 m.init_massifs(**attributes['SD_1DY_ISBA'])
 m.draw_mesh(indata.lons, indata.lats, indata.snow[18,:,:], **attributes['SD_1DY_ISBA'])
 m.set_figtitle("SD_1DY_ISBA 2021041218")
 m.set_maptitle("Percentile 90")
-m.save("grid_postproc_p90_2021041218_alpha.png", formatout="png")
+m.save("grid_postproc_p90_2021041218_alpha_terrimage.png", formatout="png")
 m.close()
 
 
