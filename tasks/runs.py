@@ -64,8 +64,11 @@ class surfexrun(object):
             self.modeinterpol = "MPI"
         else:
             if not self.onlyextractforcing:
-                if "MPIAUTO" in os.readlink(self.execdir + "/OFFLINE"):
-                    self.moderun = "MPIRUN"
+                if os.path.islink(self.execdir + "/OFFLINE"):
+                    if "MPIAUTO" in os.readlink(self.execdir + "/OFFLINE"):
+                        self.moderun = "MPIRUN"
+                    else:
+                        self.moderun = moderun
                 else:
                     self.moderun = moderun
             else:
