@@ -58,6 +58,8 @@ class boxplots(Mplfigure):
         firsttick = self.firstboxposition + (nsimu - 1) / 2.
 
         self.plot.set_xticks(np.arange(firsttick, nboxes + 1, nsimu))
+        # Il y a un problème avec les "xtickslabels" en python 3 : seul le premier element
+        # de la liste s'affiche
         plt.setp(self.plot.get_xticklabels(), fontsize=18)
         self.plot.set_xlim((self.firstboxposition - 1, nboxes + 1))
 
