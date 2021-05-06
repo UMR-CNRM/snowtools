@@ -60,25 +60,28 @@ class boxplots(Mplfigure):
         self.plot.set_xticks(np.arange(firsttick, nboxes + 1, nsimu))
         # Il y a un problème avec les "xtickslabels" en python 3 : seul le premier element
         # de la liste s'affiche
-        plt.setp(self.plot.get_xticklabels(), fontsize=18)
+        plt.setp(self.plot.get_xticklabels(), fontsize=14)
         self.plot.set_xlim((self.firstboxposition - 1, nboxes + 1))
 
         self.set_yaxis(**kwargs)
         self.plot.grid(axis='y')
         plt.tight_layout()
 
+        list_legend = []
         if nsimu > 1:
-            list_legend = []
             for bp in self.bp:
                 list_legend.append(bp['boxes'][0])
         else:
             if isinstance(kwargs['fillcolor'], list):
                 l = kwargs['fillcolor']
-                indexes = [l.index(x) for x in set(l)]
-                list_legend = [self.bp[0]['boxes'][indexes]]
+                # On veut les indices dans l'ordre croissant puisque c'est l'ordre avec lequel ont été faites les boxplots
+                # le sort est necessaire car set(l) modifie l'ordre (ordonné selon les éléments de l)
+                indexes = np.sort([l.index(x) for x in set(l)])
+                list_legend = [self.bp[0]['boxes'][ind] for ind in indexes]
+
 
         if 'label' in kwargs.keys():
-            self.plot.legend(list_legend, kwargs['label'], loc="upper right", fontsize=20)
+            self.plot.legend(list_legend, kwargs['label'], loc="upper right", fontsize=18)
 
     def set_yaxis(self, **kwargs):
 
@@ -86,7 +89,7 @@ class boxplots(Mplfigure):
             self.plot.set_ylim([kwargs['forcemin'], kwargs['forcemax']])
         
         if 'ylabel' in kwargs.keys():
-            self.plot.set_ylabel(kwargs['ylabel'], fontsize=20)
+            self.plot.set_ylabel(kwargs['ylabel'], fontsize=18)
 
         plt.setp(self.plot.get_yticklabels(), fontsize=18)
 
@@ -102,11 +105,6 @@ class boxplots_bydepartment(boxplots):
         france = [len(s) == 8 for s in stringstations]
 
         list_dep_uniq = ['74', '73', '38,26', '05', '04,06', '64,65', '31,09', '66,99', '20']
-
-        if nsimu == 1:
-            # Color Alps departments in red, Pyr ones in blue and Corsica ones in green
-            # There should be a better way to set that
-            kwargs['fillcolor'] = ['red']*5 + ['blue']*3 + ['green']
 
         for dep in list_dep_uniq:
             if ',' in dep:
@@ -125,7 +123,7 @@ class boxplots_bydepartment(boxplots):
 
         kwargs['positions'] = range(self.indsimu, 1 + len(list_dep_uniq) * nsimu, nsimu)
 
-        self.plot.set_xlabel(u'Department', fontsize=20)
+        self.plot.set_xlabel(u'Department', fontsize=18)
         super(boxplots_bydepartment, self).draw(list_scores, **kwargs)
         self.indsimu += 1
 
@@ -133,7 +131,7 @@ class boxplots_bydepartment(boxplots):
 class boxplots_byelevation(boxplots):
 
     def label_elevation(self, tuple_elevations):
-        return str(tuple_elevations[0]) + " - " + str(tuple_elevations[1]) + " m"
+        return str(tuple_elevations[0]) + "-" + str(tuple_elevations[1]) + " m"
 
     def draw(self, elevations, scores, nsimu = 1, **kwargs):
 
@@ -148,7 +146,7 @@ class boxplots_byelevation(boxplots):
         kwargs['fontsize'] = 18
         kwargs['positions'] = range(self.indsimu, 1 + len(list_levels) * nsimu, nsimu)
 
-        self.plot.set_xlabel(u'Elevation', fontsize=20)
+        self.plot.set_xlabel(u'Elevation', fontsize=18)
         super(boxplots_byelevation, self).draw(list_scores, **kwargs)
         self.indsimu += 1
 
@@ -178,7 +176,7 @@ class boxplots_byyear(boxplots):
         print (nsimu)
         print (kwargs['positions'])
 
-        self.plot.set_xlabel(u'Year', fontsize=20)
+        self.plot.set_xlabel(u'Year', fontsize=18)
         super(boxplots_byyear, self).draw(list_scores, **kwargs)
         self.indsimu += 1
 

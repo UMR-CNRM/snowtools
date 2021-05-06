@@ -346,7 +346,7 @@ class ComparisonSimObs(object):
 
         # Default labels
 #        self.set_sim_labels(['New', 'Old', '', '', ''])
-#        self.set_sim_labels(['Alps', 'Pyrenees', 'Corsica', '', ''])
+        self.set_massifs_labels(['Alps', 'Pyrenees', 'Corsica', '', ''])
         self.set_sim_labels(['Reference reanalysis', 'Reanalysis with no temperature observation', 'Reanalysis without evaluation observations', '', ''])
 
         # Default colors
@@ -357,6 +357,9 @@ class ComparisonSimObs(object):
 
     def set_sim_labels(self, list_labels):
         self.list_labels = list_labels
+
+    def set_massifs_labels(self, list_labels):
+        self.list_labels_massifs = list_labels
 
     def plot(self):
 
@@ -496,14 +499,16 @@ class ComparisonSimObs(object):
             print (np.sum(valid))
 
         for indSim in range(0, self.nsim):
+            if self.nsim == 1:
+                # Color Alps departments in red, Pyr ones in blue and Corsica ones in green
+                # Add legend (by adding a 'label' key to the args)
+                kwargs['fillcolor'] = ['red']*5 + ['blue']*3 + ['green']
+                kwargs['label'] = self.list_labels_massifs
 
-            kwargs['fillcolor'] = self.list_colors[indSim]
-            # if nsimu == 1 can be overwrited in the boxplot class
             b1.draw(stations[valid], list_scores[indSim, valid], nsimu=self.nsim, **kwargs)
 
             #print list_scores[indSim, valid].shape
 
-        kwargs['label'] = self.list_labels
         b1.finalize(nsimu=self.nsim, **kwargs)
         plotfilename = options.dirplot + "/" + label + "_departments." + options.format
         print ('plot ' + plotfilename)
@@ -514,11 +519,18 @@ class ComparisonSimObs(object):
         b2 = boxplots_byelevation()
 
         for indSim in range(0, self.nsim):
+            # Dans le cas des boxplot par tranche d'altitude on n'ajoute pas de légende si
+            # on trace une seule simulation
+            if self.nsim > 1:
+                kwargs['label'] = self.list_labels
+                kwargs['fillcolor'] = self.list_colors[indSim]
+            else:
+                # Color all boxplots in blue if there is only 1 simulation
+                kwargs['fillcolor'] = self.list_colors[1]
+                kwargs.pop('label', None)
             valid = self.nvalues[indSim, :] > 10
-            kwargs['fillcolor'] = self.list_colors[indSim]
             b2.draw(elevations[valid], list_scores[indSim, valid], nsimu=self.nsim, **kwargs)
 
-        kwargs['label'] = self.list_labels
         b2.finalize(nsimu=self.nsim, **kwargs)
         plotfilename = options.dirplot + "/" + label + "_elevations." + options.format
         print ('plot ' + plotfilename)
