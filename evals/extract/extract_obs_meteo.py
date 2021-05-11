@@ -33,29 +33,50 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------
     # On prend toutes les heures
 
-    question1 = question("question_r_mens.q")
-    question1.set_fileout("obs_mensuelles_brutes_RR.data")
-    question1.set_varout(["dat", "mensq.num_poste", "poste.nom_usuel", "poste.alti", "rr", "rr_me"])
-    question1.set_tables(["MENSQ", "POSTE"])
-    question1.set_joincondition("MENSQ.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (" + ','.join(stations_r) + ')')
-    question1.set_period_monthly(datedeb, datefin)
-    question1.set_order(["mensq.num_poste", "dat"])
-    question1.run()
-
-    question2 = question("question_tn_mens.q")
-    question2.set_fileout("obs_mensuelles_brutes_TN.data")
-    question2.set_varout(["dat", "mensq.num_poste", "poste.nom_usuel", "poste.alti", "tn","tn_me"])
-    question2.set_tables(["MENSQ", "POSTE"])
-    question2.set_joincondition("MENSQ.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (" + ','.join(stations_t) + ')')
-    question2.set_period_monthly(datedeb, datefin)
-    question2.set_order(["mensq.num_poste", "dat"])
-    question2.run()
-
-    question3 = question("question_tx_mens.q")
-    question3.set_fileout("obs_mensuelles_brutes_TX.data")
-    question3.set_varout(["dat", "mensq.num_poste", "poste.nom_usuel", "poste.alti", "tx","tx_me"])
-    question3.set_tables(["MENSQ", "POSTE"])
-    question3.set_joincondition("MENSQ.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (" + ','.join(stations_t) + ')')
-    question3.set_period_monthly(datedeb, datefin)
-    question3.set_order(["mensq.num_poste", "dat"])
-    question3.run()
+# 1. RR mensuelles
+#-----------------
+#
+#    question1 = question("question_r_mens.q")
+#    question1.set_fileout("obs_mensuelles_brutes_RR.data")
+#    question1.set_varout(["dat", "mensq.num_poste", "poste.nom_usuel", "poste.alti", "rr", "rr_me"])
+#    question1.set_tables(["MENSQ", "POSTE"])
+#    question1.set_joincondition("MENSQ.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (" + ','.join(stations_r) + ')')
+#    question1.set_period_monthly(datedeb, datefin)
+#    question1.set_order(["mensq.num_poste", "dat"])
+#    question1.run()
+#
+# 2. TN mensuelles
+#-----------------
+#
+#    question2 = question("question_tn_mens.q")
+#    question2.set_fileout("obs_mensuelles_brutes_TN.data")
+#    question2.set_varout(["dat", "mensq.num_poste", "poste.nom_usuel", "poste.alti", "tn","tn_me"])
+#    question2.set_tables(["MENSQ", "POSTE"])
+#    question2.set_joincondition("MENSQ.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (" + ','.join(stations_t) + ')')
+#    question2.set_period_monthly(datedeb, datefin)
+#    question2.set_order(["mensq.num_poste", "dat"])
+#    question2.run()
+#
+# 3. TX mensuelles
+#-----------------
+#
+#    question3 = question("question_tx_mens.q")
+#    question3.set_fileout("obs_mensuelles_brutes_TX.data")
+#    question3.set_varout(["dat", "mensq.num_poste", "poste.nom_usuel", "poste.alti", "tx","tx_me"])
+#    question3.set_tables(["MENSQ", "POSTE"])
+#    question3.set_joincondition("MENSQ.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (" + ','.join(stations_t) + ')')
+#    question3.set_period_monthly(datedeb, datefin)
+#    question3.set_order(["mensq.num_poste", "dat"])
+#    question3.run()
+#
+# 4. T horaires 
+#---------------
+    question4 = question("question_t.q")
+    question4.set_fileout("obs_brutes_T.data")
+    question4.set_varout(["dat", "H.num_poste", "poste.nom_usuel", "poste.alti", "tn", "tx", "t"])
+    question4.set_tables(["H", "POSTE"])
+    question4.set_joincondition("H.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (" + ','.join(stations_t) + ')')
+    question4.set_period(datedeb, datefin)
+    question4.set_condition("tn is not NULL and tx is not NULL")
+    question4.set_order(["H.num_poste", "dat"])
+    question4.run()

@@ -12,6 +12,7 @@ import sys
 import os
 import numpy as np
 import datetime
+import time
 
 import matplotlib
 matplotlib.use('Agg')
@@ -67,6 +68,10 @@ def parse_options(arguments):
     parser.add_option("--yearly",
                       action="store_true", dest="yearly", default=False,
                       help="Yearly plots")
+
+    parser.add_option("--decade",
+                      action="store_true", dest="decade", default=False,
+                      help="Decade plots")
 
     parser.add_option("--plot",
                       action="store_true", dest="plot", default=False,
@@ -151,8 +156,55 @@ def yearlyplots(datebegin, dateend, dataObs):
 
     if options.scores:
         boxplots_yearly(list_years, yearly_nvalues, yearly_bias, list_colors = C.list_colors, list_labels = C.list_labels, label='bias', ylabel='Bias (cm)')
-        boxplots_yearly(list_years, yearly_nvalues, yearly_rmse, list_colors = C.list_colors, list_labels = C.list_labels, label='rmse', ylabel='RMSE (cm)')
+        boxplots_yearly(list_years, yearly_nvalues, yearly_rmse, list_colors = C.list_colors, list_labels = C.list_labels, label='rmse', ylabel='RMSD (cm)')
 
+def decadeplots(datebegin, dateend, dataObs):
+    # Il y a un problème avec les 'xticks' en python 3 : seul le 1er élément de la liste s'affiche...
+    init = time.time()
+    datepro = datebegin
+
+    yearly_nvalues = []
+    yearly_bias = []
+    yearly_rmse = []
+    list_years = [1980, 1990, 2000, 2010]
+    
+    for dec in list_years:
+        print('Debut traitement decade {0:d} : {1:f}s'.format(dec, time.time()-init))
+        C = ComparisonSimObs(dataObs)
+        datepro = datetime.datetime(dec, 8, 1, 6)
+        list_pro = []
+        for d, dirsim in enumerate(options.dirsim):
+            list_pro.append([])
+        for y in range(10):
+            for d, dirsim in enumerate(options.dirsim):
+                dateprobegin, dateproend = get_file_period("PRO", dirsim, datepro, dateend)
+                i = len(list_pro[d])
+                proname = "PRO_" + str(dec+y) + "_" + str(dec+y+1) + "_simu" + str(d) + ".nc"
+                os.rename("PRO.nc", proname)
+                list_pro[d].append(proname)
+            datepro = dateproend
+
+        for d, dirsim in enumerate(options.dirsim):
+            if options.plot or options.scores:
+                C.read_sim(list_pro[d])
+        print('Fin lecture fichiers PRO : {1:f}s'.format(dec, time.time()-init))
+
+        if options.labels:
+            C.set_sim_labels(map(str.strip, options.labels.split(',')))
+
+        if options.scores:
+            C.scores()
+            yearly_nvalues.append(C.nvalues)
+            yearly_bias.append(C.bias)
+            yearly_rmse.append(C.rmse)
+
+        print('Fin traitement decade {0:d} : {1:f}s'.format(dec, time.time()-init))
+
+    if options.scores:
+        boxplots_yearly(list_years, yearly_nvalues, yearly_bias, list_colors = C.list_colors, list_labels = C.list_labels, label='bias', ylabel='Bias (cm)')
+        print('Plot boxplot_biais : {0:f}s'.format(time.time()-init))
+        boxplots_yearly(list_years, yearly_nvalues, yearly_rmse, list_colors = C.list_colors, list_labels = C.list_labels, label='rmse', ylabel='RMSD (cm)')
+        print('Plot boxplot_rmse : {0:f}s'.format(time.time()-init))
 
 def boxplots_yearly(list_years, list_nvalues, list_scores, list_colors, list_labels, label, **kwargs):
 
@@ -294,7 +346,8 @@ class ComparisonSimObs(object):
 
         # Default labels
 #        self.set_sim_labels(['New', 'Old', '', '', ''])
-        self.set_sim_labels(['Alps', 'Pyrenees', 'Corsica', '', ''])
+        self.set_massifs_labels(['Alps', 'Pyrenees', 'Corsica', '', ''])
+        self.set_sim_labels(['Reference reanalysis', 'Reanalysis with no temperature observation', 'Reanalysis without evaluation observations', '', ''])
 
         # Default colors
         self.set_sim_colors(['red', 'blue', 'grey', 'orange', 'green'])
@@ -304,6 +357,9 @@ class ComparisonSimObs(object):
 
     def set_sim_labels(self, list_labels):
         self.list_labels = list_labels
+
+    def set_massifs_labels(self, list_labels):
+        self.list_labels_massifs = list_labels
 
     def plot(self):
 
@@ -348,20 +404,27 @@ class ComparisonSimObs(object):
         print (nivose)
 
     def scores(self):
-
+        init = time.time()
         self.nvalues = np.zeros((self.nsim, self.nstations))
         self.bias = np.zeros((self.nsim, self.nstations))
         self.rmse = np.zeros((self.nsim, self.nstations))
         self.meansd = np.zeros((self.nsim, self.nstations))
 
+        print('Debut boucle stations : {0:f}s'.format(time.time()-init))
         for s, station in enumerate(self.listStations):
+            print('Station n°{0:d} : {1:f}s'.format(s, time.time()-init))
 
             for indSim in range(0, self.nsim):
-
+                t1 = time.time()
                 available, timeObs, timeSim, sdObs, sdSim = self.get_obs_sim(station, indSim)
+                t2 = time.time()
+                print('Appel a get_obs_sim : {0:f}s'.format(t2-t1))
 
                 if available:
+                    t1 = time.time()
                     scores = DeterministicScores_Heterogeneous(timeObs, timeSim, sdObs, sdSim)
+                    t2 = time.time()
+                    print('Calcul scores sim {0:d} : {1:f}s'.format(indSim, t2-t1))
                     self.nvalues[indSim, s] = scores.nvalues()
                     self.bias[indSim, s] = scores.bias()
                     self.rmse[indSim, s] = scores.rmse()
@@ -372,7 +435,7 @@ class ComparisonSimObs(object):
         arrayStations = np.array(map(int, self.listStations))
 
         self.boxplots_scores(arrayStations, np.array(self.elevations), self.bias, 'bias', ylabel='Bias (cm)')
-        self.boxplots_scores(arrayStations, np.array(self.elevations), self.rmse, 'rmse', ylabel='RMSE (cm)')
+        self.boxplots_scores(arrayStations, np.array(self.elevations), self.rmse, 'rmse', ylabel='RMSD (cm)')
         self.boxplots_scores(arrayStations, np.array(self.elevations), self.meansd, 'mean_SD', ylabel='Mean Snow Depth (cm)')
 
     def get_obs_sim(self, station, indSim):
@@ -436,14 +499,16 @@ class ComparisonSimObs(object):
             print (np.sum(valid))
 
         for indSim in range(0, self.nsim):
+            if self.nsim == 1:
+                # Color Alps departments in red, Pyr ones in blue and Corsica ones in green
+                # Add legend (by adding a 'label' key to the args)
+                kwargs['fillcolor'] = ['red']*5 + ['blue']*3 + ['green']
+                kwargs['label'] = self.list_labels_massifs
 
-            kwargs['fillcolor'] = self.list_colors[indSim]
-            # if nsimu == 1 can be overwrited in the boxplot class
             b1.draw(stations[valid], list_scores[indSim, valid], nsimu=self.nsim, **kwargs)
 
             #print list_scores[indSim, valid].shape
 
-        kwargs['label'] = self.list_labels
         b1.finalize(nsimu=self.nsim, **kwargs)
         plotfilename = options.dirplot + "/" + label + "_departments." + options.format
         print ('plot ' + plotfilename)
@@ -454,11 +519,18 @@ class ComparisonSimObs(object):
         b2 = boxplots_byelevation()
 
         for indSim in range(0, self.nsim):
+            # Dans le cas des boxplot par tranche d'altitude on n'ajoute pas de légende si
+            # on trace une seule simulation
+            if self.nsim > 1:
+                kwargs['label'] = self.list_labels
+                kwargs['fillcolor'] = self.list_colors[indSim]
+            else:
+                # Color all boxplots in blue if there is only 1 simulation
+                kwargs['fillcolor'] = self.list_colors[1]
+                kwargs.pop('label', None)
             valid = self.nvalues[indSim, :] > 10
-            kwargs['fillcolor'] = self.list_colors[indSim]
             b2.draw(elevations[valid], list_scores[indSim, valid], nsimu=self.nsim, **kwargs)
 
-        kwargs['label'] = self.list_labels
         b2.finalize(nsimu=self.nsim, **kwargs)
         plotfilename = options.dirplot + "/" + label + "_elevations." + options.format
         print ('plot ' + plotfilename)
@@ -504,7 +576,9 @@ if __name__ == "__main__":
     elif options.yearly:
         print ("yearly comparisons")
         yearlyplots(options.datebegin, options.dateend, dataObs)
-
+    elif options.decade:
+        print ("decade comparisons")
+        decadeplots(options.datebegin, options.dateend, dataObs)
     else:
         print ("full comparison")
         fullplots(options.datebegin, options.dateend, dataObs)

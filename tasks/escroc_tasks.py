@@ -33,6 +33,9 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
 
         t = self.ticket
 
+        if not hasattr(self.conf, "genv"):
+            self.conf.genv = 'uenv:cen.02@CONST_CEN'
+
         list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
         dict_dates_end_forc = get_dic_dateend(list_dates_begin_forc, list_dates_end_forc)
         dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
@@ -68,7 +71,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
 #                 nativefmt      = 'netcdf',
 #                 local          = 'PGD.nc',
 #                 geometry       = self.conf.geometry,
-#                 genv            = 'uenv:cen.01@CONST_CEN',
+#                 genv            = self.conf.genv,
 #                 gvar           = 'pgd_[geometry::area]',
 #                 model          = 'surfex',
 #                 fatal          = False,
@@ -139,7 +142,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
 # #                     nativefmt      = 'netcdf',
 # #                     local          = 'init_TG.nc',
 # #                     geometry       = self.conf.geometry,
-# #                     genv            = 'uenv:cen.01@CONST_CEN',
+# #                     genv            = self.conf.genv,
 # #                     gvar           = 'climtg_[geometry::area]',
 # #                     model          = 'surfex',
 # #                     fatal          = False
@@ -168,7 +171,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapI_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv           = 'uenv:cen.01@CONST_CEN',
+                genv           = self.conf.genv,
                 source         = 'ecoclimap1',
                 model          = 'surfex',
             ),
@@ -182,7 +185,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapII_eu_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv            = self.conf.genv,
                 source         = 'ecoclimap2',
                 model          = 'surfex',
             ),
@@ -193,7 +196,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
             tb04 = toolbox.input(
                 role            = 'Parameters for F06 metamorphism',
                 kind            = 'ssa_params',
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv            = self.conf.genv,
                 nativefmt       = 'netcdf',
                 local           = 'drdt_bst_fit_60.nc',
                 model          = 'surfex',
@@ -214,7 +217,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                 tb05 = toolbox.input(
                     role            = 'Nam_surfex',
                     source          = 'OPTIONS_default.nam',
-                    genv            = 'uenv:cen.01@CONST_CEN',
+                    genv            = self.conf.genv,
                     kind            = 'namelist',
                     model           = 'surfex',
                     local           = 'OPTIONS.nam',
@@ -273,7 +276,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                     kind           = 'offline',
                     local          = 'OFFLINE',
                     model          = 'surfex',
-                    genv           = 'uenv:cen.01@CONST_CEN',
+                    genv           = self.conf.genv,
                     gvar           = 'master_offline_nompi',
                 )
 
@@ -288,7 +291,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                         kind           = 'buildpgd',
                         local          = 'PGD',
                         model          = 'surfex',
-                        genv           = 'uenv:cen.01@CONST_CEN',
+                        genv           = self.conf.genv,
                         gvar           = 'master_pgd_nompi',
                     )
 
@@ -303,7 +306,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                         kind           = 'prep',
                         local          = 'PREP',
                         model          = 'surfex',
-                        genv           = 'uenv:cen.01@CONST_CEN',
+                        genv           = self.conf.genv,
                     )
 
                     print(t.prompt, 'tb08 =', tb08)

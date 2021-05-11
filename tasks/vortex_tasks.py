@@ -31,6 +31,9 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
 
         t = self.ticket
 
+        if not hasattr(self.conf, "genv"):
+            self.conf.genv = 'uenv:cen.02@CONST_CEN'
+
         # Definition of geometries, safran xpid/block and list of dates from S2MTaskMixIn methods
         list_geometry = self.get_list_geometry(meteo=self.conf.meteo)
         source_safran, block_safran = self.get_source_safran(meteo=self.conf.meteo)
@@ -210,7 +213,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     nativefmt      = 'netcdf',
                     local          = 'init_TG.nc',
                     geometry       = self.conf.geometry,
-                    genv            = 'uenv:cen.01@CONST_CEN',
+                    genv            = self.conf.genv,
                     gvar           = 'climtg_[geometry::area]',
                     model          = 'surfex',
                     fatal          = False
@@ -244,7 +247,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapI_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv           = 'uenv:cen.01@CONST_CEN',
+                genv           = self.conf.genv,
                 source         = 'ecoclimap1',
                 model          = 'surfex',
             ),
@@ -259,7 +262,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapII_eu_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv            = self.conf.genv,
                 source         = 'ecoclimap2',
                 model          = 'surfex',
             ),
@@ -271,7 +274,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             tb04 = toolbox.input(
                 role            = 'Parameters for F06 metamorphism',
                 kind            = 'ssa_params',
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv            = self.conf.genv,
                 nativefmt       = 'netcdf',
                 local           = 'drdt_bst_fit_60.nc',
                 model          = 'surfex',
@@ -294,7 +297,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 tb05 = toolbox.input(
                     role            = 'Nam_surfex',
                     source          = 'OPTIONS_default.nam',
-                    genv            = 'uenv:cen.01@CONST_CEN',
+                    genv            = self.conf.genv,
                     kind            = 'namelist',
                     model           = 'surfex',
                     local           = 'OPTIONS.nam',
@@ -368,7 +371,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     kind           = 'offline',
                     local          = 'OFFLINE',
                     model          = 'surfex',
-                    genv           = 'uenv:cen.01@CONST_CEN',
+                    genv           = self.conf.genv,
                     gvar           = 'master_surfex_offline_mpi',
                 )
 
@@ -383,7 +386,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                         kind           = 'buildpgd',
                         local          = 'PGD',
                         model          = 'surfex',
-                        genv           = 'uenv:cen.01@CONST_CEN',
+                        genv           = self.conf.genv,
                         gvar           = 'master_pgd_mpi',
                     )
 
@@ -412,7 +415,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     kind           = 'offline',
                     local          = 'INTERPOL',
                     model          = 'surfex',
-                    genv           = 'uenv:cen.01@CONST_CEN',
+                    genv           = self.conf.genv,
                     gvar           = 'master_interpol_mpi',
                 )
 
@@ -420,6 +423,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print()
 
         if 'compute' in self.steps:
+
+            print (self.conf.meteo, self.conf.interpol)
 
             if self.conf.meteo == "safran":
                 # Forcing files need to be converted from flat to slopes geometry

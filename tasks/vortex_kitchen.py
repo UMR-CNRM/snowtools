@@ -255,7 +255,7 @@ class vortex_kitchen(object):
             # minutes per year for one member computing all points
             minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 5, pyr_flat = 5,
                                    cor_allslopes = 5, cor_flat = 1, postes = 5,
-                                   lautaret = 120, lautaretreduc = 5)
+                                   lautaret = 120, lautaretreduc = 5, grandesrousses250 = 35)
 
             for site_snowmip in ["cdp", "oas", "obs", "ojp", "rme", "sap", "snb", "sod", "swa", "wfj"]:
                 if self.options.scores:
@@ -266,7 +266,7 @@ class vortex_kitchen(object):
             for massif_safran in range(1, 100):
                 minutes_peryear[str(massif_safran)] = 90
 
-            key = self.options.region if self.options.region in list(minutes_peryear.keys()) else "alp_allslopes"
+            key = self.options.vconf if self.options.vconf in list(minutes_peryear.keys()) else "alp_allslopes"
 
             estimation = Period(minutes=minutes_peryear[key]) * \
                          max(1, (self.options.datefin.year - self.options.datedeb.year)) * \

@@ -6,6 +6,7 @@ Created on 20 mars 2018
 
 import numpy as np
 from utils.prosimu import prosimu
+import time
 
 ESMSnowMIP_dicvarnames = dict(snowdepth="snd_auto", snowswe="snw_auto", snowdepthman="snd_man", snowsweman="snw_man", tsurf="ts", albedo="albs")
 ESMSnowMIP_alternate_varnames = dict(snd_auto="snd_can_auto")
@@ -113,12 +114,16 @@ class DeterministicScores_Mask(DeterminsticScores):
 
     def extract_common_vectors(self, maskObs, maskSim, obs, sim):
         '''Extract common date between observations and simulations'''
-
         self.modelMask = maskSim
         self.obsMask = maskObs
-
+        t1 = time.time()
         self.obsCommon = obs[self.obsMask]
+        t2 = time.time()
+        print('Extract obs array {0:f}'.format(t2-t1))
+
         self.simCommon = sim[self.modelMask]
+        t3 = time.time()
+        print('Extract sim array {0:f}'.format(t3-t2))
 
 
 class DeterministicScores_CommonObs(DeterminsticScores):
@@ -146,6 +151,7 @@ class DeterministicScores_Heterogeneous(DeterministicScores_Mask):
     def extract_common_vectors(self, timeObs, timeSim, obs, sim):
         '''Extract common date between observations and simulations'''
         # Identify winter period
+        t1 = time.time()
         winter = np.empty_like(timeObs, 'bool')
         for i, t in enumerate(timeObs):
             winter[i] = t.month >= self.startwinter or t.month <= self.endwinter
@@ -169,6 +175,8 @@ class DeterministicScores_Heterogeneous(DeterministicScores_Mask):
 
         maskSim = np.in1d(timeSim_unique, timeObs_unique)
         maskObs = np.in1d(timeObs_unique, timeSim_unique)
+        t2 = time.time()
+        print('Compute masks in {0:f}s'.format(t2-t1))
 
         super(DeterministicScores_Heterogeneous, self).extract_common_vectors(maskObs, maskSim, obs_unique, sim_unique)
 

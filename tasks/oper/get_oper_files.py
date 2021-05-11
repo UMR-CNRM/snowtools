@@ -24,23 +24,26 @@ class configdev(object):
     list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']  # List of extracted geometries
 
     list_members = footprints.util.rangex(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
-
+    firstday = False
 
 class config(object):
     rundate = Date(2018, 10, 26, 3)    # Run date can be at 3TU, 6TU, 9TU
     previ = False  # False for analysis, True for forecast
     xpid = "oper"
-    list_geometry = ['alp_allslopes']
     list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']  # converted later with iganame property
     list_members = footprints.util.rangex(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
-
+    firstday = False
 
 def parse_options(arguments):
     parser = OptionParser(usage)
 
     parser.add_option("-b",
                       action="store", type="string", dest="datebegin", default=today().ymd,
-                      help="First year of extraction")
+                      help="First day of extraction")
+
+    parser.add_option("-e",
+                      action="store", type="string", dest="dateend", default=today().ymd,
+                      help="Last day of extraction")
 
     parser.add_option("--previ",
                       action="store_true", dest="previ", default=False,
@@ -53,6 +56,14 @@ def parse_options(arguments):
     parser.add_option("--deterministic",
                       action="store_true", dest="deterministic", default=False,
                       help="Dev chain instead of operational chain")
+
+    parser.add_option("--geometry",
+                      action="store", type="string", dest="geometry", default=None,
+                      help="geometry")
+
+    parser.add_option("--firstday",
+                      action="store_true", dest="firstday", default=False,
+                      help="only extract first day")
 
     (options, args) = parser.parse_args(arguments)  # @UnusedVariable
 
@@ -71,6 +82,12 @@ class configcommand(config):
         if options.deterministic:
             self.list_members = footprints.util.rangex(35, 35)
 
+        if options.geometry:
+            self.list_geometry = [options.geometry]
+
+        if options.firstday:
+            self.firstday = True
+
 
 class configcommanddev(configdev):
 
@@ -84,6 +101,14 @@ class S2MExtractor(S2MTaskMixIn):
         toolbox.active_now = True
         self.conf = conf
         self.datebegin, self.dateend = self.get_period()
+        if self.conf.firstday:
+            self.dateend = tomorrow(base=self.datebegin)
+
+    def set_rundate(self, date):
+        self.conf.rundate = date
+        self.datebegin, self.dateend = self.get_period()
+        if self.conf.firstday:
+            self.dateend = tomorrow(base=self.datebegin)
 
     def get(self):
         meteo_outputs = self.get_meteo()
@@ -212,6 +237,17 @@ class S2MExtractor(S2MTaskMixIn):
 if __name__ == "__main__":
 
     options = parse_options(sys.argv)
+
     S2ME = S2MExtractor(conf=configcommand(options))
-    import pprint
-    pprint.pprint(S2ME.get())
+
+    datebegin = check_and_convert_date(options.datebegin)
+    dateend = check_and_convert_date(options.dateend)
+
+    currentdate = datebegin
+
+    while currentdate <= dateend:
+        S2ME.set_rundate(currentdate)
+
+        import pprint
+        pprint.pprint(S2ME.get())
+        currentdate = tomorrow(currentdate)

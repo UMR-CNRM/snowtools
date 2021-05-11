@@ -260,7 +260,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       ELSEIF (IRANK==2) THEN
         DIM_SIZE_OUT(IDOUT)=GRID_DIM_REF(2)
         DIM_SIZE_OUT(IDOUT+1)=GRID_DIM_REF(1)
-        PRINT*, NLATCHUNKSIZE, NLONCHUNKSIZE
+        ! PRINT*, NLATCHUNKSIZE, NLONCHUNKSIZE
         DIM_CHUNK_OUT(IDOUT)=MIN(GRID_DIM_REF(2), NLATCHUNKSIZE)
         DIM_CHUNK_OUT(IDOUT+1)=MIN(GRID_DIM_REF(1), NLONCHUNKSIZE)
         IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
@@ -457,18 +457,26 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
 ! the netCDF variables. In Fortran, the unlimited
 ! dimension must come last on the list of dimids. 
 !And must not have an element equal to zero
-    PRINT*, IMASSIFTODELETE
+    ! PRINT*, IMASSIFTODELETE
     DO IV=1,INVAR
       IF (ANY( VAR_ID_DIMS_OUT(:,IV) == IMASSIFTODELETE ).OR.              &
               ANY( VAR_ID_DIMS_OUT(:,IV) == ILAYERTODELETE ).OR.               &
               (GRID_TYPE == "LL" .AND.  ANY(VAR_NAME_IN(IV) == LL_VARNAME))) CYCLE
       ! Create variable in output file
-      ! PRINT*, DIM_CHUNK_OUT, VAR_NAME_IN(IV), VAR_ID_DIMS_OUT(:,IV)
-      ! PRINT*, DIM_CHUNK_OUT(PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0))
-      CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,VAR_NAME_IN(IV),VAR_TYPE_IN(IV), &
+      IF (SUM(VAR_ID_DIMS_OUT(:,IV)) == 0) THEN
+        ! PRINT*, DIM_CHUNK_OUT, VAR_NAME_IN(IV), VAR_ID_DIMS_OUT(:,IV)
+        ! PRINT*, DIM_CHUNK_OUT(PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0))
+        CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,VAR_NAME_IN(IV),VAR_TYPE_IN(IV), &
+                PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0),VAR_ID_OUT(IV)),&
+                "Cannot def var "//TRIM(VAR_NAME_IN(IV)))
+      ELSE
+        ! PRINT*, DIM_CHUNK_OUT, VAR_NAME_IN(IV), VAR_ID_DIMS_OUT(:,IV)
+        ! PRINT*, DIM_CHUNK_OUT(PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0))
+        CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,VAR_NAME_IN(IV),VAR_TYPE_IN(IV), &
               PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0),VAR_ID_OUT(IV), &
               chunksizes=DIM_CHUNK_OUT(PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0))),&
               "Cannot def var "//TRIM(VAR_NAME_IN(IV)))
+      END IF
       !copy attributes from infile to outfile
       DO IA=1,INATT(IV)
         CALL CHECK(NF90_INQ_ATTNAME(FILE_ID_IN,VAR_ID_IN(IV),IA,ATT_NAME)," Cannot get att name")
