@@ -8,6 +8,14 @@ Created on 29 march 2021
 start collecting resources for plotting maps with cartopy.
 Might be sensitive to the combination of versions of matplotlib and cartopy.
 developed with matplotlib 3.4.0 and cartopy 0.18
+which cartopy version is based on which matplotlib version? (according to documentation)
+cartopy 0.19 -> matplotlib 3.4.1
+cartopy 0.18 -> matplotlib 3.2.1
+cartopy 0.17 -> matplotlib 3.0.2
+cartopy 0.16 -> matplotlib 2.1.2
+cartopy 0.15 -> matplotlib 2.0.0
+cartopy 0.14 -> matplotlib 1.5.1
+cartopy 0.13 -> matplotlib 1.4.3
 
 Usage :
 example :
@@ -28,6 +36,10 @@ $data_dir/shapefiles/natural_earth/cultural/
 files containing land, ocean river and lake features are stored in
 $data_dir/shapefiles/natural_earth/physical/
 
+m = MapFrance(bgimage=True)
+with bgimage=True a background image from Natural Earth is added showing the relief.
+Can not be used if geofeatures=True.
+
 m.init_massifs(palette='Reds')
 
 
@@ -43,10 +55,12 @@ import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
 import cartopy.feature
 from plots.abstracts.figures import Mplfigure
-import fiona
 from utils.infomassifs import infomassifs
+from pyproj import CRS
+from cartopy import config
 
-
+# Tell cartopy where to find Natural Earth features
+config['data_dir'] = os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')
 
 # dummy class in order to be able to create an ccrs.CRS instance from a proj4/fiona.crs dictionary
 class MyCRS(ccrs.CRS):
@@ -115,10 +129,15 @@ class _Map_massifs(Mplfigure):
         filename = 'massifs_{0:s}.shp'.format(self.area)
         self.shapefile = shpreader.Reader(os.path.join(shapefile_path, filename))
         # Informations sur la projection
-        sh = fiona.open(os.path.join(shapefile_path, filename))
+        projfile = 'massifs_{0:s}.prj'.format(self.area)
+        with open(os.path.join(shapefile_path, projfile), 'r') as prj_file:
+            prj_txt = prj_file.read()
+            pprojcrs = CRS.from_wkt(prj_txt)
+
         # Projection du shapefile
-        self.shpProj = sh.crs
+        self.shpProj = pprojcrs.to_dict()
         # print(sh.crs)
+        # print(self.shpProj)
 
         # géométries
         # records is a generator object. Each record contains a geometry, its attributes and bounds
@@ -130,7 +149,7 @@ class _Map_massifs(Mplfigure):
         return infomassifs.getAllMassifLatLon(im)
 
     def init_massifs(self, **kwargs):
-        # This routine initializes a colormap
+        # This routine initializes a colormap, and adds the massif contours to the map
         if 'palette' in kwargs.keys():
             if 'ncolors' in kwargs.keys():
                 self.palette = plt.get_cmap(kwargs['palette'], kwargs['ncolors']).copy()
@@ -143,6 +162,29 @@ class _Map_massifs(Mplfigure):
         self.palette.set_under(color='grey')
 
         self.norm = self.normpalette(**kwargs)
+
+        # print(next(self.records).attributes)
+        self.num, self.shape, self.name = zip(*[(rec.attributes['num_opp'], rec.geometry,
+                                  rec.attributes['nom']) for rec in self.records])
+        if hasattr(self, 'nsubplots'):
+            self.massif_features = list()
+            for i in range(self.nsubplots):
+                self.massif_features.append([{'feature': self.maps.flat[i].add_geometries([ishape], crs=self.projection,
+                                                                                        facecolor='none', cmap=self.palette,
+                                                                                        edgecolor='dimgrey', alpha=1.0),
+                                            'massifnum':inum, 'massifname':iname}
+                                           for inum, ishape, iname in zip(self.num, self.shape, self.name)])
+            print(len(self.massif_features))
+        else:
+            self.massif_features = [{'feature': self.map.add_geometries([ishape], crs=self.projection, cmap=self.palette,
+                                                                        facecolor='none', edgecolor='dimgrey', alpha=1.0),
+                                     'massifnum':inum, 'massifname':iname}
+                                    for inum, ishape, iname in zip(self.num, self.shape, self.name)]
+
+            # print(self.massif_features[0]['feature']._feature.kwargs)
+            # self.massif_features[0]['feature']._kwargs['facecolor'] = 'blue'
+            # plt.show()
+
 
     def normpalette(self, **kwargs):
         # Bornes pour légende
@@ -164,14 +206,15 @@ class _Map_massifs(Mplfigure):
         print(kwargs.keys())
         if 'convert_unit' in kwargs.keys():
             variable = variablein[:] * kwargs['convert_unit']
-            print(variable)
-            print(variablein)
+            # print(variable)
+            # print(variablein)
         else:
             variable = variablein[:]
 
-        # print(next(self.records).attributes)
-        num, shape, name = zip(*[(rec.attributes['num_opp'], rec.geometry,
-                                  rec.attributes['nom']) for rec in self.records])
+        # if massif contours are not yet created, draw them
+        if not hasattr(self, 'massif_features'):
+            self.init_massifs(**kwargs)
+
         if 'axis' in kwargs.keys() and hasattr(self, 'nsubplots'):
             axis = kwargs['axis']
             try:
@@ -182,25 +225,25 @@ class _Map_massifs(Mplfigure):
                 print("Warning: axis ", axis, " of value array is longer than number of subplots ", self.nsubplots,
                       ". Plotting first ", self.nsubplots, " out of ", len, ".")
                 len = self.nsubplots
-            myvalues = np.array([variable[massifref==i][0] if i in massifref else np.nan for i in num])
+            myvalues = np.array([variable[massifref==i][0] if i in massifref else np.nan for i in self.num])
             print(myvalues.shape)
-            for i in range(len):
-                for ishape, myvalue in zip(shape, myvalues.take(indices=i, axis=axis)):
-                    self.maps.flat[i].add_geometries([ishape], crs=self.projection, cmap=self.palette,
-                                                facecolor=self.palette(self.norm(myvalue)), edgecolor='dimgrey', alpha=1.0)
+            for j in range(len):
+                for i, myvalue in enumerate(myvalues.take(indices=j, axis=axis)):
+                    self.massif_features[j][i]['feature']._kwargs['facecolor'] = self.palette(self.norm(myvalue))
         else:
-            myvalues = [variable[massifref==i][0] if i in massifref else np.nan for i in num]
-            for ishape, myvalue in zip(shape, myvalues):
-                self.map.add_geometries([ishape], crs=self.projection, cmap=self.palette,
-                            facecolor=self.palette(self.norm(myvalue)),  edgecolor='dimgrey', alpha=1.0)
+            myvalues = [variable[massifref==i][0] if i in massifref else np.nan for i in self.num]
+            for i, myvalue in enumerate(myvalues):
+                self.massif_features[i]['feature']._kwargs['facecolor'] = self.palette(self.norm(myvalue))
 
-        # prepare colorbar
+       # prepare colorbar
         self.m = plt.cm.ScalarMappable(cmap=self.palette)
         self.m.set_array(np.array(myvalues))
         self.m.set_clim(self.vmin, self.vmax)
 
         if not self.legendok:
             self.legend(self.m, **kwargs)
+
+        # plt.show()
 
     def legend(self, polygons, **kwargs):
 
@@ -248,6 +291,98 @@ class _Map_massifs(Mplfigure):
 
         if not self.legendok:
             self.legend(self.m, **kwargs)
+
+    def convertunit(self, *args, **kwargs):
+        listvar = []
+        for variablein in args:
+            if 'convert_unit' in kwargs.keys():
+                variable = variablein[:] * kwargs['convert_unit']
+            else:
+                variable = variablein[:]
+            listvar.append(variable)
+        return listvar
+
+    def getformatstring(self, **kwargs):
+        if 'format' in kwargs.keys():
+            return kwargs['format']
+        else:
+            return '%i'
+
+    def getTextColor(self, var, **kwargs):
+        color = 'black'
+        if 'seuiltext' in kwargs.keys():
+            if var >= kwargs['seuiltext']:
+                color = 'white'
+        return color
+
+    def plot_center_massif(self, massifref, *args, **kwargs):
+
+        nvar = len(args)
+
+        listvar = self.convertunit(*args, **kwargs)
+        formatString = self.getformatstring(**kwargs)
+
+        self.text = []
+
+        for i, massif in enumerate(self.shape):
+
+            indmassif = massifref == self.num[i]
+            Xbary, Ybary = massif.centroid.coords[0]
+            if np.sum(indmassif) == 1:
+                infos = ''
+                if 'axis' in kwargs.keys() and hasattr(self, 'nsubplots'):
+                    axis = kwargs['axis']
+                    try:
+                        len = variable.shape[axis]
+                    except(IndexError):
+                        raise Exception("value array has lower rank than given axis number")
+                    if len > self.nsubplots:
+                        print("Warning: axis ", axis, " of value array is longer than number of subplots ", self.nsubplots,
+                              ". Plotting first ", self.nsubplots, " out of ", len, ".")
+                        len = self.nsubplots
+                    for j in range(len):
+                        # for i, myvalue in enumerate(myvalues.take(indices=j, axis=axis)):
+                        #     self.massif_features[j][i]['feature']._kwargs['facecolor'] = self.palette(self.norm(myvalue))
+                        for v, variable in enumerate(listvar):
+                            infos += formatString % variable.take(indices=j, axis=axis)[indmassif][0]
+                            if v < nvar - 1:
+                                infos += "-"
+
+                            if 'textcolor' in kwargs.keys():
+                                textcolor = kwargs['textcolor']
+                            else:
+                                if (nvar == 3 and v == 1) or nvar == 1:
+                                    textcolor = self.getTextColor(variable[indmassif][0], **kwargs)
+                                else:
+                                    textcolor = 'black'
+
+                        if 'unit' in kwargs.keys():
+                            infos += kwargs['unit']
+
+                        self.text.append(self.maps.flat[j].text(Xbary, Ybary, infos, transform=self.projection,
+                                                       horizontalalignment='center', verticalalignment='center',
+                                                       color = textcolor))
+                else:
+                    for v, variable in enumerate(listvar):
+                        infos += formatString % variable[indmassif][0]
+                        if v < nvar - 1:
+                            infos += "-"
+
+                        if 'textcolor' in kwargs.keys():
+                            textcolor = kwargs['textcolor']
+                        else:
+                            if (nvar == 3 and v == 1) or nvar == 1:
+                                textcolor = self.getTextColor(variable[indmassif][0], **kwargs)
+                            else:
+                                textcolor = 'black'
+
+                    if 'unit' in kwargs.keys():
+                        infos += kwargs['unit']
+
+                    self.text.append(self.map.text(Xbary, Ybary, infos, transform=self.projection,
+                                                       horizontalalignment='center', verticalalignment='center',
+                                                       color = textcolor))
+        plt.show()
 
 
 class Map_alpes(_Map_massifs):

@@ -246,7 +246,7 @@ class Alphafile():
 print(config)
 attributes = dict(
     PP_SD_1DY_ISBA = dict(convert_unit= 1., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)'),
-    SD_1DY_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)'),
+    SD_1DY_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm'),
     SD_3DY_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 72h (cm)'),
     RAMSOND_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur mobilisable (cm)'),
     NAT_LEV = dict(forcemin=-0.5, forcemax=5.5, palette='YlOrRd', ncolors=6, label=u'Risque naturel', ticks=[u'Très faible', u'Faible', u'Mod. A', u'Mod. D', u'Fort', u'Très fort']),
@@ -309,11 +309,11 @@ attributes = dict(
 # lo.set_maptitle(titles)
 # lo.save("cartopy_massifs_multi_2021041212_pyr.png", formatout="png")
 
-# postproc = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/Percentiles/Cor/postproc_2021041006_2021041406.nc")
-# print(postproc.listvar(), postproc.listdim())
-# points = postproc.get_points(aspect = -1, ZS=1800)
-# postproc_flat = postproc.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
-# massifs = postproc.read('massif_num', selectpoint=points)
+postproc = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/Percentiles/Cor/postproc_2021041006_2021041406.nc")
+print(postproc.listvar(), postproc.listdim())
+points = postproc.get_points(aspect = -1, ZS=1800)
+postproc_flat = postproc.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
+massifs = postproc.read('massif_num', selectpoint=points)
 # massifs2 = postproc.read('massif_num')
 # print(np.unique(massifs))
 # print(postproc_flat.shape, massifs.shape)
@@ -321,19 +321,21 @@ attributes = dict(
 # m = Map_corse(geofeatures=True)
 # m.init_massifs(**attributes['SD_1DY_ISBA'])
 # m.draw_massifs(massifs, postproc_flat[27,:,8], **attributes['SD_1DY_ISBA'])
+# m.plot_center_massif(massifs, postproc_flat[27,:,0], postproc_flat[27,:,4], postproc_flat[27,:,8], **attributes['SD_1DY_ISBA'])
 # m.set_maptitle("2021041318 percentile 90")
 # m.set_figtitle("1800m")
 #
 # m.save("cartopy_massifs_2021041318_cor.png", formatout="png")
 # m.close()
 #
-# lo = MultiMap_Cor(nrow=3, ncol=3, geofeatures=False)
-# lo.init_massifs(**attributes['SD_1DY_ISBA'])
-# lo.draw_massifs(massifs, postproc_flat[27,:,:], axis=1, **attributes['SD_1DY_ISBA'])
+lo = MultiMap_Cor(nrow=3, ncol=3, geofeatures=False)
+lo.init_massifs(**attributes['SD_1DY_ISBA'])
+lo.draw_massifs(massifs, postproc_flat[27,:,:], axis=1, **attributes['SD_1DY_ISBA'])
+lo.plot_center_massif(massifs, postproc_flat[27,:,:], axis=1, **attributes['SD_1DY_ISBA'])
 # lo.set_figtitle("SD_1DY_ISBA 2021041318 1800m")
 # titles = ['Percentile {0}'.format(i) for i in range(10, 100, 10)]
 # lo.set_maptitle(titles)
-# lo.save("cartopy_massifs_multi_2021041318_cor_geofalse.png", formatout="png")
+# lo.save("cartopy_massifs_multi_2021041318_cor_geofalse_v2.png", formatout="png")
 
 # indata = Alphafile("grid_postproc_2021041006_2021041406_cor.nc")
 # print(indata.snow[27,:,:,8].max(), indata.snow[27,:,:,8].min())
@@ -345,16 +347,16 @@ attributes = dict(
 # m.save("grid_postproc_p90_2021041318_cor.png", formatout="png")
 # m.close()
 
-indata = Alphafile("grid_postproc_2021041006_2021041406_all2alpha_testwrite2.nc")
-# for i in range(32):
-#     print(i, indata.snow[i,:,:].max(), indata.snow[i,:,:].min())
-m = MapFrance(geofeatures=False, bgimage=True)
-m.init_massifs(**attributes['SD_1DY_ISBA'])
-m.draw_mesh(indata.lons, indata.lats, indata.snow[18,:,:], **attributes['SD_1DY_ISBA'])
-m.set_figtitle("SD_1DY_ISBA 2021041218")
-m.set_maptitle("Percentile 90")
-m.save("grid_postproc_p90_2021041218_alpha_terrimage.png", formatout="png")
-m.close()
+# indata = Alphafile("grid_postproc_2021041006_2021041406_all2alpha_testwrite2.nc")
+# # for i in range(32):
+# #     print(i, indata.snow[i,:,:].max(), indata.snow[i,:,:].min())
+# m = MapFrance(geofeatures=False, bgimage=True)
+# m.init_massifs(**attributes['SD_1DY_ISBA'])
+# m.draw_mesh(indata.lons, indata.lats, indata.snow[18,:,:], **attributes['SD_1DY_ISBA'])
+# m.set_figtitle("SD_1DY_ISBA 2021041218")
+# m.set_maptitle("Percentile 90")
+# m.save("grid_postproc_p90_2021041218_alpha_terrimage.png", formatout="png")
+# m.close()
 
 
 # test_median = test_medianfile("/home/radanovicss/Hauteur_neige_median/Out_Belenos/postproc_2020092706_2020092806.nc",
