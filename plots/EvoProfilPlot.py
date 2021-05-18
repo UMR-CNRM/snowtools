@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib import collections
 import matplotlib.colors as colors
-import Dictionnaries
+from . import Dictionnaries
 import logging
 logger = logging.getLogger()
 
