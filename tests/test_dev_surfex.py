@@ -34,7 +34,11 @@ class s2mTest(unittest.TestCase):
             print("\n%s: %s\n     %s" % (typ, self.id(), msg))
 
         if ok:
+            # Suppression des sous-dossiers de fail_test correspondant aux tests OK
             os.system("rm -rf " + self.diroutput)
+            # Suppression du dossier fail_test si tous les tests ont réussi (ie dossier vide)
+            if os.listdir('fail_test') == []:
+                os.rmdir('fail_test')
 
     def list2reason(self, exc_list):
         if exc_list and exc_list[-1][0] is self:
