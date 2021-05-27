@@ -101,6 +101,8 @@ class S2MExtractor(S2MTaskMixIn):
         toolbox.active_now = True
         self.conf = conf
         self.datebegin, self.dateend = self.get_period()
+        if not hasattr(self.conf, 'firstday'):
+            self.conf.firstday = False
         if self.conf.firstday:
             self.dateend = tomorrow(base=self.datebegin)
 
