@@ -764,7 +764,8 @@ class GraphStandard(Graph):
             self.ini_ligne_commande_interne(**Arguments)
 
     def ini_ligne_commande_interne(self, **Arguments):
-        #Graph.ini_ligne_commande(self,**Arguments)
+        # TODO: Uncommented next line  <01-04-21, Léo Viallon-Galinier> #
+        Graph.ini_ligne_commande(self,**Arguments)
         self.pro = proReader_mini.ProReader_standard(ncfile = self.filename, var = self.variable, point = int(self.point_choisi))
         self.Tableau = self.pro.get_choix(self.filename)
         if self.Tableau[0][self.point_choisi] >0: 

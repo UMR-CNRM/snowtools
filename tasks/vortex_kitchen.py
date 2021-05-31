@@ -279,8 +279,12 @@ class vortex_kitchen(object):
 
     def split_geo(self):
         if ':' in self.options.region:
-            self.options.interpol = True
-            self.options.geoin, self.options.vconf, self.options.gridout = self.options.region.split(':')
+            splitregion = self.options.region.split(':')
+            self.options.geoin = splitregion[0]
+            self.options.vconf = splitregion[1]
+            self.options.interpol = len(splitregion) == 3
+            if self.options.interpol:
+                self.options.gridout = splitregion[2]
         else:
             self.options.interpol = False
             self.options.vconf = self.options.region
@@ -412,6 +416,8 @@ class Vortex_conf_file(object):
         if self.options.interpol:
             self.set_field("DEFAULT", 'interpol', self.options.interpol)
             self.set_field("DEFAULT", 'gridout', self.options.gridout)
+
+        if hasattr(self.options, 'geoin'):
             self.set_field("DEFAULT", 'geoin', self.options.geoin)
 
     def safran_variables(self):
