@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from matplotlib import collections
 from matplotlib.colors import BoundaryNorm
-from EvoProfilPlot import plot_profil
-import Dictionnaries
+from plots.EvoProfilPlot import plot_profil
+from plots import Dictionnaries
 
 import logging
 logger = logging.getLogger()
