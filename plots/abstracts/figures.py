@@ -40,6 +40,8 @@ class Mplfigure(object):
 
         if "map" in dir(self):
             self.fig.figimage(logo, widthfig - width, int(0.96 * heightfig) - height)
+        elif "maps" in dir(self):
+            self.fig.figimage(logo, widthfig - width, int(0.96 * heightfig) - height)
         else:
             self.fig.figimage(logo, widthfig - width, 0)
 
