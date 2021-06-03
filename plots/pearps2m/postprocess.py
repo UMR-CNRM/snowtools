@@ -20,7 +20,7 @@ if sys.version_info.major == 2:  # Python2 only
 # ----------------------------------------------------------
 
 import locale
-
+import six
 import os
 from optparse import OptionParser
 import numpy as np
@@ -41,9 +41,12 @@ from utils.infomassifs import infomassifs
 from utils.FileException import DirNameException
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 echecker = ExternalCodeImportChecker('plots')
-with echecker:
-    from plots.maps.basemap import Map_alpes, Map_pyrenees, Map_corse
-
+if six.PY2:
+    with echecker:
+        from plots.maps.basemap import Map_alpes, Map_pyrenees, Map_corse
+else:
+    with echecker:
+        from plots.maps.cartopy import Map_alpes, Map_pyrenees, Map_corse
 import footprints
 
 usage = "usage: python postprocess.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]"
