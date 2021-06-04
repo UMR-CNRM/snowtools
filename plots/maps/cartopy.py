@@ -8,6 +8,14 @@ Created on 29 march 2021
 start collecting resources for plotting maps with cartopy.
 Might be sensitive to the combination of versions of matplotlib and cartopy.
 developed with matplotlib 3.4.0 and cartopy 0.18
+which cartopy version is based on which matplotlib version? (according to documentation)
+cartopy 0.19 -> matplotlib 3.4.1
+cartopy 0.18 -> matplotlib 3.2.1
+cartopy 0.17 -> matplotlib 3.0.2
+cartopy 0.16 -> matplotlib 2.1.2
+cartopy 0.15 -> matplotlib 2.0.0
+cartopy 0.14 -> matplotlib 1.5.1
+cartopy 0.13 -> matplotlib 1.4.3
 
 Usage :
 example :
@@ -28,6 +36,10 @@ $data_dir/shapefiles/natural_earth/cultural/
 files containing land, ocean river and lake features are stored in
 $data_dir/shapefiles/natural_earth/physical/
 
+m = MapFrance(bgimage=True)
+with bgimage=True a background image from Natural Earth is added showing the relief.
+Can not be used if geofeatures=True.
+
 m.init_massifs(palette='Reds')
 
 
@@ -35,6 +47,7 @@ m.init_massifs(palette='Reds')
 
 import os
 import numpy as np
+import itertools
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -42,9 +55,13 @@ import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
 import cartopy.feature
 from plots.abstracts.figures import Mplfigure
-import fiona
 from utils.infomassifs import infomassifs
+from pyproj import CRS
+from cartopy import config
+from shapely.geometry import box
 
+# Tell cartopy where to find Natural Earth features
+config['data_dir'] = os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')
 
 # dummy class in order to be able to create an ccrs.CRS instance from a proj4/fiona.crs dictionary
 class MyCRS(ccrs.CRS):
@@ -59,7 +76,7 @@ class _Map_massifs(Mplfigure):
         # print(kw)
         # Get massif shapes
         self.getshapes()
-        self.projection = MyCRS(self.shpProj)
+        self.projection = MyCRS(self.shpProj, ccrs.Globe(ellipse='clrk80'))
         self.openfigure()
         if 'getmap' in kw.keys():
             getmap = kw['getmap']
@@ -82,6 +99,10 @@ class _Map_massifs(Mplfigure):
             self.geofeatures = kwargs['geofeatures']
         else:
             self.geofeatures = False
+        if 'bgimage' in kwargs.keys():
+            self.bgimage = kwargs['bgimage']
+        else:
+            self.bgimage = False
         if hasattr(self, 'nrow') and hasattr(self, 'ncol') and hasattr(self, 'iax'):
             ax = plt.subplot(self.nrow, self.ncol, self.iax+1, projection=ccrs.PlateCarree())
         else:
@@ -92,9 +113,14 @@ class _Map_massifs(Mplfigure):
             ax.add_feature(cartopy.feature.LAND, facecolor='wheat')
             ax.add_feature(cartopy.feature.OCEAN)
             ax.add_feature(cartopy.feature.COASTLINE)
-            ax.add_feature(cartopy.feature.BORDERS, linestyle=':')
+            # ax.add_feature(cartopy.feature.BORDERS, linestyle=':')
+            ax.add_feature(cartopy.feature.NaturalEarthFeature('cultural','admin_0_boundary_lines_land','10m',
+                                                               facecolor='none', linestyle=':'))
             ax.add_feature(cartopy.feature.LAKES, alpha=0.5)
             ax.add_feature(cartopy.feature.RIVERS)
+        elif self.bgimage:
+            os.environ["CARTOPY_USER_BACKGROUNDS"] = os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')
+            ax.background_img(resolution="high")
         return ax
 
     def openfigure(self):
@@ -106,10 +132,13 @@ class _Map_massifs(Mplfigure):
         filename = 'massifs_{0:s}.shp'.format(self.area)
         self.shapefile = shpreader.Reader(os.path.join(shapefile_path, filename))
         # Informations sur la projection
-        sh = fiona.open(os.path.join(shapefile_path, filename))
+        projfile = 'massifs_{0:s}.prj'.format(self.area)
+        with open(os.path.join(shapefile_path, projfile), 'r') as prj_file:
+            prj_txt = prj_file.read()
+            pprojcrs = CRS.from_wkt(prj_txt)
+
         # Projection du shapefile
-        self.shpProj = sh.crs
-        # print(sh.crs)
+        self.shpProj = pprojcrs.to_dict()
 
         # géométries
         # records is a generator object. Each record contains a geometry, its attributes and bounds
@@ -121,7 +150,7 @@ class _Map_massifs(Mplfigure):
         return infomassifs.getAllMassifLatLon(im)
 
     def init_massifs(self, **kwargs):
-        # This routine initializes a colormap
+        # This routine initializes a colormap, and adds the massif contours to the map
         if 'palette' in kwargs.keys():
             if 'ncolors' in kwargs.keys():
                 self.palette = plt.get_cmap(kwargs['palette'], kwargs['ncolors']).copy()
@@ -134,6 +163,28 @@ class _Map_massifs(Mplfigure):
         self.palette.set_under(color='grey')
 
         self.norm = self.normpalette(**kwargs)
+
+        # print(next(self.records).attributes)
+        self.num, self.shape, self.name = zip(*[(rec.attributes['num_opp'], rec.geometry,
+                                  rec.attributes['nom']) for rec in self.records])
+        if hasattr(self, 'nsubplots'):
+            self.massif_features = list()
+            for i in range(self.nsubplots):
+                self.massif_features.append([{'feature': self.maps.flat[i].add_geometries([ishape], crs=self.projection,
+                                                                                        facecolor='none', cmap=self.palette,
+                                                                                        edgecolor='dimgrey', alpha=1.0),
+                                            'massifnum':inum, 'massifname':iname}
+                                           for inum, ishape, iname in zip(self.num, self.shape, self.name)])
+            print(len(self.massif_features))
+        else:
+            self.massif_features = [{'feature': self.map.add_geometries([ishape], crs=self.projection, cmap=self.palette,
+                                                                        facecolor='none', edgecolor='dimgrey', alpha=1.0),
+                                     'massifnum':inum, 'massifname':iname}
+                                    for inum, ishape, iname in zip(self.num, self.shape, self.name)]
+
+            # print(self.massif_features[0]['feature']._feature.kwargs)
+            # self.massif_features[0]['feature']._kwargs['facecolor'] = 'blue'
+            # plt.show()
 
     def normpalette(self, **kwargs):
         # Bornes pour légende
@@ -155,14 +206,15 @@ class _Map_massifs(Mplfigure):
         print(kwargs.keys())
         if 'convert_unit' in kwargs.keys():
             variable = variablein[:] * kwargs['convert_unit']
-            print(variable)
-            print(variablein)
+            # print(variable)
+            # print(variablein)
         else:
             variable = variablein[:]
 
-        # print(next(self.records).attributes)
-        num, shape, name = zip(*[(rec.attributes['num_opp'], rec.geometry,
-                                  rec.attributes['nom']) for rec in self.records])
+        # if massif contours are not yet created, draw them
+        if not hasattr(self, 'massif_features'):
+            self.init_massifs(**kwargs)
+
         if 'axis' in kwargs.keys() and hasattr(self, 'nsubplots'):
             axis = kwargs['axis']
             try:
@@ -173,25 +225,34 @@ class _Map_massifs(Mplfigure):
                 print("Warning: axis ", axis, " of value array is longer than number of subplots ", self.nsubplots,
                       ". Plotting first ", self.nsubplots, " out of ", len, ".")
                 len = self.nsubplots
-            myvalues = np.array([variable[massifref==i][0] if i in massifref else np.nan for i in num])
+            myvalues = np.array([variable[massifref==i][0] if i in massifref else np.nan for i in self.num])
             print(myvalues.shape)
-            for i in range(len):
-                for ishape, myvalue in zip(shape, myvalues.take(indices=i, axis=axis)):
-                    self.maps.flat[i].add_geometries([ishape], crs=self.projection, cmap=self.palette,
-                                                facecolor=self.palette(self.norm(myvalue)), edgecolor='dimgrey', alpha=1.0)
+            for j in range(len):
+                for i, myvalue in enumerate(myvalues.take(indices=j, axis=axis)):
+                    self.massif_features[j][i]['feature']._kwargs['facecolor'] = self.palette(self.norm(myvalue))
         else:
-            myvalues = [variable[massifref==i][0] if i in massifref else np.nan for i in num]
-            for ishape, myvalue in zip(shape, myvalues):
-                self.map.add_geometries([ishape], crs=self.projection, cmap=self.palette,
-                            facecolor=self.palette(self.norm(myvalue)),  edgecolor='dimgrey', alpha=1.0)
+            myvalues = [variable[massifref==i][0] if i in massifref else np.nan for i in self.num]
+            for i, myvalue in enumerate(myvalues):
+                self.massif_features[i]['feature']._kwargs['facecolor'] = self.palette(self.norm(myvalue))
 
-        # prepare colorbar
+       # prepare colorbar
         self.m = plt.cm.ScalarMappable(cmap=self.palette)
         self.m.set_array(np.array(myvalues))
         self.m.set_clim(self.vmin, self.vmax)
 
         if not self.legendok:
             self.legend(self.m, **kwargs)
+
+        # plt.show()
+
+    def empty_massifs(self, **kwargs):
+        if hasattr(self, 'map'):
+            for feature in self.massif_features:
+                feature['feature']._kwargs['facecolor'] ='white'
+        elif hasattr(self, 'maps'):
+            for features in self.massif_features:
+                for feature in features:
+                    feature['feature']._kwargs['facecolor'] ='white'
 
     def legend(self, polygons, **kwargs):
 
@@ -219,9 +280,13 @@ class _Map_massifs(Mplfigure):
         """Set title on top of the map"""
         self.map.set_title(title, fontsize=20, pad=15)
 
+    set_title = set_maptitle
+
     def set_figtitle(self, title):
         """Set title on top of the figure"""
         self.fig.suptitle(title, fontsize=20)
+
+    set_suptitle = set_figtitle
 
     def draw_mesh(self, lons, lats, field, **kwargs):
         if 'convert_unit' in kwargs.keys():
@@ -239,6 +304,256 @@ class _Map_massifs(Mplfigure):
 
         if not self.legendok:
             self.legend(self.m, **kwargs)
+
+    def convertunit(self, *args, **kwargs):
+        listvar = []
+        for variablein in args:
+            if 'convert_unit' in kwargs.keys():
+                variable = variablein[:] * kwargs['convert_unit']
+            else:
+                variable = variablein[:]
+            listvar.append(variable)
+        return listvar
+
+    def getformatstring(self, **kwargs):
+        if 'format' in kwargs.keys():
+            return kwargs['format']
+        else:
+            return '%i'
+
+    def getTextColor(self, var, **kwargs):
+        color = 'black'
+        if 'seuiltext' in kwargs.keys():
+            if var >= kwargs['seuiltext']:
+                color = 'white'
+        return color
+
+    def plot_center_massif(self, massifref, *args, **kwargs):
+
+        nvar = len(args)
+
+        listvar = self.convertunit(*args, **kwargs)
+        formatString = self.getformatstring(**kwargs)
+
+        self.text = []
+
+        for i, massif in enumerate(self.shape):
+
+            indmassif = massifref == self.num[i]
+            Xbary, Ybary = massif.centroid.coords[0]
+            if np.sum(indmassif) == 1:
+                if 'axis' in kwargs.keys() and hasattr(self, 'nsubplots'):
+                    axis = kwargs['axis']
+                    try:
+                        subplotdim = listvar[0].shape[axis]
+                    except(IndexError):
+                        raise Exception("value array has lower rank than given axis number")
+                    if subplotdim > self.nsubplots:
+                        print("Warning: axis ", axis, " of value array is longer than number of subplots ", self.nsubplots,
+                              ". Plotting first ", self.nsubplots, " out of ", subplotdim, ".")
+                        subplotdim = self.nsubplots
+                    for j in range(subplotdim):
+                        infos = ''
+                        # for i, myvalue in enumerate(myvalues.take(indices=j, axis=axis)):
+                        #     self.massif_features[j][i]['feature']._kwargs['facecolor'] = self.palette(self.norm(myvalue))
+                        for v, variable in enumerate(listvar):
+                            infos += formatString % variable.take(indices=j, axis=axis)[indmassif][0]
+                            if v < nvar - 1:
+                                infos += "-"
+
+                            if 'textcolor' in kwargs.keys():
+                                textcolor = kwargs['textcolor']
+                            else:
+                                if (nvar == 3 and v == 1) or nvar == 1:
+                                    textcolor = self.getTextColor(variable.take(indices=j, axis=axis)[indmassif][0], **kwargs)
+                                else:
+                                    textcolor = 'black'
+
+                        if 'unit' in kwargs.keys():
+                            infos += kwargs['unit']
+
+                        self.text.append(self.maps.flat[j].text(Xbary, Ybary, infos, transform=self.projection,
+                                                       horizontalalignment='center', verticalalignment='center',
+                                                       color = textcolor))
+                else:
+                    infos = ''
+                    for v, variable in enumerate(listvar):
+                        infos += formatString % variable[indmassif][0]
+                        if v < nvar - 1:
+                            infos += "-"
+
+                        if 'textcolor' in kwargs.keys():
+                            textcolor = kwargs['textcolor']
+                        else:
+                            if (nvar == 3 and v == 1) or nvar == 1:
+                                textcolor = self.getTextColor(variable[indmassif][0], **kwargs)
+                            else:
+                                textcolor = 'black'
+
+                    if 'unit' in kwargs.keys():
+                        infos += kwargs['unit']
+
+                    self.text.append(self.map.text(Xbary, Ybary, infos, transform=self.projection,
+                                                       horizontalalignment='center', verticalalignment='center',
+                                                       color = textcolor))
+
+    def reset_massifs(self, **kwargs):
+        self.legendok = False
+        if hasattr(self, 'map'):
+            # remove tables
+            for prop in self.map.properties()['children']:
+                if type(prop) == matplotlib.table.Table:
+                    prop.remove()
+            # remove text
+                elif type(prop) == matplotlib.text.Text:
+                    if prop in self.text:
+                        prop.remove()
+        elif hasattr(self, 'maps'):
+            for m in self.maps.flat:
+                # remove tables
+                for prop in m.properties()['children']:
+                    if type(prop) == matplotlib.table.Table:
+                        prop.remove()
+                    # remove text
+                    elif type(prop) == matplotlib.text.Text:
+                        if prop in self.text:
+                            prop.remove()
+        # remove info boxs
+        if hasattr(self, 'infos'):
+            for elm in self.infos:
+                elm.remove()
+
+    def add_north_south_info(self):
+
+        self.infos = []
+        # self.infos.append(box(8.5, 42.9,8.85,43.1))
+
+        if hasattr(self, 'map'):
+            self.infos.append(self.map.add_artist(matplotlib.offsetbox.AnnotationBbox(matplotlib.offsetbox.TextArea("Versant Nord \n Q20 - Q50 - Q80",
+                                                                                                                    textprops=dict(horizontalalignment='center')),
+                                                                                      self.infospos, box_alignment=(0, 0),
+                                                                                      xycoords=self.projection._as_mpl_transform(self.map),
+                                                                                      bboxprops=dict(fc='none'))))
+            self.infos.append(self.map.add_artist(matplotlib.offsetbox.AnnotationBbox(matplotlib.offsetbox.TextArea("Versant Sud \n Q20 - Q50 - Q80",
+                                                                                                                    textprops=dict(horizontalalignment='center')),
+                                                                                      self.infospos, box_alignment=(0, 1.4),
+                                                                                      xycoords=self.projection._as_mpl_transform(self.map),
+                                                                                      bboxprops=dict(fc='none'))))
+
+        elif hasattr(self, 'maps'):
+            for i in range(len(self.maps.flat)):
+                self.infos.append(self.maps.flat[i].add_artist(matplotlib.offsetbox.AnnotationBbox(matplotlib.offsetbox.TextArea("Versant Nord \n Q20 - Q50 - Q80",
+                                                                                                                        textprops=dict(horizontalalignment='center',
+                                                                                                                                       size=5)),
+                                                                                          self.infospos, box_alignment=(0.2, 0),
+                                                                                          xycoords=self.projection._as_mpl_transform(self.maps.flat[i]),
+                                                                                          bboxprops=dict(fc='none'), pad=0.2)))
+                self.infos.append(self.maps.flat[i].add_artist(matplotlib.offsetbox.AnnotationBbox(matplotlib.offsetbox.TextArea("Versant Sud \n Q20 - Q50 - Q80",
+                                                                                                                    textprops=dict(horizontalalignment='center',
+                                                                                                                                   size=5)),
+                                                                                      self.infospos, box_alignment=(0.2, 1.4),
+                                                                                      xycoords=self.projection._as_mpl_transform(self.maps.flat[i]),
+                                                                                      bboxprops=dict(fc='none'), pad=0.2)))
+
+    def rectangle_massif(self, massifref, list_quantiles, list_values, ncol=1, **kwargs):
+        width = 50.
+        height = 20.
+
+        # define color palette
+        if 'palette' in kwargs.keys():
+            if 'ncolors' in kwargs.keys():
+                self.palette = plt.get_cmap(kwargs['palette'], kwargs['ncolors'])
+            else:
+                self.palette = plt.get_cmap(kwargs['palette'])
+        else:
+            self.palette = plt.get_cmap('jet')
+
+        self.palette.set_bad(color='grey')
+        self.palette.set_under(color='grey')
+
+        self.norm = self.normpalette(**kwargs)
+        ncol = ncol+1
+        nvar = len(list_values)
+        nrows = int(nvar / ncol)
+        listvar = self.convertunit(*list_values, **kwargs)
+        formatString = self.getformatstring(**kwargs)
+
+        self.text = []
+        # get renderer
+        self.fig.canvas.draw()
+        renderer = self.fig.canvas.renderer
+
+        for i, massif in enumerate(self.shape):
+            indmassif = massifref == self.num[i]
+            Xbary, Ybary = massif.centroid.coords[0]
+            if np.sum(indmassif) == 1:
+
+                (xdeport, ydeport) = self.getdeport(massifref[indmassif][0])
+                if 'axis' in kwargs.keys() and hasattr(self, 'nsubplots') and hasattr(self, 'maps'):
+                    axis = kwargs['axis']
+                    try:
+                        subplotdim = listvar[0].shape[axis]
+                    except(IndexError):
+                        raise Exception("value array has lower rank than given axis number")
+                    if subplotdim > self.nsubplots:
+                        print("Warning: axis ", axis, " of value array is longer than number of subplots ", self.nsubplots,
+                              ". Plotting first ", self.nsubplots, " out of ", subplotdim, ".")
+                        subplotdim = self.nsubplots
+                    for j in range(subplotdim):
+                        # create text array
+                        infos = np.flipud(np.array([formatString % thisvar.take(indices=j, axis=axis)[indmassif][0] for thisvar in listvar]).reshape((nrows, ncol)))
+                        # create color array
+                        tmp_colors = [self.palette(self.norm(thisvar.take(indices=j, axis=axis)[indmassif][0])) for thisvar in listvar]
+                        colors = np.array([tmp_colors[-ncol:] if irows==0 else tmp_colors[-(irows*ncol)-ncol:-(irows*ncol)] for irows in range(nrows)])
+                        bb = matplotlib.offsetbox.AnnotationBbox(matplotlib.offsetbox.DrawingArea(width, height),
+                                                                 (Xbary+xdeport,Ybary+ydeport), box_alignment=(0.5, 0.5),
+                                                                 xycoords=self.projection._as_mpl_transform(self.maps.flat[j]),
+                                                                 bboxprops=dict(fc='none'))
+
+                        mapx0, mapy0, mapwidth, mapheight = self.maps.flat[j].get_window_extent(renderer).bounds
+                        bb.draw(renderer)
+                        x0, y0, w, h = bb.get_window_extent(renderer).bounds
+                        art = matplotlib.table.table(self.maps.flat[j], cellText=infos, cellColours=colors, cellLoc='center', colWidths=None,
+                                                     rowLabels=None, rowColours=None, rowLoc='left', colLabels=None, colColours=None,
+                                                     colLoc='center',
+                                                     loc='bottom',
+                                                     bbox=[(x0-mapx0)/mapwidth, (y0-mapy0)/mapheight, w/mapwidth, h/mapheight],
+                                                     edges='closed')
+                else:
+                    # create text array
+                    infos = np.flipud(np.array([formatString % thisvar[indmassif][0] for thisvar in listvar]).reshape((nrows, ncol)))
+                    # create color array
+                    tmp_colors = [self.palette(self.norm(thisvar[indmassif][0])) for thisvar in listvar]
+                    colors = np.array([tmp_colors[-ncol:] if irows==0 else tmp_colors[-(irows*ncol)-ncol:-(irows*ncol)] for irows in range(nrows)])
+                    bb = matplotlib.offsetbox.AnnotationBbox(matplotlib.offsetbox.DrawingArea(width, height),
+                                                        (Xbary+xdeport,Ybary+ydeport), box_alignment=(0.5, 0.5),
+                                                        xycoords=self.projection._as_mpl_transform(self.map),
+                                                        bboxprops=dict(fc='none'))
+
+                    mapx0, mapy0, mapwidth, mapheight = self.map.get_window_extent(renderer).bounds
+                    bb.draw(renderer)
+                    x0, y0, w, h = bb.get_window_extent(renderer).bounds
+
+                    art = matplotlib.table.table(self.map, cellText=infos, cellColours=colors, cellLoc='center', colWidths=None,
+                                                 rowLabels=None, rowColours=None, rowLoc='left', colLabels=None, colColours=None,
+                                                 colLoc='center',
+                                                 loc='bottom',
+                                                 bbox=[(x0-mapx0)/mapwidth, (y0-mapy0)/mapheight, w/mapwidth, h/mapheight],
+                                                 edges='closed')
+
+
+        self.m = plt.cm.ScalarMappable(cmap=self.palette)
+        self.m.set_array(np.array(listvar))
+        self.m.set_clim(self.vmin, self.vmax)
+
+        if not self.legendok:
+            self.legend(self.m, **kwargs)
+
+    def getdeport(self, num):
+        if num in self.deport.keys():
+            return self.deport[num]
+        else:
+            return (0, 0)
 
 
 class Map_alpes(_Map_massifs):
@@ -259,10 +574,9 @@ class Map_alpes(_Map_massifs):
 
         self.mappos=[0.02, 0.06, 0.8, 0.8]
         self.legendpos = [0.85, 0.15, 0.03, 0.6]
-        self.infospos = (205000, 330000)
+        self.infospos = (990000, 2160000)
 
-        self.deport = {2: (-10000, 0), 3: (10000, 0), 6: (20000, 0), 7: (-20000, 10000), 9: (15000, -10000), 11: (15000, -10000),
-                       13: (15000, 0), 17: (15000, 0), 18: (-20000, -10000), 19: (0, -5000), 20: (0, -5000), 21: (0, -10000)}
+        self.deport = {7: (0, 5000), 9: (-1000, 0),  16: (1000, 0), 19: (-2000, -2000),  21: (0, -5000)}
 
         # self.fig = plt.figure(figsize=(self.width, self.height))
         # self.map = self.getmap(self.latmin, self.latmax, self.lonmin, self.lonmax)
@@ -300,6 +614,8 @@ class _MultiMap(_Map_massifs):
         else:
             print("Warning: can not set map titles. len(title) must be either equal to the number of subplots or == 1.")
 
+    set_title = set_maptitle
+
 
 class MultiMap_Alps(_MultiMap, Map_alpes):
 
@@ -310,6 +626,7 @@ class MultiMap_Alps(_MultiMap, Map_alpes):
         self.nsubplots = nrow*ncol
         self.titlepad = 5
         super(MultiMap_Alps, self).__init__(*args, **kw)
+        self.set_figsize(18, 15)
         self.init_maps(*args, **kw)
 
 
@@ -317,23 +634,64 @@ class Map_pyrenees(_Map_massifs):
 
     def __init__(self, *args, **kw):
         self.area = 'pyrenees'
-        self.width = 14
+        self.width = 14.5
         self.height = 5.8
-
         self.latmin = 42.0
         self.latmax = 43.3
         self.lonmin = -2.0
         self.lonmax = 3.0
 
         self.mappos=[0.05, 0.06, 0.8, 0.8]
+        self.legendpos = [0.89, 0.1, 0.03, 0.7]
+        self.infospos = (600000, 1790000)
+
+        self.deport = {64: (0, 2000), 67: (0, 20000), 68: (10000, 5000), 70: (-2000, 10000), 71: (-12000, 5000),
+                       72: (10000, 10000), 73: (10000, 10000), 74: (10000, 3000), 81: (-10000, 1000), 82: (-3000, 0),
+                       83: (1000, 0), 84: (-4000, 0), 85: (0, -7000), 86: (-3000, 0), 87: (0, -10000),
+                       88: (12000, 7000), 89: (0, -4000), 90: (10000, -5000), 91: (-17000, -8000)}
+
+        super(Map_pyrenees, self).__init__(*args, **kw)
+
+
+class MapFrance(_Map_massifs):
+
+    def __init__(self, *args, **kw):
+        self.area = ['alpes', 'pyrenees', 'corse']
+        self.width = 15
+        self.height = 11
+
+        self.latmin = 41.3
+        self.latmax = 51.5
+        self.lonmin = -5.
+        self.lonmax = 9.6
+
+        self.mappos=[0.05, 0.06, 0.8, 0.8]
         self.legendpos = [0.9, 0.13, 0.03, 0.7]
         self.infospos = (450000, 140000)
 
-        self.deport = {67: (10000, 20000), 68: (0, 5000), 69: (0, 10000), 72: (20000, 20000), 74: (25000, 0), 82: (-15000, -40000),
+        self.deport = {2: (-10000, 0), 3: (10000, 0), 6: (20000, 0), 7: (-20000, 10000), 9: (15000, -10000), 11: (15000, -10000),
+                       13: (15000, 0), 17: (15000, 0), 18: (-20000, -10000), 19: (0, -5000), 20: (0, -5000), 21: (0, -10000),
+                       67: (10000, 20000), 68: (0, 5000), 69: (0, 10000), 72: (20000, 20000), 74: (25000, 0), 82: (-15000, -40000),
                        84: (-10000, -30000), 85: (0, -5000), 87: (-5000, -40000), 88: (25000, -5000), 89: (15000, -15000),
                        90: (-25000, 5000), 91: (10000, -5000)}
 
-        super(Map_pyrenees, self).__init__(*args, **kw)
+        super(MapFrance, self).__init__(*args, **kw)
+
+    def getshapes(self):
+        shapefile_path = os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')
+        filenames = ['massifs_{0:s}.shp'.format(iarea) for iarea in self.area]
+        self.shapefile = [shpreader.Reader(os.path.join(shapefile_path, filename)) for filename in filenames]
+        # Informations sur la projection
+        projfile = 'massifs_{0:s}.prj'.format(self.area[0])
+        with open(os.path.join(shapefile_path, projfile), 'r') as prj_file:
+            prj_txt = prj_file.read()
+            pprojcrs = CRS.from_wkt(prj_txt)
+
+        # Projection du shapefile
+        self.shpProj = pprojcrs.to_dict()
+        # géométries
+        # records is a generator object. Each record contains a geometry, its attributes and bounds
+        self.records = itertools.chain([shapefile.records() for shapefile in self.shapefile])
 
 
 class MultiMap_Pyr(_MultiMap, Map_pyrenees):
@@ -345,6 +703,7 @@ class MultiMap_Pyr(_MultiMap, Map_pyrenees):
         self.nsubplots = nrow*ncol
         self.titlepad = 0
         super(MultiMap_Pyr, self).__init__(*args, **kw)
+        self.set_figsize(21, 8)
         self.init_maps(*args, **kw)
 
 
@@ -361,10 +720,11 @@ class Map_corse(_Map_massifs):
 
         self.mappos=[0.05, 0.06, 0.8, 0.8]
         self.legendpos = [0.81, 0.15, 0.03, 0.6]
-        self.infospos = (15000, 215000)
+        # self.infospos = (150000, 2150000)
+        self.infospos = (1110000, 1790000)
 
-        self.infoswidth = 50000
-        self.infosheight = 50000
+        self.infoswidth = 500000
+        self.infosheight = 500000
 
         self.deport = {}
 

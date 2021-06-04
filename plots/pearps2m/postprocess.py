@@ -20,7 +20,7 @@ if sys.version_info.major == 2:  # Python2 only
 # ----------------------------------------------------------
 
 import locale
-
+import six
 import os
 from optparse import OptionParser
 import numpy as np
@@ -41,9 +41,12 @@ from utils.infomassifs import infomassifs
 from utils.FileException import DirNameException
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 echecker = ExternalCodeImportChecker('plots')
-with echecker:
-    from plots.maps.basemap import Map_alpes, Map_pyrenees, Map_corse
-
+if six.PY2:
+    with echecker:
+        from plots.maps.basemap import Map_alpes, Map_pyrenees, Map_corse
+else:
+    with echecker:
+        from plots.maps.cartopy import Map_alpes, Map_pyrenees, Map_corse
 import footprints
 
 usage = "usage: python postprocess.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]"
@@ -524,7 +527,7 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
                     ech_str = '+%02d' % (ech.days * 24 + ech.seconds / 3600)
                     plotname = diroutput + "/" + domain[0:3] + "_" + var + "_" + str(int(level)) + ech_str + "." + self.formatplot
                     m.save(plotname, formatout=self.formatplot)
-                    print (plotname + " is available.")
+                    print(plotname + " is available.")
             m.reset_massifs()
 
 @echecker.disabled_if_unavailable
@@ -612,7 +615,7 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
                     ech_str = '+%02d' % (ech.days * 24 + ech.seconds / 3600)
                     plotname = diroutput + "/" + domain[0:3] + "_" + var + "_" + str(int(level)) + ech_str + "." + self.formatplot
                     m.save(plotname, formatout=self.formatplot)
-                    print (plotname + " is available.")
+                    print(plotname + " is available.")
             m.reset_massifs()
 
 
@@ -754,28 +757,28 @@ if __name__ == "__main__":
 
         E.open(snow_members[domain])
 
-        print ("domain " + domain + " npoints = " + str(E.npoints))
+        print("domain " + domain + " npoints = " + str(E.npoints))
 
         E.alldiags()
 
-        print ('Diagnostics have been computed for the following variables :')
-        print (E.ensemble.keys())
+        print('Diagnostics have been computed for the following variables :')
+        print(E.ensemble.keys())
 
-        E.pack_spaghettis(suptitle, diroutput = c.diroutput_plots)
+        E.pack_spaghettis(suptitle, diroutput=c.diroutput_plots)
         if domain != 'postes':
-            E.pack_maps(domain, suptitle, diroutput = c.diroutput_maps)
+            E.pack_maps(domain, suptitle, diroutput=c.diroutput_maps)
 
             ENS.alldiags()
-            print ('Diagnostics have been computed for the following variables :')
-            print (ENS.ensemble.keys())
-            ENS.pack_maps(domain, suptitle, diroutput = c.diroutput_maps)
+            print('Diagnostics have been computed for the following variables :')
+            print(ENS.ensemble.keys())
+            ENS.pack_maps(domain, suptitle, diroutput=c.diroutput_maps)
 
-            ENS.pack_spaghettis_ns(suptitle, diroutput = c.diroutput_plots)
+            ENS.pack_spaghettis_ns(suptitle, diroutput=c.diroutput_plots)
             ENS.close()
             del ENS
 
-            print (E.list_var_spag)
-            print (E.list_var_map)
+            print(E.list_var_spag)
+            print(E.list_var_map)
 
         E.close()
         del E
