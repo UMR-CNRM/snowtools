@@ -53,12 +53,6 @@ Indice_record_station = 5
 Indice_record_altitude = 4
 
 ################################################################
-# Arrondi des degrés pentes et orientation 
-################################################################
-round_aspect = 45
-round_slope = 20
-
-################################################################
 # Nom NetCDF de sortie
 ################################################################
 NetCDF_out = 'NetCDF_ANR_TOP.nc'
@@ -165,6 +159,10 @@ liste_altitude_MNT = raster_to_points(path_MNT_work_hors_cen, shape(shapes))
 liste_aspect_MNT = raster_to_points(path_MNT_aspect, shape(shapes))
 liste_slope_MNT = raster_to_points(path_MNT_slope, shape(shapes))
 
+liste_altitude_MNT_arrondie = [ int(round(liste_altitude_MNT[i])) for i in range(len(liste_altitude_MNT)) ]
+liste_aspect_MNT_arrondie = [ int(round(liste_aspect_MNT[i]))%360 for i in range(len(liste_aspect_MNT)) ]
+liste_slope_MNT_arrondie = [ int(round(liste_slope_MNT[i])) for i in range(len(liste_slope_MNT)) ]
+
 
 ################################################################
 # Détermination du massif
@@ -218,17 +216,16 @@ E = outputs.createVariable('massif_num',int,('Number_of_points',), fill_value=-9
 F = outputs.createVariable('slope', np.float64, ('Number_of_points',), fill_value=-9999999)
 G = outputs.createVariable('station', int,('Number_of_points',), fill_value=-9999999)
 
-liste_aspect_arrondie = [ int(round_aspect * round( liste_aspect_MNT[i]/round_aspect ))%360 for i in range(len(liste_aspect_MNT)) ]
-liste_slope_arrondie = [ int(round_slope * round( liste_slope_MNT[i]/round_slope )) for i in range(len(liste_slope_MNT)) ]
-
 outputs['LAT'][:] = liste_latitude
 outputs['LON'][:] = liste_longitude
 outputs['ZS'][:] = liste_altitude
-outputs['aspect'][:] = liste_aspect_arrondie
+outputs['aspect'][:] = liste_aspect_MNT_arrondie
 outputs['massif_num'][:] = liste_massif
-outputs['slope'][:] = liste_slope_arrondie
+outputs['slope'][:] = liste_slope_MNT_arrondie
 outputs['station'][:] = liste_station_idplot
 
+print(liste_aspect_MNT_arrondie)
+print(liste_slope_MNT_arrondie)
 
 A.setncatts({'long_name': u"latitude",\
              'units': u"degrees_north"})    
