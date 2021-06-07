@@ -53,6 +53,12 @@ Indice_record_station = 5
 Indice_record_altitude = 4
 
 ################################################################
+# Arrondi des degrés pentes et orientation 
+################################################################
+round_aspect = 45
+round_slope = 20
+
+################################################################
 # Nom NetCDF de sortie
 ################################################################
 NetCDF_out = 'NetCDF_ANR_TOP.nc'
@@ -79,7 +85,7 @@ list_shape_WGS84 = [transform(project_from_L93_to_WGS84,shape(shapes[i])) for i 
 
 # Un petit print pour voir les attributs du shapefile: noms, coordonnées, altitude, ... 
 Just_to_see = geomet[0].record
-print(Just_to_see)
+#print(Just_to_see)
 
 
 ################################################################
@@ -119,27 +125,16 @@ list_shape_massif_WGS84 = [transform(project_from_L93_to_WGS84,shape(shape_massi
 # Fonction d'Ambroise Guiot pour lire les valeurs d'un geotif en des points.
 def raster_to_points(raster_src, shape, nodata=np.nan):
     """
-    Associe pour chaque point du tableau gdf_points la valeur du pixel le plus proche
-    issu du raster_src.
+    Associe pour chaque point de la GeometryCollection shape en entrée la valeur du pixel le plus proche issu du raster_src.
     
     Attention : - le fichier géotif et le shape doivent être dans la même projection
                 - la projection ne doit pas utiliser de rotation (Lambert 93 OK, WSG84 pas clair du tout)
-    
-    Parameters
-    ----------
-    raster_src : str
-        Chemin du fichier géotif dont on souhaite extraire les valeurs.
-    shape : shapely.geometry.collection.GeometryCollection (obtenu avec shape( shapefile.Reader('...').shapes() ) 
-        Liste contenant la liste des points.
-    nodata : Int,float, optional
-        Valeurs attribuée aux points n'ayant pas de pixel à proximité. The default is np.nan.
 
-    Returns
-    -------
-    points_values : Liste
-        Liste dans le même ordre que la GeometryCollection fournie en entrée,
-        et contenant pour chaque point la valeur issue du fichier geotif.
+    :param str raster_src : Chemin du fichier géotif dont on souhaite extraire les valeurs.
+    :param shape : Liste contenant la liste des points. Format en shapely.geometry.collection.GeometryCollection (obtenu avec shape( shapefile.Reader('...').shapes() ) 
+    :param float nodata: Valeurs attribuée aux points n'ayant pas de pixel à proximité. The default is np.nan.
 
+    :returns: Liste dans le même ordre que la GeometryCollection fournie en entrée et contenant pour chaque point la valeur issue du fichier geotif.
     """
     raster = gdal.Open(raster_src) # ouverture de l'image tif
     gt = raster.GetGeoTransform()
@@ -202,8 +197,8 @@ liste_station_idplot = [geomet[i].record[Indice_record_station] for i in range(l
 ################################################################
 # Evaluation du MNT en regardant la correspondance altitude MNT vs altitude du shapefile donné
 ################################################################
-print(max([abs(liste_altitude_MNT[i] - liste_altitude[i]) for i in range(len(liste_altitude))]))
-print(np.mean([abs(liste_altitude_MNT[i] - liste_altitude[i]) for i in range(len(liste_altitude))]))
+#print(max([abs(liste_altitude_MNT[i] - liste_altitude[i]) for i in range(len(liste_altitude))]))
+#print(np.mean([abs(liste_altitude_MNT[i] - liste_altitude[i]) for i in range(len(liste_altitude))]))
 
 
 
@@ -223,12 +218,15 @@ E = outputs.createVariable('massif_num',int,('Number_of_points',), fill_value=-9
 F = outputs.createVariable('slope', np.float64, ('Number_of_points',), fill_value=-9999999)
 G = outputs.createVariable('station', int,('Number_of_points',), fill_value=-9999999)
 
+liste_aspect_arrondie = [ int(round_aspect * round( liste_aspect_MNT[i]/round_aspect ))%360 for i in range(len(liste_aspect_MNT)) ]
+liste_slope_arrondie = [ int(round_slope * round( liste_slope_MNT[i]/round_slope )) for i in range(len(liste_slope_MNT)) ]
+
 outputs['LAT'][:] = liste_latitude
 outputs['LON'][:] = liste_longitude
 outputs['ZS'][:] = liste_altitude
-outputs['aspect'][:] = liste_aspect_MNT
+outputs['aspect'][:] = liste_aspect_arrondie
 outputs['massif_num'][:] = liste_massif
-outputs['slope'][:] = liste_slope_MNT
+outputs['slope'][:] = liste_slope_arrondie
 outputs['station'][:] = liste_station_idplot
 
 

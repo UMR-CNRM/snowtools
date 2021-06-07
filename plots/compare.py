@@ -54,6 +54,20 @@ import proReader_mini
 #
 
 def make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin, date_end, output_name, point):
+    """Plot 2 PRO files side by side in order to compare them
+
+    :param str path_pro1: The path to first PRO file to plot
+    :param str path_pro2: The path to second PRO file to plot
+    :param str variable: The variable to plot (SNOWSSA by default)
+    :param str titre1: Title for first plot in graph (default = 'PRO1')
+    :param str titre2: Title for second plot in graph (default = 'PRO2')
+    :param str date_begin: If you want to zoom the graph between two dates. Format YYYYMMDDHH
+    :param str date_end: If you want to zoom the graph between two dates. Format YYYYMMDDHH
+    :param str output_name: Not mandatory. If a name is given, the plot is saved. 
+    :param str point: If there are several points in the PRO files, the graph is made for choosen point
+
+    :returns: the graph (possibly saved if an output name is given)
+    """
     fig, (ax1, ax2) = plt.subplots(1, 2)
     fig.suptitle('Compare ' + titre1 + ' and ' + titre2)
     pro1 = proReader_mini.ProReader_standard(ncfile = path_pro1, var = variable, point = int(point))
@@ -67,6 +81,18 @@ def make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin
 
 
 def make_text_comparaison(path_pro1, path_pro2, date_begin, date_end, output_name, point):
+    """Comparison of 2 PRO files. This is done with global characteristics like mean of height of snow...
+
+    :param str path_pro1: The path to first PRO file to compare
+    :param str path_pro2: The path to second PRO file to compare
+    :param str date_begin: If you want to compare the graph between two dates. Format YYYYMMDDHH
+    :param str date_end: If you want to compare the graph between two dates. Format YYYYMMDDHH
+    :param str output_name: Not mandatory. If a name is given, the text is saved. 
+    :param str point: If there are several points in the PRO files, the comparison is made for choosen point
+
+    :returns: a text with all the comparison (possibly saved if an output name is given)
+    """
+
     # ds.sel(time=slice("2021-01-03", "2021-01-05"))
     if output_name is not None:
         name_save_text = output_name + '.txt'
@@ -114,7 +140,7 @@ def make_text_comparaison(path_pro1, path_pro2, date_begin, date_end, output_nam
     test_moyenne(dsPro1, dsPro2, texte, 'WSN_T_ISBA', 'Equivalent en eau moyen')
     test_moyenne(dsPro1, dsPro2, texte, 'TALB_ISBA', 'Albedo moyen')
     test_moyenne(dsPro1, dsPro2, texte, 'SNOWSSA', 'SSA moyenne')
-    test_moyenne(dsPro1, dsPro2, texte, 'SNOWRHO', 'densité moyenne')
+    test_moyenne(dsPro1, dsPro2, texte, 'SNOWRO', 'densité moyenne')
     test_nb_couche_fragile(dsPro1, dsPro2, texte, 'SNOWTYPE', 'nb moyen de couches fragiles')
     test_nb_couche_total(dsPro1, dsPro2, texte, 'SNOWDZ', 'nb moyen de couches')
 
@@ -123,6 +149,12 @@ def make_text_comparaison(path_pro1, path_pro2, date_begin, date_end, output_nam
 
 
 def parseArguments(args):
+    """Parsing the arguments when you call the main program.
+
+    :param args: The list of arguments when you call the main program (typically sys.argv[1:] )
+    """
+
+
     # Create argument parser
     parser = argparse.ArgumentParser()
 
@@ -150,6 +182,9 @@ def parseArguments(args):
 
 
 def main(args=None):
+    """Main program: parse argument then launch plot and text comparison for the 2 PRO files
+
+    """
     args = args if args is not None else sys.argv[1:]
     if len(sys.argv) > 1: 
         args = parseArguments(args)
