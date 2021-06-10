@@ -41,6 +41,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         dict_dates_end_forc = get_dic_dateend(list_dates_begin_forc, list_dates_end_forc)
         dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
         dict_source_app_safran, dict_source_conf_safran = self.get_safran_sources(list_dates_begin_forc)
+        namespace, storage, rootpath = self.get_info_output()
 
         # Logicals to activate optional parts of the task
         if not hasattr(self.conf, "interpol"):
@@ -560,6 +561,30 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print(t.prompt, 'tb19 =', tb19)
             print()
 
+            if hasattr(self.conf, "writesx"):
+                if self.conf.writesx:
+                    self.sh.title('Toolbox output tb19bis')
+                    tb19bis = toolbox.output(
+                        local       = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        experiment  = self.conf.xpid,
+                        geometry    = self.conf.geometry,
+                        datebegin   = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
+                        dateend     = dateend if not self.conf.dailyprep else list(
+                            daterange(tomorrow(base=datebegin), dateend)),
+                        nativefmt='netcdf',
+                        kind        = 'SnowpackSimulation',
+                        model       = 'surfex',
+                        namespace   = 'vortex.archive.fr',
+                        storage     = 'sxcen.cnrm.meteo.fr',
+                        enforcesync = True, # to forbid asynchronous transfers and not saturate sxcen
+                        namebuild   = 'flat@cen',
+                        block       = 'pro',
+                        fatal       = False
+                    ),
+                    print(t.prompt, 'tb19bis =', tb19bis)
+                    print()
+
+
             if tb19[0]:
                 # Only one pro file for the whole simulation period
                 # Save only one cumul and diag file covering the whole simulation
@@ -629,12 +654,34 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
                     model          = 'surfex',
-                    namespace      = 'vortex.multi.fr',
+                    namespace      ='vortex.multi.fr',
                     namebuild      = 'flat@cen',
                     block          = 'pro',
                 ),
                 print(t.prompt, 'tb19 =', tb19)
                 print()
+
+                if hasattr(self.conf, "writesx"):
+                    if self.conf.writesx:
+                        self.sh.title('Toolbox output tb19bis')
+                        tb19bis = toolbox.output(
+                            local       = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                            experiment  = self.conf.xpid,
+                            geometry    = self.conf.geometry,
+                            datebegin   = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
+                            dateend     = dict_dates_end_pro if not self.conf.dailyprep else list(
+                                daterange(tomorrow(base=datebegin), dateend)),
+                            nativefmt   = 'netcdf',
+                            kind        = 'SnowpackSimulation',
+                            model       = 'surfex',
+                            namespace   ='vortex.archive.fr',
+                            storage     = 'sxcen.cnrm.meteo.fr',
+                            enforcesync = True,  # to forbid asynchronous transfers and not saturate sxcen
+                            namebuild   = 'flat@cen',
+                            block       = 'pro',
+                        ),
+                        print(t.prompt, 'tb19bis =', tb19bis)
+                        print()
 
                 tb19b = toolbox.output(
                     local          = 'DIAG_[datebegin:ymdh]_[dateend:ymdh].nc',
