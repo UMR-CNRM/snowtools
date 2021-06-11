@@ -4,6 +4,7 @@
 import os
 import argparse
 import sys
+import re
 from netCDF4 import Dataset
 import numpy as np
 import gdal
@@ -508,6 +509,7 @@ def create_skyline(all_lists, path_MNT_alt):
         a.set_theta_direction(-1)
         plt.savefig('output/' + str(in_stat[0]) + '_skyline.png')
         # show()
+        plt.close()
 
 
 
