@@ -326,6 +326,8 @@ class Vortex_conf_file(object):
         elif self.options.safran:
             self.create_conf_safran()
 
+        self.setwritesx()
+
     def create_conf_surfex(self):
         self.surfex_variables()
         # ESCROC on several nodes
@@ -440,3 +442,7 @@ class Vortex_conf_file(object):
         if self.options.cpl_model:
             self.set_field("DEFAULT", 'source_app', self.options.cpl_model[0])
             self.set_field("DEFAULT", 'source_conf', self.options.cpl_model[1])
+
+    def setwritesx(self):
+        if self.options.writesx:
+            self.set_field("DEFAULT", 'writesx', self.options.writesx)

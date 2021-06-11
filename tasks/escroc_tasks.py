@@ -396,6 +396,28 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
             print(t.prompt, 'tb19 =', tb19)
             print()
 
+            if hasattr(self.conf, "writesx"):
+                if self.conf.writesx:
+                    self.sh.title('Toolbox output tb19bis')
+                    tb19bis = toolbox.output(
+                        local       = 'mb[member%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        experiment  = self.conf.xpid,
+                        geometry    = self.conf.geometry,
+                        datebegin   = list_dates_begin_pro,
+                        dateend     = dict_dates_end_pro,
+                        member      = members,
+                        nativefmt   = 'netcdf',
+                        kind        = 'SnowpackSimulation',
+                        model       = 'surfex',
+                        namespace   = 'vortex.archive.fr',
+                        storage     = 'sxcen.cnrm.meteo.fr',
+                        enforcesync = True, # to forbid asynchronous transfers and not saturate sxcen
+                        namebuild   = 'flat@cen',
+                        block       = 'pro',
+                    ),
+                    print(t.prompt, 'tb19bis =', tb19bis)
+                    print()
+
             self.sh.title('Toolbox output tb20')
             tb20 = toolbox.output(
                 local          = 'mb[member%04d]/PREP_[date:ymdh].nc',
