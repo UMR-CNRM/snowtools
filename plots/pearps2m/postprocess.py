@@ -27,7 +27,11 @@ import numpy as np
 import netCDF4
 
 import matplotlib
+import matplotlib.style
 matplotlib.use('Agg')
+matplotlib.style.use('fast')
+matplotlib.rcParams['agg.path.chunksize'] = 100
+# matplotlib.rcParams["figure.dpi"] = 75
 
 from collections import Counter, defaultdict
 
@@ -414,7 +418,7 @@ class EnsembleOperDiags(EnsembleDiags):
                 s.addlogo()
                 plotname = diroutput + "/" + var + "_" + list_filenames[point] + "." + self.formatplot
                 s.save(plotname, formatout=self.formatplot)
-                print (plotname + " is available.")
+                print(plotname + " is available.")
 
             s.close()
 
@@ -476,8 +480,8 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
     levelmax = 3900
     levelmin = 0
 
-    list_var_map = ['SD_1DY_ISBA'] #'naturalIndex', 'SD_1DY_ISBA', 'SD_3DY_ISBA', 'SNOMLT_ISBA'
-    list_var_spag = ['naturalIndex'] #, 'DSN_T_ISBA', 'WSN_T_ISBA', 'SNOMLT_ISBA'
+    list_var_map = ['naturalIndex', 'SD_1DY_ISBA', 'SD_3DY_ISBA', 'SNOMLT_ISBA'] # ['SD_1DY_ISBA'] #
+    list_var_spag = ['naturalIndex', 'DSN_T_ISBA', 'WSN_T_ISBA', 'SNOMLT_ISBA'] # ['DSN_T_ISBA'] #
 
     def pack_maps(self, domain, suptitle, diroutput = "."):
 
@@ -485,7 +489,6 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
 
         alti = self.get_alti()
         list_alti = list(set(alti))
-
         m = map_generic[domain[0:3]]()
         for var in self.list_var_map:
             m.init_massifs(**self.attributes[var])
@@ -545,8 +548,8 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
     levelmin = 0
     versants = [u'Nord 40°', u'Sud 40°']
     list_var_spag = []
-    list_var_spag_2points = ['RAMSOND_ISBA'] # ['RAMSOND_ISBA', 'NAT_LEV', 'WET_TH_ISBA', 'REFRZTH_ISBA']
-    list_var_map = ['RAMSOND_ISBA'] # ['RAMSOND_ISBA', 'NAT_LEV', 'WET_TH_ISBA', 'REFRZTH_ISBA']
+    list_var_spag_2points = ['RAMSOND_ISBA', 'NAT_LEV', 'WET_TH_ISBA', 'REFRZTH_ISBA'] # ['NAT_LEV'] #
+    list_var_map = ['RAMSOND_ISBA', 'NAT_LEV', 'WET_TH_ISBA', 'REFRZTH_ISBA'] # ['RAMSOND_ISBA'] #
     ensemble = {}
 
     def alldiags(self):
@@ -612,7 +615,7 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
                     for indalti in list_indalti:
                         for q, quantile in enumerate(self.list_q):  # pylint: disable=possibly-unused-variable
                             list_values.append(self.quantiles[var][q][t, indalti])
-
+                    # print(len(massif[indalti]))
                     m.rectangle_massif(massif[indalti], self.list_q, list_values, ncol=2, **self.attributes[var])
                     if six.PY2:
                         title = "pour le " + pretty_date(self.time[t]).decode('utf-8')
@@ -636,7 +639,7 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
 
 class EnsembleOperDiagsStations(EnsembleOperDiags, EnsembleStation):
     list_var_map = []
-    list_var_spag = ['DSN_T_ISBA'] # ['DSN_T_ISBA', 'WSN_T_ISBA', 'RAMSOND_ISBA', 'WET_TH_ISBA', 'REFRZTH_ISBA', 'SNOMLT_ISBA']
+    list_var_spag = ['DSN_T_ISBA', 'WSN_T_ISBA', 'RAMSOND_ISBA', 'WET_TH_ISBA', 'REFRZTH_ISBA', 'SNOMLT_ISBA'] #['DSN_T_ISBA'] #
 
 
 class EnsemblePostproc(_EnsembleMassif):
@@ -755,11 +758,12 @@ if __name__ == "__main__":
     list_domains = snow_members.keys()
     print(list_domains)
 
-    for domain in ['alp_allslopes']: #list_domains:
+    for domain in list_domains: #['alp_allslopes']: #
 
         suptitle = u'Prévisions PEARP-S2M du ' + pretty_date(S2ME.conf.rundate)  # S2ME.conf.rundate is a Date object --> strftime already calls decode method
         # Identify the prevailing xpid in the obtained resources and adapt the title
         count = Counter(snow_xpid[domain])
+        print(count)
         prevailing_xpid = count.most_common(1)[0][0]
         suffixe_suptitle = dict_chaine[prevailing_xpid]
         suptitle += suffixe_suptitle

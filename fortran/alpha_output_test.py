@@ -258,6 +258,7 @@ attributes = dict(
     REFRZTH_ISBA  = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur regelée (cm)'),
     RAINF_ISBA   = dict(convert_unit= 3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Pluie en 3h (kg/m2/3h)'),
 )
+
 ### rectangle case ###
 sim000 = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/PRO_2020092706_2020092806_mb000.nc")
 sim001 = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/PRO_2020092706_2020092806_mb001.nc")
@@ -284,8 +285,12 @@ m.rectangle_massif(massifs, [0, 1, 2], [sim000_sud[2,:], sim001_sud[2,:], sim002
 m.addlogo()
 m.set_maptitle("2020092712")
 m.set_figtitle("2100m")
-
 m.save("cartopy_massifs_2020092712_alps_matplotlib3.2_test.png", formatout="png")
+m.rectangle_massif(massifs, [0, 1, 2], [sim000_nord[2,:], sim001_nord[2,:], sim002_nord[2,:],
+                                        sim000_sud[2,:], sim001_sud[2,:], sim002_sud[2,:]], ncol=2,
+                   **attributes['NAT_LEV'])
+m.save("cartopy_massifs_2020092712_alps_matplotlib3.2_test_changetables.png", formatout="png")
+
 m.close()
 
 # pyr

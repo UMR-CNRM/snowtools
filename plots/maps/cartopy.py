@@ -7,7 +7,7 @@ Created on 29 march 2021
 
 start collecting resources for plotting maps with cartopy.
 Might be sensitive to the combination of versions of matplotlib and cartopy.
-developed with matplotlib 3.4.0 and cartopy 0.18
+developed with matplotlib 3.4.0/3.2.1 and cartopy 0.18
 which cartopy version is based on which matplotlib version? (according to documentation)
 cartopy 0.19 -> matplotlib 3.4.1
 cartopy 0.18 -> matplotlib 3.2.1
@@ -49,8 +49,15 @@ import os
 import numpy as np
 import itertools
 import matplotlib
+# print(matplotlib.rcParams["savefig.dpi"])
+# print(matplotlib.rcParams)
 import matplotlib.pyplot as plt
-from matplotlib import cm
+# from matplotlib import style
+# style.use('fast')
+# matplotlib.rcParams["patch.antialiased"] = False
+# matplotlib.rcParams["text.antialiased"] = False
+# matplotlib.rcParams["lines.antialiased"] = False
+# matplotlib.rcParams["image.resample"] = False
 import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
 import cartopy.feature
@@ -112,7 +119,7 @@ class _Map_massifs(Mplfigure):
         if 'geofeatures' in kwargs.keys():
             self.geofeatures = kwargs['geofeatures']
         else:
-            self.geofeatures = True
+            self.geofeatures = False
         if 'bgimage' in kwargs.keys():
             self.bgimage = kwargs['bgimage']
         else:
@@ -469,22 +476,24 @@ class _Map_massifs(Mplfigure):
         if hasattr(self, 'map'):
             # remove tables
             for prop in self.map.properties()['children']:
-                if type(prop) == matplotlib.table.Table:
+                if (type(prop) == matplotlib.table.Table):
                     prop.remove()
             # remove text
                 elif type(prop) == matplotlib.text.Text:
-                    if prop in self.text:
-                        prop.remove()
+                    if hasattr(self, 'text'):
+                        if prop in self.text:
+                            prop.remove()
         elif hasattr(self, 'maps'):
             for m in self.maps.flat:
                 # remove tables
                 for prop in m.properties()['children']:
-                    if type(prop) == matplotlib.table.Table:
+                    if (type(prop) == matplotlib.table.Table):
                         prop.remove()
                     # remove text
                     elif type(prop) == matplotlib.text.Text:
-                        if prop in self.text:
-                            prop.remove()
+                        if hasattr(self, 'text'):
+                            if prop in self.text:
+                                prop.remove()
         # remove info boxs
         if hasattr(self, 'infos') & rminfobox:
             for elm in self.infos:
@@ -540,8 +549,6 @@ class _Map_massifs(Mplfigure):
         listvar = self.convertunit(*list_values, **kwargs)
         formatString = self.getformatstring(**kwargs)
 
-        self.text = []
-
         for i, massif in enumerate(self.shape):
             indmassif = massifref == self.num[i]
             if np.sum(indmassif) == 1:
@@ -575,13 +582,13 @@ class _Map_massifs(Mplfigure):
                     tmp_colors = [self.palette(self.norm(thisvar[indmassif][0])) for thisvar in listvar]
                     colors = np.array([tmp_colors[-ncol:] if irows==0 else tmp_colors[-(irows*ncol)-ncol:-(irows*ncol)] for irows in range(nrows)])
 
-
                     art = matplotlib.table.table(self.map, cellText=infos, cellColours=colors, cellLoc='center', colWidths=None,
                                                  rowLabels=None, rowColours=None, rowLoc='left', colLabels=None, colColours=None,
                                                  colLoc='center',
                                                  loc='bottom',
                                                  bbox=self.massif_features[i]['massifbb'],
                                                  edges='closed', zorder=10)
+                    # art.set_fontsize(8)
 
         if not self.legendok:
             self.m = plt.cm.ScalarMappable(cmap=self.palette)
