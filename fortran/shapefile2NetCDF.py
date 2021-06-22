@@ -31,8 +31,6 @@ from osgeo import ogr, osr
 # Bibliothèque ad hoc de Matthieu L pour ouvrir les shapefiles
 import shapefile
 
-
-
 ################################################################
 # On part d'un shapefile en Lambert 93
 # De ce shapefile, le programme fournit un NetCDF pour les besoins du lancement de Surfex (ou de réanalyse) dessus
@@ -48,10 +46,8 @@ import shapefile
 
 
 
-
-
 ################################################################
-############### EN DUR DANS LE CODE:
+#           EN DUR DANS LE CODE:
 ################################################################
 
 ################################################################
@@ -74,13 +70,13 @@ path_shapefile_massif = '/home/fructusm/git/snowtools_git/DATA/massifs_Lbrt93_20
 Indice_record_massif = 0
 
 ################################################################
-############### FIN DUR DANS LE CODE:
+#            FIN DUR DANS LE CODE
 ################################################################
 
 
-
-
+################################################################
 # Mise en place des log
+################################################################
 logger = logging.getLogger()
 logger.setLevel(logging.WARNING)
 console_handler = logging.StreamHandler()
@@ -96,7 +92,7 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
     """
     Crée un dictionnaire de listes à partir des données du shapefile et des données des MNT
 
-    :param str path_shapefile : Chemin du shapefile dont on souhaite extraire les valeurs.
+    :param str path_shapefile : Chemin du shapefile dont on souhaite extraire les points.
     :param str Id_station : Numéro de l'attribut du shapefile correspondant à un identifiant unique pour chaque point
     :param str Nom_alt : si présent dans le shapefile, nom de l'attribut d'altitude. Si absent, ce champ est à None
     :param str Nom_asp : si présent dans le shapefile, nom de l'attribut d'orientation. Si absent, ce champ est à None
@@ -169,7 +165,8 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
     # Fonction d'Ambroise Guiot pour lire les valeurs d'un geotif en des points.
     def raster_to_points(raster_src, shape, nodata=np.nan):
         """
-        Associe pour chaque point de la GeometryCollection shape en entrée la valeur du pixel le plus proche issu du raster_src.
+        Associe pour chaque point de la GeometryCollection shape en entrée l'interpolation bilinéaire des valeurs
+        des 4 pixels les plus proches issus du raster_src.
     
         Attention : - le fichier géotif et le shape doivent être dans la même projection
                     - la projection ne doit pas utiliser de rotation (Lambert 93 OK, WSG84 pas clair du tout)
@@ -190,13 +187,20 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
         for i in range(len(shape)):
             #Convert from map to pixel coordinates.
             #Only works for geotransforms with no rotation.
-            px = int((shape[i].x - gt[0]) / gt[1]) #x pixel
-            py = int((shape[i].y - gt[3]) / gt[5]) #y pixel
+            current_x = (shape[i].x - gt[0]) / gt[1]
+            current_y = (shape[i].y - gt[3]) / gt[5]
+            px = int(current_x) #x pixel
+            py = int(current_y) #y pixel
 
-            value = band.ReadAsArray(px,py,1,1)
+            val = band.ReadAsArray(px,py,2,2)
+            test_ok = (val[0][0] != nodata_raster and val[0][1] != nodata_raster and val[1][0] != nodata_raster and val[1][1] != nodata_raster)
 
-            if value is not None and value[0][0] != nodata_raster  :
-                points_values.append(value[0][0])
+            if val is not None and test_ok:
+                value = ((1 - current_x%1) * (1 - current_y%1) * val[0][0]
+                        + (current_x%1) * (1 - current_y%1) * val[0][1]
+                        + (1 - current_x%1) * (current_y%1) * val[1][0]
+                        + (current_x%1) * (current_y%1) * val[1][1])
+                points_values.append(value)
             else :
                 points_values.append(nodata)
         return points_values
@@ -272,13 +276,10 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
 ################################################################
 def create_NetCDF(all_lists, output_name):
     """
-    Crée un NetCDF 1D pour simulation réanalyse-projection à partir d'une liste de listes et d'un nom de sortie.
-    
-    La liste de listes est issue d'un shapefile. L'ordre est important:
-    [ liste_latitude, liste_longitude, liste_altitude, liste_aspect, liste_massif, liste_slope, liste_id_station ]  
+    Crée un NetCDF 1D pour simulation réanalyse-projection à partir d'un dictionnaire de listes et d'un nom de sortie.
+    Le dictionnaire de listes est issue d'un shapefile et se construit avec la routine make_dict_list
 
-
-    :param all_lists : Liste de listes pour remplir les variables du NetCDF
+    :all_lists : Dictionnaire de listes pour remplir les variables du NetCDF
     :param str output_name : Le nom du fichier NetCDF qui sera produit
 
     :returns: au sens Python, ne retourne rien. Permet d'écrire un fichier à l'emplacement donné par output_name. 
@@ -315,20 +316,86 @@ def create_NetCDF(all_lists, output_name):
 ################################################################
 # Creation des skyline
 ################################################################
-def create_skyline(all_lists, path_MNT_alt):
+def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
+    """
+    Ajoute dans le fichier METADATA.xml les points du shapefile en y ajoutant les masques
+    (ie les hauteurs d'angle de vue pour les différents azimuts).
+
+
+    :all_lists : Dictionnaire de listes
+    :param str path_MNT_alt : Chemin du MNT contenant les valeurs d'altitude
+    :param str path_shapefile : Chemin du shapefile dont on souhaite extraire les points.
+    :list_skyline: Liste des identifiants du shapefile dont on souhaite avoir le tracé des lignes d'horizon
+
+    :returns: au sens Python, ne retourne rien. Permet d'une part de tracer les graphiques de ligne d'horizon et d'autre part de compléter METADATA.xml
+    """
     start_time = time.time()
-    mnt = path_MNT_alt
 
     in_file = [ [all_lists['id'][i], all_lists['alt'][i], all_lists['m'][i], all_lists['nom'][i], all_lists['lat'][i], all_lists['lon'][i] ] for i in range(len(all_lists['alt'][:])) ]
     # à in_file = np.loadtxt(file_in, dtype={'names': ('numposte', 'alt', 'massif', 'nom', 'lat', 'lon'), 'formats': (int, int, int, '|S24', float, float)})
 
+
+    #######################################################
+    #  AJOUT DE NOUVEAUX SITES DANS LE FICHIER XML Partie I
+    #######################################################
+    # Sites existants:
+    SitesExistants = infomassifs().getListSites()
+
+    # chemin d ecriture du fichier XML
+    chemxml = os.environ['SNOWTOOLS_CEN'] + "/DATA"
+    # ouverture  du fichier en mode "lecture"/"ecriture"
+    metadata = open(chemxml + "/METADATA.xml", 'r')
+    metadataout = open(chemxml + "/METADATA_out.xml", 'w')
+
+    # faire la chaine de caractère des azimuts pour ecriture dans XML file
+    azimut_str = ','.join( map(str, range(0, 360, 5)) )
+
+    while True:
+        line = metadata.readline()
+        metadataout.write(line)
+        if '<Sites>' in line:
+            break
+    #####################
+    #  FIN AJOUT Partie I
+    #####################
+
+
+
+
+
+    # output to csv file
+    if not os.path.isdir("output"):
+        os.mkdir("output")
+
+    viewmax = 20000  # 20 km
+
+    r = shapefile.Reader(path_shapefile)
+    shapes = r.shapes()
+    shape_courant = shape(shapes)
+
+    raster = gdal.Open(path_MNT_alt) # ouverture de l'image tif
+    gt = raster.GetGeoTransform()
+    wkt = raster.GetProjection()
+    band = raster.GetRasterBand(1)
+    nodata_raster = band.GetNoDataValue()
+    step = int((gt[1] + (-gt[5])) / 2)  # for further use in line interpolation
+    print("step: ", step)
+
+
+
+
+
+
+    #################################
+    # TEST COMPARE TO OLD
+    #################################
+    mnt = path_MNT_alt
     n = int(len(all_lists['alt'][:]))
 
     # load complete raster
     img = gdal.Open(mnt)  # 50 m Lambert 93
     band1 = img.GetRasterBand(1)
     rastinit = img.GetGeoTransform()
-    step = int((rastinit[1] + (-rastinit[5])) / 2)  # for further use in line interpolation
 
     # x,y geographic reference matrix
     imgx = np.zeros((1, img.RasterXSize)).astype(np.float)
@@ -342,58 +409,176 @@ def create_skyline(all_lists, path_MNT_alt):
     if not os.path.isdir("output"):
         os.mkdir("output")
 
-    viewmax = 20000  # 20 km
-
     # reprojection to L93
     source = osr.SpatialReference()
     source.ImportFromEPSG(4326)
     target = osr.SpatialReference()
     target.ImportFromEPSG(2154)
+
     transform = osr.CoordinateTransformation(source, target)
+    #################################
+    # FIN TEST COMPARE TO OLD
+    #################################
 
 
 
 
 
-
-
-
-    # Quels sont les sites existants ?
-    SitesExistants = infomassifs().getListSites()
-    ################################################################################################
-    #                                                                                              #
-    #  AJOUT DE NOUVEAUX SITES DANS LE FICHIER XML                                   #
-    #                                                                                              #
-    ################################################################################################
-    # chemin d ecriture du fichier XML
-    chemxml = os.environ['SNOWTOOLS_CEN'] + "/DATA"
-    # ouverture  du fichier en mode "lecture"/"ecriture"
-    metadata = open(chemxml + "/METADATA.xml", 'r')
-    metadataout = open(chemxml + "/METADATA_out.xml", 'w')
-
-    # faire la chaine de caractère des azimuts pour ecriture dans XML file
-    azimut_str = ''
-    for x in map(str, range(0, 360, 5) ):
-        azimut_str = azimut_str + x + ' '
-
-    while True:
-        line = metadata.readline()
-        metadataout.write(line)
-        if '<Sites>' in line:
-            break
-
-
-
-
-
-
-
-    # extract from original raster
-    for k in range(n):
+    '''#################################
+    # TEST COMPARE TO OLD
+    #################################
+    for k in range(len(shape_courant)):
         in_stat = in_file[k]
-
-
         print('hello', in_stat[0], in_stat[3])
+
+        px_c = int((shape_courant[k].x - gt[0]) / gt[1]) #x pixel centre
+        py_c = int((shape_courant[k].y - gt[3]) / gt[5]) #y pixel centre
+
+        print("point pixel 1: ",px_c, py_c)
+        print("coord point pixelise: ", gt[0] + px_c * gt[1], gt[3] + py_c * gt[5])
+        print("centre shapefile: ", shape_courant[k].x, shape_courant[k].y)
+        print('difference: ', abs(shape_courant[k].x - (gt[0] + px_c * gt[1])), abs(shape_courant[k].y - (gt[3] + py_c * gt[5])))
+
+        value_c = int(band.ReadAsArray(px_c,py_c,1,1)[0][0])
+        print("alt: ", value_c)
+
+        point = ogr.Geometry(ogr.wkbPoint)
+        # print in_stat[4], in_stat[5]
+        point.AddPoint(in_stat[5], in_stat[4])  # coord lat lon
+        point.Transform(transform)
+        coord = point.ExportToWkt()
+        # print coord
+        xx = math.floor(point.GetX())
+        yy = math.floor(point.GetY())
+        print("point centre OLD: ", xx, yy)
+        ####
+
+        final_data = []
+        az = []
+        anglee_old = []
+        # Find row/col information et xy normalization
+        xmin = rastinit[0] + ((math.floor(((xx - viewmax) - rastinit[0]) / rastinit[1])) * rastinit[1])
+        xmax = rastinit[0] + ((math.floor(((xx + viewmax) - rastinit[0]) / rastinit[1])) * rastinit[1])
+        ymin = rastinit[3] - ((math.ceil((rastinit[3] - (yy - viewmax)) / rastinit[5])) * rastinit[5])
+        ymax = rastinit[3] - ((math.ceil((rastinit[3] - (yy + viewmax)) / rastinit[5])) * rastinit[5])
+        stax = rastinit[0] + ((math.floor((xx - rastinit[0]) / rastinit[1])) * rastinit[1])
+        stay = rastinit[3] - (math.ceil((rastinit[3] - yy) / rastinit[5]) * rastinit[5])
+
+        if ymax >= max(imgy):
+            minrow = 0
+            print('toto is here')
+        else:
+            minrow = np.unique(np.argwhere(imgy == ymax))[1]
+        if ymin <= min(imgy):
+            maxrow = imgy.shape[0]
+            print('toto is there')
+        else:
+            maxrow = np.unique(np.argwhere(imgy == ymin))[1]
+        if xmin <= min(imgx[0, ]):
+            mincol = 0
+        else:
+            mincol = np.unique(np.argwhere(imgx == xmin))[1]
+        if xmax >= max(imgx[0, ]):
+            maxcol = imgx.shape[1]
+        else:
+            maxcol = np.unique(np.argwhere(imgx == xmax))[1]
+            # douteux: les 6 lignes qui suivent devraient être "désindentés" ?
+            starow = maxrow - np.unique(np.argwhere(imgy == stay))[1]
+            stacol = np.unique(np.argwhere(imgx == stax))[1] - mincol
+            starow = starow.astype('int64')
+            stacol = stacol.astype('int64')
+            #sta_xy = (stax + (rastinit[1] / 2), stay + (rastinit[5] / 2)) pas d'utilité ?
+            sta_rc = (starow, stacol)
+        # Extract array from raster
+        #print(mincol, minrow, maxcol - mincol, maxrow - minrow)
+        print(mincol+stacol, minrow+starow, maxcol - mincol, maxrow - minrow)
+        height = band1.ReadAsArray(int(mincol), int(minrow), int(maxcol - mincol), int(maxrow - minrow))
+        height = height.astype('int64')
+        # get width and heigth of image
+        w, h = height.shape
+        print("raster extracted", w, h)
+        z_alt = height[sta_rc]
+        print("z_alt: ", height[sta_rc])
+        print("coord point pixelise OLD: ", stax, stay)
+        print("centre shapefile: ", shape_courant[k].x, shape_courant[k].y)
+        print('difference: ', abs(shape_courant[k].x - stax), abs(shape_courant[k].y - stay))'''
+
+
+    #for k in range(len(shape_courant)):
+    for k in range(len(shape_courant)):
+        in_stat = in_file[k]
+        print('hello', in_stat[0], in_stat[3])
+        center_x = (shape_courant[k].x - gt[0]) / gt[1]
+        center_y = (shape_courant[k].y - gt[3]) / gt[5]
+
+        px_c = int(center_x) #x pixel centre
+        py_c = int(center_y) #y pixel centre
+
+        # Idee: faire une interpolation biliénaire: -> voir quel pixel (pour orientation) mais en gros
+        # f(x,y) = f(0,0)(1-x)(1-y) + f(1,0)x(1-y) + f(0,1)(1-x)y + f(1,1)xy avec x et y entre 0 et 1.
+        # Ici, x et y sont les parties décimales de (shape_courant[k].x - gt[0]) / gt[1] et (shape_courant[k].y - gt[3]) / gt[5]
+        # La fonction f est jouée par le tableau 2x2 band.ReadAsArray(px_c,py_c,2,2)
+        # ! band.ReadAsArray(px_c,py_c,2,2)[0][1] correspond à band.ReadAsArray(px_c+1,py_c,1,1)[0][0]
+        value_bilin = band.ReadAsArray(px_c,py_c,2,2)
+        value_c = ((1 - center_x%1) * (1 - center_y%1) * value_bilin[0][0]
+                  + (center_x%1) * (1 - center_y%1) * value_bilin[0][1]
+                  + (1 - center_x%1) * (center_y%1) * value_bilin[1][0]
+                  + (center_x%1) * (center_y%1) * value_bilin[1][1])
+
+        print("alt: ", round(value_c,1))
+        anglee = []
+        for azimut in range(0, 360, 5):
+            angle=[]
+            for index,dist in enumerate(range(step, viewmax, step)):
+                current_x = (shape_courant[k].x + dist * math.sin(math.radians(azimut)) - gt[0]) / gt[1]
+                current_y = (shape_courant[k].y + dist * math.cos(math.radians(azimut)) - gt[3]) / gt[5]
+
+                px = int(current_x) #x pixel le long de l'azimut
+                py = int(current_y) #y pixel le long de l'azimut
+                val = band.ReadAsArray(px,py,2,2)
+
+                test_ok = (val[0][0] != nodata_raster and val[0][1] != nodata_raster and val[1][0] != nodata_raster and val[1][1] != nodata_raster)
+
+                if val is not None and test_ok :
+                    value = ((1 - current_x%1) * (1 - current_y%1) * val[0][0]
+                            + (current_x%1) * (1 - current_y%1) * val[0][1]
+                            + (1 - current_x%1) * (current_y%1) * val[1][0]
+                            + (current_x%1) * (current_y%1) * val[1][1])
+
+                    angle.append(math.ceil((math.degrees(math.atan(  (value - value_c) / dist ) )) * 100) / 100)
+                else:
+                    angle.append(0)
+            anglee.append(max(angle))
+
+        #print(anglee)
+        az = [azimut for azimut in range(0, 360, 5)]
+        angle_str = ','.join( map(str, anglee) )
+
+
+        # PLOT
+        if list_skyline is not None and all_lists['id'][k] in list_skyline:
+            az = np.array(az, 'float')
+            anglee = np.array(anglee, 'float')
+            fig = plt.figure()
+            a = fig.add_subplot(111, polar=True)
+            rmax = max(40., max(anglee))
+            # print rmax-anglee
+            a.fill(az * math.pi / 180., rmax - anglee, '-ob', alpha=0.5, edgecolor='b')
+            a.set_rmax(rmax)
+            a.set_rgrids([0.01, 10., 20., 30., float(int(rmax))], [str(int(rmax)), '30', '20', '10', '0'])
+            a.set_thetagrids([0., 45., 90., 135., 180., 225., 270., 315.], ["N", "NE", "E", "SE", "S", "SW", "W", "NW"])
+            a.set_title(in_stat[3] + ' alt mnt:' + str(value_c) + ' m alt poste:' + str(in_stat[1]))
+            a.set_theta_zero_location('N')
+            a.set_theta_direction(-1)
+            plt.savefig('output/' + str(in_stat[0]) + '_skyline.png')
+            # show()
+            plt.close()
+
+
+        '''#################################
+        # TEST COMPARE TO OLD
+        #################################
+        print('hello OLD: ', in_stat[0], in_stat[3])
         # tranformation des coordonnées geo en L93
         point = ogr.Geometry(ogr.wkbPoint)
         # print in_stat[4], in_stat[5]
@@ -403,11 +588,11 @@ def create_skyline(all_lists, path_MNT_alt):
         # print coord
         xx = math.floor(point.GetX())
         yy = math.floor(point.GetY())
-        print(xx, yy)
         ####
 
-
-
+        final_data = []
+        az = []
+        anglee_old = []
         # Find row/col information et xy normalization
         xmin = rastinit[0] + ((math.floor(((xx - viewmax) - rastinit[0]) / rastinit[1])) * rastinit[1])
         xmax = rastinit[0] + ((math.floor(((xx + viewmax) - rastinit[0]) / rastinit[1])) * rastinit[1])
@@ -431,31 +616,23 @@ def create_skyline(all_lists, path_MNT_alt):
             maxcol = imgx.shape[1]
         else:
             maxcol = np.unique(np.argwhere(imgx == xmax))[1]
-            # douteux: les 6 lignes qui suivent devraient être "désindentés" -> fait au cas où. 
-        starow = maxrow - np.unique(np.argwhere(imgy == stay))[1]
-        stacol = np.unique(np.argwhere(imgx == stax))[1] - mincol
-        starow = starow.astype('int64')
-        stacol = stacol.astype('int64')
-        #sta_xy = (stax + (rastinit[1] / 2), stay + (rastinit[5] / 2)) pas d'utilité ?
-        sta_rc = (starow, stacol)
+            # douteux: les 6 lignes qui suivent devraient être "désindentés" ?
+            starow = maxrow - np.unique(np.argwhere(imgy == stay))[1]
+            stacol = np.unique(np.argwhere(imgx == stax))[1] - mincol
+            starow = starow.astype('int64')
+            stacol = stacol.astype('int64')
+            sta_rc = (starow, stacol)
         # Extract array from raster
-        print(mincol, minrow, maxcol - mincol, maxrow - minrow)
         height = band1.ReadAsArray(int(mincol), int(minrow), int(maxcol - mincol), int(maxrow - minrow))
         height = height.astype('int64')
         # get width and heigth of image
         w, h = height.shape
-        print("raster extracted", w, h)
         z_alt = height[sta_rc]
-        print(height[sta_rc])
-        # Get all intersected cells on azimuth 
+        print("z_alt: ", height[sta_rc])
+        # Get all intersected cells on azimuth
 
-
-
-
-        az = []
-        anglee = []
-        angle_str=''
         for azimut in range(0, 360, 5):
+            angle_str=''
             i = 0
             angle = np.zeros((1, (viewmax // step) )).astype(np.float)  # initialize container for angles
             points = []  # initialize container for points
@@ -484,14 +661,82 @@ def create_skyline(all_lists, path_MNT_alt):
                         angle[0, i] = math.ceil((math.degrees(math.atan(b / dist))) * 100) / 100
                     else:
                         angle[0, i] = 0
+            # print angle[0,i], maangle[0,])
+            # raw_input()
                 i = i + 1
-
+            # print in_stat[0], azimut, maangle[0,])
+            # append each azimut to final data for weather station
+            data = (in_stat[0], azimut, max(angle[0, ]), points[np.argwhere(angle == max(angle[0, ]))[0][1]][0], points[np.argwhere(angle == max(angle[0, ]))[0][1]][1])
+            final_data.append(data)
+            # print(data)
             az = az + [azimut]
-            anglee = anglee + [max(angle[0, ])]
+            anglee_old = anglee_old + [max(angle[0, ])]
             angle_str = angle_str + str(max(angle[0, ])) + ' '
 
- 
+        # insert values into new table for the given weather station
+        az = np.array(az, 'float')
+        #print("anglee_old: ", anglee_old)
+        anglee_old = np.array(anglee_old, 'float')
 
+        print('écart max: ' + str(max([abs(anglee[i] - anglee_old[i]) for i in range(len(anglee))])))
+        print('écart moyen: ' + str(np.mean([abs(anglee[i] - anglee_old[i]) for i in range(len(anglee))])))
+
+        print(in_stat[3], "done")
+        # print az, anglee_old
+        fig = plt.figure()
+        a = fig.add_subplot(111, polar=True)
+        rmax = max(40., max(anglee_old))
+        # print rmax-anglee_old
+        a.fill(az * math.pi / 180., rmax - anglee_old, '-ob', alpha=0.5, edgecolor='b')
+        a.set_rmax(rmax)
+        a.set_rgrids([0.01, 10., 20., 30., float(int(rmax))], [str(int(rmax)), '30', '20', '10', '0'])
+        a.set_thetagrids([0., 45., 90., 135., 180., 225., 270., 315.], ["N", "NE", "E", "SE", "S", "SW", "W", "NW"])
+        a.set_title(in_stat[3] + ' alt mnt:' + str(z_alt) + ' m alt poste:' + str(in_stat[1]))
+        a.set_theta_zero_location('N')
+        a.set_theta_direction(-1)
+        plt.savefig('output/' + str(in_stat[0]) + '_skyline_old.png')
+
+        plt.close()
+        #################################
+        # FIN TEST COMPARE TO OLD
+        #################################
+
+
+
+
+
+
+
+
+        in_stat = in_file[k]
+        print('hello new', in_stat[0], in_stat[3])
+
+        px_c = round((shape_courant[k].x - gt[0]) / gt[1]) #x pixel centre
+        py_c = round((shape_courant[k].y - gt[3]) / gt[5]) #y pixel centre
+        value_c = int(band.ReadAsArray(px_c,py_c,1,1)[0][0])
+        print("alt: ", value_c)
+        anglee = []
+        for azimut in range(0, 360, 5):
+            angle=[]
+            for index,dist in enumerate(range(step, viewmax, step)):
+
+                px = round(    (shape_courant[k].x + dist * math.sin(math.radians(azimut)) - gt[0]) / gt[1]) #x pixel le long de l'azimut
+                py = round(    (shape_courant[k].y + dist * math.cos(math.radians(azimut)) - gt[3]) / gt[5]) #y pixel le long de l'azimut
+
+                value = band.ReadAsArray(px,py,1,1)
+
+                if value is not None and value[0][0] != nodata_raster:
+                    angle.append(math.ceil((math.degrees(math.atan((int(value[0][0])-value_c) / dist))) * 100) / 100)
+                else:
+                    angle.append(0)
+            anglee.append(max(angle))
+
+        #print(anglee)
+        az = [azimut for azimut in range(0, 360, 5)]
+        angle_str = ','.join( map(str, anglee) )
+
+        print('écart max: ' + str(max([abs(anglee[i] - anglee_old[i]) for i in range(len(anglee))])))
+        print('écart moyen: ' + str(np.mean([abs(anglee[i] - anglee_old[i]) for i in range(len(anglee))])))
 
         # PLOT
         az = np.array(az, 'float')
@@ -504,17 +749,27 @@ def create_skyline(all_lists, path_MNT_alt):
         a.set_rmax(rmax)
         a.set_rgrids([0.01, 10., 20., 30., float(int(rmax))], [str(int(rmax)), '30', '20', '10', '0'])
         a.set_thetagrids([0., 45., 90., 135., 180., 225., 270., 315.], ["N", "NE", "E", "SE", "S", "SW", "W", "NW"])
-        a.set_title(in_stat[3] + ' alt mnt:' + str(z_alt) + ' m alt poste:' + str(in_stat[1]))
+        a.set_title(in_stat[3] + ' alt mnt:' + str(value_c) + ' m alt poste:' + str(in_stat[1]))
         a.set_theta_zero_location('N')
         a.set_theta_direction(-1)
-        plt.savefig('output/' + str(in_stat[0]) + '_skyline.png')
+        plt.savefig('output/' + str(in_stat[0]) + '_skyline_with_round.png')
         # show()
-        plt.close()
+        plt.close()'''
 
 
 
 
 
+
+
+
+
+
+
+
+        ########################################################
+        #  AJOUT DE NOUVEAUX SITES DANS LE FICHIER XML Partie II
+        ########################################################
         if all_lists['id'][k] not in SitesExistants:
             print("ajout du site : ", all_lists['nom'][k])
 
@@ -530,8 +785,9 @@ def create_skyline(all_lists, path_MNT_alt):
             metadataout.write('\t\t<massif> ' + str(all_lists['m'][k]) + ' </massif>\n')
             metadataout.write('\t\t<zref> ' + "1.5" + ' </zref>\n')
             metadataout.write('\t\t<uref> ' + "10.0" + ' </uref>\n')
-            metadataout.write('\t\t<azimut> ' + azimut_str + '</azimut>\n')
-            metadataout.write('\t\t<mask> ' + angle_str + '</mask>\n')
+            metadataout.write('\t\t<azimut> ' + azimut_str + ' </azimut>\n')
+            metadataout.write('\t\t<mask> ' + angle_str + ' </mask>\n')
+            metadataout.write('\t\t<source_mask> ' + 'IGN' + ' </source_mask>\n')
             metadataout.write('\t</Site>\n')
 
         else:
@@ -577,8 +833,9 @@ def create_skyline(all_lists, path_MNT_alt):
                 metadataout.write('\t\t<massif> ' + str(all_lists['m'][k]) + ' </massif>\n')
                 metadataout.write('\t\t<zref> ' + "1.5" + ' </zref>\n')
                 metadataout.write('\t\t<uref> ' + "10.0" + ' </uref>\n')
-                metadataout.write('\t\t<azimut> ' + azimut_str + '</azimut>\n')
-                metadataout.write('\t\t<mask> ' + angle_str + '</mask>\n')
+                metadataout.write('\t\t<azimut> ' + azimut_str + ' </azimut>\n')
+                metadataout.write('\t\t<mask> ' + angle_str + ' </mask>\n')
+                metadataout.write('\t\t<source_mask> ' + 'IGN' + ' </source_mask>\n')
                 metadataout.write('\t</Site>\n')
 
 
@@ -621,6 +878,7 @@ def parseArguments(args):
     parser.add_argument("--MNT_alt", help = "Path for MNT altitude", type = str, default = path_MNT_alti_defaut)
     parser.add_argument("--MNT_asp", help = "Path for MNT altitude", type = str, default = path_MNT_aspect_defaut)
     parser.add_argument("--MNT_slop", help = "Path for MNT altitude", type = str, default = path_MNT_slope_defaut)
+    parser.add_argument("--list_skyline", nargs='*', help = "The skyline plot you want", default = None)
 
     args = parser.parse_args(args)
     return args
@@ -644,6 +902,7 @@ def main(args=None):
         path_MNT_asp = args.MNT_asp
         path_MNT_slop = args.MNT_slop
         output_name = args.output
+        list_skyline = args.list_skyline
 
         # Check if mandatory path for shapefile is OK
         if not os.path.isfile(path_shapefile + '.shp'):
@@ -659,10 +918,14 @@ def main(args=None):
             logger.critical('Field {} does not exist in {}'.format(Id_station, path_shapefile))
             sys.exit(3)
 
-        # Launch the app
+        # Launch the app:
         all_lists = make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, Nom_slop, path_MNT_alt, path_MNT_asp, path_MNT_slop)
         create_NetCDF(all_lists, output_name)
-        create_skyline(all_lists, path_MNT_alt)
+        if list_skyline == 'all' or list_skyline == 'All' or list_skyline == 'ALL':
+            list_skyline = [all_lists['id'][k] for k in range(len(all_lists['id']))]
+        elif list_skyline is not None:
+            list_skyline = [int(list_skyline[i]) for i in range(len(list_skyline))]
+        create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline)
 
 if __name__ == '__main__':
     main()

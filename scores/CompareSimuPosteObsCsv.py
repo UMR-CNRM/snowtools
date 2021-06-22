@@ -166,6 +166,7 @@ def decadeplots(datebegin, dateend, dataObs):
     yearly_nvalues = []
     yearly_bias = []
     yearly_rmse = []
+    yearly_meanSD = []
     list_years = [1980, 1990, 2000, 2010]
     
     for dec in list_years:
@@ -197,14 +198,17 @@ def decadeplots(datebegin, dateend, dataObs):
             yearly_nvalues.append(C.nvalues)
             yearly_bias.append(C.bias)
             yearly_rmse.append(C.rmse)
+            yearly_meanSD.append(C.meansd)
 
         print('Fin traitement decade {0:d} : {1:f}s'.format(dec, time.time()-init))
 
     if options.scores:
         boxplots_yearly(list_years, yearly_nvalues, yearly_bias, list_colors = C.list_colors, list_labels = C.list_labels, label='bias', ylabel='Bias (cm)')
         print('Plot boxplot_biais : {0:f}s'.format(time.time()-init))
-        boxplots_yearly(list_years, yearly_nvalues, yearly_rmse, list_colors = C.list_colors, list_labels = C.list_labels, label='rmse', ylabel='RMSD (cm)')
+        boxplots_yearly(list_years, yearly_nvalues, yearly_rmse, list_colors = C.list_colors, list_labels = C.list_labels, label='rmsd', ylabel='RMSD (cm)')
         print('Plot boxplot_rmse : {0:f}s'.format(time.time()-init))
+        boxplots_yearly(list_years, yearly_nvalues, yearly_meanSD, list_colors = C.list_colors, list_labels = C.list_labels, label='MeanSD', ylabel='Mean snow depth (cm)')
+        print('Plot boxplot_mean_SD : {0:f}s'.format(time.time()-init))
 
 def boxplots_yearly(list_years, list_nvalues, list_scores, list_colors, list_labels, label, **kwargs):
 
@@ -425,10 +429,11 @@ class ComparisonSimObs(object):
                     scores = DeterministicScores_Heterogeneous(timeObs, timeSim, sdObs, sdSim)
                     t2 = time.time()
                     print('Calcul scores sim {0:d} : {1:f}s'.format(indSim, t2-t1))
-                    self.nvalues[indSim, s] = scores.nvalues()
-                    self.bias[indSim, s] = scores.bias()
-                    self.rmse[indSim, s] = scores.rmse()
-                    self.meansd[indSim, s] = scores.meansim
+                    #self.nvalues[indSim, s] = scores.nvalues()
+                    #self.bias[indSim, s] = scores.bias()
+                    #self.rmse[indSim, s] = scores.rmse()
+                    #self.meansd[indSim, s] = scores.meansim
+                    self.nvalues[indSim, s], self.bias[indSim, s], self.rmse[indSim, s], self.meansd[indSim, s] = scores.scores_with_positive_values_only()
 
     def allboxplots(self):
 
@@ -500,9 +505,10 @@ class ComparisonSimObs(object):
 
         for indSim in range(0, self.nsim):
             if self.nsim == 1:
-                # Color Alps departments in red, Pyr ones in blue and Corsica ones in green
+                # Color Alps departments in red, Pyr ones in blue and Corsica ones in grey to avoid
+                # blue and green colors and the same figure
                 # Add legend (by adding a 'label' key to the args)
-                kwargs['fillcolor'] = ['red']*5 + ['blue']*3 + ['green']
+                kwargs['fillcolor'] = ['red']*5 + ['blue']*3 + ['grey']
                 kwargs['label'] = self.list_labels_massifs
 
             b1.draw(stations[valid], list_scores[indSim, valid], nsimu=self.nsim, **kwargs)
