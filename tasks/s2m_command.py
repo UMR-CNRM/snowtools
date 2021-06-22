@@ -253,8 +253,8 @@ class Surfex_command(_S2M_command):
                           help="specify your job walltime (format hh:mm:ss)")
 
         parser.add_option("--writesx",
-                          action="store", type = "str", dest="writesx", default = None,
-                          help="specify the root path (.../vortex) where you'd like to store PREP files on sxcen")
+                          action="store_true", dest="writesx", default = False,
+                          help="Optionnaly transfer the PRO files towards sxcen")
 
         parser.add_option("--sensor",
                           action="store", type = "str", dest="sensor", default = "MODIS",

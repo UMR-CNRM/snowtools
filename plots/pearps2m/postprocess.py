@@ -20,14 +20,18 @@ if sys.version_info.major == 2:  # Python2 only
 # ----------------------------------------------------------
 
 import locale
-
+import six
 import os
 from optparse import OptionParser
 import numpy as np
 import netCDF4
 
 import matplotlib
+import matplotlib.style
 matplotlib.use('Agg')
+matplotlib.style.use('fast')
+matplotlib.rcParams['agg.path.chunksize'] = 100
+# matplotlib.rcParams["figure.dpi"] = 75
 
 from collections import Counter, defaultdict
 
@@ -41,9 +45,12 @@ from utils.infomassifs import infomassifs
 from utils.FileException import DirNameException
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 echecker = ExternalCodeImportChecker('plots')
-with echecker:
-    from plots.maps.basemap import Map_alpes, Map_pyrenees, Map_corse
-
+if six.PY2:
+    with echecker:
+        from plots.maps.basemap import Map_alpes, Map_pyrenees, Map_corse
+else:
+    with echecker:
+        from plots.maps.cartopy import Map_alpes, Map_pyrenees, Map_corse
 import footprints
 
 usage = "usage: python postprocess.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]"
@@ -89,7 +96,7 @@ class config(object):
 
     def __init__(self):
         options = parse_options(sys.argv)
-        options.datebegin, options.dateend = map(check_and_convert_date, [options.datebegin, options.dateend])
+        options.datebegin, options.dateend = [check_and_convert_date(dat) for dat in [options.datebegin, options.dateend]]
         if options.datebegin.hour == 0:
             self.rundate = options.datebegin.replace(hour=6)
         else:
@@ -264,7 +271,8 @@ class _EnsembleMassif(Ensemble):
             alti = self.get_alti()
             massif = self.get_massifdim()
 
-        return map(self.build_filename, massif, alti), map(self.build_title, massif, alti)
+        return [self.build_filename(mas, alt) for mas, alt in zip(massif, alti)], \
+               [self.build_title(mas, alt) for mas, alt in zip(massif, alti)]
 
     def build_filename(self, massif, alti):
         filename = str(massif)
@@ -274,7 +282,6 @@ class _EnsembleMassif(Ensemble):
 
     def build_title(self, massif, alti):
         title = self.InfoMassifs.getMassifName(massif)  # type unicode
-        print (type(title))
         if alti:
             title += u" %d m" % int(alti)
         return title  # matplotlib needs unicode
@@ -310,8 +317,8 @@ class EnsembleStation(Ensemble):
     def get_metadata(self, **kwargs):
         alti = self.simufiles[0].read_var("ZS", Number_of_points = self.indpoints)
         station = self.get_station()
-
-        return map(self.build_filename, station, alti), map(self.build_title, station, alti)
+        return [self.build_filename(stat, alt) for stat, alt in zip(station, alti)], \
+               [self.build_title(stat, alt) for stat, alt in zip(station, alti)]
 
     def build_filename(self, station, alti):
         return '%08d' % station
@@ -411,7 +418,7 @@ class EnsembleOperDiags(EnsembleDiags):
                 s.addlogo()
                 plotname = diroutput + "/" + var + "_" + list_filenames[point] + "." + self.formatplot
                 s.save(plotname, formatout=self.formatplot)
-                print (plotname + " is available.")
+                print(plotname + " is available.")
 
             s.close()
 
@@ -473,8 +480,8 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
     levelmax = 3900
     levelmin = 0
 
-    list_var_map = 'naturalIndex', 'SD_1DY_ISBA', 'SD_3DY_ISBA', 'SNOMLT_ISBA'
-    list_var_spag = 'naturalIndex', 'DSN_T_ISBA', 'WSN_T_ISBA', 'SNOMLT_ISBA'
+    list_var_map = ['naturalIndex', 'SD_1DY_ISBA', 'SD_3DY_ISBA', 'SNOMLT_ISBA'] # ['SD_1DY_ISBA'] #
+    list_var_spag = ['naturalIndex', 'DSN_T_ISBA', 'WSN_T_ISBA', 'SNOMLT_ISBA'] # ['DSN_T_ISBA'] #
 
     def pack_maps(self, domain, suptitle, diroutput = "."):
 
@@ -482,10 +489,11 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
 
         alti = self.get_alti()
         list_alti = list(set(alti))
-
         m = map_generic[domain[0:3]]()
         for var in self.list_var_map:
             m.init_massifs(**self.attributes[var])
+            if six.PY3:
+                m.addlogo()
             if 'nolevel' not in self.attributes[var].keys():
                 self.attributes[var]['nolevel'] = False
             if self.attributes[var]['nolevel']:
@@ -513,18 +521,24 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
 
                     m.plot_center_massif(massif[indalti], qmin, qmed, qmax, **self.attributes[var])
 
-                    title = "pour le " + pretty_date(self.time[t]).decode('utf-8')
+                    if six.PY2:
+                        title = "pour le " + pretty_date(self.time[t]).decode('utf-8')
+                    else:
+                        title = "pour le " + pretty_date(self.time[t])
                     if not self.attributes[var]['nolevel']:
                         title += " - Altitude : " + str(int(level)) + "m"
 
                     m.set_title(title)
                     m.set_suptitle(suptitle)
-                    m.addlogo()
+                    if six.PY2:
+                        m.addlogo()
                     ech = self.time[t] - self.time[0] + self.time[1] - self.time[0]
                     ech_str = '+%02d' % (ech.days * 24 + ech.seconds / 3600)
                     plotname = diroutput + "/" + domain[0:3] + "_" + var + "_" + str(int(level)) + ech_str + "." + self.formatplot
                     m.save(plotname, formatout=self.formatplot)
-                    print (plotname + " is available.")
+                    print(plotname + " is available.")
+                    if six.PY3:
+                        m.reset_massifs(rmcbar=False)
             m.reset_massifs()
 
 @echecker.disabled_if_unavailable
@@ -534,8 +548,8 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
     levelmin = 0
     versants = [u'Nord 40°', u'Sud 40°']
     list_var_spag = []
-    list_var_spag_2points = ['RAMSOND_ISBA', 'NAT_LEV', 'WET_TH_ISBA', 'REFRZTH_ISBA']
-    list_var_map = ['RAMSOND_ISBA', 'NAT_LEV', 'WET_TH_ISBA', 'REFRZTH_ISBA']
+    list_var_spag_2points = ['RAMSOND_ISBA', 'NAT_LEV', 'WET_TH_ISBA', 'REFRZTH_ISBA'] # ['NAT_LEV'] #
+    list_var_map = ['RAMSOND_ISBA', 'NAT_LEV', 'WET_TH_ISBA', 'REFRZTH_ISBA'] # ['RAMSOND_ISBA'] #
     ensemble = {}
 
     def alldiags(self):
@@ -543,7 +557,7 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
 
     def get_pairs_ns(self):
         alti = self.get_alti()
-        aspect = np.array(map(int, self.get_aspect()))
+        aspect = np.array([int(asp) for asp in self.get_aspect()])
         massif = self.get_massifdim()
 
         if not hasattr(self, 'list_pairs'):
@@ -579,6 +593,8 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
             m.init_massifs(**self.attributes[var])
             m.empty_massifs()
             m.add_north_south_info()
+            if six.PY3:
+                m.addlogo()
 
             list_loop_alti = list_alti[:]
             for level in list_loop_alti:
@@ -599,26 +615,31 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
                     for indalti in list_indalti:
                         for q, quantile in enumerate(self.list_q):  # pylint: disable=possibly-unused-variable
                             list_values.append(self.quantiles[var][q][t, indalti])
-
+                    # print(len(massif[indalti]))
                     m.rectangle_massif(massif[indalti], self.list_q, list_values, ncol=2, **self.attributes[var])
-
-                    title = "pour le " + pretty_date(self.time[t]).decode('utf-8')
+                    if six.PY2:
+                        title = "pour le " + pretty_date(self.time[t]).decode('utf-8')
+                    else:
+                        title = "pour le " + pretty_date(self.time[t])
                     title += " - Altitude : " + str(int(level)) + "m"
 
                     m.set_title(title)
                     m.set_suptitle(suptitle)
-                    m.addlogo()
+                    if six.PY2:
+                        m.addlogo()
                     ech = self.time[t] - self.time[0] + self.time[1] - self.time[0]
                     ech_str = '+%02d' % (ech.days * 24 + ech.seconds / 3600)
                     plotname = diroutput + "/" + domain[0:3] + "_" + var + "_" + str(int(level)) + ech_str + "." + self.formatplot
                     m.save(plotname, formatout=self.formatplot)
-                    print (plotname + " is available.")
+                    print(plotname + " is available.")
+                    if six.PY3:
+                        m.reset_massifs(rmcbar=False, rminfobox=False)
             m.reset_massifs()
 
 
 class EnsembleOperDiagsStations(EnsembleOperDiags, EnsembleStation):
     list_var_map = []
-    list_var_spag = ['DSN_T_ISBA', 'WSN_T_ISBA', 'RAMSOND_ISBA', 'WET_TH_ISBA', 'REFRZTH_ISBA', 'SNOMLT_ISBA']
+    list_var_spag = ['DSN_T_ISBA', 'WSN_T_ISBA', 'RAMSOND_ISBA', 'WET_TH_ISBA', 'REFRZTH_ISBA', 'SNOMLT_ISBA'] #['DSN_T_ISBA'] #
 
 
 class EnsemblePostproc(_EnsembleMassif):
@@ -735,12 +756,14 @@ if __name__ == "__main__":
     locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
 
     list_domains = snow_members.keys()
+    print(list_domains)
 
-    for domain in list_domains:
+    for domain in list_domains: #['alp_allslopes']: #
 
         suptitle = u'Prévisions PEARP-S2M du ' + pretty_date(S2ME.conf.rundate)  # S2ME.conf.rundate is a Date object --> strftime already calls decode method
         # Identify the prevailing xpid in the obtained resources and adapt the title
         count = Counter(snow_xpid[domain])
+        print(count)
         prevailing_xpid = count.most_common(1)[0][0]
         suffixe_suptitle = dict_chaine[prevailing_xpid]
         suptitle += suffixe_suptitle
@@ -754,28 +777,28 @@ if __name__ == "__main__":
 
         E.open(snow_members[domain])
 
-        print ("domain " + domain + " npoints = " + str(E.npoints))
+        print("domain " + domain + " npoints = " + str(E.npoints))
 
         E.alldiags()
 
-        print ('Diagnostics have been computed for the following variables :')
-        print (E.ensemble.keys())
+        print('Diagnostics have been computed for the following variables :')
+        print(E.ensemble.keys())
 
-        E.pack_spaghettis(suptitle, diroutput = c.diroutput_plots)
+        E.pack_spaghettis(suptitle, diroutput=c.diroutput_plots)
         if domain != 'postes':
-            E.pack_maps(domain, suptitle, diroutput = c.diroutput_maps)
+            E.pack_maps(domain, suptitle, diroutput=c.diroutput_maps)
 
             ENS.alldiags()
-            print ('Diagnostics have been computed for the following variables :')
-            print (ENS.ensemble.keys())
-            ENS.pack_maps(domain, suptitle, diroutput = c.diroutput_maps)
+            print('Diagnostics have been computed for the following variables :')
+            print(ENS.ensemble.keys())
+            ENS.pack_maps(domain, suptitle, diroutput=c.diroutput_maps)
 
-            ENS.pack_spaghettis_ns(suptitle, diroutput = c.diroutput_plots)
+            ENS.pack_spaghettis_ns(suptitle, diroutput=c.diroutput_plots)
             ENS.close()
             del ENS
 
-            print (E.list_var_spag)
-            print (E.list_var_map)
+            print(E.list_var_spag)
+            print(E.list_var_map)
 
         E.close()
         del E
