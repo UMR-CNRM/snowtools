@@ -49,6 +49,12 @@ import shapefile
 ################################################################
 #           EN DUR DANS LE CODE:
 ################################################################
+# VALEUR A IMPLEMENTER MANUELLEMENT: DEPEND DE CHAQUE PROJET POUR UNICITE DANS METADATA.xml
+# ANR_TOP: 0
+# INCREMENTER DE 1000 POUR LE PROJET SUIVANT ET PENSER A LE METTRE ICI
+add_for_METADATA = 0
+
+
 
 ################################################################
 # VALEURS PAR DEFAUT CHANGEABLE PAR OPTION:
@@ -567,7 +573,7 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
             a.set_rmax(rmax)
             a.set_rgrids([0.01, 10., 20., 30., float(int(rmax))], [str(int(rmax)), '30', '20', '10', '0'])
             a.set_thetagrids([0., 45., 90., 135., 180., 225., 270., 315.], ["N", "NE", "E", "SE", "S", "SW", "W", "NW"])
-            a.set_title(in_stat[3] + ' alt mnt:' + str(value_c) + ' m alt poste:' + str(in_stat[1]))
+            a.set_title(in_stat[3] + ' alt mnt:' + str(round(value_c,1)) + ' m alt poste:' + str(in_stat[1]))
             a.set_theta_zero_location('N')
             a.set_theta_direction(-1)
             plt.savefig('output/' + str(in_stat[0]) + '_skyline.png')
@@ -776,7 +782,7 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
             metadataout.write('\t<Site>\n')
             metadataout.write('\t\t<name> ' + all_lists['nom'][k] + ' </name>\n')
             metadataout.write('\t\t<nameRed> ' + all_lists['nom'][k] + ' </nameRed>\n')
-            metadataout.write('\t\t<number> ' + str(all_lists['id'][k]) + ' </number>\n')
+            metadataout.write('\t\t<number> ' + str(all_lists['id'][k] + add_for_METADATA) + ' </number>\n')
             metadataout.write('\t\t<lat> ' + str(all_lists['lat'][k]) + ' </lat>\n')
             metadataout.write('\t\t<lon> ' + str(all_lists['lon'][k]) + ' </lon>\n')
             metadataout.write('\t\t<altitude> ' + str(all_lists['alt'][k]) + ' </altitude>\n')
@@ -824,7 +830,7 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
                 metadataout.write('\t<Site>\n')
                 metadataout.write('\t\t<name> ' + all_lists['nom'][k] + ' </name>\n')
                 metadataout.write('\t\t<nameRed> ' + all_lists['nom'][k] + ' </nameRed>\n')
-                metadataout.write('\t\t<number> ' + str(all_lists['id'][k]) + ' </number>\n')
+                metadataout.write('\t\t<number> ' + str(all_lists['id'][k] + add_for_METADATA) + ' </number>\n')
                 metadataout.write('\t\t<lat> ' + str(all_lists['lat'][k]) + ' </lat>\n')
                 metadataout.write('\t\t<lon> ' + str(all_lists['lon'][k]) + ' </lon>\n')
                 metadataout.write('\t\t<altitude> ' + str(all_lists['alt'][k]) + ' </altitude>\n')
