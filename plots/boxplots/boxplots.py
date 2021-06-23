@@ -131,22 +131,24 @@ class boxplots_bydepartment(boxplots):
 class boxplots_byelevation(boxplots):
 
     def label_elevation(self, tuple_elevations):
-        return str(tuple_elevations[0]) + "-" + str(tuple_elevations[1]) + " m"
+        #return str(tuple_elevations[0]) + "-" + str(tuple_elevations[1]) + " m"
+        return str(tuple_elevations[0]) + "-" + str(tuple_elevations[1])
 
     def draw(self, elevations, scores, nsimu = 1, **kwargs):
 
         list_scores = []
 
-        list_levels = [(600, 1200), (1200, 1600), (1600, 2000), (2000, 2400), (2400, 3300)]
+        #list_levels = [(600, 1200), (1200, 1600), (1600, 2000), (2000, 2400), (2400, 3300)]
+        list_levels = [(0, 900), (900, 1200), (1200, 1500), (1500, 1800), (1800, 2100), (2100, 2400), (2400, 3300)]
 
         for (minlevel, maxlevel) in list_levels:
             list_scores.append(scores[(elevations >= minlevel) & (elevations < maxlevel)])
 
         kwargs['labels'] = map(self.label_elevation, list_levels)
-        kwargs['fontsize'] = 18
+        kwargs['fontsize'] = 10
         kwargs['positions'] = range(self.indsimu, 1 + len(list_levels) * nsimu, nsimu)
 
-        self.plot.set_xlabel(u'Elevation', fontsize=18)
+        self.plot.set_xlabel(u'Elevation (m)', fontsize=18)
         super(boxplots_byelevation, self).draw(list_scores, **kwargs)
         self.indsimu += 1
 
