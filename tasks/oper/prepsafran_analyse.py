@@ -427,7 +427,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 
         if 'compute' in self.steps:
 
-            elf.sh.title('Toolbox algo tb04')
+            self.sh.title('Toolbox algo tb04')
             expresso = toolbox.algo(
                 vconf          = self.conf.vconf,
                 engine         = 'exec',
