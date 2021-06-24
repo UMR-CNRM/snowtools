@@ -39,8 +39,112 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             if self.conf.rundate.hour == 3:
 
-                # I- Guess ARPEGE (= "36eme membre")
-                # ----------------------------------
+                ###########################
+                #  I) FICHIER de METADONNES
+                ###########################
+
+                # On commence par récupérer un fichier à échéance 0h qui sert à lire le métédonnées (infos sur la grille en particulier)
+                # Ce fichier supplémentaire est indispensable pour toujours travailler avec la bonne grille du modèle, même en cas d'évolution
+                # de la géométrie ARPEGE.
+                self.sh.title('Toolbox input metadata_inline')
+                tb01a = toolbox.input(
+                    role           = 'Metadata',
+                    format         = 'grib',
+                    geometry       = self.conf.arpege_geometry,
+                    kind           = 'gridpoint',
+                    filtername     = 'concatenate',
+                    suite          = self.conf.suite,
+                    local          = 'METADATA.grib',
+                    date           = '{0:s}/-PT30H'.format(self.conf.rundate.ymd6h),
+                    term           = 0,
+                    namespace      = 'vortex.cache.fr',
+                    block          = 'forecast',
+                    nativefmt      = '[format]',
+                    origin         = 'historic',
+                    model          = '[vapp]',
+                    vapp           = self.conf.source_app,
+                    vconf          = self.conf.deterministic_conf,
+                    fatal          = False,
+                )
+                print(t.prompt, 'tb01a =', tb01a)
+                print()
+
+                # Deuxième tentative sur hendrix
+                self.sh.title('Toolbox input metadata_archive')
+                tb01b = toolbox.input(
+                    alternate      = 'Metadata',
+                    format         = 'grib',
+                    geometry       = self.conf.arpege_geometry,
+                    kind           = 'gridpoint',
+                    suite          = self.conf.suite,
+                    local          = 'METADATA.grib',
+                    date           = '{0:s}/-PT30H'.format(self.conf.rundate.ymd6h),
+                    term           = 0,
+                    namespace      = 'vortex.archive.fr',
+                    block          = 'forecast',
+                    nativefmt      = '[format]',
+                    origin         = 'historic',
+                    model          = '[vapp]',
+                    vapp           = self.conf.source_app,
+                    vconf          = self.conf.deterministic_conf,
+                    fatal          = False,
+                )
+                print(t.prompt, 'tb01b =', tb01b)
+                print()
+
+                # Mode secours : On récupère les prévisions 6h correspondantes inline...
+                self.sh.title('Toolbox input metadata_secours_inline')
+                tb01c = toolbox.input(
+                    alternate      = 'Metadata',
+                    format         = 'grib',
+                    geometry       = self.conf.arpege_geometry,
+                    kind           = 'gridpoint',
+                    filtername     = 'concatenate',
+                    suite          = self.conf.suite,
+                    local          = 'METADATA.grib',
+                    date           = '{0:s}/-PT30H'.format(self.conf.rundate.ymd6h),
+                    term           = 0,
+                    namespace      = 'vortex.cache.fr',
+                    cutoff         = 'production',
+                    block          = 'forecast',
+                    nativefmt      = '[format]',
+                    origin         = 'historic',
+                    model          = '[vapp]',
+                    vapp           = self.conf.source_app,
+                    vconf          = self.conf.deterministic_conf,
+                    fatal          = False,
+                )
+                print(t.prompt, 'tb01c =', tb01c)
+                print()
+
+                # Mode secours : On récupère les prévisions 6h correspondantes inline...
+                self.sh.title('Toolbox input metadata_secours_inline')
+                tb01d = toolbox.input(
+                    alternate      = 'Metadata',
+                    format         = 'grib',
+                    geometry       = self.conf.arpege_geometry,
+                    kind           = 'gridpoint',
+                    filtername     = 'concatenate',
+                    suite          = self.conf.suite,
+                    local          = 'METADATA.grib',
+                    date           = '{0:s}/-PT30H'.format(self.conf.rundate.ymd6h),
+                    term           = 0,
+                    namespace      = 'vortex.archive.fr',
+                    cutoff         = 'production',
+                    block          = 'forecast',
+                    nativefmt      = '[format]',
+                    origin         = 'historic',
+                    model          = '[vapp]',
+                    vapp           = self.conf.source_app,
+                    vconf          = self.conf.deterministic_conf,
+                    fatal          = True,
+                )
+                print(t.prompt, 'tb01d =', tb01d)
+                print()
+
+                #####################################
+                # II- Guess ARPEGE (= "36eme membre")
+                # ###################################
 
                 # RUN 3h : Recuperation de A6 des réseaux 6H, 12H et 18H (J-1).
                 # On récupère aussi le réseau 0H (J-1) qui a normalement déjà été extrait par la tâche prepsaf de 9h de la veille par sécurité
@@ -68,8 +172,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = False,
                 )
-                print t.prompt, 'tbarp =', tbarp
-                print
+                print(t.prompt, 'tbarp =', tbarp)
+                print()
 
                 # Deuxième tentative sur hendrix
                 self.sh.title('Toolbox input tbarp_archive')
@@ -92,8 +196,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = False,
                 ))
-                print t.prompt, 'tbarp =', tbarp
-                print
+                print(t.prompt, 'tbarp =', tbarp)
+                print()
 
                 # Mode secours : On récupère les prévisions 6h correspondantes inline...
                 self.sh.title('Toolbox input tbarp_inline secours')
@@ -118,8 +222,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = False,
                 ))
-                print t.prompt, 'tbarp =', tbarp
-                print
+                print(t.prompt, 'tbarp =', tbarp)
+                print()
 
                 # ... ou sur Hendrix
                 self.sh.title('Toolbox input tbarp_archive secours')
@@ -143,11 +247,12 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = True,
                 ))
-                print t.prompt, 'tbarp =', tbarp
-                print
+                print(t.prompt, 'tbarp =', tbarp)
+                print()
 
-                # II- Guess PEARP (membres 0 à 34)
-                # --------------------------------
+                ###################################
+                # III- Guess PEARP (membres 0 à 34)
+                ###################################
 
                 # Récupération des prévisions du réseau 6h (J-1) (utilisée seulement à partir du run de 6h) pour l'analyse (J-1) 6h -> J 6h
                 self.sh.title('Toolbox input tbpearp')
@@ -171,13 +276,70 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.eps_conf,
                     fatal          = False,
                 )
-                print t.prompt, 'tb04_a =', tbpearp
-                print
+                print(t.prompt, 'tb04_a =', tbpearp)
+                print()
 
                 # Mode secours : les guess correspondant au prévisions du réseau 18h (J-2) ont déjà été extraites
                 # par la tâche prepsafran_analyse du réseau 3h
 
             else:
+                
+                ###########################
+                #  I) FICHIER de METADONNES
+                ###########################
+
+                # On commence par récupérer un fichier à échéance 0h qui sert à lire le métédonnées (infos sur la grille en particulier)
+                # Ce fichier supplémentaire est indispensable pour toujours travailler avec la bonne grille du modèle, même en cas d'évolution
+                # de la géométrie ARPEGE.
+                self.sh.title('Toolbox input metadata_inline')
+                tbarp = toolbox.input(
+                    role           = 'Metadata',
+                    format         = 'grib',
+                    geometry       = self.conf.arpege_geometry,
+                    kind           = 'gridpoint',
+                    filtername     = 'concatenate',
+                    suite          = self.conf.suite,
+                    local          = 'METADATA.grib',
+                    date           = '{0:s}/-PT30H'.format(self.conf.rundate.ymd6h),
+                    term           = 0,
+                    namespace      = 'vortex.cache.fr',
+                    block          = 'forecast',
+                    nativefmt      = '[format]',
+                    origin         = 'historic',
+                    model          = '[vapp]',
+                    vapp           = self.conf.source_app,
+                    vconf          = self.conf.deterministic_conf,
+                    fatal          = False,
+                )
+                print(t.prompt, 'tbarp =', tbarp)
+                print()
+
+                # Deuxième tentative sur hendrix
+                self.sh.title('Toolbox input metadata_archive')
+                tbarp.extend(toolbox.input(
+                    alternate      = 'Metadata',
+                    format         = 'grib',
+                    geometry       = self.conf.arpege_geometry,
+                    kind           = 'gridpoint',
+                    suite          = self.conf.suite,
+                    local          = 'METADATA.grib',
+                    date           = '{0:s}/-PT30H'.format(self.conf.rundate.ymd6h),
+                    term           = 0,
+                    namespace      = 'vortex.archive.fr',
+                    block          = 'forecast',
+                    nativefmt      = '[format]',
+                    origin         = 'historic',
+                    model          = '[vapp]',
+                    vapp           = self.conf.source_app,
+                    vconf          = self.conf.deterministic_conf,
+                    fatal          = True,
+                ))
+                print(t.prompt, 'tbarp =', tbarp)
+                print()
+
+                ##################
+                # II- Guess ARPEGE 
+                # ################
 
                 # RUN 9h : Récupération de A6 du réseau d'assimilation d'ARPEGE de 0h inline...
                 self.sh.title('Toolbox input tb01')
@@ -201,8 +363,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = False,
                 )
-                print t.prompt, 'tb01 =', tbarp
-                print
+                print(t.prompt, 'tb01 =', tbarp)
+                print()
 
                 # ...ou sur hendrix
                 self.sh.title('Toolbox input tb01')
@@ -225,22 +387,39 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = True,
                 )
-                print t.prompt, 'tb01 =', tbarp
-                print
+                print(t.prompt, 'tb01 =', tbarp)
+                print()
 
                 tbpearp = list()
 
-            self.sh.title('Toolbox input tb03 = PRE-TRAITEMENT FORCAGE script')
+            ###########################
+            #        SHAPEFILE 
+            ###########################
+            # Dans tous les cas de figure on aura besoin du shapefile des massifs SAFRAN
+            self.sh.title('Toolbox input shapefile')
+            tbshp = toolbox.input(
+                role            = 'Shapefile',
+                genv            = self.conf.cycle,
+                gdomain         = 'all_massifs',
+                geometry        = '[gdomain]',
+                kind            = 'shapefile',
+                model           = self.conf.model,
+                local           = 'massifs_safran.tar',
+            )
+            print(t.prompt, 'tbshp =', tbshp)
+            print()
+
+            self.sh.title('Toolbox executable = PRE-TRAITEMENT FORCAGE script')
             tb03 = script = toolbox.input(
                 role        = 'pretraitement',
                 local       = 'makeP.py',
-                genv        = 'uenv:s2m.01@vernaym',
+                genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -o -a -i IDW -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
+                rawopts     = ' -o -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
             )
-            print t.prompt, 'tb03 =', tb03
-            print
+            print(t.prompt, 'tb03 =', tb03)
+            print()
 
         if 'fetch' in self.steps:
 
@@ -248,7 +427,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 
         if 'compute' in self.steps:
 
-            self.sh.title('Toolbox algo tb04')
+            elf.sh.title('Toolbox algo tb04')
             expresso = toolbox.algo(
                 vconf          = self.conf.vconf,
                 engine         = 'exec',
@@ -261,8 +440,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ntasks         = self.conf.ntasks,
                 terms          = footprints.util.rangex(self.conf.ana_terms),
             )
-            print t.prompt, 'tb04 =', expresso
-            print
+            print(t.prompt, 'tb04 =', expresso)
+            print()
 
             self.component_runner(expresso, script, fortran = False)
 
@@ -292,9 +471,12 @@ class PrepSafran(Task, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     fatal          = False,
                 ),
-                print t.prompt, 'tb05_a =', tb05
-                print
+                print(t.prompt, 'tb05_a =', tb05)
+                print()
 
+                # Dans le mode secours, on est passé dans l'alternate qui consiste à prendre un fichier du cycle de production au lieu d'assimilation
+                # Le script qui génère les fichiers guess lit cette information dans le grib et la met dans le nom du fichier produit.
+                # On doit donc ajouter la toolbox suivante au cas où, qui doit renvoyer False dans le cas nominal.
                 self.sh.title('Toolbox output tb05_b')
                 tb05 = toolbox.output(
                     alternate      = 'Ebauche',
@@ -314,8 +496,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     fatal          = False,
                 ),
-                print t.prompt, 'tb05_b =', tb05
-                print
+                print(t.prompt, 'tb05_b =', tb05)
+                print()
 
                 self.sh.title('Toolbox output tb06')
                 tb06 = toolbox.output(
@@ -337,8 +519,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     member         = footprints.util.rangex(self.conf.pearp_members),
                     fatal          = False,
                 ),
-                print t.prompt, 'tb06 =', tb06
-                print
+                print(t.prompt, 'tb06 =', tb06)
+                print()
 
             else:
 
@@ -360,8 +542,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     fatal          = True,
                 ),
-                print t.prompt, 'tb05 =', tb05
-                print
+                print(t.prompt, 'tb05 =', tb05)
+                print()
 
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')

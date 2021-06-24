@@ -40,6 +40,59 @@ class PrepSafran(Task, S2MTaskMixIn):
         t.env.setvar('DATADIR', '/scratch/mtool/vernaym/cache')
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
+                
+            ###########################
+            #  I) FICHIER de METADONNES
+            ###########################
+
+            # On commence par récupérer un fichier à échéance 0h qui sert à lire le métédonnées (infos sur la grille en particulier)
+            # Ce fichier supplémentaire est indispensable pour toujours travailler avec la bonne grille du modèle, même en cas d'évolution
+            # de la géométrie ARPEGE.
+            self.sh.title('Toolbox input metadata_inline')
+            tb01a = toolbox.input(
+                role           = 'Metadata',
+                format         = 'grib',
+                geometry       = self.conf.arpege_geometry,
+                kind           = 'gridpoint',
+                filtername     = 'concatenate',
+                suite          = self.conf.suite,
+                local          = 'METADATA.grib',
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                term           = 0,
+                namespace      = 'vortex.cache.fr',
+                block          = 'forecast',
+                nativefmt      = '[format]',
+                origin         = 'historic',
+                model          = '[vapp]',
+                vapp           = self.conf.source_app,
+                vconf          = self.conf.deterministic_conf,
+                fatal          = False,
+            )
+            print t.prompt, 'tb01a =', tb01a
+            print
+
+            # Deuxième tentative sur hendrix
+            self.sh.title('Toolbox input metadata_archive')
+            tb01b = toolbox.input(
+                alternate      = 'Metadata',
+                format         = 'grib',
+                geometry       = self.conf.arpege_geometry,
+                kind           = 'gridpoint',
+                suite          = self.conf.suite,
+                local          = 'METADATA.grib',
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                term           = 0,
+                namespace      = 'vortex.archive.fr',
+                block          = 'forecast',
+                nativefmt      = '[format]',
+                origin         = 'historic',
+                model          = '[vapp]',
+                vapp           = self.conf.source_app,
+                vconf          = self.conf.deterministic_conf,
+                fatal          = False,
+            )
+            print t.prompt, 'tb01b =', tb01b
+            print
 
             # I- ARPEGE
             # Récupération des échéances de 6h à 102h du réseau 0h J d'ARPEGE
@@ -147,14 +200,31 @@ class PrepSafran(Task, S2MTaskMixIn):
             print t.prompt, 'tb02 =', tbpearp
             print
 
+            ###########################
+            #        SHAPEFILE 
+            ###########################
+            # Dans tous les cas de figure on aura besoin du shapefile des massifs SAFRAN
+            self.sh.title('Toolbox input shapefile')
+            tbshp = toolbox.input(
+                role            = 'Shapefile',
+                genv            = self.conf.cycle,
+                gdomain         = 'all_massifs',
+                geometry        = '[gdomain]',
+                kind            = 'shapefile',
+                model           = self.conf.model,
+                local           = 'massifs_safran.tar',
+            )
+            print t.prompt, 'tbshp =', tbshp
+            print
+
             self.sh.title('Toolbox input tb04 = PRE-TRAITEMENT FORCAGE script')
             tb03 = script = toolbox.input(
                 role        = 'pretraitement',
                 local       = 'makeP.py',
-                genv        = 'uenv:s2m.01@vernaym',
+                genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -o -a -i IDW  -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
+                rawopts     = ' -o -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
             )
             print t.prompt, 'tb03 =', tb03
             print
