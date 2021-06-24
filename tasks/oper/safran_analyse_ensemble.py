@@ -356,7 +356,7 @@ class Safran(Task, S2MTaskMixIn):
                 # I.1- EBAUCHE issue des A6 des réseaux 0/6/12/18h (J-n) d'assimilation d'ARPEGE et l'A6 du réseau 0h J si présente pour couvrir (J-n) 6h -> J 6h
                 self.sh.title('Toolbox input tb17_a')
                 tb17_a = toolbox.input(
-                    role           = 'Ebauche',
+                    role           = 'Ebauche_Deterministic',
                     local          = 'mb035/P[date::addcumul_yymdh]',
                     experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,
@@ -380,7 +380,7 @@ class Safran(Task, S2MTaskMixIn):
                 # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur 6h homogène avec le cumul dans les fichiers d'assimilation
                 self.sh.title('Toolbox input tb17_b')
                 tb17_b = toolbox.input(
-                    alternate      = 'Ebauche',
+                    alternate      = 'Ebauche_Deterministic',
                     local          = 'mb035/P[date::addcumul_yymdh]',
                     experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,
