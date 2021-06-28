@@ -197,7 +197,7 @@ class prettyensemble(temporalplot):
 
 class spaghettis(temporalplot):
 
-    figsize = (10, 3)
+    figsize = (10, 3.5)
 
     def __init__(self, *args, **kwargs):
         super(spaghettis, self).__init__(*args, **kwargs)
