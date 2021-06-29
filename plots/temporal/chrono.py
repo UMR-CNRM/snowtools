@@ -27,6 +27,7 @@ class temporalplot_abstract(Mplfigure):
 
         if 'forcemin' in kwargs.keys() and 'forcemax' in kwargs.keys():
             self.plot.set_ylim([kwargs['forcemin'], kwargs['forcemax']])
+        self.plot.set_ylim(top=self.plot.get_ylim()[1]*1.05)
 
         if 'ylabel' in kwargs.keys():
             label = kwargs.pop('ylabel')
