@@ -613,7 +613,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
 class Four_Seasons_Task(S2MTaskMixIn, Task):
     """
     Post-processing task for the 4 seasons bulletin. Uses S2m ensemble forecasts based on PEARP.
-    Calculates ensemble median for the 12hourly and 1day snow accumulation for the moment.
+    Calculates ensemble deciles for the 12hourly and 1day snow accumulation for the moment.
     """
 
     def process(self):
@@ -631,7 +631,7 @@ class Four_Seasons_Task(S2MTaskMixIn, Task):
 
             self.sh.title('Toolbox input tb01')
             tb01 = toolbox.input(
-                role        = 'Crocus Forecast',
+                role        = 'CrocusForecast',
                 local       = 'mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
                 experiment  = self.conf.xpid,
                 block       = 'pro',
@@ -656,8 +656,6 @@ class Four_Seasons_Task(S2MTaskMixIn, Task):
             tb02 = tbalgo1 = toolbox.algo(
                 kind        = "s2m_postproc",
                 varnames    = ['SD_12H_ISBA', 'SD_1DY_ISBA'],
-                datebegin   = datebegin,
-                dateend     = dateend,
                 dateinit    = datebegin,
                 # threshold=self.conf.threshold,
                 engine      = 's2m',

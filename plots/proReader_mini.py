@@ -76,7 +76,7 @@ class ProReader_abstract:
             logger.error('Lack of Necessary variable: SNOWDZ for PRO or Dsnw for FSM. Something will go wrong')
 
         # Selection du point d interet
-        if(isinstance(point, int)):
+        if(isinstance(point, np.int) or isinstance(point, np.int64)):
             point = point
         elif self.type_fichier == 'PRO':
             point = 0
@@ -1064,7 +1064,7 @@ class ProReader_membre(ProReader_abstract):
                 var = self.var_utile
                 
             # Selection du point d interet
-            if(isinstance(point, int)):
+            if(isinstance(point, np.int) or isinstance(point, np.int64)):
                 point = point
             elif self.type_fichier == 'PRO':
                 point = 0

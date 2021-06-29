@@ -4,6 +4,7 @@
 import os
 import argparse
 import sys
+import re
 from netCDF4 import Dataset
 import numpy as np
 import gdal
@@ -12,21 +13,28 @@ from shapely.ops import transform
 from functools import partial
 import pyproj
 
+from utils.infomassifs import infomassifs
+from utils.FileException import FileNameException, FileOpenException
+
+# Import pour les log
 import logging
-logger = logging.getLogger()
-logger.setLevel(logging.WARNING)
-console_handler = logging.StreamHandler()
-console_handler.setFormatter(logging.Formatter('%(levelname)s :: %(message)s'))
-console_handler.setLevel(logging.DEBUG)
-logger.addHandler(console_handler)
+
+# Imports pour "Skyline"
+import csv
+import time
+import math
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from osgeo import ogr, osr
 
 # Bibliothèque ad hoc de Matthieu L pour ouvrir les shapefiles
 import shapefile
 
-
 ################################################################
 # On part d'un shapefile en Lambert 93
 # De ce shapefile, le programme fournit un NetCDF pour les besoins du lancement de Surfex (ou de réanalyse) dessus
+# Il va aussi fournir les skyline
 #
 # Lancement:
 # python3 shapefile2NetCDF.py path_shapefile nom_point_in_shapefile id_point_in_shapefile [--name_alt alti_name_in_shapefile] [-o path_name_of_NetCDF_output] [--MNT_alt path_of_MNT_altitude]
@@ -39,8 +47,14 @@ import shapefile
 
 
 ################################################################
-############### EN DUR DANS LE CODE:
+#           EN DUR DANS LE CODE:
 ################################################################
+# VALEUR A IMPLEMENTER MANUELLEMENT: DEPEND DE CHAQUE PROJET POUR UNICITE DANS METADATA.xml
+# ANR_TOP: 0
+# INCREMENTER DE 1000 POUR LE PROJET SUIVANT ET PENSER A LE METTRE ICI
+add_for_METADATA = 0
+
+
 
 ################################################################
 # VALEURS PAR DEFAUT CHANGEABLE PAR OPTION:
@@ -62,21 +76,29 @@ path_shapefile_massif = '/home/fructusm/git/snowtools_git/DATA/massifs_Lbrt93_20
 Indice_record_massif = 0
 
 ################################################################
-############### FIN DUR DANS LE CODE:
+#            FIN DUR DANS LE CODE
 ################################################################
 
 
-
+################################################################
+# Mise en place des log
+################################################################
+logger = logging.getLogger()
+logger.setLevel(logging.WARNING)
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter('%(levelname)s :: %(message)s'))
+console_handler.setLevel(logging.DEBUG)
+logger.addHandler(console_handler)
 
 
 ################################################################
 # Creation des listes de données
 ################################################################
-def make_list(path_shapefile, Id_station, Nom_alt, Nom_asp, Nom_slop, path_MNT_alt, path_MNT_asp, path_MNT_slop):
+def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, Nom_slop, path_MNT_alt, path_MNT_asp, path_MNT_slop):
     """
-    Crée une liste de listes à partir des données du shapefile et des données des MNT
+    Crée un dictionnaire de listes à partir des données du shapefile et des données des MNT
 
-    :param str path_shapefile : Chemin du shapefile dont on souhaite extraire les valeurs.
+    :param str path_shapefile : Chemin du shapefile dont on souhaite extraire les points.
     :param str Id_station : Numéro de l'attribut du shapefile correspondant à un identifiant unique pour chaque point
     :param str Nom_alt : si présent dans le shapefile, nom de l'attribut d'altitude. Si absent, ce champ est à None
     :param str Nom_asp : si présent dans le shapefile, nom de l'attribut d'orientation. Si absent, ce champ est à None
@@ -85,7 +107,10 @@ def make_list(path_shapefile, Id_station, Nom_alt, Nom_asp, Nom_slop, path_MNT_a
     :param str path_MNT_asp : Chemin du MNT contenant les valeurs d'aspect
     :param str path_MNT_slop : Chemin du MNT contenant les valeurs de pente
 
-    :returns: liste de listes dans l'ordre suivant: [ liste_latitude, liste_longitude, liste_altitude, liste_aspect, liste_massif, liste_slope, liste_station ] 
+    :returns: dictionnaire de listes:{ 'lat': liste_latitude, 'lon':liste_longitude, 
+                                       'alt': liste_altitude, 'asp': liste_aspect, 
+                                       'm': liste_massif, 'slop': liste_slope,
+                                       'id': liste_id_station, 'nom': liste_nom_station } 
     """
     # Ouverture du shapefile d'intérêt. Conversion éventuelle
     r = shapefile.Reader(path_shapefile)
@@ -111,7 +136,9 @@ def make_list(path_shapefile, Id_station, Nom_alt, Nom_asp, Nom_slop, path_MNT_a
         if Nom_slop is not None and r.fields[i][0]==Nom_slop:
             Indice_record_slope = i - 1
         if r.fields[i][0]==Id_station:
-            Indice_record_station = i - 1
+            Indice_record_id_station = i - 1
+        if r.fields[i][0]==Nom_station:
+            Indice_record_nom_station = i - 1
 
     ################################################################
     # Ouverture du shapefile massif. Conversion éventuelle
@@ -144,7 +171,8 @@ def make_list(path_shapefile, Id_station, Nom_alt, Nom_asp, Nom_slop, path_MNT_a
     # Fonction d'Ambroise Guiot pour lire les valeurs d'un geotif en des points.
     def raster_to_points(raster_src, shape, nodata=np.nan):
         """
-        Associe pour chaque point de la GeometryCollection shape en entrée la valeur du pixel le plus proche issu du raster_src.
+        Associe pour chaque point de la GeometryCollection shape en entrée l'interpolation bilinéaire des valeurs
+        des 4 pixels les plus proches issus du raster_src.
     
         Attention : - le fichier géotif et le shape doivent être dans la même projection
                     - la projection ne doit pas utiliser de rotation (Lambert 93 OK, WSG84 pas clair du tout)
@@ -165,13 +193,20 @@ def make_list(path_shapefile, Id_station, Nom_alt, Nom_asp, Nom_slop, path_MNT_a
         for i in range(len(shape)):
             #Convert from map to pixel coordinates.
             #Only works for geotransforms with no rotation.
-            px = int((shape[i].x - gt[0]) / gt[1]) #x pixel
-            py = int((shape[i].y - gt[3]) / gt[5]) #y pixel
+            current_x = (shape[i].x - gt[0]) / gt[1]
+            current_y = (shape[i].y - gt[3]) / gt[5]
+            px = int(current_x) #x pixel
+            py = int(current_y) #y pixel
 
-            value = band.ReadAsArray(px,py,1,1)
+            val = band.ReadAsArray(px,py,2,2)
+            test_ok = (val[0][0] != nodata_raster and val[0][1] != nodata_raster and val[1][0] != nodata_raster and val[1][1] != nodata_raster)
 
-            if value is not None and value[0][0] != nodata_raster  :
-                points_values.append(value[0][0])
+            if val is not None and test_ok:
+                value = ((1 - current_x%1) * (1 - current_y%1) * val[0][0]
+                        + (current_x%1) * (1 - current_y%1) * val[0][1]
+                        + (1 - current_x%1) * (current_y%1) * val[1][0]
+                        + (current_x%1) * (current_y%1) * val[1][1])
+                points_values.append(value)
             else :
                 points_values.append(nodata)
         return points_values
@@ -200,11 +235,13 @@ def make_list(path_shapefile, Id_station, Nom_alt, Nom_asp, Nom_slop, path_MNT_a
 
     ################################################################
     # Création liste longitudes:
-    liste_longitude = [list_shape_WGS84[i].x for i in range(len(list_shape_WGS84))]
+    liste_longitude = [round(list_shape_WGS84[i].x,6) for i in range(len(list_shape_WGS84))]
     # Création liste latitudes:
-    liste_latitude = [list_shape_WGS84[i].y for i in range(len(list_shape_WGS84))]
-    # Création liste "station" faite avec le field name de référence dans le shapefile
-    liste_station = [geomet[i].record[Indice_record_station] for i in range(len(shapes))]
+    liste_latitude = [round(list_shape_WGS84[i].y,6) for i in range(len(list_shape_WGS84))]
+    # Création liste "id station" faite avec le field number de référence dans le shapefile
+    liste_id_station = [geomet[i].record[Indice_record_id_station] for i in range(len(shapes))]
+    # Création liste "name station" faite avec le field name de référence dans le shapefile
+    liste_nom_station = [geomet[i].record[Indice_record_nom_station] for i in range(len(shapes))]
 
     ################################################################
     # Création des listes via shapefile ou MNT + Vérification-Comparaison éventuelle avec MNT
@@ -234,7 +271,10 @@ def make_list(path_shapefile, Id_station, Nom_alt, Nom_asp, Nom_slop, path_MNT_a
         liste_slope = liste_slope_MNT_arrondie
 
 
-    return [liste_latitude, liste_longitude, liste_altitude, liste_aspect, liste_massif, liste_slope, liste_station]
+    return { 'lat': liste_latitude, 'lon':liste_longitude, 
+             'alt': liste_altitude, 'asp': liste_aspect, 
+             'm': liste_massif, 'slop': liste_slope,
+             'id': liste_id_station, 'nom': liste_nom_station } 
 
 
 ################################################################
@@ -242,19 +282,16 @@ def make_list(path_shapefile, Id_station, Nom_alt, Nom_asp, Nom_slop, path_MNT_a
 ################################################################
 def create_NetCDF(all_lists, output_name):
     """
-    Crée un NetCDF 1D pour simulation réanalyse-projection à partir d'une liste de listes et d'un nom de sortie.
-    
-    La liste de listes est issue d'un shapefile. L'ordre est important:
-    [ liste_latitude, liste_longitude, liste_altitude, liste_aspect, liste_massif, liste_slope, liste_station ]  
+    Crée un NetCDF 1D pour simulation réanalyse-projection à partir d'un dictionnaire de listes et d'un nom de sortie.
+    Le dictionnaire de listes est issue d'un shapefile et se construit avec la routine make_dict_list
 
-
-    :param all_lists : Liste de listes pour remplir les variables du NetCDF
+    :all_lists : Dictionnaire de listes pour remplir les variables du NetCDF
     :param str output_name : Le nom du fichier NetCDF qui sera produit
 
     :returns: au sens Python, ne retourne rien. Permet d'écrire un fichier à l'emplacement donné par output_name. 
     """
     outputs = Dataset(output_name, 'w', format='NETCDF4')
-    outputs.createDimension('Number_of_points', len(all_lists[0]))
+    outputs.createDimension('Number_of_points', len(all_lists['alt']))
     A = outputs.createVariable('LAT', np.float64,('Number_of_points',), fill_value=-9999999)
     B = outputs.createVariable('LON', np.float64,('Number_of_points',), fill_value=-9999999)
     C = outputs.createVariable('ZS', np.float64, ('Number_of_points',), fill_value=-9999999)
@@ -263,13 +300,13 @@ def create_NetCDF(all_lists, output_name):
     F = outputs.createVariable('slope', np.float64, ('Number_of_points',), fill_value=-9999999)
     G = outputs.createVariable('station', int,('Number_of_points',), fill_value=-9999999)
 
-    outputs['LAT'][:] = all_lists[0] #liste_latitude
-    outputs['LON'][:] = all_lists[1] #liste_longitude
-    outputs['ZS'][:] = all_lists[2] #liste_altitude
-    outputs['aspect'][:] = all_lists[3] #liste_aspect_
-    outputs['massif_num'][:] = all_lists[4] #liste_massif
-    outputs['slope'][:] = all_lists[5] #liste_slope_
-    outputs['station'][:] = all_lists[6] #liste_station
+    outputs['LAT'][:] = all_lists['lat'] #liste_latitude
+    outputs['LON'][:] = all_lists['lon'] #liste_longitude
+    outputs['ZS'][:] = all_lists['alt'] #liste_altitude
+    outputs['aspect'][:] = all_lists['asp'] #liste_aspect_
+    outputs['massif_num'][:] = all_lists['m'] #liste_massif
+    outputs['slope'][:] = all_lists['slop'] #liste_slope_
+    outputs['station'][:] = all_lists['id'] #liste_id_station
 
     A.setncatts({'long_name': u"latitude", 'units': u"degrees_north"})    
     B.setncatts({'long_name': u"longitude", 'units': u"degrees_east"})
@@ -282,6 +319,225 @@ def create_NetCDF(all_lists, output_name):
     outputs.close()
 
 
+################################################################
+# Creation des skyline
+################################################################
+def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
+    """
+    Ajoute dans le fichier METADATA.xml les points du shapefile en y ajoutant les masques
+    (ie les hauteurs d'angle de vue pour les différents azimuts).
+
+
+    :all_lists : Dictionnaire de listes
+    :param str path_MNT_alt : Chemin du MNT contenant les valeurs d'altitude
+    :param str path_shapefile : Chemin du shapefile dont on souhaite extraire les points.
+    :list_skyline: Liste des identifiants du shapefile dont on souhaite avoir le tracé des lignes d'horizon
+
+    :returns: au sens Python, ne retourne rien. Permet d'une part de tracer les graphiques de ligne d'horizon et d'autre part de compléter METADATA.xml
+    """
+    start_time = time.time()
+
+    in_file = [ [all_lists['id'][i], all_lists['alt'][i], all_lists['m'][i], all_lists['nom'][i], all_lists['lat'][i], all_lists['lon'][i] ] for i in range(len(all_lists['alt'][:])) ]
+    # à in_file = np.loadtxt(file_in, dtype={'names': ('numposte', 'alt', 'massif', 'nom', 'lat', 'lon'), 'formats': (int, int, int, '|S24', float, float)})
+
+
+    #######################################################
+    #  AJOUT DE NOUVEAUX SITES DANS LE FICHIER XML Partie I
+    #######################################################
+    # Sites existants:
+    SitesExistants = infomassifs().getListSites()
+
+    # chemin d ecriture du fichier XML
+    chemxml = os.environ['SNOWTOOLS_CEN'] + "/DATA"
+    # ouverture  du fichier en mode "lecture"/"ecriture"
+    metadata = open(chemxml + "/METADATA.xml", 'r')
+    metadataout = open(chemxml + "/METADATA_out.xml", 'w')
+
+    # faire la chaine de caractère des azimuts pour ecriture dans XML file
+    azimut_str = ','.join( map(str, range(0, 360, 5)) )
+
+    while True:
+        line = metadata.readline()
+        metadataout.write(line)
+        if '<Sites>' in line:
+            break
+    #####################
+    #  FIN AJOUT Partie I
+    #####################
+
+
+    # output folder for skyline graph (if asked via options)
+    if not os.path.isdir("output"):
+        os.mkdir("output")
+
+    viewmax = 20000  # 20 km
+
+    r = shapefile.Reader(path_shapefile)
+    shapes = r.shapes()
+    shape_courant = shape(shapes)
+
+    raster = gdal.Open(path_MNT_alt) # ouverture de l'image tif
+    gt = raster.GetGeoTransform()
+    wkt = raster.GetProjection()
+    band = raster.GetRasterBand(1)
+    nodata_raster = band.GetNoDataValue()
+    step = int((gt[1] + (-gt[5])) / 2)  # for further use in line interpolation
+    print("step: ", step)
+
+    for k in range(len(shape_courant)):
+        in_stat = in_file[k]
+        print('hello', in_stat[0], in_stat[3])
+        center_x = (shape_courant[k].x - gt[0]) / gt[1]
+        center_y = (shape_courant[k].y - gt[3]) / gt[5]
+
+        px_c = int(center_x) #x pixel centre
+        py_c = int(center_y) #y pixel centre
+
+        # Idee: faire une interpolation biliénaire: -> voir quel pixel (pour orientation) mais en gros
+        # f(x,y) = f(0,0)(1-x)(1-y) + f(1,0)x(1-y) + f(0,1)(1-x)y + f(1,1)xy avec x et y entre 0 et 1.
+        # Ici, x et y sont les parties décimales de (shape_courant[k].x - gt[0]) / gt[1] et (shape_courant[k].y - gt[3]) / gt[5]
+        # La fonction f est jouée par le tableau 2x2 band.ReadAsArray(px_c,py_c,2,2)
+        # ! band.ReadAsArray(px_c,py_c,2,2)[0][1] correspond à band.ReadAsArray(px_c+1,py_c,1,1)[0][0]
+        value_bilin = band.ReadAsArray(px_c,py_c,2,2)
+        value_c = ((1 - center_x%1) * (1 - center_y%1) * value_bilin[0][0]
+                  + (center_x%1) * (1 - center_y%1) * value_bilin[0][1]
+                  + (1 - center_x%1) * (center_y%1) * value_bilin[1][0]
+                  + (center_x%1) * (center_y%1) * value_bilin[1][1])
+
+        print("alt: ", round(value_c,1))
+        anglee = []
+        for azimut in range(0, 360, 5):
+            angle=[]
+            for index,dist in enumerate(range(step, viewmax, step)):
+                current_x = (shape_courant[k].x + dist * math.sin(math.radians(azimut)) - gt[0]) / gt[1]
+                current_y = (shape_courant[k].y + dist * math.cos(math.radians(azimut)) - gt[3]) / gt[5]
+
+                px = int(current_x) #x pixel le long de l'azimut
+                py = int(current_y) #y pixel le long de l'azimut
+                val = band.ReadAsArray(px,py,2,2)
+
+                test_ok = (val[0][0] != nodata_raster and val[0][1] != nodata_raster and val[1][0] != nodata_raster and val[1][1] != nodata_raster)
+
+                if val is not None and test_ok :
+                    value = ((1 - current_x%1) * (1 - current_y%1) * val[0][0]
+                            + (current_x%1) * (1 - current_y%1) * val[0][1]
+                            + (1 - current_x%1) * (current_y%1) * val[1][0]
+                            + (current_x%1) * (current_y%1) * val[1][1])
+
+                    angle.append(math.ceil((math.degrees(math.atan(  (value - value_c) / dist ) )) * 100) / 100)
+                else:
+                    angle.append(0)
+            anglee.append(max(angle))
+
+        #print(anglee)
+        az = [azimut for azimut in range(0, 360, 5)]
+        angle_str = ','.join( map(str, anglee) )
+
+
+        # PLOT
+        if list_skyline is not None and all_lists['id'][k] in list_skyline:
+            az = np.array(az, 'float')
+            anglee = np.array(anglee, 'float')
+            fig = plt.figure()
+            a = fig.add_subplot(111, polar=True)
+            rmax = max(40., max(anglee))
+            # print rmax-anglee
+            a.fill(az * math.pi / 180., rmax - anglee, '-ob', alpha=0.5, edgecolor='b')
+            a.set_rmax(rmax)
+            a.set_rgrids([0.01, 10., 20., 30., float(int(rmax))], [str(int(rmax)), '30', '20', '10', '0'])
+            a.set_thetagrids([0., 45., 90., 135., 180., 225., 270., 315.], ["N", "NE", "E", "SE", "S", "SW", "W", "NW"])
+            a.set_title(in_stat[3] + ' alt mnt:' + str(round(value_c,1)) + ' m alt poste:' + str(in_stat[1]))
+            a.set_theta_zero_location('N')
+            a.set_theta_direction(-1)
+            plt.savefig('output/' + str(in_stat[0]) + '_skyline.png')
+            # show()
+            plt.close()
+
+
+        ########################################################
+        #  AJOUT DE NOUVEAUX SITES DANS LE FICHIER XML Partie II
+        ########################################################
+        if all_lists['id'][k] not in SitesExistants:
+            print("ajout du site : ", all_lists['nom'][k])
+
+            metadataout.write('\t<Site>\n')
+            metadataout.write('\t\t<name> ' + all_lists['nom'][k] + ' </name>\n')
+            metadataout.write('\t\t<nameRed> ' + all_lists['nom'][k] + ' </nameRed>\n')
+            metadataout.write('\t\t<number> ' + str(all_lists['id'][k] + add_for_METADATA) + ' </number>\n')
+            metadataout.write('\t\t<lat> ' + str(all_lists['lat'][k]) + ' </lat>\n')
+            metadataout.write('\t\t<lon> ' + str(all_lists['lon'][k]) + ' </lon>\n')
+            metadataout.write('\t\t<altitude> ' + str(all_lists['alt'][k]) + ' </altitude>\n')
+            metadataout.write('\t\t<aspect> ' + str(all_lists['asp'][k]) + ' </aspect>\n')
+            metadataout.write('\t\t<slope> ' + str(all_lists['slop'][k]) + ' </slope>\n')
+            metadataout.write('\t\t<massif> ' + str(all_lists['m'][k]) + ' </massif>\n')
+            metadataout.write('\t\t<zref> ' + "1.5" + ' </zref>\n')
+            metadataout.write('\t\t<uref> ' + "10.0" + ' </uref>\n')
+            metadataout.write('\t\t<azimut> ' + azimut_str.rstrip() + ' </azimut>\n')
+            metadataout.write('\t\t<mask> ' + angle_str.rstrip() + ' </mask>\n')
+            metadataout.write('\t\t<source_mask> ' + 'IGN' + ' </source_mask>\n')
+            metadataout.write('\t</Site>\n')
+
+        else:
+            lati_base, longi_base, alti_base = infomassifs().infoposte(all_lists['id'][k])
+            expo_base, slope_base = infomassifs().exposlopeposte(all_lists['id'][k])
+            try:
+                # Ce truc va planter s'il n'y a pas encore de champ massif
+                massif_base = infomassifs().massifposte(all_lists['id'][k])
+            except Exception:
+                massif_base = -1
+
+            if all_lists['alt'][k] != alti_base:
+                print("WARNING ALTITUDE : " + all_lists['id'][k])
+                print(all_lists['alt'][k], alti_base)
+
+            if all_lists['asp'][k] != expo_base:
+                print("WARNING ASPECT : " + all_lists['id'][k])
+                print(all_lists['asp'][k], expo_base)
+
+            if all_lists['slop'][k] != slope_base:
+                print("WARNING SLOPE : " + all_lists['id'][k])
+                print(all_lists['slop'][k], slope_base)
+
+            if all_lists['lat'][k] != lati_base:
+                print("WARNING LATITUDE : " + all_lists['id'][k])
+                print(all_lists['lat'][k], lati_base)
+
+            if all_lists['lon'][k] != longi_base:
+                print("WARNING LONGITUDE : " + all_lists['id'][k])
+                print(all_lists['lon'][k], longi_base)
+
+            if all_lists['m'][k] != massif_base:
+                print("UPDATE MASSIF NUMBER : " + all_lists['id'][k])
+                metadataout.write('\t<Site>\n')
+                metadataout.write('\t\t<name> ' + all_lists['nom'][k] + ' </name>\n')
+                metadataout.write('\t\t<nameRed> ' + all_lists['nom'][k] + ' </nameRed>\n')
+                metadataout.write('\t\t<number> ' + str(all_lists['id'][k] + add_for_METADATA) + ' </number>\n')
+                metadataout.write('\t\t<lat> ' + str(all_lists['lat'][k]) + ' </lat>\n')
+                metadataout.write('\t\t<lon> ' + str(all_lists['lon'][k]) + ' </lon>\n')
+                metadataout.write('\t\t<altitude> ' + str(all_lists['alt'][k]) + ' </altitude>\n')
+                metadataout.write('\t\t<aspect> ' + str(all_lists['asp'][k]) + ' </aspect>\n')
+                metadataout.write('\t\t<slope> ' + str(all_lists['slop'][k]) + ' </slope>\n')
+                metadataout.write('\t\t<massif> ' + str(all_lists['m'][k]) + ' </massif>\n')
+                metadataout.write('\t\t<zref> ' + "1.5" + ' </zref>\n')
+                metadataout.write('\t\t<uref> ' + "10.0" + ' </uref>\n')
+                metadataout.write('\t\t<azimut> ' + azimut_str.rstrip() + ' </azimut>\n')
+                metadataout.write('\t\t<mask> ' + angle_str.rstrip() + ' </mask>\n')
+                metadataout.write('\t\t<source_mask> ' + 'IGN' + ' </source_mask>\n')
+                metadataout.write('\t</Site>\n')
+
+    # On écrit la fin du fichier
+    for line in metadata.readlines():
+        metadataout.write(line)
+
+        if "<number>"in line:
+            if re.match("^.*(\d{8}).*$", line):
+                codestation = re.split("^.*(\d{8}).*$", line)[1]
+                if codestation == all_lists['id'][k]:
+                    metadataout.write('\t\t<massif> ' + str(all_lists['m'][k]) + ' </massif>\n')
+
+
+    metadata.close()
+    print("done in", time.time() - start_time, "seconds")
 
 def parseArguments(args):
     """Parsing the arguments when you call the main program.
@@ -305,6 +561,7 @@ def parseArguments(args):
     parser.add_argument("--MNT_alt", help = "Path for MNT altitude", type = str, default = path_MNT_alti_defaut)
     parser.add_argument("--MNT_asp", help = "Path for MNT altitude", type = str, default = path_MNT_aspect_defaut)
     parser.add_argument("--MNT_slop", help = "Path for MNT altitude", type = str, default = path_MNT_slope_defaut)
+    parser.add_argument("--list_skyline", nargs='*', help = "The skyline plot you want", default = None)
 
     args = parser.parse_args(args)
     return args
@@ -328,6 +585,7 @@ def main(args=None):
         path_MNT_asp = args.MNT_asp
         path_MNT_slop = args.MNT_slop
         output_name = args.output
+        list_skyline = args.list_skyline
 
         # Check if mandatory path for shapefile is OK
         if not os.path.isfile(path_shapefile + '.shp'):
@@ -343,10 +601,14 @@ def main(args=None):
             logger.critical('Field {} does not exist in {}'.format(Id_station, path_shapefile))
             sys.exit(3)
 
-        # Launch the app
-        all_lists = make_list(path_shapefile, Id_station, Nom_alt, Nom_asp, Nom_slop, path_MNT_alt, path_MNT_asp, path_MNT_slop)
+        # Launch the app:
+        all_lists = make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, Nom_slop, path_MNT_alt, path_MNT_asp, path_MNT_slop)
         create_NetCDF(all_lists, output_name)
+        if list_skyline == 'all' or list_skyline == 'All' or list_skyline == 'ALL':
+            list_skyline = [all_lists['id'][k] for k in range(len(all_lists['id']))]
+        elif list_skyline is not None:
+            list_skyline = [int(list_skyline[i]) for i in range(len(list_skyline))]
+        create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline)
 
 if __name__ == '__main__':
     main()
-
