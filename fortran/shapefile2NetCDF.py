@@ -235,9 +235,9 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
 
     ################################################################
     # Création liste longitudes:
-    liste_longitude = [list_shape_WGS84[i].x for i in range(len(list_shape_WGS84))]
+    liste_longitude = [round(list_shape_WGS84[i].x,6) for i in range(len(list_shape_WGS84))]
     # Création liste latitudes:
-    liste_latitude = [list_shape_WGS84[i].y for i in range(len(list_shape_WGS84))]
+    liste_latitude = [round(list_shape_WGS84[i].y,6) for i in range(len(list_shape_WGS84))]
     # Création liste "id station" faite avec le field number de référence dans le shapefile
     liste_id_station = [geomet[i].record[Indice_record_id_station] for i in range(len(shapes))]
     # Création liste "name station" faite avec le field name de référence dans le shapefile
@@ -366,10 +366,7 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
     #####################
 
 
-
-
-
-    # output to csv file
+    # output folder for skyline graph (if asked via options)
     if not os.path.isdir("output"):
         os.mkdir("output")
 
@@ -387,130 +384,6 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
     step = int((gt[1] + (-gt[5])) / 2)  # for further use in line interpolation
     print("step: ", step)
 
-
-
-
-
-
-    #################################
-    # TEST COMPARE TO OLD
-    #################################
-    mnt = path_MNT_alt
-    n = int(len(all_lists['alt'][:]))
-
-    # load complete raster
-    img = gdal.Open(mnt)  # 50 m Lambert 93
-    band1 = img.GetRasterBand(1)
-    rastinit = img.GetGeoTransform()
-
-    # x,y geographic reference matrix
-    imgx = np.zeros((1, img.RasterXSize)).astype(np.float)
-    imgy = np.zeros((img.RasterYSize, 1)).astype(np.float)
-    for i in range(0, imgx.shape[1]):
-        imgx[0, i] = rastinit[0] + (i * rastinit[1])
-    for i in range(0, imgy.shape[0]):
-        imgy[i, 0] = rastinit[3] + (i * rastinit[5])
-
-    # output to csv file
-    if not os.path.isdir("output"):
-        os.mkdir("output")
-
-    # reprojection to L93
-    source = osr.SpatialReference()
-    source.ImportFromEPSG(4326)
-    target = osr.SpatialReference()
-    target.ImportFromEPSG(2154)
-
-    transform = osr.CoordinateTransformation(source, target)
-    #################################
-    # FIN TEST COMPARE TO OLD
-    #################################
-
-
-
-
-
-    '''#################################
-    # TEST COMPARE TO OLD
-    #################################
-    for k in range(len(shape_courant)):
-        in_stat = in_file[k]
-        print('hello', in_stat[0], in_stat[3])
-
-        px_c = int((shape_courant[k].x - gt[0]) / gt[1]) #x pixel centre
-        py_c = int((shape_courant[k].y - gt[3]) / gt[5]) #y pixel centre
-
-        print("point pixel 1: ",px_c, py_c)
-        print("coord point pixelise: ", gt[0] + px_c * gt[1], gt[3] + py_c * gt[5])
-        print("centre shapefile: ", shape_courant[k].x, shape_courant[k].y)
-        print('difference: ', abs(shape_courant[k].x - (gt[0] + px_c * gt[1])), abs(shape_courant[k].y - (gt[3] + py_c * gt[5])))
-
-        value_c = int(band.ReadAsArray(px_c,py_c,1,1)[0][0])
-        print("alt: ", value_c)
-
-        point = ogr.Geometry(ogr.wkbPoint)
-        # print in_stat[4], in_stat[5]
-        point.AddPoint(in_stat[5], in_stat[4])  # coord lat lon
-        point.Transform(transform)
-        coord = point.ExportToWkt()
-        # print coord
-        xx = math.floor(point.GetX())
-        yy = math.floor(point.GetY())
-        print("point centre OLD: ", xx, yy)
-        ####
-
-        final_data = []
-        az = []
-        anglee_old = []
-        # Find row/col information et xy normalization
-        xmin = rastinit[0] + ((math.floor(((xx - viewmax) - rastinit[0]) / rastinit[1])) * rastinit[1])
-        xmax = rastinit[0] + ((math.floor(((xx + viewmax) - rastinit[0]) / rastinit[1])) * rastinit[1])
-        ymin = rastinit[3] - ((math.ceil((rastinit[3] - (yy - viewmax)) / rastinit[5])) * rastinit[5])
-        ymax = rastinit[3] - ((math.ceil((rastinit[3] - (yy + viewmax)) / rastinit[5])) * rastinit[5])
-        stax = rastinit[0] + ((math.floor((xx - rastinit[0]) / rastinit[1])) * rastinit[1])
-        stay = rastinit[3] - (math.ceil((rastinit[3] - yy) / rastinit[5]) * rastinit[5])
-
-        if ymax >= max(imgy):
-            minrow = 0
-            print('toto is here')
-        else:
-            minrow = np.unique(np.argwhere(imgy == ymax))[1]
-        if ymin <= min(imgy):
-            maxrow = imgy.shape[0]
-            print('toto is there')
-        else:
-            maxrow = np.unique(np.argwhere(imgy == ymin))[1]
-        if xmin <= min(imgx[0, ]):
-            mincol = 0
-        else:
-            mincol = np.unique(np.argwhere(imgx == xmin))[1]
-        if xmax >= max(imgx[0, ]):
-            maxcol = imgx.shape[1]
-        else:
-            maxcol = np.unique(np.argwhere(imgx == xmax))[1]
-            # douteux: les 6 lignes qui suivent devraient être "désindentés" ?
-            starow = maxrow - np.unique(np.argwhere(imgy == stay))[1]
-            stacol = np.unique(np.argwhere(imgx == stax))[1] - mincol
-            starow = starow.astype('int64')
-            stacol = stacol.astype('int64')
-            #sta_xy = (stax + (rastinit[1] / 2), stay + (rastinit[5] / 2)) pas d'utilité ?
-            sta_rc = (starow, stacol)
-        # Extract array from raster
-        #print(mincol, minrow, maxcol - mincol, maxrow - minrow)
-        print(mincol+stacol, minrow+starow, maxcol - mincol, maxrow - minrow)
-        height = band1.ReadAsArray(int(mincol), int(minrow), int(maxcol - mincol), int(maxrow - minrow))
-        height = height.astype('int64')
-        # get width and heigth of image
-        w, h = height.shape
-        print("raster extracted", w, h)
-        z_alt = height[sta_rc]
-        print("z_alt: ", height[sta_rc])
-        print("coord point pixelise OLD: ", stax, stay)
-        print("centre shapefile: ", shape_courant[k].x, shape_courant[k].y)
-        print('difference: ', abs(shape_courant[k].x - stax), abs(shape_courant[k].y - stay))'''
-
-
-    #for k in range(len(shape_courant)):
     for k in range(len(shape_courant)):
         in_stat = in_file[k]
         print('hello', in_stat[0], in_stat[3])
@@ -581,198 +454,6 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
             plt.close()
 
 
-        '''#################################
-        # TEST COMPARE TO OLD
-        #################################
-        print('hello OLD: ', in_stat[0], in_stat[3])
-        # tranformation des coordonnées geo en L93
-        point = ogr.Geometry(ogr.wkbPoint)
-        # print in_stat[4], in_stat[5]
-        point.AddPoint(in_stat[5], in_stat[4])  # coord lat lon
-        point.Transform(transform)
-        coord = point.ExportToWkt()
-        # print coord
-        xx = math.floor(point.GetX())
-        yy = math.floor(point.GetY())
-        ####
-
-        final_data = []
-        az = []
-        anglee_old = []
-        # Find row/col information et xy normalization
-        xmin = rastinit[0] + ((math.floor(((xx - viewmax) - rastinit[0]) / rastinit[1])) * rastinit[1])
-        xmax = rastinit[0] + ((math.floor(((xx + viewmax) - rastinit[0]) / rastinit[1])) * rastinit[1])
-        ymin = rastinit[3] - ((math.ceil((rastinit[3] - (yy - viewmax)) / rastinit[5])) * rastinit[5])
-        ymax = rastinit[3] - ((math.ceil((rastinit[3] - (yy + viewmax)) / rastinit[5])) * rastinit[5])
-        stax = rastinit[0] + ((math.floor((xx - rastinit[0]) / rastinit[1])) * rastinit[1])
-        stay = rastinit[3] - (math.ceil((rastinit[3] - yy) / rastinit[5]) * rastinit[5])
-        if ymax >= max(imgy):
-            minrow = 0
-        else:
-            minrow = np.unique(np.argwhere(imgy == ymax))[1]
-        if ymin <= min(imgy):
-            maxrow = imgy.shape[0]
-        else:
-            maxrow = np.unique(np.argwhere(imgy == ymin))[1]
-        if xmin <= min(imgx[0, ]):
-            mincol = 0
-        else:
-            mincol = np.unique(np.argwhere(imgx == xmin))[1]
-        if xmax >= max(imgx[0, ]):
-            maxcol = imgx.shape[1]
-        else:
-            maxcol = np.unique(np.argwhere(imgx == xmax))[1]
-            # douteux: les 6 lignes qui suivent devraient être "désindentés" ?
-            starow = maxrow - np.unique(np.argwhere(imgy == stay))[1]
-            stacol = np.unique(np.argwhere(imgx == stax))[1] - mincol
-            starow = starow.astype('int64')
-            stacol = stacol.astype('int64')
-            sta_rc = (starow, stacol)
-        # Extract array from raster
-        height = band1.ReadAsArray(int(mincol), int(minrow), int(maxcol - mincol), int(maxrow - minrow))
-        height = height.astype('int64')
-        # get width and heigth of image
-        w, h = height.shape
-        z_alt = height[sta_rc]
-        print("z_alt: ", height[sta_rc])
-        # Get all intersected cells on azimuth
-
-        for azimut in range(0, 360, 5):
-            angle_str=''
-            i = 0
-            angle = np.zeros((1, (viewmax // step) )).astype(np.float)  # initialize container for angles
-            points = []  # initialize container for points
-            pt_dist = []
-            for dist in range(step, viewmax, step):
-                ptx = xx + (dist * math.sin(math.radians(azimut)))
-                pty = yy + (dist * math.cos(math.radians(azimut)))
-                pt = (ptx, pty)
-                points.append(pt)
-                pt_dist.append(dist)
-            # get row col information
-                if ptx < xmax and ptx > xmin:
-                    x = rastinit[0] + ((math.floor((ptx - rastinit[0]) / rastinit[1])) * rastinit[1])
-                    ptcol = np.unique(np.argwhere(imgx == x))[1] - mincol
-                if pty < ymax and pty > ymin:
-                    y = rastinit[3] - ((math.ceil((rastinit[3] - pty) / rastinit[5])) * rastinit[5])
-                    ptrow = np.unique(np.argwhere(imgy == y))[1] - minrow
-                    ptrc = (ptrow, ptcol)
-                # print dist, height[ptrc]-height[sta_rc], x,y, stax, stay, ptrc, sta_rc
-                # calculate corresponding angle to reach the height of pt
-                if ptrow < w and ptcol < h:
-                    b = height[ptrc] - height[sta_rc]  # sta[7]
-                    b = b.astype('float')
-                # print b, b/dist, type(b), type(dist), type(b/dist)#)))*100)/100
-                    if b > 0:
-                        angle[0, i] = math.ceil((math.degrees(math.atan(b / dist))) * 100) / 100
-                    else:
-                        angle[0, i] = 0
-            # print angle[0,i], maangle[0,])
-            # raw_input()
-                i = i + 1
-            # print in_stat[0], azimut, maangle[0,])
-            # append each azimut to final data for weather station
-            data = (in_stat[0], azimut, max(angle[0, ]), points[np.argwhere(angle == max(angle[0, ]))[0][1]][0], points[np.argwhere(angle == max(angle[0, ]))[0][1]][1])
-            final_data.append(data)
-            # print(data)
-            az = az + [azimut]
-            anglee_old = anglee_old + [max(angle[0, ])]
-            angle_str = angle_str + str(max(angle[0, ])) + ' '
-
-        # insert values into new table for the given weather station
-        az = np.array(az, 'float')
-        #print("anglee_old: ", anglee_old)
-        anglee_old = np.array(anglee_old, 'float')
-
-        print('écart max: ' + str(max([abs(anglee[i] - anglee_old[i]) for i in range(len(anglee))])))
-        print('écart moyen: ' + str(np.mean([abs(anglee[i] - anglee_old[i]) for i in range(len(anglee))])))
-
-        print(in_stat[3], "done")
-        # print az, anglee_old
-        fig = plt.figure()
-        a = fig.add_subplot(111, polar=True)
-        rmax = max(40., max(anglee_old))
-        # print rmax-anglee_old
-        a.fill(az * math.pi / 180., rmax - anglee_old, '-ob', alpha=0.5, edgecolor='b')
-        a.set_rmax(rmax)
-        a.set_rgrids([0.01, 10., 20., 30., float(int(rmax))], [str(int(rmax)), '30', '20', '10', '0'])
-        a.set_thetagrids([0., 45., 90., 135., 180., 225., 270., 315.], ["N", "NE", "E", "SE", "S", "SW", "W", "NW"])
-        a.set_title(in_stat[3] + ' alt mnt:' + str(z_alt) + ' m alt poste:' + str(in_stat[1]))
-        a.set_theta_zero_location('N')
-        a.set_theta_direction(-1)
-        plt.savefig('output/' + str(in_stat[0]) + '_skyline_old.png')
-
-        plt.close()
-        #################################
-        # FIN TEST COMPARE TO OLD
-        #################################
-
-
-
-
-
-
-
-
-        in_stat = in_file[k]
-        print('hello new', in_stat[0], in_stat[3])
-
-        px_c = round((shape_courant[k].x - gt[0]) / gt[1]) #x pixel centre
-        py_c = round((shape_courant[k].y - gt[3]) / gt[5]) #y pixel centre
-        value_c = int(band.ReadAsArray(px_c,py_c,1,1)[0][0])
-        print("alt: ", value_c)
-        anglee = []
-        for azimut in range(0, 360, 5):
-            angle=[]
-            for index,dist in enumerate(range(step, viewmax, step)):
-
-                px = round(    (shape_courant[k].x + dist * math.sin(math.radians(azimut)) - gt[0]) / gt[1]) #x pixel le long de l'azimut
-                py = round(    (shape_courant[k].y + dist * math.cos(math.radians(azimut)) - gt[3]) / gt[5]) #y pixel le long de l'azimut
-
-                value = band.ReadAsArray(px,py,1,1)
-
-                if value is not None and value[0][0] != nodata_raster:
-                    angle.append(math.ceil((math.degrees(math.atan((int(value[0][0])-value_c) / dist))) * 100) / 100)
-                else:
-                    angle.append(0)
-            anglee.append(max(angle))
-
-        #print(anglee)
-        az = [azimut for azimut in range(0, 360, 5)]
-        angle_str = ','.join( map(str, anglee) )
-
-        print('écart max: ' + str(max([abs(anglee[i] - anglee_old[i]) for i in range(len(anglee))])))
-        print('écart moyen: ' + str(np.mean([abs(anglee[i] - anglee_old[i]) for i in range(len(anglee))])))
-
-        # PLOT
-        az = np.array(az, 'float')
-        anglee = np.array(anglee, 'float')
-        fig = plt.figure()
-        a = fig.add_subplot(111, polar=True)
-        rmax = max(40., max(anglee))
-        # print rmax-anglee
-        a.fill(az * math.pi / 180., rmax - anglee, '-ob', alpha=0.5, edgecolor='b')
-        a.set_rmax(rmax)
-        a.set_rgrids([0.01, 10., 20., 30., float(int(rmax))], [str(int(rmax)), '30', '20', '10', '0'])
-        a.set_thetagrids([0., 45., 90., 135., 180., 225., 270., 315.], ["N", "NE", "E", "SE", "S", "SW", "W", "NW"])
-        a.set_title(in_stat[3] + ' alt mnt:' + str(value_c) + ' m alt poste:' + str(in_stat[1]))
-        a.set_theta_zero_location('N')
-        a.set_theta_direction(-1)
-        plt.savefig('output/' + str(in_stat[0]) + '_skyline_with_round.png')
-        # show()
-        plt.close()'''
-
-
-
-
-
-
-
-
-
-
-
-
         ########################################################
         #  AJOUT DE NOUVEAUX SITES DANS LE FICHIER XML Partie II
         ########################################################
@@ -791,8 +472,8 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
             metadataout.write('\t\t<massif> ' + str(all_lists['m'][k]) + ' </massif>\n')
             metadataout.write('\t\t<zref> ' + "1.5" + ' </zref>\n')
             metadataout.write('\t\t<uref> ' + "10.0" + ' </uref>\n')
-            metadataout.write('\t\t<azimut> ' + azimut_str + ' </azimut>\n')
-            metadataout.write('\t\t<mask> ' + angle_str + ' </mask>\n')
+            metadataout.write('\t\t<azimut> ' + azimut_str.rstrip() + ' </azimut>\n')
+            metadataout.write('\t\t<mask> ' + angle_str.rstrip() + ' </mask>\n')
             metadataout.write('\t\t<source_mask> ' + 'IGN' + ' </source_mask>\n')
             metadataout.write('\t</Site>\n')
 
@@ -839,14 +520,10 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
                 metadataout.write('\t\t<massif> ' + str(all_lists['m'][k]) + ' </massif>\n')
                 metadataout.write('\t\t<zref> ' + "1.5" + ' </zref>\n')
                 metadataout.write('\t\t<uref> ' + "10.0" + ' </uref>\n')
-                metadataout.write('\t\t<azimut> ' + azimut_str + ' </azimut>\n')
-                metadataout.write('\t\t<mask> ' + angle_str + ' </mask>\n')
+                metadataout.write('\t\t<azimut> ' + azimut_str.rstrip() + ' </azimut>\n')
+                metadataout.write('\t\t<mask> ' + angle_str.rstrip() + ' </mask>\n')
                 metadataout.write('\t\t<source_mask> ' + 'IGN' + ' </source_mask>\n')
                 metadataout.write('\t</Site>\n')
-
-
-
-
 
     # On écrit la fin du fichier
     for line in metadata.readlines():
@@ -935,4 +612,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
