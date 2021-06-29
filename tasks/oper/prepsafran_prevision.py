@@ -155,7 +155,9 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -o -a -i IDW  -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
+                # En python 3 l'ordre des arguments a une importance pour que Vortex ne considère pas que les exécutables sont différents
+                # Pour éviter de complexifier le code ici, le script s2m_filtering_grib s'occupe désormais de supprimer les doublons.
+                rawopts     = ' -o -a -i IDW -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)])),
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
