@@ -31,6 +31,8 @@ import matplotlib.style
 matplotlib.use('Agg')
 matplotlib.style.use('fast')
 matplotlib.rcParams['agg.path.chunksize'] = 100
+matplotlib.rcParams['axes.xmargin'] = 0
+matplotlib.rcParams['axes.ymargin'] = 0
 # matplotlib.rcParams["figure.dpi"] = 75
 
 from collections import Counter, defaultdict
@@ -69,7 +71,7 @@ def parse_options(arguments):
 
     parser.add_option("-o",
                       action="store", type="string", dest="diroutput",
-                      default="/cnrm/cen/users/NO_SAVE/lafaysse/PEARPS2M",
+                      default="/cnrm/cen/users/NO_SAVE/radanovicss/PEARPS2M",
                       help="Output directory")
 
     (options, args) = parser.parse_args(arguments)  # @UnusedVariable
