@@ -37,8 +37,12 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
     """
 
     """
-
+    # Filter of errors to be applied in both oper and dev cases
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
+    # only in dev for CEN, to be defined for IGA
+    report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
+    # only in dev for CEN, keep IGA method for oper
+    report_execution_error = S2MTaskMixIn.s2moper_report_execution_error
 
     def process(self):
 
@@ -59,7 +63,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
 
             self.sh.title('Toolbox input tb01')
             tb01 = toolbox.input(
-                role           = 'Forcing',
+                role           = 'Forcing_Deterministic',
                 local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                 vapp           = self.conf.vapp,
                 vconf          = '[geometry:area]',
@@ -86,7 +90,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
 
                 self.sh.title('Toolbox input tb01a')
                 tb01a = toolbox.input(
-                    alternate      = 'Forcing',
+                    alternate      = 'Forcing_Deterministic',
                     local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     vapp           = self.conf.vapp,
                     vconf          = '[geometry:area]',
@@ -609,7 +613,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
 class Four_Seasons_Task(S2MTaskMixIn, Task):
     """
     Post-processing task for the 4 seasons bulletin. Uses S2m ensemble forecasts based on PEARP.
-    Calculates ensemble median for the 12hourly and 1day snow accumulation for the moment.
+    Calculates ensemble deciles for the 12hourly and 1day snow accumulation for the moment.
     """
 
     def process(self):
@@ -627,7 +631,7 @@ class Four_Seasons_Task(S2MTaskMixIn, Task):
 
             self.sh.title('Toolbox input tb01')
             tb01 = toolbox.input(
-                role        = 'Crocus Forecast',
+                role        = 'CrocusForecast',
                 local       = 'mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
                 experiment  = self.conf.xpid,
                 block       = 'pro',
@@ -652,8 +656,6 @@ class Four_Seasons_Task(S2MTaskMixIn, Task):
             tb02 = tbalgo1 = toolbox.algo(
                 kind        = "s2m_postproc",
                 varnames    = ['SD_12H_ISBA', 'SD_1DY_ISBA'],
-                datebegin   = datebegin,
-                dateend     = dateend,
                 dateinit    = datebegin,
                 # threshold=self.conf.threshold,
                 engine      = 's2m',

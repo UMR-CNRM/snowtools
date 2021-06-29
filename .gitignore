@@ -5,6 +5,7 @@
 .idea
 *~
 tests/output*
+tests/fail_test
 snowtools
 oper_tag
 tag

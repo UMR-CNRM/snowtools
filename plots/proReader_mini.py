@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from matplotlib import collections
 from matplotlib.colors import BoundaryNorm
-from EvoProfilPlot import plot_profil
-import Dictionnaries
+from plots.EvoProfilPlot import plot_profil
+from plots import Dictionnaries
 
 import logging
 logger = logging.getLogger()
@@ -32,7 +32,7 @@ dico = {'WSN_VEG':(0,40),
             'SNOWDZ':(0,0.2),
             'SNOWDEND':(-0.1,1),
             'SNOWSPHER':(-0.1,1),
-            'SNOWSIZE':(0,0.1),
+            'SNOWSIZE':(0,0.01),
             'SNOWSSA':(-1,60),
             'SNOWSHEAR':(0,30),
             'RSN_VEG':(0,600),
@@ -75,26 +75,44 @@ class ProReader_abstract:
         else:
             logger.error('Lack of Necessary variable: SNOWDZ for PRO or Dsnw for FSM. Something will go wrong')
 
+        # Selection du point d interet
+        if(isinstance(point, np.int) or isinstance(point, np.int64)):
+            point = point
+        elif self.type_fichier == 'PRO':
+            point = 0
+        elif self.type_fichier == 'FSM':
+            point = -1
+
         if('slope' in listvariables):
             slopetab = ff.read('slope')[:]
+            self.slope = slopetab[point]
         else:
             slopetab = np.array([0])
+            self.slope = np.nan
         if('aspect' in listvariables):
             aspecttab = ff.read('aspect')[:]
+            self.aspect = aspecttab[point]
         else:
             aspecttab = np.array([0])
+            self.aspect = np.nan
         if('ZS' in listvariables):
             alttab = ff.read('ZS')[:]
+            self.alt = alttab[point]
         else:
             alttab = np.array([0])
+            self.alt = np.nan
         if('latitude' in listvariables):
             lattab = ff.read('latitude')[:]
+            self.lat = lattab[point]
         else:
             lattab = np.array([0])
+            self.lat = np.nan
         if('longitude' in listvariables):
             lontab = ff.read('longitude')[:]
+            self.lon = lontab[point]
         else:
             lontab = np.array([0])
+            self.lon = np.nan
         self.date = ff.readtime()
 
         if(isinstance(var, str)):
@@ -102,23 +120,10 @@ class ProReader_abstract:
         else:
             var = self.var_utile
 
-        # Selection du point d interet
-        if(isinstance(point, int)):
-            point = point
-        elif self.type_fichier == 'PRO':
-            point = 0
-        elif self.type_fichier == 'FSM':
-            point = -1
-
         logger.info("Lecture fichier %s" % ncfile)
         logger.info("Variable %s selectionnee" % var)
         logger.info("Point %i selectionne" % point)
 
-        self.slope = slopetab[point]
-        self.aspect = aspecttab[point]
-        self.alt = alttab[point]
-        self.lat = lattab[point]
-        self.lon = lontab[point]
 
         if('station' in ff.listvar()):
             nrstationtab = ff.read('station')[:]
@@ -320,7 +325,7 @@ class ProReader_abstract:
         axe.xaxis.set_major_locator(ticker.MaxNLocator(5))
         plt.setp(axe.xaxis.get_majorticklabels(),size='small')
             
-        Max = np.nanmax(self.var[var][self.date == date]) if np.nanmax(self.var[var][self.date == date]) > 0 else 0
+        Max = np.nanmax(self.var[var][self.date == date]) if np.nanmax(self.var[var][self.date == date]) > 0 else 1
         Min = np.nanmin(self.var[var][self.date == date]) if np.nanmin(self.var[var][self.date == date]) < 0 else 0
             
         if (var in dico.keys()):
@@ -453,7 +458,7 @@ class ProReader_standard(ProReader_abstract):
         self.ntime = np.shape(self.var[self.var_utile])[0]
         self.nsnowlayer = np.shape(self.var[self.var_utile])[1]
 
-    def plot(self, axe, var, b=None, e=None, xlabel=True, legend=None, colormap='viridis', real_layers=True, color='b', direction_cut='up', height_cut=10.):
+    def plot(self, axe, var, b=None, e=None, xlabel=True, legend=None, colormap='viridis', real_layers=True, color='b', direction_cut='up', height_cut=10., cbar_show=True):
         '''
         Trace la variable demandee sur la hauteur du manteau neigeux en fonction du temps
             axe : matplotlib.Axe
@@ -474,18 +479,18 @@ class ProReader_standard(ProReader_abstract):
         colormap = get_colormap(var, colormap)
 
         intime = (self.date >= b) * (self.date <= e)
-        
+
         if len(np.where(intime)[0]) > constante_sampling:
             sampling = int(len(np.where(intime)[0])/constante_sampling)+1
             intime_t=np.zeros(len(intime),dtype=bool)
             intime_t[np.where(intime)[0][0]:np.where(intime)[0][len(np.where(intime)[0])-1]:sampling]=True
             intime = intime_t
-        
+
         # Trace par appel a plot_profil
         ep = self.var[self.var_utile][intime]
         toplot = self.var[var][intime]
         if(real_layers):
-            plot_profil(axe, ep, toplot, colormap=colormap, legend=legend)
+            plot_profil(axe, ep, toplot, colormap=colormap, legend=legend, cbar_show=cbar_show)
             axe.set_ylabel('Hauteur (m)')
             axe.set_ylim(0, np.max(np.nansum(ep, axis=1)))
         else:
@@ -1059,7 +1064,7 @@ class ProReader_membre(ProReader_abstract):
                 var = self.var_utile
                 
             # Selection du point d interet
-            if(isinstance(point, int)):
+            if(isinstance(point, np.int) or isinstance(point, np.int64)):
                 point = point
             elif self.type_fichier == 'PRO':
                 point = 0

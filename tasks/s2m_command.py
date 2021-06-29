@@ -253,8 +253,8 @@ class Surfex_command(_S2M_command):
                           help="specify your job walltime (format hh:mm:ss)")
 
         parser.add_option("--writesx",
-                          action="store", type = "str", dest="writesx", default = None,
-                          help="specify the root path (.../vortex) where you'd like to store PREP files on sxcen")
+                          action="store_true", dest="writesx", default = False,
+                          help="Optionnaly transfer the PRO files towards sxcen")
 
         parser.add_option("--sensor",
                           action="store", type = "str", dest="sensor", default = "MODIS",
@@ -299,7 +299,15 @@ class Surfex_command(_S2M_command):
                                            namelist=self.options.namelist,
                                            addmask=True, onlyextractforcing=self.options.onlyextractforcing)
             elif self.interpol:
-                run = tasks.runs.interpolrun(self.options.datedeb, self.options.datefin, self.options.forcing, self.options.diroutput, threshold=self.options.threshold,
+                if self.options.gridsimul:
+                    run = tasks.runs.interpolgriddedrun(self.options.datedeb, self.options.datefin, self.options.forcing, self.options.diroutput, threshold=self.options.threshold,
+                                             workdir=self.options.workdir, datespinup=self.options.datespinup, geolist=[self.options.region],
+                                             execdir=self.options.exesurfex,
+                                             namelist=self.options.namelist,
+                                             addmask=False,
+                                             onlyextractforcing=self.options.onlyextractforcing)
+                else:
+                    run = tasks.runs.interpolrun(self.options.datedeb, self.options.datefin, self.options.forcing, self.options.diroutput, threshold=self.options.threshold,
                                              workdir=self.options.workdir, datespinup=self.options.datespinup, geolist=[self.options.region],
                                              execdir=self.options.exesurfex,
                                              namelist=self.options.namelist,

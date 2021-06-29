@@ -255,7 +255,7 @@ class vortex_kitchen(object):
             # minutes per year for one member computing all points
             minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 5, pyr_flat = 5,
                                    cor_allslopes = 5, cor_flat = 1, postes = 5,
-                                   lautaret = 120, lautaretreduc = 5)
+                                   lautaret = 120, lautaretreduc = 5, grandesrousses250 = 35)
 
             for site_snowmip in ["cdp", "oas", "obs", "ojp", "rme", "sap", "snb", "sod", "swa", "wfj"]:
                 if self.options.scores:
@@ -266,7 +266,7 @@ class vortex_kitchen(object):
             for massif_safran in range(1, 100):
                 minutes_peryear[str(massif_safran)] = 90
 
-            key = self.options.region if self.options.region in list(minutes_peryear.keys()) else "alp_allslopes"
+            key = self.options.vconf if self.options.vconf in list(minutes_peryear.keys()) else "alp_allslopes"
 
             estimation = Period(minutes=minutes_peryear[key]) * \
                          max(1, (self.options.datefin.year - self.options.datedeb.year)) * \
@@ -279,8 +279,12 @@ class vortex_kitchen(object):
 
     def split_geo(self):
         if ':' in self.options.region:
-            self.options.interpol = True
-            self.options.geoin, self.options.vconf, self.options.gridout = self.options.region.split(':')
+            splitregion = self.options.region.split(':')
+            self.options.geoin = splitregion[0]
+            self.options.vconf = splitregion[1]
+            self.options.interpol = len(splitregion) == 3
+            if self.options.interpol:
+                self.options.gridout = splitregion[2]
         else:
             self.options.interpol = False
             self.options.vconf = self.options.region
@@ -321,6 +325,8 @@ class Vortex_conf_file(object):
             self.create_conf_surfex()
         elif self.options.safran:
             self.create_conf_safran()
+
+        self.setwritesx()
 
     def create_conf_surfex(self):
         self.surfex_variables()
@@ -412,6 +418,8 @@ class Vortex_conf_file(object):
         if self.options.interpol:
             self.set_field("DEFAULT", 'interpol', self.options.interpol)
             self.set_field("DEFAULT", 'gridout', self.options.gridout)
+
+        if hasattr(self.options, 'geoin'):
             self.set_field("DEFAULT", 'geoin', self.options.geoin)
 
     def safran_variables(self):
@@ -434,3 +442,7 @@ class Vortex_conf_file(object):
         if self.options.cpl_model:
             self.set_field("DEFAULT", 'source_app', self.options.cpl_model[0])
             self.set_field("DEFAULT", 'source_conf', self.options.cpl_model[1])
+
+    def setwritesx(self):
+        if self.options.writesx:
+            self.set_field("DEFAULT", 'writesx', self.options.writesx)
