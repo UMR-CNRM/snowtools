@@ -60,7 +60,7 @@ class Prosnow_ST_Forecast(Task, S2MTaskMixIn):
 #                 role           = 'Forcing',
 #                 local          = 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
 #                 vapp           = 'safran',
-#                 vconf          = self.conf.vconf,
+#                 vconf          = self.conf.geom_safran,
 #                 block          = 'massifs/[datebegin:nivologyseason]',
 #                 source_app     = 'arpege',
 #                 source_conf    = 'pearp',
@@ -84,7 +84,7 @@ class Prosnow_ST_Forecast(Task, S2MTaskMixIn):
                  local          = 'mb[member]/FORCING_{0:s}_[dateend::ymd6h].nc'.format(self.conf.datebegin.ymdh),
                  experiment     = xpid,
                  block          = 'massifs',
-                 geometry       = self.conf.vconf,
+                 geometry       = self.conf.geom_safran,
                  member         = members,
                  nativefmt      = 'netcdf',
                  model          = 'safran',
@@ -93,7 +93,7 @@ class Prosnow_ST_Forecast(Task, S2MTaskMixIn):
                  namespace      = 'vortex.multi.fr',
                  date           = '{0:s}03'.format(self.conf.datebegin.ymd),
                  vapp           = 's2m',
-                 vconf          = self.conf.vconf,
+                 vconf          = self.conf.geom_safran,
             )
 
             print(t.prompt, 'in_tb01 =', in_tb01)

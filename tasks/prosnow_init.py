@@ -77,7 +77,7 @@ class Prosnow_Init(Task, S2MTaskMixIn):
             '''1) INPUT -> search for forcing'''
             in_tb01 = toolbox.input(
                 vapp           = 's2m',
-                vconf          = self.conf.vconf,
+                vconf          = self.conf.geom_safran,
                 local          = 'FORCING_{0:s}_[dateend:ymdh].nc'.format(self.conf.datebegin.ymd6h),
                 experiment     = xpid,
                 block          = 'massifs',
