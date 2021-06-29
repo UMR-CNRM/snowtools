@@ -76,7 +76,7 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
                     local          = 'FORCING_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = xpid,
                     block          = 'massifs',
-                    geometry       = self.conf.vconf,
+                    geometry       = self.conf.geom_safran,
                     nativefmt      = 'netcdf',
                     model          = 'safran',
                     datebegin      = self.conf.datebegin,
@@ -84,7 +84,7 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
                     namespace      = 'vortex.multi.fr',
                     date           = '[dateend::ymd]09',
                     vapp           = 's2m',
-                    vconf          = self.conf.vconf,
+                    vconf          = self.conf.geom_safran,
                     fatal          = False,
                 )
                 print(t.prompt, 'in_tb01 =', in_tb01)
@@ -102,7 +102,7 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
                     local          = 'FORCING_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = xpid,
                     block          = 'massifs',
-                    geometry       = self.conf.vconf,
+                    geometry       = self.conf.geom_safran,
                     nativefmt      = 'netcdf',
                     model          = 'safran',
                     datebegin      = self.conf.datebegin,
@@ -110,7 +110,7 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
                     namespace      = 'vortex.multi.fr',
                     date           = '[dateend::ymd]06',
                     vapp           = 's2m',
-                    vconf          = self.conf.vconf,
+                    vconf          = self.conf.geom_safran,
                 )
                 print(t.prompt, 'in_tb01 =', in_tb01)
                 print()
