@@ -5,20 +5,22 @@
 Created on Wed Oct 24 17:53:27 2018
 
 @author: deschampsbc, cluzetb
+
 Command to generate an ensemble of perturbed forcings from :
-  - initial forcing file (param.txt as an example)
-  - .csv file with statistical values of perturbations for each variable
+ - initial forcing file (param.txt as an example)
+ - .csv file with statistical values of perturbations for each variable
 
 
- Adapted from Charrois/Revuelto's
+Adapted from Charrois/Revuelto's
 
-IN:
-    -f : reference forcing file
-    -p : csv file with the value of std and tau for each disturbed variable
-    -nmembers  : size of the ensemble
-    -o : writing output in o
-    -startmember : number of the first disturbed file
-    --brutalImp : brutal factors for impurities
+Inputs:
+ - ``-f`` : reference forcing file
+ - ``-p`` : csv file with the value of std and tau for each disturbed variable
+ - ``-nmembers``  : size of the ensemble
+ - ``-o`` : writing output in o
+ - ``-startmember`` : number of the first disturbed file
+ - ``--brutalImp`` : brutal factors for impurities
+
 Reference : Charrois et al., 2016
 """
 import netCDF4
@@ -319,13 +321,13 @@ def convertPrecipPhase( f, semiDistrib = False):
 
 def MakeForEnsemble( f, po, nmembers, o, startmember=1, brutal=False):
 
-    print ''
+    print('')
     print(' -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - ')
     print('Start generating forcing ensemble')
     print(' -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - ')
-    print ''
+    print('')
     print(' Reference forcing : ' + f)
-    print ''
+    print('')
 
     if not os.path.exists(o):  # creates o
         os.mkdir(o)
@@ -339,7 +341,7 @@ def MakeForEnsemble( f, po, nmembers, o, startmember=1, brutal=False):
     param = {}
     with open(po, mode = 'r') as csv_file:
         csv_reader = csv.DictReader(csv_file)
-        print 'Param value'
+        print('Param value')
         for row in csv_reader:
             param[row['varName']] = [float(row['std']), float(row['tau'])]
             print(str(row['varName']) + ' | std : ' + str(param[row['varName']][0]) + ' | tau : ' + str(param[row['varName']][1]))
@@ -351,7 +353,7 @@ def MakeForEnsemble( f, po, nmembers, o, startmember=1, brutal=False):
 
         outN = str(i).zfill(nL)
 
-        print ''
+        print('')
         print('Generating forcing number : ' + outN)
 
         oMb = o + '/mb' + str(outN)
@@ -363,7 +365,7 @@ def MakeForEnsemble( f, po, nmembers, o, startmember=1, brutal=False):
         outFOR = oMb + '/meteo/' + bn
         print(outFOR)
         shutil.copy( f, outFOR )
-        print brutal
+        print(brutal)
         if brutal or (not brutal and i != startmember):  # brutal : mb0001 is not a control anymore.
 
             # generate disturbed forcing
@@ -426,5 +428,5 @@ if __name__ == "__main__":
     parser.add_argument("-o", dest = "o")
     parser.add_argument("--brutalImp", dest = 'brutalImp', default = False, action = "store_true",)
     args = parser.parse_args()
-    print args.brutalImp
+    print(args.brutalImp)
     MakeForEnsemble( args.f, args.p, args.nmembers, args.o, args.startmember, brutal = args.brutalImp)
