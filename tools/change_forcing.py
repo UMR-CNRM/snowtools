@@ -831,7 +831,7 @@ class forcinput_extract(forcinput_tomodify):
         ''' Modify a forcing file towards a prescribed geometry:
         - init_forcing_file = initial forcing file (input)
         - new_forcing_file  = new forcing file (output)
-        - *args             = .txt file containing the list of points to be extracted '''
+        - args              = .txt file containing the list of points to be extracted '''
 
         # Read data from file
 
@@ -979,7 +979,7 @@ class forcinput_changedates(forcinput_tomodify):
         ''' Modify a forcing file towards a prescribed geometry:
         - init_forcing_file = initial forcing file (input)
         - new_forcing_file  = new forcing file (output) - same name as input!
-        - *args             = date of beginning of new forcing file '''
+        - args              = date of beginning of new forcing file '''
 
         # Open file
         file_name = netCDF4.Dataset(init_forcing_file.path, "a")

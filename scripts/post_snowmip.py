@@ -49,7 +49,7 @@ class ESMSnowMIP_output:
         for varout, varin in dicvar_direct.iteritems():
 
             if varin in availVar:
-                print varout
+                print(varout)
                 varData = DataSim.read(varin, keepfillvalue=True)
 
                 var = newFile.createVariable(varout, 'd', ("time"), fill_value=1.e20)
@@ -59,7 +59,7 @@ class ESMSnowMIP_output:
         for varout, varin in dicvar_xlvtt.iteritems():
 
             if varin in availVar:
-                print varout
+                print(varout)
                 varData = DataSim.read(varin, keepfillvalue=True)
 
                 var = newFile.createVariable(varout, 'd', ("time"), fill_value=1.e20)
@@ -69,20 +69,20 @@ class ESMSnowMIP_output:
         for varout, varin in dicvar_xlstt.iteritems():
 
             if varin in availVar:
-                print varout
+                print(varout)
                 varData = DataSim.read(varin, keepfillvalue=True)
 
                 var = newFile.createVariable(varout, 'd', ("time"), fill_value=1.e20)
                 var[:] = varData[:] / 2834500.
                 var.units = "kg.m-2.s-1"
 
-        print "evspsblsoi"
+        print("evspsblsoi")
         leg = DataSim.read("LEG_ISBA", keepfillvalue=True)
         legi = DataSim.read("LEGI_ISBA", keepfillvalue=True)
         var = newFile.createVariable("evspsblsoi", 'd', ("time"), fill_value=1.e20)
         var[:] = leg / 2500800. + legi / 2834500.
 
-        print "tsl", "mrlsl", "mrfsofr"
+        print("tsl", "mrlsl", "mrfsofr")
         var = newFile.createVariable("tsl", 'd', ("time", "soil_layer"), fill_value=1.e20)
 
         tg = np.empty_like(var)
@@ -106,18 +106,18 @@ class ESMSnowMIP_output:
         var[:, :] = fracice[:, :]
         var.units = ""
 
-        print "tsn"
+        print("tsn")
         var = newFile.createVariable("tsn", 'd', ("time"), fill_value=1.e20)
         snowtemp = DataSim.read("SNOWTEMP", keepfillvalue=True, selectpoint=0)
         snowswe = DataSim.read("WSN_VEG", fill2zero=True, selectpoint=0)
         var[:] = np.sum(snowtemp[:, :] * snowswe[:, :], axis=1) / np.sum(snowswe[:, :], axis=1)
         var.units = 'K'
-        print "tsns"
+        print("tsns")
         var = newFile.createVariable("tsns", 'd', ("time"), fill_value=1.e20)
         var[:] = snowtemp[:, 0]
         var.units = 'K'
 
-        print "lwsnl"
+        print("lwsnl")
         var = newFile.createVariable("lwsnl", 'd', ("time"), fill_value=1.e20)
         snowliq = DataSim.read("SNOWLIQ", keepfillvalue=True, selectpoint=0)
         var[:] = np.sum(snowliq, axis=1)
