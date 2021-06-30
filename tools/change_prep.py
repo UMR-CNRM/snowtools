@@ -81,7 +81,7 @@ class prep_tomodify(object):
         self.prepfile.close()
 
     def insert_snow_depth(self, my_name_SRU, my_name_SNOWSAT, my_name_OBS, my_name_extprep50, my_name_extprep5, my_name_var, my_name_PREP):
-
+ 
         ''' This function was implemented by C. Carmagnola in March 2019 (PROSNOW project).
         It modifies a PREP file by inserting measured snow depth values.'''
 
@@ -134,9 +134,8 @@ class prep_tomodify(object):
                 Fnc = netCDF4.Dataset(name_OBS, 'a')
                 dsn = Fnc.variables[snd]
 
-                if float(r[2]) >= 0.:
-                    ind = int(r[0]) - 1
-                    dsn[0, ind] = float(r[2]) / 100.
+                ind = int(r[0]) - 1
+                dsn[0, ind] = float(r[2]) / 100.
 
                 Fnc.close()
 
@@ -154,8 +153,10 @@ class prep_tomodify(object):
             nlayer = self.prepfile.read(self.dict_prep['nsnowlayer'])[:]
             tg1 = [self.prepfile.read(self.dict_prep['tg'] + str(1))[:]]
 
-            old_swe = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1], nlayer))
-            old_rho = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1], nlayer))
+            old_swe = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1], nlayer)) # [1,point,layer]
+            new_swe = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1], nlayer)) # [1,point,layer]
+            old_rho = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1], nlayer)) # [1,point,layer]
+            dsn     = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1]))         # [1,point]
 
             for j in range(nlayer):
                 var = self.prepfile.read(self.dict_prep['swe'] + str(j + 1))[:]
@@ -163,12 +164,13 @@ class prep_tomodify(object):
                 var = self.prepfile.read(self.dict_prep['rho'] + str(j + 1))[:]
                 old_rho[:, :, j] = var[:]
 
-            dsn  = np.sum(old_swe / old_rho, 2)
-
             # Loop on points
             for k in range(np.shape(tg1)[1]):
-
-                # SWE corrected to account for the slope
+                
+                for m in range(nlayer):
+                    if old_swe[0,k,m] > 0:
+                        dsn[0,k] = dsn[0,k] + old_swe[0,k,m]/old_rho[0,k,m]
+                        
                 dsno[0][k] = dsno[0][k] * np.cos(slope[k] * np.pi / 180.)
 
                 # Observation exists
@@ -177,12 +179,11 @@ class prep_tomodify(object):
                     # Model guess > 10 cm -> fine!
                     if (dsn[0, k] > 0.10):
 
-                        ana = dsno[0, k]
-                        new_swe = (ana / dsn[:, k]) * old_swe[:, k, :].copy()
-
+                        new_swe[0, k, :] = (dsno[0, k] / dsn[0, k]) * old_swe[0, k, :]
+                        
                         for m in range(nlayer):
                             var = PREP.variables[swe + str(m + 1)]
-                            var[0, k] = new_swe[0, m]
+                            var[0, k] = new_swe[0, k, m]
 
                     # Model guess <= 10 cm -> use other profiles!
                     else:
