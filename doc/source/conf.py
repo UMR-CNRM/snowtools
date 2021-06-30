@@ -102,6 +102,8 @@ html_static_path = ['_static']
 #
 # html_sidebars = {}
 
+html_favicon = '_static/snow.ico'
+
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
@@ -184,3 +186,9 @@ epub_exclude_files = ['search.html']
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+# -- Options for autodoc extension -------------------------------------------
+
+autodoc_default_options = {
+        'show-inheritance': True,
+        }

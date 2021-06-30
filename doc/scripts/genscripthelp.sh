@@ -17,9 +17,9 @@ then
     exit 0
 fi
 
-if [ $@ -ne 3 ]
+if [ $# -ne 3 ]
 then
-    echo 'Error: Please provide exactly one argument. Use -h for details.'
+    echo 'Error: Please provide exactly 3 argument. Use -h for details.'
     exit 1
 fi
 
