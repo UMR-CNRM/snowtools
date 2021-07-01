@@ -11,7 +11,6 @@ Created on 23 Aug. 2017
 import os, csv, netCDF4
 import numpy as np
 
-
 # For compatibility python 2 / python 3
 # import six
 
@@ -124,20 +123,18 @@ class prep_tomodify(object):
 
         # 2) Fill OBS.nc
 
-        with open(name_SNOWSAT, 'rb') as readfile:
+        with open(name_SNOWSAT, 'r') as readfile:
 
             spamreader = csv.reader(readfile)
 
             for row in spamreader:
 
                 r = row[0].split()
-                Fnc = netCDF4.Dataset(name_OBS, 'a')
-                dsn = Fnc.variables[snd]
+                with netCDF4.Dataset(name_OBS, 'a') as Fnc:
+                    dsn = Fnc.variables[snd]
 
-                ind = int(r[0]) - 1
-                dsn[0, ind] = float(r[2]) / 100.
-
-                Fnc.close()
+                    ind = int(r[0]) - 1
+                    dsn[0, ind] = float(r[2]) / 100.
 
         # 3) Change PREP
 
@@ -187,7 +184,7 @@ class prep_tomodify(object):
 
                     # Model guess <= 10 cm -> use other profiles!
                     else:
-
+                        
                         # Observation >= 10 cm
                         if (dsno[0, k] >= .10):
                             PREP_ext  = netCDF4.Dataset(extprep50, 'r')
@@ -224,9 +221,12 @@ class prep_tomodify(object):
                                 if str(x) == "--":
                                     x = 1.
                                 var[0, k] = x
-
+                                
+                        PREP_ext.close()
+                        
             OBS_nc.close()
-            PREP.close()
+            PREP.close()           
+            
 
 
 # Test
