@@ -218,13 +218,13 @@ if __name__ == "__main__":
 
             E[ensemble] = EnsembleEscrocDiags()
 
-            print "on domain " + domain + ", open ensemble " + ensemble
-            print snow_members[domain][ensemble]
+            print("on domain " + domain + ", open ensemble " + ensemble)
+            print(snow_members[domain][ensemble])
             E[ensemble].open(snow_members[domain][ensemble])
 
     #         print ("domain " + domain + " npoints = " + str(E.npoints))
 
-            print E[ensemble].ensemble.keys()
+            print(E[ensemble].ensemble.keys())
 
 
             E[ensemble].alldiags()

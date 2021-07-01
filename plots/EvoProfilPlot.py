@@ -20,8 +20,48 @@ logger = logging.getLogger()
 def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=None, legend=None, cbar_show=True):
     """
     Trace le profil de value en fonction du temps avec les epaisseurs reelles de couches
+
+    Plot a snow profile along time taking into account layer thicknesses for a realistic
+    plot.
+
+    :param ax: figure axis
+    :type ax: matplotlib axis
+    :param dz: layer thicknesses
+    :type dz: numpy array
+    :param value: Value to be plot (color of the layer). Should have the same dimension as ``dz``
+    :type value: numpy array
+    :param colormap: Colormap to use. Some custom colormaps are defined for specific variables:
+                     ``grains``, ``echelle_log``, ``echelle_log_sahara``, ``ratio_cisaillement``,
+                     ``tempK`` and ``lwc``.
+    :type colormap: str or matplotlib colormap
+    :param legend: legend for the colorbar
+    :type legend: str
+    :param cbar_show: Whether or not to plot the colorbar
+    :type cbar_show: bool
+
+    Note that ``dz`` should not contain ``nan`` values. Layers that are not used sould be filled with
+    a zero value for depth.
+
+    .. code-block:: python
+
+       from snowtools.utils.prosimu import prosimu
+       import matplotlib.pyplot as plt
+
+       with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/PRO_gdesRousses_2019-2020.nc') as ff:
+           dz = ff.read('SNOWDZ', selectpoint=point, fill2zero=True)
+           var = ff.read('SNOWTYPE', selectpoint=point)
+
+       ax = plt.gca()
+       plot_profil(ax, dz, var, colormap='grains')
+       plt.show()
+
+    .. figure:: /images/plots-strati-1.png
+       :align: center
+
+       Example of plots that can be obtained with this funcnction (example of the code snippet provided).
+
     """
-    
+
     class MidpointNormalize(colors.Normalize):
         def __init__(self, vmin=None, vmax=None, vcenter=None, clip=False):
             self.vcenter = vcenter

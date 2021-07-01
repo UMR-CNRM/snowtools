@@ -5,6 +5,9 @@
 Created on 4 oct. 2012
 
 @author: lafaysse
+
+This module contains the ``prosimu`` class used to read simulation files 
+(netCDF format) as produced by SURFEX/Crocus for instance.
 '''
 import os
 import netCDF4
@@ -19,6 +22,25 @@ import six
 
 
 class prosimu():
+    """
+    Class designed to read simulations files
+
+    :param path: path of the file to read
+    :type path: path-like
+    :param ncformat: NetCDF format to use
+    :type ncformat: str
+    :param openmode: open mode (mainly ``r``, ``w`` or ``r+``)
+    :type openmode: str
+
+    Do not forget to close the file at the end or use a context manager:
+
+    .. code-block:: python
+
+       with prosimu(filename) as ff:
+           time= ff.readtime()
+           var = ff.read(varname)
+           # Do your stuff
+    """
 
     Number_of_points = 'Number_of_points'
     Number_of_Patches = 'Number_of_Patches'
@@ -88,9 +110,11 @@ class prosimu():
         """
         Force la lecture des variables du netcdf sous forme de tableau numpy.
         Ces tableaux sont stockés dans l'attribut varcache de la classe
+
         Le cache est utilisé par la méthode read_var, son utilisation n'est pas
         implémentée pour les autres méthodes
-        Utile lorsque de nombreuses lectures _de la même variable sont requises
+
+        Utile lorsque de nombreuses lectures de la même variable sont requises
         """
         self.varcache = {}
         for varname, var in self.dataset.variables.items():
@@ -109,9 +133,18 @@ class prosimu():
             return 'NETCDF3_CLASSIC'
 
     def listdim(self):
+        """
+        Return a copy of the list of dimensions present in the netCDF file
+        """
         return self.dataset.dimensions.copy()
 
     def listvar(self):
+        """
+        Return the list of variables present in the netCDF file
+
+        :returns: list of variables
+        :rtype: list
+        """
         return list(self.dataset.variables.keys())
 
     def getlendim(self, dimname):
@@ -150,6 +183,12 @@ class prosimu():
         return time, time.units
 
     def readtime(self):
+        """
+        Get the time dimension of the netCDF file
+
+        :returns: time axis data
+        :trype: numpy array
+        """
         # Vérification du nom de la variable
         if "time" not in list(self.dataset.variables.keys()):
             raise VarNameException("time", self.path)
@@ -175,22 +214,29 @@ class prosimu():
 
     def read_var(self, variable_name, **kwargs):
         """
-        variable_name : nom de la variable
-        **kwargs : spécifier la sous-sélection sous la forme  dimname = value
-        ou dimname est le nom de la dimension d'intéret, value est une valeur
-        numérique ou un objet slice python pour récupérer une plage de valeurs
-        Retourne : un tableau numpy.ma.MaskedArray (on peut toujours remplacer
-        les éléments masqués par un indicateur de valeur manquante - pas
-        implémenté)
+        Read a variable from netCDF file
+
+        :param variable_name: nom de la variable
+        :param kwargs: spécifier la sous-sélection sous la forme  dimname = value
+                         ou dimname est le nom de la dimension d'intéret, value est une valeur
+                         numérique ou un objet slice python pour récupérer une plage de valeurs
+        :returns: un tableau numpy.ma.MaskedArray (on peut toujours remplacer les éléments masqués
+                  par un indicateur de valeur manquante  pas implémenté)
 
         Exemples:
-            snowtemp = prosimu.read_var('SNOWTEMP',time=0,Number_of_points = slice(100,125))
-            snowtemp = prosimu.read_var('SNOWTEMP',time= slice(0,10,2), Number_of_points=1,snow_layer=slice(0,10))
-            etc...
+
+        .. code-block:: python
+
+           snowemp = prosimu.read_var('SNOWTEMP',time=0,Number_of_points = slice(100,125))
+           snowtemp = prosimu.read_var('SNOWTEMP',time= slice(0,10,2), Number_of_points=1,snow_layer=slice(0,10))
+
         peut-être utilisé en combinaison avec les méthodes get_point et get_time
         pour récupérer un point / un instant donné :
-            snowtemp = prosimu.read_var('SNOWTEMP',time=self.get_time(datetime(2018,3,1,9)),
-                                         Number_of_points = self.get_point(massif_num=3,slope=20,ZS=4500,aspect=0))
+
+        .. code-block:: python
+
+           snowtemp = prosimu.read_var('SNOWTEMP',time=self.get_time(datetime(2018,3,1,9)),
+                       Number_of_points = self.get_point(massif_num=3,slope=20,ZS=4500,aspect=0))
         """
         # Gestion des noms de dimensions différents entre ancien et nouveau
         # format
@@ -487,6 +533,9 @@ class prosimu_old(prosimu):
     """
     In the old operationnal format (before 2018), some dimensions have different
     names, this class allows to deal with them easily
+
+    .. warning::
+       Should not be used nowadays
     """
 
     Number_of_points = 'location'

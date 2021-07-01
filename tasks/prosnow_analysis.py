@@ -176,8 +176,8 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input in_tb06')
             '''6) INPUT -> variables (for insertion of snow height)'''
             in_tb06 = toolbox.input(
-                role           = 'variables',
-                kind           = 'variables',
+                role           = 'list_updated_variables',
+                kind           = 'list_updated_variables',
                 nativefmt      = 'ascii',
                 local          = 'variables',
                 genv           = 'uenv:prosnow.01@CONST_PROSNOW',
