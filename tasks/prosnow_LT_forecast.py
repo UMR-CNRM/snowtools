@@ -50,7 +50,7 @@ class Prosnow_LT_Forecast(Task, S2MTaskMixIn):
 
             # '''1) Climatology'''
 
-            xpid = "reanalysis@lafaysse"
+            xpid = self.ref_reanalysis
 
             for p, datebegin in enumerate(list_dates_begin_forc_clim):
                 dateend = list_dates_end_forc_clim[p]

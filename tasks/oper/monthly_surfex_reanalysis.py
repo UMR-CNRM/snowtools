@@ -135,7 +135,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
             tb03d = toolbox.input(
                 alternate      = 'SnowpackInit',
                 local          = 'PREP.nc',
-                experiment     = 'reanalysis@lafaysse',
+                experiment     = self.ref_reanalysis,
                 geometry       = self.conf.geometry,
                 date           = datebegin,
                 intent         = 'inout',
