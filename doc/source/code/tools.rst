@@ -12,8 +12,9 @@ Forcing edition
 ---------------
 
 .. automodule:: tools.change_forcing
+   :member-order: bysource
    :members:
-
+   
 Namelist edition
 ----------------
 
