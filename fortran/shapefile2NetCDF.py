@@ -239,7 +239,8 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
     # Création liste latitudes:
     liste_latitude = [round(list_shape_WGS84[i].y,6) for i in range(len(list_shape_WGS84))]
     # Création liste "id station" faite avec le field number de référence dans le shapefile
-    liste_id_station = [geomet[i].record[Indice_record_id_station] for i in range(len(shapes))]
+    # 8 chiffres significatifs pour être compatible avec les codes de infomassifs
+    liste_id_station = ['%08d' % int(geomet[i].record[Indice_record_id_station] + add_for_METADATA) for i in range(len(shapes))]
     # Création liste "name station" faite avec le field name de référence dans le shapefile
     liste_nom_station = [geomet[i].record[Indice_record_nom_station] for i in range(len(shapes))]
 
@@ -457,13 +458,13 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
         ########################################################
         #  AJOUT DE NOUVEAUX SITES DANS LE FICHIER XML Partie II
         ########################################################
-        if all_lists['id'][k] not in SitesExistants:
+        if str(all_lists['id'][k]) not in SitesExistants:
             print("ajout du site : ", all_lists['nom'][k])
 
             metadataout.write('\t<Site>\n')
             metadataout.write('\t\t<name> ' + all_lists['nom'][k] + ' </name>\n')
             metadataout.write('\t\t<nameRed> ' + all_lists['nom'][k] + ' </nameRed>\n')
-            metadataout.write('\t\t<number> ' + str(all_lists['id'][k] + add_for_METADATA) + ' </number>\n')
+            metadataout.write('\t\t<number> ' + str(all_lists['id'][k]) + ' </number>\n')
             metadataout.write('\t\t<lat> ' + str(all_lists['lat'][k]) + ' </lat>\n')
             metadataout.write('\t\t<lon> ' + str(all_lists['lon'][k]) + ' </lon>\n')
             metadataout.write('\t\t<altitude> ' + str(all_lists['alt'][k]) + ' </altitude>\n')
@@ -478,11 +479,11 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
             metadataout.write('\t</Site>\n')
 
         else:
-            lati_base, longi_base, alti_base = infomassifs().infoposte(all_lists['id'][k])
-            expo_base, slope_base = infomassifs().exposlopeposte(all_lists['id'][k])
+            lati_base, longi_base, alti_base = infomassifs().infoposte(str(all_lists['id'][k]))
+            expo_base, slope_base = infomassifs().exposlopeposte(str(all_lists['id'][k]))
             try:
                 # Ce truc va planter s'il n'y a pas encore de champ massif
-                massif_base = infomassifs().massifposte(all_lists['id'][k])
+                massif_base = infomassifs().massifposte(str(all_lists['id'][k]))
             except Exception:
                 massif_base = -1
 
@@ -604,10 +605,10 @@ def main(args=None):
         # Launch the app:
         all_lists = make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, Nom_slop, path_MNT_alt, path_MNT_asp, path_MNT_slop)
         create_NetCDF(all_lists, output_name)
-        if list_skyline == 'all' or list_skyline == 'All' or list_skyline == 'ALL':
+        if list_skyline == ['all'] or list_skyline == ['All'] or list_skyline == ['ALL']:
             list_skyline = [all_lists['id'][k] for k in range(len(all_lists['id']))]
         elif list_skyline is not None:
-            list_skyline = [int(list_skyline[i]) for i in range(len(list_skyline))]
+            list_skyline = ['%08d' % int(list_skyline[i]) for i in range(len(list_skyline))]
         create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline)
 
 if __name__ == '__main__':
