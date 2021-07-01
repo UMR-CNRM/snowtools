@@ -215,7 +215,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
 !
   IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
 ! Get interpolation informations
-!Read altitude massif numbers and aspects
+! Read altitude massif numbers and aspects
     CALL READ_OUTPUT_GRID(FILE_ID_GEO,ZZSOUT,IMASSIFOUT,ZASPECTOUT,IRANK, &
           GRID_TYPE,GRID_DIM_REF,ZLATOUT,ZLONOUT,ZYOUT,ZXOUT,&
           ZSLOPEOUT)
@@ -225,7 +225,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       IF (ANY(IMASSIFOUT == IM)) THEN
         IMASSIVE_DIM_SIZE_OUT = IMASSIVE_DIM_SIZE_OUT + 1
       ELSE
-        PRINT*, IM
+       ! PRINT*, IM
       END IF
     END DO
     ! IMASSIVE_DIM_SIZE_OUT = (MAXVAL(IMASSIFOUT) - MINVAL(IMASSIFOUT,MASK=IMASSIFOUT/=0)) + 1 ! to define the "massif" dimension in the output file
@@ -456,7 +456,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
 ! The dim ids array is used to pass the dim ids of the dimensions of
 ! the netCDF variables. In Fortran, the unlimited
 ! dimension must come last on the list of dimids. 
-!And must not have an element equal to zero
+! And must not have an element equal to zero
     ! PRINT*, IMASSIFTODELETE
     DO IV=1,INVAR
       IF (ANY( VAR_ID_DIMS_OUT(:,IV) == IMASSIFTODELETE ).OR.              &
@@ -556,7 +556,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       !ZASPECTOUT = Proc_id
       IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
         CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZASPECTOUT, &
-              start =(/1,1/), count = (/NX,NY/)), &
+              start =(/1,1/), count = (/NX, NY/)), &
               "Cannot put var aspect")
       END IF
     ELSEIF (VAR_NAME_IN(IV) == "slope") THEN
@@ -568,7 +568,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
     ELSEIF (VAR_NAME_IN(IV) == "massif_number" .OR. VAR_NAME_IN(IV) == "massif_num") THEN
       IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
         CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),IMASSIFOUT, &
-              start =(/IXSTART,IYSTART/), count = (/NX_PROC,NY_PROC/)), &
+              start =(/1,1/), count = (/NX,NY/)), &
               "Cannot put var massif_number")
       END IF
     ELSEIF (VAR_NAME_IN(IV) == "LAT" .AND. GRID_TYPE == "XY") THEN
@@ -1136,7 +1136,7 @@ ELSEIF(IRANK == 1)THEN
 ENDIF
 !
 ALLOCATE(PZSOUT(NX_PROC,NY_PROC))
-ALLOCATE(KMASSIFOUT(NX_PROC,NY_PROC))
+ALLOCATE(KMASSIFOUT(NX,NY))
 KMASSIFOUT = 0 ; PZSOUT= XUNDEF
 !
 CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARGZS,PZSOUT, &
@@ -1145,7 +1145,7 @@ CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARGZS,PZSOUT, &
 IF (NF90_INQ_VARID(FILE_ID_GEO,HMASSIF,IDVARGMASSIF) == NF90_NOERR) THEN
 
   CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARGMASSIF,KMASSIFOUT, &
-    start =(/IXSTART,IYSTART/) , count = (/NX_PROC,NY_PROC/)),"Cannot read "//HMASSIF)
+    start =(/1,1/) , count = (/NX,NY/)),"Cannot read "//HMASSIF)
 ELSE
   KMASSIFOUT = 1
 ENDIF
@@ -1160,14 +1160,14 @@ IF(IRANK == 1)THEN
   ALLOCATE(PLONOUT(NPOINT_PROC))
   IF(NF90_INQ_VARID(FILE_ID_GEO,HASPECT,IDVARGASPECT) == NF90_NOERR ) THEN
     CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARGASPECT,PASPECTOUT , &
-     start =(/IXSTART,IYSTART/) , count = (/NX_PROC,NY_PROC/)), &
+     start =(/1,1/) , count = (/NX,NY/)), &
                        "Cannot read "//HASPECT)
   ENDIF 
   !
   IF (NF90_INQ_VARID(FILE_ID_GEO,HSLOPE,IDVARSLOPE) == NF90_NOERR) THEN
     !
     CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARSLOPE,PSLOPEOUT , &
-       start =(/IXSTART,IYSTART/) , count = (/NX_PROC,NY_PROC/)), &
+       start =(/1,1/) , count = (/NX,NY/)), &
                          "Cannot read "//HSLOPE)
   ENDIF
   !
@@ -1334,7 +1334,7 @@ DO JX=1,INX
         IF (ZSLOPEIN(JI) /= 0.) THEN
           CYCLE
         END IF
-        !Evaluate the aspet only if the input domain is not flat
+        !Evaluate the aspect only if the input domain is not flat
         IF (.NOT. GISFLAT) THEN
           IF (KASPECTIN(JI) /= -1) THEN
             CALL EVALUATE_ASPECT (KASPECTIN(JI),PASPECTOUT(JX,JY),GASPECT)
