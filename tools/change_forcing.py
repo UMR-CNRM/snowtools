@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 3 Aug. 2017
 
 @author: lafaysse
-'''
+"""
 
 import os, csv
 import numpy as np
@@ -27,12 +27,20 @@ from utils.S2M_standard_file import StandardSAFRAN, StandardCROCUS
 
 
 class forcinput_tomerge:
+    """
+    This class represents a group of forcing files which must be merged
+    in a single one through the Number_of_points dimension.
 
+    :param forcin: List of input files names
+    :type forcin: list
+    :param forcout: Name of merged output file
+    :type forcout: str
+    """
     printmemory = False
     formatout = "NETCDF4_CLASSIC"
 
     def __init__(self, forcin, forcout, *args, **kwargs):
-        '''Generic method to open merge multiple forcing files'''
+        """Generic method to open and merge multiple forcing files"""
 
         if type(forcin) is list:
             forcin = list(map(str, forcin))
@@ -67,6 +75,13 @@ class forcinput_tomerge:
         new_forcing_file.close()
 
     def checktime(self, init_forcing_file, forcin):
+        """Check time consistency of forcing files to merge.
+
+        :param init_forcing_file: Input files to merge object
+        :type init_forcing_file: :class:`utils.prosimu.prosimu`
+        :param forcin: file names
+        :type forcin: list
+        """
 
         dimtime = []
         for unitfile in init_forcing_file:
@@ -76,6 +91,14 @@ class forcinput_tomerge:
             raise TimeListException(forcin, dimtime)
 
     def merge(self, init_forcing_file, new_forcing_file, *args):
+        """Merge forcing files.
+
+        :param init_forcing_file: Input files to merge object
+        :type init_forcing_file: :class:`utils.prosimu.prosimu`
+        :param new_forcing_file: Output file object
+        :type new_forcing_file: :class:`utils.prosimu.prosimu`
+
+        """
 
         spatial_dim_name = "Number_of_points"
 
@@ -154,8 +177,13 @@ class forcinput_tomerge:
 
 
 class forcinput_applymask(forcinput_tomerge):
+    """
+    This class represents a group of forcing files which must be merged
+    in a single one through the Number_of_points dimension.
+    and for which incoming shortwave radiation must be corrected from shadows.
+    Or a single forcing file for which incoming shortwave radiation must be corrected from shadows.
+    """
     def compute_solar_radiations(self, time, savevar, i):
-
         if "station" + str(i) in list(savevar.keys()):
             INFO = infomassifs()
             list_list_azim = []
@@ -182,12 +210,21 @@ class forcinput_applymask(forcinput_tomerge):
 
 
 class forcinput_tomodify:
+    """This class represents a forcing file for which modifications are needed before being used as SURFEX input
+    Instanciation opens the initial forcing file to read and create the modified forcing file.
 
+    The :meth:`change_forcing.forcinput_tomodify.modify` must be defined in child classes.
+
+    :param forcin: Input file name
+    :type forcin: str
+    :param forcout: Output file name
+    :type forcout: str
+
+    """
     printmemory = False
     formatout = "NETCDF4_CLASSIC"
 
     def __init__(self, forcin, forcout, *args, **kwargs):
-        '''Generic method to open an initial forcing file to read and to create a modified forcing file'''
 
         if type(forcin) is int:
             forcin = str(forcin)
@@ -222,10 +259,25 @@ class forcinput_tomodify:
         return StandardSAFRAN(*args, **kwargs)
 
     def modify(self, init_forcing_file, new_forcing_file, *args):
+        """The key method to be overriden
+
+        :param init_forcing_file: Input file object
+        :type init_forcing_file: :class:`utils.prosimu.prosimu`
+        :param new_forcing_file: Output file object
+        :type new_forcing_file: :class:`utils.prosimu.prosimu`
+        """
         pass
 
     def add_massif_variables(self, init_forcing_file, new_forcing_file, savevar={}):
+        """Add massif-scale diagnostics (isotherm 0 and rain snow limit elevation)
 
+        :param init_forcing_file: Input file object
+        :type init_forcing_file: :class:`utils.prosimu.prosimu`
+        :param new_forcing_file: Output file object
+        :type new_forcing_file: :class:`utils.prosimu.prosimu`
+        :param savevar: Dictionnary of variables in cache
+        :type savevar: dict
+        """
         # if new_forcing_file is prosimu instance, take the dataset class instead
         if type(new_forcing_file) not in [netCDF4.Dataset, StandardSAFRAN]:
             new_forcing_file = new_forcing_file.dataset
@@ -237,6 +289,16 @@ class forcinput_tomodify:
             self.add_snow_rain_limit(init_forcing_file, new_forcing_file, savevar)
 
     def create_massif_dimension(self, init_forcing_file, new_forcing_file, savevar):
+        """create massif dimension from existing massifs in the forcing file
+
+        :param init_forcing_file: Input file object
+        :type init_forcing_file: :class:`utils.prosimu.prosimu`
+        :param new_forcing_file: Output file object
+        :type new_forcing_file: :class:`utils.prosimu.prosimu`
+        :param savevar: Dictionnary of variables in cache
+        :type savevar: dict
+        """
+
         massif_dim_name = "massif"
 
         if "massif_number" in list(savevar.keys()):
@@ -262,6 +324,15 @@ class forcinput_tomodify:
             self.zs = init_forcing_file.read("ZS")
 
     def add_snow_rain_limit(self, init_forcing_file, new_forcing_file, savevar):
+        """Adds a massif-scale snow-rain limit elevation diagnostic
+
+        :param init_forcing_file: Input file object
+        :type init_forcing_file: :class:`utils.prosimu.prosimu`
+        :param new_forcing_file: Output file object
+        :type new_forcing_file: :class:`utils.prosimu.prosimu`
+        :param savevar: Dictionnary of variables in cache
+        :type savevar: dict
+        """
 
         if "Snowf" in list(savevar.keys()):
             snowf = savevar["Snowf"]
@@ -299,6 +370,8 @@ class forcinput_tomodify:
         var[:] = lpn
 
     def add_iso_zero(self, init_forcing_file, new_forcing_file, savevar):
+        """Adds a massif-scale 0 degree isotherm diagnostic
+        """
         zero = 273.16
 
         if "Tair" in list(savevar.keys()):
@@ -357,22 +430,44 @@ class forcinput_tomodify:
 
 
 class forcinput_addmeteomassif(forcinput_tomodify):
+    """This class represents a forcing file for which massif-scale meteorological diagnostics must be added.
+    """
     def modify(self, init_forcing_file, new_forcing_file, *args):
+        """Add massif-scale meteorological diagnostics
+
+        :param init_forcing_file: Input file object
+        :type init_forcing_file: :class:`utils.prosimu.prosimu`
+        :param new_forcing_file: Output file object
+        :type new_forcing_file: :class:`utils.prosimu.prosimu`
+        """
+
         self.add_massif_variables(init_forcing_file, new_forcing_file)
 
 
 class forcinput_select(forcinput_tomodify):
-    ''' This class was first implemented by G. Lecourt for spatial reduction of a forcing file
-    M Lafaysse generalized the method to both FORCING and PRO files (June 2016)
-    M Lafaysse added a treatement to increase the number of slopes (July 2016)
-    M Lafaysse added a treatment to create coordinates for direct compatibilty with the new SAFRAN output (August 2017)'''
+    """This class represents a forcing file for which the geometry has to been modified
+    before being used as SURFEX input including selection of massifs, elevation levels, slopes or aspects,
+    duplication of slopes.
+    """
+
+    # This class was first implemented by G. Lecourt for spatial reduction of a forcing file
+    # M Lafaysse generalized the method to both FORCING and PRO files (June 2016)
+    # M Lafaysse added a treatement to increase the number of slopes (July 2016)
+    # M Lafaysse added a treatment to create coordinates for direct compatibilty with the new SAFRAN output (August 2017)
 
     def massifvarname(self):
         return 'massif_number'
 
     def modify(self, init_forcing_file, new_forcing_file, *args):
+        """Selection of massifs, elevation levels, slopes or aspects, duplication of slopes.
 
-        ''' Modify a forcing file towards a prescribed geometry'''
+        :param init_forcing_file: Input file object
+        :type init_forcing_file: :class:`utils.prosimu.prosimu`
+        :param new_forcing_file: Output file object
+        :type new_forcing_file: :class:`utils.prosimu.prosimu`
+        :param \*args: list of massif numbers, minimum elevation, maximum elevation, list of slopes, list of aspects
+        :type \*args: list, int, int, list, list
+        """
 
         print("Modify forcing file towards the prescribed geometry:")
 
@@ -653,7 +748,8 @@ class forcinput_select(forcinput_tomodify):
         del savevar
 
     def addCoord(self, forcing, massifnumber, dimension, varFillValue):
-        '''Routine to add coordinates in the forcing file for the SAFRAN massifs'''
+        """Routine to add coordinates in the forcing file for the SAFRAN massifs
+        """
         INFOmassifs = infomassifs()
         dicLonLat = INFOmassifs.getAllMassifLatLon()
 
@@ -678,6 +774,8 @@ class forcinput_select(forcinput_tomodify):
 
 
 class proselect(forcinput_select):
+    """This class is designed to extract a selection of massifs, elevation levels, slopes or aspects from a PRO file.
+    """
     def massifvarname(self):
         return 'massif_num'
 
@@ -690,7 +788,8 @@ class proselect(forcinput_select):
 
 
 class forcinput_ESMSnowMIP(forcinput_tomodify):
-
+    """This class prepares FORCING files from the ESMSnowMIP offical netcdf dataset
+    """
     formatout = "NETCDF3_CLASSIC"
 
     def upscale_tab_time(self, var, theshape):
@@ -699,11 +798,11 @@ class forcinput_ESMSnowMIP(forcinput_tomodify):
         bigvar = np.ma.zeros(theshape)
 
         if len(theshape) == 2:
-            for i in xrange(0, theshape[1]):
+            for i in range(0, theshape[1]):
                 bigvar[:, i] = var[:]
         elif len(theshape) == 3:
-            for ilat in xrange(0, theshape[1]):
-                for ilon in xrange(0, theshape[2]):
+            for ilat in range(0, theshape[1]):
+                for ilon in range(0, theshape[2]):
                     bigvar[:, ilat, ilon] = var[:]
 
         else:
@@ -712,7 +811,13 @@ class forcinput_ESMSnowMIP(forcinput_tomodify):
         return bigvar
 
     def modify(self, init_forcing_file, new_forcing_file, *args):
+        """ Prepare ESM-SnowMIP forcings.
 
+        :param init_forcing_file: Input file object from ESM-SnowMIP database
+        :type init_forcing_file: :class:`utils.prosimu.prosimu`
+        :param new_forcing_file: Output file object (SURFEX format)
+        :type new_forcing_file: :class:`utils.prosimu.prosimu`
+        """
         site = os.path.basename(self.filename)[11:14]
         source = os.path.basename(self.filename)[4:10]
         if site == "cdp":
@@ -822,16 +927,21 @@ class forcinput_ESMSnowMIP(forcinput_tomodify):
 
 
 class forcinput_extract(forcinput_tomodify):
-
-    ''' This class was implemented by C. Carmagnola in November 2018 (PROSNOW project).
-    It allows to extract from an original forcing file all the variables corresponding to a pre-defined list of points. '''
+    """This class allows to extract from an original forcing file all the variables corresponding
+    to a pre-defined list of points.
+    Implemented by C. Carmagnola in November 2018 (PROSNOW project).
+    """
 
     def modify(self, init_forcing_file, new_forcing_file, *args):
+        """ Extract a pre-defined list of points in a forcing file.
 
-        ''' Modify a forcing file towards a prescribed geometry:
-        - init_forcing_file = initial forcing file (input)
-        - new_forcing_file  = new forcing file (output)
-        - args              = .txt file containing the list of points to be extracted '''
+        :param init_forcing_file: Input file object
+        :type init_forcing_file: :class:`utils.prosimu.prosimu`
+        :param new_forcing_file: Output file object
+        :type new_forcing_file: :class:`utils.prosimu.prosimu`
+        :param \*args: .txt file name containing the list of points to be extracted
+        :type \*args: str
+        """
 
         # Read data from file
 
@@ -971,15 +1081,20 @@ class forcinput_extract(forcinput_tomodify):
 
 class forcinput_changedates(forcinput_tomodify):
 
-    ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).
-    It allows to change the dates of a forcing file from the climatology '''
+    """This class allows to change the dates of a forcing file from the climatology
+    Implemented by C. Carmagnola in November 2018 (PROSNOW project).
+    """
 
     def modify(self, init_forcing_file, new_forcing_file, *args):
+        """ Change the dates of a forcing file for climatological forecast.
 
-        ''' Modify a forcing file towards a prescribed geometry:
-        - init_forcing_file = initial forcing file (input)
-        - new_forcing_file  = new forcing file (output) - same name as input!
-        - args              = date of beginning of new forcing file '''
+        :param init_forcing_file: Input file object
+        :type init_forcing_file: :class:`utils.prosimu.prosimu`
+        :param new_forcing_file: Output file object
+        :type new_forcing_file: :class:`utils.prosimu.prosimu`
+        :param \*args: New initial date
+        :type \*args: :class:`bronx.stddtypes.date.Date`
+        """
 
         # Open file
         file_name = netCDF4.Dataset(init_forcing_file.path, "a")
