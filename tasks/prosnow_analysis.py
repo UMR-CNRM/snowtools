@@ -355,7 +355,7 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
 
         if 'compute' in self.steps:
 
-            ntasks = min(self.conf.nproc, len(list_dates_begin_forc))
+            ntasks = min(int(self.conf.nproc), len(list_dates_begin_forc))
             self.sh.title('Toolbox algo alg_tb01')
             '''1) ALGO -> generate new forcing over SRU geometry'''
             alg_tb01 = toolbox.algo(
