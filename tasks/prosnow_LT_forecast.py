@@ -115,6 +115,7 @@ class Prosnow_LT_Forecast(Task, S2MTaskMixIn):
                 genv            = 'uenv:prosnow.01@CONST_PROSNOW',
                 gvar            = 'namelist_surfex',
                 local           = 'OPTIONS.nam',
+                intent          = 'inout'
             )
             print(t.prompt, 'in_tb02 =', in_tb02)
             print()
@@ -231,6 +232,7 @@ class Prosnow_LT_Forecast(Task, S2MTaskMixIn):
             '''8) INPUT -> search for PREP of previous simulation'''
             in_tb08 = toolbox.input(
                 member         = members,
+                date           = self.conf.datebegin,
                 local          = 'mb[member]/PREP.nc',
                 experiment     = xpid,
                 geometry       = self.conf.geometry,
@@ -328,13 +330,13 @@ class Prosnow_LT_Forecast(Task, S2MTaskMixIn):
             self.sh.title('Toolbox algo alg_tb03')
             '''3) ALGO -> run surfex (Surfex_Component)'''
             alg_tb03 = toolbox.algo(
-                kind                       = 'ensmeteo',
+                kind                       = 'ensmeteonodet',
                 engine                     = 's2m',
                 datebegin                  = self.conf.datebegin,
                 dateend                    = self.conf.dateend,
                 ntasks                     = self.conf.ntasks,
                 # '''1) Climatology'''
-                geometry                   = list_geometry,
+                geometry                   = [u'allslopes'],
                 # '''2) Seasonal'''
 #                 geometry                   = [self.conf.resort + '_flat'],
             )
@@ -403,6 +405,7 @@ class Prosnow_LT_Forecast(Task, S2MTaskMixIn):
 #                 geometry       = self.conf.geometry,
 #                 datebegin      = [self.conf.datebegin],
 #                 dateend        = [self.conf.dateend],
+#                 date           = [self.conf.datebegin],
 #                 nativefmt      = 'netcdf',
 #                 kind           = 'SnowpackSimulation',
 #                 model          = 'surfex',
@@ -425,6 +428,7 @@ class Prosnow_LT_Forecast(Task, S2MTaskMixIn):
                 username       = 'carmagnolac',
                 datebegin      = self.conf.datebegin,
                 dateend        = self.conf.dateend,
+                date           = self.conf.datebegin,
                 tube           = 'ftp',
                 geometry       = self.conf.geometry,
                 nativefmt      = 'netcdf',
@@ -442,6 +446,7 @@ class Prosnow_LT_Forecast(Task, S2MTaskMixIn):
 #                 geometry       = self.conf.geometry,
 #                 datebegin      = [self.conf.datebegin],
 #                 dateend        = [self.conf.dateend],
+#                 date           = [self.conf.datebegin],
 #                 nativefmt      = 'netcdf',
 #                 kind           = 'MeteorologicalForcing',
 #                 model          = 's2m',
@@ -464,6 +469,7 @@ class Prosnow_LT_Forecast(Task, S2MTaskMixIn):
                 username       = 'carmagnolac',
                 datebegin      = self.conf.datebegin,
                 dateend        = self.conf.dateend,
+                date           = self.conf.datebegin,
                 tube           = 'ftp',
                 geometry       = self.conf.geometry,
                 nativefmt      = 'netcdf',

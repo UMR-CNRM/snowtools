@@ -76,7 +76,7 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
                     local          = 'FORCING_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = xpid,
                     block          = 'massifs',
-                    geometry       = 'alp',
+                    geometry       = self.conf.geom_safran,
                     nativefmt      = 'netcdf',
                     model          = 'safran',
                     datebegin      = self.conf.datebegin,
@@ -84,7 +84,7 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
                     namespace      = 'vortex.multi.fr',
                     date           = '[dateend::ymd]09',
                     vapp           = 's2m',
-                    vconf          = 'alp',
+                    vconf          = self.conf.geom_safran,
                     fatal          = False,
                 )
                 print(t.prompt, 'in_tb01 =', in_tb01)
@@ -102,7 +102,7 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
                     local          = 'FORCING_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = xpid,
                     block          = 'massifs',
-                    geometry       = 'alp',
+                    geometry       = self.conf.geom_safran,
                     nativefmt      = 'netcdf',
                     model          = 'safran',
                     datebegin      = self.conf.datebegin,
@@ -110,7 +110,7 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
                     namespace      = 'vortex.multi.fr',
                     date           = '[dateend::ymd]06',
                     vapp           = 's2m',
-                    vconf          = 'alp',
+                    vconf          = self.conf.geom_safran,
                 )
                 print(t.prompt, 'in_tb01 =', in_tb01)
                 print()
@@ -125,6 +125,7 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
                 genv            = 'uenv:prosnow.01@CONST_PROSNOW',
                 gvar            = 'namelist_surfex',
                 local           = 'OPTIONS_unmodified.nam',
+                intent          = 'inout'
             )
             print(t.prompt, 'in_tb02 =', in_tb02)
             print()
@@ -175,8 +176,8 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input in_tb06')
             '''6) INPUT -> variables (for insertion of snow height)'''
             in_tb06 = toolbox.input(
-                role           = 'variables',
-                kind           = 'variables',
+                role           = 'list_updated_variables',
+                kind           = 'list_updated_variables',
                 nativefmt      = 'ascii',
                 local          = 'variables',
                 genv           = 'uenv:prosnow.01@CONST_PROSNOW',
@@ -244,7 +245,7 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
             )
             print(t.prompt, 'in_tb10 =', in_tb10)
             print()
- 
+
             self.sh.title('Toolbox input in_tb11')
             '''11) INPUT -> search for PREP of previous simulation'''
             in_tb11 = toolbox.input(
@@ -390,7 +391,7 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
             print(t.prompt, 'tb02 =', tb02)
             print()
             tb02.run()
- 
+
             self.sh.title('Toolbox algo alg_tb03')
             '''3) ALGO -> run surfex (Prosnow_Parallel)'''
             alg_tb03 = toolbox.algo(
@@ -434,7 +435,7 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
                 ),
                 print(t.prompt, 'out_tb01 =', out_tb01)
                 print()
- 
+
                 self.sh.title('Toolbox output out_tb02')
                 '''2) OUTPUT -> prep'''
                 out_tb02 = toolbox.output(
@@ -451,7 +452,7 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
                 ),
                 print(t.prompt, 'out_tb02 =', out_tb02)
                 print()
- 
+
                 self.sh.title('Toolbox output out_tb03')
                 '''3) OUTPUT -> pro'''
                 out_tb03 = toolbox.output(
@@ -460,6 +461,7 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
                     geometry       = self.conf.geometry,
                     datebegin      = [self.conf.datebegin],
                     dateend        = [self.conf.dateend],
+                    date           = [self.conf.datebegin],
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
                     model          = 'surfex',
@@ -479,9 +481,11 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
                     # '''1) Past years'''
 #                     datebegin      = [datebegin],
 #                     dateend        = [dateend],
+#                     date           = [datebegin],
                     # '''2) Real-time'''
                     datebegin      = self.conf.datebegin,
                     dateend        = self.conf.dateend,
+                    date           = self.conf.datebegin,
                     nativefmt      = 'netcdf',
                     kind           = 'MeteorologicalForcing',
                     model          = 's2m',

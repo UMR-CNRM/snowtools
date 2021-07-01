@@ -41,7 +41,6 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         dict_dates_end_forc = get_dic_dateend(list_dates_begin_forc, list_dates_end_forc)
         dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
         dict_source_app_safran, dict_source_conf_safran = self.get_safran_sources(list_dates_begin_forc)
-        namespace, storage, rootpath = self.get_info_output()
 
         # Logicals to activate optional parts of the task
         if not hasattr(self.conf, "interpol"):

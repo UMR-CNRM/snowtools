@@ -77,15 +77,17 @@ class Prosnow_Init(Task, S2MTaskMixIn):
             '''1) INPUT -> search for forcing'''
             in_tb01 = toolbox.input(
                 vapp           = 's2m',
-                vconf          = 'alp',
+                vconf          = self.conf.geom_safran,
                 local          = 'FORCING_{0:s}_[dateend:ymdh].nc'.format(self.conf.datebegin.ymd6h),
                 experiment     = xpid,
                 block          = 'massifs',
                 source_app     = 'arpege',
                 source_conf    = '4dvarfr',
                 geometry       = self.conf.geometry,
-                date           = '[dateend:ymd]12',
-                datebegin      = '{0:s}/-PT24H'.format(self.conf.datebegin.ymd6h),
+#                 date           = '[dateend:ymd]12',
+                date           = '[dateend:ymd]09',
+#                 datebegin      = '{0:s}/-PT24H'.format(self.conf.datebegin.ymd6h),
+                datebegin      = '{0:s}'.format(self.conf.datebegin.ymd6h),
                 dateend        = self.conf.dateend,
                 nativefmt      = 'netcdf',
                 kind           = 'MeteorologicalForcing',
@@ -107,6 +109,7 @@ class Prosnow_Init(Task, S2MTaskMixIn):
                 genv            = 'uenv:prosnow.01@CONST_PROSNOW',
                 gvar            = 'namelist_surfex',
                 local           = 'OPTIONS.nam',
+                intent          = 'inout'
             )
             print(t.prompt, 'in_tb02 =', in_tb02)
             print()
@@ -255,8 +258,8 @@ class Prosnow_Init(Task, S2MTaskMixIn):
 #                 datebegin      = [list_dates_begin_forc],
 #                 dateend        = [list_dates_end_forc],
                 # '''2) Real-time'''
-                datebegin    = [[self.conf.datebegin]],
-                dateend      = [[self.conf.dateend]],
+                datebegin    = [self.conf.datebegin],
+                dateend      = [self.conf.dateend],
                 ntasks         = ntasks,
                 geometry_in    = list_geometry,
                 geometry_out   = 'allslopes',
@@ -350,6 +353,7 @@ class Prosnow_Init(Task, S2MTaskMixIn):
                     geometry       = self.conf.geometry,
                     datebegin      = [self.conf.datebegin],
                     dateend        = [self.conf.dateend],
+                    date           = [self.conf.datebegin],
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
                     model          = 'surfex',
@@ -369,9 +373,11 @@ class Prosnow_Init(Task, S2MTaskMixIn):
                     # '''1) Past years'''
 #                     datebegin      = [datebegin],
 #                     dateend        = [dateend],
+#                     date           = [datebegin],
                     # '''2) Real-time'''
                     datebegin      = [self.conf.datebegin],
                     dateend        = [self.conf.dateend],
+                    date           = [self.conf.datebegin],
                     nativefmt      = 'netcdf',
                     kind           = 'MeteorologicalForcing',
                     model          = 's2m',
