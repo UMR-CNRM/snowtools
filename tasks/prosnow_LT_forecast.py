@@ -115,6 +115,7 @@ class Prosnow_LT_Forecast(Task, S2MTaskMixIn):
                 genv            = 'uenv:prosnow.01@CONST_PROSNOW',
                 gvar            = 'namelist_surfex',
                 local           = 'OPTIONS.nam',
+                intent          = 'inout'
             )
             print(t.prompt, 'in_tb02 =', in_tb02)
             print()
@@ -329,7 +330,7 @@ class Prosnow_LT_Forecast(Task, S2MTaskMixIn):
             self.sh.title('Toolbox algo alg_tb03')
             '''3) ALGO -> run surfex (Surfex_Component)'''
             alg_tb03 = toolbox.algo(
-                kind                       = 'ensmeteo',
+                kind                       = 'ensmeteonodet',
                 engine                     = 's2m',
                 datebegin                  = self.conf.datebegin,
                 dateend                    = self.conf.dateend,

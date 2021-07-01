@@ -109,6 +109,7 @@ class Prosnow_Init(Task, S2MTaskMixIn):
                 genv            = 'uenv:prosnow.01@CONST_PROSNOW',
                 gvar            = 'namelist_surfex',
                 local           = 'OPTIONS.nam',
+                intent          = 'inout'
             )
             print(t.prompt, 'in_tb02 =', in_tb02)
             print()
