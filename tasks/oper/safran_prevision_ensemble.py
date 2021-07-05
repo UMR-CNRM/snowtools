@@ -42,7 +42,7 @@ class Safran(Task, S2MTaskMixIn):
             # A6 des réseaux 0, 6, 12, 18 (J-1)
             self.sh.title('Toolbox input tb01a')
             tb01a = toolbox.input(
-                role           = 'Ebauche',
+                role           = 'Ebauche_Deterministic',
                 local          = 'mb035/P[date::yymdh]_[cumul:hour]',
                 experiment     = self.conf.xpid_guess,
                 block          = self.conf.guess_block,
@@ -72,7 +72,7 @@ class Safran(Task, S2MTaskMixIn):
             # P6 à P 102 du réseau 0h J
             self.sh.title('Toolbox input tb01b')
             tb01b = toolbox.input(
-                role           = 'Ebauche',
+                role           = 'Ebauche_Deterministic',
                 local          = 'mb035/P[date::yymdh]_[cumul:hour]',
                 experiment     = self.conf.xpid_guess,
                 block          = self.conf.guess_block,
