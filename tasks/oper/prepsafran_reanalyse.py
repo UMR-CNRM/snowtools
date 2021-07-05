@@ -77,7 +77,7 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                     intent         = 'inout',
                     fatal          = True,
                 )
-                print((t.prompt, 'tb01 =', tb01))
+                print(t.prompt, 'tb01 =', tb01)
                 print()
 
             # Récupération des guess de la veille à ajouter à l'archive
@@ -99,7 +99,7 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 namespace      = 'vortex.cache.fr',
                 fatal          = True,
             ),
-            print((t.prompt, 'tb02 =', tb02))
+            print(t.prompt, 'tb02 =', tb02)
             print()
 
             # Mode secours : on prend la prévision correspondante
@@ -121,7 +121,7 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 namespace      = 'vortex.cache.fr',
                 fatal          = True,
             ),
-            print((t.prompt, 'tb02 =', tb02))
+            print(t.prompt, 'tb02 =', tb02)
             print()
 
         if 'late-backup' in self.steps:
@@ -149,5 +149,5 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 vconf          = self.conf.vconf,
                 fatal          = True,
             ),
-            print((t.prompt, 'tb03 =', tb03))
+            print(t.prompt, 'tb03 =', tb03)
             print()
