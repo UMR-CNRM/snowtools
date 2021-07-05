@@ -9,7 +9,7 @@ import os
 import sys
 
 class SystemException(Exception):
-
+    """Exception for a system command"""
     def __init__(self, status, command, errorcode=None):
         self.status = status
         self.command = command
@@ -19,7 +19,7 @@ class SystemException(Exception):
 
 
 def callSystemOrDie(commande, errorcode=None):
-    '''Execute a system command and kill the current program if it fails.'''
+    """Method to execute a system command and kill the current program if it fails."""
 
     status = os.system(commande)
     if status != 0:
@@ -28,7 +28,9 @@ def callSystemOrDie(commande, errorcode=None):
 
 
 def callSurfexOrDie(commande, moderun="NORMAL", nproc=1, errorcode=None):
-    '''Execute a SURFEX binary'''
+    """Method to execute a SURFEX binary and kill the current program if it fails.
+    Include the setting of MPI and OpenMP tasks, and the extension of stack memory.
+    """
 
     # Without the following lines, the worse segmentation faults you can ever imagine
     # Equivalent to bash command ulimit -s unlimited

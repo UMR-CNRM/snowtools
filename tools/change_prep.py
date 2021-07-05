@@ -19,8 +19,15 @@ from utils.FileException import FileNameException
 
 
 class prep_tomodify(object):
+    """This class represents a PREP.nc file for SURFEX initial conditions
+    which has to be modified before SURFEX execution
+
+    :param prepfile: Address of prep file to modify
+    :type prepfile: str
+    """
+
     def __init__(self, prepfile):
-        '''Generic method to open a PREP.nc file ready to be modified'''
+        """Init method opens a PREP.nc file ready to be modified"""
 
         # Names of the prognostic variables in the PREP netcdf file
         self.dict_prep = {'nsnowlayer': 'SN_VEG_N',
@@ -46,7 +53,13 @@ class prep_tomodify(object):
         self.nsnowlayer = self.prepfile.read(self.dict_prep['nsnowlayer'])[0]
 
     def apply_swe_threshold(self, swe_threshold, closefile=False):
-        '''Method to apply a threshold on snow water equivalent in a PREP.nc file'''
+        """Method to apply a threshold on snow water equivalent in a PREP.nc file
+
+        :param swe_threshold: Maximum allowed Snow Water Equivalent (kg/m2)
+        :type swe_threshold: int or float
+        :param closefile: Close PREP file after modification. Defaults to False
+        :type closefile: bool, optional
+        """
         for i in range(self.nsnowlayer):
             swe_layer, swe_layer_nc = self.prepfile.read(self.dict_prep['swe'] + str(i + 1), keepfillvalue=True, removetile=False, needmodif=True)
             if i == 0:
@@ -59,8 +72,13 @@ class prep_tomodify(object):
             self.close()
 
     def change_date(self, newdate, closefile=False):
-        '''Method to change the date of a PREP file because a spinup is used to initialize the simulation
-           Input : newdate must be a datetime.datetime object'''
+        """Method to change the date of a PREP file because a spinup is used to initialize the simulation
+
+        :param newdate: New initial date of simulation
+        :type newdate: class:`datetime.datetime`
+        :param closefile: Close PREP file after modification. Defaults to False
+        :type closefile: bool, optional
+        """
         year, yearnc = self.prepfile.read(self.dict_prep['year'], needmodif=True)
         month, monthnc = self.prepfile.read(self.dict_prep['month'], needmodif=True)
         day, daync = self.prepfile.read(self.dict_prep['day'], needmodif=True)
@@ -77,10 +95,10 @@ class prep_tomodify(object):
             self.close()
 
     def close(self):
+        """Close the PREP file"""
         self.prepfile.close()
 
     def insert_snow_depth(self, my_name_SRU, my_name_SNOWSAT, my_name_OBS, my_name_extprep50, my_name_extprep5, my_name_var, my_name_PREP):
- 
         ''' This function was implemented by C. Carmagnola in March 2019 (PROSNOW project).
         It modifies a PREP file by inserting measured snow depth values.'''
 

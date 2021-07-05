@@ -19,6 +19,7 @@ Namelist edition
 ----------------
 
 .. automodule:: tools.update_namelist
+   :member-order: bysource
    :members:
 
 Ground initialization
@@ -33,10 +34,13 @@ Prep edition
 .. automodule:: tools.change_prep
    :members:
 
-Ensemble of perturbed forcing
------------------------------
+Diagnostics
+-----------
 
-.. automodule:: tools.makeForcingEnsemble
+.. automodule:: tools.massif_diags
+   :members:
+
+.. automodule:: tools.special_diags
    :members:
 
 Simulation execution helpers
@@ -45,11 +49,8 @@ Simulation execution helpers
 .. automodule:: tools.execute
    :members:
 
-Diagnostics
------------
+Ensemble of perturbed forcing
+-----------------------------
 
-.. automodule:: tools.massif_diags
-   :members:
-
-.. automodule:: tools.special_diags
+.. automodule:: tools.makeForcingEnsemble
    :members:
