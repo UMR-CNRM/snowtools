@@ -23,7 +23,7 @@ Comparison tool
 
 To compare two simulations, a script is available in ``plots/temporal/compare_sims.py``.
 
-.. include:: ./autoscripts/plots-temporal-compare_sims.rst
+.. include:: ./autoscripts/plots--temporal--compare_sims.rst
 
 Demo files
 ----------

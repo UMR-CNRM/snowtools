@@ -15,7 +15,7 @@ Get simulation files
 Reanalysis
 """"""""""
 
-.. include:: ./autoscripts/scripts-get_reanalysis.rst
+.. include:: ./autoscripts/scripts--get_reanalysis.rst
 
 Reforecast
 """"""""""
@@ -26,7 +26,7 @@ Reforecast
 Escroc
 """"""
 
-.. include:: ./autoscripts/scripts-get_escroc.rst
+.. include:: ./autoscripts/scripts--get_escroc.rst
 
 SnowMIP runs and post-processing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
