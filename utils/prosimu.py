@@ -44,6 +44,7 @@ class prosimu():
 
     Number_of_points = 'Number_of_points'
     Number_of_Patches = 'Number_of_Patches'
+    Number_of_Tiles = ['tile', 'Number_of_Tile', 'Number_of_Patches']
 
     def __init__(self, path, ncformat='NETCDF3_CLASSIC', openmode='r'):
         """
@@ -294,148 +295,37 @@ class prosimu():
             raise IndexError('No point matching the selection')
         return point_list[0]
 
-    def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime = True, hasDecile = False):
+    def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime=True, hasDecile=False):
+
+        vardims = self.dataset.variables[varname].dimensions
+        try:
+            allpointstest = all(selectpoint == -1)
+        except TypeError:
+            allpointstest = selectpoint == -1
+
+        # Special case
+        if len(var.shape) == 0:
+            if allpointstest:
+                return var
+            else:
+                raise ValueError('Could not extract a point. The {} dimension was not found for variable {}'.format(self.Number_of_points, varname))
+
+        selector = [slice(None, None, None)] * len(vardims)
+
+        # Point extraction
+        if not allpointstest:
+            if self.Number_of_points not in vardims:
+                raise ValueError('Could not extract a point. The {} dimension was not found for variable {}'.format(self.Number_of_points, varname))
+            axispoint = vardims.index(self.Number_of_points)
+            selector[axispoint] = selectpoint
 
         if removetile:
-            vardims = self.dataset.variables[varname].dimensions
-            needremovetile = "tile" in vardims or 'Number_of_Tile' in vardims or 'Number_of_Patches' in vardims
-        else:
-            needremovetile = False
-        rank = len(var.shape)
-        try:
-            selectpointtest = all(selectpoint == -1)
-        except TypeError:
-            selectpointtest = selectpoint == -1
-        if hasTime is True:
-            if selectpointtest:
-                if needremovetile:
-                    if rank == 1:
-                        # Pour cas de la variable tile dans comparaisons automatiques
-                        var_extract = var[0]
-                    if rank == 2:
-                        var_extract = var[:, 0]
-                    elif rank == 3:
-                        var_extract = var[:, 0, :]
-                    elif rank == 4:
-                        var_extract = var[:, 0, :, :]
-                    elif rank == 5:
-                        var_extract = var[:, 0, :, :, :]
-                else:
-                    if rank == 0:
-                        var_extract = var
-                    elif rank == 1:
-                        var_extract = var[:]
-                    elif rank == 2:
-                        var_extract = var[:, :]
-                    elif rank == 3:
-                        var_extract = var[:, :, :]
-                    elif rank == 4:
-                        var_extract = var[:, :, :, :]
-                    elif rank == 5:
-                        var_extract = var[:, :, :, :, :]
-            else:
-                if hasDecile:
-                    if needremovetile:
-                        if rank == 1:
-                            # Pour cas de la variable tile dans comparaisons automatiques
-                            var_extract = var[0]
-                        elif rank == 3:
-                            var_extract = var[:, 0, selectpoint]
-                        elif rank == 4:
-                            var_extract = var[:, 0, selectpoint, :]
-                        elif rank == 5:
-                            var_extract = var[:, 0, :, selectpoint, :]
-                    else:
-                        if rank == 0:
-                            var_extract = var
-                        elif rank == 1:
-                            var_extract = var[selectpoint]
-                        elif rank == 2:
-                            var_extract = var[:, selectpoint]
-                        elif rank == 3:
-                            var_extract = var[:, selectpoint, :]
-                        elif rank == 4:
-                            var_extract = var[:, :, selectpoint, :]
-                        elif rank == 5:
-                            var_extract = var[:, :, :, selectpoint, :]
-                else:
-                    if needremovetile:
-                        if rank == 1:
-                            # Pour cas de la variable tile dans comparaisons automatiques
-                            var_extract = var[0]
-                        elif rank == 3:
-                            var_extract = var[:, 0, selectpoint]
-                        elif rank == 4:
-                            var_extract = var[:, 0, :, selectpoint]
-                        elif rank == 5:
-                            var_extract = var[:, 0, :, :, selectpoint]
-                    else:
-                        if rank == 0:
-                            var_extract = var
-                        elif rank == 1:
-                            var_extract = var[selectpoint]
-                        elif rank == 2:
-                            var_extract = var[:, selectpoint]
-                        elif rank == 3:
-                            var_extract = var[:, :, selectpoint]
-                        elif rank == 4:
-                            var_extract = var[:, :, :, selectpoint]
-                        elif rank == 5:
-                            var_extract = var[:, :, :, :, selectpoint]
+            for key in self.Number_of_Tiles:
+                if key in vardims:
+                    tileindex = vardims.index(key)
+                    selector[tileindex] = 0
 
-        else:  # if isPrep, no time dimension, tile is the first dim
-            if selectpointtest:
-                if needremovetile:
-                    if rank == 1:
-                        # Pour cas de la variable tile dans comparaisons automatiques
-                        var_extract = var[0]
-                    if rank == 2:
-                        var_extract = var[0, :]
-                    elif rank == 3:
-                        var_extract = var[0, :, :]
-                    elif rank == 4:
-                        var_extract = var[0, :, :, :]
-                    elif rank == 5:
-                        var_extract = var[0, :, :, :, :]
-                else:
-                    if rank == 0:
-                        var_extract = var
-                    elif rank == 1:
-                        var_extract = var[:]
-                    elif rank == 2:
-                        var_extract = var[:, :]
-                    elif rank == 3:
-                        var_extract = var[:, :, :]
-                    elif rank == 4:
-                        var_extract = var[:, :, :, :]
-                    elif rank == 5:
-                        var_extract = var[:, :, :, :, :]
-            else:
-                if needremovetile:
-                    if rank == 1:
-                        # Pour cas de la variable tile dans comparaisons automatiques
-                        var_extract = var[0]
-                    elif rank == 3:
-                        var_extract = var[0, :, selectpoint]
-                    elif rank == 4:
-                        var_extract = var[0, :, :, selectpoint]
-                    elif rank == 5:
-                        var_extract = var[0, :, :, :, selectpoint]
-                else:
-                    if rank == 0:
-                        var_extract = var
-                    elif rank == 1:
-                        var_extract = var[selectpoint]
-                    elif rank == 2:
-                        var_extract = var[:, selectpoint]
-                    elif rank == 3:
-                        var_extract = var[:, :, selectpoint]
-                    elif rank == 4:
-                        var_extract = var[:, :, :, selectpoint]
-                    elif rank == 5:
-                        var_extract = var[:, :, :, :, selectpoint]
-
-        return var_extract
+        return var[tuple(selector)]
 
     def read(self, varname, fill2zero=False, selectpoint=-1, keepfillvalue=False, removetile=True, needmodif=False,
              hasDecile = False):
