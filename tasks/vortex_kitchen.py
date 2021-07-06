@@ -112,8 +112,10 @@ class vortex_kitchen(object):
         if self.options.oper:
             if self.options.monthlyreanalysis:
                 self.reftask = "monthly_surfex_reanalysis"
+            elif self.options.forecast:
+                self.reftask = "ensemble_surfex_tasks_forecast"
             else:
-                self.reftask = "ensemble_surfex_tasks"
+                self.reftask = "ensemble_surfex_tasks_analysis"
             self.nnodes = 1
             self.period = "rundate=" + self.options.datedeb.strftime("%Y%m%d%H%M")
             # Note that the jobname is used to discriminate self.conf.previ in vortex task

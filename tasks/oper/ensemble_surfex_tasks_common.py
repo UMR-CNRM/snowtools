@@ -4,34 +4,11 @@ Created on 7 nov. 2017
 @author: lafaysse
 """
 
-from vortex.layout.nodes import Driver, Task, Family
+from vortex.layout.nodes import Task
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
-from bronx.stdtypes.date import daterange, yesterday, tomorrow, Period
+from bronx.stdtypes.date import daterange, yesterday, tomorrow
 import footprints
-from vortex.algo.components import DelayedAlgoComponentError
-
-
-def setup(t, **kw):
-    if t.context.env.rd_jobname == "surfex_forecast":
-        return Driver(
-            tag = 'Surfex_Parallel',
-            ticket = t,
-            nodes = [
-                    Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw),
-                    Four_Seasons_Task(tag='S2m_pp_Task', ticket=t, **kw)],
-            options=kw
-        )
-    else:
-        return Driver(
-            tag='Surfex_Parallel',
-            ticket=t,
-            nodes=[
-                Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw)
-            ],
-            options=kw
-        )
-
 
 class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
     """
