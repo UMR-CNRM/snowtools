@@ -68,8 +68,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = False,
                 )
-                print t.prompt, 'tbarp =', tbarp
-                print
+                print(t.prompt, 'tbarp =', tbarp)
+                print()
 
                 # Deuxième tentative sur hendrix
                 self.sh.title('Toolbox input tbarp_archive')
@@ -92,8 +92,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = False,
                 ))
-                print t.prompt, 'tbarp =', tbarp
-                print
+                print(t.prompt, 'tbarp =', tbarp)
+                print()
 
                 # Mode secours : On récupère les prévisions 6h correspondantes inline...
                 self.sh.title('Toolbox input tbarp_inline secours')
@@ -118,8 +118,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = False,
                 ))
-                print t.prompt, 'tbarp =', tbarp
-                print
+                print(t.prompt, 'tbarp =', tbarp)
+                print()
 
                 # ... ou sur Hendrix
                 self.sh.title('Toolbox input tbarp_archive secours')
@@ -143,8 +143,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = True,
                 ))
-                print t.prompt, 'tbarp =', tbarp
-                print
+                print(t.prompt, 'tbarp =', tbarp)
+                print()
 
                 # II- Guess PEARP (membres 0 à 34)
                 # --------------------------------
@@ -171,8 +171,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.eps_conf,
                     fatal          = False,
                 )
-                print t.prompt, 'tb04_a =', tbpearp
-                print
+                print(t.prompt, 'tb04_a =', tbpearp)
+                print()
 
                 # Mode secours : les guess correspondant au prévisions du réseau 18h (J-2) ont déjà été extraites
                 # par la tâche prepsafran_analyse du réseau 3h
@@ -201,8 +201,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = False,
                 )
-                print t.prompt, 'tb01 =', tbarp
-                print
+                print(t.prompt, 'tb01 =', tbarp)
+                print()
 
                 # ...ou sur hendrix
                 self.sh.title('Toolbox input tb01')
@@ -225,8 +225,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = self.conf.deterministic_conf,
                     fatal          = True,
                 )
-                print t.prompt, 'tb01 =', tbarp
-                print
+                print(t.prompt, 'tb01 =', tbarp)
+                print()
 
                 tbpearp = list()
 
@@ -239,8 +239,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 language    = 'python',
                 rawopts     = ' -o -a -i IDW -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
             )
-            print t.prompt, 'tb03 =', tb03
-            print
+            print(t.prompt, 'tb03 =', tb03)
+            print()
 
         if 'fetch' in self.steps:
 
@@ -261,8 +261,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ntasks         = self.conf.ntasks,
                 terms          = footprints.util.rangex(self.conf.ana_terms),
             )
-            print t.prompt, 'tb04 =', expresso
-            print
+            print(t.prompt, 'tb04 =', expresso)
+            print()
 
             self.component_runner(expresso, script, fortran = False)
 
@@ -292,8 +292,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     fatal          = False,
                 ),
-                print t.prompt, 'tb05_a =', tb05
-                print
+                print(t.prompt, 'tb05_a =', tb05)
+                print()
 
                 self.sh.title('Toolbox output tb05_b')
                 tb05 = toolbox.output(
@@ -314,8 +314,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     fatal          = False,
                 ),
-                print t.prompt, 'tb05_b =', tb05
-                print
+                print(t.prompt, 'tb05_b =', tb05)
+                print()
 
                 self.sh.title('Toolbox output tb06')
                 tb06 = toolbox.output(
@@ -337,8 +337,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     member         = footprints.util.rangex(self.conf.pearp_members),
                     fatal          = False,
                 ),
-                print t.prompt, 'tb06 =', tb06
-                print
+                print(t.prompt, 'tb06 =', tb06)
+                print()
 
             else:
 
@@ -360,8 +360,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     fatal          = True,
                 ),
-                print t.prompt, 'tb05 =', tb05
-                print
+                print(t.prompt, 'tb05 =', tb05)
+                print()
 
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')

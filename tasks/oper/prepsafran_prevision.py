@@ -67,8 +67,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 vconf          = self.conf.deterministic_conf,
                 fatal          = False,
             )
-            print t.prompt, 'tb01 =', tbarp
-            print
+            print(t.prompt, 'tb01 =', tbarp)
+            print()
 
             # En cas de bascule les fichiers ont pu ne pas être phasés, on essaye alors sur Hendrix.
             # Les fichiers sur Hendrix n'ont pas de filtername "concatenate" --> A voir avec IGA
@@ -92,8 +92,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 vconf          = self.conf.deterministic_conf,
                 fatal          = True,
             ))
-            print t.prompt, 'tb01 =', tbarp
-            print
+            print(t.prompt, 'tb01 =', tbarp)
+            print()
 
             # II- PEARP
             # Récupération du réseau 18h (J-1) pour couvrir J 6h -> (J+4) 6h
@@ -120,8 +120,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 vconf          = self.conf.eps_conf,
                 fatal          = False,
             )
-            print t.prompt, 'tb02 =', tbpearp
-            print
+            print(t.prompt, 'tb02 =', tbpearp)
+            print()
 
             self.sh.title('Toolbox input tbpearp_archive')
             tbpearp.extend(toolbox.input(
@@ -144,8 +144,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 vconf          = self.conf.eps_conf,
                 fatal          = False,
             ))
-            print t.prompt, 'tb02 =', tbpearp
-            print
+            print(t.prompt, 'tb02 =', tbpearp)
+            print()
 
             self.sh.title('Toolbox input tb04 = PRE-TRAITEMENT FORCAGE script')
             tb03 = script = toolbox.input(
@@ -156,8 +156,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 language    = 'python',
                 rawopts     = ' -o -a -i IDW  -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
             )
-            print t.prompt, 'tb03 =', tb03
-            print
+            print(t.prompt, 'tb03 =', tb03)
+            print()
 
         if 'fetch' in self.steps:
             pass
@@ -177,8 +177,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 terms          = footprints.util.rangex(self.conf.prv_terms),
                 ntasks         = self.conf.ntasks,
             )
-            print t.prompt, 'tb04 =', expresso
-            print
+            print(t.prompt, 'tb04 =', expresso)
+            print()
 
             self.component_runner(expresso, script, fortran = False)
 
@@ -208,8 +208,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 namespace      = self.conf.namespace,
                 fatal          = True,
             ),
-            print t.prompt, 'tb05a =', tb05
-            print
+            print(t.prompt, 'tb05a =', tb05)
+            print()
 
             self.sh.title('Toolbox output tb06a')
             tb06a = toolbox.output(
@@ -230,8 +230,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 fatal          = False,
             ),
-            print t.prompt, 'tb06a =', tb06a
-            print
+            print(t.prompt, 'tb06a =', tb06a)
+            print()
 
             self.sh.title('Toolbox output tb06b')
             tb06b = toolbox.output(
@@ -252,8 +252,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 fatal          = False,
             ),
-            print t.prompt, 'tb06b =', tb06b
-            print
+            print(t.prompt, 'tb06b =', tb06b)
+            print()
 
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')
