@@ -23,7 +23,8 @@ class s2mTest(unittest.TestCase):
         s2m(command.split())
 
     def runatcen(self):
-        return os.path.isdir("/manto/lafaysse")
+        return os.path.isdir("/rd/cenfic2/manto/lafaysse") or "DIRDATAPGD" in list(os.environ.keys())
+
 
 class s2mMassifTest(s2mTest):
 

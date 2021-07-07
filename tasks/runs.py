@@ -64,8 +64,11 @@ class surfexrun(object):
             self.modeinterpol = "MPI"
         else:
             if not self.onlyextractforcing:
-                if "MPIAUTO" in os.readlink(self.execdir + "/OFFLINE"):
-                    self.moderun = "MPIRUN"
+                if os.path.islink(self.execdir + "/OFFLINE"):
+                    if "MPIAUTO" in os.readlink(self.execdir + "/OFFLINE"):
+                        self.moderun = "MPIRUN"
+                    else:
+                        self.moderun = moderun
                 else:
                     self.moderun = moderun
             else:
@@ -358,8 +361,14 @@ class griddedrun(surfexrun):
             if "DIRDATAPGD" in list(os.environ.keys()):
                 dirdatapgd = os.environ["DIRDATAPGD"]
             else:
-                dirdatapgd = "/manto/lafaysse/FILES_PGD"
+                dirdatapgd = "/rd/cenfic2/manto/lafaysse/FILES_PGD"
 
             print(os.listdir(dirdatapgd))
             for fic in os.listdir(dirdatapgd):
                 get_file_const_or_crash(dirdatapgd + "/" + fic, fic)
+
+
+class interpolgriddedrun(interpolrun, griddedrun):
+    """Class for a PC gridded SURFEX run for which the geometry is defined in the namelist
+    and the forcing requires a preliminary interpolation"""
+    pass

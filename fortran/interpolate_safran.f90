@@ -13,7 +13,7 @@ INTEGER::FILE_ID_IN, FILE_ID_OUT ,FILE_ID_GEO! id of input ,output and geometrie
 !!!!! Dim properties
 CHARACTER(LEN=20),DIMENSION(:),ALLOCATABLE::DIM_NAME_IN, DIM_NAME_OUT! name of dimensions
 INTEGER,DIMENSION(:),ALLOCATABLE:: DIM_ID_IN, DIM_ID_OUT ! id of dimensions
-INTEGER,DIMENSION(:),ALLOCATABLE:: DIM_SIZE_IN, DIM_SIZE_OUT ! size of dimensions
+INTEGER,DIMENSION(:),ALLOCATABLE:: DIM_SIZE_IN, DIM_SIZE_OUT, DIM_CHUNK_OUT ! size of dimensions
 INTEGER :: IMASSIVE_DIM_SIZE_OUT ! dimension length of massif dimension is determ
 !
 !!!!! Var properties
@@ -43,6 +43,7 @@ INTEGER,DIMENSION(2)::GRID_DIM_REF! lenghts of dimensions
 !
 !INPUT_GRID_VARIABLES
 INTEGER,DIMENSION(:),ALLOCATABLE::IZSIN,IMASSIFIN,IASPECTIN !Elevation massif and aspect of output grid
+REAL, DIMENSION(:), ALLOCATABLE :: ZSLOPEIN ! slope of input grid
 !
 !INDICES parameter
 INTEGER,DIMENSION(:,:),ALLOCATABLE::IINDICESBAS,IINDICESHAUT
@@ -77,8 +78,9 @@ INTEGER :: IV_TMP
 INTEGER :: IOS ! status indicator
 INTEGER :: INAM_UNIT
 !
-INTEGER :: IMASSIFTODELETE, ILAYERTODELETE, I
+INTEGER :: IMASSIFTODELETE, ILAYERTODELETE, I, status
 LOGICAL :: AFTERLOC
+LOGICAL :: LPRINT
 CHARACTER(LEN=10),DIMENSION(4) :: LL_VARNAME
 !
 REAL,    PARAMETER :: XUNDEF =  -9999999. ! Fill_Value for netcdf
@@ -88,7 +90,7 @@ CALL MPI_INIT(IERR)
 CALL MPI_COMM_RANK(COMM, PROC_ID, IERR)
 CALL MPI_COMM_SIZE(COMM, NPROC, IERR)
 !
-
+LPRINT = .FALSE.
 !
 LL_VARNAME(1)= "LON"
 LL_VARNAME(2)= "LAT"
@@ -116,6 +118,9 @@ ELSE
   HFILESOUT(1) = HFILENAMEOUT
   NNUMBER_INPUT_FILES = 1
   NNUMBER_OUTPUT_GRIDS = 1
+  LTIMECHUNK = .FALSE.
+  NLONCHUNKSIZE = 100
+  NLATCHUNKSIZE = 100
 END IF
 CLOSE(INAM_UNIT)
 
@@ -173,9 +178,11 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
     ALLOCATE(DIM_NAME_OUT(INDIM+1))
     ALLOCATE(DIM_ID_OUT(INDIM+1))
     ALLOCATE(DIM_SIZE_OUT(INDIM+1))
+    ALLOCATE(DIM_CHUNK_OUT(INDIM+1))
 !! VAR
     ALLOCATE(VAR_ID_OUT(INVAR+2))
     ALLOCATE(VAR_ID_DIMS_OUT(INDIM+1, INVAR+2))
+
 
     VAR_ID_OUT = 0
     VAR_ID_DIMS_OUT=0
@@ -228,10 +235,10 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
   END IF
 
   ! open a file FORCING.nc by massif, altitude, aspect
-  CALL READ_NC(FILE_ID_IN,IZSIN,IMASSIFIN,IASPECTIN)
+  CALL READ_NC(FILE_ID_IN,IZSIN,IMASSIFIN,IASPECTIN,ZSLOPEIN)
   !
   CALL INDICES2D(ZZSOUT,IMASSIFOUT,ZASPECTOUT,IZSIN,IMASSIFIN,&
-          IASPECTIN,IINDICESBAS,IINDICESHAUT)
+          IASPECTIN,ZSLOPEIN, IINDICESBAS,IINDICESHAUT)
   !
   IDOUT = 1
   DO ID=1,INDIM
@@ -240,6 +247,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       ! Change spatial dimension
       IF (IRANK==1) THEN
         DIM_SIZE_OUT(IDOUT)=GRID_DIM_REF(1)
+        DIM_CHUNK_OUT(IDOUT)=MIN(GRID_DIM_REF(1), NLONCHUNKSIZE*NLATCHUNKSIZE)
         IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
           CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),GRID_DIM_REF(1),DIM_ID_OUT(IDOUT)), &
                 "Cannot def dim  "//TRIM(HFILENAMEOUT))
@@ -252,6 +260,9 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       ELSEIF (IRANK==2) THEN
         DIM_SIZE_OUT(IDOUT)=GRID_DIM_REF(2)
         DIM_SIZE_OUT(IDOUT+1)=GRID_DIM_REF(1)
+        ! PRINT*, NLATCHUNKSIZE, NLONCHUNKSIZE
+        DIM_CHUNK_OUT(IDOUT)=MIN(GRID_DIM_REF(2), NLATCHUNKSIZE)
+        DIM_CHUNK_OUT(IDOUT+1)=MIN(GRID_DIM_REF(1), NLONCHUNKSIZE)
         IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
           IF (GRID_TYPE == "LL") THEN
           !
@@ -293,9 +304,12 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
     ELSEIF (DIM_NAME_IN(ID) == 'time') THEN
       ! Need to to distinguish because of the unlimited dimension
       DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      DIM_CHUNK_OUT(IDOUT) = 1
       IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
         CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),NF90_UNLIMITED, &
               DIM_ID_OUT(IDOUT)), "def time out")
+!        CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_OUT(IDOUT), &
+!                DIM_ID_OUT(IDOUT)), "def time out")
       ELSE
         CALL CHECK(NF90_INQ_DIMID(FILE_ID_OUT, 'time', DIM_ID_OUT(IDOUT)), &
                   "Cannot inquire dimid for time in "//TRIM(HFILENAMEOUT))
@@ -305,6 +319,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       !
     ELSEIF(DIM_NAME_IN(ID) == 'massif') THEN
       DIM_SIZE_OUT(IDOUT) = IMASSIVE_DIM_SIZE_OUT !DIM_SIZE_IN(ID)
+      DIM_CHUNK_OUT(IDOUT) = IMASSIVE_DIM_SIZE_OUT
       IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
         CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_OUT(IDOUT),&
               DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
@@ -317,6 +332,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       !
     ELSEIF(DIM_NAME_IN(ID) == 'snow_layer') THEN
       DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      DIM_CHUNK_OUT(IDOUT) = DIM_SIZE_OUT(IDOUT)
       IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
         CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
               DIM_ID_OUT(IDOUT)),"Cannot def dim snow_layer in "//TRIM(HFILENAMEOUT))
@@ -328,6 +344,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       IDOUT = IDOUT+1
     ELSEIF(DIM_NAME_IN(ID) == 'Number_of_Patches') THEN
       DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      DIM_CHUNK_OUT(IDOUT) = DIM_SIZE_OUT(IDOUT)
       IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
         CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
               DIM_ID_OUT(IDOUT)),"Cannot def dim "//DIM_NAME_IN(ID)//' in '//TRIM(HFILENAMEOUT))
@@ -340,6 +357,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       IDOUT = IDOUT+1
     ELSEIF(DIM_NAME_IN(ID) == 'decile') THEN
       DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+      DIM_CHUNK_OUT(IDOUT) = DIM_SIZE_OUT(IDOUT)
       IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
         CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
               DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
@@ -354,6 +372,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       !
       IF (IRANK==1) THEN
         DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+        DIM_CHUNK_OUT(IDOUT) = DIM_SIZE_OUT(IDOUT)
         IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
           CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
                 DIM_ID_OUT(IDOUT)) , "Cannot def dim "//DIM_NAME_IN(ID)//' in '//TRIM(HFILENAMEOUT))
@@ -364,6 +383,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
         IDOUT = IDOUT + 1
       ELSEIF (IRANK==2) THEN
         DIM_SIZE_OUT(IDOUT)=DIM_SIZE_IN(ID)
+        DIM_CHUNK_OUT(IDOUT) = DIM_SIZE_OUT(IDOUT)
         IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
           CALL CHECK(NF90_DEF_DIM(FILE_ID_OUT,DIM_NAME_IN(ID),DIM_SIZE_IN(ID),&
                 DIM_ID_OUT(IDOUT)),"Cannot def dim "//TRIM(HFILENAMEOUT))
@@ -437,15 +457,26 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
 ! the netCDF variables. In Fortran, the unlimited
 ! dimension must come last on the list of dimids. 
 !And must not have an element equal to zero
-    PRINT*, IMASSIFTODELETE
+    ! PRINT*, IMASSIFTODELETE
     DO IV=1,INVAR
       IF (ANY( VAR_ID_DIMS_OUT(:,IV) == IMASSIFTODELETE ).OR.              &
               ANY( VAR_ID_DIMS_OUT(:,IV) == ILAYERTODELETE ).OR.               &
               (GRID_TYPE == "LL" .AND.  ANY(VAR_NAME_IN(IV) == LL_VARNAME))) CYCLE
       ! Create variable in output file
-      CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,VAR_NAME_IN(IV),VAR_TYPE_IN(IV), &
-              PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0),VAR_ID_OUT(IV)),&
+      IF (SUM(VAR_ID_DIMS_OUT(:,IV)) == 0) THEN
+        ! PRINT*, DIM_CHUNK_OUT, VAR_NAME_IN(IV), VAR_ID_DIMS_OUT(:,IV)
+        ! PRINT*, DIM_CHUNK_OUT(PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0))
+        CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,VAR_NAME_IN(IV),VAR_TYPE_IN(IV), &
+                PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0),VAR_ID_OUT(IV)),&
+                "Cannot def var "//TRIM(VAR_NAME_IN(IV)))
+      ELSE
+        ! PRINT*, DIM_CHUNK_OUT, VAR_NAME_IN(IV), VAR_ID_DIMS_OUT(:,IV)
+        ! PRINT*, DIM_CHUNK_OUT(PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0))
+        CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,VAR_NAME_IN(IV),VAR_TYPE_IN(IV), &
+              PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0),VAR_ID_OUT(IV), &
+              chunksizes=DIM_CHUNK_OUT(PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0))),&
               "Cannot def var "//TRIM(VAR_NAME_IN(IV)))
+      END IF
       !copy attributes from infile to outfile
       DO IA=1,INATT(IV)
         CALL CHECK(NF90_INQ_ATTNAME(FILE_ID_IN,VAR_ID_IN(IV),IA,ATT_NAME)," Cannot get att name")
@@ -487,13 +518,12 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
 
   ALLOCATE(VALUE_TIME(NTIME))
   !
-  ! 14/12/2020 check for proper (de-)allocation of the time variable
   DO IV=1,INVAR
+    PRINT*, VAR_NAME_IN(IV)
     IF (ANY( VAR_ID_DIMS_OUT(:,IV) == IMASSIFTODELETE ).OR.              &
             ANY( VAR_ID_DIMS_OUT(:,IV) == ILAYERTODELETE ).OR.               &
             (GRID_TYPE == "LL" .AND.  ANY(VAR_NAME_IN(IV) == LL_VARNAME))) CYCLE
     !  !Unlimited dimensions require collective writes
-    ! 07/01/2021 fix collective write error for multiinput and single output case
     CALL CHECK(NF90_VAR_PAR_ACCESS(FILE_ID_OUT, VAR_ID_OUT(IV), nf90_collective),&
             "collective write"//VAR_NAME_IN(IV)//HFILESIN(JINFILE))
 
@@ -506,6 +536,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       !
         CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),VALUE_TIME  &
               , start = (/1/), count =(/NTIME/) ),"Cannot put var time")
+        !PRINT*, VALUE_TIME
       ELSE
         CALL CHECK(NF90_GET_VAR(FILE_ID_IN,VAR_ID_IN(IV),VALUE_TIME &
               , start =(/1/), count = (/NTIME/)) &
@@ -631,13 +662,22 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
         ALLOCATE(ZVARINT(NDECILE,DIM_SIZE_IN(ILLOC_ID),NTIME))
         ALLOCATE(ZVAROUTXYT(NDECILE,NX_PROC,NY_PROC,NTIME))
         IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
-          ALLOCATE(ZVAROUTXYT_OLD(NDECILE,NX_PROC,NY_PROC,NTIME))
+          IF (LTIMECHUNK) THEN
+            ALLOCATE(ZVAROUTXYT_OLD(NDECILE,NX_PROC,NY_PROC,1))
+          ELSE
+            ALLOCATE(ZVAROUTXYT_OLD(NDECILE,NX_PROC,NY_PROC,NTIME))
+          END IF
+
         END IF
       ELSE
         ALLOCATE(ZVARINT(DIM_SIZE_IN(ILLOC_ID),NPATCH,NTIME))
         ALLOCATE(ZVAROUTXYT(NX_PROC,NY_PROC,NPATCH,NTIME))
         IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
-          ALLOCATE(ZVAROUTXYT_OLD(NX_PROC,NY_PROC,NPATCH,NTIME))
+          IF (LTIMECHUNK) THEN
+            ALLOCATE(ZVAROUTXYT_OLD(NX_PROC,NY_PROC,NPATCH,1))
+          ELSE
+            ALLOCATE(ZVAROUTXYT_OLD(NX_PROC,NY_PROC,NPATCH,NTIME))
+          END IF
         END IF
       ENDIF
 
@@ -665,8 +705,13 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
         CALL INTERPOLZS2DDIMBEFORE(ZVAROUTXYT,ZVARINT,IINDICESBAS,IINDICESHAUT,&
                 ZZSOUT,IZSIN)
       ELSE
+        IF (VAR_NAME_IN(IV) == "SD_1DY_ISBA") THEN
+          LPRINT = .TRUE.
+        ELSE
+          LPRINT = .FALSE.
+        END IF
         CALL INTERPOLZS2D(ZVAROUTXYT,ZVARINT,IINDICESBAS,IINDICESHAUT,&
-                ZZSOUT,IZSIN)
+                ZZSOUT,IZSIN, LPRINT)
       ENDIF
       !
       IF (IRANK == 1) THEN
@@ -739,30 +784,71 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
               ! read old variable
               CALL CHECK(NF90_INQ_VARID(FILE_ID_OUT, VAR_NAME_IN(IV), IV_TMP), &
                 "Cannot inquire variable id for "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
-              CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD), &
-                "W cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
-              ! fusion of old and new variable
-              WHERE (ZVAROUTXYT == XUNDEF) ZVAROUTXYT = ZVAROUTXYT_OLD
+              IF (LTIMECHUNK) THEN
+                DO I=1, NTIME
+                  CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD, start =(/1,IXSTART,IYSTART,I/) ,&
+                          count = (/NDECILE,NX_PROC,NY_PROC,1/)), &
+                  "W cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+                ! fusion of old and new variable
+                  WHERE (ZVAROUTXYT(:,:,:,I) == XUNDEF) ZVAROUTXYT(:,:,:,I) = ZVAROUTXYT_OLD(:,:,:,1)
+
+                END DO
+              ELSE
+                CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD), &
+                        "W cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+                ! fusion of old and new variable
+                WHERE (ZVAROUTXYT == XUNDEF) ZVAROUTXYT = ZVAROUTXYT_OLD
+              END IF
               ! write fusioned variable
             END IF
-            CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+            PRINT*, "before put", SHAPE(ZVAROUTXYT)
+            IF (LTIMECHUNK) THEN
+              DO I=1, NTIME
+                !PRINT*, I, MAXVAL(ZVAROUTXYT(:,:,:,I))
+                CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT(:,:,:,I),  &
+                        start =(/1,IXSTART,IYSTART,I/) ,count = (/NDECILE,NX_PROC,NY_PROC,1/)),&
+                        "W Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+              END DO
+            ELSE
+              CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
                     start =(/1,IXSTART,IYSTART,1/) ,count = (/NDECILE,NX_PROC,NY_PROC,NTIME/)),&
                     "W Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+            END IF
+            PRINT*, "after put"
           ELSE
             ! standard case (time, x, y)
             IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
               ! read old variable
               CALL CHECK(NF90_INQ_VARID(FILE_ID_OUT, VAR_NAME_IN(IV), IV_TMP), &
                 "Cannot inquire variable id for "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
-              CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD(:,:,1,:)), &
-                "X cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
-              ! fusion of old and new variable
-              WHERE (ZVAROUTXYT == XUNDEF) ZVAROUTXYT = ZVAROUTXYT_OLD
+              IF (LTIMECHUNK) THEN
+                DO I=1, NTIME
+                  CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD(:,:,1,:), start =(/IXSTART,IYSTART,I/),&
+                          count = (/NX_PROC,NY_PROC,1/)), &
+                          "X cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+                  ! fusion of old and new variable
+                  WHERE (ZVAROUTXYT(:,:,:,I) == XUNDEF) ZVAROUTXYT(:,:,:,I) = ZVAROUTXYT_OLD(:,:,:,1)
+                END DO
+              ELSE
+                CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD(:,:,1,:)), &
+                  "X cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+                ! fusion of old and new variable
+                WHERE (ZVAROUTXYT == XUNDEF) ZVAROUTXYT = ZVAROUTXYT_OLD
+              END IF
               ! write fusioned variable
             END IF
-            CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
-                    start =(/IXSTART,IYSTART,1/) ,count = (/NX_PROC,NY_PROC,NTIME/)),&
-                    "X Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+            IF (LTIMECHUNK) THEN
+              DO I=1, NTIME
+                CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT(:,:,:,I),  &
+                        start =(/IXSTART,IYSTART,I/) ,count = (/NX_PROC,NY_PROC,1/)),&
+                        "X Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+              END DO
+            ELSE
+              CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+                      start =(/IXSTART,IYSTART,1/) ,count = (/NX_PROC,NY_PROC,NTIME/)),&
+                      "X Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+            END IF
+
           ENDIF
         ELSE
           ! case (time, Number_of_Patches, x, y)
@@ -770,15 +856,34 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
               ! read old variable
               CALL CHECK(NF90_INQ_VARID(FILE_ID_OUT, VAR_NAME_IN(IV), IV_TMP), &
                 "Cannot inquire variable id for "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
-              CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD), &
-                "Y cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
-              ! fusion of old and new variable
-              WHERE (ZVAROUTXYT == XUNDEF) ZVAROUTXYT = ZVAROUTXYT_OLD
+              IF (LTIMECHUNK) THEN
+                DO I=1, NTIME
+                  CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD, start =(/IXSTART,IYSTART,1,I/), &
+                          count = (/NX_PROC,NY_PROC,NPATCH,1/)), &
+                          "Y cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+                  ! fusion of old and new variable
+                  WHERE (ZVAROUTXYT(:,:,:,I) == XUNDEF) ZVAROUTXYT(:,:,:,I) = ZVAROUTXYT_OLD(:,:,:,1)
+                END DO
+              ELSE
+                CALL CHECK(NF90_GET_VAR(FILE_ID_OUT, IV_TMP, ZVAROUTXYT_OLD), &
+                        "Y cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
+                ! fusion of old and new variable
+                WHERE (ZVAROUTXYT == XUNDEF) ZVAROUTXYT = ZVAROUTXYT_OLD
+              END IF
               ! write fusioned variable
-            END IF
-          CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
-                  start =(/IXSTART,IYSTART,1,1/) ,count = (/NX_PROC,NY_PROC,NPATCH,NTIME/)),&
-                  "Y Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+          END IF
+          IF (LTIMECHUNK) THEN
+            DO I=1, NTIME
+              CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT(:,:,:,I),  &
+                      start =(/IXSTART,IYSTART,1,I/) ,count = (/NX_PROC,NY_PROC,NPATCH,1/)),&
+                      "Y Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+            END DO
+          ELSE
+            CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVAROUTXYT,  &
+                    start =(/IXSTART,IYSTART,1,1/) ,count = (/NX_PROC,NY_PROC,NPATCH,NTIME/)),&
+                    "Y Cannot put var "//TRIM(VAR_NAME_IN(IV)))
+          END IF
+
         ENDIF
       ENDIF
       !
@@ -1122,10 +1227,10 @@ ENDIF
 !
 END SUBROUTINE READ_OUTPUT_GRID
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE READ_NC(IDFICNC,KZSIN,KMASSIFIN,KASPECTIN)
+SUBROUTINE READ_NC(IDFICNC,KZSIN,KMASSIFIN,KASPECTIN, ZSLOPEIN)
 INTEGER,INTENT(IN) :: IDFICNC
 INTEGER,DIMENSION(:),ALLOCATABLE,INTENT(OUT)::KZSIN, KMASSIFIN, KASPECTIN ! Elevation massif and aspect of output grid
-REAL,DIMENSION(:),ALLOCATABLE::ZSLOPEIN
+REAL,DIMENSION(:),ALLOCATABLE, INTENT(OUT)::ZSLOPEIN
 INTEGER::IDVARGZS,IDVARGMASSIF,IDVARGASPECT,IDVARGSLOPE ! nc variable identifier
 INTEGER,DIMENSION(:),ALLOCATABLE::IDDIMSVARG ! dimension ids of nc variable
 !
@@ -1183,17 +1288,19 @@ CALL CHECK(NF90_INQ_VARID(IDFICNC,HSLOPE,IDVARGSLOPE),"Cannot find "//HSLOPE)
 CALL CHECK(NF90_GET_VAR(IDFICNC,IDVARGSLOPE,ZSLOPEIN), "Cannot read "//HSLOPE)
 !
 IF (MAXVAL(ZSLOPEIN) > 1.) THEN
- STOP "INPUT FORCING FILE MUST PROVIDE HORIZONTAL RADIATIONS AND MUST NEVER HAVE BEEN PROJECTED ON SLOPES."
+  WRITE(*,*) "WARNING: Input file contains non-zero slopes. Only zero slopes will be interpolated"
+  ! STOP "INPUT FORCING FILE MUST PROVIDE HORIZONTAL RADIATIONS AND MUST NEVER HAVE BEEN PROJECTED ON SLOPES."
 END IF
 !
 END SUBROUTINE READ_NC
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE INDICES2D(PZSOUT,KMASSIFOUT,PASPECTOUT,KZSIN,KMASSIFIN,&
-                   KASPECTIN,KINDICESBAS,KINDICESHAUT)
+                   KASPECTIN, ZSLOPEIN, KINDICESBAS,KINDICESHAUT)
 
 INTEGER,DIMENSION(:,:),INTENT(IN)::KMASSIFOUT  ! Massif of output collection of points
 DOUBLE PRECISION,DIMENSION(:,:),INTENT(IN)::PZSOUT,PASPECTOUT! Elevation and aspect of output collection of points
 INTEGER,DIMENSION(:),INTENT(IN)::KZSIN,KMASSIFIN,KASPECTIN ! Elevation, massif and aspect of input collection of points
+REAL, DIMENSION(:), INTENT(IN):: ZSLOPEIN ! slope of input collection of points
 !
 ! Indexes of input collection of points to interpolate to obtain output grid
 INTEGER,DIMENSION(:,:),ALLOCATABLE,INTENT(OUT)::KINDICESBAS,KINDICESHAUT
@@ -1223,10 +1330,16 @@ DO JX=1,INX
     IF(PZSOUT(JX,JY) == XUNDEF .OR.  KMASSIFOUT(JX,JY) == 0) CYCLE
     DO JI=1,ININ
         IF (KMASSIFIN(JI) /= KMASSIFOUT(JX,JY)) CYCLE
+        ! Take only zero slopes
+        IF (ZSLOPEIN(JI) /= 0.) THEN
+          CYCLE
+        END IF
         !Evaluate the aspet only if the input domain is not flat
         IF (.NOT. GISFLAT) THEN
-        CALL EVALUATE_ASPECT (KASPECTIN(JI),PASPECTOUT(JX,JY),GASPECT)
-        IF (.NOT. GASPECT) CYCLE
+          IF (KASPECTIN(JI) /= -1) THEN
+            CALL EVALUATE_ASPECT (KASPECTIN(JI),PASPECTOUT(JX,JY),GASPECT)
+            IF (.NOT. GASPECT) CYCLE
+          END IF
         ENDIF
         !
         JDIFFZS = KZSIN(JI) - PZSOUT(JX,JY)
@@ -1243,6 +1356,7 @@ DO JX=1,INX
         ENDIF
         
     END DO
+    ! PRINT*, KINDICESHAUT(JX,JY), KINDICESBAS(JX,JY),KZSIN(KINDICESHAUT(JX,JY)), KZSIN(KINDICESBAS(JX,JY))
   END DO
 END DO
 !
@@ -1265,7 +1379,7 @@ ENDIF
 !
 END SUBROUTINE EVALUATE_ASPECT
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE INTERPOLZS2D(PVAROUT,PVARIN,KINDBAS,KINDHAUT,PZSGRID,KZSSAFRAN)
+SUBROUTINE INTERPOLZS2D(PVAROUT,PVARIN,KINDBAS,KINDHAUT,PZSGRID,KZSSAFRAN, LPRINT)
 ! Linear interpolation between SAFRAN elevation levels over 2D grids
 
 REAL,DIMENSION(:,:,:,:),INTENT(OUT)::PVAROUT
@@ -1273,16 +1387,17 @@ REAL,DIMENSION(:,:,:),INTENT(IN)::PVARIN
 INTEGER,DIMENSION(:,:),INTENT(IN)::KINDBAS,KINDHAUT
 DOUBLE PRECISION,DIMENSION(:,:),INTENT(IN)::PZSGRID
 INTEGER,DIMENSION(:),INTENT(IN)::KZSSAFRAN
+LOGICAL, INTENT(IN) :: LPRINT
 REAL ::ZA,ZB,ZC
 INTEGER::JX,JY,JT,JP !Loop counters
 INTEGER::KNX,KNY,KNSAFRAN,KNT,KNP
-!
+
 KNX=SIZE(PVAROUT,1)
 KNY=SIZE(PVAROUT,2)
 KNSAFRAN=SIZE(PVARIN,1)
 KNP = SIZE(PVAROUT,3)
 KNT=SIZE(PVARIN,3)
-!
+
 PVAROUT = XUNDEF
 DO JX=1,KNX
     DO JY=1,KNY
@@ -1293,9 +1408,10 @@ DO JX=1,KNX
       ZC = 1.*(KZSSAFRAN(KINDHAUT(JX,JY))-KZSSAFRAN(KINDBAS(JX,JY)))
       !
       DO JP=1,KNP
-
-        DO JT=1,KNT      
-          PVAROUT(JX,JY,JP,JT)= (ZA*PVARIN(KINDHAUT(JX,JY),JP,JT)+ZB*PVARIN(KINDBAS(JX,JY),JP,JT))/ZC 
+        DO JT=1,KNT
+          IF (PVARIN(KINDHAUT(JX,JY),JP,JT) /= XUNDEF .AND. PVARIN(KINDBAS(JX,JY),JP,JT) /= XUNDEF) THEN
+            PVAROUT(JX,JY,JP,JT)= (ZA*PVARIN(KINDHAUT(JX,JY),JP,JT)+ZB*PVARIN(KINDBAS(JX,JY),JP,JT))/ZC
+          END IF
         END DO
       ENDDO
     END DO
@@ -1332,8 +1448,10 @@ DO JX=1,KNX
       !
       DO JP=1,KNP
 
-        DO JT=1,KNT      
-          PVAROUT(JP, JX,JY,JT)= (ZA*PVARIN(JP,KINDHAUT(JX,JY),JT)+ZB*PVARIN(JP,KINDBAS(JX,JY),JT))/ZC 
+        DO JT=1,KNT
+          IF (PVARIN(JP,KINDHAUT(JX,JY),JT) /= XUNDEF .AND. PVARIN(JP,KINDBAS(JX,JY),JT) /= XUNDEF) THEN
+            PVAROUT(JP, JX,JY,JT)= (ZA*PVARIN(JP,KINDHAUT(JX,JY),JT)+ZB*PVARIN(JP,KINDBAS(JX,JY),JT))/ZC
+          END IF
         END DO
       ENDDO
     END DO
@@ -1367,7 +1485,9 @@ DO JX=1,KNX
       ZC = 1.*(KZSSAFRAN(KINDHAUT(JX,JY))-KZSSAFRAN(KINDBAS(JX,JY)))
       !
       DO JP=1,KNP
-        PVAROUT(JX,JY,JP)= (ZA*PVARIN(KINDHAUT(JX,JY),JP)+ZB*PVARIN(KINDBAS(JX,JY),JP))/ZC 
+        IF (PVARIN(KINDHAUT(JX,JY),JP) /= XUNDEF .AND. PVARIN(KINDBAS(JX,JY),JP) /= XUNDEF) THEN
+          PVAROUT(JX,JY,JP)= (ZA*PVARIN(KINDHAUT(JX,JY),JP)+ZB*PVARIN(KINDBAS(JX,JY),JP))/ZC
+        END IF
       ENDDO
     END DO
 END DO
@@ -1921,6 +2041,11 @@ END SUBROUTINE CHECK
         HGRIDSIN(1) = HGRIDIN
       END IF
 
+    END IF
+    READ(UNIT=KNAMUNIT,NML=NAM_OTHER_STUFF, IOSTAT=IOS)
+    IF (IOS /= 0) THEN
+      PRINT*, IOS, LTIMECHUNK, NLONCHUNKSIZE, NLATCHUNKSIZE
+      STOP 'ERROR reading namelist NAM_OTHER_STUFF'
     END IF
     ! PRINT*, HFILESOUT
     ! PRINT*, HFILESIN

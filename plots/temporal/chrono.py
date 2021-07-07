@@ -14,20 +14,14 @@ from matplotlib import pyplot as plt
 from matplotlib.dates import HourLocator, DayLocator, MonthLocator, YearLocator, DateFormatter
 
 
-class temporalplot(Mplfigure):
-
-    figsize = (5, 4)
-
-    def __init__(self, *args, **kwargs):
-
-        self.fig = plt.figure(figsize=self.figsize)
-        self.plot = plt.subplot(111)
+class temporalplot_abstract(Mplfigure):
 
     def finalize(self, timeOut, **kwargs):
 
         self.set_xaxis(timeOut)
         self.set_yaxis(**kwargs)
-        self.plot.legend(loc="upper left", fontsize="x-small")
+        kwargs.setdefault("fontsize", "x-small")
+        self.plot.legend(loc="upper left", fontsize=kwargs["fontsize"])
 
     def set_yaxis(self, **kwargs):
 
@@ -71,15 +65,24 @@ class temporalplot(Mplfigure):
         duration = timeOut[-1] - timeOut[0]
         ndays = duration.days
 
-        if ndays <= 5:
+        if ndays <= 2:
+            self.plot.xaxis.set_major_locator(HourLocator([0, 6, 12, 18]))
+            formatDate = '%d/%m\n%Hh'
+        if ndays <= 4:
             self.plot.xaxis.set_major_locator(HourLocator([0, 12]))
-            formatDate = '%d/%m %Hh'
+            formatDate = '%d/%m\n%Hh'
+        elif ndays <= 10:
+            self.plot.xaxis.set_major_locator(DayLocator(range(1, 31, 1)))
+            formatDate = '%d %b\n%Y'
+        elif ndays <= 30:
+            self.plot.xaxis.set_major_locator(DayLocator(range(1, 31, 3)))
+            formatDate = '%d %b\n%Y'
         elif ndays <= 90:
             self.plot.xaxis.set_major_locator(DayLocator([1, 11, 21]))
             formatDate = '%d %b\n%Y'
         elif ndays <= 366:
             self.plot.xaxis.set_major_locator(MonthLocator(range(1, 13, 2), 1))
-            formatDate = '%d %b\n%Y'
+            formatDate = '%d %b'
         elif ndays <= (5 * 365):
             interval = ndays / 365 + 1
             self.plot.xaxis.set_major_locator(MonthLocator(range(1, 13, interval), 1))
@@ -96,8 +99,29 @@ class temporalplot(Mplfigure):
         self.plot.xaxis.set_major_formatter(DateFormatter(formatDate))
 
     def save(self, *args, **kwargs):
-        super(temporalplot, self).save(*args, **kwargs)
+        super(temporalplot_abstract, self).save(*args, **kwargs)
         self.plot.cla()
+
+
+class temporalplot(temporalplot_abstract):
+    figsize = (5, 4)
+    def __init__(self, *args, **kwargs):
+
+        self.fig = plt.figure(figsize=self.figsize)
+        self.plot = plt.subplot(111)
+
+
+class temporalsubplot(temporalplot_abstract):
+    def __init__(self, subplots, i, j):
+        if hasattr(subplots, "shape"):
+            if len(subplots.shape) == 2:
+                self.plot = subplots[i, j]
+            elif len(subplots.shape) == 1:
+                self.plot = subplots[i * j]
+            else:
+                raise Exception
+        else:
+            self.plot = subplots
 
 
 class temporalplotSim(temporalplot):
@@ -208,3 +232,4 @@ class spaghettis_with_det(spaghettis):
 
         self.add_line(timeSim, deterministic, color="black", linewidth=2, label=detlabel, zorder=100)
         super(spaghettis_with_det, self).draw(timeSim, ensemble, qmin, qmed, qmax, **kwargs)
+

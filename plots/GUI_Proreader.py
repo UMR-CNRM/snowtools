@@ -213,7 +213,7 @@ class Graph(Toplevel):
             listmassif = IM.getListMassif_of_region('all')
             for massif in listmassif:
                 self.list_massif_num.append(massif)
-                self.list_massif_nom.append(str(IM.getMassifName(massif).decode('UTF-8')))
+                self.list_massif_nom.append(str(IM.getMassifName(massif)))
         except FileNameException:
             logger.warning('Could not find massif metadata')
             self.list_massif_num = list(range(100))
@@ -764,7 +764,8 @@ class GraphStandard(Graph):
             self.ini_ligne_commande_interne(**Arguments)
 
     def ini_ligne_commande_interne(self, **Arguments):
-        #Graph.ini_ligne_commande(self,**Arguments)
+        # TODO: Uncommented next line  <01-04-21, Léo Viallon-Galinier> #
+        Graph.ini_ligne_commande(self,**Arguments)
         self.pro = proReader_mini.ProReader_standard(ncfile = self.filename, var = self.variable, point = int(self.point_choisi))
         self.Tableau = self.pro.get_choix(self.filename)
         if self.Tableau[0][self.point_choisi] >0: 
@@ -1747,7 +1748,7 @@ def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph
         listmassif = IM.getListMassif_of_region('all')
         for massif in listmassif:
             list_massif_num.append(massif)
-            list_massif_nom.append(str(IM.getMassifName(massif).decode('UTF-8')))
+            list_massif_nom.append(str(IM.getMassifName(massif)))
         pro = proReader_mini.ProReader_massif(ncfile = filename, var = variable, liste_points = liste_points)
         fig1, ax1 = plt.subplots(1, 1, sharex = True, sharey = True)
 

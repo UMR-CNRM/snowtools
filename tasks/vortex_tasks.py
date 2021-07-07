@@ -31,6 +31,9 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
 
         t = self.ticket
 
+        if not hasattr(self.conf, "genv"):
+            self.conf.genv = 'uenv:cen.02@CONST_CEN'
+
         # Definition of geometries, safran xpid/block and list of dates from S2MTaskMixIn methods
         list_geometry = self.get_list_geometry(meteo=self.conf.meteo)
         source_safran, block_safran = self.get_source_safran(meteo=self.conf.meteo)
@@ -38,6 +41,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         dict_dates_end_forc = get_dic_dateend(list_dates_begin_forc, list_dates_end_forc)
         dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
         dict_source_app_safran, dict_source_conf_safran = self.get_safran_sources(list_dates_begin_forc)
+        namespace, storage, rootpath = self.get_info_output()
 
         # Logicals to activate optional parts of the task
         if not hasattr(self.conf, "interpol"):
@@ -210,7 +214,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     nativefmt      = 'netcdf',
                     local          = 'init_TG.nc',
                     geometry       = self.conf.geometry,
-                    genv            = 'uenv:cen.01@CONST_CEN',
+                    genv            = self.conf.genv,
                     gvar           = 'climtg_[geometry::area]',
                     model          = 'surfex',
                     fatal          = False
@@ -244,7 +248,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapI_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv           = 'uenv:cen.01@CONST_CEN',
+                genv           = self.conf.genv,
                 source         = 'ecoclimap1',
                 model          = 'surfex',
             ),
@@ -259,7 +263,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapII_eu_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv            = self.conf.genv,
                 source         = 'ecoclimap2',
                 model          = 'surfex',
             ),
@@ -271,7 +275,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             tb04 = toolbox.input(
                 role            = 'Parameters for F06 metamorphism',
                 kind            = 'ssa_params',
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv            = self.conf.genv,
                 nativefmt       = 'netcdf',
                 local           = 'drdt_bst_fit_60.nc',
                 model          = 'surfex',
@@ -294,7 +298,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 tb05 = toolbox.input(
                     role            = 'Nam_surfex',
                     source          = 'OPTIONS_default.nam',
-                    genv            = 'uenv:cen.01@CONST_CEN',
+                    genv            = self.conf.genv,
                     kind            = 'namelist',
                     model           = 'surfex',
                     local           = 'OPTIONS.nam',
@@ -368,7 +372,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     kind           = 'offline',
                     local          = 'OFFLINE',
                     model          = 'surfex',
-                    genv           = 'uenv:cen.01@CONST_CEN',
+                    genv           = self.conf.genv,
                     gvar           = 'master_surfex_offline_mpi',
                 )
 
@@ -383,7 +387,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                         kind           = 'buildpgd',
                         local          = 'PGD',
                         model          = 'surfex',
-                        genv           = 'uenv:cen.01@CONST_CEN',
+                        genv           = self.conf.genv,
                         gvar           = 'master_pgd_mpi',
                     )
 
@@ -412,7 +416,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     kind           = 'offline',
                     local          = 'INTERPOL',
                     model          = 'surfex',
-                    genv           = 'uenv:cen.01@CONST_CEN',
+                    genv           = self.conf.genv,
                     gvar           = 'master_interpol_mpi',
                 )
 
@@ -420,6 +424,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print()
 
         if 'compute' in self.steps:
+
+            print (self.conf.meteo, self.conf.interpol)
 
             if self.conf.meteo == "safran":
                 # Forcing files need to be converted from flat to slopes geometry
@@ -555,6 +561,30 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print(t.prompt, 'tb19 =', tb19)
             print()
 
+            if hasattr(self.conf, "writesx"):
+                if self.conf.writesx:
+                    self.sh.title('Toolbox output tb19bis')
+                    tb19bis = toolbox.output(
+                        local       = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        experiment  = self.conf.xpid,
+                        geometry    = self.conf.geometry,
+                        datebegin   = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
+                        dateend     = dateend if not self.conf.dailyprep else list(
+                            daterange(tomorrow(base=datebegin), dateend)),
+                        nativefmt='netcdf',
+                        kind        = 'SnowpackSimulation',
+                        model       = 'surfex',
+                        namespace   = 'vortex.archive.fr',
+                        storage     = 'sxcen.cnrm.meteo.fr',
+                        enforcesync = True, # to forbid asynchronous transfers and not saturate sxcen
+                        namebuild   = 'flat@cen',
+                        block       = 'pro',
+                        fatal       = False
+                    ),
+                    print(t.prompt, 'tb19bis =', tb19bis)
+                    print()
+
+
             if tb19[0]:
                 # Only one pro file for the whole simulation period
                 # Save only one cumul and diag file covering the whole simulation
@@ -624,12 +654,34 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
                     model          = 'surfex',
-                    namespace      = 'vortex.multi.fr',
+                    namespace      ='vortex.multi.fr',
                     namebuild      = 'flat@cen',
                     block          = 'pro',
                 ),
                 print(t.prompt, 'tb19 =', tb19)
                 print()
+
+                if hasattr(self.conf, "writesx"):
+                    if self.conf.writesx:
+                        self.sh.title('Toolbox output tb19bis')
+                        tb19bis = toolbox.output(
+                            local       = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                            experiment  = self.conf.xpid,
+                            geometry    = self.conf.geometry,
+                            datebegin   = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
+                            dateend     = dict_dates_end_pro if not self.conf.dailyprep else list(
+                                daterange(tomorrow(base=datebegin), dateend)),
+                            nativefmt   = 'netcdf',
+                            kind        = 'SnowpackSimulation',
+                            model       = 'surfex',
+                            namespace   ='vortex.archive.fr',
+                            storage     = 'sxcen.cnrm.meteo.fr',
+                            enforcesync = True,  # to forbid asynchronous transfers and not saturate sxcen
+                            namebuild   = 'flat@cen',
+                            block       = 'pro',
+                        ),
+                        print(t.prompt, 'tb19bis =', tb19bis)
+                        print()
 
                 tb19b = toolbox.output(
                     local          = 'DIAG_[datebegin:ymdh]_[dateend:ymdh].nc',

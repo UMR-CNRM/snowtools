@@ -6,8 +6,14 @@ import matplotlib
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Polygon, Rectangle
 import matplotlib.pyplot as plt
-import mpl_toolkits.basemap.pyproj as pyproj
-from mpl_toolkits.basemap import Basemap
+from bronx.syntax.externalcode import ExternalCodeImportChecker
+echecker = ExternalCodeImportChecker('mpl_toolkits.basemap')
+with echecker:
+    try:
+        import mpl_toolkits.basemap.pyproj as pyproj
+    except:
+        raise ImportError
+    from mpl_toolkits.basemap import Basemap
 import numpy as np
 from utils import shapefile
 from utils.infomassifs import infomassifs
@@ -48,6 +54,7 @@ class _Map_massifs(Mplfigure):
         if hasattr(self, 'r'):
             self.r.remove()
 
+    @echecker.disabled_if_unavailable
     def getshapes(self):
         shapefile_path = os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')
         filename = 'massifs_{0:s}.shp'.format(self.area)
@@ -71,6 +78,7 @@ class _Map_massifs(Mplfigure):
         srs.AutoIdentifyEPSG()
         return '%s' % srs.ExportToProj4()
 
+    @echecker.disabled_if_unavailable
     def getmap(self, latmin, latmax, lonmin, lonmax):
         # Définit les bords de la carte
         return Basemap(

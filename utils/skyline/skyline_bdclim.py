@@ -6,6 +6,8 @@ import os
 import sys
 import math
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from osgeo import ogr, osr
 
@@ -203,6 +205,7 @@ for k in range(n):
     a.set_theta_zero_location('N')
     a.set_theta_direction(-1)
     plt.savefig('output/' + str(in_stat[0]) + '_skyline.png')
+
     # show()
     # check de latitude
     diff = z_alt - in_stat[1]
@@ -211,7 +214,6 @@ for k in range(n):
     else:
         data_bis = (in_stat[0], in_stat[3], in_stat[1], z_alt, diff)
     ctrwriter.writerow(data_bis)
-
 
 csvfile.close()
 ctrfile.close()

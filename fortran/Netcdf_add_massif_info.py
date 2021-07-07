@@ -10,7 +10,6 @@ Created on Mon Jul  9 16:44:24 2019
 import numpy as np
 import netCDF4 as nc
 from netCDF4 import Dataset
-import pandas as pd
 import pyproj
 
 import shapefile

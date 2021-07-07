@@ -4,7 +4,7 @@
 """
 This module provides informations on the NUMA partitioning of the CPUs.
 
-On Epona (2x AMD Rome socket with 64 cores each)::
+On Belenos (2x AMD Rome socket with 64 cores each)::
 
     >>> numa_i = numa_nodes_info()
     >>> print(numa_i)
@@ -234,7 +234,7 @@ class _NumaPackedCpuIdDispenser(_NumaAbstractCpuIdDispencer):
             # Go through the various clusters
             xnodeclust_its = self._xnodesclust_its(maxdist, blocksize)
             for _ in range(len(self._xnodesclust[maxdist])):
-                # We use persistant iterator (from one call to another) in order
+                # We use persistent iterator (from one call to another) in order
                 # To evenly distribute the CPUs
                 cluster, nodes_it = next(xnodeclust_its)
                 # Try to create block of blocksize size in a round-robin manner

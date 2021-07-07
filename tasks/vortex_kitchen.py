@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 23 févr. 2018
 
 @author: lafaysse
-'''
+"""
 
 import datetime
 import os
@@ -17,14 +17,14 @@ from bronx.stdtypes.date import Period
 
 
 class vortex_kitchen(object):
-    '''
+    """
     Interface between s2m command line and vortex utilities (tasks and mk_jobs)
-    '''
+    """
 
     def __init__(self, options):
-        '''
+        """
         Constructor
-        '''
+        """
         # Check if a vortex installation is defined
         self.check_vortex_install()
         self.options = options
@@ -60,7 +60,8 @@ class vortex_kitchen(object):
     def define_ntasks(self, machine):
         if not self.options.ntasks:
             if 'taranis' in machine or 'belenos' in machine:
-                self.options.ntasks = 80  # optimum constaté pour la réanalyse Alpes avec léger dépeuplement parmi les 128 coeurs.
+                self.options.ntasks = 80
+                # optimum constaté pour la réanalyse Alpes avec léger dépeuplement parmi les 128 coeurs.
 
     def execute(self):
 
@@ -124,7 +125,9 @@ class vortex_kitchen(object):
                 self.jobname = "surfex_analysis"
             self.confcomplement = ''
         else:
-            self.period = " rundate=" + self.options.datedeb.strftime("%Y%m%d%H%M") + " datebegin=" + self.options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + self.options.datefin.strftime("%Y%m%d%H%M")
+            self.period = " rundate=" + self.options.datedeb.strftime("%Y%m%d%H%M") + " datebegin=" + \
+                          self.options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + \
+                          self.options.datefin.strftime("%Y%m%d%H%M")
             if self.options.escroc:
                 self.jobname = jobname if jobname else 'escroc'
                 if self.options.scores:
@@ -167,7 +170,8 @@ class vortex_kitchen(object):
             if self.options.oper:
                 conffilename = self.options.vapp + "_" + self.options.vconf + ".ini"
                 if not os.path.islink(conffilename):
-                    # Operational case : the configuration files are provided : only create a symbolic link in the appropriate directory
+                    # Operational case : the configuration files are provided :
+                    # only create a symbolic link in the appropriate directory
                     if os.path.exists("../snowtools/DATA/OPER/" + conffilename):
                         os.symlink("../snowtools/DATA/OPER/" + conffilename, conffilename)
                     elif os.path.exists("../snowtools/conf/" + conffilename):
@@ -178,10 +182,11 @@ class vortex_kitchen(object):
                 if hasattr(self.options, 'confname'):
                     conffilename = self.options.confname.rstrip('.ini') + ".ini"
                 else:
-                    conffilename = self.options.vapp + "_" + self.options.vconf + "_" + self.options.datedeb.strftime("%Y") + ".ini"
+                    conffilename = self.options.vapp + "_" + self.options.vconf + "_" + \
+                                   self.options.datedeb.strftime("%Y") + ".ini"
 
             if self.options.soda:
-                print ('copy conf file to vortex path')
+                print('copy conf file to vortex path')
                 shutil.copyfile(self.options.soda, conffilename)
 
         elif self.options.safran:
@@ -202,7 +207,8 @@ class vortex_kitchen(object):
 
     def mkjob_command(self):
 
-        return "../vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + " profile=" + self.profile + " jobassistant=cen " + self.period +\
+        return "../vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + " profile=" + \
+               self.profile + " jobassistant=cen " + self.period +\
             " time=" + self.walltime() + " nnodes=" + str(self.nnodes) + self.confcomplement
 
     def mkjob_list_commands(self):
@@ -238,7 +244,8 @@ class vortex_kitchen(object):
             if self.options.escroc:
                 if self.options.nmembers:
                     nmembers = self.options.nmembers
-                elif len(self.options.escroc) >= 2 and self.options.escroc[0:2] == "E2":  # E2, E2MIP, E2tartes, E2MIPtartes
+                elif len(self.options.escroc) >= 2 and self.options.escroc[0:2] == "E2":
+                    # E2, E2MIP, E2tartes, E2MIPtartes
                     nmembers = 35
                 else:
                     raise Exception("don't forget to specify escroc ensemble or --nmembers")
@@ -246,8 +253,9 @@ class vortex_kitchen(object):
             else:
                 nmembers = 1
             # minutes per year for one member computing all points
-            minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 5, pyr_flat = 5, cor_allslopes = 5, cor_flat = 1, postes = 5,
-                                   lautaret = 120, lautaretreduc = 5)
+            minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 5, pyr_flat = 5,
+                                   cor_allslopes = 5, cor_flat = 1, postes = 5,
+                                   lautaret = 120, lautaretreduc = 5, grandesrousses250 = 35)
 
             for site_snowmip in ["cdp", "oas", "obs", "ojp", "rme", "sap", "snb", "sod", "swa", "wfj"]:
                 if self.options.scores:
@@ -258,9 +266,11 @@ class vortex_kitchen(object):
             for massif_safran in range(1, 100):
                 minutes_peryear[str(massif_safran)] = 90
 
-            key = self.options.region if self.options.region in list(minutes_peryear.keys()) else "alp_allslopes"
+            key = self.options.vconf if self.options.vconf in list(minutes_peryear.keys()) else "alp_allslopes"
 
-            estimation = Period(minutes=minutes_peryear[key]) * max(1, (self.options.datefin.year - self.options.datedeb.year)) * (1 + nmembers / (40 * self.options.nnodes) )
+            estimation = Period(minutes=minutes_peryear[key]) * \
+                         max(1, (self.options.datefin.year - self.options.datedeb.year)) * \
+                         (1 + nmembers / (40 * self.options.nnodes))
 
             #!!!! Ne marche pas à tous les coups... 
 
@@ -271,8 +281,12 @@ class vortex_kitchen(object):
 
     def split_geo(self):
         if ':' in self.options.region:
-            self.options.interpol = True
-            self.options.geoin, self.options.vconf, self.options.gridout = self.options.region.split(':')
+            splitregion = self.options.region.split(':')
+            self.options.geoin = splitregion[0]
+            self.options.vconf = splitregion[1]
+            self.options.interpol = len(splitregion) == 3
+            if self.options.interpol:
+                self.options.gridout = splitregion[2]
         else:
             self.options.interpol = False
             self.options.vconf = self.options.region
@@ -306,13 +320,15 @@ class Vortex_conf_file(object):
         self.fileobject.close()
 
     def create_conf(self, jobname):
-        ''' Prepare configuration file from s2m options'''
+        """ Prepare configuration file from s2m options"""
         self.default_variables()
         self.add_block(jobname)
         if self.options.surfex:
             self.create_conf_surfex()
         elif self.options.safran:
             self.create_conf_safran()
+
+        self.setwritesx()
 
     def create_conf_surfex(self):
         self.surfex_variables()
@@ -334,8 +350,8 @@ class Vortex_conf_file(object):
     def default_variables(self):
 
         self.set_field("DEFAULT", 'xpid', self.options.xpid + '@' + os.getlogin())
-        self.set_field("DEFAULT", 'ntasks', self.options.ntasks )
-        self.set_field("DEFAULT", 'nprocs', self.options.ntasks )
+        self.set_field("DEFAULT", 'ntasks', self.options.ntasks)
+        self.set_field("DEFAULT", 'nprocs', self.options.ntasks)
         self.set_field("DEFAULT", 'openmp', 1)
         self.set_field("DEFAULT", 'geometry', self.options.vconf)
 
@@ -404,6 +420,8 @@ class Vortex_conf_file(object):
         if self.options.interpol:
             self.set_field("DEFAULT", 'interpol', self.options.interpol)
             self.set_field("DEFAULT", 'gridout', self.options.gridout)
+
+        if hasattr(self.options, 'geoin'):
             self.set_field("DEFAULT", 'geoin', self.options.geoin)
 
     def safran_variables(self):
@@ -426,3 +444,7 @@ class Vortex_conf_file(object):
         if self.options.cpl_model:
             self.set_field("DEFAULT", 'source_app', self.options.cpl_model[0])
             self.set_field("DEFAULT", 'source_conf', self.options.cpl_model[1])
+
+    def setwritesx(self):
+        if self.options.writesx:
+            self.set_field("DEFAULT", 'writesx', self.options.writesx)

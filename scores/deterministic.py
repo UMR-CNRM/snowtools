@@ -6,6 +6,7 @@ Created on 20 mars 2018
 
 import numpy as np
 from utils.prosimu import prosimu
+import time
 
 ESMSnowMIP_dicvarnames = dict(snowdepth="snd_auto", snowswe="snw_auto", snowdepthman="snd_man", snowsweman="snw_man", tsurf="ts", albedo="albs")
 ESMSnowMIP_alternate_varnames = dict(snd_auto="snd_can_auto")
@@ -18,7 +19,7 @@ class DeterminsticScores(object):
     Abstract class for deterministic scores
     '''
     _abstract = True
-    startwinter = 10
+    startwinter = 10 
     endwinter = 6
 
     def nvalues(self):
@@ -55,6 +56,19 @@ class DeterminsticScores(object):
             self.diffCommon = self.diff()
 
         return np.mean(np.abs(self.diffCommon))
+
+    def scores_with_positive_values_only(self):
+        """Pour calculer les scores sans les 0 communs aux vecteurs d'obs et de simu"""
+        sim = self.simCommon[(self.simCommon!=0)&(self.obsCommon!=0)]
+        obs = self.obsCommon[(self.simCommon!=0)&(self.obsCommon!=0)]
+        nvalues = len(sim)
+        diff = sim - obs
+        bias = np.mean(diff)
+        squarediff = np.square(diff)
+        rmse = np.sqrt(np.mean(squarediff))
+        mean = np.mean(sim)
+
+        return nvalues, bias, rmse, mean
 
     @property
     def meanobs(self):
@@ -113,13 +127,16 @@ class DeterministicScores_Mask(DeterminsticScores):
 
     def extract_common_vectors(self, maskObs, maskSim, obs, sim):
         '''Extract common date between observations and simulations'''
-
         self.modelMask = maskSim
         self.obsMask = maskObs
-
+        t1 = time.time()
         self.obsCommon = obs[self.obsMask]
-        self.simCommon = sim[self.modelMask]
+        t2 = time.time()
+        print('Extract obs array {0:f}'.format(t2-t1))
 
+        self.simCommon = sim[self.modelMask]
+        t3 = time.time()
+        print('Extract sim array {0:f}'.format(t3-t2))
 
 class DeterministicScores_CommonObs(DeterminsticScores):
     def __init__(self, obsCommon, maskSim, sim):
@@ -146,12 +163,12 @@ class DeterministicScores_Heterogeneous(DeterministicScores_Mask):
     def extract_common_vectors(self, timeObs, timeSim, obs, sim):
         '''Extract common date between observations and simulations'''
         # Identify winter period
+        t1 = time.time()
         winter = np.empty_like(timeObs, 'bool')
         for i, t in enumerate(timeObs):
             winter[i] = t.month >= self.startwinter or t.month <= self.endwinter
 
         # First reduce observation vector to available observations and winter
-
         indObs_ok = np.invert(np.isnan(obs)) & winter
         timeObs_ok = timeObs[indObs_ok]
         obs_ok = obs[indObs_ok]
@@ -169,6 +186,8 @@ class DeterministicScores_Heterogeneous(DeterministicScores_Mask):
 
         maskSim = np.in1d(timeSim_unique, timeObs_unique)
         maskObs = np.in1d(timeObs_unique, timeSim_unique)
+        t2 = time.time()
+        print('Compute masks in {0:f}s'.format(t2-t1))
 
         super(DeterministicScores_Heterogeneous, self).extract_common_vectors(maskObs, maskSim, obs_unique, sim_unique)
 
