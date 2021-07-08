@@ -9,6 +9,13 @@ import footprints
 from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
 
+from iga.tools.apps import OpTask
+from vortex.tools.actions import actiond as ad
+from common.util import usepygram
+import iga.tools.op as op
+import snowtools
+
+
 logger = footprints.loggers.getLogger(__name__)
 
 
@@ -51,7 +58,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 geometry       = self.conf.arpege_geometry,
                 kind           = 'gridpoint',
                 filtername     = 'concatenate',
-                suite          = self.conf.suite,
+                suite          = 'oper',
                 cutoff         = 'production',
                 local          = 'ARP_[term:hour]/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
@@ -65,31 +72,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 vconf          = self.conf.deterministic_conf,
                 fatal          = False,
             )
-            print(t.prompt, 'tb01 =', tbarp)
-            print()
-
-            # En cas de bascule les fichiers ont pu ne pas être phasés, on essaye alors sur Hendrix.
-            # Les fichiers sur Hendrix n'ont pas de filtername "concatenate" --> A voir avec IGA
-            self.sh.title('Toolbox input tbarp_arch')
-            tbarp.extend(toolbox.input(
-                alternate      = 'Gridpoint',
-                format         = 'grib',
-                geometry       = self.conf.arpege_geometry,
-                kind           = 'gridpoint',
-                suite          = self.conf.suite,
-                cutoff         = 'production',
-                local          = 'ARP_[term:hour]/ARPEGE[date::addterm_ymdh]',
-                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[2:35],
-                namespace      = 'vortex.archive.fr',
-                block          = 'forecast',
-                nativefmt      = '[format]',
-                origin         = 'historic',
-                model          = '[vapp]',
-                vapp           = self.conf.source_app,
-                vconf          = self.conf.deterministic_conf,
-                fatal          = True,
-            ))
             print(t.prompt, 'tb01 =', tbarp)
             print()
 
@@ -101,7 +83,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             tbpearp = toolbox.input(
                 role           = 'Gridpoint',
                 block          = 'forecast',
-                suite          = self.conf.suite,
+                suite          = 'oper',
                 cutoff         = 'production',
                 format         = 'grib',
                 geometry       = self.conf.pearp_geometry,
@@ -118,30 +100,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 vconf          = self.conf.eps_conf,
                 fatal          = False,
             )
-            print(t.prompt, 'tb02 =', tbpearp)
-            print()
-
-            self.sh.title('Toolbox input tbpearp_archive')
-            tbpearp.extend(toolbox.input(
-                alternate      = 'Gridpoint',
-                block          = 'forecast',
-                suite          = self.conf.suite,
-                cutoff         = 'production',
-                format         = 'grib',
-                geometry       = self.conf.pearp_geometry,
-                kind           = 'gridpoint',
-                local          = 'PEARP_[member]_[term:hour]/PEARP[date::addterm_ymdh]',
-                date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[4:38],
-                member         = footprints.util.rangex(self.conf.pearp_members),
-                namespace      = 'vortex.archive.fr',
-                nativefmt      = '[format]',
-                origin         = 'historic',
-                model          = '[vapp]',
-                vapp           = self.conf.source_app,
-                vconf          = self.conf.eps_conf,
-                fatal          = False,
-            ))
             print(t.prompt, 'tb02 =', tbpearp)
             print()
 
@@ -171,7 +129,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # Need to extend pythonpath to be independant of the user environment
                 # The vortex-build environment already set up the pythonpath (see jobassistant plugin) but the script is 
                 # eventually launched in a 'user-defined' environment
-                extendpypath   = [self.sh.path.join('/'.join(self.conf.iniconf.split('/')[:-2]), d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site', 'epygram/eccodes_python']],
+		extendpypath = ['/opt/softs/libraries/ICC_2018.5.274/eccodes-2.14.1/lib/python2.7/site-packages'] + [self.sh.path.join(self.conf.rootapp, d) for d in ['', 'vortex/site', 'vortex/src', 'epygram', 'epygram/site', 'epygram/grib_api','eccodes_python']],
                 terms          = footprints.util.rangex(self.conf.prv_terms),
                 ntasks         = self.conf.ntasks,
             )
@@ -205,6 +163,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 source_conf    = self.conf.deterministic_conf,
                 namespace      = self.conf.namespace,
                 fatal          = True,
+		delayed        = True,
             ),
             print(t.prompt, 'tb05 =', tb05)
             print()
@@ -227,6 +186,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 fatal          = False,
+		delayed        = True,
             ),
             print(t.prompt, 'tb06a =', tb06a)
             print()
@@ -249,10 +209,13 @@ class PrepSafran(Task, S2MTaskMixIn):
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 fatal          = False,
+		delayed        = True,
             ),
             print(t.prompt, 'tb06b =', tb06b)
             print()
 
-            from vortex.tools.systems import ExecutionError
-            raise ExecutionError('')
-            pass
+	    ad.phase(tb05,tb06a,tb06b)
+
+            #from vortex.tools.systems import ExecutionError
+            #raise ExecutionError('')
+            #pass

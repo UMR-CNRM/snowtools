@@ -9,6 +9,12 @@ import footprints
 from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
 
+from iga.tools.apps import OpTask
+from vortex.tools.actions import actiond as ad
+from common.util import usepygram
+import iga.tools.op as op
+import snowtools
+
 logger = footprints.loggers.getLogger(__name__)
 
 
@@ -53,7 +59,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     geometry       = self.conf.arpege_geometry,
                     kind           = 'gridpoint',
                     filtername     = 'concatenate',
-                    suite          = self.conf.suite,
+                    suite          = 'oper',
                     local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
                     date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
@@ -70,30 +76,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tbarp =', tbarp)
                 print()
 
-                # Deuxième tentative sur hendrix
-                self.sh.title('Toolbox input tbarp_archive')
-                tbarp.extend(toolbox.input(
-                    alternate      = 'Gridpoint',
-                    format         = 'grib',
-                    geometry       = self.conf.arpege_geometry,
-                    kind           = 'gridpoint',
-                    suite          = self.conf.suite,
-                    local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
-                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
-                    # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
-                    term           = self.conf.cumul,
-                    namespace      = 'vortex.archive.fr',
-                    block          = 'forecast',
-                    nativefmt      = '[format]',
-                    origin         = 'historic',
-                    model          = '[vapp]',
-                    vapp           = self.conf.source_app,
-                    vconf          = self.conf.deterministic_conf,
-                    fatal          = False,
-                ))
-                print(t.prompt, 'tbarp =', tbarp)
-                print()
-
                 # Mode secours : On récupère les prévisions 6h correspondantes inline...
                 self.sh.title('Toolbox input tbarp_inline secours')
                 tbarp.extend(toolbox.input(
@@ -102,38 +84,13 @@ class PrepSafran(Task, S2MTaskMixIn):
                     geometry       = self.conf.arpege_geometry,
                     kind           = 'gridpoint',
                     filtername     = 'concatenate',
-                    suite          = self.conf.suite,
+                    suite          = 'oper',
                     cutoff         = 'production',
                     local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
                     date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
                     namespace      = 'vortex.cache.fr',
-                    block          = 'forecast',
-                    nativefmt      = '[format]',
-                    origin         = 'historic',
-                    model          = '[vapp]',
-                    vapp           = self.conf.source_app,
-                    vconf          = self.conf.deterministic_conf,
-                    fatal          = False,
-                ))
-                print(t.prompt, 'tbarp =', tbarp)
-                print()
-
-                # ... ou sur Hendrix
-                self.sh.title('Toolbox input tbarp_archive secours')
-                tbarp.extend(toolbox.input(
-                    alternate      = 'Gridpoint',
-                    format         = 'grib',
-                    geometry       = self.conf.arpege_geometry,
-                    kind           = 'gridpoint',
-                    suite          = self.conf.suite,
-                    cutoff         = 'production',
-                    local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
-                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
-                    # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
-                    term           = self.conf.cumul,
-                    namespace      = 'vortex.archive.fr',
                     block          = 'forecast',
                     nativefmt      = '[format]',
                     origin         = 'historic',
@@ -153,7 +110,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 tbpearp = toolbox.input(
                     role           = 'Gridpoint',
                     block          = 'forecast',
-                    suite          = self.conf.suite,
+                    suite          = 'oper',
                     cutoff         = 'production',
                     format         = 'grib',
                     geometry       = self.conf.pearp_geometry,
@@ -162,13 +119,13 @@ class PrepSafran(Task, S2MTaskMixIn):
                     date           = '{0:s}/-PT24H'.format(self.conf.rundate.ymd6h),
                     term           = footprints.util.rangex(self.conf.ana_terms),
                     member         = footprints.util.rangex(self.conf.pearp_members),
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = 'vortex.cache.fr',
                     nativefmt      = '[format]',
                     origin         = 'historic',
                     model          = '[vapp]',
                     vapp           = self.conf.source_app,
                     vconf          = self.conf.eps_conf,
-                    fatal          = False,
+                    fatal          = True,
                 )
                 print(t.prompt, 'tb04_a =', tbpearp)
                 print()
@@ -187,7 +144,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     geometry       = self.conf.arpege_geometry,
                     kind           = 'gridpoint',
                     filtername     = 'concatenate',
-                    suite          = self.conf.suite,
+                    suite          = 'oper',
                     local          = 'ARPEGE[date::addterm_ymdh]',
                     date           = '{0:s}/-PT6H'.format(self.conf.rundate.ymd6h),
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
@@ -199,30 +156,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vapp           = self.conf.source_app,
                     vconf          = self.conf.deterministic_conf,
                     fatal          = False,
-                )
-                print(t.prompt, 'tb01 =', tbarp)
-                print()
-
-                # ...ou sur hendrix
-                self.sh.title('Toolbox input tb01')
-                tbarp = toolbox.input(
-                    alternate      = 'Gridpoint',
-                    block          = 'forecast',
-                    format         = 'grib',
-                    geometry       = self.conf.arpege_geometry,
-                    kind           = 'gridpoint',
-                    suite          = self.conf.suite,
-                    local          = 'ARPEGE[date::addterm_ymdh]',
-                    date           = '{0:s}/-PT6H'.format(self.conf.rundate.ymd6h),
-                    # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
-                    term           = self.conf.cumul,
-                    namespace      = 'vortex.archive.fr',
-                    nativefmt      = '[format]',
-                    origin         = 'historic',
-                    model          = '[vapp]',
-                    vapp           = self.conf.source_app,
-                    vconf          = self.conf.deterministic_conf,
-                    fatal          = True,
                 )
                 print(t.prompt, 'tb01 =', tbarp)
                 print()
@@ -256,7 +189,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # Need to extend pythonpath to be independant of the user environment ($PYTHONPATH)
                 # The vortex-build environment already set up the pythonpath (see jobassistant plugin) but the script is 
                 # eventually launched in a 'user-defined' environment
-                extendpypath   = [self.sh.path.join('/'.join(self.conf.iniconf.split('/')[:-2]), d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site', 'epygram/eccodes_python']],
+		extendpypath = ['/homech/mxpt001/vortex/oper/s2m/alp/eccodes_python'] + [self.sh.path.join(self.conf.rootapp, d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site']],
                 ntasks         = self.conf.ntasks,
                 terms          = footprints.util.rangex(self.conf.ana_terms),
             )
@@ -289,7 +222,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
                     namespace      = self.conf.namespace,
-                    fatal          = False,
+		    delayed        = True, 
                 ),
                 print(t.prompt, 'tb05_a =', tb05a)
                 print()
@@ -312,6 +245,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     source_conf    = self.conf.deterministic_conf,
                     namespace      = self.conf.namespace,
                     fatal          = False,
+		    delayed        = True,
                 ),
                 print(t.prompt, 'tb05_b =', tb05b)
                 print()
@@ -330,6 +264,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     nativefmt      = 'ascii',
                     kind           = 'guess',
                     model          = 'safran',
+		    delayed        = True,
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.eps_conf,
                     namespace      = self.conf.namespace,
@@ -339,6 +274,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb06 =', tb06)
                 print()
 
+                ad.phase(tb05a,tb05b,tb06)
             else:
 
                 self.sh.title('Toolbox output tb05')
@@ -354,6 +290,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     nativefmt      = 'ascii',
                     kind           = 'guess',
                     model          = 'safran',
+		    delayed        = True,
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
                     namespace      = self.conf.namespace,
@@ -362,5 +299,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb05 =', tb05)
                 print()
 
-            from vortex.tools.systems import ExecutionError
-            raise ExecutionError('')
+                ad.phase(tb05)
+
+            #from vortex.tools.systems import ExecutionError
+            #raise ExecutionError('')
