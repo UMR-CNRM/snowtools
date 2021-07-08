@@ -35,4 +35,4 @@ Script for comparing simulations
 
 The script is ``scores/CompareSimuPosteObsCsv.py``.
 
-.. include:: autoscripts/scores-CompareSimuPosteObsCsv.rst
+.. include:: autoscripts/scores--CompareSimuPosteObsCsv.rst

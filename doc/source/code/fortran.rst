@@ -14,4 +14,4 @@ shapefile2NetCDF tool
 
 This module is also an executable script:
 
-.. include:: ./autoscripts/fortran-shapefile2NetCDF.rst
+.. include:: ./autoscripts/fortran--shapefile2NetCDF.rst

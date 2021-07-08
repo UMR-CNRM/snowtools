@@ -53,7 +53,7 @@ Writing output files
 NetCDF comparisons
 ------------------
 
-.. include:: ./autoscripts/utils-compare2versions.rst
+.. include:: ./autoscripts/utils--operational_reproductibility--compare2versions.rst
 
 File conversions
 ----------------

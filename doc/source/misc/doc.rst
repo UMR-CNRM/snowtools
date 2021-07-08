@@ -24,7 +24,7 @@ Documentation can be generated directly from source repository. It could be gene
 To do so, go to the ``doc`` folder and use ``make <format>`` where ``<format>`` could be either ``html`` or ``pdf``.
 The documentation will be generated in ``doc/_build/<format>``.
 
-Note that this generation will require some additional python packages to be installed and a correct installation of vortex as some parts of snowtools are in closely linked to vortex resources.
+Note that this generation will require all snowtools dependecies to be installed (this includes a correct installation of vortex) and ``sphinx`` with python 3.7 or later.
 
 
 Code documentation
@@ -81,5 +81,5 @@ Documentation for scripts is generated from ``-h`` option.
 
 To add a documented script :
 
-1. Add script path to doc/scripts_list.txt (file path + a unique rst filename used hereafter and denoted ``<fn>``)
-2. Add an include directive where you want in the documentation pointing to ``code/autoscripts/<fn>``
+1. Add script path to doc/scripts_list.txt (file path)
+2. Add an include directive where you want in the documentation pointing to ``code/autoscripts/<fn>`` where ``<fn>`` is the script file path with ``/`` replaced by ``--``
