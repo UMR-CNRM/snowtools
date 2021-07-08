@@ -76,7 +76,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 nativefmt      = 'netcdf',
                 local          = 'PGD.nc',
                 geometry       = self.conf.geometry,
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv           = self.conf.cycle,
                 gvar           = 'pgd_[geometry::area]',
                 model          = 'surfex',
                 fatal          = True,
@@ -158,7 +158,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapI_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv           = 'uenv:cen.01@CONST_CEN',
+                genv           = self.conf.cycle,
                 source         = 'ecoclimap1',
                 model          = 'surfex',
             ),
@@ -172,7 +172,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapII_eu_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv           = self.conf.cycle,
                 source         = 'ecoclimap2',
                 model          = 'surfex',
             ),
@@ -183,7 +183,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
             tb06 = toolbox.input(
                 role            = 'Parameters for F06 metamorphism',
                 kind            = 'ssa_params',
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv            = self.conf.cycle,
                 nativefmt       = 'netcdf',
                 local           = 'drdt_bst_fit_60.nc',
                 model          = 'surfex',
@@ -195,8 +195,9 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
             tb07 = toolbox.input(
                 role            = 'Nam_surfex',
                 source          = 'OPTIONS_reanalysis.nam',
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv            = self.conf.cycle,
                 kind            = 'namelist',
+                intent          = 'inout',
                 model           = 'surfex',
                 local           = 'OPTIONS.nam',
             )
@@ -210,7 +211,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 kind           = 'offline',
                 local          = 'OFFLINE',
                 model          = 'surfex',
-                genv           = 'uenv:cen.01@CONST_CEN',
+                genv           = self.conf.cycle,
                 gvar           = 'master_surfex_offline_mpi',
             )
 
