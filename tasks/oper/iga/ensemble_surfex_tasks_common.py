@@ -342,28 +342,6 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                         print(t.prompt, 'tb03c =', tb03c)
                         print()
 
-                        # Last chance is the reanalysis if even the deterministic run is stopped:
-			# This can allow a quick restart from a file on hendrix
-			# produced by CEN after a long interruption.
-                        self.sh.title('Toolbox input tb03e')
-                        tb03d = toolbox.input(
-                            alternate      = 'SnowpackInitSecours',
-                            local          = 'PREP.nc',
-                            experiment     = self.ref_reanalysis,
-                            geometry       = self.conf.geometry,
-                            date           = datebegin,
-                            intent         = 'inout',
-                            nativefmt      = 'netcdf',
-                            kind           = 'PREP',
-                            model          = 'surfex',
-                            namespace      = 'vortex.multi.fr',  # IGA can keep that: this is only for last chance rescue mode
-                            namebuild      = 'flat@cen',
-                            block          = 'prep',
-                            fatal          = False,
-                        )
-
-                        print(t.prompt, 'tb03d =', tb03d)
-                        print()
 
                 self.sh.title('Toolbox input tb04')
                 tb04 = toolbox.input(
