@@ -11,6 +11,7 @@ from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 import footprints
 
+
 def setup(t, **kw):
     return Driver(
         tag = 'Surfex_Parallel',
