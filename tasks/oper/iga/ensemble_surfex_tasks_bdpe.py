@@ -12,12 +12,9 @@ from vortex.tools.actions import actiond as ad
 from vortex.layout.nodes import Driver
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
-from snowtools.bronx.stdtypes.date import daterange, yesterday, tomorrow, Period
+from snowtools.bronx.stdtypes.date import daterange, tomorrow, Date
 import footprints
-from vortex.algo.components import DelayedAlgoComponentError
 
-import snowtools
-import re
 
 def setup(t, **kw):
     return Driver(
@@ -35,29 +32,20 @@ def setup(t, **kw):
 
 class Rapatrie_Forcing(S2MTaskMixIn, OpTask):
 
-
     def process(self):
 
         t = self.ticket
         transfernode = t.sh.target().inetname + 'transfert-agt'
         datebegin, dateend = self.get_period()
-        rundate_forcing = self.get_rundate_forcing()
-        rundate_prep, alternate_rundate_prep = self.get_rundate_prep()
 
-        list_geometry = self.get_list_geometry()
         source_safran, block_safran = self.get_source_safran()
-        alternate_safran, alternate_block, alternate_geometry = self.get_alternate_safran()
-        exceptional_save_forcing = False
 
         pearpmembers, members = self.get_list_members()
 
-
-        if source_safran != 's2m' or exceptional_save_forcing:
-
+        if source_safran != 's2m':
 
             for m in members:
                 try:
-
 
                     self.sh.title('Toolbox output tb10')
                     tb10 = toolbox.input(
@@ -90,22 +78,13 @@ class Rapatrie_Forcing(S2MTaskMixIn, OpTask):
 
 class Rapatrie_Pro(S2MTaskMixIn, OpTask):
 
-
     def process(self):
 
         t = self.ticket
         transfernode = t.sh.target().inetname + 'transfert-agt'
         datebegin, dateend = self.get_period()
-        rundate_forcing = self.get_rundate_forcing()
-        rundate_prep, alternate_rundate_prep = self.get_rundate_prep()
-
-        list_geometry = self.get_list_geometry()
-        source_safran, block_safran = self.get_source_safran()
-        alternate_safran, alternate_block, alternate_geometry = self.get_alternate_safran()
-        exceptional_save_forcing = False
 
         pearpmembers, members = self.get_list_members()
-
 
         for m in members:
             try:
@@ -141,23 +120,13 @@ class Rapatrie_Pro(S2MTaskMixIn, OpTask):
 
 class Rapatrie_Prep(S2MTaskMixIn, OpTask):
 
-
     def process(self):
 
         t = self.ticket
         transfernode = t.sh.target().inetname + 'transfert-agt'
         datebegin, dateend = self.get_period()
-        rundate_forcing = self.get_rundate_forcing()
-        rundate_prep, alternate_rundate_prep = self.get_rundate_prep()
-
-        list_geometry = self.get_list_geometry()
-        source_safran, block_safran = self.get_source_safran()
-        alternate_safran, alternate_block, alternate_geometry = self.get_alternate_safran()
-        exceptional_save_forcing = False
 
         pearpmembers, members = self.get_list_members()
-
-
 
         for m in members:
             try:
@@ -189,3 +158,30 @@ class Rapatrie_Prep(S2MTaskMixIn, OpTask):
                 ad.route(kind='bdpe', productid=self.conf.num_bdpe_prep[self.conf.xpid], sshhost=transfernode, soprano_target=self.conf.soprano_target[self.conf.suitebg], routingkey='bdpe',term=m, filename='PREP_{:03}.tar.gz'.format(m))
             except:
                 print(("Oops! The file PRO_{:03}.tar is missing...".format(m)))
+
+        # When the simulation is an analysis covering August 1st, (on August 2nd, 3rd and 4th)
+        # also route member 35 to BDPE in a specific product because this is the PREP file which is needed
+        # to initialize future monthly reanalyses
+        # This product will be read once a month in extract_for_reanalyse.py
+        if not self.conf.previ and Date(dateend.year, 8, 1, 6) in list(daterange(tomorrow(base=datebegin), dateend)):
+            self.sh.title('Toolbox input tb12')
+            tb12 = toolbox.input(
+                local='PREP_for_reanalysis.nc',
+                role='SnowpackInitForMonthlyReanalysis',
+                experiment=self.conf.xpid,
+                block='prep',
+                geometry=self.conf.geometry,
+                datevalidity=dateend if self.conf.previ else list(daterange(tomorrow(base=datebegin), dateend)),
+                date=self.conf.rundate,
+                member=35,  # deterministic run
+                nativefmt='netcdf',
+                namespace='vortex.cache.fr',
+                intent='inout',
+                kind='PREP',
+                model='surfex',
+                cutoff='assimilation',
+                fatal=True
+            ),
+            print((t.prompt, 'tb12 =', tb12))
+            print()
+            ad.route(kind='bdpe', productid=self.conf.num_bdpe_initrea[self.conf.xpid], sshhost=transfernode, soprano_target=self.conf.soprano_target[self.conf.suitebg], routingkey='bdpe',term=0, filename='PREP_for_reanalysis.nc')

@@ -14,7 +14,7 @@ def setup(t, **kw):
         tag='Surfex_Parallel',
         ticket=t,
         nodes=[
-            Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw)
+            Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw),
             Rapatrie_Forcing(tag='Rapatrie_Forcing', ticket=t, **kw),
             Rapatrie_Pro(tag='Rapatrie_Pro', ticket=t, **kw),
             Rapatrie_Prep(tag='Rapatrie_Prep', ticket=t, **kw),

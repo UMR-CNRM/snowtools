@@ -11,7 +11,6 @@ from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 import footprints
 
-
 def setup(t, **kw):
     return Driver(
         tag = 'Surfex_Parallel',
@@ -21,9 +20,9 @@ def setup(t, **kw):
                 Four_Seasons_Task(tag='S2m_pp_Task', ticket=t, **kw),
                 Rapatrie_Forcing(tag='Rapatrie_Forcing', ticket=t, **kw),
                 Rapatrie_Pro(tag='Rapatrie_Pro', ticket=t, **kw),
-                Rapatrie_Prep(tag='Rapatrie_Prep', ticket=t, **kw),]
-
-    options=kw
+                Rapatrie_Prep(tag='Rapatrie_Prep', ticket=t, **kw),
+        ],
+        options=kw
     )
 
 
