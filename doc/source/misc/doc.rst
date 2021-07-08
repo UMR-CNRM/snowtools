@@ -24,7 +24,12 @@ Documentation can be generated directly from source repository. It could be gene
 To do so, go to the ``doc`` folder and use ``make <format>`` where ``<format>`` could be either ``html`` or ``pdf``.
 The documentation will be generated in ``doc/_build/<format>``.
 
-Note that this generation will require all snowtools dependecies to be installed (this includes a correct installation of vortex) and ``sphinx`` with python 3.7 or later.
+Note that this generation will require some packages to be installed:
+
+ - all snowtools dependecies (this includes a correct installation of vortex)
+ - Python 3.7 or later
+ - ``sphinx``
+ - The ``sphinx-fortran`` extension (installable with ``pip install sphinx-fortran``)
 
 
 Code documentation
@@ -83,3 +88,26 @@ To add a documented script :
 
 1. Add script path to doc/scripts_list.txt (file path)
 2. Add an include directive where you want in the documentation pointing to ``code/autoscripts/<fn>`` where ``<fn>`` is the script file path with ``/`` replaced by ``--``
+
+Fortran Documentation
+^^^^^^^^^^^^^^^^^^^^^
+
+Fortran documentation is done through `sphinx-fortran <https://sphinx-fortran.readthedocs.io>`_ add-on. Folder containing Fortran files are set in the ``doc/source/conf.py`` file and then it is possible to document a whole file with:
+
+.. code-block:: rest
+   
+   .. f:autosrcfile:: ../path/to/file.f90
+
+or specific elements (program, module, subroutine, function) giving their name (and possibly the module name):
+
+.. code-block:: rest
+
+   .. f:autoprogram:: progname
+
+   .. f:autovariable:: modname
+
+   .. f:autosubroutine:: [modname/]subrname
+
+   .. f:autofunction:: [modname/]funcname
+
+Note that elements included in programs, subroutine or functions are not documentd (e.g. subroutine defined in a ``CONAINS`` section of a program).

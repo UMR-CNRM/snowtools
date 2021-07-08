@@ -4,14 +4,17 @@ Created on 7 nov. 2017
 @author: lafaysse
 """
 
-from vortex.layout.nodes import Task
+import iga.tools.op as op
+from iga.tools.apps import OpTask
+from vortex.tools.actions import actiond as ad
+
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 from snowtools.bronx.stdtypes.date import daterange, yesterday, tomorrow
 import footprints
 
 
-class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
+class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
     """
     Task for operational ensemble SURFEX simulation used in the Drivers of
     ensemble_surfex_tasks_analysis.py and in ensemble_surfex_tasks_forecast.py
@@ -38,8 +41,8 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
 
         pearpmembers, members = self.get_list_members()
 
-        if 'early-fetch' in self.steps or 'fetch' in self.steps:
-            if True:  # In order to have an indentation and facilitate the comparison with IGA Task
+        if 'fetch' in self.steps:
+            with op.InputReportContext(self, t):
 
                 self.sh.title('Toolbox input tb01')
                 tb01 = toolbox.input(
@@ -58,7 +61,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     dateend        = dateend,
                     nativefmt      = 'netcdf',
                     kind           = 'MeteorologicalForcing',
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = 'vortex.cache.fr',
                     model          = source_safran,
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
                     fatal          = False
@@ -85,7 +88,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                         dateend        = dateend,
                         nativefmt      = 'netcdf',
                         kind           = 'MeteorologicalForcing',
-                        namespace      = 'vortex.multi.fr',
+                        namespace      = 'vortex.cache.fr',
                         model          = alternate_safran,
                         cutoff         = 'production' if self.conf.previ else 'assimilation',
                         fatal          = False
@@ -111,7 +114,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     member         = pearpmembers,
                     nativefmt      = 'netcdf',
                     kind           = 'MeteorologicalForcing',
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = 'vortex.cache.fr',
                     model          = source_safran,
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
                     fatal          = False
@@ -139,7 +142,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                         member         = pearpmembers,
                         nativefmt      = 'netcdf',
                         kind           = 'MeteorologicalForcing',
-                        namespace      = 'vortex.multi.fr',
+                        namespace      = 'vortex.cache.fr',
                         model          = alternate_safran,
                         cutoff         = 'production' if self.conf.previ else 'assimilation',
                         fatal          = False
@@ -190,7 +193,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                         nativefmt      = 'netcdf',
                         kind           = 'PREP',
                         model          = 'surfex',
-                        namespace      = 'vortex.multi.fr',
+                        namespace      = 'vortex.cache.fr',
                         fatal          = False,
                         cutoff         = 'assimilation'
                     ),
@@ -213,7 +216,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             nativefmt      = 'netcdf',
                             kind           = 'PREP',
                             model          = 'surfex',
-                            namespace      = 'vortex.multi.fr',
+                            namespace      = 'vortex.cache.fr',
                             fatal          = False,
                             cutoff         = alternate_prep[1]
                         ),
@@ -236,7 +239,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             nativefmt      = 'netcdf',
                             kind           = 'PREP',
                             model          = 'surfex',
-                            namespace      = 'vortex.multi.fr',
+                            namespace      = 'vortex.cache.fr',
                             fatal          = False,
                             cutoff         = 'assimilation'
                         ),
@@ -259,7 +262,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                                 nativefmt      = 'netcdf',
                                 kind           = 'PREP',
                                 model          = 'surfex',
-                                namespace      = 'vortex.multi.fr',
+                                namespace      = 'vortex.cache.fr',
                                 fatal          = False,
                                 cutoff         = alternate_prep[1]
                             ),
@@ -282,7 +285,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                         nativefmt      = 'netcdf',
                         kind           = 'PREP',
                         model          = 'surfex',
-                        namespace      = 'vortex.multi.fr',
+                        namespace      = 'vortex.cache.fr',
                         fatal          = False,
                         cutoff         = 'assimilation'
                     ),
@@ -308,7 +311,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             nativefmt      = 'netcdf',
                             kind           = 'PREP',
                             model          = 'surfex',
-                            namespace      = 'vortex.multi.fr',
+                            namespace      = 'vortex.cache.fr',
                             fatal          = False,
                             cutoff         = alternate_prep[1]
                         ),
@@ -332,35 +335,13 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             nativefmt      = 'netcdf',
                             kind           = 'PREP',
                             model          = 'surfex',
-                            namespace      = 'vortex.multi.fr',
+                            namespace      = 'vortex.cache.fr',
                             fatal          = False,
                             cutoff         = 'assimilation'
                         ),
                         print(t.prompt, 'tb03c =', tb03c)
                         print()
 
-                        # Last chance is the reanalysis if even the deterministic run is stopped:
-			# This can allow a quick restart from a file on hendrix
-			# produced by CEN after a long interruption.
-                        self.sh.title('Toolbox input tb03e')
-                        tb03d = toolbox.input(
-                            alternate      = 'SnowpackInitSecours',
-                            local          = 'PREP.nc',
-                            experiment     = self.ref_reanalysis,
-                            geometry       = self.conf.geometry,
-                            date           = datebegin,
-                            intent         = 'inout',
-                            nativefmt      = 'netcdf',
-                            kind           = 'PREP',
-                            model          = 'surfex',
-                            namespace      = 'vortex.multi.fr',  # IGA can keep that: this is only for last chance rescue mode
-                            namebuild      = 'flat@cen',
-                            block          = 'prep',
-                            fatal          = False,
-                        )
-
-                        print(t.prompt, 'tb03d =', tb03d)
-                        print()
 
                 self.sh.title('Toolbox input tb04')
                 tb04 = toolbox.input(
@@ -463,8 +444,8 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
 
             self.component_runner(tbalgo1, tbx1)
 
-        if 'backup' in self.steps or 'late-backup' in self.steps:
-            if True:  # In order to have an indentation and facilitate the comparison with IGA Task
+        if 'backup' in self.steps:
+            with op.OutputReportContext(self, t):
 
                 self.sh.title('Toolbox output tb11')
                 tb11 = toolbox.output(
@@ -481,13 +462,12 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     model       = 'surfex',
                     namespace   = 'vortex.multi.fr',
                     cutoff      = 'production' if self.conf.previ else 'assimilation',
+                    delayed     = True,
                     fatal       = False
                 ),
                 print(t.prompt, 'tb11 =', tb11)
                 print()
 
-        if 'late-backup' in self.steps:
-            if True:  # In order to have an indentation and facilitate the comparison with IGA Task
                 if source_safran != 's2m' or exceptional_save_forcing:
                     self.sh.title('Toolbox output tb10')
                     tb10 = toolbox.output(
@@ -504,6 +484,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                         model          = 's2m',
                         namespace      = 'vortex.multi.fr',
                         cutoff         = 'production' if self.conf.previ else 'assimilation',
+                        delayed        = True,
                         fatal          = False
                     ),
                     print(t.prompt, 'tb10 =', tb10)
@@ -524,6 +505,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     model          = 'surfex',
                     namespace      = 'vortex.multi.fr',
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
+                    delayed        = True,
                     fatal          = False
                 ),
                 print(t.prompt, 'tb12 =', tb12)

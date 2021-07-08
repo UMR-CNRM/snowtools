@@ -43,6 +43,8 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.imgmath',
     'sphinx.ext.viewcode',
+    'sphinxfortran.fortran_domain',
+    'sphinxfortran.fortran_autodoc',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -192,3 +194,6 @@ todo_include_todos = True
 autodoc_default_options = {
         'show-inheritance': True,
         }
+
+# -- Options for fortran extension -------------------------------------------
+fortran_src = ['../fortran/']
