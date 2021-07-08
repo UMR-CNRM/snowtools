@@ -57,6 +57,19 @@ class DeterminsticScores(object):
 
         return np.mean(np.abs(self.diffCommon))
 
+    def scores_all_values(self):
+        """Pour calculer les scores en conservant les valeurs nulles"""
+        sim = self.simCommon
+        obs = self.obsCommon
+        nvalues = len(sim)
+        diff = sim - obs
+        bias = np.mean(diff)
+        squarediff = np.square(diff)
+        rmse = np.sqrt(np.mean(squarediff))
+        mean = np.mean(sim)
+
+        return nvalues, bias, rmse, mean
+
     def scores_with_positive_values_only(self):
         """Pour calculer les scores sans les 0 communs aux vecteurs d'obs et de simu"""
         sim = self.simCommon[(self.simCommon!=0)&(self.obsCommon!=0)]
