@@ -29,7 +29,8 @@ import netCDF4
 import matplotlib
 import matplotlib.style
 matplotlib.use('Agg')
-matplotlib.style.use('fast')
+if 'fast' in matplotlib.style.available:
+    matplotlib.style.use('fast')
 matplotlib.rcParams['agg.path.chunksize'] = 100
 matplotlib.rcParams['axes.xmargin'] = 0
 matplotlib.rcParams['axes.ymargin'] = 0
