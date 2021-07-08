@@ -103,6 +103,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 engine         = 'exec',
                 kind           = 'guess',
                 terms          = footprints.util.rangex(self.conf.prv_terms),
+                extendpypath   = [self.sh.path.join('/'.join(self.conf.iniconf.split('/')[:-2]), d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site', 'epygram/eccodes_python']],
                 interpreter    = 'current',
                 ntasks         = self.conf.ntasks,
             )
