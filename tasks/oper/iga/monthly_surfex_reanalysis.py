@@ -4,7 +4,12 @@ Created on 7 nov. 2017
 @author: lafaysse
 '''
 
-from vortex.layout.nodes import Driver, Task
+
+import iga.tools.op as op
+from iga.tools.apps import OpTask
+from vortex.tools.actions import actiond as ad
+
+from vortex.layout.nodes import Driver
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 from bronx.stdtypes.date import daterange, yesterday, tomorrow, Period
@@ -23,7 +28,7 @@ def setup(t, **kw):
     )
 
 
-class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
+class Monthly_Surfex_Reanalysis(S2MTaskMixIn, OpTask):
     '''
 
     '''
@@ -43,7 +48,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
         alternate_safran, alternate_block, alternate_geometry = self.get_alternate_safran()
         exceptional_save_forcing = False
 
-        if 'early-fetch' in self.steps or 'fetch' in self.steps:
+        if 'fetch' in self.steps:
 
             self.sh.title('Toolbox input tb01')
             tb01 = toolbox.input(
@@ -60,8 +65,8 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 datebegin      = datebegin,
                 dateend        = dateend,
                 nativefmt      = 'netcdf',
+                namespace      = 'vortex.cache.fr',
                 kind           = 'MeteorologicalForcing',
-                namespace      = 'vortex.multi.fr',
                 model          = source_safran,
                 cutoff         = 'assimilation',
                 fatal          = True
@@ -94,7 +99,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 datevalidity   = datebegin,
                 date           = rundate_prep,
                 member         = 35,
-                namespace      = 'vortex.multi.fr',
+                namespace      = 'vortex.cache.fr',
                 intent         = 'inout',
                 nativefmt      = 'netcdf',
                 kind           = 'PREP',
@@ -119,7 +124,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                     datevalidity   = datebegin,
                     date           = alternate_prep[0],
                     member         = 35,
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = 'vortex.cache.fr',
                     intent         = 'inout',
                     nativefmt      = 'netcdf',
                     kind           = 'PREP',
@@ -130,26 +135,6 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 print((t.prompt, 'tb03b =', tb03b))
                 print()
 
-            # Last chance is the reanalysis if even the deterministic run was stopped:
-            self.sh.title('Toolbox input tb03e')
-            tb03d = toolbox.input(
-                alternate      = 'SnowpackInit',
-                local          = 'PREP.nc',
-                experiment     = self.ref_reanalysis,
-                geometry       = self.conf.geometry,
-                date           = datebegin,
-                intent         = 'inout',
-                nativefmt      = 'netcdf',
-                kind           = 'PREP',
-                model          = 'surfex',
-                namespace      = 'vortex.multi.fr',
-                namebuild      = 'flat@cen',
-                block          = 'prep',
-                fatal          = True,
-            )
-
-            print(t.prompt, 'tb03d =', tb03d)
-            print()
 
             self.sh.title('Toolbox input tb04')
             tb04 = toolbox.input(
@@ -264,9 +249,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
             self.component_runner(tbalgo3, tbx1)
 
         if 'backup' in self.steps:
-            pass
 
-        if 'late-backup' in self.steps:
             if source_safran != 's2m' or exceptional_save_forcing:
                 self.sh.title('Toolbox output tb10')
                 tb10 = toolbox.output(
@@ -280,6 +263,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                     nativefmt      = 'netcdf',
                     kind           = 'MeteorologicalForcing',
                     model          = 's2m',
+                    delayed        = True,
                     namespace      = 'vortex.multi.fr',
                     cutoff         = 'assimilation',
                     fatal          = False
@@ -299,6 +283,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 nativefmt      = 'netcdf',
                 kind           = 'SnowpackSimulation',
                 model          = 'surfex',
+                delayed        = True,
                 namespace      = 'vortex.multi.fr',
                 cutoff         = 'assimilation',
                 fatal          = False
@@ -319,6 +304,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 member         = 35,
                 nativefmt      = 'netcdf',
                 kind           = 'PREP',
+                delayed        = True,
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
                 cutoff         = 'assimilation',
