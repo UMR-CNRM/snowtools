@@ -53,9 +53,11 @@ $(SCRIPTSHELPDESTDIR)%.rst: $(subst --,/,$(patsubst $(SCRIPTSHELPDESTDIR)%.rst, 
 
 html: scripthelp
 	$(SPHINXBUILD) -b html $(SPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/html
+	@echo "Build done in $(BUILDDIR)/html"
 
 pdf: scripthelp
 	$(SPHINXBUILD) -b latexpdf $(SPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/pdf
+	@echo "Build done in $(BUILDDIR)/latex"
 
 #######################################################################
 #                                Clean                                #

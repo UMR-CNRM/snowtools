@@ -3,7 +3,8 @@
 '''
 Created on 30 Aug. 2017
 
-@author: lafaysse
+:Authord:
+    M. Lafaysse
 
 This module contains all file manipulations.
 '''
@@ -15,7 +16,11 @@ from utils.FileException import FileNameException, DirNameException
 
 
 def absolute_path(pathin):
-    '''Convert a local path in a absolute path'''
+    """
+    Convert a local path in a absolute path.
+
+    The input may be a list of coma-separated paths
+    """
 
     if pathin:
 
@@ -40,8 +45,10 @@ def absolute_path(pathin):
 
 
 def smart_copy(pathin, nameout):
-    '''If pathin includes /home do a symbolic link because we probably are on the disk.
-    Otherwise, do a hard copy of the file to improve computing times.'''
+    """
+    If pathin includes /home do a symbolic link because we probably are on the disk.
+    Otherwise, do a hard copy of the file to improve computing times.
+    """
 
     if pathin[0:5] == '/home' or pathin[0:8] == '/scratch':
         if os.path.islink(nameout):
@@ -54,6 +61,14 @@ def smart_copy(pathin, nameout):
 
 
 def check_surfex_exe(path):
+    """
+    Check that SURFEX inaries are present and return their path
+
+    :param path: The path to look in. If one, fallback to environment variable EXESURFEX.
+    :returns: The path for surfex binaries
+
+    :raises: BaseException if no path provided or FileNameException if binaries not found
+    """
     if not path:
         if "EXESURFEX" in list(os.environ.keys()):
             path = os.environ["EXESURFEX"]
@@ -76,6 +91,12 @@ class InstallException(Exception):
 
 
 def check_snowtools_install():
+    """
+    Check the snowtool installation. More precisely :
+
+    - Check the environment variables SNOWTOOLS_CEN and PYTHONPATH
+    - Check that the required folders for a simulation are present in the folder pointed by SNOWTOOLS_CEN
+    """
     # Check installation of snowtools package
     ValidInstall = True
     issue = ""
@@ -277,6 +298,9 @@ def ldd(filename):
 
 
 def print_used_memory():
+    """
+    Print the currently used memory with the ``free`` linux command
+    """
     mem = str(os.popen('free -t -m').readlines())
     T_ind = mem.index('T')
     mem_G = mem[T_ind + 14:-4]
