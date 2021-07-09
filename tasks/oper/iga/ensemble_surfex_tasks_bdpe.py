@@ -9,25 +9,43 @@ import iga.tools.op as op
 from iga.tools.apps import OpTask
 from vortex.tools.actions import actiond as ad
 
-from vortex.layout.nodes import Driver
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 from snowtools.bronx.stdtypes.date import daterange, tomorrow, Date
 import footprints
 
 
-def setup(t, **kw):
-    return Driver(
-        tag = 'Surfex_Parallel',
-        ticket = t,
-        nodes = [
-            Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw),
-            Rapatrie_Forcing(tag='Rapatrie_Forcing', ticket=t, **kw),
-            Rapatrie_Pro(tag='Rapatrie_Pro', ticket=t, **kw),
-            Rapatrie_Prep(tag='Rapatrie_Prep', ticket=t, **kw),
-        ],
-        options=kw
-    )
+class Rapatrie_Postproc(S2MTaskMixIn, OpTask):
+
+    def process(self):
+        t = self.ticket
+        transfernode = t.sh.target().inetname + 'transfert-agt'
+        datebegin, dateend = self.get_period()
+
+        self.sh.title('Toolbox output tb03')
+        tb03 = toolbox.input(
+            role='Postproc_output',
+            intent='out',
+            local='postproc.nc',
+            experiment=self.conf.xpid_postpr,
+            block='postproc',
+            geometry=self.conf.geometry,
+            date=self.conf.rundate,
+            datebegin=datebegin,
+            dateend=dateend,
+            nativefmt='netcdf',
+            kind='SnowpackSimulation',
+            model='postproc',
+            namespace='vortex.multi.fr',
+            cutoff='production',
+            fatal=True
+        ),
+        print(t.prompt, 'tb03 =', tb03)
+        print()
+
+        ad.route(kind='bdpe', productid=self.conf.num_bdpe_postproc[self.conf.xpid], sshhost=transfernode,
+         soprano_target=self.conf.soprano_target[self.conf.suitebg], routingkey='bdpe', term=0,
+         filename='postproc.nc')
 
 
 class Rapatrie_Forcing(S2MTaskMixIn, OpTask):

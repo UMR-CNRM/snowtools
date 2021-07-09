@@ -5,7 +5,7 @@ Created on 7 nov. 2017
 """
 
 from .ensemble_surfex_tasks_common import Ensemble_Surfex_Task
-from .ensemble_surfex_tasks_bdpe import Rapatrie_Forcing, Rapatrie_Prep, Rapatrie_Pro
+from .ensemble_surfex_tasks_bdpe import Rapatrie_Forcing, Rapatrie_Prep, Rapatrie_Pro, Rapatrie_Postproc
 from vortex.layout.nodes import Driver, Task
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
@@ -19,6 +19,7 @@ def setup(t, **kw):
         nodes = [
                 Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw),
                 Four_Seasons_Task(tag='S2m_pp_Task', ticket=t, **kw),
+                Rapatrie_Postproc(tag='Rapatrie_Postproc', ticket=t, **kw),
                 Rapatrie_Forcing(tag='Rapatrie_Forcing', ticket=t, **kw),
                 Rapatrie_Pro(tag='Rapatrie_Pro', ticket=t, **kw),
                 Rapatrie_Prep(tag='Rapatrie_Prep', ticket=t, **kw),
@@ -79,16 +80,13 @@ class Four_Seasons_Task(S2MTaskMixIn, Task):
             self.component_runner(tbalgo1[0])
 
         if 'backup' in self.steps:
-            pass
 
-        if 'late-backup' in self.steps:
-            #  @IGA : Ajouter le routage en BDPE
             self.sh.title('Toolbox output tb03')
             tb03 = toolbox.output(
                 role        = 'Postproc_output',
                 intent      = 'out',
                 local       = 'PRO_post_[datebegin:ymdh]_[dateend:ymdh].nc',
-                experiment  = self.conf.xpid_postpr,
+                experiment  = self.conf.xpid,
                 block       = 'postproc',
                 geometry    = self.conf.geometry,
                 date        = self.conf.rundate,
