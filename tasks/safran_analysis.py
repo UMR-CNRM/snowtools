@@ -718,7 +718,7 @@ class Safran(Task, S2MTaskMixIn):
                     kind           = 'listobs',
                     begindate      = datebegin.ymd6h,
                     enddate        = dateend.ymd6h,
-                    local          = '{0:s}/liste_obs_[begindate::ymd6h]_[enddate::ymd6h].tar'.format(rundir),
+                    local          = '{0:s}/liste_obs_[begindate::ymd6h]_[enddate::ymd6h].tar.gz'.format(rundir),
                     namespace      = self.conf.namespace,
                     task           = '[local]',
                     namebuild      = 'flat@cen',

@@ -433,7 +433,8 @@ class ComparisonSimObs(object):
                     #self.bias[indSim, s] = scores.bias()
                     #self.rmse[indSim, s] = scores.rmse()
                     #self.meansd[indSim, s] = scores.meansim
-                    self.nvalues[indSim, s], self.bias[indSim, s], self.rmse[indSim, s], self.meansd[indSim, s] = scores.scores_with_positive_values_only()
+                    #self.nvalues[indSim, s], self.bias[indSim, s], self.rmse[indSim, s], self.meansd[indSim, s] = scores.scores_with_positive_values_only()
+                    self.nvalues[indSim, s], self.bias[indSim, s], self.rmse[indSim, s], self.meansd[indSim, s] = scores.scores_all_values()
 
     def allboxplots(self):
 

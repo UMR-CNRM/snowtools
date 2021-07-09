@@ -9,9 +9,12 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex import toolbox
 from cen.layout.nodes import S2MTaskMixIn
-from vortex.layout.nodes import Driver, Task
+from vortex.layout.nodes import Driver
 
-
+import iga.tools.op as op
+from iga.tools.apps import OpTask
+from vortex.tools.actions import actiond as ad
+from common.util import usepygram
 
 
 def setup(t, **kw):
@@ -25,11 +28,11 @@ def setup(t, **kw):
     )
 
 
-class Safran(Task, S2MTaskMixIn):
+class Safran(OpTask, S2MTaskMixIn):
 
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
 
-    def process(self):
+    def refill(self):
         """Safran analysis"""
 
         t = self.ticket
@@ -44,9 +47,113 @@ class Safran(Task, S2MTaskMixIn):
         ndays = (dateend - datebegin).days
 #       list_geometry = self.get_list_geometry()
 
-        if 'early-fetch' in self.steps or 'fetch' in self.steps:
+        if 'refill' in self.steps:
 
-            if True:
+            with op.InputReportContext(self, t):
+
+                self.sh.title('Toolbox input tb01')
+                tb01 = toolbox.input(
+                    role             = 'Observations',
+                    vapp             = 's2m',
+                    geometry         = self.conf.vconf,
+                    kind             = 'packedobs',
+                    date             = self.conf.rundate.ymdh,
+                    begindate        = datebegin.ymd6h,
+                    enddate          = dateend.ymd6h,
+                    local            = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
+                    model            = 'safran',
+                    namespace        = 'bdpe.archive.fr',
+                    #storage          = 'piccolo',
+                    cutoff           = 'assim',
+                    bdpeid           = self.conf.bdpe_id[self.conf.vconf],
+                    #hook_autohook1 = (tb01_generic_hook1, ),
+                )
+                print(t.prompt, 'tb01 =', tb01)
+                print()
+
+
+#               self.sh.title('Toolbox input tb02')
+#               tb02 = toolbox.input(
+#                   role           = 'ObsNeb',
+#                   part           = 'nebulosity',
+#                   block          = 'observations',
+#                   experiment     = self.conf.xpid,
+#                   geometry       = self.conf.vconf,
+#                   fatal          = False,
+#                   bdpeid         = self.conf.bdpe_id_nebul[self.conf.vconf],
+#                   kind           = 'observations',
+#                   stage          = 'safrane',
+#                   nativefmt      = 'ascii',
+#                   date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(24 * i)) for i in range(ndays)],
+#                   local          = 'N[date:yymdh]',
+#                   model          = self.conf.model,
+#                   namespace      = 'bdpe.archive.fr',
+#                   #storage        = 'piccolo',
+#               )
+#               print t.prompt, 'tb02 =', tb02
+#               print
+
+                self.sh.title('Toolbox output tb03')
+                tb03 = toolbox.output(
+                    role           = 'Observations',
+                    block          = 'observations',
+                    experiment     = self.conf.xpid,
+                    vapp           = 's2m',
+                    geometry       = self.conf.vconf,
+                    kind           = 'packedobs',
+                    date           = self.conf.rundate.ymdh,
+                    begindate      = datebegin.ymd6h,
+                    enddate        = dateend.ymd6h,
+                    local          = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
+                    model          = 'safran',
+                    cutoff         = 'assim',
+                    delayed        = True,
+                    namespace      = self.conf.namespace,
+                    #hook_autohook1 = (tb01_generic_hook1, ),
+                )
+                print(t.prompt, 'tb03 =', tb03)
+                print()
+
+#               self.sh.title('Toolbox output tb04')
+#               tb04 = toolbox.output(
+#                   role           = 'ObsNeb',
+#                   part           = 'nebulosity',
+#                   block          = 'observations',
+#                   cutoff         = 'assim',
+#                   experiment     = self.conf.xpid,
+#                   geometry       = self.conf.vconf,
+#                   fatal          = False,
+#                   kind           = 'observations',
+#                   stage          = 'safrane',
+#                   nativefmt      = 'ascii',
+#                   date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(24 * i)) for i in range(ndays)],
+#                   local          = 'N[date:yymdh]',
+#                   model          = self.conf.model,
+
+#               )
+#               print t.prompt, 'tb04 =', tb04
+#               print
+
+
+
+
+    def process(self):
+        """Safran analysis"""
+
+        t = self.ticket
+
+        def tb01_generic_hook1(t, rh):
+            sh = t.sh
+            tarname = sh.path.basename(rh.container.localpath())
+            if sh.is_tarfile(tarname):
+                sh.untar(tarname)
+
+        datebegin, dateend = self.get_period()
+        ndays = (dateend - datebegin).days
+
+        if 'fetch' in self.steps:
+
+            with op.InputReportContext(self, t):
 
                 if self.conf.rundate.hour == 12:
 
@@ -63,8 +170,7 @@ class Safran(Task, S2MTaskMixIn):
                         enddate        = dateend.ymd6h,
                         local          = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
                         model          = 'safran',
-                        namespace      = 'vortex.archive.fr',
-                        now            = True,
+                        suite          = 'oper',
                         cutoff         = 'assimilation',
                         hook_autohook1 = (tb01_generic_hook1, ),
                     )
@@ -73,34 +179,9 @@ class Safran(Task, S2MTaskMixIn):
 
                 else:
 
-                    self.sh.title('Toolbox input tb01_a')
+                    self.sh.title('Toolbox input tb01')
                     tb01 = toolbox.input(
                         role           = 'Observations',
-                        geometry       = self.conf.vconf,
-                        suite          = 'oper',
-                        kind           = 'packedobs',
-                        date           = self.conf.rundate.ymdh,
-                        begindate      = datebegin.ymd6h,
-                        enddate        = dateend.ymd6h,
-                        local          = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
-                        model          = 'safran',
-                        hostname       = 'guppy.meteo.fr',
-                        username       = 'vernaym',
-                        tube           = 'ftp',
-                        remote         = '/home/mrns/vernaym/extraction_obs/oper/observations_safran_[vconf]_[date::ymdh].tar',
-                        # namespace      = 'vortex.archive.fr',
-                        cutoff         = 'assimilation',
-                        now            = True,
-                        hook_autohook1 = (tb01_generic_hook1, ),
-                    )
-                    print(t.prompt, 'tb01 =', tb01)
-                    print()
-
-                    # Dans le cas d'une execution sur une date ancienne le cache de guppy est nettoyé,
-                    # il faut donc aller chercher les obs sur hendrix
-                    self.sh.title('Toolbox output tb01')
-                    tb01 = toolbox.output(
-                        alternate      = 'Observations',
                         block          = 'observations',
                         experiment     = self.conf.xpid,
                         vapp           = 's2m',
@@ -112,8 +193,8 @@ class Safran(Task, S2MTaskMixIn):
                         enddate        = dateend.ymd6h,
                         local          = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
                         model          = 'safran',
-                        namespace      = self.conf.namespace,
                         cutoff         = 'assimilation',
+                        hook_autohook1 = (tb01_generic_hook1, ),
                     )
                     print(t.prompt, 'tb01 =', tb01)
                     print()
@@ -351,6 +432,7 @@ class Safran(Task, S2MTaskMixIn):
                         experiment     = self.conf.xpid,
                         block          = 'guess',
                         nativefmt      = 'tar',
+                        namespace      = 'vortex.cache.fr',
                         fatal          = False,
                         kind           = 'packedguess',
                         model          = 'safran',
@@ -376,7 +458,7 @@ class Safran(Task, S2MTaskMixIn):
                     tb17_a = toolbox.input(
                         role           = 'Ebauche_Deterministic',
                         local          = 'mb035/P[date::addcumul_yymdh]',
-                        experiment     = self.conf.xpid_guess,
+                        experiment     = self.conf.xpid,
                         block          = self.conf.guess_block,
                         geometry        = self.conf.vconf,
                         cutoff         = 'assimilation',
@@ -387,7 +469,7 @@ class Safran(Task, S2MTaskMixIn):
                         model          = 'safran',
                         source_app     = self.conf.source_app,
                         source_conf    = self.conf.deterministic_conf,
-                        namespace      = self.conf.namespace,
+                        namespace      = 'vortex.cache.fr',
                         fatal          = False,
                     ),
                     print(t.prompt, 'tb17_a =', tb17_a)
@@ -400,7 +482,7 @@ class Safran(Task, S2MTaskMixIn):
                     tb17_b = toolbox.input(
                         alternate      = 'Ebauche_Deterministic',
                         local          = 'mb035/P[date::addcumul_yymdh]',
-                        experiment     = self.conf.xpid_guess,
+                        experiment     = self.conf.xpid,
                         block          = self.conf.guess_block,
                         geometry       = self.conf.vconf,
                         cutoff         = 'production',
@@ -411,7 +493,7 @@ class Safran(Task, S2MTaskMixIn):
                         model          = 'safran',
                         source_app     = self.conf.source_app,
                         source_conf    = self.conf.deterministic_conf,
-                        namespace      = self.conf.namespace,
+                        namespace      = 'vortex.cache.fr',
                         fatal          = False,
                     ),
                     print(t.prompt, 'tb17_b =', tb17_b)
@@ -424,7 +506,7 @@ class Safran(Task, S2MTaskMixIn):
     #                 tb17_c = toolbox.input(
     #                     alternate      = 'Ebauche_Deterministic',
     #                     local          = 'mb035/P[date::addcumul_yymdh]',
-    #                     experiment     = self.conf.xpid_guess,
+    #                     experiment     = self.conf.xpid,
     #                     block          = self.conf.guess_block,
     #                     geometry       = self.conf.vconf,
     #                     cutoff         = 'production',
@@ -452,7 +534,7 @@ class Safran(Task, S2MTaskMixIn):
                         # local          = 'mb[member]/P[date:addcumul_yymdh]',
                         local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
                         term           = '[cumul]',
-                        experiment     = self.conf.xpid_guess,
+                        experiment     = self.conf.xpid,
                         block          = self.conf.guess_block,
                         geometry        = self.conf.vconf,
                         cutoff         = 'production',
@@ -464,7 +546,7 @@ class Safran(Task, S2MTaskMixIn):
                         model          = 'safran',
                         source_app     = self.conf.source_app,
                         source_conf    = self.conf.eps_conf,
-                        namespace      = self.conf.namespace,
+                        namespace      = 'vortex.cache.fr',
                         member         = footprints.util.rangex(self.conf.pearp_members),
                         fatal          = False,
                     ),
@@ -653,9 +735,9 @@ class Safran(Task, S2MTaskMixIn):
             self.component_runner(tbalgo6, tbx6)
 
 
-        if 'late-backup' in self.steps:
+        if 'backup' in self.steps:
 
-            if True:
+            with op.OutputReportContext(self, t):
 
                 if self.conf.rundate.hour == 12:
                     deterministicdir = ''
@@ -677,31 +759,13 @@ class Safran(Task, S2MTaskMixIn):
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
+                    delayed        = True,
                     namespace      = self.conf.namespace,
                 ),
                 print(t.prompt, 'tb27 =', tb27)
                 print()
 
-                self.sh.title('Toolbox output tb27_diff')
-                tb27_diff = toolbox.diff(
-                    role           = 'Ana_massifs',
-                    kind           = 'MeteorologicalForcing',
-                    source_app     = 'arpege',
-                    source_conf    = '4dvarfr',
-                    cutoff         = 'assimilation',
-                    local          = deterministicdir + 'FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
-                    experiment     = self.conf.diff_xpid,
-                    block          = 'massifs',
-                    geometry        = self.conf.vconf,
-                    nativefmt      = 'netcdf',
-                    model          = self.conf.model,
-                    datebegin      = datebegin.ymd6h,
-                    dateend        = dateend.ymd6h,
-                    namespace      = self.conf.namespace,
-                    fatal          = False,
-                ),
-                print(t.prompt, 'tb27_diff =', tb27_diff)
-                print()
+                ad.phase(tb27)
 
                 self.sh.title('Toolbox output tb28')
                 tb28 = toolbox.output(
@@ -715,6 +779,7 @@ class Safran(Task, S2MTaskMixIn):
                     block          = 'postes',
                     geometry        = self.conf.vconf,
                     nativefmt      = 'netcdf',
+                    delayed        = True,
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
@@ -722,6 +787,8 @@ class Safran(Task, S2MTaskMixIn):
                 ),
                 print(t.prompt, 'tb28 =', tb28)
                 print()
+
+                ad.phase(tb28)
 
                 if self.conf.rundate.hour != 12:
 
@@ -737,6 +804,7 @@ class Safran(Task, S2MTaskMixIn):
                         block          = 'massifs',
                         geometry        = self.conf.vconf,
                         nativefmt      = 'netcdf',
+                        delayed        = True,
                         model          = self.conf.model,
                         datebegin      = datebegin.ymd6h,
                         dateend        = dateend.ymd6h,
@@ -747,27 +815,7 @@ class Safran(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb29 =', tb29)
                     print()
 
-                    self.sh.title('Toolbox output tb29_diff')
-                    tb29_diff = toolbox.diff(
-                        role           = 'Ana_massifs',
-                        kind           = 'MeteorologicalForcing',
-                        source_app     = 'arpege',
-                        source_conf    = 'pearp',
-                        cutoff         = 'assimilation',
-                        local          = 'mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
-                        experiment     = self.conf.diff_xpid,
-                        block          = 'massifs',
-                        geometry        = self.conf.vconf,
-                        nativefmt      = 'netcdf',
-                        model          = self.conf.model,
-                        datebegin      = datebegin.ymd6h,
-                        dateend        = dateend.ymd6h,
-                        namespace      = self.conf.namespace,
-                        member         = footprints.util.rangex(self.conf.pearp_members),
-                        fatal          = False,
-                    ),
-                    print(t.prompt, 'tb29_diff =', tb29_diff)
-                    print()
+                    ad.phase(tb29)
 
                     self.sh.title('Toolbox output tb30')
                     tb30 = toolbox.output(
@@ -778,6 +826,7 @@ class Safran(Task, S2MTaskMixIn):
                         cutoff         = 'assimilation',
                         local          = 'mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                         experiment     = self.conf.xpid,
+                        delayed        = True,
                         block          = 'postes',
                         geometry        = self.conf.vconf,
                         nativefmt      = 'netcdf',
@@ -790,6 +839,8 @@ class Safran(Task, S2MTaskMixIn):
                     ),
                     print(t.prompt, 'tb30 =', tb30)
                     print()
+
+                    ad.phase(tb30)
 
                 self.sh.title('Toolbox output tb31')
                 tb31 = toolbox.output(
@@ -805,6 +856,7 @@ class Safran(Task, S2MTaskMixIn):
                     format         = 'tar',
                     model          = 'safran',
                     namespace      = self.conf.namespace,
+                    delayed        = True,
                 )
                 print(t.prompt, 'tb31 =', tb31)
                 print()
@@ -823,6 +875,7 @@ class Safran(Task, S2MTaskMixIn):
                     format         = 'tar',
                     model          = 'safran',
                     namespace      = self.conf.namespace,
+                    delayed        = True,
                 )
                 print(t.prompt, 'tb32 =', tb32)
                 print()
@@ -843,9 +896,10 @@ class Safran(Task, S2MTaskMixIn):
                     model          = 'safran',
                     namespace      = self.conf.namespace,
                     cutoff         = 'assimilation',
+                    delayed        = True,
                 )
                 print(t.prompt, 'tb33 =', tb33)
                 print()
 
-                from vortex.tools.systems import ExecutionError
-                raise ExecutionError('')
+                #from vortex.tools.systems import ExecutionError
+                #raise ExecutionError('')

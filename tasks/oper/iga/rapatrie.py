@@ -9,25 +9,31 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 from vortex import toolbox
-from vortex.layout.nodes import Driver, Task
+from vortex.layout.nodes import Driver
 
+from iga.tools.apps import OpTask
+from vortex.tools.actions import actiond as ad
+from common.util import usepygram
+import iga.tools.op as op
+import snowtools
+from snowtools.bronx.stdtypes.date import Date
 
 def setup(t, **kw):
     return Driver(
         tag    = 'pearp2safran',
         ticket = t,
         nodes  = [
-            Reanalyses(tag='prepsafreana', ticket=t, **kw),
+            Reanalyses(tag='reanalyses', ticket=t, **kw),
         ],
         options = kw,
     )
 
 
-class Reanalyses(Task, S2MTaskMixIn):
+class Reanalyses(OpTask, S2MTaskMixIn):
 
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
 
-    def process(self):
+    def refill(self):
         """Preparation of SAFRAN input files"""
 
         t = self.ticket
@@ -41,7 +47,7 @@ class Reanalyses(Task, S2MTaskMixIn):
                 sh.untar(tarname)
             sh.rm(tarname)
 
-        if 'early-fetch' in self.steps:
+        if 'refill' in self.steps:
 
             if not (self.conf.rundate.month == 8 and self.conf.rundate.day == 1):
 
@@ -67,7 +73,7 @@ class Reanalyses(Task, S2MTaskMixIn):
                     begindate      = datebegin.ymd6h,
                     enddate        = '{0:s}/-PT24H'.format(dateend.ymd6h),
                     geometry       = self.conf.vconf,
-                    intent         = 'inout',
+                    namespace      = 'vortex.cache.fr',
                     fatal          = True,
                 )
                 print(t.prompt, 'tb01 =', tb01)
@@ -118,8 +124,6 @@ class Reanalyses(Task, S2MTaskMixIn):
             print(t.prompt, 'tb02b =', tb02b)
             print()
 
-        if 'late-backup' in self.steps:
-
             # Mise à jour de l'archive,
             # TODO :
             # Elle devrait désormais couvrir au moins la période allant du 31/07 6h jusqu'à J 6h
@@ -133,7 +137,7 @@ class Reanalyses(Task, S2MTaskMixIn):
                 experiment     = self.conf.xpid,
                 block          = 'guess',
                 nativefmt      = 'tar',
-                namespace      = 'vortex.multi.fr',
+                namespace      = self.conf.namespace,
                 geometry       = self.conf.vconf,
                 begindate      = datebegin.ymd6h,
                 enddate        = dateend.ymd6h,
@@ -142,6 +146,9 @@ class Reanalyses(Task, S2MTaskMixIn):
                 vapp           = self.conf.vapp,
                 vconf          = self.conf.vconf,
                 fatal          = True,
+                delayed        = True,
             ),
             print(t.prompt, 'tb03 =', tb03)
             print()
+            
+            ad.phase(tb07)
