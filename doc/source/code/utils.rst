@@ -13,6 +13,7 @@ Tools for reading simulations : the ``utils`` module
    utils-exceptions.rst
    utils-sun.rst
    utils-s2mstandardfile.rst
+   utils-git.rst
 
 Other tools
 -----------
