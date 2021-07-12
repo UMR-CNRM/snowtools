@@ -46,6 +46,7 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
 
        from snowtools.utils.prosimu import prosimu
        import matplotlib.pyplot as plt
+       from snowtools.plots.EvoProfilPlot import plot_profil
 
        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/PRO_gdesRousses_2019-2020.nc') as ff:
            dz = ff.read('SNOWDZ', selectpoint=point, fill2zero=True)

@@ -1,5 +1,5 @@
-# Makefile for Sphinx documentation
-#
+## Makefile for Sphinx documentation
+##
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
@@ -10,8 +10,12 @@ PYTHON        = python3
 
 
 # Put it first so that "make" without argument is like "make help".
-help:
-	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+#help:
+#	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+help:  ## Show this help message
+	@egrep -h '^##\s' $(MAKEFILE_LIST) | awk 'BEGIN {FS = "## "}; {printf "%s\n", $$2}'
+	@egrep -h '\s##\s' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m %-20s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: help Makefile
 
@@ -51,15 +55,27 @@ $(SCRIPTSHELPDESTDIR)%.rst: $(subst --,/,$(patsubst $(SCRIPTSHELPDESTDIR)%.rst, 
 #%: Makefile
 #	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-html: scripthelp
+html: scripthelp  ## Generate HTML documentation
 	$(SPHINXBUILD) -b html $(SPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/html
+	@echo "Build done in $(BUILDDIR)/html"
 
-pdf: scripthelp
-	$(SPHINXBUILD) -b latexpdf $(SPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/pdf
+pdf: scripthelp   ## Generate a PDF documentation (with pdflatex)
+	$(SPHINXBUILD) -M latexpdf $(SPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/pdf
+	@echo "Build done in $(BUILDDIR)/pdf"
+
+latex: scripthelp ## Generate a latex documentation (do not compile it)
+	$(SPHINXBUILD) -b latex $(SPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/latex
+	@echo "Build done in $(BUILDDIR)/latex"
+
+man: scripthelp   ## Generate a unix man format documentation
+	$(SPHINXBUILD) -b man $(SPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/man
+	@echo "Build done in $(BUILDDIR)/man"
 
 #######################################################################
 #                                Clean                                #
 #######################################################################
-clean: clean-scripthelp
+clean: clean-scripthelp  ## Clean the all build directories
 	rm -rf $(BUILDDIR)/html
 	rm -rf $(BUILDDIR)/latex
+	rm -rf $(BUILDDIR)/pdf
+	rm -rf $(BUILDDIR)/man

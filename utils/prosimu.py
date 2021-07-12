@@ -1,14 +1,15 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 '''
 Created on 4 oct. 2012
 
-@author: lafaysse
+:Authors:
+    lafaysse
 
-This module contains the ``prosimu`` class used to read simulation files 
+This module contains the ``prosimu`` class used to read simulation files
 (netCDF format) as produced by SURFEX/Crocus for instance.
 '''
+
 import os
 import netCDF4
 import numpy as np
@@ -40,6 +41,8 @@ class prosimu():
            time= ff.readtime()
            var = ff.read(varname)
            # Do your stuff
+
+    To read data (in variables), see :meth:`read` or :meth:`read_var`
     """
 
     Number_of_points = 'Number_of_points'
@@ -126,6 +129,9 @@ class prosimu():
             self.varcache[varname] = var[slices]
 
     def format(self):
+        """
+        Get the format of the undelying netCDF file (e.g. NETCDF3_CLASSIC)
+        """
         try:
             return self.dataset.data_model
         except AttributeError:
@@ -148,24 +154,76 @@ class prosimu():
         return list(self.dataset.variables.keys())
 
     def getlendim(self, dimname):
+        """
+        Return the number of dimensions
+
+        :returns: number of dimensions
+        :rtype: int
+        """
         return len(self.dataset.dimensions[dimname])
 
     def getdimvar(self, varname):
+        """
+        The dimensions of a specific variable
+
+        :param varname: the variable name
+        :type varname: str
+        :returns: dimensions of varname
+        :rtype: numpy array
+        """
         return np.array(self.dataset.variables[varname].dimensions)
 
     def getrankvar(self, varname):
+        """
+        Get the rank (number of dimensions) of a variable
+
+        :param varname: the variable name
+        :type varname: str
+        :returns: rank
+        :rtype: int
+        """
         return len(self.dataset.variables[varname].shape)
 
     def listattr(self, varname):
+        """
+        Get the list of attributtes attached to a variable
+
+        :param varname: the variable name
+        :type varname: str
+        :returns: atributes
+        """
         return self.dataset.variables[varname].ncattrs()
 
     def getattr(self, varname, attname):
+        """
+        Get the value of an attribute of a variable
+
+        :param varname: the variable name
+        :type varname: str
+        :param attname: the attribute name
+        :type attname: str
+        :returns: the attribute value
+        """
         return getattr(self.dataset.variables[varname], attname)
 
     def gettypevar(self, varname):
+        """
+        Return the dtype of a variable
+
+        :param varname: the variable name
+        :type varname: str
+        :returns: the corresponding dtype
+        """
         return self.dataset.variables[varname].dtype
 
     def getfillvalue(self, varname):
+        """
+        Get the fill value for a variable
+
+        :param varname: Variable name
+        :type varname: str
+        :returns: the fill value
+        """
         if hasattr(self.dataset.variables[varname], "_FillValue"):
             return self.dataset.variables[varname]._FillValue
         else:
@@ -179,6 +237,11 @@ class prosimu():
         return self.gettypevar(varname), self.getrankvar(varname), self.getdimvar(varname), self.getfillvalue(varname), self.listattr(varname)
 
     def readtime_for_copy(self):
+        """
+        Get the time raw variable and units
+
+        :returns: time variable, time units
+        """
         time = self.dataset.variables["time"]
         return time, time.units
 
@@ -271,8 +334,9 @@ class prosimu():
 
     def get_points(self, **kwargs):
         """
-        Renvoie les valeurs de la dimension Number_of_points correspondant à une
-        sous-selection de variables aspect,ZS,massif_num,slope
+        Return the values of dimension :data:`number of points<Number_of_points>` correpsonding to
+        a subset defined by variables aspect, ZS, massif_num and slope according to named arguments
+        passed to the function.
         """
         if not( all([(self.dataset.variables[varname].dimensions == (self.Number_of_points,)) for varname in kwargs.keys()])):
             raise TypeError("""Le filtrage ne peut se faire que sur des variables géographiques (ZS, slope, aspect, massif_num)""")
@@ -284,8 +348,7 @@ class prosimu():
 
     def get_point(self, **kwargs):
         """
-        get_points mais pour un seul point - exception si plusieurs points ou
-        aucun dans la réponse
+        Same as :meth:`get_points` but raise an exception if there is not exactly one point.
         """
         point_list = self.get_points(**kwargs)
         if len(point_list) > 1:
@@ -295,6 +358,11 @@ class prosimu():
         return point_list[0]
 
     def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime = True, hasDecile = False):
+        """
+        Extract data as a numpy array, possibly selecting point, and removing useless dimensions
+
+        :meta private:
+        """
 
         if removetile:
             vardims = self.dataset.variables[varname].dimensions
@@ -439,6 +507,24 @@ class prosimu():
 
     def read(self, varname, fill2zero=False, selectpoint=-1, keepfillvalue=False, removetile=True, needmodif=False,
              hasDecile = False):
+        """
+        Read data from a variable in the netCDF file.
+
+        :param varname: the variable name
+        :type varname: str
+        :param fill2zero: if True, will replace undefined data with the value of 0. Otherwise, ``np.nan`` is used
+                          except if ``keepfillvalue`` is set.
+        :type fill2zero: bool
+        :param selectpoint: Select a point. If -1, select all points.
+        :type selectpoint: int
+        :param removetile: Removethe tile dimension, if present.
+        :type removetile: bool
+        :param keepfillvalue: Do not replace the undefined data with ``np.nan`` and keep the fill value used in the
+                              netCDF file.
+        :type keepfillvalue: bool
+        :param needmodif: If True, return also the variable object
+        :type needmodif: bool
+        """
 
         # Vérification du nom de la variable
         if varname not in self.listvar():
@@ -491,9 +577,19 @@ class prosimu():
     # Pour compatibilité anciens codes, on conserve les routines obsolètes read1d et read2d
 
     def read1d(self, varname, fill2zero=False, indpoint=0):
+        """
+        .. warning:: Obsolete method
+
+        :meta private:
+        """
         return self.read(varname, fill2zero=fill2zero, selectpoint=indpoint)
 
     def read2d(self, varname, fill2zero=False):
+        """
+        .. warning:: Obsolete method
+
+        :meta private:
+        """
         return self.read(varname, fill2zero=fill2zero)
 
     def checktime(self, nametime, timeref):
@@ -505,6 +601,9 @@ class prosimu():
             raise TimeException(self.path)
 
     def close(self):
+        """
+        Close the netCDF dataset.
+        """
         self.dataset.close()
 
     def integration(self, variable, nstep, start=0):
