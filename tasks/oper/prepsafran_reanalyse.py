@@ -10,6 +10,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
+from snowtools.bronx.stdtypes.date import Date
 
 
 def setup(t, **kw):
@@ -56,6 +57,7 @@ class Reanalyses(Task, S2MTaskMixIn):
                     role           = 'Reanalyse',
                     local          = 'p{0:s}_{1:s}.tar'.format(season, self.conf.vconf),
                     experiment     = self.conf.xpid,
+                    cutoff         = 'assimilation',
                     block          = 'guess',
                     nativefmt      = 'tar',
                     kind           = 'packedguess',
@@ -65,7 +67,7 @@ class Reanalyses(Task, S2MTaskMixIn):
                     vapp           = self.conf.vapp,
                     vconf          = self.conf.vconf,
                     begindate      = datebegin.ymd6h,
-                    enddate        = '{0:s}/-PT24H'.format(dateend.ymd6h),
+                    enddate        = '{0:s}/-PT24H'.format(self.conf.rundate.ymd6h),
                     geometry       = self.conf.vconf,
                     intent         = 'inout',
                     fatal          = True,
@@ -74,7 +76,7 @@ class Reanalyses(Task, S2MTaskMixIn):
                 print()
 
             # Récupération des guess de la veille à ajouter à l'archive
-            # Comme dateend correpond à J-4 on ajoute 4*24h
+            # Comme dateend correpond à J-4 on ajoute 5*24h
             self.sh.title('Toolbox input tb02a')
             tb02a = toolbox.input(
                 role           = 'Ebauche',
@@ -83,7 +85,7 @@ class Reanalyses(Task, S2MTaskMixIn):
                 block          = 'guess',
                 geometry       = self.conf.vconf,
                 cutoff         = 'assimilation',
-                date           = ['{0:s}/+PT96H/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 102, self.conf.cumul)],
+                date           = ['{0:s}/+PT96H/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 120, self.conf.cumul)],
                 cumul          = self.conf.cumul,
                 nativefmt      = 'ascii',
                 kind           = 'guess',
@@ -104,8 +106,8 @@ class Reanalyses(Task, S2MTaskMixIn):
                 experiment     = self.conf.xpid,
                 block          = 'guess',
                 geometry       = self.conf.vconf,
-                cutoff         = 'prevision',
-                date           = ['{0:s}/+PT96H/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 102, self.conf.cumul)],
+                cutoff         = 'production',
+                date           = ['{0:s}/+PT96H/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 120, self.conf.cumul)],
                 cumul          = self.conf.cumul,
                 nativefmt      = 'ascii',
                 kind           = 'guess',
@@ -131,12 +133,13 @@ class Reanalyses(Task, S2MTaskMixIn):
                 kind           = 'packedguess',
                 local          = 'p{0:s}_{1:s}.tar'.format(season, self.conf.vconf),
                 experiment     = self.conf.xpid,
+                cutoff         = 'assimilation',
                 block          = 'guess',
                 nativefmt      = 'tar',
                 namespace      = 'vortex.multi.fr',
                 geometry       = self.conf.vconf,
                 begindate      = datebegin.ymd6h,
-                enddate        = dateend.ymd6h,
+                enddate        = self.conf.rundate.ymd6h,
                 model          = 'safran',
                 date           = self.conf.rundate.ymdh,
                 vapp           = self.conf.vapp,
