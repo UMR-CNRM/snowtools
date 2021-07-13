@@ -54,6 +54,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     kind           = 'gridpoint',
                     filtername     = 'concatenate',
                     suite          = self.conf.suite,
+                    cutoff         = 'assimilation',
                     local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
                     date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
@@ -78,6 +79,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     geometry       = self.conf.arpege_geometry,
                     kind           = 'gridpoint',
                     suite          = self.conf.suite,
+                    cutoff         = 'assimilation',
                     local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
                     date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
@@ -188,6 +190,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     kind           = 'gridpoint',
                     filtername     = 'concatenate',
                     suite          = self.conf.suite,
+                    cutoff         = 'assimilation',
                     local          = 'ARPEGE[date::addterm_ymdh]',
                     date           = '{0:s}/-PT6H'.format(self.conf.rundate.ymd6h),
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
@@ -212,6 +215,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     geometry       = self.conf.arpege_geometry,
                     kind           = 'gridpoint',
                     suite          = self.conf.suite,
+                    cutoff         = 'assimilation',
                     local          = 'ARPEGE[date::addterm_ymdh]',
                     date           = '{0:s}/-PT6H'.format(self.conf.rundate.ymd6h),
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
@@ -277,6 +281,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 tb05a = toolbox.output(
                     role           = 'Ebauche',
                     local          = 'ARP_[date:ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
+                    cutoff         = 'assimilation',
                     geometry       = self.conf.domains,
                     vconf          = '[geometry:area]',
                     experiment     = self.conf.xpid,
