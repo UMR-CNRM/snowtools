@@ -44,7 +44,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             # On traite les échéances en les considérant comme des membres distincts pour paralléliser les calculs
 
             # On essaye d'abord sur le cache inline
-            self.sh.title('Toolbox input tbarp_inline')
+            self.sh.title('Toolbox input arpege prod inline')
             tbarp = toolbox.input(
                 role           = 'Gridpoint',
                 format         = 'grib',
@@ -70,7 +70,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             # En cas de bascule les fichiers ont pu ne pas être phasés, on essaye alors sur Hendrix.
             # Les fichiers sur Hendrix n'ont pas de filtername "concatenate" --> A voir avec IGA
-            self.sh.title('Toolbox input tbarp_arch')
+            self.sh.title('Toolbox input arpege prod archive')
             tbarp.extend(toolbox.input(
                 alternate      = 'Gridpoint',
                 format         = 'grib',
@@ -97,7 +97,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             # Récupération du réseau 18h (J-1) pour couvrir J 6h -> (J+4) 6h
             # On veut donc les échéances de 12h à 108h
             # Désormais toutes les échéances tri-horaire sont disponible
-            self.sh.title('Toolbox input tbpearp_inline')
+            self.sh.title('Toolbox input pearp inline')
             tbpearp = toolbox.input(
                 role           = 'Gridpoint',
                 block          = 'forecast',
@@ -121,7 +121,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb02 =', tbpearp)
             print()
 
-            self.sh.title('Toolbox input tbpearp_archive')
+            self.sh.title('Toolbox input pearp archive')
             tbpearp.extend(toolbox.input(
                 alternate      = 'Gridpoint',
                 block          = 'forecast',
@@ -188,7 +188,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             # On ne plante que si les guess issus d'ARPEGE n'ont pas pu être générés
 
-            self.sh.title('Toolbox output tb05')
+            self.sh.title('Toolbox output guess arpege prod')
             tb05 = toolbox.output(
                 role           = 'Ebauche',
                 local          = 'ARP_[cumul:hour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
@@ -209,7 +209,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb05 =', tb05)
             print()
 
-            self.sh.title('Toolbox output tb06')
+            self.sh.title('Toolbox output guess pearp')
             tb06 = toolbox.output(
                 role           = 'Ebauche',
                 local          = 'PEARP_[member]_[cumul:hour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',

@@ -48,7 +48,7 @@ class Safran(OpTask, S2MTaskMixIn):
 
                 # I.1- Pseudo-prevision de (J-1) 6h à J 6h
                 # A6 des réseaux 0, 6, 12, 18 (J-1)
-                self.sh.title('Toolbox input tb01a')
+                self.sh.title('Toolbox input guess arpege J-1 -> J')
                 tb01a = toolbox.input(
                     role           = 'Ebauche_Deterministic',
                     local          = 'mb035/P[date::yymdh]_[cumul:hour]',
@@ -79,7 +79,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 # I.2- Prevision de J 6h à J+4 6h
 
                 # P6 à P 102 du réseau 0h J
-                self.sh.title('Toolbox input tb01b')
+                self.sh.title('Toolbox input guess arpege J -> J+4')
                 tb01b = toolbox.input(
                     role           = 'Ebauche_Deterministic',
                     local          = 'mb035/P[date::yymdh]_[cumul:hour]',
@@ -106,7 +106,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 # II.1- Prevision de (J-1) 6h à J 6h
 
                 # P0/P6/P12/P18/P24 du réseau 6h (J-1)
-                self.sh.title('Toolbox intput tb02a')
+                self.sh.title('Toolbox intput guess pearp J-1 -> J')
                 tb02a = toolbox.input(
                     role           = 'Ebauche',
                     local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
@@ -129,7 +129,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 print()
 
                 # P12 à P108 du réseau 18h (J-1)
-                self.sh.title('Toolbox intput tb02b')
+                self.sh.title('Toolbox intput guess pearp J -> J+4')
                 tb02b = toolbox.input(
                     role           = 'Ebauche',
                     local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
@@ -151,7 +151,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb02b =', tb02b)
                 print()
 
-                self.sh.title('Toolbox input tb03')
+                self.sh.title('Toolbox input listem')
                 tb03 = toolbox.input(
                     role            = 'ListeMassif',
                     genv            = self.conf.cycle,
@@ -163,7 +163,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb03 =', tb03)
                 print()
 
-                self.sh.title('Toolbox input tb04')
+                self.sh.title('Toolbox input listeml')
                 tb04 = toolbox.input(
                     role            = 'ListeLimitesMassif',
                     genv            = self.conf.cycle,
@@ -175,7 +175,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb04 =', tb04)
                 print()
 
-                self.sh.title('Toolbox input tb05')
+                self.sh.title('Toolbox input listeo')
                 tb05 = toolbox.input(
                     role            = 'ListePost',
                     genv            = self.conf.cycle,
@@ -189,7 +189,7 @@ class Safran(OpTask, S2MTaskMixIn):
 
                 if not self.conf.vconf == 'cor':
 
-                    self.sh.title('Toolbox input tb06')
+                    self.sh.title('Toolbox input norelmt')
                     tb06 = toolbox.input(
                         role            = 'MoyRRmensuelles',
                         genv            = self.conf.cycle,
@@ -204,7 +204,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 # WARNING : Les ressoucres rsclim et icrccm ne servent pas dans le cas nominal mais
                 # consituent un mode secours pour SAFRAN si il rencontre un problème pour faire son guess
                 # A partir des fichiers P
-                self.sh.title('Toolbox input tb07')
+                self.sh.title('Toolbox input rsclim')
                 tb07 = toolbox.input(
                     role            = 'Clim',
                     genv            = self.conf.cycle,
@@ -216,7 +216,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb07 =', tb07)
                 print()
 
-                self.sh.title('Toolbox input tb08')
+                self.sh.title('Toolbox input icrccm')
                 tb08 = toolbox.input(
                     role            = 'Clim',
                     genv            = self.conf.cycle,
@@ -228,7 +228,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb08 =', tb08)
                 print()
 
-                self.sh.title('Toolbox input tb09')
+                self.sh.title('Toolbox input namelist sorties')
                 tb09 = toolbox.input(
                     role            = 'Nam_sorties',
                     source          = 'namelist_sorties_[geometry]',
@@ -241,7 +241,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb09 =', tb09)
                 print()
 
-                self.sh.title('Toolbox input tb14')
+                self.sh.title('Toolbox input namelist adapt')
                 tb14 = toolbox.input(
                     role            = 'Nam_adapt',
                     source          = 'namelist_adapt',
@@ -254,7 +254,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb14 =', tb14)
                 print()
 
-                self.sh.title('Toolbox input tb10')
+                self.sh.title('Toolbox input namelist melange')
                 tb10 = toolbox.input(
                     role            = 'Nam_melange',
                     source          = 'namelist_melange_[geometry]',
@@ -267,7 +267,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb10 =', tb10)
                 print()
 
-                self.sh.title('Toolbox input tb11')
+                self.sh.title('Toolbox input carpost')
                 tb11 = toolbox.input(
                     role            = 'carac_post',
                     genv            = self.conf.cycle,
@@ -279,7 +279,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb11 =', tb11)
                 print()
 
-                self.sh.title('Toolbox input tb12')
+                self.sh.title('Toolbox input namelist impress')
                 tb12 = toolbox.input(
                     role            = 'Nam_impress',
                     source          = 'namelist_impress_[geometry]',
@@ -294,7 +294,7 @@ class Safran(OpTask, S2MTaskMixIn):
 
                 if self.conf.vconf == 'pyr':
 
-                    self.sh.title('Toolbox input tb13')
+                    self.sh.title('Toolbox input namelist observr')
                     tb13 = toolbox.input(
                         role            = 'Nam_observr',
                         source          = 'namelist_observr_[geometry]',
@@ -308,7 +308,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     print(t.prompt, 'tb13 =', tb13)
                     print()
 
-                self.sh.title('Toolbox input tb14')
+                self.sh.title('Toolbox input namelist analyse')
                 tb14 = toolbox.input(
                     role            = 'Nam_analyse',
                     source          = 'namelist_analyse_[geometry]',
@@ -322,7 +322,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb14 =', tb14)
                 print()
 
-                self.sh.title('Toolbox input tb16')
+                self.sh.title('Toolbox input namelist ebauche')
                 tb16 = toolbox.input(
                     role            = 'Nam_ebauche',
                     source          = 'namelist_ebauche_[geometry]',
@@ -336,7 +336,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb16 =', tb16)
                 print()
 
-                self.sh.title('Toolbox executable tb11 = tbx1')
+                self.sh.title('Toolbox executable tbx1 = safrane')
                 tb11 = tbx1 = toolbox.executable(
                     role           = 'Binary',
                     genv           = self.conf.cycle,
@@ -347,7 +347,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb11 =', tb11)
                 print()
 
-                self.sh.title('Toolbox executable tb12 = tbx2')
+                self.sh.title('Toolbox executable tbx2 = syrpluie')
                 tb12 = tbx2 = toolbox.executable(
                     role           = 'Binary',
                     genv           = self.conf.cycle,
@@ -358,7 +358,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb12 =', tb12)
                 print()
 
-                self.sh.title('Toolbox executable tb13 = tbx3')
+                self.sh.title('Toolbox executable tbx3 = syrmrr')
                 tb13 = tbx3 = toolbox.executable(
                     role           = 'Binary',
                     genv           = self.conf.cycle,
@@ -369,7 +369,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb13 =', tb13)
                 print()
 
-                self.sh.title('Toolbox executable tb14 = tbx4')
+                self.sh.title('Toolbox executable tbx4 = sytist')
                 tb14 = tbx4 = toolbox.executable(
                     role           = 'Binary',
                     genv           = self.conf.cycle,
@@ -443,7 +443,7 @@ class Safran(OpTask, S2MTaskMixIn):
 
             with op.OutputReportContext(self, t):
 
-                self.sh.title('Toolbox output tb27')
+                self.sh.title('Toolbox output FORCING_massif deteministe')
                 tb27 = toolbox.output(
                     role           = 'Prv_massifs',
                     kind           = 'MeteorologicalForcing',
@@ -463,7 +463,9 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb27 =', tb27)
                 print()
 
-                self.sh.title('Toolbox output tb28')
+                ad.phase(tb27)
+
+                self.sh.title('Toolbox output FORCING_postes deterministe')
                 tb28 = toolbox.output(
                     role           = 'Prv_postes',
                     kind           = 'MeteorologicalForcing',
@@ -485,7 +487,7 @@ class Safran(OpTask, S2MTaskMixIn):
 
                 ad.phase(tb28)
 
-                self.sh.title('Toolbox output tb29')
+                self.sh.title('Toolbox output FORCING_massif pearp')
                 tb29 = toolbox.output(
                     role           = 'Prv_massifs',
                     kind           = 'MeteorologicalForcing',
@@ -508,7 +510,7 @@ class Safran(OpTask, S2MTaskMixIn):
 
                 ad.phase(tb29)
 
-                self.sh.title('Toolbox output tb30')
+                self.sh.title('Toolbox output FORCING_postes pearp')
                 tb30 = toolbox.output(
                     role           = 'Prv_postes',
                     kind           = 'MeteorologicalForcing',
@@ -531,7 +533,7 @@ class Safran(OpTask, S2MTaskMixIn):
 
                 ad.phase(tb30)
 
-                self.sh.title('Toolbox output tb31')
+                self.sh.title('Toolbox output listings execution')
                 tb31 = toolbox.output(
                     role           = 'Listing',
                     block          = 'listing',
@@ -549,24 +551,6 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb31 =', tb31)
                 print()
 
-                self.sh.title('Toolbox output tb32')
-                tb32 = toolbox.output(
-                    role           = 'Listing',
-                    block          = 'listing',
-                    experiment     = self.conf.xpid,
-                    geometry       = self.conf.vconf,
-                    kind           = 'packedlisting',
-                    begindate      = datebegin.ymd6h,
-                    enddate        = dateend.ymd6h,
-                    local          = 'mb{glob:a:\d+}/listings_safran_[begindate::ymdh]_[enddate::ymdh].tar.gz',
-                    format         = 'tar',
-                    seta           = '[glob:a]',
-                    member         = '[seta]',
-                    namespace      = self.conf.namespace,
-                    delayed        = True,
-                )
-                print(t.prompt, 'tb32 =', tb32)
-                print()
 
                 #from vortex.tools.systems import ExecutionError
                 #raise ExecutionError('')
