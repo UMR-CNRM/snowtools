@@ -612,6 +612,8 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb31 =', tb31)
                 print()
 
-
+                print('==================================================================================================')
+                print('INFO :The execution went well, do not take into account the following error')
+                print('==================================================================================================')
                 from vortex.tools.systems import ExecutionError
                 raise ExecutionError('')
