@@ -168,8 +168,8 @@ class PrepSafran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb05 =', tb05)
             print()
 
-            self.sh.title('Toolbox output tb06a')
-            tb06a = toolbox.output(
+            self.sh.title('Toolbox output tb06')
+            tb06 = toolbox.output(
                 role           = 'Ebauche',
                 local          = 'PEARP_[member]_[cumul:hour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                 experiment     = self.conf.xpid,
@@ -177,7 +177,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 geometry       = self.conf.domains,
                 vconf          = '[geometry::area]',
                 date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[4:19],
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[4:38],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -188,33 +188,11 @@ class PrepSafran(Task, S2MTaskMixIn):
                 fatal          = False,
 		delayed        = True,
             ),
-            print(t.prompt, 'tb06a =', tb06a)
+            print(t.prompt, 'tb06 =', tb06)
             print()
 
-            self.sh.title('Toolbox output tb06b')
-            tb06b = toolbox.output(
-                role           = 'Ebauche',
-                local          = 'PEARP_[member]_[cumul:hour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
-                experiment     = self.conf.xpid,
-                block          = self.conf.block,
-                geometry       = self.conf.domains,
-                vconf          = '[geometry::area]',
-                date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[20:38:2],
-                nativefmt      = 'ascii',
-                kind           = 'guess',
-                model          = 'safran',
-                source_app     = self.conf.source_app,
-                source_conf    = self.conf.eps_conf,
-                namespace      = self.conf.namespace,
-                member         = footprints.util.rangex(self.conf.pearp_members),
-                fatal          = False,
-		delayed        = True,
-            ),
-            print(t.prompt, 'tb06b =', tb06b)
-            print()
 
-	    ad.phase(tb05,tb06a,tb06b)
+	    ad.phase(tb05,tb06)
 
             #from vortex.tools.systems import ExecutionError
             #raise ExecutionError('')
