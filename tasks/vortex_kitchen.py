@@ -7,12 +7,12 @@ Created on 23 févr. 2018
 @author: lafaysse
 """
 
-import os
 import datetime
+import os
 import shutil
 
-from utils.resources import InstallException
 from utils.dates import WallTimeException
+from utils.resources import InstallException
 from bronx.stdtypes.date import Period
 
 
@@ -112,8 +112,10 @@ class vortex_kitchen(object):
         if self.options.oper:
             if self.options.monthlyreanalysis:
                 self.reftask = "monthly_surfex_reanalysis"
+            elif self.options.forecast:
+                self.reftask = "ensemble_surfex_tasks_forecast"
             else:
-                self.reftask = "ensemble_surfex_tasks"
+                self.reftask = "ensemble_surfex_tasks_analysis"
             self.nnodes = 1
             self.period = "rundate=" + self.options.datedeb.strftime("%Y%m%d%H%M")
             # Note that the jobname is used to discriminate self.conf.previ in vortex task
@@ -213,7 +215,7 @@ class vortex_kitchen(object):
 
     def mkjob_list_commands(self):
 
-        if self.options.escroc and self.options.nnodes > 1:
+        if not self.options.safran and (self.options.escroc and self.options.nnodes > 1):
             mkjob_list = []
             print("loop")
             for node in range(1, self.options.nnodes + 1):
@@ -271,6 +273,8 @@ class vortex_kitchen(object):
             estimation = Period(minutes=minutes_peryear[key]) * \
                          max(1, (self.options.datefin.year - self.options.datedeb.year)) * \
                          (1 + nmembers / (40 * self.options.nnodes))
+
+            #!!!! Ne marche pas à tous les coups... 
 
             if estimation >= datetime.timedelta(hours=24):
                 raise WallTimeException(estimation)

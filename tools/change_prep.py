@@ -11,7 +11,6 @@ Created on 23 Aug. 2017
 import os, csv, netCDF4
 import numpy as np
 
-
 # For compatibility python 2 / python 3
 # import six
 
@@ -20,8 +19,15 @@ from utils.FileException import FileNameException
 
 
 class prep_tomodify(object):
+    """This class represents a PREP.nc file for SURFEX initial conditions
+    which has to be modified before SURFEX execution
+
+    :param prepfile: Address of prep file to modify
+    :type prepfile: str
+    """
+
     def __init__(self, prepfile):
-        '''Generic method to open a PREP.nc file ready to be modified'''
+        """Init method opens a PREP.nc file ready to be modified"""
 
         # Names of the prognostic variables in the PREP netcdf file
         self.dict_prep = {'nsnowlayer': 'SN_VEG_N',
@@ -47,7 +53,13 @@ class prep_tomodify(object):
         self.nsnowlayer = self.prepfile.read(self.dict_prep['nsnowlayer'])[0]
 
     def apply_swe_threshold(self, swe_threshold, closefile=False):
-        '''Method to apply a threshold on snow water equivalent in a PREP.nc file'''
+        """Method to apply a threshold on snow water equivalent in a PREP.nc file
+
+        :param swe_threshold: Maximum allowed Snow Water Equivalent (kg/m2)
+        :type swe_threshold: int or float
+        :param closefile: Close PREP file after modification. Defaults to False
+        :type closefile: bool, optional
+        """
         for i in range(self.nsnowlayer):
             swe_layer, swe_layer_nc = self.prepfile.read(self.dict_prep['swe'] + str(i + 1), keepfillvalue=True, removetile=False, needmodif=True)
             if i == 0:
@@ -60,8 +72,13 @@ class prep_tomodify(object):
             self.close()
 
     def change_date(self, newdate, closefile=False):
-        '''Method to change the date of a PREP file because a spinup is used to initialize the simulation
-           Input : newdate must be a datetime.datetime object'''
+        """Method to change the date of a PREP file because a spinup is used to initialize the simulation
+
+        :param newdate: New initial date of simulation
+        :type newdate: class:`datetime.datetime`
+        :param closefile: Close PREP file after modification. Defaults to False
+        :type closefile: bool, optional
+        """
         year, yearnc = self.prepfile.read(self.dict_prep['year'], needmodif=True)
         month, monthnc = self.prepfile.read(self.dict_prep['month'], needmodif=True)
         day, daync = self.prepfile.read(self.dict_prep['day'], needmodif=True)
@@ -78,10 +95,10 @@ class prep_tomodify(object):
             self.close()
 
     def close(self):
+        """Close the PREP file"""
         self.prepfile.close()
 
     def insert_snow_depth(self, my_name_SRU, my_name_SNOWSAT, my_name_OBS, my_name_extprep50, my_name_extprep5, my_name_var, my_name_PREP):
-
         ''' This function was implemented by C. Carmagnola in March 2019 (PROSNOW project).
         It modifies a PREP file by inserting measured snow depth values.'''
 
@@ -124,21 +141,18 @@ class prep_tomodify(object):
 
         # 2) Fill OBS.nc
 
-        with open(name_SNOWSAT, 'rb') as readfile:
+        with open(name_SNOWSAT, 'r') as readfile:
 
             spamreader = csv.reader(readfile)
 
             for row in spamreader:
 
                 r = row[0].split()
-                Fnc = netCDF4.Dataset(name_OBS, 'a')
-                dsn = Fnc.variables[snd]
+                with netCDF4.Dataset(name_OBS, 'a') as Fnc:
+                    dsn = Fnc.variables[snd]
 
-                if float(r[2]) >= 0.:
                     ind = int(r[0]) - 1
                     dsn[0, ind] = float(r[2]) / 100.
-
-                Fnc.close()
 
         # 3) Change PREP
 
@@ -154,8 +168,10 @@ class prep_tomodify(object):
             nlayer = self.prepfile.read(self.dict_prep['nsnowlayer'])[:]
             tg1 = [self.prepfile.read(self.dict_prep['tg'] + str(1))[:]]
 
-            old_swe = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1], nlayer))
-            old_rho = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1], nlayer))
+            old_swe = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1], nlayer)) # [1,point,layer]
+            new_swe = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1], nlayer)) # [1,point,layer]
+            old_rho = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1], nlayer)) # [1,point,layer]
+            dsn     = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1]))         # [1,point]
 
             for j in range(nlayer):
                 var = self.prepfile.read(self.dict_prep['swe'] + str(j + 1))[:]
@@ -163,12 +179,13 @@ class prep_tomodify(object):
                 var = self.prepfile.read(self.dict_prep['rho'] + str(j + 1))[:]
                 old_rho[:, :, j] = var[:]
 
-            dsn  = np.sum(old_swe / old_rho, 2)
-
             # Loop on points
             for k in range(np.shape(tg1)[1]):
-
-                # SWE corrected to account for the slope
+                
+                for m in range(nlayer):
+                    if old_swe[0,k,m] > 0:
+                        dsn[0,k] = dsn[0,k] + old_swe[0,k,m]/old_rho[0,k,m]
+                        
                 dsno[0][k] = dsno[0][k] * np.cos(slope[k] * np.pi / 180.)
 
                 # Observation exists
@@ -177,16 +194,15 @@ class prep_tomodify(object):
                     # Model guess > 10 cm -> fine!
                     if (dsn[0, k] > 0.10):
 
-                        ana = dsno[0, k]
-                        new_swe = (ana / dsn[:, k]) * old_swe[:, k, :].copy()
-
+                        new_swe[0, k, :] = (dsno[0, k] / dsn[0, k]) * old_swe[0, k, :]
+                        
                         for m in range(nlayer):
                             var = PREP.variables[swe + str(m + 1)]
-                            var[0, k] = new_swe[0, m]
+                            var[0, k] = new_swe[0, k, m]
 
                     # Model guess <= 10 cm -> use other profiles!
                     else:
-
+                        
                         # Observation >= 10 cm
                         if (dsno[0, k] >= .10):
                             PREP_ext  = netCDF4.Dataset(extprep50, 'r')
@@ -223,9 +239,12 @@ class prep_tomodify(object):
                                 if str(x) == "--":
                                     x = 1.
                                 var[0, k] = x
-
+                                
+                        PREP_ext.close()
+                        
             OBS_nc.close()
-            PREP.close()
+            PREP.close()           
+            
 
 
 # Test

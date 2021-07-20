@@ -12,7 +12,7 @@ from utils.prosimu import prosimu
 
 
 class massif_simu(prosimu):
-
+    """Class overriding prosimu to add massif-scale diagnostics"""
     SurfexNatRiskName = 'NAT_LEV'
     MassifRiskName = 'naturalIndex'
     massif_dim_name = 'massif'
@@ -22,7 +22,7 @@ class massif_simu(prosimu):
     slope_var_name = 'slope'
 
     def massif_natural_risk(self):
-
+        """Compute massif-scale natural hazard index and add it to the file"""
         if self.SurfexNatRiskName not in self.listvar():
             return
 
@@ -76,6 +76,21 @@ class massif_simu(prosimu):
         var[:, :] = np.max(np.nanmean(risk_array, axis=2), axis=1)
 
     def warnings(self, minaltitude, maxaltitude, minlevel, maxlevel, naspects, list_aspects):
+        """Check if all elevations and aspects are present in the computation of massif-scale natural hazard index
+
+        :param minaltitude: Minimum elevation present in the PRO file
+        :type minaltitude: float
+        :param maxaltitude: Maximum elevation present in the PRO file
+        :type maxaltitude: float
+        :param minlevel: Minimum elevation considered in massif-scale natural hazard index
+        :type minlevel: float
+        :param maxlevel: Maximum elevation considered in massif-scale natural hazard index
+        :type maxlevel: float
+        :param naspects: Number of aspects present in the PRO file
+        :type naspects: int
+        :param list_aspects: List of aspects present in the PRO file
+        :type list_aspects: list
+        """
         if minaltitude > minlevel:
             print ("WARNING: the massif-scale natural avalanche hazard index is not computed with all expected elevations")
             print ("Lowest available level: " + str(minaltitude))

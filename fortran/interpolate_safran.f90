@@ -1,5 +1,7 @@
 PROGRAM INTERPOLATE_SAFRAN
-! 
+!
+! This program interpolate SAFRAN meteorological data
+!
 USE NETCDF
 USE MODN_INTERPOL_SAFRAN
 !
@@ -1813,6 +1815,14 @@ DEALLOCATE(ZYHAT)
 END SUBROUTINE EXPLICIT_SLOPE
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE EXPLICIT_SLOPE_LAT_LON(PX,PY,PZS,PSSO_SLOPE,PSSO_DIR)
+! Subroutine documentation
+!
+! :param PX: PX
+! :param PY: PY
+! :param PZS: PZS
+! :param PSSO_SLOPE: SLOPE
+! :param PSSO_DIR: DIR
+!
 DOUBLE PRECISION, DIMENSION(:,:),   INTENT(IN) :: PX,PY
                                            ! given conformal coordinates of the 
                                            ! processed points (meters);

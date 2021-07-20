@@ -206,7 +206,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ntasks         = self.conf.ntasks,
                 members        = footprints.util.rangex(self.conf.members),
                 terms          = footprints.util.rangex(self.conf.ana_terms),
-                extendpypath = ['/home/gmap/mrpe/mary/public/eccodes_python'] + [self.sh.path.join(self.conf.rootapp, d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site']],
+                extendpypath   = [self.sh.path.join('/'.join(self.conf.iniconf.split('/')[:-2]), d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site', 'epygram/eccodes_python']],
             )
             print t.prompt, 'tb04 =', expresso
             print

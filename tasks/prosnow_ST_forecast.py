@@ -60,7 +60,7 @@ class Prosnow_ST_Forecast(Task, S2MTaskMixIn):
 #                 role           = 'Forcing',
 #                 local          = 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
 #                 vapp           = 'safran',
-#                 vconf          = 'alp',
+#                 vconf          = self.conf.geom_safran,
 #                 block          = 'massifs/[datebegin:nivologyseason]',
 #                 source_app     = 'arpege',
 #                 source_conf    = 'pearp',
@@ -84,7 +84,7 @@ class Prosnow_ST_Forecast(Task, S2MTaskMixIn):
                  local          = 'mb[member]/FORCING_{0:s}_[dateend::ymd6h].nc'.format(self.conf.datebegin.ymdh),
                  experiment     = xpid,
                  block          = 'massifs',
-                 geometry       = 'alp',
+                 geometry       = self.conf.geom_safran,
                  member         = members,
                  nativefmt      = 'netcdf',
                  model          = 'safran',
@@ -93,7 +93,7 @@ class Prosnow_ST_Forecast(Task, S2MTaskMixIn):
                  namespace      = 'vortex.multi.fr',
                  date           = '{0:s}03'.format(self.conf.datebegin.ymd),
                  vapp           = 's2m',
-                 vconf          = 'alp',
+                 vconf          = self.conf.geom_safran,
             )
 
             print(t.prompt, 'in_tb01 =', in_tb01)
@@ -109,6 +109,7 @@ class Prosnow_ST_Forecast(Task, S2MTaskMixIn):
                 genv            = 'uenv:prosnow.01@CONST_PROSNOW',
                 gvar            = 'namelist_surfex',
                 local           = 'OPTIONS1.nam',
+                intent          = 'inout'
             )
             print(t.prompt, 'in_tb02 =', in_tb02)
             print()
@@ -315,12 +316,12 @@ class Prosnow_ST_Forecast(Task, S2MTaskMixIn):
             self.sh.title('Toolbox algo alg_tb02')
             '''2) ALGO -> run surfex (Surfex_Component)'''
             alg_tb02 = toolbox.algo(
-                kind                       = 'ensmeteo',
+                kind                       = 'ensmeteonodet',
                 engine                     = 's2m',
                 datebegin                  = my_datebegin,
                 dateend                    = my_dateend,
                 ntasks                     = self.conf.ntasks,
-                geometry                   = list_geometry,
+                geometry                   = [u'allslopes'],
                 daily                      = True,
                 dailynamelist              = ["OPTIONS1.nam", "OPTIONS2.nam", "OPTIONS3.nam", "OPTIONS4.nam"],
             )
@@ -390,6 +391,7 @@ class Prosnow_ST_Forecast(Task, S2MTaskMixIn):
 #                 geometry       = self.conf.geometry,
 #                 datebegin      = '[dateend]/-PT24H',
 #                 dateend        = list(daterange(tomorrow(base=my_datebegin), my_dateend)),
+#                 date           = '[dateend]/-PT24H',
 #                 nativefmt      = 'netcdf',
 #                 kind           = 'SnowpackSimulation',
 #                 model          = 'surfex',
@@ -412,6 +414,7 @@ class Prosnow_ST_Forecast(Task, S2MTaskMixIn):
                 username       = 'carmagnolac',
                 datebegin      = self.conf.datebegin,
                 dateend        = self.conf.dateend,
+                date           = self.conf.datebegin,
                 tube           = 'ftp',
                 geometry       = self.conf.geometry,
                 nativefmt      = 'netcdf',
@@ -429,6 +432,7 @@ class Prosnow_ST_Forecast(Task, S2MTaskMixIn):
 #                 geometry       = self.conf.geometry,
 #                 datebegin      = [my_datebegin],
 #                 dateend        = [my_dateend],
+#                 date           = [my_datebegin],
 #                 nativefmt      = 'netcdf',
 #                 kind           = 'MeteorologicalForcing',
 #                 model          = 's2m',
@@ -451,6 +455,7 @@ class Prosnow_ST_Forecast(Task, S2MTaskMixIn):
                 username       = 'carmagnolac',
                 datebegin      = self.conf.datebegin,
                 dateend        = self.conf.dateend,
+                date           = self.conf.datebegin,
                 tube           = 'ftp',
                 geometry       = self.conf.geometry,
                 nativefmt      = 'netcdf',
