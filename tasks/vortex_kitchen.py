@@ -169,9 +169,7 @@ class vortex_kitchen(object):
                 if not os.path.islink(conffilename):
                     # Operational case : the configuration files are provided :
                     # only create a symbolic link in the appropriate directory
-                    if os.path.exists("../snowtools/DATA/OPER/" + conffilename):
-                        os.symlink("../snowtools/DATA/OPER/" + conffilename, conffilename)
-                    elif os.path.exists("../snowtools/conf/" + conffilename):
+                    if os.path.exists("../snowtools/conf/" + conffilename):
                         os.symlink("../snowtools/conf/" + conffilename, conffilename)
                     else:
                         print("WARNING : No conf file found in snowtools")
