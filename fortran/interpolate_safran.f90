@@ -1095,7 +1095,9 @@ CHARACTER(*),PARAMETER::HMASSIF='massif_num'
 CHARACTER(*),PARAMETER::HASPECT='aspect'
 CHARACTER(*),PARAMETER::HSLOPE='slope'
 CHARACTER(*),PARAMETER::HLAT='latitude'
+CHARACTER(*),PARAMETER::HLAT1D='LAT'
 CHARACTER(*),PARAMETER::HLON='longitude'
+CHARACTER(*),PARAMETER::HLON1D='LON'
 CHARACTER(*),PARAMETER::HX='x'
 CHARACTER(*),PARAMETER::HY='y'
 !
@@ -1170,6 +1172,16 @@ IF(IRANK == 1)THEN
        start =(/1,1/) , count = (/NX,NY/)), &
                          "Cannot read "//HSLOPE)
   ENDIF
+  IF (NF90_INQ_VARID(FILE_ID_GEO, HLAT1D,IDVARLAT) == NF90_NOERR) THEN
+    CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARLAT,PLATOUT , &
+            start =(/IXSTART/) , count = (/NX_PROC/)), &
+            "Cannot read "//HLAT1D)
+  END IF
+  IF (NF90_INQ_VARID(FILE_ID_GEO, HLON1D,IDVARLON) == NF90_NOERR) THEN
+    CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARLON,PLONOUT , &
+            start =(/IXSTART/) , count = (/NX_PROC/)), &
+            "Cannot read "//HLON1D)
+  END IF
   !
 ELSEIF(IRANK == 2)THEN
   IF (GT == "XY") THEN  !X Y GRID
