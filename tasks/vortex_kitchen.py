@@ -43,11 +43,6 @@ class vortex_kitchen(object):
         self.confdir    = "/".join([self.workingdir, 'conf'])
         self.jobdir     = "/".join([self.workingdir, "jobs"])
 
-        if self.options.oper:
-            self.jobtemplate = "job-s2m-oper.py"
-        else:
-            self.jobtemplate = "job-vortex-default.py"
-
         machine = os.uname()[1]
         if 'taranis' in machine:
             self.profile = "rd-taranis-mt"
@@ -91,16 +86,16 @@ class vortex_kitchen(object):
             if self.options.oper:
                 os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/oper", "tasks")
             else:
-                os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks", "tasks")
+                if self.options.soda:
+                    os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/research/crampon", "tasks")
+                elif self.options.surfex:
+                    os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/research/surfex", "tasks")
+                else:
+                    os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/research/safran", "tasks")
 
         for directory in ["conf", "jobs"]:
             if not os.path.isdir(directory):
                 os.mkdir(directory)
-
-        os.chdir("jobs")
-        if not os.path.isfile(self.jobtemplate):
-            os.symlink(os.environ["SNOWTOOLS_CEN"] + "/jobs/" + self.jobtemplate, self.jobtemplate)
-        os.chdir(self.workingdir)
 
     def init_job_task(self, jobname=None):
         if self.options.surfex:
