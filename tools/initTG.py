@@ -22,7 +22,11 @@ from tools.execute import callSurfexOrDie
 
 
 def create_env(diroutput):
-    """Create working directory and directories to save outputs"""
+    """Create working directory and directories to save outputs
+
+    :param diroutput: output directory
+    :type diroutput: str
+    """
 
     # Note that it is not necessary to remove any existing working directory as the working directory is always new
     # (date in microseconds in the directory name)
@@ -41,7 +45,20 @@ def create_env(diroutput):
 
 
 def get_meteo_for_clim(forcingpath, datebegin, dateend, geolist, list_forcing=[]):
+    """Get the meteorological forcing files required to compute a climatology
+    This is a recursive function until all files are found.
 
+    :param forcingpath: directory where are stored the forcing files
+    :type forcingpath: str
+    :param datebegin: First date of the climatology period
+    :type datebegin: class:`datetime.datetime`
+    :param dateend: Last date of the climatology period
+    :type dateend: class:`datetime.datetime`
+    :param geolist: list defining the domain
+    :type geolist: list
+    :param list_forcing: list of forcing files previously found by previous iterations (should not be set by the user)
+    :type list_forcing: list, optional
+    """
     if type(forcingpath) is str:
         forcingpath = [forcingpath]
     list_forcing_tomerge = []
@@ -80,7 +97,11 @@ def get_meteo_for_clim(forcingpath, datebegin, dateend, geolist, list_forcing=[]
 
 
 def generate_clim(list_forcing):
+    """Generate a temperature climatology from meteorological forcing files
 
+    :param list_forcing: List of forcing files addresses
+    :type list_forcing: list of str
+    """
     DataMeteo = prosimu(list_forcing)
     Tair = DataMeteo.read("Tair", keepfillvalue=True)
     spatialdim = DataMeteo.getdimvar("Tair")[1:]
@@ -100,7 +121,11 @@ def generate_clim(list_forcing):
 
 
 def clim(options):
+    """Generate a temperature climatology from S2M options
 
+    :param options: S2M options
+    :type options: dict
+    """
     # Save initial directory to go back at the end
     initcurrentdirectory = os.getcwd()
 

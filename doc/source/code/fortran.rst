@@ -14,4 +14,12 @@ shapefile2NetCDF tool
 
 This module is also an executable script:
 
-.. include:: ./autoscripts/fortran-shapefile2NetCDF.rst
+.. include:: ./autoscripts/fortran--shapefile2NetCDF.rst
+
+The interpolation tool
+----------------------
+
+The interpolation tool is written in FORTRAN
+
+.. f:autoprogram:: INTERPOLATE_SAFRAN
+

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -249,9 +248,17 @@ def netcdf_dataset_diff(netcdf4_ref, netcdf4_new, verbose=True):
         rc = True
         ref_values = ref_vars.pop(path_to_var)[...]
         new_values = new_vars.pop(path_to_var)[...]
-        ref_nans = np.isnan(ref_values).filled(False)
-        new_nans = np.isnan(new_values).filled(False)
-        if np.any(ref_nans) or np.any(new_nans):
+        # Specifically look for NaNs
+        try:
+            ref_nans = np.isnan(ref_values).filled(False)
+            new_nans = np.isnan(new_values).filled(False)
+        except TypeError:
+            # a TypeError is raised if ref_values or new_values are not
+            # numerical data (e.g strings)
+            numeric_type = False
+        else:
+            numeric_type = True
+        if numeric_type and (np.any(ref_nans) or np.any(new_nans)):
             if not np.array_equal(ref_nans, new_nans):
                 updated_vars.add(path_to_var)
                 continue

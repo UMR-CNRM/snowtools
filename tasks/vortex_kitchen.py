@@ -7,12 +7,12 @@ Created on 23 févr. 2018
 @author: lafaysse
 """
 
-import os
 import datetime
+import os
 import shutil
 
-from utils.resources import InstallException
 from utils.dates import WallTimeException
+from utils.resources import InstallException
 from bronx.stdtypes.date import Period
 
 
@@ -42,11 +42,6 @@ class vortex_kitchen(object):
         self.workingdir = "/".join([self.options.workdir, self.options.xpid, self.options.vapp, self.options.vconf])
         self.confdir    = "/".join([self.workingdir, 'conf'])
         self.jobdir     = "/".join([self.workingdir, "jobs"])
-
-        if self.options.oper:
-            self.jobtemplate = "job-s2m-oper.py"
-        else:
-            self.jobtemplate = "job-vortex-default.py"
 
         machine = os.uname()[1]
         if 'taranis' in machine:
@@ -91,16 +86,16 @@ class vortex_kitchen(object):
             if self.options.oper:
                 os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/oper", "tasks")
             else:
-                os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks", "tasks")
+                if self.options.soda:
+                    os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/research/crampon", "tasks")
+                elif self.options.surfex:
+                    os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/research/surfex", "tasks")
+                else:
+                    os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/research/safran", "tasks")
 
         for directory in ["conf", "jobs"]:
             if not os.path.isdir(directory):
                 os.mkdir(directory)
-
-        os.chdir("jobs")
-        if not os.path.isfile(self.jobtemplate):
-            os.symlink(os.environ["SNOWTOOLS_CEN"] + "/jobs/" + self.jobtemplate, self.jobtemplate)
-        os.chdir(self.workingdir)
 
     def init_job_task(self, jobname=None):
         if self.options.surfex:
@@ -112,8 +107,10 @@ class vortex_kitchen(object):
         if self.options.oper:
             if self.options.monthlyreanalysis:
                 self.reftask = "monthly_surfex_reanalysis"
+            elif self.options.forecast:
+                self.reftask = "ensemble_surfex_tasks_forecast"
             else:
-                self.reftask = "ensemble_surfex_tasks"
+                self.reftask = "ensemble_surfex_tasks_analysis"
             self.nnodes = 1
             self.period = "rundate=" + self.options.datedeb.strftime("%Y%m%d%H%M")
             # Note that the jobname is used to discriminate self.conf.previ in vortex task
@@ -172,9 +169,7 @@ class vortex_kitchen(object):
                 if not os.path.islink(conffilename):
                     # Operational case : the configuration files are provided :
                     # only create a symbolic link in the appropriate directory
-                    if os.path.exists("../snowtools/DATA/OPER/" + conffilename):
-                        os.symlink("../snowtools/DATA/OPER/" + conffilename, conffilename)
-                    elif os.path.exists("../snowtools/conf/" + conffilename):
+                    if os.path.exists("../snowtools/conf/" + conffilename):
                         os.symlink("../snowtools/conf/" + conffilename, conffilename)
                     else:
                         print("WARNING : No conf file found in snowtools")
@@ -213,7 +208,7 @@ class vortex_kitchen(object):
 
     def mkjob_list_commands(self):
 
-        if self.options.escroc and self.options.nnodes > 1:
+        if not self.options.safran and (self.options.escroc and self.options.nnodes > 1):
             mkjob_list = []
             print("loop")
             for node in range(1, self.options.nnodes + 1):
@@ -271,6 +266,8 @@ class vortex_kitchen(object):
             estimation = Period(minutes=minutes_peryear[key]) * \
                          max(1, (self.options.datefin.year - self.options.datedeb.year)) * \
                          (1 + nmembers / (40 * self.options.nnodes))
+
+            #!!!! Ne marche pas à tous les coups... 
 
             if estimation >= datetime.timedelta(hours=24):
                 raise WallTimeException(estimation)

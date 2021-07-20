@@ -21,13 +21,13 @@ A script, called ``proReader`` allow to easily and quickly plot Crocus outputs (
    :maxdepth: 2
 
    The GUI/CLI script ProReader <plots-proreader>
-   Functions to plot snow stratigraphy <plots-strati>
 
-Classes
--------
+Classes or functions
+--------------------
 
 .. toctree::
    :maxdepth: 2
 
-    Classes to plot maps <plots-maps>
-    Temporal plots and comparison tools <plots-temporal>
+   Classes to plot maps <plots-maps>
+   Temporal plots and comparison tools <plots-temporal>
+   Functions to plot snow stratigraphy <plots-strati>

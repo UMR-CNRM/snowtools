@@ -18,7 +18,21 @@ from bronx.datagrip.namelist import NamelistParser
 
 
 def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam", forcing="FORCING.nc", dateend=None, updateloc=True, nmembers = None):
-    '''This function updates a namelist file through the bronx module.'''
+    """This function updates a namelist file through the bronx module. Called by standalone S2M but not by vortex
+
+    :param datebegin: Initial date of simulation
+    :type datebegin: class:`bronx.stdtypes.date.Date`
+    :param namelistfile: Address of namelist to modified. Defaults to "OPTIONS.nam"
+    :type namelistfile: str, optional
+    :param forcing: Address of associated forcing file. Defaults to "FORCING.nc"
+    :type forcing: str, optional
+    :param dateend: Last date of simulation (only necessary if different from the end of the FORCING file)
+    :type dateend: class:`bronx.stdtypes.date.Date`, optional
+    :param updateloc: Modify coordinates in the namelist from the forcing file. Defaults to True
+    :type updateloc: bool, optional
+    :param nmembers: number of members for mutiphysics simulations. Defaults to None
+    :type nmembers: int, optional
+    """
     if not os.path.isfile(namelistfile):
         raise FileNameException(os.getcwd() + "/OPTIONS.nam")
     n = NamelistParser()
@@ -36,7 +50,25 @@ def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam", forcing="
 
 
 def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc", dateend=None, updateloc=True, physicaloptions={}, snowparameters={}):
-    '''This function updates a NamelistSet object of the bronx module or a NamelistContents object of the vortex module.'''
+    """This function updates a class:`bronx.datagrip.namelist.NamelistSet` object. Called directly by vortex algos.
+
+    :param NamelistObject: Namelist to modified.
+    :type NamelistObject: class:`bronx.datagrip.namelist.NamelistSet`
+    :param datebegin: Initial date of simulation
+    :type datebegin: class:`bronx.stdtypes.date.Date`
+    :param forcing: Address of associated forcing file. Defaults to "FORCING.nc"
+    :type forcing: str, optional
+    :param dateend: Last date of simulation (only necessary if different from the end of the FORCING file)
+    :type dateend: class:`bronx.stdtypes.date.Date`, optional
+    :param updateloc: Modify coordinates in the namelist from the forcing file. Defaults to True
+    :type updateloc: bool, optional
+    :param nmembers: number of members for SODA simulations. Defaults to None
+    :type nmembers: int, optional
+    :param physicaloptions: ESCROC physical options. Defaults to {}.
+    :type physicaloptions: dict, optional
+    :param snowparameters: ESCROC physical parameters. Defaults to {}.
+    :type snowparameters: dict, optional
+    """
     NamelistObject = update_mandatory_settings(NamelistObject)
     NamelistObject = update_dates(NamelistObject, datebegin)
     if updateloc:
@@ -50,12 +82,23 @@ def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc
 
 
 def check_or_create_block(NamelistObject, blockname):
+    """Create a new namelist block only if it does not already exist.
+
+    :param NamelistObject: Namelist to modified
+    :type NamelistObject: class:`bronx.datagrip.namelist.NamelistSet`
+    :param blockname: name of new block
+    :type blockname: str
+    """
     if blockname not in NamelistObject.keys():
         NamelistObject.newblock(blockname)
 
 
 def update_mandatory_settings(NamelistObject):
-    '''Force some options whose values are mandatory to be compatible with snowtools_git'''
+    """Force some options whose values are mandatory to be compatible with snowtools_git
+
+    :param NamelistObject: Namelist to modified
+    :type NamelistObject: class:`bronx.datagrip.namelist.NamelistSet`
+    """
     check_or_create_block(NamelistObject, "NAM_IO_OFFLINE")
     NamelistObject["NAM_IO_OFFLINE"].CSURF_FILETYPE = "NC "
     NamelistObject["NAM_IO_OFFLINE"].CFORCING_FILETYPE = "NETCDF"
@@ -73,7 +116,13 @@ def update_mandatory_settings(NamelistObject):
 
 
 def update_dates(NamelistObject, datebegin):
-    """Modify SURFEX namelist for defining the beginning of the simulation."""
+    """Modify SURFEX namelist for defining the beginning of the simulation.
+
+    :param NamelistObject: Namelist to modified
+    :type NamelistObject: class:`bronx.datagrip.namelist.NamelistSet`
+    :param datebegin: Initial date of simulation
+    :type datebegin: class:`bronx.stdtypes.date.Date`
+    """
     check_or_create_block(NamelistObject, "NAM_PREP_SURF_ATM")
     NamelistObject["NAM_PREP_SURF_ATM"].NYEAR = datebegin.year
     NamelistObject["NAM_PREP_SURF_ATM"].NMONTH = datebegin.month
@@ -84,8 +133,13 @@ def update_dates(NamelistObject, datebegin):
 
 
 def update_loc(NamelistObject, forcing):
-    """modify SURFEX namelist for defining the coordinates of the simulation points."""
+    """Modify SURFEX namelist for defining the coordinates of the simulation points.
 
+    :param NamelistObject: Namelist to modified
+    :type NamelistObject: class:`bronx.datagrip.namelist.NamelistSet`
+    :param forcing: Address of associated forcing file.
+    :type forcing: str
+    """
     if NamelistObject["NAM_PGD_GRID"].CGRID == "LONLATVAL":
         check_or_create_block(NamelistObject, "NAM_LONLATVAL")
         # Read coordinates in FORCING file
@@ -122,8 +176,17 @@ def update_loc(NamelistObject, forcing):
 
 
 def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"):
+    """Modify SURFEX namelist limiting the dates to read in a FORCING file longer than the simulation.
 
-    """modify SURFEX namelist for limiting the dates to read in a FORCING file longer than the simulation."""
+    :param NamelistObject: Namelist to modified
+    :type NamelistObject: class:`bronx.datagrip.namelist.NamelistSet`
+    :param datebegin: Initial date of simulation
+    :type datebegin: class:`bronx.stdtypes.date.Date`
+    :param dateend: Last date of simulation
+    :type dateend: class:`bronx.stdtypes.date.Date`
+    :param forcing: Address of associated forcing file. Defaults to "FORCING.nc"
+    :type forcing: str, optional
+    """
 
     forc = prosimu(forcing)
     timeforc = forc.readtime()
@@ -151,6 +214,13 @@ def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"
 
 
 def update_physicaloptions(NamelistObject, **kwargs):
+    """Modify physical options for ESCROC simulations
+
+    :param NamelistObject: Namelist to modified
+    :type NamelistObject: class:`bronx.datagrip.namelist.NamelistSet`
+    :param \*\*kwargs: ESCROC physical options. Defaults to {}.
+    :type \*\*kwargs: dict, optional
+    """
     check_or_create_block(NamelistObject, "NAM_ISBA_SNOWn")
     for key, value in six.iteritems(kwargs):
         if key.upper() in ["CSNOWDRIFT", "LSNOWDRIFT_SUBLIM", "LSNOW_ABS_ZENITH", "CSNOWMETAMO", "CSNOWRAD", "CSNOWFALL", "CSNOWCOND", "CSNOWHOLD", "CSNOWCOMP", "CSNOWZREF", "LSNOWSYTRON"]:
@@ -160,6 +230,13 @@ def update_physicaloptions(NamelistObject, **kwargs):
 
 
 def update_snowparameters(NamelistObject, **kwargs):
+    """Modify physical parameters for ESCROC simulations
+
+    :param NamelistObject: Namelist to modified
+    :type NamelistObject: class:`bronx.datagrip.namelist.NamelistSet`
+    :param \*\*kwargs: ESCROC physical parameters. Defaults to {}.
+    :type \*\*kwargs: dict, optional
+    """
     check_or_create_block(NamelistObject, "NAM_SURF_CSTS")
     check_or_create_block(NamelistObject, "NAM_SURF_SNOW_CSTS")
     check_or_create_block(NamelistObject, "NAM_ISBAn")
@@ -177,7 +254,13 @@ def update_snowparameters(NamelistObject, **kwargs):
 
 
 def update_namelist_object_nmembers(NamelistObject, nmembers):
+    """Modify number of members for SODA simulations
 
+    :param NamelistObject: Namelist to modified
+    :type NamelistObject: class:`bronx.datagrip.namelist.NamelistSet`
+    :param nmembers: number of members for SODA simulations.
+    :type nmembers: int
+    """
     if nmembers is not None:
         check_or_create_block(NamelistObject, "NAM_ENS")
         setattr(NamelistObject["NAM_ENS"], 'NENS', nmembers)
@@ -187,9 +270,18 @@ def update_namelist_object_nmembers(NamelistObject, nmembers):
 
 
 def update_namelist_var(namelist_file, data_file):
+    """ Modify snowmaking parameters.
+    The function reads "water consumption data for snowmaking" from an external file (data_file)
+    and updates a namelist (namelist_file) accordingly.
+    This function was implemented by C. Carmagnola in December 2018 (PROSNOW project).
+    Comment Matthieu : the copy at the end is awful and dangerous for use in vortex, can we remove ?
 
-    ''' This function was implemented by C. Carmagnola in December 2018 (PROSNOW project).
-    It reads "water consumption data for snowmaking" from an external file (data_file) and updates a namelist (namelist_file) accordingly.'''
+
+    :param namelist_file: namelist address
+    :type namelist_file: str
+    :param data_file: file containing water consumption data
+    :type data_file: str
+    """
 
     # 1) Read data from an external file
 
@@ -230,9 +322,4 @@ def update_namelist_var(namelist_file, data_file):
 
     os.system('cp ' + namelist_file + ' OPTIONS.nam')
 
-
-# Test
-
-# if __name__ == "__main__":
-#     update_namelist_var("/home/carmagnolac/Desktop/OPTIONS_V8.1_1h_0.nam", "/home/carmagnolac/Desktop/Technoalpin_saisies.txt")
 

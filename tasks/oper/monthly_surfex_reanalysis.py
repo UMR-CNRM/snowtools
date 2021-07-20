@@ -66,7 +66,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 cutoff         = 'assimilation',
                 fatal          = True
             ),
-            print(t.prompt, 'tb01 =', tb01)
+            print((t.prompt, 'tb01 =', tb01))
             print()
 
             self.sh.title('Toolbox input tb02')
@@ -76,12 +76,12 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 nativefmt      = 'netcdf',
                 local          = 'PGD.nc',
                 geometry       = self.conf.geometry,
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv           = self.conf.cycle,
                 gvar           = 'pgd_[geometry::area]',
                 model          = 'surfex',
                 fatal          = True,
             ),
-            print(t.prompt, 'tb02 =', tb02)
+            print((t.prompt, 'tb02 =', tb02))
             print()
 
             self.sh.title('Toolbox input tb03')
@@ -94,15 +94,15 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 datevalidity   = datebegin,
                 date           = rundate_prep,
                 member         = 35,
+                namespace      = 'vortex.multi.fr',
                 intent         = 'inout',
                 nativefmt      = 'netcdf',
                 kind           = 'PREP',
                 model          = 'surfex',
-                namespace      = 'vortex.multi.fr',
                 fatal          = False,
                 cutoff         = 'assimilation'
             ),
-            print(t.prompt, 'tb03 =', tb03)
+            print((t.prompt, 'tb03 =', tb03))
             print()
 
             for i, alternate_prep in enumerate(alternate_rundate_prep):
@@ -119,15 +119,15 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                     datevalidity   = datebegin,
                     date           = alternate_prep[0],
                     member         = 35,
+                    namespace      = 'vortex.multi.fr',
                     intent         = 'inout',
                     nativefmt      = 'netcdf',
                     kind           = 'PREP',
                     model          = 'surfex',
-                    namespace      = 'vortex.multi.fr',
                     fatal          = False,
                     cutoff         = alternate_prep[1]
                 ),
-                print(t.prompt, 'tb03b =', tb03b)
+                print((t.prompt, 'tb03b =', tb03b))
                 print()
 
             # Last chance is the reanalysis if even the deterministic run was stopped:
@@ -135,7 +135,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
             tb03d = toolbox.input(
                 alternate      = 'SnowpackInit',
                 local          = 'PREP.nc',
-                experiment     = 'reanalysis@lafaysse',
+                experiment     = self.ref_reanalysis,
                 geometry       = self.conf.geometry,
                 date           = datebegin,
                 intent         = 'inout',
@@ -158,11 +158,11 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapI_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv           = 'uenv:cen.01@CONST_CEN',
+                genv           = self.conf.cycle,
                 source         = 'ecoclimap1',
                 model          = 'surfex',
             ),
-            print(t.prompt, 'tb04 =', tb04)
+            print((t.prompt, 'tb04 =', tb04))
             print()
 
             self.sh.title('Toolbox input tb05')
@@ -172,36 +172,37 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapII_eu_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv           = self.conf.cycle,
                 source         = 'ecoclimap2',
                 model          = 'surfex',
             ),
-            print(t.prompt, 'tb05 =', tb05)
+            print((t.prompt, 'tb05 =', tb05))
             print()
 
             self.sh.title('Toolbox input tb06')
             tb06 = toolbox.input(
                 role            = 'Parameters for F06 metamorphism',
                 kind            = 'ssa_params',
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv            = self.conf.cycle,
                 nativefmt       = 'netcdf',
                 local           = 'drdt_bst_fit_60.nc',
-                model          = 'surfex',
+                model           = 'surfex',
             )
-            print(t.prompt, 'tb06 =', tb06)
+            print((t.prompt, 'tb06 =', tb06))
             print()
 
             self.sh.title('Toolbox input tb07')
             tb07 = toolbox.input(
                 role            = 'Nam_surfex',
                 source          = 'OPTIONS_reanalysis.nam',
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv            = self.conf.cycle,
                 kind            = 'namelist',
+                intent          = 'inout',
                 model           = 'surfex',
                 local           = 'OPTIONS.nam',
             )
 
-            print(t.prompt, 'tb07 =', tb07)
+            print((t.prompt, 'tb07 =', tb07))
             print()
 
             self.sh.title('Toolbox executable tb08= tbx1')
@@ -210,11 +211,11 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 kind           = 'offline',
                 local          = 'OFFLINE',
                 model          = 'surfex',
-                genv           = 'uenv:cen.01@CONST_CEN',
+                genv           = self.conf.cycle,
                 gvar           = 'master_surfex_offline_mpi',
             )
 
-            print(t.prompt, 'tb08 =', tb08)
+            print((t.prompt, 'tb08 =', tb08))
             print()
 
         if 'compute' in self.steps:
@@ -229,7 +230,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 geometry_in     = list_geometry,
                 geometry_out     = self.conf.geometry.area
             )
-            print(t.prompt, 'tb09a =', tb09)
+            print((t.prompt, 'tb09a =', tb09))
             print()
             tb09.run()
 
@@ -242,7 +243,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 dateend      = dateend,
                 forcingname  = firstforcing
             )
-            print(t.prompt, 'tb09a =', tb10)
+            print((t.prompt, 'tb09a =', tb10))
             print()
             tb10.run()
 
@@ -257,7 +258,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 threshold      = self.conf.threshold,
                 daily          = False
             )
-            print(t.prompt, 'tb11 =', tb11)
+            print((t.prompt, 'tb11 =', tb11))
             print()
 
             self.component_runner(tbalgo3, tbx1)
@@ -283,7 +284,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                     cutoff         = 'assimilation',
                     fatal          = False
                 ),
-                print(t.prompt, 'tb10 =', tb10)
+                print((t.prompt, 'tb10 =', tb10))
                 print()
 
             self.sh.title('Toolbox output tb11')
@@ -302,7 +303,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 cutoff         = 'assimilation',
                 fatal          = False
             ),
-            print(t.prompt, 'tb11 =', tb11)
+            print((t.prompt, 'tb11 =', tb11))
             print()
 
             # Prep file is saved directly in the 03h run output of the same day in order to update initial conditions for the next day
@@ -323,5 +324,5 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 cutoff         = 'assimilation',
                 fatal          = True
             ),
-            print(t.prompt, 'tb12 =', tb12)
+            print((t.prompt, 'tb12 =', tb12))
             print()

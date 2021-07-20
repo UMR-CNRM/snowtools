@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """An object-oriented interface to .netrc files.
 
 This code has been extacted from Python 3.5 and two patches have been applied:

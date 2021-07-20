@@ -50,7 +50,8 @@ class Safran_command(_S2M_command):
         parser.add_argument('--oper', action='store_true', help='Operational chain')
         parser.add_argument('--safran', help='Launch safran task', action='store_true', default=True)
         parser.add_argument('--prepsaf', help='Launch prepsaf task', action='store_true', default=False)
-        parser.add_argument('--ensemble', help='Explicitely specify an ensemble simulation', action='store_true')
+        parser.add_argument('--ensemble', help='Explicitly specify an ensemble simulation', action='store_true')
+        parser.add_argument('--ntasks', help='Explicitly specify the number of tasks by node (not used in general)', default=None)
 
         args = parser.parse_args()
 

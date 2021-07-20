@@ -1,13 +1,26 @@
+# -*- coding: utf-8 -*-
 '''
 Created on 22 mai 2018
 
-@author: lafaysse
+:Authors:
+    M. Lafaysse
 '''
+
 import numpy as np
 
 
 class ESCROC_subensembles(dict):
-    '''Define the different subensembles of ESCROC and provide the corresponding namelist components'''
+    """
+    Define the different subensembles of ESCROC and provide the corresponding namelist components
+
+    See methods for available subensemble name and description
+
+    :param subensemble: The subensemble name
+    :type subensemble: str
+    :param members: Passed to the subsensemble definition
+    :param randomDraw: if True, perform a random Draw for E1-like subensemble
+    :type randomDraw: bool
+    """
 
     def __init__(self, subensemble, members, randomDraw = False):
 
@@ -47,6 +60,9 @@ class ESCROC_subensembles(dict):
             raise Exception("The subensemble selected is not defined in ESCROCsubensembles.py")
 
     def E1(self, members, randomDraw = False):
+        """
+        E1 subensemble: the most complete one
+        """
 
         self.snowflist = ['V12', 'S02', 'A76']
         self.metamlist = ['C13', 'F06', 'S-F']
@@ -66,10 +82,10 @@ class ESCROC_subensembles(dict):
         E1tartes is a random draw inside the big Tartes ensemble
         members is a sorted list of members id (ex 1...35)
 
-        /!\ member identities will be different from one run to another
+        .. warning::
+           Member identities will be different from one run to another
 
-        NEW : 12/11/18 :
-                activate/deactivate random draw
+        NEW : 12/11/18 : activate/deactivate random draw
 
         """
 
@@ -87,11 +103,12 @@ class ESCROC_subensembles(dict):
 
     def E1notartes(self, members, randomDraw):
         """
-        /!\ quasi duplicate from E1tartes
+        Quasi duplicate from E1tartes
         E1notartes is a duplicate from E1 with T17 replaced by B92
 
-        /!\ member identities will be different from one run to another
-        the returned models are randomly drawn among E1notartes
+        .. warning::
+           member identities will be different from one run to another
+           the returned models are randomly drawn among E1notartes
 
         """
         self.snowflist = ['V12', 'S02', 'A76']
@@ -107,6 +124,9 @@ class ESCROC_subensembles(dict):
         return physical_options, snow_parameters, memberslist
 
     def E2(self, members):
+        """
+        Optimal subensemble at Col de Porte
+        """
 
         allmembers = {1: ['V12', 'C13', 'B60', 'RI1', 'Y81', 'SPK', 'B92', 'CV30000'],
                       2: ['V12', 'C13', 'B60', 'RI1', 'I02', 'B92', 'S14', 'CV30000'],
@@ -156,6 +176,9 @@ class ESCROC_subensembles(dict):
         return physical_options, snow_parameters, members
     
     def E2MIP(self, members):
+        """
+        Optimal subensemble on MIP sites
+        """
 
         allmembers = {1: ['V12', 'C13', 'B60', 'RI2', 'Y81', 'SPK', 'T11', 'CV30000'],
                       2: ['V12', 'C13', 'TAR', 'RI1', 'Y81', 'B02', 'S14', 'CV30000'],
@@ -205,6 +228,9 @@ class ESCROC_subensembles(dict):
         return physical_options, snow_parameters, members
 
     def E2tartes(self, members):
+        """
+        Like E2 but with ``T17`` rad option (Tartes)
+        """
 
         allmembers = {1: ['V12', 'C13', 'T17', 'RI1', 'Y81', 'SPK', 'B92', 'CV30000'],
                       2: ['V12', 'C13', 'T17', 'RI1', 'I02', 'B92', 'S14', 'CV30000'],
@@ -254,6 +280,9 @@ class ESCROC_subensembles(dict):
         return physical_options, snow_parameters, members
 
     def E2MIPtartes(self, members):
+        """
+        Like E2MIP but with ``T17`` rad option (Tartes)
+        """
 
         allmembers = {1: ['V12', 'C13', 'T17', 'RI2', 'Y81', 'SPK', 'T11', 'CV30000'],
                       2: ['V12', 'C13', 'T17', 'RI1', 'Y81', 'B02', 'S14', 'CV30000'],
@@ -303,6 +332,9 @@ class ESCROC_subensembles(dict):
         return physical_options, snow_parameters, members
 
     def Crocus(self, members):
+        """
+        The deterministic member
+        """
 
         members = {1: ['V12', 'C13', 'B60', 'RI1', 'Y81', 'B92', 'B92', 'CV30000']}
 
@@ -318,9 +350,13 @@ class ESCROC_subensembles(dict):
         return physical_options, snow_parameters, members
 
     def drawMembers(self, members, randomDraw):
-        # if randomDraw : random draw (whithout replacement) of len(members) in the whole population
-        # else: returns the members corresponding to members
-        # be careful +1 because starts from 0
+        """
+        if randomDraw : random draw (whithout replacement) of len(members) in the whole population
+        else: returns the members corresponding to members
+        be careful +1 because starts from 0
+
+        :meta private:
+        """
         if randomDraw:
             memberslist = 1 + np.random.choice(len(self.snowflist) * len(self.metamlist) * len(self.radlist) * len(self.turblist) * len(self.condlist) * len(self.holdlist) * len(self.complist) * len(self.cvlist), len(members), replace = False)
         else:
@@ -344,6 +380,9 @@ class ESCROC_subensembles(dict):
         return physical_options, snow_parameters, memberslist
 
     def convert_options(self, snowfall, metamo, radiation, turb, cond, holding, compaction, cv):
+        """
+        :meta private:
+        """
 
         physical_options = dict(
             csnowfall=snowfall,
