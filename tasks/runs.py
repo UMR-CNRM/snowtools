@@ -21,10 +21,10 @@ from utils.resources import get_file_period, get_file_date, get_file_const, save
     get_file_const_or_crash, ldd
 from utils.prosimu import prosimu
 from utils.FileException import DirFileException
+from utils.git import git_infos
 
 
 class surfexrun(object):
-
     """Class for any SURFEX run"""
 
     def __init__(self, datebegin, dateend, forcingpath, diroutput,
@@ -243,9 +243,17 @@ class surfexrun(object):
             prep.close()
 
     def postprocess(self):
+
+        gi = git_infos(self.execdir)
+
+        if 'commit' in gi:
+            surfex_commit = gi['commit']
+        else:
+            surfex_commit = None
+
         profile = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode='a')
         profile.massif_natural_risk()
-        profile.dataset.GlobalAttributes()
+        profile.dataset.GlobalAttributes(surfex_commit=surfex_commit)
         profile.dataset.add_standard_names()
         profile.close()
 
