@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
 Created on 4 oct. 2012
@@ -8,6 +7,11 @@ Created on 4 oct. 2012
 
 
 class DirNameException(Exception):
+    """
+    Exception for a non-existent directory
+
+    :param path: the directory conerned
+    """
 
     def __init__(self, path):
         self.path = path
@@ -22,6 +26,11 @@ class DirNameException(Exception):
 
 
 class DirFileException(Exception):
+    """
+    Exception when a file is provided instead of a directory
+
+    :param path: the file conerned
+    """
 
     def __init__(self, path):
         self.path = path
@@ -36,6 +45,11 @@ class DirFileException(Exception):
 
 
 class FileNameException(Exception):
+    """
+    Exception for a non-existent file
+
+    :param path: the file conerned
+    """
 
     def __init__(self, path):
         self.path = path
@@ -50,6 +64,11 @@ class FileNameException(Exception):
 
 
 class FileOpenException(Exception):
+    """
+    Exception when a file cannot be openned
+
+    :param path: the file conerned
+    """
 
     def __init__(self, path):
         self.path = path
@@ -64,6 +83,11 @@ class FileOpenException(Exception):
 
 
 class FileParseException(Exception):
+    """
+    Exception when parsing an XML file
+
+    :param path: the path to the XML file
+    """
 
     def __init__(self, path):
         self.path = path
@@ -78,6 +102,12 @@ class FileParseException(Exception):
 
 
 class VarNameException(Exception):
+    """
+    Exception when a variable is not found in a netCDF file.
+
+    :param varname: the variable name
+    :param path: the path to netCDF file
+    """
 
     def __init__(self, varname, path):
         self.varname = varname
@@ -93,6 +123,11 @@ class VarNameException(Exception):
 
 
 class TimeException(Exception):
+    """
+    Exception when time variable is not suitable
+
+    :param path: the file conerned
+    """
 
     def __init__(self, path):
         self.path = path
@@ -107,6 +142,12 @@ class TimeException(Exception):
 
 
 class TimeListException(Exception):
+    """
+    Exception when merging timeseries of inconsistent length
+
+    :param path: the list of files for the merge
+    :param dimtime: the list of time dimensions in each file
+    """
 
     def __init__(self, path, dimtime):
         self.path = path
@@ -127,6 +168,9 @@ class TimeListException(Exception):
 
 
 class VarWriteException(Exception):
+    """
+    Exception when trying to write a variable in a netCDF file.
+    """
 
     def __init__(self, varname, varshape, varfileshape):
         self.varname = varname
@@ -145,6 +189,12 @@ class VarWriteException(Exception):
 
 
 class GeometryException(Exception):
+    """
+    Exception when the asked point is not present in selected geometry
+
+    :param altmin: the min altitude in the geometry
+    :param altmax: the max altitude in the geometry
+    """
     def __init__(self, altmin, altmax):
         self.altmin = altmin
         self.altmax = altmax
@@ -174,7 +224,18 @@ class UnknownGridTypeException(Exception):
 
 
 class VarDimensionException(Exception):
-    def __init__(self, varname, var, expectedrank = 1):
+    """
+    Exception when the expected rank is not the correct one in the file
+    for a netCDF variable.
+
+    :param varname: the variable name
+    :type varname: str
+    :param var: The variable object
+    :type var: netCDF variable
+    :param expectedrank: The expected rank
+    :type expectedrank: int
+    """
+    def __init__(self, varname, var, expectedrank=1):
         self.varname = varname
         self.var = var
         self.expectedrank = expectedrank
@@ -187,7 +248,14 @@ class VarDimensionException(Exception):
         red[1] = (self.varname, self.var, self.expectedrank)
         return tuple(red)
 
+
 class MassifException(Exception):
+    """
+    Exception when the selected massif is not present in the file.
+
+    :param massifrequest: The requested massif number
+    :param massifavail: The list of available massifs
+    """
     def __init__(self, massifrequest, massifavail):
         self.massifrequest = massifrequest
         self.massifavail = massifavail
@@ -215,6 +283,9 @@ class ModuleImportException(Exception):
 
 
 class MultipleValueException(Exception):
+    """
+    Exception when multiple values match the semection but only one is allowed
+    """
 
     def __str__(self):
         return "Multiple values match the selection"

@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import numpy as np
@@ -8,8 +7,15 @@ from utils.resources import print_used_memory
 
 
 def interp1d(x, y, tab):
-    '''Return the linear interpolation of y for the tab values of the x coordinate'''
-    '''Method designed to avoid the use of scipy.interpolate (avoid the dependency to an external module and environment problems on Bull)'''
+    """
+    Return the linear interpolation of y for the tab values of the x coordinate
+    Method designed to avoid the use of scipy.interpolate (avoid the dependency to an external module and environment problems on Bull)
+
+    .. warning::
+       This is not relevant anymore
+
+    :meta private:
+    """
     ind_after = np.searchsorted(x, tab)
     ind_before = ind_after - 1
     x_before = np.take(x, ind_before)
@@ -20,6 +26,9 @@ def interp1d(x, y, tab):
 
 
 class sun():
+    """
+    A class for computation around sun and radiations
+    """
 
     printmemory = False
 
@@ -27,18 +36,26 @@ class sun():
         self.missingvalue = -9999999.
 
     def slope_aspect_correction(self, direct, diffus, time, lat_in, lon_in, aspect_in, slope_in, list_list_azim=None, list_list_mask=None, lnosof_surfex=True, convert_time = True, return_angles = False):
+        """
+        This routine corrects the direct solar radiation because due to explicit slope or surrounding masks
 
-        '''This routine corrects the direct solar radiation because due to explicit slope or surrounding masks
-          Input : array of direct solar radiation over an infinite flat surface (time,loc) or (time,x,y)
-                  time vector
-                  latitude vector
-                  longitude vector
-                  aspect vector
-                  slope vector
-          Optional input : list of azimuths and height of masks on each point(radian or degrees ?)
-          Optional input : lnosof_surfex (subgrid orography deactivated in Surfex)
-          Output : corrected direct solar radiation
-          Optional Output : angular positions of sun'''
+        :param direct: array of direct solar radiation over an infinite flat surface (time,loc) or (time,x,y)
+        :param time: time vector
+        :param latitude: latitude vector
+        :param logitude: longitude vector
+        :param aspect: aspect vector
+        :param slope: slope vector
+        :param list_list_azim: list of azimuths of masks on each point(radian or degrees ?)
+        :param list_list_mask: list of heights of masks on each point(radian or degrees ?)
+        :param lnosof_surfex: (subgrid orography deactivated in Surfex)
+        :type lnosof_surfex: bool
+        :param convert_time: take time at the middle of the time step to compute angles more representative of the fluxes
+        :type convert_time: bool
+        :param return_angles: if True, also return the sun angle
+        :type return_angles: bool
+
+        :returns: corrected direct solar radiation and optionally, the angular positions of sun
+        """
         tab_direct = direct[:]
         tab_diffus = diffus[:]
         tab_global = tab_direct + tab_diffus
@@ -272,6 +289,15 @@ class sun():
         return bigvar
 
     def coszenith(self, tab_time_date, lat, lon, slope, aspect):
+        """
+        Cosinus of solar zenith angle
+
+        :param tab_time_date: time
+        :param lat: latitude
+        :param lon: longitude
+        :param slope: slope (degrees)
+        :param aspect: aspect (degrees)
+        """
 
         j_2 = np.ones(tab_time_date.shape, 'f')
         h_2 = np.ones(tab_time_date.shape, 'f')
@@ -335,6 +361,19 @@ class sun():
         return np.cos(math.pi / 2. - ZGAMMA)
 
     def directdiffus(self, SWglo, time, lat, lon, slope, aspect, site):
+        """
+        Separation of direct and diffuse  short wave radiations
+
+        :param SWglo: global short wave
+        :param time: time
+        :param lat: latitude
+        :param lon: longitude
+        :param slope: The slope angle (degrees)
+        :param aspect: The aspect (degrees)
+        :param site: The site code for clear sky decomposition. Must be one of wfj, snb, swa, sap, sod, rme, oas, obs, ojp or cdp)
+
+        :returns: direct short wave, diffuse short wave
+        """
 
         # Clear sky decomposition by Marie Dumont
         if site == "wfj":

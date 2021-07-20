@@ -46,7 +46,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # SAFRAN utilisera la P6 du réseau 0h J pour le dernier guess en attendant que l'analyse soit disponible (réseau 9h)
                 # On cherche d'abord sur le cache inline puis sur hendrix
                 # RQ : on ne peut pas utiliser le namespace multi car les fichiers sur hendrix n'ont pas de filtername...
-                self.sh.title('Toolbox input tbarp_inline')
+                self.sh.title('Toolbox input arpege assim inline')
                 tbarp = toolbox.input(
                     role           = 'Gridpoint',
                     format         = 'grib',
@@ -54,6 +54,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     kind           = 'gridpoint',
                     filtername     = 'concatenate',
                     suite          = self.conf.suite,
+                    cutoff         = 'assimilation',
                     local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
                     date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
@@ -71,13 +72,14 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print()
 
                 # Deuxième tentative sur hendrix
-                self.sh.title('Toolbox input tbarp_archive')
+                self.sh.title('Toolbox alternate arpege assim archive')
                 tbarp.extend(toolbox.input(
                     alternate      = 'Gridpoint',
                     format         = 'grib',
                     geometry       = self.conf.arpege_geometry,
                     kind           = 'gridpoint',
                     suite          = self.conf.suite,
+                    cutoff         = 'assimilation',
                     local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
                     date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
@@ -95,7 +97,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print()
 
                 # Mode secours : On récupère les prévisions 6h correspondantes inline...
-                self.sh.title('Toolbox input tbarp_inline secours')
+                self.sh.title('Toolbox alternate arpege prod inline (secours)')
                 tbarp.extend(toolbox.input(
                     alternate      = 'Gridpoint',
                     format         = 'grib',
@@ -121,7 +123,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print()
 
                 # ... ou sur Hendrix
-                self.sh.title('Toolbox input tbarp_archive secours')
+                self.sh.title('Toolbox alternate arpege prod archive (secours)')
                 tbarp.extend(toolbox.input(
                     alternate      = 'Gridpoint',
                     format         = 'grib',
@@ -149,7 +151,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # --------------------------------
 
                 # Récupération des prévisions du réseau 6h (J-1) (utilisée seulement à partir du run de 6h) pour l'analyse (J-1) 6h -> J 6h
-                self.sh.title('Toolbox input tbpearp')
+                self.sh.title('Toolbox input pearp')
                 tbpearp = toolbox.input(
                     role           = 'Gridpoint',
                     block          = 'forecast',
@@ -179,7 +181,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             else:
 
                 # RUN 9h : Récupération de A6 du réseau d'assimilation d'ARPEGE de 0h inline...
-                self.sh.title('Toolbox input tb01')
+                self.sh.title('Toolbox input arpege assim inline')
                 tbarp = toolbox.input(
                     role           = 'Gridpoint',
                     block          = 'forecast',
@@ -188,6 +190,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     kind           = 'gridpoint',
                     filtername     = 'concatenate',
                     suite          = self.conf.suite,
+                    cutoff         = 'assimilation',
                     local          = 'ARPEGE[date::addterm_ymdh]',
                     date           = '{0:s}/-PT6H'.format(self.conf.rundate.ymd6h),
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
@@ -204,7 +207,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print()
 
                 # ...ou sur hendrix
-                self.sh.title('Toolbox input tb01')
+                self.sh.title('Toolbox input arpege assim archive')
                 tbarp = toolbox.input(
                     alternate      = 'Gridpoint',
                     block          = 'forecast',
@@ -212,6 +215,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     geometry       = self.conf.arpege_geometry,
                     kind           = 'gridpoint',
                     suite          = self.conf.suite,
+                    cutoff         = 'assimilation',
                     local          = 'ARPEGE[date::addterm_ymdh]',
                     date           = '{0:s}/-PT6H'.format(self.conf.rundate.ymd6h),
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
@@ -273,10 +277,11 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             if self.conf.rundate.hour == 3:
 
-                self.sh.title('Toolbox output tb05_a')
+                self.sh.title('Toolbox output tb05_a = guess arpege assim')
                 tb05a = toolbox.output(
                     role           = 'Ebauche',
                     local          = 'ARP_[date:ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
+                    cutoff         = 'assimilation',
                     geometry       = self.conf.domains,
                     vconf          = '[geometry:area]',
                     experiment     = self.conf.xpid,
@@ -294,7 +299,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb05_a =', tb05a)
                 print()
 
-                self.sh.title('Toolbox output tb05_b')
+                self.sh.title('Toolbox output tb05_b = guess arpege prod (secours)')
                 tb05b = toolbox.output(
                     alternate      = 'Ebauche',
                     local          = 'ARP_[date:ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
@@ -316,7 +321,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb05_b =', tb05b)
                 print()
 
-                self.sh.title('Toolbox output tb06')
+                self.sh.title('Toolbox output tb06 = guess pearp')
                 tb06 = toolbox.output(
                     role           = 'Ebauche',
                     local          = 'PEARP_[member]_[cumul:hour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
@@ -341,7 +346,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             else:
 
-                self.sh.title('Toolbox output tb05')
+                self.sh.title('Toolbox output tb05 = guess arpege assim')
                 tb05 = toolbox.output(
                     role           = 'Ebauche',
                     local          = 'P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
@@ -362,5 +367,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb05 =', tb05)
                 print()
 
+            print '=================================================================================================='
+            print 'INFO :The execution went well, do not take into account the following error'
+            print '=================================================================================================='
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')
