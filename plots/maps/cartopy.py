@@ -3,10 +3,11 @@
 """
 Created on 29 march 2021
 
-@author: radanovics
+:Authors:
+    radanovics
 
-start collecting resources for plotting maps with cartopy.
-Might be sensitive to the combination of versions of matplotlib and cartopy.
+Module for map plots with massifs.
+This module might be sensitive to the combination of versions of matplotlib and cartopy.
 developed with matplotlib 3.4.0/3.2.1 and cartopy 0.18
 which cartopy version is based on which matplotlib version? (according to documentation)
 cartopy 0.19 -> matplotlib 3.4.1
