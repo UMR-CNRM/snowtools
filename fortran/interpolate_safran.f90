@@ -4,6 +4,7 @@ PROGRAM INTERPOLATE_SAFRAN
 !
 USE NETCDF
 USE MODN_INTERPOL_SAFRAN
+USE SUBS
 !
 IMPLICIT NONE
 include 'mpif.h'
@@ -1026,8 +1027,13 @@ END DO ! loop over input files (domains)
 !
 CALL MPI_FINALIZE(IERR)
 !
-CONTAINS
+END PROGRAM INTERPOLATE_SAFRAN
+!END PROGRAM INTERPOLATE_SAFRAN
+!CONTAINS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+MODULE SUBS
+
+CONTAINS
 SUBROUTINE XY_PROC_DISTRIBUTOR(IXYDIM,IPROC_ID, INPROC,IIXSTART, INX_PROC,IIYSTART, INY_PROC)
 INTEGER ,INTENT(IN) :: IPROC_ID, INPROC
 INTEGER,DIMENSION(2),INTENT(IN) ::  IXYDIM
@@ -2010,8 +2016,9 @@ DEALLOCATE(ZYHAT)
 END SUBROUTINE EXPLICIT_SLOPE_LAT_LON
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE CHECK(STATUS,LINE)
-  INTEGER, INTENT ( IN) :: STATUS
-    CHARACTER(*), INTENT(IN) :: LINE
+  ! Handles error messages from the netcdf API
+  INTEGER, INTENT ( IN) :: STATUS ! error number
+    CHARACTER(*), INTENT(IN) :: LINE ! description line
   
   IF(STATUS /= NF90_NOERR) THEN 
     PRINT *, TRIM(NF90_STRERROR(STATUS)),":", LINE
@@ -2021,8 +2028,9 @@ END SUBROUTINE CHECK
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   SUBROUTINE READ_NML(KNAMUNIT)
+    ! reads namelist interpolate_safran.nam
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: KNAMUNIT
+    INTEGER, INTENT(IN) :: KNAMUNIT ! unit number
 
     INTEGER :: IOS
 
@@ -2104,5 +2112,4 @@ END SUBROUTINE CHECK
     ! PRINT*, HGRIDSIN
   END SUBROUTINE READ_NML
 !  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-END PROGRAM INTERPOLATE_SAFRAN
-
+END MODULE SUBS

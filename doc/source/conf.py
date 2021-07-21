@@ -197,3 +197,4 @@ autodoc_default_options = {
 
 # -- Options for fortran extension -------------------------------------------
 fortran_src = ['../fortran/']
+fortran_ext = ['f90']

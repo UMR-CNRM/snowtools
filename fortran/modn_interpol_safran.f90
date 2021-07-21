@@ -1,8 +1,7 @@
 ! Created by  on 26/10/2020.
 MODULE MODN_INTERPOL_SAFRAN
-
-    !! Author:
-    !! Sabine Radanovics
+! Author:
+! Sabine Radanovics
 USE MODD_INTERPOL_SAFRAN
 IMPLICIT NONE
 
