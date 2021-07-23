@@ -1,5 +1,5 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
+
 # Author: M. Lafaysse 24/05/2017
 # Recoding of functionalities of faitNAMetPGD in snowtools1 for projects snowtools2 and vortex
 

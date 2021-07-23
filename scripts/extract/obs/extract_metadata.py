@@ -1,14 +1,12 @@
-#! /usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # Extraction des données d'observation depuis la BDCLIM
 # Matthieu Lafaysse 10 sept 2014
 # Script simplifié pour obtenir un format obs.csv depuis la BDCLIM
 
-import sys, os
-import re
-import datetime
-
+import sys
+import os
 import csv
 
 from evals.extract.extract_obs import question

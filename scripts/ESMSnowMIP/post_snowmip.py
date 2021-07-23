@@ -1,5 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 # Auteur : M lafaysse
 # Date : July 2017
 

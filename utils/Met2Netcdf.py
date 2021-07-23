@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # First version met file (format printable .prn or .txt) to netcdf
 
