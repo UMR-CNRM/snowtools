@@ -34,17 +34,18 @@ import shapefile
 ################################################################
 # On part d'un shapefile en Lambert 93
 # De ce shapefile, le programme fournit un NetCDF pour les besoins du lancement de Surfex (ou de réanalyse) dessus
-# Il va aussi fournir les skyline
+# Il fournit aussi les skyline qui sont ajoutées dans MEDATADA.xml
+# Il est possible de garder certain tracés des skylines. 
 #
 # Lancement:
-# python3 shapefile2NetCDF.py path_shapefile nom_point_in_shapefile id_point_in_shapefile [--name_alt alti_name_in_shapefile] [-o path_name_of_NetCDF_output] [--MNT_alt path_of_MNT_altitude]
+# python3 shapefile2NetCDF.py path_shapefile station_name_in_shapefile station_id_in_shapefile project_number [--name_alt alti_name_in_shapefile] [-o path_name_of_NetCDF_output] [--MNT_alt path_of_MNT_altitude] [--confirm_overwrite] [--list_skyline all or 1 5 6 if you want skyline for your id_station number 1, 5 and 6]
 #
 # Exemple d'appel
-# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot --name_alt alti
-# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti --confirm_overwrite
+# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti
+# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti --confirm_overwrite si on a déjà travaillé sur ce projet
+# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti --list_skyline 1 34 47 (pour avoir dans le dossier output les tour d'horizon des stations numéros 1, 34 et 47
 #
-#
-# PROJECT NUMBER, C'EST QUOI ?
+# NB: PROJECT NUMBER, C'EST QUOI ?
 # Comme nous allons ajouter des points dans le fichier METADATA.xml, il s'agit de savoir si ces points existent déjà.
 # A priori à la conception de l'algo, on se dit que:
 # - il y aura moins de 10 000 points par projet
@@ -52,12 +53,23 @@ import shapefile
 # (et sinon, on réfléchira plus)
 # Le but est d'éviter d'avoir en double un code station (sur 8 chiffres comme les codes OMM)
 # Bref:
-# - les nombres entre 00000001 et 00009999 sont pour le projet 0
-# - les nombres entre 00010001 et 00019999 sont pour le projet 1
+# - les nombres entre 10000001 et 10009999 sont pour le projet 0
+# - les nombres entre 10010001 et 10019999 sont pour le projet 1
 # - etc
 #
 # A ce jour: le projet 0 correspond à l'ANR TOP
 # Merci de mettre à jour le numéro de projet ici histoire d'avoir une tracabilité.
+#
+# POUR MEMOIRE: que fait-on ensuite du fichier NetCDF ?
+# s2m -f path_FORCING -b begin_date -e end_date -r path_netcdf.nc -o output_name -g --extractforcing
+# give interpol_FORCING
+# s2m -f path_interpol_FORCING -b begin_date -e end_date -o output_name_pour_PRO -g --addmask
+# give the PRO file for the shapefile points. 
+#
+# Exemple:
+# s2m -f /rd/cenfic2/era40/vortex/s2m/alp_flat/reanalysis/meteo/FORCING_2017080106_2018080106.nc -b 20170801 -e 20180801 -r /home/fructusm/git/snowtools_git/fortran/NetCDF_from_shapefile.nc -o output_test_s2m -g --extractforcing
+# s2m -f /home/fructusm/OUTPUT_et_PRO/output_test_s2m/meteo/FORCING_2017080106_2018080106.nc -b 20170801 -e 20180801 -o output_test_s2m_Safran -g --addmask
+# (NB: export NINTERPOL=1 if MPI problem for the extractforcing) 
 ################################################################
 
 
@@ -576,6 +588,7 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
 
 
     metadata.close()
+    os.system('mv -f ' + chemxml + '/METADATA_out.xml ' + chemxml + '/METADATA.xml')
     print("done in", time.time() - start_time, "seconds")
 
 def parseArguments(args):
@@ -650,14 +663,14 @@ def main(args=None):
             sys.exit(1)
 
         # Launch the app:
-        all_lists = make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, Nom_slop, path_MNT_alt, path_MNT_asp, path_MNT_slop, 10000*Project_number)
+        all_lists = make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, Nom_slop, path_MNT_alt, path_MNT_asp, path_MNT_slop, 10000000 + 10000*Project_number)
         if not confirm_overwrite:
             check_Id_station_in_Metadata(all_lists)
         create_NetCDF(all_lists, output_name)
         if list_skyline == ['all'] or list_skyline == ['All'] or list_skyline == ['ALL']:
             list_skyline = [all_lists['id'][k] for k in range(len(all_lists['id']))]
         elif list_skyline is not None:
-            list_skyline = ['%08d' % int(list_skyline[i]) for i in range(len(list_skyline))]
+            list_skyline = ['%08d' % (10000000 + 10000*Project_number + int( list_skyline[i])) for i in range(len(list_skyline))]
         create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline)
 
 if __name__ == '__main__':
