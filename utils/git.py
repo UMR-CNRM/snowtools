@@ -8,6 +8,9 @@ A small tool to get information from git. Useful to reuse it in python scripts
 Can also be used as a script passing the path as an argument.
 It will print the main informations.
 
+.. note::
+    This class does nothing when run with python 2
+
 :Authors:
     Léo Viallon-Galinier
 """
@@ -15,6 +18,7 @@ It will print the main informations.
 import subprocess
 import logging
 import os
+import six
 
 logger = logging.getLogger('snowtools.gitutils')
 
@@ -54,7 +58,7 @@ class _chdir:
             return self
         except (OSError, FileNotFoundError, PermissionError, NotADirectoryError) as e:
             logger.error('Incorrect path: {}'.format(e))
-            raise _ChdirException('Could not change directory to {}'.format(self.path)) from e
+            six.raise_from(_ChdirException('Could not change directory to {}'.format(self.path)), e)
 
     def __exit__(self, e_type, e_value, e_traceback):
         if self.chdir:
@@ -72,6 +76,8 @@ def current_git_repo(path=None):
     :returns: Path of git repository, or None if an error occurs or not in a git repository
     :rtype: str
     """
+    if six.PY2:
+        return None
     try:
         with _chdir(path):
             spg = subprocess.run(CMD_DISCOVER, timeout=timeout, capture_output=True, check=True, encoding='utf-8')
@@ -137,7 +143,7 @@ class git_infos:
 
     .. code-block:: python
 
-       >>> gi.print()
+       >>> print(gi)
        path: /home/viallonl/bin/snowtools
        commit: 98730c7c7f486dc85462b0427ff2ff9275bd5537
        short_commit: 98730c7
@@ -230,6 +236,8 @@ class git_infos:
                   Could also return None in case of error in command execution or git repo not found.
         :rtype: bool
         """
+        if six.PY2:
+            return None
         try:
             with _chdir(self.path):
                 spg = subprocess.run(COMMAND_CLEAN, timeout=timeout, capture_output=True, check=True, encoding='utf-8')
@@ -273,9 +281,11 @@ class git_infos:
             logger.error('Could not reach target directory {}'.format(self.path))
         return None
 
-    def print(self):
+    def __str__(self):
+        r = ""
         for key, value in self.dict.items():
-            print('{}: {}'.format(key, value))
+            r += '{}: {}\n'.format(key, value)
+        return r
 
     def __getitem__(self, key):
         return self.dict[key]
@@ -300,4 +310,4 @@ if __name__ == "__main__":
         print('Git info on current directory:')
     else:
         print('Git info on {}:'.format(args.path))
-    gi.print()
+    print(gi)

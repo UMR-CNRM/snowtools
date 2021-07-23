@@ -1,23 +1,34 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 '''
 Created on 30 Aug. 2017
 
-@author: lafaysse
+:Authors:
+    M. Lafaysse
+
+Importing this module will check the snowtools installation and make
+``_S2M_command`` abstract class available. All s2m command executions
+inherit from this class.
 '''
 
 # General python modules
 import os
+import six
+
+if six.PY2:
+    print('*************************************************************')
+    print('Depreciation warning: You run s2m with python 2.')
+    print('Support for python 2.7 is not guaranteed after December 2021.')
+    print('Consider switching to python3. If you use the s2m alias, it')
+    print('may be necessary to modify its definition in your ~/.bashrc')
+    print('*************************************************************')
 
 try:
     from utils.resources import check_snowtools_install
     from utils.resources import InstallException
-    print (os.environ["SNOWTOOLS_CEN"])
+    print(os.environ["SNOWTOOLS_CEN"])
     check_snowtools_install()
-    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
     print('Snowtools installation has been successfully checked.')
-    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
 except ImportError or InstallException:
     print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
     print('Incorrect snowtools installation. Check the documentation.')
