@@ -244,12 +244,7 @@ class surfexrun(object):
 
     def postprocess(self):
 
-        gi = git_infos(self.execdir)
-
-        if 'commit' in gi:
-            surfex_commit = gi['commit']
-        else:
-            surfex_commit = None
+        surfex_commit = git_infos(self.execdir).get_commit(default=None)
 
         profile = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode='a')
         profile.massif_natural_risk()

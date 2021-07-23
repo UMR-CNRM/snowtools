@@ -111,9 +111,7 @@ class _StandardNC(netCDF4.Dataset):
         self.time_coverage_duration = str(time[-1] - time[0])
         self.time_coverage_resolution = str(time[1] - time[0])
 
-        gi = git_infos(os.path.dirname(os.path.abspath(__file__)))
-        if 'commit' in gi:
-            self.snowtools_commit = gi['commit']
+        self.snowtools_commit = git_infos(os.path.dirname(os.path.abspath(__file__))).get_commit(default=None)
 
     def standard_names(self):
         return dict(ZS = 'surface_altitude',

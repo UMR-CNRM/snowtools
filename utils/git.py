@@ -181,6 +181,16 @@ class git_infos:
         'last_tag': 's2m_reanalysis_2020.2',
         'clean': False}
 
+    Some very often used strings are also computed by pre-coded functions with
+    management of lacking keys:
+
+    .. code-block:: python
+
+       >>> gi.pretty_str_commit()
+       c46bb7a088fc182950621f6849e64d2654987325 (master) by Matthieu Lafaysse on 2021-07-20 (from s2m_reanalysis_2020.2)
+       >>> gi.get_commit()
+       c46bb7a088fc182950621f6849e64d2654987325
+
     """
 
     def __init__(self, path=None):
@@ -280,6 +290,64 @@ class git_infos:
         except _ChdirException:
             logger.error('Could not reach target directory {}'.format(self.path))
         return None
+
+    def pretty_str_commit(self, short=False, default=''):
+        """
+        Return a pretty one-line string to describe the commit
+
+        Example: ``c46bb7a088fc182950621f6849e64d2654987325 (master) by Matthieu Lafaysse on 2021-07-20 (from s2m_reanalysis_2020.2)``
+
+        :param short: If True, return the short commit format
+        :type short: bool
+        :param default: Default string to be returned if commit could not be read
+        :type default: str
+
+        :returns: A pretty string describing the commit
+        :rtype: str
+        """
+        if self.dict['path'] is None:
+            return default
+        r = []
+        key_commit = 'short_commit' if short else 'commit'
+        if key_commit in self.dict:
+            r.append(self.dict[key_commit])
+        if 'branch' in self.dict:
+            r.append('({})'.format(self.dict['branch']))
+        if 'author' in self.dict:
+            r.append('by {}'.format(self.dict['author']))
+        if 'date' in self.dict and len(self.dict['date']) >= 10:
+            r.append('on {}'.format(self.dict['date'][:10]))
+        if 'last_tag' in self.dict:
+            r.append('(from {})'.format(self.dict['last_tag']))
+        if 'clean' in self.dict:
+            if not self.dict['clean']:
+                r.append('[+]')
+        else:
+            r.append('[?]')
+
+        if len(r) == 0:
+            return default
+        else:
+            return ' '.join(r)
+
+    def get_commit(self, short=False, default=''):
+        """
+        Return the commit number if present, and a zero-length
+        string else (or default if specified).
+
+        :param short: If True, return the short commit format
+        :type short: bool
+        :param default: Default string to be returned if commit could not be read
+        :type default: str
+
+        :returns: commit string
+        :rtype: str
+        """
+        key = 'short_commit' if short else 'commit'
+        if key in self.dict:
+            return self.dict[key]
+        else:
+            return default
 
     def __str__(self):
         r = ""
