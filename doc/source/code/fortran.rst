@@ -23,10 +23,6 @@ The interpolation tool is written in FORTRAN
 
 .. f:autoprogram:: INTERPOLATE_SAFRAN
 
-.. f:autosubroutine:: INTERPOLATE_SAFRAN/READ_NML
-
-.. f:autosubroutine:: INTERPOLATE_SAFRAN/CHECK
-
 
 **Module SUBS**
 

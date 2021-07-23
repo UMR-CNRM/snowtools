@@ -104,10 +104,21 @@ or specific elements (program, module, subroutine, function) giving their name (
 
    .. f:autoprogram:: progname
 
-   .. f:autovariable:: modname
+   .. f:automodule:: modname
 
    .. f:autosubroutine:: [modname/]subrname
 
    .. f:autofunction:: [modname/]funcname
 
-Note that elements included in programs, subroutine or functions are not documentd (e.g. subroutine defined in a ``CONAINS`` section of a program).
+Note that elements included in programs, subroutine or functions are not documented
+(e.g. subroutine defined in a ``CONAINS`` section of a program).
+Subroutines and functions that are placed inside a module are documented with the module
+documentation.
+
+**Attention:**
+
+1. The modname has to be given in lower case letters, even if the original
+module name is written in upper case.
+
+2. Sphinx does not correctly interpret DOUBLE PRECISION declarations.
+Need to use REAL(KIND=8) instead to make it work.
