@@ -2,7 +2,7 @@
 
 
 import unittest
-from snowtools_git.utils.prosimu import prosimu, prosimu_old
+from snowtools.utils.prosimu import prosimu, prosimu_old
 
 from datetime import datetime
 import os
@@ -49,6 +49,10 @@ class TestProSimu(unittest.TestCase):
             'SNOWTEMP', time=1, Number_of_points=slice(600, 690, 2))
         self.assertEqual(snowtemp.shape, (50, 45), "Attendu : 50 couches, 45 points")
 
+    @classmethod
+    def tearDownClass(cls):
+        cls.ps.close()
+
 
 class TestProSimuWithCache(unittest.TestCase):
 
@@ -69,6 +73,10 @@ class TestProSimuWithCache(unittest.TestCase):
         snowtemp = self.ps.read_var(
             'SNOWTEMP', time=1, Number_of_points=slice(600, 690, 2))
         self.assertEqual(snowtemp.shape, (50, 45), "Attendu : 50 couches, 45 points")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.ps.close()
 
 
 class TestProSimuOld(unittest.TestCase):
@@ -105,6 +113,10 @@ class TestProSimuOld(unittest.TestCase):
             'SNOWTEMP', time=1, Number_of_points=slice(600, 690, 2))
         self.assertEqual(snowtemp.shape, (50, 45), "Attendu : 50 couches, 45 points")
 
+    @classmethod
+    def tearDownClass(cls):
+        cls.ps.close()
+
 
 class TestProSimuOldWithCache(unittest.TestCase):
 
@@ -126,6 +138,10 @@ class TestProSimuOldWithCache(unittest.TestCase):
         snowtemp = self.ps.read_var(
             'SNOWTEMP', time=1, Number_of_points=slice(600, 690, 2))
         self.assertEqual(snowtemp.shape, (50, 45), "Attendu : 50 couches, 45 points")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.ps.close()
 
 
 if __name__ == "__main__":
