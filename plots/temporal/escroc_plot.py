@@ -8,12 +8,12 @@ Created on 4 déc. 2018
 '''
 
 from plots.temporal.chrono import prettyensemble
-from scripts.get_escroc import S2MExtractor, config
+from scripts.extract.vortex.get_escroc import S2MExtractor, config
 from plots.pearps2m.postprocess import EnsembleDiags
 import datetime
 import numpy as np
 from utils.prosimu import prosimu
-from scripts.ESM_snowmip import bdate, edate
+from scripts.ESMSnowMIP.ESM_snowmip import bdate, edate
 
 
 class EnsembleEscrocDiags(EnsembleDiags):

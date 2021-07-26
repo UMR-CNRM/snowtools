@@ -20,7 +20,7 @@ Reanalysis
 Reforecast
 """"""""""
 
-.. automodule:: scripts.get_reforecast
+.. automodule:: scripts.extract.vortex.get_reforecast
    :members:
 
 Escroc

@@ -16,7 +16,7 @@ from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 
 
-from scripts.ESM_snowmip import bdate, edate
+from scripts.ESMSnowMIP.ESM_snowmip import bdate, edate
 
 usage = "usage: python get_escroc.py --site=xxx --nmembers=xx --escroc=xx"
 
