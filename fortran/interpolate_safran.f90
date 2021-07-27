@@ -120,8 +120,8 @@ CONTAINS
     REAL(KIND=8),DIMENSION(:),ALLOCATABLE,INTENT(OUT):: PXOUT ! output x coordinates in the case of 2D grid with a XY grid type
     INTEGER,INTENT(OUT)::IRANK ! rank of output grid (1 for vector or 2 for matrix)
     INTEGER,DIMENSION(1:2),INTENT(OUT)::ILENDIM ! lenghts of dimensions
-    CHARACTER(LEN=2)::GT !GRID TYPE
-    !
+    CHARACTER(LEN=2), INTENT(OUT):: GT ! GRID TYPE
+
     !INTEGER::IDVARG ! nc variable identifier
     INTEGER::IDVARGZS,IDVARGMASSIF,IDVARGASPECT,IDVARSLOPE,IDVARLAT,IDVARLON,IDY,IDX, IDVARSTATION ! nc variable identifier
     INTEGER,DIMENSION(:),ALLOCATABLE::IDDIMSVARG ! dimension ids of nc variable
@@ -465,15 +465,15 @@ CONTAINS
     !
   END SUBROUTINE EVALUATE_ASPECT
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE INTERPOLZS2D(PVAROUT,PVARIN,KINDBAS,KINDHAUT,PZSGRID,KZSSAFRAN, LPRINT)
+  SUBROUTINE INTERPOLZS2D(PVAROUT,PVARIN,KINDBAS,KINDHAUT,PZSGRID,KZSSAFRAN)
     ! Linear interpolation between SAFRAN elevation levels over 2D grids
 
-    REAL,DIMENSION(:,:,:,:),INTENT(OUT)::PVAROUT
-    REAL,DIMENSION(:,:,:),INTENT(IN)::PVARIN
-    INTEGER,DIMENSION(:,:),INTENT(IN)::KINDBAS,KINDHAUT
-    REAL(KIND=8),DIMENSION(:,:),INTENT(IN)::PZSGRID
-    INTEGER,DIMENSION(:),INTENT(IN)::KZSSAFRAN
-    LOGICAL, INTENT(IN) :: LPRINT
+    REAL,DIMENSION(:,:,:,:),INTENT(OUT)::PVAROUT ! Interpolated variable on 2D grid. The first 2 dimensions are the spatial dimensions, the last dimension is the time dimension.
+    REAL,DIMENSION(:,:,:),INTENT(IN)::PVARIN ! Variable on SAFRAN elevation levels
+    INTEGER,DIMENSION(:,:),INTENT(IN)::KINDBAS ! Index of **pvarin** containing the values at the SAFRAN elevation level below the grid point elevation at the corresponding massif.
+    INTEGER,DIMENSION(:,:),INTENT(IN)::KINDHAUT ! Index of **pvarin** containing the values at the SAFRAN elevation level above the grid point elevation at the corresponding massif.
+    REAL(KIND=8),DIMENSION(:,:),INTENT(IN)::PZSGRID ! Gridpoint elevation data
+    INTEGER,DIMENSION(:),INTENT(IN)::KZSSAFRAN ! SAFRAN elevation data
     REAL ::ZA,ZB,ZC
     INTEGER::JX,JY,JT,JP !Loop counters
     INTEGER::KNX,KNY,KNSAFRAN,KNT,KNP
@@ -508,11 +508,12 @@ CONTAINS
   SUBROUTINE INTERPOLZS2DDIMBEFORE(PVAROUT,PVARIN,KINDBAS,KINDHAUT,PZSGRID,KZSSAFRAN)
     ! Linear interpolation between SAFRAN elevation levels over 2D grids
 
-    REAL,DIMENSION(:,:,:,:),INTENT(OUT)::PVAROUT
-    REAL,DIMENSION(:,:,:),INTENT(IN)::PVARIN
-    INTEGER,DIMENSION(:,:),INTENT(IN)::KINDBAS,KINDHAUT
-    REAL(KIND=8),DIMENSION(:,:),INTENT(IN)::PZSGRID
-    INTEGER,DIMENSION(:),INTENT(IN)::KZSSAFRAN
+    REAL,DIMENSION(:,:,:,:),INTENT(OUT)::PVAROUT ! Interpolated variable on 2D grid. The second and third dimension are the spatial dimensions, the last dimension is the time dimension.
+    REAL,DIMENSION(:,:,:),INTENT(IN)::PVARIN ! Variable on SAFRAN elevation levels
+    INTEGER,DIMENSION(:,:),INTENT(IN)::KINDBAS ! Index of **pvarin** containing the values at the SAFRAN elevation level below the grid point elevation at the corresponding massif.
+    INTEGER,DIMENSION(:,:),INTENT(IN)::KINDHAUT ! Index of **pvarin** containing the values at the SAFRAN elevation level above the grid point elevation at the corresponding massif.
+    REAL(KIND=8),DIMENSION(:,:),INTENT(IN)::PZSGRID  ! Gridpoint elevation data
+    INTEGER,DIMENSION(:),INTENT(IN)::KZSSAFRAN ! SAFRAN elevation data
     REAL ::ZA,ZB,ZC
     INTEGER::JX,JY,JT,JP !Loop counters
     INTEGER::KNX,KNY,KNSAFRAN,KNT,KNP
@@ -547,11 +548,12 @@ CONTAINS
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE INTERPOLZS2DNOTIME(PVAROUT,PVARIN,KINDBAS,KINDHAUT,PZSGRID,KZSSAFRAN)
     ! Linear interpolation between SAFRAN elevation levels over 2D grids
-    REAL,DIMENSION(:,:,:),INTENT(OUT)::PVAROUT
-    REAL,DIMENSION(:,:),INTENT(IN)::PVARIN
-    INTEGER,DIMENSION(:,:),INTENT(IN)::KINDBAS,KINDHAUT
-    REAL(KIND=8),DIMENSION(:,:),INTENT(IN)::PZSGRID
-    INTEGER,DIMENSION(:),INTENT(IN)::KZSSAFRAN
+    REAL,DIMENSION(:,:,:),INTENT(OUT)::PVAROUT ! Interpolated variable on 2D grid. The first two dimensions are the spatial dimensions. There is no time dimension.
+    REAL,DIMENSION(:,:),INTENT(IN)::PVARIN ! Variable on SAFRAN elevation levels without time dimension.
+    INTEGER,DIMENSION(:,:),INTENT(IN)::KINDBAS ! Index of **pvarin** containing the values at the SAFRAN elevation level below the grid point elevation at the corresponding massif.
+    INTEGER,DIMENSION(:,:),INTENT(IN)::KINDHAUT ! Index of **pvarin** containing the values at the SAFRAN elevation level above the grid point elevation at the corresponding massif.
+    REAL(KIND=8),DIMENSION(:,:),INTENT(IN)::PZSGRID ! Gridpoint elevation data
+    INTEGER,DIMENSION(:),INTENT(IN)::KZSSAFRAN ! SAFRAN elevation data
     REAL ::ZA,ZB,ZC
     INTEGER::JX,JY,JP !Loop counters
     INTEGER::KNX,KNY,KNSAFRAN,KNP
@@ -581,10 +583,12 @@ CONTAINS
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   SUBROUTINE FUSE_FLD_3D(PVAROUT_OLD, PVAROUT, XUNDEF)
-    ! *** Put values of PVAROUT into PVAROUT_OLD where PVAROUT_OLD == XUNDEF
-    REAL,DIMENSION(:,:,:), INTENT(INOUT) :: PVAROUT_OLD
-    REAL,DIMENSION(:,:,:), INTENT(IN) :: PVAROUT
-    REAL, INTENT(IN) :: XUNDEF
+    ! Merge two 3D fields.
+    !
+    ! :actions: Put values of PVAROUT into PVAROUT_OLD where PVAROUT_OLD == XUNDEF
+    REAL,DIMENSION(:,:,:), INTENT(INOUT) :: PVAROUT_OLD ! Variable on 2D grid with existing values to be completed.
+    REAL,DIMENSION(:,:,:), INTENT(IN) :: PVAROUT ! Variable on 2D grid with new values to be added.
+    REAL, INTENT(IN) :: XUNDEF ! Missing value indicator.
 
     INTEGER::JX,JY,JT !Loop counters
     INTEGER::KNX,KNY, KNT !KNSAFRAN,KNP
@@ -606,16 +610,12 @@ CONTAINS
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE LATLON_IGN(PX,PY,PLAT,PLON)
+    ! Routine to compute geographical coordinates from lambert conformal coordinates
     !
-    !!****  *LATLON_IGN * - Routine to compute geographical coordinates
-    !
-    REAL(KIND=8), DIMENSION(:),   INTENT(IN) :: PX,PY
-    ! given conformal coordinates of the
-    ! processed points (meters);
-    REAL(KIND=8), DIMENSION(:,:), OPTIONAL,  INTENT(OUT):: PLAT,PLON
-    ! returned geographic latitudes and
-    ! longitudes of the processed points
-    ! (degrees).
+    REAL(KIND=8), DIMENSION(:), INTENT(IN) :: PX ! given conformal x-coordinates of the processed points (meters).
+    REAL(KIND=8), DIMENSION(:), INTENT(IN) :: PY ! given conformal y-coordinates of the processed points (meters).
+    REAL(KIND=8), DIMENSION(:,:), OPTIONAL,  INTENT(OUT):: PLAT ! returned geographic latitudes of the processed point (degrees).
+    REAL(KIND=8), DIMENSION(:,:), OPTIONAL,  INTENT(OUT):: PLON ! returned geographic longitudes of the processed point (degrees).
     !
     REAL(KIND=8), DIMENSION(SIZE(PX),SIZE(PY)) :: ZGAMMA
     REAL(KIND=8), DIMENSION(SIZE(PX),SIZE(PY)) :: ZR   ! length of arc meridian line projection
@@ -671,16 +671,13 @@ CONTAINS
   END SUBROUTINE LATLON_IGN
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE XY_IGN(PLAT,PLON,PX,PY)
+    ! Routine to compute Lambert coordinates from logitude and latitude
     !
-    !!****  *XY_IGN * - Routine to compute Lambert coordinates
-    !
-    REAL(KIND=8), DIMENSION(:), INTENT(IN):: PLON, PLAT
-    ! returned geographic latitudes and
-    ! longitudes of the processed points
-    ! (degrees).
-    REAL(KIND=8), DIMENSION(:,:), INTENT(OUT):: PX,PY
-    ! given conformal coordinates of the
-    ! processed points (meters);
+    REAL(KIND=8), DIMENSION(:), INTENT(IN):: PLON ! given geographic longitudes of the processed points (degrees).
+    REAL(KIND=8), DIMENSION(:), INTENT(IN):: PLAT ! given geographic latitudes of the processed points (degrees).
+    REAL(KIND=8), DIMENSION(:,:), INTENT(OUT):: PX ! returned lambert conformal x-coordinates of the processed points (meters).
+    REAL(KIND=8), DIMENSION(:,:), INTENT(OUT):: PY ! returned lambert conformal y-coordinates of the processed points (meters).
+
     !
     REAL :: ZPI180, ZPI4, ZECC2
     REAL :: ZWRK     ! working arrays
@@ -735,10 +732,10 @@ CONTAINS
   END SUBROUTINE XY_IGN
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE EXPLICIT_SLOPE(PX,PY,PZS,PSSO_SLOPE,PSSO_DIR)
-    REAL(KIND=8), DIMENSION(:),   INTENT(IN) :: PX,PY
-    ! given conformal coordinates of the
-    ! processed points (meters);
-    REAL(KIND=8),DIMENSION(:,:),INTENT(IN)::PZS ! resolved model orography
+    ! calculate resolved slope and aspect on a Lambert conformal grid.
+    REAL(KIND=8), DIMENSION(:), INTENT(IN) :: PX  ! given Lambert conformal x-coordinates of the processed points (meters).
+    REAL(KIND=8), DIMENSION(:), INTENT(IN) :: PY ! given Lambert conformal y-coordinates of the processed points (meters).
+    REAL(KIND=8),DIMENSION(:,:),INTENT(IN):: PZS ! resolved model orography
     REAL(KIND=8),DIMENSION(:,:),INTENT(OUT)::PSSO_SLOPE ! resolved slope tangent
     REAL(KIND=8),DIMENSION(:,:),INTENT(OUT)::PSSO_DIR ! resolved aspect
     !
@@ -887,17 +884,10 @@ CONTAINS
   END SUBROUTINE EXPLICIT_SLOPE
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE EXPLICIT_SLOPE_LAT_LON(PX,PY,PZS,PSSO_SLOPE,PSSO_DIR)
-    ! Subroutine documentation
+    ! calculate resolved slope and aspect on a lat/lon grid.
     !
-    ! :param PX: PX
-    ! :param PY: PY
-    ! :param PZS: PZS
-    ! :param PSSO_SLOPE: SLOPE
-    ! :param PSSO_DIR: DIR
-    !
-    REAL(KIND=8), DIMENSION(:,:),   INTENT(IN) :: PX,PY
-    ! given conformal coordinates of the
-    ! processed points (meters);
+    REAL(KIND=8), DIMENSION(:,:), INTENT(IN) :: PX  ! given longitude coordinates of the processed points (degrees).
+    REAL(KIND=8), DIMENSION(:,:), INTENT(IN) :: PY ! given latitude coordinates of the processed points (degrees).
     REAL(KIND=8),DIMENSION(:,:),INTENT(IN)::PZS ! resolved model orography
     REAL(KIND=8),DIMENSION(:,:),INTENT(OUT)::PSSO_SLOPE ! resolved slope tangent
     REAL(KIND=8),DIMENSION(:,:),INTENT(OUT)::PSSO_DIR ! resolved aspect
@@ -1152,9 +1142,25 @@ END MODULE SUBS
 
 PROGRAM INTERPOLATE_SAFRAN
   !
-  ! This program interpolate SAFRAN meteorological data
+  ! This program interpolates SAFRAN meteorological data.
   !
-
+  ! If a namelist called interpolate_safran.nam is present, the configuration information from the namelist is used.
+  ! Otherwise the default configuration is used.
+  !
+  ! :Default configuration:
+  !   #) A file named "GRID.nc" is read, containing the output grid (2D case) or station (1D case) information.
+  !   #) A file named "input.nc" is supposed to contain the data in massif geometry to be interpolated on some grid or station.
+  !   #) A file named "ouput.nc" is written containing the interpolated version of the data.
+  !
+  ! :Possible configurations via the namelist:
+  !   #) Possibility to specify custom filenames (mandatory for multiinput and multioutput options).
+  !   #) Iterating over several input files
+  !
+  !      - Providing a grid definition file for each of them (set :f:var:`lmultiinput` =.TRUE. and :f:var:`lmultioutput` =.TRUE.) and producing a separate output file for each of them
+  !      - Combining the data from them on a single grid in a single output file (set :f:var:`lmultiinput` =.TRUE. and :f:var:`lmultioutput` =.FALSE.)
+  !   #) Treat time steps sepatately in order to save memory in the case of very large fields by setting :f:var:`ltimechunk` = .TRUE.
+  !   #) customize the NetCDF chunksize of the spatial output dimensions in order to optimise write performance for large fields. (:f:var:`nlonchunksize`,   :f:var:`nlatchunksize`)
+  !
 USE SUBS
 !
 IMPLICIT NONE
@@ -1875,13 +1881,13 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
         CALL INTERPOLZS2DDIMBEFORE(ZVAROUTXYT,ZVARINT,IINDICESBAS,IINDICESHAUT,&
                 ZZSOUT,IZSIN)
       ELSE
-        IF (VAR_NAME_IN(IV) == "SD_1DY_ISBA") THEN
-          LPRINT = .TRUE.
-        ELSE
-          LPRINT = .FALSE.
-        END IF
+!        IF (VAR_NAME_IN(IV) == "SD_1DY_ISBA") THEN
+!          LPRINT = .TRUE.
+!        ELSE
+!          LPRINT = .FALSE.
+!        END IF
         CALL INTERPOLZS2D(ZVAROUTXYT,ZVARINT,IINDICESBAS,IINDICESHAUT,&
-                ZZSOUT,IZSIN, LPRINT)
+                ZZSOUT,IZSIN)
       ENDIF
       !
       IF (IRANK == 1) THEN
