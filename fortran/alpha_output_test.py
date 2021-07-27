@@ -241,8 +241,6 @@ class Alphafile():
         self.lats = self.ds.variables['LAT'][:]
         self.lons = self.ds.variables['LON'][:]
         self.snow = self.ds.variables['SD_1DY_ISBA'][:, :, :, 8]
-        self.massifs = self.ds.variables['massif_num'][:,:]
-        self.slopes = self.ds.variables['slope'][:,:]
 
 
 print(config)
@@ -262,38 +260,38 @@ attributes = dict(
 )
 
 ### rectangle case ###
-# sim000 = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/PRO_2020092706_2020092806_mb000.nc")
-# sim001 = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/PRO_2020092706_2020092806_mb001.nc")
-# sim002 = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/PRO_2020092706_2020092806_mb002.nc")
-# points_nord = sim000.get_points(aspect=0, ZS=2100, slope=40)
-# sim000_nord = sim000.read('NAT_LEV', selectpoint=points_nord, hasDecile=False)
-# sim001_nord = sim001.read('NAT_LEV', selectpoint=points_nord, hasDecile=False)
-# sim002_nord = sim002.read('NAT_LEV', selectpoint=points_nord, hasDecile=False)
-# points_sud = sim000.get_points(aspect=180, ZS=2100, slope=40)
-# sim000_sud = sim000.read('NAT_LEV', selectpoint=points_sud, hasDecile=False)
-# sim001_sud = sim001.read('NAT_LEV', selectpoint=points_sud, hasDecile=False)
-# sim002_sud = sim002.read('NAT_LEV', selectpoint=points_sud, hasDecile=False)
-# massifs = sim000.read('massif_num', selectpoint=points_nord)
-# m = Map_alpes(geofeatures=True)
-# m.init_massifs(**attributes['NAT_LEV'])
-# # print('massif init done')
-# m.add_north_south_info()
-# m.rectangle_massif(massifs, [0, 1, 2], [sim000_sud[2,:], sim001_sud[2,:], sim002_sud[2,:],
-#                                        sim000_nord[2,:], sim001_nord[2,:], sim002_nord[2,:]], ncol=2,
-#                    **attributes['NAT_LEV'])
-# # m.plot_center_massif(massifs, massifs)
-# # m.reset_massifs()
-# # m.plot_center_massif(massifs, massifs)
-# m.addlogo()
-# m.set_maptitle("2020092712")
-# m.set_figtitle("2100m")
-# m.save("cartopy_massifs_2020092712_alps_matplotlib3.2_test.png", formatout="png")
-# m.rectangle_massif(massifs, [0, 1, 2], [sim000_nord[2,:], sim001_nord[2,:], sim002_nord[2,:],
-#                                         sim000_sud[2,:], sim001_sud[2,:], sim002_sud[2,:]], ncol=2,
-#                    **attributes['NAT_LEV'])
-# m.save("cartopy_massifs_2020092712_alps_matplotlib3.2_test_changetables.png", formatout="png")
-#
-# m.close()
+sim000 = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/PRO_2020092706_2020092806_mb000.nc")
+sim001 = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/PRO_2020092706_2020092806_mb001.nc")
+sim002 = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/PRO_2020092706_2020092806_mb002.nc")
+points_nord = sim000.get_points(aspect=0, ZS=2100, slope=40)
+sim000_nord = sim000.read('NAT_LEV', selectpoint=points_nord, hasDecile=False)
+sim001_nord = sim001.read('NAT_LEV', selectpoint=points_nord, hasDecile=False)
+sim002_nord = sim002.read('NAT_LEV', selectpoint=points_nord, hasDecile=False)
+points_sud = sim000.get_points(aspect=180, ZS=2100, slope=40)
+sim000_sud = sim000.read('NAT_LEV', selectpoint=points_sud, hasDecile=False)
+sim001_sud = sim001.read('NAT_LEV', selectpoint=points_sud, hasDecile=False)
+sim002_sud = sim002.read('NAT_LEV', selectpoint=points_sud, hasDecile=False)
+massifs = sim000.read('massif_num', selectpoint=points_nord)
+m = Map_alpes(geofeatures=True)
+m.init_massifs(**attributes['NAT_LEV'])
+# print('massif init done')
+m.add_north_south_info()
+m.rectangle_massif(massifs, [0, 1, 2], [sim000_sud[2,:], sim001_sud[2,:], sim002_sud[2,:],
+                                       sim000_nord[2,:], sim001_nord[2,:], sim002_nord[2,:]], ncol=2,
+                   **attributes['NAT_LEV'])
+# m.plot_center_massif(massifs, massifs)
+# m.reset_massifs()
+# m.plot_center_massif(massifs, massifs)
+m.addlogo()
+m.set_maptitle("2020092712")
+m.set_figtitle("2100m")
+m.save("cartopy_massifs_2020092712_alps_matplotlib3.2_test.png", formatout="png")
+m.rectangle_massif(massifs, [0, 1, 2], [sim000_nord[2,:], sim001_nord[2,:], sim002_nord[2,:],
+                                        sim000_sud[2,:], sim001_sud[2,:], sim002_sud[2,:]], ncol=2,
+                   **attributes['NAT_LEV'])
+m.save("cartopy_massifs_2020092712_alps_matplotlib3.2_test_changetables.png", formatout="png")
+
+m.close()
 
 # pyr
 # sim000 = prosimu.prosimu("/home/radanovicss/PycharmProjects/snowtools_git/tasks/oper/pyr/2020092806/mb000/PRO_2020092706_2020092806.nc")
@@ -344,38 +342,7 @@ attributes = dict(
 #                                         sim000_nord[2,:], sim001_nord[2,:], sim002_nord[2,:]], ncol=2,
 #                    **attributes['NAT_LEV'])
 # m.plot_center_massif(massifs, massifs)
-# # m.reset_massifs()sim000 = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/PRO_2020092706_2020092806_mb000.nc")
-# sim001 = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/PRO_2020092706_2020092806_mb001.nc")
-# sim002 = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/PRO_2020092706_2020092806_mb002.nc")
-# points_nord = sim000.get_points(aspect=0, ZS=2100, slope=40)
-# sim000_nord = sim000.read('NAT_LEV', selectpoint=points_nord, hasDecile=False)
-# sim001_nord = sim001.read('NAT_LEV', selectpoint=points_nord, hasDecile=False)
-# sim002_nord = sim002.read('NAT_LEV', selectpoint=points_nord, hasDecile=False)
-# points_sud = sim000.get_points(aspect=180, ZS=2100, slope=40)
-# sim000_sud = sim000.read('NAT_LEV', selectpoint=points_sud, hasDecile=False)
-# sim001_sud = sim001.read('NAT_LEV', selectpoint=points_sud, hasDecile=False)
-# sim002_sud = sim002.read('NAT_LEV', selectpoint=points_sud, hasDecile=False)
-# massifs = sim000.read('massif_num', selectpoint=points_nord)
-# m = Map_alpes(geofeatures=True)
-# m.init_massifs(**attributes['NAT_LEV'])
-# # print('massif init done')
-# m.add_north_south_info()
-# m.rectangle_massif(massifs, [0, 1, 2], [sim000_sud[2,:], sim001_sud[2,:], sim002_sud[2,:],
-#                                        sim000_nord[2,:], sim001_nord[2,:], sim002_nord[2,:]], ncol=2,
-#                    **attributes['NAT_LEV'])
-# # m.plot_center_massif(massifs, massifs)
 # # m.reset_massifs()
-# # m.plot_center_massif(massifs, massifs)
-# m.addlogo()
-# m.set_maptitle("2020092712")
-# m.set_figtitle("2100m")
-# m.save("cartopy_massifs_2020092712_alps_matplotlib3.2_test.png", formatout="png")
-# m.rectangle_massif(massifs, [0, 1, 2], [sim000_nord[2,:], sim001_nord[2,:], sim002_nord[2,:],
-#                                         sim000_sud[2,:], sim001_sud[2,:], sim002_sud[2,:]], ncol=2,
-#                    **attributes['NAT_LEV'])
-# m.save("cartopy_massifs_2020092712_alps_matplotlib3.2_test_changetables.png", formatout="png")
-#
-# m.close()
 # # m.plot_center_massif(massifs, massifs)
 # m.addlogo()
 # m.set_maptitle("2020092712")
@@ -492,14 +459,9 @@ attributes = dict(
 # m.save("grid_postproc_p90_2021041318_cor.png", formatout="png")
 # m.close()
 
-indata = Alphafile("/home/radanovicss/Interpol_hauteur_neige/Results/Test_MPI/Test_2D_multi2single/1Proc/grid_postproc_2021041006_2021041406_all2alpha_testwrite2.nc")
-indata_multi = Alphafile("/home/radanovicss/Interpol_hauteur_neige/Results/Test_MPI/Test_2D_multi2single/Multiproc/grid_postproc_2021041006_2021041406_all2alpha_testmpi.nc")
-for i in range(32):
-#    print(i, indata.snow[i,:,:].max(), indata_multi.snow[i,:,:].max(), indata.snow[i,:,:].min(), indata_multi.snow[i,:,:].min())
-    print(i, np.sum(indata.snow[i,:,:] - indata_multi.snow[i,:,:]))
-print(np.sum(indata.lats - indata_multi.lats), np.sum(indata.lons - indata_multi.lons),
-      np.sum(indata.massifs - indata_multi.massifs), np.sum(indata.slopes - indata_multi.slopes))
-
+# indata = Alphafile("grid_postproc_2021041006_2021041406_all2alpha_testwrite2.nc")
+# # for i in range(32):
+# #     print(i, indata.snow[i,:,:].max(), indata.snow[i,:,:].min())
 # m = MapFrance(geofeatures=False, bgimage=True)
 # m.init_massifs(**attributes['SD_1DY_ISBA'])
 # m.draw_mesh(indata.lons, indata.lats, indata.snow[18,:,:], **attributes['SD_1DY_ISBA'])
