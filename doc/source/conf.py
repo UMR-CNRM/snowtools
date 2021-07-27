@@ -45,6 +45,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinxfortran.fortran_domain',
     'sphinxfortran.fortran_autodoc',
+    'sphinx.ext.autosectionlabel',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -197,3 +198,4 @@ autodoc_default_options = {
 
 # -- Options for fortran extension -------------------------------------------
 fortran_src = ['../fortran/']
+fortran_ext = ['f90']

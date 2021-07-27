@@ -19,7 +19,26 @@ This module is also an executable script:
 The interpolation tool
 ----------------------
 
-The interpolation tool is written in FORTRAN
+The interpolation tool is written in FORTRAN.
+
+Makefiles for mageia7 PCs and for MF supercomputers are provided.
+Needs MPI and parallel netcdf libraries.
 
 .. f:autoprogram:: INTERPOLATE_SAFRAN
+
+
+**Module SUBS**
+
+
+.. f:automodule:: subs
+
+
+**Module MODN_INTERPOL_SAFRAN**
+
+
+.. f:automodule:: modn_interpol_safran
+
+**Module MODD_INTERPOL_SAFRAN**
+
+.. f:automodule:: modd_interpol_safran
 

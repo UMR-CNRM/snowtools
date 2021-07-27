@@ -301,7 +301,7 @@ class interpolrun(surfexrun):
 
     def modify_forcing(self, *args):
         os.rename("FORCING.nc", "input.nc")
-        print (args)
+        print(args)
         if not os.path.islink('GRID.nc'):
             os.symlink(args[0], "GRID.nc")
         callSurfexOrDie(os.environ['SNOWTOOLS_CEN'] + "/fortran/interpol", moderun=self.modeinterpol, nproc=self.ninterpol)
