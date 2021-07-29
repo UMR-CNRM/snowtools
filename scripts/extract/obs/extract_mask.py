@@ -6,13 +6,11 @@
 import os
 import string
 import re
-
 import csv
-
-from evals.extract.extract_rr_mens import question
-
 from lxml import etree as ET
 # import xml.etree.ElementTree as ET
+
+from snowtools.evals.extract.extract_rr_mens import question
 
 
 if __name__ == "__main__":

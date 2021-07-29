@@ -10,8 +10,8 @@ import datetime
 import os
 import shutil
 
-from utils.dates import WallTimeException
-from utils.resources import InstallException
+from snowtools.utils.dates import WallTimeException
+from snowtools.utils.resources import InstallException
 from bronx.stdtypes.date import Period
 
 

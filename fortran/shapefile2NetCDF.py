@@ -5,6 +5,7 @@ import os
 import argparse
 import sys
 import re
+
 from netCDF4 import Dataset
 import numpy as np
 import gdal
@@ -12,12 +13,10 @@ from shapely.geometry import shape, Polygon
 from shapely.ops import transform
 from functools import partial
 import pyproj
+import logging  # Import pour les log
 
-from utils.infomassifs import infomassifs
-from utils.FileException import FileNameException, FileOpenException
-
-# Import pour les log
-import logging
+from snowtools.utils.infomassifs import infomassifs
+from snowtools.utils.FileException import FileNameException, FileOpenException
 
 # Imports pour "Skyline"
 import csv

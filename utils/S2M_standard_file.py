@@ -11,11 +11,11 @@ import os
 
 import netCDF4
 from six.moves import configparser as ConfigParser
-
 import numpy as np
-from utils.FileException import VarNameException, UnknownGridTypeException, FileNameException
-from utils.infomassifs import infomassifs
-from utils.git import git_infos
+
+from snowtools.utils.FileException import VarNameException, UnknownGridTypeException, FileNameException
+from snowtools.utils.infomassifs import infomassifs
+from snowtools.utils.git import git_infos
 
 
 class _StandardNC(netCDF4.Dataset):

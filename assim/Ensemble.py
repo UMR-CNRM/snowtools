@@ -4,8 +4,11 @@ Created on 6 févr. 2019
 
 @author: cluzetb
 '''
-from SemiDistributed import PrepBg, PrepAn, PrepAbs
 import numpy as np
+
+from snowtools.assim.SemiDistributed import PrepBg, PrepAn, PrepAbs
+
+
 class Ensemble(object):
     '''
     class to describe an ensemble of objects.

@@ -12,7 +12,8 @@ This module contains all file manipulations.
 import os
 import shutil
 import datetime
-from utils.FileException import FileNameException, DirNameException
+
+from snowtools.utils.FileException import FileNameException, DirNameException
 
 
 def absolute_path(pathin):

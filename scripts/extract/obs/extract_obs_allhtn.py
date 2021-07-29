@@ -5,10 +5,10 @@
 # Matthieu Lafaysse 10 sept 2014
 # Script simplifié pour obtenir un format obs.csv depuis la BDCLIM
 
-import sys, os
+import sys
+import os
 import re
 import datetime
-
 import csv
 
 

@@ -7,15 +7,14 @@ Created on Mon Jul  9 16:44:24 2019
 """
 
 # LOAD LIBRARIES
+from functools import partial
 import numpy as np
-import netCDF4 as nc
 from netCDF4 import Dataset
 import pyproj
 
 import shapefile
 from shapely.geometry import shape, Point, Polygon, MultiPolygon
 from shapely.ops import transform
-from functools import partial
 
 import matplotlib.pyplot as plt
 

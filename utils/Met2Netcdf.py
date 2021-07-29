@@ -4,19 +4,21 @@
 
 import sys
 import datetime
+import argparse
+from datetime import timedelta
+
 import psycopg2
 import numpy as np
 import netCDF4
-import argparse
-from utils.S2M_standard_file import StandardCDP
-from utils.resources import get_file_period
-from utils.prosimu import prosimu
-from datetime import timedelta
 from dateutil.relativedelta import relativedelta
-from utils.dates import check_and_convert_date
+
+from snowtools.utils.S2M_standard_file import StandardCDP
+from snowtools.utils.resources import get_file_period
+from snowtools.utils.prosimu import prosimu
+from snowtools.utils.dates import check_and_convert_date
+from snowtools.utils.infomassifs import infomassifs
 from bronx.meteo.thermo import Thermo
 from bronx.meteo.constants import T0
-from utils.infomassifs import infomassifs
 
 
 # Tester avec par exemple: python Met2Netcdf.py -b 2000080106 -e 2001080106

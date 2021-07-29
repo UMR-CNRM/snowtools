@@ -47,8 +47,9 @@ m.init_massifs(palette='Reds')
 """
 
 import os
-import numpy as np
 import itertools
+
+import numpy as np
 import matplotlib
 # print(matplotlib.rcParams["savefig.dpi"])
 # print(matplotlib.rcParams)
@@ -62,11 +63,12 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
 import cartopy.feature
-from plots.abstracts.figures import Mplfigure
-from utils.infomassifs import infomassifs
 from pyproj import CRS
 from cartopy import config
 from shapely.geometry import box
+
+from snowtools.plots.abstracts.figures import Mplfigure
+from snowtools.utils.infomassifs import infomassifs
 
 # Tell cartopy where to find Natural Earth features
 config['data_dir'] = os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')

@@ -3,12 +3,12 @@
 
 # Extraction des masques dans BDLIM
 
-import sys, os
+import sys
+import os
 import string
 import re
 
 import csv
-
 
 import xml.etree.ElementTree as ET
 

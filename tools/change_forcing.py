@@ -6,7 +6,7 @@ Created on 3 Aug. 2017
 @author: lafaysse
 """
 
-import os, csv
+import os
 import numpy as np
 import datetime
 import netCDF4
@@ -14,15 +14,15 @@ import netCDF4
 # For compatibility python 2 / python 3
 import six
 
-from utils.sun import sun
-from utils.prosimu import prosimu
-from utils.infomassifs import infomassifs
+from snowtools.utils.sun import sun
+from snowtools.utils.prosimu import prosimu
+from snowtools.utils.infomassifs import infomassifs
 # Take care : exceptions have to been imported with snowtools prefix to be recognized by vortex
 from snowtools.utils.FileException import FileNameException, DirNameException, VarWriteException, GeometryException, MassifException, TimeListException
-from utils.dates import TypeException
+from snowtools.utils.dates import TypeException
 
-from utils.resources import print_used_memory
-from utils.S2M_standard_file import StandardSAFRAN, StandardCROCUS
+from snowtools.utils.resources import print_used_memory
+from snowtools.utils.S2M_standard_file import StandardSAFRAN, StandardCROCUS
 
 
 class forcinput_tomerge:

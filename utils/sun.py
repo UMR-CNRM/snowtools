@@ -3,7 +3,7 @@
 import numpy as np
 import math
 
-from utils.resources import print_used_memory
+from snowtools.utils.resources import print_used_memory
 
 
 def interp1d(x, y, tab):

@@ -7,7 +7,7 @@ Created on 25 June 2018
 '''
 
 import numpy as np
-from utils.prosimu import prosimu
+from snowtools.utils.prosimu import prosimu
 
 
 class massif_simu(prosimu):

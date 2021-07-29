@@ -1,7 +1,12 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-#from tkinter import *
+import logging
+import pickle
+import math
+import argparse
+import sys
+import os.path
 from tkinter import Toplevel
 from tkinter import Frame
 from tkinter import Button
@@ -14,7 +19,20 @@ from tkinter import ttk
 from tkinter import Tk
 import tkinter.filedialog
 
-import logging
+import numpy as np
+
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
+from snowtools.utils.prosimu import prosimu
+from snowtools.utils.infomassifs import infomassifs
+from snowtools.utils.dates import check_and_convert_date
+from snowtools.utils.FileException import FileNameException, FileParseException
+from snowtools.plots import proReader_mini
+
+
 logger = logging.getLogger()
 logger.setLevel(logging.WARNING)
 console_handler = logging.StreamHandler()
@@ -22,24 +40,6 @@ console_handler.setFormatter(logging.Formatter('%(levelname)s :: %(message)s'))
 console_handler.setLevel(logging.DEBUG)
 logger.addHandler(console_handler)
 
-import math
-import numpy as np
-import argparse
-import sys
-import os.path
-
-import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-
-from utils.prosimu import prosimu
-from utils.infomassifs import infomassifs
-from utils.dates import check_and_convert_date
-from utils.FileException import FileNameException, FileParseException
-import proReader_mini
-
-import pickle
 
 constante_sampling = proReader_mini.constante_sampling
 

@@ -140,8 +140,9 @@ cleantmp()
 #######################################################################
 adapt_import()
 {
-    sed -i -e "s/from utils\./from /" "$1"
-    sed -i -e "s/import utils\./import /" "$1"
+    sed -i -e "s/from snowtools.utils\./from /" "$1"
+    sed -i -e "s/import snowtools.utils\./import /" "$1"
+    sed -i -e "s/from snowtools.plots\. /from /" "$1"
     sed -i -e "s/from \.FileException/from FileException/" "$1"
     sed -i -e "s/^\( *\)main(version='.*')/\1main()/" "$1"
 }

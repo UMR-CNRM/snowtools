@@ -5,15 +5,15 @@ Created on 11 févr. 2019
 @author: cluzetb
 '''
 import os
-from SemiDistributed import PrepBg, PrepAbs, Synthetic, Real, Obs
-from plotcrocO import Pie
-from Ensemble import PrepEnsBg, PrepEnsAn
-from Operators import PrepEnsOperator
-import matplotlib.pyplot as plt
-from utilcrocO import setSubsetclasses
-from utilcrocO import niceName
-from utilcrocO import Pgd
+
 import numpy as np
+import matplotlib.pyplot as plt
+
+from snowtools.assim.plotcrocO import Pie
+from snowtools.assim.Ensemble import PrepEnsBg, PrepEnsAn
+from snowtools.assim.Operators import PrepEnsOperator
+from snowtools.assim.utilcrocO import setSubsetclasses
+
 
 class PostCroco(object):
     '''

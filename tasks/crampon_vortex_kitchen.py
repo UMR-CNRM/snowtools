@@ -7,11 +7,12 @@ Run a CRAMPON assimilation sequence on a multinode
 import os
 import shutil
 
-from utils.resources import InstallException
-from tasks.vortex_kitchen import Vortex_conf_file
-from tools.update_namelist import update_surfex_namelist_file
 import numpy as np
-from utils.ESCROCsubensembles import ESCROC_subensembles
+
+from snowtools.utils.resources import InstallException
+from snowtools.tasks.vortex_kitchen import Vortex_conf_file
+from snowtools.tools.update_namelist import update_surfex_namelist_file
+from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
 
 
 class crampon_vortex_kitchen(object):

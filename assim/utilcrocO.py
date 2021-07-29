@@ -7,12 +7,15 @@ Created on 6 févr. 2019
 utils suited for crocO interface only
 '''
 
+import datetime
+
+import netCDF4
 import numpy as np
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 from vortex.util.config import GenericConfigParser
 from vortex.layout.nodes import ConfigSet
-import netCDF4
-import datetime
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 
 def dictsAspect():
     '''

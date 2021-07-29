@@ -10,12 +10,13 @@ perform local tests/dev of SODA based on :
     - opt : set of REAL observations OR generate synthetical observations.
 
 '''
-from optparse import OptionParser
-from utilcrocO import read_conf
 import sys
 import time
 import os
-from CrocOrun import CrocOrun
+from optparse import OptionParser
+
+from snowtools.assim.utilcrocO import read_conf
+from snowtools.assim.CrocOrun import CrocOrun
 usage = 'crocO --opts'
 
 

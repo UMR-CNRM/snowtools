@@ -11,13 +11,15 @@ This module contains the ``prosimu`` class used to read simulation files
 '''
 
 import os
+import sys
+
+import six
 import netCDF4
 import numpy as np
-import sys
-from .FileException import FileNameException, DirNameException, FileOpenException, VarNameException, TimeException,\
-    MultipleValueException
-from utils.S2M_standard_file import StandardCROCUS
-import six
+
+from snowtools.utils.FileException import FileNameException, DirNameException, FileOpenException, VarNameException, \
+        TimeException, MultipleValueException
+from snowtools.utils.S2M_standard_file import StandardCROCUS
 
 # Fichier PRO.nc issu d'une simulation SURFEX post-traitée
 

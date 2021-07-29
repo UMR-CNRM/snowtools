@@ -9,12 +9,15 @@ Module for preparing/faking/ observations within crocO framework
 import os
 import sys
 import shutil
-from utilcrocO import Pgd, convertdate
-from utilcrocO import setlistvars_obs, setlistvars_var, setSubsetclasses,\
-    dictvarsPrep, dictvarsWrite
+import random
+
 import netCDF4
 import numpy as np
-import random
+
+from snowtools.assim.utilcrocO import Pgd, convertdate
+from snowtools.assim.utilcrocO import setlistvars_obs, setlistvars_var, setSubsetclasses,\
+    dictvarsPrep, dictvarsWrite
+
 
 class SemiDistributed(object):
     '''

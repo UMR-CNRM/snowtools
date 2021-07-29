@@ -13,11 +13,11 @@ import netCDF4
 import datetime
 
 # snowtools modules
-from utils.prosimu import prosimu
-from utils.resources import get_file_period, save_file_const
-from tools.change_forcing import forcinput_select, forcinput_applymask
-from utils.FileException import DirFileException
-from tools.execute import callSurfexOrDie
+from snowtools.utils.prosimu import prosimu
+from snowtools.utils.resources import get_file_period, save_file_const
+from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask
+from snowtools.utils.FileException import DirFileException
+from snowtools.tools.execute import callSurfexOrDie
 
 
 def create_env(diroutput):

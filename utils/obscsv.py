@@ -7,9 +7,14 @@ Created on 29 oct. 2012
 @author: lafaysse
 '''
 
-import os, csv, re, datetime
+import os
+import csv
+import re
+import datetime
+
 import numpy as np
-from utils.FileException import FileOpenException, FileNameException
+
+from snowtools.utils.FileException import FileOpenException, FileNameException
 
 
 class multiplecsv(object):

@@ -9,7 +9,8 @@ import sys
 import os
 import csv
 
-from evals.extract.extract_obs import question
+from snowtools.evals.extract.extract_obs import question
+
 
 def usage():
     print("USAGE extract_metadata.py LIST_STATIONS")

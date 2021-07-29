@@ -4,12 +4,15 @@ Created on 6 févr. 2019
 
 @author: cluzetb
 '''
+import os
+
 import numpy as np
 import matplotlib.pyplot as plt
-from utilcrocO import setSubsetclasses
-from utilcrocO import colorbar
-import os
 from matplotlib.cm import ScalarMappable
+
+from snowtools.assim.utilcrocO import setSubsetclasses
+from snowtools.assim.utilcrocO import colorbar
+
 
 class Pie(object):
     '''

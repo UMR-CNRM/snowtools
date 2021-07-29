@@ -5,8 +5,8 @@ import os
 import sys
 import re
 
-from utils.infomassifs import infomassifs
-from utils.FileException import FileNameException, FileOpenException
+from snowtools.utils.infomassifs import infomassifs
+from snowtools.utils.FileException import FileNameException, FileOpenException
 ################################################################################################
 #                                                                                              #
 #  I/  LECTURE DES SITES DANS UN FICHIER                                                       #

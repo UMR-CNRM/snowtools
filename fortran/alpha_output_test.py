@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-import netCDF4 as nc
 from netCDF4 import Dataset
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import cartopy.crs as ccrs
 from cartopy import config
+
 from snowtools.utils import prosimu
 from snowtools.plots.maps.cartopy import Map_alpes, MultiMap_Alps, Map_pyrenees, MultiMap_Pyr, Map_corse, MultiMap_Cor, MapFrance
 

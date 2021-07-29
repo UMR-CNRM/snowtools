@@ -11,17 +11,17 @@ import os
 import datetime
 
 # Snowtools modules
-from tools.change_forcing import forcinput_select, forcinput_applymask,\
+from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask,\
     forcinput_tomerge, proselect
-from tools.change_prep import prep_tomodify
-from tools.update_namelist import update_surfex_namelist_file
-from tools.execute import callSurfexOrDie
-from tools.massif_diags import massif_simu
-from utils.resources import get_file_period, get_file_date, get_file_const, save_file_period, save_file_date, save_file_const,\
-    get_file_const_or_crash, ldd
-from utils.prosimu import prosimu
-from utils.FileException import DirFileException
-from utils.git import git_infos
+from snowtools.tools.change_prep import prep_tomodify
+from snowtools.tools.update_namelist import update_surfex_namelist_file
+from snowtools.tools.execute import callSurfexOrDie
+from snowtools.tools.massif_diags import massif_simu
+from snowtools.utils.resources import get_file_period, get_file_date, get_file_const, save_file_period, \
+        save_file_date, save_file_const, get_file_const_or_crash, ldd
+from snowtools.utils.prosimu import prosimu
+from snowtools.utils.FileException import DirFileException
+from snowtools.utils.git import git_infos
 
 
 class surfexrun(object):

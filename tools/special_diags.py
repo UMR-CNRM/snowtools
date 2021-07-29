@@ -11,7 +11,7 @@ Note that in the general case, we should avoid to add new diagnostics here, all 
 '''
 
 import numpy as np
-from utils.prosimu import prosimu
+from snowtools.utils.prosimu import prosimu
 
 
 class diagprosimu(prosimu):

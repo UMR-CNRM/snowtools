@@ -5,14 +5,10 @@
 # Matthieu Lafaysse 10 sept 2014
 # Script simplifié pour obtenir un format obs.csv depuis la BDCLIM
 
-import sys, os
-import string
-import re
-import datetime
+import sys
 
-import csv
+from snowtools.scripts.extract.obs.extract_obs import question
 
-from extract_obs import question 
 
 def usage():
     print("USAGE extract_rr_mens.py datedeb datefin")

@@ -6,12 +6,13 @@ Created on 20 mars 2018
 
 @author: lafaysse
 '''
-from optparse import OptionParser
-from tools.change_forcing import forcinput_ESMSnowMIP
-from scripts.ESMSnowMIP.post_snowmip import ESMSnowMIP_output
 import os
 import sys
 import shutil
+from optparse import OptionParser
+
+from snowtools.tools.change_forcing import forcinput_ESMSnowMIP
+from snowtools.scripts.ESMSnowMIP.post_snowmip import ESMSnowMIP_output
 
 dirsnowmip = os.environ['HOME'] + "/data/ESM-SnowMIP/"
 #dirnamelist = dirsnowmip + "namelists_8.0/"
