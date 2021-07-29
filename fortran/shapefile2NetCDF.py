@@ -302,9 +302,9 @@ def check_Id_station_in_Metadata(all_lists):
     Vérifie que les id des stations (création via make_dict_list) ne sont pas présentes dans METADATA.xml.
     On ne passe pas par cette routine si l'option confirm_overwrite est activée
 
-    :all_lists : Dictionnaire de listes pour avoir la liste des id_station
-
+    :param all_lists: Dictionnaire de listes pour avoir la liste des id_station
     :returns: au sens Python, ne retourne rien.
+
     Ecritures écrans et sortie du programme si les id stations sont présentes dans METADATA.xml
     Sinon, il ne se passe rien
     """

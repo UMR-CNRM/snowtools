@@ -25,8 +25,8 @@ Basics
    Testing <misc/test.rst>
 
 
-Code organization
------------------
+Technical documentation
+-----------------------
 
 .. toctree::
    :maxdepth: 1
