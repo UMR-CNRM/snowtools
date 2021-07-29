@@ -15,3 +15,4 @@ fortran/interpol
 fortran/*.o
 fortran/*.mod
 *.mod
+GUI_selfcontain.zip
