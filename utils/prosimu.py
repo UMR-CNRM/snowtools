@@ -61,12 +61,6 @@ class prosimu():
                 if not os.path.isfile(fichier):
                     raise FileNameException(fichier)
 
-                else:
-                    tempdataset = netCDF4.Dataset(fichier, "a")
-                    if "time" in list(tempdataset.variables.keys()):
-                        tempdataset.variables["time"].calendar = "standard"
-                    tempdataset.close()
-
             self.dataset = netCDF4.MFDataset(path, "r")
             self.path = path[0]
             self.mfile = 1
@@ -259,9 +253,7 @@ class prosimu():
 
         if(self.mfile == 1):
             time_base = self.dataset.variables["time"]
-            time_base.calendar = 'standard'
-            time = netCDF4.MFTime(time_base)
-            # time=time_base
+            time = netCDF4.MFTime(time_base, calendar='standard')
         else:
             time = self.dataset.variables["time"]
         if netCDF4.__version__ >= '1.5.4':
