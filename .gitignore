@@ -16,3 +16,4 @@ fortran/*.o
 fortran/*.mod
 *.mod
 GUI_selfcontain.zip
+DATA/shapefiles
