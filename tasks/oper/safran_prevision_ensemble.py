@@ -175,7 +175,7 @@ class Safran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb05 =', tb05)
             print()
 
-            if not self.conf.vconf == 'cor':
+            if self.conf.vconf in ['alp', 'pyr']:
 
                 self.sh.title('Toolbox input tb06')
                 tb06 = toolbox.input(
