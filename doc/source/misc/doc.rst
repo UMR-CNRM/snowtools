@@ -29,7 +29,7 @@ Note that this generation will require some packages to be installed:
  - all snowtools dependecies (this includes a correct installation of vortex)
  - Python 3.7 or later
  - ``sphinx``
- - The ``sphinx-fortran`` extension (installable with ``pip install sphinx-fortran``)
+ - The ``sphinx-fortran`` extension (installable with ``pip install sphinx-fortran`` but the ``pipy`` version is quite old, so we encourage you to install the last version available at https://github.com/sradanov/sphinx-fortran)
 
 
 Code documentation
