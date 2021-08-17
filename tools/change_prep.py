@@ -14,7 +14,7 @@ import numpy as np
 # import six
 
 from utils.prosimu import prosimu
-from utils.FileException import FileNameException
+from snowtools.utils.FileException import FileNameException
 
 
 class prep_tomodify(object):

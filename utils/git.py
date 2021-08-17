@@ -91,6 +91,8 @@ def current_git_repo(path=None):
         logger.warning('Error when discovering git repository')
     except _ChdirException:
         logger.error('Could not reach target directory {}'.format(path))
+    except FileNotFoundError:
+        logger.error('GIT is not installed in your environment')
     return None
 
 

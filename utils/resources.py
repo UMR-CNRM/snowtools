@@ -12,7 +12,8 @@ This module contains all file manipulations.
 import os
 import shutil
 import datetime
-from utils.FileException import FileNameException, DirNameException
+# take care "snowtools" necessary in import for exception catching by vortex
+from snowtools.utils.FileException import FileNameException, DirNameException
 
 
 def absolute_path(pathin):
@@ -44,13 +45,13 @@ def absolute_path(pathin):
     return pathin
 
 
-def smart_copy(pathin, nameout):
+def smart_copy(pathin, nameout, preferlink=False):
     """
     If pathin includes /home do a symbolic link because we probably are on the disk.
     Otherwise, do a hard copy of the file to improve computing times.
     """
 
-    if pathin[0:5] == '/home' or pathin[0:8] == '/scratch':
+    if pathin[0:5] == '/home' or pathin[0:8] == '/scratch' or preferlink:
         if os.path.islink(nameout):
             os.remove(nameout)
         if os.path.isfile(nameout):
@@ -157,15 +158,15 @@ def save_file_period(path, prefix, datebegin, dateend, newprefix=None):
     save_file_const(path, prefix + ".nc", savename)
 
 
-def get_file_const_or_crash(pathin, nameout):
-    if not get_file_const(pathin, nameout):
+def get_file_const_or_crash(pathin, nameout, preferlink=False):
+    if not get_file_const(pathin, nameout, preferlink=preferlink):
         raise FileNameException(pathin)
 
 
-def get_file_const(pathin, nameout):
+def get_file_const(pathin, nameout, preferlink=False):
     if os.path.isfile(pathin):
         print(pathin)
-        smart_copy(pathin, nameout)
+        smart_copy(pathin, nameout, preferlink=preferlink)
         return True
     else:
         return False
