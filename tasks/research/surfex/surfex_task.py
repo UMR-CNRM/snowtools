@@ -33,7 +33,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         t = self.ticket
 
         if not hasattr(self.conf, "genv"):
-            self.conf.genv = 'uenv:cen.02@CONST_CEN'
+            self.conf.genv = 'uenv:cen.03@CONST_CEN'
 
         # Definition of geometries, safran xpid/block and list of dates from S2MTaskMixIn methods
         list_geometry = self.get_list_geometry(meteo=self.conf.meteo)
@@ -402,7 +402,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                         kind           = 'prep',
                         local          = 'PREP',
                         model          = 'surfex',
-                        genv           = 'uenv:cen.01@CONST_CEN',
+                        genv           = self.conf.genv,
                         gvar           = 'master_prep_mpi',
                     )
 
