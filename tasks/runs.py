@@ -368,7 +368,7 @@ class griddedrun(surfexrun):
 
             print(os.listdir(dirdatapgd))
             for fic in os.listdir(dirdatapgd):
-                get_file_const_or_crash(dirdatapgd + "/" + fic, fic)
+                get_file_const_or_crash(dirdatapgd + "/" + fic, fic, preferlink=True)
 
 
 class interpolgriddedrun(interpolrun, griddedrun):
