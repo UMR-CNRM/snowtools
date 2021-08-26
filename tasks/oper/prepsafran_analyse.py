@@ -25,7 +25,10 @@ def setup(t, **kw):
 
 class PrepSafran(Task, S2MTaskMixIn):
 
+    # Filter of errors to be applied in both oper and dev cases
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
+    report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
+    report_execution_error = S2MTaskMixIn.s2moper_report_execution_error
 
     def process(self):
         """Preparation of SAFRAN input files"""
