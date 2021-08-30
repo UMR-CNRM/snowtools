@@ -50,7 +50,7 @@ import shapefile
 # A priori à la conception de l'algo, on se dit que:
 # - il y aura moins de 10 000 points par projet
 # - il y aura moins d'une centaine de projets
-# (et sinon, on réfléchira plus)
+# (et sinon, on réfléchira à quelque chose de mieux)
 # Le but est d'éviter d'avoir en double un code station (sur 8 chiffres comme les codes OMM)
 # Bref:
 # - les nombres entre 10000001 et 10009999 sont pour le projet 0
@@ -69,7 +69,18 @@ import shapefile
 # Exemple:
 # s2m -f /rd/cenfic2/era40/vortex/s2m/alp_flat/reanalysis/meteo/FORCING_2017080106_2018080106.nc -b 20170801 -e 20180801 -r /home/fructusm/git/snowtools_git/fortran/NetCDF_from_shapefile.nc -o output_test_s2m -g --extractforcing
 # s2m -f /home/fructusm/OUTPUT_et_PRO/output_test_s2m/meteo/FORCING_2017080106_2018080106.nc -b 20170801 -e 20180801 -o output_test_s2m_Safran -g --addmask
-# (NB: export NINTERPOL=1 if MPI problem for the extractforcing) 
+# (NB: export NINTERPOL=1 if MPI problem for the extractforcing)
+#
+# Appel sur belenos:
+# s2m -b 19580801 -e 20200801 -m s2m -f reanalysis2020.2@lafaysse -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc -o TEST1 -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -g --addmask -a 400
+# -m pour le modèle
+# -f pour les fichiers de forcing -> on va les chercher chez Matthieu pour reanalyse. On devrait bientôt pouvoir faire -f reanalysis
+# -r pour la région: penser à rajouter la géométrie dans vortex/conf/geometries.ini
+# -n prendre les mêmes options que pour la réanalyse
+# -g car on n'a pas de prep au début -> il faut faire un spinup
+# --addmask pour tenir compte des masques calculés lors de la génération du fichier NetCDF
+# -a 400 pour limiter le Snow Water Equivalent à 400kg/m3 au 1er août
+# question pour simulation: où trouver les forcing de SMHI_RCA4_MOHC_HadGEM2_ES_RCP85 (par exemple)
 ################################################################
 
 
@@ -305,8 +316,7 @@ def check_Id_station_in_Metadata(all_lists):
     :param all_lists: Dictionnaire de listes pour avoir la liste des id_station
     :returns: au sens Python, ne retourne rien.
 
-    Ecritures écrans et sortie du programme si les id stations sont présentes dans METADATA.xml
-    Sinon, il ne se passe rien
+    Ecritures écrans et sortie du programme si les id stations sont présentes dans METADATA.xml. Sinon, il ne se passe rien
     """
     # chemin d ecriture du fichier XML
     chemxml = os.environ['SNOWTOOLS_CEN'] + "/DATA"
@@ -336,7 +346,7 @@ def create_NetCDF(all_lists, output_name):
     Crée un NetCDF 1D pour simulation réanalyse-projection à partir d'un dictionnaire de listes et d'un nom de sortie.
     Le dictionnaire de listes est issue d'un shapefile et se construit avec la routine make_dict_list.
 
-    :all_lists : Dictionnaire de listes pour remplir les variables du NetCDF
+    :param all_lists : Dictionnaire de listes pour remplir les variables du NetCDF
     :param str output_name : Le nom du fichier NetCDF qui sera produit
 
     :returns: au sens Python, ne retourne rien. Permet d'écrire un fichier à l'emplacement donné par output_name. 
@@ -379,7 +389,7 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
     (ie les hauteurs d'angle de vue pour les différents azimuts).
 
 
-    :all_lists : Dictionnaire de listes
+    :param all_lists : Dictionnaire de listes
     :param str path_MNT_alt : Chemin du MNT contenant les valeurs d'altitude
     :param str path_shapefile : Chemin du shapefile dont on souhaite extraire les points.
     :list_skyline: Liste des identifiants du shapefile dont on souhaite avoir le tracé des lignes d'horizon
