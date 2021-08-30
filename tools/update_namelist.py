@@ -1,5 +1,5 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
+
 # Author: M. Lafaysse 24/05/2017
 # Recoding of functionalities of faitNAMetPGD in snowtools1 for projects snowtools2 and vortex
 
@@ -12,7 +12,7 @@ import six
 # Snowtools modules
 from utils.prosimu import prosimu
 from utils.dates import checkdateafter
-from utils.FileException import FileNameException, VarDimensionException
+from snowtools.utils.FileException import FileNameException, VarDimensionException
 
 from bronx.datagrip.namelist import NamelistParser
 

@@ -13,8 +13,9 @@ import netCDF4
 from six.moves import configparser as ConfigParser
 
 import numpy as np
-from utils.FileException import VarNameException, UnknownGridTypeException, FileNameException
+from snowtools.utils.FileException import VarNameException, UnknownGridTypeException, FileNameException
 from utils.infomassifs import infomassifs
+from utils.git import git_infos
 
 
 class _StandardNC(netCDF4.Dataset):
@@ -109,6 +110,8 @@ class _StandardNC(netCDF4.Dataset):
         self.time_coverage_end = time[-1].isoformat()
         self.time_coverage_duration = str(time[-1] - time[0])
         self.time_coverage_resolution = str(time[1] - time[0])
+
+        self.snowtools_commit = git_infos(os.path.dirname(os.path.abspath(__file__))).get_commit(default='')
 
     def standard_names(self):
         return dict(ZS = 'surface_altitude',
@@ -329,12 +332,15 @@ class StandardPROSNOW(StandardSAFRAN):
 
 class StandardCROCUS(_StandardNC):
 
-    def GlobalAttributes(self):
+    def GlobalAttributes(self, surfex_commit=None):
         super(StandardCROCUS, self).GlobalAttributes()
         self.read_config('StandardCROCUS')
         self.title = self.title + ": snow variables"
         self.summary = self.summary + ' This file provides the snowpack properties of the Crocus model.'
         self.keywords = self.keywords + ',SNOW WATER EQUIVALENT,SNOW,ALBEDO,AVALANCHE,FREEZE/THAW,SNOW COVER,SNOW DENSITY,SNOW DEPTH,SNOW ENERGY BALANCE,SNOW MELT,SNOW WATER EQUIVALENT,SNOW/ICE TEMPERATURE'
+
+        if surfex_commit:
+            self.surfex_commit = surfex_commit
 
     def getlatname(self):
         return 'latitude'

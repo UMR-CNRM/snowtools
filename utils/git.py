@@ -8,6 +8,9 @@ A small tool to get information from git. Useful to reuse it in python scripts
 Can also be used as a script passing the path as an argument.
 It will print the main informations.
 
+.. note::
+    This class does nothing when run with python 2
+
 :Authors:
     Léo Viallon-Galinier
 """
@@ -15,6 +18,7 @@ It will print the main informations.
 import subprocess
 import logging
 import os
+import six
 
 logger = logging.getLogger('snowtools.gitutils')
 
@@ -54,7 +58,7 @@ class _chdir:
             return self
         except (OSError, FileNotFoundError, PermissionError, NotADirectoryError) as e:
             logger.error('Incorrect path: {}'.format(e))
-            raise _ChdirException('Could not change directory to {}'.format(self.path)) from e
+            six.raise_from(_ChdirException('Could not change directory to {}'.format(self.path)), e)
 
     def __exit__(self, e_type, e_value, e_traceback):
         if self.chdir:
@@ -72,6 +76,8 @@ def current_git_repo(path=None):
     :returns: Path of git repository, or None if an error occurs or not in a git repository
     :rtype: str
     """
+    if six.PY2:
+        return None
     try:
         with _chdir(path):
             spg = subprocess.run(CMD_DISCOVER, timeout=timeout, capture_output=True, check=True, encoding='utf-8')
@@ -85,6 +91,8 @@ def current_git_repo(path=None):
         logger.warning('Error when discovering git repository')
     except _ChdirException:
         logger.error('Could not reach target directory {}'.format(path))
+    except FileNotFoundError:
+        logger.error('GIT is not installed in your environment')
     return None
 
 
@@ -137,7 +145,7 @@ class git_infos:
 
     .. code-block:: python
 
-       >>> gi.print()
+       >>> print(gi)
        path: /home/viallonl/bin/snowtools
        commit: 98730c7c7f486dc85462b0427ff2ff9275bd5537
        short_commit: 98730c7
@@ -174,6 +182,16 @@ class git_infos:
         'branch': 'master',
         'last_tag': 's2m_reanalysis_2020.2',
         'clean': False}
+
+    Some very often used strings are also computed by pre-coded functions with
+    management of lacking keys:
+
+    .. code-block:: python
+
+       >>> gi.pretty_str_commit()
+       c46bb7a088fc182950621f6849e64d2654987325 (master) by Matthieu Lafaysse on 2021-07-20 (from s2m_reanalysis_2020.2)
+       >>> gi.get_commit()
+       c46bb7a088fc182950621f6849e64d2654987325
 
     """
 
@@ -230,6 +248,8 @@ class git_infos:
                   Could also return None in case of error in command execution or git repo not found.
         :rtype: bool
         """
+        if six.PY2:
+            return None
         try:
             with _chdir(self.path):
                 spg = subprocess.run(COMMAND_CLEAN, timeout=timeout, capture_output=True, check=True, encoding='utf-8')
@@ -273,9 +293,69 @@ class git_infos:
             logger.error('Could not reach target directory {}'.format(self.path))
         return None
 
-    def print(self):
+    def pretty_str_commit(self, short=False, default=''):
+        """
+        Return a pretty one-line string to describe the commit
+
+        Example: ``c46bb7a088fc182950621f6849e64d2654987325 (master) by Matthieu Lafaysse on 2021-07-20 (from s2m_reanalysis_2020.2)``
+
+        :param short: If True, return the short commit format
+        :type short: bool
+        :param default: Default string to be returned if commit could not be read
+        :type default: str
+
+        :returns: A pretty string describing the commit
+        :rtype: str
+        """
+        if self.dict['path'] is None:
+            return default
+        r = []
+        key_commit = 'short_commit' if short else 'commit'
+        if key_commit in self.dict:
+            r.append(self.dict[key_commit])
+        if 'branch' in self.dict:
+            r.append('({})'.format(self.dict['branch']))
+        if 'author' in self.dict:
+            r.append('by {}'.format(self.dict['author']))
+        if 'date' in self.dict and len(self.dict['date']) >= 10:
+            r.append('on {}'.format(self.dict['date'][:10]))
+        if 'last_tag' in self.dict:
+            r.append('(from {})'.format(self.dict['last_tag']))
+        if 'clean' in self.dict:
+            if not self.dict['clean']:
+                r.append('[+]')
+        else:
+            r.append('[?]')
+
+        if len(r) == 0:
+            return default
+        else:
+            return ' '.join(r)
+
+    def get_commit(self, short=False, default=''):
+        """
+        Return the commit number if present, and a zero-length
+        string else (or default if specified).
+
+        :param short: If True, return the short commit format
+        :type short: bool
+        :param default: Default string to be returned if commit could not be read
+        :type default: str
+
+        :returns: commit string
+        :rtype: str
+        """
+        key = 'short_commit' if short else 'commit'
+        if key in self.dict:
+            return self.dict[key]
+        else:
+            return default
+
+    def __str__(self):
+        r = ""
         for key, value in self.dict.items():
-            print('{}: {}'.format(key, value))
+            r += '{}: {}\n'.format(key, value)
+        return r
 
     def __getitem__(self, key):
         return self.dict[key]
@@ -300,4 +380,4 @@ if __name__ == "__main__":
         print('Git info on current directory:')
     else:
         print('Git info on {}:'.format(args.path))
-    gi.print()
+    print(gi)

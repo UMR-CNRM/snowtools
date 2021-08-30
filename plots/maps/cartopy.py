@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on 29 march 2021
@@ -53,6 +53,8 @@ import matplotlib
 # print(matplotlib.rcParams["savefig.dpi"])
 # print(matplotlib.rcParams)
 import matplotlib.pyplot as plt
+from matplotlib.patches import Polygon
+from matplotlib.collections import PatchCollection
 # from matplotlib import style
 # style.use('fast')
 # matplotlib.rcParams["patch.antialiased"] = False
@@ -90,6 +92,7 @@ class _Map_massifs(Mplfigure):
     def __init__(self, *args, **kw):
         # print(kw)
         # Get massif shapes
+        self.titlepad = 15
         self.getshapes()
         # self.projection = MyCRS(self.shpProj, ccrs.Globe(ellipse='clrk80'))
         if self.shpProj['proj'] == 'lcc':
@@ -157,14 +160,14 @@ class _Map_massifs(Mplfigure):
         projfile = 'massifs_{0:s}.prj'.format(self.area)
         with open(os.path.join(shapefile_path, projfile), 'r') as prj_file:
             prj_txt = prj_file.read()
-            pprojcrs = CRS.from_wkt(prj_txt)
+            self.pprojcrs = CRS.from_wkt(prj_txt)
 
         # Projection du shapefile
-        self.shpProj = pprojcrs.to_dict()
+        self.shpProj = self.pprojcrs.to_dict()
 
         # géométries
         # records is a generator object. Each record contains a geometry, its attributes and bounds
-        self.records = self.shapefile.records()
+        self.records = [record for record in self.shapefile.records()]
 
     def getLonLatMassif(self):
         """returns dict with key = Massif Number, value = (lon, lat) """
@@ -329,6 +332,27 @@ class _Map_massifs(Mplfigure):
                 for feature in features:
                     feature['feature']._kwargs['facecolor'] ='white'
 
+    def addpoints(self, lon, lat, labels=None, color='black', marker=None):
+        if labels is not None:
+            for label, x, y in zip(labels, lon, lat):
+                self.map.annotate(label, (x, y), color=color, zorder=4)
+        else:
+            self.map.plot(lon, lat, marker=marker, color=color, linestyle='', zorder=3)
+
+    def highlight_massif(self, massifs, fillvalues, **kwargs):
+
+        # if massif contours are not yet created, draw them
+        if not hasattr(self, 'massif_features'):
+            self.init_massifs(**kwargs)
+
+        if not isinstance(massifs, list):
+            massifs = [massifs, ]
+
+        for i,massif in enumerate(self.records):
+            if massif.attributes['num_opp'] in massifs:
+                self.massif_features[i]['feature'].set_zorder(2) # Pour tracer le massif en dernier
+                self.massif_features[i]['feature']._kwargs['edgecolor'] = 'red'
+
     def legend(self, polygons, **kwargs):
 
         currentaxis = plt.gca()
@@ -354,7 +378,7 @@ class _Map_massifs(Mplfigure):
 
     def set_maptitle(self, title):
         """Set title on top of the map"""
-        self.map.set_title(title, fontsize=20, pad=15)
+        self.map.set_title(title, fontsize=20, pad=self.titlepad)
 
     set_title = set_maptitle
 
@@ -791,3 +815,70 @@ class MultiMap_Cor(_MultiMap, Map_corse):
         super(MultiMap_Cor, self).__init__(*args, **kw)
         self.init_maps(*args, **kw)
         self.legendpos = [0.85, 0.15, 0.03, 0.6]
+
+
+class Zoom_massif(_Map_massifs):
+
+    def __init__(self, num_massif, *args, **kw):
+        if num_massif <= 24:
+            self.area = 'alpes'
+            self.width = 9 
+            self.height = 8 
+            self.legendpos = [0.91, 0.15, 0.03, 0.6]
+            self.mappos=[0.05, 0.03, 0.8, 0.8]
+            self.titlepad = 25
+        elif num_massif >= 64:
+            self.area = 'pyrenees'
+            self.width = 10
+            self.height = 8 
+            self.legendpos = [0.91, 0.15, 0.03, 0.6]
+            self.mappos=[0.05, 0.06, 0.8, 0.8]
+            self.titlepad = 40 
+        else:
+            self.area = 'corse'
+            self.width = 9 
+            self.height = 8
+            self.legendpos = [0.91, 0.15, 0.03, 0.6]
+            self.mappos=[0.05, 0.06, 0.8, 0.8]
+            self.titlepad = 25
+
+        self.deport = {}
+
+        self.getshapes()
+
+        if self.shpProj['proj'] == 'lcc':
+            self.projection = ccrs.LambertConformal(central_longitude=self.shpProj['lon_0'],
+                                                central_latitude=self.shpProj['lat_0'],
+                              false_easting=self.shpProj['x_0'], false_northing=self.shpProj['y_0'],
+                              standard_parallels=(self.shpProj['lat_1'], self.shpProj['lat_2']))
+        else:
+            raise NotImplementedError('only LambertConformal projection is implemented for the massif shapes')
+
+        self.get_map_dimensions(num_massif)
+        self.fig = plt.figure(figsize=(self.width, self.height))
+        self.fig.subplots_adjust(bottom=0.005, left=0.005, top=0.95, right=0.9)
+        self.map = self.getmap(self.latmin, self.latmax, self.lonmin, self.lonmax)
+        self.map.gridlines(draw_labels=True)
+        #self.map.drawcoastlines(linewidth=1)
+#        self.map.drawcountries()
+        #self.map.drawmapboundary()
+
+    def get_map_dimensions(self, num_massif):
+
+        self.dicLonLatMassif = self.getLonLatMassif()
+        for massif in self.records:
+            num = massif.attributes['num_opp']
+            if num == num_massif:
+                barycentre = self.dicLonLatMassif[num]
+        if self.area in ['alpes', 'corse']:
+            dlat = 0.55
+            dlon = 0.65
+        elif self.area == 'pyrenees':
+            dlat = 0.5
+            dlon = 1.3
+
+        self.lonmin = barycentre[0] - dlon
+        self.lonmax = barycentre[0] + dlon
+        self.latmin = barycentre[1] - dlat
+        self.latmax = barycentre[1] + dlat
+

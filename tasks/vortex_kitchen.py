@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -43,11 +42,6 @@ class vortex_kitchen(object):
         self.confdir    = "/".join([self.workingdir, 'conf'])
         self.jobdir     = "/".join([self.workingdir, "jobs"])
 
-        if self.options.oper:
-            self.jobtemplate = "job-s2m-oper.py"
-        else:
-            self.jobtemplate = "job-vortex-default.py"
-
         machine = os.uname()[1]
         if 'taranis' in machine:
             self.profile = "rd-taranis-mt"
@@ -91,16 +85,16 @@ class vortex_kitchen(object):
             if self.options.oper:
                 os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/oper", "tasks")
             else:
-                os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks", "tasks")
+                if self.options.soda:
+                    os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/research/crampon", "tasks")
+                elif self.options.surfex:
+                    os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/research/surfex", "tasks")
+                else:
+                    os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/research/safran", "tasks")
 
         for directory in ["conf", "jobs"]:
             if not os.path.isdir(directory):
                 os.mkdir(directory)
-
-        os.chdir("jobs")
-        if not os.path.isfile(self.jobtemplate):
-            os.symlink(os.environ["SNOWTOOLS_CEN"] + "/jobs/" + self.jobtemplate, self.jobtemplate)
-        os.chdir(self.workingdir)
 
     def init_job_task(self, jobname=None):
         if self.options.surfex:
@@ -149,7 +143,7 @@ class vortex_kitchen(object):
                 self.nnodes = self.options.nnodes
             else:
                 self.jobname = 'rea_s2m'
-                self.reftask = "vortex_tasks"
+                self.reftask = "surfex_task"
                 self.nnodes = self.options.nnodes
             self.confcomplement = " taskconf=" + self.options.datedeb.strftime("%Y")
 
@@ -174,9 +168,7 @@ class vortex_kitchen(object):
                 if not os.path.islink(conffilename):
                     # Operational case : the configuration files are provided :
                     # only create a symbolic link in the appropriate directory
-                    if os.path.exists("../snowtools/DATA/OPER/" + conffilename):
-                        os.symlink("../snowtools/DATA/OPER/" + conffilename, conffilename)
-                    elif os.path.exists("../snowtools/conf/" + conffilename):
+                    if os.path.exists("../snowtools/conf/" + conffilename):
                         os.symlink("../snowtools/conf/" + conffilename, conffilename)
                     else:
                         print("WARNING : No conf file found in snowtools")

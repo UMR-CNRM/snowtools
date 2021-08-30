@@ -1,5 +1,5 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
+
 """
 This modules implements constants and conversions used in thermodynamics.
 

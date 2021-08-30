@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # -*- coding: utf-8 -*-
 '''
 Created on 6 févr. 2019
@@ -125,8 +124,3 @@ class Pie(object):
         if savefig:
             fig.savefig("../pie/pie_" + self.sdObj.ptinom + '_' + var + '_' + self.sdObj.date + '.png')
             fig.close()
-                
-            
-        
-        
-        

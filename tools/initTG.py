@@ -1,4 +1,3 @@
-#! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
 '''
@@ -17,7 +16,7 @@ import datetime
 from utils.prosimu import prosimu
 from utils.resources import get_file_period, save_file_const
 from tools.change_forcing import forcinput_select, forcinput_applymask
-from utils.FileException import DirFileException
+from snowtools.utils.FileException import DirFileException
 from tools.execute import callSurfexOrDie
 
 
