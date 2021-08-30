@@ -3,7 +3,7 @@
 import os
 import six
 import xml.dom.minidom
-from utils.FileException import FileNameException, FileParseException
+from snowtools.utils.FileException import FileNameException, FileParseException
 
 # M Lafaysse 04/08/2017
 # Give metadata about massifs used for avalanche hazard forecasting

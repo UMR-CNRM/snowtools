@@ -143,7 +143,7 @@ class vortex_kitchen(object):
                 self.nnodes = self.options.nnodes
             else:
                 self.jobname = 'rea_s2m'
-                self.reftask = "vortex_tasks"
+                self.reftask = "surfex_task"
                 self.nnodes = self.options.nnodes
             self.confcomplement = " taskconf=" + self.options.datedeb.strftime("%Y")
 

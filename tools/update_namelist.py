@@ -12,7 +12,7 @@ import six
 # Snowtools modules
 from utils.prosimu import prosimu
 from utils.dates import checkdateafter
-from utils.FileException import FileNameException, VarDimensionException
+from snowtools.utils.FileException import FileNameException, VarDimensionException
 
 from bronx.datagrip.namelist import NamelistParser
 
