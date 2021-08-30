@@ -26,19 +26,14 @@ Needs MPI and parallel netcdf libraries.
 
 .. f:autoprogram:: INTERPOLATE_SAFRAN
 
-
 **Module SUBS**
-
 
 .. f:automodule:: subs
 
-
 **Module MODN_INTERPOL_SAFRAN**
-
 
 .. f:automodule:: modn_interpol_safran
 
 **Module MODD_INTERPOL_SAFRAN**
 
 .. f:automodule:: modd_interpol_safran
-
