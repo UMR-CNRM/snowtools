@@ -8,28 +8,26 @@ import re
 from netCDF4 import Dataset
 import numpy as np
 import gdal
-from shapely.geometry import shape, Polygon
+from shapely.geometry import shape
 from shapely.ops import transform
 from functools import partial
 import pyproj
 
 from utils.infomassifs import infomassifs
-from utils.FileException import FileNameException, FileOpenException
 
 # Import pour les log
 import logging
 
+# Bibliothèque ad hoc de Matthieu L pour ouvrir les shapefiles
+import shapefile
+
 # Imports pour "Skyline"
-import csv
 import time
 import math
 import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from osgeo import ogr, osr
+matplotlib.use('Agg')
 
-# Bibliothèque ad hoc de Matthieu L pour ouvrir les shapefiles
-import shapefile
 
 ################################################################
 # On part d'un shapefile en Lambert 93
@@ -106,8 +104,6 @@ import shapefile
 ################################################################
 
 
-
-
 ################################################################
 # VALEURS PAR DEFAUT CHANGEABLE PAR OPTION:
 # MNT (30m) et Nom NetCDF de sortie
@@ -118,7 +114,7 @@ NetCDF_out = 'NetCDF_from_shapefile.nc'
 path_MNT_alti_defaut = '/home/fructusm/MNT_FRANCEandBORDER_30m_fusion:IGN5m+COPERNICUS30m_EPSG:2154_INT:AVERAGE_2021-03.tif'
 path_MNT_slope_defaut = '/home/fructusm/MNT_slope.tif'
 path_MNT_aspect_defaut = '/home/fructusm/MNT_aspect.tif'
-#path_MNT_defaut = '/rd/cenfic2/manto/haddjeria/MNT/finalized/MNT_FRANCEandBORDER_30m_fusion:IGN5m+COPERNICUS30m_EPSG:2154_INT:AVERAGE_2021-03.tif'
+# path_MNT_defaut = '/rd/cenfic2/manto/haddjeria/MNT/finalized/MNT_FRANCEandBORDER_30m_fusion:IGN5m+COPERNICUS30m_EPSG:2154_INT:AVERAGE_2021-03.tif'
 
 
 ################################################################
@@ -180,8 +176,8 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
     # Permet de convertir du Lambert93 (EPSG 2154) en WGS84 (EPSG 4326)
     # Lambert93: coordonnées en mètre sur la France métropolitaine élargie (avec Corse)
     # WSG84: coordonnées en (lon, lat) type GPS pour le monde entier
-    project_from_L93_to_WGS84 = partial(pyproj.transform, pyproj.Proj(init='epsg:2154'),pyproj.Proj(init='epsg:4326'))
-    list_shape_WGS84 = [transform(project_from_L93_to_WGS84,shape(shapes[i])) for i in range(len(shapes))]
+    project_from_L93_to_WGS84 = partial(pyproj.transform, pyproj.Proj(init='epsg:2154'), pyproj.Proj(init='epsg:4326'))
+    list_shape_WGS84 = [transform(project_from_L93_to_WGS84, shape(shapes[i])) for i in range(len(shapes))]
 
     # Un petit print pour voir les attributs du shapefile: noms, coordonnées, altitude, ... 
     # Just_to_see = geomet[0].record
@@ -189,15 +185,15 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
 
     # Recherche des indices de champs pour le shapefile
     for i in range(len(r.fields)):
-        if Nom_alt is not None and r.fields[i][0]==Nom_alt:
+        if Nom_alt is not None and r.fields[i][0] == Nom_alt:
             Indice_record_altitude = i - 1
-        if Nom_asp is not None and r.fields[i][0]==Nom_asp:
+        if Nom_asp is not None and r.fields[i][0] == Nom_asp:
             Indice_record_aspect = i - 1
-        if Nom_slop is not None and r.fields[i][0]==Nom_slop:
+        if Nom_slop is not None and r.fields[i][0] == Nom_slop:
             Indice_record_slope = i - 1
-        if r.fields[i][0]==Id_station:
+        if r.fields[i][0] == Id_station:
             Indice_record_id_station = i - 1
-        if r.fields[i][0]==Nom_station:
+        if r.fields[i][0] == Nom_station:
             Indice_record_nom_station = i - 1
 
     ################################################################
@@ -216,7 +212,7 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
 
     # Version snwotools_git/DATA future
     # NB: Bien vérifier sur le shapefile massif que le numéro de massif est record[0].
-    # Par exemple, pour les shapefile massif en LambertII, c'est record[1] qu'il faut prendre -> à changer dans DUR DANS LE CODE
+    # Pour les shapefile massif en LambertII, c'est record[1] qu'il faut prendre -> à changer dans DUR DANS LE CODE
     massif = shapefile.Reader(path_shapefile_massif)
     shape_massif = massif.shapes()
     geomet_massif = massif.shapeRecords()
@@ -224,9 +220,8 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
     # Permet de convertir du Lambert93 (EPSG 2154) en WGS84 (EPSG 4326)
     # Lambert93: coordonnées en mètre sur la France métropolitaine élargie (avec Corse)
     # WSG84: coordonnées en (lon, lat) type GPS pour le monde entier
-    project_from_L93_to_WGS84 = partial(pyproj.transform, pyproj.Proj(init='epsg:2154'),pyproj.Proj(init='epsg:4326'))
-    list_shape_massif_WGS84 = [transform(project_from_L93_to_WGS84,shape(shape_massif[i])) for i in range(len(shape_massif))]
-
+    project_from_L93_to_WGS84 = partial(pyproj.transform, pyproj.Proj(init='epsg:2154'), pyproj.Proj(init='epsg:4326'))
+    list_shape_massif_WGS84 = [transform(project_from_L93_to_WGS84, shape(shape_massif[i])) for i in range(len(shape_massif))]
 
     # Fonction d'Ambroise Guiot pour lire les valeurs d'un geotif en des points.
     def raster_to_points(raster_src, shape, nodata=np.nan):
@@ -239,40 +234,41 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
 
         :param raster_src: Chemin du fichier géotif dont on souhaite extraire les valeurs.
         :type raster_src: str
-        :param shape: Liste contenant la liste des points. Format en shapely.geometry.collection.GeometryCollection (obtenu avec shape( shapefile.Reader('...').shapes() ) 
+        :param shape: Liste contenant la liste des points. Format en shapely.geometry.collection.GeometryCollection
+        (obtenu avec shape( shapefile.Reader('...').shapes() )
         :param nodata: Valeurs attribuée aux points n'ayant pas de pixel à proximité. The default is np.nan.
         :type nodata: float
 
-        :returns: Liste dans le même ordre que la GeometryCollection fournie en entrée et contenant pour chaque point la valeur issue du fichier geotif.
+        :returns: Liste dans le même ordre que la GeometryCollection fournie en entrée.
+        Elle contient pour chaque point la valeur issue du fichier geotif.
         """
-        raster = gdal.Open(raster_src) # ouverture de l'image tif
+        raster = gdal.Open(raster_src)  # ouverture de l'image tif
         gt = raster.GetGeoTransform()
-        wkt = raster.GetProjection()
+        # wkt = raster.GetProjection()
         band = raster.GetRasterBand(1)
         nodata_raster = band.GetNoDataValue()
         points_values = []
 
         for i in range(len(shape)):
-            #Convert from map to pixel coordinates.
-            #Only works for geotransforms with no rotation.
+            # Convert from map to pixel coordinates.
+            # Only works for geotransforms with no rotation.
             current_x = (shape[i].x - gt[0]) / gt[1]
             current_y = (shape[i].y - gt[3]) / gt[5]
-            px = int(current_x) #x pixel
-            py = int(current_y) #y pixel
+            px = int(current_x)  # x pixel
+            py = int(current_y)  # y pixel
 
-            val = band.ReadAsArray(px,py,2,2)
+            val = band.ReadAsArray(px, py, 2, 2)
             test_ok = (val[0][0] != nodata_raster and val[0][1] != nodata_raster and val[1][0] != nodata_raster and val[1][1] != nodata_raster)
 
             if val is not None and test_ok:
-                value = ((1 - current_x%1) * (1 - current_y%1) * val[0][0]
-                        + (current_x%1) * (1 - current_y%1) * val[0][1]
-                        + (1 - current_x%1) * (current_y%1) * val[1][0]
-                        + (current_x%1) * (current_y%1) * val[1][1])
+                value = ((1 - current_x % 1) * (1 - current_y % 1) * val[0][0]
+                         + (current_x % 1) * (1 - current_y % 1) * val[0][1]
+                         + (1 - current_x % 1) * (current_y % 1) * val[1][0]
+                         + (current_x % 1) * (current_y % 1) * val[1][1])
                 points_values.append(value)
             else :
                 points_values.append(nodata)
         return points_values
-
 
     ################################################################
     # Création des listes d'intérêts venant des geotif
@@ -280,9 +276,9 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
     liste_aspect_MNT = raster_to_points(path_MNT_asp, shape(shapes))
     liste_slope_MNT = raster_to_points(path_MNT_slop, shape(shapes))
 
-    liste_altitude_MNT_arrondie = [ int(round(liste_altitude_MNT[i])) for i in range(len(liste_altitude_MNT)) ]
-    liste_aspect_MNT_arrondie = [ int(round(liste_aspect_MNT[i]))%360 for i in range(len(liste_aspect_MNT)) ]
-    liste_slope_MNT_arrondie = [ int(round(liste_slope_MNT[i])) for i in range(len(liste_slope_MNT)) ]
+    liste_altitude_MNT_arrondie = [int(round(liste_altitude_MNT[i])) for i in range(len(liste_altitude_MNT))]
+    liste_aspect_MNT_arrondie = [int(round(liste_aspect_MNT[i]))%360 for i in range(len(liste_aspect_MNT))]
+    liste_slope_MNT_arrondie = [int(round(liste_slope_MNT[i])) for i in range(len(liste_slope_MNT))]
 
     ################################################################
     # Création liste massif
@@ -297,9 +293,9 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
 
     ################################################################
     # Création liste longitudes:
-    liste_longitude = [round(list_shape_WGS84[i].x,6) for i in range(len(list_shape_WGS84))]
+    liste_longitude = [round(list_shape_WGS84[i].x, 6) for i in range(len(list_shape_WGS84))]
     # Création liste latitudes:
-    liste_latitude = [round(list_shape_WGS84[i].y,6) for i in range(len(list_shape_WGS84))]
+    liste_latitude = [round(list_shape_WGS84[i].y, 6) for i in range(len(list_shape_WGS84))]
     # Création liste "id station" faite avec le field number de référence dans le shapefile
     # 8 chiffres significatifs pour être compatible avec les codes de infomassifs
     liste_id_station = ['%08d' % int(geomet[i].record[Indice_record_id_station] + add_for_METADATA) for i in range(len(shapes))]
@@ -333,11 +329,10 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
     else:
         liste_slope = liste_slope_MNT_arrondie
 
-
-    return { 'lat': liste_latitude, 'lon':liste_longitude, 
-             'alt': liste_altitude, 'asp': liste_aspect, 
-             'm': liste_massif, 'slop': liste_slope,
-             'id': liste_id_station, 'nom': liste_nom_station }
+    return {'lat': liste_latitude, 'lon': liste_longitude,
+            'alt': liste_altitude, 'asp': liste_aspect,
+            'm': liste_massif, 'slop': liste_slope,
+            'id': liste_id_station, 'nom': liste_nom_station}
 
 
 def check_Id_station_in_Metadata(all_lists):
@@ -347,8 +342,8 @@ def check_Id_station_in_Metadata(all_lists):
 
     :param all_lists: Dictionnaire de listes pour avoir la liste des id_station
     :returns: au sens Python, ne retourne rien.
-
-    Ecritures écrans et sortie du programme si les id stations sont présentes dans METADATA.xml. Sinon, il ne se passe rien
+    Ecritures écrans et sortie du programme si les id stations sont présentes dans METADATA.xml.
+    Sinon, il ne se passe rien
     """
     # chemin d ecriture du fichier XML
     chemxml = os.environ['SNOWTOOLS_CEN'] + "/DATA"
@@ -369,7 +364,6 @@ def check_Id_station_in_Metadata(all_lists):
     metadata.close()
 
 
-
 ################################################################
 # Creation du NetCDF
 ################################################################
@@ -386,21 +380,21 @@ def create_NetCDF(all_lists, output_name):
     """
     outputs = Dataset(output_name, 'w', format='NETCDF4')
     outputs.createDimension('Number_of_points', len(all_lists['alt']))
-    A = outputs.createVariable('LAT', np.float64,('Number_of_points',), fill_value=-9999999)
-    B = outputs.createVariable('LON', np.float64,('Number_of_points',), fill_value=-9999999)
+    A = outputs.createVariable('LAT', np.float64, ('Number_of_points',), fill_value=-9999999)
+    B = outputs.createVariable('LON', np.float64, ('Number_of_points',), fill_value=-9999999)
     C = outputs.createVariable('ZS', np.float64, ('Number_of_points',), fill_value=-9999999)
     D = outputs.createVariable('aspect', np.float64, ('Number_of_points',), fill_value=-9999999)
-    E = outputs.createVariable('massif_num',int,('Number_of_points',), fill_value=-999)
+    E = outputs.createVariable('massif_num', int, ('Number_of_points',), fill_value=-999)
     F = outputs.createVariable('slope', np.float64, ('Number_of_points',), fill_value=-9999999)
-    G = outputs.createVariable('station', int,('Number_of_points',), fill_value=-9999999)
+    G = outputs.createVariable('station', int, ('Number_of_points',), fill_value=-9999999)
 
-    outputs['LAT'][:] = all_lists['lat'] #liste_latitude
-    outputs['LON'][:] = all_lists['lon'] #liste_longitude
-    outputs['ZS'][:] = all_lists['alt'] #liste_altitude
-    outputs['aspect'][:] = all_lists['asp'] #liste_aspect_
-    outputs['massif_num'][:] = all_lists['m'] #liste_massif
-    outputs['slope'][:] = all_lists['slop'] #liste_slope_
-    outputs['station'][:] = all_lists['id'] #liste_id_station
+    outputs['LAT'][:] = all_lists['lat']  # liste_latitude
+    outputs['LON'][:] = all_lists['lon']  # liste_longitude
+    outputs['ZS'][:] = all_lists['alt']  # liste_altitude
+    outputs['aspect'][:] = all_lists['asp']  # liste_aspect_
+    outputs['massif_num'][:] = all_lists['m']  # liste_massif
+    outputs['slope'][:] = all_lists['slop']  # liste_slope_
+    outputs['station'][:] = all_lists['id']  # liste_id_station
 
     A.setncatts({'long_name': u"latitude", 'units': u"degrees_north"})    
     B.setncatts({'long_name': u"longitude", 'units': u"degrees_east"})
@@ -427,15 +421,15 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
     :type path_MNT_alt: str
     :param path_shapefile: Chemin du shapefile dont on souhaite extraire les points.
     :param path_shapefile: str
-    :list_skyline: Liste des identifiants du shapefile dont on souhaite avoir le tracé des lignes d'horizon
+    :param list_skyline: Liste des identifiants du shapefile dont on souhaite avoir le tracé des lignes d'horizon
 
-    :returns: au sens Python, ne retourne rien. Permet d'une part de tracer les graphiques de ligne d'horizon et d'autre part de compléter METADATA.xml
+    :returns: au sens Python, ne retourne rien. Permet d'une part de tracer les graphiques de ligne d'horizon
+    et d'autre part de compléter METADATA.xml
     """
     start_time = time.time()
 
-    in_file = [ [all_lists['id'][i], all_lists['alt'][i], all_lists['m'][i], all_lists['nom'][i], all_lists['lat'][i], all_lists['lon'][i] ] for i in range(len(all_lists['alt'][:])) ]
+    in_file = [[all_lists['id'][i], all_lists['alt'][i], all_lists['m'][i], all_lists['nom'][i], all_lists['lat'][i], all_lists['lon'][i]] for i in range(len(all_lists['alt'][:]))]
     # à in_file = np.loadtxt(file_in, dtype={'names': ('numposte', 'alt', 'massif', 'nom', 'lat', 'lon'), 'formats': (int, int, int, '|S24', float, float)})
-
 
     #######################################################
     #  AJOUT DE NOUVEAUX SITES DANS LE FICHIER XML Partie I
@@ -450,7 +444,7 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
     metadataout = open(chemxml + "/METADATA_out.xml", 'w')
 
     # faire la chaine de caractère des azimuts pour ecriture dans XML file
-    azimut_str = ','.join( map(str, range(0, 360, 5)) )
+    azimut_str = ','.join(map(str, range(0, 360, 5)))
 
     while True:
         line = metadata.readline()
@@ -460,7 +454,6 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
     #####################
     #  FIN AJOUT Partie I
     #####################
-
 
     # output folder for skyline graph (if asked via options)
     if not os.path.isdir("output"):
@@ -472,9 +465,9 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
     shapes = r.shapes()
     shape_courant = shape(shapes)
 
-    raster = gdal.Open(path_MNT_alt) # ouverture de l'image tif
+    raster = gdal.Open(path_MNT_alt)  # ouverture de l'image tif
     gt = raster.GetGeoTransform()
-    wkt = raster.GetProjection()
+    # wkt = raster.GetProjection()
     band = raster.GetRasterBand(1)
     nodata_raster = band.GetNoDataValue()
     step = int((gt[1] + (-gt[5])) / 2)  # for further use in line interpolation
@@ -486,49 +479,48 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
         center_x = (shape_courant[k].x - gt[0]) / gt[1]
         center_y = (shape_courant[k].y - gt[3]) / gt[5]
 
-        px_c = int(center_x) #x pixel centre
-        py_c = int(center_y) #y pixel centre
+        px_c = int(center_x)  # x pixel centre
+        py_c = int(center_y)  # y pixel centre
 
         # Idee: faire une interpolation biliénaire: -> voir quel pixel (pour orientation) mais en gros
         # f(x,y) = f(0,0)(1-x)(1-y) + f(1,0)x(1-y) + f(0,1)(1-x)y + f(1,1)xy avec x et y entre 0 et 1.
         # Ici, x et y sont les parties décimales de (shape_courant[k].x - gt[0]) / gt[1] et (shape_courant[k].y - gt[3]) / gt[5]
         # La fonction f est jouée par le tableau 2x2 band.ReadAsArray(px_c,py_c,2,2)
         # ! band.ReadAsArray(px_c,py_c,2,2)[0][1] correspond à band.ReadAsArray(px_c+1,py_c,1,1)[0][0]
-        value_bilin = band.ReadAsArray(px_c,py_c,2,2)
-        value_c = ((1 - center_x%1) * (1 - center_y%1) * value_bilin[0][0]
-                  + (center_x%1) * (1 - center_y%1) * value_bilin[0][1]
-                  + (1 - center_x%1) * (center_y%1) * value_bilin[1][0]
-                  + (center_x%1) * (center_y%1) * value_bilin[1][1])
+        value_bilin = band.ReadAsArray(px_c, py_c, 2, 2)
+        value_c = ((1 - center_x % 1) * (1 - center_y % 1) * value_bilin[0][0]
+                   + (center_x % 1) * (1 - center_y % 1) * value_bilin[0][1]
+                   + (1 - center_x % 1) * (center_y % 1) * value_bilin[1][0]
+                   + (center_x % 1) * (center_y % 1) * value_bilin[1][1])
 
-        print("alt: ", round(value_c,1))
+        print("alt: ", round(value_c, 1))
         anglee = []
         for azimut in range(0, 360, 5):
-            angle=[]
-            for index,dist in enumerate(range(step, viewmax, step)):
+            angle = []
+            for index, dist in enumerate(range(step, viewmax, step)):
                 current_x = (shape_courant[k].x + dist * math.sin(math.radians(azimut)) - gt[0]) / gt[1]
                 current_y = (shape_courant[k].y + dist * math.cos(math.radians(azimut)) - gt[3]) / gt[5]
 
-                px = int(current_x) #x pixel le long de l'azimut
-                py = int(current_y) #y pixel le long de l'azimut
-                val = band.ReadAsArray(px,py,2,2)
+                px = int(current_x)  # x pixel le long de l'azimut
+                py = int(current_y)  # y pixel le long de l'azimut
+                val = band.ReadAsArray(px, py, 2, 2)
 
                 test_ok = (val[0][0] != nodata_raster and val[0][1] != nodata_raster and val[1][0] != nodata_raster and val[1][1] != nodata_raster)
 
-                if val is not None and test_ok :
-                    value = ((1 - current_x%1) * (1 - current_y%1) * val[0][0]
-                            + (current_x%1) * (1 - current_y%1) * val[0][1]
-                            + (1 - current_x%1) * (current_y%1) * val[1][0]
-                            + (current_x%1) * (current_y%1) * val[1][1])
+                if val is not None and test_ok:
+                    value = ((1 - current_x % 1) * (1 - current_y % 1) * val[0][0]
+                             + (current_x % 1) * (1 - current_y % 1) * val[0][1]
+                             + (1 - current_x % 1) * (current_y % 1) * val[1][0]
+                             + (current_x % 1) * (current_y % 1) * val[1][1])
 
-                    angle.append(math.ceil((math.degrees(math.atan(  (value - value_c) / dist ) )) * 100) / 100)
+                    angle.append(math.ceil((math.degrees(math.atan((value - value_c) / dist))) * 100) / 100)
                 else:
                     angle.append(0)
             anglee.append(max(angle))
 
-        #print(anglee)
+        # print(anglee)
         az = [azimut for azimut in range(0, 360, 5)]
-        angle_str = ','.join( map(str, anglee) )
-
+        angle_str = ','.join(map(str, anglee))
 
         # PLOT
         if list_skyline is not None and all_lists['id'][k] in list_skyline:
@@ -542,13 +534,12 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
             a.set_rmax(rmax)
             a.set_rgrids([0.01, 10., 20., 30., float(int(rmax))], [str(int(rmax)), '30', '20', '10', '0'])
             a.set_thetagrids([0., 45., 90., 135., 180., 225., 270., 315.], ["N", "NE", "E", "SE", "S", "SW", "W", "NW"])
-            a.set_title(in_stat[3] + ' alt mnt:' + str(round(value_c,1)) + ' m alt poste:' + str(in_stat[1]))
+            a.set_title(in_stat[3] + ' alt mnt:' + str(round(value_c, 1)) + ' m alt poste:' + str(in_stat[1]))
             a.set_theta_zero_location('N')
             a.set_theta_direction(-1)
             plt.savefig('output/' + str(in_stat[0]) + '_skyline.png')
             # show()
             plt.close()
-
 
         ########################################################
         #  AJOUT DE NOUVEAUX SITES DANS LE FICHIER XML Partie II
@@ -631,39 +622,39 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
                 if codestation == all_lists['id'][k]:
                     metadataout.write('\t\t<massif> ' + str(all_lists['m'][k]) + ' </massif>\n')
 
-
     metadata.close()
     os.system('mv -f ' + chemxml + '/METADATA_out.xml ' + chemxml + '/METADATA.xml')
     print("done in", time.time() - start_time, "seconds")
+
 
 def parseArguments(args):
     """Parsing the arguments when you call the main program.
 
     :param args: The list of arguments when you call the main program (typically sys.argv[1:] )
     """
-
     # Create argument parser
     parser = argparse.ArgumentParser()
 
     # Mandatory argument
-    parser.add_argument("path_shape", help = "Path to shapefile", type = str)
-    parser.add_argument("name_station", help = "Shapefile Field Name containing a unique reference for points", type = str)
-    parser.add_argument("id_station", help = "Shapefile Field Number containing a unique reference for points", type = str)
-    parser.add_argument("project_number", help = "Project Number in order to get unique reference in METADATA", type = int)
+    parser.add_argument("path_shape", help="Path to shapefile", type=str)
+    parser.add_argument("name_station", help="Shapefile Field Name containing a unique reference for points", type=str)
+    parser.add_argument("id_station", help="Shapefile Field Number containing a unique reference for points", type=str)
+    parser.add_argument("project_number", help="Project Number in order to get unique reference in METADATA", type=int)
 
     # Optional argument
-    parser.add_argument("--name_alt", help = "Shapefile Field Name containing altitude, if it exists", type = str, default = None)
-    parser.add_argument("--name_asp", help = "Shapefile Field Name containing altitude, if it exists", type = str, default = None)
-    parser.add_argument("--name_slop", help = "Shapefile Field Name containing altitude, if it exists", type = str, default = None)
-    parser.add_argument("-o", "--output", help = "Name for NetCDF file to save", type = str, default = NetCDF_out)
-    parser.add_argument("--MNT_alt", help = "Path for MNT altitude", type = str, default = path_MNT_alti_defaut)
-    parser.add_argument("--MNT_asp", help = "Path for MNT altitude", type = str, default = path_MNT_aspect_defaut)
-    parser.add_argument("--MNT_slop", help = "Path for MNT altitude", type = str, default = path_MNT_slope_defaut)
-    parser.add_argument("--list_skyline", nargs='*', help = "The skyline plot you want", default = None)
-    parser.add_argument("--confirm_overwrite", help = "Confirm you want to overwrite", action = "store_true")
+    parser.add_argument("--name_alt", help="Shapefile Field Name containing altitude, if it exists", type=str, default=None)
+    parser.add_argument("--name_asp", help="Shapefile Field Name containing aspect, if it exists", type=str, default=None)
+    parser.add_argument("--name_slop", help="Shapefile Field Name containing slope, if it exists", type=str, default=None)
+    parser.add_argument("-o", "--output", help="Name for NetCDF file to save", type=str, default=NetCDF_out)
+    parser.add_argument("--MNT_alt", help="Path for MNT altitude", type=str, default=path_MNT_alti_defaut)
+    parser.add_argument("--MNT_asp", help="Path for MNT altitude", type=str, default=path_MNT_aspect_defaut)
+    parser.add_argument("--MNT_slop", help="Path for MNT altitude", type=str, default=path_MNT_slope_defaut)
+    parser.add_argument("--list_skyline", nargs='*', help="The skyline plot you want", default=None)
+    parser.add_argument("--confirm_overwrite", help="Confirm you want to overwrite", action="store_true")
 
     args = parser.parse_args(args)
     return args
+
 
 def main(args=None):
     """Main program: parse argument then launch plot and text comparison for the 2 PRO files
@@ -715,8 +706,9 @@ def main(args=None):
         if list_skyline == ['all'] or list_skyline == ['All'] or list_skyline == ['ALL']:
             list_skyline = [all_lists['id'][k] for k in range(len(all_lists['id']))]
         elif list_skyline is not None:
-            list_skyline = ['%08d' % (10000000 + 10000*Project_number + int( list_skyline[i])) for i in range(len(list_skyline))]
+            list_skyline = ['%08d' % (10000000 + 10000*Project_number + int(list_skyline[i])) for i in range(len(list_skyline))]
         create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline)
+
 
 if __name__ == '__main__':
     main()
