@@ -67,8 +67,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # La ressource n'est peut être pas encore présente, dans ce cas pas de panique
                 fatal          = False,
             )
-            print t.prompt, 'tb01 =', tbarp
-            print
+            print(t.prompt, 'tb01 =', tbarp)
+            print()
 
             # 2. Mode secours :
             # si la ressource précédente est absente, l'échéance 6h du réseau de PRODUCTION d'ARPEGE de 0H
@@ -95,8 +95,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # Mainteant on peut paniquer en cas d'absence
                 fatal          = True,
             )
-            print t.prompt, 'tb02 =', tbarp
-            print
+            print(t.prompt, 'tb02 =', tbarp)
+            print()
 
             # 3. Récupération de l'exécutable (ici un script python avec options)
             self.sh.title('Toolbox input tb03 = PRE-TRAITEMENT FORCAGE script')
@@ -108,8 +108,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 language    = 'python',
                 rawopts     = ' -o -a -i IDW -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp)]))),
             )
-            print t.prompt, 'tb03 =', tb03
-            print
+            print(t.prompt, 'tb03 =', tb03)
+            print()
 
 ###########################################################################
 #                               STEP.02 - COMPUTE                         
@@ -129,8 +129,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ntasks         = self.conf.ntasks,
                 terms          = footprints.util.rangex(self.conf.ana_terms),
             )
-            print t.prompt, 'tb04 =', expresso
-            print
+            print(t.prompt, 'tb04 =', expresso)
+            print()
 
             self.component_runner(expresso, script, fortran = False)
 
@@ -159,8 +159,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 namespace      = self.conf.namespace,
                 fatal          = True,
             ),
-            print t.prompt, 'tb05 =', tb05
-            print
+            print(t.prompt, 'tb05 =', tb05)
+            print()
 
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')
