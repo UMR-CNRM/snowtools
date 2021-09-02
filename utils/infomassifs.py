@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import typing
 import six
 import xml.dom.minidom
 from snowtools.utils.FileException import FileNameException, FileParseException
@@ -39,7 +40,19 @@ class DomainError(Exception):
 
 class infomassifs():
 
-    def __init__(self):
+    def __init__(self, metadata_file=None):
+        """
+        Get massif or point information from file located in
+        ``snowtools/DATA/METADATA.xml`` (or file given as argument)
+
+        :param metadata_file: File in which are stored metadata information (XML format).
+                If file is not found or None given, which will look for ``METADATA.xml`` in current folder or
+                 ``../DATA/METADATA.xml``.
+        :type metadata_file: Path-like (str) or I/O stream
+
+        :raises FileNameException: The metadata file is not found
+        :raises FileParseException: The metadata file cannot be read correctly
+        """
 
         self.dico_units = {'lat': "degrees_north", 'LAT': "degrees_north", 'lon': "degrees_east", 'LON': "degrees_east",
                            'altitude': 'm', 'ZS': 'm', 'aspect': 'degrees from north',
@@ -142,23 +155,20 @@ class infomassifs():
 
         self.missval = -99
 
-        if os.path.isfile('METADATA.xml') or os.path.islink('METADATA.xml'):
-            metadata = 'METADATA.xml'
-        elif 'WHERE' in list(os.environ.keys()):
-            if os.environ['WHERE'] == "SOPRANO":
+        if metadata_file is not None and isinstance(metadata_file, typing.IO):
+            metadata = metadata_file
+        else:
+            if metadata_file is not None and (os.path.isfile(metadata_file) or os.path.islink(metadata_file)):
+                metadata = metadata_file
+            elif os.path.isfile('METADATA.xml') or os.path.islink('METADATA.xml'):
+                metadata = 'METADATA.xml'
+            elif 'WHERE' in list(os.environ.keys()) and os.environ['WHERE'] == "SOPRANO":
                 metadata = os.environ['HOME_RO'] + '/METADATA.xml'
             else:
-                metadata = os.environ['SNOWTOOLS_CEN'] + '/DATA/METADATA.xml'
-        elif 'SNOWTOOLS_CEN' in list(os.environ.keys()):
-            metadata = os.environ['SNOWTOOLS_CEN'] + '/DATA/METADATA.xml'
-        else:
-            metadata = './DATA/METADATA.xml'
+                snowtools_basepath = os.path.dirname(os.path.dirname(__file__))
+                metadata = os.path.join(snowtools_basepath, 'DATA/METADATA.xml')
 
-        if not (os.path.isfile(metadata) or os.path.islink(metadata)):
-            try:
-                import importlib.resources # Python > 3.7
-                metadata = importlib.resources.open_text('DATA', 'METADATA.xml', encoding='utf-8', errors='strict')
-            except:
+            if not (os.path.isfile(metadata) or os.path.islink(metadata)):
                 raise FileNameException(metadata)
 
         try:
