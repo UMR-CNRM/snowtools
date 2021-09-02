@@ -32,8 +32,6 @@ def setup(t, **kw):
 
 class Reanalyses(OpTask, S2MTaskMixIn):
 
-    filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
-
     def refill(self):
         """Preparation of SAFRAN input files"""
 
