@@ -35,16 +35,8 @@ import shapefile
 # On part d'un shapefile en Lambert 93
 # De ce shapefile, le programme fournit un NetCDF pour les besoins du lancement de Surfex (ou de réanalyse) dessus
 # Il fournit aussi les skyline qui sont ajoutées dans MEDATADA.xml
-# Il est possible de garder certain tracés des skylines. 
-#
-# Lancement:
-# python3 shapefile2NetCDF.py path_shapefile station_name_in_shapefile station_id_in_shapefile project_number [--name_alt alti_name_in_shapefile] [-o path_name_of_NetCDF_output] [--MNT_alt path_of_MNT_altitude] [--confirm_overwrite] [--list_skyline all or 1 5 6 if you want skyline for your id_station number 1, 5 and 6]
-#
-# Exemple d'appel
-# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti
-# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti --confirm_overwrite si on a déjà travaillé sur ce projet
-# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti --list_skyline 1 34 47 (pour avoir dans le dossier output les tour d'horizon des stations numéros 1, 34 et 47
-#
+# Il est possible de garder certain tracés des skylines.
+
 # NB: PROJECT NUMBER, C'EST QUOI ?
 # Comme nous allons ajouter des points dans le fichier METADATA.xml, il s'agit de savoir si ces points existent déjà.
 # A priori à la conception de l'algo, on se dit que:
@@ -56,11 +48,31 @@ import shapefile
 # - les nombres entre 10000001 et 10009999 sont pour le projet 0
 # - les nombres entre 10010001 et 10019999 sont pour le projet 1
 # - etc
+#############
+# TRACABILITE DES NUMEROS DE PROJET
+#############
 #
-# A ce jour: le projet 0 correspond à l'ANR TOP
-# Merci de mettre à jour le numéro de projet ici histoire d'avoir une tracabilité.
+# Au 27 août 2021:
+# ANR TOP = projet 0 = geometrie orchamp dans vortex/conf/geometries.ini
 #
-# POUR MEMOIRE: que fait-on ensuite du fichier NetCDF ?
+#############
+# METTRE A JOUR CI DESSUS A CHAQUE NOUVEAU PROJET
+#############
+#
+#############
+# Exemple Lancement:
+#############
+# python3 shapefile2NetCDF.py path_shapefile station_name_in_shapefile station_id_in_shapefile project_number [--name_alt alti_name_in_shapefile] [-o path_name_of_NetCDF_output] [--MNT_alt path_of_MNT_altitude] [--confirm_overwrite] [--list_skyline all or 1 5 6 if you want skyline for your id_station number 1, 5 and 6]
+#
+# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti
+# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti --confirm_overwrite si on a déjà travaillé sur ce projet
+# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti --list_skyline 1 34 47 (pour avoir dans le dossier output les tour d'horizon des stations numéros 1, 34 et 47
+#
+#
+#
+##############
+# Utilisation du fichier NetCDF pour reanalyse ou simulation en local
+##############
 # s2m -f path_FORCING -b begin_date -e end_date -r path_netcdf.nc -o output_name -g --extractforcing
 # give interpol_FORCING
 # s2m -f path_interpol_FORCING -b begin_date -e end_date -o output_name_pour_PRO -g --addmask
@@ -71,8 +83,15 @@ import shapefile
 # s2m -f /home/fructusm/OUTPUT_et_PRO/output_test_s2m/meteo/FORCING_2017080106_2018080106.nc -b 20170801 -e 20180801 -o output_test_s2m_Safran -g --addmask
 # (NB: export NINTERPOL=1 if MPI problem for the extractforcing)
 #
-# Appel sur belenos:
+####################
+# Utilisation du fichier NetCDF sur belenos:
+####################
+#
 # s2m -b 19580801 -e 20200801 -m s2m -f reanalysis2020.2@lafaysse -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc -o TEST1 -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -g --addmask -a 400
+#
+# PENSER AU SPINUP
+#
+# Options: 
 # -m pour le modèle
 # -f pour les fichiers de forcing -> on va les chercher chez Matthieu pour reanalyse. On devrait bientôt pouvoir faire -f reanalysis
 # -r pour la région: penser à rajouter la géométrie dans vortex/conf/geometries.ini
@@ -80,7 +99,10 @@ import shapefile
 # -g car on n'a pas de prep au début -> il faut faire un spinup
 # --addmask pour tenir compte des masques calculés lors de la génération du fichier NetCDF
 # -a 400 pour limiter le Snow Water Equivalent à 400kg/m3 au 1er août
-# question pour simulation: où trouver les forcing de SMHI_RCA4_MOHC_HadGEM2_ES_RCP85 (par exemple)
+#
+# question pour simulation: où trouver les forcing de SMHI_RCA4_MOHC_HadGEM2_ES_RCP85 (par exemple) ?
+# reponse: chez Raphaelle Samacoits d'où une commande avec quelque chose comme: 
+# -m adamont -f RCM_GCM_EXP@samacoitsr -r alp_flat:geometryout:fichier.nc
 ################################################################
 
 
@@ -128,14 +150,22 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
     """
     Crée un dictionnaire de listes à partir des données du shapefile et des données des MNT
 
-    :param str path_shapefile : Chemin du shapefile dont on souhaite extraire les points.
-    :param str Id_station : Numéro de l'attribut du shapefile correspondant à un identifiant unique pour chaque point
-    :param str Nom_alt : si présent dans le shapefile, nom de l'attribut d'altitude. Si absent, ce champ est à None
-    :param str Nom_asp : si présent dans le shapefile, nom de l'attribut d'orientation. Si absent, ce champ est à None
-    :param str Nom_slop : si présent dans le shapefile, nom de l'attribut de pente. Si absent, ce champ est à None
-    :param str path_MNT_alt : Chemin du MNT contenant les valeurs d'altitude
-    :param str path_MNT_asp : Chemin du MNT contenant les valeurs d'aspect
-    :param str path_MNT_slop : Chemin du MNT contenant les valeurs de pente
+    :param path_shapefile: Chemin du shapefile dont on souhaite extraire les points.
+    :type path_shapefile: str
+    :param Id_station: Numéro de l'attribut du shapefile correspondant à un identifiant unique pour chaque point
+    :type Id_station: str
+    :param Nom_alt: si présent dans le shapefile, nom de l'attribut d'altitude. Si absent, ce champ est à None
+    :type Nom_alt: str
+    :param Nom_asp: si présent dans le shapefile, nom de l'attribut d'orientation. Si absent, ce champ est à None
+    :type Nom_asp: str
+    :param Nom_slop: si présent dans le shapefile, nom de l'attribut de pente. Si absent, ce champ est à None
+    :type Nom_slop: str
+    :param path_MNT_alt: Chemin du MNT contenant les valeurs d'altitude
+    :type path_MNT_alt: str
+    :param path_MNT_asp: Chemin du MNT contenant les valeurs d'aspect
+    :type path_MNT_asp: str
+    :param path_MNT_slop: Chemin du MNT contenant les valeurs de pente
+    :type path_MNT_slop: str
 
     :returns: dictionnaire de listes:{ 'lat': liste_latitude, 'lon':liste_longitude, 
                                        'alt': liste_altitude, 'asp': liste_aspect, 
@@ -207,9 +237,11 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
         Attention : - le fichier géotif et le shape doivent être dans la même projection
                     - la projection ne doit pas utiliser de rotation (Lambert 93 OK, WSG84 pas clair du tout)
 
-        :param str raster_src : Chemin du fichier géotif dont on souhaite extraire les valeurs.
-        :param shape : Liste contenant la liste des points. Format en shapely.geometry.collection.GeometryCollection (obtenu avec shape( shapefile.Reader('...').shapes() ) 
-        :param float nodata: Valeurs attribuée aux points n'ayant pas de pixel à proximité. The default is np.nan.
+        :param raster_src: Chemin du fichier géotif dont on souhaite extraire les valeurs.
+        :type raster_src: str
+        :param shape: Liste contenant la liste des points. Format en shapely.geometry.collection.GeometryCollection (obtenu avec shape( shapefile.Reader('...').shapes() ) 
+        :param nodata: Valeurs attribuée aux points n'ayant pas de pixel à proximité. The default is np.nan.
+        :type nodata: float
 
         :returns: Liste dans le même ordre que la GeometryCollection fournie en entrée et contenant pour chaque point la valeur issue du fichier geotif.
         """
@@ -346,8 +378,9 @@ def create_NetCDF(all_lists, output_name):
     Crée un NetCDF 1D pour simulation réanalyse-projection à partir d'un dictionnaire de listes et d'un nom de sortie.
     Le dictionnaire de listes est issue d'un shapefile et se construit avec la routine make_dict_list.
 
-    :param all_lists : Dictionnaire de listes pour remplir les variables du NetCDF
-    :param str output_name : Le nom du fichier NetCDF qui sera produit
+    :param all_lists: Dictionnaire de listes pour remplir les variables du NetCDF
+    :param output_name: Le nom du fichier NetCDF qui sera produit
+    :type output_name: str
 
     :returns: au sens Python, ne retourne rien. Permet d'écrire un fichier à l'emplacement donné par output_name. 
     """
@@ -390,8 +423,10 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
 
 
     :param all_lists : Dictionnaire de listes
-    :param str path_MNT_alt : Chemin du MNT contenant les valeurs d'altitude
-    :param str path_shapefile : Chemin du shapefile dont on souhaite extraire les points.
+    :param path_MNT_alt: Chemin du MNT contenant les valeurs d'altitude
+    :type path_MNT_alt: str
+    :param path_shapefile: Chemin du shapefile dont on souhaite extraire les points.
+    :param path_shapefile: str
     :list_skyline: Liste des identifiants du shapefile dont on souhaite avoir le tracé des lignes d'horizon
 
     :returns: au sens Python, ne retourne rien. Permet d'une part de tracer les graphiques de ligne d'horizon et d'autre part de compléter METADATA.xml
