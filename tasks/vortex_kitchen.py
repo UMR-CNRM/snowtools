@@ -319,10 +319,10 @@ class Vortex_conf_file(object):
         self.add_block(jobname)
         if self.options.surfex:
             self.create_conf_surfex()
+            self.setwritesx()
         elif self.options.safran:
             self.create_conf_safran()
 
-        self.setwritesx()
 
     def create_conf_surfex(self):
         self.surfex_variables()

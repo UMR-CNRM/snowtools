@@ -68,8 +68,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     fatal          = False,
                 ),
-                print t.prompt, 'tb01 =', tb01
-                print
+                print(t.prompt, 'tb01 =', tb01)
+                print()
 
                 if len(tb01[0]) < 5:
 
@@ -104,8 +104,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                             vconf          = self.conf.deterministic_conf,
                             fatal          = False,
                         ))
-                        print t.prompt, 'tb02 =', tbarp
-                        print
+                        print(t.prompt, 'tb02 =', tbarp)
+                        print()
 
                     elif rundate < Date(2018, 7, 1):
                         # Pour les dates les plus anciennes aucun archivage sur hendrix n'est disponible
@@ -137,8 +137,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                             #vconf          = self.conf.deterministic_conf,
                             #fatal          = False,
                         ))
-                        print t.prompt, 'tb02 =', tbarp
-                        print
+                        print(t.prompt, 'tb02 =', tbarp)
+                        print()
 
 
                         self.sh.title('Toolbox input tb_ebauche')
@@ -151,8 +151,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                             model           = self.conf.model,
                             local           = 'EBAUCHE_[vconf]',
                         )
-                        print t.prompt, 'tb_tb_ebauche =', tb_ebauche
-                        print
+                        print(t.prompt, 'tb_tb_ebauche =', tb_ebauche)
+                        print()
                         
                         interp = ''
 
@@ -182,8 +182,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                             vconf          = self.conf.deterministic_conf,
                             fatal          = False,
                         ))
-                        print t.prompt, 'tb02 =', tbarp
-                        print
+                        print(t.prompt, 'tb02 =', tbarp)
+                        print()
 
                 rundate = rundate + Period(days=1)
 
@@ -196,8 +196,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 language    = 'python',
                 rawopts     = '{0:s} -a -d {1:s} -f '.format(interp, self.conf.vconf) + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp)]))),
             )
-            print t.prompt, 'tb03 =', tb03
-            print
+            print(t.prompt, 'tb03 =', tb03)
+            print()
 
 
 #             self.sh.title('Toolbox input tb04 = PRE-TRAITEMENT FORCAGE script')
@@ -232,8 +232,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ntasks         = self.conf.ntasks,
                 terms          = footprints.util.rangex(self.conf.ana_terms),
             )
-            print t.prompt, 'tb04 =', expresso
-            print
+            print(t.prompt, 'tb04 =', expresso)
+            print()
 
 #             self.sh.title('Toolbox algo tb04')
 #             expresso = toolbox.algo(
@@ -286,8 +286,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 model          = 'safran',
                 date           = self.conf.dateend.ymd6h,
             ),
-            print t.prompt, 'tb05 =', tb05
-            print
+            print(t.prompt, 'tb05 =', tb05)
+            print()
 
 
             from vortex.tools.systems import ExecutionError
