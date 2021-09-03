@@ -56,7 +56,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     geometry       = self.conf.vconf,
                     vapp           = 's2m',
                     vconf          = '[geometry:area]',
-                    experiment     = 'OPER@vernaym',
+                    experiment     = self.conf.xpid,
                     cutoff         = 'assimilation',
                     block          = self.conf.guess_block,
                     date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
