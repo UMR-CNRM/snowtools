@@ -40,9 +40,64 @@ class PrepSafran(Task, S2MTaskMixIn):
         """Preparation of SAFRAN input files"""
 
         t = self.ticket
-        self.missing_dates = list()
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
+
+            ###########################
+            #  I) FICHIER de METADONNES
+            ###########################
+
+            # On commence par récupérer un fichier à échéance 0h qui sert à lire le métédonnées (infos sur la grille en particulier)
+            # Ce fichier supplémentaire est indispensable pour toujours travailler avec la bonne grille du modèle, même en cas d'évolution
+            # de la géométrie ARPEGE.
+            # On prend arbitrairement le fichier le plus récent (correspondant à dateend) pour maximiser les chances qu'il soit sur le cache
+            # WARNING : Dans le cas d'une réanalyse sur une longue periode il faudrait s'assurer qu'il n'y a pas eu de 
+            # changement de géométrie en cours de période.
+            self.sh.title('Toolbox input metadata_inline')
+            tbmeta = toolbox.input(
+                role           = 'Metadata',
+                format         = 'grib',
+                geometry       = self.conf.cpl_geometry,
+                kind           = 'gridpoint',
+                filtername     = 'concatenate',
+                suite          = 'oper',
+                local          = 'METADATA.grib',
+                date           = '{0:s}/-PT6H'.format(self.conf.dateend.ymd6h),
+                term           = 0,
+                namespace      = 'vortex.cache.fr',
+                block          = 'forecast',
+                nativefmt      = '[format]',
+                origin         = 'historic',
+                model          = '[vapp]',
+                vapp           = self.conf.source_app,
+                vconf          = self.conf.deterministic_conf,
+                fatal          = False,
+            )
+            print(t.prompt, 'tbmeta =', tbmeta)
+            print()
+
+            # Deuxième tentative sur hendrix
+            self.sh.title('Toolbox input metadata_archive')
+            tbmeta.extend(toolbox.input(
+                alternate      = 'Metadata',
+                format         = 'grib',
+                geometry       = self.conf.cpl_geometry,
+                kind           = 'gridpoint',
+                suite          = 'oper',
+                local          = 'METADATA.grib',
+                date           = '{0:s}/-PT6H'.format(self.conf.dateend.ymd6h),
+                term           = 0,
+                namespace      = 'vortex.archive.fr',
+                block          = 'forecast',
+                nativefmt      = '[format]',
+                origin         = 'historic',
+                model          = '[vapp]',
+                vapp           = self.conf.source_app,
+                vconf          = self.conf.deterministic_conf,
+                fatal          = True,
+            ))
+            print(t.prompt, 'tbmeta =', tbmeta)
+            print()
 
             tbarp   = list()
             rundate = self.conf.datebegin
@@ -73,8 +128,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print()
 
                 if len(tb01[0]) < 5:
-
-                    self.missing_dates.append(rundate)
 
                     # 2. Get ARPEGE file 
                     # Recuperation de A6 du réseau H-6 pour H in [0, 6, 12, 18]
@@ -190,6 +243,23 @@ class PrepSafran(Task, S2MTaskMixIn):
 
                 rundate = rundate + Period(days=1)
 
+            ###########################
+            #        SHAPEFILE 
+            ###########################
+            # Dans tous les cas de figure on aura besoin du shapefile des massifs SAFRAN
+            self.sh.title('Toolbox input shapefile')
+            tbshp = toolbox.input(
+                role            = 'Shapefile',
+                genv            = self.conf.cycle,
+                gdomain         = 'all_massifs',
+                geometry        = '[gdomain]',
+                kind            = 'shapefile',
+                model           = self.conf.model,
+                local           = 'massifs_safran.tar',
+            )
+            print(t.prompt, 'tbshp =', tbshp)
+            print()
+
             self.sh.title('Toolbox input tb03 = PRE-TRAITEMENT FORCAGE script')
             tb03 = script = toolbox.input(
                 role        = 'pretraitement',
@@ -260,7 +330,8 @@ class PrepSafran(Task, S2MTaskMixIn):
 
         if 'late-backup' in self.steps:
 
-            for rundate in self.missing_dates:
+            rundate = self.conf.datebegin
+            while rundate <= self.conf.dateend:
 
                 # 1. Save generated guess file in the corresponding Vortex experiment for a re-use
                 self.sh.title('Toolbox output tb01')
