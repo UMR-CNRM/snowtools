@@ -79,8 +79,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vapp           = self.conf.source_app,
                     vconf          = self.conf.eps_conf,
                 ))
-                print t.prompt, 'tb01'
-                print
+                print(t.prompt, 'tb01')
+                print()
 
                 rundate = rundate + Period(days=1)
 
@@ -98,8 +98,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 language    = 'python',
                 rawopts     = ' -o -a -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbpearp)]))),
             )
-            print t.prompt, 'tb02 =', tb02
-            print
+            print(t.prompt, 'tb02 =', tb02)
+            print()
 
         if 'fetch' in self.steps:
             pass
@@ -120,8 +120,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ntasks         = self.conf.ntasks,
                 reforecast     = True,
             )
-            print t.prompt, 'tb03 =', expresso
-            print
+            print(t.prompt, 'tb03 =', expresso)
+            print()
 
             self.component_runner(expresso, script, fortran = False)
 
@@ -154,8 +154,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     namespace      = 'vortex.cache.fr',
                     member         = footprints.util.rangex(self.conf.pearp_members),
                 ),
-                print t.prompt, 'tb04 =', tb04
-                print
+                print(t.prompt, 'tb04 =', tb04)
+                print()
 
                 rundate = rundate + Period(days=1)
 
