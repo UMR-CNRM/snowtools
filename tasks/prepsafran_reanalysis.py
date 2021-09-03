@@ -356,6 +356,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ),
                 print(t.prompt, 'tb01 =', tb01)
                 print()
+                
+                rundate = rundate + Period(days=1)
 
             # WARNING : The following only works for a 1-year execution
             season = self.conf.datebegin.nivologyseason
