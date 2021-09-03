@@ -85,12 +85,12 @@ class vortex_kitchen(object):
             if self.options.oper:
                 os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/oper", "tasks")
             else:
-                if self.options.soda:
+                if self.options.safran:
+                    os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/research/safran", "tasks")
+                elif self.options.soda:
                     os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/research/crampon", "tasks")
                 elif self.options.surfex:
                     os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/research/surfex", "tasks")
-                else:
-                    os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/research/safran", "tasks")
 
         for directory in ["conf", "jobs"]:
             if not os.path.isdir(directory):
