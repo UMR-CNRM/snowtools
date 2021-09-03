@@ -40,11 +40,11 @@ class PrepSafran(Task, S2MTaskMixIn):
         """Preparation of SAFRAN input files"""
 
         t = self.ticket
+        self.missing_dates = list()
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
             tbarp   = list()
-            interp = ' -i IDW'
             rundate = self.conf.datebegin
             while rundate <= self.conf.dateend:
 
@@ -73,6 +73,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print()
 
                 if len(tb01[0]) < 5:
+
+                    self.missing_dates.append(rundate)
 
                     # 2. Get ARPEGE file 
                     # Recuperation de A6 du réseau H-6 pour H in [0, 6, 12, 18]
@@ -195,7 +197,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -d {1:s} -f '.format(self.conf.vconf) + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp)])),
+                rawopts     = ' -f '.format(self.conf.vconf) + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp)])),
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
@@ -258,13 +260,13 @@ class PrepSafran(Task, S2MTaskMixIn):
 
         if 'late-backup' in self.steps:
 
-            while rundate <= self.conf.dateend:
+            for rundate in self.missing_dates:
 
                 # 1. Save generated guess file in the corresponding Vortex experiment for a re-use
                 self.sh.title('Toolbox output tb01')
                 tb01 = toolbox.output(
                     role           = 'Ebauche',
-                    local          = '[date::ymdh]/P[date::addcumul_yymdh]', # TODO : Check if OK
+                    local          = '[date::ymdh]/P[date::addcumul_yymdh]',
                     geometry       = self.conf.vconf,
                     vapp           = 's2m',
                     vconf          = '[geometry:area]',
