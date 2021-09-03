@@ -39,6 +39,7 @@ class PrepSafran(Task, S2MTaskMixIn):
         """Preparation of SAFRAN input files"""
 
         t = self.ticket
+        self.missing_dates = list()
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
@@ -71,7 +72,10 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb01 =', tb01)
                 print()
 
+
                 if len(tb01[0]) < 5:
+
+                    self.missing_dates.append(rundate)
 
                     # 2. Get ARPEGE file 
                     # Recuperation de A6 du réseau H-6 pour H in [0, 6, 12, 18]
@@ -256,6 +260,32 @@ class PrepSafran(Task, S2MTaskMixIn):
             pass
 
         if 'late-backup' in self.steps:
+
+            for rundate in self.missing_dates:
+
+                # 1. Refill generated guess files in vortex cache for future use
+                self.sh.title('Toolbox output tb04')
+                tb04 = toolbox.output(
+                    role           = 'Ebauche',
+                    local          = '[date::ymdh]/P[date::addcumul_yymdh]',
+                    geometry       = self.conf.vconf,
+                    vapp           = 's2m',
+                    vconf          = '[geometry:area]',
+                    experiment     = 'OPER@vernaym',
+                    cutoff         = 'assimilation',
+                    block          = self.conf.guess_block,
+                    date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                    cumul          = self.conf.cumul,
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.deterministic_conf,
+                    namespace      = self.conf.namespace,
+                    fatal          = False,
+                ),
+                print(t.prompt, 'tb04 =', tb04)
+                print()
 
             # WARNING : The following only works for a 1-year execution
             season = self.conf.datebegin.nivologyseason
