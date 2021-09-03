@@ -22,6 +22,14 @@ A script, called ``proReader`` allow to easily and quickly plot Crocus outputs (
 
    The GUI/CLI script ProReader <plots-proreader>
 
+Script for plotting results from operational simulations (s2m based on PEARP)
+-----------------------------------------------------------------------------
+
+.. toctree::
+   :maxdepth: 2
+
+   The script postprocess.py <plots-pearps2m>
+
 Classes or functions
 --------------------
 

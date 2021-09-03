@@ -39,6 +39,7 @@ class PrepSafran(Task, S2MTaskMixIn):
         """Preparation of SAFRAN input files"""
 
         t = self.ticket
+        self.missing_dates = list()
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
@@ -68,10 +69,13 @@ class PrepSafran(Task, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     fatal          = False,
                 ),
-                print t.prompt, 'tb01 =', tb01
-                print
+                print(t.prompt, 'tb01 =', tb01)
+                print()
+
 
                 if len(tb01[0]) < 5:
+
+                    self.missing_dates.append(rundate)
 
                     # 2. Get ARPEGE file 
                     # Recuperation de A6 du réseau H-6 pour H in [0, 6, 12, 18]
@@ -104,8 +108,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                             vconf          = self.conf.deterministic_conf,
                             fatal          = False,
                         ))
-                        print t.prompt, 'tb02 =', tbarp
-                        print
+                        print(t.prompt, 'tb02 =', tbarp)
+                        print()
 
                     elif rundate < Date(2018, 7, 1):
                         # Pour les dates les plus anciennes aucun archivage sur hendrix n'est disponible
@@ -137,8 +141,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                             #vconf          = self.conf.deterministic_conf,
                             #fatal          = False,
                         ))
-                        print t.prompt, 'tb02 =', tbarp
-                        print
+                        print(t.prompt, 'tb02 =', tbarp)
+                        print()
 
 
                         self.sh.title('Toolbox input tb_ebauche')
@@ -151,8 +155,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                             model           = self.conf.model,
                             local           = 'EBAUCHE_[vconf]',
                         )
-                        print t.prompt, 'tb_tb_ebauche =', tb_ebauche
-                        print
+                        print(t.prompt, 'tb_tb_ebauche =', tb_ebauche)
+                        print()
                         
                         interp = ''
 
@@ -182,8 +186,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                             vconf          = self.conf.deterministic_conf,
                             fatal          = False,
                         ))
-                        print t.prompt, 'tb02 =', tbarp
-                        print
+                        print(t.prompt, 'tb02 =', tbarp)
+                        print()
 
                 rundate = rundate + Period(days=1)
 
@@ -194,10 +198,10 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = '{0:s} -a -d {1:s} -f '.format(interp, self.conf.vconf) + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp)]))),
+                rawopts     = '{0:s} -a -d {1:s} -f '.format(interp, self.conf.vconf) + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp)])),
             )
-            print t.prompt, 'tb03 =', tb03
-            print
+            print(t.prompt, 'tb03 =', tb03)
+            print()
 
 
 #             self.sh.title('Toolbox input tb04 = PRE-TRAITEMENT FORCAGE script')
@@ -232,8 +236,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ntasks         = self.conf.ntasks,
                 terms          = footprints.util.rangex(self.conf.ana_terms),
             )
-            print t.prompt, 'tb04 =', expresso
-            print
+            print(t.prompt, 'tb04 =', expresso)
+            print()
 
 #             self.sh.title('Toolbox algo tb04')
 #             expresso = toolbox.algo(
@@ -256,6 +260,32 @@ class PrepSafran(Task, S2MTaskMixIn):
             pass
 
         if 'late-backup' in self.steps:
+
+            for rundate in self.missing_dates:
+
+                # 1. Refill generated guess files in vortex cache for future use
+                self.sh.title('Toolbox output tb04')
+                tb04 = toolbox.output(
+                    role           = 'Ebauche',
+                    local          = '[date::ymdh]/P[date::addcumul_yymdh]',
+                    geometry       = self.conf.vconf,
+                    vapp           = 's2m',
+                    vconf          = '[geometry:area]',
+                    experiment     = 'OPER@vernaym',
+                    cutoff         = 'assimilation',
+                    block          = self.conf.guess_block,
+                    date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                    cumul          = self.conf.cumul,
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.deterministic_conf,
+                    namespace      = self.conf.namespace,
+                    fatal          = False,
+                ),
+                print(t.prompt, 'tb04 =', tb04)
+                print()
 
             # WARNING : The following only works for a 1-year execution
             season = self.conf.datebegin.nivologyseason
@@ -286,8 +316,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 model          = 'safran',
                 date           = self.conf.dateend.ymd6h,
             ),
-            print t.prompt, 'tb05 =', tb05
-            print
+            print(t.prompt, 'tb05 =', tb05)
+            print()
 
 
             from vortex.tools.systems import ExecutionError

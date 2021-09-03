@@ -56,15 +56,24 @@ import proReader_mini
 def make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin, date_end, output_name, point):
     """Plot 2 PRO files side by side in order to compare them
 
-    :param str path_pro1: The path to first PRO file to plot
-    :param str path_pro2: The path to second PRO file to plot
-    :param str variable: The variable to plot (SNOWSSA by default)
-    :param str titre1: Title for first plot in graph (default = 'PRO1')
-    :param str titre2: Title for second plot in graph (default = 'PRO2')
-    :param str date_begin: If you want to zoom the graph between two dates. Format YYYYMMDDHH
-    :param str date_end: If you want to zoom the graph between two dates. Format YYYYMMDDHH
-    :param str output_name: Not mandatory. If a name is given, the plot is saved. 
-    :param str point: If there are several points in the PRO files, the graph is made for choosen point
+    :param path_pro1: The path to first PRO file to plot
+    :type path_pro1: str
+    :param path_pro2: The path to second PRO file to plot
+    :type path_pro2: str
+    :param variable: The variable to plot (SNOWSSA by default)
+    :type variable: str
+    :param titre1: Title for first plot in graph (default = 'PRO1')
+    :type titre1: str
+    :param titre2: Title for second plot in graph (default = 'PRO2')
+    :type ittre2: str
+    :param date_begin: If you want to zoom the graph between two dates. Format YYYYMMDDHH
+    :type date_begin: str
+    :param date_end: If you want to zoom the graph between two dates. Format YYYYMMDDHH
+    :type date_end: str
+    :param output_name: Not mandatory. If a name is given, the plot is saved.
+    :type output_name: str
+    :param point: If there are several points in the PRO files, the graph is made for choosen point
+    :type point: str
 
     :returns: the graph (possibly saved if an output name is given)
     """
@@ -83,12 +92,18 @@ def make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin
 def make_text_comparaison(path_pro1, path_pro2, date_begin, date_end, output_name, point):
     """Comparison of 2 PRO files. This is done with global characteristics like mean of height of snow...
 
-    :param str path_pro1: The path to first PRO file to compare
-    :param str path_pro2: The path to second PRO file to compare
-    :param str date_begin: If you want to compare the graph between two dates. Format YYYYMMDDHH
-    :param str date_end: If you want to compare the graph between two dates. Format YYYYMMDDHH
-    :param str output_name: Not mandatory. If a name is given, the text is saved. 
-    :param str point: If there are several points in the PRO files, the comparison is made for choosen point
+    :param path_pro1: The path to first PRO file to compare
+    :type path_pro1: str
+    :param path_pro2: The path to second PRO file to compare
+    :type path_pro2: str
+    :param date_begin: If you want to compare the graph between two dates. Format YYYYMMDDHH
+    :type date_begin: str
+    :param date_end: If you want to compare the graph between two dates. Format YYYYMMDDHH
+    :type date_end: str
+    :param output_name: Not mandatory. If a name is given, the text is saved.
+    :type output_name: str
+    :param point: If there are several points in the PRO files, the comparison is made for choosen point
+    :type point: str
 
     :returns: a text with all the comparison (possibly saved if an output name is given)
     """

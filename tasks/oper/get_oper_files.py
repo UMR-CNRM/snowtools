@@ -96,8 +96,15 @@ class configcommanddev(configdev):
 
 
 class S2MExtractor(S2MTaskMixIn):
+    """
+    Class to extract S2M results
+    """
 
     def __init__(self, conf):
+        """
+
+        :param conf: configuration information for vortex toolboxes
+        """
         toolbox.active_now = True
         self.conf = conf
         self.datebegin, self.dateend = self.get_period()
