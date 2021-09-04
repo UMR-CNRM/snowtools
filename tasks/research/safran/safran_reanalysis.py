@@ -577,6 +577,10 @@ class Safran(Task, S2MTaskMixIn):
 
                 # Cas d'une execution où l'on veut utiliser les rr ARPEGE comme guess
                 # A lancer avec un job_name=with_rr_arpege (cf fichier de conf)
+                # TODO : Vérifier que dans ce cas les obs sont bien assimilées !!!
+                # En effet si execution="analysis" l'algo component définit les
+                # observations comme des fichiers "communs", ce qui n'est pas le
+                # cas 
                 self.sh.title('Toolbox algo tb23 = SYRPLUIE')
                 tb23 = tbalgo2 = toolbox.algo(
                     engine         = 's2m',
