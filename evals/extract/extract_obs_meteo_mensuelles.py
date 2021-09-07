@@ -15,7 +15,7 @@ import csv
 from extract_obs import question 
 
 def usage():
-    print("USAGE extract_rr_mens.py datedeb datefin")
+    print("USAGE extract_obs_meteo_mensuelles.py datedeb datefin")
     print("format des dates : YYYYMMDD")
     sys.exit(1)
 
