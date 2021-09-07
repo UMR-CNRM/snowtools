@@ -602,7 +602,7 @@ class Graph(Toplevel):
             hauteur_souris = event.ydata
             date_souris = self.date[min(np.where(self.intime)[0][int(math.floor(event.xdata))], len(self.date)-1)]
             self.ax2.clear()
-            top_zoom = self.pro.get_topplot(self.variable, self.date1_zoom, self.date2_zoom)
+            top_zoom = self.pro.get_topplot(self.date1_zoom, self.date2_zoom)
 
             if self.profil_complet:
                 self.ax3.clear()
