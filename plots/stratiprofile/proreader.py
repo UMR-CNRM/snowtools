@@ -25,6 +25,41 @@ class reader(abc.ABC):
     Abstract class defining the API for all reader objects.
     """
 
+    @abc.abstractmethod
+    def __init__(self, filename):
+        """
+        Instantiate a reader object from a file identified by its path
+
+        :param filename: file path to open
+        :type filename: str (path-like)
+        """
+
+    @property
+    @abc.abstractmethod
+    def _association_names(self):
+        """
+        An associative dict relating usual names
+        (altitude, aspect, slope, dz, t, etc.)
+        to actual variable names. For internal use.
+
+        :meta: private
+        """
+
+    @property
+    @abc.abstractmethod
+    def _get_varname(self, varname):
+        """
+        Get the canonical name (as stored in the data)
+        from varname which can be a canonical name or an
+        usual name (e.g. altitude, density, dz, t...)
+        :param varname: Variable name
+        :type varname: str
+        :returns: Canonical name as stored in the data file
+        :rtype: str
+
+        :meta: private
+        """
+
     @property
     @abc.abstractmethod
     def variables(self):
