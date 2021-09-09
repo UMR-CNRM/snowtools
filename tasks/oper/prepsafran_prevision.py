@@ -226,7 +226,9 @@ class PrepSafran(Task, S2MTaskMixIn):
                 language    = 'python',
                 # En python 3 l'ordre des arguments a une importance pour que Vortex ne considère pas que les exécutables sont différents
                 # Pour éviter de complexifier le code ici, le script s2m_filtering_grib s'occupe désormais de supprimer les doublons.
-                rawopts     = ' -o -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)])),
+                # ajouter l'option -p pour tracer les profils générés
+                #rawopts     = ' -o -p -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)])),
+                rawopts     = ' -o -p -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)])),
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
