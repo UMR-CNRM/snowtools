@@ -66,7 +66,7 @@ class Monthly_Surfex_Reanalysis_GetInit(S2MTaskMixIn, OpTask):
         # Alternates (3 previous days)
         for i, alternate_prep in enumerate(alternate_rundate_prep):
 
-            fatal = i < len(alternate_rundate_prep)
+            fatal = i == len(alternate_rundate_prep) - 1
 
             tb01 = toolbox.input(
                 alternate='SnowpackInitForMonthlyReanalysis',
