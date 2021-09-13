@@ -3,7 +3,10 @@
 import abc
 import tkinter as tk
 import tkinter.filedialog
+from tkinter import ttk
 import logging
+
+import numpy as np
 
 from snowtools.plots.stratiprofile import proreader
 
@@ -45,7 +48,9 @@ class ProPlotterApplication(tk.Frame):
         self.main = ProPlotterMain(self)
         self.status = ProPlotterStatus(self)
 
-        # TODO: call to_graph_something depending on self.type  <07-09-21, Léo Viallon-Galinier> #
+        # Set the ProPlotterChoicesBar graphical element adapted to graph type
+        # Set the ProPlotterController adapted to graph type
+        self.to_graph()
 
         # Keyboard shortcuts
         self.master.bind('<Control-o>', self.open)
@@ -54,6 +59,22 @@ class ProPlotterApplication(tk.Frame):
 
     def close_window(self, *args, **kwargs):
         self.master.destroy()
+
+    def to_graph(self, typ=None):
+        if typ is None:
+            typ = self.type
+
+        if typ == 'standard':
+            self.to_graph_standard()
+        elif typ == 'massif':
+            self.to_graph_massif()
+        elif typ == 'height':
+            self.to_graph_height()
+        elif typ == 'member':
+            self.to_graph_member()
+        else:
+            raise ValueError('Unknown graph type')
+        self.type = typ
 
     def to_graph_standard(self):
         self.controller = ProPlotterController_Standard(self)
@@ -77,12 +98,9 @@ class ProPlotterApplication(tk.Frame):
             logger.info('No file selected. Ignore.')
             return None
         self.openbar.update_filename(selectedfilename)
-        # TODO: To be adjusted:  <07-09-21, Léo Viallon-Galinier> #
-        # * If filename is none ask, else do not open dialog
-        # * Reload self.fileobj
-        # * self.choices.variables_w.update()
-        # * self.choices.point_w.update()
-        raise NotImplementedError('NYI')
+        self.fileobj = proreader.read_file(selectedfilename)
+        self.choices.variables_w.update()
+        self.choices.point_w.update()
 
 
 class ProPlotterMenu(tk.Menu):
@@ -94,6 +112,8 @@ class ProPlotterMenu(tk.Menu):
         self.filemenu = tk.Menu(self, tearoff=0)
         self.filemenu.add_command(label='Open', command=self.master.open)
         self.filemenu.add_command(label='Quit', command=self.master.quit)
+        self.filemenu.add_separator()
+        self.filemenu.add_command(label='Save graph', command=lambda x: None)
         self.add_cascade(label='File', menu=self.filemenu)
         # Menu 1
         self.typemenu = tk.Menu(self, tearoff=0)
@@ -129,7 +149,7 @@ class ProPlotterOpenBar(tk.Frame):
         self.openbutton = tk.Button(self, text="Open File", command=self.open)
         self.openbutton.pack(side=tk.LEFT, padx=5)
 
-        filename = self.master.fileobj.filename if self.master.fileobj is not None else 'No file open'
+        filename = self.master.fileobj.filename if self.master.fileobj is not None else '--'
         self.filename = tk.Label(self, text=filename)
         self.filename.pack(side=tk.LEFT)
 
@@ -147,6 +167,8 @@ class ProPlotterChoicesBar(tk.Frame):
      * Variable selection
      * Point selection
     """
+
+    WIDTH = 40
 
     def __init__(self, master):
         """Initialization of left bar for selecting parameters specific to representation,
@@ -181,13 +203,51 @@ class ProPlotterChoicesBar_Variables():
     def __init__(self, master, frame):
         self.master = master
         self.frame = frame
+        self._var_1 = None
+        self._var_2 = None
         self.update()
 
     def update(self):
         self.clean_frame()
-        self.label = tk.Label(self.frame, text='Choice of variables')
+        self.label = tk.Label(self.frame, text='Choice of variables', relief=tk.RAISED)
         self.label.pack()
-        # TODO: Use self.master.master.fileobj to create list of variables  <07-09-21, Léo Viallon-Galinier> #
+
+        if self.master.master.fileobj is not None:
+            self.variables_info = self.master.master.fileobj.variables_desc
+            variables_list = [v['full_name'] if 'full_name' in v else k for k, v in self.variables_info.items()]
+
+            self.label1 = tk.Label(self.frame, text='Variable:')
+            self.label1.pack()
+            self.choice_var_1 = ttk.Combobox(self.frame, state='readonly', values=variables_list,
+                                             width=self.master.WIDTH, )
+            self.choice_var_1.bind('<<ComboboxSelected>>', self.update_var_1)
+            self.choice_var_1.pack()
+            self.label2 = tk.Label(self.frame, text='Variable profil:')
+            self.label2.pack()
+            self.choice_var_2 = ttk.Combobox(self.frame, state='readonly', values=variables_list,
+                                             width=self.master.WIDTH)
+            self.choice_var_2.bind('<<ComboboxSelected>>', self.update_var_2)
+            self.choice_var_2.pack()
+
+    def update_var_1(self):
+        value = self.choice_var_1.get()
+        if value != self._var_1:
+            self._var_1 = value
+            self.master.master.controls.plot_mark()
+
+    def update_var_2(self):
+        value = self.choice_var_2.get()
+        if value != self._var_2:
+            self._var_2 = value
+            self.master.master.controls.plot_mark()
+
+    @property
+    def var_1(self):
+        return self._var_1
+
+    @property
+    def var_2(self):
+        return self._var_2
 
     def clean_frame(self):
         for widgets in self.frame.winfo_children():
@@ -196,7 +256,7 @@ class ProPlotterChoicesBar_Variables():
 
 class ProPlotterChoicesBar_Point():
     """
-    Choice of variables in the opened file
+    Choice of points in the opened file
     """
     def __init__(self, master, frame):
         self.master = master
@@ -205,9 +265,84 @@ class ProPlotterChoicesBar_Point():
 
     def update(self):
         self.clean_frame()
-        self.label = tk.Label(self.frame, text='Choice of point selectors')
-        self.label.pack()
-        # TODO: Use self.master.master.fileobj to create list of point selector  <07-09-21, Léo Viallon-Galinier> #
+        self.label = tk.Label(self.frame, text='Choice of point selectors\n(fill from top to bottom)', relief=tk.RAISED)
+        self.label.pack(pady=5)
+        self.lselectors = []
+        self.llabels = []
+        self.lvariables = []
+        self.lf = []
+        if self.master.master.fileobj is not None:
+            self.variables_info = self.master.master.fileobj.variables_selection_point
+            for v, info in self.variables_info.items():
+                label = tk.Label(self.frame, text=info['full_name'])
+                label.pack()
+                choices = list(info['choices'])  # Tkinter knows nothing of numpy arrays...
+                ii = len(self.llabels)
+                if info['type'] == 'choices':
+                    selector = ttk.Combobox(self.frame, state='readonly', values=choices,
+                                            width=self.master.WIDTH)
+                    selector.bind('<<ComboboxSelected>>', lambda _, i=ii: self.update_var(i))
+                elif info['type'] in ['int', 'float']:
+                    sv = tk.StringVar()
+                    selector = ttk.Spinbox(self.frame, values=choices, textvariable=sv,
+                                           width=self.master.WIDTH, validate='focusout',
+                                           validatecommand=lambda *_, i=ii: self.update_var_numeric(i))
+                    # Trace + check do not execute if string is vide.
+                    # validate='focusout', validatecommand=lambda *_: self
+                    # sv.bind('w', lambda *_: self.update_var(len(self.llabels)))
+                selector.pack()
+                self.llabels.append(label)
+                self.lselectors.append(selector)
+                self.lvariables.append(v)
+
+    def update_var(self, i):
+        """
+        run at each modification of a widget:
+
+        * Set 1st acceptable value for previous widgets if they have not
+          already an acceptable value
+        * Reduce the choices for following widgets
+        """
+        self.master.master.controls.plot_mark()
+        selector = {}
+        for j in range(i):
+            v = self.lvariables[j]
+            val = self.lselectors[j].get()
+            if val is not None and len(val) > 0:
+                if np.issubdtype(self.variables_info[v]['choices'].dtype, np.inexact):
+                    val = float(val)
+                elif np.issubdtype(self.variables_info[v]['choices'].dtype, np.integer):
+                    val = int(val)
+                elif np.issubdtype(self.variables_info[v]['choices'].dtype, np.bool_):
+                    val = int(val)
+                selector[v] = val
+        remaining_options = self.master.master.fileobj.variables_choices(selector=selector)
+
+        # Previous values:  set 1st acceptable value if not already an acceptable value
+        for j in range(0, i):
+            v = self.lvariables[j]
+            ro = list(remaining_options[v])
+            if v in selector and str(selector[v]) in ro:
+                continue  # Already an acceptable value
+            if len(ro) > 0 and v != 'point':
+                self.lselectors[j].set(ro[0])
+
+        # For the modified selector
+
+        # For the following ones, modify the options available
+        for j in range(i+1, len(self.llabels)):
+            v = self.lvariables[j]
+            ro = list(remaining_options[v])
+            self.lselectors[j].configure(values=ro)
+            if v in selector and selector[v] in ro:
+                continue
+            elif v != 'point' and (len(remaining_options[v]) == 1 or
+                                   len(remaining_options[v]) > 0 and v not in selector):
+                self.lselectors[j].set(remaining_options[v][0])
+
+    def update_var_numeric(self, i):
+        # TODO: Check value or do it in previous function  <13-09-21, Léo Viallon-Galinier> #
+        self.update_var(i)
 
     def clean_frame(self):
         for widgets in self.frame.winfo_children():
@@ -234,14 +369,29 @@ class ProPlotterControlsBar(tk.Frame):
         self.infos.pack(side=tk.LEFT)
 
     def plot(self):
-        # TODO: Call controller plotting function  <07-09-21, Léo Viallon-Galinier> #
-        pass
+        """
+        The plot button action -> Call the controller equivalent method
+        """
+        self.master.controller.plot()
+        self.plotbutton.configure(fg='black')
 
     def reset(self):
-        # TODO: Call controller reset function  <07-09-21, Léo Viallon-Galinier> #
-        pass
+        """
+        The reset button action -> Call the controller equivalent method
+        """
+        self.master.controller.reset()
 
-    # TODO: Add functions to change plotbutton color and update text (called by controller)  <07-09-21, LVG> #
+    def plot_mark(self):
+        """
+        To mark that a modification have been done somewhere that necessitate a new plot
+        """
+        self.plotbutton.configure(fg='red')
+
+    def update_text(self, text):
+        """
+        To update the text of this bar
+        """
+        self.infos.configure(text=text)
 
 
 class ProPlotterMain(tk.Frame):
@@ -279,6 +429,11 @@ class ProPlotterStatus(tk.Frame):
         self.status.configure(text=status)
 
 
+class ProPlotterChoicesBar_Params_Standard:
+    def __init__(self, master):
+        pass
+
+
 class ProPlotterController(abc.ABC):
     def __init__(self, master):
         """
@@ -286,6 +441,22 @@ class ProPlotterController(abc.ABC):
         """
         self.master = master
         self.plotting_function = None
+
+    def plot(self):
+        """
+        The plot machinery
+        """
+        # TODO: tbd  <13-09-21, Léo Viallon-Galinier> #
+
+    def reset(self):
+        """
+        Reset the selection (and plot ?)
+        """
+        # TODO: tbd  <13-09-21, Léo Viallon-Galinier> #
+
+
+class ProPlotterController_Standard(ProPlotterController):
+    pass
 
 
 def main(*args, **kwargs):
