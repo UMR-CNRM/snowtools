@@ -4,6 +4,7 @@ import abc
 import tkinter as tk
 import tkinter.filedialog
 from tkinter import ttk
+from tkinter import messagebox
 import logging
 
 import numpy as np
@@ -93,12 +94,17 @@ class ProPlotterApplication(tk.Frame):
         self.choices.params_w = ProPlotterChoicesBar_Params_Member(self)
 
     def open(self, *args):
+        self.status.set_status('Open file...')
         selectedfilename = tkinter.filedialog.askopenfilename(title='Open filename', filetypes=FILETYPES)
         if len(selectedfilename) == 0:
             logger.info('No file selected. Ignore.')
+            self.status.set_status('Open file... No file selected.')
             return None
         self.openbar.update_filename(selectedfilename)
+        self.status.set_status('Opening file {}'.format(selectedfilename))
         self.fileobj = proreader.read_file(selectedfilename)
+        if self.fileobj is not None:
+            self.status.set_status('Successfully opened file {}'.format(selectedfilename))
         self.choices.variables_w.update()
         self.choices.point_w.update()
 
@@ -229,13 +235,13 @@ class ProPlotterChoicesBar_Variables():
             self.choice_var_2.bind('<<ComboboxSelected>>', self.update_var_2)
             self.choice_var_2.pack()
 
-    def update_var_1(self):
+    def update_var_1(self, *args):
         value = self.choice_var_1.get()
         if value != self._var_1:
             self._var_1 = value
             self.master.master.controls.plot_mark()
 
-    def update_var_2(self):
+    def update_var_2(self, *args):
         value = self.choice_var_2.get()
         if value != self._var_2:
             self._var_2 = value
@@ -279,7 +285,7 @@ class ProPlotterChoicesBar_Point():
                 choices = list(info['choices'])  # Tkinter knows nothing of numpy arrays...
                 ii = len(self.llabels)
                 if info['type'] == 'choices':
-                    selector = ttk.Combobox(self.frame, state='readonly', values=choices,
+                    selector = ttk.Combobox(self.frame, state='readonly', values=[''] + choices,
                                             width=self.master.WIDTH)
                     selector.bind('<<ComboboxSelected>>', lambda _, i=ii: self.update_var(i))
                 elif info['type'] in ['int', 'float']:
@@ -287,13 +293,27 @@ class ProPlotterChoicesBar_Point():
                     selector = ttk.Spinbox(self.frame, values=choices, textvariable=sv,
                                            width=self.master.WIDTH, validate='focusout',
                                            validatecommand=lambda *_, i=ii: self.update_var_numeric(i))
-                    # Trace + check do not execute if string is vide.
-                    # validate='focusout', validatecommand=lambda *_: self
-                    # sv.bind('w', lambda *_: self.update_var(len(self.llabels)))
                 selector.pack()
                 self.llabels.append(label)
                 self.lselectors.append(selector)
                 self.lvariables.append(v)
+
+    def get_selector(self):
+        selector = {}
+        for j in range(len(self.llabels)):
+            v = self.lvariables[j]
+            val = self.lselectors[j].get()
+            if val == '':
+                continue
+            if val is not None and len(val) > 0:
+                if np.issubdtype(self.variables_info[v]['choices'].dtype, np.inexact):
+                    val = float(val)
+                elif np.issubdtype(self.variables_info[v]['choices'].dtype, np.integer):
+                    val = int(val)
+                elif np.issubdtype(self.variables_info[v]['choices'].dtype, np.bool_):
+                    val = int(val)
+                selector[v] = val
+        return selector
 
     def update_var(self, i):
         """
@@ -305,9 +325,11 @@ class ProPlotterChoicesBar_Point():
         """
         self.master.master.controls.plot_mark()
         selector = {}
-        for j in range(i):
+        for j in range(i+1):
             v = self.lvariables[j]
             val = self.lselectors[j].get()
+            if val == '':
+                continue
             if val is not None and len(val) > 0:
                 if np.issubdtype(self.variables_info[v]['choices'].dtype, np.inexact):
                     val = float(val)
@@ -333,15 +355,12 @@ class ProPlotterChoicesBar_Point():
         for j in range(i+1, len(self.llabels)):
             v = self.lvariables[j]
             ro = list(remaining_options[v])
-            self.lselectors[j].configure(values=ro)
-            if v in selector and selector[v] in ro:
-                continue
-            elif v != 'point' and (len(remaining_options[v]) == 1 or
-                                   len(remaining_options[v]) > 0 and v not in selector):
-                self.lselectors[j].set(remaining_options[v][0])
+            null_val = [''] if self.variables_info[v]['type'] == 'choices' else []
+            self.lselectors[j].configure(values=null_val + ro)
 
     def update_var_numeric(self, i):
         # TODO: Check value or do it in previous function  <13-09-21, Léo Viallon-Galinier> #
+        # We have to put the nearsest value (or maybe not)
         self.update_var(i)
 
     def clean_frame(self):
@@ -446,7 +465,26 @@ class ProPlotterController(abc.ABC):
         """
         The plot machinery
         """
-        # TODO: tbd  <13-09-21, Léo Viallon-Galinier> #
+        if self.master.fileobj is None:
+            return
+        var_1 = self.master.choices.variables_w.var_1
+        var_2 = self.master.choices.variables_w.var_2
+        selector = self.master.choices.point_w.get_selector()
+        points = self.master.fileobj.get_points(selector=selector)
+
+        if len(points) > 1:
+            error_msg = "Too much points, please refine you selection"
+            messagebox.showerror(title='Too much points', message=error_msg)
+            return
+        elif len(points) == 0:
+            error_msg = "No points with current selection."
+            messagebox.showerror(title='No point found', message=error_msg)
+            return
+
+        point = points[0]
+        text = "Vars: {}/{}. Point: {}".format(var_1, var_2, point)
+        self.master.controls.update_text(text)
+        # TODO: Actually do the plot here <13-09-21, Léo Viallon-Galinier> #
 
     def reset(self):
         """
