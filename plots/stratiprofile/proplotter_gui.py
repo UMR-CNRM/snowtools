@@ -28,6 +28,31 @@ class ProPlotterApplication(tk.Frame):
                       Accepted keys are: type, begin, end, max_samples,
                       date, variable, variable_profil
                       direction, height (only for type=height)
+
+    Maintain links to the different parts of the interface:
+     * menu: The Menu (File, graph type, change language)
+     * openbar: The Tk Frame containing the Open button and the information on currently opened file
+     * choices: The Tk lateral frame for selecting:
+                 * Parameters specific to representation
+                 * Variable selection (specific to opened file)
+                 * Point selection (specific to opened file)
+     * controls: The Tk Frame with "reset" and "plot" button. Also have a text field for displaying information
+                 on what is currently plotted
+     * main: The Tk Frame in which are plotted the graphs
+     * status: The Tk Frame correspondig to the statusbar at bottom
+     * controller : The class which controls interaction between previously defined elements. For each action triggered
+                    in one element, it should call a function of the same element (as elements may be modified, it is
+                    safer not to link directly to an action of an other one as it may have changed since callback
+                    definition) which will call a controller action which will act on desired graphical elements.
+    * fileobj:
+
+    Note that only two elements are adapted to graph type: the first part of the choices Frame
+    (``choices.params_w``) and the controller.
+
+    .. warning::
+        * Actions when clicking buttons or similar should only call functions in the same class
+        * Class actions should only call functions in main Application class or fileobj or controller
+        * controller can act on every element.
     """
     def __init__(self, master=None, fileobj: proreader.reader = None, point=None, arguments: dict = None):
         super().__init__(master)
