@@ -301,13 +301,13 @@ CONTAINS
     !
   END SUBROUTINE READ_OUTPUT_GRID
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE READ_NC(IDFICNC,KZSIN,KMASSIFIN,KASPECTIN, ZSLOPEIN)
+  SUBROUTINE READ_NC(IDFICNC,KZSIN,KMASSIFIN,KASPECTIN, PSLOPEIN)
     ! Read NetCDF file with forcing data to be interpolated.
     INTEGER,INTENT(IN) :: IDFICNC ! NetCDF id of the forcing file
     INTEGER,DIMENSION(:),ALLOCATABLE,INTENT(OUT):: KZSIN  ! Elevation of the input data points
     INTEGER,DIMENSION(:),ALLOCATABLE,INTENT(OUT):: KMASSIFIN ! Massif of the input data points
     INTEGER,DIMENSION(:),ALLOCATABLE,INTENT(OUT):: KASPECTIN ! Aspect of the input data points
-    REAL,DIMENSION(:),ALLOCATABLE, INTENT(OUT):: ZSLOPEIN ! Slope of the input data points
+    REAL,DIMENSION(:),ALLOCATABLE, INTENT(OUT):: PSLOPEIN ! Slope of the input data points
     INTEGER::IDVARGZS,IDVARGMASSIF,IDVARGASPECT,IDVARGSLOPE ! nc variable identifier
     INTEGER,DIMENSION(:),ALLOCATABLE::IDDIMSVARG ! dimension ids of nc variable
     !
@@ -342,7 +342,7 @@ CONTAINS
     ALLOCATE(KZSIN(ILENDIM(1)))
     ALLOCATE(KMASSIFIN(ILENDIM(1)))
     ALLOCATE(KASPECTIN(ILENDIM(1)))
-    ALLOCATE(ZSLOPEIN(ILENDIM(1)))
+    ALLOCATE(PSLOPEIN(ILENDIM(1)))
     !
     CALL CHECK(NF90_GET_VAR(IDFICNC,IDVARGZS,KZSIN), "Cannot read "//HZS)
     !
@@ -362,9 +362,9 @@ CONTAINS
     ! If we interpolate the forcing, the projection will be done after either in snowtools for collection of points, either in SURFEX for 2d points
     CALL CHECK(NF90_INQ_VARID(IDFICNC,HSLOPE,IDVARGSLOPE),"Cannot find "//HSLOPE)
     !
-    CALL CHECK(NF90_GET_VAR(IDFICNC,IDVARGSLOPE,ZSLOPEIN), "Cannot read "//HSLOPE)
+    CALL CHECK(NF90_GET_VAR(IDFICNC,IDVARGSLOPE,PSLOPEIN), "Cannot read "//HSLOPE)
     !
-    IF (MAXVAL(ZSLOPEIN) > 1.) THEN
+    IF (MAXVAL(PSLOPEIN) > 1.) THEN
       WRITE(*,*) "WARNING: Input file contains non-zero slopes. Only zero slopes will be interpolated"
       ! STOP "INPUT FORCING FILE MUST PROVIDE HORIZONTAL RADIATIONS AND MUST NEVER HAVE BEEN PROJECTED ON SLOPES."
     END IF
@@ -372,7 +372,7 @@ CONTAINS
   END SUBROUTINE READ_NC
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE INDICES2D(PZSOUT,KMASSIFOUT,PASPECTOUT,KZSIN,KMASSIFIN,&
-          KASPECTIN, ZSLOPEIN, KINDICESBAS,KINDICESHAUT)
+          KASPECTIN, PSLOPEIN, KINDICESBAS,KINDICESHAUT)
    ! Determines the  indexes of input collection of points to interpolate between in order to obtain the output grid.
     !
     ! Selects the hight level above and below the hight of the output grid point, at the corresponding massif number and
@@ -384,7 +384,7 @@ CONTAINS
     INTEGER,DIMENSION(:),INTENT(IN):: KZSIN ! Elevation of input collection of points
     INTEGER,DIMENSION(:),INTENT(IN):: KMASSIFIN ! Massif of input collection of points
     INTEGER,DIMENSION(:),INTENT(IN):: KASPECTIN ! Aspect of input collection of points
-    REAL, DIMENSION(:), INTENT(IN):: ZSLOPEIN ! slope of input collection of points
+    REAL, DIMENSION(:), INTENT(IN):: PSLOPEIN ! slope of input collection of points
     !
     ! Indexes of input collection of points to interpolate to obtain output grid
     INTEGER,DIMENSION(:,:),ALLOCATABLE,INTENT(OUT):: KINDICESBAS ! Indices of the input collection of points corresponding to the points below the target point
@@ -394,7 +394,7 @@ CONTAINS
     INTEGER :: ININ    ! dimension of input collection of points
     !
     INTEGER::JI,JX,JY ! loop counters
-    INTEGER::JDIFFZS ! elevation difference between output point and input point
+    REAL::ZDIFFZS ! elevation difference between output point and input point TAKE CARE MUST BE REAL !
     !
     LOGICAL :: GASPECT, GISFLAT
     INTEGER, PARAMETER::JPRESOL_ELEV = 300 ! elevation resolution of input collection of points
@@ -416,7 +416,7 @@ CONTAINS
         DO JI=1,ININ
           IF (KMASSIFIN(JI) /= KMASSIFOUT(JX,JY)) CYCLE
           ! Take only zero slopes
-          IF (ZSLOPEIN(JI) /= 0.) THEN
+          IF (PSLOPEIN(JI) /= 0.) THEN
             CYCLE
           END IF
           !Evaluate the aspect only if the input domain is not flat
@@ -427,12 +427,12 @@ CONTAINS
             END IF
           ENDIF
           !
-          JDIFFZS = KZSIN(JI) - PZSOUT(JX,JY)
-          IF (JDIFFZS < -JPRESOL_ELEV) THEN
+          ZDIFFZS = KZSIN(JI) - PZSOUT(JX,JY)
+          IF (ZDIFFZS < -JPRESOL_ELEV) THEN
             CYCLE
-          ELSEIF (JDIFFZS > JPRESOL_ELEV) THEN
+          ELSEIF (ZDIFFZS > JPRESOL_ELEV) THEN
             CYCLE
-          ELSEIF (JDIFFZS <= 0) THEN
+          ELSEIF (ZDIFFZS <= 0) THEN
             ! Elevation of the level just below the point
             KINDICESBAS(JX,JY) = JI
           ELSE
@@ -1411,7 +1411,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
 !    PRINT*, ZSLOPEOUT
 !  END IF
   END IF
-  PRINT*, IMASSIVE_DIM_SIZE_OUT
+!  PRINT*, IMASSIVE_DIM_SIZE_OUT
 
   ! open a file FORCING.nc by massif, altitude, aspect
   CALL READ_NC(FILE_ID_IN,IZSIN,IMASSIFIN,IASPECTIN,ZSLOPEIN)
@@ -2140,7 +2140,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       !
     ELSE
       !
-      PRINT*, VAR_NAME_IN(IV),  VAR_ID_DIMS_OUT(:,IV), "DIMMENSION VAR NON TRAITEE"
+      PRINT*, VAR_NAME_IN(IV),  VAR_ID_DIMS_OUT(:,IV), "DIMENSION VAR NON TRAITEE"
       !
     ENDIF
     !
