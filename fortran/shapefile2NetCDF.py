@@ -110,17 +110,20 @@ matplotlib.use('Agg')
 ################################################################
 NetCDF_out = 'NetCDF_from_shapefile.nc'
 
-# A CHANGER PLUS TARD
-path_MNT_alti_defaut = '/home/fructusm/MNT_FRANCEandBORDER_30m_fusion:IGN5m+COPERNICUS30m_EPSG:2154_INT:AVERAGE_2021-03.tif'
-path_MNT_slope_defaut = '/home/fructusm/MNT_slope.tif'
-path_MNT_aspect_defaut = '/home/fructusm/MNT_aspect.tif'
-# path_MNT_defaut = '/rd/cenfic2/manto/haddjeria/MNT/finalized/MNT_FRANCEandBORDER_30m_fusion:IGN5m+COPERNICUS30m_EPSG:2154_INT:AVERAGE_2021-03.tif'
+# PATH_MNT
+path_MNT_alti_defaut = '/rd/cenfic2/sentinel/mnt_ange/ange-factory/prod1/france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
+path_MNT_slope_defaut = '/rd/cenfic2/sentinel/mnt_ange/ange-factory/prod1/france_30m/SLP_FRANCE_L93_30m_bilinear.tif'
+path_MNT_aspect_defaut = '/rd/cenfic2/sentinel/mnt_ange/ange-factory/prod1/france_30m/ASP_FRANCE_L93_30m_bilinear.tif'
 
+# Pour test en local:
+#path_MNT_alti_defaut = '/home/fructusm/MNT_FRANCEandBORDER_30m_fusion:IGN5m+COPERNICUS30m_EPSG:2154_INT:AVERAGE_2021-03.tif'
+#path_MNT_slope_defaut = '/home/fructusm/MNT_slope.tif'
+#path_MNT_aspect_defaut = '/home/fructusm/MNT_aspect.tif'
 
 ################################################################
 # Infos shapefile massif, a priori pérenne 
 ################################################################
-path_shapefile_massif = '/home/fructusm/git/snowtools_git/DATA/massifs_Lbrt93_2019'
+path_shapefile_massif = os.environ['SNOWTOOLS_CEN'] + '/DATA/massifs_Lbrt93_2019'
 Indice_record_massif = 0
 
 ################################################################
