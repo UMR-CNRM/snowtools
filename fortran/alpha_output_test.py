@@ -247,18 +247,18 @@ class Alphafile():
 
 print(config)
 attributes = dict(
-    PP_SD_1DY_ISBA = dict(convert_unit= 1., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)'),
-    SD_1DY_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm'),
-    SD_3DY_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 72h (cm)'),
-    RAMSOND_ISBA = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur mobilisable (cm)'),
-    NAT_LEV = dict(forcemin=-0.5, forcemax=5.5, palette='YlOrRd', ncolors=6, label=u'Risque naturel', ticks=[u'Très faible', u'Faible', u'Mod. A', u'Mod. D', u'Fort', u'Très fort']),
-    naturalIndex = dict(forcemin=0., forcemax=8., palette='YlOrRd', label=u'Indice de risque naturel', format= '%.1f', nolevel=True),
-    DSN_T_ISBA  = dict(convert_unit= 100., label=u'Hauteur de neige (cm)'),
-    WSN_T_ISBA  = dict(label=u'Equivalent en eau (kg/m2)'),
-    SNOMLT_ISBA  = dict(convert_unit= 3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Ecoulement en 3h (kg/m2/3h)'),
-    WET_TH_ISBA  = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur humide (cm)'),
-    REFRZTH_ISBA  = dict(convert_unit= 100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur regelée (cm)'),
-    RAINF_ISBA   = dict(convert_unit= 3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Pluie en 3h (kg/m2/3h)'),
+    PP_SD_1DY_ISBA=dict(convert_unit=1., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)'),
+    SD_1DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm'),
+    SD_3DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 72h (cm)'),
+    RAMSOND_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur mobilisable (cm)'),
+    NAT_LEV=dict(forcemin=-0.5, forcemax=5.5, palette='YlOrRd', ncolors=6, label=u'Risque naturel', ticks=[u'Très faible', u'Faible', u'Mod. A', u'Mod. D', u'Fort', u'Très fort']),
+    naturalIndex=dict(forcemin=0., forcemax=8., palette='YlOrRd', label=u'Indice de risque naturel', format= '%.1f', nolevel=True),
+    DSN_T_ISBA=dict(convert_unit=100., label=u'Hauteur de neige (cm)'),
+    WSN_T_ISBA=dict(label=u'Equivalent en eau (kg/m2)'),
+    SNOMLT_ISBA=dict(convert_unit=3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Ecoulement en 3h (kg/m2/3h)'),
+    WET_TH_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur humide (cm)'),
+    REFRZTH_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur regelée (cm)'),
+    RAINF_ISBA=dict(convert_unit=3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Pluie en 3h (kg/m2/3h)'),
 )
 
 ### rectangle case ###
@@ -384,25 +384,26 @@ attributes = dict(
 # m.save("cartopy_massifs_2020092712_cor_tab_test.png", formatout="png")
 # m.close()
 
-# postproc = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/Percentiles/Alp/postproc_2021041006_2021041406.nc")
-# print(postproc.listvar(), postproc.listdim())
-# points = postproc.get_points(aspect = -1, ZS=2100)
-# postproc_flat = postproc.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
-# massifs = postproc.read('massif_num', selectpoint=points)
-# # massifs2 = postproc.read('massif_num')
-# # print(np.unique(massifs))
-# # print(postproc_flat.shape, massifs.shape, postproc_flat[5, :, :].max())
-# m = Map_alpes(geofeatures=True)
-# m.init_massifs(**attributes['SD_1DY_ISBA'])
-# # m.draw_massifs(massifs,postproc_flat[5,:,8], **attributes['SD_1DY_ISBA'])
-# # m.plot_center_massif(massifs, postproc_flat[5,:,0], postproc_flat[5,:,4], postproc_flat[5,:,8], **attributes['SD_1DY_ISBA'])
-# m.add_north_south_info()
-# m.addlogo()
-# m.set_maptitle("2021041112 percentile 90")
-# m.set_figtitle("2100m")
-#
-# m.save("cartopy_massifs_2021041112_alps_tab_test.png", formatout="png")
-# m.close()
+postproc = prosimu.prosimu("/home/radanovicss/Hauteur_neige_median/Percentiles/Alp/postproc_2021041006_2021041406.nc")
+print(postproc.listvar(), postproc.listdim())
+points = postproc.get_points(aspect=-1, ZS=2100)
+postproc_flat = postproc.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
+massifs = postproc.read('massif_num', selectpoint=points)
+# massifs2 = postproc.read('massif_num')
+# print(np.unique(massifs))
+# print(postproc_flat.shape, massifs.shape, postproc_flat[5, :, :].max())
+m = Map_alpes(geofeatures=True)
+print(m.latmax, m.infospos)
+m.init_massifs(**attributes['SD_1DY_ISBA'])
+m.draw_massifs(massifs, postproc_flat[5, :, 8], **attributes['SD_1DY_ISBA'])
+m.plot_center_massif(massifs, postproc_flat[5,:,0], postproc_flat[5,:,4], postproc_flat[5,:,8], **attributes['SD_1DY_ISBA'])
+m.add_north_south_info()
+m.addlogo()
+m.set_maptitle("2021041112 percentile 90")
+m.set_figtitle("2100m")
+
+m.save("cartopy_massifs_2021041112_alps_refactor_test.png", formatout="png")
+m.close()
 #
 # lo = MultiMap_Alps(nrow=3, ncol=3, geofeatures=True)
 # lo.init_massifs(**attributes['SD_1DY_ISBA'])
@@ -492,13 +493,13 @@ attributes = dict(
 # m.save("grid_postproc_p90_2021041318_cor.png", formatout="png")
 # m.close()
 
-indata = Alphafile("/home/radanovicss/Interpol_hauteur_neige/Results/Test_MPI/Test_2D_multi2single/1Proc/grid_postproc_2021041006_2021041406_all2alpha_testwrite2.nc")
-indata_multi = Alphafile("/home/radanovicss/Interpol_hauteur_neige/Results/Test_MPI/Test_2D_multi2single/Multiproc/grid_postproc_2021041006_2021041406_all2alpha_testmpi.nc")
-for i in range(32):
-#    print(i, indata.snow[i,:,:].max(), indata_multi.snow[i,:,:].max(), indata.snow[i,:,:].min(), indata_multi.snow[i,:,:].min())
-    print(i, np.sum(indata.snow[i,:,:] - indata_multi.snow[i,:,:]))
-print(np.sum(indata.lats - indata_multi.lats), np.sum(indata.lons - indata_multi.lons),
-      np.sum(indata.massifs - indata_multi.massifs), np.sum(indata.slopes - indata_multi.slopes))
+# indata = Alphafile("/home/radanovicss/Interpol_hauteur_neige/Results/Test_MPI/Test_2D_multi2single/1Proc/grid_postproc_2021041006_2021041406_all2alpha_testwrite2.nc")
+# indata_multi = Alphafile("/home/radanovicss/Interpol_hauteur_neige/Results/Test_MPI/Test_2D_multi2single/Multiproc/grid_postproc_2021041006_2021041406_all2alpha_testmpi.nc")
+# for i in range(32):
+# #    print(i, indata.snow[i,:,:].max(), indata_multi.snow[i,:,:].max(), indata.snow[i,:,:].min(), indata_multi.snow[i,:,:].min())
+#     print(i, np.sum(indata.snow[i,:,:] - indata_multi.snow[i,:,:]))
+# print(np.sum(indata.lats - indata_multi.lats), np.sum(indata.lons - indata_multi.lons),
+#       np.sum(indata.massifs - indata_multi.massifs), np.sum(indata.slopes - indata_multi.slopes))
 
 # m = MapFrance(geofeatures=False, bgimage=True)
 # m.init_massifs(**attributes['SD_1DY_ISBA'])

@@ -24,6 +24,9 @@ def setup(t, **kw):
 
 
 class Safran(Task, S2MTaskMixIn):
+    """
+    Safran re-forecast task
+    """
 
     def process(self):
         """Safran"""
