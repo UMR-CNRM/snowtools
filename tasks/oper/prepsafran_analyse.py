@@ -49,20 +49,20 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # SAFRAN utilisera la P6 du réseau 0h J pour le dernier guess en attendant que l'analyse soit disponible (réseau 9h)
                 # On cherche d'abord sur le cache inline puis sur hendrix
                 # RQ : on ne peut pas utiliser le namespace multi car les fichiers sur hendrix n'ont pas de filtername...
-#                06/09/2020 : La nouvelle chaine en double archive désormais de la même façon sur hendrix et BULL
-                self.sh.title('Toolbox arpege assim')
+                self.sh.title('Toolbox input arpege assim inline')
                 tbarp = toolbox.input(
-                    alternate      = 'Gridpoint',
+                    role           = 'Gridpoint',
                     format         = 'grib',
                     geometry       = self.conf.arpege_geometry,
                     kind           = 'gridpoint',
+                    filtername     = 'concatenate',
                     suite          = self.conf.suite,
                     cutoff         = 'assimilation',
                     local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
                     date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = 'vortex.cache.fr',
                     block          = 'forecast',
                     nativefmt      = '[format]',
                     origin         = 'historic',
@@ -74,7 +74,59 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tbarp =', tbarp)
                 print()
 
-                self.sh.title('Toolbox arpege prod (secours)')
+                # Deuxième tentative sur hendrix
+                self.sh.title('Toolbox alternate arpege assim archive')
+                tbarp.extend(toolbox.input(
+                    alternate      = 'Gridpoint',
+                    format         = 'grib',
+                    geometry       = self.conf.arpege_geometry,
+                    kind           = 'gridpoint',
+                    suite          = self.conf.suite,
+                    cutoff         = 'assimilation',
+                    local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
+                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
+                    # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
+                    term           = self.conf.cumul,
+                    namespace      = 'vortex.archive.fr',
+                    block          = 'forecast',
+                    nativefmt      = '[format]',
+                    origin         = 'historic',
+                    model          = '[vapp]',
+                    vapp           = self.conf.source_app,
+                    vconf          = self.conf.deterministic_conf,
+                    fatal          = False,
+                ))
+                print(t.prompt, 'tbarp =', tbarp)
+                print()
+
+                # Mode secours : On récupère les prévisions 6h correspondantes inline...
+                self.sh.title('Toolbox alternate arpege prod inline (secours)')
+                tbarp.extend(toolbox.input(
+                    alternate      = 'Gridpoint',
+                    format         = 'grib',
+                    geometry       = self.conf.arpege_geometry,
+                    kind           = 'gridpoint',
+                    filtername     = 'concatenate',
+                    suite          = self.conf.suite,
+                    cutoff         = 'production',
+                    local          = 'ARP_[date:ymdh]/ARPEGE[date::addterm_ymdh]',
+                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
+                    # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
+                    term           = self.conf.cumul,
+                    namespace      = 'vortex.cache.fr',
+                    block          = 'forecast',
+                    nativefmt      = '[format]',
+                    origin         = 'historic',
+                    model          = '[vapp]',
+                    vapp           = self.conf.source_app,
+                    vconf          = self.conf.deterministic_conf,
+                    fatal          = False,
+                ))
+                print(t.prompt, 'tbarp =', tbarp)
+                print()
+
+                # ... ou sur Hendrix
+                self.sh.title('Toolbox alternate arpege prod archive (secours)')
                 tbarp.extend(toolbox.input(
                     alternate      = 'Gridpoint',
                     format         = 'grib',
@@ -86,7 +138,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = 'vortex.archive.fr',
                     block          = 'forecast',
                     nativefmt      = '[format]',
                     origin         = 'historic',
@@ -132,7 +184,33 @@ class PrepSafran(Task, S2MTaskMixIn):
             else:
 
                 # RUN 9h : Récupération de A6 du réseau d'assimilation d'ARPEGE de 0h inline...
-                self.sh.title('Toolbox input arpege assim')
+                self.sh.title('Toolbox input arpege assim inline')
+                tbarp = toolbox.input(
+                    role           = 'Gridpoint',
+                    block          = 'forecast',
+                    format         = 'grib',
+                    geometry       = self.conf.arpege_geometry,
+                    kind           = 'gridpoint',
+                    filtername     = 'concatenate',
+                    suite          = self.conf.suite,
+                    cutoff         = 'assimilation',
+                    local          = 'ARPEGE[date::addterm_ymdh]',
+                    date           = '{0:s}/-PT6H'.format(self.conf.rundate.ymd6h),
+                    # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
+                    term           = self.conf.cumul,
+                    namespace      = 'vortex.cache.fr',
+                    nativefmt      = '[format]',
+                    origin         = 'historic',
+                    model          = '[vapp]',
+                    vapp           = self.conf.source_app,
+                    vconf          = self.conf.deterministic_conf,
+                    fatal          = False,
+                )
+                print(t.prompt, 'tb01 =', tbarp)
+                print()
+
+                # ...ou sur hendrix
+                self.sh.title('Toolbox input arpege assim archive')
                 tbarp = toolbox.input(
                     alternate      = 'Gridpoint',
                     block          = 'forecast',
@@ -145,7 +223,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     date           = '{0:s}/-PT6H'.format(self.conf.rundate.ymd6h),
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = 'vortex.archive.fr',
                     nativefmt      = '[format]',
                     origin         = 'historic',
                     model          = '[vapp]',
