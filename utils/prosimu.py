@@ -12,6 +12,7 @@ This module contains the ``prosimu`` class used to read simulation files
 
 import os
 import netCDF4
+import cftime
 import numpy as np
 import sys
 from .FileException import FileNameException, DirNameException, FileOpenException, VarNameException, TimeException,\
@@ -256,7 +257,7 @@ class prosimu():
             time = netCDF4.MFTime(time_base, calendar='standard')
         else:
             time = self.dataset.variables["time"]
-        if netCDF4.__version__ >= '1.5.4':
+        if netCDF4.__version__ >= '1.4.0' and cftime.__version >= '1.1.0':
             return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False, only_use_python_datetimes=True))
         else:
             return np.array(netCDF4.num2date(time[:], time.units))
