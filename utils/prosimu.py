@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 4 oct. 2012
 
 :Authors:
@@ -8,9 +8,10 @@ Created on 4 oct. 2012
 
 This module contains the ``prosimu`` class used to read simulation files
 (netCDF format) as produced by SURFEX/Crocus for instance.
-'''
+"""
 
 import os
+import cftime
 import netCDF4
 import numpy as np
 import sys
@@ -256,7 +257,7 @@ class prosimu():
             time = netCDF4.MFTime(time_base, calendar='standard')
         else:
             time = self.dataset.variables["time"]
-        if netCDF4.__version__ >= '1.5.4':
+        if netCDF4.__version__ >= '1.4.0' and cftime.__version__ >= '1.1.0':
             return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False, only_use_python_datetimes=True))
         else:
             return np.array(netCDF4.num2date(time[:], time.units))
@@ -266,7 +267,7 @@ class prosimu():
         Renvoie l'indice de la dimension time correspondant au datetime donné en
         argument
         """
-        return np.where( self.readtime() == time_asdatetime )[0][0]
+        return np.where(self.readtime() == time_asdatetime)[0][0]
 
     def read_var(self, variable_name, **kwargs):
         """
@@ -331,8 +332,9 @@ class prosimu():
         a subset defined by variables aspect, ZS, massif_num and slope according to named arguments
         passed to the function.
         """
-        if not( all([(self.dataset.variables[varname].dimensions == (self.Number_of_points,)) for varname in kwargs.keys()])):
-            raise TypeError("""Le filtrage ne peut se faire que sur des variables géographiques (ZS, slope, aspect, massif_num)""")
+        if not(all([(self.dataset.variables[varname].dimensions == (self.Number_of_points,)) for varname in kwargs.keys()])):
+            raise TypeError("""Le filtrage ne peut se faire que sur des variables géographiques 
+                (ZS, slope, aspect, massif_num)""")
         nop = np.arange(len(self.dataset.dimensions[self.Number_of_points]))
         locations_bool = np.ones(len(nop))
         for varname, values in six.iteritems(kwargs):
@@ -368,14 +370,16 @@ class prosimu():
             if allpointstest:
                 return var
             else:
-                raise ValueError('Could not extract a point. The {} dimension was not found for variable {}'.format(self.Number_of_points, varname))
+                raise ValueError('Could not extract a point. The {} dimension was not found for '
+                                 'variable {}'.format(self.Number_of_points, varname))
 
         selector = [slice(None, None, None)] * len(vardims)
 
         # Point extraction
         if not allpointstest:
             if self.Number_of_points not in vardims:
-                raise ValueError('Could not extract a point. The {} dimension was not found for variable {}'.format(self.Number_of_points, varname))
+                raise ValueError('Could not extract a point. The {} dimension was not found '
+                                 'for variable {}'.format(self.Number_of_points, varname))
             axispoint = vardims.index(self.Number_of_points)
             selector[axispoint] = selectpoint
 

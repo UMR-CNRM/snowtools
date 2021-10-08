@@ -338,7 +338,7 @@ class _Map_massifs(Mplfigure):
         self._infos = value
 
     # @echecker.disabled_if_unavailable
-    def getmap(self, geofeatures=False, bgimage=False):
+    def getmap(self, geofeatures=False, bgimage=False, **kwargs):
         """
         Create map axes.
 
@@ -368,7 +368,7 @@ class _Map_massifs(Mplfigure):
             ax.add_feature(cartopy.feature.LAKES, alpha=0.5)
             ax.add_feature(cartopy.feature.RIVERS)
         elif bgimage:
-            os.environ["CARTOPY_USER_BACKGROUNDS"] = os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')
+            os.environ["CARTOPY_USER_BACKGROUNDS"] = config["data_dir"] #os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')
             ax.background_img(resolution="high")
         return ax
 
@@ -647,13 +647,13 @@ class _Map_massifs(Mplfigure):
             self.cbar.set_ticklabels(kwargs['ticks'])
             fontsize = 10
         else:
-            fontsize = 20
+            fontsize = self.labelfontsize
 
         for t in self.cbar.ax.get_yticklabels():
             t.set_fontsize(fontsize)
 
         if 'label' in kwargs.keys():
-            self.cbar.set_label(kwargs['label'], fontsize=20)
+            self.cbar.set_label(kwargs['label'], fontsize=self.labelfontsize)
 
         plt.sca(currentaxis)
         self.legendok = True
@@ -680,16 +680,16 @@ class _Map_massifs(Mplfigure):
         :param kwargs: 'convert_unit': factor for scaling :py:attr:`field`
 
         """
-        variable = self.convertunit(field)
+        variable = self.convertunit(field, **kwargs)
         # if 'convert_unit' in kwargs.keys():
         #     variable = field[:] * kwargs['convert_unit']
         # else:
         #     variable = field[:]
-        print(variable.max())
-        self.map.pcolormesh(lons, lats, variable, transform=ccrs.PlateCarree(), cmap=self.palette, vmin=self.vmin,
+        print(variable[0].max())
+        self.map.pcolormesh(lons, lats, variable[0], transform=ccrs.PlateCarree(), cmap=self.palette, vmin=self.vmin,
                             vmax=self.vmax)
         # prepare colorbar
-        self.prepare_colorbar(variable, **kwargs)
+        self.prepare_colorbar(variable[0], **kwargs)
 
     def prepare_colorbar(self, variable, **kwargs):
         """
@@ -945,6 +945,7 @@ class Map_alpes(_Map_massifs):
     legendpos = [0.85, 0.15, 0.03, 0.6]  #: legend position on the plot = [0.85, 0.15, 0.03, 0.6]
     #: position of info-box on the map in Lambert Conformal coordinates = (990000, 2160000)
     infospos = (990000, 2160000)
+    labelfontsize = 20  #: fontsize of colorbar label
     deport = {7: (0, 5000), 9: (-1000, 0),  16: (1000, 0), 19: (-2000, -2000),  21: (0, -5000)}
     """ displacement dictionary for the positioning tables near the massif center without overlapping.
     
@@ -1276,6 +1277,7 @@ class _MultiMap(_Map_massifs):
         """open a figure with several subplots and puts them in :py:attr:`fig` and :py:attr:`maps`"""
         self.fig, self.maps = plt.subplots(nrows=self.nrow, ncols=self.ncol, sharex='all', sharey='all',
                                            figsize=(self.width, self.height))
+        return self.fig
 
     def set_maptitle(self, title):
         """
@@ -1290,15 +1292,19 @@ class _MultiMap(_Map_massifs):
                 self.maps.flat[i].set_title(title[i], fontsize=14, pad=self.titlepad)
         elif len(title) == 1:
             for i in range(self.nsubplots):
-                self.maps.flat[i].set_title(title, fontsize=14, pad=self.titlepad)
+                self.maps.flat[i].set_title(title[0], fontsize=14, pad=self.titlepad)
+        elif len(title) < self.nsubplots:
+            for i in range(len(title)):
+                self.maps.flat[i].set_title(title[i], fontsize=14, pad=self.titlepad)
         else:
             print("Warning: can not set map titles. len(title) must be either equal to the number of subplots or == 1.")
 
     set_title = set_maptitle
 
 
-class MultiMap_Alps(_MultiMap, Map_alpes):
+class MultiMap_Alps(Map_alpes, _MultiMap):
     """Class for plotting multiple massif plots of the French Alps"""
+    legendpos = [0.9, 0.15, 0.03, 0.6]  #: legend position on the plot = [0.85, 0.15, 0.03, 0.6]
 
     def __init__(self, nrow=1, ncol=1, *args, **kw):
         """
@@ -1312,8 +1318,8 @@ class MultiMap_Alps(_MultiMap, Map_alpes):
         self.nrow = nrow
         self.ncol = ncol
         self.nsubplots = nrow*ncol
-        self.titlepad = 5
         super(MultiMap_Alps, self).__init__(*args, **kw)
+        self.titlepad = 5
         self.set_figsize(18, 15)
         self.init_maps(*args, **kw)
 
@@ -1331,8 +1337,9 @@ class Map_pyrenees(_Map_massifs):
     lonmax = 3.0  #: eastern map border = 3.0
 
     mappos = [0.05, 0.06, 0.8, 0.8]  #: map position on the figure = [0.05, 0.06, 0.8, 0.8]
-    legendpos = [0.89, 0.1, 0.03, 0.7]  #: legend position on the figure = [0.89, 0.1, 0.03, 0.7]
+    legendpos = [0.89, 0.13, 0.02, 0.6]  #: legend position on the figure = [0.89, 0.1, 0.03, 0.7]
     infospos = (600000, 1790000)  #: info box position on the map in Lambert Conformal Coordinates
+    labelfontsize = 16  #: fontsize of colorbar label
 
     deport = {64: (0, 2000), 67: (0, 20000), 68: (10000, 5000), 70: (-2000, 10000), 71: (-12000, 5000),
                    72: (10000, 10000), 73: (10000, 10000), 74: (10000, 3000), 81: (-10000, 1000), 82: (-3000, 0),
@@ -1373,6 +1380,7 @@ class MapFrance(_Map_massifs):
     mappos = [0.05, 0.06, 0.8, 0.8]
     legendpos = [0.9, 0.13, 0.03, 0.7]
     infospos = (450000, 140000)
+    labelfontsize = 20  #: fontsize of colorbar label
 
     deport = {2: (-10000, 0), 3: (10000, 0), 6: (20000, 0), 7: (-20000, 10000), 9: (15000, -10000), 11: (15000, -10000),
               13: (15000, 0), 17: (15000, 0), 18: (-20000, -10000), 19: (0, -5000), 20: (0, -5000), 21: (0, -10000),
@@ -1396,7 +1404,7 @@ class MapFrance(_Map_massifs):
         """
         shapefile_path = os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')
         filenames = ['massifs_{0:s}.shp'.format(iarea) for iarea in self.area]
-        self.shapefile = [shpreader.Reader(os.path.join(shapefile_path, filename)) for filename in filenames]
+        shapefile = [shpreader.Reader(os.path.join(shapefile_path, filename)) for filename in filenames]
         # Informations sur la projection
         projfile = 'massifs_{0:s}.prj'.format(self.area[0])
         with open(os.path.join(shapefile_path, projfile), 'r') as prj_file:
@@ -1404,14 +1412,19 @@ class MapFrance(_Map_massifs):
             pprojcrs = CRS.from_wkt(prj_txt)
 
         # Projection du shapefile
-        self.shpProj = pprojcrs.to_dict()
+        shpProj = pprojcrs.to_dict()
         # géométries
         # records is a generator object. Each record contains a geometry, its attributes and bounds
-        self.records = itertools.chain([shapefile.records() for shapefile in self.shapefile])
+        records = [record for sublist in [list(i_shapefile.records()) for i_shapefile in shapefile]
+                   for record in sublist]
+        print(len(records))
+        return shapefile, pprojcrs, shpProj, records
 
 
-class MultiMap_Pyr(_MultiMap, Map_pyrenees):
+class MultiMap_Pyr(Map_pyrenees, _MultiMap):
     """Class for plotting multiple massif plots of the Pyrenees"""
+    legendpos = [0.94, 0.13, 0.02, 0.6]  #: legend position on the figure = [0.89, 0.1, 0.03, 0.7]
+    mappos = [0.05, 0.06, 0.95, 0.8]  #: map position on the figure = [0.05, 0.06, 0.85, 0.8]
 
     def __init__(self, nrow=1, ncol=1, *args, **kw):
         """
@@ -1421,13 +1434,14 @@ class MultiMap_Pyr(_MultiMap, Map_pyrenees):
         :param args: arguments passed to super class init and :py:meth:`init_maps`
         :param kw: keyword arguments passed to super class init and :py:meth:`init_maps`
         """
+        plt.rcParams["figure.subplot.right"] = 0.95
         kw['getmap'] = False
         self.nrow = nrow
         self.ncol = ncol
         self.nsubplots = nrow*ncol
-        self.titlepad = 0
         super(MultiMap_Pyr, self).__init__(*args, **kw)
-        self.set_figsize(21, 8)
+        self.titlepad = 5
+        self.set_figsize(30, 9)
         self.init_maps(*args, **kw)
 
 
@@ -1447,6 +1461,7 @@ class Map_corse(_Map_massifs):
     legendpos = [0.81, 0.15, 0.03, 0.6]  #: legend position on the figure = [0.81, 0.15, 0.03, 0.6]
     #: info box position on the map in Lambert Conformal Coordinates = (1110000, 1790000)
     infospos = (1110000, 1790000)  #: info box position on the map in Lambert Conformal Coordinates
+    labelfontsize = 20  #: fontsize of colorbar label
     #: displacement dictionary for the positioning tables near the massif center without overlapping. = {}
     deport = {}
 
@@ -1475,8 +1490,8 @@ class MultiMap_Cor(_MultiMap, Map_corse):
         self.nrow = nrow
         self.ncol = ncol
         self.nsubplots = nrow*ncol
-        self.titlepad = 5
         super(MultiMap_Cor, self).__init__(*args, **kw)
+        self.titlepad = 5
         self.init_maps(*args, **kw)
         self.legendpos = [0.85, 0.15, 0.03, 0.6]
 
