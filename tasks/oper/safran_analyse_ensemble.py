@@ -472,6 +472,8 @@ class Safran(Task, S2MTaskMixIn):
                     # I.3- En dernier recours on essaye le réseau de production de 0h J-1
                     # PROBLEME : le nom dans 'local' change donc on passe dans l'alternate même si la ressource voulue
                     # est déjà présente
+                    # TODO ==> SOLUTION : utiliser les "coherentgroup" (cf src/vortex/layout/dataflow.py)
+                    #
     #                self.sh.title('Toolbox input guess arpege prod j-1 (secours bis)')
     #                 tb17_c = toolbox.input(
     #                     alternate      = 'Ebauche_Deterministic',
