@@ -13,6 +13,7 @@ This module contains the ``prosimu`` class used to read simulation files
 import os
 import cftime
 import netCDF4
+import cftime
 import numpy as np
 import sys
 from .FileException import FileNameException, DirNameException, FileOpenException, VarNameException, TimeException,\
