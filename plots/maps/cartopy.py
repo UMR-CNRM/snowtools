@@ -68,7 +68,7 @@ from plots.abstracts.figures import Mplfigure
 from utils.infomassifs import infomassifs
 from pyproj import CRS
 from cartopy import config
-from shapely.geometry import box
+from shapely.geometry import Point
 
 # Tell cartopy where to find Natural Earth features
 # config['data_dir'] = os.path.join(os.environ['SNOWTOOLS_CEN'], 'CartopyData')
@@ -596,7 +596,7 @@ class _Map_massifs(Mplfigure):
         """
         if labels is not None:
             for label, x, y in zip(labels, lon, lat):
-                self.map.annotate(label, (x, y), color=color, zorder=4)
+                self.map.annotate(label, (x, y), color=color, horizontalalignment='center', zorder=4)
         else:
             self.map.plot(lon, lat, marker=marker, color=color, linestyle='', zorder=3)
 
@@ -620,7 +620,7 @@ class _Map_massifs(Mplfigure):
         if isinstance(self, _MultiMap):
             for i, massif in enumerate(self.records):
                 if massif.attributes['num_opp'] in massifs:
-                    for j in self.nsubplots:
+                    for j in range(self.nsubplots):
                         self.massif_features[j][i]['feature'].set_zorder(2)  # Pour tracer le massif en dernier
                         self.massif_features[j][i]['feature']._kwargs['edgecolor'] = 'red'
         else:
@@ -1498,38 +1498,41 @@ class MultiMap_Cor(_MultiMap, Map_corse):
 
 class Zoom_massif(_Map_massifs):
     """
-    Class for zoomed map on given massifs
+    Class for zoomed map on a given massif
     """
+    labelfontsize = 20  #: fontsize of colorbar label
 
     def __init__(self, num_massif, *args, **kw):
         """
         Init zoom class
 
-        :param num_massif:  massif numbers
+        :param num_massif:  massif number
         :param args:
         :param kw:
         """
-        if num_massif <= 24:
+        if 1 <= num_massif <= 24:
             self.area = 'alpes'
-            self.width = 9 
+            self.width = 10.2
             self.height = 8 
-            self.legendpos = [0.91, 0.15, 0.03, 0.6]
+            self.legendpos = [0.89, 0.15, 0.03, 0.6]
             self.mappos = [0.05, 0.03, 0.8, 0.8]
             self.titlepad = 25
-        elif num_massif >= 64:
+        elif 64 <= num_massif <= 91:
             self.area = 'pyrenees'
-            self.width = 10
-            self.height = 8 
-            self.legendpos = [0.91, 0.15, 0.03, 0.6]
+            self.width = 12
+            self.height = 6.8
+            self.legendpos = [0.91, 0.12, 0.025, 0.6]
             self.mappos = [0.05, 0.06, 0.8, 0.8]
             self.titlepad = 40 
-        else:
+        elif 40 <= num_massif <= 41:
             self.area = 'corse'
-            self.width = 9 
+            self.width = 10.2
             self.height = 8
-            self.legendpos = [0.91, 0.15, 0.03, 0.6]
+            self.legendpos = [0.89, 0.15, 0.03, 0.6]
             self.mappos = [0.05, 0.06, 0.8, 0.8]
             self.titlepad = 25
+        else:
+            raise ValueError("unknown massif number")
 
         self.deport = {}
         self.shapefile, self.pprojcrs, self.shpProj, self.records = self.getshapes()
@@ -1542,7 +1545,8 @@ class Zoom_massif(_Map_massifs):
         else:
             raise NotImplementedError('only LambertConformal projection is implemented for the massif shapes')
 
-        self.lonmin, self.lonmax, self.latmin , self.latmax = self.get_map_dimensions(num_massif)
+        self.lonmin, self.lonmax, self.latmin , self.latmax, self.infospos = self.get_map_dimensions(num_massif)
+
         self.fig = plt.figure(figsize=(self.width, self.height))
         self.fig.subplots_adjust(bottom=0.005, left=0.005, top=0.95, right=0.9)
         self.map = self.getmap()
@@ -1561,18 +1565,26 @@ class Zoom_massif(_Map_massifs):
         self.dicLonLatMassif = self.getLonLatMassif()
         for massif in self.records:
             num = massif.attributes['num_opp']
+            # print(num)
             if num == num_massif:
                 barycentre = self.dicLonLatMassif[num]
         if self.area in ['alpes', 'corse']:
             dlat = 0.55
             dlon = 0.65
+            dloninfo = dlon/3.
+            dlatinfo = dlat/5.
         elif self.area == 'pyrenees':
             dlat = 0.5
             dlon = 1.3
+            dloninfo = dlon/3.5
+            dlatinfo = dlat/4.
 
         lonmin = barycentre[0] - dlon
         lonmax = barycentre[0] + dlon
         latmin = barycentre[1] - dlat
         latmax = barycentre[1] + dlat
 
-        return lonmin, lonmax, latmin, latmax
+        infospos = self.projection.project_geometry(Point((lonmax-dloninfo, latmax-dlatinfo)),
+                                                         ccrs.PlateCarree()).coords[0]
+
+        return lonmin, lonmax, latmin, latmax, infospos

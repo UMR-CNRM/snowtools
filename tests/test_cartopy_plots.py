@@ -70,6 +70,11 @@ class TestCartopyFrance(unittest.TestCase):
             shutil.rmtree(cls.diroutput)
 
 
+class TestZoomMassifError(unittest.TestCase):
+    def test_zoom_42(self):
+        self.assertRaises(ValueError, cartopy.Zoom_massif, 42)
+
+
 @unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "Cor", "postproc_2021041006_2021041112.nc")),
                  "input file not available")
 class TestCartopyCor(unittest.TestCase):
@@ -101,6 +106,19 @@ class TestCartopyCor(unittest.TestCase):
         self.m.set_maptitle("2021041112 percentile 50 and 90")
         self.m.set_figtitle("2100m")
         self.outfilename = "2021041112_cor_bgimage_highlight42.png"
+        self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
+        self.m.close()
+
+    def test_zoom_41(self):
+        self.m = cartopy.Zoom_massif(41)
+        self.m.draw_massifs(self.massifs, self.snow[5, :, 8], **self.mix.attributes['SD_1DY_ISBA'])
+        self.m.add_north_south_info()
+        centre = [shape.centroid.coords[0] for shape in self.m.llshape]
+        self.m.addpoints(*list(zip(*centre)), color='crimson', marker="+")
+        self.m.addlogo()
+        self.m.set_maptitle("2021041112 percentile 90")
+        self.m.set_figtitle("2100m")
+        self.outfilename = "2021041112_zoom_41.png"
         self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
         self.m.close()
 
@@ -170,6 +188,25 @@ class TestCartopyPyr(unittest.TestCase):
         self.m.set_maptitle("2021041012")
         self.m.set_figtitle("2100m")
         self.outfilename = "2021041012_pyr_tables.png"
+        self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
+        self.m.close()
+        self.m.reset_massifs()
+
+    def test_zoom_70(self):
+        self.m = cartopy.Zoom_massif(70)
+        self.m.init_massifs(palette='YlGnBu', seuiltext=50., ticks=['A', 'B', 'C', 'D'],
+                            label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm', ncolors=3)
+        self.m.draw_massifs(self.massifs, self.snow_nord[1, :, 8], palette='YlGnBu', seuiltext=50.,
+                            label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm', ncolors=3,
+                            ticks=['A', 'B', 'C', 'D'])
+        self.m.empty_massifs(**self.mix.attributes['SD_1DY_ISBA'])
+        self.m.add_north_south_info()
+        centre = [shape.centroid.coords[0] for shape in self.m.llshape]
+        self.m.addpoints(*list(zip(*centre)), color='magenta', labels=self.m.name)
+        self.m.addlogo()
+        self.m.set_maptitle("2021041012 p90")
+        self.m.set_figtitle("2100m")
+        self.outfilename = "2021041012_zoom_70.png"
         self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
         self.m.close()
 
@@ -248,10 +285,22 @@ class TestCartopyAlp(unittest.TestCase):
         self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
         self.m.close()
 
+    def test_zoom_10(self):
+        self.m = cartopy.Zoom_massif(10)
+        self.m.draw_massifs(self.massifs, self.snow[5, :, 8], **self.mix.attributes['SD_1DY_ISBA'])
+        self.m.add_north_south_info(english=True)
+        self.m.addlogo()
+        self.m.set_maptitle("2021041112 percentile 90")
+        self.m.set_figtitle("2100m")
+        self.outfilename = "2021041112_p90_zoom10.png"
+        self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
+        self.m.close()
+
     def test_multi_map_alps(self):
         self.lo = cartopy.MultiMap_Alps(nrow=3, ncol=3, geofeatures=False)
         self.lo.init_massifs(**self.mix.attributes['SD_1DY_ISBA'])
-        self.lo.draw_massifs(self.massifs, self.snow[5,:,:], axis=1, **self.mix.attributes['SD_1DY_ISBA'])
+        self.lo.draw_massifs(self.massifs, self.snow[5, :, :], axis=1, **self.mix.attributes['SD_1DY_ISBA'])
+        self.lo.highlight_massif(10, self.snow, **self.mix.attributes['SD_1DY_ISBA'])
         self.lo.set_figtitle("SD_1DY_ISBA 2021041112 2100m")
         titles = ['Percentile {0}'.format(i) for i in range(10, 100, 10)]
         self.lo.set_maptitle(titles)
