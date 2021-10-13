@@ -105,7 +105,7 @@ class TestCartopyCor(unittest.TestCase):
         self.m.addlogo()
         self.m.set_maptitle("2021041112 percentile 50 and 90")
         self.m.set_figtitle("2100m")
-        self.outfilename = "2021041112_cor_bgimage_highlight42.png"
+        self.outfilename = "2021041112_cor_bgimage_highlight40.png"
         self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
         self.m.close()
 
