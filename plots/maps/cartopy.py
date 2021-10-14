@@ -932,6 +932,37 @@ class _Map_massifs(Mplfigure):
 class Map_alpes(_Map_massifs):
     """
     Class for plotting a map over the French Alps.
+
+    Example:
+
+     .. code-block:: python
+
+        from snowtools.utils.prosimu import prosimu
+        from snowtools.plots.maps import cartopy
+        import matplotlib.pyplot as plt
+
+        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Alp/postproc_2021041006_2021041112.nc') as ff:
+            points = ff.get_points(ZS=2100, aspect=-1)
+            snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
+            massifs = ff.read('massif_num', selectpoint=points)
+
+        m = cartopy.Map_alpes(geofeatures=True)
+        m.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
+                         label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        m.draw_massifs(massifs, snow[5, :, 8], convert_unit=100., forcemin=0., forcemax=50.,
+                        palette='YlGnBu', seuiltext=50.,
+                        label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        m.plot_center_massif(massifs, snow[5, :, 0], snow[5, :, 4], snow[5, :, 8], convert_unit=100.,
+                                forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
+                                label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        m.addlogo()
+        m.set_maptitle("2021041112 percentile 90")
+        m.set_figtitle("2100m")
+        plt.show()
+        m.close()
+
+    .. figure:: /images/2021041112_p90_alps_geofeatures.png
+       :align: center
     """
     area = 'alpes'  #: area tag = 'alpes'
     width = 12  #: figure width = 12
@@ -1303,7 +1334,43 @@ class _MultiMap(_Map_massifs):
 
 
 class MultiMap_Alps(Map_alpes, _MultiMap):
-    """Class for plotting multiple massif plots of the French Alps"""
+    """
+    Class for plotting multiple massif plots of the French Alps
+
+    Example:
+
+     .. code-block:: python
+
+        from snowtools.utils.prosimu import prosimu
+        from snowtools.plots.maps import cartopy
+        import matplotlib.pyplot as plt
+
+        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Alp/postproc_2021041006_2021041112.nc') as ff:
+            points = ff.get_points(ZS=2100, aspect=-1)
+            snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
+            massifs = ff.read('massif_num', selectpoint=points)
+
+        lo = cartopy.MultiMap_Alps(nrow=3, ncol=3, geofeatures=False)
+        lo.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
+                         label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        lo.draw_massifs(massifs, snow[5, :, :], axis=1, convert_unit=100., forcemin=0., forcemax=50.,
+                        palette='YlGnBu', seuiltext=50.,
+                        label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        lo.highlight_massif(10, snow, convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu',
+                            seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        lo.set_figtitle("SD_1DY_ISBA 2021041112 2100m")
+        titles = ['Percentile {0}'.format(i) for i in range(10, 100, 10)]
+        lo.set_maptitle(titles)
+        lo.plot_center_massif(massifs, snow[5,:,:], axis=1,convert_unit=100., forcemin=0., forcemax=50.,
+                                palette='YlGnBu', seuiltext=50.,
+                                label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        lo.addlogo()
+        plt.show()
+        lo.close()
+
+    .. figure:: /images/2021041112_multi_alps.png
+       :align: center
+    """
     legendpos = [0.9, 0.15, 0.03, 0.6]  #: legend position on the plot = [0.85, 0.15, 0.03, 0.6]
 
     def __init__(self, nrow=1, ncol=1, *args, **kw):
@@ -1327,6 +1394,39 @@ class MultiMap_Alps(Map_alpes, _MultiMap):
 class Map_pyrenees(_Map_massifs):
     """
     Class to plot a map of the Pyrenees.
+
+    Example:
+
+     .. code-block:: python
+
+        from snowtools.utils.prosimu import prosimu
+        from snowtools.plots.maps import cartopy
+        import matplotlib.pyplot as plt
+
+        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
+            points_nord = ff.get_points(aspect=0, ZS=2100, slope=40)
+            points_sud = ff.get_points(aspect=180, ZS=2100, slope=40)
+            snow_nord = ff.read('SD_1DY_ISBA', selectpoint=points_nord, hasDecile=True)
+            snow_sud = ff.read('SD_1DY_ISBA', selectpoint=points_sud, hasDecile=True)
+            massifs = ff.read('massif_num', selectpoint=points_nord)
+
+        m = cartopy.Map_pyrenees(geofeatures=True)
+        m.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
+                         label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        m.add_north_south_info()
+        m.rectangle_massif(massifs, [0, 1, 2], [snow_sud[1, :, 1], snow_sud[1, :, 4],
+                                                snow_sud[1, :, 7], snow_nord[1, :, 1],
+                                                snow_nord[1, :, 4], snow_nord[1, :, 7]], ncol=2,
+                            convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu',
+                            seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        m.addlogo()
+        m.set_maptitle("2021041012")
+        m.set_figtitle("2100m")
+        plt.show()
+        m.close()
+
+    .. figure:: /images/2021041012_pyr_tables.png
+       :align: center
     """
     area = 'pyrenees'  #: area tag = 'pyrenees'
     width = 14.5  #: figure width = 14.5
@@ -1367,19 +1467,45 @@ def __init__(self, *args, **kw):
 class MapFrance(_Map_massifs):
     """
     Class to draw map over all French massifs.
+
+    Example:
+
+     .. code-block:: python
+
+        from netCDF4 import Dataset
+        from snowtools.plots.maps import cartopy
+        import matplotlib.pyplot as plt
+
+        with Dataset('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/grid_postproc_2021041112.nc') as ff:
+            lats = ff.variables['LAT'][:]
+            lons = ff.variables['LON'][:]
+            snow = ff.variables['SD_1DY_ISBA'][0, :, :, 8]
+
+        m = cartopy.MapFrance(geofeatures=False, bgimage=True)
+        m.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
+                         label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        m.draw_mesh(lons, lats, snow,convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu',
+                    seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        m.set_figtitle("SD_1DY_ISBA 2021041112")
+        m.set_maptitle("Percentile 90")
+        plt.show()
+        m.close()
+
+    .. figure:: /images/grid_p90_2021041112_alpha_terrimage.png
+       :align: center
     """
-    area = ['alpes', 'pyrenees', 'corse']
-    width = 15
-    height = 11
+    area = ['alpes', 'pyrenees', 'corse']  #: list of areas
+    width = 15  #: figure width
+    height = 11  #: figure height
 
-    latmin = 41.3
-    latmax = 51.5
-    lonmin = -5.
-    lonmax = 9.6
+    latmin = 41.3  #: minimum latitude of map
+    latmax = 51.5  #: maximum latitude of map
+    lonmin = -5.  #: minimum longitude of map
+    lonmax = 9.6  #: maximum longitude of map
 
-    mappos = [0.05, 0.06, 0.8, 0.8]
-    legendpos = [0.9, 0.13, 0.03, 0.7]
-    infospos = (450000, 140000)
+    mappos = [0.05, 0.06, 0.8, 0.8]  #: position of the map on the plot
+    legendpos = [0.9, 0.13, 0.03, 0.7]  #: position of the colorbar on the plot
+    infospos = (450000, 140000)  #: position of north-south info box in lambert conformal coordinates
     labelfontsize = 20  #: fontsize of colorbar label
 
     deport = {2: (-10000, 0), 3: (10000, 0), 6: (20000, 0), 7: (-20000, 10000), 9: (15000, -10000), 11: (15000, -10000),
@@ -1387,6 +1513,7 @@ class MapFrance(_Map_massifs):
               67: (10000, 20000), 68: (0, 5000), 69: (0, 10000), 72: (20000, 20000), 74: (25000, 0),
               82: (-15000, -40000), 84: (-10000, -30000), 85: (0, -5000), 87: (-5000, -40000), 88: (25000, -5000),
               89: (15000, -15000), 90: (-25000, 5000), 91: (10000, -5000)}
+    """displacement of tables from the center of the massifs"""
 
     def __init__(self, *args, **kw):
         """
@@ -1422,7 +1549,43 @@ class MapFrance(_Map_massifs):
 
 
 class MultiMap_Pyr(Map_pyrenees, _MultiMap):
-    """Class for plotting multiple massif plots of the Pyrenees"""
+    """
+    Class for plotting multiple massif plots of the Pyrenees
+
+    Example:
+
+    .. code-block:: python
+
+        from snowtools.utils.prosimu import prosimu
+        from snowtools.plots.maps import cartopy
+        import matplotlib.pyplot as plt
+
+        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
+            points_nord = ff.get_points(aspect=0, ZS=2100, slope=40)
+            points_sud = ff.get_points(aspect=180, ZS=2100, slope=40)
+            snow_nord = ff.read('SD_1DY_ISBA', selectpoint=points_nord, hasDecile=True)
+            snow_sud = ff.read('SD_1DY_ISBA', selectpoint=points_sud, hasDecile=True)
+            massifs = ff.read('massif_num', selectpoint=points_nord)
+
+        m = cartopy.MultiMap_Pyr(nrow=3, ncol=3, geofeatures=True)
+        m.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
+                         label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        m.add_north_south_info()
+        titles = ff.readtime()
+        m.set_maptitle(titles)
+        m.rectangle_massif(massifs, [0, 1, 2], [snow_sud[:, :, 1], snow_sud[:, :, 4],
+                                                snow_sud[:, :, 7], snow_nord[:, :, 1],
+                                                snow_nord[:, :, 4], snow_nord[:, :, 7]], ncol=2,
+                            convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
+                            label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm', axis=0)
+        m.addlogo()
+        m.set_figtitle("2100m")
+        plt.show()
+        m.close()
+
+    .. figure:: /images/2021041006_2021041112_pyr_tables.png
+       :align: center
+    """
     legendpos = [0.94, 0.13, 0.02, 0.6]  #: legend position on the figure = [0.89, 0.1, 0.03, 0.7]
     mappos = [0.05, 0.06, 0.95, 0.8]  #: map position on the figure = [0.05, 0.06, 0.85, 0.8]
 
@@ -1448,6 +1611,37 @@ class MultiMap_Pyr(Map_pyrenees, _MultiMap):
 class Map_corse(_Map_massifs):
     """
     Class for plotting a map over Corse.
+
+    Example:
+
+     .. code-block:: python
+
+        from snowtools.utils.prosimu import prosimu
+        from snowtools.plots.maps import cartopy
+        import matplotlib.pyplot as plt
+
+        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Cor/postproc_2021041006_2021041112.nc') as ff:
+            points = ff.get_points(ZS=2100, aspect=-1)
+            snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
+            massifs = ff.read('massif_num', selectpoint=points)
+
+        m = cartopy.Map_corse(bgimage=True)
+        m.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
+                         label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        m.highlight_massif(massifs[0], snow, convert_unit=100., forcemin=0., forcemax=50.,
+                            palette='YlGnBu', seuiltext=50.,
+                            label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        m.plot_center_massif(massifs, snow[5, :, 4], snow[5, :, 8], convert_unit=100., forcemin=0.,
+                                forcemax=50., palette='YlGnBu', seuiltext=50.,
+                                label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        m.addlogo()
+        m.set_maptitle("2021041112 percentile 50 and 90")
+        m.set_figtitle("2100m")
+        plt.show()
+        m.close()
+
+    .. figure:: /images/2021041112_cor_bgimage_highlight40.png
+       :align: center
     """
     area = 'corse'  #: area tag = 'corse'
     width = 10  #: figure width = 10
@@ -1476,7 +1670,36 @@ class Map_corse(_Map_massifs):
 
 
 class MultiMap_Cor(_MultiMap, Map_corse):
-    """Class for plotting multiple massif plots of Corse"""
+    """
+    Class for plotting multiple massif plots of Corse
+
+    Example:
+
+     .. code-block:: python
+
+        from snowtools.utils.prosimu import prosimu
+        from snowtools.plots.maps import cartopy
+        import matplotlib.pyplot as plt
+
+        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Cor/postproc_2021041006_2021041112.nc') as ff:
+            points = ff.get_points(ZS=2100, aspect=-1)
+            snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
+            massifs = ff.read('massif_num', selectpoint=points)
+
+        m = cartopy.MultiMap_Cor(nrow=3, ncol=3, bgimage=True)
+        m.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
+                         label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        centre = [shape.centroid.coords[0] for shape in m.llshape]
+        m.addpoints(*list(zip(*centre)), color='magenta', marker="o")
+        m.addlogo()
+        m.set_maptitle(["magenta center"])
+        m.set_figtitle("2100m")
+        plt.show()
+        m.close()
+
+    .. figure:: /images/multi_cor_bgimage_annotate.png
+       :align: center
+    """
 
     def __init__(self, nrow=1, ncol=1, *args, **kw):
         """
@@ -1499,6 +1722,39 @@ class MultiMap_Cor(_MultiMap, Map_corse):
 class Zoom_massif(_Map_massifs):
     """
     Class for zoomed map on a given massif
+
+    Example:
+
+     .. code-block:: python
+
+        from snowtools.utils.prosimu import prosimu
+        from snowtools.plots.maps import cartopy
+        import matplotlib.pyplot as plt
+
+        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
+            points_nord = ff.get_points(aspect=0, ZS=2100, slope=40)
+            snow_nord = ff.read('SD_1DY_ISBA', selectpoint=points_nord, hasDecile=True)
+            massifs = ff.read('massif_num', selectpoint=points_nord)
+
+        m = cartopy.Zoom_massif(70)
+        m.init_massifs(palette='YlGnBu', seuiltext=50., ticks=['A', 'B', 'C', 'D'],
+                            label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm', ncolors=3)
+        m.draw_massifs(massifs, snow_nord[1, :, 8], palette='YlGnBu', seuiltext=50.,
+                            label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm', ncolors=3,
+                            ticks=['A', 'B', 'C', 'D'])
+        m.empty_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
+                         label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        m.add_north_south_info()
+        centre = [shape.centroid.coords[0] for shape in m.llshape]
+        m.addpoints(*list(zip(*centre)), color='magenta', labels=m.name)
+        m.addlogo()
+        m.set_maptitle("2021041012 p90")
+        m.set_figtitle("2100m")
+        plt.show()
+        m.close()
+
+    .. figure:: /images/2021041012_zoom_70.png
+       :align: center
     """
     labelfontsize = 20  #: fontsize of colorbar label
 
