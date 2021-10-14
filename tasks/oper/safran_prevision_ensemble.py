@@ -85,7 +85,7 @@ class Safran(Task, S2MTaskMixIn):
                     block          = self.conf.guess_block,
                     geometry       = self.conf.vconf,
                     date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                    cumul          = footprints.util.rangex(self.conf.prv_terms)[2:35],
+                    cumul          = footprints.util.rangex(self.conf.prv_terms)[2:],
                     nativefmt      = 'ascii',
                     kind           = 'guess',
                     model          = 'safran',
@@ -124,16 +124,17 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb02a =', tb02a)
                 print()
 
-                # P12 à P108 du réseau 18h (J-1)
+                # P6 à P102 du réseau 0h (J)
                 self.sh.title('Toolbox intput guess pearp J -> J+4')
                 tb02b = toolbox.input(
                     role           = 'Ebauche',
+                    coherentgroup  = 'pearp_forecast',
                     local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
                     experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,
                     geometry       = self.conf.vconf,
-                    date           = '{0:s}/+PT12H'.format(datebegin.ymdh),
-                    cumul          = footprints.util.rangex(self.conf.prv_terms)[4:38],
+                    date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h), # Réseau 0h (J)
+                    cumul          = footprints.util.rangex(self.conf.prv_terms)[2:],
                     nativefmt      = 'ascii',
                     kind           = 'guess',
                     model          = 'safran',
@@ -144,6 +145,29 @@ class Safran(Task, S2MTaskMixIn):
                     fatal          = False,
                 ),
                 print(t.prompt, 'tb02b =', tb02b)
+                print()
+
+                # P24 à P102 du réseau 6h (J-1) pour couvrir J --> J+3
+                self.sh.title('Toolbox intput guess pearp secours J -> J+3')
+                tb02c = toolbox.input(
+                    alternate      = 'Ebauche',
+                    coherentgroup  = 'pearp_forecast',
+                    local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
+                    experiment     = self.conf.xpid_guess,
+                    block          = self.conf.guess_block,
+                    geometry       = self.conf.vconf,
+                    date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h), # Réseau 0h (J)
+                    cumul          = footprints.util.rangex(self.conf.prv_terms)[8:],
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.eps_conf,
+                    namespace      = self.conf.namespace,
+                    member         = footprints.util.rangex(self.conf.pearp_members),
+                    fatal          = False,
+                ),
+                print(t.prompt, 'tb02c =', tb02c)
                 print()
 
                 self.sh.title('Toolbox input listem')

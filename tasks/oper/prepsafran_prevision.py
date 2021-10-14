@@ -53,12 +53,12 @@ class PrepSafran(Task, S2MTaskMixIn):
                 format         = 'grib',
                 geometry       = self.conf.arpege_geometry,
                 kind           = 'gridpoint',
-                filtername     = 'concatenate',
+                #filtername     = 'concatenate',
                 suite          = self.conf.suite,
                 cutoff         = 'production',
                 local          = 'ARP_[term:hour]/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[2:35],
+                term           = footprints.util.rangex(self.conf.prv_terms)[2:],
                 namespace      = 'vortex.cache.fr',
                 block          = 'forecast',
                 nativefmt      = '[format]',
@@ -83,7 +83,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 cutoff         = 'production',
                 local          = 'ARP_[term:hour]/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[2:35],
+                term           = footprints.util.rangex(self.conf.prv_terms)[2:],
                 namespace      = 'vortex.archive.fr',
                 block          = 'forecast',
                 nativefmt      = '[format]',
@@ -110,8 +110,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 geometry       = self.conf.pearp_geometry,
                 kind           = 'gridpoint',
                 local          = 'PEARP_[member]_[term:hour]/PEARP[date::addterm_ymdh]',
-                date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[4:38],
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h), # réseau 0h (J)
+                term           = footprints.util.rangex(self.conf.prv_terms)[2:],
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 namespace      = 'vortex.cache.fr',
                 nativefmt      = '[format]',
@@ -134,8 +134,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 geometry       = self.conf.pearp_geometry,
                 kind           = 'gridpoint',
                 local          = 'PEARP_[member]_[term:hour]/PEARP[date::addterm_ymdh]',
-                date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[4:38],
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h), # réseau 0h (J)
+                term           = footprints.util.rangex(self.conf.prv_terms)[2:],
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 namespace      = 'vortex.archive.fr',
                 nativefmt      = '[format]',
@@ -177,7 +177,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # The vortex-build environment already set up the pythonpath (see jobassistant plugin) but the script is 
                 # eventually launched in a 'user-defined' environment
                 extendpypath   = [self.sh.path.join('/'.join(self.conf.iniconf.split('/')[:-2]), d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site', 'epygram/eccodes_python']],
-                terms          = footprints.util.rangex(self.conf.prv_terms),
+                terms          = footprints.util.rangex(self.conf.prv_terms)[2:],
                 ntasks         = self.conf.ntasks,
             )
             print(t.prompt, 'tb04 =', expresso)
@@ -202,7 +202,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 geometry       = self.conf.domains,
                 vconf          = '[geometry::area]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[2:35],
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[2:],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -222,8 +222,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 block          = self.conf.block,
                 geometry       = self.conf.domains,
                 vconf          = '[geometry::area]',
-                date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[4:38],
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[2:],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -231,7 +231,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 source_conf    = self.conf.eps_conf,
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
-                fatal          = False,
+                fatal          = False, # Stay alive if deterministic "member" is OK
             ),
             print(t.prompt, 'tb06 =', tb06)
             print()
