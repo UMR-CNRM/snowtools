@@ -460,6 +460,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox output tb05_a')
                 tb05 = toolbox.output(
                     role           = 'Ebauche',
+                    coherentgroup  = 'EbauchesDeterministes',
                     local          = 'ARP_[date:ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
                     geometry       = self.conf.domains,
                     vconf          = '[geometry:area]',
@@ -484,6 +485,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox output tb05_b')
                 tb05 = toolbox.output(
                     alternate      = 'Ebauche',
+                    coherentgroup  = 'EbauchesDeterministes',
                     local          = 'ARP_[date:ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                     cutoff         = 'production',
                     geometry       = self.conf.domains,
