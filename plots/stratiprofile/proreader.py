@@ -302,9 +302,9 @@ class proreader(reader):
             'yy': {'type': 'float'},
             }
 
-    _variables_default = ['SNOWTYPE', 'SNOWSSA'],
-    _variables_dz = ['SNOWDZ', 'Dsnw'],
-    _variables_grain = ['SNOWTYPE'],
+    _variables_default = ['SNOWTYPE', 'SNOWSSA']
+    _variables_dz = ['SNOWDZ', 'Dsnw']
+    _variables_grain = ['SNOWTYPE']
 
     _name_variable_dz = ['']
     _name_variable_t = ['time']

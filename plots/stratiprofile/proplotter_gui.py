@@ -11,6 +11,13 @@ import numpy as np
 
 from snowtools.plots.stratiprofile import proreader
 
+
+from snowtools.plots.stratiprofile import profilPlot
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 logger = logging.getLogger()
 
 # App constants:
@@ -447,6 +454,20 @@ class ProPlotterMain(tk.Frame):
         super().__init__(master, relief=tk.RAISED, borderwidth=1)
         self.pack(fill=tk.BOTH, expand=True)
 
+        self.fig1, self.ax1 = plt.subplots(1, 1, sharex=True, sharey=True)
+        self.Canevas = FigureCanvasTkAgg(self.fig1, self)
+
+
+        self.toberemoved = tk.Label(self, text='Plotting area')
+        self.toberemoved.pack()
+
+    def clear(self):
+        self.toberemoved.destroy()
+        self.Canevas.get_tk_widget().destroy()
+
+    def ready_to_plot(self):
+        self.fig1, self.ax1 = plt.subplots(1, 1, sharex=True, sharey=True)
+        self.Canevas = FigureCanvasTkAgg(self.fig1, self)
         self.toberemoved = tk.Label(self, text='Plotting area')
         self.toberemoved.pack()
 
@@ -509,7 +530,25 @@ class ProPlotterController(abc.ABC):
         point = points[0]
         text = "Vars: {}/{}. Point: {}".format(var_1, var_2, point)
         self.master.controls.update_text(text)
+
         # TODO: Actually do the plot here <13-09-21, Léo Viallon-Galinier> #
+        toto = [x for x in self.master.fileobj.variables_desc.keys() ]
+        for i in toto:
+            if self.master.fileobj.variables_desc[i]['full_name'] == var_1:
+                toto_1 = i
+        print(toto_1)
+        print(point)
+        if 'snow_layer' in self.master.fileobj.variables_desc[toto_1]['dimensions']:
+            self.master.main.clear()
+            self.master.main.ready_to_plot()
+            self.master.main.toberemoved.destroy()
+            #self.master.main.Canevas.get_tk_widget().place_forget()
+            youkaidi_dz = self.master.fileobj.get_data(self.master.fileobj.variable_dz,point, fillnan=0.)
+            youkaida_data = self.master.fileobj.get_data(toto_1, point)
+            profilPlot.plot_profil(self.master.main.ax1, youkaidi_dz, youkaida_data)
+            self.master.main.Canevas.draw()
+            self.master.main.Canevas.get_tk_widget().pack()
+
 
     def reset(self):
         """
@@ -525,7 +564,7 @@ class ProPlotterController_Standard(ProPlotterController):
 def main(*args, **kwargs):
     root = tk.Tk()
     root.title('GUI PROreader CEN')
-    root.geometry('900x700')
+    root.geometry('1100x850')
     app = ProPlotterApplication(*args, master=root, **kwargs)
     app.mainloop()
 
