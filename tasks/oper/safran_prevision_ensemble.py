@@ -50,6 +50,10 @@ class Safran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox input guess arpege J-1 -> J')
                 tb01a = toolbox.input(
                     role           = 'Ebauche_Deterministic',
+                    # On est obligé d'avoir un "local" précisant le réseau et le cumul
+                    # car on a 2 fichiers valides à J 6h (une A6 et une P6)
+                    # RQ : on pourrait utiliser la même dans le cas d'ARPEGE, mais
+                    # pas pour la PEARP (cf commentaire tb02)
                     local          = 'mb035/P[date::yymdh]_[cumul:hour]',
                     experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,
@@ -96,6 +100,10 @@ class Safran(Task, S2MTaskMixIn):
                 ),
                 print(t.prompt, 'tb01b =', tb01b)
                 print()
+
+                # TODO : Pas de mode secours pour le déterministe ?
+                # On ne peut pas faire mieux que la prévision jusqu'à J+3 issue
+                # du réseau 0h de J-1 qui a tourné la veille...
 
                 # II- PEARP
                 # ---------
@@ -148,27 +156,30 @@ class Safran(Task, S2MTaskMixIn):
                 print()
 
                 # P24 à P102 du réseau 6h (J-1) pour couvrir J --> J+3
-                self.sh.title('Toolbox intput guess pearp secours J -> J+3')
-                tb02c = toolbox.input(
-                    alternate      = 'Ebauche',
-                    coherentgroup  = 'pearp_forecast',
-                    local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
-                    experiment     = self.conf.xpid_guess,
-                    block          = self.conf.guess_block,
-                    geometry       = self.conf.vconf,
-                    date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h), # Réseau 0h (J)
-                    cumul          = footprints.util.rangex(self.conf.prv_terms)[8:],
-                    nativefmt      = 'ascii',
-                    kind           = 'guess',
-                    model          = 'safran',
-                    source_app     = self.conf.source_app,
-                    source_conf    = self.conf.eps_conf,
-                    namespace      = self.conf.namespace,
-                    member         = footprints.util.rangex(self.conf.pearp_members),
-                    fatal          = False,
-                ),
-                print(t.prompt, 'tb02c =', tb02c)
-                print()
+                # TODO : Ne marche pas car le nom "local" est différent
+                # Cela est nécessaire car il y a 2 fichiers différents valides à 6h J :
+                # une P24 et une P6
+#                self.sh.title('Toolbox intput guess pearp secours J -> J+3')
+#                tb02c = toolbox.input(
+#                    alternate      = 'Ebauche',
+#                    coherentgroup  = 'pearp_forecast',
+#                    local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
+#                    experiment     = self.conf.xpid_guess,
+#                    block          = self.conf.guess_block,
+#                    geometry       = self.conf.vconf,
+#                    date           = '{0:s}/-PT6H'.format(datebegin.ymd6h), # Réseau 0h (J)
+#                    cumul          = footprints.util.rangex(self.conf.prv_terms)[8:],
+#                    nativefmt      = 'ascii',
+#                    kind           = 'guess',
+#                    model          = 'safran',
+#                    source_app     = self.conf.source_app,
+#                    source_conf    = self.conf.eps_conf,
+#                    namespace      = self.conf.namespace,
+#                    member         = footprints.util.rangex(self.conf.pearp_members),
+#                    fatal          = False,
+#                ),
+#                print(t.prompt, 'tb02c =', tb02c)
+#                print()
 
                 self.sh.title('Toolbox input listem')
                 tb03 = toolbox.input(
