@@ -90,6 +90,10 @@ class ProPlotterApplication(tk.Frame):
         self.master.bind('<Escape>', self.close_window)
         self.master.bind('<Control-q>', self.close_window)
 
+        self.update_idletasks()
+        print(self.winfo_width(), self.winfo_height())
+
+
     def close_window(self, *args, **kwargs):
         self.master.destroy()
 
@@ -457,6 +461,10 @@ class ProPlotterMain(tk.Frame):
         self.fig1, self.ax1 = plt.subplots(1, 1, sharex=True, sharey=True)
         self.Canevas = FigureCanvasTkAgg(self.fig1, self)
 
+        self.update_idletasks()
+        print(self.winfo_width())
+        print(self.winfo_height())
+        #STOP ICI: idée pour plus tard pour le self.pack: se baser sur le info_width du master
 
         self.toberemoved = tk.Label(self, text='Plotting area')
         self.toberemoved.pack()
@@ -536,8 +544,7 @@ class ProPlotterController(abc.ABC):
         for i in toto:
             if self.master.fileobj.variables_desc[i]['full_name'] == var_1:
                 toto_1 = i
-        print(toto_1)
-        print(point)
+
         if 'snow_layer' in self.master.fileobj.variables_desc[toto_1]['dimensions']:
             self.master.main.clear()
             self.master.main.ready_to_plot()
