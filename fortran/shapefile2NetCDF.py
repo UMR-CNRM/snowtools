@@ -67,7 +67,7 @@ import matplotlib.pyplot as plt
 # python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti
 # python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti --confirm_overwrite si on a déjà travaillé sur ce projet
 # python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti --list_skyline 1 34 47 (pour avoir dans le dossier output les tour d'horizon des stations numéros 1, 34 et 47
-#
+# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2021/PlotsMaJ2021 codeplot idplot 0 --confirm_overwrite
 #
 #
 ##############
@@ -89,7 +89,13 @@ import matplotlib.pyplot as plt
 #
 # s2m -b 19580801 -e 20200801 -m s2m -f reanalysis2020.2@lafaysse -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc -o TEST1 -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -g --addmask -a 400
 #
+# !!!!
 # PENSER AU SPINUP
+# PENSER QU'IL FAUT BIEN ENVOYER SUR BELENOS LE METADATA.xml POUR PRENDRE EN COMPTE LES MASQUES
+# PENSER QU'IL FAUT CHANGER LA NAMELIST: dans le CSELECT, IL NE FAUT PAS station ET massif_num EN MEME TEMPS
+# PENSER DANS LA NAMELIST A ENLEVER LES DIAG AVALANCHES DANS LE CSELECT (massif_num nécessaire dans ce cas)
+# Pour info, dans /SURFEX/src/OFFLINE il faut faire attention à init_output_oln.F90 (ligne 130) et ol_write_coord.F90 
+# !!!!
 #
 # Options: 
 # -m pour le modèle
@@ -103,6 +109,13 @@ import matplotlib.pyplot as plt
 # question pour simulation: où trouver les forcing de SMHI_RCA4_MOHC_HadGEM2_ES_RCP85 (par exemple) ?
 # reponse: chez Raphaelle Samacoits d'où une commande avec quelque chose comme: 
 # -m adamont -f RCM_GCM_EXP@samacoitsr -r alp_flat:geometryout:fichier.nc
+# s2m -b 20100801 -e 20990801 -m adamont -f CLMcom_CCLM4_8_17_CNRM_CERFACS_CNRM_CM5_RCP45@samacoitsr -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc -o TEST_Raphaelle -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -x 20200801 --addmask -a 400
+#
+#
+# Pour transférer les fichiers de Belenos à sxcen:
+# utiliser get_reanalysis qui est dans snowtools_git/scripts/extract/vortex
+# Sur SXCEN: python3 get_reanalysis.py --geometry=orchamp --snow --xpid=SPINUP@fructusm
+# Sur SXCEN: python3 get_reanalysis.py --geometry=orchamp --snow --xpid=TEST_Raphaelle@fructusm --byear=2010 --eyear=2099
 ################################################################
 
 
