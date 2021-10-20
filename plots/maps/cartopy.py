@@ -8,34 +8,45 @@ Created on 29 march 2021
 
 Module for map plots with massifs.
 This module might be sensitive to the combination of versions of matplotlib and cartopy.
-developed with matplotlib 3.4.0/3.2.1 and cartopy 0.18
-which cartopy version is based on which matplotlib version? (according to documentation)
-cartopy 0.19 -> matplotlib 3.4.1
-cartopy 0.18 -> matplotlib 3.2.1
-cartopy 0.17 -> matplotlib 3.0.2
-cartopy 0.16 -> matplotlib 2.1.2
-cartopy 0.15 -> matplotlib 2.0.0
-cartopy 0.14 -> matplotlib 1.5.1
-cartopy 0.13 -> matplotlib 1.4.3
+Developed with matplotlib 3.4.0/3.2.1 and cartopy 0.18.
+
+Which cartopy version is based on which matplotlib version? (according to documentation)
+
+* cartopy 0.19 -> matplotlib 3.4.1
+* cartopy 0.18 -> matplotlib 3.2.1
+* cartopy 0.17 -> matplotlib 3.0.2
+* cartopy 0.16 -> matplotlib 2.1.2
+* cartopy 0.15 -> matplotlib 2.0.0
+* cartopy 0.14 -> matplotlib 1.5.1
+* cartopy 0.13 -> matplotlib 1.4.3
 
 Usage :
 example :
-create a Map instance for the Alps. Map_alpes can take optional kwargs.
-m = Map_alpes(kwargs)
-m = Map_alpes(geofeatures=True)
-with geofeatures = True, borders, rivers and lakes are drawn on the map, the land and ocean polygons are colored.
+create a Map instance for the Alps. ``Map_alpes`` can take optional kwargs.
+
+.. code-block:: python
+
+    m = Map_alpes(kwargs)
+    m = Map_alpes(geofeatures=True)
+
+with ``geofeatures = True``, borders, rivers and lakes are drawn on the map, the land and ocean polygons are colored.
 at the first use cartopy tries to download the necessary data on the fly and saves them.
 If this doesn't succeed for some reason (proxy or certificate issues for example), you can manually download the
 shapefiles from NaturalEarth https://www.naturalearthdata.com/ and store them in cartopys 'data_dir'.
 To see where cartopy will look for the data do :
-from cartopy import config
-print(config['data_dir'])
+
+.. code-block:: python
+
+    from cartopy import config
+    print(config['data_dir'])
+
 The result might be for example :
-$HOME/.local/share/cartopy (I'll abbreviate with $data_dir)
-files containing borders are then stored in
-$data_dir/shapefiles/natural_earth/cultural/
+``$HOME/.local/share/cartopy`` (I'll abbreviate with ``$data_dir``)
+
+Files containing borders are then stored in
+``$data_dir/shapefiles/natural_earth/cultural/`` and
 files containing land, ocean river and lake features are stored in
-$data_dir/shapefiles/natural_earth/physical/
+``$data_dir/shapefiles/natural_earth/physical/``
 
 m = MapFrance(bgimage=True)
 with bgimage=True a background image from Natural Earth is added showing the relief.
@@ -48,24 +59,15 @@ m.init_massifs(palette='Reds')
 
 import os
 import numpy as np
-import itertools
 import matplotlib
-# print(matplotlib.rcParams["savefig.dpi"])
-# print(matplotlib.rcParams)
 import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon
-from matplotlib.collections import PatchCollection
-# from matplotlib import style
-# style.use('fast')
-# matplotlib.rcParams["patch.antialiased"] = False
-# matplotlib.rcParams["text.antialiased"] = False
-# matplotlib.rcParams["lines.antialiased"] = False
-# matplotlib.rcParams["image.resample"] = False
 import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
 import cartopy.feature
+
 from plots.abstracts.figures import Mplfigure
 from utils.infomassifs import infomassifs
+
 from pyproj import CRS
 from cartopy import config
 from shapely.geometry import Point
@@ -468,7 +470,7 @@ class _Map_massifs(Mplfigure):
 
         :return: feature list
         """
-        features = [{'feature': self.map.add_geometries([lshape], crs=ccrs.PlateCarree(), #crs=self.projection,
+        features = [{'feature': self.map.add_geometries([lshape], crs=ccrs.PlateCarree(),  # crs=self.projection,
                                                         cmap=self.palette,
                                                         facecolor='none', edgecolor='dimgrey', alpha=1.0),
                      'massifnum':inum, 'massifname':iname,
@@ -578,7 +580,7 @@ class _Map_massifs(Mplfigure):
         :param kwargs:
         """
         for feature in self.massif_features:
-            feature['feature']._kwargs['facecolor'] ='white'
+            feature['feature']._kwargs['facecolor'] = 'white'
 
     def addpoints(self, lon, lat, labels=None, color='black', marker=None):
         """
@@ -904,7 +906,7 @@ class _Map_massifs(Mplfigure):
                                     for thisvar in listvar]).reshape((nrows, ncol)))
         # create color array
         tmp_colors = [self.palette(self.norm(thisvar[indmassif][0])) for thisvar in listvar]
-        colors = np.array([tmp_colors[-ncol:] if irows==0 else tmp_colors[-(irows*ncol)-ncol:-(irows*ncol)]
+        colors = np.array([tmp_colors[-ncol:] if irows == 0 else tmp_colors[-(irows*ncol)-ncol:-(irows*ncol)]
                            for irows in range(nrows)])
 
         art = matplotlib.table.table(self.map, cellText=infos, cellColours=colors, cellLoc='center', colWidths=None,
@@ -978,9 +980,7 @@ class Map_alpes(_Map_massifs):
     infospos = (990000, 2160000)
     labelfontsize = 20  #: fontsize of colorbar label
     deport = {7: (0, 5000), 9: (-1000, 0),  16: (1000, 0), 19: (-2000, -2000),  21: (0, -5000)}
-    """ displacement dictionary for the positioning tables near the massif center without overlapping.
-    
-    = {7: (0, 5000), 9: (-1000, 0),  16: (1000, 0), 19: (-2000, -2000),  21: (0, -5000)} """
+    """ displacement dictionary for the positioning tables near the massif center without overlapping."""
 
     def __init__(self, *args, **kw):
         """
@@ -1222,7 +1222,7 @@ class _MultiMap(_Map_massifs):
             # create color array
             tmp_colors = [self.palette(self.norm(thisvar.take(indices=j, axis=axis)[indmassif][0]))
                           for thisvar in listvar]
-            colors = np.array([tmp_colors[-ncol:] if irows==0 else tmp_colors[-(irows*ncol)-ncol:-(irows*ncol)]
+            colors = np.array([tmp_colors[-ncol:] if irows == 0 else tmp_colors[-(irows*ncol)-ncol:-(irows*ncol)]
                                for irows in range(nrows)])
             art = matplotlib.table.table(self.maps.flat[j], cellText=infos, cellColours=colors, cellLoc='center',
                                          colWidths=None,
@@ -1285,7 +1285,7 @@ class _MultiMap(_Map_massifs):
                 box_alignment=(0.2, 0), xycoords=self.projection._as_mpl_transform(self.maps.flat[i]),
                 bboxprops=dict(fc='none'), pad=0.2)))
             self.infos.append(self.maps.flat[i].add_artist(matplotlib.offsetbox.AnnotationBbox(
-                matplotlib.offsetbox.TextArea(south_text, textprops=dict(horizontalalignment='left', # center in matplotlib 3.4
+                matplotlib.offsetbox.TextArea(south_text, textprops=dict(horizontalalignment='left',  # center in matplotlib 3.4
                                                                          size=5)), self.infospos,
                 box_alignment=(0.2, 1.4), xycoords=self.projection._as_mpl_transform(self.maps.flat[i]),
                 bboxprops=dict(fc='none'), pad=0.2)))
@@ -1445,13 +1445,7 @@ class Map_pyrenees(_Map_massifs):
                    72: (10000, 10000), 73: (10000, 10000), 74: (10000, 3000), 81: (-10000, 1000), 82: (-3000, 0),
                    83: (1000, 0), 84: (-4000, 0), 85: (0, -7000), 86: (-3000, 0), 87: (0, -10000),
                    88: (12000, 7000), 89: (0, -4000), 90: (10000, -5000), 91: (-17000, -8000)}
-    """displacement dictionary for the positioning tables near the massif center without overlapping.
-    
-    = {64: (0, 2000), 67: (0, 20000), 68: (10000, 5000), 70: (-2000, 10000), 71: (-12000, 5000),
-                   72: (10000, 10000), 73: (10000, 10000), 74: (10000, 3000), 81: (-10000, 1000), 82: (-3000, 0),
-                   83: (1000, 0), 84: (-4000, 0), 85: (0, -7000), 86: (-3000, 0), 87: (0, -10000),
-                   88: (12000, 7000), 89: (0, -4000), 90: (10000, -5000), 91: (-17000, -8000)}
-    """
+    """displacement dictionary for the positioning tables near the massif center without overlapping."""
 
 
 def __init__(self, *args, **kw):
@@ -1769,7 +1763,7 @@ class Zoom_massif(_Map_massifs):
         if 1 <= num_massif <= 24:
             self.area = 'alpes'
             self.width = 10.2
-            self.height = 8 
+            self.height = 8
             self.legendpos = [0.89, 0.15, 0.03, 0.6]
             self.mappos = [0.05, 0.03, 0.8, 0.8]
             self.titlepad = 25
@@ -1779,7 +1773,7 @@ class Zoom_massif(_Map_massifs):
             self.height = 6.8
             self.legendpos = [0.91, 0.12, 0.025, 0.6]
             self.mappos = [0.05, 0.06, 0.8, 0.8]
-            self.titlepad = 40 
+            self.titlepad = 40
         elif 40 <= num_massif <= 41:
             self.area = 'corse'
             self.width = 10.2
@@ -1801,15 +1795,15 @@ class Zoom_massif(_Map_massifs):
         else:
             raise NotImplementedError('only LambertConformal projection is implemented for the massif shapes')
 
-        self.lonmin, self.lonmax, self.latmin , self.latmax, self.infospos = self.get_map_dimensions(num_massif)
+        self.lonmin, self.lonmax, self.latmin, self.latmax, self.infospos = self.get_map_dimensions(num_massif)
 
         self.fig = plt.figure(figsize=(self.width, self.height))
         self.fig.subplots_adjust(bottom=0.005, left=0.005, top=0.95, right=0.9)
         self.map = self.getmap()
         self.map.gridlines(draw_labels=True)
-        #self.map.drawcoastlines(linewidth=1)
-#        self.map.drawcountries()
-        #self.map.drawmapboundary()
+        # self.map.drawcoastlines(linewidth=1)
+        # self.map.drawcountries()
+        # self.map.drawmapboundary()
 
     def get_map_dimensions(self, num_massif):
         """
@@ -1841,6 +1835,6 @@ class Zoom_massif(_Map_massifs):
         latmax = barycentre[1] + dlat
 
         infospos = self.projection.project_geometry(Point((lonmax-dloninfo, latmax-dlatinfo)),
-                                                         ccrs.PlateCarree()).coords[0]
+                                                    ccrs.PlateCarree()).coords[0]
 
         return lonmin, lonmax, latmin, latmax, infospos
