@@ -482,28 +482,29 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # Dans le mode secours, on est passé dans l'alternate qui consiste à prendre un fichier du cycle de production au lieu d'assimilation
                 # Le script qui génère les fichiers guess lit cette information dans le grib et la met dans le nom du fichier produit.
                 # On doit donc ajouter la toolbox suivante au cas où, qui doit renvoyer False dans le cas nominal.
-                self.sh.title('Toolbox output tb05_b')
-                tb05 = toolbox.output(
-                    alternate      = 'Ebauche',
-                    coherentgroup  = 'EbauchesDeterministes',
-                    local          = 'ARP_[date:ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
-                    cutoff         = 'production',
-                    geometry       = self.conf.domains,
-                    vconf          = '[geometry:area]',
-                    experiment     = self.conf.xpid,
-                    block          = self.conf.block,
-                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
-                    cumul          = self.conf.cumul,
-                    nativefmt      = 'ascii',
-                    kind           = 'guess',
-                    model          = 'safran',
-                    source_app     = self.conf.source_app,
-                    source_conf    = self.conf.deterministic_conf,
-                    namespace      = self.conf.namespace,
-                    fatal          = False,
-                ),
-                print(t.prompt, 'tb05_b =', tb05)
-                print()
+                # TODO : "l'alternate" ne fonctionne toujours pas car les noms des fichiers sont différents
+#                self.sh.title('Toolbox output tb05_b')
+#                tb05 = toolbox.output(
+#                    alternate      = 'Ebauche',
+#                    coherentgroup  = 'EbauchesDeterministes',
+#                    local          = 'ARP_[date:ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+#                    cutoff         = 'production',
+#                    geometry       = self.conf.domains,
+#                    vconf          = '[geometry:area]',
+#                    experiment     = self.conf.xpid,
+#                    block          = self.conf.block,
+#                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
+#                    cumul          = self.conf.cumul,
+#                    nativefmt      = 'ascii',
+#                    kind           = 'guess',
+#                    model          = 'safran',
+#                    source_app     = self.conf.source_app,
+#                    source_conf    = self.conf.deterministic_conf,
+#                    namespace      = self.conf.namespace,
+#                    fatal          = False,
+#                ),
+#                print(t.prompt, 'tb05_b =', tb05)
+#                print()
 
                 self.sh.title('Toolbox output tb06')
                 tb06 = toolbox.output(
