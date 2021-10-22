@@ -304,27 +304,28 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb05_a =', tb05a)
                 print()
 
-                self.sh.title('Toolbox output tb05_b = guess arpege prod (secours)')
-                tb05b = toolbox.output(
-                    alternate      = 'Ebauche',
-                    local          = 'ARP_[date:ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
-                    cutoff         = 'production',
-                    geometry       = self.conf.domains,
-                    vconf          = '[geometry:area]',
-                    experiment     = self.conf.xpid,
-                    block          = self.conf.block,
-                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
-                    cumul          = self.conf.cumul,
-                    nativefmt      = 'ascii',
-                    kind           = 'guess',
-                    model          = 'safran',
-                    source_app     = self.conf.source_app,
-                    source_conf    = self.conf.deterministic_conf,
-                    namespace      = self.conf.namespace,
-                    fatal          = False,
-                ),
-                print(t.prompt, 'tb05_b =', tb05b)
-                print()
+                # TODO : les fichiers on des noms différents, l'alternate est donc systématiquement appéllée
+#                self.sh.title('Toolbox output tb05_b = guess arpege prod (secours)')
+#                tb05b = toolbox.output(
+#                    alternate      = 'Ebauche',
+#                    local          = 'ARP_[date:ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+#                    cutoff         = 'production',
+#                    geometry       = self.conf.domains,
+#                    vconf          = '[geometry:area]',
+#                    experiment     = self.conf.xpid,
+#                    block          = self.conf.block,
+#                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
+#                    cumul          = self.conf.cumul,
+#                    nativefmt      = 'ascii',
+#                    kind           = 'guess',
+#                    model          = 'safran',
+#                    source_app     = self.conf.source_app,
+#                    source_conf    = self.conf.deterministic_conf,
+#                    namespace      = self.conf.namespace,
+#                    fatal          = False,
+#                ),
+#                print(t.prompt, 'tb05_b =', tb05b)
+#                print()
 
                 self.sh.title('Toolbox output tb06 = guess pearp')
                 tb06 = toolbox.output(
