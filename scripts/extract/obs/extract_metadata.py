@@ -9,7 +9,8 @@ import sys
 import os
 import csv
 
-from evals.extract.extract_obs import question
+from snowtools.scripts.extract.obs.bdquery import question
+
 
 def usage():
     print("USAGE extract_metadata.py LIST_STATIONS")
@@ -31,17 +32,14 @@ if __name__ == "__main__":
     for row in r:
         station = row[0].strip()
 
-    # II.1.1 construction de la question pour tous les postes sauf les sondages pour la HTN
-    # -------------------------------------------------------------------------------------
-    # On prend toutes les heures
-
-
-        question1 = question("question_metadata.q")
-        question1.set_fileout(station + ".hist")
-        question1.set_varout(["num_poste", "type_poste", "datdeb", "datfin"])
-        question1.set_tables(["HIST_TYPE_POSTE"])
-        question1.set_firstcondition("NUM_POSTE = " + station)
-        question1.run()
+        question1 = question(
+                listvars=["num_poste", "type_poste", "datdeb", "datfin"],
+                table="HIST_TYPE_POSTE",
+                listconditions=[
+                    "NUM_POSTE = " + station
+                    ]
+                )
+        question1.run(outputfile=station + '.hist')
 
     objcsv.close()
     os.system("sleep 10")
@@ -53,15 +51,15 @@ if __name__ == "__main__":
         station = row[0].strip()
 
         objcsv2 = open(station + ".hist", "r")
-        info = csv.reader(objcsv2, delimiter="|", skipinitialspace=True)
+        info = csv.reader(objcsv2, delimiter=";", skipinitialspace=True)
         for rowinfo in info:
             pass
 
-        print (station, rowinfo)
+        print(station, rowinfo)
         writer.writerow(row[0:5] + rowinfo[1:])
         objcsv2.close()
 
     objcsvbis.close()
     fichierout.close()
-        
+
     # Fichier final
