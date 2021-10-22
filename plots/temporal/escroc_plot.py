@@ -8,12 +8,10 @@ Created on 4 déc. 2018
 '''
 
 from plots.temporal.chrono import prettyensemble
-from scripts.extract.vortex.get_escroc import S2MExtractor, config
 from plots.pearps2m.postprocess import EnsembleDiags
 import datetime
 import numpy as np
 from utils.prosimu import prosimu
-from scripts.ESMSnowMIP.ESM_snowmip import bdate, edate
 
 
 class EnsembleEscrocDiags(EnsembleDiags):
@@ -193,6 +191,10 @@ class EnsembleEscrocDiags(EnsembleDiags):
 
 
 if __name__ == "__main__":
+
+    from scripts.extract.vortex.get_escroc import S2MExtractor, config
+    from scripts.ESMSnowMIP.ESM_snowmip import bdate, edate
+
     c = config()
     S2ME = S2MExtractor(c)
     snow_members = S2ME.get()
