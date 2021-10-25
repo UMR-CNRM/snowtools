@@ -44,6 +44,8 @@ class question(object):
         :type dateformat: str
         :type table: str
         """
+        if listconditions is None:
+            listconditions = []
         self.host = host
         self.port = port
         self.user = user

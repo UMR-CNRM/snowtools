@@ -1,10 +1,11 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+"""
 # Extraction des données d'observation depuis la BDCLIM
 # Matthieu Lafaysse 10 sept 2014
 # Modified Léo Viallon-Galinier 22 oct 2021
 # Script simplifié pour obtenir un format obs.csv depuis la BDCLIM
+"""
 
 import argparse
 

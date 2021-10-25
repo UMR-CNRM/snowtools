@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
 # Extraction des données d'observation depuis la BDCLIM
 # Matthieu Lafaysse 10 sept 2014
 # Script simplifié pour obtenir un format obs.csv depuis la BDCLIM
+
+"""
 
 import sys
 import os
@@ -33,7 +36,7 @@ if __name__ == "__main__":
         station = row[0].strip()
 
         question1 = question(
-                listvars=["num_poste", "type_poste", "datdeb", "datfin"],
+                listvar=["num_poste", "type_poste", "datdeb", "datfin"],
                 table="HIST_TYPE_POSTE",
                 listconditions=[
                     "NUM_POSTE = " + station

@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+"""
 # Extraction des masques dans BDLIM
-
+"""
 import os
-import string
 import re
 import xml.etree.ElementTree as ET
 import csv
 
-from evals.extract.extract_rr_mens import question
+from snowtools.scripts.extract.obs.bdquery import question
 
 # Extraction des masques dans la BDCLIM
 # ---------------------------------------------------------------------------
 
 question1 = question(
-        listvars=["NUM_POSTE", "AZIMUT", "ELEVATION"],
+        listvar=["NUM_POSTE", "AZIMUT", "ELEVATION"],
         table="MASQUE_NIVO",
         listorder=["num_poste", "azimut"]
         )
@@ -86,18 +85,24 @@ objcsv.close()
 metadata = os.environ["SNOWTOOLS_CEN"] + "/DATA/METADATA.xml"
 savefile = os.environ["SNOWTOOLS_CEN"] + "/DATA/METADATA_save.xml"
 os.rename(metadata, savefile)
-parser = ET.XMLParser(remove_blank_text=True)
-tree = ET.parse(savefile, parser)
+# parser = ET.XMLParser(remove_blank_text=True)
+# tree = ET.parse(savefile, parser)
+tree = ET.parse(savefile)
 root = tree.getroot()
 
 for site in root[1]:
     code = site.find("number").text.strip()
     if code in list(mask.keys()):
+        site[-1].tail = "\n      "
         attazim = ET.SubElement(site, "azimut")
         attmask = ET.SubElement(site, "mask")
         attsource = ET.SubElement(site, "source_mask")
-        attazim.text = string.join(azim[code], ',')
-        attmask.text = string.join(mask[code], ',')
+        attazim.text = ','.join(azim[code])
+        attmask.text = ','.join(mask[code])
         attsource.text = source[code]
+        attazim.tail = "\n      "
+        attmask.tail = "\n      "
+        attsource.tail = "\n    "
 
-tree.write(metadata, pretty_print=True, encoding="utf-8")
+
+tree.write(metadata, encoding="utf-8")
