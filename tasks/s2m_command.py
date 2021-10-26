@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 30 Aug. 2017
 
 @author: lafaysse
-'''
+"""
 
 # General python modules
 from optparse import OptionParser
@@ -21,9 +21,11 @@ from utils.infomassifs import infomassifs
 import tasks.runs
 from tasks.vortex_kitchen import vortex_kitchen
 from tasks.crampon_vortex_kitchen import crampon_vortex_kitchen
-from tasks.s2m_launcher import _S2M_command
+from snowtools.tasks.s2m_launcher import _S2M_command
 
-usage = "usage: s2m -b begin_date -e end_date -f forcing [-m forcingmodel] [-o path_output] [-w workdir] [-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] [-c nb_classes_aspects] [-L Lower-altitude] [-U Upper-altitude] [-s surfex_exe_directory]"
+usage = "usage: s2m -b begin_date -e end_date -f forcing [-m forcingmodel] [-o path_output] [-w workdir] " \
+        "[-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] " \
+        "[-c nb_classes_aspects] [-L Lower-altitude] [-U Upper-altitude] [-s surfex_exe_directory]"
 
 
 class Surfex_command(_S2M_command):
@@ -55,7 +57,10 @@ class Surfex_command(_S2M_command):
                 print(self.options.exesurfex)
 
             # Controls and type conversions of dates
-            [self.options.datedeb, self.options.datefin, self.options.datespinup] = list(map(check_and_convert_date, [self.options.datedeb, self.options.datefin, self.options.datespinup]))
+            [self.options.datedeb, self.options.datefin, self.options.datespinup] = list(map(check_and_convert_date,
+                                                                                             [self.options.datedeb,
+                                                                                              self.options.datefin,
+                                                                                              self.options.datespinup]))
             checkdateafter(self.options.datefin, self.options.datedeb)
 
             if vortex:
@@ -77,7 +82,8 @@ class Surfex_command(_S2M_command):
             self.interpol = True
 
         # Check and conversion of geographical requirements
-        elif self.options.region or self.options.slopes or self.options.aspects or self.options.minlevel or self.options.maxlevel:
+        elif self.options.region or self.options.slopes or self.options.aspects or self.options.minlevel \
+                or self.options.maxlevel:
             INFOmassifs = infomassifs()
 
             if not vortex:
@@ -89,7 +95,8 @@ class Surfex_command(_S2M_command):
                 self.options.slopes = ["0", "20", "40"]
 
             self.options.aspects = INFOmassifs.get_list_aspect(self.options.aspects, self.options.slopes)
-            self.options.minlevel, self.options.maxlevel = INFOmassifs.check_and_convert_min_max_elevation(self.options.minlevel, self.options.maxlevel)
+            self.options.minlevel, self.options.maxlevel \
+                = INFOmassifs.check_and_convert_min_max_elevation(self.options.minlevel, self.options.maxlevel)
 
     def set_path(self, vortex):
         # Conversions of local paths in absolute paths
@@ -145,8 +152,10 @@ class Surfex_command(_S2M_command):
                           help="path of the file with the list of physical options - default: alpes")
 
         parser.add_option("-n", "--namelist",
-                          action="store", type="string", dest="namelist", default=os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam',
-                          help="path of the mother namelist - default: " + os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam')
+                          action="store", type="string", dest="namelist",
+                          default=os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam',
+                          help="path of the mother namelist - default: " + os.environ['SNOWTOOLS_CEN']
+                               + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam')
 
         parser.add_option("-s", "--surfexexec",
                           action="store", type="string", dest="exesurfex", default=None,
@@ -210,7 +219,7 @@ class Surfex_command(_S2M_command):
 
         parser.add_option("--cramponmonthly",
                           action="store_true", dest="cramponmonthly", default=False,
-                          help="activation of CRAMPON with monthly forcing files (not possible yet)." )
+                          help="activation of CRAMPON with monthly forcing files (not possible yet).")
 
         parser.add_option("--grid",
                           action="store_true", dest="gridsimul", default=False,
@@ -238,26 +247,27 @@ class Surfex_command(_S2M_command):
 
         parser.add_option("--soda",
                           action="store", type='string', dest="soda", default=None,
-                          help="ESCROC-SODA assimilation sequence activation and ABSOLUTE path to conf (assimdates (file)")
+                          help="ESCROC-SODA assimilation sequence activation and ABSOLUTE "
+                               "path to conf (assimdates (file)")
 
         parser.add_option("--sodamonthly",
                           action="store_true", dest="sodamonthly", default=False,
-                          help="activation of SODA with monthly forcing files" )
+                          help="activation of SODA with monthly forcing files")
 
         parser.add_option("--openloop",
                           action="store_true", dest="openloop", default=False,
                           help="OFFLINE inout at assimdates without assim")
 
         parser.add_option("--walltime",
-                          action="store", type = "string", dest="walltime", default = None,
+                          action="store", type="string", dest="walltime", default=None,
                           help="specify your job walltime (format hh:mm:ss)")
 
         parser.add_option("--writesx",
-                          action="store_true", dest="writesx", default = False,
+                          action="store_true", dest="writesx", default=False,
                           help="Optionnaly transfer the PRO files towards sxcen")
 
         parser.add_option("--sensor",
-                          action="store", type = "str", dest="sensor", default = "MODIS",
+                          action="store", type="str", dest="sensor", default="MODIS",
                           help="specify the sensor name of the obs you want to assimilate")
 
         parser.add_option("--ntasks",
@@ -293,52 +303,66 @@ class Surfex_command(_S2M_command):
 
             # Define a run object
             if type(self.options.forcing) is list or self.options.addmask:
-                run = tasks.runs.postesrun(self.options.datedeb, self.options.datefin, self.options.forcing, self.options.diroutput, threshold=self.options.threshold,
+                run = tasks.runs.postesrun(self.options.datedeb, self.options.datefin, self.options.forcing,
+                                           self.options.diroutput, threshold=self.options.threshold,
                                            workdir=self.options.workdir, datespinup=self.options.datespinup,
                                            execdir=self.options.exesurfex,
                                            namelist=self.options.namelist,
                                            addmask=True, onlyextractforcing=self.options.onlyextractforcing)
             elif self.interpol:
                 if self.options.gridsimul:
-                    run = tasks.runs.interpolgriddedrun(self.options.datedeb, self.options.datefin, self.options.forcing, self.options.diroutput, threshold=self.options.threshold,
-                                             workdir=self.options.workdir, datespinup=self.options.datespinup, geolist=[self.options.region],
-                                             execdir=self.options.exesurfex,
-                                             namelist=self.options.namelist,
-                                             addmask=False,
-                                             onlyextractforcing=self.options.onlyextractforcing)
+                    run = tasks.runs.interpolgriddedrun(self.options.datedeb, self.options.datefin,
+                                                        self.options.forcing, self.options.diroutput,
+                                                        threshold=self.options.threshold, workdir=self.options.workdir,
+                                                        datespinup=self.options.datespinup,
+                                                        geolist=[self.options.region], execdir=self.options.exesurfex,
+                                                        namelist=self.options.namelist, addmask=False,
+                                                        onlyextractforcing=self.options.onlyextractforcing)
                 else:
-                    run = tasks.runs.interpolrun(self.options.datedeb, self.options.datefin, self.options.forcing, self.options.diroutput, threshold=self.options.threshold,
-                                             workdir=self.options.workdir, datespinup=self.options.datespinup, geolist=[self.options.region],
-                                             execdir=self.options.exesurfex,
-                                             namelist=self.options.namelist,
-                                             addmask=True,
-                                             onlyextractforcing=self.options.onlyextractforcing)
-            elif self.options.region or self.options.slopes or self.options.aspects or self.options.minlevel or self.options.maxlevel:
+                    run = tasks.runs.interpolrun(self.options.datedeb, self.options.datefin, self.options.forcing,
+                                                 self.options.diroutput, threshold=self.options.threshold,
+                                                 workdir=self.options.workdir, datespinup=self.options.datespinup,
+                                                 geolist=[self.options.region], execdir=self.options.exesurfex,
+                                                 namelist=self.options.namelist, addmask=True,
+                                                 onlyextractforcing=self.options.onlyextractforcing)
+            elif self.options.region or self.options.slopes or self.options.aspects or self.options.minlevel \
+                    or self.options.maxlevel:
 
                 if self.options.onlyextractforcing:
                     if 'pro' in self.options.forcing or 'PRO' in self.options.forcing:
-                        run = tasks.runs.massifextractpro(self.options.datedeb, self.options.datefin, self.options.forcing, self.options.diroutput,
+                        run = tasks.runs.massifextractpro(self.options.datedeb, self.options.datefin,
+                                                          self.options.forcing, self.options.diroutput,
                                                           workdir=self.options.workdir,
-                                                          geolist=[self.options.region, self.options.minlevel, self.options.maxlevel, self.options.slopes, self.options.aspects])
+                                                          geolist=[self.options.region, self.options.minlevel,
+                                                                   self.options.maxlevel, self.options.slopes,
+                                                                   self.options.aspects])
                     else:
-                        run = tasks.runs.massifextractforcing(self.options.datedeb, self.options.datefin, self.options.forcing, self.options.diroutput,
+                        run = tasks.runs.massifextractforcing(self.options.datedeb, self.options.datefin,
+                                                              self.options.forcing, self.options.diroutput,
                                                               workdir=self.options.workdir,
-                                                              geolist=[self.options.region, self.options.minlevel, self.options.maxlevel, self.options.slopes, self.options.aspects])
+                                                              geolist=[self.options.region, self.options.minlevel,
+                                                                       self.options.maxlevel, self.options.slopes,
+                                                                       self.options.aspects])
                 else:
 
-                    run = tasks.runs.massifrun(self.options.datedeb, self.options.datefin, self.options.forcing, self.options.diroutput, threshold=self.options.threshold,
+                    run = tasks.runs.massifrun(self.options.datedeb, self.options.datefin, self.options.forcing,
+                                               self.options.diroutput, threshold=self.options.threshold,
                                                workdir=self.options.workdir, datespinup=self.options.datespinup,
                                                execdir=self.options.exesurfex,
                                                namelist=self.options.namelist,
-                                               geolist=[self.options.region, self.options.minlevel, self.options.maxlevel, self.options.slopes, self.options.aspects])
+                                               geolist=[self.options.region, self.options.minlevel,
+                                                        self.options.maxlevel, self.options.slopes,
+                                                        self.options.aspects])
             else:
                 if self.options.gridsimul:
-                    run = tasks.runs.griddedrun(self.options.datedeb, self.options.datefin, self.options.forcing, self.options.diroutput, threshold=self.options.threshold,
+                    run = tasks.runs.griddedrun(self.options.datedeb, self.options.datefin, self.options.forcing,
+                                                self.options.diroutput, threshold=self.options.threshold,
                                                 workdir=self.options.workdir, datespinup=self.options.datespinup,
                                                 execdir=self.options.exesurfex,
                                                 namelist=self.options.namelist)
                 else:
-                    run = tasks.runs.surfexrun(self.options.datedeb, self.options.datefin, self.options.forcing, self.options.diroutput, threshold=self.options.threshold,
+                    run = tasks.runs.surfexrun(self.options.datedeb, self.options.datefin, self.options.forcing,
+                                               self.options.diroutput, threshold=self.options.threshold,
                                                workdir=self.options.workdir, datespinup=self.options.datespinup,
                                                execdir=self.options.exesurfex,
                                                namelist=self.options.namelist)
@@ -367,12 +391,12 @@ class Surfex_command(_S2M_command):
             # Cook vortex task
             if not self.options.crampon:
                 run = vortex_kitchen(self.options)
-                run.run(self.options)
+                run.run()
             elif self.options.escroc:
                 run = crampon_vortex_kitchen(self.options)
-                run.run(self.options)
+                run.run()
             else:
-                print ("soda should run with escroc option")
+                print("soda should run with escroc option")
 
 
 if __name__ == "__main__":
