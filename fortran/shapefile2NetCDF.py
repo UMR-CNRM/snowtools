@@ -52,8 +52,10 @@ import matplotlib.pyplot as plt
 # TRACABILITE DES NUMEROS DE PROJET
 #############
 #
-# Au 27 août 2021:
-# ANR TOP = projet 0 = geometrie orchamp dans vortex/conf/geometries.ini
+# Au 27 octobre 2021:
+# ORCHAMP = projet 0 = geometrie orchamp dans vortex/conf/geometries.ini
+# projet 1 utilisé sans référence ? 
+# TOP_CBNA = projet 2 = geometrie orchamp dans vortex/conf/geometries.ini
 #
 #############
 # METTRE A JOUR CI DESSUS A CHAQUE NOUVEAU PROJET
@@ -69,7 +71,8 @@ import matplotlib.pyplot as plt
 # python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti --list_skyline 1 34 47 (pour avoir dans le dossier output les tour d'horizon des stations numéros 1, 34 et 47
 # python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2021/PlotsMaJ2021 codeplot idplot 0 --confirm_overwrite
 #
-#
+# TOP_CBNA:
+# python3 shapefile2NetCDF.py /home/fructusm/Bureau/Shapefile_simu/cn_maille_points/cn_maille_points cd50m ORIG_FID 1
 ##############
 # Utilisation du fichier NetCDF pour reanalyse ou simulation en local
 ##############
