@@ -10,7 +10,10 @@ import argparse
 
 from snowtools.scripts.extract.obs.bdquery import question
 
-parser = argparse.ArgumentParser(description="Read HTN obs from BDCLim")
+parser = argparse.ArgumentParser(
+        description="Read HTN (snow height) observations from BDClim for all available stations on a daily timestep \
+                     at 6hUTC"
+        )
 parser.add_argument("date_min", help="Start date")
 parser.add_argument("date_max", help="End date")
 parser.add_argument("-o", "--output", help="Output file. If none selected, produce HTN.csv file",

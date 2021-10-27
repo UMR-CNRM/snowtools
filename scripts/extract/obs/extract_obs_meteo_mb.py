@@ -11,7 +11,9 @@ import argparse
 
 from snowtools.scripts.extract.obs.bdquery import question
 
-parser = argparse.ArgumentParser(description="Read obs data (Temp) from BDCLim from specified observation stations")
+parser = argparse.ArgumentParser(
+        description="Read obs data (Temperature) from BDCLim from specified observation stations"
+        )
 parser.add_argument("date_min", help="Start date")
 parser.add_argument("date_max", help="End date")
 parser.add_argument("-o", "--output", help="Output filename", default='obs_horaires.csv', dest='output')

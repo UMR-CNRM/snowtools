@@ -11,7 +11,9 @@ import os
 
 from snowtools.scripts.extract.obs.bdquery import question
 
-parser = argparse.ArgumentParser(description="Read HTN obs from BDCLim")
+parser = argparse.ArgumentParser(
+        description="Read precititation and temperature observations from BDCLim for all availables stations"
+        )
 parser.add_argument("date_min", help="Start date")
 parser.add_argument("date_max", help="End date")
 parser.add_argument("-o", "--output", help="Output folder",

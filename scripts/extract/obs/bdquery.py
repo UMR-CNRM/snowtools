@@ -5,13 +5,36 @@ from snowtools.utils.dates import check_and_convert_date
 
 
 class question(object):
-
     """
-    Class for interrogating PostGreSQL database
+    Class for interrogating PostgreSQL database
 
     Useful for accessing BDClim at Meteo-France. Please consider using directly
     ``psycopg2`` or ``pandas`` for new projects and make sure you are familiar
     with SQL syntax before using as inputs are not always correctly sanitized.
+
+    Usecase example: Read all snow depth information for poste nr 38005402 (Nivose Aigleton)
+    and 38567002 (Chamrousse) for the season 2020-2021 and save it to a file:
+
+    .. code:: python
+
+       question1 = question(
+               # Variables to extract: here date, num_poste on 8 digits, poste name, snow depth
+               listvar=["to_char(dat,'YYYY-MM-DD-HH24-MI')", "to_char(h.num_poste, 'fm00000000')",
+                        "poste_nivo.nom_usuel", "neigetot"],
+               # The table to read (see BDClim documentation)
+               table='H',
+               # Join table num_poste to get the poste name
+               listjoin=['POSTE_NIVO ON H.NUM_POSTE = POSTE_NIVO.NUM_POSTE'],
+               # Set a time period of interest (datetime or str objects)
+               period=['2020-08-01', '2021-08-01'],
+               # Set the order
+               listorder=['dat', 'h.num_poste'],
+               # Filtering
+               # parenthesis compulsory to group with "OR"
+               listconditions=['(H.NUM_POSTE=38005402 OR H.NUM_POSTE=38567002)'],
+               )
+       # Save into a csv file
+       question1.run(outputfile='output.csv', header=['dat', 'num_poste', 'poste', 'neigetot'])
     """
 
     def __init__(self, host='bdclimop-usr.meteo.fr', port=5432, user='anonymous', password='anonymous',
@@ -21,28 +44,28 @@ class question(object):
         :param host: Database server hostname
         :type host: str
         :param port: Database server port
-        :type: int
+        :type port: int
         :param user: Database username
-        :type: str
+        :type user: str
         :param password: Database password
-        :type: str
+        :type password: str
         :param database: Database name to use on the server
-        :type: str
+        :type database: str
         :param listvar: List of variables to read
         :type listvar: list of str
         :param listorder: List of variables to order on
         :type listorder: list of str
         :param listconditions: List of conditions to apply for data selection (SQL format)
-        :type: list of str
+        :type listconditions: list of str
         :param listjoin: List of join to be done (SQL format without 'JOIN')
         :type join: list of str
         :param period: List [[Min date, [max_date]]] for filtering on dates
                        (field dat, else, put it in conditions please)
         :type period: list of str or datetime
         :param table: The table to read in the selected database
+        :type table: str
         :param dateformat: Date format (iso, daily or monthly)
         :type dateformat: str
-        :type table: str
         """
         if listconditions is None:
             listconditions = []
@@ -118,6 +141,10 @@ class question(object):
     def get(self, outputfile=None, sep=';', header=True, mode='w'):
         """
         Run the query to the database and return an array of results
+        (or write the results in a csv file).
+
+        Note that the sql query is written in ``sql`` attribute of the
+        object.
 
         :param outputfile: Output csv file in which to write the results.
                            If set to None, an array of results is returned
@@ -130,6 +157,7 @@ class question(object):
         :type header: bool or list
         :param mode: Mode for opening outputfile
         :type mode: str
+        :returns: array of results (or nothing in case outputfile is set)
         """
         # construction of SQL request
         self.sql = 'SELECT {fields} FROM {table}'.format(fields=','.join(self.variables), table=self.table)

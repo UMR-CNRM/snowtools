@@ -10,7 +10,13 @@ import argparse
 
 from snowtools.scripts.extract.obs.bdquery import question
 
-parser = argparse.ArgumentParser(description="Read HTN obs from BDCLim")
+parser = argparse.ArgumentParser(
+        description="""
+        Read HTN (snow height) observations from BDCLim
+        for all available stations: both Nivoses and
+        "nivo-meteo" network.
+        """
+        )
 parser.add_argument("date_min", help="Start date")
 parser.add_argument("date_max", help="End date")
 parser.add_argument("-o", "--output", help="Output file. If none selected, produce NIVOMETEO.obs and NIVOSE.obs files",
