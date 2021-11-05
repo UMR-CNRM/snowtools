@@ -70,7 +70,7 @@ class vortex_kitchen(object):
             raise InstallException("VORTEX environment variable must be defined towards a valid vortex install.")
 
     def create_env(self):
-        # Prepare environment
+        """Prepare environment"""
         if not os.path.isdir(self.workingdir):
             os.makedirs(self.workingdir)
         os.chdir(self.workingdir)
@@ -247,9 +247,9 @@ class vortex_kitchen(object):
             else:
                 nmembers = 1
             # minutes per year for one member computing all points
-            minutes_peryear = dict(alp_allslopes = 15, pyr_allslopes = 15, alp_flat = 5, pyr_flat = 5,
-                                   cor_allslopes = 5, cor_flat = 1, postes = 5,
-                                   lautaret = 120, lautaretreduc = 5, grandesrousses250 = 35)
+            minutes_peryear = dict(alp_allslopes=15, pyr_allslopes=15, alp_flat=5, pyr_flat=5,
+                                   cor_allslopes=5, cor_flat=1, postes = 5,
+                                   lautaret=120, lautaretreduc=5, grandesrousses250=35)
 
             for site_snowmip in ["cdp", "oas", "obs", "ojp", "rme", "sap", "snb", "sod", "swa", "wfj"]:
                 if self.options.scores:
@@ -322,7 +322,6 @@ class Vortex_conf_file(object):
             self.setwritesx()
         elif self.options.safran:
             self.create_conf_safran()
-
 
     def create_conf_surfex(self):
         self.surfex_variables()

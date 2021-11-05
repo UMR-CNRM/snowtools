@@ -1,28 +1,29 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 Created on 6 févr. 2019
 
 @author: cluzetb
 
 utils suited for crocO interface only
-'''
+"""
 
 import numpy as np
-from vortex.util.config import GenericConfigParser
-from vortex.layout.nodes import ConfigSet
 import netCDF4
 import datetime
+from vortex.util.config import GenericConfigParser
+from vortex.layout.nodes import ConfigSet
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
+
 def dictsAspect():
-    '''
+    """
     returns the dict for aspect and its reverse.
-    '''
+    """
     
     gg1 = {'N': 0, 'NE': 45, 'E': 90, 'SE': 135, 'S': 180, 'SW': 225, 'W': 270, 'NW': 315, 'flat': -1}
-    
-    
-    return gg1, {v: k for k, v in gg1.iteritems()}
+
+    return gg1, {v: k for k, v in gg1.items()}
+
 
 def setSubsetclasses(pgd, selE, selA, selS):
     """
@@ -62,25 +63,29 @@ def setSubsetclasses(pgd, selE, selA, selS):
             mask.append(False)
     
     return subsetClass, np.array(mask)
+
+
 def dictvarsPrep():
     return {'b1': 'SPM_VEG1', 'b2': 'SPM_VEG2', 'b3': 'SPM_VEG3',
             'b4': 'SPM_VEG4', 'b5': 'SPM_VEG5', 'b6': 'SPM_VEG6',
             'b7': 'SPM_VEG7',
             'r53': 'r53', 'r52': 'r52', 'r51': 'r51', 'r54': 'r54', 'r21': 'r21', 'r23': 'r23', 'r24': 'r24',
-            'DEP':'DEP_TOT'}
-    
+            'DEP': 'DEP_TOT'}
+
+
 def dictvarsWrite():
     return {'b1': 'B1', 'b2': 'B2', 'b3': 'B3',
             'b4': 'B4', 'b5': 'B5', 'b6': 'B6',
             'b7': 'B7',
             'r53': 'r53', 'r52': 'r52', 'r51': 'r51', 'r54': 'r54', 'r21': 'r21', 'r23': 'r23', 'r24': 'r24',
-            'DEP':'DEP'}
+            'DEP': 'DEP'}
 
 
-def niceName(pgd, cl, tolist = False):
+def niceName(pgd, cl, tolist=False):
     _, revdictAsp = dictsAspect()
-    print type(revdictAsp[int(pgd.aspect[cl])])
-    return str(int(pgd.elev[cl])) + '_' + revdictAsp[pgd.aspect[cl]] + '_' + str(int(np.arctan(pgd.slope[cl]) * 180. / np.pi))
+    print(type(revdictAsp[int(pgd.aspect[cl])]))
+    return str(int(pgd.elev[cl])) + '_' + revdictAsp[pgd.aspect[cl]] + '_' + str(int(np.arctan(pgd.slope[cl]) * 180.
+                                                                                     / np.pi))
 
 
 class Pgd(object):
@@ -102,12 +107,12 @@ class Pgd(object):
         pgd.close()
         # print 'pgd loaded'
 
-def convertdate(date):
-    '''
-    YYYYMMDDHH to datetime.datetime
-    '''
-    return datetime.datetime(int(date[0:4]), int(date[4:6]), int(date[6:8]), int(date[8:10]), 0, 0)
 
+def convertdate(date):
+    """
+    YYYYMMDDHH to datetime.datetime
+    """
+    return datetime.datetime(int(date[0:4]), int(date[4:6]), int(date[6:8]), int(date[8:10]), 0, 0)
 
 
 def colorbar(mappable):
@@ -135,6 +140,7 @@ def setlistvars_obs(arg):
             listvar.append(gg[var])  # 'b*' -> 'B*'
     return listvar
 
+
 def setlistvars_var(arg):
     """
     BC 6/02/19
@@ -146,18 +152,19 @@ def setlistvars_var(arg):
     else:
         listvar = []
         for var in arg:
-            if (var=='DEP'):
+            if var == 'DEP':
                 listvar.append('DEP')
             else:
                 listvar.append('P' + var.upper())  # 'b*' -> 'PB*'
     return listvar
-    
+
+
 def read_conf(pathconf):
-    
-    '''
+
+    """
     B. Cluzet
     duplicated from evalSODA.util
-    '''
+    """
     print(pathconf)
     """
     Config = ConfigParser.ConfigParser()
@@ -181,27 +188,30 @@ def read_conf(pathconf):
 
     return conf
 
+
 def set_errors(argsoda):
-    '''
+    """
     BC 06/02/19
     set soda canonical errors for the prescribed vars (Wright et al., Charrois et al.)
-    '''
+    """
     
-    dicterrors = {'B1': 0.00071, 'B2': 0.00046, 'B3': 0.00056,'B4': 0.00056, 'B5': 0.002, 'B6': 0.0015, 'B7': 0.00078, 'SCF': 0.2, 'DEP': 0.1}
+    dicterrors = {'B1': 0.00071, 'B2': 0.00046, 'B3': 0.00056,'B4': 0.00056, 'B5': 0.002, 'B6': 0.0015, 'B7': 0.00078,
+                  'SCF': 0.2, 'DEP': 0.1}
     ret = []
     for el in argsoda:
         ret.append(dicterrors[el])
     
     return ret
 
+
 def set_factors(argsoda, fact):
-    '''
+    """
     BC 06/02/19
     properly set the error factors for namelist Writing
-    fact is prescribed in namelist : 
+    fact is prescribed in namelist :
     - if only one value (default or lazy case), apply it to all variables
     - if list of values (exhaustive): ok
-    '''
+    """
     if len(argsoda) == len([fact]):  # default with 1 var, lazy with 1 var, exhaustive
         if len([fact]) == 1:
             return [fact]
@@ -212,4 +222,4 @@ def set_factors(argsoda, fact):
             return [fact] * len(argsoda)
         else:
             raise Exception('you should either apply the same fact to all vars or specify it for each one')
-    
+

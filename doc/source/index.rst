@@ -8,9 +8,9 @@ Presentation of the Snowtools project
 
 Snowtools is a series of scripts, mostly written in python, that are designed to make our life simpler in terms of pre- and post-processing of SURFEX-Crocus snow model.
 
-Note that this package is only useful for people interested in using numerical codes of **snowpack modelling** on a **Linux environment**. The package does not include any meteorological or snow data. It may be associated for most of its scripts with the SURFEX project (http://www.cnrm-game-meteo.fr/surfex//spip.php).
+Note that this package is only useful for people interested in using numerical codes of **snowpack modelling** on a **Linux environment**. The package does not include any meteorological or snow data. It may be associated for most of its scripts with the SURFEX project (http://www.umr-cnrm.fr/surfex/spip.php).
 
-General informations about snowpack modelling with SURFEX-Crocus can be found here: http://www.cnrm-game-meteo.fr/spip.php?rubrique73.
+General informations about snowpack modelling with SURFEX-Crocus can be found here: http://www.umr-cnrm.fr/spip.php?rubrique73.
 
 Basics
 ------

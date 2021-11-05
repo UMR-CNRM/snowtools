@@ -25,8 +25,10 @@ import shapefile
 import time
 import math
 import matplotlib
+matplotlib.use('Agg')  # has to be before matplotlib.pyplot, because otherwise the backend is already chosen.
+# Even if that obviously is in conflict with PEP8.
 import matplotlib.pyplot as plt
-matplotlib.use('Agg')
+
 
 
 ################################################################
@@ -50,8 +52,10 @@ matplotlib.use('Agg')
 # TRACABILITE DES NUMEROS DE PROJET
 #############
 #
-# Au 27 août 2021:
-# ANR TOP = projet 0 = geometrie orchamp dans vortex/conf/geometries.ini
+# Au 27 octobre 2021:
+# ORCHAMP = projet 0 = geometrie orchamp dans vortex/conf/geometries.ini
+# projet 1 utilisé sans référence ? 
+# TOP_CBNA = projet 2 = geometrie orchamp dans vortex/conf/geometries.ini
 #
 #############
 # METTRE A JOUR CI DESSUS A CHAQUE NOUVEAU PROJET
@@ -65,9 +69,10 @@ matplotlib.use('Agg')
 # python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti
 # python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti --confirm_overwrite si on a déjà travaillé sur ce projet
 # python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti --list_skyline 1 34 47 (pour avoir dans le dossier output les tour d'horizon des stations numéros 1, 34 et 47
+# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2021/PlotsMaJ2021 codeplot idplot 0 --confirm_overwrite
 #
-#
-#
+# TOP_CBNA:
+# python3 shapefile2NetCDF.py /home/fructusm/Bureau/Shapefile_simu/cn_maille_points/cn_maille_points cd50m ORIG_FID 1
 ##############
 # Utilisation du fichier NetCDF pour reanalyse ou simulation en local
 ##############
@@ -87,7 +92,13 @@ matplotlib.use('Agg')
 #
 # s2m -b 19580801 -e 20200801 -m s2m -f reanalysis2020.2@lafaysse -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc -o TEST1 -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -g --addmask -a 400
 #
+# !!!!
 # PENSER AU SPINUP
+# PENSER QU'IL FAUT BIEN ENVOYER SUR BELENOS LE METADATA.xml POUR PRENDRE EN COMPTE LES MASQUES
+# PENSER QU'IL FAUT CHANGER LA NAMELIST: dans le CSELECT, IL NE FAUT PAS station ET massif_num EN MEME TEMPS
+# PENSER DANS LA NAMELIST A ENLEVER LES DIAG AVALANCHES DANS LE CSELECT (massif_num nécessaire dans ce cas)
+# Pour info, dans /SURFEX/src/OFFLINE il faut faire attention à init_output_oln.F90 (ligne 130) et ol_write_coord.F90 
+# !!!!
 #
 # Options: 
 # -m pour le modèle
@@ -101,6 +112,13 @@ matplotlib.use('Agg')
 # question pour simulation: où trouver les forcing de SMHI_RCA4_MOHC_HadGEM2_ES_RCP85 (par exemple) ?
 # reponse: chez Raphaelle Samacoits d'où une commande avec quelque chose comme: 
 # -m adamont -f RCM_GCM_EXP@samacoitsr -r alp_flat:geometryout:fichier.nc
+# s2m -b 20100801 -e 20990801 -m adamont -f CLMcom_CCLM4_8_17_CNRM_CERFACS_CNRM_CM5_RCP45@samacoitsr -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc -o TEST_Raphaelle -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -x 20200801 --addmask -a 400
+#
+#
+# Pour transférer les fichiers de Belenos à sxcen:
+# utiliser get_reanalysis qui est dans snowtools_git/scripts/extract/vortex
+# Sur SXCEN: python3 get_reanalysis.py --geometry=orchamp --snow --xpid=SPINUP@fructusm
+# Sur SXCEN: python3 get_reanalysis.py --geometry=orchamp --snow --xpid=TEST_Raphaelle@fructusm --byear=2010 --eyear=2099
 ################################################################
 
 
@@ -110,17 +128,20 @@ matplotlib.use('Agg')
 ################################################################
 NetCDF_out = 'NetCDF_from_shapefile.nc'
 
-# A CHANGER PLUS TARD
-path_MNT_alti_defaut = '/home/fructusm/MNT_FRANCEandBORDER_30m_fusion:IGN5m+COPERNICUS30m_EPSG:2154_INT:AVERAGE_2021-03.tif'
-path_MNT_slope_defaut = '/home/fructusm/MNT_slope.tif'
-path_MNT_aspect_defaut = '/home/fructusm/MNT_aspect.tif'
-# path_MNT_defaut = '/rd/cenfic2/manto/haddjeria/MNT/finalized/MNT_FRANCEandBORDER_30m_fusion:IGN5m+COPERNICUS30m_EPSG:2154_INT:AVERAGE_2021-03.tif'
+# PATH_MNT
+path_MNT_alti_defaut = '/rd/cenfic2/sentinel/mnt_ange/ange-factory/prod1/france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
+path_MNT_slope_defaut = '/rd/cenfic2/sentinel/mnt_ange/ange-factory/prod1/france_30m/SLP_FRANCE_L93_30m_bilinear.tif'
+path_MNT_aspect_defaut = '/rd/cenfic2/sentinel/mnt_ange/ange-factory/prod1/france_30m/ASP_FRANCE_L93_30m_bilinear.tif'
 
+# Pour test en local:
+#path_MNT_alti_defaut = '/home/fructusm/MNT_FRANCEandBORDER_30m_fusion:IGN5m+COPERNICUS30m_EPSG:2154_INT:AVERAGE_2021-03.tif'
+#path_MNT_slope_defaut = '/home/fructusm/MNT_slope.tif'
+#path_MNT_aspect_defaut = '/home/fructusm/MNT_aspect.tif'
 
 ################################################################
 # Infos shapefile massif, a priori pérenne 
 ################################################################
-path_shapefile_massif = '/home/fructusm/git/snowtools_git/DATA/massifs_Lbrt93_2019'
+path_shapefile_massif = os.environ['SNOWTOOLS_CEN'] + '/DATA/massifs_Lbrt93_2019'
 Indice_record_massif = 0
 
 ################################################################
@@ -342,8 +363,8 @@ def check_Id_station_in_Metadata(all_lists):
 
     :param all_lists: Dictionnaire de listes pour avoir la liste des id_station
     :returns: au sens Python, ne retourne rien.
-    Ecritures écrans et sortie du programme si les id stations sont présentes dans METADATA.xml.
-    Sinon, il ne se passe rien
+        Ecritures écrans et sortie du programme si les id stations sont présentes dans METADATA.xml.
+        Sinon, il ne se passe rien
     """
     # chemin d ecriture du fichier XML
     chemxml = os.environ['SNOWTOOLS_CEN'] + "/DATA"
@@ -424,7 +445,7 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
     :param list_skyline: Liste des identifiants du shapefile dont on souhaite avoir le tracé des lignes d'horizon
 
     :returns: au sens Python, ne retourne rien. Permet d'une part de tracer les graphiques de ligne d'horizon
-    et d'autre part de compléter METADATA.xml
+        et d'autre part de compléter METADATA.xml
     """
     start_time = time.time()
 

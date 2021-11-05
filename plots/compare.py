@@ -53,7 +53,7 @@ import proReader_mini
 # - albedo moyen avec TALB_ISBA 
 #
 
-def make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin, date_end, output_name, point):
+def make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin, date_end, output_name, point, bool_snow_layer):
     """Plot 2 PRO files side by side in order to compare them
 
     :param path_pro1: The path to first PRO file to plot
@@ -74,15 +74,21 @@ def make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin
     :type output_name: str
     :param point: If there are several points in the PRO files, the graph is made for choosen point
     :type point: str
+    :param bool_snow_layer: If the variable is 1D, this is a 1D plot which is made
+    :type bool_snow_layer: boolean
 
     :returns: the graph (possibly saved if an output name is given)
     """
     fig, (ax1, ax2) = plt.subplots(1, 2)
     fig.suptitle('Compare ' + titre1 + ' and ' + titre2)
     pro1 = proReader_mini.ProReader_standard(ncfile = path_pro1, var = variable, point = int(point))
-    pro1.plot(ax1, variable, date_begin, date_end, real_layers = True, legend = variable)
     pro2 = proReader_mini.ProReader_standard(ncfile = path_pro2, var = variable, point = int(point))
-    intime = pro2.plot(ax2, variable, date_begin, date_end, real_layers = True, legend = variable)
+    if bool_snow_layer:
+        pro1.plot(ax1, variable, date_begin, date_end, real_layers = True, legend = variable)
+        pro2.plot(ax2, variable, date_begin, date_end, real_layers = True, legend = variable)
+    else:
+        pro1.plot1D(ax1, variable, date_begin, date_end, legend = variable)
+        pro2.plot1D(ax2, variable, date_begin, date_end, legend = variable)
     plt.show()
     if output_name is not None:
         name_save_fig = output_name+'.png'
@@ -129,7 +135,7 @@ def make_text_comparaison(path_pro1, path_pro2, date_begin, date_end, output_nam
             texte.info(path_pro1 + ' : ' + str(var_moy1))
             texte.info(path_pro2 + ' : ' + str(var_moy2))
             if var_moy1 > 0.01: 
-                 texte.info('Ecart de Pro2 par rapport à Pro1 en pourcentage: ' + str( (var_moy2 - var_moy1)/var_moy1 ) + ' % \n' )
+                 texte.info('Ecart de Pro2 par rapport à Pro1 en pourcentage: ' + str( 100*(var_moy2 - var_moy1)/var_moy1 ) + ' % \n' )
 
     def test_nb_couche_fragile(dsPro1, dsPro2, texte, var, texte_info):
         if var in dsPro1.variables and var in dsPro2.variables:
@@ -139,7 +145,7 @@ def make_text_comparaison(path_pro1, path_pro2, date_begin, date_end, output_nam
             texte.info(path_pro1 + ' : ' + str(ds1))
             texte.info(path_pro2 + ' : ' + str(ds2))
             if ds1 > 0.01: 
-                 texte.info('Ecart de Pro2 par rapport à Pro1 en pourcentage: ' + str( (ds2 - ds1)/ds1 ) + ' % \n' )
+                 texte.info('Ecart de Pro2 par rapport à Pro1 en pourcentage: ' + str( 100*(ds2 - ds1)/ds1 ) + ' % \n' )
 
     def test_nb_couche_total(dsPro1, dsPro2, texte, var, texte_info):
         if var in dsPro1.variables and var in dsPro2.variables:
@@ -149,7 +155,7 @@ def make_text_comparaison(path_pro1, path_pro2, date_begin, date_end, output_nam
             texte.info(path_pro1 + ' : ' + str(ds1))
             texte.info(path_pro2 + ' : ' + str(ds2))
             if ds1 > 0.01: 
-                 texte.info('Ecart de Pro2 par rapport à Pro1 en pourcentage: ' + str( (ds2 - ds1)/ds1 ) + ' % \n' )
+                 texte.info('Ecart de Pro2 par rapport à Pro1 en pourcentage: ' + str( 100*(ds2 - ds1)/ds1 ) + ' % \n' )
 
     test_moyenne(dsPro1, dsPro2, texte, 'DSN_T_ISBA', 'Hauteur moyenne')
     test_moyenne(dsPro1, dsPro2, texte, 'WSN_T_ISBA', 'Equivalent en eau moyen')
@@ -245,23 +251,20 @@ def main(args=None):
 
         # check variables exist
         if variable is not None:
-            with prosimu(path_pro1) as ff:
-                if variable is not None and variable not in ff.listvar():
+            with prosimu(path_pro1) as ff1:
+                if variable is not None and variable not in ff1.listvar():
                     logger.critical('Variable {} does not exist in {}'.format(variable, path_pro1))
                     sys.exit(3)
-                if variable is not None and 'snow_layer' not in ff.getdimvar(variable):
-                    logger.critical('snow_layer not in {}. Compare.py is not working in that case'.format(variable))
-                    sys.exit(3)
-            with prosimu(path_pro2) as ff:
-                if variable is not None and variable not in ff.listvar():
+            with prosimu(path_pro2) as ff2:
+                if variable is not None and variable not in ff2.listvar():
                     logger.critical('Variable {} does not exist in {}'.format(variable, path_pro2))
-                    sys.exit(3)
-                if variable is not None and 'snow_layer' not in ff.getdimvar(variable):
-                    logger.critical('snow_layer not in {}. Compare.py is not working in that case'.format(variable))
                     sys.exit(3)
 
         # Launch the app
-        make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin, date_end, output_name, point)
+        if variable is not None and 'snow_layer' not in prosimu(path_pro1).getdimvar(variable) and 'snow_layer' not in prosimu(path_pro2).getdimvar(variable):
+            make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin, date_end, output_name, point, False)
+        else:
+            make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin, date_end, output_name, point, True)
         make_text_comparaison(path_pro1, path_pro2, date_begin, date_end, output_name, point)
 
 if __name__ == '__main__':

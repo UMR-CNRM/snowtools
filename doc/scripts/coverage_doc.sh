@@ -52,7 +52,7 @@ fi
 
 cov(){
     echo '**********************************************'
-    echo -e " Documentation voverage for folder $BOLD$1$STOPC"
+    echo -e " Documentation coverage for folder $BOLD$1$STOPC"
     echo '**********************************************'
     docstr-coverage --verbose=$VERBOSE $BASEDIR/$1
 }

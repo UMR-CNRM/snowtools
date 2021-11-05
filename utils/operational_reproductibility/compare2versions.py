@@ -224,6 +224,9 @@ class ComparisonS2MIntDev(ComparisonNetcdf):
     pathint = "/chaine/mxpt001/vortex/mtool/cache/vortex/s2m"
     pathdev = "/scratch/mtool/lafaysse/cache/vortex/s2m"
 
+    xpid_int = 'OPER'
+    xpid_dev = 'OPER@lafaysse'
+
     filename = dict(meteo = 'forcing', pro = 'pro', prep = 'prep')
     nmembers_snow = dict(alp_allslopes = 37, pyr_allslopes = 37, cor_allslopes = 37, postes = 35)
     nmembers_meteo = dict(alp_allslopes = 36, pyr_allslopes = 36, cor_allslopes = 36, postes = 35)
@@ -254,10 +257,10 @@ class ComparisonS2MIntDev(ComparisonNetcdf):
         return Date(date).stdvortex + cutoff
 
     def getpathint(self, vconf, date, cutoff, member, block):
-        return "/".join([self.pathint, vconf.replace("_allslopes", ""), "OPER", self.dirdate(date, cutoff), "mb%3.3d" % member, block])
+        return "/".join([self.pathint, vconf.replace("_allslopes", ""), self.xpid_int, self.dirdate(date, cutoff), "mb%3.3d" % member, block])
 
     def getpathdev(self, vconf, date, cutoff, member, block):
-        return "/".join([self.pathdev, vconf, "OPER@lafaysse", self.dirdate(date, cutoff), "mb%3.3d" % member, block])
+        return "/".join([self.pathdev, vconf, self.xpid_dev, self.dirdate(date, cutoff), "mb%3.3d" % member, block])
 
     def get_period(self, rundate, cutoff):
 
@@ -379,6 +382,14 @@ class FastComparisonS2MIntDev(ComparisonS2MIntDev):
         return list(set(vars_to_check) & set(afile.listvar()))
 
 
+class ComparisonS2MDbleDev(ComparisonS2MIntDev):
+    xpid_int = 'DBLE'
+
+
+class FastComparisonS2MDbleDev(FastComparisonS2MIntDev, ComparisonS2MDbleDev):
+    pass
+
+
 def parse_options(arguments):
     parser = OptionParser(usage)
 
@@ -406,6 +417,10 @@ def parse_options(arguments):
                       action="store_true", dest="fast", default=False,
                       help="Last date (YYYYMMDD)")
 
+    parser.add_option("--double",
+                      action="store_true", dest="double", default=False,
+                      help= 'Reference is double')
+
     (options, args) = parser.parse_args(arguments)
 
     # Controls and type conversions of dates
@@ -427,9 +442,15 @@ if __name__ == "__main__":
     elif options.datebegin and options.dateend:
         conform = True
         if options.fast:
-            C = FastComparisonS2MIntDev(options.nmembers)
+            if options.double:
+                C = FastComparisonS2MDbleDev(options.nmembers)
+            else:
+                C = FastComparisonS2MIntDev(options.nmembers)
         else:
-            C = ComparisonS2MIntDev(options.nmembers)
+            if options.double:
+                C = ComparisonS2MDbleDev(options.nmembers)
+            else:
+                C = ComparisonS2MIntDev(options.nmembers)
         currentdate = Date(options.datebegin)
         while currentdate < options.dateend:
             conform = conform and C.compareallruns(currentdate)

@@ -1,14 +1,16 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 1 oct 2014
 
 @author: lafaysse
-'''
+"""
 
 
-import sys, os, datetime
+import datetime
+import os
+import sys
 
 
 def usage():
@@ -33,7 +35,8 @@ elif suff == 'INT':
 if len(datepivot) != 14:
     usage()
 
-datejour = datetime.datetime(int(datepivot[0:4]), int(datepivot[4:6]), int(datepivot[6:8]), int(datepivot[8:10]), int(datepivot[10:12]))
+datejour = datetime.datetime(int(datepivot[0:4]), int(datepivot[4:6]), int(datepivot[6:8]), int(datepivot[8:10]),
+                             int(datepivot[10:12]))
 dateAna = datejour.replace(hour=6, minute=0)
 
 list_prod_nomm = [11977, 11979, 11980, 11982, 11983, 11985, 11989, 11991]
@@ -99,16 +102,20 @@ for prod in list_prod:
             if ech == "000000":
                 datedeb = dateAna - datetime.timedelta(days=1)
                 datefin = dateAna
-                pathin = pathbase + "/ANA-" + datepivot[8:10] + "/" + directory + "/" + fic + "_" + datedeb.strftime('%Y%m%d%H') + "_" + datefin.strftime('%Y%m%d%H') + ".nc"
+                pathin = pathbase + "/ANA-" + datepivot[8:10] + "/" + directory + "/" + fic + "_" + \
+                         datedeb.strftime('%Y%m%d%H') + "_" + datefin.strftime('%Y%m%d%H') + ".nc"
             elif ech == "002400":
                 datedeb = dateAna
                 datefin = dateAna + datetime.timedelta(days=1)
-                pathin = pathbase + "/P24-" + datepivot[8:10] + "/" + directory + "/" + fic + "_" + datedeb.strftime('%Y%m%d%H') + "_" + datefin.strftime('%Y%m%d%H') + ".nc"
+                pathin = pathbase + "/P24-" + datepivot[8:10] + "/" + directory + "/" + fic + "_" + \
+                         datedeb.strftime('%Y%m%d%H') + "_" + datefin.strftime('%Y%m%d%H') + ".nc"
             elif ech == "004800":
                 datedeb = dateAna + datetime.timedelta(days=1)
                 datefin = dateAna + datetime.timedelta(days=2)
-                pathin = pathbase + "/P48-" + datepivot[8:10] + "/" + directory + "/" + fic + "_" + datedeb.strftime('%Y%m%d%H') + "_" + datefin.strftime('%Y%m%d%H') + ".nc"
+                pathin = pathbase + "/P48-" + datepivot[8:10] + "/" + directory + "/" + fic + "_" + \
+                         datedeb.strftime('%Y%m%d%H') + "_" + datefin.strftime('%Y%m%d%H') + ".nc"
 
             os.symlink(pathin, str(prod) + "_" + datepivot + "_" + ech + "_" + suff + ".nc")
         else:
-            os.system("lirepe " + str(prod) + " " + datepivot + " " + ech + " " + str(prod) + "_" + datepivot + "_" + ech + "_" + suff + ".nc")
+            os.system("lirepe " + str(prod) + " " + datepivot + " " + ech + " " + str(prod) + "_" +
+                      datepivot + "_" + ech + "_" + suff + ".nc")

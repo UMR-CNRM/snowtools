@@ -1,44 +1,40 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 Created on 5 févr. 2019
 
 @author: cluzetb, inspired on SodaXP, test_PF.py and snowtools_git/tasks/runs.py from Lafaysse
-'''
+"""
 import os
-from SemiDistributed import Synthetic, Real, PrepBg, PrepAbs
-import datetime
-import shutil
-from utilcrocO import convertdate
-from utilcrocO import setlistvars_obs, setlistvars_var, set_errors, set_factors,\
-    setSubsetclasses
-from bronx.datagrip.namelist import NamelistParser
-from plotcrocO import Pie
-from Ensemble import PrepEnsBg, PrepEnsAn
-import matplotlib.pyplot as plt
-from Operators import PrepEnsOperator
-from PostCroco import PostCroco
 import numpy as np
+import shutil
+
+from snowtools.assim.utilcrocO import convertdate
+from snowtools.assim.utilcrocO import setlistvars_obs, setlistvars_var, set_errors, set_factors
+from bronx.datagrip.namelist import NamelistParser
+from snowtools.assim.PostCroco import PostCroco
+from snowtools.assim.SemiDistributed import Synthetic, Real
+
 
 class CrocOrun(object):
-    '''
+    """
     Class for local soda test
-    '''
+    """
 
     def __init__(self, options, conf):
 
         self.options = options
         self.options.dates = [self.options.dates]
         self.conf = conf
-        self.xpiddir =  self.options.vortexpath + '/s2m/' + self.options.vconf + '/' + self.options.xpid + '/'
+        self.xpiddir = self.options.vortexpath + '/s2m/' + self.options.vconf + '/' + self.options.xpid + '/'
         self.xpidobsdir = self.options.vortexpath + '/s2m/' + self.options.vconf + '/obs/' + self.options.sensor + '/'
         self.crocodir = self.xpiddir + 'crocO/'
-        if type(self.conf.assimdates) is unicode:
+        if isinstance(self.conf.assimdates, str):
             self.conf.assimdates = [str(self.conf.assimdates)]
         else:
             self.conf.assimdates = map(str, self.conf.assimdates)
         self.mblist = ['mb{0:04d}'.format(mb) for mb in range(1, 36)]
         
-        if self.options.mpi is True: # for cesar, change here the day you want to test mpi
+        if self.options.mpi is True:  # for cesar, change here the day you want to test mpi
             self.exesurfex = '/home/cluzetb/SURFEX_V81/cen_release/exe_mpi/'
         else:
             self.exesurfex = os.environ['EXESURFEX']
@@ -60,8 +56,8 @@ class CrocOrun(object):
                 os.mkdir(dd)
                 self.prepare_sodaenv(dd)
             else:
-                print 'prescribed date ' + dd + 'does not exist in the experiment, remove it.'
-                print self.conf.assimdates
+                print('prescribed date ' + dd + 'does not exist in the experiment, remove it.')
+                print(self.conf.assimdates)
                 self.options.dates.remove(dd)
 
     def prepare_sodaenv(self, path):
@@ -74,11 +70,13 @@ class CrocOrun(object):
         dateAssSoda = convertdate(path).strftime('%y%m%dH%H')
         for imb, mb in enumerate(self.mblist):
             if not os.path.exists('PREP_' + path + '_PF_ENS' + str(imb + 1) + '.nc'):
-                os.symlink(self.xpiddir + mb + '/bg/PREP_' + path + '.nc', 'PREP_' + dateAssSoda + '_PF_ENS' + str(imb + 1) + '.nc')
+                os.symlink(self.xpiddir + mb + '/bg/PREP_' + path + '.nc', 'PREP_' + dateAssSoda + '_PF_ENS' +
+                           str(imb + 1) + '.nc')
         if not os.path.exists('PREP.nc'):
             os.symlink('PREP_' + dateAssSoda + '_PF_ENS1.nc', 'PREP.nc')
         if not os.path.exists('PGD.nc'):
-            os.symlink(self.options.vortexpath + '/s2m/' + self.options.vconf + '/spinup/pgd/PGD_' + self.options.vconf + '.nc', 'PGD.nc')
+            os.symlink(self.options.vortexpath + '/s2m/' + self.options.vconf + '/spinup/pgd/PGD_' +
+                       self.options.vconf + '.nc', 'PGD.nc')
 
         # Prepare and check the namelist (LWRITE_TOPO must be false for SODA)
         if not os.path.exists('OPTIONS.nam'):
@@ -87,8 +85,10 @@ class CrocOrun(object):
 
         # prepare ecoclimap binaries
         if not os.path.exists('ecoclimapI_covers_param.bin'):
-            os.symlink(self.exesurfex + '/../MY_RUN/ECOCLIMAP/ecoclimapI_covers_param.bin', 'ecoclimapI_covers_param.bin')
-            os.symlink(self.exesurfex + '/../MY_RUN/ECOCLIMAP/ecoclimapII_eu_covers_param.bin', 'ecoclimapII_eu_covers_param.bin')
+            os.symlink(self.exesurfex + '/../MY_RUN/ECOCLIMAP/ecoclimapI_covers_param.bin',
+                       'ecoclimapI_covers_param.bin')
+            os.symlink(self.exesurfex + '/../MY_RUN/ECOCLIMAP/ecoclimapII_eu_covers_param.bin',
+                       'ecoclimapII_eu_covers_param.bin')
             # flanner stuff
             os.symlink(self.exesurfex + '/../MY_RUN//DATA/CROCUS/drdt_bst_fit_60.nc', 'drdt_bst_fit_60.nc')
         if not os.path.exists('soda.exe'):
@@ -169,8 +169,7 @@ class CrocOrun(object):
             os.chdir(dd)
             os.system('./soda.exe')
             os.chdir('..')
-            
-            
+
     def post_proc(self, options):
         postp = PostCroco(self.xpiddir, self.xpidobsdir, options)
         postp.run()
