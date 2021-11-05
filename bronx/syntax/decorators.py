@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -103,9 +102,11 @@ def secure_getattr(func):
     """
     def secured_getattr(self, key):
         # Avoid nasty interactions when copying/pickling
-        if key in ('__deepcopy__', '__copy__',
-                   '__getinitargs__', '__getnewargs__', '__getnewargs_ex__', '__getstate__',
-                   '__setstate__'):
+        if key in ('__bases__',
+                   '__deepcopy__', '__copy__',
+                   '__reduce__', '__reduce_ex__',
+                   '__getinitargs__', '__getnewargs__', '__getnewargs_ex__',
+                   '__getstate__', '__setstate__'):
             raise AttributeError(key)
         else:
             return func(self, key)

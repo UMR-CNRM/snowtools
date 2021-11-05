@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -85,6 +84,42 @@ def izip_pcn(* iterables):
                    for i in (0, 1, 2)]
     except StopIteration:
         return
+
+
+def interleave(* iterables):
+    """Take several iterable objects and iterate in a roundrobin manner.
+
+    Example::
+
+        >>> print(','.join(
+        ...     interleave('abcd', '1234', 'ABCD')
+        ... ))
+        a,1,A,b,2,B,c,3,C,d,4,D
+        >>> print(','.join(
+        ...     interleave('abcd', '12', 'ABCD')
+        ... ))
+        a,1,A,b,2,B,c,C,d,D
+        >>> print(','.join(
+        ...     interleave('ab', '1234', 'ABCD')
+        ... ))
+        a,1,A,b,2,B,3,C,4,D
+
+    """
+    my_iterators = [iter(it) for it in iterables]
+    my_index = len(iterables) - 1
+    while True:
+        found = None
+        my_index += 1
+        while my_iterators and found is None:
+            my_index %= len(my_iterators)
+            try:
+                found = next(my_iterators[my_index])
+            except StopIteration:
+                del my_iterators[my_index]
+        if found is None:
+            return
+        else:
+            yield found
 
 
 if __name__ == '__main__':

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -9,8 +8,9 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import abc
 import re
-import six
 import sys
+
+import six
 
 
 def _require_version(major, minor=0):

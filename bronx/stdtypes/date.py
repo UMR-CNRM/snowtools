@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Classes and functions form this module are dedicated to the manipulation of
@@ -267,7 +266,7 @@ def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
     Except when ``fmt`` or ``prefix`` are specified, a list of :class:`Date`
     objects is returned.
 
-    :func:`daterange` accepts many arguments combinations::
+    :func:`daterangex` accepts many arguments combinations::
 
         >>> daterangex('2017010100', '2017013100', 'P14D')
         [Date(2017, 1, 1, 0, 0), Date(2017, 1, 15, 0, 0), Date(2017, 1, 29, 0, 0)]
@@ -491,15 +490,20 @@ def timerangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
 def timeintrangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
     """Extended range expansion  (returns a list).
 
-    This function is built on top of :func:`timerangex`. It uses the
-    :class:`TimeInt` class instead of the :class:`Time` class. Practically, if
-    the 'range' is just made of basic integers (e.g. just hours), a list of
-    integers is returned. If minutes are needed, a list of string formated as
+    This function is built on top of :func:`~bronx.stdtypes.date.timerangex`.
+    It uses the :class:`~bronx.stdtypes.date.TimeInt` class instead of the
+    :class:`~bronx.stdtypes.date.Time` class. Practically, if the 'range' is
+    just made of basic integers (e.g. just hours), a list of integers is
+    returned. If minutes are needed, a list of string formated as
     'hhhh:mm' is returned.
 
     When ``start`` is already a complex definition (as a string), ``end`` and
     ``step`` only apply as default when the sub-definition in ``start`` does not
     contain any ``end`` or ``step`` value.
+
+    All the examples below refers to :func:`~bronx.stdtypes.date.timeintrangex`.
+    However, they are fully relevant for :func:`~footprints.util.rangex` (since
+    it is an alias of :func:`~bronx.stdtypes.date.timeintrangex`).
 
     Basic examples::
 
@@ -707,7 +711,11 @@ class Period(datetime.timedelta):
 
     def __reduce__(self):
         """Return a compatible args sequence for the Period constructor (used by :mod:`pickle`)."""
-        return (self.__class__, (self.isoformat(),))
+        return self.__class__, (self.days, self.seconds, self.microseconds)
+
+    def __reduce_ex__(self, protocol):
+        """Otherwise datetime.timedelta's __reduce_ex__ method may be called."""
+        return self.__reduce__()
 
     def __deepcopy__(self, memo):
         newinstance = type(self)(self)
@@ -919,7 +927,7 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
             ld = [int(x) for x in args
                   if isinstance(x, (int, float)) or (isinstance(x, six.string_types) and re.match(r'\d+$', x))]
         if not ld:
-            raise ValueError("Initial Date value unknown")
+            raise ValueError("Initial Date value unknown (args: {!s}, kw: {!s})".format(args, kw))
         newdate = datetime.datetime.__new__(cls, *ld)
         if deltas:
             newdate += sum([Period(d) for d in deltas], Period(0))
@@ -1024,7 +1032,11 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
 
     def __reduce__(self):
         """Return a compatible args sequence for the Date constructor (used by :mod:`pickle`)."""
-        return (self.__class__, (self.iso8601(),))
+        return self.__class__, (self.year, self.month, self.day, self.hour, self.minute, self.second)
+
+    def __reduce_ex__(self, protocol):
+        """Otherwise datetime.datetime's __reduce_ex__ method might be called."""
+        return self.__reduce__()
 
     def __deepcopy__(self, memo):
         newinstance = type(self)(self)
@@ -1325,15 +1337,15 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         return out.ymd
 
     @property
+    def nivologyseason_begin(self):
+        """Return the begin date of the current nivology season."""
+        return self.__class__(self.year - 1 if self.month < 8 else self.year, 8, 1, 6, 0)
+
+    @property
     def nivologyseason(self):
         """Return the nivology season of a current date"""
-        if self.month < 8:
-            season_begin = datetime.datetime(self.year - 1, 8, 1)
-            season_end = datetime.datetime(self.year, 7, 31)
-        else:
-            season_begin = datetime.datetime(self.year, 8, 1)
-            season_end = datetime.datetime(self.year + 1, 7, 31)
-
+        season_begin = self.nivologyseason_begin
+        season_end = season_begin + Period('P1Y')
         return season_begin.strftime('%y') + season_end.strftime('%y')
 
 

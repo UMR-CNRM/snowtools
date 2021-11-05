@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Tools to handle changes in some context.
@@ -8,7 +7,10 @@ Changes could be creation, deletion, modification.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import collections
+
 from bronx.compat.moves import collections_abc
+from bronx.fancies.dump import OneLineTxtDumper
 
 
 class Tracker(object):
@@ -20,6 +22,7 @@ class Tracker(object):
     :param collections.abc.Iterable created: The list of created items
     :param collections.abc.Iterable updated: The list of updated items
     :param collections.abc.Iterable unchanged: The list of unchanged items
+    :param sectionlabel: The display name of items
 
     There are two way to initialise such an object:
 
@@ -41,7 +44,6 @@ class Tracker(object):
         >>> tracker.differences()   # doctest: +NORMALIZE_WHITESPACE
         Section deleted: 3, 5
         Section created: 7
-        Section updated:
         >>> list(tracker)
         [1, 2, 3, 4, 5, 6, 7]
         >>> tracker.updated = [2, 4]
@@ -68,7 +70,9 @@ class Tracker(object):
 
     """
 
-    def __init__(self, before=None, after=None, deleted=None, created=None, updated=None, unchanged=None):
+    def __init__(self, before=None, after=None, deleted=None, created=None, updated=None, unchanged=None,
+                 sectionlabel='Section'):
+        self._sectionlabel = sectionlabel
         for args in (before, after, deleted, created, updated, unchanged):
             if args is not None:
                 if not (isinstance(args, collections_abc.Iterable) and
@@ -159,21 +163,33 @@ class Tracker(object):
     def __len__(self):
         return len(self.deleted | self.created | self.updated)
 
-    def dump(self, *args):
-        """Produce a simple dump report."""
+    def dump_str(self, *args, **kwargs):
+        """Produce a simple report string."""
+        result = list()
+        with_empty = kwargs.pop('with_empty', True)
         if not args:
             args = ('deleted', 'created', 'updated', 'unchanged')
         for section in args:
             sectionset = getattr(self, section)
-            print('Section {0:s}: {1:s}'.format(section, ', '.join([str(x) for x in sectionset])))
+            if with_empty or sectionset:
+                result.append('{0:s} {1:s}: {2:s}'.format(self._sectionlabel,
+                                                          section,
+                                                          ', '.join([str(x) for x in sectionset])))
+
+        return '\n'.join(result)
+
+    def dump(self, *args):
+        """Produce a simple dump report."""
+        print(self.dump_str(*args))
 
     def differences(self):
         """Dump only created, deleted and updated items."""
-        return self.dump('deleted', 'created', 'updated')
+        result = self.dump_str('deleted', 'created', 'updated', with_empty=False)
+        print(result if result else 'No differences')
 
 
 class MappingTracker(Tracker):
-    """A tracker that compute the differences between two mappings (e.g. dicitonaries).
+    """A tracker that compute the differences between two mappings (e.g. dictionaries).
 
     :param collections.abc.Mapping before: The reference mapping
     :param collections.abc.Mapping after: The (possibly) modified mapping
@@ -187,14 +203,14 @@ class MappingTracker(Tracker):
         >>> b=dict(b=9, c=3, d=4)
         >>> mtracker=MappingTracker(a, b)
         >>> mtracker.dump()
-        Section deleted: a
-        Section created: d
-        Section updated: b
-        Section unchanged: c
+        Item deleted: a
+        Item created: d
+        Item updated: b
+        Item unchanged: c
         >>> mtracker.differences()
-        Section deleted: a
-        Section created: d
-        Section updated: b
+        Item deleted: a
+        Item created: d
+        Item updated: b
         >>> len(mtracker)
         3
         >>> sorted(mtracker)
@@ -206,10 +222,12 @@ class MappingTracker(Tracker):
 
     def __init__(self, before, after):
         if not isinstance(before, collections_abc.Mapping):
-            raise ValueError('The before argument must be some kind of mapping.')
+            raise ValueError('The before argument must be some kind of mapping (got {!s}).'
+                             .format(type(before)))
         if not isinstance(after, collections_abc.Mapping):
-            raise ValueError('The after argument must be some kind of mapping.')
-        super(MappingTracker, self).__init__(before, after)
+            raise ValueError('The after argument must be some kind of mapping (got {!s}).'
+                             .format(type(before)))
+        super(MappingTracker, self).__init__(before, after, sectionlabel='Item')
         super(MappingTracker, self)._set_updated([k for k in self.unchanged if after[k] != before[k]])
 
     deleted = property(Tracker._get_deleted, None, None, "The set of deleted items.")
@@ -219,6 +237,147 @@ class MappingTracker(Tracker):
     updated = property(Tracker._get_updated, None, None, "The set of updated items.")
 
     unchanged = property(Tracker._get_unchanged, None, None, "The set of unchanged items.")
+
+
+SimpleDifference = collections.namedtuple('SimpleDiffernce', ('before', 'after'))
+
+
+class RecursiveMappingTracker(MappingTracker):
+    """
+    A tracker that compute that recursively compute differences between
+    two mappings (e.g. dictionaries).
+
+    :param collections.abc.Mapping before: The reference mapping
+    :param collections.abc.Mapping after: The (possibly) modified mapping
+
+    On the contrary to the :class:`Tracker` class, the :data:`deleted`, :data:`created`,
+    :data:`updated` and :data:`unchanged` properties are read-only.
+
+    Example::
+
+        >>> a = dict(a=1, b=dict(b1=1, b2=2, b3={1, 2}), c=0)
+        >>> b = dict(a=1, b=dict(b1=1, b2=3, b3={1, 3}, b4='x'), d=0)
+        >>> mtracker=RecursiveMappingTracker(a, b)
+        >>> mtracker.dump_legend()
+        (legend: created: "+"  deleted: "-"  unchanged: "="  updated: "?")
+        >>> mtracker.differences()
+        - c: 0
+        + d: 0
+        ? b:
+          | + b4: 'x'
+          | ? b2: before=2 after=3
+          | ? b3:
+          |   | Set's item deleted: 2
+          |   | Set's item created: 3
+        >>> mtracker.deleted_data == {'c': 0}
+        True
+        >>> mtracker.created_data == {'d': 0}
+        True
+        >>> mtracker.unchanged_data == {'a': 1}
+        True
+        >>> set(mtracker.updated_data.keys()) == {'b'}
+        True
+
+    The `updated_data` one and only item (`b`) is itself a
+    :class:`RecursiveMappingTracker` object:
+
+        >>> mtracker.updated_data['b'].dump()
+        + b4: 'x'
+        = b1: 1
+        ? b2: before=2 after=3
+        ? b3:
+          | Set's item deleted: 2
+          | Set's item created: 3
+
+    """
+
+    _level_indent = '  | '
+    _default_dumper = OneLineTxtDumper(tag='bronx_recursive_tracking')
+    _dump_tr = dict(deleted='-', created='+', updated='?', unchanged='=')
+
+    def __init__(self, before, after):
+        super(RecursiveMappingTracker, self).__init__(before, after)
+        self._created_data = {k: after[k] for k in self.created}
+        self._deleted_data = {k: before[k] for k in self.deleted}
+        self._unchanged_data = {k: after[k] for k in self.unchanged}
+        self._updated_data = dict()
+        for k_changed in self.updated:
+            k_before = before[k_changed]
+            k_after = after[k_changed]
+            if isinstance(k_before, set) and isinstance(k_after, set):
+                self._updated_data[k_changed] = Tracker(k_before, k_after, sectionlabel="Set's item")
+            elif (isinstance(k_before, collections_abc.Mapping) and
+                  isinstance(k_after, collections_abc.Mapping)):
+                self._updated_data[k_changed] = RecursiveMappingTracker(k_before, k_after)
+            else:
+                self._updated_data[k_changed] = SimpleDifference(k_before, k_after)
+
+    @property
+    def created_data(self):
+        """A mapping of created items (present in **after** but not in **before**)."""
+        return self._created_data
+
+    @property
+    def deleted_data(self):
+        """A mapping of deleteted items (present in **before** but not in **after**)."""
+        return self._deleted_data
+
+    @property
+    def unchanged_data(self):
+        """A mapping of items available and identical in both **before** and **after**."""
+        return self._unchanged_data
+
+    @property
+    def updated_data(self):
+        """
+        A mapping of items available in both **before** and **after** but with
+        different values.
+        """
+        return self._updated_data
+
+    def dump_str(self, *args, **kwargs):
+        """Produce a simple report string."""
+        result = list()
+        with_empty = kwargs.pop('with_empty', True)
+        if not args:
+            args = sorted(self._dump_tr.keys())
+        for section in args:
+            sectionset = getattr(self, section)
+            if with_empty or sectionset:
+                sectiondata = getattr(self, section + '_data')
+                if section == 'updated':
+                    for k, v in sorted(sectiondata.items()):
+                        if isinstance(v, SimpleDifference):
+                            result.append('{0:s} {1:s}: before={2:s} after={3:s}'.format(
+                                self._dump_tr.get(section, ' '),
+                                k,
+                                self._default_dumper.dump(v.before),
+                                self._default_dumper.dump(v.after),
+                            ))
+                        else:
+                            xresult = v.dump_str('deleted', 'created', 'updated', with_empty=False)
+                            xresult = '\n'.join([self._level_indent + l for l in xresult.split('\n')])
+                            result.append('{0:s} {1:s}:\n{2:s}'.format(
+                                self._dump_tr.get(section, ' '), k, xresult
+                            ))
+                else:
+                    for k, v in sorted(sectiondata.items()):
+                        result.append('{0:s} {1:s}: {2:s}'.format(
+                            self._dump_tr.get(section, ' '), k, self._default_dumper.dump(v)
+                        ))
+        return '\n'.join(result)
+
+    def dump_legend(self):
+        """The "legend" of the result of a :meth:`dump` call."""
+        print('(legend: ' +
+              '  '.join(['{:s}: "{:s}"'.format(k, v)
+                         for k, v in sorted(self._dump_tr.items())]) +
+              ')')
+
+    def dump(self, *args):
+        """Produce a simple dump report."""
+        super(RecursiveMappingTracker, self).dump(*args)
+        self._default_dumper.reset()
 
 
 if __name__ == '__main__':

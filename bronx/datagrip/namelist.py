@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #  -*- coding: utf-8 -*-
 
 """
@@ -575,7 +574,7 @@ class NamelistBlock(collections_abc.MutableMapping):
         self.__dict__['_name'] = name.upper()
         self.__dict__['_keys'] = list()
         self.__dict__['_pool'] = dict()
-        self.__dict__['_mods'] = set()
+        self.__dict__['_ref_pool'] = dict()
         self.__dict__['_dels'] = set()
         self.__dict__['_subs'] = dict()
         self.__dict__['_declared_subs'] = set()
@@ -586,6 +585,9 @@ class NamelistBlock(collections_abc.MutableMapping):
         st = dict(self.__dict__)
         st['_literal'] = None  # It's recreated on the fly when needed...
         return st
+
+    def set_as_reference(self):
+        self.__dict__['_ref_pool'] = copy.deepcopy(self._pool)
 
     def set_name(self, name):
         """Change the namelist block name."""
@@ -633,7 +635,6 @@ class NamelistBlock(collections_abc.MutableMapping):
         elif index is not None:
             self._keys.remove(varname)
             self._keys.insert(index, varname)
-        self._mods.add(varname)
         self._dels.discard(varname)
 
     def __setitem__(self, varname, value):
@@ -785,15 +786,10 @@ class NamelistBlock(collections_abc.MutableMapping):
         else:
             return None
 
-    def nice(self, item, literal=None):
-        """Nice encoded value of the item, possibly substitute with macros."""
-        if literal is None:
-            if self._literal is None:
-                self.__dict__['_literal'] = LiteralParser()
-            literal = self._literal
+    def _xdetect_macroname(self, item):
         if isinstance(item, six.string_types):
             itemli = item[:]
-            # Ignore quote and double-quote when mathing macro's name
+            # Ignore quote and double-quote when matching macro's name
             if ((itemli.startswith("'") and itemli.endswith("'")) or
                     (itemli.startswith('"') and itemli.endswith('"'))):
                 itemli = itemli[1:-1]
@@ -802,7 +798,15 @@ class NamelistBlock(collections_abc.MutableMapping):
                 itemli = itemli[1:]
         else:
             itemli = item
-        macroname = self.possible_macroname(itemli)
+        return self.possible_macroname(itemli)
+
+    def nice(self, item, literal=None):
+        """Nice encoded value of the item, possibly substitute with macros."""
+        if literal is None:
+            if self._literal is None:
+                self.__dict__['_literal'] = LiteralParser()
+            literal = self._literal
+        macroname = self._xdetect_macroname(item)
         if macroname is not None:
             if self._subs.get(macroname, None) is None:
                 return item
@@ -818,6 +822,18 @@ class NamelistBlock(collections_abc.MutableMapping):
     def dumps_values(self, key, literal=None):
         """Nice encoded values (incl. list of)."""
         return ','.join([self.nice(value, literal) for value in self._pool[key]])
+
+    @property
+    def dumps_needs_update(self):
+        identical = self._pool == self._ref_pool
+        has_macros = False
+        for v in self.values():
+            for item in v:
+                macroname = self._xdetect_macroname(item)
+                if macroname and self._subs.get(macroname, None) is not None:
+                    has_macros = True
+                    break
+        return not identical or has_macros
 
     def dumps(self, literal=None, sorting=NO_SORTING):
         """
@@ -980,6 +996,13 @@ class NamelistSet(collections_abc.MutableMapping):
         self._mapping_dict = collections.OrderedDict()
         for nb in blocks_set:
             self._mapping_dict[nb.name] = nb
+        # Reference list of blocks
+        self._ref_blocks = set()
+
+    def set_as_reference(self):
+        self._ref_blocks = set(self._mapping_dict.keys())
+        for v in self.values():
+            v.set_as_reference()
 
     def __contains__(self, key):
         return key.upper() in self._mapping_dict
@@ -1062,6 +1085,13 @@ class NamelistSet(collections_abc.MutableMapping):
             for item in self:
                 self[item].clear(rmkeys)
 
+    @property
+    def dumps_needs_update(self):
+        identical = self._ref_blocks == set(self._mapping_dict.keys())
+        identical = identical and all([not v.dumps_needs_update
+                                       for v in self.values()])
+        return not identical
+
     def dumps(self, sorting=NO_SORTING, block_sorting=True):
         """
         Join the fortran's strings dumped by each namelist block.
@@ -1114,7 +1144,11 @@ class NamelistParser(object):
        B=__MYMACRO__,
      /
     <BLANKLINE>
+    >>> nset.dumps_needs_update
+    False
     >>> nset.setmacro('MYMACRO', 'toto')
+    >>> nset.dumps_needs_update
+    True
     >>> print(nset.dumps())
      &NAM1
        A=5.69,
@@ -1196,7 +1230,9 @@ class NamelistParser(object):
                 namelists.append(namblock)
             else:
                 break
-        return NamelistSet(namelists)
+        n_set = NamelistSet(namelists)
+        n_set.set_as_reference()
+        return n_set
 
     def _namelist_clean(self, dirty_source, extraclean=()):
         """Removes spaces and comments before data."""
