@@ -9,7 +9,7 @@ Vortex task performing up to 40 offline runs in parallel on a single node
 from vortex import toolbox
 from bronx.stdtypes.date import Date
 import os
-from tasks.crampon_common import Crampon_Task
+from snowtools.tasks.research.crampon.crampon_common import Crampon_Task
 
 
 class Soda_Task(Crampon_Task):

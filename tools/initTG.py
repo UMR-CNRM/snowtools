@@ -8,9 +8,10 @@ Created on 5 Sept. 2017
 
 # General python modules
 import os
+import datetime
+
 import numpy as np
 import netCDF4
-import datetime
 
 # snowtools modules
 from snowtools.utils.prosimu import prosimu

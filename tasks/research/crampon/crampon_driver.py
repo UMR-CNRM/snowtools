@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 Created on 27 mars 2019
 
 @author: cluzetb
 task for running SODA-SNOW sequence on HPC MULTINODE
-'''
+"""
 
 from vortex.layout.nodes import Driver, WorkshareFamily, LoopFamily
-from tasks.crampon_soda import Soda_Task
-from tasks.crampon_offline import Offline_Task
+from snowtools.tasks.research.crampon.crampon_soda import Soda_Task
+from snowtools.tasks.research.crampon.crampon_offline import Offline_Task
 
 
 def setup(t, **kw):

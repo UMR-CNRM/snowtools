@@ -27,7 +27,10 @@ def setup(t, **kw):
 
 class Safran(Task, S2MTaskMixIn):
 
+    # Filter of errors to be applied in both oper and dev cases
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
+    report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
+    report_execution_error = S2MTaskMixIn.s2moper_report_execution_error
 
     def process(self):
         """Safran analysis"""
@@ -371,7 +374,56 @@ class Safran(Task, S2MTaskMixIn):
                     # I- ARPEGE (J-5) -> J ou (J-1) -> J
                     # --------------------
 
-                    # I.1- EBAUCHE issue des A6 des réseaux 0/6/12/18h (J-n) d'assimilation d'ARPEGE et l'A6 du réseau 0h J si présente pour couvrir (J-n) 6h -> J 6h
+                    # I.1- EBAUCHE issue 
+                    #     - de l'A6 du réseau 0h (J ou J-1) d'assimilation d'ARPEGE pour les réseaux 3h et 9h
+                    #     - de la P6 du réseau 0h (J) de production d'AREPEG pour le réseau 6h (A6 pas encore disponible)
+                    self.sh.title('Toolbox input guess arpege assim 0h J')
+                    tb17 = toolbox.input(
+                        role           = 'Ebauche_Deterministic',
+                        local          = 'mb035/P[date::addcumul_yymdh]',
+                        experiment     = self.conf.xpid_guess,
+                        block          = self.conf.guess_block,
+                        geometry        = self.conf.vconf,
+                        cutoff         = 'production' if self.conf.rundate.hour == 6 else 'assimilation',
+                        date           = '{0:s}/-PT{1:d}H'.format(dateend.ymd6h, 6),
+                        cumul          = self.conf.cumul,
+                        nativefmt      = 'ascii',
+                        kind           = 'guess',
+                        model          = 'safran',
+                        source_app     = self.conf.source_app,
+                        source_conf    = self.conf.deterministic_conf,
+                        namespace      = self.conf.namespace,
+                        fatal          = False,
+                    ),
+                    print(t.prompt, 'tb17 =', tb17)
+                    print()
+
+                    if self.conf.rundate.hour != 6:
+
+                        # Si l'A6 du réseau H n'est pas là on prend la P6 du réseau H-6h
+                        # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur 6h homogène avec le cumul dans les fichiers d'assimilation
+                        self.sh.title('Toolbox input guess arpege assim 0h J (secours)')
+                        tb17 = toolbox.input(
+                            role           = 'Ebauche_Deterministic',
+                            local          = 'mb035/P[date::addcumul_yymdh]',
+                            experiment     = self.conf.xpid_guess,
+                            block          = self.conf.guess_block,
+                            geometry        = self.conf.vconf,
+                            cutoff         = 'production',
+                            date           = '{0:s}/-PT{1:d}H'.format(dateend.ymd6h, 6),
+                            cumul          = self.conf.cumul,
+                            nativefmt      = 'ascii',
+                            kind           = 'guess',
+                            model          = 'safran',
+                            source_app     = self.conf.source_app,
+                            source_conf    = self.conf.deterministic_conf,
+                            namespace      = self.conf.namespace,
+                            fatal          = False,
+                        ),
+                        print(t.prompt, 'tb17 =', tb17)
+                        print()
+
+                    # I.1- EBAUCHE issue des A6 des réseaux 0/6/12/18h (J-n) d'assimilation d'ARPEGE et l'A6 du réseau 0h J si présente pour couvrir (J-n) 6h -> J 0h
                     self.sh.title('Toolbox input guess arpege assim')
                     tb17_a = toolbox.input(
                         role           = 'Ebauche_Deterministic',
@@ -380,7 +432,7 @@ class Safran(Task, S2MTaskMixIn):
                         block          = self.conf.guess_block,
                         geometry        = self.conf.vconf,
                         cutoff         = 'assimilation',
-                        date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
+                        date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(12, ndays * 24 + 6, self.conf.cumul)],
                         cumul          = self.conf.cumul,
                         nativefmt      = 'ascii',
                         kind           = 'guess',
@@ -404,7 +456,7 @@ class Safran(Task, S2MTaskMixIn):
                         block          = self.conf.guess_block,
                         geometry       = self.conf.vconf,
                         cutoff         = 'production',
-                        date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
+                        date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(12, ndays * 24 + 6, self.conf.cumul)],
                         cumul          = self.conf.cumul,
                         nativefmt      = 'ascii',
                         kind           = 'guess',
@@ -420,6 +472,8 @@ class Safran(Task, S2MTaskMixIn):
                     # I.3- En dernier recours on essaye le réseau de production de 0h J-1
                     # PROBLEME : le nom dans 'local' change donc on passe dans l'alternate même si la ressource voulue
                     # est déjà présente
+                    # TODO ==> SOLUTION : utiliser les "coherentgroup" (cf src/vortex/layout/dataflow.py)
+                    #
     #                self.sh.title('Toolbox input guess arpege prod j-1 (secours bis)')
     #                 tb17_c = toolbox.input(
     #                     alternate      = 'Ebauche_Deterministic',
@@ -847,8 +901,8 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb33 =', tb33)
                 print()
 
-                print '=================================================================================================='
-                print 'INFO :The execution went well, do not take into account the following error'
-                print '=================================================================================================='
+                print('==================================================================================================')
+                print('INFO :The execution went well, do not take into account the following error')
+                print('==================================================================================================')
                 from vortex.tools.systems import ExecutionError
                 raise ExecutionError('')

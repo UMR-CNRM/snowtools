@@ -14,6 +14,15 @@ import matplotlib.pyplot as plt
 
 class Mplfigure(object):
 
+    @property
+    def cbar(self):
+        """Colorbar of the figure"""
+        return self._cbar
+
+    @cbar.setter
+    def cbar(self, value):
+        self._cbar = value
+
     def set_title(self, title):
         if hasattr(self, 'map'):
             plt.title(title, fontsize=10)

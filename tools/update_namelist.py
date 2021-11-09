@@ -17,7 +17,7 @@ from snowtools.utils.FileException import FileNameException, VarDimensionExcepti
 from bronx.datagrip.namelist import NamelistParser
 
 
-def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam", forcing="FORCING.nc", dateend=None, updateloc=True, nmembers = None):
+def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam", forcing="FORCING.nc", dateend=None, updateloc=True, nmembers=None):
     """This function updates a namelist file through the bronx module. Called by standalone S2M but not by vortex
 
     :param datebegin: Initial date of simulation

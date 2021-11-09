@@ -29,7 +29,7 @@ Note that this generation will require some packages to be installed:
  - all snowtools dependecies (this includes a correct installation of vortex)
  - Python 3.7 or later
  - ``sphinx``
- - The ``sphinx-fortran`` extension (installable with ``pip install sphinx-fortran``)
+ - The ``sphinx-fortran`` extension (installable with ``pip install sphinx-fortran`` but the ``pipy`` version is quite old, so we encourage you to install the last version available at https://github.com/sradanov/sphinx-fortran)
 
 
 Code documentation
@@ -111,14 +111,9 @@ or specific elements (program, module, subroutine, function) giving their name (
    .. f:autofunction:: [modname/]funcname
 
 Note that elements included in programs, subroutine or functions are not documented
-(e.g. subroutine defined in a ``CONAINS`` section of a program).
+(e.g. subroutine defined in a ``CONTAINS`` section of a program).
 Subroutines and functions that are placed inside a module are documented with the module
 documentation.
 
-**Attention:**
-
-1. The modname has to be given in lower case letters, even if the original
+**Warning:** The modname has to be given in lower case letters, even if the original
 module name is written in upper case.
-
-2. Sphinx does not correctly interpret DOUBLE PRECISION declarations.
-Need to use REAL(KIND=8) instead to make it work.

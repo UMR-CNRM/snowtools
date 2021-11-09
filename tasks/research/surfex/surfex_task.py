@@ -33,7 +33,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         t = self.ticket
 
         if not hasattr(self.conf, "genv"):
-            self.conf.genv = 'uenv:cen.02@CONST_CEN'
+            self.conf.genv = 'uenv:cen.04@CONST_CEN'
 
         # Definition of geometries, safran xpid/block and list of dates from S2MTaskMixIn methods
         list_geometry = self.get_list_geometry(meteo=self.conf.meteo)
@@ -59,8 +59,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 kind           = 'MeteorologicalForcing',
                 vapp           = self.conf.meteo,
                 vconf          = '[geometry:area]',
-                source_app     = 'arpege' if source_safran == 'safran' else None,
-                source_conf    = '4dvarfr' if source_safran == 'safran' else None,
+                source_app     = dict_source_app_safran if source_safran == 'safran' else None,
+                source_conf    = dict_source_conf_safran if source_safran == 'safran' else None,
                 cutoff         = 'assimilation',
                 local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                 experiment     = self.conf.forcingid,
@@ -402,7 +402,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                         kind           = 'prep',
                         local          = 'PREP',
                         model          = 'surfex',
-                        genv           = 'uenv:cen.01@CONST_CEN',
+                        genv           = self.conf.genv,
                         gvar           = 'master_prep_mpi',
                     )
 
@@ -425,7 +425,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
 
         if 'compute' in self.steps:
 
-            print (self.conf.meteo, self.conf.interpol)
+            print (self.conf.meteo, self.conf.interpol, self.conf.addmask)
 
             if self.conf.meteo == "safran":
                 # Forcing files need to be converted from flat to slopes geometry
@@ -462,6 +462,21 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print()
 
                 self.component_runner(tbalgo1, tbxi)
+
+                # Algo component for shadows
+                if self.conf.addmask:
+                    self.sh.title('Toolbox algo tb09abis')
+                    tb09abis = tbalgo_shadows = toolbox.algo(
+                        engine         = 's2m',
+                        kind         = 'shadowsforcing',
+                        datebegin    = list_dates_begin_forc if not oneforcing else [self.conf.datebegin],
+                        dateend      = list_dates_end_forc if not oneforcing else [self.conf.dateend],
+                        ntasks       = min(40, len(list_dates_begin_forc))
+                    )
+                    print(t.prompt, 'tb09abis =', tb09abis)
+                    print()
+
+                    tb09abis.run()
 
             if self.conf.climground:
                 # Algo component to build the climatological file if allowed by the user (-g option)

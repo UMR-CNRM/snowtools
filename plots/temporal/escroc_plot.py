@@ -12,10 +12,8 @@ import datetime
 import numpy as np
 
 from snowtools.plots.temporal.chrono import prettyensemble
-from snowtools.scripts.extract.vortex.get_escroc import S2MExtractor, config
 from snowtools.plots.pearps2m.postprocess import EnsembleDiags
 from snowtools.utils.prosimu import prosimu
-from snowtools.scripts.ESMSnowMIP.ESM_snowmip import bdate, edate
 
 
 class EnsembleEscrocDiags(EnsembleDiags):
@@ -26,9 +24,9 @@ class EnsembleEscrocDiags(EnsembleDiags):
         self.list_var_spag = 'DSN_T_ISBA', 'WSN_T_ISBA'
 
         self.attributes = dict(
-            DSN_T_ISBA  = dict(convert_unit= 100., label=u'Snow depth (cm)'),
-            gap  = dict(convert_unit= 100., label=u'Snow depth (cm)'),
-            WSN_T_ISBA  = dict(label=u'Snow water equivalent (kg/m2)'),
+            DSN_T_ISBA=dict(convert_unit=100., label=u'Snow depth (cm)'),
+            gap=dict(convert_unit=100., label=u'Snow depth (cm)'),
+            WSN_T_ISBA=dict(label=u'Snow water equivalent (kg/m2)'),
         )
 
         self.list_q = [10, 50, 90]
@@ -68,7 +66,7 @@ class EnsembleEscrocDiags(EnsembleDiags):
 
         obsfile = dirsnouf + "/2016-2017/Obs_HTN_1h.csv"
         str2date = lambda x: datetime.datetime.strptime(x.decode("utf-8"), '%Y-%m-%d %H:%M:%S')
-        timeObs2016 = np.genfromtxt(obsfile, delimiter="\t", skip_header=1,usecols=(0), converters = {0: str2date})      
+        timeObs2016 = np.genfromtxt(obsfile, delimiter="\t", skip_header=1,usecols=(0), converters = {0: str2date})
 
         varObs2016 = 2.07 - np.genfromtxt(obsfile, delimiter="\t", skip_header=1,usecols=(1), converters = {0: str2date})
         varObs2016 = np.where(varObs2016 < 0, 0 , varObs2016) * 100.
@@ -142,19 +140,17 @@ class EnsembleEscrocDiags(EnsembleDiags):
                     qmed2 = secondensemble.quantiles[var][1][:, point]
                     qmax2 = secondensemble.quantiles[var][2][:, point]
 
-
                 settings["colorquantiles"] = "blue"
-                settings["linewidth"] = 1 
-                settings["alpha"] = 0.3 
+                settings["linewidth"] = 1
+                settings["alpha"] = 0.3
                 settings["commonlabel"] = "Opened area"
 
                 s.draw(secondensemble.time, qmin2, qmed2, qmax2, **settings)
 
                 settings["colorquantiles"] = "green"
                 settings["commonlabel"] = "Forest"
-                settings["alpha"] = 0.6 
-                settings["linewidth"] = 2 
-
+                settings["alpha"] = 0.6
+                settings["linewidth"] = 2
 
                 s.draw(self.time, qmin, qmed, qmax, **settings)
 
@@ -165,23 +161,22 @@ class EnsembleEscrocDiags(EnsembleDiags):
 #                 import sys
 #                 sys.exit(1)
 
-
                 if obsfile:
                     if 'snouf' in obsfile:
                         if var == 'DSN_T_ISBA':
                             timeObs, varObs = self.getsnouf(obsfile, var)
                             timeGAP, varGAP = self.getsnoufprairie(obsfile, 'gap')
                             s.add_line(timeGAP, varGAP, label="Observations in meadow", linewidth=2)
-                            s.add_line(timeObs, varObs, label="Observations below canopy", linewidth=2, color= 'black')                            
+                            s.add_line(timeObs, varObs, label="Observations below canopy", linewidth=2, color='black')
                     else:
                         timeObs, varObs = self.getobs(obsfile, var)
 
                         if var == 'WSN_T_ISBA':
                             s.add_points(timeObs, varObs, label="Observations")
                         elif var == 'DSN_T_ISBA':
-                            timeObs, varGAP = self.getobs(obsfile, 'gap') 
+                            timeObs, varGAP = self.getobs(obsfile, 'gap')
                             s.add_line(timeObs, varGAP, label="Observations in canopy gap", linewidth=2)
-                            s.add_line(timeObs, varObs, label="Observations below canopy", linewidth=2, color= 'black')
+                            s.add_line(timeObs, varObs, label="Observations below canopy", linewidth=2, color='black')
 
 #                 s.plot.set_xlim([datetime.datetime(2009, 10, 1), datetime.datetime(2010, 6, 1)])
 
@@ -189,12 +184,16 @@ class EnsembleEscrocDiags(EnsembleDiags):
 
                 plotname = diroutput + "/" + var + "_" + filename + "." + self.formatplot
                 s.save(plotname, formatout=self.formatplot)
-                print (plotname + " is available.")
+                print(plotname + " is available.")
 
             s.close()
 
 
 if __name__ == "__main__":
+
+    from snowtools.scripts.extract.vortex.get_escroc import S2MExtractor, config
+    from snowtools.scripts.ESMSnowMIP.ESM_snowmip import bdate, edate
+
     c = config()
     S2ME = S2MExtractor(c)
     snow_members = S2ME.get()
@@ -211,8 +210,6 @@ if __name__ == "__main__":
             obsfile = '/cnrm/cen/users/NO_SAVE/lafaysse/ESM-SnowMIP/evaldata/snouf'
         else:
             obsfile = '/cnrm/cen/users/NO_SAVE/lafaysse/ESM-SnowMIP/evaldata/obs_insitu_' + domain + "_" + bdate[domain][0:4] + "_" + edate[domain][0:4] + ".nc"
-        
-
 
         E = dict()
 
@@ -228,10 +225,9 @@ if __name__ == "__main__":
 
             print(E[ensemble].ensemble.keys())
 
-
             E[ensemble].alldiags()
 
-            print ('Diagnostics have been computed for the following variables :')
+            print('Diagnostics have been computed for the following variables :')
 #             print (E.ensemble.keys())
 
         if domain == 'cdp':

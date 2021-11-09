@@ -32,6 +32,8 @@ def setup(t, **kw):
 class PrepSafran(Task, S2MTaskMixIn):
 
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
+    report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
+    report_execution_error = S2MTaskMixIn.s2moper_report_execution_error
 
     def refill(self):
 
@@ -285,8 +287,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb06 =', tb06)
                 print()
 
-            print '=================================================================================================='
-            print 'INFO :The execution went well, do not take into account the following error'
-            print '=================================================================================================='
+            print('==================================================================================================')
+            print('INFO :The execution went well, do not take into account the following error')
+            print('==================================================================================================')
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')

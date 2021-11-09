@@ -72,8 +72,8 @@ class Safran(Task, S2MTaskMixIn):
                         cutoff         = 'assimilation',
                         now            = True,
                     ),
-                    print t.prompt, 'tb01_a =', tb01_a
-                    print
+                    print(t.prompt, 'tb01_a =', tb01_a)
+                    print()
 
                     # On doit prendre les guess de la saison suivante pour y trouver les 01/08 de l'année A+1...
                     # Cela impose que les fichiers cep soient des fichiers 'common' d'un point de vue de l'algo vortex
@@ -99,8 +99,8 @@ class Safran(Task, S2MTaskMixIn):
                                 cutoff         = 'assimilation',
                                 now            = True,
                             ),
-                            print t.prompt, 'tb01_b =', tb01_b
-                            print
+                            print(t.prompt, 'tb01_b =', tb01_b)
+                            print()
 
                         elif dateend.ymd == '20020801':
 
@@ -122,8 +122,8 @@ class Safran(Task, S2MTaskMixIn):
                                 fatal          = False,
                                 date           = dateend.ymdh,
                             ),
-                            print t.prompt, 'tb01_c =', tb01_c
-                            print
+                            print(t.prompt, 'tb01_c =', tb01_c)
+                            print()
 
 #                 # A partir de la saison 2017-2018 on prend les guess produits par Vortex
 #                 elif datebegin >= Date(year=2018, month=8, day=1):
@@ -174,8 +174,8 @@ class Safran(Task, S2MTaskMixIn):
                         date           = dateend.ymdh,
                         fatal          = False,
                     ),
-                    print t.prompt, 'tb01 =', tb01
-                    print
+                    print(t.prompt, 'tb01 =', tb01)
+                    print()
 
                 # TODO : Gérer le fait de ne pas prendre le fichier 2 de 6h le 01/08
                 self.sh.title('Toolbox input tb02 - ' + datebegin.ymdh)
@@ -194,8 +194,8 @@ class Safran(Task, S2MTaskMixIn):
                     model          = self.conf.model,
                     now            = True,
                 )
-                print t.prompt, 'tb02 =', tb02
-                print
+                print(t.prompt, 'tb02 =', tb02)
+                print()
 
                 if datebegin >= Date(1991, 8, 1, 6) and dateend <= Date(2018, 8, 1, 6):
 
@@ -216,8 +216,8 @@ class Safran(Task, S2MTaskMixIn):
                         now            = True,
                         fatal          = False,
                     )
-                    print t.prompt, 'tb03 =', tb03
-                    print
+                    print(t.prompt, 'tb03 =', tb03)
+                    print()
 
         if 'fetch' in self.steps:
 
@@ -231,8 +231,8 @@ class Safran(Task, S2MTaskMixIn):
                 model           = self.conf.model,
                 local           = 'listem',
             )
-            print t.prompt, 'tb07 =', tb07
-            print
+            print(t.prompt, 'tb07 =', tb07)
+            print()
 
             self.sh.title('Toolbox input tb08')
             tb08 = toolbox.input(
@@ -244,8 +244,8 @@ class Safran(Task, S2MTaskMixIn):
                 model           = self.conf.model,
                 local           = 'listeml',
             )
-            print t.prompt, 'tb08 =', tb08
-            print
+            print(t.prompt, 'tb08 =', tb08)
+            print()
 
 #             self.sh.title('Toolbox input tb08')
 #             tb08 = toolbox.input(
@@ -270,8 +270,8 @@ class Safran(Task, S2MTaskMixIn):
                 model           = self.conf.model,
                 local           = 'listeo',
             )
-            print t.prompt, 'tb09 =', tb09
-            print
+            print(t.prompt, 'tb09 =', tb09)
+            print()
 
             self.sh.title('Toolbox input tb09')
             tb09 = toolbox.input(
@@ -283,8 +283,8 @@ class Safran(Task, S2MTaskMixIn):
                 model           = self.conf.model,
                 local           = 'NORELot',
             )
-            print t.prompt, 'tb09 =', tb09
-            print
+            print(t.prompt, 'tb09 =', tb09)
+            print()
 
             self.sh.title('Toolbox input tb09')
             tb09 = toolbox.input(
@@ -297,8 +297,8 @@ class Safran(Task, S2MTaskMixIn):
                 local           = 'surfz',
                 nativefmt       = 'ascii',
             )
-            print t.prompt, 'tb09 =', tb09
-            print
+            print(t.prompt, 'tb09 =', tb09)
+            print()
 
 #             self.sh.title('Toolbox input tb09')
 #             tb09 = toolbox.input(
@@ -323,8 +323,8 @@ class Safran(Task, S2MTaskMixIn):
                 model           = self.conf.model,
                 local           = 'carpost.tar',
             )
-            print t.prompt, 'tb09 =', tb09
-            print
+            print(t.prompt, 'tb09 =', tb09)
+            print()
 
             if not self.conf.vconf == 'cor':
 
@@ -339,8 +339,8 @@ class Safran(Task, S2MTaskMixIn):
                     local           = 'BLACK',
                     fatal           = False,
                 )
-                print t.prompt, 'tb12 =', tb12
-                print
+                print(t.prompt, 'tb12 =', tb12)
+                print()
 
                 self.sh.title('Toolbox input tb08')
                 tb08 = toolbox.input(
@@ -352,8 +352,8 @@ class Safran(Task, S2MTaskMixIn):
                     model           = self.conf.model,
                     local           = 'NORELmt',
                 )
-                print t.prompt, 'tb08 =', tb08
-                print
+                print(t.prompt, 'tb08 =', tb08)
+                print()
 
             self.sh.title('Toolbox input tb11')
             tb11 = toolbox.input(
@@ -365,8 +365,8 @@ class Safran(Task, S2MTaskMixIn):
                 model           = self.conf.model,
                 local           = 'rsclim.don',
             )
-            print t.prompt, 'tb11 =', tb11
-            print
+            print(t.prompt, 'tb11 =', tb11)
+            print()
 
             self.sh.title('Toolbox input tb12')
             tb12 = toolbox.input(
@@ -378,8 +378,8 @@ class Safran(Task, S2MTaskMixIn):
                 model           = self.conf.model,
                 local           = 'icrccm.don',
             )
-            print t.prompt, 'tb12 =', tb12
-            print
+            print(t.prompt, 'tb12 =', tb12)
+            print()
 
             self.sh.title('Toolbox input tb13')
             tb13 = toolbox.input(
@@ -392,8 +392,8 @@ class Safran(Task, S2MTaskMixIn):
                 local           = 'SORTIES',
                 fatal           = False,
             )
-            print t.prompt, 'tb13 =', tb13
-            print
+            print(t.prompt, 'tb13 =', tb13)
+            print()
 
             self.sh.title('Toolbox input tb13')
             tb13 = toolbox.input(
@@ -406,8 +406,8 @@ class Safran(Task, S2MTaskMixIn):
                 local           = 'ANALYSE',
                 fatal           = False,
             )
-            print t.prompt, 'tb13 =', tb13
-            print
+            print(t.prompt, 'tb13 =', tb13)
+            print()
 
             self.sh.title('Toolbox input tb14')
             tb14 = toolbox.input(
@@ -419,8 +419,8 @@ class Safran(Task, S2MTaskMixIn):
                 model           = self.conf.model,
                 local           = 'ADAPT',
             )
-            print t.prompt, 'tb14 =', tb14
-            print
+            print(t.prompt, 'tb14 =', tb14)
+            print()
 
             self.sh.title('Toolbox input tb14')
             tb14 = toolbox.input(
@@ -433,8 +433,8 @@ class Safran(Task, S2MTaskMixIn):
                 local           = 'MELANGE',
                 fatal           = False,
             )
-            print t.prompt, 'tb14 =', tb14
-            print
+            print(t.prompt, 'tb14 =', tb14)
+            print()
 
             self.sh.title('Toolbox input tb16')
             tb16 = toolbox.input(
@@ -447,8 +447,8 @@ class Safran(Task, S2MTaskMixIn):
                 local           = 'OBSERVR',
                 fatal           = False,
             )
-            print t.prompt, 'tb16 =', tb16
-            print
+            print(t.prompt, 'tb16 =', tb16)
+            print()
 
             self.sh.title('Toolbox input tb16')
             tb16 = toolbox.input(
@@ -460,8 +460,8 @@ class Safran(Task, S2MTaskMixIn):
                 model           = self.conf.model,
                 local           = 'EBAUCHE',
             )
-            print t.prompt, 'tb16 =', tb16
-            print
+            print(t.prompt, 'tb16 =', tb16)
+            print()
 
             self.sh.title('Toolbox executable tb17 = tbx0')
             tb17 = tbx0 = toolbox.executable(
@@ -471,8 +471,8 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'intercep_era40',
                 model          = self.conf.model,
             )
-            print t.prompt, 'tb17 =', tb17
-            print
+            print(t.prompt, 'tb17 =', tb17)
+            print()
 
             self.sh.title('Toolbox executable tb17 = tbx1')
             tb17 = tbx1 = toolbox.executable(
@@ -482,8 +482,8 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'safrane',
                 model          = self.conf.model,
             )
-            print t.prompt, 'tb17 =', tb17
-            print
+            print(t.prompt, 'tb17 =', tb17)
+            print()
 
             self.sh.title('Toolbox executable tb18 = tbx2')
             tbx2 = toolbox.executable(
@@ -493,8 +493,8 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'syrpluie',
                 model          = self.conf.model,
             )
-            print t.prompt, 'tb18 =', tbx2
-            print
+            print(t.prompt, 'tb18 =', tbx2)
+            print()
 
             self.sh.title('Toolbox executable tb18_b = tbx3')
             tb18_b = tbx3 = toolbox.executable(
@@ -504,8 +504,8 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'sypluie',
                 model          = self.conf.model,
             )
-            print t.prompt, 'tb18_b =', tb18_b
-            print
+            print(t.prompt, 'tb18_b =', tb18_b)
+            print()
 
             self.sh.title('Toolbox executable tb19 = tbx4')
             tb19 = tbx4 = toolbox.executable(
@@ -515,8 +515,8 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'syvapr',
                 model          = self.conf.model,
             )
-            print t.prompt, 'tb19 =', tb19
-            print
+            print(t.prompt, 'tb19 =', tb19)
+            print()
 
             self.sh.title('Toolbox executable tb20 = tbx5')
             tb20 = tbx5 = toolbox.executable(
@@ -526,8 +526,8 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'syvafi',
                 model          = self.conf.model,
             )
-            print t.prompt, 'tb20 =', tb20
-            print
+            print(t.prompt, 'tb20 =', tb20)
+            print()
 
             self.sh.title('Toolbox executable tb21 = tbx6')
             tb21 = tbx6 = toolbox.executable(
@@ -537,8 +537,8 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'sytist',
                 model          = self.conf.model,
             )
-            print t.prompt, 'tb21 =', tb21
-            print
+            print(t.prompt, 'tb21 =', tb21)
+            print()
 
         if 'compute' in self.steps:
 
@@ -553,8 +553,8 @@ class Safran(Task, S2MTaskMixIn):
                     ntasks         = self.conf.ntasks,
                     execution      = self.conf.execution,
                 )
-                print t.prompt, 'tb22 =', tb22
-                print
+                print(t.prompt, 'tb22 =', tb22)
+                print()
 
                 self.component_runner(tbalgo0, tbx0)
 
@@ -568,8 +568,8 @@ class Safran(Task, S2MTaskMixIn):
                 ntasks         = self.conf.ntasks,
                 execution      = self.conf.execution,
             )
-            print t.prompt, 'tb22 =', tb22
-            print
+            print(t.prompt, 'tb22 =', tb22)
+            print()
 
             self.component_runner(tbalgo1, tbx1)
 
@@ -577,6 +577,12 @@ class Safran(Task, S2MTaskMixIn):
 
                 # Cas d'une execution où l'on veut utiliser les rr ARPEGE comme guess
                 # A lancer avec un job_name=with_rr_arpege (cf fichier de conf)
+                # WARNING : si execution="analysis" l'algo component définit les
+                # observations comme des fichiers "communs", ce qui n'est pas le
+                # cas.
+                # Les obs sont néanmoins bien assimilées car si les fichiers d'obs ne sont pas 
+                # au chemin indiqué dans les fichiers OP* (ce qui dépend de la variable "execution"),
+                # SAFRAN les cherche dans le répertoire courrant.
                 self.sh.title('Toolbox algo tb23 = SYRPLUIE')
                 tb23 = tbalgo2 = toolbox.algo(
                     engine         = 's2m',
@@ -587,8 +593,8 @@ class Safran(Task, S2MTaskMixIn):
                     ntasks         = self.conf.ntasks,
                     execution      = self.conf.execution,
                 )
-                print t.prompt, 'tb23 =', tb23
-                print
+                print(t.prompt, 'tb23 =', tb23)
+                print()
 
                 self.component_runner(tbalgo2, tbx2)
 
@@ -602,8 +608,8 @@ class Safran(Task, S2MTaskMixIn):
                 ntasks         = self.conf.ntasks,
                 execution      = self.conf.execution,
             )
-            print t.prompt, 'tb23 =', tb23
-            print
+            print(t.prompt, 'tb23 =', tb23)
+            print()
 
             self.component_runner(tbalgo3, tbx3)
 
@@ -617,8 +623,8 @@ class Safran(Task, S2MTaskMixIn):
                 ntasks         = self.conf.ntasks,
                 execution      = self.conf.execution,
             )
-            print t.prompt, 'tb24 =', tb24
-            print
+            print(t.prompt, 'tb24 =', tb24)
+            print()
 
             self.component_runner(tbalgo4, tbx4)
 
@@ -632,8 +638,8 @@ class Safran(Task, S2MTaskMixIn):
                 ntasks         = self.conf.ntasks,
                 execution      = self.conf.execution,
             )
-            print t.prompt, 'tb25 =', tb25
-            print
+            print(t.prompt, 'tb25 =', tb25)
+            print()
 
             self.component_runner(tbalgo5, tbx5)
 
@@ -648,8 +654,8 @@ class Safran(Task, S2MTaskMixIn):
                 execution      = self.conf.execution,
                 metadata       = 'StandardSAFRAN',
             )
-            print t.prompt, 'tb26 =', tb26
-            print
+            print(t.prompt, 'tb26 =', tb26)
+            print()
 
             self.component_runner(tbalgo6, tbx6)
 
@@ -691,8 +697,8 @@ class Safran(Task, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     namebuild      = 'flat@cen',
                 ),
-                print t.prompt, 'tb27 =', tb27
-                print
+                print(t.prompt, 'tb27 =', tb27)
+                print()
 
                 self.sh.title('Toolbox output tb28')
                 tb27 = toolbox.output(
@@ -714,8 +720,8 @@ class Safran(Task, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     namebuild      = 'flat@cen',
                 ),
-                print t.prompt, 'tb28 =', tb27
-                print
+                print(t.prompt, 'tb28 =', tb27)
+                print()
 
                 self.sh.title('Toolbox output tb32')
                 tb29 = toolbox.output(
@@ -734,7 +740,7 @@ class Safran(Task, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     namebuild      = 'flat@cen',
                 )
-                print t.prompt, 'tb32 =', tb29
-                print
+                print(t.prompt, 'tb32 =', tb29)
+                print()
 
             raise ExecutionError('')

@@ -301,13 +301,13 @@ CONTAINS
     !
   END SUBROUTINE READ_OUTPUT_GRID
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE READ_NC(IDFICNC,KZSIN,KMASSIFIN,KASPECTIN, ZSLOPEIN)
+  SUBROUTINE READ_NC(IDFICNC,KZSIN,KMASSIFIN,KASPECTIN, PSLOPEIN)
     ! Read NetCDF file with forcing data to be interpolated.
     INTEGER,INTENT(IN) :: IDFICNC ! NetCDF id of the forcing file
     INTEGER,DIMENSION(:),ALLOCATABLE,INTENT(OUT):: KZSIN  ! Elevation of the input data points
     INTEGER,DIMENSION(:),ALLOCATABLE,INTENT(OUT):: KMASSIFIN ! Massif of the input data points
     INTEGER,DIMENSION(:),ALLOCATABLE,INTENT(OUT):: KASPECTIN ! Aspect of the input data points
-    REAL,DIMENSION(:),ALLOCATABLE, INTENT(OUT):: ZSLOPEIN ! Slope of the input data points
+    REAL,DIMENSION(:),ALLOCATABLE, INTENT(OUT):: PSLOPEIN ! Slope of the input data points
     INTEGER::IDVARGZS,IDVARGMASSIF,IDVARGASPECT,IDVARGSLOPE ! nc variable identifier
     INTEGER,DIMENSION(:),ALLOCATABLE::IDDIMSVARG ! dimension ids of nc variable
     !
@@ -342,7 +342,7 @@ CONTAINS
     ALLOCATE(KZSIN(ILENDIM(1)))
     ALLOCATE(KMASSIFIN(ILENDIM(1)))
     ALLOCATE(KASPECTIN(ILENDIM(1)))
-    ALLOCATE(ZSLOPEIN(ILENDIM(1)))
+    ALLOCATE(PSLOPEIN(ILENDIM(1)))
     !
     CALL CHECK(NF90_GET_VAR(IDFICNC,IDVARGZS,KZSIN), "Cannot read "//HZS)
     !
@@ -362,9 +362,9 @@ CONTAINS
     ! If we interpolate the forcing, the projection will be done after either in snowtools for collection of points, either in SURFEX for 2d points
     CALL CHECK(NF90_INQ_VARID(IDFICNC,HSLOPE,IDVARGSLOPE),"Cannot find "//HSLOPE)
     !
-    CALL CHECK(NF90_GET_VAR(IDFICNC,IDVARGSLOPE,ZSLOPEIN), "Cannot read "//HSLOPE)
+    CALL CHECK(NF90_GET_VAR(IDFICNC,IDVARGSLOPE,PSLOPEIN), "Cannot read "//HSLOPE)
     !
-    IF (MAXVAL(ZSLOPEIN) > 1.) THEN
+    IF (MAXVAL(PSLOPEIN) > 1.) THEN
       WRITE(*,*) "WARNING: Input file contains non-zero slopes. Only zero slopes will be interpolated"
       ! STOP "INPUT FORCING FILE MUST PROVIDE HORIZONTAL RADIATIONS AND MUST NEVER HAVE BEEN PROJECTED ON SLOPES."
     END IF
@@ -372,7 +372,7 @@ CONTAINS
   END SUBROUTINE READ_NC
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE INDICES2D(PZSOUT,KMASSIFOUT,PASPECTOUT,KZSIN,KMASSIFIN,&
-          KASPECTIN, ZSLOPEIN, KINDICESBAS,KINDICESHAUT)
+          KASPECTIN, PSLOPEIN, KINDICESBAS,KINDICESHAUT)
    ! Determines the  indexes of input collection of points to interpolate between in order to obtain the output grid.
     !
     ! Selects the hight level above and below the hight of the output grid point, at the corresponding massif number and
@@ -384,7 +384,7 @@ CONTAINS
     INTEGER,DIMENSION(:),INTENT(IN):: KZSIN ! Elevation of input collection of points
     INTEGER,DIMENSION(:),INTENT(IN):: KMASSIFIN ! Massif of input collection of points
     INTEGER,DIMENSION(:),INTENT(IN):: KASPECTIN ! Aspect of input collection of points
-    REAL, DIMENSION(:), INTENT(IN):: ZSLOPEIN ! slope of input collection of points
+    REAL, DIMENSION(:), INTENT(IN):: PSLOPEIN ! slope of input collection of points
     !
     ! Indexes of input collection of points to interpolate to obtain output grid
     INTEGER,DIMENSION(:,:),ALLOCATABLE,INTENT(OUT):: KINDICESBAS ! Indices of the input collection of points corresponding to the points below the target point
@@ -394,7 +394,7 @@ CONTAINS
     INTEGER :: ININ    ! dimension of input collection of points
     !
     INTEGER::JI,JX,JY ! loop counters
-    INTEGER::JDIFFZS ! elevation difference between output point and input point
+    REAL::ZDIFFZS ! elevation difference between output point and input point TAKE CARE MUST BE REAL !
     !
     LOGICAL :: GASPECT, GISFLAT
     INTEGER, PARAMETER::JPRESOL_ELEV = 300 ! elevation resolution of input collection of points
@@ -416,7 +416,7 @@ CONTAINS
         DO JI=1,ININ
           IF (KMASSIFIN(JI) /= KMASSIFOUT(JX,JY)) CYCLE
           ! Take only zero slopes
-          IF (ZSLOPEIN(JI) /= 0.) THEN
+          IF (PSLOPEIN(JI) /= 0.) THEN
             CYCLE
           END IF
           !Evaluate the aspect only if the input domain is not flat
@@ -427,12 +427,12 @@ CONTAINS
             END IF
           ENDIF
           !
-          JDIFFZS = KZSIN(JI) - PZSOUT(JX,JY)
-          IF (JDIFFZS < -JPRESOL_ELEV) THEN
+          ZDIFFZS = KZSIN(JI) - PZSOUT(JX,JY)
+          IF (ZDIFFZS < -JPRESOL_ELEV) THEN
             CYCLE
-          ELSEIF (JDIFFZS > JPRESOL_ELEV) THEN
+          ELSEIF (ZDIFFZS > JPRESOL_ELEV) THEN
             CYCLE
-          ELSEIF (JDIFFZS <= 0) THEN
+          ELSEIF (ZDIFFZS <= 0) THEN
             ! Elevation of the level just below the point
             KINDICESBAS(JX,JY) = JI
           ELSE
@@ -1097,7 +1097,6 @@ CONTAINS
           STOP 'ERROR reading namelist NAM_FILENAMES_MULTI_OUT'
         END IF
       ELSE
-        ! STOP 'ERROR Single output not yet implemented with multiple inputs. Check namelist settings'
         ALLOCATE(HFILESOUT(1), HGRIDSIN(1))
         READ(KNAMUNIT, NML=NAM_FILENAMES_SINGLE_OUT, IOSTAT=IOS)
         IF (IOS /= 0) THEN
@@ -1128,6 +1127,19 @@ CONTAINS
       END IF
 
     END IF
+    ! If variable selection is activated, read the number of variables and the variable names.
+    IF (LSELECTVAR) THEN
+      READ(UNIT=KNAMUNIT, NML=NAM_SELECT_VARS_SETTING, IOSTAT=IOS)
+      IF (IOS /= 0) THEN
+        STOP 'ERROR: problem reading namelist NAM_SELECT_VARS_SETTING'
+      END IF
+      ALLOCATE(HVAR_LIST(NNUMBER_OF_VARIABLES))
+      READ(UNIT=KNAMUNIT, NML=NAM_SELECT_VARS_NAMES, IOSTAT=IOS)
+      IF (IOS /= 0) THEN
+        STOP 'ERROR: problem reading namelist NAM_SELECT_VARS_NAMES'
+      END IF
+    END IF
+    !
     READ(UNIT=KNAMUNIT,NML=NAM_OTHER_STUFF, IOSTAT=IOS)
     IF (IOS /= 0) THEN
       PRINT*, IOS, LTIMECHUNK, NLONCHUNKSIZE, NLATCHUNKSIZE
@@ -1160,6 +1172,7 @@ PROGRAM INTERPOLATE_SAFRAN
   !      - Combining the data from them on a single grid in a single output file (set :f:var:`lmultiinput` =.TRUE. and :f:var:`lmultioutput` =.FALSE.)
   !   #) Treat time steps sepatately in order to save memory in the case of very large fields by setting :f:var:`ltimechunk` = .TRUE.
   !   #) customize the NetCDF chunksize of the spatial output dimensions in order to optimise write performance for large fields. (:f:var:`nlonchunksize`,   :f:var:`nlatchunksize`)
+  !   #) Select variables to be interpolated. (set :f:var:`lselectvar` = .TRUE., assign a list of variables to :f:var:`hvar_list` and give the number of selected variables to :f:var:`nnumber_of_variables`)
   !
 USE SUBS
 !
@@ -1168,7 +1181,7 @@ IMPLICIT NONE
 !
 !!!!! Files properties
 CHARACTER(LEN=100):: HFILENAMEIN, HFILENAMEOUT   ! Name of the field file.
-INTEGER::FILE_ID_IN, FILE_ID_OUT ,FILE_ID_GEO! id of input ,output and geometrie netcdf file
+INTEGER::FILE_ID_IN, FILE_ID_OUT, FILE_ID_GEO ! id of input ,output and geometrie netcdf file
 !
 !!!!! Dim properties
 CHARACTER(LEN=20),DIMENSION(:),ALLOCATABLE::DIM_NAME_IN ! name of input dimensions
@@ -1179,6 +1192,7 @@ INTEGER :: IMASSIVE_DIM_SIZE_OUT ! dimension length of massif dimension is deter
 !!!!! Var properties
 INTEGER,DIMENSION(:),ALLOCATABLE::VAR_ID_IN, VAR_ID_OUT ! id of variables
 CHARACTER(LEN=20),DIMENSION(:),ALLOCATABLE::VAR_NAME_IN ! name of variables
+CHARACTER(LEN=20),DIMENSION(7):: STANDARD_VARS ! variables to select anyway
 CHARACTER(LEN=20) :: VARNAME_LOC ! temporary variable for variable name
 INTEGER,DIMENSION(:),ALLOCATABLE::VAR_TYPE_IN ! type of variables
 INTEGER,DIMENSION(:),ALLOCATABLE::VAR_NDIMS_IN ! variables domensions
@@ -1251,6 +1265,14 @@ LL_VARNAME(1)= "LON"
 LL_VARNAME(2)= "LAT"
 LL_VARNAME(3)= "latitude"
 LL_VARNAME(4)= "longitude"
+!
+STANDARD_VARS(1) = "time"
+STANDARD_VARS(2) = "ZS"
+STANDARD_VARS(3) = "aspect"
+STANDARD_VARS(4) = "slope"
+STANDARD_VARS(5) = "massif_number"
+STANDARD_VARS(6) = "massif_num"
+STANDARD_VARS(7) = "decile"
 !
 HFILENAMEIN ='input.nc'
 HFILENAMEG =  'GRID.nc'
@@ -1389,7 +1411,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
 !    PRINT*, ZSLOPEOUT
 !  END IF
   END IF
-  PRINT*, IMASSIVE_DIM_SIZE_OUT
+!  PRINT*, IMASSIVE_DIM_SIZE_OUT
 
   ! open a file FORCING.nc by massif, altitude, aspect
   CALL READ_NC(FILE_ID_IN,IZSIN,IMASSIFIN,IASPECTIN,ZSLOPEIN)
@@ -1625,6 +1647,9 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
 ! And must not have an element equal to zero
     ! PRINT*, IMASSIFTODELETE
     DO IV=1,INVAR
+      IF (LSELECTVAR) THEN
+        IF ((.NOT. ANY(VAR_NAME_IN(IV) == STANDARD_VARS)) .AND. (.NOT. ANY(VAR_NAME_IN(IV) == HVAR_LIST))) CYCLE
+      END IF
       IF (ANY( VAR_ID_DIMS_OUT(:,IV) == IMASSIFTODELETE ).OR.              &
               ANY( VAR_ID_DIMS_OUT(:,IV) == ILAYERTODELETE ).OR.               &
               (GRID_TYPE == "LL" .AND.  ANY(VAR_NAME_IN(IV) == LL_VARNAME))) CYCLE
@@ -1684,7 +1709,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
               start= (/1/) ,count =(/NX/)),"Cannot put lon")
       ! station
       CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+3),ISTATIONOUT ,&
-              start= (/1/) ,count =(/NX/)),"Cannot put lon")
+              start= (/1/) ,count =(/NX/)),"Cannot put station")
     END IF
 !
     NTIME =  DIM_SIZE_OUT(ITIMEID)
@@ -1696,6 +1721,12 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
   !
   DO IV=1,INVAR
     PRINT*, VAR_NAME_IN(IV)
+    IF (LSELECTVAR) THEN
+      IF ((.NOT. ANY(VAR_NAME_IN(IV) == STANDARD_VARS)) .AND. (.NOT. ANY(VAR_NAME_IN(IV) == HVAR_LIST)) .AND. &
+              VAR_NAME_IN(IV) /= "LAT" .AND. VAR_NAME_IN(IV) /= "LON") THEN
+        CYCLE
+      END IF
+    END IF
     IF (ANY( VAR_ID_DIMS_OUT(:,IV) == IMASSIFTODELETE ).OR.              &
             ANY( VAR_ID_DIMS_OUT(:,IV) == ILAYERTODELETE ).OR.               &
             (GRID_TYPE == "LL" .AND.  ANY(VAR_NAME_IN(IV) == LL_VARNAME))) CYCLE
@@ -1977,7 +2008,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
               END IF
               ! write fusioned variable
             END IF
-            PRINT*, "before put", SHAPE(ZVAROUTXYT)
+            ! PRINT*, "before put", SHAPE(ZVAROUTXYT)
             IF (LTIMECHUNK) THEN
               DO I=1, NTIME
                 !PRINT*, I, MAXVAL(ZVAROUTXYT(:,:,:,I))
@@ -1990,7 +2021,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
                     start =(/1,IXSTART,IYSTART,1/) ,count = (/NDECILE,NX_PROC,NY_PROC,NTIME/)),&
                     "W Cannot put var "//TRIM(VAR_NAME_IN(IV)))
             END IF
-            PRINT*, "after put"
+            ! PRINT*, "after put"
           ELSE
             ! standard case (time, x, y)
             IF (.NOT. LMULTIOUTPUT .AND. (JINFILE /= 1)) THEN
@@ -2109,7 +2140,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       !
     ELSE
       !
-      PRINT*, VAR_NAME_IN(IV),  VAR_ID_DIMS_OUT(:,IV), "DIMMENSION VAR NON TRAITEE"
+      PRINT*, VAR_NAME_IN(IV),  VAR_ID_DIMS_OUT(:,IV), "DIMENSION VAR NON TRAITEE"
       !
     ENDIF
     !

@@ -36,6 +36,7 @@ LFILES=("utils/FileException.py"
         "utils/prosimu.py"
         "utils/infomassifs.py"
         "utils/S2M_standard_file.py"
+        "utils/git.py"
         "plots/EvoProfilPlot.py"
         "plots/proReader_mini.py"
         "plots/Dictionnaries.py"
@@ -140,9 +141,9 @@ cleantmp()
 #######################################################################
 adapt_import()
 {
-    sed -i -e "s/from snowtools.utils\./from /" "$1"
-    sed -i -e "s/import snowtools.utils\./import /" "$1"
-    sed -i -e "s/from snowtools.plots\. /from /" "$1"
+    sed -i -e "s/from snowtools\.utils\./from /" "$1"
+    sed -i -e "s/from snowtools\.plots\./from /" "$1"
+    sed -i -e "s/from snowtools\.plots //" "$1"
     sed -i -e "s/from \.FileException/from FileException/" "$1"
     sed -i -e "s/^\( *\)main(version='.*')/\1main()/" "$1"
 }
@@ -174,6 +175,7 @@ done
 # Main file
 echo -e "  - file __main__.py"
 DATE=`date --iso-8601=seconds -u` # Date/Time UTC
+COMMIT_INFO=`git log -1 --date=iso --format="%H (%ad) branch %D"`
 cat > $TMPFOLDERNAME/__main__.py << EndOfFile
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -181,7 +183,7 @@ cat > $TMPFOLDERNAME/__main__.py << EndOfFile
 import GUI_Proreader
 import sys
 
-GUI_Proreader.main(version='ZIP $DATE', args=sys.argv[1:])
+GUI_Proreader.main(version='ZIP $DATE from $COMMIT_INFO', args=sys.argv[1:])
 
 EndOfFile
 
@@ -190,7 +192,8 @@ cd "$TMPFOLDERNAME"
 zip $OUTFILE_DEFAULT *.py DATA/*
 cd "$PWD_INI"
 
-cp "$TMPFOLDERNAME/$OUTFILE_DEFAULT" "$OUTFILE"
+echo '#!/usr/bin/env python3' | cat - "$TMPFOLDERNAME/$OUTFILE_DEFAULT" > $OUTFILE
+chmod 755 $OUTFILE
 
 cleantmp $TMPFOLDERNAME
 

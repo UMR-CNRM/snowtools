@@ -8,11 +8,12 @@ If you do not care about random number generation reproducibility, please use
 the bare :class:`random.Random` class.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-from math import log as _log, ceil as _ceil
 import random as _barerandom
+from math import ceil as _ceil, log as _log
+
+import six
 
 if six.PY3:
 
@@ -74,8 +75,7 @@ if six.PY3:
                     return _int(istart + self._randbelow(width))
                 return _int(istart + _int(self.random() * width))
             if step == 1:
-                raise ValueError("empty range for randrange() (%d,%d, %d)"
-                                 % (istart, istop, width))
+                raise ValueError("empty range for randrange(): {:d}, {:d}, {:d}".format(istart, istop, width))
 
             # Non-unit step argument supplied.
             istep = _int(step)
@@ -148,17 +148,17 @@ if six.PY3:
             random = self.random
             _int = int
             result = [None] * k
-            setsize = 21        # size of a small set minus size of an empty list
+            setsize = 21  # size of a small set minus size of an empty list
             if k > 5:
                 setsize += 4 ** _ceil(_log(k * 3, 4))  # table size for big sets
             if n <= setsize or hasattr(population, "keys"):
                 # An n-length list is smaller than a k-length set, or this is a
                 # mapping type so the other algorithm wouldn't work.
                 pool = list(population)
-                for i in range(k):         # invariant:  non-selected at [0,n-i)
+                for i in range(k):  # invariant:  non-selected at [0,n-i)
                     j = _int(random() * (n - i))
                     result[i] = pool[j]
-                    pool[j] = pool[n - i - 1]   # move non-selected item into vacancy
+                    pool[j] = pool[n - i - 1]  # move non-selected item into vacancy
             else:
                 try:
                     selected = set()
@@ -169,7 +169,7 @@ if six.PY3:
                             j = _int(random() * n)
                         selected_add(j)
                         result[i] = population[j]
-                except (TypeError, KeyError):   # handle (at least) sets
+                except (TypeError, KeyError):  # handle (at least) sets
                     if isinstance(population, list):
                         raise
                     return self.sample(tuple(population), k)

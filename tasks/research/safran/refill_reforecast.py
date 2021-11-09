@@ -81,8 +81,8 @@ class Refill(Task, S2MTaskMixIn):
                     vapp           = self.conf.source_app,
                     vconf          = self.conf.eps_conf,
                 )
-                print t.prompt, 'tb01 =', tb01
-                print
+                print(t.prompt, 'tb01 =', tb01)
+                print()
 
                 self.sh.title('Toolbox output tb02')
                 tb02 = toolbox.output(
@@ -105,8 +105,8 @@ class Refill(Task, S2MTaskMixIn):
                     vapp           = self.conf.source_app,
                     vconf          = self.conf.eps_conf,
                 )
-                print t.prompt, 'tb02 =', tb02
-                print
+                print(t.prompt, 'tb02 =', tb02)
+                print()
 
                 rundate = rundate + Period(days=1)
 

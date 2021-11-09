@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
+"""
 # Extraction des masques dans BDLIM
-
+"""
 import sys
 import os
-import string
 import re
-
 import csv
-
 import xml.etree.ElementTree as ET
 
 
@@ -49,8 +46,8 @@ if __name__ == "__main__":
             attazim = ET.SubElement(site, "azimut")
             attmask = ET.SubElement(site, "mask")
             attsource = ET.SubElement(site, "source_mask")
-            attazim.text = string.join(azimSim2[code], ',')
-            attmask.text = string.join(maskSim2[code], ',')
+            attazim.text = ','.join(azimSim2[code])
+            attmask.text = ','.join(maskSim2[code])
             attsource.text = "SIM-COORD-MARIE"
 
     tree.write(metadata, "utf-8")

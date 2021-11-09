@@ -41,13 +41,15 @@ def recup_donnees_site(nom_site):
 def path_safran():
     return "/rd/cenfic2/era40/vortex/s2m/postes/reanalysis/meteo"
 
+def path_met():
+    return "/rd/cenfic2/mesure_data/col_de_porte/met/"
 
 def message_accueil(option_bool, nom_site):
     if option_bool:
         print('\nCompletion des donnees MET avec Pression et Direction du vent du site ' + str(nom_site) + '\n')
     print('#########################################################')
     print('# A verifier/modifier dans le code:')
-    print('# - chemin des MET: /mesure_data/col_de_porte/met\n')
+    print('# - chemin des MET: ' + path_met() + '\n')
     print('# - format des MET: MET_YYYY_YYYY+1_fmt (ex MET_2000_2001_fmt)\n')
     print('# - chemin des reanalyses SAFRAN: ' + path_safran() + '\n')
     print('# - etat de la base de donnees du Col de Porte: cdp60mn_1819 puis cdp60mn a partir du 01082019\n')
@@ -82,7 +84,7 @@ def decoupe_periode(date_entree_debut, date_entree_fin):
     # En parallèle, donne la liste des fichiers MET correspondants
     # !!! Format des fichiers MET supposé fixe: MET_1996_1997_fmt
     first_year = date_entree_debut.year
-    path = '/mesure_data/col_de_porte/met/'  # EN DUR
+    path = path_met()  # EN DUR
 
     list_date_debut = [date_entree_debut]
     if date_entree_debut < datetime.datetime(first_year, 8, 1, 6):

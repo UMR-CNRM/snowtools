@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 Created on 7 nov. 2017
 
 @author: lafaysse
-'''
+"""
 
 from vortex.layout.nodes import Driver, Task
 from cen.layout.nodes import S2MTaskMixIn
@@ -25,9 +25,9 @@ def setup(t, **kw):
 
 
 class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
-    '''
-
-    '''
+    """
+    S2M reforecast task
+    """
 
     filter_execution_error = S2MTaskMixIn.reforecast_filter_execution_error
 
@@ -42,7 +42,6 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
         pearpmembers, members = self.get_list_members()
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
-
 
             self.sh.title('Toolbox input tb01b')
             tb01b = toolbox.input(
@@ -220,8 +219,8 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
             pass
 
         if 'late-backup' in self.steps:
-            print "source_safran"
-            print source_safran
+            print("source_safran")
+            print(source_safran)
             if source_safran != 's2m':
                 self.sh.title('Toolbox output tb10')
                 tb10 = toolbox.output(

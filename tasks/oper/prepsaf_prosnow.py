@@ -27,7 +27,10 @@ def setup(t, **kw):
 
 class PrepSafran(Task, S2MTaskMixIn):
 
+    # Filter of errors to be applied in both oper and dev cases
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
+    report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
+    report_execution_error = S2MTaskMixIn.s2moper_report_execution_error
 
     def refill(self):
 
@@ -63,8 +66,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 vconf          = self.conf.eps_conf,
                 fatal          = False,
             )
-            print t.prompt, 'tb01 =', tbpearp
-            print
+            print(t.prompt, 'tb01 =', tbpearp)
+            print()
 
             self.sh.title('Toolbox input tb02')
             tb02 = toolbox.input(
@@ -76,8 +79,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 model           = self.conf.model,
                 local           = 'EBAUCHE_prosnow',
             )
-            print t.prompt, 'tb02 =', tb02
-            print
+            print(t.prompt, 'tb02 =', tb02)
+            print()
 
 
             self.sh.title('Toolbox input tb04 = PRE-TRAITEMENT FORCAGE script')
@@ -89,8 +92,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 language    = 'python',
                 rawopts     = ' -o -a -d prosnow -i IDW -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbpearp)]))),
             )
-            print t.prompt, 'tb03 =', tb03
-            print
+            print(t.prompt, 'tb03 =', tb03)
+            print()
 
         if 'fetch' in self.steps:
             pass
@@ -107,8 +110,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 interpreter    = 'current',
                 ntasks         = self.conf.ntasks,
             )
-            print t.prompt, 'tb04 =', expresso
-            print
+            print(t.prompt, 'tb04 =', expresso)
+            print()
 
             self.component_runner(expresso, script, fortran = False)
 
@@ -137,12 +140,12 @@ class PrepSafran(Task, S2MTaskMixIn):
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
             ),
-            print t.prompt, 'tb06a =', tb06
-            print
+            print(t.prompt, 'tb06a =', tb06)
+            print()
 
 
-            print '=================================================================================================='
-            print 'INFO :The execution went well, do not take into account the following error'
-            print '=================================================================================================='
+            print('==================================================================================================')
+            print('INFO :The execution went well, do not take into account the following error')
+            print('==================================================================================================')
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')

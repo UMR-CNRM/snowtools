@@ -244,7 +244,7 @@ class surfexrun(object):
 
     def postprocess(self):
 
-        surfex_commit = git_infos(self.execdir).get_commit(default=None)
+        surfex_commit = git_infos(self.execdir).get_commit(default='')
 
         profile = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode='a')
         profile.massif_natural_risk()
@@ -368,7 +368,7 @@ class griddedrun(surfexrun):
 
             print(os.listdir(dirdatapgd))
             for fic in os.listdir(dirdatapgd):
-                get_file_const_or_crash(dirdatapgd + "/" + fic, fic)
+                get_file_const_or_crash(dirdatapgd + "/" + fic, fic, preferlink=True)
 
 
 class interpolgriddedrun(interpolrun, griddedrun):

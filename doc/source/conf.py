@@ -195,6 +195,7 @@ todo_include_todos = True
 autodoc_default_options = {
         'show-inheritance': True,
         }
+autoclass_content = 'both'
 
 # -- Options for fortran extension -------------------------------------------
 fortran_src = ['../fortran/']

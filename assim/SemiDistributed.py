@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 Created on 5 févr. 2019
 
 @author: cluzetb
 Module for preparing/faking/ observations within crocO framework
 
-'''
+"""
 import os
-import sys
-import shutil
 import random
 
 import netCDF4
@@ -20,9 +18,9 @@ from snowtools.assim.utilcrocO import setlistvars_obs, setlistvars_var, setSubse
 
 
 class SemiDistributed(object):
-    '''
+    """
     class for semi-distributed files (obs or PREP) bound to a geometry described by a pgd in current crocOdir
-    '''
+    """
     _abstract = True
     
     def __init__(self, pgdPath = 'PGD.nc'):
@@ -40,10 +38,10 @@ class SemiDistributed(object):
 
 
 class Obs(SemiDistributed):
-    '''
+    """
     class attached to an observation file, either synthetical or real
 
-    '''
+    """
     _abstract = True
 
     def __init__(self, date, options):
@@ -95,12 +93,12 @@ class Obs(SemiDistributed):
         return subset, mask
     
     def copydimsvars(self, Raw, New, nameVars, mask = None):
-        '''
+        """
         BC 5/02/19 from maskSentinel2.py
         copy nameVars from Raw to New netCDF Datasets (and copy dims before)
         /!\ only for vars that already exist in Raw
-        
-        '''
+
+        """
         for dimName, dim in Raw.dimensions.iteritems():
             New.createDimension(dimName, len(dim) if not dim.isunlimited() else None)
         for name in nameVars:  # name in arg format (b*, r**...)
@@ -119,11 +117,12 @@ class Obs(SemiDistributed):
                 if mask is None:
                     tmp[:] = var[:]
                 else:
-                    print np.shape(tmp)
-                    print np.shape(mask)
+                    print(np.shape(tmp))
+                    print(np.shape(mask))
                     tmp[0, mask] = var[0, mask] * (0.05 + np.random.rand(np.shape(var[0, mask])[0]))
-                    print np.shape(np.invert(np.squeeze(mask)))
-                    tmp[0, np.invert(np.squeeze(mask))] = np.nan  # I'd rather set it to fillValue but it is not understood by SODA as far as I know
+                    print(np.shape(np.invert(np.squeeze(mask))))
+                    tmp[0, np.invert(np.squeeze(mask))] = np.nan  # I'd rather set it to fillValue but it is not
+                    # understood by SODA as far as I know
         
     def close(self):
         self.Raw.close()
@@ -134,10 +133,10 @@ class Synthetic(Obs):
     """
     Class describing synthetic obs
     """  
-    def __init__(self, xpiddir, date, options, nmembers = 35):
-        '''
+    def __init__(self, xpiddir, date, options, nmembers=35):
+        """
         Constructor
-        '''
+        """
         Obs.__init__(self, date, options)
         
         self.date = date
@@ -149,7 +148,7 @@ class Synthetic(Obs):
             draw = random.choice(range(1, options.nmembers+1))
             self.path = xpiddir + 'mb{0:04d}'.format(draw) + '/bg/PREP_' + date + '.nc'
             self.ptinom = 'synth' + 'mb{0:04d}'.format(draw)
-        #if 'DEP' not in self.listvar: # I think I managed to make it work without these two lines...to check.
+        # if 'DEP' not in self.listvar: # I think I managed to make it work without these two lines...to check.
         #    self.listvar.append('DEP')  # add total DEP
         self.dictVarsRead = dictvarsPrep()
         self.dictVarsWrite = dictvarsWrite()
@@ -169,15 +168,16 @@ class Synthetic(Obs):
                 tmp[mask] = varnum[mask] / varden[mask]
                 tmp[np.invert(mask)] = np.nan
 
+
 class Real(Obs):
     """
     Class describing real obs
     TODO : pursue implementation
     """
-    def __init__(self, xpidobsdir, date, options): 
-        '''
+    def __init__(self, xpidobsdir, date, options):
+        """
         Constructor
-        '''
+        """
         Obs.__init__(self, date, options)
         self.path = xpidobsdir + 'obs_' + options.sensor + '_' + options.vconf + '_' + date + '.nc'
         
@@ -185,12 +185,14 @@ class Real(Obs):
         self.dictVarsWrite = dictvarsWrite()
         self.loadDict = dictvarsWrite()
         self.isloaded = False
-        
+
+
 class Prep(SemiDistributed):
     """
     class describing Prep (background) and/or analysis 
     """
     _abstract = True
+
     def __init__(self, options):
         SemiDistributed.__init__(self)
         self.options = options
@@ -201,6 +203,7 @@ class Prep(SemiDistributed):
         self.dictVarsRead = dictvarsPrep()
         self.dictVarsWrite = dictvarsWrite()
         self.loadDict = dictvarsPrep()
+
 
 class PrepBg(Prep):
     def __init__(self, date, mbid, options):
@@ -217,11 +220,12 @@ class PrepAn(Prep):
         self.ptinom = 'an' + str(mbid)
         self.sodaName = 'SURFOUT' + str(mbid) + '.nc'
 
+
 class PrepAbs(Prep):
-    '''
+    """
     class describing abstract prep-like objects ( computed from prep, not bound to a specific file)
     e.g. medians, covariance etc.
-    '''
+    """
     def __init__(self, date, options, ptinom):
         Prep.__init__(self, options)
         self.date = date

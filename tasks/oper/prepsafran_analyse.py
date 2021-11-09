@@ -25,7 +25,10 @@ def setup(t, **kw):
 
 class PrepSafran(Task, S2MTaskMixIn):
 
+    # Filter of errors to be applied in both oper and dev cases
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
+    report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
+    report_execution_error = S2MTaskMixIn.s2moper_report_execution_error
 
     def process(self):
         """Preparation of SAFRAN input files"""
@@ -240,7 +243,9 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -o -a -i IDW -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
+                # En python 3 l'ordre des arguments a une importance pour que Vortex ne considère pas que les exécutables sont différents
+                # Pour éviter de complexifier le code ici, le script s2m_filtering_grib s'occupe désormais de supprimer les doublons.
+                rawopts     = ' -o -a -i IDW -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)])),
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
@@ -367,8 +372,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb05 =', tb05)
                 print()
 
-            print '=================================================================================================='
-            print 'INFO :The execution went well, do not take into account the following error'
-            print '=================================================================================================='
+            print('==================================================================================================')
+            print('INFO :The execution went well, do not take into account the following error')
+            print('==================================================================================================')
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')

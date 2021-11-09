@@ -6,11 +6,16 @@ Created on 30 Aug. 2017
 @author: lafaysse
 '''
 
+import re
+
 from six import string_types
 from bronx.stdtypes.date import Date
 
 
 class TypeException(Exception):
+    """
+    Expetion when input type is not accepted.
+    """
     def __init__(self, typein, typerequired):
         self.typein = typein
         self.typerequired = typerequired
@@ -26,6 +31,9 @@ class TypeException(Exception):
 
 
 class DateException(Exception):
+    """
+    All exceptions related to date parsing
+    """
 
     def __init__(self, message=""):
         self.message = message
@@ -35,6 +43,9 @@ class DateException(Exception):
 
 
 class WallTimeException(Exception):
+    """
+    Exceptions related to wall time, for walltime longer than 24h.
+    """
 
     def __init__(self, duration):
         self.duration = duration
@@ -44,6 +55,9 @@ class WallTimeException(Exception):
 
 
 class EarlyDateException(DateException):
+    """
+    Exceptions to be raised when date need to be ordered and are not (version "too early").
+    """
 
     def __init__(self, earlydate, date):
         self.earlydate = earlydate
@@ -57,6 +71,9 @@ class EarlyDateException(DateException):
 
 
 class LateDateException(DateException):
+    """
+    Exceptions to be raised when date need to be ordered and are not (version "too late").
+    """
 
     def __init__(self, latedate, date):
         self.latedate = latedate
@@ -76,43 +93,130 @@ class FormatDateException(DateException):
 
 
 def checkdatebefore(date, datemax):
+    """
+    Check that ``date < datemax`` or raises a `LateDateException`.
+
+    :param date: Date to be tested
+    :type date: datetime or Bronx Date format
+    :param datemax: The maximum date accepted
+    :type date: datetime or Bronx Date format
+    :raises: LateDateException
+    :returns: Nothing
+    """
     if date > datemax:
         raise LateDateException(date, datemax)
 
 
 def checkdateafter(date, datemin):
+    """
+    Check that ``date > datemin`` or raises a `EarlyDateException`.
+
+    :param date: Date to be tested
+    :type date: datetime or Bronx Date format
+    :param datemin: The minimum date accepted
+    :type date: datetime or Bronx Date format
+    :raises: EarlyDateException
+    :returns: Nothing
+    """
     if date < datemin:
         raise EarlyDateException(date, datemin)
 
 
 def checkdatebetween(date, datemin, datemax):
+    """
+    Uses both ``checkdateafter`` and ``checkdatebefore``.
+
+    :param date: Date to be tested
+    :type date: datetime or Bronx Date format
+    :param datemin: The minimum date accepted
+    :type date: datetime or Bronx Date format
+    :param datemax: The maximum date accepted
+    :type date: datetime or Bronx Date format
+    :raises: EarlyDateException, LateDateException
+    :returns: Nothing
+    """
     checkdateafter(date, datemin)
     checkdatebefore(date, datemax)
 
 
+def _parsematch(d, default=None):
+    """
+    Private function to deal with defined or undefined groups in
+    regex match for the `check_and_convert_date` function.
+    """
+    if d is None:
+        return default
+    else:
+        return int(d)
+
+
 def check_and_convert_date(datearg):
+    """
+    Check an input date string and return a
+    `bronx.stdtypes.date.Date` object
+
+    Accepted date formats:
+
+    * YYYY[MM[DD[HH[MM[SS]]]]]
+    * YYYY-MM-DD[ HH:MM]
+    * YYYY-MM-DDTHH:MM:SS
+    * Etc (exact regex in the code).
+
+    :param datearg: Date to be parsed
+    :type datearg: str
+    """
 
     if datearg:
         if not isinstance(datearg, string_types):
             raise TypeException(type(datearg), str)
 
-        if len(datearg) == 8:
-            return Date(int(datearg[0:4]), int(datearg[4:6]), int(datearg[6:8]), 6, 0, 0)
-        elif len(datearg) == 10:
-            return Date(int(datearg[0:4]), int(datearg[4:6]), int(datearg[6:8]), int(datearg[8:10]), 0, 0)
-        elif len(datearg) == 14:
-            return Date(int(datearg[0:4]), int(datearg[4:6]), int(datearg[6:8]), int(datearg[8:10]), int(datearg[10:12]), int(datearg[12:14]))
-        else:
+        # the regex that parses date format
+        f1 = re.match('([0-9]{4})[-]?([0-9]{2})?[-]?([0-9]{2})?[ T]?([0-9]{2})?[ :hH]?([0-9]{2})?[ :mM]?([0-9]{2})?',
+                      datearg)
+        if f1 is None:
             raise FormatDateException(datearg)
+        return Date(
+                _parsematch(f1.group(1)),             # Year
+                _parsematch(f1.group(2), default=8),  # Month
+                _parsematch(f1.group(3), default=1),  # Day
+                _parsematch(f1.group(4), default=6),  # Hour
+                _parsematch(f1.group(5), default=0),  # Min
+                _parsematch(f1.group(6), default=0),  # Sec
+                )
     else:
         return datearg
 
 
 def pretty_date(datetimeobject):
+    """
+    Return a string with input prettfied.
+
+    :param datetimeobject: The date object to be prettified
+    :type datetimeobject: datetime or bronx Date object
+    :returns: Prettified string
+    :rtype: str
+    """
     return datetimeobject.strftime("%A %d %B %Y à %H:%M")
 
 
 def get_list_dates_files(datebegin, dateend, duration, listDateStop=None):
+    """
+    Get the list of begin and end dates for forcing and pro files
+    according to given begin and end dates, with simulation
+    possibly interrupted at given dates.
+
+    :param datebegin: The begin date
+    :type datebegin: datetime or bronx Date object
+    :param dateend: The end date
+    :type dateend: datetime or bronx Date object
+    :param duration: One of yearly, monthly or full
+    :type duration: str
+    :param listDateStop: The list of dates for imposed stop of simulation (for instance for SODA assimilation)
+    :type listDateStop: list
+    :returns: list_dates_begin_forcing, list_dates_end_forcing, list_dates_begin_pro, list_dates_end_pro
+    :rtype: list, list, list, list
+    :raises: ValueError if duration is not recognized
+    """
     list_dates_begin_forcing = []
     list_dates_end_forcing = []
     if duration == "yearly":
@@ -140,6 +244,8 @@ def get_list_dates_files(datebegin, dateend, duration, listDateStop=None):
     elif duration == "full":
         list_dates_begin_forcing.append(datebegin)
         list_dates_end_forcing.append(dateend)
+    else:
+        raise ValueError('Value for parameter duration not accepted')
     if listDateStop is None:  # bc added for SODA stop dates
         list_dates_begin_pro = list_dates_begin_forcing[:]
         list_dates_begin_pro[0] = max(list_dates_begin_forcing[0], datebegin)

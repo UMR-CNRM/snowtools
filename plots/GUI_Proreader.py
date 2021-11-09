@@ -43,6 +43,22 @@ logger.addHandler(console_handler)
 
 constante_sampling = proReader_mini.constante_sampling
 
+# Get correct path for infomassifs
+infomassif_metadata_path = None
+snowtools_basepath = os.path.dirname(os.path.dirname(__file__))
+metadata1 = os.path.join(snowtools_basepath, 'DATA/METADATA.xml')
+metadata2 = './DATA/METADATA.xml'
+if os.path.isfile(metadata1) or os.path.islink(metadata1):
+    infomassif_metadata_path = metadata1
+if os.path.isfile(metadata2) or os.path.islink(metadata2):
+    infomassif_metadata_path = metadata2
+else:
+    try:
+        import importlib.resources  # Python > 3.7
+        infomassif_metadata_path = importlib.resources.open_text('DATA', 'METADATA.xml', encoding='utf-8', errors='strict')
+    except:
+        pass
+
 ########################################################
 # Modele de fenetre graphique dont les autres heritent #
 ########################################################
@@ -209,7 +225,7 @@ class Graph(Toplevel):
         self.list_massif_num = []
         self.list_massif_nom = []
         try:
-            IM = infomassifs()
+            IM = infomassifs(metadata_file=infomassif_metadata_path)
             listmassif = IM.getListMassif_of_region('all')
             for massif in listmassif:
                 self.list_massif_num.append(massif)
@@ -1744,7 +1760,7 @@ def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph
     if type_graph == 'massif':
         list_massif_num = []
         list_massif_nom = []
-        IM=infomassifs()
+        IM = infomassifs(metadata_file=infomassif_metadata_path)
         listmassif = IM.getListMassif_of_region('all')
         for massif in listmassif:
             list_massif_num.append(massif)
