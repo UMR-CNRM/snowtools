@@ -11,7 +11,6 @@ from optparse import OptionParser
 from utils.dates import check_and_convert_date
 import footprints
 import sys
-import six
 
 usage = "usage: get_oper_files.py [-b YYYYMMDD] [--previ]"
 

@@ -4,15 +4,16 @@ Created on 3 aug. 2018
 @author: lafaysse
 '''
 
+import sys
+import six
+from optparse import OptionParser
+from collections import defaultdict
+
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 from bronx.stdtypes.date import Date, daterange, tomorrow, today
-from optparse import OptionParser
-from utils.dates import check_and_convert_date
+from snowtools.utils.dates import check_and_convert_date
 import footprints
-from collections import defaultdict
-import sys
-import six
 
 usage = "usage: get_oper_files.py [-b YYYYMMDD] [--previ]"
 

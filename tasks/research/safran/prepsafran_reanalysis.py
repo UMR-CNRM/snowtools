@@ -3,13 +3,14 @@
 
 __all__ = []
 
+import glob
+import os
+import tarfile
+
 from bronx.stdtypes.date import Date
 from bronx.stdtypes.date import Period
 from cen.layout.nodes import S2MTaskMixIn
 import footprints
-import glob
-import os
-import tarfile
 from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
 

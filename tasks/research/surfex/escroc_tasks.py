@@ -11,7 +11,7 @@ import footprints
 from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
 
-from utils.dates import get_list_dates_files, get_dic_dateend
+from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 
 
 def setup(t, **kw):
