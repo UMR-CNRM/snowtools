@@ -22,6 +22,7 @@ from snowtools.tasks import runs
 from snowtools.tasks.vortex_kitchen import vortex_kitchen
 from snowtools.tasks.crampon_vortex_kitchen import crampon_vortex_kitchen
 from snowtools.tasks.s2m_launcher import _S2M_command
+from snowtools.DATA import SNOWTOOLS_DIR
 
 usage = "usage: s2m -b begin_date -e end_date -f forcing [-m forcingmodel] [-o path_output] [-w workdir] " \
         "[-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] " \
@@ -153,8 +154,8 @@ class Surfex_command(_S2M_command):
 
         parser.add_option("-n", "--namelist",
                           action="store", type="string", dest="namelist",
-                          default=os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam',
-                          help="path of the mother namelist - default: " + os.environ['SNOWTOOLS_CEN']
+                          default=SNOWTOOLS_DIR + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam',
+                          help="path of the mother namelist - default: " + SNOWTOOLS_DIR
                                + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam')
 
         parser.add_option("-s", "--surfexexec",

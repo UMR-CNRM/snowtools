@@ -58,7 +58,8 @@ if __name__ == "__main__":
     #                                                                                              #
     ################################################################################################
     # chemin d ecriture du fichier XML
-    chemxml = os.environ['SNOWTOOLS_CEN'] + "/DATA"
+    from snowtools.DATA import SNOWTOOLS_DIR
+    chemxml = SNOWTOOLS_DIR + "/DATA"
     # ouverture  du fichier en mode "lecture"/"ecriture"
     metadata = open(chemxml + "/METADATA.xml", 'r')
     metadataout = open(chemxml + "/METADATA_out.xml", 'w')

@@ -12,6 +12,7 @@ import shutil
 
 from snowtools.utils.dates import WallTimeException
 from snowtools.utils.resources import InstallException
+from snowtools.DATA import SNOWTOOLS_DIR, SNOWTOOLS_CEN
 from bronx.stdtypes.date import Period
 
 
@@ -79,18 +80,18 @@ class vortex_kitchen(object):
             os.symlink(os.environ["VORTEX"], "vortex")
 
         if not os.path.islink("snowtools"):
-            os.symlink(os.environ["SNOWTOOLS_CEN"], "snowtools")
+            os.symlink(SNOWTOOLS_CEN, "snowtools")
 
         if not os.path.islink("tasks"):
             if self.options.oper:
-                os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/oper", "tasks")
+                os.symlink(SNOWTOOLS_DIR + "/tasks/oper", "tasks")
             else:
                 if self.options.safran:
-                    os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/research/safran", "tasks")
+                    os.symlink(SNOWTOOLS_DIR + "/tasks/research/safran", "tasks")
                 elif self.options.soda:
-                    os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/research/crampon", "tasks")
+                    os.symlink(SNOWTOOLS_DIR + "/tasks/research/crampon", "tasks")
                 elif self.options.surfex:
-                    os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks/research/surfex", "tasks")
+                    os.symlink(SNOWTOOLS_DIR + "/tasks/research/surfex", "tasks")
 
         for directory in ["conf", "jobs"]:
             if not os.path.isdir(directory):

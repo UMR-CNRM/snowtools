@@ -16,7 +16,8 @@ from functools import partial
 import pyproj
 
 from snowtools.utils.infomassifs import infomassifs
-from snowtools.utils.FileException import FileNameException, FileOpenException
+from snowtools.utils.FileException import FileOpenException
+from snowtools.DATA import SNOWTOOLS_DIR
 
 # Bibliothèque ad hoc de Matthieu L pour ouvrir les shapefiles
 import shapefile
@@ -141,7 +142,7 @@ path_MNT_aspect_defaut = '/rd/cenfic2/sentinel/mnt_ange/ange-factory/prod1/franc
 ################################################################
 # Infos shapefile massif, a priori pérenne 
 ################################################################
-path_shapefile_massif = os.environ['SNOWTOOLS_CEN'] + '/DATA/massifs_Lbrt93_2019'
+path_shapefile_massif = SNOWTOOLS_DIR + '/DATA/massifs_Lbrt93_2019'
 Indice_record_massif = 0
 
 ################################################################
@@ -367,7 +368,7 @@ def check_Id_station_in_Metadata(all_lists):
         Sinon, il ne se passe rien
     """
     # chemin d ecriture du fichier XML
-    chemxml = os.environ['SNOWTOOLS_CEN'] + "/DATA"
+    chemxml = SNOWTOOLS_DIR + "/DATA"
     # ouverture  du fichier en mode "lecture"/"ecriture"
     metadata = open(chemxml + "/METADATA.xml", 'r')
     # lire le fichier
@@ -459,7 +460,7 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
     SitesExistants = infomassifs().getListSites()
 
     # chemin d ecriture du fichier XML
-    chemxml = os.environ['SNOWTOOLS_CEN'] + "/DATA"
+    chemxml = SNOWTOOLS_DIR + "/DATA"
     # ouverture  du fichier en mode "lecture"/"ecriture"
     metadata = open(chemxml + "/METADATA.xml", 'r')
     metadataout = open(chemxml + "/METADATA_out.xml", 'w')

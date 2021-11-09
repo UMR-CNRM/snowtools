@@ -29,8 +29,8 @@ from scipy.stats import gamma
 from snowtools.plots.pearps2m.postprocess import config, Ensemble, EnsembleOperDiagsFlatMassif, EnsembleStation
 from snowtools.tasks.oper.get_oper_files import S2MExtractor
 from snowtools.utils.FileException import DirNameException
-
 from snowtools.utils.dates import pretty_date
+from snowtools.DATA import SNOWTOOLS_DIR
 
 
 class postprocess_ensemble(Ensemble):
@@ -259,7 +259,7 @@ if __name__ == "__main__":
         else:
             E = postprocess_massif()
 
-        E.read_emos_param(filename = os.environ['SNOWTOOLS_CEN'] + '/DATA/EMOS_HN.Rdata')
+        E.read_emos_param(filename=os.path.join(SNOWTOOLS_DIR, 'DATA/EMOS_HN.Rdata'))
         E.open(snow_members[domain])
 
         ppfile = c.diroutput + "/" + domain + "/PP_" + S2ME.conf.rundate.strftime("%Y%m%d%H") + ".nc"

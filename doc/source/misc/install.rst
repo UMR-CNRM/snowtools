@@ -36,5 +36,5 @@ It is also recommended to create useful aliases for s2m command and proreader gr
 
 .. code-block:: bash
 
-   alias s2m="python $SNOWTOOLS_CEN/tasks/s2m_command.py" 
-   alias proreader="python3 $SNOWTOOLS_CEN/plots/GUI_Proreader.py" 
+   alias s2m="python $SNOWTOOLS_CEN/snowtools/tasks/s2m_command.py" 
+   alias proreader="python3 $SNOWTOOLS_CEN/snowtools/plots/GUI_Proreader.py" 

@@ -14,6 +14,7 @@ from snowtools.tasks.vortex_kitchen import Vortex_conf_file
 from snowtools.tools.update_namelist import update_surfex_namelist_file
 from snowtools.tasks.vortex_kitchen import vortex_kitchen
 from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
+from snowtools.DATA import SNOWTOOLS_DIR
 
 
 class crampon_vortex_kitchen(vortex_kitchen):
@@ -57,7 +58,7 @@ class crampon_vortex_kitchen(vortex_kitchen):
         if not os.path.islink("vortex"):
             os.symlink(os.environ["VORTEX"], "vortex")
         if not os.path.islink("tasks"):
-            os.symlink(os.environ["SNOWTOOLS_CEN"] + "/tasks", "tasks")
+            os.symlink(SNOWTOOLS_DIR + "/tasks", "tasks")
 
         for directory in ["conf", "jobs"]:
             if not os.path.isdir(directory):
@@ -65,7 +66,7 @@ class crampon_vortex_kitchen(vortex_kitchen):
 
         os.chdir("jobs")
         if not os.path.islink(self.jobtemplate):
-            os.symlink(os.environ["SNOWTOOLS_CEN"] + "/jobs/" + self.jobtemplate, self.jobtemplate)
+            os.symlink(SNOWTOOLS_DIR + "/jobs/" + self.jobtemplate, self.jobtemplate)
 
     def enforce_nmembers(self):
         """enforce NENS in the namelist to the presecribed s2m argument value. Mandatory for SODA"""

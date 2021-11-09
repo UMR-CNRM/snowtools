@@ -13,6 +13,7 @@ from optparse import OptionParser
 
 from snowtools.tools.change_forcing import forcinput_ESMSnowMIP
 from snowtools.scripts.ESMSnowMIP.post_snowmip import ESMSnowMIP_output
+from snowtools.DATA import SNOWTOOLS_DIR
 
 dirsnowmip = os.environ['HOME'] + "/data/ESM-SnowMIP/"
 #dirnamelist = dirsnowmip + "namelists_8.0/"
@@ -105,7 +106,7 @@ if __name__ == '__main__':
             forcinput_ESMSnowMIP(met, forcing)
 
         if "spinup" in options.action:
-            commande = "python $SNOWTOOLS_CEN/tasks/s2m_command.py -g -o " + dirsnowmip + "SPINUP_" + site + "_" + options.source + options.suffix + " -f " + dirforcing + " -b " + begindate + " -e " + enddate + " -n " + dirnamelist + "/OPTIONS_" + site + ".nam -s " + direxe
+            commande = SNOWTOOLS_DIR + "/tasks/s2m_command.py -g -o " + dirsnowmip + "SPINUP_" + site + "_" + options.source + options.suffix + " -f " + dirforcing + " -b " + begindate + " -e " + enddate + " -n " + dirnamelist + "/OPTIONS_" + site + ".nam -s " + direxe
             print(commande)
             os.system(commande)
 
@@ -116,7 +117,7 @@ if __name__ == '__main__':
                 os.makedirs(dirprep)
             for fichier in ["PGD.nc", "PREP_" + enddate + ".nc"]:
                 shutil.copy(dirprepspinup + fichier, dirprep + fichier)
-            commande = "python $SNOWTOOLS_CEN/tasks/s2m_command.py -o  " + dirsnowmip + "Crocus_" + site + "_" + options.source + options.suffix  + " -f " + dirforcing + " -x " + enddate + " -b " + begindate + " -e " + enddate + " -n " + dirnamelist + "/OPTIONS_" + site + ".nam -s " + direxe
+            commande = SNOWTOOLS_DIR + "/tasks/s2m_command.py -o  " + dirsnowmip + "Crocus_" + site + "_" + options.source + options.suffix  + " -f " + dirforcing + " -x " + enddate + " -b " + begindate + " -e " + enddate + " -n " + dirnamelist + "/OPTIONS_" + site + ".nam -s " + direxe
             print(commande)
             os.system(commande)
         elif options.action == "runbeaufix":
@@ -136,7 +137,7 @@ if __name__ == '__main__':
                 nmembers = 1
                 nnodes = 1
 
-            commande = "python $SNOWTOOLS_CEN/tasks/s2m_command.py --escroc=" + options.escroc + " --nnodes=" + str(nnodes) + " -o " + options.escroc + " --nmembers=" + str(nmembers) + " -m ESM-SnowMIP -f obs -r " + site + " -b " + begindate + " -e " + enddate + " -x " + enddate + " -n " + namelist + " -s /home/cnrm_other/cen/mrns/lafaysse/SURFEX/lafaysse_fromV8trunk_withmeb/exe_hybride"
+            commande = SNOWTOOLS_DIR + "/tasks/s2m_command.py --escroc=" + options.escroc + " --nnodes=" + str(nnodes) + " -o " + options.escroc + " --nmembers=" + str(nmembers) + " -m ESM-SnowMIP -f obs -r " + site + " -b " + begindate + " -e " + enddate + " -x " + enddate + " -n " + namelist + " -s /home/cnrm_other/cen/mrns/lafaysse/SURFEX/lafaysse_fromV8trunk_withmeb/exe_hybride"
             print(commande)
             os.system(commande)
         elif options.action == "scores":
@@ -146,7 +147,7 @@ if __name__ == '__main__':
                 nmembers = 35
             elif options.escroc == "Crocus":
                 nmembers = 1
-            commande = "python $SNOWTOOLS_CEN/tasks/s2m_command.py --scores --escroc=" + options.escroc + " --nnodes=1 -o " + options.escroc + " --nmembers=" + str(nmembers) + " -m ESM-SnowMIP -f obs -r " + site + " -b " + begindate + " -e " + enddate + " -s /home/cnrm_other/cen/mrns/lafaysse/SURFEX/lafaysse_fromV8trunk_withmeb/exe_hybride"
+            commande = SNOWTOOLS_DIR + "/tasks/s2m_command.py --scores --escroc=" + options.escroc + " --nnodes=1 -o " + options.escroc + " --nmembers=" + str(nmembers) + " -m ESM-SnowMIP -f obs -r " + site + " -b " + begindate + " -e " + enddate + " -s /home/cnrm_other/cen/mrns/lafaysse/SURFEX/lafaysse_fromV8trunk_withmeb/exe_hybride"
             print(commande)
             os.system(commande)
 

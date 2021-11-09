@@ -15,11 +15,12 @@ with echecker:
         raise ImportError
     from mpl_toolkits.basemap import Basemap
 import numpy as np
-from utils import shapefile
-from utils.infomassifs import infomassifs
+from snowtools.utils import shapefile
+from snowtools.utils.infomassifs import infomassifs
 from osgeo import osr
 
-from plots.abstracts.figures import Mplfigure
+from snowtools.plots.abstracts.figures import Mplfigure
+from snowtools.DATA import SNOWTOOLS_DIR
 
 
 class _Map_massifs(Mplfigure):
@@ -56,7 +57,7 @@ class _Map_massifs(Mplfigure):
 
     @echecker.disabled_if_unavailable
     def getshapes(self):
-        shapefile_path = os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')
+        shapefile_path = os.path.join(SNOWTOOLS_DIR, 'DATA')
         filename = 'massifs_{0:s}.shp'.format(self.area)
         self.shapefile = shapefile.Reader(os.path.join(shapefile_path, filename))
         # Informations sur la projection

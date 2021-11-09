@@ -12,7 +12,6 @@ inherit from this class.
 """
 
 # General python modules
-import os
 import six
 
 if six.PY2:
@@ -26,7 +25,8 @@ if six.PY2:
 try:
     from snowtools.utils.resources import check_snowtools_install
     from snowtools.utils.resources import InstallException
-    print(os.environ["SNOWTOOLS_CEN"])
+    from snowtools.DATA import SNOWTOOLS_DIR
+    print("SNOWTOOLS Directory", SNOWTOOLS_DIR)
     check_snowtools_install()
     print('Snowtools installation has been successfully checked.')
 except ImportError or InstallException:

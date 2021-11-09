@@ -7,7 +7,6 @@ Created on 4 déc. 2018
 @author: lafaysse
 '''
 
-import os
 from PIL import Image
 import matplotlib.pyplot as plt
 
@@ -37,7 +36,8 @@ class Mplfigure(object):
         fig.set_size_inches(width, height)
 
     def getlogo(self):
-        return Image.open(os.environ["SNOWTOOLS_CEN"] + "/plots/logos/logoMF15.jpg")
+        from snowtools.DATA import SNOWTOOLS_DIR
+        return Image.open(SNOWTOOLS_DIR + "/plots/logos/logoMF15.jpg")
 
     def addlogo(self):
         logo = self.getlogo()
