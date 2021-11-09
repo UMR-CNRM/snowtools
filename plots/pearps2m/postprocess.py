@@ -41,7 +41,6 @@ from snowtools.utils.dates import check_and_convert_date, pretty_date
 from snowtools.plots.temporal.chrono import spaghettis_with_det, spaghettis
 from snowtools.utils.infomassifs import infomassifs
 from snowtools.utils.FileException import DirNameException
-import footprints
 from bronx.stdtypes.date import today
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 if six.PY2:
@@ -108,7 +107,7 @@ class config(object):
     # xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
     # list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
 
-    list_members = footprints.util.rangex(0, 35)  #: 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+    list_members = list(range(0, 35))  #: 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
 
     def __init__(self):
         """
