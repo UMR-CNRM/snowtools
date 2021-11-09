@@ -130,7 +130,7 @@ class git_infos:
     .. code-block:: python
 
        import os
-       from utils.git import git_infos
+       from snowtools.utils.git import git_infos
 
        gi = git_infos(os.environ.get('EXESURFEX'))
 

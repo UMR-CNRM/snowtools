@@ -12,16 +12,15 @@ Major update on 13 sept 2019
 import sys
 import os
 import datetime
+
 import numpy as np
-
 import netCDF4
-
 from scipy import nanmean
-from utils.FileException import FileNameException, VarNameException
 
+from snowtools.utils.FileException import FileNameException, VarNameException
 # Not necessary to transfer in vortex
-from utils.resources import get_file_period, get_file_date
-from utils.dates import check_and_convert_date, checkdateafter
+from snowtools.utils.resources import get_file_period, get_file_date
+from snowtools.utils.dates import check_and_convert_date, checkdateafter
 from bronx.stdtypes.date import Date, Period, Time, yesterday, tomorrow, daterange
 from optparse import OptionParser
 

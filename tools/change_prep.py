@@ -16,7 +16,7 @@ import numpy as np
 # For compatibility python 2 / python 3
 # import six
 
-from utils.prosimu import prosimu
+from snowtools.utils.prosimu import prosimu
 from snowtools.utils.FileException import FileNameException
 
 
