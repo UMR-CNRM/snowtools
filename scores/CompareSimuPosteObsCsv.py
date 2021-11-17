@@ -341,10 +341,13 @@ class ComparisonSimObs(object):
 
         # Default labels
 #        self.set_sim_labels(['New', 'Old', '', '', ''])
-        self.set_sim_labels(['Alps', 'Pyrenees', 'Corsica', '', ''])
+        self.set_massifs_labels(['Alps', 'Pyrenees', 'Corsica', '', ''])
+        #self.set_sim_labels(['Reference reanalysis', 'Reanalysis with no temperature observation', 'Reanalysis without evaluation observations', '', ''])
+        self.set_sim_labels(['Reference reanalysis without observations', 'New guess reanalysis without observations', 'Reference reanalysis', 'New guess reanalysis', ''])
 
         # Default colors
-        self.set_sim_colors(['red', 'blue', 'grey', 'orange', 'green'])
+        #self.set_sim_colors(['red', 'blue', 'grey', 'orange', 'green'])
+        self.set_sim_colors(['maroon', 'darkgreen', 'grey', 'blue'])
 
     def set_sim_colors(self, list_colors):
         self.list_colors = list_colors
@@ -419,8 +422,8 @@ class ComparisonSimObs(object):
         arrayStations = np.array(map(int, self.listStations))
 
         self.boxplots_scores(arrayStations, np.array(self.elevations), self.bias, 'bias', ylabel='Bias (cm)')
-        self.boxplots_scores(arrayStations, np.array(self.elevations), self.rmse, 'rmse', ylabel='RMSE (cm)')
-        self.boxplots_scores(arrayStations, np.array(self.elevations), self.meansd, 'mean_SD', ylabel='Mean Snow Depth (cm)')
+        self.boxplots_scores(arrayStations, np.array(self.elevations), self.rmse, 'rmse', ylabel='RMSD (cm)')
+        self.boxplots_scores(arrayStations, np.array(self.elevations), self.meansd, 'mean_SD', ylabel='Mean simulated Snow Depth (cm)')
 
     def get_obs_sim(self, station, indSim):
 
@@ -483,6 +486,15 @@ class ComparisonSimObs(object):
             print (np.sum(valid))
 
         for indSim in range(0, self.nsim):
+            if self.nsim == 1:
+                # Color Alps departments in red, Pyr ones in blue and Corsica ones in grey to avoid
+                # blue and green colors and the same figure
+                # Add legend (by adding a 'label' key to the args)
+                kwargs['fillcolor'] = ['red']*5 + ['blue']*3 + ['grey']
+                kwargs['label'] = self.list_labels_massifs
+            else:
+                kwargs['fillcolor'] = self.list_colors[indSim] 
+                kwargs['label'] = self.list_labels
 
             kwargs['fillcolor'] = self.list_colors[indSim]
             # if nsimu == 1 can be overwrited in the boxplot class
