@@ -93,6 +93,8 @@ def current_git_repo(path=None):
         logger.error('Could not reach target directory {}'.format(path))
     except FileNotFoundError:
         logger.error('GIT is not installed in your environment')
+    except TypeError:
+        logger.error('GIT folder not found. Maybe too old version of python3')
     return None
 
 
