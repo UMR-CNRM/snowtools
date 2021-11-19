@@ -75,6 +75,8 @@ from shapely.geometry import Point
 # Tell cartopy where to find Natural Earth features
 # config['data_dir'] = os.path.join(os.environ['SNOWTOOLS_CEN'], 'CartopyData')
 config['data_dir'] = os.path.join('/rd/cenfic2/manto/radanovicss', 'CartopyData')
+# config['data_dir'] = os.path.join('/cnrm/cen/users/NO_SAVE/radanovicss', 'CartopyData')  # for sxcen
+# until proper git annex solution
 
 
 class MyCRS(ccrs.CRS):
@@ -836,6 +838,8 @@ class _Map_massifs(Mplfigure):
             try:
                 self.cbar.remove()
             except ValueError:
+                pass
+            except KeyError:
                 pass
             self.legendok = False
 
