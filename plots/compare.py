@@ -4,12 +4,15 @@
 import os
 import argparse
 import sys
-import matplotlib
+import logging
+
 import matplotlib.pyplot as plt
 import xarray as xr
 import numpy as np
 
-import logging
+from snowtools.utils.prosimu import prosimu
+from snowtools.plots import proReader_mini
+
 logger = logging.getLogger()
 logger.setLevel(logging.WARNING)
 console_handler = logging.StreamHandler()
@@ -17,11 +20,6 @@ console_handler.setFormatter(logging.Formatter('%(levelname)s :: %(message)s'))
 console_handler.setLevel(logging.DEBUG)
 logger.addHandler(console_handler)
 
-from utils.prosimu import prosimu
-from utils.infomassifs import infomassifs
-from utils.dates import check_and_convert_date
-from utils.FileException import FileNameException, FileParseException
-import proReader_mini
 
 #############################################################
 # Le but est de comparer 2 fichiers PRO

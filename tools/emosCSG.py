@@ -18,18 +18,19 @@ if sys.version_info.major == 2:  # Python2 only
 # ----------------------------------------------------------
 
 import locale
-import rpy2.robjects as robjects
-import numpy as np
 import datetime
 import os
+
+import rpy2.robjects as robjects
+import numpy as np
 import netCDF4
 from scipy.stats import gamma
 
-from plots.pearps2m.postprocess import config, Ensemble, EnsembleOperDiagsFlatMassif, EnsembleStation
-from tasks.oper.get_oper_files import S2MExtractor
-from utils.FileException import DirNameException
-
-from utils.dates import pretty_date
+from snowtools.plots.pearps2m.postprocess import config, Ensemble, EnsembleOperDiagsFlatMassif, EnsembleStation
+from snowtools.tasks.oper.get_oper_files import S2MExtractor
+from snowtools.utils.FileException import DirNameException
+from snowtools.utils.dates import pretty_date
+from snowtools.DATA import SNOWTOOLS_DIR
 
 
 class postprocess_ensemble(Ensemble):
@@ -258,7 +259,7 @@ if __name__ == "__main__":
         else:
             E = postprocess_massif()
 
-        E.read_emos_param(filename = os.environ['SNOWTOOLS_CEN'] + '/DATA/EMOS_HN.Rdata')
+        E.read_emos_param(filename=os.path.join(SNOWTOOLS_DIR, 'DATA/EMOS_HN.Rdata'))
         E.open(snow_members[domain])
 
         ppfile = c.diroutput + "/" + domain + "/PP_" + S2ME.conf.rundate.strftime("%Y%m%d%H") + ".nc"

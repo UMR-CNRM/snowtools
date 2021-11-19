@@ -7,19 +7,21 @@ Created on 6 févr. 2019
 utils suited for crocO interface only
 """
 
-import numpy as np
-import netCDF4
 import datetime
+
+import netCDF4
+import numpy as np
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 from vortex.util.config import GenericConfigParser
 from vortex.layout.nodes import ConfigSet
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 def dictsAspect():
     """
     returns the dict for aspect and its reverse.
     """
-    
+
     gg1 = {'N': 0, 'NE': 45, 'E': 90, 'SE': 135, 'S': 180, 'SW': 225, 'W': 270, 'NW': 315, 'flat': -1}
 
     return gg1, {v: k for k, v in gg1.items()}

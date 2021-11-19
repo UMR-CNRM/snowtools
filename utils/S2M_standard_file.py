@@ -11,11 +11,12 @@ import os
 
 import netCDF4
 from six.moves import configparser as ConfigParser
-
 import numpy as np
+
 from snowtools.utils.FileException import VarNameException, UnknownGridTypeException, FileNameException
-from utils.infomassifs import infomassifs
-from utils.git import git_infos
+from snowtools.utils.infomassifs import infomassifs
+from snowtools.utils.git import git_infos
+from snowtools.DATA import SNOWTOOLS_DIR
 
 
 class _StandardNC(netCDF4.Dataset):
@@ -25,7 +26,7 @@ class _StandardNC(netCDF4.Dataset):
 
     def read_config(self, section):
         config = ConfigParser.RawConfigParser()
-        rootdir = '/'.join(__file__.split('/')[0:-2])  # This is equivalent to $SNOWTOOLS_CEN
+        rootdir = SNOWTOOLS_DIR
         confile = os.path.join(rootdir, 'conf', 'S2M_Standard_Metadata.ini')
         if os.path.isfile(confile):
             config.read(confile)
@@ -363,7 +364,7 @@ class StandardCROCUS(_StandardNC):
             top = [0] + bottom[:-1]
             self.soilgrid = (np.array(top) + np.array(bottom)) / 2.
         else:
-            from utils.prosimu import prosimu
+            from snowtools.utils.prosimu import prosimu
             if os.path.isfile("PGD.nc"):
                 pgd = prosimu("PGD.nc")
                 nlayers = pgd.read("GROUND_LAYER")

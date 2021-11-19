@@ -7,10 +7,11 @@ Module for preparing/faking/ observations within crocO framework
 
 """
 import os
-import shutil
+import random
+
 import netCDF4
 import numpy as np
-import random
+
 from snowtools.assim.utilcrocO import Pgd, convertdate
 from snowtools.assim.utilcrocO import setlistvars_obs, setlistvars_var, setSubsetclasses,\
     dictvarsPrep, dictvarsWrite

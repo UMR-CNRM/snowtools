@@ -11,24 +11,25 @@ import os
 import datetime
 
 # Snowtools modules
-from tools.change_forcing import forcinput_select, forcinput_applymask,\
+from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask,\
     forcinput_tomerge, proselect
-from tools.change_prep import prep_tomodify
-from tools.update_namelist import update_surfex_namelist_file
-from tools.execute import callSurfexOrDie
-from tools.massif_diags import massif_simu
-from utils.resources import get_file_period, get_file_date, get_file_const, save_file_period, save_file_date, save_file_const,\
-    get_file_const_or_crash, ldd
-from utils.prosimu import prosimu
-from utils.FileException import DirFileException
-from utils.git import git_infos
+from snowtools.tools.change_prep import prep_tomodify
+from snowtools.tools.update_namelist import update_surfex_namelist_file
+from snowtools.tools.execute import callSurfexOrDie
+from snowtools.tools.massif_diags import massif_simu
+from snowtools.utils.resources import get_file_period, get_file_date, get_file_const, save_file_period, \
+        save_file_date, save_file_const, get_file_const_or_crash, ldd
+from snowtools.utils.prosimu import prosimu
+from snowtools.utils.FileException import DirFileException
+from snowtools.utils.git import git_infos
+from snowtools.DATA import SNOWTOOLS_DIR
 
 
 class surfexrun(object):
     """Class for any SURFEX run"""
 
     def __init__(self, datebegin, dateend, forcingpath, diroutput,
-                 namelist=os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam',
+                 namelist=os.path.join(SNOWTOOLS_DIR, 'DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam'),
                  execdir=".", onlyextractforcing = False,
                  threshold=-999, workdir=None, datespinup=None, geolist=[], addmask=False):
 
@@ -73,8 +74,8 @@ class surfexrun(object):
                     self.moderun = moderun
             else:
                 self.moderun = moderun
-            if os.path.islink(os.environ['SNOWTOOLS_CEN'] + "/fortran/interpol"):
-                if "MPIAUTO" in os.readlink(os.environ['SNOWTOOLS_CEN'] + "/fortran/interpol"):
+            if os.path.islink(os.path.join(SNOWTOOLS_DIR, "fortran/interpol")):
+                if "MPIAUTO" in os.readlink(os.path.join(SNOWTOOLS_DIR, "fortran/interpol")):
                     self.modeinterpol = "MPIRUN"
                 else:
                     self.modeinterpol = moderun
@@ -304,7 +305,7 @@ class interpolrun(surfexrun):
         print(args)
         if not os.path.islink('GRID.nc'):
             os.symlink(args[0], "GRID.nc")
-        callSurfexOrDie(os.environ['SNOWTOOLS_CEN'] + "/fortran/interpol", moderun=self.modeinterpol, nproc=self.ninterpol)
+        callSurfexOrDie(os.path.join(SNOWTOOLS_DIR, "fortran/interpol"), moderun=self.modeinterpol, nproc=self.ninterpol)
         os.rename("output.nc", "FORCING.nc")
 
     def save_output(self):

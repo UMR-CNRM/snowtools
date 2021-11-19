@@ -8,9 +8,10 @@ Created on 4 déc. 2018
 
 import six
 
-from plots.abstracts.figures import Mplfigure
 from matplotlib import pyplot as plt
 from matplotlib.dates import HourLocator, DayLocator, MonthLocator, YearLocator, DateFormatter
+
+from snowtools.plots.abstracts.figures import Mplfigure
 
 
 class temporalplot_abstract(Mplfigure):

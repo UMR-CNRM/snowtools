@@ -5,14 +5,15 @@ Created in February
 @author: carmagnola (PROSNOW)
 '''
 
+import datetime
+import tarfile
+import glob
 
-import os, tarfile, glob
 from vortex.layout.nodes import Driver, Task
 from vortex import toolbox
 from snowtools.utils.dates import get_list_dates_files
 from bronx.stdtypes.date import Date, daterange, tomorrow, Period
 from cen.layout.nodes import S2MTaskMixIn
-import datetime
 
 
 def setup(t, **kw):

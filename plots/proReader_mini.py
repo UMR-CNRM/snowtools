@@ -5,19 +5,20 @@ Created on 6 apr. 2017
 
 @author viallon
 """
-
-from utils.prosimu import prosimu
-import numpy as np
-import datetime as dt
 import os
+import logging
+import datetime as dt
+
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from matplotlib import collections
 from matplotlib.colors import BoundaryNorm
-from plots.EvoProfilPlot import plot_profil
-from plots import Dictionnaries
 
-import logging
+from snowtools.utils.prosimu import prosimu
+from snowtools.plots.EvoProfilPlot import plot_profil
+from snowtools.plots import Dictionnaries
+
 logger = logging.getLogger()
 
 constante_sampling = 1000

@@ -7,17 +7,16 @@ Created on 25 mar 2020
 @author: lafaysse
 '''
 
+
 import matplotlib
-matplotlib.use('Agg')
 
-import six
-
-import numpy as np
-from utils.prosimu import prosimu
-from utils.infomassifs import infomassifs
-from plots.temporal.chrono import temporalplot2Axes, temporalsubplot
-from plots.abstracts.figures import MultiPlots
+from snowtools.utils.prosimu import prosimu
+from snowtools.utils.infomassifs import infomassifs
+from snowtools.plots.temporal.chrono import temporalsubplot
+from snowtools.plots.abstracts.figures import MultiPlots
 from bronx.stdtypes.date import Date
+
+matplotlib.use('Agg')
 
 commonpath = "/cnrm/cen/users/NO_SAVE/lafaysse/oper/alp"
 # commonpath = "/home/lafaysse"

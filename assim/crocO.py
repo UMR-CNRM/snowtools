@@ -14,8 +14,10 @@ import sys
 import time
 import os
 from optparse import OptionParser
+
 from snowtools.assim.utilcrocO import read_conf
 from snowtools.assim.CrocOrun import CrocOrun
+
 usage = 'crocO --opts'
 
 

@@ -4,9 +4,10 @@ Created on 8 févr. 2019
 
 @author: cluzetb
 '''
-from Ensemble import PrepEnsAbs
-from SemiDistributed import PrepAbs
 import numpy as np
+
+from snowtools.assim.Ensemble import PrepEnsAbs
+from snowtools.assim.SemiDistributed import PrepAbs
 
 class SdOperator(object):
     '''

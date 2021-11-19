@@ -7,13 +7,16 @@ Created on 6 avr. 2017
 Modified 7. apr. 2017 viallon
 '''
 
+import logging
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib import collections
 import matplotlib.colors as colors
-from plots import Dictionnaries
-import logging
+
+from snowtools.plots import Dictionnaries
+
 logger = logging.getLogger()
 
 

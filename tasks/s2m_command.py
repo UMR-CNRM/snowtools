@@ -14,14 +14,15 @@ import sys
 import datetime
 
 # Import snowtools modules
-from tools.initTG import clim
-from utils.dates import checkdateafter, check_and_convert_date
-from utils.resources import absolute_path, check_surfex_exe
-from utils.infomassifs import infomassifs
-import tasks.runs
-from tasks.vortex_kitchen import vortex_kitchen
-from tasks.crampon_vortex_kitchen import crampon_vortex_kitchen
+from snowtools.tools.initTG import clim
+from snowtools.utils.dates import checkdateafter, check_and_convert_date
+from snowtools.utils.resources import absolute_path, check_surfex_exe
+from snowtools.utils.infomassifs import infomassifs
+from snowtools.tasks import runs
+from snowtools.tasks.vortex_kitchen import vortex_kitchen
+from snowtools.tasks.crampon_vortex_kitchen import crampon_vortex_kitchen
 from snowtools.tasks.s2m_launcher import _S2M_command
+from snowtools.DATA import SNOWTOOLS_DIR
 
 usage = "usage: s2m -b begin_date -e end_date -f forcing [-m forcingmodel] [-o path_output] [-w workdir] " \
         "[-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] " \
@@ -153,8 +154,8 @@ class Surfex_command(_S2M_command):
 
         parser.add_option("-n", "--namelist",
                           action="store", type="string", dest="namelist",
-                          default=os.environ['SNOWTOOLS_CEN'] + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam',
-                          help="path of the mother namelist - default: " + os.environ['SNOWTOOLS_CEN']
+                          default=SNOWTOOLS_DIR + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam',
+                          help="path of the mother namelist - default: " + SNOWTOOLS_DIR
                                + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam')
 
         parser.add_option("-s", "--surfexexec",
@@ -303,69 +304,69 @@ class Surfex_command(_S2M_command):
 
             # Define a run object
             if type(self.options.forcing) is list or self.options.addmask:
-                run = tasks.runs.postesrun(self.options.datedeb, self.options.datefin, self.options.forcing,
-                                           self.options.diroutput, threshold=self.options.threshold,
-                                           workdir=self.options.workdir, datespinup=self.options.datespinup,
-                                           execdir=self.options.exesurfex,
-                                           namelist=self.options.namelist,
-                                           addmask=True, onlyextractforcing=self.options.onlyextractforcing)
+                run = runs.postesrun(self.options.datedeb, self.options.datefin, self.options.forcing,
+                                     self.options.diroutput, threshold=self.options.threshold,
+                                     workdir=self.options.workdir, datespinup=self.options.datespinup,
+                                     execdir=self.options.exesurfex,
+                                     namelist=self.options.namelist,
+                                     addmask=True, onlyextractforcing=self.options.onlyextractforcing)
             elif self.interpol:
                 if self.options.gridsimul:
-                    run = tasks.runs.interpolgriddedrun(self.options.datedeb, self.options.datefin,
-                                                        self.options.forcing, self.options.diroutput,
-                                                        threshold=self.options.threshold, workdir=self.options.workdir,
-                                                        datespinup=self.options.datespinup,
-                                                        geolist=[self.options.region], execdir=self.options.exesurfex,
-                                                        namelist=self.options.namelist, addmask=False,
-                                                        onlyextractforcing=self.options.onlyextractforcing)
+                    run = runs.interpolgriddedrun(self.options.datedeb, self.options.datefin,
+                                                  self.options.forcing, self.options.diroutput,
+                                                  threshold=self.options.threshold, workdir=self.options.workdir,
+                                                  datespinup=self.options.datespinup,
+                                                  geolist=[self.options.region], execdir=self.options.exesurfex,
+                                                  namelist=self.options.namelist, addmask=False,
+                                                  onlyextractforcing=self.options.onlyextractforcing)
                 else:
-                    run = tasks.runs.interpolrun(self.options.datedeb, self.options.datefin, self.options.forcing,
-                                                 self.options.diroutput, threshold=self.options.threshold,
-                                                 workdir=self.options.workdir, datespinup=self.options.datespinup,
-                                                 geolist=[self.options.region], execdir=self.options.exesurfex,
-                                                 namelist=self.options.namelist, addmask=True,
-                                                 onlyextractforcing=self.options.onlyextractforcing)
+                    run = runs.interpolrun(self.options.datedeb, self.options.datefin, self.options.forcing,
+                                           self.options.diroutput, threshold=self.options.threshold,
+                                           workdir=self.options.workdir, datespinup=self.options.datespinup,
+                                           geolist=[self.options.region], execdir=self.options.exesurfex,
+                                           namelist=self.options.namelist, addmask=True,
+                                           onlyextractforcing=self.options.onlyextractforcing)
             elif self.options.region or self.options.slopes or self.options.aspects or self.options.minlevel \
                     or self.options.maxlevel:
 
                 if self.options.onlyextractforcing:
                     if 'pro' in self.options.forcing or 'PRO' in self.options.forcing:
-                        run = tasks.runs.massifextractpro(self.options.datedeb, self.options.datefin,
-                                                          self.options.forcing, self.options.diroutput,
-                                                          workdir=self.options.workdir,
-                                                          geolist=[self.options.region, self.options.minlevel,
-                                                                   self.options.maxlevel, self.options.slopes,
-                                                                   self.options.aspects])
+                        run = runs.massifextractpro(self.options.datedeb, self.options.datefin,
+                                                    self.options.forcing, self.options.diroutput,
+                                                    workdir=self.options.workdir,
+                                                    geolist=[self.options.region, self.options.minlevel,
+                                                             self.options.maxlevel, self.options.slopes,
+                                                             self.options.aspects])
                     else:
-                        run = tasks.runs.massifextractforcing(self.options.datedeb, self.options.datefin,
-                                                              self.options.forcing, self.options.diroutput,
-                                                              workdir=self.options.workdir,
-                                                              geolist=[self.options.region, self.options.minlevel,
-                                                                       self.options.maxlevel, self.options.slopes,
-                                                                       self.options.aspects])
+                        run = runs.massifextractforcing(self.options.datedeb, self.options.datefin,
+                                                        self.options.forcing, self.options.diroutput,
+                                                        workdir=self.options.workdir,
+                                                        geolist=[self.options.region, self.options.minlevel,
+                                                                 self.options.maxlevel, self.options.slopes,
+                                                                 self.options.aspects])
                 else:
 
-                    run = tasks.runs.massifrun(self.options.datedeb, self.options.datefin, self.options.forcing,
-                                               self.options.diroutput, threshold=self.options.threshold,
-                                               workdir=self.options.workdir, datespinup=self.options.datespinup,
-                                               execdir=self.options.exesurfex,
-                                               namelist=self.options.namelist,
-                                               geolist=[self.options.region, self.options.minlevel,
-                                                        self.options.maxlevel, self.options.slopes,
-                                                        self.options.aspects])
+                    run = runs.massifrun(self.options.datedeb, self.options.datefin, self.options.forcing,
+                                         self.options.diroutput, threshold=self.options.threshold,
+                                         workdir=self.options.workdir, datespinup=self.options.datespinup,
+                                         execdir=self.options.exesurfex,
+                                         namelist=self.options.namelist,
+                                         geolist=[self.options.region, self.options.minlevel,
+                                                  self.options.maxlevel, self.options.slopes,
+                                                  self.options.aspects])
             else:
                 if self.options.gridsimul:
-                    run = tasks.runs.griddedrun(self.options.datedeb, self.options.datefin, self.options.forcing,
-                                                self.options.diroutput, threshold=self.options.threshold,
-                                                workdir=self.options.workdir, datespinup=self.options.datespinup,
-                                                execdir=self.options.exesurfex,
-                                                namelist=self.options.namelist)
+                    run = runs.griddedrun(self.options.datedeb, self.options.datefin, self.options.forcing,
+                                          self.options.diroutput, threshold=self.options.threshold,
+                                          workdir=self.options.workdir, datespinup=self.options.datespinup,
+                                          execdir=self.options.exesurfex,
+                                          namelist=self.options.namelist)
                 else:
-                    run = tasks.runs.surfexrun(self.options.datedeb, self.options.datefin, self.options.forcing,
-                                               self.options.diroutput, threshold=self.options.threshold,
-                                               workdir=self.options.workdir, datespinup=self.options.datespinup,
-                                               execdir=self.options.exesurfex,
-                                               namelist=self.options.namelist)
+                    run = runs.surfexrun(self.options.datedeb, self.options.datefin, self.options.forcing,
+                                         self.options.diroutput, threshold=self.options.threshold,
+                                         workdir=self.options.workdir, datespinup=self.options.datespinup,
+                                         execdir=self.options.exesurfex,
+                                         namelist=self.options.namelist)
 
             # Execute the run
             run.run()

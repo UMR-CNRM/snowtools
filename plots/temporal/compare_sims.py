@@ -7,23 +7,19 @@ Created on 25 mar 2020
 @author: lafaysse
 '''
 
-import matplotlib
-matplotlib.use('Agg')
 import os
 import sys
-import six
 
-import numpy as np
+import matplotlib
 
 from optparse import OptionParser
 
-from utils.prosimu import prosimu
-from utils.infomassifs import infomassifs
-from plots.temporal.chrono import temporalplot2Axes, temporalsubplot, temporalplotSim
-from plots.abstracts.figures import MultiPlots
-from bronx.stdtypes.date import Date, daterange
-from utils.dates import checkdateafter, check_and_convert_date
-from utils.resources import absolute_path
+from snowtools.utils.prosimu import prosimu
+from snowtools.plots.temporal.chrono import temporalplotSim
+from snowtools.utils.dates import checkdateafter, check_and_convert_date
+from snowtools.utils.resources import absolute_path
+
+matplotlib.use('Agg')
 
 usage = "compare_sims.py [-b YYYYMMDD] [-e YYYYMMDD] --dirsim=dirsim1,dirsim2 --labels=label1,labe2 --dirplot=dirplot --format=pdf,png,eps --yearly"
 

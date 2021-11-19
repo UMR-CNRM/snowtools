@@ -5,14 +5,18 @@ Created on 5 févr. 2019
 @author: cluzetb, inspired on SodaXP, test_PF.py and snowtools_git/tasks/runs.py from Lafaysse
 """
 import os
-import numpy as np
 import shutil
 
-from snowtools.assim.utilcrocO import convertdate
-from snowtools.assim.utilcrocO import setlistvars_obs, setlistvars_var, set_errors, set_factors
+import numpy as np
+
 from bronx.datagrip.namelist import NamelistParser
+from snowtools.assim.SemiDistributed import Synthetic, Real, PrepBg, PrepAbs
+from snowtools.assim.utilcrocO import convertdate
+from snowtools.assim.utilcrocO import setlistvars_obs, setlistvars_var, set_errors, set_factors, setSubsetclasses
+from snowtools.assim.plotcrocO import Pie
+from snowtools.assim.Ensemble import PrepEnsBg, PrepEnsAn
+from snowtools.assim.Operators import PrepEnsOperator
 from snowtools.assim.PostCroco import PostCroco
-from snowtools.assim.SemiDistributed import Synthetic, Real
 
 
 class CrocOrun(object):

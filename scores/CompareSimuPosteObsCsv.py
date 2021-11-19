@@ -10,21 +10,22 @@ Created on 5 dec. 2018
 from optparse import OptionParser
 import sys
 import os
-import numpy as np
 import datetime
 import time
 
+import numpy as np
 import matplotlib
-matplotlib.use('Agg')
 
-from utils.prosimu import prosimu
-from utils.obscsv import obscsv, multiplecsv
-from utils.resources import absolute_path, get_file_period
-from utils.dates import checkdateafter, check_and_convert_date
-from utils.infomassifs import infomassifs
-from plots.temporal.chrono import temporalplotObsMultipleSims
-from plots.boxplots.boxplots import boxplots_bydepartment, boxplots_byelevation, boxplots_byyear
-from scores.deterministic import DeterministicScores_Heterogeneous
+from snowtools.utils.prosimu import prosimu
+from snowtools.utils.obscsv import obscsv, multiplecsv
+from snowtools.utils.resources import absolute_path, get_file_period
+from snowtools.utils.dates import checkdateafter, check_and_convert_date
+from snowtools.utils.infomassifs import infomassifs
+from snowtools.plots.temporal.chrono import temporalplotObsMultipleSims
+from snowtools.plots.boxplots.boxplots import boxplots_bydepartment, boxplots_byelevation, boxplots_byyear
+from snowtools.scores.deterministic import DeterministicScores_Heterogeneous
+
+matplotlib.use('Agg')
 
 usage = "CompareSimuPosteObsCsv.py [--scores] [--plot] -b YYYYMMDD -e YYYYMMDD --dirsim=dirsim1,dirsim2 --labels=label1,labe2 --dirplot=dirplot --format=pdf,png,eps --yearly"
 

@@ -13,7 +13,7 @@ from optparse import OptionParser
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 from bronx.stdtypes.date import Date
-from utils.dates import get_list_dates_files, get_dic_dateend
+from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 
 usage = "usage: python get_reanalysis.py --geometry=xxx [--byear=YYYY] [--eyear=YYYY] [--meteo] [--snow] [--nativemeteo]"
 

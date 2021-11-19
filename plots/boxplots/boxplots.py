@@ -11,7 +11,7 @@ import six
 
 from matplotlib import pyplot as plt
 
-from plots.abstracts.figures import Mplfigure
+from snowtools.plots.abstracts.figures import Mplfigure
 
 
 class boxplots(Mplfigure):

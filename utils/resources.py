@@ -12,8 +12,10 @@ This module contains all file manipulations.
 import os
 import shutil
 import datetime
+
 # take care "snowtools" necessary in import for exception catching by vortex
 from snowtools.utils.FileException import FileNameException, DirNameException
+from snowtools.DATA import SNOWTOOLS_DIR, SNOWTOOLS_CEN
 
 
 def absolute_path(pathin):
@@ -95,29 +97,28 @@ def check_snowtools_install():
     """
     Check the snowtool installation. More precisely :
 
-    - Check the environment variables SNOWTOOLS_CEN and PYTHONPATH
     - Check that the required folders for a simulation are present in the folder pointed by SNOWTOOLS_CEN
+    - Check the snowtools packages are correctly importable
     """
     # Check installation of snowtools package
     ValidInstall = True
     issue = ""
-    if 'SNOWTOOLS_CEN' not in list(os.environ.keys()):
-        issue += "SNOWTOOLS_CEN environment variable is not defined.\n"
-        ValidInstall = False
-
-    if 'PYTHONPATH' not in list(os.environ.keys()):
-        issue += "PYTHONPATH environment variable is not defined.\n"
-        ValidInstall = False
 
     if ValidInstall:
         for rep in ["DATA", "tasks", "tools", "utils"]:
-            if not os.path.isdir(os.environ["SNOWTOOLS_CEN"] + "/" + rep):
-                issue += "There is not a correct install of snowtools_git in directory " + os.environ["SNOWTOOLS_CEN"] + "\n"
+            if not os.path.isdir(os.path.join(SNOWTOOLS_DIR, rep)):
+                issue += "There is not a correct install of snowtools_git in directory " + SNOWTOOLS_CEN + "\n"
                 issue += "missing directory:" + rep + "\n"
                 ValidInstall = False
     if ValidInstall:
-        if not os.environ["SNOWTOOLS_CEN"] in os.environ["PYTHONPATH"]:
-            issue += "PYTHONPATH environment variable must contain" + os.environ["SNOWTOOLS_CEN"] + "\n"
+        try:
+            # Import test (DATA already imported)
+            import snowtools.utils
+            import snowtools.tools
+            import snowtools.tasks
+        except ImportError:
+            issue += "PYTHONPATH environment variable must contain" + SNOWTOOLS_CEN + \
+                     ". Cannot import snowtools modules.\n"
             ValidInstall = False
 
     if not ValidInstall:

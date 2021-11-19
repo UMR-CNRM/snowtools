@@ -4,11 +4,12 @@ Created on 17 avr. 2019
 
 @author: cluzetb
 '''
+import os
+
 from vortex.layout.nodes import Task
 from vortex import toolbox
 from bronx.stdtypes.date import Date
-from utils.dates import check_and_convert_date
-import os
+from snowtools.utils.dates import check_and_convert_date
 
 
 class Crampon_Task(Task):

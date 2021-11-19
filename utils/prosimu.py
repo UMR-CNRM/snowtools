@@ -11,13 +11,15 @@ This module contains the ``prosimu`` class used to read simulation files
 """
 
 import os
-import netCDF4
-import numpy as np
 import sys
-from .FileException import FileNameException, DirNameException, FileOpenException, VarNameException, TimeException,\
-    MultipleValueException
-from utils.S2M_standard_file import StandardCROCUS
+
+import netCDF4
 import six
+import numpy as np
+
+from snowtools.utils.FileException import FileNameException, DirNameException, FileOpenException, VarNameException, \
+        TimeException, MultipleValueException
+from snowtools.utils.S2M_standard_file import StandardCROCUS
 
 try:
     import cftime
@@ -327,7 +329,7 @@ class prosimu():
         slices = tuple(slices)
         result = ncvariable_data[slices]
         # if (isinstance(result, np.ma.core.MaskedConstant) or not(isinstance(result, np.ma.core.MaskedArray))):
-            # result = np.ma.MaskedArray(result)
+        #     result = np.ma.MaskedArray(result)
         return result
 
     def get_points(self, **kwargs):
@@ -337,7 +339,7 @@ class prosimu():
         passed to the function.
         """
         if not(all([(self.dataset.variables[varname].dimensions == (self.Number_of_points,)) for varname in kwargs.keys()])):
-            raise TypeError("""Le filtrage ne peut se faire que sur des variables géographiques 
+            raise TypeError("""Le filtrage ne peut se faire que sur des variables géographiques
                 (ZS, slope, aspect, massif_num)""")
         nop = np.arange(len(self.dataset.dimensions[self.Number_of_points]))
         locations_bool = np.ones(len(nop))
@@ -396,7 +398,7 @@ class prosimu():
         return var[tuple(selector)]
 
     def read(self, varname, fill2zero=False, selectpoint=-1, keepfillvalue=False, removetile=True, needmodif=False,
-             hasDecile = False):
+             hasDecile=False):
         """
         Read data from a variable in the netCDF file.
 
@@ -486,7 +488,8 @@ class prosimu():
 
         newtime = self.read(nametime)
 
-#        Provisoirement on compare brutalement. A terme il faudra faire en fonction du units ou sélectionner une période commune.
+#        Provisoirement on compare brutalement.
+#        A terme il faudra faire en fonction du units ou sélectionner une période commune.
         if (newtime[:] != timeref[:]).all():
             raise TimeException(self.path)
 
@@ -529,5 +532,3 @@ class prosimu_old(prosimu):
 
     Number_of_points = 'location'
     Number_of_Patches = 'tile'
-
-

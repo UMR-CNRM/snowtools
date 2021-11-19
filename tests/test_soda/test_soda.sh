@@ -1,10 +1,13 @@
-ln -sf $EXESURFEX/../STRATO/TESTS/ISBA/drdt_bst_fit_60.nc $SNOWTOOLS_CEN/tests/test_soda/drdt_bst_fit_60.nc
-ln -sf $EXESURFEX/../MY_RUN/ECOCLIMAP/ecoclimapI_covers_param.bin $SNOWTOOLS_CEN/tests/test_soda/ecoclimapI_covers_param.bin
-ln -sf $EXESURFEX/../MY_RUN/ECOCLIMAP/ecoclimapII_eu_covers_param.bin $SNOWTOOLS_CEN/tests/test_soda/ecoclimapII_eu_covers_param.bin
+#!/usr/bin/env bash
+
+HERE="$( cd "$( dirname "$( readlink -f "${BASH_SOURCE[0]}" )" )" >/dev/null 2>&1 && pwd )"
+ln -sf $EXESURFEX/../STRATO/TESTS/ISBA/drdt_bst_fit_60.nc $HERE/drdt_bst_fit_60.nc
+ln -sf $EXESURFEX/../MY_RUN/ECOCLIMAP/ecoclimapI_covers_param.bin $HERE/ecoclimapI_covers_param.bin
+ln -sf $EXESURFEX/../MY_RUN/ECOCLIMAP/ecoclimapII_eu_covers_param.bin $HERE/ecoclimapII_eu_covers_param.bin
 
 for i in {1..8}
 do 
-  ln -sf $SNOWTOOLS_CEN/tests/test_soda/PREP.nc PREP_140225H06_PF_ENS$i.nc
+  ln -sf $HERE/PREP.nc PREP_140225H06_PF_ENS$i.nc
 done
 
 ln -sf $EXESURFEX/SODA soda.exe

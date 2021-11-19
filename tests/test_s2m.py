@@ -11,8 +11,9 @@ import shutil
 import sys
 import tempfile
 import datetime
-from tasks.s2m_command import Surfex_command as s2m
-from tests.export_output import exportoutput
+
+from snowtools.tasks.s2m_command import Surfex_command as s2m
+from snowtools.tests.export_output import exportoutput
 _here = os.path.dirname(os.path.realpath(__file__))
 
 

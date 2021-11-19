@@ -6,14 +6,12 @@
 import sys
 import os
 import re
-
 import csv
-
-
 import xml.etree.ElementTree as ET
 
 
 if __name__ == "__main__":
+    from snowtools.DATA import SNOWTOOLS_DIR
 
     fichier_masques = sys.argv[1]
 
@@ -36,8 +34,8 @@ if __name__ == "__main__":
     objcsv.close()
 
     # Ajout des données dans fichier METADATA.xml
-    metadata = os.environ["SNOWTOOLS_CEN"] + "/DATA/METADATA.xml"
-    savefile = os.environ["SNOWTOOLS_CEN"] + "/DATA/METADATA_save.xml"
+    metadata = SNOWTOOLS_DIR + "/DATA/METADATA.xml"
+    savefile = SNOWTOOLS_DIR + "/DATA/METADATA_save.xml"
     os.rename(metadata, savefile)
     tree = ET.parse(savefile)
     root = tree.getroot()

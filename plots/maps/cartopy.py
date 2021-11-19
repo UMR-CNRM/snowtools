@@ -58,22 +58,23 @@ m.init_massifs(palette='Reds')
 """
 
 import os
+
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
 import cartopy.feature
-
-from plots.abstracts.figures import Mplfigure
-from utils.infomassifs import infomassifs
-
 from pyproj import CRS
 from cartopy import config
 from shapely.geometry import Point
 
+from snowtools.plots.abstracts.figures import Mplfigure
+from snowtools.utils.infomassifs import infomassifs
+from snowtools.DATA import SNOWTOOLS_DIR
+
 # Tell cartopy where to find Natural Earth features
-# config['data_dir'] = os.path.join(os.environ['SNOWTOOLS_CEN'], 'CartopyData')
+# config['data_dir'] = os.path.join(SNOWTOOLS_DIR, 'CartopyData')
 config['data_dir'] = os.path.join('/rd/cenfic2/manto/radanovicss', 'CartopyData')
 # config['data_dir'] = os.path.join('/cnrm/cen/users/NO_SAVE/radanovicss', 'CartopyData')  # for sxcen
 # until proper git annex solution
@@ -372,7 +373,7 @@ class _Map_massifs(Mplfigure):
             ax.add_feature(cartopy.feature.LAKES, alpha=0.5)
             ax.add_feature(cartopy.feature.RIVERS)
         elif bgimage:
-            os.environ["CARTOPY_USER_BACKGROUNDS"] = config["data_dir"] #os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')
+            os.environ["CARTOPY_USER_BACKGROUNDS"] = config["data_dir"]  # os.path.join(SNOWTOOLS_DIR, 'DATA')
             ax.background_img(resolution="high")
         return ax
 
@@ -391,7 +392,7 @@ class _Map_massifs(Mplfigure):
 
         :return: shapefile, pprojcrs, shpProj, records
         """
-        shapefile_path = os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')
+        shapefile_path = os.path.join(SNOWTOOLS_DIR, 'DATA')
         filename = 'massifs_{0:s}.shp'.format(self.area)
         shapefile = shpreader.Reader(os.path.join(shapefile_path, filename))
         # Informations sur la projection
@@ -1527,7 +1528,7 @@ class MapFrance(_Map_massifs):
         Read massif shapes from shapefiles for all areas.
 
         """
-        shapefile_path = os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')
+        shapefile_path = os.path.join(SNOWTOOLS_DIR, 'DATA')
         filenames = ['massifs_{0:s}.shp'.format(iarea) for iarea in self.area]
         shapefile = [shpreader.Reader(os.path.join(shapefile_path, filename)) for filename in filenames]
         # Informations sur la projection

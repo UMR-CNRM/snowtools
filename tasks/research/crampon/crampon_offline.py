@@ -7,9 +7,10 @@ Vortex task performing up to 40 offline runs in parallel on a single node
 
 '''
 
+import os
+
 from vortex import toolbox
 from bronx.stdtypes.date import Date
-import os
 from snowtools.tasks.research.crampon.crampon_common import Crampon_Task
 from snowtools.utils.dates import get_list_dates_files, check_and_convert_date
 

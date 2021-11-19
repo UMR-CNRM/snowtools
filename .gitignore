@@ -6,6 +6,7 @@
 *~
 tests/output*
 tests/fail_test
+tests/Manual_tests
 snowtools
 oper_tag
 tag
@@ -17,3 +18,4 @@ fortran/*.mod
 *.mod
 GUI_selfcontain.zip
 DATA/shapefiles
+.coverage

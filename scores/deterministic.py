@@ -5,9 +5,11 @@ Created on 20 mars 2018
 @author: lafaysse
 '''
 
-import numpy as np
-from utils.prosimu import prosimu
 import time
+
+import numpy as np
+
+from snowtools.utils.prosimu import prosimu
 
 ESMSnowMIP_dicvarnames = dict(snowdepth="snd_auto", snowswe="snw_auto", snowdepthman="snd_man", snowsweman="snw_man", tsurf="ts", albedo="albs")
 ESMSnowMIP_alternate_varnames = dict(snd_auto="snd_can_auto")

@@ -8,16 +8,18 @@ Created on 5 Sept. 2017
 
 # General python modules
 import os
-import numpy as np
-import netCDF4
 import datetime
 
+import numpy as np
+import netCDF4
+
 # snowtools modules
-from utils.prosimu import prosimu
-from utils.resources import get_file_period, save_file_const
-from tools.change_forcing import forcinput_select, forcinput_applymask
+from snowtools.utils.prosimu import prosimu
+from snowtools.utils.resources import get_file_period, save_file_const
+from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask
 from snowtools.utils.FileException import DirFileException
-from tools.execute import callSurfexOrDie
+from snowtools.tools.execute import callSurfexOrDie
+from snowtools.DATA import SNOWTOOLS_DIR
 
 
 def create_env(diroutput):
@@ -77,7 +79,7 @@ def get_meteo_for_clim(forcingpath, datebegin, dateend, geolist, list_forcing=[]
             os.rename("FORCING.nc", "input.nc")
             if not os.path.islink('GRID.nc'):
                 os.symlink(geolist[0], "GRID.nc")
-            callSurfexOrDie(os.environ['SNOWTOOLS_CEN'] + "/fortran/interpol", moderun='MPIRUN', nproc=4)
+            callSurfexOrDie(SNOWTOOLS_DIR + "/fortran/interpol", moderun='MPIRUN', nproc=4)
             os.rename("output.nc", "FORCING.nc")
         else:
             os.rename("FORCING.nc", "FORCING_base.nc")

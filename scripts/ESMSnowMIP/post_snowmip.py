@@ -5,9 +5,10 @@
 # Date : July 2017
 
 
-from utils.prosimu import prosimu
 import numpy as np
 import netCDF4
+
+from snowtools.utils.prosimu import prosimu
 
 
 class ESMSnowMIP_output:

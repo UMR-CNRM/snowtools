@@ -10,14 +10,14 @@ import os
 import six
 
 # Snowtools modules
-from utils.prosimu import prosimu
-from utils.dates import checkdateafter
+from snowtools.utils.prosimu import prosimu
+from snowtools.utils.dates import checkdateafter
 from snowtools.utils.FileException import FileNameException, VarDimensionException
 
 from bronx.datagrip.namelist import NamelistParser
 
 
-def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam", forcing="FORCING.nc", dateend=None, updateloc=True, nmembers = None):
+def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam", forcing="FORCING.nc", dateend=None, updateloc=True, nmembers=None):
     """This function updates a namelist file through the bronx module. Called by standalone S2M but not by vortex
 
     :param datebegin: Initial date of simulation

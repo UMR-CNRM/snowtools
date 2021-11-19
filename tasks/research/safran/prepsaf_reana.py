@@ -6,8 +6,6 @@ __all__ = []
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-import os
-
 from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
 from cen.layout.nodes import S2MTaskMixIn
@@ -15,7 +13,6 @@ from vortex.tools.systems import System
 
 from bronx.stdtypes.date import Date
 
-import tarfile
 import glob
 
 from bronx.stdtypes.date import Period

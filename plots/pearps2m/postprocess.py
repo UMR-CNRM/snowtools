@@ -29,28 +29,28 @@ import locale
 import six
 import os
 from optparse import OptionParser
+from collections import Counter, defaultdict
+
 import numpy as np
-import netCDF4
 import matplotlib
 matplotlib.use('Agg')
-from collections import Counter, defaultdict
-from bronx.stdtypes.date import today
-from utils.prosimu import prosimu
-from utils.dates import check_and_convert_date, pretty_date
-from plots.temporal.chrono import spaghettis_with_det, spaghettis
-from utils.infomassifs import infomassifs
-from utils.FileException import DirNameException
-import footprints
 import matplotlib.style
+
+from snowtools.utils.prosimu import prosimu
+from snowtools.utils.dates import check_and_convert_date, pretty_date
+from snowtools.plots.temporal.chrono import spaghettis_with_det, spaghettis
+from snowtools.utils.infomassifs import infomassifs
+from snowtools.utils.FileException import DirNameException
+from bronx.stdtypes.date import today
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 if six.PY2:
     echecker = ExternalCodeImportChecker('plots.maps.basemap')
     with echecker:
-        from plots.maps.basemap import Map_alpes, Map_pyrenees, Map_corse
+        from snowtools.plots.maps.basemap import Map_alpes, Map_pyrenees, Map_corse
 else:
     echecker = ExternalCodeImportChecker('plots.maps.cartopy')
     with echecker:
-        from plots.maps.cartopy import Map_alpes, Map_pyrenees, Map_corse
+        from snowtools.plots.maps.cartopy import Map_alpes, Map_pyrenees, Map_corse
 
 if 'fast' in matplotlib.style.available:
     matplotlib.style.use('fast')
@@ -107,7 +107,7 @@ class config(object):
     # xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
     # list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
 
-    list_members = footprints.util.rangex(0, 35)  #: 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+    list_members = list(range(0, 35))  #: 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
 
     def __init__(self):
         """
@@ -1149,7 +1149,7 @@ if __name__ == "__main__":
 
     # The following class has a vortex-dependence
     # Should not import than above to avoid problems when importing the module from vortex
-    from tasks.oper.get_oper_files import S2MExtractor
+    from snowtools.tasks.oper.get_oper_files import S2MExtractor
 
     c = config()
     os.chdir(c.diroutput)

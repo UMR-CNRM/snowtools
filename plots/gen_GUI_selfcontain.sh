@@ -25,9 +25,9 @@ PWD_INI="$(pwd)"
 
 if [ -s "$SNOWTOOLS_CEN" ]
 then
-    LFILESDIR="$SNOWTOOLS_CEN"
+    LFILESDIR="$SNOWTOOLS_CEN/snowtools"
 else
-    LFILESDIR="./"
+    LFILESDIR="$( cd "$( dirname "$( readlink -f "${BASH_SOURCE[0]}" )" )" >/dev/null 2>&1 && pwd )"
 fi
 
 # List of files to be used

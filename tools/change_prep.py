@@ -7,13 +7,16 @@ Created on 23 Aug. 2017
 '''
 
 
-import os, csv, netCDF4
+import os
+import csv
+
+import netCDF4
 import numpy as np
 
 # For compatibility python 2 / python 3
 # import six
 
-from utils.prosimu import prosimu
+from snowtools.utils.prosimu import prosimu
 from snowtools.utils.FileException import FileNameException
 
 

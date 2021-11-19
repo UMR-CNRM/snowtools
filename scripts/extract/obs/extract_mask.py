@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET
 import csv
 
 from snowtools.scripts.extract.obs.bdquery import question
+from snowtools.DATA import SNOWTOOLS_DIR
 
 # Extraction des masques dans la BDCLIM
 # ---------------------------------------------------------------------------
@@ -29,7 +30,7 @@ mask = {}
 source = {}
 for row in r:
     print(row)
-    if re.match("^\d{7}$", row[0]):
+    if re.match('^\d{7}$', row[0]):
         code = "0" + row[0]
     else:
         code = row[0]
@@ -46,7 +47,7 @@ objcsv.close()
 # Lecture de la liste des postes mal géolocalisés pour ne pas les prendre en compte
 # ---------------------------------------------------------------------------
 list_mal_geolocalises = []
-objcsv = open(os.environ["SNOWTOOLS_CEN"] + "/DATA/liste_malgeolocalises.txt", "r")
+objcsv = open(SNOWTOOLS_DIR + "/DATA/liste_malgeolocalises.txt", "r")
 r = csv.reader(objcsv, delimiter=" ", skipinitialspace=True)
 for row in r:
     if re.match("^\d{7}$", row[0]):
@@ -57,7 +58,7 @@ for row in r:
 
 # Lecture du fichier obtenu par calcul des skylinesà partir du MNT
 # ---------------------------------------------------------------------------
-objcsv = open(os.environ["SNOWTOOLS_CEN"] + "/DATA/sta_skylines.csv", "r")
+objcsv = open(SNOWTOOLS_DIR + "/DATA/sta_skylines.csv", "r")
 
 r = csv.reader(objcsv, delimiter=" ", skipinitialspace=True)
 
@@ -82,8 +83,8 @@ for row in r:
 objcsv.close()
 
 # Ajout des données dans fichier METADATA.xml
-metadata = os.environ["SNOWTOOLS_CEN"] + "/DATA/METADATA.xml"
-savefile = os.environ["SNOWTOOLS_CEN"] + "/DATA/METADATA_save.xml"
+metadata = SNOWTOOLS_DIR + "/DATA/METADATA.xml"
+savefile = SNOWTOOLS_DIR + "/DATA/METADATA_save.xml"
 os.rename(metadata, savefile)
 # parser = ET.XMLParser(remove_blank_text=True)
 # tree = ET.parse(savefile, parser)
