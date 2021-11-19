@@ -108,6 +108,7 @@ import matplotlib.pyplot as plt
 # -g car on n'a pas de prep au début -> il faut faire un spinup
 # --addmask pour tenir compte des masques calculés lors de la génération du fichier NetCDF
 # -a 400 pour limiter le Snow Water Equivalent à 400kg/m3 au 1er août
+# --ntasks 8 si on n'a que 8 points dans les pyrénées -> éviter les pbs
 #
 # question pour simulation: où trouver les forcing de SMHI_RCA4_MOHC_HadGEM2_ES_RCP85 (par exemple) ?
 # reponse: chez Raphaelle Samacoits d'où une commande avec quelque chose comme: 
