@@ -8,7 +8,7 @@ Created on 21 mars 2018
 import numpy as np
 import netCDF4
 
-from snowtool.scores.deterministic import ESMSnowMIP_DeterministicScores_Heterogeneous, \
+from snowtools.scores.deterministic import ESMSnowMIP_DeterministicScores_Heterogeneous, \
         ESMSnowMIP_DeterministicScores_Time, S2M_DeterministicScores_CommonObs
 
 

@@ -15,7 +15,7 @@ from optparse import OptionParser
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 
-from snowtols.scripts.ESMSnowMIP.ESM_snowmip import bdate, edate
+from snowtools.scripts.ESMSnowMIP.ESM_snowmip import bdate, edate
 
 usage = "usage: python get_escroc.py --site=xxx --nmembers=xx --escroc=xx"
 

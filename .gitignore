@@ -7,7 +7,6 @@
 tests/output*
 tests/fail_test
 tests/Manual_tests
-snowtools
 oper_tag
 tag
 *.swp

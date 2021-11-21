@@ -4,7 +4,6 @@
 import six
 import unittest
 import shutil
-import glob
 import tempfile
 from datetime import datetime
 from snowtools.utils.prosimu import prosimu

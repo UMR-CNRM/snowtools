@@ -14,7 +14,8 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../'))
+sys.path.insert(0, os.path.abspath('../../'))           # Bronx
+sys.path.insert(0, os.path.abspath('../../snowtools'))  # Folder inside snowtools
 
 
 # -- Project information -----------------------------------------------------
@@ -198,5 +199,5 @@ autodoc_default_options = {
 autoclass_content = 'both'
 
 # -- Options for fortran extension -------------------------------------------
-fortran_src = ['../fortran/']
+fortran_src = ['../snowtools/fortran/']
 fortran_ext = ['f90']

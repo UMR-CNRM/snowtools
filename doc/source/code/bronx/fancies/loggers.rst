@@ -16,7 +16,7 @@ Data definition
 
 .. autodata:: roots
 
-.. autodata:: console
+.. autodata:: default_console
 
 
 Main Interface functions
@@ -45,7 +45,7 @@ Other Interface functions
 Descriptors classes
 -------------------
 
-.. autoclass:: LoggingFilter
+.. autoclass:: PromptAwareLoggingFilter
    :show-inheritance:
    :members:
    :member-order: alphabetical

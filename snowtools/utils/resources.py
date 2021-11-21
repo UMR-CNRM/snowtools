@@ -95,7 +95,7 @@ class InstallException(Exception):
 
 def check_snowtools_install():
     """
-    Check the snowtool installation. More precisely :
+    Check the snowtools installation. More precisely :
 
     - Check that the required folders for a simulation are present in the folder pointed by SNOWTOOLS_CEN
     - Check the snowtools packages are correctly importable

@@ -27,7 +27,7 @@ SCRIPTHELP_LIST = $(shell cut -d ' ' -f 1 $(SCRIPTHELPFILE))
 SCRIPTHELP_DONE = $(patsubst %.py, $(SCRIPTSHELPDESTDIR)%.rst,$(subst /,--,$(SCRIPTHELP_LIST)))
 GENSCRIPTHELP   = bash scripts/genscripthelp.sh
 SCRIPTSHELPDESTDIR = source/code/autoscripts/
-SCRIPTHELPSRCDIR   = ../
+SCRIPTHELPSRCDIR   = ../snowtools/
 
 clean-scripthelp:
 	rm -rf $(SCRIPTSHELPDESTDIR)/*

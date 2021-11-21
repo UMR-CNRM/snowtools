@@ -3,12 +3,11 @@
 
 
 import unittest
-from snowtools.utils.prosimu import prosimu, prosimu_old
-
 from datetime import datetime
 import os
 
-THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+from snowtools.utils.prosimu import prosimu, prosimu_old
+from snowtools.DATA import SNOWTOOLS_DATA
 
 
 class TestProSimu(unittest.TestCase):
@@ -16,7 +15,7 @@ class TestProSimu(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # fichier au nouveau format de la chaîne
-        path_new = os.path.join(THIS_DIR, '../DATA', 'pro_2018080306_2018080406.nc')
+        path_new = os.path.join(SNOWTOOLS_DATA, 'pro_2018080306_2018080406.nc')
         cls.ps = prosimu(path_new)
 
     def test_get_points_intargs(self):
@@ -59,7 +58,7 @@ class TestProSimuWithCache(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        path_new = os.path.join(THIS_DIR, '../DATA', 'pro_2018080306_2018080406.nc')
+        path_new = os.path.join(SNOWTOOLS_DATA, 'pro_2018080306_2018080406.nc')
         cls.ps = prosimu(path_new)
         cls.ps.force_read_in_cache()
 
@@ -85,7 +84,7 @@ class TestProSimuOld(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # fichier au nouveau format de la chaîne
-        path_old = os.path.join(THIS_DIR, '../DATA', 'old_PRO_20180807032000_002400.nc')
+        path_old = os.path.join(SNOWTOOLS_DATA, 'old_PRO_20180807032000_002400.nc')
         cls.ps = prosimu_old(path_old)
 
     def test_get_points_intargs(self):
@@ -124,7 +123,7 @@ class TestProSimuOldWithCache(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # fichier au nouveau format de la chaîne
-        path_old = os.path.join(THIS_DIR, '../DATA', 'old_PRO_20180807032000_002400.nc')
+        path_old = os.path.join(SNOWTOOLS_DATA, 'old_PRO_20180807032000_002400.nc')
         cls.ps = prosimu_old(path_old)
         cls.ps.force_read_in_cache()
 

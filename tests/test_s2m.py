@@ -13,7 +13,8 @@ import tempfile
 import datetime
 
 from snowtools.tasks.s2m_command import Surfex_command as s2m
-from snowtools.tests.export_output import exportoutput
+from snowtools.DATA import SNOWTOOLS_DATA
+from export_output import exportoutput
 _here = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -73,7 +74,7 @@ class s2mMassifTest(s2mTest):
 
     def setUp(self):
         super(s2mMassifTest, self).setUp()
-        forcingtest = os.path.join(_here, "../DATA/FORCING_test_massif.nc")
+        forcingtest = os.path.join(SNOWTOOLS_DATA, "FORCING_test_massif.nc")
         self.commonoptions += " -f " + forcingtest
 
     def test_delayed_period(self):
@@ -91,13 +92,13 @@ class s2m2DTest(s2mTest):
     def setUp(self):
 
         super(s2m2DTest, self).setUp()
-        forcingtest = os.path.join(_here, "../DATA/FORCING_test_2d.nc")
-        namelist = os.path.join(_here, "../DATA/OPTIONS_test_2d.nam")
+        forcingtest = os.path.join(SNOWTOOLS_DATA, "FORCING_test_2d.nc")
+        namelist = os.path.join(SNOWTOOLS_DATA, "OPTIONS_test_2d.nam")
         # If the test is run at CEN, it can run PGD with available databases.
         # Otherwise, we do not test the PGD step and only take a PGD test file.
         if not self.runatcen():
             os.makedirs(self.diroutput+"/prep")
-            pgd = os.path.join(_here, "../DATA/PGD_test_2d.nc")
+            pgd = os.path.join(SNOWTOOLS_DATA, "PGD_test_2d.nc")
             os.symlink(pgd, self.diroutput+"/prep/PGD.nc")
         self.commonoptions += " --grid -f " + forcingtest + " -n " + namelist
 

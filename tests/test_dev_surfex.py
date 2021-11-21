@@ -13,7 +13,8 @@ import datetime
 import tempfile
 
 from snowtools.tasks.s2m_command import Surfex_command as s2m
-from snowtools.tests.export_output import exportoutput
+from snowtools.DATA import SNOWTOOLS_DATA
+from export_output import exportoutput
 _here = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -26,7 +27,7 @@ class s2mTest(unittest.TestCase):
         self.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
         self.path_namelist = os.path.join(_here, 'namelists/')
         self.namelist = os.path.join(_here, 'namelists/namelist.nam')
-        self.forcingtest = os.path.join(_here, "../DATA/FORCING_test_base.nc")
+        self.forcingtest = os.path.join(SNOWTOOLS_DATA, "FORCING_test_base.nc")
         self.commonoptions = " -o " + self.diroutput + " -f " + self.forcingtest + " -n " + self.namelist + " -g"
         self.logfile = os.path.join(self.diroutput, 'output.log')
         with open(self.logfile, 'w') as f:
@@ -126,7 +127,7 @@ class s2mTestForcageImpurete(s2mTest):
 
     def setUp(self):
         super(s2mTestForcageImpurete, self).setUp()
-        self.forcingtest = os.path.join(_here, "../DATA/FORCING_test_impur.nc")
+        self.forcingtest = os.path.join(SNOWTOOLS_DATA, "FORCING_test_impur.nc")
         self.commonoptions = " -o " + self.diroutput + " -f " + self.forcingtest + " -n " + self.namelist + " -g"
 
     def test_impur1(self):
@@ -152,13 +153,13 @@ class s2m2DTest(s2mTest):
 
     def setUp(self):
         super(s2m2DTest, self).setUp()
-        self.forcingtest = os.path.join(_here, "../DATA/FORCING_test_2d.nc")
-        self.namelist = os.path.join(_here, "../DATA/OPTIONS_test_2d.nam")
+        self.forcingtest = os.path.join(SNOWTOOLS_DATA, "FORCING_test_2d.nc")
+        self.namelist = os.path.join(SNOWTOOLS_DATA, "OPTIONS_test_2d.nam")
         # If the test is run at CEN, it can run PGD with available databases.
         # Otherwise, we do not test the PGD step and only take a PGD test file.
         if not self.runatcen():
             os.makedirs(self.diroutput+"/prep")
-            pgd = os.path.join(_here, "../DATA/PGD_test_2d.nc")
+            pgd = os.path.join(SNOWTOOLS_DATA, "PGD_test_2d.nc")
             os.symlink(pgd, self.diroutput+"/prep/PGD.nc")
         self.commonoptions = " -o " + self.diroutput + " --grid -f " + self.forcingtest + " -n " + self.namelist + " -g"
 
