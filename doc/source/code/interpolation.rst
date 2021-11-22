@@ -9,17 +9,17 @@ Interpolation tools
 Netcdf_add_massif_info script
 -----------------------------
 
-.. include:: ./autoscripts/fortran--Netcdf_add_massif_info.rst
+.. include:: ./autoscripts/interpolation--Netcdf_add_massif_info.rst
 
 shapefile2NetCDF tool
 ---------------------
 
-.. automodule:: fortran.shapefile2NetCDF
+.. automodule:: interpolation.shapefile2NetCDF
    :members:
 
 This module is also an executable script:
 
-.. include:: ./autoscripts/fortran--shapefile2NetCDF.rst
+.. include:: ./autoscripts/interpolation--shapefile2NetCDF.rst
 
 The interpolation tool
 ----------------------

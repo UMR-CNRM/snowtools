@@ -39,7 +39,7 @@ Technical documentation
    Scores (scores) <code/scores.rst>
    Plots tools (plots) <code/plots.rst>
    Assimilation scripts (assim) <code/assim.rst>
-   Interpolation <code/fortran.rst>
+   Interpolation <code/interpolation.rst>
    The bronx package <code/bronx.rst>
 
 Other things gathered by snowtools

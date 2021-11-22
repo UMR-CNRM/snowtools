@@ -83,7 +83,7 @@ import matplotlib.pyplot as plt
 # give the PRO file for the shapefile points. 
 #
 # Exemple:
-# s2m -f /rd/cenfic2/era40/vortex/s2m/alp_flat/reanalysis/meteo/FORCING_2017080106_2018080106.nc -b 20170801 -e 20180801 -r /home/fructusm/git/snowtools_git/fortran/NetCDF_from_shapefile.nc -o output_test_s2m -g --extractforcing
+# s2m -f /rd/cenfic2/era40/vortex/s2m/alp_flat/reanalysis/meteo/FORCING_2017080106_2018080106.nc -b 20170801 -e 20180801 -r /home/fructusm/git/snowtools_git/interpolation/NetCDF_from_shapefile.nc -o output_test_s2m -g --extractforcing
 # s2m -f /home/fructusm/OUTPUT_et_PRO/output_test_s2m/meteo/FORCING_2017080106_2018080106.nc -b 20170801 -e 20180801 -o output_test_s2m_Safran -g --addmask
 # (NB: export NINTERPOL=1 if MPI problem for the extractforcing)
 #

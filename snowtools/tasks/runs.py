@@ -74,8 +74,8 @@ class surfexrun(object):
                     self.moderun = moderun
             else:
                 self.moderun = moderun
-            if os.path.islink(os.path.join(SNOWTOOLS_DIR, "fortran/interpol")):
-                if "MPIAUTO" in os.readlink(os.path.join(SNOWTOOLS_DIR, "fortran/interpol")):
+            if os.path.islink(os.path.join(SNOWTOOLS_DIR, "interpolation/interpol")):
+                if "MPIAUTO" in os.readlink(os.path.join(SNOWTOOLS_DIR, "interpolation/interpol")):
                     self.modeinterpol = "MPIRUN"
                 else:
                     self.modeinterpol = moderun
@@ -305,7 +305,7 @@ class interpolrun(surfexrun):
         print(args)
         if not os.path.islink('GRID.nc'):
             os.symlink(args[0], "GRID.nc")
-        callSurfexOrDie(os.path.join(SNOWTOOLS_DIR, "fortran/interpol"), moderun=self.modeinterpol, nproc=self.ninterpol)
+        callSurfexOrDie(os.path.join(SNOWTOOLS_DIR, "interpolation/interpol"), moderun=self.modeinterpol, nproc=self.ninterpol)
         os.rename("output.nc", "FORCING.nc")
 
     def save_output(self):

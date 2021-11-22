@@ -59,7 +59,7 @@ cov(){
 
 # Do doc coverage tests
 cov bronx
-cov fortran
+cov interpolation
 cov plots
 cov tools
 cov utils

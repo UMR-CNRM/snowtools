@@ -199,5 +199,5 @@ autodoc_default_options = {
 autoclass_content = 'both'
 
 # -- Options for fortran extension -------------------------------------------
-fortran_src = ['../snowtools/fortran/']
+fortran_src = ['../snowtools/interpolation/']
 fortran_ext = ['f90']
