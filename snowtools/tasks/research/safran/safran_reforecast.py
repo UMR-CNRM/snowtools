@@ -14,12 +14,12 @@ from bronx.stdtypes.date import Period
 
 def setup(t, **kw):
     return Driver(
-        tag    = 'safran',
-        ticket = t,
-        nodes  = [
+        tag='safran',
+        ticket=t,
+        nodes=[
             Safran(tag='prvsaf', ticket=t, **kw),
         ],
-        options = kw,
+        options=kw,
     )
 
 
@@ -414,7 +414,8 @@ class Safran(Task, S2MTaskMixIn):
                     kind           = 'MeteorologicalForcing',
                     source_app     = 'arpege',
                     source_conf    = 'pearp',
-                    local          = '[datebegin::ymd6h]/mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                    local          = '[datebegin::ymd6h]/mb[member]/ \
+                                     FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = self.conf.xpid,
                     block          = 'massifs/{0:s}'.format(season),
                     geometry       = self.conf.vconf,
@@ -435,7 +436,8 @@ class Safran(Task, S2MTaskMixIn):
                     kind           = 'MeteorologicalForcing',
                     source_app     = 'arpege',
                     source_conf    = 'pearp',
-                    local          = '[datebegin::ymd6h]/mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                    local          = '[datebegin::ymd6h]/mb[member]/ \
+                                     FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = self.conf.xpid,
                     block          = 'postes/{0:s}'.format(season),
                     geometry       = self.conf.vconf,

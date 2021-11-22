@@ -44,8 +44,8 @@ class Rapatrie_Postproc(S2MTaskMixIn, OpTask):
         print()
 
         ad.route(kind='bdpe', productid=self.conf.num_bdpe_postproc[self.conf.xpid], sshhost=transfernode,
-         soprano_target=self.conf.soprano_target[self.conf.suitebg], routingkey='bdpe', term=0,
-         filename='postproc.nc')
+                 soprano_target=self.conf.soprano_target[self.conf.suitebg], routingkey='bdpe', term=0,
+                 filename='postproc.nc')
 
 
 class Rapatrie_Forcing(S2MTaskMixIn, OpTask):
@@ -67,29 +67,32 @@ class Rapatrie_Forcing(S2MTaskMixIn, OpTask):
 
                     self.sh.title('Toolbox output tb10')
                     tb10 = toolbox.input(
-                        local          = 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                        experiment     = self.conf.xpid,
-                        block          = 'meteo',
-                        geometry       = self.conf.geometry,
-                        date           = self.conf.rundate,
-                        datebegin      = datebegin,
-                        dateend        = dateend,
-                        member         = m,
-                        nativefmt      = 'netcdf',
-                        intent         = 'inout',
-                        namespace      = 'vortex.cache.fr',
-                        kind           = 'MeteorologicalForcing',
-                        model          = 's2m',
+                        local            = 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        experiment       = self.conf.xpid,
+                        block            = 'meteo',
+                        geometry         = self.conf.geometry,
+                        date             = self.conf.rundate,
+                        datebegin        = datebegin,
+                        dateend          = dateend,
+                        member           = m,
+                        nativefmt        = 'netcdf',
+                        intent           = 'inout',
+                        namespace        = 'vortex.cache.fr',
+                        kind             = 'MeteorologicalForcing',
+                        model            = 's2m',
                         store_compressed = 'gzip',
-                        cutoff         = 'production' if self.conf.previ else 'assimilation',
-                        fatal          = False
+                        cutoff           = 'production' if self.conf.previ else 'assimilation',
+                        fatal            = False
                     ),
                     print((t.prompt, 'tb10 =', tb10))
                     print()
 
-                    self.sh.tar('FORCING_{:03}.tar'.format(m), *[item for sublist in (['mb{:03}'.format(m)], ['FORCING']) for item in sublist], output= False)
-                    self.sh.gzip('FORCING_{:03}.tar'.format(m), output = False)
-                    ad.route(kind='bdpe', productid=self.conf.num_bdpe_for[self.conf.xpid], sshhost=transfernode, soprano_target=self.conf.soprano_target[self.conf.suitebg], routingkey='bdpe',term=m, filename='FORCING_{:03}.tar.gz'.format(m)) 
+                    self.sh.tar('FORCING_{:03}.tar'.format(m), *[item for sublist in (['mb{:03}'.format(m)],
+                                ['FORCING']) for item in sublist], output=False)
+                    self.sh.gzip('FORCING_{:03}.tar'.format(m), output=False)
+                    ad.route(kind='bdpe', productid=self.conf.num_bdpe_for[self.conf.xpid], sshhost=transfernode,
+                             soprano_target=self.conf.soprano_target[self.conf.suitebg],
+                             routingkey='bdpe', term=m, filename='FORCING_{:03}.tar.gz'.format(m))
                 except:
                     print(("Oops! The file FORCING_{:03}.tar is missing...".format(m)))
 
@@ -115,7 +118,8 @@ class Rapatrie_Pro(S2MTaskMixIn, OpTask):
                     geometry         = self.conf.geometry,
                     date             = self.conf.rundate,
                     datebegin        = datebegin if self.conf.previ else '[dateend]/-PT24H',
-                    dateend          = dateend if self.conf.previ else list(daterange(tomorrow(base=datebegin), dateend)),
+                    dateend          = dateend if self.conf.previ else list(daterange(tomorrow(base=datebegin),
+                                                                                      dateend)),
                     member           = m,
                     nativefmt        = 'netcdf',
                     namespace        = 'vortex.cache.fr',
@@ -129,9 +133,12 @@ class Rapatrie_Pro(S2MTaskMixIn, OpTask):
                 print((t.prompt, 'tb11 =', tb11))
                 print()
 
-                self.sh.tar('PRO_{:03}.tar'.format(m), *[item for sublist in (['mb{:03}'.format(m)], ['PRO']) for item in sublist], output= False)
-                self.sh.gzip('PRO_{:03}.tar'.format(m), output = False)
-                ad.route(kind='bdpe', productid=self.conf.num_bdpe_pro[self.conf.xpid], sshhost=transfernode, soprano_target=self.conf.soprano_target[self.conf.suitebg], routingkey='bdpe',term=m, filename='PRO_{:03}.tar.gz'.format(m))
+                self.sh.tar('PRO_{:03}.tar'.format(m),
+                            *[item for sublist in (['mb{:03}'.format(m)], ['PRO'])for item in sublist], output=False)
+                self.sh.gzip('PRO_{:03}.tar'.format(m), output=False)
+                ad.route(kind='bdpe', productid=self.conf.num_bdpe_pro[self.conf.xpid], sshhost=transfernode,
+                         soprano_target=self.conf.soprano_target[self.conf.suitebg], routingkey='bdpe', term=m,
+                         filename='PRO_{:03}.tar.gz'.format(m))
             except:
                 print(("Oops! The file PRO_{:03}.tar is missing...".format(m)))
 
@@ -156,7 +163,8 @@ class Rapatrie_Prep(S2MTaskMixIn, OpTask):
                     experiment       = self.conf.xpid,
                     block            = 'prep',
                     geometry         = self.conf.geometry,
-                    datevalidity     = dateend if self.conf.previ else list(daterange(tomorrow(base=datebegin), dateend)),
+                    datevalidity     = dateend if self.conf.previ else list(daterange(tomorrow(base=datebegin),
+                                                                                      dateend)),
                     date             = self.conf.rundate,
                     member           = m,
                     nativefmt        = 'netcdf',
@@ -171,9 +179,12 @@ class Rapatrie_Prep(S2MTaskMixIn, OpTask):
                 print((t.prompt, 'tb12 =', tb12))
                 print()
 
-                self.sh.tar('PREP_{:03}.tar'.format(m), *[item for sublist in (['mb{:03}'.format(m)], ['PREP']) for item in sublist], output= False)
-                self.sh.gzip('PREP_{:03}.tar'.format(m), output = False)
-                ad.route(kind='bdpe', productid=self.conf.num_bdpe_prep[self.conf.xpid], sshhost=transfernode, soprano_target=self.conf.soprano_target[self.conf.suitebg], routingkey='bdpe',term=m, filename='PREP_{:03}.tar.gz'.format(m))
+                self.sh.tar('PREP_{:03}.tar'.format(m),
+                            *[item for sublist in (['mb{:03}'.format(m)], ['PREP']) for item in sublist], output=False)
+                self.sh.gzip('PREP_{:03}.tar'.format(m), output=False)
+                ad.route(kind='bdpe', productid=self.conf.num_bdpe_prep[self.conf.xpid], sshhost=transfernode,
+                         soprano_target=self.conf.soprano_target[self.conf.suitebg], routingkey='bdpe', term=m,
+                         filename='PREP_{:03}.tar.gz'.format(m))
             except:
                 print(("Oops! The file PRO_{:03}.tar is missing...".format(m)))
 
@@ -202,4 +213,6 @@ class Rapatrie_Prep(S2MTaskMixIn, OpTask):
             ),
             print((t.prompt, 'tb12 =', tb12))
             print()
-            ad.route(kind='bdpe', productid=self.conf.num_bdpe_initrea[self.conf.xpid], sshhost=transfernode, soprano_target=self.conf.soprano_target[self.conf.suitebg], routingkey='bdpe',term=0, filename='PREP_for_reanalysis.nc')
+            ad.route(kind='bdpe', productid=self.conf.num_bdpe_initrea[self.conf.xpid], sshhost=transfernode,
+                     soprano_target=self.conf.soprano_target[self.conf.suitebg], routingkey='bdpe', term=0,
+                     filename='PREP_for_reanalysis.nc')

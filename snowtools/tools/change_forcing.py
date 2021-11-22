@@ -18,7 +18,9 @@ from snowtools.utils.sun import sun
 from snowtools.utils.prosimu import prosimu
 from snowtools.utils.infomassifs import infomassifs
 # Take care : exceptions have to been imported with snowtools prefix to be recognized by vortex
-from snowtools.utils.FileException import FileNameException, DirNameException, VarWriteException, GeometryException, MassifException, TimeListException
+from snowtools.utils.FileException import (
+    FileNameException, DirNameException, VarWriteException,
+    GeometryException, MassifException, TimeListException)
 from snowtools.utils.dates import TypeException
 
 from snowtools.utils.resources import print_used_memory
@@ -28,7 +30,7 @@ from snowtools.utils.S2M_standard_file import StandardSAFRAN, StandardCROCUS
 class forcinput_tomerge:
     """
     This class represents a group of forcing files which must be merged
-    in a single one through the Number_of_points dimension.
+    in a single one through the ``Number_of_points`` dimension.
 
     :param forcin: List of input files names
     :type forcin: list
@@ -154,7 +156,8 @@ class forcinput_tomerge:
 
                     var_array = unitfile.read(varname, keepfillvalue=True)
 
-                    if varname in ["LAT", "LON", "aspect", "slope", "DIR_SWdown", "SCA_SWdown", "massif_number", "station"]:
+                    if varname in ["LAT", "LON", "aspect", "slope", "DIR_SWdown",
+                                   "SCA_SWdown", "massif_number", "station"]:
                         savevar[varname + str(i)] = var_array
 
                     if varname not in ["DIR_SWdown", "SCA_SWdown"]:
@@ -178,10 +181,11 @@ class forcinput_tomerge:
 class forcinput_applymask(forcinput_tomerge):
     """
     This class represents a group of forcing files which must be merged
-    in a single one through the Number_of_points dimension.
+    in a single one through the ``Number_of_points`` dimension.
     and for which incoming shortwave radiation must be corrected from shadows.
     Or a single forcing file for which incoming shortwave radiation must be corrected from shadows.
     """
+
     def compute_solar_radiations(self, time, savevar, i):
         if "station" + str(i) in list(savevar.keys()):
             INFO = infomassifs()
@@ -198,8 +202,11 @@ class forcinput_applymask(forcinput_tomerge):
             list_list_azim = None
             list_list_mask = None
 
-        return sun().slope_aspect_correction(savevar["DIR_SWdown" + str(i)], savevar["SCA_SWdown" + str(i)], time, savevar["LAT" + str(i)],
-                                             savevar["LON" + str(i)], savevar["aspect" + str(i)], savevar["slope" + str(i)], list_list_azim=list_list_azim, list_list_mask=list_list_mask, lnosof_surfex=True)
+        return sun().slope_aspect_correction(savevar["DIR_SWdown" + str(i)], savevar["SCA_SWdown" + str(i)],
+                                             time, savevar["LAT" + str(i)], savevar["LON" + str(i)],
+                                             savevar["aspect" + str(i)], savevar["slope" + str(i)],
+                                             list_list_azim=list_list_azim, list_list_mask=list_list_mask,
+                                             lnosof_surfex=True)
 
     def stringstation(self, station):
         station = str(station)
@@ -243,7 +250,7 @@ class forcinput_tomodify:
             self.modify(init_forcing_file, init_forcing_file, args)
         else:
             init_forcing_file = prosimu(forcin)
-            print ("INFO INPUT FORCING FILE FORMAT: " + init_forcing_file.format())
+            print("INFO INPUT FORCING FILE FORMAT: " + init_forcing_file.format())
             new_forcing_file = self.StandardFILE(forcout, "w", format=self.formatout)
             self.modify(init_forcing_file, new_forcing_file, args)
 
@@ -360,11 +367,12 @@ class forcinput_tomodify:
 
             lpn_temp = np.where(snow_full[:, 0] > 0., -3, lpn_temp)
             lpn_temp = np.where(rain_full[:, -1] > 0., -2, lpn_temp)
-            lpn_temp = np.where(np.all(preciptot<2.E-4, axis=1) & np.any(preciptot < 1.E-8, axis=1), -1, lpn_temp)
+            lpn_temp = np.where(np.all(preciptot < 2.E-4, axis=1) & np.any(preciptot < 1.E-8, axis=1), -1, lpn_temp)
 
             lpn[:, m] = lpn_temp
         var = new_forcing_file.createVariable("rainSnowLimit", 'float', ["time", "massif"], fill_value=-9999.)
-        var.long_name = 'Rain-snow transition altitude (resolution 300 m). -1 if no precipitation; -2 if above the top of the massif; -3 if below the bottom of the massif.'
+        var.long_name = ('Rain-snow transition altitude (resolution 300 m). -1 if no precipitation;'
+                         '-2 if above the top of the massif; -3 if below the bottom of the massif.')
         var.units = 'm'
         var[:] = lpn
 
@@ -389,10 +397,10 @@ class forcinput_tomodify:
             tair_full = tair[:, indflat]
             # Temperature of the level just above
             # Last column will not be used but is necessary to conform shapes.
-            tair_full_up = np.concatenate((tair_full[:,1:], np.zeros_like(tair_full[:,0:1]) + 999),axis=1)
+            tair_full_up = np.concatenate((tair_full[:, 1:], np.zeros_like(tair_full[:, 0:1]) + 999), axis=1)
 
             # Store both temperatures in the same variable
-            x = (tair_full * 100.).astype('int')  + tair_full_up / 1000.
+            x = (tair_full * 100.).astype('int') + tair_full_up / 1000.
 
             # Elevations with positive temperatures
             # Decimal part represents the temperature of the correponding level and the temperature above
@@ -406,21 +414,22 @@ class forcinput_tomodify:
             zup = zlow + 300
 
             # Separate and reconstruct both temperatures
-            ttempup,ttemplow = np.modf(y*100000)
+            ttempup, ttemplow = np.modf(y*100000)
 
-            tlow=np.where(ttemplow > 0., ttemplow / 100., -999.) # Temperature of the level just below freezing level
-            tup=np.where(ttempup > 0., ttempup * 1000., -998.) # Temperature of the level just above freezing level
+            tlow = np.where(ttemplow > 0., ttemplow / 100., -999.)  # Temperature of the level just below freezing level
+            tup = np.where(ttempup > 0., ttempup * 1000., -998.)  # Temperature of the level just above freezing level
             # Note that in cases of missing values, tup and tlow must be different to avoid a division by 0 just after
 
             # Freezing level is computed with a linear interpolation.
-            isozero_temp = ((tlow - zero) * zup + (zero - tup) * zlow ) / (tlow - tup)
-            isozero_temp = np.where(zlow == -999., -3, isozero_temp) # Freezing level below the lowest level
-            isozero_temp = np.where(zlow == zmax, -2, isozero_temp) # Freezing level above the lowest level
+            isozero_temp = ((tlow - zero) * zup + (zero - tup) * zlow) / (tlow - tup)
+            isozero_temp = np.where(zlow == -999., -3, isozero_temp)  # Freezing level below the lowest level
+            isozero_temp = np.where(zlow == zmax, -2, isozero_temp)  # Freezing level above the lowest level
 
             isozero[:, m] = isozero_temp
 
         var = new_forcing_file.createVariable("isoZeroAltitude", 'float', ["time", "massif"], fill_value=-9999.)
-        var.long_name = 'Freezing level altitude obtained by interpolation from SAFRAN standard levels. -2 if above the top of the massif ; -3 if below the bottom of the massif.'
+        var.long_name = ('Freezing level altitude obtained by interpolation from SAFRAN standard levels.'
+                         '-2 if above the top of the massif ; -3 if below the bottom of the massif.')
         var.units = 'm'
         var[:] = isozero
 
@@ -429,8 +438,10 @@ class forcinput_tomodify:
 
 
 class forcinput_addmeteomassif(forcinput_tomodify):
-    """This class represents a forcing file for which massif-scale meteorological diagnostics must be added.
     """
+    This class represents a forcing file for which massif-scale meteorological diagnostics must be added.
+    """
+
     def modify(self, init_forcing_file, new_forcing_file, *args):
         """Add massif-scale meteorological diagnostics
 
@@ -452,7 +463,7 @@ class forcinput_select(forcinput_tomodify):
     # This class was first implemented by G. Lecourt for spatial reduction of a forcing file
     # M Lafaysse generalized the method to both FORCING and PRO files (June 2016)
     # M Lafaysse added a treatement to increase the number of slopes (July 2016)
-    # M Lafaysse added a treatment to create coordinates for direct compatibilty with the new SAFRAN output (August 2017)
+    # M Lafaysse added a treatment to create coordinates for direct compatibilty with the new SAFRAN output (Aug 2017)
 
     def massifvarname(self):
         return 'massif_number'
@@ -464,15 +475,15 @@ class forcinput_select(forcinput_tomodify):
         :type init_forcing_file: :class:`utils.prosimu.prosimu`
         :param new_forcing_file: Output file object
         :type new_forcing_file: :class:`utils.prosimu.prosimu`
-        :param \*args: list of massif numbers, minimum elevation, maximum elevation, list of slopes, list of aspects
-        :type \*args: list, int, int, list, list
+        :param args: list of massif numbers, minimum elevation, maximum elevation, list of slopes, list of aspects
+        :type args: list, int, int, list, list
         """
 
         print("Modify forcing file towards the prescribed geometry:")
 
         (list_massif_number, min_alt, max_alt, liste_pentes, list_exp) = args[:][0]
 
-        list_exp_degres = list_exp[:]  # A copy is necessary to not modify this value in the calling module for next iteration
+        list_exp_degres = list_exp[:]  # Necessary to not modify this value in the module call for next iteration
         # print list_exp_degres
         liste_pentes_int = list(map(int, liste_pentes))
 
@@ -499,18 +510,20 @@ class forcinput_select(forcinput_tomodify):
         if "0" in liste_pentes:
             nb_slope_angles_notflat = len(liste_pentes) - 1  # Number of target slopes excluding flat
             nb_aspect_angles_notflat = len(list_exp_degres) - 1  # Number of target aspects excluding flat
-            nb_slopes_bylevel = 1 + nb_slope_angles_notflat * nb_aspect_angles_notflat  # Number of slopes for a given elevation level
+            nb_slopes_bylevel = 1 + (nb_slope_angles_notflat *
+                                     nb_aspect_angles_notflat)  # Number of slopes for a given elevation level
         else:
             nb_slope_angles_notflat = len(liste_pentes)  # Number of target slopes excluding flat
             nb_aspect_angles_notflat = len(list_exp_degres)  # Number of target aspects excluding flat
-            nb_slopes_bylevel = nb_slope_angles_notflat * nb_aspect_angles_notflat  # Number of slopes for a given elevation level
+            nb_slopes_bylevel = (nb_slope_angles_notflat *
+                                 nb_aspect_angles_notflat)  # Number of slopes for a given elevation level
 
         # print nb_slopes_bylevel, nb_slope_angles_notflat, nb_aspect_angles_notflat
 
         # Extend aspects mode only if input file have only -1 aspects
         extendaspects = nb_slopes_bylevel > 1 and np.all(init_exp == -1)
         # Extend slopes if input file already have several aspects but we want more slope values
-        extendslopes = not extendaspects and ( len(liste_pentes) > len(np.unique(init_slopes)) )
+        extendslopes = not extendaspects and (len(liste_pentes) > len(np.unique(init_slopes)))
 
         if extendaspects:
             print("Extend aspects of the input forcing file")
@@ -600,7 +613,7 @@ class forcinput_select(forcinput_tomodify):
             print(varname)
             if self.printmemory:
                 print_used_memory()
-                print (datetime.datetime.today())
+                print(datetime.datetime.today())
             vartype, rank, array_dim, varFillvalue, var_attrs = init_forcing_file.infovar(varname)
 
             if len(array_dim) > 0:
@@ -656,10 +669,13 @@ class forcinput_select(forcinput_tomodify):
 
                             # WE CAN NOT USE NP.REPEAT IN THAT CASE BECAUSE WE WANT TO DUPICATE SEQUENCES OF 8 ASPECTS
                             # WITH THE ASPECT VARYING FASTER THAN THE SLOPE ANGLE.
-                            # USE NP.SPLIT TO SEPARATE EACH MASSIF-ELEVATION (GROUPS OF 8 ASPECTS), THEN USE NP.TILE TO DUPICATE THE SLOPES,
+                            # USE NP.SPLIT TO SEPARATE EACH MASSIF-ELEVATION (GROUPS OF 8 ASPECTS),
+                            # THEN USE NP.TILE TO DUPICATE THE SLOPES,
                             # FINALLY NP.HSTACK CONCATENATE THE SEQUENCES ALONG THE LAST DIMENSION
 
-                            newvar_array[:, indnoflat] = np.hstack(np.tile(np.split(var_array[:, points_to_duplicate], len(indflat), axis=1), 1 + nslopes_to_create))
+                            newvar_array[:, indnoflat] = np.hstack(
+                                np.tile(np.split(var_array[:, points_to_duplicate], len(indflat), axis=1),
+                                        1 + nslopes_to_create))
 
                             del var_array
                             var_array = newvar_array
@@ -672,7 +688,9 @@ class forcinput_select(forcinput_tomodify):
                             newvar_array[indflat] = var_array[~points_to_duplicate]
 
                             # THIS IS EQUIVALENT TO THE SEQUENCE ABOVE FOR RANK 2 VARIABLES
-                            newvar_array[indnoflat] = np.tile(np.array(np.split(var_array[points_to_duplicate], len(indflat))), 1 + nslopes_to_create).flatten()
+                            newvar_array[indnoflat] = np.tile(
+                                np.array(np.split(var_array[points_to_duplicate], len(indflat))),
+                                1 + nslopes_to_create).flatten()
 
 
 #                             print indflat
@@ -688,10 +706,11 @@ class forcinput_select(forcinput_tomodify):
                 if not attname == '_FillValue':
                     setattr(var, attname, init_forcing_file.getattr(varname, attname))
             try:
-                if not (varname in ["DIR_SWdown", "SCA_SWdown"] and ( extendaspects or extendslopes )):
+                if not (varname in ["DIR_SWdown", "SCA_SWdown"] and (extendaspects or extendslopes)):
                     # print "BEFORE WRITE", datetime.datetime.today()
 
-                    # do not write direct solar radiations if aspects and slopes were extended because we need to recompute the values
+                    # do not write direct solar radiations if aspects and slopes were extended
+                    # because we need to recompute the values
                     if rank == 0:
                         var[:] = var_array
                     elif rank == 1:
@@ -713,7 +732,8 @@ class forcinput_select(forcinput_tomodify):
             # Some variables need to be saved for solar computations
             if varname in ["time"]:
                 savevar[varname] = init_forcing_file.readtime()
-            if varname in ["LAT", "LON", "ZS", "aspect", "slope", "DIR_SWdown", "SCA_SWdown", self.massifvarname(), "Tair", "Rainf", "Snowf"]:
+            if varname in ["LAT", "LON", "ZS", "aspect", "slope", "DIR_SWdown",
+                           "SCA_SWdown", self.massifvarname(), "Tair", "Rainf", "Snowf"]:
                 savevar[varname] = var_array
             if varname == self.massifvarname():
                 save_array_dim = array_dim
@@ -729,9 +749,11 @@ class forcinput_select(forcinput_tomodify):
 
         # Compute new solar radiations according to the new values of slope and aspect
         if extendaspects or extendslopes:
-#             print ("BEFORE RADIATION COMPUTATIONS", datetime.datetime.today())
-            direct, diffus = sun().slope_aspect_correction(savevar["DIR_SWdown"], savevar["SCA_SWdown"], savevar["time"], lat, lon, savevar["aspect"], savevar["slope"])
-#             print ("AFTER RADIATION COMPUTATIONS", datetime.datetime.today())
+            # print ("BEFORE RADIATION COMPUTATIONS", datetime.datetime.today())
+            direct, diffus = sun().slope_aspect_correction(savevar["DIR_SWdown"], savevar["SCA_SWdown"],
+                                                           savevar["time"], lat, lon, savevar["aspect"],
+                                                           savevar["slope"])
+            # print ("AFTER RADIATION COMPUTATIONS", datetime.datetime.today())
             new_forcing_file.variables["DIR_SWdown"][:] = direct
             new_forcing_file.variables["SCA_SWdown"][:] = diffus
             del savevar["DIR_SWdown"]
@@ -739,10 +761,10 @@ class forcinput_select(forcinput_tomodify):
             del savevar["time"]
             del savevar["aspect"]
 
-            print ("AFTER WRITE RADIATIONS", datetime.datetime.today())
+            print("AFTER WRITE RADIATIONS", datetime.datetime.today())
 
         self.add_massif_variables(init_forcing_file, new_forcing_file, savevar=savevar)
-        print ("AFTER MASSIF VARIABLES", datetime.datetime.today())
+        print("AFTER MASSIF VARIABLES", datetime.datetime.today())
 
         del savevar
 
@@ -773,8 +795,10 @@ class forcinput_select(forcinput_tomodify):
 
 
 class proselect(forcinput_select):
-    """This class is designed to extract a selection of massifs, elevation levels, slopes or aspects from a PRO file.
     """
+    This class is designed to extract a selection of massifs, elevation levels, slopes or aspects from a PRO file.
+    """
+
     def massifvarname(self):
         return 'massif_num'
 
@@ -785,9 +809,9 @@ class proselect(forcinput_select):
         return StandardCROCUS(*args, **kwargs)
 
 
-
 class forcinput_ESMSnowMIP(forcinput_tomodify):
-    """This class prepares FORCING files from the ESMSnowMIP offical netcdf dataset
+    """
+    This class prepares FORCING files from the ESMSnowMIP offical netcdf dataset
     """
     formatout = "NETCDF3_CLASSIC"
 
@@ -805,7 +829,7 @@ class forcinput_ESMSnowMIP(forcinput_tomodify):
                     bigvar[:, ilat, ilon] = var[:]
 
         else:
-            print ("error on indices in upscale_tab_time")
+            print("error on indices in upscale_tab_time")
 
         return bigvar
 
@@ -820,61 +844,71 @@ class forcinput_ESMSnowMIP(forcinput_tomodify):
         site = os.path.basename(self.filename)[11:14]
         source = os.path.basename(self.filename)[4:10]
         if site == "cdp":
-            const = {"LAT": 45.3, "LON": 5.77, "ZS": 1325, "slope": 0, "aspect": -1, "ZREF": 37, "UREF": 38, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            const = {"LAT": 45.3, "LON": 5.77, "ZS": 1325, "slope": 0, "aspect": -1,
+                     "ZREF": 37, "UREF": 38, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
             if source == "insitu":
                 timeshift = 0
             elif source == "gswp3c":
                 timeshift = -1
         if site == "oas":
-            const = {"LAT": 53.63, "LON": -106.2, "ZS": 600, "slope": 0, "aspect": -1, "ZREF": 37, "UREF": 38, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            const = {"LAT": 53.63, "LON": -106.2, "ZS": 600, "slope": 0, "aspect": -1,
+                     "ZREF": 37, "UREF": 38, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
             if source == "insitu":
                 timeshift = 6
             elif source == "gswp3c":
                 timeshift = -1
         elif site == "obs":
-            const = {"LAT": 53.99, "LON": -105.12, "ZS": 629, "slope": 0, "aspect": -1, "ZREF": 25, "UREF": 26, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            const = {"LAT": 53.99, "LON": -105.12, "ZS": 629, "slope": 0,
+                     "aspect": -1, "ZREF": 25, "UREF": 26, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
             if source == "insitu":
                 timeshift = 6
             elif source == "gswp3c":
                 timeshift = -1
         elif site == "ojp":
-            const = {"LAT": 53.92, "LON": -104.69, "ZS": 579, "slope": 0, "aspect": -1, "ZREF": 28, "UREF": 29, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            const = {"LAT": 53.92, "LON": -104.69, "ZS": 579, "slope": 0,
+                     "aspect": -1, "ZREF": 28, "UREF": 29, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
             if source == "insitu":
                 timeshift = 6
             elif source == "gswp3c":
                 timeshift = -1
         elif site == "rme":
-            const = {"LAT": 43.19, "LON": -116.78, "ZS": 2060, "slope": 0, "aspect": -1, "ZREF": 3, "UREF": 3, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            const = {"LAT": 43.19, "LON": -116.78, "ZS": 2060, "slope": 0,
+                     "aspect": -1, "ZREF": 3, "UREF": 3, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
             if source == "insitu":
                 timeshift = 7
             elif source == "gswp3c":
                 timeshift = -1
         elif site == "sap":
-            const = {"LAT": 43.08, "LON": 141.34, "ZS": 15, "slope": 0, "aspect": -1, "ZREF": 1.5, "UREF": 1.5, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            const = {"LAT": 43.08, "LON": 141.34, "ZS": 15, "slope": 0,
+                     "aspect": -1, "ZREF": 1.5, "UREF": 1.5, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
             if source == "insitu":
                 timeshift = -9
             elif source == "gswp3c":
                 timeshift = -1
         elif site == "snb":
-            const = {"LAT": 37.91, "LON": -107.73, "ZS": 3714, "slope": 0, "aspect": -1, "ZREF": 3.8, "UREF": 4, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            const = {"LAT": 37.91, "LON": -107.73, "ZS": 3714, "slope": 0,
+                     "aspect": -1, "ZREF": 3.8, "UREF": 4, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
             if source == "insitu":
                 timeshift = 7
             elif source == "gswp3c":
                 timeshift = -1
         elif site == "sod":
-            const = {"LAT": 67.37, "LON": 26.63, "ZS": 179, "slope": 0, "aspect": -1, "ZREF": 2, "UREF": 2, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            const = {"LAT": 67.37, "LON": 26.63, "ZS": 179, "slope": 0,
+                     "aspect": -1, "ZREF": 2, "UREF": 2, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
             if source == "insitu":
                 timeshift = 0
             elif source == "gswp3c":
                 timeshift = -1
         elif site == "swa":
-            const = {"LAT": 37.91, "LON": -107.71, "ZS": 3371, "slope": 0, "aspect": -1, "ZREF": 3.4, "UREF": 3.8, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            const = {"LAT": 37.91, "LON": -107.71, "ZS": 3371, "slope": 0,
+                     "aspect": -1, "ZREF": 3.4, "UREF": 3.8, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
             if source == "insitu":
                 timeshift = 7
             elif source == "gswp3c":
                 timeshift = -1
         elif site == "wfj":
-            const = {"LAT": 46.82962, "LON": 9.80934, "ZS": 2540, "slope": 0, "aspect": -1, "ZREF": 4.5, "UREF": 5.5, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
+            const = {"LAT": 46.82962, "LON": 9.80934, "ZS": 2540, "slope": 0,
+                     "aspect": -1, "ZREF": 4.5, "UREF": 5.5, "CO2air": 0.00062, "Wind_DIR": 0, "SCA_SWdown": 0}
             if source == "insitu":
                 timeshift = 0
             elif source == "gswp3c":
@@ -898,11 +932,15 @@ class forcinput_ESMSnowMIP(forcinput_tomodify):
                 var[:] = time_array
                 unit_time = getattr(ncvar, "units")
             elif varname == "SWdown":
-                vardir = new_forcing_file.createVariable("DIR_SWdown", 'd', ("time", "Number_of_points"), fill_value=-9999999.)
+                vardir = new_forcing_file.createVariable("DIR_SWdown", 'd', ("time", "Number_of_points"),
+                                                         fill_value=-9999999.)
                 setattr(vardir, "long_name", "Direct downward shortwave radiation")
-                vardif = new_forcing_file.createVariable("SCA_SWdown", 'd', ("time", "Number_of_points"), fill_value=-9999999.)
+                vardif = new_forcing_file.createVariable("SCA_SWdown", 'd', ("time", "Number_of_points"),
+                                                         fill_value=-9999999.)
                 setattr(vardif, "long_name", "Diffuse downward shortwave radiation")
-                vardir[:, 0], vardif[:, 0] = sun().directdiffus(var_array, netCDF4.num2date(time_array, unit_time), const["LAT"], const["LON"], const["slope"], const["aspect"], site)
+                vardir[:, 0], vardif[:, 0] = sun().directdiffus(var_array, netCDF4.num2date(time_array, unit_time),
+                                                                const["LAT"], const["LON"], const["slope"],
+                                                                const["aspect"], site)
             else:
                 var = new_forcing_file.createVariable(varname, 'd', ("time", "Number_of_points"), fill_value=-9999999.)
                 var[:, 0] = var_array[:]
@@ -928,6 +966,7 @@ class forcinput_ESMSnowMIP(forcinput_tomodify):
 class forcinput_extract(forcinput_tomodify):
     """This class allows to extract from an original forcing file all the variables corresponding
     to a pre-defined list of points.
+
     Implemented by C. Carmagnola in November 2018 (PROSNOW project).
     """
 
@@ -938,8 +977,8 @@ class forcinput_extract(forcinput_tomodify):
         :type init_forcing_file: :class:`utils.prosimu.prosimu`
         :param new_forcing_file: Output file object
         :type new_forcing_file: :class:`utils.prosimu.prosimu`
-        :param \*args: .txt file name containing the list of points to be extracted
-        :type \*args: str
+        :param args: .txt file name containing the list of points to be extracted
+        :type args: str
         """
 
         # Read data from file
@@ -949,7 +988,8 @@ class forcinput_extract(forcinput_tomodify):
 
         mdat = open(args[0][0])
 
-        list_massif_number, list_sru, list_alt, list_asp, list_slo = np.loadtxt(mdat, delimiter=' ', usecols=(2, 3, 1, 6, 7), unpack=True)
+        list_massif_number, list_sru, list_alt, list_asp, list_slo = np.loadtxt(mdat, delimiter=' ',
+                                                                                usecols=(2, 3, 1, 6, 7), unpack=True)
 
 #         print "Points to be extracted:"
 #         print "massif = " + str(list_massif_number)
@@ -978,7 +1018,8 @@ class forcinput_extract(forcinput_tomodify):
         index_points = np.zeros(len(list_massif_number), 'int')
 
         for i, j in ((a, b) for a in range(len(init_massif_nb_sop)) for b in range(len(list_massif_number))):
-            if init_massif_nb_sop[i] == list_massif_number[j] and init_alt[i] == list_alt[j] and init_slopes[i] == list_slo_int[j] and init_exp[i] == list_asp_degres[j]:
+            if init_massif_nb_sop[i] == list_massif_number[j] and init_alt[i] == list_alt[j] and \
+               init_slopes[i] == list_slo_int[j] and init_exp[i] == list_asp_degres[j]:
                 index_points[j] = i
 
 #         print "Indices:"
@@ -1025,13 +1066,13 @@ class forcinput_extract(forcinput_tomodify):
 
             if varname == 'stations':
 
-                vartype      = 'float32'
-                rank         = 1
-                array_dim    = [u'Number_of_points']
+                vartype = 'float32'
+                rank = 1
+                array_dim = [u'Number_of_points']
                 varFillvalue = -1e+07
-                var_attrs    = [u'_FillValue', u'long_name', u'units']
+                var_attrs = [u'_FillValue', u'long_name', u'units']
 
-                var    = new_forcing_file.createVariable(varname, vartype, array_dim, fill_value=varFillvalue)
+                var = new_forcing_file.createVariable(varname, vartype, array_dim, fill_value=varFillvalue)
                 var[:] = list_sru
 
             # All other variables
@@ -1061,18 +1102,18 @@ class forcinput_extract(forcinput_tomodify):
                     if not attname == '_FillValue':
                         setattr(var, attname, init_forcing_file.getattr(varname, attname))
                 try:
-                        if rank == 0:
-                            var[:] = var_array
-                        elif rank == 1:
-                            var[:] = var_array
-                        elif rank == 2:
-                            var[:, :] = var_array
-                        elif rank == 3:
-                            var[:, :, :] = var_array
-                        elif rank == 4:
-                            var[:, :, :, :] = var_array
-                        elif rank == 5:
-                            var[:, :, :, :, :] = var_array
+                    if rank == 0:
+                        var[:] = var_array
+                    elif rank == 1:
+                        var[:] = var_array
+                    elif rank == 2:
+                        var[:, :] = var_array
+                    elif rank == 3:
+                        var[:, :, :] = var_array
+                    elif rank == 4:
+                        var[:, :, :, :] = var_array
+                    elif rank == 5:
+                        var[:, :, :, :, :] = var_array
                 except Exception:
                     print(var_array)
                     raise VarWriteException(varname, var_array.shape, var.shape)
@@ -1091,8 +1132,8 @@ class forcinput_changedates(forcinput_tomodify):
         :type init_forcing_file: :class:`utils.prosimu.prosimu`
         :param new_forcing_file: Output file object
         :type new_forcing_file: :class:`utils.prosimu.prosimu`
-        :param \*args: New initial date
-        :type \*args: :class:`bronx.stddtypes.date.Date`
+        :param args: New initial date
+        :type args: :class:`bronx.stddtypes.date.Date`
         """
 
         # Open file
@@ -1101,20 +1142,12 @@ class forcinput_changedates(forcinput_tomodify):
         nc_unit = file_name.variables["time"].units
 
         # Compute new time
-        date_time_old = netCDF4.num2date(nc_time[:], units = nc_unit)
+        date_time_old = netCDF4.num2date(nc_time[:], units=nc_unit)
         delta = args[0][0] - date_time_old[0]
         date_time_new = date_time_old + delta
 
         # Insert new time in file
-        nc_time[:] = netCDF4.date2num(date_time_new, units = nc_unit)
+        nc_time[:] = netCDF4.date2num(date_time_new, units=nc_unit)
 
         # Close file
         file_name.close()
-
-
-# Test
-
-# if __name__ == "__main__":
-#     forcinput_extract("/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/1_saisies/2_change_forcing/input_FORCING_2018080106_2019080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/1_saisies/2_change_forcing/output_FORCING_2018080106_2019080106.nc", "/home/carmagnolac/CMC/CEN/4_SIMUL/Vortex/1_saisies/1_get_from_API/SRU_saisies.txt")
-#     forcinput_changedates("/home/carmagnolac/Desktop/output_FORCING_2018080106_2019080106.nc", "/home/carmagnolac/Desktop/output_FORCING_2018080106_2019080106.nc", datetime.datetime(2019, 8, 1, 6, 0))
-

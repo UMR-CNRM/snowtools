@@ -8,8 +8,10 @@ Created on 9 oct. 2012
 import os
 import sys
 
+
 class SystemException(Exception):
     """Exception for a system command"""
+
     def __init__(self, status, command, errorcode=None):
         self.status = status
         self.command = command
@@ -34,7 +36,8 @@ def callSurfexOrDie(commande, moderun="NORMAL", nproc=1, errorcode=None):
 
     # Without the following lines, the worse segmentation faults you can ever imagine
     # Equivalent to bash command ulimit -s unlimited
-    # Take care : some systems do not allow to force resource.RLIMIT_STACK at resource.RLIM_INFINITY, so it is safer to get the system hard limit first.
+    # Take care : some systems do not allow to force resource.RLIMIT_STACK at resource.RLIM_INFINITY,
+    # so it is safer to get the system hard limit first.
     # Moreover, this can not be done on MacOS
     if sys.platform != 'darwin':
         import resource
@@ -50,7 +53,8 @@ def callSurfexOrDie(commande, moderun="NORMAL", nproc=1, errorcode=None):
             callSystemOrDie("mpirun -np " + str(nproc) + " " + commande, errorcode=errorcode)
         else:
             if "SLURM_NODES" in list(os.environ.keys()):
-                callSystemOrDie("srun --nodes=" + os.environ["SLURM_NNODES"] + " --ntasks=" + str(nproc) + " " + commande, errorcode=errorcode)
+                callSystemOrDie("srun --nodes=" + os.environ["SLURM_NNODES"] + " --ntasks="
+                                + str(nproc) + " " + commande, errorcode=errorcode)
             else:
                 callSystemOrDie("srun --ntasks=" + str(nproc) + " " + commande, errorcode=errorcode)
 

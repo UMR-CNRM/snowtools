@@ -39,15 +39,16 @@ Technical documentation
    Scores (scores) <code/scores.rst>
    Plots tools (plots) <code/plots.rst>
    Assimilation scripts (assim) <code/assim.rst>
-   Interpolation <code/fortran.rst>
+   Interpolation <code/interpolation.rst>
    The bronx package <code/bronx.rst>
 
 Other things gathered by snowtools
 ----------------------------------
 
-.. todo::
-   
-   Describe a little bit what there is in DATA for instance and some guidelines on what to put here.
+.. toctree::
+   :maxdepth: 1
+
+   Data <code/data.rst>
 
 Help improving this documentation !
 -----------------------------------

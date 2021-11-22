@@ -17,9 +17,9 @@ from vortex import toolbox
 
 def setup(t, **kw):
     return Driver(
-        tag = 'Surfex_Parallel',
-        ticket = t,
-        nodes = [
+        tag='Surfex_Parallel',
+        ticket=t,
+        nodes=[
             Monthly_Surfex_Reanalysis_GetInit(tag='Monthly_Surfex_Reanalysis', ticket=t, **kw),
         ],
         options=kw
@@ -46,7 +46,7 @@ class Monthly_Surfex_Reanalysis_GetInit(S2MTaskMixIn, OpTask):
             role           = 'SnowpackInitForMonthlyReanalysis',
             local          = 'PREP.nc',
             block          = 'prep',
-            experiment     = 'oper',#self.conf.xpid,
+            experiment     = 'oper',# self.conf.xpid,
             geometry       = self.conf.geometry,
             datevalidity   = datebegin,
             date           = rundate_prep,

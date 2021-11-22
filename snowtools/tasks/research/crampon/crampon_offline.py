@@ -23,8 +23,10 @@ class Offline_Task(Crampon_Task):
     def process(self):
         # ##### PREPARE common stuff with the offline task ###########
         t, firstloop, lastloop, _, = self.prepare_common()
+        # each one of these items has only one item
         date_begin_forc, date_end_forc, _, _ = \
-            get_list_dates_files(self.conf.datebegin, Date(check_and_convert_date(self.conf.stopdate)), self.conf.duration)  # each one of these items has only one item
+            get_list_dates_files(self.conf.datebegin,
+                                 Date(check_and_convert_date(self.conf.stopdate)), self.conf.duration)
         date_begin_forc = date_begin_forc[0]
         date_end_forc = date_end_forc[0]  # replace one-item list by item.
         print('sequence dates', date_begin_forc, date_end_forc)
@@ -111,7 +113,8 @@ class Offline_Task(Crampon_Task):
 
         if 'fetch' in self.steps:
 
-            # ############# FETCH PREPS : either 1 spinup (firstloop=True, could be moved to early-fetch) or a list of PREPS ##########
+            # ############# FETCH PREPS : either 1 spinup (firstloop=True,
+            # could be moved to early-fetch) or a list of PREPS ##########
             if not firstloop:  # else, got it in the early step on hendrix
                 dmembersnode = {str(mb): mb for mb in self.conf.membersnode}
                 dlocal_names = {str(mb): 'mb{0:04d}'.format(mb) + '/PREP.nc'
@@ -121,7 +124,8 @@ class Offline_Task(Crampon_Task):
                     alternate      = 'SnowpackInit',
                     realmember     = self.conf.membersnode,
                     member         = dict(realmember=dmembersnode),
-                    local          = dict(realmember = dlocal_names),  # local prep name does not hold the date at the moment
+                    # local prep name does not hold the date at the moment
+                    local          = dict(realmember = dlocal_names),
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
                     date           = self.conf.stopdate_prev,
@@ -144,7 +148,8 @@ class Offline_Task(Crampon_Task):
                     tb03_lbg = toolbox.input(
                         alternate      = 'SnowpackInit',
                         member         = dict(realmember=dmembersnode),
-                        local          = dict(realmember = dlocal_names),  # local prep name does not hold the date at the moment
+                        # local prep name does not hold the date at the moment
+                        local          = dict(realmember = dlocal_names),
                         experiment     = self.conf.xpid,
                         geometry       = self.conf.geometry,
                         date           = self.conf.stopdate_prev,
@@ -163,8 +168,8 @@ class Offline_Task(Crampon_Task):
 
         if 'compute' in self.steps:
             # force first forcing to the first forcing of first member 0001 doesn't work on several nodes...
-            firstforcing = 'mb{0:04d}'.format(self.conf.membersnode[0]) + '/FORCING_' + date_begin_forc.strftime("%Y%m%d%H") +\
-                "_" + date_end_forc.strftime("%Y%m%d%H") + ".nc"
+            firstforcing = 'mb{0:04d}'.format(self.conf.membersnode[0]) + '/FORCING_' + \
+                date_begin_forc.strftime("%Y%m%d%H") + "_" + date_end_forc.strftime("%Y%m%d%H") + ".nc"
             self.sh.title('Toolbox algo tb09a')
 
             tb09a = tbalgo1 = toolbox.algo(
@@ -198,7 +203,8 @@ class Offline_Task(Crampon_Task):
                 dateend        = self.conf.stopdate,
                 dateinit       = dateinit,
                 threshold      = threshold,
-                members        = idsnode,  # mbids (=ESCROC IDS in case of prescribed draw) = members node in case draw without prescription
+                members        = idsnode,  # mbids (=ESCROC IDS in case of prescribed draw) =
+                # members node in case draw without prescription
                 startmbnode    = self.conf.membersnode[0],  # necessary
                 geometry       = [self.conf.geometry.area],
                 subensemble    = self.conf.subensemble,

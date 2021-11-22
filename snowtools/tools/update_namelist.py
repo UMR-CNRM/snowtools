@@ -17,7 +17,8 @@ from snowtools.utils.FileException import FileNameException, VarDimensionExcepti
 from bronx.datagrip.namelist import NamelistParser
 
 
-def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam", forcing="FORCING.nc", dateend=None, updateloc=True, nmembers=None):
+def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam",
+                                forcing="FORCING.nc", dateend=None, updateloc=True, nmembers=None):
     """This function updates a namelist file through the bronx module. Called by standalone S2M but not by vortex
 
     :param datebegin: Initial date of simulation
@@ -49,7 +50,8 @@ def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam", forcing="
     namSURFEX.close()
 
 
-def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc", dateend=None, updateloc=True, physicaloptions={}, snowparameters={}):
+def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc",
+                                  dateend=None, updateloc=True, physicaloptions={}, snowparameters={}):
     """This function updates a class:`bronx.datagrip.namelist.NamelistSet` object. Called directly by vortex algos.
 
     :param NamelistObject: Namelist to modified.
@@ -195,8 +197,8 @@ def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"
     dateforcbegin = timeforc[0]
     dateforcend = timeforc[-1]
 
-    print ("DATES OF THE FORCING FILE:", dateforcbegin, dateforcend)
-    print ("PRESCRIBED SIMULATION DATES:", datebegin, dateend)
+    print("DATES OF THE FORCING FILE:", dateforcbegin, dateforcend)
+    print("PRESCRIBED SIMULATION DATES:", datebegin, dateend)
 
     checkdateafter(datebegin, dateforcbegin)
     if dateend:
@@ -223,7 +225,8 @@ def update_physicaloptions(NamelistObject, **kwargs):
     """
     check_or_create_block(NamelistObject, "NAM_ISBA_SNOWn")
     for key, value in six.iteritems(kwargs):
-        if key.upper() in ["CSNOWDRIFT", "LSNOWDRIFT_SUBLIM", "LSNOW_ABS_ZENITH", "CSNOWMETAMO", "CSNOWRAD", "CSNOWFALL", "CSNOWCOND", "CSNOWHOLD", "CSNOWCOMP", "CSNOWZREF", "LSNOWSYTRON"]:
+        if key.upper() in ["CSNOWDRIFT", "LSNOWDRIFT_SUBLIM", "LSNOW_ABS_ZENITH", "CSNOWMETAMO",
+                           "CSNOWRAD", "CSNOWFALL", "CSNOWCOND", "CSNOWHOLD", "CSNOWCOMP", "CSNOWZREF", "LSNOWSYTRON"]:
             setattr(NamelistObject["NAM_ISBA_SNOWn"], key.upper(), value)
 
     return NamelistObject
@@ -243,7 +246,8 @@ def update_snowparameters(NamelistObject, **kwargs):
     for key, value in six.iteritems(kwargs):
         if key.upper() in ["XZ0SN", "XZ0HSN", "XTAU_LW"]:
             setattr(NamelistObject["NAM_SURF_CSTS"], key.upper(), value)
-        elif key.upper() in ["XALBICE1", "XALBICE2", "XALBICE3", "XRHOTHRESHOLD_ICE", "XZ0ICEZ0SNOW", "XVAGING_GLACIER", "XVAGING_NOGLACIER", "XVVISC3", "X_RI_MAX"]:
+        elif key.upper() in ["XALBICE1", "XALBICE2", "XALBICE3", "XRHOTHRESHOLD_ICE", "XZ0ICEZ0SNOW",
+                             "XVAGING_GLACIER", "XVAGING_NOGLACIER", "XVVISC3", "X_RI_MAX"]:
             setattr(NamelistObject["NAM_SURF_SNOW_CSTS"], key.upper(), value)
         elif key.upper() in ["XCVHEATF"]:
             setattr(NamelistObject["NAM_ISBAn"], key.upper(), value)
@@ -264,7 +268,7 @@ def update_namelist_object_nmembers(NamelistObject, nmembers):
     if nmembers is not None:
         check_or_create_block(NamelistObject, "NAM_ENS")
         setattr(NamelistObject["NAM_ENS"], 'NENS', nmembers)
-        print ("NENS set to {}".format(nmembers))
+        print("NENS set to {}".format(nmembers))
 
     return NamelistObject
 
@@ -321,5 +325,3 @@ def update_namelist_var(namelist_file, data_file):
     namSURFEX.close()
 
     os.system('cp ' + namelist_file + ' OPTIONS.nam')
-
-

@@ -20,12 +20,12 @@ from vortex.tools.actions import actiond as ad
 
 def setup(t, **kw):
     return Driver(
-        tag    = 'safran',
-        ticket = t,
-        nodes  = [
+        tag='safran',
+        ticket=t,
+        nodes=[
             Safran(tag='prvsaf', ticket=t, **kw),
         ],
-        options = kw,
+        options=kw,
     )
 
 
@@ -59,10 +59,10 @@ class Safran(OpTask, S2MTaskMixIn):
                     nativefmt      = 'ascii',
                     kind           = 'guess',
                     model          = 'safran',
-                    namespace      = 'vortex.cache.fr', #self.conf.namespace,
+                    namespace      = 'vortex.cache.fr', # self.conf.namespace,
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
-                    #namespace      = self.conf.namespace,
+                    # namespace      = self.conf.namespace,
                     fatal          = False,
                 ),
                 print(t.prompt, 'tb01a =', tb01a)
@@ -71,7 +71,8 @@ class Safran(OpTask, S2MTaskMixIn):
                 # L'A6 du réseau 0h J n'est génaralement pas encore là pour le run de 3h, SAFRAN utilisera alors la P6
                 # du réseau 0h J récupérée dans la TB suivante car également utilisée pour la prévision de J à J+1.
                 # En l'état même si l'A6 du réseau 0h est présente, elle sera écrasée par la P6 qui porte le même nom...
-                # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur 6h homogène avec le cumul dans les fichiers d'assimilation
+                # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur 6h homogène avec le cumul
+                # dans les fichiers d'assimilation
                 # P6 du réseau 0h (J)
 
                 # I.2- Prevision de J 6h à J+4 6h
@@ -88,11 +89,11 @@ class Safran(OpTask, S2MTaskMixIn):
                     cumul          = footprints.util.rangex(self.conf.prv_terms)[2:35],
                     nativefmt      = 'ascii',
                     kind           = 'guess',
-                    namespace      = 'vortex.cache.fr', #self.conf.namespace,
+                    namespace      = 'vortex.cache.fr', # self.conf.namespace,
                     model          = 'safran',
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
-                    #namespace      = self.conf.namespace,
+                    # namespace      = self.conf.namespace,
                     fatal          = False,
                 ),
                 print(t.prompt, 'tb01b =', tb01b)
@@ -115,11 +116,11 @@ class Safran(OpTask, S2MTaskMixIn):
                     cumul          = footprints.util.rangex(self.conf.ana_terms),
                     nativefmt      = 'ascii',
                     kind           = 'guess',
-                    namespace      = 'vortex.cache.fr', #self.conf.namespace,
+                    namespace      = 'vortex.cache.fr', # self.conf.namespace,
                     model          = 'safran',
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.eps_conf,
-                    #namespace      = self.conf.namespace,
+                    # namespace      = self.conf.namespace,
                     member         = footprints.util.rangex(self.conf.pearp_members),
                     fatal          = False,
                 ),
@@ -139,10 +140,10 @@ class Safran(OpTask, S2MTaskMixIn):
                     nativefmt      = 'ascii',
                     kind           = 'guess',
                     model          = 'safran',
-                    namespace      = 'vortex.cache.fr', #self.conf.namespace,
+                    namespace      = 'vortex.cache.fr', # self.conf.namespace,
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.eps_conf,
-                    #namespace      = self.conf.namespace,
+                    # namespace      = self.conf.namespace,
                     member         = footprints.util.rangex(self.conf.pearp_members),
                     fatal          = False,
                 ),
@@ -436,7 +437,6 @@ class Safran(OpTask, S2MTaskMixIn):
 
             self.component_runner(tbalgo4, tbx4)
 
-
         if 'backup' in self.steps:
 
             with op.OutputReportContext(self, t):
@@ -549,6 +549,5 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb31 =', tb31)
                 print()
 
-
-                #from vortex.tools.systems import ExecutionError
-                #raise ExecutionError('')
+                # from vortex.tools.systems import ExecutionError
+                # raise ExecutionError('')

@@ -17,9 +17,9 @@ from cen.layout.nodes import S2MTaskMixIn
 
 def setup(t, **kw):
     return Driver(
-        tag = 'Prosnow_ST_Forecast',
-        ticket = t,
-        nodes = [
+        tag='Prosnow_ST_Forecast',
+        ticket=t,
+        nodes=[
             Prosnow_ST_Forecast(tag='prosnow_ST_forecast', ticket=t, **kw),
         ],
         options=kw
@@ -33,9 +33,12 @@ class Prosnow_ST_Forecast(Task, S2MTaskMixIn):
         t = self.ticket
 
         list_geometry = self.get_list_geometry(meteo=self.conf.meteo)
-        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, "yearly")
+        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = \
+            get_list_dates_files(self.conf.datebegin, self.conf.dateend, "yearly")
 
-        members = ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34']
+        members = ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15',
+                   '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31',
+                   '32', '33', '34']
 
         my_datebegin = self.conf.datebegin
         my_dateend = self.conf.dateend
@@ -180,7 +183,7 @@ class Prosnow_ST_Forecast(Task, S2MTaskMixIn):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapII_eu_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv           = 'uenv:cen.01@CONST_CEN',
                 source         = 'ecoclimap2',
                 model          = 'surfex',
             ),
@@ -409,7 +412,8 @@ class Prosnow_ST_Forecast(Task, S2MTaskMixIn):
             out_tb03 = toolbox.output(
                 role           = 'PRO',
                 local          = 'PRO.tar',
-                remote         = '/home/carmagnolac/vortex/surfex/{0:s}/outputs/{1:s}/{2:s}'.format(self.conf.resort, self.conf.snow_conf, 'PRO_ST.tar'),
+                remote         = '/home/carmagnolac/vortex/surfex/{0:s}/outputs/{1:s}/{2:s}'.\
+                format(self.conf.resort, self.conf.snow_conf, 'PRO_ST.tar'),
                 hostname       = 'hendrix.meteo.fr',
                 unknownflow    = True,
                 username       = 'carmagnolac',
@@ -450,7 +454,8 @@ class Prosnow_ST_Forecast(Task, S2MTaskMixIn):
             out_tb04 = toolbox.output(
                 role           = 'FORCING',
                 local          = 'FORCING.tar',
-                remote         = '/home/carmagnolac/vortex/surfex/{0:s}/outputs/{1:s}/{2:s}'.format(self.conf.resort, self.conf.snow_conf, 'FORCING_ST.tar'),
+                remote         = '/home/carmagnolac/vortex/surfex/{0:s}/outputs/{1:s}/{2:s}'.\
+                format(self.conf.resort, self.conf.snow_conf, 'FORCING_ST.tar'),
                 hostname       = 'hendrix.meteo.fr',
                 unknownflow    = True,
                 username       = 'carmagnolac',

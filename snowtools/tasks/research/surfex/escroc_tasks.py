@@ -16,9 +16,9 @@ from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 
 def setup(t, **kw):
     return Driver(
-        tag = 'Surfex_Parallel',
-        ticket = t,
-        nodes = [
+        tag='Surfex_Parallel',
+        ticket=t,
+        nodes=[
             Escroc_Vortex_Task(tag='Escroc_Vortex_Task', ticket=t, **kw),
         ],
         options=kw
@@ -37,12 +37,14 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
         if not hasattr(self.conf, "genv"):
             self.conf.genv = 'uenv:cen.02@CONST_CEN'
 
-        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
+        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = \
+            get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
         dict_dates_end_forc = get_dic_dateend(list_dates_begin_forc, list_dates_end_forc)
         dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
 
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 1
-        members = list(range(startmember, int(self.conf.nmembers) + startmember)) if hasattr( self.conf, "nmembers") else list(range(1, 36))
+        members = list(range(startmember, int(self.conf.nmembers) + startmember)) \
+            if hasattr(self.conf, "nmembers") else list(range(1, 36))
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
@@ -186,7 +188,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapII_eu_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv            = self.conf.genv,
+                genv           = self.conf.genv,
                 source         = 'ecoclimap2',
                 model          = 'surfex',
             ),
@@ -200,7 +202,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                 genv            = self.conf.genv,
                 nativefmt       = 'netcdf',
                 local           = 'drdt_bst_fit_60.nc',
-                model          = 'surfex',
+                model           = 'surfex',
             )
             print(t.prompt, 'tb04 =', tb04)
             print()
@@ -234,7 +236,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                     kind           = 'offline',
                     local          = 'OFFLINE',
                     model          = 'surfex',
-                    remote          = self.conf.exesurfex + "/OFFLINE"
+                    remote         = self.conf.exesurfex + "/OFFLINE"
                 )
 
                 print(t.prompt, 'tb06 =', tb06)
@@ -249,7 +251,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                         kind           = 'buildpgd',
                         local          = 'PGD',
                         model          = 'surfex',
-                        remote          = self.conf.exesurfex + "/PGD"
+                        remote         = self.conf.exesurfex + "/PGD"
                     )
 
                     print(t.prompt, 'tb07 =', tb07)
@@ -263,7 +265,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                         kind           = 'prep',
                         local          = 'PREP',
                         model          = 'surfex',
-                        remote          = self.conf.exesurfex + "/PREP"
+                        remote         = self.conf.exesurfex + "/PREP"
                     )
 
                     print(t.prompt, 'tb08 =', tb08)
@@ -315,7 +317,8 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
 
         if 'compute' in self.steps:
 
-            firstforcing = 'FORCING_' + list_dates_begin_forc[0].strftime("%Y%m%d%H") + "_" + list_dates_end_forc[0].strftime("%Y%m%d%H") + ".nc"
+            firstforcing = 'FORCING_' + list_dates_begin_forc[0].strftime("%Y%m%d%H") + "_" + \
+                list_dates_end_forc[0].strftime("%Y%m%d%H") + ".nc"
             self.sh.title('Toolbox algo tb09a')
             tb09a = tbalgo1 = toolbox.algo(
                 kind         = 'surfex_preprocess',
@@ -337,7 +340,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                 )
                 print(t.prompt, 'tb09 =', tb09)
                 print()
-                self.component_runner(tbalgo2, tbx1, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
+                self.component_runner(tbalgo2, tbx1, mpiopts=dict(nnodes=1, nprocs=1, ntasks=1))
 
             # Take care : PREP parallelization will be available in v8.1 --> nproc and ntasks will have to be set to 40
             if not (tb03[0] or tb03_s[0]):
@@ -347,7 +350,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                 )
                 print(t.prompt, 'tb10 =', tb10)
                 print()
-                self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
+                self.component_runner(tbalgo3, tbx2, mpiopts=dict(nnodes=1, nprocs=1, ntasks=1))
 
             self.sh.title('Toolbox algo tb11 = OFFLINE')
 

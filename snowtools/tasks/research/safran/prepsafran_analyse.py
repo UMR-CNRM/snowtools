@@ -14,12 +14,12 @@ logger = footprints.loggers.getLogger(__name__)
 
 def setup(t, **kw):
     return Driver(
-        tag    = 'pearp2safran',
-        ticket = t,
-        nodes  = [
+        tag='pearp2safran',
+        ticket=t,
+        nodes=[
             PrepSafran(tag='prepsafana', ticket=t, **kw),
         ],
-        options = kw,
+        options=kw,
     )
 
 
@@ -106,7 +106,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = 'uenv:s2m.01@vernaym',
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -o -a -i IDW -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp)]))),
+                rawopts     = ' -o -a -i IDW -f ' + ' '.join(list(set([str(rh[1].container.basename)
+                                                                       for rh in enumerate(tbarp)]))),
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
