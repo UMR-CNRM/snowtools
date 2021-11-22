@@ -14,9 +14,9 @@ from cen.layout.nodes import S2MTaskMixIn
 
 def setup(t, **kw):
     return Driver(
-        tag = 'Surfex_Parallel',
-        ticket = t,
-        nodes = [
+        tag='Surfex_Parallel',
+        ticket=t,
+        nodes=[
             Surfex_Vortex_Task(tag='Surfex_Vortex_Task', ticket=t, **kw),
         ],
         options=kw
@@ -38,7 +38,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         # Definition of geometries, safran xpid/block and list of dates from S2MTaskMixIn methods
         list_geometry = self.get_list_geometry(meteo=self.conf.meteo)
         source_safran, block_safran = self.get_source_safran(meteo=self.conf.meteo)
-        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
+        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = \
+            get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
         dict_dates_end_forc = get_dic_dateend(list_dates_begin_forc, list_dates_end_forc)
         dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
         dict_source_app_safran, dict_source_conf_safran = self.get_safran_sources(list_dates_begin_forc)
@@ -62,10 +63,11 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 source_app     = dict_source_app_safran if source_safran == 'safran' else None,
                 source_conf    = dict_source_conf_safran if source_safran == 'safran' else None,
                 cutoff         = 'assimilation',
-                local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' \
+                                 if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                 experiment     = self.conf.forcingid,
                 block          = block_safran,
-                geometry        = list_geometry,
+                geometry       = list_geometry,
                 nativefmt      = 'netcdf',
                 model          = 'safran',
                 datebegin      = self.conf.datebegin,
@@ -90,10 +92,11 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     source_app     = dict_source_app_safran if source_safran == 'safran' else None,
                     source_conf    = dict_source_conf_safran if source_safran == 'safran' else None,
                     cutoff         = 'assimilation',
-                    local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' \
+                                     if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = self.conf.forcingid,
                     block          = block_safran,
-                    geometry        = list_geometry,
+                    geometry       = list_geometry,
                     nativefmt      = 'netcdf',
                     model          = 'safran',
                     datebegin      = list_dates_begin_forc,
@@ -109,7 +112,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             # Look for a PGD file if already available for this xpid and geometry
             self.sh.title('Toolbox input tb02')
             tb02 = toolbox.input(
-                role      = 'SurfexClim',
+                role           = 'SurfexClim',
                 kind           = 'pgdnc',
                 nativefmt      = 'netcdf',
                 local          = 'PGD.nc',
@@ -163,7 +166,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print(t.prompt, 'tb03 =', tb03)
             print()
 
-            # 1st alternate : look for a PREP file if already available for this geometry, and initial date for the "spinup" xpid
+            # 1st alternate : look for a PREP file if already available for this geometry,
+            # and initial date for the "spinup" xpid
             self.sh.title('Toolbox input tb03')
             tb03a = toolbox.input(
                 alternate      = 'SnowpackInit',
@@ -183,7 +187,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print(t.prompt, 'tb03a =', tb03a)
             print()
 
-            # 2nd alternate : look for a PREP file if already available for this geometry, and initial date for the "reanalysis" xpid
+            # 2nd alternate : look for a PREP file if already available for this geometry,
+            # and initial date for the "reanalysis" xpid
             # If not available, do not fail because the PREP file will be automatically built.
             self.sh.title('Toolbox input tb03')
             tb03a2 = toolbox.input(
@@ -205,8 +210,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print()
 
             if not tb03[0] and not tb03a[0] and not tb03a2[0] and not self.conf.climground:
-                # not self.conf.climground means that the user does not allow the climatological file to be built by the system
-                # (-g option of the s2m command is not activated)
+                # not self.conf.climground means that the user does not allow the climatological file
+                # to be built by the system (-g option of the s2m command is not activated)
                 # If no prep file has been found, look for a climatological file to initialize the ground in the uenv
                 tbi = toolbox.input(
                     role           = 'initial values of ground temperature',
@@ -214,7 +219,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     nativefmt      = 'netcdf',
                     local          = 'init_TG.nc',
                     geometry       = self.conf.geometry,
-                    genv            = self.conf.genv,
+                    genv           = self.conf.genv,
                     gvar           = 'climtg_[geometry::area]',
                     model          = 'surfex',
                     fatal          = False
@@ -263,7 +268,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapII_eu_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv            = self.conf.genv,
+                genv           = self.conf.genv,
                 source         = 'ecoclimap2',
                 model          = 'surfex',
             ),
@@ -278,7 +283,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 genv            = self.conf.genv,
                 nativefmt       = 'netcdf',
                 local           = 'drdt_bst_fit_60.nc',
-                model          = 'surfex',
+                model           = 'surfex',
             )
             print(t.prompt, 'tb04 =', tb04)
             print()
@@ -306,14 +311,15 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print(t.prompt, 'tb05 =', tb05)
             print()
 
-            # Target grid file if an interpolation is required before the run and the path must be provided in the configuration file
+            # Target grid file if an interpolation is required before the run
+            # and the path must be provided in the configuration file
             if self.conf.interpol:
                 tbgrid = toolbox.input(
-                    role = 'gridout',
+                    role   = 'gridout',
                     remote = self.conf.gridout,
-                    kind = 'interpolgrid',
-                    model = 'surfex',
-                    local = 'GRID.nc',
+                    kind   = 'interpolgrid',
+                    model  = 'surfex',
+                    local  = 'GRID.nc',
                 )
                 print(t.prompt, 'tbgrid =', tbgrid)
             else:
@@ -329,7 +335,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     kind           = 'offline',
                     local          = 'OFFLINE',
                     model          = 'surfex',
-                    remote          = self.conf.exesurfex + "/OFFLINE"
+                    remote         = self.conf.exesurfex + "/OFFLINE"
                 )
 
                 print(t.prompt, 'tb06 =', tb06)
@@ -343,7 +349,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                         kind           = 'buildpgd',
                         local          = 'PGD',
                         model          = 'surfex',
-                        remote          = self.conf.exesurfex + "/PGD"
+                        remote         = self.conf.exesurfex + "/PGD"
                     )
 
                     print(t.prompt, 'tb07 =', tb07)
@@ -357,7 +363,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                         kind           = 'prep',
                         local          = 'PREP',
                         model          = 'surfex',
-                        remote          = self.conf.exesurfex + "/PREP"
+                        remote         = self.conf.exesurfex + "/PREP"
                     )
 
                     print(t.prompt, 'tb08 =', tb08)
@@ -435,16 +441,17 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 else:
                     ntasks = min(40, len(list_dates_begin_forc))
 
-                # Algo component converting the forcing files geometry (duplication of points and projection of solar radiations)
+                # Algo component converting the forcing files geometry
+                # (duplication of points and projection of solar radiations)
                 self.sh.title('Toolbox algo tb09a')
                 tb09a = tbalgo1 = toolbox.algo(
-                    engine         = 's2m',
+                    engine       = 's2m',
                     kind         = 'prepareforcing',
                     datebegin    = list_dates_begin_forc if not oneforcing else [self.conf.datebegin],
                     dateend      = list_dates_end_forc if not oneforcing else [self.conf.dateend],
                     ntasks       = ntasks,
-                    geometry_in     = list_geometry,
-                    geometry_out     = self.conf.geometry.area
+                    geometry_in  = list_geometry,
+                    geometry_out = self.conf.geometry.area
                 )
                 print(t.prompt, 'tb09a =', tb09a)
                 print()
@@ -467,7 +474,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 if self.conf.addmask:
                     self.sh.title('Toolbox algo tb09abis')
                     tb09abis = tbalgo_shadows = toolbox.algo(
-                        engine         = 's2m',
+                        engine       = 's2m',
                         kind         = 'shadowsforcing',
                         datebegin    = list_dates_begin_forc if not oneforcing else [self.conf.datebegin],
                         dateend      = list_dates_end_forc if not oneforcing else [self.conf.dateend],
@@ -482,7 +489,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 # Algo component to build the climatological file if allowed by the user (-g option)
                 self.sh.title('Toolbox algo tb09a')
                 tb09b = tbalgo1 = toolbox.algo(
-                    engine         = 's2m',
+                    engine       = 's2m',
                     kind         = 'clim',
                 )
                 print(t.prompt, 'tb09b =', tb09b)
@@ -490,9 +497,11 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 tb09b.run()
 
             if oneforcing:
-                firstforcing = 'FORCING_' + self.conf.datebegin.strftime("%Y%m%d%H") + "_" + self.conf.dateend.strftime("%Y%m%d%H") + ".nc"
+                firstforcing = 'FORCING_' + self.conf.datebegin.strftime("%Y%m%d%H") + \
+                    "_" + self.conf.dateend.strftime("%Y%m%d%H") + ".nc"
             else:
-                firstforcing = 'FORCING_' + list_dates_begin_forc[0].strftime("%Y%m%d%H") + "_" + list_dates_end_forc[0].strftime("%Y%m%d%H") + ".nc"
+                firstforcing = 'FORCING_' + list_dates_begin_forc[0].strftime("%Y%m%d%H") + \
+                    "_" + list_dates_end_forc[0].strftime("%Y%m%d%H") + ".nc"
 
             # Algo component to preprocess the namelist (adjust dates, etc.)
             self.sh.title('Toolbox algo tb09a')
@@ -523,7 +532,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             if not tb03[0] and not tb03a[0] and not tb03a2[0]:
                 self.sh.title('Toolbox algo tb09 = PREP')
                 tb10 = tbalgo3 = toolbox.algo(
-                    engine         = 'parallel',
+                    engine     = 'parallel',
                 )
                 print(t.prompt, 'tb10 =', tb10)
                 print()
@@ -545,8 +554,9 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print()
 
             if self.conf.geometry.area in ["cor_flat"]:
-                # Specific number of threads must be provided for domains with a number of points lower than the number of MPI threads
-                self.component_runner(tbalgo4, tbx3, mpiopts = dict(nnodes=1, nprocs=18, ntasks=18))
+                # Specific number of threads must be provided for domains
+                # with a number of points lower than the number of MPI threads
+                self.component_runner(tbalgo4, tbx3, mpiopts=dict(nnodes=1, nprocs=18, ntasks=18))
             else:
                 self.component_runner(tbalgo4, tbx3)
 
@@ -564,7 +574,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 experiment     = self.conf.xpid,
                 geometry       = self.conf.geometry,
                 datebegin      = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
-                dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin),
+                                                                                        dateend)),
                 nativefmt      = 'netcdf',
                 kind           = 'SnowpackSimulation',
                 model          = 'surfex',
@@ -584,9 +595,9 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                         experiment  = self.conf.xpid,
                         geometry    = self.conf.geometry,
                         datebegin   = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
-                        dateend     = dateend if not self.conf.dailyprep else list(
-                            daterange(tomorrow(base=datebegin), dateend)),
-                        nativefmt='netcdf',
+                        dateend     = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin),
+                                                                                             dateend)),
+                        nativefmt   ='netcdf',
                         kind        = 'SnowpackSimulation',
                         model       = 'surfex',
                         namespace   = 'vortex.archive.fr',
@@ -611,7 +622,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
                     datebegin      = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
-                    dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                    dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin),
+                                                                                            dateend)),
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
                     model          = 'surfex',
@@ -628,7 +640,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
                     datebegin      = datebegin if not self.conf.dailyprep else '[dateend]/-PT24H',
-                    dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                    dateend        = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin),
+                                                                                            dateend)),
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
                     model          = 'surfex',
@@ -646,7 +659,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     role           = 'SnowpackInit',
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
-                    date           = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                    date           = dateend if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin),
+                                                                                            dateend)),
                     nativefmt      = 'netcdf',
                     kind           = 'PREP',
                     model          = 'surfex',
@@ -658,14 +672,16 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print()
 
             else:
-                # PRO not available for the whole simulation period: try to save yearly PRO, DIAG, CUMUL files + 1 PREP file per year
+                # PRO not available for the whole simulation period: try to save yearly PRO, DIAG, CUMUL 
+                # files + 1 PREP file per year
                 self.sh.title('Toolbox output tb19')
                 tb19 = toolbox.output(
                     local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
                     datebegin      = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
-                    dateend        = dict_dates_end_pro if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                    dateend        = dict_dates_end_pro if not self.conf.dailyprep else \
+                                     list(daterange(tomorrow(base=datebegin), dateend)),
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
                     model          = 'surfex',
@@ -684,8 +700,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                             experiment  = self.conf.xpid,
                             geometry    = self.conf.geometry,
                             datebegin   = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
-                            dateend     = dict_dates_end_pro if not self.conf.dailyprep else list(
-                                daterange(tomorrow(base=datebegin), dateend)),
+                            dateend     = dict_dates_end_pro if not self.conf.dailyprep else \
+                                          list(daterange(tomorrow(base=datebegin), dateend)),
                             nativefmt   = 'netcdf',
                             kind        = 'SnowpackSimulation',
                             model       = 'surfex',
@@ -703,7 +719,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
                     datebegin      = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
-                    dateend        = dict_dates_end_pro if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                    dateend        = dict_dates_end_pro if not self.conf.dailyprep else \
+                                     list(daterange(tomorrow(base=datebegin), dateend)),
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
                     model          = 'surfex',
@@ -720,7 +737,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
                     datebegin      = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
-                    dateend        = dict_dates_end_pro if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                    dateend        = dict_dates_end_pro if not self.conf.dailyprep else \
+                                     list(daterange(tomorrow(base=datebegin), dateend)),
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
                     model          = 'surfex',
@@ -738,7 +756,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     role           = 'SnowpackInit',
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
-                    date           = list_dates_end_pro if not self.conf.dailyprep else list(daterange(tomorrow(base=datebegin), dateend)),
+                    date           = list_dates_end_pro if not self.conf.dailyprep else \
+                                     list(daterange(tomorrow(base=datebegin), dateend)),
                     nativefmt      = 'netcdf',
                     kind           = 'PREP',
                     model          = 'surfex',

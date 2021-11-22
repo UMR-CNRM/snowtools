@@ -30,7 +30,7 @@ from snowtools.utils.S2M_standard_file import StandardSAFRAN, StandardCROCUS
 class forcinput_tomerge:
     """
     This class represents a group of forcing files which must be merged
-    in a single one through the Number_of_points dimension.
+    in a single one through the ``Number_of_points`` dimension.
 
     :param forcin: List of input files names
     :type forcin: list
@@ -181,7 +181,7 @@ class forcinput_tomerge:
 class forcinput_applymask(forcinput_tomerge):
     """
     This class represents a group of forcing files which must be merged
-    in a single one through the Number_of_points dimension.
+    in a single one through the ``Number_of_points`` dimension.
     and for which incoming shortwave radiation must be corrected from shadows.
     Or a single forcing file for which incoming shortwave radiation must be corrected from shadows.
     """
@@ -475,8 +475,8 @@ class forcinput_select(forcinput_tomodify):
         :type init_forcing_file: :class:`utils.prosimu.prosimu`
         :param new_forcing_file: Output file object
         :type new_forcing_file: :class:`utils.prosimu.prosimu`
-        :param \*args: list of massif numbers, minimum elevation, maximum elevation, list of slopes, list of aspects
-        :type \*args: list, int, int, list, list
+        :param args: list of massif numbers, minimum elevation, maximum elevation, list of slopes, list of aspects
+        :type args: list, int, int, list, list
         """
 
         print("Modify forcing file towards the prescribed geometry:")
@@ -966,6 +966,7 @@ class forcinput_ESMSnowMIP(forcinput_tomodify):
 class forcinput_extract(forcinput_tomodify):
     """This class allows to extract from an original forcing file all the variables corresponding
     to a pre-defined list of points.
+
     Implemented by C. Carmagnola in November 2018 (PROSNOW project).
     """
 
@@ -976,8 +977,8 @@ class forcinput_extract(forcinput_tomodify):
         :type init_forcing_file: :class:`utils.prosimu.prosimu`
         :param new_forcing_file: Output file object
         :type new_forcing_file: :class:`utils.prosimu.prosimu`
-        :param \*args: .txt file name containing the list of points to be extracted
-        :type \*args: str
+        :param args: .txt file name containing the list of points to be extracted
+        :type args: str
         """
 
         # Read data from file
@@ -1131,8 +1132,8 @@ class forcinput_changedates(forcinput_tomodify):
         :type init_forcing_file: :class:`utils.prosimu.prosimu`
         :param new_forcing_file: Output file object
         :type new_forcing_file: :class:`utils.prosimu.prosimu`
-        :param *args: New initial date
-        :type *args: :class:`bronx.stddtypes.date.Date`
+        :param args: New initial date
+        :type args: :class:`bronx.stddtypes.date.Date`
         """
 
         # Open file

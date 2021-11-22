@@ -13,15 +13,14 @@ from vortex.layout.nodes import Driver, Task
 logger = footprints.loggers.getLogger(__name__)
 
 
-
 def setup(t, **kw):
     return Driver(
-        tag    = 'pearp2safran',
-        ticket = t,
-        nodes  = [
+        tag='pearp2safran',
+        ticket=t,
+        nodes=[
             PrepSafran(tag='prepsafprv', ticket=t, **kw),
         ],
-        options = kw,
+        options=kw,
     )
 
 
@@ -113,14 +112,13 @@ class PrepSafran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb04 =', expresso)
             print()
 
-            self.component_runner(expresso, script, fortran = False)
+            self.component_runner(expresso, script, fortran=False)
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
 
             pass
 
         if 'late-backup' in self.steps:
-
 
             self.sh.title('Toolbox output tb06a')
             tb06 = toolbox.output(
@@ -142,7 +140,6 @@ class PrepSafran(Task, S2MTaskMixIn):
             ),
             print(t.prompt, 'tb06a =', tb06)
             print()
-
 
             print('==================================================================================================')
             print('INFO :The execution went well, do not take into account the following error')

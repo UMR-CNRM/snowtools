@@ -69,7 +69,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     experiment     = 'OPER@vernaym',
                     cutoff         = 'assimilation',
                     block          = 'guess',
-                    date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                    date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d))
+                                      for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                     cumul          = self.conf.cumul,
                     nativefmt      = 'ascii',
                     kind           = 'guess',
@@ -95,10 +96,12 @@ class PrepSafran(Task, S2MTaskMixIn):
                             geometry       = 'euroc25',
                             kind           = 'gridpoint',
                             local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
-                            date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                            date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d))
+                                              for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                             term           = self.conf.cumul,
                             nativefmt      = '[format]',
-                            # remote         = '/home/mrns/vernaym/extraction_bdap/[vconf]/arpege_[date::ymdh]_[term::hour].grib',
+                            # remote         = '/home/mrns/vernaym/extraction_bdap/[vconf]/ \
+                            # arpege_[date::ymdh]_[term::hour].grib',
                             # hostname       = 'guppy.meteo.fr',
                             # tube           = 'ftp',
                             # origin         = 'arpege',
@@ -127,7 +130,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                             # filtername     = 'concatenate',
                             suite          = 'oper',
                             local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
-                            date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                            date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d))
+                                              for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                             # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                             term           = self.conf.cumul,
                             namespace      = 'vortex.multi.fr',
@@ -147,7 +151,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                         if len(tb02) == 5:
                             tbarp.extend(tb02)
                         else:
-                            # En dernier recours on va chercher si une extraction BDAP a été faite pour les dates plus anciennes
+                            # En dernier recours on va chercher si une extraction BDAP a été faite
+                            # pour les dates plus anciennes
                             self.sh.title('Toolbox input BDAP {0:s}'.format(rundate.ymdh))
                             tbarp.extend(toolbox.input(
                                 role           = 'Gridpoint',
@@ -155,10 +160,12 @@ class PrepSafran(Task, S2MTaskMixIn):
                                 geometry       = 'euroc25',
                                 kind           = 'gridpoint',
                                 local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
-                                date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                                date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d))
+                                                  for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                                 term           = self.conf.cumul,
                                 nativefmt      = '[format]',
-                                remote         = '/home/mrns/vernaym/extraction_bdap/[vconf]/arpege_[date::ymdh]_[term::hour].grib',
+                                remote         = '/home/mrns/vernaym/extraction_bdap/[vconf]/ \
+                                arpege_[date::ymdh]_[term::hour].grib',
                                 hostname       = 'guppy.meteo.fr',
                                 tube           = 'ftp',
                                 origin         = 'arpege',
@@ -178,7 +185,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = 'uenv:s2m.01@vernaym',
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -a -o -i IDW -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp)]))),
+                rawopts     = ' -a -o -i IDW -f ' + ' '.join(list(set([str(rh[1].container.basename)
+                                                                       for rh in enumerate(tbarp)]))),
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
@@ -197,7 +205,9 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # Need to extend pythonpath to be independant of the user environment
                 # The vortex-build environment already set up the pythonpath (see jobassistant plugin) but the script is 
                 # eventually launched in a 'user-defined' environment
-                extendpypath = [self.sh.path.join(self.conf.rootapp, d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site', 'epygram/eccodes_python']],
+                extendpypath = [self.sh.path.join(self.conf.rootapp, d)
+                                for d in ['vortex/src', 'vortex/site', 'epygram',
+                                          'epygram/site', 'epygram/eccodes_python']],
                 ntasks         = self.conf.ntasks,
                 terms          = footprints.util.rangex(self.conf.ana_terms),
             )
