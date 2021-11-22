@@ -13,9 +13,9 @@ import footprints
 
 def setup(t, **kw):
     return Driver(
-        tag = 'Surfex_Parallel',
-        ticket = t,
-        nodes = [
+        tag='Surfex_Parallel',
+        ticket=t,
+        nodes=[
             Escroc_Eval_Task(tag='Escroc_Eval_Task', ticket=t, **kw),
         ],
         options=kw
@@ -27,11 +27,13 @@ class Escroc_Eval_Task(Task):
     def process(self):
 
         t = self.ticket
-        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
+        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = \
+            get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
         dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
 
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 1
-        members = list(range(startmember, int(self.conf.nmembers) + startmember)) if hasattr( self.conf, "nmembers") else list(range(1, 36))
+        members = list(range(startmember, int(self.conf.nmembers) + startmember)) \
+            if hasattr(self.conf, "nmembers") else list(range(1, 36))
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 

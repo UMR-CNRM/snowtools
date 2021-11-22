@@ -15,9 +15,9 @@ from cen.layout.nodes import S2MTaskMixIn
 
 def setup(t, **kw):
     return Driver(
-        tag = 'Prosnow_Analysis',
-        ticket = t,
-        nodes = [
+        tag='Prosnow_Analysis',
+        ticket=t,
+        nodes=[
             Prosnow_Analysis(tag='prosnow_analysis', ticket=t, **kw),
         ],
         options=kw
@@ -31,7 +31,8 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
         t = self.ticket
 
         list_geometry = self.get_list_geometry(meteo=self.conf.meteo)
-        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, "yearly")
+        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = \
+            get_list_dates_files(self.conf.datebegin, self.conf.dateend, "yearly")
 
         '''-----------------------------------'''
         '''              step.01              '''
@@ -154,7 +155,7 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapII_eu_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv           = 'uenv:cen.01@CONST_CEN',
                 source         = 'ecoclimap2',
                 model          = 'surfex',
             ),
@@ -379,7 +380,8 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
             # '''1) Past years'''
 #             firstforcing = 'FORCING_' + list_dates_begin_forc[0].strftime("%Y%m%d%H") + "_" + list_dates_end_forc[0].strftime("%Y%m%d%H") + ".nc"
             # '''2) Real-time'''
-            firstforcing = 'FORCING_' + self.conf.datebegin.strftime("%Y%m%d%H") + "_" + self.conf.dateend.strftime("%Y%m%d%H") + ".nc"
+            firstforcing = 'FORCING_' + self.conf.datebegin.strftime("%Y%m%d%H") + "_" + \
+                self.conf.dateend.strftime("%Y%m%d%H") + ".nc"
 
             self.sh.title('Toolbox algo tb02')
             '''2) ALGO -> modify namelist to end simulation before the end of forcing file'''
@@ -501,4 +503,3 @@ class Prosnow_Analysis(Task, S2MTaskMixIn):
 #             ### Force vortex to fail, in order to save info in the "abort" folder
 #             from vortex.tools.systems import ExecutionError
 #             raise ExecutionError('')
-

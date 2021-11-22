@@ -15,6 +15,7 @@ import ftplib
 from ftplib import FTP,all_errors
 from netrc import netrc
 
+
 def ftpconnect(machine):
     username, account, password = netrc().authenticators(machine)
     ftp = FTP(machine)
@@ -25,12 +26,12 @@ def ftpconnect(machine):
 
 def setup(t, **kw):
     return Driver(
-        tag    = 'safran',
-        ticket = t,
-        nodes  = [
+        tag='safran',
+        ticket=t,
+        nodes=[
             Safran(tag='prvsaf', ticket=t, **kw),
         ],
-        options = kw,
+        options=kw,
     )
 
 
@@ -48,7 +49,6 @@ class Safran(Task, S2MTaskMixIn):
         datebegin, dateend = self.get_period()
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
-
 
             # P12 à P108 du réseau 18h (J-1)
             self.sh.title('Toolbox intput tb01')

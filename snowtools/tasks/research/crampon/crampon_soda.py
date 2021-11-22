@@ -28,8 +28,8 @@ class Soda_Task(Crampon_Task):
             # ################# FETCH CONSTANT FILES #############
             # 17/04/19 -> keep a workSODA rep for backward compatibility
             # AND sake of simplicity, even though it is not needed anymore.
-
-            self.get_common_consts(firstloop, self.conf.members)  # soda gets ALL members, not only membersnode. 
+            # soda gets ALL members, not only membersnode.
+            self.get_common_consts(firstloop, self.conf.members)
 
             # ################# FETCH EXECUTABLE ###############
             self.sh.title('Toolbox executable tb08_s= tbx4')
@@ -38,7 +38,7 @@ class Soda_Task(Crampon_Task):
                 kind           = 'soda',
                 local          = 'SODA',
                 model          = 'surfex',
-                remote          = self.conf.exesurfex + "/SODA"
+                remote         = self.conf.exesurfex + "/SODA"
             )
 
             print(t.prompt, 'tb08_s =', tb08_s)
@@ -96,8 +96,8 @@ class Soda_Task(Crampon_Task):
             # TODO : get the actualized version of the conf file.
         if 'compute' in self.steps:
             # ################## SODA toolbox.algo
-            if os.path.exists('workSODA/OBSERVATIONS_' + assDate.ymdHh + '.nc'):  # test of obs exists/successfully downloaded
-
+            # test of obs exists/successfully downloaded
+            if os.path.exists('workSODA/OBSERVATIONS_' + assDate.ymdHh + '.nc'):
                 # soda
                 self.sh.title('Toolbox algo tb11_s = SODA')
 
@@ -110,9 +110,10 @@ class Soda_Task(Crampon_Task):
                 )
                 print(t.prompt, 'tb11_s =', tb11_s)
                 print()
-                self.component_runner(tbalgo4s, tbx4, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
+                self.component_runner(tbalgo4s, tbx4, mpiopts=dict(nnodes=1, nprocs=1, ntasks=1))
             """
-            else:  # in case of SODA, if obs file doesn't exist, we need to remove PREP.nc in every mbdir (this is done by soda)
+            else:  # in case of SODA, if obs file doesn't exist, we need to remove PREP.nc in every mbdir
+                (this is done by soda)
                 for mb in self.conf.members:
                     if os.path.exists('mb{0:04d}'.format(mb) + '/PREP.nc'):
                         os.remove('mb{0:04d}'.format(mb) + '/PREP.nc')
@@ -192,12 +193,12 @@ class Soda_Task(Crampon_Task):
                     tb24 = toolbox.output(
                         model           = 'PART',
                         namebuild       = 'flat@cen',
-                        namespace      = 'vortex.multi.fr',
+                        namespace       = 'vortex.multi.fr',
                         fatal           = True,
                         dateassim       = assDate,
                         block           = 'workSODA',
-                        experiment = self.conf.xpid,
-                        filename = 'workSODA/PART_' + Date(assDate).ymdh + '.txt',
+                        experiment      = self.conf.xpid,
+                        filename        = 'workSODA/PART_' + Date(assDate).ymdh + '.txt',
                     )
                     print(t.prompt, 'tb24 =', tb24)
                     print()
@@ -207,12 +208,12 @@ class Soda_Task(Crampon_Task):
                     tb242 = toolbox.output(
                         model           = 'BG_CORR',
                         namebuild       = 'flat@cen',
-                        namespace      = 'vortex.multi.fr',
+                        namespace       = 'vortex.multi.fr',
                         fatal           = True,
                         dateassim       = assDate,
                         block           = 'workSODA',
-                        experiment = self.conf.xpid,
-                        filename = 'workSODA/BG_CORR_' + Date(assDate).ymdh + '.txt',
+                        experiment      = self.conf.xpid,
+                        filename        = 'workSODA/BG_CORR_' + Date(assDate).ymdh + '.txt',
                     )
                     print(t.prompt, 'tb242 =', tb242)
                     print()
@@ -222,21 +223,21 @@ class Soda_Task(Crampon_Task):
                     tb243 = toolbox.output(
                         model           = 'IMASK',
                         namebuild       = 'flat@cen',
-                        namespace      = 'vortex.multi.fr',
+                        namespace       = 'vortex.multi.fr',
                         fatal           = True,
                         dateassim       = assDate,
                         block           = 'workSODA',
-                        experiment = self.conf.xpid,
-                        filename = 'workSODA/IMASK_' + Date(assDate).ymdh + '.txt',
+                        experiment      = self.conf.xpid,
+                        filename        = 'workSODA/IMASK_' + Date(assDate).ymdh + '.txt',
                     )
                     print(t.prompt, 'tb243 =', tb243)
                     print()
-
-
+#
             # ########### PUT OBSERVATIONS SXCEN ####################################
             if os.path.exists('workSODA/OBSERVATIONS_' + Date(assDate).ymdHh + '.nc'):
-                locObs = 'workSODA/obs_' + self.conf.sensor + '_' + self.conf.geometry.area + '_' + Date(assDate).ymdHh + '.nc'
-                os.rename('workSODA/OBSERVATIONS_' + Date(assDate).ymdHh + '.nc', locObs )
+                locObs = 'workSODA/obs_' + self.conf.sensor + '_' + \
+                    self.conf.geometry.area + '_' + Date(assDate).ymdHh + '.nc'
+                os.rename('workSODA/OBSERVATIONS_' + Date(assDate).ymdHh + '.nc', locObs)
                 if hasattr(self.conf, 'writesx'):
                     self.sh.title('Toolbox output tobsOUT_sx')
                     tobsout = toolbox.output(
@@ -323,7 +324,7 @@ class Soda_Task(Crampon_Task):
                         )
                         print(t.prompt, 'tb242 =', tb242)
                         print()
-                        
+#
                     if os.path.exists('workSODA/IMASK_' + Date(assDate).ymdh + '.txt'):
                         self.sh.title('Toolbox output tb243_sx')
                         tb243 = toolbox.output(
@@ -340,4 +341,3 @@ class Soda_Task(Crampon_Task):
                         )
                         print(t.prompt, 'tb24 3=', tb243)
                         print()
-

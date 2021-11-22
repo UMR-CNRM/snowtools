@@ -16,12 +16,12 @@ from bronx.stdtypes.date import Period
 
 def setup(t, **kw):
     return Driver(
-        tag    = 'refill',
-        ticket = t,
-        nodes  = [
+        tag='refill',
+        ticket=t,
+        nodes=[
             Refill(tag='refill', ticket=t, **kw),
         ],
-        options = kw,
+        options=kw,
     )
 
 

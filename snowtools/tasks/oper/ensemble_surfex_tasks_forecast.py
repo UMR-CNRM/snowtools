@@ -13,9 +13,9 @@ import footprints
 
 def setup(t, **kw):
     return Driver(
-        tag = 'Surfex_Parallel',
-        ticket = t,
-        nodes = [
+        tag='Surfex_Parallel',
+        ticket=t,
+        nodes=[
                 Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw),
                 Four_Seasons_Task(tag='S2m_pp_Task', ticket=t, **kw)],
         options=kw
