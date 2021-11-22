@@ -21,12 +21,12 @@ from snowtools.bronx.stdtypes.date import Date
 
 def setup(t, **kw):
     return Driver(
-        tag    = 'pearp2safran',
-        ticket = t,
-        nodes  = [
+        tag='pearp2safran',
+        ticket=t,
+        nodes=[
             Reanalyses(tag='reanalyses', ticket=t, **kw),
         ],
-        options = kw,
+        options=kw,
     )
 
 
@@ -89,7 +89,8 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 block          = 'guess',
                 geometry       = self.conf.vconf,
                 cutoff         = 'assimilation',
-                date           = ['{0:s}/+PT96H/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 120, self.conf.cumul)],
+                date           = ['{0:s}/+PT96H/-PT{1:s}H'.format(dateend.ymd6h, str(d))
+                                  for d in footprints.util.rangex(6, 120, self.conf.cumul)],
                 cumul          = self.conf.cumul,
                 nativefmt      = 'ascii',
                 kind           = 'guess',
@@ -111,7 +112,8 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 block          = 'guess',
                 geometry       = self.conf.vconf,
                 cutoff         = 'production',
-                date           = ['{0:s}/+PT96H/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 120, self.conf.cumul)],
+                date           = ['{0:s}/+PT96H/-PT{1:s}H'.format(dateend.ymd6h, str(d))
+                                  for d in footprints.util.rangex(6, 120, self.conf.cumul)],
                 cumul          = self.conf.cumul,
                 nativefmt      = 'ascii',
                 kind           = 'guess',

@@ -6,6 +6,11 @@ Interpolation tools
    
    Document the interpolation tools better ?
 
+Netcdf_add_massif_info script
+-----------------------------
+
+.. include:: ./autoscripts/fortran--Netcdf_add_massif_info.rst
+
 shapefile2NetCDF tool
 ---------------------
 

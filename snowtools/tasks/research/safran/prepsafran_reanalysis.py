@@ -19,12 +19,12 @@ logger = footprints.loggers.getLogger(__name__)
 
 def setup(t, **kw):
     return Driver(
-        tag    = 'pearp2safran',
-        ticket = t,
-        nodes  = [
+        tag='pearp2safran',
+        ticket=t,
+        nodes=[
             PrepSafran(tag='prepsaf', ticket=t, **kw),
         ],
-        options = kw,
+        options=kw,
     )
 
 
@@ -60,7 +60,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     experiment     = 'OPER@vernaym',
                     cutoff         = 'assimilation',
                     block          = self.conf.guess_block,
-                    date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                    date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d))
+                                      for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                     cumul          = self.conf.cumul,
                     nativefmt      = 'ascii',
                     kind           = 'guess',
@@ -91,7 +92,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                             geometry       = 'euroc25',
                             kind           = 'gridpoint',
                             local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
-                            date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                            date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d))
+                                              for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                             term           = self.conf.cumul,
                             nativefmt      = '[format]',
                             #remote         = '/home/mrns/vernaym/extraction_bdap/[vconf]/arpege_[date::ymdh]_[term::hour].grib',
@@ -124,7 +126,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                             geometry       = 'euroc25',
                             kind           = 'gridpoint',
                             local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
-                            date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                            date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d))
+                                              for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                             term           = self.conf.cumul,
                             nativefmt      = '[format]',
                             remote         = '/home/mrns/vernaym/extraction_bdap/[vconf]/arpege_[date::ymdh]_[term::hour].grib',
@@ -174,7 +177,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                             #filtername     = 'concatenate',
                             suite          = 'oper',
                             local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
-                            date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                            date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d))
+                                              for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                             # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                             term           = self.conf.cumul,
                             namespace      = 'vortex.multi.fr',
@@ -199,7 +203,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = '{0:s} -a -d {1:s} -f '.format(interp, self.conf.vconf) + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp)])),
+                rawopts     = '{0:s} -a -d {1:s} -f '.format(interp, self.conf.vconf)
+                              + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp)])),
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
@@ -233,7 +238,9 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # Need to extend pythonpath to be independant of the user environment
                 # The vortex-build environment already set up the pythonpath (see jobassistant plugin) but the script is 
                 # eventually launched in a 'user-defined' environment
-                extendpypath   = [self.sh.path.join('/'.join(self.conf.iniconf.split('/')[:-2]), d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site', 'epygram/eccodes_python']],
+                extendpypath   = [self.sh.path.join('/'.join(self.conf.iniconf.split('/')[:-2]), d)
+                                  for d in ['vortex/src', 'vortex/site', 'epygram',
+                                            'epygram/site', 'epygram/eccodes_python']],
                 ntasks         = self.conf.ntasks,
                 terms          = footprints.util.rangex(self.conf.ana_terms),
             )
@@ -275,7 +282,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     experiment     = 'OPER@vernaym',
                     cutoff         = 'assimilation',
                     block          = self.conf.guess_block,
-                    date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                    date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d))
+                                      for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                     cumul          = self.conf.cumul,
                     nativefmt      = 'ascii',
                     kind           = 'guess',
@@ -291,12 +299,12 @@ class PrepSafran(Task, S2MTaskMixIn):
             # WARNING : The following only works for a 1-year execution
             season = self.conf.datebegin.nivologyseason
             tarname = 'p{0:s}.tar'.format(season)
-            #thisdir = os.getcwd()
+            # thisdir = os.getcwd()
             with tarfile.open(tarname, mode='w') as tarfic:
                 for f in glob.glob('*/P????????'):
-                    #oldname = os.path.basename(f).split('_')[0]
-                    #date = Date.strptime(oldname[1:], '%y%m%d%H') + Period(hours=6)
-                    #arcname = 'P{0:s}'.format(date.yymdh)
+                    # oldname = os.path.basename(f).split('_')[0]
+                    # date = Date.strptime(oldname[1:], '%y%m%d%H') + Period(hours=6)
+                    # arcname = 'P{0:s}'.format(date.yymdh)
                     arcname = os.path.basename(f)
                     tarfic.add(f, arcname=arcname)
 
@@ -319,7 +327,6 @@ class PrepSafran(Task, S2MTaskMixIn):
             ),
             print(t.prompt, 'tb05 =', tb05)
             print()
-
 
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')

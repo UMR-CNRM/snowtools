@@ -48,10 +48,10 @@ def parse_options(arguments):
     parser.add_option("-r",
                       action="store", type="string", dest="region", default='all',
                       help="alp, pyr, cor, postes, all")
-    
+
     parser.add_option("--meteo",
                       action="store_true", dest="meteo", default=True,
-                      help="Extract meteorological forcing files")    
+                      help="Extract meteorological forcing files")
 
     parser.add_option("--snow",
                       action="store_true", dest="snow", default=True,
@@ -66,12 +66,13 @@ class configcommand(config):
 
     def __init__(self, options):
         self.rundate = check_and_convert_date(options.datebegin)
-        
+
         if not options.region == "all":
             self.list_geometry = options.region
-            
+
         self.meteo = options.meteo
         self.snow = options.snow
+
 
 class configcommanddev(configdev):
 
@@ -83,7 +84,7 @@ class configcommanddev(configdev):
 
         self.meteo = options.meteo
         self.snow = options.snow
-        
+
 
 class S2MExtractor(S2MTaskMixIn):
 
@@ -155,8 +156,8 @@ class S2MExtractor(S2MTaskMixIn):
 
         list_output = {}
         for rh in tb:
-#             print(rh.quickview())
-#             rh.get()
+            # print(rh.quickview())
+            # rh.get()
             if rh.check():
                 if rh.resource.geometry.area not in list_output.keys():
                     list_output[rh.resource.geometry.area] = []

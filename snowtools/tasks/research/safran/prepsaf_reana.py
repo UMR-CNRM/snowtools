@@ -20,12 +20,12 @@ from bronx.stdtypes.date import Period
 
 def setup(t, **kw):
     return Driver(
-        tag    = 'pearp2safran',
-        ticket = t,
-        nodes  = [
+        tag='pearp2safran',
+        ticket=t,
+        nodes=[
             PrepSafran(tag='prepsaf', ticket=t, **kw),
         ],
-        options = kw,
+        options=kw,
     )
 
 
@@ -43,8 +43,7 @@ class PrepSafran(Task, S2MTaskMixIn):
         t = self.ticket
 
         if 'early-fetch' in self.steps:
-
-            tbarp   = list()
+            tbarp = list()
             missing_dates = list()
             rundate = self.conf.datebegin
             while rundate <= self.conf.dateend:
@@ -72,10 +71,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ),
                 print(t.prompt, 'tb01 =', tb01)
                 print()
-
                 if len(tb01[0]) < 15:
-
-                    # 2. Get ARPEGE file 
+                    # 2. Get ARPEGE file
                     # Recuperation de A6 du réseau H-6 pour H in [0, 6, 12, 18]
                     if rundate < Date(2019, 7, 1, 0):
 
@@ -180,8 +177,10 @@ class PrepSafran(Task, S2MTaskMixIn):
 #                 genv        = 'uenv:s2m.01@vernaym',
 #                 kind        = 's2m_filtering_grib',
 #                 language    = 'python',
-#                 # rawopts     = ' -o -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
-#                 rawopts     = '-a -r -d {0:s} -f {1:s}'.format(self.conf.vconf, ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)])))),
+#                 # rawopts     = ' -o -f ' + ' '.join(list(set([str(rh[1].container.basename) \
+#                                for rh in enumerate(tbarp + tbpearp)]))),
+#                 rawopts     = '-a -r -d {0:s} -f {1:s}'.format(self.conf.vconf, ' '. \
+#                                join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)])))),
 #             )
 #             print t.prompt, 'tb03 =', tb03
 #             print
@@ -202,7 +201,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ntasks         = self.conf.ntasks,
                 members        = footprints.util.rangex(self.conf.members),
                 terms          = footprints.util.rangex(self.conf.ana_terms),
-                extendpypath   = [self.sh.path.join('/'.join(self.conf.iniconf.split('/')[:-2]), d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site', 'epygram/eccodes_python']],
+                extendpypath   = [self.sh.path.join('/'.join(self.conf.iniconf.split('/')[:-2]), d) for d in \
+                                  ['vortex/src', 'vortex/site', 'epygram', 'epygram/site', 'epygram/eccodes_python']],
             )
             print(t.prompt, 'tb04 =', expresso)
             print()
@@ -221,7 +221,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 #             print t.prompt, 'tb04 =', expresso
 #             print
 
-            self.component_runner(expresso, script, fortran = False)
+            self.component_runner(expresso, script, fortran=False)
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
 
@@ -263,9 +263,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 #            print
 
             for f in glob.glob('*/ARPEGE*'):
-                
                 rundate = Date(f.split('/')[0])
-
                 self.sh.title('Toolbox output tb06')
                 tb06 = toolbox.output(
                     role           = 'Ebauche',
@@ -287,8 +285,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ),
                 print(t.prompt, 'tb06 =', tb06)
                 print()
-
-
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')
             pass

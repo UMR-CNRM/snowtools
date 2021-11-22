@@ -8,4 +8,5 @@ scripts/extract/obs/extract_obs.py
 scripts/extract/obs/extract_obs_meteo.py
 scripts/extract/obs/extract_obs_meteo_mb.py
 scripts/extract/obs/extract_obs_allhtn.py
+fortran/Netcdf_add_massif_info.py
 

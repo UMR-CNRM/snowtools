@@ -12,16 +12,14 @@ from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
 
 
-
-
 def setup(t, **kw):
     return Driver(
-        tag    = 'safran',
-        ticket = t,
-        nodes  = [
+        tag='safran',
+        ticket=t,
+        nodes=[
             Safran(tag='prvsaf', ticket=t, **kw),
         ],
-        options = kw,
+        options=kw,
     )
 
 
@@ -55,7 +53,8 @@ class Safran(Task, S2MTaskMixIn):
                     block          = self.conf.guess_block,
                     geometry       = self.conf.vconf,
                     cutoff         = 'assimilation',
-                    date           = ['{0:s}/+PT{1:s}H/-PT6H'.format(datebegin.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                    date           = ['{0:s}/+PT{1:s}H/-PT6H'.format(datebegin.ymd6h, str(d))
+                                      for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                     cumul          = self.conf.cumul,
                     nativefmt      = 'ascii',
                     kind           = 'guess',
@@ -71,7 +70,8 @@ class Safran(Task, S2MTaskMixIn):
                 # L'A6 du réseau 0h J n'est génaralement pas encore là pour le run de 3h, SAFRAN utilisera alors la P6
                 # du réseau 0h J récupérée dans la TB suivante car également utilisée pour la prévision de J à J+1.
                 # En l'état même si l'A6 du réseau 0h est présente, elle sera écrasée par la P6 qui porte le même nom...
-                # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur 6h homogène avec le cumul dans les fichiers d'assimilation
+                # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur 6h homogène avec le cumul
+                # dans les fichiers d'assimilation
                 # P6 du réseau 0h (J)
 
                 # I.2- Prevision de J 6h à J+4 6h
@@ -432,7 +432,6 @@ class Safran(Task, S2MTaskMixIn):
             print()
 
             self.component_runner(tbalgo4, tbx4)
-
 
         if 'late-backup' in self.steps:
 
