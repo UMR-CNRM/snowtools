@@ -30,8 +30,6 @@ matplotlib.use('Agg')  # has to be before matplotlib.pyplot, because otherwise t
 # Even if that obviously is in conflict with PEP8.
 import matplotlib.pyplot as plt
 
-
-
 ################################################################
 # On part d'un shapefile en Lambert 93
 # De ce shapefile, le programme fournit un NetCDF pour les besoins du lancement de Surfex (ou de réanalyse) dessus
@@ -65,12 +63,17 @@ import matplotlib.pyplot as plt
 #############
 # Exemple Lancement:
 #############
-# python3 shapefile2NetCDF.py path_shapefile station_name_in_shapefile station_id_in_shapefile project_number [--name_alt alti_name_in_shapefile] [-o path_name_of_NetCDF_output] [--MNT_alt path_of_MNT_altitude] [--confirm_overwrite] [--list_skyline all or 1 5 6 if you want skyline for your id_station number 1, 5 and 6]
+# python3 shapefile2NetCDF.py path_shapefile station_name_in_shapefile station_id_in_shapefile project_number
+#         [--name_alt alti_name_in_shapefile] [-o path_name_of_NetCDF_output] [--MNT_alt path_of_MNT_altitude]
+#         [--confirm_overwrite] [--list_skyline all or 1 5 6 if you want skyline for your id_station number 1, 5 and 6]
 #
 # python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti
-# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti --confirm_overwrite si on a déjà travaillé sur ce projet
-# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti --list_skyline 1 34 47 (pour avoir dans le dossier output les tour d'horizon des stations numéros 1, 34 et 47
-# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2021/PlotsMaJ2021 codeplot idplot 0 --confirm_overwrite
+# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti 
+#         --confirm_overwrite si on a déjà travaillé sur ce projet
+# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti
+#         --list_skyline 1 34 47 (pour avoir dans le dossier output les tour d'horizon des stations numéros 1, 34 et 47
+# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2021/PlotsMaJ2021 codeplot idplot 0 
+#         --confirm_overwrite
 #
 # TOP_CBNA:
 # python3 shapefile2NetCDF.py /home/fructusm/Bureau/Shapefile_simu/cn_maille_points/cn_maille_points cd50m ORIG_FID 1
@@ -83,15 +86,20 @@ import matplotlib.pyplot as plt
 # give the PRO file for the shapefile points. 
 #
 # Exemple:
-# s2m -f /rd/cenfic2/era40/vortex/s2m/alp_flat/reanalysis/meteo/FORCING_2017080106_2018080106.nc -b 20170801 -e 20180801 -r /home/fructusm/git/snowtools_git/interpolation/NetCDF_from_shapefile.nc -o output_test_s2m -g --extractforcing
-# s2m -f /home/fructusm/OUTPUT_et_PRO/output_test_s2m/meteo/FORCING_2017080106_2018080106.nc -b 20170801 -e 20180801 -o output_test_s2m_Safran -g --addmask
+# s2m -f /rd/cenfic2/era40/vortex/s2m/alp_flat/reanalysis/meteo/FORCING_2017080106_2018080106.nc 
+#     -b 20170801 -e 20180801 -r /home/fructusm/git/snowtools_git/interpolation/NetCDF_from_shapefile.nc
+#     -o output_test_s2m -g --extractforcing
+# s2m -f /home/fructusm/OUTPUT_et_PRO/output_test_s2m/meteo/FORCING_2017080106_2018080106.nc -b 20170801 -e 20180801 
+#     -o output_test_s2m_Safran -g --addmask
 # (NB: export NINTERPOL=1 if MPI problem for the extractforcing)
 #
 ####################
 # Utilisation du fichier NetCDF sur belenos:
 ####################
 #
-# s2m -b 19580801 -e 20200801 -m s2m -f reanalysis2020.2@lafaysse -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc -o TEST1 -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -g --addmask -a 400
+# s2m -b 19580801 -e 20200801 -m s2m -f reanalysis2020.2@lafaysse 
+#     -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc -o TEST1 
+#     -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -g --addmask -a 400
 #
 # !!!!
 # PENSER AU SPINUP
@@ -103,7 +111,7 @@ import matplotlib.pyplot as plt
 #
 # Options: 
 # -m pour le modèle
-# -f pour les fichiers de forcing -> on va les chercher chez Matthieu pour reanalyse. On devrait bientôt pouvoir faire -f reanalysis
+# -f pour les fichiers de forcing -> on va les chercher chez Matthieu pour reanalyse. Bientôt -f reanalysis
 # -r pour la région: penser à rajouter la géométrie dans vortex/conf/geometries.ini
 # -n prendre les mêmes options que pour la réanalyse
 # -g car on n'a pas de prep au début -> il faut faire un spinup
@@ -114,13 +122,16 @@ import matplotlib.pyplot as plt
 # question pour simulation: où trouver les forcing de SMHI_RCA4_MOHC_HadGEM2_ES_RCP85 (par exemple) ?
 # reponse: chez Raphaelle Samacoits d'où une commande avec quelque chose comme: 
 # -m adamont -f RCM_GCM_EXP@samacoitsr -r alp_flat:geometryout:fichier.nc
-# s2m -b 20100801 -e 20990801 -m adamont -f CLMcom_CCLM4_8_17_CNRM_CERFACS_CNRM_CM5_RCP45@samacoitsr -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc -o TEST_Raphaelle -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -x 20200801 --addmask -a 400
+# s2m -b 20100801 -e 20990801 -m adamont -f CLMcom_CCLM4_8_17_CNRM_CERFACS_CNRM_CM5_RCP45@samacoitsr
+#     -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc -o TEST_Raphaelle 
+#     -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -x 20200801 --addmask -a 400
 #
 #
 # Pour transférer les fichiers de Belenos à sxcen:
 # utiliser get_reanalysis qui est dans snowtools_git/scripts/extract/vortex
 # Sur SXCEN: python3 get_reanalysis.py --geometry=orchamp --snow --xpid=SPINUP@fructusm
-# Sur SXCEN: python3 get_reanalysis.py --geometry=orchamp --snow --xpid=TEST_Raphaelle@fructusm --byear=2010 --eyear=2099
+# Sur SXCEN: python3 get_reanalysis.py --geometry=orchamp --snow --xpid=TEST_Raphaelle@fructusm
+#                                      --byear=2010 --eyear=2099
 ################################################################
 
 
@@ -136,15 +147,16 @@ path_MNT_slope_defaut = '/rd/cenfic2/sentinel/mnt_ange/ange-factory/prod1/france
 path_MNT_aspect_defaut = '/rd/cenfic2/sentinel/mnt_ange/ange-factory/prod1/france_30m/ASP_FRANCE_L93_30m_bilinear.tif'
 
 # Pour test en local:
-#path_MNT_alti_defaut = '/home/fructusm/MNT_FRANCEandBORDER_30m_fusion:IGN5m+COPERNICUS30m_EPSG:2154_INT:AVERAGE_2021-03.tif'
-#path_MNT_slope_defaut = '/home/fructusm/MNT_slope.tif'
-#path_MNT_aspect_defaut = '/home/fructusm/MNT_aspect.tif'
+# path_MNT_alti_defaut = 
+#                '/home/fructusm/MNT_FRANCEandBORDER_30m_fusion:IGN5m+COPERNICUS30m_EPSG:2154_INT:AVERAGE_2021-03.tif'
+# path_MNT_slope_defaut = '/home/fructusm/MNT_slope.tif'
+# path_MNT_aspect_defaut = '/home/fructusm/MNT_aspect.tif'
 
 ################################################################
 # Infos shapefile massif, a priori pérenne 
 ################################################################
 path_shapefile_massif = SNOWTOOLS_DIR + '/DATA/massifs_Lbrt93_2019'
-Indice_record_massif = 0
+indice_record_massif = 0
 
 ################################################################
 #            FIN DUR DANS LE CODE
@@ -165,26 +177,31 @@ logger.addHandler(console_handler)
 ################################################################
 # Creation des listes de données
 ################################################################
-def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, Nom_slop, path_MNT_alt, path_MNT_asp, path_MNT_slop, add_for_METADATA):
+def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, nom_slop, path_MNT_alt, path_MNT_asp,
+                   path_MNT_slop, add_for_METADATA):
     """
     Crée un dictionnaire de listes à partir des données du shapefile et des données des MNT
 
     :param path_shapefile: Chemin du shapefile dont on souhaite extraire les points.
     :type path_shapefile: str
-    :param Id_station: Numéro de l'attribut du shapefile correspondant à un identifiant unique pour chaque point
-    :type Id_station: str
-    :param Nom_alt: si présent dans le shapefile, nom de l'attribut d'altitude. Si absent, ce champ est à None
-    :type Nom_alt: str
-    :param Nom_asp: si présent dans le shapefile, nom de l'attribut d'orientation. Si absent, ce champ est à None
-    :type Nom_asp: str
-    :param Nom_slop: si présent dans le shapefile, nom de l'attribut de pente. Si absent, ce champ est à None
-    :type Nom_slop: str
+    :param id_station: Numéro de l'attribut du shapefile correspondant à un identifiant unique pour chaque point
+    :type id_station: str
+    :param nom_station: Nom de l'attribut du shapefile correspondant à un identifiant unique pour chaque point
+    :type nom_station: str
+    :param nom_alt: si présent dans le shapefile, nom de l'attribut d'altitude. Si absent, ce champ est à None
+    :type nom_alt: str
+    :param nom_asp: si présent dans le shapefile, nom de l'attribut d'orientation. Si absent, ce champ est à None
+    :type nom_asp: str
+    :param nom_slop: si présent dans le shapefile, nom de l'attribut de pente. Si absent, ce champ est à None
+    :type nom_slop: str
     :param path_MNT_alt: Chemin du MNT contenant les valeurs d'altitude
     :type path_MNT_alt: str
     :param path_MNT_asp: Chemin du MNT contenant les valeurs d'aspect
     :type path_MNT_asp: str
     :param path_MNT_slop: Chemin du MNT contenant les valeurs de pente
     :type path_MNT_slop: str
+    :param add_for_METADATA: entier sur 8 chiffres pour le codage de la station dans le fichier METADATA.xml
+    :type add_for_METADATA: int
 
     :returns: dictionnaire de listes:{ 'lat': liste_latitude, 'lon':liste_longitude, 
                                        'alt': liste_altitude, 'asp': liste_aspect, 
@@ -208,16 +225,16 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
 
     # Recherche des indices de champs pour le shapefile
     for i in range(len(r.fields)):
-        if Nom_alt is not None and r.fields[i][0] == Nom_alt:
-            Indice_record_altitude = i - 1
-        if Nom_asp is not None and r.fields[i][0] == Nom_asp:
-            Indice_record_aspect = i - 1
-        if Nom_slop is not None and r.fields[i][0] == Nom_slop:
-            Indice_record_slope = i - 1
-        if r.fields[i][0] == Id_station:
-            Indice_record_id_station = i - 1
-        if r.fields[i][0] == Nom_station:
-            Indice_record_nom_station = i - 1
+        if nom_alt is not None and r.fields[i][0] == nom_alt:
+            indice_record_altitude = i - 1
+        if nom_asp is not None and r.fields[i][0] == nom_asp:
+            indice_record_aspect = i - 1
+        if nom_slop is not None and r.fields[i][0] == nom_slop:
+            indice_record_slope = i - 1
+        if r.fields[i][0] == id_station:
+            indice_record_id_station = i - 1
+        if r.fields[i][0] == nom_station:
+            indice_record_nom_station = i - 1
 
     ################################################################
     # Ouverture du shapefile massif. Conversion éventuelle
@@ -231,7 +248,8 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
     # Lambert_II: coordonnées en mètre sur la France métropolitaine (sans la Corse ? voir https://epsg.io/27572 ) 
     # WSG84: coordonnées en (lon, lat) type GPS pour le monde entier
     project_from_LII_to_WGS84 = partial(pyproj.transform, pyproj.Proj(init='epsg:27572'),pyproj.Proj(init='epsg:4326'))
-    list_shape_massif_WGS84 = [transform(project_from_LII_to_WGS84,shape(shape_massif[i])) for i in range(len(shape_massif))]'''
+    list_shape_massif_WGS84 = [transform(project_from_LII_to_WGS84,shape(shape_massif[i])) 
+                               for i in range(len(shape_massif))]'''
 
     # Version snwotools_git/DATA future
     # NB: Bien vérifier sur le shapefile massif que le numéro de massif est record[0].
@@ -244,7 +262,8 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
     # Lambert93: coordonnées en mètre sur la France métropolitaine élargie (avec Corse)
     # WSG84: coordonnées en (lon, lat) type GPS pour le monde entier
     project_from_L93_to_WGS84 = partial(pyproj.transform, pyproj.Proj(init='epsg:2154'), pyproj.Proj(init='epsg:4326'))
-    list_shape_massif_WGS84 = [transform(project_from_L93_to_WGS84, shape(shape_massif[i])) for i in range(len(shape_massif))]
+    list_shape_massif_WGS84 = [transform(project_from_L93_to_WGS84, shape(shape_massif[i]))
+                               for i in range(len(shape_massif))]
 
     # Fonction d'Ambroise Guiot pour lire les valeurs d'un geotif en des points.
     def raster_to_points(raster_src, shape, nodata=np.nan):
@@ -281,7 +300,8 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
             py = int(current_y)  # y pixel
 
             val = band.ReadAsArray(px, py, 2, 2)
-            test_ok = (val[0][0] != nodata_raster and val[0][1] != nodata_raster and val[1][0] != nodata_raster and val[1][1] != nodata_raster)
+            test_ok = (val[0][0] != nodata_raster and val[0][1] != nodata_raster and val[1][0] != nodata_raster
+                       and val[1][1] != nodata_raster)
 
             if val is not None and test_ok:
                 value = ((1 - current_x % 1) * (1 - current_y % 1) * val[0][0]
@@ -289,7 +309,7 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
                          + (1 - current_x % 1) * (current_y % 1) * val[1][0]
                          + (current_x % 1) * (current_y % 1) * val[1][1])
                 points_values.append(value)
-            else :
+            else:
                 points_values.append(nodata)
         return points_values
 
@@ -300,12 +320,13 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
     liste_slope_MNT = raster_to_points(path_MNT_slop, shape(shapes))
 
     liste_altitude_MNT_arrondie = [int(round(liste_altitude_MNT[i])) for i in range(len(liste_altitude_MNT))]
-    liste_aspect_MNT_arrondie = [int(round(liste_aspect_MNT[i]))%360 for i in range(len(liste_aspect_MNT))]
+    liste_aspect_MNT_arrondie = [int(round(liste_aspect_MNT[i])) % 360 for i in range(len(liste_aspect_MNT))]
     liste_slope_MNT_arrondie = [int(round(liste_slope_MNT[i])) for i in range(len(liste_slope_MNT))]
 
     ################################################################
     # Création liste massif
-    liste_massif = [geomet_massif[j].record[Indice_record_massif] for i in range(len(shapes)) for j in range(len(shape_massif)) if list_shape_massif_WGS84[j].contains(list_shape_WGS84[i]) ]
+    liste_massif = [geomet_massif[j].record[indice_record_massif] for i in range(len(shapes))
+                    for j in range(len(shape_massif)) if list_shape_massif_WGS84[j].contains(list_shape_WGS84[i])]
     ''' MODE NON PYTHONIQUE POUR COMPRENDRE SI BESOIN: 
     liste_massif = []
     for i in range(len(shapes)):
@@ -321,30 +342,32 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
     liste_latitude = [round(list_shape_WGS84[i].y, 6) for i in range(len(list_shape_WGS84))]
     # Création liste "id station" faite avec le field number de référence dans le shapefile
     # 8 chiffres significatifs pour être compatible avec les codes de infomassifs
-    liste_id_station = ['%08d' % int(geomet[i].record[Indice_record_id_station] + add_for_METADATA) for i in range(len(shapes))]
+    liste_id_station = ['%08d' % int(geomet[i].record[indice_record_id_station] + add_for_METADATA)
+                        for i in range(len(shapes))]
     # Création liste "name station" faite avec le field name de référence dans le shapefile
-    liste_nom_station = [geomet[i].record[Indice_record_nom_station] for i in range(len(shapes))]
+    liste_nom_station = [geomet[i].record[indice_record_nom_station] for i in range(len(shapes))]
 
     ################################################################
     # Création des listes via shapefile ou MNT + Vérification-Comparaison éventuelle avec MNT
-    if Nom_alt is not None:
-        liste_altitude = [geomet[i].record[Indice_record_altitude] for i in range(len(shapes))]
+    if nom_alt is not None:
+        liste_altitude = [geomet[i].record[indice_record_altitude] for i in range(len(shapes))]
         print('########### Vérification MNT vs shapefile ##############')
         print('ALTITUDE:')
         print('écart max: ' + str(max([abs(liste_altitude_MNT[i] - liste_altitude[i]) for i in range(len(shapes))])))
-        print('écart moyen: ' + str(np.mean([abs(liste_altitude_MNT[i] - liste_altitude[i]) for i in range(len(shapes))])))
+        print('écart moyen: ' + str(np.mean([abs(liste_altitude_MNT[i] - liste_altitude[i])
+                                             for i in range(len(shapes))])))
     else:
         liste_altitude = liste_altitude_MNT_arrondie
-    if Nom_asp is not None:
-        liste_aspect = [geomet[i].record[Indice_record_aspect] for i in range(len(shapes))]
+    if nom_asp is not None:
+        liste_aspect = [geomet[i].record[indice_record_aspect] for i in range(len(shapes))]
         print('########### Vérification MNT vs shapefile ##############')
         print('ORIENTATION:')
         print('écart max: ' + str(max([abs(liste_aspect_MNT[i] - liste_aspect[i]) for i in range(len(shapes))])))
         print('écart moyen: ' + str(np.mean([abs(liste_aspect_MNT[i] - liste_aspect[i]) for i in range(len(shapes))])))
     else:
         liste_aspect = liste_aspect_MNT_arrondie
-    if Nom_slop is not None:
-        liste_slope = [geomet[i].record[Indice_record_slope] for i in range(len(shapes))]
+    if nom_slop is not None:
+        liste_slope = [geomet[i].record[indice_record_slope] for i in range(len(shapes))]
         print('########### Vérification MNT vs shapefile ##############')
         print('PENTE:')
         print('écart max: ' + str(max([abs(liste_slope_MNT[i] - liste_slope[i]) for i in range(len(shapes))])))
@@ -358,7 +381,7 @@ def make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, No
             'id': liste_id_station, 'nom': liste_nom_station}
 
 
-def check_Id_station_in_Metadata(all_lists):
+def check_id_station_in_Metadata(all_lists):
     """
     Vérifie que les id des stations (création via make_dict_list) ne sont pas présentes dans METADATA.xml.
     On ne passe pas par cette routine si l'option confirm_overwrite est activée
@@ -451,8 +474,10 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
     """
     start_time = time.time()
 
-    in_file = [[all_lists['id'][i], all_lists['alt'][i], all_lists['m'][i], all_lists['nom'][i], all_lists['lat'][i], all_lists['lon'][i]] for i in range(len(all_lists['alt'][:]))]
-    # à in_file = np.loadtxt(file_in, dtype={'names': ('numposte', 'alt', 'massif', 'nom', 'lat', 'lon'), 'formats': (int, int, int, '|S24', float, float)})
+    in_file = [[all_lists['id'][i], all_lists['alt'][i], all_lists['m'][i], all_lists['nom'][i], all_lists['lat'][i],
+                all_lists['lon'][i]] for i in range(len(all_lists['alt'][:]))]
+    # à in_file = np.loadtxt(file_in, dtype={'names': ('numposte', 'alt', 'massif', 'nom', 'lat', 'lon'),
+    #                        'formats': (int, int, int, '|S24', float, float)})
 
     #######################################################
     #  AJOUT DE NOUVEAUX SITES DANS LE FICHIER XML Partie I
@@ -507,7 +532,8 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
 
         # Idee: faire une interpolation biliénaire: -> voir quel pixel (pour orientation) mais en gros
         # f(x,y) = f(0,0)(1-x)(1-y) + f(1,0)x(1-y) + f(0,1)(1-x)y + f(1,1)xy avec x et y entre 0 et 1.
-        # Ici, x et y sont les parties décimales de (shape_courant[k].x - gt[0]) / gt[1] et (shape_courant[k].y - gt[3]) / gt[5]
+        # Ici: x est la partie décimale de (shape_courant[k].x - gt[0]) / gt[1] et
+        #      y est la partie décimale de (shape_courant[k].y - gt[3]) / gt[5]
         # La fonction f est jouée par le tableau 2x2 band.ReadAsArray(px_c,py_c,2,2)
         # ! band.ReadAsArray(px_c,py_c,2,2)[0][1] correspond à band.ReadAsArray(px_c+1,py_c,1,1)[0][0]
         value_bilin = band.ReadAsArray(px_c, py_c, 2, 2)
@@ -528,7 +554,8 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
                 py = int(current_y)  # y pixel le long de l'azimut
                 val = band.ReadAsArray(px, py, 2, 2)
 
-                test_ok = (val[0][0] != nodata_raster and val[0][1] != nodata_raster and val[1][0] != nodata_raster and val[1][1] != nodata_raster)
+                test_ok = (val[0][0] != nodata_raster and val[0][1] != nodata_raster and val[1][0] != nodata_raster
+                           and val[1][1] != nodata_raster)
 
                 if val is not None and test_ok:
                     value = ((1 - current_x % 1) * (1 - current_y % 1) * val[0][0]
@@ -665,9 +692,9 @@ def parseArguments(args):
     parser.add_argument("project_number", help="Project Number in order to get unique reference in METADATA", type=int)
 
     # Optional argument
-    parser.add_argument("--name_alt", help="Shapefile Field Name containing altitude, if it exists", type=str, default=None)
-    parser.add_argument("--name_asp", help="Shapefile Field Name containing aspect, if it exists", type=str, default=None)
-    parser.add_argument("--name_slop", help="Shapefile Field Name containing slope, if it exists", type=str, default=None)
+    parser.add_argument("--name_alt", help="Shapefile Field Name containing altitude, if it exists", type=str)
+    parser.add_argument("--name_asp", help="Shapefile Field Name containing aspect, if it exists", type=str)
+    parser.add_argument("--name_slop", help="Shapefile Field Name containing slope, if it exists", type=str)
     parser.add_argument("-o", "--output", help="Name for NetCDF file to save", type=str, default=NetCDF_out)
     parser.add_argument("--MNT_alt", help="Path for MNT altitude", type=str, default=path_MNT_alti_defaut)
     parser.add_argument("--MNT_asp", help="Path for MNT altitude", type=str, default=path_MNT_aspect_defaut)
@@ -689,12 +716,12 @@ def main(args=None):
 
         # argument for command line call
         path_shapefile = args.path_shape
-        Nom_station = args.name_station
-        Id_station = args.id_station
+        nom_station = args.name_station
+        id_station = args.id_station
         Project_number = args.project_number
-        Nom_alt = args.name_alt
-        Nom_asp = args.name_asp
-        Nom_slop = args.name_slop
+        nom_alt = args.name_alt
+        nom_asp = args.name_asp
+        nom_slop = args.name_slop
         path_MNT_alt = args.MNT_alt
         path_MNT_asp = args.MNT_asp
         path_MNT_slop = args.MNT_slop
@@ -709,27 +736,30 @@ def main(args=None):
 
         # Check if mandatory field to play the role of station in shapefile is OK
         r = shapefile.Reader(path_shapefile)
-        if Nom_station not in [r.fields[i][0] for i in range(len(r.fields))]: 
-            logger.critical('Field {} does not exist in {}'.format(Nom_station, path_shapefile))
+        if nom_station not in [r.fields[i][0] for i in range(len(r.fields))]: 
+            logger.critical('Field {} does not exist in {}'.format(nom_station, path_shapefile))
             sys.exit(3)
-        if Id_station not in [r.fields[i][0] for i in range(len(r.fields))]: 
-            logger.critical('Field {} does not exist in {}'.format(Id_station, path_shapefile))
+        if id_station not in [r.fields[i][0] for i in range(len(r.fields))]: 
+            logger.critical('Field {} does not exist in {}'.format(id_station, path_shapefile))
             sys.exit(3)
 
         # Check if mandatory project number
         if Project_number > 99:
-            logger.critical('Project Number should be between 0 and 99. Use your favorite editor to read the code shapefile2NetCDF.py')
+            logger.critical('Project Number should be between 0 and 99. Use your favorite editor to read the code '
+                            'shapefile2NetCDF.py')
             sys.exit(1)
 
         # Launch the app:
-        all_lists = make_dict_list(path_shapefile, Id_station, Nom_station, Nom_alt, Nom_asp, Nom_slop, path_MNT_alt, path_MNT_asp, path_MNT_slop, 10000000 + 10000*Project_number)
+        all_lists = make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, nom_slop, path_MNT_alt,
+                                   path_MNT_asp, path_MNT_slop, 10000000 + 10000*Project_number)
         if not confirm_overwrite:
-            check_Id_station_in_Metadata(all_lists)
+            check_id_station_in_Metadata(all_lists)
         create_NetCDF(all_lists, output_name)
         if list_skyline == ['all'] or list_skyline == ['All'] or list_skyline == ['ALL']:
             list_skyline = [all_lists['id'][k] for k in range(len(all_lists['id']))]
         elif list_skyline is not None:
-            list_skyline = ['%08d' % (10000000 + 10000*Project_number + int(list_skyline[i])) for i in range(len(list_skyline))]
+            list_skyline = ['%08d' % (10000000 + 10000*Project_number + int(list_skyline[i]))
+                            for i in range(len(list_skyline))]
         create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline)
 
 
