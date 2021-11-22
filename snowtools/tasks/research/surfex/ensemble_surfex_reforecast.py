@@ -15,9 +15,9 @@ from vortex.algo.components import DelayedAlgoComponentError
 
 def setup(t, **kw):
     return Driver(
-        tag = 'Surfex_Parallel',
-        ticket = t,
-        nodes = [
+        tag='Surfex_Parallel',
+        ticket=t,
+        nodes=[
             Ensemble_Surfex_Reforecast(tag='Ensemble_Surfex_Reforecast', ticket=t, **kw),
         ],
         options=kw
@@ -75,7 +75,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                 nativefmt      = 'netcdf',
                 local          = 'PGD.nc',
                 geometry       = self.conf.geometry,
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv           = 'uenv:cen.01@CONST_CEN',
                 gvar           = 'pgd_[geometry::area]',
                 model          = 'surfex',
                 fatal          = False,
@@ -140,7 +140,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapII_eu_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv           = 'uenv:cen.01@CONST_CEN',
                 source         = 'ecoclimap2',
                 model          = 'surfex',
             ),
@@ -154,7 +154,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                 genv            = 'uenv:cen.01@CONST_CEN',
                 nativefmt       = 'netcdf',
                 local           = 'drdt_bst_fit_60.nc',
-                model          = 'surfex',
+                model           = 'surfex',
             )
             print(t.prompt, 'tb06 =', tb06)
             print()

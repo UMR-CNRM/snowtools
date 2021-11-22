@@ -27,13 +27,16 @@ class configdev(object):
     list_members = footprints.util.rangex(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
     firstday = False
 
+
 class config(object):
     rundate = Date(2018, 10, 26, 3)    # Run date can be at 3TU, 6TU, 9TU
     previ = False  # False for analysis, True for forecast
     xpid = "oper"
-    list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']  # converted later with iganame property
+    # converted later with iganame property
+    list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
     list_members = footprints.util.rangex(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
     firstday = False
+
 
 def parse_options(arguments):
     parser = OptionParser(usage)
@@ -235,7 +238,7 @@ class S2MExtractor(S2MTaskMixIn):
     def get_std(self, tb):
 
         list_output = defaultdict(list)
-        list_xpid   = defaultdict(list)
+        list_xpid = defaultdict(list)
         for rh in tb:
             if rh.stage == 'get':
                 list_output[rh.resource.geometry.area].append(rh.container.filename)

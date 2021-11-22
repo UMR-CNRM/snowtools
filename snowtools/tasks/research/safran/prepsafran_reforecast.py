@@ -16,12 +16,12 @@ from bronx.stdtypes.date import Period
 
 def setup(t, **kw):
     return Driver(
-        tag    = 'pearp2safran',
-        ticket = t,
-        nodes  = [
+        tag='pearp2safran',
+        ticket=t,
+        nodes=[
             PrepSafran(tag='prepsafprv', ticket=t, **kw),
         ],
-        options = kw,
+        options=kw,
     )
 
 
@@ -122,16 +122,15 @@ class PrepSafran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb03 =', expresso)
             print()
 
-            self.component_runner(expresso, script, fortran = False)
+            self.component_runner(expresso, script, fortran=False)
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
 
             pass
 
         if 'late-backup' in self.steps:
-            
-#            d = 0
-#            m = 0
+            # d = 0
+            # m = 0
             rundate = datebegin
             while rundate <= dateend:
 

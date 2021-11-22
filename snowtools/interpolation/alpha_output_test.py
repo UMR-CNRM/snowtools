@@ -19,16 +19,15 @@ class test_medianfile():
     def test(self):
         snowcomp = self.ftest.variables['SD_1DY_ISBA'][:, :]
         snowref = self.fref.variables['SD_1DY_ISBA'][:, :]
-        #points = self.fref.variables['']
+        # points = self.fref.variables['']
 
         diff = snowcomp - snowref
         for time in range(7):
-            print(time, snowcomp[time,:].min(), snowcomp[time,:].max())
-            print(time, snowref[time,:].min(), snowref[time,:].max())
-            print(time, diff[time,:].min(), diff[time,:].max())
-            plt.plot(diff[time,:])
+            print(time, snowcomp[time, :].min(), snowcomp[time, :].max())
+            print(time, snowref[time, :].min(), snowref[time, :].max())
+            print(time, diff[time, :].min(), diff[time, :].max())
+            plt.plot(diff[time, :])
             plt.show()
-
 
 class test_pro():
     def __init__(self, inputzeros, inputnonzeros):
@@ -68,8 +67,6 @@ class test_pro():
         #         [print(ind, i, it, ms, massif_big[i], zss, zs_big[i], slope[i], testval, val) for i, val in enumerate(snowbig[it,:])
         #             if ((testval != 0.) & (abs(val - testval) < 0.00000001))]
 
-
-
 class output_test():
     def __init__(self, outputfile, outputreffile, lat_bnds, lon_bnds, figname, flip=True, doubleflip=False):
         self.ftot = Dataset(outputfile)
@@ -91,7 +88,7 @@ class output_test():
 
         ax = plt.axes(projection=ccrs.PlateCarree())
         plt.pcolormesh(lons, lats, ZS, transform=ccrs.PlateCarree(), cmap=cm.terrain)  # gist_earth
-        plt.pcolormesh(lons, lats, slope, # vmin=-0.0001,
+        plt.pcolormesh(lons, lats, slope,  # vmin=-0.0001,
                        transform=ccrs.PlateCarree(), cmap=cm.Reds)
         plt.title("Slopes", y=1.09)
 
@@ -109,24 +106,24 @@ class output_test():
         massif = self.ftot.variables['massif_num'][:, :]
         lats = self.ftot.variables['LAT'][:]
         lons = self.ftot.variables['LON'][:]
-        ZS = self.ftot.variables['ZS'][:,:]
-        snow = self.ftot.variables['SD_1DY_ISBA'][7,:,:]
+        ZS = self.ftot.variables['ZS'][:, :]
+        snow = self.ftot.variables['SD_1DY_ISBA'][7, :, :]
 
-        snowcomp = self.fcomp.variables['SD_1DY_ISBA'][7,:,:]
+        snowcomp = self.fcomp.variables['SD_1DY_ISBA'][7, :, :]
         complats = self.fcomp.variables['LAT'][:]
         complons = self.fcomp.variables['LON'][:]
-        compZS = self.fcomp.variables['ZS'][:,:]
+        compZS = self.fcomp.variables['ZS'][:, :]
         compmassif = self.fcomp.variables['massif_num'][:, :]
 
         # print(complons)
         print(complats.min(), complats.max())
         print(complons.min(), complons.max())
 
-
         lat_inds = np.where((lats > self.lat_bnds[0]) & (lats < self.lat_bnds[1]))
         lon_inds = np.where((lons > self.lon_bnds[0]) & (lons < self.lon_bnds[1]))
-        snow_region = self.ftot.variables['SD_1DY_ISBA'][7, np.min(lat_inds):np.max(lat_inds)+1,np.min(lon_inds):np.max(lon_inds)+1]
-        massif_region = massif[np.min(lat_inds):np.max(lat_inds)+1,np.min(lon_inds):np.max(lon_inds)+1]
+        snow_region = self.ftot.variables['SD_1DY_ISBA'][7, np.min(lat_inds):np.max(lat_inds) + 1,
+                                                         np.min(lon_inds):np.max(lon_inds) + 1]
+        massif_region = massif[np.min(lat_inds):np.max(lat_inds)+1, np.min(lon_inds):np.max(lon_inds) + 1]
         # print(lons[np.min(lon_inds):np.max(lon_inds)+1])
         print(snow_region.shape)
         print(snowcomp.shape)
@@ -142,10 +139,9 @@ class output_test():
             massif_diff = np.flipud(massif_diff)
 
         print(massif_diff.min(), massif_diff.max())
-        print(len(diff[diff!=0]))
+        print(len(diff[diff != 0]))
         # print(diff[diff < 999999].max())
         # print(np.unique(massif))
-
 
         # ax = plt.axes(projection=ccrs.PlateCarree())
         # plt.pcolormesh(lons, lats, ZS, transform=ccrs.PlateCarree(), cmap=cm.terrain) #gist_earth
@@ -163,9 +159,9 @@ class output_test():
         # plt.savefig('snow_test_alps_to_alpha.png')
         lim = max(diff.max(), abs(diff.min()))
         ax = plt.axes(projection=ccrs.PlateCarree())
-        plt.pcolormesh(complons, complats, compZS, transform=ccrs.PlateCarree(), cmap=cm.terrain) #gist_earth
+        plt.pcolormesh(complons, complats, compZS, transform=ccrs.PlateCarree(), cmap=cm.terrain)  # gist_earth
         plt.pcolormesh(complons, complats, diff, vmin=-lim, vmax=lim,
-                     transform=ccrs.PlateCarree(), cmap=cm.seismic)
+                       transform=ccrs.PlateCarree(), cmap=cm.seismic)
 
         ax.gridlines(draw_labels=True)
         m = plt.cm.ScalarMappable(cmap=cm.seismic)
@@ -177,9 +173,9 @@ class output_test():
         #
         plt.savefig(self.figname)
 
-
         # ax = plt.axes(projection=ccrs.PlateCarree())
-        # plt.pcolormesh(complons, complats, np.flipud(compZS), transform=ccrs.PlateCarree(), cmap=cm.terrain) #gist_earth
+        # plt.pcolormesh(complons, complats, np.flipud(compZS), transform=ccrs.PlateCarree(), cmap=cm.terrain)
+        # gist_earth
         # plt.pcolormesh(complons, complats, np.flipud(compmassif), #alpha=0.4, # vmin=-1, vmax=1,
         #              transform=ccrs.PlateCarree(), cmap=cm.seismic)
         #
@@ -217,9 +213,9 @@ class output_test():
         lat_inds = np.where((lats > self.lat_bnds[0]) & (lats < self.lat_bnds[1]))
         lon_inds = np.where((lons > self.lon_bnds[0]) & (lons < self.lon_bnds[1]))
         snow_region = self.ftot.variables['SD_1DY_ISBA'][:, np.min(lat_inds):np.max(lat_inds) + 1,
-                      np.min(lon_inds):np.max(lon_inds) + 1]
+                                                         np.min(lon_inds):np.max(lon_inds) + 1]
         massif_region = self.ftot.variables['massif_num'][np.min(lat_inds):np.max(lat_inds) + 1,
-                        np.min(lon_inds):np.max(lon_inds) + 1]
+                                                          np.min(lon_inds):np.max(lon_inds) + 1]
         if self.flip:
             massif_diff = massif_region - np.flipud(compmassif)
         else:
@@ -247,18 +243,28 @@ class Alphafile():
 
 print(config)
 attributes = dict(
-    PP_SD_1DY_ISBA=dict(convert_unit=1., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)'),
-    SD_1DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm'),
-    SD_3DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur de neige fraîche en 72h (cm)'),
-    RAMSOND_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur mobilisable (cm)'),
-    NAT_LEV=dict(forcemin=-0.5, forcemax=5.5, palette='YlOrRd', ncolors=6, label=u'Risque naturel', ticks=[u'Très faible', u'Faible', u'Mod. A', u'Mod. D', u'Fort', u'Très fort']),
-    naturalIndex=dict(forcemin=0., forcemax=8., palette='YlOrRd', label=u'Indice de risque naturel', format= '%.1f', nolevel=True),
+    PP_SD_1DY_ISBA=dict(convert_unit=1., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+                        label=u'Epaisseur de neige fraîche en 24h (cm)'),
+    SD_1DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
+                     label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm'),
+    SD_3DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+                     label=u'Epaisseur de neige fraîche en 72h (cm)'),
+    RAMSOND_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+                      label=u'Epaisseur mobilisable (cm)'),
+    NAT_LEV=dict(forcemin=-0.5, forcemax=5.5, palette='YlOrRd', ncolors=6, label=u'Risque naturel',
+                 ticks=[u'Très faible', u'Faible', u'Mod. A', u'Mod. D', u'Fort', u'Très fort']),
+    naturalIndex=dict(forcemin=0., forcemax=8., palette='YlOrRd', label=u'Indice de risque naturel',
+                      format= '%.1f', nolevel=True),
     DSN_T_ISBA=dict(convert_unit=100., label=u'Hauteur de neige (cm)'),
     WSN_T_ISBA=dict(label=u'Equivalent en eau (kg/m2)'),
-    SNOMLT_ISBA=dict(convert_unit=3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Ecoulement en 3h (kg/m2/3h)'),
-    WET_TH_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur humide (cm)'),
-    REFRZTH_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Epaisseur regelée (cm)'),
-    RAINF_ISBA=dict(convert_unit=3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50., label=u'Pluie en 3h (kg/m2/3h)'),
+    SNOMLT_ISBA=dict(convert_unit=3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+                     label=u'Ecoulement en 3h (kg/m2/3h)'),
+    WET_TH_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+                     label=u'Epaisseur humide (cm)'),
+    REFRZTH_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+                      label=u'Epaisseur regelée (cm)'),
+    RAINF_ISBA=dict(convert_unit=3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+                    label=u'Pluie en 3h (kg/m2/3h)'),
 )
 
 ### rectangle case ###
@@ -396,7 +402,8 @@ m = Map_alpes(geofeatures=True)
 print(m.latmax, m.infospos)
 m.init_massifs(**attributes['SD_1DY_ISBA'])
 m.draw_massifs(massifs, postproc_flat[5, :, 8], **attributes['SD_1DY_ISBA'])
-m.plot_center_massif(massifs, postproc_flat[5,:,0], postproc_flat[5,:,4], postproc_flat[5,:,8], **attributes['SD_1DY_ISBA'])
+m.plot_center_massif(massifs, postproc_flat[5, :, 0], postproc_flat[5, :, 4], postproc_flat[5, :, 8],
+                     **attributes['SD_1DY_ISBA'])
 m.add_north_south_info()
 m.addlogo()
 m.set_maptitle("2021041112 percentile 90")

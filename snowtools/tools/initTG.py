@@ -79,20 +79,21 @@ def get_meteo_for_clim(forcingpath, datebegin, dateend, geolist, list_forcing=[]
             os.rename("FORCING.nc", "input.nc")
             if not os.path.islink('GRID.nc'):
                 os.symlink(geolist[0], "GRID.nc")
-            callSurfexOrDie(SNOWTOOLS_DIR + "/fortran/interpol", moderun='MPIRUN', nproc=4)
+            callSurfexOrDie(SNOWTOOLS_DIR + "/interpolation/interpol", moderun='MPIRUN', nproc=4)
             os.rename("output.nc", "FORCING.nc")
         else:
             os.rename("FORCING.nc", "FORCING_base.nc")
             forcinput_select("FORCING_base.nc", "FORCING.nc", *geolist)
 
-    forcing = "FORCING_" + str(i) + "_" + dateforcbegin.strftime('%Y%m%d%H') + "_" + dateforcend.strftime('%Y%m%d%H') + ".nc"
+    forcing = ("FORCING_" + str(i) + "_" + dateforcbegin.strftime('%Y%m%d%H') +
+               "_" + dateforcend.strftime('%Y%m%d%H') + ".nc")
     os.rename("FORCING.nc", forcing)
     list_forcing.append(forcing)
 
     datebegin = dateforcend
 
     if dateforcend < dateend:
-        get_meteo_for_clim(forcingpath, datebegin, dateend, geolist, list_forcing = list_forcing)
+        get_meteo_for_clim(forcingpath, datebegin, dateend, geolist, list_forcing=list_forcing)
 
     return list_forcing
 

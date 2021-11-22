@@ -105,7 +105,8 @@ class Crampon_Task(Task):
         print(t.prompt, 'tb05 =', tb05)
         print()
 
-        takeConf = '/scratch/work/'  + os.environ['USER'] + '/' + self.conf.vapp + '/' + self.conf.vconf + '/conf/' + self.conf.vapp + '_' + self.conf.vconf + '.ini'
+        takeConf = '/scratch/work/'  + os.environ['USER'] + '/' + self.conf.vapp + '/' + \
+                   self.conf.vconf + '/conf/' + self.conf.vapp + '_' + self.conf.vconf + '.ini'
         self.sh.title('Toolbox input tbconf')
         tbconf = toolbox.input(
             kind           = 'ini_file',

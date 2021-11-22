@@ -21,12 +21,12 @@ logger = footprints.loggers.getLogger(__name__)
 
 def setup(t, **kw):
     return Driver(
-        tag    = 'pearp2safran',
-        ticket = t,
-        nodes  = [
+        tag='pearp2safran',
+        ticket=t,
+        nodes=[
             PrepSafran(tag='prepsafprv', ticket=t, **kw),
         ],
-        options = kw,
+        options=kw,
     )
 
 
@@ -108,7 +108,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -o -a -i IDW  -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
+                rawopts     = ' -o -a -i IDW  -f ' + ' '. \
+                join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)]))),
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
@@ -125,16 +126,19 @@ class PrepSafran(Task, S2MTaskMixIn):
                 kind           = 'guess',
                 interpreter    = 'current',
                 # Need to extend pythonpath to be independant of the user environment
-                # The vortex-build environment already set up the pythonpath (see jobassistant plugin) but the script is 
+                # The vortex-build environment already set up the pythonpath (see jobassistant plugin) 
+                # but the script is
                 # eventually launched in a 'user-defined' environment
-		extendpypath = ['/opt/softs/libraries/ICC_2018.5.274/eccodes-2.14.1/lib/python2.7/site-packages'] + [self.sh.path.join(self.conf.rootapp, d) for d in ['', 'vortex/site', 'vortex/src', 'epygram', 'epygram/site', 'epygram/grib_api','eccodes_python']],
+                extendpypath   = ['/opt/softs/libraries/ICC_2018.5.274/eccodes-2.14.1/lib/python2.7/site-packages'] \
+                + [self.sh.path.join(self.conf.rootapp, d) for d in ['', 'vortex/site', 'vortex/src', 'epygram',
+                   'epygram/site', 'epygram/grib_api', 'eccodes_python']],
                 terms          = footprints.util.rangex(self.conf.prv_terms),
                 ntasks         = self.conf.ntasks,
             )
             print(t.prompt, 'tb04 =', expresso)
             print()
 
-            self.component_runner(expresso, script, fortran = False)
+            self.component_runner(expresso, script, fortran=False)
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
 
@@ -161,7 +165,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 source_conf    = self.conf.deterministic_conf,
                 namespace      = self.conf.namespace,
                 fatal          = True,
-		delayed        = True,
+                delayed        = True,
             ),
             print(t.prompt, 'tb05 =', tb05)
             print()
@@ -184,14 +188,13 @@ class PrepSafran(Task, S2MTaskMixIn):
                 namespace      = self.conf.namespace,
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 fatal          = False,
-		delayed        = True,
+                delayed        = True,
             ),
             print(t.prompt, 'tb06 =', tb06)
             print()
 
+            ad.phase(tb05, tb06)
 
-	    ad.phase(tb05,tb06)
-
-            #from vortex.tools.systems import ExecutionError
-            #raise ExecutionError('')
-            #pass
+            # from vortex.tools.systems import ExecutionError
+            # raise ExecutionError('')
+            # pass
