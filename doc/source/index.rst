@@ -45,9 +45,10 @@ Technical documentation
 Other things gathered by snowtools
 ----------------------------------
 
-.. todo::
-   
-   Describe a little bit what there is in DATA for instance and some guidelines on what to put here.
+.. toctree::
+   :maxdepth: 1
+
+   Data <code/data.rst>
 
 Help improving this documentation !
 -----------------------------------
