@@ -6,7 +6,8 @@ Created on 28 juin 2018
 @author: lafaysse
 
 Template for Jesus developments (special SURFEX post-processing)
-Note that in the general case, we should avoid to add new diagnostics here, all diagnostics shoud be implemented in SURFEX when possible
+Note that in the general case, we should avoid to add new diagnostics here,
+all diagnostics shoud be implemented in SURFEX when possible
 
 '''
 

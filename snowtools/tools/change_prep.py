@@ -63,7 +63,8 @@ class prep_tomodify(object):
         :type closefile: bool, optional
         """
         for i in range(self.nsnowlayer):
-            swe_layer, swe_layer_nc = self.prepfile.read(self.dict_prep['swe'] + str(i + 1), keepfillvalue=True, removetile=False, needmodif=True)
+            swe_layer, swe_layer_nc = self.prepfile.read(
+                self.dict_prep['swe'] + str(i + 1), keepfillvalue=True, removetile=False, needmodif=True)
             if i == 0:
                 swe_fromsurface = np.zeros_like(swe_layer)
             swe_layer = np.where(swe_fromsurface > swe_threshold, 0, swe_layer)
@@ -100,13 +101,14 @@ class prep_tomodify(object):
         """Close the PREP file"""
         self.prepfile.close()
 
-    def insert_snow_depth(self, my_name_SRU, my_name_SNOWSAT, my_name_OBS, my_name_extprep50, my_name_extprep5, my_name_var, my_name_PREP):
+    def insert_snow_depth(self, my_name_SRU, my_name_SNOWSAT, my_name_OBS,
+                          my_name_extprep50, my_name_extprep5, my_name_var, my_name_PREP):
         ''' This function was implemented by C. Carmagnola in March 2019 (PROSNOW project).
         It modifies a PREP file by inserting measured snow depth values.'''
 
         swe = 'WSN_VEG'
         rho = 'RSN_VEG'
-        tg  = 'TG1'
+        tg = 'TG1'
         snd = 'DSN_T_ISBA'
 
         # 1) Read files
@@ -127,7 +129,8 @@ class prep_tomodify(object):
         # my_name_OBS -> OBS.nc to be filled
         name_OBS = my_name_OBS
 
-        # my_name_extprep50, my_name_extprep5 and my_name_var -> extprep50, extprep5 and variables (for model guess <= 10 cm)
+        # my_name_extprep50, my_name_extprep5 and my_name_var ->
+        # extprep50, extprep5 and variables (for model guess <= 10 cm)
         extprep50 = my_name_extprep50
         extprep5 = my_name_extprep5
         variables_list = open(my_name_var)
@@ -162,18 +165,18 @@ class prep_tomodify(object):
         if os.path.exists(name_OBS):
 
             # OBS.nc
-            OBS_nc      = netCDF4.Dataset(name_OBS, 'r')
+            OBS_nc = netCDF4.Dataset(name_OBS, 'r')
             dsno = OBS_nc.variables[snd][:]
 
             # PREP
-            PREP   = netCDF4.Dataset(name_PREP, 'a')
+            PREP = netCDF4.Dataset(name_PREP, 'a')
             nlayer = self.prepfile.read(self.dict_prep['nsnowlayer'])[:]
             tg1 = [self.prepfile.read(self.dict_prep['tg'] + str(1))[:]]
 
-            old_swe = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1], nlayer)) # [1,point,layer]
-            new_swe = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1], nlayer)) # [1,point,layer]
-            old_rho = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1], nlayer)) # [1,point,layer]
-            dsn     = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1]))         # [1,point]
+            old_swe = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1], nlayer))  # [1,point,layer]
+            new_swe = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1], nlayer))  # [1,point,layer]
+            old_rho = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1], nlayer))  # [1,point,layer]
+            dsn = np.zeros((np.shape(tg1)[0], np.shape(tg1)[1]))         # [1,point]
 
             for j in range(nlayer):
                 var = self.prepfile.read(self.dict_prep['swe'] + str(j + 1))[:]
@@ -183,11 +186,11 @@ class prep_tomodify(object):
 
             # Loop on points
             for k in range(np.shape(tg1)[1]):
-                
+
                 for m in range(nlayer):
-                    if old_swe[0,k,m] > 0:
-                        dsn[0,k] = dsn[0,k] + old_swe[0,k,m]/old_rho[0,k,m]
-                        
+                    if old_swe[0, k, m] > 0:
+                        dsn[0, k] = dsn[0, k] + old_swe[0, k, m]/old_rho[0, k, m]
+
                 dsno[0][k] = dsno[0][k] * np.cos(slope[k] * np.pi / 180.)
 
                 # Observation exists
@@ -197,21 +200,21 @@ class prep_tomodify(object):
                     if (dsn[0, k] > 0.10):
 
                         new_swe[0, k, :] = (dsno[0, k] / dsn[0, k]) * old_swe[0, k, :]
-                        
+
                         for m in range(nlayer):
                             var = PREP.variables[swe + str(m + 1)]
                             var[0, k] = new_swe[0, k, m]
 
                     # Model guess <= 10 cm -> use other profiles!
                     else:
-                        
+
                         # Observation >= 10 cm
                         if (dsno[0, k] >= .10):
-                            PREP_ext  = netCDF4.Dataset(extprep50, 'r')
+                            PREP_ext = netCDF4.Dataset(extprep50, 'r')
 
                         # Observation < 10 cm
                         else:
-                            PREP_ext  = netCDF4.Dataset(extprep5, 'r')
+                            PREP_ext = netCDF4.Dataset(extprep5, 'r')
 
                         utg1 = PREP_ext.variables[tg][:]
 
@@ -224,7 +227,7 @@ class prep_tomodify(object):
                             var = PREP_ext.variables[rho + str(j + 1)]
                             urho[:, :, j] = var[:, :]
 
-                        udsn  = np.sum(uswe / urho, 2)
+                        udsn = np.sum(uswe / urho, 2)
 
                         ana = dsno[0, k]
                         unew_swe = (ana / udsn[:, 0]) * uswe[:, 0, :].copy()
@@ -241,21 +244,8 @@ class prep_tomodify(object):
                                 if str(x) == "--":
                                     x = 1.
                                 var[0, k] = x
-                                
+
                         PREP_ext.close()
-                        
+
             OBS_nc.close()
-            PREP.close()           
-            
-
-
-# Test
-
-# if __name__ == "__main__":
-#     prep = prep_tomodify("PREP.nc")
-#     prep.apply_swe_threshold(swe_threshold=400, closefile=True)
-
-# if __name__ == "__main__":
-#     old_prep = prep_tomodify("/home/carmagnolac/Desktop/PREP_2019080106.nc")
-#     new_prep = old_prep.insert_snow_depth("/home/carmagnolac/Desktop/SRU_saisies.txt", "/home/carmagnolac/Desktop/Snowsat_nosm_saisies.txt", "/home/carmagnolac/Desktop/OBS_empty_saisies.nc", "/home/carmagnolac/Desktop/PREP_fillup_50.nc", "/home/carmagnolac/Desktop/PREP_fillup_5.nc", "/home/carmagnolac/Desktop/variables", "/home/carmagnolac/Desktop/PREP_2019080106.nc")
-
+            PREP.close()

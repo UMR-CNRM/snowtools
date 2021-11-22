@@ -30,7 +30,7 @@ class massif_simu(prosimu):
         if not np.any(slope == 40.):
             return
 
-        print ("Compute massif-scale natural avalanche hazard indexes")
+        print("Compute massif-scale natural avalanche hazard indexes")
 
         slope_natural_risk = self.read(self.SurfexNatRiskName, keepfillvalue=True).astype('int')
         fillvalue = self.getfillvalue(self.SurfexNatRiskName)
@@ -60,16 +60,18 @@ class massif_simu(prosimu):
 
         risk_array = np.empty((ntime, naspects, nlevels, nmassifs))
         for m, massif in enumerate(list_massifs):
-            for l, level in enumerate(np.arange(minlevel, maxlevel + 1, 300)):
+            for L, level in enumerate(np.arange(minlevel, maxlevel + 1, 300)):
                 indslopes = (massif_number == massif) & (slope == 40.) & (altitude == level)
 
                 if np.sum(indslopes) > 1:
-                    risk_array[:, :, l, m] = np.take(weights, slope_natural_risk[:, indslopes])
+                    risk_array[:, :, L, m] = np.take(weights, slope_natural_risk[:, indslopes])
                 else:
-                    risk_array[:, :, l, m] = np.nan
+                    risk_array[:, :, L, m] = np.nan
 
-        var = self.dataset.createVariable(self.MassifRiskName, 'float', ["time", self.massif_dim_name], fill_value=fillvalue)
-        var.long_name = 'Massif-scale index of natural avalanche hazard. Definition provided in http://dx.doi.org/10.3189/172756401781819292'
+        var = self.dataset.createVariable(self.MassifRiskName, 'float',
+                                          ["time", self.massif_dim_name], fill_value=fillvalue)
+        var.long_name = ('Massif-scale index of natural avalanche hazard.'
+                         ' Definition provided in http://dx.doi.org/10.3189/172756401781819292')
         var.units = '0-8'
 
         var[:, :] = np.max(np.nanmean(risk_array, axis=2), axis=1)
@@ -91,13 +93,15 @@ class massif_simu(prosimu):
         :type list_aspects: list
         """
         if minaltitude > minlevel:
-            print ("WARNING: the massif-scale natural avalanche hazard index is not computed with all expected elevations")
-            print ("Lowest available level: " + str(minaltitude))
+            print("WARNING: the massif-scale natural avalanche"
+                  " hazard index is not computed with all expected elevations")
+            print("Lowest available level: " + str(minaltitude))
 
         if maxaltitude < maxlevel:
-            print ("WARNING: the massif-scale natural avalanche hazard index is not computed with all expected elevations")
-            print ("Lowest available level: " + str(maxaltitude))
+            print("WARNING: the massif-scale natural avalanche"
+                  "hazard index is not computed with all expected elevations")
+            print("Highest available level: " + str(maxaltitude))
 
         if naspects != 8:
-            print ("WARNING: the massif-scale natural avalanche hazard index is not computed with 8 aspect classes")
-            print ("Available aspects: " + str(list_aspects))
+            print("WARNING: the massif-scale natural avalanche hazard index is not computed with 8 aspect classes")
+            print("Available aspects: " + str(list_aspects))
