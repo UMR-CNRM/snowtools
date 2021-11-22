@@ -15,6 +15,7 @@ Research scripts
    scripts-extract-vortex.rst
    scripts-extract-obs.rst
    scripts-snowmip.rst
+   script_create_forcing.rst
 
 
 Operational scripts
@@ -22,4 +23,4 @@ Operational scripts
 
 .. todo::
    
-   Move opertaional scripts into scripts/ and document them !
+   Move operational scripts into scripts/ and document them !
