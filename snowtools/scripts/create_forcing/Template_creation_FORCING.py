@@ -45,22 +45,39 @@ parser = argparse.ArgumentParser(
 parser.add_argument("-i", "--infile", help="Input csv file", default='meteo.csv', dest='infile')
 parser.add_argument("-o", "--output", help="Output netcdf file",
                     default='FORCING_from_my_obs.nc', dest='outfile')
-parser.add_argument("-s", "--station_data", help="Dictionary of station information : LAT, LON, UREF (height of the "
-                                                 "wind sensor), ZREF (height of the temperature sensor),"
-                                                 "ZS (station altitude), aspect"
-                                                 "slope, FRC_TIME_STP (time step in seconds)",
-                    default={'LAT': 67.983333, 'LON': 24.216667, 'UREF': 2, 'ZREF': 2, 'ZS': 347, 'aspect': 0,
-                             'slope': 0, 'FRC_TIME_STP': 3600}, dest='station_data')
-parser.add_argument("--meta", help="Dictionary with meta data for netcdf file: title, summary, id, contributor_name,"
-                                   "contributor_role or whatever global attribute you want to add",
-                    default={'title': 'FORCING TITLE', 'summary': 'This file is bla bla bla FORCING from '
-                                                                  'bla bla bla Observation Site',
-                             'id': 'FORCING ID', 'contributor_name': 'People 1, People 2, People 3',
-                             'contributor_role': 'People 1 collected the observation; People 2 made some modelisation; '
-                                                 'People 3 made some coffee  (huge contribution)'},
-                    dest='metadata')
+parser.add_argument("--lon", help="station longitude", dest="LON", default='24.216667')
+parser.add_argument("--lat", help="station latitude", dest='LAT', default='67.983333')
+parser.add_argument("--uref", help="height of wind measurements", default='2', dest='UREF')
+parser.add_argument("--zref", help="height of temperature measurements", default='2', dest='ZREF')
+parser.add_argument("--aspect", help="slope orientation", dest='aspect', default='0')
+parser.add_argument("--slope", help="slope angle", default='0', dest='slope')
+parser.add_argument("--zs", help="station height", default='347', dest='ZS')
+parser.add_argument("--timestep", help="Time step in seconds", default='3600', dest='FRC_TIME_STP')
+parser.add_argument("--meta", help="add global attributes in form attname=attribute_text. Can be evoced multiple times",
+                    dest='metadata', action='append')
 
 args = parser.parse_args()
+###########################
+# build station information dict
+###########################
+station_data = {'LAT': args.LAT, 'LON': args.LON, 'UREF': args.UREF, 'ZREF': args.ZREF, 'ZS': args.ZS,
+                'aspect': args.aspect, 'slope': args.slope, 'FRC_TIME_STP': args.FRC_TIME_STP}
+default_meta_data = ['title=FORCING TITLE',
+                     'summary=This file is bla bla bla FORCING from bla bla bla Observation Site',
+                     'id=FORCING ID', 'contributor_name=People 1, People 2, People 3',
+                     'contributor_role=People 1 collected the observation; People 2 made some modelisation; '
+                     'People 3 made some coffee  (huge contribution)']
+###################
+# treat meta data
+##################
+if not args.metadata:
+    meta_data = default_meta_data
+else:
+    meta_data = args.metadata
+meta_dict = {}
+for meta_item in meta_data:
+    key, val = meta_item.split("=", 2)
+    meta_dict[key] = val
 
 
 ###########################################################################################
@@ -97,8 +114,6 @@ first_date = croc_data.index[0]
 List_dates = []
 for i in range(len(croc_data)):
     List_dates.append(datetime.datetime.utcfromtimestamp(croc_data.index.tz_localize('UTC')[i].timestamp()))
-    # List_dates.append(datetime.datetime.utcfromtimestamp(datetime.datetime.fromtimestamp(croc_data.index.tz_localize('UTC')[i]).timestamp()))
-
 
 # creating the netcdf file: dataset
 with netCDF4.Dataset(args.outfile, 'w', format='NETCDF4_CLASSIC') as fic_forcing:
@@ -117,7 +132,7 @@ with netCDF4.Dataset(args.outfile, 'w', format='NETCDF4_CLASSIC') as fic_forcing
     # creation and definition of Time Step
     frc_nc = fic_forcing.createVariable('FRC_TIME_STP', 'f', fill_value=fill_value)
     frc_nc.units = 's'
-    frc_nc[:] = args.station_data["FRC_TIME_STP"]
+    frc_nc[:] = station_data["FRC_TIME_STP"]
 
     # variables with 2 dimensions and their metadata
     List_nom_time_nbpoint = ['CO2air', 'DIR_SWdown', 'HUMREL', 'LWdown', 'NEB', 'PSurf', 'Qair', 'Rainf',
@@ -167,12 +182,12 @@ with netCDF4.Dataset(args.outfile, 'w', format='NETCDF4_CLASSIC') as fic_forcing
     for i in range(len(List_nom_nbpoint)):
         vari = List_nom_nbpoint[i]
         try:
-            fic_forcing[vari][0] = args.station_data[vari]
+            fic_forcing[vari][0] = station_data[vari]
         except KeyError:
             print("there is no", List_nom_nbpoint[i], "data available")
 
     # Others Metadata
-    for key, description in args.metadata.items():
+    for key, description in meta_dict.items():
         fic_forcing.setncattr(key, description)
 
     fic_forcing.date_created = datetime.datetime.today().replace(second=0, microsecond=0).isoformat()
