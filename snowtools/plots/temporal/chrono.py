@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 4 déc. 2018
 
 This script contains classes allowing to make matplotlib graphs with an automatic formatting of the temporal axis in
 order to adapt to simulation temporal extent.
 
 @author: lafaysse
-'''
+"""
 
 import six
 
@@ -139,7 +139,8 @@ class temporalplotSim(temporalplot):
     """
     Class for 1D variable temporal plot
 
-     Example :
+    Example :
+
     .. code-block:: python
 
         from snowtools.utils.prosimu import prosimu
@@ -181,7 +182,8 @@ class temporalplotObsSim(temporalplot):
     """
     Class for 1D variable temporal plot comparaison with observation
 
-     Example :
+    Example :
+
     .. code-block:: python
 
 
@@ -199,6 +201,7 @@ class temporalplotObsSim(temporalplot):
 
     .. figure:: /images/EX-temporalplotObsSim.png
         :align: center
+
     """
     def draw(self, timeObs, varObs, timeSim, varSim, *args, **kwargs):
         """

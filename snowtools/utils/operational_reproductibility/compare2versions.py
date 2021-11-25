@@ -1,13 +1,12 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 1 oct 2014
 Major update on 13 sept 2019
 
 @author: Matthieu Lafaysse
-'''
-
+"""
 
 import sys
 import os
@@ -24,11 +23,16 @@ from snowtools.utils.dates import check_and_convert_date, checkdateafter
 from bronx.stdtypes.date import Date, Period, Time, yesterday, tomorrow, daterange
 from optparse import OptionParser
 
+try:
+    import cftime
+except ImportError:
+    cftime = None
 
 usage = "USAGE compare2versions.py [fichier1 fichier2] [DATEBEGIN DATEEND]"
 
 
 class SimplifiedProsimu(netCDF4.Dataset):
+    """Simplified prosimu class"""
 
     def __init__(self, filename):
         if not os.path.isfile(filename):
@@ -36,27 +40,71 @@ class SimplifiedProsimu(netCDF4.Dataset):
         super(SimplifiedProsimu, self).__init__(filename)
 
     def listdim(self):
+        """
+        list of dimensions
+
+        :returns: list of dimensions
+        :rtype: list
+        """
         return self.dimensions.copy()
 
     def listvar(self):
+        """
+        list of variables
+
+        :returns: list of variables
+        :rtype: list
+        """
         return list(self.variables.keys())
 
     def listattr(self, varname):
+        """
+        list of attributes for a variable
+
+        :param varname: the variable name
+        :type varname: str
+        :returns: atributes
+        """
         return self.variables[varname].ncattrs()
 
     def getattr(self, varname, attname):
+        """
+        get a specific attribute for a specific variable
+
+        :param varname: the variable name
+        :type varname: str
+        :param attname: the attribute name
+        :type attname: str
+        :returns: the attribute value
+        """
         return getattr(self.variables[varname], attname)
 
     def readtime(self):
+        """
+        Get the time dimension of the netCDF file
+
+        :returns: time axis data
+        :trype: numpy array
+        """
         # Vérification du nom de la variable
         if "time" not in list(self.variables.keys()):
             raise VarNameException("time", self.path)
 
         time = self.variables["time"]
 
-        return np.array(netCDF4.num2date(time[:], time.units))
+        if netCDF4.__version__ >= '1.4.0' and cftime is not None and cftime.__version__ >= '1.1.0':
+            return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False,
+                                             only_use_python_datetimes=True))
+        else:
+            return np.array(netCDF4.num2date(time[:], time.units))
 
     def read(self, varname):
+        """
+        read variable from NetCDF file.
+
+        :param varname: variable name
+        :returns: data array
+        """
         if varname not in self.listvar():
             raise VarNameException(varname, self.path)
 
@@ -73,17 +121,39 @@ class SimplifiedProsimu(netCDF4.Dataset):
 
 
 class ComparisonNetcdf(object):
+    """
+    Class for Netcdf comparison
+    """
 
-    allowed_ga_differences = ['date_created']
+    allowed_ga_differences = ['date_created'] # allowed differences in global attributes
 
     def report(self, info):
-        # Define what should be done with the information message
-        print (info)
+        """
+        Define what should be done with the information message
+        """
+        print(info)
 
     def getlistvar(self, afile):
+        """
+        get variable list from given file
+
+        :param afile: filename
+        :returns: list of variables
+        """
         return afile.listvar()
 
     def compare2files(self, name1, name2, checktime=True):
+        """
+        main comparison method
+
+        :param name1: filename of first file
+        :param name2: filename of second file
+        :param checktime: check time variable
+        :type checktime: bool
+
+        :returns: conform
+        :rtype: bool
+        """
 
         conform = True
 
@@ -147,7 +217,8 @@ class ComparisonNetcdf(object):
                                 pass
                             else:
                                 conform = False
-                                self.report(varname + " : mean=" + str(meandiff) + " : min=" + str(mindiff) + " : max=" + str(maxdiff))
+                                self.report(varname + " : mean=" + str(meandiff) + " : min=" + str(mindiff) + " : max="
+                                            + str(maxdiff))
 
                     listattr1 = file1.listattr(varname)
                     listattr2 = file2.listattr(varname)
@@ -193,8 +264,8 @@ class ComparisonNetcdf(object):
             else:
                 if globattname in self.allowed_ga_differences:
                     continue
-                globattr1 = getattr(file1, globattname)
-                globattr2 = getattr(file2, globattname)
+                globattr1 = file1.getncattr(globattname)
+                globattr2 = file2.getncattr(globattname)
 
                 try:
                     if type(globattr1) is np.ndarray:
@@ -207,9 +278,9 @@ class ComparisonNetcdf(object):
                         self.report("Global attribute " + globattname + " differs:" + globattr1 + " - " + globattr2)
 
                 except:
-                    print ("BUG:")
-                    print (globattname)
-                    print (type(globattr1))
+                    print("BUG:")
+                    print(globattname)
+                    print(type(globattr1))
 
         file1.close()
         file2.close()
@@ -217,24 +288,30 @@ class ComparisonNetcdf(object):
         return conform
 
 
-# The following class is not useful for vortex but is temporarily used while netcdf comparison is not implemented in the diff toolbox.
 class ComparisonS2MIntDev(ComparisonNetcdf):
+    """
+    This class is not useful for vortex but is temporarily used while netcdf comparison is not implemented
+    in the diff toolbox.
+    """
 
-    pathint = "/chaine/mxpt001/vortex/mtool/cache/vortex/s2m"
-    pathdev = "/scratch/mtool/lafaysse/cache/vortex/s2m"
+    pathint = "/chaine/mxpt001/vortex/mtool/cache/vortex/s2m"  #: path to operational s2m chain
+    pathdev = "/scratch/mtool/lafaysse/cache/vortex/s2m"  #: path to development chain
 
-    xpid_int = 'OPER'
-    xpid_dev = 'OPER@lafaysse'
+    xpid_int = 'OPER'  #: experiment id of operational chain
+    xpid_dev = 'OPER@lafaysse'  #: experiment id of development chain
 
-    filename = dict(meteo = 'forcing', pro = 'pro', prep = 'prep')
-    nmembers_snow = dict(alp_allslopes = 37, pyr_allslopes = 37, cor_allslopes = 37, postes = 35)
-    nmembers_meteo = dict(alp_allslopes = 36, pyr_allslopes = 36, cor_allslopes = 36, postes = 35)
-    nmembers = dict(meteo = nmembers_meteo, pro = nmembers_snow, prep = nmembers_snow)
+    filename = dict(meteo='forcing', pro='pro', prep='prep')  #: filename dict for s2m files
+    #: number of members for snow simulation
+    nmembers_snow = dict(alp_allslopes=37, pyr_allslopes=37, cor_allslopes=37, postes=35)
+    #: number of members for safran meteo simulation
+    nmembers_meteo = dict(alp_allslopes=36, pyr_allslopes=36, cor_allslopes=36, postes=35)
+    #: member number dict
+    nmembers = dict(meteo=nmembers_meteo, pro=nmembers_snow, prep=nmembers_snow)
 
-    nightruntime = Time(hour=3, minute=0)
-    firstassimruntime = Time(hour=6, minute=0)
-    secondassimruntime = Time(hour=9, minute=0)
-    monthly_analysis_time = Time(hour=12, minute=0)
+    nightruntime = Time(hour=3, minute=0)  #: runtime for first run of the day
+    firstassimruntime = Time(hour=6, minute=0)  #: runtime for second run of the day
+    secondassimruntime = Time(hour=9, minute=0)  #: runtime of third run of the day
+    monthly_analysis_time = Time(hour=12, minute=0)  #: hour of the monthly reanalysis
 
     def __init__(self, nmembers):
 
@@ -256,7 +333,8 @@ class ComparisonS2MIntDev(ComparisonNetcdf):
         return Date(date).stdvortex + cutoff
 
     def getpathint(self, vconf, date, cutoff, member, block):
-        return "/".join([self.pathint, vconf.replace("_allslopes", ""), self.xpid_int, self.dirdate(date, cutoff), "mb%3.3d" % member, block])
+        return "/".join([self.pathint, vconf.replace("_allslopes", ""), self.xpid_int, self.dirdate(date, cutoff),
+                         "mb%3.3d" % member, block])
 
     def getpathdev(self, vconf, date, cutoff, member, block):
         return "/".join([self.pathdev, vconf, self.xpid_dev, self.dirdate(date, cutoff), "mb%3.3d" % member, block])
@@ -283,9 +361,9 @@ class ComparisonS2MIntDev(ComparisonNetcdf):
                 datebegin = dateend - Period(days=4)
             elif rundate.hour == self.monthly_analysis_time.hour:
                 if rundate.month <= 7:
-                    year = self.conf.rundate.year - 1
+                    year = rundate.year - 1
                 else:
-                    year = self.conf.rundate.year
+                    year = rundate.year
                 datebegin = Date(year, 7, 31, 6)
             else:
                 # The daytime runs perform a 1 day analysis
@@ -318,51 +396,63 @@ class ComparisonS2MIntDev(ComparisonNetcdf):
                 for b, thisdatebegin in enumerate(list_datebegin):
                     thisdateend = list_dateend[b]
                     try:
-                        get_file_period(self.filename[block], self.getpathint(vconf, date, cutoff, member, block), thisdatebegin, thisdateend)
+                        get_file_period(self.filename[block], self.getpathint(vconf, date, cutoff, member, block),
+                                        thisdatebegin, thisdateend)
                         os.rename(self.filename[block] + ".nc", self.filename[block] + "_int.nc")
-                        get_file_period(self.filename[block], self.getpathdev(vconf, date, cutoff, member, block), thisdatebegin, thisdateend)
+                        get_file_period(self.filename[block], self.getpathdev(vconf, date, cutoff, member, block),
+                                        thisdatebegin, thisdateend)
                         os.rename(self.filename[block] + ".nc", self.filename[block] + "_dev.nc")
-                        thisconform = self.compare2files(self.filename[block] + "_int.nc", self.filename[block] + "_dev.nc")
+                        thisconform = self.compare2files(self.filename[block] + "_int.nc", self.filename[block]
+                                                         + "_dev.nc")
 
                         if thisconform:
-                            self.report("Conform output " + block + " for domain " + vconf + " member " + str(member) + " date " + date.stdvortex + cutoff)
+                            self.report("Conform output " + block + " for domain " + vconf + " member " + str(member)
+                                        + " date " + date.stdvortex + cutoff)
                         else:
-                            self.report("Not conform output " + block + " for domain " + vconf + " member " + str(member) + " date " + date.stdvortex + cutoff)
+                            self.report("Not conform output " + block + " for domain " + vconf + " member "
+                                        + str(member) + " date " + date.stdvortex + cutoff)
                         conform = conform and thisconform
 
                     except FileNameException as FNE:
-                        self.report("Missing " + self.filename[block] + " for domain " + vconf + " member " + str(member) + " date " + date.stdvortex + cutoff)
+                        self.report("Missing " + self.filename[block] + " for domain " + vconf + " member "
+                                    + str(member) + " date " + date.stdvortex + cutoff)
                         self.report(FNE)
                         conform = False
 
         block = "prep"
         try:
             for member in self.list_members[block][vconf]:
-                get_file_date(self.filename[block], self.getpathint(vconf, date, cutoff, member, block), dateend, raiseexception = True)
+                get_file_date(self.filename[block], self.getpathint(vconf, date, cutoff, member, block), dateend,
+                              raiseexception=True)
                 os.rename(self.filename[block] + ".nc", self.filename[block] + "_int.nc")
-                get_file_date(self.filename[block], self.getpathdev(vconf, date, cutoff, member, block), dateend, raiseexception = True)
+                get_file_date(self.filename[block], self.getpathdev(vconf, date, cutoff, member, block), dateend,
+                              raiseexception=True)
                 os.rename(self.filename[block] + ".nc", self.filename[block] + "_dev.nc")
-                thisconform = self.compare2files(self.filename[block] + "_int.nc", self.filename[block] + "_dev.nc", checktime=False)
+                thisconform = self.compare2files(self.filename[block] + "_int.nc", self.filename[block] + "_dev.nc",
+                                                 checktime=False)
                 if thisconform:
-                    self.report("Conform output " + block + " for domain " + vconf + " member " + str(member) + " date " + date.stdvortex + cutoff)
+                    self.report("Conform output " + block + " for domain " + vconf + " member " + str(member) + " date "
+                                + date.stdvortex + cutoff)
                 else:
-                    self.report("Not conform output " + block + " for domain " + vconf + " member " + str(member) + " date " + date.stdvortex + cutoff)
+                    self.report("Not conform output " + block + " for domain " + vconf + " member " + str(member)
+                                + " date " + date.stdvortex + cutoff)
                 conform = conform and thisconform
 
         except FileNameException as FNE:
-                self.report("Missing " + self.filename[block] + " for domain " + vconf + " member " + str(member) + " date " + date.stdvortex + cutoff)
-                self.report(FNE)
-                conform = False
+            self.report("Missing " + self.filename[block] + " for domain " + vconf + " member " + str(member)
+                        + " date " + date.stdvortex + cutoff)
+            self.report(FNE)
+            conform = False
         return conform
 
     def comparealldomains(self, date):
         conform = True
         for domain in ["alp_allslopes", "pyr_allslopes", "cor_allslopes", "postes"]:
-            print (domain)
+            print(domain)
             for cutoff in ["A", "P"]:
-                print (cutoff)
+                print(cutoff)
                 conform = conform and self.compareallmembers(domain, date, cutoff)
-                print (domain + ' ' + cutoff + ':' + str(conform))
+                print(domain + ' ' + cutoff + ':' + str(conform))
         return conform
 
     def compareallruns(self, date):
@@ -370,11 +460,12 @@ class ComparisonS2MIntDev(ComparisonNetcdf):
         for runtime in [self.nightruntime, self.firstassimruntime, self.secondassimruntime]:
 
             conform = conform and self.comparealldomains(date.replace(hour=runtime.hour))
-            print (str(runtime) + ':' + str(conform))
+            print(str(runtime) + ':' + str(conform))
         return conform
 
 
 class FastComparisonS2MIntDev(ComparisonS2MIntDev):
+    """Fast comparison of operational chain with development chain """
 
     def getlistvar(self, afile):
         vars_to_check = ['SNOWDZ', 'Tair', 'Rainf', 'TG1', 'WSN_VEG1', 'ZS']
@@ -382,10 +473,12 @@ class FastComparisonS2MIntDev(ComparisonS2MIntDev):
 
 
 class ComparisonS2MDbleDev(ComparisonS2MIntDev):
+    """Class for comparing dev chain with "chaine en double". """
     xpid_int = 'DBLE'
 
 
 class FastComparisonS2MDbleDev(FastComparisonS2MIntDev, ComparisonS2MDbleDev):
+    """Class for fast comparison dev chain with "chaine en double". """
     pass
 
 
@@ -418,16 +511,16 @@ def parse_options(arguments):
 
     parser.add_option("--double",
                       action="store_true", dest="double", default=False,
-                      help= 'Reference is double')
+                      help='Reference is double')
 
-    (options, args) = parser.parse_args(arguments)
+    (opts, args) = parser.parse_args(arguments)
 
     # Controls and type conversions of dates
-    [options.datebegin, options.dateend] = list(map(check_and_convert_date, [options.datebegin, options.dateend]))
-    checkdateafter(options.dateend, options.datebegin)
+    [opts.datebegin, opts.dateend] = list(map(check_and_convert_date, [opts.datebegin, opts.dateend]))
+    checkdateafter(opts.dateend, opts.datebegin)
 
     del args
-    return options
+    return opts
 
 
 if __name__ == "__main__":
@@ -436,10 +529,11 @@ if __name__ == "__main__":
 
     if options.new and options.old:
         C = ComparisonNetcdf()
-        checktime = 'prep' not in options.new and 'PGD' not in options.new and 'pgd' not in options.new and 'PREP' not in options.new
+        checktime = 'prep' not in options.new and 'PGD' not in options.new and 'pgd' not in options.new \
+                    and 'PREP' not in options.new
         C.compare2files(options.new, options.old, checktime=checktime)
     elif options.datebegin and options.dateend:
-        conform = True
+        is_conform = True
         if options.fast:
             if options.double:
                 C = FastComparisonS2MDbleDev(options.nmembers)
@@ -452,12 +546,12 @@ if __name__ == "__main__":
                 C = ComparisonS2MIntDev(options.nmembers)
         currentdate = Date(options.datebegin)
         while currentdate < options.dateend:
-            conform = conform and C.compareallruns(currentdate)
+            is_conform = is_conform and C.compareallruns(currentdate)
             currentdate = tomorrow(currentdate)
-        if conform:
-            print ("All runs are conform, well done !")
+        if is_conform:
+            print("All runs are conform, well done !")
         else:
-            print ("Some runs differ. Good luck !")
+            print("Some runs differ. Good luck !")
     else:
-        print (usage)
+        print(usage)
         sys.exit(1)
