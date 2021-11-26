@@ -8,24 +8,27 @@ Dependencies
 
 The snowtools project is mainly designed for a Linux environment.
 
-The whole project requires at least python 3.5 and the following packages:
+The whole project requires at least python 3.6 and the following packages:
 
 * ``six``
 * ``numpy``
 * ``netCDF4``
-
-In addition, the Graphical Tool Interface to plot simulation outputs requires the following packages:
-
-* ``tkinter``
 * ``matplotlib``
-* ``pickle``
 
-Install
--------
+Some specific parts of the code (including test) require to have also:
+
+* ``PIL`` (Pillow Imaging library)
+* ``pandas``
+* ``cartopy``. Verion have to be in coherence with ``matplotlib`` version, see :ref:`maps plots documentation <plots-maps>`.
+* The vortex toolbox for run on Meteo-France super-computers
+
+
+Install for developers
+----------------------
 
 Snowtools is available on a git repository. See https://opensource.umr-cnrm.fr/projects/snowtools_git/wiki/Procedure_for_new_users for getting access.
 
-Clone the git repository on your computer. You have then to define the environment variable ``SNOWTOOLS_CEN`` and add the install folder to your ``PYTHONPATH``. This can be done by adding these thow following lines to your ``.bashrc`` or ``.bash-profile``: 
+Clone the git repository on your computer. You have to add the install folder to your ``PYTHONPATH``. This can be done by adding these thow following lines to your ``.bashrc`` or ``.bash-profile``: 
 
 .. code-block:: bash
    
@@ -36,5 +39,5 @@ It is also recommended to create useful aliases for s2m command and proreader gr
 
 .. code-block:: bash
 
-   alias s2m="python $SNOWTOOLS_CEN/snowtools/tasks/s2m_command.py" 
-   alias proreader="python3 $SNOWTOOLS_CEN/snowtools/plots/GUI_Proreader.py" 
+   alias s2m="python $SNOWTOOLS_CEN/snowtools/tasks/s2m_command.py"
+   alias proreader="python3 $SNOWTOOLS_CEN/snowtools/plots/GUI_Proreader.py"
