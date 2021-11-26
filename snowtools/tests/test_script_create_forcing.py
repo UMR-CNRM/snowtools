@@ -14,13 +14,14 @@ import tempfile
 
 from netCDF4 import Dataset
 
+from snowtools.DATA import SNOWTOOLS_DIR
 
 _here = os.path.dirname(os.path.realpath(__file__))
 TEST_DATA_DIR = "/rd/cenfic2/manto/viallonl/testbase/FORCING"
 
 
 @unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "METEO_KENTTAROVA.csv")),
-                 "input file not available")
+        'Input test data not available')
 class TemplateCreationForcingTest(unittest.TestCase):
     """Test Forcing creation script (csv to Forcing)"""
     def setUp(self):
@@ -31,7 +32,9 @@ class TemplateCreationForcingTest(unittest.TestCase):
         self.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
 
     def test_create_forcing_default(self):
-        p = subprocess.run(['python', '../snowtools/scripts/create_forcing/Template_creation_FORCING.py', '-i',
+        p = subprocess.run(['python3',
+                            os.path.join(SNOWTOOLS_DIR, 'scripts/create_forcing/Template_creation_FORCING.py'),
+                            '-i',
                             os.path.join(TEST_DATA_DIR, "METEO_KENTTAROVA.csv"), '-o',
                             os.path.join(self.diroutput, 'created_forcing.nc')])
         self.assertEqual(p.returncode, 0, 'snowtools/scripts/create_forcing/Template_creation_FORCING.py failed')
@@ -41,7 +44,9 @@ class TemplateCreationForcingTest(unittest.TestCase):
             self.assertAlmostEqual(humrel[0], 76., msg='humidity data not as expected')
 
     def test_create_forcing_station_info(self):
-        p = subprocess.run(['python', '../snowtools/scripts/create_forcing/Template_creation_FORCING.py', '-i',
+        p = subprocess.run(['python3',
+                            os.path.join(SNOWTOOLS_DIR, 'scripts/create_forcing/Template_creation_FORCING.py'),
+                            '-i',
                             os.path.join(TEST_DATA_DIR, "METEO_KENTTAROVA.csv"), '-o',
                             os.path.join(self.diroutput, 'created_forcing_fantasy_station.nc'), '--lon', '15.5',
                             '--lat', '46.2', '--zs', '400', '--meta', 'title=FORCING for fantasy station',
