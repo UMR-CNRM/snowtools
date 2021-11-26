@@ -15,53 +15,17 @@ import tempfile
 from snowtools.tasks.s2m_command import Surfex_command as s2m
 from snowtools.DATA import SNOWTOOLS_DATA
 from snowtools.tests.export_output import exportoutput
+from snowtools.tests.tempfolder import TestWithTempFolderWithLog
 _here = os.path.dirname(os.path.realpath(__file__))
 
 
-class s2mTest(unittest.TestCase):
+class s2mTest(TestWithTempFolderWithLog):
     def setUp(self):
-        basediroutput = os.path.join(_here, "fail_test")
-        if not os.path.isdir(basediroutput):
-            os.makedirs(basediroutput)
-        self.basediroutput = basediroutput
-        prefix = "output" + datetime.datetime.today().strftime("%Y%m%d%H%M%S%f-")
-        self.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
+        super(s2mTest, self).setUp()
         self.path_namelist = os.path.join(_here, 'namelists/')
         self.namelist = os.path.join(_here, 'namelists/namelist.nam')
         self.forcingtest = os.path.join(SNOWTOOLS_DATA, "FORCING_test_base.nc")
         self.commonoptions = " -o " + self.diroutput + " -f " + self.forcingtest + " -n " + self.namelist + " -g"
-        self.logfile = os.path.join(self.diroutput, 'output.log')
-        with open(self.logfile, 'w') as f:
-            f.write('Log for test {} executed on {}'.format(__file__, datetime.datetime.now()))
-
-    def tearDown(self):
-        if hasattr(self, '_outcome'):  # Python 3.4+
-            result = self.defaultTestResult()  # These two methods have no side effects
-            self._feedErrorsToResult(result, self._outcome.errors)
-        else:  # Python 3.2 - 3.3 or 3.0 - 3.1 and 2.7
-            result = getattr(self, '_outcomeForDoCleanups', self._resultForDoCleanups)
-        error = self.list2reason(result.errors)
-        failure = self.list2reason(result.failures)
-        ok = not error and not failure
-
-        # Demo:   report short info immediately (not important)
-        if not ok:
-            with open(self.logfile, 'r') as f:
-                sys.stderr.write(f.read())
-            typ, text = ('ERROR', error) if error else ('FAIL', failure)
-            msg = [x for x in text.split('\n')[1:] if not x.startswith(' ')][0]
-            print("\n%s: %s\n     %s" % (typ, self.id(), msg))
-
-        if ok:
-            # Suppression des sous-dossiers de fail_test correspondant aux tests OK
-            shutil.rmtree(self.diroutput)
-            # Suppression du dossier fail_test si tous les tests ont réussi (ie dossier vide)
-            if os.listdir(self.basediroutput) == []:
-                os.rmdir(self.basediroutput)
-
-    def list2reason(self, exc_list):
-        if exc_list and exc_list[-1][0] is self:
-            return exc_list[-1][1]
 
     def full_run(self, shortcommand):
         command = shortcommand + self.commonoptions
