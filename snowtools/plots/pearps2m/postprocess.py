@@ -167,11 +167,11 @@ class Ensemble(object):
         self.simufiles = []
         for m, member in enumerate(listmembers):
             p = prosimu(member)
-            if m==0:
+            if m == 0:
                 self.nech = p.getlendim("time")
             ntime = p.getlendim("time")
             if ntime == self.nech:
-                self.simufiles.append(prosimu(member))
+                self.simufiles.append(p)
                 if 'mb035' in member:
                     self.inddeterministic = m
 
