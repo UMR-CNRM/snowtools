@@ -139,7 +139,8 @@ class temporalplotSim(temporalplot):
     """
     Class for 1D variable temporal plot
 
-     Example :
+    Example :
+
     .. code-block:: python
 
         from snowtools.utils.prosimu import prosimu
@@ -181,9 +182,9 @@ class temporalplotObsSim(temporalplot):
     """
     Class for 1D variable temporal plot comparaison with observation
 
-     Example :
-    .. code-block:: python
+    Example :
 
+    .. code-block:: python
 
         from snowtools.utils.prosimu import prosimu
         from snowtools.plots.temporal.chrono import temporalplotObsSim
@@ -200,18 +201,19 @@ class temporalplotObsSim(temporalplot):
     .. figure:: /images/EX-temporalplotObsSim.png
         :align: center
     """
+
     def draw(self, timeObs, varObs, timeSim, varSim, *args, **kwargs):
         """
-       Method of temporalplotObsSim class. Used for generating comparative 1D plot with time formatting.
+        Method of temporalplotObsSim class. Used for generating comparative 1D plot with time formatting.
 
-       :param timeObs: Array of Observation duration usually given by prosimu.readtime()
-       :param varObs: Array of Observation data usially given by prosimu.read()
-       :param timeSim: Array of simulation duration usually given by prosimu.readtime()
-       :param varSim: Array of simulation data usially given by prosimu.read()
-       :param args: (optional)
-       :param kwargs: optional ( matplotlib.pyplot key arguments )
-       :return:
-       """
+        :param timeObs: Array of Observation duration usually given by prosimu.readtime()
+        :param varObs: Array of Observation data usially given by prosimu.read()
+        :param timeSim: Array of simulation duration usually given by prosimu.readtime()
+        :param varSim: Array of simulation data usially given by prosimu.read()
+        :param args: (optional)
+        :param kwargs: optional ( matplotlib.pyplot key arguments )
+        :return:
+        """
         self.add_points(timeObs, varObs, label="Observations")
         if 'label' in kwargs.keys():
             label = kwargs['label']
@@ -228,6 +230,7 @@ class temporalplotObsMultipleSims(temporalplot):
     def draw(self, timeObs, varObs, timeSim, varSim, *args, **kwargs):
         """Method of temporalplotObsMultipleSims class. Used for generating comparative 1D plot with time formatting.
         Similar to temporalplotObsSim but UGLIER
+
         :param timeObs: Array of Observation duration usually given by prosimu.readtime()
         :param varObs: Array of Observation data usially given by prosimu.read()
         :param timeSim: Array of simulation duration usually given by prosimu.readtime()
