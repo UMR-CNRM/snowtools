@@ -14,7 +14,7 @@ import datetime
 
 from snowtools.tasks.s2m_command import Surfex_command as s2m
 from snowtools.DATA import SNOWTOOLS_DATA
-from export_output import exportoutput
+from snowtools.tests.export_output import exportoutput
 _here = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -24,6 +24,7 @@ class s2mTest(unittest.TestCase):
         basediroutput = os.path.join(_here, "fail_test")
         if not os.path.isdir(basediroutput):
             os.makedirs(basediroutput)
+        self.basediroutput = basediroutput
         prefix = "output" + datetime.datetime.today().strftime("%Y%m%d%H%M%S%f-")
         self.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
         self.logfile = os.path.join(self.diroutput, 'output.log')
@@ -54,8 +55,8 @@ class s2mTest(unittest.TestCase):
             # Suppression des sous-dossiers de fail_test correspondant aux tests OK
             shutil.rmtree(self.diroutput)
             # Suppression du dossier fail_test si tous les tests ont réussi (ie dossier vide)
-            if os.listdir('fail_test') == []:
-                os.rmdir('fail_test')
+            if os.listdir(self.basediroutput) == []:
+                os.rmdir(self.basediroutput)
 
     def list2reason(self, exc_list):
         if exc_list and exc_list[-1][0] is self:
