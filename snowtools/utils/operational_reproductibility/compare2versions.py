@@ -137,7 +137,8 @@ class ComparisonNetcdf(object):
         """
         get variable list from given file
 
-        :param afile: filename
+        :param afile: file object
+        :type afile: :py:class:`SimplifiedProsimu`
         :returns: list of variables
         """
         return afile.listvar()
@@ -330,16 +331,51 @@ class ComparisonS2MIntDev(ComparisonNetcdf):
         super(ComparisonS2MIntDev, self).__init__()
 
     def dirdate(self, date, cutoff):
+        """
+        get date directory name
+
+        :param date: rundate
+        :param cutoff: "A" or "P" (for analysis or forecast)
+        :returns: date directory name
+        :rtype: str
+        """
         return Date(date).stdvortex + cutoff
 
     def getpathint(self, vconf, date, cutoff, member, block):
+        """
+        get path of operational simulation
+
+        :param vconf: vortex vconf
+        :param date: rundate
+        :param cutoff: "A" or "P" (for analysis or forecast)
+        :param member: member number
+        :param block: vortex block ("meteo", "pro", "prep")
+        :returns: path
+        """
         return "/".join([self.pathint, vconf.replace("_allslopes", ""), self.xpid_int, self.dirdate(date, cutoff),
                          "mb%3.3d" % member, block])
 
     def getpathdev(self, vconf, date, cutoff, member, block):
+        """
+        get path of development simulation
+
+        :param vconf: vortex vconf
+        :param date: rundate
+        :param cutoff: "A" or "P" (for analysis or forecast)
+        :param member: member number
+        :param block: vortex block ("meteo", "pro", "prep")
+        :returns: path
+        """
         return "/".join([self.pathdev, vconf, self.xpid_dev, self.dirdate(date, cutoff), "mb%3.3d" % member, block])
 
     def get_period(self, rundate, cutoff):
+        """
+        get simulation start date and end date
+
+        :param rundate: simulation reference date
+        :param cutoff: "A" or "P" (for analysis or forecast)
+        :returns: datebegin, dateend
+        """
 
         previ = cutoff == 'P'
 
@@ -372,6 +408,15 @@ class ComparisonS2MIntDev(ComparisonNetcdf):
         return datebegin, dateend
 
     def compareallmembers(self, vconf, date, cutoff):
+        """
+        Comparison loop over members
+
+        :param vconf: vortex vconf
+        :param date: run date
+        :param cutoff: "A" or "P" (for analysis or forecast)
+        :returns: conform
+        :rtype: bool
+        """
 
         conform = True
 
@@ -446,6 +491,16 @@ class ComparisonS2MIntDev(ComparisonNetcdf):
         return conform
 
     def comparealldomains(self, date):
+        """
+        Comparison loop over all domains ("alp_allslopes", "pyr_allslopes", "cor_allslopes", "postes")
+        and "cutoffs" ("A", "P") = analysis and forecast
+
+        :param date: date to be compared
+        :returns: conform
+        :rtype: bool
+
+        :calls: :py:meth:`compareallmembers`
+        """
         conform = True
         for domain in ["alp_allslopes", "pyr_allslopes", "cor_allslopes", "postes"]:
             print(domain)
@@ -456,6 +511,14 @@ class ComparisonS2MIntDev(ComparisonNetcdf):
         return conform
 
     def compareallruns(self, date):
+        """
+        Comparison loop over all runs on a given day
+
+        :param date: run date
+        :returns: conform
+        :rtype: bool
+        :calls: :py:meth:`comparealldomains`
+        """
         conform = True
         for runtime in [self.nightruntime, self.firstassimruntime, self.secondassimruntime]:
 
@@ -468,13 +531,18 @@ class FastComparisonS2MIntDev(ComparisonS2MIntDev):
     """Fast comparison of operational chain with development chain """
 
     def getlistvar(self, afile):
+        """
+        get reduced list of variables to compare
+
+        :param afile:
+        """
         vars_to_check = ['SNOWDZ', 'Tair', 'Rainf', 'TG1', 'WSN_VEG1', 'ZS']
         return list(set(vars_to_check) & set(afile.listvar()))
 
 
 class ComparisonS2MDbleDev(ComparisonS2MIntDev):
     """Class for comparing dev chain with "chaine en double". """
-    xpid_int = 'DBLE'
+    xpid_int = 'DBLE'  #: experiment id
 
 
 class FastComparisonS2MDbleDev(FastComparisonS2MIntDev, ComparisonS2MDbleDev):
