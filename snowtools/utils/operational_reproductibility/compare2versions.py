@@ -534,7 +534,8 @@ class FastComparisonS2MIntDev(ComparisonS2MIntDev):
         """
         get reduced list of variables to compare
 
-        :param afile:
+        :param afile: file object
+        :type afile: :py:class:`SimplifiedProsimu`
         """
         vars_to_check = ['SNOWDZ', 'Tair', 'Rainf', 'TG1', 'WSN_VEG1', 'ZS']
         return list(set(vars_to_check) & set(afile.listvar()))
