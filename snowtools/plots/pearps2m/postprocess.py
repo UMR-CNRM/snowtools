@@ -166,9 +166,14 @@ class Ensemble(object):
         print(listmembers)
         self.simufiles = []
         for m, member in enumerate(listmembers):
-            self.simufiles.append(prosimu(member))
-            if 'mb035' in member:
-                self.inddeterministic = m
+            p = prosimu(member)
+            if m==0:
+                self.nech = p.getlendim("time")
+            ntime = p.getlendim("time")
+            if ntime == self.nech:
+                self.simufiles.append(prosimu(member))
+                if 'mb035' in member:
+                    self.inddeterministic = m
 
         self.nmembers = len(self.simufiles)
         print(self.nmembers)
@@ -176,7 +181,6 @@ class Ensemble(object):
 
         self.indpoints = self.select_points()
         self.npoints = self.get_npoints()
-        self.nech = len(self.time)
 
     def select_points(self):
         """
