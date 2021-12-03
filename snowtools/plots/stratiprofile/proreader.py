@@ -92,6 +92,20 @@ class reader(abc.ABC):
         :rtype: dict
         """
 
+    def variable_desc(self, varname):
+        """
+        Get information on a specific variable, given its name on any form (short, long).
+        See `variable_desc` for more details on reported information.
+
+        :param varname: variable name (or alias)
+        :type varname: str
+        :returns: Dictionary of information on variable
+        :rtype: dict
+        """
+        v = self._get_varname(varname)
+        return self.variables_desc[v] if v in self.variables_desc else None
+
+
     @property
     @abc.abstractmethod
     def variables_t(self):
@@ -263,6 +277,7 @@ class proreader(reader):
             'ZS': ['altitude', 'alt'],
             'time': ['t'],
             'RSN_VEG': ['density', 'rho', 'snowrho'],
+            'SNOWDZ': ['dz'],
             }
 
     _range_defaults = {
@@ -408,9 +423,12 @@ class proreader(reader):
             if v in self._variables:
                 for alias in self._association_names_defaut[v]:
                     _association_names[alias] = v
-        for v in self._variables_p:
-            if 'full_name' in self._variables_p[v]:
-                _association_names[self._variables_p[v]['full_name']] = v
+        for v in self._variables:
+            if 'full_name' in self._variables[v]:
+                _association_names[self._variables[v]['full_name']] = v
+#        for v in self._variables_p:
+#            if 'full_name' in self._variables_p[v]:
+#                _association_names[self._variables_p[v]['full_name']] = v
         return _association_names
 
     @property
