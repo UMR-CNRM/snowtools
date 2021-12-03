@@ -10,6 +10,13 @@
 
 .. autodata:: __all__
 
+Functions
+---------
+
+.. autofunction:: dictmerge
+
+.. autofunction:: mktuple
+
 Sub-modules
 -----------
 

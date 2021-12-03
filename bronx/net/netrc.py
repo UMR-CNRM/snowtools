@@ -19,7 +19,7 @@ This code has been extacted from Python 3.5 and two patches have been applied:
 # Proposed patch applied: https://bugs.python.org/issue11416
 # LFM: netrc._passwd_clean regex introduced to remove matching quotes
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import io
 import os
@@ -39,6 +39,7 @@ class NetrcParseError(Exception):
     ``filename`` is the name of the source file, and ``lineno`` gives the
     line number on which the error was found.
     """
+
     def __init__(self, msg, filename=None, lineno=None):
         self.filename = filename
         self.lineno = lineno
@@ -107,7 +108,7 @@ class netrc:
                 entryname = lexer.get_token()
             elif tt == 'default':
                 entryname = 'default'
-            elif tt == 'macdef':                # Just skip to end of macdefs
+            elif tt == 'macdef':  # Just skip to end of macdefs
                 entryname = lexer.get_token()
                 self.macros[entryname] = []
                 lexer.whitespace = ' \t'
@@ -129,8 +130,7 @@ class netrc:
             self.hosts[entryname] = {}
             while 1:
                 tt = lexer.get_token()
-                if (tt.startswith('#') or
-                        tt in {'', 'machine', 'default', 'macdef'}):
+                if (tt.startswith('#') or tt in {'', 'machine', 'default', 'macdef'}):
                     if password:
                         current_entry = (login, account, password)
                         self.allhosts[entryname].append(current_entry)
@@ -170,8 +170,8 @@ class netrc:
                                 " the owner", file, lexer.lineno)
                     password = self._passwd_clean.sub(r'\g<pass>', lexer.get_token())
                 else:
-                    raise NetrcParseError("bad follower token %r" % tt,
-                                          file, lexer.lineno)
+                    raise NetrcParseError("bad follower token {!r} in {!r} line {}".format(
+                        tt, file, lexer.lineno))
 
     def authenticators(self, host, login=None):
         """

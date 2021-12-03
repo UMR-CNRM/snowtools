@@ -4,11 +4,12 @@
 Various tools designed for interactive scripts.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-from bronx.compat.moves import collections_abc
 import sys
+
+import six
+from bronx.compat.moves import collections_abc
 
 #: No automatic export
 __all__ = []
@@ -72,7 +73,7 @@ def query_yes_no_quit(question, default="yes"):
         choice = six.moves.input().lower()
         if default is not None and choice == '':
             return default
-        elif choice in valid.keys():
+        elif choice in valid:
             return valid[choice]
         else:
             sys.stdout.write("Please respond with 'yes', 'no' or 'quit'.\n")
@@ -135,15 +136,15 @@ def print_tablelike(fmt, *args, **kwargs):
             newargs.append([("{:<" + str(maxlen) + "s}").format(s) for s in arg])
         else:
             newargs.append(arg)
-    for args in zip(* newargs):
-        cb(fmt.format(* args))
+    for args in zip(*newargs):
+        cb(fmt.format(*args))
 
 
 def join_list_in_proper_english(a_list, l_fmt='{!s}'):
     """Join a list using commas + a final 'and' word if needed.
 
     :param a_list: any iterable object to be concatenated
-    :param str a_fmt: The Python's format applied to each **a_list** item
+    :param str l_fmt: The Python's format applied to each **a_list** item
 
     :example: Ask something to someone...
 
@@ -169,6 +170,37 @@ def join_list_in_proper_english(a_list, l_fmt='{!s}'):
     return outstr
 
 
+def dict_as_str(adict, prefix=0, indent=3):
+    """Nicely aligned string representation of a dictionary.
+
+    :param dict adict: the dictionary to format
+    :param int prefix: number of leading spaces
+    :param int indent: number of additionnal spaces when recurring
+    :return str: the formatted string representation
+
+    >>> d = dict(a=1, abracadabra=42, more=dict(b=2, babylou=69))
+    >>> print(dict_as_str(d, prefix=4, indent=2), end='')
+        a          : 1
+        abracadabra: 42
+        more
+          b      : 2
+          babylou: 69
+    """
+    if len(adict) == 0:
+        return ''
+    maxlen = max([len(k) for k in adict])
+    s = ''
+    for key, value in sorted(adict.items()):
+        spaces = ' ' * (maxlen - len(key))
+        if isinstance(value, dict):
+            s += ' ' * prefix + key
+            s += '\n' + dict_as_str(value, prefix + indent, indent)
+        else:
+            s += ' ' * prefix + key + spaces + ': ' + str(value) + '\n'
+    return s
+
+
 if __name__ == '__main__':
     import doctest
+
     doctest.testmod()

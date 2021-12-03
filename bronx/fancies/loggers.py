@@ -56,7 +56,7 @@ import six
 
 import contextlib
 import logging
-import sys
+import threading
 
 from bronx.syntax.decorators import nicedeco
 
@@ -65,10 +65,11 @@ __all__ = []
 
 #: The actual set of pseudo-root loggers created
 roots = set()
+
 lognames = set()
 
 #: Default formatters
-formats = dict(
+predefined_formats = dict(
     default=logging.Formatter(
         fmt='# [%(asctime)s][%(name)s][%(funcName)s:%(lineno)04d][%(levelname)s]: %(message)s',
         datefmt='%Y/%m/%d-%H:%M:%S',
@@ -80,9 +81,15 @@ formats = dict(
 )
 
 #: Console handler
-console = logging.StreamHandler()
-console.setLevel(logging.DEBUG)
-console.setFormatter(formats['default'])
+default_console = logging.StreamHandler()
+default_console.setLevel(logging.DEBUG)
+default_console.setFormatter(predefined_formats['default'])
+
+#: The logging module root
+_logging_root = logging.getLogger()
+
+#: Try to prevent race conditions
+_logging_threading_lock = threading.Lock()
 
 
 # MAIN INTERFACES TO THIS MODULE
@@ -91,8 +98,9 @@ def getLogger(modname):
     """Return a standard logger in the scope of an appropriate root logger."""
     rootname = modname.split('.')[0]
     rootlogger = logging.getLogger(rootname)
-    if rootname not in roots:
-        setRootLogger(rootlogger)
+    with _logging_threading_lock:
+        if rootname not in roots:
+            setRootLogger(rootlogger)
     lognames.add(modname)
     if rootname == modname:
         return rootlogger
@@ -101,16 +109,14 @@ def getLogger(modname):
 
 
 def setGlobalLevel(level):
-    """
-    Explicitly sets the logging level to the ``level`` value for all roots items.
-    """
+    """Explicitly sets the logging level to the ``level`` value for everyone."""
     thislevel = getActualLevel(level)
     if thislevel is None:
         print('ERROR!!! Try to set an unknown log level {:s}'.format(level))
     else:
-        for rootname in roots:
-            r_logger = logging.getLogger(rootname)
-            r_logger.setLevel(thislevel)
+        for a_logger in [logging.getLogger(l) for l in roots | lognames]:
+            a_logger.setLevel(logging.NOTSET)
+        _logging_root.setLevel(thislevel)
     return thislevel
 
 
@@ -118,7 +124,7 @@ def setGlobalLevel(level):
 def contextboundGlobalLevel(level):
     """
     Within this context manager, explicitly sets the logging level to the
-    ``level`` value for all roots items.
+    ``level`` value for everyone.
 
     When the context exists, logging levels are restored to their previous values.
     """
@@ -127,15 +133,20 @@ def contextboundGlobalLevel(level):
         print('ERROR!!! Try to set an unknown log level {:s}'.format(level))
         yield
     else:
-        known_roots = [logging.getLogger(l) for l in roots]
-        known_levels = [l.level for l in known_roots]
-        for a_logger in known_roots:
-            a_logger.setLevel(thislevel)
+        with _logging_threading_lock:
+            known_loggers = [logging.getLogger(l) for l in roots | lognames]
+            known_levels = [l.level for l in known_loggers]
+            for a_logger in known_loggers:
+                a_logger.setLevel(logging.NOTSET)
+            previous_r_logger_level = _logging_root.level
+            _logging_root.setLevel(thislevel)
         try:
             yield
         finally:
-            for a_logger, level in zip(known_roots, known_levels):
-                a_logger.setLevel(level)
+            with _logging_threading_lock:
+                _logging_root.setLevel(previous_r_logger_level)
+                for a_logger, a_level in zip(known_loggers, known_levels):
+                    a_logger.setLevel(a_level)
 
 
 @contextlib.contextmanager
@@ -143,43 +154,33 @@ def contextboundRedirectStdout(outputs=None):
     """Within this context manager, redirect all the outputs to a StringIO object."""
     if outputs is None:
         outputs = six.StringIO()
-    # Tweak the default console
-    global console
-    prev_console = console
-    console = logging.StreamHandler(stream=outputs)
-    console.setLevel(logging.DEBUG)
-    console.setFormatter(formats['default'])
-    # Tweak the various root loggers
-    roots_todo = dict()
-    for lname in roots:
-        alogger = logging.getLogger(lname)
-        shandlers = [h for h in alogger.handlers
-                     if (isinstance(h, logging.StreamHandler) and
-                         h.stream in (sys.stderr, sys.stdout))]
-
-        for ahandler in shandlers:
-            alogger.removeHandler(ahandler)
-        outputs_handler = logging.StreamHandler(stream=outputs)
-        outputs_handler.setFormatter(shandlers[0].formatter)
-        outputs_handler.setLevel(max([h.level for h in shandlers]))
-        alogger.addHandler(outputs_handler)
-        roots_todo[alogger] = (shandlers, outputs_handler)
+    with _logging_threading_lock:
+        # Tweak the root logger
+        r_handlers = dict()
+        r_handlers[_logging_root] = list(_logging_root.handlers)
+        for a_handler in r_handlers[_logging_root]:
+            _logging_root.removeHandler(a_handler)
+        for a_logger in [logging.getLogger(n) for n in roots | lognames]:
+            r_handlers[a_logger] = list(a_logger.handlers)
+            for a_handler in r_handlers[a_logger]:
+                a_logger.removeHandler(a_handler)
+        # Create a new dedicated console
+        st_console = logging.StreamHandler(stream=outputs)
+        st_console.setLevel(default_console.level)
+        st_console.setFormatter(default_console.formatter)
+        # Make the switch to this new default console
+        _logging_root.addHandler(st_console)
     try:
         yield outputs
     finally:
-        # Restore the previous default console
-        for lname in roots:
-            alogger = logging.getLogger(lname)
-            shandlers = [h for h in alogger.handlers if h is console]
-            for ahandler in shandlers:
-                alogger.removeHandler(console)
-                alogger.addHandler(prev_console)
-        console = prev_console
-        # Restore all the other stream loggers
-        for alogger, (shandlers, outputs_handler) in roots_todo.items():
-            alogger.removeHandler(outputs_handler)
-            for ahandler in shandlers:
-                alogger.addHandler(ahandler)
+        # Revert back to the previous handlers
+        with _logging_threading_lock:
+            _logging_root.removeHandler(st_console)
+            for a_handler in r_handlers[_logging_root]:
+                _logging_root.addHandler(a_handler)
+            for a_logger in [logging.getLogger(n) for n in roots | lognames]:
+                for a_handler in r_handlers.get(a_logger, ()):
+                    a_logger.addHandler(a_handler)
 
 
 def fdecoGlobalLevel(level):
@@ -211,18 +212,23 @@ def unittestGlobalLevel(level):
 
         else:
             def setUp(self):
-                self._log_known_roots = [logging.getLogger(l) for l in roots]
-                self._log_known_levels = [l.level for l in self._log_known_roots]
-                for a_logger in self._log_known_roots:
-                    a_logger.setLevel(thislevel)
+                with _logging_threading_lock:
+                    self._log_known_loggers = [logging.getLogger(l) for l in roots | lognames]
+                    self._log_known_levels = [l.level for l in self._log_known_loggers]
+                    for a_logger in self._log_known_loggers:
+                        a_logger.setLevel(logging.NOTSET)
+                    self._log_r_logger_level = _logging_root.level
+                    _logging_root.setLevel(thislevel)
                 if orig_setUp is not None:
                     orig_setUp(self)
             if orig_setUp:
                 setUp.__doc__ = orig_setUp.__doc__
 
             def tearDown(self):
-                for a_logger, a_level in zip(self._log_known_roots, self._log_known_levels):
-                    a_logger.setLevel(a_level)
+                with _logging_threading_lock:
+                    _logging_root.setLevel(self._log_r_logger_level)
+                    for a_logger, a_level in zip(self._log_known_loggers, self._log_known_levels):
+                        a_logger.setLevel(a_level)
                 if orig_tearDown is not None:
                     orig_tearDown(self)
             if orig_tearDown:
@@ -237,18 +243,30 @@ def unittestGlobalLevel(level):
 
 # OTHER UTILITY METHODS
 
-def setRootLogger(logger, level=logging.INFO):
-    """Set appropriate Handler and Console to a top level logger."""
-    logger.setLevel(level)
-    logger.addHandler(console)
-    logger.addFilter(LoggingFilter(name=logger.name))
-    logger.propagate = False
+def setRootLogger(logger):
+    """Set appropriate Handler and Console t a top level logger."""
+    logger.addFilter(PromptAwareLoggingFilter(name=logger.name))
     roots.add(logger.name)
+    # If need be, initialise the root logger
+    if not _logging_root.handlers:
+        # This means that the root logger is not yet initialised
+        # (basicConfig or equivalent not called)
+        _logging_root.addHandler(default_console)
+        _logging_root.setLevel(logging.INFO)
+    if _logging_root.level is logging.NOTSET:
+        # A rather odd case...
+        _logging_root.setLevel(logging.INFO)
     return logger
 
 
 def setLogMethods(logger, methods=('debug', 'info', 'warning', 'error', 'critical')):
-    """Reset some loggers methods with methods from an external logger."""
+    """Reset some loggers methods with methods from an external logger.
+
+    :note: This method is realy disturbing. Its use won't be allowed anymore
+           with Python3
+    """
+    if not six.PY2:
+        raise RuntimeError('The ``setLogMethod`` is deprecated.')
     for modname in lognames:
         thislog = logging.getLogger(modname)
         for logmethod in methods:
@@ -270,7 +288,7 @@ def getActualLevel(level):
 # OTHER UTILITY CLASSES
 
 # A hook filter (optional)
-class LoggingFilter(logging.Filter):
+class PromptAwareLoggingFilter(logging.Filter):
     """Add module name to record."""
 
     def filter(self, record):

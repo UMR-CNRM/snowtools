@@ -9,33 +9,18 @@ Scripts
 Research scripts
 ----------------
 
-Get simulation files
-^^^^^^^^^^^^^^^^^^^^
+.. toctree::
+   :maxdepth: 2
 
-Reanalysis
-""""""""""
+   scripts-extract-vortex.rst
+   scripts-extract-obs.rst
+   scripts-snowmip.rst
+   script_create_forcing.rst
 
-.. include:: ./autoscripts/scripts--get_reanalysis.rst
-
-Reforecast
-""""""""""
-
-.. automodule:: scripts.extract.vortex.get_reforecast
-   :members:
-
-Escroc
-""""""
-
-.. include:: ./autoscripts/scripts--get_escroc.rst
-
-SnowMIP runs and post-processing
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-See ``scripts/post_snowmip.py`` and ``scripts/ESM_snowmip.py``.
 
 Operational scripts
 -------------------
 
 .. todo::
    
-   Move opertaional scripts into scripts/ and document them !
+   Move operational scripts into scripts/ and document them !

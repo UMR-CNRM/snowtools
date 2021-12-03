@@ -15,12 +15,10 @@ Functions
 ---------
 
 .. autofunction:: printstatus
-
 .. autofunction:: query_yes_no_quit
-
 .. autofunction:: print_tablelike
-
 .. autofunction:: join_list_in_proper_english
+.. autofunction:: dict_as_str
 
 ..  Exceptions
 .. ----------

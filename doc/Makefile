@@ -27,7 +27,7 @@ SCRIPTHELP_LIST = $(shell cut -d ' ' -f 1 $(SCRIPTHELPFILE))
 SCRIPTHELP_DONE = $(patsubst %.py, $(SCRIPTSHELPDESTDIR)%.rst,$(subst /,--,$(SCRIPTHELP_LIST)))
 GENSCRIPTHELP   = bash scripts/genscripthelp.sh
 SCRIPTSHELPDESTDIR = source/code/autoscripts/
-SCRIPTHELPSRCDIR   = ../
+SCRIPTHELPSRCDIR   = ../snowtools/
 
 clean-scripthelp:
 	rm -rf $(SCRIPTSHELPDESTDIR)/*
@@ -39,12 +39,12 @@ $(SCRIPTSHELPDESTDIR)%.rst: $(subst --,/,$(patsubst $(SCRIPTSHELPDESTDIR)%.rst, 
 	@# Create directory if not exist
 	@mkdir -p $(SCRIPTSHELPDESTDIR)
 	@# Introduction
-	@echo -e "Script \`\`$(subst --,/,$(patsubst $(SCRIPTSHELPDESTDIR)%.rst, %.py, $@))\`\` help:\n\n" > $@
-	@echo -e ".. code-block:: none\n" >> $@
+	@echo "Script \`\`$(subst --,/,$(patsubst $(SCRIPTSHELPDESTDIR)%.rst,%.py,$@))\`\` help:\n\n" > $@
+	@echo ".. code-block:: none\n" >> $@
 	@# Get -h, remove vortex import messages and indent correctly for ResT
 	@$(PYTHON) $(subst --,/,$(patsubst $(SCRIPTSHELPDESTDIR)%.rst, $(SCRIPTHELPSRCDIR)%.py, $@)) -h | \
 	    sed -e 's/^ *Vortex.*\(loaded\|completed\) (.*, at [0-9:]* )$$//' | sed -e 's/^/   /' >> $@
-	@echo -e "\n\n" >> $@
+	@echo "\n\n" >> $@
 
 
 #######################################################################
