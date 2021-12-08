@@ -8,6 +8,7 @@ from tkinter import messagebox
 import logging
 
 import numpy as np
+import pdb
 
 from snowtools.plots.stratiprofile import proreader
 
@@ -91,7 +92,6 @@ class ProPlotterApplication(tk.Frame):
         self.master.bind('<Control-q>', self.close_window)
 
         self.update_idletasks()
-        print(self.winfo_width(), self.winfo_height())
 
 
     def close_window(self, *args, **kwargs):
@@ -462,9 +462,6 @@ class ProPlotterMain(tk.Frame):
         self.Canevas = FigureCanvasTkAgg(self.fig1, self)
 
         self.update_idletasks()
-        print(self.winfo_width())
-        print(self.winfo_height())
-        #STOP ICI: idée pour plus tard pour le self.pack: se baser sur le info_width du master
 
         self.toberemoved = tk.Label(self, text='Plotting area')
         self.toberemoved.pack()
@@ -476,6 +473,18 @@ class ProPlotterMain(tk.Frame):
     def ready_to_plot(self):
         self.fig1, self.ax1 = plt.subplots(1, 1, sharex=True, sharey=True)
         self.Canevas = FigureCanvasTkAgg(self.fig1, self)
+        self.toberemoved = tk.Label(self, text='Plotting area')
+        self.toberemoved.pack()
+
+    def ready_to_plot_2_graphs(self):
+        self.first_profil = True
+        self.fig1, (self.ax1, self.ax2) = plt.subplots(ncols=2, gridspec_kw={'width_ratios': [2, 1]}, sharex=False, sharey=True)
+        self.ax3 = self.ax2.twiny()
+        self.Canevas = FigureCanvasTkAgg(self.fig1, self)
+        '''self.fig1, self.ax1 = plt.subplots(1, 1, sharex=True, sharey=True)
+        self.fig2, self.ax2 = plt.subplots(1, 1, sharex=True, sharey=True)
+        self.Canevas1 = FigureCanvasTkAgg(self.fig1, self)
+        self.Canevas2 = FigureCanvasTkAgg(self.fig2, self)'''
         self.toberemoved = tk.Label(self, text='Plotting area')
         self.toberemoved.pack()
 
@@ -515,10 +524,47 @@ class ProPlotterController(abc.ABC):
         self.master = master
         self.plotting_function = None
 
+
+
     def plot(self):
         """
         The plot machinery
         """
+        def motion(event):
+            if event.inaxes == self.master.main.ax1:
+                # print(event.xdata)
+                # print(event.ydata)
+
+                data_date = datatoplot2[int(event.xdata), :]
+                dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, point, fillnan=0.)
+                dz_date = dztoplot[int(event.xdata), :]
+                topdz=np.max(np.sum(dztoplot[:,:],1))
+
+                self.master.main.ax2.clear()
+                self.master.main.ax3.clear()
+
+                if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
+                    grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.)
+                    grain_date = grain[int(event.xdata), :]
+                    # print('profil interactif complet')
+
+                    profilPlot.interactifProfilComplet(self.master.main.ax2, self.master.main.ax3, data_date, dz_date,
+                                                       grain_date, limitplot2, top=topdz, hauteur=event.ydata,
+                                                       cbar_show=self.master.main.first_profil, bool_layer=True)
+                else:
+                    print('profil interactif pas complet')
+                    # profilPlot.interactifProfil(self.master.main.ax2, datatoplot2)
+                # self.pro.plot_profil_complet(self.ax2, self.ax3, self.variable_souris, date_souris, hauteur_souris,
+                # cbar_show=self.first_profil, bool_layer=self.bool_layer)
+
+                # self.pro.plot_profil(self.ax2, self.variable_souris, date_souris, hauteur_souris,
+                # bool_layer=self.bool_layer)
+                '''self.master.main.Canevas2.draw()
+                self.master.main.Canevas2.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)'''
+                self.master.main.first_profil = False
+                self.master.main.Canevas.draw()
+                self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
         if self.master.fileobj is None:
             return
         var_1 = self.master.choices.variables_w.var_1
@@ -540,21 +586,38 @@ class ProPlotterController(abc.ABC):
         self.master.controls.update_text(text)
 
         # TODO: Actually do the plot here <13-09-21, Léo Viallon-Galinier> #
-        toto = [x for x in self.master.fileobj.variables_desc.keys() ]
-        for i in toto:
-            if self.master.fileobj.variables_desc[i]['full_name'] == var_1:
-                toto_1 = i
+        vartoplot1 = self.master.fileobj.variable_desc(var_1)
+        vartoplot2 = self.master.fileobj.variable_desc(var_2)
 
-        if 'snow_layer' in self.master.fileobj.variables_desc[toto_1]['dimensions']:
+        # how to check if interactiveProfile is complete
+        if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
+            print('ok there is snowtype')
+
+        if vartoplot1['name'] in self.master.fileobj.variables_snl:
+            self.master.main.clear()
+            self.master.main.ready_to_plot_2_graphs()
+            self.master.main.toberemoved.destroy()
+            dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz,point, fillnan=0.)
+            datatoplot1 = self.master.fileobj.get_data(vartoplot1['name'], point)
+            datatoplot2 = self.master.fileobj.get_data(vartoplot2['name'], point)
+            limitplot2 = self.master.fileobj.limits_variable(vartoplot2['name'])
+
+            profilPlot.saisonProfil(self.master.main.ax1, dztoplot, datatoplot1)
+            self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
+            self.master.main.Canevas.draw()
+            self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+            '''self.master.main.Canevas1.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+            self.master.main.Canevas2.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)'''
+        else:
             self.master.main.clear()
             self.master.main.ready_to_plot()
             self.master.main.toberemoved.destroy()
-            #self.master.main.Canevas.get_tk_widget().place_forget()
-            youkaidi_dz = self.master.fileobj.get_data(self.master.fileobj.variable_dz,point, fillnan=0.)
-            youkaida_data = self.master.fileobj.get_data(toto_1, point)
-            profilPlot.plot_profil(self.master.main.ax1, youkaidi_dz, youkaida_data)
+            datatoplot1 = self.master.fileobj.get_data(vartoplot1['name'], point)
+            profilPlot.saison1d(self.master.main.ax1, datatoplot1)
             self.master.main.Canevas.draw()
-            self.master.main.Canevas.get_tk_widget().pack()
+            self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+
 
 
     def reset(self):

@@ -105,7 +105,6 @@ class reader(abc.ABC):
         v = self._get_varname(varname)
         return self.variables_desc[v] if v in self.variables_desc else None
 
-
     @property
     @abc.abstractmethod
     def variables_t(self):
@@ -344,6 +343,7 @@ class proreader(reader):
 
         self._variables = {}    # Plottable variables with description
         self._variables_t = []  # Variables with time dimension
+        self._variables_snl = []  # Variables with snow_layer dimension
         self._variables_p = {}  # Variables for point selection
         self._variables_p_values = {}
         self._npoints = 0
@@ -389,9 +389,14 @@ class proreader(reader):
                     if 'time' in dimensions:
                         self._variables_t.append(v)
 
+                    # Identify variables with snow-layer dimension
+                    if 'snow_layer' in dimensions:
+                        self._variables_snl.append(v)
+
                 # Sorting variables by name
                 self._variables = {key: self._variables[key] for key in sorted(self._variables.keys())}
                 self._variables_t.sort()
+                self._variables_snl.sort()
                 self._variables_p = {key: self._variables_p[key] for key in sorted(self._variables_p.keys())}
 
                 # Add the point dimension for selection
@@ -566,6 +571,14 @@ class proreader(reader):
         :rtype: list of strings
         """
         return self._variables_t
+
+    @property
+    def variables_snl(self):
+        """
+        The list of all available variables with snow-layer dimension
+        :rtype: list of strings
+        """
+        return self._variables_snl
 
     @property
     def variable_dz(self):
