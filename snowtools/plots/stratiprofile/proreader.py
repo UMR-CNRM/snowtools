@@ -11,7 +11,7 @@ import numpy as np
 logger = logging.getLogger()
 
 
-def read_file(filename,  *args, **kwargs):
+def read_file(filename, *args, **kwargs):
     """
     Instantiate a reader-like class for the given file.
     Guess the correct reader depending on the file type and content.
@@ -437,9 +437,6 @@ class proreader(reader):
         for v in self._variables:
             if 'full_name' in self._variables[v]:
                 _association_names[self._variables[v]['full_name']] = v
-#        for v in self._variables_p:
-#            if 'full_name' in self._variables_p[v]:
-#                _association_names[self._variables_p[v]['full_name']] = v
         return _association_names
 
     @property
