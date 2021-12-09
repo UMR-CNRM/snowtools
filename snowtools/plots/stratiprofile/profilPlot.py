@@ -258,67 +258,37 @@ def saison1d(ax, value, myrange=None, legend=None, color='b.'):
     ax.plot(value, color)
 
 
-def interactifProfil(axe, var, date=None, hauteur=None, color='b', cbar_show=False, top=None, bool_layer=False):
-    date = self.parsedate(date, self.date, self.date[self.ntime - 1])
-    date = self.date[self.date >= date][0]
-    ep = self.var[self.var_utile][self.date == date]
-    epc = np.cumsum(ep)
-
-    pointsx = np.zeros(2 * self.nsnowlayer + 2)
-    pointsx[2:2 * self.nsnowlayer + 2:2] = epc
-    pointsx[3:2 * self.nsnowlayer + 2:2] = epc
-    pointsx[0:2] = 0
-    pointsy = np.zeros(2 * self.nsnowlayer + 2)
-    pointsy[1:2 * self.nsnowlayer:2] = self.var[var][self.date == date]
-    pointsy[2:2 * self.nsnowlayer + 1:2] = self.var[var][self.date == date]
-
-    pointsy = np.delete(pointsy, 0)
-    pointsx = np.delete(pointsx, 0)
-
-    if var == 'SNOWTEMP' or var == 'tsnl':
-        pointsy = np.where(pointsy > MIN_temp, pointsy, zero_C)
-    if 'SNOWIMP' in var:
-        pointsy = np.where(pointsy > 10 ** (-10), pointsy, 10 ** (-10))
-        pointsy = np.where(pointsy > 0, np.log10(pointsy), -10)
-
-    axe.plot(pointsy[::-1], np.subtract(pointsx[-1], pointsx[::-1]), color=color)
-    # axe.set(title=date.strftime('%Y-%m-%d %Hh'))
-    if 'SNOWIMP' in var:
-        axe.set_xlabel('log10 for x    ' + date.strftime('%Y-%m-%d %Hh'))
-    else:
-        axe.set_xlabel(date.strftime('%Y-%m-%d %Hh'))
-
-    axe.xaxis.set_major_locator(ticker.MaxNLocator(5))
-    plt.setp(axe.xaxis.get_majorticklabels(), size='small')
-
-    Max = np.nanmax(self.var[var][self.date == date]) if np.nanmax(self.var[var][self.date == date]) > 0 else 1
-    Min = np.nanmin(self.var[var][self.date == date]) if np.nanmin(self.var[var][self.date == date]) < 0 else 0
-
-    if var in dico.keys():
-        Max = np.nanmax(self.var[var][self.date == date]) if np.nanmax(self.var[var][self.date == date]) > \
-                                                             dico[var][1] else dico[var][1]
-        Min = np.nanmin(self.var[var][self.date == date]) if np.nanmax(self.var[var][self.date == date]) < \
-                                                             dico[var][0] else dico[var][0]
-    axe.set_xlim(Min, Max)
-
-    if bool_layer:
-        axe.axhline(y=hauteur, color='black', linestyle='-')
-
-    if top is None:
-        Max_y = ProReaderAbstract.get_topplot(self)
-    else:
-        Max_y = top
-    axe.set_ylim(0, Max_y)
-
-
-def interactifProfilComplet(axe, axe2, value, value_dz, value_grain, limit, date=None, hauteur=None, color='b', cbar_show=False, top=200,
-                        bool_layer=False):
-
-    #axe2 = axe.twiny()
-
-    ep = value_dz
-    epc = np.cumsum(ep)
-
+def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xlimit=(None, None), ylimit=200,
+               hauteur=None, color='b', cbar_show=False, date=None, **kwargs):
+    """
+    Trace le profil de la variable avec type_de_grain et résistance si présent. Ce profil est effectué à une date fixée.
+    :param axe: figure axis
+    :type axe: matplotlib axis
+    :param axe2: figure axis (there are two axis on same plot: one for the variable, the other for snowgrain and RAM)
+    :type axe2: matplotlib axis
+    :param value: variable to be plot
+    :type value: numpy array
+    :param value_dz: thickness value for all the layers considered
+    :type value_dz: numpy array
+    :param value_grain: grain type for each layer
+    :type value_grain: numpy array
+    :param value_ram: Résistance à l'enfoncement (traduction à trouver)
+    :type value_ram: numpy array
+    :param xlimit: give the x-limit for the variable (from limits_variable in proreader)
+    :type xlimit: tuple
+    :param ylimit: give the upper y-limit for the variable (= max of thickness in all the season normally)
+    :type ylimit: float
+    :param hauteur: y-value for a black line in order to better see the interaction with seasonal profile
+    :type hauteur: float
+    :param color: color name
+    :type color: str
+    :param cbar_show: show the colorbar for grain type
+    :type color: boolean
+    :param date: legend for the date (to be changed in legend or title)
+    :type date: str
+    """
+    # Créer les épaisseurs cumulées
+    epc = np.cumsum(value_dz)
     # Tracé du profil
     pointsx = np.zeros(2 * len(value) + 2)
     pointsx[2:2 * len(value) + 2:2] = epc
@@ -336,7 +306,7 @@ def interactifProfilComplet(axe, axe2, value, value_dz, value_grain, limit, date
     if 'SNOWIMP' in var:
         pointsy = np.where(pointsy > 10 ** (-10), pointsy, 10 ** (-10))
         pointsy = np.where(pointsy > 0, np.log10(pointsy), -10)'''
-    axe.plot(pointsy[::-1], np.subtract(pointsx[-1], pointsx[::-1]), color=color)
+    axe.plot(pointsy[::-1], np.subtract(pointsx[-1], pointsx[::-1]), color=color, linewidth=2)
     if date is not None:
         axe.set_xlabel(date.strftime('%Y-%m-%d %Hh'))
     axe.set_title('RAM - Snowgrain', y=1.04)
@@ -344,63 +314,64 @@ def interactifProfilComplet(axe, axe2, value, value_dz, value_grain, limit, date
     axe.xaxis.set_major_locator(ticker.MaxNLocator(6))
     plt.setp(axe.xaxis.get_majorticklabels(), size='small')
 
-    Max = np.nanmax(value) if np.nanmax(value) > 0 else 0
-    Min = np.nanmin(value) if np.nanmin(value) < 0 else 0
-
-    if limit is not (None, None):
-        Max = np.nanmax(value) if np.nanmax(value) > limit[1] else limit[1]
-        Min = np.nanmin(value) if np.nanmin(value) < limit[0] else limit[0]
+    if xlimit is not (None, None):
+        Max = xlimit[1]
+        Min = xlimit[0]
+    else:
+        Max = 0
+        Min = 0
+    if not np.isnan(value).all():
+        Max = np.nanmax(value) if np.nanmax(value) > Max else Max
+        Min = np.nanmin(value) if np.nanmin(value) < Min else Min
     axe.set_xlim(Min, Max)
+    axe.set_ylim(0, ylimit)
 
-    if bool_layer:
+    if hauteur is not None:
         axe.axhline(y=hauteur, color='black', linestyle='-')
 
-    axe.set_ylim(0, top)
-
     # Tracé du graphe SNOWTYPE / SNOWRAM
-    epc_inv = epc[::-1].ravel()
-    bottom_y = np.subtract(np.array(epc_inv[0]), np.array(epc_inv))
-    bottom_y = bottom_y[(ep > 0).ravel()[::-1]]
-    top_y = np.append(bottom_y[1:], epc_inv[0])
+    if value_grain is not None:
+        epc_inv = epc[::-1].ravel()
+        bottom_y = np.subtract(np.array(epc_inv[0]), np.array(epc_inv))
+        bottom_y = bottom_y[(value_dz > 0).ravel()[::-1]]
+        top_y = np.append(bottom_y[1:], epc_inv[0])
 
-    '''if 'SNOWRAM' in self.var:
-        left_x = self.var['SNOWRAM'][self.date == date].ravel()[::-1]
-        left_x = left_x[(ep > 0).ravel()[::-1]]
-        left_x = np.where(left_x > 0.5, left_x, 0.5)
-    else:
-        left_x = np.zeros(shape=bottom_y.shape[0], dtype='int') + 30'''
-    left_x = np.zeros(shape=bottom_y.shape[0], dtype='int') + 30
-    right_x = np.zeros(shape=bottom_y.shape[0], dtype='int')
+        if value_ram is not None:
+            left_x = value_ram.ravel()[::-1]
+            left_x = left_x[(value_dz > 0).ravel()[::-1]]
+            left_x = np.where(left_x > 0.5, left_x, 0.5)
+        else:
+            left_x = np.zeros(shape=bottom_y.shape[0], dtype='int') + 30
+        right_x = np.zeros(shape=bottom_y.shape[0], dtype='int')
 
-    vertices = np.zeros(shape=(bottom_y.shape[0], 4, 2))
-    vertices[:, 0, 0] = right_x
-    vertices[:, 0, 1] = bottom_y
-    vertices[:, 1, 0] = right_x
-    vertices[:, 1, 1] = top_y
-    vertices[:, 2, 0] = left_x
-    vertices[:, 2, 1] = top_y
-    vertices[:, 3, 0] = left_x
-    vertices[:, 3, 1] = bottom_y
+        vertices = np.zeros(shape=(bottom_y.shape[0], 4, 2))
+        vertices[:, 0, 0] = right_x
+        vertices[:, 0, 1] = bottom_y
+        vertices[:, 1, 0] = right_x
+        vertices[:, 1, 1] = top_y
+        vertices[:, 2, 0] = left_x
+        vertices[:, 2, 1] = top_y
+        vertices[:, 3, 0] = left_x
+        vertices[:, 3, 1] = bottom_y
 
-    cmap = Dictionnaries.grain_colormap
-    bounds = np.linspace(-0.5, 14.5, 16)
-    norm = BoundaryNorm(bounds, cmap.N)
-    vmin = -0.5
-    vmax = 14.5
+        cmap = Dictionnaries.grain_colormap
+        bounds = np.linspace(-0.5, 14.5, 16)
+        norm = BoundaryNorm(bounds, cmap.N)
+        vmin = -0.5
+        vmax = 14.5
 
-    rect = collections.PolyCollection(vertices[::-1],
-                                      array=value_grain[(ep > 0)].ravel(),
+        rect = collections.PolyCollection(vertices[::-1], array=value_grain[(value_dz > 0)].ravel(),
                                       cmap=cmap, norm=norm, edgecolors='none', alpha=0.7)
 
-    rect.set_clim(vmin, vmax)
-    axe2.add_collection(rect)
-    axe2.xaxis.set_major_locator(ticker.MaxNLocator(5))
-    axe2.set_xlim(30, 0)
-    axe2.set_zorder(2)
+        rect.set_clim(vmin, vmax)
+        axe2.add_collection(rect)
+        axe2.xaxis.set_major_locator(ticker.MaxNLocator(5))
+        axe2.set_xlim(30, 0)
+        axe2.set_zorder(2)
 
-    # Tracé éventuel de la colorbar
-    if cbar_show:
-        cbar = plt.colorbar(rect, ax=[axe, axe2])
-        labels = Dictionnaries.MEPRA_labels
-        cbar.set_ticks(np.arange(np.shape(labels)[0]))
-        cbar.ax.set_yticklabels(labels)
+        # Tracé éventuel de la colorbar
+        if cbar_show:
+            cbar = plt.colorbar(rect, ax=[axe, axe2])
+            labels = Dictionnaries.MEPRA_labels
+            cbar.set_ticks(np.arange(np.shape(labels)[0]))
+            cbar.ax.set_yticklabels(labels)

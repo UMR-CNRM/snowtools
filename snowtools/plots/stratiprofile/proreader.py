@@ -311,6 +311,11 @@ class proreader(reader):
             }
     _default_colorbar = 'viridis'
 
+    _change_scale_defaults = {
+        'SNOWIMP1': 'echelle_log',
+        'SNOWIMP2': 'echelle_log',
+    }
+
     _selection_point_defaults = {
             'xx': {'type': 'float'},
             'yy': {'type': 'float'},
@@ -319,6 +324,7 @@ class proreader(reader):
     _variables_default = ['SNOWTYPE', 'SNOWSSA']
     _variables_dz = ['SNOWDZ', 'Dsnw']
     _variables_grain = ['SNOWTYPE']
+    _variables_ram = ['SNOWRAM']
 
     _name_variable_dz = ['']
     _name_variable_t = ['time']
@@ -343,7 +349,7 @@ class proreader(reader):
 
         self._variables = {}    # Plottable variables with description
         self._variables_t = []  # Variables with time dimension
-        self._variables_snl = []  # Variables with snow_layer dimension
+        self._variables_snl = {}  # Variables with snow_layer dimension
         self._variables_p = {}  # Variables for point selection
         self._variables_p_values = {}
         self._npoints = 0
@@ -391,13 +397,13 @@ class proreader(reader):
 
                     # Identify variables with snow-layer dimension
                     if 'snow_layer' in dimensions:
-                        self._variables_snl.append(v)
+                        self._variables_snl[v] = vardesc
 
                 # Sorting variables by name
                 self._variables = {key: self._variables[key] for key in sorted(self._variables.keys())}
-                self._variables_t.sort()
-                self._variables_snl.sort()
+                self._variables_snl = {key: self._variables_snl[key] for key in sorted(self._variables_snl.keys())}
                 self._variables_p = {key: self._variables_p[key] for key in sorted(self._variables_p.keys())}
+                self._variables_t.sort()
 
                 # Add the point dimension for selection
                 self._variables_p_values['point'] = np.arange(self._npoints)
@@ -575,8 +581,8 @@ class proreader(reader):
     @property
     def variables_snl(self):
         """
-        The list of all available variables with snow-layer dimension
-        :rtype: list of strings
+        The dict associating each variable with snow-layer to its metadata (dimensions,
+        rank (1 or 2), full_name, dtype)
         """
         return self._variables_snl
 
@@ -614,6 +620,18 @@ class proreader(reader):
         :rtype: str
         """
         for v in self._variables_grain:
+            if v in self._variables:
+                return v
+        return None
+
+    @property
+    def variable_ram(self):
+        """
+        The variable containing RAM
+        :returns: variable name
+        :rtype: str
+        """
+        for v in self._variables_ram:
             if v in self._variables:
                 return v
         return None
@@ -744,6 +762,10 @@ class proreader(reader):
 
         See documentation of get_data for arguments description.
         """
+        if type(begin) == int:
+            begin = self.get_time()[begin]
+        if type(end) == int:
+            end = self.get_time()[end]
 
         v = self._get_varname(varname)
 
@@ -753,11 +775,11 @@ class proreader(reader):
 
         # Date filtering
         if begin is not None and end is not None:
-            select = (self._date >= begin) * (self._date <= end)
+            select = (self._time >= begin) * (self._time <= end)
         elif begin is not None:
-            select = self._date >= begin
+            select = self._time >= begin
         elif end is not None:
-            select = self._date <= end
+            select = self._time <= end
         else:
             select = ...
         data = data[select]
@@ -778,8 +800,8 @@ class proreader(reader):
         :param fillnan: Whether or not to fill the nan values. Defaults to False (do not fill nan values).
                         All other value will be used to fill the data.
         :param members: If not false, use `~reader.get_data_members` instead. See corresponding documentation.
-        :param begin: A begin date (remove data before this date)
-        :param end: A end date (remove data after this date)
+        :param begin: A begin date (remove data before this date) or an integer
+        :param end: A end date (remove data after this date) or an integer
         :returns: The selected data
         :rtype: numpy.array
         """

@@ -258,6 +258,9 @@ class ProPlotterChoicesBar_Variables():
             self.variables_info = self.master.master.fileobj.variables_desc
             variables_list = [v['full_name'] if 'full_name' in v else k for k, v in self.variables_info.items()]
 
+            variables_with_snl = [v['full_name'] if 'full_name' in v else k for k, v in
+                                  self.master.master.fileobj.variables_snl.items()]
+
             self.label1 = tk.Label(self.frame, text='Variable:')
             self.label1.pack()
             self.choice_var_1 = ttk.Combobox(self.frame, state='readonly', values=variables_list,
@@ -266,7 +269,7 @@ class ProPlotterChoicesBar_Variables():
             self.choice_var_1.pack()
             self.label2 = tk.Label(self.frame, text='Variable profil:')
             self.label2.pack()
-            self.choice_var_2 = ttk.Combobox(self.frame, state='readonly', values=variables_list,
+            self.choice_var_2 = ttk.Combobox(self.frame, state='readonly', values=variables_with_snl,
                                              width=self.master.WIDTH)
             self.choice_var_2.bind('<<ComboboxSelected>>', self.update_var_2)
             self.choice_var_2.pack()
@@ -476,15 +479,12 @@ class ProPlotterMain(tk.Frame):
         self.toberemoved = tk.Label(self, text='Plotting area')
         self.toberemoved.pack()
 
-    def ready_to_plot_2_graphs(self):
+    def ready_to_plot_2_graphs(self, same_y=False):
         self.first_profil = True
-        self.fig1, (self.ax1, self.ax2) = plt.subplots(ncols=2, gridspec_kw={'width_ratios': [2, 1]}, sharex=False, sharey=True)
+        self.fig1, (self.ax1, self.ax2) = plt.subplots(ncols=2, gridspec_kw={'width_ratios': [2, 1]},
+                                                       sharex=False, sharey=same_y)
         self.ax3 = self.ax2.twiny()
         self.Canevas = FigureCanvasTkAgg(self.fig1, self)
-        '''self.fig1, self.ax1 = plt.subplots(1, 1, sharex=True, sharey=True)
-        self.fig2, self.ax2 = plt.subplots(1, 1, sharex=True, sharey=True)
-        self.Canevas1 = FigureCanvasTkAgg(self.fig1, self)
-        self.Canevas2 = FigureCanvasTkAgg(self.fig2, self)'''
         self.toberemoved = tk.Label(self, text='Plotting area')
         self.toberemoved.pack()
 
@@ -535,32 +535,33 @@ class ProPlotterController(abc.ABC):
                 # print(event.xdata)
                 # print(event.ydata)
 
-                data_date = datatoplot2[int(event.xdata), :]
-                dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, point, fillnan=0.)
-                dz_date = dztoplot[int(event.xdata), :]
-                topdz=np.max(np.sum(dztoplot[:,:],1))
+                xindex = min(int(event.xdata), size_x-1)
+                data_date = datatoplot2[xindex, :]
+                dz_date = dztoplot[xindex, :]
+                if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
+                    grain_date = grain[xindex, :]
+                else:
+                    grain_date = None
+
+                if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
+                    ram_date = ram[xindex, :]
+                else:
+                    ram_date = None
+
+                if trace_hauteur == None:
+                    hauteur=None
+                else:
+                    hauteur=event.ydata
+
+                '''test_dz_date = self.master.fileobj.get_data(self.master.fileobj.variable_dz, point, fillnan=0.,
+                                                            begin = int(event.xdata), end = int(event.xdata))'''
 
                 self.master.main.ax2.clear()
                 self.master.main.ax3.clear()
+                profilPlot.dateProfil(self.master.main.ax2, self.master.main.ax3, data_date, dz_date,
+                                      value_grain=grain_date, value_ram=ram_date, xlimit=limitplot2, ylimit=topdz,
+                                      hauteur=hauteur, cbar_show=self.master.main.first_profil)
 
-                if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
-                    grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.)
-                    grain_date = grain[int(event.xdata), :]
-                    # print('profil interactif complet')
-
-                    profilPlot.interactifProfilComplet(self.master.main.ax2, self.master.main.ax3, data_date, dz_date,
-                                                       grain_date, limitplot2, top=topdz, hauteur=event.ydata,
-                                                       cbar_show=self.master.main.first_profil, bool_layer=True)
-                else:
-                    print('profil interactif pas complet')
-                    # profilPlot.interactifProfil(self.master.main.ax2, datatoplot2)
-                # self.pro.plot_profil_complet(self.ax2, self.ax3, self.variable_souris, date_souris, hauteur_souris,
-                # cbar_show=self.first_profil, bool_layer=self.bool_layer)
-
-                # self.pro.plot_profil(self.ax2, self.variable_souris, date_souris, hauteur_souris,
-                # bool_layer=self.bool_layer)
-                '''self.master.main.Canevas2.draw()
-                self.master.main.Canevas2.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)'''
                 self.master.main.first_profil = False
                 self.master.main.Canevas.draw()
                 self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
@@ -587,37 +588,41 @@ class ProPlotterController(abc.ABC):
 
         # TODO: Actually do the plot here <13-09-21, Léo Viallon-Galinier> #
         vartoplot1 = self.master.fileobj.variable_desc(var_1)
-        vartoplot2 = self.master.fileobj.variable_desc(var_2)
+        datatoplot1 = self.master.fileobj.get_data(vartoplot1['name'], point)
+        snl_names = [v['name'] if 'name' in v else k for k, v in self.master.fileobj.variables_snl.items()]
 
-        # how to check if interactiveProfile is complete
-        if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
-            print('ok there is snowtype')
-
-        if vartoplot1['name'] in self.master.fileobj.variables_snl:
-            self.master.main.clear()
-            self.master.main.ready_to_plot_2_graphs()
-            self.master.main.toberemoved.destroy()
-            dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz,point, fillnan=0.)
-            datatoplot1 = self.master.fileobj.get_data(vartoplot1['name'], point)
-            datatoplot2 = self.master.fileobj.get_data(vartoplot2['name'], point)
-            limitplot2 = self.master.fileobj.limits_variable(vartoplot2['name'])
-
-            profilPlot.saisonProfil(self.master.main.ax1, dztoplot, datatoplot1)
-            self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
-            self.master.main.Canevas.draw()
-            self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-            '''self.master.main.Canevas1.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-            self.master.main.Canevas2.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)'''
-        else:
-            self.master.main.clear()
+        self.master.main.clear()
+        if not self.master.fileobj.variables_snl:
             self.master.main.ready_to_plot()
             self.master.main.toberemoved.destroy()
-            datatoplot1 = self.master.fileobj.get_data(vartoplot1['name'], point)
             profilPlot.saison1d(self.master.main.ax1, datatoplot1)
-            self.master.main.Canevas.draw()
-            self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        else:
+            dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz,point, fillnan=0.)
+            if vartoplot1['name'] in snl_names:
+                self.master.main.ready_to_plot_2_graphs(True)
+                self.master.main.toberemoved.destroy()
+                profilPlot.saisonProfil(self.master.main.ax1, dztoplot, datatoplot1)
+                trace_hauteur = 0
+            else:
+                self.master.main.ready_to_plot_2_graphs()
+                self.master.main.toberemoved.destroy()
+                profilPlot.saison1d(self.master.main.ax1, datatoplot1)
+                trace_hauteur = None
 
+            # usefull for motion
+            vartoplot2 = self.master.fileobj.variable_desc(var_2)
+            datatoplot2 = self.master.fileobj.get_data(vartoplot2['name'], point)
+            limitplot2 = self.master.fileobj.limits_variable(vartoplot2['name'])
+            size_x = dztoplot.shape[0]
+            topdz = np.max(np.sum(dztoplot[:, :], 1))
+            if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
+                grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.)
+            if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
+                ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.)
+            self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
 
+        self.master.main.Canevas.draw()
+        self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
 
     def reset(self):
