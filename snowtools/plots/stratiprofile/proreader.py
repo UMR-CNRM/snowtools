@@ -325,6 +325,7 @@ class proreader(reader):
     _variables_dz = ['SNOWDZ', 'Dsnw']
     _variables_grain = ['SNOWTYPE']
     _variables_ram = ['SNOWRAM']
+    _variables_log = ['SNOWIMP1', 'SNOWIMP2']
 
     _name_variable_dz = ['']
     _name_variable_t = ['time']
@@ -568,6 +569,14 @@ class proreader(reader):
         return self._variables
 
     @property
+    def variables_snl(self):
+        """
+        The dict associating each variable with snow-layer to its metadata (dimensions,
+        rank (1 or 2), full_name, dtype)
+        """
+        return self._variables_snl
+
+    @property
     def variables_t(self):
         """
         The list of all available variables with time dimension
@@ -576,12 +585,12 @@ class proreader(reader):
         return self._variables_t
 
     @property
-    def variables_snl(self):
+    def variables_log(self):
         """
-        The dict associating each variable with snow-layer to its metadata (dimensions,
-        rank (1 or 2), full_name, dtype)
+        The list of all variables that should be plotted with log scale
+        :rtype: list of strings
         """
-        return self._variables_snl
+        return self._variables_log
 
     @property
     def variable_dz(self):

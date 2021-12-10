@@ -21,7 +21,8 @@ import logging
 logger = logging.getLogger()
 
 
-def saisonProfil(ax, dz, value, colormap='viridis', myrange=None, vmin=None, vmax=None, legend=None, cbar_show=True):
+def saisonProfil(ax, dz, value, list_date, colormap='viridis', myrange=None, vmin=None, vmax=None, legend=None,
+                 cbar_show=True):
     """
     Trace le profil de value en fonction du temps avec les epaisseurs reelles de couches
 
@@ -192,6 +193,16 @@ def saisonProfil(ax, dz, value, colormap='viridis', myrange=None, vmin=None, vma
         if legend:
             cbar.set_label(legend)
 
+    def format_ticks(x, pos):
+        x = int(x)
+        x = max(min(len(list_date)-1,x),0)
+        return list_date[x].strftime('%Y-%m-%d')
+
+    formatter = ticker.FuncFormatter(format_ticks)
+    ax.xaxis.set_major_formatter(formatter)
+    ax.xaxis.set_major_locator(ticker.MaxNLocator(4))
+    plt.setp(ax.xaxis.get_majorticklabels(), size='small')
+
 
 def plot_grains1D(ax, dz, value, legend=None, cbar_show=True):
     """
@@ -237,7 +248,7 @@ def plot_grains1D(ax, dz, value, legend=None, cbar_show=True):
         ax.set_xlabel(legend)
 
 
-def saison1d(ax, value, myrange=None, legend=None, color='b.'):
+def saison1d(ax, value, list_date, myrange=None, legend=None, color='b.'):
     """
     Trace la variable demandee en fonction du temps
     :param ax: figure axis
@@ -254,6 +265,16 @@ def saison1d(ax, value, myrange=None, legend=None, color='b.'):
 
     if legend:
         ax.set_xlabel(legend)
+
+    def format_ticks(x, pos):
+        x = int(x)
+        x = max(min(len(list_date)-1,x),0)
+        return list_date[x].strftime('%Y-%m-%d')
+
+    formatter = ticker.FuncFormatter(format_ticks)
+    ax.xaxis.set_major_formatter(formatter)
+    ax.xaxis.set_major_locator(ticker.MaxNLocator(4))
+    plt.setp(ax.xaxis.get_majorticklabels(), size='small')
 
     ax.plot(value, color)
 
@@ -301,17 +322,12 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
     pointsy = np.delete(pointsy, 0)
     pointsx = np.delete(pointsx, 0)
 
-    '''if var == 'SNOWTEMP' or var == 'tsnl':
-        pointsy = np.where(pointsy > MIN_temp, pointsy, zero_C)
-    if 'SNOWIMP' in var:
-        pointsy = np.where(pointsy > 10 ** (-10), pointsy, 10 ** (-10))
-        pointsy = np.where(pointsy > 0, np.log10(pointsy), -10)'''
     axe.plot(pointsy[::-1], np.subtract(pointsx[-1], pointsx[::-1]), color=color, linewidth=2)
     if date is not None:
         axe.set_xlabel(date.strftime('%Y-%m-%d %Hh'))
     axe.set_title('RAM - Snowgrain', y=1.04)
 
-    axe.xaxis.set_major_locator(ticker.MaxNLocator(6))
+    axe.xaxis.set_major_locator(ticker.MaxNLocator(4))
     plt.setp(axe.xaxis.get_majorticklabels(), size='small')
 
     if xlimit is not (None, None):

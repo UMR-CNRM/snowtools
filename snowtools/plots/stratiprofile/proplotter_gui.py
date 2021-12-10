@@ -523,28 +523,121 @@ class ProPlotterController(abc.ABC):
         """
         self.master = master
         self.plotting_function = None
-
+        self.stop_right_click = False
+        self.boolzoom = False
+        self.width_rect = 0.01
+        self.x_start_zoom = 0
+        self.x_end_zoom = 0
+        self.rectangle_choix = None
+        self.dataplot1 = None
+        self.dztoplot = None
+        self.topdz = None
+        self.sizex = None
+        self.timeplot = None
+        self.dataplot2 = None
+        self.grain = None
+        self.ram = None
 
 
     def plot(self):
         """
         The plot machinery
         """
+        # ZOOM
+        def button_press(event):
+            if (event.button > 1):
+                self.stop_right_click = not self.stop_right_click
+                return
+            if (event.inaxes == self.master.main.ax1):
+                self.boolzoom = True
+                self.x_start_zoom = int(event.xdata)
+                bottom, top = self.master.main.ax1.get_ylim()
+                self.rectangle_choix = self.master.main.ax1.add_patch(
+                    matplotlib.patches.Rectangle((self.x_start_zoom, bottom), self.width_rect, top - bottom, alpha=0.1))
+                self.master.main.Canevas.draw()
+
+        def move_press(event):
+            if self.stop_right_click:
+                return
+            if not self.boolzoom:
+                return
+            if (event.inaxes == self.master.main.ax1):
+                self.width_rect = abs(event.xdata - self.x_start_zoom)
+                self.rectangle_choix.set_width(self.width_rect)
+                if event.xdata - self.x_start_zoom < 0:
+                    self.rectangle_choix.set_x(event.xdata)
+                self.master.main.Canevas.draw()
+                self.master.main.Canevas.flush_events()
+
+        def button_release(event):
+            if self.stop_right_click:
+                return
+            if event.button > 1:
+                return
+            if event.inaxes == self.master.main.ax1:
+                self.width_rect = 0.01
+
+                self.x_end_zoom = int(event.xdata)
+                if self.x_start_zoom > self.x_end_zoom:
+                    self.x_start_zoom, self.x_end_zoom = self.x_end_zoom, self.x_start_zoom
+
+                self.dataplot1 = self.dataplot1[self.x_start_zoom:self.x_end_zoom]
+                self.dztoplot = self.dztoplot[self.x_start_zoom:self.x_end_zoom,:]
+                self.size_x = self.dztoplot.shape[0]
+                self.topdz = np.max(np.sum(self.dztoplot[:, :], 1))
+                self.timeplot = self.timeplot[self.x_start_zoom:self.x_end_zoom]
+                self.dataplot2 = self.dataplot2[self.x_start_zoom:self.x_end_zoom,:]
+                if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
+                    self.grain = self.grain[self.x_start_zoom:self.x_end_zoom,:]
+                if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
+                    self.ram = self.ram[self.x_start_zoom:self.x_end_zoom,:]
+
+                self.master.main.fig1.clear()
+                self.master.main.clear()
+                if not self.master.fileobj.variables_snl:
+                    self.master.main.ready_to_plot()
+                    self.master.main.toberemoved.destroy()
+                    profilPlot.saison1d(self.master.main.ax1, self.dataplot1, self.timeplot)
+                else:
+                    if vartoplot1['name'] in snl_names:
+                        self.master.main.ready_to_plot_2_graphs(True)
+                        self.master.main.toberemoved.destroy()
+                        profilPlot.saisonProfil(self.master.main.ax1, self.dztoplot, self.dataplot1,
+                                                self.timeplot)
+                        trace_hauteur = 0
+                    else:
+                        self.master.main.ready_to_plot_2_graphs()
+                        self.master.main.toberemoved.destroy()
+                        profilPlot.saison1d(self.master.main.ax1, self.dataplot1, self.timeplot)
+                        trace_hauteur = None
+
+                self.master.main.Canevas.draw()
+                self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+                self.boolzoom = False
+                self.master.main.Canevas.mpl_connect('button_press_event', button_press)
+                self.master.main.Canevas.mpl_connect('motion_notify_event', move_press)
+                self.master.main.Canevas.mpl_connect('button_release_event', button_release)
+                self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
+
+        # Graphe du profil animé à droite en fonction du mouvement de la souris
         def motion(event):
+            if self.stop_right_click | self.boolzoom:
+                return
             if event.inaxes == self.master.main.ax1:
                 # print(event.xdata)
                 # print(event.ydata)
 
-                xindex = min(int(event.xdata), size_x-1)
-                data_date = datatoplot2[xindex, :]
-                dz_date = dztoplot[xindex, :]
+                xindex = min(int(event.xdata), self.size_x-1)
+                date = self.timeplot[xindex]
+                data_date = self.dataplot2[xindex, :]
+                dz_date = self.dztoplot[xindex, :]
                 if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
-                    grain_date = grain[xindex, :]
+                    grain_date = self.grain[xindex, :]
                 else:
                     grain_date = None
 
                 if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
-                    ram_date = ram[xindex, :]
+                    ram_date = self.ram[xindex, :]
                 else:
                     ram_date = None
 
@@ -559,8 +652,8 @@ class ProPlotterController(abc.ABC):
                 self.master.main.ax2.clear()
                 self.master.main.ax3.clear()
                 profilPlot.dateProfil(self.master.main.ax2, self.master.main.ax3, data_date, dz_date,
-                                      value_grain=grain_date, value_ram=ram_date, xlimit=limitplot2, ylimit=topdz,
-                                      hauteur=hauteur, cbar_show=self.master.main.first_profil)
+                                      value_grain=grain_date, value_ram=ram_date, xlimit=limitplot2, ylimit=self.topdz,
+                                      hauteur=hauteur, cbar_show=self.master.main.first_profil, date=date)
 
                 self.master.main.first_profil = False
                 self.master.main.Canevas.draw()
@@ -588,38 +681,45 @@ class ProPlotterController(abc.ABC):
 
         # TODO: Actually do the plot here <13-09-21, Léo Viallon-Galinier> #
         vartoplot1 = self.master.fileobj.variable_desc(var_1)
-        datatoplot1 = self.master.fileobj.get_data(vartoplot1['name'], point)
+        self.dataplot1 = self.master.fileobj.get_data(vartoplot1['name'], point)
         snl_names = [v['name'] if 'name' in v else k for k, v in self.master.fileobj.variables_snl.items()]
+        self.timeplot = self.master.fileobj.get_time()
 
         self.master.main.clear()
         if not self.master.fileobj.variables_snl:
             self.master.main.ready_to_plot()
             self.master.main.toberemoved.destroy()
-            profilPlot.saison1d(self.master.main.ax1, datatoplot1)
+            profilPlot.saison1d(self.master.main.ax1, self.dataplot1, self.timeplot)
         else:
-            dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz,point, fillnan=0.)
+            self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz,point, fillnan=0.)
             if vartoplot1['name'] in snl_names:
                 self.master.main.ready_to_plot_2_graphs(True)
                 self.master.main.toberemoved.destroy()
-                profilPlot.saisonProfil(self.master.main.ax1, dztoplot, datatoplot1)
+                profilPlot.saisonProfil(self.master.main.ax1, self.dztoplot, self.dataplot1, self.timeplot)
                 trace_hauteur = 0
             else:
                 self.master.main.ready_to_plot_2_graphs()
                 self.master.main.toberemoved.destroy()
-                profilPlot.saison1d(self.master.main.ax1, datatoplot1)
+                profilPlot.saison1d(self.master.main.ax1, self.dataplot1, self.timeplot)
                 trace_hauteur = None
 
             # usefull for motion
             vartoplot2 = self.master.fileobj.variable_desc(var_2)
-            datatoplot2 = self.master.fileobj.get_data(vartoplot2['name'], point)
+            self.dataplot2 = self.master.fileobj.get_data(vartoplot2['name'], point)
             limitplot2 = self.master.fileobj.limits_variable(vartoplot2['name'])
-            size_x = dztoplot.shape[0]
-            topdz = np.max(np.sum(dztoplot[:, :], 1))
+            self.size_x = self.dztoplot.shape[0]
+            self.topdz = np.max(np.sum(self.dztoplot[:, :], 1))
             if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
-                grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.)
+                self.grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.)
             if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
-                ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.)
+                self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.)
+            if vartoplot2['name'] in self.master.fileobj.variables_log:
+                self.dataplot2 = np.where(self.dataplot2 > 10 ** (-10), self.dataplot2, 10 ** (-10))
+                self.dataplot2 = np.where(self.dataplot2 > 0, np.log10(self.dataplot2), -10)
             self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
+            self.master.main.Canevas.mpl_connect('button_press_event', button_press)
+            self.master.main.Canevas.mpl_connect('motion_notify_event', move_press)
+            self.master.main.Canevas.mpl_connect('button_release_event', button_release)
 
         self.master.main.Canevas.draw()
         self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
