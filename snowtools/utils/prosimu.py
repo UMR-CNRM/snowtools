@@ -11,7 +11,6 @@ This module contains the ``prosimu`` class used to read simulation files
 """
 
 import os
-import sys
 import abc
 import logging
 
@@ -579,14 +578,33 @@ class _prosimu1d2d():
         """
         for varname in kwargs.keys():
             varname = self._check_varname(varname)
-            if not set(self.dataset.variables[varname].dimensions) == set(self.Points_dimensions):
+            if not set(self.dataset.variables[varname].dimensions).issubset(set(self.Points_dimensions)):
                 raise TypeError("""Le filtrage ne peut se faire que sur des variables géographiques
                     (such as ZS, slope, aspect, lat, lon). Variable {} not compatible.""".format(varname))
-        locations_bool = np.ones(tuple([len(self.dataset.dimensions[dimname]) for dimname in self.Points_dimensions]),
+
+        locations_bool = np.ones(tuple(self.pointsdim_l),
                                  dtype=bool)
+
         for varname, values in six.iteritems(kwargs):
             varname = self._check_varname(varname)
-            locations_bool = np.logical_and(locations_bool, np.isin(self.dataset.variables[varname], values))
+            vardims = self.dataset.variables[varname].dimensions
+
+            data = self.dataset.variables[varname][Ellipsis]
+            if list(self.dataset.variables[varname].dimensions) == self.Points_dimensions:
+                slices = Ellipsis
+            else:
+                # Swap axes if necessary
+                index = []
+                for axis in self.dataset.variables[varname].dimensions:
+                    index.append(self.Points_dimensions.index(axis))
+
+                index = np.argsort(np.array(index))
+                if np.all(np.diff(index) > 0):
+                    data = np.moveaxis(data, np.arange(len(index)), index)
+                slices = tuple([None if axis not in vardims else slice(None) for axis in self.Points_dimensions])
+
+            locations_bool = np.logical_and(locations_bool, np.isin(data[slices], values))
+
         return np.where(locations_bool.flatten())[0]
 
     def read(self, varname, fill2zero=False, selectpoint=-1, keepfillvalue=False, removetile=True, needmodif=False,
@@ -740,8 +758,8 @@ class prosimu2d(_prosimu1d2d, prosimuAbstract):
             selectpoint = None
         elif selectpoint is None:
             pass
-        elif isinstance(selectpoint, int):
-            pass
+        elif np.issubdtype(type(selectpoint), np.integer):
+            selectpoint = self._translate_pointnr_to_varind(selectpoint)
         elif isinstance(selectpoint, list):
             if isinstance(selectpoint[0], int):
                 # Translate point number in dimensions indexes
@@ -765,7 +783,7 @@ class prosimu2d(_prosimu1d2d, prosimuAbstract):
         pd = self.pointsdim_n
         reste = nr
         for i in range(len(self.pointsdim_l[::-1])):
-            pd = pd / self.pointsdim_l[i]
+            pd = pd // self.pointsdim_l[i]
             l.append(reste // pd)
             reste = reste % pd
         return tuple(l)
