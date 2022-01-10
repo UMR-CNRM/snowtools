@@ -7,8 +7,13 @@ Created on 4 déc. 2018
 @author: lafaysse
 '''
 
-from PIL import Image
 import matplotlib.pyplot as plt
+
+try:
+    from PIL import Image
+except ImportError as e:
+    print("Warning : PIL package not found")
+    Image = None
 
 
 class Mplfigure(object):
@@ -37,10 +42,11 @@ class Mplfigure(object):
 
     def getlogo(self):
         from snowtools.DATA import SNOWTOOLS_DIR
-        return Image.open(SNOWTOOLS_DIR + "/plots/logos/logoMF15.jpg")
+        return Image.open(SNOWTOOLS_DIR + "/plots/logos/logoMF15.jpg") if Image is not None else None
 
     def addlogo(self):
         logo = self.getlogo()
+        if logo is None: return
         width, height = logo.size
         sizefig = self.fig.get_size_inches()
         widthfig = sizefig[0] * 100

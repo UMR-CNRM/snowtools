@@ -18,3 +18,5 @@ fortran/*.mod
 GUI_selfcontain.zip
 DATA/shapefiles
 .coverage
+newvenevsnowtools
+requirement*
