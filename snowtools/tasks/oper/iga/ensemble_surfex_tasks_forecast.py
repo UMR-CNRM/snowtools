@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Created on 7 nov. 2017
 
@@ -14,9 +15,9 @@ import footprints
 
 def setup(t, **kw):
     return Driver(
-        tag = 'Surfex_Parallel',
-        ticket = t,
-        nodes = [
+        tag='Surfex_Parallel',
+        ticket=t,
+        nodes=[
                 Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw),
                 Four_Seasons_Task(tag='S2m_pp_Task', ticket=t, **kw),
                 Rapatrie_Postproc(tag='Rapatrie_Postproc', ticket=t, **kw),

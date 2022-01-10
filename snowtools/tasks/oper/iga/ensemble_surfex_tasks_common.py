@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Created on 7 nov. 2017
 
@@ -10,7 +11,7 @@ from vortex.tools.actions import actiond as ad
 
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
-from snowtools.bronx.stdtypes.date import daterange, yesterday, tomorrow
+from bronx.stdtypes.date import daterange, yesterday, tomorrow
 import footprints
 
 
@@ -47,7 +48,8 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                 self.sh.title('Toolbox input tb01')
                 tb01 = toolbox.input(
                     role           = 'Forcing_Deterministic',
-                    local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' 
+                    if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     vapp           = self.conf.vapp,
                     vconf          = '[geometry:area]' if len(list_geometry) > 1 else self.conf.vconf,
                     block          = block_safran,
@@ -74,7 +76,8 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                     self.sh.title('Toolbox input tb01a')
                     tb01a = toolbox.input(
                         alternate      = 'Forcing_Deterministic',
-                        local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' 
+                        if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                         vapp           = self.conf.vapp,
                         vconf          = '[geometry:area]' if len(list_geometry) > 1 else self.conf.vconf,
                         block          = alternate_block,
@@ -169,7 +172,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                     nativefmt      = 'netcdf',
                     local          = 'PGD.nc',
                     geometry       = self.conf.geometry,
-                    genv            = self.conf.cycle,
+                    genv           = self.conf.cycle,
                     gvar           = 'pgd_[geometry::area]',
                     model          = 'surfex',
                     fatal          = True,
@@ -364,7 +367,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                     nativefmt      = 'bin',
                     local          = 'ecoclimapII_eu_covers_param.bin',
                     geometry       = self.conf.geometry,
-                    genv            = self.conf.cycle,
+                    genv           = self.conf.cycle,
                     source         = 'ecoclimap2',
                     model          = 'surfex',
                 ),
@@ -378,7 +381,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                     genv            = self.conf.cycle,
                     nativefmt       = 'netcdf',
                     local           = 'drdt_bst_fit_60.nc',
-                    model          = 'surfex',
+                    model           = 'surfex',
                 )
                 print(t.prompt, 'tb06 =', tb06)
                 print()

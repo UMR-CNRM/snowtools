@@ -18,9 +18,9 @@ from cen.layout.nodes import S2MTaskMixIn
 
 def setup(t, **kw):
     return Driver(
-        tag = 'Prosnow_LT_Hindcast',
-        ticket = t,
-        nodes = [
+        tag='Prosnow_LT_Hindcast',
+        ticket=t,
+        nodes=[
             Prosnow_LT_Forecast(tag='prosnow_LT_hindcast', ticket=t, **kw),
         ],
         options=kw
@@ -34,11 +34,12 @@ class Prosnow_LT_Forecast(Task, S2MTaskMixIn):
         t = self.ticket
 
         list_geometry = self.get_list_geometry(meteo=self.conf.meteo)
-        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, "yearly")
-        list_dates_begin_forc_clim, list_dates_end_forc_clim, list_dates_begin_pro_clim, list_dates_end_pro_clim = get_list_dates_files(datetime.datetime(1993, 8, 1, 6, 0), datetime.datetime(2018, 8, 1, 6, 0), 'yearly')
-       
-        members = ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24']
-
+        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = \
+            get_list_dates_files(self.conf.datebegin, self.conf.dateend, "yearly")
+        list_dates_begin_forc_clim, list_dates_end_forc_clim, list_dates_begin_pro_clim, list_dates_end_pro_clim = \
+            get_list_dates_files(datetime.datetime(1993, 8, 1, 6, 0), datetime.datetime(2018, 8, 1, 6, 0), 'yearly')
+        members = ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14',
+                   '15', '16', '17', '18', '19', '20', '21', '22', '23', '24']
         datebegin_str = self.conf.datebegin.strftime('%Y%m%d%H')
         dateend_str = self.conf.dateend.strftime('%Y%m%d%H')
 
@@ -144,7 +145,7 @@ class Prosnow_LT_Forecast(Task, S2MTaskMixIn):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapII_eu_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv           = 'uenv:cen.01@CONST_CEN',
                 source         = 'ecoclimap2',
                 model          = 'surfex',
             ),
@@ -280,7 +281,6 @@ class Prosnow_LT_Forecast(Task, S2MTaskMixIn):
             with tarfile.open('PRO.tar', mode='w') as tarfic:
                 for f in glob.glob('*/PRO_*'):
                     tarfic.add(f)
-                    
         '''-----------------------------------'''
         '''              step.03              '''
         '''-----------------------------------'''
@@ -319,4 +319,3 @@ class Prosnow_LT_Forecast(Task, S2MTaskMixIn):
             ### Force vortex to fail, in order to save info in the "abort" folder
 #             from vortex.tools.systems import ExecutionError
 #             raise ExecutionError('')
-

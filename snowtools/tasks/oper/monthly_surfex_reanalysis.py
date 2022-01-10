@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 Created on 7 nov. 2017
 
@@ -14,9 +15,9 @@ from vortex.algo.components import DelayedAlgoComponentError
 
 def setup(t, **kw):
     return Driver(
-        tag = 'Surfex_Parallel',
-        ticket = t,
-        nodes = [
+        tag='Surfex_Parallel',
+        ticket=t,
+        nodes=[
             Monthly_Surfex_Reanalysis(tag='Monthly_Surfex_Reanalysis', ticket=t, **kw),
         ],
         options=kw

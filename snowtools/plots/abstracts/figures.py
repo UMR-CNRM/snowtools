@@ -7,12 +7,14 @@ Created on 4 déc. 2018
 @author: lafaysse
 '''
 
+import logging
+
 import matplotlib.pyplot as plt
 
 try:
     from PIL import Image
 except ImportError as e:
-    print("Warning : PIL package not found")
+    logging.warning("PIL package not found")
     Image = None
 
 

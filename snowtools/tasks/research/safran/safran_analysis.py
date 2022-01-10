@@ -16,12 +16,12 @@ from bronx.stdtypes.date import Date
 
 def setup(t, **kw):
     return Driver(
-        tag    = 'safran_ana',
-        ticket = t,
-        nodes  = [
+        tag='safran_ana',
+        ticket=t,
+        nodes=[
             Safran(tag='safran_ana', ticket=t, **kw),
         ],
-        options = kw,
+        options=kw,
     )
 
 
@@ -90,7 +90,8 @@ class Safran(Task, S2MTaskMixIn):
                             model          = 'safran',
                             cutoff         = 'assimilation',
                             cumul          = self.conf.cumul,
-                            date           = ['{0:s}/-PT{1:s}H'.format(self.conf.dateend.ymd6h, str(d)) for d in footprints.util.rangex(0, 24 * ndays, self.conf.cumul)],
+                            date           = ['{0:s}/-PT{1:s}H'.format(self.conf.dateend.ymd6h, str(d))
+                                              for d in footprints.util.rangex(0, 24 * ndays, self.conf.cumul)],
                             unknownflow    = True,
                             now            = True,
                             fatal          = False,
@@ -107,7 +108,8 @@ class Safran(Task, S2MTaskMixIn):
                             model          = 'safran',
                             cutoff         = 'assimilation',
                             cumul          = self.conf.cumul,
-                            date           = ['{0:s}/-PT{1:s}H'.format(self.conf.dateend.ymd6h, str(d)) for d in footprints.util.rangex(0, 24 * ndays, self.conf.cumul)],
+                            date           = ['{0:s}/-PT{1:s}H'.format(self.conf.dateend.ymd6h, str(d))
+                                              for d in footprints.util.rangex(0, 24 * ndays, self.conf.cumul)],
                             unknownflow    = True,
                             now            = True,
                         ),
@@ -123,7 +125,8 @@ class Safran(Task, S2MTaskMixIn):
                             model          = 'safran',
                             cutoff         = 'assimilation',
                             cumul          = self.conf.cumul,
-                            date           = ['{0:s}/-PT{1:s}H'.format(self.conf.dateend.ymd6h, str(d)) for d in footprints.util.rangex(0, 24 * ndays, self.conf.cumul)],
+                            date           = ['{0:s}/-PT{1:s}H'.format(self.conf.dateend.ymd6h, str(d))
+                                              for d in footprints.util.rangex(0, 24 * ndays, self.conf.cumul)],
                             unknownflow    = True,
                             now            = True,
                         ),
@@ -139,7 +142,8 @@ class Safran(Task, S2MTaskMixIn):
                             model          = 'safran',
                             cutoff         = 'assimilation',
                             cumul          = self.conf.cumul,
-                            date           = ['{0:s}/-PT{1:s}H'.format(self.conf.dateend.ymd6h, str(d)) for d in footprints.util.rangex(0, 24 * ndays, self.conf.cumul)],
+                            date           = ['{0:s}/-PT{1:s}H'.format(self.conf.dateend.ymd6h, str(d))
+                                              for d in footprints.util.rangex(0, 24 * ndays, self.conf.cumul)],
                             unknownflow    = True,
                             now            = True,
                         ),
@@ -213,7 +217,8 @@ class Safran(Task, S2MTaskMixIn):
                             tb01_c = toolbox.input(
                                 role           = 'Ebauche',
                                 local          = '{0:d}/p{2:s}.tar'.format(rundir, next_season),
-                                remote         = '/home/vernaym/s2m/[geometry]/{0:s}/p{1:s}.tar'.format(self.conf.guess_block, next_season),
+                                remote         = '/home/vernaym/s2m/[geometry]/{0:s}/p{1:s}.tar'.format(
+                                    self.conf.guess_block, next_season),
                                 hostname       = 'hendrix.meteo.fr',
                                 unknownflow    = True,
                                 username       = 'vernaym',
@@ -231,7 +236,8 @@ class Safran(Task, S2MTaskMixIn):
 
     #                 # A partir de la saison 2017-2018 on prend les guess produits par Vortex
     #                 elif datebegin >= Date(year=2018, month=8, day=1):
-    #                     # I.1- EBAUCHE issue des A6 des réseaux 0/6/12/18h (J-n) d'assimilation d'ARPEGE et l'A6 du réseau 0h J si présente pour couvrir (J-n) 6h -> J 6h
+    #                     # I.1- EBAUCHE issue des A6 des réseaux 0/6/12/18h (J-n) d'assimilation d'ARPEGE et
+                    #                     *l'A6 du réseau 0h J si présente pour couvrir (J-n) 6h -> J 6h
     #                     self.sh.title('Toolbox input tb01')
     #                     tb07_a = toolbox.input(
     #                         role           = 'Ebauche',
@@ -246,7 +252,8 @@ class Safran(Task, S2MTaskMixIn):
     #                         #block          = self.conf.guess_block,
     #                         #geometry       = self.conf.vconf,
     #                         #cutoff         = 'assimilation',
-    #                         date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 30, self.conf.cumul)],
+    #                         date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d))
+                    #                         for d in footprints.util.rangex(6, 30, self.conf.cumul)],
     #                         cumul          = self.conf.cumul,
     #                         nativefmt      = 'ascii',
     #                         kind           = 'guess',
@@ -264,7 +271,8 @@ class Safran(Task, S2MTaskMixIn):
                         tb01 = toolbox.input(
                             role           = 'Ebauche',
                             local          = '{0:s}/p{1:s}.tar'.format(rundir, season),
-                            remote         = '/home/vernaym/s2m/[geometry]/{0:s}/p{1:s}.tar'.format(self.conf.guess_block, season),
+                            remote         = '/home/vernaym/s2m/[geometry]/{0:s}/p{1:s}.tar'.format(
+                                self.conf.guess_block, season),
                             hostname       = 'hendrix.meteo.fr',
                             unknownflow    = True,
                             username       = 'vernaym',

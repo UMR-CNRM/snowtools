@@ -72,7 +72,7 @@ class postprocess_ensemble(Ensemble):
         timevar.units = 'hours since 2019-08-01 06:00:00'
         timevar[:] = netCDF4.date2num(self.time, timevar.units)
 
-        print (self.geo)
+        print(self.geo)
         if self.geo == 'massifs':
             massifvar = newdataset.createVariable("massif_num", 'i4', (self.location_dim_name), fill_value=fillvalue)
             massifvar[:] = self.get_massifdim()
@@ -143,7 +143,9 @@ class postprocess_ensemble(Ensemble):
         delta = self.time - self.time[0].replace(hour=6)
 
         for day_leadtime in range(1, self.ndays_leadtime + 1):
-            list_indtime.append(np.where((delta <= datetime.timedelta(days=day_leadtime)) & (delta > datetime.timedelta(days=day_leadtime - 1)))[0])
+            list_indtime.append(np.where(
+                (delta <= datetime.timedelta(days=day_leadtime)) &
+                (delta > datetime.timedelta(days=day_leadtime - 1)))[0])
 
         list_massifs = np.unique(massif_number)
 
@@ -212,7 +214,8 @@ class postprocess_ensemble(Ensemble):
             for i in range(0, shapein[0]):
                 for j in range(0, shapein[1]):
                     for k in range(0, shapein[2]):
-                        varout[i, j, k, :] = self.quantiles_CSGD_1point(csgmean[i, j, k], csgstd[i, j, k], csgdelta[i, j, k], quantiles)
+                        varout[i, j, k, :] = self.quantiles_CSGD_1point(csgmean[i, j, k], csgstd[i, j, k],
+                                                                        csgdelta[i, j, k], quantiles)
 
         self.quantiles_CSGD = varout
 
@@ -221,7 +224,7 @@ class postprocess_ensemble(Ensemble):
     def diags(self, list_var, list_quantiles):
         for var in list_var:
             print(type(self.quantiles))
-            print (var)
+            print(var)
             self.quantiles[var] = []
             for quantile in list_quantiles:
                 indquantile = quantile / 10 - 1

@@ -1,3 +1,4 @@
+.. _plots-maps:
 
 Map plotting tools
 ==================

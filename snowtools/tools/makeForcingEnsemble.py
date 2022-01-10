@@ -31,7 +31,7 @@ import argparse
 import csv
 
 
-def addNoise2Tair( f, sigma, tau, dt, semiDistrib = False):
+def addNoise2Tair(f, sigma, tau, dt, semiDistrib=False):
     """
     Add noise with temporal correlation.
     """
@@ -41,10 +41,10 @@ def addNoise2Tair( f, sigma, tau, dt, semiDistrib = False):
     xx = np.zeros(nT, float)
 
     v2 = sigma * sigma  # variance
-    phi = np.exp( - dt / tau)
+    phi = np.exp(- dt / tau)
     sig2 = v2 * (1 - phi * phi)
     sig = np.sqrt(sig2)
-    epsilon = np.random.normal( 0., sig, nT)
+    epsilon = np.random.normal(0., sig, nT)
 
     for ii in range(nT):
         xx[ii] = phi * xx[ii - 1] + epsilon[ii]
@@ -57,7 +57,7 @@ def addNoise2Tair( f, sigma, tau, dt, semiDistrib = False):
     return f
 
 
-def addNoise2Snowf( f, sigma, tau, dt, semiDistrib = False):
+def addNoise2Snowf(f, sigma, tau, dt, semiDistrib=False):
     """
     Add noise with temporal correlation.
     """
@@ -69,7 +69,7 @@ def addNoise2Snowf( f, sigma, tau, dt, semiDistrib = False):
     XX = np.zeros(nT, float)
     YY = np.zeros(nT, float)
 
-    phi = np.exp( - dt / tau)
+    phi = np.exp(- dt / tau)
     sig2 = (1 - phi * phi)
     sig = np.sqrt(sig2)
     epsilon = np.random.normal(0., sig, nT)
@@ -92,7 +92,7 @@ def addNoise2Snowf( f, sigma, tau, dt, semiDistrib = False):
     return f
 
 
-def addNoise2Rainf( f, sigma, tau, dt, semiDistrib = False):
+def addNoise2Rainf(f, sigma, tau, dt, semiDistrib=False):
     """
     Add noise with temporal correlation.
     """
@@ -104,7 +104,7 @@ def addNoise2Rainf( f, sigma, tau, dt, semiDistrib = False):
     XX = np.zeros(nT, float)
     YY = np.zeros(nT, float)
 
-    phi = np.exp( - dt / tau)
+    phi = np.exp(- dt / tau)
     sig2 = (1 - phi * phi)
     sig = np.sqrt(sig2)
     epsilon = np.random.normal(0., sig, nT)
@@ -126,7 +126,8 @@ def addNoise2Rainf( f, sigma, tau, dt, semiDistrib = False):
 
     return f
 
-def addNoise2DIR_SWdown( f, sigma, tau, dt, semiDistrib = False):
+
+def addNoise2DIR_SWdown(f, sigma, tau, dt, semiDistrib=False):
     """
     Add noise with temporal correlation.
     """
@@ -138,7 +139,7 @@ def addNoise2DIR_SWdown( f, sigma, tau, dt, semiDistrib = False):
     XX = np.zeros(nT, float)
     YY = np.zeros(nT, float)
 
-    phi = np.exp( - dt / tau)
+    phi = np.exp(- dt / tau)
     sig2 = (1 - phi * phi)
     sig = np.sqrt(sig2)
     epsilon = np.random.normal(0., sig, nT)
@@ -177,7 +178,7 @@ def addNoise2DIR_SWdown( f, sigma, tau, dt, semiDistrib = False):
     return f
 
 
-def addNoise2Wind( f, sigma, tau, dt, semiDistrib = False):
+def addNoise2Wind(f, sigma, tau, dt, semiDistrib=False):
     """
     Add noise with temporal correlation.
     """
@@ -188,7 +189,7 @@ def addNoise2Wind( f, sigma, tau, dt, semiDistrib = False):
     xx = np.zeros(nT, float)
     XX = np.zeros(nT, float)
     YY = np.zeros(nT, float)
-    phi = np.exp( - dt / tau)
+    phi = np.exp(- dt / tau)
     sig2 = (1 - phi * phi)
     sig = np.sqrt(sig2)
     epsilon = np.random.normal(0., sig, nT)
@@ -211,7 +212,7 @@ def addNoise2Wind( f, sigma, tau, dt, semiDistrib = False):
     return f
 
 
-def addNoise2LWdown( f, sigma, tau, dt, semiDistrib = False):
+def addNoise2LWdown(f, sigma, tau, dt, semiDistrib=False):
     """
     Add noise with temporal correlation.
     """
@@ -222,7 +223,7 @@ def addNoise2LWdown( f, sigma, tau, dt, semiDistrib = False):
     xx = np.zeros(nT, float)
 
     v2 = sigma * sigma
-    phi = np.exp( - dt / tau)
+    phi = np.exp(- dt / tau)
     sig2 = v2 * (1 - phi * phi)
     sig = np.sqrt(sig2)
     epsilon = np.random.normal(0., sig, nT)
@@ -239,7 +240,7 @@ def addNoise2LWdown( f, sigma, tau, dt, semiDistrib = False):
     return f
 
 
-def addNoise2Impur( f, varName, sigma, tau, dt, semiDistrib = False, brutal=False):
+def addNoise2Impur(f, varName, sigma, tau, dt, semiDistrib=False, brutal=False):
     """
     Add noise with temporal correlation.
     """
@@ -251,14 +252,14 @@ def addNoise2Impur( f, varName, sigma, tau, dt, semiDistrib = False, brutal=Fals
     XX = np.zeros((nT, ), float)
     YY = np.zeros((nT, ), float)
 
-    phi = np.exp( - dt / tau)
+    phi = np.exp(- dt / tau)
     sig2 = (1 - phi * phi)
     sig = np.sqrt(sig2)
     epsilon = np.random.normal(0., sig, nT)
     if not brutal:
 
         for ii in range(nT):
-            xx[ii]  = phi * xx[ii - 1] + epsilon[ii]
+            xx[ii] = phi * xx[ii - 1] + epsilon[ii]
             XX[ii] = xx[ii] * 0.7
             YY[ii] = 1 + XX[ii]
             while YY[ii] < 0.5 or YY[ii] > 2.:
@@ -291,8 +292,7 @@ def addNoise2Impur( f, varName, sigma, tau, dt, semiDistrib = False, brutal=Fals
     return f
 
 
-def convertPrecipPhase( f, semiDistrib = False):
-
+def convertPrecipPhase(f, semiDistrib=False):
     """
     Convert precipitation to solid or liquid according to the disturbed temperature.
     """
@@ -304,22 +304,22 @@ def convertPrecipPhase( f, semiDistrib = False):
     Rainf1 = Rainf[:]
     Snowf1 = Snowf[:]
 
-    Tpos = (Tair1  > 274.5)
-    ItSnows = (Snowf1  > 0.)
-    keep = np.where(  Tpos * ItSnows  )
+    Tpos = (Tair1 > 274.5)
+    ItSnows = (Snowf1 > 0.)
+    keep = np.where(Tpos * ItSnows)
     Rainf1[keep] = Snowf1[keep]
     Rainf[:] = Rainf1
 
     Tneg = (Tair1 < 274.5)
     ItRains = (Rainf1 < 0.)
-    keep = np.where( Tneg * ItRains )
+    keep = np.where(Tneg * ItRains)
     Snowf1[keep] = Rainf1[keep]
     Snowf[:] = Snowf1
 
     return f
 
 
-def MakeForEnsemble( f, po, nmembers, o, startmember=1, brutal=False):
+def MakeForEnsemble(f, po, nmembers, o, startmember=1, brutal=False):
 
     print('')
     print(' -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - ')
@@ -339,12 +339,13 @@ def MakeForEnsemble( f, po, nmembers, o, startmember=1, brutal=False):
 
     # read paramaters: sigma and tau for each disturbed variable from a csv file
     param = {}
-    with open(po, mode = 'r') as csv_file:
+    with open(po, mode='r') as csv_file:
         csv_reader = csv.DictReader(csv_file)
         print('Param value')
         for row in csv_reader:
             param[row['varName']] = [float(row['std']), float(row['tau'])]
-            print(str(row['varName']) + ' | std : ' + str(param[row['varName']][0]) + ' | tau : ' + str(param[row['varName']][1]))
+            print(str(row['varName']) + ' | std : ' + str(param[row['varName']][0]) +
+                  ' | tau : ' + str(param[row['varName']][1]))
 
     bn = os.path.basename(f)
 
@@ -364,7 +365,7 @@ def MakeForEnsemble( f, po, nmembers, o, startmember=1, brutal=False):
 
         outFOR = oMb + '/meteo/' + bn
         print(outFOR)
-        shutil.copy( f, outFOR )
+        shutil.copy(f, outFOR)
         print(brutal)
         if brutal or (not brutal and i != startmember):  # brutal : mb0001 is not a control anymore.
 
@@ -375,58 +376,68 @@ def MakeForEnsemble( f, po, nmembers, o, startmember=1, brutal=False):
             semiDistrib = len(np.shape(FORCING.variables['Tair'])) == 2  # test the number of dims
             # Disturb Tair
             if param['Tair'][0] != 0:
-                FORCING = addNoise2Tair( FORCING, param['Tair'][0], param['Tair'][1], dt, semiDistrib = semiDistrib)
+                FORCING = addNoise2Tair(FORCING, param['Tair'][0], param['Tair'][1], dt, semiDistrib=semiDistrib)
 
             # Disturb Snowf
             if param['Snowf'][0] != 0:
-                FORCING = addNoise2Snowf( FORCING, param['Snowf'][0], param['Snowf'][1], dt, semiDistrib = semiDistrib)
-                
+                FORCING = addNoise2Snowf(FORCING, param['Snowf'][0], param['Snowf'][1], dt, semiDistrib=semiDistrib)
+
             # Disturb Rainf
             if param['Rainf'][0] != 0:
-                FORCING = addNoise2Rainf( FORCING, param['Rainf'][0], param['Rainf'][1], dt, semiDistrib = semiDistrib)
-                
+                FORCING = addNoise2Rainf(FORCING, param['Rainf'][0], param['Rainf'][1], dt, semiDistrib=semiDistrib)
+
             # Disturb SWdown
             if param['DIR_SWdown'][0] != 0:
-                FORCING = addNoise2DIR_SWdown( FORCING, param['DIR_SWdown'][0], param['DIR_SWdown'][1], dt, semiDistrib = semiDistrib)
+                FORCING = addNoise2DIR_SWdown(FORCING, param['DIR_SWdown']
+                                              [0], param['DIR_SWdown'][1], dt, semiDistrib=semiDistrib)
 
             # Disturb Wind
             if param['Wind'][0] != 0:
-                FORCING = addNoise2Wind( FORCING, param['Wind'][0], param['Wind'][1], dt, semiDistrib = semiDistrib)
+                FORCING = addNoise2Wind(FORCING, param['Wind'][0], param['Wind'][1], dt, semiDistrib=semiDistrib)
 
         # Disturb LWdown
             if param['LWdown'][0] != 0:
-                FORCING = addNoise2LWdown( FORCING, param['LWdown'][0], param['LWdown'][1], dt, semiDistrib = semiDistrib)
+                FORCING = addNoise2LWdown(FORCING, param['LWdown'][0], param['LWdown'][1], dt, semiDistrib=semiDistrib)
 
             # Disturb IMPWET1
             if param['IMPWET1'][0] != 0:
-                FORCING = addNoise2Impur( FORCING, 'IMPWET1', param['IMPWET1'][0], param['IMPWET1'][1], dt, semiDistrib = semiDistrib, brutal=brutal)
+                FORCING = addNoise2Impur(
+                    FORCING, 'IMPWET1', param['IMPWET1'][0], param['IMPWET1'][1], dt,
+                    semiDistrib=semiDistrib, brutal=brutal)
 
             # Disturb IMPWET2
             if param['IMPWET2'][0] != 0:
-                FORCING = addNoise2Impur( FORCING, 'IMPWET2', param['IMPWET2'][0], param['IMPWET2'][1], dt, semiDistrib = semiDistrib, brutal=brutal)
+                FORCING = addNoise2Impur(
+                    FORCING, 'IMPWET2', param['IMPWET2'][0], param['IMPWET2'][1], dt,
+                    semiDistrib=semiDistrib, brutal=brutal)
 
             # Disturb IMPDRY1
             if param['IMPDRY1'][0] != 0:
-                FORCING = addNoise2Impur( FORCING, 'IMPDRY1', param['IMPDRY1'][0], param['IMPDRY1'][1], dt, semiDistrib = semiDistrib, brutal=brutal)
+                FORCING = addNoise2Impur(
+                    FORCING, 'IMPDRY1', param['IMPDRY1'][0], param['IMPDRY1'][1], dt,
+                    semiDistrib=semiDistrib, brutal=brutal)
 
             # Disturb IMPDRY2
             if param['IMPDRY2'][0] != 0:
-                FORCING = addNoise2Impur( FORCING, 'IMPDRY2', param['IMPDRY2'][0], param['IMPDRY2'][1], dt, semiDistrib = semiDistrib, brutal=brutal)
+                FORCING = addNoise2Impur(
+                    FORCING, 'IMPDRY2', param['IMPDRY2'][0], param['IMPDRY2'][1], dt,
+                    semiDistrib=semiDistrib, brutal=brutal)
 
-            # Convert phases to solid or liquid according to threshold temperature ! MUST ALWAYS COME AFTER TEMPERATURE WERE DISTURBED
-            FORCING = convertPrecipPhase( FORCING, semiDistrib = semiDistrib)
+            # Convert phases to solid or liquid according to threshold temperature !
+            # MUST ALWAYS COME AFTER TEMPERATURE WERE DISTURBED
+            FORCING = convertPrecipPhase(FORCING, semiDistrib=semiDistrib)
 
             FORCING.close
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = "Generate ensemble weather forcing.")
-    parser.add_argument("-f", dest = "f")
-    parser.add_argument("-p", dest = "p")
-    parser.add_argument("-nmembers", dest = "nmembers", type=int)
-    parser.add_argument("-startmember", dest = "startmember", default=1, type=int)
-    parser.add_argument("-o", dest = "o")
-    parser.add_argument("--brutalImp", dest = 'brutalImp', default = False, action = "store_true",)
+    parser = argparse.ArgumentParser(description="Generate ensemble weather forcing.")
+    parser.add_argument("-f", dest="f")
+    parser.add_argument("-p", dest="p")
+    parser.add_argument("-nmembers", dest="nmembers", type=int)
+    parser.add_argument("-startmember", dest="startmember", default=1, type=int)
+    parser.add_argument("-o", dest="o")
+    parser.add_argument("--brutalImp", dest='brutalImp', default=False, action="store_true",)
     args = parser.parse_args()
     print(args.brutalImp)
-    MakeForEnsemble( args.f, args.p, args.nmembers, args.o, args.startmember, brutal = args.brutalImp)
+    MakeForEnsemble(args.f, args.p, args.nmembers, args.o, args.startmember, brutal=args.brutalImp)

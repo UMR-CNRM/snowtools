@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
 
@@ -90,7 +89,8 @@ class Safran(Task, S2MTaskMixIn):
                         hostname       = 'guppy.meteo.fr',
                         username       = 'vernaym',
                         tube           = 'ftp',
-                        remote         = '/home/mrns/vernaym/extraction_obs/oper/observations_safran_[vconf]_[date::ymdh].tar',
+                        remote         = '/home/mrns/vernaym/extraction_obs/oper/ \
+                        observations_safran_[vconf]_[date::ymdh].tar',
                         # namespace      = 'vortex.archive.fr',
                         cutoff         = 'assimilation',
                         now            = True,
@@ -383,7 +383,7 @@ class Safran(Task, S2MTaskMixIn):
                         local          = 'mb035/P[date::addcumul_yymdh]',
                         experiment     = self.conf.xpid_guess,
                         block          = self.conf.guess_block,
-                        geometry        = self.conf.vconf,
+                        geometry       = self.conf.vconf,
                         cutoff         = 'production' if self.conf.rundate.hour == 6 else 'assimilation',
                         date           = '{0:s}/-PT{1:d}H'.format(dateend.ymd6h, 6),
                         cumul          = self.conf.cumul,
@@ -401,14 +401,15 @@ class Safran(Task, S2MTaskMixIn):
                     if self.conf.rundate.hour != 6:
 
                         # Si l'A6 du réseau H n'est pas là on prend la P6 du réseau H-6h
-                        # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur 6h homogène avec le cumul dans les fichiers d'assimilation
+                        # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur
+                        # 6h homogène avec le cumul dans les fichiers d'assimilation
                         self.sh.title('Toolbox input guess arpege assim 0h J (secours)')
                         tb17 = toolbox.input(
                             role           = 'Ebauche_Deterministic',
                             local          = 'mb035/P[date::addcumul_yymdh]',
                             experiment     = self.conf.xpid_guess,
                             block          = self.conf.guess_block,
-                            geometry        = self.conf.vconf,
+                            geometry       = self.conf.vconf,
                             cutoff         = 'production',
                             date           = '{0:s}/-PT{1:d}H'.format(dateend.ymd6h, 6),
                             cumul          = self.conf.cumul,
@@ -423,7 +424,8 @@ class Safran(Task, S2MTaskMixIn):
                         print(t.prompt, 'tb17 =', tb17)
                         print()
 
-                    # I.1- EBAUCHE issue des A6 des réseaux 0/6/12/18h (J-n) d'assimilation d'ARPEGE et l'A6 du réseau 0h J si présente pour couvrir (J-n) 6h -> J 0h
+                    # I.1- EBAUCHE issue des A6 des réseaux 0/6/12/18h (J-n) d'assimilation d'ARPEGE et l'A6
+                    # du réseau 0h J si présente pour couvrir (J-n) 6h -> J 0h
                     self.sh.title('Toolbox input guess arpege assim')
                     tb17_a = toolbox.input(
                         role           = 'Ebauche_Deterministic',
@@ -432,7 +434,8 @@ class Safran(Task, S2MTaskMixIn):
                         block          = self.conf.guess_block,
                         geometry        = self.conf.vconf,
                         cutoff         = 'assimilation',
-                        date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(12, ndays * 24 + 6, self.conf.cumul)],
+                        date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d))
+                                          for d in footprints.util.rangex(12, ndays * 24 + 6, self.conf.cumul)],
                         cumul          = self.conf.cumul,
                         nativefmt      = 'ascii',
                         kind           = 'guess',
@@ -447,7 +450,8 @@ class Safran(Task, S2MTaskMixIn):
 
                     # I.2- EBAUCHE issue de la P6 du réseau H-6 de production d'ARPEGE
                     # Si l'A6 du réseau H n'est pas là on prend la P6 du réseau H-6h
-                    # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur 6h homogène avec le cumul dans les fichiers d'assimilation
+                    # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur
+                    # 6h homogène avec le cumul dans les fichiers d'assimilation
                     self.sh.title('Toolbox input guess arpege prod (secours)')
                     tb17_b = toolbox.input(
                         alternate      = 'Ebauche_Deterministic',
@@ -456,7 +460,8 @@ class Safran(Task, S2MTaskMixIn):
                         block          = self.conf.guess_block,
                         geometry       = self.conf.vconf,
                         cutoff         = 'production',
-                        date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(12, ndays * 24 + 6, self.conf.cumul)],
+                        date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d))
+                                          for d in footprints.util.rangex(12, ndays * 24 + 6, self.conf.cumul)],
                         cumul          = self.conf.cumul,
                         nativefmt      = 'ascii',
                         kind           = 'guess',
@@ -482,7 +487,8 @@ class Safran(Task, S2MTaskMixIn):
     #                     block          = self.conf.guess_block,
     #                     geometry       = self.conf.vconf,
     #                     cutoff         = 'production',
-    #                     date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(30, ndays * 24 + 6, 24)],
+    #                     date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d))
+                    #                     for d in footprints.util.rangex(30, ndays * 24 + 6, 24)],
     #                     cumul          = footprints.util.rangex('6-30-6'),
     #                     nativefmt      = 'ascii',
     #                     kind           = 'guess',
@@ -498,8 +504,10 @@ class Safran(Task, S2MTaskMixIn):
                     # II- PEARP (J-5) -> (J-1) ou (J-1) -> J
                     # --------------------
 
-                    # II.1- EBAUCHE issue des prevision P0/P6/P12/P18/P24 du réseau 6h (J-n) de la PEARP pour couvrir (J-5) 6h -> (J-1) 6h
-                    # RQ : on ne peut pas mélanger des resources issues de runs différents pour conserver des cumuls de précipitations cohérents
+                    # II.1- EBAUCHE issue des prevision P0/P6/P12/P18/P24 du réseau 6h (J-n)
+                    # de la PEARP pour couvrir (J-5) 6h -> (J-1) 6h
+                    # RQ : on ne peut pas mélanger des resources issues de runs différents
+                    # pour conserver des cumuls de précipitations cohérents
                     self.sh.title('Toolbox input guess pearp')
                     tb18_a = toolbox.input(
                         role           = 'Ebauche',
@@ -538,7 +546,8 @@ class Safran(Task, S2MTaskMixIn):
         #                 block          = self.conf.guess_block,
         #                 geometry        = self.conf.vconf,
         #                 cutoff         = 'production',
-        #                 date           = ['{0:s}/+PT{1:s}H/-PT12H'.format(datebegin.ymd6h, str(24 * i)) for i in range(ndays)],
+        #                 date           = ['{0:s}/+PT{1:s}H/-PT12H'.format( \
+                #                 datebegin.ymd6h, str(24 * i)) for i in range(ndays)],
         #                 cumul          = footprints.util.rangex(self.conf.ana_terms, shift=12),
         #                 nativefmt      = 'ascii',
         #                 kind           = 'guess',
@@ -617,7 +626,6 @@ class Safran(Task, S2MTaskMixIn):
                 )
                 print(t.prompt, 'tb21 =', tb21)
                 print()
-
 
         if 'compute' in self.steps:
 
@@ -706,7 +714,6 @@ class Safran(Task, S2MTaskMixIn):
 
             self.component_runner(tbalgo6, tbx6)
 
-
         if 'late-backup' in self.steps:
 
             if True:
@@ -726,7 +733,7 @@ class Safran(Task, S2MTaskMixIn):
                     local          = deterministicdir + 'FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = self.conf.xpid,
                     block          = 'massifs',
-                    geometry        = self.conf.vconf,
+                    geometry       = self.conf.vconf,
                     nativefmt      = 'netcdf',
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
@@ -746,7 +753,7 @@ class Safran(Task, S2MTaskMixIn):
                     local          = deterministicdir + 'FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = self.conf.diff_xpid,
                     block          = 'massifs',
-                    geometry        = self.conf.vconf,
+                    geometry       = self.conf.vconf,
                     nativefmt      = 'netcdf',
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
@@ -767,7 +774,7 @@ class Safran(Task, S2MTaskMixIn):
                     local          = deterministicdir + 'FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = self.conf.xpid,
                     block          = 'postes',
-                    geometry        = self.conf.vconf,
+                    geometry       = self.conf.vconf,
                     nativefmt      = 'netcdf',
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
@@ -789,7 +796,7 @@ class Safran(Task, S2MTaskMixIn):
                         local          = 'mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                         experiment     = self.conf.xpid,
                         block          = 'massifs',
-                        geometry        = self.conf.vconf,
+                        geometry       = self.conf.vconf,
                         nativefmt      = 'netcdf',
                         model          = self.conf.model,
                         datebegin      = datebegin.ymd6h,
@@ -811,7 +818,7 @@ class Safran(Task, S2MTaskMixIn):
                         local          = 'mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                         experiment     = self.conf.diff_xpid,
                         block          = 'massifs',
-                        geometry        = self.conf.vconf,
+                        geometry       = self.conf.vconf,
                         nativefmt      = 'netcdf',
                         model          = self.conf.model,
                         datebegin      = datebegin.ymd6h,
@@ -833,7 +840,7 @@ class Safran(Task, S2MTaskMixIn):
                         local          = 'mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                         experiment     = self.conf.xpid,
                         block          = 'postes',
-                        geometry        = self.conf.vconf,
+                        geometry       = self.conf.vconf,
                         nativefmt      = 'netcdf',
                         model          = self.conf.model,
                         datebegin      = datebegin.ymd6h,
@@ -851,7 +858,7 @@ class Safran(Task, S2MTaskMixIn):
                     block          = 'listing',
                     experiment     = self.conf.xpid,
                     cutoff         = 'assimilation',
-                    geometry        = self.conf.vconf,
+                    geometry       = self.conf.vconf,
                     kind           = 'packedlisting',
                     begindate      = datebegin.ymd6h,
                     enddate        = dateend.ymd6h,
@@ -868,7 +875,7 @@ class Safran(Task, S2MTaskMixIn):
                     role           = 'Liste_obs',
                     block          = 'listing',
                     experiment     = self.conf.xpid,
-                    geometry        = self.conf.vconf,
+                    geometry       = self.conf.vconf,
                     cutoff         = 'assimilation',
                     kind           = 'listobs',
                     begindate      = datebegin.ymd6h,

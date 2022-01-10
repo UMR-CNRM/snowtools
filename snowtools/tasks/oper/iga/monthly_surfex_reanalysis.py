@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 '''
 Created on 7 nov. 2017
 
@@ -19,9 +20,9 @@ from vortex.algo.components import DelayedAlgoComponentError
 
 def setup(t, **kw):
     return Driver(
-        tag = 'Surfex_Parallel',
-        ticket = t,
-        nodes = [
+        tag='Surfex_Parallel',
+        ticket=t,
+        nodes=[
             Monthly_Surfex_Reanalysis(tag='Monthly_Surfex_Reanalysis', ticket=t, **kw),
         ],
         options=kw
@@ -53,7 +54,8 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, OpTask):
             self.sh.title('Toolbox input tb01')
             tb01 = toolbox.input(
                 role           = 'Forcing',
-                local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' 
+                if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                 vapp           = self.conf.vapp,
                 vconf          = '[geometry:area]',
                 block          = block_safran,
@@ -207,13 +209,13 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, OpTask):
 
             self.sh.title('Toolbox algo tb09a')
             tb09 = tbalgo1 = toolbox.algo(
-                engine         = 's2m',
+                engine       = 's2m',
                 kind         = 'prepareforcing',
                 datebegin    = [datebegin],
                 dateend      = [dateend],
                 ntasks       = 1,
-                geometry_in     = list_geometry,
-                geometry_out     = self.conf.geometry.area
+                geometry_in  = list_geometry,
+                geometry_out = self.conf.geometry.area
             )
             print((t.prompt, 'tb09a =', tb09))
             print()
@@ -291,7 +293,8 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, OpTask):
             print((t.prompt, 'tb11 =', tb11))
             print()
 
-            # Prep file is saved directly in the 03h run output of the same day in order to update initial conditions for the next day
+            # Prep file is saved directly in the 03h run output of the same day
+#            in order to update initial conditions for the next day
             self.sh.title('Toolbox output tb12')
             tb12 = toolbox.output(
                 local          = 'PREP_[datevalidity:ymdh].nc',

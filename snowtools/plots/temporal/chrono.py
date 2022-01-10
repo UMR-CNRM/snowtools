@@ -3,6 +3,9 @@
 '''
 Created on 4 déc. 2018
 
+This script contains classes allowing to make matplotlib graphs with an automatic formatting of the temporal axis in
+order to adapt to simulation temporal extent.
+
 @author: lafaysse
 '''
 
@@ -16,6 +19,12 @@ from snowtools.plots.abstracts.figures import Mplfigure
 
 class temporalplot_abstract(Mplfigure):
 
+    def __init__(self, **kwargs):
+        """Constructor for temporalplot_abstract class, redefinied for the chiled class"""
+        super(temporalplot_abstract, self).__init__(**kwargs)
+        self.plot = None
+        #self.draw = None
+
     def finalize(self, timeOut, **kwargs):
 
         self.set_xaxis(timeOut)
@@ -27,7 +36,7 @@ class temporalplot_abstract(Mplfigure):
 
         if 'forcemin' in kwargs.keys() and 'forcemax' in kwargs.keys():
             self.plot.set_ylim([kwargs['forcemin'], kwargs['forcemax']])
-        self.plot.set_ylim(top=self.plot.get_ylim()[1]*1.05)
+        self.plot.set_ylim(top=self.plot.get_ylim()[1] * 1.05)
 
         if 'ylabel' in kwargs.keys():
             label = kwargs.pop('ylabel')
@@ -37,8 +46,8 @@ class temporalplot_abstract(Mplfigure):
                 color = 'black'
             self.plot.set_ylabel(label, color=color)
 
-    def draw(self, timeOut, *args, **kwargs):
-        self.finalize(timeOut, **kwargs)
+#    def draw(self, timeOut, *args, **kwargs):
+#        self.finalize(timeOut, **kwargs)
 
     def add_line(self, timeOut, varOut, **kwargs):
 
@@ -105,15 +114,16 @@ class temporalplot_abstract(Mplfigure):
 
 
 class temporalplot(temporalplot_abstract):
-    figsize = (5, 4)
     def __init__(self, *args, **kwargs):
-
-        self.fig = plt.figure(figsize=self.figsize)
+        figsize = (5, 4)
+        super(temporalplot, self).__init__(**kwargs)
+        self.fig = plt.figure(figsize=figsize)
         self.plot = plt.subplot(111)
 
 
 class temporalsubplot(temporalplot_abstract):
-    def __init__(self, subplots, i, j):
+    def __init__(self, subplots, i, j, **kwargs):
+        super(temporalsubplot, self).__init__(**kwargs)
         if hasattr(subplots, "shape"):
             if len(subplots.shape) == 2:
                 self.plot = subplots[i, j]
@@ -126,36 +136,126 @@ class temporalsubplot(temporalplot_abstract):
 
 
 class temporalplotSim(temporalplot):
-    def draw(self, timeSim, varSim, **kwargs):
+    """
+    Class for 1D variable temporal plot
+
+    Example :
+
+    .. code-block:: python
+
+        from snowtools.utils.prosimu import prosimu
+        from snowtools.plots.temporal.chrono import temporalplotSim
+
+        # read data
+        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/PRO_LaPlagne_2000-2001.nc') as p:
+            sd = p.read('DSN_T_ISBA')
+            sd2 = p.read('SNOWTEMP')
+            time = p.readtime()
+        plot = temporalplotSim()
+        plot.draw(time, sd,label='prout')
+        plot.finalize(time) # pour gérer les dates correctement
+        plot.save('EX-temporalplotSim.png')
+
+    .. figure:: /images/EX-temporalplotSim.png
+        :align: center
+
+    """
+    def draw(self, timeSim, varSim, *args, **kwargs):
+        """
+        Method of temporalplotSim class. Used for generating a 1D plot with time formatting.
+
+        :param timeSim: Array of simulation duration usually given by prosimu.readtime()
+        :param varSim: Array of simulation data usially given by prosimu.read()
+        :param args: (optional)
+        :param kwargs: optional ( matplotlib.pyplot key arguments )
+        :return:
+        """
         if 'label' in kwargs.keys():
             label = kwargs.pop('label')
         else:
             label = 'S2M'
         self.add_line(timeSim, varSim, label=label, **kwargs)
-        super(temporalplotSim, self).draw(timeSim, **kwargs)
+        self.finalize(timeSim, **kwargs)
 
 
 class temporalplotObsSim(temporalplot):
-    def draw(self, timeObs, varObs, timeSim, varSim, **kwargs):
+    """
+    Class for 1D variable temporal plot comparaison with observation
+
+    Example :
+
+    .. code-block:: python
+
+        from snowtools.utils.prosimu import prosimu
+        from snowtools.plots.temporal.chrono import temporalplotObsSim
+        # read data
+        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/PRO_LaPlagne_2000-2001.nc') as p:
+            sd = p.read('DSN_T_ISBA')
+            sd2 = p.read('SNOWTEMP')
+            time = p.readtime()
+        plot = temporalplotObsSim()
+        plot.draw(time, sd,time,sd,label='prout') # comparaison of sd with sd during the same time
+        plot.finalize(time) # pour gérer les dates correctement
+        plot.save('EX-temporalplotObsSim.png')
+
+    .. figure:: /images/EX-temporalplotObsSim.png
+        :align: center
+    """
+
+    def draw(self, timeObs, varObs, timeSim, varSim, *args, **kwargs):
+        """
+        Method of temporalplotObsSim class. Used for generating comparative 1D plot with time formatting.
+
+        :param timeObs: Array of Observation duration usually given by prosimu.readtime()
+        :param varObs: Array of Observation data usially given by prosimu.read()
+        :param timeSim: Array of simulation duration usually given by prosimu.readtime()
+        :param varSim: Array of simulation data usially given by prosimu.read()
+        :param args: (optional)
+        :param kwargs: optional ( matplotlib.pyplot key arguments )
+        :return:
+        """
         self.add_points(timeObs, varObs, label="Observations")
         if 'label' in kwargs.keys():
             label = kwargs['label']
         else:
             label = 'S2M'
         self.add_line(timeSim, varSim, label=label)
-        super(temporalplotObsSim, self).draw(timeSim, **kwargs)
+        self.finalize(timeSim, **kwargs)
 
 
 class temporalplotObsMultipleSims(temporalplot):
-    def draw(self, timeObs, varObs, timeSim, varSim, **kwargs):
+    """ Kept for bakward compatibility , please refer totemporalplotObsSim
+        Similar to temporalplotObsSim but UGLIER
+    """
+    def draw(self, timeObs, varObs, timeSim, varSim, *args, **kwargs):
+        """Method of temporalplotObsMultipleSims class. Used for generating comparative 1D plot with time formatting.
+        Similar to temporalplotObsSim but UGLIER
+
+        :param timeObs: Array of Observation duration usually given by prosimu.readtime()
+        :param varObs: Array of Observation data usially given by prosimu.read()
+        :param timeSim: Array of simulation duration usually given by prosimu.readtime()
+        :param varSim: Array of simulation data usially given by prosimu.read()
+        :param args: (optional)
+        :param kwargs: optional ( matplotlib.pyplot key arguments )
+        :return:
+        """
         self.add_points(timeObs, varObs, label="Observations")
         self.set_default("label", "S2M", kwargs)
         self.add_line(timeSim, varSim, **kwargs)
 
 
 class temporalplot2Axes(temporalplot):
-
+    """ Kept for bakward compatibility
+    LM2B = Looks Broken to Me
+    """
     def addAx2(self, labelAx2, color='black', **kw):
+        """
+
+        :param labelAx2: str of label
+        :param color:
+        :param kw:
+        :return:
+        """
         self.ax2 = self.plot.twinx()
         if 'forcemin' in kw.keys() and 'forcemax' in kw.keys():
             self.ax2.set_ylim(kw['forcemin'], kw['forcemax'])
@@ -170,15 +270,14 @@ class temporalplot2Axes(temporalplot):
 
 
 class prettyensemble(temporalplot):
-
     figsize = (15, 4.5)
 
     def __init__(self, *args, **kwargs):
         super(prettyensemble, self).__init__(*args, **kwargs)
-#         self.fig.subplots_adjust(top=0.85)
+        #         self.fig.subplots_adjust(top=0.85)
         self.fig.subplots_adjust()
 
-    def draw(self, timeSim, qmin, qmed, qmax, **kwargs):
+    def draw(self, timeSim, qmin, qmed, qmax, *args, **kwargs):
 
         if 'colorquantiles' not in kwargs.keys():
             kwargs['colorquantiles'] = 'red'
@@ -191,20 +290,21 @@ class prettyensemble(temporalplot):
             medianlabel += " " + kwargs['commonlabel']
             quantileslabel += " " + kwargs['commonlabel']
 
-        self.plot.plot_date(timeSim, qmed, "-", color=kwargs['colorquantiles'], linewidth=kwargs['linewidth'], label=medianlabel)
-        self.plot.fill_between(timeSim, qmin, qmax, color=kwargs['colorquantiles'], alpha=kwargs['alpha'], label=quantileslabel)
-        super(prettyensemble, self).draw(timeSim, **kwargs)
+        self.plot.plot_date(timeSim, qmed, "-", color=kwargs['colorquantiles'], linewidth=kwargs['linewidth'],
+                            label=medianlabel)
+        self.plot.fill_between(timeSim, qmin, qmax, color=kwargs['colorquantiles'], alpha=kwargs['alpha'],
+                               label=quantileslabel)
+        self.finalize(timeSim, **kwargs)
 
 
 class spaghettis(temporalplot):
-
     figsize = (10, 3.5)
 
     def __init__(self, *args, **kwargs):
         super(spaghettis, self).__init__(*args, **kwargs)
         self.fig.subplots_adjust(top=0.85)
 
-    def draw(self, timeSim, ensemble, qmin, qmed, qmax, **kwargs):
+    def draw(self, timeSim, ensemble, qmin, qmed, qmax, *args, **kwargs):
 
         if 'colorquantiles' not in kwargs.keys():
             kwargs['colorquantiles'] = 'red'
@@ -220,17 +320,16 @@ class spaghettis(temporalplot):
         self.add_line(timeSim, ensemble, color=kwargs['colormembers'], linewidth=0.5)
         self.plot.plot_date(timeSim, qmed, "-", color=kwargs['colorquantiles'], linewidth=2, label=medianlabel)
         self.plot.fill_between(timeSim, qmin, qmax, color=kwargs['colorquantiles'], alpha=0.25, label=quantileslabel)
-        super(spaghettis, self).draw(timeSim, **kwargs)
+        self.finalize(timeSim, **kwargs)
 
 
 class spaghettis_with_det(spaghettis):
-    def draw(self, timeSim, deterministic, ensemble, qmin, qmed, qmax, **kwargs):
-
+    def draw(self, timeSim, ensemble, qmin, qmed, qmax, deterministic=None, *args, **kwargs):
+        super(spaghettis_with_det,self).draw(timeSim, ensemble, qmin, qmed, qmax, deterministic, *args, **kwargs)
         if 'commonlabel' in kwargs.keys():
-            detlabel = u"Dét."  + " " + kwargs['commonlabel']
+            detlabel = u"Dét." + " " + kwargs['commonlabel']
         else:
             detlabel = u"Déterministe"
 
         self.add_line(timeSim, deterministic, color="black", linewidth=2, label=detlabel, zorder=100)
         super(spaghettis_with_det, self).draw(timeSim, ensemble, qmin, qmed, qmax, **kwargs)
-

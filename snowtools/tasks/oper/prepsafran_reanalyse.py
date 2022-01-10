@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
 
@@ -10,17 +9,17 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
-from snowtools.bronx.stdtypes.date import Date
+from bronx.stdtypes.date import Date
 
 
 def setup(t, **kw):
     return Driver(
-        tag    = 'pearp2safran',
-        ticket = t,
-        nodes  = [
+        tag='pearp2safran',
+        ticket=t,
+        nodes=[
             Reanalyses(tag='prepsafreana', ticket=t, **kw),
         ],
-        options = kw,
+        options=kw,
     )
 
 

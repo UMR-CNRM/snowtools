@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
 
@@ -20,12 +19,12 @@ logger = footprints.loggers.getLogger(__name__)
 
 def setup(t, **kw):
     return Driver(
-        tag    = 'pearp2safran',
-        ticket = t,
-        nodes  = [
+        tag='pearp2safran',
+        ticket=t,
+        nodes=[
             PrepSafran(tag='prepsafana', ticket=t, **kw),
         ],
-        options = kw,
+        options=kw,
     )
 
 
@@ -46,10 +45,13 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # ----------------------------------
 
                 # RUN 3h : Recuperation de A6 des réseaux 6H, 12H et 18H (J-1).
-                # On récupère aussi le réseau 0H (J-1) qui a normalement déjà été extrait par la tâche prepsaf de 9h de la veille par sécurité
-                # SAFRAN utilisera la P6 du réseau 0h J pour le dernier guess en attendant que l'analyse soit disponible (réseau 9h)
+                # On récupère aussi le réseau 0H (J-1) qui a normalement déjà été extrait par la tâche prepsaf
+                # de 9h de la veille par sécurité
+                # SAFRAN utilisera la P6 du réseau 0h J pour le dernier guess en attendant que l'analyse
+                # soit disponible (réseau 9h)
                 # On cherche d'abord sur le cache inline puis sur hendrix
-                # RQ : on ne peut pas utiliser le namespace multi car les fichiers sur hendrix n'ont pas de filtername...
+                # RQ : on ne peut pas utiliser le namespace multi car les fichiers sur hendrix n'ont
+                # pas de filtername...
                 self.sh.title('Toolbox input arpege assim inline')
                 tbarp = toolbox.input(
                     role           = 'Gridpoint',
@@ -104,7 +106,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # II- Guess PEARP (membres 0 à 34)
                 # --------------------------------
 
-                # Récupération des prévisions du réseau 6h (J-1) (utilisée seulement à partir du run de 6h) pour l'analyse (J-1) 6h -> J 6h
+                # Récupération des prévisions du réseau 6h (J-1) (utilisée seulement à partir du run de 6h)
+                # pour l'analyse (J-1) 6h -> J 6h
                 self.sh.title('Toolbox input pearp')
                 tbpearp = toolbox.input(
                     role           = 'Gridpoint',
@@ -189,14 +192,16 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # Need to extend pythonpath to be independant of the user environment ($PYTHONPATH)
                 # The vortex-build environment already set up the pythonpath (see jobassistant plugin) but the script is 
                 # eventually launched in a 'user-defined' environment
-		extendpypath = ['/homech/mxpt001/vortex/oper/s2m/alp/eccodes_python'] + [self.sh.path.join(self.conf.rootapp, d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site']],
+                extendpypath   = ['/homech/mxpt001/vortex/oper/s2m/alp/eccodes_python'] + \
+                       [self.sh.path.join(self.conf.rootapp, d)
+                        for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site']],
                 ntasks         = self.conf.ntasks,
                 terms          = footprints.util.rangex(self.conf.ana_terms),
             )
             print(t.prompt, 'tb04 =', expresso)
             print()
 
-            self.component_runner(expresso, script, fortran = False)
+            self.component_runner(expresso, script, fortran=False)
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
 
@@ -215,7 +220,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vconf          = '[geometry:area]',
                     experiment     = self.conf.xpid,
                     block          = self.conf.block,
-                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d)) for d in footprints.util.rangex(12, 30, self.conf.cumul)],
+                    date           = ['{0:s}/-PT{1:s}H'.format(self.conf.rundate.ymd6h, str(d))
+                                      for d in footprints.util.rangex(12, 30, self.conf.cumul)],
                     cumul          = self.conf.cumul,
                     nativefmt      = 'ascii',
                     kind           = 'guess',
@@ -223,7 +229,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
                     namespace      = self.conf.namespace,
-		    delayed        = True, 
+                    delayed        = True,
                 ),
                 print(t.prompt, 'tb05_a =', tb05a)
                 print()
@@ -246,7 +252,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     source_conf    = self.conf.deterministic_conf,
                     namespace      = self.conf.namespace,
                     fatal          = False,
-		    delayed        = True,
+                    delayed        = True,
                 ),
                 print(t.prompt, 'tb05_b =', tb05b)
                 print()
@@ -265,7 +271,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     nativefmt      = 'ascii',
                     kind           = 'guess',
                     model          = 'safran',
-		    delayed        = True,
+                    delayed        = True,
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.eps_conf,
                     namespace      = self.conf.namespace,
@@ -275,7 +281,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb06 =', tb06)
                 print()
 
-                ad.phase(tb05a,tb05b,tb06)
+                ad.phase(tb05a, tb05b, tb06)
             else:
 
                 self.sh.title('Toolbox output tb05 = guess arpege assim')
@@ -291,7 +297,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     nativefmt      = 'ascii',
                     kind           = 'guess',
                     model          = 'safran',
-		    delayed        = True,
+                    delayed        = True,
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
                     namespace      = self.conf.namespace,
@@ -302,5 +308,5 @@ class PrepSafran(Task, S2MTaskMixIn):
 
                 ad.phase(tb05)
 
-            #from vortex.tools.systems import ExecutionError
-            #raise ExecutionError('')
+            # from vortex.tools.systems import ExecutionError
+            # raise ExecutionError('')
