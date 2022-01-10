@@ -424,7 +424,8 @@ class Vortex_conf_file(object):
         self.set_field("DEFAULT", 'cumul', 6)
         self.set_field("DEFAULT", 'cutoff', self.options.cutoff)
         self.set_field("DEFAULT", 'model', 'safran')
-        self.set_field("DEFAULT", 'cycle', 'uenv:s2m.01@vernaym')
+        # Default cycle is the oper one, to be updated...
+        self.set_field("DEFAULT", 'cycle', 'uenv:cen01_cen@s2m-op2.06')
         self.set_field("DEFAULT", 'namespace', 'vortex.multi.fr')
         if self.options.namelist:
             self.set_field("DEFAULT", 'namelist', self.options.namelist)
