@@ -348,7 +348,7 @@ class Vortex_conf_file(object):
         self.set_field("DEFAULT", 'nprocs', self.options.ntasks)
         self.set_field("DEFAULT", 'openmp', 1)
         self.set_field("DEFAULT", 'geometry', self.options.vconf)
-        if hasattr(self.options, 'addmask')
+        if hasattr(self.options, 'addmask'):
             self.set_field("DEFAULT", 'addmask', self.options.addmask)
 
     def escroc_variables(self):
