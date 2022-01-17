@@ -10,6 +10,7 @@ import argparse
 import os
 
 from snowtools.scripts.extract.obs.bdquery import question
+from bronx.stdtypes.date import Date
 
 parser = argparse.ArgumentParser(
         description="Read precititation and temperature observations from BDCLim for all availables stations"
@@ -18,10 +19,11 @@ parser.add_argument("date_min", help="Start date")
 parser.add_argument("date_max", help="End date")
 parser.add_argument("-o", "--output", help="Output folder",
                     default='.', dest='output')
-parser.add_argument("--rr", action="store_true", default=False, help="Produce RR output (one by month)")
-parser.add_argument("--tn", action="store_true", default=False, help="Produce TN output (one by month)")
-parser.add_argument("--tx", action="store_true", default=False, help="Produce TX output (one by month)")
-parser.add_argument("--tt", action="store_true", default=False, help="Produce T output at hour timestep")
+parser.add_argument("--rr", action="store_true", default=False, help="Produce RR output")
+parser.add_argument("--tn", action="store_true", default=False, help="Produce TN output")
+parser.add_argument("--tx", action="store_true", default=False, help="Produce TX output")
+parser.add_argument("--tt", action="store_true", default=False, help="Produce T output at hourly timestep")
+parser.add_argument("--f", dest="frequency", action="store", default="daily", help="Observation frequency", choices=["monthly", "daily"])
 args = parser.parse_args()
 
 if not os.path.isdir(args.output):
@@ -66,58 +68,69 @@ if __name__ == "__main__":
 
     datedeb = args.date_min
     datefin = args.date_max
+    begin = Date(datedeb)
+    end = Date(datefin)
 
     # II.1.1 construction de la question pour les postes nivo pour la HTN
     # ---------------------------------------------------------------------------
     # On prend toutes les heures
 
-# 1. RR mensuelles
-# -----------------
+if args.frequency == "monthly":
+    table = "MENSQ"
+    sufix = "_me"
+elif args.frequency == "daily":
+    table = "Q"
+    sufix = ""
+else:
+    table = "H"
+
+# 1. RR
+# ------
 
 if args.rr:
     question1 = question(
-            listvar=["dat", "mensq.num_poste", "poste.nom_usuel", "poste.alti", "rr", "rr_me"],
-            table='MENSQ',
-            listorder=['mensq.num_poste', 'dat'],
+            listvar=["dat", f"{table}.num_poste", "poste.nom_usuel", "poste.alti", "rr"+sufix],
+            table=table,
+            listorder=[f'{table}.num_poste', 'dat'],
             listjoin=[
-                'POSTE ON MENSQ.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (' + ','.join(stations_r) + ')'
+                f'POSTE ON {table}.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (' + ','.join(stations_r) + ')'
                 ],
             period=[datedeb, datefin],
-            dateformat='monthly',
+            dateformat=args.frequency,
             )
-    question1.run(outputfile='obs_mensuelles_brutes_RR.csv')
+    question1.run(outputfile=f'raw_{args.frequency}_obs_RR_{begin.ymd}_{end.ymd}.csv')
 
-# 2. TN mensuelles
-# -----------------
+# 2. TN
+# ------
 
 if args.tn:
     question2 = question(
-            listvar=["dat", "mensq.num_poste", "poste.nom_usuel", "poste.alti", "tn", "tn_me"],
-            table='MENSQ',
-            listorder=['mensq.num_poste', 'dat'],
+            listvar=["dat", f"{table}.num_poste", "poste.nom_usuel", "poste.alti", "tn"+sufix],
+            table=table,
+            listorder=[f'{table}.num_poste', 'dat'],
             listjoin=[
-                'POSTE ON MENSQ.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (' + ','.join(stations_t) + ')'
+                f'POSTE ON {table}.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (' + ','.join(stations_t) + ')'
                 ],
             period=[datedeb, datefin],
-            dateformat='monthly',
+            dateformat=args.frequency,
             )
-    question2.run(outputfile='obs_mensuelles_brutes_TN.csv')
+    question2.run(outputfile=f'raw_{args.frequency}_obs_TN_{begin.ymd}_{end.ymd}.csv')
 
-# 3. TX mensuelles
-# -----------------
+# 3. TX
+# ------
 
 if args.tx:
     question3 = question(
-            listvar=["dat", "mensq.num_poste", "poste.nom_usuel", "poste.alti", "tx", "tx_me"],
-            table='MENSQ',
-            listorder=['mensq.num_poste', 'dat'],
+            listvar=["dat", f"{table}.num_poste", "poste.nom_usuel", "poste.alti", "tx"+sufix],
+            table=table,
+            listorder=[f'{table}.num_poste', 'dat'],
             listjoin=[
-                'POSTE ON MENSQ.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (' + ','.join(stations_t) + ')'
+                f'POSTE ON {table}.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (' + ','.join(stations_t) + ')'
                 ],
             period=[datedeb, datefin],
-            dateformat='monthly',
+            dateformat=args.frequency,
             )
-    question3.run(outputfile='obs_mensuelles_brutes_TX.csv')
+    question3.run(outputfile=f'raw_{args.frequency}_obs_TX_{begin.ymd}_{end.ymd}.csv')
 
 # 4. T horaires
 # ---------------
