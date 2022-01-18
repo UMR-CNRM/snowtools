@@ -90,7 +90,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         tb02 = toolbox.input(
                             role           = 'Gridpoint',
                             format         = 'grib',
-                            geometry       = 'euroc25',
+                            geometry       = self.conf.cpl_geometry,
                             kind           = 'gridpoint',
                             local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
                             date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
@@ -120,7 +120,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         tb02 = toolbox.input(
                             role           = 'Gridpoint',
                             format         = 'grib',
-                            geometry       = 'glob025',
+                            geometry       = self.conf.cpl_geometry,
                             kind           = 'gridpoint',
                             # filtername     = 'concatenate',
                             suite          = 'oper',
@@ -150,7 +150,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             tbarp.extend(toolbox.input(
                                 role           = 'Gridpoint',
                                 format         = 'grib',
-                                geometry       = 'euroc25',
+                                geometry       = self.conf.cpl_geometry,
                                 kind           = 'gridpoint',
                                 local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
                                 date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
