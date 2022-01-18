@@ -77,8 +77,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     fatal          = False,
                 ),
-                print t.prompt, 'tb01 =', tb01
-                print
+                print(t.prompt, 'tb01 =', tb01)
+                print()
 
                 if len(tb01[0]) < 5:
 
@@ -111,8 +111,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                             vconf          = self.conf.deterministic_conf,
                             fatal          = False,
                         )
-                        print t.prompt, 'tb02 =', tb02
-                        print
+                        print(t.prompt, 'tb02 =', tb02)
+                        print()
 
                     else:
 
@@ -139,8 +139,8 @@ class PrepSafran(Task, S2MTaskMixIn):
 
                             fatal          = False,
                         )
-                        print t.prompt, 'tb02 =', tb02
-                        print
+                        print(t.prompt, 'tb02 =', tb02)
+                        print()
 
                         if len(tb02) == 5:
                             tbarp.extend(tb02)
@@ -162,8 +162,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                                 origin         = 'arpege',
                                 fatal          = False,
                             ))
-                            print t.prompt, 'tbarp =', tbarp
-                            print
+                            print(t.prompt, 'tbarp =', tbarp)
+                            print()
 
                         missing_dates.append(rundate)
 
@@ -178,8 +178,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 language    = 'python',
                 rawopts     = ' -a -o -i IDW -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp)]))),
             )
-            print t.prompt, 'tb03 =', tb03
-            print
+            print(t.prompt, 'tb03 =', tb03)
+            print()
 
         if 'fetch' in self.steps:
             pass
@@ -199,8 +199,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ntasks         = self.conf.ntasks,
                 terms          = footprints.util.rangex(self.conf.ana_terms),
             )
-            print t.prompt, 'tb04 =', expresso
-            print
+            print(t.prompt, 'tb04 =', expresso)
+            print()
 
 #             self.sh.title('Toolbox algo tb04')
 #             expresso = toolbox.algo(
@@ -256,8 +256,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 vconf          = self.conf.vconf,
                 fatal          = True,
             ),
-            print t.prompt, 'tb05 =', tb05
-            print
+            print(t.prompt, 'tb05 =', tb05)
+            print()
 
             for f in glob.glob('*/ARPEGE*'):
 
@@ -282,8 +282,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     source_conf    = self.conf.deterministic_conf,
                     namespace      = self.conf.namespace,
                 ),
-                print t.prompt, 'tb06 =', tb06
-                print
+                print(t.prompt, 'tb06 =', tb06)
+                print()
 
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')
