@@ -19,3 +19,4 @@ DATA/shapefiles
 .coverage
 newvenevsnowtools
 requirement*
+*.egg-info
