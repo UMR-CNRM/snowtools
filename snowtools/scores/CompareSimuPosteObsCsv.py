@@ -29,7 +29,7 @@ from snowtools.scores.deterministic import DeterministicScores_Heterogeneous
 
 usage = "CompareSimuPosteObsCsv.py [--scores] [--plot] -b YYYYMMDD -e YYYYMMDD --dirsim=dirsim1,dirsim2 --labels=label1,labe2 --dirplot=dirplot --format=pdf,png,eps --yearly"
 
-default = dict(fileobs="/rd/cenfic2/mma/vernaym/extraction_obs_htn/OBS_1958080100_2021080106.csv",
+default = dict(fileobs="/rd/cenfic2/mma/vernaym/extraction_obs_htn/OBS_ref.csv",
                dirsim='/rd/cenfic2/era40/vortex/s2m/postes/reanalysis/pro')
 
 IM = infomassifs()
