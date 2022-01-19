@@ -53,6 +53,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             # On s'arrête à J-4 pour produire le même fichier que le 'refill' journalier
             # TODO --> il serait plus logique d'aller jusqu'à 6H (J) pour avoir un mode secours
             # ==> Modification simultanéee de prepsaf_reana ET safran_ana (12H) 
+
             while rundate < dateend + Period(days=4):
 
                 # 1. Check if guess file already exists
@@ -169,14 +170,50 @@ class PrepSafran(Task, S2MTaskMixIn):
 
                 rundate = rundate + Period(days=1)
 
+            self.sh.title('Toolbox input metadata')
+            tbmeta = toolbox.input(
+                role           = 'Metadata',
+                format         = 'grib',
+                geometry       = self.conf.cpl_geometry,
+                kind           = 'gridpoint',
+                suite          = 'oper',
+                local          = 'METADATA.grib',
+                date           = '{0:s}/-PT30H'.format(self.conf.rundate.ymd6h),
+                term           = 0,
+                namespace      = 'vortex.multi.fr',
+                block          = 'forecast',
+                nativefmt      = '[format]',
+                cutoff         = 'assimilation',
+                origin         = 'historic',
+                model          = '[vapp]',
+                vapp           = self.conf.source_app,
+                vconf          = self.conf.deterministic_conf,
+                fatal          = False,
+            )
+            print(t.prompt, 'tbmeta =', tbmeta)
+            print()
+
+            self.sh.title('Toolbox input shapefile')
+            tbshp = toolbox.input(
+                role            = 'Shapefile',
+                genv            = self.conf.cycle,
+                gdomain         = 'all_massifs',
+                geometry        = '[gdomain]',
+                kind            = 'shapefile',
+                model           = self.conf.model,
+                local           = 'massifs_safran.tar',
+            )
+            print(t.prompt, 'tbshp =', tbshp)
+            print()
+
             self.sh.title('Toolbox input tb03 = PRE-TRAITEMENT FORCAGE script')
             tb03 = script = toolbox.input(
                 role        = 'pretraitement',
                 local       = 'makeP.py',
-                genv        = 'uenv:s2m.01@vernaym',
+                genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -a -o -i IDW -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp)]))),
+                rawopts     = ' -o -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp)])),
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
@@ -195,7 +232,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # Need to extend pythonpath to be independant of the user environment
                 # The vortex-build environment already set up the pythonpath (see jobassistant plugin) but the script is 
                 # eventually launched in a 'user-defined' environment
-                extendpypath = [self.sh.path.join(self.conf.rootapp, d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site', 'epygram/eccodes_python']],
+                extendpypath = [self.sh.path.join('/'.join(self.conf.iniconf.split('/')[:-2]), d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site', 'epygram/eccodes_python']],
                 ntasks         = self.conf.ntasks,
                 terms          = footprints.util.rangex(self.conf.ana_terms),
             )
