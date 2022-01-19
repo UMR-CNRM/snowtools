@@ -29,7 +29,7 @@ from snowtools.scores.deterministic import DeterministicScores_Heterogeneous
 
 usage = "CompareSimuPosteObsCsv.py [--scores] [--plot] -b YYYYMMDD -e YYYYMMDD --dirsim=dirsim1,dirsim2 --labels=label1,labe2 --dirplot=dirplot --format=pdf,png,eps --yearly"
 
-default = dict(fileobs="/rd/cenfic2/mma/vernaym/extraction_obs_htn/OBS_1983080100_2020080123.csv",
+default = dict(fileobs="/rd/cenfic2/mma/vernaym/extraction_obs_htn/OBS_1958080100_2021080106.csv",
                dirsim='/rd/cenfic2/era40/vortex/s2m/postes/reanalysis/pro')
 
 IM = infomassifs()
@@ -352,7 +352,7 @@ class ComparisonSimObs(object):
         # Default labels
 #        self.set_sim_labels(['New', 'Old', '', '', ''])
         self.set_massifs_labels(['Alps', 'Pyrenees', 'Corsica', '', ''])
-        self.set_sim_labels(['Reference reanalysis', 'Reanalysis with no temperature observation', 'Reanalysis without evaluation observations', '', ''])
+        self.set_sim_labels(['Reference reanalysis with no assimilation', 'New guess with no temperature observation', 'Reference reanalysis with assimilation', 'New guess with assimilation', ''])
 
         # Default colors
         self.set_sim_colors(['red', 'blue', 'grey', 'orange', 'green'])
