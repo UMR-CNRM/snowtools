@@ -94,7 +94,7 @@ class temporalplot_abstract(Mplfigure):
             self.plot.xaxis.set_major_locator(MonthLocator(range(1, 13, 2), 1))
             formatDate = '%d %b'
         elif ndays <= (5 * 365):
-            interval = ndays / 365 + 1
+            interval = int(ndays / 365) + 1
             self.plot.xaxis.set_major_locator(MonthLocator(range(1, 13, interval), 1))
             formatDate = '%d %b\n%Y'
         elif ndays >= (30 * 365):
