@@ -341,7 +341,7 @@ class ComparisonSimObs(object):
 
         # Default labels
 #        self.set_sim_labels(['New', 'Old', '', '', ''])
-        self.set_massifs_labels(['Alps', 'Pyrenees', 'Corsica', '', ''])
+        #self.set_massifs_labels(['Alps', 'Pyrenees', 'Corsica', '', ''])
         #self.set_sim_labels(['Reference reanalysis', 'Reanalysis with no temperature observation', 'Reanalysis without evaluation observations', '', ''])
         self.set_sim_labels(['Reference reanalysis without observations', 'New guess reanalysis without observations', 'Reference reanalysis', 'New guess reanalysis', ''])
 
