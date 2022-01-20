@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Created on 7 nov. 2017
 
@@ -7,7 +8,7 @@ Created on 7 nov. 2017
 from vortex.layout.nodes import Task
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
-from snowtools.bronx.stdtypes.date import daterange, yesterday, tomorrow
+from bronx.stdtypes.date import daterange, yesterday, tomorrow
 import footprints
 
 

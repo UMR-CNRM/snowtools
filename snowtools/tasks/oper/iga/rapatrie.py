@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
 
@@ -16,7 +15,7 @@ from vortex.tools.actions import actiond as ad
 from common.util import usepygram
 import iga.tools.op as op
 import snowtools
-from snowtools.bronx.stdtypes.date import Date
+from bronx.stdtypes.date import Date
 
 
 def setup(t, **kw):

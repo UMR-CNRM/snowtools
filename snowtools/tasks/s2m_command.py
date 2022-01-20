@@ -400,6 +400,9 @@ class Surfex_command(_S2M_command):
                 print("soda should run with escroc option")
 
 
-if __name__ == "__main__":
-
+def main():
     Surfex_command(sys.argv)
+
+
+if __name__ == "__main__":
+    main()

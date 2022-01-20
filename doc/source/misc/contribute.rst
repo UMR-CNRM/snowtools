@@ -25,7 +25,7 @@ Code tips
 Shebangs
 ^^^^^^^^
 
-If you are writing a script that can be executed, please add the following shebang. Note that you should not point to ``python`` as it may not be defined on all platforms, hence you have to point to ``pyhton3`` (or ``python2`` if absolutely needed).
+If you are writing a script that can be executed, please add the following shebang. Note that you should not point to ``python`` as it may not be defined on all platforms, hence you have to point to ``pyhton3``.
 
 .. code-block:: python
    

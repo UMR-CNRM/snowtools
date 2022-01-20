@@ -15,6 +15,7 @@ import time
 
 import numpy as np
 import matplotlib
+matplotlib.use('Agg')
 
 from snowtools.utils.prosimu import prosimu
 from snowtools.utils.obscsv import obscsv, multiplecsv
@@ -25,7 +26,6 @@ from snowtools.plots.temporal.chrono import temporalplotObsMultipleSims
 from snowtools.plots.boxplots.boxplots import boxplots_bydepartment, boxplots_byelevation, boxplots_byyear
 from snowtools.scores.deterministic import DeterministicScores_Heterogeneous
 
-matplotlib.use('Agg')
 
 usage = "CompareSimuPosteObsCsv.py [--scores] [--plot] -b YYYYMMDD -e YYYYMMDD --dirsim=dirsim1,dirsim2 --labels=label1,labe2 --dirplot=dirplot --format=pdf,png,eps --yearly"
 
@@ -345,7 +345,7 @@ class ComparisonSimObs(object):
 
         self.listStations = list(set(listStations) & set(listSitesMetadata))
 
-        self.elevations = map(IM.altiposte, self.listStations)
+        self.elevations = list(map(IM.altiposte, self.listStations))
 
         self.nstations = len(self.listStations)
 
@@ -439,7 +439,7 @@ class ComparisonSimObs(object):
 
     def allboxplots(self):
 
-        arrayStations = np.array(map(int, self.listStations))
+        arrayStations = np.array(list(map(int, self.listStations)))
 
         self.boxplots_scores(arrayStations, np.array(self.elevations), self.bias, 'bias', ylabel='Bias (cm)')
         self.boxplots_scores(arrayStations, np.array(self.elevations), self.rmse, 'rmse', ylabel='RMSD (cm)')
