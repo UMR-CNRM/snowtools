@@ -213,7 +213,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -o -d {0:s} -f '.format(self.conf.vconf) + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp)])),
+                rawopts     = ' -o -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp)])),
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
@@ -267,61 +267,65 @@ class PrepSafran(Task, S2MTaskMixIn):
             # tarname = 'p{0:s}_{1:s}.tar'.format(season, self.conf.domains)
             tarname = 'p{0:s}_{1:s}.tar'.format(season, self.conf.vconf)
             # thisdir = os.getcwd()
-            with tarfile.open(tarname, mode='w') as tarfic:
-                for f in glob.glob('*/P????????'):
-                    # oldname = os.path.basename(f).split('_')[0]
-                    # date = Date.strptime(oldname[1:], '%y%m%d%H') + Period(hours=6)
-                    # arcname = 'P{0:s}'.format(date.yymdh)
-                    arcname = os.path.basename(f)
-                    tarfic.add(f, arcname=arcname)
 
-            self.sh.title('Toolbox output tb05')
-            tb05 = toolbox.output(
-                role           = 'Reanalyses',
-                kind           = 'packedguess',
-                local          = tarname,
-                experiment     = self.conf.xpid_guess,
-                block          = 'guess',
-                nativefmt      = 'tar',
-                namespace      = 'vortex.multi.fr',
-                geometry       = self.conf.vconf,
-                begindate      = datebegin.ymd6h,
-                enddate        = dateend.ymd6h,
-                model          = 'safran',
-                date           = self.conf.rundate.ymdh,
-                vapp           = self.conf.vapp,
-                vconf          = self.conf.vconf,
-                fatal          = True,
-            ),
-            print(t.prompt, 'tb05 =', tb05)
-            print()
+            for dom in self.conf.domains:
+                with tarfile.open(tarname, mode='w') as tarfic:
 
-            for f in glob.glob('*/ARPEGE*'):
+                    for f in glob.glob('*/ARPEGE*'):
 
-                rundate = Date(f.split('/')[0])
+                        rundate = Date(f.split('/')[0])
 
-                self.sh.title('Toolbox output tb06')
-                tb06 = toolbox.output(
-                    role           = 'Ebauche',
-                    #local          = '[date::ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
-                    local          = '[date::ymdh]/P[date::addcumul_yymdh]',
-                    geometry       = self.conf.vconf,
-                    vapp           = 's2m',
-                    vconf          = '[geometry:area]',
-                    experiment     = 'OPER@vernaym',
-                    cutoff         = 'assimilation',
+                        # On archive d'abord le fichier guess
+                        self.sh.title('Toolbox output tb06')
+                        tbguess = toolbox.output(
+                            role           = 'Ebauche',
+                            local          = '[date::ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
+                            #local          = '[date::ymdh]/P[date::addcumul_yymdh]',
+                            geometry       = self.conf.vconf,
+                            vapp           = 's2m',
+                            vconf          = dom,
+                            experiment     = 'OPER@vernaym',
+                            cutoff         = 'assimilation',
+                            block          = 'guess',
+                            date           = rundate.ymdh,
+                            cumul          = self.conf.cumul,
+                            nativefmt      = 'ascii',
+                            kind           = 'guess',
+                            model          = 'safran',
+                            source_app     = self.conf.source_app,
+                            source_conf    = self.conf.deterministic_conf,
+                            namespace      = self.conf.namespace,
+                        ),
+                        print(t.prompt, 'tbguess =', tbguess)
+                        print()
+                        
+                        validitydate = rundate + Period(hours=6)
+                        guessname = f'P{validitydate}'
+                        # Puis on renome le fichier guess au format P????????
+                        os.rename(f'{rundate.ymdh}/P{rundate.yymdh}_6_{dom}_assimilation', guessname)
+                        tarfic.add(f, arcname=guessname)
+
+                self.sh.title('Toolbox output tb05')
+                tb05 = toolbox.output(
+                    role           = 'Reanalyses',
+                    kind           = 'packedguess',
+                    local          = tarname,
+                    experiment     = self.conf.xpid_guess,
                     block          = 'guess',
-                    date           = rundate.ymdh,
-                    cumul          = self.conf.cumul,
-                    nativefmt      = 'ascii',
-                    kind           = 'guess',
+                    nativefmt      = 'tar',
+                    namespace      = 'vortex.multi.fr',
+                    geometry       = self.conf.vconf,
+                    begindate      = datebegin.ymd6h,
+                    enddate        = dateend.ymd6h,
                     model          = 'safran',
-                    source_app     = self.conf.source_app,
-                    source_conf    = self.conf.deterministic_conf,
-                    namespace      = self.conf.namespace,
+                    date           = self.conf.rundate.ymdh,
+                    vapp           = self.conf.vapp,
+                    vconf          = self.conf.vconf,
+                    fatal          = True,
                 ),
-                print(t.prompt, 'tb06 =', tb06)
+                print(t.prompt, 'tb05 =', tb05)
                 print()
+
 
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')
