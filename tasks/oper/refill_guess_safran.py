@@ -56,33 +56,38 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             while rundate < dateend + Period(days=4):
 
-                # 1. Check if guess file already exists
-                self.sh.title('Toolbox input guess {0:s}'.format(rundate.ymdh))
-                tb01 = toolbox.input(
-                    role           = 'Ebauche',
-                    local          = '[date::ymdh]/P[date::addcumul_yymdh]',
-                    # geometry       = self.conf.domains,
-                    geometry       = self.conf.vconf,
-                    vapp           = 's2m',
-                    vconf          = '[geometry:area]',
-                    experiment     = self.conf.xpid_guess,
-                    cutoff         = 'assimilation',
-                    block          = 'guess',
-                    date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
-                    cumul          = self.conf.cumul,
-                    nativefmt      = 'ascii',
-                    kind           = 'guess',
-                    model          = 'safran',
-                    source_app     = self.conf.source_app,
-                    source_conf    = self.conf.deterministic_conf,
-                    namespace      = self.conf.namespace,
-                    fatal          = False,
-                ),
-                print(t.prompt, 'tb01 =', tb01)
-                print()
+                refill = False
+                for dom in self.conf.domains:
 
-                if len(tb01[0]) < 5:
+                    # 1. Check if guess file already exists
+                    self.sh.title('Toolbox input guess {0:s}'.format(rundate.ymdh))
+                    tb01 = toolbox.input(
+                        role           = 'Ebauche',
+                        local          = '[date::ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
+                        # geometry       = self.conf.domains,
+                        geometry       = '[vconf]',
+                        vapp           = 's2m',
+                        vconf          = dom,
+                        experiment     = self.conf.xpid_guess,
+                        cutoff         = 'assimilation',
+                        block          = 'guess',
+                        date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                        cumul          = self.conf.cumul,
+                        nativefmt      = 'ascii',
+                        kind           = 'guess',
+                        model          = 'safran',
+                        source_app     = self.conf.source_app,
+                        source_conf    = self.conf.deterministic_conf,
+                        namespace      = self.conf.namespace,
+                        fatal          = False,
+                    ),
+                    print(t.prompt, 'tb01 =', tb01)
+                    print()
 
+                    if len(tb01[0]) < 5:
+                        refill = True
+
+                if refill:
                     # 2. Get ARPEGE file
                     # Recuperation de A6 du réseau H-6 pour H in [0, 6, 12, 18]
                     if rundate < Date(2019, 7, 1, 0):
@@ -281,7 +286,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             role           = 'Ebauche',
                             local          = '[date::ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
                             #local          = '[date::ymdh]/P[date::addcumul_yymdh]',
-                            geometry       = self.conf.vconf,
+                            geometry       = '[vconf]',
                             vapp           = 's2m',
                             vconf          = dom,
                             experiment     = 'OPER@vernaym',
@@ -314,13 +319,13 @@ class PrepSafran(Task, S2MTaskMixIn):
                     block          = 'guess',
                     nativefmt      = 'tar',
                     namespace      = 'vortex.multi.fr',
-                    geometry       = self.conf.vconf,
+                    geometry       = '[vconf]',
                     begindate      = datebegin.ymd6h,
                     enddate        = dateend.ymd6h,
                     model          = 'safran',
                     date           = self.conf.rundate.ymdh,
                     vapp           = self.conf.vapp,
-                    vconf          = self.conf.vconf,
+                    vconf          = dom,
                     fatal          = True,
                 ),
                 print(t.prompt, 'tb05 =', tb05)
