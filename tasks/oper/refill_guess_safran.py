@@ -270,18 +270,18 @@ class PrepSafran(Task, S2MTaskMixIn):
             season = Date.nivologyseason.fget(self.conf.rundate)
             # for dom in self.conf.domains:
             # tarname = 'p{0:s}_{1:s}.tar'.format(season, self.conf.domains)
-            tarname = 'p{0:s}_{1:s}.tar'.format(season, self.conf.vconf)
             # thisdir = os.getcwd()
 
             for dom in self.conf.domains:
+                tarname = f'p{season}_{dom}.tar'
                 with tarfile.open(tarname, mode='w') as tarfic:
 
-                    for f in glob.glob('*/ARPEGE*'):
+                    for f in glob.glob('*/guess.out'):
 
                         rundate = Date(f.split('/')[0])
 
                         # On archive d'abord le fichier guess
-                        self.sh.title('Toolbox output tb06')
+                        self.sh.title(f'Toolbox output tbguess {rundate.ymdh}')
                         tbguess = toolbox.output(
                             role           = 'Ebauche',
                             local          = '[date::ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
@@ -305,7 +305,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         print()
                         
                         validitydate = rundate + Period(hours=6)
-                        guessname = f'P{validitydate}'
+                        guessname = f'{rundate.ymdh}/P{validitydate.ymdh}'
                         # Puis on renome le fichier guess au format P????????
                         os.rename(f'{rundate.ymdh}/P{rundate.yymdh}_6_{dom}_assimilation', guessname)
                         tarfic.add(f, arcname=guessname)
