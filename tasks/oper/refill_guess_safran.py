@@ -289,7 +289,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             geometry       = '[vconf]',
                             vapp           = 's2m',
                             vconf          = dom,
-                            experiment     = 'OPER@vernaym',
+                            experiment     = self.conf.xpid_guess,
                             cutoff         = 'assimilation',
                             block          = 'guess',
                             date           = rundate.ymdh,
