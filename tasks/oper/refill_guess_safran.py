@@ -213,7 +213,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -o -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp)])),
+                rawopts     = ' -o -d {0:s} -f '.format(self.conf.vconf) + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp)])),
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
@@ -303,7 +303,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox output tb06')
                 tb06 = toolbox.output(
                     role           = 'Ebauche',
-                    local          = '[date::ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
+                    #local          = '[date::ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
+                    local          = '[date::ymdh]/P[date::addcumul_yymdh]',
                     geometry       = self.conf.vconf,
                     vapp           = 's2m',
                     vconf          = '[geometry:area]',
