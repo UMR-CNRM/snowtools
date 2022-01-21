@@ -111,7 +111,7 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 experiment     = self.conf.xpid,
                 block          = 'guess',
                 geometry       = self.conf.vconf,
-                cutoff         = 'prevision',
+                cutoff         = 'production',
                 date           = ['{0:s}/+PT96H/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 30, self.conf.cumul)],
                 cumul          = self.conf.cumul,
                 nativefmt      = 'ascii',
