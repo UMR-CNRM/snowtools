@@ -65,7 +65,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     geometry       = self.conf.vconf,
                     vapp           = 's2m',
                     vconf          = '[geometry:area]',
-                    experiment     = 'OPER@vernaym',
+                    experiment     = self.conf.xpid_guess,
                     cutoff         = 'assimilation',
                     block          = 'guess',
                     date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d))
@@ -281,7 +281,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     geometry       = self.conf.vconf,
                     vapp           = 's2m',
                     vconf          = '[geometry:area]',
-                    experiment     = 'OPER@vernaym',
+                    experiment     = self.conf.xpid_guess,
                     cutoff         = 'assimilation',
                     block          = 'guess',
                     date           = rundate.ymdh,
