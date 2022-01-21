@@ -74,6 +74,7 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                     begindate      = datebegin.ymd6h,
                     enddate        = '{0:s}/-PT24H'.format(dateend.ymd6h),
                     geometry       = self.conf.vconf,
+                    cutoff         = 'assimilation',
                     intent         = 'inout',
                     fatal          = True,
                 )
