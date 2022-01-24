@@ -331,7 +331,7 @@ class Safran(Task, S2MTaskMixIn):
                 tb17 = toolbox.input(
                     role           = 'Ebauche',
                     local          = 'guess.tar',
-                    experiment     = self.conf.xpid,
+                    experiment     = self.conf.xpid_guess,
                     block          = 'guess',
                     nativefmt      = 'tar',
                     fatal          = False,
