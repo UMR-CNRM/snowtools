@@ -329,7 +329,7 @@ class Safran(Task, S2MTaskMixIn):
                 # Cela permettrait d'avoir des modes secours
                 self.sh.title('Toolbox input tb17')
                 tb17 = toolbox.input(
-                    role           = 'Ebauche',
+                    role           = 'Ebauche_Deterministic',
                     local          = 'guess.tar',
                     experiment     = self.conf.xpid_guess,
                     block          = 'guess',
