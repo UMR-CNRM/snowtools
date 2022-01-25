@@ -47,24 +47,49 @@ class Safran(Task, S2MTaskMixIn):
 
             if self.conf.rundate.hour == 12:
 
-                self.sh.title('Toolbox input tb01')
+#                self.sh.title('Toolbox input tb01')
+#                tb01 = toolbox.input(
+#                    role           = 'Observations',
+#                    block          = 'observations',
+#                    experiment     = self.conf.xpid_obs,
+#                    vapp           = 's2m',
+#                    geometry       = self.conf.vconf,
+#                    kind           = 'packedobs',
+#                    date           = self.conf.rundate.ymdh,
+#                    begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
+#                    enddate        = dateend.ymd6h,
+#                    local          = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
+#                    model          = 'safran',
+#                    # hostname       = 'guppy.meteo.fr',
+#                    # username       = 'vernaym',
+#                    # tube           = 'ftp',
+#                    # remote         = '/home/mrns/vernaym/extraction_obs/oper/observations_safran_[vconf]_[date::ymdh].tar',
+#                    namespace      = 'vortex.archive.fr',
+#                    cutoff         = 'assimilation',
+#                    now            = True,
+#                    hook_autohook1 = (tb01_generic_hook1, ),
+#                )
+#                print(t.prompt, 'tb01 =', tb01)
+#                print()
+                self.sh.title('Toolbox input tb01_a')
                 tb01 = toolbox.input(
                     role           = 'Observations',
-                    block          = 'observations',
-                    experiment     = self.conf.xpid_obs,
-                    vapp           = 's2m',
+                    # block          = 'observations',
+                    # experiment     = self.conf.xpid,
+                    # vapp           = 's2m',
                     geometry       = self.conf.vconf,
+                    suite          = 'oper',
                     kind           = 'packedobs',
                     date           = self.conf.rundate.ymdh,
                     begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
                     enddate        = dateend.ymd6h,
                     local          = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
                     model          = 'safran',
-                    # hostname       = 'guppy.meteo.fr',
-                    # username       = 'vernaym',
-                    # tube           = 'ftp',
-                    # remote         = '/home/mrns/vernaym/extraction_obs/oper/observations_safran_[vconf]_[date::ymdh].tar',
-                    namespace      = 'vortex.archive.fr',
+                    hostname       = 'guppy.meteo.fr',
+                    username       = 'vernaym',
+                    tube           = 'ftp',
+                    remote         = '/home/mrns/vernaym/extraction_obs/oper/rep_[geometry:area]/observations_safran_[vconf]_[date::ymdh].tar',
+                    # namespace      = 'vortex.archive.fr',
                     cutoff         = 'assimilation',
                     now            = True,
                     hook_autohook1 = (tb01_generic_hook1, ),
