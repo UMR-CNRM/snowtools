@@ -276,7 +276,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 tarname = f'p{season}_{dom}.tar'
                 with tarfile.open(tarname, mode='w') as tarfic:
 
-                    rundate = datebegin - Period(days=1)
+                    rundate = datebegin - Period(days=1) - Period(hours=6)
                     while rundate < dateend + Period(days=4):
 
                         # On archive d'abord le fichier guess
@@ -309,7 +309,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         # Puis on renome le fichier guess au format P????????
                         tarfic.add(guessname, arcname=arcname)
 
-                        rundate = rundate + Period(days=1)
+                        rundate = rundate + Period(hours=6)
 
                 self.sh.title('Toolbox output tb05')
                 tb05 = toolbox.output(
@@ -321,8 +321,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     nativefmt      = 'tar',
                     namespace      = 'vortex.multi.fr',
                     geometry       = '[vconf]',
-                    begindate      = datebegin.ymd6h,
-                    enddate        = dateend.ymd6h,
+                    begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
+                    enddate        = '{0:s}/+PT96H'.format(dateend.ymd6h),
                     model          = 'safran',
                     date           = self.conf.rundate.ymdh,
                     vapp           = self.conf.vapp,
