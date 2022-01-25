@@ -305,10 +305,10 @@ class PrepSafran(Task, S2MTaskMixIn):
                         print()
                         
                         validitydate = rundate + Period(hours=6)
-                        guessname = f'{rundate.ymdh}/P{validitydate.ymdh}'
+                        guessname = f'{rundate.ymdh}/P{rundate.yymdh}_6_{dom}_assimilation'
+                        arcname   = f'P{validitydate.yymdh}'
                         # Puis on renome le fichier guess au format P????????
-                        os.rename(f'{rundate.ymdh}/P{rundate.yymdh}_6_{dom}_assimilation', guessname)
-                        tarfic.add(f, arcname=guessname)
+                        tarfic.add(guessname, arcname=arcname)
 
                 self.sh.title('Toolbox output tb05')
                 tb05 = toolbox.output(
