@@ -33,7 +33,7 @@ class Safran(Task, S2MTaskMixIn):
 
         t = self.ticket
 
-        def tb01_generic_hook1(t, rh):
+        def untar_hook(t, rh):
             sh = t.sh
             tarname = sh.path.basename(rh.container.localpath())
             if sh.is_tarfile(tarname):
@@ -67,7 +67,7 @@ class Safran(Task, S2MTaskMixIn):
 #                    namespace      = 'vortex.archive.fr',
 #                    cutoff         = 'assimilation',
 #                    now            = True,
-#                    hook_autohook1 = (tb01_generic_hook1, ),
+#                    hook_autohook1 = (untar_hook, ),
 #                )
 #                print(t.prompt, 'tb01 =', tb01)
 #                print()
@@ -92,7 +92,7 @@ class Safran(Task, S2MTaskMixIn):
                     # namespace      = 'vortex.archive.fr',
                     cutoff         = 'assimilation',
                     now            = True,
-                    hook_autohook1 = (tb01_generic_hook1, ),
+                    hook_autohook1 = (untar_hook, ),
                 )
                 print(t.prompt, 'tb01 =', tb01)
                 print()
@@ -120,7 +120,7 @@ class Safran(Task, S2MTaskMixIn):
                     # namespace      = 'vortex.archive.fr',
                     cutoff         = 'assimilation',
                     now            = True,
-                    hook_autohook1 = (tb01_generic_hook1, ),
+                    hook_autohook1 = (untar_hook, ),
                 )
                 print(t.prompt, 'tb01 =', tb01)
                 print()
@@ -362,14 +362,14 @@ class Safran(Task, S2MTaskMixIn):
                     fatal          = False,
                     kind           = 'packedguess',
                     model          = 'safran',
-                    hook_autohook1 = (tb01_generic_hook1, ),
-                    date           = '{0:s}/-PT24H'.format(self.conf.rundate.ymdh),
+                    date           = self.conf.rundate.ymdh,
                     vapp           = self.conf.vapp,
                     vconf          = self.conf.vconf,
                     begindate      = datebegin.ymd6h,
-                    enddate        = '{0:s}/-PT24H'.format(dateend.ymd6h),
+                    enddate        = dateend.ymd6h,
                     geometry       = self.conf.vconf,
                     intent         = 'inout',
+                    hook_autohook1 = (untar_hook, ),
                 )
                 print(t.prompt, 'tb17 =', tb17)
                 print()
