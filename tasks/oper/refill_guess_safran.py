@@ -276,9 +276,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 tarname = f'p{season}_{dom}.tar'
                 with tarfile.open(tarname, mode='w') as tarfic:
 
-                    for f in glob.glob('*/guess.out'):
-
-                        rundate = Date(f.split('/')[0])
+                    rundate = datebegin - Period(days=1)
+                    while rundate < dateend + Period(days=4):
 
                         # On archive d'abord le fichier guess
                         self.sh.title(f'Toolbox output tbguess {rundate.ymdh}')
@@ -309,6 +308,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                         arcname   = f'P{validitydate.yymdh}'
                         # Puis on renome le fichier guess au format P????????
                         tarfic.add(guessname, arcname=arcname)
+
+                        rundate = rundate + Period(days=1)
 
                 self.sh.title('Toolbox output tb05')
                 tb05 = toolbox.output(
