@@ -46,7 +46,7 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'mb035/P[date::yymdh]_[cumul:hour]',
                 experiment     = self.conf.xpid_guess,
                 block          = self.conf.guess_block,
-                geometry       = self.conf.vconf,
+                geometry       = self.conf.geometry[self.conf.vconf],
                 cutoff         = 'assimilation',
                 date           = ['{0:s}/+PT{1:s}H/-PT6H'.format(datebegin.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                 cumul          = self.conf.cumul,
@@ -76,7 +76,7 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'mb035/P[date::yymdh]_[cumul:hour]',
                 experiment     = self.conf.xpid_guess,
                 block          = self.conf.guess_block,
-                geometry       = self.conf.vconf,
+                geometry       = self.conf.geometry[self.conf.vconf],
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
                 cumul          = footprints.util.rangex(self.conf.prv_terms)[2:35],
                 nativefmt      = 'ascii',
@@ -102,7 +102,7 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
                 experiment     = self.conf.xpid_guess,
                 block          = self.conf.guess_block,
-                geometry       = self.conf.vconf,
+                geometry       = self.conf.geometry[self.conf.vconf],
                 date           = '{0:s}'.format(datebegin.ymd6h),
                 cumul          = footprints.util.rangex(self.conf.ana_terms),
                 nativefmt      = 'ascii',
@@ -124,7 +124,7 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
                 experiment     = self.conf.xpid_guess,
                 block          = self.conf.guess_block,
-                geometry       = self.conf.vconf,
+                geometry       = self.conf.geometry[self.conf.vconf],
                 date           = '{0:s}/+PT12H'.format(datebegin.ymdh),
                 cumul          = footprints.util.rangex(self.conf.prv_terms)[4:38],
                 nativefmt      = 'ascii',
@@ -146,7 +146,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind            = 'listem',
                 model           = self.conf.model,
                 local           = 'listem',
-                geometry        = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
@@ -158,7 +158,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind            = 'listeml',
                 model           = self.conf.model,
                 local           = 'listeml',
-                geometry        = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
             )
             print(t.prompt, 'tb04 =', tb04)
             print()
@@ -170,7 +170,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind            = 'listeo',
                 model           = self.conf.model,
                 local           = 'listeo',
-                geometry        = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
             )
             print(t.prompt, 'tb05 =', tb05)
             print()
@@ -184,7 +184,7 @@ class Safran(Task, S2MTaskMixIn):
                     kind            = 'NORELmt',
                     model           = self.conf.model,
                     local           = 'NORELmt',
-                    geometry        = self.conf.vconf,
+                    geometry        = self.conf.geometry[self.conf.vconf],
                 )
                 print(t.prompt, 'tb06 =', tb06)
                 print()
@@ -199,7 +199,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind            = 'rsclim',
                 model           = self.conf.model,
                 local           = 'rsclim.don',
-                geometry        = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
             )
             print(t.prompt, 'tb07 =', tb07)
             print()
@@ -211,7 +211,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind            = 'icrccm',
                 model           = self.conf.model,
                 local           = 'icrccm.don',
-                geometry        = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
             )
             print(t.prompt, 'tb08 =', tb08)
             print()
@@ -219,8 +219,8 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb09')
             tb09 = toolbox.input(
                 role            = 'Nam_sorties',
-                source          = 'namelist_sorties_[geometry]',
-                geometry        = self.conf.vconf,
+                source          = 'namelist_sorties_[geometry:area]',
+                geometry        = self.conf.geometry[self.conf.vconf],
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -233,7 +233,7 @@ class Safran(Task, S2MTaskMixIn):
             tb14 = toolbox.input(
                 role            = 'Nam_adapt',
                 source          = 'namelist_adapt',
-                geometry        = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -245,8 +245,8 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb10')
             tb10 = toolbox.input(
                 role            = 'Nam_melange',
-                source          = 'namelist_melange_[geometry]',
-                geometry        = self.conf.vconf,
+                source          = 'namelist_melange_[geometry:area]',
+                geometry        = self.conf.geometry[self.conf.vconf],
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -259,7 +259,7 @@ class Safran(Task, S2MTaskMixIn):
             tb11 = toolbox.input(
                 role            = 'carac_post',
                 genv            = self.conf.cycle,
-                geometry        = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
                 kind            = 'carpost',
                 model           = self.conf.model,
                 local           = 'carpost.tar',
@@ -270,8 +270,8 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb12')
             tb12 = toolbox.input(
                 role            = 'Nam_impress',
-                source          = 'namelist_impress_[geometry]',
-                geometry        = self.conf.vconf,
+                source          = 'namelist_impress_[geometry:area]',
+                geometry        = self.conf.geometry[self.conf.vconf],
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -285,8 +285,8 @@ class Safran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox input tb13')
                 tb13 = toolbox.input(
                     role            = 'Nam_observr',
-                    source          = 'namelist_observr_[geometry]',
-                    geometry        = self.conf.vconf,
+                    source          = 'namelist_observr_[geometry:area]',
+                    geometry        = self.conf.geometry[self.conf.vconf],
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
                     model           = self.conf.model,
@@ -299,8 +299,8 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb14')
             tb14 = toolbox.input(
                 role            = 'Nam_analyse',
-                source          = 'namelist_analyse_[geometry]',
-                geometry        = self.conf.vconf,
+                source          = 'namelist_analyse_[geometry:area]',
+                geometry        = self.conf.geometry[self.conf.vconf],
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -313,8 +313,8 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb16')
             tb16 = toolbox.input(
                 role            = 'Nam_ebauche',
-                source          = 'namelist_ebauche_[geometry]',
-                geometry        = self.conf.vconf,
+                source          = 'namelist_ebauche_[geometry:area]',
+                geometry        = self.conf.geometry[self.conf.vconf],
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -441,7 +441,7 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'mb035/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                 experiment     = self.conf.xpid,
                 block          = 'massifs',
-                geometry       = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
                 nativefmt      = 'netcdf',
                 model          = self.conf.model,
                 datebegin      = datebegin.ymd6h,
@@ -460,7 +460,7 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'mb035/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                 experiment     = self.conf.diff_xpid,
                 block          = 'massifs',
-                geometry       = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
                 nativefmt      = 'netcdf',
                 model          = self.conf.model,
                 datebegin      = datebegin.ymd6h,
@@ -480,7 +480,7 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'mb035/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                 experiment     = self.conf.xpid,
                 block          = 'postes',
-                geometry       = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
                 nativefmt      = 'netcdf',
                 model          = self.conf.model,
                 datebegin      = datebegin.ymd6h,
@@ -499,7 +499,7 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'mb035/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                 experiment     = self.conf.diff_xpid,
                 block          = 'postes',
-                geometry       = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
                 nativefmt      = 'netcdf',
                 model          = self.conf.model,
                 datebegin      = datebegin.ymd6h,
@@ -519,7 +519,7 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                 experiment     = self.conf.xpid,
                 block          = 'massifs',
-                geometry       = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
                 nativefmt      = 'netcdf',
                 model          = self.conf.model,
                 datebegin      = datebegin.ymd6h,
@@ -539,7 +539,7 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                 experiment     = self.conf.diff_xpid,
                 block          = 'massifs',
-                geometry       = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
                 nativefmt      = 'netcdf',
                 model          = self.conf.model,
                 datebegin      = datebegin.ymd6h,
@@ -560,7 +560,7 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                 experiment     = self.conf.xpid,
                 block          = 'postes',
-                geometry       = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
                 nativefmt      = 'netcdf',
                 model          = self.conf.model,
                 datebegin      = datebegin.ymd6h,
@@ -580,7 +580,7 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                 experiment     = self.conf.diff_xpid,
                 block          = 'postes',
-                geometry       = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
                 nativefmt      = 'netcdf',
                 model          = self.conf.model,
                 datebegin      = datebegin.ymd6h,
@@ -597,7 +597,7 @@ class Safran(Task, S2MTaskMixIn):
                 role           = 'Listing',
                 block          = 'listing',
                 experiment     = self.conf.xpid,
-                geometry       = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
                 kind           = 'packedlisting',
                 begindate      = datebegin.ymd6h,
                 enddate        = dateend.ymd6h,
@@ -614,7 +614,7 @@ class Safran(Task, S2MTaskMixIn):
                 role           = 'Listing',
                 block          = 'listing',
                 experiment     = self.conf.xpid,
-                geometry       = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
                 kind           = 'packedlisting',
                 begindate      = datebegin.ymd6h,
                 enddate        = dateend.ymd6h,
