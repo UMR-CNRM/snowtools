@@ -55,7 +55,7 @@ if args.postes:
     question_postes = question(
             listvar=["num_poste", "nom_usuel", "alti", "lat", "lon"],
             table='POSTE_NIVO',
-            listconditions=['type_nivo=1'],
+            listconditions=['type_nivo=1', "datouvr<to_date('{0:s}', 'YYYYMMDD')".format(datedeb), "(datferm>to_date('{0:s}', 'YYYYMMDD') OR datferm is Null)".format(datefin)],
             listorder=['num_poste'],
             )
     question_postes.run(outputfile=f'postes_nivometeo.csv')
