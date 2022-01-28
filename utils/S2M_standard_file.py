@@ -41,7 +41,7 @@ class _StandardNC(netCDF4.Dataset):
         self.title = 'S2M reanalysis'
         self.summary = 'This file takes part from a 61-years reanalysis of meteorological and snow conditions in the French Alps, Pyrenees and Corsica from 1958 to 2020. The simulations are performed over relatively homogeneous units designed to represent the main drivers of the spatial variability observed in mountain ranges (elevation, slope and aspect). The meteorological reanalysis is performed by the SAFRAN system, which adjusts a guess from a Numerical Weather Prediction model (ERA-40 reanalysis from 1958 to 2002, ARPEGE from 2002 to 2018) with the best possible set of available in-situ meteorological observations. SAFRAN outputs are used to force the Crocus detailed snowpack model within the land surface scheme SURFEX/ISBA. This provides the evolution of the snowpack and the associated avalanche hazard accounting for the main physical processes involved in a multilayer snowpack.'
 
-        self.id = 's2m_reanalysis_2020'
+        self.id = 's2m_reanalysis_moyenne_montagne2022'
 
         self.references = 'https://doi.org/10.1175/2008JAMC1808.1;https://doi.org/10.1175/2009JAMC1810.1;new reference to come in 2021'
 
