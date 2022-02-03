@@ -55,7 +55,7 @@ if args.postes:
     question_postes = question(
             listvar=["num_poste", "nom_usuel", "alti", "lat", "lon"],
             table='POSTE_NIVO',
-            listconditions=['type_nivo=1', "datouvr<to_date('{0:s}', 'YYYYMMDD')".format(datedeb), "(datferm>to_date('{0:s}', 'YYYYMMDD') OR datferm is Null)".format(datefin)],
+            listconditions=["datouvr<to_date('{0:s}', 'YYYYMMDD')".format(datedeb), "(datferm>to_date('{0:s}', 'YYYYMMDD') OR datferm is Null)".format(datefin)],
             listorder=['num_poste'],
             )
     question_postes.run(outputfile=f'postes_nivometeo.csv')
@@ -69,7 +69,7 @@ if args.rr:
             table=table,
             listorder=[f'{table}.num_poste', 'dat'],
             listjoin=[
-                f'POSTE_NIVO ON {table}.NUM_POSTE = POSTE_NIVO.NUM_POSTE and type_nivo = 1'],
+                f'POSTE_NIVO ON {table}.NUM_POSTE = POSTE_NIVO.NUM_POSTE'],
             period=[datedeb, datefin],
             dateformat=args.frequency,
             )
