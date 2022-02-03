@@ -85,6 +85,9 @@ def parse_options(arguments):
                       default="/cnrm/cen/users/NO_SAVE/radanovicss/PEARPS2M",
                       help="Output directory")
 
+    parser.add_option("--dev",
+                      action="store_true", dest="dev", default=False)
+
     (options, args) = parser.parse_args(arguments)  # @UnusedVariable
 
     return options
@@ -128,6 +131,12 @@ class config(object):
         for required_directory in [self.diroutput, self.diroutput_maps, self.diroutput_plots]:
             if not os.path.isdir(required_directory):
                 os.mkdir(required_directory)
+
+        self.dev = options.dev
+        if options.dev:
+            self.xpid = "nouveaux_guess@lafaysse"
+            self.alternate_xpid = None
+            self.list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes']
 
 
 class Ensemble(object):
@@ -510,6 +519,25 @@ class EnsembleNorthSouthMassif(_EnsembleMassif):
         return (self.simufiles[0].get_points(aspect=0, slope=40),
                 self.simufiles[0].get_points(aspect=180, slope=40))
 
+
+class EnsembleMassifPoint(_EnsembleMassif):
+    """
+    Class for extracting one specific point in massif geometry
+    """
+
+    def __init__(self, massif_num, alti, aspect, slope):
+        self.massif_num = massif_num
+        self.alti = alti
+        self.aspect = aspect
+        self.slope = slope
+
+        super(EnsembleMassifPoint, self).__init__()
+
+    def select_points(self):
+        """Select index of the corresponding point"""
+
+        return self.simufiles[0].get_points(massif_num= self.massif_num, aspect=self.aspect, slope=self.slope,
+                                            ZS=self.alti)
 
 class EnsembleStation(Ensemble):
     """
@@ -1153,11 +1181,14 @@ if __name__ == "__main__":
 
     # The following class has a vortex-dependence
     # Should not import than above to avoid problems when importing the module from vortex
-    from snowtools.tasks.oper.get_oper_files import S2MExtractor
+    from snowtools.tasks.oper.get_oper_files import S2MExtractor, FutureS2MExtractor
 
     c = config()
     os.chdir(c.diroutput)
-    S2ME = S2MExtractor(c)
+    if c.dev:
+        S2ME = S2MExtractor(c)
+    else:
+        S2ME = FutureS2MExtractor(c)
     snow_members, snow_xpid = S2ME.get_snow()
 
     dict_chaine = defaultdict(str)
