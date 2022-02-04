@@ -432,7 +432,7 @@ class Vortex_conf_file(object):
         self.set_field("DEFAULT", 'cutoff', self.options.cutoff)
         self.set_field("DEFAULT", 'model', 'safran')
         # Default cycle corresponding to the "official" reanalysis one, to be updated...
-        self.set_field("DEFAULT", 'cycle', 'uenv:s2m.reanalysis_2020@vernaym')
+        self.set_field("DEFAULT", 'cycle', 'uenv:s2m.reanalysis_2020.2@vernaym')
         self.set_field("DEFAULT", 'namespace', 'vortex.multi.fr')
         if self.options.namelist:
             self.set_field("DEFAULT", 'namelist', self.options.namelist)
