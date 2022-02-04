@@ -206,7 +206,8 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                 dateend        = self.conf.dateend,
                 threshold      = self.conf.threshold,
                 members        = footprints.util.rangex(pearpmembers),
-                geometry       = list_geometry,
+                geometry_in    = list_geometry,
+                geometry_out   = self.conf.geometry.tag,
                 ntasks         = 40,
                 daily          = not self.conf.previ,
             )
