@@ -733,8 +733,8 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb32 =', tb29)
                 print()
 
-                from vortex.tools.systems import ExecutionError
-                raise ExecutionError('')
+            from vortex.tools.systems import ExecutionError
+            raise ExecutionError('')
 
 #########################################################################################
 #                               END OF THE TASK
