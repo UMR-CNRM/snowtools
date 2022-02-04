@@ -65,7 +65,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     geometry       = self.conf.vconf,
                     vapp           = 's2m',
                     vconf          = '[geometry:area]',
-                    experiment     = 'OPER@vernaym',
+                    experiment     = self.conf.xpid_guess,
                     cutoff         = 'assimilation',
                     block          = 'guess',
                     date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d))
@@ -184,8 +184,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = 'uenv:s2m.01@vernaym',
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -a -o -i IDW -f ' + ' '.join(list(set([str(rh[1].container.basename)
-                                                                       for rh in enumerate(tbarp)]))),
+                rawopts     = ' -a -o -i IDW -f ' + ' '.join(list([str(rh[1].container.basename)
+                                                                       for rh in enumerate(tbarp)])),
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
@@ -204,9 +204,9 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # Need to extend pythonpath to be independant of the user environment
                 # The vortex-build environment already set up the pythonpath (see jobassistant plugin) but the script is 
                 # eventually launched in a 'user-defined' environment
-                extendpypath = [self.sh.path.join(self.conf.rootapp, d)
-                                for d in ['vortex/src', 'vortex/site', 'epygram',
-                                          'epygram/site', 'epygram/eccodes_python']],
+                extendpypath   = [self.sh.path.join('/'.join(self.conf.iniconf.split('/')[:-2]), d)
+                                  for d in ['vortex/src', 'vortex/site', 'epygram',
+                                            'epygram/site', 'epygram/eccodes_python']],
                 ntasks         = self.conf.ntasks,
                 terms          = footprints.util.rangex(self.conf.ana_terms),
             )
@@ -254,7 +254,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 role           = 'Reanalyses',
                 kind           = 'packedguess',
                 local          = tarname,
-                experiment     = self.conf.xpid,
+                experiment     = self.conf.xpid_guess,
                 block          = 'guess',
                 nativefmt      = 'tar',
                 namespace      = 'vortex.multi.fr',
@@ -281,7 +281,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     geometry       = self.conf.vconf,
                     vapp           = 's2m',
                     vconf          = '[geometry:area]',
-                    experiment     = 'OPER@vernaym',
+                    experiment     = self.conf.xpid_guess,
                     cutoff         = 'assimilation',
                     block          = 'guess',
                     date           = rundate.ymdh,

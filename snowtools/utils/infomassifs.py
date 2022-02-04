@@ -131,13 +131,20 @@ class infomassifs():
                         "alpes_F": list(range(1, 24)),  # les 23 massifs des Alpes
                         "alpes": list(range(1, 24)) + [30],  # les 23 massifs des Alpes + Diablerets
                         "alp": list(range(1, 24)) + [30],  # les 23 massifs des Alpes + Diablerets
+                        "alp27": list(range(1, 28)),
                         "pyrenees_F": list(range(64, 75)),
                         "pyrenees_E": list(range(80, 92)),
                         "pyrenees": list(range(64, 75)) + list(range(80, 92)),
                         "pyr": list(range(64, 75)) + list(range(80, 92)),
+                        "pyr24": list(range(64, 76)) + list(range(80, 92)),
                         "corse": [40, 41],
                         "cor": [40, 41],
-                        "all": list(range(1, 24)) + [30] + list(range(40, 42)) + list(range(64, 75)) + list(range(80, 92))
+                        "cor2": [40, 41],
+                        "mac": list(range(48, 55)) + list(range(59, 63)),
+                        "jur": list(range(55, 59)),
+                        "vog": list(range(45,48)),
+                        "all": list(range(1, 27)) + [30] + list(range(40, 42)) + list(range(45, 63)) +
+                               list(range(64, 75)) + list(range(80, 92))
                         }
 
         for area, list_massifs in six.iteritems(self.dicArea.copy()):
