@@ -436,7 +436,7 @@ class _Map_massifs(Mplfigure):
                 else:
                     palette = plt.get_cmap(kwargs['palette'])
         else:
-            if matplotlib.__version__ >= '3.3':
+            if matplotlib.__version__ >= '3.4':
                 palette = plt.get_cmap('jet').copy()
             else:
                 palette = plt.get_cmap('jet')
