@@ -65,7 +65,7 @@ if args.postes:
 
 if args.rr:
     question1 = question(
-            listvar=["dat", f"{table}.num_poste", "poste_nivo.nom_usuel", "poste_nivo.alti", "poste_nivo.lat_dg", "poste_nivo.lon_dg", "rr"+sufix],
+            listvar=["dat", f"{table}.num_poste", "poste_nivo.nom_usuel", "poste_nivo.alti", "poste_nivo.lat_dg", "poste_nivo.lon_dg", "poste_nivo.massif_nivo", "rr"+sufix],
             table=table,
             listorder=[f'{table}.num_poste', 'dat'],
             listjoin=[
