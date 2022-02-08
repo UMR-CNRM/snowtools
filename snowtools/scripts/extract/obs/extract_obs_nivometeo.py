@@ -53,8 +53,9 @@ else:
 
 if args.postes:
     question_postes = question(
-            listvar=["num_poste", "nom_usuel", "alti", "lat_dg", "lon_dg"],
+            listvar=["poste_nivo.num_poste", "poste_nivo.nom_usuel", "poste_nivo.alti", "poste_nivo.lat_dg", "poste_nivo.lon_dg", "hist_reseau_poste.reseau_poste"],
             table='POSTE_NIVO',
+            listjoin=["HIST_RESEAU_POSTE on (POSTE_NIVO.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE and HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64'))"],
             listconditions=["datouvr<to_date('{0:s}', 'YYYYMMDD')".format(datedeb), "(datferm>to_date('{0:s}', 'YYYYMMDD') OR datferm is Null)".format(datefin)],
             listorder=['num_poste'],
             )
@@ -65,11 +66,13 @@ if args.postes:
 
 if args.rr:
     question1 = question(
-            listvar=["dat", f"{table}.num_poste", "poste_nivo.nom_usuel", "poste_nivo.alti", "poste_nivo.lat_dg", "poste_nivo.lon_dg", "poste_nivo.massif_nivo", "rr"+sufix],
+            listvar=["dat", f"{table}.num_poste", "poste_nivo.nom_usuel", "poste_nivo.alti", "poste_nivo.lat_dg", "poste_nivo.lon_dg", "poste_nivo.massif_nivo", "rr"+sufix, "hist_reseau_poste.reseau_poste"],
             table=table,
             listorder=[f'{table}.num_poste', 'dat'],
             listjoin=[
-                f'POSTE_NIVO ON {table}.NUM_POSTE = POSTE_NIVO.NUM_POSTE'],
+                f"POSTE_NIVO ON {table}.NUM_POSTE = POSTE_NIVO.NUM_POSTE ", f" HIST_RESEAU_POSTE on ({table}.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE) "],
+                #f"POSTE_NIVO ON {table}.NUM_POSTE = POSTE_NIVO.NUM_POSTE ", f" HIST_RESEAU_POSTE on ({table}.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE ", " HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64')) "],
+            listconditions=["HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64')"],
             period=[datedeb, datefin],
             dateformat=args.frequency,
             )
