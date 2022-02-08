@@ -194,6 +194,10 @@ class Surfex_command(_S2M_command):
                           action="store_true", dest="oper", default=False,
                           help="Operational chain")
 
+        parser.add_option("--dev",
+                          action="store_true", dest="dev", default=False,
+                          help="Operational chain in development")
+
         parser.add_option("--forecast",
                           action="store_true", dest="forecast", default=False,
                           help="To separate analysis and forecast modes")

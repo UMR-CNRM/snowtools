@@ -78,7 +78,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 local          = 'PGD.nc',
                 geometry       = self.conf.geometry,
                 genv           = self.conf.cycle,
-                gvar           = 'pgd_[geometry::area]',
+                gvar           = 'pgd_[geometry::tag]',
                 model          = 'surfex',
                 fatal          = True,
             ),
@@ -137,6 +137,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 alternate      = 'SnowpackInit',
                 local          = 'PREP.nc',
                 experiment     = self.ref_reanalysis,
+                vconf          = self.conf.geometry.tag,
                 geometry       = self.conf.geometry,
                 date           = datebegin,
                 intent         = 'inout',
@@ -229,7 +230,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 dateend      = [dateend],
                 ntasks       = 1,
                 geometry_in     = list_geometry,
-                geometry_out     = self.conf.geometry.area
+                geometry_out     = self.conf.geometry.tag
             )
             print((t.prompt, 'tb09a =', tb09))
             print()

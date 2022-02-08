@@ -20,7 +20,7 @@ from snowtools.plots.abstracts.figures import Mplfigure
 class temporalplot_abstract(Mplfigure):
 
     def __init__(self, **kwargs):
-        """Constructor for temporalplot_abstract class, redefinied for the chiled class"""
+        """Constructor for temporalplot_abstract class, redefinied for the child class"""
         super(temporalplot_abstract, self).__init__(**kwargs)
         self.plot = None
         #self.draw = None
@@ -94,7 +94,7 @@ class temporalplot_abstract(Mplfigure):
             self.plot.xaxis.set_major_locator(MonthLocator(range(1, 13, 2), 1))
             formatDate = '%d %b'
         elif ndays <= (5 * 365):
-            interval = ndays / 365 + 1
+            interval = int(ndays / 365) + 1
             self.plot.xaxis.set_major_locator(MonthLocator(range(1, 13, interval), 1))
             formatDate = '%d %b\n%Y'
         elif ndays >= (30 * 365):
@@ -114,10 +114,9 @@ class temporalplot_abstract(Mplfigure):
 
 
 class temporalplot(temporalplot_abstract):
-    def __init__(self, *args, **kwargs):
-        figsize = (5, 4)
+    def __init__(self,  *args, **kwargs):
         super(temporalplot, self).__init__(**kwargs)
-        self.fig = plt.figure(figsize=figsize)
+        self.fig = plt.figure(figsize=self.figsize)
         self.plot = plt.subplot(111)
 
 
@@ -160,6 +159,8 @@ class temporalplotSim(temporalplot):
         :align: center
 
     """
+    figsize=(5, 4)
+
     def draw(self, timeSim, varSim, *args, **kwargs):
         """
         Method of temporalplotSim class. Used for generating a 1D plot with time formatting.
@@ -225,7 +226,7 @@ class temporalplotObsSim(temporalplot):
 
 
 class temporalplotObsMultipleSims(temporalplot):
-    """ Kept for bakward compatibility , please refer totemporalplotObsSim
+    """ Kept for bakward compatibility , please refer to temporalplotObsSim
         Similar to temporalplotObsSim but UGLIER
     """
     def draw(self, timeObs, varObs, timeSim, varSim, *args, **kwargs):
@@ -302,7 +303,7 @@ class spaghettis(temporalplot):
     figsize = (10, 3.5)
 
     def __init__(self, *args, **kwargs):
-        super(spaghettis, self).__init__(*args, **kwargs)
+        super(spaghettis, self).__init__( *args, **kwargs)
         self.fig.subplots_adjust(top=0.85)
 
     def draw(self, timeSim, ensemble, qmin, qmed, qmax, *args, **kwargs):
@@ -319,14 +320,14 @@ class spaghettis(temporalplot):
             quantileslabel += " " + kwargs['commonlabel']
 
         self.add_line(timeSim, ensemble, color=kwargs['colormembers'], linewidth=0.5)
-        self.plot.plot_date(timeSim, qmed, "-", color=kwargs['colorquantiles'], linewidth=2, label=medianlabel)
+        self.plot.plot(timeSim, qmed, "-", color=kwargs['colorquantiles'], linewidth=2, label=medianlabel)
         self.plot.fill_between(timeSim, qmin, qmax, color=kwargs['colorquantiles'], alpha=0.25, label=quantileslabel)
         self.finalize(timeSim, **kwargs)
 
 
 class spaghettis_with_det(spaghettis):
     def draw(self, timeSim, ensemble, qmin, qmed, qmax, deterministic=None, *args, **kwargs):
-        super(spaghettis_with_det,self).draw(timeSim, ensemble, qmin, qmed, qmax, deterministic, *args, **kwargs)
+        super(spaghettis_with_det, self).draw(timeSim, ensemble, qmin, qmed, qmax, deterministic, *args, **kwargs)
         if 'commonlabel' in kwargs.keys():
             detlabel = u"Dét." + " " + kwargs['commonlabel']
         else:
