@@ -82,8 +82,11 @@ def parse_options(arguments):
 
     parser.add_option("-o",
                       action="store", type="string", dest="diroutput",
-                      default="/cnrm/cen/users/NO_SAVE/radanovicss/PEARPS2M",
+                      default="/cnrm/cen/users/NO_SAVE/radanovicss/PEARPS2M_dev",
                       help="Output directory")
+
+    parser.add_option("--dev",
+                      action="store_true", dest="dev", default=False)
 
     (options, args) = parser.parse_args(arguments)  # @UnusedVariable
 
@@ -102,6 +105,7 @@ class config(object):
     list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes'] #: List of geometries
     # list_geometry = ['alp', 'pyr', 'cor', 'postes']
     #: Alternative list of geometries (corresponding to alternative experiment ids)
+    # alternate_list_geometry = [['alp', 'pyr', 'cor', 'postes']]
     alternate_list_geometry = [['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']]
     # Development chain
     # xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
@@ -128,6 +132,12 @@ class config(object):
         for required_directory in [self.diroutput, self.diroutput_maps, self.diroutput_plots]:
             if not os.path.isdir(required_directory):
                 os.mkdir(required_directory)
+
+        self.dev = options.dev
+        if options.dev:
+            self.xpid = "nouveaux_guess@lafaysse"
+            delattr(config, 'alternate_xpid')
+            self.list_geometry = ['cor', 'alp', 'pyr']
 
 
 class Ensemble(object):
@@ -511,6 +521,25 @@ class EnsembleNorthSouthMassif(_EnsembleMassif):
                 self.simufiles[0].get_points(aspect=180, slope=40))
 
 
+class EnsembleMassifPoint(_EnsembleMassif):
+    """
+    Class for extracting one specific point in massif geometry
+    """
+
+    def __init__(self, massif_num, alti, aspect, slope):
+        self.massif_num = massif_num
+        self.alti = alti
+        self.aspect = aspect
+        self.slope = slope
+
+        super(EnsembleMassifPoint, self).__init__()
+
+    def select_points(self):
+        """Select index of the corresponding point"""
+
+        return self.simufiles[0].get_points(massif_num= self.massif_num, aspect=self.aspect, slope=self.slope,
+                                            ZS=self.alti)
+
 class EnsembleStation(Ensemble):
     """
     Class for ensemble simulations at station locations.
@@ -788,6 +817,7 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
     list_var_map = ['naturalIndex', 'SD_1DY_ISBA', 'SD_3DY_ISBA', 'SNOMLT_ISBA']
     #: list of variables to do spaghetti plots for
     list_var_spag = ['naturalIndex', 'DSN_T_ISBA', 'WSN_T_ISBA', 'SNOMLT_ISBA']
+    # list_var_spag = ['DSN_T_ISBA', 'WSN_T_ISBA', 'SNOMLT_ISBA']
 
     def pack_maps(self, domain, suptitle, diroutput="."):
         """
@@ -1153,11 +1183,14 @@ if __name__ == "__main__":
 
     # The following class has a vortex-dependence
     # Should not import than above to avoid problems when importing the module from vortex
-    from snowtools.tasks.oper.get_oper_files import S2MExtractor
+    from snowtools.tasks.oper.get_oper_files import S2MExtractor, FutureS2MExtractor
 
     c = config()
     os.chdir(c.diroutput)
-    S2ME = S2MExtractor(c)
+    if c.dev:
+        S2ME = FutureS2MExtractor(c)
+    else:
+        S2ME = S2MExtractor(c)
     snow_members, snow_xpid = S2ME.get_snow()
 
     dict_chaine = defaultdict(str)

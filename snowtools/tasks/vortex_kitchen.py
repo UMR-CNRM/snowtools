@@ -80,7 +80,7 @@ class vortex_kitchen(object):
             os.symlink(os.environ["VORTEX"], "vortex")
 
         if not os.path.islink("snowtools"):
-            os.symlink(SNOWTOOLS_CEN, "snowtools")
+            os.symlink(SNOWTOOLS_DIR, "snowtools")
 
         if not os.path.islink("tasks"):
             if self.options.oper:
@@ -166,11 +166,16 @@ class vortex_kitchen(object):
         if self.options.surfex:
             if self.options.oper:
                 conffilename = self.options.vapp + "_" + self.options.vconf + ".ini"
+                if self.options.dev:
+                    conffilename_in = self.options.vapp + "dev_" + self.options.vconf + ".ini"
+                else:
+                    conffilename_in = conffilename
+
                 if not os.path.islink(conffilename):
                     # Operational case : the configuration files are provided :
                     # only create a symbolic link in the appropriate directory
-                    if os.path.exists("../snowtools/conf/" + conffilename):
-                        os.symlink("../snowtools/conf/" + conffilename, conffilename)
+                    if os.path.exists("../snowtools/conf/" + conffilename_in):
+                        os.symlink("../snowtools/conf/" + conffilename_in, conffilename)
                     else:
                         print("WARNING : No conf file found in snowtools")
             else:
@@ -249,6 +254,7 @@ class vortex_kitchen(object):
                 nmembers = 1
             # minutes per year for one member computing all points
             minutes_peryear = dict(alp_allslopes=15, pyr_allslopes=15, alp_flat=5, pyr_flat=5,
+                                   alp27_allslopes=20, pyr23_allslopes=20, alp27_flat=7, pyr23_flat=7,
                                    cor_allslopes=5, cor_flat=1, postes = 5,
                                    lautaret=120, lautaretreduc=5, grandesrousses250=35)
 
@@ -426,7 +432,7 @@ class Vortex_conf_file(object):
         self.set_field("DEFAULT", 'cutoff', self.options.cutoff)
         self.set_field("DEFAULT", 'model', 'safran')
         # Default cycle corresponding to the "official" reanalysis one, to be updated...
-        self.set_field("DEFAULT", 'cycle', 'uenv:s2m.reanalysis_2020@vernaym')
+        self.set_field("DEFAULT", 'cycle', 'uenv:s2m.reanalysis2020.2@vernaym')
         self.set_field("DEFAULT", 'namespace', 'vortex.multi.fr')
         if self.options.namelist:
             self.set_field("DEFAULT", 'namelist', self.options.namelist)
