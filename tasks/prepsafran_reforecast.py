@@ -46,13 +46,40 @@ class PrepSafran(Task, S2MTaskMixIn):
         if ndays > 366:
             raise ExecutionError('Periode trop longue')
 
-        day_per_worker = ndays / 4
+        #day_per_worker = ndays / 4
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
+            ###########################
+            #  I) FICHIER de METADONNES
+            ###########################
+            # On commence par récupérer un fichier à échéance 0h qui sert à lire le métédonnées (infos sur la grille en particulier)
+            # Ce fichier supplémentaire est indispensable pour toujours travailler avec la bonne grille du modèle, même en cas d'évolution
+            # de la géométrie ARPEGE.
+            self.sh.title('Toolbox input metadata')
+            tbmeta = toolbox.input(
+                role           = 'Metadata',
+                kind           = 'gridpoint',
+                cutoff         = 'production',
+                format         = 'grib',
+                nativefmt      = '[format]',
+                experiment     = 'GCQ7@rieutordt',
+                block          = 'forecast',
+                namespace      = 'vortex.archive.fr',
+                geometry       = self.conf.pearp_geometry,
+                local          = 'METADATA.grib',
+                origin         = 'historic',
+                date           = '{0:s}/-PT12H'.format(datebegin.ymd6h),
+                term           = 0,
+                member         = 0,
+                model          = '[vapp]',
+                vapp           = self.conf.source_app,
+                vconf          = self.conf.eps_conf,
+            )
+            print(t.prompt, 'tbmeta =', tbmeta)
+            print()
+
             tbpearp = list()
-#             d = 0
-#             m = 0
             rundate = datebegin
             while rundate <= dateend:
 
@@ -62,13 +89,12 @@ class PrepSafran(Task, S2MTaskMixIn):
                 tbpearp.extend(toolbox.input(
                     role           = 'Gridpoint',
                     kind           = 'gridpoint',
-                    username       = 'vernaym',
                     cutoff         = 'production',
                     format         = 'grib',
                     nativefmt      = '[format]',
-                    experiment     = 'reforecast@vernaym',
-                    block          = 'refill',
-                    namespace      = 'vortex.cache.fr',
+                    experiment     = 'GCQ7@rieutordt',
+                    block          = 'forecast',
+                    namespace      = 'vortex.archive.fr',
                     geometry       = self.conf.pearp_geometry,
                     local          = '[date::ymdh]/mb[member%03]/PEARP[date::ymdh]_[term:fmthour]',
                     origin         = 'historic',
@@ -84,10 +110,26 @@ class PrepSafran(Task, S2MTaskMixIn):
 
                 rundate = rundate + Period(days=1)
 
-#                 if d == day_per_worker:
-#                     m = m + 1
-#                     d = 0
-#                 d = d + 1
+            ###########################
+            #        SHAPEFILE 
+            ###########################
+            # Dans tous les cas de figure on aura besoin du shapefile des massifs SAFRAN
+            self.sh.title('Toolbox input shapefile')
+            tbshp = toolbox.input(
+                role            = 'Shapefile',
+                genv            = self.conf.cycle,
+                gdomain         = 'all_massifs',
+                geometry        = '[gdomain]',
+                kind            = 'shapefile',
+                model           = self.conf.model,
+                local           = 'massifs_safran.tar',
+            )
+            print(t.prompt, 'tbshp =', tbshp)
+            print()
+
+# TODO : Il reste à gérer les liens vers les fichiers METADATA et shapefiles
+# On a ici 2 niveau de répertoires : {date}/{membre} et l'algo standard cherche
+# a faire un lien uniquement vers le répertoire n-1,  pas vers n-2...
 
             self.sh.title('Toolbox input tb02 = PRE-TRAITEMENT FORCAGE script')
             tb02 = script = toolbox.input(
@@ -96,7 +138,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = 'uenv:s2m.01@vernaym',
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbpearp)])),
+                rawopts     = ' -o -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbpearp)])),
             )
             print(t.prompt, 'tb02 =', tb02)
             print()
