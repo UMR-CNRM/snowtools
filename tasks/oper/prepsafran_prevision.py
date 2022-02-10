@@ -69,8 +69,8 @@ class PrepSafran(Task, S2MTaskMixIn):
             print()
 
             # II- PEARP
-            # Récupération du réseau 18h (J-1) pour couvrir J 6h -> (J+4) 6h
-            # On veut donc les échéances de 12h à 108h
+            # Récupération du réseau 0h (J) pour couvrir J 6h -> (J+4) 6h
+            # On veut donc les échéances de 12h à 102h
             # Désormais toutes les échéances tri-horaire sont disponible
             self.sh.title('Toolbox input pearp inline')
             tbpearp = toolbox.input(
@@ -82,8 +82,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 geometry       = self.conf.pearp_geometry,
                 kind           = 'gridpoint',
                 local          = 'PEARP_[member]_[term:hour]/PEARP[date::addterm_ymdh]',
-                date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[4:38],
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                term           = footprints.util.rangex(self.conf.prv_terms)[4:],
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 namespace      = 'vortex.multi.fr',
                 nativefmt      = '[format]',
@@ -170,8 +170,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 block          = self.conf.block,
                 geometry       = self.conf.domains,
                 vconf          = '[geometry::area]',
-                date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[4:38],
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[4:],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
