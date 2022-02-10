@@ -107,10 +107,10 @@ class PrepSafran(Task, S2MTaskMixIn):
                             # tube           = 'ftp',
                             # origin         = 'arpege',
                             # fatal          = False,
-                            suite          = 'oper',
+                            suite          = 'oper', # Force oper file to avoid mixing experiments
                             cutoff         = 'assimilation',
                             # local          = 'mb035/ARPEGE[date::addterm_ymdh]',
-                            namespace      = 'oper.multi.fr',
+                            namespace      = 'vortex.multi.fr',
                             origin         = 'historic',
                             model          = '[vapp]',
                             vapp           = self.conf.source_app,
@@ -129,7 +129,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             geometry       = self.conf.cpl_geometry,
                             kind           = 'gridpoint',
                             # filtername     = 'concatenate',
-                            suite          = 'oper',
+                            suite          = 'oper', # Force oper files to avoid mixing experiments
                             local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
                             date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                             # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip

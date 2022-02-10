@@ -376,6 +376,13 @@ class Safran(Task, S2MTaskMixIn):
 
             else:
 
+                # TODO : réorganiser les toolbox suivantes en 3 modes
+                #  - mode nominal (réseaux 3h et 9h) / mode nominal réseau 6h (mélange A6 et P6 ==> gérer le cutoff avec un dictionnaire en fonction de l'échéance)
+                #  - 1er mode secours (commun) ==> que des P6
+                #  - Second mode secours (commun) ==> utiliser un "coherentgroup")
+                #
+                # ==> 4 toolbox avec un "if" entre les 2 premières
+
                 # I- ARPEGE (J-5) -> J ou (J-1) -> J
                 # --------------------
                 # I.1- EBAUCHE issue des A6 des réseaux 0/6/12/18h (J-n) d'assimilation d'ARPEGE et l'A6 du réseau 0h J si présente pour couvrir (J-n) 6h -> J 6h
