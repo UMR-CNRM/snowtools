@@ -47,7 +47,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # RUN 3h : Recuperation de A6 des réseaux 6H, 12H et 18H (J-1).
                 # On récupère aussi le réseau 0H (J-1) qui a normalement déjà été extrait par la tâche prepsaf de 9h de la veille par sécurité
                 # SAFRAN utilisera la P6 du réseau 0h J pour le dernier guess en attendant que l'analyse soit disponible (réseau 9h)
-                self.sh.title('Toolbox input arpege assim inline')
+                self.sh.title('Toolbox input arpege assim')
                 tbarp = toolbox.input(
                     role           = 'Gridpoint',
                     format         = 'grib',
@@ -73,7 +73,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print()
 
                 # Mode secours : On récupère les prévisions 6h correspondantes
-                self.sh.title('Toolbox alternate arpege prod inline (secours)')
+                self.sh.title('Toolbox alternate arpege prod (secours)')
                 tbarp.extend(toolbox.input(
                     alternate      = 'Gridpoint',
                     format         = 'grib',
@@ -134,7 +134,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             else:
 
                 # RUN 9h : Récupération de A6 du réseau d'assimilation d'ARPEGE de 0h
-                self.sh.title('Toolbox input arpege assim inline')
+                self.sh.title('Toolbox input arpege assim')
                 tbarp = toolbox.input(
                     role           = 'Gridpoint',
                     block          = 'forecast',
