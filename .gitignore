@@ -11,3 +11,4 @@ tag
 fortran/interpol_MPIAUTO
 fortran/interpol
 fortran/*.o
+DATA/shapefiles/natural_earth/

@@ -304,7 +304,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                         print()
                         
                         validitydate = rundate + Period(hours=6)
-                        guessname = f'{rundate.ymdh}/P{rundate.yymdh}_6_{dom}_assimilation'
+
+                        guessname = tbguess[0][0].container.localpath()
                         arcname   = f'P{validitydate.yymdh}'
                         # Puis on renome le fichier guess au format P????????
                         tarfic.add(guessname, arcname=arcname)
