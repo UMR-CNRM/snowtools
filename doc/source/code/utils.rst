@@ -27,6 +27,14 @@ NetCDF comparisons
 
 .. include:: ./autoscripts/utils--operational_reproductibility--compare2versions.rst
 
+Module content:
+
+.. toctree::
+   :maxdepth: 1
+
+   utils-operational_repro-compare2versions.rst
+
+
 File conversions : et and netCDF
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

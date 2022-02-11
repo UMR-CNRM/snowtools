@@ -82,7 +82,7 @@ def parse_options(arguments):
 
     parser.add_option("-o",
                       action="store", type="string", dest="diroutput",
-                      default="/cnrm/cen/users/NO_SAVE/radanovicss/PEARPS2M",
+                      default="/cnrm/cen/users/NO_SAVE/radanovicss/PEARPS2M_dev",
                       help="Output directory")
 
     parser.add_option("--dev",
@@ -105,6 +105,7 @@ class config(object):
     list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes'] #: List of geometries
     # list_geometry = ['alp', 'pyr', 'cor', 'postes']
     #: Alternative list of geometries (corresponding to alternative experiment ids)
+    # alternate_list_geometry = [['alp', 'pyr', 'cor', 'postes']]
     alternate_list_geometry = [['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']]
     # Development chain
     # xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
@@ -135,8 +136,8 @@ class config(object):
         self.dev = options.dev
         if options.dev:
             self.xpid = "nouveaux_guess@lafaysse"
-            self.alternate_xpid = None
-            self.list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes']
+            delattr(config, 'alternate_xpid')
+            self.list_geometry = ['cor', 'alp', 'pyr']
 
 
 class Ensemble(object):
@@ -816,6 +817,7 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
     list_var_map = ['naturalIndex', 'SD_1DY_ISBA', 'SD_3DY_ISBA', 'SNOMLT_ISBA']
     #: list of variables to do spaghetti plots for
     list_var_spag = ['naturalIndex', 'DSN_T_ISBA', 'WSN_T_ISBA', 'SNOMLT_ISBA']
+    # list_var_spag = ['DSN_T_ISBA', 'WSN_T_ISBA', 'SNOMLT_ISBA']
 
     def pack_maps(self, domain, suptitle, diroutput="."):
         """
@@ -1186,9 +1188,9 @@ if __name__ == "__main__":
     c = config()
     os.chdir(c.diroutput)
     if c.dev:
-        S2ME = S2MExtractor(c)
-    else:
         S2ME = FutureS2MExtractor(c)
+    else:
+        S2ME = S2MExtractor(c)
     snow_members, snow_xpid = S2ME.get_snow()
 
     dict_chaine = defaultdict(str)
