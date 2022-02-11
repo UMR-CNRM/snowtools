@@ -5,7 +5,7 @@ numpy
 scipy
 six
 python-dateutil
-pyproj
+pyproj>=2.0.0
 shapely
 psycopg2
 pyshp
