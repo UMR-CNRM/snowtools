@@ -78,7 +78,7 @@ class Safran(Task, S2MTaskMixIn):
                 block          = self.conf.guess_block,
                 geometry       = self.conf.geometry[self.conf.vconf],
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[2:35],
+                cumul          = footprints.util.rangex(self.conf.prv_terms),
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
@@ -117,7 +117,7 @@ class Safran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb02a =', tb02a)
             print()
 
-            # P12 à P108 du réseau 18h (J-1)
+            # P6 à P102 du réseau 0h (J-1)
             self.sh.title('Toolbox intput tb02')
             tb02b = toolbox.input(
                 role           = 'Ebauche',
@@ -125,8 +125,8 @@ class Safran(Task, S2MTaskMixIn):
                 experiment     = self.conf.xpid_guess,
                 block          = self.conf.guess_block,
                 geometry       = self.conf.geometry[self.conf.vconf],
-                date           = '{0:s}/+PT12H'.format(datebegin.ymdh),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[4:38],
+                date           = '{0:s}/+PT18H'.format(datebegin.ymdh), # = 0h J
+                cumul          = footprints.util.rangex(self.conf.prv_terms),
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
