@@ -63,7 +63,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 cutoff         = 'production',
                 format         = 'grib',
                 nativefmt      = '[format]',
-                experiment     = 'GCQ7@rieutordt',
+                experiment     = self.conf.guess_xpid,
                 block          = 'forecast',
                 namespace      = 'vortex.archive.fr',
                 geometry       = self.conf.pearp_geometry,
@@ -92,7 +92,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     cutoff         = 'production',
                     format         = 'grib',
                     nativefmt      = '[format]',
-                    experiment     = 'GCQ7@rieutordt',
+                    experiment     = self.conf.guess_xpid,
                     block          = 'forecast',
                     namespace      = 'vortex.archive.fr',
                     geometry       = self.conf.pearp_geometry,
@@ -181,7 +181,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox output tb04')
                 tb04 = toolbox.output(
                     role           = 'Ebauche',
-                    local          = '[date::ymdh]/mb[member%03]/P[date:yymdh]_[cumul:hour]_[vconf]_reforecast',
+                    local          = '[date::ymdh]/mb[member%03]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                     experiment     = self.conf.xpid,
                     block          = self.conf.guess_block,
                     geometry       = self.conf.domains,
