@@ -127,7 +127,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         block          = 'forecast',
                         namespace      = 'vortex.archive.fr',
                         geometry       = self.conf.pearp_geometry,
-                        local          = '[date::ymdh]/mb[member%03]/PEARP[date::ymdh]_[term:fmthour]',
+                        local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/PEARP[date::ymdh]_[term:fmthour]',
                         origin         = 'historic',
                         date           = rundate.ymd6h,
                         term           = footprints.util.rangex(self.conf.prv_terms)[:33],
@@ -153,7 +153,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         block          = 'forecast',
                         namespace      = 'vortex.archive.fr',
                         geometry       = self.conf.pearp_geometry,
-                        local          = '[date::ymdh]/mb[member%03]/PEARP[date::ymdh]_[term:fmthour]',
+                        local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/PEARP[date::ymdh]_[term:fmthour]',
                         origin         = 'historic',
                         date           = '{0:s}/-PT12H'.format(rundate.ymd6h),
                         term           = footprints.util.rangex(self.conf.prv_terms)[4:],
@@ -181,7 +181,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         block          = 'forecast',
                         namespace      = 'vortex.archive.fr',
                         geometry       = self.conf.pearp_geometry,
-                        local          = '[date::ymdh]/ARPEGE/ARPEGE[date::ymdh]_[term:fmthour]',
+                        local          = '[date::ymdh]/ARPEGE/[term:fmthour]/ARPEGE[date::ymdh]_[term:fmthour]',
                         origin         = 'historic',
                         date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
                         term           = footprints.util.rangex(self.conf.prv_terms)[2:35],
@@ -206,7 +206,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             block          = 'forecast',
                             namespace      = 'vortex.archive.fr',
                             geometry       = self.conf.pearp_geometry,
-                            local          = '[date::ymdh]/mb[member%03]/PEARP[date::ymdh]_[term:fmthour]',
+                            local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/PEARP[date::ymdh]_[term:fmthour]',
                             origin         = 'historic',
                             date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
                             term           = footprints.util.rangex(self.conf.prv_terms)[2:35],
@@ -289,7 +289,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     self.sh.title('Toolbox output tb6h')
                     tb6h = toolbox.output(
                         role           = 'Ebauche',
-                        local          = '[date::ymdh]/mb[member%03]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                        local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                         experiment     = self.conf.xpid,
                         block          = self.conf.guess_block,
                         geometry       = self.conf.domains,
@@ -312,7 +312,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     self.sh.title('Toolbox output tb18h')
                     tb18h = toolbox.output(
                         role           = 'Ebauche',
-                        local          = '[date::ymdh]/mb[member%03]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                        local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                         experiment     = self.conf.xpid,
                         block          = self.conf.guess_block,
                         geometry       = self.conf.domains,
@@ -337,7 +337,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     self.sh.title('Toolbox output AREPEGE 0h')
                     tbarp = toolbox.output(
                         role           = 'Ebauche',
-                        local          = '[date::ymdh]/ARPEGE/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                        local          = '[date::ymdh]/ARPEGE/[term:fmthour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                         experiment     = self.conf.xpid,
                         block          = self.conf.guess_block,
                         geometry       = self.conf.domains,
@@ -359,7 +359,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         self.sh.title('Toolbox output PEARP 0h')
                         tbpearp = toolbox.output(
                             role           = 'Ebauche',
-                            local          = '[date::ymdh]/mb[member%03]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                            local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                             experiment     = self.conf.xpid,
                             block          = self.conf.guess_block,
                             geometry       = self.conf.domains,
