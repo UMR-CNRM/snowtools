@@ -46,8 +46,7 @@ class Safran(Task, S2MTaskMixIn):
                         local          = '[date::ymdh]/mb[member%03]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                         experiment     = self.conf.xpid,
                         block          = self.conf.guess_block,
-                        geometry       = self.conf.domains,
-                        vconf          = '[geometry::area]',
+                        geometry       = self.conf.geometry[self.conf.vconf],
                         date           = rundate.ymd6h,
                         cumul          = footprints.util.rangex(self.conf.prv_terms)[:33],
                         nativefmt      = 'ascii',
@@ -69,8 +68,7 @@ class Safran(Task, S2MTaskMixIn):
                         local          = '[date::ymdh]/mb[member%03]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                         experiment     = self.conf.xpid,
                         block          = self.conf.guess_block,
-                        geometry       = self.conf.domains,
-                        vconf          = '[geometry::area]',
+                        geometry       = self.conf.geometry[self.conf.vconf],
                         date           = '{0:s}/-PT12H'.format(rundate.ymd6h),
                         cumul          = footprints.util.rangex(self.conf.prv_terms)[4:],
                         nativefmt      = 'ascii',
@@ -96,7 +94,7 @@ class Safran(Task, S2MTaskMixIn):
                         local          = '{0:s}/P[date::yymdh]_[cumul:hour]'.format(rundate.ymd6h),
                         experiment     = self.conf.xpid,
                         block          = self.conf.guess_block,
-                        geometry       = self.conf.vconf,
+                        geometry       = self.conf.geometry[self.conf.vconf],
                         date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
                         cumul          = footprints.util.rangex(self.conf.prv_terms)[2:35],
                         nativefmt      = 'ascii',
@@ -117,7 +115,7 @@ class Safran(Task, S2MTaskMixIn):
                             local          = '{0:s}/mb[member]/P[date::yymdh]_[cumul:hour]'.format(rundate.ymd6h),
                             experiment     = self.conf.xpid,
                             block          = self.conf.guess_block,
-                            geometry       = self.conf.vconf,
+                            geometry       = self.conf.geometry[self.conf.vconf],
                             date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
                             cumul          = footprints.util.rangex(self.conf.prv_terms)[2:35],
                             nativefmt      = 'ascii',
@@ -126,7 +124,7 @@ class Safran(Task, S2MTaskMixIn):
                             source_app     = self.conf.source_app,
                             source_conf    = self.conf.eps_conf,
                             namespace      = self.conf.namespace,
-                            member         = footprints.util.rangex(self.conf.members),
+                            member         = footprints.util.rangex(self.conf.pearp_members),
                         ),
                         print(t.prompt, 'tb01 =', tb01)
                         print()
@@ -141,7 +139,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind            = 'listem',
                 model           = self.conf.model,
                 local           = 'listem',
-                geometry        = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
@@ -153,7 +151,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind            = 'listeml',
                 model           = self.conf.model,
                 local           = 'listeml',
-                geometry        = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
             )
             print(t.prompt, 'tb04 =', tb04)
             print()
@@ -165,12 +163,12 @@ class Safran(Task, S2MTaskMixIn):
                 kind            = 'listeo',
                 model           = self.conf.model,
                 local           = 'listeo',
-                geometry        = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
             )
             print(t.prompt, 'tb05 =', tb05)
             print()
 
-            if not self.conf.vconf == 'cor':
+            if self.conf.vconf in ['alp', 'pyr']:
 
                 self.sh.title('Toolbox input tb06')
                 tb06 = toolbox.input(
@@ -179,7 +177,7 @@ class Safran(Task, S2MTaskMixIn):
                     kind            = 'NORELmt',
                     model           = self.conf.model,
                     local           = 'NORELmt',
-                    geometry        = self.conf.vconf,
+                    geometry        = self.conf.geometry[self.conf.vconf],
                 )
                 print(t.prompt, 'tb06 =', tb06)
                 print()
@@ -191,7 +189,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind            = 'rsclim',
                 model           = self.conf.model,
                 local           = 'rsclim.don',
-                geometry        = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
             )
             print(t.prompt, 'tb07 =', tb07)
             print()
@@ -203,7 +201,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind            = 'icrccm',
                 model           = self.conf.model,
                 local           = 'icrccm.don',
-                geometry        = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
             )
             print(t.prompt, 'tb08 =', tb08)
             print()
@@ -211,8 +209,8 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb09')
             tb09 = toolbox.input(
                 role            = 'Nam_sorties',
-                source          = 'namelist_sorties_[geometry]',
-                geometry        = self.conf.vconf,
+                source          = 'namelist_sorties_[geometry:area]',
+                geometry        = self.conf.geometry[self.conf.vconf],
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -225,7 +223,7 @@ class Safran(Task, S2MTaskMixIn):
             tb14 = toolbox.input(
                 role            = 'Nam_adapt',
                 source          = 'namelist_adapt',
-                geometry        = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -237,8 +235,8 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb10')
             tb10 = toolbox.input(
                 role            = 'Nam_melange',
-                source          = 'namelist_melange_[geometry]',
-                geometry        = self.conf.vconf,
+                source          = 'namelist_melange_[geometry:area]',
+                geometry        = self.conf.geometry[self.conf.vconf],
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -251,7 +249,7 @@ class Safran(Task, S2MTaskMixIn):
             tb11 = toolbox.input(
                 role            = 'carac_post',
                 genv            = self.conf.cycle,
-                geometry        = self.conf.vconf,
+                geometry        = self.conf.geometry[self.conf.vconf],
                 kind            = 'carpost',
                 model           = self.conf.model,
                 local           = 'carpost.tar',
@@ -262,8 +260,8 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb12')
             tb12 = toolbox.input(
                 role            = 'Nam_impress',
-                source          = 'namelist_impress_[geometry]',
-                geometry        = self.conf.vconf,
+                source          = 'namelist_impress_[geometry:area]',
+                geometry        = self.conf.geometry[self.conf.vconf],
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -275,8 +273,8 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb13')
             tb13 = toolbox.input(
                 role            = 'Nam_observr',
-                source          = 'namelist_observr_[geometry]',
-                geometry        = self.conf.vconf,
+                source          = 'namelist_observr_[geometry:area]',
+                geometry        = self.conf.geometry[self.conf.vconf],
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -289,8 +287,8 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb14')
             tb14 = toolbox.input(
                 role            = 'Nam_analyse',
-                source          = 'namelist_analyse_[geometry]',
-                geometry        = self.conf.vconf,
+                source          = 'namelist_analyse_[geometry:area]',
+                geometry        = self.conf.geometry[self.conf.vconf],
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -303,8 +301,8 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb16')
             tb16 = toolbox.input(
                 role            = 'Nam_ebauche',
-                source          = 'namelist_ebauche_[geometry]',
-                geometry        = self.conf.vconf,
+                source          = 'namelist_ebauche_[geometry:area]',
+                geometry        = self.conf.geometry[self.conf.vconf],
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -422,49 +420,98 @@ class Safran(Task, S2MTaskMixIn):
             rundate = datebegin
             while rundate <= dateend:
 
-                self.sh.title('Toolbox output tb27')
-                tb27 = toolbox.output(
-                    role           = 'Prv_massifs',
-                    kind           = 'MeteorologicalForcing',
-                    source_app     = 'arpege',
-                    source_conf    = 'pearp',
-                    local          = '[datebegin::ymd6h]/mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
-                    experiment     = self.conf.xpid,
-                    block          = 'massifs',
-                    geometry       = self.conf.vconf,
-                    nativefmt      = 'netcdf',
-                    model          = self.conf.model,
-                    datebegin      = rundate.ymd6h,
-                    dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
-                    namespace      = 'vortex.multi.fr',
-                    member         = footprints.util.rangex(self.conf.members),
-                    namebuild      = 'flat@cen',
-                ),
-                print(t.prompt, 'tb27 =', tb27)
-                print()
+                if not isinstance(self.conf.guess_xpid, dict):
 
-                self.sh.title('Toolbox output tb28')
-                tb27 = toolbox.output(
-                    role           = 'Prv_postes',
-                    kind           = 'MeteorologicalForcing',
-                    source_app     = 'arpege',
-                    source_conf    = 'pearp',
-                    local          = '[datebegin::ymd6h]/mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
-                    experiment     = self.conf.xpid,
-                    block          = 'postes',
-                    geometry       = self.conf.vconf,
-                    nativefmt      = 'netcdf',
-                    model          = self.conf.model,
-                    datebegin      = rundate.ymd6h,
-                    dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
-                    namespace      = 'vortex.multi.fr',
-                    member         = footprints.util.rangex(self.conf.members),
-                    namebuild      = 'flat@cen',
-                ),
-                print(t.prompt, 'tb28 =', tb27)
-                print()
+                    self.sh.title('Toolbox output tb27')
+                    tb27 = toolbox.output(
+                        role           = 'Prv_massifs',
+                        kind           = 'MeteorologicalForcing',
+                        source_app     = self.conf.source_app,
+                        source_conf    = self.conf.arpege_conf,
+                        local          = '[datebegin::ymd6h]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                        experiment     = self.conf.xpid,
+                        block          = 'massifs',
+                        geometry        = self.conf.geometry[self.conf.vconf],
+                        nativefmt      = 'netcdf',
+                        model          = self.conf.model,
+                        date           = rundate.ymd6h,
+                        datebegin      = rundate.ymd6h,
+                        dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
+                        namespace      = 'vortex.multi.fr',
+                        namebuild      = 'flat@cen',
+                    ),
+                    print(t.prompt, 'tb27 =', tb27)
+                    print()
 
-                if isinstance(self.conf.guess_xpid, dict): # RECYF 2022 reforecast provides forecast every 2 days
+                    self.sh.title('Toolbox output tb28')
+                    tb28 = toolbox.output(
+                        role           = 'Prv_postes',
+                        kind           = 'MeteorologicalForcing',
+                        source_app     = self.conf.source_app,
+                        source_conf    = self.conf.arpege_conf,
+                        local          = '[datebegin::ymd6h]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                        experiment     = self.conf.xpid,
+                        block          = 'postes',
+                        geometry        = self.conf.geometry[self.conf.vconf],
+                        nativefmt      = 'netcdf',
+                        model          = self.conf.model,
+                        date           = rundate.ymd6h,
+                        datebegin      = rundate.ymd6h,
+                        dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
+                        namespace      = 'vortex.multi.fr',
+                        namebuild      = 'flat@cen',
+                    ),
+                    print(t.prompt, 'tb28 =', tb28)
+                    print()
+
+                if isinstance(self.conf.guess_xpid, dict) or self.conf.pearp:
+
+                    self.sh.title('Toolbox output tb27')
+                    tb27 = toolbox.output(
+                        role           = 'Prv_massifs',
+                        kind           = 'MeteorologicalForcing',
+                        source_app     = self.conf.source_app,
+                        source_conf    = self.conf.eps_conf,
+                        local          = '[datebegin::ymd6h]/mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                        experiment     = self.conf.xpid,
+                        block          = 'massifs',
+                        geometry        = self.conf.geometry[self.conf.vconf],
+                        nativefmt      = 'netcdf',
+                        model          = self.conf.model,
+                        date           = rundate.ymd6h,
+                        datebegin      = rundate.ymd6h,
+                        dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
+                        namespace      = 'vortex.multi.fr',
+                        member         = footprints.util.rangex(self.conf.pearp_members),
+                        namebuild      = 'flat@cen',
+                    ),
+                    print(t.prompt, 'tb27 =', tb27)
+                    print()
+
+                    self.sh.title('Toolbox output tb28')
+                    tb28 = toolbox.output(
+                        role           = 'Prv_postes',
+                        kind           = 'MeteorologicalForcing',
+                        source_app     = self.conf.source_app,
+                        source_conf    = self.conf.eps_conf,
+                        local          = '[datebegin::ymd6h]/mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                        experiment     = self.conf.xpid,
+                        block          = 'postes',
+                        geometry        = self.conf.geometry[self.conf.vconf],
+                        nativefmt      = 'netcdf',
+                        model          = self.conf.model,
+                        date           = rundate.ymd6h,
+                        datebegin      = rundate.ymd6h,
+                        dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
+                        namespace      = 'vortex.multi.fr',
+                        member         = footprints.util.rangex(self.conf.pearp_members),
+                        namebuild      = 'flat@cen',
+                    ),
+                    print(t.prompt, 'tb28 =', tb28)
+                    print()
+
+                if isinstance(self.conf.guess_xpid, dict):
+                    # RECYF 2022 reforecast provides forecast every 2 days
                     rundate = rundate + Period(days=2)
                 else:
                     rundate = rundate + Period(days=1)
