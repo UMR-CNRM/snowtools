@@ -93,7 +93,6 @@ class ProPlotterApplication(tk.Frame):
 
         self.update_idletasks()
 
-
     def close_window(self, *args, **kwargs):
         self.master.destroy()
 
@@ -299,7 +298,7 @@ class ProPlotterChoicesBar_Variables():
             widgets.destroy()
 
 
-class ProPlotterChoicesBar_Point():
+class ProPlotterChoicesBar_Point:
     """
     Choice of points in the opened file
     """
@@ -512,6 +511,11 @@ class ProPlotterStatus(tk.Frame):
 
 
 class ProPlotterChoicesBar_Params_Standard:
+    def __init__(self, master):
+        pass
+
+
+class ProPlotterChoicesBar_Params_Height:
     def __init__(self, master):
         pass
 
@@ -733,7 +737,13 @@ class ProPlotterController(abc.ABC):
 
 
 class ProPlotterController_Standard(ProPlotterController):
+    # idée: mettre en appel ProPlotterController(graphe_A, graphe_B, graphe_C) -> ce sont les graphes/champs d'entrées
+    # qui changent...
     pass
+
+class ProPlotterController_Height(ProPlotterController):
+    pass
+
 
 
 def main(*args, **kwargs):

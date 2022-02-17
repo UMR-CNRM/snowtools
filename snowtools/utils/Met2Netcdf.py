@@ -10,7 +10,7 @@ from datetime import timedelta
 import psycopg2
 import numpy as np
 import netCDF4
-from dateutil.relativedelta import relativedelta
+#from dateutil.relativedelta import relativedelta
 
 from snowtools.utils.S2M_standard_file import StandardCDP
 from snowtools.utils.resources import get_file_period
@@ -95,17 +95,24 @@ def decoupe_periode(date_entree_debut, date_entree_fin):
         list_date_fin = [datetime.datetime(first_year + 1, 8, 1, 6)]
 
     date_tour = date_entree_debut
-    while (date_tour + relativedelta(months=+12)) < date_entree_fin:
+    date_tour_plus1 = datetime.datetime(date_tour.year + 1,date_tour.month,date_tour.day,date_tour.hour)
+    #while (date_tour + relativedelta(months=+12)) < date_entree_fin:
+    while date_tour_plus1 < date_entree_fin:
         list_date_debut.append(list_date_fin[-1])
-        list_date_fin.append(list_date_fin[-1] + relativedelta(months=+12))
+        #list_date_fin.append(list_date_fin[-1] + relativedelta(months=+12))
+        to_app = datetime.datetime(list_date_fin[-1].year + 1, list_date_fin[-1].month, list_date_fin[-1].day, list_date_fin[-1].hour)
+        list_date_fin.append(to_app)
         path_add = list_path_met[-1].replace(list_path_met[-1][-8:-4], str(int(list_path_met[-1][-8:-4]) + 1))
         path_add = path_add.replace(list_path_met[-1][-13:-9], str(int(list_path_met[-1][-13:-9]) + 1))
         list_path_met.append(path_add)
-        date_tour = date_tour + relativedelta(months=+12)
+        #date_tour = date_tour + relativedelta(months=+12)
+        date_tour = date_tour_plus1
 
     if list_date_fin[-1] < date_entree_fin:
         list_date_debut.append(list_date_fin[-1])
-        list_date_fin.append(list_date_fin[-1] + relativedelta(months=+12))
+        #list_date_fin.append(list_date_fin[-1] + relativedelta(months=+12))
+        to_app = datetime.datetime(list_date_fin[-1].year + 1, list_date_fin[-1].month, list_date_fin[-1].day, list_date_fin[-1].hour)
+        list_date_fin.append(to_app)
         path_add = list_path_met[-1].replace(list_path_met[-1][-8:-4], str(int(list_path_met[-1][-8:-4]) + 1))
         path_add = path_add.replace(list_path_met[-1][-13:-9], str(int(list_path_met[-1][-13:-9]) + 1))
         list_path_met.append(path_add)
@@ -336,11 +343,11 @@ def open_met_file_and_create_tab(filename, option_recup, date_entree_debut, date
     # File_entree = np.genfromtxt(fileLines, dtype='string')
     File_entree = np.loadtxt(fileLines, dtype='str')
 
-    if sys.version_info[0] == 3:
+    '''if sys.version_info[0] == 3:
         for i in range(len(File_entree[:, 0])):
             for j in range(len(File_entree[0, :])):
-                File_entree[i, j] = File_entree[i, j][2:-1]
-        '''if 'MET_2015' in filename: 
+                File_entree[i, j] = File_entree[i, j][2:-1]'''
+    '''if 'MET_2015' in filename: 
             for i in range(len(File_entree[:,0])):
                 File_entree[i,0] = File_entree[i,0][:-2]'''
 

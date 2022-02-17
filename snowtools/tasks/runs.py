@@ -182,6 +182,7 @@ class surfexrun(object):
                 get_file_const_or_crash(self.execdir + "/../MY_RUN/ECOCLIMAP/" + ecoclimap_file, ecoclimap_file)
 
             get_file_const_or_crash(self.execdir + "/../MY_RUN/DATA/CROCUS/drdt_bst_fit_60.nc", "drdt_bst_fit_60.nc")
+            get_file_const_or_crash(self.execdir + "/../MY_RUN/DATA/CROCUS/refice_etotref.nc", "refice_etotref.nc")
 
     def get_forcing(self):
         ''' Look for a FORCING file including the starting date'''

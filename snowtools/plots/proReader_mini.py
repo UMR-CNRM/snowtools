@@ -280,8 +280,9 @@ class ProReaderAbstract:
 
         toplot = self.var1D[var][self.date == date][0]
         xplot = [300+20*i for i in range(toplot.shape[0])]
-        axe.plot(xplot, toplot, color)
+        axe.plot(xplot, toplot, color, linestyle='-')
         axe.set_xlim(300, 300+20*toplot.shape[0])
+        axe.set_ylim(0, 1)
         
         axe.set_xlabel(date.strftime('%Y-%m-%d %Hh'))
 
