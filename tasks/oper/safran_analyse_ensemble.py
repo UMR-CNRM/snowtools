@@ -843,25 +843,5 @@ class Safran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb32 =', tb32)
             print()
 
-            self.sh.title('Toolbox output tb33')
-            tb33 = toolbox.output(
-                role           = 'Observations',
-                block          = 'observations',
-                experiment     = self.conf.xpid,
-                vapp           = 's2m',
-                geometry        = self.conf.geometry[self.conf.vconf],
-                suite          = 'oper',
-                kind           = 'packedobs',
-                date           = self.conf.rundate.ymdh,
-                begindate      = datebegin.ymd6h,
-                enddate        = dateend.ymd6h,
-                local          = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
-                model          = 'safran',
-                namespace      = self.conf.namespace,
-                cutoff         = 'assimilation',
-            )
-            print(t.prompt, 'tb33 =', tb33)
-            print()
-
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')
