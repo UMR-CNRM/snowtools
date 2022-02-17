@@ -360,68 +360,57 @@ class Safran(Task, S2MTaskMixIn):
 
         if 'compute' in self.steps:
 
-            rundate = datebegin
-            while rundate <= dateend:
 
-                self.sh.title('Running date {0:s}'.format(rundate.ymdh))
+            self.sh.title('Running date {0:s}'.format(rundate.ymdh))
 
-                self.sh.title('Toolbox algo tb15 = SAFRANE')
-                tb15 = tbalgo1 = toolbox.algo(
-                    engine         = 's2m',
-                    kind           = 'safrane',
-                    execution      = 'reforecast',
-                    datebegin      = rundate.ymd6h,
-                    dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
-                    ntasks         = self.conf.ntasks,
-                )
-                print(t.prompt, 'tb15 =', tb15)
-                print()
+            self.sh.title('Toolbox algo tb15 = SAFRANE')
+            tb15 = tbalgo1 = toolbox.algo(
+                engine         = 's2m',
+                kind           = 'safrane',
+                execution      = 'reforecast',
+                ntasks         = self.conf.ntasks,
+            )
+            print(t.prompt, 'tb15 =', tb15)
+            print()
 
-                self.component_runner(tbalgo1, tbx1)
+            self.component_runner(tbalgo1, tbx1)
 
-                self.sh.title('Toolbox algo tb16 = SYRPLUIE')
-                tb16 = tbalgo2 = toolbox.algo(
-                    engine         = 's2m',
-                    kind           = 'syrpluie',
-                    execution      = 'reforecast',
-                    datebegin      = rundate.ymd6h,
-                    dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
-                    ntasks         = self.conf.ntasks,
-                )
-                print(t.prompt, 'tb16 =', tb16)
-                print()
+            self.sh.title('Toolbox algo tb16 = SYRPLUIE')
+            tb16 = tbalgo2 = toolbox.algo(
+                engine         = 's2m',
+                kind           = 'syrpluie',
+                execution      = 'reforecast',
+                ntasks         = self.conf.ntasks,
+            )
+            print(t.prompt, 'tb16 =', tb16)
+            print()
 
-                self.component_runner(tbalgo2, tbx2)
+            self.component_runner(tbalgo2, tbx2)
 
-                self.sh.title('Toolbox algo tb17 = SYRMRR')
-                tb17 = tbalgo3 = toolbox.algo(
-                    engine         = 's2m',
-                    kind           = 'syrmrr',
-                    execution      = 'reforecast',
-                    datebegin      = rundate.ymd6h,
-                    dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
-                    ntasks         = self.conf.ntasks,
-                )
-                print(t.prompt, 'tb17 =', tb17)
-                print()
+            self.sh.title('Toolbox algo tb17 = SYRMRR')
+            tb17 = tbalgo3 = toolbox.algo(
+                engine         = 's2m',
+                kind           = 'syrmrr',
+                execution      = 'reforecast',
+                ntasks         = self.conf.ntasks,
+            )
+            print(t.prompt, 'tb17 =', tb17)
+            print()
 
-                self.component_runner(tbalgo3, tbx3)
+            self.component_runner(tbalgo3, tbx3)
 
-                self.sh.title('Toolbox algo tb18 = SYTIST')
-                tb18 = tbalgo4 = toolbox.algo(
-                    engine         = 's2m',
-                    kind           = 'sytist',
-                    execution      = 'reforecast',
-                    datebegin      = rundate.ymd6h,
-                    dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
-                    ntasks         = self.conf.ntasks,
-                )
-                print(t.prompt, 'tb18 =', tb18)
-                print()
+            self.sh.title('Toolbox algo tb18 = SYTIST')
+            tb18 = tbalgo4 = toolbox.algo(
+                engine         = 's2m',
+                kind           = 'sytist',
+                execution      = 'reforecast',
+                ntasks         = self.conf.ntasks,
+            )
+            print(t.prompt, 'tb18 =', tb18)
+            print()
 
-                self.component_runner(tbalgo4, tbx4)
+            self.component_runner(tbalgo4, tbx4)
 
-                rundate = rundate + Period(days=1)
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
 
