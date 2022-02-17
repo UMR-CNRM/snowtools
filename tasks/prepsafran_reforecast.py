@@ -289,7 +289,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     self.sh.title('Toolbox output tb6h')
                     tb6h = toolbox.output(
                         role           = 'Ebauche',
-                        local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                        local          = '[date::ymdh]/mb[member%03]/[cumul:fmthour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                         experiment     = self.conf.xpid,
                         block          = self.conf.guess_block,
                         geometry       = self.conf.domains,
@@ -312,7 +312,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     self.sh.title('Toolbox output tb18h')
                     tb18h = toolbox.output(
                         role           = 'Ebauche',
-                        local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                        local          = '[date::ymdh]/mb[member%03]/[cumul:fmthour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                         experiment     = self.conf.xpid,
                         block          = self.conf.guess_block,
                         geometry       = self.conf.domains,
@@ -337,7 +337,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     self.sh.title('Toolbox output AREPEGE 0h')
                     tbarp = toolbox.output(
                         role           = 'Ebauche',
-                        local          = '[date::ymdh]/ARPEGE/[term:fmthour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                        local          = '[date::ymdh]/ARPEGE/[cumul:fmthour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                         experiment     = self.conf.xpid,
                         block          = self.conf.guess_block,
                         geometry       = self.conf.domains,
@@ -359,7 +359,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         self.sh.title('Toolbox output PEARP 0h')
                         tbpearp = toolbox.output(
                             role           = 'Ebauche',
-                            local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                            local          = '[date::ymdh]/mb[member%03]/[cumul:fmthour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
                             experiment     = self.conf.xpid,
                             block          = self.conf.guess_block,
                             geometry       = self.conf.domains,
