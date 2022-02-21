@@ -90,7 +90,7 @@ class obscsv(object):
         else:
             raise FileNameException(path)
 
-    def read(self):
+    def read(self, keysfromheader=False):
 
         try:
             cr = csv.reader(self.theFile, delimiter=";")
@@ -99,7 +99,13 @@ class obscsv(object):
 
         self._data = {}
 
+        firstline = True
         for row in cr:
+
+            if keysfromheader and firstline:
+                headers = row[:]
+                firstline = False
+                continue
 
             # Dans les extractions SIM-BDCLIM de François, il manque le 0 du numéro de station
             if re.match("^\d{7}$", row[0]):
@@ -109,15 +115,23 @@ class obscsv(object):
                 if not row[0] in self._data.keys():
                     self._data[row[0]] = {}
                     self._data[row[0]]["time"] = []
-                    self._data[row[0]]["SNOWDEPTH"] = []
-                    self._data[row[0]]["SNOWSWE"] = []
+                    if keysfromheader:
+                        for header in headers[2:]:
+                            self._data[row[0]][header] = []
+                    else:
+                        self._data[row[0]]["SNOWDEPTH"] = []
+                        self._data[row[0]]["SNOWSWE"] = []
 
                 listdate = row[1].split("-")
                 date = datetime.datetime(int(listdate[0]), int(listdate[1]), int(listdate[2]), int(listdate[3]), int(listdate[4]))
                 self._data[row[0]]["time"].append(date)
-                self._data[row[0]]["SNOWDEPTH"].append(float(row[2].replace(",", ".")))
-                if len(row) >= 4:
-                    self._data[row[0]]["SNOWSWE"].append(float(row[3].replace(",", ".")))
+                if keysfromheader:
+                    for h, header in enumerate(headers[2:]):
+                        self._data[row[0]][header].append(float(row[h+2].replace(",", ".")))
+                else:
+                    self._data[row[0]]["SNOWDEPTH"].append(float(row[2].replace(",", ".")))
+                    if len(row) >= 4:
+                        self._data[row[0]]["SNOWSWE"].append(float(row[3].replace(",", ".")))
             else:
                 print ("station ignorée :" + row[0])
 
