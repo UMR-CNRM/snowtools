@@ -337,7 +337,7 @@ class Vortex_conf_file(object):
             self.escroc_variables()
         else:
             self.set_field("DEFAULT", 'nnodes', self.options.nnodes)
-            if self.options.nmembers:
+            if 'nmembers' in self.options.keys():
                 self.set_field("DEFAULT", 'nmembers', self.options.nmembers)
             if self.options.startmember:
                 self.set_field("DEFAULT", 'startmember', self.options.startmember)
