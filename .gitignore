@@ -18,5 +18,4 @@ GUI_selfcontain.zip
 DATA/shapefiles
 .coverage
 newvenevsnowtools
-requirement*
 *.egg-info
