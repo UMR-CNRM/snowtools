@@ -82,7 +82,7 @@ def parse_options(arguments):
 
     parser.add_option("-o",
                       action="store", type="string", dest="diroutput",
-                      default="/cnrm/cen/users/NO_SAVE/radanovicss/PEARPS2M_dev",
+                      default="/cnrm/cen/users/NO_SAVE/radanovicss/PEARPS2M",
                       help="Output directory")
 
     parser.add_option("--dev",
@@ -111,7 +111,7 @@ class config(object):
     # xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
     # list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
 
-    list_members = list(range(0, 35))  #: 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+    list_members = list(range(0, 36))  #: 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
 
     def __init__(self):
         """
@@ -727,7 +727,8 @@ class EnsembleOperDiags(EnsembleDiags):
                     qmax = self.quantiles[var][2][:, point]
 
                 if hasattr(self, 'inddeterministic'):
-                    s.draw(self.time, allmembers[:, self.inddeterministic], allmembers, qmin, qmed, qmax, **settings)
+                    s.draw(self.time, allmembers, qmin, qmed, qmax, deterministic=allmembers[:, self.inddeterministic],
+                           **settings)
                 else:
                     s.draw(self.time, allmembers, qmin, qmed, qmax, **settings)
 
@@ -790,7 +791,8 @@ class EnsembleOperDiags(EnsembleDiags):
                         settings['commonlabel'] = kwargs['labels'][p]
 
                     if hasattr(self, 'inddeterministic'):
-                        s.draw(self.time, allmembers[:, self.inddeterministic], allmembers, qmin, qmed, qmax, **settings)
+                        s.draw(self.time, allmembers, qmin, qmed, qmax,
+                               deterministic=allmembers[:, self.inddeterministic], **settings)
                     else:
                         s.draw(self.time, allmembers, qmin, qmed, qmax, **settings)
 
@@ -799,7 +801,7 @@ class EnsembleOperDiags(EnsembleDiags):
                 s.addlogo()
                 plotname = diroutput + "/" + var + "_" + list_filenames[point] + "." + self.formatplot
                 s.save(plotname, formatout=self.formatplot)
-                print (plotname + " is available.")
+                print(plotname + " is available.")
 
             s.close()
 
