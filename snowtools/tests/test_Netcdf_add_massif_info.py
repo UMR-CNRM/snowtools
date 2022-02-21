@@ -2,11 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-import os
-import shutil
+import os.path
 import sys
-import tempfile
-import datetime
+import subprocess
 
 from netCDF4 import Dataset
 
@@ -19,7 +17,7 @@ class TestScript(TestWithTempFolder):
         path_forcing = os.path.join(SNOWTOOLS_DATA, 'FORCING_test_2d.nc')
         path_script = os.path.join(SNOWTOOLS_DIR, 'interpolation/Netcdf_add_massif_info.py')
         path_out = os.path.join(self.diroutput, 'test.nc')
-        os.system("python3  " + path_script + " " + path_forcing + " -o " + path_out)
+        subprocess.run([sys.executable, path_script, path_forcing, "-o", path_out])
         with Dataset(path_out, 'r', format='NETCDF4') as file_input:
             self.assertTrue((file_input.variables['massif_num'][Ellipsis] == 69).all())
 
