@@ -39,63 +39,133 @@ class PrepSafran(Task, S2MTaskMixIn):
         t = self.ticket
         datebegin = self.conf.datebegin.replace(hour=6)
         dateend = self.conf.dateend.replace(hour=6)
-        t.env.setvar('DATADIR', '/scratch/mtool/vernaym/cache')
-
-        ndays = (dateend - datebegin).days
-        if ndays > 366:
-            raise ExecutionError('Periode trop longue')
-
-        day_per_worker = ndays / 4
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
             tbpearp = list()
-#             d = 0
-#             m = 0
+            tbarp   = list()
             rundate = datebegin
             while rundate <= dateend:
 
-                # I- PEARP
-                # Récupération du réseau P18 (J-1) pour couvrir J 6h -> (J+4) 6h
-                self.sh.title('Toolbox input tb01')
-                tbpearp.extend(toolbox.input(
-                    role           = 'Gridpoint',
-                    kind           = 'gridpoint',
-                    username       = 'vernaym',
-                    cutoff         = 'production',
-                    format         = 'grib',
-                    nativefmt      = '[format]',
-                    experiment     = 'reforecast@vernaym',
-                    block          = 'refill',
-                    namespace      = 'vortex.cache.fr',
-                    geometry       = self.conf.pearp_geometry,
-                    local          = '[date::ymdh]/mb[member%03]/PEARP[date::ymdh]_[term:fmthour]',
-                    origin         = 'historic',
-                    date           = '{0:s}/-PT12H'.format(rundate.ymd6h),
-                    term           = footprints.util.rangex(self.conf.prv_terms),
-                    member         = footprints.util.rangex(self.conf.pearp_members),
-                    model          = '[vapp]',
-                    vapp           = self.conf.source_app,
-                    vconf          = self.conf.eps_conf,
-                ))
-                print(t.prompt, 'tb01')
-                print()
+                if isinstance(self.conf.xpid, dict): 
+                    # Le reforecast PEARP produit par GMAP/RECYF en 2022 est dispo pour les réseaux 18h et 6h
+                    # RQ : Le code suppose de passer comme datebegin une date avec un réseau de 6h disponible
 
-                rundate = rundate + Period(days=1)
+                    # Récupération du réseau 6:00 (J) 
+                    self.sh.title(f'Toolbox input pearp {rundate.ymd} 6h')
+                    tbpearp.extend(toolbox.input(
+                        role           = 'Gridpoint',
+                        kind           = 'gridpoint',
+                        cutoff         = 'production',
+                        format         = 'grib',
+                        nativefmt      = '[format]',
+                        experiment     = self.conf.guess_xpid['6'],
+                        block          = 'forecast',
+                        namespace      = 'vortex.archive.fr',
+                        geometry       = self.conf.pearp_geometry,
+                        local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/PEARP[date::ymdh]_[term:fmthour]',
+                        origin         = 'historic',
+                        date           = rundate.ymd6h,
+                        term           = footprints.util.rangex(self.conf.prv_terms)[:33],
+                        member         = footprints.util.rangex(self.conf.pearp_members),
+                        model          = '[vapp]',
+                        vapp           = self.conf.source_app,
+                        vconf          = self.conf.eps_conf,
+                    ))
+                    print(t.prompt, 'tb6h')
+                    print()
 
-#                 if d == day_per_worker:
-#                     m = m + 1
-#                     d = 0
-#                 d = d + 1
+                    rundate = rundate + Period(days=3)
+
+                    # Récupération du réseau de 18:00 (J-1) pour couvrir J 6h -> (J+4) 6h
+                    self.sh.title('Toolbox input pearp 18h')
+                    tbpearp.extend(toolbox.input(
+                        role           = 'Gridpoint',
+                        kind           = 'gridpoint',
+                        cutoff         = 'production',
+                        format         = 'grib',
+                        nativefmt      = '[format]',
+                        experiment     = self.conf.guess_xpid['18'],
+                        block          = 'forecast',
+                        namespace      = 'vortex.archive.fr',
+                        geometry       = self.conf.pearp_geometry,
+                        local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/PEARP[date::ymdh]_[term:fmthour]',
+                        origin         = 'historic',
+                        date           = '{0:s}/-PT12H'.format(rundate.ymd6h),
+                        term           = footprints.util.rangex(self.conf.prv_terms)[4:],
+                        member         = footprints.util.rangex(self.conf.pearp_members),
+                        model          = '[vapp]',
+                        vapp           = self.conf.source_app,
+                        vconf          = self.conf.eps_conf,
+                    ))
+                    print(t.prompt, 'tb18h')
+                    print()
+
+                    rundate = rundate + Period(days=2)
+
+                else: # Reforecast chaine en double 2021
+
+                    # Récupération du réseau ARPEGE de 0:00 (J) pour couvrir J 6h -> (J+4) 6h
+                    self.sh.title('Toolbox input arpege 0h')
+                    tbarp.extend(toolbox.input(
+                        role           = 'Gridpoint',
+                        kind           = 'gridpoint',
+                        cutoff         = 'production',
+                        format         = 'grib',
+                        nativefmt      = '[format]',
+                        experiment     = self.conf.guess_xpid,
+                        block          = 'forecast',
+                        namespace      = 'vortex.archive.fr',
+                        geometry       = self.conf.pearp_geometry,
+                        local          = '[date::ymdh]/ARPEGE/[term:fmthour]/ARPEGE[date::ymdh]_[term:fmthour]',
+                        origin         = 'historic',
+                        date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
+                        term           = footprints.util.rangex(self.conf.prv_terms)[2:35],
+                        model          = '[vapp]',
+                        vapp           = self.conf.source_app,
+                        vconf          = self.conf.arpege_conf,
+                    ))
+                    print(t.prompt, 'tbarp')
+                    print()
+
+                    if self.conf.pearp:
+
+                        # Récupération du réseau PEARP de 0:00 (J) pour couvrir J 6h -> (J+4) 6h
+                        self.sh.title('Toolbox input pearp 0h')
+                        tbpearp.extend(toolbox.input(
+                            role           = 'Gridpoint',
+                            kind           = 'gridpoint',
+                            cutoff         = 'production',
+                            format         = 'grib',
+                            nativefmt      = '[format]',
+                            experiment     = self.conf.guess_xpid,
+                            block          = 'forecast',
+                            namespace      = 'vortex.archive.fr',
+                            geometry       = self.conf.pearp_geometry,
+                            local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/PEARP[date::ymdh]_[term:fmthour]',
+                            origin         = 'historic',
+                            date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
+                            term           = footprints.util.rangex(self.conf.prv_terms)[2:35],
+                            member         = footprints.util.rangex(self.conf.pearp_members),
+                            model          = '[vapp]',
+                            vapp           = self.conf.source_app,
+                            vconf          = self.conf.eps_conf,
+                        ))
+                        print(t.prompt, 'tbpearp')
+                        print()
+
+                    rundate = rundate + Period(days=1)
+
+
 
             self.sh.title('Toolbox input tb02 = PRE-TRAITEMENT FORCAGE script')
             tb02 = script = toolbox.input(
                 role        = 'pretraitement',
                 local       = 'makeP.py',
-                genv        = 'uenv:s2m.01@vernaym',
+                genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -o -a -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbpearp)]))),
+                rawopts     = ' -o -a -i IDW -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp+tbpearp)])),
             )
             print(t.prompt, 'tb02 =', tb02)
             print()
@@ -130,37 +200,102 @@ class PrepSafran(Task, S2MTaskMixIn):
 
         if 'late-backup' in self.steps:
             
-#            d = 0
-#            m = 0
             rundate = datebegin
             while rundate <= dateend:
 
-                self.sh.title('Toolbox output tb04')
-                tb04 = toolbox.output(
-                    role           = 'Ebauche',
-                    local          = '[date::ymdh]/mb[member%03]/P[date:yymdh]_[cumul:hour]_[vconf]_reforecast',
-                    experiment     = self.conf.xpid,
-                    block          = self.conf.guess_block,
-                    geometry       = self.conf.domains,
-                    vconf          = '[geometry::area]',
-                    date           = '{0:s}/-PT12H'.format(rundate.ymd6h),
-                    cumul          = footprints.util.rangex(self.conf.prv_terms),
-                    nativefmt      = 'ascii',
-                    kind           = 'guess',
-                    model          = 'safran',
-                    source_app     = self.conf.source_app,
-                    source_conf    = self.conf.eps_conf,
-                    namespace      = 'vortex.cache.fr',
-                    member         = footprints.util.rangex(self.conf.pearp_members),
-                ),
-                print(t.prompt, 'tb04 =', tb04)
-                print()
+                if isinstance(self.conf.guess_xpid, dict): 
 
-                rundate = rundate + Period(days=1)
+                    self.sh.title('Toolbox output tb6h')
+                    tb6h = toolbox.output(
+                        role           = 'Ebauche',
+                        local          = '[date::ymdh]/mb[member%03]/[cumul:fmthour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                        experiment     = self.conf.xpid,
+                        block          = self.conf.guess_block,
+                        geometry       = self.conf.domains,
+                        vconf          = '[geometry::area]',
+                        date           = rundate.ymd6h,
+                        cumul          = footprints.util.rangex(self.conf.prv_terms)[:33],
+                        nativefmt      = 'ascii',
+                        kind           = 'guess',
+                        model          = 'safran',
+                        source_app     = self.conf.source_app,
+                        source_conf    = self.conf.eps_conf,
+                        namespace      = 'vortex.cache.fr',
+                        member         = footprints.util.rangex(self.conf.pearp_members),
+                    ),
+                    print(t.prompt, 'tb6h =', tb6h)
+                    print()
 
-#                if d == day_per_worker:
-#                    m = m + 1
-#                    d = 0
-#                d = d + 1
+                    rundate = rundate + Period(days=3)
+
+                    self.sh.title('Toolbox output tb18h')
+                    tb18h = toolbox.output(
+                        role           = 'Ebauche',
+                        local          = '[date::ymdh]/mb[member%03]/[cumul:fmthour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                        experiment     = self.conf.xpid,
+                        block          = self.conf.guess_block,
+                        geometry       = self.conf.domains,
+                        vconf          = '[geometry::area]',
+                        date           = '{0:s}/-PT12H'.format(rundate.ymd6h),
+                        cumul          = footprints.util.rangex(self.conf.prv_terms)[4:],
+                        nativefmt      = 'ascii',
+                        kind           = 'guess',
+                        model          = 'safran',
+                        source_app     = self.conf.source_app,
+                        source_conf    = self.conf.eps_conf,
+                        namespace      = 'vortex.cache.fr',
+                        member         = footprints.util.rangex(self.conf.pearp_members),
+                    ),
+                    print(t.prompt, 'tb18h =', tb18h)
+                    print()
+
+                    rundate = rundate + Period(days=2)
+
+                else:
+
+                    self.sh.title('Toolbox output AREPEGE 0h')
+                    tbarp = toolbox.output(
+                        role           = 'Ebauche',
+                        local          = '[date::ymdh]/ARPEGE/[cumul:fmthour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                        experiment     = self.conf.xpid,
+                        block          = self.conf.guess_block,
+                        geometry       = self.conf.domains,
+                        vconf          = '[geometry::area]',
+                        date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
+                        cumul          = footprints.util.rangex(self.conf.prv_terms)[2:35],
+                        nativefmt      = 'ascii',
+                        kind           = 'guess',
+                        model          = 'safran',
+                        source_app     = self.conf.source_app,
+                        source_conf    = self.conf.arpege_conf,
+                        namespace      = 'vortex.cache.fr',
+                    ),
+                    print(t.prompt, 'tbarp =', tbarp)
+                    print()
+
+                    if self.conf.pearp:
+
+                        self.sh.title('Toolbox output PEARP 0h')
+                        tbpearp = toolbox.output(
+                            role           = 'Ebauche',
+                            local          = '[date::ymdh]/mb[member%03]/[cumul:fmthour]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+                            experiment     = self.conf.xpid,
+                            block          = self.conf.guess_block,
+                            geometry       = self.conf.domains,
+                            vconf          = '[geometry::area]',
+                            date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
+                            cumul          = footprints.util.rangex(self.conf.prv_terms)[2:35],
+                            nativefmt      = 'ascii',
+                            kind           = 'guess',
+                            model          = 'safran',
+                            source_app     = self.conf.source_app,
+                            source_conf    = self.conf.eps_conf,
+                            namespace      = 'vortex.cache.fr',
+                            member         = footprints.util.rangex(self.conf.pearp_members),
+                        ),
+                        print(t.prompt, 'tbpearp =', tbpearp)
+                        print()
+
+                    rundate = rundate + Period(days=1)
 
             raise ExecutionError('')
