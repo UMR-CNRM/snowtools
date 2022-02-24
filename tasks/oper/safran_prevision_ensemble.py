@@ -26,6 +26,8 @@ def setup(t, **kw):
 class Safran(Task, S2MTaskMixIn):
 
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
+    report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
+    report_execution_error = S2MTaskMixIn.s2moper_report_execution_error
 
     def process(self):
         """Safran"""
