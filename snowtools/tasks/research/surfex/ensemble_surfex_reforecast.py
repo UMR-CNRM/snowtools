@@ -33,6 +33,8 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
 
     def process(self):
 
+        if not hasattr(self.conf, "genv"):
+            self.conf.genv = 'uenv:cen.05@CONST_CEN'
         t = self.ticket
 
         listrundate = list(daterange(self.conf.datebegin, self.conf.dateend))
@@ -101,8 +103,8 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                 nativefmt      = 'netcdf',
                 local          = 'PGD.nc',
                 geometry       = self.conf.geometry,
-                genv           = 'uenv:cen.01@CONST_CEN',
-                gvar           = 'pgd_[geometry::area]',
+                genv           = self.conf.genv,
+                gvar           = 'pgd_[geometry::tag]',
                 model          = 'surfex',
                 fatal          = False,
             ),
@@ -152,7 +154,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapI_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv           = 'uenv:cen.01@CONST_CEN',
+                genv           = self.conf.genv,
                 source         = 'ecoclimap1',
                 model          = 'surfex',
             ),
@@ -166,7 +168,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                 nativefmt      = 'bin',
                 local          = 'ecoclimapII_eu_covers_param.bin',
                 geometry       = self.conf.geometry,
-                genv           = 'uenv:cen.01@CONST_CEN',
+                genv           = self.conf.genv,
                 source         = 'ecoclimap2',
                 model          = 'surfex',
             ),
@@ -177,7 +179,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
             tb06 = toolbox.input(
                 role            = 'Parameters for F06 metamorphism',
                 kind            = 'ssa_params',
-                genv            = 'uenv:cen.01@CONST_CEN',
+                genv           = self.conf.genv,
                 nativefmt       = 'netcdf',
                 local           = 'drdt_bst_fit_60.nc',
                 model           = 'surfex',
@@ -198,7 +200,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                 tb07 = toolbox.input(
                     role            = 'Nam_surfex',
                     source          = 'OPTIONS_default.nam',
-                    genv            = 'uenv:cen.01@CONST_CEN',
+                    genv           = self.conf.genv,
                     kind            = 'namelist',
                     model           = 'surfex',
                     local           = 'OPTIONS.nam',
@@ -213,8 +215,8 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                 kind           = 'offline',
                 local          = 'OFFLINE',
                 model          = 'surfex',
-                genv           = 'uenv:cen.01@CONST_CEN',
-                gvar           = 'master_offline_nompi',
+                genv           = self.conf.genv,
+                gvar           = 'master_surfex_offline_nompi',
             )
 
             print(t.prompt, 'tb08 =', tb08)
