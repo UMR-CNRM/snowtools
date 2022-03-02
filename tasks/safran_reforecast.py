@@ -96,7 +96,7 @@ class Safran(Task, S2MTaskMixIn):
                         block          = self.conf.guess_block,
                         geometry       = self.conf.geometry[self.conf.vconf],
                         date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
-                        cumul          = footprints.util.rangex(self.conf.prv_terms)[2:35],
+                        cumul          = footprints.util.rangex(self.conf.prv_terms),
                         nativefmt      = 'ascii',
                         kind           = 'guess',
                         model          = 'safran',
@@ -117,7 +117,7 @@ class Safran(Task, S2MTaskMixIn):
                             block          = self.conf.guess_block,
                             geometry       = self.conf.geometry[self.conf.vconf],
                             date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
-                            cumul          = footprints.util.rangex(self.conf.prv_terms)[2:35],
+                            cumul          = footprints.util.rangex(self.conf.prv_terms),
                             nativefmt      = 'ascii',
                             kind           = 'guess',
                             model          = 'safran',
@@ -125,6 +125,7 @@ class Safran(Task, S2MTaskMixIn):
                             source_conf    = self.conf.eps_conf,
                             namespace      = self.conf.namespace,
                             member         = footprints.util.rangex(self.conf.pearp_members),
+                            fatal          = False,
                         ),
                         print(t.prompt, 'tb01 =', tb01)
                         print()
