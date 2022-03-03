@@ -45,7 +45,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 self.sh.title('Toolbox input tb01')
                 tb01 = toolbox.input(
                     role           = 'Forcing_Deterministic',
-                    local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' 
+                    local          = 'mb035/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                     if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     vapp           = self.conf.vapp,
                     vconf          = '[geometry:area]',
@@ -73,7 +73,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     self.sh.title('Toolbox input tb01a')
                     tb01a = toolbox.input(
                         alternate      = 'Forcing_Deterministic',
-                        local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' 
+                        local          = 'mb035/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                         if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                         vapp           = self.conf.vapp,
                         vconf          = '[geometry:area]',
@@ -99,7 +99,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 self.sh.title('Toolbox input tb01b')
                 tb01b = toolbox.input(
                     role           = 'Forcing',
-                    local          = 'mb[member]/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
+                    local          = 'mb[member]/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                     if len(list_geometry) > 1 else 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     vapp           = self.conf.vapp,
                     vconf          = '[geometry:area]',
@@ -127,7 +127,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     self.sh.title('Toolbox input tb01c')
                     tb01c = toolbox.input(
                         alternate           = 'Forcing',
-                        local          = 'mb[member]/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
+                        local          = 'mb[member]/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                         if len(list_geometry) > 1 else 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                         vapp           = self.conf.vapp,
                         vconf          = '[geometry:area]',

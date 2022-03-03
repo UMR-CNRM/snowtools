@@ -107,6 +107,8 @@ class vortex_kitchen(object):
         if self.options.oper:
             if self.options.monthlyreanalysis:
                 self.reftask = "monthly_surfex_reanalysis"
+            elif self.options.monthlyreanalysissytron:
+                self.reftask = "monthly_surfex_reanalysis_sytron"
             elif self.options.forecast:
                 self.reftask = "ensemble_surfex_tasks_forecast"
             else:

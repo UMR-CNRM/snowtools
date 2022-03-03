@@ -18,13 +18,13 @@ def setup(t, **kw):
         tag='Surfex_Parallel',
         ticket=t,
         nodes=[
-            Monthly_Surfex_Reanalysis(tag='Monthly_Surfex_Reanalysis', ticket=t, **kw),
+            Monthly_Surfex_Reanalysis_Sytron(tag='Monthly_Surfex_Reanalysis_Sytron', ticket=t, **kw),
         ],
         options=kw
     )
 
 
-class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
+class Monthly_Surfex_Reanalysis_Sytron(S2MTaskMixIn, Task):
     '''
 
     '''
@@ -196,7 +196,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
             self.sh.title('Toolbox input tb07')
             tb07 = toolbox.input(
                 role            = 'Nam_surfex',
-                source          = 'OPTIONS_reanalysis.nam',
+                source          = 'OPTIONS_sytron.nam',
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 intent          = 'inout',
@@ -274,7 +274,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 tb10 = toolbox.output(
                     local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = self.conf.xpid,
-                    block          = 'meteo',
+                    block          = 'meteo_sytron',
                     geometry       = self.conf.geometry,
                     date           = self.conf.rundate,
                     datebegin      = datebegin,
@@ -293,7 +293,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
             tb11 = toolbox.output(
                 local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
                 experiment     = self.conf.xpid,
-                block          = 'pro',
+                block          = 'pro_sytron',
                 geometry       = self.conf.geometry,
                 date           = self.conf.rundate,
                 datebegin      = datebegin,
@@ -318,7 +318,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 geometry       = self.conf.geometry,
                 datevalidity   = dateend,
                 date           = self.conf.rundate.replace(hour = self.nightruntime.hour),
-                member         = 35,
+                member         = 36,
                 nativefmt      = 'netcdf',
                 kind           = 'PREP',
                 model          = 'surfex',
