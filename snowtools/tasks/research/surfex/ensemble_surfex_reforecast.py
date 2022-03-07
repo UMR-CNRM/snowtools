@@ -78,7 +78,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                     local          = '[datebegin:ymdh]/mb[member]/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else '[datebegin:ymdh]/mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     vapp           = self.conf.meteo,
                     vconf          = '[geometry:area]',
-                    block          = block_safran + '/[datebegin:nivologyseason]',
+                    block          = block_safran,
                     source_app     = 'arpege' if source_safran == 'safran' else None,
                     source_conf    = 'pearp' if source_safran == 'safran' else None,
                     experiment     = self.conf.forcingid  if source_safran == 'safran' else self.conf.xpid,
@@ -92,6 +92,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                     model          = source_safran,
                     cutoff         = 'production',
                     namebuild      = 'flat@cen',
+                    fatal          = False,
                 ),
                 print(t.prompt, 'tb01b =', tb01b)
                 print()
