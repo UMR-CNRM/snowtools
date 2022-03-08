@@ -270,6 +270,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                         model          = 's2m',
                         namespace      = 'vortex.multi.fr',
                         cutoff         = 'production',
+                        member         = 35,
                         fatal          = False
                     ),
                     print(t.prompt, 'tb10 =', tb10)
@@ -289,6 +290,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                     model          = 'surfex',
                     namespace      = 'vortex.multi.fr',
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
+                    member         = 35,
                     fatal          = False
                 ),
                 print(t.prompt, 'tb11 =', tb11)
@@ -308,6 +310,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                     model          = 'surfex',
                     namespace      = 'vortex.multi.fr',
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
+                    member         = 35,
                     fatal          = False
                 ),
                 print(t.prompt, 'tb12 =', tb12)
