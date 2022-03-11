@@ -1,0 +1,4 @@
+#45 8 * * * . /etc/profile ; . $HOME/.bash_profile_common ; python /home/lafaysse/git/snowtools_git/snowtools/tools/emosCSG.py > emosCSG.out 2>&1
+55 8 * * * . /etc/profile ; . $HOME/.bash_profile_common ; python /home/lafaysse/git/snowtools_git/snowtools/plots/pearps2m/postprocess.py > post_pearps2m.out 2>&1
+00 20 * * * . /etc/profile ; . $HOME/.bash_profile_common ; find /cnrm/cen/users/NO_SAVE/lafaysse/cache/cache/vortex/s2m/*/OPER -type d -ctime +15 -exec rm -rf {} \;
+15 20 * * * . /etc/profile ; . $HOME/.bash_profile_common ; find /cnrm/cen/users/NO_SAVE/lafaysse/PEARPS2M -type d -ctime +15 -exec rm -rf {} \;

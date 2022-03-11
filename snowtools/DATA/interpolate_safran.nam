@@ -1,0 +1,36 @@
+&NAM_SWITCHES_INT
+    LMULTIINPUT = .TRUE.
+    LMULTIOUTPUT = .FALSE.
+    LSELECTVAR = .TRUE.
+/
+&NAM_FILENAMES_SINGLE_IN
+    HFILEIN = "postproc_2021041006_2021041406_cor.nc" !"PRO_2020092706_2020092806_mb035_zeroslope_alps.nc" !"PRO_2020092706_2020092806_mb035_alps.nc" !,
+/
+&NAM_MULTIIN_SETTING
+    NNUMBER_INPUT_FILES = 3
+/
+&NAM_FILENAMES_MULTI_IN
+    HFILESIN =  "postproc_2021041006_2021041406_cor.nc", "postproc_2021041006_2021041406_alp.nc", "postproc_2021041006_2021041406_pyr.nc" !"PRO_2020092706_2020092806_mb035_cor.nc", "PRO_2020092706_2020092806_mb035_alps.nc", "PRO_2020092706_2020092806_mb035_pyr.nc"
+/
+&NAM_MULTIOUT_SETTING
+    NNUMBER_OUTPUT_GRIDS = 3
+/
+&NAM_FILENAMES_SINGLE_OUT
+    HFILEOUT = "grid_postproc_2021041006_2021041406_all2alpha_testselvar.nc" !"alpha_2020092706_2020092806_mb035.nc" !"test_ignore_nonzeroslopes_zeroslopes_alps.nc" !"test_ignore_nonzeroslopes_allslopes_alps.nc" !'test_v2_multi_in_single_out_alpha.nc'
+    HGRIDIN = 'alpha_massifs.nc' ! "ALPS.nc" ! "PYRENNES.nc" !"CORSE_1D.nc" !'alpha_massifs_1d.nc' ! "CORSE.nc" !
+/
+&NAM_FILENAMES_MULTI_OUT
+    HFILESOUT = "dev_multiin_singleout_test_multi_in_multi_out_cor.nc", "dev_multiin_singleout_test_multi_in_multi_out_alps.nc", "dev_multiin_singleout_test_multi_in_multi_out_pyr.nc"
+    HGRIDSIN = "CORSE.nc", "ALPS.nc",  "PYRENNES.nc"
+/
+&NAM_SELECT_VARS_SETTING
+    NNUMBER_OF_VARIABLES = 2
+/
+&NAM_SELECT_VARS_NAMES
+    HVAR_LIST = "SD_1DY_ISBA", "decile"
+/
+&NAM_OTHER_STUFF
+    LTIMECHUNK = .TRUE. ! write one time step at a time to safe memory when working with larger files
+    NLONCHUNKSIZE = 108 ! 108 for alpha grid on pc
+    NLATCHUNKSIZE = 112 ! 112 for alpha grid on pc
+/
