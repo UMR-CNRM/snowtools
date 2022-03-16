@@ -4,7 +4,10 @@
 # Extraction des données d'observation depuis la BDCLIM
 # Matthieu Lafaysse 10 sept 2014
 # Modified Léo Viallon-Galinier 22 oct 2021
+# Modified Matthieu Vernay 15 mar 2022
 # Script simplifié pour obtenir un format obs.csv depuis la BDCLIM
+
+# rundir on sxcen : /home/vernaym/workdir/extraction_obs_eval_antilope
 
 import argparse
 import os
@@ -76,6 +79,7 @@ if args.rr:
             period=[datedeb, datefin],
             dateformat=args.frequency,
             )
+    print("WARNING : The rr value corresponding to date 'ymd' is the observation of date 'ym(d+1)' covering ymd6h-->ym(d+1)6h")
     question1.run(outputfile=f'obs_nivometeo_{args.frequency}_RR_{begin.ymd}_{end.ymd}.csv')
 
 # 2. TN
