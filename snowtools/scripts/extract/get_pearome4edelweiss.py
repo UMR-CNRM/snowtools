@@ -36,7 +36,7 @@ config_user = dict(
     date_end=Date(2020, 1, 2),
 
     # Analysis hour
-    analysis_hour=0,
+    analysis_hour=3,
 
     # Delta between terms
     delta_terms=1,
@@ -58,5 +58,6 @@ e = eh.Extractor(config_user)
 # print(e.latlon2ij(43.8, 5., 46.4, 8.12))  # (900.0, 1076.0, 518.0, 751.0)
 # print(e.latlon2ij(43.88, 5., 46.39, 8.12))  # (900.0, 1076.0, 525.0, 751.0)
 # print(e.latlon2ij(43.88, 5., 46.39, 8.1))  # (900.0, 1075.0, 525.0, 750.0)
-print(e.ij2latlon(900, 1075, 525, 750))  # (5.0144002419324005, 43.88876964463646, 8.12542615983552, 46.39544595151476)
-# e.download()
+# print(e.ij2latlon(1090, 1100, 740, 750))
+
+e.download()

@@ -88,6 +88,8 @@ def parse_options(arguments):
     parser.add_option("--dev",
                       action="store_true", dest="dev", default=False)
 
+    parser.add_option("--reforecast", action="store_true", dest="reforecast", default=False)
+
     (options, args) = parser.parse_args(arguments)  # @UnusedVariable
 
     return options
@@ -138,6 +140,11 @@ class config(object):
             self.xpid = "nouveaux_guess@lafaysse"
             delattr(config, 'alternate_xpid')
             self.list_geometry = ['cor', 'alp', 'pyr']
+        self.reforecast = options.reforecast
+        if options.reforecast:
+            self.xpid = "reforecast_double2021@vernaym"
+            delattr(config, 'alternate_xpid')
+            self.list_geometry = ['alp27_allslopes',  'pyr24_allslopes', 'cor2_allslopes']
 
 
 class Ensemble(object):
@@ -706,8 +713,10 @@ class EnsembleOperDiags(EnsembleDiags):
             list_filenames, list_titles = self.get_metadata(nolevel=self.attributes[var]['nolevel'])
 
             if hasattr(self, 'inddeterministic'):
+                print('has inddet')
                 s = spaghettis_with_det(self.time)
             else:
+                print('no inddet')
                 s = spaghettis(self.time)
             settings = self.attributes[var].copy()
             if 'label' in self.attributes[var].keys():
@@ -1191,9 +1200,12 @@ if __name__ == "__main__":
     os.chdir(c.diroutput)
     if c.dev:
         S2ME = FutureS2MExtractor(c)
+    elif c.reforecast:
+        S2ME = FutureS2MExtractor(c)
     else:
         S2ME = S2MExtractor(c)
     snow_members, snow_xpid = S2ME.get_snow()
+
 
     dict_chaine = defaultdict(str)
     dict_chaine['OPER'] = ' (oper)'
@@ -1223,7 +1235,7 @@ if __name__ == "__main__":
             E = EnsembleOperDiagsFlatMassif()
             ENS = EnsembleOperDiagsNorthSouthMassif()
             ENS.open(snow_members[domain])
-
+        print('number of member files', len(snow_members[domain]))
         E.open(snow_members[domain])
 
         print("domain " + domain + " npoints = " + str(E.npoints))
