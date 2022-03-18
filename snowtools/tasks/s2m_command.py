@@ -93,7 +93,10 @@ class Surfex_command(_S2M_command):
             if self.options.slopes:
                 self.options.slopes = self.options.slopes.split(",")
             else:
-                self.options.slopes = ["0", "20", "40"]
+                if 'allslopes' in self.options.region:
+                    self.options.slopes = ["0", "20", "40"]
+                else:
+                    self.options.slopes = ["0"]
 
             self.options.aspects = INFOmassifs.get_list_aspect(self.options.aspects, self.options.slopes)
             self.options.minlevel, self.options.maxlevel \
