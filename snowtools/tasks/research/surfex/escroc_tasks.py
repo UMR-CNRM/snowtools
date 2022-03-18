@@ -295,7 +295,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                     local          = 'OFFLINE',
                     model          = 'surfex',
                     genv           = self.conf.genv,
-                    gvar           = 'master_offline_nompi',
+                    gvar           = 'master_surfex_offline_nompi',
                 )
 
                 print(t.prompt, 'tb06 =', tb06)
@@ -310,7 +310,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                         local          = 'PGD',
                         model          = 'surfex',
                         genv           = self.conf.genv,
-                        gvar           = 'master_pgd_nompi',
+                        gvar           = 'master_surfex_pgd_nompi',
                     )
 
                     print(t.prompt, 'tb07 =', tb07)
@@ -325,6 +325,8 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                         local          = 'PREP',
                         model          = 'surfex',
                         genv           = self.conf.genv,
+                        gvar           = 'master_surfex_prep_nompi',
+
                     )
 
                     print(t.prompt, 'tb08 =', tb08)
