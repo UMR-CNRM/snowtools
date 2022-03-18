@@ -23,6 +23,7 @@ from snowtools.tasks.vortex_kitchen import vortex_kitchen
 from snowtools.tasks.crampon_vortex_kitchen import crampon_vortex_kitchen
 from snowtools.tasks.s2m_launcher import _S2M_command
 from snowtools.DATA import SNOWTOOLS_DIR
+from snowtools.utils.FileException import UndefinedDirectoryException
 
 usage = "usage: s2m -b begin_date -e end_date -f forcing [-m forcingmodel] [-o path_output] [-w workdir] " \
         "[-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] " \
@@ -54,8 +55,15 @@ class Surfex_command(_S2M_command):
             self.check_mandatory_arguments(**{'-b': 'datedeb', '-e': 'datefin', '-f': 'forcing'})
 
             if not self.options.onlyextractforcing:
-                self.options.exesurfex = check_surfex_exe(self.options.exesurfex)
-                print(self.options.exesurfex)
+                try:
+                    self.options.exesurfex = check_surfex_exe(self.options.exesurfex)
+                except UndefinedDirectoryException as e:
+                    if not vortex:
+                        raise e
+                    else:
+                        print ("Use SURFEX binaries from GENV\n")
+                else:
+                    print("USE SURFEX binaries from " + self.options.exesurfex)
 
             # Controls and type conversions of dates
             [self.options.datedeb, self.options.datefin, self.options.datespinup] = list(map(check_and_convert_date,
