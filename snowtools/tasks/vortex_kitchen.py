@@ -234,7 +234,7 @@ class vortex_kitchen(object):
         os.chdir(self.jobdir)
         for mkjob in mkjob_list:
             print("Run command: " + mkjob + "\n")
-            subprocess.call(mkjob, stdout=sys.stdout, stderr=sys.stderr)
+            os.system(mkjob)
 
     def walltime(self):
 
