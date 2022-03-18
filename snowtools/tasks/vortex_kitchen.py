@@ -8,6 +8,8 @@ Created on 23 févr. 2018
 
 import datetime
 import os
+import sys
+import subprocess
 import shutil
 
 from snowtools.utils.dates import WallTimeException
@@ -232,7 +234,7 @@ class vortex_kitchen(object):
         os.chdir(self.jobdir)
         for mkjob in mkjob_list:
             print("Run command: " + mkjob + "\n")
-            os.system(mkjob)
+            subprocess.call(mkjob, stdout=sys.stdout, stderr=sys.stderr)
 
     def walltime(self):
 
@@ -367,7 +369,7 @@ class Vortex_conf_file(object):
     def escroc_variables(self):
 
         self.set_field("DEFAULT", 'subensemble', self.options.escroc)
-        self.set_field("DEFAULT", 'duration', 'full')
+        # self.set_field("DEFAULT", 'duration', 'full')
 
         if self.options.nnodes > 1 and self.options.nmembers:
 

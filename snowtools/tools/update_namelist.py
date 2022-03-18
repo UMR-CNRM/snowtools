@@ -274,6 +274,7 @@ def update_namelist_object_nmembers(NamelistObject, nmembers):
 
 
 def update_namelist_var(namelist_file, data_file):
+    import shutil
     """ Modify snowmaking parameters.
     The function reads "water consumption data for snowmaking" from an external file (data_file)
     and updates a namelist (namelist_file) accordingly.
@@ -324,4 +325,4 @@ def update_namelist_var(namelist_file, data_file):
     namSURFEX.write(NamelistObject.dumps())
     namSURFEX.close()
 
-    os.system('cp ' + namelist_file + ' OPTIONS.nam')
+    shutil.copy(namelist_file, "OPTIONS.nam")

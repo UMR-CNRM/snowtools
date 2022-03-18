@@ -17,6 +17,7 @@ from snowtools.assim.plotcrocO import Pie
 from snowtools.assim.Ensemble import PrepEnsBg, PrepEnsAn
 from snowtools.assim.Operators import PrepEnsOperator
 from snowtools.assim.PostCroco import PostCroco
+from snowtools.tools.execute import callSurfexOrDie
 
 
 class CrocOrun(object):
@@ -168,10 +169,9 @@ class CrocOrun(object):
         
     def run(self):
         """spawn soda in each date repertory"""
-        os.system('ulimit -s unlimited')
         for dd in self.options.dates:
             os.chdir(dd)
-            os.system('./soda.exe')
+            callSurfexOrDie('./soda.exe')
             os.chdir('..')
 
     def post_proc(self, options):
