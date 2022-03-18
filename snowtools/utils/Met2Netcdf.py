@@ -21,7 +21,7 @@ from bronx.meteo.thermo import Thermo
 from bronx.meteo.constants import T0
 
 
-# Tester avec par exemple: python Met2Netcdf.py -b 2000080106 -e 2001080106
+# Tester avec par exemple: python3 Met2Netcdf.py -b 2000080106 -e 2001080106
 
 def recup_donnees_site(nom_site):
     IM = infomassifs()
@@ -96,21 +96,17 @@ def decoupe_periode(date_entree_debut, date_entree_fin):
 
     date_tour = date_entree_debut
     date_tour_plus1 = datetime.datetime(date_tour.year + 1,date_tour.month,date_tour.day,date_tour.hour)
-    #while (date_tour + relativedelta(months=+12)) < date_entree_fin:
     while date_tour_plus1 < date_entree_fin:
         list_date_debut.append(list_date_fin[-1])
-        #list_date_fin.append(list_date_fin[-1] + relativedelta(months=+12))
         to_app = datetime.datetime(list_date_fin[-1].year + 1, list_date_fin[-1].month, list_date_fin[-1].day, list_date_fin[-1].hour)
         list_date_fin.append(to_app)
         path_add = list_path_met[-1].replace(list_path_met[-1][-8:-4], str(int(list_path_met[-1][-8:-4]) + 1))
         path_add = path_add.replace(list_path_met[-1][-13:-9], str(int(list_path_met[-1][-13:-9]) + 1))
         list_path_met.append(path_add)
-        #date_tour = date_tour + relativedelta(months=+12)
-        date_tour = date_tour_plus1
+        date_tour_plus1 = datetime.datetime(date_tour_plus1.year + 1,date_tour.month,date_tour.day,date_tour.hour)
 
     if list_date_fin[-1] < date_entree_fin:
         list_date_debut.append(list_date_fin[-1])
-        #list_date_fin.append(list_date_fin[-1] + relativedelta(months=+12))
         to_app = datetime.datetime(list_date_fin[-1].year + 1, list_date_fin[-1].month, list_date_fin[-1].day, list_date_fin[-1].hour)
         list_date_fin.append(to_app)
         path_add = list_path_met[-1].replace(list_path_met[-1][-8:-4], str(int(list_path_met[-1][-8:-4]) + 1))
@@ -560,7 +556,7 @@ def complete_obs_with_model_1period(filename, option_recup, date_entree_debut, d
 
 def compilation_ttes_periodes(date_entree_debut, date_entree_fin, site, option_recup):
     date_first_met = datetime.datetime(1993, 8, 1, 6)  # EN DUR
-    date_last_met = datetime.datetime(2020, 8, 1, 6)  # EN DUR
+    date_last_met = datetime.datetime(2021, 8, 1, 6)  # EN DUR
     list_path_met, list_date_debut, list_date_fin = decoupe_periode(date_entree_debut, date_entree_fin)
     pas = 3600  # EN DUR
     L = []
