@@ -35,12 +35,17 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
         t = self.ticket
 
         if not hasattr(self.conf, "genv"):
-            self.conf.genv = 'uenv:cen.02@CONST_CEN'
+            self.conf.genv = 'uenv:cen.05@CONST_CEN'
 
+
+        # Definition of geometries, safran xpid/block and list of dates from S2MTaskMixIn methods
+        list_geometry = self.get_list_geometry(meteo=self.conf.meteo)
+        source_safran, block_safran = self.get_source_safran(meteo=self.conf.meteo)
         list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = \
             get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
         dict_dates_end_forc = get_dic_dateend(list_dates_begin_forc, list_dates_end_forc)
         dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
+        dict_source_app_safran, dict_source_conf_safran = self.get_safran_sources(list_dates_begin_forc)
 
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 1
         members = list(range(startmember, int(self.conf.nmembers) + startmember)) \
@@ -48,47 +53,88 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
-            self.sh.title('Toolbox input tb01')
+            # Try to find a forcing covering the full simulation period
             tb01 = toolbox.input(
                 role           = 'Forcing',
-                local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                vapp           = self.conf.meteo,
-                experiment     = self.conf.forcingid,
-                geometry       = self.conf.geometry,
-                datebegin      = list_dates_begin_forc,
-                dateend        = dict_dates_end_forc,
-                nativefmt      = 'netcdf',
                 kind           = 'MeteorologicalForcing',
+                vapp           = self.conf.meteo,
+                vconf          = '[geometry:area]' if source_safran == 'safran' else '[geometry:tag]',
+                source_app     = dict_source_app_safran if source_safran == 'safran' else None,
+                source_conf    = dict_source_conf_safran if source_safran == 'safran' else None,
+                cutoff         = 'assimilation',
+                local          = '[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' \
+                                 if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                experiment     = self.conf.forcingid,
+                block          = block_safran,
+                geometry       = list_geometry,
+                nativefmt      = 'netcdf',
+                model          = 'safran',
+                datebegin      = self.conf.datebegin,
+                dateend        = self.conf.dateend,
+                intent         = 'inout',
                 namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
-                model          = 'obs',
-                block          = 'meteo',
+                fatal          = False,
             ),
-            print(t.prompt, 'tb01 =', tb01)
+
+            if tb01[0]:
+                oneforcing = True
+            else:
+                oneforcing = False
+                # Look for yearly forcing files
+                self.sh.title('Toolbox input tb01')
+                tb01 = toolbox.input(
+                    role           = 'Forcing',
+                    kind           = 'MeteorologicalForcing',
+                    vapp           = self.conf.meteo,
+                    vconf          = '[geometry:area]' if source_safran == 'safran' else '[geometry:tag]',
+                    source_app     = dict_source_app_safran if source_safran == 'safran' else None,
+                    source_conf    = dict_source_conf_safran if source_safran == 'safran' else None,
+                    cutoff         = 'assimilation',
+                    local          = '[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' \
+                                     if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    experiment     = self.conf.forcingid,
+                    block          = block_safran,
+                    geometry       = list_geometry,
+                    nativefmt      = 'netcdf',
+                    model          = 'safran',
+                    datebegin      = list_dates_begin_forc,
+                    dateend        = dict_dates_end_forc,
+                    intent         = 'inout',
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
+                ),
+
+                print(t.prompt, 'tb01 =', tb01)
+                print()
+
+            # Look for a PGD file if already available for this xpid and geometry
+            self.sh.title('Toolbox input tb02')
+            tb02 = toolbox.input(
+                role           = 'SurfexClim',
+                kind           = 'pgdnc',
+                nativefmt      = 'netcdf',
+                local          = 'PGD.nc',
+                experiment     = self.conf.xpid,
+                geometry       = self.conf.geometry,
+                model          = 'surfex',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'pgd',
+                fatal          = False,
+            ),
+            print(t.prompt, 'tb02_a =', tb02)
             print()
 
-#             self.sh.title('Toolbox input tb02')
-#             tb02 = toolbox.input(
-#                 role           = 'SurfexClim',
-#                 kind           = 'pgdnc',
-#                 nativefmt      = 'netcdf',
-#                 local          = 'PGD.nc',
-#                 geometry       = self.conf.geometry,
-#                 genv            = self.conf.genv,
-#                 gvar           = 'pgd_[geometry::area]',
-#                 model          = 'surfex',
-#                 fatal          = False,
-#             ),
-#             print(t.prompt, 'tb02 =', tb02)
-#             print()
-
-            self.sh.title('Toolbox input tb02')
+            # Alternate : look for a PGD file if already available for this geometry with the "spinup" xpid
+            # If not available, do not fail because the PGD file will be automatically built.
+            self.sh.title('Toolbox input tb02a')
             tb02_a = toolbox.input(
                 alternate      = 'SurfexClim',
                 kind           = 'pgdnc',
                 nativefmt      = 'netcdf',
                 local          = 'PGD.nc',
-                experiment     = self.conf.xpid,
+                experiment     = 'spinup@' + t.env.getvar("USER"),
                 geometry       = self.conf.geometry,
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
@@ -113,7 +159,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                 namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
                 block          = 'prep',
-                fatal          = True,
+                fatal          = False,
             ),
             print(t.prompt, 'tb03 =', tb03)
             print()
@@ -132,40 +178,10 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                 namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
                 block          = 'prep',
-                fatal          = False,
+                fatal          = True,
             ),
             print(t.prompt, 'tb03_s =', tb03_s)
             print()
-
-
-#             if not tb03[0]:
-# #                 tbi = toolbox.input(
-# #                     role           = 'initial values of ground temperature',
-# #                     kind           = 'climTG',
-# #                     nativefmt      = 'netcdf',
-# #                     local          = 'init_TG.nc',
-# #                     geometry       = self.conf.geometry,
-# #                     genv            = self.conf.genv,
-# #                     gvar           = 'climtg_[geometry::area]',
-# #                     model          = 'surfex',
-# #                     fatal          = False
-# #                 ),
-# #                 print t.prompt, 'tbi =', tbi
-# #                 print
-#
-#                 tbi_a = toolbox.input(
-#                     alternate      = 'initial values of ground temperature',
-#                     kind           = 'climTG',
-#                     nativefmt      = 'netcdf',
-#                     local          = 'init_TG.nc',
-#                     experiment     = self.conf.xpid,
-#                     geometry       = self.conf.geometry,
-#                     model          = 'surfex',
-#                     namespace      = 'cenvortex.multi.fr',
-#                 ),
-#
-#                 print t.prompt, 'tbi_a =', tbi_a
-#                 print
 
             self.sh.title('Toolbox input tb03b')
             tb03b = toolbox.input(
@@ -242,8 +258,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb06 =', tb06)
                 print()
 
-#                 if not (tb02[0] or tb02_a[0]):
-                if not (tb02_a[0]):
+                if not (tb02[0] or tb02_a[0]):
 
                     self.sh.title('Toolbox executable tb07= tbx2')
                     tb07 = tbx1 = toolbox.executable(
@@ -331,8 +346,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
             tb09a.run()
 
             # Take care : PGD parallelization will be available in v8.1 --> nproc and ntasks will have to be set to 40
-#             if not (tb02[0] or tb02_a[0]):
-            if not tb02_a[0]:
+            if not (tb02[0] or tb02_a[0]):
                 self.sh.title('Toolbox algo tb09 = PGD')
                 tb09 = tbalgo2 = toolbox.algo(
                     kind         = 'pgd_from_forcing',
