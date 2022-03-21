@@ -50,7 +50,7 @@ if six.PY2:
 else:
     echecker = ExternalCodeImportChecker('plots.maps.cartopy')
     with echecker:
-        from snowtools.plots.maps.cartopy import Map_alpes, Map_pyrenees, Map_corse
+        from snowtools.plots.maps.cartopy import Map_alpes, Map_pyrenees, Map_corse, Map_vosges, Map_jura, Map_central
 
 if 'fast' in matplotlib.style.available:
     matplotlib.style.use('fast')
@@ -139,7 +139,7 @@ class config(object):
         if options.dev:
             self.xpid = "nouveaux_guess@lafaysse"
             delattr(config, 'alternate_xpid')
-            self.list_geometry = ['cor', 'alp', 'pyr']
+            self.list_geometry = ['jur4_allslopes', 'mac11_allslopes', 'vog3_allslopes', 'cor', 'alp', 'pyr']
         self.reforecast = options.reforecast
         if options.reforecast:
             self.xpid = "reforecast_double2021@vernaym"
@@ -713,10 +713,10 @@ class EnsembleOperDiags(EnsembleDiags):
             list_filenames, list_titles = self.get_metadata(nolevel=self.attributes[var]['nolevel'])
 
             if hasattr(self, 'inddeterministic'):
-                print('has inddet')
+                # print('has inddet')
                 s = spaghettis_with_det(self.time)
             else:
-                print('no inddet')
+                # print('no inddet')
                 s = spaghettis(self.time)
             settings = self.attributes[var].copy()
             if 'label' in self.attributes[var].keys():
@@ -847,7 +847,8 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
         :param diroutput: output directory to save the maps
         """
 
-        map_generic = dict(alp=Map_alpes, pyr=Map_pyrenees, cor=Map_corse)
+        map_generic = dict(alp=Map_alpes, pyr=Map_pyrenees, cor=Map_corse, jur=Map_jura, mac=Map_central,
+                           vog=Map_vosges)
 
         alti = self.get_alti()
         list_alti = list(set(alti))
@@ -983,7 +984,8 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
         :param diroutput: output directory to save the maps
         """
 
-        map_generic = dict(alp=Map_alpes, pyr=Map_pyrenees, cor=Map_corse)
+        map_generic = dict(alp=Map_alpes, pyr=Map_pyrenees, cor=Map_corse, jur=Map_jura, vog=Map_vosges,
+                           mac=Map_central)
 
         list_pairs = self.get_pairs_ns()  # pylint: disable=possibly-unused-variable
 
@@ -1211,6 +1213,7 @@ if __name__ == "__main__":
     dict_chaine['OPER'] = ' (oper)'
     dict_chaine['MIRR'] = ' (miroir)'
     dict_chaine['OPER@lafaysse'] = ' (dev)'
+    dict_chaine['nouveaux_guess@lafaysse'] = ' (dev)'
     # undefined xpid is possible because it is allowed by defaultdict
 
     locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
