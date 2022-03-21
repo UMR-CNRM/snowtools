@@ -190,7 +190,7 @@ class Ensemble(object):
             if ntime == self.nech:
                 self.simufiles.append(p)
                 if 'mb035' in member:
-                    self.inddeterministic = m
+                    self.inddeterministic = len(self.simufiles) - 1
 
         self.nmembers = len(self.simufiles)
         print(self.nmembers)
