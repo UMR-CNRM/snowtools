@@ -608,12 +608,10 @@ class ProPlotterController(abc.ABC):
                         self.master.main.toberemoved.destroy()
                         profilPlot.saisonProfil(self.master.main.ax1, self.dztoplot, self.dataplot1,
                                                 self.timeplot)
-                        trace_hauteur = 0
                     else:
                         self.master.main.ready_to_plot_2_graphs()
                         self.master.main.toberemoved.destroy()
                         profilPlot.saison1d(self.master.main.ax1, self.dataplot1, self.timeplot)
-                        trace_hauteur = None
 
                 self.master.main.Canevas.draw()
                 self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
