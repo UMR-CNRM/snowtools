@@ -35,6 +35,8 @@ def saisonProfil(ax, dz, value, list_date, colormap='viridis', myrange=None, vmi
     :type dz: numpy array
     :param value: Value to be plot (color of the layer). Should have the same dimension as ``dz``
     :type value: numpy array
+    :param list_date: all the dates where there are some datas to be plotted
+    :type list_date: numpy array
     :param colormap: Colormap to use. Some custom colormaps are defined for specific variables:
                      ``grains``, ``echelle_log``, ``echelle_log_sahara``, ``ratio_cisaillement``,
                      ``tempK`` and ``lwc``.
@@ -132,7 +134,7 @@ def saisonProfil(ax, dz, value, list_date, colormap='viridis', myrange=None, vmi
         cmap = cm.get_cmap('viridis')
         Vmin = 0
         Vmax = 20
-        norm = colors.Normalize(vmin=0, vmax=Vmax, clip=True)
+        norm = colors.Normalize(vmin=Vmin, vmax=Vmax, clip=True)
         # Generating a colormap from given cmap with:
         # 0 -> 1 pink
         # 1 -> 2 red

@@ -533,15 +533,31 @@ class ProPlotterController(abc.ABC):
         self.x_start_zoom = 0
         self.x_end_zoom = 0
         self.rectangle_choix = None
-        self.dataplot1 = None
+        self.dataplot_master = None
         self.dztoplot = None
         self.topdz = None
         self.sizex = None
         self.timeplot = None
-        self.dataplot2 = None
+        self.dataplot_react = None
         self.grain = None
         self.ram = None
 
+    def masterfig(self, plot_type=None, **kwargs):
+        """
+        Definition of the master figure, depending of the choice for the graph type.
+
+        :param all params necessary to define the figure
+        :type it depends, no idea how to explain that
+        """
+
+    def reactfig(self, plot_type=None, **kwargs):
+        """
+        Definition of the figure on the right, reacting to the movement made on master figure.
+        It also depends of the choice for the graph type.
+
+        :param all params necessary to define the figure
+        :type it depends, no idea how to explain that
+        """
 
     def plot(self):
         """
@@ -585,12 +601,12 @@ class ProPlotterController(abc.ABC):
                 if self.x_start_zoom > self.x_end_zoom:
                     self.x_start_zoom, self.x_end_zoom = self.x_end_zoom, self.x_start_zoom
 
-                self.dataplot1 = self.dataplot1[self.x_start_zoom:self.x_end_zoom]
+                self.dataplot_master = self.dataplot_master[self.x_start_zoom:self.x_end_zoom]
                 self.dztoplot = self.dztoplot[self.x_start_zoom:self.x_end_zoom,:]
                 self.size_x = self.dztoplot.shape[0]
                 self.topdz = np.max(np.sum(self.dztoplot[:, :], 1))
                 self.timeplot = self.timeplot[self.x_start_zoom:self.x_end_zoom]
-                self.dataplot2 = self.dataplot2[self.x_start_zoom:self.x_end_zoom,:]
+                self.dataplot_react = self.dataplot_react[self.x_start_zoom:self.x_end_zoom,:]
                 if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
                     self.grain = self.grain[self.x_start_zoom:self.x_end_zoom,:]
                 if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
@@ -601,17 +617,19 @@ class ProPlotterController(abc.ABC):
                 if not self.master.fileobj.variables_snl:
                     self.master.main.ready_to_plot()
                     self.master.main.toberemoved.destroy()
-                    profilPlot.saison1d(self.master.main.ax1, self.dataplot1, self.timeplot)
+                    self.masterfig('saison1d', ax=self.master.main.ax1, value=self.dataplot_master,
+                                   list_date=self.timeplot)
                 else:
-                    if vartoplot1['name'] in snl_names:
+                    if vartoplot_master['name'] in snl_names:
                         self.master.main.ready_to_plot_2_graphs(True)
                         self.master.main.toberemoved.destroy()
-                        profilPlot.saisonProfil(self.master.main.ax1, self.dztoplot, self.dataplot1,
-                                                self.timeplot)
+                        self.masterfig('saisonProfil', ax=self.master.main.ax1, dz=self.dztoplot,
+                                        value=self.dataplot_master, list_date=self.timeplot)
                     else:
                         self.master.main.ready_to_plot_2_graphs()
                         self.master.main.toberemoved.destroy()
-                        profilPlot.saison1d(self.master.main.ax1, self.dataplot1, self.timeplot)
+                        self.masterfig('saison1d', ax=self.master.main.ax1, value=self.dataplot_master,
+                                       list_date=self.timeplot)
 
                 self.master.main.Canevas.draw()
                 self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
@@ -631,7 +649,7 @@ class ProPlotterController(abc.ABC):
 
                 xindex = min(int(event.xdata), self.size_x-1)
                 date = self.timeplot[xindex]
-                data_date = self.dataplot2[xindex, :]
+                data_date = self.dataplot_react[xindex, :]
                 dz_date = self.dztoplot[xindex, :]
                 if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
                     grain_date = self.grain[xindex, :]
@@ -653,9 +671,9 @@ class ProPlotterController(abc.ABC):
 
                 self.master.main.ax2.clear()
                 self.master.main.ax3.clear()
-                profilPlot.dateProfil(self.master.main.ax2, self.master.main.ax3, data_date, dz_date,
-                                      value_grain=grain_date, value_ram=ram_date, xlimit=limitplot2, ylimit=self.topdz,
-                                      hauteur=hauteur, cbar_show=self.master.main.first_profil, date=date)
+                self.reactfig('dateProfil', axe=self.master.main.ax2, axe2=self.master.main.ax3, value=data_date,
+                              value_dz=dz_date, value_grain=grain_date, value_ram=ram_date, xlimit=limitplot_react,
+                              ylimit=self.topdz, hauteur=hauteur, cbar_show=self.master.main.first_profil, date=date)
 
                 self.master.main.first_profil = False
                 self.master.main.Canevas.draw()
@@ -682,8 +700,8 @@ class ProPlotterController(abc.ABC):
         self.master.controls.update_text(text)
 
         # TODO: Actually do the plot here <13-09-21, Léo Viallon-Galinier> #
-        vartoplot1 = self.master.fileobj.variable_desc(var_1)
-        self.dataplot1 = self.master.fileobj.get_data(vartoplot1['name'], point)
+        vartoplot_master = self.master.fileobj.variable_desc(var_1)
+        self.dataplot_master = self.master.fileobj.get_data(vartoplot_master['name'], point)
         snl_names = [v['name'] if 'name' in v else k for k, v in self.master.fileobj.variables_snl.items()]
         self.timeplot = self.master.fileobj.get_time()
 
@@ -691,33 +709,34 @@ class ProPlotterController(abc.ABC):
         if not self.master.fileobj.variables_snl:
             self.master.main.ready_to_plot()
             self.master.main.toberemoved.destroy()
-            profilPlot.saison1d(self.master.main.ax1, self.dataplot1, self.timeplot)
+            self.masterfig('saison1d', ax=self.master.main.ax1, value=self.dataplot_master, list_date=self.timeplot)
         else:
             self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz,point, fillnan=0.)
-            if vartoplot1['name'] in snl_names:
+            if vartoplot_master['name'] in snl_names:
                 self.master.main.ready_to_plot_2_graphs(True)
                 self.master.main.toberemoved.destroy()
-                profilPlot.saisonProfil(self.master.main.ax1, self.dztoplot, self.dataplot1, self.timeplot)
+                self.masterfig('saisonProfil', ax=self.master.main.ax1, dz=self.dztoplot,
+                               value=self.dataplot_master, list_date=self.timeplot)
                 trace_hauteur = 0
             else:
                 self.master.main.ready_to_plot_2_graphs()
                 self.master.main.toberemoved.destroy()
-                profilPlot.saison1d(self.master.main.ax1, self.dataplot1, self.timeplot)
+                self.masterfig('saison1d', ax=self.master.main.ax1, value=self.dataplot_master, list_date=self.timeplot)
                 trace_hauteur = None
 
             # usefull for motion
-            vartoplot2 = self.master.fileobj.variable_desc(var_2)
-            self.dataplot2 = self.master.fileobj.get_data(vartoplot2['name'], point)
-            limitplot2 = self.master.fileobj.limits_variable(vartoplot2['name'])
+            vartoplot_react = self.master.fileobj.variable_desc(var_2)
+            self.dataplot_react = self.master.fileobj.get_data(vartoplot_react['name'], point)
+            limitplot_react = self.master.fileobj.limits_variable(vartoplot_react['name'])
             self.size_x = self.dztoplot.shape[0]
             self.topdz = np.max(np.sum(self.dztoplot[:, :], 1))
             if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
                 self.grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.)
             if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
                 self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.)
-            if vartoplot2['name'] in self.master.fileobj.variables_log:
-                self.dataplot2 = np.where(self.dataplot2 > 10 ** (-10), self.dataplot2, 10 ** (-10))
-                self.dataplot2 = np.where(self.dataplot2 > 0, np.log10(self.dataplot2), -10)
+            if vartoplot_react['name'] in self.master.fileobj.variables_log:
+                self.dataplot_react = np.where(self.dataplot_react > 10 ** (-10), self.dataplot_react, 10 ** (-10))
+                self.dataplot_react = np.where(self.dataplot_react > 0, np.log10(self.dataplot_react), -10)
             self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
             self.master.main.Canevas.mpl_connect('button_press_event', button_press)
             self.master.main.Canevas.mpl_connect('motion_notify_event', move_press)
@@ -737,6 +756,34 @@ class ProPlotterController(abc.ABC):
 class ProPlotterController_Standard(ProPlotterController):
     # idée: mettre en appel ProPlotterController(graphe_A, graphe_B, graphe_C) -> ce sont les graphes/champs d'entrées
     # qui changent...
+
+    def masterfig(self, plot_type=None, **kwargs):
+        """
+        Definition of the master figure, depending of the choice for the graph type.
+
+        :param all params necessary to define the figure
+        :type it depends, no idea how to explain that
+        """
+        if plot_type == 'saison1d':
+            profilPlot.saison1d(**kwargs)
+
+        if plot_type == 'saisonProfil':
+            profilPlot.saisonProfil(**kwargs)
+
+
+    def reactfig(self, plot_type=None, **kwargs):
+        """
+        Definition of the figure on the right, reacting to the movement made on master figure.
+        It also depends of the choice for the graph type.
+
+        :param all params necessary to define the figure
+        :type it depends, no idea how to explain that
+
+        """
+        if plot_type == 'dateProfil':
+            profilPlot.dateProfil(**kwargs)
+
+
     pass
 
 class ProPlotterController_Height(ProPlotterController):
