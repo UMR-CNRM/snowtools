@@ -144,7 +144,9 @@ class config(object):
         if options.reforecast:
             self.xpid = "reforecast_double2021@vernaym"
             delattr(config, 'alternate_xpid')
-            self.list_geometry = ['alp27_allslopes',  'pyr24_allslopes', 'cor2_allslopes']
+            self.list_geometry = ['jur4_allslopes_reforecast', 'mac11_allslopes_reforecast',
+                                  'vog3_allslopes_reforecast', 'alp27_allslopes',
+                                  'pyr24_allslopes', 'cor2_allslopes']
 
 
 class Ensemble(object):

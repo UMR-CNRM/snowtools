@@ -367,9 +367,9 @@ class _Map_massifs(Mplfigure):
             ax.add_feature(cartopy.feature.LAND, facecolor='wheat')
             ax.add_feature(cartopy.feature.OCEAN)
             ax.add_feature(cartopy.feature.COASTLINE)
-            # ax.add_feature(cartopy.feature.BORDERS, linestyle=':')
-            ax.add_feature(cartopy.feature.NaturalEarthFeature('cultural', 'admin_0_boundary_lines_land', '10m',
-                                                               facecolor='none', linestyle=':'))
+            ax.add_feature(cartopy.feature.BORDERS, linestyle=':')
+            #ax.add_feature(cartopy.feature.NaturalEarthFeature('cultural', 'admin_0_boundary_lines_land', '10m',
+            #                                                   facecolor='none', linestyle=':'))
             ax.add_feature(cartopy.feature.LAKES, alpha=0.5)
             ax.add_feature(cartopy.feature.RIVERS)
         elif bgimage:
@@ -624,13 +624,13 @@ class _Map_massifs(Mplfigure):
 
         if isinstance(self, _MultiMap):
             for i, massif in enumerate(self.records):
-                if massif.attributes['num_opp'] in massifs:
+                if massif.attributes['code'] in massifs:
                     for j in range(self.nsubplots):
                         self.massif_features[j][i]['feature'].set_zorder(2)  # Pour tracer le massif en dernier
                         self.massif_features[j][i]['feature']._kwargs['edgecolor'] = 'red'
         else:
             for i, massif in enumerate(self.records):
-                if massif.attributes['num_opp'] in massifs:
+                if massif.attributes['code'] in massifs:
                     self.massif_features[i]['feature'].set_zorder(2)  # Pour tracer le massif en dernier
                     self.massif_features[i]['feature']._kwargs['edgecolor'] = 'red'
 
@@ -803,6 +803,7 @@ class _Map_massifs(Mplfigure):
                 textcolor = kwargs['textcolor']
             elif (nvar == 3 and v == 1) or nvar == 1:
                 textcolor = self.getTextColor(variable[indmassif][0], **kwargs)
+                # print("textcolor variable", textcolor)
             else:
                 textcolor = 'black'
 
@@ -812,6 +813,7 @@ class _Map_massifs(Mplfigure):
         self.text.append(self.map.text(Xbary, Ybary, infos, transform=self.projection,
                                        horizontalalignment='center', verticalalignment='center',
                                        color=textcolor))
+        # print(self.map.properties())
 
     def reset_massifs(self, rmcbar=True, rminfobox=True, **kwargs):
         """
@@ -1199,7 +1201,9 @@ class _MultiMap(_Map_massifs):
             print("Warning: axis ", axis, " of value array is longer than number of subplots ", self.nsubplots,
                   ". Plotting first ", self.nsubplots, " out of ", leng, ".")
             leng = self.nsubplots
-        myvalues = np.array([variable[massifref == i][0] if i in massifref else np.nan for i in self.num])
+        print('var shape', variable.shape)
+        #myvalues = np.array([variable[massifref == i][0] if i in massifref else np.nan for i in self.num], dtype=object)
+        myvalues = np.array([variable[massifref == i][0] for i in self.num if i in massifref])
         print(myvalues.shape)
         for j in range(leng):
             for i, myvalue in enumerate(myvalues.take(indices=j, axis=axis)):
@@ -1616,29 +1620,6 @@ class MapFrance(_Map_massifs):
 
         super(MapFrance, self).__init__(*args, **kw)
 
-    def getshapes(self):
-        """
-        Read massif shapes from shapefiles for all areas.
-
-        """
-        shapefile_path = os.path.join(SNOWTOOLS_DIR, 'DATA')
-        filenames = ['massifs_{0:s}.shp'.format(iarea) for iarea in self.area]
-        shapefile = [shpreader.Reader(os.path.join(shapefile_path, filename)) for filename in filenames]
-        # Informations sur la projection
-        projfile = 'massifs_{0:s}.prj'.format(self.area[0])
-        with open(os.path.join(shapefile_path, projfile), 'r') as prj_file:
-            prj_txt = prj_file.read()
-            pprojcrs = CRS.from_wkt(prj_txt)
-
-        # Projection du shapefile
-        shpProj = pprojcrs.to_dict()
-        # géométries
-        # records is a generator object. Each record contains a geometry, its attributes and bounds
-        records = [record for sublist in [list(i_shapefile.records()) for i_shapefile in shapefile]
-                   for record in sublist]
-        print(len(records))
-        return shapefile, pprojcrs, shpProj, records
-
 
 class MultiMap_Pyr(Map_pyrenees, _MultiMap):
     """
@@ -1858,8 +1839,29 @@ class Zoom_massif(_Map_massifs):
         :param args:
         :param kw:
         """
-        if 1 <= num_massif <= 24:
+        if 1 <= num_massif <= 27:
             self.area = 'alpes'
+            self.width = 10.2
+            self.height = 8
+            self.legendpos = [0.89, 0.15, 0.03, 0.6]
+            self.mappos = [0.05, 0.03, 0.8, 0.8]
+            self.titlepad = 25
+        elif 45 <= num_massif <= 47:
+            self.area = 'vosges'
+            self.width = 10.2
+            self.height = 8
+            self.legendpos = [0.89, 0.15, 0.03, 0.6]
+            self.mappos = [0.05, 0.03, 0.8, 0.8]
+            self.titlepad = 25
+        elif 55 <= num_massif <= 58:
+            self.area = 'jura'
+            self.width = 10.2
+            self.height = 8
+            self.legendpos = [0.89, 0.15, 0.03, 0.6]
+            self.mappos = [0.05, 0.03, 0.8, 0.8]
+            self.titlepad = 25
+        elif 48 <= num_massif <= 54 or 59 <= num_massif <= 62:
+            self.area = 'central'
             self.width = 10.2
             self.height = 8
             self.legendpos = [0.89, 0.15, 0.03, 0.6]
@@ -1912,11 +1914,11 @@ class Zoom_massif(_Map_massifs):
         """
         self.dicLonLatMassif = self.getLonLatMassif()
         for massif in self.records:
-            num = massif.attributes['num_opp']
+            num = massif.attributes['code']
             # print(num)
             if num == num_massif:
                 barycentre = self.dicLonLatMassif[num]
-        if self.area in ['alpes', 'corse']:
+        if self.area in ['alpes', 'corse', 'jura', 'central', 'vosges']:
             dlat = 0.55
             dlon = 0.65
             dloninfo = dlon/3.
@@ -1932,7 +1934,8 @@ class Zoom_massif(_Map_massifs):
         latmin = barycentre[1] - dlat
         latmax = barycentre[1] + dlat
 
-        infospos = self.projection.project_geometry(Point((lonmax-dloninfo, latmax-dlatinfo)),
-                                                    ccrs.PlateCarree()).coords[0]
+        # infospos = self.projection.project_geometry(Point((lonmax-dloninfo, latmax-dlatinfo)),
+        #                                             ccrs.PlateCarree()).coords[0]
+        infospos = (lonmax-dloninfo, latmax-dlatinfo)
 
         return lonmin, lonmax, latmin, latmax, infospos
