@@ -11,8 +11,6 @@ import numpy as np
 import pdb
 
 from snowtools.plots.stratiprofile import proreader
-
-
 from snowtools.plots.stratiprofile import profilPlot
 import matplotlib
 matplotlib.use('TkAgg')
@@ -237,15 +235,21 @@ class ProPlotterChoicesBar(tk.Frame):
         self.point_w = ProPlotterChoicesBar_Point(self, self.point)
 
 
-class ProPlotterChoicesBar_Variables():
+class ProPlotterChoicesBar_Variables:
     """
     Choice of variables in the opened file
     """
     def __init__(self, master, frame):
         self.master = master
         self.frame = frame
-        self._var_1 = None
-        self._var_2 = None
+        self._var_master = None
+        self._var_react = None
+        self.label = None
+        self.label1 = None
+        self.label2 = None
+        self.variables_info = None
+        self.choice_var_master = None
+        self.choice_var_react = None
         self.update()
 
     def update(self):
@@ -262,36 +266,36 @@ class ProPlotterChoicesBar_Variables():
 
             self.label1 = tk.Label(self.frame, text='Variable:')
             self.label1.pack()
-            self.choice_var_1 = ttk.Combobox(self.frame, state='readonly', values=variables_list,
-                                             width=self.master.WIDTH, )
-            self.choice_var_1.bind('<<ComboboxSelected>>', self.update_var_1)
-            self.choice_var_1.pack()
+            self.choice_var_master = ttk.Combobox(self.frame, state='readonly', values=variables_list,
+                                                  width=self.master.WIDTH, )
+            self.choice_var_master.bind('<<ComboboxSelected>>', self.update_var_master)
+            self.choice_var_master.pack()
             self.label2 = tk.Label(self.frame, text='Variable profil:')
             self.label2.pack()
-            self.choice_var_2 = ttk.Combobox(self.frame, state='readonly', values=variables_with_snl,
-                                             width=self.master.WIDTH)
-            self.choice_var_2.bind('<<ComboboxSelected>>', self.update_var_2)
-            self.choice_var_2.pack()
+            self.choice_var_react = ttk.Combobox(self.frame, state='readonly', values=variables_with_snl,
+                                                 width=self.master.WIDTH)
+            self.choice_var_react.bind('<<ComboboxSelected>>', self.update_var_react)
+            self.choice_var_react.pack()
 
-    def update_var_1(self, *args):
-        value = self.choice_var_1.get()
-        if value != self._var_1:
-            self._var_1 = value
+    def update_var_master(self, *args):
+        value = self.choice_var_master.get()
+        if value != self._var_master:
+            self._var_master = value
             self.master.master.controls.plot_mark()
 
-    def update_var_2(self, *args):
-        value = self.choice_var_2.get()
-        if value != self._var_2:
-            self._var_2 = value
+    def update_var_react(self, *args):
+        value = self.choice_var_react.get()
+        if value != self._var_react:
+            self._var_react = value
             self.master.master.controls.plot_mark()
 
     @property
-    def var_1(self):
-        return self._var_1
+    def var_master(self):
+        return self._var_master
 
     @property
-    def var_2(self):
-        return self._var_2
+    def var_react(self):
+        return self._var_react
 
     def clean_frame(self):
         for widgets in self.frame.winfo_children():
@@ -305,16 +309,19 @@ class ProPlotterChoicesBar_Point:
     def __init__(self, master, frame):
         self.master = master
         self.frame = frame
+        self.label = None
+        self.variables_info = None
+        self.lselectors = []
+        self.llabels = []
+        self.lvariables = []
+        self.lf = []
         self.update()
 
     def update(self):
         self.clean_frame()
         self.label = tk.Label(self.frame, text='Choice of point selectors\n(fill from top to bottom)', relief=tk.RAISED)
         self.label.pack(pady=5)
-        self.lselectors = []
-        self.llabels = []
-        self.lvariables = []
-        self.lf = []
+
         if self.master.master.fileobj is not None:
             self.variables_info = self.master.master.fileobj.variables_selection_point
             for v, info in self.variables_info.items():
@@ -331,6 +338,8 @@ class ProPlotterChoicesBar_Point:
                     selector = ttk.Spinbox(self.frame, values=choices, textvariable=sv,
                                            width=self.master.WIDTH, validate='focusout',
                                            validatecommand=lambda *_, i=ii: self.update_var_numeric(i))
+                else:
+                    selector = None  # TO BE CHECKED BY LEO
                 selector.pack()
                 self.llabels.append(label)
                 self.lselectors.append(selector)
@@ -461,6 +470,9 @@ class ProPlotterMain(tk.Frame):
         self.pack(fill=tk.BOTH, expand=True)
 
         self.fig1, self.ax1 = plt.subplots(1, 1, sharex=True, sharey=True)
+        self.ax2 = None
+        self.ax3 = None
+        self.first_profil = True
         self.Canevas = FigureCanvasTkAgg(self.fig1, self)
 
         self.update_idletasks()
@@ -532,6 +544,7 @@ class ProPlotterController(abc.ABC):
         self.width_rect = 0.01
         self.x_start_zoom = 0
         self.x_end_zoom = 0
+        self.size_x = None
         self.rectangle_choix = None
         self.dataplot_master = None
         self.dztoplot = None
@@ -542,22 +555,33 @@ class ProPlotterController(abc.ABC):
         self.grain = None
         self.ram = None
 
-    def masterfig(self, plot_type=None, **kwargs):
-        """
-        Definition of the master figure, depending of the choice for the graph type.
+    def masterfig1d(self, **kwargs):
+        return profilPlot.saison1d(**kwargs)
 
-        :param all params necessary to define the figure
-        :type it depends, no idea how to explain that
-        """
+    def masterfigsaison(self, **kwargs: dict):
+        return profilPlot.saisonProfil(**kwargs)
 
-    def reactfig(self, plot_type=None, **kwargs):
-        """
-        Definition of the figure on the right, reacting to the movement made on master figure.
-        It also depends of the choice for the graph type.
+    def reactfig(self, **kwargs):
+        return profilPlot.dateProfil(**kwargs)
 
-        :param all params necessary to define the figure
-        :type it depends, no idea how to explain that
+    def get_data_master1d(self):
         """
+        Collecting datas for the master figure, depending of the choice for the graph type.
+        """
+        return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_date=self.timeplot)
+
+    def get_data_mastersaison(self):
+        """
+        Collecting datas for the master figure, depending of the choice for the graph type.
+        """
+        return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_date=self.timeplot, dz=self.dztoplot)
+
+    def get_data_react(self):
+        """
+         Collecting datas for the reacting figure, depending of the choice for the graph type.
+         """
+        return dict(axe=self.master.main.ax2, axe2=self.master.main.ax3, ylimit=self.topdz,
+                    cbar_show=self.master.main.first_profil)
 
     def plot(self):
         """
@@ -565,10 +589,10 @@ class ProPlotterController(abc.ABC):
         """
         # ZOOM
         def button_press(event):
-            if (event.button > 1):
+            if event.button > 1:
                 self.stop_right_click = not self.stop_right_click
                 return
-            if (event.inaxes == self.master.main.ax1):
+            if event.inaxes == self.master.main.ax1:
                 self.boolzoom = True
                 self.x_start_zoom = int(event.xdata)
                 bottom, top = self.master.main.ax1.get_ylim()
@@ -581,7 +605,7 @@ class ProPlotterController(abc.ABC):
                 return
             if not self.boolzoom:
                 return
-            if (event.inaxes == self.master.main.ax1):
+            if event.inaxes == self.master.main.ax1:
                 self.width_rect = abs(event.xdata - self.x_start_zoom)
                 self.rectangle_choix.set_width(self.width_rect)
                 if event.xdata - self.x_start_zoom < 0:
@@ -602,34 +626,31 @@ class ProPlotterController(abc.ABC):
                     self.x_start_zoom, self.x_end_zoom = self.x_end_zoom, self.x_start_zoom
 
                 self.dataplot_master = self.dataplot_master[self.x_start_zoom:self.x_end_zoom]
-                self.dztoplot = self.dztoplot[self.x_start_zoom:self.x_end_zoom,:]
+                self.dztoplot = self.dztoplot[self.x_start_zoom:self.x_end_zoom, :]
                 self.size_x = self.dztoplot.shape[0]
                 self.topdz = np.max(np.sum(self.dztoplot[:, :], 1))
                 self.timeplot = self.timeplot[self.x_start_zoom:self.x_end_zoom]
-                self.dataplot_react = self.dataplot_react[self.x_start_zoom:self.x_end_zoom,:]
+                self.dataplot_react = self.dataplot_react[self.x_start_zoom:self.x_end_zoom, :]
                 if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
-                    self.grain = self.grain[self.x_start_zoom:self.x_end_zoom,:]
+                    self.grain = self.grain[self.x_start_zoom:self.x_end_zoom, :]
                 if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
-                    self.ram = self.ram[self.x_start_zoom:self.x_end_zoom,:]
+                    self.ram = self.ram[self.x_start_zoom:self.x_end_zoom, :]
 
                 self.master.main.fig1.clear()
                 self.master.main.clear()
                 if not self.master.fileobj.variables_snl:
                     self.master.main.ready_to_plot()
                     self.master.main.toberemoved.destroy()
-                    self.masterfig('saison1d', ax=self.master.main.ax1, value=self.dataplot_master,
-                                   list_date=self.timeplot)
+                    self.masterfig1d(**self.get_data_master1d())
                 else:
                     if vartoplot_master['name'] in snl_names:
                         self.master.main.ready_to_plot_2_graphs(True)
                         self.master.main.toberemoved.destroy()
-                        self.masterfig('saisonProfil', ax=self.master.main.ax1, dz=self.dztoplot,
-                                        value=self.dataplot_master, list_date=self.timeplot)
+                        self.masterfigsaison(**self.get_data_mastersaison())
                     else:
                         self.master.main.ready_to_plot_2_graphs()
                         self.master.main.toberemoved.destroy()
-                        self.masterfig('saison1d', ax=self.master.main.ax1, value=self.dataplot_master,
-                                       list_date=self.timeplot)
+                        self.masterfig1d(**self.get_data_master1d())
 
                 self.master.main.Canevas.draw()
                 self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
@@ -661,19 +682,22 @@ class ProPlotterController(abc.ABC):
                 else:
                     ram_date = None
 
-                if trace_hauteur == None:
-                    hauteur=None
+                if trace_hauteur is None:
+                    hauteur = None
                 else:
-                    hauteur=event.ydata
+                    hauteur = event.ydata
 
                 '''test_dz_date = self.master.fileobj.get_data(self.master.fileobj.variable_dz, point, fillnan=0.,
                                                             begin = int(event.xdata), end = int(event.xdata))'''
 
                 self.master.main.ax2.clear()
                 self.master.main.ax3.clear()
-                self.reactfig('dateProfil', axe=self.master.main.ax2, axe2=self.master.main.ax3, value=data_date,
-                              value_dz=dz_date, value_grain=grain_date, value_ram=ram_date, xlimit=limitplot_react,
-                              ylimit=self.topdz, hauteur=hauteur, cbar_show=self.master.main.first_profil, date=date)
+
+                dico = self.get_data_react()
+                dico.update(dict(value=data_date, value_dz=dz_date, value_grain=grain_date, value_ram=ram_date,
+                                 xlimit=limitplot_react, hauteur=hauteur, date=date))
+
+                self.reactfig(**dico)
 
                 self.master.main.first_profil = False
                 self.master.main.Canevas.draw()
@@ -681,8 +705,8 @@ class ProPlotterController(abc.ABC):
 
         if self.master.fileobj is None:
             return
-        var_1 = self.master.choices.variables_w.var_1
-        var_2 = self.master.choices.variables_w.var_2
+        var_master = self.master.choices.variables_w.var_master
+        var_react = self.master.choices.variables_w.var_react
         selector = self.master.choices.point_w.get_selector()
         points = self.master.fileobj.get_points(selector=selector)
 
@@ -696,11 +720,11 @@ class ProPlotterController(abc.ABC):
             return
 
         point = points[0]
-        text = "Vars: {}/{}. Point: {}".format(var_1, var_2, point)
+        text = "Vars: {}/{}. Point: {}".format(var_master, var_react, point)
         self.master.controls.update_text(text)
 
         # TODO: Actually do the plot here <13-09-21, Léo Viallon-Galinier> #
-        vartoplot_master = self.master.fileobj.variable_desc(var_1)
+        vartoplot_master = self.master.fileobj.variable_desc(var_master)
         self.dataplot_master = self.master.fileobj.get_data(vartoplot_master['name'], point)
         snl_names = [v['name'] if 'name' in v else k for k, v in self.master.fileobj.variables_snl.items()]
         self.timeplot = self.master.fileobj.get_time()
@@ -709,23 +733,23 @@ class ProPlotterController(abc.ABC):
         if not self.master.fileobj.variables_snl:
             self.master.main.ready_to_plot()
             self.master.main.toberemoved.destroy()
-            self.masterfig('saison1d', ax=self.master.main.ax1, value=self.dataplot_master, list_date=self.timeplot)
+            self.masterfig1d(**self.get_data_master1d())
         else:
-            self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz,point, fillnan=0.)
+            self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, point, fillnan=0.)
             if vartoplot_master['name'] in snl_names:
                 self.master.main.ready_to_plot_2_graphs(True)
                 self.master.main.toberemoved.destroy()
-                self.masterfig('saisonProfil', ax=self.master.main.ax1, dz=self.dztoplot,
-                               value=self.dataplot_master, list_date=self.timeplot)
+                toto = self.get_data_mastersaison()
+                self.masterfigsaison(**self.get_data_mastersaison())
                 trace_hauteur = 0
             else:
                 self.master.main.ready_to_plot_2_graphs()
                 self.master.main.toberemoved.destroy()
-                self.masterfig('saison1d', ax=self.master.main.ax1, value=self.dataplot_master, list_date=self.timeplot)
+                self.masterfig1d(**self.get_data_master1d())
                 trace_hauteur = None
 
             # usefull for motion
-            vartoplot_react = self.master.fileobj.variable_desc(var_2)
+            vartoplot_react = self.master.fileobj.variable_desc(var_react)
             self.dataplot_react = self.master.fileobj.get_data(vartoplot_react['name'], point)
             limitplot_react = self.master.fileobj.limits_variable(vartoplot_react['name'])
             self.size_x = self.dztoplot.shape[0]
@@ -745,7 +769,6 @@ class ProPlotterController(abc.ABC):
         self.master.main.Canevas.draw()
         self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
-
     def reset(self):
         """
         Reset the selection (and plot ?)
@@ -756,39 +779,25 @@ class ProPlotterController(abc.ABC):
 class ProPlotterController_Standard(ProPlotterController):
     # idée: mettre en appel ProPlotterController(graphe_A, graphe_B, graphe_C) -> ce sont les graphes/champs d'entrées
     # qui changent...
-
-    def masterfig(self, plot_type=None, **kwargs):
-        """
-        Definition of the master figure, depending of the choice for the graph type.
-
-        :param all params necessary to define the figure
-        :type it depends, no idea how to explain that
-        """
-        if plot_type == 'saison1d':
-            profilPlot.saison1d(**kwargs)
-
-        if plot_type == 'saisonProfil':
-            profilPlot.saisonProfil(**kwargs)
-
-
-    def reactfig(self, plot_type=None, **kwargs):
-        """
-        Definition of the figure on the right, reacting to the movement made on master figure.
-        It also depends of the choice for the graph type.
-
-        :param all params necessary to define the figure
-        :type it depends, no idea how to explain that
-
-        """
-        if plot_type == 'dateProfil':
-            profilPlot.dateProfil(**kwargs)
-
-
     pass
+
 
 class ProPlotterController_Height(ProPlotterController):
-    pass
+    def __init__(self, master):
+        """
+        Abstract method that define the applicative logic
+        """
+        self.master = master
+        self.masterfigsaison = profilPlot.saisonProfil
 
+    def get_data_mastersaison(self):
+        """
+        Collecting datas for the master figure, depending of the choice for the graph type.
+        """
+        return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_date=self.timeplot, dz=self.dztoplot)
+
+
+    pass
 
 
 def main(*args, **kwargs):

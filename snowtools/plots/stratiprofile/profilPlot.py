@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 6 avr. 2017
 Modified 7. apr. 2017 viallon
 
 :Authors:
     - Pascal Hagenmuller
     - Léo Viallon-Galinier
-'''
+"""
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -197,7 +197,7 @@ def saisonProfil(ax, dz, value, list_date, colormap='viridis', myrange=None, vmi
 
     def format_ticks(x, pos):
         x = int(x)
-        x = max(min(len(list_date)-1,x),0)
+        x = max(min(len(list_date)-1, x), 0)
         return list_date[x].strftime('%Y-%m-%d')
 
     formatter = ticker.FuncFormatter(format_ticks)
@@ -257,6 +257,8 @@ def saison1d(ax, value, list_date, myrange=None, legend=None, color='b.'):
     :type ax: matplotlib axis
     :param value: Value to be plot
     :type value: numpy array
+    :param list_date: all the dates where there are some datas to be plotted
+    :type list_date: numpy array
     :param color: color name
     :type color: str
     :param legend: legend for the colorbar
@@ -270,7 +272,7 @@ def saison1d(ax, value, list_date, myrange=None, legend=None, color='b.'):
 
     def format_ticks(x, pos):
         x = int(x)
-        x = max(min(len(list_date)-1,x),0)
+        x = max(min(len(list_date)-1, x), 0)
         return list_date[x].strftime('%Y-%m-%d')
 
     formatter = ticker.FuncFormatter(format_ticks)
@@ -379,7 +381,7 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
         vmax = 14.5
 
         rect = collections.PolyCollection(vertices[::-1], array=value_grain[(value_dz > 0)].ravel(),
-                                      cmap=cmap, norm=norm, edgecolors='none', alpha=0.7)
+                                          cmap=cmap, norm=norm, edgecolors='none', alpha=0.7)
 
         rect.set_clim(vmin, vmax)
         axe2.add_collection(rect)
@@ -393,3 +395,74 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
             labels = Dictionnaries.MEPRA_labels
             cbar.set_ticks(np.arange(np.shape(labels)[0]))
             cbar.ax.set_yticklabels(labels)
+
+
+def plot(ax, value, value_dz, list_date, myrange=None, legend=None, color='b', direction_cut='up', height_cut=10.):
+    """
+     Trace la variable demandée au niveau de la hauteur du manteau neigeux. Cette hauteur est définie par une direction
+     (direction "up" signifie hauteur mesurée depuis la terre, direction "down" signifie hauteur mesurée depuis le point
+     le plus haut du manteau neigeux).
+     :param ax: figure axis
+     :type ax: matplotlib axis
+     :param value: Value to be plot
+     :type value: numpy array
+     :param value_dz: thickness value for all the layers considered
+     :type value_dz: numpy array
+     :param list_date: all the dates where there are some datas to be plotted
+     :type list_date: numpy array
+     :param color: color name
+     :type color: str
+     :param legend: legend for the colorbar
+     :type legend: str
+     :param direction_cut: legend for the colorbar
+     :type direction_cut: str
+     :param height_cut: legend for the colorbar
+     :type height_cut: int
+
+    """
+    if myrange:
+        value = np.clip(value, myrange[0], myrange[1])
+
+    if legend:
+        ax.set_xlabel(legend)
+
+    # 1) Prendre les épaisseurs et les sommer puis voir pour quel indice on dépasse la valeur height
+    # 2) On fait cela pour chaque date
+    ep = value_dz
+    toplot = value
+    y = []
+    ep_from_ground = 100 * np.cumsum(ep[:, ::-1], axis=1)
+    ep_from_topsnow = 100 * np.cumsum(ep, axis=1)
+
+    # pas très pythonique: faire un truc avec np.apply_along_axis(np.searchsorted, 1, ep_from, height)
+    if direction_cut == 'down':
+        for i in np.arange(np.alen(ep_from_topsnow)):
+            if ep_from_topsnow[i, :].searchsorted(float(height_cut)) < int(ep.shape[1]) and \
+                    float(height_cut) < ep_from_ground[i, -1]:
+                y.append(toplot[i, ep_from_topsnow[i, :].searchsorted(float(height_cut))])
+            else:
+                y.append(None)
+    if direction_cut == 'up':
+        for i in np.arange(np.alen(ep_from_ground)):
+            if ep_from_ground[i, :].searchsorted(float(height_cut)) > 0 and \
+                    float(height_cut) < ep_from_ground[i, -1]:
+                y.append(toplot[i, int(ep.shape[1]) - ep_from_ground[i, :].searchsorted(float(height_cut))])
+            else:
+                y.append(None)
+
+    y_out = [y[i] if y[i] != 0 else None for i in range(len(y))]
+
+    xplot = range(toplot.shape[0])
+
+    ax.plot(xplot, y_out, color)
+    ax.set_xlim(0, toplot.shape[0])
+
+    def format_ticks(x, pos):
+        x = int(x)
+        x = max(min(len(list_date)-1, x), 0)
+        return list_date[x].strftime('%Y-%m-%d')
+
+    formatter = ticker.FuncFormatter(format_ticks)
+    ax.xaxis.set_major_formatter(formatter)
+    ax.xaxis.set_major_locator(ticker.MaxNLocator(4))
+    plt.setp(ax.xaxis.get_majorticklabels(), size='small')
