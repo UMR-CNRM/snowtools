@@ -119,8 +119,10 @@ class ProPlotterApplication(tk.Frame):
         self.choices.params_w = ProPlotterChoicesBar_Params_Massif(self)
 
     def to_graph_height(self):
+        self.var_height = tk.Frame(self.choices.canvas)
+        self.var_height.pack(fill=tk.X)
         self.controller = ProPlotterController_Height(self)
-        self.choices.params_w = ProPlotterChoicesBar_Params_Height(self)
+        self.choices.params_w = ProPlotterChoicesBar_Params_Height(self, self.var_height)
 
     def to_graph_member(self):
         self.controller = ProPlotterController_Member(self)
@@ -140,6 +142,8 @@ class ProPlotterApplication(tk.Frame):
             self.status.set_status('Successfully opened file {}'.format(selectedfilename))
         self.choices.variables_w.update()
         self.choices.point_w.update()
+        if self.choices.params_w.use:
+            self.choices.params_w.update()
 
 
 class ProPlotterMenu(tk.Menu):
@@ -407,7 +411,7 @@ class ProPlotterChoicesBar_Point:
 
     def update_var_numeric(self, i):
         # TODO: Check value or do it in previous function  <13-09-21, Léo Viallon-Galinier> #
-        # We have to put the nearsest value (or maybe not)
+        # We have to put the nearest value (or maybe not)
         self.update_var(i)
 
     def clean_frame(self):
@@ -524,12 +528,69 @@ class ProPlotterStatus(tk.Frame):
 
 class ProPlotterChoicesBar_Params_Standard:
     def __init__(self, master):
-        pass
+        self.use = False
 
 
 class ProPlotterChoicesBar_Params_Height:
-    def __init__(self, master):
-        pass
+    """
+     Specific choice for direction and height
+     """
+
+    def __init__(self, master, frame):
+        self.master = master
+        self.frame = frame
+        self.use = True
+        self._direction = None
+        self._height = None
+        self.label = None
+        self.label1 = None
+        self.label2 = None
+        self.choice_direction = None
+        self.choice_height = None
+        self.update()
+
+    def update(self):
+        self.clean_frame()
+        self.label = tk.Label(self.frame, text='Choice of direction and height', relief=tk.RAISED)
+        self.label.pack()
+        if self.master.fileobj is not None:
+            direction_list = ['up', 'down']
+            self.label1 = tk.Label(self.frame, text='Direction:')
+            self.label1.pack()
+            self.choice_direction = ttk.Combobox(self.frame, state='readonly', values=direction_list,
+                                                 width=self.master.choices.WIDTH, )
+            self.choice_direction.bind('<<ComboboxSelected>>', self.update_direction)
+            self.choice_direction.pack()
+
+            height_list = [i for i in range(5,100,5)]
+            self.label2 = tk.Label(self.frame, text='Height:')
+            self.label2.pack()
+            self.choice_height = ttk.Combobox(self.frame, state='readonly', values=height_list,
+                                              width=self.master.choices.WIDTH)
+            self.choice_height.bind('<<ComboboxSelected>>', self.update_height)
+            self.choice_height.pack()
+
+    def update_direction(self, *args):
+        value = self.choice_direction.get()
+        if value != self._direction:
+            self._direction = value
+
+    def update_height(self, *args):
+        value = self.choice_height.get()
+        if value != self._height:
+            self._height = value
+
+    @property
+    def var_direction(self):
+        return self._direction
+
+    @property
+    def var_height(self):
+        return self._height
+
+    def clean_frame(self):
+        for widgets in self.frame.winfo_children():
+            widgets.destroy()
 
 
 class ProPlotterController(abc.ABC):
@@ -696,7 +757,6 @@ class ProPlotterController(abc.ABC):
                 dico = self.get_data_react()
                 dico.update(dict(value=data_date, value_dz=dz_date, value_grain=grain_date, value_ram=ram_date,
                                  xlimit=limitplot_react, hauteur=hauteur, date=date))
-
                 self.reactfig(**dico)
 
                 self.master.main.first_profil = False
@@ -729,7 +789,6 @@ class ProPlotterController(abc.ABC):
         snl_names = [v['name'] if 'name' in v else k for k, v in self.master.fileobj.variables_snl.items()]
         self.timeplot = self.master.fileobj.get_time()
 
-        self.master.main.clear()
         if not self.master.fileobj.variables_snl:
             self.master.main.ready_to_plot()
             self.master.main.toberemoved.destroy()
@@ -739,7 +798,6 @@ class ProPlotterController(abc.ABC):
             if vartoplot_master['name'] in snl_names:
                 self.master.main.ready_to_plot_2_graphs(True)
                 self.master.main.toberemoved.destroy()
-                toto = self.get_data_mastersaison()
                 self.masterfigsaison(**self.get_data_mastersaison())
                 trace_hauteur = 0
             else:
@@ -784,20 +842,23 @@ class ProPlotterController_Standard(ProPlotterController):
 
 class ProPlotterController_Height(ProPlotterController):
     def __init__(self, master):
-        """
-        Abstract method that define the applicative logic
-        """
         self.master = master
-        self.masterfigsaison = profilPlot.saisonProfil
+        super().__init__(master)
+        self.direction = None
+        self.height = None
+
+    def masterfigsaison(self, **kwargs: dict):
+        return profilPlot.heightplot(**kwargs)
 
     def get_data_mastersaison(self):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
-        return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_date=self.timeplot, dz=self.dztoplot)
+        self.direction = self.master.choices.params_w.var_direction
+        self.height = self.master.choices.params_w.var_height
+        return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_date=self.timeplot, value_ep=self.dztoplot,
+                    direction_cut=self.direction, height_cut=self.height)
 
-
-    pass
 
 
 def main(*args, **kwargs):

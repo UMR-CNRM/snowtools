@@ -397,7 +397,7 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
             cbar.ax.set_yticklabels(labels)
 
 
-def plot(ax, value, value_dz, list_date, myrange=None, legend=None, color='b', direction_cut='up', height_cut=10.):
+def heightplot(ax, value, value_ep, list_date, myrange=None, legend=None, color='b', direction_cut='up', height_cut=10.):
     """
      Trace la variable demandée au niveau de la hauteur du manteau neigeux. Cette hauteur est définie par une direction
      (direction "up" signifie hauteur mesurée depuis la terre, direction "down" signifie hauteur mesurée depuis le point
@@ -406,8 +406,8 @@ def plot(ax, value, value_dz, list_date, myrange=None, legend=None, color='b', d
      :type ax: matplotlib axis
      :param value: Value to be plot
      :type value: numpy array
-     :param value_dz: thickness value for all the layers considered
-     :type value_dz: numpy array
+     :param value_ep: thickness value for all the layers considered
+     :type value_ep: numpy array
      :param list_date: all the dates where there are some datas to be plotted
      :type list_date: numpy array
      :param color: color name
@@ -428,7 +428,7 @@ def plot(ax, value, value_dz, list_date, myrange=None, legend=None, color='b', d
 
     # 1) Prendre les épaisseurs et les sommer puis voir pour quel indice on dépasse la valeur height
     # 2) On fait cela pour chaque date
-    ep = value_dz
+    ep = value_ep
     toplot = value
     y = []
     ep_from_ground = 100 * np.cumsum(ep[:, ::-1], axis=1)
