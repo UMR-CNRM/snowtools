@@ -110,23 +110,29 @@ class ProPlotterApplication(tk.Frame):
             raise ValueError('Unknown graph type')
         self.type = typ
 
+    def to_graph_reset(self):
+        if self.choices.params_w is not None:
+            self.choices.params_w.clean_frame()
+
     def to_graph_standard(self):
+        self.to_graph_reset()
         self.controller = ProPlotterController_Standard(self)
-        self.choices.params_w = ProPlotterChoicesBar_Params_Standard(self)
+        self.choices.params_w = ProPlotterChoicesBar_Params_Standard(self, self.choices.params)
 
     def to_graph_massif(self):
+        self.to_graph_reset()
         self.controller = ProPlotterController_Massif(self)
-        self.choices.params_w = ProPlotterChoicesBar_Params_Massif(self)
+        self.choices.params_w = ProPlotterChoicesBar_Params_Massif(self, self.choices.params)
 
     def to_graph_height(self):
-        self.var_height = tk.Frame(self.choices.canvas)
-        self.var_height.pack(fill=tk.X)
+        self.to_graph_reset()
         self.controller = ProPlotterController_Height(self)
-        self.choices.params_w = ProPlotterChoicesBar_Params_Height(self, self.var_height)
+        self.choices.params_w = ProPlotterChoicesBar_Params_Height(self, self.choices.params)
 
     def to_graph_member(self):
+        self.to_graph_reset()
         self.controller = ProPlotterController_Member(self)
-        self.choices.params_w = ProPlotterChoicesBar_Params_Member(self)
+        self.choices.params_w = ProPlotterChoicesBar_Params_Member(self, self.choices.params)
 
     def open(self, *args):
         self.status.set_status('Open file...')
@@ -142,9 +148,7 @@ class ProPlotterApplication(tk.Frame):
             self.status.set_status('Successfully opened file {}'.format(selectedfilename))
         self.choices.variables_w.update()
         self.choices.point_w.update()
-        if self.choices.params_w.use:
-            self.choices.params_w.update()
-
+        self.choices.params_w.update()
 
 class ProPlotterMenu(tk.Menu):
     """ The app menu """
@@ -227,16 +231,16 @@ class ProPlotterChoicesBar(tk.Frame):
         self.bind("<Configure>",
                   lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"), yscrollcommand=self.scroll.set))
 
-        self.params = tk.Frame(self.canvas)
-        self.params.pack(fill=tk.X)
         self.variables = tk.Frame(self.canvas)
         self.variables.pack(fill=tk.X)
         self.point = tk.Frame(self.canvas)
         self.point.pack(fill=tk.X)
+        self.params = tk.Frame(self.canvas)
+        self.params.pack(fill=tk.X)
 
-        self.params_w = None
         self.variables_w = ProPlotterChoicesBar_Variables(self, self.variables)
         self.point_w = ProPlotterChoicesBar_Point(self, self.point)
+        self.params_w = None
 
 
 class ProPlotterChoicesBar_Variables:
@@ -254,6 +258,7 @@ class ProPlotterChoicesBar_Variables:
         self.variables_info = None
         self.choice_var_master = None
         self.choice_var_react = None
+        self.exists_snl = True
         self.update()
 
     def update(self):
@@ -264,9 +269,10 @@ class ProPlotterChoicesBar_Variables:
         if self.master.master.fileobj is not None:
             self.variables_info = self.master.master.fileobj.variables_desc
             variables_list = [v['full_name'] if 'full_name' in v else k for k, v in self.variables_info.items()]
-
-            variables_with_snl = [v['full_name'] if 'full_name' in v else k for k, v in
-                                  self.master.master.fileobj.variables_snl.items()]
+            list_bool = [v['has_snl'] if 'full_name' in v else k for k, v in self.variables_info.items()]
+            variables_with_snl = [variables_list[i] for i in range(len(variables_list)) if list_bool[i]]
+            if variables_with_snl == []:
+                self.exists_snl = False
 
             self.label1 = tk.Label(self.frame, text='Variable:')
             self.label1.pack()
@@ -526,20 +532,32 @@ class ProPlotterStatus(tk.Frame):
         self.status.configure(text=status)
 
 
-class ProPlotterChoicesBar_Params_Standard:
-    def __init__(self, master):
-        self.use = False
+class ProPlotterChoicesBar_Params(abc.ABC):
+    def __init__(self, master, frame):
+        self.master = master
+        self.frame = frame
+
+    def clean_frame(self):
+        if self.frame is not None:
+            for widgets in self.frame.winfo_children():
+                widgets.destroy()
+
+class ProPlotterChoicesBar_Params_Standard(ProPlotterChoicesBar_Params):
+    def __init__(self, master, frame):
+        super().__init__(master, frame)
+        self.update()
+
+    def update(self):
+        pass
 
 
-class ProPlotterChoicesBar_Params_Height:
+class ProPlotterChoicesBar_Params_Height(ProPlotterChoicesBar_Params):
     """
      Specific choice for direction and height
      """
 
     def __init__(self, master, frame):
-        self.master = master
-        self.frame = frame
-        self.use = True
+        super().__init__(master, frame)
         self._direction = None
         self._height = None
         self.label = None
@@ -565,10 +583,15 @@ class ProPlotterChoicesBar_Params_Height:
             height_list = [i for i in range(5,100,5)]
             self.label2 = tk.Label(self.frame, text='Height:')
             self.label2.pack()
-            self.choice_height = ttk.Combobox(self.frame, state='readonly', values=height_list,
-                                              width=self.master.choices.WIDTH)
-            self.choice_height.bind('<<ComboboxSelected>>', self.update_height)
+            #self.choice_height = ttk.Combobox(self.frame, state='readonly', values=height_list,
+            #                                  width=self.master.choices.WIDTH)
+
+            height = tk.DoubleVar()
+            self.choice_height = ttk.Entry(self.frame, textvariable=height)
+            #self.choice_height.bind('<<ComboboxSelected>>', self.update_height)
             self.choice_height.pack()
+            self.choice_height.focus()
+            self.update_height(height)
 
     def update_direction(self, *args):
         value = self.choice_direction.get()
@@ -587,10 +610,6 @@ class ProPlotterChoicesBar_Params_Height:
     @property
     def var_height(self):
         return self._height
-
-    def clean_frame(self):
-        for widgets in self.frame.winfo_children():
-            widgets.destroy()
 
 
 class ProPlotterController(abc.ABC):
@@ -615,6 +634,10 @@ class ProPlotterController(abc.ABC):
         self.dataplot_react = None
         self.grain = None
         self.ram = None
+        self.same_y = True
+
+    def warningtextbar(self, var_master):
+        return ''
 
     def masterfig1d(self, **kwargs):
         return profilPlot.saison1d(**kwargs)
@@ -699,13 +722,13 @@ class ProPlotterController(abc.ABC):
 
                 self.master.main.fig1.clear()
                 self.master.main.clear()
-                if not self.master.fileobj.variables_snl:
+                if not self.master.choices.variables_w.exists_snl:
                     self.master.main.ready_to_plot()
                     self.master.main.toberemoved.destroy()
                     self.masterfig1d(**self.get_data_master1d())
                 else:
-                    if vartoplot_master['name'] in snl_names:
-                        self.master.main.ready_to_plot_2_graphs(True)
+                    if vartoplot_master['has_snl']:
+                        self.master.main.ready_to_plot_2_graphs(self.same_y)
                         self.master.main.toberemoved.destroy()
                         self.masterfigsaison(**self.get_data_mastersaison())
                     else:
@@ -771,32 +794,32 @@ class ProPlotterController(abc.ABC):
         points = self.master.fileobj.get_points(selector=selector)
 
         if len(points) > 1:
-            error_msg = "Too much points, please refine you selection"
+            error_msg = 'Too much points, please refine you selection'
             messagebox.showerror(title='Too much points', message=error_msg)
             return
         elif len(points) == 0:
-            error_msg = "No points with current selection."
+            error_msg = 'No points with current selection.'
             messagebox.showerror(title='No point found', message=error_msg)
             return
 
         point = points[0]
-        text = "Vars: {}/{}. Point: {}".format(var_master, var_react, point)
+        text = self.warningtextbar(var_master) + ' VARS: {}/{}. POINT: {}'.format(var_master, var_react, point)
         self.master.controls.update_text(text)
 
         # TODO: Actually do the plot here <13-09-21, Léo Viallon-Galinier> #
         vartoplot_master = self.master.fileobj.variable_desc(var_master)
         self.dataplot_master = self.master.fileobj.get_data(vartoplot_master['name'], point)
-        snl_names = [v['name'] if 'name' in v else k for k, v in self.master.fileobj.variables_snl.items()]
         self.timeplot = self.master.fileobj.get_time()
 
-        if not self.master.fileobj.variables_snl:
+        self.master.main.clear()
+        if not self.master.choices.variables_w.exists_snl:
             self.master.main.ready_to_plot()
             self.master.main.toberemoved.destroy()
             self.masterfig1d(**self.get_data_master1d())
         else:
             self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, point, fillnan=0.)
-            if vartoplot_master['name'] in snl_names:
-                self.master.main.ready_to_plot_2_graphs(True)
+            if vartoplot_master['has_snl']:
+                self.master.main.ready_to_plot_2_graphs(self.same_y)
                 self.master.main.toberemoved.destroy()
                 self.masterfigsaison(**self.get_data_mastersaison())
                 trace_hauteur = 0
@@ -846,9 +869,14 @@ class ProPlotterController_Height(ProPlotterController):
         super().__init__(master)
         self.direction = None
         self.height = None
+        self.same_y = False
+        self.masterfigsaison = profilPlot.heightplot
 
-    def masterfigsaison(self, **kwargs: dict):
-        return profilPlot.heightplot(**kwargs)
+    def warningtextbar(self, var_master):
+        if not self.master.fileobj.variable_desc(var_master)['has_snl']:
+            return 'WARNING: MISSING SNOW LAYER DIMENSION for HEIGHT GRAPH'
+        else:
+            return ''
 
     def get_data_mastersaison(self):
         """

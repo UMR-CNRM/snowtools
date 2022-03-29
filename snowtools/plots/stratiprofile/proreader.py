@@ -350,7 +350,6 @@ class proreader(reader):
 
         self._variables = {}    # Plottable variables with description
         self._variables_t = []  # Variables with time dimension
-        self._variables_snl = {}  # Variables with snow_layer dimension
         self._variables_p = {}  # Variables for point selection
         self._variables_p_values = {}
         self._npoints = 0
@@ -386,23 +385,24 @@ class proreader(reader):
 
                 # Select plotable variables and get information on it
                 if len(dimensions) > 0 and len(dimensions) < 3:
-                    vardesc = {
+                    if 'snow_layer' in dimensions:
+                        vardesc = {
                             'name': v, 'full_name': self._get_full_name(v, ff),
                             'rank': len(dimensions), 'dtype': ff.gettypevar(v),
-                            'dimensions': dimensions}
+                            'dimensions': dimensions, 'has_snl': True}
+                    else:
+                        vardesc = {
+                            'name': v, 'full_name': self._get_full_name(v, ff),
+                            'rank': len(dimensions), 'dtype': ff.gettypevar(v),
+                            'dimensions': dimensions, 'has_snl': False}
                     self._variables[v] = vardesc
 
                     # Identify variables with time dimension
                     if 'time' in dimensions:
                         self._variables_t.append(v)
 
-                    # Identify variables with snow-layer dimension
-                    if 'snow_layer' in dimensions:
-                        self._variables_snl[v] = vardesc
-
                 # Sorting variables by name
                 self._variables = {key: self._variables[key] for key in sorted(self._variables.keys())}
-                self._variables_snl = {key: self._variables_snl[key] for key in sorted(self._variables_snl.keys())}
                 self._variables_p = {key: self._variables_p[key] for key in sorted(self._variables_p.keys())}
                 self._variables_t.sort()
 
@@ -567,14 +567,6 @@ class proreader(reader):
         rank (1 or 2), full_name, dtype)
         """
         return self._variables
-
-    @property
-    def variables_snl(self):
-        """
-        The dict associating each variable with snow-layer to its metadata (dimensions,
-        rank (1 or 2), full_name, dtype)
-        """
-        return self._variables_snl
 
     @property
     def variables_t(self):
