@@ -542,6 +542,7 @@ class ProPlotterChoicesBar_Params(abc.ABC):
             for widgets in self.frame.winfo_children():
                 widgets.destroy()
 
+
 class ProPlotterChoicesBar_Params_Standard(ProPlotterChoicesBar_Params):
     def __init__(self, master, frame):
         super().__init__(master, frame)
@@ -549,6 +550,34 @@ class ProPlotterChoicesBar_Params_Standard(ProPlotterChoicesBar_Params):
 
     def update(self):
         pass
+
+
+class ProPlotterChoicesBar_Params_DateSlicer(ProPlotterChoicesBar_Params):
+    def __init__(self, master, frame):
+        super().__init__(master, frame)
+        self.update()
+
+    def update(self):
+        self.clean_frame()
+        self.label = tk.Label(self.frame, text='Date Slicer', relief=tk.RAISED)
+        self.label.pack()
+        if self.master.fileobj is not None:
+            self.label1 = tk.Label(self.frame, text='Direction:')
+            self.label1.pack()
+            self.scale_date = ttk.Scale(self, orient='horizontal', state='disabled', label='Echelle de dates',
+                                    width=self.master.choices.WIDTH)
+            self.scale_date.config(from_=0, to=(len(self.master.controls.timeplot) - 1), state='normal', showvalue=0,
+                                   command=self.update_date_or_plot, variable=tk.IntVar)
+            self.scale_date.pack()
+
+    def update_date_or_plot(self, *args):
+        value = self.scale_date.get()
+        if value != self._dateslice:
+            self._dateslice = value
+
+    @property
+    def var_dateslice(self):
+        return self._dateslice
 
 
 class ProPlotterChoicesBar_Params_Height(ProPlotterChoicesBar_Params):
@@ -581,17 +610,13 @@ class ProPlotterChoicesBar_Params_Height(ProPlotterChoicesBar_Params):
             self.choice_direction.pack()
 
             height_list = [i for i in range(5,100,5)]
-            self.label2 = tk.Label(self.frame, text='Height:')
+            self.label2 = tk.Label(self.frame, text='Height in cm (press <Return> to validate):')
             self.label2.pack()
-            #self.choice_height = ttk.Combobox(self.frame, state='readonly', values=height_list,
-            #                                  width=self.master.choices.WIDTH)
 
             height = tk.DoubleVar()
-            self.choice_height = ttk.Entry(self.frame, textvariable=height)
-            #self.choice_height.bind('<<ComboboxSelected>>', self.update_height)
+            self.choice_height = ttk.Entry(self.frame, textvariable=height, width=self.master.choices.WIDTH)
+            self.choice_height.bind("<Return>", self.update_height)
             self.choice_height.pack()
-            self.choice_height.focus()
-            self.update_height(height)
 
     def update_direction(self, *args):
         value = self.choice_direction.get()
@@ -601,7 +626,7 @@ class ProPlotterChoicesBar_Params_Height(ProPlotterChoicesBar_Params):
     def update_height(self, *args):
         value = self.choice_height.get()
         if value != self._height:
-            self._height = value
+            self._height = float(value)
 
     @property
     def var_direction(self):

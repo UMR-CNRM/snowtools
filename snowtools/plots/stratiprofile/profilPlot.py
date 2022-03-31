@@ -428,34 +428,32 @@ def heightplot(ax, value, value_ep, list_date, myrange=None, legend=None, color=
 
     # 1) Prendre les épaisseurs et les sommer puis voir pour quel indice on dépasse la valeur height
     # 2) On fait cela pour chaque date
-    ep = value_ep
-    toplot = value
     y = []
-    ep_from_ground = 100 * np.cumsum(ep[:, ::-1], axis=1)
-    ep_from_topsnow = 100 * np.cumsum(ep, axis=1)
+    ep_from_ground = 100 * np.cumsum(value_ep[:, ::-1], axis=1)
+    ep_from_topsnow = 100 * np.cumsum(value_ep, axis=1)
 
     # pas très pythonique: faire un truc avec np.apply_along_axis(np.searchsorted, 1, ep_from, height)
     if direction_cut == 'down':
         for i in np.arange(np.alen(ep_from_topsnow)):
-            if ep_from_topsnow[i, :].searchsorted(float(height_cut)) < int(ep.shape[1]) and \
+            if ep_from_topsnow[i, :].searchsorted(float(height_cut)) < int(value_ep.shape[1]) and \
                     float(height_cut) < ep_from_ground[i, -1]:
-                y.append(toplot[i, ep_from_topsnow[i, :].searchsorted(float(height_cut))])
+                y.append(value[i, ep_from_topsnow[i, :].searchsorted(float(height_cut))])
             else:
                 y.append(None)
     if direction_cut == 'up':
         for i in np.arange(np.alen(ep_from_ground)):
             if ep_from_ground[i, :].searchsorted(float(height_cut)) > 0 and \
                     float(height_cut) < ep_from_ground[i, -1]:
-                y.append(toplot[i, int(ep.shape[1]) - ep_from_ground[i, :].searchsorted(float(height_cut))])
+                y.append(value[i, int(value_ep.shape[1]) - ep_from_ground[i, :].searchsorted(float(height_cut))])
             else:
                 y.append(None)
 
     y_out = [y[i] if y[i] != 0 else None for i in range(len(y))]
 
-    xplot = range(toplot.shape[0])
+    xplot = range(value.shape[0])
 
     ax.plot(xplot, y_out, color)
-    ax.set_xlim(0, toplot.shape[0])
+    ax.set_xlim(0, value.shape[0])
 
     def format_ticks(x, pos):
         x = int(x)
