@@ -21,8 +21,7 @@ import logging
 logger = logging.getLogger()
 
 
-def saisonProfil(ax, dz, value, list_date, colormap='viridis', myrange=None, vmin=None, vmax=None, legend=None,
-                 cbar_show=True):
+def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax=None, legend=None, cbar_show=True):
     """
     Trace le profil de value en fonction du temps avec les epaisseurs reelles de couches
 
@@ -35,8 +34,8 @@ def saisonProfil(ax, dz, value, list_date, colormap='viridis', myrange=None, vmi
     :type dz: numpy array
     :param value: Value to be plot (color of the layer). Should have the same dimension as ``dz``
     :type value: numpy array
-    :param list_date: all the dates where there are some datas to be plotted
-    :type list_date: numpy array
+    :param list_legend: list for x axis legend. The dates where there are some datas to be plotted for standard graphs
+    :type list_legend: numpy array
     :param colormap: Colormap to use. Some custom colormaps are defined for specific variables:
                      ``grains``, ``echelle_log``, ``echelle_log_sahara``, ``ratio_cisaillement``,
                      ``tempK`` and ``lwc``.
@@ -70,6 +69,8 @@ def saisonProfil(ax, dz, value, list_date, colormap='viridis', myrange=None, vmi
 
     """
 
+    value = np.array(value)
+
     class MidpointNormalize(colors.Normalize):
         def __init__(self, vmin=None, vmax=None, vcenter=None, clip=False):
             self.vcenter = vcenter
@@ -78,9 +79,6 @@ def saisonProfil(ax, dz, value, list_date, colormap='viridis', myrange=None, vmi
         def __call__(self, value, clip=None):
             x, y = [self.vmin, self.vcenter, self.vmax], [0, 0.5, 1]
             return np.ma.masked_array(np.interp(value, x, y))
-
-    if myrange:
-        value = np.clip(value, myrange[0], myrange[1])
 
     top_y = np.cumsum(dz[:, ::-1], axis=1)[:, ::-1].ravel()
     bottom_y = top_y - dz.ravel()
@@ -197,8 +195,11 @@ def saisonProfil(ax, dz, value, list_date, colormap='viridis', myrange=None, vmi
 
     def format_ticks(x, pos):
         x = int(x)
-        x = max(min(len(list_date)-1, x), 0)
-        return list_date[x].strftime('%Y-%m-%d')
+        x = max(min(len(list_legend)-1, x), 0)
+        if (type(list_legend[0]) == int or type(list_legend[0]) == str):
+            return list_legend[x]
+        else:
+            return list_legend[x].strftime('%Y-%m-%d')
 
     formatter = ticker.FuncFormatter(format_ticks)
     ax.xaxis.set_major_formatter(formatter)
@@ -250,30 +251,30 @@ def plot_grains1D(ax, dz, value, legend=None, cbar_show=True):
         ax.set_xlabel(legend)
 
 
-def saison1d(ax, value, list_date, myrange=None, legend=None, color='b.'):
+def saison1d(ax, value, list_legend, legend=None, color='b.'):
     """
     Trace la variable demandee en fonction du temps
     :param ax: figure axis
     :type ax: matplotlib axis
     :param value: Value to be plot
     :type value: numpy array
-    :param list_date: all the dates where there are some datas to be plotted
-    :type list_date: numpy array
+    :param list_legend: list for x axis legend. The dates where there are some datas to be plotted for standard graphs
+    :type list_legend: numpy array
     :param color: color name
     :type color: str
     :param legend: legend for the colorbar
     :type legend: str
     """
-    if myrange:
-        value = np.clip(value, myrange[0], myrange[1])
-
     if legend:
         ax.set_xlabel(legend)
 
     def format_ticks(x, pos):
         x = int(x)
-        x = max(min(len(list_date)-1, x), 0)
-        return list_date[x].strftime('%Y-%m-%d')
+        x = max(min(len(list_legend)-1, x), 0)
+        if (type(list_legend[0]) == int or type(list_legend[0]) == str):
+            return list_legend[x]
+        else:
+            return list_legend[x].strftime('%Y-%m-%d')
 
     formatter = ticker.FuncFormatter(format_ticks)
     ax.xaxis.set_major_formatter(formatter)
@@ -283,7 +284,7 @@ def saison1d(ax, value, list_date, myrange=None, legend=None, color='b.'):
     ax.plot(value, color)
 
 
-def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xlimit=(None, None), ylimit=200,
+def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xlimit=(None, None), ylimit=None,
                hauteur=None, color='b', cbar_show=False, date=None, **kwargs):
     """
     Trace le profil de la variable avec type_de_grain et résistance si présent. Ce profil est effectué à une date fixée.
@@ -326,7 +327,8 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
     pointsy = np.delete(pointsy, 0)
     pointsx = np.delete(pointsx, 0)
 
-    axe.plot(pointsy[::-1], np.subtract(pointsx[-1], pointsx[::-1]), color=color, linewidth=2)
+    axe.plot(pointsy[::-1], np.subtract(pointsx[-1], pointsx[::-1]), color=color, linewidth=2, scalex=False,
+             scaley=False)
     if date is not None:
         axe.set_xlabel(date.strftime('%Y-%m-%d %Hh'))
     axe.set_title('RAM - Snowgrain', y=1.04)
@@ -344,7 +346,8 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
         Max = np.nanmax(value) if np.nanmax(value) > Max else Max
         Min = np.nanmin(value) if np.nanmin(value) < Min else Min
     axe.set_xlim(Min, Max)
-    axe.set_ylim(0, ylimit)
+    if ylimit is not None:
+        axe.set_ylim(0, ylimit)
 
     if hauteur is not None:
         axe.axhline(y=hauteur, color='black', linestyle='-')
@@ -397,7 +400,7 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
             cbar.ax.set_yticklabels(labels)
 
 
-def heightplot(ax, value, value_ep, list_date, myrange=None, legend=None, color='b', direction_cut='up', height_cut=10.):
+def heightplot(ax, value, value_ep, list_legend, legend=None, color='b', direction_cut='up', height_cut=10.):
     """
      Trace la variable demandée au niveau de la hauteur du manteau neigeux. Cette hauteur est définie par une direction
      (direction "up" signifie hauteur mesurée depuis la terre, direction "down" signifie hauteur mesurée depuis le point
@@ -408,8 +411,8 @@ def heightplot(ax, value, value_ep, list_date, myrange=None, legend=None, color=
      :type value: numpy array
      :param value_ep: thickness value for all the layers considered
      :type value_ep: numpy array
-     :param list_date: all the dates where there are some datas to be plotted
-     :type list_date: numpy array
+     :param list_legend: list for x axis legend. The dates where there are some datas to be plotted for standard graphs
+     :type list_legend: numpy array
      :param color: color name
      :type color: str
      :param legend: legend for the colorbar
@@ -420,9 +423,6 @@ def heightplot(ax, value, value_ep, list_date, myrange=None, legend=None, color=
      :type height_cut: int
 
     """
-    if myrange:
-        value = np.clip(value, myrange[0], myrange[1])
-
     if legend:
         ax.set_xlabel(legend)
 
@@ -457,8 +457,11 @@ def heightplot(ax, value, value_ep, list_date, myrange=None, legend=None, color=
 
     def format_ticks(x, pos):
         x = int(x)
-        x = max(min(len(list_date)-1, x), 0)
-        return list_date[x].strftime('%Y-%m-%d')
+        x = max(min(len(list_legend)-1, x), 0)
+        if (type(list_legend[0]) == int or type(list_legend[0]) == str):
+            return list_legend[x]
+        else:
+            return list_legend[x].strftime('%Y-%m-%d')
 
     formatter = ticker.FuncFormatter(format_ticks)
     ax.xaxis.set_major_formatter(formatter)
