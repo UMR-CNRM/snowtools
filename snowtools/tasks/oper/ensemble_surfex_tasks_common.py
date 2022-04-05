@@ -455,7 +455,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 dateinit       = datebegin,
                 threshold      = self.conf.threshold,
                 members        = footprints.util.rangex(members),
-                geometry_in    = list_geometry,
+                geometry_in    = list_geometry if any(tb01) or source_safran != 's2m' else alternate_geometry,
                 geometry_out   = self.conf.geometry.tag,
                 ntasks         = 6 if self.conf.rundate.hour == self.monthly_analysis_time else 40,
                 daily          = not self.conf.previ,
