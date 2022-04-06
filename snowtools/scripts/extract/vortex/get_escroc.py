@@ -17,7 +17,7 @@ from vortex import toolbox
 from bronx.stdtypes.date import Date
 
 from snowtools.scripts.ESMSnowMIP.ESM_snowmip import bdate, edate
-from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
+from snowtools.utils.dates import get_list_dates_files, get_dic_dateend, check_and_convert_date
 
 usage = "usage: python get_escroc.py --site=xxx [--nmembers=xx] --escroc=xx [--byear=YYYY --eyear=YYYY]"
 
@@ -41,9 +41,17 @@ def parse_options(arguments):
                       action="store", type="int", dest="byear", default=None,
                       help="First year of extraction")
 
-    parser.add_option("--eyear",
+    parser.add_option("--bdate",
+                      action="store", type="string", dest="byear", default=None,
+                      help="First date of extraction")
+
+    parser.add_option("--eyear",cd
                       action="store", type="int", dest="eyear", default=None,
                       help="Last year of extraction")
+
+    parser.add_option("--edate",
+                      action="store", type="string", dest="byear", default=None,
+                      help="Last date of extraction")
 
     parser.add_option("--yearly",
                       action="store_true", dest="yearly", default=False,
@@ -69,7 +77,10 @@ class config(object):
             bdate[options.site] = Date(options.byear, 8, 1, 6)
         if options.eyear:
             edate[options.site] = Date(options.eyear, 8, 1, 6)
-
+        if options.bdate:
+            bdate[options.site] = check_and_convert_date(options.bdate)
+        if options.edate:
+            bdate[options.site] = check_and_convert_date(options.edate)
 
 class S2MExtractor(S2MTaskMixIn):
 

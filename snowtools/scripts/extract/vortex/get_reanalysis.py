@@ -62,8 +62,8 @@ def parse_options(arguments):
 
 class config(object):
 
-    xpid = "reanalysis@lafaysse"  #
-    xpid_native = "reanalysis@vernaym"
+    xpid = "reanalysis2020.2@lafaysse"  #
+    xpid_native = "reanalysis2020.2@vernaym"
     duration = "yearly"
 
     def __init__(self):
