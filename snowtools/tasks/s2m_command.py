@@ -315,6 +315,13 @@ class Surfex_command(_S2M_command):
                           action="store_true", dest="drhook", default=False,
                           help="Profiling MPI task with DRHOOK")
 
+        parser.add_option("--save-pro",
+                          dest="save_pro", default='multi',
+                          choices=['none', 'cache', 'archive', 'multi'],
+                          help="Wheteher and where to save PRO_ output files. "
+                               "multi is the default and store both in cache and in archive. "
+                               "Use none not to save the PRO_ files at all. [Vortex only]")
+
         (options, args) = parser.parse_args(arguments)
 
         del args

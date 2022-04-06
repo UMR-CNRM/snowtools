@@ -59,6 +59,9 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         if hasattr(self.conf, "simu2D"):
             self.conf.genv2D = 'uenv:pgd.002@SURFEX_CEN'
 
+        #######################################################################
+        #                             Fetch steps                             #
+        #######################################################################
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
             # Try to find a forcing covering the full simulation period
@@ -484,6 +487,9 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print(t.prompt, 'tbI =', tbI)
                 print()
 
+        #######################################################################
+        #                            Compute step                             #
+        #######################################################################
         if 'compute' in self.steps:
 
             print (self.conf.meteo, self.conf.interpol, self.conf.addmask)
@@ -624,10 +630,17 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             else:
                 self.component_runner(tbalgo4, tbx3)
 
+        #######################################################################
+        #                               Backup                                #
+        #######################################################################
         if 'backup' in self.steps:
             pass
 
         if 'late-backup' in self.steps:
+
+            namespace = 'vortex.multi.fr'
+            if hasattr(self.conf, 'save_pro') and self.conf.save_pro in ['cache', 'archive', 'multi']:
+                namespace = 'vortex.' + self.conf.save_pro + '.fr'
 
             # First we try to save a PRO file covering the whole simulation period if present
             datebegin = self.conf.datebegin
@@ -643,7 +656,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 nativefmt      = 'netcdf',
                 kind           = 'SnowpackSimulation',
                 model          = 'surfex',
-                namespace      = 'vortex.multi.fr',
+                namespace      = namespace,
                 namebuild      = 'flat@cen',
                 block          = 'pro',
                 fatal          = False
@@ -749,7 +762,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
                     model          = 'surfex',
-                    namespace      ='vortex.multi.fr',
+                    namespace      = namespace,
                     namebuild      = 'flat@cen',
                     block          = 'pro',
                 ),
