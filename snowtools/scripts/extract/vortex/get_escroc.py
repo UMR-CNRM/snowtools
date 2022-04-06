@@ -80,7 +80,7 @@ class config(object):
         if options.bdate:
             bdate[options.site] = check_and_convert_date(options.bdate)
         if options.edate:
-            bdate[options.site] = check_and_convert_date(options.edate)
+            edate[options.site] = check_and_convert_date(options.edate)
 
 class S2MExtractor(S2MTaskMixIn):
 
