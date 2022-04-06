@@ -45,7 +45,7 @@ def parse_options(arguments):
                       action="store", type="string", dest="byear", default=None,
                       help="First date of extraction")
 
-    parser.add_option("--eyear",cd
+    parser.add_option("--eyear",
                       action="store", type="int", dest="eyear", default=None,
                       help="Last year of extraction")
 
