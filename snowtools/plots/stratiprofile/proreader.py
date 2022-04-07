@@ -825,7 +825,7 @@ class proreader(reader):
                 continue
             lf.append(fn)
             ln.append(nr)
-            return lf, ln
+        return lf, ln
 
     def _get_member_filenames(self):
         """
