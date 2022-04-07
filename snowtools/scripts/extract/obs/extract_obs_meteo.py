@@ -64,6 +64,7 @@ if not os.path.isdir(args.output):
 #              '74203001', '74211002', '74221001', '74256001', '74258002', '74280001', '74281001', '74285002',
 #              '74286001', '74289001']
 
+# Liste des stations avec simulation S2M (liste avant mise à jour pour les nouveaux guess 665 stations)
 stations_t = stations_r = ['4006004','4006006','4006400','4006401','4006403','4019001','4019400','4019401','4019402','4019403',
 '4019404','4062400','4073400','4096001','4096401','4099001','4100400','4100401','4115001','4126400',
 '4136001','4173001','4193002','4193008','4193400','4193401','4205001','4205400','4226001','5001400',
@@ -205,16 +206,12 @@ if args.tx:
 
 if args.tt:
     question4 = question(
-            listvar=["dat", "H.num_poste", "poste.nom_usuel", "poste.alti", "tn", "tx", "t"],
+            listvar=["dat", "H.num_poste", "poste.nom_usuel", "poste.alti", "t"],
             table='H',
             listorder=['H.num_poste', 'dat'],
             listjoin=[
                 'POSTE ON H.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (' + ','.join(stations_t) + ')'
                 ],
-            listconditions=[
-                "tn is not NULL",
-                "tx is not NULL"
-                ],
             period=[datedeb, datefin],
             )
-    question4.run(outputfile='obs_brutes_T.csv')
+    question4.run(outputfile='obs_brutes_T_horaires.csv')
