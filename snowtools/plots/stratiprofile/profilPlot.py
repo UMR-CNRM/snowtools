@@ -21,7 +21,8 @@ import logging
 logger = logging.getLogger()
 
 
-def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax=None, legend=None, cbar_show=True):
+def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax=None, legend=None, cbar_show=True,
+                 title=None):
     """
     Trace le profil de value en fonction du temps avec les epaisseurs reelles de couches
 
@@ -44,6 +45,8 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax
     :type legend: str
     :param cbar_show: Whether or not to plot the colorbar
     :type cbar_show: bool
+    :param title: title (date for member plots for example)
+    :type title: str
 
     Note that ``dz`` should not contain ``nan`` values. Layers that are not used sould be filled with
     a zero value for depth.
@@ -68,10 +71,6 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax
        Example of plots that can be obtained with this function (example of the code snippet provided).
 
     """
-
-    value = np.array(value)
-    dz = np.array(dz)
-
     class MidpointNormalize(colors.Normalize):
         def __init__(self, vmin=None, vmax=None, vcenter=None, clip=False):
             self.vcenter = vcenter
@@ -83,8 +82,6 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax
 
     top_y = np.cumsum(dz[:, ::-1], axis=1)[:, ::-1].ravel()
     bottom_y = top_y - dz.ravel()
-    print(top_y)
-    print(bottom_y)
 
     left_x = np.ones(shape=dz.shape, dtype='int')
     left_x = np.cumsum(left_x, axis=0).ravel()
@@ -209,6 +206,9 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax
     ax.xaxis.set_major_locator(ticker.MaxNLocator(4))
     plt.setp(ax.xaxis.get_majorticklabels(), size='small')
 
+    if title is not None:
+        ax.set_title(title)
+
 
 def plot_grains1D(ax, dz, value, legend=None, cbar_show=True):
     """
@@ -254,7 +254,7 @@ def plot_grains1D(ax, dz, value, legend=None, cbar_show=True):
         ax.set_xlabel(legend)
 
 
-def saison1d(ax, value, list_legend, legend=None, color='b.'):
+def saison1d(ax, value, list_legend, legend=None, color='b.', title=None):
     """
     Trace la variable demandee en fonction du temps
     :param ax: figure axis
@@ -284,11 +284,14 @@ def saison1d(ax, value, list_legend, legend=None, color='b.'):
     ax.xaxis.set_major_locator(ticker.MaxNLocator(4))
     plt.setp(ax.xaxis.get_majorticklabels(), size='small')
 
+    if title is not None:
+        ax.set_title(title)
+
     ax.plot(value, color)
 
 
 def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xlimit=(None, None), ylimit=None,
-               hauteur=None, color='b', cbar_show=False, date=None, **kwargs):
+               hauteur=None, color='b', cbar_show=False, legend=None, **kwargs):
     """
     Trace le profil de la variable avec type_de_grain et résistance si présent. Ce profil est effectué à une date fixée.
     :param axe: figure axis
@@ -313,8 +316,8 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
     :type color: str
     :param cbar_show: show the colorbar for grain type
     :type color: boolean
-    :param date: legend for the date (to be changed in legend or title)
-    :type date: str
+    :param legend: legend (the date in standard plot)
+    :type legend: datetime object or str
     """
     # Créer les épaisseurs cumulées
     epc = np.cumsum(value_dz)
@@ -332,8 +335,11 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
 
     axe.plot(pointsy[::-1], np.subtract(pointsx[-1], pointsx[::-1]), color=color, linewidth=2, scalex=False,
              scaley=False)
-    if date is not None:
-        axe.set_xlabel(date.strftime('%Y-%m-%d %Hh'))
+
+    if type(legend) == int or type(legend) == str:
+        axe.set_xlabel(legend)
+    elif legend is not None:
+        axe.set_xlabel(legend.strftime('%Y-%m-%d %Hh'))
     axe.set_title('RAM - Snowgrain', y=1.04)
 
     axe.xaxis.set_major_locator(ticker.MaxNLocator(4))

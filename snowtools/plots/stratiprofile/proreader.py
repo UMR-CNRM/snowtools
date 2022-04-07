@@ -843,9 +843,6 @@ class proreader(reader):
                 lf, ln = self._get_member_filenames_one(fn_abs)
                 llf.append(lf)
                 lln.append(ln)
-            print('1')
-            print(llf)
-            print(lln)
 
             # check for consistency between length and generate full list
             # in the right order (list of members)
@@ -872,18 +869,12 @@ class proreader(reader):
                     lmbi.append(llf[i][j])
                 lmb.append(lmbi)
 
-            print('2')
-            print(lmb)
-            print(ln)
-
             return lmb, ln
 
         else:
             filename = os.path.abspath(self._filename)
             lf, ln = self._get_member_filenames_one(filename)
-            print('3')
-            print(lf)
-            print(ln)
+
             return lf, ln
 
     def get_data_members(self, varname, point, fillnan=False, members='all',

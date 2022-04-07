@@ -629,7 +629,6 @@ class ProPlotterChoicesBar_Params_Member(ProPlotterChoicesBar_Params):
         value = self.scale_date.get()
         if value != self._dateslice:
             self._dateslice = value
-        # ICI METTRE UN MOTION MASTER POUR FAIRE REAGIR LA FIGURE !!
 
     @property
     def var_dateslice(self):
@@ -658,6 +657,8 @@ class ProPlotterController(abc.ABC):
         self.same_y = True
         self.toolbar = None
         self.point = None
+        self.x_legend = None
+        self.ymax_react = None
         if self.master.fileobj is not None:
             self.colormap = self.master.fileobj.colorbar_variable('')
 
@@ -688,13 +689,29 @@ class ProPlotterController(abc.ABC):
         self.vartoplot_react_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_react)
         self.dataplot_react = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], self.point)
         self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, self.point, fillnan=0.)
+        self.timeplot = self.master.fileobj.get_time()
+        self.colormap = self.master.fileobj.colorbar_variable(self.vartoplot_master_desc['name'])
+
+        self.ymax_react = np.max(np.nansum(self.dztoplot, axis=1))
+
+        # usefull for motion
+        if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
+            self.grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, self.point, fillnan=0.)
+        if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
+            self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, self.point, fillnan=0.)
+        if self.vartoplot_react_desc['name'] in self.master.fileobj.variables_log:
+            self.dataplot_react = np.where(self.dataplot_react > 10 ** (-10), self.dataplot_react, 10 ** (-10))
+            self.dataplot_react = np.where(self.dataplot_react > 0, np.log10(self.dataplot_react), -10)
+
+        print(type(self.timeplot))
+        print(self.timeplot.shape)
 
     def get_data_master1d(self):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
         self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], self.point)
-        self.timeplot = self.master.fileobj.get_time()
+
         return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_legend=self.timeplot)
 
     def get_data_mastersaison(self):
@@ -702,18 +719,34 @@ class ProPlotterController(abc.ABC):
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
         self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], self.point)
-        self.timeplot = self.master.fileobj.get_time()
-        self.colormap = self.master.fileobj.colorbar_variable(self.vartoplot_master_desc['name'])
+
+
         return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_legend=self.timeplot, dz=self.dztoplot,
                     colormap=self.colormap)
 
-    def get_data_react(self):
+    def get_data_react(self, x_event):
         """
          Collecting datas for the reacting figure, depending of the choice for the graph type.
          """
         limitplot_react = self.master.fileobj.limits_variable(self.vartoplot_react_desc['name'])
+
+        xindex = min(int(x_event), self.dztoplot.shape[0] - 1)
+        date = self.timeplot[xindex]
+        data_date = self.dataplot_react[xindex, :]
+        dz_date = self.dztoplot[xindex, :]
+        if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
+            grain_date = self.grain[xindex, :]
+        else:
+            grain_date = None
+
+        if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
+            ram_date = self.ram[xindex, :]
+        else:
+            ram_date = None
+
         return dict(axe=self.master.main.ax2, axe2=self.master.main.ax3, cbar_show=self.master.main.first_profil,
-                    xlimit=limitplot_react)
+                    xlimit=limitplot_react, value=data_date, value_dz=dz_date, value_grain=grain_date,
+                    value_ram=ram_date, legend=date)
 
     def masterfig1d(self, **kwargs):
         return profilPlot.saison1d(**kwargs)
@@ -739,21 +772,6 @@ class ProPlotterController(abc.ABC):
             if self.stop_right_click:
                 return
             if event.inaxes == self.master.main.ax1:
-                print(self.dztoplot)
-                xindex = min(int(event.xdata), self.dztoplot.shape[0]-1)
-                date = self.timeplot[xindex]
-                data_date = self.dataplot_react[xindex, :]
-                dz_date = self.dztoplot[xindex, :]
-                if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
-                    grain_date = self.grain[xindex, :]
-                else:
-                    grain_date = None
-
-                if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
-                    ram_date = self.ram[xindex, :]
-                else:
-                    ram_date = None
-
                 if trace_hauteur is None:
                     hauteur = None
                 else:
@@ -762,9 +780,8 @@ class ProPlotterController(abc.ABC):
                 self.master.main.ax2.lines = []
                 self.master.main.ax3.clear()
 
-                dico = self.get_data_react()
-                dico.update(dict(value=data_date, value_dz=dz_date, value_grain=grain_date, value_ram=ram_date,
-                                 hauteur=hauteur, date=date))
+                dico = self.get_data_react(event.xdata)
+                dico.update(dict(hauteur=hauteur))
                 self.reactfig(**dico)
 
                 self.master.main.first_profil = False
@@ -786,25 +803,17 @@ class ProPlotterController(abc.ABC):
             if self.vartoplot_master_desc['has_snl']:
                 self.master.main.ready_to_plot(self.same_y, 2)
                 if not self.same_y:
-                    self.master.main.ax2.set_ylim(0, np.max(np.nansum(self.dztoplot, axis=1)))
+                    self.master.main.ax2.set_ylim(0, self.ymax_react)
                 self.master.main.toberemoved.destroy()
                 self.masterfigsaison(**self.get_data_mastersaison())
                 trace_hauteur = True
             else:
                 self.master.main.ready_to_plot(False, 2)
-                self.master.main.ax2.set_ylim(0, np.max(np.nansum(self.dztoplot, axis=1)))
+                self.master.main.ax2.set_ylim(0, self.ymax_react)
                 self.master.main.toberemoved.destroy()
                 self.masterfig1d(**self.get_data_master1d())
                 trace_hauteur = None
 
-            # usefull for motion
-            if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
-                self.grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, self.point, fillnan=0.)
-            if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
-                self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, self.point, fillnan=0.)
-            if self.vartoplot_react_desc['name'] in self.master.fileobj.variables_log:
-                self.dataplot_react = np.where(self.dataplot_react > 10 ** (-10), self.dataplot_react, 10 ** (-10))
-                self.dataplot_react = np.where(self.dataplot_react > 0, np.log10(self.dataplot_react), -10)
             self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
             self.master.main.Canevas.mpl_connect('button_press_event', button_press)
 
@@ -863,6 +872,8 @@ class ProPlotterController_Member(ProPlotterController):
     def __init__(self, master):
         self.master = master
         super().__init__(master)
+        self.dateslice = None
+        self.first_master = True
 
     def warningtextbar(self):
         v_master = self.master.choices.variables_w.var_master
@@ -874,62 +885,110 @@ class ProPlotterController_Member(ProPlotterController):
         """
         Collecting datas for figures, before subsetting with motions
         """
-        dateslice = self.master.choices.params_w.var_dateslice
         self.vartoplot_master_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_master)
+        self.dataplot_master, list_members = self.master.fileobj.get_data(self.vartoplot_master_desc['name'],
+                                                                          self.point, members='all')
         self.vartoplot_react_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_react)
+        self.dataplot_react = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], self.point,
+                                                           members='all')[0]
+
+        self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, self.point, fillnan=0.,
+                                                     members='all')[0]
         self.timeplot = self.master.fileobj.get_time()
-        dat=self.timeplot[dateslice]
-        self.dataplot_react, list_members = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], self.point,
-                                                                         members='all', begin=dat, end=dat)
-        self.dztoplot, list_members = self.master.fileobj.get_data(self.master.fileobj.variable_dz, self.point,
-                                                                   fillnan=0., members='all', begin=dat,
-                                                                   end=dat)
-        self.dztoplot=np.array(self.dztoplot)
-        self.dataplot_react=np.array(self.dataplot_react)
+        self.colormap = self.master.fileobj.colorbar_variable(self.vartoplot_master_desc['name'])
 
-        test_write, list_members = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], self.point,
-                                                                members='all')
-        print('test_write')
-        print(test_write)
-        print(type(test_write))
-        print(len(test_write))
-        print(test_write[0])
-        print(type(test_write[0]))
-        toto=np.array(test_write)
-        print(np.shape(toto))
+        # usefull for motion
+        if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
+            self.grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, self.point, fillnan=0.,
+                                                      members='all')[0]
+        if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
+            self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, self.point, fillnan=0.,
+                                                    members='all')[0]
+        if self.vartoplot_react_desc['name'] in self.master.fileobj.variables_log:
+            self.dataplot_react = np.where(self.dataplot_react > 10 ** (-10), self.dataplot_react, 10 ** (-10))
+            self.dataplot_react = np.where(self.dataplot_react > 0, np.log10(self.dataplot_react), -10)
 
+        self.dataplot_master = np.array(self.dataplot_master)
+        self.dataplot_react = np.array(self.dataplot_react)
+        self.dztoplot = np.array(self.dztoplot)
+        self.grain = np.array(self.grain)
+        self.ram = np.array(self.ram)
+        self.ymax_react = np.max(np.nansum(self.dztoplot, axis=1))
+        self.x_legend = list_members
+        self.dateslice = self.master.choices.params_w.var_dateslice
+        if self.dateslice is None:
+            self.dateslice = 0
+
+        self.master.choices.params_w.scale_date.config(from_=0, to=(len(self.master.fileobj.get_time()) - 1),
+                                                       state='normal', showvalue=0, command=self.update_slice_date,
+                                                       variable=tk.IntVar)
+
+    def update_slice_date(self, value):
+        """
+        Redraw the ax1 graph and clear ax2 and ax3
+        """
+        self.dateslice = self.master.choices.params_w.scale_date.get()
+        self.first_master = False
+
+        self.master.main.ax1.clear()
+        self.master.main.ax2.lines = []
+        self.master.main.ax3.clear()
+
+        if not self.master.choices.variables_w.exists_snl:
+            self.masterfig1d(**self.get_data_master1d())
+        else:
+            if self.vartoplot_master_desc['has_snl']:
+                self.masterfigsaison(**self.get_data_mastersaison())
+            else:
+                self.masterfig1d(**self.get_data_master1d())
+
+        self.master.main.Canevas.draw()
+        self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
     def get_data_master1d(self):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
-        dateslice = self.master.choices.params_w.var_dateslice
-        dat=self.timeplot[dateslice]
-        self.dataplot_master, list_members = self.master.fileobj.get_data(self.vartoplot_master_desc['name'],
-                                                                          self.point, members='all', begin=dat,
-                                                                          end=dat)
-        return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_legend=list_members)
+        dataplot_master = self.dataplot_master[:, self.dateslice, :]
+        if self.dztoplot is not None:
+            self.dztoplot = self.dztoplot[:, self.dateslice, :]
+
+        return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend,
+                    title=self.timeplot[self.dateslice])
 
     def get_data_mastersaison(self):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
-        dateslice = self.master.choices.params_w.var_dateslice
-        dat = self.timeplot[dateslice]
-        self.dataplot_master, list_members = self.master.fileobj.get_data(self.vartoplot_master_desc['name'],
-                                                                          self.point, members='all', begin=dat,
-                                                                          end=dat)
-        self.colormap = self.master.fileobj.colorbar_variable(self.vartoplot_master_desc['name'])
-        return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_legend=list_members, dz=self.dztoplot,
-                    colormap=self.colormap)
+        dataplot_master = self.dataplot_master[:, self.dateslice, :]
+        dztoplot = self.dztoplot[:, self.dateslice, :]
 
-    def get_data_react(self):
+        return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend, dz=dztoplot,
+                    colormap=self.colormap, title=self.timeplot[self.dateslice], cbar_show=self.first_master)
+
+    def get_data_react(self, x_event):
         """
          Collecting datas for the reacting figure, depending of the choice for the graph type.
          """
         limitplot_react = self.master.fileobj.limits_variable(self.vartoplot_react_desc['name'])
+
+        xindex = min(int(x_event), self.dztoplot.shape[0] - 1)
+        legend_member = "member " + str(self.x_legend[xindex])
+        data_member = self.dataplot_react[xindex, self.dateslice, :]
+        dz_member = self.dztoplot[xindex, self.dateslice, :]
+        if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
+            grain_date = self.grain[xindex, self.dateslice, :]
+        else:
+            grain_date = None
+
+        if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
+            ram_date = self.ram[xindex, self.dateslice, :]
+        else:
+            ram_date = None
+
         return dict(axe=self.master.main.ax2, axe2=self.master.main.ax3, cbar_show=self.master.main.first_profil,
-                    xlimit=limitplot_react)
+                    xlimit=limitplot_react, value=data_member, value_dz=dz_member, value_grain=grain_date,
+                    value_ram=ram_date, legend=legend_member)
 
     def masterfig1d(self, **kwargs):
         return profilPlot.saison1d(**kwargs)
@@ -939,22 +998,6 @@ class ProPlotterController_Member(ProPlotterController):
 
     def reactfig(self, **kwargs):
         return profilPlot.dateProfil(**kwargs)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def main(*args, **kwargs):
