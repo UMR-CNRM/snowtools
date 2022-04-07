@@ -606,7 +606,7 @@ class ProPlotterChoicesBar_Params_Height(ProPlotterChoicesBar_Params):
         return self._height
 
 
-class ProPlotterChoicesBar_Params_DateSlicer(ProPlotterChoicesBar_Params):
+class ProPlotterChoicesBar_Params_Member(ProPlotterChoicesBar_Params):
     def __init__(self, master, frame):
         super().__init__(master, frame)
         self._dateslice = None
@@ -616,35 +616,27 @@ class ProPlotterChoicesBar_Params_DateSlicer(ProPlotterChoicesBar_Params):
 
     def update(self):
         self.clean_frame()
-        self.label = tk.Label(self.frame, text='Date Slicer', relief=tk.RAISED)
+        self.label = tk.Label(self.frame, text='Choice for Date', relief=tk.RAISED)
         self.label.pack()
         if self.master.fileobj is not None:
-            self.scale_date = ttk.Scale(self, orient='horizontal', state='disabled', label='Echelle de dates',
-                                        width=self.master.choices.WIDTH)
-            self.scale_date.config(from_=0, to=(len(self.master.controls.timeplot) - 1), state='normal', showvalue=0,
+            self.scale_date = tk.Scale(self.frame, orient='horizontal', state='disabled',
+                                       label='Use the slicer to choose the date')
+            self.scale_date.config(from_=0, to=(len(self.master.fileobj.get_time()) - 1), state='normal', showvalue=0,
                                    command=self.update_slice_date, variable=tk.IntVar)
-            self.scale_date.pack()
+            self.scale_date.pack(expand=1, fill=tk.BOTH)
 
     def update_slice_date(self, *args):
         value = self.scale_date.get()
         if value != self._dateslice:
             self._dateslice = value
+        # ICI METTRE UN MOTION MASTER POUR FAIRE REAGIR LA FIGURE !!
 
     @property
     def var_dateslice(self):
         return self._dateslice
 
 
-class ProPlotterChoicesBar_Params_Member(ProPlotterChoicesBar_Params_DateSlicer):
-    def __init__(self, master, frame):
-        super().__init__(master, frame)
-        self.update()
-
-    def update(self):
-        pass
-
-
-class ProPlotterChoicesBar_Params_Massif(ProPlotterChoicesBar_Params_DateSlicer):
+class ProPlotterChoicesBar_Params_Massif(ProPlotterChoicesBar_Params):
     pass
 
 
@@ -747,6 +739,7 @@ class ProPlotterController(abc.ABC):
             if self.stop_right_click:
                 return
             if event.inaxes == self.master.main.ax1:
+                print(self.dztoplot)
                 xindex = min(int(event.xdata), self.dztoplot.shape[0]-1)
                 date = self.timeplot[xindex]
                 data_date = self.dataplot_react[xindex, :]
@@ -881,32 +874,53 @@ class ProPlotterController_Member(ProPlotterController):
         """
         Collecting datas for figures, before subsetting with motions
         """
+        dateslice = self.master.choices.params_w.var_dateslice
         self.vartoplot_master_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_master)
         self.vartoplot_react_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_react)
-        self.dataplot_react = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], self.point, members=True)
-        self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, self.point, fillnan=0.,
-                                                     members=True)
+        self.timeplot = self.master.fileobj.get_time()
+        dat=self.timeplot[dateslice]
+        self.dataplot_react, list_members = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], self.point,
+                                                                         members='all', begin=dat, end=dat)
+        self.dztoplot, list_members = self.master.fileobj.get_data(self.master.fileobj.variable_dz, self.point,
+                                                                   fillnan=0., members='all', begin=dat,
+                                                                   end=dat)
+        self.dztoplot=np.array(self.dztoplot)
+        self.dataplot_react=np.array(self.dataplot_react)
+
+        test_write, list_members = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], self.point,
+                                                                members='all')
+        print('test_write')
+        print(test_write)
+        print(type(test_write))
+        print(len(test_write))
+        print(test_write[0])
+        print(type(test_write[0]))
+        toto=np.array(test_write)
+        print(np.shape(toto))
+
 
     def get_data_master1d(self):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
         dateslice = self.master.choices.params_w.var_dateslice
-        self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], self.point,
-                                                            members=True, begin=dateslice, end=dateslice)
-        self.timeplot = self.master.fileobj.get_time()
-        return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_legend=self.timeplot)
+        dat=self.timeplot[dateslice]
+        self.dataplot_master, list_members = self.master.fileobj.get_data(self.vartoplot_master_desc['name'],
+                                                                          self.point, members='all', begin=dat,
+                                                                          end=dat)
+        return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_legend=list_members)
 
     def get_data_mastersaison(self):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
         dateslice = self.master.choices.params_w.var_dateslice
-        self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], self.point,
-                                                            members=True, begin=dateslice, end=dateslice)
-        self.timeplot = self.master.fileobj.get_time()
+        dat = self.timeplot[dateslice]
+        self.dataplot_master, list_members = self.master.fileobj.get_data(self.vartoplot_master_desc['name'],
+                                                                          self.point, members='all', begin=dat,
+                                                                          end=dat)
         self.colormap = self.master.fileobj.colorbar_variable(self.vartoplot_master_desc['name'])
-        return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_legend=self.timeplot, dz=self.dztoplot,
+        return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_legend=list_members, dz=self.dztoplot,
                     colormap=self.colormap)
 
     def get_data_react(self):

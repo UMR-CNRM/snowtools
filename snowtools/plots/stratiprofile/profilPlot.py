@@ -70,6 +70,7 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax
     """
 
     value = np.array(value)
+    dz = np.array(dz)
 
     class MidpointNormalize(colors.Normalize):
         def __init__(self, vmin=None, vmax=None, vcenter=None, clip=False):
@@ -82,6 +83,8 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax
 
     top_y = np.cumsum(dz[:, ::-1], axis=1)[:, ::-1].ravel()
     bottom_y = top_y - dz.ravel()
+    print(top_y)
+    print(bottom_y)
 
     left_x = np.ones(shape=dz.shape, dtype='int')
     left_x = np.cumsum(left_x, axis=0).ravel()
