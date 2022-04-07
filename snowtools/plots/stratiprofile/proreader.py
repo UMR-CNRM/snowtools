@@ -816,7 +816,7 @@ class proreader(reader):
         lf = []  # List of filenames
         ln = []  # List of numbers
         for elem in os.listdir(m.group('prefix')):
-            m2 = re.match('mb(?P<nr>[0-9]*)')
+            m2 = re.match('mb(?P<nr>[0-9]*)', elem)
             if m2 is None:
                 continue
             fn = os.path.join(m.group('prefix'), elem, m.group('suffix'))
@@ -825,7 +825,7 @@ class proreader(reader):
                 continue
             lf.append(fn)
             ln.append(nr)
-            return lf, ln
+        return lf, ln
 
     def _get_member_filenames(self):
         """
