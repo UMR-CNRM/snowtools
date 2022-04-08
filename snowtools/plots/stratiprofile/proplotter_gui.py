@@ -484,6 +484,7 @@ class ProPlotterMain(tk.Frame):
         self.ax2 = None
         self.ax3 = None
         self.first_profil = True
+        self.toolbar = None
         self.Canevas = FigureCanvasTkAgg(self.fig1, self)
 
         self.update_idletasks()
@@ -572,7 +573,7 @@ class ProPlotterChoicesBar_Params_Height(ProPlotterChoicesBar_Params):
         self.label = tk.Label(self.frame, text='Choice of direction and height', relief=tk.RAISED)
         self.label.pack()
         if self.master.fileobj is not None:
-            direction_list = ['up', 'down']
+            direction_list = ['from ground to top of snow layer', 'from top of snow layer to ground']
             self.label1 = tk.Label(self.frame, text='Direction:')
             self.label1.pack()
             self.choice_direction = ttk.Combobox(self.frame, state='readonly', values=direction_list,
@@ -655,7 +656,6 @@ class ProPlotterController(abc.ABC):
         self.grain = None
         self.ram = None
         self.same_y = True
-        self.toolbar = None
         self.point = None
         self.x_legend = None
         self.ymax_react = None
@@ -817,11 +817,11 @@ class ProPlotterController(abc.ABC):
             self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
             self.master.main.Canevas.mpl_connect('button_press_event', button_press)
 
-        if self.toolbar is None:
-            self.toolbar = NavigationToolbar2Tk(self.master.main.Canevas, self.master.main)
-            self.toolbar.pack()
-        if self.toolbar is not None:
-            self.toolbar.update()
+        if self.master.main.toolbar is None:
+            self.master.main.toolbar = NavigationToolbar2Tk(self.master.main.Canevas, self.master.main)
+            self.master.main.toolbar.pack()
+        if self.master.main.toolbar is not None:
+            self.master.main.toolbar.update()
 
         self.master.main.Canevas.draw()
         self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
@@ -916,6 +916,7 @@ class ProPlotterController_Member(ProPlotterController):
         self.ymax_react = np.max(np.nansum(self.dztoplot, axis=1))
         self.x_legend = list_members
         self.dateslice = self.master.choices.params_w.var_dateslice
+        self.first_master = True
         if self.dateslice is None:
             self.dateslice = 0
 
