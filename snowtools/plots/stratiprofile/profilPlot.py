@@ -22,7 +22,7 @@ logger = logging.getLogger()
 
 
 def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax=None, legend=None, cbar_show=True,
-                 title=None):
+                 title=None, ylimit=None,):
     """
     Trace le profil de value en fonction du temps avec les epaisseurs reelles de couches
 
@@ -43,10 +43,16 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax
     :type colormap: str or matplotlib colormap
     :param legend: legend for the colorbar
     :type legend: str
+    :param vmin: not clear (use for nomalisation ?)
+    :type vmin: float
+    :param vmax: not clear (use for nomalisation ?)
+    :type vmax: float
     :param cbar_show: Whether or not to plot the colorbar
     :type cbar_show: bool
     :param title: title (date for member plots for example)
     :type title: str
+    :param ylimit: give the upper y-limit for the variable (= max of thickness in all the season normally)
+    :type ylimit: float
 
     Note that ``dz`` should not contain ``nan`` values. Layers that are not used sould be filled with
     a zero value for depth.
@@ -209,6 +215,9 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax
     if title is not None:
         ax.set_title(title)
 
+    if ylimit is not None:
+        ax.set_ylim(0, ylimit)
+
 
 def plot_grains1D(ax, dz, value, legend=None, cbar_show=True):
     """
@@ -254,7 +263,7 @@ def plot_grains1D(ax, dz, value, legend=None, cbar_show=True):
         ax.set_xlabel(legend)
 
 
-def saison1d(ax, value, list_legend, legend=None, color='b.', title=None):
+def saison1d(ax, value, list_legend, legend=None, color='b.', title=None, ylimit=None):
     """
     Trace la variable demandee en fonction du temps
     :param ax: figure axis
@@ -263,10 +272,14 @@ def saison1d(ax, value, list_legend, legend=None, color='b.', title=None):
     :type value: numpy array
     :param list_legend: list for x axis legend. The dates where there are some datas to be plotted for standard graphs
     :type list_legend: numpy array
-    :param color: color name
-    :type color: str
     :param legend: legend for the colorbar
     :type legend: str
+    :param color: color name
+    :type color: str
+    :param title: title (date for member plots for example)
+    :type title: str
+    :param ylimit: give the upper y-limit for the variable (= max of thickness in all the season normally)
+    :type ylimit: float
     """
     if legend:
         ax.set_xlabel(legend)
@@ -286,6 +299,8 @@ def saison1d(ax, value, list_legend, legend=None, color='b.', title=None):
 
     if title is not None:
         ax.set_title(title)
+    if ylimit is not None:
+        ax.set_ylim(0, ylimit)
 
     ax.plot(value, color)
 
