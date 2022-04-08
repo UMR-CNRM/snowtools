@@ -113,6 +113,12 @@ class ProPlotterApplication(tk.Frame):
     def to_graph_reset(self):
         if self.choices.params_w is not None:
             self.choices.params_w.clean_frame()
+        if self.master.main.ax1 is not None:
+            self.master.main.ax1.clear()
+        if self.master.main.ax2 is not None:
+            self.master.main.ax2.clear()
+        if self.master.main.ax3 is not None:
+            self.master.main.ax3.clear()
 
     def to_graph_standard(self):
         self.to_graph_reset()
@@ -126,8 +132,9 @@ class ProPlotterApplication(tk.Frame):
 
     def to_graph_height(self):
         self.to_graph_reset()
-        self.controller = ProPlotterController_Height(self)
         self.choices.params_w = ProPlotterChoicesBar_Params_Height(self, self.choices.params)
+        self.controller = ProPlotterController_Height(self)
+
 
     def to_graph_member(self):
         self.to_graph_reset()
@@ -484,6 +491,7 @@ class ProPlotterMain(tk.Frame):
         self.ax2 = None
         self.ax3 = None
         self.first_profil = True
+        self.first_master = True
         self.toolbar = None
         self.Canevas = FigureCanvasTkAgg(self.fig1, self)
 
@@ -560,7 +568,7 @@ class ProPlotterChoicesBar_Params_Height(ProPlotterChoicesBar_Params):
     def __init__(self, master, frame):
         super().__init__(master, frame)
         self._direction = None
-        self._height = None
+        self._height = 8.3
         self.label = None
         self.label1 = None
         self.label2 = None
@@ -581,22 +589,27 @@ class ProPlotterChoicesBar_Params_Height(ProPlotterChoicesBar_Params):
             self.choice_direction.bind('<<ComboboxSelected>>', self.update_direction)
             self.choice_direction.pack()
 
-            self.label2 = tk.Label(self.frame, text='Height in cm (press <Return> to validate):')
+            self.label2 = tk.Label(self.frame, text='Height in cm (default = 8.3 cm):')
             self.label2.pack()
             height = tk.DoubleVar()
             self.choice_height = ttk.Entry(self.frame, textvariable=height, width=self.master.choices.WIDTH)
-            self.choice_height.bind("<Return>", self.update_height)
             self.choice_height.pack()
 
     def update_direction(self, *args):
         value = self.choice_direction.get()
-        if value != self._direction:
-            self._direction = value
+        if value == 'from ground to top of snow layer':
+            self._direction = 'up'
+        elif value == 'from top of snow layer to ground':
+            self._direction = 'down'
 
     def update_height(self, *args):
-        value = self.choice_height.get()
-        if value != self._height:
+        if self.choice_height is None:
+            value = 8.3
+        else:
+            value = self.choice_height.get()
+        if value is not None:
             self._height = float(value)
+
 
     @property
     def var_direction(self):
@@ -702,9 +715,6 @@ class ProPlotterController(abc.ABC):
         if self.vartoplot_react_desc['name'] in self.master.fileobj.variables_log:
             self.dataplot_react = np.where(self.dataplot_react > 10 ** (-10), self.dataplot_react, 10 ** (-10))
             self.dataplot_react = np.where(self.dataplot_react > 0, np.log10(self.dataplot_react), -10)
-
-        print(type(self.timeplot))
-        print(self.timeplot.shape)
 
     def get_data_master1d(self):
         """
@@ -863,6 +873,7 @@ class ProPlotterController_Height(ProPlotterController):
         self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], self.point)
         self.timeplot = self.master.fileobj.get_time()
         self.direction = self.master.choices.params_w.var_direction
+        self.master.choices.params_w.update_height()
         self.height = self.master.choices.params_w.var_height
         return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_legend=self.timeplot,
                     value_ep=self.dztoplot, direction_cut=self.direction, height_cut=self.height)
@@ -873,7 +884,7 @@ class ProPlotterController_Member(ProPlotterController):
         self.master = master
         super().__init__(master)
         self.dateslice = None
-        self.first_master = True
+
 
     def warningtextbar(self):
         v_master = self.master.choices.variables_w.var_master
@@ -913,10 +924,9 @@ class ProPlotterController_Member(ProPlotterController):
         self.dztoplot = np.array(self.dztoplot)
         self.grain = np.array(self.grain)
         self.ram = np.array(self.ram)
-        self.ymax_react = np.max(np.nansum(self.dztoplot, axis=1))
+        self.ymax_react = np.max(np.nansum(self.dztoplot, axis=2))
         self.x_legend = list_members
         self.dateslice = self.master.choices.params_w.var_dateslice
-        self.first_master = True
         if self.dateslice is None:
             self.dateslice = 0
 
@@ -929,7 +939,7 @@ class ProPlotterController_Member(ProPlotterController):
         Redraw the ax1 graph and clear ax2 and ax3
         """
         self.dateslice = self.master.choices.params_w.scale_date.get()
-        self.first_master = False
+        self.master.main.first_master = False
 
         self.master.main.ax1.clear()
         self.master.main.ax2.lines = []
@@ -965,7 +975,8 @@ class ProPlotterController_Member(ProPlotterController):
         dztoplot = self.dztoplot[:, self.dateslice, :]
 
         return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend, dz=dztoplot,
-                    colormap=self.colormap, title=self.timeplot[self.dateslice], cbar_show=self.first_master)
+                    colormap=self.colormap, title=self.timeplot[self.dateslice],
+                    cbar_show=self.master.main.first_master)
 
     def get_data_react(self, x_event):
         """
@@ -991,14 +1002,14 @@ class ProPlotterController_Member(ProPlotterController):
                     xlimit=limitplot_react, value=data_member, value_dz=dz_member, value_grain=grain_date,
                     value_ram=ram_date, legend=legend_member)
 
-    def masterfig1d(self, **kwargs):
+    '''def masterfig1d(self, **kwargs):
         return profilPlot.saison1d(**kwargs)
 
     def masterfigsaison(self, **kwargs: dict):
         return profilPlot.saisonProfil(**kwargs)
 
     def reactfig(self, **kwargs):
-        return profilPlot.dateProfil(**kwargs)
+        return profilPlot.dateProfil(**kwargs)'''
 
 
 def main(*args, **kwargs):
