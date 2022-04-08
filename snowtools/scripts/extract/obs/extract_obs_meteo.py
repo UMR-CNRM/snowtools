@@ -157,6 +157,12 @@ else:
 # ------
 
 if args.rr:
+    # WARNING 1 : l'extraction de la table Q fournit des cumuls entre 0:00 J-1 et 0:00 J
+    # pour avoir des observations entre 6:00 J-1 et 6:00 J il faut extraire les valeurs horaires
+    # puis faire le cumul à la main.
+    # WARNING 2 : l'extraction pour la date y/m/d correspond au cumul entre y/m/d à 0:00
+    # et y/m/(d+1) à 0:00
+
     question1 = question(
             listvar=["dat", f"{table}.num_poste", "poste.nom_usuel", "poste.alti", "rr"+sufix],
             table=table,
