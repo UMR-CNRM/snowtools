@@ -64,8 +64,8 @@ from matplotlib.collections import PatchCollection
 import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
 import cartopy.feature
-from snowtools.plots.abstracts.figures import Mplfigure
-from snowtools.utils.infomassifs import infomassifs
+from plots.abstracts.figures import Mplfigure
+from utils.infomassifs import infomassifs
 from pyproj import CRS
 from cartopy import config
 from shapely.geometry import box
@@ -153,7 +153,7 @@ class _Map_massifs(Mplfigure):
 
     #@echecker.disabled_if_unavailable
     def getshapes(self):
-        shapefile_path = os.path.join(os.environ['SNOWTOOLS_CEN'], 'snowtools', 'DATA')
+        shapefile_path = os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')
         filename = 'massifs_{0:s}.shp'.format(self.area)
         self.shapefile = shpreader.Reader(os.path.join(shapefile_path, filename))
         # Informations sur la projection
@@ -339,7 +339,7 @@ class _Map_massifs(Mplfigure):
         else:
             self.map.plot(lon, lat, marker=marker, color=color, linestyle='', zorder=3)
 
-    def highlight_massif(self, massifs, fillvalues, **kwargs):
+    def highlight_massif(self, massifs, **kwargs):
 
         # if massif contours are not yet created, draw them
         if not hasattr(self, 'massif_features'):
@@ -822,22 +822,22 @@ class Zoom_massif(_Map_massifs):
     def __init__(self, num_massif, *args, **kw):
         if num_massif <= 24:
             self.area = 'alpes'
-            self.width = 9 
-            self.height = 8 
+            self.width = 12 
+            self.height = 11 
             self.legendpos = [0.91, 0.15, 0.03, 0.6]
-            self.mappos=[0.05, 0.03, 0.8, 0.8]
+            self.mappos=[0.05, 0.03, 0.9, 0.9]
             self.titlepad = 25
         elif num_massif >= 64:
             self.area = 'pyrenees'
-            self.width = 10 
-            self.height = 8 
-            #self.legendpos = [0.91, 0.12, 0.025, 0.6]
+            self.width = 14
+            self.height = 12 
+            self.legendpos = [0.91, 0.15, 0.03, 0.6]
             self.mappos=[0.05, 0.06, 0.8, 0.8]
             self.titlepad = 40 
         else:
             self.area = 'corse'
-            self.width = 9 
-            self.height = 8
+            self.width = 14
+            self.height = 12
             self.legendpos = [0.91, 0.15, 0.03, 0.6]
             self.mappos=[0.05, 0.06, 0.8, 0.8]
             self.titlepad = 25
@@ -857,7 +857,7 @@ class Zoom_massif(_Map_massifs):
         self.get_map_dimensions(num_massif)
         self.fig = plt.figure(figsize=(self.width, self.height))
         self.fig.subplots_adjust(bottom=0.005, left=0.005, top=0.95, right=0.9)
-        self.map = self.getmap(self.latmin, self.latmax, self.lonmin, self.lonmax)
+        self.map = self.getmap(self.latmin, self.latmax, self.lonmin, self.lonmax, **kw)
         self.map.gridlines(draw_labels=True)
         #self.map.drawcoastlines(linewidth=1)
 #        self.map.drawcountries()
@@ -871,11 +871,11 @@ class Zoom_massif(_Map_massifs):
             if num == num_massif:
                 barycentre = self.dicLonLatMassif[num]
         if self.area in ['alpes', 'corse']:
-            dlat = 0.55
-            dlon = 0.65
+            dlat = 0.25
+            dlon = 0.30
         elif self.area == 'pyrenees':
-            dlat = 0.5
-            dlon = 1.3
+            dlat = 0.25
+            dlon = 0.6
 
         self.lonmin = barycentre[0] - dlon
         self.lonmax = barycentre[0] + dlon
