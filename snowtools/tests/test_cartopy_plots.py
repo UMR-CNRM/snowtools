@@ -9,11 +9,18 @@ import numpy as np
 from datetime import datetime
 from snowtools.utils.prosimu import prosimu
 from snowtools.plots.maps import cartopy
+from snowtools.DATA import TESTBASE_DIR
 from netCDF4 import Dataset
 import os
 
+
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-TEST_DATA_DIR = "/rd/cenfic2/manto/viallonl/testbase/PRO"
+TEST_DATA_DIR = os.path.join(TESTBASE_DIR, "PRO")
+# read the index file template and insert the testbase directory
+index = open(os.path.join(THIS_DIR, "Manual_tests", "index_template.html")).read().format(testbase=TESTBASE_DIR)
+# write the index.html file with the right testbase paths
+with open(os.path.join(THIS_DIR, "Manual_tests", "index.html"), 'w') as outfile:
+    outfile.write(index)
 
 
 @unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "postproc", "grid_postproc_2021041112.nc")),
