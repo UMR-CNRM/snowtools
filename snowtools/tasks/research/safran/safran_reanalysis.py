@@ -41,7 +41,7 @@ class Safran(Task, S2MTaskMixIn):
         if len(list_dates) > 120:
             raise ExecutionError("Too many years")
 
-        if 'early-fetch' in self.steps:
+        if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
             for rundate in list_dates:
                 datebegin = rundate
@@ -223,7 +223,6 @@ class Safran(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb03 =', tb03)
                     print()
 
-        if 'fetch' in self.steps:
 
             self.sh.title('Toolbox input tb07')
             tb07 = toolbox.input(
