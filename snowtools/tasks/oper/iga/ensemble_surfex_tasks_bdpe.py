@@ -12,7 +12,7 @@ from vortex.tools.actions import actiond as ad
 
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
-from snowtools.bronx.stdtypes.date import daterange, tomorrow, Date
+from bronx.stdtypes.date import daterange, tomorrow, Date
 import footprints
 
 

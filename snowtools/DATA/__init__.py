@@ -16,3 +16,8 @@ SNOWTOOLS_CEN = os.path.dirname(SNOWTOOLS_DIR)
 """
 Path to git repository base (folder in which snowtools folder is present)
 """
+
+TESTBASE = '/rd/cenfic2/manto/viallonl/testbase'
+"""
+Path to the test base
+"""
