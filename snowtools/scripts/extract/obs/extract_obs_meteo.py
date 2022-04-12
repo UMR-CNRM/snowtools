@@ -164,7 +164,7 @@ if args.rr:
     # et y/m/(d+1) à 0:00
 
     question1 = question(
-            listvar=["dat", f"{table}.num_poste", "poste.nom_usuel", "poste.alti", "rr"+sufix],
+            listvar=["dat", f"{table}.num_poste", "poste.nom_usuel", "poste.alti", "poste.lat_dg", "poste.lon_dg", "rr"+sufix],
             table=table,
             listorder=[f'{table}.num_poste', 'dat'],
             listjoin=[
