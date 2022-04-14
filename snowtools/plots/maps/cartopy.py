@@ -426,17 +426,18 @@ class _Map_massifs(Mplfigure):
         """
         if 'palette' in kwargs.keys():
             if 'ncolors' in kwargs.keys():
-                if matplotlib.__version__ >= '3.3':
+                if matplotlib.__version__ >= '3.4':
+                    # deprecation warning in version 3.3, but copy method not yet implemented
                     palette = plt.get_cmap(kwargs['palette'], kwargs['ncolors']).copy()
                 else:
                     palette = plt.get_cmap(kwargs['palette'], kwargs['ncolors'])
             else:
-                if matplotlib.__version__ >= '3.3':
+                if matplotlib.__version__ >= '3.4':
                     palette = plt.get_cmap(kwargs['palette']).copy()
                 else:
                     palette = plt.get_cmap(kwargs['palette'])
         else:
-            if matplotlib.__version__ >= '3.3':
+            if matplotlib.__version__ >= '3.4':
                 palette = plt.get_cmap('jet').copy()
             else:
                 palette = plt.get_cmap('jet')
