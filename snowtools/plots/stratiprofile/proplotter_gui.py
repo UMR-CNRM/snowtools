@@ -100,8 +100,8 @@ class ProPlotterApplication(tk.Frame):
 
         if typ == 'standard':
             self.to_graph_standard()
-        elif typ == 'massif':
-            self.to_graph_massif_profil()
+        elif typ == 'multiple':
+            self.to_graph_multiple_profil()
         elif typ == 'height':
             self.to_graph_height()
         elif typ == 'member profil':
@@ -130,28 +130,28 @@ class ProPlotterApplication(tk.Frame):
 
     def to_graph_standard(self):
         self.to_graph_reset()
-        self.controller = ProPlotterController_Standard(self)
-        self.choices.params_w = ProPlotterChoicesBar_Params_Standard(self, self.choices.params)
+        self.controller = ProPlotterControllerStandard(self)
+        self.choices.params_w = ProPlotterChoicesBarParamsStandard(self, self.choices.params)
 
-    def to_graph_massif_profil(self):
+    def to_graph_multiple_profil(self):
         self.to_graph_reset()
-        self.controller = ProPlotterController_Massif_Profil(self)
-        self.choices.params_w = ProPlotterChoicesBar_Params_Massif(self, self.choices.params)
+        self.controller = ProPlotterControllerMultipleProfil(self)
+        self.choices.params_w = ProPlotterChoicesBarParamsMultiple(self, self.choices.params)
 
     def to_graph_height(self):
         self.to_graph_reset()
-        self.choices.params_w = ProPlotterChoicesBar_Params_Height(self, self.choices.params)
-        self.controller = ProPlotterController_Height(self)
+        self.choices.params_w = ProPlotterChoicesBarParamsHeight(self, self.choices.params)
+        self.controller = ProPlotterControllerHeight(self)
 
     def to_graph_member_profil(self):
         self.to_graph_reset()
-        self.controller = ProPlotterController_Member_Profil(self)
-        self.choices.params_w = ProPlotterChoicesBar_Params_Member(self, self.choices.params)
+        self.controller = ProPlotterControllerMemberProfil(self)
+        self.choices.params_w = ProPlotterChoicesBarParamsMember(self, self.choices.params)
 
     def to_graph_member_saison(self):
         self.to_graph_reset()
-        self.controller = ProPlotterController_Member_Saison(self)
-        self.choices.params_w = ProPlotterChoicesBar_Params_Member(self, self.choices.params)
+        self.controller = ProPlotterControllerMemberSaison(self)
+        self.choices.params_w = ProPlotterChoicesBarParamsMember(self, self.choices.params)
 
     def open(self, *args):
         self.status.set_status('Open file...')
@@ -185,24 +185,13 @@ class ProPlotterMenu(tk.Menu):
         # Menu 1
         self.typemenu = tk.Menu(self, tearoff=0)
         self.typemenu.add_command(label='Standard', command=self.master.to_graph_standard)
-        self.typemenu.add_command(label='Massif Profil', command=self.master.to_graph_massif_profil)
+        self.typemenu.add_command(label='Multiple Profil', command=self.master.to_graph_multiple_profil)
         self.typemenu.add_command(label='Member Profil', command=self.master.to_graph_member_profil)
         self.typemenu.add_command(label='Member Saison', command=self.master.to_graph_member_saison)
         self.typemenu.add_command(label='Height', command=self.master.to_graph_height)
         self.add_cascade(label='Graph type', menu=self.typemenu)
-        # Menu 2
-        self.langmenu = tk.Menu(self, tearoff=0)
-        self.langmenu.add_command(label='French', command=self.to_French)
-        self.langmenu.add_command(label='English', command=self.to_English)
-        self.add_cascade(label='Change Language', menu=self.langmenu)
         # Config
         self.master.master.config(menu=self)
-
-    def to_French():
-        pass
-
-    def to_English():
-        pass
 
 
 class ProPlotterOpenBar(tk.Frame):
@@ -259,12 +248,12 @@ class ProPlotterChoicesBar(tk.Frame):
         self.params = tk.Frame(self.canvas)
         self.params.pack(fill=tk.X)
 
-        self.variables_w = ProPlotterChoicesBar_Variables(self, self.variables)
-        self.point_w = ProPlotterChoicesBar_Point(self, self.point)
+        self.variables_w = ProPlotterChoicesBarVariables(self, self.variables)
+        self.point_w = ProPlotterChoicesBarPoint(self, self.point)
         self.params_w = None
 
 
-class ProPlotterChoicesBar_Variables:
+class ProPlotterChoicesBarVariables:
     """
     Choice of variables in the opened file
     """
@@ -333,7 +322,7 @@ class ProPlotterChoicesBar_Variables:
             widgets.destroy()
 
 
-class ProPlotterChoicesBar_Point:
+class ProPlotterChoicesBarPoint:
     """
     Choice of points in the opened file
     """
@@ -356,7 +345,6 @@ class ProPlotterChoicesBar_Point:
         if self.master.master.fileobj is not None:
             self.variables_info = self.master.master.fileobj.variables_selection_point
             for v, info in self.variables_info.items():
-                # if v != 'massif_num':
                 label = tk.Label(self.frame, text=info['full_name'])
                 label.pack()
                 choices = list(info['choices'])  # Tkinter knows nothing of numpy arrays...
@@ -501,15 +489,19 @@ class ProPlotterMain(tk.Frame):
         super().__init__(master, relief=tk.RAISED, borderwidth=1)
         self.pack(fill=tk.BOTH, expand=True)
 
-        self.fig1, self.ax1 = plt.subplots(1, 1, sharex=True, sharey=True)
+        self.fig1 = plt.figure()
+        self.ax1 = None
         self.ax2 = None
         self.ax3 = None
+        self.cid = None
         self.first_profil = True
         self.first_master = True
+        self.first_graph = True
         self.ratio1 = 2
         self.ratio2 = 1
-        self.toolbar = None
         self.Canevas = FigureCanvasTkAgg(self.fig1, self)
+        self.toolbar = NavigationToolbar2Tk(self.Canevas, self)
+        self.toolbar.update()
 
         self.update_idletasks()
 
@@ -518,21 +510,34 @@ class ProPlotterMain(tk.Frame):
 
     def clear(self):
         self.toberemoved.destroy()
-        self.Canevas.get_tk_widget().destroy()
+        for e in self.fig1.axes:
+            self.fig1.delaxes(e.axes)
+        if self.cid is not None:
+            self.Canevas.mpl_disconnect(self.cid)
+        self.ax1 = None
+        self.ax2 = None
+        self.ax3 = None
+        self.cid = None
+        self.first_profil = True
+        self.first_master = True
+        self.first_graph = True
 
     def ready_to_plot(self, same_y, nb_graph, rat1=2, rat2=1):
         if nb_graph == 1:
-            self.fig1, self.ax1 = plt.subplots(1, 1, sharex=True, sharey=True)
+            self.ax1 = self.fig1.add_subplot(1, 1, 1)
         elif nb_graph == 2:
             self.first_profil = True
-            self.fig1, (self.ax1, self.ax2) = plt.subplots(ncols=2, gridspec_kw={'width_ratios': [rat1, rat2]},
-                                                           sharex=False, sharey=same_y)
-
-            plt.subplots_adjust(left=0.1, bottom=0.08, wspace=0.1)
+            self.ax1 = self.fig1.add_subplot(1, rat1+rat2, (1, rat1))
+            if same_y:
+                self.ax2 = self.fig1.add_subplot(1, rat1+rat2, (rat1 + 1, rat1 + rat2), sharey=self.ax1)
+            else:
+                self.ax2 = self.fig1.add_subplot(1, rat1+rat2, (rat1 + 1, rat1 + rat2))
+            self.fig1.subplots_adjust(left=0.1, bottom=0.08, wspace=0.1)
             self.ax3 = self.ax2.twiny()
-        self.Canevas = FigureCanvasTkAgg(self.fig1, self)
+
         self.toberemoved = tk.Label(self, text='Plotting area')
         self.toberemoved.pack()
+
 
 
 class ProPlotterStatus(tk.Frame):
@@ -557,7 +562,7 @@ class ProPlotterStatus(tk.Frame):
         self.status.configure(text=status)
 
 
-class ProPlotterChoicesBar_Params(abc.ABC):
+class ProPlotterChoicesBarParams(abc.ABC):
     def __init__(self, master, frame):
         self.master = master
         self.frame = frame
@@ -568,7 +573,7 @@ class ProPlotterChoicesBar_Params(abc.ABC):
                 widgets.destroy()
 
 
-class ProPlotterChoicesBar_Params_Standard(ProPlotterChoicesBar_Params):
+class ProPlotterChoicesBarParamsStandard(ProPlotterChoicesBarParams):
     def __init__(self, master, frame):
         super().__init__(master, frame)
         self.update()
@@ -577,7 +582,7 @@ class ProPlotterChoicesBar_Params_Standard(ProPlotterChoicesBar_Params):
         pass
 
 
-class ProPlotterChoicesBar_Params_Height(ProPlotterChoicesBar_Params):
+class ProPlotterChoicesBarParamsHeight(ProPlotterChoicesBarParams):
     """
      Specific choice for direction and height
      """
@@ -626,7 +631,6 @@ class ProPlotterChoicesBar_Params_Height(ProPlotterChoicesBar_Params):
         if value is not None:
             self._height = float(value)
 
-
     @property
     def var_direction(self):
         return self._direction
@@ -636,7 +640,7 @@ class ProPlotterChoicesBar_Params_Height(ProPlotterChoicesBar_Params):
         return self._height
 
 
-class ProPlotterChoicesBar_Params_Member(ProPlotterChoicesBar_Params):
+class ProPlotterChoicesBarParamsMember(ProPlotterChoicesBarParams):
     def __init__(self, master, frame):
         super().__init__(master, frame)
         self._dateslice = None
@@ -665,7 +669,7 @@ class ProPlotterChoicesBar_Params_Member(ProPlotterChoicesBar_Params):
         return self._dateslice
 
 
-class ProPlotterChoicesBar_Params_Massif(ProPlotterChoicesBar_Params_Member):
+class ProPlotterChoicesBarParamsMultiple(ProPlotterChoicesBarParamsMember):
     def __init__(self, master, frame):
         super().__init__(master, frame)
         self.update()
@@ -687,7 +691,6 @@ class ProPlotterController(abc.ABC):
         self.grain = None
         self.ram = None
         self.same_y = True
-        self.point = None
         self.x_legend = None
         self.ymax_react = None
         self.hauteur = None
@@ -695,32 +698,58 @@ class ProPlotterController(abc.ABC):
             self.colormap = self.master.fileobj.colorbar_variable('')
 
     def get_choice(self):
+        """
+        Check if there is only one point which is selected
+        """
         selector = self.master.choices.point_w.get_selector()
         points = self.master.fileobj.get_points(selector=selector)
         if len(points) > 1:
             error_msg = 'Too much points, please refine you selection'
             messagebox.showerror(title='Too much points', message=error_msg)
-            return
+            return None
         elif len(points) == 0:
             error_msg = 'No points with current selection.'
             messagebox.showerror(title='No point found', message=error_msg)
-            return
-        self.point = points[0]
+            return None
+        return points[0]
 
-    def warningtextbar(self):
+    def info_text_bar(self, point):
+        """
+        Fill the information bar above the graph
+        :param point: the number of the point chosen by the user
+        """
         v_master = self.master.choices.variables_w.var_master
         v_react = self.master.choices.variables_w.var_react
-        text = ' VARS: {}/{}. POINT: {}'.format(v_master, v_react, self.point)
+        text = ' VARS: {}/{}. POINT: {}'.format(v_master, v_react, point)
         self.master.controls.update_text(text)
-
-    def init_data(self):
+        
+    def check_var_info(self):
         """
-        Collecting datas for figures, before subsetting with motions
+        Check if there is a choice for variable(s) to plot
         """
         self.vartoplot_master_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_master)
         self.vartoplot_react_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_react)
-        self.dataplot_react = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], self.point)
-        self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, self.point, fillnan=0.)
+        if self.vartoplot_master_desc['has_snl']:
+            self.same_y = True
+        else:
+            self.same_y = False
+        if self.vartoplot_master_desc is None:
+            error_msg = 'Please choose a variable to plot'
+            messagebox.showerror(title='Missing variable', message=error_msg)
+            return None
+        if self.master.choices.variables_w.exists_snl:
+            if self.vartoplot_react_desc is None:
+                error_msg = 'Please choose a variable for profil plot'
+                messagebox.showerror(title='Missing variable', message=error_msg)
+                return None
+
+    def get_data(self, point):
+        """
+        Collecting datas for figures, before subsetting with motions
+        """
+        self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], point)
+        self.dataplot_react = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], point)
+        self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, point, fillnan=0.)
         self.timeplot = self.master.fileobj.get_time()
         self.colormap = self.master.fileobj.colorbar_variable(self.vartoplot_master_desc['name'])
 
@@ -728,32 +757,27 @@ class ProPlotterController(abc.ABC):
 
         # usefull for motion
         if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
-            self.grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, self.point, fillnan=0.)
+            self.grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.)
         if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
-            self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, self.point, fillnan=0.)
+            self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.)
         if self.vartoplot_react_desc['name'] in self.master.fileobj.variables_log:
             self.dataplot_react = np.where(self.dataplot_react > 10 ** (-10), self.dataplot_react, 10 ** (-10))
             self.dataplot_react = np.where(self.dataplot_react > 0, np.log10(self.dataplot_react), -10)
 
-    def get_data_master1d(self):
+    def give_master1d_args(self):
         """
-        Collecting datas for the master figure, depending of the choice for the graph type.
+        Returns dictionary for the master figure, depending of the choice for the graph type.
         """
-        self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], self.point)
-
         return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_legend=self.timeplot)
 
-    def get_data_mastersaison(self):
+    def give_mastersaison_args(self):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
-        self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], self.point)
-
-
         return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_legend=self.timeplot, dz=self.dztoplot,
                     colormap=self.colormap)
 
-    def get_data_react(self, x_event):
+    def give_react_args(self, x_event):
         """
          Collecting datas for the reacting figure, depending of the choice for the graph type.
          """
@@ -773,9 +797,15 @@ class ProPlotterController(abc.ABC):
         else:
             ram_date = None
 
-        return dict(axe=self.master.main.ax2, axe2=self.master.main.ax3, cbar_show=self.master.main.first_profil,
-                    xlimit=limitplot_react, value=data_date, value_dz=dz_date, value_grain=grain_date,
-                    value_ram=ram_date, legend=date, hauteur=self.hauteur)
+        if self.same_y:
+            return dict(axe=self.master.main.ax2, axe2=self.master.main.ax3, cbar_show=self.master.main.first_profil,
+                        xlimit=limitplot_react, value=data_date, value_dz=dz_date, value_grain=grain_date,
+                        value_ram=ram_date, legend=date, hauteur=self.hauteur)
+        else:
+            return dict(axe=self.master.main.ax2, axe2=self.master.main.ax3, cbar_show=self.master.main.first_profil,
+                        xlimit=limitplot_react, value=data_date, value_dz=dz_date, value_grain=grain_date,
+                        value_ram=ram_date, legend=date, hauteur=self.hauteur, ylimit=self.ymax_react)
+
 
     def masterfig1d(self, **kwargs):
         return profilPlot.saison1d(**kwargs)
@@ -809,7 +839,7 @@ class ProPlotterController(abc.ABC):
                 self.master.main.ax2.clear()
                 self.master.main.ax3.clear()
 
-                dico = self.get_data_react(event.xdata)
+                dico = self.give_react_args(event.xdata)
                 self.reactfig(**dico)
 
                 self.master.main.first_profil = False
@@ -819,37 +849,40 @@ class ProPlotterController(abc.ABC):
         if self.master.fileobj is None:
             return
 
-        self.get_choice()
-        self.warningtextbar()
-        self.init_data()
+        point = self.get_choice()
+        if point is None:
+            return
+        self.check_var_info()
+        self.info_text_bar(point)
+        self.get_data(point)
         self.master.main.clear()
         if not self.master.choices.variables_w.exists_snl:
             self.master.main.ready_to_plot(1)
             self.master.main.toberemoved.destroy()
-            self.masterfig1d(**self.get_data_master1d())
+            self.masterfig1d(**self.give_master1d_args())
         else:
             if self.vartoplot_master_desc['has_snl']:
                 self.master.main.ready_to_plot(self.same_y, 2, self.master.main.ratio1, self.master.main.ratio2)
                 if not self.same_y:
                     self.master.main.ax2.set_ylim(0, self.ymax_react)
                 self.master.main.toberemoved.destroy()
-                self.masterfigsaison(**self.get_data_mastersaison())
+                self.masterfigsaison(**self.give_mastersaison_args())
                 trace_hauteur = True
             else:
                 self.master.main.ready_to_plot(False, 2, self.master.main.ratio1, self.master.main.ratio2)
                 self.master.main.ax2.set_ylim(0, self.ymax_react)
                 self.master.main.toberemoved.destroy()
-                self.masterfig1d(**self.get_data_master1d())
+                self.masterfig1d(**self.give_master1d_args())
                 trace_hauteur = None
 
-            self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
+            self.master.main.cid = self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
             self.master.main.Canevas.mpl_connect('button_press_event', button_press)
 
-        if self.master.main.toolbar is None:
+        '''if self.master.main.toolbar is None:
             self.master.main.toolbar = NavigationToolbar2Tk(self.master.main.Canevas, self.master.main)
             self.master.main.toolbar.pack()
         if self.master.main.toolbar is not None:
-            self.master.main.toolbar.update()
+            self.master.main.toolbar.update()'''
 
         self.master.main.Canevas.draw()
         self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
@@ -861,11 +894,11 @@ class ProPlotterController(abc.ABC):
         # TODO: tbd  <13-09-21, Léo Viallon-Galinier> #
 
 
-class ProPlotterController_Standard(ProPlotterController):
+class ProPlotterControllerStandard(ProPlotterController):
     pass
 
 
-class ProPlotterController_Height(ProPlotterController):
+class ProPlotterControllerHeight(ProPlotterController):
     def __init__(self, master):
         self.master = master
         super().__init__(master)
@@ -874,21 +907,36 @@ class ProPlotterController_Height(ProPlotterController):
         self.same_y = False
         self.masterfigsaison = profilPlot.heightplot
 
-    def warningtextbar(self):
+    def info_text_bar(self, point):
         v_master = self.master.choices.variables_w.var_master
         if not self.master.fileobj.variable_desc(v_master)['has_snl']:
             text = 'WARNING: MISSING SNOW LAYER DIMENSION for HEIGHT GRAPH'
             self.master.controls.update_text(text)
         else:
             v_react = self.master.choices.variables_w.var_react
-            text = 'HEIGHT GRAPH with VARS: {}/{}. POINT: {}'.format(v_master, v_react, self.point)
+            text = 'HEIGHT GRAPH with VARS: {}/{}. POINT: {}'.format(v_master, v_react, point)
             self.master.controls.update_text(text)
 
-    def get_data_mastersaison(self):
+    def check_var_info(self):
+        """
+        Check if there is a choice for variable(s) to plot
+        """
+        self.vartoplot_master_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_master)
+        self.vartoplot_react_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_react)
+        if self.vartoplot_master_desc is None:
+            error_msg = 'Please choose a variable to plot'
+            messagebox.showerror(title='Missing variable', message=error_msg)
+            return None
+        if self.master.choices.variables_w.exists_snl:
+            if self.vartoplot_react_desc is None:
+                error_msg = 'Please choose a variable for profil plot'
+                messagebox.showerror(title='Missing variable', message=error_msg)
+                return None
+
+    def give_mastersaison_args(self):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
-        self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], self.point)
         self.timeplot = self.master.fileobj.get_time()
         self.direction = self.master.choices.params_w.var_direction
         self.master.choices.params_w.update_height()
@@ -897,7 +945,7 @@ class ProPlotterController_Height(ProPlotterController):
                     value_ep=self.dztoplot, direction_cut=self.direction, height_cut=self.height)
 
 
-class ProPlotterController_Slider(ProPlotterController):
+class ProPlotterControllerSlider(ProPlotterController):
     def __init__(self, master):
         self.master = master
         super().__init__(master)
@@ -915,50 +963,50 @@ class ProPlotterController_Slider(ProPlotterController):
         self.master.main.ax3.clear()
 
         if not self.master.choices.variables_w.exists_snl:
-            self.masterfig1d(**self.get_data_master1d())
+            self.masterfig1d(**self.give_master1d_args())
         else:
             if self.vartoplot_master_desc['has_snl']:
-                self.masterfigsaison(**self.get_data_mastersaison())
+                self.masterfigsaison(**self.give_mastersaison_args())
             else:
-                self.masterfig1d(**self.get_data_master1d())
+                self.masterfig1d(**self.give_master1d_args())
 
         self.master.main.Canevas.draw()
         self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
 
-class ProPlotterController_Member_Profil(ProPlotterController_Slider):
+class ProPlotterControllerMember(ProPlotterControllerSlider):
     def __init__(self, master):
         self.master = master
         super().__init__(master)
 
-    def warningtextbar(self):
+    def info_text_bar(self, point):
         v_master = self.master.choices.variables_w.var_master
         v_react = self.master.choices.variables_w.var_react
-        text = 'MEMBER GRAPH with VARS: {}/{}. POINT: {}'.format(v_master, v_react, self.point)
+        text = 'MEMBER GRAPH with VARS: {}/{}. POINT: {}'.format(v_master, v_react, point)
         self.master.controls.update_text(text)
 
-    def init_data(self):
+    def get_data(self, point):
         """
         Collecting datas for figures, before subsetting with motions
         """
         self.vartoplot_master_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_master)
         self.dataplot_master, list_members = self.master.fileobj.get_data(self.vartoplot_master_desc['name'],
-                                                                          self.point, members='all')
+                                                                          point, members='all')
         self.vartoplot_react_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_react)
-        self.dataplot_react = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], self.point,
+        self.dataplot_react = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], point,
                                                            members='all')[0]
 
-        self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, self.point, fillnan=0.,
+        self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, point, fillnan=0.,
                                                      members='all')[0]
         self.timeplot = self.master.fileobj.get_time()
         self.colormap = self.master.fileobj.colorbar_variable(self.vartoplot_master_desc['name'])
 
         # usefull for motion
         if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
-            self.grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, self.point, fillnan=0.,
+            self.grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.,
                                                       members='all')[0]
         if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
-            self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, self.point, fillnan=0.,
+            self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.,
                                                     members='all')[0]
         if self.vartoplot_react_desc['name'] in self.master.fileobj.variables_log:
             self.dataplot_react = np.where(self.dataplot_react > 10 ** (-10), self.dataplot_react, 10 ** (-10))
@@ -976,10 +1024,10 @@ class ProPlotterController_Member_Profil(ProPlotterController_Slider):
             self.dateslice = 0
 
         self.master.choices.params_w.scale_date.config(from_=0, to=(len(self.master.fileobj.get_time()) - 1),
-                                                       state='normal', showvalue=0, command=self.update_slice_date,
-                                                       variable=tk.IntVar)
+                                                       state='normal', showvalue=0, variable=tk.IntVar,
+                                                       command=self.update_slice_date)
 
-    def get_data_master1d(self):
+    def give_master1d_args(self):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
@@ -988,12 +1036,12 @@ class ProPlotterController_Member_Profil(ProPlotterController_Slider):
             self.dztoplot = self.dztoplot[:, self.dateslice, :]
             ylimit = np.max(np.cumsum(self.dztoplot[:, :, :], axis=2))
             return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend,
-                    title=self.timeplot[self.dateslice], ylimit=ylimit)
+                        title=self.timeplot[self.dateslice], ylimit=ylimit)
         else:
             return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend,
-                    title=self.timeplot[self.dateslice])
+                        title=self.timeplot[self.dateslice])
 
-    def get_data_mastersaison(self):
+    def give_mastersaison_args(self):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
@@ -1005,7 +1053,7 @@ class ProPlotterController_Member_Profil(ProPlotterController_Slider):
                     colormap=self.colormap, title=self.timeplot[self.dateslice],
                     cbar_show=self.master.main.first_master, ylimit=ylimit)
 
-    def get_data_react(self, x_event):
+    def give_react_args(self, x_event):
         """
          Collecting datas for the reacting figure, depending of the choice for the graph type.
          """
@@ -1030,7 +1078,13 @@ class ProPlotterController_Member_Profil(ProPlotterController_Slider):
                     value_ram=ram_date, legend=legend_member, hauteur=self.hauteur)
 
 
-class ProPlotterController_Member_Saison(ProPlotterController_Member_Profil):
+class ProPlotterControllerMemberProfil(ProPlotterControllerMember):
+    def __init__(self, master):
+        self.master = master
+        super().__init__(master)
+
+
+class ProPlotterControllerMemberSaison(ProPlotterControllerMember):
     def __init__(self, master):
         self.master = master
         super().__init__(master)
@@ -1040,69 +1094,68 @@ class ProPlotterController_Member_Saison(ProPlotterController_Member_Profil):
     def reactfig(self, **kwargs: dict):
         return profilPlot.saisonProfil(**kwargs)
 
-    def get_data_react(self, x_event):
+    def give_react_args(self, x_event):
         """
          Collecting datas for the reacting figure, depending of the choice for the graph type.
          """
         xindex = min(int(x_event), self.dztoplot.shape[0] - 1)
         legend_member = "member " + str(self.x_legend[xindex])
-        dataplot_master = self.dataplot_master[xindex, :, :]
+        dataplot_react = self.dataplot_react[xindex, :, :]
         dztoplot = self.dztoplot[xindex, :, :]
 
-        return dict(ax=self.master.main.ax2, value=dataplot_master, list_legend=self.timeplot, dz=dztoplot,
+        return dict(ax=self.master.main.ax2, value=dataplot_react, list_legend=self.timeplot, dz=dztoplot,
                     colormap=self.colormap, title=legend_member, cbar_show=self.master.main.first_profil)
 
-class ProPlotterController_Massif_Profil(ProPlotterController_Slider):
+
+class ProPlotterControllerMultipleProfil(ProPlotterControllerSlider):
     def __init__(self, master):
         self.master = master
         super().__init__(master)
-        self.points = None
 
     def get_choice(self):
         selector = self.master.choices.point_w.get_selector()
-        if 'massif_num' in selector.keys():
-            selector.pop('massif_num', None)
-        self.points = self.master.fileobj.get_points(selector=selector)
+        liste_points = self.master.fileobj.get_points(selector=selector)
+        print(liste_points)
+        return liste_points
 
-    def warningtextbar(self):
+    def info_text_bar(self, point):
         v_master = self.master.choices.variables_w.var_master
         v_react = self.master.choices.variables_w.var_react
-        text = 'MEMBER GRAPH with VARS: {}/{}. POINT: {}'.format(v_master, v_react, self.point)
+        text = 'MULTIPLE GRAPH with VARS: {}/{}.'.format(v_master, v_react)
         self.master.controls.update_text(text)
 
-    def init_data(self):
+    def get_data(self, liste_points):
         """
         Collecting datas for figures, before subsetting with motions
         """
         self.vartoplot_master_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_master)
-        self.dataplot_master = self.master.fileobj.get_data_massif(self.vartoplot_master_desc['name'],
-                                                                          self.points)
-        # shape = time, snowlayer, massif)
-        self.vartoplot_react_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_react)
-        self.dataplot_react = self.master.fileobj.get_data_massif(self.vartoplot_react_desc['name'], self.points)
+        self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], liste_points)
+        print(self.dataplot_master[0,0,:])
+        print(self.dataplot_master.shape)
+        print(type(self.dataplot_master))
 
-        self.dztoplot = self.master.fileobj.get_data_massif(self.master.fileobj.variable_dz, self.points, fillnan=0.)
+        # ATTENTION: SUPPOSITION QUE
+        # shape = time, snowlayer, selection du multiple ?
+        # A VERIFIER
+        self.vartoplot_react_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_react)
+        self.dataplot_react = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], liste_points)
+
+        self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, liste_points, fillnan=0.)
         self.timeplot = self.master.fileobj.get_time()
         self.colormap = self.master.fileobj.colorbar_variable(self.vartoplot_master_desc['name'])
 
         # usefull for motion
         if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
-            self.grain = self.master.fileobj.get_data_massif(self.master.fileobj.variable_grain, self.points,
-                                                             fillnan=0.)
+            self.grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, liste_points, fillnan=0.)
         if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
-            self.ram = self.master.fileobj.get_data_massif(self.master.fileobj.variable_grain, self.points, fillnan=0.)
+            self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, liste_points, fillnan=0.)
         if self.vartoplot_react_desc['name'] in self.master.fileobj.variables_log:
             self.dataplot_react = np.where(self.dataplot_react > 10 ** (-10), self.dataplot_react, 10 ** (-10))
             self.dataplot_react = np.where(self.dataplot_react > 0, np.log10(self.dataplot_react), -10)
 
         self.ymax_react = np.max(np.nansum(self.dztoplot, axis=2))
 
-
-        self.variables_info = self.master.fileobj.variables_selection_point
-        for v, info in self.variables_info.items():
-            if v=='massif_num':
-                self.x_legend = list(info['choices'])
-
+        self.x_legend = liste_points
         self.x_legend = [int(i) for i in self.x_legend]
 
         self.dateslice = self.master.choices.params_w.var_dateslice
@@ -1110,10 +1163,10 @@ class ProPlotterController_Massif_Profil(ProPlotterController_Slider):
             self.dateslice = 0
 
         self.master.choices.params_w.scale_date.config(from_=0, to=(len(self.master.fileobj.get_time()) - 1),
-                                                       state='normal', showvalue=0, command=self.update_slice_date,
-                                                       variable=tk.IntVar)
+                                                       state='normal', showvalue=0, variable=tk.IntVar,
+                                                       command=self.update_slice_date)
 
-    def get_data_master1d(self):
+    def give_master1d_args(self):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
@@ -1122,12 +1175,12 @@ class ProPlotterController_Massif_Profil(ProPlotterController_Slider):
             self.dztoplot = self.dztoplot[self.dateslice, :, :]
             ylimit = np.max(np.cumsum(self.dztoplot[:, :, :], axis=1))
             return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend,
-                    title=self.timeplot[self.dateslice], ylimit=ylimit)
+                        title=self.timeplot[self.dateslice], ylimit=ylimit)
         else:
             return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend,
-                    title=self.timeplot[self.dateslice])
+                        title=self.timeplot[self.dateslice])
 
-    def get_data_mastersaison(self):
+    def give_mastersaison_args(self):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
@@ -1139,14 +1192,14 @@ class ProPlotterController_Massif_Profil(ProPlotterController_Slider):
                     colormap=self.colormap, title=self.timeplot[self.dateslice],
                     cbar_show=self.master.main.first_master, ylimit=ylimit)
 
-    def get_data_react(self, x_event):
+    def give_react_args(self, x_event):
         """
          Collecting datas for the reacting figure, depending of the choice for the graph type.
          """
         limitplot_react = self.master.fileobj.limits_variable(self.vartoplot_react_desc['name'])
 
         xindex = min(int(x_event), self.dztoplot.shape[0] - 1)
-        legend_member = "massif " + str(self.x_legend[xindex])
+        legend_member = "multiple " + str(self.x_legend[xindex])
         data_member = self.dataplot_react[self.dateslice, :, xindex]
         dz_member = self.dztoplot[self.dateslice, :, xindex]
         if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:

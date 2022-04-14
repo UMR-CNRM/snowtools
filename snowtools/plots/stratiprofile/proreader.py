@@ -7,6 +7,7 @@ import os.path
 import re
 import logging
 import numpy as np
+import typing
 
 logger = logging.getLogger()
 
@@ -788,13 +789,13 @@ class proreader(reader):
 
         return data
 
-    def get_data(self, varname: str, point: int, fillnan=False, members=False,
+    def get_data(self, varname: str, point: typing.Union[int, list], fillnan=False, members=False,
                  begin=None, end=None):
         """
         Get the data for selected variable and point
 
         :param varname: The variable name
-        :param point: The point identifier
+        :param point: The point identifier or the list of point identifier
         :param fillnan: Whether or not to fill the nan values. Defaults to False (do not fill nan values).
                         All other value will be used to fill the data.
         :param members: If not false, use `~reader.get_data_members` instead. See corresponding documentation.
@@ -902,45 +903,3 @@ class proreader(reader):
                 ldata.append(data)
                 lnr.append(n)
         return ldata, lnr
-
-    def get_data_massif(self, varname, points, fillnan=False, begin=None, end=None):
-        """
-        Get a list of data for selected variable and point, for all members or
-        a subset of all available.
-
-        :param varname: The variable name
-        :param points: List of points for massif visualisation
-        :param fillnan: Whether or not to fill the nan values. Defaults to False (do not fill nan values).
-                        All other value will be used to fill the data.
-        :param begin: A begin date (remove data before this date)
-        :param end: A end date (remove data after this date)
-        :returns: The selected data
-        :rtype: numpy.array
-        """
-        if type(begin) == int:
-            begin = self.get_time()[begin]
-        if type(end) == int:
-            end = self.get_time()[end]
-
-        v = self._get_varname(varname)
-
-        from snowtools.utils.prosimu import prosimu
-        with prosimu(self._filename) as ff:
-            data = ff.read_var(v, Number_of_points=points)
-
-        # Date filtering
-        if begin is not None and end is not None:
-            select = (self._time >= begin) * (self._time <= end)
-        elif begin is not None:
-            select = self._time >= begin
-        elif end is not None:
-            select = self._time <= end
-        else:
-            select = ...
-        data = data[select]
-
-        # Filling nan
-        if fillnan is not False and np.issubdtype(data.dtype, np.inexact):
-            data[np.isnan(data)] = fillnan
-
-        return data

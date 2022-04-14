@@ -167,7 +167,7 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax
         Vmin = Vmax-40 if vmax is None else vmin
         norm = colors.Normalize(vmin=Vmin, vmax=Vmax)
         value[value < Vmin] = Vmin
-        cmap = cm.get_cmap('RdBu_r')
+        cmap = cm.get_cmap('RdBu_r').copy()
         cmap.set_over((0.32, 0.0, 0.097))
         extend = 'max'
     elif colormap == 'lwc':
