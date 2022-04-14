@@ -395,6 +395,7 @@ class TestCartopyMac(unittest.TestCase):
             # Suppression des sous-dossiers de fail_test correspondant aux tests OK
             shutil.rmtree(cls.diroutput)
 
+
 class TestCartopyJura(unittest.TestCase):
     """
     Test Map_jura class
@@ -435,7 +436,10 @@ class TestCartopyJura(unittest.TestCase):
             error = self.mix.list2reason(result.errors)
             failure = self.mix.list2reason(result.failures)
             if not error and not failure:
-                shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
+                dirmantest = os.path.join(THIS_DIR, "Manual_tests")
+                if not os.path.isdir(dirmantest):
+                    os.makedirs(dirmantest)
+                shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(dirmantest,
                                                                                          self.outfilename))
         else:
             print("no automatic move implemented for python2")
@@ -445,6 +449,7 @@ class TestCartopyJura(unittest.TestCase):
         if not os.listdir(cls.diroutput):
             # Suppression des sous-dossiers de fail_test correspondant aux tests OK
             shutil.rmtree(cls.diroutput)
+
 
 class TestCartopyVosges(unittest.TestCase):
     """
@@ -481,7 +486,10 @@ class TestCartopyVosges(unittest.TestCase):
             error = self.mix.list2reason(result.errors)
             failure = self.mix.list2reason(result.failures)
             if not error and not failure:
-                shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
+                dirmantest = os.path.join(THIS_DIR, "Manual_tests")
+                if not os.path.isdir(dirmantest):
+                    os.makedirs(dirmantest)
+                shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(dirmantest,
                                                                                          self.outfilename))
         else:
             print("no automatic move implemented for python2")
