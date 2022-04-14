@@ -61,8 +61,8 @@ class Mplfigure(object):
         else:
             self.fig.figimage(logo, widthfig - width, 0)
 
-    def save(self, figname, formatout="pdf"):
-        plt.savefig(figname, format=formatout)
+    def save(self, figname, formatout="pdf", **kw):
+        plt.savefig(figname, format=formatout, **kw)
 
     def close(self):
         self.fig.clear()
