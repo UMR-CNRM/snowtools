@@ -801,7 +801,8 @@ class ProPlotterController(abc.ABC):
         Collecting datas for figures, before subsetting with motions
         """
         self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], point)
-        self.dataplot_react = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], point)
+        if self.vartoplot_react_desc is not None:
+            self.dataplot_react = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], point)
         self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, point, fillnan=0.)
         self.timeplot = self.master.fileobj.get_time()
         self.colormap = self.master.fileobj.colorbar_variable(self.vartoplot_master_desc['name'])
