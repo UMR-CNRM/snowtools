@@ -43,9 +43,9 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax
     :type colormap: str or matplotlib colormap
     :param legend: legend for the colorbar
     :type legend: str
-    :param vmin: not clear (use for nomalisation ?)
+    :param vmin: seems to be use only for Temperature graph
     :type vmin: float
-    :param vmax: not clear (use for nomalisation ?)
+    :param vmax: seems to be use only for Temperature graph
     :type vmax: float
     :param cbar_show: Whether or not to plot the colorbar
     :type cbar_show: bool
@@ -163,8 +163,12 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax
             customcmap['blue'].append((x, cmap.colors[iuse][2], cmap.colors[iuse][2]))
         cmap = colors.LinearSegmentedColormap('ratio_cisaillment', customcmap)
     elif colormap == 'tempK':
-        Vmax = 273.15
-        Vmin = Vmax-40 if vmax is None else vmin
+        if vmax is None:
+            Vmax = 273.15
+            Vmin = Vmax-40
+        else:
+            Vmax = vmax
+            Vmin = vmin
         norm = colors.Normalize(vmin=Vmin, vmax=Vmax)
         value[value < Vmin if ~np.isnan(Vmin) else False] = Vmin
         cmap = cm.get_cmap('RdBu_r').copy()

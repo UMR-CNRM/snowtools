@@ -110,6 +110,8 @@ class ProPlotterApplication(tk.Frame):
             self.to_graph_member_profil()
         elif typ == 'member saison':
             self.to_graph_member_saison()
+        elif typ == 'compare':
+            self.to_graph_compare()
         else:
             raise ValueError('Unknown graph type')
         self.type = typ
@@ -160,6 +162,11 @@ class ProPlotterApplication(tk.Frame):
         self.controller = ProPlotterControllerMemberSaison(self)
         self.choices.params_w = ProPlotterChoicesBarParamsMember(self, self.choices.params)
 
+    def to_graph_compare(self):
+        self.to_graph_reset()
+        self.controller = ProPlotterControllerCompare(self)
+        self.choices.params_w = ProPlotterChoicesBarParamsCompare(self, self.choices.params)
+
     def open(self, *args):
         self.status.set_status('Open file...')
         selectedfilename = tkinter.filedialog.askopenfilename(title='Open filename', filetypes=FILETYPES)
@@ -186,8 +193,6 @@ class ProPlotterMenu(tk.Menu):
         self.filemenu = tk.Menu(self, tearoff=0)
         self.filemenu.add_command(label='Open', command=self.master.open)
         self.filemenu.add_command(label='Quit', command=self.master.quit)
-        self.filemenu.add_separator()
-        self.filemenu.add_command(label='Save graph', command=lambda x: None)
         self.add_cascade(label='File', menu=self.filemenu)
         # Menu 1
         self.typemenu = tk.Menu(self, tearoff=0)
@@ -197,6 +202,7 @@ class ProPlotterMenu(tk.Menu):
         self.typemenu.add_command(label='Member Profil', command=self.master.to_graph_member_profil)
         self.typemenu.add_command(label='Member Saison', command=self.master.to_graph_member_saison)
         self.typemenu.add_command(label='Height', command=self.master.to_graph_height)
+        self.typemenu.add_command(label='Compare', command=self.master.to_graph_compare)
         self.add_cascade(label='Graph type', menu=self.typemenu)
         # Config
         self.master.master.config(menu=self)
@@ -648,7 +654,10 @@ class ProPlotterChoicesBarParamsHeight(ProPlotterChoicesBarParams):
         return self._height
 
 
-class ProPlotterChoicesBarParamsMember(ProPlotterChoicesBarParams):
+class ProPlotterChoicesBarParamsDateSlicer(ProPlotterChoicesBarParams):
+    """
+     Specific choice via adding a Date Slicer (for Multiple Plots or Member Plots for example)
+     """
     def __init__(self, master, frame):
         super().__init__(master, frame)
         self._dateslice = None
@@ -677,10 +686,44 @@ class ProPlotterChoicesBarParamsMember(ProPlotterChoicesBarParams):
         return self._dateslice
 
 
-class ProPlotterChoicesBarParamsMultiple(ProPlotterChoicesBarParamsMember):
+class ProPlotterChoicesBarParamsMember(ProPlotterChoicesBarParamsDateSlicer):
     def __init__(self, master, frame):
         super().__init__(master, frame)
         self.update()
+
+
+class ProPlotterChoicesBarParamsMultiple(ProPlotterChoicesBarParamsDateSlicer):
+    def __init__(self, master, frame):
+        super().__init__(master, frame)
+        self.update()
+
+
+class ProPlotterChoicesBarParamsCompare(ProPlotterChoicesBarParams):
+    """
+     Specific choice for opening second file for comparison
+     """
+    def __init__(self, master, frame):
+        super().__init__(master, frame)
+        self.fileobj2 = None
+        self.opencompare = tk.Button(self.frame, text="Open Second File", command=self.open2)
+        self.opencompare.pack(side=tk.LEFT, padx=5, fill=tk.BOTH)
+        self.update()
+
+    def update(self):
+        pass
+
+    def open2(self):
+        self.master.status.set_status('Open second file...')
+        selectedfilename = tkinter.filedialog.askopenfilename(title='Open second filename', filetypes=FILETYPES)
+        if len(selectedfilename) == 0:
+            logger.info('No file selected. Ignore.')
+            self.master.status.set_status('Open second file... No file selected.')
+            return None
+        self.master.status.set_status('Opening second file {}'.format(selectedfilename))
+        self.fileobj2 = proreader.read_file(selectedfilename)
+        if self.fileobj2 is not None:
+            self.master.status.set_status('Successfully second opened file {}'.format(selectedfilename))
+
 
 
 class ProPlotterController(abc.ABC):
@@ -752,8 +795,6 @@ class ProPlotterController(abc.ABC):
             self.same_y = False
 
         return 'OK'
-
-
 
     def get_data(self, point):
         """
@@ -1260,6 +1301,97 @@ class ProPlotterControllerMultipleSaison(ProPlotterControllerMultiple):
 
         return dict(ax=self.master.main.ax2, value=dataplot_react, list_legend=self.timeplot, dz=dztoplot,
                     colormap=self.colormap, title=legend_multiple, cbar_show=self.master.main.first_profil)
+
+
+class ProPlotterControllerCompare(ProPlotterController):
+    def __init__(self, master):
+        self.master = master
+        super().__init__(master)
+        self.dztoplot_react = None
+        self.timeplot_react = None
+        self.master.main.ratio1 = 1
+        self.master.main.ratio2 = 1
+
+    def get_data(self, point):
+        """
+        Collecting datas for figures, before subsetting with motions
+        """
+        self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], point)
+        self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, point, fillnan=0.)
+        self.colormap = self.master.fileobj.colorbar_variable(self.vartoplot_master_desc['name'])
+
+        self.dataplot_react = self.master.choices.params_w.fileobj2.get_data(self.vartoplot_react_desc['name'], point)
+        self.dztoplot_react = self.master.choices.params_w.fileobj2.get_data(self.master.fileobj.variable_dz, point,
+                                                                             fillnan=0.)
+        self.colormap_react = self.master.fileobj.colorbar_variable(self.vartoplot_react_desc['name'])
+
+        self.timeplot = self.master.fileobj.get_time()
+
+
+    def reactfigsaison(self, **kwargs: dict):
+        return profilPlot.saisonProfil(**kwargs)
+
+    def reactfig1d(self, **kwargs: dict):
+        return profilPlot.saison1d(**kwargs)
+
+    def give_reactsaison_args(self):
+        """
+         Collecting datas for the reacting figure, depending of the choice for the graph type.
+         """
+        return dict(ax=self.master.main.ax2, value=self.dataplot_react, list_legend=self.timeplot,
+                    dz=self.dztoplot_react, colormap=self.colormap_react)
+
+    def give_react1d_args(self):
+        """
+        Returns dictionary for the master figure, depending of the choice for the graph type.
+        """
+        return dict(ax=self.master.main.ax2, value=self.dataplot_react, list_legend=self.timeplot)
+
+    def plot(self):
+        """
+        The plot machinery
+        """
+        if self.master.fileobj is None:
+            return
+
+        if self.master.choices.params_w.fileobj2 is None:
+            return
+
+        var_info = self.check_var_info()
+        if var_info is None:
+            return
+
+        point = self.get_choice()
+        if point is None:
+            return
+
+        self.info_text_bar(point)
+        self.get_data(point)
+        self.master.main.clear()
+
+        self.master.main.ax1 = self.master.main.fig1.add_subplot(1, 2, 1)
+
+        if self.vartoplot_master_desc['has_snl'] and self.vartoplot_react_desc['has_snl']:
+            self.master.main.ax2 = self.master.main.fig1.add_subplot(1, 2, 2, sharex=self.master.main.ax1,
+                                                                     sharey=self.master.main.ax1)
+        elif self.vartoplot_master_desc['name'] == self.vartoplot_react_desc['name']:
+            self.master.main.ax2 = self.master.main.fig1.add_subplot(1, 2, 2, sharex=self.master.main.ax1,
+                                                                     sharey=self.master.main.ax1)
+        else:
+            self.master.main.ax2 = self.master.main.fig1.add_subplot(1, 2, 2, sharex=self.master.main.ax1)
+
+        if self.vartoplot_master_desc['has_snl']:
+            self.masterfigsaison(**self.give_mastersaison_args())
+        else:
+            self.masterfig1d(**self.give_master1d_args())
+
+        if self.vartoplot_react_desc['has_snl']:
+            self.reactfigsaison(**self.give_reactsaison_args())
+        else:
+            self.reactfig1d(**self.give_react1d_args())
+
+        self.master.main.Canevas.draw()
+        self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
 
 def main(*args, **kwargs):
