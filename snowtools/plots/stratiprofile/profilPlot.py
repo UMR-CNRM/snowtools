@@ -43,9 +43,9 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax
     :type colormap: str or matplotlib colormap
     :param legend: legend for the colorbar
     :type legend: str
-    :param vmin: not clear (use for nomalisation ?)
+    :param vmin: seems to be use only for Temperature graph
     :type vmin: float
-    :param vmax: not clear (use for nomalisation ?)
+    :param vmax: seems to be use only for Temperature graph
     :type vmax: float
     :param cbar_show: Whether or not to plot the colorbar
     :type cbar_show: bool
@@ -120,14 +120,14 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax
         vmin = -0.5
         vmax = 14.5
     elif colormap == 'echelle_log':
-        cmap = cm.gray_r
+        cmap = cm.gray_r.copy()
         Vmin = max(minval, 0.0000000001)
         Vmax = min(max(0.000000001, maxval), 1)
         norm = colors.LogNorm(vmin=Vmin, vmax=Vmax)    
         cmap.set_under('#fff2fd')
         extend = 'min'
     elif colormap == 'echelle_log_sahara':
-        cmap = cm.gist_heat_r
+        cmap = cm.gist_heat_r.copy()
         Vmin = max(minval, 0.0000000001)
         Vmax = min(max(0.000000001, maxval), 1)
         value = value.clip(Vmin/2, Vmax)
@@ -163,20 +163,24 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax
             customcmap['blue'].append((x, cmap.colors[iuse][2], cmap.colors[iuse][2]))
         cmap = colors.LinearSegmentedColormap('ratio_cisaillment', customcmap)
     elif colormap == 'tempK':
-        Vmax = 273.15
-        Vmin = Vmax-40 if vmax is None else vmin
+        if vmax is None:
+            Vmax = 273.15
+            Vmin = Vmax-40
+        else:
+            Vmax = vmax
+            Vmin = vmin
         norm = colors.Normalize(vmin=Vmin, vmax=Vmax)
-        value[value < Vmin] = Vmin
-        cmap = cm.get_cmap('RdBu_r')
+        value[value < Vmin if ~np.isnan(Vmin) else False] = Vmin
+        cmap = cm.get_cmap('RdBu_r').copy()
         cmap.set_over((0.32, 0.0, 0.097))
         extend = 'max'
     elif colormap == 'lwc':
-        cmap = cm.get_cmap('viridis')
         Vmin = 0
         Vmax = 35 if vmax is None else vmax
         norm = colors.Normalize(vmin=Vmin, vmax=Vmax)
-        value[value > Vmax] = Vmax
+        value[value > Vmax if ~np.isnan(Vmax) else False] = Vmax
         value[value == 0] = -1
+        cmap = cm.get_cmap('viridis').copy()
         cmap.set_under('#fff2fd')
         extend = 'min'
     else:

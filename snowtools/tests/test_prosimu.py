@@ -7,7 +7,12 @@ from datetime import datetime
 import os
 
 from snowtools.utils.prosimu import prosimu, prosimu_old
-from snowtools.DATA import SNOWTOOLS_DATA
+from snowtools.DATA import SNOWTOOLS_DATA, TESTBASE
+
+if not os.path.isdir(TESTBASE):
+    SKIP = True
+else:
+    SKIP = False
 
 
 class TestProSimu(unittest.TestCase):
@@ -73,6 +78,42 @@ class TestProSimuWithCache(unittest.TestCase):
         snowtemp = self.ps.read_var(
             'SNOWTEMP', time=1, Number_of_points=slice(600, 690, 2))
         self.assertEqual(snowtemp.shape, (50, 45), "Attendu : 50 couches, 45 points")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.ps.close()
+
+
+class TestProSimu2d(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # fichier au nouveau format de la chaîne
+        path = os.path.join(TESTBASE, 'PRO/PRO_2014080106_2015010106_grille2d.nc')
+        if not SKIP:
+            cls.ps = prosimu(path)
+        else:
+            cls.ps = None
+
+    @unittest.skipIf(SKIP, 'Test files not available')
+    def test_get_point(self):
+        valx = self.ps.read('xx')
+        valy = self.ps.read('yy')
+        for x, y in [(2, 1), (1, 1), (1, 2), (0, 0)]:
+            point = self.ps.get_point(xx=valx[x], yy=valy[y])
+        self.assertEqual(point, len(valy)*x + y, "get_point method fail in 2d")
+
+    @unittest.skipIf(SKIP, 'Test files not available')
+    def test_get_data(self):
+        valx = self.ps.read('xx')
+        valy = self.ps.read('yy')
+        data = self.ps.read('DSN_T_ISBA')
+        for x, y in [(2, 1), (1, 1), (1, 2), (0, 0)]:
+            point = self.ps.get_point(xx=valx[x], yy=valy[y])
+            # Order dimensions = time, yy, xx
+            data_ok = data[-1, y, x]
+            data_test = self.ps.read('DSN_T_ISBA', selectpoint=point)[-1]
+        self.assertAlmostEqual(data_test, data_ok, "read method fail with selectpoint in 2d")
 
     @classmethod
     def tearDownClass(cls):
