@@ -252,19 +252,20 @@ class prosimu():
         Get the time dimension of the netCDF file
 
         :returns: time axis data
-        :trype: numpy array
+        :rtype: numpy array
         """
         # Vérification du nom de la variable
         if "time" not in list(self.dataset.variables.keys()):
             raise VarNameException("time", self.path)
 
-        if(self.mfile == 1):
+        if self.mfile == 1:
             time_base = self.dataset.variables["time"]
             time = netCDF4.MFTime(time_base, calendar='standard')
         else:
             time = self.dataset.variables["time"]
         if netCDF4.__version__ >= '1.4.0' and cftime is not None and cftime.__version__ >= '1.1.0':
-            return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False, only_use_python_datetimes=True))
+            return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False,
+                                             only_use_python_datetimes=True))
         else:
             return np.array(netCDF4.num2date(time[:], time.units))
 

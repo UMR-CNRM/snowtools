@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 Created on 3 aug. 2018
 
 @author: lafaysse
-'''
+"""
 
 import sys
 import six
