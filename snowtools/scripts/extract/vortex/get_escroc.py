@@ -19,7 +19,7 @@ from bronx.stdtypes.date import Date
 from snowtools.scripts.ESMSnowMIP.ESM_snowmip import bdate, edate
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend, check_and_convert_date
 
-usage = "usage: python get_escroc.py --site=xxx [--nmembers=xx] --escroc=xx [--byear=YYYY --eyear=YYYY]"
+usage = "usage: python get_escroc.py --site=xxx [--nmembers=xx] --escroc=xx [--byear=YYYY --eyear=YYYY] [--bdate=YYYYMMDDHH --eyear=YYYYMMDDHH]"
 
 
 def parse_options(arguments):
@@ -43,7 +43,7 @@ def parse_options(arguments):
 
     parser.add_option("--bdate",
                       action="store", type="string", dest="bdate", default=None,
-                      help="First date of extraction")
+                      help="First date of extraction YYYYMMDDHH")
 
     parser.add_option("--eyear",
                       action="store", type="int", dest="eyear", default=None,
@@ -51,7 +51,7 @@ def parse_options(arguments):
 
     parser.add_option("--edate",
                       action="store", type="string", dest="edate", default=None,
-                      help="Last date of extraction")
+                      help="Last date of extraction  YYYYMMDDHH")
 
     parser.add_option("--yearly",
                       action="store_true", dest="yearly", default=False,
