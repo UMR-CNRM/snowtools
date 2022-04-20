@@ -46,8 +46,8 @@ class Reanalyses(Task, S2MTaskMixIn):
 
         if 'early-fetch' in self.steps:
 
+            missing_days = 0
             if not (self.conf.rundate.month == 8 and self.conf.rundate.day == 1):
-
                 tb01 = False
                 missing_days = -1
                 rundate = self.conf.rundate
@@ -104,7 +104,7 @@ class Reanalyses(Task, S2MTaskMixIn):
                 model          = 'safran',
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
-                namespace      = 'vortex.cache.fr',
+                namespace      = 'vortex.multi.fr',
                 fatal          = False,
             ),
             print(t.prompt, 'tb02 =', tb02)
@@ -126,11 +126,13 @@ class Reanalyses(Task, S2MTaskMixIn):
                 model          = 'safran',
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
-                namespace      = 'vortex.cache.fr',
+                namespace      = 'vortex.multi.fr',
                 fatal          = True,
             ),
             print(t.prompt, 'tb02 =', tb02)
             print()
+
+        #TODO :prévoir de regénérer les éventuels guess manquants
 
         if 'late-backup' in self.steps:
 
