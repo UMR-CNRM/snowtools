@@ -14,10 +14,12 @@ import footprints
 from optparse import OptionParser
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
+from bronx.stdtypes.date import Date
 
 from snowtools.scripts.ESMSnowMIP.ESM_snowmip import bdate, edate
+from snowtools.utils.dates import get_list_dates_files, get_dic_dateend, check_and_convert_date
 
-usage = "usage: python get_escroc.py --site=xxx --nmembers=xx --escroc=xx"
+usage = "usage: python get_escroc.py --site=xxx [--nmembers=xx] --escroc=xx [--byear=YYYY --eyear=YYYY] [--bdate=YYYYMMDDHH --eyear=YYYYMMDDHH]"
 
 
 def parse_options(arguments):
@@ -35,6 +37,26 @@ def parse_options(arguments):
                       action="store", type="string", dest="escroc", default=None,
                       help="First year of extraction")
 
+    parser.add_option("--byear",
+                      action="store", type="int", dest="byear", default=None,
+                      help="First year of extraction")
+
+    parser.add_option("--bdate",
+                      action="store", type="string", dest="bdate", default=None,
+                      help="First date of extraction YYYYMMDDHH")
+
+    parser.add_option("--eyear",
+                      action="store", type="int", dest="eyear", default=None,
+                      help="Last year of extraction")
+
+    parser.add_option("--edate",
+                      action="store", type="string", dest="edate", default=None,
+                      help="Last date of extraction  YYYYMMDDHH")
+
+    parser.add_option("--yearly",
+                      action="store_true", dest="yearly", default=False,
+                      help="Extract yearly files")
+
     (options, args) = parser.parse_args(arguments)
     del args
     return options
@@ -47,7 +69,18 @@ class config(object):
         self.list_sites = options.site.split(",")
         self.nmembers = options.nmembers
         self.list_escroc = options.escroc.split(",")
-
+        if options.yearly:
+            self.duration = 'yearly'
+        else:
+            self.duration = 'full'
+        if options.byear:
+            bdate[options.site] = Date(options.byear, 8, 1, 6)
+        if options.eyear:
+            edate[options.site] = Date(options.eyear, 8, 1, 6)
+        if options.bdate:
+            bdate[options.site] = check_and_convert_date(options.bdate)
+        if options.edate:
+            edate[options.site] = check_and_convert_date(options.edate)
 
 class S2MExtractor(S2MTaskMixIn):
 
@@ -60,6 +93,10 @@ class S2MExtractor(S2MTaskMixIn):
 
         for site in self.conf.list_sites:
 
+            list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(
+                bdate[site], edate[site], self.conf.duration)
+            dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
+
             for escroc in self.conf.list_escroc:
                 tb = toolbox.input(
                     vapp           = 's2m',
@@ -69,8 +106,8 @@ class S2MExtractor(S2MTaskMixIn):
                     block          = 'pro',
                     geometry       = site,
                     date           = '[datebegin]',
-                    datebegin      = bdate[site],
-                    dateend        = edate[site],
+                    datebegin      = list_dates_begin_pro,
+                    dateend        = dict_dates_end_pro,
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
                     model          = 'surfex',

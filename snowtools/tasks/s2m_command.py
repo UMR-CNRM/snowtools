@@ -23,6 +23,7 @@ from snowtools.tasks.vortex_kitchen import vortex_kitchen
 from snowtools.tasks.crampon_vortex_kitchen import crampon_vortex_kitchen
 from snowtools.tasks.s2m_launcher import _S2M_command
 from snowtools.DATA import SNOWTOOLS_DIR
+from snowtools.utils.FileException import UndefinedDirectoryException
 
 usage = "usage: s2m -b begin_date -e end_date -f forcing [-m forcingmodel] [-o path_output] [-w workdir] " \
         "[-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] " \
@@ -54,8 +55,15 @@ class Surfex_command(_S2M_command):
             self.check_mandatory_arguments(**{'-b': 'datedeb', '-e': 'datefin', '-f': 'forcing'})
 
             if not self.options.onlyextractforcing:
-                self.options.exesurfex = check_surfex_exe(self.options.exesurfex)
-                print(self.options.exesurfex)
+                try:
+                    self.options.exesurfex = check_surfex_exe(self.options.exesurfex)
+                except UndefinedDirectoryException as e:
+                    if not vortex:
+                        raise e
+                    else:
+                        print ("Use SURFEX binaries from GENV\n")
+                else:
+                    print("USE SURFEX binaries from " + self.options.exesurfex)
 
             # Controls and type conversions of dates
             [self.options.datedeb, self.options.datefin, self.options.datespinup] = list(map(check_and_convert_date,
@@ -93,7 +101,10 @@ class Surfex_command(_S2M_command):
             if self.options.slopes:
                 self.options.slopes = self.options.slopes.split(",")
             else:
-                self.options.slopes = ["0", "20", "40"]
+                if 'allslopes' in self.options.region:
+                    self.options.slopes = ["0", "20", "40"]
+                else:
+                    self.options.slopes = ["0"]
 
             self.options.aspects = INFOmassifs.get_list_aspect(self.options.aspects, self.options.slopes)
             self.options.minlevel, self.options.maxlevel \
@@ -186,6 +197,10 @@ class Surfex_command(_S2M_command):
                           action="store_true", dest="onlyextractforcing", default=False,
                           help="only extract meteorological forcing - default: False")
 
+        parser.add_option("-p", "--prep_xpid",
+                          action="store", type="string", dest="prep_xpid", default=None,
+                          help="xpid in wich are the PREP files to be used")
+
         parser.add_option("--addmask",
                           action="store_true", dest="addmask", default=False,
                           help="apply shadows on solar radiation from surrounding masks")
@@ -208,6 +223,10 @@ class Surfex_command(_S2M_command):
 
         parser.add_option("--monthlyreanalysis",
                           action="store_true", dest="monthlyreanalysis", default=False,
+                          help="Run monthly reanalysis")
+
+        parser.add_option("--monthlyreanalysissytron",
+                          action="store_true", dest="monthlyreanalysissytron", default=False,
                           help="Run monthly reanalysis")
 
         parser.add_option("--dailyprep",

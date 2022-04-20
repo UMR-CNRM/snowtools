@@ -5,6 +5,8 @@ Run a CRAMPON assimilation sequence on a multinode
 @author: cluzetb
 """
 import os
+import sys
+import subprocess
 import shutil
 
 import numpy as np
@@ -209,4 +211,4 @@ class crampon_vortex_kitchen(vortex_kitchen):
         mkjob_list = self.mkjob_crampon()
         for mkjob in mkjob_list:
             print("Run command: " + mkjob + "\n")
-            os.system(mkjob)
+            subprocess.call(mkjob, stdout=sys.stdout, stderr=sys.stderr)

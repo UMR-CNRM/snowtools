@@ -673,7 +673,7 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
                     metadataout.write('\t\t<massif> ' + str(all_lists['m'][k]) + ' </massif>\n')
 
     metadata.close()
-    os.system('mv -f ' + chemxml + '/METADATA_out.xml ' + chemxml + '/METADATA.xml')
+    os.rename(chemxml + '/METADATA_out.xml', chemxml + '/METADATA.xml')
     print("done in", time.time() - start_time, "seconds")
 
 
