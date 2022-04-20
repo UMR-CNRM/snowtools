@@ -367,9 +367,9 @@ class _Map_massifs(Mplfigure):
             ax.add_feature(cartopy.feature.LAND, facecolor='wheat')
             ax.add_feature(cartopy.feature.OCEAN)
             ax.add_feature(cartopy.feature.COASTLINE)
-            # ax.add_feature(cartopy.feature.BORDERS, linestyle=':')
-            ax.add_feature(cartopy.feature.NaturalEarthFeature('cultural', 'admin_0_boundary_lines_land', '10m',
-                                                               facecolor='none', linestyle=':'))
+            ax.add_feature(cartopy.feature.BORDERS, linestyle=':')
+            #ax.add_feature(cartopy.feature.NaturalEarthFeature('cultural', 'admin_0_boundary_lines_land', '10m',
+            #                                                   facecolor='none', linestyle=':'))
             ax.add_feature(cartopy.feature.LAKES, alpha=0.5)
             ax.add_feature(cartopy.feature.RIVERS)
         elif bgimage:
@@ -393,10 +393,10 @@ class _Map_massifs(Mplfigure):
         :return: shapefile, pprojcrs, shpProj, records
         """
         shapefile_path = os.path.join(SNOWTOOLS_DIR, 'DATA')
-        filename = 'massifs_{0:s}.shp'.format(self.area)
+        filename = 'massifs_Lbrt93_2019.shp'
         shapefile = shpreader.Reader(os.path.join(shapefile_path, filename))
         # Informations sur la projection
-        projfile = 'massifs_{0:s}.prj'.format(self.area)
+        projfile = 'massifs_Lbrt93_2019.prj'
         with open(os.path.join(shapefile_path, projfile), 'r') as prj_file:
             prj_txt = prj_file.read()
             pprojcrs = CRS.from_wkt(prj_txt)
@@ -426,17 +426,18 @@ class _Map_massifs(Mplfigure):
         """
         if 'palette' in kwargs.keys():
             if 'ncolors' in kwargs.keys():
-                if matplotlib.__version__ >= '3.3':
+                if matplotlib.__version__ >= '3.4':
+                    # deprecation warning in version 3.3, but copy method not yet implemented
                     palette = plt.get_cmap(kwargs['palette'], kwargs['ncolors']).copy()
                 else:
                     palette = plt.get_cmap(kwargs['palette'], kwargs['ncolors'])
             else:
-                if matplotlib.__version__ >= '3.3':
+                if matplotlib.__version__ >= '3.4':
                     palette = plt.get_cmap(kwargs['palette']).copy()
                 else:
                     palette = plt.get_cmap(kwargs['palette'])
         else:
-            if matplotlib.__version__ >= '3.3':
+            if matplotlib.__version__ >= '3.4':
                 palette = plt.get_cmap('jet').copy()
             else:
                 palette = plt.get_cmap('jet')
@@ -457,8 +458,8 @@ class _Map_massifs(Mplfigure):
 
         self.palette, self.norm = self.init_cmap(**kwargs)
         if not hasattr(self, 'massif_features'):
-            self.num, self.shape, self.name = zip(*[(rec.attributes['num_opp'], rec.geometry,
-                                                     rec.attributes['nom']) for rec in self.records])
+            self.num, self.shape, self.name = map(list, zip(*[(rec.attributes['code'], rec.geometry,
+                                                     rec.attributes['title']) for rec in self.records]))
             self.llshape = [ccrs.PlateCarree().project_geometry(ishape, self.projection) for ishape in self.shape]
             # get renderer
             if not hasattr(self, 'renderer'):
@@ -624,13 +625,13 @@ class _Map_massifs(Mplfigure):
 
         if isinstance(self, _MultiMap):
             for i, massif in enumerate(self.records):
-                if massif.attributes['num_opp'] in massifs:
+                if massif.attributes['code'] in massifs:
                     for j in range(self.nsubplots):
                         self.massif_features[j][i]['feature'].set_zorder(2)  # Pour tracer le massif en dernier
                         self.massif_features[j][i]['feature']._kwargs['edgecolor'] = 'red'
         else:
             for i, massif in enumerate(self.records):
-                if massif.attributes['num_opp'] in massifs:
+                if massif.attributes['code'] in massifs:
                     self.massif_features[i]['feature'].set_zorder(2)  # Pour tracer le massif en dernier
                     self.massif_features[i]['feature']._kwargs['edgecolor'] = 'red'
 
@@ -768,15 +769,16 @@ class _Map_massifs(Mplfigure):
         nvar = len(args)
         listvar = self.convertunit(*args, **kwargs)
         formatString = self.getformatstring(**kwargs)
-
+        # print(listvar)
         self.text = []
 
         for i, massif in enumerate(self.shape):
 
             indmassif = massifref == self.num[i]
-            Xbary, Ybary = massif.centroid.coords[0]
+            # print(indmassif, self.num[i], massifref)
+            Xbary, Ybary = massif.centroid.coords.xy
             if np.sum(indmassif) == 1:
-                self.puttext(Xbary, Ybary, indmassif, listvar, nvar, formatString, **kwargs)
+                self.puttext(Xbary[0], Ybary[0], indmassif, listvar, nvar, formatString, **kwargs)
 
     def puttext(self, Xbary, Ybary, indmassif, listvar, nvar, formatString, **kwargs):
         """
@@ -793,6 +795,7 @@ class _Map_massifs(Mplfigure):
         """
         infos = ''
         for v, variable in enumerate(listvar):
+            # print(formatString, variable[indmassif][0])
             infos += formatString % variable[indmassif][0]
             if v < nvar - 1:
                 infos += "-"
@@ -801,6 +804,7 @@ class _Map_massifs(Mplfigure):
                 textcolor = kwargs['textcolor']
             elif (nvar == 3 and v == 1) or nvar == 1:
                 textcolor = self.getTextColor(variable[indmassif][0], **kwargs)
+                # print("textcolor variable", textcolor)
             else:
                 textcolor = 'black'
 
@@ -810,6 +814,7 @@ class _Map_massifs(Mplfigure):
         self.text.append(self.map.text(Xbary, Ybary, infos, transform=self.projection,
                                        horizontalalignment='center', verticalalignment='center',
                                        color=textcolor))
+        # print(self.map.properties())
 
     def reset_massifs(self, rmcbar=True, rminfobox=True, **kwargs):
         """
@@ -860,13 +865,17 @@ class _Map_massifs(Mplfigure):
             south_text = "Versant Sud \n Q20 - Q50 - Q80"
         # self.infos.append(box(8.5, 42.9,8.85,43.1))
 
+        # self.infos.append(self.map.add_artist(matplotlib.offsetbox.AnnotationBbox(
+        #     matplotlib.offsetbox.TextArea(north_text, textprops=dict(horizontalalignment='left')),  # center in matplotlib 3.4
+        #     self.infospos, box_alignment=(0, 0), xycoords=self.projection._as_mpl_transform(self.map),
+        #     bboxprops=dict(fc='none'))))
         self.infos.append(self.map.add_artist(matplotlib.offsetbox.AnnotationBbox(
             matplotlib.offsetbox.TextArea(north_text, textprops=dict(horizontalalignment='left')),  # center in matplotlib 3.4
-            self.infospos, box_alignment=(0, 0), xycoords=self.projection._as_mpl_transform(self.map),
+            self.infospos, box_alignment=(0, 0),
             bboxprops=dict(fc='none'))))
         self.infos.append(self.map.add_artist(matplotlib.offsetbox.AnnotationBbox(
             matplotlib.offsetbox.TextArea(south_text, textprops=dict(horizontalalignment='left')),  # center in matplotlib 3.4
-            self.infospos, box_alignment=(0, 1.4), xycoords=self.projection._as_mpl_transform(self.map),
+            self.infospos, box_alignment=(0, 1.4),
             bboxprops=dict(fc='none'))))
 
     def rectangle_massif(self, massifref, list_quantiles, list_values, ncol=1, **kwargs):
@@ -936,6 +945,93 @@ class _Map_massifs(Mplfigure):
             return 0, 0
 
 
+class Map_vosges(_Map_massifs):
+    """
+     Class for plotting a map over the Vosges.
+    """
+    area = 'vosges'  #: area tag = 'vosges'
+    width = 12  #: figure width = 12
+    height = 10  #: figure height = 10
+    latmin = 47.65  #: southern map border = 43.9
+    latmax = 48.7  #: northen map border = 46.5
+    lonmin = 6.55  #: western map border = 5.2
+    lonmax = 7.45  #: eastern map border = 7.9
+
+    mappos = [0.02, 0.06, 0.8, 0.8]  #: map position on the plot = [0.02, 0.06, 0.8, 0.8]
+    legendpos = [0.85, 0.15, 0.03, 0.6]  #: legend position on the plot = [0.85, 0.15, 0.03, 0.6]
+    #: position of info-box on the map in Lambert Conformal coordinates = (990000, 2160000)
+    infospos = (6.6, 48.6)
+    labelfontsize = 20  #: fontsize of colorbar label
+    deport = {}
+    """ displacement dictionary for the positioning tables near the massif center without overlapping."""
+
+    def __init__(self, *args, **kw):
+        """
+
+        :param args: Arguments to be passed to super class
+        :param kw: Keyword arguments to be passed to super class
+        """
+        super(Map_vosges, self).__init__(*args, **kw)
+
+
+class Map_central(_Map_massifs):
+    """
+     Class for plotting a map over the Massif Central.
+    """
+    area = 'central'  #: area tag = 'central'
+    width = 12  #: figure width = 12
+    height = 10  #: figure height = 10
+    latmin = 43.3  #: southern map border = 43.3
+    latmax = 46.3  #: northen map border = 46.3
+    lonmin = 1.6  #: western map border = 1.6
+    lonmax = 4.8  #: eastern map border = 4.8
+
+    mappos = [0.02, 0.06, 0.8, 0.8]  #: map position on the plot = [0.02, 0.06, 0.8, 0.8]
+    legendpos = [0.85, 0.15, 0.03, 0.6]  #: legend position on the plot = [0.85, 0.15, 0.03, 0.6]
+    #: position of info-box on the map in Lambert Conformal coordinates = (990000, 2160000)
+    infospos = (4.3, 46.1)
+    labelfontsize = 20  #: fontsize of colorbar label
+    deport = {}
+    """ displacement dictionary for the positioning tables near the massif center without overlapping."""
+
+    def __init__(self, *args, **kw):
+        """
+
+        :param args: Arguments to be passed to super class
+        :param kw: Keyword arguments to be passed to super class
+        """
+        super(Map_central, self).__init__(*args, **kw)
+
+
+class Map_jura(_Map_massifs):
+    """
+     Class for plotting a map over the French Jura.
+    """
+    area = 'jura'  #: area tag = 'jura'
+    width = 12  #: figure width = 12
+    height = 10  #: figure height = 10
+    latmin = 45.6  #: southern map border = 43.9
+    latmax = 47.5  #: northen map border = 46.5
+    lonmin = 5.3  #: western map border = 5.2
+    lonmax = 7.15  #: eastern map border = 7.9
+
+    mappos = [0.02, 0.06, 0.8, 0.8]  #: map position on the plot = [0.02, 0.06, 0.8, 0.8]
+    legendpos = [0.85, 0.15, 0.03, 0.6]  #: legend position on the plot = [0.85, 0.15, 0.03, 0.6]
+    #: position of info-box on the map in Lambert Conformal coordinates = (990000, 2160000)
+    infospos = (5.4, 47.35)
+    labelfontsize = 20  #: fontsize of colorbar label
+    deport = {}
+    """ displacement dictionary for the positioning tables near the massif center without overlapping."""
+
+    def __init__(self, *args, **kw):
+        """
+
+        :param args: Arguments to be passed to super class
+        :param kw: Keyword arguments to be passed to super class
+        """
+        super(Map_jura, self).__init__(*args, **kw)
+
+
 class Map_alpes(_Map_massifs):
     """
     Class for plotting a map over the French Alps.
@@ -974,15 +1070,15 @@ class Map_alpes(_Map_massifs):
     area = 'alpes'  #: area tag = 'alpes'
     width = 12  #: figure width = 12
     height = 10  #: figure height = 10
-    latmin = 43.9  #: southern map border = 43.9
+    latmin = 43.5  #: southern map border = 43.9
     latmax = 46.5  #: northen map border = 46.5
-    lonmin = 5.2  #: western map border = 5.2
+    lonmin = 5.0  #: western map border = 5.2
     lonmax = 7.9  #: eastern map border = 7.9
 
     mappos = [0.02, 0.06, 0.8, 0.8]  #: map position on the plot = [0.02, 0.06, 0.8, 0.8]
     legendpos = [0.85, 0.15, 0.03, 0.6]  #: legend position on the plot = [0.85, 0.15, 0.03, 0.6]
     #: position of info-box on the map in Lambert Conformal coordinates = (990000, 2160000)
-    infospos = (990000, 2160000)
+    infospos = (7.3, 46.3)
     labelfontsize = 20  #: fontsize of colorbar label
     deport = {7: (0, 5000), 9: (-1000, 0),  16: (1000, 0), 19: (-2000, -2000),  21: (0, -5000)}
     """ displacement dictionary for the positioning tables near the massif center without overlapping."""
@@ -1106,7 +1202,9 @@ class _MultiMap(_Map_massifs):
             print("Warning: axis ", axis, " of value array is longer than number of subplots ", self.nsubplots,
                   ". Plotting first ", self.nsubplots, " out of ", leng, ".")
             leng = self.nsubplots
-        myvalues = np.array([variable[massifref == i][0] if i in massifref else np.nan for i in self.num])
+        print('var shape', variable.shape)
+        #myvalues = np.array([variable[massifref == i][0] if i in massifref else np.nan for i in self.num], dtype=object)
+        myvalues = np.array([variable[massifref == i][0] for i in self.num if i in massifref])
         print(myvalues.shape)
         for j in range(leng):
             for i, myvalue in enumerate(myvalues.take(indices=j, axis=axis)):
@@ -1287,12 +1385,12 @@ class _MultiMap(_Map_massifs):
             self.infos.append(self.maps.flat[i].add_artist(matplotlib.offsetbox.AnnotationBbox(
                 matplotlib.offsetbox.TextArea(north_text, textprops=dict(horizontalalignment='left',  # center in matplotlib 3.4
                                                                          size=5)), self.infospos,
-                box_alignment=(0.2, 0), xycoords=self.projection._as_mpl_transform(self.maps.flat[i]),
+                box_alignment=(0.2, 0),
                 bboxprops=dict(fc='none'), pad=0.2)))
             self.infos.append(self.maps.flat[i].add_artist(matplotlib.offsetbox.AnnotationBbox(
                 matplotlib.offsetbox.TextArea(south_text, textprops=dict(horizontalalignment='left',  # center in matplotlib 3.4
                                                                          size=5)), self.infospos,
-                box_alignment=(0.2, 1.4), xycoords=self.projection._as_mpl_transform(self.maps.flat[i]),
+                box_alignment=(0.2, 1.4),
                 bboxprops=dict(fc='none'), pad=0.2)))
 
     def draw_mesh(self, lons, lats, field, **kwargs):
@@ -1443,13 +1541,13 @@ class Map_pyrenees(_Map_massifs):
 
     mappos = [0.05, 0.06, 0.8, 0.8]  #: map position on the figure = [0.05, 0.06, 0.8, 0.8]
     legendpos = [0.89, 0.13, 0.02, 0.6]  #: legend position on the figure = [0.89, 0.1, 0.03, 0.7]
-    infospos = (600000, 1790000)  #: info box position on the map in Lambert Conformal Coordinates
+    infospos = (-1.8, 42.4)  #: info box position on the map in Lambert Conformal Coordinates
     labelfontsize = 16  #: fontsize of colorbar label
 
     deport = {64: (0, 2000), 67: (0, 20000), 68: (10000, 5000), 70: (-2000, 10000), 71: (-12000, 5000),
-                   72: (10000, 10000), 73: (10000, 10000), 74: (10000, 3000), 81: (-10000, 1000), 82: (-3000, 0),
-                   83: (1000, 0), 84: (-4000, 0), 85: (0, -7000), 86: (-3000, 0), 87: (0, -10000),
-                   88: (12000, 7000), 89: (0, -4000), 90: (10000, -5000), 91: (-17000, -8000)}
+              72: (10000, 10000), 73: (10000, 10000), 74: (10000, 3000), 75: (5000, 0), 81: (-10000, 1000),
+              82: (-3000, 0), 83: (1000, 0), 84: (-4000, 0), 85: (0, -7000), 86: (-3000, 0), 87: (0, -10000),
+              88: (12000, 7000), 89: (0, -4000), 90: (10000, -5000), 91: (-17000, -8000)}
     """displacement dictionary for the positioning tables near the massif center without overlapping."""
 
 
@@ -1504,7 +1602,7 @@ class MapFrance(_Map_massifs):
 
     mappos = [0.05, 0.06, 0.8, 0.8]  #: position of the map on the plot
     legendpos = [0.9, 0.13, 0.03, 0.7]  #: position of the colorbar on the plot
-    infospos = (450000, 140000)  #: position of north-south info box in lambert conformal coordinates
+    infospos = (-4., 51.)  #: position of north-south info box in lambert conformal coordinates
     labelfontsize = 20  #: fontsize of colorbar label
 
     deport = {2: (-10000, 0), 3: (10000, 0), 6: (20000, 0), 7: (-20000, 10000), 9: (15000, -10000), 11: (15000, -10000),
@@ -1522,29 +1620,6 @@ class MapFrance(_Map_massifs):
         """
 
         super(MapFrance, self).__init__(*args, **kw)
-
-    def getshapes(self):
-        """
-        Read massif shapes from shapefiles for all areas.
-
-        """
-        shapefile_path = os.path.join(SNOWTOOLS_DIR, 'DATA')
-        filenames = ['massifs_{0:s}.shp'.format(iarea) for iarea in self.area]
-        shapefile = [shpreader.Reader(os.path.join(shapefile_path, filename)) for filename in filenames]
-        # Informations sur la projection
-        projfile = 'massifs_{0:s}.prj'.format(self.area[0])
-        with open(os.path.join(shapefile_path, projfile), 'r') as prj_file:
-            prj_txt = prj_file.read()
-            pprojcrs = CRS.from_wkt(prj_txt)
-
-        # Projection du shapefile
-        shpProj = pprojcrs.to_dict()
-        # géométries
-        # records is a generator object. Each record contains a geometry, its attributes and bounds
-        records = [record for sublist in [list(i_shapefile.records()) for i_shapefile in shapefile]
-                   for record in sublist]
-        print(len(records))
-        return shapefile, pprojcrs, shpProj, records
 
 
 class MultiMap_Pyr(Map_pyrenees, _MultiMap):
@@ -1653,7 +1728,7 @@ class Map_corse(_Map_massifs):
     mappos = [0.05, 0.06, 0.8, 0.8]  #: map position on the figure = [0.05, 0.06, 0.8, 0.8]
     legendpos = [0.81, 0.15, 0.03, 0.6]  #: legend position on the figure = [0.81, 0.15, 0.03, 0.6]
     #: info box position on the map in Lambert Conformal Coordinates = (1110000, 1790000)
-    infospos = (1110000, 1790000)  #: info box position on the map in Lambert Conformal Coordinates
+    infospos = (8.5, 43.)  #: info box position on the map in Lambert Conformal Coordinates
     labelfontsize = 20  #: fontsize of colorbar label
     #: displacement dictionary for the positioning tables near the massif center without overlapping. = {}
     deport = {}
@@ -1765,8 +1840,29 @@ class Zoom_massif(_Map_massifs):
         :param args:
         :param kw:
         """
-        if 1 <= num_massif <= 24:
+        if 1 <= num_massif <= 27:
             self.area = 'alpes'
+            self.width = 10.2
+            self.height = 8
+            self.legendpos = [0.89, 0.15, 0.03, 0.6]
+            self.mappos = [0.05, 0.03, 0.8, 0.8]
+            self.titlepad = 25
+        elif 45 <= num_massif <= 47:
+            self.area = 'vosges'
+            self.width = 10.2
+            self.height = 8
+            self.legendpos = [0.89, 0.15, 0.03, 0.6]
+            self.mappos = [0.05, 0.03, 0.8, 0.8]
+            self.titlepad = 25
+        elif 55 <= num_massif <= 58:
+            self.area = 'jura'
+            self.width = 10.2
+            self.height = 8
+            self.legendpos = [0.89, 0.15, 0.03, 0.6]
+            self.mappos = [0.05, 0.03, 0.8, 0.8]
+            self.titlepad = 25
+        elif 48 <= num_massif <= 54 or 59 <= num_massif <= 62:
+            self.area = 'central'
             self.width = 10.2
             self.height = 8
             self.legendpos = [0.89, 0.15, 0.03, 0.6]
@@ -1819,11 +1915,11 @@ class Zoom_massif(_Map_massifs):
         """
         self.dicLonLatMassif = self.getLonLatMassif()
         for massif in self.records:
-            num = massif.attributes['num_opp']
+            num = massif.attributes['code']
             # print(num)
             if num == num_massif:
                 barycentre = self.dicLonLatMassif[num]
-        if self.area in ['alpes', 'corse']:
+        if self.area in ['alpes', 'corse', 'jura', 'central', 'vosges']:
             dlat = 0.55
             dlon = 0.65
             dloninfo = dlon/3.
@@ -1839,7 +1935,8 @@ class Zoom_massif(_Map_massifs):
         latmin = barycentre[1] - dlat
         latmax = barycentre[1] + dlat
 
-        infospos = self.projection.project_geometry(Point((lonmax-dloninfo, latmax-dlatinfo)),
-                                                    ccrs.PlateCarree()).coords[0]
+        # infospos = self.projection.project_geometry(Point((lonmax-dloninfo, latmax-dlatinfo)),
+        #                                             ccrs.PlateCarree()).coords[0]
+        infospos = (lonmax-dloninfo, latmax-dlatinfo)
 
         return lonmin, lonmax, latmin, latmax, infospos

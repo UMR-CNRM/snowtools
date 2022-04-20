@@ -33,7 +33,7 @@ class s2mTest(TestWithTempFolderWithLog):
             s2m(command.split())
 
     def runatcen(self):
-        return os.path.isdir("/rd/cenfic2/manto/lafaysse")
+        return os.path.isdir("/rd/cenfic3/manto/lafaysse")
 
 
 class s2mTestForcageBase(s2mTest):
