@@ -54,7 +54,7 @@ class Reanalyses(Task, S2MTaskMixIn):
                 datefin = dateend
                 fatal = False
                 # We check for latest packedguess file in the last month (last monthly reanalysis)
-                while not tb01: 
+                while not tb01:
                     missing_days = missing_days + 1
                     if missing_days == 31:
                         fatal = True # Crash if no packedguess found in the last month
