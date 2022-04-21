@@ -9,7 +9,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
-from bronx.stdtypes.date import Date
+from bronx.stdtypes.date import Date, Period
 
 
 def setup(t, **kw):
@@ -107,7 +107,7 @@ class Reanalyses(Task, S2MTaskMixIn):
                 namespace      = 'vortex.multi.fr',
                 fatal          = False,
             ),
-            print(t.prompt, 'tb02 =', tb02)
+            print(t.prompt, 'tb02a =', tb02a)
             print()
 
             # Mode secours : on prend la prévision correspondante
@@ -129,7 +129,7 @@ class Reanalyses(Task, S2MTaskMixIn):
                 namespace      = 'vortex.multi.fr',
                 fatal          = True,
             ),
-            print(t.prompt, 'tb02 =', tb02)
+            print(t.prompt, 'tb02b =', tb02b)
             print()
 
         #TODO :prévoir de regénérer les éventuels guess manquants
