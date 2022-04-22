@@ -253,7 +253,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 fatal          = False,
             ),
-            print(t.prompt, 'tb06a =', tb06a)
+            print(t.prompt, 'tb06 =', tb06)
             print()
 
 #            self.sh.title('Toolbox output tb06b')

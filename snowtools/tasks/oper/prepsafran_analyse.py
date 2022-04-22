@@ -314,8 +314,8 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             if self.conf.rundate.hour == 3:
 
-                self.sh.title('Toolbox output tb05_a = guess arpege assim')
-                tb05a = toolbox.output(
+                self.sh.title('Toolbox output tb05 = guess arpege assim')
+                tb05 = toolbox.output(
                     role           = 'Ebauche',
                     coherentgroup  = 'EbauchesDeterministes',
                     local          = 'ARP_[date:ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
@@ -335,7 +335,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     fatal          = False,
                 ),
-                print(t.prompt, 'tb05_a =', tb05)
+                print(t.prompt, 'tb05 =', tb05)
                 print()
 
                 # Dans le mode secours, on est passé dans l'alternate qui consiste à prendre un fichier du cycle de production au lieu d'assimilation
