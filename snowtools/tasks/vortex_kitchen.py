@@ -107,6 +107,8 @@ class vortex_kitchen(object):
         if self.options.oper:
             if self.options.monthlyreanalysis:
                 self.reftask = "monthly_surfex_reanalysis"
+            elif self.options.monthlyreanalysissytron:
+                self.reftask = "monthly_surfex_reanalysis_sytron"
             elif self.options.forecast:
                 self.reftask = "ensemble_surfex_tasks_forecast"
             else:
@@ -356,6 +358,10 @@ class Vortex_conf_file(object):
         self.set_field("DEFAULT", 'geometry', self.options.vconf)
         if hasattr(self.options, 'addmask'):
             self.set_field("DEFAULT", 'addmask', self.options.addmask)
+        if hasattr(self.options, 'prep_xpid'):
+            if '@' not in self.options.prep_xpid:
+                self.options.prep_xpid = self.options.prep_xpid + '@' + os.getlogin()
+            self.set_field("DEFAULT", 'prep_xpid', self.options.prep_xpid)
 
     def escroc_variables(self):
 

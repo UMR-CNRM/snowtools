@@ -110,7 +110,8 @@ class _StandardNC(netCDF4.Dataset):
         self.time_coverage_start = time[0].isoformat()
         self.time_coverage_end = time[-1].isoformat()
         self.time_coverage_duration = str(time[-1] - time[0])
-        self.time_coverage_resolution = str(time[1] - time[0])
+        if len(time) > 1:
+            self.time_coverage_resolution = str(time[1] - time[0])
 
         self.snowtools_commit = git_infos(os.path.dirname(os.path.abspath(__file__))).get_commit(default='')
 

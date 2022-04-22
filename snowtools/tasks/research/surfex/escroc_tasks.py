@@ -369,7 +369,8 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                 dateinit       = Date(self.conf.datespinup),
                 threshold      = self.conf.threshold,
                 members        = footprints.util.rangex(members),
-                geometry       = [self.conf.geometry.area],
+                geometry_in    = [self.conf.geometry.tag],
+                geometry_out   = self.conf.geometry.tag,
                 subensemble    = self.conf.subensemble if hasattr(self.conf, "subensemble")  else "E2",
                 ntasks         = ntasks
             )

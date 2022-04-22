@@ -186,6 +186,10 @@ class Surfex_command(_S2M_command):
                           action="store_true", dest="onlyextractforcing", default=False,
                           help="only extract meteorological forcing - default: False")
 
+        parser.add_option("-p", "--prep_xpid",
+                          action="store", type="string", dest="prep_xpid", default=None,
+                          help="xpid in wich are the PREP files to be used")
+
         parser.add_option("--addmask",
                           action="store_true", dest="addmask", default=False,
                           help="apply shadows on solar radiation from surrounding masks")
@@ -208,6 +212,10 @@ class Surfex_command(_S2M_command):
 
         parser.add_option("--monthlyreanalysis",
                           action="store_true", dest="monthlyreanalysis", default=False,
+                          help="Run monthly reanalysis")
+
+        parser.add_option("--monthlyreanalysissytron",
+                          action="store_true", dest="monthlyreanalysissytron", default=False,
                           help="Run monthly reanalysis")
 
         parser.add_option("--dailyprep",

@@ -271,7 +271,8 @@ class Prosnow_LT_Forecast(Task, S2MTaskMixIn):
                 datebegin                  = self.conf.datebegin,
                 dateend                    = self.conf.dateend,
                 ntasks                     = self.conf.ntasks,
-                geometry                   = [self.conf.resort + '_flat'],
+                geometry_in                = [self.conf.resort + '_flat'],
+                geometry_out               = self.conf.resort + '_flat',
             )
             print(t.prompt, 'alg_tb03 =', alg_tb03)
             print()

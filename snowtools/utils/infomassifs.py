@@ -140,9 +140,9 @@ class infomassifs():
                         "corse": [40, 41],
                         "cor": [40, 41],
                         "cor2": [40, 41],
-                        "mac": list(range(48, 55)) + list(range(59, 63)),
-                        "jur": list(range(55, 59)),
-                        "vog": list(range(45,48)),
+                        "mac11": list(range(48, 55)) + list(range(59, 63)),
+                        "jur4": list(range(55, 59)),
+                        "vog3": list(range(45,48)),
                         "all": list(range(1, 27)) + [30] + list(range(40, 42)) + list(range(45, 63)) +
                                list(range(64, 75)) + list(range(80, 92))
                         }
