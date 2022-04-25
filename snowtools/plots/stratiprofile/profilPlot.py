@@ -21,7 +21,7 @@ import logging
 logger = logging.getLogger()
 
 
-def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax=None, legend=None, cbar_show=True,
+def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None, value_max=None, legend=None, cbar_show=True,
                  title=None, ylimit=None,):
     """
     Trace le profil de value en fonction du temps avec les epaisseurs reelles de couches
@@ -43,10 +43,10 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax
     :type colormap: str or matplotlib colormap
     :param legend: legend for the colorbar
     :type legend: str
-    :param vmin: seems to be use only for Temperature graph
-    :type vmin: float
-    :param vmax: seems to be use only for Temperature graph
-    :type vmax: float
+    :param value_min: imposing maxval (useful for members graph for example)
+    :type value_min: float
+    :param value_max: imposing minval (useful for members graph for example)
+    :type value_max: float
     :param cbar_show: Whether or not to plot the colorbar
     :type cbar_show: bool
     :param title: title (date for member plots for example)
@@ -105,12 +105,21 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax
 
     vertices = vertices[(dz > 0).ravel()]
 
-    maxval = np.nanmax(value)
-    minval = np.nanmin(value)
-    if np.ma.is_masked(maxval):
-        maxval = 1
-    if np.ma.is_masked(minval):
-        minval = 0.1
+    if value_max is None:
+        try:
+            maxval = np.nanmax(value)
+        except ValueError:
+            maxval = 1
+    else:
+        maxval = value_max
+
+    if value_min is None:
+        try:
+            minval = np.nanmin(value)
+        except ValueError:
+            minval = 0.1
+    else:
+        minval = value_min
 
     extend = 'neither'
     if colormap == 'grains':
@@ -163,12 +172,14 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', vmin=None, vmax
             customcmap['blue'].append((x, cmap.colors[iuse][2], cmap.colors[iuse][2]))
         cmap = colors.LinearSegmentedColormap('ratio_cisaillment', customcmap)
     elif colormap == 'tempK':
-        if vmax is None:
+        if value_max is None:
             Vmax = 273.15
-            Vmin = Vmax-40
         else:
-            Vmax = vmax
-            Vmin = vmin
+            Vmax = maxval
+        if value_min is None:
+            Vmin = Vmax - 40
+        else:
+            Vmin = minval
         norm = colors.Normalize(vmin=Vmin, vmax=Vmax)
         value[value < Vmin if ~np.isnan(Vmin) else False] = Vmin
         cmap = cm.get_cmap('RdBu_r').copy()
@@ -364,7 +375,7 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
     axe.xaxis.set_major_locator(ticker.MaxNLocator(4))
     plt.setp(axe.xaxis.get_majorticklabels(), size='small')
 
-    if xlimit is not (None, None):
+    if xlimit != (None, None):
         Max = xlimit[1]
         Min = xlimit[0]
     else:
