@@ -1108,13 +1108,16 @@ class ProPlotterControllerMember(ProPlotterControllerSlider):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
+        max_value = np.nanmax(self.dataplot_master[:, :, :])
+        min_value = np.nanmin(self.dataplot_master[:, :, :])
+
         dataplot_master = self.dataplot_master[:, self.dateslice, :]
         dztoplot = self.dztoplot[:, self.dateslice, :]
         ylimit = np.max(np.cumsum(self.dztoplot[:, :, :], axis=2))
 
         return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend, dz=dztoplot,
-                    colormap=self.colormap, title=self.timeplot[self.dateslice],
-                    cbar_show=self.master.main.first_master, ylimit=ylimit)
+                    colormap=self.colormap, title=self.timeplot[self.dateslice], value_max=max_value,
+                    value_min=min_value, cbar_show=self.master.main.first_master, ylimit=ylimit)
 
     def give_react_args(self, x_event):
         """
@@ -1240,13 +1243,15 @@ class ProPlotterControllerMultiple(ProPlotterControllerSlider):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
+        max_value = np.nanmax(self.dataplot_master[:, :, :])
+        min_value = np.nanmin(self.dataplot_master[:, :, :])
         dataplot_master = np.transpose(self.dataplot_master[self.dateslice, :, :])
         dztoplot = np.transpose(self.dztoplot[self.dateslice, :, :])
         ylimit = np.max(np.cumsum(self.dztoplot[:, :, :], axis=1))
 
         return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend, dz=dztoplot,
-                    colormap=self.colormap, title=self.timeplot[self.dateslice],
-                    cbar_show=self.master.main.first_master, ylimit=ylimit)
+                    colormap=self.colormap, title=self.timeplot[self.dateslice],value_max=max_value,
+                    value_min = min_value, cbar_show = self.master.main.first_master, ylimit = ylimit)
 
     def give_react_args(self, x_event):
         """
