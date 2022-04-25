@@ -398,7 +398,7 @@ class Vortex_conf_file(object):
             if '@' in self.options.forcing:
                 self.options.forcing, forcinglogin = self.options.forcing.split('@')
             elif self.options.model == 'safran':
-                forcinglogin = 'vernaym'
+                forcinglogin = 'nativesafran_CEN'
             else:
                 forcinglogin = os.getlogin()
 
@@ -441,7 +441,7 @@ class Vortex_conf_file(object):
         self.set_field("DEFAULT", 'cutoff', self.options.cutoff)
         self.set_field("DEFAULT", 'model', 'safran')
         # Default cycle corresponding to the "official" reanalysis one, to be updated...
-        self.set_field("DEFAULT", 'cycle', 'uenv:s2m.reanalysis2020.2@vernaym')
+        self.set_field("DEFAULT", 'cycle', 'uenv:s2m.reanalysis2020.2@nativesafran_CEN')
         self.set_field("DEFAULT", 'namespace', 'vortex.multi.fr')
         if self.options.namelist:
             self.set_field("DEFAULT", 'namelist', self.options.namelist)
