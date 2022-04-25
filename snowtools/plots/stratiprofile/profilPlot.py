@@ -197,6 +197,8 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
     else:
         norm = None
         cmap = cm.get_cmap(colormap)
+        vmax = maxval
+        vmin = minval
 
     rect = collections.PolyCollection(vertices, array=value[(dz > 0)].ravel(),
                                       cmap=cmap, norm=norm, edgecolors='none')
