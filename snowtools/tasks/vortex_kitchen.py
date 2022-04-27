@@ -175,13 +175,16 @@ class vortex_kitchen(object):
                 else:
                     conffilename_in = conffilename
 
-                if not os.path.islink(conffilename):
-                    # Operational case : the configuration files are provided :
-                    # only create a symbolic link in the appropriate directory
-                    if os.path.exists("../snowtools/conf/" + conffilename_in):
-                        os.symlink("../snowtools/conf/" + conffilename_in, conffilename)
-                    else:
-                        print("WARNING : No conf file found in snowtools")
+                # Remove existing link (to allow to switch from one configuration file to another one)
+                if os.path.islink(conffilename):
+                    os.remove(conffilename)
+
+                # Operational case : the configuration files are provided :
+                # only create a symbolic link in the appropriate directory
+                if os.path.exists("../snowtools/conf/" + conffilename_in):
+                    os.symlink("../snowtools/conf/" + conffilename_in, conffilename)
+                else:
+                    print("WARNING : No conf file found in snowtools")
             else:
                 if hasattr(self.options, 'confname'):
                     conffilename = self.options.confname.rstrip('.ini') + ".ini"
