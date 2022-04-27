@@ -75,7 +75,7 @@ from snowtools.DATA import SNOWTOOLS_DIR
 
 # Tell cartopy where to find Natural Earth features
 # config['data_dir'] = os.path.join(SNOWTOOLS_DIR, 'CartopyData')
-config['data_dir'] = os.path.join('/rd/cenfic2/manto/radanovicss', 'CartopyData')
+config['data_dir'] = os.path.join('/rd/cenfic3/manto/radanovicss', 'CartopyData')
 # config['data_dir'] = os.path.join('/cnrm/cen/users/NO_SAVE/radanovicss', 'CartopyData')  # for sxcen
 # until proper git annex solution
 
