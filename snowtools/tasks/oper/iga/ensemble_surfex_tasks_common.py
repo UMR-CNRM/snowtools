@@ -11,7 +11,7 @@ from vortex.tools.actions import actiond as ad
 
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
-from snowtools.bronx.stdtypes.date import daterange, yesterday, tomorrow
+from bronx.stdtypes.date import daterange, yesterday, tomorrow
 import footprints
 
 class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
