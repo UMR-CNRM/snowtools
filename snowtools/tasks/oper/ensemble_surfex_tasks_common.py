@@ -8,7 +8,7 @@ Created on 7 nov. 2017
 from vortex.layout.nodes import Task
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
-from bronx.stdtypes.date import daterange, yesterday, tomorrow
+from snowtools.bronx.stdtypes.date import daterange, yesterday, tomorrow
 import footprints
 
 
@@ -386,7 +386,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     nativefmt      = 'bin',
                     local          = 'ecoclimapII_eu_covers_param.bin',
                     geometry       = self.conf.geometry,
-                    genv           = self.conf.cycle,
+                    genv            = self.conf.cycle,
                     source         = 'ecoclimap2',
                     model          = 'surfex',
                 ),
@@ -400,7 +400,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     genv            = self.conf.cycle,
                     nativefmt       = 'netcdf',
                     local           = 'drdt_bst_fit_60.nc',
-                    model           = 'surfex',
+                    model          = 'surfex',
                 )
                 print(t.prompt, 'tb06 =', tb06)
                 print()
