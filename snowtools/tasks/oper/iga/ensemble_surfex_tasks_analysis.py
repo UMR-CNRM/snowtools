@@ -15,7 +15,7 @@ def setup(t, **kw):
         tag='Surfex_Parallel',
         ticket=t,
         nodes=[
-            Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw),
+            Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw, delay_component_errors=True, on_error='delayed_fail'),
             Rapatrie_Forcing_Deterministic(tag='Rapatrie_Forcing_Deterministic', ticket=t, **kw),
             Rapatrie_Pro_Deterministic(tag='Rapatrie_Pro_Deterministic', ticket=t, **kw),
             Rapatrie_Forcing(tag='Rapatrie_Forcing', ticket=t, **kw),

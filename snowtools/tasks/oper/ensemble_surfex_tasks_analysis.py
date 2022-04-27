@@ -14,7 +14,7 @@ def setup(t, **kw):
         tag='Surfex_Parallel',
         ticket=t,
         nodes=[
-            Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw)
+            Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw, delay_component_errors=True, on_error='delayed_fail')
         ],
         options=kw
     )
