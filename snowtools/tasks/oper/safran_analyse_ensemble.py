@@ -89,8 +89,8 @@ class Safran(Task, S2MTaskMixIn):
                         hostname       = 'guppy.meteo.fr',
                         username       = 'vernaym',
                         tube           = 'ftp',
-                        remote         = '/home/mrns/vernaym/extraction_obs/oper/ \
-                        observations_safran_[vconf]_[date::ymdh].tar',
+                        remote         = '/home/mrns/vernaym/extraction_obs/oper/'+
+                            'observations_safran_[vconf]_[date::ymdh].tar',
                         # namespace      = 'vortex.archive.fr',
                         cutoff         = 'assimilation',
                         now            = True,
