@@ -58,7 +58,7 @@ if args.postes:
     question_postes = question(
             listvar=["poste_nivo.num_poste", "poste_nivo.nom_usuel", "poste_nivo.alti", "poste_nivo.lat_dg", "poste_nivo.lon_dg", "hist_reseau_poste.reseau_poste"],
             table='POSTE_NIVO',
-            listjoin=["HIST_RESEAU_POSTE on (POSTE_NIVO.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE and HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64'))"],
+            listjoin=["HIST_RESEAU_POSTE on (POSTE_NIVO.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE and HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64'))",],
             listconditions=["datouvr<to_date('{0:s}', 'YYYYMMDD')".format(datedeb), "(datferm>to_date('{0:s}', 'YYYYMMDD') OR datferm is Null)".format(datefin)],
             listorder=['num_poste'],
             )
@@ -69,11 +69,13 @@ if args.postes:
 
 if args.rr:
     question1 = question(
-            listvar=["dat", f"{table}.num_poste", "poste_nivo.nom_usuel", "poste_nivo.alti", "poste_nivo.lat_dg", "poste_nivo.lon_dg", "poste_nivo.massif_nivo", "rr"+sufix, "hist_reseau_poste.reseau_poste"],
+            listvar=["Q.dat", f"{table}.num_poste", "poste_nivo.nom_usuel", "poste_nivo.alti", "poste_nivo.lat_dg", "poste_nivo.lon_dg", 
+                "poste_nivo.massif_nivo", "rr"+sufix, "hist_reseau_poste.reseau_poste", "HOR_NIV.ALTI_LPNX", "HOR_NIV.DAT"],
             table=table,
-            listorder=[f'{table}.num_poste', 'dat'],
+            listorder=[f'{table}.num_poste', 'Q.dat'],
             listjoin=[
-                f"POSTE_NIVO ON {table}.NUM_POSTE = POSTE_NIVO.NUM_POSTE ", f" HIST_RESEAU_POSTE on ({table}.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE) "],
+                f"POSTE_NIVO ON {table}.NUM_POSTE = POSTE_NIVO.NUM_POSTE ", f" HIST_RESEAU_POSTE on ({table}.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE) ",
+                f"HOR_NIV on (POSTE_NIVO.NUM_POSTE=HOR_NIV.NUM_POSTE and HOR_NIV.DAT>=to_date('{datedeb}', 'YYYYMMDD') and HOR_NIV.DAT<=to_date('{datefin}', 'YYYYMMDD'))"],
                 #f"POSTE_NIVO ON {table}.NUM_POSTE = POSTE_NIVO.NUM_POSTE ", f" HIST_RESEAU_POSTE on ({table}.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE ", " HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64')) "],
             listconditions=["HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64')"],
             period=[datedeb, datefin],
