@@ -182,6 +182,7 @@ class question(object):
             self.sql += ' WHERE {}'.format(' AND '.join(self.conditions))
         if len(self.order) > 0:
             self.sql += ' ORDER BY {}'.format(','.join(self.order))
+        print('Lauching the following querry : \n', self.sql)
 
         # Connexion to database
         with psycopg2.connect(
