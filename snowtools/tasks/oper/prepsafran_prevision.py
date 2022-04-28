@@ -44,36 +44,8 @@ class PrepSafran(Task, S2MTaskMixIn):
             # I- ARPEGE
             # Récupération des échéances de 6h à 102h du réseau 0h J d'ARPEGE
             # On traite les échéances en les considérant comme des membres distincts pour paralléliser les calculs
-
-            # On essaye d'abord sur le cache inline
-            self.sh.title('Toolbox input arpege prod inline')
+            self.sh.title('Toolbox input arpege')
             tbarp = toolbox.input(
-                role           = 'Gridpoint',
-                format         = 'grib',
-                geometry       = self.conf.arpege_geometry,
-                kind           = 'gridpoint',
-                filtername     = 'concatenate',
-                suite          = self.conf.suite,
-                cutoff         = 'production',
-                local          = 'ARP_[term:hour]/ARPEGE[date::addterm_ymdh]',
-                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[2:35],
-                namespace      = 'vortex.cache.fr',
-                block          = 'forecast',
-                nativefmt      = '[format]',
-                origin         = 'historic',
-                model          = '[vapp]',
-                vapp           = self.conf.source_app,
-                vconf          = self.conf.deterministic_conf,
-                fatal          = False,
-            )
-            print(t.prompt, 'tb01 =', tbarp)
-            print()
-
-            # En cas de bascule les fichiers ont pu ne pas être phasés, on essaye alors sur Hendrix.
-            # Les fichiers sur Hendrix n'ont pas de filtername "concatenate" --> A voir avec IGA
-            self.sh.title('Toolbox input arpege prod archive')
-            tbarp.extend(toolbox.input(
                 alternate      = 'Gridpoint',
                 format         = 'grib',
                 geometry       = self.conf.arpege_geometry,
@@ -83,7 +55,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 local          = 'ARP_[term:hour]/ARPEGE[date::addterm_ymdh]',
                 date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms)[2:35],
-                namespace      = 'vortex.archive.fr',
+                namespace      = 'vortex.multi.fr',
                 block          = 'forecast',
                 nativefmt      = '[format]',
                 origin         = 'historic',
@@ -91,13 +63,13 @@ class PrepSafran(Task, S2MTaskMixIn):
                 vapp           = self.conf.source_app,
                 vconf          = self.conf.deterministic_conf,
                 fatal          = True,
-            ))
+            )
             print(t.prompt, 'tb01 =', tbarp)
             print()
 
             # II- PEARP
-            # Récupération du réseau 18h (J-1) pour couvrir J 6h -> (J+4) 6h
-            # On veut donc les échéances de 12h à 108h
+            # Récupération du réseau 0h (J) pour couvrir J 6h -> (J+4) 6h
+            # On veut donc les échéances de 12h à 102h
             # Désormais toutes les échéances tri-horaire sont disponible
             self.sh.title('Toolbox input pearp inline')
             tbpearp = toolbox.input(
@@ -109,10 +81,10 @@ class PrepSafran(Task, S2MTaskMixIn):
                 geometry       = self.conf.pearp_geometry,
                 kind           = 'gridpoint',
                 local          = 'PEARP_[member]_[term:hour]/PEARP[date::addterm_ymdh]',
-                date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[4:38],
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                term           = footprints.util.rangex(self.conf.prv_terms)[4:],
                 member         = footprints.util.rangex(self.conf.pearp_members),
-                namespace      = 'vortex.cache.fr',
+                namespace      = 'vortex.multi.fr',
                 nativefmt      = '[format]',
                 origin         = 'historic',
                 model          = '[vapp]',
@@ -120,30 +92,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 vconf          = self.conf.eps_conf,
                 fatal          = False,
             )
-            print(t.prompt, 'tb02 =', tbpearp)
-            print()
-
-            self.sh.title('Toolbox input pearp archive')
-            tbpearp.extend(toolbox.input(
-                alternate      = 'Gridpoint',
-                block          = 'forecast',
-                suite          = self.conf.suite,
-                cutoff         = 'production',
-                format         = 'grib',
-                geometry       = self.conf.pearp_geometry,
-                kind           = 'gridpoint',
-                local          = 'PEARP_[member]_[term:hour]/PEARP[date::addterm_ymdh]',
-                date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                term           = footprints.util.rangex(self.conf.prv_terms)[4:38],
-                member         = footprints.util.rangex(self.conf.pearp_members),
-                namespace      = 'vortex.archive.fr',
-                nativefmt      = '[format]',
-                origin         = 'historic',
-                model          = '[vapp]',
-                vapp           = self.conf.source_app,
-                vconf          = self.conf.eps_conf,
-                fatal          = False,
-            ))
             print(t.prompt, 'tb02 =', tbpearp)
             print()
 
@@ -226,8 +174,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 block          = self.conf.block,
                 geometry       = self.conf.domains,
                 vconf          = '[geometry::area]',
-                date           = '{0:s}/+PT24H/-PT12H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms)[4:38],
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                cumul          = footprints.util.rangex(self.conf.prv_terms)[4:],
                 nativefmt      = 'ascii',
                 kind           = 'guess',
                 model          = 'safran',
