@@ -24,7 +24,7 @@ class SystemException(Exception):
 def callSystemOrDie(commande, errorcode=None):
     """Method to execute a system command and kill the current program if it fails."""
 
-    status = subprocess.call(commande, stdout=sys.stdout, stderr=sys.stderr)
+    status = subprocess.call(commande.split(), stdout=sys.stdout, stderr=sys.stderr)
 
     if status != 0:
         raise SystemException(status, commande)

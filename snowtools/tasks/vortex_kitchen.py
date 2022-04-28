@@ -8,12 +8,11 @@ Created on 23 févr. 2018
 
 import datetime
 import os
-import sys
-import subprocess
 import shutil
 
 from snowtools.utils.dates import WallTimeException
 from snowtools.utils.resources import InstallException
+from snowtools.tools.execute import callSystemOrDie
 from snowtools.DATA import SNOWTOOLS_DIR, SNOWTOOLS_CEN
 from bronx.stdtypes.date import Period
 
@@ -237,7 +236,7 @@ class vortex_kitchen(object):
         os.chdir(self.jobdir)
         for mkjob in mkjob_list:
             print("Run command: " + mkjob + "\n")
-            os.system(mkjob)
+            callSystemOrDie(mkjob)
 
     def walltime(self):
 
