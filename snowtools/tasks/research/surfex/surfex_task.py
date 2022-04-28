@@ -33,7 +33,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         t = self.ticket
 
         if not hasattr(self.conf, "genv"):
-            self.conf.genv = 'uenv:cen.04@CONST_CEN'
+            self.conf.genv = 'uenv:cen.05@CONST_CEN'
 
         # Definition of geometries, safran xpid/block and list of dates from S2MTaskMixIn methods
         list_geometry = self.get_list_geometry(meteo=self.conf.meteo)
@@ -59,11 +59,11 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 role           = 'Forcing',
                 kind           = 'MeteorologicalForcing',
                 vapp           = self.conf.meteo,
-                vconf          = '[geometry:area]',
+                vconf          = '[geometry:area]' if source_safran == 'safran' else '[geometry:tag]',
                 source_app     = dict_source_app_safran if source_safran == 'safran' else None,
                 source_conf    = dict_source_conf_safran if source_safran == 'safran' else None,
                 cutoff         = 'assimilation',
-                local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' \
+                local          = '[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' \
                                  if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                 experiment     = self.conf.forcingid,
                 block          = block_safran,
@@ -88,11 +88,11 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     role           = 'Forcing',
                     kind           = 'MeteorologicalForcing',
                     vapp           = self.conf.meteo,
-                    vconf          = '[geometry:area]',
+                    vconf          = '[geometry:area]' if source_safran == 'safran' else '[geometry:tag]',
                     source_app     = dict_source_app_safran if source_safran == 'safran' else None,
                     source_conf    = dict_source_conf_safran if source_safran == 'safran' else None,
                     cutoff         = 'assimilation',
-                    local          = '[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' \
+                    local          = '[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' \
                                      if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = self.conf.forcingid,
                     block          = block_safran,
@@ -220,7 +220,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     local          = 'init_TG.nc',
                     geometry       = self.conf.geometry,
                     genv           = self.conf.genv,
-                    gvar           = 'climtg_[geometry::area]',
+                    gvar           = 'climtg_[geometry::tag]',
                     model          = 'surfex',
                     fatal          = False
                 ),
@@ -436,7 +436,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             if self.conf.meteo == "safran":
                 # Forcing files need to be converted from flat to slopes geometry
                 # Parallelization on the years but limited for memory issues on alp_allslopes and pyr_allslopes domains
-                if self.conf.geometry.area in ["alp_allslopes", "pyr_allslopes"]:
+                if self.conf.geometry.tag in ["alp_allslopes", "pyr_allslopes", "alp27_allslopes", "pyr23_allslopes"]:
                     ntasks = min(5, len(list_dates_begin_forc))
                 else:
                     ntasks = min(40, len(list_dates_begin_forc))
@@ -451,7 +451,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     dateend      = list_dates_end_forc if not oneforcing else [self.conf.dateend],
                     ntasks       = ntasks,
                     geometry_in  = list_geometry,
-                    geometry_out = self.conf.geometry.area
+                    geometry_out = self.conf.geometry.tag
                 )
                 print(t.prompt, 'tb09a =', tb09a)
                 print()
@@ -553,7 +553,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print(t.prompt, 'tb11 =', tb11)
             print()
 
-            if self.conf.geometry.area in ["cor_flat"]:
+            if self.conf.geometry.tag in ["cor_flat"]:
                 # Specific number of threads must be provided for domains
                 # with a number of points lower than the number of MPI threads
                 self.component_runner(tbalgo4, tbx3, mpiopts=dict(nnodes=1, nprocs=18, ntasks=18))

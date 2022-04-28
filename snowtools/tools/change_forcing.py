@@ -356,6 +356,10 @@ class forcinput_tomodify:
         for m, massif in enumerate(self.list_massifs):
             indflat = (self.slope == 0.) & (self.massif_number == massif)
             altitude = self.zs[indflat]
+
+            if len(altitude) < 2:
+                return
+
             rain_full = rainf[:, indflat]
             snow_full = snowf[:, indflat]
             preciptot = rain_full + snow_full
@@ -392,6 +396,10 @@ class forcinput_tomodify:
         for m, massif in enumerate(self.list_massifs):
             indflat = (self.slope == 0.) & (self.massif_number == massif)
             altitude = self.zs[indflat]
+
+            if len(altitude) < 2:
+                return
+
             zmax = np.max(altitude)
 
             tair_full = tair[:, indflat]
@@ -563,8 +571,8 @@ class forcinput_select(forcinput_tomodify):
         # Il faut créer la dimension time en premier (obligatoire au format NETCDF4_CLASSIC)
         new_forcing_file.createDimension("time", None)
 
-        if massif_dim_name in init_forcing_file_dimensions:
-            init_massif = init_forcing_file.read("massif", keepfillvalue=True)
+        if massif_dim_name in init_forcing_file_dimensions and massif_dim_name in init_forcing_file.listvar():
+            init_massif = init_forcing_file.read(massif_dim_name, keepfillvalue=True)
             index_massif = np.where(np.in1d(init_massif, list_massif_number))[0]
             len_dim = len(index_massif)
 
@@ -582,10 +590,10 @@ class forcinput_select(forcinput_tomodify):
             spatial_dim_name = "missing"
 
         if spatial_dim_name in init_forcing_file_dimensions:
-            # print extendaspects
-            # print "NB slopes by level"
-            # print nb_slopes_bylevel
-            # print len(index_points)
+            # print (extendaspects)
+            # print ("NB slopes by level")
+            # print (nb_slopes_bylevel)
+            # print (len(index_points))
             if extendaspects:
                 len_dim = len(index_points) * nb_slopes_bylevel
             elif extendslopes:
@@ -654,9 +662,6 @@ class forcinput_select(forcinput_tomodify):
                             var_array = np.tile(slope_1level, len(index_points))
                         elif extendslopes:
                             var_array = np.tile(slope_1level, len(indflat))
-
-#                 print extendslopes
-#                 print extendaspects
 
                 if varname not in ["aspect", "slope"]:
 

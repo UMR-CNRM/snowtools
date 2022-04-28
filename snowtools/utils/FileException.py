@@ -25,6 +25,25 @@ class DirNameException(Exception):
         return tuple(red)
 
 
+class UndefinedDirectoryException(Exception):
+    """
+    Exception for a non-defined directory
+
+    :param path: the directory conerned
+    """
+
+    def __init__(self, path):
+        self.path = path
+
+    def __str__(self):
+        return "Undefined directory : " + self.path
+
+    def __reduce__(self):
+        red = list(super(UndefinedDirectoryException, self).__reduce__())
+        red[1] = tuple([self.path])  # Les arguments qui seront passes a __init__
+        return tuple(red)
+
+
 class DirFileException(Exception):
     """
     Exception when a file is provided instead of a directory

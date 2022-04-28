@@ -66,7 +66,7 @@ class massif_simu(prosimu):
                 if np.sum(indslopes) > 1:
                     risk_array[:, :, L, m] = np.take(weights, slope_natural_risk[:, indslopes])
                 else:
-                    risk_array[:, :, L, m] = np.nan
+                    risk_array[:, :, L, m] = 0
 
         var = self.dataset.createVariable(self.MassifRiskName, 'float',
                                           ["time", self.massif_dim_name], fill_value=fillvalue)

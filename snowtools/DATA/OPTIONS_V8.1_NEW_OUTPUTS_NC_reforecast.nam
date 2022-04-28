@@ -227,7 +227,7 @@
                        CSURF_FILETYPE =       'NC '   ,
                        CTIMESERIES_FILETYPE = 'NETCDF'   ,
                        LRESTART = .TRUE.                     ,
-                       XTSTEP_OUTPUT = 86400.            ,
+                       XTSTEP_OUTPUT = 10800.            ,
                        XTSTEP_SURF = 900.                ,
                        LWRITE_COORD = .TRUE.
 /
@@ -278,12 +278,10 @@
   LSNOWDIMNC = .TRUE.
   LRESETCUMUL = .TRUE.
   LSELECT= .TRUE.
-  CSELECT='time','ZS','aspect','slope','massif_num','station','TG1','WG1','WGI1','TG4',
-'RAINF_ISBA','DRAIN_ISBA','RUNOFF_ISBA','TALB_ISBA','TS_ISBA',
+  CSELECT='time','ZS','aspect','slope','massif_num','station',
+'DRAIN_ISBA','RAINF_ISBA','RUNOFF_ISBA',
 'WSN_T_ISBA','DSN_T_ISBA','EVAP_ISBA','SNOMLT_ISBA',
-'SD_1DY_ISBA','SD_3DY_ISBA','SD_5DY_ISBA','SD_7DY_ISBA','SWE_1DY_ISBA','SWE_3DY_ISBA','SWE_5DY_ISBA','SWE_7DY_ISBA',
+'SD_12H_ISBA','SD_1DY_ISBA','SD_3DY_ISBA','SD_5DY_ISBA','SD_7DY_ISBA','SWE_1DY_ISBA','SWE_3DY_ISBA','SWE_5DY_ISBA','SWE_7DY_ISBA',
 'RAMSOND_ISBA','WET_TH_ISBA','REFRZTH_ISBA',
-'RN_ISBA','LE_ISBA','H_ISBA','GFLUX_ISBA',
-'SWD_ISBA','SWU_ISBA','LWD_ISBA','LWU_ISBA',
-'NAT_LEV','AVA_TYP','ACC_LEV','DEP_HIG','DEP_MOD'
+'NAT_LEV','AVA_TYP','ACC_LEV','DEP_HIG','DEP_MOD','NAT_RAT','ACC_RAT'
 /

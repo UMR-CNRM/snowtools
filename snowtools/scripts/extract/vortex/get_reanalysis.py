@@ -15,7 +15,7 @@ from vortex import toolbox
 from bronx.stdtypes.date import Date
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 
-usage = "usage: python get_reanalysis.py --geometry=xxx [--byear=YYYY] [--eyear=YYYY] [--meteo] [--snow] [--nativemeteo]"
+usage = "usage: python get_reanalysis.py --geometry=xxx [--byear=YYYY] [--eyear=YYYY] [--xpid=xpid] [--meteo] [--snow] [--nativemeteo]"
 
 toolbox.active_now = True  # permet de se passer de l'attribut now=True dans les toolbox
 
@@ -62,8 +62,8 @@ def parse_options(arguments):
 
 class config(object):
 
-    xpid = "reanalysis@lafaysse"  #
-    xpid_native = "reanalysis@vernaym"
+    xpid = "reanalysis2020.2@lafaysse"  #
+    xpid_native = "reanalysis2020.2@vernaym"
     duration = "yearly"
 
     def __init__(self):

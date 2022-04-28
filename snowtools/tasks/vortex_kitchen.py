@@ -12,6 +12,7 @@ import shutil
 
 from snowtools.utils.dates import WallTimeException
 from snowtools.utils.resources import InstallException
+from snowtools.tools.execute import callSystemOrDie
 from snowtools.DATA import SNOWTOOLS_DIR, SNOWTOOLS_CEN
 from bronx.stdtypes.date import Period
 
@@ -107,6 +108,8 @@ class vortex_kitchen(object):
         if self.options.oper:
             if self.options.monthlyreanalysis:
                 self.reftask = "monthly_surfex_reanalysis"
+            elif self.options.monthlyreanalysissytron:
+                self.reftask = "monthly_surfex_reanalysis_sytron"
             elif self.options.forecast:
                 self.reftask = "ensemble_surfex_tasks_forecast"
             else:
@@ -171,13 +174,16 @@ class vortex_kitchen(object):
                 else:
                     conffilename_in = conffilename
 
-                if not os.path.islink(conffilename):
-                    # Operational case : the configuration files are provided :
-                    # only create a symbolic link in the appropriate directory
-                    if os.path.exists("../snowtools/conf/" + conffilename_in):
-                        os.symlink("../snowtools/conf/" + conffilename_in, conffilename)
-                    else:
-                        print("WARNING : No conf file found in snowtools")
+                # Remove existing link (to allow to switch from one configuration file to another one)
+                if os.path.islink(conffilename):
+                    os.remove(conffilename)
+
+                # Operational case : the configuration files are provided :
+                # only create a symbolic link in the appropriate directory
+                if os.path.exists("../snowtools/conf/" + conffilename_in):
+                    os.symlink("../snowtools/conf/" + conffilename_in, conffilename)
+                else:
+                    print("WARNING : No conf file found in snowtools")
             else:
                 if hasattr(self.options, 'confname'):
                     conffilename = self.options.confname.rstrip('.ini') + ".ini"
@@ -230,7 +236,7 @@ class vortex_kitchen(object):
         os.chdir(self.jobdir)
         for mkjob in mkjob_list:
             print("Run command: " + mkjob + "\n")
-            os.system(mkjob)
+            callSystemOrDie(mkjob)
 
     def walltime(self):
 
@@ -356,11 +362,16 @@ class Vortex_conf_file(object):
         self.set_field("DEFAULT", 'geometry', self.options.vconf)
         if hasattr(self.options, 'addmask'):
             self.set_field("DEFAULT", 'addmask', self.options.addmask)
+        if hasattr(self.options, 'prep_xpid'):
+            if self.options.prep_xpid:
+                if '@' not in self.options.prep_xpid:
+                    self.options.prep_xpid = self.options.prep_xpid + '@' + os.getlogin()
+                self.set_field("DEFAULT", 'prep_xpid', self.options.prep_xpid)
 
     def escroc_variables(self):
 
         self.set_field("DEFAULT", 'subensemble', self.options.escroc)
-        self.set_field("DEFAULT", 'duration', 'full')
+        # self.set_field("DEFAULT", 'duration', 'full')
 
         if self.options.nnodes > 1 and self.options.nmembers:
 
@@ -389,7 +400,7 @@ class Vortex_conf_file(object):
             if '@' in self.options.forcing:
                 self.options.forcing, forcinglogin = self.options.forcing.split('@')
             elif self.options.model == 'safran':
-                forcinglogin = 'vernaym'
+                forcinglogin = 'nativesafran_CEN'
             else:
                 forcinglogin = os.getlogin()
 
@@ -432,7 +443,7 @@ class Vortex_conf_file(object):
         self.set_field("DEFAULT", 'cutoff', self.options.cutoff)
         self.set_field("DEFAULT", 'model', 'safran')
         # Default cycle corresponding to the "official" reanalysis one, to be updated...
-        self.set_field("DEFAULT", 'cycle', 'uenv:s2m.reanalysis2020.2@vernaym')
+        self.set_field("DEFAULT", 'cycle', 'uenv:s2m.reanalysis2020.2@nativesafran_CEN')
         self.set_field("DEFAULT", 'namespace', 'vortex.multi.fr')
         if self.options.namelist:
             self.set_field("DEFAULT", 'namelist', self.options.namelist)

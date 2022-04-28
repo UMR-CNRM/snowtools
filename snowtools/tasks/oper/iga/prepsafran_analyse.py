@@ -22,7 +22,7 @@ def setup(t, **kw):
         tag='pearp2safran',
         ticket=t,
         nodes=[
-            PrepSafran(tag='prepsafana', ticket=t, **kw),
+            PrepSafran(tag='prepsafana', ticket=t, **kw, delay_component_errors=True),
         ],
         options=kw,
     )
