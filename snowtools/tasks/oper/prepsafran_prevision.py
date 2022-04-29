@@ -143,8 +143,6 @@ class PrepSafran(Task, S2MTaskMixIn):
 
         if 'late-backup' in self.steps:
 
-            # On ne plante que si les guess issus d'ARPEGE n'ont pas pu être générés
-
             self.sh.title('Toolbox output guess arpege prod')
             tb05 = toolbox.output(
                 role           = 'Ebauche',

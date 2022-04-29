@@ -3,19 +3,15 @@
 
 __all__ = []
 
+from bronx.stdtypes.date import Date
+from bronx.stdtypes.date import Period
 from cen.layout.nodes import S2MTaskMixIn
 import footprints
-logger = footprints.loggers.getLogger(__name__)
-
+import glob
+import os
+import tarfile
 from vortex import toolbox
-from vortex.layout.nodes import Driver
-
-from iga.tools.apps import OpTask
-from vortex.tools.actions import actiond as ad
-from common.util import usepygram
-import iga.tools.op as op
-import snowtools
-from snowtools.bronx.stdtypes.date import Date
+from vortex.layout.nodes import Driver, Task
 
 logger = footprints.loggers.getLogger(__name__)
 
@@ -32,20 +28,24 @@ def setup(t, **kw):
     )
 
 
-class PrepSafran(OpTask, S2MTaskMixIn):
+class PrepSafran(Task, S2MTaskMixIn):
 
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
     report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
     report_execution_error = S2MTaskMixIn.s2moper_report_execution_error
 
     def refill(self):
+
+        pass
+
+    def process(self):
         """Preparation of SAFRAN input files"""
 
         t = self.ticket
         # En laçant cette tâche au réseau de 12h on obtient datebegin=1er aout precedent et dateend=J-4
         datebegin, dateend = self.get_period()
 
-        if 'refill' in self.steps:
+        if 'early-fetch' in self.steps:
 
             tbarp   = list()
             missing_dates = list()
@@ -269,8 +269,6 @@ class PrepSafran(OpTask, S2MTaskMixIn):
             ),
             print(t.prompt, 'tb05 =', tb05)
             print()
-
-            ad.phase(tb05)
 
             for f in glob.glob('*/ARPEGE*'):
 

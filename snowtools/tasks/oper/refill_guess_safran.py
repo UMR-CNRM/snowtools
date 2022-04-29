@@ -22,6 +22,9 @@ def setup(t, **kw):
         tag    = 'pearp2safran',
         ticket = t,
         nodes  = [
+            # Do not add delay_component_errors=True in the kw because
+            # if one file hasn't been produced nothing must be saved
+            # (otherwise it could lead to keep an incomplete tar).
             PrepSafran(tag='prepsaf', ticket=t, **kw),
         ],
         options = kw,
