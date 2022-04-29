@@ -213,21 +213,12 @@ class PrepSafran(Task, S2MTaskMixIn):
             tbmeta = toolbox.input(
                 role           = 'Metadata',
                 format         = 'grib',
-                geometry       = self.conf.cpl_geometry,
-                kind           = 'gridpoint',
-                suite          = 'oper',
+                genv            = self.conf.cycle,
+                geometry       = self.conf.arpege_geometry, #EURAT01
+                gdomain        = '[geometry:area]',
+                kind           = 'relief',
                 local          = 'METADATA.grib',
-                date           = '{0:s}/-PT30H'.format(self.conf.rundate.ymd6h),
-                term           = 0,
-                namespace      = 'vortex.multi.fr',
-                block          = 'forecast',
-                nativefmt      = '[format]',
-                cutoff         = 'assimilation',
-                origin         = 'historic',
-                model          = '[vapp]',
-                vapp           = self.conf.source_app,
-                vconf          = self.conf.deterministic_conf,
-                fatal          = False,
+                fatal          = True,
             )
             print(t.prompt, 'tbmeta =', tbmeta)
             print()

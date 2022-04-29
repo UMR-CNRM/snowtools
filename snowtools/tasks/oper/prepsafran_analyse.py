@@ -38,60 +38,28 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             tbarp = list()
 
+            ###########################
+            #  I) FICHIER de METADONNES
+            ###########################
+
+            # On commence par récupérer un fichier à échéance 0h qui sert à lire le métédonnées (infos sur la grille en particulier)
+            # Ce fichier supplémentaire est indispensable pour toujours travailler avec la bonne grille du modèle, même en cas d'évolution
+            # de la géométrie ARPEGE.
+            self.sh.title('Toolbox input metadata')
+            tb01 = toolbox.input(
+                role           = 'Metadata',
+                format         = 'grib',
+                genv            = self.conf.cycle,
+                geometry       = self.conf.arpege_geometry, #EURAT01
+                kind           = 'relief',
+                gdomain        = '[geometry:area]',
+                local          = 'METADATA.grib',
+                fatal          = True,
+            )
+            print(t.prompt, 'tb01 =', tb01)
+            print()
+
             if self.conf.rundate.hour == 3:
-
-                ###########################
-                #  I) FICHIER de METADONNES
-                ###########################
-
-                # On commence par récupérer un fichier à échéance 0h qui sert à lire le métédonnées (infos sur la grille en particulier)
-                # Ce fichier supplémentaire est indispensable pour toujours travailler avec la bonne grille du modèle, même en cas d'évolution
-                # de la géométrie ARPEGE.
-                self.sh.title('Toolbox input metadata')
-                tb01a = toolbox.input(
-                    role           = 'Metadata',
-                    format         = 'grib',
-                    geometry       = self.conf.arpege_geometry,
-                    kind           = 'gridpoint',
-                    suite          = self.conf.suite,
-                    local          = 'METADATA.grib',
-                    date           = '{0:s}/-PT30H'.format(self.conf.rundate.ymd6h),
-                    term           = 0,
-                    namespace      = 'vortex.multi.fr',
-                    block          = 'forecast',
-                    nativefmt      = '[format]',
-                    origin         = 'historic',
-                    model          = '[vapp]',
-                    vapp           = self.conf.source_app,
-                    vconf          = self.conf.deterministic_conf,
-                    fatal          = False,
-                )
-                print(t.prompt, 'tb01a =', tb01a)
-                print()
-
-                # Mode secours : On récupère la prévision de 0h (J-1)
-                self.sh.title('Toolbox input metadata_secours')
-                tb01b = toolbox.input(
-                    alternate      = 'Metadata',
-                    format         = 'grib',
-                    geometry       = self.conf.arpege_geometry,
-                    kind           = 'gridpoint',
-                    suite          = self.conf.suite,
-                    local          = 'METADATA.grib',
-                    date           = '{0:s}/-PT30H'.format(self.conf.rundate.ymd6h),
-                    term           = 0,
-                    namespace      = 'vortex.multi.fr',
-                    cutoff         = 'production',
-                    block          = 'forecast',
-                    nativefmt      = '[format]',
-                    origin         = 'historic',
-                    model          = '[vapp]',
-                    vapp           = self.conf.source_app,
-                    vconf          = self.conf.deterministic_conf,
-                    fatal          = True,
-                )
-                print(t.prompt, 'tb01b =', tb01b)
-                print()
 
                 #####################################
                 # II- Guess ARPEGE (= "36eme membre")
@@ -187,35 +155,6 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             else:
                 
-                ###########################
-                #  I) FICHIER de METADONNES
-                ###########################
-
-                # On commence par récupérer un fichier à échéance 0h qui sert à lire le métédonnées (infos sur la grille en particulier)
-                # Ce fichier supplémentaire est indispensable pour toujours travailler avec la bonne grille du modèle, même en cas d'évolution
-                # de la géométrie ARPEGE.
-                self.sh.title('Toolbox input metadata')
-                tbarp = toolbox.input(
-                    role           = 'Metadata',
-                    format         = 'grib',
-                    geometry       = self.conf.arpege_geometry,
-                    kind           = 'gridpoint',
-                    suite          = self.conf.suite,
-                    local          = 'METADATA.grib',
-                    date           = '{0:s}/-PT6H'.format(self.conf.rundate.ymd6h),
-                    term           = 0,
-                    namespace      = 'vortex.multi.fr',
-                    block          = 'forecast',
-                    nativefmt      = '[format]',
-                    origin         = 'historic',
-                    model          = '[vapp]',
-                    vapp           = self.conf.source_app,
-                    vconf          = self.conf.deterministic_conf,
-                    fatal          = True,
-                )
-                print(t.prompt, 'tbarp =', tbarp)
-                print()
-
                 ##################
                 # II- Guess ARPEGE 
                 # ################

@@ -48,49 +48,18 @@ class PrepSafran(Task, S2MTaskMixIn):
             # On commence par récupérer un fichier à échéance 0h qui sert à lire le métédonnées (infos sur la grille en particulier)
             # Ce fichier supplémentaire est indispensable pour toujours travailler avec la bonne grille du modèle, même en cas d'évolution
             # de la géométrie ARPEGE.
-            self.sh.title('Toolbox input metadata_inline')
-            tb01a = toolbox.input(
+            self.sh.title('Toolbox input metadata')
+            tb01 = toolbox.input(
                 role           = 'Metadata',
                 format         = 'grib',
-                geometry       = self.conf.arpege_geometry,
-                kind           = 'gridpoint',
-                suite          = self.conf.suite,
+                genv            = self.conf.cycle,
+                geometry       = self.conf.arpege_geometry, #EURAT01
+                gdomain        = '[geometry:area]',
+                kind           = 'relief',
                 local          = 'METADATA.grib',
-                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                term           = 0,
-                namespace      = 'vortex.cache.fr',
-                block          = 'forecast',
-                nativefmt      = '[format]',
-                origin         = 'historic',
-                model          = '[vapp]',
-                vapp           = self.conf.source_app,
-                vconf          = self.conf.deterministic_conf,
-                fatal          = False,
+                fatal          = True,
             )
-            print(t.prompt, 'tb01a =', tb01a)
-            print()
-
-            # Deuxième tentative sur hendrix
-            self.sh.title('Toolbox input metadata_archive')
-            tb01b = toolbox.input(
-                alternate      = 'Metadata',
-                format         = 'grib',
-                geometry       = self.conf.arpege_geometry,
-                kind           = 'gridpoint',
-                suite          = self.conf.suite,
-                local          = 'METADATA.grib',
-                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                term           = 0,
-                namespace      = 'vortex.archive.fr',
-                block          = 'forecast',
-                nativefmt      = '[format]',
-                origin         = 'historic',
-                model          = '[vapp]',
-                vapp           = self.conf.source_app,
-                vconf          = self.conf.deterministic_conf,
-                fatal          = False,
-            )
-            print(t.prompt, 'tb01b =', tb01b)
+            print(t.prompt, 'tb01 =', tb01)
             print()
 
             # I- ARPEGE
