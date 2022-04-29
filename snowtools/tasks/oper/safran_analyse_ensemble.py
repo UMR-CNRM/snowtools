@@ -739,6 +739,7 @@ class Safran(Task, S2MTaskMixIn):
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
                     namespace      = self.conf.namespace,
+                    fatal          = False,
                 ),
                 print(t.prompt, 'tb27 =', tb27)
                 print()
