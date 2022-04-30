@@ -52,58 +52,23 @@ class PrepSafran(Task, S2MTaskMixIn):
             ###########################
             #  I) FICHIER de METADONNES
             ###########################
+
             # On commence par récupérer un fichier à échéance 0h qui sert à lire le métédonnées (infos sur la grille en particulier)
             # Ce fichier supplémentaire est indispensable pour toujours travailler avec la bonne grille du modèle, même en cas d'évolution
             # de la géométrie ARPEGE.
-            if isinstance(self.conf.guess_xpid, dict):
-
-                # On utilise une P0 du réseau PEARP de 6h qui devrait être un doublon pour éviter de traiter 1 fichier en plus
-                self.sh.title('Toolbox input metadata')
-                tbmeta = toolbox.input(
-                    role           = 'Metadata',
-                    kind           = 'gridpoint',
-                    cutoff         = 'production',
-                    format         = 'grib',
-                    nativefmt      = '[format]',
-                    experiment     = self.conf.guess_xpid,
-                    block          = 'forecast',
-                    namespace      = 'vortex.archive.fr',
-                    geometry       = self.conf.pearp_geometry,
-                    local          = 'METADATA.grib',
-                    origin         = 'historic',
-                    date           = datebegin.ymd6h,
-                    term           = 0,
-                    member         = 0,
-                    model          = '[vapp]',
-                    vapp           = self.conf.source_app,
-                    vconf          = self.conf.eps_conf,
-                )
-                print(t.prompt, 'tbmeta =', tbmeta)
-                print()
-
-            else:
-
-                self.sh.title('Toolbox input METADATA')
-                tbmeta = toolbox.input(
-                    role           = 'Gridpoint',
-                    kind           = 'gridpoint',
-                    cutoff         = 'production',
-                    format         = 'grib',
-                    nativefmt      = '[format]',
-                    experiment     = self.conf.guess_xpid,
-                    block          = 'forecast',
-                    namespace      = 'vortex.archive.fr',
-                    geometry       = self.conf.arpege_geometry,
-                    local          = 'METADATA.grib',
-                    origin         = 'historic',
-                    date           = '{0:s}/-PT6H'.format(datebegin.ymd6h),
-                    term           = 0,
-                    model          = '[vapp]',
-                    vapp           = self.conf.source_app,
-                    vconf          = self.conf.arpege_conf,
-                )
-                print(t.prompt, 'METADATA')
-                print()
+            self.sh.title('Toolbox input metadata')
+            tbmeta = toolbox.input(
+                role           = 'Metadata',
+                format         = 'grib',
+                genv            = self.conf.cycle,
+                geometry       = self.conf.arpege_geometry, #EURAT01
+                gdomain        = '[geometry:area]',
+                kind           = 'relief',
+                local          = 'METADATA.grib',
+                fatal          = True,
+            )
+            print(t.prompt, 'tbmeta =', tbmeta)
+            print()
 
             tbarp   = list()
             tbpearp = list()

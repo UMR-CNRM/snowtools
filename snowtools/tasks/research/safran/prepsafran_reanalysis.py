@@ -54,49 +54,17 @@ class PrepSafran(Task, S2MTaskMixIn):
             # On prend arbitrairement le fichier le plus récent (correspondant à dateend) pour maximiser les chances qu'il soit sur le cache
             # WARNING : Dans le cas d'une réanalyse sur une longue periode il faudrait s'assurer qu'il n'y a pas eu de 
             # changement de géométrie en cours de période.
-            self.sh.title('Toolbox input metadata_inline')
+            self.sh.title('Toolbox input metadata')
             tbmeta = toolbox.input(
                 role           = 'Metadata',
                 format         = 'grib',
-                geometry       = self.conf.cpl_geometry,
-                kind           = 'gridpoint',
-                filtername     = 'concatenate',
-                suite          = 'oper',
+                genv            = self.conf.cycle,
+                geometry       = self.conf.arpege_geometry, #EURAT01
+                gdomain        = '[geometry:area]',
+                kind           = 'relief',
                 local          = 'METADATA.grib',
-                date           = '{0:s}/-PT6H'.format(self.conf.dateend.ymd6h),
-                term           = 0,
-                namespace      = 'vortex.cache.fr',
-                block          = 'forecast',
-                nativefmt      = '[format]',
-                origin         = 'historic',
-                model          = '[vapp]',
-                vapp           = self.conf.source_app,
-                vconf          = self.conf.deterministic_conf,
-                fatal          = False,
-            )
-            print(t.prompt, 'tbmeta =', tbmeta)
-            print()
-
-            # Deuxième tentative sur hendrix
-            self.sh.title('Toolbox input metadata_archive')
-            tbmeta.extend(toolbox.input(
-                alternate      = 'Metadata',
-                format         = 'grib',
-                geometry       = self.conf.cpl_geometry,
-                kind           = 'gridpoint',
-                suite          = 'oper',
-                local          = 'METADATA.grib',
-                date           = '{0:s}/-PT6H'.format(self.conf.dateend.ymd6h),
-                term           = 0,
-                namespace      = 'vortex.archive.fr',
-                block          = 'forecast',
-                nativefmt      = '[format]',
-                origin         = 'historic',
-                model          = '[vapp]',
-                vapp           = self.conf.source_app,
-                vconf          = self.conf.deterministic_conf,
                 fatal          = True,
-            ))
+            )
             print(t.prompt, 'tbmeta =', tbmeta)
             print()
 
