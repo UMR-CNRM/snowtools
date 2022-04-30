@@ -264,7 +264,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         model          = 'safran',
                         source_app     = self.conf.source_app,
                         source_conf    = self.conf.eps_conf,
-                        namespace      = 'vortex.cache.fr',
+                        namespace      = 'vortex.multi.fr',
                         member         = footprints.util.rangex(self.conf.pearp_members),
                     ),
                     print(t.prompt, 'tb6h =', tb6h)
@@ -287,7 +287,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         model          = 'safran',
                         source_app     = self.conf.source_app,
                         source_conf    = self.conf.eps_conf,
-                        namespace      = 'vortex.cache.fr',
+                        namespace      = 'vortex.multi.fr',
                         member         = footprints.util.rangex(self.conf.pearp_members),
                     ),
                     print(t.prompt, 'tb18h =', tb18h)
@@ -312,7 +312,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         model          = 'safran',
                         source_app     = self.conf.source_app,
                         source_conf    = self.conf.arpege_conf,
-                        namespace      = 'vortex.cache.fr',
+                        namespace      = 'vortex.multi.fr',
                     ),
                     print(t.prompt, 'tbarp =', tbarp)
                     print()
@@ -334,7 +334,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             model          = 'safran',
                             source_app     = self.conf.source_app,
                             source_conf    = self.conf.eps_conf,
-                            namespace      = 'vortex.cache.fr',
+                            namespace      = 'vortex.multi.fr',
                             member         = footprints.util.rangex(self.conf.pearp_members),
                             fatal          = False,
                         ),
