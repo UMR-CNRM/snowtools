@@ -59,7 +59,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 role           = 'Metadata',
                 format         = 'grib',
                 genv            = self.conf.cycle,
-                geometry       = self.conf.arpege_geometry, #EURAT01
+                geometry       = self.conf.cpl_geometry, #EURAT01
                 gdomain        = '[geometry:area]',
                 kind           = 'relief',
                 local          = 'METADATA.grib',
@@ -71,6 +71,8 @@ class PrepSafran(Task, S2MTaskMixIn):
             tbarp   = list()
             rundate = self.conf.datebegin
             while rundate <= self.conf.dateend:
+
+                tb01 = [[]]
 
                 # 1. Check if guess file already exists
                 self.sh.title('Toolbox input tb01')
@@ -138,7 +140,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     elif rundate < Date(2018, 7, 1):
                         # Pour les dates les plus anciennes aucun archivage sur hendrix n'est disponible
                         # Il faut alors extraire les champs des guess depuis la BDPE avec le script 
-                        # creation_fichiers_RST.py sur guppy
+                        # Extraction_BDAP.py sur guppy
 
                         self.sh.title('Toolbox input tb02')
                         tbarp.extend(toolbox.input(
@@ -241,7 +243,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -d {0:s} -f '.format(self.conf.vconf) + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp)])),
+                rawopts     = ' -o -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp)])),
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
@@ -314,7 +316,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 tb01 = toolbox.output(
                     role           = 'Ebauche',
                     local          = '[date::ymdh]/P[date::addcumul_yymdh]',
-                    geometry       = self.conf.geometry[self.conf.vconf],
+                    geometry       = self.conf.geometry,
                     vapp           = 's2m',
                     vconf          = '[geometry:area]',
                     experiment     = self.conf.xpid,
@@ -356,7 +358,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 unknownflow    = True,
                 username       = 'vernaym',
                 tube           = 'ftp',
-                geometry       = self.conf.geometry[self.conf.vconf],
+                geometry       = self.conf.geometry,
                 cumul          = self.conf.cumul,
                 cutoff         = 'assimilation',
                 nativefmt      = 'ascii',
