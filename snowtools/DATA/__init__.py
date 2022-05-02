@@ -21,3 +21,11 @@ TESTBASE_DIR = "/rd/cenfic3/manto/viallonl/testbase"
 """
 Path to the testbase on cenfic3
 """
+
+DIRDATAPGD = '/rd/cenfic3/manto/lafaysse/FILES_PGD'
+"""
+PGD files at CEN
+"""
+
+CARTOPY_DIR = '/rd/cenfic3/manto/radanovicss/CartopyData'
+# config['data_dir'] = os.path.join('/cnrm/cen/users/NO_SAVE/radanovicss', 'CartopyData')  # for sxcen
