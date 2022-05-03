@@ -309,35 +309,39 @@ class PrepSafran(Task, S2MTaskMixIn):
         if 'late-backup' in self.steps:
 
             rundate = self.conf.datebegin
-            while rundate <= self.conf.dateend:
 
-                # 1. Save generated guess file in the corresponding Vortex experiment for a re-use
-                self.sh.title('Toolbox output tb01')
-                tb01 = toolbox.output(
-                    role           = 'Ebauche',
-                    local          = '[date::ymdh]/P[date::addcumul_yymdh]',
-                    geometry       = self.conf.geometry,
-                    vapp           = 's2m',
-                    vconf          = '[geometry:area]',
-                    experiment     = self.conf.xpid,
-                    cutoff         = 'assimilation',
-                    block          = self.conf.guess_block,
-                    date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
-                    cumul          = self.conf.cumul,
-                    nativefmt      = 'ascii',
-                    kind           = 'guess',
-                    model          = 'safran',
-                    source_app     = self.conf.source_app,
-                    source_conf    = self.conf.deterministic_conf,
-                    namespace      = self.conf.namespace,
-                    fatal          = False,
-                ),
-                print(t.prompt, 'tb01 =', tb01)
-                print()
-                
-                rundate = rundate + Period(days=1)
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# WARNING : Eviter d'archiver trop de petis fichiers sur HENDRIX.
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-            # WARNING : The following only works for a 1-year execution
+#            while rundate <= self.conf.dateend:
+#
+#                # 1. Save generated guess file in the corresponding Vortex experiment for a re-use
+#                self.sh.title('Toolbox output tb01')
+#                tb01 = toolbox.output(
+#                    role           = 'Ebauche',
+#                    local          = '[date::ymdh]/P[date::addcumul_yymdh]',
+#                    geometry       = self.conf.geometry,
+#                    vapp           = 's2m',
+#                    vconf          = '[geometry:area]',
+#                    experiment     = self.conf.xpid,
+#                    cutoff         = 'assimilation',
+#                    block          = self.conf.guess_block,
+#                    date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+#                    cumul          = self.conf.cumul,
+#                    nativefmt      = 'ascii',
+#                    kind           = 'guess',
+#                    model          = 'safran',
+#                    source_app     = self.conf.source_app,
+#                    source_conf    = self.conf.deterministic_conf,
+#                    namespace      = self.conf.namespace,
+#                    fatal          = False,
+#                ),
+#                print(t.prompt, 'tb01 =', tb01)
+#                print()
+#                
+#                rundate = rundate + Period(days=1)
+
             season = self.conf.datebegin.nivologyseason
             tarname = 'p{0:s}.tar'.format(season)
             # thisdir = os.getcwd()
@@ -369,6 +373,3 @@ class PrepSafran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb05 =', tb05)
             print()
 
-            from vortex.tools.systems import ExecutionError
-            raise ExecutionError('')
-            pass
