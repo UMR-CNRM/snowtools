@@ -71,11 +71,12 @@ from shapely.geometry import Point
 
 from snowtools.plots.abstracts.figures import Mplfigure
 from snowtools.utils.infomassifs import infomassifs
-from snowtools.DATA import SNOWTOOLS_DIR, TESTBASE_DIR, CARTOPY_DIR
+from snowtools.DATA import SNOWTOOLS_DIR, CARTOPY_DIR
 
 # Tell cartopy where to find Natural Earth features
 # config['data_dir'] = os.path.join(SNOWTOOLS_DIR, 'CartopyData')
-config['data_dir'] = CARTOPY_DIR
+if os.path.isdir(CARTOPY_DIR):
+    config['data_dir'] = CARTOPY_DIR
 # config['data_dir'] = os.path.join('/cnrm/cen/users/NO_SAVE/radanovicss', 'CartopyData')  # for sxcen
 # until proper git annex solution
 
@@ -1044,7 +1045,7 @@ class Map_alpes(_Map_massifs):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('{path}/PRO/postproc/Alp/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Alp/postproc_2021041006_2021041112.nc') as ff:
             points = ff.get_points(ZS=2100, aspect=-1)
             snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points)
@@ -1066,7 +1067,7 @@ class Map_alpes(_Map_massifs):
 
     .. figure:: /images/2021041112_p90_alps_geofeatures.png
        :align: center
-    """.format(path=TESTBASE_DIR)
+    """
     area = 'alpes'  #: area tag = 'alpes'
     width = 12  #: figure width = 12
     height = 10  #: figure height = 10
