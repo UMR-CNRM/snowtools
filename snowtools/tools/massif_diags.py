@@ -22,7 +22,7 @@ class massif_simu(prosimu):
 
     def massif_natural_risk(self):
         """Compute massif-scale natural hazard index and add it to the file"""
-        if self.SurfexNatRiskName not in self.listvar():
+        if self.SurfexNatRiskName not in self.listvar() or self.massif_var_name not in self.listvar():
             return
 
         slope = self.read(self.slope_var_name, keepfillvalue=True)
