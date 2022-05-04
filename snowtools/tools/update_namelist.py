@@ -208,10 +208,16 @@ def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"
     :type dateend: class:`bronx.stdtypes.date.Date`
     :param forcing: Address of associated forcing file. Defaults to "FORCING.nc"
     :type forcing: str, optional
-    :param no_caution: do not open the forcing to reduce computaiton time
+    :param no_caution: do not check the forcing dates to reduce computation time (dangerous option, not recommended)
     :type no_caution: boolean, optional
     """
-    if no_caution is False:
+    if no_caution:
+        # Assume forcing dates are equal or larger than s2m option
+        # Very dangerous option, not compatible with yearly simulations
+        dateforcbegin = datebegin  # only used for the final test, ok while real dateforcbegin <= datebegin
+        dateforcend = dateend  # only used for the final test, ok while real dateforcend >= dateend
+    else:
+        # Normal case
         forc = prosimu(forcing)
         timeforc = forc.readtime()
         forc.close()
@@ -228,15 +234,11 @@ def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"
         else:
             dateend = dateforcend
 
-        if datebegin > dateforcbegin or dateend < dateforcend:
-            NamelistObject["NAM_IO_OFFLINE"].LDELAYEDSTART_NC = True
-
-    #     if dateend < dateforcend:
-        NamelistObject["NAM_IO_OFFLINE"].NDATESTOP = [dateend.year, dateend.month, dateend.day, dateend.hour * 3600]
-    else:
-        # there will likely be errors of datebegin and dateend coincice with the forcing dates.
+    if datebegin > dateforcbegin or dateend < dateforcend or no_caution:
         NamelistObject["NAM_IO_OFFLINE"].LDELAYEDSTART_NC = True
-        NamelistObject["NAM_IO_OFFLINE"].NDATESTOP = [dateend.year, dateend.month, dateend.day, dateend.hour * 3600]
+
+    NamelistObject["NAM_IO_OFFLINE"].NDATESTOP = [dateend.year, dateend.month, dateend.day, dateend.hour * 3600]
+
     return NamelistObject
 
 
