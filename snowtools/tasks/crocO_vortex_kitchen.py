@@ -62,7 +62,8 @@ class crocO_vortex_kitchen(vortex_kitchen):
                 raise Exception
         elif (self.options.synth is None and self.options.real is False):
             raise Exception('''
-            Either you\'re running an assimilation experiment with (1) real data or (2) with synthetic from previous openloop
+            Either you\'re running an assimilation experiment with (1) real data or (2)
+            with synthetic from previous openloop
             (1) specify --real to s2m
             (2) use --synth <mbid> (starting from 1)
                 to specify which member is the synthetic one in order to remove and replace it.
@@ -70,7 +71,7 @@ class crocO_vortex_kitchen(vortex_kitchen):
         if self.options.nnodes * self.options.ntasks > self.options.nmembers:
             print(' be careful, you are trying to run ' + str(self.options.nmembers) + ' members on ' +
                   str(self.options.nnodes * self.options.ntasks) + ' cores (40 cores per nodes)' +
-                  ' please reduce --nnodes so that n_cores<=nmembers' )
+                  ' please reduce --nnodes so that n_cores<=nmembers')
 
     def create_env(self):
         # Prepare environment
@@ -105,12 +106,13 @@ class crocO_vortex_kitchen(vortex_kitchen):
         # options.namelist is already an absolute path.
         if self.options.nmembers is None:
             raise Exception('please specify the number of members for this run')
-        update_surfex_namelist_file(self.options.datedeb, namelistfile=self.namelist, dateend=self.options.datefin, updateloc=False, nmembers = self.options.nmembers)
+        update_surfex_namelist_file(self.options.datedeb, namelistfile=self.namelist, dateend=self.options.datefin,
+                                    updateloc=False, nmembers=self.options.nmembers)
 
     def replace_member(self, allmembers, members_id):
         # warning in case of misspecification of --synth
         print('\n\n\n')
-        print(' /!\/!\/!\/!\ CAUTION /!\/!\/!\/!\/!\ ')
+        print('************* CAUTION ****************')
         print('Please check that the --synth argument')
         print('corresponds to the openloop member    ')
         print('used to generate the observations     ')
@@ -157,7 +159,8 @@ class crocO_vortex_kitchen(vortex_kitchen):
         conffile.set_field('DEFAULT', 'nforcing', self.options.nforcing)
         conffile.set_field('DEFAULT', 'datedeb', self.options.datedeb)
         conffile.set_field('DEFAULT', 'datefin', self.options.datefin)
-        conffile.set_field('DEFAULT', 'confcomplement', self.options.confcomplement)  # put confcomplement un the conf itself for hendrix fetching -_-
+        # put confcomplement un the conf itself for hendrix fetching -_-
+        conffile.set_field('DEFAULT', 'confcomplement', self.options.confcomplement)
 
         # ########### READ THE USER-PROVIDED conf file ##########################
         # -> in order to append datefin to assimdates and remove the exceding dates.
@@ -213,7 +216,7 @@ class crocO_vortex_kitchen(vortex_kitchen):
                     # warning in case of performing a synthetic experiment
                     # but forgetting to specify the synthetic member
                     print('\n\n\n')
-                    print(' /!\/!\/!\/!\ CAUTION /!\/!\/!\/!\/!\ ')
+                    print('************* CAUTION ****************')
                     print("If you're performing a SYNTHETIC EXPERIMENT")
                     print('you MUST specify the synthetic member     ')
                     print('to eliminate from the ensemble')
@@ -310,8 +313,9 @@ class crocO_vortex_kitchen(vortex_kitchen):
         # BC add in order to use the generic job template
         self.period = " rundate=" + self.options.datedeb.strftime("%Y%m%d")
 
-        return ["python ../vortex/bin/mkjob.py -j name=" + jobname + " task=" + reftask + " profile=" + self.profile + " jobassistant=cen datebegin=" +
-                self.options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + self.options.datefin.strftime("%Y%m%d%H%M") +
+        return ["python ../vortex/bin/mkjob.py -j name=" + jobname + " task=" + reftask + " profile=" + self.profile +
+                " jobassistant=cen datebegin=" + self.options.datedeb.strftime("%Y%m%d%H%M") +
+                " dateend=" + self.options.datefin.strftime("%Y%m%d%H%M") +
                 # " template=" + self.jobtemplate +
                 " time=" + self.walltime() +
                 self.period +

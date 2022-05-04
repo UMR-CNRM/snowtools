@@ -18,7 +18,9 @@ from bronx.datagrip.namelist import NamelistParser
 
 
 def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam",
-                                forcing="FORCING.nc", dateend=None, updateloc=True, physicaloptions={}, snowparameters={}, nmembers=None, no_caution=False, cselect=None):
+                                forcing="FORCING.nc", dateend=None, updateloc=True,
+                                physicaloptions={}, snowparameters={}, nmembers=None,
+                                no_caution=False, cselect=None):
     """This function updates a namelist file through the bronx module. Called by standalone S2M but not by vortex
 
     :param datebegin: Initial date of simulation
@@ -47,7 +49,9 @@ def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam",
     if nmembers is None:  # this doesn't work on beaufix.
         os.rename(namelistfile, "OPTIONS_base.nam")
         N = n.parse("OPTIONS_base.nam")
-        update_surfex_namelist_object(N, datebegin=datebegin, forcing=forcing, dateend=dateend, updateloc=updateloc, physicaloptions=physicaloptions, snowparameters=snowparameters, no_caution=no_caution, cselect=cselect)
+        update_surfex_namelist_object(N, datebegin=datebegin, forcing=forcing, dateend=dateend, updateloc=updateloc,
+                                      physicaloptions=physicaloptions, snowparameters=snowparameters,
+                                      no_caution=no_caution, cselect=cselect)
     else:
         N = n.parse(namelistfile)
         update_namelist_object_nmembers(N, nmembers)
@@ -57,7 +61,8 @@ def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam",
 
 
 def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc",
-                                  dateend=None, updateloc=True, physicaloptions={}, snowparameters={}, no_caution=False, cselect = None):
+                                  dateend=None, updateloc=True, physicaloptions={}, snowparameters={},
+                                  no_caution=False, cselect = None):
     """This function updates a class:`bronx.datagrip.namelist.NamelistSet` object. Called directly by vortex algos.
 
     :param NamelistObject: Namelist to modified.
@@ -80,7 +85,7 @@ def update_surfex_namelist_object(NamelistObject, datebegin, forcing="FORCING.nc
     :type no_caution: boolean, optional
     :param cselect: do not open the forcing to reduce computation time
     :type no_caution: boolean, optional
-    :param cselect: set a list of diagnostic variables 
+    :param cselect: set a list of diagnostic variables
     :type cselect: list
     """
     NamelistObject = update_mandatory_settings(NamelistObject)
@@ -240,8 +245,8 @@ def update_physicaloptions(NamelistObject, **kwargs):
 
     :param NamelistObject: Namelist to modified
     :type NamelistObject: class:`bronx.datagrip.namelist.NamelistSet`
-    :param \*\*kwargs: ESCROC physical options. Defaults to {}.
-    :type \*\*kwargs: dict, optional
+    :param kwargs: ESCROC physical options. Defaults to {}.
+    :type kwargs: dict, optional
     """
     check_or_create_block(NamelistObject, "NAM_ISBA_SNOWn")
     for key, value in six.iteritems(kwargs):
@@ -257,8 +262,8 @@ def update_snowparameters(NamelistObject, **kwargs):
 
     :param NamelistObject: Namelist to modified
     :type NamelistObject: class:`bronx.datagrip.namelist.NamelistSet`
-    :param \*\*kwargs: ESCROC physical parameters. Defaults to {}.
-    :type \*\*kwargs: dict, optional
+    :param kwargs: ESCROC physical parameters. Defaults to {}.
+    :type kwargs: dict, optional
     """
     check_or_create_block(NamelistObject, "NAM_SURF_CSTS")
     check_or_create_block(NamelistObject, "NAM_SURF_SNOW_CSTS")
