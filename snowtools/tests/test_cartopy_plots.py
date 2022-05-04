@@ -276,6 +276,7 @@ class TestCartopyAlp(unittest.TestCase):
         cls.massifs = cls.ps.read('massif_num', selectpoint=cls.points)
 
     def setUp(self):
+        self.outfilename = None
         pass
 
     def test_with_geo_features(self):
@@ -323,7 +324,7 @@ class TestCartopyAlp(unittest.TestCase):
             self._feedErrorsToResult(result, self._outcome.errors)
             error = self.mix.list2reason(result.errors)
             failure = self.mix.list2reason(result.failures)
-            if not error and not failure:
+            if not error and not failure and self.outfilename is not None:
                 shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
                                                                                          self.outfilename))
         else:
@@ -358,6 +359,7 @@ class TestCartopyMac(unittest.TestCase):
         cls.massifs = cls.ps.read('massif_num', selectpoint=cls.points)
 
     def setUp(self):
+        self.outfilename = None
         pass
 
     def test_swemap(self):
@@ -382,7 +384,7 @@ class TestCartopyMac(unittest.TestCase):
             self._feedErrorsToResult(result, self._outcome.errors)
             error = self.mix.list2reason(result.errors)
             failure = self.mix.list2reason(result.failures)
-            if not error and not failure:
+            if not error and not failure and self.outfilename is not None:
                 shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
                                                                                          self.outfilename))
         else:
@@ -415,6 +417,7 @@ class TestCartopyJura(unittest.TestCase):
         # cls.massifs = cls.ps.read('massif_num', selectpoint=cls.points)
 
     def setUp(self):
+        self.outfilename = None
         pass
 
     def test_juramap(self):
@@ -435,7 +438,7 @@ class TestCartopyJura(unittest.TestCase):
             self._feedErrorsToResult(result, self._outcome.errors)
             error = self.mix.list2reason(result.errors)
             failure = self.mix.list2reason(result.failures)
-            if not error and not failure:
+            if not error and not failure and self.outfilename is not None:
                 dirmantest = os.path.join(THIS_DIR, "Manual_tests")
                 if not os.path.isdir(dirmantest):
                     os.makedirs(dirmantest)
@@ -465,6 +468,7 @@ class TestCartopyVosges(unittest.TestCase):
         cls.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
 
     def setUp(self):
+        self.outfilename = None
         pass
 
     def test_vosgesmap(self):
@@ -485,7 +489,7 @@ class TestCartopyVosges(unittest.TestCase):
             self._feedErrorsToResult(result, self._outcome.errors)
             error = self.mix.list2reason(result.errors)
             failure = self.mix.list2reason(result.failures)
-            if not error and not failure:
+            if not error and not failure and self.outfilename is not None:
                 dirmantest = os.path.join(THIS_DIR, "Manual_tests")
                 if not os.path.isdir(dirmantest):
                     os.makedirs(dirmantest)
