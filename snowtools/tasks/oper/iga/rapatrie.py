@@ -9,291 +9,145 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex import toolbox
 from vortex.layout.nodes import Driver
-
 from iga.tools.apps import OpTask
-from vortex.tools.actions import actiond as ad
-from common.util import usepygram
-import iga.tools.op as op
-import snowtools
-from snowtools.bronx.stdtypes.date import Date
-
-logger = footprints.loggers.getLogger(__name__)
+from bronx.stdtypes.date import Date
 
 
 def setup(t, **kw):
-
     return Driver(
-        tag    = 'pearp2safran',
-        ticket = t,
-        nodes  = [
-            PrepSafran(tag='prepsaf', ticket=t, **kw),
+        tag='pearp2safran',
+        ticket=t,
+        nodes=[
+            Reanalyses(tag='prepsafreana', ticket=t, **kw),
         ],
-        options = kw,
+        options=kw,
     )
 
 
-class PrepSafran(OpTask, S2MTaskMixIn):
+class Reanalyses(OpTask, S2MTaskMixIn):
 
+    # Filter of errors to be applied in both oper and dev cases
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
     report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
     report_execution_error = S2MTaskMixIn.s2moper_report_execution_error
 
-    def refill(self):
+    def process(self):
         """Preparation of SAFRAN input files"""
 
         t = self.ticket
-        # En laçant cette tâche au réseau de 12h on obtient datebegin=1er aout precedent et dateend=J-4
+        season = Date.nivologyseason.fget(self.conf.rundate)
         datebegin, dateend = self.get_period()
 
-        if 'refill' in self.steps:
+        def tb01_generic_hook1(t, rh):
+            sh = t.sh
+            tarname = sh.path.basename(rh.container.localpath())
+            if sh.is_tarfile(tarname):
+                sh.untar(tarname)
+            sh.rm(tarname)
 
-            tbarp   = list()
-            missing_dates = list()
-            # On veut commencer les guess au 31/07 6h
-            rundate = datebegin - Period(days=1)
-            # On s'arrête à J-4 pour produire le même fichier que le 'refill' journalier
-            # TODO --> il serait plus logique d'aller jusqu'à 6H (J) pour avoir un mode secours
-            # ==> Modification simultanéee de prepsaf_reana ET safran_ana (12H) 
-            while rundate < dateend + Period(days=4):
+        if 'early-fetch' in self.steps:
 
-                # 1. Check if guess file already exists
-                self.sh.title('Toolbox input guess {0:s}'.format(rundate.ymdh))
+            if not (self.conf.rundate.month == 8 and self.conf.rundate.day == 1):
+
+                # Récupération de l'archive de la veille (tâche de 12h J-1)
+                # L'archive doit couvrir la période allant du 31/07 précendent à 6h jusqu'à J-1 6h bien que
+                # la réanalyse mensuelle n'utilise les guess que jusqu'à J-4 6h
+
+                # TODO : Ajouter un mode secours en récupérant les archives de J-2, J-3,... et en les completant
+                # avec les guess manquants
+                self.sh.title('Toolbox input tb01')
                 tb01 = toolbox.input(
-                    role           = 'Ebauche',
-                    local          = '[date::ymdh]/P[date::addcumul_yymdh]',
-                    # geometry       = self.conf.domains,
-                    geometry       = self.conf.vconf,
-                    vapp           = 's2m',
-                    vconf          = '[geometry:area]',
-                    experiment     = self.conf.xpid_guess,
+                    role           = 'Reanalyse',
+                    local          = 'p{0:s}_{1:s}.tar'.format(season, self.conf.vconf),
+                    experiment     = self.conf.xpid,
                     cutoff         = 'assimilation',
                     block          = 'guess',
-                    date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d))
-                                      for d in footprints.util.rangex(0, 24, self.conf.cumul)],
-                    cumul          = self.conf.cumul,
-                    nativefmt      = 'ascii',
-                    kind           = 'guess',
+                    nativefmt      = 'tar',
+                    kind           = 'packedguess',
                     model          = 'safran',
-                    source_app     = self.conf.source_app,
-                    source_conf    = self.conf.deterministic_conf,
-                    namespace      = self.conf.namespace,
-                    fatal          = False,
-                ),
+                    hook_autohook1 = (tb01_generic_hook1, ),
+                    date           = '{0:s}/-PT24H'.format(self.conf.rundate.ymdh),
+                    vapp           = self.conf.vapp,
+                    vconf          = self.conf.vconf,
+                    begindate      = datebegin.ymd6h,
+                    enddate        = '{0:s}/-PT24H'.format(self.conf.rundate.ymd6h),
+                    geometry       = self.conf.vconf,
+                    intent         = 'inout',
+                    fatal          = True,
+                )
                 print(t.prompt, 'tb01 =', tb01)
                 print()
 
-                if len(tb01[0]) < 5:
-
-                    # 2. Get ARPEGE file
-                    # Recuperation de A6 du réseau H-6 pour H in [0, 6, 12, 18]
-                    if rundate < Date(2019, 7, 1, 0):
-
-                        self.sh.title('Toolbox input ARPEGE {0:s}'.format(rundate.ymdh))
-                        tb02 = toolbox.input(
-                            role           = 'Gridpoint',
-                            format         = 'grib',
-                            geometry       = 'euroc25',
-                            kind           = 'gridpoint',
-                            local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
-                            date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d))
-                                              for d in footprints.util.rangex(0, 24, self.conf.cumul)],
-                            term           = self.conf.cumul,
-                            nativefmt      = '[format]',
-                            # remote         = '/home/mrns/vernaym/extraction_bdap/[vconf]/ \
-                            # arpege_[date::ymdh]_[term::hour].grib',
-                            # hostname       = 'guppy.meteo.fr',
-                            # tube           = 'ftp',
-                            # origin         = 'arpege',
-                            # fatal          = False,
-                            suite          = 'oper',
-                            cutoff         = 'assimilation',
-                            # local          = 'mb035/ARPEGE[date::addterm_ymdh]',
-                            namespace      = 'oper.multi.fr',
-                            origin         = 'historic',
-                            model          = '[vapp]',
-                            vapp           = self.conf.source_app,
-                            vconf          = self.conf.deterministic_conf,
-                            fatal          = False,
-                        )
-                        print(t.prompt, 'tb02 =', tb02)
-                        print()
-
-                    else:
-
-                        self.sh.title('Toolbox input arpege {0:s}'.format(rundate.ymdh))
-                        tb02 = toolbox.input(
-                            role           = 'Gridpoint',
-                            format         = 'grib',
-                            geometry       = 'glob025',
-                            kind           = 'gridpoint',
-                            # filtername     = 'concatenate',
-                            suite          = 'oper',
-                            local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
-                            date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d))
-                                              for d in footprints.util.rangex(0, 24, self.conf.cumul)],
-                            # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
-                            term           = self.conf.cumul,
-                            namespace      = 'vortex.multi.fr',
-                            block          = 'forecast',
-                            cutoff         = 'assimilation',
-                            nativefmt      = '[format]',
-                            origin         = 'historic',
-                            model          = '[vapp]',
-                            vapp           = self.conf.source_app,
-                            vconf          = self.conf.deterministic_conf,
-
-                            fatal          = False,
-                        )
-                        print(t.prompt, 'tb02 =', tb02)
-                        print()
-
-                        if len(tb02) == 5:
-                            tbarp.extend(tb02)
-                        else:
-                            # En dernier recours on va chercher si une extraction BDAP a été faite
-                            # pour les dates plus anciennes
-                            self.sh.title('Toolbox input BDAP {0:s}'.format(rundate.ymdh))
-                            tbarp.extend(toolbox.input(
-                                role           = 'Gridpoint',
-                                format         = 'grib',
-                                geometry       = 'euroc25',
-                                kind           = 'gridpoint',
-                                local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
-                                date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d))
-                                                  for d in footprints.util.rangex(0, 24, self.conf.cumul)],
-                                term           = self.conf.cumul,
-                                nativefmt      = '[format]',
-                                remote         = '/home/mrns/vernaym/extraction_bdap/[vconf]/ \
-                                arpege_[date::ymdh]_[term::hour].grib',
-                                hostname       = 'guppy.meteo.fr',
-                                tube           = 'ftp',
-                                origin         = 'arpege',
-                                fatal          = False,
-                            ))
-                            print(t.prompt, 'tbarp =', tbarp)
-                            print()
-
-                        missing_dates.append(rundate)
-
-                rundate = rundate + Period(days=1)
-
-            self.sh.title('Toolbox input tb03 = PRE-TRAITEMENT FORCAGE script')
-            tb03 = script = toolbox.input(
-                role        = 'pretraitement',
-                local       = 'makeP.py',
-                genv        = 'uenv:s2m.01@vernaym',
-                kind        = 's2m_filtering_grib',
-                language    = 'python',
-                rawopts     = ' -a -o -i IDW -f ' + ' '.join(list([str(rh[1].container.basename)
-                                                                       for rh in enumerate(tbarp)])),
-            )
-            print(t.prompt, 'tb03 =', tb03)
-            print()
-
-        if 'fetch' in self.steps:
-            pass
-
-        if 'compute' in self.steps:
-
-            self.sh.title('Toolbox algo tb04')
-            expresso = toolbox.algo(
-                vconf          = self.conf.vconf,
-                engine         = 'exec',
+            # Récupération des guess de la veille à ajouter à l'archive
+            # Comme dateend correpond à J-4 on ajoute 5*24h
+            self.sh.title('Toolbox input tb02a')
+            tb02a = toolbox.input(
+                role           = 'Ebauche',
+                local          = 'P[date::addcumul_yymdh]',
+                experiment     = self.conf.xpid,
+                block          = 'guess',
+                geometry       = self.conf.vconf,
+                cutoff         = 'assimilation',
+                date           = ['{0:s}/+PT96H/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 120, self.conf.cumul)],
+                cumul          = self.conf.cumul,
+                nativefmt      = 'ascii',
                 kind           = 'guess',
-                interpreter    = 'current',
-                # Need to extend pythonpath to be independant of the user environment
-                # The vortex-build environment already set up the pythonpath (see jobassistant plugin) but the script is 
-                # eventually launched in a 'user-defined' environment
-                extendpypath   = [self.sh.path.join('/'.join(self.conf.iniconf.split('/')[:-2]), d)
-                                  for d in ['vortex/src', 'vortex/site', 'epygram',
-                                            'epygram/site', 'epygram/eccodes_python']],
-                ntasks         = self.conf.ntasks,
-                terms          = footprints.util.rangex(self.conf.ana_terms),
-            )
-            print(t.prompt, 'tb04 =', expresso)
+                model          = 'safran',
+                source_app     = self.conf.source_app,
+                source_conf    = self.conf.deterministic_conf,
+                namespace      = 'vortex.cache.fr',
+                fatal          = False,
+            ),
+            print(t.prompt, 'tb02a =', tb02a)
             print()
 
-#             self.sh.title('Toolbox algo tb04')
-#             expresso = toolbox.algo(
-#                 vconf          = self.conf.vconf,
-#                 engine         = 'exec',
-#                 kind           = 'guess',
-#                 #terms          = footprints.util.rangex(self.conf.prv_terms),
-#                 #members        = footprints.util.rangex(1, 40, 1),
-#                 interpreter    = script[0].resource.language,
-#                 ntasks         = self.conf.ntasks,
-#                 # members        = footprints.util.rangex(self.conf.members)
-#             )
-#             print t.prompt, 'tb04 =', expresso
-#             print
-
-            self.component_runner(expresso, script, fortran = False)
-
-        if 'backup' in self.steps or 'late-backup' in self.steps:
-
-            pass
+            # Mode secours : on prend la prévision correspondante
+            self.sh.title('Toolbox input tb02b')
+            tb02b = toolbox.input(
+                alternate      = 'Ebauche',
+                local          = 'P[date::addcumul_yymdh]',
+                experiment     = self.conf.xpid,
+                block          = 'guess',
+                geometry       = self.conf.vconf,
+                cutoff         = 'production',
+                date           = ['{0:s}/+PT96H/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, 120, self.conf.cumul)],
+                cumul          = self.conf.cumul,
+                nativefmt      = 'ascii',
+                kind           = 'guess',
+                model          = 'safran',
+                source_app     = self.conf.source_app,
+                source_conf    = self.conf.deterministic_conf,
+                namespace      = 'vortex.cache.fr',
+                fatal          = True,
+            ),
+            print(t.prompt, 'tb02b =', tb02b)
+            print()
 
         if 'late-backup' in self.steps:
 
-            # WARNING : The following only works for a 1-year execution and one domain
-            season = Date.nivologyseason.fget(self.conf.rundate)
-            # for dom in self.conf.domains:
-            # tarname = 'p{0:s}_{1:s}.tar'.format(season, self.conf.domains)
-            tarname = 'p{0:s}_{1:s}.tar'.format(season, self.conf.vconf)
-            # thisdir = os.getcwd()
-            with tarfile.open(tarname, mode='w') as tarfic:
-                for f in glob.glob('*/P????????'):
-                    # oldname = os.path.basename(f).split('_')[0]
-                    # date = Date.strptime(oldname[1:], '%y%m%d%H') + Period(hours=6)
-                    # arcname = 'P{0:s}'.format(date.yymdh)
-                    arcname = os.path.basename(f)
-                    tarfic.add(f, arcname=arcname)
+            # Mise à jour de l'archive,
+            # TODO :
+            # Elle devrait désormais couvrir au moins la période allant du 31/07 6h jusqu'à J 6h
+            self.sh.tar('p{0:s}_{1:s}.tar'.format(season, self.conf.vconf), "P????????")
 
-            self.sh.title('Toolbox output tb05')
-            tb05 = toolbox.output(
+            self.sh.title('Toolbox output tb03')
+            tb03 = toolbox.output(
                 role           = 'Reanalyses',
                 kind           = 'packedguess',
-                local          = tarname,
-                experiment     = self.conf.xpid_guess,
+                local          = 'p{0:s}_{1:s}.tar'.format(season, self.conf.vconf),
+                experiment     = self.conf.xpid,
+                cutoff         = 'assimilation',
                 block          = 'guess',
                 nativefmt      = 'tar',
                 namespace      = 'vortex.multi.fr',
                 geometry       = self.conf.vconf,
                 begindate      = datebegin.ymd6h,
-                enddate        = dateend.ymd6h,
+                enddate        = self.conf.rundate.ymd6h,
                 model          = 'safran',
                 date           = self.conf.rundate.ymdh,
                 vapp           = self.conf.vapp,
                 vconf          = self.conf.vconf,
                 fatal          = True,
             ),
-            print(t.prompt, 'tb05 =', tb05)
+            print(t.prompt, 'tb03 =', tb03)
             print()
-
-            ad.phase(tb05)
-
-            for f in glob.glob('*/ARPEGE*'):
-
-                rundate = Date(f.split('/')[0])
-
-                self.sh.title('Toolbox output tb06')
-                tb06 = toolbox.output(
-                    role           = 'Ebauche',
-                    local          = '[date::ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
-                    geometry       = self.conf.vconf,
-                    vapp           = 's2m',
-                    vconf          = '[geometry:area]',
-                    experiment     = self.conf.xpid_guess,
-                    cutoff         = 'assimilation',
-                    block          = 'guess',
-                    date           = rundate.ymdh,
-                    cumul          = self.conf.cumul,
-                    nativefmt      = 'ascii',
-                    kind           = 'guess',
-                    model          = 'safran',
-                    source_app     = self.conf.source_app,
-                    source_conf    = self.conf.deterministic_conf,
-                    namespace      = self.conf.namespace,
-                ),
-                print(t.prompt, 'tb06 =', tb06)
-                print()
