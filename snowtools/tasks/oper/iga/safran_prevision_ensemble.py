@@ -52,7 +52,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 tb01a = toolbox.input(
                     role           = 'Ebauche_Deterministic',
                     local          = 'mb035/P[date::yymdh]_[cumul:hour]',
-                    experiment     = self.conf.xpid_guess,
+                    experiment     = self.conf.xpid,
                     block          = self.conf.guess_block,
                     geometry       = self.conf.vconf,
                     cutoff         = 'assimilation',
@@ -84,7 +84,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 tb01b = toolbox.input(
                     role           = 'Ebauche_Deterministic',
                     local          = 'mb035/P[date::yymdh]_[cumul:hour]',
-                    experiment     = self.conf.xpid_guess,
+                    experiment     = self.conf.xpid,
                     block          = self.conf.guess_block,
                     geometry       = self.conf.vconf,
                     date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
@@ -110,7 +110,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 tb02a = toolbox.input(
                     role           = 'Ebauche',
                     local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
-                    experiment     = self.conf.xpid_guess,
+                    experiment     = self.conf.xpid,
                     block          = self.conf.guess_block,
                     geometry       = self.conf.vconf,
                     date           = '{0:s}'.format(datebegin.ymd6h),
@@ -132,7 +132,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 tb02b = toolbox.input(
                     role           = 'Ebauche',
                     local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
-                    experiment     = self.conf.xpid_guess,
+                    experiment     = self.conf.xpid,
                     block          = self.conf.guess_block,
                     geometry       = self.conf.vconf,
                     date           = '{0:s}/+PT12H'.format(datebegin.ymdh),
@@ -456,6 +456,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     dateend        = dateend.ymd6h,
                     namespace      = self.conf.namespace,
                     fatal          = False,
+                    delayed        = True,
                 ),
                 print(t.prompt, 'tb27 =', tb27)
                 print()
@@ -477,6 +478,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
                     namespace      = self.conf.namespace,
+                    delayed        = True,
                 ),
                 print(t.prompt, 'tb28 =', tb28)
                 print()
@@ -499,6 +501,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     dateend        = dateend.ymd6h,
                     namespace      = self.conf.namespace,
                     member         = footprints.util.rangex(self.conf.pearp_members),
+                    delayed        = True,
                 ),
                 print(t.prompt, 'tb29 =', tb29)
                 print()
@@ -521,6 +524,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     dateend        = dateend.ymd6h,
                     namespace      = self.conf.namespace,
                     member         = footprints.util.rangex(self.conf.pearp_members),
+                    delayed        = True,
                 ),
                 print(t.prompt, 'tb30 =', tb30)
                 print()
@@ -540,6 +544,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     format         = 'tar',
                     model          = 'safran',
                     namespace      = self.conf.namespace,
+                    delayed        = True,
                 )
                 print(t.prompt, 'tb31 =', tb31)
                 print()
