@@ -31,109 +31,137 @@ class Safran(Task, S2MTaskMixIn):
     def process(self):
         """Safran"""
 
+        def untar_hook(t, rh):
+                sh = t.sh
+                tarname = sh.path.basename(rh.container.localpath())
+                if sh.is_tarfile(tarname):
+                    sh.untar(tarname)
+
         t = self.ticket
         datebegin = self.conf.datebegin.replace(hour=6)
         dateend = self.conf.dateend.replace(hour=6)
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
-            rundate = datebegin
-            while rundate <= dateend:
-
-                if isinstance(self.conf.guess_xpid, dict):
-
-                    self.sh.title('Toolbox input tb6h')
-                    tb6h = toolbox.input(
-                        role           = 'Ebauche',
-                        local          = '[date::ymdh]/mb[member%03]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
-                        experiment     = self.conf.xpid,
-                        block          = self.conf.guess_block,
-                        geometry       = self.conf.geometry[self.conf.vconf],
-                        date           = rundate.ymd6h,
-                        cumul          = footprints.util.rangex(self.conf.prv_terms)[:33],
-                        nativefmt      = 'ascii',
-                        kind           = 'guess',
-                        model          = 'safran',
-                        source_app     = self.conf.source_app,
-                        source_conf    = self.conf.eps_conf,
-                        namespace      = 'vortex.cache.fr',
-                        member         = footprints.util.rangex(self.conf.pearp_members),
-                    ),
-                    print(t.prompt, 'tb6h =', tb6h)
-                    print()
-
-                    rundate = rundate + Period(days=3)
-
-                    self.sh.title('Toolbox input tb18h')
-                    tb18h = toolbox.input(
-                        role           = 'Ebauche',
-                        local          = '[date::ymdh]/mb[member%03]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
-                        experiment     = self.conf.xpid,
-                        block          = self.conf.guess_block,
-                        geometry       = self.conf.geometry[self.conf.vconf],
-                        date           = '{0:s}/-PT12H'.format(rundate.ymd6h),
-                        cumul          = footprints.util.rangex(self.conf.prv_terms)[4:],
-                        nativefmt      = 'ascii',
-                        kind           = 'guess',
-                        model          = 'safran',
-                        source_app     = self.conf.source_app,
-                        source_conf    = self.conf.eps_conf,
-                        namespace      = 'vortex.cache.fr',
-                        member         = footprints.util.rangex(self.conf.pearp_members),
-                    ),
-                    print(t.prompt, 'tb18h =', tb18h)
-                    print()
-
-                    rundate = rundate + Period(days=2)
-
-
-                else:
-
-                    # I-ARPEGE
-                    self.sh.title('Toolbox intput tb01')
-                    tb01 = toolbox.input(
-                        role           = 'Ebauche',
-                        local          = '{0:s}/P[date::yymdh]_[cumul:hour]'.format(rundate.ymd6h),
-                        experiment     = self.conf.xpid,
-                        block          = self.conf.guess_block,
-                        geometry       = self.conf.geometry[self.conf.vconf],
-                        date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
-                        cumul          = footprints.util.rangex(self.conf.prv_terms),
-                        nativefmt      = 'ascii',
-                        kind           = 'guess',
-                        model          = 'safran',
-                        source_app     = self.conf.source_app,
-                        source_conf    = self.conf.arpege_conf,
-                        namespace      = self.conf.namespace,
-                    ),
-                    print(t.prompt, 'tb01 =', tb01)
-                    print()
-
-                    if self.conf.pearp:
-                        # II-PEARP
-                        self.sh.title('Toolbox intput tb01')
-                        tb01 = toolbox.input(
-                            role           = 'Ebauche',
-                            local          = '{0:s}/mb[member]/P[date::yymdh]_[cumul:hour]'.format(rundate.ymd6h),
-                            experiment     = self.conf.xpid,
-                            block          = self.conf.guess_block,
-                            geometry       = self.conf.geometry[self.conf.vconf],
-                            date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
-                            cumul          = footprints.util.rangex(self.conf.prv_terms),
-                            nativefmt      = 'ascii',
-                            kind           = 'guess',
-                            model          = 'safran',
-                            source_app     = self.conf.source_app,
-                            source_conf    = self.conf.eps_conf,
-                            namespace      = self.conf.namespace,
-                            member         = footprints.util.rangex(self.conf.pearp_members),
-                            fatal          = False,
-                        ),
-                        print(t.prompt, 'tb01 =', tb01)
-                        print()
-
-
-                    rundate = rundate + Period(days=1)
+            self.sh.title('Toolbox input tb01')
+            tb01 = toolbox.input(
+                role           = 'Ebauche',
+                local          = 'ebauches_[geometry:area]_[begindate:ymdh]_[enddate:ymdh]',
+                kind           = 'packedguess',
+                experiment     = self.conf.xpid,
+                #vconf          = 'common',
+                block          = 'guess',
+                geometry        = self.conf.geometry[self.conf.vconf],
+                nativefmt      = 'tar',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                date           = datebegin.ymdh,
+                begindate      = datebegin.ymdh,
+                enddate        = dateend.ymdh,
+                # The untar command is done in the Vortex algo component SurfexReforecast because
+                # it also provides the list of repositories to consider as members
+                #hook_autohook1 = (untar_hook, ),
+            ),
+            print(t.prompt, 'tb01 =', tb01)
+            print()
+#
+#            rundate = datebegin
+#            while rundate <= dateend:
+#
+#                if isinstance(self.conf.guess_xpid, dict):
+#
+#                    self.sh.title('Toolbox input tb6h')
+#                    tb6h = toolbox.input(
+#                        role           = 'Ebauche',
+#                        local          = '[date::ymdh]/mb[member%03]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+#                        experiment     = self.conf.xpid,
+#                        block          = self.conf.guess_block,
+#                        geometry       = self.conf.geometry[self.conf.vconf],
+#                        date           = rundate.ymd6h,
+#                        cumul          = footprints.util.rangex(self.conf.prv_terms)[:33],
+#                        nativefmt      = 'ascii',
+#                        kind           = 'guess',
+#                        model          = 'safran',
+#                        source_app     = self.conf.source_app,
+#                        source_conf    = self.conf.eps_conf,
+#                        namespace      = 'vortex.cache.fr',
+#                        member         = footprints.util.rangex(self.conf.pearp_members),
+#                    ),
+#                    print(t.prompt, 'tb6h =', tb6h)
+#                    print()
+#
+#                    rundate = rundate + Period(days=3)
+#
+#                    self.sh.title('Toolbox input tb18h')
+#                    tb18h = toolbox.input(
+#                        role           = 'Ebauche',
+#                        local          = '[date::ymdh]/mb[member%03]/P[date:yymdh]_[cumul:hour]_[vconf]_production',
+#                        experiment     = self.conf.xpid,
+#                        block          = self.conf.guess_block,
+#                        geometry       = self.conf.geometry[self.conf.vconf],
+#                        date           = '{0:s}/-PT12H'.format(rundate.ymd6h),
+#                        cumul          = footprints.util.rangex(self.conf.prv_terms)[4:],
+#                        nativefmt      = 'ascii',
+#                        kind           = 'guess',
+#                        model          = 'safran',
+#                        source_app     = self.conf.source_app,
+#                        source_conf    = self.conf.eps_conf,
+#                        namespace      = 'vortex.cache.fr',
+#                        member         = footprints.util.rangex(self.conf.pearp_members),
+#                    ),
+#                    print(t.prompt, 'tb18h =', tb18h)
+#                    print()
+#
+#                    rundate = rundate + Period(days=2)
+#
+#
+#                else:
+#
+#                    # I-ARPEGE
+#                    self.sh.title('Toolbox intput tb01')
+#                    tb01 = toolbox.input(
+#                        role           = 'Ebauche',
+#                        local          = '{0:s}/P[date::yymdh]_[cumul:hour]'.format(rundate.ymd6h),
+#                        experiment     = self.conf.xpid,
+#                        block          = self.conf.guess_block,
+#                        geometry       = self.conf.geometry[self.conf.vconf],
+#                        date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
+#                        cumul          = footprints.util.rangex(self.conf.prv_terms),
+#                        nativefmt      = 'ascii',
+#                        kind           = 'guess',
+#                        model          = 'safran',
+#                        source_app     = self.conf.source_app,
+#                        source_conf    = self.conf.arpege_conf,
+#                        namespace      = self.conf.namespace,
+#                    ),
+#                    print(t.prompt, 'tb01 =', tb01)
+#                    print()
+#
+#                    if self.conf.pearp:
+#                        # II-PEARP
+#                        self.sh.title('Toolbox intput tb01')
+#                        tb01 = toolbox.input(
+#                            role           = 'Ebauche',
+#                            local          = '{0:s}/mb[member]/P[date::yymdh]_[cumul:hour]'.format(rundate.ymd6h),
+#                            experiment     = self.conf.xpid,
+#                            block          = self.conf.guess_block,
+#                            geometry       = self.conf.geometry[self.conf.vconf],
+#                            date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
+#                            cumul          = footprints.util.rangex(self.conf.prv_terms),
+#                            nativefmt      = 'ascii',
+#                            kind           = 'guess',
+#                            model          = 'safran',
+#                            source_app     = self.conf.source_app,
+#                            source_conf    = self.conf.eps_conf,
+#                            namespace      = self.conf.namespace,
+#                            member         = footprints.util.rangex(self.conf.pearp_members),
+#                            fatal          = False,
+#                        ),
+#                        print(t.prompt, 'tb01 =', tb01)
+#                        print()
+#
+#
+#                    rundate = rundate + Period(days=1)
 
             self.sh.title('Toolbox input tb03')
             tb03 = toolbox.input(
@@ -361,9 +389,6 @@ class Safran(Task, S2MTaskMixIn):
 
         if 'compute' in self.steps:
 
-
-            self.sh.title('Running date {0:s}'.format(rundate.ymdh))
-
             self.sh.title('Toolbox algo tb15 = SAFRANE')
             tb15 = tbalgo1 = toolbox.algo(
                 engine         = 's2m',
@@ -431,7 +456,7 @@ class Safran(Task, S2MTaskMixIn):
                         kind           = 'MeteorologicalForcing',
                         source_app     = self.conf.source_app,
                         source_conf    = self.conf.arpege_conf,
-                        local          = '[datebegin::ymd6h]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                        local          = '[datebegin::ymd6h]/ARPEGE/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                         experiment     = self.conf.xpid,
                         block          = 'massifs',
                         geometry        = self.conf.geometry[self.conf.vconf],
@@ -452,7 +477,7 @@ class Safran(Task, S2MTaskMixIn):
                         kind           = 'MeteorologicalForcing',
                         source_app     = self.conf.source_app,
                         source_conf    = self.conf.arpege_conf,
-                        local          = '[datebegin::ymd6h]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                        local          = '[datebegin::ymd6h]/ARPEGE/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                         experiment     = self.conf.xpid,
                         block          = 'postes',
                         geometry        = self.conf.geometry[self.conf.vconf],

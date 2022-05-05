@@ -3,6 +3,10 @@
 
 __all__ = []
 
+import os
+import tarfile
+import glob
+
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
@@ -11,7 +15,7 @@ from vortex.tools.systems import ExecutionError
 from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
 from cen.layout.nodes import S2MTaskMixIn
-from bronx.stdtypes.date import Period
+from bronx.stdtypes.date import Date, Period
 
 
 def setup(t, **kw):
@@ -242,22 +246,34 @@ class PrepSafran(Task, S2MTaskMixIn):
             pass
 
         if 'late-backup' in self.steps:
-            # d = 0
-            # m = 0
 
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# WARNING : cette façon d'archiver les guess généré rend l'exécution
+# de SAFRAN beaucoup moins flexible car il faut désormais impérativement
+# le lancer sur exactement les même dates que le script de génération des
+# ébauches.
 # WARNING : The following output has not been tested yet !
 # TODO : Modifier le tâche safran_reforecast en conséquence,
 # ainsi que l'algo Vortex correspondant
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-            for domain in self.conf.domains:
+            for domain in self.conf.geometry.keys():
 
-                tarname = 'ebauches_{0:s}_{1:s}.tar'.format(datebegin.ymdh, dateend.ymdh)
-                # thisdir = os.getcwd()
+                tarname = 'ebauches_{0:s}_{1:s}_{2:s}.tar'.format(domain, datebegin.ymdh, dateend.ymdh)
                 with tarfile.open(tarname, mode='w') as tarfic:
                     for f in glob.glob(f'*/*/*/P????????*{domain}*'):
-                        arcname = os.path.basename(f)
+                        # f = 'YYYYMMDD00/mbXXX/0ECH/PYYMMDDHH_E_dom_production'
+                        basename = f.split('/')[-1] # PYYMMDDHH_E_dom_production
+                        reseau = Date(f.split('/')[0]) # YYYYMMDDHH
+                        member = f.split('/')[1] #mbXXX
+                        ech = int(f.split('/')[2]) # ECH
+                        # On veut organiser le tar pour qu'il soit directement exploitable par 
+                        # l'algo SAFRAN arpès détarrage : toutes les échéances issues d'un même 
+                        # réseau doivent être regroupées dans le même répertoire et le nom 
+                        # du fichier guess de la forme PYYMMDDHH correspondant à la date
+                        # de validité du guess
+                        validity = reseau + Period(hours=ech)
+                        arcname = os.path.join(f.split('/')[0], f.split('/')[1], f'P{validity.yymdh}')
                         tarfic.add(f, arcname=arcname)
 
                 self.sh.title('Toolbox output tb04')
@@ -266,11 +282,15 @@ class PrepSafran(Task, S2MTaskMixIn):
                     local          = tarname,
                     kind           = 'packedguess',
                     experiment     = self.conf.xpid,
+                    vconf          = domain,
                     block          = 'guess',
-                    geometry        = self.conf.geometry[domain],
+                    geometry       = self.conf.geometry[domain],
                     nativefmt      = 'tar',
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
+                    date           = datebegin.ymdh,
+                    begindate      = datebegin.ymdh,
+                    enddate        = dateend.ymdh,
                 ),
                 print(t.prompt, 'tb04 =', tb04)
                 print()
