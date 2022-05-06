@@ -723,18 +723,29 @@ class proreader(reader):
         """
         allpoints = np.arange(self._npoints)
         if len(selector) == 0:
-            return allpoints
+            return list(allpoints)
 
         # Check varnames in selector
         lkey = []
-        for key in selector:
+        corrected_dict = {}
+        for key, value in selector.items():
             v = self._get_varname(key)
             if v in lkey:
                 raise ValueError('Selector passed twice for variable {}, {}'.format(key, v))
             if v not in self._variables_p:
                 raise ValueError('Selector variable {} unknown'.format(key))
+            if self._variables_p[v]['type'] == 'choices':
+                corrected_value = value
+            else:
+                idx_nearest = (np.abs(self._variables_p_values[v] - value)).argmin()
+                corrected_value = self._variables_p_values[v][idx_nearest]
+            corrected_dict[v] = corrected_value
 
-        ###########################################################
+        from snowtools.utils.prosimu import prosimu
+        with prosimu(self._mainfilename) as ff:
+            return ff.get_points(**corrected_dict)
+
+        '''###########################################################
         ## TO BE CHECKED BY LEO, tout géré par "if self.simu2d..."
         ###########################################################
         selection = np.full((len(selector), self._npoints), True, dtype=np.bool_)
@@ -775,7 +786,7 @@ class proreader(reader):
         if _raw:
             return selection_point
         else:
-            return allpoints[selection_point]
+            return allpoints[selection_point]            '''
 
     def variables_choices(self, selector: dict = {}) -> dict:
         """
