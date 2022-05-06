@@ -65,7 +65,12 @@ class prosimu():
         nécessaires
         """
         # BC add the possibility to give wildcards to prosimu
-        glob_path = glob.glob(path)
+        try:
+            glob_path = glob.glob(path)
+        except TypeError:
+            # path is a list.
+            glob_path = []
+
         if type(path) is list or len(glob_path) > 1:
             if type(path) is not list:
                 path = sorted(glob_path)
