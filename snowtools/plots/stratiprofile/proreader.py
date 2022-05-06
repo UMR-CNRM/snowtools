@@ -383,6 +383,22 @@ class proreader(reader):
                 ## version tuple self._npoints = ( , ) ne marche pas avec 432-433 (self._variables_p qui attend des int)
             for v in _variables_raw_list:
                 dimensions = list(ff.getdimvar(v))
+                if v == 'xx' or v == 'yy':
+                    long_x = len(ff.read('xx'))
+                    long_y = len(ff.read('yy'))
+                    values = np.zeros(( (long_x, long_y) ))
+                    if v == 'xx':
+                        for i in range(long_y):
+                            values[:,i] = ff.read(v)
+                        self._variables_p_values[v] = values.flatten()
+                        vardesc = {'name': v, **self._infer_point_selection_type(v, ff)}
+                        self._variables_p[v] = vardesc
+                    if v == 'yy':
+                        for i in range(long_x):
+                            values[i,:] = ff.read(v)
+                        self._variables_p_values[v] = values.flatten()
+                        vardesc = {'name': v, **self._infer_point_selection_type(v, ff)}
+                        self._variables_p[v] = vardesc
                 if ff.Number_of_Patches in dimensions:
                     dimensions.remove(ff.Number_of_Patches)
                 for t_name in ff.Number_of_Tiles:
@@ -398,15 +414,13 @@ class proreader(reader):
                     else:
                         has_point_dim = False
                 else:'''
-                has_point_dim = [True]*len(ff.Points_dimensions)
-                index = 0
-                for dimname in ff.Points_dimensions:
+                has_point_dim = True
+                for i in range(len(ff.Points_dimensions)):
+                    dimname = ff.Points_dimensions[i]
                     if dimname in dimensions:
                         dimensions.remove(dimname)
-                        has_point_dim[index] = True
                     else:
-                        has_point_dim[index] = False
-                has_point_dim = sum(has_point_dim)
+                        has_point_dim = False
                 ###########################################################
                 ## END OF "CHECKED BY LEO"
                 ###########################################################
@@ -415,6 +429,8 @@ class proreader(reader):
                     self._variables_p_values[v] = ff.read(v)
                     vardesc = {'name': v, **self._infer_point_selection_type(v, ff)}
                     self._variables_p[v] = vardesc
+
+
 
                 # Select plotable variables and get information on it
                 if len(dimensions) > 0 and len(dimensions) < 3:
@@ -434,10 +450,44 @@ class proreader(reader):
                     if 'time' in dimensions:
                         self._variables_t.append(v)
 
-                # Sorting variables by name
-                self._variables = {key: self._variables[key] for key in sorted(self._variables.keys())}
-                self._variables_p = {key: self._variables_p[key] for key in sorted(self._variables_p.keys())}
-                self._variables_t.sort()
+            # Sorting variables by name
+            self._variables = {key: self._variables[key] for key in sorted(self._variables.keys())}
+            self._variables_p = {key: self._variables_p[key] for key in sorted(self._variables_p.keys())}
+            self._variables_t.sort()
+
+
+
+
+
+
+            '''############## STOP ICI ###############
+
+            # Special treatment for 'xx' and 'yy' dimension:
+            for key in set(self._selection_point_defaults.keys()).intersection(set(_variables_raw_list)):
+                print(key)
+                if key == 'xx':
+                    self._variables_p_values[key] = [ff.read(key), np.newaxis]
+                else:
+                    self._variables_p_values[key] = [np.newaxis, ff.read(key)]
+                vardesc = {'name': key, **self._infer_point_selection_type(key, ff)}
+                self._variables_p[key] = vardesc
+                
+                
+                vardesc = {'name': v, **self._infer_point_selection_type(v, ff)}
+  File "/home/fructusm/git/snowtools_git/snowtools/plots/stratiprofile/proreader.py", line 572, in _infer_point_selection_type
+    choices = np.sort(np.unique(self._variables_p_values[v]))
+  File "/usr/lib64/python3.7/site-packages/numpy/lib/arraysetops.py", line 264, in unique
+    ret = _unique1d(ar, return_index, return_inverse, return_counts)
+  File "/usr/lib64/python3.7/site-packages/numpy/lib/arraysetops.py", line 312, in _unique1d
+    ar.sort()
+
+            ############## STOP ICI ###############'''
+
+
+
+
+
+
 
             # Add the point dimension for selection
             self._variables_p_values['point'] = np.arange(self._npoints)
