@@ -370,13 +370,16 @@ class proreader(reader):
             ## PB: cas 2d -> Number_of_points n'existe pas
             ## AttributeError: 'prosimu2d' object has no attribute 'Number_of_points'
             ###########################################################
-            try:
-                self._npoints = ff.getlendim(ff.Number_of_points)
+            self._npoints = 1
+            for dimname in ff.Points_dimensions:
+                self._npoints = self._npoints * ff.getlendim(dimname)
+            '''try:
+                self._npoints = ff.getlendim(ff.Number_of_points)Points_dimensions
                 self.simu2d = False
             except:
                 self._npoints = ff.getlendim(ff.Points_dimensions[0]) * ff.getlendim(ff.Points_dimensions[1])
                 self.simu2d = True
-                self.dim2d = (ff.getlendim(ff.Points_dimensions[0]), ff.getlendim(ff.Points_dimensions[1]))
+                self.dim2d = (ff.getlendim(ff.Points_dimensions[0]), ff.getlendim(ff.Points_dimensions[1]))'''
                 ## version tuple self._npoints = ( , ) ne marche pas avec 432-433 (self._variables_p qui attend des int)
             for v in _variables_raw_list:
                 dimensions = list(ff.getdimvar(v))
@@ -385,7 +388,7 @@ class proreader(reader):
                 for t_name in ff.Number_of_Tiles:
                     if t_name in dimensions:
                         dimensions.remove(t_name)
-                if self.simu2d:
+                '''if self.simu2d:
                     if ff.Points_dimensions[0] in dimensions:
                         dimensions.remove(ff.Points_dimensions[0])
                         has_point_dim = True
@@ -394,12 +397,16 @@ class proreader(reader):
                         has_point_dim = True
                     else:
                         has_point_dim = False
-                else:
-                    if ff.Number_of_points in dimensions:
-                        dimensions.remove(ff.Number_of_points)
-                        has_point_dim = True
+                else:'''
+                has_point_dim = [True]*len(ff.Points_dimensions)
+                index = 0
+                for dimname in ff.Points_dimensions:
+                    if dimname in dimensions:
+                        dimensions.remove(dimname)
+                        has_point_dim[index] = True
                     else:
-                        has_point_dim = False
+                        has_point_dim[index] = False
+                has_point_dim = sum(has_point_dim)
                 ###########################################################
                 ## END OF "CHECKED BY LEO"
                 ###########################################################
@@ -432,19 +439,19 @@ class proreader(reader):
                 self._variables_p = {key: self._variables_p[key] for key in sorted(self._variables_p.keys())}
                 self._variables_t.sort()
 
-                # Add the point dimension for selection
-                self._variables_p_values['point'] = np.arange(self._npoints)
-                self._variables_p['point'] = {'name': 'point',
-                                              'full_name': 'Point nr',
-                                              'rank': 1,
-                                              'dtype': np.int_,
-                                              'type': 'int',
-                                              'choices': self._variables_p_values['point'],
-                                              }
+            # Add the point dimension for selection
+            self._variables_p_values['point'] = np.arange(self._npoints)
+            self._variables_p['point'] = {'name': 'point',
+                                          'full_name': 'Point nr',
+                                          'rank': 1,
+                                          'dtype': np.int_,
+                                          'type': 'int',
+                                          'choices': self._variables_p_values['point'],
+                                          }
 
-                # Get and store time dimension
-                if not self._is_list_filename:
-                    self._time = ff.readtime()
+            # Get and store time dimension
+            if not self._is_list_filename:
+                self._time = ff.readtime()
 
         if self._is_list_filename:
             with prosimu(self._filename) as ff:
@@ -721,13 +728,17 @@ class proreader(reader):
         :type _raw: bool
         :returns: list of `Point`
         """
-        allpoints = np.arange(self._npoints)
+        '''allpoints = np.arange(self._npoints)
         if len(selector) == 0:
-            return list(allpoints)
+            return list(allpoints)'''
+
+        # Special case of point key in selector
+        if 'point' in selector:
+            return [selector['point']]
 
         # Check varnames in selector
         lkey = []
-        corrected_dict = {}
+        selection = None
         for key, value in selector.items():
             v = self._get_varname(key)
             if v in lkey:
@@ -739,13 +750,18 @@ class proreader(reader):
             else:
                 idx_nearest = (np.abs(self._variables_p_values[v] - value)).argmin()
                 corrected_value = self._variables_p_values[v][idx_nearest]
-            corrected_dict[v] = corrected_value
+            if selection is None:
+                selection = np.full_like(self._variables_p_values[v], True, dtype=bool)
+            selection = selection & (self._variables_p_values[v] == corrected_value)
+        if selection is None:
+            selection = np.full((len(selector), self._npoints), True, dtype=bool)
+        return np.where(selection.flatten())[0]
 
-        from snowtools.utils.prosimu import prosimu
+        '''from snowtools.utils.prosimu import prosimu
         with prosimu(self._mainfilename) as ff:
             return ff.get_points(**corrected_dict)
 
-        '''###########################################################
+        ###########################################################
         ## TO BE CHECKED BY LEO, tout géré par "if self.simu2d..."
         ###########################################################
         selection = np.full((len(selector), self._npoints), True, dtype=np.bool_)
