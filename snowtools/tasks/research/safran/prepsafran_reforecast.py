@@ -93,7 +93,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         nativefmt      = '[format]',
                         experiment     = self.conf.guess_xpid['6'],
                         block          = 'forecast',
-                        namespace      = 'vortex.archive.fr',
+                        namespace      = 'vortex.multi.fr', # permet d'utiliser le cache inline pour les relances
                         geometry       = self.conf.pearp_geometry,
                         local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/PEARP[date::ymdh]_[term:fmthour]',
                         origin         = 'historic',
@@ -119,7 +119,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         nativefmt      = '[format]',
                         experiment     = self.conf.guess_xpid['18'],
                         block          = 'forecast',
-                        namespace      = 'vortex.archive.fr',
+                        namespace      = 'vortex.multi.fr', # permet d'utiliser le cache inline pour les relances
                         geometry       = self.conf.pearp_geometry,
                         local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/PEARP[date::ymdh]_[term:fmthour]',
                         origin         = 'historic',
@@ -147,7 +147,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         nativefmt      = '[format]',
                         experiment     = self.conf.guess_xpid,
                         block          = 'forecast',
-                        namespace      = 'vortex.archive.fr',
+                        namespace      = 'vortex.multi.fr', # permet d'utiliser le cache inline pour les relances
                         geometry       = self.conf.pearp_geometry,
                         local          = '[date::ymdh]/ARPEGE/[term:fmthour]/ARPEGE[date::ymdh]_[term:fmthour]',
                         origin         = 'historic',
@@ -172,7 +172,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             nativefmt      = '[format]',
                             experiment     = self.conf.guess_xpid,
                             block          = 'forecast',
-                            namespace      = 'vortex.archive.fr',
+                            namespace      = 'vortex.multi.fr', # permet d'utiliser le cache inline pour les relances
                             geometry       = self.conf.pearp_geometry,
                             local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/PEARP[date::ymdh]_[term:fmthour]',
                             origin         = 'historic',
