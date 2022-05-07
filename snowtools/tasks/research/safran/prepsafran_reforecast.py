@@ -42,8 +42,8 @@ class PrepSafran(Task, S2MTaskMixIn):
         t.env.setvar('DATADIR', '/scratch/mtool/vernaym/cache')
 
         ndays = (dateend - datebegin).days
-        if ndays > 366:
-            raise ExecutionError('Periode trop longue')
+#        if ndays > 366:
+#            raise ExecutionError('Periode trop longue')
 
         #day_per_worker = ndays / 4
 
