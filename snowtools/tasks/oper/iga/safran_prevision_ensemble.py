@@ -95,7 +95,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     block          = self.conf.guess_block,
                     geometry       = self.conf.vconf,
                     date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                    cumul          = footprints.util.rangex(self.conf.prv_terms)[2:],
+                    cumul          = footprints.util.rangex(self.conf.prv_terms),
                     nativefmt      = 'ascii',
                     kind           = 'guess',
                     namespace      = 'vortex.cache.fr', #self.conf.namespace,
@@ -150,7 +150,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     block          = self.conf.guess_block,
                     geometry       = self.conf.vconf,
                     date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h), # Réseau 0h (J)
-                    cumul          = footprints.util.rangex(self.conf.prv_terms)[2:],
+                    cumul          = footprints.util.rangex(self.conf.prv_terms),
                     nativefmt      = 'ascii',
                     kind           = 'guess',
                     model          = 'safran',
