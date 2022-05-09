@@ -119,16 +119,19 @@ if args.tx:
 
 if args.tt:
     question4 = question(
-            listvar=["dat", "H.num_poste", "poste.nom_usuel", "poste.alti", "tn", "tx", "t"],
+            #listvar=["dat", "H.num_poste", "poste.nom_usuel", "poste.alti", "tn", "tx", "t"],
+            listvar=["dat", "H.num_poste", "poste.nom_usuel", "poste.alti", "t"],
             table='H',
             listorder=['H.num_poste', 'dat'],
             listjoin=[
-                'POSTE ON H.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (' + ','.join(stations_t) + ')'
+                #'POSTE ON H.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (' + ','.join(stations_t) + ')'
+                f"POSTE ON H.NUM_POSTE = POSTE.NUM_POSTE ", f" HIST_RESEAU_POSTE on (H.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE) ",
                 ],
-            listconditions=[
-                "tn is not NULL",
-                "tx is not NULL"
-                ],
-            period=[datedeb, datefin],
+            listconditions=["HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64')"],
+#            listconditions=[
+#                "tn is not NULL",
+#                "tx is not NULL"
+#                ],
+#            period=[datedeb, datefin],
             )
     question4.run(outputfile='obs_brutes_T.csv')
