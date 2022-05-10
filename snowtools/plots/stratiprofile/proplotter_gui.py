@@ -92,7 +92,7 @@ class ProPlotterApplication(tk.Frame):
         self.update_idletasks()
 
     def close_window(self, *args, **kwargs):
-        self.master.destroy()
+        self.quit()
 
     def to_graph(self, typ=None):
         if typ is None:
@@ -117,20 +117,12 @@ class ProPlotterApplication(tk.Frame):
         self.type = typ
 
     def to_graph_reset(self):
-        if self.choices.params_w is not None:
-            self.choices.params_w.clean_frame()
-        if self.main.ax1 is not None:
-            self.main.ax1.clear()
-        if self.main.ax2 is not None:
-            self.main.ax2.clear()
-        if self.main.ax3 is not None:
-            self.main.ax3.clear()
-        if self.main.fig1 is not None:
-            self.main.fig1.clear()
-        self.main.first_profil = True
-        self.main.first_master = True
-        self.main.ratio1 = 2
-        self.main.ratio2 = 1
+        # Graph reset
+        self.main.clear()
+
+        # Variable selection reset
+        # if self.choices.params_w is not None:
+        #     self.choices.params_w.clean_frame()
 
     def to_graph_standard(self):
         self.to_graph_reset()
@@ -192,7 +184,7 @@ class ProPlotterMenu(tk.Menu):
         # Menu 0
         self.filemenu = tk.Menu(self, tearoff=0)
         self.filemenu.add_command(label='Open', command=self.master.open)
-        self.filemenu.add_command(label='Quit', command=self.master.quit)
+        self.filemenu.add_command(label='Quit', command=self.master.close_window)
         self.add_cascade(label='File', menu=self.filemenu)
         # Menu 1
         self.typemenu = tk.Menu(self, tearoff=0)
@@ -479,6 +471,7 @@ class ProPlotterControlsBar(tk.Frame):
         """
         The reset button action -> Call the controller equivalent method
         """
+        print('Hit reset button')
         self.master.controller.reset()
 
     def plot_mark(self):
@@ -511,19 +504,20 @@ class ProPlotterMain(tk.Frame):
         self.first_profil = True
         self.first_master = True
         self.first_graph = True
-        self.ratio1 = 2
-        self.ratio2 = 1
         self.Canevas = FigureCanvasTkAgg(self.fig1, self)
         self.toolbar = NavigationToolbar2Tk(self.Canevas, self)
         self.toolbar.update()
 
+
+        self.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        self.update()
+
         self.update_idletasks()
 
-        self.toberemoved = tk.Label(self, text='Plotting area')
-        self.toberemoved.pack()
 
     def clear(self):
-        self.toberemoved.destroy()
+        print('Clear main frame (figure)')
+
         for e in self.fig1.axes:
             self.fig1.delaxes(e.axes)
         if self.cid is not None:
@@ -535,8 +529,10 @@ class ProPlotterMain(tk.Frame):
         self.first_profil = True
         self.first_master = True
         self.first_graph = True
+        self.update()
 
     def ready_to_plot(self, same_y, nb_graph, rat1=2, rat2=1):
+        self.clear()
         if nb_graph == 1:
             self.ax1 = self.fig1.add_subplot(1, 1, 1)
         elif nb_graph == 2:
@@ -549,8 +545,17 @@ class ProPlotterMain(tk.Frame):
             self.fig1.subplots_adjust(left=0.1, bottom=0.08, wspace=0.1)
             self.ax3 = self.ax2.twiny()
 
-        self.toberemoved = tk.Label(self, text='Plotting area')
-        self.toberemoved.pack()
+    def update(self):
+        """
+        Update the figure after a change in plot.
+
+        NB: If you do not call this function, the changes on the graph are not shown.
+
+        :return: None
+        """
+        self.Canevas.draw()
+        #self.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
 
 
 
@@ -747,6 +752,8 @@ class ProPlotterController(abc.ABC):
         self.hauteur = None
         if self.master.fileobj is not None:
             self.colormap = self.master.fileobj.colorbar_variable('')
+        self.ratio = [2, 1]
+        """Ratio of the different figures to plot (when several subplots on the graph)"""
 
     def get_choice(self):
         """
@@ -897,8 +904,7 @@ class ProPlotterController(abc.ABC):
                 self.reactfig(**dico)
 
                 self.master.main.first_profil = False
-                self.master.main.Canevas.draw()
-                self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+                self.master.main.update()
 
         if self.master.fileobj is None:
             return
@@ -916,33 +922,30 @@ class ProPlotterController(abc.ABC):
         self.master.main.clear()
         if not self.master.choices.variables_w.exists_snl:
             self.master.main.ready_to_plot(1)
-            self.master.main.toberemoved.destroy()
             self.masterfig1d(**self.give_master1d_args())
         else:
             if self.vartoplot_master_desc['has_snl']:
-                self.master.main.ready_to_plot(self.same_y, 2, self.master.main.ratio1, self.master.main.ratio2)
+                self.master.main.ready_to_plot(self.same_y, 2, *self.ratio)
                 if not self.same_y:
                     self.master.main.ax2.set_ylim(0, self.ymax_react)
-                self.master.main.toberemoved.destroy()
                 self.masterfigsaison(**self.give_mastersaison_args())
                 trace_hauteur = True
             else:
-                self.master.main.ready_to_plot(False, 2, self.master.main.ratio1, self.master.main.ratio2)
+                self.master.main.ready_to_plot(False, 2, *self.ratio)
                 self.master.main.ax2.set_ylim(0, self.ymax_react)
-                self.master.main.toberemoved.destroy()
                 self.masterfig1d(**self.give_master1d_args())
                 trace_hauteur = None
 
             self.master.main.cid = self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
             self.master.main.Canevas.mpl_connect('button_press_event', button_press)
 
-        self.master.main.Canevas.draw()
-        self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        self.master.main.update()
 
     def reset(self):
         """
-        Reset the selection (and plot ?)
+        Reset the selection (and plot)
         """
+        print('Controller reset (reset selection and plot)')
         for widget in self.master.choices.point_w.lselectors:
             widget.set('')
         self.master.choices.variables_w.choice_var_master.set('')
@@ -1033,8 +1036,7 @@ class ProPlotterControllerSlider(ProPlotterController):
             else:
                 self.masterfig1d(**self.give_master1d_args())
 
-        self.master.main.Canevas.draw()
-        self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        self.master.main.update()
 
 
 class ProPlotterControllerMember(ProPlotterControllerSlider):
@@ -1157,8 +1159,7 @@ class ProPlotterControllerMemberSaison(ProPlotterControllerMember):
     def __init__(self, master):
         self.master = master
         super().__init__(master)
-        self.master.main.ratio1 = 1
-        self.master.main.ratio2 = 1
+        self.ratio = [1, 1]
 
     def reactfig(self, **kwargs: dict):
         return profilPlot.saisonProfil(**kwargs)
@@ -1292,8 +1293,7 @@ class ProPlotterControllerMultipleSaison(ProPlotterControllerMultiple):
     def __init__(self, master):
         self.master = master
         super().__init__(master)
-        self.master.main.ratio1 = 1
-        self.master.main.ratio2 = 1
+        self.ratio = [1, 1]
 
     def reactfig(self, **kwargs: dict):
         return profilPlot.saisonProfil(**kwargs)
@@ -1318,8 +1318,7 @@ class ProPlotterControllerCompare(ProPlotterController):
         super().__init__(master)
         self.dztoplot_react = None
         self.timeplot_react = None
-        self.master.main.ratio1 = 1
-        self.master.main.ratio2 = 1
+        self.ratio = [1, 1]
 
     def get_data(self, point):
         """
@@ -1399,13 +1398,13 @@ class ProPlotterControllerCompare(ProPlotterController):
         else:
             self.reactfig1d(**self.give_react1d_args())
 
-        self.master.main.Canevas.draw()
-        self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        self.master.main.update()
 
 
 def main(*args, **kwargs):
     root = tk.Tk()
     root.title('GUI PROreader CEN')
+    root.protocol("WM_DELETE_WINDOW", root.quit)
     root.geometry('1100x850')
     app = ProPlotterApplication(*args, master=root, **kwargs)
     app.mainloop()
