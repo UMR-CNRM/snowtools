@@ -1095,14 +1095,17 @@ class ProPlotterControllerMember(ProPlotterControllerSlider):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
-        dataplot_master = self.dataplot_master[:, self.dateslice, :]
+        dataplot_master = self.dataplot_master[:, self.dateslice]
+
         if self.dztoplot is not None:
-            ylimit = np.max(np.cumsum(self.dztoplot[:, :, :], axis=2))
-            return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend,
-                        title=self.timeplot[self.dateslice], ylimit=ylimit)
+            limit_dz = np.max(np.cumsum(self.dztoplot[:, :, :], axis=2))
+            limit_value = np.max(self.dataplot_master)
+            ylimit = max(limit_dz, limit_value)
         else:
-            return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend,
-                        title=self.timeplot[self.dateslice])
+            ylimit = np.max(self.dataplot_master)
+
+        return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend,
+                    title=self.timeplot[self.dateslice], ylimit=ylimit)
 
     def give_mastersaison_args(self):
         """
