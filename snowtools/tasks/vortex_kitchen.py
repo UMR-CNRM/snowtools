@@ -421,6 +421,9 @@ class Vortex_conf_file(object):
         if self.options.dailyprep:
             self.set_field("DEFAULT", 'dailyprep', self.options.dailyprep)
 
+        if self.options.gridsimul:
+            self.set_field("DEFAULT", 'simu2D', self.options.gridsimul)
+
         if self.options.interpol:
             self.set_field("DEFAULT", 'interpol', self.options.interpol)
             self.set_field("DEFAULT", 'gridout', self.options.gridout)
