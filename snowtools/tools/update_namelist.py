@@ -251,11 +251,14 @@ def update_physicaloptions(NamelistObject, **kwargs):
     :type kwargs: dict, optional
     """
     check_or_create_block(NamelistObject, "NAM_ISBA_SNOWn")
+    check_or_create_block(NamelistObject, "NAM_ISBAn")
+
     for key, value in six.iteritems(kwargs):
         if key.upper() in ["CSNOWDRIFT", "LSNOWDRIFT_SUBLIM", "LSNOW_ABS_ZENITH", "CSNOWMETAMO",
                            "CSNOWRAD", "CSNOWFALL", "CSNOWCOND", "CSNOWHOLD", "CSNOWCOMP", "CSNOWZREF", "LSNOWSYTRON"]:
             setattr(NamelistObject["NAM_ISBA_SNOWn"], key.upper(), value)
-
+        elif key.upper() in ["CSNOWRES"]:
+            setattr(NamelistObject["NAM_ISBAn"], key.upper(), value)
     return NamelistObject
 
 
