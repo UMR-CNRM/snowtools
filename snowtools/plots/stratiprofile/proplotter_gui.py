@@ -92,9 +92,16 @@ class ProPlotterApplication(tk.Frame):
         self.update_idletasks()
 
     def close_window(self, *args, **kwargs):
+        """
+        Just to close the application
+        """
         self.quit()
 
     def to_graph(self, typ=None):
+        """
+        Launch the Controller adapted to the graph type
+        :param typ: a string which qualify the graph type
+        """
         if typ is None:
             typ = self.type
 
@@ -117,49 +124,74 @@ class ProPlotterApplication(tk.Frame):
         self.type = typ
 
     def to_graph_reset(self):
-        # Graph reset
+        """
+        Graph reset
+        """
         self.main.clear()
-
         # Variable selection reset
         # if self.choices.params_w is not None:
         #     self.choices.params_w.clean_frame()
 
     def to_graph_standard(self):
+        """
+        Reset then launch Controller and Choices Bar Parameter for standard graph
+        """
         self.to_graph_reset()
         self.controller = ProPlotterControllerStandard(self)
         self.choices.params_w = ProPlotterChoicesBarParamsStandard(self, self.choices.params)
 
     def to_graph_multiple_profil(self):
+        """
+        Reset then launch Controller and Choices Bar Parameter for multiple graph with profil on the right
+        """
         self.to_graph_reset()
         self.controller = ProPlotterControllerMultipleProfil(self)
         self.choices.params_w = ProPlotterChoicesBarParamsMultiple(self, self.choices.params)
 
     def to_graph_multiple_saison(self):
+        """
+        Reset then launch Controller and Choices Bar Parameter for multiple graph with seasonal graph on the right
+        """
         self.to_graph_reset()
         self.controller = ProPlotterControllerMultipleSaison(self)
         self.choices.params_w = ProPlotterChoicesBarParamsMultiple(self, self.choices.params)
 
     def to_graph_height(self):
+        """
+        Reset then launch Controller and Choices Bar Parameter for height graph
+        """
         self.to_graph_reset()
         self.choices.params_w = ProPlotterChoicesBarParamsHeight(self, self.choices.params)
         self.controller = ProPlotterControllerHeight(self)
 
     def to_graph_member_profil(self):
+        """
+        Reset then launch Controller and Choices Bar Parameter for member graph with profil on the right
+        """
         self.to_graph_reset()
         self.controller = ProPlotterControllerMemberProfil(self)
         self.choices.params_w = ProPlotterChoicesBarParamsMember(self, self.choices.params)
 
     def to_graph_member_saison(self):
+        """
+        Reset then launch Controller and Choices Bar Parameter for member graph with seasonal graph on the right
+        """
         self.to_graph_reset()
         self.controller = ProPlotterControllerMemberSaison(self)
         self.choices.params_w = ProPlotterChoicesBarParamsMember(self, self.choices.params)
 
     def to_graph_compare(self):
+        """
+        Reset then launch Controller and Choices Bar Parameter for comparison of two graphs
+        """
         self.to_graph_reset()
         self.controller = ProPlotterControllerCompare(self)
         self.choices.params_w = ProPlotterChoicesBarParamsCompare(self, self.choices.params)
 
     def open(self, *args):
+        """
+        Opening a file
+        """
         self.status.set_status('Open file...')
         selectedfilename = tkinter.filedialog.askopenfilename(title='Open filename', filetypes=FILETYPES)
         if len(selectedfilename) == 0:
@@ -201,7 +233,7 @@ class ProPlotterMenu(tk.Menu):
 
 
 class ProPlotterOpenBar(tk.Frame):
-    """The Frame for open buton and file path"""
+    """The Frame for open button and file path"""
 
     def __init__(self, master):
         """Initialize open bar """
@@ -217,9 +249,13 @@ class ProPlotterOpenBar(tk.Frame):
         self.filename.pack(side=tk.LEFT)
 
     def open(self):
+        """
+        If the Open button is clicked, launch the Open application
+        """
         self.master.open()
 
     def update_filename(self, filename):
+        """Get the name of opened file"""
         self.filename.configure(text=filename)
 
 
@@ -278,6 +314,7 @@ class ProPlotterChoicesBarVariables:
         self.update()
 
     def update(self):
+        """Clean and fill the Combobox with choices for variables"""
         self.clean_frame()
         self.label = tk.Label(self.frame, text='Choice of variables', relief=tk.RAISED)
         self.label.pack()
@@ -304,12 +341,14 @@ class ProPlotterChoicesBarVariables:
             self.choice_var_react.pack()
 
     def update_var_master(self, *args):
+        """Update the value for the master graph, is the left graph"""
         value = self.choice_var_master.get()
         if value != self._var_master:
             self._var_master = value
             self.master.master.controls.plot_mark()
 
     def update_var_react(self, *args):
+        """Update the value for the servant graph, is the graph on the right"""
         value = self.choice_var_react.get()
         if value != self._var_react:
             self._var_react = value
@@ -324,6 +363,7 @@ class ProPlotterChoicesBarVariables:
         return self._var_react
 
     def clean_frame(self):
+        """Clean"""
         for widgets in self.frame.winfo_children():
             widgets.destroy()
 
@@ -344,6 +384,7 @@ class ProPlotterChoicesBarPoint:
         self.update()
 
     def update(self):
+        """Clean and fill the Combobox with choices for the point"""
         self.clean_frame()
         self.label = tk.Label(self.frame, text='Choice of point selectors\n(fill from top to bottom)', relief=tk.RAISED)
         self.label.pack(pady=5)
@@ -372,6 +413,7 @@ class ProPlotterChoicesBarPoint:
                 self.lvariables.append(v)
 
     def get_selector(self):
+        """Give the good type for the selected field"""
         selector = {}
         for j in range(len(self.llabels)):
             v = self.lvariables[j]
@@ -437,6 +479,7 @@ class ProPlotterChoicesBarPoint:
         self.update_var(i)
 
     def clean_frame(self):
+        """Clean"""
         for widgets in self.frame.winfo_children():
             widgets.destroy()
 
@@ -516,8 +559,7 @@ class ProPlotterMain(tk.Frame):
 
 
     def clear(self):
-        print('Clear main frame (figure)')
-
+        """Clean main frame (figure)"""
         for e in self.fig1.axes:
             self.fig1.delaxes(e.axes)
         if self.cid is not None:
@@ -532,6 +574,7 @@ class ProPlotterMain(tk.Frame):
         self.update()
 
     def ready_to_plot(self, same_y, nb_graph, rat1=2, rat2=1):
+        """Prepare the main frame for figure"""
         self.clear()
         if nb_graph == 1:
             self.ax1 = self.fig1.add_subplot(1, 1, 1)
@@ -582,6 +625,7 @@ class ProPlotterStatus(tk.Frame):
 
 
 class ProPlotterChoicesBarParams(abc.ABC):
+    """Abstract Class for the Choices for the Parameters. The standard case is described"""
     def __init__(self, master, frame):
         self.master = master
         self.frame = frame
@@ -593,6 +637,7 @@ class ProPlotterChoicesBarParams(abc.ABC):
 
 
 class ProPlotterChoicesBarParamsStandard(ProPlotterChoicesBarParams):
+    """Standard case, nothing to add"""
     def __init__(self, master, frame):
         super().__init__(master, frame)
         self.update()
@@ -603,7 +648,7 @@ class ProPlotterChoicesBarParamsStandard(ProPlotterChoicesBarParams):
 
 class ProPlotterChoicesBarParamsHeight(ProPlotterChoicesBarParams):
     """
-     Specific choice for direction and height
+     Specific choices for direction and height. Add the specific combobox and variables
      """
     def __init__(self, master, frame):
         super().__init__(master, frame)
@@ -617,6 +662,7 @@ class ProPlotterChoicesBarParamsHeight(ProPlotterChoicesBarParams):
         self.update()
 
     def update(self):
+        """Specific choices for variables in Height Graph case"""
         self.clean_frame()
         self.label = tk.Label(self.frame, text='Choice of direction and height', relief=tk.RAISED)
         self.label.pack()
@@ -636,6 +682,7 @@ class ProPlotterChoicesBarParamsHeight(ProPlotterChoicesBarParams):
             self.choice_height.pack()
 
     def update_direction(self, *args):
+        """Update the value of the direction choice (from ground to top of snow layer or the contrary)"""
         value = self.choice_direction.get()
         if value == 'from ground to top of snow layer':
             self._direction = 'up'
@@ -643,6 +690,7 @@ class ProPlotterChoicesBarParamsHeight(ProPlotterChoicesBarParams):
             self._direction = 'down'
 
     def update_height(self, *args):
+        """Update the value of the cut in the snow pack (8.3cm) from the direction"""
         if self.choice_height is None:
             value = 8.3
         else:
