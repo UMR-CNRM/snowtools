@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
 
@@ -13,6 +14,7 @@ from vortex.tools.actions import actiond as ad
 import iga.tools.op as op
 import snowtools
 
+
 logger = footprints.loggers.getLogger(__name__)
 
 
@@ -27,7 +29,7 @@ def setup(t, **kw):
     )
 
 
-class PrepSafran(OpTask, S2MTaskMixIn):
+class PrepSafran(Task, S2MTaskMixIn):
 
     # Filter of errors to be applied in both oper and dev cases
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
@@ -46,78 +48,76 @@ class PrepSafran(OpTask, S2MTaskMixIn):
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
-            with op.InputReportContext(self, t):
+            # I- ARPEGE
+            # Récupération des échéances de 6h à 102h du réseau 0h J d'ARPEGE
+            # On traite les échéances en les considérant comme des membres distincts pour paralléliser les calculs
+            self.sh.title('Toolbox input arpege')
+            tbarp = toolbox.input(
+                role           = 'Gridpoint',
+                format         = 'grib',
+                geometry       = self.conf.arpege_geometry,
+                kind           = 'gridpoint',
+                suite          = self.conf.suite,
+                cutoff         = 'production',
+                local          = 'ARP_[term:hour]/ARPEGE[date::addterm_ymdh]',
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                term           = footprints.util.rangex(self.conf.prv_terms),
+                namespace      = 'self.conf.namespace',
+                block          = 'forecast',
+                nativefmt      = '[format]',
+                origin         = 'historic',
+                model          = '[vapp]',
+                vapp           = self.conf.source_app,
+                vconf          = self.conf.deterministic_conf,
+                fatal          = True,
+            )
+            print(t.prompt, 'tb01 =', tbarp)
+            print()
 
-                # I- ARPEGE
-                # Récupération des échéances de 6h à 102h du réseau 0h J d'ARPEGE
-                # On traite les échéances en les considérant comme des membres distincts pour paralléliser les calculs
-                self.sh.title('Toolbox input arpege')
-                tbarp = toolbox.input(
-                    alternate      = 'Gridpoint',
-                    format         = 'grib',
-                    geometry       = self.conf.arpege_geometry,
-                    kind           = 'gridpoint',
-                    suite          = self.conf.suite,
-                    cutoff         = 'production',
-                    local          = 'ARP_[term:hour]/ARPEGE[date::addterm_ymdh]',
-                    date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                    term           = footprints.util.rangex(self.conf.prv_terms)[2:35],
-                    namespace      = 'vortex.multi.fr',
-                    block          = 'forecast',
-                    nativefmt      = '[format]',
-                    origin         = 'historic',
-                    model          = '[vapp]',
-                    vapp           = self.conf.source_app,
-                    vconf          = self.conf.deterministic_conf,
-                    fatal          = True,
-                )
-                print(t.prompt, 'tb01 =', tbarp)
-                print()
+            # II- PEARP
+            # Récupération du réseau 0h (J) pour couvrir J 6h -> (J+4) 6h
+            # On veut donc les échéances de 12h à 102h
+            # Désormais toutes les échéances tri-horaire sont disponible
+            self.sh.title('Toolbox input pearp inline')
+            tbpearp = toolbox.input(
+                role           = 'Gridpoint',
+                block          = 'forecast',
+                suite          = self.conf.suite,
+                cutoff         = 'production',
+                format         = 'grib',
+                geometry       = self.conf.pearp_geometry,
+                kind           = 'gridpoint',
+                local          = 'PEARP_[member]_[term:hour]/PEARP[date::addterm_ymdh]',
+                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                term           = footprints.util.rangex(self.conf.prv_terms),
+                member         = footprints.util.rangex(self.conf.pearp_members),
+                namespace      = 'self.conf.namespace',
+                nativefmt      = '[format]',
+                origin         = 'historic',
+                model          = '[vapp]',
+                vapp           = self.conf.source_app,
+                vconf          = self.conf.eps_conf,
+                fatal          = False,
+            )
+            print(t.prompt, 'tb02 =', tbpearp)
+            print()
 
-                # II- PEARP
-                # Récupération du réseau 0h (J) pour couvrir J 6h -> (J+4) 6h
-                # On veut donc les échéances de 12h à 102h
-                # Désormais toutes les échéances tri-horaire sont disponible
-                self.sh.title('Toolbox input pearp inline')
-                tbpearp = toolbox.input(
-                    role           = 'Gridpoint',
-                    block          = 'forecast',
-                    suite          = self.conf.suite,
-                    cutoff         = 'production',
-                    format         = 'grib',
-                    geometry       = self.conf.pearp_geometry,
-                    kind           = 'gridpoint',
-                    local          = 'PEARP_[member]_[term:hour]/PEARP[date::addterm_ymdh]',
-                    date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                    term           = footprints.util.rangex(self.conf.prv_terms)[4:],
-                    member         = footprints.util.rangex(self.conf.pearp_members),
-                    namespace      = 'vortex.multi.fr',
-                    nativefmt      = '[format]',
-                    origin         = 'historic',
-                    model          = '[vapp]',
-                    vapp           = self.conf.source_app,
-                    vconf          = self.conf.eps_conf,
-                    fatal          = False,
-                )
-                print(t.prompt, 'tb02 =', tbpearp)
-                print()
-
-                self.sh.title('Toolbox input tb04 = PRE-TRAITEMENT FORCAGE script')
-                tb03 = script = toolbox.input(
-                    role        = 'pretraitement',
-                    local       = 'makeP.py',
-                    genv        = self.conf.cycle,
-                    kind        = 's2m_filtering_grib',
-                    language    = 'python',
-                    # En python 3 l'ordre des arguments a une importance pour que Vortex ne considère
-                    # pas que les exécutables sont différents
-                    # Pour éviter de complexifier le code ici, le script s2m_filtering_grib s'occupe
-                    # désormais de supprimer les doublons.
-                    rawopts     = ' -o -a -i IDW -f ' + ' '.join(list([str(rh[1].container.basename)
-                                                                       for rh in enumerate(tbarp + tbpearp)])),
-                )
-                print(t.prompt, 'tb03 =', tb03)
-                print()
+            self.sh.title('Toolbox input tb04 = PRE-TRAITEMENT FORCAGE script')
+            tb03 = script = toolbox.input(
+                role        = 'pretraitement',
+                local       = 'makeP.py',
+                genv        = self.conf.cycle,
+                kind        = 's2m_filtering_grib',
+                language    = 'python',
+                # En python 3 l'ordre des arguments a une importance pour que Vortex ne considère
+                # pas que les exécutables sont différents
+                # Pour éviter de complexifier le code ici, le script s2m_filtering_grib s'occupe
+                # désormais de supprimer les doublons.
+                rawopts     = ' -o -a -i IDW -f ' + ' '.join(list([str(rh[1].container.basename)
+                                                                   for rh in enumerate(tbarp + tbpearp)])),
+            )
+            print(t.prompt, 'tb03 =', tb03)
+            print()
 
         if 'fetch' in self.steps:
             pass
@@ -150,7 +150,7 @@ class PrepSafran(OpTask, S2MTaskMixIn):
 
         if 'late-backup' in self.steps:
 
-           with op.OutputReportContext(self, t): 
+            with op.OutputReportContext(self, t):
 
                 self.sh.title('Toolbox output guess arpege prod')
                 tb05 = toolbox.output(
@@ -161,7 +161,7 @@ class PrepSafran(OpTask, S2MTaskMixIn):
                     geometry       = self.conf.domains,
                     vconf          = '[geometry::area]',
                     date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                    cumul          = footprints.util.rangex(self.conf.prv_terms)[2:35],
+                    cumul          = footprints.util.rangex(self.conf.prv_terms),
                     nativefmt      = 'ascii',
                     kind           = 'guess',
                     model          = 'safran',
@@ -169,6 +169,7 @@ class PrepSafran(OpTask, S2MTaskMixIn):
                     source_conf    = self.conf.deterministic_conf,
                     namespace      = self.conf.namespace,
                     fatal          = False,
+                    delayed        = True,
                 ),
                 print(t.prompt, 'tb05 =', tb05)
                 print()
@@ -182,7 +183,7 @@ class PrepSafran(OpTask, S2MTaskMixIn):
                     geometry       = self.conf.domains,
                     vconf          = '[geometry::area]',
                     date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                    cumul          = footprints.util.rangex(self.conf.prv_terms)[4:],
+                    cumul          = footprints.util.rangex(self.conf.prv_terms),
                     nativefmt      = 'ascii',
                     kind           = 'guess',
                     model          = 'safran',
@@ -191,8 +192,13 @@ class PrepSafran(OpTask, S2MTaskMixIn):
                     namespace      = self.conf.namespace,
                     member         = footprints.util.rangex(self.conf.pearp_members),
                     fatal          = False,
-                ),
+                      delayed        = True,
+                )
                 print(t.prompt, 'tb06 =', tb06)
                 print()
 
-                ad.phase(tb05, tb06)
+                ad.phase(tb05,tb06)
+
+            #from vortex.tools.systems import ExecutionError
+            #raise ExecutionError('')
+            #pass

@@ -161,7 +161,7 @@ class Safran(OpTask, S2MTaskMixIn):
                         enddate        = dateend.ymd6h,
                         local          = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
                         model          = 'safran',
-                        suite          = 'oper',
+                        suite          = self.conf.suite,
                         cutoff         = 'assimilation',
                         hook_autohook1 = (tb01_generic_hook1, ),
                     )
@@ -177,7 +177,7 @@ class Safran(OpTask, S2MTaskMixIn):
                         experiment     = self.conf.xpid,
                         vapp           = 's2m',
                         geometry       = self.conf.vconf,
-                        suite          = 'oper',
+                        suite          = self.conf.suite,
                         kind           = 'packedobs',
                         date           = self.conf.rundate.ymdh,
                         begindate      = datebegin.ymd6h,
