@@ -95,7 +95,7 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 model          = 'safran',
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
-                namespace      = 'vortex.cache.fr',
+                namespace      = 'self.conf.namespace',
                 fatal          = False,
             ),
             print(t.prompt, 'tb02a =', tb02a)
@@ -117,7 +117,7 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 model          = 'safran',
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
-                namespace      = 'vortex.cache.fr',
+                namespace      = 'self.conf.namespace',
                 fatal          = True,
             ),
             print(t.prompt, 'tb02b =', tb02b)

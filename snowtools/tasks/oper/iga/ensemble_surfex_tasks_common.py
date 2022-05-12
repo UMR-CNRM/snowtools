@@ -61,7 +61,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                     dateend        = dateend,
                     nativefmt      = 'netcdf',
                     kind           = 'MeteorologicalForcing',
-                    namespace      = 'vortex.cache.fr',
+                    namespace      = 'self.conf.namespace',
                     model          = source_safran,
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
                     fatal          = False
@@ -88,7 +88,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                         dateend        = dateend,
                         nativefmt      = 'netcdf',
                         kind           = 'MeteorologicalForcing',
-                        namespace      = 'vortex.cache.fr',
+                        namespace      = 'self.conf.namespace',
                         model          = alternate_safran,
                         cutoff         = 'production' if self.conf.previ else 'assimilation',
                         fatal          = False
@@ -114,7 +114,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                     member         = pearpmembers,
                     nativefmt      = 'netcdf',
                     kind           = 'MeteorologicalForcing',
-                    namespace      = 'vortex.cache.fr',
+                    namespace      = 'self.conf.namespace',
                     model          = source_safran,
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
                     fatal          = False
@@ -142,7 +142,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                         member         = pearpmembers,
                         nativefmt      = 'netcdf',
                         kind           = 'MeteorologicalForcing',
-                        namespace      = 'vortex.cache.fr',
+                        namespace      = 'self.conf.namespace',
                         model          = alternate_safran,
                         cutoff         = 'production' if self.conf.previ else 'assimilation',
                         fatal          = False
@@ -193,7 +193,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                         nativefmt      = 'netcdf',
                         kind           = 'PREP',
                         model          = 'surfex',
-                        namespace      = 'vortex.cache.fr',
+                        namespace      = 'self.conf.namespace',
                         fatal          = False,
                         cutoff         = 'assimilation'
                     ),
@@ -216,7 +216,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                             nativefmt      = 'netcdf',
                             kind           = 'PREP',
                             model          = 'surfex',
-                            namespace      = 'vortex.cache.fr',
+                            namespace      = 'self.conf.namespace',
                             fatal          = False,
                             cutoff         = alternate_prep[1]
                         ),
@@ -239,7 +239,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                             nativefmt      = 'netcdf',
                             kind           = 'PREP',
                             model          = 'surfex',
-                            namespace      = 'vortex.cache.fr',
+                            namespace      = 'self.conf.namespace',
                             fatal          = False,
                             cutoff         = 'assimilation'
                         ),
@@ -262,7 +262,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                                 nativefmt      = 'netcdf',
                                 kind           = 'PREP',
                                 model          = 'surfex',
-                                namespace      = 'vortex.cache.fr',
+                                namespace      = 'self.conf.namespace',
                                 fatal          = False,
                                 cutoff         = alternate_prep[1]
                             ),
@@ -285,7 +285,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                         nativefmt      = 'netcdf',
                         kind           = 'PREP',
                         model          = 'surfex',
-                        namespace      = 'vortex.cache.fr',
+                        namespace      = 'self.conf.namespace',
                         fatal          = False,
                         cutoff         = 'assimilation'
                     ),
@@ -311,7 +311,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                             nativefmt      = 'netcdf',
                             kind           = 'PREP',
                             model          = 'surfex',
-                            namespace      = 'vortex.cache.fr',
+                            namespace      = 'self.conf.namespace',
                             fatal          = False,
                             cutoff         = alternate_prep[1]
                         ),
@@ -335,7 +335,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                             nativefmt      = 'netcdf',
                             kind           = 'PREP',
                             model          = 'surfex',
-                            namespace      = 'vortex.cache.fr',
+                            namespace      = 'self.conf.namespace',
                             fatal          = False,
                             cutoff         = 'assimilation'
                         ),
