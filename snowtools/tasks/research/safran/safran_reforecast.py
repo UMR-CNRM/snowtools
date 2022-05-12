@@ -85,7 +85,7 @@ class Safran(Task, S2MTaskMixIn):
 #                        source_app     = self.conf.source_app,
 #                        source_conf    = self.conf.eps_conf,
 #                        namespace      = 'vortex.cache.fr',
-#                        member         = footprints.util.rangex(self.conf.pearp_members),
+#                        member         = footprints.util.rangex(self.conf.members),
 #                    ),
 #                    print(t.prompt, 'tb6h =', tb6h)
 #                    print()
@@ -107,7 +107,7 @@ class Safran(Task, S2MTaskMixIn):
 #                        source_app     = self.conf.source_app,
 #                        source_conf    = self.conf.eps_conf,
 #                        namespace      = 'vortex.cache.fr',
-#                        member         = footprints.util.rangex(self.conf.pearp_members),
+#                        member         = footprints.util.rangex(self.conf.members),
 #                    ),
 #                    print(t.prompt, 'tb18h =', tb18h)
 #                    print()
@@ -154,7 +154,7 @@ class Safran(Task, S2MTaskMixIn):
 #                            source_app     = self.conf.source_app,
 #                            source_conf    = self.conf.eps_conf,
 #                            namespace      = self.conf.namespace,
-#                            member         = footprints.util.rangex(self.conf.pearp_members),
+#                            member         = footprints.util.rangex(self.conf.members),
 #                            fatal          = False,
 #                        ),
 #                        print(t.prompt, 'tb01 =', tb01)
@@ -456,7 +456,7 @@ class Safran(Task, S2MTaskMixIn):
                         kind           = 'MeteorologicalForcing',
                         source_app     = self.conf.source_app,
                         source_conf    = self.conf.arpege_conf,
-                        local          = '[datebegin:subPT6H_ymdh]/ARPEGE/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                        local          = '[datebegin:subPT6H_ymdh]/mb035/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                         experiment     = self.conf.xpid,
                         block          = 'massifs',
                         geometry        = self.conf.geometry[self.conf.vconf],
@@ -477,7 +477,7 @@ class Safran(Task, S2MTaskMixIn):
                         kind           = 'MeteorologicalForcing',
                         source_app     = self.conf.source_app,
                         source_conf    = self.conf.arpege_conf,
-                        local          = '[datebegin:subPT6H_ymdh]/ARPEGE/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                        local          = '[datebegin:subPT6H_ymdh]/mb035/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                         experiment     = self.conf.xpid,
                         block          = 'postes',
                         geometry        = self.conf.geometry[self.conf.vconf],
@@ -510,7 +510,7 @@ class Safran(Task, S2MTaskMixIn):
                         datebegin      = rundate.ymd6h,
                         dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
                         namespace      = 'vortex.multi.fr',
-                        member         = footprints.util.rangex(self.conf.pearp_members),
+                        member         = footprints.util.rangex(self.conf.members),
                         namebuild      = 'flat@cen',
                     ),
                     print(t.prompt, 'tb27 =', tb27)
@@ -532,7 +532,7 @@ class Safran(Task, S2MTaskMixIn):
                         datebegin      = rundate.ymd6h,
                         dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
                         namespace      = 'vortex.multi.fr',
-                        member         = footprints.util.rangex(self.conf.pearp_members),
+                        member         = footprints.util.rangex(self.conf.members),
                         namebuild      = 'flat@cen',
                     ),
                     print(t.prompt, 'tb28 =', tb28)

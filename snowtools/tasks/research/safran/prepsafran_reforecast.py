@@ -99,7 +99,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         origin         = 'historic',
                         date           = rundate.ymd6h,
                         term           = footprints.util.rangex(self.conf.prv_terms)[:33],
-                        member         = footprints.util.rangex(self.conf.pearp_members),
+                        member         = footprints.util.rangex(self.conf.members),
                         model          = '[vapp]',
                         vapp           = self.conf.source_app,
                         vconf          = self.conf.eps_conf,
@@ -125,7 +125,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         origin         = 'historic',
                         date           = '{0:s}/-PT12H'.format(rundate.ymd6h),
                         term           = footprints.util.rangex(self.conf.prv_terms)[4:],
-                        member         = footprints.util.rangex(self.conf.pearp_members),
+                        member         = footprints.util.rangex(self.conf.members),
                         model          = '[vapp]',
                         vapp           = self.conf.source_app,
                         vconf          = self.conf.eps_conf,
@@ -149,7 +149,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         block          = 'forecast',
                         namespace      = 'vortex.multi.fr', # permet d'utiliser le cache inline pour les relances
                         geometry       = self.conf.pearp_geometry,
-                        local          = '[date::ymdh]/ARPEGE/[term:fmthour]/ARPEGE[date::ymdh]_[term:fmthour]',
+                        local          = '[date::ymdh]/mb035/[term:fmthour]/ARPEGE[date::ymdh]_[term:fmthour]',
                         origin         = 'historic',
                         date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
                         term           = footprints.util.rangex(self.conf.prv_terms),
@@ -178,7 +178,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             origin         = 'historic',
                             date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
                             term           = footprints.util.rangex(self.conf.prv_terms),
-                            member         = footprints.util.rangex(self.conf.pearp_members),
+                            member         = footprints.util.rangex(self.conf.members),
                             model          = '[vapp]',
                             vapp           = self.conf.source_app,
                             vconf          = self.conf.eps_conf,
@@ -319,7 +319,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 #                        source_app     = self.conf.source_app,
 #                        source_conf    = self.conf.eps_conf,
 #                        namespace      = 'vortex.multi.fr',
-#                        member         = footprints.util.rangex(self.conf.pearp_members),
+#                        member         = footprints.util.rangex(self.conf.members),
 #                    ),
 #                    print(t.prompt, 'tb6h =', tb6h)
 #                    print()
@@ -342,7 +342,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 #                        source_app     = self.conf.source_app,
 #                        source_conf    = self.conf.eps_conf,
 #                        namespace      = 'vortex.multi.fr',
-#                        member         = footprints.util.rangex(self.conf.pearp_members),
+#                        member         = footprints.util.rangex(self.conf.members),
 #                    ),
 #                    print(t.prompt, 'tb18h =', tb18h)
 #                    print()
@@ -389,7 +389,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 #                            source_app     = self.conf.source_app,
 #                            source_conf    = self.conf.eps_conf,
 #                            namespace      = 'vortex.multi.fr',
-#                            member         = footprints.util.rangex(self.conf.pearp_members),
+#                            member         = footprints.util.rangex(self.conf.members),
 #                            fatal          = False,
 #                        ),
 #                        print(t.prompt, 'tbpearp =', tbpearp)
