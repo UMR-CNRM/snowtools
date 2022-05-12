@@ -293,7 +293,6 @@ class vortex_kitchen(object):
 
 
 class Vortex_conf_file(object):
-    # NB: Inheriting from file object is not allowed in python 3
     def __init__(self, options, filename, mode='w'):
         self.name = filename
         self.options = options
@@ -313,7 +312,10 @@ class Vortex_conf_file(object):
         for blockname in self.blocks:
             self.fileobject.write("[" + blockname + "]\n")
             for fieldname, value in self.blocks[blockname].items():
-                self.fileobject.write(fieldname + " = " + str(value) + "\n")
+                if not isinstance(value, list):
+                    self.fileobject.write(fieldname + " = " + str(value) + "\n")
+                else:
+                    self.fileobject.write(fieldname + " = " + ','.join(map(str, value)) + "\n")
             self.fileobject.write("\n")
 
     def close(self):

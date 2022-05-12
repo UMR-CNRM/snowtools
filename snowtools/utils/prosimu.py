@@ -16,9 +16,10 @@ import sys
 import netCDF4
 import six
 import numpy as np
+import glob
 
 from snowtools.utils.FileException import FileNameException, DirNameException, FileOpenException, VarNameException, \
-        TimeException, MultipleValueException
+    TimeException, MultipleValueException
 from snowtools.utils.S2M_standard_file import StandardCROCUS
 
 try:
@@ -63,7 +64,16 @@ class prosimu():
         cache - utile lorsque de grands nombre d'accès à la même variable sont
         nécessaires
         """
-        if type(path) is list:
+        # BC add the possibility to give wildcards to prosimu
+        try:
+            glob_path = glob.glob(path)
+        except TypeError:
+            # path is a list.
+            glob_path = []
+
+        if type(path) is list or len(glob_path) > 1:
+            if type(path) is not list:
+                path = sorted(glob_path)
             for fichier in path:
                 if not os.path.isfile(fichier):
                     raise FileNameException(fichier)
