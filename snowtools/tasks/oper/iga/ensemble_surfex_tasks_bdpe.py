@@ -60,7 +60,7 @@ class Rapatrie_Forcing(S2MTaskMixIn, OpTask):
 
         source_safran, block_safran = self.get_source_safran()
 
-        pearpmembers, members = self.get_list_members()
+        pearpmembers, members = self.get_list_members_special()
 
         if source_safran != 's2m':
 
@@ -95,16 +95,16 @@ class Rapatrie_Forcing(S2MTaskMixIn, OpTask):
                 except Exception as e :
                      print(e)
 
-    def get_list_members(self):
+    def get_list_members_special(self):
         # Remove member 35 which is treated separately
-        pearpmembers, members = super(Rapatrie_Forcing, self).get_list_members()
+        pearpmembers, members = self.get_list_members()
         members.pop(35)
         return pearpmembers, members
 
 
 class Rapatrie_Forcing_Deterministic(Rapatrie_Forcing):
     # Member 35 is treated separately to be saved before other members
-    def get_list_members(self):
+    def get_list_members_special(self):
         return [], [35]
 
 
@@ -116,7 +116,7 @@ class Rapatrie_Pro(S2MTaskMixIn, OpTask):
         transfernode = t.sh.target().inetname + 'transfert-agt'
         datebegin, dateend = self.get_period()
 
-        pearpmembers, members = self.get_list_members()
+        pearpmembers, members = self.get_list_members_special()
 
         for m in members:
             try:
@@ -149,16 +149,16 @@ class Rapatrie_Pro(S2MTaskMixIn, OpTask):
             except Exception as e :
                  print(e)
 
-    def get_list_members(self):
+    def get_list_members_special(self):
         # Remove member 35 which is treated separately
-        pearpmembers, members = super(Rapatrie_Forcing, self).get_list_members()
+        pearpmembers, members = self.get_list_members()
         members.pop(35)
         return pearpmembers, members
 
 
 class Rapatrie_Pro_Deterministic(Rapatrie_Pro):
     # Member 35 is treated separately to be saved before other members
-    def get_list_members(self):
+    def get_list_members_special(self):
         return [], [35]
 
 
