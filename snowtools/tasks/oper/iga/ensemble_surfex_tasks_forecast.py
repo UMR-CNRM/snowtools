@@ -60,7 +60,7 @@ class Four_Seasons_Task(S2MTaskMixIn, Task):
                 nativefmt   = 'netcdf',
                 kind        = 'SnowpackSimulation',
                 model       = 'surfex',
-                namespace   = 'vortex.multi.fr',
+                namespace   = 'vortex.cache.fr',
                 cutoff      = 'production',
                 fatal       = False
             ),
