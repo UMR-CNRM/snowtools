@@ -100,7 +100,7 @@ class Monthly_Surfex_Reanalysis_GetInit(S2MTaskMixIn, OpTask):
                 datevalidity   = datebegin,
                 date           = rundate_prep,
                 member         = 35,
-                namespace      = 'self.conf.namespace',
+                namespace      = self.conf.namespace_out,
                 intent         = 'inout',
                 nativefmt      = 'netcdf',
                 kind           = 'PREP',

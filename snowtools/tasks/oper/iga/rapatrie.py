@@ -105,7 +105,7 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 model          = 'safran',
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
-                namespace      = 'self.conf.namespace',
+                namespace      = self.conf.namespace_in,
                 fatal          = False,
             ),
             print(t.prompt, 'tb02a =', tb02a)
@@ -127,7 +127,7 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 model          = 'safran',
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
-                namespace      = 'self.conf.namespace',
+                namespace      = self.conf.namespace_in,
                 fatal          = True,
             ),
             print(t.prompt, 'tb02b =', tb02b)
@@ -149,7 +149,7 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 cutoff         = 'assimilation',
                 block          = 'guess',
                 nativefmt      = 'tar',
-                namespace      = 'self.conf.namespace',
+                namespace      = self.conf.namespace_out,
                 geometry       = self.conf.vconf,
                 begindate      = datebegin.ymd6h,
                 enddate        = self.conf.rundate.ymd6h,
