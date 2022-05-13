@@ -65,50 +65,47 @@ class prosimu():
         nécessaires
         """
         # BC add the possibility to give wildcards to prosimu
-        try:
+        if type(path) is str:
             glob_path = glob.glob(path)
-        except TypeError:
-            # path is a list.
-            glob_path = []
+            path = sorted(glob_path)
+            # otherwise path is already a list.
 
-        if type(path) is list or len(glob_path) > 1:
-            if type(path) is not list:
-                path = sorted(glob_path)
+        if len(path) > 1:  # several files
             for fichier in path:
                 if not os.path.isfile(fichier):
                     raise FileNameException(fichier)
 
             self.dataset = netCDF4.MFDataset(path, "r")
-            self.path = path[0]
+            self.path = path
             self.mfile = 1
 
         # Vérification du nom du fichier
-        elif os.path.isfile(path):
-            self.path = path
+        elif os.path.isfile(path[0]):
+            self.path = path[0]
             self.mfile = 0
             try:
                 if openmode == "w":
-                    self.dataset = StandardCROCUS(path, openmode, format=ncformat)
+                    self.dataset = StandardCROCUS(path[0], openmode, format=ncformat)
                 else:
-                    self.dataset = StandardCROCUS(path, openmode)
+                    self.dataset = StandardCROCUS(path[0], openmode)
             except Exception:
                 raise FileOpenException(path)
         else:
             if openmode == "w":
-                dirname = os.path.dirname(path)
+                dirname = os.path.dirname(path[0])
 
                 if len(dirname) > 0:
                     if not os.path.isdir(dirname):
-                        raise DirNameException(path)
+                        raise DirNameException(path[0])
 
-                self.dataset = StandardCROCUS(path, openmode, format=ncformat)
-                self.path = path
+                self.dataset = StandardCROCUS(path[0], openmode, format=ncformat)
+                self.path = path[0]
                 self.mfile = 0
             else:
                 print("I am going to crash because there is a filename exception")
-                print(path)
-                print(type(path))
-                raise FileNameException(path)
+                print(path[0])
+                print(type(path[0]))
+                raise FileNameException(path[0])
 
         self.varcache = {}
 
