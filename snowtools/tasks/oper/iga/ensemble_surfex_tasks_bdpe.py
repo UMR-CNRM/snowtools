@@ -23,7 +23,7 @@ class Rapatrie_Postproc(S2MTaskMixIn, OpTask):
         transfernode = t.sh.target().inetname + 'transfert-agt'
         datebegin, dateend = self.get_period()
 
-        self.sh.title('Toolbox output tb03')
+        self.sh.title('Toolbox input tb03')
         tb03 = toolbox.input(
             role='Postproc_output',
             intent='out',
@@ -38,7 +38,7 @@ class Rapatrie_Postproc(S2MTaskMixIn, OpTask):
             nativefmt='netcdf',
             kind='SnowpackSimulation',
             model='postproc',
-            namespace='vortex.multi.fr',
+            namespace=self.conf.namespace_in,
             cutoff='production',
             fatal=True
         ),
@@ -79,7 +79,7 @@ class Rapatrie_Forcing(S2MTaskMixIn, OpTask):
                         member         = m,
                         nativefmt      = 'netcdf',
                         intent         = 'inout',
-                        namespace      = 'vortex.cache.fr',
+                        namespace      = self.conf.namespace_in,
                         kind           = 'MeteorologicalForcing',
                         model          = 's2m',
                         store_compressed = 'gzip',
@@ -132,7 +132,7 @@ class Rapatrie_Pro(S2MTaskMixIn, OpTask):
                     dateend          = dateend if self.conf.previ else list(daterange(tomorrow(base=datebegin), dateend)),
                     member           = m,
                     nativefmt        = 'netcdf',
-                    namespace        = 'vortex.cache.fr',
+                    namespace        = self.conf.namespace_in,
                     store_compressed = 'gzip',
                     kind             = 'SnowpackSimulation',
                     intent           = 'inout', 
@@ -186,7 +186,7 @@ class Rapatrie_Prep(S2MTaskMixIn, OpTask):
                     date             = self.conf.rundate,
                     member           = m,
                     nativefmt        = 'netcdf',
-                    namespace        = 'vortex.cache.fr',
+                    namespace        = self.conf.namespace_in,
                     intent           = 'inout',
                     store_compressed = 'gzip',
                     kind             = 'PREP',
@@ -219,7 +219,7 @@ class Rapatrie_Prep(S2MTaskMixIn, OpTask):
                 date=self.conf.rundate,
                 member=35,  # deterministic run
                 nativefmt='netcdf',
-                namespace='vortex.cache.fr',
+                namespace=self.conf.namespace_in,
                 intent='inout',
                 kind='PREP',
                 model='surfex',

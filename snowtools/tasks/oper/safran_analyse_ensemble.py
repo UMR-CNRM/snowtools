@@ -371,15 +371,22 @@ class Safran(Task, S2MTaskMixIn):
 
                 else:
 
+                    # TODO : réorganiser les toolbox suivantes en 3 modes
+                    #  - mode nominal (réseaux 3h et 9h) / mode nominal réseau 6h (mélange A6 et P6 ==> gérer le cutoff avec un dictionnaire en fonction de l'échéance)
+                    #  - 1er mode secours (commun) ==> que des P6
+                    #  - Second mode secours (commun) ==> utiliser un "coherentgroup") 
+                    #
+                    # ==> 4 toolbox avec un "if" entre les 2 premières
+
                     # I- ARPEGE (J-5) -> J ou (J-1) -> J
                     # --------------------
 
                     # I.1- EBAUCHE issue 
                     #     - de l'A6 du réseau 0h (J ou J-1) d'assimilation d'ARPEGE pour les réseaux 3h et 9h
-                    #     - de la P6 du réseau 0h (J) de production d'AREPEG pour le réseau 6h (A6 pas encore disponible)
+                    #     - de la P6 du réseau 0h (J) de production d'ARPEGE pour le réseau 6h (A6 pas encore disponible)
                     self.sh.title('Toolbox input guess arpege assim 0h J')
                     tb17 = toolbox.input(
-                        role           = 'Ebauche_Deterministic',
+                        role           = 'Ebauche_Deterministic_0',
                         local          = 'mb035/P[date::addcumul_yymdh]',
                         experiment     = self.conf.xpid_guess,
                         block          = self.conf.guess_block,
@@ -405,7 +412,7 @@ class Safran(Task, S2MTaskMixIn):
                         # 6h homogène avec le cumul dans les fichiers d'assimilation
                         self.sh.title('Toolbox input guess arpege assim 0h J (secours)')
                         tb17 = toolbox.input(
-                            role           = 'Ebauche_Deterministic',
+                            alternate      = 'Ebauche_Deterministic_0',
                             local          = 'mb035/P[date::addcumul_yymdh]',
                             experiment     = self.conf.xpid_guess,
                             block          = self.conf.guess_block,
