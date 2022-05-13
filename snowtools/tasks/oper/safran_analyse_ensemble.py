@@ -144,7 +144,7 @@ class Safran(Task, S2MTaskMixIn):
                     enddate        = dateend.ymd6h,
                     local          = 'RST_[begindate::ymdh]_[enddate::ymdh]_[geometry:area].tar',
                     model          = 'safran',
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_out,
                     cutoff         = 'assimilation',
                 )
                 print(t.prompt, 'tb01_b =', tb01_b)
@@ -404,7 +404,7 @@ class Safran(Task, S2MTaskMixIn):
                     model          = 'safran',
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_in,
                     fatal          = False,
                 ),
                 print(t.prompt, 'tb17_a =', tb17_a)
@@ -428,7 +428,7 @@ class Safran(Task, S2MTaskMixIn):
                     model          = 'safran',
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_in,
                     fatal          = False,
                 ),
                 print(t.prompt, 'tb17_b =', tb17_b)
@@ -452,7 +452,7 @@ class Safran(Task, S2MTaskMixIn):
 #                     model          = 'safran',
 #                     source_app     = self.conf.source_app,
 #                     source_conf    = self.conf.deterministic_conf,
-#                     namespace      = self.conf.namespace,
+#                     namespace      = self.conf.namespace_in,
 #                     fatal          = False,
 #                 ),
 #                 print t.prompt, 'tb17_c =', tb17_c
@@ -480,7 +480,7 @@ class Safran(Task, S2MTaskMixIn):
                     model          = 'safran',
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.eps_conf,
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_in,
                     member         = footprints.util.rangex(self.conf.pearp_members),
                     fatal          = False,
                 ),
@@ -507,7 +507,7 @@ class Safran(Task, S2MTaskMixIn):
     #                 model          = 'safran',
     #                 source_app     = self.conf.source_app,
     #                 source_conf    = self.conf.eps_conf,
-    #                 namespace      = self.conf.namespace,
+    #                 namespace      = self.conf.namespace_in,
     #                 member         = footprints.util.rangex(self.conf.pearp_members),
     #                 fatal          = False,
     #             ),
@@ -696,7 +696,7 @@ class Safran(Task, S2MTaskMixIn):
                 model          = self.conf.model,
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_out,
             ),
             print(t.prompt, 'tb27 =', tb27)
             print()
@@ -716,7 +716,7 @@ class Safran(Task, S2MTaskMixIn):
 #                model          = self.conf.model,
 #                datebegin      = datebegin.ymd6h,
 #                dateend        = dateend.ymd6h,
-#                namespace      = self.conf.namespace,
+#                namespace      = self.conf.namespace_out,
 #                fatal          = False,
 #            ),
 #            print(t.prompt, 'tb27_diff =', tb27_diff)
@@ -737,7 +737,7 @@ class Safran(Task, S2MTaskMixIn):
                 model          = self.conf.model,
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_out,
             ),
             print(t.prompt, 'tb28 =', tb28)
             print()
@@ -759,7 +759,7 @@ class Safran(Task, S2MTaskMixIn):
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_out,
                     member         = footprints.util.rangex(self.conf.pearp_members),
                     fatal          = False,
                 ),
@@ -781,7 +781,7 @@ class Safran(Task, S2MTaskMixIn):
 #                    model          = self.conf.model,
 #                    datebegin      = datebegin.ymd6h,
 #                    dateend        = dateend.ymd6h,
-#                    namespace      = self.conf.namespace,
+#                    namespace      = self.conf.namespace_out,
 #                    member         = footprints.util.rangex(self.conf.pearp_members),
 #                    fatal          = False,
 #                ),
@@ -803,7 +803,7 @@ class Safran(Task, S2MTaskMixIn):
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_out,
                     member         = footprints.util.rangex(self.conf.pearp_members),
                     fatal          = False,
                 ),
@@ -823,7 +823,7 @@ class Safran(Task, S2MTaskMixIn):
                 local          = deterministicdir + 'listings_safran_[begindate::ymdh]_[enddate::ymdh].tar.gz',
                 format         = 'tar',
                 model          = 'safran',
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_out,
             )
             print(t.prompt, 'tb31 =', tb31)
             print()
@@ -841,7 +841,7 @@ class Safran(Task, S2MTaskMixIn):
                 local          = deterministicdir + 'liste_obs_[begindate::ymdh]_[enddate::ymdh].tar.gz',
                 format         = 'tar',
                 model          = 'safran',
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_out,
             )
             print(t.prompt, 'tb32 =', tb32)
             print()

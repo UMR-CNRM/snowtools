@@ -57,7 +57,7 @@ class Safran(Task, S2MTaskMixIn):
                 model          = 'safran',
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_in,
                 fatal          = False,
             ),
             print(t.prompt, 'tb01a =', tb01a)
@@ -86,7 +86,7 @@ class Safran(Task, S2MTaskMixIn):
                 model          = 'safran',
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_in,
                 fatal          = False,
             ),
             print(t.prompt, 'tb01b =', tb01b)
@@ -112,7 +112,7 @@ class Safran(Task, S2MTaskMixIn):
                 model          = 'safran',
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.eps_conf,
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_in,
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 fatal          = False,
             ),
@@ -134,7 +134,7 @@ class Safran(Task, S2MTaskMixIn):
                 model          = 'safran',
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.eps_conf,
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_in,
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 fatal          = False,
             ),
@@ -448,7 +448,7 @@ class Safran(Task, S2MTaskMixIn):
                 model          = self.conf.model,
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_out,
             ),
             print(t.prompt, 'tb27 =', tb27)
             print()
@@ -467,7 +467,7 @@ class Safran(Task, S2MTaskMixIn):
 #                model          = self.conf.model,
 #                datebegin      = datebegin.ymd6h,
 #                dateend        = dateend.ymd6h,
-#                namespace      = self.conf.namespace,
+#                namespace      = self.conf.namespace_in,
 #                fatal          = False,
 #            ),
 #            print(t.prompt, 'tb27 =', tb27)
@@ -487,7 +487,7 @@ class Safran(Task, S2MTaskMixIn):
                 model          = self.conf.model,
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_out,
             ),
             print(t.prompt, 'tb28 =', tb28)
             print()
@@ -506,7 +506,7 @@ class Safran(Task, S2MTaskMixIn):
 #                model          = self.conf.model,
 #                datebegin      = datebegin.ymd6h,
 #                dateend        = dateend.ymd6h,
-#                namespace      = self.conf.namespace,
+#                namespace      = self.conf.namespace_in,
 #                fatal          = False,
 #            ),
 #            print(t.prompt, 'tb28 =', tb28)
@@ -526,7 +526,7 @@ class Safran(Task, S2MTaskMixIn):
                 model          = self.conf.model,
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_out,
                 member         = footprints.util.rangex(self.conf.pearp_members),
             ),
             print(t.prompt, 'tb29 =', tb29)
@@ -546,7 +546,7 @@ class Safran(Task, S2MTaskMixIn):
 #                model          = self.conf.model,
 #                datebegin      = datebegin.ymd6h,
 #                dateend        = dateend.ymd6h,
-#                namespace      = self.conf.namespace,
+#                namespace      = self.conf.namespace_in,
 #                member         = footprints.util.rangex(self.conf.pearp_members),
 #                fatal          = False,
 #            ),
@@ -567,7 +567,7 @@ class Safran(Task, S2MTaskMixIn):
                 model          = self.conf.model,
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_out,
                 member         = footprints.util.rangex(self.conf.pearp_members),
             ),
             print(t.prompt, 'tb30 =', tb30)
@@ -587,7 +587,7 @@ class Safran(Task, S2MTaskMixIn):
 #                model          = self.conf.model,
 #                datebegin      = datebegin.ymd6h,
 #                dateend        = dateend.ymd6h,
-#                namespace      = self.conf.namespace,
+#                namespace      = self.conf.namespace_in,
 #                member         = footprints.util.rangex(self.conf.pearp_members),
 #                fatal          = False,
 #            ),
@@ -606,7 +606,7 @@ class Safran(Task, S2MTaskMixIn):
                 local          = 'mb035/listings_safran_[begindate::ymdh]_[enddate::ymdh].tar.gz',
                 format         = 'tar',
                 model          = 'safran',
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_out,
             )
             print(t.prompt, 'tb31 =', tb28)
             print()
@@ -624,7 +624,7 @@ class Safran(Task, S2MTaskMixIn):
                 format         = 'tar',
                 seta           = '[glob:a]',
                 member         = '[seta]',
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_out,
             )
             print(t.prompt, 'tb33 =', tb28)
             print()

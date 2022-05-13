@@ -82,7 +82,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                                       for d in footprints.util.rangex(12, 30, self.conf.cumul)],
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = self.conf.namespace_in,
                     block          = 'forecast',
                     nativefmt      = '[format]',
                     origin         = 'historic',
@@ -108,7 +108,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                                       for d in footprints.util.rangex(12, 30, self.conf.cumul)],
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = self.conf.namespace_in,
                     block          = 'forecast',
                     nativefmt      = '[format]',
                     origin         = 'historic',
@@ -139,7 +139,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     date           = '{0:s}/-PT24H'.format(self.conf.rundate.ymd6h),
                     term           = footprints.util.rangex(self.conf.ana_terms),
                     member         = footprints.util.rangex(self.conf.pearp_members),
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = self.conf.namespace_in,
                     nativefmt      = '[format]',
                     origin         = 'historic',
                     model          = '[vapp]',
@@ -173,7 +173,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     date           = '{0:s}/-PT6H'.format(self.conf.rundate.ymd6h),
                     # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                     term           = self.conf.cumul,
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = self.conf.namespace_in,
                     nativefmt      = '[format]',
                     origin         = 'historic',
                     model          = '[vapp]',
@@ -271,7 +271,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     model          = 'safran',
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_out,
                     fatal          = False,
                 ),
                 print(t.prompt, 'tb05 =', tb05)
@@ -298,7 +298,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 #                    model          = 'safran',
 #                    source_app     = self.conf.source_app,
 #                    source_conf    = self.conf.deterministic_conf,
-#                    namespace      = self.conf.namespace,
+#                    namespace      = self.conf.namespace_out,
 #                    fatal          = False,
 #                ),
 #                print(t.prompt, 'tb05_b =', tb05)
@@ -320,7 +320,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     model          = 'safran',
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.eps_conf,
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_out,
                     member         = footprints.util.rangex(self.conf.pearp_members),
                     fatal          = False,
                 ),
@@ -344,7 +344,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     model          = 'safran',
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_out,
                     fatal          = True,
                 ),
                 print(t.prompt, 'tb05 =', tb05)

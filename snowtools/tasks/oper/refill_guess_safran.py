@@ -76,7 +76,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     model          = 'safran',
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_in,
                     fatal          = False,
                 ),
                 print(t.prompt, 'tb01 =', tb01)
@@ -106,7 +106,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         model          = 'safran',
                         source_app     = self.conf.source_app,
                         source_conf    = self.conf.deterministic_conf,
-                        namespace      = self.conf.namespace,
+                        namespace      = self.conf.namespace_in,
                         fatal          = False,
                     ),
                     print(t.prompt, 'tb01 =', tb01)
@@ -140,7 +140,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             suite          = 'oper', # Force oper file to avoid mixing experiments
                             cutoff         = 'assimilation',
                             # local          = 'mb035/ARPEGE[date::addterm_ymdh]',
-                            namespace      = 'vortex.multi.fr',
+                            namespace      = self.conf.namespace_in,
                             origin         = 'historic',
                             model          = '[vapp]',
                             vapp           = self.conf.source_app,
@@ -165,7 +165,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                                               for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                             # Utilisation d'une varibale de conf pour assurer la cohérence des cumuls de precip
                             term           = self.conf.cumul,
-                            namespace      = 'vortex.multi.fr',
+                            namespace      = self.conf.namespace_in,
                             block          = 'forecast',
                             cutoff         = 'assimilation',
                             nativefmt      = '[format]',
@@ -325,7 +325,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             model          = 'safran',
                             source_app     = self.conf.source_app,
                             source_conf    = self.conf.deterministic_conf,
-                            namespace      = self.conf.namespace,
+                            namespace      = self.conf.namespace_out,
                         ),
                         print(t.prompt, 'tbguess =', tbguess)
                         print()
@@ -347,7 +347,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     experiment     = self.conf.xpid_guess,
                     block          = 'guess',
                     nativefmt      = 'tar',
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = self.conf.namespace_out,
                     geometry       = dom,
                     begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
                     enddate        = '{0:s}/+PT96H'.format(dateend.ymd6h),

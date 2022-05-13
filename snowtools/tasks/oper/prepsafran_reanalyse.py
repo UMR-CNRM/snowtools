@@ -104,7 +104,7 @@ class Reanalyses(Task, S2MTaskMixIn):
                 model          = 'safran',
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
-                namespace      = 'vortex.multi.fr',
+                namespace      = self.conf.namespace_in,
                 fatal          = False,
             ),
             print(t.prompt, 'tb02a =', tb02a)
@@ -126,7 +126,7 @@ class Reanalyses(Task, S2MTaskMixIn):
                 model          = 'safran',
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.deterministic_conf,
-                namespace      = 'vortex.multi.fr',
+                namespace      = self.conf.namespace_in,
                 fatal          = True,
             ),
             print(t.prompt, 'tb02b =', tb02b)
@@ -150,7 +150,7 @@ class Reanalyses(Task, S2MTaskMixIn):
                 cutoff         = 'assimilation',
                 block          = 'guess',
                 nativefmt      = 'tar',
-                namespace      = 'vortex.multi.fr',
+                namespace      = self.conf.namespace_out,
                 geometry       = self.conf.geometry[self.conf.vconf],
                 #cutoff         = 'assimilation',
                 begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
