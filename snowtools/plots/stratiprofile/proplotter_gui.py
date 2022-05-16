@@ -551,12 +551,10 @@ class ProPlotterMain(tk.Frame):
         self.toolbar = NavigationToolbar2Tk(self.Canevas, self)
         self.toolbar.update()
 
-
         self.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         self.update()
 
         self.update_idletasks()
-
 
     def clear(self):
         """Clean main frame (figure)"""
@@ -597,9 +595,6 @@ class ProPlotterMain(tk.Frame):
         :return: None
         """
         self.Canevas.draw()
-        #self.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-
-
 
 
 class ProPlotterStatus(tk.Frame):
@@ -778,7 +773,6 @@ class ProPlotterChoicesBarParamsCompare(ProPlotterChoicesBarParams):
             self.master.status.set_status('Successfully second opened file {}'.format(selectedfilename))
 
 
-
 class ProPlotterController(abc.ABC):
     def __init__(self, master):
         """
@@ -914,7 +908,6 @@ class ProPlotterController(abc.ABC):
             return dict(axe=self.master.main.ax2, axe2=self.master.main.ax3, cbar_show=self.master.main.first_profil,
                         xlimit=limitplot_react, value=data_date, value_dz=dz_date, value_grain=grain_date,
                         value_ram=ram_date, legend=date, hauteur=self.hauteur, ylimit=self.ymax_react)
-
 
     def masterfig1d(self, **kwargs):
         return profilPlot.saison1d(**kwargs)
@@ -1302,8 +1295,8 @@ class ProPlotterControllerMultiple(ProPlotterControllerSlider):
         ylimit = np.max(np.cumsum(self.dztoplot[:, :, :], axis=1))
 
         return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend, dz=dztoplot,
-                    colormap=self.colormap, title=self.timeplot[self.dateslice],value_max=max_value,
-                    value_min = min_value, cbar_show = self.master.main.first_master, ylimit = ylimit)
+                    colormap=self.colormap, title=self.timeplot[self.dateslice], value_max=max_value,
+                    value_min=min_value, cbar_show=self.master.main.first_master, ylimit=ylimit)
 
     def give_react_args(self, x_event):
         """
@@ -1382,7 +1375,6 @@ class ProPlotterControllerCompare(ProPlotterController):
         self.colormap_react = self.master.fileobj.colorbar_variable(self.vartoplot_react_desc['name'])
 
         self.timeplot = self.master.fileobj.get_time()
-
 
     def reactfigsaison(self, **kwargs: dict):
         return profilPlot.saisonProfil(**kwargs)
