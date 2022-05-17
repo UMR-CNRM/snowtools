@@ -770,7 +770,7 @@ class proreader(reader):
         """
         return self._time
 
-    def _get_data(self, filename, varname: str, point: int, fillnan=False,
+    def _get_data(self, filename, varname: str, point: typing.Union[int, list], fillnan=False,
                   begin=None, end=None):
         """
         Get data for a given filename (to be used by both get_data with

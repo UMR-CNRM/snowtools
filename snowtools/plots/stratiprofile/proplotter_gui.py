@@ -207,6 +207,45 @@ class ProPlotterApplication(tk.Frame):
         self.choices.point_w.update()
         self.choices.params_w.update()
 
+    def open_user_guide(self, *args):
+        """
+        Opening the help window with text inside
+        """
+        messagebox.showinfo('USER GUIDE', 'This software is a visualisation tool for PRO.nc files coming from our snow '
+                                          'model CROCUS embedded in the SURFEX model. \n \n'
+                                          'There are several types of graphs:\n'
+                                          '- usual graph: click the Open File button. Select a PRO file. Choose the '
+                                          'variables you want and then the point. \n \n '
+                                          '- the height graph is made to follow a parameter in a specified place. For '
+                                          'example, 5 cm below the snow surface. \n \n'
+                                          '- in the Meteo France system, there is the possibility to have several '
+                                          'members for a simulation. In that case, choose member plot. \n \n'
+                                          '- if you want to compare several points in your simulation, try the multiple'
+                                          ' plot. Just have let free a part of the choices for point selection. \n \n'
+                                          '- finally, if you want to compare two PRO files (in the same configuration),'
+                                          ' or if you want to plot together two parameters of the same file, please use'
+                                          ' the compare plots. \n'
+                                          '\n'
+                                          'Feel free to contact us at crocus@meteo.fr if you have some questions.\n'
+                                          '\n'
+                                          'More informations are available on \n'
+                                          'https://opensource.umr-cnrm.fr/projects/snowtools_git/wiki'
+
+                            )
+
+    def open_credits(self, *args):
+        """
+        Opening the help window with text inside
+        """
+        messagebox.showinfo('CREDITS', 'This software was made by our local geek, the Legendary Visualisation Ghost, '
+                                       'or LVG.\n'
+                                       '\n'
+                                       'Nobody knows who is he, but we know that he inspired some characters in the '
+                                       'french serie "Le Bureau des Légendes".\n'
+                                       '\n'
+                                       'It is also known that he corrects the C++ code of his father when he was nine '
+                                       'years old.')
+
 
 class ProPlotterMenu(tk.Menu):
     """ The app menu """
@@ -228,6 +267,11 @@ class ProPlotterMenu(tk.Menu):
         self.typemenu.add_command(label='Height', command=self.master.to_graph_height)
         self.typemenu.add_command(label='Compare', command=self.master.to_graph_compare)
         self.add_cascade(label='Graph type', menu=self.typemenu)
+        # Menu 2
+        self.infomenu = tk.Menu(self, tearoff=0)
+        self.infomenu.add_command(label='USER Guide', command=self.master.open_user_guide)
+        self.infomenu.add_command(label='Credits', command=self.master.open_credits)
+        self.add_cascade(label='INFOS', menu=self.infomenu)
         # Config
         self.master.master.config(menu=self)
 
@@ -514,7 +558,6 @@ class ProPlotterControlsBar(tk.Frame):
         """
         The reset button action -> Call the controller equivalent method
         """
-        print('Hit reset button')
         self.master.controller.reset()
 
     def plot_mark(self):
@@ -986,7 +1029,6 @@ class ProPlotterController(abc.ABC):
         """
         Reset the selection (and plot)
         """
-        print('Controller reset (reset selection and plot)')
         for widget in self.master.choices.point_w.lselectors:
             widget.set('')
         self.master.choices.variables_w.choice_var_master.set('')
