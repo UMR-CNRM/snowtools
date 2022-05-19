@@ -932,8 +932,8 @@ class ProPlotterController(abc.ABC):
 
         xindex = min(int(x_event), self.dztoplot.shape[0] - 1)
         date = self.timeplot[xindex]
-        data_date = np.squeeze(self.dataplot_react[xindex, ...])
-        dz_date = np.squeeze(self.dztoplot[xindex, ...])
+        data_date = self.dataplot_react[xindex, ...]
+        dz_date = self.dztoplot[xindex, ...]
         if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
             grain_date = self.grain[xindex, ...]
         else:
@@ -1086,8 +1086,8 @@ class ProPlotterControllerHeight(ProPlotterController):
         self.direction = self.master.choices.params_w.var_direction
         self.master.choices.params_w.update_height()
         self.height = self.master.choices.params_w.var_height
-        return dict(ax=self.master.main.ax1, value=np.squeeze(self.dataplot_master), list_legend=self.timeplot,
-                    value_ep=np.squeeze(self.dztoplot), direction_cut=self.direction, height_cut=self.height)
+        return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_legend=self.timeplot,
+                    value_ep=self.dztoplot, direction_cut=self.direction, height_cut=self.height)
 
     def reset(self):
         super().reset()
