@@ -354,8 +354,6 @@ class proreader(reader):
         self._variables_p = {}  # Variables for point selection
         self._variables_p_values = {}
         self._npoints = 0
-        self.simu2d = False
-        self.dim2d = None
         # Also defined below:
         # - self._time
         # - self._association_names
@@ -365,44 +363,40 @@ class proreader(reader):
 
         with prosimu(self._mainfilename) as ff:
             _variables_raw_list = ff.listvar()
-            ###########################################################
-            ## TO BE CHECKED BY LEO, tout géré par try: ... except: ...
-            ## PB: cas 2d -> Number_of_points n'existe pas
-            ## AttributeError: 'prosimu2d' object has no attribute 'Number_of_points'
-            ###########################################################
-            try:
-                self._npoints = ff.getlendim(ff.Number_of_points)
-                self.simu2d = False
-            except:
-                self._npoints = ff.getlendim(ff.Points_dimensions[0]) * ff.getlendim(ff.Points_dimensions[1])
-                self.simu2d = True
-                self.dim2d = (ff.getlendim(ff.Points_dimensions[0]), ff.getlendim(ff.Points_dimensions[1]))
-                ## version tuple self._npoints = ( , ) ne marche pas avec 432-433 (self._variables_p qui attend des int)
+            self._npoints = 1
+            for dimname in ff.Points_dimensions:
+                self._npoints = self._npoints * ff.getlendim(dimname)
             for v in _variables_raw_list:
                 dimensions = list(ff.getdimvar(v))
+                if v in list(self._selection_point_defaults.keys()):
+                    long_x = len(ff.read(ff.Points_dimensions[0]))
+                    long_y = len(ff.read(ff.Points_dimensions[1]))
+                    values = np.zeros((long_x, long_y))
+                    if v == ff.Points_dimensions[0]:
+                        for i in range(long_y):
+                            values[:, i] = ff.read(v)
+                        self._variables_p_values[v] = values.flatten()
+                        vardesc = {'name': v, **self._infer_point_selection_type(v, ff)}
+                        self._variables_p[v] = vardesc
+                    if v == ff.Points_dimensions[1]:
+                        for i in range(long_x):
+                            values[i, :] = ff.read(v)
+                        self._variables_p_values[v] = values.flatten()
+                        vardesc = {'name': v, **self._infer_point_selection_type(v, ff)}
+                        self._variables_p[v] = vardesc
                 if ff.Number_of_Patches in dimensions:
                     dimensions.remove(ff.Number_of_Patches)
                 for t_name in ff.Number_of_Tiles:
                     if t_name in dimensions:
                         dimensions.remove(t_name)
-                if self.simu2d:
-                    if ff.Points_dimensions[0] in dimensions:
-                        dimensions.remove(ff.Points_dimensions[0])
-                        has_point_dim = True
-                    elif ff.Points_dimensions[1] in dimensions:
-                        dimensions.remove(ff.Points_dimensions[1])
-                        has_point_dim = True
+                has_point_dim = True
+                for i in range(len(ff.Points_dimensions)):
+                    dimname = ff.Points_dimensions[i]
+                    if dimname in dimensions:
+                        dimensions.remove(dimname)
                     else:
                         has_point_dim = False
-                else:
-                    if ff.Number_of_points in dimensions:
-                        dimensions.remove(ff.Number_of_points)
-                        has_point_dim = True
-                    else:
-                        has_point_dim = False
-                ###########################################################
-                ## END OF "CHECKED BY LEO"
-                ###########################################################
+
                 # Identify variables for point selection
                 if has_point_dim and len(dimensions) == 0:
                     self._variables_p_values[v] = ff.read(v)
@@ -427,24 +421,24 @@ class proreader(reader):
                     if 'time' in dimensions:
                         self._variables_t.append(v)
 
-                # Sorting variables by name
-                self._variables = {key: self._variables[key] for key in sorted(self._variables.keys())}
-                self._variables_p = {key: self._variables_p[key] for key in sorted(self._variables_p.keys())}
-                self._variables_t.sort()
+            # Sorting variables by name
+            self._variables = {key: self._variables[key] for key in sorted(self._variables.keys())}
+            self._variables_p = {key: self._variables_p[key] for key in sorted(self._variables_p.keys())}
+            self._variables_t.sort()
 
-                # Add the point dimension for selection
-                self._variables_p_values['point'] = np.arange(self._npoints)
-                self._variables_p['point'] = {'name': 'point',
-                                              'full_name': 'Point nr',
-                                              'rank': 1,
-                                              'dtype': np.int_,
-                                              'type': 'int',
-                                              'choices': self._variables_p_values['point'],
-                                              }
+            # Add the point dimension for selection
+            self._variables_p_values['point'] = np.arange(self._npoints)
+            self._variables_p['point'] = {'name': 'point',
+                                          'full_name': 'Point nr',
+                                          'rank': 1,
+                                          'dtype': np.int_,
+                                          'type': 'int',
+                                          'choices': self._variables_p_values['point'],
+                                          }
 
-                # Get and store time dimension
-                if not self._is_list_filename:
-                    self._time = ff.readtime()
+            # Get and store time dimension
+            if not self._is_list_filename:
+                self._time = ff.readtime()
 
         if self._is_list_filename:
             with prosimu(self._filename) as ff:
@@ -721,61 +715,34 @@ class proreader(reader):
         :type _raw: bool
         :returns: list of `Point`
         """
-        allpoints = np.arange(self._npoints)
+        '''allpoints = np.arange(self._npoints)
         if len(selector) == 0:
-            return allpoints
+            return list(allpoints)'''
+
+        # Special case of point key in selector
+        if 'point' in selector:
+            return [selector['point']]
 
         # Check varnames in selector
         lkey = []
-        for key in selector:
+        selection = None
+        for key, value in selector.items():
             v = self._get_varname(key)
             if v in lkey:
                 raise ValueError('Selector passed twice for variable {}, {}'.format(key, v))
             if v not in self._variables_p:
                 raise ValueError('Selector variable {} unknown'.format(key))
-
-        ###########################################################
-        ## TO BE CHECKED BY LEO, tout géré par "if self.simu2d..."
-        ###########################################################
-        selection = np.full((len(selector), self._npoints), True, dtype=np.bool_)
-        if self.simu2d:
-            selection = np.reshape(selection, self.dim2d)
-        for i, key in enumerate(selector):
-            #print(i)
-            #print(key)
-            value = selector[key]
-            v = self._get_varname(key)
             if self._variables_p[v]['type'] == 'choices':
-                select = self._variables_p_values[v] == value
+                corrected_value = value
             else:
                 idx_nearest = (np.abs(self._variables_p_values[v] - value)).argmin()
-                nearest_value = self._variables_p_values[v][idx_nearest]
-                select = self._variables_p_values[v] == nearest_value
-            if self.simu2d and key == 'xx':
-                #print(selection.shape)
-                #print(select.shape)
-                #print(np.tile(select, (self.dim2d[1], 1)).shape)
-                selection = selection * np.tile(select, (self.dim2d[1], 1)).transpose()
-            elif self.simu2d and key == 'yy':
-                #print(selection.shape)
-                #print(select.shape)
-                #print(np.tile(select, (self.dim2d[0], 1)).transpose().shape)
-                selection = np.tile(select, (self.dim2d[0], 1)).transpose() * selection
-            elif self.simu2d and key =='point':
-                return allpoints[select]
-            else:
-                selection[i, :] = select
-        if self.simu2d:
-            selection_point = allpoints[np.where(selection == True)[0]]
-        else:
-            selection_point = selection.all(axis=0)
-        ###########################################################
-        ## END OF "TO BE CHECKED BY LEO"
-        ###########################################################
-        if _raw:
-            return selection_point
-        else:
-            return allpoints[selection_point]
+                corrected_value = self._variables_p_values[v][idx_nearest]
+            if selection is None:
+                selection = np.full_like(self._variables_p_values[v], True, dtype=bool)
+            selection = selection & (self._variables_p_values[v] == corrected_value)
+        if selection is None:
+            selection = np.full((len(selector), self._npoints), True, dtype=bool)
+        return np.where(selection.flatten())[0]
 
     def variables_choices(self, selector: dict = {}) -> dict:
         """
@@ -803,7 +770,7 @@ class proreader(reader):
         """
         return self._time
 
-    def _get_data(self, filename, varname: str, point: int, fillnan=False,
+    def _get_data(self, filename, varname: str, point: typing.Union[int, list], fillnan=False,
                   begin=None, end=None):
         """
         Get data for a given filename (to be used by both get_data with

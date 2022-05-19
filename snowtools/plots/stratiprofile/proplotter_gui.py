@@ -92,9 +92,16 @@ class ProPlotterApplication(tk.Frame):
         self.update_idletasks()
 
     def close_window(self, *args, **kwargs):
-        self.master.destroy()
+        """
+        Just to close the application
+        """
+        self.quit()
 
     def to_graph(self, typ=None):
+        """
+        Launch the Controller adapted to the graph type
+        :param typ: a string which qualify the graph type
+        """
         if typ is None:
             typ = self.type
 
@@ -117,57 +124,74 @@ class ProPlotterApplication(tk.Frame):
         self.type = typ
 
     def to_graph_reset(self):
-        if self.choices.params_w is not None:
-            self.choices.params_w.clean_frame()
-        if self.main.ax1 is not None:
-            self.main.ax1.clear()
-        if self.main.ax2 is not None:
-            self.main.ax2.clear()
-        if self.main.ax3 is not None:
-            self.main.ax3.clear()
-        if self.main.fig1 is not None:
-            self.main.fig1.clear()
-        self.main.first_profil = True
-        self.main.first_master = True
-        self.main.ratio1 = 2
-        self.main.ratio2 = 1
+        """
+        Graph reset
+        """
+        self.main.clear()
+        # Variable selection reset
+        # if self.choices.params_w is not None:
+        #     self.choices.params_w.clean_frame()
 
     def to_graph_standard(self):
+        """
+        Reset then launch Controller and Choices Bar Parameter for standard graph
+        """
         self.to_graph_reset()
         self.controller = ProPlotterControllerStandard(self)
         self.choices.params_w = ProPlotterChoicesBarParamsStandard(self, self.choices.params)
 
     def to_graph_multiple_profil(self):
+        """
+        Reset then launch Controller and Choices Bar Parameter for multiple graph with profil on the right
+        """
         self.to_graph_reset()
         self.controller = ProPlotterControllerMultipleProfil(self)
         self.choices.params_w = ProPlotterChoicesBarParamsMultiple(self, self.choices.params)
 
     def to_graph_multiple_saison(self):
+        """
+        Reset then launch Controller and Choices Bar Parameter for multiple graph with seasonal graph on the right
+        """
         self.to_graph_reset()
         self.controller = ProPlotterControllerMultipleSaison(self)
         self.choices.params_w = ProPlotterChoicesBarParamsMultiple(self, self.choices.params)
 
     def to_graph_height(self):
+        """
+        Reset then launch Controller and Choices Bar Parameter for height graph
+        """
         self.to_graph_reset()
         self.choices.params_w = ProPlotterChoicesBarParamsHeight(self, self.choices.params)
         self.controller = ProPlotterControllerHeight(self)
 
     def to_graph_member_profil(self):
+        """
+        Reset then launch Controller and Choices Bar Parameter for member graph with profil on the right
+        """
         self.to_graph_reset()
         self.controller = ProPlotterControllerMemberProfil(self)
         self.choices.params_w = ProPlotterChoicesBarParamsMember(self, self.choices.params)
 
     def to_graph_member_saison(self):
+        """
+        Reset then launch Controller and Choices Bar Parameter for member graph with seasonal graph on the right
+        """
         self.to_graph_reset()
         self.controller = ProPlotterControllerMemberSaison(self)
         self.choices.params_w = ProPlotterChoicesBarParamsMember(self, self.choices.params)
 
     def to_graph_compare(self):
+        """
+        Reset then launch Controller and Choices Bar Parameter for comparison of two graphs
+        """
         self.to_graph_reset()
         self.controller = ProPlotterControllerCompare(self)
         self.choices.params_w = ProPlotterChoicesBarParamsCompare(self, self.choices.params)
 
     def open(self, *args):
+        """
+        Opening a file
+        """
         self.status.set_status('Open file...')
         selectedfilename = tkinter.filedialog.askopenfilename(title='Open filename', filetypes=FILETYPES)
         if len(selectedfilename) == 0:
@@ -183,6 +207,45 @@ class ProPlotterApplication(tk.Frame):
         self.choices.point_w.update()
         self.choices.params_w.update()
 
+    def open_user_guide(self, *args):
+        """
+        Opening the help window with text inside
+        """
+        messagebox.showinfo('USER GUIDE', 'This software is a visualisation tool for PRO.nc files coming from our snow '
+                                          'model CROCUS embedded in the SURFEX model. \n \n'
+                                          'There are several types of graphs:\n'
+                                          '- usual graph: click the Open File button. Select a PRO file. Choose the '
+                                          'variables you want and then the point. \n \n '
+                                          '- the height graph is made to follow a parameter in a specified place. For '
+                                          'example, 5 cm below the snow surface. \n \n'
+                                          '- in the Meteo France system, there is the possibility to have several '
+                                          'members for a simulation. In that case, choose member plot. \n \n'
+                                          '- if you want to compare several points in your simulation, try the multiple'
+                                          ' plot. Just have let free a part of the choices for point selection. \n \n'
+                                          '- finally, if you want to compare two PRO files (in the same configuration),'
+                                          ' or if you want to plot together two parameters of the same file, please use'
+                                          ' the compare plots. \n'
+                                          '\n'
+                                          'Feel free to contact us at crocus@meteo.fr if you have some questions.\n'
+                                          '\n'
+                                          'More informations are available on \n'
+                                          'https://opensource.umr-cnrm.fr/projects/snowtools_git/wiki'
+
+                            )
+
+    def open_credits(self, *args):
+        """
+        Opening the help window with text inside
+        """
+        messagebox.showinfo('CREDITS', 'This software was made by our local geek, the Legendary Visualisation Ghost, '
+                                       'or LVG.\n'
+                                       '\n'
+                                       'Nobody knows who is he, but we know that he inspired some characters in the '
+                                       'french serie "Le Bureau des Légendes".\n'
+                                       '\n'
+                                       'It is also known that he corrects the C++ code of his father when he was nine '
+                                       'years old.')
+
 
 class ProPlotterMenu(tk.Menu):
     """ The app menu """
@@ -192,7 +255,7 @@ class ProPlotterMenu(tk.Menu):
         # Menu 0
         self.filemenu = tk.Menu(self, tearoff=0)
         self.filemenu.add_command(label='Open', command=self.master.open)
-        self.filemenu.add_command(label='Quit', command=self.master.quit)
+        self.filemenu.add_command(label='Quit', command=self.master.close_window)
         self.add_cascade(label='File', menu=self.filemenu)
         # Menu 1
         self.typemenu = tk.Menu(self, tearoff=0)
@@ -204,12 +267,17 @@ class ProPlotterMenu(tk.Menu):
         self.typemenu.add_command(label='Height', command=self.master.to_graph_height)
         self.typemenu.add_command(label='Compare', command=self.master.to_graph_compare)
         self.add_cascade(label='Graph type', menu=self.typemenu)
+        # Menu 2
+        self.infomenu = tk.Menu(self, tearoff=0)
+        self.infomenu.add_command(label='USER Guide', command=self.master.open_user_guide)
+        self.infomenu.add_command(label='Credits', command=self.master.open_credits)
+        self.add_cascade(label='INFOS', menu=self.infomenu)
         # Config
         self.master.master.config(menu=self)
 
 
 class ProPlotterOpenBar(tk.Frame):
-    """The Frame for open buton and file path"""
+    """The Frame for open button and file path"""
 
     def __init__(self, master):
         """Initialize open bar """
@@ -225,9 +293,13 @@ class ProPlotterOpenBar(tk.Frame):
         self.filename.pack(side=tk.LEFT)
 
     def open(self):
+        """
+        If the Open button is clicked, launch the Open application
+        """
         self.master.open()
 
     def update_filename(self, filename):
+        """Get the name of opened file"""
         self.filename.configure(text=filename)
 
 
@@ -286,6 +358,7 @@ class ProPlotterChoicesBarVariables:
         self.update()
 
     def update(self):
+        """Clean and fill the Combobox with choices for variables"""
         self.clean_frame()
         self.label = tk.Label(self.frame, text='Choice of variables', relief=tk.RAISED)
         self.label.pack()
@@ -312,12 +385,14 @@ class ProPlotterChoicesBarVariables:
             self.choice_var_react.pack()
 
     def update_var_master(self, *args):
+        """Update the value for the master graph, is the left graph"""
         value = self.choice_var_master.get()
         if value != self._var_master:
             self._var_master = value
             self.master.master.controls.plot_mark()
 
     def update_var_react(self, *args):
+        """Update the value for the servant graph, is the graph on the right"""
         value = self.choice_var_react.get()
         if value != self._var_react:
             self._var_react = value
@@ -332,6 +407,7 @@ class ProPlotterChoicesBarVariables:
         return self._var_react
 
     def clean_frame(self):
+        """Clean"""
         for widgets in self.frame.winfo_children():
             widgets.destroy()
 
@@ -352,6 +428,7 @@ class ProPlotterChoicesBarPoint:
         self.update()
 
     def update(self):
+        """Clean and fill the Combobox with choices for the point"""
         self.clean_frame()
         self.label = tk.Label(self.frame, text='Choice of point selectors\n(fill from top to bottom)', relief=tk.RAISED)
         self.label.pack(pady=5)
@@ -380,6 +457,7 @@ class ProPlotterChoicesBarPoint:
                 self.lvariables.append(v)
 
     def get_selector(self):
+        """Give the good type for the selected field"""
         selector = {}
         for j in range(len(self.llabels)):
             v = self.lvariables[j]
@@ -445,6 +523,7 @@ class ProPlotterChoicesBarPoint:
         self.update_var(i)
 
     def clean_frame(self):
+        """Clean"""
         for widgets in self.frame.winfo_children():
             widgets.destroy()
 
@@ -511,19 +590,17 @@ class ProPlotterMain(tk.Frame):
         self.first_profil = True
         self.first_master = True
         self.first_graph = True
-        self.ratio1 = 2
-        self.ratio2 = 1
         self.Canevas = FigureCanvasTkAgg(self.fig1, self)
         self.toolbar = NavigationToolbar2Tk(self.Canevas, self)
         self.toolbar.update()
 
+        self.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        self.update()
+
         self.update_idletasks()
 
-        self.toberemoved = tk.Label(self, text='Plotting area')
-        self.toberemoved.pack()
-
     def clear(self):
-        self.toberemoved.destroy()
+        """Clean main frame (figure)"""
         for e in self.fig1.axes:
             self.fig1.delaxes(e.axes)
         if self.cid is not None:
@@ -535,8 +612,11 @@ class ProPlotterMain(tk.Frame):
         self.first_profil = True
         self.first_master = True
         self.first_graph = True
+        self.update()
 
     def ready_to_plot(self, same_y, nb_graph, rat1=2, rat2=1):
+        """Prepare the main frame for figure"""
+        self.clear()
         if nb_graph == 1:
             self.ax1 = self.fig1.add_subplot(1, 1, 1)
         elif nb_graph == 2:
@@ -549,9 +629,15 @@ class ProPlotterMain(tk.Frame):
             self.fig1.subplots_adjust(left=0.1, bottom=0.08, wspace=0.1)
             self.ax3 = self.ax2.twiny()
 
-        self.toberemoved = tk.Label(self, text='Plotting area')
-        self.toberemoved.pack()
+    def update(self):
+        """
+        Update the figure after a change in plot.
 
+        NB: If you do not call this function, the changes on the graph are not shown.
+
+        :return: None
+        """
+        self.Canevas.draw()
 
 
 class ProPlotterStatus(tk.Frame):
@@ -577,6 +663,7 @@ class ProPlotterStatus(tk.Frame):
 
 
 class ProPlotterChoicesBarParams(abc.ABC):
+    """Abstract Class for the Choices for the Parameters. The standard case is described"""
     def __init__(self, master, frame):
         self.master = master
         self.frame = frame
@@ -588,6 +675,7 @@ class ProPlotterChoicesBarParams(abc.ABC):
 
 
 class ProPlotterChoicesBarParamsStandard(ProPlotterChoicesBarParams):
+    """Standard case, nothing to add"""
     def __init__(self, master, frame):
         super().__init__(master, frame)
         self.update()
@@ -598,7 +686,7 @@ class ProPlotterChoicesBarParamsStandard(ProPlotterChoicesBarParams):
 
 class ProPlotterChoicesBarParamsHeight(ProPlotterChoicesBarParams):
     """
-     Specific choice for direction and height
+     Specific choices for direction and height. Add the specific combobox and variables
      """
     def __init__(self, master, frame):
         super().__init__(master, frame)
@@ -612,6 +700,7 @@ class ProPlotterChoicesBarParamsHeight(ProPlotterChoicesBarParams):
         self.update()
 
     def update(self):
+        """Specific choices for variables in Height Graph case"""
         self.clean_frame()
         self.label = tk.Label(self.frame, text='Choice of direction and height', relief=tk.RAISED)
         self.label.pack()
@@ -631,6 +720,7 @@ class ProPlotterChoicesBarParamsHeight(ProPlotterChoicesBarParams):
             self.choice_height.pack()
 
     def update_direction(self, *args):
+        """Update the value of the direction choice (from ground to top of snow layer or the contrary)"""
         value = self.choice_direction.get()
         if value == 'from ground to top of snow layer':
             self._direction = 'up'
@@ -638,6 +728,7 @@ class ProPlotterChoicesBarParamsHeight(ProPlotterChoicesBarParams):
             self._direction = 'down'
 
     def update_height(self, *args):
+        """Update the value of the cut in the snow pack (8.3cm) from the direction"""
         if self.choice_height is None:
             value = 8.3
         else:
@@ -725,7 +816,6 @@ class ProPlotterChoicesBarParamsCompare(ProPlotterChoicesBarParams):
             self.master.status.set_status('Successfully second opened file {}'.format(selectedfilename))
 
 
-
 class ProPlotterController(abc.ABC):
     def __init__(self, master):
         """
@@ -747,6 +837,8 @@ class ProPlotterController(abc.ABC):
         self.hauteur = None
         if self.master.fileobj is not None:
             self.colormap = self.master.fileobj.colorbar_variable('')
+        self.ratio = [2, 1]
+        """Ratio of the different figures to plot (when several subplots on the graph)"""
 
     def get_choice(self):
         """
@@ -860,7 +952,6 @@ class ProPlotterController(abc.ABC):
                         xlimit=limitplot_react, value=data_date, value_dz=dz_date, value_grain=grain_date,
                         value_ram=ram_date, legend=date, hauteur=self.hauteur, ylimit=self.ymax_react)
 
-
     def masterfig1d(self, **kwargs):
         return profilPlot.saison1d(**kwargs)
 
@@ -897,8 +988,7 @@ class ProPlotterController(abc.ABC):
                 self.reactfig(**dico)
 
                 self.master.main.first_profil = False
-                self.master.main.Canevas.draw()
-                self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+                self.master.main.update()
 
         if self.master.fileobj is None:
             return
@@ -916,32 +1006,28 @@ class ProPlotterController(abc.ABC):
         self.master.main.clear()
         if not self.master.choices.variables_w.exists_snl:
             self.master.main.ready_to_plot(1)
-            self.master.main.toberemoved.destroy()
             self.masterfig1d(**self.give_master1d_args())
         else:
             if self.vartoplot_master_desc['has_snl']:
-                self.master.main.ready_to_plot(self.same_y, 2, self.master.main.ratio1, self.master.main.ratio2)
+                self.master.main.ready_to_plot(self.same_y, 2, *self.ratio)
                 if not self.same_y:
                     self.master.main.ax2.set_ylim(0, self.ymax_react)
-                self.master.main.toberemoved.destroy()
                 self.masterfigsaison(**self.give_mastersaison_args())
                 trace_hauteur = True
             else:
-                self.master.main.ready_to_plot(False, 2, self.master.main.ratio1, self.master.main.ratio2)
+                self.master.main.ready_to_plot(False, 2, *self.ratio)
                 self.master.main.ax2.set_ylim(0, self.ymax_react)
-                self.master.main.toberemoved.destroy()
                 self.masterfig1d(**self.give_master1d_args())
                 trace_hauteur = None
 
             self.master.main.cid = self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
             self.master.main.Canevas.mpl_connect('button_press_event', button_press)
 
-        self.master.main.Canevas.draw()
-        self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        self.master.main.update()
 
     def reset(self):
         """
-        Reset the selection (and plot ?)
+        Reset the selection (and plot)
         """
         for widget in self.master.choices.point_w.lselectors:
             widget.set('')
@@ -1033,8 +1119,7 @@ class ProPlotterControllerSlider(ProPlotterController):
             else:
                 self.masterfig1d(**self.give_master1d_args())
 
-        self.master.main.Canevas.draw()
-        self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        self.master.main.update()
 
 
 class ProPlotterControllerMember(ProPlotterControllerSlider):
@@ -1095,14 +1180,17 @@ class ProPlotterControllerMember(ProPlotterControllerSlider):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
-        dataplot_master = self.dataplot_master[:, self.dateslice, :]
+        dataplot_master = self.dataplot_master[:, self.dateslice]
+
         if self.dztoplot is not None:
-            ylimit = np.max(np.cumsum(self.dztoplot[:, :, :], axis=2))
-            return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend,
-                        title=self.timeplot[self.dateslice], ylimit=ylimit)
+            limit_dz = np.max(np.cumsum(self.dztoplot[:, :, :], axis=2))
+            limit_value = np.max(self.dataplot_master)
+            ylimit = max(limit_dz, limit_value)
         else:
-            return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend,
-                        title=self.timeplot[self.dateslice])
+            ylimit = np.max(self.dataplot_master)
+
+        return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend,
+                    title=self.timeplot[self.dateslice], ylimit=ylimit)
 
     def give_mastersaison_args(self):
         """
@@ -1154,8 +1242,7 @@ class ProPlotterControllerMemberSaison(ProPlotterControllerMember):
     def __init__(self, master):
         self.master = master
         super().__init__(master)
-        self.master.main.ratio1 = 1
-        self.master.main.ratio2 = 1
+        self.ratio = [1, 1]
 
     def reactfig(self, **kwargs: dict):
         return profilPlot.saisonProfil(**kwargs)
@@ -1250,8 +1337,8 @@ class ProPlotterControllerMultiple(ProPlotterControllerSlider):
         ylimit = np.max(np.cumsum(self.dztoplot[:, :, :], axis=1))
 
         return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend, dz=dztoplot,
-                    colormap=self.colormap, title=self.timeplot[self.dateslice],value_max=max_value,
-                    value_min = min_value, cbar_show = self.master.main.first_master, ylimit = ylimit)
+                    colormap=self.colormap, title=self.timeplot[self.dateslice], value_max=max_value,
+                    value_min=min_value, cbar_show=self.master.main.first_master, ylimit=ylimit)
 
     def give_react_args(self, x_event):
         """
@@ -1289,8 +1376,7 @@ class ProPlotterControllerMultipleSaison(ProPlotterControllerMultiple):
     def __init__(self, master):
         self.master = master
         super().__init__(master)
-        self.master.main.ratio1 = 1
-        self.master.main.ratio2 = 1
+        self.ratio = [1, 1]
 
     def reactfig(self, **kwargs: dict):
         return profilPlot.saisonProfil(**kwargs)
@@ -1315,8 +1401,7 @@ class ProPlotterControllerCompare(ProPlotterController):
         super().__init__(master)
         self.dztoplot_react = None
         self.timeplot_react = None
-        self.master.main.ratio1 = 1
-        self.master.main.ratio2 = 1
+        self.ratio = [1, 1]
 
     def get_data(self, point):
         """
@@ -1332,7 +1417,6 @@ class ProPlotterControllerCompare(ProPlotterController):
         self.colormap_react = self.master.fileobj.colorbar_variable(self.vartoplot_react_desc['name'])
 
         self.timeplot = self.master.fileobj.get_time()
-
 
     def reactfigsaison(self, **kwargs: dict):
         return profilPlot.saisonProfil(**kwargs)
@@ -1396,13 +1480,13 @@ class ProPlotterControllerCompare(ProPlotterController):
         else:
             self.reactfig1d(**self.give_react1d_args())
 
-        self.master.main.Canevas.draw()
-        self.master.main.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        self.master.main.update()
 
 
 def main(*args, **kwargs):
     root = tk.Tk()
     root.title('GUI PROreader CEN')
+    root.protocol("WM_DELETE_WINDOW", root.quit)
     root.geometry('1100x850')
     app = ProPlotterApplication(*args, master=root, **kwargs)
     app.mainloop()

@@ -43,9 +43,9 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
     :type colormap: str or matplotlib colormap
     :param legend: legend for the colorbar
     :type legend: str
-    :param value_min: imposing maxval (useful for members graph for example)
+    :param value_min: imposing minval (useful for members graph for example)
     :type value_min: float
-    :param value_max: imposing minval (useful for members graph for example)
+    :param value_max: imposing maxval (useful for members graph for example)
     :type value_max: float
     :param cbar_show: Whether or not to plot the colorbar
     :type cbar_show: bool
@@ -130,24 +130,24 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
         vmax = 14.5
     elif colormap == 'echelle_log':
         cmap = cm.gray_r.copy()
-        Vmin = max(minval, 0.0000000001)
-        Vmax = min(max(0.000000001, maxval), 1)
-        norm = colors.LogNorm(vmin=Vmin, vmax=Vmax)    
+        vmin = max(minval, 0.0000000001)
+        vmax = min(max(0.000000001, maxval), 1)
+        norm = colors.LogNorm(vmin=vmin, vmax=vmax)    
         cmap.set_under('#fff2fd')
         extend = 'min'
     elif colormap == 'echelle_log_sahara':
         cmap = cm.gist_heat_r.copy()
-        Vmin = max(minval, 0.0000000001)
-        Vmax = min(max(0.000000001, maxval), 1)
-        value = value.clip(Vmin/2, Vmax)
-        norm = colors.LogNorm(vmin=Vmin, vmax=Vmax)
+        vmin = max(minval, 0.0000000001)
+        vmax = min(max(0.000000001, maxval), 1)
+        value = value.clip(vmin/2, vmax)
+        norm = colors.LogNorm(vmin=vmin, vmax=vmax)
         cmap.set_under('#fff2fd')
         extend = 'min'
     elif colormap == 'ratio_cisaillement':
         cmap = cm.get_cmap('viridis')
-        Vmin = 0
-        Vmax = 20
-        norm = colors.Normalize(vmin=Vmin, vmax=Vmax, clip=True)
+        vmin = 0
+        vmax = 20
+        norm = colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
         # Generating a colormap from given cmap with:
         # 0 -> 1 pink
         # 1 -> 2 red
@@ -173,23 +173,25 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
         cmap = colors.LinearSegmentedColormap('ratio_cisaillment', customcmap)
     elif colormap == 'tempK':
         if value_max is None:
-            Vmax = 273.15
+            vmax = 273.15
         else:
-            Vmax = maxval
+            vmax = maxval
         if value_min is None:
-            Vmin = Vmax - 40
+            vmin = vmax - 40
         else:
-            Vmin = minval
-        norm = colors.Normalize(vmin=Vmin, vmax=Vmax)
-        value[value < Vmin if ~np.isnan(Vmin) else False] = Vmin
+            vmin = minval
+        norm = colors.Normalize(vmin=vmin, vmax=vmax)
+        value = np.clip(value, vmin, vmax)
+        #value[value < vmin if ~np.isnan(vmin) else False] = vmin
         cmap = cm.get_cmap('RdBu_r').copy()
         cmap.set_over((0.32, 0.0, 0.097))
         extend = 'max'
     elif colormap == 'lwc':
-        Vmin = 0
-        Vmax = 35 if vmax is None else vmax
-        norm = colors.Normalize(vmin=Vmin, vmax=Vmax)
-        value[value > Vmax if ~np.isnan(Vmax) else False] = Vmax
+        vmin = 0
+        vmax = 35 if vmax is None else vmax
+        norm = colors.Normalize(vmin=vmin, vmax=vmax)
+        #value[value > vmax if ~np.isnan(vmax) else False] = vmax
+        value = np.clip(value, vmin, vmax)
         value[value == 0] = -1
         cmap = cm.get_cmap('viridis').copy()
         cmap.set_under('#fff2fd')
