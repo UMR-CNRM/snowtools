@@ -1294,13 +1294,6 @@ class ProPlotterControllerMultiple(ProPlotterControllerSlider):
         self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], list(liste_points))
         self.vartoplot_react_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_react)
         self.dataplot_react = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], list(liste_points))
-        print('ProPlotterControllerMultiple get_data')
-        print('Liste points')
-        print(liste_points)
-        print('dataplot_master', self.dataplot_master.shape)
-        #print(self.dataplot_master)
-        print('dataplot_react', self.dataplot_react.shape)
-        #print(self.dataplot_react)
 
         self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, list(liste_points), fillnan=0.)
         self.timeplot = self.master.fileobj.get_time()
