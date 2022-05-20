@@ -106,18 +106,18 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
     vertices = vertices[(dz > 0).ravel()]
 
     if value_max is None:
-        try:
-            maxval = np.nanmax(value)
-        except ValueError:
+        if np.all(np.isnan(value)):
             maxval = 1
+        else:
+            maxval = np.nanmax(value)
     else:
         maxval = value_max
 
     if value_min is None:
-        try:
-            minval = np.nanmin(value)
-        except ValueError:
+        if np.all(np.isnan(value)):
             minval = 0.1
+        else:
+            minval = np.nanmin(value)
     else:
         minval = value_min
 

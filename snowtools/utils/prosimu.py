@@ -89,7 +89,7 @@ class prosimuAbstract(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def Points_dimensions():
+    def Points_dimensions(self):
         pass
 
     Number_of_Patches = 'Number_of_Patches'
@@ -483,6 +483,7 @@ class prosimuAbstract(abc.ABC):
                           except if ``keepfillvalue`` is set.
         :type fill2zero: bool
         :param selectpoint: Select a point. If -1 or None, select all points.
+        :type selectpoint: integer or list of integers
         :param removetile: Removethe tile dimension, if present.
         :type removetile: bool
         :param keepfillvalue: Do not replace the undefined data with ``np.nan`` and keep the fill value used in the
@@ -490,6 +491,11 @@ class prosimuAbstract(abc.ABC):
         :type keepfillvalue: bool
         :param needmodif: If True, return also the variable object
         :type needmodif: bool
+
+        :returns: Numpy data array containing the data of the selected variable.
+                  Note that order of dimensions is the same as in in file except if selectpoint is a list.
+                  In this case, the resulting point dimension is appended as the last dimension.
+        :rtype: numpy array
         """
         pass
 
@@ -673,50 +679,6 @@ class _prosimu1d2d():
         else:
             return array
 
-    def _extract(self, varname, var, selectpoint=None, removetile=True):
-        """
-        Extract data as a numpy array, possibly selecting point, and removing useless dimensions
-
-        :meta private:
-
-        :param selectpoint: List of points id to select along dimensions of Points_dimensions.
-                            Length of the list is the same as len(Points_dimensions).
-        :type selectpoint: list or None
-        """
-        varname = self._check_varname(varname)
-
-        vardims = self.dataset.variables[varname].dimensions
-        allpointstest = selectpoint is None
-
-        # Special case
-        if len(var.shape) == 0:
-            if allpointstest:
-                return var
-            else:
-                raise ValueError('Could not extract a point. The {} dimension was not found for '
-                                 'variable {}'.format(self.Number_of_points, varname))
-
-        selector = [slice(None, None, None)] * len(vardims)
-
-        # Point extraction
-        if not allpointstest:
-            if not set(self.Points_dimensions).issubset(set(vardims)):
-                raise ValueError('Could not extract a point. The {} dimension(s) was not found '
-                                 'for variable {}'.format(', '.join(self.Points_dimensions), varname))
-            i = 0
-            for dimpoint in self.Points_dimensions:
-                axispoint = vardims.index(dimpoint)
-                selector[axispoint] = selectpoint[i]
-                i += 1
-
-        if removetile:
-            for key in self.Number_of_Tiles:
-                if key in vardims:
-                    tileindex = vardims.index(key)
-                    selector[tileindex] = 0
-
-        return var[tuple(selector)]
-
 
 class prosimu1d(_prosimu1d2d, prosimuAbstract):
     """
@@ -735,10 +697,36 @@ class prosimu1d(_prosimu1d2d, prosimuAbstract):
 
         if selectpoint == -1:
             selectpoint = None
-        if selectpoint is not None:
-            selectpoint = [selectpoint]
+        allpointstest = selectpoint is None
 
-        return self._extract(varname, var, selectpoint=selectpoint, removetile=removetile)
+        varname = self._check_varname(varname)
+        vardims = self.dataset.variables[varname].dimensions
+
+        # Special case
+        if len(var.shape) == 0:
+            if allpointstest:
+                return var
+            else:
+                raise ValueError('Could not extract a point. The {} dimension was not found for '
+                                 'variable {}'.format(self.Number_of_points, varname))
+
+        selector = [slice(None, None, None)] * len(vardims)
+
+        # Point extraction
+        if not allpointstest:
+            if not set(self.Points_dimensions).issubset(set(vardims)):
+                raise ValueError('Could not extract a point. The {} dimension(s) was not found '
+                                 'for variable {}'.format(', '.join(self.Points_dimensions), varname))
+            axispoint = vardims.index(self.Number_of_points)
+            selector[axispoint] = selectpoint
+
+        if removetile:
+            for key in self.Number_of_Tiles:
+                if key in vardims:
+                    tileindex = vardims.index(key)
+                    selector[tileindex] = 0
+
+        return var[tuple(selector)]
 
 
 class prosimu2d(_prosimu1d2d, prosimuAbstract):
@@ -759,20 +747,69 @@ class prosimu2d(_prosimu1d2d, prosimuAbstract):
         elif selectpoint is None:
             pass
         elif np.issubdtype(type(selectpoint), np.integer):
+            # We have one point, identified with unique integer
             selectpoint = self._translate_pointnr_to_varind(selectpoint)
+            onepoint = True
         elif isinstance(selectpoint, list):
-            if isinstance(selectpoint[0], int):
+            # We have a list of points
+            onepoint = False
+            if np.issubdtype(type(selectpoint[0]), np.integer):
                 # Translate point number in dimensions indexes
-                selectpoint = self._translate_listtuple_to_listsidx(
-                                  [self._translate_pointnr_to_varind(p) for p in selectpoint]
-                                  )
+                selectpoint = [self._translate_pointnr_to_varind(p) for p in selectpoint]
             elif isinstance(selectpoint[0], tuple):
-                # Reshape accordingly to the order expected by _extract function
-                self._translate_listtuple_to_listsidx(selectpoint)
+                pass
             else:
                 raise ValueError('selectpoint must be list of integer or tuple')
+        elif isinstance(selectpoint, tuple):
+            selectpoint = selectpoint
+            onepoint = True
 
-        return self._extract(varname, var, selectpoint=selectpoint, removetile=removetile)
+        varname = self._check_varname(varname)
+        vardims = self.dataset.variables[varname].dimensions
+
+        allpointstest = selectpoint is None
+
+        # Special case
+        if len(var.shape) == 0:
+            if allpointstest:
+                return var
+            else:
+                raise ValueError('Could not extract a point. The point dimension(s) were not found for '
+                                 'variable {}'.format(varname))
+
+        selector = [slice(None, None, None)] * len(vardims)
+        if removetile:
+            for key in self.Number_of_Tiles:
+                if key in vardims:
+                    tileindex = vardims.index(key)
+                    selector[tileindex] = 0
+
+        if allpointstest:
+            return var[tuple(selector)]
+        else:
+            # Point extraction
+            if not set(self.Points_dimensions).issubset(set(vardims)):
+                raise ValueError('Could not extract a point. The {} dimension(s) was not found '
+                                 'for variable {}'.format(', '.join(self.Points_dimensions), varname))
+
+            if onepoint:
+                for i, dimpoint in enumerate(self.Points_dimensions):
+                    axispoint = vardims.index(dimpoint)
+                    selector[axispoint] = selectpoint[i]
+                return var[tuple(selector)]
+            else:
+                outputdata = []
+
+                for point in selectpoint:
+                    selectorp = selector.copy()
+                    for i, dimpoint in enumerate(self.Points_dimensions):
+                        axispoint = vardims.index(dimpoint)
+                        selectorp[axispoint] = point[i]
+                    outputdata.append(var[tuple(selectorp)])
+
+            # Do a numpy array, ensure Point dimension is the last one and return
+            return np.moveaxis(np.array(outputdata), 0, -1)
+
 
     def _translate_pointnr_to_varind(self, nr):
         """

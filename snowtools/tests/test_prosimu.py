@@ -6,9 +6,12 @@ import unittest
 from datetime import datetime
 import os
 
+import numpy as np
+
 from snowtools.utils.prosimu import prosimu, prosimu_old
 from snowtools.DATA import SNOWTOOLS_DATA, TESTBASE
 
+print(TESTBASE)
 if not os.path.isdir(TESTBASE):
     SKIP = True
 else:
@@ -101,7 +104,7 @@ class TestProSimu2d(unittest.TestCase):
         valy = self.ps.read('yy')
         for x, y in [(2, 1), (1, 1), (1, 2), (0, 0)]:
             point = self.ps.get_point(xx=valx[x], yy=valy[y])
-        self.assertEqual(point, len(valy)*x + y, "get_point method fail in 2d")
+        self.assertEqual(point, len(valy) * x + y, "get_point method fail in 2d")
 
     @unittest.skipIf(SKIP, 'Test files not available')
     def test_get_data(self):
@@ -115,9 +118,22 @@ class TestProSimu2d(unittest.TestCase):
             data_test = self.ps.read('DSN_T_ISBA', selectpoint=point)[-1]
         self.assertAlmostEqual(data_test, data_ok, "read method fail with selectpoint in 2d")
 
+    @unittest.skipIf(SKIP, 'Test files not available')
+    def test_get_data_multiple_points(self):
+        valx = self.ps.read('xx')
+        valy = self.ps.read('yy')
+        query = [(2, 1), (1, 1), (1, 2), (0, 0)]
+        query2 = [self.ps.get_point(xx=valx[x], yy=valy[y]) for x, y in query]
+        data1 = self.ps.read('DSN_T_ISBA', selectpoint=query)
+        data2 = self.ps.read('DSN_T_ISBA', selectpoint=query2)
+        data_ok = np.moveaxis(np.array([self.ps.read('DSN_T_ISBA', selectpoint=point) for point in query]), 0, -1)
+        self.assertTrue((data1 == data_ok).all(), "read method fail with selectpoint with a list of tuples in 2d")
+        self.assertTrue((data2 == data_ok).all(), "read method fail with selectpoint with a list of tuples in 2d")
+
     @classmethod
     def tearDownClass(cls):
-        cls.ps.close()
+        if cls.ps is not None:
+            cls.ps.close()
 
 
 class TestProSimuOld(unittest.TestCase):

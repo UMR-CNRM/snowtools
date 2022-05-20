@@ -129,8 +129,8 @@ class ProPlotterApplication(tk.Frame):
         """
         self.main.clear()
         # Variable selection reset
-        # if self.choices.params_w is not None:
-        #     self.choices.params_w.clean_frame()
+        if self.choices.params_w is not None:
+            self.choices.params_w.clean_frame()
 
     def to_graph_standard(self):
         """
@@ -421,15 +421,16 @@ class ProPlotterChoicesBarPoint:
         self.frame = frame
         self.label = None
         self.variables_info = None
-        self.lselectors = []
-        self.llabels = []
-        self.lvariables = []
-        self.lf = []
+        # self.lf = []
         self.update()
 
     def update(self):
         """Clean and fill the Combobox with choices for the point"""
+        self.lselectors = []
+        self.llabels = []
+        self.lvariables = []
         self.clean_frame()
+
         self.label = tk.Label(self.frame, text='Choice of point selectors\n(fill from top to bottom)', relief=tk.RAISED)
         self.label.pack(pady=5)
 
@@ -931,15 +932,15 @@ class ProPlotterController(abc.ABC):
 
         xindex = min(int(x_event), self.dztoplot.shape[0] - 1)
         date = self.timeplot[xindex]
-        data_date = self.dataplot_react[xindex, :]
-        dz_date = self.dztoplot[xindex, :]
+        data_date = self.dataplot_react[xindex, ...]
+        dz_date = self.dztoplot[xindex, ...]
         if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
-            grain_date = self.grain[xindex, :]
+            grain_date = self.grain[xindex, ...]
         else:
             grain_date = None
 
         if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
-            ram_date = self.ram[xindex, :]
+            ram_date = self.ram[xindex, ...]
         else:
             ram_date = None
 
@@ -1183,7 +1184,7 @@ class ProPlotterControllerMember(ProPlotterControllerSlider):
         dataplot_master = self.dataplot_master[:, self.dateslice]
 
         if self.dztoplot is not None:
-            limit_dz = np.max(np.cumsum(self.dztoplot[:, :, :], axis=2))
+            limit_dz = np.max(np.cumsum(self.dztoplot, axis=2))
             limit_value = np.max(self.dataplot_master)
             ylimit = max(limit_dz, limit_value)
         else:
@@ -1196,12 +1197,16 @@ class ProPlotterControllerMember(ProPlotterControllerSlider):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
-        max_value = np.nanmax(self.dataplot_master[:, :, :])
-        min_value = np.nanmin(self.dataplot_master[:, :, :])
+        if np.all(np.isnan(self.dataplot_master)):
+            max_value = 1
+            min_value = 0.1
+        else:
+            max_value = np.nanmax(self.dataplot_master)
+            min_value = np.nanmin(self.dataplot_master)
 
         dataplot_master = self.dataplot_master[:, self.dateslice, :]
         dztoplot = self.dztoplot[:, self.dateslice, :]
-        ylimit = np.max(np.cumsum(self.dztoplot[:, :, :], axis=2))
+        ylimit = np.max(np.cumsum(self.dztoplot, axis=2))
 
         return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend, dz=dztoplot,
                     colormap=self.colormap, title=self.timeplot[self.dateslice], value_max=max_value,
@@ -1253,8 +1258,8 @@ class ProPlotterControllerMemberSaison(ProPlotterControllerMember):
          """
         xindex = min(int(x_event), self.dztoplot.shape[0] - 1)
         legend_member = "member " + str(self.x_legend[xindex])
-        dataplot_react = self.dataplot_react[xindex, :, :]
-        dztoplot = self.dztoplot[xindex, :, :]
+        dataplot_react = self.dataplot_react[xindex, ...]
+        dztoplot = self.dztoplot[xindex, ...]
 
         return dict(ax=self.master.main.ax2, value=dataplot_react, list_legend=self.timeplot, dz=dztoplot,
                     colormap=self.colormap, title=legend_member, cbar_show=self.master.main.first_profil)
@@ -1268,6 +1273,10 @@ class ProPlotterControllerMultiple(ProPlotterControllerSlider):
     def get_choice(self):
         selector = self.master.choices.point_w.get_selector()
         liste_points = self.master.fileobj.get_points(selector=selector)
+        if len(liste_points) == 0:
+            error_msg = 'No points with current selection.'
+            messagebox.showerror(title='No point found', message=error_msg)
+            return None
         return liste_points
 
     def info_text_bar(self, point):
@@ -1317,9 +1326,10 @@ class ProPlotterControllerMultiple(ProPlotterControllerSlider):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
-        dataplot_master = np.transpose(self.dataplot_master[self.dateslice, :, :])
+        # Select a date (this is always the first dimension (no multiple member graph)
+        dataplot_master = np.transpose(self.dataplot_master[self.dateslice, ...])
         if self.dztoplot is not None:
-            ylimit = np.max(np.cumsum(self.dztoplot[:, :, :], axis=1))
+            ylimit = np.max(np.cumsum(self.dztoplot, axis=1))  # axis 1 is layers
             return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend,
                         title=self.timeplot[self.dateslice], ylimit=ylimit)
         else:
@@ -1330,11 +1340,11 @@ class ProPlotterControllerMultiple(ProPlotterControllerSlider):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
-        max_value = np.nanmax(self.dataplot_master[:, :, :])
-        min_value = np.nanmin(self.dataplot_master[:, :, :])
-        dataplot_master = np.transpose(self.dataplot_master[self.dateslice, :, :])
-        dztoplot = np.transpose(self.dztoplot[self.dateslice, :, :])
-        ylimit = np.max(np.cumsum(self.dztoplot[:, :, :], axis=1))
+        max_value = np.nanmax(self.dataplot_master)
+        min_value = np.nanmin(self.dataplot_master)
+        dataplot_master = np.transpose(self.dataplot_master[self.dateslice, ...])
+        dztoplot = np.transpose(self.dztoplot[self.dateslice, ...])
+        ylimit = np.max(np.cumsum(self.dztoplot, axis=1))
 
         return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend, dz=dztoplot,
                     colormap=self.colormap, title=self.timeplot[self.dateslice], value_max=max_value,
@@ -1346,7 +1356,7 @@ class ProPlotterControllerMultiple(ProPlotterControllerSlider):
          """
         limitplot_react = self.master.fileobj.limits_variable(self.vartoplot_react_desc['name'])
 
-        # BEWARE: .shape[2] because here shape = time, snowlayer, nb_points
+        # here shape = time, snowlayer, nb_points
         xindex = min(int(x_event), self.dztoplot.shape[2] - 1)
         legend_mult = "multiple " + str(self.x_legend[xindex])
         data_mult = self.dataplot_react[self.dateslice, :, xindex]
@@ -1360,6 +1370,8 @@ class ProPlotterControllerMultiple(ProPlotterControllerSlider):
             ram_date = self.ram[self.dateslice, :, xindex]
         else:
             ram_date = None
+
+        # TODO: Check what happens in multiple 2d file ... something strange... #
 
         return dict(axe=self.master.main.ax2, axe2=self.master.main.ax3, cbar_show=self.master.main.first_profil,
                     xlimit=limitplot_react, value=data_mult, value_dz=dz_mult, value_grain=grain_date,
@@ -1388,8 +1400,8 @@ class ProPlotterControllerMultipleSaison(ProPlotterControllerMultiple):
         # BEWARE: .shape[2] because here shape = time, snowlayer, nb_points
         xindex = min(int(x_event), self.dztoplot.shape[2] - 1)
         legend_multiple = "multiple " + str(self.x_legend[xindex])
-        dataplot_react = self.dataplot_react[xindex, :, :]
-        dztoplot = self.dztoplot[xindex, :, :]
+        dataplot_react = self.dataplot_react[:, :, xindex]
+        dztoplot = self.dztoplot[:, :, xindex]
 
         return dict(ax=self.master.main.ax2, value=dataplot_react, list_legend=self.timeplot, dz=dztoplot,
                     colormap=self.colormap, title=legend_multiple, cbar_show=self.master.main.first_profil)

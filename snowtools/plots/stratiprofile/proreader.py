@@ -715,9 +715,9 @@ class proreader(reader):
         :type _raw: bool
         :returns: list of `Point`
         """
-        '''allpoints = np.arange(self._npoints)
         if len(selector) == 0:
-            return list(allpoints)'''
+            allpoints = np.arange(self._npoints)
+            return list(allpoints)
 
         # Special case of point key in selector
         if 'point' in selector:
@@ -789,6 +789,7 @@ class proreader(reader):
         from snowtools.utils.prosimu import prosimu
         with prosimu(filename) as ff:
             data = ff.read(v, selectpoint=point)
+            # TODO: the order of dimension is not ensured by prosimu ! Check order of time and layer dimensions here !
 
         # Date filtering
         if begin is not None and end is not None:
@@ -819,7 +820,7 @@ class proreader(reader):
         :param members: If not false, use `~reader.get_data_members` instead. See corresponding documentation.
         :param begin: A begin date (remove data before this date) or an integer
         :param end: A end date (remove data after this date) or an integer
-        :returns: The selected data
+        :returns: The selected data. Dimensions are [members], time, layers, [points].
         :rtype: numpy.array
         """
         if members is not False:
