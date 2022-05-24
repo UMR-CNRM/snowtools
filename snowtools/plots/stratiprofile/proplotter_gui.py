@@ -1260,9 +1260,10 @@ class ProPlotterControllerMemberSaison(ProPlotterControllerMember):
         legend_member = "member " + str(self.x_legend[xindex])
         dataplot_react = self.dataplot_react[xindex, ...]
         dztoplot = self.dztoplot[xindex, ...]
+        colormap = self.master.fileobj.colorbar_variable(self.vartoplot_react_desc['name'])
 
         return dict(ax=self.master.main.ax2, value=dataplot_react, list_legend=self.timeplot, dz=dztoplot,
-                    colormap=self.colormap, title=legend_member, cbar_show=self.master.main.first_profil)
+                    colormap=colormap, title=legend_member, cbar_show=self.master.main.first_profil)
 
 
 class ProPlotterControllerMultiple(ProPlotterControllerSlider):
@@ -1402,9 +1403,10 @@ class ProPlotterControllerMultipleSaison(ProPlotterControllerMultiple):
         legend_multiple = "multiple " + str(self.x_legend[xindex])
         dataplot_react = self.dataplot_react[:, :, xindex]
         dztoplot = self.dztoplot[:, :, xindex]
+        colormap = self.master.fileobj.colorbar_variable(self.vartoplot_react_desc['name'])
 
         return dict(ax=self.master.main.ax2, value=dataplot_react, list_legend=self.timeplot, dz=dztoplot,
-                    colormap=self.colormap, title=legend_multiple, cbar_show=self.master.main.first_profil)
+                    colormap=colormap, title=legend_multiple, cbar_show=self.master.main.first_profil)
 
 
 class ProPlotterControllerCompare(ProPlotterController):
