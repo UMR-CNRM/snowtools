@@ -59,7 +59,7 @@ class PrepSafran(OpTask, S2MTaskMixIn):
     #                06/09/2020 : La nouvelle chaine en double archive désormais de la même façon sur hendrix et BULL
                     self.sh.title('Toolbox arpege assim')
                     tbarp = toolbox.input(
-                        alternate      = 'Gridpoint',
+                        role           = 'Gridpoint',
                         format         = 'grib',
                         geometry       = self.conf.arpege_geometry,
                         kind           = 'gridpoint',

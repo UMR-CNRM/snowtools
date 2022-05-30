@@ -453,7 +453,7 @@ class Safran(OpTask, S2MTaskMixIn):
                         # 6h homogène avec le cumul dans les fichiers d'assimilation
                         self.sh.title('Toolbox input guess arpege assim 0h J (secours)')
                         tb17 = toolbox.input(
-                            role           = 'Ebauche_Deterministic',
+                            alternate      = 'Ebauche_Deterministic',
                             local          = 'mb035/P[date::addcumul_yymdh]',
                             experiment     = self.conf.xpid,
                             block          = self.conf.guess_block,
@@ -483,7 +483,7 @@ class Safran(OpTask, S2MTaskMixIn):
                         geometry        = self.conf.vconf,
                         cutoff         = 'assimilation',
                         date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d))
-                                          for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
+                                          for d in footprints.util.rangex(12, ndays * 24 + 6, self.conf.cumul)],
                         cumul          = self.conf.cumul,
                         nativefmt      = 'ascii',
                         kind           = 'guess',
@@ -509,7 +509,7 @@ class Safran(OpTask, S2MTaskMixIn):
                         geometry       = self.conf.vconf,
                         cutoff         = 'production',
                         date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d))
-                                          for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
+                                          for d in footprints.util.rangex(12, ndays * 24 + 6, self.conf.cumul)],
                         cumul          = self.conf.cumul,
                         nativefmt      = 'ascii',
                         kind           = 'guess',
