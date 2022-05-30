@@ -72,21 +72,30 @@ if args.postes:
 if args.rr:
     question1 = question(
             listvar=[f"{table}.dat", f"{table}.num_poste", "poste_nivo.nom_usuel", "poste_nivo.alti", "poste_nivo.lat_dg", "poste_nivo.lon_dg", 
-                "poste_nivo.massif_nivo", f"{table}.rr"+suffix, "hist_reseau_poste.reseau_poste", "H_NIVO.ALTI_LPNX", "H_NIVO.DAT"], # ALTI_LPNX=altitude maximale de la LPN depuis la dernière obs
-                #"poste_nivo.massif_nivo", "rr"+suffix, "hist_reseau_poste.reseau_poste", "HOR_NIV.ALTI_LPNX", "HOR_NIV.DAT"], # ALTI_LPNX=altitude maximale de la LPN depuis la dernière obs
+                "poste_nivo.massif_nivo", f"{table}.rr"+suffix, "hist_reseau_poste.reseau_poste"],
             table=table,
             listorder=[f'{table}.num_poste', f'{table}.dat'],
             listjoin=[
                 f"POSTE_NIVO ON {table}.NUM_POSTE = POSTE_NIVO.NUM_POSTE ", f" HIST_RESEAU_POSTE on ({table}.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE) ",
-                f"H_NIVO on (POSTE_NIVO.NUM_POSTE=H_NIVO.NUM_POSTE and H_NIVO.DAT={table}.DAT)"],
-                #f"HOR_NIV on (POSTE_NIVO.NUM_POSTE=HOR_NIV.NUM_POSTE and HOR_NIV.DAT={table}.DAT)"],
-                #f"POSTE_NIVO ON {table}.NUM_POSTE = POSTE_NIVO.NUM_POSTE ", f" HIST_RESEAU_POSTE on ({table}.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE ", " HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64')) "],
+                ],
+            listconditions=[f"HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64') AND {table}.rr{suffix} is not Null"],
+            period=[datedeb, datefin],
+            )
+    if args.frequency == 'daily':
+        print("WARNING : The rr value corresponding to date 'ymd' is the observation of date 'ym(d+1)' covering ymd6h-->ym(d+1)6h")
+    question1.run(outputfile=f'obs_nivometeo_{args.frequency}_RR_{begin.ymd}_{end.ymd}.csv')
+
+    question2 = question(
+            listvar=[f"{table}.num_poste", "H_NIVO.ALTI_LPNX", "H_NIVO.DAT"], # ALTI_LPNX=altitude maximale de la LPN depuis la dernière obs
+            table=table,
+            listorder=[f'{table}.num_poste', f'H_NIVO.DAT'],
+            listjoin=[
+                f"POSTE_NIVO ON {table}.NUM_POSTE = POSTE_NIVO.NUM_POSTE ", f" HIST_RESEAU_POSTE on ({table}.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE) ",
+                f"H_NIVO on (POSTE_NIVO.NUM_POSTE=H_NIVO.NUM_POSTE and H_NIVO.DAT={table}.DAT and H_NIVO.ALTI_LPNX is not Null)"],
             listconditions=["HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64')"],
             period=[datedeb, datefin],
-            #dateformat=args.frequency,
             )
-    print("WARNING : The rr value corresponding to date 'ymd' is the observation of date 'ym(d+1)' covering ymd6h-->ym(d+1)6h")
-    question1.run(outputfile=f'obs_nivometeo_{args.frequency}_RR_{begin.ymd}_{end.ymd}.csv')
+    question2.run(outputfile=f'LPN_nivometeo_{begin.ymd}_{end.ymd}.csv')
 
 # 2. TN
 # ------
