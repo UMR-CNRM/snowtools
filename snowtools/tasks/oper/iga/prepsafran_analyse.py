@@ -144,7 +144,7 @@ class PrepSafran(OpTask, S2MTaskMixIn):
                     # RUN 9h : Récupération de A6 du réseau d'assimilation d'ARPEGE de 0h inline...
                     self.sh.title('Toolbox input arpege assim')
                     tbarp = toolbox.input(
-                        alternate      = 'Gridpoint',
+                        role           = 'Gridpoint',
                         block          = 'forecast',
                         format         = 'grib',
                         geometry       = self.conf.arpege_geometry,
