@@ -526,6 +526,8 @@ class Safran(OpTask, S2MTaskMixIn):
                     # PROBLEME : le nom dans 'local' change donc on passe dans l'alternate même si la ressource voulue
                     # est déjà présente
                     # TODO ==> SOLUTION : utiliser les "coherentgroup" (cf src/vortex/layout/dataflow.py)
+                    # WARNING : L'utilisation de coherentgroup entraine la suppression de TOUTES les ressources présentes
+                    # dès lors qu'il en manque une.
                     #
     #                self.sh.title('Toolbox input guess arpege prod j-1 (secours bis)')
     #                 tb17_c = toolbox.input(
