@@ -20,7 +20,7 @@ from snowtools.plots import Dictionnaries
 logger = logging.getLogger()
 
 
-def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=None, legend=None, cbar_show=True):
+def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=None, legend=None, cbar_show=True, fontsize=10):
     """
     Trace le profil de value en fonction du temps avec les epaisseurs reelles de couches
 
@@ -41,6 +41,8 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
     :type legend: str
     :param cbar_show: Whether or not to plot the colorbar
     :type cbar_show: bool
+    :param fontsize: changing the size  of the labels.
+    :type fontsize: int
 
     Note that ``dz`` should not contain ``nan`` values. Layers that are not used sould be filled with
     a zero value for depth.
@@ -187,9 +189,9 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
         if colormap == 'grains':
             labels = Dictionnaries.MEPRA_labels
             cbar.set_ticks(np.arange(np.shape(labels)[0]))
-            cbar.ax.set_yticklabels(labels)
+            cbar.ax.set_yticklabels(labels, fontsize=fontsize)
         if(legend):
-            cbar.set_label(legend)
+            cbar.set_label(legend, fontsize=fontsize)
 
 
 def plot_grains1D(ax, dz, value, legend=None, cbar_show=True):
