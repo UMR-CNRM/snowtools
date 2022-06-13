@@ -8,6 +8,8 @@ import re
 import logging
 import numpy as np
 import typing
+from itertools import repeat
+from multiprocessing import Pool, cpu_count
 
 logger = logging.getLogger()
 
@@ -914,11 +916,14 @@ class proreader(reader):
         :rtype: list of numpy.array, list of member numbers
         """
         lf, ln = self._get_member_filenames()
-        ldata = []
-        lnr = []
-        for f, n in zip(lf, ln):
-            if members == 'all' or n in members:
-                data = self._get_data(f, varname=varname, point=point, fillnan=fillnan, begin=begin, end=end)
-                ldata.append(data)
-                lnr.append(n)
+        if members == "all":
+            lf2 = lf
+            lnr = ln
+        else:
+            lf2 = [f for num in members for i, f in zip(ln, lf) if num == i]
+            lnr = [i for num in members for i, f in zip(ln, lf) if num == i]
+
+        with Pool(cpu_count()) as p:
+            ldata = p.starmap(self._get_data,
+                              zip(lf2, repeat(varname), repeat(point), repeat(fillnan), repeat(begin), repeat(end)))
         return ldata, lnr
