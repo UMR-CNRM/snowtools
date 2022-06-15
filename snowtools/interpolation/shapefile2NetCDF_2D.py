@@ -182,7 +182,8 @@ def clean_the_mess(path_shape_shp):
     for suffixe in ['shp', 'prj', 'shx', 'dbf']:
         path_shape_rm = path_shape_shp[:-3] + suffixe
         cmd = ['rm', '-f', path_shape_rm]
-        subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+        # Trop brutal: efface un shapefile existant. A reprendre
+        # subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
     cmd = 'rm -f step1.tif'
     subprocess.call(cmd.split(), stdout=sys.stdout, stderr=sys.stderr)
 
