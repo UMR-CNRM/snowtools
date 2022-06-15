@@ -49,16 +49,15 @@ class Soda_Task(_CrocO_Task):
             tobs = toolbox.input(
                 geometry        = self.conf.geometry,
                 nativefmt       = 'netcdf',
-                datebegin       = assDate,
-                dateend         = assDate,
+                datevalidity    = assDate,
                 model           = 'obs',
                 block           = self.conf.sensor,
-                part            = self.conf.sensor,
+                nature          = self.conf.sensor,
                 kind            = 'SnowObservations',
                 namespace       = 'vortex.multi.fr',
                 namebuild       = 'flat@cen',
-                experiment      = 'obs@' + os.environ['USER'],
-                local           = 'workSODA/OBSERVATIONS_[datebegin:ymdHh].nc',
+                experiment      = self.conf.obsxpid,
+                local           = 'workSODA/OBSERVATIONS_[datevalidity:ymdHh].nc',
                 stage           = '1date',
                 fatal           = True
             )

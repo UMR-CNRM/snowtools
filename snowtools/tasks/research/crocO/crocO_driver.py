@@ -10,7 +10,7 @@ task for running SODA-SNOW sequence on HPC MULTINODE
 from vortex.layout.nodes import Driver, WorkshareFamily, LoopFamily
 from snowtools.tasks.research.crocO.crocO_soda import Soda_Task
 from snowtools.tasks.research.crocO.crocO_offline import Offline_Task
-from snowtools.tasks.research.crocO.crocO_common import CrocO_In, CrocO_Out
+from snowtools.tasks.research.crocO.crocO_common import CrocO_In # , CrocO_Out
 
 
 def setup(t, **kw):
@@ -46,7 +46,8 @@ def setup(t, **kw):
                 loopconf='stopdates',  # stopdates = assimdates.append(enddate)
                 loopsuffix='+d{:s}',  # format the loop iterator (assimdate(s) as itself ( a string)
                 **kw),
-            CrocO_Out(tag = 'pp_out', ticket = t, active_callback=lambda s: 'on' in s.conf.pickleit, **kw)
+            # Below commented by ML
+            # CrocO_Out(tag = 'pp_out', ticket = t, active_callback=lambda s: 'on' in s.conf.pickleit, **kw)
         ],
         options=kw
     )

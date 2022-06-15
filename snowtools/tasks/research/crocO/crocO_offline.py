@@ -7,8 +7,6 @@ Vortex task performing up to 40 offline runs in parallel on a single node
 
 '''
 
-import os
-
 from vortex import toolbox
 
 from bronx.stdtypes.date import Date
@@ -53,7 +51,7 @@ class Offline_Task(_CrocO_Task):
                 tb03_s = toolbox.input(
                     alternate      = 'SnowpackInit',
                     local          = 'PREP.nc',
-                    experiment     = 'spinup@' + os.environ['USER'],
+                    experiment     = 'spinup@' + t.env.getvar("USER"),
                     geometry       = self.conf.geometry,
                     date           = self.conf.datespinup,
                     intent         = 'inout',

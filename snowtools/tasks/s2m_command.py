@@ -277,6 +277,10 @@ class Surfex_command(_S2M_command):
                           action="store_true", dest="writesx", default=False,
                           help="Optionnaly transfer the PRO files towards sxcen")
 
+        parser.add_option("--obsxpid",
+                          action="store", type="str", dest="obsxpid", default=None,
+                          help="xpid of the obs you want to assimilate")
+
         parser.add_option("--sensor",
                           action="store", type="str", dest="sensor", default="MODIS",
                           help="specify the sensor name of the obs you want to assimilate")

@@ -89,7 +89,10 @@ class vortex_kitchen(object):
                 if self.options.safran:
                     os.symlink(SNOWTOOLS_DIR + "/tasks/research/safran", "tasks")
                 elif self.options.surfex:
-                    os.symlink(SNOWTOOLS_DIR + "/tasks/research/surfex", "tasks")
+                    if self.options.croco:
+                        os.symlink(SNOWTOOLS_DIR + "/tasks/research/crocO", "tasks")
+                    else:
+                        os.symlink(SNOWTOOLS_DIR + "/tasks/research/surfex", "tasks")
 
         for directory in ["conf", "jobs"]:
             if not os.path.isdir(directory):
@@ -126,11 +129,19 @@ class vortex_kitchen(object):
                           self.options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + \
                           self.options.datefin.strftime("%Y%m%d%H%M")
             if self.options.escroc:
-                self.jobname = jobname if jobname else 'escroc'
+                if jobname:
+                    self.jobname = jobname
+                elif self.options.croco:
+                    self.jobname = 'croco'
+                else:
+                    self.jobname = 'escroc'
+
                 if self.options.scores:
                     # self.reftask  = "scores_task"
                     # self.reftask = "optim_task"
                     self.reftask = "crps_task"
+                elif self.options.croco:
+                    self.reftask = "crocO_driver"
                 else:
                     self.reftask = "escroc_tasks"
                 self.nnodes = 1
@@ -216,7 +227,7 @@ class vortex_kitchen(object):
             mkjob_list = []
             print("loop")
             for node in range(1, self.options.nnodes + 1):
-                mkjob_list.append(self.mkjob_command(jobname='escrocN' + str(node)))
+                mkjob_list.append(self.mkjob_command(jobname=self.jobname + str(node)))
 
             return mkjob_list
         else:
@@ -325,6 +336,7 @@ class Vortex_conf_file(object):
         """ Prepare configuration file from s2m options"""
         self.default_variables()
         self.add_block(jobname)
+        self.jobname = jobname
         if self.options.surfex:
             self.create_conf_surfex()
             self.setwritesx()
@@ -336,6 +348,8 @@ class Vortex_conf_file(object):
         # ESCROC on several nodes
         if self.options.escroc:
             self.escroc_variables()
+            if self.options.croco:
+                self.croco_variables()
         else:
             self.set_field("DEFAULT", 'nnodes', self.options.nnodes)
             if self.options.nmembers:
@@ -373,7 +387,7 @@ class Vortex_conf_file(object):
             for node in range(1, self.options.nnodes + 1):
                 nmembers_this_node = min(nmembers_per_node, self.options.nmembers - startmember + 1)
                 self.set_field("DEFAULT", 'nnodes', 1)
-                newblock = "escrocN" + str(node)
+                newblock = self.jobname + str(node)
                 self.set_field(newblock, 'startmember', startmember)
                 self.set_field(newblock, 'nmembers', nmembers_this_node)
                 startmember += nmembers_this_node
@@ -458,3 +472,128 @@ class Vortex_conf_file(object):
     def setwritesx(self):
         if self.options.writesx:
             self.set_field("DEFAULT", 'writesx', self.options.writesx)
+
+    def croco_variables(self):
+        from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
+        from snowtools.tools.read_conf import read_conf
+        import numpy as np
+        import bisect
+
+        self.set_field('DEFAULT', 'nforcing', self.options.nforcing)
+
+
+        # ########### READ THE USER-PROVIDED conf file ##########################
+        # -> in order to append datefin to assimdates and remove the exceding dates.
+        # -> in order to check if members_ids were specified.
+
+        # local import since there are dependencies with vortex.
+
+
+        confObj = read_conf(self.options.croco)
+        intdates = list(map(int, confObj.assimdates))
+        intdatefin = int(self.options.datefin.strftime("%Y%m%d%H"))
+        intdates.sort()
+        bisect.insort(intdates, intdatefin)
+        intdates = np.array(intdates)
+        intdates = intdates[intdates <= intdatefin]
+        print('stopdates', intdates)
+        intdates = intdates.tolist()
+        # BC june 2020 bug in driver when stopdates has only one item
+        if len(intdates) == 1:
+            self.set_field('DEFAULT', 'stopdates', 'list(' + str(intdates[0]) + ')')
+        else:
+            self.set_field('DEFAULT', 'stopdates', intdates)
+
+        # check if members ids were specified
+        # if so, do nothing (later in the script, will be reparted between the nodes)
+        # else, draw it.
+        allmembers = list(range(1, self.options.nmembers + 1))
+
+        # BC 01/04/20: this rangeX will cause us some trouble...
+        self.set_field('DEFAULT', 'members', 'rangex(start:1 end:' + str(self.options.nmembers) + ')')
+        if 'E1' in self.options.escroc:
+            if hasattr(confObj, 'members_id'):
+                members_id = np.array(list(map(int, confObj.members_id)))
+
+                # in case of synthetic assimilation, need to:
+                #    - replace the synthetic escroc member
+                #    - draw a substitution forcing
+                if self.options.synth is not None:
+
+                    # strange case when the synth member comes from a larger openloop (ex 160) than the current experiment (ex 40)
+                    if self.options.synth > self.options.nmembers:
+                        self.set_field('DEFAULT', 'synth', self.options.synth)
+                    else:
+                        # replace ESCROC member
+                        members_id = self.replace_member(allmembers, members_id)
+                        self.set_field('DEFAULT', 'synth', self.options.synth)
+
+                        # draw a substitution forcing
+                        meteo_draw = self.draw_meteo(confObj)
+                        self.set_field('DEFAULT', 'meteo_draw', meteo_draw)
+
+                else:  # real observations assimilation
+                    # warning in case of performing a synthetic experiment
+                    # but forgetting to specify the synthetic member
+                    print('\n\n\n')
+                    print('************* CAUTION ****************')
+                    print("If you're performing a SYNTHETIC EXPERIMENT")
+                    print('you MUST specify the synthetic member     ')
+                    print('to eliminate from the ensemble')
+                    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+                    print('\n\n\n')
+            else:
+                if self.options.synth is not None:
+                    # here, no prescribed members: only need to substitute meteo.
+                    escroc = ESCROC_subensembles(self.options.escroc, allmembers, randomDraw=True)
+                    members_id = escroc.members
+
+                    # draw a substitution forcing
+                    meteo_draw = self.draw_meteo(confObj)
+                    self.set_field('DEFAULT', 'meteo_draw', meteo_draw)
+                else:
+                    escroc = ESCROC_subensembles(self.options.escroc, allmembers, randomDraw=True)
+                    members_id = escroc.members
+                self.set_field('DEFAULT', 'members_id', members_id)
+        else:
+            escroc = ESCROC_subensembles(self.options.escroc, allmembers)
+            members_id = escroc.members
+            self.set_field('DEFAULT', 'members_id', members_id)
+
+        if self.options.openloop:
+            self.options.op = 'on'
+        else:
+            self.options.op = 'off'
+        self.set_field('DEFAULT', 'openloop', self.options.op)
+
+        if hasattr(self.options, 'sensor'):
+            self.set_field('DEFAULT', 'sensor', self.options.sensor)
+
+        if hasattr(self.options, 'obsxpid'):
+            self.set_field('DEFAULT', 'obsxpid', self.options.xpid)
+        else:
+            self.set_field('DEFAULT', 'obsxpid', 'obs@' + os.getlogin())
+
+        # new entry for Loopfamily on offline parallel tasks:
+        self.set_field('DEFAULT', 'offlinetasks', list(range(1, self.options.nnodes + 1)))
+
+        # this line is mandatory to ensure the use of subjobs:
+        # place it in the field offline for parallelization of the offlines LoopFamily only
+        self.set_field('offline', 'paralleljobs_kind', 'slurm:ssh')
+
+        if self.options.croco and self.options.nmembers and self.options.op:
+
+            # soda works with all members at the same time on one node only.
+            self.set_field('soda', 'nmembersnode', self.options.nmembers)
+            self.set_field('soda', 'startmember', 1)
+            self.set_field('soda', 'ntasks', 1)  # one task only for sure
+
+            # BC 18/04/19 nprocs could be set to 40
+            # but I doubt this would save much time and it would be risky too.
+            # so far, SODA should work in MPI, but it's risky...
+            self.set_field('soda', 'nprocs', 1)
+
+        else:
+            raise Exception('please specify a conf file and a number of members to run.')
+
+
