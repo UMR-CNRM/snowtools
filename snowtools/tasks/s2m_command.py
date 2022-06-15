@@ -115,6 +115,9 @@ class Surfex_command(_S2M_command):
         [self.options.namelist, self.options.workdir, self.options.exesurfex] = \
             list(map(absolute_path, [self.options.namelist, self.options.workdir, self.options.exesurfex]))
 
+        if self.options.croco:
+            self.options.croco = absolute_path(self.options.croco)
+
         if not vortex:
             [self.options.forcing, self.options.diroutput] = \
                 list(map(absolute_path, [self.options.forcing, self.options.diroutput]))
