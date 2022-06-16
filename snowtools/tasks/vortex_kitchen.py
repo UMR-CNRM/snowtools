@@ -558,7 +558,7 @@ class Vortex_conf_file(object):
             escroc = ESCROC_subensembles(self.options.escroc, allmembers)
             members_id = escroc.members
 
-        self.set_field('DEFAULT', 'members_id', members_id)
+        self.set_field('DEFAULT', 'members_id', list(members_id))
 
         if self.options.openloop:
             self.options.op = 'on'

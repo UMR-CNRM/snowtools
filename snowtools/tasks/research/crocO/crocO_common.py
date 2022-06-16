@@ -9,9 +9,10 @@ from bronx.stdtypes.date import Date
 from snowtools.utils.dates import check_and_convert_date, get_list_dates_files
 from vortex import toolbox
 from vortex.layout.nodes import Task
+from cen.layout.nodes import S2MTaskMixIn
 
 
-class _CrocO_Task(Task):
+class _CrocO_Task(Task, S2MTaskMixIn):
     """
     Task used to fetch common consts btw OFFLINE dates (forcings) and SODA
     """

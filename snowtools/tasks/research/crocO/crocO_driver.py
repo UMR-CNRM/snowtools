@@ -12,7 +12,6 @@ from snowtools.tasks.research.crocO.crocO_soda import Soda_Task
 from snowtools.tasks.research.crocO.crocO_offline import Offline_Task
 from snowtools.tasks.research.crocO.crocO_common import CrocO_In # , CrocO_Out
 
-
 def setup(t, **kw):
     return Driver(
         tag = 'CrocO_sequence',  # change the tag ?
