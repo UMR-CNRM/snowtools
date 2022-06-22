@@ -71,13 +71,13 @@ from shapely.geometry import Point
 
 from snowtools.plots.abstracts.figures import Mplfigure
 from snowtools.utils.infomassifs import infomassifs
-from snowtools.DATA import SNOWTOOLS_DIR, CARTOPY_DIR
+from snowtools.DATA import SNOWTOOLS_DIR, CARTOPY_DIR, LUSTRE_NOSAVE_USER_DIR
 
 # Tell cartopy where to find Natural Earth features
 # config['data_dir'] = os.path.join(SNOWTOOLS_DIR, 'CartopyData')
 if os.path.isdir(CARTOPY_DIR):
     config['data_dir'] = CARTOPY_DIR
-# config['data_dir'] = os.path.join('/cnrm/cen/users/NO_SAVE/radanovicss', 'CartopyData')  # for sxcen
+# config['data_dir'] = os.path.join(LUSTRE_NOSAVE_USER_DIR, 'CartopyData')  # for sxcen
 # until proper git annex solution
 
 

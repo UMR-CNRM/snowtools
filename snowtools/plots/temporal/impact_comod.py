@@ -14,11 +14,12 @@ from snowtools.utils.infomassifs import infomassifs
 from snowtools.plots.temporal.chrono import temporalsubplot
 from snowtools.plots.abstracts.figures import MultiPlots
 from bronx.stdtypes.date import Date
+from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR
+import os
 
 matplotlib.use('Agg')
 
-commonpath = "/cnrm/cen/users/NO_SAVE/lafaysse/oper/alp"
-# commonpath = "/home/lafaysse"
+commonpath = os.path.join(LUSTRE_NOSAVE_USER_DIR, "oper/alp")# commonpath = "/home/lafaysse"
 # simuls = [commonpath + "/reanalyse_nouveau_listeo_obs_temps_reel/PRO_2020080106_2021013006.nc",
 #           commonpath + "/reanalyse_nouveaux_listeo/PRO_2020080106_2021013006.nc",
 #           commonpath + "/reanalyse_nouveaux_listeo_AVEC_EDFNIVO/PRO_2020080106_2021013006.nc",

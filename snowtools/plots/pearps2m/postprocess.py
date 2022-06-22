@@ -41,6 +41,8 @@ from snowtools.utils.dates import check_and_convert_date, pretty_date
 from snowtools.plots.temporal.chrono import spaghettis_with_det, spaghettis
 from snowtools.utils.infomassifs import infomassifs
 from snowtools.utils.FileException import DirNameException
+from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR
+
 from bronx.stdtypes.date import today
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 if six.PY2:
@@ -82,7 +84,7 @@ def parse_options(arguments):
 
     parser.add_option("-o",
                       action="store", type="string", dest="diroutput",
-                      default="/cnrm/cen/users/NO_SAVE/radanovicss/PEARPS2M",
+                      default=os.path.join(LUSTRE_NOSAVE_USER_DIR, "PEARPS2M"),
                       help="Output directory")
 
     parser.add_option("--dev",

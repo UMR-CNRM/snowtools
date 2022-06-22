@@ -8,11 +8,13 @@ Created on Wed Oct 13 15:04:27 2021
 """
 import extracthendrix as eh
 from bronx.stdtypes.date import Date
+from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR
+import os
 
 config_user = dict(
 
     #  Where you want to store the outputs
-    folder='/cnrm/cen/users/NO_SAVE/radanovicss/AROME/',
+    folder=os.path.join(LUSTRE_NOSAVE_USER_DIR,'AROME'),
 
     # Models are defined in the models.ini file
     model_name='AROME',

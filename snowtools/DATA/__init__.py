@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import os.path
+import os
 
 SNOWTOOLS_DATA = os.path.dirname(os.path.abspath(__file__))
 """
@@ -27,5 +27,11 @@ DIRDATAPGD = '/rd/cenfic3/manto/lafaysse/FILES_PGD'
 PGD files at CEN
 """
 
+LUSTRE_NOSAVE_DIR = '/cnrm/mrns/users/NO_SAVE'
+
+LUSTRE_NOSAVE_USER_DIR = os.path.join('/cnrm/mrns/users/NO_SAVE', os.getlogin())
+
 CARTOPY_DIR = '/rd/cenfic3/manto/radanovicss/CartopyData'
-# config['data_dir'] = os.path.join('/cnrm/cen/users/NO_SAVE/radanovicss', 'CartopyData')  # for sxcen
+# CARTOPY_DIR = os.path.join(LUSTRE_NOSAVE_USER_DIR, 'CartopyData')  # for sxcen
+
+
