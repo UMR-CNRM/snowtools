@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
 
@@ -9,18 +10,23 @@ logger = footprints.loggers.getLogger(__name__)
 
 from vortex import toolbox
 from vortex.layout.nodes import Driver
+
 from iga.tools.apps import OpTask
-from bronx.stdtypes.date import Date
+from vortex.tools.actions import actiond as ad
+from common.util import usepygram
+import iga.tools.op as op
+import snowtools
+from snowtools.bronx.stdtypes.date import Date, Period
 
 
 def setup(t, **kw):
     return Driver(
-        tag='pearp2safran',
-        ticket=t,
-        nodes=[
-            Reanalyses(tag='prepsafreana', ticket=t, **kw),
+        tag    = 'pearp2safran',
+        ticket = t,
+        nodes  = [
+            Reanalyses(tag='reanalyses', ticket=t, **kw),
         ],
-        options=kw,
+        options = kw,
     )
 
 
@@ -28,7 +34,7 @@ class Reanalyses(OpTask, S2MTaskMixIn):
 
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
 
-    def process(self):
+    def refill(self):
         """Preparation of SAFRAN input files"""
 
         t = self.ticket
@@ -42,7 +48,7 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 sh.untar(tarname)
             sh.rm(tarname)
 
-        if 'early-fetch' in self.steps:
+        if 'refill' in self.steps:
 
             missing_days = 0
             if not (self.conf.rundate.month == 8 and self.conf.rundate.day == 1):
@@ -73,7 +79,7 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                         vapp           = self.conf.vapp,
                         vconf          = self.conf.vconf,
                         date           = rundate.ymdh,
-                        begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
+                        begindate      = datebegin.ymd6h,
                         enddate        = '{0:s}/+PT96H'.format(datefin.ymd6h),
                         geometry       = self.conf.vconf,
                         #cutoff         = 'assimilation',
@@ -130,8 +136,6 @@ class Reanalyses(OpTask, S2MTaskMixIn):
             print(t.prompt, 'tb02b =', tb02b)
             print()
 
-        if 'late-backup' in self.steps:
-
             # Mise à jour de l'archive,
             # TODO :
             # Elle devrait désormais couvrir au moins la période allant du 31/07 6h jusqu'à J 6h
@@ -155,6 +159,9 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 vapp           = self.conf.vapp,
                 vconf          = self.conf.vconf,
                 fatal          = True,
+                delayed        = True,
             ),
             print(t.prompt, 'tb03 =', tb03)
             print()
+            
+            ad.phase(tb03)
