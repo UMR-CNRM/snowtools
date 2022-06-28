@@ -215,7 +215,7 @@ class Rapatrie_Prep(S2MTaskMixIn, OpTask):
                 experiment=self.conf.xpid,
                 block='prep',
                 geometry=self.conf.geometry,
-                datevalidity=dateend if self.conf.previ else list(daterange(tomorrow(base=datebegin), dateend)),
+                datevalidity=Date(dateend.year, 8, 1, 6),
                 date=self.conf.rundate,
                 member=35,  # deterministic run
                 nativefmt='netcdf',
