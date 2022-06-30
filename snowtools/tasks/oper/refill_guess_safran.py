@@ -7,8 +7,8 @@ from bronx.stdtypes.date import Date
 from bronx.stdtypes.date import Period
 from cen.layout.nodes import S2MTaskMixIn
 import footprints
-import glob
-import os
+#import glob
+#import os
 import tarfile
 from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
@@ -53,34 +53,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             rundate = datebegin - Period(days=1)
             # On s'arrête à J-4 pour produire le même fichier que le 'refill' journalier
             # TODO --> il serait plus logique d'aller jusqu'à 6H (J) pour avoir un mode secours
-            # ==> Modification simultanéee de prepsaf_reana ET safran_ana (12H) 
-            while rundate < dateend + Period(days=4):
-
-                # 1. Check if guess file already exists
-                self.sh.title('Toolbox input guess {0:s}'.format(rundate.ymdh))
-                tb01 = toolbox.input(
-                    role           = 'Ebauche',
-                    local          = '[date::ymdh]/P[date::addcumul_yymdh]',
-                    # geometry       = self.conf.domains,
-                    geometry       = self.conf.vconf,
-                    vapp           = 's2m',
-                    vconf          = '[geometry:area]',
-                    experiment     = self.conf.xpid_guess,
-                    cutoff         = 'assimilation',
-                    block          = 'guess',
-                    date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d))
-                                      for d in footprints.util.rangex(0, 24, self.conf.cumul)],
-                    cumul          = self.conf.cumul,
-                    nativefmt      = 'ascii',
-                    kind           = 'guess',
-                    model          = 'safran',
-                    source_app     = self.conf.source_app,
-                    source_conf    = self.conf.deterministic_conf,
-                    namespace      = self.conf.namespace_in,
-                    fatal          = False,
-                ),
-                print(t.prompt, 'tb01 =', tb01)
-                print()
+            # ==> Modification simultanéee de prepsaf_reana ET safran_ana (12H)
 
             while rundate < dateend + Period(days=4):
 
@@ -88,7 +61,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 for dom in self.conf.domains:
 
                     # 1. Check if guess file already exists
-                    self.sh.title('Toolbox input guess {0:s}'.format(rundate.ymdh))
+                    self.sh.title(f'Toolbox input guess {rundate.ymdh} {dom}')
                     tb01 = toolbox.input(
                         role           = 'Ebauche',
                         local          = '[date::ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
@@ -137,7 +110,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             # tube           = 'ftp',
                             # origin         = 'arpege',
                             # fatal          = False,
-                            suite          = 'oper', # Force oper file to avoid mixing experiments
+                            suite          = 'oper',  # Force oper file to avoid mixing experiments
                             cutoff         = 'assimilation',
                             # local          = 'mb035/ARPEGE[date::addterm_ymdh]',
                             namespace      = self.conf.namespace_in,
@@ -159,7 +132,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             geometry       = self.conf.cpl_geometry,
                             kind           = 'gridpoint',
                             # filtername     = 'concatenate',
-                            suite          = 'oper', # Force oper files to avoid mixing experiments
+                            suite          = 'oper',  # Force oper files to avoid mixing experiments
                             local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
                             date           = ['{0:s}/-PT6H/+PT{1:s}H'.format(rundate.ymd6h, str(d))
                                               for d in footprints.util.rangex(0, 24, self.conf.cumul)],
@@ -173,7 +146,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                             model          = '[vapp]',
                             vapp           = self.conf.source_app,
                             vconf          = self.conf.deterministic_conf,
-
                             fatal          = False,
                         )
                         print(t.prompt, 'tb02 =', tb02)
@@ -214,7 +186,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 role           = 'Metadata',
                 format         = 'grib',
                 genv            = self.conf.cycle,
-                geometry       = self.conf.arpege_geometry, #EURAT01
+                geometry       = self.conf.arpege_geometry,  #EURAT01
                 gdomain        = '[geometry:area]',
                 kind           = 'relief',
                 local          = 'METADATA.grib',
@@ -260,7 +232,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 kind           = 'guess',
                 interpreter    = 'current',
                 # Need to extend pythonpath to be independant of the user environment
-                # The vortex-build environment already set up the pythonpath (see jobassistant plugin) but the script is 
+                # The vortex-build environment already set up the pythonpath (see jobassistant plugin) but the script is
                 # eventually launched in a 'user-defined' environment
                 extendpypath   = [self.sh.path.join('/'.join(self.conf.iniconf.split('/')[:-2]), d)
                                   for d in ['vortex/src', 'vortex/site', 'epygram',
@@ -307,7 +279,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     while rundate < dateend + Period(days=4):
 
                         # On archive d'abord le fichier guess
-                        self.sh.title(f'Toolbox output tbguess {rundate.ymdh}')
+                        self.sh.title(f'Toolbox output tbguess {rundate.ymdh} {dom}')
                         tbguess = toolbox.output(
                             role           = 'Ebauche',
                             local          = '[date::ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
@@ -329,7 +301,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         ),
                         print(t.prompt, 'tbguess =', tbguess)
                         print()
-                        
+
                         validitydate = rundate + Period(hours=6)
 
                         guessname = tbguess[0][0].container.localpath()
