@@ -14,7 +14,7 @@ import shutil
 import datetime
 
 # take care "snowtools" necessary in import for exception catching by vortex
-from snowtools.utils.FileException import FileNameException, DirNameException
+from snowtools.utils.FileException import FileNameException, DirNameException, UndefinedDirectoryException
 from snowtools.DATA import SNOWTOOLS_DIR, SNOWTOOLS_CEN
 
 
@@ -76,7 +76,7 @@ def check_surfex_exe(path):
         if "EXESURFEX" in list(os.environ.keys()):
             path = os.environ["EXESURFEX"]
         else:
-            raise BaseException("A directory for SURFEX executables must be defined either with -s option or with $EXESURFEX")
+            raise UndefinedDirectoryException("A directory for SURFEX executables must be defined either with -s option or with $EXESURFEX")
 
     for program in ["PGD", "PREP", "OFFLINE"]:
         if not os.path.isfile(path + "/" + program):

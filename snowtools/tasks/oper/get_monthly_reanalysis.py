@@ -14,7 +14,7 @@ from optparse import OptionParser
 from snowtools.utils.dates import check_and_convert_date
 import footprints
 
-usage = "usage: get_oper_files.py [-b YYYYMMDD] [--previ]"
+usage = "usage: get_oper_files.py -b YYYYMMDD -r area [--dev] [--meteo] [--snow]"
 
 
 class configdev(object):
@@ -36,11 +36,7 @@ def parse_options(arguments):
 
     parser.add_option("-b",
                       action="store", type="string", dest="datebegin", default=today().ymd,
-                      help="First year of extraction")
-
-    parser.add_option("--previ",
-                      action="store_true", dest="previ", default=False,
-                      help="Forecast instead of analysis")
+                      help="Date of run at format YYYYMMDDHH (for oper case, should be YYYYMM2212)")
 
     parser.add_option("--dev",
                       action="store_true", dest="dev", default=False,
@@ -48,7 +44,7 @@ def parse_options(arguments):
 
     parser.add_option("-r",
                       action="store", type="string", dest="region", default='all',
-                      help="alp, pyr, cor, postes, all")
+                      help="alp, pyr, cor, mac, jur, vog, postes, all")
 
     parser.add_option("--meteo",
                       action="store_true", dest="meteo", default=True,
@@ -122,7 +118,7 @@ class S2MExtractor(S2MTaskMixIn):
             kind           = 'MeteorologicalForcing',
             model          = 's2m',
             namespace      = 'vortex.multi.fr',
-            cutoff         = 'production' if self.conf.previ else 'assimilation',
+            cutoff         = 'assimilation',
             intent         = 'in',
             fatal          = True
         )
@@ -145,7 +141,7 @@ class S2MExtractor(S2MTaskMixIn):
             kind           = 'SnowpackSimulation',
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
-            cutoff         = 'production' if self.conf.previ else 'assimilation',
+            cutoff         = 'assimilation',
             intent         = 'in',
             fatal          = True
 

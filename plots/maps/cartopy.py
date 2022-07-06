@@ -339,7 +339,11 @@ class _Map_massifs(Mplfigure):
         else:
             self.map.plot(lon, lat, marker=marker, color=color, linestyle='', zorder=3)
 
+<<<<<<< HEAD
     def highlight_massif(self, massifs, **kwargs):
+=======
+    def highlight_massif(self, massifs, fillvalues, **kwargs):
+>>>>>>> s2m_double_2022_iga
 
         # if massif contours are not yet created, draw them
         if not hasattr(self, 'massif_features'):
@@ -645,8 +649,19 @@ class Map_alpes(_Map_massifs):
         self.lonmin = 5.2
         self.lonmax = 7.9
 
+<<<<<<< HEAD
         self.mappos=[0.02, 0.06, 0.8, 0.8]
         self.legendpos = [0.85, 0.15, 0.03, 0.6]
+=======
+        if 'mappos' in kw.keys():
+            self.mappos = kw['mappos']
+        else:
+            self.mappos = [0.02, 0.06, 0.8, 0.8]
+        if 'legendpos' in kw.keys():
+            self.legendpos = kw['legendpos']
+        else:
+            self.legendpos = [0.85, 0.15, 0.03, 0.6]
+>>>>>>> s2m_double_2022_iga
         self.infospos = (990000, 2160000)
 
         self.deport = {7: (0, 5000), 9: (-1000, 0),  16: (1000, 0), 19: (-2000, -2000),  21: (0, -5000)}
@@ -707,15 +722,31 @@ class Map_pyrenees(_Map_massifs):
 
     def __init__(self, *args, **kw):
         self.area = 'pyrenees'
+<<<<<<< HEAD
         self.width = 14.5
         self.height = 5.8
+=======
+        self.width = 16.5
+        self.height = 5.
+>>>>>>> s2m_double_2022_iga
         self.latmin = 42.0
         self.latmax = 43.3
         self.lonmin = -2.0
         self.lonmax = 3.0
 
+<<<<<<< HEAD
         self.mappos=[0.05, 0.06, 0.8, 0.8]
         self.legendpos = [0.89, 0.1, 0.03, 0.7]
+=======
+        if 'mappos' in kw.keys():
+            self.mappos = kw['mappos']
+        else:
+            self.mappos = [0.05, 0.06, 0.8, 0.8]
+        if 'legendpos' in kw.keys():
+            self.legendpos = kw['legendpos']
+        else:
+            self.legendpos = [0.92, 0.08, 0.03, 0.7]
+>>>>>>> s2m_double_2022_iga
         self.infospos = (600000, 1790000)
 
         self.deport = {64: (0, 2000), 67: (0, 20000), 68: (10000, 5000), 70: (-2000, 10000), 71: (-12000, 5000),
@@ -822,6 +853,7 @@ class Zoom_massif(_Map_massifs):
     def __init__(self, num_massif, *args, **kw):
         if num_massif <= 24:
             self.area = 'alpes'
+<<<<<<< HEAD
             self.width = 12 
             self.height = 11 
             self.legendpos = [0.91, 0.15, 0.03, 0.6]
@@ -842,6 +874,37 @@ class Zoom_massif(_Map_massifs):
             self.mappos=[0.05, 0.06, 0.8, 0.8]
             self.titlepad = 25
 
+=======
+            self.width = 9 
+            self.height = 8 
+            legendpos = [0.91, 0.15, 0.03, 0.6]
+            mappos = [0.05, 0.03, 0.8, 0.8]
+            self.titlepad = 25
+        elif num_massif >= 64:
+            self.area = 'pyrenees'
+            self.width = 10
+            self.height = 8 
+            legendpos = [0.91, 0.15, 0.03, 0.6]
+            mappos = [0.05, 0.06, 0.8, 0.8]
+            self.titlepad = 40 
+        else:
+            self.area = 'corse'
+            self.width = 9 
+            self.height = 8
+            legendpos = [0.91, 0.15, 0.03, 0.6]
+            mappos = [0.05, 0.06, 0.8, 0.8]
+            self.titlepad = 25
+
+        if 'mappos' in kw.keys():
+            self.mappos = kw["mappos"]
+        else:
+            self.mappos = mappos
+        if 'legendpos' in kw.keys():
+            self.legendpos = kw["legendpos"]
+        else:
+            self.legendpos = legendpos
+
+>>>>>>> s2m_double_2022_iga
         self.deport = {}
 
         self.getshapes()
@@ -857,7 +920,11 @@ class Zoom_massif(_Map_massifs):
         self.get_map_dimensions(num_massif)
         self.fig = plt.figure(figsize=(self.width, self.height))
         self.fig.subplots_adjust(bottom=0.005, left=0.005, top=0.95, right=0.9)
+<<<<<<< HEAD
         self.map = self.getmap(self.latmin, self.latmax, self.lonmin, self.lonmax, **kw)
+=======
+        self.map = self.getmap(self.latmin, self.latmax, self.lonmin, self.lonmax)
+>>>>>>> s2m_double_2022_iga
         self.map.gridlines(draw_labels=True)
         #self.map.drawcoastlines(linewidth=1)
 #        self.map.drawcountries()
@@ -872,10 +939,17 @@ class Zoom_massif(_Map_massifs):
                 barycentre = self.dicLonLatMassif[num]
         if self.area in ['alpes', 'corse']:
             dlat = 0.25
+<<<<<<< HEAD
             dlon = 0.30
         elif self.area == 'pyrenees':
             dlat = 0.25
             dlon = 0.6
+=======
+            dlon = 0.25
+        elif self.area == 'pyrenees':
+            dlat = 0.25
+            dlon = 0.7
+>>>>>>> s2m_double_2022_iga
 
         self.lonmin = barycentre[0] - dlon
         self.lonmax = barycentre[0] + dlon

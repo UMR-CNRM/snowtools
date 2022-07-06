@@ -36,6 +36,87 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, OpTask):
 
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
 
+    def refill(self):
+
+        t = self.ticket
+
+        if 'refill' in self.steps:
+
+            datebegin, dateend = self.get_period()
+            rundate_prep, alternate_rundate_prep = self.get_rundate_prep()
+
+            with op.InputReportContext(self, t):
+
+                # This product is written in BDPE once a year by ensemble_surfex_tasks_bdpe.py and read here once a month.
+                self.sh.title('Toolbox input tb01wi')
+                tb01wi = toolbox.input(
+                    role           = 'SnowpackInitForMonthlyReanalysis',
+                    local          = 'PREP.nc',
+                    block          = 'prep',
+                    experiment     = self.conf.xpid,
+                    geometry       = self.conf.geometry,
+                    datevalidity   = datebegin,
+                    date           = rundate_prep,
+                    member         = 35,
+                    namespace      = 'bdpe.archive.fr',
+                    bdpeid         = self.conf.num_bdpe_initrea[self.conf.xpid],
+                    intent         = 'inout',
+                    nativefmt      = 'netcdf',
+                    kind           = 'PREP',
+                    model          = 'surfex',
+                    fatal          = False,
+                    cutoff         = 'assimilation'
+                ),
+                print((t.prompt, 'tb01wi =', tb01wi))
+                print()
+
+                # Alternates (3 previous days)
+                for i, alternate_prep in enumerate(alternate_rundate_prep):
+
+                    fatal = i == len(alternate_rundate_prep) - 1
+
+                    tb01wi = toolbox.input(
+                        alternate='SnowpackInitForMonthlyReanalysis',
+                        local='PREP.nc',
+                        block='prep',
+                        experiment=self.conf.xpid,
+                        geometry=self.conf.geometry,
+                        datevalidity=datebegin,
+                        date=alternate_prep[0],
+                        member=35,
+                        namespace='bdpe.archive.fr',
+                        bdpeid=self.conf.num_bdpe_initrea[self.conf.xpid],
+                        intent='inout',
+                        nativefmt='netcdf',
+                        kind='PREP',
+                        model='surfex',
+                        fatal=fatal,
+                        cutoff='assimilation'
+                    ),
+                    print((t.prompt, 'tb01wi =', tb01wi))
+                    print()
+
+            with op.OutputReportContext(self, t):
+
+                self.sh.title('Toolbox output tb01wo')
+                tb01wo = toolbox.output(
+                        role           = 'SnowpackInit',
+                        local          = 'PREP.nc',
+                        block          = 'prep',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        datevalidity   = datebegin,
+                        member         = 35,
+                        namespace      = 'vortex.cache.fr',
+                        nativefmt      = 'netcdf',
+                        kind           = 'PREP',
+                        model          = 'surfex',
+                        fatal          = True,
+                        cutoff         = 'assimilation'
+                ),
+                print((t.prompt, 'tb01wo =', tb01wo))
+                print()
+
     def process(self):
 
         t = self.ticket
@@ -67,7 +148,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, OpTask):
                 datebegin      = datebegin,
                 dateend        = dateend,
                 nativefmt      = 'netcdf',
-                namespace      = 'vortex.cache.fr',
+                namespace      = self.conf.namespace_in,
                 kind           = 'MeteorologicalForcing',
                 model          = source_safran,
                 cutoff         = 'assimilation',
@@ -99,9 +180,9 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, OpTask):
                 experiment     = self.conf.xpid,
                 geometry       = self.conf.geometry,
                 datevalidity   = datebegin,
-                date           = rundate_prep,
+#                date           = rundate_prep,
                 member         = 35,
-                namespace      = 'vortex.cache.fr',
+                namespace      = self.conf.namespace_in,
                 intent         = 'inout',
                 nativefmt      = 'netcdf',
                 kind           = 'PREP',
@@ -126,7 +207,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, OpTask):
                     datevalidity   = datebegin,
                     date           = alternate_prep[0],
                     member         = 35,
-                    namespace      = 'vortex.cache.fr',
+                    namespace      = self.conf.namespace_in,
                     intent         = 'inout',
                     nativefmt      = 'netcdf',
                     kind           = 'PREP',
@@ -266,7 +347,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, OpTask):
                     kind           = 'MeteorologicalForcing',
                     model          = 's2m',
                     delayed        = True,
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = self.conf.namespace_out,
                     cutoff         = 'assimilation',
                     fatal          = False
                 ),
@@ -286,7 +367,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, OpTask):
                 kind           = 'SnowpackSimulation',
                 model          = 'surfex',
                 delayed        = True,
-                namespace      = 'vortex.multi.fr',
+                namespace      = self.conf.namespace_out,
                 cutoff         = 'assimilation',
                 fatal          = False
             ),
@@ -309,7 +390,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, OpTask):
                 kind           = 'PREP',
                 delayed        = True,
                 model          = 'surfex',
-                namespace      = 'vortex.multi.fr',
+                namespace      = self.conf.namespace_out,
                 cutoff         = 'assimilation',
                 fatal          = True
             ),

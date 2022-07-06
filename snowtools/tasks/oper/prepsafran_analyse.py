@@ -116,7 +116,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     vapp           = self.conf.source_app,
                     vconf          = self.conf.deterministic_conf,
                     fatal          = False,
-                ))
+                )
                 print(t.prompt, 'tbarp =', tbarp)
                 print()
 
@@ -154,7 +154,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 # par la tâche prepsafran_analyse du réseau 3h
 
             else:
-                
+
                 ##################
                 # II- Guess ARPEGE 
                 # ################

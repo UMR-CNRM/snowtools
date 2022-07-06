@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
 
@@ -388,6 +389,8 @@ class Safran(Task, S2MTaskMixIn):
             print()
 
         if 'compute' in self.steps:
+
+            self.sh.title('Running date {0:s}'.format(rundate.ymdh))
 
             self.sh.title('Toolbox algo tb15 = SAFRANE')
             tb15 = tbalgo1 = toolbox.algo(

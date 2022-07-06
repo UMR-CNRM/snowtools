@@ -114,6 +114,9 @@ class temporalplot_abstract(Mplfigure):
 
 
 class temporalplot(temporalplot_abstract):
+
+    figsize = (5, 4)
+
     def __init__(self,  *args, **kwargs):
         super(temporalplot, self).__init__(**kwargs)
         self.fig = plt.figure(figsize=self.figsize)
@@ -327,7 +330,7 @@ class spaghettis(temporalplot):
 
 class spaghettis_with_det(spaghettis):
     def draw(self, timeSim, ensemble, qmin, qmed, qmax, deterministic=None, *args, **kwargs):
-        super(spaghettis_with_det, self).draw(timeSim, ensemble, qmin, qmed, qmax, deterministic, *args, **kwargs)
+        # super(spaghettis_with_det, self).draw(timeSim, ensemble, qmin, qmed, qmax, deterministic, *args, **kwargs)
         if 'commonlabel' in kwargs.keys():
             detlabel = u"Dét." + " " + kwargs['commonlabel']
         else:

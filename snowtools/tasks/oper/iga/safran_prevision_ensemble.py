@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
 
@@ -13,7 +14,6 @@ from vortex.layout.nodes import Driver
 
 import iga.tools.op as op
 from iga.tools.apps import OpTask
-from common.util import usepygram
 from vortex.tools.actions import actiond as ad
 
 
@@ -22,13 +22,15 @@ def setup(t, **kw):
         tag='safran',
         ticket=t,
         nodes=[
-            Safran(tag='prvsaf', ticket=t, **kw),
+            Safran(tag='prvsaf', ticket=t, **kw, delay_component_errors=True),
         ],
         options=kw,
     )
 
 
 class Safran(OpTask, S2MTaskMixIn):
+
+    filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
 
     def process(self):
         """Safran"""
@@ -48,20 +50,24 @@ class Safran(OpTask, S2MTaskMixIn):
                 self.sh.title('Toolbox input guess arpege J-1 -> J')
                 tb01a = toolbox.input(
                     role           = 'Ebauche_Deterministic',
+                    # On est obligé d'avoir un "local" précisant le réseau et le cumul
+                    # car on a 2 fichiers valides à J 6h (une A6 et une P6)
+                    # RQ : on pourrait utiliser la même dans le cas d'ARPEGE, mais
+                    # pas pour la PEARP (cf commentaire tb02)
                     local          = 'mb035/P[date::yymdh]_[cumul:hour]',
                     experiment     = self.conf.xpid,
                     block          = self.conf.guess_block,
                     geometry       = self.conf.vconf,
                     cutoff         = 'assimilation',
-                    date           = ['{0:s}/+PT{1:s}H/-PT6H'.format(datebegin.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                    date           = ['{0:s}/+PT{1:s}H/-PT6H'.format(datebegin.ymd6h, str(d))
+                                      for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                     cumul          = self.conf.cumul,
                     nativefmt      = 'ascii',
                     kind           = 'guess',
                     model          = 'safran',
-                    namespace      = 'vortex.cache.fr', # self.conf.namespace,
+                    namespace      = self.conf.namespace_in,
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
-                    # namespace      = self.conf.namespace,
                     fatal          = False,
                 ),
                 print(t.prompt, 'tb01a =', tb01a)
@@ -85,18 +91,21 @@ class Safran(OpTask, S2MTaskMixIn):
                     block          = self.conf.guess_block,
                     geometry       = self.conf.vconf,
                     date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                    cumul          = footprints.util.rangex(self.conf.prv_terms)[2:35],
+                    cumul          = footprints.util.rangex(self.conf.prv_terms),
                     nativefmt      = 'ascii',
                     kind           = 'guess',
-                    namespace      = 'vortex.cache.fr', # self.conf.namespace,
+                    namespace      = self.conf.namespace_in,
                     model          = 'safran',
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
-                    # namespace      = self.conf.namespace,
                     fatal          = False,
                 ),
                 print(t.prompt, 'tb01b =', tb01b)
                 print()
+
+                # TODO : Pas de mode secours pour le déterministe ?
+                # On ne peut pas faire mieux que la prévision jusqu'à J+3 issue
+                # du réseau 0h de J-1 qui a tourné la veille...
 
                 # II- PEARP
                 # ---------
@@ -115,39 +124,64 @@ class Safran(OpTask, S2MTaskMixIn):
                     cumul          = footprints.util.rangex(self.conf.ana_terms),
                     nativefmt      = 'ascii',
                     kind           = 'guess',
-                    namespace      = 'vortex.cache.fr', # self.conf.namespace,
+                    namespace      = self.conf.namespace_in,
                     model          = 'safran',
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.eps_conf,
-                    # namespace      = self.conf.namespace,
                     member         = footprints.util.rangex(self.conf.pearp_members),
                     fatal          = False,
                 ),
                 print(t.prompt, 'tb02a =', tb02a)
                 print()
 
-                # P12 à P108 du réseau 18h (J-1)
+                # P6 à P102 du réseau 0h (J)
                 self.sh.title('Toolbox intput guess pearp J -> J+4')
                 tb02b = toolbox.input(
                     role           = 'Ebauche',
+                    # coherentgroup  = 'pearp_forecast', # Supprime TOUTES les ressources présente dès lors qu'il en manque une
                     local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
                     experiment     = self.conf.xpid,
                     block          = self.conf.guess_block,
                     geometry       = self.conf.vconf,
-                    date           = '{0:s}/+PT12H'.format(datebegin.ymdh),
-                    cumul          = footprints.util.rangex(self.conf.prv_terms)[4:38],
+                    date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h), # Réseau 0h (J)
+                    cumul          = footprints.util.rangex(self.conf.prv_terms),
                     nativefmt      = 'ascii',
                     kind           = 'guess',
                     model          = 'safran',
-                    namespace      = 'vortex.cache.fr', # self.conf.namespace,
+                    namespace      = self.conf.namespace_in,
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.eps_conf,
-                    # namespace      = self.conf.namespace,
                     member         = footprints.util.rangex(self.conf.pearp_members),
                     fatal          = False,
                 ),
                 print(t.prompt, 'tb02b =', tb02b)
                 print()
+
+                # P24 à P102 du réseau 6h (J-1) pour couvrir J --> J+3
+                # TODO : Ne marche pas car le nom "local" est différent
+                # Cela est nécessaire car il y a 2 fichiers différents valides à 6h J :
+                # une P24 et une P6
+#                self.sh.title('Toolbox intput guess pearp secours J -> J+3')
+#                tb02c = toolbox.input(
+#                    alternate      = 'Ebauche',
+#                    coherentgroup  = 'pearp_forecast',
+#                    local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
+#                    experiment     = self.conf.xpid_guess,
+#                    block          = self.conf.guess_block,
+#                    geometry       = self.conf.vconf,
+#                    date           = '{0:s}/-PT6H'.format(datebegin.ymd6h), # Réseau 0h (J)
+#                    cumul          = footprints.util.rangex(self.conf.prv_terms)[8:],
+#                    nativefmt      = 'ascii',
+#                    kind           = 'guess',
+#                    model          = 'safran',
+#                    source_app     = self.conf.source_app,
+#                    source_conf    = self.conf.eps_conf,
+#                    namespace      = self.conf.namespace_in,
+#                    member         = footprints.util.rangex(self.conf.pearp_members),
+#                    fatal          = False,
+#                ),
+#                print(t.prompt, 'tb02c =', tb02c)
+#                print()
 
                 self.sh.title('Toolbox input listem')
                 tb03 = toolbox.input(
@@ -436,6 +470,7 @@ class Safran(OpTask, S2MTaskMixIn):
 
             self.component_runner(tbalgo4, tbx4)
 
+
         if 'backup' in self.steps:
 
             with op.OutputReportContext(self, t):
@@ -455,7 +490,8 @@ class Safran(OpTask, S2MTaskMixIn):
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_out,
+                    fatal          = False,
                 ),
                 print(t.prompt, 'tb27 =', tb27)
                 print()
@@ -477,7 +513,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_out,
                 ),
                 print(t.prompt, 'tb28 =', tb28)
                 print()
@@ -499,7 +535,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_out,
                     member         = footprints.util.rangex(self.conf.pearp_members),
                 ),
                 print(t.prompt, 'tb29 =', tb29)
@@ -522,8 +558,9 @@ class Safran(OpTask, S2MTaskMixIn):
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_out,
                     member         = footprints.util.rangex(self.conf.pearp_members),
+                    fatal          = False,
                 ),
                 print(t.prompt, 'tb30 =', tb30)
                 print()
@@ -542,11 +579,12 @@ class Safran(OpTask, S2MTaskMixIn):
                     local          = 'mb035/listings_safran_[begindate::ymdh]_[enddate::ymdh].tar.gz',
                     format         = 'tar',
                     model          = 'safran',
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_out,
                     delayed        = True,
                 )
                 print(t.prompt, 'tb31 =', tb31)
                 print()
 
-                # from vortex.tools.systems import ExecutionError
-                # raise ExecutionError('')
+
+                #from vortex.tools.systems import ExecutionError
+                #raise ExecutionError('')

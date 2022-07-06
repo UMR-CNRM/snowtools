@@ -27,7 +27,7 @@ class s2mTest(TestWithTempFolderWithLog):
             s2m(command.split())
 
     def runatcen(self):
-        return os.path.isdir("/rd/cenfic2/manto/lafaysse") or "DIRDATAPGD" in list(os.environ.keys())
+        return os.path.isdir("/rd/cenfic3/manto/lafaysse") or "DIRDATAPGD" in list(os.environ.keys())
 
 
 class s2mMassifTest(s2mTest):

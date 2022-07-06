@@ -281,7 +281,7 @@ class Safran(Task, S2MTaskMixIn):
             )
             print(t.prompt, 'tb12 =', tb12)
             print()
-            
+
             if self.conf.vconf == 'pyr':
 
                 self.sh.title('Toolbox input tb13')
@@ -434,7 +434,7 @@ class Safran(Task, S2MTaskMixIn):
 
         if 'late-backup' in self.steps:
 
-            self.sh.title('Toolbox output tb27')
+            self.sh.title('Toolbox output FORCING_massif deteministe')
             tb27 = toolbox.output(
                 role           = 'Prv_massifs',
                 kind           = 'MeteorologicalForcing',

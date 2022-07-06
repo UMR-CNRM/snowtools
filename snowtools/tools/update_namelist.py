@@ -247,7 +247,8 @@ def update_snowparameters(NamelistObject, **kwargs):
         if key.upper() in ["XZ0SN", "XZ0HSN", "XTAU_LW"]:
             setattr(NamelistObject["NAM_SURF_CSTS"], key.upper(), value)
         elif key.upper() in ["XALBICE1", "XALBICE2", "XALBICE3", "XRHOTHRESHOLD_ICE", "XZ0ICEZ0SNOW",
-                             "XVAGING_GLACIER", "XVAGING_NOGLACIER", "XVVISC3", "X_RI_MAX"]:
+                             "XVAGING_GLACIER", "XVAGING_NOGLACIER", "XVVISC3", "X_RI_MAX",
+                             "XIMPUR_WET", "XIMPUR_DRY"]:
             setattr(NamelistObject["NAM_SURF_SNOW_CSTS"], key.upper(), value)
         elif key.upper() in ["XCVHEATF"]:
             setattr(NamelistObject["NAM_ISBAn"], key.upper(), value)
@@ -274,6 +275,7 @@ def update_namelist_object_nmembers(NamelistObject, nmembers):
 
 
 def update_namelist_var(namelist_file, data_file):
+    import shutil
     """ Modify snowmaking parameters.
     The function reads "water consumption data for snowmaking" from an external file (data_file)
     and updates a namelist (namelist_file) accordingly.
@@ -324,4 +326,4 @@ def update_namelist_var(namelist_file, data_file):
     namSURFEX.write(NamelistObject.dumps())
     namSURFEX.close()
 
-    os.system('cp ' + namelist_file + ' OPTIONS.nam')
+    shutil.copy(namelist_file, "OPTIONS.nam")

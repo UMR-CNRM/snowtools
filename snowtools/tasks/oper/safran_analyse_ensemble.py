@@ -317,7 +317,7 @@ class Safran(Task, S2MTaskMixIn):
             )
             print(t.prompt, 'tb14 =', tb14)
             print()
-            
+
             if self.conf.vconf == 'pyr':
 
                 self.sh.title('Toolbox input tb15')
@@ -681,7 +681,7 @@ class Safran(Task, S2MTaskMixIn):
             else:
                 deterministicdir = 'mb035/'
 
-            self.sh.title('Toolbox output tb27')
+            self.sh.title('Toolbox output FORCING_massif deterministe')
             tb27 = toolbox.output(
                 role           = 'Ana_massifs',
                 kind           = 'MeteorologicalForcing',
@@ -722,7 +722,7 @@ class Safran(Task, S2MTaskMixIn):
 #            print(t.prompt, 'tb27_diff =', tb27_diff)
 #            print()
 
-            self.sh.title('Toolbox output tb28')
+            self.sh.title('Toolbox output FORCING postes deterministe')
             tb28 = toolbox.output(
                 role           = 'Ana_postes',
                 kind           = 'MeteorologicalForcing',
@@ -744,7 +744,7 @@ class Safran(Task, S2MTaskMixIn):
 
             if self.conf.rundate.hour != 12:
 
-                self.sh.title('Toolbox output tb29')
+                self.sh.title('Toolbox output FORCINGS massifs PEARP')
                 tb29 = toolbox.output(
                     role           = 'Ana_massifs',
                     kind           = 'MeteorologicalForcing',
@@ -788,7 +788,7 @@ class Safran(Task, S2MTaskMixIn):
 #                print(t.prompt, 'tb29_diff =', tb29_diff)
 #                print()
 
-                self.sh.title('Toolbox output tb30')
+                self.sh.title('Toolbox output FORCINGS postes PEARP')
                 tb30 = toolbox.output(
                     role           = 'Ana_postes',
                     kind           = 'MeteorologicalForcing',

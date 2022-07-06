@@ -40,7 +40,7 @@ class PrepSafran(Task, S2MTaskMixIn):
         datebegin, dateend = self.get_period()
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
-                
+
             ###########################
             #  I) FICHIER de METADONNES
             ###########################
@@ -179,8 +179,6 @@ class PrepSafran(Task, S2MTaskMixIn):
             pass
 
         if 'late-backup' in self.steps:
-
-            # On ne plante que si les guess issus d'ARPEGE n'ont pas pu être générés
 
             self.sh.title('Toolbox output guess arpege prod')
             tb05 = toolbox.output(

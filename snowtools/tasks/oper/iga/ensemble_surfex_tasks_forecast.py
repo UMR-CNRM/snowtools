@@ -6,7 +6,7 @@ Created on 7 nov. 2017
 """
 
 from .ensemble_surfex_tasks_common import Ensemble_Surfex_Task
-from .ensemble_surfex_tasks_bdpe import Rapatrie_Forcing, Rapatrie_Prep, Rapatrie_Pro, Rapatrie_Postproc
+from .ensemble_surfex_tasks_bdpe import Rapatrie_Forcing, Rapatrie_Prep, Rapatrie_Pro, Rapatrie_Postproc, Rapatrie_Forcing_Deterministic, Rapatrie_Pro_Deterministic
 from vortex.layout.nodes import Driver, Task
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
@@ -15,10 +15,12 @@ import footprints
 
 def setup(t, **kw):
     return Driver(
-        tag='Surfex_Parallel',
-        ticket=t,
-        nodes=[
-                Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw),
+        tag = 'Surfex_Parallel',
+        ticket = t,
+        nodes = [
+                Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw, delay_component_errors=True, on_error='delayed_fail'),
+                Rapatrie_Forcing_Deterministic(tag='Rapatrie_Forcing_Deterministic', ticket=t, **kw),
+                Rapatrie_Pro_Deterministic(tag='Rapatrie_Pro_Deterministic', ticket=t, **kw),
                 Four_Seasons_Task(tag='S2m_pp_Task', ticket=t, **kw),
                 Rapatrie_Postproc(tag='Rapatrie_Postproc', ticket=t, **kw),
                 Rapatrie_Forcing(tag='Rapatrie_Forcing', ticket=t, **kw),
@@ -58,7 +60,7 @@ class Four_Seasons_Task(S2MTaskMixIn, Task):
                 nativefmt   = 'netcdf',
                 kind        = 'SnowpackSimulation',
                 model       = 'surfex',
-                namespace   = 'vortex.multi.fr',
+                namespace   = self.conf.namespace_in,
                 cutoff      = 'production',
                 fatal       = False
             ),
@@ -96,7 +98,7 @@ class Four_Seasons_Task(S2MTaskMixIn, Task):
                 nativefmt   = 'netcdf',
                 kind        = 'SnowpackSimulation',
                 model       = 'postproc',
-                namespace   = 'vortex.multi.fr',
+                namespace   = self.conf.namespace_out,
                 cutoff      = 'production',
                 fatal       = True
             ),

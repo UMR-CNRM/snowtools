@@ -21,13 +21,13 @@ def setup(t, **kw):
         tag='Surfex_Parallel',
         ticket=t,
         nodes=[
-            Monthly_Surfex_Reanalysis_GetInit(tag='Monthly_Surfex_Reanalysis', ticket=t, **kw),
+            Monthly_Surfex_Reanalysis(tag='Monthly_Surfex_Reanalysis', ticket=t, **kw),
         ],
         options=kw
     )
 
 
-class Monthly_Surfex_Reanalysis_GetInit(S2MTaskMixIn, OpTask):
+class Monthly_Surfex_Reanalysis(S2MTaskMixIn, OpTask):
     """
     Get from BDPE the PREP file of initial conditions for the monthly reanalysis
     """
@@ -44,10 +44,10 @@ class Monthly_Surfex_Reanalysis_GetInit(S2MTaskMixIn, OpTask):
         # This product is written in BDPE once a year by ensemble_surfex_tasks_bdpe.py and read here once a month.
         self.sh.title('Toolbox input tb01')
         tb01 = toolbox.input(
-            role           = 'SnowpackInitForMonthlyReanalysis',
+            role           = 'SnowpackInit',
             local          = 'PREP.nc',
             block          = 'prep',
-            experiment     = 'oper',# self.conf.xpid,
+            experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
             datevalidity   = datebegin,
             date           = rundate_prep,
@@ -70,10 +70,10 @@ class Monthly_Surfex_Reanalysis_GetInit(S2MTaskMixIn, OpTask):
             fatal = i == len(alternate_rundate_prep) - 1
 
             tb01 = toolbox.input(
-                alternate='SnowpackInitForMonthlyReanalysis',
+                alternate='SnowpackInit',
                 local='PREP.nc',
                 block='prep',
-                experiment='oper',  # self.conf.xpid,
+                experiment=self.conf.xpid,
                 geometry=self.conf.geometry,
                 datevalidity=datebegin,
                 date=alternate_prep[0],
@@ -100,7 +100,7 @@ class Monthly_Surfex_Reanalysis_GetInit(S2MTaskMixIn, OpTask):
                 datevalidity   = datebegin,
                 date           = rundate_prep,
                 member         = 35,
-                namespace      = 'vortex.cache.fr',
+                namespace      = self.conf.namespace_out,
                 intent         = 'inout',
                 nativefmt      = 'netcdf',
                 kind           = 'PREP',

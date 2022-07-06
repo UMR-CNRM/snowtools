@@ -5,17 +5,25 @@ import six
 import unittest
 import shutil
 import tempfile
+import numpy as np
 from datetime import datetime
 from snowtools.utils.prosimu import prosimu
 from snowtools.plots.maps import cartopy
+from snowtools.DATA import TESTBASE_DIR
 from netCDF4 import Dataset
 import os
 
+
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-TEST_DATA_DIR = "/rd/cenfic2/manto/viallonl/testbase/PRO/postproc"
+TEST_DATA_DIR = os.path.join(TESTBASE_DIR, "PRO")
+# read the index file template and insert the testbase directory
+index = open(os.path.join(THIS_DIR, "Manual_tests", "index_template.html")).read().format(testbase=TESTBASE_DIR)
+# write the index.html file with the right testbase paths
+with open(os.path.join(THIS_DIR, "Manual_tests", "index.html"), 'w') as outfile:
+    outfile.write(index)
 
 
-@unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "grid_postproc_2021041112.nc")),
+@unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "postproc", "grid_postproc_2021041112.nc")),
                  "input file not available")
 class TestCartopyFrance(unittest.TestCase):
     """
@@ -29,7 +37,7 @@ class TestCartopyFrance(unittest.TestCase):
             os.makedirs(basediroutput)
         prefix = "output" + datetime.today().strftime("%Y%m%d%H%M%S%f-")
         cls.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
-        path_new = os.path.join(TEST_DATA_DIR, "grid_postproc_2021041112.nc")
+        path_new = os.path.join(TEST_DATA_DIR, "postproc", "grid_postproc_2021041112.nc")
         cls.ds = Dataset(path_new)
         cls.lats = cls.ds.variables['LAT'][:]
         cls.lons = cls.ds.variables['LON'][:]
@@ -74,7 +82,7 @@ class TestZoomMassifError(unittest.TestCase):
         self.assertRaises(ValueError, cartopy.Zoom_massif, 42)
 
 
-@unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "Cor", "postproc_2021041006_2021041112.nc")),
+@unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "postproc", "Cor", "postproc_2021041006_2021041112.nc")),
                  "input file not available")
 class TestCartopyCor(unittest.TestCase):
     """
@@ -88,7 +96,7 @@ class TestCartopyCor(unittest.TestCase):
             os.makedirs(basediroutput)
         prefix = "output" + datetime.today().strftime("%Y%m%d%H%M%S%f-")
         cls.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
-        path_new = os.path.join(TEST_DATA_DIR, "Cor", "postproc_2021041006_2021041112.nc")
+        path_new = os.path.join(TEST_DATA_DIR, "postproc", "Cor", "postproc_2021041006_2021041112.nc")
         cls.ps = prosimu(path_new)
         cls.points = cls.ps.get_points(ZS=2100, aspect=-1)
         cls.snow = cls.ps.read('SD_1DY_ISBA', selectpoint=cls.points, hasDecile=True)
@@ -153,7 +161,7 @@ class TestCartopyCor(unittest.TestCase):
             shutil.rmtree(cls.diroutput)
 
 
-@unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "Pyr", "postproc_2021041006_2021041112.nc")),
+@unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "postproc", "Pyr", "postproc_2021041006_2021041112.nc")),
                  "input file not available")
 class TestCartopyPyr(unittest.TestCase):
     """
@@ -167,7 +175,7 @@ class TestCartopyPyr(unittest.TestCase):
             os.makedirs(basediroutput)
         prefix = "output" + datetime.today().strftime("%Y%m%d%H%M%S%f-")
         cls.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
-        path_new = os.path.join(TEST_DATA_DIR, "Pyr", "postproc_2021041006_2021041112.nc")
+        path_new = os.path.join(TEST_DATA_DIR, "postproc", "Pyr", "postproc_2021041006_2021041112.nc")
         cls.ps = prosimu(path_new)
         cls.points_nord = cls.ps.get_points(aspect=0, ZS=2100, slope=40)
         cls.points_sud = cls.ps.get_points(aspect=180, ZS=2100, slope=40)
@@ -246,7 +254,7 @@ class TestCartopyPyr(unittest.TestCase):
             shutil.rmtree(cls.diroutput)
 
 
-@unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "Alp", "postproc_2021041006_2021041112.nc")),
+@unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "postproc", "Alp", "postproc_2021041006_2021041112.nc")),
                  "input file not available")
 class TestCartopyAlp(unittest.TestCase):
     """
@@ -261,7 +269,7 @@ class TestCartopyAlp(unittest.TestCase):
             os.makedirs(basediroutput)
         prefix = "output" + datetime.today().strftime("%Y%m%d%H%M%S%f-")
         cls.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
-        path_new = os.path.join(TEST_DATA_DIR, "Alp", "postproc_2021041006_2021041112.nc")
+        path_new = os.path.join(TEST_DATA_DIR, "postproc", "Alp", "postproc_2021041006_2021041112.nc")
         cls.ps = prosimu(path_new)
         cls.points = cls.ps.get_points(ZS=2100, aspect=-1)
         cls.snow = cls.ps.read('SD_1DY_ISBA', selectpoint=cls.points, hasDecile=True)
@@ -329,6 +337,170 @@ class TestCartopyAlp(unittest.TestCase):
             shutil.rmtree(cls.diroutput)
 
 
+@unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "mac_mb035_PRO_2022031306_2022031706_selvar.nc")),
+                 "input file not available")
+class TestCartopyMac(unittest.TestCase):
+    """
+    Test Map_central class
+    """
+    @classmethod
+    def setUpClass(cls):
+        cls.mix = CartopyTestMixIn()
+        basediroutput = os.path.join(THIS_DIR, "fail_test")
+        if not os.path.isdir(basediroutput):
+            os.makedirs(basediroutput)
+        prefix = "output" + datetime.today().strftime("%Y%m%d%H%M%S%f-")
+        cls.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
+        path_new = os.path.join(TEST_DATA_DIR, "mac_mb035_PRO_2022031306_2022031706_selvar.nc")
+        cls.ps = prosimu(path_new)
+        cls.points = cls.ps.get_points(ZS=1200, aspect=-1)
+        cls.swe = cls.ps.read('SWE_3DY_ISBA', selectpoint=cls.points, hasDecile=False)
+        cls.massifs = cls.ps.read('massif_num', selectpoint=cls.points)
+
+    def setUp(self):
+        pass
+
+    def test_swemap(self):
+        self.assertEqual(self.swe.shape, (32, 11), "should be 11 massifs over 32 time steps")
+        self.m = cartopy.Map_central()
+        self.m.init_massifs(**self.mix.attributes['SWE_3DY_ISBA'])
+        # print("swe", self.swe[1:11, :])
+        # print("massifs type", type(self.massifs), "massifs shape", self.massifs.shape)
+        self.m.draw_massifs(self.massifs, self.swe[6, :], **self.mix.attributes['SWE_3DY_ISBA'])
+        self.m.plot_center_massif(self.massifs, self.swe[4, :], self.swe[11, :], self.swe[6, :],
+                                  **self.mix.attributes['SWE_3DY_ISBA'])
+        self.m.addlogo()
+        self.m.set_maptitle("2022031400")
+        self.m.set_figtitle("1200m")
+        self.outfilename = "2022031400_swe3DY_mac.png"
+        self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
+        self.m.close()
+
+    def tearDown(self):
+        if six.PY3:  # Python 3.4+
+            result = self.defaultTestResult()  # These two methods have no side effects
+            self._feedErrorsToResult(result, self._outcome.errors)
+            error = self.mix.list2reason(result.errors)
+            failure = self.mix.list2reason(result.failures)
+            if not error and not failure:
+                shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
+                                                                                         self.outfilename))
+        else:
+            print("no automatic move implemented for python2")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.ps.close()
+        if not os.listdir(cls.diroutput):
+            # Suppression des sous-dossiers de fail_test correspondant aux tests OK
+            shutil.rmtree(cls.diroutput)
+
+
+class TestCartopyJura(unittest.TestCase):
+    """
+    Test Map_jura class
+    """
+    @classmethod
+    def setUpClass(cls):
+        cls.mix = CartopyTestMixIn()
+        basediroutput = os.path.join(THIS_DIR, "fail_test")
+        if not os.path.isdir(basediroutput):
+            os.makedirs(basediroutput)
+        prefix = "output" + datetime.today().strftime("%Y%m%d%H%M%S%f-")
+        cls.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
+        # path_new = os.path.join(TEST_DATA_DIR, "mac_mb035_PRO_2022031306_2022031706_selvar.nc")
+        # cls.ps = prosimu(path_new)
+        # cls.points = cls.ps.get_points(ZS=1200, aspect=-1)
+        # cls.swe = cls.ps.read('SWE_3DY_ISBA', selectpoint=cls.points, hasDecile=False)
+        # cls.massifs = cls.ps.read('massif_num', selectpoint=cls.points)
+
+    def setUp(self):
+        pass
+
+    def test_juramap(self):
+        self.m = cartopy.Map_jura(geofeatures=True)
+        self.m.init_massifs()
+        self.m.plot_center_massif(np.array(self.m.num), np.array(self.m.num), textcolor='green')
+        self.m.add_north_south_info(english=False)
+        self.m.addlogo()
+        self.m.set_maptitle("Jura")
+        self.m.set_figtitle("Numbers")
+        self.outfilename = "jura_names.png"
+        self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
+        self.m.close()
+
+    def tearDown(self):
+        if six.PY3:  # Python 3.4+
+            result = self.defaultTestResult()  # These two methods have no side effects
+            self._feedErrorsToResult(result, self._outcome.errors)
+            error = self.mix.list2reason(result.errors)
+            failure = self.mix.list2reason(result.failures)
+            if not error and not failure:
+                dirmantest = os.path.join(THIS_DIR, "Manual_tests")
+                if not os.path.isdir(dirmantest):
+                    os.makedirs(dirmantest)
+                shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(dirmantest,
+                                                                                         self.outfilename))
+        else:
+            print("no automatic move implemented for python2")
+
+    @classmethod
+    def tearDownClass(cls):
+        if not os.listdir(cls.diroutput):
+            # Suppression des sous-dossiers de fail_test correspondant aux tests OK
+            shutil.rmtree(cls.diroutput)
+
+
+class TestCartopyVosges(unittest.TestCase):
+    """
+    Test Map_vosges class
+    """
+    @classmethod
+    def setUpClass(cls):
+        cls.mix = CartopyTestMixIn()
+        basediroutput = os.path.join(THIS_DIR, "fail_test")
+        if not os.path.isdir(basediroutput):
+            os.makedirs(basediroutput)
+        prefix = "output" + datetime.today().strftime("%Y%m%d%H%M%S%f-")
+        cls.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
+
+    def setUp(self):
+        pass
+
+    def test_vosgesmap(self):
+        self.m = cartopy.Map_vosges()
+        self.m.init_massifs()
+        self.m.plot_center_massif(np.array(self.m.num), np.array(self.m.name), textcolor='orange', format='%s')
+        self.m.add_north_south_info(english=True)
+        self.m.addlogo()
+        self.m.set_maptitle("Vosges")
+        self.m.set_figtitle("Names")
+        self.outfilename = "vosges_names.png"
+        self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
+        self.m.close()
+
+    def tearDown(self):
+        if six.PY3:  # Python 3.4+
+            result = self.defaultTestResult()  # These two methods have no side effects
+            self._feedErrorsToResult(result, self._outcome.errors)
+            error = self.mix.list2reason(result.errors)
+            failure = self.mix.list2reason(result.failures)
+            if not error and not failure:
+                dirmantest = os.path.join(THIS_DIR, "Manual_tests")
+                if not os.path.isdir(dirmantest):
+                    os.makedirs(dirmantest)
+                shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(dirmantest,
+                                                                                         self.outfilename))
+        else:
+            print("no automatic move implemented for python2")
+
+    @classmethod
+    def tearDownClass(cls):
+        if not os.listdir(cls.diroutput):
+            # Suppression des sous-dossiers de fail_test correspondant aux tests OK
+            shutil.rmtree(cls.diroutput)
+
+
 class CartopyTestMixIn(object):
     """
     methods for cartopy test classes.
@@ -348,6 +520,8 @@ class CartopyTestMixIn(object):
                          label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm'),
         SD_3DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur de neige fraîche en 72h (cm)'),
+        SWE_3DY_ISBA=dict(forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=30.,
+                         label=u'accumulated snow water equivalent for past 3 days (kg/m2)'),
         RAMSOND_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
                           label=u'Epaisseur mobilisable (cm)'),
         NAT_LEV=dict(forcemin=-0.5, forcemax=5.5, palette='YlOrRd', ncolors=6, label=u'Risque naturel',
@@ -382,6 +556,5 @@ class Alphafile():
 
 
 if __name__ == "__main__":
-
 
     unittest.main()
