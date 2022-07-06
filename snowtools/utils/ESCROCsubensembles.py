@@ -26,8 +26,8 @@ class ESCROC_subensembles(dict):
 
         self.dicoptrad = {"B60": "B92", "B10": "B92", "TAR": "T17", "TA+": "T17", "T17": "T17"}
         self.dicageing = {"B60": 60., "B10": 10., "B120": 120., "B180": 180., "B240": 240., "TAR": 60., "TA+": 60., "T17": 60.}
-        self.dicimpurdry = {"B60":[0, 0], "B10":[0, 0], "T17":0, "TAR": [1.E-14, 0], "TA+" : [5.E-13, 0]}
-        self.dicimpurwet = {"B60":[0, 0], "B10":[0, 0], "T17":0, "TAR": [3.5E-14, 0], "TA+" : [3.5E-13, 0]}
+        self.dicimpurdry = {"B60": [0, 0], "B10": [0, 0], "T17": 0, "TAR": [1.E-14, 0], "TA+": [5.E-13, 0]}
+        self.dicimpurwet = {"B60": [0, 0], "B10": [0, 0], "T17": 0, "TAR": [3.5E-14, 0], "TA+": [3.5E-13, 0]}
         # In Lafaysse et al, 2017 with TAR option the impurity concentration dry increase rate was 4 ng/g/day
         # = 4E-12/3600 g kg-1 s-1 at the surface with an exponential decrease factor exp(-0.5z/0.05)
         # For a typical first layer of 1 cm and 250 kg/m3 this is equivalent to :
@@ -38,8 +38,6 @@ class ESCROC_subensembles(dict):
         # = 5E-12 * 0.1 * 250 g m-2 for a 1 cm new layer.
         # Assuming a 1 cm / hour precipitation rate, this is equivalent to a deposition rate of
         # 5E-12 * 0.1 * 250 / 3600. ~ 3.5E-14 g m-2 s-1
-
-
 
         self.dicoptturb = {"RIL": "RIL", "RI1": "RIL", "RI2": "RIL", "M98": "M98"}
 
@@ -68,10 +66,10 @@ class ESCROC_subensembles(dict):
         elif subensemble == "E2MIPB21":
             self.physical_options, self.snow_parameters, self.members = self.E2MIPB21(members)
 
-        elif subensemble == "E2tartes": # Tuzet et al TC 2020 (Lautaret)
+        elif subensemble == "E2tartes":  # Tuzet et al TC 2020 (Lautaret)
             self.physical_options, self.snow_parameters, self.members = self.E2tartes(members)
 
-        elif subensemble == "E2MIPtartes": # Dumont, Tuzet et al JGR 2020 (Russia)
+        elif subensemble == "E2MIPtartes":  # Dumont, Tuzet et al JGR 2020 (Russia)
             self.physical_options, self.snow_parameters, self.members = self.E2MIPtartes(members)
 
         elif subensemble in ["Crocus"]:
@@ -93,6 +91,7 @@ class ESCROC_subensembles(dict):
         self.complist = ['B92', 'S14', 'T11']
         self.cvlist = ['CV10000', 'CV30000', 'CV50000']
 
+        self.size = len(self.snowflist) * len(self.metamlist) * len(self.radlist) * len(self.turblist) * len(self.condlist) * len(self.holdlist) * len(self.complist) * len(self.cvlist)
         physical_options, snow_parameters, memberslist = self.drawMembers(members, randomDraw)
 
         return physical_options, snow_parameters, memberslist
@@ -117,7 +116,7 @@ class ESCROC_subensembles(dict):
         self.holdlist = ['B92', 'SPK', 'B02']
         self.complist = ['B92', 'S14', 'T11']
         self.cvlist = ['CV10000', 'CV30000', 'CV50000']
-
+        self.size = len(self.snowflist) * len(self.metamlist) * len(self.radlist) * len(self.turblist) * len(self.condlist) * len(self.holdlist) * len(self.complist) * len(self.cvlist)
         physical_options, snow_parameters, memberslist = self.drawMembers(members, randomDraw)
         return physical_options, snow_parameters, memberslist
 
@@ -139,6 +138,7 @@ class ESCROC_subensembles(dict):
         self.holdlist = ['B92', 'SPK', 'B02']
         self.complist = ['B92', 'S14', 'T11']
         self.cvlist = ['CV10000', 'CV30000', 'CV50000']
+        self.size = len(self.snowflist) * len(self.metamlist) * len(self.radlist) * len(self.turblist) * len(self.condlist) * len(self.holdlist) * len(self.complist) * len(self.cvlist)
         physical_options, snow_parameters, memberslist = self.drawMembers(members, randomDraw)
 
         return physical_options, snow_parameters, memberslist
@@ -192,7 +192,7 @@ class ESCROC_subensembles(dict):
             po, sp = self.convert_options(*allmembers[mb])
             physical_options.append(po)
             snow_parameters.append(sp)
-
+        self.size = 35
         return physical_options, snow_parameters, members
 
     def E2B21(self, members):
@@ -244,7 +244,7 @@ class ESCROC_subensembles(dict):
             po, sp = self.convert_options(*allmembers[mb])
             physical_options.append(po)
             snow_parameters.append(sp)
-
+        self.size = 35
         return physical_options, snow_parameters, members
 
     def E2MIP(self, members):
@@ -296,7 +296,7 @@ class ESCROC_subensembles(dict):
             po, sp = self.convert_options(*allmembers[mb])
             physical_options.append(po)
             snow_parameters.append(sp)
-
+        self.size = 35
         return physical_options, snow_parameters, members
 
     def E2MIPB21(self, members):
@@ -348,7 +348,7 @@ class ESCROC_subensembles(dict):
             po, sp = self.convert_options(*allmembers[mb])
             physical_options.append(po)
             snow_parameters.append(sp)
-
+        self.size = 35
         return physical_options, snow_parameters, members
 
     def E2tartes(self, members):
@@ -400,7 +400,7 @@ class ESCROC_subensembles(dict):
             po, sp = self.convert_options(*allmembers[mb])
             physical_options.append(po)
             snow_parameters.append(sp)
-
+        self.size = 35
         return physical_options, snow_parameters, members
 
     def E2MIPtartes(self, members):
@@ -452,7 +452,7 @@ class ESCROC_subensembles(dict):
             po, sp = self.convert_options(*allmembers[mb])
             physical_options.append(po)
             snow_parameters.append(sp)
-
+        self.size = 35
         return physical_options, snow_parameters, members
 
     def Crocus(self, members):
@@ -482,11 +482,11 @@ class ESCROC_subensembles(dict):
         :meta private:
         """
         if randomDraw:
-            memberslist = 1 + np.random.choice(len(self.snowflist) * len(self.metamlist) * len(self.radlist) * len(self.turblist) * len(self.condlist) * len(self.holdlist) * len(self.complist) * len(self.cvlist), len(members), replace = False)
+            memberslist = 1 + np.random.choice(self.size, len(members), replace = False)
         else:
             memberslist = members
-        physical_options = []
-        snow_parameters = []
+        physical_options = [None] * len(memberslist)
+        snow_parameters = [None] * len(memberslist)
         mb = 0
         for snowfall in self.snowflist:
             for metamo in self.metamlist:
@@ -496,12 +496,14 @@ class ESCROC_subensembles(dict):
                             for holding in self.holdlist:
                                 for compaction in self.complist:
                                     for cv in self.cvlist:
-                                            mb += 1
-                                            if mb in memberslist:
-                                                po, sp = self.convert_options(snowfall, metamo, radiation, turb, cond, holding, compaction, cv)
-                                                physical_options.append(po)
-                                                snow_parameters.append(sp)
-        return physical_options, snow_parameters, memberslist
+                                        mb += 1
+                                        if mb in memberslist:
+                                            ind = list(memberslist).index(mb)
+                                            po, sp = self.convert_options(
+                                                snowfall, metamo, radiation, turb, cond, holding, compaction, cv)
+                                            physical_options[ind] = po
+                                            snow_parameters[ind] = sp
+        return list(physical_options), list(snow_parameters), memberslist
 
     def convert_options(self, snowfall, metamo, radiation, turb, cond, holding, compaction, cv):
         """

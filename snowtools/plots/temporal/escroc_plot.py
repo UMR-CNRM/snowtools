@@ -10,11 +10,12 @@ Created on 4 déc. 2018
 import datetime
 
 import numpy as np
+import os
 
 from snowtools.plots.temporal.chrono import prettyensemble
 from snowtools.plots.pearps2m.postprocess import EnsembleDiags
 from snowtools.utils.prosimu import prosimu
-
+from snowtools.DATA import LUSTRE_NOSAVE_DIR
 
 class EnsembleEscrocDiags(EnsembleDiags):
 
@@ -207,9 +208,9 @@ if __name__ == "__main__":
         list_ensembles = snow_members[domain].keys()
 
         if domain == 'cdp':
-            obsfile = '/cnrm/cen/users/NO_SAVE/lafaysse/ESM-SnowMIP/evaldata/snouf'
+            obsfile = os.path.join(LUSTRE_NOSAVE_DIR, 'lafaysse/ESM-SnowMIP/evaldata/snouf')
         else:
-            obsfile = '/cnrm/cen/users/NO_SAVE/lafaysse/ESM-SnowMIP/evaldata/obs_insitu_' + domain + "_" + bdate[domain][0:4] + "_" + edate[domain][0:4] + ".nc"
+            obsfile = os.path.join(LUSTRE_NOSAVE_DIR, 'lafaysse/ESM-SnowMIP/evaldata/obs_insitu_' + domain + "_" + bdate[domain][0:4] + "_" + edate[domain][0:4] + ".nc"
 
         E = dict()
 

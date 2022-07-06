@@ -53,8 +53,6 @@ import matplotlib
 # print(matplotlib.rcParams["savefig.dpi"])
 # print(matplotlib.rcParams)
 import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon
-from matplotlib.collections import PatchCollection
 # from matplotlib import style
 # style.use('fast')
 # matplotlib.rcParams["patch.antialiased"] = False
@@ -68,10 +66,14 @@ from snowtools.plots.abstracts.figures import Mplfigure
 from snowtools.utils.infomassifs import infomassifs
 from pyproj import CRS
 from cartopy import config
-from shapely.geometry import box
+from snowtools.DATA import SNOWTOOLS_DIR, CARTOPY_DIR, LUSTRE_NOSAVE_USER_DIR
 
 # Tell cartopy where to find Natural Earth features
-config['data_dir'] = os.path.join(os.environ['SNOWTOOLS_CEN'], 'DATA')
+# config['data_dir'] = os.path.join(SNOWTOOLS_DIR, 'CartopyData')
+if os.path.isdir(CARTOPY_DIR):
+    config['data_dir'] = CARTOPY_DIR
+# config['data_dir'] = os.path.join(LUSTRE_NOSAVE_USER_DIR, 'CartopyData')  # for sxcen
+# until proper git annex solution
 
 # dummy class in order to be able to create an ccrs.CRS instance from a proj4/fiona.crs dictionary
 class MyCRS(ccrs.CRS):
@@ -82,7 +84,6 @@ class MyCRS(ccrs.CRS):
                                          standard_parallels=(projdict['lat_1'], projdict['lat_2']), globe=globe)
         else:
             pass
-
 
 
 class _Map_massifs(Mplfigure):
@@ -161,7 +162,7 @@ class _Map_massifs(Mplfigure):
         shapefile_path = os.path.join(SNOWTOOLS_DIR, 'DATA')
         #filename = 'massifs_{0:s}.shp'.format(self.area)
         filename = 'massifs_Lbrt93_2019.shp'
-        shapefile = shpreader.Reader(os.path.join(shapefile_path, filename))
+        self.shapefile = shpreader.Reader(os.path.join(shapefile_path, filename))
         # Informations sur la projection
         projfile = 'massifs_Lbrt93_2019.prj'
         with open(os.path.join(shapefile_path, projfile), 'r') as prj_file:
@@ -185,19 +186,19 @@ class _Map_massifs(Mplfigure):
             if 'ncolors' in kwargs.keys():
                 if matplotlib.__version__ >= '3.4':
                     # deprecation warning in version 3.3, but copy method not yet implemented
-                    palette = plt.get_cmap(kwargs['palette'], kwargs['ncolors']).copy()
+                    self.palette = plt.get_cmap(kwargs['palette'], kwargs['ncolors']).copy()
                 else:
-                    palette = plt.get_cmap(kwargs['palette'], kwargs['ncolors'])
+                    self.palette = plt.get_cmap(kwargs['palette'], kwargs['ncolors'])
             else:
                 if matplotlib.__version__ >= '3.4':
-                    palette = plt.get_cmap(kwargs['palette']).copy()
+                    self.palette = plt.get_cmap(kwargs['palette']).copy()
                 else:
-                    palette = plt.get_cmap(kwargs['palette'])
+                    self.palette = plt.get_cmap(kwargs['palette'])
         else:
             if matplotlib.__version__ >= '3.4':
-                palette = plt.get_cmap('jet').copy()
+                self.palette = plt.get_cmap('jet').copy()
             else:
-                palette = plt.get_cmap('jet')
+                self.palette = plt.get_cmap('jet')
 
         self.palette.set_bad(color='grey')
         self.palette.set_under(color='grey')
@@ -230,7 +231,7 @@ class _Map_massifs(Mplfigure):
                                                for inum, ishape, iname in zip(self.num, self.shape, self.name)])
                 print(len(self.massif_features))
             else:
-                self.massif_features = [{'feature': self.map.add_geometries([lshape], crs=ccrs.PlateCarree(), #crs=self.projection,
+                self.massif_features = [{'feature': self.map.add_geometries([lshape], crs=ccrs.PlateCarree(),  # crs=self.projection,
                                                                             cmap=self.palette,
                                                                             facecolor='none', edgecolor='dimgrey', alpha=1.0),
                                          'massifnum':inum, 'massifname':iname,
@@ -537,9 +538,15 @@ class _Map_massifs(Mplfigure):
                 pass
             self.legendok = False
 
-    def add_north_south_info(self):
+    def add_north_south_info(self, english=False):
 
         self.infos = []
+        if english:
+            north_text = "Northen slope \n Q20 - Q50 - Q80"
+            south_text = "Southern slope \n Q20 - Q50 - Q80"
+        else:
+            north_text = "Versant Nord \n Q20 - Q50 - Q80"
+            south_text = "Versant Sud \n Q20 - Q50 - Q80"
         # self.infos.append(box(8.5, 42.9,8.85,43.1))
 
         # self.infos.append(self.map.add_artist(matplotlib.offsetbox.AnnotationBbox(
@@ -720,7 +727,7 @@ class Map_alpes(_Map_massifs):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Alp/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Alp/postproc_2021041006_2021041112.nc') as ff:
             points = ff.get_points(ZS=2100, aspect=-1)
             snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points)
@@ -756,7 +763,7 @@ class Map_alpes(_Map_massifs):
     #: position of info-box on the map in Lambert Conformal coordinates = (990000, 2160000)
     infospos = (7.3, 46.3)
     labelfontsize = 20  #: fontsize of colorbar label
-    deport = {7: (0, 5000), 9: (-1000, 0),  16: (1000, 0), 19: (-2000, -2000),  21: (0, -5000)}
+    deport = {7: (0, 5000), 9: (-1000, 0), 16: (1000, 0), 19: (-2000, -2000), 21: (0, -5000)}
     """ displacement dictionary for the positioning tables near the massif center without overlapping."""
 
     def __init__(self, *args, **kw):
@@ -777,7 +784,7 @@ class Map_alpes(_Map_massifs):
         self.legendpos = [0.85, 0.15, 0.03, 0.6]
         self.infospos = (990000, 2160000)
 
-        self.deport = {7: (0, 5000), 9: (-1000, 0),  16: (1000, 0), 19: (-2000, -2000),  21: (0, -5000)}
+        self.deport = {7: (0, 5000), 9: (-1000, 0), 16: (1000, 0), 19: (-2000, -2000), 21: (0, -5000)}
 
         # self.fig = plt.figure(figsize=(self.width, self.height))
         # self.map = self.getmap(self.latmin, self.latmax, self.lonmin, self.lonmax)
@@ -1065,7 +1072,45 @@ class _MultiMap(_Map_massifs):
     set_title = set_maptitle
 
 
-class MultiMap_Alps(_MultiMap, Map_alpes):
+class MultiMap_Alps(Map_alpes, _MultiMap):
+    """
+    Class for plotting multiple massif plots of the French Alps
+
+    Example:
+
+     .. code-block:: python
+
+        from snowtools.utils.prosimu import prosimu
+        from snowtools.plots.maps import cartopy
+        import matplotlib.pyplot as plt
+
+        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Alp/postproc_2021041006_2021041112.nc') as ff:
+            points = ff.get_points(ZS=2100, aspect=-1)
+            snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
+            massifs = ff.read('massif_num', selectpoint=points)
+
+        lo = cartopy.MultiMap_Alps(nrow=3, ncol=3, geofeatures=False)
+        lo.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
+                         label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        lo.draw_massifs(massifs, snow[5, :, :], axis=1, convert_unit=100., forcemin=0., forcemax=50.,
+                        palette='YlGnBu', seuiltext=50.,
+                        label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        lo.highlight_massif(10, snow, convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu',
+                            seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        lo.set_figtitle("SD_1DY_ISBA 2021041112 2100m")
+        titles = ['Percentile {0}'.format(i) for i in range(10, 100, 10)]
+        lo.set_maptitle(titles)
+        lo.plot_center_massif(massifs, snow[5,:,:], axis=1,convert_unit=100., forcemin=0., forcemax=50.,
+                                palette='YlGnBu', seuiltext=50.,
+                                label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        lo.addlogo()
+        plt.show()
+        lo.close()
+
+    .. figure:: /images/2021041112_multi_alps.png
+       :align: center
+    """
+    legendpos = [0.9, 0.15, 0.03, 0.6]  #: legend position on the plot = [0.85, 0.15, 0.03, 0.6]
 
     def __init__(self, nrow=1, ncol=1, *args, **kw):
         kw['getmap'] = False
@@ -1090,7 +1135,7 @@ class Map_pyrenees(_Map_massifs):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
             points_nord = ff.get_points(aspect=0, ZS=2100, slope=40)
             points_sud = ff.get_points(aspect=180, ZS=2100, slope=40)
             snow_nord = ff.read('SD_1DY_ISBA', selectpoint=points_nord, hasDecile=True)
@@ -1136,13 +1181,13 @@ class Map_pyrenees(_Map_massifs):
 
 
 def __init__(self, *args, **kw):
-        """
+    """
 
-        :param args: args passed to super class
-        :param kw: keyword args passed to super class
-        """
+    :param args: args passed to super class
+    :param kw: keyword args passed to super class
+    """
 
-        super(Map_pyrenees, self).__init__(*args, **kw)
+    super(Map_pyrenees, self).__init__(*args, **kw)
 
 
 class MapFrance(_Map_massifs):
@@ -1157,7 +1202,7 @@ class MapFrance(_Map_massifs):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with Dataset('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/grid_postproc_2021041112.nc') as ff:
+        with Dataset('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/grid_postproc_2021041112.nc') as ff:
             lats = ff.variables['LAT'][:]
             lons = ff.variables['LON'][:]
             snow = ff.variables['SD_1DY_ISBA'][0, :, :, 8]
@@ -1247,7 +1292,7 @@ class MultiMap_Pyr(Map_pyrenees, _MultiMap):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
             points_nord = ff.get_points(aspect=0, ZS=2100, slope=40)
             points_sud = ff.get_points(aspect=180, ZS=2100, slope=40)
             snow_nord = ff.read('SD_1DY_ISBA', selectpoint=points_nord, hasDecile=True)
@@ -1299,7 +1344,7 @@ class Map_corse(_Map_massifs):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Cor/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Cor/postproc_2021041006_2021041112.nc') as ff:
             points = ff.get_points(ZS=2100, aspect=-1)
             snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points)
@@ -1361,6 +1406,36 @@ class Map_corse(_Map_massifs):
 
 
 class MultiMap_Cor(_MultiMap, Map_corse):
+    """
+    Class for plotting multiple massif plots of Corse
+
+    Example:
+
+     .. code-block:: python
+
+        from snowtools.utils.prosimu import prosimu
+        from snowtools.plots.maps import cartopy
+        import matplotlib.pyplot as plt
+
+        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Cor/postproc_2021041006_2021041112.nc') as ff:
+            points = ff.get_points(ZS=2100, aspect=-1)
+            snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
+            massifs = ff.read('massif_num', selectpoint=points)
+
+        m = cartopy.MultiMap_Cor(nrow=3, ncol=3, bgimage=True)
+        m.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
+                         label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        centre = [shape.centroid.coords[0] for shape in m.llshape]
+        m.addpoints(*list(zip(*centre)), color='magenta', marker="o")
+        m.addlogo()
+        m.set_maptitle(["magenta center"])
+        m.set_figtitle("2100m")
+        plt.show()
+        m.close()
+
+    .. figure:: /images/multi_cor_bgimage_annotate.png
+       :align: center
+    """
 
     def __init__(self, nrow=1, ncol=1, *args, **kw):
         kw['getmap'] = False
@@ -1374,6 +1449,43 @@ class MultiMap_Cor(_MultiMap, Map_corse):
 
 
 class Zoom_massif(_Map_massifs):
+    """
+    Class for zoomed map on a given massif
+
+    Example:
+
+     .. code-block:: python
+
+        from snowtools.utils.prosimu import prosimu
+        from snowtools.plots.maps import cartopy
+        import matplotlib.pyplot as plt
+
+        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
+            points_nord = ff.get_points(aspect=0, ZS=2100, slope=40)
+            snow_nord = ff.read('SD_1DY_ISBA', selectpoint=points_nord, hasDecile=True)
+            massifs = ff.read('massif_num', selectpoint=points_nord)
+
+        m = cartopy.Zoom_massif(70)
+        m.init_massifs(palette='YlGnBu', seuiltext=50., ticks=['A', 'B', 'C', 'D'],
+                            label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm', ncolors=3)
+        m.draw_massifs(massifs, snow_nord[1, :, 8], palette='YlGnBu', seuiltext=50.,
+                            label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm', ncolors=3,
+                            ticks=['A', 'B', 'C', 'D'])
+        m.empty_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
+                         label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
+        m.add_north_south_info()
+        centre = [shape.centroid.coords[0] for shape in m.llshape]
+        m.addpoints(*list(zip(*centre)), color='magenta', labels=m.name)
+        m.addlogo()
+        m.set_maptitle("2021041012 p90")
+        m.set_figtitle("2100m")
+        plt.show()
+        m.close()
+
+    .. figure:: /images/2021041012_zoom_70.png
+       :align: center
+    """
+    labelfontsize = 20  #: fontsize of colorbar label
 
     def __init__(self, num_massif, *args, **kw):
         """
@@ -1385,8 +1497,8 @@ class Zoom_massif(_Map_massifs):
         """
         if 1 <= num_massif <= 27:
             self.area = 'alpes'
-            self.width = 9 
-            self.height = 8 
+            self.width = 9
+            self.height = 8
             self.legendpos = [0.91, 0.15, 0.03, 0.6]
             self.mappos=[0.05, 0.03, 0.8, 0.8]
             self.titlepad = 25
@@ -1413,14 +1525,14 @@ class Zoom_massif(_Map_massifs):
             self.titlepad = 25
         elif 64 <= num_massif <= 91:
             self.area = 'pyrenees'
-            self.width = 10 
-            self.height = 8 
+            self.width = 10
+            self.height = 8
             #self.legendpos = [0.91, 0.12, 0.025, 0.6]
             self.mappos=[0.05, 0.06, 0.8, 0.8]
-            self.titlepad = 40 
+            self.titlepad = 40
         else:
             self.area = 'corse'
-            self.width = 9 
+            self.width = 9
             self.height = 8
             self.legendpos = [0.91, 0.15, 0.03, 0.6]
             self.mappos=[0.05, 0.06, 0.8, 0.8]
@@ -1469,5 +1581,4 @@ class Zoom_massif(_Map_massifs):
         self.latmax = barycentre[1] + dlat
         # infospos = self.projection.project_geometry(Point((lonmax-dloninfo, latmax-dlatinfo)),
         #                                             ccrs.PlateCarree()).coords[0]
-        infospos = (lonmax-dloninfo, latmax-dlatinfo)
-
+        # infospos = (lonmax-dloninfo, latmax-dlatinfo)

@@ -51,8 +51,8 @@ class EnsembleScores(object):
             # Number of valid members at this date
             valid = np.ma.masked_invalid(ensCommon[:, evenement])
 
-            Ndate = np.ma.count(valid)
-            if Ndate > 0:
+            NValid = np.ma.count(valid)
+            if NValid > 0:
                 for prevision in valid.compressed():
                     """
                     if np.isnan(prevision):
@@ -74,7 +74,7 @@ class EnsembleScores(object):
                     else:
                         integrale += ((prevision - precPrevision) * (ensembleCDF - obsCDF) ** 2)
                     # add 1/Ndate to CDF ensemble
-                    ensembleCDF += 1. / float(Ndate)
+                    ensembleCDF += 1. / float(NValid)
                     precPrevision = prevision
                     n += 1
                 # if obs > all forecasts
@@ -91,6 +91,75 @@ class EnsembleScores(object):
         CRPS = np.mean(np.ma.masked_invalid(CRPSVector))
         return CRPS
 
+    def CRPS_decomp(self):
+        # BC implementing the Hersbach et al. formulation for decomposition.
+        # inspired on https://github.com/brankart/ensdam/blob/master/src/EnsScores/score_crps.F90
+        # aggregated assuming that realizations are independant.
+        ensCommon = np.sort(self.ensCommon, axis = 0)
+
+        nbmb = np.shape(ensCommon)[0]
+
+        ai = np.zeros((nbmb + 1,))
+        bi = np.zeros((nbmb + 1,))
+        pi = np.arange(0, nbmb + 1.) / nbmb
+        oi_0 = 0.
+        oi_nbmb = len(self.obsCommon)
+        evenement = 0
+        for obs in self.obsCommon:
+            if not np.ma.is_masked(obs):
+                # Number of valid members at this date
+                valid = np.ma.masked_invalid(ensCommon[:, evenement])
+                ens = valid.compressed()
+                NValid = np.ma.count(valid)
+
+                if NValid > 0:
+                    # obs smaller than all
+                    if obs < ens[0]:
+                        ai[0] += 0.
+                        bi[0] += ens[0] - obs
+                        oi_0 += 1.
+                    # obs bigger than all
+                    elif obs > ens[nbmb - 1]:
+                        ai[nbmb] += obs - ens[nbmb - 1]
+                        bi[nbmb] += 0.
+                        oi_nbmb -= 1.
+                    # obs within
+                    for i in range(1, nbmb):
+                        if obs >= ens[i]:
+                            ai[i] += ens[i] - ens[i - 1]
+                            bi[i] += 0.
+                        elif (ens[i] > obs) and (obs >= ens[i - 1]):
+                            ai[i] += obs - ens[i - 1]
+                            bi[i] += ens[i] - obs
+                        elif obs < ens[i - 1]:
+                            ai[i] += 0.
+                            bi[i] += ens[i] - ens[i - 1]
+                        else:
+                            raise Exception
+                else:
+                    raise Exception
+            evenement += 1
+        ai_avg = ai / len(self.obsCommon)
+        bi_avg = bi / len(self.obsCommon)
+        gi_avg = np.zeros(np.shape(ai_avg))
+        oi_avg = np.zeros(np.shape(ai_avg))
+        for i in range(1, nbmb):
+            gi_avg[i] = ai_avg[i] + bi_avg[i]
+            if gi_avg[i] > 0.:
+                oi_avg[i] = bi_avg[i] / gi_avg[i]
+
+        oi_avg[0] = oi_0 / len(self.obsCommon)
+        oi_avg[nbmb] = oi_nbmb / len(self.obsCommon)
+        if oi_avg[0] > 0.:
+            gi_avg[0] = bi_avg[0] / oi_avg[0]
+        if oi_avg[nbmb] < 1:
+            gi_avg[nbmb] = ai_avg[nbmb] / (1. - oi_avg[nbmb])
+        CRPS = np.nansum(ai_avg * pi ** 2 + bi_avg * (1. - pi)**2)
+        Reli = np.nansum(gi_avg * (oi_avg - pi)**2)
+        Resol = np.nansum(gi_avg * oi_avg * (1. - oi_avg))
+
+        return (CRPS, Reli, Resol)
+
     def meanEnsemble(self):
             # deal with only some members valid
 
@@ -104,22 +173,9 @@ class EnsembleScores(object):
 
         meanCommon = self.meanEnsemble()
 
-        dispersion = np.zeros(NbMembres)
-        k = 0
-
-        for model in self.ensCommon:
-            # model is not masked_array but meanCommon is so the difference is masked_array
-            # so the mean is computed only on valid dates
-            model = np.ma.masked_invalid(model)
-
-            dispersion[k] = np.mean((model - meanCommon)**2)
-            k += 1
-
-        disp = np.sqrt(np.mean(dispersion))
-
-        diffMean = meanCommon - self.obsCommon
-
-        rmseMean = np.sqrt(np.mean(np.square(diffMean)))
+        # bc 21/10/19 code optim
+        disp = np.sqrt(np.mean([np.mean((np.ma.masked_invalid(m) - meanCommon)**2) for m in self.ensCommon]))
+        rmseMean = np.sqrt(np.mean(np.square(meanCommon - self.obsCommon)))
 
         return disp, rmseMean, disp / rmseMean
 

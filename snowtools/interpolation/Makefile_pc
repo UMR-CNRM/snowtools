@@ -20,10 +20,10 @@ LINK = interpol
 ##############################################################################
 #links interne libraries
 
-NETCDF ?= /opt/netcdf4/netcdf-c-4.4.1.1/lib
-NETCDF_FORTRAN_INC ?= /opt/netcdf4/netcdf-fortran-4.4.4/include
-NETCDF_FORTRAN_LIB ?= /opt/netcdf4/netcdf-fortran-4.4.4/lib
-HDF ?= /opt/netcdf4/hdf5-1.8.19/lib
+NETCDF ?= /opt/netcdf4-parallel/netcdf-c-4.4.1.1/lib
+NETCDF_FORTRAN_INC ?= /opt/netcdf4-parallel/netcdf-fortran-4.4.4/include
+NETCDF_FORTRAN_LIB ?= /opt/netcdf4-parallel/netcdf-fortran-4.4.4/lib
+HDF ?= /opt/netcdf4-parallel/hdf5-1.8.19/lib
 
 LDFLAGS=-I${NETCDF_FORTRAN_INC} -Wl,-rpath,${NETCDF_FORTRAN_LIB}:${NETCDF}:${HDF} -L${NETCDF_FORTRAN_LIB} -lnetcdff -L${NETCDF} -lnetcdf -L${HDF} -lhdf5_hl -lhdf5 -fopenmp -Wl,-warn-once -ldl -lrt 
 

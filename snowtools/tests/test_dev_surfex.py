@@ -13,6 +13,8 @@ from snowtools.tasks.s2m_command import Surfex_command as s2m
 from snowtools.DATA import SNOWTOOLS_DATA
 from snowtools.tests.export_output import exportoutput
 from snowtools.tests.tempfolder import TestWithTempFolderWithLog
+from snowtools.DATA import DIRDATAPGD
+
 _here = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -30,7 +32,7 @@ class s2mTest(TestWithTempFolderWithLog):
             s2m(command.split())
 
     def runatcen(self):
-        return os.path.isdir("/rd/cenfic3/manto/lafaysse")
+        return os.path.isdir(DIRDATAPGD)
 
 
 class s2mTestForcageBase(s2mTest):

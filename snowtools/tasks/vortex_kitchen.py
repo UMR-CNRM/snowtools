@@ -8,12 +8,11 @@ Created on 23 févr. 2018
 
 import datetime
 import os
-import shutil
 
 from snowtools.utils.dates import WallTimeException
 from snowtools.utils.resources import InstallException
 from snowtools.tools.execute import callSystemOrDie
-from snowtools.DATA import SNOWTOOLS_DIR, SNOWTOOLS_CEN
+from snowtools.DATA import SNOWTOOLS_DIR
 from bronx.stdtypes.date import Period
 
 
@@ -89,8 +88,6 @@ class vortex_kitchen(object):
             else:
                 if self.options.safran:
                     os.symlink(SNOWTOOLS_DIR + "/tasks/research/safran", "tasks")
-                elif self.options.soda:
-                    os.symlink(SNOWTOOLS_DIR + "/tasks/research/crampon", "tasks")
                 elif self.options.surfex:
                     os.symlink(SNOWTOOLS_DIR + "/tasks/research/surfex", "tasks")
 
@@ -189,11 +186,7 @@ class vortex_kitchen(object):
                     conffilename = self.options.confname.rstrip('.ini') + ".ini"
                 else:
                     conffilename = self.options.vapp + "_" + self.options.vconf + "_" + \
-                                   self.options.datedeb.strftime("%Y") + ".ini"
-
-            if self.options.soda:
-                print('copy conf file to vortex path')
-                shutil.copyfile(self.options.soda, conffilename)
+                        self.options.datedeb.strftime("%Y") + ".ini"
 
         elif self.options.safran:
             if self.options.oper:
@@ -276,10 +269,10 @@ class vortex_kitchen(object):
             key = self.options.vconf if self.options.vconf in list(minutes_peryear.keys()) else "alp_allslopes"
 
             estimation = Period(minutes=minutes_peryear[key]) * \
-                         max(1, (self.options.datefin.year - self.options.datedeb.year)) * \
-                         (1 + nmembers / (40 * self.options.nnodes))
+                max(1, (self.options.datefin.year - self.options.datedeb.year)) * \
+                (1 + nmembers / (40 * self.options.nnodes))
 
-            #!!!! Ne marche pas à tous les coups... 
+            # !!!! Ne marche pas à tous les coups...
 
             if estimation >= datetime.timedelta(hours=24):
                 raise WallTimeException(estimation)
@@ -300,7 +293,6 @@ class vortex_kitchen(object):
 
 
 class Vortex_conf_file(object):
-    # NB: Inheriting from file object is not allowed in python 3
     def __init__(self, options, filename, mode='w'):
         self.name = filename
         self.options = options
@@ -320,7 +312,10 @@ class Vortex_conf_file(object):
         for blockname in self.blocks:
             self.fileobject.write("[" + blockname + "]\n")
             for fieldname, value in self.blocks[blockname].items():
-                self.fileobject.write(fieldname + " = " + str(value) + "\n")
+                if not isinstance(value, list):
+                    self.fileobject.write(fieldname + " = " + str(value) + "\n")
+                else:
+                    self.fileobject.write(fieldname + " = " + ','.join(map(str, value)) + "\n")
             self.fileobject.write("\n")
 
     def close(self):
@@ -347,8 +342,6 @@ class Vortex_conf_file(object):
                 self.set_field("DEFAULT", 'nmembers', self.options.nmembers)
             if self.options.startmember:
                 self.set_field("DEFAULT", 'startmember', self.options.startmember)
-        if self.options.soda:
-            self.soda_variables(self.options)
 
     def create_conf_safran(self):
         self.safran_variables()
@@ -429,6 +422,9 @@ class Vortex_conf_file(object):
 
         if self.options.dailyprep:
             self.set_field("DEFAULT", 'dailyprep', self.options.dailyprep)
+
+        if self.options.gridsimul:
+            self.set_field("DEFAULT", 'simu2D', self.options.gridsimul)
 
         if self.options.interpol:
             self.set_field("DEFAULT", 'interpol', self.options.interpol)

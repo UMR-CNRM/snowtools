@@ -22,7 +22,7 @@ from snowtools.utils.resources import get_file_period, get_file_date, get_file_c
 from snowtools.utils.prosimu import prosimu
 from snowtools.utils.FileException import DirFileException
 from snowtools.utils.git import git_infos
-from snowtools.DATA import SNOWTOOLS_DIR
+from snowtools.DATA import SNOWTOOLS_DIR, DIRDATAPGD
 
 
 class surfexrun(object):
@@ -365,7 +365,7 @@ class griddedrun(surfexrun):
             if "DIRDATAPGD" in list(os.environ.keys()):
                 dirdatapgd = os.environ["DIRDATAPGD"]
             else:
-                dirdatapgd = "/rd/cenfic2/manto/lafaysse/FILES_PGD"
+                dirdatapgd = DIRDATAPGD
 
             print(os.listdir(dirdatapgd))
             for fic in os.listdir(dirdatapgd):

@@ -10,6 +10,7 @@ import shutil
 import tempfile
 import datetime
 import six
+import sys
 
 _here = os.path.dirname(os.path.realpath(__file__))
 

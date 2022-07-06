@@ -351,6 +351,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             local          = 'PREP.nc',
                             experiment     = self.ref_reanalysis,
                             geometry       = self.conf.geometry,
+                            vconf          = self.conf.geometry.tag,
                             date           = datebegin,
                             intent         = 'inout',
                             nativefmt      = 'netcdf',

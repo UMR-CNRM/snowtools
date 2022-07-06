@@ -33,7 +33,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         t = self.ticket
 
         if not hasattr(self.conf, "genv"):
-            self.conf.genv = 'uenv:cen.05@CONST_CEN'
+            self.conf.genv = 'uenv:cen.06@CONST_CEN'
 
         # Definition of geometries, safran xpid/block and list of dates from S2MTaskMixIn methods
         list_geometry = self.get_list_geometry(meteo=self.conf.meteo)
@@ -51,6 +51,10 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             self.conf.climground = False
         if not hasattr(self.conf, "dailyprep"):
             self.conf.dailyprep = False
+        if not hasattr(self.conf, "simu2D"):
+            self.conf.simu2D = False
+        if hasattr(self.conf, "simu2D"):
+            self.conf.genv2D = 'uenv:pgd.002@SURFEX_CEN'
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
@@ -287,6 +291,54 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             )
             print(t.prompt, 'tb04 =', tb04)
             print()
+
+            # For the 2d-simulation on Belenos: avoiding the PGD copy
+            if not (tb02[0] or tb02_a[0]) and self.conf.simu2D:
+                # If no PGD file has been found, look for the PGD binary
+                # Binary Sand files are mandatory to run SURFEX for PGD construction in simu2D
+                self.sh.title('Toolbox input tb04b')
+                tb04b = toolbox.input(
+                    role           = 'SandDB',
+                    format         = 'dir/hdr',
+                    genv           = self.conf.genv2D,
+                    model          = 'surfex',
+                    kind           = 'sand', #'database'
+                    local          = 'sand_DB.02.tgz',
+                    source         = 'sand_DB',
+                    gvar           = 'sand_DB',
+                )
+                print(t.prompt, 'tb04b =', tb04b)
+                print()
+
+                # Binary Clay files are mandatory to run SURFEX for PGD construction in simu2D
+                self.sh.title('Toolbox input tb04c')
+                tb04c = toolbox.input(
+                    role           = 'ClayDB',
+                    format         = 'dir/hdr',
+                    genv           = self.conf.genv2D,
+                    model          = 'surfex',
+                    kind           = 'clay',
+                    local          = 'clay_DB.02.tgz',
+                    source         = 'clay_DB',
+                    gvar           = 'clay_DB',
+                )
+                print(t.prompt, 'tb04c =', tb04c)
+                print()
+
+                # EcoclimapII_europ files are mandatory to run SURFEX for PGD construction in simu2D
+                self.sh.title('Toolbox input tb04d')
+                tb04d = toolbox.input(
+                    role           = 'EcoclimapIIEurop',
+                    format         = 'dir/hdr',
+                    genv           = self.conf.genv2D,
+                    model          = 'surfex',
+                    kind           = 'coverparams',
+                    local          = 'ECOCLIMAP_II_EUROP.02.tgz',
+                    source         = 'ecoclimap2',
+                    gvar           = 'ECOCLIMAP_II_EUROP',
+                )
+                print(t.prompt, 'tb04d =', tb04d)
+                print()
 
             # Use the path provided in the configuration file for the SURFEX namelist
             self.sh.title('Toolbox input tb05')
