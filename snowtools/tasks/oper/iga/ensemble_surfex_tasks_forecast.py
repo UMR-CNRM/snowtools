@@ -46,26 +46,28 @@ class Four_Seasons_Task(S2MTaskMixIn, Task):
 
         if 'fetch' in self.steps:
 
-            self.sh.title('Toolbox input tb01')
-            tb01 = toolbox.input(
-                role        = 'CrocusForecast',
-                local       = 'mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-                experiment  = self.conf.xpid,
-                block       = 'pro',
-                geometry    = self.conf.geometry,
-                date        = self.conf.rundate,
-                datebegin   = datebegin,
-                dateend     = dateend,
-                member      = members,
-                nativefmt   = 'netcdf',
-                kind        = 'SnowpackSimulation',
-                model       = 'surfex',
-                namespace   = self.conf.namespace_in,
-                cutoff      = 'production',
-                fatal       = False
-            ),
-            print(t.prompt, 'tb01 =', tb01)
-            print()
+            with op.InputReportContext(self, t):
+
+                self.sh.title('Toolbox input tb01')
+                tb01 = toolbox.input(
+                    role        = 'CrocusForecast',
+                    local       = 'mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    experiment  = self.conf.xpid,
+                    block       = 'pro',
+                    geometry    = self.conf.geometry,
+                    date        = self.conf.rundate,
+                    datebegin   = datebegin,
+                    dateend     = dateend,
+                    member      = members,
+                    nativefmt   = 'netcdf',
+                    kind        = 'SnowpackSimulation',
+                    model       = 'surfex',
+                    namespace   = self.conf.namespace_in,
+                    cutoff      = 'production',
+                    fatal       = False
+                ),
+                print(t.prompt, 'tb01 =', tb01)
+                print()
 
         if 'compute' in self.steps:
             self.sh.title('Toolbox algo tb02 = Postprocessing')
@@ -84,23 +86,25 @@ class Four_Seasons_Task(S2MTaskMixIn, Task):
 
         if 'backup' in self.steps:
 
-            self.sh.title('Toolbox output tb03')
-            tb03 = toolbox.output(
-                role        = 'Postproc_output',
-                intent      = 'out',
-                local       = 'PRO_post_[datebegin:ymdh]_[dateend:ymdh].nc',
-                experiment  = self.conf.xpid,
-                block       = 'postproc',
-                geometry    = self.conf.geometry,
-                date        = self.conf.rundate,
-                datebegin   = datebegin,
-                dateend     = dateend,
-                nativefmt   = 'netcdf',
-                kind        = 'SnowpackSimulation',
-                model       = 'postproc',
-                namespace   = self.conf.namespace_out,
-                cutoff      = 'production',
-                fatal       = True
-            ),
-            print(t.prompt, 'tb03 =', tb03)
-            print()
+            with op.OutputReportContext(self, t):
+
+                self.sh.title('Toolbox output tb03')
+                tb03 = toolbox.output(
+                    role        = 'Postproc_output',
+                    intent      = 'out',
+                    local       = 'PRO_post_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    experiment  = self.conf.xpid,
+                    block       = 'postproc',
+                    geometry    = self.conf.geometry,
+                    date        = self.conf.rundate,
+                    datebegin   = datebegin,
+                    dateend     = dateend,
+                    nativefmt   = 'netcdf',
+                    kind        = 'SnowpackSimulation',
+                    model       = 'postproc',
+                    namespace   = self.conf.namespace_out,
+                    cutoff      = 'production',
+                    fatal       = True
+                ),
+                print(t.prompt, 'tb03 =', tb03)
+                print()

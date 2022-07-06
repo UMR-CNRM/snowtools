@@ -21,4 +21,3 @@ def setup(t, **kw):
             anaens.Safran(tag='safran', ticket=t, **kw),
         ],
     )
-

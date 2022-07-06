@@ -7,7 +7,9 @@ __all__ = []
 from cen.layout.nodes import S2MTaskMixIn
 import footprints
 from vortex import toolbox
-from vortex.layout.nodes import Driver, Task
+from vortex.layout.nodes import Driver
+
+from vortex.layout.nodes import Task
 
 logger = footprints.loggers.getLogger(__name__)
 
@@ -37,338 +39,351 @@ class Safran(Task, S2MTaskMixIn):
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
-            # I- ARPEGE
-            # ---------
+            if True:  # To match IGA indentation
 
-            # I.1- Pseudo-prevision de (J-1) 6h à J 6h
-            # A6 des réseaux 0, 6, 12, 18 (J-1)
-            self.sh.title('Toolbox input tb01a')
-            tb01a = toolbox.input(
-                role           = 'Ebauche_Deterministic',
-                local          = 'mb035/P[date::yymdh]_[cumul:hour]',
-                experiment     = self.conf.xpid_guess,
-                block          = self.conf.guess_block,
-                geometry       = self.conf.geometry[self.conf.vconf],
-                cutoff         = 'assimilation',
-                date           = ['{0:s}/+PT{1:s}H/-PT6H'.format(datebegin.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
-                cumul          = self.conf.cumul,
-                nativefmt      = 'ascii',
-                kind           = 'guess',
-                model          = 'safran',
-                source_app     = self.conf.source_app,
-                source_conf    = self.conf.deterministic_conf,
-                namespace      = self.conf.namespace_in,
-                fatal          = False,
-            ),
-            print(t.prompt, 'tb01a =', tb01a)
-            print()
+                # I- ARPEGE
+                # ---------
 
-            # L'A6 du réseau 0h J n'est génaralement pas encore là pour le run de 3h, SAFRAN utilisera alors la P6
-            # du réseau 0h J récupérée dans la TB suivante car également utilisée pour la prévision de J à J+1.
-            # En l'état même si l'A6 du réseau 0h est présente, elle sera écrasée par la P6 qui porte le même nom...
-            # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur 6h homogène avec le cumul dans les fichiers d'assimilation
-            # P6 du réseau 0h (J)
-
-            # I.2- Prevision de J 6h à J+4 6h
-
-            # P6 à P 102 du réseau 0h J
-            self.sh.title('Toolbox input tb01b')
-            tb01b = toolbox.input(
-                role           = 'Ebauche_Deterministic',
-                local          = 'mb035/P[date::yymdh]_[cumul:hour]',
-                experiment     = self.conf.xpid_guess,
-                block          = self.conf.guess_block,
-                geometry       = self.conf.geometry[self.conf.vconf],
-                date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.prv_terms),
-                nativefmt      = 'ascii',
-                kind           = 'guess',
-                model          = 'safran',
-                source_app     = self.conf.source_app,
-                source_conf    = self.conf.deterministic_conf,
-                namespace      = self.conf.namespace_in,
-                fatal          = False,
-            ),
-            print(t.prompt, 'tb01b =', tb01b)
-            print()
-
-            # II- PEARP
-            # ---------
-
-            # II.1- Prevision de (J-1) 6h à J 6h
-
-            # P0/P6/P12/P18/P24 du réseau 6h (J-1)
-            self.sh.title('Toolbox intput tb02a')
-            tb02a = toolbox.input(
-                role           = 'Ebauche',
-                local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
-                experiment     = self.conf.xpid_guess,
-                block          = self.conf.guess_block,
-                geometry       = self.conf.geometry[self.conf.vconf],
-                date           = '{0:s}'.format(datebegin.ymd6h),
-                cumul          = footprints.util.rangex(self.conf.ana_terms),
-                nativefmt      = 'ascii',
-                kind           = 'guess',
-                model          = 'safran',
-                source_app     = self.conf.source_app,
-                source_conf    = self.conf.eps_conf,
-                namespace      = self.conf.namespace_in,
-                member         = footprints.util.rangex(self.conf.pearp_members),
-                fatal          = False,
-            ),
-            print(t.prompt, 'tb02a =', tb02a)
-            print()
-
-            # P6 à P102 du réseau 0h (J-1)
-            self.sh.title('Toolbox intput tb02')
-            tb02b = toolbox.input(
-                role           = 'Ebauche',
-                local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
-                experiment     = self.conf.xpid_guess,
-                block          = self.conf.guess_block,
-                geometry       = self.conf.geometry[self.conf.vconf],
-                date           = '{0:s}/+PT18H'.format(datebegin.ymdh), # = 0h J
-                cumul          = footprints.util.rangex(self.conf.prv_terms),
-                nativefmt      = 'ascii',
-                kind           = 'guess',
-                model          = 'safran',
-                source_app     = self.conf.source_app,
-                source_conf    = self.conf.eps_conf,
-                namespace      = self.conf.namespace_in,
-                member         = footprints.util.rangex(self.conf.pearp_members),
-                fatal          = False,
-            ),
-            print(t.prompt, 'tb02b =', tb02b)
-            print()
-
-            self.sh.title('Toolbox input tb03')
-            tb03 = toolbox.input(
-                role            = 'ListeMassif',
-                genv            = self.conf.cycle,
-                kind            = 'listem',
-                model           = self.conf.model,
-                local           = 'listem',
-                geometry        = self.conf.geometry[self.conf.vconf],
-            )
-            print(t.prompt, 'tb03 =', tb03)
-            print()
-
-            self.sh.title('Toolbox input tb04')
-            tb04 = toolbox.input(
-                role            = 'ListeLimitesMassif',
-                genv            = self.conf.cycle,
-                kind            = 'listeml',
-                model           = self.conf.model,
-                local           = 'listeml',
-                geometry        = self.conf.geometry[self.conf.vconf],
-            )
-            print(t.prompt, 'tb04 =', tb04)
-            print()
-
-            self.sh.title('Toolbox input tb05')
-            tb05 = toolbox.input(
-                role            = 'ListePost',
-                genv            = self.conf.cycle,
-                kind            = 'listeo',
-                model           = self.conf.model,
-                local           = 'listeo',
-                geometry        = self.conf.geometry[self.conf.vconf],
-            )
-            print(t.prompt, 'tb05 =', tb05)
-            print()
-
-            if self.conf.vconf in ['alp', 'pyr']:
-
-                self.sh.title('Toolbox input tb06')
-                tb06 = toolbox.input(
-                    role            = 'MoyRRmensuelles',
-                    genv            = self.conf.cycle,
-                    kind            = 'NORELmt',
-                    model           = self.conf.model,
-                    local           = 'NORELmt',
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                )
-                print(t.prompt, 'tb06 =', tb06)
+                # I.1- Pseudo-prevision de (J-1) 6h à J 6h
+                # A6 des réseaux 0, 6, 12, 18 (J-1)
+                self.sh.title('Toolbox input guess arpege J-1 -> J')
+                tb01a = toolbox.input(
+                    role           = 'Ebauche_Deterministic',
+                    # On est obligé d'avoir un "local" précisant le réseau et le cumul
+                    # car on a 2 fichiers valides à J 6h (une A6 et une P6)
+                    # RQ : on pourrait utiliser la même dans le cas d'ARPEGE, mais
+                    # pas pour la PEARP (cf commentaire tb02)
+                    local          = 'mb035/P[date::yymdh]_[cumul:hour]',
+                    experiment     = self.conf.xpid_guess,
+                    block          = self.conf.guess_block,
+                    geometry       = self.conf.geometry[self.conf.vconf],
+                    cutoff         = 'assimilation',
+                    date           = ['{0:s}/+PT{1:s}H/-PT6H'.format(datebegin.ymd6h,
+									  str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                    cumul          = self.conf.cumul,
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    namespace      = self.conf.namespace_in,
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.deterministic_conf,
+                    fatal          = False,
+                ),
+                print(t.prompt, 'tb01a =', tb01a)
                 print()
 
-            # WARNING : Les ressoucres rsclim et icrccm ne servent pas dans le cas nominal mais
-            # consituent un mode secours pour SAFRAN si il rencontre un problème pour faire son guess
-            # A partir des fichiers P
-            self.sh.title('Toolbox input tb07')
-            tb07 = toolbox.input(
-                role            = 'Clim',
-                genv            = self.conf.cycle,
-                kind            = 'rsclim',
-                model           = self.conf.model,
-                local           = 'rsclim.don',
-                geometry        = self.conf.geometry[self.conf.vconf],
-            )
-            print(t.prompt, 'tb07 =', tb07)
-            print()
+                # L'A6 du réseau 0h J n'est génaralement pas encore là pour le run de 3h, SAFRAN utilisera alors la P6
+                # du réseau 0h J récupérée dans la TB suivante car également utilisée pour la prévision de J à J+1.
+                # En l'état même si l'A6 du réseau 0h est présente, elle sera écrasée par la P6 qui porte le même nom...
+                # RQ : il est fondamental de prendre une P6 pour avoir un cumul des RR sur 6h homogène avec le cumul
+                # dans les fichiers d'assimilation
+                # P6 du réseau 0h (J)
 
-            self.sh.title('Toolbox input tb08')
-            tb08 = toolbox.input(
-                role            = 'Clim',
-                genv            = self.conf.cycle,
-                kind            = 'icrccm',
-                model           = self.conf.model,
-                local           = 'icrccm.don',
-                geometry        = self.conf.geometry[self.conf.vconf],
-            )
-            print(t.prompt, 'tb08 =', tb08)
-            print()
+                # I.2- Prevision de J 6h à J+4 6h
 
-            self.sh.title('Toolbox input tb09')
-            tb09 = toolbox.input(
-                role            = 'Nam_sorties',
-                source          = 'namelist_sorties_[geometry:area]',
-                geometry        = self.conf.geometry[self.conf.vconf],
-                genv            = self.conf.cycle,
-                kind            = 'namelist',
-                model           = self.conf.model,
-                local           = 'SORTIES',
-            )
-            print(t.prompt, 'tb09 =', tb09)
-            print()
+                # P6 à P 102 du réseau 0h J
+                self.sh.title('Toolbox input guess arpege J -> J+4')
+                tb01b = toolbox.input(
+                    role           = 'Ebauche_Deterministic',
+                    local          = 'mb035/P[date::yymdh]_[cumul:hour]',
+                    experiment     = self.conf.xpid_guess,
+                    block          = self.conf.guess_block,
+                    geometry       = self.conf.geometry[self.conf.vconf],
+                    date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
+                    cumul          = footprints.util.rangex(self.conf.prv_terms),
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    namespace      = self.conf.namespace_in,
+                    model          = 'safran',
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.deterministic_conf,
+                    fatal          = False,
+                ),
+                print(t.prompt, 'tb01b =', tb01b)
+                print()
 
-            self.sh.title('Toolbox input tb14')
-            tb14 = toolbox.input(
-                role            = 'Nam_adapt',
-                source          = 'namelist_adapt',
-                geometry        = self.conf.geometry[self.conf.vconf],
-                genv            = self.conf.cycle,
-                kind            = 'namelist',
-                model           = self.conf.model,
-                local           = 'ADAPT',
-            )
-            print(t.prompt, 'tb14 =', tb14)
-            print()
+                # TODO : Pas de mode secours pour le déterministe ?
+                # On ne peut pas faire mieux que la prévision jusqu'à J+3 issue
+                # du réseau 0h de J-1 qui a tourné la veille...
 
-            self.sh.title('Toolbox input tb10')
-            tb10 = toolbox.input(
-                role            = 'Nam_melange',
-                source          = 'namelist_melange_[geometry:area]',
-                geometry        = self.conf.geometry[self.conf.vconf],
-                genv            = self.conf.cycle,
-                kind            = 'namelist',
-                model           = self.conf.model,
-                local           = 'MELANGE',
-            )
-            print(t.prompt, 'tb10 =', tb10)
-            print()
+                # II- PEARP
+                # ---------
 
-            self.sh.title('Toolbox input tb11')
-            tb11 = toolbox.input(
-                role            = 'carac_post',
-                genv            = self.conf.cycle,
-                geometry        = self.conf.geometry[self.conf.vconf],
-                kind            = 'carpost',
-                model           = self.conf.model,
-                local           = 'carpost.tar',
-            )
-            print(t.prompt, 'tb11 =', tb11)
-            print()
+                # II.1- Prevision de (J-1) 6h à J 6h
 
-            self.sh.title('Toolbox input tb12')
-            tb12 = toolbox.input(
-                role            = 'Nam_impress',
-                source          = 'namelist_impress_[geometry:area]',
-                geometry        = self.conf.geometry[self.conf.vconf],
-                genv            = self.conf.cycle,
-                kind            = 'namelist',
-                model           = self.conf.model,
-                local           = 'IMPRESS',
-            )
-            print(t.prompt, 'tb12 =', tb12)
-            print()
+                # P0/P6/P12/P18/P24 du réseau 6h (J-1)
+                self.sh.title('Toolbox intput guess pearp J-1 -> J')
+                tb02a = toolbox.input(
+                    role           = 'Ebauche',
+                    local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
+                    experiment     = self.conf.xpid_guess,
+                    block          = self.conf.guess_block,
+                    geometry       = self.conf.geometry[self.conf.vconf],
+                    date           = '{0:s}'.format(datebegin.ymd6h),
+                    cumul          = footprints.util.rangex(self.conf.ana_terms),
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    namespace      = self.conf.namespace_in,
+                    model          = 'safran',
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.eps_conf,
+                    member         = footprints.util.rangex(self.conf.pearp_members),
+                    fatal          = False,
+                ),
+                print(t.prompt, 'tb02a =', tb02a)
+                print()
 
-            if self.conf.vconf == 'pyr':
+                # P6 à P102 du réseau 0h (J)
+                self.sh.title('Toolbox intput guess pearp J -> J+4')
+                tb02b = toolbox.input(
+                    role           = 'Ebauche',
+                    # coherentgroup  = 'pearp_forecast', # Supprime TOUTES les ressources présente dès lors qu'il en manque une
+                    local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
+                    experiment     = self.conf.xpid_guess,
+                    block          = self.conf.guess_block,
+                    geometry       = self.conf.geometry[self.conf.vconf],
+                    date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h), # Réseau 0h (J)
+                    cumul          = footprints.util.rangex(self.conf.prv_terms),
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    namespace      = self.conf.namespace_in,
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.eps_conf,
+                    member         = footprints.util.rangex(self.conf.pearp_members),
+                    fatal          = False,
+                ),
+                print(t.prompt, 'tb02b =', tb02b)
+                print()
 
-                self.sh.title('Toolbox input tb13')
-                tb13 = toolbox.input(
-                    role            = 'Nam_observr',
-                    source          = 'namelist_observr_[geometry:area]',
+                self.sh.title('Toolbox input listem')
+                tb03 = toolbox.input(
+                    role            = 'ListeMassif',
+                    genv            = self.conf.cycle,
+                    kind            = 'listem',
+                    model           = self.conf.model,
+                    local           = 'listem',
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                )
+                print(t.prompt, 'tb03 =', tb03)
+                print()
+
+                self.sh.title('Toolbox input listeml')
+                tb04 = toolbox.input(
+                    role            = 'ListeLimitesMassif',
+                    genv            = self.conf.cycle,
+                    kind            = 'listeml',
+                    model           = self.conf.model,
+                    local           = 'listeml',
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                )
+                print(t.prompt, 'tb04 =', tb04)
+                print()
+
+                self.sh.title('Toolbox input listeo')
+                tb05 = toolbox.input(
+                    role            = 'ListePost',
+                    genv            = self.conf.cycle,
+                    kind            = 'listeo',
+                    model           = self.conf.model,
+                    local           = 'listeo',
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                )
+                print(t.prompt, 'tb05 =', tb05)
+                print()
+
+                if self.conf.vconf in ['alp', 'pyr']:
+
+                    self.sh.title('Toolbox input norelmt')
+                    tb06 = toolbox.input(
+                        role            = 'MoyRRmensuelles',
+                        genv            = self.conf.cycle,
+                        kind            = 'NORELmt',
+                        model           = self.conf.model,
+                        local           = 'NORELmt',
+                        geometry        = self.conf.geometry[self.conf.vconf],
+                    )
+                    print(t.prompt, 'tb06 =', tb06)
+                    print()
+
+                # WARNING : Les ressoucres rsclim et icrccm ne servent pas dans le cas nominal mais
+                # consituent un mode secours pour SAFRAN si il rencontre un problème pour faire son guess
+                # A partir des fichiers P
+                self.sh.title('Toolbox input rsclim')
+                tb07 = toolbox.input(
+                    role            = 'Clim',
+                    genv            = self.conf.cycle,
+                    kind            = 'rsclim',
+                    model           = self.conf.model,
+                    local           = 'rsclim.don',
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                )
+                print(t.prompt, 'tb07 =', tb07)
+                print()
+
+                self.sh.title('Toolbox input icrccm')
+                tb08 = toolbox.input(
+                    role            = 'Clim',
+                    genv            = self.conf.cycle,
+                    kind            = 'icrccm',
+                    model           = self.conf.model,
+                    local           = 'icrccm.don',
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                )
+                print(t.prompt, 'tb08 =', tb08)
+                print()
+
+                self.sh.title('Toolbox input namelist sorties')
+                tb09 = toolbox.input(
+                    role            = 'Nam_sorties',
+                    source          = 'namelist_sorties_[geometry:area]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
                     model           = self.conf.model,
-                    local           = 'OBSERVR',
+                    local           = 'SORTIES',
+                )
+                print(t.prompt, 'tb09 =', tb09)
+                print()
+
+                self.sh.title('Toolbox input namelist adapt')
+                tb14 = toolbox.input(
+                    role            = 'Nam_adapt',
+                    source          = 'namelist_adapt',
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                    genv            = self.conf.cycle,
+                    kind            = 'namelist',
+                    model           = self.conf.model,
+                    local           = 'ADAPT',
+                )
+                print(t.prompt, 'tb14 =', tb14)
+                print()
+
+                self.sh.title('Toolbox input namelist melange')
+                tb10 = toolbox.input(
+                    role            = 'Nam_melange',
+                    source          = 'namelist_melange_[geometry:area]',
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                    genv            = self.conf.cycle,
+                    kind            = 'namelist',
+                    model           = self.conf.model,
+                    local           = 'MELANGE',
+                )
+                print(t.prompt, 'tb10 =', tb10)
+                print()
+
+                self.sh.title('Toolbox input carpost')
+                tb11 = toolbox.input(
+                    role            = 'carac_post',
+                    genv            = self.conf.cycle,
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                    kind            = 'carpost',
+                    model           = self.conf.model,
+                    local           = 'carpost.tar',
+                )
+                print(t.prompt, 'tb11 =', tb11)
+                print()
+
+                self.sh.title('Toolbox input namelist impress')
+                tb12 = toolbox.input(
+                    role            = 'Nam_impress',
+                    source          = 'namelist_impress_[geometry:area]',
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                    genv            = self.conf.cycle,
+                    kind            = 'namelist',
+                    model           = self.conf.model,
+                    local           = 'IMPRESS',
+                )
+                print(t.prompt, 'tb12 =', tb12)
+                print()
+
+                if self.conf.vconf == 'pyr':
+
+                    self.sh.title('Toolbox input namelist observr')
+                    tb13 = toolbox.input(
+                        role            = 'Nam_observr',
+                        source          = 'namelist_observr_[geometry:area]',
+                        geometry        = self.conf.geometry[self.conf.vconf],
+                        genv            = self.conf.cycle,
+                        kind            = 'namelist',
+                        model           = self.conf.model,
+                        local           = 'OBSERVR',
+                        fatal           = False,
+                    )
+                    print(t.prompt, 'tb13 =', tb13)
+                    print()
+
+                self.sh.title('Toolbox input namelist analyse')
+                tb14 = toolbox.input(
+                    role            = 'Nam_analyse',
+                    source          = 'namelist_analyse_[geometry:area]',
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                    genv            = self.conf.cycle,
+                    kind            = 'namelist',
+                    model           = self.conf.model,
+                    local           = 'ANALYSE',
                     fatal           = False,
+                )
+                print(t.prompt, 'tb14 =', tb14)
+                print()
+
+                self.sh.title('Toolbox input namelist ebauche')
+                tb16 = toolbox.input(
+                    role            = 'Nam_ebauche',
+                    source          = 'namelist_ebauche_[geometry:area]',
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                    genv            = self.conf.cycle,
+                    kind            = 'namelist',
+                    model           = self.conf.model,
+                    local           = 'EBAUCHE',
+                    fatal           = False,
+                )
+                print(t.prompt, 'tb16 =', tb16)
+                print()
+
+                self.sh.title('Toolbox executable tbx1 = safrane')
+                tb11 = tbx1 = toolbox.executable(
+                    role           = 'Binary',
+                    genv           = self.conf.cycle,
+                    kind           = 'safrane',
+                    local          = 'safrane',
+                    model          = self.conf.model,
+                )
+                print(t.prompt, 'tb11 =', tb11)
+                print()
+
+                self.sh.title('Toolbox executable tbx2 = syrpluie')
+                tb12 = tbx2 = toolbox.executable(
+                    role           = 'Binary',
+                    genv           = self.conf.cycle,
+                    kind           = 'syrpluie',
+                    local          = 'syrpluie',
+                    model          = self.conf.model,
+                )
+                print(t.prompt, 'tb12 =', tb12)
+                print()
+
+                self.sh.title('Toolbox executable tbx3 = syrmrr')
+                tb13 = tbx3 = toolbox.executable(
+                    role           = 'Binary',
+                    genv           = self.conf.cycle,
+                    kind           = 'syrmrr',
+                    local          = 'syrmRR',
+                    model          = self.conf.model,
                 )
                 print(t.prompt, 'tb13 =', tb13)
                 print()
 
-            self.sh.title('Toolbox input tb14')
-            tb14 = toolbox.input(
-                role            = 'Nam_analyse',
-                source          = 'namelist_analyse_[geometry:area]',
-                geometry        = self.conf.geometry[self.conf.vconf],
-                genv            = self.conf.cycle,
-                kind            = 'namelist',
-                model           = self.conf.model,
-                local           = 'ANALYSE',
-                fatal           = False,
-            )
-            print(t.prompt, 'tb14 =', tb14)
-            print()
-
-            self.sh.title('Toolbox input tb16')
-            tb16 = toolbox.input(
-                role            = 'Nam_ebauche',
-                source          = 'namelist_ebauche_[geometry:area]',
-                geometry        = self.conf.geometry[self.conf.vconf],
-                genv            = self.conf.cycle,
-                kind            = 'namelist',
-                model           = self.conf.model,
-                local           = 'EBAUCHE',
-                fatal           = False,
-            )
-            print(t.prompt, 'tb16 =', tb16)
-            print()
-
-            self.sh.title('Toolbox executable tb11 = tbx1')
-            tb11 = tbx1 = toolbox.executable(
-                role           = 'Binary',
-                genv           = self.conf.cycle,
-                kind           = 'safrane',
-                local          = 'safrane',
-                model          = self.conf.model,
-            )
-            print(t.prompt, 'tb11 =', tb11)
-            print()
-
-            self.sh.title('Toolbox executable tb12 = tbx2')
-            tb12 = tbx2 = toolbox.executable(
-                role           = 'Binary',
-                genv           = self.conf.cycle,
-                kind           = 'syrpluie',
-                local          = 'syrpluie',
-                model          = self.conf.model,
-            )
-            print(t.prompt, 'tb12 =', tb12)
-            print()
-
-            self.sh.title('Toolbox executable tb13 = tbx3')
-            tb13 = tbx3 = toolbox.executable(
-                role           = 'Binary',
-                genv           = self.conf.cycle,
-                kind           = 'syrmrr',
-                local          = 'syrmRR',
-                model          = self.conf.model,
-            )
-            print(t.prompt, 'tb13 =', tb13)
-            print()
-
-            self.sh.title('Toolbox executable tb14 = tbx4')
-            tb14 = tbx4 = toolbox.executable(
-                role           = 'Binary',
-                genv           = self.conf.cycle,
-                kind           = 'sytist',
-                local          = 'sytist',
-                model          = self.conf.model,
-            )
-            print(t.prompt, 'tb14 =', tb14)
-            print()
+                self.sh.title('Toolbox executable tbx4 = sytist')
+                tb14 = tbx4 = toolbox.executable(
+                    role           = 'Binary',
+                    genv           = self.conf.cycle,
+                    kind           = 'sytist',
+                    local          = 'sytist',
+                    model          = self.conf.model,
+                )
+                print(t.prompt, 'tb14 =', tb14)
+                print()
 
         if 'compute' in self.steps:
 
@@ -428,30 +443,28 @@ class Safran(Task, S2MTaskMixIn):
 
             self.component_runner(tbalgo4, tbx4)
 
-        if 'backup' in self.steps or 'late-backup' in self.steps:
-
-            pass
-
         if 'late-backup' in self.steps:
 
-            self.sh.title('Toolbox output FORCING_massif deteministe')
-            tb27 = toolbox.output(
-                role           = 'Prv_massifs',
-                kind           = 'MeteorologicalForcing',
-                source_app     = 'arpege',
-                source_conf    = '4dvarfr',
-                local          = 'mb035/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
-                experiment     = self.conf.xpid,
-                block          = 'massifs',
-                geometry        = self.conf.geometry[self.conf.vconf],
-                nativefmt      = 'netcdf',
-                model          = self.conf.model,
-                datebegin      = datebegin.ymd6h,
-                dateend        = dateend.ymd6h,
-                namespace      = self.conf.namespace_out,
-            ),
-            print(t.prompt, 'tb27 =', tb27)
-            print()
+            if True:  # To match IGA identation
+
+                self.sh.title('Toolbox output FORCING_massif deteministe')
+                tb27 = toolbox.output(
+                    role           = 'Prv_massifs',
+                    kind           = 'MeteorologicalForcing',
+                    source_app     = 'arpege',
+                    source_conf    = '4dvarfr',
+                    local          = 'mb035/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                    experiment     = self.conf.xpid,
+                    block          = 'massifs',
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                    nativefmt      = 'netcdf',
+                    model          = self.conf.model,
+                    datebegin      = datebegin.ymd6h,
+                    dateend        = dateend.ymd6h,
+                    namespace      = self.conf.namespace_out,
+                ),
+                print(t.prompt, 'tb27 =', tb27)
+                print()
 
 #            self.sh.title('Toolbox diff tb27')
 #            tb27 = toolbox.diff(
@@ -473,24 +486,24 @@ class Safran(Task, S2MTaskMixIn):
 #            print(t.prompt, 'tb27 =', tb27)
 #            print()
 
-            self.sh.title('Toolbox output tb28')
-            tb28 = toolbox.output(
-                role           = 'Prv_postes',
-                kind           = 'MeteorologicalForcing',
-                source_app     = 'arpege',
-                source_conf    = '4dvarfr',
-                local          = 'mb035/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
-                experiment     = self.conf.xpid,
-                block          = 'postes',
-                geometry        = self.conf.geometry[self.conf.vconf],
-                nativefmt      = 'netcdf',
-                model          = self.conf.model,
-                datebegin      = datebegin.ymd6h,
-                dateend        = dateend.ymd6h,
-                namespace      = self.conf.namespace_out,
-            ),
-            print(t.prompt, 'tb28 =', tb28)
-            print()
+                self.sh.title('Toolbox output FORCING_postes deterministe')
+                tb28 = toolbox.output(
+                    role           = 'Prv_postes',
+                    kind           = 'MeteorologicalForcing',
+                    source_app     = 'arpege',
+                    source_conf    = '4dvarfr',
+                    local          = 'mb035/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                    experiment     = self.conf.xpid,
+                    block          = 'postes',
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                    nativefmt      = 'netcdf',
+                    model          = self.conf.model,
+                    datebegin      = datebegin.ymd6h,
+                    dateend        = dateend.ymd6h,
+                    namespace      = self.conf.namespace_out,
+                ),
+                print(t.prompt, 'tb28 =', tb28)
+                print()
 
 #            self.sh.title('Toolbox diff tb28')
 #            tb28 = toolbox.diff(
@@ -512,25 +525,25 @@ class Safran(Task, S2MTaskMixIn):
 #            print(t.prompt, 'tb28 =', tb28)
 #            print()
 
-            self.sh.title('Toolbox output tb29')
-            tb29 = toolbox.output(
-                role           = 'Prv_massifs',
-                kind           = 'MeteorologicalForcing',
-                source_app     = 'arpege',
-                source_conf    = 'pearp',
-                local          = 'mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
-                experiment     = self.conf.xpid,
-                block          = 'massifs',
-                geometry        = self.conf.geometry[self.conf.vconf],
-                nativefmt      = 'netcdf',
-                model          = self.conf.model,
-                datebegin      = datebegin.ymd6h,
-                dateend        = dateend.ymd6h,
-                namespace      = self.conf.namespace_out,
-                member         = footprints.util.rangex(self.conf.pearp_members),
-            ),
-            print(t.prompt, 'tb29 =', tb29)
-            print()
+                self.sh.title('Toolbox output FORCING_massif pearp')
+                tb29 = toolbox.output(
+                    role           = 'Prv_massifs',
+                    kind           = 'MeteorologicalForcing',
+                    source_app     = 'arpege',
+                    source_conf    = 'pearp',
+                    local          = 'mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                    experiment     = self.conf.xpid,
+                    block          = 'massifs',
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                    nativefmt      = 'netcdf',
+                    model          = self.conf.model,
+                    datebegin      = datebegin.ymd6h,
+                    dateend        = dateend.ymd6h,
+                    namespace      = self.conf.namespace_out,
+                    member         = footprints.util.rangex(self.conf.pearp_members),
+                ),
+                print(t.prompt, 'tb29 =', tb29)
+                print()
 
 #            self.sh.title('Toolbox diff tb29')
 #            tb29 = toolbox.diff(
@@ -553,25 +566,25 @@ class Safran(Task, S2MTaskMixIn):
 #            print(t.prompt, 'tb29 =', tb29)
 #            print()
 
-            self.sh.title('Toolbox output tb30')
-            tb30 = toolbox.output(
-                role           = 'Prv_postes',
-                kind           = 'MeteorologicalForcing',
-                source_app     = 'arpege',
-                source_conf    = 'pearp',
-                local          = 'mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
-                experiment     = self.conf.xpid,
-                block          = 'postes',
-                geometry        = self.conf.geometry[self.conf.vconf],
-                nativefmt      = 'netcdf',
-                model          = self.conf.model,
-                datebegin      = datebegin.ymd6h,
-                dateend        = dateend.ymd6h,
-                namespace      = self.conf.namespace_out,
-                member         = footprints.util.rangex(self.conf.pearp_members),
-            ),
-            print(t.prompt, 'tb30 =', tb30)
-            print()
+                self.sh.title('Toolbox output FORCING_postes pearp')
+                tb30 = toolbox.output(
+                    role           = 'Prv_postes',
+                    kind           = 'MeteorologicalForcing',
+                    source_app     = 'arpege',
+                    source_conf    = 'pearp',
+                    local          = 'mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                    experiment     = self.conf.xpid,
+                    block          = 'postes',
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                    nativefmt      = 'netcdf',
+                    model          = self.conf.model,
+                    datebegin      = datebegin.ymd6h,
+                    dateend        = dateend.ymd6h,
+                    namespace      = self.conf.namespace_out,
+                    member         = footprints.util.rangex(self.conf.pearp_members),
+                ),
+                print(t.prompt, 'tb30 =', tb30)
+                print()
 
 #            self.sh.title('Toolbox diff tb30')
 #            tb30 = toolbox.diff(
@@ -594,40 +607,40 @@ class Safran(Task, S2MTaskMixIn):
 #            print(t.prompt, 'tb30 =', tb30)
 #            print()
 
-            self.sh.title('Toolbox output tb31')
-            tb28 = toolbox.output(
-                role           = 'Listing',
-                block          = 'listing',
-                experiment     = self.conf.xpid,
-                geometry        = self.conf.geometry[self.conf.vconf],
-                kind           = 'packedlisting',
-                begindate      = datebegin.ymd6h,
-                enddate        = dateend.ymd6h,
-                local          = 'mb035/listings_safran_[begindate::ymdh]_[enddate::ymdh].tar.gz',
-                format         = 'tar',
-                model          = 'safran',
-                namespace      = self.conf.namespace_out,
-            )
-            print(t.prompt, 'tb31 =', tb28)
-            print()
+                self.sh.title('Toolbox output listings execution')
+                tb31 = toolbox.output(
+                    role           = 'Listing',
+                    block          = 'listing',
+                    experiment     = self.conf.xpid,
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                    kind           = 'packedlisting',
+                    begindate      = datebegin.ymd6h,
+                    enddate        = dateend.ymd6h,
+                    local          = 'mb035/listings_safran_[begindate::ymdh]_[enddate::ymdh].tar.gz',
+                    format         = 'tar',
+                    model          = 'safran',
+                    namespace      = self.conf.namespace_out,
+                )
+                print(t.prompt, 'tb31 =', tb31)
+                print()
 
-            self.sh.title('Toolbox output tb33')
-            tb28 = toolbox.output(
-                role           = 'Listing',
-                block          = 'listing',
-                experiment     = self.conf.xpid,
-                geometry        = self.conf.geometry[self.conf.vconf],
-                kind           = 'packedlisting',
-                begindate      = datebegin.ymd6h,
-                enddate        = dateend.ymd6h,
-                local          = 'mb{glob:a:\d+}/listings_safran_[begindate::ymdh]_[enddate::ymdh].tar.gz',
-                format         = 'tar',
-                seta           = '[glob:a]',
-                member         = '[seta]',
-                namespace      = self.conf.namespace_out,
-            )
-            print(t.prompt, 'tb33 =', tb28)
-            print()
+                self.sh.title('Toolbox output tb33')
+                tb28 = toolbox.output(
+                    role           = 'Listing',
+                    block          = 'listing',
+                    experiment     = self.conf.xpid,
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                    kind           = 'packedlisting',
+                    begindate      = datebegin.ymd6h,
+                    enddate        = dateend.ymd6h,
+                    local          = 'mb{glob:a:\d+}/listings_safran_[begindate::ymdh]_[enddate::ymdh].tar.gz',
+                    format         = 'tar',
+                    seta           = '[glob:a]',
+                    member         = '[seta]',
+                    namespace      = self.conf.namespace_out,
+                )
+                print(t.prompt, 'tb33 =', tb28)
+                print()
 
             print('==================================================================================================')
             print('INFO :The execution went well, do not take into account the following error')

@@ -19,4 +19,3 @@ def setup(t, **kw):
         ],
         options=kw
     )
-
