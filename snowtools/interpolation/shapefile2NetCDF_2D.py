@@ -172,18 +172,18 @@ def conversion_to_L93_if_lat_lon(list_of_four):
 ################################################################
 #   ETAPE 3: nettoyer shapefile
 ################################################################
-def clean_the_mess(path_shape_shp):
+def clean_the_mess(path_shape_shp, clean_all):
     """
     Remove all the temporary files created with the script
     :param path_shape_shp: le chemin vers le fichier de shapefile
     :type path_shape_shp: str
     :return: In a pythonic point of view, nothing. Some files are deleted.
     """
-    for suffixe in ['shp', 'prj', 'shx', 'dbf']:
-        path_shape_rm = path_shape_shp[:-3] + suffixe
-        cmd = ['rm', '-f', path_shape_rm]
-        # Trop brutal: efface un shapefile existant. A reprendre
-        # subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+    if clean_all:
+        for suffixe in ['shp', 'prj', 'shx', 'dbf']:
+            path_shape_rm = path_shape_shp[:-3] + suffixe
+            cmd = ['rm', '-f', path_shape_rm]
+            subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
     cmd = 'rm -f step1.tif'
     subprocess.call(cmd.split(), stdout=sys.stdout, stderr=sys.stderr)
 
@@ -333,6 +333,10 @@ def create_netcdf(massif_number, file_out=NetCDF_out):
     else:
         massif_num_nc[:, :] = massif_number
 
+
+    print('NETCDF dimension:')
+    print(NetCDF_file.variables['ZS'].shape)
+
     NetCDF_file.close()
 
     cmd = 'mv step1.nc ' + file_out
@@ -357,9 +361,10 @@ def print_for_namelist(dict_info, output_name):
     print('XCELLSIZE=', dict_info['resol_x'])
     print('XX_LLCORNER=', dict_info['XLL'])
     print('XY_LLCORNER=', dict_info['YLL'])
+    print('A vérifier avec NETCDF dimension (décalage de 1 possible):')
     print('NCOLS=', dict_info['Nb_pixel_x'])
     print('NROWS=', dict_info['Nb_pixel_y'])
-    print('NROWS représente la valeur maximale de ntasks pour un lancement BELENOS')
+    print('pour lancement BELENOS, prendre ntasks < min(NCOLS, NROWS)')
 
 
 ################################################################
@@ -408,15 +413,17 @@ def main(args=None):
             logger.critical('Provided path for shapefile file does not exist ({})'.format(path_shapefile))
             sys.exit(1)
 
+        clean_all = False
         if path_shapefile[-3:] == 'kml':
             path_shapefile = convert_kml2shp(path_shapefile)
+            clean_all = True
         bounds = get_bounds(path_shapefile)
         bounds = conversion_to_L93_if_lat_lon(bounds)
         dict_info = create_dict_all_infos(bounds, resol_x, resol_y)
         create_MNT_tif(dict_info, path_MNT_alti)
         massif_num = find_most_common_massif(dict_info)
         create_netcdf(massif_num, output_name)
-        clean_the_mess(path_shapefile)
+        clean_the_mess(path_shapefile, clean_all)
         print_for_namelist(dict_info, output_name)
 
 
