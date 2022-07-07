@@ -172,18 +172,18 @@ def conversion_to_L93_if_lat_lon(list_of_four):
 ################################################################
 #   ETAPE 3: nettoyer shapefile
 ################################################################
-def clean_the_mess(path_shape_shp):
+def clean_the_mess(path_shape_shp, clean_all):
     """
     Remove all the temporary files created with the script
     :param path_shape_shp: le chemin vers le fichier de shapefile
     :type path_shape_shp: str
     :return: In a pythonic point of view, nothing. Some files are deleted.
     """
-    for suffixe in ['shp', 'prj', 'shx', 'dbf']:
-        path_shape_rm = path_shape_shp[:-3] + suffixe
-        cmd = ['rm', '-f', path_shape_rm]
-        # Trop brutal: efface un shapefile existant. A reprendre
-        # subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+    if clean_all:
+        for suffixe in ['shp', 'prj', 'shx', 'dbf']:
+            path_shape_rm = path_shape_shp[:-3] + suffixe
+            cmd = ['rm', '-f', path_shape_rm]
+            subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
     cmd = 'rm -f step1.tif'
     subprocess.call(cmd.split(), stdout=sys.stdout, stderr=sys.stderr)
 
@@ -316,14 +316,28 @@ def create_netcdf(massif_number, file_out=NetCDF_out):
     """
     cmd = ['gdal_translate', '-of', 'netCDF', '-co', 'FORMAT=NC4', 'step1.tif', 'step1.nc']
     subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-    alt_min_massif = infomassifs().getAltMinMax(massif_number)[0]
-    alt_max_massif = infomassifs().getAltMinMax(massif_number)[1]
+    if type(massif_number) == int:
+        alt_min_massif = infomassifs().getAltMinMax(massif_number)[0]
+        alt_max_massif = infomassifs().getAltMinMax(massif_number)[1]
+    """else:
+        size_x = massif_number.shape[0]
+        size_y = massif_number.shape[1]
+        print(size_x)
+        print(size_y)
+        alt_min_massif = np.zeros(( size_x, size_y))
+        alt_max_massif = np.zeros(( size_x, size_y))
+        for i in range(size_x):
+            print(i)
+            for j in range(size_y):
+                alt_min_massif[i,j] = infomassifs().getAltMinMax(massif_number[i,j])[0]
+                alt_max_massif[i,j] = infomassifs().getAltMinMax(massif_number[i,j])[1]"""
     NetCDF_file = Dataset('step1.nc', 'r+')
     NetCDF_file.renameVariable('Band1', 'ZS')
     ZS = NetCDF_file.variables['ZS'][:]
     ZS = np.ma.filled(ZS, np.nan)
-    ZS = np.where(ZS > alt_min_massif, ZS, alt_min_massif)
-    ZS = np.where(ZS < alt_max_massif, ZS, alt_max_massif)
+    if type(massif_number) == int:
+        ZS = np.where(ZS > alt_min_massif, ZS, alt_min_massif)
+        ZS = np.where(ZS < alt_max_massif, ZS, alt_max_massif)
     NetCDF_file.variables['ZS'][:] = ZS
     massif_num_nc = NetCDF_file.createVariable('massif_num', 'int', NetCDF_file.variables['ZS'].dimensions,
                                                fill_value=-9999999)
@@ -332,6 +346,10 @@ def create_netcdf(massif_number, file_out=NetCDF_out):
         massif_num_nc[:, :] = massif_number
     else:
         massif_num_nc[:, :] = massif_number
+
+
+    print('NETCDF dimension:')
+    print(NetCDF_file.variables['ZS'].shape)
 
     NetCDF_file.close()
 
@@ -357,9 +375,10 @@ def print_for_namelist(dict_info, output_name):
     print('XCELLSIZE=', dict_info['resol_x'])
     print('XX_LLCORNER=', dict_info['XLL'])
     print('XY_LLCORNER=', dict_info['YLL'])
+    print('A vérifier avec NETCDF dimension (décalage de 1 possible):')
     print('NCOLS=', dict_info['Nb_pixel_x'])
     print('NROWS=', dict_info['Nb_pixel_y'])
-    print('NROWS représente la valeur maximale de ntasks pour un lancement BELENOS')
+    print('pour lancement BELENOS, prendre ntasks < min(NCOLS, NROWS)')
 
 
 ################################################################
@@ -383,6 +402,7 @@ def parseArguments(args):
     parser.add_argument("-rlat", "--resol_lat", help="Latitude Resolution for 2D grid (250 or 30)", type=int,
                         default=250)
     parser.add_argument("--MNT_alt", help="Path for MNT altitude", type=str, default=None)
+    parser.add_argument("-m", "--massif_number", help="massif number if you want to choose the massif that will be applied to your zone", type=int, default=None)
 
     args = parser.parse_args(args)
     return args
@@ -402,21 +422,28 @@ def main(args=None):
         resol_x = args.resol_lon
         resol_y = args.resol_lat
         path_MNT_alti = args.MNT_alt
-
+        massif = args.massif_number
         # Check if mandatory path for shapefile is OK
         if not os.path.isfile(path_shapefile):
             logger.critical('Provided path for shapefile file does not exist ({})'.format(path_shapefile))
             sys.exit(1)
 
+        clean_all = False
         if path_shapefile[-3:] == 'kml':
             path_shapefile = convert_kml2shp(path_shapefile)
+            clean_all = True
         bounds = get_bounds(path_shapefile)
         bounds = conversion_to_L93_if_lat_lon(bounds)
         dict_info = create_dict_all_infos(bounds, resol_x, resol_y)
         create_MNT_tif(dict_info, path_MNT_alti)
+        if massif is not None:
+            massif_num = massif
+        else:
+            massif_num = find_most_common_massif(dict_info)
+
         massif_num = find_most_common_massif(dict_info)
         create_netcdf(massif_num, output_name)
-        clean_the_mess(path_shapefile)
+        clean_the_mess(path_shapefile, clean_all)
         print_for_namelist(dict_info, output_name)
 
 
