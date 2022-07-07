@@ -106,7 +106,7 @@ class TestCartopyCor(unittest.TestCase):
         self.assertEqual(self.snow.shape, (6, 2, 9), "should be 9 deciles of 24 massifs over 6 time steps")
         self.m = cartopy.Map_corse(bgimage=True)
         self.m.init_massifs(**self.mix.attributes['SD_1DY_ISBA'])
-        self.m.highlight_massif(self.massifs[0], self.snow, **self.mix.attributes['SD_1DY_ISBA'])
+        self.m.highlight_massif(self.massifs[0], **self.mix.attributes['SD_1DY_ISBA'])
         self.m.plot_center_massif(self.massifs, self.snow[5, :, 4], self.snow[5, :, 8],
                                   **self.mix.attributes['SD_1DY_ISBA'])
         self.m.addlogo()
@@ -187,10 +187,10 @@ class TestCartopyPyr(unittest.TestCase):
         self.m = cartopy.Map_pyrenees(geofeatures=True)
         self.m.init_massifs(**self.mix.attributes['SD_1DY_ISBA'])
         self.m.add_north_south_info()
-        self.m.rectangle_massif(self.massifs, [0, 1, 2], [self.snow_sud[1, :, 1], self.snow_sud[1, :, 4],
-                                                          self.snow_sud[1, :, 7], self.snow_nord[1, :, 1],
-                                                          self.snow_nord[1, :, 4], self.snow_nord[1, :, 7]], ncol=2,
-                                **self.mix.attributes['SD_1DY_ISBA'])
+        self.m.rectangle_massif(self.massifs, [self.snow_sud[1, :, 1], self.snow_sud[1, :, 4],
+                                               self.snow_sud[1, :, 7], self.snow_nord[1, :, 1],
+                                               self.snow_nord[1, :, 4], self.snow_nord[1, :, 7]],
+                                ncol=2, **self.mix.attributes['SD_1DY_ISBA'])
         self.m.addlogo()
         self.m.set_maptitle("2021041012")
         self.m.set_figtitle("2100m")
@@ -224,7 +224,7 @@ class TestCartopyPyr(unittest.TestCase):
         self.m.add_north_south_info()
         titles = self.ps.readtime()
         self.m.set_maptitle(titles)
-        self.m.rectangle_massif(self.massifs, [0, 1, 2], [self.snow_sud[:, :, 1], self.snow_sud[:, :, 4],
+        self.m.rectangle_massif(self.massifs, [self.snow_sud[:, :, 1], self.snow_sud[:, :, 4],
                                                           self.snow_sud[:, :, 7], self.snow_nord[:, :, 1],
                                                           self.snow_nord[:, :, 4], self.snow_nord[:, :, 7]], ncol=2,
                                 **self.mix.attributes['SD_1DY_ISBA'], axis=0)
@@ -308,7 +308,7 @@ class TestCartopyAlp(unittest.TestCase):
         self.lo = cartopy.MultiMap_Alps(nrow=3, ncol=3, geofeatures=False)
         self.lo.init_massifs(**self.mix.attributes['SD_1DY_ISBA'])
         self.lo.draw_massifs(self.massifs, self.snow[5, :, :], axis=1, **self.mix.attributes['SD_1DY_ISBA'])
-        self.lo.highlight_massif(10, self.snow, **self.mix.attributes['SD_1DY_ISBA'])
+        self.lo.highlight_massif(10, **self.mix.attributes['SD_1DY_ISBA'])
         self.lo.set_figtitle("SD_1DY_ISBA 2021041112 2100m")
         titles = ['Percentile {0}'.format(i) for i in range(10, 100, 10)]
         self.lo.set_maptitle(titles)

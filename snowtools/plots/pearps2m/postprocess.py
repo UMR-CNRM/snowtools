@@ -13,29 +13,20 @@ usage: python postprocess.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]
     #) Creates spaghetti plots for all massifs and stations
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-# The following lines are necessary with a French environment and python 2 to avoid a bronx crash when calling vortex
-# on months with an accent (Février, Décembre)
-# ----------------------------------------------------------
-import sys
-if sys.version_info.major == 2:  # Python2 only
-    import codecs
-    sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
-    sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
-# ----------------------------------------------------------
-
+import argparse
 import locale
-import six
 import os
-from optparse import OptionParser
 from collections import Counter, defaultdict
-
+import six
 import numpy as np
+import datetime
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.style
 
+from abc import ABC, abstractmethod
+from bronx.stdtypes.date import today
+from bronx.syntax.externalcode import ExternalCodeImportChecker
 from snowtools.utils.prosimu import prosimu
 from snowtools.utils.dates import check_and_convert_date, pretty_date
 from snowtools.plots.temporal.chrono import spaghettis_with_det, spaghettis
@@ -43,16 +34,10 @@ from snowtools.utils.infomassifs import infomassifs
 from snowtools.utils.FileException import DirNameException
 from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR
 
-from bronx.stdtypes.date import today
-from bronx.syntax.externalcode import ExternalCodeImportChecker
-if six.PY2:
-    echecker = ExternalCodeImportChecker('plots.maps.basemap')
-    with echecker:
-        from snowtools.plots.maps.basemap import Map_alpes, Map_pyrenees, Map_corse
-else:
-    echecker = ExternalCodeImportChecker('plots.maps.cartopy')
-    with echecker:
-        from snowtools.plots.maps.cartopy import Map_alpes, Map_pyrenees, Map_corse, Map_vosges, Map_jura, Map_central
+ECHECKER = ExternalCodeImportChecker('plots.maps.cartopy')
+with ECHECKER:
+    from snowtools.plots.maps.cartopy import Map_alpes, Map_pyrenees, \
+        Map_corse, Map_vosges, Map_jura, Map_central
 
 if 'fast' in matplotlib.style.available:
     matplotlib.style.use('fast')
@@ -62,42 +47,43 @@ matplotlib.rcParams['axes.ymargin'] = 0
 # matplotlib.rcParams["figure.dpi"] = 75
 
 
-usage = "usage: python postprocess.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]"
+USAGE = "usage: python postprocess.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]"
+
+PARSER = argparse.ArgumentParser(description="Postprocess new snow heights: "
+                                             "1) extracts operational simulation results,"
+                                             "2) Plots maps for the Alps, the Pyrenees the Corse,"
+                                             "3) Creates spaghetti plots "
+                                             "for all massifs and stations")
+
+PARSER.add_argument("-b", action="store", type=str, dest="datebegin", default=today().ymd,
+                    help="First year of extraction")
+PARSER.add_argument("-e", action="store", type=str, dest="dateend", default=today().ymd,
+                    help="Last year of extraction")
+PARSER.add_argument("-o", action="store", type=str, dest="diroutput",
+                    default=os.path.join(LUSTRE_NOSAVE_USER_DIR, "PEARPS2M"),
+                    help="Output directory")
+PARSER.add_argument("--dev", action="store_true", dest="dev", default=False)
+PARSER.add_argument("--reforecast", action="store_true", dest="reforecast", default=False)
+
+OPTIONS = PARSER.parse_args()  # @UnusedVariable
 
 
-def parse_options(arguments):
+def build_filename(massif, alti):
     """
-    Treat options passed to the script.
+    Construct a filename from massif and altitude information.
 
-    :param arguments: arguments from calling the script
-    :return: options
+    :param massif: a massif number
+    :param alti: an altitude level
+    :return: filename
+    :rtype: str
     """
-    parser = OptionParser(usage)
-
-    parser.add_option("-b",
-                      action="store", type="string", dest="datebegin", default=today().ymd,
-                      help="First year of extraction")
-
-    parser.add_option("-e",
-                      action="store", type="string", dest="dateend", default=today().ymd,
-                      help="Last year of extraction")
-
-    parser.add_option("-o",
-                      action="store", type="string", dest="diroutput",
-                      default=os.path.join(LUSTRE_NOSAVE_USER_DIR, "PEARPS2M"),
-                      help="Output directory")
-
-    parser.add_option("--dev",
-                      action="store_true", dest="dev", default=False)
-
-    parser.add_option("--reforecast", action="store_true", dest="reforecast", default=False)
-
-    (options, args) = parser.parse_args(arguments)  # @UnusedVariable
-
-    return options
+    filename = str(massif)
+    if alti:
+        filename += "_{:d}".format(alti)
+    return filename
 
 
-class config(object):
+class Config:
     """
     Configuration passed to S2MExtractor and to be used in vortex toolboxes.
 
@@ -106,7 +92,8 @@ class config(object):
     xpid = "oper"  #: Operational chain
     alternate_xpid = ["OPER@lafaysse"]  #: Alternative experiment id
     # alternate_xpid = ["oper"]
-    list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes'] #: List of geometries
+    #: List of geometries
+    list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
     # list_geometry = ['alp', 'pyr', 'cor', 'postes']
     #: Alternative list of geometries (corresponding to alternative experiment ids)
     # alternate_list_geometry = [['alp', 'pyr', 'cor', 'postes']]
@@ -114,22 +101,24 @@ class config(object):
     # Development chain
     # xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
     # list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
-
-    list_members = list(range(0, 36))  #: 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+    #: 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+    list_members = list(range(0, 36))
 
     def __init__(self):
         """
         #) checks and converts dates
         #) creates output directories if they don't exist.
-
         """
-        options = parse_options(sys.argv)
-        options.datebegin, options.dateend = [check_and_convert_date(dat) for dat in [options.datebegin, options.dateend]]
-        if options.datebegin.hour == 0:
-            self.rundate = options.datebegin.replace(hour=6)  #: Date of model run  class:`bronx.stdtypes.date.Date`
+        OPTIONS.datebegin, OPTIONS.dateend = [check_and_convert_date(dat)
+                                              for dat in [OPTIONS.datebegin, OPTIONS.dateend]]
+        if OPTIONS.datebegin.hour == 0:
+            #: Date of model run  class:`bronx.stdtypes.date.Date`
+            self.rundate = OPTIONS.datebegin.replace(hour=6)
         else:
-            self.rundate = options.datebegin  #: Date of model run  :class:`bronx.stdtypes.date.Date`
-        self.diroutput = options.diroutput + "/" + self.rundate.strftime("%Y%m%d%H")  #: output directory
+            #: Date of model run  :class:`bronx.stdtypes.date.Date`
+            self.rundate = OPTIONS.datebegin
+        #: output directory
+        self.diroutput = OPTIONS.diroutput + "/" + self.rundate.strftime("%Y%m%d%H")
         self.diroutput_maps = self.diroutput + "/maps"  #: output directory for maps
         self.diroutput_plots = self.diroutput + "/plots"  #: output directory for other plots
 
@@ -137,21 +126,22 @@ class config(object):
             if not os.path.isdir(required_directory):
                 os.mkdir(required_directory)
 
-        self.dev = options.dev
-        if options.dev:
+        self.dev = OPTIONS.dev
+        if OPTIONS.dev:
             self.xpid = "nouveaux_guess@lafaysse"
-            delattr(config, 'alternate_xpid')
-            self.list_geometry = ['jur4_allslopes', 'mac11_allslopes', 'vog3_allslopes', 'cor', 'alp', 'pyr']
-        self.reforecast = options.reforecast
-        if options.reforecast:
+            delattr(Config, 'alternate_xpid')
+            self.list_geometry = ['jur4_allslopes', 'mac11_allslopes',
+                                  'vog3_allslopes', 'cor', 'alp', 'pyr']
+        self.reforecast = OPTIONS.reforecast
+        if OPTIONS.reforecast:
             self.xpid = "reforecast_double2021@vernaym"
-            delattr(config, 'alternate_xpid')
+            delattr(Config, 'alternate_xpid')
             self.list_geometry = ['jur4_allslopes_reforecast', 'mac11_allslopes_reforecast',
                                   'vog3_allslopes_reforecast', 'alp27_allslopes',
                                   'pyr24_allslopes', 'cor2_allslopes']
 
 
-class Ensemble(object):
+class Ensemble:
     """
     Describes an ensemble of simulations
 
@@ -162,6 +152,89 @@ class Ensemble(object):
         """
         self.spatialdim = "Number_of_points"  #: spatial dimension
         self.ensemble = {}  #: data dict with variable names as keys and np.arrays as values
+        self.simufiles = []  #: list of prosimu objects with simulation file
+
+    @property
+    def nech(self):
+        """number of leadtimes (forecast steps)"""
+        return self._nech
+
+    @nech.setter
+    def nech(self, value):
+        self._nech = value
+
+    @property
+    def inddeterministic(self):
+        """index of the deterministic member"""
+        return self._inddeterministic
+
+    @inddeterministic.setter
+    def inddeterministic(self, value):
+        self._inddeterministic = value
+
+    @property
+    def nmembers(self):
+        """number of ensemble members"""
+        return self._nmembers
+
+    @nmembers.setter
+    def nmembers(self, value):
+        self._nmembers = value
+
+    @property
+    def time(self):
+        """time variable from the first simulation file (leadtime array)"""
+        return self._time
+
+    @time.setter
+    def time(self, value):
+        self._time = value
+
+    @property
+    def indpoints(self):
+        """list with spatial indices"""
+        return self._indpoints
+
+    @indpoints.setter
+    def indpoints(self, value):
+        self._indpoints = value
+
+    @property
+    def npoints(self):
+        """total number of spatial points"""
+        return self._npoints
+
+    @npoints.setter
+    def npoints(self, value):
+        self._npoints = value
+
+    @property
+    def alti(self):
+        """
+        altitude variable from the first simulation file.
+
+        :return: altitude variable
+        :rtype: numpy array
+        """
+        return self._alti
+
+    @alti.setter
+    def alti(self, value):
+        self._alti = value
+
+    @property
+    def aspect(self):
+        """
+        aspect variable from the first simulation file.
+
+        :return: aspect variable
+        :rtype: numpy array
+        """
+        return self._aspect
+
+    @aspect.setter
+    def aspect(self, value):
+        self._aspect = value
 
     def open(self, listmembers):
         """
@@ -169,30 +242,15 @@ class Ensemble(object):
 
         :param listmembers: list of ensemble members (filenames)
         :type listmembers: list
-        :ivar simufiles: list of prosimu objects with simulation file
-        :vartype simufiles: list
-        :ivar inddeterministic: index of the deterministic member
-        :vartype inddeterministic: int
-        :ivar nmembers:  number of members
-        :vartype nmemeber: int
-        :ivar ~.time: time variable from the first simulation file
-        :vartype ~.time: numpy array
-        :ivar indpoints: list with spatial indices
-        :vartype indpoints: list
-        :ivar npoints: total number of spatial points
-        :vartype npoints: int
-        :ivar nech: number of time steps (forecast steps)
-        :vartype nech: int
         """
         print(listmembers)
-        self.simufiles = []
-        for m, member in enumerate(listmembers):
-            p = prosimu(member)
-            if m == 0:
-                self.nech = p.getlendim("time")
-            ntime = p.getlendim("time")
+        for m_i, member in enumerate(listmembers):
+            p_i = prosimu(member)
+            if m_i == 0:
+                self.nech = p_i.getlendim("time")
+            ntime = p_i.getlendim("time")
             if ntime == self.nech:
-                self.simufiles.append(p)
+                self.simufiles.append(p_i)
                 if 'mb035' in member:
                     self.inddeterministic = len(self.simufiles) - 1
 
@@ -202,10 +260,13 @@ class Ensemble(object):
 
         self.indpoints = self.select_points()
         self.npoints = self.get_npoints()
+        self.alti = self.read_geovar("ZS")
+        self.aspect = self.read_geovar("aspect")
 
     def select_points(self):
         """
-        Get a list of spatial indices from the spatial dimension length in the first simulation file.
+        Get a list of spatial indices from the spatial dimension
+        length in the first simulation file.
 
         :return: list of spatial points (indices)
         :rtype: list
@@ -220,7 +281,7 @@ class Ensemble(object):
         :return: total number of spatial points
         :rtype: int
         """
-        if type(self.indpoints) is tuple:
+        if isinstance(self.indpoints, tuple):
             npoints = 0
             for indpoints in self.indpoints:
                 npoints += len(indpoints)
@@ -233,32 +294,33 @@ class Ensemble(object):
         """
         Read a variable and store it in :py:attr:`~.ensemble`
 
-        :param varname: name of the variable to be read (corresponds to the variable name of the simulation NetCDF files)
+        :param varname: name of the variable to be read
+        (corresponds to the variable name of the simulation NetCDF files)
         :type varname: str
-
         """
 
         self.ensemble[varname] = np.empty([self.nech, self.npoints, self.nmembers])
-        for m, member in enumerate(self.simufiles):
-            print("read " + varname + " for member" + str(m))
-            import datetime
+        for m_i, member in enumerate(self.simufiles):
+            print("read " + varname + " for member" + str(m_i))
             before = datetime.datetime.today()
 
-            if type(self.indpoints) is tuple:
+            if isinstance(self.indpoints, tuple):
                 sections = []
                 for indpoints in self.indpoints:
                     sections.append(member.read_var(varname, Number_of_points=indpoints))
 
-                self.ensemble[varname][:, :, m] = np.concatenate(tuple(sections), axis=1)
+                self.ensemble[varname][:, :, m_i] = np.concatenate(tuple(sections), axis=1)
             else:
-                self.ensemble[varname][:, :, m] = member.read_var(varname, Number_of_points=self.indpoints)
+                self.ensemble[varname][:, :, m_i] = member.read_var(varname,
+                                                                    Number_of_points=self.indpoints)
 
             after = datetime.datetime.today()
             print(after - before)
 
         # Verrues (à éviter)
         if varname == 'NAT_LEV':
-            self.ensemble[varname][:, :, :] = np.where(self.ensemble[varname] == 6., 0., self.ensemble[varname])
+            self.ensemble[varname][:, :, :] = np.where(self.ensemble[varname] == 6.,
+                                                       0., self.ensemble[varname])
 
     def read_geovar(self, varname):
         """
@@ -269,18 +331,19 @@ class Ensemble(object):
         :return: data read
         :rtype: numpy array
         """
-        if type(self.indpoints) is tuple:
+        if isinstance(self.indpoints, tuple):
             sections = []
             for indpoints in self.indpoints:
                 sections.append(self.simufiles[0].read_var(varname, Number_of_points=indpoints))
 
             return np.concatenate(tuple(sections))
-        else:
-            return self.simufiles[0].read_var(varname, Number_of_points=self.indpoints)
+
+        return self.simufiles[0].read_var(varname, Number_of_points=self.indpoints)
 
     def probability(self, varname, seuilinf=-999999999, seuilsup=999999999):
         """
-        Calculates probability as the proportion of ensemble members with values larger than :py:attr:`seuilinf`
+        Calculates probability as the proportion of ensemble members with
+        values larger than :py:attr:`seuilinf`
         and smaller than :py:attr:`seuilsup`.
 
         :param varname: name of the variable for which to calculate the probability
@@ -337,14 +400,13 @@ class Ensemble(object):
     def spread(self, varname):
         """
         Calculate ensemble spread (standard deviation) for a given variable.
-        
+
         :param varname: variable name
         :type varname: str
         :return: ensemble spread
         :rtype: numpy array
         :rtype: numpy array
         """
-
         if varname not in self.ensemble.keys():
             self.read(varname)
 
@@ -368,28 +430,6 @@ class Ensemble(object):
         indpoints = self.select_points()
         return indpoints, indpoints
 
-    def get_alti(self):
-        """
-        Get altitude variable from the first simulation file.
-
-        :return: altitude variable
-        :rtype: numpy array
-        """
-        if not hasattr(self, "alti"):
-            self.alti = self.read_geovar("ZS")
-        return self.alti
-
-    def get_aspect(self):
-        """
-        Get aspect variable from the first simulation file.
-
-        :return: aspect variable
-        :rtype: numpy array
-        """
-        if not hasattr(self, "aspect"):
-            self.aspect = self.read_geovar("aspect")
-        return self.aspect
-
 
 class _EnsembleMassif(Ensemble):
     """
@@ -409,6 +449,38 @@ class _EnsembleMassif(Ensemble):
         """
         return "massifs"
 
+    @property
+    def massifdim(self):
+        """
+        Read massif_num variable from the first simulation file.
+
+        :return: massif numbers
+        :rtype: numpy array
+        """
+        if not hasattr(self, "_massifdim"):
+            self.massifdim = self.read_geovar("massif_num")
+        return self._massifdim
+
+    @massifdim.setter
+    def massifdim(self, value):
+        self._massifdim = value
+
+    @property
+    def massifvar(self):
+        """
+        "massif" variable from the first simulation file.
+
+        :return: massif numbers
+        :rtype: numpy array
+        """
+        if not hasattr(self, "_massifvar"):
+            self.massifvar = self.simufiles[0].read_var("massif")
+        return self._massifvar
+
+    @massifvar.setter
+    def massifvar(self, value):
+        self._massifvar = value
+
     def read(self, varname):
         """
         Read data for a given variable name into the :py:attr:`ensemble` instance variable.
@@ -418,38 +490,17 @@ class _EnsembleMassif(Ensemble):
 
         """
         if varname == 'naturalIndex':
-            nmassifs = len(self.get_massifvar())
+            nmassifs = len(self.massifvar)
             self.ensemble[varname] = np.empty([self.nech, nmassifs, self.nmembers])
-            for m, member in enumerate(self.simufiles):
-                self.ensemble[varname][:, :, m] = member.read_var(varname)
+            for m_i, member in enumerate(self.simufiles):
+                self.ensemble[varname][:, :, m_i] = member.read_var(varname)
         else:
             super(_EnsembleMassif, self).read(varname)
 
-    def get_massifdim(self):
-        """
-        Read massif_num variable from the first simulation file.
-
-        :return: massif numbers
-        :rtype: numpy array
-        """
-        if not hasattr(self, "massifdim"):
-            self.massifdim = self.read_geovar("massif_num")
-        return self.massifdim
-
-    def get_massifvar(self):
-        """
-        Read "massif" variable from the first simulation file.
-
-        :return: massif numbers
-        :rtype: numpy array
-        """
-        if not hasattr(self, "massifvar"):
-            self.massifvar = self.simufiles[0].read_var("massif")
-        return self.massifvar
-
     def get_metadata(self, nolevel=False):
         """
-        Construct filenames and plot titles from massif and altitude variables in the first simulation file.
+        Construct filenames and plot titles from massif and altitude
+        variables in the first simulation file.
 
         :param nolevel: if True the altitude is not included in the filenames and titles.
         :return: a list of filenames and a list of titles
@@ -457,28 +508,14 @@ class _EnsembleMassif(Ensemble):
         """
 
         if nolevel:
-            massif = self.get_massifvar()
+            massif = self.massifvar
             alti = [None] * len(massif)
         else:
-            alti = self.get_alti()
-            massif = self.get_massifdim()
+            alti = self.alti
+            massif = self.massifdim
 
-        return [self.build_filename(mas, alt) for mas, alt in zip(massif, alti)], \
+        return [build_filename(mas, alt) for mas, alt in zip(massif, alti)], \
                [self.build_title(mas, alt) for mas, alt in zip(massif, alti)]
-
-    def build_filename(self, massif, alti):
-        """
-        Construct a filename from massif and altitude information.
-
-        :param massif: a massif number
-        :param alti: an altitude level
-        :return: filename
-        :rtype: str
-        """
-        filename = str(massif)
-        if alti:
-            filename += "_" + str(int(alti))
-        return filename
 
     def build_title(self, massif, alti):
         """
@@ -491,19 +528,21 @@ class _EnsembleMassif(Ensemble):
         """
         title = self.InfoMassifs.getMassifName(massif)  # type unicode
         if alti:
-            title += u" %d m" % int(alti)
+            title += "{:d}m".format(int(alti))
         return title  # matplotlib needs unicode
 
 
 class EnsembleFlatMassif(_EnsembleMassif):
     """
-    Class for ensemble simulations on a massif geometry (SAFRAN like) where all data points are considered
+    Class for ensemble simulations on a massif geometry (SAFRAN like)
+    where all data points are considered
     on flat terrain (zero slope and no orientation information).
     """
 
     def select_points(self):
         """
-        Select spatial indices from the first simulation file where aspect=-1 (zero slope, no orientation information).
+        Select spatial indices from the first simulation file
+        where aspect=-1 (zero slope, no orientation information).
 
         :return: spatial indices to be read from simulation files
         :rtype: numpy boolean array
@@ -513,16 +552,19 @@ class EnsembleFlatMassif(_EnsembleMassif):
 
 class EnsembleNorthSouthMassif(_EnsembleMassif):
     """
-    Class for ensemble simulations on a massif geometry (SAFRAN like) where data points are considered at a
+    Class for ensemble simulations on a massif geometry (SAFRAN like)
+    where data points are considered at a
     slope of 40 degrees and two orientations: North and South.
     """
 
     def select_points(self):
         """
-        Select spatial indices from the first simulation file where slope=40 and aspect either 0 or 180.
+        Select spatial indices from the first simulation file
+        where slope=40 and aspect either 0 or 180.
 
         :return: spatial indices to be read from simulation files
-        :rtype: a tuple of numpy boolean array, where the first component corresponds to the Northern orientation
+        :rtype: a tuple of numpy boolean array, where the first
+                component corresponds to the Northern orientation
                 and the second to the Southern one.
         """
         # return np.sort(np.concatenate((self.simufiles[0].get_points(aspect = 0, slope = 40),
@@ -548,8 +590,10 @@ class EnsembleMassifPoint(_EnsembleMassif):
     def select_points(self):
         """Select index of the corresponding point"""
 
-        return self.simufiles[0].get_points(massif_num= self.massif_num, aspect=self.aspect, slope=self.slope,
+        return self.simufiles[0].get_points(massif_num=self.massif_num,
+                                            aspect=self.aspect, slope=self.slope,
                                             ZS=self.alti)
+
 
 class EnsembleStation(Ensemble):
     """
@@ -578,41 +622,19 @@ class EnsembleStation(Ensemble):
         """
         return self.simufiles[0].read_var("station", Number_of_points=self.indpoints)
 
-    def get_metadata(self, **kwargs):
+    def get_metadata(self):
         """
         Construct filenames and plot titles from altitude and station information
 
-        :param kwargs:
         :return: a list of filenames and a list of plot titles
         """
         alti = self.simufiles[0].read_var("ZS", Number_of_points=self.indpoints)
         station = self.get_station()
-        return [self.build_filename(stat, alt) for stat, alt in zip(station, alti)], \
-               [self.build_title(stat, alt) for stat, alt in zip(station, alti)]
-
-    def build_filename(self, station, alti):
-        """
-        Construct a filename from a station number
-
-        :param station: station number
-        :param alti: altitude level (not used)
-        :return: filename
-        :rtype: station number as 8digit integer.
-        """
-        return '%08d' % station
-
-    def build_title(self, station, alti):
-        """
-        Construct a title from a station number and altitude level.
-
-        :param station: station number
-        :param alti: station altitude
-        :return: title string composed of the station name and the altitude.
-        :rtype: unicode str
-        """
         # nameposte gives unicode
         # matplotlib expects unicode
-        return self.InfoMassifs.nameposte(station) + u" %d m" % int(alti)
+        return ['{0:08d}'.format(stat) for stat, alt in zip(station, alti)], \
+               ["{0}{1:d}m".format(self.InfoMassifs.nameposte(stat),
+                                   int(alt)) for stat, alt in zip(station, alti)]
 
 
 class EnsembleDiags(Ensemble):
@@ -629,8 +651,10 @@ class EnsembleDiags(Ensemble):
 
     def diags(self, list_var, list_quantiles, list_seuils):
         """
-        Calculate quantiles and exceedance probabilities for a list of variables, quantiles and thresholds.
-        The quantiles are stored in :py:attr:`~.quantiles` and the probabilities in :py:attr:`~.proba`
+        Calculate quantiles and exceedance probabilities
+        for a list of variables, quantiles and thresholds.
+        The quantiles are stored in :py:attr:`~.quantiles`
+        and the probabilities in :py:attr:`~.proba`
 
         :param list_var: list of variables
         :type list_var: iterable
@@ -652,7 +676,8 @@ class EnsembleDiags(Ensemble):
 
     def close(self):
         """
-        Close simulation files and remove data from :py:attr:`~.plots.pearps2m.postprocess.Ensemble.ensemble`,
+        Close simulation files and remove data from
+        :py:attr:`~.plots.pearps2m.postprocess.Ensemble.ensemble`,
         :py:attr:`.proba` and :py:attr:`.quantiles`
         """
         super(EnsembleDiags, self).close()
@@ -660,7 +685,7 @@ class EnsembleDiags(Ensemble):
         self.quantiles.clear()
 
 
-class EnsembleOperDiags(EnsembleDiags):
+class EnsembleOperDiags(ABC, EnsembleDiags):
     """
     Class for operationally used plots.
     """
@@ -668,48 +693,72 @@ class EnsembleOperDiags(EnsembleDiags):
     formatplot = 'png'
     #: dict of plot attributes for each variable
     attributes = dict(
-        PP_SD_1DY_ISBA=dict(convert_unit=1., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        PP_SD_1DY_ISBA=dict(convert_unit=1., forcemin=0., forcemax=60.,
+                            palette='YlGnBu', seuiltext=50.,
                             label=u'Epaisseur de neige fraîche en 24h (cm)'),
-        SD_1DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        SD_1DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60.,
+                         palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur de neige fraîche en 24h (cm)'),
-        SD_3DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        SD_3DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60.,
+                         palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur de neige fraîche en 72h (cm)'),
-        RAMSOND_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        RAMSOND_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60.,
+                          palette='YlGnBu', seuiltext=50.,
                           label=u'Epaisseur mobilisable (cm)'),
-        NAT_LEV=dict(forcemin=-0.5, forcemax=5.5, palette='YlOrRd', ncolors=6, label=u'Risque naturel',
-                     ticks=[u'Très faible', u'Faible', u'Mod. A', u'Mod. D', u'Fort', u'Très fort']),
-        naturalIndex=dict(forcemin=0., forcemax=8., palette='YlOrRd', label=u'Indice de risque naturel', format='%.1f',
+        NAT_LEV=dict(forcemin=-0.5, forcemax=5.5, palette='YlOrRd',
+                     ncolors=6, label=u'Risque naturel',
+                     ticks=[u'Très faible', u'Faible', u'Mod. A',
+                            u'Mod. D', u'Fort', u'Très fort']),
+        naturalIndex=dict(forcemin=0., forcemax=8., palette='YlOrRd',
+                          label=u'Indice de risque naturel', format='%.1f',
                           nolevel=True),
         DSN_T_ISBA=dict(convert_unit=100., label=u'Hauteur de neige (cm)'),
         WSN_T_ISBA=dict(label=u'Equivalent en eau (kg/m2)'),
-        SNOMLT_ISBA=dict(convert_unit=3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        SNOMLT_ISBA=dict(convert_unit=3. * 3600., forcemin=0.,
+                         forcemax=60., palette='YlGnBu', seuiltext=50.,
                          label=u'Ecoulement en 3h (kg/m2/3h)'),
-        WET_TH_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        WET_TH_ISBA=dict(convert_unit=100., forcemin=0.,
+                         forcemax=60., palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur humide (cm)'),
-        REFRZTH_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        REFRZTH_ISBA=dict(convert_unit=100., forcemin=0.,
+                          forcemax=60., palette='YlGnBu', seuiltext=50.,
                           label=u'Epaisseur regelée (cm)'),
-        RAINF_ISBA=dict(convert_unit=3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        RAINF_ISBA=dict(convert_unit=3. * 3600., forcemin=0.,
+                        forcemax=60., palette='YlGnBu', seuiltext=50.,
                         label=u'Pluie en 3h (kg/m2/3h)'),
     )
     #: list of quantiles
     list_q = [20, 50, 80]
 
-    def alldiags(self):
-        """
-        Calculate percentiles for all variables in :py:attr:`list_var_spag` and :py:attr:`list_var_map`.
-        """
-        super(EnsembleOperDiags, self).diags(set(self.list_var_spag + self.list_var_map), self.list_q, {})
+    @abstractmethod
+    def get_metadata(self, nolevel=False):
+        raise NotImplementedError("Must override get_metadata")
 
-    def pack_spaghettis(self, suptitle, diroutput = "."):
+    def alldiags(self, list_var_spag, list_var_map):
+        """
+        Calculate percentiles for all variables in
+        :py:attr:`list_var_spag` and :py:attr:`list_var_map`.
+
+        :param list_var_spag: list of variables for spaghetti plots
+        :type list_var_spag: list
+        :param list_var_map: list of variables for map plots
+        :type list_var_map: list
+        """
+        super(EnsembleOperDiags, self).diags(set(list_var_spag + list_var_map),
+                                             self.list_q, {})
+
+    def pack_spaghettis(self, list_var_spag, suptitle_s, diroutput="."):
         """
         Produce spaghetti plots for all variables in :py:attr:`list_var_spag`.
 
-        :param suptitle: Suptitle for all plots.
-        :type suptitle: unicode string
+        :param list_var_spag: variable list
+        :type list_var_spag: list of strings
+        :param suptitle_s: Suptitle for all plots.
+        :type suptitle_s: unicode string
         :param diroutput: directory to save the plots
         """
 
-        for var in self.list_var_spag:
+        for var in list_var_spag:
 
             if 'nolevel' not in self.attributes[var].keys():
                 self.attributes[var]['nolevel'] = False
@@ -718,10 +767,10 @@ class EnsembleOperDiags(EnsembleDiags):
 
             if hasattr(self, 'inddeterministic'):
                 # print('has inddet')
-                s = spaghettis_with_det(self.time)
+                sp_h = spaghettis_with_det(self.time)
             else:
                 # print('no inddet')
-                s = spaghettis(self.time)
+                sp_h = spaghettis(self.time)
             settings = self.attributes[var].copy()
             if 'label' in self.attributes[var].keys():
                 settings['ylabel'] = self.attributes[var]['label']
@@ -729,7 +778,8 @@ class EnsembleOperDiags(EnsembleDiags):
 
             for point in range(0, npoints):
                 if 'convert_unit' in self.attributes[var].keys():
-                    allmembers = self.ensemble[var][:, point, :] * self.attributes[var]['convert_unit']
+                    allmembers = self.ensemble[var][:, point, :] \
+                                 * self.attributes[var]['convert_unit']
                     qmin = self.quantiles[var][0][:, point] * self.attributes[var]['convert_unit']
                     qmed = self.quantiles[var][1][:, point] * self.attributes[var]['convert_unit']
                     qmax = self.quantiles[var][2][:, point] * self.attributes[var]['convert_unit']
@@ -739,90 +789,101 @@ class EnsembleOperDiags(EnsembleDiags):
                     qmed = self.quantiles[var][1][:, point]
                     qmax = self.quantiles[var][2][:, point]
 
-                if hasattr(self, 'inddeterministic'):
-                    s.draw(self.time, allmembers, qmin, qmed, qmax, deterministic=allmembers[:, self.inddeterministic],
-                           **settings)
+                if hasattr(self, '_inddeterministic'):
+                    sp_h.draw(self.time, allmembers, qmin, qmed, qmax,
+                              deterministic=allmembers[:, self.inddeterministic],
+                              **settings)
                 else:
-                    s.draw(self.time, allmembers, qmin, qmed, qmax, **settings)
+                    sp_h.draw(self.time, allmembers, qmin, qmed, qmax, **settings)
 
-                s.set_title(list_titles[point])
-                s.set_suptitle(suptitle)
-                s.addlogo()
-                plotname = diroutput + "/" + var + "_" + list_filenames[point] + "." + self.formatplot
-                s.save(plotname, formatout=self.formatplot)
+                sp_h.set_title(list_titles[point])
+                sp_h.set_suptitle(suptitle_s)
+                sp_h.addlogo()
+                plotname = diroutput + "/" + var + "_" + list_filenames[point] + \
+                    "." + self.formatplot
+                sp_h.save(plotname, formatout=self.formatplot)
                 print(plotname + " is available.")
 
-            s.close()
+            sp_h.close()
 
-    def pack_spaghettis_multipoints(self, list_pairs, suptitle, diroutput=".", **kwargs):
+    def pack_spaghettis_multipoints(self, list_var_spag_2points, list_pairs,
+                                    suptitle_s, diroutput=".", **kwargs):
         """
-        Produce spaghetti plots with up to four points per plot for variables in :py:attr:`list_var_spag_2points`.
+        Produce spaghetti plots with up to four points per plot for
+        variables in :py:attr:`list_var_spag_2points`.
 
         Each point gets a different color.
-
+        :param list_var_spag_2points: list of variables to plot
+        :type list_var_spag_2points: list of strings
         :param list_pairs: list of indices to plot together on each plot
         :type list_pairs: list of list
-        :param suptitle: common suptitle for all plots
-        :type suptitle: unicode str
+        :param suptitle_s: common suptitle for all plots
+        :type suptitle_s: unicode str
         :param diroutput: output directory
         :param kwargs: arguments to be passed to plotting routines, notably "labels"
         """
 
         list_colors = ['blue', 'red', 'green', 'orange']
 
-        for var in self.list_var_spag_2points:
+        for var in list_var_spag_2points:
 
             if 'nolevel' not in self.attributes[var].keys():
                 self.attributes[var]['nolevel'] = False
 
-            list_filenames, list_titles = self.get_metadata(nolevel = self.attributes[var]['nolevel'])
+            list_filenames, list_titles = self.get_metadata(nolevel=self.attributes[var]['nolevel'])
 
             if hasattr(self, 'inddeterministic'):
-                s = spaghettis_with_det(self.time)
+                sp_h = spaghettis_with_det(self.time)
             else:
-                s = spaghettis(self.time)
+                sp_h = spaghettis(self.time)
 
             settings = self.attributes[var].copy()
             if 'label' in self.attributes[var].keys():
                 settings['ylabel'] = self.attributes[var]['label']
 
             for pair in list_pairs:
-                for p, point in enumerate(pair):
+                for p_i, point in enumerate(pair):
                     if 'convert_unit' in self.attributes[var].keys():
-                        allmembers = self.ensemble[var][:, point, :] * self.attributes[var]['convert_unit']
-                        qmin = self.quantiles[var][0][:, point] * self.attributes[var]['convert_unit']
-                        qmed = self.quantiles[var][1][:, point] * self.attributes[var]['convert_unit']
-                        qmax = self.quantiles[var][2][:, point] * self.attributes[var]['convert_unit']
+                        allmembers = self.ensemble[var][:, point, :] \
+                                     * self.attributes[var]['convert_unit']
+                        qmin = self.quantiles[var][0][:, point] \
+                            * self.attributes[var]['convert_unit']
+                        qmed = self.quantiles[var][1][:, point] \
+                            * self.attributes[var]['convert_unit']
+                        qmax = self.quantiles[var][2][:, point] \
+                            * self.attributes[var]['convert_unit']
                     else:
                         allmembers = self.ensemble[var][:, point, :]
                         qmin = self.quantiles[var][0][:, point]
                         qmed = self.quantiles[var][1][:, point]
                         qmax = self.quantiles[var][2][:, point]
-                    settings['colorquantiles'] = list_colors[p]
-                    settings['colormembers'] = list_colors[p]
+                    settings['colorquantiles'] = list_colors[p_i]
+                    settings['colormembers'] = list_colors[p_i]
                     if 'labels' in kwargs.keys():
-                        settings['commonlabel'] = kwargs['labels'][p]
+                        settings['commonlabel'] = kwargs['labels'][p_i]
 
                     if hasattr(self, 'inddeterministic'):
-                        s.draw(self.time, allmembers, qmin, qmed, qmax,
-                               deterministic=allmembers[:, self.inddeterministic], **settings)
+                        sp_h.draw(self.time, allmembers, qmin, qmed, qmax,
+                                  deterministic=allmembers[:, self.inddeterministic], **settings)
                     else:
-                        s.draw(self.time, allmembers, qmin, qmed, qmax, **settings)
+                        sp_h.draw(self.time, allmembers, qmin, qmed, qmax, **settings)
 
-                s.set_title(list_titles[point])
-                s.set_suptitle(suptitle)
-                s.addlogo()
-                plotname = diroutput + "/" + var + "_" + list_filenames[point] + "." + self.formatplot
-                s.save(plotname, formatout=self.formatplot)
+                sp_h.set_title(list_titles[pair])
+                sp_h.set_suptitle(suptitle_s)
+                sp_h.addlogo()
+                plotname = diroutput + "/" + var + "_" + list_filenames[pair] \
+                    + "." + self.formatplot
+                sp_h.save(plotname, formatout=self.formatplot)
                 print(plotname + " is available.")
 
-            s.close()
+            sp_h.close()
 
 
-@echecker.disabled_if_unavailable
-class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
+@ECHECKER.disabled_if_unavailable
+class EnsembleOperDiagsFlatMassif(EnsembleFlatMassif, EnsembleOperDiags):
     """
-    Class for operationally plotting maps and spaghetti plots for ensembles with massif geometry and for the zero slope case.
+    Class for operationally plotting maps and spaghetti plots for
+    ensembles with massif geometry and for the zero slope case.
     """
     #: maximum height level to be treated
     levelmax = 3900
@@ -834,85 +895,81 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
     list_var_spag = ['naturalIndex', 'DSN_T_ISBA', 'WSN_T_ISBA', 'SNOMLT_ISBA']
     # list_var_spag = ['DSN_T_ISBA', 'WSN_T_ISBA', 'SNOMLT_ISBA']
 
-    def pack_maps(self, domain, suptitle, diroutput="."):
+    def pack_maps(self, domain_m, suptitle_m, diroutput="."):
         """
-        Produce maps for the variables given in :py:attr:`list_var_map` over the regions given in :py:attr:`domain`
+        Produce maps for the variables given in :py:attr:`list_var_map`
+        over the regions given in :py:attr:`domain`
         for each available altitude level and time step.
 
         Each massif is colored corresponding to the second percentile value defined in
         :py:attr:`.list_q` and
-        the color map defined in :py:attr:`.attributes`. At the center of each massif the values corresponding to
+        the color map defined in :py:attr:`.attributes`.
+        At the center of each massif the values corresponding to
         the first three
         percentiles in :py:attr:`.list_q` are marked.
 
-        :param domain: list of region identifiers (e.g., "alp", "pyr", "cor")
-        :param suptitle: common suptitle for all plots
-        :type suptitle: str
+        :param domain_m: list of region identifiers (e.g., "alp", "pyr", "cor")
+        :param suptitle_m: common suptitle for all plots
+        :type suptitle_m: str
         :param diroutput: output directory to save the maps
         """
 
-        map_generic = dict(alp=Map_alpes, pyr=Map_pyrenees, cor=Map_corse, jur=Map_jura, mac=Map_central,
-                           vog=Map_vosges)
+        map_generic = dict(alp=Map_alpes, pyr=Map_pyrenees, cor=Map_corse, jur=Map_jura,
+                           mac=Map_central, vog=Map_vosges)
 
-        alti = self.get_alti()
-        list_alti = list(set(alti))
-        m = map_generic[domain[0:3]]()
+        m_g = map_generic[domain_m[0:3]]()
         for var in self.list_var_map:
-            m.init_massifs(**self.attributes[var])
-            if six.PY3:
-                m.addlogo()
+            m_g.init_massifs(**self.attributes[var])
+            m_g.addlogo()
             if 'nolevel' not in self.attributes[var].keys():
                 self.attributes[var]['nolevel'] = False
             if self.attributes[var]['nolevel']:
                 list_loop_alti = [0]
-                massif = self.get_massifvar()
+                massif = self.massifvar
                 indalti = np.ones_like(self.quantiles[var][0][0, :], dtype=bool)
             else:
-                list_loop_alti = list_alti[:]
+                list_loop_alti = list(set(self.alti))
                 for level in list_loop_alti:
                     if level < self.levelmin or level > self.levelmax:
                         list_loop_alti.remove(level)
 
-                massif = self.get_massifdim()
+                massif = self.massifdim
 
             for level in list_loop_alti:
                 if not self.attributes[var]['nolevel']:
-                    indalti = alti == level
+                    indalti = self.alti == level
 
-                for t in range(0, self.nech):
-                    qmin = self.quantiles[var][0][t, indalti]
-                    qmed = self.quantiles[var][1][t, indalti]
-                    qmax = self.quantiles[var][2][t, indalti]
+                for t_i in range(0, self.nech):
+                    qmin = self.quantiles[var][0][t_i, indalti]
+                    qmed = self.quantiles[var][1][t_i, indalti]
+                    qmax = self.quantiles[var][2][t_i, indalti]
 
-                    m.draw_massifs(massif[indalti], qmed, **self.attributes[var])
+                    m_g.draw_massifs(massif[indalti], qmed, **self.attributes[var])
 
-                    m.plot_center_massif(massif[indalti], qmin, qmed, qmax, **self.attributes[var])
+                    m_g.plot_center_massif(massif[indalti], qmin, qmed, qmax,
+                                           **self.attributes[var])
 
-                    if six.PY2:
-                        title = "pour le " + pretty_date(self.time[t]).decode('utf-8')
-                    else:
-                        title = "pour le " + pretty_date(self.time[t])
+                    title = "pour le " + pretty_date(self.time[t_i])
                     if not self.attributes[var]['nolevel']:
                         title += " - Altitude : " + str(int(level)) + "m"
 
-                    m.set_title(title)
-                    m.set_suptitle(suptitle)
-                    if six.PY2:
-                        m.addlogo()
-                    ech = self.time[t] - self.time[0] + self.time[1] - self.time[0]
+                    m_g.set_title(title)
+                    m_g.set_suptitle(suptitle_m)
+                    ech = self.time[t_i] - self.time[0] + self.time[1] - self.time[0]
                     ech_str = '+%02d' % (ech.days * 24 + ech.seconds / 3600)
-                    plotname = diroutput + "/" + domain[0:3] + "_" + var + "_" + str(int(level)) + ech_str + "." + self.formatplot
-                    m.save(plotname, formatout=self.formatplot)
+                    plotname = diroutput + "/" + domain_m[0:3] + "_" + var + "_" \
+                        + str(int(level)) + ech_str + "." + self.formatplot
+                    m_g.save(plotname, formatout=self.formatplot)
                     print(plotname + " is available.")
-                    if six.PY3:
-                        m.reset_massifs(rmcbar=False)
-            m.reset_massifs()
+                    m_g.reset_massifs(rmcbar=False)
+            m_g.reset_massifs()
 
 
-@echecker.disabled_if_unavailable
-class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMassif):
+@ECHECKER.disabled_if_unavailable
+class EnsembleOperDiagsNorthSouthMassif(EnsembleNorthSouthMassif, EnsembleOperDiags):
     """
-    Class for operationally plot maps and spaghetti plots distinguishing between northern and southern orientation
+    Class for operationally plot maps and spaghetti plots
+    distinguishing between northern and southern orientation
     at each massif.
     """
     #: maximum height level to plot
@@ -930,131 +987,134 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
     #: ensemble data
     ensemble = {}
 
-    def alldiags(self):
+    @property
+    def list_pairs(self):
+        """Pair of indices corresponding to values for the northern and
+        southern slopes for each massif and altitude the ."""
+        if not hasattr(self, '_list_pairs'):
+            self.list_pairs = self.get_pairs_ns()
+        return self._list_pairs
+
+    @list_pairs.setter
+    def list_pairs(self, value):
+        self._list_pairs = value
+
+    def alldiags(self, list_var_spag, list_var_map):
         """
-        Calculate percentiles for all variables in :py:attr:`.list_var_spag_2points` and :py:attr:`.list_var_map`.
+        Calculate percentiles for all variables in :py:attr:`.list_var_spag_2points`
+        and :py:attr:`.list_var_map`.
+
+        :param list_var_spag: variable list for spaghetti plots
+        combining northern and southern orientation
+        :param list_var_map: variable list for producing maps
         """
-        super(EnsembleOperDiagsNorthSouthMassif, self).diags(set(self.list_var_spag_2points + self.list_var_map),
+        super(EnsembleOperDiagsNorthSouthMassif, self).diags(set(list_var_spag + list_var_map),
                                                              self.list_q, {})
 
     def get_pairs_ns(self):
         """
-        Get for each massif and altitude the pair of indices corresponding to values for the northern and southern
-        slopes.
+        Get for each massif and altitude the pair of indices corresponding to
+        values for the northern and southern slopes.
 
         :return: indices corresponding to northern and southern slopes
         :rtype: list of lists
         """
-        alti = self.get_alti()
-        aspect = np.array([int(asp) for asp in self.get_aspect()])
-        massif = self.get_massifdim()
+        aspect = np.array([int(asp) for asp in self.aspect])
 
-        if not hasattr(self, 'list_pairs'):
-            self.list_pairs = []
+        self.list_pairs = []
 
-            for point in range(0, np.shape(alti)[0]):
-                if aspect[point] == 0:
-                    indsouth = np.where((alti == alti[point]) & (aspect == 180) & (massif == massif[point]))
-                    if len(indsouth) == 1:
-                        self.list_pairs.append([point, indsouth[0][0]])
+        for point in range(0, np.shape(self.alti)[0]):
+            if aspect[point] == 0:
+                indsouth = np.where((self.alti == self.alti[point]) & (aspect == 180)
+                                    & (self.massifdim == self.massifdim[point]))
+                if len(indsouth) == 1:
+                    self.list_pairs.append([point, indsouth[0][0]])
 
         return self.list_pairs
 
-    def pack_spaghettis_ns(self, suptitle, diroutput="."):
+    def pack_spaghettis_ns(self, suptitle_s, diroutput="."):
         """
         Do spaghetti plots with values for the northern and southern slope on the same plot.
 
-        :param suptitle: common suptitle for all plots
+        :param suptitle_s: common suptitle for all plots
         :param diroutput: directory to save the plots
         """
 
-        list_pairs = self.get_pairs_ns()
-
-        super(EnsembleOperDiagsNorthSouthMassif, self).pack_spaghettis_multipoints(list_pairs, suptitle, diroutput,
+        super(EnsembleOperDiagsNorthSouthMassif, self).pack_spaghettis_multipoints(self.list_pairs,
+                                                                                   suptitle_s,
+                                                                                   diroutput,
                                                                                    labels=self.versants)
 
-    def pack_maps(self, domain, suptitle, diroutput):
+    def pack_maps(self, domain_m, suptitle_m, diroutput):
         """
-        Produce maps for the variables given in :py:attr:`.list_var_map` over the regions given in :py:attr:`.domain`
+        Produce maps for the variables given in :py:attr:`.list_var_map`
+        over the regions given in :py:attr:`.domain`
         for each available altitude level and time step.
 
-        For each massif a table with background colors and values corresponding to the percentiles in
-        :py:attr:`.list_q` and
-        the color map defined in :py:attr:`.attributes` is plotted near the center of each massif.
+        For each massif a table with background colors and values corresponding to the
+        percentiles in :py:attr:`.list_q` and the color map defined in
+        :py:attr:`.attributes` is plotted near the center of each massif.
 
-        :param domain: list of region identifiers (e.g., "alp", "pyr", "cor")
-        :param suptitle: common suptitle for all plots
-        :type suptitle: str
+        :param domain_m: list of region identifiers (e.g., "alp", "pyr", "cor")
+        :param suptitle_m: common suptitle for all plots
+        :type suptitle_m: str
         :param diroutput: output directory to save the maps
         """
 
-        map_generic = dict(alp=Map_alpes, pyr=Map_pyrenees, cor=Map_corse, jur=Map_jura, vog=Map_vosges,
-                           mac=Map_central)
+        map_generic = dict(alp=Map_alpes, pyr=Map_pyrenees, cor=Map_corse,
+                           jur=Map_jura, vog=Map_vosges, mac=Map_central)
 
-        list_pairs = self.get_pairs_ns()  # pylint: disable=possibly-unused-variable
-
-        alti = self.get_alti()
-        aspect = self.get_aspect()
-
-        list_alti = list(set(alti))
-
-        m = map_generic[domain[0:3]]()
+        m_g = map_generic[domain_m[0:3]]()
         for var in self.list_var_map:
-            m.init_massifs(**self.attributes[var])
-            m.empty_massifs()
-            m.add_north_south_info()
-            if six.PY3:
-                m.addlogo()
+            m_g.init_massifs(**self.attributes[var])
+            m_g.empty_massifs()
+            m_g.add_north_south_info()
+            m_g.addlogo()
 
-            list_loop_alti = list_alti[:]
+            list_loop_alti = list(set(self.alti))
             for level in list_loop_alti:
                 if level < self.levelmin or level > self.levelmax:
                     list_loop_alti.remove(level)
-
-            massif = self.get_massifdim()
 
             for level in list_loop_alti:
 
                 list_indalti = []
                 for plotaspect in [180, 0]:  # du bas vers le haut
 
-                    list_indalti.append((alti == level) & (aspect == plotaspect))
+                    list_indalti.append((self.alti == level) & (self.aspect == plotaspect))
 
-                for t in range(0, self.nech):
+                for t_i in range(0, self.nech):
                     list_values = []
                     for indalti in list_indalti:
-                        for q, quantile in enumerate(self.list_q):  # pylint: disable=possibly-unused-variable
-                            list_values.append(self.quantiles[var][q][t, indalti])
+                        for q_i in range(len(self.list_q)):
+                            list_values.append(self.quantiles[var][q_i][t_i, indalti])
                     # print(len(massif[indalti]))
-                    m.rectangle_massif(massif[indalti], self.list_q, list_values, ncol=2, **self.attributes[var])
-                    if six.PY2:
-                        title = "pour le " + pretty_date(self.time[t]).decode('utf-8')
-                    else:
-                        title = "pour le " + pretty_date(self.time[t])
+                    m_g.rectangle_massif(self.massifdim[indalti], self.list_q, list_values, ncol=2,
+                                         **self.attributes[var])
+                    title = "pour le " + pretty_date(self.time[t_i])
                     title += " - Altitude : " + str(int(level)) + "m"
 
-                    m.set_title(title)
-                    m.set_suptitle(suptitle)
-                    if six.PY2:
-                        m.addlogo()
-                    ech = self.time[t] - self.time[0] + self.time[1] - self.time[0]
+                    m_g.set_title(title)
+                    m_g.set_suptitle(suptitle_m)
+                    ech = self.time[t_i] - self.time[0] + self.time[1] - self.time[0]
                     ech_str = '+%02d' % (ech.days * 24 + ech.seconds / 3600)
-                    plotname = diroutput + "/" + domain[0:3] + "_" + var + "_" + str(int(level)) + ech_str + "." + self.formatplot
-                    m.save(plotname, formatout=self.formatplot)
+                    plotname = diroutput + "/" + domain_m[0:3] + "_" + var + "_" \
+                        + str(int(level)) + ech_str + "." + self.formatplot
+                    m_g.save(plotname, formatout=self.formatplot)
                     print(plotname + " is available.")
-                    if six.PY3:
-                        m.reset_massifs(rmcbar=False, rminfobox=False)
-            m.reset_massifs()
+                    m_g.reset_massifs(rmcbar=False, rminfobox=False)
+            m_g.reset_massifs()
 
 
-class EnsembleOperDiagsStations(EnsembleOperDiags, EnsembleStation):
+class EnsembleOperDiagsStations(EnsembleStation, EnsembleOperDiags):
     """
     Class for operationally plotting spaghetti plots for station based simulations.
     """
     #: list of variables to plot maps for
     list_var_map = []
     #: list of variables to plot spaghetti plots for.
-    list_var_spag = ['DSN_T_ISBA', 'WSN_T_ISBA', 'RAMSOND_ISBA', 'WET_TH_ISBA', 'REFRZTH_ISBA', 'SNOMLT_ISBA']
+    list_var_spag = ['DSN_T_ISBA', 'WSN_T_ISBA', 'RAMSOND_ISBA',
+                     'WET_TH_ISBA', 'REFRZTH_ISBA', 'SNOMLT_ISBA']
 
 
 class EnsemblePostproc(_EnsembleMassif):
@@ -1062,7 +1122,8 @@ class EnsemblePostproc(_EnsembleMassif):
     Class for ensemble post-processing.
     """
 
-    def __init__(self, ensemble, variables, inputfiles, datebegin, dateend, decile=range(10, 100, 10)):
+    def __init__(self, ensemble, variables, inputfiles, datebegin, dateend,
+                 decile=range(10, 100, 10)):
         """
         :param ensemble: object to hold the ensemble data
         :type ensemble: instance of :py:class:`.Ensemble` or inheriting from :py:class:`.Ensemble`
@@ -1079,12 +1140,22 @@ class EnsemblePostproc(_EnsembleMassif):
         self.ensemble = ensemble  #: ensemble data
         self.variables = variables  #: list of variables
         self.ensemble.open(inputfiles)
-        self.outfile = 'PRO_post_{0}_{1}.nc'.format(datebegin.ymdh, dateend.ymdh)  #: output filename
+        #: output filename
+        self.outfile = 'PRO_post_{0}_{1}.nc'.format(datebegin.ymdh, dateend.ymdh)
         #: variables always written to the output file
         #: ['time', 'ZS', 'aspect', 'slope', 'massif_num', 'longitude', 'latitude']
         self.standardvars = ['time', 'ZS', 'aspect', 'slope', 'massif_num', 'longitude', 'latitude']
         #: list of percentiles
         self.decile = decile
+
+    @property
+    def outdataset(self):
+        """output data set. (Prosimu instance)"""
+        return self._outdataset
+
+    @outdataset.setter
+    def outdataset(self, value):
+        self._outdataset = value
 
     def create_outfile(self):
         """
@@ -1100,7 +1171,8 @@ class EnsemblePostproc(_EnsembleMassif):
 
     def init_outfile(self):
         """
-        Copy global attributes, dimensions and standard variables from the first simulation file to the output file.
+        Copy global attributes, dimensions and standard variables from the
+        first simulation file to the output file.
         """
         # copy global attributes all at once via dictionary
         self.outdataset.dataset.setncatts(self.ensemble.simufiles[0].dataset.__dict__)
@@ -1114,8 +1186,9 @@ class EnsemblePostproc(_EnsembleMassif):
         for name, variable in self.ensemble.simufiles[0].dataset.variables.items():
             if name in self.standardvars:
                 fillval = self.ensemble.simufiles[0].getfillvalue(name)
-                x = self.outdataset.dataset.createVariable(name, variable.datatype, variable.dimensions,
-                                                           fill_value=fillval)
+                x_od = self.outdataset.dataset.createVariable(name, variable.datatype,
+                                                              variable.dimensions,
+                                                              fill_value=fillval)
                 # copy variable attributes without _FillValue since this causes an error
                 for att in self.ensemble.simufiles[0].listattr(name):
                     if att != '_FillValue':
@@ -1134,9 +1207,8 @@ class EnsemblePostproc(_EnsembleMassif):
         #) calculate deciles for the data variables and put them to the output file
         #) close all input and output data sets.
 
-        Calls :py:meth:`.create_outfile`, :py:meth:`.init_outfile`, :py:meth:`.deciles` and close methods for
-        all data sets.
-
+        Calls :py:meth:`.create_outfile`, :py:meth:`.init_outfile`,
+        :py:meth:`.deciles` and close methods for all data sets.
         """
         self.create_outfile()
         self.init_outfile()
@@ -1149,13 +1221,14 @@ class EnsemblePostproc(_EnsembleMassif):
 
     def deciles(self):
         """
-        Calculates percentiles given in :py:attr:`.decile` for variables in :py:attr:`.variables` and adds them
-        to the output data set including the corresponding dimension, coordinate variable and attributes.
+        Calculates percentiles given in :py:attr:`.decile` for variables in
+        :py:attr:`.variables` and adds them to the output data set including
+        the corresponding dimension, coordinate variable and attributes.
         """
         # create decile dimension
         self.outdataset.dataset.createDimension('decile', len(self.decile))
         # create decile variable
-        x = self.outdataset.dataset.createVariable('decile', 'i4', 'decile')
+        x_ds = self.outdataset.dataset.createVariable('decile', 'i4', 'decile')
         self.outdataset.dataset['decile'][:] = self.decile[:]
         atts = {'long_name': "Percentiles of the ensemble forecast"}
         self.outdataset.dataset['decile'].setncatts(atts)
@@ -1166,8 +1239,9 @@ class EnsemblePostproc(_EnsembleMassif):
                 # get decile axis in the right place
                 vardecile = np.moveaxis(vardecile, 0, -1)
                 fillval = self.ensemble.simufiles[0].getfillvalue(name)
-                x = self.outdataset.dataset.createVariable(name, variable.datatype, variable.dimensions + ('decile',),
-                                                           fill_value=fillval)
+                x_ds = self.outdataset.dataset.createVariable(name, variable.datatype,
+                                                              variable.dimensions + ('decile',),
+                                                              fill_value=fillval)
                 # copy variable attributes all at once via dictionary, but without _FillValue
                 attdict = self.ensemble.simufiles[0].dataset[name].__dict__
                 attdict.pop('_FillValue', None)
@@ -1185,8 +1259,9 @@ class EnsemblePostproc(_EnsembleMassif):
             if name in self.variables:
                 median = self.ensemble.quantile(name, 50)
                 fillval = self.ensemble.simufiles[0].getfillvalue(name)
-                x = self.outdataset.dataset.createVariable(name, variable.datatype, variable.dimensions,
-                                                           fill_value=fillval)
+                x_ds = self.outdataset.dataset.createVariable(name, variable.datatype,
+                                                              variable.dimensions,
+                                                              fill_value=fillval)
                 # copy variable attributes all at once via dictionary, but without _FillValue
                 attdict = self.ensemble.simufiles[0].dataset[name].__dict__
                 attdict.pop('_FillValue', None)
@@ -1202,38 +1277,37 @@ if __name__ == "__main__":
     # Should not import than above to avoid problems when importing the module from vortex
     from snowtools.tasks.oper.get_oper_files import S2MExtractor, FutureS2MExtractor
 
-    c = config()
-    os.chdir(c.diroutput)
-    if c.dev:
-        S2ME = FutureS2MExtractor(c)
-    elif c.reforecast:
-        S2ME = FutureS2MExtractor(c)
+    C = Config()
+    os.chdir(C.diroutput)
+    if C.dev:
+        S2ME = FutureS2MExtractor(C)
+    elif C.reforecast:
+        S2ME = FutureS2MExtractor(C)
     else:
-        S2ME = S2MExtractor(c)
-    snow_members, snow_xpid = S2ME.get_snow()
+        S2ME = S2MExtractor(C)
+    SNOW_MEMBERS, SNOW_XPID = S2ME.get_snow()
 
-
-    dict_chaine = defaultdict(str)
-    dict_chaine['OPER'] = ' (oper)'
-    dict_chaine['MIRR'] = ' (miroir)'
-    dict_chaine['OPER@lafaysse'] = ' (dev)'
-    dict_chaine['nouveaux_guess@lafaysse'] = ' (dev)'
+    DICT_CHAINE = defaultdict(str)
+    DICT_CHAINE['OPER'] = ' (oper)'
+    DICT_CHAINE['MIRR'] = ' (miroir)'
+    DICT_CHAINE['OPER@lafaysse'] = ' (dev)'
+    DICT_CHAINE['nouveaux_guess@lafaysse'] = ' (dev)'
     # undefined xpid is possible because it is allowed by defaultdict
 
     locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
 
-    list_domains = snow_members.keys()
-    print(list_domains)
+    LIST_DOMAINS = SNOW_MEMBERS.keys()
+    print(LIST_DOMAINS)
 
-    for domain in list_domains:  # ['alp_allslopes']: #
+    for domain in LIST_DOMAINS:  # ['alp_allslopes']: #
 
         # S2ME.conf.rundate is a Date object --> strftime already calls decode method
         suptitle = u'Prévisions PEARP-S2M du ' + pretty_date(S2ME.conf.rundate)
         # Identify the prevailing xpid in the obtained resources and adapt the title
-        count = Counter(snow_xpid[domain])
+        count = Counter(SNOW_XPID[domain])
         print(count)
         prevailing_xpid = count.most_common(1)[0][0]
-        suffixe_suptitle = dict_chaine[prevailing_xpid]
+        suffixe_suptitle = DICT_CHAINE[prevailing_xpid]
         suptitle += suffixe_suptitle
 
         if domain == 'postes':
@@ -1241,27 +1315,27 @@ if __name__ == "__main__":
         else:
             E = EnsembleOperDiagsFlatMassif()
             ENS = EnsembleOperDiagsNorthSouthMassif()
-            ENS.open(snow_members[domain])
-        print('number of member files', len(snow_members[domain]))
-        E.open(snow_members[domain])
+            ENS.open(SNOW_MEMBERS[domain])
+        print('number of member files', len(SNOW_MEMBERS[domain]))
+        E.open(SNOW_MEMBERS[domain])
 
         print("domain " + domain + " npoints = " + str(E.npoints))
 
-        E.alldiags()
+        E.alldiags(E.list_var_spag, E.list_var_map)
 
         print('Diagnostics have been computed for the following variables :')
         print(E.ensemble.keys())
 
-        E.pack_spaghettis(suptitle, diroutput=c.diroutput_plots)
+        E.pack_spaghettis(E.list_var_spag, suptitle_s=suptitle, diroutput=C.diroutput_plots)
         if domain != 'postes':
-            E.pack_maps(domain, suptitle, diroutput=c.diroutput_maps)
+            E.pack_maps(domain, suptitle, diroutput=C.diroutput_maps)
 
-            ENS.alldiags()
+            ENS.alldiags(ENS.list_var_spag_2points, ENS.list_var_map)
             print('Diagnostics have been computed for the following variables :')
             print(ENS.ensemble.keys())
-            ENS.pack_maps(domain, suptitle, diroutput=c.diroutput_maps)
+            ENS.pack_maps(domain, suptitle, diroutput=C.diroutput_maps)
 
-            ENS.pack_spaghettis_ns(suptitle, diroutput=c.diroutput_plots)
+            ENS.pack_spaghettis_ns(suptitle, diroutput=C.diroutput_plots)
             ENS.close()
             del ENS
 

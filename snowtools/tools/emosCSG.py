@@ -1,39 +1,88 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 25 June 2018
 
 @author: lafaysse
-'''
-
-# The following lines are necessary with a French environment and python 2 to avoid a bronx crash when calling vortex
-# on months with an accent (Février, Décembre)
-# ----------------------------------------------------------
-import sys
-if sys.version_info.major == 2:  # Python2 only
-    import codecs
-    sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
-    sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
-# ----------------------------------------------------------
+"""
 
 import locale
 import datetime
 import os
 
+from abc import ABC, abstractmethod
 import rpy2.robjects as robjects
 import numpy as np
 import netCDF4
 from scipy.stats import gamma
 
-from snowtools.plots.pearps2m.postprocess import config, Ensemble, EnsembleOperDiagsFlatMassif, EnsembleStation
+from snowtools.plots.pearps2m.postprocess import Config, Ensemble, EnsembleOperDiagsFlatMassif,\
+    EnsembleStation
 from snowtools.tasks.oper.get_oper_files import S2MExtractor
 from snowtools.utils.FileException import DirNameException
 from snowtools.utils.dates import pretty_date
 from snowtools.DATA import SNOWTOOLS_DIR
 
 
-class postprocess_ensemble(Ensemble):
+def csg_mean(a_1, a_2, a_3, a_4, muclim, ensmean, ens_pop):
+    """
+    calculate the mean of the csg distribution given csg parameters and ensemble characteristics
+
+    :param a_1: first csg parameter for mean
+    :param a_2: second csg parameter for mean
+    :param a_3: third csg parameter for mean
+    :param a_4: fourth csg parameter for mean
+    :param muclim: climatological mean
+    :param ensmean: ensemble mean
+    :param ens_pop: probability of precipitation given the ensemble forecast
+    """
+    return (muclim / a_1) * np.log1p(np.expm1(a_1) * (a_2 + a_3 * ens_pop + a_4 * ensmean))
+
+
+def csg_std(b_1, b_2, muclim, sigmaclim, emosmean, ensspread):
+    """
+    calculate standard deviation of the csg distribution given csg parameters and ensemble
+    characteristics
+
+    :param b_1: first csg parameter for spread
+    :param b_2: second csg parameter for spread
+    :param muclim: climatological mean
+    :param sigmaclim: climatological standard deviation
+    :param emosmean: ensemble mean
+    :param ensspread: ensemble spread, ensemble standard deviation
+    """
+    return b_1 * sigmaclim * np.sqrt(emosmean / muclim) + b_2 * ensspread
+
+
+def csg_delta(ensmean, deltaclim):
+    """
+    return climatological delta parameter
+
+    :param ensmean: ensemble mean
+    :param deltaclim: climatological delta parameter
+    """
+    return ensmean * 0. + deltaclim
+
+
+def quantiles_CSGD_1point(csgmean, csgstd, csgdelta, quantiles):
+    """
+    get quantiles of a csg distribution given mean, standard deviation, deltan and quantiles
+
+    :param csgmean: mean of csg distribution
+    :param csgstd: standard deviation of csg distribution
+    :param csgdelta: delta parambeter of csg distribution
+    :param quantiles: list of quantiles to calculate
+    """
+    tmp = gamma.ppf(q=quantiles, a=(csgmean / csgstd) ** 2, scale=(csgstd ** 2) / csgmean,
+                    loc=csgdelta)
+    return np.where(tmp >= 0, tmp, 0)
+
+
+class PostprocessEnsemble(ABC, Ensemble):
+    """
+    Class for postprocessed ensemble
+    """
 
     newsnow_var_name = 'SD_1DY_ISBA'
     location_dim_name = 'Number_of_points'
@@ -43,7 +92,31 @@ class postprocess_ensemble(Ensemble):
 
     massifs_learning = np.concatenate([np.arange(1, 24), np.arange(64, 75)])
 
+    # @property
+    # def geo(self):
+    #     """'station' or 'massifs' geometry"""
+    #     return self._geo
+    #
+    # @geo.setter
+    # def geo(self, value):
+    #     self._geo = value
+
+    @abstractmethod
+    def create_location_var(self, dataset, fill_value):
+        """
+        method to create a location variable
+
+        :param dataset: NetCDF4 dataset
+        :param fill_value: fill value for the location variable
+        """
+        raise NotImplementedError("Child classes should implement create_location_var method")
+
     def create_pp_file(self, filename):
+        """
+        Create a netCDF file for postprocessed variables.
+
+        :param filename: file name with full path
+        """
 
         dirout = os.path.dirname(filename)
         if not os.path.isdir(dirout):
@@ -53,7 +126,7 @@ class postprocess_ensemble(Ensemble):
 
         dims_in = self.simufiles[0].getdimvar(self.newsnow_var_name)
         rank = self.simufiles[0].getrankvar(self.newsnow_var_name)
-        fillvalue = self.simufiles[0].getfillvalue(self.newsnow_var_name)
+        fill_value = self.simufiles[0].getfillvalue(self.newsnow_var_name)
         dims_out = tuple(list(dims_in) + ["decile"])
 
         for dim in dims_out:
@@ -68,28 +141,24 @@ class postprocess_ensemble(Ensemble):
 
             newdataset.createDimension(dim, dimlen)
 
-        timevar = newdataset.createVariable("time", 'double', ('time'), fill_value=fillvalue)
+        timevar = newdataset.createVariable("time", 'double', ('time'), fill_value=fill_value)
         timevar.units = 'hours since 2019-08-01 06:00:00'
         timevar[:] = netCDF4.date2num(self.time, timevar.units)
 
-        print(self.geo)
-        if self.geo == 'massifs':
-            massifvar = newdataset.createVariable("massif_num", 'i4', (self.location_dim_name), fill_value=fillvalue)
-            massifvar[:] = self.get_massifdim()
-        elif self.geo == 'stations':
-            stationsvar = newdataset.createVariable("station", 'i4', (self.location_dim_name), fill_value=fillvalue)
-            stationsvar[:] = self.get_station()
+        self.create_location_var(newdataset, fill_value)
+        zsvar = newdataset.createVariable("ZS", 'float', (self.location_dim_name),
+                                          fill_value=fill_value)
+        zsvar[:] = self.alti
 
-        zsvar = newdataset.createVariable("ZS", 'float', (self.location_dim_name), fill_value=fillvalue)
-        zsvar[:] = self.get_alti()
+        aspectvar = newdataset.createVariable("aspect", 'float', (self.location_dim_name),
+                                              fill_value=fill_value)
+        aspectvar[:] = self.aspect
 
-        aspectvar = newdataset.createVariable("aspect", 'float', (self.location_dim_name), fill_value=fillvalue)
-        aspectvar[:] = self.get_aspect()
-
-        var = newdataset.createVariable("PP_" + self.newsnow_var_name, 'float', dims_out, fill_value=fillvalue)
+        var = newdataset.createVariable("PP_" + self.newsnow_var_name, 'float', dims_out,
+                                        fill_value=fill_value)
 
         csgmean, csgstd, csgdelta = self.get_csg_param()
-        pp_forecast = self.quantiles_CSGD(csgmean, csgstd, csgdelta, self.ppquantiles)
+        pp_forecast = self.get_quantiles_CSGD(csgmean, csgstd, csgdelta, self.ppquantiles)
 
         if rank == 2:
             var[:, :, :] = pp_forecast[:, :, :]
@@ -98,44 +167,71 @@ class postprocess_ensemble(Ensemble):
 
         newdataset.close()
 
+    @property
+    def reg_coef(self):
+        """ object containing regression coefficients"""
+        return self._reg_coef
+
+    @reg_coef.setter
+    def reg_coef(self, value):
+        self._reg_coef = value
+
+    @property
+    def clim_par(self):
+        """climatological distribution parameters"""
+        return self._clim_par
+
+    @clim_par.setter
+    def clim_par(self, value):
+        self._clim_par = value
+
     def read_emos_param(self, filename='EMOS_HN.Rdata'):
+        """
+        read emos parameters from Rdata object.
+
+        :param filename: file name of .Rdata file
+        """
         robj = robjects.r.load(filename)  # pylint: disable=possibly-unused-variable
         self.reg_coef = robjects.r['par.reg']
         self.clim_par = robjects.r['par.climo']
 
     def get_emos_param(self, massif, leadtime):
+        """
+        get emos parameters for a given massif and lead time
+
+        :param massif: massif number
+        :param leadtime: lead time index
+        """
         indmassif = np.where(self.massifs_learning == massif)
 
         if len(indmassif[0]) == 1:
             return np.array(self.reg_coef)[0, indmassif[0][0], leadtime, :]
-        else:
-            return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
+        return np.nan, np.nan, np.nan, np.nan, np.nan, np.nan
 
     def get_clim_param(self, massif):
+        """
+        get climatological distribution parameters for a given massif
+
+        :param massif: massif number
+        """
         indmassif = np.where(self.massifs_learning == massif)
         if len(indmassif[0]) == 1:
             return np.array(self.clim_par)[0, indmassif[0][0], :]
-        else:
-            return np.nan, np.nan, np.nan
+        return np.nan, np.nan, np.nan
 
-    def csg_mean(self, a1, a2, a3, a4, muclim, ensmean, ensPOP):
-        return (muclim / a1) * np.log1p(np.expm1(a1) * (a2 + a3 * ensPOP + a4 * ensmean))
-
-    def csg_std(self, b1, b2, muclim, sigmaclim, emosmean, ensspread):
-        return b1 * sigmaclim * np.sqrt(emosmean / muclim) + b2 * ensspread
-
-    def csg_delta(self, ensmean, deltaclim):
-        return ensmean * 0. + deltaclim
+    @abstractmethod
+    def get_massifnumber(self):
+        """ get array with massif numbers """
+        raise NotImplementedError("child classes are supposed to implement get_massifnumber method")
 
     def get_csg_param(self):
+        """
+        get csg parameters from raw predictors
+        :returns: csgmean, csgstd, csgdelta
+        """
 
         # Read raw forecast metadata
-
-        if self.geo == "stations":
-            station = self.simufiles[0].read_var("station")
-            massif_number = map(self.InfoMassifs.massifposte, station)
-        else:
-            massif_number = self.get_massifdim()
+        massif_number = self.get_massifnumber()
 
         ntime = len(self.time)
         list_indtime = []
@@ -150,26 +246,26 @@ class postprocess_ensemble(Ensemble):
         list_massifs = np.unique(massif_number)
 
         # Extract regression parameters
-        a1, a2, a3, a4, b1, b2 = np.empty((6, ntime, self.npoints))
+        a_1, a_2, a_3, a_4, b_1, b_2 = np.empty((6, ntime, self.npoints))
         muclim, sigmaclim, deltaclim = np.empty((3, self.npoints))
 
         for massif in list_massifs:
 
             indmassif = np.where(massif_number == massif)[0]
+            cst_muclim, cst_sigmaclim, cst_deltaclim = self.get_clim_param(massif)
 
             for leadtime in range(0, self.ndays_leadtime):
-                cst_a1, cst_a2, cst_a3, cst_a4, cst_b1, cst_b2 = self.get_emos_param(massif, leadtime)
-                cst_muclim, cst_sigmaclim, cst_deltaclim = self.get_clim_param(massif)
-
+                cst_a1, cst_a2, cst_a3, cst_a4, cst_b1, cst_b2 = self.get_emos_param(massif,
+                                                                                     leadtime)
                 begin = list_indtime[leadtime][0]
                 end = list_indtime[leadtime][-1]
 
-                a1[slice(begin, end + 1), indmassif] = cst_a1
-                a2[slice(begin, end + 1), indmassif] = cst_a2
-                a3[slice(begin, end + 1), indmassif] = cst_a3
-                a4[slice(begin, end + 1), indmassif] = cst_a4
-                b1[slice(begin, end + 1), indmassif] = cst_b1
-                b2[slice(begin, end + 1), indmassif] = cst_b2
+                a_1[slice(begin, end + 1), indmassif] = cst_a1
+                a_2[slice(begin, end + 1), indmassif] = cst_a2
+                a_3[slice(begin, end + 1), indmassif] = cst_a3
+                a_4[slice(begin, end + 1), indmassif] = cst_a4
+                b_1[slice(begin, end + 1), indmassif] = cst_b1
+                b_2[slice(begin, end + 1), indmassif] = cst_b2
 
             muclim[indmassif] = cst_muclim
             sigmaclim[indmassif] = cst_sigmaclim
@@ -178,21 +274,33 @@ class postprocess_ensemble(Ensemble):
         # Extract raw ensemble predictors
         ensmean = self.mean(self.newsnow_var_name) * 100.
         ensspread = self.spread(self.newsnow_var_name) * 100.
-        ensPOP = self.probability(self.newsnow_var_name, seuilinf=1.E-6)
+        ens_pop = self.probability(self.newsnow_var_name, seuilinf=1.E-6)
 
         # Compute CSGD parameters with regression laws
-        csgmean = self.csg_mean(a1, a2, a3, a4, muclim, ensmean, ensPOP)
-        csgstd = self.csg_std(b1, b2, muclim, sigmaclim, ensmean, ensspread)
-        csgdelta = self.csg_delta(ensmean, deltaclim)
+        csgmean = csg_mean(a_1, a_2, a_3, a_4, muclim, ensmean, ens_pop)
+        csgstd = csg_std(b_1, b_2, muclim, sigmaclim, ensmean, ensspread)
+        csgdelta = csg_delta(ensmean, deltaclim)
 
         return csgmean, csgstd, csgdelta
 
-    def quantiles_CSGD_1point(self, csgmean, csgstd, csgdelta, quantiles):
+    @property
+    def quantiles_CSGD(self):
+        """postprocessed quantiles"""
+        return self._quantiles_CSGD
 
-        tmp = gamma.ppf(q=quantiles, a=(csgmean / csgstd) ** 2, scale=(csgstd ** 2) / csgmean, loc=csgdelta)
-        return np.where(tmp >= 0, tmp, 0)
+    @quantiles_CSGD.setter
+    def quantiles_CSGD(self, value):
+        self._quantiles_CSGD = value
 
-    def quantiles_CSGD(self, csgmean, csgstd, csgdelta, quantiles):
+    def get_quantiles_CSGD(self, csgmean, csgstd, csgdelta, quantiles):
+        """
+        get quantiles of csg distribution for arrays of mean, standard deviation and delta
+
+        :param csgmean: array of means of csg distributions
+        :param csgstd: array of standard deviations of csg distributions
+        :param csgdelta: array of delta parameters of csg distributions
+        :param quantiles: list of quantiles
+        """
 
         shapein = list(csgmean.shape)
         shapeout = shapein[:]
@@ -203,25 +311,42 @@ class postprocess_ensemble(Ensemble):
 
         if len(shapein) == 1:
             for i in range(0, shapein[0]):
-                varout[i, :] = self.quantiles_CSGD_1point(csgmean[i], csgstd[i], csgdelta[i], quantiles)
+                varout[i, :] = quantiles_CSGD_1point(csgmean[i], csgstd[i], csgdelta[i], quantiles)
 
         elif len(shapein) == 2:
             for i in range(0, shapein[0]):
                 for j in range(0, shapein[1]):
-                    varout[i, j, :] = self.quantiles_CSGD_1point(csgmean[i, j], csgstd[i, j], csgdelta[i, j], quantiles)
+                    varout[i, j, :] = quantiles_CSGD_1point(csgmean[i, j], csgstd[i, j],
+                                                            csgdelta[i, j], quantiles)
 
         elif len(shapein) == 3:
             for i in range(0, shapein[0]):
                 for j in range(0, shapein[1]):
                     for k in range(0, shapein[2]):
-                        varout[i, j, k, :] = self.quantiles_CSGD_1point(csgmean[i, j, k], csgstd[i, j, k],
-                                                                        csgdelta[i, j, k], quantiles)
+                        varout[i, j, k, :] = quantiles_CSGD_1point(csgmean[i, j, k],
+                                                                   csgstd[i, j, k],
+                                                                   csgdelta[i, j, k], quantiles)
 
         self.quantiles_CSGD = varout
 
         return varout
 
+    @property
+    def quantiles(self):
+        """ List of quantiles for all variables (list of lists)"""
+        return self._quantiles
+
+    @quantiles.setter
+    def quantiles(self, value):
+        self._quantiles = value
+
     def diags(self, list_var, list_quantiles):
+        """
+        calculate csg distribution quantiles for a list of variables and a list of quantiles
+
+        :param list_var: list of variables
+        :param list_quantiles: list of quantiles
+        """
         for var in list_var:
             print(type(self.quantiles))
             print(var)
@@ -231,48 +356,89 @@ class postprocess_ensemble(Ensemble):
                 self.quantiles[var].append(self.quantiles_CSGD[:, :, indquantile])
 
 
-class postprocess_massif(postprocess_ensemble, EnsembleOperDiagsFlatMassif):
-
+class PostprocessMassif(EnsembleOperDiagsFlatMassif, PostprocessEnsemble):
+    """ Class for postprocessed data on a Massif geometry"""
     levelmin = 600
     levelmax = 3000
     list_var_map = ['PP_SD_1DY_ISBA']
 
+    def create_location_var(self, dataset, fill_value):
+        """
+        create massif variable in output netCDF file
 
-class postprocess_stations(postprocess_ensemble, EnsembleStation):
+        :param dataset: dataset to create variable in
+        :type dataset: netCDF4.Dataset
+        :param fill_value: fill value for netCDF variable
+        """
+        massifvar = dataset.createVariable("massif_num", 'i4', (self.location_dim_name),
+                                           fill_value=fill_value)
+        massifvar[:] = self.massifdim
 
-    pass
+    def get_massifnumber(self):
+        """
+        get massif numbers
+        """
+        return self.massifvar
+
+
+class PostprocessStations(EnsembleStation, PostprocessEnsemble):
+    """
+    Postprocess simulations at station locations
+    """
+    def create_location_var(self, dataset, fill_value):
+        """
+        create station variable in output netCDF file
+
+        :param dataset: dataset to create variable in
+        :type dataset: netCDF4.Dataset
+        :param fill_value: fill value for netCDF variable
+        """
+        stationsvar = dataset.createVariable("station", 'i4', (self.location_dim_name),
+                                             fill_value=fill_value)
+        stationsvar[:] = self.get_station()
+
+    def get_massifnumber(self):
+        """
+        get the massif numbers corresponding to the stations
+
+        :return: massif_number array
+        """
+        station = self.simufiles[0].read_var("station")
+        massif_number = map(self.InfoMassifs.massifposte, station)
+        return massif_number
 
 
 if __name__ == "__main__":
 
-    c = config()
-    os.chdir(c.diroutput)
-    S2ME = S2MExtractor(c)
-    snow_members = S2ME.get_snow()
+    C = Config()
+    os.chdir(C.diroutput)
+    S2ME = S2MExtractor(C)
+    SNOW_MEMBERS, SNOW_XPID = S2ME.get_snow()
 
     locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
-    suptitle = u'Adaptations statistiques PEARP-S2M du ' + pretty_date(S2ME.conf.rundate).decode('utf-8')
+    SUPTITLE = 'Adaptations statistiques PEARP-S2M du ' + pretty_date(S2ME.conf.rundate)
 
-    list_domains = snow_members.keys()
+    LIST_DOMAINS = SNOW_MEMBERS.keys()
 
-    for domain in list_domains:
+    for domain in LIST_DOMAINS:
 
         if domain == "postes":
-            E = postprocess_stations()
+            E = PostprocessStations()
         else:
-            E = postprocess_massif()
+            E = PostprocessMassif()
 
         E.read_emos_param(filename=os.path.join(SNOWTOOLS_DIR, 'DATA/EMOS_HN.Rdata'))
-        E.open(snow_members[domain])
+        E.open(SNOW_MEMBERS[domain])
 
-        ppfile = c.diroutput + "/" + domain + "/PP_" + S2ME.conf.rundate.strftime("%Y%m%d%H") + ".nc"
+        ppfile = C.diroutput + "/" + domain + "/PP_" + S2ME.conf.rundate.strftime("%Y%m%d%H") + \
+            ".nc"
         E.create_pp_file(ppfile)
 
         if domain == "postes":
             pass
         else:
             E.diags(E.list_var_map, E.list_q)
-            E.pack_maps(domain, suptitle, c.diroutput_maps)
+            E.pack_maps(domain, SUPTITLE, C.diroutput_maps)
 
         E.close()
         del E
