@@ -316,14 +316,28 @@ def create_netcdf(massif_number, file_out=NetCDF_out):
     """
     cmd = ['gdal_translate', '-of', 'netCDF', '-co', 'FORMAT=NC4', 'step1.tif', 'step1.nc']
     subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-    alt_min_massif = infomassifs().getAltMinMax(massif_number)[0]
-    alt_max_massif = infomassifs().getAltMinMax(massif_number)[1]
+    if type(massif_number) == int:
+        alt_min_massif = infomassifs().getAltMinMax(massif_number)[0]
+        alt_max_massif = infomassifs().getAltMinMax(massif_number)[1]
+    """else:
+        size_x = massif_number.shape[0]
+        size_y = massif_number.shape[1]
+        print(size_x)
+        print(size_y)
+        alt_min_massif = np.zeros(( size_x, size_y))
+        alt_max_massif = np.zeros(( size_x, size_y))
+        for i in range(size_x):
+            print(i)
+            for j in range(size_y):
+                alt_min_massif[i,j] = infomassifs().getAltMinMax(massif_number[i,j])[0]
+                alt_max_massif[i,j] = infomassifs().getAltMinMax(massif_number[i,j])[1]"""
     NetCDF_file = Dataset('step1.nc', 'r+')
     NetCDF_file.renameVariable('Band1', 'ZS')
     ZS = NetCDF_file.variables['ZS'][:]
     ZS = np.ma.filled(ZS, np.nan)
-    ZS = np.where(ZS > alt_min_massif, ZS, alt_min_massif)
-    ZS = np.where(ZS < alt_max_massif, ZS, alt_max_massif)
+    if type(massif_number) == int:
+        ZS = np.where(ZS > alt_min_massif, ZS, alt_min_massif)
+        ZS = np.where(ZS < alt_max_massif, ZS, alt_max_massif)
     NetCDF_file.variables['ZS'][:] = ZS
     massif_num_nc = NetCDF_file.createVariable('massif_num', 'int', NetCDF_file.variables['ZS'].dimensions,
                                                fill_value=-9999999)
