@@ -14,6 +14,7 @@ from vortex.layout.nodes import Task
 from cen.layout.nodes import S2MTaskMixIn
 
 from bronx.stdtypes.date import Date, Period
+from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR
 import os
 
 toolbox.active_now = True
@@ -140,7 +141,7 @@ if __name__ == "__main__":
 
     # os.chdir('/home/vernaym/workdir')
     # os.chdir('/manto/nousuj/reforecast')
-    os.chdir('/cnrm/cen/users/NO_SAVE/radanovicss/Reforecasts')
+    os.chdir(os.path.join(LUSTRE_NOSAVE_USER_DIR, 'Reforecasts'))
 
     t = vortex.ticket()
 
