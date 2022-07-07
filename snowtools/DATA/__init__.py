@@ -29,9 +29,11 @@ PGD files at CEN
 
 LUSTRE_NOSAVE_DIR = '/cnrm/mrns/users/NO_SAVE'
 
-LUSTRE_NOSAVE_USER_DIR = os.path.join('/cnrm/mrns/users/NO_SAVE', os.getlogin())
+try:  # os.getlogin() fail on an HPC environment
+    LUSTRE_NOSAVE_USER_DIR = os.path.join('/cnrm/mrns/users/NO_SAVE', os.getlogin())
+except OSError:
+    pass
 
 CARTOPY_DIR = '/rd/cenfic3/manto/radanovicss/CartopyData'
 # CARTOPY_DIR = os.path.join(LUSTRE_NOSAVE_USER_DIR, 'CartopyData')  # for sxcen
-
 
