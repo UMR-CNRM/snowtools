@@ -27,10 +27,8 @@ def setup(t, **kw):
 
 class Safran(OpTask, S2MTaskMixIn):
 
-    # Filter of errors to be applied in both oper and dev cases
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
-    #report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
-    report_execution_error = S2MTaskMixIn.s2moper_report_execution_error
+
     def refill(self):
         """Safran analysis"""
 
@@ -453,7 +451,7 @@ class Safran(OpTask, S2MTaskMixIn):
                         # 6h homogène avec le cumul dans les fichiers d'assimilation
                         self.sh.title('Toolbox input guess arpege assim 0h J (secours)')
                         tb17 = toolbox.input(
-                            role           = 'Ebauche_Deterministic',
+                            alternate      = 'Ebauche_Deterministic',
                             local          = 'mb035/P[date::addcumul_yymdh]',
                             experiment     = self.conf.xpid,
                             block          = self.conf.guess_block,
@@ -483,7 +481,7 @@ class Safran(OpTask, S2MTaskMixIn):
                         geometry        = self.conf.vconf,
                         cutoff         = 'assimilation',
                         date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d))
-                                          for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
+                                          for d in footprints.util.rangex(12, ndays * 24 + 6, self.conf.cumul)],
                         cumul          = self.conf.cumul,
                         nativefmt      = 'ascii',
                         kind           = 'guess',
@@ -509,7 +507,7 @@ class Safran(OpTask, S2MTaskMixIn):
                         geometry       = self.conf.vconf,
                         cutoff         = 'production',
                         date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d))
-                                          for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
+                                          for d in footprints.util.rangex(12, ndays * 24 + 6, self.conf.cumul)],
                         cumul          = self.conf.cumul,
                         nativefmt      = 'ascii',
                         kind           = 'guess',
@@ -526,6 +524,8 @@ class Safran(OpTask, S2MTaskMixIn):
                     # PROBLEME : le nom dans 'local' change donc on passe dans l'alternate même si la ressource voulue
                     # est déjà présente
                     # TODO ==> SOLUTION : utiliser les "coherentgroup" (cf src/vortex/layout/dataflow.py)
+                    # WARNING : L'utilisation de coherentgroup entraine la suppression de TOUTES les ressources présentes
+                    # dès lors qu'il en manque une.
                     #
     #                self.sh.title('Toolbox input guess arpege prod j-1 (secours bis)')
     #                 tb17_c = toolbox.input(

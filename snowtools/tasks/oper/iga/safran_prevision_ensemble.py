@@ -30,10 +30,7 @@ def setup(t, **kw):
 
 class Safran(OpTask, S2MTaskMixIn):
 
-    # Filter of errors to be applied in both oper and dev cases
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
-    report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
-    report_execution_error = S2MTaskMixIn.s2moper_report_execution_error
 
     def process(self):
         """Safran"""
@@ -141,7 +138,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 self.sh.title('Toolbox intput guess pearp J -> J+4')
                 tb02b = toolbox.input(
                     role           = 'Ebauche',
-                    coherentgroup  = 'pearp_forecast',
+                    # coherentgroup  = 'pearp_forecast', # Supprime TOUTES les ressources présente dès lors qu'il en manque une
                     local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
                     experiment     = self.conf.xpid,
                     block          = self.conf.guess_block,
