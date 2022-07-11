@@ -135,7 +135,7 @@ class Safran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox intput guess pearp J -> J+4')
                 tb02b = toolbox.input(
                     role           = 'Ebauche',
-                    coherentgroup  = 'pearp_forecast',
+                    # coherentgroup  = 'pearp_forecast', # Supprime TOUTES les ressources présente dès lors qu'il en manque une
                     local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
                     experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,

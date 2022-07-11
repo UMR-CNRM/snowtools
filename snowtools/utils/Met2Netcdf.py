@@ -31,8 +31,8 @@ annee_last_MET = 2021
 annee_last_cdp60mn = 2020080100 # !!! 
 #
 # Autres données EN DUR dans le code: 
-path_safran = "/rd/cenfic2/era40/vortex/s2m/postes/reanalysis/meteo"
-path_met = "/rd/cenfic2/mesure_data/col_de_porte/met/"
+path_safran = "/rd/cenfic3/era40/vortex/s2m/postes/reanalysis/meteo"
+path_met = "/rd/cenfic3/mesure_data/col_de_porte/met/"
 pas_par_defaut = 3600
 
 

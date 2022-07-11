@@ -28,10 +28,7 @@ def setup(t, **kw):
 
 class PrepSafran(OpTask, S2MTaskMixIn):
 
-    # Filter of errors to be applied in both oper and dev cases
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
-    report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
-    report_execution_error = S2MTaskMixIn.s2moper_report_execution_error
 
     def process(self):
         """Preparation of SAFRAN input files"""
@@ -59,7 +56,7 @@ class PrepSafran(OpTask, S2MTaskMixIn):
     #                06/09/2020 : La nouvelle chaine en double archive désormais de la même façon sur hendrix et BULL
                     self.sh.title('Toolbox arpege assim')
                     tbarp = toolbox.input(
-                        alternate      = 'Gridpoint',
+                        role           = 'Gridpoint',
                         format         = 'grib',
                         geometry       = self.conf.arpege_geometry,
                         kind           = 'gridpoint',
@@ -144,7 +141,7 @@ class PrepSafran(OpTask, S2MTaskMixIn):
                     # RUN 9h : Récupération de A6 du réseau d'assimilation d'ARPEGE de 0h inline...
                     self.sh.title('Toolbox input arpege assim')
                     tbarp = toolbox.input(
-                        alternate      = 'Gridpoint',
+                        role           = 'Gridpoint',
                         block          = 'forecast',
                         format         = 'grib',
                         geometry       = self.conf.arpege_geometry,

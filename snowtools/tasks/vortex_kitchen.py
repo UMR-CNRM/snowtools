@@ -120,9 +120,9 @@ class vortex_kitchen(object):
             if self.options.reinit:
                 self.jobname = "surfex_reinit"
             elif self.options.forecast:
-                self.jobname = "surfex_forecast"
+                self.jobname = "prvsurf_s2m" + self.options.vconf
             else:
-                self.jobname = "surfex_analysis"
+                self.jobname = "anasurf_s2m" + self.options.vconf
             self.confcomplement = ''
         else:
             self.period = " rundate=" + self.options.datedeb.strftime("%Y%m%d%H%M") + " datebegin=" + \
@@ -178,7 +178,7 @@ class vortex_kitchen(object):
             if self.options.oper:
                 conffilename = self.options.vapp + "_" + self.options.vconf + ".ini"
                 if self.options.dev:
-                    conffilename_in = self.options.vapp + "dev_" + self.options.vconf + ".ini"
+                    conffilename_in = self.options.vapp + "devnew_" + self.options.vconf + ".ini"
                 else:
                     conffilename_in = conffilename
 
