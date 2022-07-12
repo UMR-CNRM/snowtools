@@ -277,36 +277,6 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb06 =', tb06)
                 print()
 
-                if self.conf.vconf in ['alp', 'pyr']:
-
-                    self.sh.title('Toolbox input norelmt')
-                    tb07 = toolbox.input(
-                        role            = 'MoyRRmensuelles',
-                        genv            = self.conf.cycle,
-                        gdomain         = self.conf.vconf,
-                        geometry        = self.conf.geometry[self.conf.vconf],
-                        kind            = 'NORELmt',
-                        model           = self.conf.model,
-                        local           = 'NORELmt',
-                        fatal           = False,
-                    )
-                    print(t.prompt, 'tb07 =', tb07)
-                    print()
-
-                    self.sh.title('Toolbox input blacklist')
-                    tb08 = toolbox.input(
-                        role            = 'BlackList',
-                        genv            = self.conf.cycle,
-                        gdomain         = self.conf.vconf,
-                        geometry        = self.conf.geometry[self.conf.vconf],
-                        kind            = 'blacklist',
-                        model           = self.conf.model,
-                        local           = 'BLACK',
-                        fatal           = False,
-                    )
-                    print(t.prompt, 'tb08 =', tb08)
-                    print()
-
                 # WARNING : Les ressoucres rsclim et icrccm ne servent pas dans le cas nominal mais
                 # consituent un mode secours pour SAFRAN si il rencontre un problème pour faire son guess
                 # A partir des fichiers P
@@ -314,7 +284,7 @@ class Safran(Task, S2MTaskMixIn):
                 tb09 = toolbox.input(
                     role            = 'Clim',
                     genv            = self.conf.cycle,
-                    gdomain         = self.conf.vconf,
+                    gvar            = '[kind]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     kind            = 'rsclim',
                     model           = self.conf.model,
@@ -327,7 +297,7 @@ class Safran(Task, S2MTaskMixIn):
                 tb10 = toolbox.input(
                     role            = 'Clim',
                     genv            = self.conf.cycle,
-                    gdomain         = self.conf.vconf,
+                    gvar            = '[kind]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     kind            = 'icrccm',
                     model           = self.conf.model,
