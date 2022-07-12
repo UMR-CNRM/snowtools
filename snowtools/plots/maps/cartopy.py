@@ -213,7 +213,7 @@ class _Map_massifs(Mplfigure):
 
         if getmap:
             self.map = self.getmap(**kw)
-            self.map.coastlines(linewidth=1)
+            self.map.coastlines(resolution='10m', linewidth=1)
             self.map.gridlines(draw_labels=True)
 
         self.dicLonLatMassif = getLonLatMassif()
@@ -459,7 +459,7 @@ class _Map_massifs(Mplfigure):
 
         # print(kwargs.keys())
         if 'nrow' in kwargs.keys() and 'ncol' in kwargs.keys() and 'iax' in kwargs.keys():
-            ax_pl = plt.subplot(kwargs['nrow'], kwargs['ncol'], kwargs['iax+1'],
+            ax_pl = plt.subplot(kwargs['nrow'], kwargs['ncol'], kwargs['iax']+1,
                                 projection=ccrs.PlateCarree())
         else:
             ax_pl = plt.axes(self.mappos, projection=ccrs.PlateCarree())
@@ -467,19 +467,27 @@ class _Map_massifs(Mplfigure):
         ax_pl.set_extent([self.lonmin, self.lonmax, self.latmin, self.latmax])
 
         if geofeatures:
-            ax_pl.add_feature(cartopy.feature.LAND, facecolor='wheat')
-            ax_pl.add_feature(cartopy.feature.OCEAN)
-            ax_pl.add_feature(cartopy.feature.COASTLINE)
+            ax_pl.add_feature(cartopy.feature.NaturalEarthFeature('physical', 'land', scale='10m',
+                                                                  facecolor='wheat'))
+            ax_pl.add_feature(cartopy.feature.NaturalEarthFeature('physical', 'ocean', scale='10m',
+                                                                  facecolor=cartopy.feature.COLORS['water']))
             # ax.add_feature(cartopy.feature.BORDERS, linestyle=':')
             ax_pl.add_feature(cartopy.feature.NaturalEarthFeature('cultural',
                                                                   'admin_0_boundary_lines_land',
-                                                                  '10m', facecolor='none',
+                                                                  scale='10m', facecolor='none',
                                                                   linestyle=':'))
-            ax_pl.add_feature(cartopy.feature.LAKES, alpha=0.5)
-            ax_pl.add_feature(cartopy.feature.RIVERS)
+            ax_pl.add_feature(cartopy.feature.NaturalEarthFeature('physical', 'lakes', scale='10m',
+                                                                  facecolor=cartopy.feature.COLORS['water'],
+                                                                  alpha=0.5))
+            ax_pl.add_feature(cartopy.feature.NaturalEarthFeature('physical', 'rivers_lake_centerlines',
+                                                                  scale='10m',
+                                                                  edgecolor=cartopy.feature.COLORS['water'],
+                                                                  facecolor='none', alpha=0.5))
         elif bgimage:
             os.environ["CARTOPY_USER_BACKGROUNDS"] = config["data_dir"]  # os.path.join(SNOWTOOLS_DIR, 'DATA')
             ax_pl.background_img(resolution="high")
+        # else:
+        #     ax_pl.coastlines(resolution='10m')
         return ax_pl
 
     def openfigure(self):
@@ -1193,11 +1201,11 @@ class _MultiMap(_Map_massifs):
         for iax in range(self.nsubplots):
             kw['iax'] = iax
             self.maps.flat[iax] = self.getmap(**kw)
-            self.maps.flat[iax].coastlines(linewidth=1)
+            self.maps.flat[iax].coastlines(resolution='10m', linewidth=1)
             self.gl = self.maps.flat[iax].gridlines(draw_labels=True)
             # keep labels left and bottom only
-            self.gl.top_labels = False
-            self.gl.right_labels = False
+            self.gl.top_labels = False  # from cartopy 0.18 on
+            self.gl.right_labels = False  # from cartopy 0.18 on
             # move the subplots a little to the left in order to have
             # some space for the colorbar on the right.
             pos1 = self.maps.flat[iax].get_position()
@@ -1749,6 +1757,9 @@ class MultiMap_Pyr(Map_pyrenees, _MultiMap):
         self.nrow = nrow
         self.ncol = ncol
         self.nsubplots = nrow*ncol
+        kw['nrow'] = self.nrow
+        kw['ncol'] = self.ncol
+        kw['nsubplots'] = self.nsubplots
         super(MultiMap_Pyr, self).__init__(*args, **kw)
         self.titlepad = 5
         self.set_figsize(30, 9)
@@ -1861,6 +1872,9 @@ class MultiMap_Cor(_MultiMap, Map_corse):
         self.nrow = nrow
         self.ncol = ncol
         self.nsubplots = nrow*ncol
+        kw['nrow'] = self.nrow
+        kw['ncol'] = self.ncol
+        kw['nsubplots'] = self.nsubplots
         super(MultiMap_Cor, self).__init__(*args, **kw)
         self.titlepad = 5
         self.init_maps(**kw)

@@ -411,6 +411,7 @@ class PostprocessStations(EnsembleStation, PostprocessEnsemble):
 if __name__ == "__main__":
 
     C = Config()
+    C.list_members = list(range(0, 35))
     os.chdir(C.diroutput)
     S2ME = S2MExtractor(C)
     SNOW_MEMBERS, SNOW_XPID = S2ME.get_snow()

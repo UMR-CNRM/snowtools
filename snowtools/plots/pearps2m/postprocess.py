@@ -17,7 +17,6 @@ import argparse
 import locale
 import os
 from collections import Counter, defaultdict
-import six
 import numpy as np
 import datetime
 import matplotlib
@@ -79,7 +78,7 @@ def build_filename(massif, alti):
     """
     filename = str(massif)
     if alti:
-        filename += "_{:d}".format(alti)
+        filename += "_{:d}".format(int(alti))
     return filename
 
 
@@ -131,7 +130,7 @@ class Config:
             self.xpid = "nouveaux_guess@lafaysse"
             delattr(Config, 'alternate_xpid')
             self.list_geometry = ['jur4_allslopes', 'mac11_allslopes',
-                                  'vog3_allslopes', 'cor', 'alp', 'pyr']
+                                  'vog3_allslopes', 'cor', 'alp', 'pyr'] # , 'postes'
         self.reforecast = OPTIONS.reforecast
         if OPTIONS.reforecast:
             self.xpid = "reforecast_double2021@vernaym"
@@ -622,12 +621,16 @@ class EnsembleStation(Ensemble):
         """
         return self.simufiles[0].read_var("station", Number_of_points=self.indpoints)
 
-    def get_metadata(self):
+    def get_metadata(self, nolevel=False):
         """
         Construct filenames and plot titles from altitude and station information
 
+        :param nolevel: ignored parameter for this class, but needed for coherence with
+        other classes.
         :return: a list of filenames and a list of plot titles
         """
+        if nolevel:
+            print('warning: nolevel ignored for EnsembleStation class filenames and plot titles')
         alti = self.simufiles[0].read_var("ZS", Number_of_points=self.indpoints)
         station = self.get_station()
         # nameposte gives unicode
@@ -826,7 +829,8 @@ class EnsembleOperDiags(ABC, EnsembleDiags):
         list_colors = ['blue', 'red', 'green', 'orange']
 
         for var in list_var_spag_2points:
-
+            # print(var)
+            # print(self.attributes[var])
             if 'nolevel' not in self.attributes[var].keys():
                 self.attributes[var]['nolevel'] = False
 
@@ -868,10 +872,10 @@ class EnsembleOperDiags(ABC, EnsembleDiags):
                     else:
                         sp_h.draw(self.time, allmembers, qmin, qmed, qmax, **settings)
 
-                sp_h.set_title(list_titles[pair])
+                sp_h.set_title(list_titles[pair[0]])
                 sp_h.set_suptitle(suptitle_s)
                 sp_h.addlogo()
-                plotname = diroutput + "/" + var + "_" + list_filenames[pair] \
+                plotname = diroutput + "/" + var + "_" + list_filenames[pair[0]] \
                     + "." + self.formatplot
                 sp_h.save(plotname, formatout=self.formatplot)
                 print(plotname + " is available.")
@@ -1040,7 +1044,8 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleNorthSouthMassif, EnsembleOperDi
         :param diroutput: directory to save the plots
         """
 
-        super(EnsembleOperDiagsNorthSouthMassif, self).pack_spaghettis_multipoints(self.list_pairs,
+        super(EnsembleOperDiagsNorthSouthMassif, self).pack_spaghettis_multipoints(self.list_var_spag_2points,
+                                                                                   self.list_pairs,
                                                                                    suptitle_s,
                                                                                    diroutput,
                                                                                    labels=self.versants)
@@ -1089,7 +1094,7 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleNorthSouthMassif, EnsembleOperDi
                         for q_i in range(len(self.list_q)):
                             list_values.append(self.quantiles[var][q_i][t_i, indalti])
                     # print(len(massif[indalti]))
-                    m_g.rectangle_massif(self.massifdim[indalti], self.list_q, list_values, ncol=2,
+                    m_g.rectangle_massif(self.massifdim[indalti], list_values, ncol=2,
                                          **self.attributes[var])
                     title = "pour le " + pretty_date(self.time[t_i])
                     title += " - Altitude : " + str(int(level)) + "m"
@@ -1299,7 +1304,7 @@ if __name__ == "__main__":
     LIST_DOMAINS = SNOW_MEMBERS.keys()
     print(LIST_DOMAINS)
 
-    for domain in LIST_DOMAINS:  # ['alp_allslopes']: #
+    for domain in LIST_DOMAINS:  # ['alp_allslopes']: # ['postes']: #
 
         # S2ME.conf.rundate is a Date object --> strftime already calls decode method
         suptitle = u'Prévisions PEARP-S2M du ' + pretty_date(S2ME.conf.rundate)

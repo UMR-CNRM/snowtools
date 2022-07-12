@@ -367,11 +367,21 @@ class infomassifs():
         return massif
 
     def nameposte(self, num_poste):
+        """
+        get station name for a given station number.
+
+        :param num_poste: station number
+        :type num_poste: int
+        :returns: station name
+        :rtype: str
+        """
+        str_poste = '%08d' % int(num_poste)
         for poste in self.caracLoc.documentElement.getElementsByTagName("Site"):
-            if str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip() == '%08d' % int(num_poste):
+            if str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip() == str_poste:
                 name = poste.getElementsByTagName("name")[0].childNodes[0].data
-                break
-        return name  # type unicode in python2
+                # break
+                return name  # type unicode in python2
+        raise ValueError('station number not found' + str_poste)
 
     def maskposte(self, num_poste):
         for poste in self.caracLoc.documentElement.getElementsByTagName("Site"):
@@ -395,9 +405,9 @@ class infomassifs():
                     listazi = [0, 360]
                     listmask = [0, 0]
                 break
-            else:
-                listazi = [0, 360]
-                listmask = [0, 0]
+
+            listazi = [0, 360]
+            listmask = [0, 0]
         return listazi, listmask
 
     def getListAlt(self, num_massif, tagname="Massif"):
