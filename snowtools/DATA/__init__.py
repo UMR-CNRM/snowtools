@@ -29,10 +29,11 @@ PGD files at CEN
 
 LUSTRE_NOSAVE_DIR = '/cnrm/mrns/users/NO_SAVE'
 
-try:  # os.getlogin() fail on an HPC environment
+try:
     LUSTRE_NOSAVE_USER_DIR = os.path.join('/cnrm/mrns/users/NO_SAVE', os.getlogin())
 except OSError:
-    pass
+    # os.getlogin not defined in a vortex job but we don't care because this variable is for sxcen.
+    LUSTRE_NOSAVE_USER_DIR = None
 
 CARTOPY_DIR = '/rd/cenfic3/manto/radanovicss/CartopyData'
 # CARTOPY_DIR = os.path.join(LUSTRE_NOSAVE_USER_DIR, 'CartopyData')  # for sxcen

@@ -61,8 +61,8 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 datebegin      = datebegin,
                 dateend        = dateend,
                 nativefmt      = 'netcdf',
+                namespace      = self.conf.namespace_in,
                 kind           = 'MeteorologicalForcing',
-                namespace      = 'vortex.multi.fr',
                 model          = source_safran,
                 cutoff         = 'assimilation',
                 fatal          = True
@@ -224,12 +224,12 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
 
             self.sh.title('Toolbox algo tb09a')
             tb09 = tbalgo1 = toolbox.algo(
-                engine         = 's2m',
+                engine       = 's2m',
                 kind         = 'prepareforcing',
                 datebegin    = [datebegin],
                 dateend      = [dateend],
                 ntasks       = 1,
-                geometry_in     = list_geometry,
+                geometry_in  = list_geometry,
                 geometry_out     = self.conf.geometry.tag
             )
             print((t.prompt, 'tb09a =', tb09))
@@ -282,7 +282,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                     nativefmt      = 'netcdf',
                     kind           = 'MeteorologicalForcing',
                     model          = 's2m',
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = self.conf.namespace_out,
                     cutoff         = 'assimilation',
                     fatal          = False
                 ),
@@ -301,7 +301,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 nativefmt      = 'netcdf',
                 kind           = 'SnowpackSimulation',
                 model          = 'surfex',
-                namespace      = 'vortex.multi.fr',
+                namespace      = self.conf.namespace_out,
                 cutoff         = 'assimilation',
                 fatal          = False
             ),
@@ -322,7 +322,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 nativefmt      = 'netcdf',
                 kind           = 'PREP',
                 model          = 'surfex',
-                namespace      = 'vortex.multi.fr',
+                namespace      = self.conf.namespace_out,
                 cutoff         = 'assimilation',
                 fatal          = True
             ),
