@@ -46,17 +46,19 @@ class Soda_Task(_CrocO_Task):
 
             # ############### FETCH OBSERVATIONS  ##########
             self.sh.title('Toolbox input tobs (obs)')
+            nature = self.conf.sensor + "_" + self.conf.geometry.tag # to be changed later
             tobs = toolbox.input(
                 geometry        = self.conf.geometry,
                 nativefmt       = 'netcdf',
                 datevalidity    = assDate,
                 model           = 'obs',
                 block           = self.conf.sensor,
-                nature          = self.conf.sensor,
+                nature          = nature,
                 kind            = 'SnowObservations',
                 namespace       = 'vortex.multi.fr',
                 namebuild       = 'flat@cen',
                 experiment      = self.conf.obsxpid,
+#                local           = 'OBSERVATIONS.nc',
                 local           = 'workSODA/OBSERVATIONS_[datevalidity:ymdHh].nc',
                 stage           = '1date',
                 fatal           = True

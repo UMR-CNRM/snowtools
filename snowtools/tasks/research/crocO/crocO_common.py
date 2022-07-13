@@ -39,6 +39,9 @@ class _CrocO_Task(Task, S2MTaskMixIn):
     def get_common_consts(self, firstloop, members):
         t = self.ticket
 
+        if not hasattr(self.conf, "genv"):
+            self.conf.genv = 'uenv:cen.06@CONST_CEN'
+
         # #################### FETCH CONSTANT FILES ##########################
         self.sh.title('Toolbox input tb02_s (PGD)')  # this step should work if PGD properly in spinup on hendrix
         tb02_s = toolbox.input(
@@ -47,7 +50,7 @@ class _CrocO_Task(Task, S2MTaskMixIn):
             nativefmt      = 'netcdf',
             local          = 'PGD.nc',
             # member         = '{0:04d}'.format(forcingdir),
-            experiment     = 'spinup@' + t.env.getvar('USER'),
+            experiment     = self.conf.spinup_xpid,
             geometry       = self.conf.geometry,
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
@@ -109,22 +112,22 @@ class _CrocO_Task(Task, S2MTaskMixIn):
         print(t.prompt, 'tb05 =', tb05)
         print()
         # each task has its specific conf file on /scratch to avoid overwriting.
-        takeConf = self.conf.workingdir + '/conf/' + self.conf.vapp + '_' + self.conf.vconf +\
-            '_' + self.conf.confcomplement + '.ini'
-        self.sh.title('Toolbox input tbconf (conf)')
-        tbconf = toolbox.input(
-            kind           = 'ini_file',
-            local          = self.conf.vapp + '_' + self.conf.vconf + '.ini',
-            vapp           = self.conf.vapp,
-            vconf          = self.conf.vconf,
-            remote         = takeConf,
-            model          ='surfex',
-            role           = 'Conf_file',
-            intent = 'inout',
-            fatal = True,
-        )
-        print(t.prompt, 'tbCONFIN =', tbconf)
-        print()
+        # takeConf = self.conf.workingdir + '/conf/' + self.conf.vapp + '_' + self.conf.vconf +\
+        #     '_' + self.conf.confcomplement + '.ini'
+        # self.sh.title('Toolbox input tbconf (conf)')
+        # tbconf = toolbox.input(
+        #     kind           = 'ini_file',
+        #     local          = self.conf.vapp + '_' + self.conf.vconf + '.ini',
+        #     vapp           = self.conf.vapp,
+        #     vconf          = self.conf.vconf,
+        #     remote         = takeConf,
+        #     model          ='surfex',
+        #     role           = 'Conf_file',
+        #     intent = 'inout',
+        #     fatal = True,
+        # )
+        # print(t.prompt, 'tbCONFIN =', tbconf)
+        # print()
 
 
 class CrocO_In(_CrocO_Task):

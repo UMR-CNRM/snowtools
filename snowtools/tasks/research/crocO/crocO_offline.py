@@ -51,7 +51,7 @@ class Offline_Task(_CrocO_Task):
                 tb03_s = toolbox.input(
                     alternate      = 'SnowpackInit',
                     local          = 'PREP.nc',
-                    experiment     = 'spinup@' + t.env.getvar("USER"),
+                    experiment     = self.conf.spinup_xpid,
                     geometry       = self.conf.geometry,
                     date           = self.conf.datespinup,
                     intent         = 'inout',

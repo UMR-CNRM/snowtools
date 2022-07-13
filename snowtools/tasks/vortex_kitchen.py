@@ -481,7 +481,6 @@ class Vortex_conf_file(object):
 
         self.set_field('DEFAULT', 'nforcing', self.options.nforcing)
 
-
         # ########### READ THE USER-PROVIDED conf file ##########################
         # -> in order to append datefin to assimdates and remove the exceding dates.
         # -> in order to check if members_ids were specified.
@@ -490,6 +489,13 @@ class Vortex_conf_file(object):
 
 
         confObj = read_conf(self.options.croco)
+
+        # PGD xpid can be either prescribed in the conf file or taken by default to a reference spinup
+        if hasattr(confObj, 'spinup_xpid'):
+            self.set_field('DEFAULT', 'spinup_xpid', confObj.spinup_xpid)
+        else:
+            self.set_field('DEFAULT', 'spinup_xpid', 'spinup@' + os.getlogin())
+
         intdates = list(map(int, confObj.assimdates))
         intdatefin = int(self.options.datefin.strftime("%Y%m%d%H"))
         intdates.sort()
@@ -570,7 +576,7 @@ class Vortex_conf_file(object):
             self.set_field('DEFAULT', 'sensor', self.options.sensor)
 
         if hasattr(self.options, 'obsxpid'):
-            self.set_field('DEFAULT', 'obsxpid', self.options.xpid)
+            self.set_field('DEFAULT', 'obsxpid', self.options.obsxpid)
         else:
             self.set_field('DEFAULT', 'obsxpid', 'obs@' + os.getlogin())
 
