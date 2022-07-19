@@ -171,17 +171,18 @@ class question(object):
                 else:
                     date = self.period[0]
                 date_formatted = self._format_date(date)
-                conditions += ['DAT >= \'{}\''.format(date_formatted)]
+                conditions += [f'{self.table}.DAT >= \'{date_formatted}\'']
             if len(self.period) > 1:
                 if isinstance(self.period[1], str):
                     date = check_and_convert_date(self.period[1])
                 else:
                     date = self.period[1]
                 date_formatted = self._format_date(date)
-                conditions += ['DAT <= \'{}\''.format(date_formatted)]
+                conditions += [f'{self.table}.DAT <= \'{date_formatted}\'']
             self.sql += ' WHERE {}'.format(' AND '.join(self.conditions))
         if len(self.order) > 0:
             self.sql += ' ORDER BY {}'.format(','.join(self.order))
+        print('Lauching the following querry : \n', self.sql)
 
         # Connexion to database
         with psycopg2.connect(
