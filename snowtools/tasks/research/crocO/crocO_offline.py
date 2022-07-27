@@ -183,7 +183,8 @@ class Offline_Task(_CrocO_Task):
                 members        = idsnode,  # mbids (=ESCROC IDS in case of prescribed draw) =
                 # members node in case draw without prescription
                 startmbnode    = self.conf.membersnode[0],  # necessary
-                geometry       = [self.conf.geometry.area],
+                geometry_in    = [self.conf.geometry.tag],
+                geometry_out   = self.conf.geometry.tag,
                 subensemble    = self.conf.subensemble,
                 # ntasks         = ntasksEsc,  # not consistent with the self.conf.membersnode
                 ntasks         = nmembersnode,  # BC 18/04/19 more consistent
