@@ -85,6 +85,8 @@ class Offline_Task(_CrocO_Task):
 
         if 'fetch' in self.steps:
 
+            self.get_common_fetch() # get the namelist
+
             # ############# FETCH PREPS : either 1 spinup (firstloop=True,
             # could be moved to early-fetch) or a list of PREPS ##########
             if not firstloop:  # else, got it in the early step on hendrix

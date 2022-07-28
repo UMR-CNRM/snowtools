@@ -101,16 +101,16 @@ class _CrocO_Task(Task, S2MTaskMixIn):
         print(t.prompt, 'tb04 =', tb04)
         print()
 
-        self.sh.title('Toolbox input tb05 (namelist)')
-        tb05 = toolbox.input(
-            role            = 'Nam_surfex',
-            remote          = self.conf.namelist,
-            kind            = 'namelist',
-            model           = 'surfex',
-            local           = 'OPTIONS.nam',
-        )
-        print(t.prompt, 'tb05 =', tb05)
-        print()
+        # self.sh.title('Toolbox input tb05 (namelist)')
+        # tb05 = toolbox.input(
+        #     role            = 'Nam_surfex',
+        #     remote          = self.conf.namelist,
+        #     kind            = 'namelist',
+        #     model           = 'surfex',
+        #     local           = 'OPTIONS.nam',
+        # )
+        # print(t.prompt, 'tb05 =', tb05)
+        # print()
         # each task has its specific conf file on /scratch to avoid overwriting.
         # takeConf = self.conf.workingdir + '/conf/' + self.conf.vapp + '_' + self.conf.vconf +\
         #     '_' + self.conf.confcomplement + '.ini'
@@ -129,6 +129,22 @@ class _CrocO_Task(Task, S2MTaskMixIn):
         # print(t.prompt, 'tbCONFIN =', tbconf)
         # print()
 
+    def get_common_fetch(self):
+        t = self.ticket
+
+        self.sh.title('Toolbox input tb04 (soda namelist)')
+        tb04 = toolbox.input(
+            role='Nam_surfex',
+            kind='namelist',
+            model='surfex',
+            local='OPTIONS.nam',
+            experiment=self.conf.xpid,
+            namespace='vortex.cache.fr',
+            block='namelist',
+            intent='inout',
+        )
+        print(t.prompt, 'tb04 =', tb04)
+        print()
 
 class CrocO_In(_CrocO_Task):
     """
@@ -177,6 +193,46 @@ class CrocO_In(_CrocO_Task):
                 block          = 'meteo'
             ),
             print(t.prompt, 'tb01 =', tb01)
+            print()
+
+        if 'early-fetch' in self.steps or 'fetch' in self.steps:
+
+            self.sh.title('Toolbox input tb02 (namelist)')
+            tb02 = toolbox.input(
+                role            = 'Nam_surfex',
+                remote          = self.conf.namelist,
+                kind            = 'namelist',
+                model           = 'surfex',
+                local           = 'OPTIONS.nam',
+            )
+            print(t.prompt, 'tb02 =', tb02)
+            print()
+
+        if 'compute' in self.steps:
+
+            self.sh.title('Toolbox algo tb03 (soda preprocess)')
+
+            tb03 = toolbox.algo(
+                kind         = 'soda_preprocess',
+                members      = self.conf.members,
+            )
+            print(t.prompt, 'tb03 =', tb03)
+            print()
+            tb03.run()
+
+        if 'backup' in self.steps:
+
+            self.sh.title('Toolbox output tb04 (namelist)')
+            tb04 = toolbox.output(
+                role            = 'Nam_surfex',
+                kind            = 'namelist',
+                model           = 'surfex',
+                local           = 'OPTIONS.nam',
+                experiment            = self.conf.xpid,
+                namespace       = 'vortex.cache.fr',
+                block           = 'namelist'
+            )
+            print(t.prompt, 'tb04 =', tb04)
             print()
 
 # Matthieu Lafaysse: comment this because pickle is not the appropriate solution for post-processing
