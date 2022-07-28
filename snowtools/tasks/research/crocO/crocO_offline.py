@@ -219,27 +219,27 @@ class Offline_Task(_CrocO_Task):
             print(t.prompt, 'tb21 =', tb21)
             print()
 
-            if self.conf.pickleit == 'on':
-
-                # bc displaced because now we pickle the files instead of transferring it.
-                # ########### PUT PRO FILE ###########
-                self.sh.title('Toolbox output tb19_bk (pro backup)')
-                tb19 = toolbox.output(
-                    local          = 'mb[member%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-                    experiment     = self.conf.xpid,
-                    geometry       = self.conf.geometry,
-                    datebegin      = self.conf.stopdate_prev,
-                    dateend        = self.conf.stopdate,
-                    member         = self.conf.membersnode,
-                    nativefmt      = 'netcdf',
-                    kind           = 'SnowpackSimulation',
-                    model          = 'surfex',
-                    namespace      = 'vortex.cache.fr',
-                    namebuild      = 'flat@cen',
-                    block          = 'pro',
-                ),
-                print(t.prompt, 'tb19 =', tb19)
-                print()
+            # if self.conf.pickleit == 'on':
+            #
+            #     # bc displaced because now we pickle the files instead of transferring it.
+            #     # ########### PUT PRO FILE ###########
+            #     self.sh.title('Toolbox output tb19_bk (pro backup)')
+            #     tb19 = toolbox.output(
+            #         local          = 'mb[member%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+            #         experiment     = self.conf.xpid,
+            #         geometry       = self.conf.geometry,
+            #         datebegin      = self.conf.stopdate_prev,
+            #         dateend        = self.conf.stopdate,
+            #         member         = self.conf.membersnode,
+            #         nativefmt      = 'netcdf',
+            #         kind           = 'SnowpackSimulation',
+            #         model          = 'surfex',
+            #         namespace      = 'vortex.cache.fr',
+            #         namebuild      = 'flat@cen',
+            #         block          = 'pro',
+            #     ),
+            #     print(t.prompt, 'tb19 =', tb19)
+            #     print()
 
         if 'late-backup' in self.steps:
             # if fetchnig to sxcen, must be done file/file to prevent from having too many simultaneous transfers
@@ -248,7 +248,8 @@ class Offline_Task(_CrocO_Task):
             if self.conf.writesx == 'on':
                 storage.append('sxcen.cnrm.meteo.fr')
 
-            if self.conf.pickleit == 'off':
+            # if self.conf.pickleit == 'off':
+            if True:
                 # ########### PUT PREP FILES ###########
                 localbg = 'mb[member%04d]/PREP_[date:ymdh].nc'
                 self.sh.title('Toolbox output tb21bg_ar (background archive)')

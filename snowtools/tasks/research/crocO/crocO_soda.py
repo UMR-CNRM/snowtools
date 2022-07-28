@@ -169,7 +169,8 @@ class Soda_Task(_CrocO_Task):
             if self.conf.writesx == 'on':
                 storage.append('sxcen.cnrm.meteo.fr')
             if os.path.exists('workSODA/OBSERVATIONS_' + Date(assDate).ymdHh + '.nc'):
-                if self.conf.pickleit == 'off':
+                # if self.conf.pickleit == 'off':
+                if True:
                     # ########### PUT PREP FILES HENDRIX ######################################
                     self.sh.title('Toolbox output tb12_ar (analysis archive)')
                     tb20 = toolbox.output(
