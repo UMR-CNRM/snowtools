@@ -247,8 +247,9 @@ class Offline_Task(_CrocO_Task):
             # if fetchnig to sxcen, must be done file/file to prevent from having too many simultaneous transfers
             storage = ['hendrix.meteo.fr']
             enforcesync = dict(storage={'hendrix.meteo.fr': False, 'sxcen.cnrm.meteo.fr': True})
-            if self.conf.writesx == 'on':
-                storage.append('sxcen.cnrm.meteo.fr')
+            if hasattr(self.conf, 'writesx'):
+                if self.conf.writesx:
+                    storage.append('sxcen.cnrm.meteo.fr')
 
             # if self.conf.pickleit == 'off':
             if True:

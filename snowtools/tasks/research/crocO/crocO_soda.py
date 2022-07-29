@@ -132,7 +132,7 @@ class Soda_Task(_CrocO_Task):
             # ----            | background  PREP_YYYYMMDDHH.nc        PREP_YYYYMMDDHH_bg.nc
             # OPENLOOP          analysis    NONE                      NONE
             # -------           background  PREP_YYYYMMDDHH.nc        PREP_YYYYMMDDHH_bg.nc
-            if self.conf.openloop == 'on' or not os.path.exists('OBSERVATIONS_' + Date(assDate).ymdHh + '.nc'):  # openloop or noobs/final step
+            if self.conf.openloop == 'on' or not os.path.exists('OBSERVATIONS_' + assDate.ymdHh + '.nc'):  # openloop or noobs/final step
                 localan = 'NONE'
                 # localbg = 'mb[member%04d]/PREP_[date:ymdh].nc'
             else:  # usual soda step
@@ -167,9 +167,10 @@ class Soda_Task(_CrocO_Task):
             # if fetchnig to sxcen, must be done file/file to prevent from having too many simultaneous transfers
             storage = ['hendrix.meteo.fr']
             enforcesync = dict(storage={'hendrix.meteo.fr': False, 'sxcen.cnrm.meteo.fr': True})
-            if self.conf.writesx == 'on':
-                storage.append('sxcen.cnrm.meteo.fr')
-            if os.path.exists('OBSERVATIONS_' + Date(assDate).ymdHh + '.nc'):
+            if hasattr(self.conf, 'writesx'):
+                if self.conf.writesx:
+                    storage.append('sxcen.cnrm.meteo.fr')
+            if os.path.exists('OBSERVATIONS_' + assDate.ymdHh + '.nc'):
                 # if self.conf.pickleit == 'off':
                 if True:
                     # ########### PUT PREP FILES HENDRIX ######################################
@@ -197,12 +198,13 @@ class Soda_Task(_CrocO_Task):
                     print()
 
                 # ########## RESAMPLE FILES HENDRIX ########################################
-                if not os.path.exists('PART_' + Date(assDate).ymdh + '.txt'):
-                    print('PART_' + Date(assDate).ymdh + '.txt doesnot exist')
+                if not os.path.exists('PART_' + assDate.ymdh + '.txt'):
+                    print('PART_' + assDate.ymdh + '.txt does not exist')
                 else:
                     self.sh.title('Toolbox output tb24 (part archive)')
                     tb24 = toolbox.output(
-                        model           = 'PART',
+                        kind           = 'PART',
+                        model          = 'soda',
                         namebuild       = 'flat@cen',
                         namespace      = 'vortex.multi.fr',
                         storage        = storage,
@@ -212,15 +214,16 @@ class Soda_Task(_CrocO_Task):
                         dateassim       = assDate,
                         # block           = 'workSODA',
                         experiment      = self.conf.xpid,
-                        filename        = 'PART_' + Date(assDate).ymdh + '.txt',
+                        filename        = 'PART_' + assDate.ymdh + '.txt',
                     )
                     print(t.prompt, 'tb24 =', tb24)
                     print()
                 # ########## BG_CORR FILE ON HENDRIX (klocal case only) ########################################
-                if os.path.exists('BG_CORR_' + Date(assDate).ymdh + '.txt'):
+                if os.path.exists('BG_CORR_' + assDate.ymdh + '.txt'):
                     self.sh.title('Toolbox output tb242 (bg_corr archive)')
                     tb242 = toolbox.output(
-                        model           = 'BG_CORR',
+                        kind           = 'BG_CORR',
+                        model          = 'soda',
                         namebuild       = 'flat@cen',
                         namespace      = 'vortex.multi.fr',
                         storage        = storage,
@@ -229,15 +232,16 @@ class Soda_Task(_CrocO_Task):
                         dateassim       = assDate,
                         # block           = 'workSODA',
                         experiment      = self.conf.xpid,
-                        filename        = 'BG_CORR_' + Date(assDate).ymdh + '.txt',
+                        filename        = 'BG_CORR_' + assDate.ymdh + '.txt',
                     )
                     print(t.prompt, 'tb242 =', tb242)
                     print()
                 # ########## IMASK FILE ON HENDRIX (klocal case only) ########################################
-                if os.path.exists('IMASK_' + Date(assDate).ymdh + '.txt'):
+                if os.path.exists('IMASK_' + assDate.ymdh + '.txt'):
                     self.sh.title('Toolbox output tb243 (imask archive)')
                     tb243 = toolbox.output(
-                        model           = 'IMASK',
+                        kind           = 'IMASK',
+                        model          = 'soda',
                         namebuild       = 'flat@cen',
                         namespace      = 'vortex.multi.fr',
                         storage        = storage,
@@ -247,15 +251,16 @@ class Soda_Task(_CrocO_Task):
                         dateassim       = assDate,
                         # block           = 'workSODA',
                         experiment      = self.conf.xpid,
-                        filename        = 'IMASK_' + Date(assDate).ymdh + '.txt',
+                        filename        = 'IMASK_' + assDate.ymdh + '.txt',
                     )
                     print(t.prompt, 'tb243 =', tb243)
                     print()
                 # ########## inflation FILE ON HENDRIX ########################################
-                if os.path.exists('ALPHA_' + Date(assDate).ymdh + '.txt'):
+                if os.path.exists('ALPHA_' + assDate.ymdh + '.txt'):
                     self.sh.title('Toolbox output tb244 (alpha archive)')
                     tb244 = toolbox.output(
-                        model           = 'ALPHA',
+                        kind           = 'ALPHA',
+                        model          = 'soda',
                         namebuild       = 'flat@cen',
                         namespace      = 'vortex.multi.fr',
                         storage        = storage,
@@ -264,7 +269,7 @@ class Soda_Task(_CrocO_Task):
                         dateassim       = assDate,
                         # block           = 'workSODA',
                         experiment = self.conf.xpid,
-                        filename = 'ALPHA_' + Date(assDate).ymdh + '.txt',
+                        filename = 'ALPHA_' + assDate.ymdh + '.txt',
                     )
                     print(t.prompt, 'tb244 =', tb244)
                     print()
