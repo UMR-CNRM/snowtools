@@ -205,6 +205,7 @@ class Soda_Task(_CrocO_Task):
                     tb24 = toolbox.output(
                         kind           = 'PART',
                         model          = 'soda',
+                        block          = 'soda',
                         namebuild       = 'flat@cen',
                         namespace      = 'vortex.multi.fr',
                         storage        = storage,
@@ -224,6 +225,7 @@ class Soda_Task(_CrocO_Task):
                     tb242 = toolbox.output(
                         kind           = 'BG_CORR',
                         model          = 'soda',
+                        block          = 'soda',
                         namebuild       = 'flat@cen',
                         namespace      = 'vortex.multi.fr',
                         storage        = storage,
@@ -242,6 +244,7 @@ class Soda_Task(_CrocO_Task):
                     tb243 = toolbox.output(
                         kind           = 'IMASK',
                         model          = 'soda',
+                        block          = 'soda',
                         namebuild       = 'flat@cen',
                         namespace      = 'vortex.multi.fr',
                         storage        = storage,
@@ -261,6 +264,7 @@ class Soda_Task(_CrocO_Task):
                     tb244 = toolbox.output(
                         kind           = 'ALPHA',
                         model          = 'soda',
+                        block          = 'soda',
                         namebuild       = 'flat@cen',
                         namespace      = 'vortex.multi.fr',
                         storage        = storage,
