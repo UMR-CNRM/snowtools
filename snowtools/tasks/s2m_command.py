@@ -413,9 +413,7 @@ class Surfex_command(_S2M_command):
         if not self.options.croco:
             vortex_kitchen(self.options)
         elif self.options.escroc:
-            # BC 16/12/20: crocO_vortex_kitchen left to phase with the other kitchens.
-            run = crocO_vortex_kitchen(self.options)
-            run.run()
+            crocO_vortex_kitchen(self.options)
         else:
             print("the croco sequence should run with escroc option")
 
