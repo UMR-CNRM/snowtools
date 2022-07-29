@@ -59,7 +59,6 @@ class vortex_kitchen(object):
                 # optimum constaté pour la réanalyse Alpes avec léger dépeuplement parmi les 128 coeurs.
 
     def execute(self):
-
         self.create_env()
         self.init_job_task()
         self.set_conf_file()
@@ -225,7 +224,6 @@ class vortex_kitchen(object):
 
         if not self.options.safran and (self.options.escroc and self.options.nnodes > 1):
             mkjob_list = []
-            print("loop")
             for node in range(1, self.options.nnodes + 1):
                 mkjob_list.append(self.mkjob_command(jobname=self.jobname + str(node)))
 
@@ -487,7 +485,6 @@ class Vortex_conf_file(object):
 
         # local import since there are dependencies with vortex.
 
-
         confObj = read_conf(self.options.croco)
 
         # PGD xpid can be either prescribed in the conf file or taken by default to a reference spinup
@@ -524,9 +521,10 @@ class Vortex_conf_file(object):
                 # in case of synthetic assimilation, need to:
                 #    - replace the synthetic escroc member
                 #    - draw a substitution forcing
-                if self.options.synth is not None:
+                if self.options.synth:
 
-                    # strange case when the synth member comes from a larger openloop (ex 160) than the current experiment (ex 40)
+                    # case when the synth member comes from a larger openloop (ex 160)
+                    # than the current experiment (ex 40)
                     if self.options.synth > self.options.nmembers:
                         self.set_field('DEFAULT', 'synth', self.options.synth)
                     else:
