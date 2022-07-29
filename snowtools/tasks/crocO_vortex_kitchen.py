@@ -51,10 +51,18 @@ class crocO_vortex_kitchen(vortex_kitchen):
             (2) use --synth <mbid> (starting from 1)
                 to specify which member is the synthetic one in order to remove and replace it.
                  ''')
-        if self.options.nnodes * self.options.ntasks > self.options.nmembers:
-            print(' be careful, you are trying to run ' + str(self.options.nmembers) + ' members on ' +
-                  str(self.options.nnodes * self.options.ntasks) + ' cores (40 cores per nodes)' +
-                  ' please reduce --nnodes so that n_cores<=nmembers')
+        if self.options.nnodes > 1 and self.options.nnodes * self.options.ntasks > self.options.nmembers:
+            # Adjust the number of nodes if excessive request:
+            print('You want to run ' + str(self.options.nmembers) + ' members on ' +
+                  str(self.options.nnodes) + ' nodes.')
+            self.options.nnodes = self.options.nmembers // self.options.ntasks + 1
+            print('but we estimate that  ' + str(self.options.nnodes) + ' nodes are sufficient.')
+        elif self.options.nmembers // (self.options.nnodes * self.options.ntasks) >= 1:
+            print('WARNING !')
+            print('You want to run ' + str(self.options.nmembers) + ' members on ' +
+                  str(self.options.nnodes) + ' nodes.')
+            print('But you could get quicker results by using up to ' +
+                  str(self.options.nmembers // self.options.ntasks + 1) + 'nodes.')
 
     def prepare_namelist(self):
         self.namelist = self.workingdir + '/OPTIONS_' + self.confcomplement + '.nam'
