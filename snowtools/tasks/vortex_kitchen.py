@@ -581,7 +581,7 @@ class Vortex_conf_file(object):
         # place it in the field offline for parallelization of the offlines LoopFamily only
         self.set_field('offline', 'paralleljobs_kind', 'slurm:ssh')
 
-        if self.options.croco and self.options.nmembers and self.options.openloop:
+        if self.options.croco and self.options.nmembers:
 
             # soda works with all members at the same time on one node only.
             self.set_field('soda', 'nmembersnode', self.options.nmembers)
