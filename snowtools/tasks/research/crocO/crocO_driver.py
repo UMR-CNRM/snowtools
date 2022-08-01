@@ -12,6 +12,7 @@ from snowtools.tasks.research.crocO.crocO_soda import Soda_Task
 from snowtools.tasks.research.crocO.crocO_offline import Offline_Task
 from snowtools.tasks.research.crocO.crocO_common import CrocO_In # , CrocO_Out
 
+
 def setup(t, **kw):
     return Driver(
         tag = 'CrocO_sequence',  # change the tag ?
@@ -39,7 +40,7 @@ def setup(t, **kw):
                             Offline_Task(tag = 'offline', ticket=t, **kw),
                         ], **kw),
                     Soda_Task(tag='soda', ticket=t,
-                              active_callback=lambda s: 'off' in s.conf.openloop and s.conf.stopdate_next is not None,
+                              active_callback=lambda s: not s.conf.openloop and s.conf.stopdate_next is not None,
                               **kw),
                 ],
                 loopconf='stopdates',  # stopdates = assimdates.append(enddate)

@@ -9,7 +9,6 @@ Vortex task performing up to 40 offline runs in parallel on a single node
 import os
 
 from vortex import toolbox
-from bronx.stdtypes.date import Date
 from snowtools.tasks.research.crocO.crocO_common import _CrocO_Task
 
 
@@ -112,13 +111,6 @@ class Soda_Task(_CrocO_Task):
                 print(t.prompt, 'tb11_s =', tb11_s)
                 print()
                 self.component_runner(tbalgo4s, tbx4, mpiopts=dict(nnodes=1, nprocs=1, ntasks=1))
-            """
-            else:  # in case of SODA, if obs file doesn't exist, we need to remove PREP.nc in every mbdir
-                (this is done by soda)
-                for mb in self.conf.members:
-                    if os.path.exists('mb{0:04d}'.format(mb) + '/PREP.nc'):
-                        os.remove('mb{0:04d}'.format(mb) + '/PREP.nc')
-            """
 
         if 'backup' in self.steps:
 
@@ -144,7 +136,6 @@ class Soda_Task(_CrocO_Task):
                 ),
                 print(t.prompt, 'tb20 =', tb20)
                 print()
-
 
         if 'late-backup' in self.steps:
             # if fetchnig to sxcen, must be done file/file to prevent from having too many simultaneous transfers
