@@ -316,6 +316,7 @@ class Offline_Task(_CrocO_Task):
                     model           = 'surfex',
                     local           = 'OPTIONS.nam',
                     fatal           = False,
+                    nativefmt       = 'nam'
                 ),
                 print(t.prompt, 'tb23 =', tb23)
                 print()

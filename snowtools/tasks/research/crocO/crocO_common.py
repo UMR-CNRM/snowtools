@@ -113,6 +113,7 @@ class _CrocO_Task(Task, S2MTaskMixIn):
             namespace='vortex.cache.fr',
             block='namelist',
             intent='inout',
+            nativefmt='nam',
         )
         print(t.prompt, 'tb04 =', tb04)
         print()
@@ -176,6 +177,7 @@ class CrocO_In(_CrocO_Task):
                 kind            = 'namelist',
                 model           = 'surfex',
                 local           = 'OPTIONS.nam',
+                nativefmt='nam',
             )
             print(t.prompt, 'tb02 =', tb02)
             print()
@@ -202,7 +204,8 @@ class CrocO_In(_CrocO_Task):
                 local           = 'OPTIONS.nam',
                 experiment            = self.conf.xpid,
                 namespace       = 'vortex.cache.fr',
-                block           = 'namelist'
+                block           = 'namelist',
+                nativefmt       = 'nam',
             )
             print(t.prompt, 'tb04 =', tb04)
             print()
