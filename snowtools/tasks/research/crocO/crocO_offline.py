@@ -16,7 +16,7 @@ from snowtools.utils.dates import get_list_dates_files, check_and_convert_date
 
 class Offline_Task(_CrocO_Task):
     '''
-    classdocs
+    Task for ensemble offline sequence between 2 assimilation dates
     '''
 
     def process(self):
@@ -144,11 +144,13 @@ class Offline_Task(_CrocO_Task):
         if 'compute' in self.steps:
             # force first forcing to the first forcing of first member 0001 doesn't work on several nodes...
             date_begin_forc, date_end_forc, _, _ = \
-                get_list_dates_files(self.conf.datebegin, Date(check_and_convert_date(self.conf.stopdate)), self.conf.duration)  # each one of these items has only one item
+                get_list_dates_files(self.conf.datebegin, Date(check_and_convert_date(self.conf.stopdate)),
+                                     self.conf.duration)  # each one of these items has only one item
             date_begin_forc = date_begin_forc[0]
             date_end_forc = date_end_forc[0]  # replace one-item list by item.
-            firstforcing = '../../../common/mb{0:04d}'.format(self.conf.membersnode[0]) + '/FORCING_' + date_begin_forc.strftime("%Y%m%d%H") +\
-                "_" + date_end_forc.strftime("%Y%m%d%H") + ".nc"
+            firstforcing = '../../../common/mb{0:04d}'.format(self.conf.membersnode[0]) +\
+                           '/FORCING_' + date_begin_forc.strftime("%Y%m%d%H") +\
+                           "_" + date_end_forc.strftime("%Y%m%d%H") + ".nc"
             self.sh.title('Toolbox algo tb09a (preprocess)')
 
             tb09a = toolbox.algo(
@@ -321,16 +323,17 @@ class Offline_Task(_CrocO_Task):
                 # conf file to hendrix
                 self.sh.title('Toolbox output tbconf (conf archive)')
                 tbconf = toolbox.output(
-                    kind           = 'ini_file',
+                    kind           = 'config',
+                    nativefmt      = 'ini',
+                    scope          = 'history',
+                    source         = 'mkjob',
                     namespace      = 'vortex.multi.fr',
                     storage        = storage,
                     enforcesync    = enforcesync,
                     namebuild      = 'flat@cen',
                     block          = 'conf',
                     experiment     = self.conf.xpid,
-                    local          = self.conf.vapp + '_' + self.conf.vconf + '.ini',
-                    vapp           = self.conf.vapp,
-                    vconf          = self.conf.vconf,
+                    local          = self.conf.confpath,
                     fatal          = False,
                 ),
                 print(t.prompt, 'tbconf =', tbconf)
