@@ -18,7 +18,6 @@ class _CrocO_Task(Task, S2MTaskMixIn):
     """
 
     def prepare_common(self):
-
         # set dates.
         # /!\ No handling of sentinel2 dates for the moment (should be put up to the familyloop)
 
@@ -101,34 +100,6 @@ class _CrocO_Task(Task, S2MTaskMixIn):
         print(t.prompt, 'tb04 =', tb04)
         print()
 
-        # self.sh.title('Toolbox input tb05 (namelist)')
-        # tb05 = toolbox.input(
-        #     role            = 'Nam_surfex',
-        #     remote          = self.conf.namelist,
-        #     kind            = 'namelist',
-        #     model           = 'surfex',
-        #     local           = 'OPTIONS.nam',
-        # )
-        # print(t.prompt, 'tb05 =', tb05)
-        # print()
-        # each task has its specific conf file on /scratch to avoid overwriting.
-        # takeConf = self.conf.workingdir + '/conf/' + self.conf.vapp + '_' + self.conf.vconf +\
-        #     '_' + self.conf.confcomplement + '.ini'
-        # self.sh.title('Toolbox input tbconf (conf)')
-        # tbconf = toolbox.input(
-        #     kind           = 'ini_file',
-        #     local          = self.conf.vapp + '_' + self.conf.vconf + '.ini',
-        #     vapp           = self.conf.vapp,
-        #     vconf          = self.conf.vconf,
-        #     remote         = takeConf,
-        #     model          ='surfex',
-        #     role           = 'Conf_file',
-        #     intent = 'inout',
-        #     fatal = True,
-        # )
-        # print(t.prompt, 'tbCONFIN =', tbconf)
-        # print()
-
     def get_common_fetch(self):
         t = self.ticket
 
@@ -146,6 +117,7 @@ class _CrocO_Task(Task, S2MTaskMixIn):
         print(t.prompt, 'tb04 =', tb04)
         print()
 
+
 class CrocO_In(_CrocO_Task):
     """
     Task used to fetch common consts btw OFFLINE dates (forcings) and SODA
@@ -158,7 +130,7 @@ class CrocO_In(_CrocO_Task):
             # we fetch forcing files into the members directories using the remainder function %
             # since we usually have more members than forcing files, we loop over forcing files
             date_begin_forc, date_end_forc, _, _ = \
-                get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)  # each one of these items has only one item
+                get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
             date_begin_forc = date_begin_forc[0]
             date_end_forc = date_end_forc[0]  # replace one-item list by item.
             forcExp = self.conf.forcingid
@@ -166,7 +138,7 @@ class CrocO_In(_CrocO_Task):
 
             if hasattr(self.conf, 'synth'):
                 if self.conf.synth is not None:
-                    # strange case when the synth member comes from a larger openloop (ex 160) than the current experiment (ex 40)
+                    # case when the synth member comes from a larger openloop (ex 160) than current experiment (ex 40)
                     print(self.conf.synth)
                     print(self.conf.nmembers)
                     if int(self.conf.synth) <= int(self.conf.nmembers):
@@ -246,7 +218,7 @@ class CrocO_In(_CrocO_Task):
 #     def process(self):
 #         t = self.ticket
 #         if 'early-fetch' in self.steps:
-#             self.sh.title('Toolbox input tb02_s (pickle PGD)')  # this step should work if PGD properly in spinup on hendrix
+#             self.sh.title('Toolbox input tb02_s (pickle PGD)')
 #             tb02_s = toolbox.input(
 #                 alternate      = 'SurfexClim',
 #                 kind           = 'pgdnc',

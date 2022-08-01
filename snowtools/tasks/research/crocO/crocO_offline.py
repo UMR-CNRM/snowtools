@@ -156,7 +156,6 @@ class Offline_Task(_CrocO_Task):
                 datebegin    = self.conf.stopdate_prev,
                 dateend      = self.conf.stopdate,
                 forcingname  = firstforcing,
-                # nmembers = self.conf.nmembers,  # BC 06/05/19 : WTF nmembersnode ?? -> delete this shit
             )
             print(t.prompt, 'tb09a =', tb09a)
             print()

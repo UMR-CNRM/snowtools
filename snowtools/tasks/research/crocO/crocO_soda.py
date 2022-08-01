@@ -15,7 +15,7 @@ from snowtools.tasks.research.crocO.crocO_common import _CrocO_Task
 
 class Soda_Task(_CrocO_Task):
     '''
-    classdocs
+    Task for 1 assimilation cycle
     '''
 
     def process(self):
@@ -55,7 +55,6 @@ class Soda_Task(_CrocO_Task):
                 namespace       = 'vortex.multi.fr',
                 namebuild       = 'flat@cen',
                 experiment      = self.conf.obsxpid,
-#                local           = 'OBSERVATIONS.nc',
                 local           = 'OBSERVATIONS_[datevalidity:ymdHh].nc',
                 stage           = '1date',
                 fatal           = True
@@ -160,7 +159,7 @@ class Soda_Task(_CrocO_Task):
                     # ########### PUT PREP FILES HENDRIX ######################################
                     self.sh.title('Toolbox output tb12_ar (analysis archive)')
                     tb20 = toolbox.output(
-                        local          = localan,
+                        local          = 'mb[member%04d]/PREP_[date:ymdh].nc',
                         role           = 'SnowpackInit',
                         experiment     = self.conf.xpid,
                         geometry       = self.conf.geometry,
