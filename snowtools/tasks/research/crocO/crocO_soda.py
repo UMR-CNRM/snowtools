@@ -123,45 +123,29 @@ class Soda_Task(_CrocO_Task):
 
         if 'backup' in self.steps:
 
-            # ################### output
-            # (deprecated, to update, now renaming is not done remotely, files are stored in separate bg and an blocks
-            #                                 local              -->     remote
-            # SODA        obs | analysis    PREP_YYYYMMDDHH.nc        PREP_YYYYMMDDHH_an.nc
-            # ----            | background  PREP_YYYYMMDDYHH_bg.nc    PREP_YYYYMMDDHH_bg.nc
-            # ----      noobs | analysis    NONE                      NONE
-            # ----            | background  PREP_YYYYMMDDHH.nc        PREP_YYYYMMDDHH_bg.nc
-            # OPENLOOP          analysis    NONE                      NONE
-            # -------           background  PREP_YYYYMMDDHH.nc        PREP_YYYYMMDDHH_bg.nc
-            if self.conf.openloop == 'on' or not os.path.exists('OBSERVATIONS_' + assDate.ymdHh + '.nc'):  # openloop or noobs/final step
-                localan = 'NONE'
-                # localbg = 'mb[member%04d]/PREP_[date:ymdh].nc'
-            else:  # usual soda step
-                localan = 'mb[member%04d]/PREP_[date:ymdh].nc'
-                # localbg = 'mb[member%04d]/PREP_[date:ymdh]_bg.nc'
+            if not self.conf.openloop and os.path.exists('OBSERVATIONS_' + assDate.ymdHh + '.nc'):
 
-            self.sh.title('Toolbox output tb12_bk (analysis backup)')
-            tb20 = toolbox.output(
-                local          = localan,
-                role           = 'SnowpackInit',
-                experiment     = self.conf.xpid,
-                geometry       = self.conf.geometry,
-                date           = assDate,
-                period         = assDate,
-                member         = self.conf.members,  # BC 21/03/19 probably replace by mbids
-                nativefmt      = 'netcdf',
-                kind           = 'PREP',
-                model          = 'surfex',
-                namespace      = 'vortex.cache.fr',
-                namebuild      = 'flat@cen',
-                block          = 'an',
-                stage          = '_an',
-                fatal          = False  # doesn't exist if openloop
-            ),
-            print(t.prompt, 'tb20 =', tb20)
-            print()
+                self.sh.title('Toolbox output tb12_bk (analysis backup)')
+                tb20 = toolbox.output(
+                    local          = 'mb[member%04d]/PREP_[date:ymdh].nc',
+                    role           = 'SnowpackInit',
+                    experiment     = self.conf.xpid,
+                    geometry       = self.conf.geometry,
+                    date           = assDate,
+                    period         = assDate,
+                    member         = self.conf.members,  # BC 21/03/19 probably replace by mbids
+                    nativefmt      = 'netcdf',
+                    kind           = 'PREP',
+                    model          = 'surfex',
+                    namespace      = 'vortex.cache.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'an',
+                    stage          = '_an',
+                    fatal          = True
+                ),
+                print(t.prompt, 'tb20 =', tb20)
+                print()
 
-            # ############# PUT CONF-file to the cache
-            # @TODO for the actualization of the conf file.
 
         if 'late-backup' in self.steps:
             # if fetchnig to sxcen, must be done file/file to prevent from having too many simultaneous transfers
@@ -213,7 +197,6 @@ class Soda_Task(_CrocO_Task):
                         storetrack     = False,
                         fatal           = True,
                         dateassim       = assDate,
-                        # block           = 'workSODA',
                         experiment      = self.conf.xpid,
                         filename        = 'PART_' + assDate.ymdh + '.txt',
                     )
@@ -232,7 +215,6 @@ class Soda_Task(_CrocO_Task):
                         enforcesync    = enforcesync,
                         fatal           = True,
                         dateassim       = assDate,
-                        # block           = 'workSODA',
                         experiment      = self.conf.xpid,
                         filename        = 'BG_CORR_' + assDate.ymdh + '.txt',
                     )
@@ -252,7 +234,6 @@ class Soda_Task(_CrocO_Task):
                         storetrack     = False,
                         fatal           = True,
                         dateassim       = assDate,
-                        # block           = 'workSODA',
                         experiment      = self.conf.xpid,
                         filename        = 'IMASK_' + assDate.ymdh + '.txt',
                     )
@@ -271,7 +252,6 @@ class Soda_Task(_CrocO_Task):
                         enforcesync    = enforcesync,
                         fatal           = False,
                         dateassim       = assDate,
-                        # block           = 'workSODA',
                         experiment = self.conf.xpid,
                         filename = 'ALPHA_' + assDate.ymdh + '.txt',
                     )

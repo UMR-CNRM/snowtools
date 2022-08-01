@@ -32,7 +32,7 @@ class Offline_Task(_CrocO_Task):
         # BC 31/07/19 this produces noise deteriorating the spread so remove it.
         # # in case of synthetic assimilation, shuffle it to prevent the truth to appear.
         # # within each node only, not btw them.
-        # if self.conf.openloop == 'off' and self.conf.sensor == 'SYNTH':
+        # if not self.conf.openloop and self.conf.sensor == 'SYNTH':
         #     shuffle(idsnode)
         # ################## STEP.01 #################################################
         # separate early-fetch (constant files, get at the beginning of the simulation)

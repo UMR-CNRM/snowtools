@@ -564,11 +564,7 @@ class Vortex_conf_file(object):
 
         self.set_field('DEFAULT', 'members_id', list(members_id))
 
-        if self.options.openloop:
-            self.options.op = 'on'
-        else:
-            self.options.op = 'off'
-        self.set_field('DEFAULT', 'openloop', self.options.op)
+        self.set_field('DEFAULT', 'openloop', self.options.openloop)
 
         if hasattr(self.options, 'sensor'):
             self.set_field('DEFAULT', 'sensor', self.options.sensor)
@@ -585,7 +581,7 @@ class Vortex_conf_file(object):
         # place it in the field offline for parallelization of the offlines LoopFamily only
         self.set_field('offline', 'paralleljobs_kind', 'slurm:ssh')
 
-        if self.options.croco and self.options.nmembers and self.options.op:
+        if self.options.croco and self.options.nmembers and self.options.openloop:
 
             # soda works with all members at the same time on one node only.
             self.set_field('soda', 'nmembersnode', self.options.nmembers)

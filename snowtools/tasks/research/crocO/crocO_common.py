@@ -346,7 +346,7 @@ class CrocO_In(_CrocO_Task):
 #                 print()
 #                 dlocal_names_an = {str(mb): 'mb{0:04d}'.format(mb) + '/an/PREP_[date:ymdh].nc'
 #                                    for mb in self.conf.members}
-#                 if self.conf.openloop == 'off':
+#                 if not self.conf.openloop:
 #                     if dateend != self.conf.stopdates[-1]:
 #                         self.sh.title('Toolbox input PP2_an (pickle analysis)')
 #                         tbinpp2 = toolbox.input(
@@ -390,7 +390,7 @@ class CrocO_In(_CrocO_Task):
 #             # FETCHING PRO pickle FILES
 #             self.sh.title('Toolbox OUTPUT TB30 (pickle ensPro archive)')
 #             tb_outpppro = toolbox.output(
-#                 model          = 'ensProOl' if self.conf.openloop == 'on' else 'ensProAn',
+#                 model          = 'ensProOl' if self.conf.openloop else 'ensProAn',
 #                 namebuild      = 'flat@cen',
 #                 namespace      = 'vortex.archive.fr',
 #                 storage        = storage,
@@ -399,14 +399,14 @@ class CrocO_In(_CrocO_Task):
 #                 fatal          = True,
 #                 block          = 'crocO/beaufix',
 #                 experiment     = self.conf.xpid,
-#                 filename       = 'crocO/pickle/ensPro' + ('Ol' if self.conf.openloop == 'on' else 'An') + '.pkl',
+#                 filename       = 'crocO/pickle/ensPro' + ('Ol' if self.conf.openloop else 'An') + '.pkl',
 #             )
 #             print(t.prompt, 'tboutpro =', tb_outpppro)
 #             print()
 #
 #             # # FETCHING PREP pickle FILES
 #             for assDate in self.conf.stopdates:
-#                 if self.conf.openloop == 'on':
+#                 if self.conf.openloop:
 #                     self.sh.title('Toolbox OUTPUT TB31 (pickle ensPrepOl archive)')
 #                     tb_outppol = toolbox.output(
 #                         model          = 'ol',
