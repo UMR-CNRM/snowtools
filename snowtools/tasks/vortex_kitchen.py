@@ -8,9 +8,11 @@ Created on 23 févr. 2018
 
 import datetime
 import os
+import numpy as np
 
 from snowtools.utils.dates import WallTimeException
 from snowtools.utils.resources import InstallException
+from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
 from snowtools.tools.execute import callSystemOrDie
 from snowtools.DATA import SNOWTOOLS_DIR
 from bronx.stdtypes.date import Period
@@ -472,7 +474,6 @@ class Vortex_conf_file(object):
             self.set_field("DEFAULT", 'writesx', self.options.writesx)
 
     def croco_variables(self):
-        from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
         from snowtools.tools.read_conf import read_conf
         import numpy as np
         import bisect
@@ -596,4 +597,33 @@ class Vortex_conf_file(object):
         else:
             raise Exception('please specify a conf file and a number of members to run.')
 
+    def replace_member(self, allmembers, members_id):
 
+        # warning in case of misspecification of --synth
+        print('\n\n\n')
+        print('************* CAUTION ****************')
+        print('Please check that the --synth argument')
+        print('corresponds to the openloop member    ')
+        print('used to generate the observations     ')
+        print('otherwise this would artificially     ')
+        print('generate excellent results            ')
+        print('by letting the truth member to stay   ')
+        print('in the assimilation experiment        ')
+        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+        print('\n\n\n')
+        # workaround to know the size of the ensemble
+        sizeE1 = ESCROC_subensembles(self.options.escroc, allmembers, randomDraw = True).size
+        # draw a member, excluding any ESCROC member already present in the ensemble.
+        members_id[self.options.synth - 1] = np.random.choice([e for e in range(1, sizeE1 + 1) if e not in members_id])
+        return members_id
+
+    def draw_meteo(self, confObj):
+        meteo_members = {str(m): ((m - 1) % int(self.options.nforcing)) + 1 for m in range(self.options.nmembers)}
+        if hasattr(confObj, 'meteo_draw'):
+            meteo_draw = confObj.meteo_draw
+        else:
+            meteo_draw = meteo_members[str(self.options.synth)]
+        while meteo_draw == meteo_members[str(self.options.synth)]:
+            meteo_draw = np.random.choice(list(range(1, int(self.options.nforcing) + 1)))
+        print('mto draw', meteo_draw)
+        return meteo_draw

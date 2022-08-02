@@ -77,34 +77,3 @@ class crocO_vortex_kitchen(vortex_kitchen):
             raise Exception('please specify the number of members for this run')
         update_surfex_namelist_file(self.options.datedeb, namelistfile=self.namelist, dateend=self.options.datefin,
                                     updateloc=False, nmembers=self.options.nmembers)
-
-    def replace_member(self, allmembers, members_id):
-        # warning in case of misspecification of --synth
-        print('\n\n\n')
-        print('************* CAUTION ****************')
-        print('Please check that the --synth argument')
-        print('corresponds to the openloop member    ')
-        print('used to generate the observations     ')
-        print('otherwise this would artificially     ')
-        print('generate excellent results            ')
-        print('by letting the truth member to stay   ')
-        print('in the assimilation experiment        ')
-        print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-        print('\n\n\n')
-        # workaround to know the size of the ensemble
-        sizeE1 = ESCROC_subensembles(self.options.escroc, allmembers, randomDraw = True).size
-        # draw a member, excluding any ESCROC member already present in the ensemble.
-        members_id[self.options.synth - 1] = np.random.choice([e for e in range(1, sizeE1 + 1) if e not in members_id])
-        return members_id
-
-    def draw_meteo(self, confObj):
-        meteo_members = {str(m): ((m - 1) % int(self.options.nforcing)) + 1 for m in range(self.options.nmembers)}
-        if hasattr(confObj, 'meteo_draw'):
-            meteo_draw = confObj.meteo_draw
-        else:
-            meteo_draw = meteo_members[str(self.options.synth)]
-        while meteo_draw == meteo_members[str(self.options.synth)]:
-            meteo_draw = random.choice(list(range(1, int(self.options.nforcing) + 1)))
-        print('mto draw', meteo_draw)
-        return meteo_draw
-
