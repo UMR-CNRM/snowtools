@@ -210,6 +210,53 @@ class CrocO_In(_CrocO_Task):
             print(t.prompt, 'tb04 =', tb04)
             print()
 
+
+class CrocO_Out(Task, S2MTaskMixIn):
+    """Final outputs after several offline-soda sequences"""
+
+    def process(self):
+        t = self.ticket
+
+        storage = ['hendrix.meteo.fr']
+
+        if 'early-fetch' in self.steps or 'fetch' in self.steps:
+            # get conf file for archive purpose
+            self.sh.title('Toolbox input tbconfin (conf archive)')
+            tbconfin = toolbox.input(
+                kind='config',
+                nativefmt='ini',
+                scope='history',
+                source='mkjob',
+                namebuild='flat@cen',
+                block='conf',
+                experiment=self.conf.xpid,
+                remote=self.conf.confpath,
+                local='conf_for_archive.ini',
+                role='archive',
+                fatal=True,
+            ),
+            print(t.prompt, 'tbconfin =', tbconfin)
+            print()
+
+        if 'backup' in self.steps or 'late-backup' in self.steps:
+            # archive conf file
+            self.sh.title('Toolbox output tbconfout (conf archive)')
+            tbconfout = toolbox.output(
+                kind='config',
+                nativefmt='ini',
+                scope='history',
+                source='mkjob',
+                namespace='vortex.multi.fr',
+                storage=storage,
+                namebuild='flat@cen',
+                block='conf',
+                experiment=self.conf.xpid,
+                local='conf_for_archive.ini',
+                fatal=True,
+            ),
+            print(t.prompt, 'tbconfout =', tbconfout)
+            print()
+
 # Matthieu Lafaysse: comment this because pickle is not the appropriate solution for post-processing
 # class CrocO_Out(Task):
 #     '''

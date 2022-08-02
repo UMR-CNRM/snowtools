@@ -321,21 +321,3 @@ class Offline_Task(_CrocO_Task):
                 print(t.prompt, 'tb23 =', tb23)
                 print()
 
-                # conf file to hendrix
-                self.sh.title('Toolbox output tbconf (conf archive)')
-                tbconf = toolbox.output(
-                    kind           = 'config',
-                    nativefmt      = 'ini',
-                    scope          = 'history',
-                    source         = 'mkjob',
-                    namespace      = 'vortex.multi.fr',
-                    storage        = storage,
-                    enforcesync    = enforcesync,
-                    namebuild      = 'flat@cen',
-                    block          = 'conf',
-                    experiment     = self.conf.xpid,
-                    local          = self.conf.confpath,
-                    fatal          = False,
-                ),
-                print(t.prompt, 'tbconf =', tbconf)
-                print()
