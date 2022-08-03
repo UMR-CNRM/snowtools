@@ -227,7 +227,7 @@ class CrocO_Out(Task, S2MTaskMixIn):
                 nativefmt='ini',
                 scope='history',
                 source='mkjob',
-                remote=self.conf.confpath,
+                remote=self.conf.iniconf,
                 local='conf_for_archive.ini',
                 role='archive',
                 fatal=True,

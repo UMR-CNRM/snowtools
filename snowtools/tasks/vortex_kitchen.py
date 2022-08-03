@@ -361,7 +361,6 @@ class Vortex_conf_file(object):
         self.safran_variables()
 
     def default_variables(self):
-        self.set_field("DEFAULT", 'confpath', self.name)
         self.set_field("DEFAULT", 'xpid', self.options.xpid + '@' + os.getlogin())
         self.set_field("DEFAULT", 'ntasks', self.options.ntasks)
         self.set_field("DEFAULT", 'nprocs', self.options.ntasks)
