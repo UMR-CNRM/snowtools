@@ -202,7 +202,7 @@ class Safran(Task, S2MTaskMixIn):
                 tb02 = toolbox.input(
                     role           = 'Observations',
                     part           = 'all',
-                    geometry       = self.conf.vconf,
+                    geometry       = self.conf.geometry[self.conf.vconf],
                     kind           = 'packedobs',
                     #nativefmt      = 'tar',
                     #unknownflow    = True,
@@ -227,7 +227,7 @@ class Safran(Task, S2MTaskMixIn):
                     tb03 = toolbox.input(
                         role           = 'Observations',
                         part           = 'all',
-                        geometry       = self.conf.vconf,
+                        geometry       = self.conf.geometry[self.conf.vconf],
                         kind           = 'packedobs',
                         #nativefmt      = 'tar',
                         #unknownflow    = True,
