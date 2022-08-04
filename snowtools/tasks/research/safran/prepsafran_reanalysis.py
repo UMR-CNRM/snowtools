@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
 
@@ -184,7 +185,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         )
                         print(t.prompt, 'tb_tb_ebauche =', tb_ebauche)
                         print()
-                        
+
                         interp = ''
 
                     else:
@@ -243,7 +244,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -o -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp)])),
+                # L'option -d permet de générer des guess pour 1 seul domaine, nommés PYYMMDDHH prêts pour l'archivage
+                rawopts     = ' -o -d {0:s} -f {1:s}'.format(self.conf.geometry[self.conf.vconf].area, ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp)]))),
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
@@ -339,7 +341,7 @@ class PrepSafran(Task, S2MTaskMixIn):
 #                ),
 #                print(t.prompt, 'tb01 =', tb01)
 #                print()
-#                
+#
 #                rundate = rundate + Period(days=1)
 
             season = self.conf.datebegin.nivologyseason
@@ -356,19 +358,23 @@ class PrepSafran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox output tb05')
             tb05 = toolbox.output(
                 role           = 'Ebauche',
+                kind           = 'packedguess',
                 local          = tarname,
-                remote         = '/home/vernaym/s2m/[geometry:area]/{0:s}/{1:s}'.format(self.conf.guess_block, tarname),
-                hostname       = 'hendrix.meteo.fr',
-                unknownflow    = True,
-                username       = 'vernaym',
-                tube           = 'ftp',
-                geometry       = self.conf.geometry,
+                #remote         = '/home/vernaym/s2m/[geometry:area]/{0:s}/{1:s}'.format(self.conf.guess_block, tarname),
+                #hostname       = 'hendrix.meteo.fr',
+                namespace      = 's2m.archive.fr',
+                #unknownflow    = True,
+                #username       = 'vernaym',
+                #tube           = 'ftp',
+                geometry       = self.conf.geometry[self.conf.vconf],
                 cumul          = self.conf.cumul,
                 cutoff         = 'assimilation',
-                nativefmt      = 'ascii',
-                kind           = 'guess',
+                nativefmt      = 'tar',
                 model          = 'safran',
+                source         = 'arpege',
                 date           = self.conf.dateend.ymd6h,
+                begindate      = self.conf.datebegin.ymdh,
+                enddate        = self.conf.dateend.ymdh,
             ),
             print(t.prompt, 'tb05 =', tb05)
             print()
