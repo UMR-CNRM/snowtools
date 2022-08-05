@@ -93,7 +93,11 @@ class FileOpenException(Exception):
         self.path = path
 
     def __str__(self):
-        return "Can not open the file : " + self.path
+        if type(self.path) is str:
+            return "Can not open the file : " + self.path
+        else:
+            return "self.path is not a string:" + str(self.path)
+
 
     def __reduce__(self):
         red = list(super(FileOpenException, self).__reduce__())
