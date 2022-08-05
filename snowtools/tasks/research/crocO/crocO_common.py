@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 Created on 17 avr. 2019
 
 @author: cluzetb
-'''
+"""
 from bronx.stdtypes.date import Date
 from snowtools.utils.dates import check_and_convert_date, get_list_dates_files
 from vortex import toolbox

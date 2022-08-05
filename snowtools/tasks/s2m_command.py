@@ -240,6 +240,10 @@ class Surfex_command(_S2M_command):
                           action="store", type='string', dest="croco", default=None,
                           help="CrocO assimilation sequence activation and ABSOLUTE path to conf (assimdates (file)")
 
+        parser.add_option("--perturb",
+                          action="store_true", dest="perturb", default=False,
+                          help="Generate stochastic perturbations of forcing files")
+
         parser.add_option("--nforcing",
                           action="store", type="int", dest="nforcing", default=1,
                           help="Number of members of forcing files")

@@ -66,7 +66,8 @@ class vortex_kitchen(object):
         self.set_conf_file()
         self.run()
 
-    def check_vortex_install(self):
+    @staticmethod
+    def check_vortex_install():
 
         if "VORTEX" not in list(os.environ.keys()):
             raise InstallException("VORTEX environment variable must be defined towards a valid vortex install.")
@@ -90,7 +91,7 @@ class vortex_kitchen(object):
                 if self.options.safran:
                     os.symlink(SNOWTOOLS_DIR + "/tasks/research/safran", "tasks")
                 elif self.options.surfex:
-                    if self.options.croco:
+                    if self.options.croco or self.options.perturb:
                         os.symlink(SNOWTOOLS_DIR + "/tasks/research/crocO", "tasks")
                     else:
                         os.symlink(SNOWTOOLS_DIR + "/tasks/research/surfex", "tasks")
@@ -121,9 +122,9 @@ class vortex_kitchen(object):
             if self.options.reinit:
                 self.jobname = "surfex_reinit"
             elif self.options.forecast:
-                self.jobname = "prvsurf_s2m" + self.options.vconf
+                self.jobname = "prvsurf_s2m" + self.options.vconf[:3]
             else:
-                self.jobname = "anasurf_s2m" + self.options.vconf
+                self.jobname = "anasurf_s2m" + self.options.vconf[:3]
             self.confcomplement = ''
         else:
             self.period = " rundate=" + self.options.datedeb.strftime("%Y%m%d%H%M") + " datebegin=" + \
@@ -154,6 +155,10 @@ class vortex_kitchen(object):
                 self.jobname = 'debug_s2m'
                 self.reftask = 'debug_tasks'
                 self.nnodes = self.options.nnodes
+            elif self.options.perturb:
+                self.jobname = 'perturb_forcing'
+                self.reftask = 'crocO_perturb'
+                self.nnodes = self.options.nnodes
             else:
                 self.jobname = 'rea_s2m'
                 self.reftask = "surfex_task"
@@ -174,6 +179,7 @@ class vortex_kitchen(object):
 
     def set_conf_file(self):
 
+        conffilename = None
         os.chdir(self.confdir)
         if self.options.surfex:
             if self.options.oper:
@@ -206,7 +212,10 @@ class vortex_kitchen(object):
             else:
                 conffilename = self.options.vapp + "_" + self.options.vconf + ".ini"
 
-        fullname = '/'.join([self.confdir, conffilename])
+        if conffilename:
+            fullname = '/'.join([self.confdir, conffilename])
+        else:
+            fullname = None
 
         if not self.options.oper:
             self.conf_file = Vortex_conf_file(self.options, fullname)
@@ -216,9 +225,9 @@ class vortex_kitchen(object):
 
         os.chdir(self.workingdir)
 
-    def mkjob_command(self):
+    def mkjob_command(self, jobname):
 
-        return "../vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + " profile=" + \
+        return "../vortex/bin/mkjob.py -j name=" + jobname + " task=" + self.reftask + " profile=" + \
                self.profile + " jobassistant=cen " + self.period +\
             " time=" + self.walltime() + " nnodes=" + str(self.nnodes) + self.confcomplement
 
@@ -231,7 +240,7 @@ class vortex_kitchen(object):
 
             return mkjob_list
         else:
-            return [self.mkjob_command()]
+            return [self.mkjob_command(jobname=self.jobname)]
 
     def run(self):
 
@@ -398,7 +407,7 @@ class Vortex_conf_file(object):
             if self.options.startmember:
                 self.set_field("DEFAULT", 'startmember', self.options.startmember)
 
-    def surfex_variables(self):
+    def get_forcing_variables(self):
 
         if self.options.debug:
             self.set_field("DEFAULT", 'forcingid', self.options.forcing)
@@ -419,6 +428,10 @@ class Vortex_conf_file(object):
         self.set_field("DEFAULT", 'meteo', self.options.model)
 
         self.set_field("DEFAULT", 'duration', 'yearly')
+
+    def surfex_variables(self):
+
+        self.get_forcing_variables()
 
         if self.options.namelist:
             self.set_field("DEFAULT", 'namelist', self.options.namelist)
@@ -472,9 +485,13 @@ class Vortex_conf_file(object):
         if self.options.writesx:
             self.set_field("DEFAULT", 'writesx', self.options.writesx)
 
+    def perturb_variables(self):
+        self.get_forcing_variables()
+        if self.options.nmembers:
+            self.set_field("DEFAULT", 'nmembers', self.options.nmembers)
+
     def croco_variables(self):
         from snowtools.tools.read_conf import read_conf
-        import numpy as np
         import bisect
 
         self.set_field('DEFAULT', 'nforcing', self.options.nforcing)
