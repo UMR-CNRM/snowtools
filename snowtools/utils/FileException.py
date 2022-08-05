@@ -164,6 +164,25 @@ class TimeException(Exception):
         return tuple(red)
 
 
+class TimeUnitsException(Exception):
+    """
+    Exception when time variable is not suitable
+
+    :param path: the file conerned
+    """
+
+    def __init__(self, path):
+        self.path = path
+
+    def __str__(self):
+        return "No units attribute for time variable in file : " + self.path
+
+    def __reduce__(self):
+        red = list(super(TimeUnitsException, self).__reduce__())
+        red[1] = tuple([self.path])  # Les arguments qui seront passes a __init__
+        return tuple(red)
+
+
 class TimeListException(Exception):
     """
     Exception when merging timeseries of inconsistent length
