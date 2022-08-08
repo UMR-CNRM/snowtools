@@ -14,6 +14,7 @@ from vortex import toolbox
 from bronx.stdtypes.date import daterange, yesterday, tomorrow
 import footprints
 
+
 class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
     """
     Task for operational ensemble SURFEX simulation used in the Drivers of
@@ -47,9 +48,10 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                 self.sh.title('Toolbox input tb01')
                 tb01 = toolbox.input(
                     role           = 'Forcing_Deterministic',
-                    local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    local          = 'mb035/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
+                    if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     vapp           = self.conf.vapp,
-                    vconf          = '[geometry:area]' if len(list_geometry) > 1 else self.conf.vconf,
+                    vconf          = '[geometry:area]',
                     block          = block_safran,
                     member         = 35 if source_safran == 's2m' else None,
                     source_app     = 'arpege' if source_safran == 'safran' else None,
@@ -74,9 +76,10 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                     self.sh.title('Toolbox input tb01a')
                     tb01a = toolbox.input(
                         alternate      = 'Forcing_Deterministic',
-                        local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        local          = 'mb035/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
+                        if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                         vapp           = self.conf.vapp,
-                        vconf          = '[geometry:area]' if len(list_geometry) > 1 else self.conf.vconf,
+                        vconf          = '[geometry:area]',
                         block          = alternate_block,
                         member         = None,
                         source_app     = 'arpege',
@@ -99,10 +102,10 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                 self.sh.title('Toolbox input tb01b')
                 tb01b = toolbox.input(
                     role           = 'Forcing',
-                    local          = 'mb[member]/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
+                    local          = 'mb[member]/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                     if len(list_geometry) > 1 else 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     vapp           = self.conf.vapp,
-                    vconf          = '[geometry:area]' if len(list_geometry) > 1 else self.conf.vconf,
+                    vconf          = '[geometry:area]',
                     block          = block_safran,
                     source_app     = 'arpege' if source_safran == 'safran' else None,
                     source_conf    = 'pearp' if source_safran == 'safran' else None,
@@ -127,10 +130,10 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                     self.sh.title('Toolbox input tb01c')
                     tb01c = toolbox.input(
                         alternate           = 'Forcing',
-                        local          = 'mb[member]/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
+                        local          = 'mb[member]/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                         if len(list_geometry) > 1 else 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                         vapp           = self.conf.vapp,
-                        vconf          = '[geometry:area]' if len(list_geometry) > 1 else self.conf.vconf,
+                        vconf          = '[geometry:area]',
                         block          = alternate_block,
                         source_app     = 'arpege',
                         source_conf    = 'pearp',
@@ -169,8 +172,8 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
                     nativefmt      = 'netcdf',
                     local          = 'PGD.nc',
                     geometry       = self.conf.geometry,
-                    genv            = self.conf.cycle,
-                    gvar           = 'pgd_[geometry::area]',
+                    genv           = self.conf.cycle,
+                    gvar           = 'pgd_[geometry::tag]',
                     model          = 'surfex',
                     fatal          = True,
                 ),
