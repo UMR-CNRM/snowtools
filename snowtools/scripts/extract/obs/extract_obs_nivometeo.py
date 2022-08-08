@@ -27,7 +27,7 @@ parser.add_argument("--tn", action="store_true", default=False, help="Produce TN
 parser.add_argument("--tx", action="store_true", default=False, help="Produce TX output")
 parser.add_argument("--tt", action="store_true", default=False, help="Produce T output at hourly timestep")
 parser.add_argument("--postes", action="store_true", default=True, help="Print list of stations")
-parser.add_argument("--f", dest="frequency", action="store", default="daily", help="Observation frequency", choices=["monthly", "daily"])
+parser.add_argument("--f", dest="frequency", action="store", default="daily", help="Observation frequency", choices=["monthly", "daily", "hourly"])
 args = parser.parse_args()
 
 if not os.path.isdir(args.output):
@@ -47,18 +47,20 @@ if __name__ == "__main__":
 
 if args.frequency == "monthly":
     table = "MENSQ"
-    sufix = "_me"
+    suffix = "_me"
 elif args.frequency == "daily":
     table = "Q"
-    sufix = ""
-else:
+    suffix = ""
+elif args.frequency == "hourly":
     table = "H"
+    suffix = "1" 
+
 
 if args.postes:
     question_postes = question(
             listvar=["poste_nivo.num_poste", "poste_nivo.nom_usuel", "poste_nivo.alti", "poste_nivo.lat_dg", "poste_nivo.lon_dg", "hist_reseau_poste.reseau_poste"],
             table='POSTE_NIVO',
-            listjoin=["HIST_RESEAU_POSTE on (POSTE_NIVO.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE and HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64'))"],
+            listjoin=["HIST_RESEAU_POSTE on (POSTE_NIVO.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE and HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64'))",],
             listconditions=["datouvr<to_date('{0:s}', 'YYYYMMDD')".format(datedeb), "(datferm>to_date('{0:s}', 'YYYYMMDD') OR datferm is Null)".format(datefin)],
             listorder=['num_poste'],
             )
@@ -69,18 +71,31 @@ if args.postes:
 
 if args.rr:
     question1 = question(
-            listvar=["dat", f"{table}.num_poste", "poste_nivo.nom_usuel", "poste_nivo.alti", "poste_nivo.lat_dg", "poste_nivo.lon_dg", "poste_nivo.massif_nivo", "rr"+sufix, "hist_reseau_poste.reseau_poste"],
+            listvar=[f"{table}.dat", f"{table}.num_poste", "poste_nivo.nom_usuel", "poste_nivo.alti", "poste_nivo.lat_dg", "poste_nivo.lon_dg", 
+                "poste_nivo.massif_nivo", f"{table}.rr"+suffix, "hist_reseau_poste.reseau_poste"],
             table=table,
-            listorder=[f'{table}.num_poste', 'dat'],
+            listorder=[f'{table}.num_poste', f'{table}.dat'],
             listjoin=[
-                f"POSTE_NIVO ON {table}.NUM_POSTE = POSTE_NIVO.NUM_POSTE ", f" HIST_RESEAU_POSTE on ({table}.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE) "],
-                #f"POSTE_NIVO ON {table}.NUM_POSTE = POSTE_NIVO.NUM_POSTE ", f" HIST_RESEAU_POSTE on ({table}.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE ", " HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64')) "],
+                f"POSTE_NIVO ON {table}.NUM_POSTE = POSTE_NIVO.NUM_POSTE ", f" HIST_RESEAU_POSTE on ({table}.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE) ",
+                ],
+            listconditions=[f"HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64') AND {table}.rr{suffix} is not Null"],
+            period=[datedeb, datefin],
+            )
+    if args.frequency == 'daily':
+        print("WARNING : The rr value corresponding to date 'ymd' is the observation of date 'ym(d+1)' covering ymd6h-->ym(d+1)6h")
+    question1.run(outputfile=f'obs_nivometeo_{args.frequency}_RR_{begin.ymd}_{end.ymd}.csv')
+
+    question2 = question(
+            listvar=[f"{table}.num_poste", "H_NIVO.ALTI_LPNX", "H_NIVO.DAT"], # ALTI_LPNX=altitude maximale de la LPN depuis la dernière obs
+            table=table,
+            listorder=[f'{table}.num_poste', f'H_NIVO.DAT'],
+            listjoin=[
+                f"POSTE_NIVO ON {table}.NUM_POSTE = POSTE_NIVO.NUM_POSTE ", f" HIST_RESEAU_POSTE on ({table}.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE) ",
+                f"H_NIVO on (POSTE_NIVO.NUM_POSTE=H_NIVO.NUM_POSTE and H_NIVO.DAT={table}.DAT and H_NIVO.ALTI_LPNX is not Null)"],
             listconditions=["HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64')"],
             period=[datedeb, datefin],
-            dateformat=args.frequency,
             )
-    print("WARNING : The rr value corresponding to date 'ymd' is the observation of date 'ym(d+1)' covering ymd6h-->ym(d+1)6h")
-    question1.run(outputfile=f'obs_nivometeo_{args.frequency}_RR_{begin.ymd}_{end.ymd}.csv')
+    question2.run(outputfile=f'LPN_nivometeo_{begin.ymd}_{end.ymd}.csv')
 
 # 2. TN
 # ------

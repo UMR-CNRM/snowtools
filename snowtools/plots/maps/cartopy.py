@@ -139,9 +139,9 @@ class _Map_massifs(Mplfigure):
             ax.add_feature(cartopy.feature.LAND, facecolor='wheat')
             ax.add_feature(cartopy.feature.OCEAN)
             ax.add_feature(cartopy.feature.COASTLINE)
-            # ax.add_feature(cartopy.feature.BORDERS, linestyle=':')
-            ax.add_feature(cartopy.feature.NaturalEarthFeature('cultural','admin_0_boundary_lines_land','10m',
-                                                               facecolor='none', linestyle=':'))
+            ax.add_feature(cartopy.feature.BORDERS, linestyle=':')
+            #ax.add_feature(cartopy.feature.NaturalEarthFeature('cultural', 'admin_0_boundary_lines_land', '10m',
+            #                                                   facecolor='none', linestyle=':'))
             ax.add_feature(cartopy.feature.LAKES, alpha=0.5)
             ax.add_feature(cartopy.feature.RIVERS)
         elif self.bgimage:
@@ -211,8 +211,6 @@ class _Map_massifs(Mplfigure):
 
         self.init_cmap(**kwargs)
         if not hasattr(self, 'massif_features'):
-#            self.num, self.shape, self.name = zip(*[(rec.attributes['num_opp'], rec.geometry,
-#                                      rec.attributes['nom']) for rec in self.records])
             self.num, self.shape, self.name = map(list, zip(*[(rec.attributes['code'], rec.geometry,
                                                      rec.attributes['title']) for rec in self.records]))
             self.llshape = [ccrs.PlateCarree().project_geometry(ishape, self.projection) for ishape in self.shape]
@@ -1179,15 +1177,13 @@ class Map_pyrenees(_Map_massifs):
               88: (12000, 7000), 89: (0, -4000), 90: (10000, -5000), 91: (-17000, -8000)}
     """displacement dictionary for the positioning tables near the massif center without overlapping."""
 
+    def __init__(self, *args, **kw):
+        """
+        :param args: args passed to super class
+        :param kw: keyword args passed to super class
+        """
 
-def __init__(self, *args, **kw):
-    """
-
-    :param args: args passed to super class
-    :param kw: keyword args passed to super class
-    """
-
-    super(Map_pyrenees, self).__init__(*args, **kw)
+        super(Map_pyrenees, self).__init__(*args, **kw)
 
 
 class MapFrance(_Map_massifs):
@@ -1563,7 +1559,6 @@ class Zoom_massif(_Map_massifs):
 
         self.dicLonLatMassif = self.getLonLatMassif()
         for massif in self.records:
-            #num = massif.attributes['num_opp']
             num = massif.attributes['code']
             # print(num)
             if num == num_massif:
@@ -1571,9 +1566,13 @@ class Zoom_massif(_Map_massifs):
         if self.area in ['alpes', 'corse', 'jura', 'central', 'vosges']:
             dlat = 0.55
             dlon = 0.65
+            dloninfo = dlon/3.
+            dlatinfo = dlat/5.
         elif self.area == 'pyrenees':
             dlat = 0.5
             dlon = 1.3
+            dloninfo = dlon/3.5
+            dlatinfo = dlat/4.
 
         self.lonmin = barycentre[0] - dlon
         self.lonmax = barycentre[0] + dlon
