@@ -1156,6 +1156,11 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         return self.strftime('%H')
 
     @property
+    def ymdHh(self):
+        """SURFEX-SODA hour format yymmddHhh ex : 140331H10"""
+        return self.strftime('%y%m%dH%H')
+
+    @property
     def h(self):
         """H formated string."""
         return self.strftime('%-H')

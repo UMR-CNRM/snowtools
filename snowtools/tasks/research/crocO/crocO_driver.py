@@ -40,13 +40,14 @@ def setup(t, **kw):
                             Offline_Task(tag = 'offline', ticket=t, **kw),
                         ], **kw),
                     Soda_Task(tag='soda', ticket=t,
-                              active_callback=lambda s: 'off' in s.conf.openloop and s.conf.stopdate_next is not None,
+                              active_callback=lambda s: not s.conf.openloop and s.conf.stopdate_next is not None,
                               **kw),
                 ],
                 loopconf='stopdates',  # stopdates = assimdates.append(enddate)
                 loopsuffix='+d{:s}',  # format the loop iterator (assimdate(s) as itself ( a string)
                 **kw),
-            CrocO_Out(tag = 'pp_out', ticket = t, active_callback=lambda s: 'on' in s.conf.pickleit, **kw)
+
+            CrocO_Out(tag = 'pp_out', ticket = t, **kw)
         ],
         options=kw
     )

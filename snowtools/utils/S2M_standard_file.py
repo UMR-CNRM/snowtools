@@ -13,7 +13,8 @@ import netCDF4
 from six.moves import configparser as ConfigParser
 import numpy as np
 
-from snowtools.utils.FileException import VarNameException, UnknownGridTypeException, FileNameException
+from snowtools.utils.FileException import VarNameException, UnknownGridTypeException, FileNameException,\
+    TimeUnitsException
 from snowtools.utils.infomassifs import infomassifs
 from snowtools.utils.git import git_infos
 from snowtools.DATA import SNOWTOOLS_DIR
@@ -37,15 +38,23 @@ class _StandardNC(netCDF4.Dataset):
         else:
             raise FileNameException(confile)
 
-
     def GlobalAttributesReanalysis(self):
         self.read_config('DEFAULT')
         self.title = 'S2M reanalysis'
-        self.summary = 'This file takes part from a 61-years reanalysis of meteorological and snow conditions in the French Alps, Pyrenees and Corsica from 1958 to 2020. The simulations are performed over relatively homogeneous units designed to represent the main drivers of the spatial variability observed in mountain ranges (elevation, slope and aspect). The meteorological reanalysis is performed by the SAFRAN system, which adjusts a guess from a Numerical Weather Prediction model (ERA-40 reanalysis from 1958 to 2002, ARPEGE from 2002 to 2018) with the best possible set of available in-situ meteorological observations. SAFRAN outputs are used to force the Crocus detailed snowpack model within the land surface scheme SURFEX/ISBA. This provides the evolution of the snowpack and the associated avalanche hazard accounting for the main physical processes involved in a multilayer snowpack.'
+        self.summary = 'This file takes part from a 61-years reanalysis of meteorological and snow conditions in the' \
+                       ' French Alps, Pyrenees and Corsica from 1958 to 2020. The simulations are performed over' \
+                       ' relatively homogeneous units designed to represent the main drivers of the spatial' \
+                       ' variability observed in mountain ranges (elevation, slope and aspect). The meteorological' \
+                       ' reanalysis is performed by the SAFRAN system, which adjusts a guess from a Numerical Weather' \
+                       ' Prediction model (ERA-40 reanalysis from 1958 to 2002, ARPEGE from 2002 to 2018) with the' \
+                       ' best possible set of available in-situ meteorological observations. SAFRAN outputs are used' \
+                       ' to force the Crocus detailed snowpack model within the land surface scheme SURFEX/ISBA.' \
+                       ' This provides the evolution of the snowpack and the associated avalanche hazard accounting' \
+                       ' for the main physical processes involved in a multilayer snowpack.'
 
         self.id = 's2m_reanalysis_2022.1'
 
-        self.references = 'https://doi.org/10.1175/2008JAMC1808.1;https://doi.org/10.1175/2009JAMC1810.1;new reference to come in 2021'
+        self.references = 'https://doi.org/10.5194/essd-14-1707-2022'
 
         self.date_created = datetime.datetime.today().replace(second=0, microsecond=0).isoformat()
 
@@ -53,18 +62,30 @@ class _StandardNC(netCDF4.Dataset):
         self.platform_vocabulary = 'GCMD,AERIS'
 
         self.contributor_name = 'Matthieu Vernay ; Matthieu Lafaysse'
-        self.contributor_role = 'Matthieu Vernay collected the input data and ran the SAFRAN reanalysis ; Matthieu Lafaysse ran the SURFEX-ISBA/Crocus simulations.'
+        self.contributor_role = 'Matthieu Vernay collected the input data and ran the SAFRAN reanalysis ;' \
+                                ' Matthieu Lafaysse ran the SURFEX-ISBA/Crocus simulations.'
 
     def GlobalAttributesOper(self):
         self.title = 'S2M operational chain'
-        self.summary = 'This file takes part from the operation modelling chain of meteorological and snow conditions in the French Alps, Pyrenees and Corsica. The simulations are performed over relatively homogeneous units designed to represent the main drivers of the spatial variability observed in mountain ranges (elevation, slope and aspect). The meteorological analysis and forecast is produced by the SAFRAN system, which adjusts a guess from a Numerical Weather Prediction model (ARPEGE or PEARP) with the best possible set of available in-situ meteorological observations. SAFRAN outputs are used to force the Crocus detailed snowpack model within the land surface scheme SURFEX/ISBA. This provides the evolution of the snowpack and the associated avalanche hazard accounting for the main physical processes involved in a multilayer snowpack.'
+        self.summary = 'This file takes part from the operation modelling chain of meteorological and snow conditions' \
+                       ' in the French Alps, Pyrenees and Corsica. The simulations are performed over relatively' \
+                       ' homogeneous units designed to represent the main drivers of the spatial variability observed' \
+                       ' in mountain ranges (elevation, slope and aspect). The meteorological analysis and forecast' \
+                       ' is produced by the SAFRAN system, which adjusts a guess from a Numerical Weather Prediction' \
+                       ' model (ARPEGE or PEARP) with the best possible set of available in-situ meteorological' \
+                       ' observations. SAFRAN outputs are used to force the Crocus detailed snowpack model within' \
+                       ' the land surface scheme SURFEX/ISBA. This provides the evolution of the snowpack and the' \
+                       ' associated avalanche hazard accounting for the main physical processes involved in a' \
+                       ' multilayer snowpack.'
 
         # For reproductibility tests, the hour is fixed in the operational chain
         # In future versions it would be nice to use the operational rundate.
         self.date_created = datetime.datetime.today().replace(hour=12, minute=0, second=0, microsecond=0).isoformat()
 
         self.contributor_name = 'Matthieu Vernay ; Matthieu Lafaysse; Emmanuel Riggi-Carrolo'
-        self.contributor_role = 'Matthieu Vernay develops the SAFRAN analysis and forecast system ; Matthieu Lafaysse develops the SURFEX-ISBA/Crocus snowpack model ; Emmanuel Riggi-Carrolo set up the operational environment.'
+        self.contributor_role = 'Matthieu Vernay develops the SAFRAN analysis and forecast system ; Matthieu Lafaysse' \
+                                ' develops the SURFEX-ISBA/Crocus snowpack model ;' \
+                                ' Emmanuel Riggi-Carrolo set up the operational environment.'
 
     def GlobalAttributes(self):
 
@@ -80,7 +101,9 @@ class _StandardNC(netCDF4.Dataset):
         self.keywords_vocabulary = 'GCMD'
         self.Conventions = 'ACDD-1.3,CF-1.7'
         self.naming_authority = 'fr.umr-cnrm.cen'
-        self.acknowledgement = 'Many contributors have developed and maintained the codes until today. The full list of contributors can be found in the associated publications. CNRM is a research unit of Météo-France and CNRS. CNRM/CEN, is part of LabEX OSUG@2020 (ANR10 LABX56).'
+        self.acknowledgement = 'Many contributors have developed and maintained the codes until today. The full list' \
+                               ' of contributors can be found in the associated publications. CNRM is a research unit' \
+                               ' of Météo-France and CNRS. CNRM/CEN, is part of LabEX OSUG@2020 (ANR10 LABX56).'
         self.standard_name_vocabulary = 'CF Standard Name Table v67'
         self.creator_name = "CNRM / Centre d'Etudes de la Neige"
         self.creator_type = 'institution'
@@ -92,7 +115,10 @@ class _StandardNC(netCDF4.Dataset):
 
         self.processing_level = 'L4'
 
-        self.comment = 'These data are provided on a semi-distributed grid based on relatively homogeneous areas called massifs where the variability of meteorological and snow conditions are assumed to depend only on elevation, aspect and slope. A metadata shapefile is associated with these data to describe the massif names and contours.'
+        self.comment = 'These data are provided on a semi-distributed grid based on relatively homogeneous areas' \
+                       ' called massifs where the variability of meteorological and snow conditions are assumed' \
+                       ' to depend only on elevation, aspect and slope. A metadata shapefile is associated with' \
+                       ' these data to describe the massif names and contours.'
 
         lat, lon, alti = self.get_coord()
 
@@ -127,10 +153,14 @@ class _StandardNC(netCDF4.Dataset):
 
         time = self.variables["time"]
 
+        if not hasattr(time, 'units'):
+            raise TimeUnitsException(self.filepath())
+
         if netCDF4.__version__ >= '1.4.2':
             return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False))
         elif netCDF4.__version__ >= '1.4.0':
-            return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False, only_use_python_datetimes=True))
+            return np.array(netCDF4.num2date(time[:], time.units, only_use_cftime_datetimes=False,
+                                             only_use_python_datetimes=True))
         else:
             return np.array(netCDF4.num2date(time[:], time.units))
 
@@ -284,7 +314,10 @@ class StandardSAFRAN(StandardSAFRANetMET):
         self.read_config('StandardSAFRAN')
         self.title = self.title + ": meteorological variables"
         self.summary = self.summary + ' This file provides the SAFRAN meteorological fields'
-        self.keywords = self.keywords + ',INCOMING SOLAR RADIATION,LONGWAVE RADIATION,SHORTWAVE RADIATION,AIR TEMPERATURE,SURFACE TEMPERATURE,ABSOLUTE HUMIDITY,RELATIVE HUMIDITY,WIND DIRECTION,WIND SPEED,SURFACE WINDS,RAIN,LIQUID PRECIPITATION,HOURLY PRECIPITATION AMOUNT,SOLID PRECIPITATION'
+        self.keywords = self.keywords + ',INCOMING SOLAR RADIATION,LONGWAVE RADIATION,SHORTWAVE RADIATION,AIR' \
+                                        ' TEMPERATURE,SURFACE TEMPERATURE,ABSOLUTE HUMIDITY,RELATIVE HUMIDITY,' \
+                                        'WIND DIRECTION,WIND SPEED,SURFACE WINDS,RAIN,LIQUID PRECIPITATION,' \
+                                        'HOURLY PRECIPITATION AMOUNT,SOLID PRECIPITATION'
 
     def getmassifname(self):
         return 'massif_number'
@@ -296,8 +329,12 @@ class StandardCDP(StandardSAFRANetMET):
         super(StandardCDP, self).GlobalAttributes()
         self.read_config('StandardCDP')
         self.title = self.title + ": meteorological variables"
-        self.summary = self.summary + ' This file provides the Col de Porte observed meteorological fields, completed with SAFRAN'
-        self.keywords = self.keywords + ',INCOMING SOLAR RADIATION,LONGWAVE RADIATION,SHORTWAVE RADIATION,AIR TEMPERATURE,SURFACE TEMPERATURE,ABSOLUTE HUMIDITY,RELATIVE HUMIDITY,WIND DIRECTION,WIND SPEED,SURFACE WINDS,RAIN,LIQUID PRECIPITATION,HOURLY PRECIPITATION AMOUNT,SOLID PRECIPITATION'
+        self.summary = self.summary + ' This file provides the Col de Porte observed meteorological fields, completed' \
+                                      ' with SAFRAN'
+        self.keywords = self.keywords + ',INCOMING SOLAR RADIATION,LONGWAVE RADIATION,SHORTWAVE RADIATION,AIR' \
+                                        ' TEMPERATURE,SURFACE TEMPERATURE,ABSOLUTE HUMIDITY,RELATIVE HUMIDITY,' \
+                                        'WIND DIRECTION,WIND SPEED,SURFACE WINDS,RAIN,LIQUID PRECIPITATION,HOURLY' \
+                                        ' PRECIPITATION AMOUNT,SOLID PRECIPITATION'
 
 
 class StandardPROSNOW(StandardSAFRAN):
@@ -306,9 +343,22 @@ class StandardPROSNOW(StandardSAFRAN):
         super(StandardPROSNOW, self).GlobalAttributes()
         self.read_config('StandardPROSNOW')
         self.title = "SAFRAN: meteorological variables"
-        self.summary = 'This file is a meteorological forcing file generated by the SAFRAN system. Is is based on the 4 days forecasts of the 35 members french Ensemble Forecasting system PEARP with a 6-hours temporal resolution. It provides at an hourly time step the main meteorological parameters to force a snowpack model on all of the PROSNOW stations except the french ones.'
+        self.summary = 'This file is a meteorological forcing file generated by the SAFRAN system. Is is based on the' \
+                       ' 4 days forecasts of the 35 members french Ensemble Forecasting system PEARP with a 6-hours' \
+                       ' temporal resolution. It provides at an hourly time step the main meteorological parameters' \
+                       ' to force a snowpack model on all of the PROSNOW stations except the french ones.'
         self.platform = 'MODELS_ANALYSES.MODELS'
-        self.comment = "This file provides data for various stations of the PROSNOW project, the mapping between the station numbers and the station names is given by the following dictionary : {1: 'ZAMG-11706', 2: 'ZAMG-11803', 3: 'ZAMG-11804', 4: 'ZAMG-14631', 5: 'ZAMG-14701', 6: 'ZAMG-14812', 7: 'ZAMG-17301', 8: 'ZAMG-17315', 9: 'dwd_gar_1995_20', 10: 'dwd_zug_1995_20', 11: 'lwd_ost_1995_20', 12: 'lwd_pla_2012_20', 13: '*CHU', 14: 'CMA1', 15: 'CMA2', 16: '*DAV', 17: 'DAV3', 18: 'DAV4', 19: 'DAV5', 20: 'ELA1', 21: 'ELA2', 22: 'PMA1', 23: 'PMA2', 24: 'ROT2', 25: 'ROT3', 26: 'TAM3', 27: '*WFJ', 28: 'WFJ1', 29: 'WFJ2', 30: 'BER1', 31: 'BER2', 32: 'BER3', 33: 'BEV1', 34: 'BEV2', 35: 'GESS2', 36: 'KES1', 37: 'KES2', 38: 'LAG1', 39: 'LAG2', 40: 'OFE1', 41: 'OFE2', 42: 'VALL2', 43: 'ZNZ1', 44: 'ZNZ2', 45: 'ZNZ3', 46: 'Bruneck', 47: 'Deutschnofen', 48: 'Merbalm', 49: 'PizlaIla', 50: 'Rittnerhorn', 51: 'SterzingFlughaf'}"
+        self.comment = "This file provides data for various stations of the PROSNOW project, the mapping between the" \
+                       " station numbers and the station names is given by the following dictionary :" \
+                       " {1: 'ZAMG-11706', 2: 'ZAMG-11803', 3: 'ZAMG-11804', 4: 'ZAMG-14631', 5: 'ZAMG-14701'," \
+                       " 6: 'ZAMG-14812', 7: 'ZAMG-17301', 8: 'ZAMG-17315', 9: 'dwd_gar_1995_20'," \
+                       " 10: 'dwd_zug_1995_20', 11: 'lwd_ost_1995_20', 12: 'lwd_pla_2012_20', 13: '*CHU'," \
+                       " 14: 'CMA1', 15: 'CMA2', 16: '*DAV', 17: 'DAV3', 18: 'DAV4', 19: 'DAV5', 20: 'ELA1'," \
+                       " 21: 'ELA2', 22: 'PMA1', 23: 'PMA2', 24: 'ROT2', 25: 'ROT3', 26: 'TAM3', 27: '*WFJ'," \
+                       " 28: 'WFJ1', 29: 'WFJ2', 30: 'BER1', 31: 'BER2', 32: 'BER3', 33: 'BEV1', 34: 'BEV2'," \
+                       " 35: 'GESS2', 36: 'KES1', 37: 'KES2', 38: 'LAG1', 39: 'LAG2', 40: 'OFE1', 41: 'OFE2'," \
+                       " 42: 'VALL2', 43: 'ZNZ1', 44: 'ZNZ2', 45: 'ZNZ3', 46: 'Bruneck', 47: 'Deutschnofen'," \
+                       " 48: 'Merbalm', 49: 'PizlaIla', 50: 'Rittnerhorn', 51: 'SterzingFlughaf'}"
 
     def addCoord(self):
         '''Routine to add coordinates in the forcing file for the SAFRAN massifs'''
@@ -339,7 +389,9 @@ class StandardCROCUS(_StandardNC):
         self.read_config('StandardCROCUS')
         self.title = self.title + ": snow variables"
         self.summary = self.summary + ' This file provides the snowpack properties of the Crocus model.'
-        self.keywords = self.keywords + ',SNOW WATER EQUIVALENT,SNOW,ALBEDO,AVALANCHE,FREEZE/THAW,SNOW COVER,SNOW DENSITY,SNOW DEPTH,SNOW ENERGY BALANCE,SNOW MELT,SNOW WATER EQUIVALENT,SNOW/ICE TEMPERATURE'
+        self.keywords = self.keywords + ',SNOW WATER EQUIVALENT,SNOW,ALBEDO,AVALANCHE,FREEZE/THAW,SNOW COVER,' \
+                                        'SNOW DENSITY,SNOW DEPTH,SNOW ENERGY BALANCE,SNOW MELT,SNOW WATER EQUIVALENT,' \
+                                        'SNOW/ICE TEMPERATURE'
 
         if surfex_commit:
             self.surfex_commit = surfex_commit
@@ -426,4 +478,5 @@ class StandardCROCUS(_StandardNC):
             for varname in self.variables.keys():
                 if varname[0:2] in ['TG', 'WG']:
                     if hasattr(self.variables[varname], 'long_name'):
-                        self.variables[varname].long_name = self.variables[varname].long_name + self.soil_long_names(varname)
+                        self.variables[varname].long_name = self.variables[varname].long_name + \
+                                                            self.soil_long_names(varname)

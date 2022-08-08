@@ -115,6 +115,9 @@ class Surfex_command(_S2M_command):
         [self.options.namelist, self.options.workdir, self.options.exesurfex] = \
             list(map(absolute_path, [self.options.namelist, self.options.workdir, self.options.exesurfex]))
 
+        if self.options.croco:
+            self.options.croco = absolute_path(self.options.croco)
+
         if not vortex:
             [self.options.forcing, self.options.diroutput] = \
                 list(map(absolute_path, [self.options.forcing, self.options.diroutput]))
@@ -237,6 +240,10 @@ class Surfex_command(_S2M_command):
                           action="store", type='string', dest="croco", default=None,
                           help="CrocO assimilation sequence activation and ABSOLUTE path to conf (assimdates (file)")
 
+        parser.add_option("--perturb",
+                          action="store_true", dest="perturb", default=False,
+                          help="Generate stochastic perturbations of forcing files")
+
         parser.add_option("--nforcing",
                           action="store", type="int", dest="nforcing", default=1,
                           help="Number of members of forcing files")
@@ -276,6 +283,10 @@ class Surfex_command(_S2M_command):
         parser.add_option("--writesx",
                           action="store_true", dest="writesx", default=False,
                           help="Optionnaly transfer the PRO files towards sxcen")
+
+        parser.add_option("--obsxpid",
+                          action="store", type="str", dest="obsxpid", default=None,
+                          help="xpid of the obs you want to assimilate")
 
         parser.add_option("--sensor",
                           action="store", type="str", dest="sensor", default="MODIS",
@@ -406,9 +417,7 @@ class Surfex_command(_S2M_command):
         if not self.options.croco:
             vortex_kitchen(self.options)
         elif self.options.escroc:
-            # BC 16/12/20: crocO_vortex_kitchen left to phase with the other kitchens.
-            run = crocO_vortex_kitchen(self.options)
-            run.run()
+            crocO_vortex_kitchen(self.options)
         else:
             print("the croco sequence should run with escroc option")
 

@@ -7,8 +7,6 @@ Vortex task performing up to 40 offline runs in parallel on a single node
 
 '''
 
-import os
-
 from vortex import toolbox
 
 from bronx.stdtypes.date import Date
@@ -18,7 +16,7 @@ from snowtools.utils.dates import get_list_dates_files, check_and_convert_date
 
 class Offline_Task(_CrocO_Task):
     '''
-    classdocs
+    Task for ensemble offline sequence between 2 assimilation dates
     '''
 
     def process(self):
@@ -34,7 +32,7 @@ class Offline_Task(_CrocO_Task):
         # BC 31/07/19 this produces noise deteriorating the spread so remove it.
         # # in case of synthetic assimilation, shuffle it to prevent the truth to appear.
         # # within each node only, not btw them.
-        # if self.conf.openloop == 'off' and self.conf.sensor == 'SYNTH':
+        # if not self.conf.openloop and self.conf.sensor == 'SYNTH':
         #     shuffle(idsnode)
         # ################## STEP.01 #################################################
         # separate early-fetch (constant files, get at the beginning of the simulation)
@@ -53,7 +51,7 @@ class Offline_Task(_CrocO_Task):
                 tb03_s = toolbox.input(
                     alternate      = 'SnowpackInit',
                     local          = 'PREP.nc',
-                    experiment     = 'spinup@' + os.environ['USER'],
+                    experiment     = self.conf.spinup_xpid,
                     geometry       = self.conf.geometry,
                     date           = self.conf.datespinup,
                     intent         = 'inout',
@@ -86,6 +84,8 @@ class Offline_Task(_CrocO_Task):
                 print('you fool ! you should prescribe a --exesurfex path to your s2m command !')
 
         if 'fetch' in self.steps:
+
+            self.get_common_fetch() # get the namelist
 
             # ############# FETCH PREPS : either 1 spinup (firstloop=True,
             # could be moved to early-fetch) or a list of PREPS ##########
@@ -144,11 +144,13 @@ class Offline_Task(_CrocO_Task):
         if 'compute' in self.steps:
             # force first forcing to the first forcing of first member 0001 doesn't work on several nodes...
             date_begin_forc, date_end_forc, _, _ = \
-                get_list_dates_files(self.conf.datebegin, Date(check_and_convert_date(self.conf.stopdate)), self.conf.duration)  # each one of these items has only one item
+                get_list_dates_files(self.conf.datebegin, Date(check_and_convert_date(self.conf.stopdate)),
+                                     self.conf.duration)  # each one of these items has only one item
             date_begin_forc = date_begin_forc[0]
             date_end_forc = date_end_forc[0]  # replace one-item list by item.
-            firstforcing = '../../../common/mb{0:04d}'.format(self.conf.membersnode[0]) + '/FORCING_' + date_begin_forc.strftime("%Y%m%d%H") +\
-                "_" + date_end_forc.strftime("%Y%m%d%H") + ".nc"
+            firstforcing = '../../../common/mb{0:04d}'.format(self.conf.membersnode[0]) +\
+                           '/FORCING_' + date_begin_forc.strftime("%Y%m%d%H") +\
+                           "_" + date_end_forc.strftime("%Y%m%d%H") + ".nc"
             self.sh.title('Toolbox algo tb09a (preprocess)')
 
             tb09a = toolbox.algo(
@@ -156,7 +158,6 @@ class Offline_Task(_CrocO_Task):
                 datebegin    = self.conf.stopdate_prev,
                 dateend      = self.conf.stopdate,
                 forcingname  = firstforcing,
-                # nmembers = self.conf.nmembers,  # BC 06/05/19 : WTF nmembersnode ?? -> delete this shit
             )
             print(t.prompt, 'tb09a =', tb09a)
             print()
@@ -185,7 +186,8 @@ class Offline_Task(_CrocO_Task):
                 members        = idsnode,  # mbids (=ESCROC IDS in case of prescribed draw) =
                 # members node in case draw without prescription
                 startmbnode    = self.conf.membersnode[0],  # necessary
-                geometry       = [self.conf.geometry.area],
+                geometry_in    = [self.conf.geometry.tag],
+                geometry_out   = self.conf.geometry.tag,
                 subensemble    = self.conf.subensemble,
                 # ntasks         = ntasksEsc,  # not consistent with the self.conf.membersnode
                 ntasks         = nmembersnode,  # BC 18/04/19 more consistent
@@ -220,36 +222,38 @@ class Offline_Task(_CrocO_Task):
             print(t.prompt, 'tb21 =', tb21)
             print()
 
-            if self.conf.pickleit == 'on':
-
-                # bc displaced because now we pickle the files instead of transferring it.
-                # ########### PUT PRO FILE ###########
-                self.sh.title('Toolbox output tb19_bk (pro backup)')
-                tb19 = toolbox.output(
-                    local          = 'mb[member%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-                    experiment     = self.conf.xpid,
-                    geometry       = self.conf.geometry,
-                    datebegin      = self.conf.stopdate_prev,
-                    dateend        = self.conf.stopdate,
-                    member         = self.conf.membersnode,
-                    nativefmt      = 'netcdf',
-                    kind           = 'SnowpackSimulation',
-                    model          = 'surfex',
-                    namespace      = 'vortex.cache.fr',
-                    namebuild      = 'flat@cen',
-                    block          = 'pro',
-                ),
-                print(t.prompt, 'tb19 =', tb19)
-                print()
+            # if self.conf.pickleit == 'on':
+            #
+            #     # bc displaced because now we pickle the files instead of transferring it.
+            #     # ########### PUT PRO FILE ###########
+            #     self.sh.title('Toolbox output tb19_bk (pro backup)')
+            #     tb19 = toolbox.output(
+            #         local          = 'mb[member%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+            #         experiment     = self.conf.xpid,
+            #         geometry       = self.conf.geometry,
+            #         datebegin      = self.conf.stopdate_prev,
+            #         dateend        = self.conf.stopdate,
+            #         member         = self.conf.membersnode,
+            #         nativefmt      = 'netcdf',
+            #         kind           = 'SnowpackSimulation',
+            #         model          = 'surfex',
+            #         namespace      = 'vortex.cache.fr',
+            #         namebuild      = 'flat@cen',
+            #         block          = 'pro',
+            #     ),
+            #     print(t.prompt, 'tb19 =', tb19)
+            #     print()
 
         if 'late-backup' in self.steps:
             # if fetchnig to sxcen, must be done file/file to prevent from having too many simultaneous transfers
             storage = ['hendrix.meteo.fr']
             enforcesync = dict(storage={'hendrix.meteo.fr': False, 'sxcen.cnrm.meteo.fr': True})
-            if self.conf.writesx == 'on':
-                storage.append('sxcen.cnrm.meteo.fr')
+            if hasattr(self.conf, 'writesx'):
+                if self.conf.writesx:
+                    storage.append('sxcen.cnrm.meteo.fr')
 
-            if self.conf.pickleit == 'off':
+            # if self.conf.pickleit == 'off':
+            if True:
                 # ########### PUT PREP FILES ###########
                 localbg = 'mb[member%04d]/PREP_[date:ymdh].nc'
                 self.sh.title('Toolbox output tb21bg_ar (background archive)')
@@ -312,24 +316,8 @@ class Offline_Task(_CrocO_Task):
                     model           = 'surfex',
                     local           = 'OPTIONS.nam',
                     fatal           = False,
+                    nativefmt       = 'nam'
                 ),
                 print(t.prompt, 'tb23 =', tb23)
                 print()
 
-                # conf file to hendrix
-                self.sh.title('Toolbox output tbconf (conf archive)')
-                tbconf = toolbox.output(
-                    kind           = 'ini_file',
-                    namespace      = 'vortex.multi.fr',
-                    storage        = storage,
-                    enforcesync    = enforcesync,
-                    namebuild      = 'flat@cen',
-                    block          = 'conf',
-                    experiment     = self.conf.xpid,
-                    local          = self.conf.vapp + '_' + self.conf.vconf + '.ini',
-                    vapp           = self.conf.vapp,
-                    vconf          = self.conf.vconf,
-                    fatal          = False,
-                ),
-                print(t.prompt, 'tbconf =', tbconf)
-                print()
