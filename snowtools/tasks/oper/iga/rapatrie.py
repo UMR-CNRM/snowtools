@@ -95,54 +95,54 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                         print(t.prompt, 'tb01 =', tb01)
                         print()
 
-                        dt = missing_days * 24 + 30
+                dt = missing_days * 24 + 30
 
-                        # Récupération des guess de la veille à ajouter à l'archive
-                        # Comme dateend correpond à J-4 on ajoute 5*24h
-                        self.sh.title('Toolbox input tb02a')
-                        tb02a = toolbox.input(
-                            role           = 'Ebauche',
-                            local          = 'P[date::addcumul_yymdh]',
-                            experiment     = self.conf.xpid,
-                            block          = 'guess',
-                            geometry       = self.conf.geometry[self.conf.vconf],
-                            cutoff         = 'assimilation',
-                            date           = ['{0:s}/+PT96H/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, dt, self.conf.cumul)],
-                            cumul          = self.conf.cumul,
-                            nativefmt      = 'ascii',
-                            kind           = 'guess',
-                            model          = 'safran',
-                            source_app     = self.conf.source_app,
-                            source_conf    = self.conf.deterministic_conf,
-                            namespace      = self.conf.namespace_in,
-                            fatal          = False,
-                        ),
-                        print(t.prompt, 'tb02a =', tb02a)
-                        print()
+                # Récupération des guess de la veille à ajouter à l'archive
+                # Comme dateend correpond à J-4 on ajoute 5*24h
+                self.sh.title('Toolbox input tb02a')
+                tb02a = toolbox.input(
+                    role           = 'Ebauche',
+                    local          = 'P[date::addcumul_yymdh]',
+                    experiment     = self.conf.xpid,
+                    block          = 'guess',
+                    geometry       = self.conf.geometry[self.conf.vconf],
+                    cutoff         = 'assimilation',
+                    date           = ['{0:s}/+PT96H/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, dt, self.conf.cumul)],
+                    cumul          = self.conf.cumul,
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.deterministic_conf,
+                    namespace      = self.conf.namespace_in,
+                    fatal          = False,
+                ),
+                print(t.prompt, 'tb02a =', tb02a)
+                print()
 
-                        # Mode secours : on prend la prévision correspondante
-                        self.sh.title('Toolbox input tb02b')
-                        tb02b = toolbox.input(
-                            alternate      = 'Ebauche',
-                            local          = 'P[date::addcumul_yymdh]',
-                            experiment     = self.conf.xpid,
-                            block          = 'guess',
-                            geometry       = self.conf.geometry[self.conf.vconf],
-                            cutoff         = 'production',
-                            date           = ['{0:s}/+PT96H/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, dt, self.conf.cumul)],
-                            cumul          = self.conf.cumul,
-                            nativefmt      = 'ascii',
-                            kind           = 'guess',
-                            model          = 'safran',
-                            source_app     = self.conf.source_app,
-                            source_conf    = self.conf.deterministic_conf,
-                            namespace      = self.conf.namespace_in,
-                            fatal          = True,
-                        ),
-                        print(t.prompt, 'tb02b =', tb02b)
-                        print()
+                # Mode secours : on prend la prévision correspondante
+                self.sh.title('Toolbox input tb02b')
+                tb02b = toolbox.input(
+                    alternate      = 'Ebauche',
+                    local          = 'P[date::addcumul_yymdh]',
+                    experiment     = self.conf.xpid,
+                    block          = 'guess',
+                    geometry       = self.conf.geometry[self.conf.vconf],
+                    cutoff         = 'production',
+                    date           = ['{0:s}/+PT96H/-PT{1:s}H'.format(dateend.ymd6h, str(d)) for d in footprints.util.rangex(6, dt, self.conf.cumul)],
+                    cumul          = self.conf.cumul,
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.deterministic_conf,
+                    namespace      = self.conf.namespace_in,
+                    fatal          = True,
+                ),
+                print(t.prompt, 'tb02b =', tb02b)
+                print()
 
-                    #TODO :prévoir de regénérer les éventuels guess manquants
+            #TODO :prévoir de regénérer les éventuels guess manquants
 
         if 'late-backup' in self.steps:
 
