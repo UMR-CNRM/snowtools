@@ -130,7 +130,7 @@ class Config:
             self.xpid = "nouveaux_guess@lafaysse"
             delattr(Config, 'alternate_xpid')
             self.list_geometry = ['jur4_allslopes', 'mac11_allslopes',
-                                  'vog3_allslopes', 'cor', 'alp', 'pyr'] # , 'postes'
+                                  'vog3_allslopes', 'cor', 'alp', 'pyr', 'postes'] #
         self.reforecast = OPTIONS.reforecast
         if OPTIONS.reforecast:
             self.xpid = "reforecast_double2021@vernaym"

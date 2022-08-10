@@ -18,8 +18,8 @@ import netCDF4
 from scipy.stats import gamma
 
 from snowtools.plots.pearps2m.postprocess import Config, Ensemble, EnsembleOperDiagsFlatMassif,\
-    EnsembleStation
-from snowtools.tasks.oper.get_oper_files import S2MExtractor
+    EnsembleStation, OPTIONS
+from snowtools.tasks.oper.get_oper_files import S2MExtractor, FutureS2MExtractor
 from snowtools.utils.FileException import DirNameException
 from snowtools.utils.dates import pretty_date
 from snowtools.DATA import SNOWTOOLS_DIR
@@ -352,7 +352,7 @@ class PostprocessEnsemble(ABC, Ensemble):
             print(var)
             self.quantiles[var] = []
             for quantile in list_quantiles:
-                indquantile = quantile / 10 - 1
+                indquantile = quantile // 10 - 1 # floor division needed
                 self.quantiles[var].append(self.quantiles_CSGD[:, :, indquantile])
 
 
@@ -413,15 +413,19 @@ if __name__ == "__main__":
     C = Config()
     C.list_members = list(range(0, 35))
     os.chdir(C.diroutput)
-    S2ME = S2MExtractor(C)
+    if C.dev:
+        S2ME = FutureS2MExtractor(C)
+    else:
+        S2ME = S2MExtractor(C)
     SNOW_MEMBERS, SNOW_XPID = S2ME.get_snow()
 
     locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
     SUPTITLE = 'Adaptations statistiques PEARP-S2M du ' + pretty_date(S2ME.conf.rundate)
 
     LIST_DOMAINS = SNOW_MEMBERS.keys()
+    print(LIST_DOMAINS)
 
-    for domain in LIST_DOMAINS:
+    for domain in ['alp']: # LIST_DOMAINS:
 
         if domain == "postes":
             E = PostprocessStations()

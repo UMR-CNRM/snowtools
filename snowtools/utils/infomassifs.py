@@ -380,8 +380,9 @@ class infomassifs():
             if str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip() == str_poste:
                 name = poste.getElementsByTagName("name")[0].childNodes[0].data
                 # break
-                return name  # type unicode in python2
-        raise ValueError('station number not found' + str_poste)
+                return name
+        print('Warning: station number not found ' + str_poste)
+        return str_poste
 
     def maskposte(self, num_poste):
         for poste in self.caracLoc.documentElement.getElementsByTagName("Site"):
