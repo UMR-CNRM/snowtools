@@ -264,7 +264,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     self.sh.title('Toolbox output tb05 = guess arpege assim')
                     tb05 = toolbox.output(
                         role           = 'Ebauche',
-                        coherentgroup  = 'EbauchesDeterministes',
+                        #coherentgroup  = 'EbauchesDeterministes',
                         local          = 'ARP_[date:ymdh]/P[date:yymdh]_[cumul:hour]_[vconf]_assimilation',
                         cutoff         = 'assimilation',
                         geometry       = self.conf.domains,

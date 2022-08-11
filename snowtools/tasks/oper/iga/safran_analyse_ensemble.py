@@ -124,7 +124,6 @@ class Safran(OpTask, S2MTaskMixIn):
                     print(t.prompt, 'tb01wo =', tb01wo)
                     print()
 
-
     def process(self):
         """Safran analysis"""
 
@@ -196,7 +195,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 tb03 = toolbox.input(
                     role            = 'ListeMassif',
                     genv            = self.conf.cycle,
-                    gdomain         = self.conf.vconf,
+                    gdomain         = '[geometry:area]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     kind            = 'listem',
                     model           = self.conf.model,
@@ -209,7 +208,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 tb04 = toolbox.input(
                     role            = 'ListeLimitesMassif',
                     genv            = self.conf.cycle,
-                    gdomain         = self.conf.vconf,
+                    gdomain         = '[geometry:area]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     kind            = 'listeml',
                     model           = self.conf.model,
@@ -222,7 +221,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 tb05 = toolbox.input(
                     role            = 'ListePost',
                     genv            = self.conf.cycle,
-                    gdomain         = self.conf.vconf,
+                    gdomain         = '[geometry:area]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     kind            = 'listeo',
                     model           = self.conf.model,
@@ -236,7 +235,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 tb06 = toolbox.input(
                     role            = 'carac_post',
                     genv            = self.conf.cycle,
-                    gdomain         = self.conf.vconf,
+                    gdomain         = '[geometry:area]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     kind            = 'carpost',
                     model           = self.conf.model,
@@ -578,6 +577,9 @@ class Safran(OpTask, S2MTaskMixIn):
                 )
                 print(t.prompt, 'tb21 =', tb21)
                 print()
+
+        if 'fetch' in self.steps:
+            pass
 
         if 'compute' in self.steps:
 
