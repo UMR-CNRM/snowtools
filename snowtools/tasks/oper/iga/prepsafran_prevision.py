@@ -60,6 +60,7 @@ class PrepSafran(OpTask, S2MTaskMixIn):
                     gdomain        = '[geometry:area]',
                     kind           = 'relief',
                     local          = 'METADATA.grib',
+                    intent         = 'in',  # Make a hard link rather than a copy
                     fatal          = True,
                 )
                 print(t.prompt, 'tb01 =', tb01)
@@ -86,6 +87,7 @@ class PrepSafran(OpTask, S2MTaskMixIn):
                     model          = '[vapp]',
                     vapp           = self.conf.source_app,
                     vconf          = self.conf.deterministic_conf,
+                    intent         = 'in',  # Make a hard link rather than a copy
                     fatal          = True,
                 )
                 print(t.prompt, 'tbarp =', tbarp)
@@ -113,6 +115,7 @@ class PrepSafran(OpTask, S2MTaskMixIn):
                     model          = '[vapp]',
                     vapp           = self.conf.source_app,
                     vconf          = self.conf.eps_conf,
+                    intent         = 'in',  # Make a hard link rather than a copy
                     fatal          = False,
                 )
                 print(t.prompt, 'tbpearp =', tbpearp)
@@ -225,7 +228,7 @@ class PrepSafran(OpTask, S2MTaskMixIn):
                     member         = footprints.util.rangex(self.conf.pearp_members),
                     fatal          = False,
                       delayed        = True,
-                )
+                ),
                 print(t.prompt, 'tb06 =', tb06)
                 print()
 
