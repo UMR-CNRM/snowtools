@@ -1558,26 +1558,29 @@ class Zoom_massif(_Map_massifs):
     def get_map_dimensions(self, num_massif):
 
         self.dicLonLatMassif = self.getLonLatMassif()
+        barycentre = None
         for massif in self.records:
             num = massif.attributes['code']
-            # print(num)
             if num == num_massif:
                 barycentre = self.dicLonLatMassif[num]
-        if self.area in ['alpes', 'corse', 'jura', 'central', 'vosges']:
-            dlat = 0.55
-            dlon = 0.65
-            dloninfo = dlon/3.
-            dlatinfo = dlat/5.
-        elif self.area == 'pyrenees':
-            dlat = 0.5
-            dlon = 1.3
-            dloninfo = dlon/3.5
-            dlatinfo = dlat/4.
+        if barycentre is None:
+            raise ValueError(f'Massif {num_massif} not in shapefile')
+        else:
+            if self.area in ['alpes', 'corse', 'jura', 'central', 'vosges']:
+                dlat = 0.55
+                dlon = 0.65
+                dloninfo = dlon/3.
+                dlatinfo = dlat/5.
+            elif self.area == 'pyrenees':
+                dlat = 0.5
+                dlon = 1.3
+                dloninfo = dlon/3.5
+                dlatinfo = dlat/4.
 
-        self.lonmin = barycentre[0] - dlon
-        self.lonmax = barycentre[0] + dlon
-        self.latmin = barycentre[1] - dlat
-        self.latmax = barycentre[1] + dlat
-        # infospos = self.projection.project_geometry(Point((lonmax-dloninfo, latmax-dlatinfo)),
-        #                                             ccrs.PlateCarree()).coords[0]
-        # infospos = (lonmax-dloninfo, latmax-dlatinfo)
+            self.lonmin = barycentre[0] - dlon
+            self.lonmax = barycentre[0] + dlon
+            self.latmin = barycentre[1] - dlat
+            self.latmax = barycentre[1] + dlat
+            # infospos = self.projection.project_geometry(Point((lonmax-dloninfo, latmax-dlatinfo)),
+            #                                             ccrs.PlateCarree()).coords[0]
+            # infospos = (lonmax-dloninfo, latmax-dlatinfo)
