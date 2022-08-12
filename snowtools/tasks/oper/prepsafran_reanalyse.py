@@ -52,17 +52,23 @@ class Reanalyses(Task, S2MTaskMixIn):
             if True:  # To match IGA identation
 
                 missing_days = 0
+
                 if not (self.conf.rundate.month == 8 and self.conf.rundate.day == 1):
+
                     tb01 = False
                     missing_days = -1
                     rundate = self.conf.rundate
                     datefin = dateend
                     fatal = False
                     # We check for latest packedguess file in the last month (last monthly reanalysis)
+
                     while not tb01:
+
                         missing_days = missing_days + 1
+
                         if missing_days == 31:
                             fatal = True  # Crash if no packedguess found in the last month
+
                         rundate = rundate - Period(days=1)
                         datefin = datefin - Period(days=1)
 
