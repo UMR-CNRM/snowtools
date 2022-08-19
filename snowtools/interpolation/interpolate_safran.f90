@@ -1157,7 +1157,7 @@ PROGRAM INTERPOLATE_SAFRAN
   ! This program interpolates SAFRAN meteorological data.
   !
   ! If a namelist called interpolate_safran.nam is present, the configuration information from the namelist is used.
-  ! Otherwise the default configuration is used.
+  ! Otherwise the default configuration is used. An example namelist can be found in sonwtools/DATA.
   !
   ! :Default configuration:
   !   #) A file named "GRID.nc" is read, containing the output grid (2D case) or station (1D case) information.
