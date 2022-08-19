@@ -26,19 +26,21 @@ args = parser.parse_args()
 # On prend toutes les heures
 question = question(
         # Insert other variables here if needed
-        listvar=["h.num_poste", "to_char(dat,'YYYY-MM-DD-HH24-MI')", "neigetot", "type_nivo"],
+        listvar=["h.num_poste", "to_char(dat,'YYYY-MM-DD-HH24-MI')", "neigetot", "POSTE.LAT_DG", "POSTE.LON_DG",
+                 "POSTE.ALTI", "POSTE.NOM_USUEL"],
         table='H',
-        listorder=['dat', 'h.num_poste'],
+        listorder=['h.num_poste', 'dat'],
         listjoin=[
-            'POSTE_NIVO ON H.NUM_POSTE = POSTE_NIVO.NUM_POSTE and type_nivo != 2',
+            'POSTE ON H.NUM_POSTE = POSTE.NUM_POSTE',
             ],
         listconditions=[
-            "to_char(dat,'HH24') = '06'", "neigetot is not null"
+            "to_char(dat,'HH24') = '06'", "neigetot is not null", "POSTE.ALTI > 300",
+            "POSTE.NUM_DEP = 57" # 54 57 67 68 70 88 90
             ],
         period=[args.date_min, args.date_max],
         )
 question.run(outputfile=args.output,
-             header=['NUMPOST', 'Date UTC', "HTN cm", "type_nivo"] if not args.append else False,
+             header=['NUMPOST', 'Date UTC', "HTN cm", "LAT dg", "LON dg", "ALTI m", "NOM"] if not args.append else False,
              mode='w' if not args.append else 'a')
 
 # Old code:
