@@ -372,7 +372,7 @@ class Vortex_conf_file(object):
     def default_variables(self):
         self.set_field("DEFAULT", 'xpid', self.options.xpid + '@' + os.getlogin())
         self.set_field("DEFAULT", 'ntasks', self.options.ntasks)
-        self.set_field("DEFAULT", 'nprocs', self.options.ntasks)
+        self.set_field("DEFAULT", 'nprocs', self.options.ntasks * self.options.nnodes)
         self.set_field("DEFAULT", 'openmp', 1)
         self.set_field("DEFAULT", 'geometry', self.options.vconf)
         if hasattr(self.options, 'addmask'):
