@@ -510,7 +510,13 @@ class Vortex_conf_file(object):
         else:
             self.set_field('DEFAULT', 'spinup_xpid', 'spinup@' + os.getlogin())
 
-        intdates = list(map(int, confObj.assimdates))
+        if type(confObj.assimdates) is list:
+            # case for only 1 assimilation date --> confObj.assimdates is list
+            intdates = list(map(int, confObj.assimdates))
+        else:
+            # case for only 1 assimilation date --> confObj.assimdates is str
+            intdates = [int(confObj.assimdates)]
+
         intdatefin = int(self.options.datefin.strftime("%Y%m%d%H"))
         intdates.sort()
         bisect.insort(intdates, intdatefin)
