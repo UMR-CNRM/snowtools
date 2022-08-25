@@ -65,9 +65,10 @@ def convertPrecipPhase(Tair, precip, Tmin=272.65, Tmax=274.05):
     :param Tair: air temperature data (K)
     :param precip: precip data
     :param Tmin: minimum temperature for liquid precip (K)
-    :param Tmax : maximum temperature for solid precip (K)
+    :param Tmax: maximum temperature for solid precip (K)
 
-    :return list [Rain, Snow]
+    :return: list [Rain, Snow]
+
     """
 
     frac_liquid = (Tair - Tmin) / (Tmax - Tmin)  # mix of liquid and solid precip if Tair within [Tmin,Tmax]

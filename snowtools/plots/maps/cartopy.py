@@ -165,10 +165,10 @@ def getTextColor(var, **kwargs):
 
 
 class MyCRS(ccrs.CRS):
-    """
-    dummy class in order to be able to create an ccrs.CRS instance from a proj4/fiona.crs dictionary
+    """ dummy class in order to be able to create an ccrs.CRS instance from a proj4/fiona.crs dictionary
     If the 'proj' is 'lcc' in projdict, an LambertConformal projection is initialized.
     """
+
     def __init__(self, projdict, globe):
         if projdict['proj'] == 'lcc':
             ccrs.LambertConformal(central_longitude=projdict['lon_0'],
@@ -449,9 +449,9 @@ class _Map_massifs(Mplfigure):
         Create map axes.
 
         :param geofeatures: if True, Land and Ocean are colored, coastlines, borders,
-            lakes and rivers are added to the map
+                            lakes and rivers are added to the map
         :param bgimage: if True, a background image (high resolution satellite relief)
-        is added to the map. Ignored if geofeatures is True.
+                        is added to the map. Ignored if geofeatures is True.
         :return: map axes
         :rtype: GeoAxes object
 
@@ -501,9 +501,9 @@ class _Map_massifs(Mplfigure):
     def init_cmap(self, **kwargs):
         """
         :param kwargs: 'palette': name of color palette, (default: 'jet'),
-        'ncolors': number of colors
+                        'ncolors': number of colors
         :return: palette (colormap object), norm (scaled colormap with
-        chosen minimum and maximum values)
+                    chosen minimum and maximum values)
         """
         if 'palette' in kwargs.keys():
             if 'ncolors' in kwargs.keys():
@@ -808,7 +808,7 @@ class _Map_massifs(Mplfigure):
         :param massifref: massif numbers
         :param args: values to write for each massif
         :param kwargs: arguments passed to :py:meth:`convertunit`, :py:meth:`getformatstring`
-        and :py:meth:`puttext`
+                        and :py:meth:`puttext`
         """
 
         nvar = len(args)
@@ -932,7 +932,7 @@ class _Map_massifs(Mplfigure):
         :param list_values: list of value arrays
         :param ncol: number of columns in the table
         :param kwargs: kwargs passed to :py:meth:`convertunit`, :py:meth:`getformatstring`,
-        :py:meth:`puttable` and :py:meth:`prepare_colorbar`
+                        :py:meth:`puttable` and :py:meth:`prepare_colorbar`
         """
 
         ncol = ncol+1
@@ -1239,12 +1239,12 @@ class _MultiMap(_Map_massifs):
         :param massifref: massif numbers
         :param variable: values
         :param kwargs: 'axis': the dimension along which to split :py:attr:`variable`
-        between different subplots
+                        between different subplots
         :return: value array
         :rtype: numpy array
         :raises: KeyError if 'axis' is not in the :py:attr:`kwargs`,
-        IndexError if :py:attr:`variable` array has lower
-         rank than the number given to 'axis'.
+                    IndexError if :py:attr:`variable` array has lower
+                    rank than the number given to 'axis'.
         """
         try:
             axis = kwargs['axis']

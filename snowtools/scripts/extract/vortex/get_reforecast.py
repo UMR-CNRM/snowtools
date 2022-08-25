@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on dec. 2018
 @author: Vernay
-'''
+"""
 
+import os
 import vortex
 
 import footprints
@@ -15,7 +16,6 @@ from cen.layout.nodes import S2MTaskMixIn
 
 from bronx.stdtypes.date import Date, Period
 from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR
-import os
 
 toolbox.active_now = True
 
