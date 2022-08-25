@@ -518,4 +518,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, OpTask):
 
                 ad.phase(tb11,tb12)
 
-            #INTRODUIRE_AVIS_DE_DISPO
+                #INTRODUIRE_AVIS_DE_DISPO
+                ad.dmt_status()
+                ad.dmt(resource_name='r_{0:s}_{1:s}_{2:s}'.format(self.conf.disp_name, self.conf.cutoff, self.conf.xpid_gad),soprano_host=self.conf.soprano_host[self.conf.xpid])
+
