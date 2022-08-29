@@ -20,7 +20,7 @@ def setup(t, **kw):
         tag    = 'pearp2safran',
         ticket = t,
         nodes  = [
-            Reanalyses(tag='prepsafreana', ticket=t, **kw),
+            Reanalyses(tag='prepsafreana', ticket=t, delay_component_errors=True, on_error='delayed_fail', **kw),
         ],
         options = kw,
     )

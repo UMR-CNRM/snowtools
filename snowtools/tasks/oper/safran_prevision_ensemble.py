@@ -19,7 +19,7 @@ def setup(t, **kw):
         tag    = 'safran',
         ticket = t,
         nodes  = [
-            Safran(tag='prvsaf', ticket=t, **kw, delay_component_errors=True),
+            Safran(tag='prvsaf', ticket=t, delay_component_errors=True, on_error='delayed_fail', **kw),
         ],
         options = kw,
     )
