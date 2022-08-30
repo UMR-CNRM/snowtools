@@ -31,6 +31,7 @@
 /
 &NAM_OTHER_STUFF
     LTIMECHUNK = .TRUE. ! write one time step at a time to safe memory when working with larger files
+    LSPATIALCHUNK = .TRUE.
     NLONCHUNKSIZE = 108 ! 108 for alpha grid on pc
     NLATCHUNKSIZE = 112 ! 112 for alpha grid on pc
 /

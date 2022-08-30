@@ -1158,7 +1158,7 @@ CONTAINS
     !
     READ(UNIT=KNAMUNIT,NML=NAM_OTHER_STUFF, IOSTAT=IOS)
     IF (IOS /= 0) THEN
-      PRINT*, IOS, LTIMECHUNK, NLONCHUNKSIZE, NLATCHUNKSIZE
+      PRINT*, IOS, LTIMECHUNK, LSPATIALCHUNK, NLONCHUNKSIZE, NLATCHUNKSIZE
       CALL ABORT_INTERPOLATE('ERROR reading namelist NAM_OTHER_STUFF')
     END IF
     ! PRINT*, HFILESOUT
@@ -1173,7 +1173,7 @@ PROGRAM INTERPOLATE_SAFRAN
   ! This program interpolates SAFRAN meteorological data.
   !
   ! If a namelist called interpolate_safran.nam is present, the configuration information from the namelist is used.
-  ! Otherwise the default configuration is used.
+  ! Otherwise the default configuration is used. An example namelist can be found in sonwtools/DATA.
   !
   ! :Default configuration:
   !   #) A file named "GRID.nc" is read, containing the output grid (2D case) or station (1D case) information.
@@ -1187,7 +1187,7 @@ PROGRAM INTERPOLATE_SAFRAN
   !      - Providing a grid definition file for each of them (set :f:var:`lmultiinput` =.TRUE. and :f:var:`lmultioutput` =.TRUE.) and producing a separate output file for each of them
   !      - Combining the data from them on a single grid in a single output file (set :f:var:`lmultiinput` =.TRUE. and :f:var:`lmultioutput` =.FALSE.)
   !   #) Treat time steps sepatately in order to save memory in the case of very large fields by setting :f:var:`ltimechunk` = .TRUE.
-  !   #) customize the NetCDF chunksize of the spatial output dimensions in order to optimise write performance for large fields. (:f:var:`nlonchunksize`,   :f:var:`nlatchunksize`)
+  !   #) customize the NetCDF chunksize of the spatial output dimensions in order to optimise write performance for large fields. (:f:var:`lspatialchunk` = .TRUE. and :f:var:`nlonchunksize`,   :f:var:`nlatchunksize`)
   !   #) Select variables to be interpolated. (set :f:var:`lselectvar` = .TRUE., assign a list of variables to :f:var:`hvar_list` and give the number of selected variables to :f:var:`nnumber_of_variables`)
   !
 USE SUBS
@@ -1269,7 +1269,7 @@ LOGICAL :: AFTERLOC
 LOGICAL :: LPRINT
 CHARACTER(LEN=10),DIMENSION(4) :: LL_VARNAME
 !
-LOGICAL :: LSPATIALCHUNK! temporary, to be defined in namelist
+! LOGICAL :: LSPATIALCHUNK! temporary, to be defined in namelist
 !
 !
 COMM = MPI_COMM_WORLD
@@ -1305,7 +1305,7 @@ IF (IOS == 0) THEN
 !  PRINT*, NNUMBER_INPUT_GRIDS
 !  PRINT*, 'HFILEIN ', HFILEIN, 'HGRIDIN ', HGRIDIN
 !  PRINT*, 'HFILESIN ', HFILESIN, 'HGRIDSIN ', HGRIDSIN
-  LSPATIALCHUNK = .TRUE. ! temporary --> should be defined in namelist
+!  LSPATIALCHUNK = .TRUE. ! temporary --> should be defined in namelist
 !
 ELSE
   PRINT*, 'WARNING: no namelist interpolate_safran.nam provided. Continue with default settings.'
