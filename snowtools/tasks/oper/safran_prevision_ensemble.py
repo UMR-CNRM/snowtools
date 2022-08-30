@@ -630,8 +630,6 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb33 =', tb28)
                 print()
 
-            print('==================================================================================================')
-            print('INFO :The execution went well, do not take into account the following error')
-            print('==================================================================================================')
-            import sys
-            sys.exit(1)
+#            print('==================================================================================================')
+#            print('==================================================================================================')
+#            raise Exception('INFO :The execution went well, do not take into account the following error')

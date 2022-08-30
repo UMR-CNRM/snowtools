@@ -358,8 +358,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb05 =', tb05)
                     print()
 
-            print('==================================================================================================')
-            print('INFO :The execution went well, do not take into account the following error')
-            print('==================================================================================================')
-            from vortex.tools.systems import ExecutionError
-            raise ExecutionError('')
+#            print('==================================================================================================')
+#            print('==================================================================================================')
+#            raise Exception('INFO :The execution went well, do not take into account the following error')
