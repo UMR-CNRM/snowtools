@@ -1,6 +1,15 @@
 F90 = mpiifort
 CC  = mpiicc
-EXEC1 =interpol_MPIAUTO
+
+OPTLEVEL ?= O2
+ifeq "$(OPTLEVEL)" "DEBUG"
+OPT= -O0 -g
+else
+OPT= -$(OPTLEVEL)
+endif
+
+
+EXEC1 =interpol_MPIAUTO_$(OPTLEVEL)
 
 OPT = -O2
 CFLAGS = -c  
