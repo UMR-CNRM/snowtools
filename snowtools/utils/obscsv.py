@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 
-'''
+"""
 Created on 29 oct. 2012
 
 @author: lafaysse
-'''
+"""
 
 import os
 import csv
@@ -133,7 +133,7 @@ class obscsv(object):
                     if len(row) >= 4:
                         self._data[row[0]]["SNOWSWE"].append(float(row[3].replace(",", ".")))
             else:
-                print ("station ignorée :" + row[0])
+                print("station ignorée :" + row[0])
 
         for station in self._data.keys():
             for varname in self._data[station].keys():

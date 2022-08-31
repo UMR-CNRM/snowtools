@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 Created on 20 mars 2018
 
 @author: lafaysse
-'''
+"""
 
 import time
 

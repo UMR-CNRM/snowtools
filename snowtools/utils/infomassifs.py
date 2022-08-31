@@ -371,7 +371,7 @@ class infomassifs():
         get station name for a given station number.
 
         :param num_poste: station number
-        :type num_poste: int
+        :type num_poste: str
         :returns: station name
         :rtype: str
         """

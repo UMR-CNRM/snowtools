@@ -79,7 +79,6 @@ class boxplots(Mplfigure):
                 indexes = np.sort([l.index(x) for x in set(l)])
                 list_legend = [self.bp[0]['boxes'][ind] for ind in indexes]
 
-
         if 'label' in kwargs.keys():
             self.plot.legend(list_legend, kwargs['label'], loc="upper right", fontsize=18)
 
@@ -159,27 +158,26 @@ class boxplots_byyear(boxplots):
     def draw(self, list_years, list_scores, nsimu = 1, **kwargs):
 
         nyears = len(list_years)
-        stepticks = nyears / 15 + 1
+        stepticks = nyears // 15 + 1
         list_years_str = map(str, list_years)
 
         list_labels = []
-        for y, year in enumerate(list_years_str):
-            if y % stepticks == 0:
+        for y_i, year in enumerate(list_years_str):
+            if y_i % stepticks == 0:
                 list_labels.append(year)
             else:
                 list_labels.append("")
 
-        print (list_labels)
+        print(list_labels)
 
         kwargs['labels'] = list_labels
 
         kwargs['positions'] = range(self.indsimu, 1 + len(list_labels) * nsimu, nsimu)
 
-        print ('debug')
-        print (nsimu)
-        print (kwargs['positions'])
+        print('debug')
+        print(nsimu)
+        print(kwargs['positions'])
 
         self.plot.set_xlabel(u'Year', fontsize=18)
         super(boxplots_byyear, self).draw(list_scores, **kwargs)
         self.indsimu += 1
-
