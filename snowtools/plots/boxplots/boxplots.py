@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 6 févr. 2019
 
 @author: lafaysse
-'''
+"""
 
 import numpy as np
 import six
@@ -15,8 +15,9 @@ from snowtools.plots.abstracts.figures import Mplfigure
 
 
 class boxplots(Mplfigure):
-    '''
-    '''
+    """
+    class for common boxplot features.
+    """
     figsize = (10, 8)
 
     def __init__(self, *args, **kwargs):
@@ -108,7 +109,7 @@ class boxplots_bydepartment(boxplots):
         for dep in list_dep_uniq:
             if ',' in dep:
                 deps = dep.split(',')
-                inddep = np.array(list_dep) == -999
+                inddep = np.array(list_dep) == '-999'
                 for d in deps:
                     inddep = (np.array(list_dep) == d.strip()) | inddep
             else:

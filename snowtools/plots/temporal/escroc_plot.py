@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 4 déc. 2018
 
 @author: lafaysse
-'''
+"""
 
 import datetime
 
@@ -210,7 +210,9 @@ if __name__ == "__main__":
         if domain == 'cdp':
             obsfile = os.path.join(LUSTRE_NOSAVE_DIR, 'lafaysse/ESM-SnowMIP/evaldata/snouf')
         else:
-            obsfile = os.path.join(LUSTRE_NOSAVE_DIR, 'lafaysse/ESM-SnowMIP/evaldata/obs_insitu_' + domain + "_" + bdate[domain][0:4] + "_" + edate[domain][0:4] + ".nc"
+            obsfile = os.path.join(LUSTRE_NOSAVE_DIR, 'lafaysse/ESM-SnowMIP/evaldata/obs_insitu_' +
+                                   domain + "_" + bdate[domain][0:4] + "_" + edate[domain][0:4] +
+                                   ".nc")
 
         E = dict()
 
@@ -233,9 +235,9 @@ if __name__ == "__main__":
 
         if domain == 'cdp':
             # j'ai inversé E2 et E2open au CDP comme c'est un site dégagé dans snowmip
-            E["E2open"].pack_pretty(E["E2"], diroutput = ".", filename = domain, obsfile = obsfile)
+            E["E2open"].pack_pretty(E["E2"], diroutput=".", filename=domain, obsfile=obsfile)
         else:
-            E["E2"].pack_pretty(E["E2open"], diroutput = ".", filename = domain, obsfile = obsfile)
+            E["E2"].pack_pretty(E["E2open"], diroutput=".", filename=domain, obsfile=obsfile)
 
         for key, value in E.iteritems():
             value.close()

@@ -352,7 +352,7 @@ class PostprocessEnsemble(ABC, Ensemble):
             print(var)
             self.quantiles[var] = []
             for quantile in list_quantiles:
-                indquantile = quantile // 10 - 1 # floor division needed
+                indquantile = quantile // 10 - 1  # floor division needed
                 self.quantiles[var].append(self.quantiles_CSGD[:, :, indquantile])
 
 
