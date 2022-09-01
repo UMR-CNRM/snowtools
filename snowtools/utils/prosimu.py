@@ -66,7 +66,12 @@ class prosimu():
         """
         # BC add the possibility to give wildcards to prosimu
         if type(path) is str:
-            glob_path = glob.glob(path)
+            if openmode == 'w':
+                glob_path = [path]
+            else:
+                glob_path = glob.glob(path)
+            if len(glob_path) == 0:
+                raise FileNameException(path)
             path = sorted(glob_path)
             # otherwise path is already a list.
 
