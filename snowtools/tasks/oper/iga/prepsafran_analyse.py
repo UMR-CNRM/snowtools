@@ -337,7 +337,7 @@ class PrepSafran(OpTask, S2MTaskMixIn):
                     print(t.prompt, 'tb06 =', tb06)
                     print()
 
-                    ad.phase(tb05a, tb06)
+                    ad.phase(tb05, tb06)
 
                 else:
 
