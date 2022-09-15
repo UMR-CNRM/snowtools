@@ -10,6 +10,7 @@ MODULE MODD_INTERPOL_SAFRAN
     LOGICAL :: LMULTIINPUT = .FALSE. ! Set to .TRUE. in order to handle multiple input files
     LOGICAL :: LMULTIOUTPUT = .FALSE. ! Set to .TRUE. in order to handle multiple output files
     LOGICAL :: LTIMECHUNK = .FALSE. ! Set to .TRUE. to write one time step at a time to safe memory when working with larger files
+    LOGICAL :: LSPATIALCHUNK = .FALSE. ! Set to .TRUE. to manualy fix chuncksizes for the first and second spatial dimension when writing the output netcdf file(s).
     LOGICAL :: LSELECTVAR = .FALSE. ! Set to .TRUE. to choose variables to interpolate from the input file
     INTEGER :: NNUMBER_INPUT_FILES = 1 ! Number of input files. Used if LMULTIINPUT=.TRUE..
     INTEGER :: NNUMBER_OUTPUT_GRIDS = 1 ! Number of output grid files. Used if LMULTIOUTPUT=.TRUE..

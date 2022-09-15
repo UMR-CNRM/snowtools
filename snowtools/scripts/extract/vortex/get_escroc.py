@@ -102,7 +102,7 @@ class S2MExtractor(S2MTaskMixIn):
                     vapp           = 's2m',
                     vconf          = site,
                     local          = '[vconf]/[experiment]/mb[member%03d]/[block]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-                    experiment     = escroc + '@' + os.getlogin(),
+                    experiment     = escroc + '@' + os.getlogin() if '@' not in escroc else escroc,
                     block          = 'pro',
                     geometry       = site,
                     date           = '[datebegin]',
