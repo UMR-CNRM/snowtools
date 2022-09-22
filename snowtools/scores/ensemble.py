@@ -19,6 +19,7 @@ SURFEX_dicvarnames = dict(snowdepth="DSN_T_ISBA", snowswe="WSN_T_ISBA", snowdept
 class EnsembleScores:
     """
     Ensemble scores
+
     """
 
     startwinter = 10
@@ -191,9 +192,16 @@ class EnsembleScores:
 class ESCROC_EnsembleScores(EnsembleScores):
     """
     Ensemble scores for ESCROC ensemble
+
+    used by vortex/src/cen/algo/scores.py
     """
 
     def __init__(self, profiles, obsfile, varname):
+        """
+        :param profiles: list of netcdf filenames for the different ensemble members
+        :param obsfile: observation filename (netcdf format)
+        :param varname: variable name to read
+        """
         # be careful with calling the superclass constructor:
         # self.obs_common and self.ens_common are defined at the end of the self.read method
         self.read(profiles, obsfile, varname)
