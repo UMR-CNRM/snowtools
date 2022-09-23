@@ -370,8 +370,8 @@ class infomassifs():
         for poste in self.caracLoc.documentElement.getElementsByTagName("Site"):
             if str(poste.getElementsByTagName("number")[0].childNodes[0].data).strip() == '%08d' % int(num_poste):
                 name = poste.getElementsByTagName("name")[0].childNodes[0].data
-                break
-        return name  # type unicode in python2
+                return name
+        return ''
 
     def maskposte(self, num_poste):
         for poste in self.caracLoc.documentElement.getElementsByTagName("Site"):

@@ -89,6 +89,7 @@ def parse_options(arguments):
 
     parser.add_option("--dev",
                       action="store_true", dest="dev", default=False)
+    parser.add_option("--dble", action="store_true", dest="dble", default=False)
 
     parser.add_option("--reforecast", action="store_true", dest="reforecast", default=False)
 
@@ -142,6 +143,11 @@ class config(object):
             self.xpid = "nouveaux_guess@lafaysse"
             delattr(config, 'alternate_xpid')
             self.list_geometry = ['jur4_allslopes', 'mac11_allslopes', 'vog3_allslopes', 'cor', 'alp', 'pyr']
+        self.dble = options.dble
+        if options.dble:
+            self.xpid = "dble"
+            delattr(config, 'alternate_xpid')
+            self.list_geometry = ['alp', 'pyr', 'cor', 'jur', 'mac', 'vog', 'postes']
         self.reforecast = options.reforecast
         if options.reforecast:
             self.xpid = "reforecast_double2021@vernaym"
@@ -612,7 +618,7 @@ class EnsembleStation(Ensemble):
         """
         # nameposte gives unicode
         # matplotlib expects unicode
-        return self.InfoMassifs.nameposte(station) + u" %d m" % int(alti)
+        return self.InfoMassifs.nameposte(station) + " %d m" % int(alti)
 
 
 class EnsembleDiags(Ensemble):
@@ -1026,7 +1032,7 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
                         for q, quantile in enumerate(self.list_q):  # pylint: disable=possibly-unused-variable
                             list_values.append(self.quantiles[var][q][t, indalti])
                     # print(len(massif[indalti]))
-                    m.rectangle_massif(massif[indalti], self.list_q, list_values, ncol=2, **self.attributes[var])
+                    m.rectangle_massif(massif[indalti], list_values, ncol=2, **self.attributes[var])
                     if six.PY2:
                         title = "pour le " + pretty_date(self.time[t]).decode('utf-8')
                     else:
@@ -1206,6 +1212,8 @@ if __name__ == "__main__":
     os.chdir(c.diroutput)
     if c.dev:
         S2ME = FutureS2MExtractor(c)
+    elif c.dble:
+        S2ME = FutureS2MExtractor(c)
     elif c.reforecast:
         S2ME = FutureS2MExtractor(c)
     else:
@@ -1215,6 +1223,7 @@ if __name__ == "__main__":
 
     dict_chaine = defaultdict(str)
     dict_chaine['OPER'] = ' (oper)'
+    dict_chaine['DBLE'] = ' (double)'
     dict_chaine['MIRR'] = ' (miroir)'
     dict_chaine['OPER@lafaysse'] = ' (dev)'
     dict_chaine['nouveaux_guess@lafaysse'] = ' (dev)'
