@@ -17,6 +17,8 @@ from snowtools.DATA import DIRDATAPGD
 
 _here = os.path.dirname(os.path.realpath(__file__))
 
+SKIP_TEST_SNOWPAPPUS = False if os.getenv('SNOWTOOLS_TEST_SNOWPAPPUS', False) else True
+
 
 class s2mTest(TestWithTempFolderWithLog):
     def setUp(self):
@@ -40,12 +42,15 @@ class s2mTestForcageBase(s2mTest):
     def test_base(self):
         shutil.copy(self.path_namelist + "namelist_base.nam", self.namelist)
         self.full_run("s2m -b 20101215 -e 20110115")
-        
+
+    @unittest.skipIf(SKIP_TEST_SNOWPAPPUS,
+                     'SnowPappus not yet implemented in SURFEX cen branch. '
+                     'Please use SNOWTOOLS_TEST_PAPPUS env variable to force test')
     def test_snowpappus(self):
         # NAM_ISBA_SNOW: LSNOWPAPPUS = TRUE
         shutil.copy(self.path_namelist + "namelist_pappus_1.nam", self.namelist)
         self.full_run("s2m -b 20101215 -e 20110115")
-        
+
     def test_multiphy1(self):
         # NAM_ISBA_SNOW:   CSNOWMETAMO = 'F06', CSNOWFALL = 'S02', CSNOWCOMP = 'T11', CSNOWCOND = 'I02', CSNOWHOLD = 'O04'
         # NAM_ISBA: CSNOWRES = 'M98'
@@ -90,7 +95,6 @@ class s2mTestForcageBase(s2mTest):
         # NAM_SURF_SNOW_CSTS  XPSR_SNOWMAK = 0.002, XRHO_SNOWMAK = 600, XPTA_SEUIL = 268.15, XPROD_SCHEME = 0,0,0,0,0, XSM_END = 4,30,4,30, XFREQ_GRO = 1
         shutil.copy(self.path_namelist + "namelist_resort1.nam", self.namelist)
         self.full_run("s2m -b 20101215 -e 20110115")
-        
 
 
 class s2mTestForcageImpurete(s2mTest):
@@ -136,6 +140,10 @@ class s2m2DTest(s2mTest):
     def test_2d_ign(self):
         self.full_run("s2m -b 20150101 -e 20150201")
 
+
+@unittest.skipIf(SKIP_TEST_SNOWPAPPUS,
+                 'SnowPappus not yet implemented in SURFEX cen branch. '
+                 'Please use SNOWTOOLS_TEST_PAPPUS env variable to force test')
 class s2m2DTest_pappus(s2mTest):
 
     def setUp(self):
@@ -145,11 +153,10 @@ class s2m2DTest_pappus(s2mTest):
         # If the test is run at CEN, it can run PGD with available databases.
         # Otherwise, we do not test the PGD step and only take a PGD test file.
         if not self.runatcen():
-            os.makedirs(self.diroutput+"/prep")
+            os.makedirs(self.diroutput + "/prep")
             pgd = os.path.join(SNOWTOOLS_DATA, "PGD_test_2d.nc")
-            os.symlink(pgd, self.diroutput+"/prep/PGD.nc")
+            os.symlink(pgd, self.diroutput + "/prep/PGD.nc")
         self.commonoptions = " -o " + self.diroutput + " --grid -f " + self.forcingtest + " -n " + self.namelist + " -g"
-
 
     def test_2d_ign_pappus(self):
         self.full_run("s2m -b 20150101 -e 20150201")
