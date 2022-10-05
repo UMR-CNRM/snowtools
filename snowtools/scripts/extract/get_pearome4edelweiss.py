@@ -6,16 +6,19 @@ Created on Wed Oct 13 15:04:27 2021
 
 
 """
+import os
 import extracthendrix.configreader as configreader
 from bronx.stdtypes.date import Date
 from extracthendrix.config.variables import pearome
+from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR
 
 config_user = dict(
 
     #  Where you want to store the outputs
-    folder='/cnrm/cen/users/NO_SAVE/radanovicss/PEAROME/',
-    native_files_folder="/cnrm/cen/users/NO_SAVE/radanovicss/PEAROME/_native_files_",
-    cache_folder="/cnrm/cen/users/NO_SAVE/radanovicss/PEAROME/_cache_",
+    folder=os.path.join(LUSTRE_NOSAVE_USER_DIR,'PEAROME'),
+    native_files_folder=os.path.join(LUSTRE_NOSAVE_USER_DIR,'PEAROME','_native_files_'),
+    cache_folder=os.path.join(LUSTRE_NOSAVE_USER_DIR,'PEAROME','_cache_'),
+
 
     # Models are defined in the models.ini file
     model_name='PEAROME',

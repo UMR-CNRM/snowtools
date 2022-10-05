@@ -20,7 +20,7 @@ rpy2
 
 # Requirements for generating the documentation
 sphinx>=4.3
-git+https://github.com/sradanov/sphinx-fortran.git
+git+https://github.com/VACUMM/sphinx-fortran.git
 
 # Cartopy:
 # Cartopy version need to be paired with matplotlib version to work properly and

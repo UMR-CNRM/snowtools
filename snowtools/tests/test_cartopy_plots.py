@@ -1,29 +1,29 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import six
 import unittest
 import shutil
 import tempfile
-import numpy as np
+import os
 from datetime import datetime
+import numpy as np
+import six
+from netCDF4 import Dataset
 from snowtools.utils.prosimu import prosimu
 from snowtools.plots.maps import cartopy
 from snowtools.DATA import TESTBASE_DIR
-from netCDF4 import Dataset
-import os
-
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 TEST_DATA_DIR = os.path.join(TESTBASE_DIR, "PRO")
 # read the index file template and insert the testbase directory
-index = open(os.path.join(THIS_DIR, "Manual_tests", "index_template.html")).read().format(testbase=TESTBASE_DIR)
+INDEX = open(os.path.join(THIS_DIR, "Manual_tests", "index_template.html")).read().format(testbase=TESTBASE_DIR)
 # write the index.html file with the right testbase paths
 with open(os.path.join(THIS_DIR, "Manual_tests", "index.html"), 'w') as outfile:
-    outfile.write(index)
+    outfile.write(INDEX)
 
 
-@unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "postproc", "grid_postproc_2021041112.nc")),
+@unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "postproc",
+                                                 "grid_postproc_2021041112.nc")),
                  "input file not available")
 class TestCartopyFrance(unittest.TestCase):
     """
@@ -106,7 +106,7 @@ class TestCartopyCor(unittest.TestCase):
         self.assertEqual(self.snow.shape, (6, 2, 9), "should be 9 deciles of 24 massifs over 6 time steps")
         self.m = cartopy.Map_corse(bgimage=True)
         self.m.init_massifs(**self.mix.attributes['SD_1DY_ISBA'])
-        self.m.highlight_massif(self.massifs[0], self.snow, **self.mix.attributes['SD_1DY_ISBA'])
+        self.m.highlight_massif(self.massifs[0], **self.mix.attributes['SD_1DY_ISBA'])
         self.m.plot_center_massif(self.massifs, self.snow[5, :, 4], self.snow[5, :, 8],
                                   **self.mix.attributes['SD_1DY_ISBA'])
         self.m.addlogo()
@@ -187,10 +187,10 @@ class TestCartopyPyr(unittest.TestCase):
         self.m = cartopy.Map_pyrenees(geofeatures=True)
         self.m.init_massifs(**self.mix.attributes['SD_1DY_ISBA'])
         self.m.add_north_south_info()
-        self.m.rectangle_massif(self.massifs, [0, 1, 2], [self.snow_sud[1, :, 1], self.snow_sud[1, :, 4],
-                                                          self.snow_sud[1, :, 7], self.snow_nord[1, :, 1],
-                                                          self.snow_nord[1, :, 4], self.snow_nord[1, :, 7]], ncol=2,
-                                **self.mix.attributes['SD_1DY_ISBA'])
+        self.m.rectangle_massif(self.massifs, [self.snow_sud[1, :, 1], self.snow_sud[1, :, 4],
+                                               self.snow_sud[1, :, 7], self.snow_nord[1, :, 1],
+                                               self.snow_nord[1, :, 4], self.snow_nord[1, :, 7]],
+                                ncol=2, **self.mix.attributes['SD_1DY_ISBA'])
         self.m.addlogo()
         self.m.set_maptitle("2021041012")
         self.m.set_figtitle("2100m")
@@ -224,7 +224,7 @@ class TestCartopyPyr(unittest.TestCase):
         self.m.add_north_south_info()
         titles = self.ps.readtime()
         self.m.set_maptitle(titles)
-        self.m.rectangle_massif(self.massifs, [0, 1, 2], [self.snow_sud[:, :, 1], self.snow_sud[:, :, 4],
+        self.m.rectangle_massif(self.massifs, [self.snow_sud[:, :, 1], self.snow_sud[:, :, 4],
                                                           self.snow_sud[:, :, 7], self.snow_nord[:, :, 1],
                                                           self.snow_nord[:, :, 4], self.snow_nord[:, :, 7]], ncol=2,
                                 **self.mix.attributes['SD_1DY_ISBA'], axis=0)
@@ -276,6 +276,7 @@ class TestCartopyAlp(unittest.TestCase):
         cls.massifs = cls.ps.read('massif_num', selectpoint=cls.points)
 
     def setUp(self):
+        self.outfilename = None
         pass
 
     def test_with_geo_features(self):
@@ -307,7 +308,7 @@ class TestCartopyAlp(unittest.TestCase):
         self.lo = cartopy.MultiMap_Alps(nrow=3, ncol=3, geofeatures=False)
         self.lo.init_massifs(**self.mix.attributes['SD_1DY_ISBA'])
         self.lo.draw_massifs(self.massifs, self.snow[5, :, :], axis=1, **self.mix.attributes['SD_1DY_ISBA'])
-        self.lo.highlight_massif(10, self.snow, **self.mix.attributes['SD_1DY_ISBA'])
+        self.lo.highlight_massif(10, **self.mix.attributes['SD_1DY_ISBA'])
         self.lo.set_figtitle("SD_1DY_ISBA 2021041112 2100m")
         titles = ['Percentile {0}'.format(i) for i in range(10, 100, 10)]
         self.lo.set_maptitle(titles)
@@ -323,7 +324,7 @@ class TestCartopyAlp(unittest.TestCase):
             self._feedErrorsToResult(result, self._outcome.errors)
             error = self.mix.list2reason(result.errors)
             failure = self.mix.list2reason(result.failures)
-            if not error and not failure:
+            if not error and not failure and self.outfilename is not None:
                 shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
                                                                                          self.outfilename))
         else:
@@ -358,6 +359,7 @@ class TestCartopyMac(unittest.TestCase):
         cls.massifs = cls.ps.read('massif_num', selectpoint=cls.points)
 
     def setUp(self):
+        self.outfilename = None
         pass
 
     def test_swemap(self):
@@ -382,7 +384,7 @@ class TestCartopyMac(unittest.TestCase):
             self._feedErrorsToResult(result, self._outcome.errors)
             error = self.mix.list2reason(result.errors)
             failure = self.mix.list2reason(result.failures)
-            if not error and not failure:
+            if not error and not failure and self.outfilename is not None:
                 shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
                                                                                          self.outfilename))
         else:
@@ -415,6 +417,7 @@ class TestCartopyJura(unittest.TestCase):
         # cls.massifs = cls.ps.read('massif_num', selectpoint=cls.points)
 
     def setUp(self):
+        self.outfilename = None
         pass
 
     def test_juramap(self):
@@ -435,7 +438,7 @@ class TestCartopyJura(unittest.TestCase):
             self._feedErrorsToResult(result, self._outcome.errors)
             error = self.mix.list2reason(result.errors)
             failure = self.mix.list2reason(result.failures)
-            if not error and not failure:
+            if not error and not failure and self.outfilename is not None:
                 dirmantest = os.path.join(THIS_DIR, "Manual_tests")
                 if not os.path.isdir(dirmantest):
                     os.makedirs(dirmantest)
@@ -465,6 +468,7 @@ class TestCartopyVosges(unittest.TestCase):
         cls.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
 
     def setUp(self):
+        self.outfilename = None
         pass
 
     def test_vosgesmap(self):
@@ -485,7 +489,7 @@ class TestCartopyVosges(unittest.TestCase):
             self._feedErrorsToResult(result, self._outcome.errors)
             error = self.mix.list2reason(result.errors)
             failure = self.mix.list2reason(result.failures)
-            if not error and not failure:
+            if not error and not failure and self.outfilename is not None:
                 dirmantest = os.path.join(THIS_DIR, "Manual_tests")
                 if not os.path.isdir(dirmantest):
                     os.makedirs(dirmantest)

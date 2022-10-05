@@ -65,8 +65,8 @@ class Mplfigure(object):
             position.x1 = 0.89
             self.plot.set_position(position)
 
-    def save(self, figname, formatout="pdf"):
-        self.fig.savefig(figname, format=formatout)
+    def save(self, figname, formatout="pdf", **kw):
+        plt.savefig(figname, format=formatout, **kw)
 
     def close(self):
         self.fig.clear()

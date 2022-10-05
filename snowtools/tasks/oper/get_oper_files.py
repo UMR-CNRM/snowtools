@@ -17,7 +17,7 @@ from snowtools.utils.dates import check_and_convert_date
 import footprints
 
 usage = "usage: get_oper_files.py [-b YYYYMMDD]  [-e YYYYMMDD] [--previ] [--dev] [--deterministic] \
-        [--geometry=domain] [--firstday]"
+        [--geometry=domain] [--firstday] [--meteo] [--snow]"
 
 
 class configdev(object):
@@ -61,7 +61,7 @@ def parse_options(arguments):
 
     parser.add_option("--deterministic",
                       action="store_true", dest="deterministic", default=False,
-                      help="Dev chain instead of operational chain")
+                      help="Only extract member forced by deterministic ARPEGE")
 
     parser.add_option("--geometry",
                       action="store", type="string", dest="geometry", default=None,

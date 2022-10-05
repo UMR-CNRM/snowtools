@@ -71,6 +71,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ),
                 print(t.prompt, 'tb01 =', tb01)
                 print()
+
                 if len(tb01[0]) < 15:
                     # 2. Get ARPEGE file
                     # Recuperation de A6 du réseau H-6 pour H in [0, 6, 12, 18]
@@ -165,7 +166,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = 'uenv:s2m.01@vernaym',
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -a -o -i IDW -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp)]))),
+                rawopts     = ' -o -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp)])),
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
@@ -285,6 +286,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ),
                 print(t.prompt, 'tb06 =', tb06)
                 print()
+
             from vortex.tools.systems import ExecutionError
             raise ExecutionError('')
             pass

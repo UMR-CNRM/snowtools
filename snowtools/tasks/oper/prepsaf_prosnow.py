@@ -17,7 +17,7 @@ def setup(t, **kw):
         tag='pearp2safran',
         ticket=t,
         nodes=[
-            PrepSafran(tag='prepsafprv', ticket=t, **kw),
+            PrepSafran(tag='prepsafprv', ticket=t, **kw, delay_component_errors=True),
         ],
         options=kw,
     )
@@ -56,7 +56,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 date           = '{0:s}/-PT12H'.format(self.conf.rundate.ymd6h),
                 term           = footprints.util.rangex(self.conf.prv_terms),
                 member         = footprints.util.rangex(self.conf.pearp_members),
-                namespace      = 'vortex.multi.fr',
+                namespace      = self.conf.namespace_in,
                 nativefmt      = '[format]',
                 origin         = 'historic',
                 model          = '[vapp]',
@@ -134,7 +134,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 model          = 'safran',
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.eps_conf,
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_out,
                 member         = footprints.util.rangex(self.conf.pearp_members),
             ),
             print(t.prompt, 'tb06a =', tb06)

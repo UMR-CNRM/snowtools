@@ -19,3 +19,4 @@ DATA/shapefiles
 .coverage
 newvenevsnowtools
 *.egg-info
+*.orig

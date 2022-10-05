@@ -28,7 +28,7 @@ def setup(t, **kw):
         tag='safran',
         ticket=t,
         nodes=[
-            Safran(tag='prvsaf', ticket=t, **kw),
+            Safran(tag='prvsaf', ticket=t, **kw, delay_component_errors=True),
         ],
         options=kw,
     )
@@ -64,7 +64,7 @@ class Safran(Task, S2MTaskMixIn):
                 model          = 'safran',
                 source_app     = self.conf.source_app,
                 source_conf    = self.conf.eps_conf,
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_in,
                 member         = footprints.util.rangex(self.conf.pearp_members),
                 fatal          = False,
             ),
@@ -350,7 +350,7 @@ class Safran(Task, S2MTaskMixIn):
                 model          = self.conf.model,
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_out,
                 member         = footprints.util.rangex(self.conf.pearp_members),
             ),
             print(t.prompt, 'tb27 =', tb27)
@@ -370,7 +370,7 @@ class Safran(Task, S2MTaskMixIn):
                 model          = self.conf.model,
                 datebegin      = datebegin.ymd6h,
                 dateend        = dateend.ymd6h,
-                namespace      = self.conf.namespace,
+                namespace      = self.conf.namespace_out,
                 member         = footprints.util.rangex(self.conf.pearp_members),
             ),
             print(t.prompt, 'tb28 =', tb27)

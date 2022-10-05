@@ -343,7 +343,8 @@ class Prosnow_LT_Forecast(Task, S2MTaskMixIn):
                 dateend                    = self.conf.dateend,
                 ntasks                     = self.conf.ntasks,
                 # '''1) Climatology'''
-                geometry                   = [u'allslopes'],
+                geometry_in                = [u'allslopes'],
+                geometry_out               = 'allslopes',
                 # '''2) Seasonal'''
 #                 geometry                   = [self.conf.resort + '_flat'],
             )
