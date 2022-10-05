@@ -17,6 +17,8 @@ from snowtools.DATA import DIRDATAPGD
 
 _here = os.path.dirname(os.path.realpath(__file__))
 
+SKIP_TEST_SNOWPAPPUS = False if os.getenv('SNOWTOOLS_TEST_SNOWPAPPUS', False) else True
+
 
 class s2mTest(TestWithTempFolderWithLog):
     def setUp(self):
@@ -39,6 +41,14 @@ class s2mTestForcageBase(s2mTest):
 
     def test_base(self):
         shutil.copy(self.path_namelist + "namelist_base.nam", self.namelist)
+        self.full_run("s2m -b 20101215 -e 20110115")
+
+    @unittest.skipIf(SKIP_TEST_SNOWPAPPUS,
+                     'SnowPappus not yet implemented in SURFEX cen branch. '
+                     'Please use SNOWTOOLS_TEST_PAPPUS env variable to force test')
+    def test_snowpappus(self):
+        # NAM_ISBA_SNOW: LSNOWPAPPUS = TRUE
+        shutil.copy(self.path_namelist + "namelist_pappus_1.nam", self.namelist)
         self.full_run("s2m -b 20101215 -e 20110115")
 
     def test_multiphy1(self):
@@ -128,6 +138,27 @@ class s2m2DTest(s2mTest):
         self.commonoptions = " -o " + self.diroutput + " --grid -f " + self.forcingtest + " -n " + self.namelist + " -g"
 
     def test_2d_ign(self):
+        self.full_run("s2m -b 20150101 -e 20150201")
+
+
+@unittest.skipIf(SKIP_TEST_SNOWPAPPUS,
+                 'SnowPappus not yet implemented in SURFEX cen branch. '
+                 'Please use SNOWTOOLS_TEST_PAPPUS env variable to force test')
+class s2m2DTest_pappus(s2mTest):
+
+    def setUp(self):
+        super(s2m2DTest_pappus, self).setUp()
+        self.forcingtest = os.path.join(SNOWTOOLS_DATA, "FORCING_test_2d.nc")
+        self.namelist = os.path.join(SNOWTOOLS_DATA, "OPTIONS_test_2d_pappus.nam")
+        # If the test is run at CEN, it can run PGD with available databases.
+        # Otherwise, we do not test the PGD step and only take a PGD test file.
+        if not self.runatcen():
+            os.makedirs(self.diroutput + "/prep")
+            pgd = os.path.join(SNOWTOOLS_DATA, "PGD_test_2d.nc")
+            os.symlink(pgd, self.diroutput + "/prep/PGD.nc")
+        self.commonoptions = " -o " + self.diroutput + " --grid -f " + self.forcingtest + " -n " + self.namelist + " -g"
+
+    def test_2d_ign_pappus(self):
         self.full_run("s2m -b 20150101 -e 20150201")
 
 
