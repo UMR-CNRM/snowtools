@@ -142,7 +142,7 @@ class config(object):
         if options.dev:
             self.xpid = "nouveaux_guess@lafaysse"
             delattr(config, 'alternate_xpid')
-            self.list_geometry = ['jur4_allslopes', 'mac11_allslopes', 'vog3_allslopes', 'cor', 'alp', 'pyr']
+            self.list_geometry = ['jur', 'mac', 'vog', 'cor', 'alp', 'pyr', 'postes']
         self.dble = options.dble
         if options.dble:
             self.xpid = "dble"
