@@ -18,7 +18,7 @@ def setup(t, **kw):
         tag='pearp2safran',
         ticket=t,
         nodes=[
-            PrepSafran(tag='prepsafprv', ticket=t, **kw, delay_component_errors=True),
+            PrepSafran(tag='prepsafprv', ticket=t, delay_component_errors=True, on_error='delayed_fail', **kw),
         ],
         options=kw,
     )
@@ -253,8 +253,6 @@ class PrepSafran(Task, S2MTaskMixIn):
 #            print(t.prompt, 'tb06b =', tb06b)
 #            print()
 
-            print('==================================================================================================')
-            print('INFO :The execution went well, do not take into account the following error')
-            print('==================================================================================================')
-            from vortex.tools.systems import ExecutionError
-            raise ExecutionError('')
+#            print('==================================================================================================')
+#            print('==================================================================================================')
+#            raise Exception('INFO :The execution went well, do not take into account the following error')

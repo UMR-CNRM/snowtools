@@ -20,7 +20,7 @@ def setup(t, **kw):
         tag    = 'safran',
         ticket = t,
         nodes  = [
-            Safran(tag='anasaf', ticket=t, **kw, delay_component_errors=True),
+            Safran(tag='anasaf', ticket=t, delay_component_errors=True, on_error='delayed_fail', **kw),
         ],
         options = kw,
     )
@@ -244,21 +244,21 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb06 =', tb06)
                 print()
 
-                # WARNING : Les ressoucres rsclim et icrccm ne servent pas dans le cas nominal mais
-                # consituent un mode secours pour SAFRAN si il rencontre un problème pour faire son guess
+                # WARNING : Le ressoucre rsclim  sert pas dans le cas nominal mais
+                # constitue un mode secours pour SAFRAN si il rencontre un problème pour faire son guess
                 # A partir des fichiers P
-                self.sh.title('Toolbox input rsclim')
-                tb09 = toolbox.input(
-                    role            = 'Clim',
-                    genv            = self.conf.cycle,
-                    gvar            = '[kind]',
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                    kind            = 'rsclim',
-                    model           = self.conf.model,
-                    local           = 'rsclim.don',
-                )
-                print(t.prompt, 'tb09 =', tb09)
-                print()
+#                self.sh.title('Toolbox input rsclim')
+#                tb09 = toolbox.input(
+#                    role            = 'Clim',
+#                    genv            = self.conf.cycle,
+#                    gvar            = '[kind]',
+#                    geometry        = self.conf.geometry[self.conf.vconf],
+#                    kind            = 'rsclim',
+#                    model           = self.conf.model,
+#                    local           = 'rsclim.don',
+#                )
+#                print(t.prompt, 'tb09 =', tb09)
+#                print()
 
                 self.sh.title('Toolbox input icrccm')
                 tb10 = toolbox.input(
