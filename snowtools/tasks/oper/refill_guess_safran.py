@@ -172,7 +172,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                                 nativefmt      = '[format]',
                                 remote         = '/home/mrns/vernaym/extraction_bdap/[vconf]/ \
                                 arpege_[date::ymdh]_[term::hour].grib',
-                                hostname       = 'guppy.meteo.fr',
+                                hostname       = 'sotrtm35-sidev.meteo.fr',
                                 tube           = 'ftp',
                                 origin         = 'arpege',
                                 fatal          = False,
