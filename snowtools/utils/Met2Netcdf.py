@@ -25,10 +25,10 @@ from bronx.meteo.constants import T0
 # Données EN DUR A MODIFIER REGULIEREMENT:
 #
 # A CHANGER A CHAQUE AJOUT D'UN FICHIER MET DE YVES
-annee_last_MET = 2021
+annee_last_MET = 2022
 #
 # A CHANGER A CHAQUE BASCULE DE CDP60mn vers CDP60mn_... (= date de depart dans CDP60mn)
-annee_last_cdp60mn = 2020080100 # !!! 
+annee_last_cdp60mn = 2022080100 # !!! 
 #
 # Autres données EN DUR dans le code: 
 path_safran = "/rd/cenfic3/era40/vortex/s2m/postes/reanalysis/meteo"
@@ -68,7 +68,7 @@ def message_accueil(option_bool, nom_site):
     print('# - chemin des MET: ' + path_met + '\n')
     print('# - format des MET: MET_YYYY_YYYY+1_fmt (ex MET_2000_2001_fmt)\n')
     print('# - chemin des reanalyses SAFRAN: ' + path_safran + '\n')
-    print('# - etat de la base de donnees du Col de Porte: cdp60mn_1920 puis cdp60mn a partir du 01082020\n')
+    print('# - etat de la base de donnees du Col de Porte: cdp60mn_2122 puis cdp60mn a partir du 01082022\n')
     print(
         '# ! la base CdP change a priori tous les ans ! => modifier la seconde ligne de la fonction recup_cdp (vers ligne 165-170)')
     print('# Si vous faites des modifs, penser aussi à changer ce message (fonction message_accueil)')
@@ -267,7 +267,7 @@ def recup_cdp(date_time_deb, date_time_fin, pas_de_temps):
     # Cas où YYYY080106 => ensuite récupérer les données sur l'année en cours
     # a) récupérer dans la base de données d'après les 5h manquantes
     # b) concaténer les données.
-    if (date_time_fin > date_1er_aout and nom_base != 'cdp60mn'):
+    if (date_time_fin > date_1er_aout and nom_base != 'cdp60mn' and date_time_fin.year < date_change_base60mn.year):
         nom_var = 'p_ptb330_v1,dd_meca_10mn_10m'
         if date_time_fin.year < date_change_base60mn.year:
             nom_base = 'cdp60mn_' + str(date_time_fin.year)[2:4] + str(date_time_fin.year + 1)[2:4]
@@ -746,11 +746,11 @@ def parseArguments():
     parser = argparse.ArgumentParser()
 
     # Optional arguments
-    parser.add_argument("-o", "--output", help="Name for output file", type=str, default='out.nc')
+    parser.add_argument("-o", "--output", help="Name for output file", type=str, default='out_met2netcdf.nc')
     parser.add_argument('-r', "--recup", help="Option for recup PSurf in database.",
                         type=lambda x: (str(x).lower() in ['true', 'yes', '1']), default=True)
     parser.add_argument("-b", "--begin", help="Beginning date for nc file", type=str, default='1993080106')
-    parser.add_argument("-e", "--end", help="Ending date for nc file", type=str, default='2019080106')
+    parser.add_argument("-e", "--end", help="Ending date for nc file", type=str, default='2022080106')
     parser.add_argument("-s", "--site", help="Site location", type=str, default='38472401')
 
     # Print version
