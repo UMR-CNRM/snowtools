@@ -459,6 +459,8 @@ class Vortex_conf_file(object):
         if hasattr(self.options, 'geoin'):
             self.set_field("DEFAULT", 'geoin', self.options.geoin)
 
+        self.set_field("DEFAULT", 'drhook', self.options.drhook)
+
     def safran_variables(self):
 
         self.set_field("DEFAULT", 'cumul', 6)
