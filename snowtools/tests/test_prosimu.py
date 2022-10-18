@@ -6,7 +6,7 @@ import unittest
 from datetime import datetime
 import os
 
-from snowtools.utils.prosimu import prosimu, prosimu_old
+from snowtools.utils.prosimu import prosimu_auto as prosimu, prosimu_old
 from snowtools.DATA import SNOWTOOLS_DATA, TESTBASE
 
 if not os.path.isdir(TESTBASE):
@@ -117,7 +117,8 @@ class TestProSimu2d(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.ps.close()
+        if cls.ps is not None:
+            cls.ps.close()
 
 
 class TestProSimuOld(unittest.TestCase):

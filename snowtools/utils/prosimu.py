@@ -4,7 +4,8 @@
 Created on 4 oct. 2012
 
 :Authors:
-    lafaysse
+    - lafaysse
+    - LVG
 
 This module contains the ``prosimu`` class used to read simulation files
 (netCDF format) as produced by SURFEX/Crocus for instance.
@@ -30,7 +31,7 @@ except ImportError:
 DEFAULT_NETCDF_FORMAT = 'NETCDF3_CLASSIC'
 
 
-def prosimu(path, ncformat=DEFAULT_NETCDF_FORMAT, openmode='r', **kwargs):
+def prosimu_auto(path, ncformat=DEFAULT_NETCDF_FORMAT, openmode='r', **kwargs):
     """
     Factory function that guess the correct class to return among
     :cls:`prosimu1d` or :cls:`prosimu2d`.
@@ -490,6 +491,7 @@ class prosimuAbstract(abc.ABC):
         :type keepfillvalue: bool
         :param needmodif: If True, return also the variable object
         :type needmodif: bool
+        :param hasDecile: Deprecated, please do not use.
         """
         pass
 
@@ -564,9 +566,7 @@ class prosimuAbstract(abc.ABC):
 
 
 class _prosimu1d2d():
-    """
-    Common definitions to :cls:`prosimu1d` and :cls:`prosimu2d`
-    """
+    """ Common definitions to :cls:`prosimu1d` and :cls:`prosimu2d` """
 
     def get_points(self, **kwargs):
         """
@@ -718,6 +718,37 @@ class _prosimu1d2d():
         return var[tuple(selector)]
 
 
+class prosimu_base(_prosimu1d2d, prosimuAbstract):
+    """
+    Common class that is allowed to read both 1d and 2d simualtions. The selection of points is
+    not allowed in this class.
+    """
+
+    Points_dimensions = []
+
+    def get_points(*args, **kwargs):
+        """
+        :meta: private
+        """
+        raise NotImplementedError('get_points is not implemented in prosimu_base. Please use prosimu1d or prosimu2d classes')
+
+    def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime=True, hasDecile=False):
+        """
+        Extract data as a numpy array, possibly removing useless dimensions. In prosimu_base class,
+        does not allow to select a point !
+
+        :meta private:
+        """
+
+        if selectpoint == -1:
+            selectpoint = None
+        else:
+            raise ValueError('To use the selectpoint option, please use prosimu_auto, prosimu1d or prosimu2d. '
+                             'prosimu_base does not allow for point selection.')
+
+        return self._extract(varname, var, selectpoint=selectpoint, removetile=removetile)
+
+
 class prosimu1d(_prosimu1d2d, prosimuAbstract):
     """
     Class to read simulations where simulation points are aggregated along one dimension.
@@ -816,3 +847,7 @@ class prosimu_old(prosimu1d):
     Number_of_Patches = 'tile'
 
     _rewrite_dims = {'Number_of_points': 'location', 'Number_of_patches': 'tile'}
+
+
+# Definition of base prosimu for compatibility purposes.
+prosimu = prosimu1d
