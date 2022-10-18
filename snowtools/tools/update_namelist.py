@@ -10,7 +10,7 @@ import os
 import six
 
 # Snowtools modules
-from snowtools.utils.prosimu import prosimu
+from snowtools.utils.prosimu import prosimu_base
 from snowtools.utils.dates import checkdateafter
 from snowtools.utils.FileException import FileNameException, VarDimensionException
 
@@ -145,7 +145,7 @@ def update_loc(NamelistObject, forcing):
     if NamelistObject["NAM_PGD_GRID"].CGRID == "LONLATVAL":
         check_or_create_block(NamelistObject, "NAM_LONLATVAL")
         # Read coordinates in FORCING file
-        forc = prosimu(forcing)
+        forc = prosimu_base(forcing)
         latitudes1d = forc.read("LAT")
         longitudes1d = forc.read("LON")
         forc.close()
@@ -190,7 +190,7 @@ def update_forcingdates(NamelistObject, datebegin, dateend, forcing="FORCING.nc"
     :type forcing: str, optional
     """
 
-    forc = prosimu(forcing)
+    forc = prosimu_base(forcing)
     timeforc = forc.readtime()
     forc.close()
 
