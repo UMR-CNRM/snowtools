@@ -6,9 +6,7 @@ import unittest
 from datetime import datetime
 import os
 
-import numpy as np
-
-from snowtools.utils.prosimu import prosimu, prosimu_old
+from snowtools.utils.prosimu import prosimu_auto as prosimu, prosimu_old
 from snowtools.DATA import SNOWTOOLS_DATA, TESTBASE
 
 print(TESTBASE)

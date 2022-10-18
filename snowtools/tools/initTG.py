@@ -14,7 +14,7 @@ import numpy as np
 import netCDF4
 
 # snowtools modules
-from snowtools.utils.prosimu import prosimu
+from snowtools.utils.prosimu import prosimu_auto
 from snowtools.utils.resources import get_file_period, save_file_const
 from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask
 from snowtools.utils.FileException import DirFileException
@@ -104,7 +104,7 @@ def generate_clim(list_forcing):
     :param list_forcing: List of forcing files addresses
     :type list_forcing: list of str
     """
-    DataMeteo = prosimu(list_forcing)
+    DataMeteo = prosimu_auto(list_forcing)
     Tair = DataMeteo.read("Tair", keepfillvalue=True)
     spatialdim = DataMeteo.getdimvar("Tair")[1:]
     tclim = np.mean(Tair, axis=0)

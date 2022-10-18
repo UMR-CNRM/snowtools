@@ -16,7 +16,7 @@ import numpy as np
 # For compatibility python 2 / python 3
 # import six
 
-from snowtools.utils.prosimu import prosimu
+from snowtools.utils.prosimu import prosimu_base
 from snowtools.utils.FileException import FileNameException
 
 
@@ -51,7 +51,7 @@ class prep_tomodify(object):
         if not os.path.isfile(prepfile):
             raise FileNameException(prepfile)
 
-        self.prepfile = prosimu(prepfile, openmode="a")
+        self.prepfile = prosimu_base(prepfile, openmode="a")
         self.nsnowlayer = self.prepfile.read(self.dict_prep['nsnowlayer'])[0]
 
     def apply_swe_threshold(self, swe_threshold, closefile=False):

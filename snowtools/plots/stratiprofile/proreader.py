@@ -361,7 +361,7 @@ class proreader(reader):
         # - self._association_names
 
         # Read file
-        from snowtools.utils.prosimu import prosimu
+        from snowtools.utils.prosimu import prosimu_auto as prosimu
 
         with prosimu(self._mainfilename) as ff:
             _variables_raw_list = ff.listvar()

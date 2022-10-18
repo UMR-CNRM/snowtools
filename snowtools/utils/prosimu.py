@@ -4,7 +4,8 @@
 Created on 4 oct. 2012
 
 :Authors:
-    lafaysse
+    - lafaysse
+    - LVG
 
 This module contains the ``prosimu`` class used to read simulation files
 (netCDF format) as produced by SURFEX/Crocus for instance.
@@ -30,7 +31,7 @@ except ImportError:
 DEFAULT_NETCDF_FORMAT = 'NETCDF3_CLASSIC'
 
 
-def prosimu(path, ncformat=DEFAULT_NETCDF_FORMAT, openmode='r', **kwargs):
+def prosimu_auto(path, ncformat=DEFAULT_NETCDF_FORMAT, openmode='r', **kwargs):
     """
     Factory function that guess the correct class to return among
     :cls:`prosimu1d` or :cls:`prosimu2d`.
@@ -491,6 +492,7 @@ class prosimuAbstract(abc.ABC):
         :type keepfillvalue: bool
         :param needmodif: If True, return also the variable object
         :type needmodif: bool
+        :param hasDecile: Deprecated, please do not use.
 
         :returns: Numpy data array containing the data of the selected variable.
                   Note that order of dimensions is the same as in in file except if selectpoint is a list.
@@ -570,9 +572,7 @@ class prosimuAbstract(abc.ABC):
 
 
 class _prosimu1d2d():
-    """
-    Common definitions to :cls:`prosimu1d` and :cls:`prosimu2d`
-    """
+    """ Common definitions to :cls:`prosimu1d` and :cls:`prosimu2d` """
 
     def get_points(self, **kwargs):
         """
@@ -679,6 +679,81 @@ class _prosimu1d2d():
         else:
             return array
 
+    def _extract(self, varname, var, selectpoint=None, removetile=True):
+        """
+        Extract data as a numpy array, possibly selecting point, and removing useless dimensions
+
+        :meta private:
+
+        :param selectpoint: List of points id to select along dimensions of Points_dimensions.
+                            Length of the list is the same as len(Points_dimensions).
+        :type selectpoint: list or None
+        """
+        varname = self._check_varname(varname)
+
+        vardims = self.dataset.variables[varname].dimensions
+        allpointstest = selectpoint is None
+
+        # Special case
+        if len(var.shape) == 0:
+            if allpointstest:
+                return var
+            else:
+                raise ValueError('Could not extract a point. The {} dimension was not found for '
+                                 'variable {}'.format(self.Number_of_points, varname))
+
+        selector = [slice(None, None, None)] * len(vardims)
+
+        # Point extraction
+        if not allpointstest:
+            if not set(self.Points_dimensions).issubset(set(vardims)):
+                raise ValueError('Could not extract a point. The {} dimension(s) was not found '
+                                 'for variable {}'.format(', '.join(self.Points_dimensions), varname))
+            i = 0
+            for dimpoint in self.Points_dimensions:
+                axispoint = vardims.index(dimpoint)
+                selector[axispoint] = selectpoint[i]
+                i += 1
+
+        if removetile:
+            for key in self.Number_of_Tiles:
+                if key in vardims:
+                    tileindex = vardims.index(key)
+                    selector[tileindex] = 0
+
+        return var[tuple(selector)]
+
+
+class prosimu_base(_prosimu1d2d, prosimuAbstract):
+    """
+    Common class that is allowed to read both 1d and 2d simualtions. The selection of points is
+    not allowed in this class.
+    """
+
+    Points_dimensions = []
+
+    def get_points(*args, **kwargs):
+        """
+        :meta: private
+        """
+        raise NotImplementedError('get_points is not implemented in prosimu_base. Please use prosimu1d or prosimu2d classes')
+
+    def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime=True, hasDecile=False):
+        """
+        Extract data as a numpy array, possibly removing useless dimensions. In prosimu_base class,
+        does not allow to select a point !
+
+        :meta private:
+        """
+
+        if selectpoint == -1:
+            selectpoint = None
+        else:
+            raise ValueError('To use the selectpoint option, please use prosimu_auto, prosimu1d or prosimu2d. '
+                             'prosimu_base does not allow for point selection.')
+
+        return self._extract(varname, var, selectpoint=selectpoint, removetile=removetile)
+
 
 class prosimu1d(_prosimu1d2d, prosimuAbstract):
     """
@@ -697,36 +772,10 @@ class prosimu1d(_prosimu1d2d, prosimuAbstract):
 
         if selectpoint == -1:
             selectpoint = None
-        allpointstest = selectpoint is None
+        if selectpoint is not None:
+            selectpoint = [selectpoint]
 
-        varname = self._check_varname(varname)
-        vardims = self.dataset.variables[varname].dimensions
-
-        # Special case
-        if len(var.shape) == 0:
-            if allpointstest:
-                return var
-            else:
-                raise ValueError('Could not extract a point. The {} dimension was not found for '
-                                 'variable {}'.format(self.Number_of_points, varname))
-
-        selector = [slice(None, None, None)] * len(vardims)
-
-        # Point extraction
-        if not allpointstest:
-            if not set(self.Points_dimensions).issubset(set(vardims)):
-                raise ValueError('Could not extract a point. The {} dimension(s) was not found '
-                                 'for variable {}'.format(', '.join(self.Points_dimensions), varname))
-            axispoint = vardims.index(self.Number_of_points)
-            selector[axispoint] = selectpoint
-
-        if removetile:
-            for key in self.Number_of_Tiles:
-                if key in vardims:
-                    tileindex = vardims.index(key)
-                    selector[tileindex] = 0
-
-        return var[tuple(selector)]
+        return self._extract(varname, var, selectpoint=selectpoint, removetile=removetile)
 
 
 class prosimu2d(_prosimu1d2d, prosimuAbstract):
@@ -810,7 +859,6 @@ class prosimu2d(_prosimu1d2d, prosimuAbstract):
             # Do a numpy array, ensure Point dimension is the last one and return
             return np.moveaxis(np.array(outputdata), 0, -1)
 
-
     def _translate_pointnr_to_varind(self, nr):
         """
         Return the tuple of indices along ``Points_dimensions`` dimensions
@@ -853,3 +901,7 @@ class prosimu_old(prosimu1d):
     Number_of_Patches = 'tile'
 
     _rewrite_dims = {'Number_of_points': 'location', 'Number_of_patches': 'tile'}
+
+
+# Definition of base prosimu for compatibility purposes.
+prosimu = prosimu1d
