@@ -243,8 +243,8 @@ class ProPlotterApplication(tk.Frame):
                                        'Nobody knows who is he, but we know that he inspired some characters in the '
                                        'french serie "Le Bureau des Légendes".\n'
                                        '\n'
-                                       'It is also known that he corrects the C++ code of his father when he was nine '
-                                       'years old.')
+                                       'Most of the code was written by Mathieu Fructus.'
+                                       '')
 
 
 class ProPlotterMenu(tk.Menu):
@@ -485,7 +485,7 @@ class ProPlotterChoicesBarPoint:
         """
         self.master.master.controls.plot_mark()
         selector = {}
-        for j in range(i+1):
+        for j in range(i + 1):
             v = self.lvariables[j]
             val = self.lselectors[j].get()
             if val == '':
@@ -512,7 +512,7 @@ class ProPlotterChoicesBarPoint:
         # For the modified selector
 
         # For the following ones, modify the options available
-        for j in range(i+1, len(self.llabels)):
+        for j in range(i + 1, len(self.llabels)):
             v = self.lvariables[j]
             ro = list(remaining_options[v])
             null_val = [''] if self.variables_info[v]['type'] == 'choices' else []
@@ -622,11 +622,11 @@ class ProPlotterMain(tk.Frame):
             self.ax1 = self.fig1.add_subplot(1, 1, 1)
         elif nb_graph == 2:
             self.first_profil = True
-            self.ax1 = self.fig1.add_subplot(1, rat1+rat2, (1, rat1))
+            self.ax1 = self.fig1.add_subplot(1, rat1 + rat2, (1, rat1))
             if same_y:
-                self.ax2 = self.fig1.add_subplot(1, rat1+rat2, (rat1 + 1, rat1 + rat2), sharey=self.ax1)
+                self.ax2 = self.fig1.add_subplot(1, rat1 + rat2, (rat1 + 1, rat1 + rat2), sharey=self.ax1)
             else:
-                self.ax2 = self.fig1.add_subplot(1, rat1+rat2, (rat1 + 1, rat1 + rat2))
+                self.ax2 = self.fig1.add_subplot(1, rat1 + rat2, (rat1 + 1, rat1 + rat2))
             self.fig1.subplots_adjust(left=0.1, bottom=0.08, wspace=0.1)
             self.ax3 = self.ax2.twiny()
 
@@ -866,7 +866,7 @@ class ProPlotterController(abc.ABC):
         v_react = self.master.choices.variables_w.var_react
         text = ' VARS: {}/{}. POINT: {}'.format(v_master, v_react, point)
         self.master.controls.update_text(text)
-        
+
     def check_var_info(self):
         """
         Check if there is a choice for variable(s) to plot
@@ -1499,7 +1499,7 @@ class ProPlotterControllerCompare(ProPlotterController):
 
 def main(*args, **kwargs):
     root = tk.Tk()
-    root.title('GUI PROreader CEN')
+    root.title('GUI PROplotter CEN')
     root.protocol("WM_DELETE_WINDOW", root.quit)
     root.geometry('1100x850')
     app = ProPlotterApplication(*args, master=root, **kwargs)
