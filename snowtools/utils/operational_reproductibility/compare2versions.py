@@ -299,13 +299,13 @@ class ComparisonS2MIntDev(ComparisonNetcdf):
     pathdev = "/scratch/mtool/lafaysse/cache/vortex/s2m"  #: path to development chain
 
     xpid_int = 'OPER'  #: experiment id of operational chain
-    xpid_dev = 'OPER@lafaysse'  #: experiment id of development chain
+    xpid_dev = 'nouveaux_guess@lafaysse'  #: experiment id of development chain
 
     filename = dict(meteo='forcing', pro='pro', prep='prep')  #: filename dict for s2m files
     #: number of members for snow simulation
-    nmembers_snow = dict(alp_allslopes=37, pyr_allslopes=37, cor_allslopes=37, postes=35)
+    nmembers_snow = dict(alp=37, pyr=37, cor=37, postes=35)
     #: number of members for safran meteo simulation
-    nmembers_meteo = dict(alp_allslopes=36, pyr_allslopes=36, cor_allslopes=36, postes=35)
+    nmembers_meteo = dict(alp=36, pyr=36, cor=36, postes=35)
     #: member number dict
     nmembers = dict(meteo=nmembers_meteo, pro=nmembers_snow, prep=nmembers_snow)
 
@@ -320,7 +320,7 @@ class ComparisonS2MIntDev(ComparisonNetcdf):
 
         for block in ["meteo", "pro", "prep"]:
             self.list_members[block] = dict()
-            for conf in ["alp_allslopes", "pyr_allslopes", "cor_allslopes", "postes"]:
+            for conf in ["alp", "pyr", "cor", "postes"]:
                 if nmembers == 1:
                     self.list_members[block][conf] = [35]
                 elif nmembers == 2:
@@ -502,7 +502,7 @@ class ComparisonS2MIntDev(ComparisonNetcdf):
         :calls: :py:meth:`compareallmembers`
         """
         conform = True
-        for domain in ["alp_allslopes", "pyr_allslopes", "cor_allslopes", "postes"]:
+        for domain in ["alp", "pyr", "cor", "postes"]:
             print(domain)
             for cutoff in ["A", "P"]:
                 print(cutoff)
