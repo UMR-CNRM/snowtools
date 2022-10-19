@@ -20,7 +20,7 @@ def setup(t, **kw):
         tag    = 'safran',
         ticket = t,
         nodes  = [
-            Safran(tag='anasaf', ticket=t, **kw, delay_component_errors=True),
+            Safran(tag='anasaf', ticket=t, delay_component_errors=True, on_error='delayed_fail', **kw),
         ],
         options = kw,
     )
@@ -49,7 +49,7 @@ class Safran(OpTask, S2MTaskMixIn):
                         block          = 'observations',
                         suite          = self.conf.xpid,
                         vapp           = 's2m',
-                        geometry       = self.conf.geometry[self.conf.vconf],
+                        geometry       = self.conf.geometry_safran[self.conf.vconf],
                         kind           = 'packedobs',
                         date           = self.conf.rundate.ymdh,
                         begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
@@ -71,7 +71,7 @@ class Safran(OpTask, S2MTaskMixIn):
                         experiment     = self.conf.xpid,
                         vapp           = 's2m',
                         fatal          = False,
-                        geometry       = self.conf.geometry[self.conf.vconf],
+                        geometry       = self.conf.geometry_safran[self.conf.vconf],
                         kind           = 'packedobs',
                         date           = self.conf.rundate.ymdh,
                         begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
@@ -90,7 +90,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     tb01wi = toolbox.input(
                         role             = 'Observations',
                         vapp             = 's2m',
-                        geometry         = self.conf.geometry[self.conf.vconf],
+                        geometry         = self.conf.geometry_safran[self.conf.vconf],
                         kind             = 'packedobs',
                         date             = self.conf.rundate.ymdh,
                         begindate        = datebegin.ymd6h,
@@ -110,7 +110,7 @@ class Safran(OpTask, S2MTaskMixIn):
                         block          = 'observations',
                         experiment     = self.conf.xpid,
                         vapp           = 's2m',
-                        geometry       = self.conf.vconf,
+                        geometry       = self.conf.geometry_safran[self.conf.vconf],
                         kind           = 'packedobs',
                         date           = self.conf.rundate.ymdh,
                         begindate      = datebegin.ymd6h,
@@ -244,21 +244,21 @@ class Safran(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb06 =', tb06)
                 print()
 
-                # WARNING : Les ressoucres rsclim et icrccm ne servent pas dans le cas nominal mais
-                # consituent un mode secours pour SAFRAN si il rencontre un problème pour faire son guess
+                # WARNING : Le ressoucre rsclim  sert pas dans le cas nominal mais
+                # constitue un mode secours pour SAFRAN si il rencontre un problème pour faire son guess
                 # A partir des fichiers P
-                self.sh.title('Toolbox input rsclim')
-                tb09 = toolbox.input(
-                    role            = 'Clim',
-                    genv            = self.conf.cycle,
-                    gvar            = '[kind]',
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                    kind            = 'rsclim',
-                    model           = self.conf.model,
-                    local           = 'rsclim.don',
-                )
-                print(t.prompt, 'tb09 =', tb09)
-                print()
+#                self.sh.title('Toolbox input rsclim')
+#                tb09 = toolbox.input(
+#                    role            = 'Clim',
+#                    genv            = self.conf.cycle,
+#                    gvar            = '[kind]',
+#                    geometry        = self.conf.geometry[self.conf.vconf],
+#                    kind            = 'rsclim',
+#                    model           = self.conf.model,
+#                    local           = 'rsclim.don',
+#                )
+#                print(t.prompt, 'tb09 =', tb09)
+#                print()
 
                 self.sh.title('Toolbox input icrccm')
                 tb10 = toolbox.input(
@@ -409,7 +409,7 @@ class Safran(OpTask, S2MTaskMixIn):
                         geometry        = self.conf.geometry[self.conf.vconf],
                         cutoff         = 'assimilation',
                         date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d))
-										  for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
+                            for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
                         cumul          = self.conf.cumul,
                         nativefmt      = 'ascii',
                         kind           = 'guess',

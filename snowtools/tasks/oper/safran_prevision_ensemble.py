@@ -19,7 +19,7 @@ def setup(t, **kw):
         tag    = 'safran',
         ticket = t,
         nodes  = [
-            Safran(tag='prvsaf', ticket=t, **kw, delay_component_errors=True),
+            Safran(tag='prvsaf', ticket=t, delay_component_errors=True, on_error='delayed_fail', **kw),
         ],
         options = kw,
     )
@@ -192,21 +192,21 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb05 =', tb05)
                 print()
 
-                # WARNING : Les ressoucres rsclim et icrccm ne servent pas dans le cas nominal mais
-                # consituent un mode secours pour SAFRAN si il rencontre un problème pour faire son guess
+                # WARNING : Les ressoucre rsclim ne sert pas dans le cas nominal mais
+                # constitue un mode secours pour SAFRAN si il rencontre un problème pour faire son guess
                 # A partir des fichiers P
-                self.sh.title('Toolbox input rsclim')
-                tb07 = toolbox.input(
-                    role            = 'Clim',
-                    genv            = self.conf.cycle,
-                    gvar            = '[kind]',
-                    kind            = 'rsclim',
-                    model           = self.conf.model,
-                    local           = 'rsclim.don',
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                )
-                print(t.prompt, 'tb07 =', tb07)
-                print()
+#                self.sh.title('Toolbox input rsclim')
+#                tb07 = toolbox.input(
+#                    role            = 'Clim',
+#                    genv            = self.conf.cycle,
+#                    gvar            = '[kind]',
+#                    kind            = 'rsclim',
+#                    model           = self.conf.model,
+#                    local           = 'rsclim.don',
+#                    geometry        = self.conf.geometry[self.conf.vconf],
+#                )
+#                print(t.prompt, 'tb07 =', tb07)
+#                print()
 
                 self.sh.title('Toolbox input icrccm')
                 tb08 = toolbox.input(
@@ -630,8 +630,6 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb33 =', tb28)
                 print()
 
-            print('==================================================================================================')
-            print('INFO :The execution went well, do not take into account the following error')
-            print('==================================================================================================')
-            from vortex.tools.systems import ExecutionError
-            raise ExecutionError('')
+#            print('==================================================================================================')
+#            print('==================================================================================================')
+#            raise Exception('INFO :The execution went well, do not take into account the following error')
