@@ -118,6 +118,49 @@ class _CrocO_Task(Task, S2MTaskMixIn):
         print(t.prompt, 'tb04 =', tb04)
         print()
 
+    def get_forcings(self):
+        t = self.ticket
+        # ############## FETCH FORCINGS #######################################
+        # we fetch forcing files into the members directories using the remainder function %
+        # since we usually have more members than forcing files, we loop over forcing files
+        date_begin_forc, date_end_forc, _, _ = \
+            get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
+        date_begin_forc = date_begin_forc[0]
+        date_end_forc = date_end_forc[0]  # replace one-item list by item.
+        forcExp = self.conf.forcingid
+        meteo_members = {str(m): ((m - 1) % int(self.conf.nforcing)) + 1 for m in self.conf.members}
+
+        if hasattr(self.conf, 'synth'):
+            if self.conf.synth is not None:
+                # case when the synth member comes from a larger openloop (ex 160) than current experiment (ex 40)
+                print(self.conf.synth)
+                print(self.conf.nmembers)
+                if int(self.conf.synth) <= int(self.conf.nmembers):
+                    synth = str(int(self.conf.synth))
+                    meteo_members[synth] = self.conf.meteo_draw
+        local_names = {str(m): 'mb{0:04d}'.format(m) + '/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
+                       for m in self.conf.members}
+        self.sh.title('Toolbox input tb01 (forcings)')
+        tb01 = toolbox.input(
+            role='Forcing',
+            realmember=self.conf.members,
+            local=dict(realmember=local_names),
+            vapp=self.conf.meteo,
+            experiment=forcExp,
+            member=dict(realmember=meteo_members),
+            geometry=self.conf.geometry,
+            datebegin=date_begin_forc,
+            dateend=date_end_forc,
+            nativefmt='netcdf',
+            kind='MeteorologicalForcing',
+            model='safran',
+            namespace='vortex.multi.fr',
+            namebuild='flat@cen',  # ???
+            block='meteo'
+        ),
+        print(t.prompt, 'tb01 =', tb01)
+        print()
+
 
 class CrocO_In(_CrocO_Task):
     """
@@ -126,50 +169,9 @@ class CrocO_In(_CrocO_Task):
 
     def process(self):
         t = self.ticket
-        if 'early-fetch' in self.steps:
-            # ############## FETCH FORCINGS #######################################
-            # we fetch forcing files into the members directories using the remainder function %
-            # since we usually have more members than forcing files, we loop over forcing files
-            date_begin_forc, date_end_forc, _, _ = \
-                get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
-            date_begin_forc = date_begin_forc[0]
-            date_end_forc = date_end_forc[0]  # replace one-item list by item.
-            forcExp = self.conf.forcingid
-            meteo_members = {str(m): ((m - 1) % int(self.conf.nforcing)) + 1 for m in self.conf.members}
-
-            if hasattr(self.conf, 'synth'):
-                if self.conf.synth is not None:
-                    # case when the synth member comes from a larger openloop (ex 160) than current experiment (ex 40)
-                    print(self.conf.synth)
-                    print(self.conf.nmembers)
-                    if int(self.conf.synth) <= int(self.conf.nmembers):
-                        synth = str(int(self.conf.synth))
-                        meteo_members[synth] = self.conf.meteo_draw
-            local_names = {str(m): 'mb{0:04d}'.format(m) + '/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
-                           for m in self.conf.members}
-            self.sh.title('Toolbox input tb01 (forcings)')
-            tb01 = toolbox.input(
-                role           = 'Forcing',
-                realmember     = self.conf.members,
-                local          = dict(realmember= local_names),
-                vapp           = self.conf.meteo,
-                experiment     = forcExp,
-                member         = dict(realmember= meteo_members),
-                geometry       = self.conf.geometry,
-                datebegin      = date_begin_forc,
-                dateend        = date_end_forc,
-                nativefmt      = 'netcdf',
-                kind           = 'MeteorologicalForcing',
-                model          = 'safran',
-                namespace      = 'vortex.multi.fr',
-                namebuild      = 'flat@cen',  # ???
-                block          = 'meteo'
-            ),
-            print(t.prompt, 'tb01 =', tb01)
-            print()
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
-
+            self.get_forcings()
             self.sh.title('Toolbox input tb02 (namelist)')
             tb02 = toolbox.input(
                 role            = 'Nam_surfex',

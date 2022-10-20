@@ -86,6 +86,7 @@ class Offline_Task(_CrocO_Task):
         if 'fetch' in self.steps:
 
             self.get_common_fetch() # get the namelist
+            self.get_forcings() # the early-fetch is done in crocO_common
 
             # ############# FETCH PREPS : either 1 spinup (firstloop=True,
             # could be moved to early-fetch) or a list of PREPS ##########
@@ -148,9 +149,10 @@ class Offline_Task(_CrocO_Task):
                                      self.conf.duration)  # each one of these items has only one item
             date_begin_forc = date_begin_forc[0]
             date_end_forc = date_end_forc[0]  # replace one-item list by item.
-            firstforcing = '../../../common/mb{0:04d}'.format(self.conf.membersnode[0]) +\
+            firstforcing = 'mb{0:04d}'.format(self.conf.membersnode[0]) +\
                            '/FORCING_' + date_begin_forc.strftime("%Y%m%d%H") +\
                            "_" + date_end_forc.strftime("%Y%m%d%H") + ".nc"
+
             self.sh.title('Toolbox algo tb09a (preprocess)')
 
             tb09a = toolbox.algo(
