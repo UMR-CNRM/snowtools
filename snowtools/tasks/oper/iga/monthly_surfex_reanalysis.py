@@ -53,7 +53,7 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, OpTask):
                     local          = 'PREP.nc',
                     block          = 'prep',
                     experiment     = self.conf.xpid,
-                    geometry       = self.conf.geometry_surfex[self.conf.vconf],
+                    geometry       = self.conf.geometry,
                     datevalidity   = datebegin,
                     date           = rundate_prep,
                     member         = 35,
@@ -75,22 +75,22 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, OpTask):
                     fatal = i >= len(alternate_rundate_prep) - 1
 
                     tb01wi = toolbox.input(
-                        alternate='SnowpackInitForMonthlyReanalysis',
-                        local='PREP.nc',
-                        block='prep',
-                        experiment=self.conf.xpid,
-                        geometry=self.conf.geometry_surfex[self.conf.vconf],
-                        datevalidity=datebegin,
-                        date=alternate_prep[0],
-                        member=35,
-                        namespace='bdpe.archive.fr',
-                        bdpeid=self.conf.num_bdpe_initrea[self.conf.xpid],
-                        intent='inout',
-                        nativefmt='netcdf',
-                        kind='PREP',
-                        model='surfex',
-                        fatal=fatal,
-                        cutoff='assimilation'
+                        alternate      = 'SnowpackInitForMonthlyReanalysis',
+                        local          = 'PREP.nc',
+                        block          = 'prep',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        datevalidity   = datebegin,
+                        date           = alternate_prep[0],
+                        member         = 35,
+                        namespace      = 'bdpe.archive.fr',
+                        bdpeid         = self.conf.num_bdpe_initrea[self.conf.xpid],
+                        intent         = 'inout',
+                        nativefmt      = 'netcdf',
+                        kind           = 'PREP',
+                        model          = 'surfex',
+                        fatal          = fatal,
+                        cutoff         = 'assimilation'
                     ),
                     print((t.prompt, 'tb01wi =', tb01wi))
                     print()
