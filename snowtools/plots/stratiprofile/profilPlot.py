@@ -63,7 +63,7 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
        import matplotlib.pyplot as plt
        from snowtools.plots.EvoProfilPlot import plot_profil
 
-       with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/PRO_gdesRousses_2019-2020.nc') as ff:
+       with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/PRO_gdesRousses_2019-2020.nc') as ff:
            dz = ff.read('SNOWDZ', selectpoint=point, fill2zero=True)
            var = ff.read('SNOWTYPE', selectpoint=point)
 
@@ -129,14 +129,14 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
         vmin = -0.5
         vmax = 14.5
     elif colormap == 'echelle_log':
-        cmap = cm.gray_r.copy()
+        cmap = cm.gray_r
         vmin = max(minval, 0.0000000001)
         vmax = min(max(0.000000001, maxval), 1)
         norm = colors.LogNorm(vmin=vmin, vmax=vmax)    
         cmap.set_under('#fff2fd')
         extend = 'min'
     elif colormap == 'echelle_log_sahara':
-        cmap = cm.gist_heat_r.copy()
+        cmap = cm.gist_heat_r
         vmin = max(minval, 0.0000000001)
         vmax = min(max(0.000000001, maxval), 1)
         value = value.clip(vmin/2, vmax)
@@ -183,7 +183,7 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
         norm = colors.Normalize(vmin=vmin, vmax=vmax)
         value = np.clip(value, vmin, vmax)
         #value[value < vmin if ~np.isnan(vmin) else False] = vmin
-        cmap = cm.get_cmap('RdBu_r').copy()
+        cmap = cm.get_cmap('RdBu_r')
         cmap.set_over((0.32, 0.0, 0.097))
         extend = 'max'
     elif colormap == 'lwc':
@@ -193,7 +193,7 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
         #value[value > vmax if ~np.isnan(vmax) else False] = vmax
         value = np.clip(value, vmin, vmax)
         value[value == 0] = -1
-        cmap = cm.get_cmap('viridis').copy()
+        cmap = cm.get_cmap('viridis')
         cmap.set_under('#fff2fd')
         extend = 'min'
     else:
@@ -238,9 +238,11 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
         ax.set_ylim(0, ylimit)
 
 
+''' NOT USEFUL ?? TO BE CHECKED THEN ERASED
 def plot_grains1D(ax, dz, value, legend=None, cbar_show=True):
     """
     Trace le profil de type de grains selon la hauteur
+    
     """
 
     bottom_y = np.cumsum(dz).ravel()
@@ -279,12 +281,15 @@ def plot_grains1D(ax, dz, value, legend=None, cbar_show=True):
         cbar.set_ticks(np.arange(np.shape(labels)[0]))
         cbar.ax.set_yticklabels(labels)
     if legend:
-        ax.set_xlabel(legend)
+        ax.set_xlabel(legend)'''
 
 
 def saison1d(ax, value, list_legend, legend=None, color='b.', title=None, ylimit=None):
     """
     Trace la variable demandee en fonction du temps
+    
+    Plot a 1d variable of interest for the snowpack (total SWE, albedo, etc...) along time. 
+    
     :param ax: figure axis
     :type ax: matplotlib axis
     :param value: Value to be plot
@@ -328,6 +333,10 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
                hauteur=None, color='b', cbar_show=False, legend=None, **kwargs):
     """
     Trace le profil de la variable avec type_de_grain et résistance si présent. Ce profil est effectué à une date fixée.
+    
+    Plot the vertical profile of the snowpack of one variable. If grain type and RAM resistance are given,
+    these infos are added in the plot. The plot is made for a specific date
+    
     :param axe: figure axis
     :type axe: matplotlib axis
     :param axe2: figure axis (there are two axis on same plot: one for the variable, the other for snowgrain and RAM)
@@ -448,6 +457,12 @@ def heightplot(ax, value, value_ep, list_legend, legend=None, color='b', directi
      Trace la variable demandée au niveau de la hauteur du manteau neigeux. Cette hauteur est définie par une direction
      (direction "up" signifie hauteur mesurée depuis la terre, direction "down" signifie hauteur mesurée depuis le point
      le plus haut du manteau neigeux).
+     
+     Plot the variable at a specific place in the snowpack. It is given with a height (in centimeter) and a direction.
+     direction='up' means from ground to top of the snowpack
+     direction='down' means from top of the snowpack to ground
+     For example, if you want to plot 5 cm under the snowpack surface, you choose: height_cut=5 and direction_cut='down'
+     
      :param ax: figure axis
      :type ax: matplotlib axis
      :param value: Value to be plot

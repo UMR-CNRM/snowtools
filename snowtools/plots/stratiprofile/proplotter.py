@@ -12,8 +12,7 @@ parser = argparse.ArgumentParser(
         prog='proplotter',
         #       0         1         2         3         4         5         6         7         8
         description=textwrap.dedent("""\
-                Proplotter is a tool to plot with (or without) a beautiful GUI by Mathieu
-                Fructus.
+                Proplotter is a tool to plot with (or without) the Graphical User Interface
         """),
         # TODO: Full description of different use cases  <07-09-21, Léo Viallon-Galinier> #
         epilog=textwrap.dedent("""\

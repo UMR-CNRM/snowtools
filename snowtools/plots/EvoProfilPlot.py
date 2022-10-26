@@ -64,7 +64,7 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
     .. figure:: /images/plots-strati-1.png
        :align: center
 
-       Example of plots that can be obtained with this funcnction (example of the code snippet provided).
+       Example of plots that can be obtained with this function (example of the code snippet provided).
 
     """
 

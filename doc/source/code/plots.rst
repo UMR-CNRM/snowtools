@@ -11,14 +11,21 @@ A lot of tools for plotting are available in the ``plots`` folder. It may not di
 .. todo::
 
    It would be interesting to have image examples with code snippets. It is possible to document it directly in code files.
-
+   
 Script for plotting Crocus output (GUI and CLI)
 -----------------------------------------------
 
-A script, called ``proReader`` allow to easily and quickly plot Crocus outputs (PRO files). It have a graphical user interface to browse and plot simulation data and all graphs could also be saved directly with command line arguments and then used without any graphical interface. It allows to plot stratigraphies, and functions for plotting stratigraphy can also been used independently to plot snow stratigraphy in your own graphs.
+A new script, called ``proplotter`` allow to easily and quickly plot Crocus outputs (PRO files). It have a graphical user interface to browse and plot simulation data and all graphs could also be saved directly with command line arguments and then used without any graphical interface. It allows to plot stratigraphies, and functions for plotting stratigraphy can also been used independently to plot snow stratigraphy in your own graphs.
 
 .. toctree::
    :maxdepth: 2
+
+   The GUI/CLI script stratiprofile <plots-proplotter>
+
+(deprecated): An old script, called ``proReader`` was doing the same thing. It will stay in snowtools for around one year in order let user change to proplotter.
+
+.. toctree::
+   :maxdepth: 1
 
    The GUI/CLI script ProReader <plots-proreader>
 
