@@ -187,8 +187,11 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
         cmap.set_over((0.32, 0.0, 0.097))
         extend = 'max'
     elif colormap == 'lwc':
+        if value_max is None:
+            vmax = 35
+        else:
+            vmax = maxval
         vmin = 0
-        vmax = 35 if vmax is None else vmax
         norm = colors.Normalize(vmin=vmin, vmax=vmax)
         #value[value > vmax if ~np.isnan(vmax) else False] = vmax
         value = np.clip(value, vmin, vmax)
