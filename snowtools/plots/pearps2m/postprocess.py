@@ -107,7 +107,8 @@ class config(object):
     xpid = "oper"  #: Operational chain
     alternate_xpid = ["OPER@lafaysse"]  #: Alternative experiment id
     # alternate_xpid = ["oper"]
-    list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes'] #: List of geometries
+    list_geometry = ['alp', 'pyr', 'cor', 'jur', 'mac', 'vog', 'postes']
+    # list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes'] #: List of geometries
     # list_geometry = ['alp', 'pyr', 'cor', 'postes']
     #: Alternative list of geometries (corresponding to alternative experiment ids)
     # alternate_list_geometry = [['alp', 'pyr', 'cor', 'postes']]
@@ -1210,14 +1211,14 @@ if __name__ == "__main__":
 
     c = config()
     os.chdir(c.diroutput)
-    if c.dev:
-        S2ME = FutureS2MExtractor(c)
-    elif c.dble:
-        S2ME = FutureS2MExtractor(c)
-    elif c.reforecast:
-        S2ME = FutureS2MExtractor(c)
-    else:
-        S2ME = S2MExtractor(c)
+    # if c.dev:
+    #     S2ME = FutureS2MExtractor(c)
+    # elif c.dble:
+    #     S2ME = FutureS2MExtractor(c)
+    # elif c.reforecast:
+    #     S2ME = FutureS2MExtractor(c)
+    # else:
+    S2ME = FutureS2MExtractor(c)
     snow_members, snow_xpid = S2ME.get_snow()
 
 

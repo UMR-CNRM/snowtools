@@ -600,7 +600,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 dateend        = self.conf.dateend,
                 dateinit       = Date(self.conf.datespinup),
                 threshold      = self.conf.threshold,
-                daily          = self.conf.dailyprep
+                daily          = self.conf.dailyprep,
+                drhookprof     = self.conf.drhook,
             )
             print(t.prompt, 'tb11 =', tb11)
             print()
@@ -871,3 +872,17 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 ),
                 print(t.prompt, 'tb19 =', tb19)
                 print()
+
+            self.sh.title('Toolbox output tb20 (profiling)')
+            tb20 = toolbox.output(
+                kind       = "drhook",
+                mpi        = "[glob:n]",
+                task       = self.tag,
+                block      = "profiling",
+                experiment = self.conf.xpid,
+                model      = 'surfex',
+                local      = "drhook.prof.{glob:n:\d+}",
+                format     = "ascii",
+            ),
+            print(t.prompt, 'tb20 =', tb20)
+            print()

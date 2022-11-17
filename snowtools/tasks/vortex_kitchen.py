@@ -459,6 +459,8 @@ class Vortex_conf_file(object):
         if hasattr(self.options, 'geoin'):
             self.set_field("DEFAULT", 'geoin', self.options.geoin)
 
+        self.set_field("DEFAULT", 'drhook', self.options.drhook)
+
     def safran_variables(self):
 
         self.set_field("DEFAULT", 'cumul', 6)
@@ -494,7 +496,13 @@ class Vortex_conf_file(object):
         from snowtools.tools.read_conf import read_conf
         import bisect
 
-        self.set_field('DEFAULT', 'nforcing', self.options.nforcing)
+        # Default configuration if not prescribed
+        default_attr=dict(
+            # PGD xpid can be either prescribed in the conf file or taken by default to a reference spinup
+            spinup_xpid = 'spinup@' + os.getlogin(),
+            obsxpid = 'obs@' + os.getlogin(),
+            openloop = False
+        )
 
         # ########### READ THE USER-PROVIDED conf file ##########################
         # -> in order to append datefin to assimdates and remove the exceding dates.
@@ -504,11 +512,14 @@ class Vortex_conf_file(object):
 
         confObj = read_conf(self.options.croco)
 
-        # PGD xpid can be either prescribed in the conf file or taken by default to a reference spinup
-        if hasattr(confObj, 'spinup_xpid'):
-            self.set_field('DEFAULT', 'spinup_xpid', confObj.spinup_xpid)
-        else:
-            self.set_field('DEFAULT', 'spinup_xpid', 'spinup@' + os.getlogin())
+        # Attributes directly transfered to vortex conf file from s2m options or config file or default values
+        for direct_attr in ['sensor', 'scope', 'spinup_xpid', 'obsxpid', 'openloop', 'nforcing']:
+            if hasattr(self.options, direct_attr):
+                self.set_field('DEFAULT', direct_attr, getattr(self.options, direct_attr))
+            elif hasattr(confObj, direct_attr):
+                self.set_field('DEFAULT', direct_attr, getattr(confObj, direct_attr))
+            elif direct_attr in default_attr.keys():
+                self.set_field('DEFAULT', direct_attr, default_attr[direct_attr])
 
         if type(confObj.assimdates) is list:
             # case for only 1 assimilation date --> confObj.assimdates is list
@@ -586,16 +597,6 @@ class Vortex_conf_file(object):
             members_id = escroc.members
 
         self.set_field('DEFAULT', 'members_id', list(members_id))
-
-        self.set_field('DEFAULT', 'openloop', self.options.openloop)
-
-        if hasattr(self.options, 'sensor'):
-            self.set_field('DEFAULT', 'sensor', self.options.sensor)
-
-        if hasattr(self.options, 'obsxpid'):
-            self.set_field('DEFAULT', 'obsxpid', self.options.obsxpid)
-        else:
-            self.set_field('DEFAULT', 'obsxpid', 'obs@' + os.getlogin())
 
         # new entry for Loopfamily on offline parallel tasks:
         self.set_field('DEFAULT', 'offlinetasks', list(range(1, self.options.nnodes + 1)))

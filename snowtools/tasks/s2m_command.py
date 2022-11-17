@@ -27,7 +27,8 @@ from snowtools.utils.FileException import UndefinedDirectoryException
 
 usage = "usage: s2m -b begin_date -e end_date -f forcing [-m forcingmodel] [-o path_output] [-w workdir] " \
         "[-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] " \
-        "[-c nb_classes_aspects] [-L Lower-altitude] [-U Upper-altitude] [-s surfex_exe_directory]"
+        "[-c nb_classes_aspects] [-L Lower-altitude] [-U Upper-altitude] [-s surfex_exe_directory]" \
+        "[--lptr]"
 
 
 class Surfex_command(_S2M_command):
@@ -309,6 +310,10 @@ class Surfex_command(_S2M_command):
         parser.add_option("--debug",
                           action="store_true", dest="debug", default=False,
                           help="Debug task with files available on server")
+
+        parser.add_option("--lptr",
+                          action="store_true", dest="drhook", default=False,
+                          help="Profiling MPI task with DRHOOK")
 
         (options, args) = parser.parse_args(arguments)
 

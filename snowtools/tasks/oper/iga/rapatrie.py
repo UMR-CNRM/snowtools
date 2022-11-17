@@ -22,7 +22,7 @@ def setup(t, **kw):
         tag    = 'pearp2safran',
         ticket = t,
         nodes  = [
-            Reanalyses(tag='reanalyses', ticket=t, **kw),
+            Reanalyses(tag='reanalyses', delay_component_errors=True, on_error='delayed_fail', ticket=t, **kw),
         ],
         options = kw,
     )
@@ -142,11 +142,7 @@ class Reanalyses(OpTask, S2MTaskMixIn):
                 print(t.prompt, 'tb02b =', tb02b)
                 print()
 
-            #TODO :prévoir de regénérer les éventuels guess manquants
-
-        if 'late-backup' in self.steps:
-
-            with op.OutputReportContext(self, t):
+                #TODO :prévoir de regénérer les éventuels guess manquants
 
                 # Mise à jour de l'archive,
                 # TODO :
