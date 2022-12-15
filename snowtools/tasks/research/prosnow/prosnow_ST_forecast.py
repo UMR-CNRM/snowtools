@@ -325,7 +325,8 @@ class Prosnow_ST_Forecast(Task, S2MTaskMixIn):
                 datebegin                  = my_datebegin,
                 dateend                    = my_dateend,
                 ntasks                     = self.conf.ntasks,
-                geometry                   = [u'allslopes'],
+                geometry_in                = [u'allslopes'],
+                geometry_out               = 'allslopes',
                 daily                      = True,
                 dailynamelist              = ["OPTIONS1.nam", "OPTIONS2.nam", "OPTIONS3.nam", "OPTIONS4.nam"],
             )

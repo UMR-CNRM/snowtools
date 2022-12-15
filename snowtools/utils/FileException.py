@@ -25,6 +25,25 @@ class DirNameException(Exception):
         return tuple(red)
 
 
+class UndefinedDirectoryException(Exception):
+    """
+    Exception for a non-defined directory
+
+    :param path: the directory conerned
+    """
+
+    def __init__(self, path):
+        self.path = path
+
+    def __str__(self):
+        return "Undefined directory : " + self.path
+
+    def __reduce__(self):
+        red = list(super(UndefinedDirectoryException, self).__reduce__())
+        red[1] = tuple([self.path])  # Les arguments qui seront passes a __init__
+        return tuple(red)
+
+
 class DirFileException(Exception):
     """
     Exception when a file is provided instead of a directory
@@ -74,7 +93,11 @@ class FileOpenException(Exception):
         self.path = path
 
     def __str__(self):
-        return "Can not open the file : " + self.path
+        if type(self.path) is str:
+            return "Can not open the file : " + self.path
+        else:
+            return "self.path is not a string:" + str(self.path)
+
 
     def __reduce__(self):
         red = list(super(FileOpenException, self).__reduce__())
@@ -137,6 +160,25 @@ class TimeException(Exception):
 
     def __reduce__(self):
         red = list(super(TimeException, self).__reduce__())
+        red[1] = tuple([self.path])  # Les arguments qui seront passes a __init__
+        return tuple(red)
+
+
+class TimeUnitsException(Exception):
+    """
+    Exception when time variable is not suitable
+
+    :param path: the file conerned
+    """
+
+    def __init__(self, path):
+        self.path = path
+
+    def __str__(self):
+        return "No units attribute for time variable in file : " + self.path
+
+    def __reduce__(self):
+        red = list(super(TimeUnitsException, self).__reduce__())
         red[1] = tuple([self.path])  # Les arguments qui seront passes a __init__
         return tuple(red)
 

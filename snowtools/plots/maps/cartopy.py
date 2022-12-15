@@ -29,11 +29,14 @@ create a Map instance for the Alps. ``Map_alpes`` can take optional kwargs.
     m = Map_alpes(kwargs)
     m = Map_alpes(geofeatures=True)
 
-with ``geofeatures = True``, borders, rivers and lakes are drawn on the map, the land and ocean polygons are colored.
-at the first use cartopy tries to download the necessary data on the fly and saves them.
-If this doesn't succeed for some reason (proxy or certificate issues for example), you can manually download the
-shapefiles from NaturalEarth https://www.naturalearthdata.com/ and store them in cartopys 'data_dir'.
-To see where cartopy will look for the data do :
+with ``geofeatures = True``, borders, rivers and lakes are drawn on
+the map, the land and ocean polygons are colored.
+At the first use cartopy tries to download the necessary data
+on the fly and saves them.
+If this doesn't succeed for some reason (proxy or certificate
+issues for example), you can manually download the
+shapefiles from NaturalEarth https://www.naturalearthdata.com/ and store them
+in cartopys 'data_dir'. To see where cartopy will look for the data do :
 
 .. code-block:: python
 
@@ -67,29 +70,112 @@ import cartopy.io.shapereader as shpreader
 import cartopy.feature
 from pyproj import CRS
 from cartopy import config
-from shapely.geometry import Point
+# from shapely.geometry import Point
 
 from snowtools.plots.abstracts.figures import Mplfigure
 from snowtools.utils.infomassifs import infomassifs
-from snowtools.DATA import SNOWTOOLS_DIR
+from snowtools.DATA import SNOWTOOLS_DIR, CARTOPY_DIR, LUSTRE_NOSAVE_USER_DIR
 
 # Tell cartopy where to find Natural Earth features
 # config['data_dir'] = os.path.join(SNOWTOOLS_DIR, 'CartopyData')
-config['data_dir'] = os.path.join('/rd/cenfic2/manto/radanovicss', 'CartopyData')
-# config['data_dir'] = os.path.join('/cnrm/cen/users/NO_SAVE/radanovicss', 'CartopyData')  # for sxcen
+if os.path.isdir(CARTOPY_DIR):
+    config['data_dir'] = CARTOPY_DIR
+# config['data_dir'] = os.path.join(LUSTRE_NOSAVE_USER_DIR, 'CartopyData')  # for sxcen
 # until proper git annex solution
 
 
-class MyCRS(ccrs.CRS):
+# @echecker.disabled_if_unavailable
+def getshapes():
     """
-    dummy class in order to be able to create an ccrs.CRS instance from a proj4/fiona.crs dictionary
+    read shapefile and return projection and records
+
+    :return: shapefile, pprojcrs, shpProj, records
+    """
+    shapefile_path = os.path.join(SNOWTOOLS_DIR, 'DATA')
+    filename = 'massifs_Lbrt93_2019.shp'
+    shapefile = shpreader.Reader(os.path.join(shapefile_path, filename))
+    # Informations sur la projection
+    projfile = 'massifs_Lbrt93_2019.prj'
+    with open(os.path.join(shapefile_path, projfile), 'r') as prj_file:
+        prj_txt = prj_file.read()
+        pprojcrs = CRS.from_wkt(prj_txt)
+
+    # Projection du shapefile
+    shp_proj = pprojcrs.to_dict()
+
+    # géométries
+    # records is a generator object. Each record contains a geometry, its attributes and bounds
+    records = [record for record in shapefile.records()]
+    return shapefile, pprojcrs, shp_proj, records
+
+
+def getLonLatMassif():
+    """
+    get center coordinates of the Massifs
+
+    :return: dict with key = Massif Number, value = (lon, lat)
+    """
+    in_ma = infomassifs()
+    return infomassifs.getAllMassifLatLon(in_ma)
+
+
+def convertunit(*args, **kwargs):
+    """
+    convert units vor all variables in :py:attr:`args`
+
+    :param args: variables to be scaled
+    :param kwargs: 'convert_unit': scaling factor to be used
+    :return: list of converted variables
+    """
+    listvar = []
+    for variablein in args:
+        if 'convert_unit' in kwargs.keys():
+            variable = variablein[:] * kwargs['convert_unit']
+        else:
+            variable = variablein[:]
+        listvar.append(variable)
+    return listvar
+
+
+def getformatstring(**kwargs):
+    """
+    returns format string
+    :param kwargs: 'format': containing the format string
+    :return: value from 'format' or '%i'
+    """
+    if 'format' in kwargs.keys():
+        return kwargs['format']
+    return '%i'
+
+
+def getTextColor(var, **kwargs):
+    """
+    determine text color given the value of the variable to plot.
+
+    :param var: value of the variable
+    :param kwargs: 'seuiltext': threshold above which text color should be white.
+    :return: color, default is 'black'
+    :rtype: str
+    """
+    color = 'black'
+    if 'seuiltext' in kwargs.keys():
+        if var >= kwargs['seuiltext']:
+            color = 'white'
+    return color
+
+
+class MyCRS(ccrs.CRS):
+    """ dummy class in order to be able to create an ccrs.CRS instance from a proj4/fiona.crs dictionary
     If the 'proj' is 'lcc' in projdict, an LambertConformal projection is initialized.
     """
+
     def __init__(self, projdict, globe):
         if projdict['proj'] == 'lcc':
-            ccrs.LambertConformal(central_longitude=projdict['lon_0'], central_latitude=projdict['lat_0'],
+            ccrs.LambertConformal(central_longitude=projdict['lon_0'],
+                                  central_latitude=projdict['lat_0'],
                                   false_easting=projdict['x_0'], false_northing=projdict['y_0'],
-                                  standard_parallels=(projdict['lat_1'], projdict['lat_2']), globe=globe)
+                                  standard_parallels=(projdict['lat_1'],
+                                                      projdict['lat_2']), globe=globe)
         else:
             pass
 
@@ -107,16 +193,18 @@ class _Map_massifs(Mplfigure):
         # print(kw)
         # Get massif shapes
         self.titlepad = 15
-        self.shapefile, self.pprojcrs, self.shpProj, self.records = self.getshapes()
+        self.shapefile, self.pprojcrs, self.shp_proj, self.records = getshapes()
         # self.projection = MyCRS(self.shpProj, ccrs.Globe(ellipse='clrk80'))
-        if self.shpProj['proj'] == 'lcc':
-            self.projection = ccrs.LambertConformal(central_longitude=self.shpProj['lon_0'],
-                                                    central_latitude=self.shpProj['lat_0'],
-                                                    false_easting=self.shpProj['x_0'],
-                                                    false_northing=self.shpProj['y_0'],
-                                                    standard_parallels=(self.shpProj['lat_1'], self.shpProj['lat_2']))
+        if self.shp_proj['proj'] == 'lcc':
+            self.projection = ccrs.LambertConformal(central_longitude=self.shp_proj['lon_0'],
+                                                    central_latitude=self.shp_proj['lat_0'],
+                                                    false_easting=self.shp_proj['x_0'],
+                                                    false_northing=self.shp_proj['y_0'],
+                                                    standard_parallels=(self.shp_proj['lat_1'],
+                                                                        self.shp_proj['lat_2']))
         else:
-            raise NotImplementedError('only LambertConformal projection is implemented for the massif shapes')
+            raise NotImplementedError('only LambertConformal projection '
+                                      'is implemented for the massif shapes')
         self.fig = self.openfigure()
         if 'getmap' in kw.keys():
             getmap = kw['getmap']
@@ -125,10 +213,10 @@ class _Map_massifs(Mplfigure):
 
         if getmap:
             self.map = self.getmap(**kw)
-            self.map.coastlines(linewidth=1)
+            self.map.coastlines(resolution='10m', linewidth=1)
             self.map.gridlines(draw_labels=True)
 
-        self.dicLonLatMassif = self.getLonLatMassif()
+        self.dicLonLatMassif = getLonLatMassif()
 
     @property
     def lonmin(self):
@@ -204,7 +292,8 @@ class _Map_massifs(Mplfigure):
 
     @property
     def deport(self):
-        """displacement dictionary for the positioning tables near the massif center without overlapping."""
+        """displacement dictionary for the positioning tables near
+        the massif center without overlapping."""
         return self._deport
 
     @deport.setter
@@ -213,11 +302,20 @@ class _Map_massifs(Mplfigure):
 
     @property
     def infospos(self):
+        """Position of info-box on the map (in coordinates) """
         return self._infospos
 
     @infospos.setter
     def infospos(self, value):
         self._infospos = value
+
+    @property
+    def labelfontsize(self):
+        return self._labelfontsize
+
+    @labelfontsize.setter
+    def labelfontsize(self, value):
+        self._labelfontsize = value
 
     @property
     def vmin(self):
@@ -320,6 +418,7 @@ class _Map_massifs(Mplfigure):
 
     @property
     def legendpos(self):
+        """Position of colorbar axis with respect to the plot"""
         return self._legendpos
 
     @legendpos.setter
@@ -328,6 +427,7 @@ class _Map_massifs(Mplfigure):
 
     @property
     def text(self):
+        """text to be added to the map"""
         return self._text
 
     @text.setter
@@ -336,6 +436,7 @@ class _Map_massifs(Mplfigure):
 
     @property
     def infos(self):
+        """info box to be added to the map"""
         return self._infos
 
     @infos.setter
@@ -348,34 +449,46 @@ class _Map_massifs(Mplfigure):
         Create map axes.
 
         :param geofeatures: if True, Land and Ocean are colored, coastlines, borders,
-            lakes and rivers are added to the map
-        :param bgimage: if True, a background image (high resolution satellite relief) is added to the map.
-            Ignored if geofeatures is True.
+                            lakes and rivers are added to the map
+        :param bgimage: if True, a background image (high resolution satellite relief)
+                        is added to the map. Ignored if geofeatures is True.
         :return: map axes
         :rtype: GeoAxes object
 
         """
 
         # print(kwargs.keys())
-        if hasattr(self, 'nrow') and hasattr(self, 'ncol') and hasattr(self, 'iax'):
-            ax = plt.subplot(self.nrow, self.ncol, self.iax+1, projection=ccrs.PlateCarree())
+        if 'nrow' in kwargs.keys() and 'ncol' in kwargs.keys() and 'iax' in kwargs.keys():
+            ax_pl = plt.subplot(kwargs['nrow'], kwargs['ncol'], kwargs['iax']+1,
+                                projection=ccrs.PlateCarree())
         else:
-            ax = plt.axes(self.mappos, projection=ccrs.PlateCarree())
+            ax_pl = plt.axes(self.mappos, projection=ccrs.PlateCarree())
         # Définit les bords de la carte
-        ax.set_extent([self.lonmin, self.lonmax, self.latmin, self.latmax])
+        ax_pl.set_extent([self.lonmin, self.lonmax, self.latmin, self.latmax])
+
         if geofeatures:
-            ax.add_feature(cartopy.feature.LAND, facecolor='wheat')
-            ax.add_feature(cartopy.feature.OCEAN)
-            ax.add_feature(cartopy.feature.COASTLINE)
+            ax_pl.add_feature(cartopy.feature.NaturalEarthFeature('physical', 'land', scale='10m',
+                                                                  facecolor='wheat'))
+            ax_pl.add_feature(cartopy.feature.NaturalEarthFeature('physical', 'ocean', scale='10m',
+                                                                  facecolor=cartopy.feature.COLORS['water']))
             # ax.add_feature(cartopy.feature.BORDERS, linestyle=':')
-            ax.add_feature(cartopy.feature.NaturalEarthFeature('cultural', 'admin_0_boundary_lines_land', '10m',
-                                                               facecolor='none', linestyle=':'))
-            ax.add_feature(cartopy.feature.LAKES, alpha=0.5)
-            ax.add_feature(cartopy.feature.RIVERS)
+            ax_pl.add_feature(cartopy.feature.NaturalEarthFeature('cultural',
+                                                                  'admin_0_boundary_lines_land',
+                                                                  scale='10m', facecolor='none',
+                                                                  linestyle=':'))
+            ax_pl.add_feature(cartopy.feature.NaturalEarthFeature('physical', 'lakes', scale='10m',
+                                                                  facecolor=cartopy.feature.COLORS['water'],
+                                                                  alpha=0.5))
+            ax_pl.add_feature(cartopy.feature.NaturalEarthFeature('physical', 'rivers_lake_centerlines',
+                                                                  scale='10m',
+                                                                  edgecolor=cartopy.feature.COLORS['water'],
+                                                                  facecolor='none', alpha=0.5))
         elif bgimage:
             os.environ["CARTOPY_USER_BACKGROUNDS"] = config["data_dir"]  # os.path.join(SNOWTOOLS_DIR, 'DATA')
-            ax.background_img(resolution="high")
-        return ax
+            ax_pl.background_img(resolution="high")
+        # else:
+        #     ax_pl.coastlines(resolution='10m')
+        return ax_pl
 
     def openfigure(self):
         """
@@ -385,58 +498,27 @@ class _Map_massifs(Mplfigure):
         """
         return plt.figure(figsize=(self.width, self.height))
 
-    #@echecker.disabled_if_unavailable
-    def getshapes(self):
-        """
-        read shapefile and return projection and records
-
-        :return: shapefile, pprojcrs, shpProj, records
-        """
-        shapefile_path = os.path.join(SNOWTOOLS_DIR, 'DATA')
-        filename = 'massifs_{0:s}.shp'.format(self.area)
-        shapefile = shpreader.Reader(os.path.join(shapefile_path, filename))
-        # Informations sur la projection
-        projfile = 'massifs_{0:s}.prj'.format(self.area)
-        with open(os.path.join(shapefile_path, projfile), 'r') as prj_file:
-            prj_txt = prj_file.read()
-            pprojcrs = CRS.from_wkt(prj_txt)
-
-        # Projection du shapefile
-        shpProj = pprojcrs.to_dict()
-
-        # géométries
-        # records is a generator object. Each record contains a geometry, its attributes and bounds
-        records = [record for record in shapefile.records()]
-        return shapefile, pprojcrs, shpProj, records
-
-    def getLonLatMassif(self):
-        """
-        get center coordinates of the Massifs
-
-        :return: dict with key = Massif Number, value = (lon, lat)
-        """
-        im = infomassifs()
-        return infomassifs.getAllMassifLatLon(im)
-
     def init_cmap(self, **kwargs):
         """
-
-        :param kwargs: 'palette': name of color palette, (default: 'jet'), 'ncolors': number of colors
-        :return: palette (colormap object), norm (scaled colormap with chosen minimum and maximum values)
+        :param kwargs: 'palette': name of color palette, (default: 'jet'),
+                        'ncolors': number of colors
+        :return: palette (colormap object), norm (scaled colormap with
+                    chosen minimum and maximum values)
         """
         if 'palette' in kwargs.keys():
             if 'ncolors' in kwargs.keys():
-                if matplotlib.__version__ >= '3.3':
+                if matplotlib.__version__ >= '3.4':
+                    # deprecation warning in version 3.3, but copy method not yet implemented
                     palette = plt.get_cmap(kwargs['palette'], kwargs['ncolors']).copy()
                 else:
                     palette = plt.get_cmap(kwargs['palette'], kwargs['ncolors'])
             else:
-                if matplotlib.__version__ >= '3.3':
+                if matplotlib.__version__ >= '3.4':
                     palette = plt.get_cmap(kwargs['palette']).copy()
                 else:
                     palette = plt.get_cmap(kwargs['palette'])
         else:
-            if matplotlib.__version__ >= '3.3':
+            if matplotlib.__version__ >= '3.4':
                 palette = plt.get_cmap('jet').copy()
             else:
                 palette = plt.get_cmap('jet')
@@ -457,9 +539,10 @@ class _Map_massifs(Mplfigure):
 
         self.palette, self.norm = self.init_cmap(**kwargs)
         if not hasattr(self, 'massif_features'):
-            self.num, self.shape, self.name = zip(*[(rec.attributes['num_opp'], rec.geometry,
-                                                     rec.attributes['nom']) for rec in self.records])
-            self.llshape = [ccrs.PlateCarree().project_geometry(ishape, self.projection) for ishape in self.shape]
+            self.num, self.shape, self.name = map(list, zip(*[(rec.attributes['code'], rec.geometry,
+                                                               rec.attributes['title']) for rec in self.records]))
+            self.llshape = [ccrs.PlateCarree().project_geometry(ishape,
+                                                                self.projection) for ishape in self.shape]
             # get renderer
             if not hasattr(self, 'renderer'):
                 self.fig.canvas.draw()
@@ -473,12 +556,14 @@ class _Map_massifs(Mplfigure):
 
         :return: feature list
         """
-        features = [{'feature': self.map.add_geometries([lshape], crs=ccrs.PlateCarree(),  # crs=self.projection,
+        features = [{'feature': self.map.add_geometries([lshape], crs=ccrs.PlateCarree(),
                                                         cmap=self.palette,
-                                                        facecolor='none', edgecolor='dimgrey', alpha=1.0),
+                                                        facecolor='none', edgecolor='dimgrey',
+                                                        alpha=1.0),
                      'massifnum':inum, 'massifname':iname,
                      'massifbb': self.get_massif_bb(inum, ishape, self.map)}
-                    for inum, ishape, lshape, iname in zip(self.num, self.shape, self.llshape, self.name)]
+                    for inum, ishape, lshape, iname in zip(self.num, self.shape,
+                                                           self.llshape, self.name)]
         return features
 
     def get_massif_bb(self, num, shape, mymap):
@@ -496,21 +581,21 @@ class _Map_massifs(Mplfigure):
         # print('enter massif_bb')
         width = 50.
         height = 20.
-        Xbary, Ybary = shape.centroid.coords[0]
+        x_bary, y_bary = shape.centroid.coords[0]
         (xdeport, ydeport) = self.getdeport(num)
         # print(self.projection._as_mpl_transform(mymap))
-        mlon, mlat = ccrs.PlateCarree().transform_point(Xbary+xdeport, Ybary+ydeport, self.projection)
+        mlon, mlat = ccrs.PlateCarree().transform_point(x_bary+xdeport, y_bary+ydeport, self.projection)
         bb = matplotlib.offsetbox.AnnotationBbox(matplotlib.offsetbox.DrawingArea(width, height),
                                                  (mlon, mlat), box_alignment=(0.5, 0.5),
                                                  xycoords=mymap.transData,
-                                                 #xycoords=self.projection._as_mpl_transform(mymap),
+                                                 # xycoords=self.projection._as_mpl_transform(mymap),
                                                  bboxprops=dict(fc='none'))
 
         mapx0, mapy0, mapwidth, mapheight = mymap.get_window_extent(self.renderer).bounds
         bb.draw(self.renderer)
-        # x0, y0, w, h = bb.get_window_extent(self.renderer).bounds # matplotlib 3.4
-        x0, y0, w, h = bb.patch.get_bbox().bounds
-        return [(x0-mapx0)/mapwidth, (y0-mapy0)/mapheight, w/mapwidth, h/mapheight]
+        # x_0, y_0, w_d, h_g = bb.get_window_extent(self.renderer).bounds # matplotlib 3.4
+        x_0, y_0, w_d, h_g = bb.patch.get_bbox().bounds
+        return [(x_0-mapx0)/mapwidth, (y_0-mapy0)/mapheight, w_d/mapwidth, h_g/mapheight]
 
     def normpalette(self, **kwargs):
         """
@@ -571,7 +656,7 @@ class _Map_massifs(Mplfigure):
         :return: data values used for filling
         :rtype: list
         """
-        myvalues = [variable[massifref==i][0] if i in massifref else np.nan for i in self.num]
+        myvalues = [variable[massifref == i][0] if i in massifref else np.nan for i in self.num]
         for i, myvalue in enumerate(myvalues):
             self.massif_features[i]['feature']._kwargs['facecolor'] = self.palette(self.norm(myvalue))
         return myvalues
@@ -600,17 +685,17 @@ class _Map_massifs(Mplfigure):
 
         """
         if labels is not None:
-            for label, x, y in zip(labels, lon, lat):
-                self.map.annotate(label, (x, y), color=color, horizontalalignment='center', zorder=4)
+            for label, x_i, y_i in zip(labels, lon, lat):
+                self.map.annotate(label, (x_i, y_i), color=color, horizontalalignment='center',
+                                  zorder=4)
         else:
             self.map.plot(lon, lat, marker=marker, color=color, linestyle='', zorder=3)
 
-    def highlight_massif(self, massifs, fillvalues, **kwargs):
+    def highlight_massif(self, massifs, **kwargs):
         """
         draw the contours of the given massifs in red.
 
         :param massifs: Massif numbers of massifs to highlight
-        :param fillvalues: not used
         :param kwargs: kwargs passed to :py:meth`init_massifs`
 
         """
@@ -622,17 +707,19 @@ class _Map_massifs(Mplfigure):
         if not isinstance(massifs, list):
             massifs = [massifs, ]
 
-        if isinstance(self, _MultiMap):
-            for i, massif in enumerate(self.records):
-                if massif.attributes['num_opp'] in massifs:
-                    for j in range(self.nsubplots):
-                        self.massif_features[j][i]['feature'].set_zorder(2)  # Pour tracer le massif en dernier
-                        self.massif_features[j][i]['feature']._kwargs['edgecolor'] = 'red'
-        else:
-            for i, massif in enumerate(self.records):
-                if massif.attributes['num_opp'] in massifs:
-                    self.massif_features[i]['feature'].set_zorder(2)  # Pour tracer le massif en dernier
-                    self.massif_features[i]['feature']._kwargs['edgecolor'] = 'red'
+        self.red_edge(massifs)
+
+    def red_edge(self, massifs):
+        """
+        set edgecolor to red for given massifs
+
+        :param massifs: Massif numbers of massifs to highlight
+        :type massifs: list
+        """
+        for i, massif in enumerate(self.records):
+            if massif.attributes['code'] in massifs:
+                self.massif_features[i]['feature'].set_zorder(2)  # Pour tracer le massif en dernier
+                self.massif_features[i]['feature']._kwargs['edgecolor'] = 'red'
 
     def legend(self, polygons, **kwargs):
         """
@@ -654,8 +741,8 @@ class _Map_massifs(Mplfigure):
         else:
             fontsize = self.labelfontsize
 
-        for t in self.cbar.ax.get_yticklabels():
-            t.set_fontsize(fontsize)
+        for t_lab in self.cbar.ax.get_yticklabels():
+            t_lab.set_fontsize(fontsize)
 
         if 'label' in kwargs.keys():
             self.cbar.set_label(kwargs['label'], fontsize=self.labelfontsize)
@@ -685,14 +772,14 @@ class _Map_massifs(Mplfigure):
         :param kwargs: 'convert_unit': factor for scaling :py:attr:`field`
 
         """
-        variable = self.convertunit(field, **kwargs)
+        variable = convertunit(field, **kwargs)
         # if 'convert_unit' in kwargs.keys():
         #     variable = field[:] * kwargs['convert_unit']
         # else:
         #     variable = field[:]
         print(variable[0].max())
-        self.map.pcolormesh(lons, lats, variable[0], transform=ccrs.PlateCarree(), cmap=self.palette, vmin=self.vmin,
-                            vmax=self.vmax)
+        self.map.pcolormesh(lons, lats, variable[0], transform=ccrs.PlateCarree(),
+                            cmap=self.palette, vmin=self.vmin, vmax=self.vmax)
         # prepare colorbar
         self.prepare_colorbar(variable[0], **kwargs)
 
@@ -710,106 +797,70 @@ class _Map_massifs(Mplfigure):
             self.m.cmap.set_under(color='w', alpha=0)
             self.legend(self.m, **kwargs)
 
-    def convertunit(self, *args, **kwargs):
-        """
-        convert units vor all variables in :py:attr:`args`
-
-        :param args: variables to be scaled
-        :param kwargs: 'convert_unit': scaling factor to be used
-        :return: list of converted variables
-        """
-        listvar = []
-        for variablein in args:
-            if 'convert_unit' in kwargs.keys():
-                variable = variablein[:] * kwargs['convert_unit']
-            else:
-                variable = variablein[:]
-            listvar.append(variable)
-        return listvar
-
-    def getformatstring(self, **kwargs):
-        """
-        returns format string
-        :param kwargs: 'format': containing the format string
-        :return: value from 'format' or '%i'
-        """
-        if 'format' in kwargs.keys():
-            return kwargs['format']
-        else:
-            return '%i'
-
-    def getTextColor(self, var, **kwargs):
-        """
-        determine text color given the value of the variable to plot.
-
-        :param var: value of the variable
-        :param kwargs: 'seuiltext': threshold above which text color should be white.
-        :return: color, default is 'black'
-        :rtype: str
-        """
-        color = 'black'
-        if 'seuiltext' in kwargs.keys():
-            if var >= kwargs['seuiltext']:
-                color = 'white'
-        return color
-
     def plot_center_massif(self, massifref, *args, **kwargs):
         """
         Write values at the center of the massifs.
 
-        Each positional argument contains the values for each massifs. The values for the different arguments
+        Each positional argument contains the values for each massifs.
+        The values for the different arguments
         are separated by "-" on the plot.
 
         :param massifref: massif numbers
         :param args: values to write for each massif
-        :param kwargs: arguments passed to :py:meth:`convertunit`, :py:meth:`getformatstring` and :py:meth:`puttext`
+        :param kwargs: arguments passed to :py:meth:`convertunit`, :py:meth:`getformatstring`
+                        and :py:meth:`puttext`
         """
 
         nvar = len(args)
-        listvar = self.convertunit(*args, **kwargs)
-        formatString = self.getformatstring(**kwargs)
-
+        listvar = convertunit(*args, **kwargs)
+        format_string = getformatstring(**kwargs)
+        # print(listvar)
         self.text = []
 
         for i, massif in enumerate(self.shape):
 
             indmassif = massifref == self.num[i]
-            Xbary, Ybary = massif.centroid.coords[0]
+            # print(indmassif, self.num[i], massifref)
+            x_bary, y_bary = massif.centroid.coords.xy
             if np.sum(indmassif) == 1:
-                self.puttext(Xbary, Ybary, indmassif, listvar, nvar, formatString, **kwargs)
+                self.puttext(x_bary[0], y_bary[0], indmassif, listvar, nvar, format_string,
+                             **kwargs)
 
-    def puttext(self, Xbary, Ybary, indmassif, listvar, nvar, formatString, **kwargs):
+    def puttext(self, x_bary, y_bary, indmassif, listvar, nvar, format_string, **kwargs):
         """
         Put text on the maps for a given massif.
 
-        :param Xbary: x-coordinate of the massif center
-        :param Ybary: y-coordinate of the massif center
+        :param x_bary: x-coordinate of the massif center
+        :param y_bary: y-coordinate of the massif center
         :param indmassif: massif index
         :param listvar: list of values to write on the maps
         :param nvar: number of variables to plot at each center
-        :param formatString: format specifier of the
+        :param format_string: format specifier of the
         :param kwargs: 'textcolor', 'unit'
 
         """
         infos = ''
-        for v, variable in enumerate(listvar):
-            infos += formatString % variable[indmassif][0]
-            if v < nvar - 1:
+        for v_i, variable in enumerate(listvar):
+            # print(formatString, variable[indmassif][0])
+            infos += format_string % variable[indmassif][0]
+            if v_i < nvar - 1:
                 infos += "-"
 
             if 'textcolor' in kwargs.keys():
                 textcolor = kwargs['textcolor']
-            elif (nvar == 3 and v == 1) or nvar == 1:
-                textcolor = self.getTextColor(variable[indmassif][0], **kwargs)
+            elif (nvar == 3 and v_i == 1) or nvar == 1:
+                textcolor = getTextColor(variable[indmassif][0], **kwargs)
+                # print("textcolor variable", textcolor)
             else:
                 textcolor = 'black'
 
         if 'unit' in kwargs.keys():
             infos += kwargs['unit']
 
-        self.text.append(self.map.text(Xbary, Ybary, infos, transform=self.projection,
+        self.text.append(self.map.text(x_bary, y_bary, infos, transform=self.projection,
                                        horizontalalignment='center', verticalalignment='center',
                                        color=textcolor))
+        # print(self.map.properties())
 
     def reset_massifs(self, rmcbar=True, rminfobox=True, **kwargs):
         """
@@ -822,10 +873,10 @@ class _Map_massifs(Mplfigure):
 
         # remove tables
         for prop in self.map.properties()['children']:
-            if type(prop) == matplotlib.table.Table:
+            if isinstance(prop, matplotlib.table.Table):
                 prop.remove()
         # remove text
-            elif type(prop) == matplotlib.text.Text:
+            elif isinstance(prop, matplotlib.text.Text):
                 if hasattr(self, 'text'):
                     if prop in self.text:
                         prop.remove()
@@ -860,41 +911,44 @@ class _Map_massifs(Mplfigure):
             south_text = "Versant Sud \n Q20 - Q50 - Q80"
         # self.infos.append(box(8.5, 42.9,8.85,43.1))
 
+        # self.infos.append(self.map.add_artist(matplotlib.offsetbox.AnnotationBbox(
+        #     matplotlib.offsetbox.TextArea(north_text, textprops=dict(horizontalalignment='left')),  # center in matplotlib 3.4
+        #     self.infospos, box_alignment=(0, 0), xycoords=self.projection._as_mpl_transform(self.map),
+        #     bboxprops=dict(fc='none'))))
         self.infos.append(self.map.add_artist(matplotlib.offsetbox.AnnotationBbox(
             matplotlib.offsetbox.TextArea(north_text, textprops=dict(horizontalalignment='left')),  # center in matplotlib 3.4
-            self.infospos, box_alignment=(0, 0), xycoords=self.projection._as_mpl_transform(self.map),
+            self.infospos, box_alignment=(0, 0),
             bboxprops=dict(fc='none'))))
         self.infos.append(self.map.add_artist(matplotlib.offsetbox.AnnotationBbox(
             matplotlib.offsetbox.TextArea(south_text, textprops=dict(horizontalalignment='left')),  # center in matplotlib 3.4
-            self.infospos, box_alignment=(0, 1.4), xycoords=self.projection._as_mpl_transform(self.map),
+            self.infospos, box_alignment=(0, 1.4),
             bboxprops=dict(fc='none'))))
 
-    def rectangle_massif(self, massifref, list_quantiles, list_values, ncol=1, **kwargs):
+    def rectangle_massif(self, massifref, list_values, ncol=1, **kwargs):
         """
         Put colored tables with values near the massif centers on the map.
 
         :param massifref: massif numbers
-        :param list_quantiles: unused argument for compatibility reasons
         :param list_values: list of value arrays
         :param ncol: number of columns in the table
-        :param kwargs: kwargs passed to :py:meth:`convertunit`, :py:meth:`getformatstring`, :py:meth:`puttable` and
-            :py:meth:`prepare_colorbar`
+        :param kwargs: kwargs passed to :py:meth:`convertunit`, :py:meth:`getformatstring`,
+                        :py:meth:`puttable` and :py:meth:`prepare_colorbar`
         """
 
         ncol = ncol+1
         nvar = len(list_values)
         nrows = int(nvar / ncol)
-        listvar = self.convertunit(*list_values, **kwargs)
-        formatString = self.getformatstring(**kwargs)
+        listvar = convertunit(*list_values, **kwargs)
+        format_string = getformatstring(**kwargs)
 
-        for i, massif in enumerate(self.shape):
+        for i in range(len(self.shape)):
             indmassif = massifref == self.num[i]
             if np.sum(indmassif) == 1:
-                self.puttable(i, indmassif, listvar, ncol, nrows, formatString, **kwargs)
+                self.puttable(i, indmassif, listvar, ncol, nrows, format_string, **kwargs)
 
         self.prepare_colorbar(np.array(listvar), **kwargs)
 
-    def puttable(self, i, indmassif, listvar, ncol, nrows, formatString, **kwargs):
+    def puttable(self, i, indmassif, listvar, ncol, nrows, format_string, **kwargs):
         """
         Put a table with values and colored cells on the map.
 
@@ -903,19 +957,22 @@ class _Map_massifs(Mplfigure):
         :param listvar: list of values
         :param ncol: number of columns in the table
         :param nrows: number of rows in the table
-        :param formatString: format string for values
+        :param format_string: format string for values
         :param kwargs: not used
         """
         # create text array
-        infos = np.flipud(np.array([formatString % thisvar[indmassif][0]
+        infos = np.flipud(np.array([format_string % thisvar[indmassif][0]
                                     for thisvar in listvar]).reshape((nrows, ncol)))
         # create color array
         tmp_colors = [self.palette(self.norm(thisvar[indmassif][0])) for thisvar in listvar]
-        colors = np.array([tmp_colors[-ncol:] if irows == 0 else tmp_colors[-(irows*ncol)-ncol:-(irows*ncol)]
+        colors = np.array([tmp_colors[-ncol:] if irows == 0
+                           else tmp_colors[-(irows*ncol)-ncol:-(irows*ncol)]
                            for irows in range(nrows)])
 
-        art = matplotlib.table.table(self.map, cellText=infos, cellColours=colors, cellLoc='center', colWidths=None,
-                                     rowLabels=None, rowColours=None, rowLoc='left', colLabels=None, colColours=None,
+        art = matplotlib.table.table(self.map, cellText=infos, cellColours=colors,
+                                     cellLoc='center', colWidths=None,
+                                     rowLabels=None, rowColours=None, rowLoc='left',
+                                     colLabels=None, colColours=None,
                                      colLoc='center',
                                      loc='bottom',
                                      bbox=self.massif_features[i]['massifbb'],
@@ -932,8 +989,97 @@ class _Map_massifs(Mplfigure):
         """
         if num in self.deport.keys():
             return self.deport[num]
-        else:
-            return 0, 0
+        return 0, 0
+
+
+class Map_vosges(_Map_massifs):
+    """
+     Class for plotting a map over the Vosges.
+    """
+    area = 'vosges'  #: area tag = 'vosges'
+    width = 12  #: figure width = 12
+    height = 10  #: figure height = 10
+    latmin = 47.65  #: southern map border = 43.9
+    latmax = 48.7  #: northen map border = 46.5
+    lonmin = 6.55  #: western map border = 5.2
+    lonmax = 7.45  #: eastern map border = 7.9
+
+    mappos = [0.02, 0.06, 0.8, 0.8]  #: map position on the plot = [0.02, 0.06, 0.8, 0.8]
+    legendpos = [0.85, 0.15, 0.03, 0.6]  #: legend position on the plot = [0.85, 0.15, 0.03, 0.6]
+    #: position of info-box on the map in Lambert Conformal coordinates = (990000, 2160000)
+    infospos = (6.6, 48.6)
+    labelfontsize = 20  #: fontsize of colorbar label
+    deport = {}
+    """ displacement dictionary for the positioning tables near
+    the massif center without overlapping."""
+
+    def __init__(self, *args, **kw):
+        """
+
+        :param args: Arguments to be passed to super class
+        :param kw: Keyword arguments to be passed to super class
+        """
+        super(Map_vosges, self).__init__(*args, **kw)
+
+
+class Map_central(_Map_massifs):
+    """
+     Class for plotting a map over the Massif Central.
+    """
+    area = 'central'  #: area tag = 'central'
+    width = 12  #: figure width = 12
+    height = 10  #: figure height = 10
+    latmin = 43.3  #: southern map border = 43.3
+    latmax = 46.3  #: northen map border = 46.3
+    lonmin = 1.6  #: western map border = 1.6
+    lonmax = 4.8  #: eastern map border = 4.8
+
+    mappos = [0.02, 0.06, 0.8, 0.8]  #: map position on the plot = [0.02, 0.06, 0.8, 0.8]
+    legendpos = [0.85, 0.15, 0.03, 0.6]  #: legend position on the plot = [0.85, 0.15, 0.03, 0.6]
+    #: position of info-box on the map in Lambert Conformal coordinates = (990000, 2160000)
+    infospos = (4.3, 46.1)
+    labelfontsize = 20  #: fontsize of colorbar label
+    deport = {}
+    """ displacement dictionary for the positioning tables
+    near the massif center without overlapping."""
+
+    def __init__(self, *args, **kw):
+        """
+
+        :param args: Arguments to be passed to super class
+        :param kw: Keyword arguments to be passed to super class
+        """
+        super(Map_central, self).__init__(*args, **kw)
+
+
+class Map_jura(_Map_massifs):
+    """
+     Class for plotting a map over the French Jura.
+    """
+    area = 'jura'  #: area tag = 'jura'
+    width = 12  #: figure width = 12
+    height = 10  #: figure height = 10
+    latmin = 45.6  #: southern map border = 43.9
+    latmax = 47.5  #: northen map border = 46.5
+    lonmin = 5.3  #: western map border = 5.2
+    lonmax = 7.15  #: eastern map border = 7.9
+
+    mappos = [0.02, 0.06, 0.8, 0.8]  #: map position on the plot = [0.02, 0.06, 0.8, 0.8]
+    legendpos = [0.85, 0.15, 0.03, 0.6]  #: legend position on the plot = [0.85, 0.15, 0.03, 0.6]
+    #: position of info-box on the map in Lambert Conformal coordinates = (990000, 2160000)
+    infospos = (5.4, 47.35)
+    labelfontsize = 20  #: fontsize of colorbar label
+    deport = {}
+    """ displacement dictionary for the positioning tables
+    near the massif center without overlapping."""
+
+    def __init__(self, *args, **kw):
+        """
+
+        :param args: Arguments to be passed to super class
+        :param kw: Keyword arguments to be passed to super class
+        """
+        super(Map_jura, self).__init__(*args, **kw)
 
 
 class Map_alpes(_Map_massifs):
@@ -948,7 +1094,7 @@ class Map_alpes(_Map_massifs):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Alp/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Alp/postproc_2021041006_2021041112.nc') as ff:
             points = ff.get_points(ZS=2100, aspect=-1)
             snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points)
@@ -974,18 +1120,19 @@ class Map_alpes(_Map_massifs):
     area = 'alpes'  #: area tag = 'alpes'
     width = 12  #: figure width = 12
     height = 10  #: figure height = 10
-    latmin = 43.9  #: southern map border = 43.9
+    latmin = 43.5  #: southern map border = 43.9
     latmax = 46.5  #: northen map border = 46.5
-    lonmin = 5.2  #: western map border = 5.2
+    lonmin = 5.0  #: western map border = 5.2
     lonmax = 7.9  #: eastern map border = 7.9
 
     mappos = [0.02, 0.06, 0.8, 0.8]  #: map position on the plot = [0.02, 0.06, 0.8, 0.8]
     legendpos = [0.85, 0.15, 0.03, 0.6]  #: legend position on the plot = [0.85, 0.15, 0.03, 0.6]
     #: position of info-box on the map in Lambert Conformal coordinates = (990000, 2160000)
-    infospos = (990000, 2160000)
+    infospos = (7.3, 46.3)
     labelfontsize = 20  #: fontsize of colorbar label
-    deport = {7: (0, 5000), 9: (-1000, 0),  16: (1000, 0), 19: (-2000, -2000),  21: (0, -5000)}
-    """ displacement dictionary for the positioning tables near the massif center without overlapping."""
+    deport = {7: (0, 5000), 9: (-1000, 0), 16: (1000, 0), 19: (-2000, -2000), 21: (0, -5000)}
+    """ displacement dictionary for the positioning tables
+    near the massif center without overlapping."""
 
     def __init__(self, *args, **kw):
         """
@@ -1044,25 +1191,26 @@ class _MultiMap(_Map_massifs):
     def maps(self, value):
         self._maps = value
 
-    def init_maps(self, *args, **kw):
+    def init_maps(self, **kw):
         """
         Creates a geoaxis object for each subplot.
 
-        :param args: not used
         :param kw: arguments passed to :py:meth:`getmap`
 
         """
-        for self.iax in range(self.nsubplots):
-            self.maps.flat[self.iax] = self.getmap(**kw)
-            self.maps.flat[self.iax].coastlines(linewidth=1)
-            self.gl = self.maps.flat[self.iax].gridlines(draw_labels=True)
+        for iax in range(self.nsubplots):
+            kw['iax'] = iax
+            self.maps.flat[iax] = self.getmap(**kw)
+            self.maps.flat[iax].coastlines(resolution='10m', linewidth=1)
+            self.gl = self.maps.flat[iax].gridlines(draw_labels=True)
             # keep labels left and bottom only
-            self.gl.top_labels = False
-            self.gl.right_labels = False
-            # move the subplots a little to the left in order to have some space for the colorbar on the right.
-            pos1 = self.maps.flat[self.iax].get_position()
+            self.gl.top_labels = False  # from cartopy 0.18 on
+            self.gl.right_labels = False  # from cartopy 0.18 on
+            # move the subplots a little to the left in order to have
+            # some space for the colorbar on the right.
+            pos1 = self.maps.flat[iax].get_position()
             pos1.x0 = pos1.x0 - 0.1
-            self.maps.flat[self.iax].set_position(pos1)
+            self.maps.flat[iax].set_position(pos1)
 
     def get_massif_features(self):
         """
@@ -1072,12 +1220,15 @@ class _MultiMap(_Map_massifs):
         """
         features = list()
         for i in range(self.nsubplots):
-            features.append([{'feature': self.maps.flat[i].add_geometries([ishape], crs=self.projection,
-                                                                                    facecolor='none', cmap=self.palette,
-                                                                                    edgecolor='dimgrey', alpha=1.0),
+            features.append([{'feature': self.maps.flat[i].add_geometries([ishape],
+                                                                          crs=self.projection,
+                                                                          facecolor='none',
+                                                                          cmap=self.palette,
+                                                                          edgecolor='dimgrey',
+                                                                          alpha=1.0),
                               'massifnum':inum, 'massifname':iname,
                               'massifbb': self.get_massif_bb(inum, ishape, self.maps.flat[i])}
-                               for inum, ishape, iname in zip(self.num, self.shape, self.name)])
+                             for inum, ishape, iname in zip(self.num, self.shape, self.name)])
         print(len(features))
         return features
 
@@ -1087,11 +1238,13 @@ class _MultiMap(_Map_massifs):
 
         :param massifref: massif numbers
         :param variable: values
-        :param kwargs: 'axis': the dimension along which to split :py:attr:`variable` between different subplots
+        :param kwargs: 'axis': the dimension along which to split :py:attr:`variable`
+                        between different subplots
         :return: value array
         :rtype: numpy array
-        :raises: KeyError if 'axis' is not in the :py:attr:`kwargs`, IndexError if :py:attr:`variable` array has lower
-         rank than the number given to 'axis'.
+        :raises: KeyError if 'axis' is not in the :py:attr:`kwargs`,
+                    IndexError if :py:attr:`variable` array has lower
+                    rank than the number given to 'axis'.
         """
         try:
             axis = kwargs['axis']
@@ -1103,15 +1256,30 @@ class _MultiMap(_Map_massifs):
         except IndexError:
             raise Exception("value array has lower rank than given axis number")
         if leng > self.nsubplots:
-            print("Warning: axis ", axis, " of value array is longer than number of subplots ", self.nsubplots,
-                  ". Plotting first ", self.nsubplots, " out of ", leng, ".")
+            print("Warning: axis ", axis, " of value array is longer than number of subplots ",
+                  self.nsubplots, ". Plotting first ", self.nsubplots, " out of ", leng, ".")
             leng = self.nsubplots
-        myvalues = np.array([variable[massifref == i][0] if i in massifref else np.nan for i in self.num])
+        print('var shape', variable.shape)
+        # myvalues = np.array([variable[massifref == i][0] if i in massifref else np.nan for i in self.num], dtype=object)
+        myvalues = np.array([variable[massifref == i][0] for i in self.num if i in massifref])
         print(myvalues.shape)
         for j in range(leng):
             for i, myvalue in enumerate(myvalues.take(indices=j, axis=axis)):
                 self.massif_features[j][i]['feature']._kwargs['facecolor'] = self.palette(self.norm(myvalue))
         return myvalues
+
+    def red_edge(self, massifs):
+        """
+        set edgecolor to red for given massifs
+
+        :param massifs: Massif numbers of massifs to highlight
+        :type massifs: list
+        """
+        for i, massif in enumerate(self.records):
+            if massif.attributes['code'] in massifs:
+                for j in range(self.nsubplots):
+                    self.massif_features[j][i]['feature'].set_zorder(2)  # Pour tracer le massif en dernier
+                    self.massif_features[j][i]['feature']._kwargs['edgecolor'] = 'red'
 
     def empty_massifs(self, **kwargs):
         """
@@ -1121,7 +1289,7 @@ class _MultiMap(_Map_massifs):
         """
         for features in self.massif_features:
             for feature in features:
-                feature['feature']._kwargs['facecolor'] ='white'
+                feature['feature']._kwargs['facecolor'] = 'white'
 
     def addpoints(self, lon, lat, labels=None, color='black', marker=None):
         """
@@ -1138,23 +1306,23 @@ class _MultiMap(_Map_massifs):
 
         """
         if labels is not None:
-            for label, x, y in zip(labels, lon, lat):
+            for label, x_i, y_i in zip(labels, lon, lat):
                 for i in range(self.nsubplots):
-                    self.maps.flat[i].annotate(label, (x, y), color=color, zorder=4)
+                    self.maps.flat[i].annotate(label, (x_i, y_i), color=color, zorder=4)
         else:
             for i in range(self.nsubplots):
                 self.maps.flat[i].plot(lon, lat, marker=marker, color=color, linestyle='', zorder=3)
 
-    def puttext(self, Xbary, Ybary, indmassif, listvar, nvar, formatString, **kwargs):
+    def puttext(self, x_bary, y_bary, indmassif, listvar, nvar, format_string, **kwargs):
         """
         Put text on the maps for a given massif.
 
-        :param Xbary: x-coordinate of the massif center
-        :param Ybary: y-coordinate of the massif center
+        :param x_bary: x-coordinate of the massif center
+        :param y_bary: y-coordinate of the massif center
         :param indmassif: massif index
         :param listvar: list of values to write on the maps
         :param nvar: number of variables to plot at each center
-        :param formatString: format specifier of the
+        :param format_string: format specifier of the
         :param kwargs: 'axis', 'textcolor', 'unit'
 
         """
@@ -1162,39 +1330,42 @@ class _MultiMap(_Map_massifs):
             axis = kwargs['axis']
         except KeyError:
             raise KeyError("axis keyword argument needed by the draw_massif method in the case of "
-                       "multiple maps on the figure")
+                           "multiple maps on the figure")
         try:
             subplotdim = listvar[0].shape[axis]
         except IndexError:
             raise Exception("value array has lower rank than given axis number")
         if subplotdim > self.nsubplots:
-            print("Warning: axis ", axis, " of value array is longer than number of subplots ", self.nsubplots,
-                  ". Plotting first ", self.nsubplots, " out of ", subplotdim, ".")
+            print("Warning: axis ", axis, " of value array is longer than number of subplots ",
+                  self.nsubplots, ". Plotting first ", self.nsubplots, " out of ", subplotdim, ".")
         subplotdim = self.nsubplots
         for j in range(subplotdim):
             infos = ''
             # for i, myvalue in enumerate(myvalues.take(indices=j, axis=axis)):
             #     self.massif_features[j][i]['feature']._kwargs['facecolor'] = self.palette(self.norm(myvalue))
-            for v, variable in enumerate(listvar):
-                infos += formatString % variable.take(indices=j, axis=axis)[indmassif][0]
-                if v < nvar - 1:
+            for v_i, variable in enumerate(listvar):
+                infos += format_string % variable.take(indices=j, axis=axis)[indmassif][0]
+                if v_i < nvar - 1:
                     infos += "-"
 
                 if 'textcolor' in kwargs.keys():
                     textcolor = kwargs['textcolor']
-                elif (nvar == 3 and v == 1) or nvar == 1:
-                    textcolor = self.getTextColor(variable.take(indices=j, axis=axis)[indmassif][0], **kwargs)
+                elif (nvar == 3 and v_i == 1) or nvar == 1:
+                    textcolor = getTextColor(variable.take(indices=j, axis=axis)[indmassif][0],
+                                             **kwargs)
                 else:
                     textcolor = 'black'
 
             if 'unit' in kwargs.keys():
                 infos += kwargs['unit']
 
-            self.text.append(self.maps.flat[j].text(Xbary, Ybary, infos, transform=self.projection,
-                                                    horizontalalignment='center', verticalalignment='center',
-                                                    color = textcolor))
+            self.text.append(self.maps.flat[j].text(x_bary, y_bary, infos,
+                                                    transform=self.projection,
+                                                    horizontalalignment='center',
+                                                    verticalalignment='center',
+                                                    color=textcolor))
 
-    def puttable(self, i, indmassif, listvar, ncol, nrows, formatString, **kwargs):
+    def puttable(self, i, indmassif, listvar, ncol, nrows, format_string, **kwargs):
         """
         Put tables with values and colored cells on the maps for a given massif.
 
@@ -1203,7 +1374,7 @@ class _MultiMap(_Map_massifs):
         :param listvar: list of values
         :param ncol: number of columns in the table
         :param nrows: number of rows in the table
-        :param formatString: format string for values
+        :param format_string: format string for values
         :param kwargs: axis
         """
         # print(self.massif_features[i]['massifbb'])
@@ -1217,23 +1388,24 @@ class _MultiMap(_Map_massifs):
         except IndexError:
             raise Exception("value array has lower rank than given axis number")
         if subplotdim > self.nsubplots:
-            print("Warning: axis ", axis, " of value array is longer than number of subplots ", self.nsubplots,
-                  ". Plotting first ", self.nsubplots, " out of ", subplotdim, ".")
+            print("Warning: axis ", axis, " of value array is longer than number of subplots ",
+                  self.nsubplots, ". Plotting first ", self.nsubplots, " out of ", subplotdim, ".")
             subplotdim = self.nsubplots
         for j in range(subplotdim):
             # create text array
-            infos = np.flipud(np.array([formatString % thisvar.take(indices=j, axis=axis)[indmassif][0]
+            infos = np.flipud(np.array([format_string % thisvar.take(indices=j,
+                                                                     axis=axis)[indmassif][0]
                                         for thisvar in listvar]).reshape((nrows, ncol)))
             # create color array
             tmp_colors = [self.palette(self.norm(thisvar.take(indices=j, axis=axis)[indmassif][0]))
                           for thisvar in listvar]
-            colors = np.array([tmp_colors[-ncol:] if irows == 0 else tmp_colors[-(irows*ncol)-ncol:-(irows*ncol)]
+            colors = np.array([tmp_colors[-ncol:] if irows == 0
+                               else tmp_colors[-(irows*ncol)-ncol:-(irows*ncol)]
                                for irows in range(nrows)])
-            art = matplotlib.table.table(self.maps.flat[j], cellText=infos, cellColours=colors, cellLoc='center',
-                                         colWidths=None,
-                                         rowLabels=None, rowColours=None, rowLoc='left', colLabels=None, colColours=None,
-                                         colLoc='center',
-                                         loc='bottom',
+            art = matplotlib.table.table(self.maps.flat[j], cellText=infos, cellColours=colors,
+                                         cellLoc='center', colWidths=None, rowLabels=None,
+                                         rowColours=None, rowLoc='left', colLabels=None,
+                                         colColours=None, colLoc='center', loc='bottom',
                                          bbox=self.massif_features[j][i]['massifbb'],
                                          edges='closed', zorder=10)
 
@@ -1245,13 +1417,13 @@ class _MultiMap(_Map_massifs):
         :param rminfobox: if True, the infobox is removed.
         """
 
-        for m in self.maps.flat:
+        for m_i in self.maps.flat:
             # remove tables
-            for prop in m.properties()['children']:
-                if type(prop) == matplotlib.table.Table:
+            for prop in m_i.properties()['children']:
+                if isinstance(prop, matplotlib.table.Table):
                     prop.remove()
                 # remove text
-                elif type(prop) == matplotlib.text.Text:
+                elif isinstance(prop, matplotlib.text.Text):
                     if hasattr(self, 'text'):
                         if prop in self.text:
                             prop.remove()
@@ -1287,12 +1459,12 @@ class _MultiMap(_Map_massifs):
             self.infos.append(self.maps.flat[i].add_artist(matplotlib.offsetbox.AnnotationBbox(
                 matplotlib.offsetbox.TextArea(north_text, textprops=dict(horizontalalignment='left',  # center in matplotlib 3.4
                                                                          size=5)), self.infospos,
-                box_alignment=(0.2, 0), xycoords=self.projection._as_mpl_transform(self.maps.flat[i]),
+                box_alignment=(0.2, 0),
                 bboxprops=dict(fc='none'), pad=0.2)))
             self.infos.append(self.maps.flat[i].add_artist(matplotlib.offsetbox.AnnotationBbox(
                 matplotlib.offsetbox.TextArea(south_text, textprops=dict(horizontalalignment='left',  # center in matplotlib 3.4
                                                                          size=5)), self.infospos,
-                box_alignment=(0.2, 1.4), xycoords=self.projection._as_mpl_transform(self.maps.flat[i]),
+                box_alignment=(0.2, 1.4),
                 bboxprops=dict(fc='none'), pad=0.2)))
 
     def draw_mesh(self, lons, lats, field, **kwargs):
@@ -1310,9 +1482,10 @@ class _MultiMap(_Map_massifs):
         raise NotImplementedError
 
     def openfigure(self):
-        """open a figure with several subplots and puts them in :py:attr:`fig` and :py:attr:`maps`"""
-        self.fig, self.maps = plt.subplots(nrows=self.nrow, ncols=self.ncol, sharex='all', sharey='all',
-                                           figsize=(self.width, self.height))
+        """open a figure with several subplots and puts them in
+        :py:attr:`fig` and :py:attr:`maps`"""
+        self.fig, self.maps = plt.subplots(nrows=self.nrow, ncols=self.ncol, sharex='all',
+                                           sharey='all', figsize=(self.width, self.height))
         return self.fig
 
     def set_maptitle(self, title):
@@ -1330,10 +1503,11 @@ class _MultiMap(_Map_massifs):
             for i in range(self.nsubplots):
                 self.maps.flat[i].set_title(title[0], fontsize=14, pad=self.titlepad)
         elif len(title) < self.nsubplots:
-            for i in range(len(title)):
-                self.maps.flat[i].set_title(title[i], fontsize=14, pad=self.titlepad)
+            for i, i_title in enumerate(title):
+                self.maps.flat[i].set_title(i_title, fontsize=14, pad=self.titlepad)
         else:
-            print("Warning: can not set map titles. len(title) must be either equal to the number of subplots or == 1.")
+            print("Warning: can not set map titles. len(title) must be either"
+                  "equal to the number of subplots or == 1.")
 
     set_title = set_maptitle
 
@@ -1350,7 +1524,7 @@ class MultiMap_Alps(Map_alpes, _MultiMap):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Alp/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Alp/postproc_2021041006_2021041112.nc') as ff:
             points = ff.get_points(ZS=2100, aspect=-1)
             snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points)
@@ -1361,7 +1535,7 @@ class MultiMap_Alps(Map_alpes, _MultiMap):
         lo.draw_massifs(massifs, snow[5, :, :], axis=1, convert_unit=100., forcemin=0., forcemax=50.,
                         palette='YlGnBu', seuiltext=50.,
                         label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
-        lo.highlight_massif(10, snow, convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu',
+        lo.highlight_massif(10, convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu',
                             seuiltext=50., label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
         lo.set_figtitle("SD_1DY_ISBA 2021041112 2100m")
         titles = ['Percentile {0}'.format(i) for i in range(10, 100, 10)]
@@ -1378,7 +1552,7 @@ class MultiMap_Alps(Map_alpes, _MultiMap):
     """
     legendpos = [0.9, 0.15, 0.03, 0.6]  #: legend position on the plot = [0.85, 0.15, 0.03, 0.6]
 
-    def __init__(self, nrow=1, ncol=1, *args, **kw):
+    def __init__(self, *args, nrow=1, ncol=1, **kw):
         """
 
         :param nrow: number of rows of plots
@@ -1390,10 +1564,13 @@ class MultiMap_Alps(Map_alpes, _MultiMap):
         self.nrow = nrow
         self.ncol = ncol
         self.nsubplots = nrow*ncol
+        kw['nrow'] = self.nrow
+        kw['ncol'] = self.ncol
+        kw['nsubplots'] = self.nsubplots
         super(MultiMap_Alps, self).__init__(*args, **kw)
         self.titlepad = 5
         self.set_figsize(18, 15)
-        self.init_maps(*args, **kw)
+        self.init_maps(**kw)
 
 
 class Map_pyrenees(_Map_massifs):
@@ -1408,7 +1585,7 @@ class Map_pyrenees(_Map_massifs):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
             points_nord = ff.get_points(aspect=0, ZS=2100, slope=40)
             points_sud = ff.get_points(aspect=180, ZS=2100, slope=40)
             snow_nord = ff.read('SD_1DY_ISBA', selectpoint=points_nord, hasDecile=True)
@@ -1419,7 +1596,7 @@ class Map_pyrenees(_Map_massifs):
         m.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
         m.add_north_south_info()
-        m.rectangle_massif(massifs, [0, 1, 2], [snow_sud[1, :, 1], snow_sud[1, :, 4],
+        m.rectangle_massif(massifs, [snow_sud[1, :, 1], snow_sud[1, :, 4],
                                                 snow_sud[1, :, 7], snow_nord[1, :, 1],
                                                 snow_nord[1, :, 4], snow_nord[1, :, 7]], ncol=2,
                             convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu',
@@ -1443,17 +1620,18 @@ class Map_pyrenees(_Map_massifs):
 
     mappos = [0.05, 0.06, 0.8, 0.8]  #: map position on the figure = [0.05, 0.06, 0.8, 0.8]
     legendpos = [0.89, 0.13, 0.02, 0.6]  #: legend position on the figure = [0.89, 0.1, 0.03, 0.7]
-    infospos = (600000, 1790000)  #: info box position on the map in Lambert Conformal Coordinates
+    infospos = (-1.8, 42.4)  #: info box position on the map in Lambert Conformal Coordinates
     labelfontsize = 16  #: fontsize of colorbar label
 
-    deport = {64: (0, 2000), 67: (0, 20000), 68: (10000, 5000), 70: (-2000, 10000), 71: (-12000, 5000),
-                   72: (10000, 10000), 73: (10000, 10000), 74: (10000, 3000), 81: (-10000, 1000), 82: (-3000, 0),
-                   83: (1000, 0), 84: (-4000, 0), 85: (0, -7000), 86: (-3000, 0), 87: (0, -10000),
-                   88: (12000, 7000), 89: (0, -4000), 90: (10000, -5000), 91: (-17000, -8000)}
-    """displacement dictionary for the positioning tables near the massif center without overlapping."""
+    deport = {64: (0, 2000), 67: (0, 20000), 68: (10000, 5000), 70: (-2000, 10000),
+              71: (-12000, 5000), 72: (10000, 10000), 73: (10000, 10000), 74: (10000, 3000),
+              75: (5000, 0), 81: (-10000, 1000), 82: (-3000, 0), 83: (1000, 0), 84: (-4000, 0),
+              85: (0, -7000), 86: (-3000, 0), 87: (0, -10000), 88: (12000, 7000),
+              89: (0, -4000), 90: (10000, -5000), 91: (-17000, -8000)}
+    """displacement dictionary for the positioning tables
+    near the massif center without overlapping."""
 
-
-def __init__(self, *args, **kw):
+    def __init__(self, *args, **kw):
         """
 
         :param args: args passed to super class
@@ -1475,7 +1653,7 @@ class MapFrance(_Map_massifs):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with Dataset('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/grid_postproc_2021041112.nc') as ff:
+        with Dataset('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/grid_postproc_2021041112.nc') as ff:
             lats = ff.variables['LAT'][:]
             lons = ff.variables['LON'][:]
             snow = ff.variables['SD_1DY_ISBA'][0, :, :, 8]
@@ -1504,13 +1682,14 @@ class MapFrance(_Map_massifs):
 
     mappos = [0.05, 0.06, 0.8, 0.8]  #: position of the map on the plot
     legendpos = [0.9, 0.13, 0.03, 0.7]  #: position of the colorbar on the plot
-    infospos = (450000, 140000)  #: position of north-south info box in lambert conformal coordinates
+    infospos = (-4., 51.)  #: position of north-south info box in lambert conformal coordinates
     labelfontsize = 20  #: fontsize of colorbar label
 
-    deport = {2: (-10000, 0), 3: (10000, 0), 6: (20000, 0), 7: (-20000, 10000), 9: (15000, -10000), 11: (15000, -10000),
-              13: (15000, 0), 17: (15000, 0), 18: (-20000, -10000), 19: (0, -5000), 20: (0, -5000), 21: (0, -10000),
-              67: (10000, 20000), 68: (0, 5000), 69: (0, 10000), 72: (20000, 20000), 74: (25000, 0),
-              82: (-15000, -40000), 84: (-10000, -30000), 85: (0, -5000), 87: (-5000, -40000), 88: (25000, -5000),
+    deport = {2: (-10000, 0), 3: (10000, 0), 6: (20000, 0), 7: (-20000, 10000), 9: (15000, -10000),
+              11: (15000, -10000), 13: (15000, 0), 17: (15000, 0), 18: (-20000, -10000),
+              19: (0, -5000), 20: (0, -5000), 21: (0, -10000), 67: (10000, 20000), 68: (0, 5000),
+              69: (0, 10000), 72: (20000, 20000), 74: (25000, 0), 82: (-15000, -40000),
+              84: (-10000, -30000), 85: (0, -5000), 87: (-5000, -40000), 88: (25000, -5000),
               89: (15000, -15000), 90: (-25000, 5000), 91: (10000, -5000)}
     """displacement of tables from the center of the massifs"""
 
@@ -1522,29 +1701,6 @@ class MapFrance(_Map_massifs):
         """
 
         super(MapFrance, self).__init__(*args, **kw)
-
-    def getshapes(self):
-        """
-        Read massif shapes from shapefiles for all areas.
-
-        """
-        shapefile_path = os.path.join(SNOWTOOLS_DIR, 'DATA')
-        filenames = ['massifs_{0:s}.shp'.format(iarea) for iarea in self.area]
-        shapefile = [shpreader.Reader(os.path.join(shapefile_path, filename)) for filename in filenames]
-        # Informations sur la projection
-        projfile = 'massifs_{0:s}.prj'.format(self.area[0])
-        with open(os.path.join(shapefile_path, projfile), 'r') as prj_file:
-            prj_txt = prj_file.read()
-            pprojcrs = CRS.from_wkt(prj_txt)
-
-        # Projection du shapefile
-        shpProj = pprojcrs.to_dict()
-        # géométries
-        # records is a generator object. Each record contains a geometry, its attributes and bounds
-        records = [record for sublist in [list(i_shapefile.records()) for i_shapefile in shapefile]
-                   for record in sublist]
-        print(len(records))
-        return shapefile, pprojcrs, shpProj, records
 
 
 class MultiMap_Pyr(Map_pyrenees, _MultiMap):
@@ -1559,7 +1715,7 @@ class MultiMap_Pyr(Map_pyrenees, _MultiMap):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
             points_nord = ff.get_points(aspect=0, ZS=2100, slope=40)
             points_sud = ff.get_points(aspect=180, ZS=2100, slope=40)
             snow_nord = ff.read('SD_1DY_ISBA', selectpoint=points_nord, hasDecile=True)
@@ -1572,7 +1728,7 @@ class MultiMap_Pyr(Map_pyrenees, _MultiMap):
         m.add_north_south_info()
         titles = ff.readtime()
         m.set_maptitle(titles)
-        m.rectangle_massif(massifs, [0, 1, 2], [snow_sud[:, :, 1], snow_sud[:, :, 4],
+        m.rectangle_massif(massifs, [snow_sud[:, :, 1], snow_sud[:, :, 4],
                                                 snow_sud[:, :, 7], snow_nord[:, :, 1],
                                                 snow_nord[:, :, 4], snow_nord[:, :, 7]], ncol=2,
                             convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
@@ -1588,7 +1744,7 @@ class MultiMap_Pyr(Map_pyrenees, _MultiMap):
     legendpos = [0.94, 0.13, 0.02, 0.6]  #: legend position on the figure = [0.89, 0.1, 0.03, 0.7]
     mappos = [0.05, 0.06, 0.95, 0.8]  #: map position on the figure = [0.05, 0.06, 0.85, 0.8]
 
-    def __init__(self, nrow=1, ncol=1, *args, **kw):
+    def __init__(self, *args, nrow=1, ncol=1, **kw):
         """
 
         :param nrow: number of rows of maps
@@ -1601,10 +1757,13 @@ class MultiMap_Pyr(Map_pyrenees, _MultiMap):
         self.nrow = nrow
         self.ncol = ncol
         self.nsubplots = nrow*ncol
+        kw['nrow'] = self.nrow
+        kw['ncol'] = self.ncol
+        kw['nsubplots'] = self.nsubplots
         super(MultiMap_Pyr, self).__init__(*args, **kw)
         self.titlepad = 5
         self.set_figsize(30, 9)
-        self.init_maps(*args, **kw)
+        self.init_maps(**kw)
 
 
 class Map_corse(_Map_massifs):
@@ -1619,7 +1778,7 @@ class Map_corse(_Map_massifs):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Cor/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Cor/postproc_2021041006_2021041112.nc') as ff:
             points = ff.get_points(ZS=2100, aspect=-1)
             snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points)
@@ -1627,7 +1786,7 @@ class Map_corse(_Map_massifs):
         m = cartopy.Map_corse(bgimage=True)
         m.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
-        m.highlight_massif(massifs[0], snow, convert_unit=100., forcemin=0., forcemax=50.,
+        m.highlight_massif(massifs[0], convert_unit=100., forcemin=0., forcemax=50.,
                             palette='YlGnBu', seuiltext=50.,
                             label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
         m.plot_center_massif(massifs, snow[5, :, 4], snow[5, :, 8], convert_unit=100., forcemin=0.,
@@ -1653,10 +1812,11 @@ class Map_corse(_Map_massifs):
     mappos = [0.05, 0.06, 0.8, 0.8]  #: map position on the figure = [0.05, 0.06, 0.8, 0.8]
     legendpos = [0.81, 0.15, 0.03, 0.6]  #: legend position on the figure = [0.81, 0.15, 0.03, 0.6]
     #: info box position on the map in Lambert Conformal Coordinates = (1110000, 1790000)
-    infospos = (1110000, 1790000)  #: info box position on the map in Lambert Conformal Coordinates
+    infospos = (8.5, 43.)  #: info box position on the map in Lambert Conformal Coordinates
     labelfontsize = 20  #: fontsize of colorbar label
-    #: displacement dictionary for the positioning tables near the massif center without overlapping. = {}
     deport = {}
+    """displacement dictionary for the positioning tables near the massif center
+    without overlapping. = {}"""
 
     def __init__(self, *args, **kw):
         """
@@ -1680,7 +1840,7 @@ class MultiMap_Cor(_MultiMap, Map_corse):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Cor/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Cor/postproc_2021041006_2021041112.nc') as ff:
             points = ff.get_points(ZS=2100, aspect=-1)
             snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points)
@@ -1700,7 +1860,7 @@ class MultiMap_Cor(_MultiMap, Map_corse):
        :align: center
     """
 
-    def __init__(self, nrow=1, ncol=1, *args, **kw):
+    def __init__(self, *args, nrow=1, ncol=1, **kw):
         """
 
         :param nrow: number of rows of maps
@@ -1712,9 +1872,12 @@ class MultiMap_Cor(_MultiMap, Map_corse):
         self.nrow = nrow
         self.ncol = ncol
         self.nsubplots = nrow*ncol
+        kw['nrow'] = self.nrow
+        kw['ncol'] = self.ncol
+        kw['nsubplots'] = self.nsubplots
         super(MultiMap_Cor, self).__init__(*args, **kw)
         self.titlepad = 5
-        self.init_maps(*args, **kw)
+        self.init_maps(**kw)
         self.legendpos = [0.85, 0.15, 0.03, 0.6]
 
 
@@ -1730,7 +1893,7 @@ class Zoom_massif(_Map_massifs):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
             points_nord = ff.get_points(aspect=0, ZS=2100, slope=40)
             snow_nord = ff.read('SD_1DY_ISBA', selectpoint=points_nord, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points_nord)
@@ -1757,16 +1920,35 @@ class Zoom_massif(_Map_massifs):
     """
     labelfontsize = 20  #: fontsize of colorbar label
 
-    def __init__(self, num_massif, *args, **kw):
+    def __init__(self, num_massif):
         """
         Init zoom class
 
         :param num_massif:  massif number
-        :param args:
-        :param kw:
         """
-        if 1 <= num_massif <= 24:
+        if 1 <= num_massif <= 27:
             self.area = 'alpes'
+            self.width = 10.2
+            self.height = 8
+            self.legendpos = [0.89, 0.15, 0.03, 0.6]
+            self.mappos = [0.05, 0.03, 0.8, 0.8]
+            self.titlepad = 25
+        elif 45 <= num_massif <= 47:
+            self.area = 'vosges'
+            self.width = 10.2
+            self.height = 8
+            self.legendpos = [0.89, 0.15, 0.03, 0.6]
+            self.mappos = [0.05, 0.03, 0.8, 0.8]
+            self.titlepad = 25
+        elif 55 <= num_massif <= 58:
+            self.area = 'jura'
+            self.width = 10.2
+            self.height = 8
+            self.legendpos = [0.89, 0.15, 0.03, 0.6]
+            self.mappos = [0.05, 0.03, 0.8, 0.8]
+            self.titlepad = 25
+        elif 48 <= num_massif <= 54 or 59 <= num_massif <= 62:
+            self.area = 'central'
             self.width = 10.2
             self.height = 8
             self.legendpos = [0.89, 0.15, 0.03, 0.6]
@@ -1790,17 +1972,20 @@ class Zoom_massif(_Map_massifs):
             raise ValueError("unknown massif number")
 
         self.deport = {}
-        self.shapefile, self.pprojcrs, self.shpProj, self.records = self.getshapes()
-        if self.shpProj['proj'] == 'lcc':
-            self.projection = ccrs.LambertConformal(central_longitude=self.shpProj['lon_0'],
-                                                    central_latitude=self.shpProj['lat_0'],
-                                                    false_easting=self.shpProj['x_0'],
-                                                    false_northing=self.shpProj['y_0'],
-                                                    standard_parallels=(self.shpProj['lat_1'], self.shpProj['lat_2']))
+        self.shapefile, self.pprojcrs, self.shp_proj, self.records = getshapes()
+        if self.shp_proj['proj'] == 'lcc':
+            self.projection = ccrs.LambertConformal(central_longitude=self.shp_proj['lon_0'],
+                                                    central_latitude=self.shp_proj['lat_0'],
+                                                    false_easting=self.shp_proj['x_0'],
+                                                    false_northing=self.shp_proj['y_0'],
+                                                    standard_parallels=(self.shp_proj['lat_1'],
+                                                                        self.shp_proj['lat_2']))
         else:
-            raise NotImplementedError('only LambertConformal projection is implemented for the massif shapes')
+            raise NotImplementedError('only LambertConformal projection '
+                                      'is implemented for the massif shapes')
 
-        self.lonmin, self.lonmax, self.latmin, self.latmax, self.infospos = self.get_map_dimensions(num_massif)
+        self.lonmin, self.lonmax, self.latmin, self.latmax, \
+            self.infospos = self.get_map_dimensions(num_massif)
 
         self.fig = plt.figure(figsize=(self.width, self.height))
         self.fig.subplots_adjust(bottom=0.005, left=0.005, top=0.95, right=0.9)
@@ -1817,13 +2002,13 @@ class Zoom_massif(_Map_massifs):
         :param num_massif: massif numbers
         :return: lonmin, lonmax, latmin, latmax
         """
-        self.dicLonLatMassif = self.getLonLatMassif()
+        self.dicLonLatMassif = getLonLatMassif()
         for massif in self.records:
-            num = massif.attributes['num_opp']
+            num = massif.attributes['code']
             # print(num)
             if num == num_massif:
                 barycentre = self.dicLonLatMassif[num]
-        if self.area in ['alpes', 'corse']:
+        if self.area in ['alpes', 'corse', 'jura', 'central', 'vosges']:
             dlat = 0.55
             dlon = 0.65
             dloninfo = dlon/3.
@@ -1833,13 +2018,17 @@ class Zoom_massif(_Map_massifs):
             dlon = 1.3
             dloninfo = dlon/3.5
             dlatinfo = dlat/4.
+        else:
+            raise NotImplementedError("implemented areas: 'alpes', 'corse', 'jura', "
+                                      "'central', 'vosges', 'pyrenees'")
 
         lonmin = barycentre[0] - dlon
         lonmax = barycentre[0] + dlon
         latmin = barycentre[1] - dlat
         latmax = barycentre[1] + dlat
 
-        infospos = self.projection.project_geometry(Point((lonmax-dloninfo, latmax-dlatinfo)),
-                                                    ccrs.PlateCarree()).coords[0]
+        # infospos = self.projection.project_geometry(Point((lonmax-dloninfo, latmax-dlatinfo)),
+        #                                             ccrs.PlateCarree()).coords[0]
+        infospos = (lonmax-dloninfo, latmax-dlatinfo)
 
         return lonmin, lonmax, latmin, latmax, infospos

@@ -84,6 +84,9 @@ def make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin
     if bool_snow_layer:
         pro1.plot(ax1, variable, date_begin, date_end, real_layers = True, legend = variable)
         pro2.plot(ax2, variable, date_begin, date_end, real_layers = True, legend = variable)
+    elif 'bands' in prosimu(path_pro1).getdimvar(variable):
+        pro1.plot1D_bande(ax1, variable, date_begin, legend = variable)
+        pro2.plot1D_bande(ax2, variable, date_begin, legend = variable)
     else:
         pro1.plot1D(ax1, variable, date_begin, date_end, legend = variable)
         pro2.plot1D(ax2, variable, date_begin, date_end, legend = variable)

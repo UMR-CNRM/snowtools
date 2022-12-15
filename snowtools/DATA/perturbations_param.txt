@@ -1,0 +1,10 @@
+varName,std,tau,fsys
+Tair,2.16,15,0.
+Precip,0.5,1500,1.
+DIR_SWdown,0.5,3,1.
+Wind,0.5,100,1.
+LWdown,24.5,30,0.
+IMPDRY1,0,0,1.
+IMPDRY2,0,0,1.
+IMPWET1,0,0,1.
+IMPWET2,0,0,1.

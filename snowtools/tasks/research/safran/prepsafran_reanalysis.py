@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
 
@@ -44,39 +45,59 @@ class PrepSafran(Task, S2MTaskMixIn):
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
+            ###########################
+            #  I) FICHIER de METADONNES
+            ###########################
+
+            # On commence par récupérer un fichier à échéance 0h qui sert à lire le métédonnées (infos sur la grille en particulier)
+            # Ce fichier supplémentaire est indispensable pour toujours travailler avec la bonne grille du modèle, même en cas d'évolution
+            # de la géométrie ARPEGE.
+            # On prend arbitrairement le fichier le plus récent (correspondant à dateend) pour maximiser les chances qu'il soit sur le cache
+            # WARNING : Dans le cas d'une réanalyse sur une longue periode il faudrait s'assurer qu'il n'y a pas eu de 
+            # changement de géométrie en cours de période.
+            self.sh.title('Toolbox input metadata')
+            tbmeta = toolbox.input(
+                role           = 'Metadata',
+                format         = 'grib',
+                genv            = self.conf.cycle,
+                geometry       = self.conf.cpl_geometry, #EURAT01
+                gdomain        = '[geometry:area]',
+                kind           = 'relief',
+                local          = 'METADATA.grib',
+                fatal          = True,
+            )
+            print(t.prompt, 'tbmeta =', tbmeta)
+            print()
+
             tbarp   = list()
-            interp = ' -i IDW'
             rundate = self.conf.datebegin
             while rundate <= self.conf.dateend:
 
                 tb01 = [[]]
 
-# Force the generation of new guess files since the new guess can't be used for old geometries
                 # 1. Check if guess file already exists
-#                self.sh.title('Toolbox input tb01')
-#                tb01 = toolbox.input(
-#                    role           = 'Ebauche',
-#                    local          = '[date::ymdh]/P[date::addcumul_yymdh]',
-#                    geometry       = self.conf.vconf,
-#                    vapp           = 's2m',
-#                    vconf          = '[geometry:area]',
-#                    experiment     = 'OPER@vernaym',
-#                    cutoff         = 'assimilation',
-#                    block          = self.conf.guess_block,
-#                    date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d))
-#                                      for d in footprints.util.rangex(0, 24, self.conf.cumul)],
-#                    cumul          = self.conf.cumul,
-#                    nativefmt      = 'ascii',
-#                    kind           = 'guess',
-#                    model          = 'safran',
-#                    source_app     = self.conf.source_app,
-#                    source_conf    = self.conf.deterministic_conf,
-#                    namespace      = self.conf.namespace,
-#                    fatal          = False,
-#                ),
-#                print(t.prompt, 'tb01 =', tb01)
-#                print()
-
+                self.sh.title('Toolbox input tb01')
+                tb01 = toolbox.input(
+                    role           = 'Ebauche',
+                    local          = '[date::ymdh]/P[date::addcumul_yymdh]',
+                    geometry       = self.conf.geometry[self.conf.vconf],
+                    vapp           = 's2m',
+                    experiment     = self.conf.xpid,
+                    cutoff         = 'assimilation',
+                    block          = self.conf.guess_block,
+                    date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d))
+                                      for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                    cumul          = self.conf.cumul,
+                    nativefmt      = 'ascii',
+                    kind           = 'guess',
+                    model          = 'safran',
+                    source_app     = self.conf.source_app,
+                    source_conf    = self.conf.deterministic_conf,
+                    namespace      = self.conf.namespace,
+                    fatal          = False,
+                ),
+                print(t.prompt, 'tb01 =', tb01)
+                print()
 
                 if len(tb01[0]) < 5:
 
@@ -92,7 +113,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         tbarp.extend(toolbox.input(
                             role           = 'Gridpoint',
                             format         = 'grib',
-                            geometry       = 'euroc25',
+                            geometry       = self.conf.cpl_geometry,
                             kind           = 'gridpoint',
                             local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
                             date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d))
@@ -120,13 +141,13 @@ class PrepSafran(Task, S2MTaskMixIn):
                     elif rundate < Date(2018, 7, 1):
                         # Pour les dates les plus anciennes aucun archivage sur hendrix n'est disponible
                         # Il faut alors extraire les champs des guess depuis la BDPE avec le script 
-                        # creation_fichiers_RST.py sur guppy
+                        # Extraction_BDAP.py sur guppy
 
                         self.sh.title('Toolbox input tb02')
                         tbarp.extend(toolbox.input(
                             role           = 'Gridpoint',
                             format         = 'grib',
-                            geometry       = 'euroc25',
+                            geometry       = self.conf.cpl_geometry,
                             kind           = 'gridpoint',
                             local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
                             date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d))
@@ -175,7 +196,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         tbarp.extend(toolbox.input(
                             role           = 'Gridpoint',
                             format         = 'grib',
-                            geometry       = 'glob025',
+                            geometry       = self.conf.cpl_geometry,
                             kind           = 'gridpoint',
                             #filtername     = 'concatenate',
                             suite          = 'oper',
@@ -199,6 +220,23 @@ class PrepSafran(Task, S2MTaskMixIn):
 
                 rundate = rundate + Period(days=1)
 
+            ###########################
+            #        SHAPEFILE 
+            ###########################
+            # Dans tous les cas de figure on aura besoin du shapefile des massifs SAFRAN
+            self.sh.title('Toolbox input shapefile')
+            tbshp = toolbox.input(
+                role            = 'Shapefile',
+                genv            = self.conf.cycle,
+                gdomain         = 'all_massifs',
+                geometry        = '[gdomain]',
+                kind            = 'shapefile',
+                model           = self.conf.model,
+                local           = 'massifs_safran.tar',
+            )
+            print(t.prompt, 'tbshp =', tbshp)
+            print()
+
             self.sh.title('Toolbox input tb03 = PRE-TRAITEMENT FORCAGE script')
             tb03 = script = toolbox.input(
                 role        = 'pretraitement',
@@ -206,8 +244,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = '{0:s} -a -d {1:s} -f '.format(interp, self.conf.vconf)
-                              + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp)])),
+                # L'option -d permet de générer des guess pour 1 seul domaine, nommés PYYMMDDHH prêts pour l'archivage
+                rawopts     = ' -o -d {0:s} -f {1:s}'.format(self.conf.geometry[self.conf.vconf].area, ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp)]))),
             )
             print(t.prompt, 'tb03 =', tb03)
             print()
@@ -272,23 +310,26 @@ class PrepSafran(Task, S2MTaskMixIn):
 
         if 'late-backup' in self.steps:
 
+            rundate = self.conf.datebegin
+
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # WARNING : Eviter d'archiver trop de petis fichiers sur HENDRIX.
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-#            for rundate in self.missing_dates:
-#                # 1. Refill generated guess files in vortex cache for future use
-#                self.sh.title('Toolbox output tb04')
-#                tb04 = toolbox.output(
+
+#            while rundate <= self.conf.dateend:
+#
+#                # 1. Save generated guess file in the corresponding Vortex experiment for a re-use
+#                self.sh.title('Toolbox output tb01')
+#                tb01 = toolbox.output(
 #                    role           = 'Ebauche',
 #                    local          = '[date::ymdh]/P[date::addcumul_yymdh]',
-#                    geometry       = self.conf.vconf,
+#                    geometry       = self.conf.geometry,
 #                    vapp           = 's2m',
 #                    vconf          = '[geometry:area]',
-#                    experiment     = 'OPER@vernaym',
+#                    experiment     = self.conf.xpid,
 #                    cutoff         = 'assimilation',
 #                    block          = self.conf.guess_block,
-#                    date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d))
-#                                      for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+#                    date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
 #                    cumul          = self.conf.cumul,
 #                    nativefmt      = 'ascii',
 #                    kind           = 'guess',
@@ -298,10 +339,11 @@ class PrepSafran(Task, S2MTaskMixIn):
 #                    namespace      = self.conf.namespace,
 #                    fatal          = False,
 #                ),
-#                print(t.prompt, 'tb04 =', tb04)
+#                print(t.prompt, 'tb01 =', tb01)
 #                print()
+#
+#                rundate = rundate + Period(days=1)
 
-            # WARNING : The following only works for a 1-year execution
             season = self.conf.datebegin.nivologyseason
             tarname = 'p{0:s}.tar'.format(season)
             # thisdir = os.getcwd()
@@ -333,10 +375,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 date           = self.conf.dateend.ymd6h,
                 begindate      = self.conf.datebegin.ymdh,
                 enddate        = self.conf.dateend.ymdh,
-             ),
+            ),
             print(t.prompt, 'tb05 =', tb05)
             print()
 
-            from vortex.tools.systems import ExecutionError
-            raise ExecutionError('')
-            pass

@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 4 déc. 2018
 
 @author: lafaysse
-'''
+"""
 
 import datetime
 
 import numpy as np
+import os
 
 from snowtools.plots.temporal.chrono import prettyensemble
 from snowtools.plots.pearps2m.postprocess import EnsembleDiags
 from snowtools.utils.prosimu import prosimu
-
+from snowtools.DATA import LUSTRE_NOSAVE_DIR
 
 class EnsembleEscrocDiags(EnsembleDiags):
 
@@ -61,14 +62,14 @@ class EnsembleEscrocDiags(EnsembleDiags):
 
         obsfile = dirsnouf + "/2017-2018/CR3000_SNOUF_2017-2018_corrYves_foret.csv"
         str2date = lambda x: datetime.datetime.strptime(x.decode("utf-8"), '%m/%d/%Y %H:%M')
-        timeObs2017 = np.genfromtxt(obsfile, delimiter=",", skip_header=1, usecols=(0), converters = {0: str2date})
-        varObs2017 = np.genfromtxt(obsfile, delimiter=",", skip_header=1, usecols=(SNOUF_col2017[varname]))
+        timeObs2017 = np.genfromtxt(obsfile, delimiter=",", skip_header=1, usecols=(0,), converters = {0: str2date})
+        varObs2017 = np.genfromtxt(obsfile, delimiter=",", skip_header=1, usecols=(SNOUF_col2017[varname],))
 
         obsfile = dirsnouf + "/2016-2017/Obs_HTN_1h.csv"
         str2date = lambda x: datetime.datetime.strptime(x.decode("utf-8"), '%Y-%m-%d %H:%M:%S')
-        timeObs2016 = np.genfromtxt(obsfile, delimiter="\t", skip_header=1,usecols=(0), converters = {0: str2date})
+        timeObs2016 = np.genfromtxt(obsfile, delimiter="\t", skip_header=1,usecols=(0,), converters = {0: str2date})
 
-        varObs2016 = 2.07 - np.genfromtxt(obsfile, delimiter="\t", skip_header=1,usecols=(1), converters = {0: str2date})
+        varObs2016 = 2.07 - np.genfromtxt(obsfile, delimiter="\t", skip_header=1,usecols=(1,), converters = {0: str2date})
         varObs2016 = np.where(varObs2016 < 0, 0 , varObs2016) * 100.
 
         indfoireux = (timeObs2016 > datetime.datetime(2017,4,30,10)) | ((timeObs2016 < datetime.datetime(2017,4,28, 0)) & (timeObs2016 > datetime.datetime(2017,3 ,14, 0)))
@@ -86,8 +87,8 @@ class EnsembleEscrocDiags(EnsembleDiags):
 
         obsfile = dirsnouf + "/CR3000_SNOUF_2017-2018_corrYves_prairie.csv"
         str2date = lambda x: datetime.datetime.strptime(x.decode("utf-8"), '%m/%d/%Y %H:%M')
-        timeObs2017 = np.genfromtxt(obsfile, delimiter=",", skip_header=1, usecols=(0), converters = {0: str2date})
-        varObs2017 = np.genfromtxt(obsfile, delimiter=",", skip_header=1, usecols=(SNOUF_col2017[varname]))
+        timeObs2017 = np.genfromtxt(obsfile, delimiter=",", skip_header=1, usecols=(0,), converters = {0: str2date})
+        varObs2017 = np.genfromtxt(obsfile, delimiter=",", skip_header=1, usecols=(SNOUF_col2017[varname],))
 
         ESMSnowMIP_dicvarnames = dict(DSN_T_ISBA="snow_depth_auto", WSN_T_ISBA="swe_auto", gap="snow_depth_auto")
 
@@ -198,7 +199,7 @@ if __name__ == "__main__":
     S2ME = S2MExtractor(c)
     snow_members = S2ME.get()
 
-    suptitle = u''.decode('utf-8')
+    suptitle = ''
 
     list_domains = snow_members.keys()
 
@@ -207,9 +208,11 @@ if __name__ == "__main__":
         list_ensembles = snow_members[domain].keys()
 
         if domain == 'cdp':
-            obsfile = '/cnrm/cen/users/NO_SAVE/lafaysse/ESM-SnowMIP/evaldata/snouf'
+            obsfile = os.path.join(LUSTRE_NOSAVE_DIR, 'lafaysse/ESM-SnowMIP/evaldata/snouf')
         else:
-            obsfile = '/cnrm/cen/users/NO_SAVE/lafaysse/ESM-SnowMIP/evaldata/obs_insitu_' + domain + "_" + bdate[domain][0:4] + "_" + edate[domain][0:4] + ".nc"
+            obsfile = os.path.join(LUSTRE_NOSAVE_DIR,
+                                   'lafaysse/ESM-SnowMIP/evaldata/obs_insitu_' + domain + "_" +
+                                   bdate[domain][0:4] + "_" + edate[domain][0:4] + ".nc")
 
         E = dict()
 
@@ -232,11 +235,11 @@ if __name__ == "__main__":
 
         if domain == 'cdp':
             # j'ai inversé E2 et E2open au CDP comme c'est un site dégagé dans snowmip
-            E["E2open"].pack_pretty(E["E2"], diroutput = ".", filename = domain, obsfile = obsfile)
+            E["E2open"].pack_pretty(E["E2"], diroutput=".", filename=domain, obsfile=obsfile)
         else:
-            E["E2"].pack_pretty(E["E2open"], diroutput = ".", filename = domain, obsfile = obsfile)
+            E["E2"].pack_pretty(E["E2open"], diroutput=".", filename=domain, obsfile=obsfile)
 
-        for key, value in E.iteritems():
+        for key, value in E.items():
             value.close()
 
         del E

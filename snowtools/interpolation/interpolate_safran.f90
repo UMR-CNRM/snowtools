@@ -25,6 +25,22 @@ MODULE SUBS
   INTEGER :: IPSTART ! start index in the spatial dimension (points) for the given processor
 
 CONTAINS
+
+  SUBROUTINE ABORT_INTERPOLATE(YTEXT)
+  ! Crash the program
+  CHARACTER(LEN=*),  INTENT(IN)  :: YTEXT
+  !
+  write(0,*) "aborted with text:",TRIM(ytext),"|"
+   
+  CALL ABORT
+
+  !MPI_ABORT(COMM, IERR)
+  CALL MPI_FINALIZE(IERR)
+
+  STOP  
+  !
+  END SUBROUTINE ABORT_INTERPOLATE
+  !
   SUBROUTINE XY_PROC_DISTRIBUTOR(IXYDIM,IPROC_ID, INPROC,IIXSTART, INX_PROC,IIYSTART, INY_PROC)
     ! Routine used for parallelisation with MPI.
     !
@@ -168,7 +184,7 @@ CONTAINS
       ELSEIF (ANY(DIM_NAME_OUT == "lon"))THEN
         GT="LL"
       ELSE
-        STOP "GRID 2D NON TRAITE"
+        CALL ABORT_INTERPOLATE("GRID 2D NON TRAITE")
       ENDIF
       CALL XY_PROC_DISTRIBUTOR(ILENDIM,PROC_ID, NPROC,IXSTART, NX_PROC,IYSTART, NY_PROC)
     ELSEIF(IRANK == 1)THEN
@@ -294,7 +310,7 @@ CONTAINS
         DEALLOCATE(PX2D)
         DEALLOCATE(PY2D)
       ELSE
-        STOP "GRID 2D NOT TRAITED"
+        CALL ABORT_INTERPOLATE("GRID 2D NOT TRAITED")
       ENDIF
       !
     ENDIF
@@ -1046,9 +1062,8 @@ CONTAINS
     INTEGER, INTENT ( IN) :: STATUS ! error number
     CHARACTER(*), INTENT(IN) :: LINE ! description line
 
-    IF(STATUS /= NF90_NOERR) THEN
-      PRINT *, TRIM(NF90_STRERROR(STATUS)),":", LINE
-      STOP "STOPPED"
+    IF(STATUS /= NF90_NOERR) THEN    
+      CALL ABORT_INTERPOLATE(TRIM(NF90_STRERROR(STATUS)) // ":" // LINE)
     END IF
   END SUBROUTINE CHECK
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1063,45 +1078,45 @@ CONTAINS
     READ(UNIT=KNAMUNIT,NML=NAM_SWITCHES_INT, IOSTAT=IOS)
     IF (IOS /= 0) THEN
       PRINT*, IOS
-      STOP 'ERROR reading namelist NAM_SWITCHES_INT'
+      CALL ABORT_INTERPOLATE('ERROR reading namelist NAM_SWITCHES_INT')
     END IF
     ! If multiinput is wanted, read the number of inputs wanted, allocate the filename arrays and
     ! read the input filenames
     IF (LMULTIINPUT) THEN
       READ(UNIT=KNAMUNIT, NML=NAM_MULTIIN_SETTING, IOSTAT=IOS)
       IF (IOS /= 0) THEN
-        STOP 'ERROR reading namelist NAM_MULTIIN_SETTING'
+        CALL ABORT_INTERPOLATE('ERROR reading namelist NAM_MULTIIN_SETTING')
       END IF
       ALLOCATE(HFILESIN(NNUMBER_INPUT_FILES))
       READ(UNIT=KNAMUNIT, NML=NAM_FILENAMES_MULTI_IN, IOSTAT=IOS)
       IF (IOS /= 0) THEN
         PRINT*, IOS, HFILESIN
-        STOP 'ERROR reading namelist NAM_FILENAMES_MULTI_IN'
+        CALL ABORT_INTERPOLATE('ERROR reading namelist NAM_FILENAMES_MULTI_IN')
       END IF
       IF (LMULTIOUTPUT) THEN
         READ(UNIT=KNAMUNIT, NML=NAM_MULTIOUT_SETTING, IOSTAT=IOS)
         IF (IOS /= 0) THEN
           PRINT*, IOS
-          STOP 'ERROR reading namelist NAM_MULTIOUT_SETTING'
+          CALL ABORT_INTERPOLATE('ERROR reading namelist NAM_MULTIOUT_SETTING')
         END IF
         ! check if number of input files equals number of output grids
         IF (NNUMBER_OUTPUT_GRIDS /= NNUMBER_INPUT_FILES) THEN
-          STOP 'ERROR for multiinput and multioutput the number of output grids must equal the number of input files. &
-                  & Check namelist settings'
+          CALL ABORT_INTERPOLATE('ERROR for multiinput and multioutput the number of output grids must &
+                                  equal the number of input files. Check namelist settings')
         END IF
         ALLOCATE(HFILESOUT(NNUMBER_OUTPUT_GRIDS), HGRIDSIN(NNUMBER_OUTPUT_GRIDS))
         ! read the output file names and the associated grid filenames
         READ(KNAMUNIT,NML=NAM_FILENAMES_MULTI_OUT, IOSTAT=IOS)
         IF (IOS /= 0) THEN
           PRINT*, IOS, HFILESOUT, HGRIDSIN, SHAPE(HGRIDSIN)
-          STOP 'ERROR reading namelist NAM_FILENAMES_MULTI_OUT'
+          CALL ABORT_INTERPOLATE('ERROR reading namelist NAM_FILENAMES_MULTI_OUT')
         END IF
       ELSE
         ALLOCATE(HFILESOUT(1), HGRIDSIN(1))
         READ(KNAMUNIT, NML=NAM_FILENAMES_SINGLE_OUT, IOSTAT=IOS)
         IF (IOS /= 0) THEN
           PRINT*, IOS, HFILEOUT, HGRIDIN
-          STOP 'ERROR reading namelist NAM_FILENAMES_SINGLE_OUT'
+          CALL ABORT_INTERPOLATE('ERROR reading namelist NAM_FILENAMES_SINGLE_OUT')
         END IF
         HGRIDSIN(1) = HGRIDIN
         HFILESOUT(1) = HFILEOUT
@@ -1110,16 +1125,17 @@ CONTAINS
     ELSE
       READ(UNIT=KNAMUNIT, NML=NAM_FILENAMES_SINGLE_IN, IOSTAT=IOS)
       IF (IOS /= 0) THEN
-        STOP 'ERROR: problem reading namelist NAM_FILENAMES_SINGLE_IN'
+        CALL ABORT_INTERPOLATE('ERROR: problem reading namelist NAM_FILENAMES_SINGLE_IN')
       END IF
       ALLOCATE(HFILESIN(1))
       HFILESIN(1) = HFILEIN
       IF (LMULTIOUTPUT) THEN
-        STOP 'ERROR: Output of multiple files not supported for a single input. Check namelist settings'
+        CALL ABORT_INTERPOLATE('ERROR: Output of multiple files not supported for a single input.&
+                                Check namelist settings')
       ELSE
         READ(UNIT=KNAMUNIT, NML=NAM_FILENAMES_SINGLE_OUT, IOSTAT=IOS)
         IF (IOS /= 0) THEN
-          STOP 'ERROR: problem reading namelist NAM_FILENAMES_SINGLE_OUT'
+          CALL ABORT_INTERPOLATE('ERROR: problem reading namelist NAM_FILENAMES_SINGLE_OUT')
         END IF
         ALLOCATE(HFILESOUT(1), HGRIDSIN(1))
         HFILESOUT(1) = HFILEOUT
@@ -1131,19 +1147,19 @@ CONTAINS
     IF (LSELECTVAR) THEN
       READ(UNIT=KNAMUNIT, NML=NAM_SELECT_VARS_SETTING, IOSTAT=IOS)
       IF (IOS /= 0) THEN
-        STOP 'ERROR: problem reading namelist NAM_SELECT_VARS_SETTING'
+        CALL ABORT_INTERPOLATE('ERROR: problem reading namelist NAM_SELECT_VARS_SETTING')
       END IF
       ALLOCATE(HVAR_LIST(NNUMBER_OF_VARIABLES))
       READ(UNIT=KNAMUNIT, NML=NAM_SELECT_VARS_NAMES, IOSTAT=IOS)
       IF (IOS /= 0) THEN
-        STOP 'ERROR: problem reading namelist NAM_SELECT_VARS_NAMES'
+        CALL ABORT_INTERPOLATE('ERROR: problem reading namelist NAM_SELECT_VARS_NAMES')
       END IF
     END IF
     !
     READ(UNIT=KNAMUNIT,NML=NAM_OTHER_STUFF, IOSTAT=IOS)
     IF (IOS /= 0) THEN
-      PRINT*, IOS, LTIMECHUNK, NLONCHUNKSIZE, NLATCHUNKSIZE
-      STOP 'ERROR reading namelist NAM_OTHER_STUFF'
+      PRINT*, IOS, LTIMECHUNK, LSPATIALCHUNK, NLONCHUNKSIZE, NLATCHUNKSIZE
+      CALL ABORT_INTERPOLATE('ERROR reading namelist NAM_OTHER_STUFF')
     END IF
     ! PRINT*, HFILESOUT
     ! PRINT*, HFILESIN
@@ -1157,7 +1173,7 @@ PROGRAM INTERPOLATE_SAFRAN
   ! This program interpolates SAFRAN meteorological data.
   !
   ! If a namelist called interpolate_safran.nam is present, the configuration information from the namelist is used.
-  ! Otherwise the default configuration is used.
+  ! Otherwise the default configuration is used. An example namelist can be found in sonwtools/DATA.
   !
   ! :Default configuration:
   !   #) A file named "GRID.nc" is read, containing the output grid (2D case) or station (1D case) information.
@@ -1171,7 +1187,7 @@ PROGRAM INTERPOLATE_SAFRAN
   !      - Providing a grid definition file for each of them (set :f:var:`lmultiinput` =.TRUE. and :f:var:`lmultioutput` =.TRUE.) and producing a separate output file for each of them
   !      - Combining the data from them on a single grid in a single output file (set :f:var:`lmultiinput` =.TRUE. and :f:var:`lmultioutput` =.FALSE.)
   !   #) Treat time steps sepatately in order to save memory in the case of very large fields by setting :f:var:`ltimechunk` = .TRUE.
-  !   #) customize the NetCDF chunksize of the spatial output dimensions in order to optimise write performance for large fields. (:f:var:`nlonchunksize`,   :f:var:`nlatchunksize`)
+  !   #) customize the NetCDF chunksize of the spatial output dimensions in order to optimise write performance for large fields. (:f:var:`lspatialchunk` = .TRUE. and :f:var:`nlonchunksize`,   :f:var:`nlatchunksize`)
   !   #) Select variables to be interpolated. (set :f:var:`lselectvar` = .TRUE., assign a list of variables to :f:var:`hvar_list` and give the number of selected variables to :f:var:`nnumber_of_variables`)
   !
 USE SUBS
@@ -1252,7 +1268,9 @@ INTEGER :: IMASSIFTODELETE, ILAYERTODELETE, I, status
 LOGICAL :: AFTERLOC
 LOGICAL :: LPRINT
 CHARACTER(LEN=10),DIMENSION(4) :: LL_VARNAME
-
+!
+! LOGICAL :: LSPATIALCHUNK! temporary, to be defined in namelist
+!
 !
 COMM = MPI_COMM_WORLD
 CALL MPI_INIT(IERR)
@@ -1287,6 +1305,8 @@ IF (IOS == 0) THEN
 !  PRINT*, NNUMBER_INPUT_GRIDS
 !  PRINT*, 'HFILEIN ', HFILEIN, 'HGRIDIN ', HGRIDIN
 !  PRINT*, 'HFILESIN ', HFILESIN, 'HGRIDSIN ', HGRIDSIN
+!  LSPATIALCHUNK = .TRUE. ! temporary --> should be defined in namelist
+!
 ELSE
   PRINT*, 'WARNING: no namelist interpolate_safran.nam provided. Continue with default settings.'
   ALLOCATE(HFILESIN(1), HGRIDSIN(1), HFILESOUT(1))
@@ -1296,6 +1316,7 @@ ELSE
   NNUMBER_INPUT_FILES = 1
   NNUMBER_OUTPUT_GRIDS = 1
   LTIMECHUNK = .FALSE.
+  LSPATIALCHUNK = .FALSE.
   NLONCHUNKSIZE = 100
   NLATCHUNKSIZE = 100
 END IF
@@ -1458,7 +1479,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
                   "Cannot def dim x  "//TRIM(HFILENAMEOUT))
           !
           ELSE
-            STOP "INCORRECT TYPE OF GRID"
+            CALL ABORT_INTERPOLATE("INCORRECT TYPE OF GRID")
           ENDIF
         ELSE
           IF (GRID_TYPE == "LL") THEN
@@ -1476,7 +1497,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
           ILLOC_ID = DIM_ID_OUT(IDOUT)
           IDOUT = IDOUT + 2
       ELSE
-        STOP 'INCORRECT RANK OF OUTPUT GRID'
+        CALL ABORT_INTERPOLATE('INCORRECT RANK OF OUTPUT GRID')
       END IF
 
       !
@@ -1572,7 +1593,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
         END IF
         IDOUT = IDOUT +1
       ELSE
-        STOP 'INCORRECT RANK OF OUTPUT GRID'
+        CALL ABORT_INTERPOLATE('INCORRECT RANK OF OUTPUT GRID')
       ENDIF
     END IF
     !
@@ -1627,7 +1648,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
                 DIM_ID_OUT(ILLOC_ID+1),VAR_ID_OUT(INVAR+2)),"Cannot def var x")
         !
       ELSE
-        STOP "INCORRECT TYPE OF GRID 2D"
+        CALL ABORT_INTERPOLATE("INCORRECT TYPE OF GRID 2D")
       ENDIF
     ELSEIF(IRANK==1) THEN
       CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,"LAT",NF90_DOUBLE,&
@@ -1654,15 +1675,22 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
               ANY( VAR_ID_DIMS_OUT(:,IV) == ILAYERTODELETE ).OR.               &
               (GRID_TYPE == "LL" .AND.  ANY(VAR_NAME_IN(IV) == LL_VARNAME))) CYCLE
       ! Create variable in output file
-      IF (SUM(VAR_ID_DIMS_OUT(:,IV)) == 0) THEN
+      ! ML : on large domains (e.g. Gdes Rousses at 30 m resolution from Ange), hdf5 random crashes
+      ! are obtained with NF90_PUT_VAR when defining the chunk size.
+      ! Furthermore, running time is lower with standard definition (without chunk size).
+      ! Therefore, default is changed to standard variable definition,
+      ! as chunk size must ALWAYS be tested and adjusted for each application. 
+      IF ((.NOT. LSPATIALCHUNK) .OR. (SUM(VAR_ID_DIMS_OUT(:,IV)) == 0)) THEN
+        PRINT*,"variable " // VAR_NAME_IN(IV) //" defined normally"      
         ! PRINT*, DIM_CHUNK_OUT, VAR_NAME_IN(IV), VAR_ID_DIMS_OUT(:,IV)
         ! PRINT*, DIM_CHUNK_OUT(PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0))
         CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,VAR_NAME_IN(IV),VAR_TYPE_IN(IV), &
                 PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0),VAR_ID_OUT(IV)),&
                 "Cannot def var "//TRIM(VAR_NAME_IN(IV)))
       ELSE
+        PRINT*,"variable " // VAR_NAME_IN(IV) //" defined with explicit chunksize :"
         ! PRINT*, DIM_CHUNK_OUT, VAR_NAME_IN(IV), VAR_ID_DIMS_OUT(:,IV)
-        ! PRINT*, DIM_CHUNK_OUT(PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0))
+        PRINT*, DIM_CHUNK_OUT(PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0))
         CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,VAR_NAME_IN(IV),VAR_TYPE_IN(IV), &
               PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0),VAR_ID_OUT(IV), &
               chunksizes=DIM_CHUNK_OUT(PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0))),&
@@ -1682,34 +1710,51 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
     CALL CHECK(NF90_ENDDEF(FILE_ID_OUT),"Cannot end of definition of output file")
 
     IF(IRANK == 2 )THEN
-      IF (GRID_TYPE == "LL") THEN
+      ! Set independent access for coordinate variables (full writing by 1 thread)
+      DO IV = INVAR+1, INVAR+2
+        CALL CHECK(NF90_VAR_PAR_ACCESS(FILE_ID_OUT, VAR_ID_OUT(IV), nf90_independent),&
+            "can not set independent write for 2d coordinates")
+      ENDDO
+      ! Write coordinates variables
+      IF (PROC_ID == 0) THEN
+        IF (GRID_TYPE == "LL") THEN
+          !lat
+          CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+1),ZLATOUT ,&
+                start= (/1/) ,count =(/NY/)),"Cannot put lat")
+          ! lon
+          CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+2),ZLONOUT ,&
+                start= (/1/) ,count =(/NX/)),"Cannot put lon")
+        
+        ELSEIF (GRID_TYPE == "XY") THEN
+          !y
+          CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+1),ZYOUT ,&
+                start= (/1/) ,count =(/NY/)),"Cannot put y")
+          !x
+          CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+2),ZXOUT ,&
+                start= (/1/) ,count =(/NX/)),"Cannot put x")
+
+        ELSE
+          CALL ABORT_INTERPOLATE("INCORRECT TYPE OF GRID 2D")        
+        ENDIF
+      ENDIF
+    ELSEIF(IRANK==1) THEN
+      ! Set independent access for coordinate variables (full writing by 1 thread)
+      DO IV = INVAR+1, INVAR+3
+        CALL CHECK(NF90_VAR_PAR_ACCESS(FILE_ID_OUT, VAR_ID_OUT(IV), nf90_independent),&
+            "can not set independent write for 1d metadata")
+      ENDDO
+      ! Write coordinates variables
+      IF (PROC_ID == 0) THEN    
         !lat
         CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+1),ZLATOUT ,&
-                start= (/1/) ,count =(/NY/)),"Cannot put lat")
+                start= (/1/) ,count =(/NX/)),"Cannot put lat")
         ! lon
         CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+2),ZLONOUT ,&
                 start= (/1/) ,count =(/NX/)),"Cannot put lon")
-      ELSEIF (GRID_TYPE == "XY") THEN
-        !y
-        CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+1),ZYOUT ,&
-                start= (/1/) ,count =(/NY/)),"Cannot put y")
-        !x
-        CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+2),ZXOUT ,&
-                start= (/1/) ,count =(/NX/)),"Cannot put x")
-
-      ELSE
-        STOP "INCORRECT TYPE OF GRID 2D"
-      ENDIF
-    ELSEIF(IRANK==1) THEN
-      !lat
-      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+1),ZLATOUT ,&
-              start= (/1/) ,count =(/NX/)),"Cannot put lat")
-      ! lon
-      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+2),ZLONOUT ,&
-              start= (/1/) ,count =(/NX/)),"Cannot put lon")
-      ! station
-      CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+3),ISTATIONOUT ,&
-              start= (/1/) ,count =(/NX/)),"Cannot put station")
+        ! station
+        CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(INVAR+3),ISTATIONOUT ,&
+                start= (/1/) ,count =(/NX/)),"Cannot put station")
+      END IF
     END IF
 !
     NTIME =  DIM_SIZE_OUT(ITIMEID)
@@ -1730,10 +1775,24 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
     IF (ANY( VAR_ID_DIMS_OUT(:,IV) == IMASSIFTODELETE ).OR.              &
             ANY( VAR_ID_DIMS_OUT(:,IV) == ILAYERTODELETE ).OR.               &
             (GRID_TYPE == "LL" .AND.  ANY(VAR_NAME_IN(IV) == LL_VARNAME))) CYCLE
-    !  !Unlimited dimensions require collective writes
-    CALL CHECK(NF90_VAR_PAR_ACCESS(FILE_ID_OUT, VAR_ID_OUT(IV), nf90_collective),&
+    
+    ! Set independent access for coordinate variables (full writing by 1 thread)
+    IF ((VAR_NAME_IN(IV) == "aspect") .OR. (VAR_NAME_IN(IV) == "slope")  .OR. &
+       ((VAR_NAME_IN(IV) == "LAT" .OR. VAR_NAME_IN(IV) == "LON") .AND. GRID_TYPE == "XY")) THEN
+      ! Special case: lat / lon computed for the full domain and written by a single thread
+      IF (PROC_ID == 0) THEN
+        PRINT*, "This thread writes the LAT LON coordinates of the full XY grid."
+      ELSE
+        PRINT*, "This thread does not write any LAT LON coordinates."      
+      END IF
+      CALL CHECK(NF90_VAR_PAR_ACCESS(FILE_ID_OUT, VAR_ID_OUT(IV), nf90_independent),&
             "collective write"//VAR_NAME_IN(IV)//HFILESIN(JINFILE))
-
+    ELSE
+      ! Set collective writing access for other variables
+      CALL CHECK(NF90_VAR_PAR_ACCESS(FILE_ID_OUT, VAR_ID_OUT(IV), nf90_collective),&
+            "collective write"//VAR_NAME_IN(IV)//HFILESIN(JINFILE))
+    ENDIF
+    !
     IF (VAR_NAME_IN(IV) == "time") THEN
       ! time variable
       IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
@@ -1749,7 +1808,8 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
               , start =(/1/), count = (/NTIME/)) &
               ,"Cannot get var time")
         IF (ANY((VALUE_TIME - VALUE_TIME_OLD) /= 0)) THEN
-          STOP "ERROR: Multiple inputs on a single output grid must be valid for the same time steps"
+          CALL ABORT_INTERPOLATE("ERROR: Multiple inputs on a single output grid&
+                                  must be valid for the same time steps")
         END IF
       END IF
       !
@@ -1761,13 +1821,13 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       END IF
     ELSEIF (VAR_NAME_IN(IV) == "aspect") THEN
       !ZASPECTOUT = Proc_id
-      IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
+      IF ((LMULTIOUTPUT .OR. (JINFILE == 1)) .AND. (PROC_ID == 0)) THEN
         CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZASPECTOUT, &
               start =(/1,1/), count = (/NX, NY/)), &
               "Cannot put var aspect")
       END IF
     ELSEIF (VAR_NAME_IN(IV) == "slope") THEN
-      IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
+      IF ((LMULTIOUTPUT .OR. (JINFILE == 1)) .AND. (PROC_ID == 0)) THEN
         CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZSLOPEOUT, &
               start =(/1,1/), count = (/NX,NY/)), &
               "Cannot put var slope")
@@ -1780,7 +1840,9 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       END IF
     ELSEIF (VAR_NAME_IN(IV) == "LAT" .AND. GRID_TYPE == "XY") THEN
       !
-      IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
+      IF ((LMULTIOUTPUT .OR. (JINFILE == 1)) .AND. (PROC_ID == 0)) THEN
+        ! This could be parallelized, but it is not expensive.
+        ! For now as for coordinates, a single thread deals with the full domain
         ALLOCATE(ZVARLATLON(NX,NY))
         CALL LATLON_IGN(ZXOUT,ZYOUT,PLAT=ZVARLATLON)
         CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARLATLON , &
@@ -1791,7 +1853,10 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       !!    !
     ELSEIF (VAR_NAME_IN(IV) == "LON" .AND. GRID_TYPE == "XY") THEN
       !
-      IF (LMULTIOUTPUT .OR. (JINFILE == 1)) THEN
+      IF ((LMULTIOUTPUT .OR. (JINFILE == 1)) .AND. (PROC_ID == 0)) THEN
+        ! This could be parallelized, but it is not expensive.
+        ! For now as for coordinates, a single thread deals with the full domain
+        ! NB : It is not efficient to call twice LATLON_IGN ! Should be done once and saved
         ALLOCATE(ZVARLATLON(NX,NY))
         CALL LATLON_IGN(ZXOUT,ZYOUT,PLON=ZVARLATLON)
         CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZVARLATLON , &
@@ -1818,7 +1883,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
                 "Q cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
         IF (ANY((ZVARINT - ZVARINT_TMP) /= 0)) THEN
           PRINT*, "Problem with variable ", VAR_NAME_IN(IV)
-          STOP "ERROR: Multiple inputs on a single output grid must have equal values for variable "
+          CALL ABORT_INTERPOLATE("ERROR: Multiple inputs on a single output grid must have equal values for variable ")
         END IF
         DEALLOCATE(ZVARINT, ZVARINT_TMP)
       END IF
@@ -1836,7 +1901,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
                 "R cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
         IF ((ZSCAIN - ZSCAIN_TMP) /= 0) THEN
           PRINT*, "Problem with variable ", VAR_NAME_IN(IV)
-          STOP "ERROR: Multiple inputs on a single output grid must have equal values for variable "
+          CALL ABORT_INTERPOLATE("ERROR: Multiple inputs on a single output grid must have equal values for variable ")
         END IF
       END IF
       !
@@ -1857,7 +1922,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
                 "S cannot get variable "//VAR_NAME_IN(IV)//"from "//TRIM(HFILENAMEOUT))
         IF (ANY((ZVARIN - ZVARIN_TMP) /= 0)) THEN
           PRINT*, "Problem with variable ", VAR_NAME_IN(IV)
-          STOP "ERROR: Multiple inputs on a single output grid must have equal values for variable "
+          CALL ABORT_INTERPOLATE("ERROR: Multiple inputs on a single output grid must have equal values for variable ")
         END IF
         DEALLOCATE(ZVARIN, ZVARIN_TMP)
       END IF

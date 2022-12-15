@@ -41,6 +41,8 @@ from snowtools.utils.dates import check_and_convert_date, pretty_date
 from snowtools.plots.temporal.chrono import spaghettis_with_det, spaghettis
 from snowtools.utils.infomassifs import infomassifs
 from snowtools.utils.FileException import DirNameException
+from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR
+
 from bronx.stdtypes.date import today
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 if six.PY2:
@@ -50,7 +52,7 @@ if six.PY2:
 else:
     echecker = ExternalCodeImportChecker('plots.maps.cartopy')
     with echecker:
-        from snowtools.plots.maps.cartopy import Map_alpes, Map_pyrenees, Map_corse
+        from snowtools.plots.maps.cartopy import Map_alpes, Map_pyrenees, Map_corse, Map_vosges, Map_jura, Map_central
 
 if 'fast' in matplotlib.style.available:
     matplotlib.style.use('fast')
@@ -82,11 +84,14 @@ def parse_options(arguments):
 
     parser.add_option("-o",
                       action="store", type="string", dest="diroutput",
-                      default="/cnrm/cen/users/NO_SAVE/radanovicss/PEARPS2M_dev",
+                      default=os.path.join(LUSTRE_NOSAVE_USER_DIR, "PEARPS2M"),
                       help="Output directory")
 
     parser.add_option("--dev",
                       action="store_true", dest="dev", default=False)
+    parser.add_option("--dble", action="store_true", dest="dble", default=False)
+
+    parser.add_option("--reforecast", action="store_true", dest="reforecast", default=False)
 
     (options, args) = parser.parse_args(arguments)  # @UnusedVariable
 
@@ -111,7 +116,7 @@ class config(object):
     # xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
     # list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
 
-    list_members = list(range(0, 35))  #: 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+    list_members = list(range(0, 36))  #: 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
 
     def __init__(self):
         """
@@ -137,7 +142,19 @@ class config(object):
         if options.dev:
             self.xpid = "nouveaux_guess@lafaysse"
             delattr(config, 'alternate_xpid')
-            self.list_geometry = ['cor', 'alp', 'pyr']
+            self.list_geometry = ['jur', 'mac', 'vog', 'cor', 'alp', 'pyr', 'postes']
+        self.dble = options.dble
+        if options.dble:
+            self.xpid = "dble"
+            delattr(config, 'alternate_xpid')
+            self.list_geometry = ['alp', 'pyr', 'cor', 'jur', 'mac', 'vog', 'postes']
+        self.reforecast = options.reforecast
+        if options.reforecast:
+            self.xpid = "reforecast_double2021@vernaym"
+            delattr(config, 'alternate_xpid')
+            self.list_geometry = ['jur4_allslopes_reforecast', 'mac11_allslopes_reforecast',
+                                  'vog3_allslopes_reforecast', 'alp27_allslopes',
+                                  'pyr24_allslopes', 'cor2_allslopes']
 
 
 class Ensemble(object):
@@ -183,7 +200,7 @@ class Ensemble(object):
             if ntime == self.nech:
                 self.simufiles.append(p)
                 if 'mb035' in member:
-                    self.inddeterministic = m
+                    self.inddeterministic = len(self.simufiles) - 1
 
         self.nmembers = len(self.simufiles)
         print(self.nmembers)
@@ -601,7 +618,7 @@ class EnsembleStation(Ensemble):
         """
         # nameposte gives unicode
         # matplotlib expects unicode
-        return self.InfoMassifs.nameposte(station) + u" %d m" % int(alti)
+        return self.InfoMassifs.nameposte(station) + " %d m" % int(alti)
 
 
 class EnsembleDiags(Ensemble):
@@ -706,8 +723,10 @@ class EnsembleOperDiags(EnsembleDiags):
             list_filenames, list_titles = self.get_metadata(nolevel=self.attributes[var]['nolevel'])
 
             if hasattr(self, 'inddeterministic'):
+                # print('has inddet')
                 s = spaghettis_with_det(self.time)
             else:
+                # print('no inddet')
                 s = spaghettis(self.time)
             settings = self.attributes[var].copy()
             if 'label' in self.attributes[var].keys():
@@ -727,7 +746,8 @@ class EnsembleOperDiags(EnsembleDiags):
                     qmax = self.quantiles[var][2][:, point]
 
                 if hasattr(self, 'inddeterministic'):
-                    s.draw(self.time, allmembers[:, self.inddeterministic], allmembers, qmin, qmed, qmax, **settings)
+                    s.draw(self.time, allmembers, qmin, qmed, qmax, deterministic=allmembers[:, self.inddeterministic],
+                           **settings)
                 else:
                     s.draw(self.time, allmembers, qmin, qmed, qmax, **settings)
 
@@ -790,7 +810,8 @@ class EnsembleOperDiags(EnsembleDiags):
                         settings['commonlabel'] = kwargs['labels'][p]
 
                     if hasattr(self, 'inddeterministic'):
-                        s.draw(self.time, allmembers[:, self.inddeterministic], allmembers, qmin, qmed, qmax, **settings)
+                        s.draw(self.time, allmembers, qmin, qmed, qmax,
+                               deterministic=allmembers[:, self.inddeterministic], **settings)
                     else:
                         s.draw(self.time, allmembers, qmin, qmed, qmax, **settings)
 
@@ -799,7 +820,7 @@ class EnsembleOperDiags(EnsembleDiags):
                 s.addlogo()
                 plotname = diroutput + "/" + var + "_" + list_filenames[point] + "." + self.formatplot
                 s.save(plotname, formatout=self.formatplot)
-                print (plotname + " is available.")
+                print(plotname + " is available.")
 
             s.close()
 
@@ -836,7 +857,8 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
         :param diroutput: output directory to save the maps
         """
 
-        map_generic = dict(alp=Map_alpes, pyr=Map_pyrenees, cor=Map_corse)
+        map_generic = dict(alp=Map_alpes, pyr=Map_pyrenees, cor=Map_corse, jur=Map_jura, mac=Map_central,
+                           vog=Map_vosges)
 
         alti = self.get_alti()
         list_alti = list(set(alti))
@@ -972,7 +994,8 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
         :param diroutput: output directory to save the maps
         """
 
-        map_generic = dict(alp=Map_alpes, pyr=Map_pyrenees, cor=Map_corse)
+        map_generic = dict(alp=Map_alpes, pyr=Map_pyrenees, cor=Map_corse, jur=Map_jura, vog=Map_vosges,
+                           mac=Map_central)
 
         list_pairs = self.get_pairs_ns()  # pylint: disable=possibly-unused-variable
 
@@ -1009,7 +1032,7 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
                         for q, quantile in enumerate(self.list_q):  # pylint: disable=possibly-unused-variable
                             list_values.append(self.quantiles[var][q][t, indalti])
                     # print(len(massif[indalti]))
-                    m.rectangle_massif(massif[indalti], self.list_q, list_values, ncol=2, **self.attributes[var])
+                    m.rectangle_massif(massif[indalti], list_values, ncol=2, **self.attributes[var])
                     if six.PY2:
                         title = "pour le " + pretty_date(self.time[t]).decode('utf-8')
                     else:
@@ -1189,14 +1212,21 @@ if __name__ == "__main__":
     os.chdir(c.diroutput)
     if c.dev:
         S2ME = FutureS2MExtractor(c)
+    elif c.dble:
+        S2ME = FutureS2MExtractor(c)
+    elif c.reforecast:
+        S2ME = FutureS2MExtractor(c)
     else:
         S2ME = S2MExtractor(c)
     snow_members, snow_xpid = S2ME.get_snow()
 
+
     dict_chaine = defaultdict(str)
     dict_chaine['OPER'] = ' (oper)'
+    dict_chaine['DBLE'] = ' (double)'
     dict_chaine['MIRR'] = ' (miroir)'
     dict_chaine['OPER@lafaysse'] = ' (dev)'
+    dict_chaine['nouveaux_guess@lafaysse'] = ' (dev)'
     # undefined xpid is possible because it is allowed by defaultdict
 
     locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
@@ -1221,7 +1251,7 @@ if __name__ == "__main__":
             E = EnsembleOperDiagsFlatMassif()
             ENS = EnsembleOperDiagsNorthSouthMassif()
             ENS.open(snow_members[domain])
-
+        print('number of member files', len(snow_members[domain]))
         E.open(snow_members[domain])
 
         print("domain " + domain + " npoints = " + str(E.npoints))

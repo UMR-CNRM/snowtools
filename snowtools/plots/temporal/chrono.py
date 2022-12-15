@@ -114,6 +114,9 @@ class temporalplot_abstract(Mplfigure):
 
 
 class temporalplot(temporalplot_abstract):
+
+    figsize = (5, 4)
+
     def __init__(self,  *args, **kwargs):
         super(temporalplot, self).__init__(**kwargs)
         self.fig = plt.figure(figsize=self.figsize)
@@ -146,7 +149,7 @@ class temporalplotSim(temporalplot):
         from snowtools.plots.temporal.chrono import temporalplotSim
 
         # read data
-        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/PRO_LaPlagne_2000-2001.nc') as p:
+        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/PRO_LaPlagne_2000-2001.nc') as p:
             sd = p.read('DSN_T_ISBA')
             sd2 = p.read('SNOWTEMP')
             time = p.readtime()
@@ -191,7 +194,7 @@ class temporalplotObsSim(temporalplot):
         from snowtools.utils.prosimu import prosimu
         from snowtools.plots.temporal.chrono import temporalplotObsSim
         # read data
-        with prosimu('/rd/cenfic2/manto/viallonl/testbase/PRO/PRO_LaPlagne_2000-2001.nc') as p:
+        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/PRO_LaPlagne_2000-2001.nc') as p:
             sd = p.read('DSN_T_ISBA')
             sd2 = p.read('SNOWTEMP')
             time = p.readtime()
@@ -327,7 +330,7 @@ class spaghettis(temporalplot):
 
 class spaghettis_with_det(spaghettis):
     def draw(self, timeSim, ensemble, qmin, qmed, qmax, deterministic=None, *args, **kwargs):
-        super(spaghettis_with_det, self).draw(timeSim, ensemble, qmin, qmed, qmax, deterministic, *args, **kwargs)
+        # super(spaghettis_with_det, self).draw(timeSim, ensemble, qmin, qmed, qmax, deterministic, *args, **kwargs)
         if 'commonlabel' in kwargs.keys():
             detlabel = u"Dét." + " " + kwargs['commonlabel']
         else:

@@ -7,12 +7,12 @@ Created on 11 oct. 2017
 """
 import unittest
 import os
-import datetime
 
 from snowtools.tasks.s2m_command import Surfex_command as s2m
 from snowtools.DATA import SNOWTOOLS_DATA
 from snowtools.tests.export_output import exportoutput
 from snowtools.tests.tempfolder import TestWithTempFolderWithLog
+from snowtools.DATA import DIRDATAPGD
 
 
 class s2mTest(TestWithTempFolderWithLog):
@@ -27,7 +27,7 @@ class s2mTest(TestWithTempFolderWithLog):
             s2m(command.split())
 
     def runatcen(self):
-        return os.path.isdir("/rd/cenfic2/manto/lafaysse") or "DIRDATAPGD" in list(os.environ.keys())
+        return os.path.isdir(DIRDATAPGD) or "DIRDATAPGD" in list(os.environ.keys())
 
 
 class s2mMassifTest(s2mTest):
@@ -41,7 +41,7 @@ class s2mMassifTest(s2mTest):
         self.full_run("s2m -b 20101001 -e 20101002")
 
     def test_extract_domain(self):
-        self.full_run("s2m -b 20100801 -e 20110201 -U 2400")
+        self.full_run("s2m -b 20110101 -e 20110201 -U 2400")
 
     def test_extend_slopes(self):
         self.full_run("s2m -b 20110101 -e 20110201 -l 0,20,40 -c 8")

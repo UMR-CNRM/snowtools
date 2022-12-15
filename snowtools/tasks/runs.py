@@ -22,7 +22,7 @@ from snowtools.utils.resources import get_file_period, get_file_date, get_file_c
 from snowtools.utils.prosimu import prosimu
 from snowtools.utils.FileException import DirFileException
 from snowtools.utils.git import git_infos
-from snowtools.DATA import SNOWTOOLS_DIR
+from snowtools.DATA import SNOWTOOLS_DIR, DIRDATAPGD
 
 
 class surfexrun(object):
@@ -182,6 +182,8 @@ class surfexrun(object):
                 get_file_const_or_crash(self.execdir + "/../MY_RUN/ECOCLIMAP/" + ecoclimap_file, ecoclimap_file)
 
             get_file_const_or_crash(self.execdir + "/../MY_RUN/DATA/CROCUS/drdt_bst_fit_60.nc", "drdt_bst_fit_60.nc")
+            #line below is necessary for Tartes Optimisation Option
+            #get_file_const_or_crash(self.execdir + "/../MY_RUN/DATA/CROCUS/refice_etotref.nc", "refice_etotref.nc")
 
     def get_forcing(self):
         ''' Look for a FORCING file including the starting date'''
@@ -365,7 +367,7 @@ class griddedrun(surfexrun):
             if "DIRDATAPGD" in list(os.environ.keys()):
                 dirdatapgd = os.environ["DIRDATAPGD"]
             else:
-                dirdatapgd = "/rd/cenfic2/manto/lafaysse/FILES_PGD"
+                dirdatapgd = DIRDATAPGD
 
             print(os.listdir(dirdatapgd))
             for fic in os.listdir(dirdatapgd):
