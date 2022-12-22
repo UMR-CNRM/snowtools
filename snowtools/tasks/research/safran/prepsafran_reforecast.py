@@ -79,9 +79,35 @@ class PrepSafran(Task, S2MTaskMixIn):
             rundate = datebegin
             while rundate <= dateend:
 
-                if isinstance(self.conf.xpid, dict): 
+                if isinstance(self.conf.guess_xpid, dict): 
                     # Le reforecast PEARP produit par GMAP/RECYF en 2022 est dispo pour les réseaux 18h et 6h
-                    # RQ : Le code suppose de passer comme datebegin une date avec un réseau de 6h disponible
+                    # RQ : Le code suppose de passer comme datebegin une date avec un réseau de 18h disponible
+
+                    # Récupération du réseau de 18:00 (J-1) pour couvrir J 6h -> (J+4) 6h
+                    self.sh.title('Toolbox input pearp 18h')
+                    tbpearp.extend(toolbox.input(
+                        role           = 'Gridpoint',
+                        kind           = 'gridpoint',
+                        cutoff         = 'production',
+                        format         = 'grib',
+                        nativefmt      = '[format]',
+                        experiment     = self.conf.guess_xpid['18'],
+                        block          = 'forecast',
+                        namespace      = 'vortex.multi.fr', # permet d'utiliser le cache inline pour les relances
+                        geometry       = self.conf.pearp_geometry,
+                        local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/PEARP[date::ymdh]_[term:fmthour]',
+                        origin         = 'historic',
+                        date           = '{0:s}/+PT12H'.format(rundate.ymd6h),
+                        term           = footprints.util.rangex(self.conf.prv_terms)[4:],
+                        member         = footprints.util.rangex(self.conf.members),
+                        model          = '[vapp]',
+                        vapp           = self.conf.source_app,
+                        vconf          = self.conf.eps_conf,
+                    ))
+                    print(t.prompt, 'tb18h')
+                    print()
+
+                    rundate = rundate + Period(days=3)
 
                     # Récupération du réseau 6:00 (J) 
                     self.sh.title(f'Toolbox input pearp {rundate.ymd} 6h')
@@ -105,32 +131,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                         vconf          = self.conf.eps_conf,
                     ))
                     print(t.prompt, 'tb6h')
-                    print()
-
-                    rundate = rundate + Period(days=3)
-
-                    # Récupération du réseau de 18:00 (J-1) pour couvrir J 6h -> (J+4) 6h
-                    self.sh.title('Toolbox input pearp 18h')
-                    tbpearp.extend(toolbox.input(
-                        role           = 'Gridpoint',
-                        kind           = 'gridpoint',
-                        cutoff         = 'production',
-                        format         = 'grib',
-                        nativefmt      = '[format]',
-                        experiment     = self.conf.guess_xpid['18'],
-                        block          = 'forecast',
-                        namespace      = 'vortex.multi.fr', # permet d'utiliser le cache inline pour les relances
-                        geometry       = self.conf.pearp_geometry,
-                        local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/PEARP[date::ymdh]_[term:fmthour]',
-                        origin         = 'historic',
-                        date           = '{0:s}/-PT12H'.format(rundate.ymd6h),
-                        term           = footprints.util.rangex(self.conf.prv_terms)[4:],
-                        member         = footprints.util.rangex(self.conf.members),
-                        model          = '[vapp]',
-                        vapp           = self.conf.source_app,
-                        vconf          = self.conf.eps_conf,
-                    ))
-                    print(t.prompt, 'tb18h')
                     print()
 
                     rundate = rundate + Period(days=2)
@@ -217,9 +217,6 @@ class PrepSafran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb02 =', tb02)
             print()
 
-        if 'fetch' in self.steps:
-            pass
-
         if 'compute' in self.steps:
 
             self.sh.title('Toolbox algo tb03')
@@ -242,10 +239,6 @@ class PrepSafran(Task, S2MTaskMixIn):
             self.component_runner(expresso, script, fortran=False)
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
-
-            pass
-
-        if 'late-backup' in self.steps:
 
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # WARNING : cette façon d'archiver les guess généré rend l'exécution
