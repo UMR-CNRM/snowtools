@@ -95,7 +95,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         block          = 'forecast',
                         namespace      = 'vortex.multi.fr', # permet d'utiliser le cache inline pour les relances
                         geometry       = self.conf.pearp_geometry,
-                        local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/PEARP[date::ymdh]_[term:fmthour]',
+                        local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/PEARP.grib',
                         origin         = 'historic',
                         date           = '{0:s}/+PT12H'.format(rundate.ymd6h),
                         term           = footprints.util.rangex(self.conf.prv_terms)[4:],
@@ -121,7 +121,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         block          = 'forecast',
                         namespace      = 'vortex.multi.fr', # permet d'utiliser le cache inline pour les relances
                         geometry       = self.conf.pearp_geometry,
-                        local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/PEARP[date::ymdh]_[term:fmthour]',
+                        local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/PEARP.grib',
                         origin         = 'historic',
                         date           = rundate.ymd6h,
                         term           = footprints.util.rangex(self.conf.prv_terms)[:33],
@@ -212,7 +212,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                 genv        = self.conf.cycle,
                 kind        = 's2m_filtering_grib',
                 language    = 'python',
-                rawopts     = ' -o -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp+tbpearp)])),
+                rawopts     = ' -o -f ' + ' '.join(list(set([str(rh[1].container.basename) for rh in enumerate(tbarp+tbpearp)]))),
             )
             print(t.prompt, 'tb02 =', tb02)
             print()
@@ -225,11 +225,13 @@ class PrepSafran(Task, S2MTaskMixIn):
                 engine         = 'exec',
                 kind           = 'guess',
                 terms          = footprints.util.rangex(self.conf.prv_terms),
-                interpreter    = script[0].resource.language,
+                interpreter    = 'current',
                 # Need to extend pythonpath to be independant of the user environment
-                # The vortex-build environment already set up the pythonpath (see jobassistant plugin) but the script is 
+                # The vortex-build environment already set up the pythonpath (see jobassistant plugin) but the script is
                 # eventually launched in a 'user-defined' environment
-                extendpypath   = [self.sh.path.join('/'.join(self.conf.iniconf.split('/')[:-2]), d) for d in ['vortex/src', 'vortex/site', 'epygram', 'epygram/site', 'epygram/eccodes_python']],
+                extendpypath   = [self.sh.path.join('/'.join(self.conf.iniconf.split('/')[:-2]), d)
+                                  for d in ['vortex/src', 'vortex/site', 'epygram',
+                                            'epygram/site', 'epygram/eccodes_python']],
                 ntasks         = self.conf.ntasks,
                 reforecast     = True,
             )
@@ -237,18 +239,6 @@ class PrepSafran(Task, S2MTaskMixIn):
             print()
 
             self.component_runner(expresso, script, fortran=False)
-
-        if 'backup' in self.steps or 'late-backup' in self.steps:
-
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# WARNING : cette façon d'archiver les guess généré rend l'exécution
-# de SAFRAN beaucoup moins flexible car il faut désormais impérativement
-# le lancer sur exactement les même dates que le script de génération des
-# ébauches.
-# WARNING : The following output has not been tested yet !
-# TODO : Modifier le tâche safran_reforecast en conséquence,
-# ainsi que l'algo Vortex correspondant
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
             for domain in self.conf.geometry.keys():
 
@@ -267,7 +257,23 @@ class PrepSafran(Task, S2MTaskMixIn):
                         # de validité du guess
                         validity = reseau + Period(hours=ech)
                         arcname = os.path.join(f.split('/')[0], f.split('/')[1], f'P{validity.yymdh}')
-                        tarfic.add(f, arcname=arcname)
+
+
+        if 'backup' in self.steps or 'late-backup' in self.steps:
+
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# WARNING : cette façon d'archiver les guess généré rend l'exécution
+# de SAFRAN beaucoup moins flexible car il faut désormais impérativement
+# le lancer sur exactement les même dates que le script de génération des
+# ébauches.
+# WARNING : The following output has not been tested yet !
+# TODO : Modifier le tâche safran_reforecast en conséquence,
+# ainsi que l'algo Vortex correspondant
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+            for domain in self.conf.geometry.keys():
+
+                tarname = 'ebauches_{0:s}_{1:s}_{2:s}.tar'.format(domain, datebegin.ymdh, dateend.ymdh)
 
                 self.sh.title('Toolbox output tb04')
                 tb04 = toolbox.output(
