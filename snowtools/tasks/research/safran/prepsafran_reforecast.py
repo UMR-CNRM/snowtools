@@ -77,7 +77,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             tbarp   = list()
             tbpearp = list()
             rundate = datebegin
-            while rundate <= dateend:
+            while rundate < dateend:
 
                 if isinstance(self.conf.guess_xpid, dict): 
                     # Le reforecast PEARP produit par GMAP/RECYF en 2022 est dispo pour les réseaux 18h et 6h
@@ -103,6 +103,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         model          = '[vapp]',
                         vapp           = self.conf.source_app,
                         vconf          = self.conf.eps_conf,
+                        fatal          = False,
                     ))
                     print(t.prompt, 'tb18h')
                     print()
@@ -129,6 +130,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         model          = '[vapp]',
                         vapp           = self.conf.source_app,
                         vconf          = self.conf.eps_conf,
+                        fatal          = False,
                     ))
                     print(t.prompt, 'tb6h')
                     print()
@@ -257,9 +259,9 @@ class PrepSafran(Task, S2MTaskMixIn):
                         # de validité du guess
                         validity = reseau + Period(hours=ech)
                         arcname = os.path.join(f.split('/')[0], f.split('/')[1], f'P{validity.yymdh}')
+                        tarfic.add(f, arcname=arcname)
 
-
-        if 'backup' in self.steps or 'late-backup' in self.steps:
+        if 'late-backup' in self.steps:
 
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # WARNING : cette façon d'archiver les guess généré rend l'exécution
@@ -293,6 +295,10 @@ class PrepSafran(Task, S2MTaskMixIn):
                 ),
                 print(t.prompt, 'tb04 =', tb04)
                 print()
+
+            print('==================================================================================================')
+            print('==================================================================================================')
+            raise Exception('INFO :The execution went well, do not take into account the following error')
 
 #            while rundate <= dateend:
 #
