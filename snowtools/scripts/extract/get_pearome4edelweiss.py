@@ -16,14 +16,15 @@ from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR
 config_user = dict(
 
     #  Where you want to store the outputs
-    work_folder=os.path.join(LUSTRE_NOSAVE_USER_DIR,'PEAROME'),
-    native_files_folder=os.path.join(LUSTRE_NOSAVE_USER_DIR,'PEAROME','_native_files_'),
-    cache_folder=os.path.join(LUSTRE_NOSAVE_USER_DIR,'PEAROME','_cache_'),
+    work_folder=os.path.join(LUSTRE_NOSAVE_USER_DIR, 'AROME'),
+    native_files_folder=os.path.join(LUSTRE_NOSAVE_USER_DIR, 'AROME', '_native_files_'),
+    cache_folder=os.path.join(LUSTRE_NOSAVE_USER_DIR, 'AROME', '_cache_'),
 
 
     # Models are defined in the models.ini file
-    model='PEAROME',
-    members=range(1, 2),
+    # model='PEAROME',
+    model='AROME_EURW1S40',
+    # members=range(1, 2),
     # The domain can be defined by its name or its coordinates
     # Existing domain can be found in the config_fa2nc.py file
     domain="alp",
@@ -38,7 +39,9 @@ config_user = dict(
     #            'cswc10m', 'cswc100m', 'crwc10m', 'crwc100m', 't2m', 'Qair', 'u10m', 'v10m',
     #            'Rainf', 'Snowf', 'refl0m', 'reflfactorsnow', 'HUMREL', 'isoZeroAltitude',
     #            'isowetbt0', 'isowetbt1', 'isowetbt1_5', 'sd', 'avgptype', 'maxptype'],
-    variables=['ZS'],
+    variables=['Rainf', 'Snowf', 'isoZeroAltitude', 'isowetbt0', 'isowetbt1', 'isowetbt1_5', 'sd',
+               'avgptype', 'maxptype', 'tw3d', 'clwc3d', 't3d', 'P3d', 'r3d', 'ciwc10m', 'ciwc100m'],
+    # variables=['ZS'],
 
     # "local" if the FA file are on your computer or "hendrix" otherwise
     getter="hendrix",
@@ -57,14 +60,14 @@ config_user = dict(
     delta_t=1,
 
     # Term in hour after analysis
-    start_term=0,  # Default: 6
-    end_term=0,  # Default: 6+24 = 30
+    start_term=1,  # Default: 6
+    end_term=45,  # Default: 6+24 = 30
     dtype='64bits',
     make_surfex=False,
 
     # todo: concatenation mode : "timeseries" or "forecast"
     groupby=("forecast",),
-
+    # groupby=("timeseries", "monthly"),
     # How to group the netcdf files: ["month", "year", "all"] for timeseries,
     # and  ["deterministic", "ensemble"] for forecasts
     # final_concatenation="all"

@@ -558,6 +558,7 @@ class _Map_massifs(Mplfigure):
         """
         features = [{'feature': self.map.add_geometries([lshape], crs=ccrs.PlateCarree(),
                                                         cmap=self.palette,
+                                                        #cmap='YlGnBu',
                                                         facecolor='none', edgecolor='dimgrey',
                                                         alpha=1.0),
                      'massifnum':inum, 'massifname':iname,
