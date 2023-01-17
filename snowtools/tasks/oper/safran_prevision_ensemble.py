@@ -595,6 +595,8 @@ class Safran(Task, S2MTaskMixIn):
 #            print(t.prompt, 'tb30 =', tb30)
 #            print()
 
+                # TODO : Archiver tous les listings en une seule fois ?
+
                 self.sh.title('Toolbox output listings execution')
                 tb31 = toolbox.output(
                     role           = 'Listing',
@@ -612,8 +614,8 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb31 =', tb31)
                 print()
 
-                self.sh.title('Toolbox output tb33')
-                tb28 = toolbox.output(
+                self.sh.title('Toolbox output tb32')
+                tb32 = toolbox.output(
                     role           = 'Listing',
                     block          = 'listing',
                     experiment     = self.conf.xpid,
@@ -627,7 +629,7 @@ class Safran(Task, S2MTaskMixIn):
                     member         = '[seta]',
                     namespace      = self.conf.namespace_out,
                 )
-                print(t.prompt, 'tb33 =', tb28)
+                print(t.prompt, 'tb32 =', tb32)
                 print()
 
 #            print('==================================================================================================')

@@ -18,6 +18,7 @@ from snowtools.DATA import DIRDATAPGD
 _here = os.path.dirname(os.path.realpath(__file__))
 
 SKIP_TEST_SNOWPAPPUS = False if os.getenv('SNOWTOOLS_TEST_SNOWPAPPUS', False) else True
+SKIP_TEST_AXEL_AARON = False if os.getenv('SNOWTOOLS_TEST_AXEL_AARON', False) else True
 
 
 class s2mTest(TestWithTempFolderWithLog):
@@ -49,6 +50,15 @@ class s2mTestForcageBase(s2mTest):
     def test_snowpappus(self):
         # NAM_ISBA_SNOW: LSNOWPAPPUS = TRUE
         shutil.copy(self.path_namelist + "namelist_pappus_1.nam", self.namelist)
+        self.full_run("s2m -b 20101215 -e 20110115")
+        
+    @unittest.skipIf(SKIP_TEST_AXEL_AARON,
+                     'Work of Axel and Aaron on MEB not yet implemented in SURFEX cen branch. '
+                     'Please use SNOWTOOLS_TEST_AXEL_AARON env variable to force test')
+    def test_axel_aaron(self):
+        # NAM_MEB_ISBA:  LMEB_TALL_VEG       = .TRUE., LMEB_INT_PHASE_LUN  = .TRUE.,
+        #                LMEB_INT_UNLOAD_LUN = .TRUE., LMEB_INT_UNLOAD_SFC = .TRUE.,
+        shutil.copy(self.path_namelist + "namelist_axel_aaron.nam", self.namelist)
         self.full_run("s2m -b 20101215 -e 20110115")
 
     def test_multiphy1(self):
