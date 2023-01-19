@@ -36,8 +36,9 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
         if not hasattr(self.conf, "genv"):
             self.conf.genv = 'uenv:cen.05@CONST_CEN'
         t = self.ticket
-
         listrundate = list(daterange(self.conf.datebegin, self.conf.dateend))
+        # 5d time step for 2022 reforecasts
+        # listrundate = list(daterange(self.conf.datebegin, self.conf.dateend, 'P5d'))
         list_geometry = self.get_list_geometry()
         source_safran, block_safran = self.get_source_safran()
         self.conf.previ = True
