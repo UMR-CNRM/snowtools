@@ -65,6 +65,7 @@ import os
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib import patheffects
 import cartopy.crs as ccrs
 import cartopy.io.shapereader as shpreader
 import cartopy.feature
@@ -517,6 +518,10 @@ class _Map_massifs(Mplfigure):
                     palette = plt.get_cmap(kwargs['palette']).copy()
                 else:
                     palette = plt.get_cmap(kwargs['palette'])
+            if 'truncate' in kwargs.keys():
+                if kwargs['truncate']:
+                    palette = matplotlib.colors.LinearSegmentedColormap.from_list(
+                        'trunc({n})'.format(n=palette.name), palette(np.linspace(0.0, 0.8, 100)))
         else:
             if matplotlib.__version__ >= '3.4':
                 palette = plt.get_cmap('jet').copy()
@@ -687,7 +692,8 @@ class _Map_massifs(Mplfigure):
         if labels is not None:
             for label, x_i, y_i in zip(labels, lon, lat):
                 self.map.annotate(label, (x_i, y_i), color=color, horizontalalignment='center',
-                                  zorder=4)
+                                  zorder=4, path_effects=[patheffects.withStroke(linewidth=3,
+                                                        foreground="w")])
         else:
             self.map.plot(lon, lat, marker=marker, color=color, linestyle='', zorder=3)
 
@@ -859,7 +865,8 @@ class _Map_massifs(Mplfigure):
 
         self.text.append(self.map.text(x_bary, y_bary, infos, transform=self.projection,
                                        horizontalalignment='center', verticalalignment='center',
-                                       color=textcolor))
+                                       color=textcolor, path_effects=[patheffects.withStroke(linewidth=3,
+                                                        foreground="w")]))
         # print(self.map.properties())
 
     def reset_massifs(self, rmcbar=True, rminfobox=True, **kwargs):
@@ -976,7 +983,8 @@ class _Map_massifs(Mplfigure):
                                      colLoc='center',
                                      loc='bottom',
                                      bbox=self.massif_features[i]['massifbb'],
-                                     edges='closed', zorder=10)
+                                     edges='closed', zorder=10, path_effects=[patheffects.withStroke(linewidth=3,
+                                                        foreground="w")])
         # art.set_fontsize(8)
 
     def getdeport(self, num):
@@ -1363,7 +1371,9 @@ class _MultiMap(_Map_massifs):
                                                     transform=self.projection,
                                                     horizontalalignment='center',
                                                     verticalalignment='center',
-                                                    color=textcolor))
+                                                    color=textcolor,
+                                                    path_effects=[patheffects.withStroke(linewidth=3,
+                                                        foreground="w")]))
 
     def puttable(self, i, indmassif, listvar, ncol, nrows, format_string, **kwargs):
         """
@@ -1407,7 +1417,9 @@ class _MultiMap(_Map_massifs):
                                          rowColours=None, rowLoc='left', colLabels=None,
                                          colColours=None, colLoc='center', loc='bottom',
                                          bbox=self.massif_features[j][i]['massifbb'],
-                                         edges='closed', zorder=10)
+                                         edges='closed', zorder=10,
+                                         path_effects=[patheffects.withStroke(linewidth=3,
+                                                        foreground="w")])
 
     def reset_massifs(self, rmcbar=True, rminfobox=True, **kwargs):
         """
