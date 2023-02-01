@@ -983,8 +983,11 @@ class _Map_massifs(Mplfigure):
                                      colLoc='center',
                                      loc='bottom',
                                      bbox=self.massif_features[i]['massifbb'],
-                                     edges='closed', zorder=10, path_effects=[patheffects.withStroke(linewidth=3,
-                                                        foreground="w")])
+                                     edges='closed', zorder=10)
+        for bla, cell in art._cells.items():
+            cell._text.set(path_effects=[patheffects.withStroke(linewidth=3,
+                                                                foreground="w")])
+
         # art.set_fontsize(8)
 
     def getdeport(self, num):
@@ -1417,9 +1420,10 @@ class _MultiMap(_Map_massifs):
                                          rowColours=None, rowLoc='left', colLabels=None,
                                          colColours=None, colLoc='center', loc='bottom',
                                          bbox=self.massif_features[j][i]['massifbb'],
-                                         edges='closed', zorder=10,
-                                         path_effects=[patheffects.withStroke(linewidth=3,
-                                                        foreground="w")])
+                                         edges='closed', zorder=10)
+            for bla, cell in art._cells.items():
+                cell._text.set(path_effects=[patheffects.withStroke(linewidth=3,
+                                                         foreground="w")])
 
     def reset_massifs(self, rmcbar=True, rminfobox=True, **kwargs):
         """
