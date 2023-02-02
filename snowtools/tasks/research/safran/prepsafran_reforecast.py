@@ -244,6 +244,9 @@ class PrepSafran(Task, S2MTaskMixIn):
 
             for domain in self.conf.geometry.keys():
 
+                # WARNING : Cette boucle est extrêmement lente (~1h soit 1/3 du temps total de calcul !!)
+                #----------------------------------------------------------------------------------------
+
                 tarname = 'ebauches_{0:s}_{1:s}_{2:s}.tar'.format(domain, datebegin.ymdh, dateend.ymdh)
                 with tarfile.open(tarname, mode='w') as tarfic:
                     for f in glob.glob(f'*/*/*/P????????*{domain}*'):
