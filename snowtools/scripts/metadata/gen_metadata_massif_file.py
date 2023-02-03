@@ -51,8 +51,8 @@ for line in lines:
     et.SubElement(m, "name").text = l['title']
     et.SubElement(m, "nameRed").text = l['title_shor']
     et.SubElement(m, "number").text = '{:d}'.format(l['code'])
-    et.SubElement(m, "latCenter").text = '{:4.2f}'.format(l['lat_centro'])
-    et.SubElement(m, "lonCenter").text = '{:4.2f}'.format(l['lon_centro'])
+    et.SubElement(m, "latCenter").text = '{:4.6f}'.format(l['lat_centro'])
+    et.SubElement(m, "lonCenter").text = '{:4.6f}'.format(l['lon_centro'])
     et.SubElement(m, "altMin").text = '{:d}'.format(altmin_safran)
     et.SubElement(m, "altMax").text = '{:d}'.format(altmax_safran)
     et.SubElement(m, "altRealMin").text = '{:d}'.format(altmin_real)
