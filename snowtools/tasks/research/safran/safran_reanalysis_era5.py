@@ -56,7 +56,7 @@ class Safran(Task, S2MTaskMixIn):
                 tb01_a = toolbox.input(
                     role           = 'Ebauche',
                     # local          = 'mb035/P[date::yymdh]_[cumul:hour]',
-                    local          = 'cep{0:d}_{1:d}'.format(y1, y2),
+                    local          = f'{season}/cep{season}',
                     remote         = f'/home/m/mcbd/mcbd036/CLIM-SIM/cep/cep{season}',
                     hostname       = 'hendrix.meteo.fr',
                     #namespace      = 's2m.archive.fr',
@@ -84,7 +84,7 @@ class Safran(Task, S2MTaskMixIn):
                     tb01_b = toolbox.input(
                         role           = 'Ebauche',
                         # local          = 'mb035/P[date::yymdh]_[cumul:hour]',
-                        local          = 'cep{0:d}_{1:d}'.format(y1 + 1, y2 + 1),
+                        local          = f'{next_season}/cep{next_season}',
                         remote         = f'/home/m/mcbd/mcbd036/CLIM-SIM/cep/cep{next_season}',
                         hostname       = 'hendrix.meteo.fr',
                         #namespace      = 's2m.archive.fr',
@@ -302,6 +302,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind            = 'rsclim',
                 model           = self.conf.model,
                 local           = 'rsclim.don',
+                fatal           = False,
             )
             print(t.prompt, 'tb11 =', tb11)
             print()
@@ -315,6 +316,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind            = 'icrccm',
                 model           = self.conf.model,
                 local           = 'icrccm.don',
+                fatal           = False,
             )
             print(t.prompt, 'tb12 =', tb12)
             print()
