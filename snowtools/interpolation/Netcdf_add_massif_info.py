@@ -34,6 +34,7 @@ Script to add massif info into the netcdf forcing 2D with a variable ZS. Dimensi
 
 Example of use:
 python3 Netcdf_add_massif_info /home/reveilletm/alpha4.nc -p
+python3 Netcdf_add_massif_info.py input_4_test_add_massif_info.nc -p -v -o output_4_test_add_massif_info.nc
 """)
 
 # Mandatory argument
@@ -88,9 +89,9 @@ project = partial(pyproj.transform, pyproj.Proj(init='epsg:2154'), pyproj.Proj(i
 
 # 3- Create variable and fill in with massif number
 massif_num = np.zeros((lons.shape[0], lats.shape[0]))
-max_alps = 23
-max_pyr = 22
-max_cor = 2
+#max_alps = 23
+#max_pyr = 22
+#max_cor = 2
 
 for nb in range(0, len(shapes)):
     if args.bool_print:
@@ -142,10 +143,10 @@ with Dataset(args.path_output, 'w', format='NETCDF4') as outputs:
     D = outputs.createVariable('ZS', np.float64, ('lat', 'lon'), fill_value=-9999)
 
     num = np.flipud(results)
-    Z = np.flipud(ZS)
+    #Z = np.flipud(ZS)
     outputs["latitude"][:, ] = lats
     outputs["longitude"][:, ] = lons
-    outputs["massif_num"][:, :] = results  # num
+    outputs["massif_num"][:, :] = num #results
     outputs["ZS"][:, :] = ZS  # Z
 
     A.setncatts({'long_name': u"latitude", 'units': u"degrees_north"})
