@@ -159,7 +159,7 @@ path_MNT_aspect_defaut = '/rd/cenfic3/sentinel/mnt_ange/ange-factory/prod1/franc
 ################################################################
 # Infos shapefile massif, a priori pérenne 
 ################################################################
-path_shapefile_massif = SNOWTOOLS_DIR + '/DATA/massifs_Lbrt93_2019'
+path_shapefile_massif = SNOWTOOLS_DIR + '/DATA/massifs'
 indice_record_massif = 0
 
 ################################################################

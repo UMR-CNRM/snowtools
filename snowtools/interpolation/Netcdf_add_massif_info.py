@@ -41,7 +41,7 @@ parser.add_argument("path_forcing", help="Path to forcing file (mandatory)", typ
 
 # Optional argument
 parser.add_argument("-s", "--shape", help="Path to shapefile file", type=str,
-                    default=os.path.join(SNOWTOOLS_DATA, 'massifs_Lbrt93_2019'), dest='path_shape')
+                    default=os.path.join(SNOWTOOLS_DATA, 'massifs'), dest='path_shape')
 parser.add_argument("-p", "--plot", help="Make a plot to check", action='store_true', dest='bool_plot')
 parser.add_argument("-v", "--verbose", help="Print index in loop", action='store_true', dest='bool_print')
 parser.add_argument("-o", "--output", help="Path to output file", type=str, default='alpha_massifs.nc',
