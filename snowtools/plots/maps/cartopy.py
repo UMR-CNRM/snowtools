@@ -93,10 +93,10 @@ def getshapes():
     :return: shapefile, pprojcrs, shpProj, records
     """
     shapefile_path = os.path.join(SNOWTOOLS_DIR, 'DATA')
-    filename = 'massifs_Lbrt93_2019.shp'
+    filename = 'massifs.shp'
     shapefile = shpreader.Reader(os.path.join(shapefile_path, filename))
     # Informations sur la projection
-    projfile = 'massifs_Lbrt93_2019.prj'
+    projfile = 'massifs.prj'
     with open(os.path.join(shapefile_path, projfile), 'r') as prj_file:
         prj_txt = prj_file.read()
         pprojcrs = CRS.from_wkt(prj_txt)
