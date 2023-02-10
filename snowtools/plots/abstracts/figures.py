@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 
-'''
+"""
 Created on 4 déc. 2018
 
 @author: lafaysse
-'''
+"""
 
 import logging
 
@@ -60,9 +60,13 @@ class Mplfigure(object):
             self.fig.figimage(logo, widthfig - width, int(0.96 * heightfig) - height)
         else:
             self.fig.figimage(logo, widthfig - width, 0)
+            position = self.plot.get_position()
+            position.x0 = 0.08
+            position.x1 = 0.89
+            self.plot.set_position(position)
 
-    def save(self, figname, formatout="pdf"):
-        plt.savefig(figname, format=formatout)
+    def save(self, figname, formatout="pdf", **kw):
+        plt.savefig(figname, format=formatout, **kw)
 
     def close(self):
         self.fig.clear()

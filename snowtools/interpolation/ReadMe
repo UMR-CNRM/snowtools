@@ -1,9 +1,12 @@
 
-In beaufix type the commands :
+Compilation on belenos:
+  module load intel intelmpi
+  make -f Makefile_belenos
 
-  module load intel
-  module load intelmpi
-  module load netcdf/4.4.0
+Run:
+
+On belenos type the commands :
+
   ulimit -s unlimited
   export I_MPI_PMI_LIBRARY=/usr/lib64/libpmi.so
 
@@ -14,8 +17,7 @@ I/O Files : (The names input.nc, GRID.nc, outpout.nc are fixed in the program)
   2. Create a link for the reference grid  ==> ln -s ref_grid.nc    GRID.nc   
   3. The result file                       ==>  output.nc   
   
-Compile and run 
-  make
+
   srun -nX  ./main ; X number of processors
 
 

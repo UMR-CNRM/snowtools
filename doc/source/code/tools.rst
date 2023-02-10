@@ -52,5 +52,5 @@ Simulation execution helpers
 Ensemble of perturbed forcing
 -----------------------------
 
-.. automodule:: tools.makeForcingEnsemble
+.. automodule:: tools.perturb_forcing
    :members:

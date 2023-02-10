@@ -45,7 +45,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 self.sh.title('Toolbox input tb01')
                 tb01 = toolbox.input(
                     role           = 'Forcing_Deterministic',
-                    local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' 
+                    local          = 'mb035/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                     if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     vapp           = self.conf.vapp,
                     vconf          = '[geometry:area]',
@@ -73,7 +73,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     self.sh.title('Toolbox input tb01a')
                     tb01a = toolbox.input(
                         alternate      = 'Forcing_Deterministic',
-                        local          = 'mb035/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' 
+                        local          = 'mb035/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                         if len(list_geometry) > 1 else 'mb035/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                         vapp           = self.conf.vapp,
                         vconf          = '[geometry:area]',
@@ -88,7 +88,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                         dateend        = dateend,
                         nativefmt      = 'netcdf',
                         kind           = 'MeteorologicalForcing',
-                        namespace      = 'vortex.multi.fr',
+                        namespace      = self.conf.namespace_in,
                         model          = alternate_safran,
                         cutoff         = 'production' if self.conf.previ else 'assimilation',
                         fatal          = False
@@ -99,7 +99,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 self.sh.title('Toolbox input tb01b')
                 tb01b = toolbox.input(
                     role           = 'Forcing',
-                    local          = 'mb[member]/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
+                    local          = 'mb[member]/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                     if len(list_geometry) > 1 else 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     vapp           = self.conf.vapp,
                     vconf          = '[geometry:area]',
@@ -114,7 +114,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     member         = pearpmembers,
                     nativefmt      = 'netcdf',
                     kind           = 'MeteorologicalForcing',
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = self.conf.namespace_in,
                     model          = source_safran,
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
                     fatal          = False
@@ -127,7 +127,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     self.sh.title('Toolbox input tb01c')
                     tb01c = toolbox.input(
                         alternate           = 'Forcing',
-                        local          = 'mb[member]/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
+                        local          = 'mb[member]/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                         if len(list_geometry) > 1 else 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                         vapp           = self.conf.vapp,
                         vconf          = '[geometry:area]',
@@ -142,7 +142,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                         member         = pearpmembers,
                         nativefmt      = 'netcdf',
                         kind           = 'MeteorologicalForcing',
-                        namespace      = 'vortex.multi.fr',
+                        namespace      = self.conf.namespace_in,
                         model          = alternate_safran,
                         cutoff         = 'production' if self.conf.previ else 'assimilation',
                         fatal          = False
@@ -170,7 +170,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     local          = 'PGD.nc',
                     geometry       = self.conf.geometry,
                     genv           = self.conf.cycle,
-                    gvar           = 'pgd_[geometry::area]',
+                    gvar           = 'pgd_[geometry::tag]',
                     model          = 'surfex',
                     fatal          = True,
                 ),
@@ -193,7 +193,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                         nativefmt      = 'netcdf',
                         kind           = 'PREP',
                         model          = 'surfex',
-                        namespace      = 'vortex.multi.fr',
+                        namespace      = self.conf.namespace_in,
                         fatal          = False,
                         cutoff         = 'assimilation'
                     ),
@@ -216,7 +216,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             nativefmt      = 'netcdf',
                             kind           = 'PREP',
                             model          = 'surfex',
-                            namespace      = 'vortex.multi.fr',
+                            namespace      = self.conf.namespace_in,
                             fatal          = False,
                             cutoff         = alternate_prep[1]
                         ),
@@ -239,7 +239,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             nativefmt      = 'netcdf',
                             kind           = 'PREP',
                             model          = 'surfex',
-                            namespace      = 'vortex.multi.fr',
+                            namespace      = self.conf.namespace_in,
                             fatal          = False,
                             cutoff         = 'assimilation'
                         ),
@@ -262,7 +262,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                                 nativefmt      = 'netcdf',
                                 kind           = 'PREP',
                                 model          = 'surfex',
-                                namespace      = 'vortex.multi.fr',
+                                namespace      = self.conf.namespace_in,
                                 fatal          = False,
                                 cutoff         = alternate_prep[1]
                             ),
@@ -285,7 +285,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                         nativefmt      = 'netcdf',
                         kind           = 'PREP',
                         model          = 'surfex',
-                        namespace      = 'vortex.multi.fr',
+                        namespace      = self.conf.namespace_in,
                         fatal          = False,
                         cutoff         = 'assimilation'
                     ),
@@ -311,7 +311,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             nativefmt      = 'netcdf',
                             kind           = 'PREP',
                             model          = 'surfex',
-                            namespace      = 'vortex.multi.fr',
+                            namespace      = self.conf.namespace_in,
                             fatal          = False,
                             cutoff         = alternate_prep[1]
                         ),
@@ -335,7 +335,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             nativefmt      = 'netcdf',
                             kind           = 'PREP',
                             model          = 'surfex',
-                            namespace      = 'vortex.multi.fr',
+                            namespace      = self.conf.namespace_in,
                             fatal          = False,
                             cutoff         = 'assimilation'
                         ),
@@ -351,6 +351,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             local          = 'PREP.nc',
                             experiment     = self.ref_reanalysis,
                             geometry       = self.conf.geometry,
+                            vconf          = self.conf.geometry.tag,
                             date           = datebegin,
                             intent         = 'inout',
                             nativefmt      = 'netcdf',
@@ -386,7 +387,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     nativefmt      = 'bin',
                     local          = 'ecoclimapII_eu_covers_param.bin',
                     geometry       = self.conf.geometry,
-                    genv           = self.conf.cycle,
+                    genv            = self.conf.cycle,
                     source         = 'ecoclimap2',
                     model          = 'surfex',
                 ),
@@ -400,7 +401,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     genv            = self.conf.cycle,
                     nativefmt       = 'netcdf',
                     local           = 'drdt_bst_fit_60.nc',
-                    model           = 'surfex',
+                    model          = 'surfex',
                 )
                 print(t.prompt, 'tb06 =', tb06)
                 print()
@@ -455,7 +456,8 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 dateinit       = datebegin,
                 threshold      = self.conf.threshold,
                 members        = footprints.util.rangex(members),
-                geometry       = list_geometry,
+                geometry_in    = list_geometry if any(tb01) or source_safran != 's2m' else alternate_geometry,
+                geometry_out   = self.conf.geometry.tag,
                 ntasks         = 6 if self.conf.rundate.hour == self.monthly_analysis_time else 40,
                 daily          = not self.conf.previ,
                 taskset        = "numapacked_taskset",
@@ -482,7 +484,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     nativefmt   = 'netcdf',
                     kind        = 'SnowpackSimulation',
                     model       = 'surfex',
-                    namespace   = 'vortex.multi.fr',
+                    namespace   = self.conf.namespace_out,
                     cutoff      = 'production' if self.conf.previ else 'assimilation',
                     fatal       = False
                 ),
@@ -505,7 +507,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                         nativefmt      = 'netcdf',
                         kind           = 'MeteorologicalForcing',
                         model          = 's2m',
-                        namespace      = 'vortex.multi.fr',
+                        namespace      = self.conf.namespace_out, 
                         cutoff         = 'production' if self.conf.previ else 'assimilation',
                         fatal          = False
                     ),
@@ -525,7 +527,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                     nativefmt      = 'netcdf',
                     kind           = 'PREP',
                     model          = 'surfex',
-                    namespace      = 'vortex.multi.fr',
+                    namespace      = self.conf.namespace_out,
                     cutoff         = 'production' if self.conf.previ else 'assimilation',
                     fatal          = False
                 ),

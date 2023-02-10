@@ -52,9 +52,10 @@ import matplotlib.pyplot as plt
 #############
 #
 # Au 27 octobre 2021:
-# ORCHAMP = projet 0 = geometrie orchamp dans vortex/conf/geometries.ini
-# projet 1 utilisé sans référence ? 
-# TOP_CBNA = projet 2 = geometrie orchamp dans vortex/conf/geometries.ini
+# ORCHAMP = projet 0 = geometrie orchamp dans vortex/conf/geometries.ini  (164 points)
+# projet 1 utilisé sans référence ? (15 points)
+# TOP_CBNA = projet 2 = geometrie orchamp dans vortex/conf/geometries.ini (169 points)
+# ORCHAMP_MAJ_2022 = projet 3 = geometrie orchamp dans vortex/conf/geometries.ini (26 points)
 #
 #############
 # METTRE A JOUR CI DESSUS A CHAQUE NOUVEAU PROJET
@@ -77,6 +78,9 @@ import matplotlib.pyplot as plt
 #
 # TOP_CBNA:
 # python3 shapefile2NetCDF.py /home/fructusm/Bureau/Shapefile_simu/cn_maille_points/cn_maille_points cd50m ORIG_FID 1
+#
+# MAJ Orchamp_2022
+# python3 shapefile2NetCDF.py /home/fructusm/Travail_Orchamp/Orchamp_nouveaux_sites_2022/Plots_new_2022 codeplot idplot 3
 ##############
 # Utilisation du fichier NetCDF pour reanalyse ou simulation en local
 ##############
@@ -86,7 +90,7 @@ import matplotlib.pyplot as plt
 # give the PRO file for the shapefile points. 
 #
 # Exemple:
-# s2m -f /rd/cenfic2/era40/vortex/s2m/alp_flat/reanalysis/meteo/FORCING_2017080106_2018080106.nc 
+# s2m -f /rd/cenfic3/era40/vortex/s2m/alp_flat/reanalysis/meteo/FORCING_2017080106_2018080106.nc 
 #     -b 20170801 -e 20180801 -r /home/fructusm/git/snowtools_git/interpolation/NetCDF_from_shapefile.nc
 #     -o output_test_s2m -g --extractforcing
 # s2m -f /home/fructusm/OUTPUT_et_PRO/output_test_s2m/meteo/FORCING_2017080106_2018080106.nc -b 20170801 -e 20180801 
@@ -142,9 +146,9 @@ import matplotlib.pyplot as plt
 NetCDF_out = 'NetCDF_from_shapefile.nc'
 
 # PATH_MNT
-path_MNT_alti_defaut = '/rd/cenfic2/sentinel/mnt_ange/ange-factory/prod1/france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
-path_MNT_slope_defaut = '/rd/cenfic2/sentinel/mnt_ange/ange-factory/prod1/france_30m/SLP_FRANCE_L93_30m_bilinear.tif'
-path_MNT_aspect_defaut = '/rd/cenfic2/sentinel/mnt_ange/ange-factory/prod1/france_30m/ASP_FRANCE_L93_30m_bilinear.tif'
+path_MNT_alti_defaut = '/rd/cenfic3/sentinel/mnt_ange/ange-factory/prod1/france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
+path_MNT_slope_defaut = '/rd/cenfic3/sentinel/mnt_ange/ange-factory/prod1/france_30m/SLP_FRANCE_L93_30m_bilinear.tif'
+path_MNT_aspect_defaut = '/rd/cenfic3/sentinel/mnt_ange/ange-factory/prod1/france_30m/ASP_FRANCE_L93_30m_bilinear.tif'
 
 # Pour test en local:
 # path_MNT_alti_defaut = 
@@ -155,7 +159,7 @@ path_MNT_aspect_defaut = '/rd/cenfic2/sentinel/mnt_ange/ange-factory/prod1/franc
 ################################################################
 # Infos shapefile massif, a priori pérenne 
 ################################################################
-path_shapefile_massif = SNOWTOOLS_DIR + '/DATA/massifs_Lbrt93_2019'
+path_shapefile_massif = SNOWTOOLS_DIR + '/DATA/massifs'
 indice_record_massif = 0
 
 ################################################################
@@ -673,7 +677,7 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
                     metadataout.write('\t\t<massif> ' + str(all_lists['m'][k]) + ' </massif>\n')
 
     metadata.close()
-    os.system('mv -f ' + chemxml + '/METADATA_out.xml ' + chemxml + '/METADATA.xml')
+    os.rename(chemxml + '/METADATA_out.xml', chemxml + '/METADATA.xml')
     print("done in", time.time() - start_time, "seconds")
 
 

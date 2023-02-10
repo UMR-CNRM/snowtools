@@ -9,10 +9,9 @@ import os
 import numpy as np
 
 from snowtools.utils.prosimu import prosimu, prosimu_old
-from snowtools.DATA import SNOWTOOLS_DATA, TESTBASE
+from snowtools.DATA import SNOWTOOLS_DATA, TESTBASE_DIR
 
-print(TESTBASE)
-if not os.path.isdir(TESTBASE):
+if not os.path.isdir(TESTBASE_DIR):
     SKIP = True
 else:
     SKIP = False
@@ -92,7 +91,7 @@ class TestProSimu2d(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # fichier au nouveau format de la chaîne
-        path = os.path.join(TESTBASE, 'PRO/PRO_2014080106_2015010106_grille2d.nc')
+        path = os.path.join(TESTBASE_DIR, 'PRO/PRO_2014080106_2015010106_grille2d.nc')
         if not SKIP:
             cls.ps = prosimu(path)
         else:

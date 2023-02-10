@@ -733,6 +733,9 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb32 =', tb29)
                 print()
 
+            from vortex.tools.systems import ExecutionError
+            raise ExecutionError('')
+
 #########################################################################################
 #                               END OF THE TASK
 #########################################################################################
@@ -813,7 +816,7 @@ class Safran(Task, S2MTaskMixIn):
             executables['safrane'] = tbx1 = toolbox.executable(
                 role           = 'Binary',
                 genv           = self.conf.cycle,
-                kind           = 'safrane_dev',
+                kind           = 'safrane',
                 local          = 'safrane',
                 model          = self.conf.model,
             )
@@ -824,7 +827,7 @@ class Safran(Task, S2MTaskMixIn):
             executables['syrpluie'] = tbx2 = toolbox.executable(
                 role           = 'Binary',
                 genv           = self.conf.cycle,
-                kind           = 'syrpluie_dev',
+                kind           = 'syrpluie',
                 local          = 'syrpluie',
                 model          = self.conf.model,
             )
@@ -835,7 +838,7 @@ class Safran(Task, S2MTaskMixIn):
             executables['sypluie'] = tbx3 = toolbox.executable(
                 role           = 'Binary',
                 genv           = self.conf.cycle,
-                kind           = 'sypluie_dev',
+                kind           = 'sypluie',
                 local          = 'sypluie',
                 model          = self.conf.model,
             )
@@ -846,7 +849,7 @@ class Safran(Task, S2MTaskMixIn):
             executables['syvapr'] = tbx4 = toolbox.executable(
                 role           = 'Binary',
                 genv           = self.conf.cycle,
-                kind           = 'syvapr_dev',
+                kind           = 'syvapr',
                 local          = 'syvapr',
                 model          = self.conf.model,
             )
@@ -857,7 +860,7 @@ class Safran(Task, S2MTaskMixIn):
             executables['syvafi'] = tbx5 = toolbox.executable(
                 role           = 'Binary',
                 genv           = self.conf.cycle,
-                kind           = 'syvafi_dev',
+                kind           = 'syvafi',
                 local          = 'syvafi',
                 model          = self.conf.model,
             )
@@ -868,7 +871,7 @@ class Safran(Task, S2MTaskMixIn):
             executables['sytist'] = tbx6 = toolbox.executable(
                 role           = 'Binary',
                 genv           = self.conf.cycle,
-                kind           = 'sytist_dev',
+                kind           = 'sytist',
                 local          = 'sytist',
                 model          = self.conf.model,
             )

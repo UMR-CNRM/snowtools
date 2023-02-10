@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
 
@@ -5,30 +6,31 @@ __all__ = []
 
 from cen.layout.nodes import S2MTaskMixIn
 import footprints
-logger = footprints.loggers.getLogger(__name__)
-
 from vortex import toolbox
 from vortex.layout.nodes import Driver
 
 
 import iga.tools.op as op
 from iga.tools.apps import OpTask
-from common.util import usepygram
 from vortex.tools.actions import actiond as ad
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 def setup(t, **kw):
     return Driver(
-        tag='safran',
-        ticket=t,
-        nodes=[
-            Safran(tag='prvsaf', ticket=t, **kw),
+        tag    = 'safran',
+        ticket = t,
+        nodes  = [
+            Safran(tag='prvsaf', ticket=t, delay_component_errors=True, on_error='delayed_fail', **kw),
         ],
-        options=kw,
+        options = kw,
     )
 
 
 class Safran(OpTask, S2MTaskMixIn):
+
+    filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
 
     def process(self):
         """Safran"""
@@ -36,7 +38,7 @@ class Safran(OpTask, S2MTaskMixIn):
         t = self.ticket
         datebegin, dateend = self.get_period()
 
-        if 'fetch' in self.steps:
+        if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
             with op.InputReportContext(self, t):
 
@@ -48,20 +50,24 @@ class Safran(OpTask, S2MTaskMixIn):
                 self.sh.title('Toolbox input guess arpege J-1 -> J')
                 tb01a = toolbox.input(
                     role           = 'Ebauche_Deterministic',
+                    # On est obligé d'avoir un "local" précisant le réseau et le cumul
+                    # car on a 2 fichiers valides à J 6h (une A6 et une P6)
+                    # RQ : on pourrait utiliser la même dans le cas d'ARPEGE, mais
+                    # pas pour la PEARP (cf commentaire tb02)
                     local          = 'mb035/P[date::yymdh]_[cumul:hour]',
-                    experiment     = self.conf.xpid,
+                    experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,
-                    geometry       = self.conf.vconf,
+                    geometry       = self.conf.geometry[self.conf.vconf],
                     cutoff         = 'assimilation',
-                    date           = ['{0:s}/+PT{1:s}H/-PT6H'.format(datebegin.ymd6h, str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
+                    date           = ['{0:s}/+PT{1:s}H/-PT6H'.format(datebegin.ymd6h,
+									  str(d)) for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                     cumul          = self.conf.cumul,
                     nativefmt      = 'ascii',
                     kind           = 'guess',
                     model          = 'safran',
-                    namespace      = 'vortex.cache.fr', # self.conf.namespace,
+                    namespace      = self.conf.namespace_in,
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
-                    # namespace      = self.conf.namespace,
                     fatal          = False,
                 ),
                 print(t.prompt, 'tb01a =', tb01a)
@@ -81,22 +87,25 @@ class Safran(OpTask, S2MTaskMixIn):
                 tb01b = toolbox.input(
                     role           = 'Ebauche_Deterministic',
                     local          = 'mb035/P[date::yymdh]_[cumul:hour]',
-                    experiment     = self.conf.xpid,
+                    experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,
-                    geometry       = self.conf.vconf,
+                    geometry       = self.conf.geometry[self.conf.vconf],
                     date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h),
-                    cumul          = footprints.util.rangex(self.conf.prv_terms)[2:35],
+                    cumul          = footprints.util.rangex(self.conf.prv_terms),
                     nativefmt      = 'ascii',
                     kind           = 'guess',
-                    namespace      = 'vortex.cache.fr', # self.conf.namespace,
+                    namespace      = self.conf.namespace_in,
                     model          = 'safran',
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.deterministic_conf,
-                    # namespace      = self.conf.namespace,
                     fatal          = False,
                 ),
                 print(t.prompt, 'tb01b =', tb01b)
                 print()
+
+                # TODO : Pas de mode secours pour le déterministe ?
+                # On ne peut pas faire mieux que la prévision jusqu'à J+3 issue
+                # du réseau 0h de J-1 qui a tourné la veille...
 
                 # II- PEARP
                 # ---------
@@ -108,41 +117,40 @@ class Safran(OpTask, S2MTaskMixIn):
                 tb02a = toolbox.input(
                     role           = 'Ebauche',
                     local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
-                    experiment     = self.conf.xpid,
+                    experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,
-                    geometry       = self.conf.vconf,
+                    geometry       = self.conf.geometry[self.conf.vconf],
                     date           = '{0:s}'.format(datebegin.ymd6h),
                     cumul          = footprints.util.rangex(self.conf.ana_terms),
                     nativefmt      = 'ascii',
                     kind           = 'guess',
-                    namespace      = 'vortex.cache.fr', # self.conf.namespace,
+                    namespace      = self.conf.namespace_in,
                     model          = 'safran',
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.eps_conf,
-                    # namespace      = self.conf.namespace,
                     member         = footprints.util.rangex(self.conf.pearp_members),
                     fatal          = False,
                 ),
                 print(t.prompt, 'tb02a =', tb02a)
                 print()
 
-                # P12 à P108 du réseau 18h (J-1)
+                # P6 à P102 du réseau 0h (J)
                 self.sh.title('Toolbox intput guess pearp J -> J+4')
                 tb02b = toolbox.input(
                     role           = 'Ebauche',
+                    # coherentgroup  = 'pearp_forecast', # Supprime TOUTES les ressources présente dès lors qu'il en manque une
                     local          = 'mb[member]/P[date::yymdh]_[cumul:hour]',
-                    experiment     = self.conf.xpid,
+                    experiment     = self.conf.xpid_guess,
                     block          = self.conf.guess_block,
-                    geometry       = self.conf.vconf,
-                    date           = '{0:s}/+PT12H'.format(datebegin.ymdh),
-                    cumul          = footprints.util.rangex(self.conf.prv_terms)[4:38],
+                    geometry       = self.conf.geometry[self.conf.vconf],
+                    date           = '{0:s}/+PT24H/-PT6H'.format(datebegin.ymd6h), # Réseau 0h (J)
+                    cumul          = footprints.util.rangex(self.conf.prv_terms),
                     nativefmt      = 'ascii',
                     kind           = 'guess',
                     model          = 'safran',
-                    namespace      = 'vortex.cache.fr', # self.conf.namespace,
+                    namespace      = self.conf.namespace_in,
                     source_app     = self.conf.source_app,
                     source_conf    = self.conf.eps_conf,
-                    # namespace      = self.conf.namespace,
                     member         = footprints.util.rangex(self.conf.pearp_members),
                     fatal          = False,
                 ),
@@ -156,7 +164,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     kind            = 'listem',
                     model           = self.conf.model,
                     local           = 'listem',
-                    geometry        = self.conf.vconf,
+                    geometry        = self.conf.geometry[self.conf.vconf],
                 )
                 print(t.prompt, 'tb03 =', tb03)
                 print()
@@ -168,7 +176,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     kind            = 'listeml',
                     model           = self.conf.model,
                     local           = 'listeml',
-                    geometry        = self.conf.vconf,
+                    geometry        = self.conf.geometry[self.conf.vconf],
                 )
                 print(t.prompt, 'tb04 =', tb04)
                 print()
@@ -180,48 +188,36 @@ class Safran(OpTask, S2MTaskMixIn):
                     kind            = 'listeo',
                     model           = self.conf.model,
                     local           = 'listeo',
-                    geometry        = self.conf.vconf,
+                    geometry        = self.conf.geometry[self.conf.vconf],
                 )
                 print(t.prompt, 'tb05 =', tb05)
                 print()
 
-                if not self.conf.vconf == 'cor':
-
-                    self.sh.title('Toolbox input norelmt')
-                    tb06 = toolbox.input(
-                        role            = 'MoyRRmensuelles',
-                        genv            = self.conf.cycle,
-                        kind            = 'NORELmt',
-                        model           = self.conf.model,
-                        local           = 'NORELmt',
-                        geometry        = self.conf.vconf,
-                    )
-                    print(t.prompt, 'tb06 =', tb06)
-                    print()
-
-                # WARNING : Les ressoucres rsclim et icrccm ne servent pas dans le cas nominal mais
-                # consituent un mode secours pour SAFRAN si il rencontre un problème pour faire son guess
+                # WARNING : Les ressoucre rsclim ne sert pas dans le cas nominal mais
+                # constitue un mode secours pour SAFRAN si il rencontre un problème pour faire son guess
                 # A partir des fichiers P
-                self.sh.title('Toolbox input rsclim')
-                tb07 = toolbox.input(
-                    role            = 'Clim',
-                    genv            = self.conf.cycle,
-                    kind            = 'rsclim',
-                    model           = self.conf.model,
-                    local           = 'rsclim.don',
-                    geometry        = self.conf.vconf,
-                )
-                print(t.prompt, 'tb07 =', tb07)
-                print()
+#                self.sh.title('Toolbox input rsclim')
+#                tb07 = toolbox.input(
+#                    role            = 'Clim',
+#                    genv            = self.conf.cycle,
+#                    gvar            = '[kind]',
+#                    kind            = 'rsclim',
+#                    model           = self.conf.model,
+#                    local           = 'rsclim.don',
+#                    geometry        = self.conf.geometry[self.conf.vconf],
+#                )
+#                print(t.prompt, 'tb07 =', tb07)
+#                print()
 
                 self.sh.title('Toolbox input icrccm')
                 tb08 = toolbox.input(
                     role            = 'Clim',
                     genv            = self.conf.cycle,
+                    gvar            = '[kind]',
                     kind            = 'icrccm',
                     model           = self.conf.model,
                     local           = 'icrccm.don',
-                    geometry        = self.conf.vconf,
+                    geometry        = self.conf.geometry[self.conf.vconf],
                 )
                 print(t.prompt, 'tb08 =', tb08)
                 print()
@@ -229,8 +225,8 @@ class Safran(OpTask, S2MTaskMixIn):
                 self.sh.title('Toolbox input namelist sorties')
                 tb09 = toolbox.input(
                     role            = 'Nam_sorties',
-                    source          = 'namelist_sorties_[geometry]',
-                    geometry        = self.conf.vconf,
+                    source          = 'namelist_sorties_[geometry:area]',
+                    geometry        = self.conf.geometry[self.conf.vconf],
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
                     model           = self.conf.model,
@@ -243,7 +239,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 tb14 = toolbox.input(
                     role            = 'Nam_adapt',
                     source          = 'namelist_adapt',
-                    geometry        = self.conf.vconf,
+                    geometry        = self.conf.geometry[self.conf.vconf],
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
                     model           = self.conf.model,
@@ -255,8 +251,8 @@ class Safran(OpTask, S2MTaskMixIn):
                 self.sh.title('Toolbox input namelist melange')
                 tb10 = toolbox.input(
                     role            = 'Nam_melange',
-                    source          = 'namelist_melange_[geometry]',
-                    geometry        = self.conf.vconf,
+                    source          = 'namelist_melange_[geometry:area]',
+                    geometry        = self.conf.geometry[self.conf.vconf],
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
                     model           = self.conf.model,
@@ -269,7 +265,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 tb11 = toolbox.input(
                     role            = 'carac_post',
                     genv            = self.conf.cycle,
-                    geometry        = self.conf.vconf,
+                    geometry        = self.conf.geometry[self.conf.vconf],
                     kind            = 'carpost',
                     model           = self.conf.model,
                     local           = 'carpost.tar',
@@ -280,8 +276,8 @@ class Safran(OpTask, S2MTaskMixIn):
                 self.sh.title('Toolbox input namelist impress')
                 tb12 = toolbox.input(
                     role            = 'Nam_impress',
-                    source          = 'namelist_impress_[geometry]',
-                    geometry        = self.conf.vconf,
+                    source          = 'namelist_impress_[geometry:area]',
+                    geometry        = self.conf.geometry[self.conf.vconf],
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
                     model           = self.conf.model,
@@ -295,8 +291,8 @@ class Safran(OpTask, S2MTaskMixIn):
                     self.sh.title('Toolbox input namelist observr')
                     tb13 = toolbox.input(
                         role            = 'Nam_observr',
-                        source          = 'namelist_observr_[geometry]',
-                        geometry        = self.conf.vconf,
+                        source          = 'namelist_observr_[geometry:area]',
+                        geometry        = self.conf.geometry[self.conf.vconf],
                         genv            = self.conf.cycle,
                         kind            = 'namelist',
                         model           = self.conf.model,
@@ -309,8 +305,8 @@ class Safran(OpTask, S2MTaskMixIn):
                 self.sh.title('Toolbox input namelist analyse')
                 tb14 = toolbox.input(
                     role            = 'Nam_analyse',
-                    source          = 'namelist_analyse_[geometry]',
-                    geometry        = self.conf.vconf,
+                    source          = 'namelist_analyse_[geometry:area]',
+                    geometry        = self.conf.geometry[self.conf.vconf],
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
                     model           = self.conf.model,
@@ -323,8 +319,8 @@ class Safran(OpTask, S2MTaskMixIn):
                 self.sh.title('Toolbox input namelist ebauche')
                 tb16 = toolbox.input(
                     role            = 'Nam_ebauche',
-                    source          = 'namelist_ebauche_[geometry]',
-                    geometry        = self.conf.vconf,
+                    source          = 'namelist_ebauche_[geometry:area]',
+                    geometry        = self.conf.geometry[self.conf.vconf],
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
                     model           = self.conf.model,
@@ -436,7 +432,7 @@ class Safran(OpTask, S2MTaskMixIn):
 
             self.component_runner(tbalgo4, tbx4)
 
-        if 'backup' in self.steps:
+        if 'late-backup' in self.steps:
 
             with op.OutputReportContext(self, t):
 
@@ -449,13 +445,13 @@ class Safran(OpTask, S2MTaskMixIn):
                     local          = 'mb035/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = self.conf.xpid,
                     block          = 'massifs',
-                    geometry       = self.conf.vconf,
+                    geometry        = self.conf.geometry[self.conf.vconf],
                     nativefmt      = 'netcdf',
-                    delayed        = True,
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_out,
+                    delayed        = True,
                 ),
                 print(t.prompt, 'tb27 =', tb27)
                 print()
@@ -471,13 +467,13 @@ class Safran(OpTask, S2MTaskMixIn):
                     local          = 'mb035/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = self.conf.xpid,
                     block          = 'postes',
-                    geometry       = self.conf.vconf,
+                    geometry        = self.conf.geometry[self.conf.vconf],
                     nativefmt      = 'netcdf',
-                    delayed        = True,
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_out,
+                    delayed        = True,
                 ),
                 print(t.prompt, 'tb28 =', tb28)
                 print()
@@ -490,17 +486,17 @@ class Safran(OpTask, S2MTaskMixIn):
                     kind           = 'MeteorologicalForcing',
                     source_app     = 'arpege',
                     source_conf    = 'pearp',
-                    delayed        = True,
                     local          = 'mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = self.conf.xpid,
                     block          = 'massifs',
-                    geometry       = self.conf.vconf,
+                    geometry        = self.conf.geometry[self.conf.vconf],
                     nativefmt      = 'netcdf',
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_out,
                     member         = footprints.util.rangex(self.conf.pearp_members),
+                    delayed        = True,
                 ),
                 print(t.prompt, 'tb29 =', tb29)
                 print()
@@ -516,14 +512,14 @@ class Safran(OpTask, S2MTaskMixIn):
                     local          = 'mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = self.conf.xpid,
                     block          = 'postes',
-                    geometry       = self.conf.vconf,
-                    delayed        = True,
+                    geometry        = self.conf.geometry[self.conf.vconf],
                     nativefmt      = 'netcdf',
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_out,
                     member         = footprints.util.rangex(self.conf.pearp_members),
+                    delayed        = True,
                 ),
                 print(t.prompt, 'tb30 =', tb30)
                 print()
@@ -535,18 +531,17 @@ class Safran(OpTask, S2MTaskMixIn):
                     role           = 'Listing',
                     block          = 'listing',
                     experiment     = self.conf.xpid,
-                    geometry       = self.conf.vconf,
+                    geometry        = self.conf.geometry[self.conf.vconf],
                     kind           = 'packedlisting',
                     begindate      = datebegin.ymd6h,
                     enddate        = dateend.ymd6h,
                     local          = 'mb035/listings_safran_[begindate::ymdh]_[enddate::ymdh].tar.gz',
                     format         = 'tar',
                     model          = 'safran',
-                    namespace      = self.conf.namespace,
+                    namespace      = self.conf.namespace_out,
                     delayed        = True,
                 )
                 print(t.prompt, 'tb31 =', tb31)
                 print()
 
-                # from vortex.tools.systems import ExecutionError
-                # raise ExecutionError('')
+

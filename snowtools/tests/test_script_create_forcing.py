@@ -15,9 +15,9 @@ import tempfile
 from netCDF4 import Dataset
 
 from snowtools.DATA import SNOWTOOLS_DIR
-
+from snowtools.DATA import TESTBASE_DIR
 _here = os.path.dirname(os.path.realpath(__file__))
-TEST_DATA_DIR = "/rd/cenfic2/manto/viallonl/testbase/FORCING"
+TEST_DATA_DIR = os.path.join(TESTBASE_DIR, "FORCING")
 
 
 @unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "METEO_KENTTAROVA.csv")),

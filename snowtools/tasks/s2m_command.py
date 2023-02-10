@@ -20,13 +20,15 @@ from snowtools.utils.resources import absolute_path, check_surfex_exe
 from snowtools.utils.infomassifs import infomassifs
 from snowtools.tasks import runs
 from snowtools.tasks.vortex_kitchen import vortex_kitchen
-from snowtools.tasks.crampon_vortex_kitchen import crampon_vortex_kitchen
+from snowtools.tasks.crocO_vortex_kitchen import crocO_vortex_kitchen
 from snowtools.tasks.s2m_launcher import _S2M_command
 from snowtools.DATA import SNOWTOOLS_DIR
+from snowtools.utils.FileException import UndefinedDirectoryException
 
 usage = "usage: s2m -b begin_date -e end_date -f forcing [-m forcingmodel] [-o path_output] [-w workdir] " \
         "[-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] " \
-        "[-c nb_classes_aspects] [-L Lower-altitude] [-U Upper-altitude] [-s surfex_exe_directory]"
+        "[-c nb_classes_aspects] [-L Lower-altitude] [-U Upper-altitude] [-s surfex_exe_directory]" \
+        "[--lptr]"
 
 
 class Surfex_command(_S2M_command):
@@ -54,8 +56,15 @@ class Surfex_command(_S2M_command):
             self.check_mandatory_arguments(**{'-b': 'datedeb', '-e': 'datefin', '-f': 'forcing'})
 
             if not self.options.onlyextractforcing:
-                self.options.exesurfex = check_surfex_exe(self.options.exesurfex)
-                print(self.options.exesurfex)
+                try:
+                    self.options.exesurfex = check_surfex_exe(self.options.exesurfex)
+                except UndefinedDirectoryException as e:
+                    if not vortex:
+                        raise e
+                    else:
+                        print("Use SURFEX binaries from GENV\n")
+                else:
+                    print("USE SURFEX binaries from " + self.options.exesurfex)
 
             # Controls and type conversions of dates
             [self.options.datedeb, self.options.datefin, self.options.datespinup] = list(map(check_and_convert_date,
@@ -93,7 +102,10 @@ class Surfex_command(_S2M_command):
             if self.options.slopes:
                 self.options.slopes = self.options.slopes.split(",")
             else:
-                self.options.slopes = ["0", "20", "40"]
+                if 'allslopes' in self.options.region:
+                    self.options.slopes = ["0", "20", "40"]
+                else:
+                    self.options.slopes = ["0"]
 
             self.options.aspects = INFOmassifs.get_list_aspect(self.options.aspects, self.options.slopes)
             self.options.minlevel, self.options.maxlevel \
@@ -103,6 +115,9 @@ class Surfex_command(_S2M_command):
         # Conversions of local paths in absolute paths
         [self.options.namelist, self.options.workdir, self.options.exesurfex] = \
             list(map(absolute_path, [self.options.namelist, self.options.workdir, self.options.exesurfex]))
+
+        if self.options.croco:
+            self.options.croco = absolute_path(self.options.croco)
 
         if not vortex:
             [self.options.forcing, self.options.diroutput] = \
@@ -155,8 +170,8 @@ class Surfex_command(_S2M_command):
         parser.add_option("-n", "--namelist",
                           action="store", type="string", dest="namelist",
                           default=SNOWTOOLS_DIR + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam',
-                          help="path of the mother namelist - default: " + SNOWTOOLS_DIR
-                               + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam')
+                          help="path of the mother namelist - default: " + SNOWTOOLS_DIR +
+                          '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam')
 
         parser.add_option("-s", "--surfexexec",
                           action="store", type="string", dest="exesurfex", default=None,
@@ -186,6 +201,10 @@ class Surfex_command(_S2M_command):
                           action="store_true", dest="onlyextractforcing", default=False,
                           help="only extract meteorological forcing - default: False")
 
+        parser.add_option("-p", "--prep_xpid",
+                          action="store", type="string", dest="prep_xpid", default=None,
+                          help="xpid in wich are the PREP files to be used")
+
         parser.add_option("--addmask",
                           action="store_true", dest="addmask", default=False,
                           help="apply shadows on solar radiation from surrounding masks")
@@ -193,6 +212,10 @@ class Surfex_command(_S2M_command):
         parser.add_option("--oper",
                           action="store_true", dest="oper", default=False,
                           help="Operational chain")
+
+        parser.add_option("--dev",
+                          action="store_true", dest="dev", default=False,
+                          help="Operational chain in development")
 
         parser.add_option("--forecast",
                           action="store_true", dest="forecast", default=False,
@@ -206,21 +229,25 @@ class Surfex_command(_S2M_command):
                           action="store_true", dest="monthlyreanalysis", default=False,
                           help="Run monthly reanalysis")
 
+        parser.add_option("--monthlyreanalysissytron",
+                          action="store_true", dest="monthlyreanalysissytron", default=False,
+                          help="Run monthly reanalysis")
+
         parser.add_option("--dailyprep",
                           action="store_true", dest="dailyprep", default=False,
                           help="Split reanalysis day by day to prepare initial conditions for reforecast")
 
-        parser.add_option("--crampon",
-                          action="store", type='string', dest="crampon", default=None,
-                          help="CRAMPON assimilation sequence activation and ABSOLUTE path to conf (assimdates (file)")
+        parser.add_option("--croco",
+                          action="store", type='string', dest="croco", default=None,
+                          help="CrocO assimilation sequence activation and ABSOLUTE path to conf (assimdates (file)")
+
+        parser.add_option("--perturb",
+                          action="store_true", dest="perturb", default=False,
+                          help="Generate stochastic perturbations of forcing files")
 
         parser.add_option("--nforcing",
                           action="store", type="int", dest="nforcing", default=1,
                           help="Number of members of forcing files")
-
-        parser.add_option("--cramponmonthly",
-                          action="store_true", dest="cramponmonthly", default=False,
-                          help="activation of CRAMPON with monthly forcing files (not possible yet).")
 
         parser.add_option("--grid",
                           action="store_true", dest="gridsimul", default=False,
@@ -246,15 +273,6 @@ class Surfex_command(_S2M_command):
                           action="store", type="int", dest="nnodes", default=1,
                           help="Number of nodes")
 
-        parser.add_option("--soda",
-                          action="store", type='string', dest="soda", default=None,
-                          help="ESCROC-SODA assimilation sequence activation and ABSOLUTE "
-                               "path to conf (assimdates (file)")
-
-        parser.add_option("--sodamonthly",
-                          action="store_true", dest="sodamonthly", default=False,
-                          help="activation of SODA with monthly forcing files")
-
         parser.add_option("--openloop",
                           action="store_true", dest="openloop", default=False,
                           help="OFFLINE inout at assimdates without assim")
@@ -267,9 +285,23 @@ class Surfex_command(_S2M_command):
                           action="store_true", dest="writesx", default=False,
                           help="Optionnaly transfer the PRO files towards sxcen")
 
+        parser.add_option("--obsxpid",
+                          action="store", type="str", dest="obsxpid", default=None,
+                          help="xpid of the obs you want to assimilate")
+
         parser.add_option("--sensor",
                           action="store", type="str", dest="sensor", default="MODIS",
                           help="specify the sensor name of the obs you want to assimilate")
+
+        parser.add_option("--synth",
+                          action="store", type = "int", dest="synth", default = None,
+                          help="activate synthetic assimilation and set the synthetic member to remove and replace (starting from 1)")
+        parser.add_option("--real",
+                          action="store_true", dest="real", default = False,
+                          help="activate real assimilation")
+        parser.add_option("--pickleit",
+                          action="store_true", dest = "pickleit", default = False,
+                          help ="pickle the output of sims instead of transferring outputs")
 
         parser.add_option("--ntasks",
                           action="store", type="int", dest="ntasks", default=None,
@@ -278,6 +310,10 @@ class Surfex_command(_S2M_command):
         parser.add_option("--debug",
                           action="store_true", dest="debug", default=False,
                           help="Debug task with files available on server")
+
+        parser.add_option("--lptr",
+                          action="store_true", dest="drhook", default=False,
+                          help="Profiling MPI task with DRHOOK")
 
         (options, args) = parser.parse_args(arguments)
 
@@ -383,23 +419,17 @@ class Surfex_command(_S2M_command):
                 self.options.workdir = "."
 
         # Cook vortex task
-        if not self.options.soda:
+        if not self.options.croco:
             vortex_kitchen(self.options)
-#        elif self.options.escroc:
-#            run = vortex_kitchen_soda(self.options)
-#            run.run(self.options)
+        elif self.options.escroc:
+            crocO_vortex_kitchen(self.options)
         else:
-            # Cook vortex task
-            if not self.options.crampon:
-                run = vortex_kitchen(self.options)
-                run.run()
-            elif self.options.escroc:
-                run = crampon_vortex_kitchen(self.options)
-                run.run()
-            else:
-                print("soda should run with escroc option")
+            print("the croco sequence should run with escroc option")
+
+
+def main():
+    Surfex_command(sys.argv)
 
 
 if __name__ == "__main__":
-
-    Surfex_command(sys.argv)
+    main()

@@ -17,6 +17,7 @@ import logging
 import netCDF4
 import six
 import numpy as np
+import glob
 
 from snowtools.utils.FileException import FileNameException, DirNameException, FileOpenException, VarNameException
 from snowtools.utils.FileException import TimeException, MultipleValueException
@@ -30,7 +31,7 @@ except ImportError:
 DEFAULT_NETCDF_FORMAT = 'NETCDF3_CLASSIC'
 
 
-def prosimu(path, ncformat=DEFAULT_NETCDF_FORMAT, openmode='r', **kwargs):
+def prosimu_auto(path, ncformat=DEFAULT_NETCDF_FORMAT, openmode='r', **kwargs):
     """
     Factory function that guess the correct class to return among
     :cls:`prosimu1d` or :cls:`prosimu2d`.
@@ -107,36 +108,47 @@ class prosimuAbstract(abc.ABC):
         """
         self.dataset = None
 
-        if type(path) is list:
+        # BC add the possibility to give wildcards to prosimu
+        if type(path) is str:
+            if openmode == 'w':
+                glob_path = [path]
+            else:
+                glob_path = glob.glob(path)
+            if len(glob_path) == 0:
+                raise FileNameException(path)
+            path = sorted(glob_path)
+            # otherwise path is already a list.
+
+        if len(path) > 1:  # several files
             for fichier in path:
                 if not os.path.isfile(fichier):
                     raise FileNameException(fichier)
 
             self.dataset = netCDF4.MFDataset(path, "r")
-            self.path = path[0]
+            self.path = path
             self.mfile = 1
 
         # Vérification du nom du fichier
-        elif os.path.isfile(path):
-            self.path = path
+        elif os.path.isfile(path[0]):
+            self.path = path[0]
             self.mfile = 0
             try:
                 if openmode == "w":
-                    self.dataset = StandardCROCUS(path, openmode, format=ncformat)
+                    self.dataset = StandardCROCUS(path[0], openmode, format=ncformat)
                 else:
-                    self.dataset = StandardCROCUS(path, openmode)
+                    self.dataset = StandardCROCUS(path[0], openmode)
             except Exception:
                 raise FileOpenException(path)
         else:
             if openmode == "w":
-                dirname = os.path.dirname(path)
+                dirname = os.path.dirname(path[0])
 
                 if len(dirname) > 0:
                     if not os.path.isdir(dirname):
-                        raise DirNameException(path)
+                        raise DirNameException(path[0])
 
-                self.dataset = StandardCROCUS(path, openmode, format=ncformat)
-                self.path = path
+                self.dataset = StandardCROCUS(path[0], openmode, format=ncformat)
+                self.path = path[0]
                 self.mfile = 0
             else:
                 logging.error("I am going to crash because there is a filename exception: \
@@ -369,13 +381,13 @@ class prosimuAbstract(abc.ABC):
         Get the time dimension of the netCDF file
 
         :returns: time axis data
-        :trype: numpy array
+        :rtype: numpy array
         """
         # Vérification du nom de la variable
         if "time" not in list(self.dataset.variables.keys()):
             raise VarNameException("time", self.path)
 
-        if(self.mfile == 1):
+        if self.mfile == 1:
             time_base = self.dataset.variables["time"]
             time = netCDF4.MFTime(time_base, calendar='standard')
         else:
@@ -853,3 +865,6 @@ class prosimu_old(prosimu1d):
     Number_of_Patches = 'tile'
 
     _rewrite_dims = {'Number_of_points': 'location', 'Number_of_patches': 'tile'}
+
+# For retro-compatibility
+prosimu = prosimu1d

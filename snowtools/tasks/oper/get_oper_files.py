@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 Created on 3 aug. 2018
 
 @author: lafaysse
-'''
+"""
 
 import sys
 import six
@@ -16,7 +16,8 @@ from bronx.stdtypes.date import Date, daterange, tomorrow, today
 from snowtools.utils.dates import check_and_convert_date
 import footprints
 
-usage = "usage: get_oper_files.py [-b YYYYMMDD] [--previ]"
+usage = "usage: get_oper_files.py [-b YYYYMMDD]  [-e YYYYMMDD] [--previ] [--dev] [--deterministic] \
+        [--geometry=domain] [--firstday] [--meteo] [--snow]"
 
 
 class configdev(object):
@@ -60,7 +61,7 @@ def parse_options(arguments):
 
     parser.add_option("--deterministic",
                       action="store_true", dest="deterministic", default=False,
-                      help="Dev chain instead of operational chain")
+                      help="Only extract member forced by deterministic ARPEGE")
 
     parser.add_option("--geometry",
                       action="store", type="string", dest="geometry", default=None,
@@ -69,6 +70,14 @@ def parse_options(arguments):
     parser.add_option("--firstday",
                       action="store_true", dest="firstday", default=False,
                       help="only extract first day")
+
+    parser.add_option("--meteo",
+                      action="store_true", dest="meteo", default=False,
+                      help="Extract meteorological forcing files")
+
+    parser.add_option("--snow",
+                      action="store_true", dest="snow", default=False,
+                      help="Extract snowpack model output files")
 
     (options, args) = parser.parse_args(arguments)  # @UnusedVariable
 
@@ -92,6 +101,9 @@ class configcommand(config):
 
         if options.firstday:
             self.firstday = True
+
+        self.meteo = options.meteo
+        self.snow = options.snow
 
 
 class configcommanddev(configdev):
@@ -125,8 +137,15 @@ class S2MExtractor(S2MTaskMixIn):
             self.dateend = tomorrow(base=self.datebegin)
 
     def get(self):
-        meteo_outputs = self.get_meteo()
-        snow_outputs = self.get_snow()
+        if self.conf.meteo:
+            meteo_outputs = self.get_meteo()
+        else:
+            meteo_outputs = None
+        if self.conf.snow :
+            snow_outputs = self.get_snow()
+        else:
+            snow_outputs = None
+
         return meteo_outputs, snow_outputs
 
     def get_meteo(self):
@@ -246,6 +265,115 @@ class S2MExtractor(S2MTaskMixIn):
                 list_xpid[rh.resource.geometry.area].append(rh.provider.experiment)
 
         return list_output, list_xpid
+
+
+class FutureS2MExtractor(S2MExtractor):
+
+    def get_meteo(self):
+
+        tb01 = toolbox.input(
+            role           = 'Forcing',
+            vapp           = 's2m',
+            vconf          = '[geometry::area]',
+            local          = '[geometry::area]/[date:ymdh]/mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment     = self.conf.xpid,
+            block          = 'meteo',
+            geometry       = self.conf.list_geometry,
+            date           = self.conf.rundate,
+            datebegin      = self.datebegin,
+            dateend        = self.dateend,
+            member         = self.conf.list_members,
+            nativefmt      = 'netcdf',
+            kind           = 'MeteorologicalForcing',
+            model          = 's2m',
+            namespace      = 'vortex.multi.fr',
+            cutoff         = 'production' if self.conf.previ else 'assimilation',
+            intent         = 'in',
+            fatal          = False
+        )
+
+        if hasattr(self.conf, "alternate_xpid"):
+            for a, alternate_xpid in enumerate(self.conf.alternate_xpid):
+                if hasattr(self.conf, "alternate_list_geometry"):
+                    list_geometry = self.conf.alternate_list_geometry[a]
+                else:
+                    list_geometry = self.conf.list_geometry
+                tb01.extend(toolbox.input(
+                    alternate      = 'Forcing',
+                    vapp           = 's2m',
+                    vconf          = '[geometry::area]',
+                    local          = '[geometry::area]/[date:ymdh]/mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    experiment     = alternate_xpid,
+                    block          = 'meteo',
+                    geometry       = list_geometry,
+                    date           = self.conf.rundate,
+                    datebegin      = self.datebegin,
+                    dateend        = self.dateend,
+                    member         = self.conf.list_members,
+                    nativefmt      = 'netcdf',
+                    kind           = 'MeteorologicalForcing',
+                    model          = 's2m',
+                    namespace      = 'vortex.multi.fr',
+                    cutoff         = 'production' if self.conf.previ else 'assimilation',
+                    intent         = 'in',
+                    fatal          = False
+                ))
+
+        return self.get_std(tb01)
+
+    def get_snow(self):
+        import cen
+        tb02 = toolbox.input(
+            role           = 'pro',
+            vapp           = 's2m',
+            vconf          = '[geometry::area]',
+            local          = '[geometry::area]/[date:ymdh]/mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment     = self.conf.xpid,
+            block          = 'pro',
+            geometry       = self.conf.list_geometry,
+            date           = self.conf.rundate,
+            datebegin      = self.datebegin if self.conf.previ else '[dateend]/-PT24H',
+            dateend        = self.dateend if self.conf.previ else list(daterange(tomorrow(base=self.datebegin), self.dateend)),
+            member         = self.conf.list_members,
+            nativefmt      = 'netcdf',
+            kind           = 'SnowpackSimulation',
+            model          = 'surfex',
+            namespace      = 'vortex.multi.fr',
+            cutoff         = 'production' if self.conf.previ else 'assimilation',
+            intent         = 'in',
+            fatal          = False
+
+        )
+        if hasattr(self.conf, "alternate_xpid"):
+            for a, alternate_xpid in enumerate(self.conf.alternate_xpid):
+                if hasattr(self.conf, "alternate_list_geometry"):
+                    list_geometry = self.conf.alternate_list_geometry[a]
+                else:
+                    list_geometry = self.conf.list_geometry
+
+                tb02.extend(toolbox.input(
+                    alternate      = 'pro',
+                    vapp           = 's2m',
+                    vconf          = '[geometry::area]',
+                    local          = '[geometry::area]/[date:ymdh]/mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    experiment     = alternate_xpid,
+                    block          = 'pro',
+                    geometry       = list_geometry,
+                    date           = self.conf.rundate,
+                    datebegin      = self.datebegin if self.conf.previ else '[dateend]/-PT24H',
+                    dateend        = self.dateend if self.conf.previ else list(daterange(tomorrow(base=self.datebegin), self.dateend)),
+                    member         = self.conf.list_members,
+                    nativefmt      = 'netcdf',
+                    kind           = 'SnowpackSimulation',
+                    model          = 'surfex',
+                    namespace      = 'vortex.multi.fr',
+                    cutoff         = 'production' if self.conf.previ else 'assimilation',
+                    intent         = 'in',
+                    fatal          = False
+
+                ))
+
+        return self.get_std(tb02)
 
 
 if __name__ == "__main__":
