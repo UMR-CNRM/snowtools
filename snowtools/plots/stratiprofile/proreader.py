@@ -197,7 +197,7 @@ class reader(abc.ABC):
         :returns: list of `Point`
         """
 
-    def get_point(self, *args, **kwargs):
+    def get_point(self, selector: dict = {}) -> list:
         """
         Same as get_points but raise a ValueError if there is not exactly one point
         corresponding to the selection.
@@ -206,7 +206,7 @@ class reader(abc.ABC):
         :rtype: `Point` identifier
         :raises: ValueError if not exactly one point in selection
         """
-        points = self.get_points()
+        points = self.get_points(selector=selector)
         if len(points) > 1 or len(points) == 0:
             raise ValueError('{} points found'.format(len(points)))
         return points[0]

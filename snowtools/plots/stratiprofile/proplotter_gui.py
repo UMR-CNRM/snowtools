@@ -6,6 +6,7 @@ import tkinter.filedialog
 from tkinter import ttk
 from tkinter import messagebox
 import logging
+import textwrap
 
 import numpy as np
 # import pdb
@@ -33,7 +34,6 @@ class ProPlotterApplication(tk.Frame):
     :param arguments: Other arguments provided as a dict.
                       Accepted keys are: type, begin, end, max_samples,
                       date, variable, variable_profil
-                      direction, height (only for type=height)
 
     Maintain links to the different parts of the interface:
      * menu: The Menu (File, graph type, change language)
@@ -82,12 +82,25 @@ class ProPlotterApplication(tk.Frame):
 
         # Set the ProPlotterChoicesBar graphical element adapted to graph type
         # Set the ProPlotterController adapted to graph type
-        self.to_graph()
+        self.to_graph(self.type)
+        # Update to take into account an eventual open file
+        self.open_update()
 
         # Keyboard shortcuts
         self.master.bind('<Control-o>', self.open)
         self.master.bind('<Escape>', self.close_window)
         self.master.bind('<Control-q>', self.close_window)
+
+        # Parse additional arguments
+        if 'variable' in arguments:
+            set_v1 = self.choices.variables_w.set_var_master(arguments['variable'])
+        if 'variable_profil' in arguments:
+            set_v2 = self.choices.variables_w.set_var_react(arguments['variable_profil'])
+        if point is not None:
+            set_v3 = self.choices.point_w.set_point(point)
+
+        if set_v1 and set_v2 and set_v3:
+            self.controller.plot()
 
         self.update_idletasks()
 
@@ -198,11 +211,20 @@ class ProPlotterApplication(tk.Frame):
             logger.info('No file selected. Ignore.')
             self.status.set_status('Open file... No file selected.')
             return None
-        self.openbar.update_filename(selectedfilename)
         self.status.set_status('Opening file {}'.format(selectedfilename))
         self.fileobj = proreader.read_file(selectedfilename)
         if self.fileobj is not None:
             self.status.set_status('Successfully opened file {}'.format(selectedfilename))
+            self.open_update()
+
+    def open_update(self):
+        """
+        Do the different update after successfully open a new file
+        (i.e. once self.fileobj correctly set).
+        """
+        if self.fileobj is None:
+            return
+        self.openbar.update_filename(self.fileobj.get_filename())
         self.choices.variables_w.update()
         self.choices.point_w.update()
         self.choices.params_w.update()
@@ -211,7 +233,7 @@ class ProPlotterApplication(tk.Frame):
         """
         Opening the help window with text inside
         """
-        messagebox.showinfo('USER GUIDE', 'This software is a visualisation tool for PRO.nc files coming from our snow '
+        messagebox.showinfo('User Guide', 'This software is a visualisation tool for PRO.nc files coming from our snow '
                                           'model CROCUS embedded in the SURFEX model. \n \n'
                                           'There are several types of graphs:\n'
                                           '- usual graph: click the Open File button. Select a PRO file. Choose the '
@@ -269,9 +291,9 @@ class ProPlotterMenu(tk.Menu):
         self.add_cascade(label='Graph type', menu=self.typemenu)
         # Menu 2
         self.infomenu = tk.Menu(self, tearoff=0)
-        self.infomenu.add_command(label='USER Guide', command=self.master.open_user_guide)
+        self.infomenu.add_command(label='User Guide', command=self.master.open_user_guide)
         self.infomenu.add_command(label='Credits', command=self.master.open_credits)
-        self.add_cascade(label='INFOS', menu=self.infomenu)
+        self.add_cascade(label='Help', menu=self.infomenu)
         # Config
         self.master.master.config(menu=self)
 
@@ -288,7 +310,7 @@ class ProPlotterOpenBar(tk.Frame):
         self.openbutton = tk.Button(self, text="Open File", command=self.open)
         self.openbutton.pack(side=tk.LEFT, padx=5)
 
-        filename = self.master.fileobj.filename if self.master.fileobj is not None else '--'
+        filename = self.master.fileobj.get_filename() if self.master.fileobj is not None else '--'
         self.filename = tk.Label(self, text=filename)
         self.filename.pack(side=tk.LEFT)
 
@@ -312,6 +334,7 @@ class ProPlotterChoicesBar(tk.Frame):
     """
 
     WIDTH = 40
+    WIDTH_TXT = WIDTH
 
     def __init__(self, master):
         """Initialization of left bar for selecting parameters specific to representation,
@@ -368,7 +391,7 @@ class ProPlotterChoicesBarVariables:
             variables_list = [v['full_name'] if 'full_name' in v else k for k, v in self.variables_info.items()]
             list_bool = [v['has_snl'] if 'full_name' in v else k for k, v in self.variables_info.items()]
             variables_with_snl = [variables_list[i] for i in range(len(variables_list)) if list_bool[i]]
-            if variables_with_snl == []:
+            if len(variables_with_snl) == 0:
                 self.exists_snl = False
 
             self.label1 = tk.Label(self.frame, text='Variable:')
@@ -384,12 +407,28 @@ class ProPlotterChoicesBarVariables:
             self.choice_var_react.bind('<<ComboboxSelected>>', self.update_var_react)
             self.choice_var_react.pack()
 
+    def set_var_master(self, var):
+        if var in self.choice_var_master['values']:
+            i = self.choice_var_master['values'].index(var)
+            self.choice_var_master.current(i)
+            self.update_var_master()
+            return True
+        return False
+
     def update_var_master(self, *args):
         """Update the value for the master graph, is the left graph"""
         value = self.choice_var_master.get()
         if value != self._var_master:
             self._var_master = value
             self.master.master.controls.plot_mark()
+
+    def set_var_react(self, var):
+        if var in self.choice_var_react['values']:
+            i = self.choice_var_react['values'].index(var)
+            self.choice_var_react.current(i)
+            self.update_var_react()
+            return True
+        return False
 
     def update_var_react(self, *args):
         """Update the value for the servant graph, is the graph on the right"""
@@ -437,7 +476,7 @@ class ProPlotterChoicesBarPoint:
         if self.master.master.fileobj is not None:
             self.variables_info = self.master.master.fileobj.variables_selection_point
             for v, info in self.variables_info.items():
-                label = tk.Label(self.frame, text=info['full_name'])
+                label = tk.Label(self.frame, text=textwrap.fill(info['full_name'], width=self.master.WIDTH_TXT))
                 label.pack()
                 choices = list(info['choices'])  # Tkinter knows nothing of numpy arrays...
                 ii = len(self.llabels)
@@ -456,6 +495,16 @@ class ProPlotterChoicesBarPoint:
                 self.llabels.append(label)
                 self.lselectors.append(selector)
                 self.lvariables.append(v)
+
+    def set_point(self, point):
+        """Set point number"""
+        if 'point' in self.lvariables:
+            i = self.lvariables.index('point')
+            selector = self.lselectors[i]
+            if str(point) in selector['values']:
+                selector.set(point)
+                return True
+        return False
 
     def get_selector(self):
         """Give the good type for the selected field"""
@@ -485,7 +534,7 @@ class ProPlotterChoicesBarPoint:
         """
         self.master.master.controls.plot_mark()
         selector = {}
-        for j in range(i+1):
+        for j in range(i + 1):
             v = self.lvariables[j]
             val = self.lselectors[j].get()
             if val == '':
@@ -544,9 +593,9 @@ class ProPlotterControlsBar(tk.Frame):
         self.plotbutton = tk.Button(self, text="Plot", command=self.plot)
         self.plotbutton.pack(side=tk.LEFT, padx=5)
 
-        text = 'Some useful informations on what is currently plotted to be updated when relevant'
-        self.infos = tk.Label(self, text=text)
-        self.infos.pack(side=tk.LEFT)
+        text = 'Nothing plotted yet'
+        self.infos = tk.Label(self, text=text, anchor='w')
+        self.infos.pack(side=tk.LEFT, fill='both')
 
     def plot(self):
         """
@@ -622,11 +671,11 @@ class ProPlotterMain(tk.Frame):
             self.ax1 = self.fig1.add_subplot(1, 1, 1)
         elif nb_graph == 2:
             self.first_profil = True
-            self.ax1 = self.fig1.add_subplot(1, rat1+rat2, (1, rat1))
+            self.ax1 = self.fig1.add_subplot(1, rat1 + rat2, (1, rat1))
             if same_y:
-                self.ax2 = self.fig1.add_subplot(1, rat1+rat2, (rat1 + 1, rat1 + rat2), sharey=self.ax1)
+                self.ax2 = self.fig1.add_subplot(1, rat1 + rat2, (rat1 + 1, rat1 + rat2), sharey=self.ax1)
             else:
-                self.ax2 = self.fig1.add_subplot(1, rat1+rat2, (rat1 + 1, rat1 + rat2))
+                self.ax2 = self.fig1.add_subplot(1, rat1 + rat2, (rat1 + 1, rat1 + rat2))
             self.fig1.subplots_adjust(left=0.1, bottom=0.08, wspace=0.1)
             self.ax3 = self.ax2.twiny()
 
@@ -864,9 +913,9 @@ class ProPlotterController(abc.ABC):
         """
         v_master = self.master.choices.variables_w.var_master
         v_react = self.master.choices.variables_w.var_react
-        text = ' VARS: {}/{}. POINT: {}'.format(v_master, v_react, point)
+        text = ' VARS: {}/{}. \nPOINT: {}'.format(v_master, v_react, point)
         self.master.controls.update_text(text)
-        
+
     def check_var_info(self):
         """
         Check if there is a choice for variable(s) to plot
