@@ -52,9 +52,10 @@ import matplotlib.pyplot as plt
 #############
 #
 # Au 27 octobre 2021:
-# ORCHAMP = projet 0 = geometrie orchamp dans vortex/conf/geometries.ini
-# projet 1 utilisé sans référence ? 
-# TOP_CBNA = projet 2 = geometrie orchamp dans vortex/conf/geometries.ini
+# ORCHAMP = projet 0 = geometrie orchamp dans vortex/conf/geometries.ini  (164 points)
+# projet 1 utilisé sans référence ? (15 points)
+# TOP_CBNA = projet 2 = geometrie orchamp dans vortex/conf/geometries.ini (169 points)
+# ORCHAMP_MAJ_2022 = projet 3 = geometrie orchamp dans vortex/conf/geometries.ini (26 points)
 #
 #############
 # METTRE A JOUR CI DESSUS A CHAQUE NOUVEAU PROJET
@@ -77,6 +78,9 @@ import matplotlib.pyplot as plt
 #
 # TOP_CBNA:
 # python3 shapefile2NetCDF.py /home/fructusm/Bureau/Shapefile_simu/cn_maille_points/cn_maille_points cd50m ORIG_FID 1
+#
+# MAJ Orchamp_2022
+# python3 shapefile2NetCDF.py /home/fructusm/Travail_Orchamp/Orchamp_nouveaux_sites_2022/Plots_new_2022 codeplot idplot 3
 ##############
 # Utilisation du fichier NetCDF pour reanalyse ou simulation en local
 ##############
@@ -155,7 +159,7 @@ path_MNT_aspect_defaut = '/rd/cenfic3/sentinel/mnt_ange/ange-factory/prod1/franc
 ################################################################
 # Infos shapefile massif, a priori pérenne 
 ################################################################
-path_shapefile_massif = SNOWTOOLS_DIR + '/DATA/massifs_Lbrt93_2019'
+path_shapefile_massif = SNOWTOOLS_DIR + '/DATA/massifs'
 indice_record_massif = 0
 
 ################################################################

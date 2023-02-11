@@ -90,7 +90,7 @@ path_MNT_alti_250m = '/rd/cenfic3/sentinel/mnt_ange/ange-factory/prod1/france_25
 ################################################################
 # Infos shapefile massif, a priori pérenne 
 ################################################################
-path_shapefile_massif = SNOWTOOLS_DIR + '/DATA/massifs_Lbrt93_2019'
+path_shapefile_massif = SNOWTOOLS_DIR + '/DATA/massifs'
 
 ################################################################
 #            FIN DUR DANS LE CODE
