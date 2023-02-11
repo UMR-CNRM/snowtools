@@ -34,7 +34,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
     def process(self):
 
         if not hasattr(self.conf, "genv"):
-            self.conf.genv = 'uenv:cen.05@CONST_CEN'
+            self.conf.genv = 'uenv:cen.07@CONST_CEN'
         t = self.ticket
 
         listrundate = list(daterange(self.conf.datebegin, self.conf.dateend))
