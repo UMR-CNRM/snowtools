@@ -1,655 +1,788 @@
 <root>
   <Massifs>
-    <Massif>
-      <name> Chablais   </name>
-      <nameRed> chablai </nameRed>
-      <number> 1 </number>
-      <latCenter> 46.17685 </latCenter>
-      <lonCenter> 6.64493 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 2800 </altMax>
-    </Massif>
-    <Massif>
-      <name> Aravis     </name>
-      <nameRed> aravis  </nameRed>
-      <number> 2 </number>
-      <latCenter> 45.89494 </latCenter>
-      <lonCenter> 6.39738 </lonCenter>
-      <altMin> 800 </altMin>
-      <altMax> 2800 </altMax>
-    </Massif>
-    <Massif>
-      <name> Mont-Blanc </name>
-      <nameRed> mont-bl </nameRed>
-      <number> 3 </number>
-      <latCenter> 45.89794 </latCenter>
-      <lonCenter> 6.82392 </lonCenter>
-      <altMin> 1000 </altMin>
-      <altMax> 3800 </altMax>
-    </Massif>
-    <Massif>
-      <name> Beaufortain </name>
-      <nameRed> beaufor </nameRed>
-      <number> 5 </number>
-      <latCenter> 45.65756 </latCenter>
-      <lonCenter> 6.57668 </lonCenter>
-      <altMin> 800 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Haute-Tarentaise </name>
-      <nameRed> hte-tar </nameRed>
-      <number> 6 </number>
-      <latCenter> 45.54313 </latCenter>
-      <lonCenter> 6.90053 </lonCenter>
-      <altMin> 800 </altMin>
-      <altMax> 3700 </altMax>
-    </Massif>
-    <Massif>
-      <name> Vanoise    </name>
-      <nameRed> vanoise </nameRed>
-      <number> 10 </number>
-      <latCenter> 45.411 </latCenter>
-      <lonCenter> 6.61786 </lonCenter>
-      <altMin> 800 </altMin>
-      <altMax> 3700 </altMax>
-    </Massif>
-    <Massif>
-      <name> Maurienne  </name>
-      <nameRed> maurien </nameRed>
-      <number> 9 </number>
-      <latCenter> 45.32783 </latCenter>
-      <lonCenter> 6.35451 </lonCenter>
-      <altMin> 600 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Haute-Maurienne </name>
-      <nameRed> hte-mau </nameRed>
-      <number> 11 </number>
-      <latCenter> 45.26072 </latCenter>
-      <lonCenter> 6.91492 </lonCenter>
-      <altMin> 1200 </altMin>
-      <altMax> 3700 </altMax>
-    </Massif>
-    <Massif>
-      <name> Bauges     </name>
-      <nameRed> bauges  </nameRed>
-      <number> 4 </number>
-      <latCenter> 45.65578 </latCenter>
-      <lonCenter> 6.10178 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 2200 </altMax>
-    </Massif>
-    <Massif>
-      <name> Chartreuse </name>
-      <nameRed> chartre </nameRed>
-      <number> 7 </number>
-      <latCenter> 45.37753 </latCenter>
-      <lonCenter> 5.80795 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 2200 </altMax>
-    </Massif>
-    <Massif>
-      <name> Vercors    </name>
-      <nameRed> vercors </nameRed>
-      <number> 14 </number>
-      <latCenter> 45.00409 </latCenter>
-      <lonCenter> 5.4932 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 2500 </altMax>
-    </Massif>
-    <Massif>
-      <name> Belledonne </name>
-      <nameRed> belledo </nameRed>
-      <number> 8 </number>
-      <latCenter> 45.27395 </latCenter>
-      <lonCenter> 6.00201 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Grandes-Rousses </name>
-      <nameRed> gdes-ro </nameRed>
-      <number> 12 </number>
-      <latCenter> 45.11517 </latCenter>
-      <lonCenter> 6.21836 </lonCenter>
-      <altMin> 800 </altMin>
-      <altMax> 3500 </altMax>
-    </Massif>
-    <Massif>
-      <name> Oisans     </name>
-      <nameRed> oisans  </nameRed>
-      <number> 15 </number>
-      <latCenter> 44.94609 </latCenter>
-      <lonCenter> 5.99951 </lonCenter>
-      <altMin> 800 </altMin>
-      <altMax> 3800 </altMax>
-    </Massif>
-    <Massif>
-      <name> Pelvoux    </name>
-      <nameRed> pelvoux </nameRed>
-      <number> 16 </number>
-      <latCenter> 44.83699 </latCenter>
-      <lonCenter> 6.45769 </lonCenter>
-      <altMin> 1000 </altMin>
-      <altMax> 3800 </altMax>
-    </Massif>
-    <Massif>
-      <name> Thabor     </name>
-      <nameRed> thabor  </nameRed>
-      <number> 13 </number>
-      <latCenter> 45.01923 </latCenter>
-      <lonCenter> 6.59154 </lonCenter>
-      <altMin> 1500 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Champsaur  </name>
-      <nameRed> champsa </nameRed>
-      <number> 19 </number>
-      <latCenter> 44.70565 </latCenter>
-      <lonCenter> 6.23469 </lonCenter>
-      <altMin> 1100 </altMin>
-      <altMax> 3500 </altMax>
-    </Massif>
-    <Massif>
-      <name> Devoluy    </name>
-      <nameRed> devoluy </nameRed>
-      <number> 18 </number>
-      <latCenter> 44.69552 </latCenter>
-      <lonCenter> 5.8499 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Queyras    </name>
-      <nameRed> queyras </nameRed>
-      <number> 17 </number>
-      <latCenter> 44.77139 </latCenter>
-      <lonCenter> 6.79352 </lonCenter>
-      <altMin> 1000 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Parpaillon </name>
-      <nameRed> parpail </nameRed>
-      <number> 20 </number>
-      <latCenter> 44.57217 </latCenter>
-      <lonCenter> 6.50065 </lonCenter>
-      <altMin> 800 </altMin>
-      <altMax> 3300 </altMax>
-    </Massif>
-    <Massif>
-      <name> Ubaye      </name>
-      <nameRed> ubaye   </nameRed>
-      <number> 21 </number>
-      <latCenter> 44.44757 </latCenter>
-      <lonCenter> 6.67076 </lonCenter>
-      <altMin> 1200 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Haut-Var-Haut-Verdon </name>
-      <nameRed> Ht_Var-Ver </nameRed>
-      <number> 22 </number>
-      <latCenter> 44.12458 </latCenter>
-      <lonCenter> 6.79647 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 2800 </altMax>
-    </Massif>
-    <Massif>
-      <name> Mercantour </name>
-      <nameRed> mercant </nameRed>
-      <number> 23 </number>
-      <latCenter> 44.12649 </latCenter>
-      <lonCenter> 7.31586 </lonCenter>
-      <altMin> 1000 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Baronnies </name>
-      <nameRed> Baronnies </nameRed>
-      <number> 24 </number>
-      <latCenter> 44.523456 </latCenter>
-      <lonCenter> 5.506917 </lonCenter>
-      <altMin> 200 </altMin>
-      <altMax> 2100 </altMax>
-    </Massif>
-    <Massif>
-      <name> Ventoux </name>
-      <nameRed> Ventoux </nameRed>
-      <number> 25 </number>
-      <latCenter> 44.160051 </latCenter>
-      <lonCenter> 5.529072 </lonCenter>
-      <altMin> 200 </altMin>
-      <altMax> 2000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Chiran </name>
-      <nameRed> Chiran </nameRed>
-      <number> 26 </number>
-      <latCenter> 44.225706 </latCenter>
-      <lonCenter> 6.175682 </lonCenter>
-      <altMin> 300 </altMin>
-      <altMax> 2400 </altMax>
-    </Massif>
-    <Massif>
-      <name> Préalpes d'Azur </name>
-      <nameRed> Préalpes d'Azur </nameRed>
-      <number> 27 </number>
-      <latCenter> 43.822736 </latCenter>
-      <lonCenter> 6.574427 </lonCenter>
-      <altMin> 100 </altMin>
-      <altMax> 2100 </altMax>
-    </Massif>
-    <Massif>
-      <name> Diablerets </name>
-      <nameRed> diabler </nameRed>
-      <number> 30 </number>
-      <latCenter> 46.39 </latCenter>
-      <lonCenter> 7.3025 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Pays-Basque </name>
-      <nameRed> Fpaysba </nameRed>
-      <number> 64 </number>
-      <latCenter> 43.05254 </latCenter>
-      <lonCenter> -0.99299 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 2200 </altMax>
-    </Massif>
-    <Massif>
-      <name> Aspe-Ossau </name>
-      <nameRed> Faspe-o </nameRed>
-      <number> 65 </number>
-      <latCenter> 42.95985 </latCenter>
-      <lonCenter> -0.49791 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Haute-Bigorre </name>
-      <nameRed> Fhte-bi </nameRed>
-      <number> 66 </number>
-      <latCenter> 42.89645 </latCenter>
-      <lonCenter> 0.01979 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3300 </altMax>
-    </Massif>
-    <Massif>
-      <name> Aure-Louron </name>
-      <nameRed> Faure-l </nameRed>
-      <number> 67 </number>
-      <latCenter> 42.85249 </latCenter>
-      <lonCenter> 0.41549 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Luchonnais </name>
-      <nameRed> Fluchon </nameRed>
-      <number> 68 </number>
-      <latCenter> 42.80421 </latCenter>
-      <lonCenter> 0.58138 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3400 </altMax>
-    </Massif>
-    <Massif>
-      <name> Couserans </name>
-      <nameRed> Fcouser </nameRed>
-      <number> 69 </number>
-      <latCenter> 42.85791 </latCenter>
-      <lonCenter> 1.16394 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3200 </altMax>
-    </Massif>
-    <Massif>
-      <name> Haute-Ariège </name>
-      <nameRed> Fhte-ar </nameRed>
-      <number> 70 </number>
-      <latCenter> 42.69676 </latCenter>
-      <lonCenter> 1.62746 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3100 </altMax>
-    </Massif>
-    <Massif>
-      <name> Orlu-Saint-Barthélémy </name>
-      <nameRed> Forlu-s </nameRed>
-      <number> 72 </number>
-      <latCenter> 42.75583 </latCenter>
-      <lonCenter> 1.86031 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 2800 </altMax>
-    </Massif>
-    <Massif>
-      <name> Capcir-Puymorens </name>
-      <nameRed> Fcapcir </nameRed>
-      <number> 73 </number>
-      <latCenter> 42.5781 </latCenter>
-      <lonCenter> 2.08373 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 2900 </altMax>
-    </Massif>
-    <Massif>
-      <name> Cerdagne  </name>
-      <nameRed> Fcerdag </nameRed>
-      <number> 74 </number>
-      <latCenter> 42.45443 </latCenter>
-      <lonCenter> 2.35667 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Pyrénées Audoises  </name>
-      <nameRed> Pyrénées Audoises </nameRed>
-      <number> 75 </number>
-      <latCenter> 42.845139 </latCenter>
-      <lonCenter> 2.268456 </lonCenter>
-      <altMin> 100 </altMin>
-      <altMax> 2000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Andorre   </name>
-      <nameRed> Aandorr </nameRed>
-      <number> 71 </number>
-      <latCenter> 42.54648 </latCenter>
-      <lonCenter> 1.57683 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Navarra   </name>
-      <nameRed> Enavarr </nameRed>
-      <number> 80 </number>
-      <latCenter> 42.87611 </latCenter>
-      <lonCenter> -1.07132 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 2200 </altMax>
-    </Massif>
-    <Massif>
-      <name> Jacetania </name>
-      <nameRed> Ejaceta </nameRed>
-      <number> 81 </number>
-      <latCenter> 42.65731 </latCenter>
-      <lonCenter> -0.53549 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Gallego   </name>
-      <nameRed> Egalleg </nameRed>
-      <number> 82 </number>
-      <latCenter> 42.61868 </latCenter>
-      <lonCenter> -0.24826 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3100 </altMax>
-    </Massif>
-    <Massif>
-      <name> Sobrarbe  </name>
-      <nameRed> Esobrar </nameRed>
-      <number> 83 </number>
-      <latCenter> 42.56782 </latCenter>
-      <lonCenter> 0.06739 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3300 </altMax>
-    </Massif>
-    <Massif>
-      <name> Esera     </name>
-      <nameRed> Eesera  </nameRed>
-      <number> 84 </number>
-      <latCenter> 42.50586 </latCenter>
-      <lonCenter> 0.49725 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3400 </altMax>
-    </Massif>
-    <Massif>
-      <name> Aran      </name>
-      <nameRed> Earan   </nameRed>
-      <number> 85 </number>
-      <latCenter> 42.72301 </latCenter>
-      <lonCenter> 0.90827 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Ribagorcana </name>
-      <nameRed> Eribago </nameRed>
-      <number> 86 </number>
-      <latCenter> 42.45993 </latCenter>
-      <lonCenter> 0.8552 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Pallaresa </name>
-      <nameRed> Epallar </nameRed>
-      <number> 87 </number>
-      <latCenter> 42.454 </latCenter>
-      <lonCenter> 1.19189 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3100 </altMax>
-    </Massif>
-    <Massif>
-      <name> Perafita  </name>
-      <nameRed> Eperafi </nameRed>
-      <number> 88 </number>
-      <latCenter> 42.4233 </latCenter>
-      <lonCenter> 1.68542 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Ter-Freser </name>
-      <nameRed> Eter-fr </nameRed>
-      <number> 89 </number>
-      <latCenter> 42.32891 </latCenter>
-      <lonCenter> 2.1838 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 3000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Cadi-Moixero </name>
-      <nameRed> Ecadi-m </nameRed>
-      <number> 90 </number>
-      <latCenter> 42.32361 </latCenter>
-      <lonCenter> 1.66441 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 2800 </altMax>
-    </Massif>
-    <Massif>
-      <name> Pre-Pireneu </name>
-      <nameRed> Eprepir </nameRed>
-      <number> 91 </number>
-      <latCenter> 42.21428 </latCenter>
-      <lonCenter> 1.59673 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 2200 </altMax>
-    </Massif>
-    <Massif>
-      <name> Cinto-Rotondo </name>
-      <nameRed> Cinto-R </nameRed>
-      <number> 40 </number>
-      <latCenter> 42.32936 </latCenter>
-      <lonCenter> 8.98261 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 2800 </altMax>
-    </Massif>
-    <Massif>
-      <name> Renoso-Incudine </name>
-      <nameRed> Renos-I </nameRed>
-      <number> 41 </number>
-      <latCenter> 41.95254 </latCenter>
-      <lonCenter> 9.1662 </lonCenter>
-      <altMin> 500 </altMin>
-      <altMax> 2400 </altMax>
-    </Massif>
-    <Massif>
-      <name> Donon-Champ-du-Feu </name>
-      <nameRed> XXX </nameRed>
-      <number> 45 </number>
-      <latCenter> 48.457682 </latCenter>
-      <lonCenter> 7.193633 </lonCenter>
-      <altMin> 200 </altMin>
-      <altMax> 1100 </altMax>
-    </Massif>
-    <Massif>
-      <name> Hautes-Vosges </name>
-      <nameRed> XXX </nameRed>
-      <number> 46 </number>
-      <latCenter> 48.071388 </latCenter>
-      <lonCenter> 6.976381 </lonCenter>
-      <altMin> 600 </altMin>
-      <altMax> 1500 </altMax>
-    </Massif>
-    <Massif>
-      <name> Ballon d'Alsace </name>
-      <nameRed> XXX </nameRed>
-      <number> 47 </number>
-      <latCenter> 47.801156 </latCenter>
-      <lonCenter> 6.854180 </lonCenter>
-      <altMin> 300 </altMin>
-      <altMax> 1200 </altMax>
-    </Massif>
-    <Massif>
-      <name> Millevaches </name>
-      <nameRed> XXX </nameRed>
-      <number> 48 </number>
-      <latCenter> 45.761494 </latCenter>
-      <lonCenter> 2.301477 </lonCenter>
-      <altMin> 300 </altMin>
-      <altMax> 1000 </altMax>
-    </Massif>
-    <Massif>
-      <name> Livradois </name>
-      <nameRed> XXX </nameRed>
-      <number> 49 </number>
-      <latCenter> 45.220403 </latCenter>
-      <lonCenter> 3.684882 </lonCenter>
-      <altMin> 400 </altMin>
-      <altMax> 1500 </altMax>
-    </Massif>
-    <Massif>
-      <name> Monts du Forez </name>
-      <nameRed> XXX </nameRed>
-      <number> 50 </number>
-      <latCenter> 45.669038 </latCenter>
-      <lonCenter> 3.857187 </lonCenter>
-      <altMin> 300 </altMin>
-      <altMax> 1500 </altMax>
-    </Massif>
-    <Massif>
-      <name> Sancy </name>
-      <nameRed> XXX </nameRed>
-      <number> 51 </number>
-      <latCenter> 45.552703 </latCenter>
-      <lonCenter> 2.871230 </lonCenter>
-      <altMin> 600 </altMin>
-      <altMax> 1800 </altMax>
-    </Massif>
-    <Massif>
-      <name> Monts du Cantal </name>
-      <nameRed> XXX </nameRed>
-      <number> 52 </number>
-      <latCenter> 45.041260 </latCenter>
-      <lonCenter> 2.639729 </lonCenter>
-      <altMin> 600 </altMin>
-      <altMax> 1800 </altMax>
-    </Massif>
-    <Massif>
-      <name> Aubrac </name>
-      <nameRed> XXX </nameRed>
-      <number> 53 </number>
-      <latCenter> 44.695832 </latCenter>
-      <lonCenter> 3.008545 </lonCenter>
-      <altMin> 300 </altMin>
-      <altMax> 1500 </altMax>
-    </Massif>
-    <Massif>
-      <name> Margeride </name>
-      <nameRed> XXX </nameRed>
-      <number> 54 </number>
-      <latCenter> 44.822415 </latCenter>
-      <lonCenter> 3.485708 </lonCenter>
-      <altMin> 400 </altMin>
-      <altMax> 1600 </altMax>
-    </Massif>
-    <Massif>
-      <name> Haut-Doubs </name>
-      <nameRed> XXX </nameRed>
-      <number> 55 </number>
-      <latCenter> 47.080935 </latCenter>
-      <lonCenter> 6.388473 </lonCenter>
-      <altMin> 600 </altMin>
-      <altMax> 1500 </altMax>
-    </Massif>
-    <Massif>
-      <name> Haut-Jura </name>
-      <nameRed> XXX </nameRed>
-      <number> 56 </number>
-      <latCenter> 46.576471 </latCenter>
-      <lonCenter> 5.808410 </lonCenter>
-      <altMin> 300 </altMin>
-      <altMax> 1500 </altMax>
-    </Massif>
-    <Massif>
-      <name> Bugey-Jura-Gessien </name>
-      <nameRed> XXX </nameRed>
-      <number> 57 </number>
-      <latCenter> 46.084263 </latCenter>
-      <lonCenter> 5.691341 </lonCenter>
-      <altMin> 0 </altMin>
-      <altMax> 1500 </altMax>
-    </Massif>
-    <Massif>
-      <name> Salève </name>
-      <nameRed> XXX </nameRed>
-      <number> 58 </number>
-      <latCenter> 46.055268 </latCenter>
-      <lonCenter> 6.134147 </lonCenter>
-      <altMin> 300 </altMin>
-      <altMax> 1400 </altMax>
-    </Massif>
-    <Massif>
-      <name> Pilat-Vivarais </name>
-      <nameRed> XXX </nameRed>
-      <number> 59 </number>
-      <latCenter> 44.997267 </latCenter>
-      <lonCenter> 4.233531 </lonCenter>
-      <altMin> 200 </altMin>
-      <altMax> 1800 </altMax>
-    </Massif>
-    <Massif>
-      <name> Cévennes </name>
-      <nameRed> XXX </nameRed>
-      <number> 60 </number>
-      <latCenter> 44.236649 </latCenter>
-      <lonCenter> 3.596462 </lonCenter>
-      <altMin> 200 </altMin>
-      <altMax> 1700 </altMax>
-    </Massif>
-    <Massif>
-      <name> Grands-Causses </name>
-      <nameRed> XXX </nameRed>
-      <number> 61 </number>
-      <latCenter> 44.149127 </latCenter>
-      <lonCenter> 2.995934 </lonCenter>
-      <altMin> 100 </altMin>
-      <altMax> 1200 </altMax>
-    </Massif>
-    <Massif>
-      <name> Haut-Languedoc </name>
-      <nameRed> XXX </nameRed>
-      <number> 62 </number>
-      <latCenter> 43.630611 </latCenter>
-      <lonCenter> 2.663473 </lonCenter>
-      <altMin> 0 </altMin>
-      <altMax> 1300 </altMax>
-    </Massif>
-  </Massifs>
-  <Sites>
+	<Massif>
+		<name>Chablais</name>
+		<nameRed>Chablais</nameRed>
+		<number>1</number>
+		<latCenter>46.177000</latCenter>
+		<lonCenter>6.644300</lonCenter>
+		<altMin>300</altMin>
+		<altMax>3300</altMax>
+		<altRealMin>398</altRealMin>
+		<altRealMax>3085</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Aravis</name>
+		<nameRed>Aravis</nameRed>
+		<number>2</number>
+		<latCenter>45.895010</latCenter>
+		<lonCenter>6.396970</lonCenter>
+		<altMin>300</altMin>
+		<altMax>3000</altMax>
+		<altRealMin>343</altRealMin>
+		<altRealMax>2737</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Mont-Blanc</name>
+		<nameRed>Mont-Blanc</nameRed>
+		<number>3</number>
+		<latCenter>45.897940</latCenter>
+		<lonCenter>6.823600</lonCenter>
+		<altMin>300</altMin>
+		<altMax>4800</altMax>
+		<altRealMin>554</altRealMin>
+		<altRealMax>4798</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Bauges</name>
+		<nameRed>Bauges</nameRed>
+		<number>4</number>
+		<latCenter>45.655870</latCenter>
+		<lonCenter>6.101330</lonCenter>
+		<altMin>0</altMin>
+		<altMax>2400</altMax>
+		<altRealMin>244</altRealMin>
+		<altRealMax>2198</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Beaufortain</name>
+		<nameRed>Beaufort.</nameRed>
+		<number>5</number>
+		<latCenter>45.657620</latCenter>
+		<lonCenter>6.576160</lonCenter>
+		<altMin>300</altMin>
+		<altMax>3000</altMax>
+		<altRealMin>328</altRealMin>
+		<altRealMax>2983</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Haute-Tarentaise</name>
+		<nameRed>Hte-Tarent</nameRed>
+		<number>6</number>
+		<latCenter>45.543300</latCenter>
+		<lonCenter>6.899800</lonCenter>
+		<altMin>600</altMin>
+		<altMax>3900</altMax>
+		<altRealMin>780</altRealMin>
+		<altRealMax>3803</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Chartreuse</name>
+		<nameRed>Chartreuse</nameRed>
+		<number>7</number>
+		<latCenter>45.377650</latCenter>
+		<lonCenter>5.807550</lonCenter>
+		<altMin>0</altMin>
+		<altMax>2100</altMax>
+		<altRealMin>186</altRealMin>
+		<altRealMax>2071</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Belledonne</name>
+		<nameRed>Belledonne</nameRed>
+		<number>8</number>
+		<latCenter>45.274150</latCenter>
+		<lonCenter>6.001930</lonCenter>
+		<altMin>0</altMin>
+		<altMax>3000</altMax>
+		<altRealMin>206</altRealMin>
+		<altRealMax>2952</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Maurienne</name>
+		<nameRed>Maurienne</nameRed>
+		<number>9</number>
+		<latCenter>45.328110</latCenter>
+		<lonCenter>6.353720</lonCenter>
+		<altMin>0</altMin>
+		<altMax>3300</altMax>
+		<altRealMin>286</altRealMin>
+		<altRealMax>3170</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Vanoise</name>
+		<nameRed>Vanoise</nameRed>
+		<number>10</number>
+		<latCenter>45.411040</latCenter>
+		<lonCenter>6.617200</lonCenter>
+		<altMin>300</altMin>
+		<altMax>3900</altMax>
+		<altRealMin>320</altRealMin>
+		<altRealMax>3836</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Haute-Maurienne</name>
+		<nameRed>Hte-Maurie</nameRed>
+		<number>11</number>
+		<latCenter>45.260710</latCenter>
+		<lonCenter>6.914740</lonCenter>
+		<altMin>900</altMin>
+		<altMax>3900</altMax>
+		<altRealMin>1019</altRealMin>
+		<altRealMax>3739</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Grandes-Rousses</name>
+		<nameRed>Gdes-Rouss</nameRed>
+		<number>12</number>
+		<latCenter>45.115140</latCenter>
+		<lonCenter>6.217790</lonCenter>
+		<altMin>600</altMin>
+		<altMax>3600</altMax>
+		<altRealMin>704</altRealMin>
+		<altRealMax>3481</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Thabor</name>
+		<nameRed>Thabor</nameRed>
+		<number>13</number>
+		<latCenter>45.019280</latCenter>
+		<lonCenter>6.590930</lonCenter>
+		<altMin>900</altMin>
+		<altMax>3300</altMax>
+		<altRealMin>1196</altRealMin>
+		<altRealMax>3208</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Vercors</name>
+		<nameRed>Vercors</nameRed>
+		<number>14</number>
+		<latCenter>45.004370</latCenter>
+		<lonCenter>5.492800</lonCenter>
+		<altMin>0</altMin>
+		<altMax>2400</altMax>
+		<altRealMin>171</altRealMin>
+		<altRealMax>2326</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Oisans</name>
+		<nameRed>Oisans</nameRed>
+		<number>15</number>
+		<latCenter>44.946000</latCenter>
+		<lonCenter>5.998910</lonCenter>
+		<altMin>0</altMin>
+		<altMax>4200</altMax>
+		<altRealMin>248</altRealMin>
+		<altRealMax>3997</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Pelvoux</name>
+		<nameRed>Pelvoux</nameRed>
+		<number>16</number>
+		<latCenter>44.837120</latCenter>
+		<lonCenter>6.457170</lonCenter>
+		<altMin>900</altMin>
+		<altMax>4200</altMax>
+		<altRealMin>945</altRealMin>
+		<altRealMax>4080</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Queyras</name>
+		<nameRed>Queyras</nameRed>
+		<number>17</number>
+		<latCenter>44.771390</latCenter>
+		<lonCenter>6.792960</lonCenter>
+		<altMin>600</altMin>
+		<altMax>3300</altMax>
+		<altRealMin>896</altRealMin>
+		<altRealMax>3288</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Devoluy</name>
+		<nameRed>Devoluy</nameRed>
+		<number>18</number>
+		<latCenter>44.695570</latCenter>
+		<lonCenter>5.849210</lonCenter>
+		<altMin>300</altMin>
+		<altMax>3000</altMax>
+		<altRealMin>484</altRealMin>
+		<altRealMax>2789</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Champsaur</name>
+		<nameRed>Champsaur</nameRed>
+		<number>19</number>
+		<latCenter>44.705690</latCenter>
+		<lonCenter>6.234130</lonCenter>
+		<altMin>600</altMin>
+		<altMax>3600</altMax>
+		<altRealMin>789</altRealMin>
+		<altRealMax>3477</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Embrunnais Parpaillon</name>
+		<nameRed>Parpaillon</nameRed>
+		<number>20</number>
+		<latCenter>44.572170</latCenter>
+		<lonCenter>6.500300</lonCenter>
+		<altMin>600</altMin>
+		<altMax>3300</altMax>
+		<altRealMin>651</altRealMin>
+		<altRealMax>3057</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Ubaye</name>
+		<nameRed>Ubaye</nameRed>
+		<number>21</number>
+		<latCenter>44.447600</latCenter>
+		<lonCenter>6.670580</lonCenter>
+		<altMin>600</altMin>
+		<altMax>3600</altMax>
+		<altRealMin>771</altRealMin>
+		<altRealMax>3390</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Haut-Var Haut-Verdon</name>
+		<nameRed>Ht-Var Ver</nameRed>
+		<number>22</number>
+		<latCenter>44.124610</latCenter>
+		<lonCenter>6.795700</lonCenter>
+		<altMin>0</altMin>
+		<altMax>3300</altMax>
+		<altRealMin>266</altRealMin>
+		<altRealMax>3032</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Mercantour</name>
+		<nameRed>Mercantour</nameRed>
+		<number>23</number>
+		<latCenter>44.126360</latCenter>
+		<lonCenter>7.314730</lonCenter>
+		<altMin>300</altMin>
+		<altMax>3300</altMax>
+		<altRealMin>398</altRealMin>
+		<altRealMax>3036</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Baronnies</name>
+		<nameRed>Baronnies</nameRed>
+		<number>24</number>
+		<latCenter>44.523330</latCenter>
+		<lonCenter>5.506540</lonCenter>
+		<altMin>0</altMin>
+		<altMax>2100</altMax>
+		<altRealMin>235</altRealMin>
+		<altRealMax>2015</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Ventoux</name>
+		<nameRed>Ventoux</nameRed>
+		<number>25</number>
+		<latCenter>44.160080</latCenter>
+		<lonCenter>5.528850</lonCenter>
+		<altMin>0</altMin>
+		<altMax>2100</altMax>
+		<altRealMin>240</altRealMin>
+		<altRealMax>1906</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Chiran</name>
+		<nameRed>Chiran</nameRed>
+		<number>26</number>
+		<latCenter>44.226050</latCenter>
+		<lonCenter>6.175630</lonCenter>
+		<altMin>300</altMin>
+		<altMax>2400</altMax>
+		<altRealMin>388</altRealMin>
+		<altRealMax>2320</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Préalpes d'Azur</name>
+		<nameRed>Azur</nameRed>
+		<number>27</number>
+		<latCenter>43.822500</latCenter>
+		<lonCenter>6.574450</lonCenter>
+		<altMin>0</altMin>
+		<altMax>2100</altMax>
+		<altRealMin>111</altRealMin>
+		<altRealMax>2091</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Cinto Rotondo</name>
+		<nameRed>Cinto</nameRed>
+		<number>40</number>
+		<latCenter>42.329580</latCenter>
+		<lonCenter>8.982530</lonCenter>
+		<altMin>0</altMin>
+		<altMax>2700</altMax>
+		<altRealMin>187</altRealMin>
+		<altRealMax>2696</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Renoso Incudine</name>
+		<nameRed>Renoso</nameRed>
+		<number>41</number>
+		<latCenter>41.952770</latCenter>
+		<lonCenter>9.166180</lonCenter>
+		<altMin>300</altMin>
+		<altMax>2400</altMax>
+		<altRealMin>341</altRealMin>
+		<altRealMax>2337</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Donon-Champ du Feu</name>
+		<nameRed>Champ Feu</nameRed>
+		<number>45</number>
+		<latCenter>48.457700</latCenter>
+		<lonCenter>7.193740</lonCenter>
+		<altMin>0</altMin>
+		<altMax>1200</altMax>
+		<altRealMin>246</altRealMin>
+		<altRealMax>1092</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Hautes-Vosges</name>
+		<nameRed>Hte-Vosges</nameRed>
+		<number>46</number>
+		<latCenter>48.071500</latCenter>
+		<lonCenter>6.976610</lonCenter>
+		<altMin>300</altMin>
+		<altMax>1500</altMax>
+		<altRealMin>333</altRealMin>
+		<altRealMax>1422</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Ballon d'Alsace</name>
+		<nameRed>Ballon Als</nameRed>
+		<number>47</number>
+		<latCenter>47.801130</latCenter>
+		<lonCenter>6.854240</lonCenter>
+		<altMin>300</altMin>
+		<altMax>1500</altMax>
+		<altRealMin>385</altRealMin>
+		<altRealMax>1251</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Millevaches</name>
+		<nameRed>Millevaches</nameRed>
+		<number>48</number>
+		<latCenter>45.761760</latCenter>
+		<lonCenter>2.302910</lonCenter>
+		<altMin>300</altMin>
+		<altMax>1200</altMax>
+		<altRealMin>313</altRealMin>
+		<altRealMax>975</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Livradois</name>
+		<nameRed>Livradois</nameRed>
+		<number>49</number>
+		<latCenter>45.221230</latCenter>
+		<lonCenter>3.684090</lonCenter>
+		<altMin>300</altMin>
+		<altMax>1500</altMax>
+		<altRealMin>485</altRealMin>
+		<altRealMax>1420</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Monts du Forez</name>
+		<nameRed>Forez</nameRed>
+		<number>50</number>
+		<latCenter>45.669990</latCenter>
+		<lonCenter>3.856450</lonCenter>
+		<altMin>300</altMin>
+		<altMax>1800</altMax>
+		<altRealMin>390</altRealMin>
+		<altRealMax>1629</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Sancy</name>
+		<nameRed>Sancy</nameRed>
+		<number>51</number>
+		<latCenter>45.553160</latCenter>
+		<lonCenter>2.871000</lonCenter>
+		<altMin>300</altMin>
+		<altMax>2100</altMax>
+		<altRealMin>532</altRealMin>
+		<altRealMax>1874</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Monts du Cantal</name>
+		<nameRed>Cantal</nameRed>
+		<number>52</number>
+		<latCenter>45.041370</latCenter>
+		<lonCenter>2.639830</lonCenter>
+		<altMin>0</altMin>
+		<altMax>2100</altMax>
+		<altRealMin>268</altRealMin>
+		<altRealMax>1849</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Aubrac</name>
+		<nameRed>Aubrac</nameRed>
+		<number>53</number>
+		<latCenter>44.695900</latCenter>
+		<lonCenter>3.008620</lonCenter>
+		<altMin>300</altMin>
+		<altMax>1500</altMax>
+		<altRealMin>318</altRealMin>
+		<altRealMax>1466</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Margeride</name>
+		<nameRed>Margeride</nameRed>
+		<number>54</number>
+		<latCenter>44.822920</latCenter>
+		<lonCenter>3.484660</lonCenter>
+		<altMin>300</altMin>
+		<altMax>1800</altMax>
+		<altRealMin>452</altRealMin>
+		<altRealMax>1550</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Haut-Doubs</name>
+		<nameRed>Haut-Doubs</nameRed>
+		<number>55</number>
+		<latCenter>47.081340</latCenter>
+		<lonCenter>6.389650</lonCenter>
+		<altMin>0</altMin>
+		<altMax>1500</altMax>
+		<altRealMin>229</altRealMin>
+		<altRealMax>1461</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Haut-Jura</name>
+		<nameRed>Haut-Jura</nameRed>
+		<number>56</number>
+		<latCenter>46.576910</latCenter>
+		<lonCenter>5.808710</lonCenter>
+		<altMin>0</altMin>
+		<altMax>1500</altMax>
+		<altRealMin>276</altRealMin>
+		<altRealMax>1495</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Bugey Jura-Gessien</name>
+		<nameRed>Bugey</nameRed>
+		<number>57</number>
+		<latCenter>46.084580</latCenter>
+		<lonCenter>5.692020</lonCenter>
+		<altMin>0</altMin>
+		<altMax>1800</altMax>
+		<altRealMin>202</altRealMin>
+		<altRealMax>1704</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Salève</name>
+		<nameRed>Salève</nameRed>
+		<number>58</number>
+		<latCenter>46.055260</latCenter>
+		<lonCenter>6.134140</lonCenter>
+		<altMin>300</altMin>
+		<altMax>1500</altMax>
+		<altRealMin>330</altRealMin>
+		<altRealMax>1380</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Pilat-Vivarais</name>
+		<nameRed>Pilat</nameRed>
+		<number>59</number>
+		<latCenter>44.998040</latCenter>
+		<lonCenter>4.234410</lonCenter>
+		<altMin>0</altMin>
+		<altMax>1800</altMax>
+		<altRealMin>217</altRealMin>
+		<altRealMax>1748</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Cévennes</name>
+		<nameRed>Cévennes</nameRed>
+		<number>60</number>
+		<latCenter>44.236740</latCenter>
+		<lonCenter>3.596760</lonCenter>
+		<altMin>0</altMin>
+		<altMax>1800</altMax>
+		<altRealMin>249</altRealMin>
+		<altRealMax>1698</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Grands Causses</name>
+		<nameRed>Gd Causses</nameRed>
+		<number>61</number>
+		<latCenter>44.149340</latCenter>
+		<lonCenter>2.995250</lonCenter>
+		<altMin>0</altMin>
+		<altMax>1200</altMax>
+		<altRealMin>156</altRealMin>
+		<altRealMax>1148</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Haut-Languedoc</name>
+		<nameRed>Ht-Langued</nameRed>
+		<number>62</number>
+		<latCenter>43.630670</latCenter>
+		<lonCenter>2.663920</lonCenter>
+		<altMin>0</altMin>
+		<altMax>1500</altMax>
+		<altRealMin>79</altRealMin>
+		<altRealMax>1268</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Pays-Basque</name>
+		<nameRed>P-Basque</nameRed>
+		<number>64</number>
+		<latCenter>43.052470</latCenter>
+		<lonCenter>-0.993900</lonCenter>
+		<altMin>0</altMin>
+		<altMax>2100</altMax>
+		<altRealMin>198</altRealMin>
+		<altRealMax>2027</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Aspe Ossau</name>
+		<nameRed>Aspe Ossau</nameRed>
+		<number>65</number>
+		<latCenter>42.959900</latCenter>
+		<lonCenter>-0.498630</lonCenter>
+		<altMin>0</altMin>
+		<altMax>3000</altMax>
+		<altRealMin>270</altRealMin>
+		<altRealMax>2953</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Haute-Bigorre</name>
+		<nameRed>Hte-Bigor</nameRed>
+		<number>66</number>
+		<latCenter>42.896480</latCenter>
+		<lonCenter>0.019020</lonCenter>
+		<altMin>300</altMin>
+		<altMax>3300</altMax>
+		<altRealMin>343</altRealMin>
+		<altRealMax>3284</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Aure Louron</name>
+		<nameRed>Aure Louron</nameRed>
+		<number>67</number>
+		<latCenter>42.852540</latCenter>
+		<lonCenter>0.414970</lonCenter>
+		<altMin>300</altMin>
+		<altMax>3300</altMax>
+		<altRealMin>471</altRealMin>
+		<altRealMax>3085</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Luchonnais</name>
+		<nameRed>Luchonnais</nameRed>
+		<number>68</number>
+		<latCenter>42.804190</latCenter>
+		<lonCenter>0.580770</lonCenter>
+		<altMin>300</altMin>
+		<altMax>3300</altMax>
+		<altRealMin>461</altRealMin>
+		<altRealMax>3132</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Couserans</name>
+		<nameRed>Couserans</nameRed>
+		<number>69</number>
+		<latCenter>42.857710</latCenter>
+		<lonCenter>1.163010</lonCenter>
+		<altMin>300</altMin>
+		<altMax>3000</altMax>
+		<altRealMin>423</altRealMin>
+		<altRealMax>2847</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Haute-Ariege</name>
+		<nameRed>Hte-Ariege</nameRed>
+		<number>70</number>
+		<latCenter>42.696120</latCenter>
+		<lonCenter>1.628170</lonCenter>
+		<altMin>300</altMin>
+		<altMax>3300</altMax>
+		<altRealMin>519</altRealMin>
+		<altRealMax>3120</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Andorre</name>
+		<nameRed>Andorre</nameRed>
+		<number>71</number>
+		<latCenter>42.546520</latCenter>
+		<lonCenter>1.576170</lonCenter>
+		<altMin>0</altMin>
+		<altMax>3000</altMax>
+		<altRealMin>0</altRealMin>
+		<altRealMax>2923</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Orlu St-Barthelemy</name>
+		<nameRed>Orlu</nameRed>
+		<number>72</number>
+		<latCenter>42.755900</latCenter>
+		<lonCenter>1.859450</lonCenter>
+		<altMin>300</altMin>
+		<altMax>3000</altMax>
+		<altRealMin>468</altRealMin>
+		<altRealMax>2830</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Capcir Puymorens</name>
+		<nameRed>Capcir</nameRed>
+		<number>73</number>
+		<latCenter>42.578060</latCenter>
+		<lonCenter>2.083280</lonCenter>
+		<altMin>300</altMin>
+		<altMax>3000</altMax>
+		<altRealMin>341</altRealMin>
+		<altRealMax>2891</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Cerdagne Canigou</name>
+		<nameRed>Canigou</nameRed>
+		<number>74</number>
+		<latCenter>42.454320</latCenter>
+		<lonCenter>2.356070</lonCenter>
+		<altMin>0</altMin>
+		<altMax>3000</altMax>
+		<altRealMin>254</altRealMin>
+		<altRealMax>2862</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Pyrénées Audoises</name>
+		<nameRed>Pyr Aude</nameRed>
+		<number>75</number>
+		<latCenter>42.845040</latCenter>
+		<lonCenter>2.268470</lonCenter>
+		<altMin>0</altMin>
+		<altMax>2100</altMax>
+		<altRealMin>186</altRealMin>
+		<altRealMax>1923</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Navarra</name>
+		<nameRed>Navarra</nameRed>
+		<number>80</number>
+		<latCenter>42.875750</latCenter>
+		<lonCenter>-1.073070</lonCenter>
+		<altMin>0</altMin>
+		<altMax>2400</altMax>
+		<altRealMin>0</altRealMin>
+		<altRealMax>2388</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Jacetiana</name>
+		<nameRed>Jacetiana</nameRed>
+		<number>81</number>
+		<latCenter>42.657370</latCenter>
+		<lonCenter>-0.536360</lonCenter>
+		<altMin>0</altMin>
+		<altMax>2700</altMax>
+		<altRealMin>0</altRealMin>
+		<altRealMax>2665</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Gallego</name>
+		<nameRed>Gallego</nameRed>
+		<number>82</number>
+		<latCenter>42.618910</latCenter>
+		<lonCenter>-0.248980</lonCenter>
+		<altMin>0</altMin>
+		<altMax>3300</altMax>
+		<altRealMin>0</altRealMin>
+		<altRealMax>3281</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Sobrarbe</name>
+		<nameRed>Sobrarbe</nameRed>
+		<number>83</number>
+		<latCenter>42.567850</latCenter>
+		<lonCenter>0.066830</lonCenter>
+		<altMin>0</altMin>
+		<altMax>3600</altMax>
+		<altRealMin>0</altRealMin>
+		<altRealMax>3316</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Esera</name>
+		<nameRed>Esera</nameRed>
+		<number>84</number>
+		<latCenter>42.505770</latCenter>
+		<lonCenter>0.496500</lonCenter>
+		<altMin>0</altMin>
+		<altMax>3300</altMax>
+		<altRealMin>0</altRealMin>
+		<altRealMax>3202</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Aran</name>
+		<nameRed>Aran</nameRed>
+		<number>85</number>
+		<latCenter>42.722940</latCenter>
+		<lonCenter>0.907380</lonCenter>
+		<altMin>0</altMin>
+		<altMax>3300</altMax>
+		<altRealMin>0</altRealMin>
+		<altRealMax>3051</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Ribagorcana</name>
+		<nameRed>Ribagorcana</nameRed>
+		<number>86</number>
+		<latCenter>42.460060</latCenter>
+		<lonCenter>0.854490</lonCenter>
+		<altMin>0</altMin>
+		<altMax>3000</altMax>
+		<altRealMin>0</altRealMin>
+		<altRealMax>3000</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Pallaresa</name>
+		<nameRed>Pallaresa</nameRed>
+		<number>87</number>
+		<latCenter>42.454280</latCenter>
+		<lonCenter>1.191160</lonCenter>
+		<altMin>0</altMin>
+		<altMax>3000</altMax>
+		<altRealMin>0</altRealMin>
+		<altRealMax>2900</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Perafita</name>
+		<nameRed>Perafita</nameRed>
+		<number>88</number>
+		<latCenter>42.423280</latCenter>
+		<lonCenter>1.684810</lonCenter>
+		<altMin>0</altMin>
+		<altMax>3000</altMax>
+		<altRealMin>0</altRealMin>
+		<altRealMax>2901</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Ter-Freser</name>
+		<nameRed>Ter-Freser</nameRed>
+		<number>89</number>
+		<latCenter>42.328930</latCenter>
+		<lonCenter>2.183180</lonCenter>
+		<altMin>0</altMin>
+		<altMax>3000</altMax>
+		<altRealMin>0</altRealMin>
+		<altRealMax>2903</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Cadi Moixero</name>
+		<nameRed>Cadi Moixero</nameRed>
+		<number>90</number>
+		<latCenter>42.323530</latCenter>
+		<lonCenter>1.663720</lonCenter>
+		<altMin>0</altMin>
+		<altMax>2700</altMax>
+		<altRealMin>0</altRealMin>
+		<altRealMax>2500</altRealMax>
+	</Massif>
+	<Massif>
+		<name>Pre-Pireneu</name>
+		<nameRed>Pre-Pireneu</nameRed>
+		<number>91</number>
+		<latCenter>42.213820</latCenter>
+		<lonCenter>1.596660</lonCenter>
+		<altMin>0</altMin>
+		<altMax>2400</altMax>
+		<altRealMin>0</altRealMin>
+		<altRealMax>2128</altRealMax>
+	</Massif>
+</Massifs>
+<Sites>
     <Site>
         <name> La Foux d Allos -S- </name>
         <nameRed> La Foux d Allos -S- </nameRed>

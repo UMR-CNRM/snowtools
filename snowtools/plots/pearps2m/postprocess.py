@@ -9,7 +9,7 @@ Created on 6 déc. 2018
 usage: python postprocess.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]
 
     #) extracts operational simulation results
-    #) Plots maps for the Alps, the Pyrenees the Corse
+    #) Plots maps for the Alps, the Pyrenees the Corse, Vosges, Massif Central, Jura
     #) Creates spaghetti plots for all massifs and stations
 """
 

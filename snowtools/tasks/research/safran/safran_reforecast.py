@@ -390,7 +390,14 @@ class Safran(Task, S2MTaskMixIn):
 
         if 'compute' in self.steps:
 
-            self.sh.title('Running date {0:s}'.format(rundate.ymdh))
+#            rundate = datebegin + Period(hours=12)  # Verrue : les simulations de Thomas commencent le 03/01 à 18h...
+#            while rundate <= dateend:
+#                self.sh.title('Running date {0:s}'.format(rundate.ymdh))
+#                start = rundate.ymdh if rundate.hour == 6 else rundate + Period(hours=12)
+#                stop  = start + Period(days=4)
+
+             # datebegin/dateend are automatically detected by the algo component using available ressources
+             #----------------------------------------------------------------------------------------------
 
             self.sh.title('Toolbox algo tb15 = SAFRANE')
             tb15 = tbalgo1 = toolbox.algo(
@@ -410,6 +417,8 @@ class Safran(Task, S2MTaskMixIn):
                 kind           = 'syrpluie',
                 execution      = 'reforecast',
                 ntasks         = self.conf.ntasks,
+                #datebegin      = start.ymdh,
+                #dateend        = stop.ymdh,
             )
             print(t.prompt, 'tb16 =', tb16)
             print()
@@ -422,6 +431,8 @@ class Safran(Task, S2MTaskMixIn):
                 kind           = 'syrmrr',
                 execution      = 'reforecast',
                 ntasks         = self.conf.ntasks,
+                #datebegin      = start.ymdh,
+                #ateend        = stop.ymdh,
             )
             print(t.prompt, 'tb17 =', tb17)
             print()
@@ -434,22 +445,27 @@ class Safran(Task, S2MTaskMixIn):
                 kind           = 'sytist',
                 execution      = 'reforecast',
                 ntasks         = self.conf.ntasks,
+                #datebegin      = start.ymdh,
+                #dateend        = stop.ymdh,
             )
             print(t.prompt, 'tb18 =', tb18)
             print()
 
             self.component_runner(tbalgo4, tbx4)
 
-
-        if 'backup' in self.steps or 'late-backup' in self.steps:
-
-            pass
+#                if isinstance(self.conf.guess_xpid, dict):
+#                    # RECYF 2022 reforecast provides forecast every 2 days
+#                    rundate = rundate + Period(days=2) + Period(hours=12)
+#                else:
+#                    rundate = rundate + Period(days=1)
 
         if 'late-backup' in self.steps:
 
-            #season = rundate.nivologyseason
-            rundate = datebegin
+            rundate = datebegin.replace(hour=18)  # Verrue : les simulations de Tom commencent le 03/01 à 18h...
             while rundate <= dateend:
+
+                start = rundate if rundate.hour == 6 else rundate + Period(hours=12)
+                stop  = start + Period(days=4)
 
                 if not isinstance(self.conf.guess_xpid, dict):
 
@@ -503,15 +519,15 @@ class Safran(Task, S2MTaskMixIn):
                         kind           = 'MeteorologicalForcing',
                         source_app     = self.conf.source_app,
                         source_conf    = self.conf.eps_conf,
-                        local          = '[datebegin:subPT6H_ymdh]/mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                        local          = '[date:ymdh]/mb[member]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                         experiment     = self.conf.xpid,
                         block          = 'massifs',
                         geometry        = self.conf.geometry[self.conf.vconf],
                         nativefmt      = 'netcdf',
                         model          = self.conf.model,
-                        date           = rundate.ymd6h,
-                        datebegin      = rundate.ymd6h,
-                        dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
+                        date           = rundate.ymdh,
+                        datebegin      = start.ymd6h,
+                        dateend        = stop.ymd6h,
                         namespace      = 'vortex.multi.fr',
                         member         = footprints.util.rangex(self.conf.members),
                         namebuild      = 'flat@cen',
@@ -525,15 +541,15 @@ class Safran(Task, S2MTaskMixIn):
                         kind           = 'MeteorologicalForcing',
                         source_app     = self.conf.source_app,
                         source_conf    = self.conf.eps_conf,
-                        local          = '[datebegin:subPT6H_ymdh]/mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
+                        local          = '[date:ymdh]/mb[member]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                         experiment     = self.conf.xpid,
                         block          = 'postes',
                         geometry        = self.conf.geometry[self.conf.vconf],
                         nativefmt      = 'netcdf',
                         model          = self.conf.model,
-                        date           = rundate.ymd6h,
-                        datebegin      = rundate.ymd6h,
-                        dateend        = '{0:s}/+PT96H'.format(rundate.ymd6h),
+                        date           = rundate.ymdh,
+                        datebegin      = start.ymd6h,
+                        dateend        = stop.ymd6h,
                         namespace      = 'vortex.multi.fr',
                         member         = footprints.util.rangex(self.conf.members),
                         namebuild      = 'flat@cen',
@@ -543,9 +559,10 @@ class Safran(Task, S2MTaskMixIn):
 
                 if isinstance(self.conf.guess_xpid, dict):
                     # RECYF 2022 reforecast provides forecast every 2 days
-                    rundate = rundate + Period(days=2)
+                    rundate = rundate + Period(days=2) + Period(hours=12)
                 else:
                     rundate = rundate + Period(days=1)
 
-            from vortex.tools.systems import ExecutionError
-            raise ExecutionError('')
+            print('==================================================================================================')
+            print('==================================================================================================')
+            raise Exception('INFO :The execution went well, do not take into account the following error')
