@@ -24,8 +24,6 @@ logger = logging.getLogger()
 def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None, value_max=None, legend=None, cbar_show=True,
                  title=None, ylimit=None,):
     """
-    Trace le profil de value en fonction du temps avec les epaisseurs reelles de couches
-
     Plot a snow profile along time taking into account layer thicknesses for a realistic
     plot.
 
@@ -132,14 +130,14 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
         cmap = cm.gray_r.copy()
         vmin = max(minval, 0.0000000001)
         vmax = min(max(0.000000001, maxval), 1)
-        norm = colors.LogNorm(vmin=vmin, vmax=vmax)    
+        norm = colors.LogNorm(vmin=vmin, vmax=vmax)
         cmap.set_under('#fff2fd')
         extend = 'min'
     elif colormap == 'echelle_log_sahara':
         cmap = cm.gist_heat_r.copy()
         vmin = max(minval, 0.0000000001)
         vmax = min(max(0.000000001, maxval), 1)
-        value = value.clip(vmin/2, vmax)
+        value = value.clip(vmin / 2, vmax)
         norm = colors.LogNorm(vmin=vmin, vmax=vmax)
         cmap.set_under('#fff2fd')
         extend = 'min'
@@ -162,10 +160,10 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
         cmapl = len(cmap.colors)
         start = 0.16
         for i in range(cmapl):
-            if i == cmapl-1:
+            if i == cmapl - 1:
                 x = 1
             else:
-                x = start + i*(1-start)/cmapl
+                x = start + i * (1 - start) / cmapl
             iuse = cmapl - i - 1
             customcmap['red'].append((x, cmap.colors[iuse][0], cmap.colors[iuse][0]))
             customcmap['green'].append((x, cmap.colors[iuse][1], cmap.colors[iuse][1]))
@@ -182,7 +180,7 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
             vmin = minval
         norm = colors.Normalize(vmin=vmin, vmax=vmax)
         value = np.clip(value, vmin, vmax)
-        #value[value < vmin if ~np.isnan(vmin) else False] = vmin
+        # value[value < vmin if ~np.isnan(vmin) else False] = vmin
         cmap = cm.get_cmap('RdBu_r').copy()
         cmap.set_over((0.32, 0.0, 0.097))
         extend = 'max'
@@ -190,7 +188,7 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
         vmin = 0
         vmax = 35 if vmax is None else vmax
         norm = colors.Normalize(vmin=vmin, vmax=vmax)
-        #value[value > vmax if ~np.isnan(vmax) else False] = vmax
+        # value[value > vmax if ~np.isnan(vmax) else False] = vmax
         value = np.clip(value, vmin, vmax)
         value[value == 0] = -1
         cmap = cm.get_cmap('viridis').copy()
@@ -207,7 +205,7 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
     rect.set_clim(vmin, vmax)
     ax.add_collection(rect)
     ax.autoscale_view()
-    
+
     if cbar_show:
         cbar = plt.colorbar(rect, ax=ax, extend=extend)
 
@@ -220,7 +218,7 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
 
     def format_ticks(x, pos):
         x = int(x)
-        x = max(min(len(list_legend)-1, x), 0)
+        x = max(min(len(list_legend) - 1, x), 0)
         if (type(list_legend[0]) == int or type(list_legend[0]) == str):
             return list_legend[x]
         else:
@@ -305,7 +303,7 @@ def saison1d(ax, value, list_legend, legend=None, color='b.', title=None, ylimit
 
     def format_ticks(x, pos):
         x = int(x)
-        x = max(min(len(list_legend)-1, x), 0)
+        x = max(min(len(list_legend) - 1, x), 0)
         if (type(list_legend[0]) == int or type(list_legend[0]) == str):
             return list_legend[x]
         else:
@@ -327,7 +325,8 @@ def saison1d(ax, value, list_legend, legend=None, color='b.', title=None, ylimit
 def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xlimit=(None, None), ylimit=None,
                hauteur=None, color='b', cbar_show=False, legend=None, **kwargs):
     """
-    Trace le profil de la variable avec type_de_grain et résistance si présent. Ce profil est effectué à une date fixée.
+    Plot the snow profile at a given date. Use grain type color and penetration resistance if provided.
+
     :param axe: figure axis
     :type axe: matplotlib axis
     :param axe2: figure axis (there are two axis on same plot: one for the variable, the other for snowgrain and RAM)
@@ -448,6 +447,7 @@ def heightplot(ax, value, value_ep, list_legend, legend=None, color='b', directi
      Trace la variable demandée au niveau de la hauteur du manteau neigeux. Cette hauteur est définie par une direction
      (direction "up" signifie hauteur mesurée depuis la terre, direction "down" signifie hauteur mesurée depuis le point
      le plus haut du manteau neigeux).
+
      :param ax: figure axis
      :type ax: matplotlib axis
      :param value: Value to be plot
@@ -500,7 +500,7 @@ def heightplot(ax, value, value_ep, list_legend, legend=None, color='b', directi
 
     def format_ticks(x, pos):
         x = int(x)
-        x = max(min(len(list_legend)-1, x), 0)
+        x = max(min(len(list_legend) - 1, x), 0)
         if (type(list_legend[0]) == int or type(list_legend[0]) == str):
             return list_legend[x]
         else:

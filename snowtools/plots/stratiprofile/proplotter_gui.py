@@ -6,6 +6,7 @@ import tkinter.filedialog
 from tkinter import ttk
 from tkinter import messagebox
 import logging
+import textwrap
 
 import numpy as np
 # import pdb
@@ -437,7 +438,8 @@ class ProPlotterChoicesBarPoint:
         if self.master.master.fileobj is not None:
             self.variables_info = self.master.master.fileobj.variables_selection_point
             for v, info in self.variables_info.items():
-                label = tk.Label(self.frame, text=info['full_name'])
+                label_txt = '\n'.join(textwrap.wrap(info['full_name'], width=45))
+                label = tk.Label(self.frame, text=label_txt)
                 label.pack()
                 choices = list(info['choices'])  # Tkinter knows nothing of numpy arrays...
                 ii = len(self.llabels)
@@ -864,7 +866,7 @@ class ProPlotterController(abc.ABC):
         """
         v_master = self.master.choices.variables_w.var_master
         v_react = self.master.choices.variables_w.var_react
-        text = ' VARS: {}/{}. POINT: {}'.format(v_master, v_react, point)
+        text = ' VARIABLES: {}/{}.\nPOINT: {}'.format(v_master, v_react, point)
         self.master.controls.update_text(text)
 
     def check_var_info(self):
