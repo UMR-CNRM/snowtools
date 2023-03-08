@@ -5,14 +5,15 @@ import unittest
 import os.path
 
 from snowtools.plots.stratiprofile import proreader
+from snowtools.DATA import TESTBASE_DIR
 
-FILENAME = '/rd/cenfic2/manto/viallonl/testbase/PRO/PRO_gdesRousses_2019-2020.nc'
+TEST_FILENAME = os.path.join(TESTBASE_DIR, "PRO", "PRO_gdesRousses_2019-2020.nc")
 
 
-@unittest.skipIf(not os.path.isfile(FILENAME), "Input test file not available")
+@unittest.skipIf(not os.path.isfile(TEST_FILENAME), "Input test file not available")
 class TestProreader(unittest.TestCase):
     def setUp(self):
-        self.ff = proreader.read_file(FILENAME)
+        self.ff = proreader.read_file(TEST_FILENAME)
 
     def test1(self):
         assert 'SNOWDZ' in self.ff.variables, 'Check variable existence'

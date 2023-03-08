@@ -21,11 +21,9 @@ import logging
 logger = logging.getLogger()
 
 
-def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None, value_max=None, legend=None, cbar_show=True,
-                 title=None, ylimit=None,):
+def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None, value_max=None, legend=None,
+                 cbar_show=True, title=None, ylimit=None,):
     """
-    Trace le profil de value en fonction du temps avec les epaisseurs reelles de couches
-
     Plot a snow profile along time taking into account layer thicknesses for a realistic
     plot.
 
@@ -132,14 +130,14 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
         cmap = cm.gray_r
         vmin = max(minval, 0.0000000001)
         vmax = min(max(0.000000001, maxval), 1)
-        norm = colors.LogNorm(vmin=vmin, vmax=vmax)    
+        norm = colors.LogNorm(vmin=vmin, vmax=vmax)
         cmap.set_under('#fff2fd')
         extend = 'min'
     elif colormap == 'echelle_log_sahara':
         cmap = cm.gist_heat_r
         vmin = max(minval, 0.0000000001)
         vmax = min(max(0.000000001, maxval), 1)
-        value = value.clip(vmin/2, vmax)
+        value = value.clip(vmin / 2, vmax)
         norm = colors.LogNorm(vmin=vmin, vmax=vmax)
         cmap.set_under('#fff2fd')
         extend = 'min'
@@ -162,10 +160,10 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
         cmapl = len(cmap.colors)
         start = 0.16
         for i in range(cmapl):
-            if i == cmapl-1:
+            if i == cmapl - 1:
                 x = 1
             else:
-                x = start + i*(1-start)/cmapl
+                x = start + i * (1 - start) / cmapl
             iuse = cmapl - i - 1
             customcmap['red'].append((x, cmap.colors[iuse][0], cmap.colors[iuse][0]))
             customcmap['green'].append((x, cmap.colors[iuse][1], cmap.colors[iuse][1]))
@@ -182,8 +180,8 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
             vmin = minval
         norm = colors.Normalize(vmin=vmin, vmax=vmax)
         value = np.clip(value, vmin, vmax)
-        #value[value < vmin if ~np.isnan(vmin) else False] = vmin
-        cmap = cm.get_cmap('RdBu_r')
+        # value[value < vmin if ~np.isnan(vmin) else False] = vmin
+        cmap = cm.get_cmap('RdBu_r').copy()
         cmap.set_over((0.32, 0.0, 0.097))
         extend = 'max'
     elif colormap == 'lwc':
@@ -193,7 +191,7 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
             vmax = maxval
         vmin = 0
         norm = colors.Normalize(vmin=vmin, vmax=vmax)
-        #value[value > vmax if ~np.isnan(vmax) else False] = vmax
+        # value[value > vmax if ~np.isnan(vmax) else False] = vmax
         value = np.clip(value, vmin, vmax)
         value[value == 0] = -1
         cmap = cm.get_cmap('viridis')
@@ -210,7 +208,7 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
     rect.set_clim(vmin, vmax)
     ax.add_collection(rect)
     ax.autoscale_view()
-    
+
     if cbar_show:
         cbar = plt.colorbar(rect, ax=ax, extend=extend)
 
@@ -223,7 +221,7 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
 
     def format_ticks(x, pos):
         x = int(x)
-        x = max(min(len(list_legend)-1, x), 0)
+        x = max(min(len(list_legend) - 1, x), 0)
         if (type(list_legend[0]) == int or type(list_legend[0]) == str):
             return list_legend[x]
         else:
@@ -289,10 +287,9 @@ def plot_grains1D(ax, dz, value, legend=None, cbar_show=True):
 
 def saison1d(ax, value, list_legend, legend=None, color='b.', title=None, ylimit=None):
     """
-    Trace la variable demandee en fonction du temps
-    
-    Plot a 1d variable of interest for the snowpack (total SWE, albedo, etc...) along time. 
-    
+    Plot the variable value across time for bulk variables (not variables per layer, e.g.
+    total SWE, albedo, etc.).
+
     :param ax: figure axis
     :type ax: matplotlib axis
     :param value: Value to be plot
@@ -313,7 +310,7 @@ def saison1d(ax, value, list_legend, legend=None, color='b.', title=None, ylimit
 
     def format_ticks(x, pos):
         x = int(x)
-        x = max(min(len(list_legend)-1, x), 0)
+        x = max(min(len(list_legend) - 1, x), 0)
         if (type(list_legend[0]) == int or type(list_legend[0]) == str):
             return list_legend[x]
         else:
@@ -335,11 +332,10 @@ def saison1d(ax, value, list_legend, legend=None, color='b.', title=None, ylimit
 def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xlimit=(None, None), ylimit=None,
                hauteur=None, color='b', cbar_show=False, legend=None, **kwargs):
     """
-    Trace le profil de la variable avec type_de_grain et résistance si présent. Ce profil est effectué à une date fixée.
-    
-    Plot the vertical profile of the snowpack of one variable. If grain type and RAM resistance are given,
-    these infos are added in the plot. The plot is made for a specific date
-    
+    Plot the vertical profile of the snowpack of one variable at a given date.
+    If grain type and RAM resistance are given, these infos are added in the plot.
+
+
     :param axe: figure axis
     :type axe: matplotlib axis
     :param axe2: figure axis (there are two axis on same plot: one for the variable, the other for snowgrain and RAM)
@@ -457,15 +453,11 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
 
 def heightplot(ax, value, value_ep, list_legend, legend=None, color='b', direction_cut='up', height_cut=10.):
     """
-     Trace la variable demandée au niveau de la hauteur du manteau neigeux. Cette hauteur est définie par une direction
-     (direction "up" signifie hauteur mesurée depuis la terre, direction "down" signifie hauteur mesurée depuis le point
-     le plus haut du manteau neigeux).
-     
      Plot the variable at a specific place in the snowpack. It is given with a height (in centimeter) and a direction.
      direction='up' means from ground to top of the snowpack
      direction='down' means from top of the snowpack to ground
      For example, if you want to plot 5 cm under the snowpack surface, you choose: height_cut=5 and direction_cut='down'
-     
+
      :param ax: figure axis
      :type ax: matplotlib axis
      :param value: Value to be plot
@@ -518,7 +510,7 @@ def heightplot(ax, value, value_ep, list_legend, legend=None, color='b', directi
 
     def format_ticks(x, pos):
         x = int(x)
-        x = max(min(len(list_legend)-1, x), 0)
+        x = max(min(len(list_legend) - 1, x), 0)
         if (type(list_legend[0]) == int or type(list_legend[0]) == str):
             return list_legend[x]
         else:

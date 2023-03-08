@@ -94,13 +94,19 @@ class ProPlotterApplication(tk.Frame):
         # Parse additional arguments
         if 'variable' in arguments:
             set_v1 = self.choices.variables_w.set_var_master(arguments['variable'])
+        else:
+            set_v1 = False
         if 'variable_profil' in arguments:
             set_v2 = self.choices.variables_w.set_var_react(arguments['variable_profil'])
+        else:
+            set_v2 = False
         if point is not None:
             set_v3 = self.choices.point_w.set_point(point)
+        else:
+            set_v3 = False
 
         if set_v1 and set_v2 and set_v3:
-            self.controller.plot()
+            self.plot()
 
         self.update_idletasks()
 
@@ -265,8 +271,11 @@ class ProPlotterApplication(tk.Frame):
                                        'Nobody knows who is he, but we know that he inspired some characters in the '
                                        'french serie "Le Bureau des Légendes".\n'
                                        '\n'
-                                       'It is also known that he corrects the C++ code of his father when he was nine '
-                                       'years old.')
+                                       'Most of the code was written by Mathieu Fructus.'
+                                       '')
+
+    def plot(self):
+        self.controls.plot()
 
 
 class ProPlotterMenu(tk.Menu):
@@ -561,7 +570,7 @@ class ProPlotterChoicesBarPoint:
         # For the modified selector
 
         # For the following ones, modify the options available
-        for j in range(i+1, len(self.llabels)):
+        for j in range(i + 1, len(self.llabels)):
             v = self.lvariables[j]
             ro = list(remaining_options[v])
             null_val = [''] if self.variables_info[v]['type'] == 'choices' else []
@@ -913,7 +922,7 @@ class ProPlotterController(abc.ABC):
         """
         v_master = self.master.choices.variables_w.var_master
         v_react = self.master.choices.variables_w.var_react
-        text = ' VARS: {}/{}. \nPOINT: {}'.format(v_master, v_react, point)
+        text = ' VARIABLES: {}/{}.\nPOINT: {}'.format(v_master, v_react, point)
         self.master.controls.update_text(text)
 
     def check_var_info(self):
@@ -1548,7 +1557,7 @@ class ProPlotterControllerCompare(ProPlotterController):
 
 def main(*args, **kwargs):
     root = tk.Tk()
-    root.title('GUI PROreader CEN')
+    root.title('GUI PROplotter CEN')
     root.protocol("WM_DELETE_WINDOW", root.quit)
     root.geometry('1100x850')
     app = ProPlotterApplication(*args, master=root, **kwargs)

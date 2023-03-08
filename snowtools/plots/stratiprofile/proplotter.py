@@ -37,6 +37,7 @@ parser.add_argument("--point", help="Point number to select", type=int)
 parser.add_argument("-s", "--select", type=str, action='append', dest='select',
                     help="Selection of point with constraints on data: use as many '-s variable=value' as necessary to \
                           select the point of interest. Note that if -p is given, these options are ignored.")
+
 # Options for plotting 1D profile instead of time evolution
 parser.add_argument("--profil", action="store_true", default=False,
                     help="Plot profil at given date (-d is compulsory) instead of a time evolution", dest='profil')
@@ -47,6 +48,20 @@ parser.add_argument("-d", "--date", default=None, help="Date for vertical profil
 parser.add_argument("--version", action="version", version='%(prog)s - version ' + str(version))
 args = parser.parse_args()
 
+# Logging and debug
+logging_level = logging.WARNING
+logging_format = "%(asctime)s %(levelname)s: %(message)s"
+logging_dateformat = "%Y-%m-%d %H:%M:%S"
+if args.debug is not None:
+    if args.debug == 1:
+        logging_level = logging.INFO
+        logging_format = "%(asctime)s %(levelname)s: %(message)s (%(name)s)"
+    if args.debug >= 2:
+        logging_level = logging.DEBUG
+        logging_format = "%(asctime)s %(levelname)s: %(message)s (%(name)s: %(filename)s l.%(lineno)s)"
+logging.basicConfig(level=logging_level, format=logging_format, style='%', datefmt=logging_dateformat)
+
+# Argument interpretation
 arguments = {'type': args.type, }
 
 if len(args.filename) > 0:
@@ -72,6 +87,9 @@ if len(args.filename) > 0:
             value = float(sp[1])
             selector[key] = value
         point = fileobj.get_point(selector=selector)
+    else:
+        point = None
+    # TODO: Implement --begin/--end  <08-03-23, Léo Viallon-Galinier> #
 else:
     fileobj = None
     point = None

@@ -361,9 +361,9 @@ class proreader(reader):
         # - self._association_names
 
         # Read file
-        from snowtools.utils.prosimu import prosimu
+        from snowtools.utils.prosimu import prosimu_auto
 
-        with prosimu(self._mainfilename) as ff:
+        with prosimu_auto(self._mainfilename) as ff:
             _variables_raw_list = ff.listvar()
             self._npoints = 1
             for dimname in ff.Points_dimensions:
@@ -443,7 +443,7 @@ class proreader(reader):
                 self._time = ff.readtime()
 
         if self._is_list_filename:
-            with prosimu(self._filename) as ff:
+            with prosimu_auto(self._filename) as ff:
                 self._time = ff.readtime()
 
             pass
@@ -788,8 +788,8 @@ class proreader(reader):
 
         v = self._get_varname(varname)
 
-        from snowtools.utils.prosimu import prosimu
-        with prosimu(filename) as ff:
+        from snowtools.utils.prosimu import prosimu_auto
+        with prosimu_auto(filename) as ff:
             data = ff.read(v, selectpoint=point)
             # TODO: the order of dimension is not ensured by prosimu ! Check order of time and layer dimensions here !
 
