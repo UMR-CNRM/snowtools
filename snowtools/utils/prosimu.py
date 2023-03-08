@@ -758,7 +758,7 @@ class prosimu_base(_prosimu1d2d, prosimuAbstract):
         :meta private:
         """
 
-        if selectpoint == -1:
+        if isinstance(selectpoint, int) and selectpoint == -1:
             selectpoint = None
         else:
             raise ValueError('To use the selectpoint option, please use prosimu_auto, prosimu1d or prosimu2d. '
@@ -782,7 +782,7 @@ class prosimu1d(_prosimu1d2d, prosimuAbstract):
         :meta private:
         """
 
-        if selectpoint == -1:
+        if isinstance(selectpoint, int) and selectpoint == -1:
             selectpoint = None
         if selectpoint is not None:
             selectpoint = [selectpoint]
@@ -803,7 +803,7 @@ class prosimu2d(_prosimu1d2d, prosimuAbstract):
 
         :meta private:
         """
-        if selectpoint == -1:
+        if isinstance(selectpoint, int) and selectpoint == -1:
             selectpoint = None
         elif selectpoint is None:
             pass
