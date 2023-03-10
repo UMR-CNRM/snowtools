@@ -52,62 +52,28 @@ class Safran(Task, S2MTaskMixIn):
                 y1 = datebegin.year
                 y2 = dateend.year
 
-                self.sh.title('Toolbox input tb01_a - ' + datebegin.ymdh)
-                tb01_a = toolbox.input(
+                self.sh.title(f'Toolbox input tb01 - {y1:d}/{y2:d}')
+                tb01 = toolbox.input(
                     role           = 'Ebauche',
-                    # local          = 'mb035/P[date::yymdh]_[cumul:hour]',
-                    local          = f'{season}/cep{season}',
-                    remote         = f'/home/m/mcbd/mcbd036/CLIM-SIM/cep/cep{season}',
-                    hostname       = 'hendrix.meteo.fr',
-                    #namespace      = 's2m.archive.fr',
-                    #unknownflow    = True,
-                    unknown        = True,
-                    # date           = rundate.ymd6h,
-#                    date           = dateend.ymdh,
-#                    begindate      = self.conf.datebegin.ymdh,
-#                    enddate        = self.conf.dateend.ymdh,
-                    source         = 'cep',
-                    tube           = 'ftp',
-                    #username       = 'vernaym',
                     kind           = 'packedguess',
+                    local          = '{0:s}/guess{1:s}.tar'.format(season, next_season),
+                    namespace      = 's2m.archive.fr',
+                    geometry       = self.conf.geometry[self.conf.vconf],
+                    cumul          = self.conf.cumul,
+                    nativefmt      = 'tar',
                     model          = 'safran',
-                    cutoff         = 'assimilation',
-                    intent         = 'in',
+                    source         = 'arpege' if y1 > 2020 else 'era5',
                     now            = True,
+                    fatal          = False,
+                    date           = dateend.ymdh,
+                    begindate      = datebegin.ymdh,
+                    enddate        = dateend.ymdh,
                 ),
-                print(t.prompt, 'tb01_a =', tb01_a)
+                print(t.prompt, 'tb01 =', tb01)
                 print()
 
-                if dateend < Date(2020, 8, 1):
-
-                    self.sh.title('Toolbox input tb01_b ' + dateend.ymdh)
-                    tb01_b = toolbox.input(
-                        role           = 'Ebauche',
-                        # local          = 'mb035/P[date::yymdh]_[cumul:hour]',
-                        local          = f'{next_season}/cep{next_season}',
-                        remote         = f'/home/m/mcbd/mcbd036/CLIM-SIM/cep/cep{next_season}',
-                        hostname       = 'hendrix.meteo.fr',
-                        #namespace      = 's2m.archive.fr',
-                        #unknownflow    = True,
-                        unknown        = True,
-                        # date           = rundate.ymd6h,
-                        #date           = dateend.ymdh,
-                        #begindate      = self.conf.datebegin.ymdh,
-                        #enddate        = self.conf.dateend.ymdh,
-                        source         = 'cep',
-                        tube           = 'ftp',
-                        username       = 'vernaym',
-                        kind           = 'packedguess',
-                        model          = 'safran',
-                        cutoff         = 'assimilation',
-                        intent         = 'in',
-                        now            = True,
-                    ),
-                    print(t.prompt, 'tb01_b =', tb01_b)
-                    print()
-
                 # TODO : Gérer le fait de ne pas prendre le fichier 2 de 6h le 01/08
-                self.sh.title('Toolbox input tb02 - ' + datebegin.ymdh)
+                self.sh.title(f'Toolbox input tb02 - {y1:d}/{y2:d}')
                 tb02 = toolbox.input(
                     role           = 'Observations',
                     part           = 'all',
@@ -120,8 +86,8 @@ class Safran(Task, S2MTaskMixIn):
                     #remote         = '/home/vernaym/s2m/[geometry]/obs/rs{0:s}.tar'.format(season),
                     #hostname       = 'hendrix.meteo.fr',
                     date           = dateend.ymdh,
-                    begindate      = self.conf.datebegin.ymdh,
-                    enddate        = self.conf.dateend.ymdh,
+                    begindate      = datebegin.ymdh,
+                    enddate        = dateend.ymdh,
                     #tube           = 'ftp',
                     model          = self.conf.model,
                     source         = 'surfaceobs',
@@ -145,8 +111,8 @@ class Safran(Task, S2MTaskMixIn):
                         #remote         = '/home/vernaym/s2m/[geometry]/obs/n{0:s}.tar'.format(season),
                         #hostname       = 'hendrix.meteo.fr',
                         date           = dateend.ymdh,
-                        begindate      = self.conf.datebegin.ymdh,
-                        enddate        = self.conf.dateend.ymdh,
+                        begindate      = datebegin.ymdh,
+                        enddate        = dateend.ymdh,
                         source         = 'neb',
                         #tube           = 'ftp',
                         model          = self.conf.model,
@@ -404,17 +370,17 @@ class Safran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb16 =', tb16)
             print()
 
-            self.sh.title('Toolbox executable tb17 = tbx0')
-            tb17 = tbx0 = toolbox.executable(
-                role           = 'Binary',
-                genv           = self.conf.cycle,
-                kind           = 'intercep',
-                #local          = 'intercep_era40',
-                local          = 'intercep_era5',
-                model          = self.conf.model,
-            )
-            print(t.prompt, 'tb17 =', tb17)
-            print()
+#            self.sh.title('Toolbox executable tb17 = tbx0')
+#            tb17 = tbx0 = toolbox.executable(
+#                role           = 'Binary',
+#                genv           = self.conf.cycle,
+#                kind           = 'intercep',
+#                #local          = 'intercep_era40',
+#                local          = 'intercep_era5',
+#                model          = self.conf.model,
+#            )
+#            print(t.prompt, 'tb17 =', tb17)
+#            print()
 
             self.sh.title('Toolbox executable tb17 = tbx1')
             tb17 = tbx1 = toolbox.executable(
@@ -484,21 +450,21 @@ class Safran(Task, S2MTaskMixIn):
 
         if 'compute' in self.steps:
 
-            if self.conf.datebegin < Date(2002, 8, 1):
-
-                self.sh.title('Toolbox algo tb22 = INTERCEP')
-                tb22 = tbalgo0 = toolbox.algo(
-                    engine         = 's2m',
-                    kind           = 'intercep',
-                    datebegin      = self.conf.datebegin.ymd6h,
-                    dateend        = self.conf.dateend.ymd6h,
-                    ntasks         = self.conf.ntasks,
-                    execution      = self.conf.execution,
-                )
-                print(t.prompt, 'tb22 =', tb22)
-                print()
-
-                self.component_runner(tbalgo0, tbx0)
+#            if self.conf.datebegin < Date(2002, 8, 1):
+#
+#                self.sh.title('Toolbox algo tb22 = INTERCEP')
+#                tb22 = tbalgo0 = toolbox.algo(
+#                    engine         = 's2m',
+#                    kind           = 'intercep',
+#                    datebegin      = self.conf.datebegin.ymd6h,
+#                    dateend        = self.conf.dateend.ymd6h,
+#                    ntasks         = self.conf.ntasks,
+#                    execution      = self.conf.execution,
+#                )
+#                print(t.prompt, 'tb22 =', tb22)
+#                print()
+#
+#                self.component_runner(tbalgo0, tbx0)
 
             # NB : La date des executions est fixée à J-1 car l'analyse SAFRAN va de J-1 6h à J 6H
             self.sh.title('Toolbox algo tb22 = SAFRANE')
@@ -609,12 +575,12 @@ class Safran(Task, S2MTaskMixIn):
                 season = datebegin.nivologyseason
                 next_season = dateend.nivologyseason
 
-                if rundate >= Date(2002, 8, 1):
+                if rundate >= Date(2021, 8, 1):
                     source_app = 'arpege'
                     source_conf = '4dvarfr'
                 else:
                     source_app = 'ifs'
-                    source_conf = 'era40'
+                    source_conf = 'era5'
 
                 y1 = datebegin.year
                 y2 = y1 + 1
@@ -627,7 +593,7 @@ class Safran(Task, S2MTaskMixIn):
                     source_conf    = source_conf,
                     cutoff         = 'assimilation',
                     # local          = 'mb035/FORCING_massif.nc',
-                    local          = '{0:d}/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(y1),
+                    local          = '{0:s}/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(season),
                     experiment     = self.conf.xpid,
                     block          = 'massifs',
                     geometry       = self.conf.geometry[self.conf.vconf],
@@ -650,7 +616,7 @@ class Safran(Task, S2MTaskMixIn):
                     source_conf    = source_conf,
                     cutoff         = 'assimilation',
                     # local          = 'mb035/FORCING_postes.nc',
-                    local          = '{0:d}/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(y1),
+                    local          = '{0:s}/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(season),
                     experiment     = self.conf.xpid,
                     block          = 'postes',
                     geometry       = self.conf.geometry[self.conf.vconf],
@@ -678,7 +644,7 @@ class Safran(Task, S2MTaskMixIn):
                     begindate      = datebegin.ymd6h,
                     enddate        = dateend.ymd6h,
                     date           = dateend.ymd6h,
-                    local          = '{0:d}/liste_obs_[begindate::ymd6h]_[enddate::ymd6h].tar.gz'.format(y1),
+                    local          = '{0:s}/liste_obs_[begindate::ymd6h]_[enddate::ymd6h].tar.gz'.format(season),
                     namespace      = self.conf.namespace,
                     namebuild      = 'flat@cen',
                 )
