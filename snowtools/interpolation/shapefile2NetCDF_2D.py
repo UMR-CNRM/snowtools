@@ -84,13 +84,13 @@ from snowtools.DATA import SNOWTOOLS_DIR
 NetCDF_out = 'NetCDF2D_from_shapefile.nc'
 
 # PATH_MNT
-path_MNT_alti_30m = '/rd/cenfic3/sentinel/mnt_ange/ange-factory/prod1/france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
-path_MNT_alti_250m = '/rd/cenfic3/sentinel/mnt_ange/ange-factory/prod1/france_250m/DEM_FRANCE_L93_250m_bilinear.tif'
+path_MNT_alti_30m = '/rd/cenfic3/manto/haddjeria/mnt_ange/ange-factory/prod1/france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
+path_MNT_alti_250m = '/rd/cenfic3/manto/haddjeria/mnt_ange/ange-factory/prod1/france_250m/DEM_FRANCE_L93_250m_bilinear.tif'
 
 ################################################################
 # Infos shapefile massif, a priori pérenne 
 ################################################################
-path_shapefile_massif = SNOWTOOLS_DIR + '/DATA/massifs_Lbrt93_2019'
+path_shapefile_massif = SNOWTOOLS_DIR + '/DATA/massifs'
 
 ################################################################
 #            FIN DUR DANS LE CODE

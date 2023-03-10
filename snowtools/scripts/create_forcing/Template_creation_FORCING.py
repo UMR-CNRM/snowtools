@@ -29,6 +29,7 @@ import pandas as pd
 import netCDF4
 
 from bronx.meteo.thermo import Thermo
+from utils.sun import sun
 
 parser = argparse.ArgumentParser(
     description="""Create forcing file from txt or csv file. 
@@ -45,14 +46,16 @@ parser = argparse.ArgumentParser(
 parser.add_argument("-i", "--infile", help="Input csv file", default='meteo.csv', dest='infile')
 parser.add_argument("-o", "--output", help="Output netcdf file",
                     default='FORCING_from_my_obs.nc', dest='outfile')
-parser.add_argument("--lon", help="station longitude", dest="LON", default='24.216667')
-parser.add_argument("--lat", help="station latitude", dest='LAT', default='67.983333')
-parser.add_argument("--uref", help="height of wind measurements", default='2', dest='UREF')
-parser.add_argument("--zref", help="height of temperature measurements", default='2', dest='ZREF')
-parser.add_argument("--aspect", help="slope orientation", dest='aspect', default='0')
-parser.add_argument("--slope", help="slope angle", default='0', dest='slope')
-parser.add_argument("--zs", help="station height", default='347', dest='ZS')
-parser.add_argument("--timestep", help="Time step in seconds", default='3600', dest='FRC_TIME_STP')
+parser.add_argument("--lon", help="station longitude", dest="LON", default=24.216667)
+parser.add_argument("--lat", help="station latitude", dest='LAT', default=67.983333)
+parser.add_argument("--uref", help="height of wind measurements", default=2, dest='UREF')
+parser.add_argument("--zref", help="height of temperature measurements", default=2, dest='ZREF')
+parser.add_argument("--aspect", help="slope orientation", dest='aspect', default=0)
+parser.add_argument("--slope", help="slope angle", default=0, dest='slope')
+parser.add_argument("--zs", help="station height", default=347, dest='ZS')
+parser.add_argument("--radpart", help="logical: radiation partitioning global to direct and diffuse", default=False, dest='RADPART')
+parser.add_argument("--radpart_params", help="reference parameters for radiation partitioning", default='sod', dest='RADPART_PARAMS')
+parser.add_argument("--timestep", help="Time step in seconds", default=3600, dest='FRC_TIME_STP')
 parser.add_argument("--meta", help="add global attributes in form attname=attribute_text. Can be evoced multiple times",
                     dest='metadata', action='append')
 
@@ -79,7 +82,6 @@ for meta_item in meta_data:
     key, val = meta_item.split("=", 2)
     meta_dict[key] = val
 
-
 ###########################################################################################
 # Processing raw meteo file into pd dataframe
 ###########################################################################################
@@ -92,28 +94,35 @@ fill_value = -9999999
 meteo_data["Qair"] = Thermo(['v', 'c'], dict(P=meteo_data["PSurf"], Huw=meteo_data["HUMREL"],
                                              T=meteo_data["Tair"], rc=0)).get('qv')
 
+if args.RADPART == True:
+    meteo_data['DIR_SWdown'], meteo_data['SCA_SWdown'] = sun().directdiffus(meteo_data['DIR_SWdown'],
+                                                                            meteo_data.index, station_data['LAT'],
+                                                                            station_data['LON'], station_data['slope'],
+                                                                            station_data['aspect'], site=args.RADPART_PARAMS)
+
+# assign CO2 (should not matter for snow simulations?)
+if 'CO2air' not in meteo_data.columns:
+    meteo_data['CO2air'] = 0.00062
+    
 # saving only the necessary variables in a new df
-croc_data = meteo_data[['CO2air', 'DIR_SWdown', 'HUMREL', 
+meteo_data = meteo_data[['CO2air', 'DIR_SWdown', 'HUMREL', 
                         'LWdown', 'NEB', 'PSurf', 'Qair', 'Rainf',
                         'SCA_SWdown', 'Snowf', 'Tair', 'Wind', 'Wind_DIR']]
 
 # in case nan, fill with fill_value=-9999999 
 # some variables do not need to be perfect, some do
-croc_data = croc_data.fillna(fill_value)
-
-# in case resampling is wanted
-# croc_data = croc_data.resample('3H').mean()
+meteo_data = meteo_data.fillna(fill_value)
 
 ###########################################################################################
 # NETCDF FILE CREATION
 ###########################################################################################
 # first date
-first_date = croc_data.index[0]
+first_date = meteo_data.index[0]
 
 # list of dates in right format
 List_dates = []
-for i in range(len(croc_data)):
-    List_dates.append(datetime.datetime.utcfromtimestamp(croc_data.index.tz_localize('UTC')[i].timestamp()))
+for i in range(len(meteo_data)):
+    List_dates.append(datetime.datetime.utcfromtimestamp(meteo_data.index.tz_localize('UTC')[i].timestamp()))
 
 # creating the netcdf file: dataset
 with netCDF4.Dataset(args.outfile, 'w', format='NETCDF4_CLASSIC') as fic_forcing:
@@ -174,7 +183,7 @@ with netCDF4.Dataset(args.outfile, 'w', format='NETCDF4_CLASSIC') as fic_forcing
     for i in range(len(List_nom_time_nbpoint)):
         vari = List_nom_time_nbpoint[i]
         try:
-            fic_forcing[vari][:] = croc_data[vari].values
+            fic_forcing[vari][:] = meteo_data[vari].values
         except IndexError:
             print("there is no", List_nom_time_nbpoint[i], "data available")
 

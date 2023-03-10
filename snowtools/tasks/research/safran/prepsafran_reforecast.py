@@ -151,7 +151,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         block          = 'forecast',
                         namespace      = 'vortex.multi.fr', # permet d'utiliser le cache inline pour les relances
                         geometry       = self.conf.pearp_geometry,
-                        local          = '[date::ymdh]/mb035/[term:fmthour]/ARPEGE[date::ymdh]_[term:fmthour]',
+                        local          = '[date::ymdh]/mb035/[term:fmthour]/ARPEGE.grib',
                         origin         = 'historic',
                         date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
                         term           = footprints.util.rangex(self.conf.prv_terms),
@@ -176,7 +176,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             block          = 'forecast',
                             namespace      = 'vortex.multi.fr', # permet d'utiliser le cache inline pour les relances
                             geometry       = self.conf.pearp_geometry,
-                            local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/PEARP[date::ymdh]_[term:fmthour]',
+                            local          = '[date::ymdh]/mb[member%03]/[term:fmthour]/PEARP.grib',
                             origin         = 'historic',
                             date           = '{0:s}/-PT6H'.format(rundate.ymd6h),
                             term           = footprints.util.rangex(self.conf.prv_terms),

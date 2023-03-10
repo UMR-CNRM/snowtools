@@ -4,24 +4,43 @@
 import argparse
 import math
 import xml.etree.cElementTree as et
-import xml.etree.ElementTree as etp
 
 import shapefile
 
 # Command-line arguments
-parser = argparse.ArgumentParser(description="Generate the METATADA_Massif.xml file from massif shapefile")
-parser.add_argument("input", help="Input shapefile (shp file)")
-parser.add_argument("-o", "--output", type=argparse.FileType('w', encoding='UTF-8'), default='-', dest='out',
+parser = argparse.ArgumentParser(description="""
+Generate the Massifs section of METADATA.xml file from a shapefile describing massifs (massifs.shp).
+
+NB: It is possible to use the same file as input and output but the Massifs tag will be overwritten
+with no way of undoing changes.
+""")
+parser.add_argument("inputshp", help="Input shapefile (shp file)")
+parser.add_argument("-i", "--input", default=None, dest='inputxml',
+                    help="Input filename (to overwrite <Massifs> tag of an existing file)")
+parser.add_argument("-o", "--output", default=None, dest='outputxml',
                     help="Output filename (default to standard output)")
 args = parser.parse_args()
 
-# Creation of XML structure
-root = et.Element("root")
-massifs = et.SubElement(root, "Massifs")
+# Read or create the XML structure
+if args.inputxml is None:
+    root = et.Element("root")
+    root.text = '\n'
+else:
+    tree = et.parse(args.inputxml)
+    root = tree.getroot()
 
-# Open file
-shp = shapefile.Reader(args.input)
+massifs = root.find('Massifs')
+if massifs is None:
+    massifs = et.SubElement(root, "Massifs")
+else:
+    massifs.clear()
+massifs.tail = '\n'
+
+# Open shapefile file
+shp = shapefile.Reader(args.inputshp)
 lines = shp.records()
+
+# Build XML with shapefile data
 for line in lines:
     l = line.as_dict()
     altmin_real = int(l['Zstat_min'])
@@ -32,8 +51,8 @@ for line in lines:
     et.SubElement(m, "name").text = l['title']
     et.SubElement(m, "nameRed").text = l['title_shor']
     et.SubElement(m, "number").text = '{:d}'.format(l['code'])
-    et.SubElement(m, "latCenter").text = '{:4.2f}'.format(l['lat_centro'])
-    et.SubElement(m, "lonCenter").text = '{:4.2f}'.format(l['lon_centro'])
+    et.SubElement(m, "latCenter").text = '{:4.6f}'.format(l['lat_centro'])
+    et.SubElement(m, "lonCenter").text = '{:4.6f}'.format(l['lon_centro'])
     et.SubElement(m, "altMin").text = '{:d}'.format(altmin_safran)
     et.SubElement(m, "altMax").text = '{:d}'.format(altmax_safran)
     et.SubElement(m, "altRealMin").text = '{:d}'.format(altmin_real)
@@ -55,6 +74,11 @@ def _pretty_print(current, parent=None, index=-1, depth=0):
             current.tail = '\n' + ('\t' * (depth - 1))
 
 
-_pretty_print(root)
+_pretty_print(massifs)
+outs = et.tostring(root, encoding='UTF-8').decode('utf-8')
 
-args.out.write(et.tostring(root, encoding='UTF-8').decode('utf-8'))
+if args.outputxml is not None:
+    with open(args.outputxml, 'w', encoding='UTF-8') as ff:
+        ff.write(outs)
+else:
+    print(outs)
