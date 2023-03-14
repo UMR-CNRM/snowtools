@@ -56,7 +56,7 @@ class Safran(Task, S2MTaskMixIn):
                 tb01 = toolbox.input(
                     role           = 'Ebauche',
                     kind           = 'packedguess',
-                    local          = '{0:s}/guess{1:s}.tar'.format(season, next_season),
+                    local          = '{0:s}_{1:s}/guess{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
                     namespace      = 's2m.archive.fr',
                     geometry       = self.conf.geometry[self.conf.vconf],
                     cumul          = self.conf.cumul,
@@ -81,7 +81,7 @@ class Safran(Task, S2MTaskMixIn):
                     kind           = 'packedobs',
                     #nativefmt      = 'tar',
                     #unknownflow    = True,
-                    local          = '{0:s}/rs{1:s}.tar'.format(season, season),
+                    local          = '{0:s}_{1:s}/rs{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
                     namespace      = 's2m.archive.fr',
                     #remote         = '/home/vernaym/s2m/[geometry]/obs/rs{0:s}.tar'.format(season),
                     #hostname       = 'hendrix.meteo.fr',
@@ -96,17 +96,17 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb02 =', tb02)
                 print()
 
-                if datebegin >= Date(1991, 8, 1, 6) and dateend <= Date(2018, 8, 1, 6):
+                if datebegin >= Date(1991, 8, 1, 6) and dateend <= Date(2018, 8, 1, 6) and self.conf.vconf in ['alp', 'pyr', 'cor']:
 
                     self.sh.title('Toolbox input tb03 - ' + datebegin.ymdh)
                     tb03 = toolbox.input(
-                        role           = 'Observations',
+                        role           = 'Nebul',
                         part           = 'all',
                         geometry       = self.conf.geometry[self.conf.vconf],
                         kind           = 'packedobs',
                         #nativefmt      = 'tar',
                         #unknownflow    = True,
-                        local          = '{0:d}/n{1:s}.tar'.format(y1, season),
+                        local          = '{0:s}_{1:s}/n{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
                         namespace      = 's2m.archive.fr',
                         #remote         = '/home/vernaym/s2m/[geometry]/obs/n{0:s}.tar'.format(season),
                         #hostname       = 'hendrix.meteo.fr',
@@ -593,7 +593,7 @@ class Safran(Task, S2MTaskMixIn):
                     source_conf    = source_conf,
                     cutoff         = 'assimilation',
                     # local          = 'mb035/FORCING_massif.nc',
-                    local          = '{0:s}/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(season),
+                    local          = '{0:s}_{1:s}/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(datebegin.ymdh, dateend.ymd6h),
                     experiment     = self.conf.xpid,
                     block          = 'massifs',
                     geometry       = self.conf.geometry[self.conf.vconf],
@@ -616,7 +616,7 @@ class Safran(Task, S2MTaskMixIn):
                     source_conf    = source_conf,
                     cutoff         = 'assimilation',
                     # local          = 'mb035/FORCING_postes.nc',
-                    local          = '{0:s}/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(season),
+                    local          = '{0:s}_{1:s}/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(datebegin.ymd6h, dateend.ymd6h),
                     experiment     = self.conf.xpid,
                     block          = 'postes',
                     geometry       = self.conf.geometry[self.conf.vconf],
@@ -644,7 +644,7 @@ class Safran(Task, S2MTaskMixIn):
                     begindate      = datebegin.ymd6h,
                     enddate        = dateend.ymd6h,
                     date           = dateend.ymd6h,
-                    local          = '{0:s}/liste_obs_[begindate::ymd6h]_[enddate::ymd6h].tar.gz'.format(season),
+                    local          = '{0:s}_{1:s}/liste_obs_[begindate::ymd6h]_[enddate::ymd6h].tar.gz'.format(datebegin.ymd6h, dateend.ymd6h),
                     namespace      = self.conf.namespace,
                     namebuild      = 'flat@cen',
                 )
