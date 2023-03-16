@@ -189,7 +189,7 @@ class _StandardNC(netCDF4.Dataset):
             alti = np.nan
 
         return lat, lon, alti
-
+        
     def xy2latlon(self, x, y):
         # TO BE CHANGED
         from pyproj import Proj, transform
@@ -203,6 +203,12 @@ class _StandardNC(netCDF4.Dataset):
                 epsg = 'epsg:2154'
             else:
                 raise UnknownGridTypeException(gridtype, projtype)
+        elif gridtype == "CONF PROJ":
+            if N['NAM_CONF_PROJ'].XRPK == 0:
+                epsg = 'epsg:23032'
+            else:
+                projtype = 'No Mercator: XRPK != 0 '
+                raise UnknownGridTypeException(gridtype, projtype) 
         else:
             raise UnknownGridTypeException(gridtype, "")
 
