@@ -973,13 +973,13 @@ class ProPlotterController(abc.ABC):
         """
         Returns dictionary for the master figure, depending of the choice for the graph type.
         """
-        return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_legend=self.timeplot)
+        return dict(ax=self.master.main.ax1, value=self.dataplot_master, time=self.timeplot)
 
     def give_mastersaison_args(self):
         """
         Collecting datas for the master figure, depending of the choice for the graph type.
         """
-        return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_legend=self.timeplot, dz=self.dztoplot,
+        return dict(ax=self.master.main.ax1, value=self.dataplot_master, time=self.timeplot, dz=self.dztoplot,
                     colormap=self.colormap)
 
     def give_react_args(self, x_event):
@@ -1144,7 +1144,7 @@ class ProPlotterControllerHeight(ProPlotterController):
         self.direction = self.master.choices.params_w.var_direction
         self.master.choices.params_w.update_height()
         self.height = self.master.choices.params_w.var_height
-        return dict(ax=self.master.main.ax1, value=self.dataplot_master, list_legend=self.timeplot,
+        return dict(ax=self.master.main.ax1, value=self.dataplot_master, time=self.timeplot,
                     value_ep=self.dztoplot, direction_cut=self.direction, height_cut=self.height)
 
     def reset(self):
@@ -1248,7 +1248,7 @@ class ProPlotterControllerMember(ProPlotterControllerSlider):
         else:
             ylimit = np.max(self.dataplot_master)
 
-        return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend,
+        return dict(ax=self.master.main.ax1, value=dataplot_master, time=self.x_legend,
                     title=self.timeplot[self.dateslice], ylimit=ylimit)
 
     def give_mastersaison_args(self):
@@ -1266,7 +1266,7 @@ class ProPlotterControllerMember(ProPlotterControllerSlider):
         dztoplot = self.dztoplot[:, self.dateslice, :]
         ylimit = np.max(np.cumsum(self.dztoplot, axis=2))
 
-        return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend, dz=dztoplot,
+        return dict(ax=self.master.main.ax1, value=dataplot_master, time=self.x_legend, dz=dztoplot,
                     colormap=self.colormap, title=self.timeplot[self.dateslice], value_max=max_value,
                     value_min=min_value, cbar_show=self.master.main.first_master, ylimit=ylimit)
 
@@ -1320,7 +1320,7 @@ class ProPlotterControllerMemberSaison(ProPlotterControllerMember):
         dztoplot = self.dztoplot[xindex, ...]
         colormap = self.master.fileobj.colorbar_variable(self.vartoplot_react_desc['name'])
 
-        return dict(ax=self.master.main.ax2, value=dataplot_react, list_legend=self.timeplot, dz=dztoplot,
+        return dict(ax=self.master.main.ax2, value=dataplot_react, time=self.timeplot, dz=dztoplot,
                     colormap=colormap, title=legend_member, cbar_show=self.master.main.first_profil)
 
 
@@ -1389,10 +1389,10 @@ class ProPlotterControllerMultiple(ProPlotterControllerSlider):
         dataplot_master = np.transpose(self.dataplot_master[self.dateslice, ...])
         if self.dztoplot is not None:
             ylimit = np.max(np.cumsum(self.dztoplot, axis=1))  # axis 1 is layers
-            return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend,
+            return dict(ax=self.master.main.ax1, value=dataplot_master, time=self.x_legend,
                         title=self.timeplot[self.dateslice], ylimit=ylimit)
         else:
-            return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend,
+            return dict(ax=self.master.main.ax1, value=dataplot_master, time=self.x_legend,
                         title=self.timeplot[self.dateslice])
 
     def give_mastersaison_args(self):
@@ -1405,7 +1405,7 @@ class ProPlotterControllerMultiple(ProPlotterControllerSlider):
         dztoplot = np.transpose(self.dztoplot[self.dateslice, ...])
         ylimit = np.max(np.cumsum(self.dztoplot, axis=1))
 
-        return dict(ax=self.master.main.ax1, value=dataplot_master, list_legend=self.x_legend, dz=dztoplot,
+        return dict(ax=self.master.main.ax1, value=dataplot_master, time=self.x_legend, dz=dztoplot,
                     colormap=self.colormap, title=self.timeplot[self.dateslice], value_max=max_value,
                     value_min=min_value, cbar_show=self.master.main.first_master, ylimit=ylimit)
 
@@ -1463,7 +1463,7 @@ class ProPlotterControllerMultipleSaison(ProPlotterControllerMultiple):
         dztoplot = self.dztoplot[:, :, xindex]
         colormap = self.master.fileobj.colorbar_variable(self.vartoplot_react_desc['name'])
 
-        return dict(ax=self.master.main.ax2, value=dataplot_react, list_legend=self.timeplot, dz=dztoplot,
+        return dict(ax=self.master.main.ax2, value=dataplot_react, time=self.timeplot, dz=dztoplot,
                     colormap=colormap, title=legend_multiple, cbar_show=self.master.main.first_profil)
 
 
@@ -1500,14 +1500,14 @@ class ProPlotterControllerCompare(ProPlotterController):
         """
          Collecting datas for the reacting figure, depending of the choice for the graph type.
          """
-        return dict(ax=self.master.main.ax2, value=self.dataplot_react, list_legend=self.timeplot,
+        return dict(ax=self.master.main.ax2, value=self.dataplot_react, time=self.timeplot,
                     dz=self.dztoplot_react, colormap=self.colormap_react)
 
     def give_react1d_args(self):
         """
         Returns dictionary for the master figure, depending of the choice for the graph type.
         """
-        return dict(ax=self.master.main.ax2, value=self.dataplot_react, list_legend=self.timeplot)
+        return dict(ax=self.master.main.ax2, value=self.dataplot_react, time=self.timeplot)
 
     def plot(self):
         """

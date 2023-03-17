@@ -2,7 +2,7 @@
 Plotting modelled snow stratigraphy
 ===================================
 
-The module of interest is ``plots/EvoProfilPlot``.
+The module of interest is ``plots/stratiprofile/profilPlot``.
 
-.. automodule:: plots.EvoProfilPlot
+.. automodule:: plots.stratiprofile.profilPlot
    :members:

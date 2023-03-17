@@ -7,6 +7,7 @@ Modified 7. apr. 2017 viallon
 :Authors:
     - Pascal Hagenmuller
     - Léo Viallon-Galinier
+    - Mathieu Fructus
 """
 
 import numpy as np
@@ -21,7 +22,7 @@ import logging
 logger = logging.getLogger()
 
 
-def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None, value_max=None, legend=None,
+def saisonProfil(ax, dz, value, time, colormap='viridis', value_min=None, value_max=None, legend=None,
                  cbar_show=True, title=None, ylimit=None,):
     """
     Plot a snow profile along time taking into account layer thicknesses for a realistic
@@ -33,23 +34,23 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
     :type dz: numpy array
     :param value: Value to be plot (color of the layer). Should have the same dimension as ``dz``
     :type value: numpy array
-    :param list_legend: list for x axis legend. The dates where there are some datas to be plotted for standard graphs
-    :type list_legend: numpy array
+    :param time: Time values
+    :type time: numpy array
     :param colormap: Colormap to use. Some custom colormaps are defined for specific variables:
                      ``grains``, ``echelle_log``, ``echelle_log_sahara``, ``ratio_cisaillement``,
                      ``tempK`` and ``lwc``.
     :type colormap: str or matplotlib colormap
     :param legend: legend for the colorbar
     :type legend: str
-    :param value_min: imposing minval (useful for members graph for example)
+    :param value_min: minimum value for colorbar
     :type value_min: float
-    :param value_max: imposing maxval (useful for members graph for example)
+    :param value_max: maximum value for colorbar
     :type value_max: float
     :param cbar_show: Whether or not to plot the colorbar
     :type cbar_show: bool
-    :param title: title (date for member plots for example)
+    :param title: title of the graph
     :type title: str
-    :param ylimit: give the upper y-limit for the variable (= max of thickness in all the season normally)
+    :param ylimit: give the upper y-limit for the variable (defaults to the maximum snow depth across season)
     :type ylimit: float
 
     Note that ``dz`` should not contain ``nan`` values. Layers that are not used sould be filled with
@@ -57,16 +58,19 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
 
     .. code-block:: python
 
-       from snowtools.utils.prosimu import prosimu
+       from snowtools.utils.prosimu import prosimu_auto
        import matplotlib.pyplot as plt
-       from snowtools.plots.EvoProfilPlot import plot_profil
+       from snowtools.plots.stratiprofile.profilPlot import saisonProfil
 
-       with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/PRO_gdesRousses_2019-2020.nc') as ff:
+       point = 100
+
+       with prosimu_auto('/rd/cenfic3/manto/viallonl/testbase/PRO/PRO_gdesRousses_2019-2020.nc') as ff:
            dz = ff.read('SNOWDZ', selectpoint=point, fill2zero=True)
            var = ff.read('SNOWTYPE', selectpoint=point)
+           time = ff.readtime()
 
        ax = plt.gca()
-       plot_profil(ax, dz, var, colormap='grains')
+       saisonProfil(ax, dz, var, time, colormap='grains')
        plt.show()
 
     .. figure:: /images/plots-strati-1.png
@@ -221,11 +225,11 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
 
     def format_ticks(x, pos):
         x = int(x)
-        x = max(min(len(list_legend) - 1, x), 0)
-        if (type(list_legend[0]) == int or type(list_legend[0]) == str):
-            return list_legend[x]
+        x = max(min(len(time) - 1, x), 0)
+        if (type(time[0]) == int or type(time[0]) == str):
+            return time[x]
         else:
-            return list_legend[x].strftime('%Y-%m-%d')
+            return time[x].strftime('%Y-%m-%d')
 
     formatter = ticker.FuncFormatter(format_ticks)
     ax.xaxis.set_major_formatter(formatter)
@@ -239,53 +243,7 @@ def saisonProfil(ax, dz, value, list_legend, colormap='viridis', value_min=None,
         ax.set_ylim(0, ylimit)
 
 
-''' NOT USEFUL ?? TO BE CHECKED THEN ERASED
-def plot_grains1D(ax, dz, value, legend=None, cbar_show=True):
-    """
-    Trace le profil de type de grains selon la hauteur
-    
-    """
-
-    bottom_y = np.cumsum(dz).ravel()
-    top_y = bottom_y - dz.ravel()
-
-    left_x = np.ones(shape=dz.shape, dtype='int')
-    right_x = np.zeros(shape=dz.shape, dtype='int')
-
-    vertices = np.zeros(shape=(bottom_y.shape[0], 4, 2))
-    vertices[:, 0, 0] = right_x
-    vertices[:, 0, 1] = bottom_y
-    vertices[:, 1, 0] = right_x
-    vertices[:, 1, 1] = top_y
-    vertices[:, 2, 0] = left_x
-    vertices[:, 2, 1] = top_y
-    vertices[:, 3, 0] = left_x
-    vertices[:, 3, 1] = bottom_y
-
-    vertices = vertices[(dz > 0).ravel()]
-
-    cmap = Dictionnaries.grain_colormap
-    bounds = np.linspace(-0.5, 14.5, 16)
-    norm = colors.BoundaryNorm(bounds, cmap.N)
-    vmin = -0.5
-    vmax = 14.5
-
-    rect = collections.PolyCollection(vertices, array=value[(dz > 0)].ravel(),
-                                      cmap=cmap, norm=norm, edgecolors='none')
-    rect.set_clim(vmin, vmax)
-    ax.add_collection(rect)
-    ax.autoscale_view()
-
-    if cbar_show:
-        cbar = plt.colorbar(rect, ax=ax)
-        labels = Dictionnaries.MEPRA_labels
-        cbar.set_ticks(np.arange(np.shape(labels)[0]))
-        cbar.ax.set_yticklabels(labels)
-    if legend:
-        ax.set_xlabel(legend)'''
-
-
-def saison1d(ax, value, list_legend, legend=None, color='b.', title=None, ylimit=None):
+def saison1d(ax, value, time, legend=None, color='b.', title=None, ylimit=None):
     """
     Plot the variable value across time for bulk variables (not variables per layer, e.g.
     total SWE, albedo, etc.).
@@ -294,27 +252,48 @@ def saison1d(ax, value, list_legend, legend=None, color='b.', title=None, ylimit
     :type ax: matplotlib axis
     :param value: Value to be plot
     :type value: numpy array
-    :param list_legend: list for x axis legend. The dates where there are some datas to be plotted for standard graphs
-    :type list_legend: numpy array
+    :param time: Time values
+    :type time: numpy array
     :param legend: legend for the colorbar
     :type legend: str
     :param color: color name
     :type color: str
     :param title: title (date for member plots for example)
     :type title: str
-    :param ylimit: give the upper y-limit for the variable (= max of thickness in all the season normally)
+    :param ylimit: give the upper y-limit for the variable (defaults to maximum snow depth)
     :type ylimit: float
+
+    .. code-block:: python
+
+       from snowtools.utils.prosimu import prosimu_auto
+       import matplotlib.pyplot as plt
+       from snowtools.plots.stratiprofile.profilPlot import saison1d
+
+       point = 100
+
+       with prosimu_auto('/rd/cenfic3/manto/viallonl/testbase/PRO/PRO_gdesRousses_2019-2020.nc') as ff:
+           var = ff.read('DSN_T_ISBA', selectpoint=point)
+           time = ff.readtime()
+
+       ax = plt.gca()
+       saison1d(ax, var, time, title='Snow depth')
+       plt.show()
+
+    .. figure:: /images/plots-strati-2.png
+       :align: center
+
+       Example of plots that can be obtained with this function (example of the code snippet provided).
     """
     if legend:
         ax.set_xlabel(legend)
 
     def format_ticks(x, pos):
         x = int(x)
-        x = max(min(len(list_legend) - 1, x), 0)
-        if (type(list_legend[0]) == int or type(list_legend[0]) == str):
-            return list_legend[x]
+        x = max(min(len(time) - 1, x), 0)
+        if (type(time[0]) == int or type(time[0]) == str):
+            return time[x]
         else:
-            return list_legend[x].strftime('%Y-%m-%d')
+            return time[x].strftime('%Y-%m-%d')
 
     formatter = ticker.FuncFormatter(format_ticks)
     ax.xaxis.set_major_formatter(formatter)
@@ -350,7 +329,7 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
     :type value_ram: numpy array
     :param xlimit: give the x-limit for the variable (from limits_variable in proreader)
     :type xlimit: tuple
-    :param ylimit: give the upper y-limit for the variable (= max of thickness in all the season normally)
+    :param ylimit: give the upper y-limit for the variable (typically the snow depth)
     :type ylimit: float
     :param hauteur: y-value for a black line in order to better see the interaction with seasonal profile
     :type hauteur: float
@@ -358,8 +337,35 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
     :type color: str
     :param cbar_show: show the colorbar for grain type
     :type color: boolean
-    :param legend: legend (the date in standard plot)
+    :param legend: legend (usually the date)
     :type legend: datetime object or str
+
+
+    .. code-block:: python
+
+       from snowtools.utils.prosimu import prosimu_auto
+       import matplotlib.pyplot as plt
+       from snowtools.plots.stratiprofile.profilPlot import dateProfil
+
+       point = 100
+       time = 100
+
+       with prosimu_auto('/rd/cenfic3/manto/viallonl/testbase/PRO/PRO_gdesRousses_2019-2020.nc') as ff:
+           dz = ff.read('SNOWDZ', selectpoint=point, fill2zero=True)[time, :]
+           var = ff.read('SNOWTEMP', selectpoint=point)[time, :]
+           ram = ff.read('SNOWRAM', selectpoint=point)[time, :]
+           grain = ff.read('SNOWTYPE', selectpoint=point)[time, :]
+           time = ff.readtime()[time]
+
+       ax = plt.gca()
+       ax2 = ax.twiny()
+       dateProfil(ax, ax2, var, dz, value_grain=grain, value_ram=ram, legend=str(time))
+       plt.show()
+
+    .. figure:: /images/plots-strati-3.png
+       :align: center
+
+       Example of plots that can be obtained with this function (example of the code snippet provided).
     """
     # Créer les épaisseurs cumulées
     epc = np.cumsum(value_dz)
@@ -451,7 +457,7 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
             cbar.ax.set_yticklabels(labels)
 
 
-def heightplot(ax, value, value_ep, list_legend, legend=None, color='b', direction_cut='up', height_cut=10.):
+def heightplot(ax, value, value_ep, time, legend=None, color='b', direction_cut='up', height_cut=10.):
     """
      Plot the variable at a specific place in the snowpack. It is given with a height (in centimeter) and a direction.
      direction='up' means from ground to top of the snowpack
@@ -464,8 +470,8 @@ def heightplot(ax, value, value_ep, list_legend, legend=None, color='b', directi
      :type value: numpy array
      :param value_ep: thickness value for all the layers considered
      :type value_ep: numpy array
-     :param list_legend: list for x axis legend. The dates where there are some datas to be plotted for standard graphs
-     :type list_legend: numpy array
+     :param time: Time values
+     :type time: numpy array
      :param color: color name
      :type color: str
      :param legend: legend for the colorbar
@@ -510,11 +516,11 @@ def heightplot(ax, value, value_ep, list_legend, legend=None, color='b', directi
 
     def format_ticks(x, pos):
         x = int(x)
-        x = max(min(len(list_legend) - 1, x), 0)
-        if (type(list_legend[0]) == int or type(list_legend[0]) == str):
-            return list_legend[x]
+        x = max(min(len(time) - 1, x), 0)
+        if (type(time[0]) == int or type(time[0]) == str):
+            return time[x]
         else:
-            return list_legend[x].strftime('%Y-%m-%d')
+            return time[x].strftime('%Y-%m-%d')
 
     formatter = ticker.FuncFormatter(format_ticks)
     ax.xaxis.set_major_formatter(formatter)

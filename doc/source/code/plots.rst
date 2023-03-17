@@ -11,7 +11,7 @@ A lot of tools for plotting are available in the ``plots`` folder. It may not di
 .. todo::
 
    It would be interesting to have image examples with code snippets. It is possible to document it directly in code files.
-   
+
 Script for plotting Crocus output (GUI and CLI)
 -----------------------------------------------
 
@@ -21,13 +21,6 @@ A new script, called ``proplotter`` allow to easily and quickly plot Crocus outp
    :maxdepth: 2
 
    The GUI/CLI script stratiprofile <plots-proplotter>
-
-(deprecated): An old script, called ``proReader`` was doing the same thing. It will stay in snowtools for around one year in order let user change to proplotter.
-
-.. toctree::
-   :maxdepth: 1
-
-   The GUI/CLI script ProReader <plots-proreader>
 
 Script for plotting results from operational simulations (s2m based on PEARP)
 -----------------------------------------------------------------------------
@@ -41,7 +34,7 @@ Classes or functions
 --------------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    Classes to plot maps <plots-maps>
    Temporal plots and comparison tools <plots-temporal>

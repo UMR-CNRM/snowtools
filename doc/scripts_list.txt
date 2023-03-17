@@ -1,5 +1,6 @@
 interpolation/shapefile2NetCDF.py
 plots/temporal/compare_sims.py
+plots/stratiprofile/proplotter.py
 scores/CompareSimuPosteObsCsv.py
 scripts/extract/vortex/get_escroc.py
 scripts/extract/vortex/get_reanalysis.py
