@@ -10,6 +10,8 @@ Modified 7. apr. 2017 viallon
     - Mathieu Fructus
 """
 
+import logging
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -17,8 +19,9 @@ import matplotlib.cm as cm
 from matplotlib import collections
 import matplotlib.colors as colors
 from matplotlib.colors import BoundaryNorm
-from snowtools.plots import Dictionnaries
-import logging
+
+from snowtools.plots.stratiprofile import Dictionnaries
+
 logger = logging.getLogger()
 
 

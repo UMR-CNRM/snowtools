@@ -13,6 +13,7 @@ import numpy as np
 
 from snowtools.plots.stratiprofile import proreader
 from snowtools.plots.stratiprofile import profilPlot
+
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
