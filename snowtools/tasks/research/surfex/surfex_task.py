@@ -33,7 +33,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         t = self.ticket
 
         if not hasattr(self.conf, "genv"):
-            self.conf.genv = 'uenv:cen.07@CONST_CEN'
+            self.conf.genv = 'uenv:cen.08@CONST_CEN'
 
         # Definition of geometries, safran xpid/block and list of dates from S2MTaskMixIn methods
         list_geometry = self.get_list_geometry(meteo=self.conf.meteo)
@@ -42,7 +42,10 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
         dict_dates_end_forc = get_dic_dateend(list_dates_begin_forc, list_dates_end_forc)
         dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
-        dict_source_app_safran, dict_source_conf_safran = self.get_safran_sources(list_dates_begin_forc)
+
+        if not hasattr(self.conf, "era5"):
+            self.era5 = 'era5' in self.conf.forcingid
+        dict_source_app_safran, dict_source_conf_safran = self.get_safran_sources(list_dates_begin_forc, era5=self.era5)
 
         # Logicals to activate optional parts of the task
         if not hasattr(self.conf, "interpol"):
@@ -76,7 +79,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 model          = 'safran',
                 datebegin      = self.conf.datebegin,
                 dateend        = self.conf.dateend,
-                intent         = 'inout',
+                intent         = 'in',
                 namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
                 fatal          = False,
@@ -105,7 +108,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     model          = 'safran',
                     datebegin      = list_dates_begin_forc,
                     dateend        = dict_dates_end_forc,
-                    intent         = 'inout',
+                    intent         = 'in',
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
                 ),
@@ -379,7 +382,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print()
 
             # SURFEX binaries are taken from the path in the configuration file is provided
-            if self.conf.exesurfex:
+            if hasattr(self.conf, "exesurfex"):
                 # OFFLINE binary is always required
                 self.sh.title('Toolbox executable tb06= tbx1')
                 tb06 = tbx3 = toolbox.executable(
@@ -588,7 +591,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 )
                 print(t.prompt, 'tb10 =', tb10)
                 print()
-                self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=2, ntasks=2))
+                self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
 
             # Algo component to produce to run the SURFEX OFFLINE simulation (MPI parallelization)
             self.sh.title('Toolbox algo tb11 = OFFLINE')
