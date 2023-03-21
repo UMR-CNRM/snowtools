@@ -152,7 +152,7 @@ def yearlyplots(datebegin, dateend, dataObs):
                 C.read_sim("PRO.nc")
 
         if options.labels:
-            C.set_sim_labels(map(str.strip, options.labels.split(',')))
+            C.set_sim_labels(list(map(str.strip, options.labels.split(','))))
 
         if options.scores:
             C.scores()
@@ -206,7 +206,7 @@ def decadeplots(datebegin, dateend, dataObs):
         print('Fin lecture fichiers PRO : {1:f}s'.format(dec, time.time()-init))
 
         if options.labels:
-            C.set_sim_labels(map(str.strip, options.labels.split(',')))
+            C.set_sim_labels(list(map(str.strip, options.labels.split(','))))
 
         if options.scores:
             C.scores()
@@ -288,7 +288,7 @@ def fullplots(datebegin, dateend, dataObs):
         C.read_sim(list_list_pro[d])
 
     if options.labels:
-        C.set_sim_labels(map(str.strip, options.labels.split(',')))
+        C.set_sim_labels(list(map(str.strip, options.labels.split(','))))
 
     if options.scores:
         print ("Compute scores")
@@ -330,7 +330,7 @@ def fullplotsSIM2(datebegin, dateend, dataObs):
         C.read_sim(list_list_pro[d])
 
     if options.labels:
-        C.set_sim_labels(map(str.strip, options.labels.split(',')))
+        C.set_sim_labels(list(map(str.strip, options.labels.split(','))))
 
     if options.scores:
         print ("Compute scores")
@@ -368,9 +368,9 @@ class ComparisonSimObs(object):
 
         # Default labels
 #        self.set_sim_labels(['New', 'Old', '', '', ''])
-        #self.set_massifs_labels(['Alps', 'Pyrenees', 'Corsica', '', ''])
+        self.set_massifs_labels(['Alps', 'Pyrenees', 'Corsica', '', ''])
         #self.set_sim_labels(['Reference reanalysis', 'Reanalysis with no temperature observation', 'Reanalysis without evaluation observations', '', ''])
-        self.set_sim_labels(['Reference reanalysis without observations', 'New guess reanalysis without observations', 'Reference reanalysis', 'New guess reanalysis', ''])
+        # self.set_sim_labels(['Reference reanalysis without observations', 'New guess reanalysis without observations', 'Reference reanalysis', 'New guess reanalysis', ''])
 
         # Default colors
         #self.set_sim_colors(['red', 'blue', 'grey', 'orange', 'green'])
