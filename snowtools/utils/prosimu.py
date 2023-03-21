@@ -35,7 +35,7 @@ DEFAULT_NETCDF_FORMAT = 'NETCDF3_CLASSIC'
 def prosimu_auto(path, ncformat=DEFAULT_NETCDF_FORMAT, openmode='r', **kwargs):
     """
     Factory function that guess the correct class to return among
-    :cls:`prosimu1d` or :cls:`prosimu2d`.
+    :class:`prosimu1d` or :class:`prosimu2d`.
 
     :param path: file path or file path list
     :type path: str or path-like or list
@@ -584,7 +584,7 @@ class prosimuAbstract(abc.ABC):
 
 
 class _prosimu1d2d():
-    """ Common definitions to :cls:`prosimu1d` and :cls:`prosimu2d` """
+    """ Common definitions to :class:`prosimu1d` and :class:`prosimu2d` """
 
     def get_points(self, **kwargs):
         """
