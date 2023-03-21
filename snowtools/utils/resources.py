@@ -12,6 +12,7 @@ This module contains all file manipulations.
 import os
 import shutil
 import datetime
+from bronx.stdtypes.date import Date
 
 # take care "snowtools" necessary in import for exception catching by vortex
 from snowtools.utils.FileException import FileNameException, DirNameException, UndefinedDirectoryException
@@ -207,7 +208,7 @@ def get_file_period(prefix, path, datebegin, dateend):
             "NOT AVAILABLE !!!!!!!"
 
         # Attempt to find a yearly file
-        if datebegin.month >= 8 and datebegin.day >= 1 and datebegin.hour >= 6:
+        if datebegin >= Date(datebegin.year, 8, 1, 6):
             dateyear_beg = datebegin.replace(month=8, day=1, hour=6)
             dateyear_end = datebegin.replace(year=datebegin.year + 1, month=8, day=1, hour=6)
         else:
