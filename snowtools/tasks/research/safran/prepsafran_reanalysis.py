@@ -172,7 +172,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                         print(t.prompt, 'tb02 =', tbarp)
                         print()
 
-
                         self.sh.title('Toolbox input tb_ebauche')
                         tb_ebauche = toolbox.input(
                             role            = 'Nam_ebauche',
@@ -189,8 +188,9 @@ class PrepSafran(Task, S2MTaskMixIn):
                         interp = ''
 
                     else:
-                        # Pour les dates les plus récentes les sorties de la chaine ARPEGE oper en vortex sont 
+                        # Pour les dates les plus récentes les sorties de la chaine ARPEGE oper en vortex sont
                         # normalement disponibles sur hendrix
+                        # Pas de fichier dans le cache oper avant le 10/05/2022
 
                         self.sh.title('Toolbox input tb02')
                         tbarp.extend(toolbox.input(
@@ -199,7 +199,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             geometry       = self.conf.cpl_geometry,
                             kind           = 'gridpoint',
                             #filtername     = 'concatenate',
-                            suite          = 'oper',
+                            suite          = 'oper' if rundate>Date(2022, 5, 10, 0) else 'dble',
                             local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
                             date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d))
                                               for d in footprints.util.rangex(0, 24, self.conf.cumul)],
