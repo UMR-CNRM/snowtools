@@ -80,9 +80,24 @@ class prosimu():
                 if not os.path.isfile(fichier):
                     raise FileNameException(fichier)
 
-            self.dataset = netCDF4.MFDataset(path, "r")
-            self.path = path
-            self.mfile = 1
+            try:
+                self.dataset = netCDF4.MFDataset(path, "r")
+                self.path = path
+                self.mfile = 1
+
+            except ValueError:
+                # Conversion in netcdf4_classic
+                import xarray
+                classic_path=list()
+                for fichier in path:
+                    newname = 'CLASSIC_' + fichier
+                    ds=xarray.open_dataset(fichier)
+                    ds.to_netcdf(path=newname, format='NETCDF4_CLASSIC')
+                    ds.close()
+                    classic_path.append(newname)
+                self.dataset = netCDF4.MFDataset(classic_path, "r")
+                self.path = classic_path
+                self.mfile = 1
 
         # Vérification du nom du fichier
         elif os.path.isfile(path[0]):
