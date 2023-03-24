@@ -609,10 +609,18 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print(t.prompt, 'tb11 =', tb11)
             print()
 
-            if self.conf.geometry.tag in ["cor_flat"]:
+            small_domains = dict(cor_flat=18,
+                                 cor2_flat=18,
+                                 mac11_flat=66,
+                                 jur4_flat=24,
+                                 vog3_flat=15)
+
+            if self.conf.geometry.tag in small_domains.keys():
                 # Specific number of threads must be provided for domains
                 # with a number of points lower than the number of MPI threads
-                self.component_runner(tbalgo4, tbx3, mpiopts=dict(nnodes=1, nprocs=18, ntasks=18))
+                self.component_runner(tbalgo4, tbx3, mpiopts=dict(nnodes=1,
+                                                                  nprocs=small_domains[self.conf.geometry.tag],
+                                                                  ntasks=small_domains[self.conf.geometry.tag]))
             else:
                 self.component_runner(tbalgo4, tbx3)
 
