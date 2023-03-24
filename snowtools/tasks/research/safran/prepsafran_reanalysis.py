@@ -199,7 +199,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                             geometry       = self.conf.cpl_geometry,
                             kind           = 'gridpoint',
                             #filtername     = 'concatenate',
-                            suite          = 'oper' if rundate>Date(2022, 5, 10, 0) else 'dble',
+                            suite          = 'oper' if rundate >= Date(2022, 5, 10) else 'dble',
                             local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
                             date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d))
                                               for d in footprints.util.rangex(0, 24, self.conf.cumul)],
