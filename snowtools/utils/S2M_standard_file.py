@@ -212,8 +212,8 @@ class _StandardNC(netCDF4.Dataset):
         else:
             raise UnknownGridTypeException(gridtype, "")
 
-        inProj = Proj(init=epsg)
-        outProj = Proj(init='epsg:4326')
+        inProj = Proj(epsg)
+        outProj = Proj('epsg:4326')
 
         XX, YY = np.meshgrid(np.array(x), np.array(y))
 
