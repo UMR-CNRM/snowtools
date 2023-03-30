@@ -12,6 +12,7 @@ This module contains the ``prosimu`` class used to read simulation files
 
 import os
 import sys
+import logging
 
 import netCDF4
 import six
@@ -35,8 +36,8 @@ class prosimu():
     Class designed to read simulations files
 
     :param path: path of the file to read
-    :type path: path-like
-    :param ncformat: NetCDF format to use
+    :type path: path-like or list
+    :param ncformat: NetCDF format to use.
     :type ncformat: str
     :param openmode: open mode (mainly ``r``, ``w`` or ``r+``)
     :type openmode: str
@@ -51,6 +52,18 @@ class prosimu():
            # Do your stuff
 
     To read data (in variables), see :meth:`read` or :meth:`read_var`
+
+    Note that the recommended file format is NETCDF4_CLASSIC. Prosimu also allow for using NETCDF3_CLASSIC.
+    However, NETCDF4 is discouraged because this format is not supported by netCDF4.MFDataset function that
+    is used to open several files at one time.
+
+    ``path`` could be a list of files to concatenate along an undefined length dimension
+    (should be unique, e.g. time dimension). Note that in this case, NETCDF4 format is highly discouraged as
+    it implies a full type conversion and copy of the data.
+
+    ``path`` could also be a string with a glob sign ``*`` to automatically fill a list of files to concatenate.
+
+    Please note that in case of opening simultaneously several files, only the ``'r'`` open mode is allowed.
     """
 
     Number_of_points = 'Number_of_points'
@@ -64,8 +77,8 @@ class prosimu():
         cache - utile lorsque de grands nombre d'accès à la même variable sont
         nécessaires
         """
-        # BC add the possibility to give wildcards to prosimu
-        if type(path) is str:
+        # Add the possibility of using wildcards with prosimu
+        if isinstance(path, str):
             if openmode == 'w':
                 glob_path = [path]
             else:
@@ -73,59 +86,70 @@ class prosimu():
             if len(glob_path) == 0:
                 raise FileNameException(path)
             path = sorted(glob_path)
-            # otherwise path is already a list.
 
-        if len(path) > 1:  # several files
-            for fichier in path:
-                if not os.path.isfile(fichier):
-                    raise FileNameException(fichier)
+        # At this point path is supposed to be a list of at least 1 element.
 
-            try:
-                self.dataset = netCDF4.MFDataset(path, "r")
-                self.path = path
-                self.mfile = 1
-
-            except ValueError:
-                # Conversion in netcdf4_classic
-                import xarray
-                classic_path=list()
+        # Reading of several files: use netCDF4.MFDataset
+        # And do not allow r+ or w open modes.
+        if len(path) > 1:
+            if openmode == 'r':
                 for fichier in path:
-                    newname = 'CLASSIC_' + fichier
-                    ds=xarray.open_dataset(fichier)
-                    ds.to_netcdf(path=newname, format='NETCDF4_CLASSIC')
-                    ds.close()
-                    classic_path.append(newname)
-                self.dataset = netCDF4.MFDataset(classic_path, "r")
-                self.path = classic_path
-                self.mfile = 1
+                    if not os.path.isfile(fichier):
+                        raise FileNameException(fichier)
+                try:
+                    self.dataset = netCDF4.MFDataset(path)
+                    self.path = path
+                    self.mfile = 1
 
-        # Vérification du nom du fichier
+                except ValueError:
+                    # Conversion in netcdf4_classic
+                    import xarray
+                    classic_path = list()
+                    for fichier in path:
+                        newname = 'CLASSIC_' + fichier
+                        ds = xarray.open_dataset(fichier)
+                        ds.to_netcdf(path=newname, format='NETCDF4_CLASSIC')
+                        ds.close()
+                        classic_path.append(newname)
+                    self.dataset = netCDF4.MFDataset(classic_path)
+                    self.path = classic_path
+                    self.mfile = 1
+            else:
+                logging.error(('prosimu - Open several NetCDF dataset with openmode \'{}\''
+                               ' is not supported. '
+                               'Only \'r\' mode is supported.').format(openmode))
+                raise FileNameException('+'.join(path))
+
+        # Reading only one file: use StandardCROCUS (class deriving of netCDF4.Dataset)
         elif os.path.isfile(path[0]):
             self.path = path[0]
             self.mfile = 0
             try:
                 if openmode == "w":
-                    self.dataset = StandardCROCUS(path[0], openmode, format=ncformat)
+                    self.dataset = StandardCROCUS(self.path, openmode, format=ncformat)
                 else:
-                    self.dataset = StandardCROCUS(path[0], openmode)
+                    self.dataset = StandardCROCUS(self.path, openmode)
             except Exception:
-                raise FileOpenException(path)
+                raise FileOpenException(self.path)
+
+        # Create the file if openmode is w and one file only
+        elif openmode == "w":
+            dirname = os.path.dirname(path[0])
+
+            if len(dirname) > 0:
+                if not os.path.isdir(dirname):
+                    raise DirNameException(path[0])
+
+            self.dataset = StandardCROCUS(path[0], openmode, format=ncformat)
+            self.path = path[0]
+            self.mfile = 0
+
+        # Else, we could not either read or create the file -> crash
         else:
-            if openmode == "w":
-                dirname = os.path.dirname(path[0])
-
-                if len(dirname) > 0:
-                    if not os.path.isdir(dirname):
-                        raise DirNameException(path[0])
-
-                self.dataset = StandardCROCUS(path[0], openmode, format=ncformat)
-                self.path = path[0]
-                self.mfile = 0
-            else:
-                print("I am going to crash because there is a filename exception")
-                print(path[0])
-                print(type(path[0]))
-                raise FileNameException(path[0])
+            print("I am going to crash because there is a filename exception")
+            print(path[0])
+            print(type(path[0]))
+            raise FileNameException(path[0])
 
         self.varcache = {}
 
