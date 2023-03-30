@@ -29,7 +29,7 @@ import pandas as pd
 import netCDF4
 
 from bronx.meteo.thermo import Thermo
-from utils.sun import sun
+from snowtools.utils.sun import sun
 
 parser = argparse.ArgumentParser(
     description="""Create forcing file from txt or csv file. 
@@ -63,8 +63,11 @@ args = parser.parse_args()
 ###########################
 # build station information dict
 ###########################
-station_data = {'LAT': args.LAT, 'LON': args.LON, 'UREF': args.UREF, 'ZREF': args.ZREF, 'ZS': args.ZS,
-                'aspect': args.aspect, 'slope': args.slope, 'FRC_TIME_STP': args.FRC_TIME_STP}
+station_data = {'LAT': float(args.LAT), 'LON': float(args.LON), 'UREF': float(args.UREF), 'ZREF': float(args.ZREF), 'ZS': float(args.ZS),
+                'aspect': float(args.aspect), 'slope': float(args.slope), 'FRC_TIME_STP': float(args.FRC_TIME_STP)}
+
+print('Station data assigned as:', station_data)
+
 default_meta_data = ['title=FORCING TITLE',
                      'summary=This file is bla bla bla FORCING from bla bla bla Observation Site',
                      'id=FORCING ID', 'contributor_name=People 1, People 2, People 3',
@@ -94,7 +97,12 @@ fill_value = -9999999
 meteo_data["Qair"] = Thermo(['v', 'c'], dict(P=meteo_data["PSurf"], Huw=meteo_data["HUMREL"],
                                              T=meteo_data["Tair"], rc=0)).get('qv')
 
-if args.RADPART == True:
+# assign CO2 (should not matter for snow simulations?)
+if 'SCA_SWdown' not in meteo_data.columns:
+    meteo_data['SCA_SWdown'] = fill_value
+
+if bool(args.RADPART) == True:
+    print('Radiation partitioning set as True, using sun().directdiffus method')
     meteo_data['DIR_SWdown'], meteo_data['SCA_SWdown'] = sun().directdiffus(meteo_data['DIR_SWdown'],
                                                                             meteo_data.index, station_data['LAT'],
                                                                             station_data['LON'], station_data['slope'],
@@ -103,6 +111,7 @@ if args.RADPART == True:
 # assign CO2 (should not matter for snow simulations?)
 if 'CO2air' not in meteo_data.columns:
     meteo_data['CO2air'] = 0.00062
+    print('CO2air not assigned, filling with constant 0.00062')
     
 # saving only the necessary variables in a new df
 meteo_data = meteo_data[['CO2air', 'DIR_SWdown', 'HUMREL', 
