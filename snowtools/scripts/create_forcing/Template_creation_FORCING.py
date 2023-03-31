@@ -1,4 +1,6 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
 """
 Created on Wed Oct 13 15:04:27 2021
 
@@ -7,7 +9,7 @@ Created on Wed Oct 13 15:04:27 2021
 
 # SCRIPT TO CREATE FORCING FILE FROM TXT OR CSV FILE
 # FEEL FREE TO BE INSPIRED BY THIS TO CREATE YOUR OWN FORCING FILE
-# 
+#
 # TXT/CSV --> PD.DATAFRAME --> NCF-FILE
 #
 # The FORCING File has mandatory columns.
@@ -24,23 +26,23 @@ import argparse
 import datetime
 
 import pandas as pd
-# note (S.R.): pandas.read_csv could be replaced by numpy.genfromtxt but pandas is known to be a lot faster
-# and memory efficient for big files.
+# note (S.R., L.V.G.): pandas.read_csv could be replaced by numpy.genfromtxt but pandas is more flexible in the file
+# format and is known to be a lot faster and memory efficient for big files.
 import netCDF4
 
 from bronx.meteo.thermo import Thermo
 from snowtools.utils.sun import sun
 
 parser = argparse.ArgumentParser(
-    description="""Create forcing file from txt or csv file. 
-    
+    description="""Create forcing file from txt or csv file.
+
     TXT/CSV --> PD.DATAFRAME --> NCF-FILE
 
     The FORCING File has mandatory columns.
-    
+
     Please note time column needs to be first and timezone has to be UTC.
-    
-    [['time', 'CO2air', 'DIR_SWdown', 'HUMREL', 'LWdown', 'NEB', 'PSurf', 'Qair', 'Rainf', 'SCA_SWdown', 
+
+    [['time', 'CO2air', 'DIR_SWdown', 'HUMREL', 'LWdown', 'NEB', 'PSurf', 'Qair', 'Rainf', 'SCA_SWdown',
     'Snowf','Tair', 'Wind', 'Wind_DIR']]"""
 )
 parser.add_argument("-i", "--infile", help="Input csv file", default='meteo.csv', dest='infile')
@@ -112,13 +114,13 @@ if bool(args.RADPART) == True:
 if 'CO2air' not in meteo_data.columns:
     meteo_data['CO2air'] = 0.00062
     print('CO2air not assigned, filling with constant 0.00062')
-    
+
 # saving only the necessary variables in a new df
-meteo_data = meteo_data[['CO2air', 'DIR_SWdown', 'HUMREL', 
+meteo_data = meteo_data[['CO2air', 'DIR_SWdown', 'HUMREL',
                         'LWdown', 'NEB', 'PSurf', 'Qair', 'Rainf',
                         'SCA_SWdown', 'Snowf', 'Tair', 'Wind', 'Wind_DIR']]
 
-# in case nan, fill with fill_value=-9999999 
+# in case nan, fill with fill_value=-9999999
 # some variables do not need to be perfect, some do
 meteo_data = meteo_data.fillna(fill_value)
 

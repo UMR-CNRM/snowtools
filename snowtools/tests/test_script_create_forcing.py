@@ -6,6 +6,7 @@ Created on 22 nov. 2021
 @author: radanovics
 """
 import os
+import sys
 import subprocess
 import shutil
 import unittest
@@ -32,8 +33,7 @@ class TemplateCreationForcingTest(unittest.TestCase):
         self.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
 
     def test_create_forcing_default(self):
-        p = subprocess.run(['python3',
-                            os.path.join(SNOWTOOLS_DIR, 'scripts/create_forcing/Template_creation_FORCING.py'),
+        p = subprocess.run([sys.executable, os.path.join(SNOWTOOLS_DIR, 'scripts/create_forcing/Template_creation_FORCING.py'),
                             '-i',
                             os.path.join(TEST_DATA_DIR, "METEO_KENTTAROVA.csv"), '-o',
                             os.path.join(self.diroutput, 'created_forcing.nc')])
@@ -44,8 +44,7 @@ class TemplateCreationForcingTest(unittest.TestCase):
             self.assertAlmostEqual(humrel[0], 76., msg='humidity data not as expected')
 
     def test_create_forcing_station_info(self):
-        p = subprocess.run(['python3',
-                            os.path.join(SNOWTOOLS_DIR, 'scripts/create_forcing/Template_creation_FORCING.py'),
+        p = subprocess.run([sys.executable, os.path.join(SNOWTOOLS_DIR, 'scripts/create_forcing/Template_creation_FORCING.py'),
                             '-i',
                             os.path.join(TEST_DATA_DIR, "METEO_KENTTAROVA.csv"), '-o',
                             os.path.join(self.diroutput, 'created_forcing_fantasy_station.nc'), '--lon', '15.5',
