@@ -10,7 +10,6 @@ from datetime import timedelta
 import psycopg2
 import numpy as np
 import netCDF4
-#from dateutil.relativedelta import relativedelta
 
 from snowtools.utils.S2M_standard_file import StandardCDP
 from snowtools.utils.resources import get_file_period
@@ -645,7 +644,7 @@ def compilation_ttes_periodes(date_entree_debut, date_entree_fin, site, option_r
                   le pas de temps (en secondes)
     """
     date_first_met = datetime.datetime(1993, 8, 1, 6)  # EN DUR et fixe
-    date_last_met = datetime.datetime(annee_last_MET, 8, 1, 6) 
+    date_last_met = datetime.datetime(annee_last_MET, 8, 1, 6)
     list_path_met, list_date_debut, list_date_fin = decoupe_periode(date_entree_debut, date_entree_fin)
     pas = pas_par_defaut
     L = []

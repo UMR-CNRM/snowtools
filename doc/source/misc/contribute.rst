@@ -16,7 +16,7 @@ To add the git project to PyCharm directly, click on ``VCS``, then ``checkout fr
 Code style
 ----------
 
-Python code should comply with `PEP8 <https://www.python.org/dev/peps/pep-0008>` style guide. Please check your code before committing.
+Python code should comply with PEP8 https://www.python.org/dev/peps/pep-0008 style guide. Please check your code before committing.
 In particular, tabs are prohibited and lines may not exceed 120 characters.
 
 Code tips
@@ -25,7 +25,7 @@ Code tips
 Shebangs
 ^^^^^^^^
 
-If you are writing a script that can be executed, please add the following shebang. Note that you should not point to ``python`` as it may not be defined on all platforms, hence you have to point to ``pyhton3``.
+If you are writing a script that can be executed, please add the following shebang. Note that you should not point to ``python`` as it may not be defined on all platforms, hence you have to point to ``python3``.
 
 .. code-block:: python
    
@@ -46,7 +46,7 @@ Please avoid relative imports in snowtools. Absolute imports must start at ``sno
    
    from snowtools.utils.prosimu import prosimu
 
-See `PEP 8 import section <https://www.python.org/dev/peps/pep-0008/#imports>` for more details on correct import order and other guidelines on imports.
+See PEP 8 import section https://www.python.org/dev/peps/pep-0008/#imports for more details on correct import order and other guidelines on imports.
 
 
 Documentation and testing

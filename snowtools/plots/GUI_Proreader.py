@@ -32,6 +32,17 @@ from snowtools.utils.dates import check_and_convert_date
 from snowtools.utils.FileException import FileNameException, FileParseException
 from snowtools.plots import proReader_mini
 
+WARNING_DEPRECIATION = """
+!!! --------------------------------------------------------------------- !!!
+!!! -------------------         WARNING         ------------------------- !!!
+!!! --------------------------------------------------------------------- !!!
+This visualization tool is now deprecated and will no longer been supported.
+Please use snowtools.plots.stratiprofile.proplotter instead.
+!!! --------------------------------------------------------------------- !!!
+"""
+
+WARNING_DEPRECIATION_GUI = "This software is no longer supported. Please use snowtools.plots.stratiprofile.proplotter instead"
+
 
 logger = logging.getLogger()
 logger.setLevel(logging.WARNING)
@@ -602,7 +613,7 @@ class Graph(Toplevel):
             hauteur_souris = event.ydata
             date_souris = self.date[min(np.where(self.intime)[0][int(math.floor(event.xdata))], len(self.date)-1)]
             self.ax2.clear()
-            top_zoom = self.pro.get_topplot(self.variable, self.date1_zoom, self.date2_zoom)
+            top_zoom = self.pro.get_topplot(self.date1_zoom, self.date2_zoom)
 
             if self.profil_complet:
                 self.ax3.clear()
@@ -1635,6 +1646,8 @@ class GestionFenetre(Frame):
         self.master.bind('<Alt-e>', self.graphe3)
         self.master.bind('<Alt-h>', self.graphe4)
 
+        messagebox.showinfo('Deprecation warning', WARNING_DEPRECIATION_GUI)
+
     def onsize_master(self, event):
         largeur_master = self.master.winfo_width()/self.master.taille_x_master
         hauteur_master = self.master.winfo_height()/self.master.taille_y_master
@@ -1791,6 +1804,7 @@ def Savefig(filename, profil, variable, date_massif_membre, out_name, type_graph
     plt.close(fig1)
 
 def main(version='undefined', args=None):
+    print(WARNING_DEPRECIATION)
     args = args if args is not None else sys.argv[1:]
     if len(sys.argv) > 1: 
         args = parseArguments(args, version=version)

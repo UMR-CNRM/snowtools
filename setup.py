@@ -36,6 +36,7 @@ all_packages_data['snowtools'] = [
         'DATA/OPER/*',
         'plots/logos/*',
         'tasks/oper/iga/conf/*',
+        'plots/stratiprofile/*',
         ]
 
 setup(
@@ -68,7 +69,7 @@ setup(
         entry_points={
             'console_scripts': [
                 's2m = snowtools.tasks.s2m_command:main',
-                'proreader = snowtools.plots.GUI_Proreader:main',
+                'proreader = snowtools.plots.stratiprofile.proplotter:main',
                 ],
             },
         install_requires=[

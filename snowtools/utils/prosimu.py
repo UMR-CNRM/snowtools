@@ -4,14 +4,15 @@
 Created on 4 oct. 2012
 
 :Authors:
-    lafaysse
+    - lafaysse
+    - LVG
 
 This module contains the ``prosimu`` class used to read simulation files
 (netCDF format) as produced by SURFEX/Crocus for instance.
 """
 
 import os
-import sys
+import abc
 import logging
 
 import netCDF4
@@ -19,8 +20,8 @@ import six
 import numpy as np
 import glob
 
-from snowtools.utils.FileException import FileNameException, DirNameException, FileOpenException, VarNameException, \
-    TimeException, MultipleValueException
+from snowtools.utils.FileException import FileNameException, DirNameException, FileOpenException, VarNameException
+from snowtools.utils.FileException import TimeException, MultipleValueException
 from snowtools.utils.S2M_standard_file import StandardCROCUS
 
 try:
@@ -28,12 +29,46 @@ try:
 except ImportError:
     cftime = None
 
-# Fichier PRO.nc issu d'une simulation SURFEX post-traitée
+DEFAULT_NETCDF_FORMAT = 'NETCDF3_CLASSIC'
 
 
-class prosimu():
+def prosimu_auto(path, ncformat=DEFAULT_NETCDF_FORMAT, openmode='r', **kwargs):
     """
-    Class designed to read simulations files
+    Factory function that guess the correct class to return among
+    :class:`prosimu1d` or :class:`prosimu2d`.
+
+    :param path: file path or file path list
+    :type path: str or path-like or list
+    :ncformat: netCDF format only in case of creation
+    :type ncformat: str
+    :param openmode: Open mode (r, r+ or w generally)
+    :type openmode: str
+    :param kwargs: Other arguments passed to the instantiated class
+    """
+    if isinstance(path, list) and os.path.isfile(path[0]):
+        toanalyzepath = path[0]
+    elif os.path.isfile(path):
+        toanalyzepath = path
+    else:
+        toanalyzepath = None
+
+    targetclass = prosimu1d
+
+    if toanalyzepath is not None:
+        with netCDF4.Dataset(toanalyzepath, 'r') as ncdf:
+            if 'Number_of_points' not in ncdf.dimensions:
+                if 'xx' in ncdf.dimensions and 'yy' in ncdf.dimensions:
+                    targetclass = prosimu2d
+                elif 'location' in ncdf.dimensions:
+                    targetclass = prosimu_old
+
+    return targetclass(path, ncformat=ncformat, openmode=openmode, **kwargs)
+
+
+class prosimuAbstract(abc.ABC):
+    """
+    Abstract class designed to read simulations files
+    Describe the interface provided to access simulations.
 
     :param path: path of the file to read
     :type path: path-like or list
@@ -66,9 +101,16 @@ class prosimu():
     Please note that in case of opening simultaneously several files, only the ``'r'`` open mode is allowed.
     """
 
-    Number_of_points = 'Number_of_points'
+    @property
+    @abc.abstractmethod
+    def Points_dimensions(self):
+        pass
+
     Number_of_Patches = 'Number_of_Patches'
     Number_of_Tiles = ['tile', 'Number_of_Tile', 'Number_of_Patches']
+
+    _rewrite_dims = {}
+    _rewrite_vars = {}
 
     def __init__(self, path, ncformat='NETCDF3_CLASSIC', openmode='r'):
         """
@@ -77,8 +119,10 @@ class prosimu():
         cache - utile lorsque de grands nombre d'accès à la même variable sont
         nécessaires
         """
-        # Add the possibility of using wildcards with prosimu
-        if isinstance(path, str):
+        self.dataset = None
+
+        # BC add the possibility to give wildcards to prosimu
+        if type(path) is str:
             if openmode == 'w':
                 glob_path = [path]
             else:
@@ -135,7 +179,6 @@ class prosimu():
         # Create the file if openmode is w and one file only
         elif openmode == "w":
             dirname = os.path.dirname(path[0])
-
             if len(dirname) > 0:
                 if not os.path.isdir(dirname):
                     raise DirNameException(path[0])
@@ -146,9 +189,8 @@ class prosimu():
 
         # Else, we could not either read or create the file -> crash
         else:
-            print("I am going to crash because there is a filename exception")
-            print(path[0])
-            print(type(path[0]))
+            logging.error("I am going to crash because there is a filename exception: \
+                        file {} not found and openmode is not 'w'".format(path))
             raise FileNameException(path[0])
 
         self.varcache = {}
@@ -157,10 +199,81 @@ class prosimu():
             self.timedim = range(len(self.dataset.dimensions['time']))
         else:
             self.timedim = None
-        if self.Number_of_points in self.dataset.dimensions:
-            self.pointsdim = range(len(self.dataset.dimensions[self.Number_of_points]))
-        else:
+
+        # Get the dimension of the dataset
+        # self.pointsdim is a list of indices available
+        #                  (list of integers)
+        # self.pointsdim_n give its length
+        #                  (integer)
+        # self.pointsdim_l give the dimension of each point dimension of the dataset
+        #                  (list of integers)
+        self.pointsdim_l = self._get_pointsdim()
+        if self.pointsdim_l is None:
             self.pointsdim = None
+            self.pointsdim_n = None
+        else:
+            self.pointsdim_n = 1
+            for n in self.pointsdim_l:
+                self.pointsdim_n *= n
+            self.pointsdim = range(self.pointsdim_n)
+
+    def _get_pointsdim(self):
+        """
+        Return a list of dimensions for Points_dimensions
+        """
+        if isinstance(self.Points_dimensions, str):
+            points_dimname = [self.Points_dimensions]
+        else:
+            # Else assume it is a list or similar iterable
+            points_dimname = self.Points_dimensions
+
+        r = []
+        for dimname in points_dimname:
+            if dimname in self.dataset.dimensions:
+                r.append(len(self.dataset.dimensions[dimname]))
+            else:
+                return None
+        return r
+
+    def _check_varname(self, varname):
+        """
+        chack the variable name exists or raise a VarNameException
+        and if necessary perform a rewritting of variable
+
+        :param varname: Variable name to test
+        :type varname: str
+        :returns: Actual variable name (possibly substituted from varname
+        :rtype: str
+        :raises: VarNameException
+        """
+        listvar = self.listvar()
+        if varname in listvar:
+            return varname
+        else:
+            if varname in self._rewrite_vars and self._rewrite_vars[varname] in listvar:
+                return self._rewrite_vars[varname]
+            else:
+                raise VarNameException(varname, self.path)
+
+    def _check_dimname(self, dimname):
+        """
+        chack the variable name exists or raise a dimnameException
+        and if necessary perform a rewritting of variable
+
+        :param dimname: Variable name to test
+        :type dimname: str
+        :returns: Actual variable name (possibly substituted from dimname
+        :rtype: str
+        :raises: dimnameException
+        """
+        listdim = self.listdim()
+        if dimname in listdim:
+            return dimname
+        else:
+            if dimname in self._rewrite_dims and self._rewrite_dims[dimname] in listdim:
+                return self._rewrite_dims[dimname]
+            else:
+                raise VarNameException(dimname, self.path)
 
     def force_read_in_cache(self):
         """
@@ -174,21 +287,20 @@ class prosimu():
         """
         self.varcache = {}
         for varname, var in self.dataset.variables.items():
-            slices = []
-            dims = var.dimensions
-            for dimname in dims:
-                slices.append(slice(None))
-            slices = tuple(slices)
-            self.varcache[varname] = var[slices]
+            self.varcache[varname] = var[Ellipsis]
 
     def format(self):
         """
         Get the format of the undelying netCDF file (e.g. NETCDF3_CLASSIC)
+
+        :returns: The format of NetCDF file
+        :rtype: str
         """
         try:
             return self.dataset.data_model
         except AttributeError:
-            print("WARNING : old version of netCDF4 module. We cannot check the format of your forcing file. We assume that you provide a NETCDF3_CLASSIC file.")
+            logging.warning("WARNING : old version of netCDF4 module. We cannot check the format of your forcing file. \
+                             We assume that you provide a NETCDF3_CLASSIC file.")
             return 'NETCDF3_CLASSIC'
 
     def listdim(self):
@@ -224,6 +336,7 @@ class prosimu():
         :returns: dimensions of varname
         :rtype: numpy array
         """
+        varname = self._check_varname(varname)
         return np.array(self.dataset.variables[varname].dimensions)
 
     def getrankvar(self, varname):
@@ -235,6 +348,7 @@ class prosimu():
         :returns: rank
         :rtype: int
         """
+        varname = self._check_varname(varname)
         return len(self.dataset.variables[varname].shape)
 
     def listattr(self, varname):
@@ -245,6 +359,7 @@ class prosimu():
         :type varname: str
         :returns: atributes
         """
+        varname = self._check_varname(varname)
         return self.dataset.variables[varname].ncattrs()
 
     def getattr(self, varname, attname):
@@ -257,6 +372,7 @@ class prosimu():
         :type attname: str
         :returns: the attribute value
         """
+        varname = self._check_varname(varname)
         return getattr(self.dataset.variables[varname], attname)
 
     def gettypevar(self, varname):
@@ -267,6 +383,7 @@ class prosimu():
         :type varname: str
         :returns: the corresponding dtype
         """
+        varname = self._check_varname(varname)
         return self.dataset.variables[varname].dtype
 
     def getfillvalue(self, varname):
@@ -277,6 +394,7 @@ class prosimu():
         :type varname: str
         :returns: the fill value
         """
+        varname = self._check_varname(varname)
         if hasattr(self.dataset.variables[varname], "_FillValue"):
             return self.dataset.variables[varname]._FillValue
         else:
@@ -284,9 +402,7 @@ class prosimu():
 
     def infovar(self, varname):
         # Vérification du nom de la variable
-        if varname not in self.listvar():
-            raise VarNameException(varname, self.path)
-
+        varname = self._check_varname(varname)
         return self.gettypevar(varname), self.getrankvar(varname), self.getdimvar(varname), self.getfillvalue(varname), self.listattr(varname)
 
     def readtime_for_copy(self):
@@ -342,62 +458,57 @@ class prosimu():
 
         .. code-block:: python
 
-           snowemp = prosimu.read_var('SNOWTEMP',time=0,Number_of_points = slice(100,125))
-           snowtemp = prosimu.read_var('SNOWTEMP',time= slice(0,10,2), Number_of_points=1,snow_layer=slice(0,10))
+           snowemp = prosimu.read_var('SNOWTEMP', time=0, Number_of_points = slice(100,125))
+           snowtemp = prosimu.read_var('SNOWTEMP', time=slice(0,10,2), Number_of_points=1, snow_layer=slice(0,10))
 
         peut-être utilisé en combinaison avec les méthodes get_point et get_time
         pour récupérer un point / un instant donné :
 
         .. code-block:: python
 
-           snowtemp = prosimu.read_var('SNOWTEMP',time=self.get_time(datetime(2018,3,1,9)),
+           snowtemp = prosimu.read_var('SNOWTEMP', time=self.get_time(datetime(2018,3,1,9)),
                        Number_of_points = self.get_point(massif_num=3,slope=20,ZS=4500,aspect=0))
         """
-        # Gestion des noms de dimensions différents entre ancien et nouveau
-        # format
-        condition_points = kwargs.get('Number_of_points')
-        condition_patches = kwargs.get('Number_of_Patches')
-        if condition_points is not None:
-            del kwargs['Number_of_points']
-            kwargs[self.Number_of_points] = condition_points
-        if condition_patches is not None:
-            del kwargs['Number_of_Patches']
-            kwargs[self.Number_of_Patches] = condition_patches
-        # valeurs par défaut
-        if self.Number_of_Patches not in kwargs.keys():
-            kwargs[self.Number_of_Patches] = 0
-        # contrôles des arguments d'appel de la méthode
-        if variable_name not in self.listvar():
-            raise VarNameException(variable_name, self.path)
+        # Sanitize dimensions (kwargs)
+        args = {}
+        for arg, val in six.iteritems(kwargs):
+            arg2 = self._check_dimname(arg)
+            args[arg2] = val
+
+        # Sanitize input variable name
+        variable_name = self._check_varname(variable_name)
+
+        # Default value : Remove patches
+        if self.Number_of_Patches not in args.keys():
+            args[self.Number_of_Patches] = 0
+
+        # Check cache
         ncvariable = self.dataset.variables[variable_name]
         if variable_name in self.varcache:
             ncvariable_data = self.varcache[variable_name]
         else:
             ncvariable_data = self.dataset.variables[variable_name]
+
+        # Extraction
         dims = ncvariable.dimensions
         slices = []
         for dimname in dims:
-            slices.append(kwargs.get(dimname, slice(None)))
+            slices.append(args.get(dimname, slice(None)))
         slices = tuple(slices)
         result = ncvariable_data[slices]
-        # if (isinstance(result, np.ma.core.MaskedConstant) or not(isinstance(result, np.ma.core.MaskedArray))):
-        #     result = np.ma.MaskedArray(result)
         return result
 
+    @abc.abstractmethod
     def get_points(self, **kwargs):
         """
         Return the values of dimension :data:`number of points<Number_of_points>` correpsonding to
-        a subset defined by variables aspect, ZS, massif_num and slope according to named arguments
-        passed to the function.
+        a subset defined by variables such as aspect, elevation (ZS), massif_num, slope, latitude, longitude
+        according to named arguments passed to the function.
+
+        :returns: List of points
+        :rtype: list
         """
-        if not(all([(self.dataset.variables[varname].dimensions == (self.Number_of_points,)) for varname in kwargs.keys()])):
-            raise TypeError("""Le filtrage ne peut se faire que sur des variables géographiques
-                (ZS, slope, aspect, massif_num)""")
-        nop = np.arange(len(self.dataset.dimensions[self.Number_of_points]))
-        locations_bool = np.ones(len(nop))
-        for varname, values in six.iteritems(kwargs):
-            locations_bool = np.logical_and(locations_bool, np.in1d(self.dataset.variables[varname], values))
-        return np.where(locations_bool)[0]
+        pass
 
     def get_point(self, **kwargs):
         """
@@ -410,44 +521,146 @@ class prosimu():
             raise IndexError('No point matching the selection')
         return point_list[0]
 
-    def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime=True, hasDecile=False):
+    @abc.abstractmethod
+    def read(self, varname, fill2zero=False, selectpoint=None, keepfillvalue=False, removetile=True, needmodif=False,
+             hasDecile=False):
         """
-        Extract data as a numpy array, possibly selecting point, and removing useless dimensions
+        Read data from a variable in the netCDF file.
+
+        :param varname: the variable name
+        :type varname: str
+        :param fill2zero: if True, will replace undefined data with the value of 0. Otherwise, ``np.nan`` is used
+                          except if ``keepfillvalue`` is set.
+        :type fill2zero: bool
+        :param selectpoint: Select a point. If -1 or None, select all points.
+        :type selectpoint: integer or list of integers
+        :param removetile: Removethe tile dimension, if present.
+        :type removetile: bool
+        :param keepfillvalue: Do not replace the undefined data with ``np.nan`` and keep the fill value used in the
+                              netCDF file.
+        :type keepfillvalue: bool
+        :param needmodif: If True, return also the variable object
+        :type needmodif: bool
+        :param hasDecile: Deprecated, please do not use.
+
+        :returns: Numpy data array containing the data of the selected variable.
+                  Note that order of dimensions is the same as in in file except if selectpoint is a list.
+                  In this case, the resulting point dimension is appended as the last dimension.
+        :rtype: numpy array
+        """
+        pass
+
+    # Pour compatibilité anciens codes, on conserve les routines obsolètes read1d et read2d
+
+    def read1d(self, varname, fill2zero=False, indpoint=0):
+        """
+        .. warning:: Obsolete method
 
         :meta private:
         """
+        varname = self._check_varname(varname)
+        return self.read(varname, fill2zero=fill2zero, selectpoint=indpoint)
 
-        vardims = self.dataset.variables[varname].dimensions
-        try:
-            allpointstest = all(selectpoint == -1)
-        except TypeError:
-            allpointstest = selectpoint == -1
+    def read2d(self, varname, fill2zero=False):
+        """
+        .. warning:: Obsolete method
 
-        # Special case
-        if len(var.shape) == 0:
-            if allpointstest:
-                return var
+        :meta private:
+        """
+        varname = self._check_varname(varname)
+        return self.read(varname, fill2zero=fill2zero)
+
+    def checktime(self, nametime, timeref):
+
+        newtime = self.read(nametime)
+
+        #  Provisoirement on compare brutalement.
+        #  A terme il faudra faire en fonction du units ou sélectionner une période commune.
+        if (newtime[:] != timeref[:]).all():
+            raise TimeException(self.path)
+
+    def close(self):
+        """
+        Close the netCDF dataset.
+        """
+        if self.dataset is not None:
+            self.dataset.close()
+            self.dataset = None
+
+    def integration(self, variable, nstep, start=0):
+        """
+        Renvoie les valeurs cumulées tous les nstep pas de temps
+
+        .. todo::
+           Documenter cette fonction
+        """
+        cumsum = np.cumsum(np.insert(variable, 0, 0, axis=0), axis=0)
+        if len(variable.shape) == 1:
+            temp = cumsum[nstep:] - cumsum[:-nstep]
+            return temp[np.arange(0, len(variable) - nstep, nstep)]
+        elif len(variable.shape) == 2:
+            temp = cumsum[nstep:, :] - cumsum[:-nstep, :]
+            return temp[np.arange(start, len(variable) - nstep, nstep), :]
+        else:
+            raise NotImplementedError("Integration of 3D variables not implemented")
+
+    def moytempo(self, precip, nstep, start=0):
+        """
+        Même chose que integration mais renvoie une moyenne
+
+        .. todo::
+           Documenter cette fonction
+        """
+        return self.integration(precip, nstep, start=start) / nstep
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, e_type, e_value, e_traceback):
+        self.close()
+
+
+class _prosimu1d2d():
+    """ Common definitions to :class:`prosimu1d` and :class:`prosimu2d` """
+
+    def get_points(self, **kwargs):
+        """
+        Return the values of dimension :data:`number of points<Number_of_points>` correpsonding to
+        a subset defined by variables such as aspect, elevation (ZS), massif_num, slope, latitude, longitude
+        according to named arguments passed to the function.
+
+        :rtype: list of integers
+        """
+        for varname in kwargs.keys():
+            varname = self._check_varname(varname)
+            if not set(self.dataset.variables[varname].dimensions).issubset(set(self.Points_dimensions)):
+                raise TypeError("""Le filtrage ne peut se faire que sur des variables géographiques
+                    (such as ZS, slope, aspect, lat, lon). Variable {} not compatible.""".format(varname))
+
+        locations_bool = np.ones(tuple(self.pointsdim_l),
+                                 dtype=bool)
+
+        for varname, values in six.iteritems(kwargs):
+            varname = self._check_varname(varname)
+            vardims = self.dataset.variables[varname].dimensions
+
+            data = self.dataset.variables[varname][Ellipsis]
+            if list(self.dataset.variables[varname].dimensions) == self.Points_dimensions:
+                slices = Ellipsis
             else:
-                raise ValueError('Could not extract a point. The {} dimension was not found for '
-                                 'variable {}'.format(self.Number_of_points, varname))
+                # Swap axes if necessary
+                index = []
+                for axis in self.dataset.variables[varname].dimensions:
+                    index.append(self.Points_dimensions.index(axis))
 
-        selector = [slice(None, None, None)] * len(vardims)
+                index = np.argsort(np.array(index))
+                if np.all(np.diff(index) > 0):
+                    data = np.moveaxis(data, np.arange(len(index)), index)
+                slices = tuple([None if axis not in vardims else slice(None) for axis in self.Points_dimensions])
 
-        # Point extraction
-        if not allpointstest:
-            if self.Number_of_points not in vardims:
-                raise ValueError('Could not extract a point. The {} dimension was not found '
-                                 'for variable {}'.format(self.Number_of_points, varname))
-            axispoint = vardims.index(self.Number_of_points)
-            selector[axispoint] = selectpoint
+            locations_bool = np.logical_and(locations_bool, np.isin(data[slices], values))
 
-        if removetile:
-            for key in self.Number_of_Tiles:
-                if key in vardims:
-                    tileindex = vardims.index(key)
-                    selector[tileindex] = 0
-
-        return var[tuple(selector)]
+        return np.where(locations_bool.flatten())[0]
 
     def read(self, varname, fill2zero=False, selectpoint=-1, keepfillvalue=False, removetile=True, needmodif=False,
              hasDecile=False):
@@ -459,8 +672,8 @@ class prosimu():
         :param fill2zero: if True, will replace undefined data with the value of 0. Otherwise, ``np.nan`` is used
                           except if ``keepfillvalue`` is set.
         :type fill2zero: bool
-        :param selectpoint: Select a point. If -1, select all points.
-        :type selectpoint: int
+        :param selectpoint: Select a point. If -1 or None, select all points.
+        :type selectpoint: int or tuple or list of int or tuple
         :param removetile: Removethe tile dimension, if present.
         :type removetile: bool
         :param keepfillvalue: Do not replace the undefined data with ``np.nan`` and keep the fill value used in the
@@ -469,6 +682,7 @@ class prosimu():
         :param needmodif: If True, return also the variable object
         :type needmodif: bool
         """
+        varname = self._check_varname(varname)
 
         # Vérification du nom de la variable
         if varname not in self.listvar():
@@ -483,32 +697,28 @@ class prosimu():
 
         # Sélection d'un point si demandé
         # Suppression dimension tile si nécessaire
-        # gestion time/pas time en dimension (prep files)
-        if "time" not in list(self.dataset.variables.keys()):
-            var = self.extract(varname, varnc, selectpoint=selectpoint, removetile=removetile, hasTime=False,
-                               hasDecile=hasDecile)
-        else:
-            var = self.extract(varname, varnc, selectpoint=selectpoint, removetile=removetile, hasDecile=hasDecile)
+        var = self.extract(varname, varnc, selectpoint=selectpoint, removetile=removetile)
+
         # Remplissage des valeurs manquantes si nécessaire
         if (len(var.shape) > 1 or (len(var.shape) == 1 and var.shape[0] > 1)) and not keepfillvalue:
             try:
                 if fill2zero:
                     array = var.filled(fill_value=0)
-                    # print("Fill missing data with 0 for variable " + varname)
+                    logging.debug("Fill missing data with 0 for variable " + varname)
                 else:
                     array = var.filled(fill_value=np.nan)
-                    # print("Fill missing data with np.nan for variable " + varname)
+                    logging.debug("Fill missing data with np.nan for variable " + varname)
             except Exception:
                 if avail_fillvalue:
                     if fill2zero:
                         array = np.where(var == fillvalue, 0, var)
-                        # print("Fill missing data with 0 for variable " + varname + " (old method)")
+                        logging.debug("Fill missing data with 0 for variable " + varname + " (old method)")
                     else:
                         array = np.where(var == fillvalue, np.nan, var)
-                        # print("Fill missing data with np.nan for variable " + varname + " (old method)")
+                        logging.debug("Fill missing data with np.nan for variable " + varname + " (old method)")
                 else:
                     array = var
-                    # print("Unable to fill data with 0 or np.nan for variable " + varname)
+                    logging.debug("Unable to fill data with 0 or np.nan for variable " + varname)
 
         else:
             array = var
@@ -518,62 +728,215 @@ class prosimu():
         else:
             return array
 
-    # Pour compatibilité anciens codes, on conserve les routines obsolètes read1d et read2d
-
-    def read1d(self, varname, fill2zero=False, indpoint=0):
+    def _extract(self, varname, var, selectpoint=None, removetile=True):
         """
-        .. warning:: Obsolete method
+        Extract data as a numpy array, possibly selecting point, and removing useless dimensions
+
+        :meta private:
+
+        :param selectpoint: List of points id to select along dimensions of Points_dimensions.
+                            Length of the list is the same as len(Points_dimensions).
+        :type selectpoint: list or None
+        """
+        varname = self._check_varname(varname)
+
+        vardims = self.dataset.variables[varname].dimensions
+        allpointstest = selectpoint is None
+
+        # Special case
+        if len(var.shape) == 0:
+            if allpointstest:
+                return var
+            else:
+                raise ValueError('Could not extract a point. The {} dimension was not found for '
+                                 'variable {}'.format(', '.join(self.Points_dimensions), varname))
+
+        selector = [slice(None, None, None)] * len(vardims)
+
+        # Point extraction
+        if not allpointstest:
+            if not set(self.Points_dimensions).issubset(set(vardims)):
+                raise ValueError('Could not extract a point. The {} dimension(s) was not found '
+                                 'for variable {}'.format(', '.join(self.Points_dimensions), varname))
+            i = 0
+            for dimpoint in self.Points_dimensions:
+                axispoint = vardims.index(dimpoint)
+                selector[axispoint] = selectpoint[i]
+                i += 1
+
+        if removetile:
+            for key in self.Number_of_Tiles:
+                if key in vardims:
+                    tileindex = vardims.index(key)
+                    selector[tileindex] = 0
+
+        return var[tuple(selector)]
+
+
+class prosimu_base(_prosimu1d2d, prosimuAbstract):
+    """
+    Common class that is allowed to read both 1d and 2d simualtions. The selection of points is
+    not allowed in this class.
+    """
+
+    Points_dimensions = []
+
+    def get_points(*args, **kwargs):
+        """
+        :meta: private
+        """
+        raise NotImplementedError('get_points is not implemented in prosimu_base. Please use prosimu1d or prosimu2d classes')
+
+    def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime=True, hasDecile=False):
+        """
+        Extract data as a numpy array, possibly removing useless dimensions. In prosimu_base class,
+        does not allow to select a point !
 
         :meta private:
         """
-        return self.read(varname, fill2zero=fill2zero, selectpoint=indpoint)
 
-    def read2d(self, varname, fill2zero=False):
-        """
-        .. warning:: Obsolete method
-
-        :meta private:
-        """
-        return self.read(varname, fill2zero=fill2zero)
-
-    def checktime(self, nametime, timeref):
-
-        newtime = self.read(nametime)
-
-#        Provisoirement on compare brutalement.
-#        A terme il faudra faire en fonction du units ou sélectionner une période commune.
-        if (newtime[:] != timeref[:]).all():
-            raise TimeException(self.path)
-
-    def close(self):
-        """
-        Close the netCDF dataset.
-        """
-        self.dataset.close()
-
-    def integration(self, variable, nstep, start=0):
-        # Renvoie les valeurs cumulées tous les nstep pas de temps
-        cumsum = np.cumsum(np.insert(variable, 0, 0, axis=0), axis=0)
-        if len(variable.shape) == 1:
-            temp = cumsum[nstep:] - cumsum[:-nstep]
-            return temp[np.arange(0, len(variable) - nstep, nstep)]
-        elif len(variable.shape) == 2:
-            temp = cumsum[nstep:, :] - cumsum[:-nstep, :]
-            return temp[np.arange(start, len(variable) - nstep, nstep), :]
+        if isinstance(selectpoint, int) and selectpoint == -1:
+            selectpoint = None
         else:
-            sys.exit("integration of 3D variables not implemented")
+            raise ValueError('To use the selectpoint option, please use prosimu_auto, prosimu1d or prosimu2d. '
+                             'prosimu_base does not allow for point selection.')
 
-    def moytempo(self, precip, nstep, start=0):
-        return self.integration(precip, nstep, start=start) / nstep
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, e_type, e_value, e_traceback):
-        self.close()
+        return self._extract(varname, var, selectpoint=selectpoint, removetile=removetile)
 
 
-class prosimu_old(prosimu):
+class prosimu1d(_prosimu1d2d, prosimuAbstract):
+    """
+    Class to read simulations where simulation points are aggregated along one dimension.
+    This is commonly used for semi-distributed simulations.
+    """
+    Number_of_points = 'Number_of_points'
+    Points_dimensions = [Number_of_points]
+
+    def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime=True, hasDecile=False):
+        """
+        Extract data as a numpy array, possibly selecting point, and removing useless dimensions
+
+        :meta private:
+        """
+
+        if isinstance(selectpoint, int) and selectpoint == -1:
+            selectpoint = None
+        if selectpoint is not None:
+            selectpoint = [selectpoint]
+
+        return self._extract(varname, var, selectpoint=selectpoint, removetile=removetile)
+
+
+class prosimu2d(_prosimu1d2d, prosimuAbstract):
+    """
+    Class to read simulations where simulation points are aggregated along one dimension.
+    This is commonly used for semi-distributed simulations.
+    """
+    Points_dimensions = ['xx', 'yy']
+
+    def extract(self, varname, var, selectpoint=None, removetile=True):
+        """
+        Extract data as a numpy array, possibly selecting point, and removing useless dimensions
+
+        :meta private:
+        """
+        if isinstance(selectpoint, int) and selectpoint == -1:
+            selectpoint = None
+        elif selectpoint is None:
+            pass
+        elif np.issubdtype(type(selectpoint), np.integer):
+            # We have one point, identified with unique integer
+            selectpoint = self._translate_pointnr_to_varind(selectpoint)
+            onepoint = True
+        elif isinstance(selectpoint, list):
+            # We have a list of points
+            onepoint = False
+            if np.issubdtype(type(selectpoint[0]), np.integer):
+                # Translate point number in dimensions indexes
+                selectpoint = [self._translate_pointnr_to_varind(p) for p in selectpoint]
+            elif isinstance(selectpoint[0], tuple):
+                pass
+            else:
+                raise ValueError('selectpoint must be list of integer or tuple')
+        elif isinstance(selectpoint, tuple):
+            selectpoint = selectpoint
+            onepoint = True
+
+        varname = self._check_varname(varname)
+        vardims = self.dataset.variables[varname].dimensions
+
+        allpointstest = selectpoint is None
+
+        # Special case
+        if len(var.shape) == 0:
+            if allpointstest:
+                return var
+            else:
+                raise ValueError('Could not extract a point. The point dimension(s) were not found for '
+                                 'variable {}'.format(varname))
+
+        selector = [slice(None, None, None)] * len(vardims)
+        if removetile:
+            for key in self.Number_of_Tiles:
+                if key in vardims:
+                    tileindex = vardims.index(key)
+                    selector[tileindex] = 0
+
+        if allpointstest:
+            return var[tuple(selector)]
+        else:
+            # Point extraction
+            if not set(self.Points_dimensions).issubset(set(vardims)):
+                raise ValueError('Could not extract a point. The {} dimension(s) was not found '
+                                 'for variable {}'.format(', '.join(self.Points_dimensions), varname))
+
+            if onepoint:
+                for i, dimpoint in enumerate(self.Points_dimensions):
+                    axispoint = vardims.index(dimpoint)
+                    selector[axispoint] = selectpoint[i]
+                return var[tuple(selector)]
+            else:
+                outputdata = []
+
+                for point in selectpoint:
+                    selectorp = selector.copy()
+                    for i, dimpoint in enumerate(self.Points_dimensions):
+                        axispoint = vardims.index(dimpoint)
+                        selectorp[axispoint] = point[i]
+                    outputdata.append(var[tuple(selectorp)])
+
+            # Do a numpy array, ensure Point dimension is the last one and return
+            return np.moveaxis(np.array(outputdata), 0, -1)
+
+    def _translate_pointnr_to_varind(self, nr):
+        """
+        Return the tuple of indices along ``Points_dimensions`` dimensions
+        for an integer
+        """
+        l = []
+        pd = self.pointsdim_n
+        reste = nr
+        for i in range(len(self.pointsdim_l[::-1])):
+            pd = pd // self.pointsdim_l[i]
+            l.append(reste // pd)
+            reste = reste % pd
+        return tuple(l)
+
+    def _translate_listtuple_to_listsidx(self, listtuple):
+        """
+        Translate a list of tuple, each one describing a point for its dimensions to
+        a list of indices by dimension.
+        """
+        r = []
+        for i in range(len(self.pointsdim_l)):
+            r1 = []
+            for point in listtuple:
+                r1.append(point[i])
+            r.append(r1)
+        return r
+
+
+class prosimu_old(prosimu1d):
     """
     In the old operationnal format (before 2018), some dimensions have different
     names, this class allows to deal with them easily
@@ -583,4 +946,10 @@ class prosimu_old(prosimu):
     """
 
     Number_of_points = 'location'
+    Points_dimensions = [Number_of_points]
     Number_of_Patches = 'tile'
+
+    _rewrite_dims = {'Number_of_points': 'location', 'Number_of_patches': 'tile'}
+
+
+prosimu = prosimu1d

@@ -37,4 +37,3 @@ except OSError:
 
 CARTOPY_DIR = '/rd/cenfic3/manto/radanovicss/CartopyData'
 # CARTOPY_DIR = os.path.join(LUSTRE_NOSAVE_USER_DIR, 'CartopyData')  # for sxcen
-

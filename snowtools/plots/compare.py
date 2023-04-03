@@ -29,6 +29,7 @@ logger.addHandler(console_handler)
 #
 # Exemple d'appel:
 # python3 compare.py PRO1_2010080106_2011080106.nc PRO2_2010080106_2011080106.nc -t1 'BC21' -t2 'C13' -b 2010111206 -e 2011011706
+# python3 /home/fructusm/git/snowtools_git/snowtools/plots/compare.py Test_new_tartes/pro/PRO_2010080106_2011080106.nc Test_old_Tartes/pro/PRO_2010080106_2011080106.nc -t1 'New Tartes' -t2 'Old Tartes' -b 2010080106 -e 2011080106 -v TALB_ISBA
 #
 # Options de lancement:
 # -b et -e pour begin et end pour tracer entre ces dates
@@ -51,7 +52,7 @@ logger.addHandler(console_handler)
 # - albedo moyen avec TALB_ISBA 
 #
 
-def make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin, date_end, output_name, point, bool_snow_layer):
+def make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin, date_end, output_name, point, bool_snow_layer, bool_bands=False):
     """Plot 2 PRO files side by side in order to compare them
 
     :param path_pro1: The path to first PRO file to plot
@@ -77,7 +78,7 @@ def make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin
 
     :returns: the graph (possibly saved if an output name is given)
     """
-    fig, (ax1, ax2) = plt.subplots(1, 2)
+    fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
     fig.suptitle('Compare ' + titre1 + ' and ' + titre2)
     pro1 = proReader_mini.ProReader_standard(ncfile = path_pro1, var = variable, point = int(point))
     pro2 = proReader_mini.ProReader_standard(ncfile = path_pro2, var = variable, point = int(point))
@@ -262,10 +263,15 @@ def main(args=None):
                     sys.exit(3)
 
         # Launch the app
-        if variable is not None and 'snow_layer' not in prosimu(path_pro1).getdimvar(variable) and 'snow_layer' not in prosimu(path_pro2).getdimvar(variable):
+        bool_not_snow_layer = 'snow_layer' not in prosimu(path_pro1).getdimvar(variable) and 'snow_layer' not in prosimu(path_pro2).getdimvar(variable)
+        bool_not_bands = 'bands' not in prosimu(path_pro1).getdimvar(variable) and 'bands' not in prosimu(path_pro2).getdimvar(variable)
+        bool_nothing = bool_not_snow_layer * bool_not_bands
+        if variable is not None and bool_nothing:
             make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin, date_end, output_name, point, False)
-        else:
+        elif variable is not None and bool_not_bands:
             make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin, date_end, output_name, point, True)
+        else:
+            make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin, date_end, output_name, point, False, True)
         make_text_comparaison(path_pro1, path_pro2, date_begin, date_end, output_name, point)
 
 if __name__ == '__main__':

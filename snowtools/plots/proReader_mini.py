@@ -5,6 +5,7 @@ Created on 6 apr. 2017
 
 @author viallon
 """
+from abc import abstractmethod
 import os
 import logging
 import datetime as dt
@@ -48,7 +49,7 @@ dico = {'WSN_VEG': (0, 40),
         'ts': (238, 294)}
 
 
-class ProReader_abstract:
+class ProReaderAbstract:
     """
     Basé sur une variation du logiciel Proreader.py (sert à tracer des graphes de fichier PRO issus de Crocus).
     Permet d'être utilisé par GUI_Proreader.py pour tracé interactif.
@@ -60,9 +61,9 @@ class ProReader_abstract:
                 !! si le fichier contient plusieurs points de simulation, selection par point sous forme d'un entier
                 !! si le fichier contient plusieurs variables, selection par variable via une chaine de caractères
         """
-        self.initFromFile(ncfile, var=var, point=point, liste_points=liste_points)
+        self.init_from_file(ncfile, var=var, point=point, liste_points=liste_points)
 
-    def initFromFile(self, ncfile, var=None, point=None, liste_points=[]):
+    def init_from_file(self, ncfile, var=None, point=None, liste_points=[]):
         ff = prosimu(ncfile)
         listvariables = ff.listvar()
         
@@ -134,7 +135,14 @@ class ProReader_abstract:
         self.list_var_non_plot = ['time', 'slope', 'aspect', 'ZS', 'massif_num', 'latitude', 'longitude', 'lat', 'lon', 
                                   'Projection_Type', 'station', 'massif', 'naturalIndex']
 
+        self.ntime = None
+        self.nsnowlayer = None
+
         self.extraction(ff, point, liste_points)
+
+    @abstractmethod  # un décorateur pour définir une méthode abstraite
+    def extraction(self, ff, point, liste_points):
+        pass
 
     def get_choix(self, ncfile):
         ff = prosimu(ncfile)
@@ -186,7 +194,7 @@ class ProReader_abstract:
             
         return np.vstack((alttab, slopetab, aspecttab))
     
-    def get_topplot(self, var, b=None, e=None):
+    def get_topplot(self, b=None, e=None):
         b = self.parsedate(b, self.date, self.date[0])
         e = self.parsedate(e, self.date, self.date[self.ntime - 1])
         
@@ -239,7 +247,7 @@ class ProReader_abstract:
         
         def format_ticks(x, pos):
             x = int(x)
-            if(x >= 0 and x < toplot.shape[0]):
+            if 0 <= x < toplot.shape[0]:
                 return self.date[intime][x].strftime('%Y-%m-%d')
             elif x == toplot.shape[0]:
                 return self.date[intime][x-1].strftime('%Y-%m-%d')
@@ -272,17 +280,15 @@ class ProReader_abstract:
 
         toplot = self.var1D[var][self.date == date][0]
         xplot = [300+20*i for i in range(toplot.shape[0])]
-        axe.plot(xplot, toplot, color)
+        axe.plot(xplot, toplot, color, linestyle='-')
         axe.set_xlim(300, 300+20*toplot.shape[0])
+        axe.set_ylim(0, 1)
         
         axe.set_xlabel(date.strftime('%Y-%m-%d %Hh'))
 
         axe.set_ylabel(legend)
 
-    def plot_profil(self, axe, var, date=None, hauteur=None, legend=None, color='b', cbar_show=True, top=None, bool_layer=False):
-    
-        if legend is None:
-            legend = var
+    def plot_profil(self, axe, var, date=None, hauteur=None, color='b', cbar_show=True, top=None, bool_layer=False):
 
         date = self.parsedate(date, self.date, self.date[self.ntime - 1])
         date = self.date[self.date >= date][0]
@@ -328,14 +334,12 @@ class ProReader_abstract:
             axe.axhline(y=hauteur, color='black', linestyle='-')
             
         if top is None:
-            Max_y = ProReader_abstract.get_topplot(self, var)
+            Max_y = ProReaderAbstract.get_topplot(self)
         else:
             Max_y = top
         axe.set_ylim(0, Max_y)
         
-    def plot_profil_complet(self, axe, axe2, var, date=None, hauteur=None, legend=None, color='b', cbar_show=False, top=None, bool_layer=False):
-        if legend is None:
-            legend = var
+    def plot_profil_complet(self, axe, axe2, var, date=None, hauteur=None, color='b', cbar_show=False, top=None, bool_layer=False):
 
         date = self.parsedate(date, self.date, self.date[self.ntime - 1])
         date = self.date[self.date >= date][0]
@@ -354,9 +358,9 @@ class ProReader_abstract:
         pointsy = np.delete(pointsy, 0)
         pointsx = np.delete(pointsx, 0)
 
-        if (var == 'SNOWTEMP' or var == 'tsnl'):
+        if var == 'SNOWTEMP' or var == 'tsnl':
             pointsy = np.where(pointsy > MIN_temp, pointsy, zero_C)
-        if ('SNOWIMP' in var):
+        if 'SNOWIMP' in var:
             pointsy = np.where(pointsy > 10**(-10), pointsy, 10**(-10))
             pointsy = np.where(pointsy > 0, np.log10(pointsy), -10)
         axe.plot(pointsy[::-1], np.subtract(pointsx[-1], pointsx[::-1]), color=color)
@@ -369,7 +373,7 @@ class ProReader_abstract:
         Max = np.nanmax(self.var[var][self.date == date]) if np.nanmax(self.var[var][self.date == date]) > 0 else 0
         Min = np.nanmin(self.var[var][self.date == date]) if np.nanmin(self.var[var][self.date == date]) < 0 else 0
 
-        if (var in dico.keys()):
+        if var in dico.keys():
             Max = np.nanmax(self.var[var][self.date == date]) if np.nanmax(self.var[var][self.date == date]) > dico[var][1] else dico[var][1]
             Min = np.nanmin(self.var[var][self.date == date]) if np.nanmax(self.var[var][self.date == date]) < dico[var][0] else dico[var][0]
         axe.set_xlim(Min, Max)
@@ -378,7 +382,7 @@ class ProReader_abstract:
             axe.axhline(y=hauteur, color='black', linestyle='-')
 
         if top is None:
-            Max_y = ProReader_abstract.get_topplot(self, var)
+            Max_y = ProReaderAbstract.get_topplot(self)
         else:
             Max_y = top
         axe.set_ylim(0, Max_y)
@@ -435,12 +439,12 @@ class ProReader_abstract:
 #
 #
 ###########################################################################################################
-class ProReader_standard(ProReader_abstract):
+class ProReader_standard(ProReaderAbstract):
     def extraction(self, ff, point, liste_points):
         for i in range(len(ff.listvar())):
-            if(ff.listvar()[i] not in self.list_var_non_plot):
-                if ('snow_layer' in ff.getdimvar(ff.listvar()[i])):
-                    if(ff.listvar()[i] == 'WSN_VEG'):
+            if ff.listvar()[i] not in self.list_var_non_plot:
+                if 'snow_layer' in ff.getdimvar(ff.listvar()[i]):
+                    if ff.listvar()[i] == 'WSN_VEG':
                         self.var['WSN_VEG'] = ff.read(ff.listvar()[i], selectpoint=point)
                     else:
                         # Fill2zero necessaire pour le plot
@@ -452,8 +456,8 @@ class ProReader_standard(ProReader_abstract):
         self.ntime = np.shape(self.var[self.var_utile])[0]
         self.nsnowlayer = np.shape(self.var[self.var_utile])[1]
 
-    def plot(self, axe, var, b=None, e=None, xlabel=True, legend=None, colormap='viridis', real_layers=True, color='b', direction_cut='up', height_cut=10., cbar_show=True):
-        '''
+    def plot(self, axe, var, b=None, e=None, xlabel=True, legend=None, colormap='viridis', real_layers=True, cbar_show=True):
+        """
         Trace la variable demandee sur la hauteur du manteau neigeux en fonction du temps
             axe : matplotlib.Axe
             var : string, nom variable a afficher
@@ -463,7 +467,7 @@ class ProReader_standard(ProReader_abstract):
             legend : legende colorbar, legende automatique par defaut
             colormap : string, colormap name
             real_layers : True (default) (couches epaisseurs reelles) ou False (couches numeriques)
-        '''
+        """
         b = self.parsedate(b, self.date, self.date[0])
         e = self.parsedate(e, self.date, self.date[self.ntime - 1])
 
@@ -483,7 +487,7 @@ class ProReader_standard(ProReader_abstract):
         # Trace par appel a plot_profil
         ep = self.var[self.var_utile][intime]
         toplot = self.var[var][intime]
-        if(real_layers):
+        if real_layers:
             plot_profil(axe, ep, toplot, colormap=colormap, legend=legend, cbar_show=cbar_show)
             axe.set_ylabel('Hauteur (m)')
             axe.set_ylim(0, np.max(np.nansum(ep, axis=1)))
@@ -495,10 +499,10 @@ class ProReader_standard(ProReader_abstract):
             axe.set_ylim(0, self.nsnowlayer)
 
         axe.set_xlim(0, toplot.shape[0])
-        if(xlabel):
+        if xlabel:
             def format_ticks(x, pos):
                 x = int(x)
-                if(x >= 0 and x < toplot.shape[0]):
+                if 0 <= x < toplot.shape[0]:
                     return self.date[intime][x].strftime('%Y-%m-%d')
                 elif x == toplot.shape[0]:
                     return self.date[intime][x-1].strftime('%Y-%m-%d')
@@ -519,12 +523,12 @@ class ProReader_standard(ProReader_abstract):
 #
 #
 ###########################################################################################################
-class ProReader_height(ProReader_abstract):
+class ProReader_height(ProReaderAbstract):
     def extraction(self, ff, point, liste_points):
         for i in range(len(ff.listvar())):
-            if(ff.listvar()[i] not in self.list_var_non_plot):
-                if ('snow_layer' in ff.getdimvar(ff.listvar()[i])):
-                    if(ff.listvar()[i] == 'WSN_VEG'):
+            if ff.listvar()[i] not in self.list_var_non_plot:
+                if 'snow_layer' in ff.getdimvar(ff.listvar()[i]):
+                    if ff.listvar()[i] == 'WSN_VEG':
                         self.var['WSN_VEG'] = ff.read(ff.listvar()[i], selectpoint=point)
                     else:
                         self.var[ff.listvar()[i]] = ff.read(ff.listvar()[i], selectpoint=point, fill2zero=True)  # Fill2zero necessaire pour le plot
@@ -534,8 +538,8 @@ class ProReader_height(ProReader_abstract):
         self.ntime = np.shape(self.var[self.var_utile])[0]
         self.nsnowlayer = np.shape(self.var[self.var_utile])[1]
 
-    def plot(self, axe, var, b=None, e=None, xlabel=True, legend=None, colormap='viridis', real_layers=True, color='b', direction_cut='up', height_cut=10.):
-        '''
+    def plot(self, axe, var, b=None, e=None, legend=None, color='b', direction_cut='up', height_cut=10.):
+        """
         Trace la variable demandee au niveau de la hauteur du manteau neigeux demandée (direction up = hauteur mesurée depuis la terre, 
         direction down = hauteur mesurée depuis le point le plus haut du manteau neigeux) en fonction du temps
             axe : matplotlib.Axe
@@ -547,7 +551,7 @@ class ProReader_height(ProReader_abstract):
             color : string, color name
             direction : 'up' or 'down' suivant que l'on prenne la hauteur depuis depuis le sol sous la neige ou la couche de neige au sommet
             height : hauteur
-        '''
+        """
         b = self.parsedate(b, self.date, self.date[0])
         e = self.parsedate(e, self.date, self.date[self.ntime - 1])
 
@@ -558,7 +562,7 @@ class ProReader_height(ProReader_abstract):
         
         if len(np.where(intime)[0]) > constante_sampling:
             sampling = int(len(np.where(intime)[0])/constante_sampling)+1
-            intime_t = np.zeros(len(intime), dtype = bool)
+            intime_t = np.zeros(len(intime), dtype=bool)
             intime_t[np.where(intime)[0][0]:np.where(intime)[0][len(np.where(intime)[0])-1]:sampling] = True
             intime = intime_t
         
@@ -573,7 +577,7 @@ class ProReader_height(ProReader_abstract):
         # pas très pythonique: faire un truc avec np.apply_along_axis(np.searchsorted, 1, ep_from, height)
         if direction_cut == 'down':
             for i in np.arange(np.alen(ep_from_topsnow)):
-                if ep_from_topsnow[i,:].searchsorted(float(height_cut)) < int(ep.shape[1]) and float(height_cut) < ep_from_ground[i, -1]:
+                if ep_from_topsnow[i, :].searchsorted(float(height_cut)) < int(ep.shape[1]) and float(height_cut) < ep_from_ground[i, -1]:
                     y.append(toplot[i, ep_from_topsnow[i, :].searchsorted(float(height_cut))])
                 else:
                     y.append(None)
@@ -593,7 +597,7 @@ class ProReader_height(ProReader_abstract):
         
         def format_ticks(x, pos):
             x = int(x)
-            if(x >= 0 and x < toplot.shape[0]):
+            if 0 <= x < toplot.shape[0]:
                 return self.date[intime][x].strftime('%Y-%m-%d')
             elif x == toplot.shape[0]:
                 return self.date[intime][x-1].strftime('%Y-%m-%d')
@@ -604,7 +608,7 @@ class ProReader_height(ProReader_abstract):
         axe.xaxis.set_major_locator(ticker.MaxNLocator(5))
         plt.setp(axe.xaxis.get_majorticklabels(), size='small')
         axe.ticklabel_format(axis="y", useOffset=False)
-        if (var in dico.keys()):
+        if var in dico.keys():
             axe.set_ylim(dico[var][0], dico[var][1])
         else:
             axe.set_ylim(0, 1.1*np.nanmax(self.var[var][:]))
@@ -619,34 +623,35 @@ class ProReader_height(ProReader_abstract):
 #
 #
 ###########################################################################################################
-class ProReader_massif(ProReader_abstract):
+class ProReader_massif(ProReaderAbstract):
     """
     Basé sur une variation du logiciel Proreader.ry qui sert à tracer des graphes de fichier PRO issus du modèle de neige Crocus.
     Permet d'être utilisé par GUI_Proreader.py pour tracé interactif.
     Pour plus d'information sur le code de ProReader_mini, aller directement voir l'aide de Proreader.py
     """
     def extraction(self, ff, point, liste_points):
+        self.var1D_massif = {}
         for i in range(len(ff.listvar())):
-            if(ff.listvar()[i] not in self.list_var_non_plot):
-                if ('snow_layer' in ff.getdimvar(ff.listvar()[i])):
-                    if(ff.listvar()[i] == 'WSN_VEG'):
+            if ff.listvar()[i] not in self.list_var_non_plot:
+                if 'snow_layer' in ff.getdimvar(ff.listvar()[i]):
+                    if ff.listvar()[i] == 'WSN_VEG':
                         self.var['WSN_VEG'] = ff.read_var(ff.listvar()[i], Number_of_points=liste_points)
                     else:
                         # Fill2zero necessaire pour plot
                         self.var[ff.listvar()[i]] = ff.read_var(ff.listvar()[i], Number_of_points=liste_points, fill2zero=True)
                 else:
                     # Fill2zero necessaire pour plot
-                    self.var1D[ff.listvar()[i]] = ff.read_var(ff.listvar()[i], Number_of_points=liste_points, fill2zero=True)
+                    self.var1D_massif[ff.listvar()[i]] = ff.read_var(ff.listvar()[i], Number_of_points=liste_points, fill2zero=True)
 
         self.ntime = np.shape(self.var[self.var_utile])[0]
         self.nsnowlayer = np.shape(self.var[self.var_utile])[1]
         self.nmassif = np.shape(self.var[self.var_utile])[2]
 
-    def get_topplot_massif(self, var):
+    def get_topplot_massif(self):
         ep = self.var[self.var_utile][:, :, :]
         return np.max(np.nansum(ep, axis=1))
     
-    def get_topplot_massif_date(self, var, date, b=None, e=None):
+    def get_topplot_massif_date(self, date):
         ep = self.var[self.var_utile][self.date == date, :, :]
         return np.max(np.nansum(ep, axis=1))
 
@@ -675,7 +680,7 @@ class ProReader_massif(ProReader_abstract):
         axe.xaxis.set_major_locator(ticker.MaxNLocator(5))
         plt.setp(axe.xaxis.get_majorticklabels(),size='small')'''
 
-    def plot_massif(self, axe, var, date=None, xlabel=True, legend=None, colormap='viridis', real_layers=True, legend_x=[], cbar_show=False, top_zoom=False):
+    def plot_massif(self, axe, var, date=None, legend=None, colormap='viridis', real_layers=True, legend_x=[], cbar_show=False, top_zoom=False):
         """
         Trace la variable demandee sur la hauteur du manteau neigeux en fonction du massif pour une date donnée.
             axe : matplotlib.Axe
@@ -704,12 +709,12 @@ class ProReader_massif(ProReader_abstract):
         else:
             eptop = self.var[self.var_utile][:, :, :].transpose()
         
-        if(real_layers):
+        if real_layers:
             plot_profil(axe, ep, toplot, colormap=colormap, legend=legend, cbar_show=cbar_show)
             axe.set_ylabel('Hauteur (m)')
             axe.set_ylim(0, np.max(np.nansum(eptop, axis=1)))
         else:
-            if(cbar_show):
+            if cbar_show:
                 ret = axe.pcolormesh(np.swapaxes(toplot, 0, 1), cmap=colormap)
                 cbar = plt.colorbar(ret, ax=axe)
                 cbar.set_label(legend)
@@ -722,7 +727,7 @@ class ProReader_massif(ProReader_abstract):
         if len(legend_x) > 0:
             def format_ticks(x, pos):
                 x = int(x)
-                if(x >= 0 and x < len(legend_x)):
+                if 0 <= x < len(legend_x):
                     return legend_x[x]
                 elif x == len(legend_x):
                     return legend_x[x-1]
@@ -764,7 +769,7 @@ class ProReader_massif(ProReader_abstract):
         if len(legend_x) > 0:
             def format_ticks(x, pos):
                 x = int(x)
-                if (x >= 0 and x < len(legend_x)):
+                if 0 <= x < len(legend_x):
                     return legend_x[x]
                 elif x == len(legend_x):
                     return legend_x[x-1]
@@ -780,10 +785,7 @@ class ProReader_massif(ProReader_abstract):
 
         axe.set_ylabel(legend)
 
-    def plot_profil(self, axe, var, date=None, massif=0, hauteur=None, legend=None, color='b', cbar_show=True, top=None, bool_layer=False, liste_nom=None):
-    
-        if legend is None:
-            legend = var
+    def plot_profil(self, axe, var, date=None, massif=0, hauteur=None, color='b', cbar_show=True, top=None, bool_layer=False, liste_nom=None):
 
         if date is None:
             date = self.date[0]
@@ -802,13 +804,13 @@ class ProReader_massif(ProReader_abstract):
         pointsy[1:2 * self.nsnowlayer:2] = self.var[var][intime, :, massif]
         pointsy[2:2 * self.nsnowlayer + 1:2] = self.var[var][intime, :, massif]
             
-        pointsy=np.delete(pointsy, 0)
-        pointsx=np.delete(pointsx, 0)
+        pointsy = np.delete(pointsy, 0)
+        pointsx = np.delete(pointsx, 0)
         
-        pointsy=np.delete(pointsy, 1)
-        pointsx=np.delete(pointsx, 1)
+        pointsy = np.delete(pointsy, 1)
+        pointsx = np.delete(pointsx, 1)
             
-        if (var == 'SNOWTEMP'):
+        if var == 'SNOWTEMP':
             pointsy = np.where(pointsy > MIN_temp, pointsy, zero_C)
         axe.plot(pointsy[::-1], np.subtract(pointsx[-1], pointsx[::-1]), color=color)
         # axe.set(title=date.strftime('%Y-%m-%d %Hh'))
@@ -822,7 +824,7 @@ class ProReader_massif(ProReader_abstract):
         Max = np.nanmax(self.var[var][intime, :, massif]) if np.nanmax(self.var[var][intime, :, massif]) > 0 else 0
         Min = np.nanmin(self.var[var][intime, :, massif]) if np.nanmin(self.var[var][intime, :, massif]) < 0 else 0
             
-        if (var in dico.keys()):
+        if var in dico.keys():
             Max = np.nanmax(self.var[var][intime, :, massif]) if np.nanmax(self.var[var][intime, :, massif]) > dico[var][1] else dico[var][1]
             Min = np.nanmin(self.var[var][intime, :, massif]) if np.nanmax(self.var[var][intime, :, massif]) < dico[var][0] else dico[var][0]
         axe.set_xlim(Min, Max)
@@ -831,19 +833,16 @@ class ProReader_massif(ProReader_abstract):
             axe.axhline(y=hauteur, color='black', linestyle='-')
             
         if top is None:
-            Max_y = ProReader_massif.get_topplot_massif(self, var)
+            Max_y = ProReader_massif.get_topplot_massif(self)
         elif top is False:
-            Max_y = ProReader_massif.get_topplot_massif(self, var)
+            Max_y = ProReader_massif.get_topplot_massif(self)
         elif top is True:
-            Max_y = ProReader_massif.get_topplot_massif_date(self, var, date)
+            Max_y = ProReader_massif.get_topplot_massif_date(self, date)
         else:
             Max_y = top
         axe.set_ylim(0, Max_y)
         
-    def plot_profil_complet(self, axe, axe2, var, date=None, massif=0, hauteur=None, legend=None, color='b', cbar_show=False, top=None, bool_layer=False, liste_nom=None):
-    
-        if legend is None:
-            legend = var
+    def plot_profil_complet(self, axe, axe2, var, date=None, massif=0, hauteur=None, color='b', cbar_show=False, top=None, bool_layer=False, liste_nom=None):
 
         if date is None:
             date = self.date[0]
@@ -869,7 +868,7 @@ class ProReader_massif(ProReader_abstract):
         pointsy = np.delete(pointsy, 1)
         pointsx = np.delete(pointsx, 1)
 
-        if (var == 'SNOWTEMP'):
+        if var == 'SNOWTEMP':
             pointsy = np.where(pointsy > MIN_temp, pointsy, zero_C)
         axe.plot(pointsy[::-1], np.subtract(pointsx[-1], pointsx[::-1]), color=color)
         axe.set_xlabel(liste_nom[massif])
@@ -881,7 +880,7 @@ class ProReader_massif(ProReader_abstract):
         Max = np.nanmax(self.var[var][intime, :, massif]) if np.nanmax(self.var[var][intime, :, massif]) > 0 else 0
         Min = np.nanmin(self.var[var][intime, :, massif]) if np.nanmin(self.var[var][intime, :, massif]) < 0 else 0
 
-        if (var in dico.keys()):
+        if var in dico.keys():
             Max = np.nanmax(self.var[var][intime, :, massif]) if np.nanmax(self.var[var][intime, :, massif]) > dico[var][1] else dico[var][1]
             Min = np.nanmin(self.var[var][intime, :, massif]) if np.nanmax(self.var[var][intime, :, massif]) < dico[var][0] else dico[var][0]
         axe.set_xlim(Min, Max)
@@ -890,11 +889,11 @@ class ProReader_massif(ProReader_abstract):
             axe.axhline(y=hauteur, color='black', linestyle='-')
 
         if top is None:
-            Max_y = ProReader_massif.get_topplot_massif(self, var)
+            Max_y = ProReader_massif.get_topplot_massif(self)
         elif top is False:
-            Max_y = ProReader_massif.get_topplot_massif(self, var)
+            Max_y = ProReader_massif.get_topplot_massif(self)
         elif top is True:
-            Max_y = ProReader_massif.get_topplot_massif_date(self, var, date)
+            Max_y = ProReader_massif.get_topplot_massif_date(self, date)
         else:
             Max_y = top
         axe.set_ylim(0, Max_y)
@@ -939,7 +938,7 @@ class ProReader_massif(ProReader_abstract):
         axe2.set_zorder(2)
 
         # Tracé éventuel de la colorbar
-        if(cbar_show):
+        if cbar_show:
             cbar = plt.colorbar(rect, ax=[axe, axe2])
             labels = Dictionnaries.MEPRA_labels
             cbar.set_ticks(np.arange(np.shape(labels)[0]))
@@ -951,7 +950,7 @@ class ProReader_massif(ProReader_abstract):
 #
 #
 ###########################################################################################################
-class ProReader_membre(ProReader_abstract):
+class ProReader_membre(ProReaderAbstract):
     """
     Basé sur une variation du logiciel Proreader.ry qui sert à tracer des graphes de fichier PRO issus du modèle de neige Crocus.
     Permet d'être utilisé par GUI_Proreader.py pour tracé interactif.
@@ -963,9 +962,9 @@ class ProReader_membre(ProReader_abstract):
                 !! si le fichier contient plusieurs points de simulation, selection par point sous forme d'un entier
                 !! si le fichier contient plusieurs variables, selection par variable sous forme d'une chaine de caractère
         """
-        self.nb_membre = self.initFromFile(ncfile, var=var, point=point)
+        self.nb_membre = self.init_from_file(ncfile, var=var, point=point)
 
-    def initFromFile(self, ncfile, var=None, point=None):
+    def init_from_file(self, ncfile, var=None, point=None):
         ff = prosimu(ncfile)
         
         if 'SNOWDZ' in ff.listvar():
@@ -991,6 +990,8 @@ class ProReader_membre(ProReader_abstract):
                 nb_chiffre = 3
             elif len(arborescence) == place_mb0+6 or arborescence[place_mb0+6] == separateur:
                 nb_chiffre = 4
+            else:
+                logger.warning('the way we define the number of digits for member is not efficient')
         
             if nb_chiffre == 3:
                 nmembre = 0
@@ -1029,7 +1030,7 @@ class ProReader_membre(ProReader_abstract):
             self.nsnowlayer = a.shape[1]
 
         for i in range(len(ff.listvar())):
-            if (ff.listvar()[i] not in self.list_var_non_plot):
+            if ff.listvar()[i] not in self.list_var_non_plot:
                 if 'snow_layer' in ff.getdimvar(ff.listvar()[i]):
                     if ff.listvar()[i] == 'WSN_VEG':
                         self.var_membre['WSN_VEG'] = np.ma.masked_where(np.zeros(tuple(liste[0:3])) < -1, np.zeros(tuple(liste[0:3])))
@@ -1059,7 +1060,7 @@ class ProReader_membre(ProReader_abstract):
                 var = self.var_utile
                 
             # Selection du point d interet
-            if (isinstance(point, np.int) or isinstance(point, np.int64)):
+            if isinstance(point, np.int) or isinstance(point, np.int64):
                 point = point
             elif self.type_fichier == 'PRO':
                 point = 0
@@ -1072,14 +1073,14 @@ class ProReader_membre(ProReader_abstract):
 
             # Extraction des data
             for i in range(len(ff.listvar())):
-                if (ff.listvar()[i] not in self.list_var_non_plot):
-                    if ('snow_layer' in ff.getdimvar(ff.listvar()[i])):
-                        if(ff.listvar()[i] == 'WSN_VEG'):
+                if ff.listvar()[i] not in self.list_var_non_plot:
+                    if 'snow_layer' in ff.getdimvar(ff.listvar()[i]):
+                        if ff.listvar()[i] == 'WSN_VEG':
                             self.var_membre['WSN_VEG'][nb_m, :, :] = ff.read_var(ff.listvar()[i], Number_of_points=point)
                         else:
                             self.var_membre[ff.listvar()[i]][nb_m, :, :] = ff.read_var(ff.listvar()[i], Number_of_points=point, fill2zero=True)
-                    elif ('soil_layer' in ff.getdimvar(ff.listvar()[i]) and self.type_fichier == 'FSM'):
-                        self.var1D_membre[ff.listvar()[i]][nb_m, :] = ff.read_var(ff.listvar()[i], Number_of_points=point, fill2zero=True)[:,0]
+                    elif 'soil_layer' in ff.getdimvar(ff.listvar()[i]) and self.type_fichier == 'FSM':
+                        self.var1D_membre[ff.listvar()[i]][nb_m, :] = ff.read_var(ff.listvar()[i], Number_of_points=point, fill2zero=True)[:, 0]
                     else:
                         data = ff.read_var(ff.listvar()[i], Number_of_points=point, fill2zero=True)
                         if len(data.shape) == 1:
@@ -1092,15 +1093,15 @@ class ProReader_membre(ProReader_abstract):
         self.nsnowlayer = np.shape(self.var_membre['SNOWDZ'])[1]
         self.nmassif = np.shape(self.var_membre['SNOWDZ'])[2]'''
     
-    def get_topplot_membre(self, var):
+    def get_topplot_membre(self):
         ep = self.var_membre[self.var_utile][:, :, :]
         return np.max(np.nansum(ep, axis=2))
     
-    def get_topplot_membre_date(self, var, date, b=None, e=None):
+    def get_topplot_membre_date(self, date):
         ep = self.var_membre[self.var_utile][:, self.date == date, :]
         return np.max(np.nansum(ep, axis=2))
     
-    def plot_membre(self, axe, var, date=None, xlabel=True, legend=None, colormap='viridis', real_layers=True, cbar_show=False, top_zoom=False):
+    def plot_membre(self, axe, var, date=None, legend=None, colormap='viridis', real_layers=True, cbar_show=False, top_zoom=False):
         """
         Trace la variable demandee sur la hauteur du manteau neigeux en fonction du massif pour une date donnée.
             axe : matplotlib.Axe
@@ -1129,12 +1130,12 @@ class ProReader_membre(ProReader_abstract):
         else:
             eptop = self.var_membre[self.var_utile][:, :, :]
 
-        if(real_layers):
+        if real_layers:
             plot_profil(axe, ep, toplot, colormap=colormap, legend=legend, cbar_show=cbar_show)
             axe.set_ylabel('Hauteur (m)')
             axe.set_ylim(0, np.max(np.nansum(eptop, axis=-1)))
         else:
-            if(cbar_show):
+            if cbar_show:
                 ret = axe.pcolormesh(np.swapaxes(toplot, 0, 1), cmap=colormap)
                 cbar = plt.colorbar(ret, ax=axe)
                 cbar.set_label(legend)
@@ -1170,7 +1171,7 @@ class ProReader_membre(ProReader_abstract):
         axe.plot(xplot, toplot, color)
         axe.set_xlim(0, toplot.shape[0])
         
-        if (var in dico.keys()):
+        if var in dico.keys():
             axe.set_ylim(dico[var][0], dico[var][1])
         else:
             axe.set_ylim(0, np.nanmax(self.var1D_membre[var][:, :]))
@@ -1179,10 +1180,7 @@ class ProReader_membre(ProReader_abstract):
 
         axe.set_ylabel(legend)
 
-    def plot_profil(self, axe, var, date=None, membre=0, hauteur=None, legend=None, color='b', cbar_show=True, top=None, bool_layer=False):
-    
-        if legend is None:
-            legend = var
+    def plot_profil(self, axe, var, date=None, membre=0, hauteur=None, color='b', cbar_show=True, top=None, bool_layer=False):
 
         if date is None:
             date = self.date[0]
@@ -1207,7 +1205,7 @@ class ProReader_membre(ProReader_abstract):
         pointsy = np.delete(pointsy, 1)
         pointsx = np.delete(pointsx, 1)
             
-        if (var == 'SNOWTEMP' or var == 'tsnl'):
+        if var == 'SNOWTEMP' or var == 'tsnl':
             pointsy = np.where(pointsy > MIN_temp, pointsy, zero_C)
         axe.plot(pointsy[::-1], np.subtract(pointsx[-1], pointsx[::-1]), color=color)
         # axe.set(title=date.strftime('%Y-%m-%d %Hh'))
@@ -1221,7 +1219,7 @@ class ProReader_membre(ProReader_abstract):
         Max = np.nanmax(self.var_membre[var][membre, intime, :]) if np.nanmax(self.var_membre[var][membre, intime, :]) > 0 else 0
         Min = np.nanmin(self.var_membre[var][membre, intime, :]) if np.nanmin(self.var_membre[var][membre, intime, :]) < 0 else 0
             
-        if (var in dico.keys()):
+        if var in dico.keys():
             Max = np.nanmax(self.var_membre[var][membre, intime, :]) if np.nanmax(self.var_membre[var][membre, intime, :]) > dico[var][1] else dico[var][1]
             Min = np.nanmin(self.var_membre[var][membre, intime, :]) if np.nanmax(self.var_membre[var][membre, intime, :]) < dico[var][0] else dico[var][0]
         axe.set_xlim(Min, Max)
@@ -1230,19 +1228,16 @@ class ProReader_membre(ProReader_abstract):
             axe.axhline(y=hauteur, color='black', linestyle='-')
             
         if top is None:
-            Max_y = ProReader_membre.get_topplot_membre(self, var)
+            Max_y = ProReader_membre.get_topplot_membre(self)
         elif top is False:
-            Max_y = ProReader_membre.get_topplot_membre(self, var)
+            Max_y = ProReader_membre.get_topplot_membre(self)
         elif top is True:
-            Max_y = ProReader_membre.get_topplot_membre_date(self, var, date)
+            Max_y = ProReader_membre.get_topplot_membre_date(self, date)
         else:
             Max_y = top
         axe.set_ylim(0, Max_y)
         
-    def plot_profil_complet(self, axe, axe2, var, date=None, membre=0, hauteur=None, legend=None, color='b', cbar_show=False, top=None, bool_layer=False):
-    
-        if legend is None:
-            legend = var
+    def plot_profil_complet(self, axe, axe2, var, date=None, membre=0, hauteur=None, color='b', cbar_show=False, top=None, bool_layer=False):
 
         if date is None:
             date = self.date[0]
@@ -1280,7 +1275,7 @@ class ProReader_membre(ProReader_abstract):
         Max = np.nanmax(self.var_membre[var][membre, intime, :]) if np.nanmax(self.var_membre[var][membre, intime, :]) > 0 else 0
         Min = np.nanmin(self.var_membre[var][membre, intime, :]) if np.nanmin(self.var_membre[var][membre, intime, :]) < 0 else 0
 
-        if (var in dico.keys()):
+        if var in dico.keys():
             Max = np.nanmax(self.var_membre[var][membre, intime, :]) if np.nanmax(self.var_membre[var][membre, intime, :]) > dico[var][1] else dico[var][1]
             Min = np.nanmin(self.var_membre[var][membre, intime, :]) if np.nanmax(self.var_membre[var][membre, intime, :]) < dico[var][0] else dico[var][0]
         axe.set_xlim(Min, Max)
@@ -1289,11 +1284,11 @@ class ProReader_membre(ProReader_abstract):
             axe.axhline(y=hauteur, color='black', linestyle='-')
 
         if top is None:
-            Max_y = ProReader_membre.get_topplot_membre(self, var)
+            Max_y = ProReader_membre.get_topplot_membre(self)
         elif top is False:
-            Max_y = ProReader_membre.get_topplot_membre(self, var)
+            Max_y = ProReader_membre.get_topplot_membre(self)
         elif top is True:
-            Max_y = ProReader_membre.get_topplot_membre_date(self, var, date)
+            Max_y = ProReader_membre.get_topplot_membre_date(self, date)
         else:
             Max_y = top
         axe.set_ylim(0, Max_y)
@@ -1338,7 +1333,7 @@ class ProReader_membre(ProReader_abstract):
         axe2.set_zorder(2)
 
         # Tracé éventuel de la colorbar
-        if(cbar_show):
+        if cbar_show:
             cbar = plt.colorbar(rect, ax=[axe, axe2])
             labels = Dictionnaries.MEPRA_labels
             cbar.set_ticks(np.arange(np.shape(labels)[0]))

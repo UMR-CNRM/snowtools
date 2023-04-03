@@ -13,7 +13,7 @@ pyshp
 # Other requirements
 # Pandas is a requirement for scripts/create_forcing/Template_creation_FORCING.py
 pandas
-# xarray is a requirement for plots/compare.py
+# xarray is a requirement for plots/compare.py and utils/proximu.py in case of use of NETCDF-4 file format
 xarray
 # rpy2 is a requirement for tools/emosCSG.py
 rpy2
