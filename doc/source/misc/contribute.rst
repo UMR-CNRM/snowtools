@@ -55,3 +55,19 @@ Documentation and testing
 Each modification or code addition must be clearly documented in a docstring so that it could be included in this documentation. Please refer to :ref:`sec-doc` section for the main guidelines.
 
 In addition, each new development should come with tests (unit tests and/or test cases). See :ref:`sec-test` section for main guidelines.
+
+Git commits
+-----------
+
+We recoment to commit only when :
+
+- You have a state of the code that is self-sufficient (not work in progress that could not be used yet)
+- Tests are passing
+- You have in your commit only changes on one topic (and not mixed changes that are unrelated)
+
+Each commit must contain a clear message that include in few words the part of the code that is affected and the reason of the commit. The commit message is composed of a title (1st line) that summarize the changes and could be complemented by more detailed description of the changes.
+
+Language
+--------
+
+Of course, all comments in the code, documentation and commit message have to be in english.
