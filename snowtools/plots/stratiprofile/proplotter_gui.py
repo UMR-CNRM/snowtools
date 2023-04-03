@@ -1,12 +1,30 @@
 # -*- coding: utf-8 -*-
 
+"""
+GUI Application for proplotter
+
+The GUI is splitted in different parts :
+
+* The Application which is the overall Frame
+* The choice bar (left side) to select variables, divided in:
+    * Choice of variables (ProPlotterChoicesBarVariables), only linked to the file
+    * Point selection (ProPlotterChoicesBarPoint), only linked to the file
+    * Parameters specific to the graph plotted (ProPlotterChoicesBarParams), only linked to the graph type selected
+* The open bar that give allow to open a file.
+* The Plot bar that handle the buttons and give information on what is plotted.
+* The ProPlotterController, specific to the graph, that manage the plot function
+* The Status bar at bottom
+"""
+
 import abc
+import logging
+import textwrap
+import os.path
+
 import tkinter as tk
 import tkinter.filedialog
 from tkinter import ttk
 from tkinter import messagebox
-import logging
-import textwrap
 
 import numpy as np
 # import pdb
@@ -728,6 +746,9 @@ class ProPlotterChoicesBarParams(abc.ABC):
         self.master = master
         self.frame = frame
 
+        self.label = tk.Label(self.frame, text='Graph specific options', relief=tk.RAISED)
+        self.label.pack(pady=5)
+
     def clean_frame(self):
         if self.frame is not None:
             for widgets in self.frame.winfo_children():
@@ -853,11 +874,16 @@ class ProPlotterChoicesBarParamsCompare(ProPlotterChoicesBarParams):
     """
      Specific choice for opening second file for comparison
      """
+
+    WIDTH_TXT = 40
+
     def __init__(self, master, frame):
         super().__init__(master, frame)
         self.fileobj2 = None
         self.opencompare = tk.Button(self.frame, text="Open Second File", command=self.open2)
-        self.opencompare.pack(side=tk.LEFT, padx=5, fill=tk.BOTH)
+        self.opencompare.pack(padx=5, fill=tk.X)
+        self.labelcompare = tk.Label(self.frame, text='--')
+        self.labelcompare.pack(padx=5, fill=tk.X)
         self.update()
 
     def update(self):
@@ -874,6 +900,7 @@ class ProPlotterChoicesBarParamsCompare(ProPlotterChoicesBarParams):
         self.fileobj2 = proreader.read_file(selectedfilename)
         if self.fileobj2 is not None:
             self.master.status.set_status('Successfully second opened file {}'.format(selectedfilename))
+            self.labelcompare.config(text=textwrap.fill(selectedfilename, width=self.WIDTH_TXT))
 
 
 class ProPlotterController(abc.ABC):
@@ -1561,6 +1588,14 @@ def main(*args, **kwargs):
     root.title('GUI PROplotter CEN')
     root.protocol("WM_DELETE_WINDOW", root.quit)
     root.geometry('1100x850')
+
+    try:
+        _here = os.path.dirname(os.path.realpath(__file__))
+        img = tk.PhotoImage(file=os.path.join(_here, 'proplotter.png'))
+        root.tk.call('wm', 'iconphoto', root._w, img)
+    except:
+        pass
+
     app = ProPlotterApplication(*args, master=root, **kwargs)
     app.mainloop()
 

@@ -41,6 +41,8 @@ LFILES=("utils/FileException.py"
         "plots/stratiprofile/proplotter_gui.py"
         )
 
+LFILES_NOIMPORT=("plots/stratiprofile/proplotter.png")
+
 # List of data files to be placed under DATA/ folder
 LDATAFILES=("DATA/METADATA.xml"
             "DATA/__init__.py"
@@ -170,6 +172,14 @@ do
     FILENAME="${FILEPATH##*/}"
     cp "$SNOWTOOLS_BASEDIR/$FILEPATH" "$TMPFOLDERNAME/$FILENAME"
     adapt_import "$TMPFOLDERNAME/$FILENAME"
+done
+
+# Generic files w/o adaptation
+for FILEPATH in "${LFILES_NOIMPORT[@]}"
+do
+    echo -e "  - File $FILEPATH"
+    FILENAME="${FILEPATH##*/}"
+    cp "$SNOWTOOLS_BASEDIR/$FILEPATH" "$TMPFOLDERNAME/$FILENAME"
 done
 
 # Data folder
