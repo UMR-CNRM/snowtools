@@ -209,25 +209,24 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tbshp =', tbshp)
                 print()
 
-                self.sh.title('Toolbox executable = PRE-TRAITEMENT FORCAGE script')
-                tb03 = script = toolbox.input(
-                    role        = 'pretraitement',
-                    local       = 'makeP.py',
-                    genv        = self.conf.cycle,
-                    kind        = 's2m_filtering_grib',
-                    language    = 'python',
-                    # En python 3 l'ordre des arguments a une importance pour que Vortex ne considère pas que les exécutables sont différents
-                    # Pour éviter de complexifier le code ici, le script s2m_filtering_grib s'occupe désormais de supprimer les doublons.
-                    # Ajouter l'option -p pour tracer les profils généré
-                    #rawopts     = ' -o -p -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)])),
-                    rawopts     = ' -o -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)])),
-                )
-                print(t.prompt, 'tb03 =', tb03)
-                print()
 
         if 'fetch' in self.steps:
 
-            pass
+            self.sh.title('Toolbox executable = PRE-TRAITEMENT FORCAGE script')
+            tb03 = script = toolbox.input(
+                role        = 'pretraitement',
+                local       = 'makeP.py',
+                genv        = self.conf.cycle,
+                kind        = 's2m_filtering_grib',
+                language    = 'python',
+                # En python 3 l'ordre des arguments a une importance pour que Vortex ne considère pas que les exécutables sont différents
+                # Pour éviter de complexifier le code ici, le script s2m_filtering_grib s'occupe désormais de supprimer les doublons.
+                # Ajouter l'option -p pour tracer les profils généré
+                #rawopts     = ' -o -p -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)])),
+                rawopts     = ' -o -f ' + ' '.join(list([str(rh[1].container.basename) for rh in enumerate(tbarp + tbpearp)])),
+            )
+            print(t.prompt, 'tb03 =', tb03)
+            print()
 
         if 'compute' in self.steps:
 
