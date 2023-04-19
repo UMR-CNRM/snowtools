@@ -8,8 +8,13 @@ import re
 import logging  # Import pour les log
 
 from netCDF4 import Dataset
+# new way to import gdal (https://gdal.org/api/python_bindings.html)
+# 'import gdal' is deprecated
 import numpy as np
-import gdal
+try:  
+    from osgeo import gdal
+except ImportError:
+    import gdal
 from shapely.geometry import shape
 from shapely.ops import transform
 from functools import partial
@@ -145,10 +150,13 @@ import matplotlib.pyplot as plt
 ################################################################
 NetCDF_out = 'NetCDF_from_shapefile.nc'
 
-# PATH_MNT
-path_MNT_alti_defaut = '/rd/cenfic3/sentinel/mnt_ange/ange-factory/prod1/france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
-path_MNT_slope_defaut = '/rd/cenfic3/sentinel/mnt_ange/ange-factory/prod1/france_30m/SLP_FRANCE_L93_30m_bilinear.tif'
-path_MNT_aspect_defaut = '/rd/cenfic3/sentinel/mnt_ange/ange-factory/prod1/france_30m/ASP_FRANCE_L93_30m_bilinear.tif'
+# PATH_MNT (MAJ 19/04/2023, new location of MNT files)
+# path_MNT_alti_defaut = '/rd/cenfic3/sentinel/mnt_ange/ange-factory/prod1/france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
+# path_MNT_slope_defaut = '/rd/cenfic3/sentinel/mnt_ange/ange-factory/prod1/france_30m/SLP_FRANCE_L93_30m_bilinear.tif'
+# path_MNT_aspect_defaut = '/rd/cenfic3/sentinel/mnt_ange/ange-factory/prod1/france_30m/ASP_FRANCE_L93_30m_bilinear.tif'
+path_MNT_alti_defaut = "/rd/cenfic3/manto/haddjeria/mnt_ange/ange-factory/prod1/france_30m/DEM_FRANCE_L93_30m_bilinear.tif"
+path_MNT_slope_defaut = "/rd/cenfic3/manto/haddjeria/mnt_ange/ange-factory/prod1/france_30m/SLP_FRANCE_L93_30m_bilinear.tif"
+path_MNT_aspect_defaut = "/rd/cenfic3/manto/haddjeria/mnt_ange/ange-factory/prod1/france_30m/ASP_FRANCE_L93_30m_bilinear.tif"
 
 # Pour test en local:
 # path_MNT_alti_defaut = 
