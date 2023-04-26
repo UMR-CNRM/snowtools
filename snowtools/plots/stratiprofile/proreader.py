@@ -126,6 +126,15 @@ class reader(abc.ABC):
         """
 
     @property
+    def variable_ram(self):
+        """
+        The variable containing penetration resistance (RAM).
+        Used for profile plotting.
+        :returns: variable name
+        :rtype: str
+        """
+
+    @property
     @abc.abstractmethod
     def variable_default(self):
         """
@@ -223,6 +232,20 @@ class reader(abc.ABC):
         :rtype: dict
         """
 
+    @property
+    def additional_choices(self) -> dict:
+        """
+        Additional variables to be chosen to select data properly.
+        Depends on the type of file used.
+
+         * name: name of the choice
+         * type: may be choices or float or int
+         * choices: the array of possible values
+         * limits: if type is float or int, a tuple of size 2 describing the
+         * default_value: If provided, replace none value by this default value.
+        """
+        return {}
+
     @abc.abstractmethod
     def get_time(self, begin=None, end=None):
         """
@@ -234,13 +257,14 @@ class reader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_data(self, varname: str, point, fillnan=False, members=False,
+    def get_data(self, varname: str, point, additional_options: dict = None, fillnan=False, members=False,
                  begin=None, end=None):
         """
         Get the data for selected variable and point
 
         :param varname: The variable name
         :param point: The point identifier
+        :param additional_options: A set of additional options to select the data. Keys from additional_choices.
         :param fillnan: Whether or not to fill the nan values. Defaults to False (do not fill nan values).
                         All other value will be used to fill the data.
         :param members: If not false, use `~reader.get_data_members` instead. See corresponding documentation.
@@ -251,7 +275,7 @@ class reader(abc.ABC):
         """
 
     @abc.abstractmethod
-    def get_data_members(self, varname, point, fillnan=False, members='all',
+    def get_data_members(self, varname, point, additional_options: dict = None, fillnan=False, members='all',
                          begin=None, end=None):
         """
         Get a list of data for selected variable and point, for all members or
@@ -259,6 +283,7 @@ class reader(abc.ABC):
 
         :param varname: The variable name
         :param point: The point identifier
+        :param additional_options: A set of additional options to select the data. Keys from additional_choices.
         :param fillnan: Whether or not to fill the nan values. Defaults to False (do not fill nan values).
                         All other value will be used to fill the data.
         :param members: 'all' to get all members or a list of members numbers
@@ -314,11 +339,6 @@ class proreader(reader):
             }
     _default_colorbar = 'viridis'
 
-    _change_scale_defaults = {
-        'SNOWIMP1': 'echelle_log',
-        'SNOWIMP2': 'echelle_log',
-    }
-
     _selection_point_defaults = {
             'xx': {'type': 'float'},
             'yy': {'type': 'float'},
@@ -366,6 +386,7 @@ class proreader(reader):
         with prosimu_auto(self._mainfilename) as ff:
             _variables_raw_list = ff.listvar()
             self._npoints = 1
+            self._ntile = ff.gettiledim()
             for dimname in ff.Points_dimensions:
                 self._npoints = self._npoints * ff.getlendim(dimname)
             for v in _variables_raw_list:
@@ -450,6 +471,26 @@ class proreader(reader):
 
         # Create association names array
         self._association_names_ = self._association_name_generator()
+
+    def additional_choices(self) -> dict:
+        """
+        Additional variables to be chosen to select data properly.
+        Depends on the type of file used.
+
+         * name: name of the choice
+         * type: may be choices or float or int
+         * choices: the array of possible values
+         * limits: if type is float or int, a tuple of size 2 describing the
+         * default_value: If provided, replace none value by this default value.
+        """
+        if self._ntile is None or self._ntile <= 1:
+            return {}
+        return {'tile': {'name': 'Patch (tile)',
+                         'type': 'int',
+                         'limits': [0, self._ntile - 1],
+                         'default_value': 0,
+                         }
+               }
 
     def _association_name_generator(self):
         _association_names = {}
@@ -772,8 +813,8 @@ class proreader(reader):
         """
         return self._time
 
-    def _get_data(self, filename, varname: str, point: typing.Union[int, list], fillnan=False,
-                  begin=None, end=None):
+    def _get_data(self, filename, varname: str, point: typing.Union[int, list],
+                  additional_options: dict = None, fillnan=False, begin=None, end=None):
         """
         Get data for a given filename (to be used by both get_data with
         the default filename and by get_data_members with each member
@@ -787,10 +828,16 @@ class proreader(reader):
             end = self.get_time()[end]
 
         v = self._get_varname(varname)
+        
+        # Tile management
+        if additional_options is not None and 'tile' in additional_options:
+            tile = additional_options['tile']
+        else:
+            tile = None
 
         from snowtools.utils.prosimu import prosimu_auto
         with prosimu_auto(filename) as ff:
-            data = ff.read(v, selectpoint=point)
+            data = ff.read(v, selectpoint=point, tile=tile)
             # TODO: the order of dimension is not ensured by prosimu ! Check order of time and layer dimensions here !
 
         # Date filtering
@@ -810,13 +857,14 @@ class proreader(reader):
 
         return data
 
-    def get_data(self, varname: str, point: typing.Union[int, list], fillnan=False, members=False,
-                 begin=None, end=None):
+    def get_data(self, varname: str, point: typing.Union[int, list], additional_options: dict = None,
+                 fillnan=False, members=False, begin=None, end=None):
         """
         Get the data for selected variable and point
 
         :param varname: The variable name
         :param point: The point identifier or the list of point identifier
+        :param additional_options: A set of additional options to select the data. Keys from additional_choices.
         :param fillnan: Whether or not to fill the nan values. Defaults to False (do not fill nan values).
                         All other value will be used to fill the data.
         :param members: If not false, use `~reader.get_data_members` instead. See corresponding documentation.
@@ -826,9 +874,11 @@ class proreader(reader):
         :rtype: numpy.array
         """
         if members is not False:
-            return self.get_data_members(varname, point, fillnan=fillnan, members=members, begin=begin, end=end)
+            return self.get_data_members(varname, point, additional_options=additional_options,
+                                         fillnan=fillnan, members=members, begin=begin, end=end)
 
-        return self._get_data(self._filename, varname, point, fillnan=fillnan, begin=begin, end=end)
+        return self._get_data(self._filename, varname, point, additional_options=additional_options,
+                              fillnan=fillnan, begin=begin, end=end)
 
     @staticmethod
     def _get_member_filenames_one(filename):
@@ -899,7 +949,7 @@ class proreader(reader):
 
             return lf, ln
 
-    def get_data_members(self, varname, point, fillnan=False, members='all',
+    def get_data_members(self, varname, point, additional_options: dict = None, fillnan=False, members='all',
                          begin=None, end=None):
         """
         Get a list of data for selected variable and point, for all members or
@@ -907,6 +957,7 @@ class proreader(reader):
 
         :param varname: The variable name
         :param point: The point identifier
+        :param additional_options: A set of additional options to select the data. Keys from additional_choices.
         :param fillnan: Whether or not to fill the nan values. Defaults to False (do not fill nan values).
                         All other value will be used to fill the data.
         :param members: 'all' to get all members or a list of members numbers
@@ -925,5 +976,6 @@ class proreader(reader):
 
         with Pool(cpu_count()) as p:
             ldata = p.starmap(self._get_data,
-                              zip(lf2, repeat(varname), repeat(point), repeat(fillnan), repeat(begin), repeat(end)))
+                              zip(lf2, repeat(varname), repeat(point), repeat(additional_options),
+                                  repeat(fillnan), repeat(begin), repeat(end)))
         return ldata, lnr

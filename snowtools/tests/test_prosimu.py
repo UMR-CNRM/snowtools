@@ -135,6 +135,38 @@ class TestProSimu2d(unittest.TestCase):
             cls.ps.close()
 
 
+class TestProSimuTile(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # fichier au nouveau format de la chaîne
+        path = os.path.join(TESTBASE_DIR, 'PRO/PRO_patches.nc')
+        cls.ps = prosimu(path)
+
+    @unittest.skipIf(SKIP, 'Test files not available')
+    def test_tile_1(self):
+        PATCH = 4
+        data_ok = self.ps.dataset.variables['SNOWTYPE'][:, PATCH, :, 0, 0]
+        data1 = self.ps.read('SNOWTYPE', tile=PATCH, selectpoint=0)
+        self.assertTrue((data1 == data_ok).all(), "read method fail with tile argument")
+
+    @unittest.skipIf(SKIP, 'Test files not available')
+    def test_tile_multi(self):
+        PATCH = [4, 6]
+        data_ok_1 = self.ps.dataset.variables['SNOWTYPE'][:, PATCH[0], :, 0, 0]
+        data_ok_2 = self.ps.dataset.variables['SNOWTYPE'][:, PATCH[1], :, 0, 0]
+        data_ok = np.zeros((data_ok_1.shape[0], 2, data_ok_2.shape[1]))
+        data_ok[:, 0, :] = data_ok_1.filled(np.nan)
+        data_ok[:, 1, :] = data_ok_2.filled(np.nan)
+        data1 = self.ps.read('SNOWTYPE', tile=PATCH, selectpoint=0)
+        data1[np.isnan(data1)] = -1
+        data_ok[np.isnan(data_ok)] = -1
+        self.assertTrue((data1 == data_ok).all(), "read method fail with a list as tile argument")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.ps.close()
+
+
 class TestProSimuOld(unittest.TestCase):
 
     @classmethod

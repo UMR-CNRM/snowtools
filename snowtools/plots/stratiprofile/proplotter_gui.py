@@ -61,6 +61,7 @@ class ProPlotterApplication(tk.Frame):
                  * Parameters specific to representation
                  * Variable selection (specific to opened file)
                  * Point selection (specific to opened file)
+                 * Additional parameters (specific to opened file)
      * controls: The Tk Frame with "reset" and "plot" button. Also have a text field for displaying information
                  on what is currently plotted
      * main: The Tk Frame in which are plotted the graphs
@@ -252,6 +253,7 @@ class ProPlotterApplication(tk.Frame):
         self.openbar.update_filename(self.fileobj.get_filename())
         self.choices.variables_w.update()
         self.choices.point_w.update()
+        self.choices.addparams.update()
         self.choices.params_w.update()
 
     def open_user_guide(self, *args):
@@ -382,11 +384,14 @@ class ProPlotterChoicesBar(tk.Frame):
         self.variables.pack(fill=tk.X)
         self.point = tk.Frame(self.canvas)
         self.point.pack(fill=tk.X)
+        self.addparams = tk.Frame(self.canvas)
+        self.addparams.pack(fill=tk.X)
         self.params = tk.Frame(self.canvas)
         self.params.pack(fill=tk.X)
 
         self.variables_w = ProPlotterChoicesBarVariables(self, self.variables)
         self.point_w = ProPlotterChoicesBarPoint(self, self.point)
+        self.addparams_w = ProPlotterchoicesBarAdditionalParams(self, self.addparams)
         self.params_w = None
 
 
@@ -506,19 +511,24 @@ class ProPlotterChoicesBarPoint:
             for v, info in self.variables_info.items():
                 label = tk.Label(self.frame, text=textwrap.fill(info['full_name'], width=self.master.WIDTH_TXT))
                 label.pack()
-                choices = list(info['choices'])  # Tkinter knows nothing of numpy arrays...
                 ii = len(self.llabels)
                 if info['type'] == 'choices':
+                    choices = list(info['choices'])  # Tkinter knows nothing of numpy arrays...
                     selector = ttk.Combobox(self.frame, state='readonly', values=[''] + choices,
                                             width=self.master.WIDTH)
                     selector.bind('<<ComboboxSelected>>', lambda _, i=ii: self.update_var(i))
                 elif info['type'] in ['int', 'float']:
+                    if 'choices' in info:
+                        choices = list(info['choices'])  # Tkinter knows nothing of numpy arrays...
+                    else:
+                        choices = list(range(info['limits'][0], info['limits'][1] + 1))
                     sv = tk.StringVar()
                     selector = ttk.Spinbox(self.frame, values=choices, textvariable=sv,
-                                           width=self.master.WIDTH, validate='focusout',
-                                           validatecommand=lambda *_, i=ii: self.update_var_numeric(i))
+                                           width=self.master.WIDTH,
+                                           command=lambda *_, i=ii: self.update_var_numeric(i))
                 else:
-                    selector = None  # TO BE CHECKED BY LEO
+                    selector = ttk.Combobox(self.frame, state='readonly', values=[''],
+                                            width=self.master.WIDTH)
                 selector.pack()
                 self.llabels.append(label)
                 self.lselectors.append(selector)
@@ -543,7 +553,14 @@ class ProPlotterChoicesBarPoint:
             if val == '':
                 continue
             if val is not None and len(val) > 0:
-                if np.issubdtype(self.variables_info[v]['choices'].dtype, np.inexact):
+                if 'type' in self.variables_info[v]:
+                    if self.variables_info[v]['type'] == 'int':
+                        val = int(val)
+                    elif self.variables_info[v]['type'] == 'float':
+                        val = float(val)
+                    else:
+                        val = float(val)
+                elif np.issubdtype(self.variables_info[v]['choices'].dtype, np.inexact):
                     val = float(val)
                 elif np.issubdtype(self.variables_info[v]['choices'].dtype, np.integer):
                     val = int(val)
@@ -599,6 +616,91 @@ class ProPlotterChoicesBarPoint:
         # TODO: Check value or do it in previous function  <13-09-21, Léo Viallon-Galinier> #
         # We have to put the nearest value (or maybe not)
         self.update_var(i)
+
+    def clean_frame(self):
+        """Clean"""
+        for widgets in self.frame.winfo_children():
+            widgets.destroy()
+
+
+class ProPlotterchoicesBarAdditionalParams(tk.Frame):
+    """
+    Choice of additional information to select data in the file
+    """
+    def __init__(self, master, frame):
+        self.master = master
+        self.frame = frame
+        self.label = None
+        self.variables_info = None
+        # self.lf = []
+        self.update()
+
+    def update(self):
+        """Clean and fill the Combobox with choices for the point"""
+        self.lselectors = []
+        self.llabels = []
+        self.lvariables = []
+        self.clean_frame()
+
+        self.label = tk.Label(self.frame, text='Additional choices', relief=tk.RAISED)
+        self.label.pack(pady=5)
+
+        if self.master.master.fileobj is not None:
+            self.variables_info = self.master.master.fileobj.additional_choices()
+            for v, info in self.variables_info.items():
+                label = tk.Label(self.frame, text=textwrap.fill(info['name'], width=self.master.WIDTH_TXT))
+                label.pack()
+                ii = len(self.llabels)
+                if info['type'] == 'choices':
+                    choices = list(info['choices'])  # Tkinter knows nothing of numpy arrays...
+                    selector = ttk.Combobox(self.frame, state='readonly', values=[''] + choices,
+                                            width=self.master.WIDTH)
+                    selector.bind('<<ComboboxSelected>>', lambda _, i=ii: self.update_var(i))
+                elif info['type'] in ['int', 'float']:
+                    choices = list(range(info['limits'][0], info['limits'][1] + 1))
+                    sv = tk.StringVar()
+                    selector = ttk.Spinbox(self.frame, values=choices, textvariable=sv,
+                                           width=self.master.WIDTH,
+                                           command=lambda *_, i=ii: self.update_var(i))
+                else:
+                    selector = ttk.Combobox(self.frame, state='readonly', values=[''],
+                                            width=self.master.WIDTH)
+                selector.pack()
+                self.llabels.append(label)
+                self.lselectors.append(selector)
+                self.lvariables.append(v)
+
+    def get_selector(self):
+        """Give the good type for the selected field"""
+        selector = {}
+        for j in range(len(self.llabels)):
+            v = self.lvariables[j]
+            val = self.lselectors[j].get()
+            if val == '' or val is None:
+                if 'default_value' in self.variables_info[v]:
+                    selector[v] = self.variables_info[v]['default_value']
+            if val is not None and len(val) > 0:
+                if 'type' in self.variables_info[v]:
+                    if self.variables_info[v]['type'] == 'int':
+                        val = int(val)
+                    elif self.variables_info[v]['type'] == 'float':
+                        val = float(val)
+                    else:
+                        val = float(val)
+                elif np.issubdtype(self.variables_info[v]['choices'].dtype, np.inexact):
+                    val = float(val)
+                elif np.issubdtype(self.variables_info[v]['choices'].dtype, np.integer):
+                    val = int(val)
+                elif np.issubdtype(self.variables_info[v]['choices'].dtype, np.bool_):
+                    val = int(val)
+                selector[v] = val
+        return selector
+
+    def update_var(self, i):
+        """
+        run at each modification of a widget:
+        """
+        self.master.master.controls.plot_mark()
 
     def clean_frame(self):
         """Clean"""
@@ -943,7 +1045,11 @@ class ProPlotterController(abc.ABC):
             return None
         return points[0]
 
-    def info_text_bar(self, point):
+    def get_additional_choices(self):
+        selector = self.master.choices.addparams_w.get_selector()
+        return selector
+
+    def info_text_bar(self, point, additional_options=None):
         """
         Fill the information bar above the graph
         :param point: the number of the point chosen by the user
@@ -951,6 +1057,9 @@ class ProPlotterController(abc.ABC):
         v_master = self.master.choices.variables_w.var_master
         v_react = self.master.choices.variables_w.var_react
         text = ' VARIABLES: {}/{}.\nPOINT: {}'.format(v_master, v_react, point)
+        if additional_options is not None:
+            for key, value in additional_options.items():
+                text += ' {}: {}'.format(key, value)
         self.master.controls.update_text(text)
 
     def check_var_info(self):
@@ -975,14 +1084,17 @@ class ProPlotterController(abc.ABC):
 
         return 'OK'
 
-    def get_data(self, point):
+    def get_data(self, point, additional_options=None):
         """
         Collecting datas for figures, before subsetting with motions
         """
-        self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], point)
+        self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'],
+                                                            point, additional_options=additional_options)
         if self.vartoplot_react_desc is not None:
-            self.dataplot_react = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], point)
-        self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, point, fillnan=0.)
+            self.dataplot_react = self.master.fileobj.get_data(self.vartoplot_react_desc['name'],
+                                                               point, additional_options=additional_options)
+        self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, point, fillnan=0.,
+                                                     additional_options=additional_options)
         self.timeplot = self.master.fileobj.get_time()
         self.colormap = self.master.fileobj.colorbar_variable(self.vartoplot_master_desc['name'])
 
@@ -990,9 +1102,11 @@ class ProPlotterController(abc.ABC):
 
         # usefull for motion
         if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
-            self.grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.)
+            self.grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.,
+                                                      additional_options=additional_options)
         if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
-            self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.)
+            self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.,
+                                                    additional_options=additional_options)
         if self.vartoplot_react_desc['name'] in self.master.fileobj.variables_log:
             self.dataplot_react = np.where(self.dataplot_react > 10 ** (-10), self.dataplot_react, 10 ** (-10))
             self.dataplot_react = np.where(self.dataplot_react > 0, np.log10(self.dataplot_react), -10)
@@ -1088,8 +1202,10 @@ class ProPlotterController(abc.ABC):
         if point is None:
             return
 
-        self.info_text_bar(point)
-        self.get_data(point)
+        additional_options = self.get_additional_choices()
+
+        self.info_text_bar(point, additional_options=additional_options)
+        self.get_data(point, additional_options=additional_options)
         self.master.main.clear()
         if not self.master.choices.variables_w.exists_snl:
             self.master.main.ready_to_plot(1)
@@ -1220,30 +1336,31 @@ class ProPlotterControllerMember(ProPlotterControllerSlider):
         text = 'MEMBER GRAPH with VARS: {}/{}. POINT: {}'.format(v_master, v_react, point)
         self.master.controls.update_text(text)
 
-    def get_data(self, point):
+    def get_data(self, point, additional_options=None):
         """
         Collecting datas for figures, before subsetting with motions
         In this case shape = nb_membres, time, snowlayer
         """
         self.vartoplot_master_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_master)
         self.dataplot_master, list_members = self.master.fileobj.get_data(self.vartoplot_master_desc['name'],
-                                                                          point, members='all')
+                                                                          point, members='all',
+                                                                          additional_options=additional_options)
         self.vartoplot_react_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_react)
         self.dataplot_react = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], point,
-                                                           members='all')[0]
+                                                           members='all', additional_options=additional_options)[0]
 
         self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, point, fillnan=0.,
-                                                     members='all')[0]
+                                                     members='all', additional_options=additional_options)[0]
         self.timeplot = self.master.fileobj.get_time()
         self.colormap = self.master.fileobj.colorbar_variable(self.vartoplot_master_desc['name'])
 
         # usefull for motion
         if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
             self.grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.,
-                                                      members='all')[0]
+                                                      members='all', additional_options=additional_options)[0]
         if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
             self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.,
-                                                    members='all')[0]
+                                                    members='all', additional_options=additional_options)[0]
         if self.vartoplot_react_desc['name'] in self.master.fileobj.variables_log:
             self.dataplot_react = np.where(self.dataplot_react > 10 ** (-10), self.dataplot_react, 10 ** (-10))
             self.dataplot_react = np.where(self.dataplot_react > 0, np.log10(self.dataplot_react), -10)
@@ -1372,26 +1489,30 @@ class ProPlotterControllerMultiple(ProPlotterControllerSlider):
         text = 'MULTIPLE GRAPH with VARS: {}/{}.'.format(v_master, v_react)
         self.master.controls.update_text(text)
 
-    def get_data(self, liste_points):
+    def get_data(self, liste_points, additional_options=None):
         """
         Collecting datas for figures, before subsetting with motions
         In this case shape = time, snowlayer, nb_points
         """
         self.vartoplot_master_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_master)
-        self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], list(liste_points))
+        self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], list(liste_points),
+                                                            additional_options=additional_options)
         self.vartoplot_react_desc = self.master.fileobj.variable_desc(self.master.choices.variables_w.var_react)
-        self.dataplot_react = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], list(liste_points))
+        self.dataplot_react = self.master.fileobj.get_data(self.vartoplot_react_desc['name'], list(liste_points),
+                                                           additional_options=additional_options)
 
-        self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, list(liste_points), fillnan=0.)
+        self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, list(liste_points), fillnan=0.,
+                                                     additional_options=additional_options)
         self.timeplot = self.master.fileobj.get_time()
         self.colormap = self.master.fileobj.colorbar_variable(self.vartoplot_master_desc['name'])
 
         # usefull for motion
         if self.master.fileobj.variable_grain in self.master.fileobj.variables_t:
             self.grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, list(liste_points),
-                                                      fillnan=0.)
+                                                      fillnan=0., additional_options=additional_options)
         if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
-            self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, list(liste_points), fillnan=0.)
+            self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, list(liste_points), fillnan=0.,
+                                                    additional_options=additional_options)
         if self.vartoplot_react_desc['name'] in self.master.fileobj.variables_log:
             self.dataplot_react = np.where(self.dataplot_react > 10 ** (-10), self.dataplot_react, 10 ** (-10))
             self.dataplot_react = np.where(self.dataplot_react > 0, np.log10(self.dataplot_react), -10)
@@ -1503,17 +1624,21 @@ class ProPlotterControllerCompare(ProPlotterController):
         self.timeplot_react = None
         self.ratio = [1, 1]
 
-    def get_data(self, point):
+    def get_data(self, point, additional_options=None):
         """
         Collecting datas for figures, before subsetting with motions
         """
-        self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], point)
-        self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, point, fillnan=0.)
+        self.dataplot_master = self.master.fileobj.get_data(self.vartoplot_master_desc['name'], point,
+                                                            additional_options=additional_options)
+        self.dztoplot = self.master.fileobj.get_data(self.master.fileobj.variable_dz, point, fillnan=0.,
+                                                     additional_options=additional_options)
         self.colormap = self.master.fileobj.colorbar_variable(self.vartoplot_master_desc['name'])
 
-        self.dataplot_react = self.master.choices.params_w.fileobj2.get_data(self.vartoplot_react_desc['name'], point)
+        self.dataplot_react = self.master.choices.params_w.fileobj2.get_data(self.vartoplot_react_desc['name'], point,
+                                                                             additional_options=additional_options)
         self.dztoplot_react = self.master.choices.params_w.fileobj2.get_data(self.master.fileobj.variable_dz, point,
-                                                                             fillnan=0.)
+                                                                             fillnan=0.,
+                                                                             additional_options=additional_options)
         self.colormap_react = self.master.fileobj.colorbar_variable(self.vartoplot_react_desc['name'])
 
         self.timeplot = self.master.fileobj.get_time()
@@ -1555,8 +1680,10 @@ class ProPlotterControllerCompare(ProPlotterController):
         if point is None:
             return
 
+        additional_options = self.get_additional_choices()
+
         self.info_text_bar(point)
-        self.get_data(point)
+        self.get_data(point, additional_options=additional_options)
         self.master.main.clear()
 
         self.master.main.ax1 = self.master.main.fig1.add_subplot(1, 2, 1)
@@ -1584,8 +1711,9 @@ class ProPlotterControllerCompare(ProPlotterController):
 
 
 def main(*args, **kwargs):
-    root = tk.Tk()
-    root.title('GUI PROplotter CEN')
+    NAME = 'GUI PROplotter CEN'
+    root = tk.Tk(className=NAME)
+    root.title(NAME)
     root.protocol("WM_DELETE_WINDOW", root.quit)
     root.geometry('1100x850')
 

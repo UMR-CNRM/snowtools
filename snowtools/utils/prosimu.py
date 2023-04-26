@@ -164,7 +164,7 @@ class prosimuAbstract(abc.ABC):
                                'Only \'r\' mode is supported.').format(openmode))
                 raise FileNameException('+'.join(path))
 
-        # Reading only one file: use StandardCROCUS (class deriving of netCDF4.Dataset)
+        # Reading/Writting only one file: use StandardCROCUS (class deriving of netCDF4.Dataset)
         elif os.path.isfile(path[0]):
             self.path = path[0]
             self.mfile = 0
@@ -274,6 +274,20 @@ class prosimuAbstract(abc.ABC):
                 return self._rewrite_dims[dimname]
             else:
                 raise VarNameException(dimname, self.path)
+
+    def gettiledim(self):
+        """
+        Return the number of tile in the file or None if no tile dimension is found.
+
+        :returns: Number of tile
+        :rtype: int or None
+        """
+        dimensions = self.listdim()
+        for key in self.Number_of_Tiles:
+            if key in dimensions:
+                dimension = dimensions[key]
+                return dimension.size
+        return None
 
     def force_read_in_cache(self):
         """
@@ -445,7 +459,7 @@ class prosimuAbstract(abc.ABC):
 
     def read_var(self, variable_name, **kwargs):
         """
-        Read a variable from netCDF file
+        Read a variable from netCDF file. Note that this function does not support patches.
 
         :param variable_name: nom de la variable
         :param kwargs: spécifier la sous-sélection sous la forme  dimname = value
@@ -522,8 +536,8 @@ class prosimuAbstract(abc.ABC):
         return point_list[0]
 
     @abc.abstractmethod
-    def read(self, varname, fill2zero=False, selectpoint=None, keepfillvalue=False, removetile=True, needmodif=False,
-             hasDecile=False):
+    def read(self, varname, fill2zero=False, selectpoint=None, keepfillvalue=False, tile=None, removetile=True,
+             needmodif=False, hasDecile=False):
         """
         Read data from a variable in the netCDF file.
 
@@ -534,14 +548,15 @@ class prosimuAbstract(abc.ABC):
         :type fill2zero: bool
         :param selectpoint: Select a point. If -1 or None, select all points.
         :type selectpoint: integer or list of integers
-        :param removetile: Removethe tile dimension, if present.
-        :type removetile: bool
+        :param tile: Select a tile.
+        :type tile: int
         :param keepfillvalue: Do not replace the undefined data with ``np.nan`` and keep the fill value used in the
                               netCDF file.
         :type keepfillvalue: bool
         :param needmodif: If True, return also the variable object
         :type needmodif: bool
         :param hasDecile: Deprecated, please do not use.
+        :param removetile: Deprecated, see tile instead.
 
         :returns: Numpy data array containing the data of the selected variable.
                   Note that order of dimensions is the same as in in file except if selectpoint is a list.
@@ -662,8 +677,8 @@ class _prosimu1d2d():
 
         return np.where(locations_bool.flatten())[0]
 
-    def read(self, varname, fill2zero=False, selectpoint=-1, keepfillvalue=False, removetile=True, needmodif=False,
-             hasDecile=False):
+    def read(self, varname, fill2zero=False, selectpoint=-1, keepfillvalue=False, tile=None, removetile=True,
+             needmodif=False, hasDecile=False):
         """
         Read data from a variable in the netCDF file.
 
@@ -674,13 +689,15 @@ class _prosimu1d2d():
         :type fill2zero: bool
         :param selectpoint: Select a point. If -1 or None, select all points.
         :type selectpoint: int or tuple or list of int or tuple
-        :param removetile: Removethe tile dimension, if present.
-        :type removetile: bool
+        :param tile: Select a specific tile.
+        :type removetile: int
         :param keepfillvalue: Do not replace the undefined data with ``np.nan`` and keep the fill value used in the
                               netCDF file.
         :type keepfillvalue: bool
         :param needmodif: If True, return also the variable object
         :type needmodif: bool
+        :param hasdecile: Deprecated.
+        :param removetile: Deprecated. See tile instead.
         """
         varname = self._check_varname(varname)
 
@@ -697,7 +714,7 @@ class _prosimu1d2d():
 
         # Sélection d'un point si demandé
         # Suppression dimension tile si nécessaire
-        var = self.extract(varname, varnc, selectpoint=selectpoint, removetile=removetile)
+        var = self.extract(varname, varnc, selectpoint=selectpoint, tile=tile, removetile=removetile)
 
         # Remplissage des valeurs manquantes si nécessaire
         if (len(var.shape) > 1 or (len(var.shape) == 1 and var.shape[0] > 1)) and not keepfillvalue:
@@ -728,7 +745,7 @@ class _prosimu1d2d():
         else:
             return array
 
-    def _extract(self, varname, var, selectpoint=None, removetile=True):
+    def _extract(self, varname, var, selectpoint=None, removetile=True, tile=None):
         """
         Extract data as a numpy array, possibly selecting point, and removing useless dimensions
 
@@ -737,6 +754,10 @@ class _prosimu1d2d():
         :param selectpoint: List of points id to select along dimensions of Points_dimensions.
                             Length of the list is the same as len(Points_dimensions).
         :type selectpoint: list or None
+        :param removetile: Boolean, if true, select the tile 0. Deprecated, use tile instead.
+        :type removetile: bool
+        :param tile: The tile to select.
+        :type tile: int
         """
         varname = self._check_varname(varname)
 
@@ -770,6 +791,12 @@ class _prosimu1d2d():
                     tileindex = vardims.index(key)
                     selector[tileindex] = 0
 
+        if tile is not None and tile != -1:
+            for key in self.Number_of_Tiles:
+                if key in vardims:
+                    tileindex = vardims.index(key)
+                    selector[tileindex] = tile
+
         return var[tuple(selector)]
 
 
@@ -787,7 +814,7 @@ class prosimu_base(_prosimu1d2d, prosimuAbstract):
         """
         raise NotImplementedError('get_points is not implemented in prosimu_base. Please use prosimu1d or prosimu2d classes')
 
-    def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime=True, hasDecile=False):
+    def extract(self, varname, var, selectpoint=-1, tile=None, removetile=True, hasTime=True, hasDecile=False):
         """
         Extract data as a numpy array, possibly removing useless dimensions. In prosimu_base class,
         does not allow to select a point !
@@ -801,7 +828,7 @@ class prosimu_base(_prosimu1d2d, prosimuAbstract):
             raise ValueError('To use the selectpoint option, please use prosimu_auto, prosimu1d or prosimu2d. '
                              'prosimu_base does not allow for point selection.')
 
-        return self._extract(varname, var, selectpoint=selectpoint, removetile=removetile)
+        return self._extract(varname, var, selectpoint=selectpoint, tile=tile, removetile=removetile)
 
 
 class prosimu1d(_prosimu1d2d, prosimuAbstract):
@@ -812,7 +839,7 @@ class prosimu1d(_prosimu1d2d, prosimuAbstract):
     Number_of_points = 'Number_of_points'
     Points_dimensions = [Number_of_points]
 
-    def extract(self, varname, var, selectpoint=-1, removetile=True, hasTime=True, hasDecile=False):
+    def extract(self, varname, var, selectpoint=-1, tile=None, removetile=True, hasTime=True, hasDecile=False):
         """
         Extract data as a numpy array, possibly selecting point, and removing useless dimensions
 
@@ -824,7 +851,7 @@ class prosimu1d(_prosimu1d2d, prosimuAbstract):
         if selectpoint is not None:
             selectpoint = [selectpoint]
 
-        return self._extract(varname, var, selectpoint=selectpoint, removetile=removetile)
+        return self._extract(varname, var, selectpoint=selectpoint, tile=tile, removetile=removetile)
 
 
 class prosimu2d(_prosimu1d2d, prosimuAbstract):
@@ -834,7 +861,7 @@ class prosimu2d(_prosimu1d2d, prosimuAbstract):
     """
     Points_dimensions = ['xx', 'yy']
 
-    def extract(self, varname, var, selectpoint=None, removetile=True):
+    def extract(self, varname, var, selectpoint=None, tile=None, removetile=True):
         """
         Extract data as a numpy array, possibly selecting point, and removing useless dimensions
 
@@ -881,6 +908,12 @@ class prosimu2d(_prosimu1d2d, prosimuAbstract):
                 if key in vardims:
                     tileindex = vardims.index(key)
                     selector[tileindex] = 0
+
+        if tile is not None and tile != -1:
+            for key in self.Number_of_Tiles:
+                if key in vardims:
+                    tileindex = vardims.index(key)
+                    selector[tileindex] = tile
 
         if allpointstest:
             return var[tuple(selector)]
