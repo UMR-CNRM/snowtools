@@ -3,87 +3,114 @@
 
 '''
 Created on 3 aug. 2018
+Modified on 26 april 2023 by LVG.
 
-@author: lafaysse
+@author: lafaysse, viallon-galinier
 '''
 
 import os
-import sys
-from optparse import OptionParser
+import argparse
+
+from snowtools.utils.dates import get_list_dates_files, get_dic_dateend, check_and_convert_date
+
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
-from bronx.stdtypes.date import Date
-from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
-
-usage = "usage: python get_reanalysis.py --geometry=xxx [--byear=YYYY] [--eyear=YYYY] [--xpid=xpid] [--meteo] [--snow] [--nativemeteo]"
-
 toolbox.active_now = True  # permet de se passer de l'attribut now=True dans les toolbox
 
 
-def parse_options(arguments):
-    parser = OptionParser(usage)
+def parse_args():
+    parser = argparse.ArgumentParser(description="""
+    Get Simulation files storend on Meteo-France archive (hendrix) through the vortex toolbox.
 
-    parser.add_option("--geometry",
-                      action="store", type="string", dest="geometry", default=None,
-                      help="geometry")
+    Up to now, it is able to deal with PRO, PREP (final and/or yearly prep only, not daily prep),
+    PGD and meteorological files.
 
-    parser.add_option("--byear",
-                      action="store", type="int", dest="byear", default=1958,
-                      help="First year of extraction")
+    Do not forget to first have set your communication creedentials with hendrix (.netrc) and
+    correctly installed wortex toolbox (including definition of MTOOLDIR if you are not on MF
+    supercomputers).
+    """)
 
-    parser.add_option("--eyear",
-                      action="store", type="int", dest="eyear", default=2019,
-                      help="Last year of extraction")
+    parser.add_argument("--geometry",
+                        dest="geometry", default=None,
+                        help="geometry")
 
-    parser.add_option("--meteo",
-                      action="store_true", dest="meteo", default=False,
-                      help="Extract meteorological forcing files")
+    parser.add_argument("-b", "--begin", "--byear",
+                        dest="begin", default=1958,
+                        help="Date of begining of extraction (year of full date).")
 
-    parser.add_option("--nativemeteo",
-                      action="store_true", dest="nativemeteo", default=False,
-                      help="Extract native meteorological forcing files")
+    parser.add_argument("-e", "--end", "--eyear",
+                        dest="end", default=2019,
+                        help="Date of end of extraction (year or full date).")
 
-    parser.add_option("--snow",
-                      action="store_true", dest="snow", default=False,
-                      help="Extract snowpack model output files")
+    parser.add_argument("--meteo",
+                        action="store_true", dest="meteo", default=False,
+                        help="Extract meteorological forcing files")
 
-    parser.add_option("--xpid",
-                      action="store", dest="xpid", default=None,
-                      help="Specific xpid")
+    parser.add_argument("--prep",
+                        action="store_true", dest="prep", default=False,
+                        help="Extract last PREP file")
 
-    parser.add_option("--xpid_native",
-                      action="store", dest="xpid_native", default=None,
-                      help="Specific xpid")
+    parser.add_argument("--pgd",
+                        action="store_true", dest="pgd", default=False,
+                        help="Extract PGD file")
 
-    (options, args) = parser.parse_args(arguments)
-    del args
-    return options
+    parser.add_argument("--nativemeteo",
+                        action="store_true", dest="nativemeteo", default=False,
+                        help="Extract native meteorological forcing files")
+
+    parser.add_argument("--snow",
+                        action="store_true", dest="snow", default=False,
+                        help="Extract snowpack model output files")
+
+    parser.add_argument("--xpid",
+                        dest="xpid", default=None,
+                        help="Specific xpid (except for nativemeteo, see --xpdi_native instead). "
+                        "Do not provide anything here if you want the current reanalysis.")
+
+    parser.add_argument("--xpid_native",
+                        dest="xpid_native", default=None,
+                        help="Specific xpid used for nativemeteo.")
+
+    parser.add_argument("--duration", dest="duration", default="yearly",
+                        choices=['yearly', 'monthly', 'full'],
+                        help="Duration of files. Default is yearly files. "
+                        "Use 'monthly' for monthly files "
+                        "and 'full' for one sigle file that covers the whole period between --begin and --end",
+                        )
+
+    args = parser.parse_args()
+    return args
 
 
 class config(object):
 
     xpid = "reanalysis2020.2@lafaysse"  #
     xpid_native = "reanalysis2020.2@vernaym"
-    duration = "yearly"
 
     def __init__(self):
-        options = parse_options(sys.argv)
-        self.datebegin = Date(options.byear, 8, 1, 6)
-        self.dateend = Date(options.eyear, 8, 1, 6)
-        self.geometry = options.geometry
-        self.meteo = options.meteo
-        self.nativemeteo = options.nativemeteo
-        self.snow = options.snow
-        if options.xpid:
-            if '@' in options.xpid:
-                self.xpid = options.xpid
+        args = parse_args()
+        # Dates
+        self.datebegin = check_and_convert_date(args.begin)
+        self.dateend = check_and_convert_date(args.end)
+        # Files to get
+        self.meteo = args.meteo
+        self.pgd = args.pgd
+        self.prep = args.prep
+        # Additional args
+        self.duration = args.duration
+        self.geometry = args.geometry
+        self.nativemeteo = args.nativemeteo
+        self.snow = args.snow
+        if args.xpid:
+            if '@' in args.xpid:
+                self.xpid = args.xpid
             else:
-                self.xpid = options.xpid + '@' + os.getlogin()
-        if options.xpid_native:
-            if '@' in options.xpid_native:
-                self.xpid_native = options.xpid_native
+                self.xpid = args.xpid + '@' + os.getlogin()
+        if args.xpid_native:
+            if '@' in args.xpid_native:
+                self.xpid_native = args.xpid_native
             else:
-                self.xpid_native = options.xpid_native + '@' + os.getlogin()
+                self.xpid_native = args.xpid_native + '@' + os.getlogin()
 
 
 class S2MExtractor(S2MTaskMixIn):
@@ -92,8 +119,8 @@ class S2MExtractor(S2MTaskMixIn):
         self.conf = conf
 
     def get(self):
-
-        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
+        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = \
+            get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
         dict_dates_end_forc = get_dic_dateend(list_dates_begin_forc, list_dates_end_forc)
         dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
         dict_source_app_safran, dict_source_conf_safran = self.get_safran_sources(list_dates_begin_forc)
@@ -117,12 +144,7 @@ class S2MExtractor(S2MTaskMixIn):
                 model          = 'safran',
                 namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
-                # now            = True,
             )
-
-#            for rh in tb01:
-#                print(rh.quickview())
-#                rh.get()
 
         if self.conf.meteo:
             tb01 = toolbox.input(  # pylint: disable=possibly-unused-variable
@@ -140,12 +162,7 @@ class S2MExtractor(S2MTaskMixIn):
                 model          = 's2m',
                 namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
-                # now            = True,
             )
-
-#            for rh in tb01:
-#                print(rh.quickview())
-#                rh.get()
 
         if self.conf.snow:
             tb02 = toolbox.input(  # pylint: disable=possibly-unused-variable
@@ -166,9 +183,37 @@ class S2MExtractor(S2MTaskMixIn):
                 # now            = True,
             )
 
-#            for rh in tb02:
-#                print(rh.quickview())
-#                rh.get()
+        if self.conf.prep:
+            tb20 = toolbox.input(  # pylint: disable=possibly-unused-variable
+                vapp           = 's2m',
+                vconf          = self.conf.geometry,
+                local          = 'PREP_[date:ymdh].nc',
+                role           = 'SnowpackInit',
+                experiment     = self.conf.xpid,
+                geometry       = self.conf.geometry,
+                date           = list_dates_end_pro,
+                nativefmt      = 'netcdf',
+                kind           = 'PREP',
+                model          = 'surfex',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'prep',
+            ),
+
+        if self.conf.pgd:
+            tb21 = toolbox.input(  # pylint: disable=possibly-unused-variable
+                vapp           = 's2m',
+                vconf          = self.conf.geometry,
+                role           = 'SurfexClim',
+                kind           = 'pgdnc',
+                nativefmt      = 'netcdf',
+                local          = 'PGD.nc',
+                experiment     = self.conf.xpid,
+                geometry       = self.conf.geometry,
+                model          = 'surfex',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                block          = 'pgd')
 
 
 if __name__ == "__main__":
