@@ -176,24 +176,24 @@ class ProPlotterApplication(tk.Frame):
         Reset then launch Controller and Choices Bar Parameter for standard graph
         """
         self.to_graph_reset()
-        self.controller = ProPlotterControllerStandard(self)
         self.choices.params_w = ProPlotterChoicesBarParamsStandard(self, self.choices.params)
+        self.controller = ProPlotterControllerStandard(self)
 
     def to_graph_multiple_profil(self):
         """
         Reset then launch Controller and Choices Bar Parameter for multiple graph with profil on the right
         """
         self.to_graph_reset()
-        self.controller = ProPlotterControllerMultipleProfil(self)
         self.choices.params_w = ProPlotterChoicesBarParamsMultiple(self, self.choices.params)
+        self.controller = ProPlotterControllerMultipleProfil(self)
 
     def to_graph_multiple_saison(self):
         """
         Reset then launch Controller and Choices Bar Parameter for multiple graph with seasonal graph on the right
         """
         self.to_graph_reset()
-        self.controller = ProPlotterControllerMultipleSaison(self)
         self.choices.params_w = ProPlotterChoicesBarParamsMultiple(self, self.choices.params)
+        self.controller = ProPlotterControllerMultipleSaison(self)
 
     def to_graph_height(self):
         """
@@ -208,24 +208,24 @@ class ProPlotterApplication(tk.Frame):
         Reset then launch Controller and Choices Bar Parameter for member graph with profil on the right
         """
         self.to_graph_reset()
-        self.controller = ProPlotterControllerMemberProfil(self)
         self.choices.params_w = ProPlotterChoicesBarParamsMember(self, self.choices.params)
+        self.controller = ProPlotterControllerMemberProfil(self)
 
     def to_graph_member_saison(self):
         """
         Reset then launch Controller and Choices Bar Parameter for member graph with seasonal graph on the right
         """
         self.to_graph_reset()
-        self.controller = ProPlotterControllerMemberSaison(self)
         self.choices.params_w = ProPlotterChoicesBarParamsMember(self, self.choices.params)
+        self.controller = ProPlotterControllerMemberSaison(self)
 
     def to_graph_compare(self):
         """
         Reset then launch Controller and Choices Bar Parameter for comparison of two graphs
         """
         self.to_graph_reset()
-        self.controller = ProPlotterControllerCompare(self)
         self.choices.params_w = ProPlotterChoicesBarParamsCompare(self, self.choices.params)
+        self.controller = ProPlotterControllerCompare(self)
 
     def open(self, *args):
         """
@@ -255,6 +255,7 @@ class ProPlotterApplication(tk.Frame):
         self.choices.point_w.update()
         self.choices.addparams.update()
         self.choices.params_w.update()
+        self.controller.open_update()
 
     def open_user_guide(self, *args):
         """
@@ -1006,6 +1007,8 @@ class ProPlotterChoicesBarParamsCompare(ProPlotterChoicesBarParams):
 
 
 class ProPlotterController(abc.ABC):
+    GRAPH_NAME = 'Graph'
+
     def __init__(self, master):
         """
         Abstract method that define the applicative logic
@@ -1028,6 +1031,8 @@ class ProPlotterController(abc.ABC):
             self.colormap = self.master.fileobj.colorbar_variable('')
         self.ratio = [2, 1]
         """Ratio of the different figures to plot (when several subplots on the graph)"""
+
+        self.open_update()
 
     def get_choice(self):
         """
@@ -1056,7 +1061,7 @@ class ProPlotterController(abc.ABC):
         """
         v_master = self.master.choices.variables_w.var_master
         v_react = self.master.choices.variables_w.var_react
-        text = ' VARIABLES: {}/{}.\nPOINT: {}'.format(v_master, v_react, point)
+        text = '{}\nVARIABLES: {}/{}.\nPOINT: {}'.format(self.GRAPH_NAME, v_master, v_react, point)
         if additional_options is not None:
             for key, value in additional_options.items():
                 text += ' {}: {}'.format(key, value)
@@ -1238,12 +1243,20 @@ class ProPlotterController(abc.ABC):
         self.master.choices.variables_w.choice_var_react.set('')
         self.master.main.clear()
 
+    def open_update(self):
+        """
+        Update to do to specific components when a new file is opened.
+        """
+        pass
+
 
 class ProPlotterControllerStandard(ProPlotterController):
     pass
 
 
 class ProPlotterControllerHeight(ProPlotterController):
+    GRAPH_NAME = 'Height graph'
+
     def __init__(self, master):
         self.master = master
         super().__init__(master)
@@ -1253,7 +1266,7 @@ class ProPlotterControllerHeight(ProPlotterController):
         self.hauteur = None
         self.masterfigsaison = profilPlot.heightplot
 
-    def info_text_bar(self, point):
+    def info_text_bar(self, point, additional_options=None):
         v_master = self.master.choices.variables_w.var_master
         if not self.master.fileobj.variable_desc(v_master)['has_snl']:
             text = 'WARNING: MISSING SNOW LAYER DIMENSION for HEIGHT GRAPH'
@@ -1330,12 +1343,6 @@ class ProPlotterControllerMember(ProPlotterControllerSlider):
         self.master = master
         super().__init__(master)
 
-    def info_text_bar(self, point):
-        v_master = self.master.choices.variables_w.var_master
-        v_react = self.master.choices.variables_w.var_react
-        text = 'MEMBER GRAPH with VARS: {}/{}. POINT: {}'.format(v_master, v_react, point)
-        self.master.controls.update_text(text)
-
     def get_data(self, point, additional_options=None):
         """
         Collecting datas for figures, before subsetting with motions
@@ -1376,9 +1383,14 @@ class ProPlotterControllerMember(ProPlotterControllerSlider):
         if self.dateslice is None:
             self.dateslice = 0
 
-        self.master.choices.params_w.scale_date.config(from_=0, to=(len(self.master.fileobj.get_time()) - 1),
-                                                       state='normal', showvalue=0, variable=tk.IntVar,
-                                                       command=self.update_slice_date)
+    def open_update(self):
+        """
+        Update the date scaler after opening a file.
+        """
+        if self.master.fileobj is not None:
+            self.master.choices.params_w.scale_date.config(from_=0, to=(len(self.master.fileobj.get_time()) - 1),
+                                                           state='normal', showvalue=0, variable=tk.IntVar,
+                                                           command=self.update_slice_date)
 
     def give_master1d_args(self):
         """
@@ -1470,6 +1482,8 @@ class ProPlotterControllerMemberSaison(ProPlotterControllerMember):
 
 
 class ProPlotterControllerMultiple(ProPlotterControllerSlider):
+    GRAPH_NAME = "Multiple Graph"
+
     def __init__(self, master):
         self.master = master
         super().__init__(master)
@@ -1482,12 +1496,6 @@ class ProPlotterControllerMultiple(ProPlotterControllerSlider):
             messagebox.showerror(title='No point found', message=error_msg)
             return None
         return liste_points
-
-    def info_text_bar(self, point):
-        v_master = self.master.choices.variables_w.var_master
-        v_react = self.master.choices.variables_w.var_react
-        text = 'MULTIPLE GRAPH with VARS: {}/{}.'.format(v_master, v_react)
-        self.master.controls.update_text(text)
 
     def get_data(self, liste_points, additional_options=None):
         """
@@ -1526,9 +1534,14 @@ class ProPlotterControllerMultiple(ProPlotterControllerSlider):
         if self.dateslice is None:
             self.dateslice = 0
 
-        self.master.choices.params_w.scale_date.config(from_=0, to=(len(self.master.fileobj.get_time()) - 1),
-                                                       state='normal', showvalue=0, variable=tk.IntVar,
-                                                       command=self.update_slice_date)
+    def open_update(self):
+        """
+        Update the date scaler after opening a file.
+        """
+        if self.master.fileobj is not None:
+            self.master.choices.params_w.scale_date.config(from_=0, to=(len(self.master.fileobj.get_time()) - 1),
+                                                           state='normal', showvalue=0, variable=tk.IntVar,
+                                                           command=self.update_slice_date)
 
     def give_master1d_args(self):
         """
@@ -1617,6 +1630,8 @@ class ProPlotterControllerMultipleSaison(ProPlotterControllerMultiple):
 
 
 class ProPlotterControllerCompare(ProPlotterController):
+    GRAPH_NAME = 'Compare graph'
+
     def __init__(self, master):
         self.master = master
         super().__init__(master)
