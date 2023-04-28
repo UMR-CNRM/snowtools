@@ -140,7 +140,10 @@ class TestProSimuTile(unittest.TestCase):
     def setUpClass(cls):
         # fichier au nouveau format de la chaîne
         path = os.path.join(TESTBASE_DIR, 'PRO/PRO_patches.nc')
-        cls.ps = prosimu(path)
+        if not SKIP:
+            cls.ps = prosimu(path)
+        else:
+            cls.ps = None
 
     @unittest.skipIf(SKIP, 'Test files not available')
     def test_tile_1(self):
