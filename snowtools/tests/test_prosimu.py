@@ -167,7 +167,8 @@ class TestProSimuTile(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.ps.close()
+        if cls.ps is not None:
+            cls.ps.close()
 
 
 class TestProSimuOld(unittest.TestCase):
