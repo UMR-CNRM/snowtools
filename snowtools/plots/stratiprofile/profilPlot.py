@@ -59,6 +59,12 @@ def saisonProfil(ax, dz, value, time, colormap='viridis', value_min=None, value_
     Note that ``dz`` should not contain ``nan`` values. Layers that are not used sould be filled with
     a zero value for depth.
 
+    If you plan to add data, note that the x axis is not a time axis but an axis where the values are integers
+    corresponding to the index of the date dimension (sue to limitations of the undelying matplotlib function).
+
+    Below is proposed a snippet of code that provide an example for such plot.
+    Note that additional options may be necessary for some files (e.g. specification of tile).
+
     .. code-block:: python
 
        from snowtools.utils.prosimu import prosimu_auto
