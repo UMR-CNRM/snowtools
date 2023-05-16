@@ -11,6 +11,7 @@ Modified 7. apr. 2017 viallon
 """
 
 import logging
+import copy
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -194,7 +195,7 @@ def saisonProfil(ax, dz, value, time, colormap='viridis', value_min=None, value_
         norm = colors.Normalize(vmin=vmin, vmax=vmax)
         value = np.clip(value, vmin, vmax)
         # value[value < vmin if ~np.isnan(vmin) else False] = vmin
-        cmap = cm.get_cmap('RdBu_r').copy()
+        cmap = copy.copy(cm.get_cmap('RdBu_r'))
         cmap.set_over((0.32, 0.0, 0.097))
         extend = 'max'
     elif colormap == 'lwc':
@@ -207,7 +208,7 @@ def saisonProfil(ax, dz, value, time, colormap='viridis', value_min=None, value_
         # value[value > vmax if ~np.isnan(vmax) else False] = vmax
         value = np.clip(value, vmin, vmax)
         value[value == 0] = -1
-        cmap = cm.get_cmap('viridis')
+        cmap = copy.copy(cm.get_cmap('viridis'))
         cmap.set_under('#fff2fd')
         extend = 'min'
     else:
