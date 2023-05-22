@@ -253,7 +253,7 @@ class ProPlotterApplication(tk.Frame):
         self.openbar.update_filename(self.fileobj.get_filename())
         self.choices.variables_w.update()
         self.choices.point_w.update()
-        self.choices.addparams.update()
+        self.choices.addparams_w.update()
         self.choices.params_w.update()
         self.controller.open_update()
 
@@ -293,7 +293,7 @@ class ProPlotterApplication(tk.Frame):
                                        'Nobody knows who is he, but we know that he inspired some characters in the '
                                        'french serie "Le Bureau des Légendes".\n'
                                        '\n'
-                                       'Most of the code was written by Mathieu Fructus.'
+                                       'Code written by Météo France, team CNRM/CEN/CENMOD.'
                                        '')
 
     def plot(self):
