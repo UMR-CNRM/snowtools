@@ -166,7 +166,7 @@ class ProPlotterApplication(tk.Frame):
         """
         Graph reset
         """
-        self.main.clear()
+        self.main.clear_all()
         # Variable selection reset
         if self.choices.params_w is not None:
             self.choices.params_w.clean_frame()
@@ -768,6 +768,8 @@ class ProPlotterMain(tk.Frame):
         self.ax2 = None
         self.ax3 = None
         self.cid = None
+        self.xlim = None
+        self.ylim = None
         self.first_profil = True
         self.first_master = True
         self.first_graph = True
@@ -795,6 +797,23 @@ class ProPlotterMain(tk.Frame):
         self.first_graph = True
         self.update()
 
+    def clear_all(self):
+        """Clean main frame (figure)"""
+        for e in self.fig1.axes:
+            self.fig1.delaxes(e.axes)
+        if self.cid is not None:
+            self.Canevas.mpl_disconnect(self.cid)
+        self.ax1 = None
+        self.ax2 = None
+        self.ax3 = None
+        self.cid = None
+        self.xlim = None
+        self.ylim = None
+        self.first_profil = True
+        self.first_master = True
+        self.first_graph = True
+        self.update()
+
     def ready_to_plot(self, same_y, nb_graph, rat1=2, rat2=1):
         """Prepare the main frame for figure"""
         self.clear()
@@ -809,6 +828,10 @@ class ProPlotterMain(tk.Frame):
                 self.ax2 = self.fig1.add_subplot(1, rat1 + rat2, (rat1 + 1, rat1 + rat2))
             self.fig1.subplots_adjust(left=0.1, bottom=0.08, wspace=0.1)
             self.ax3 = self.ax2.twiny()
+        if self.xlim is not None:
+            self.ax1.set_xlim(self.xlim)
+        if self.ylim is not None:
+            self.ax1.set_ylim(self.ylim)
 
     def update(self):
         """
@@ -1171,6 +1194,14 @@ class ProPlotterController(abc.ABC):
         """
         The plot machinery
         """
+        # A try: get the info for zoom
+        def on_draw(event):
+            if self.master.main.ax1 is not None:
+                self.master.main.xlim = self.master.main.ax1.get_xlim()
+                self.master.main.ylim = self.master.main.ax1.get_ylim()
+
+        self.master.main.Canevas.mpl_connect('draw_event', on_draw)
+
         # Stop défilement avec bouton droit
         def button_press(event):
             if event.button > 1:
@@ -1241,7 +1272,9 @@ class ProPlotterController(abc.ABC):
             widget.set('')
         self.master.choices.variables_w.choice_var_master.set('')
         self.master.choices.variables_w.choice_var_react.set('')
-        self.master.main.clear()
+        self.xlim = None
+        self.ylim = None
+        self.master.main.clear_all()
 
     def open_update(self):
         """
