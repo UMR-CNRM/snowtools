@@ -796,7 +796,17 @@ class ProPlotterMain(tk.Frame):
         self.update()
 
     def ready_to_plot(self, same_y, nb_graph, rat1=2, rat2=1):
-        """Prepare the main frame for figure"""
+        """
+        Prepare the main frame for a new figure.
+        This function include refreshing of surrounding dependent bricks
+        such as the matplotlib navigation toolbar.
+
+        :param same_y: Boolean on whether to have same y dimension or not
+        :type same_y: bool
+        :param nb_graph: 1 or 2 to have one or two graphs.
+        :param rat1: The horizontal part of the figure allocated to 1st graph (in case of 2 graphs).
+        :param rat2: The horizontal part of the figure allocated to 2nd graph (in case of 2 graphs).
+        """
         self.clear()
         if nb_graph == 1:
             self.ax1 = self.fig1.add_subplot(1, 1, 1)
@@ -809,6 +819,9 @@ class ProPlotterMain(tk.Frame):
                 self.ax2 = self.fig1.add_subplot(1, rat1 + rat2, (rat1 + 1, rat1 + rat2))
             self.fig1.subplots_adjust(left=0.1, bottom=0.08, wspace=0.1)
             self.ax3 = self.ax2.twiny()
+
+        # Update the Matplotlib toolbar to take into account axes added to the figure.
+        self.toolbar.update()
 
     def update(self):
         """
