@@ -19,14 +19,14 @@ parser = argparse.ArgumentParser(
         description="Read precititation and temperature observations from BDCLim for all availables stations"
         )
 parser.add_argument("date_min", help="Start date")
-parser.add_argument("date_max", help="End date")
+parser.add_argument("date_max", help="End date", default=None)
 parser.add_argument("-o", "--output", help="Output folder",
                     default='.', dest='output')
 parser.add_argument("--rr", action="store_true", default=True, help="Produce RR output")
 parser.add_argument("--tn", action="store_true", default=False, help="Produce TN output")
 parser.add_argument("--tx", action="store_true", default=False, help="Produce TX output")
 parser.add_argument("--tt", action="store_true", default=False, help="Produce T output at hourly timestep")
-parser.add_argument("--postes", action="store_true", default=True, help="Print list of stations")
+parser.add_argument("--postes", action="store_true", default=False, help="Print list of stations")
 parser.add_argument("--f", dest="frequency", action="store", default="daily", help="Observation frequency", choices=["monthly", "daily", "hourly"])
 args = parser.parse_args()
 
@@ -83,16 +83,16 @@ if args.rr:
             )
     if args.frequency == 'daily':
         print("WARNING : The rr value corresponding to date 'ymd' is the observation of date 'ym(d+1)' covering ymd6h-->ym(d+1)6h")
-    question1.run(outputfile=f'obs_nivometeo_{args.frequency}_RR_{begin.ymd}_{end.ymd}.csv')
+    question1.run(outputfile=f'obs_nivometeo_{args.frequency}_RR_{begin.ymd}_{end.ymd}.csv', header=['date', 'num_poste', 'nom', 'alti', 'lat', 'lon', 'massif', 'rr', 'reseau_poste'])
 
     question2 = question(
-            listvar=[f"{table}.num_poste", "H_NIVO.ALTI_LPNX", "H_NIVO.DAT"], # ALTI_LPNX=altitude maximale de la LPN depuis la dernière obs
-            table=table,
-            listorder=[f'{table}.num_poste', f'H_NIVO.DAT'],
+            listvar=[f"H_NIVO.NUM_POSTE", "H_NIVO.ALTI_LPNX", "H_NIVO.DAT"], # ALTI_LPNX=altitude maximale de la LPN depuis la dernière obs
+            table="H_NIVO",
+            listorder=[f'H_NIVO.NUM_POSTE', f'H_NIVO.DAT'],
             listjoin=[
-                f"POSTE_NIVO ON {table}.NUM_POSTE = POSTE_NIVO.NUM_POSTE ", f" HIST_RESEAU_POSTE on ({table}.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE) ",
-                f"H_NIVO on (POSTE_NIVO.NUM_POSTE=H_NIVO.NUM_POSTE and H_NIVO.DAT={table}.DAT and H_NIVO.ALTI_LPNX is not Null)"],
-            listconditions=["HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64')"],
+                f"HIST_RESEAU_POSTE on (H_NIVO.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE) ",
+                ],
+            listconditions=["HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64') ", "H_NIVO.ALTI_LPNX is not Null "],
             period=[datedeb, datefin],
             )
     question2.run(outputfile=f'LPN_nivometeo_{begin.ymd}_{end.ymd}.csv')
