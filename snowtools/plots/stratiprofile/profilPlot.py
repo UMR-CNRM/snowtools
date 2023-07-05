@@ -236,10 +236,10 @@ def saisonProfil(ax, dz, value, time, colormap='viridis', value_min=None, value_
     def format_ticks(x, pos):
         x = int(x)
         x = max(min(len(time) - 1, x), 0)
-        if (type(time[0]) == int or type(time[0]) == str):
-            return time[x]
-        else:
+        if hasattr(time[0], 'strftime'):
             return time[x].strftime('%Y-%m-%d')
+        else:
+            return time[x]
 
     formatter = ticker.FuncFormatter(format_ticks)
     ax.xaxis.set_major_formatter(formatter)
@@ -300,10 +300,10 @@ def saison1d(ax, value, time, legend=None, color='b.', title=None, ylimit=None):
     def format_ticks(x, pos):
         x = int(x)
         x = max(min(len(time) - 1, x), 0)
-        if (type(time[0]) == int or type(time[0]) == str):
-            return time[x]
-        else:
+        if hasattr(time[0], 'strftime'):
             return time[x].strftime('%Y-%m-%d')
+        else:
+            return time[x]
 
     formatter = ticker.FuncFormatter(format_ticks)
     ax.xaxis.set_major_formatter(formatter)
@@ -527,10 +527,10 @@ def heightplot(ax, value, value_ep, time, legend=None, color='b', direction_cut=
     def format_ticks(x, pos):
         x = int(x)
         x = max(min(len(time) - 1, x), 0)
-        if (type(time[0]) == int or type(time[0]) == str):
-            return time[x]
-        else:
+        if hasattr(time[0], 'strftime'):
             return time[x].strftime('%Y-%m-%d')
+        else:
+            return time[x]
 
     formatter = ticker.FuncFormatter(format_ticks)
     ax.xaxis.set_major_formatter(formatter)
