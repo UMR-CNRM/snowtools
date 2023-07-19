@@ -95,7 +95,7 @@ import matplotlib.pyplot as plt
 # give the PRO file for the shapefile points. 
 #
 # Exemple:
-# s2m -f /rd/cenfic3/era40/vortex/s2m/alp_flat/reanalysis/meteo/FORCING_2017080106_2018080106.nc 
+# s2m -f /rd/cenfic3/cenmod/era40/vortex/s2m/alp_flat/reanalysis/meteo/FORCING_2017080106_2018080106.nc 
 #     -b 20170801 -e 20180801 -r /home/fructusm/git/snowtools_git/interpolation/NetCDF_from_shapefile.nc
 #     -o output_test_s2m -g --extractforcing
 # s2m -f /home/fructusm/OUTPUT_et_PRO/output_test_s2m/meteo/FORCING_2017080106_2018080106.nc -b 20170801 -e 20180801 
@@ -150,13 +150,10 @@ import matplotlib.pyplot as plt
 ################################################################
 NetCDF_out = 'NetCDF_from_shapefile.nc'
 
-# PATH_MNT (MAJ 19/04/2023, new location of MNT files)
-# path_MNT_alti_defaut = '/rd/cenfic3/sentinel/mnt_ange/ange-factory/prod1/france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
-# path_MNT_slope_defaut = '/rd/cenfic3/sentinel/mnt_ange/ange-factory/prod1/france_30m/SLP_FRANCE_L93_30m_bilinear.tif'
-# path_MNT_aspect_defaut = '/rd/cenfic3/sentinel/mnt_ange/ange-factory/prod1/france_30m/ASP_FRANCE_L93_30m_bilinear.tif'
-path_MNT_alti_defaut = "/rd/cenfic3/manto/haddjeria/mnt_ange/ange-factory/prod1/france_30m/DEM_FRANCE_L93_30m_bilinear.tif"
-path_MNT_slope_defaut = "/rd/cenfic3/manto/haddjeria/mnt_ange/ange-factory/prod1/france_30m/SLP_FRANCE_L93_30m_bilinear.tif"
-path_MNT_aspect_defaut = "/rd/cenfic3/manto/haddjeria/mnt_ange/ange-factory/prod1/france_30m/ASP_FRANCE_L93_30m_bilinear.tif"
+# PATH_MNT
+path_MNT_alti_defaut = "/rd/cenfic3/cenmod/home/haddjeria/mnt_ange/ange-factory/prod1/france_30m/DEM_FRANCE_L93_30m_bilinear.tif"
+path_MNT_slope_defaut = "/rd/cenfic3/cenmod/home/haddjeria/mnt_ange/ange-factory/prod1/france_30m/SLP_FRANCE_L93_30m_bilinear.tif"
+path_MNT_aspect_defaut = "/rd/cenfic3/cenmod/home/haddjeria/mnt_ange/ange-factory/prod1/france_30m/ASP_FRANCE_L93_30m_bilinear.tif"
 
 # Pour test en local:
 # path_MNT_alti_defaut = 

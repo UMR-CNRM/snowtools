@@ -53,7 +53,7 @@ def plot_profil(ax, dz, value, colormap='jet', myrange=None, vmin=None, vmax=Non
        import matplotlib.pyplot as plt
        from snowtools.plots.EvoProfilPlot import plot_profil
 
-       with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/PRO_gdesRousses_2019-2020.nc') as ff:
+       with prosimu('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/PRO_gdesRousses_2019-2020.nc') as ff:
            dz = ff.read('SNOWDZ', selectpoint=point, fill2zero=True)
            var = ff.read('SNOWTYPE', selectpoint=point)
 
