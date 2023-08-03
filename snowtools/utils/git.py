@@ -372,6 +372,42 @@ class git_infos:
         return self.dict.__next__()
 
 
+def get_summary_git(path=None):
+    """
+    Return a short string describing the state of git repository.
+
+    Try to use git command. If this fails, search for a .git_info file
+    and return its content.
+
+    :param path: Path where to search for git repo (if None, search in curent directory)
+    :type path: str or path-like
+    """
+    # Disable messages
+    logging.getLogger('snowtools.gitutils').setLevel(logging.ERROR)
+    # Check if we are in a git repository
+    git_repo = current_git_repo(path=path)
+    if git_repo is not None:
+        # Use above defined tool with git tool
+        try:
+            text = git_infos(path=path).pretty_str_commit(short=True)
+        except:
+            text = ''
+        return text
+    else:
+        # Search for a .git_info file
+        path = path if path is not None else ''
+        gitinfos_file_path = os.path.join(path, '.git_info')
+        if os.path.isfile(gitinfos_file_path):
+            try:
+                with open(gitinfos_file_path, 'r') as f:
+                    text = f.readline()
+                    if len(text) > 1:
+                        return text.replace('\n', '')
+            except:
+                pass
+    return ''
+
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Tool to read git informations easily (last commit)")
