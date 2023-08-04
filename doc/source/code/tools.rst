@@ -54,3 +54,9 @@ Ensemble of perturbed forcing
 
 .. automodule:: tools.perturb_forcing
    :members:
+
+Management of ensemble PRO output files
+---------------------------------------
+
+.. automodule:: tools.combine_memberfiles
+   :members:
