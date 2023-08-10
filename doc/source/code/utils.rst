@@ -14,6 +14,7 @@ Tools for reading simulations : the ``utils`` module
    utils-sun.rst
    utils-s2mstandardfile.rst
    utils-git.rst
+   utils-readsnowpack.rst
 
 Other tools
 -----------
