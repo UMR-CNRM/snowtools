@@ -30,7 +30,12 @@ def setup(t, **kw):
 
 class Safran(OpTask, S2MTaskMixIn):
 
+    # Filter of errors to be applied in both oper and dev cases
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
+    #report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
+    # Report execution errors with the operationnal method
+    report_execution_error = OpTask.s2moper_report_execution_error
+
 
     def process(self):
         """Safran"""
@@ -535,13 +540,12 @@ class Safran(OpTask, S2MTaskMixIn):
                     kind           = 'packedlisting',
                     begindate      = datebegin.ymd6h,
                     enddate        = dateend.ymd6h,
-                    local          = 'mb035/listings_safran_[begindate::ymdh]_[enddate::ymdh].tar.gz',
+                    local          = 'mb{glob:a:\d+}/listings_safran_[begindate::ymdh]_[enddate::ymdh].tar.gz',
                     format         = 'tar',
-                    model          = 'safran',
+                    seta           = '[glob:a]',
+                    member         = '[seta]',
                     namespace      = self.conf.namespace_out,
-                    delayed        = True,
                 )
                 print(t.prompt, 'tb31 =', tb31)
                 print()
-
 
