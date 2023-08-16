@@ -461,6 +461,12 @@ class Vortex_conf_file(object):
 
         self.set_field("DEFAULT", 'drhook', self.options.drhook)
 
+        if hasattr(self.options, 'save_pro'):
+            self.set_field("DEFAULT", 'save_pro', self.options.save_pro)
+
+        if hasattr(self.options, 'postprocess_exe'):
+            self.set_field("DEFAULT", 'postprocess_exe', self.options.postprocess_exe)
+
     def safran_variables(self):
 
         self.set_field("DEFAULT", 'cumul', 6)

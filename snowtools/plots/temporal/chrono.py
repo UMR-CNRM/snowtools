@@ -149,7 +149,7 @@ class temporalplotSim(temporalplot):
         from snowtools.plots.temporal.chrono import temporalplotSim
 
         # read data
-        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/PRO_LaPlagne_2000-2001.nc') as p:
+        with prosimu('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/PRO_LaPlagne_2000-2001.nc') as p:
             sd = p.read('DSN_T_ISBA')
             sd2 = p.read('SNOWTEMP')
             time = p.readtime()
@@ -194,7 +194,7 @@ class temporalplotObsSim(temporalplot):
         from snowtools.utils.prosimu import prosimu
         from snowtools.plots.temporal.chrono import temporalplotObsSim
         # read data
-        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/PRO_LaPlagne_2000-2001.nc') as p:
+        with prosimu('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/PRO_LaPlagne_2000-2001.nc') as p:
             sd = p.read('DSN_T_ISBA')
             sd2 = p.read('SNOWTEMP')
             time = p.readtime()

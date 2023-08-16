@@ -315,6 +315,22 @@ class Surfex_command(_S2M_command):
                           action="store_true", dest="drhook", default=False,
                           help="Profiling MPI task with DRHOOK")
 
+        parser.add_option("--save-pro",
+                          dest="save_pro", default='multi',
+                          choices=['none', 'cache', 'archive', 'multi'],
+                          help="Wheteher and where to save PRO_ output files. "
+                               "multi is the default and store both in cache and in archive. "
+                               "Use none not to save the PRO_ files at all. [Vortex only]")
+
+        parser.add_option("--postprocess",
+                          dest="postprocess_exe", default=None,
+                          help="Postprocessing of PRO file. Provide executable path (absolute) "
+                               "and its options as a single string. Will be executed after a"
+                               "SURFEX execution in the working directory. If you want anything"
+                               "to be saved, please write in commnly used files (PRO, DIAG, CUMUL)."
+                               "Please ensure yoursel that your algorithm is correctly parallelized."
+                               "[Vortex only]")
+
         (options, args) = parser.parse_args(arguments)
 
         del args

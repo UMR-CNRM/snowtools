@@ -1105,7 +1105,7 @@ class Map_alpes(_Map_massifs):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Alp/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/postproc/Alp/postproc_2021041006_2021041112.nc') as ff:
             points = ff.get_points(ZS=2100, aspect=-1)
             snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points)
@@ -1540,7 +1540,7 @@ class MultiMap_Alps(Map_alpes, _MultiMap):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Alp/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/postproc/Alp/postproc_2021041006_2021041112.nc') as ff:
             points = ff.get_points(ZS=2100, aspect=-1)
             snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points)
@@ -1601,7 +1601,7 @@ class Map_pyrenees(_Map_massifs):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
             points_nord = ff.get_points(aspect=0, ZS=2100, slope=40)
             points_sud = ff.get_points(aspect=180, ZS=2100, slope=40)
             snow_nord = ff.read('SD_1DY_ISBA', selectpoint=points_nord, hasDecile=True)
@@ -1669,7 +1669,7 @@ class MapFrance(_Map_massifs):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with Dataset('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/grid_postproc_2021041112.nc') as ff:
+        with Dataset('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/postproc/grid_postproc_2021041112.nc') as ff:
             lats = ff.variables['LAT'][:]
             lons = ff.variables['LON'][:]
             snow = ff.variables['SD_1DY_ISBA'][0, :, :, 8]
@@ -1731,7 +1731,7 @@ class MultiMap_Pyr(Map_pyrenees, _MultiMap):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
             points_nord = ff.get_points(aspect=0, ZS=2100, slope=40)
             points_sud = ff.get_points(aspect=180, ZS=2100, slope=40)
             snow_nord = ff.read('SD_1DY_ISBA', selectpoint=points_nord, hasDecile=True)
@@ -1794,7 +1794,7 @@ class Map_corse(_Map_massifs):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Cor/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/postproc/Cor/postproc_2021041006_2021041112.nc') as ff:
             points = ff.get_points(ZS=2100, aspect=-1)
             snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points)
@@ -1856,7 +1856,7 @@ class MultiMap_Cor(_MultiMap, Map_corse):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Cor/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/postproc/Cor/postproc_2021041006_2021041112.nc') as ff:
             points = ff.get_points(ZS=2100, aspect=-1)
             snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points)
@@ -1909,7 +1909,7 @@ class Zoom_massif(_Map_massifs):
         from snowtools.plots.maps import cartopy
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic3/manto/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
             points_nord = ff.get_points(aspect=0, ZS=2100, slope=40)
             snow_nord = ff.read('SD_1DY_ISBA', selectpoint=points_nord, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points_nord)

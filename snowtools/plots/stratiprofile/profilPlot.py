@@ -74,7 +74,7 @@ def saisonProfil(ax, dz, value, time, colormap='viridis', value_min=None, value_
 
        point = 100
 
-       with prosimu_auto('/rd/cenfic3/manto/viallonl/testbase/PRO/PRO_gdesRousses_2019-2020.nc') as ff:
+       with prosimu_auto('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/PRO_gdesRousses_2019-2020.nc') as ff:
            dz = ff.read('SNOWDZ', selectpoint=point, fill2zero=True)
            var = ff.read('SNOWTYPE', selectpoint=point)
            time = ff.readtime()
@@ -236,10 +236,10 @@ def saisonProfil(ax, dz, value, time, colormap='viridis', value_min=None, value_
     def format_ticks(x, pos):
         x = int(x)
         x = max(min(len(time) - 1, x), 0)
-        if (type(time[0]) == int or type(time[0]) == str):
-            return time[x]
-        else:
+        if hasattr(time[0], 'strftime'):
             return time[x].strftime('%Y-%m-%d')
+        else:
+            return time[x]
 
     formatter = ticker.FuncFormatter(format_ticks)
     ax.xaxis.set_major_formatter(formatter)
@@ -281,7 +281,7 @@ def saison1d(ax, value, time, legend=None, color='b.', title=None, ylimit=None):
 
        point = 100
 
-       with prosimu_auto('/rd/cenfic3/manto/viallonl/testbase/PRO/PRO_gdesRousses_2019-2020.nc') as ff:
+       with prosimu_auto('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/PRO_gdesRousses_2019-2020.nc') as ff:
            var = ff.read('DSN_T_ISBA', selectpoint=point)
            time = ff.readtime()
 
@@ -300,10 +300,10 @@ def saison1d(ax, value, time, legend=None, color='b.', title=None, ylimit=None):
     def format_ticks(x, pos):
         x = int(x)
         x = max(min(len(time) - 1, x), 0)
-        if (type(time[0]) == int or type(time[0]) == str):
-            return time[x]
-        else:
+        if hasattr(time[0], 'strftime'):
             return time[x].strftime('%Y-%m-%d')
+        else:
+            return time[x]
 
     formatter = ticker.FuncFormatter(format_ticks)
     ax.xaxis.set_major_formatter(formatter)
@@ -360,7 +360,7 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
        point = 100
        time = 100
 
-       with prosimu_auto('/rd/cenfic3/manto/viallonl/testbase/PRO/PRO_gdesRousses_2019-2020.nc') as ff:
+       with prosimu_auto('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/PRO_gdesRousses_2019-2020.nc') as ff:
            dz = ff.read('SNOWDZ', selectpoint=point, fill2zero=True)[time, :]
            var = ff.read('SNOWTEMP', selectpoint=point)[time, :]
            ram = ff.read('SNOWRAM', selectpoint=point)[time, :]
@@ -527,10 +527,10 @@ def heightplot(ax, value, value_ep, time, legend=None, color='b', direction_cut=
     def format_ticks(x, pos):
         x = int(x)
         x = max(min(len(time) - 1, x), 0)
-        if (type(time[0]) == int or type(time[0]) == str):
-            return time[x]
-        else:
+        if hasattr(time[0], 'strftime'):
             return time[x].strftime('%Y-%m-%d')
+        else:
+            return time[x]
 
     formatter = ticker.FuncFormatter(format_ticks)
     ax.xaxis.set_major_formatter(formatter)

@@ -5,6 +5,8 @@ Created on 7 nov. 2017
 @author: lafaysse
 '''
 
+import shlex
+
 from vortex.layout.nodes import Driver, Task
 from vortex import toolbox
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
@@ -59,6 +61,9 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         if hasattr(self.conf, "simu2D"):
             self.conf.genv2D = 'uenv:pgd.002@SURFEX_CEN'
 
+        #######################################################################
+        #                             Fetch steps                             #
+        #######################################################################
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
             # Try to find a forcing covering the full simulation period
@@ -484,6 +489,26 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print(t.prompt, 'tbI =', tbI)
                 print()
 
+            if hasattr(self.conf, 'postprocess_exe') and self.conf.postprocess_exe is not None:
+                binary = shlex.split(self.conf.postprocess_exe)[0]
+                binary_options = ' '.join(shlex.split(self.conf.postprocess_exe)[1:])
+                print('binary_options', binary_options)
+                if not self.sh.path.isabs(binary):
+                    binary = self.sh.which(binary)
+                binary_local = self.sh.path.basename(binary)
+                self.sh.title('Toolbox executable tb07= tbx4')
+                tb07 = tbx4 = toolbox.executable(
+                    role           = 'Binary',
+                    kind           = 'blackbox',
+                    local          = binary_local,
+                    binopts        = binary_options,
+                    remote         = binary
+                )
+                print('tbx4', tbx4)
+
+        #######################################################################
+        #                            Compute step                             #
+        #######################################################################
         if 'compute' in self.steps:
 
             print (self.conf.meteo, self.conf.interpol, self.conf.addmask)
@@ -624,10 +649,25 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             else:
                 self.component_runner(tbalgo4, tbx3)
 
+            if hasattr(self.conf, 'postprocess_exe') and self.conf.postprocess_exe is not None:
+                self.sh.title('Toolbox algo tb12 = Postprocessing')
+                tbalgo5 = toolbox.algo(
+                        engine='blind',
+                        )
+                tbalgo5.run(tbx4[0])
+
+
+        #######################################################################
+        #                               Backup                                #
+        #######################################################################
         if 'backup' in self.steps:
             pass
 
         if 'late-backup' in self.steps:
+
+            namespace = 'vortex.multi.fr'
+            if hasattr(self.conf, 'save_pro') and self.conf.save_pro in ['cache', 'archive', 'multi']:
+                namespace = 'vortex.' + self.conf.save_pro + '.fr'
 
             # First we try to save a PRO file covering the whole simulation period if present
             datebegin = self.conf.datebegin
@@ -643,7 +683,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 nativefmt      = 'netcdf',
                 kind           = 'SnowpackSimulation',
                 model          = 'surfex',
-                namespace      = 'vortex.multi.fr',
+                namespace      = namespace,
                 namebuild      = 'flat@cen',
                 block          = 'pro',
                 fatal          = False
@@ -749,7 +789,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
                     model          = 'surfex',
-                    namespace      ='vortex.multi.fr',
+                    namespace      = namespace,
                     namebuild      = 'flat@cen',
                     block          = 'pro',
                 ),
