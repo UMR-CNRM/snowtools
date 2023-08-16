@@ -28,7 +28,12 @@ def setup(t, **kw):
 
 class Safran(OpTask, S2MTaskMixIn):
 
+    # Filter of errors to be applied in both oper and dev cases
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
+    #report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
+    # Report execution errors with the operationnal method
+    report_execution_error = OpTask.s2moper_report_execution_error
+
 
     def refill(self):
         """Safran analysis"""
@@ -49,7 +54,7 @@ class Safran(OpTask, S2MTaskMixIn):
                         block          = 'observations',
                         suite          = self.conf.xpid,
                         vapp           = 's2m',
-                        geometry       = self.conf.geometry_safran[self.conf.vconf],
+                        geometry       = self.conf.geometry_safran[self.conf.vconf],  # Distinction entre géométrie SAFRAN et Surfex spécifique aux taches oper
                         kind           = 'packedobs',
                         date           = self.conf.rundate.ymdh,
                         begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
@@ -71,7 +76,7 @@ class Safran(OpTask, S2MTaskMixIn):
                         experiment     = self.conf.xpid,
                         vapp           = 's2m',
                         fatal          = False,
-                        geometry       = self.conf.geometry_safran[self.conf.vconf],
+                        geometry       = self.conf.geometry_safran[self.conf.vconf],   # Distinction entre géométrie SAFRAN et Surfex spécifique aux taches oper
                         kind           = 'packedobs',
                         date           = self.conf.rundate.ymdh,
                         begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
@@ -90,7 +95,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     tb01wi = toolbox.input(
                         role             = 'Observations',
                         vapp             = 's2m',
-                        geometry         = self.conf.geometry_safran[self.conf.vconf],
+                        geometry         = self.conf.geometry_safran[self.conf.vconf],   # Distinction entre géométrie SAFRAN et Surfex spécifique aux taches oper
                         kind             = 'packedobs',
                         date             = self.conf.rundate.ymdh,
                         begindate        = datebegin.ymd6h,
@@ -110,7 +115,7 @@ class Safran(OpTask, S2MTaskMixIn):
                         block          = 'observations',
                         experiment     = self.conf.xpid,
                         vapp           = 's2m',
-                        geometry       = self.conf.geometry_safran[self.conf.vconf],
+                        geometry       = self.conf.geometry_safran[self.conf.vconf],   # Distinction entre géométrie SAFRAN et Surfex spécifique aux taches oper
                         kind           = 'packedobs',
                         date           = self.conf.rundate.ymdh,
                         begindate      = datebegin.ymd6h,
@@ -190,6 +195,9 @@ class Safran(OpTask, S2MTaskMixIn):
                     )
                     print(t.prompt, 'tb01 =', tb01)
                     print()
+
+                    ###########    End of differences    ###########
+                    ################################################
 
                 self.sh.title('Toolbox input listem')
                 tb03 = toolbox.input(
@@ -409,7 +417,7 @@ class Safran(OpTask, S2MTaskMixIn):
                         geometry        = self.conf.geometry[self.conf.vconf],
                         cutoff         = 'assimilation',
                         date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d))
-                            for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
+                                          for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
                         cumul          = self.conf.cumul,
                         nativefmt      = 'ascii',
                         kind           = 'guess',
@@ -434,7 +442,7 @@ class Safran(OpTask, S2MTaskMixIn):
                         geometry        = self.conf.geometry[self.conf.vconf],
                         cutoff         = 'production',
                         date           = ['{0:s}/-PT{1:s}H'.format(dateend.ymd6h, str(d))
-										  for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
+                                          for d in footprints.util.rangex(6, ndays * 24 + 6, self.conf.cumul)],
                         cumul          = self.conf.cumul,
                         nativefmt      = 'ascii',
                         kind           = 'guess',
@@ -498,7 +506,8 @@ class Safran(OpTask, S2MTaskMixIn):
         #                 block          = self.conf.guess_block,
         #                 geometry       = self.conf.geometry[self.conf.vconf],
         #                 cutoff         = 'production',
-        #                 date           = ['{0:s}/+PT{1:s}H/-PT12H'.format(datebegin.ymd6h, str(24 * i)) for i in range(ndays)],
+        #                 date           = ['{0:s}/+PT{1:s}H/-PT12H'.format(datebegin.ymd6h,
+        #                                   str(24 * i)) for i in range(ndays)],
         #                 cumul          = footprints.util.rangex(self.conf.ana_terms, shift=12),
         #                 nativefmt      = 'ascii',
         #                 kind           = 'guess',

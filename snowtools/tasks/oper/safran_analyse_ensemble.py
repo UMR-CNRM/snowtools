@@ -26,9 +26,12 @@ def setup(t, **kw):
 
 class Safran(Task, S2MTaskMixIn):
 
+    # Filter of errors to be applied in both oper and dev cases
     filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error
+    # Report execution warnings with CEN's method
     report_execution_warning = S2MTaskMixIn.s2moper_report_execution_warning
-    report_execution_error = S2MTaskMixIn.s2moper_report_execution_error
+    # Report execution errors with CEN's method
+    report_execution_error = S2MTaskMixIn.s2moper_report_execution_error  # TO MODIFY for operationnal transfer
 
     def refill(self):
         """Safran analysis"""
@@ -47,7 +50,7 @@ class Safran(Task, S2MTaskMixIn):
                     tb01wi = toolbox.input(
                         role           = 'Observations',
                         block          = 'observations',
-                        #suite          = self.conf.xpid,
+                        #suite          = self.conf.suite,  # Non nécessaire (utilisé par défaut)
                         vapp           = 's2m',
                         geometry       = self.conf.geometry[self.conf.vconf],
                         kind           = 'packedobs',
@@ -152,7 +155,7 @@ class Safran(Task, S2MTaskMixIn):
                     tb01 = toolbox.input(
                         role           = 'Observations',
                         geometry       = self.conf.geometry[self.conf.vconf],
-                        #suite          = self.conf.suite,
+                        #suite          = self.conf.suite,  # Non nécessaire (utilisé par défaut)
                         kind           = 'packedobs',
                         date           = self.conf.rundate.ymdh,
                         begindate      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
@@ -179,7 +182,7 @@ class Safran(Task, S2MTaskMixIn):
                         # experiment     = self.conf.xpid,
                         # vapp           = 's2m',
                         geometry       = self.conf.geometry[self.conf.vconf],
-                        #suite          = self.conf.suite,
+                        #suite          = self.conf.suite,  # Non nécessaire (utilisé par défaut)
                         kind           = 'packedobs',
                         date           = self.conf.rundate.ymdh,
                         begindate      = datebegin.ymd6h,
@@ -207,7 +210,7 @@ class Safran(Task, S2MTaskMixIn):
                         experiment     = self.conf.xpid,
                         vapp           = 's2m',
                         geometry       = self.conf.geometry[self.conf.vconf],
-                        #suite          = self.conf.suite,
+                        #suite          = self.conf.suite,  # Non nécessaire (utilisé par défaut)
                         kind           = 'packedobs',
                         date           = self.conf.rundate.ymdh,
                         begindate      = datebegin.ymd6h,
@@ -292,7 +295,7 @@ class Safran(Task, S2MTaskMixIn):
 #                )
 #                print(t.prompt, 'tb09 =', tb09)
 #                print()
-#
+
                 self.sh.title('Toolbox input icrccm')
                 tb10 = toolbox.input(
                     role            = 'Clim',
