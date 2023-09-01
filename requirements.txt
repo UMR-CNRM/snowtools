@@ -16,7 +16,7 @@ pandas
 # xarray is a requirement for plots/compare.py and utils/proximu.py in case of use of NETCDF-4 file format
 xarray
 # rpy2 is a requirement for tools/emosCSG.py
-rpy2
+# rpy2
 
 # Requirements for generating the documentation
 #sphinx>=4.3
