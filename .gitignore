@@ -7,6 +7,7 @@
 snowtools/tests/output*
 snowtools/tests/fail_test
 snowtools/tests/Manual_tests
+!snowtools/tests/Manual_tests/index_template.html
 oper_tag
 tag
 *.swp
@@ -14,8 +15,10 @@ snowtools/interpolation/interpol_MPIAUTO
 snowtools/interpolation/interpol
 *.o
 *.mod
+
 GUI_selfcontain.zip
 DATA/shapefiles
+
 .coverage
 newvenevsnowtools
 *.egg-info
