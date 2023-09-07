@@ -12,7 +12,6 @@ import datetime
 import netCDF4
 
 # For compatibility python 2 / python 3
-import six
 
 from snowtools.utils.sun import sun
 from snowtools.utils.prosimu import prosimu
@@ -123,7 +122,7 @@ class forcinput_tomerge:
         del dictdim["time"]
         del dictdim[spatial_dim_name]
 
-        for dimname, dim in six.iteritems(dictdim):
+        for dimname, dim in dictdim.items():
             print("Create dimension " + dimname + " " + str(len(dim)))
             new_forcing_file.createDimension(dimname, len(dim))
 
@@ -610,7 +609,7 @@ class forcinput_select(forcinput_tomodify):
             new_forcing_file.createDimension(spatial_dim_name, len_dim)
             del init_forcing_file_dimensions[spatial_dim_name]
 
-        for dimname, dim in six.iteritems(init_forcing_file_dimensions):
+        for dimname, dim in init_forcing_file_dimensions.items():
             print("Create dimension " + dimname + " " + str(len(dim)))
             if not dimname == "time":
                 new_forcing_file.createDimension(dimname, len(dim))

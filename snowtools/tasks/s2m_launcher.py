@@ -12,16 +12,6 @@ inherit from this class.
 """
 
 # General python modules
-import six
-
-if six.PY2:
-    print('*************************************************************')
-    print('Depreciation warning: You run s2m with python 2.')
-    print('Support for python 2.7 is not guaranteed after December 2021.')
-    print('Consider switching to python3. If you use the s2m alias, it')
-    print('may be necessary to modify its definition in your ~/.bashrc')
-    print('*************************************************************')
-
 try:
     from snowtools.utils.resources import check_snowtools_install
     from snowtools.utils.resources import InstallException

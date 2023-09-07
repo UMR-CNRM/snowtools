@@ -4,8 +4,6 @@ Created on 19 juin 2018
 
 @author: cluzetb, adapted from R. Champavier Talagrand_rank class
 '''
-# from __future__ import unicode_literals
-# Author : Robin C
 
 import random
 

@@ -16,7 +16,6 @@ import abc
 import logging
 
 import netCDF4
-import six
 import numpy as np
 import glob
 
@@ -485,7 +484,7 @@ class prosimuAbstract(abc.ABC):
         """
         # Sanitize dimensions (kwargs)
         args = {}
-        for arg, val in six.iteritems(kwargs):
+        for arg, val in kwargs.items():
             arg2 = self._check_dimname(arg)
             args[arg2] = val
 
@@ -655,7 +654,7 @@ class _prosimu1d2d():
         locations_bool = np.ones(tuple(self.pointsdim_l),
                                  dtype=bool)
 
-        for varname, values in six.iteritems(kwargs):
+        for varname, values in kwargs.items():
             varname = self._check_varname(varname)
             vardims = self.dataset.variables[varname].dimensions
 

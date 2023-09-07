@@ -7,7 +7,6 @@ import tempfile
 import os
 from datetime import datetime
 import numpy as np
-import six
 from netCDF4 import Dataset
 from snowtools.utils.prosimu import prosimu
 from snowtools.plots.maps import cartopy
@@ -58,16 +57,13 @@ class TestCartopyFrance(unittest.TestCase):
         self.m.close()
 
     def tearDown(self):
-        if six.PY3:  # Python 3.4+
-            result = self.defaultTestResult()  # These two methods have no side effects
-            self._feedErrorsToResult(result, self._outcome.errors)
-            error = self.mix.list2reason(result.errors)
-            failure = self.mix.list2reason(result.failures)
-            if not error and not failure:
-                shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
-                                                                                         self.outfilename))
-        else:
-            print("no automatic move implemented for python2")
+        result = self.defaultTestResult()  # These two methods have no side effects
+        self._feedErrorsToResult(result, self._outcome.errors)
+        error = self.mix.list2reason(result.errors)
+        failure = self.mix.list2reason(result.failures)
+        if not error and not failure:
+            shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
+                                                                                     self.outfilename))
 
     @classmethod
     def tearDownClass(cls):
@@ -142,16 +138,13 @@ class TestCartopyCor(unittest.TestCase):
         self.m.close()
 
     def tearDown(self):
-        if six.PY3:  # Python 3.4+
-            result = self.defaultTestResult()  # These two methods have no side effects
-            self._feedErrorsToResult(result, self._outcome.errors)
-            error = self.mix.list2reason(result.errors)
-            failure = self.mix.list2reason(result.failures)
-            if not error and not failure:
-                shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
-                                                                                         self.outfilename))
-        else:
-            print("no automatic move implemented for python2")
+        result = self.defaultTestResult()  # These two methods have no side effects
+        self._feedErrorsToResult(result, self._outcome.errors)
+        error = self.mix.list2reason(result.errors)
+        failure = self.mix.list2reason(result.failures)
+        if not error and not failure:
+            shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
+                                                                                     self.outfilename))
 
     @classmethod
     def tearDownClass(cls):
@@ -225,8 +218,8 @@ class TestCartopyPyr(unittest.TestCase):
         titles = self.ps.readtime()
         self.m.set_maptitle(titles)
         self.m.rectangle_massif(self.massifs, [self.snow_sud[:, :, 1], self.snow_sud[:, :, 4],
-                                                          self.snow_sud[:, :, 7], self.snow_nord[:, :, 1],
-                                                          self.snow_nord[:, :, 4], self.snow_nord[:, :, 7]], ncol=2,
+                                               self.snow_sud[:, :, 7], self.snow_nord[:, :, 1],
+                                               self.snow_nord[:, :, 4], self.snow_nord[:, :, 7]], ncol=2,
                                 **self.mix.attributes['SD_1DY_ISBA'], axis=0)
         self.m.addlogo()
         self.m.set_figtitle("2100m")
@@ -235,16 +228,13 @@ class TestCartopyPyr(unittest.TestCase):
         self.m.close()
 
     def tearDown(self):
-        if six.PY3:  # Python 3.4+
-            result = self.defaultTestResult()  # These two methods have no side effects
-            self._feedErrorsToResult(result, self._outcome.errors)
-            error = self.mix.list2reason(result.errors)
-            failure = self.mix.list2reason(result.failures)
-            if not error and not failure:
-                shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
-                                                                                         self.outfilename))
-        else:
-            print("no automatic move implemented for python2")
+        result = self.defaultTestResult()  # These two methods have no side effects
+        self._feedErrorsToResult(result, self._outcome.errors)
+        error = self.mix.list2reason(result.errors)
+        failure = self.mix.list2reason(result.failures)
+        if not error and not failure:
+            shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
+                                                                                     self.outfilename))
 
     @classmethod
     def tearDownClass(cls):
@@ -312,23 +302,20 @@ class TestCartopyAlp(unittest.TestCase):
         self.lo.set_figtitle("SD_1DY_ISBA 2021041112 2100m")
         titles = ['Percentile {0}'.format(i) for i in range(10, 100, 10)]
         self.lo.set_maptitle(titles)
-        self.lo.plot_center_massif(self.massifs, self.snow[5,:,:], axis=1, **self.mix.attributes['SD_1DY_ISBA'])
+        self.lo.plot_center_massif(self.massifs, self.snow[5, :, :], axis=1, **self.mix.attributes['SD_1DY_ISBA'])
         self.lo.addlogo()
         self.outfilename = "2021041112_multi_alps.png"
         self.lo.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
         self.lo.close()
 
     def tearDown(self):
-        if six.PY3:  # Python 3.4+
-            result = self.defaultTestResult()  # These two methods have no side effects
-            self._feedErrorsToResult(result, self._outcome.errors)
-            error = self.mix.list2reason(result.errors)
-            failure = self.mix.list2reason(result.failures)
-            if not error and not failure and self.outfilename is not None:
-                shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
-                                                                                         self.outfilename))
-        else:
-            print("no automatic move implemented for python2")
+        result = self.defaultTestResult()  # These two methods have no side effects
+        self._feedErrorsToResult(result, self._outcome.errors)
+        error = self.mix.list2reason(result.errors)
+        failure = self.mix.list2reason(result.failures)
+        if not error and not failure and self.outfilename is not None:
+            shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
+                                                                                     self.outfilename))
 
     @classmethod
     def tearDownClass(cls):
@@ -379,16 +366,13 @@ class TestCartopyMac(unittest.TestCase):
         self.m.close()
 
     def tearDown(self):
-        if six.PY3:  # Python 3.4+
-            result = self.defaultTestResult()  # These two methods have no side effects
-            self._feedErrorsToResult(result, self._outcome.errors)
-            error = self.mix.list2reason(result.errors)
-            failure = self.mix.list2reason(result.failures)
-            if not error and not failure and self.outfilename is not None:
-                shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
-                                                                                         self.outfilename))
-        else:
-            print("no automatic move implemented for python2")
+        result = self.defaultTestResult()  # These two methods have no side effects
+        self._feedErrorsToResult(result, self._outcome.errors)
+        error = self.mix.list2reason(result.errors)
+        failure = self.mix.list2reason(result.failures)
+        if not error and not failure and self.outfilename is not None:
+            shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
+                                                                                     self.outfilename))
 
     @classmethod
     def tearDownClass(cls):
@@ -433,19 +417,16 @@ class TestCartopyJura(unittest.TestCase):
         self.m.close()
 
     def tearDown(self):
-        if six.PY3:  # Python 3.4+
-            result = self.defaultTestResult()  # These two methods have no side effects
-            self._feedErrorsToResult(result, self._outcome.errors)
-            error = self.mix.list2reason(result.errors)
-            failure = self.mix.list2reason(result.failures)
-            if not error and not failure and self.outfilename is not None:
-                dirmantest = os.path.join(THIS_DIR, "Manual_tests")
-                if not os.path.isdir(dirmantest):
-                    os.makedirs(dirmantest)
-                shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(dirmantest,
-                                                                                         self.outfilename))
-        else:
-            print("no automatic move implemented for python2")
+        result = self.defaultTestResult()  # These two methods have no side effects
+        self._feedErrorsToResult(result, self._outcome.errors)
+        error = self.mix.list2reason(result.errors)
+        failure = self.mix.list2reason(result.failures)
+        if not error and not failure and self.outfilename is not None:
+            dirmantest = os.path.join(THIS_DIR, "Manual_tests")
+            if not os.path.isdir(dirmantest):
+                os.makedirs(dirmantest)
+            shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(dirmantest,
+                                                                                     self.outfilename))
 
     @classmethod
     def tearDownClass(cls):
@@ -484,19 +465,16 @@ class TestCartopyVosges(unittest.TestCase):
         self.m.close()
 
     def tearDown(self):
-        if six.PY3:  # Python 3.4+
-            result = self.defaultTestResult()  # These two methods have no side effects
-            self._feedErrorsToResult(result, self._outcome.errors)
-            error = self.mix.list2reason(result.errors)
-            failure = self.mix.list2reason(result.failures)
-            if not error and not failure and self.outfilename is not None:
-                dirmantest = os.path.join(THIS_DIR, "Manual_tests")
-                if not os.path.isdir(dirmantest):
-                    os.makedirs(dirmantest)
-                shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(dirmantest,
-                                                                                         self.outfilename))
-        else:
-            print("no automatic move implemented for python2")
+        result = self.defaultTestResult()  # These two methods have no side effects
+        self._feedErrorsToResult(result, self._outcome.errors)
+        error = self.mix.list2reason(result.errors)
+        failure = self.mix.list2reason(result.failures)
+        if not error and not failure and self.outfilename is not None:
+            dirmantest = os.path.join(THIS_DIR, "Manual_tests")
+            if not os.path.isdir(dirmantest):
+                os.makedirs(dirmantest)
+            shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(dirmantest,
+                                                                                     self.outfilename))
 
     @classmethod
     def tearDownClass(cls):
@@ -525,7 +503,7 @@ class CartopyTestMixIn(object):
         SD_3DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur de neige fraîche en 72h (cm)'),
         SWE_3DY_ISBA=dict(forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=30.,
-                         label=u'accumulated snow water equivalent for past 3 days (kg/m2)'),
+                          label=u'accumulated snow water equivalent for past 3 days (kg/m2)'),
         RAMSOND_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
                           label=u'Epaisseur mobilisable (cm)'),
         NAT_LEV=dict(forcemin=-0.5, forcemax=5.5, palette='YlOrRd', ncolors=6, label=u'Risque naturel',

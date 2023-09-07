@@ -10,7 +10,7 @@ import datetime
 import os
 
 import netCDF4
-from six.moves import configparser as ConfigParser
+import configparser
 import numpy as np
 
 from snowtools.utils.FileException import VarNameException, UnknownGridTypeException, FileNameException,\
@@ -26,7 +26,7 @@ class _StandardNC(netCDF4.Dataset):
     '''
 
     def read_config(self, section):
-        config = ConfigParser.RawConfigParser()
+        config = configparser.RawConfigParser()
         rootdir = SNOWTOOLS_DIR
         confile = os.path.join(rootdir, 'conf', 'S2M_Standard_Metadata.ini')
         if os.path.isfile(confile):
@@ -189,7 +189,7 @@ class _StandardNC(netCDF4.Dataset):
             alti = np.nan
 
         return lat, lon, alti
-        
+
     def xy2latlon(self, x, y):
         # TO BE CHANGED
         from pyproj import Proj, transform
@@ -208,7 +208,7 @@ class _StandardNC(netCDF4.Dataset):
                 epsg = 'epsg:23032'
             else:
                 projtype = 'No Mercator: XRPK != 0 '
-                raise UnknownGridTypeException(gridtype, projtype) 
+                raise UnknownGridTypeException(gridtype, projtype)
         else:
             raise UnknownGridTypeException(gridtype, "")
 

@@ -8,7 +8,6 @@ Created on 30 Aug. 2017
 
 import re
 
-from six import string_types
 from bronx.stdtypes.date import Date
 
 
@@ -167,7 +166,7 @@ def check_and_convert_date(datearg):
     """
 
     if datearg:
-        if not isinstance(datearg, string_types):
+        if not isinstance(datearg, str):
             raise TypeException(type(datearg), str)
 
         # the regex that parses date format

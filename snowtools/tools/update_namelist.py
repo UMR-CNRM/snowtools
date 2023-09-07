@@ -7,7 +7,6 @@
 # General python modules
 import numpy as np
 import os
-import six
 
 # Snowtools modules
 from snowtools.utils.prosimu import prosimu_base
@@ -253,7 +252,7 @@ def update_physicaloptions(NamelistObject, **kwargs):
     check_or_create_block(NamelistObject, "NAM_ISBA_SNOWn")
     check_or_create_block(NamelistObject, "NAM_ISBAn")
 
-    for key, value in six.iteritems(kwargs):
+    for key, value in kwargs.items():
         if key.upper() in ["CSNOWDRIFT", "LSNOWDRIFT_SUBLIM", "LSNOW_ABS_ZENITH", "CSNOWMETAMO",
                            "CSNOWRAD", "CSNOWFALL", "CSNOWCOND", "CSNOWHOLD", "CSNOWCOMP", "CSNOWZREF", "LSNOWSYTRON"]:
             setattr(NamelistObject["NAM_ISBA_SNOWn"], key.upper(), value)
@@ -273,7 +272,7 @@ def update_snowparameters(NamelistObject, **kwargs):
     check_or_create_block(NamelistObject, "NAM_SURF_CSTS")
     check_or_create_block(NamelistObject, "NAM_SURF_SNOW_CSTS")
     check_or_create_block(NamelistObject, "NAM_ISBAn")
-    for key, value in six.iteritems(kwargs):
+    for key, value in kwargs.items():
         if key.upper() in ["XZ0SN", "XZ0HSN", "XTAU_LW"]:
             setattr(NamelistObject["NAM_SURF_CSTS"], key.upper(), value)
         elif key.upper() in ["XALBICE1", "XALBICE2", "XALBICE3", "XRHOTHRESHOLD_ICE", "XZ0ICEZ0SNOW",

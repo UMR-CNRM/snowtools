@@ -2,7 +2,6 @@
 
 import os
 import typing
-import six
 import xml.dom.minidom
 from snowtools.utils.FileException import FileNameException, FileParseException
 
@@ -147,7 +146,7 @@ class infomassifs():
                                list(range(64, 75)) + list(range(80, 92))
                         }
 
-        for area, list_massifs in six.iteritems(self.dicArea.copy()):
+        for area, list_massifs in self.dicArea.copy().items():
             self.dicArea[area + "_allslopes"] = list_massifs
             self.dicArea[area + "_flat"] = list_massifs
 

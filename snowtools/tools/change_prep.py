@@ -13,9 +13,6 @@ import csv
 import netCDF4
 import numpy as np
 
-# For compatibility python 2 / python 3
-# import six
-
 from snowtools.utils.prosimu import prosimu_base
 from snowtools.utils.FileException import FileNameException
 

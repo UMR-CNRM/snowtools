@@ -18,7 +18,6 @@ It will print the main informations.
 import subprocess
 import logging
 import os
-import six
 
 logger = logging.getLogger('snowtools.gitutils')
 
@@ -58,7 +57,7 @@ class _chdir:
             return self
         except (OSError, FileNotFoundError, PermissionError, NotADirectoryError) as e:
             logger.error('Incorrect path: {}'.format(e))
-            six.raise_from(_ChdirException('Could not change directory to {}'.format(self.path)), e)
+            raise _ChdirException('Could not change directory to {}'.format(self.path)) from e
 
     def __exit__(self, e_type, e_value, e_traceback):
         if self.chdir:
@@ -76,8 +75,6 @@ def current_git_repo(path=None):
     :returns: Path of git repository, or None if an error occurs or not in a git repository
     :rtype: str
     """
-    if six.PY2:
-        return None
     try:
         with _chdir(path):
             spg = subprocess.run(CMD_DISCOVER, timeout=timeout, capture_output=True, check=True, encoding='utf-8')
@@ -250,8 +247,6 @@ class git_infos:
                   Could also return None in case of error in command execution or git repo not found.
         :rtype: bool
         """
-        if six.PY2:
-            return None
         try:
             with _chdir(self.path):
                 spg = subprocess.run(COMMAND_CLEAN, timeout=timeout, capture_output=True, check=True, encoding='utf-8')

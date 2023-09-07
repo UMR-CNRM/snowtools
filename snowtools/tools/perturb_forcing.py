@@ -9,7 +9,6 @@ Created on 3 Aug. 2022
 import numpy as np
 import os
 import csv
-import six
 
 from snowtools.tools.change_forcing import forcinput_tomodify
 from snowtools.DATA import SNOWTOOLS_DATA
@@ -233,7 +232,7 @@ class forcinput_perturb(forcinput_tomodify):
 
         semiDistrib = init_forcing_file.pointsdim is not None
 
-        for dimname, dim in six.iteritems(dictdim):
+        for dimname, dim in dictdim.items():
             print("Create dimension " + dimname + " " + str(len(dim)))
             new_forcing_file.createDimension(dimname, len(dim))
 
