@@ -1,6 +1,10 @@
 :mod:`bronx` --- A collection of basic utilities that can be used in many projects
 ==================================================================================
 
+Bronx is an indepedent package provided by the Vortex team and many contributors
+and gather many usefull functions such as date management or classical meteorological
+functions.
+
 .. automodule:: bronx
    :synopsis: A collection of basic utilities that can be used in many projects
 
@@ -9,18 +13,3 @@
 .. versionadded:: 1.2.0
 
 .. autodata:: __all__
-
-
-Bronx
------
-
-Each module of the :mod:`bronx` package may be used on its own (although it may
-depend on other :mod:`bronx`'s modules). Therefore, each module should be
-sufficiently auto-documented, which results in the following Sphinx
-documentation:
-
-.. toctree::
-   :maxdepth: 3
-
-   bronx/index
-
