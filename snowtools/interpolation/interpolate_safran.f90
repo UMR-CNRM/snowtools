@@ -642,10 +642,10 @@ CONTAINS
     REAL(KIND=8) ,SAVE :: XPI   = 4.*ATAN(1.)
     REAL(KIND=8) ,SAVE :: XN    = 0.7256077650  ! exposant de projection (n)
     REAL(KIND=8) ,SAVE :: XC    = 11754255.426  ! constante de projection (c)(m)
-    REAL(KIND=8) ,SAVE :: XXS   = 700000.000    ! X en projection du Pôle (Xs)(m)
-    REAL(KIND=8) ,SAVE :: XYS   = 12655612.050  ! Y en projection du Pôle (Ys)(m)
-    REAL(KIND=8) ,SAVE :: XLON0 = 3.            ! 3° Est Greenwitch pour L93
-    REAL(KIND=8) ,SAVE :: XE    = 0.08181919112 ! premiere excentricité
+    REAL(KIND=8) ,SAVE :: XXS   = 700000.000    ! X en projection du Pole (Xs)(m)
+    REAL(KIND=8) ,SAVE :: XYS   = 12655612.050  ! Y en projection du Pole (Ys)(m)
+    REAL(KIND=8) ,SAVE :: XLON0 = 3.            ! 3 degrees Est Greenwitch pour L93
+    REAL(KIND=8) ,SAVE :: XE    = 0.08181919112 ! first excentricity
     !
     !*       1.     LONGITUDE
     !               -----------
@@ -703,12 +703,12 @@ CONTAINS
     REAL :: ZR               ! length of arc meridian line projection
     INTEGER :: JI,JJ
     REAL(KIND=8) ,SAVE :: XPI   = 4.*ATAN(1.)
-    REAL(KIND=8) ,SAVE :: XE    = 0.08181919112 ! premiere excentricité
+    REAL(KIND=8) ,SAVE :: XE    = 0.08181919112 ! first excentricity
     REAL(KIND=8) ,SAVE :: XN    = 0.7256077650  ! exposant de projection (n)
     REAL(KIND=8) ,SAVE :: XC    = 11754255.426  ! constante de projection (c)(m)
-    REAL(KIND=8) ,SAVE :: XXS   = 700000.000    ! X en projection du Pôle (Xs)(m)
-    REAL(KIND=8) ,SAVE :: XYS   = 12655612.050  ! Y en projection du Pôle (Ys)(m)
-    REAL(KIND=8) ,SAVE :: XLON0 = 3.            ! 3° Est Greenwitch pour L93
+    REAL(KIND=8) ,SAVE :: XXS   = 700000.000    ! X en projection du Pole (Xs)(m)
+    REAL(KIND=8) ,SAVE :: XYS   = 12655612.050  ! Y en projection du Pole (Ys)(m)
+    REAL(KIND=8) ,SAVE :: XLON0 = 3.            ! 3 degrees Est Greenwitch pour L93
     !
     ZPI180 = XPI / 180.
     ZPI4 = XPI / 4.
@@ -880,7 +880,7 @@ CONTAINS
         PSSO_SLOPE(JI-JPHEXT,JJ-JPHEXT)=ATAN(SQRT(ZSURF**2.-1.))*(180./XPI)
         !
         !Calcul de SSO_DIR via formules(9),(10)et (15) de Zevenbergen and Thorne,1987
-        ! SSO_DIR en degré from north between 0 and 360 (North = 0°, East = 90 °, South = 180 °, West = 270 °)
+        ! SSO_DIR, degrees from north between 0 and 360 (North = 0 deg, East = 90 deg, South = 180 deg, West = 270 deg)
         ZDIRX=(  ZZSL(JI+1,JJ) -ZZSL(JI-1,JJ))  &
                 / (ZXHAT(JI+1)-ZXHAT(JI))
         ZDIRY=(  ZZSL(JI,JJ+1) - ZZSL(JI,JJ-1) ) &
@@ -1037,7 +1037,7 @@ CONTAINS
         PSSO_SLOPE(JI-JPHEXT,JJ-JPHEXT)=ATAN(SQRT(ZSURF**2.-1.))*(180./XPI)
         !
         !Calcul de SSO_DIR via formules(9),(10)et (15) de Zevenbergen and Thorne,1987
-        ! SSO_DIR en degré from north between 0 and 360 (North = 0°, East = 90 °, South = 180 °, West = 270 °)
+        ! SSO_DIR, degrees from north between 0 and 360 (North = 0 deg, East = 90 deg, South = 180 deg, West = 270 deg)
         ZDIRX=(  ZZSL(JI+1,JJ) -ZZSL(JI-1,JJ))  &
                 / (ZXHAT(JI+1,JJ)-ZXHAT(JI,JJ))
         ZDIRY=(  ZZSL(JI,JJ+1) - ZZSL(JI,JJ-1) ) &
