@@ -13,7 +13,7 @@ import argparse
 import os
 
 from snowtools.scripts.extract.obs.bdquery import question
-from bronx.stdtypes.date import Date
+from bronx.stdtypes.date import Date, Period
 
 parser = argparse.ArgumentParser(
         description="Read precititation and temperature observations from BDCLim for all availables stations"
@@ -79,7 +79,8 @@ if args.rr:
                 f"POSTE_NIVO ON {table}.NUM_POSTE = POSTE_NIVO.NUM_POSTE ", f" HIST_RESEAU_POSTE on ({table}.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE) ",
                 ],
             listconditions=[f"HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64') AND {table}.rr{suffix} is not Null"],
-            period=[datedeb, datefin],
+            #period=[datedeb, datefin],
+            period=[begin.ymdh, end.ymdh],
             )
     if args.frequency == 'daily':
         print("WARNING : The rr value corresponding to date 'ymd' is the observation of date 'ym(d+1)' covering ymd6h-->ym(d+1)6h")
@@ -93,7 +94,8 @@ if args.rr:
                 f"HIST_RESEAU_POSTE on (H_NIVO.NUM_POSTE = HIST_RESEAU_POSTE.NUM_POSTE) ",
                 ],
             listconditions=["HIST_RESEAU_POSTE.RESEAU_POSTE in ('51','53','64') ", "H_NIVO.ALTI_LPNX is not Null "],
-            period=[datedeb, datefin],
+            #period=[datedeb, datefin],
+            period=[begin.ymdh, end.ymdh],
             )
     question2.run(outputfile=f'LPN_nivometeo_{begin.ymd}_{end.ymd}.csv')
 
@@ -108,7 +110,8 @@ if args.tn:
             listjoin=[
                 f'POSTE ON {table}.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (' + ','.join(stations_t) + ')'
                 ],
-            period=[datedeb, datefin],
+            #period=[datedeb, datefin],
+            period=[begin.ymdh, end.ymdh],
             dateformat=args.frequency,
             )
     question2.run(outputfile=f'raw_{args.frequency}_obs_TN_{begin.ymd}_{end.ymd}.csv')
@@ -124,7 +127,8 @@ if args.tx:
             listjoin=[
                 f'POSTE ON {table}.NUM_POSTE = POSTE.NUM_POSTE and POSTE.NUM_POSTE in (' + ','.join(stations_t) + ')'
                 ],
-            period=[datedeb, datefin],
+            #period=[datedeb, datefin],
+            period=[begin.ymdh, end.ymdh],
             dateformat=args.frequency,
             )
     question3.run(outputfile=f'raw_{args.frequency}_obs_TX_{begin.ymd}_{end.ymd}.csv')
