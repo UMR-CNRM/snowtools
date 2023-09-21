@@ -1123,7 +1123,7 @@ class ProPlotterController(abc.ABC):
             self.grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.,
                                                       additional_options=additional_options)
         if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
-            self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, point, fillnan=0.,
+            self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_ram, point, fillnan=0.,
                                                     additional_options=additional_options)
         if self.vartoplot_react_desc['name'] in self.master.fileobj.variables_log:
             self.dataplot_react = np.where(self.dataplot_react > 10 ** (-10), self.dataplot_react, 10 ** (-10))
@@ -1532,7 +1532,7 @@ class ProPlotterControllerMultiple(ProPlotterControllerSlider):
             self.grain = self.master.fileobj.get_data(self.master.fileobj.variable_grain, list(liste_points),
                                                       fillnan=0., additional_options=additional_options)
         if self.master.fileobj.variable_ram in self.master.fileobj.variables_t:
-            self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_grain, list(liste_points), fillnan=0.,
+            self.ram = self.master.fileobj.get_data(self.master.fileobj.variable_ram, list(liste_points), fillnan=0.,
                                                     additional_options=additional_options)
         if self.vartoplot_react_desc['name'] in self.master.fileobj.variables_log:
             self.dataplot_react = np.where(self.dataplot_react > 10 ** (-10), self.dataplot_react, 10 ** (-10))
