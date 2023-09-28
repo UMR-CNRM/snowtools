@@ -359,7 +359,7 @@ class ecoclimaprun(surfexrun):
     """Class for a PC SURFEX run for which vegetation is taken from ECOCLIMAP"""
 
     def get_all_consts(self):
-        super(griddedrun, self).get_all_consts()
+        super(ecoclimaprun, self).get_all_consts()
         if not os.path.isfile(self.dirprep + "/PGD.nc"):
             if "DIRDATAPGD" in list(os.environ.keys()):
                 dirdatapgd = os.environ["DIRDATAPGD"]
