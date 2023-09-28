@@ -22,7 +22,7 @@ TESTBASE_DIR = "/rd/cenfic3/cenmod/home/viallonl/testbase"
 Path to the testbase on cenfic3
 """
 
-DIRDATAPGD = '/rd/cenfic3/cenmod/home/lafaysse/FILES_PGD'
+DIRDATAPGD = '/rd/cenfic3/cenmod/simul_surfex_rech/lafaysse/FILES_PGD'
 """
 PGD files at CEN
 """
