@@ -7,7 +7,6 @@ Created on 6 févr. 2019
 '''
 
 import numpy as np
-import six
 
 from matplotlib import pyplot as plt
 
@@ -30,7 +29,7 @@ class boxplots(Mplfigure):
     def draw(self, list_scores, **kwargs):
 
         boxplotargs = dict()
-        for key, value in six.iteritems(kwargs):
+        for key, value in kwargs.items():
             if key not in ['forcemin', 'forcemax', 'label', 'ylabel', 'fillcolor', 'fontsize']:
                 boxplotargs[key] = value
 
@@ -78,7 +77,6 @@ class boxplots(Mplfigure):
                 indexes = np.sort([l.index(x) for x in set(l)])
                 list_legend = [self.bp[0]['boxes'][ind] for ind in indexes]
 
-
         if 'label' in kwargs.keys():
             self.plot.legend(list_legend, kwargs['label'], loc="upper right", fontsize=18)
 
@@ -86,7 +84,7 @@ class boxplots(Mplfigure):
 
         if 'forcemin' in kwargs.keys() and 'forcemax' in kwargs.keys():
             self.plot.set_ylim([kwargs['forcemin'], kwargs['forcemax']])
-        
+
         if 'ylabel' in kwargs.keys():
             self.plot.set_ylabel(kwargs['ylabel'], fontsize=18)
 
@@ -181,4 +179,3 @@ class boxplots_byyear(boxplots):
         self.plot.set_xlabel(u'Year', fontsize=18)
         super(boxplots_byyear, self).draw(list_scores, **kwargs)
         self.indsimu += 1
-

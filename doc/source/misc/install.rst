@@ -10,7 +10,6 @@ The snowtools project is mainly designed for a Linux environment.
 
 The whole project requires at least python 3.6 and the following packages:
 
-* ``six``
 * ``numpy``
 * ``netCDF4``
 * ``matplotlib``
@@ -37,7 +36,7 @@ We encourage you to install these packages through system packages, for instance
 
 .. code-block:: bash
    
-   sudo apt install python3-six python3-numpy python3-netcdf4 \
+   sudo apt install python3-numpy python3-netcdf4 \
                     python3-matplotlib python3-dateutil python3-pyproj \
                     python3-shapely python3-willow python3-scipy \
                     python3-psycopg2 python3-pandas python3-xarray \

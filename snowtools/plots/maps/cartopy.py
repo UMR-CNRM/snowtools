@@ -562,7 +562,6 @@ class _Map_massifs(Mplfigure):
         :return: feature list
         """
         features = [{'feature': self.map.add_geometries([lshape], crs=ccrs.PlateCarree(),
-                                                        cmap=self.palette,
                                                         facecolor='none', edgecolor='dimgrey',
                                                         alpha=1.0),
                      'massifnum':inum, 'massifname':iname,
@@ -1234,7 +1233,6 @@ class _MultiMap(_Map_massifs):
             features.append([{'feature': self.maps.flat[i].add_geometries([ishape],
                                                                           crs=self.projection,
                                                                           facecolor='none',
-                                                                          cmap=self.palette,
                                                                           edgecolor='dimgrey',
                                                                           alpha=1.0),
                               'massifnum':inum, 'massifname':iname,

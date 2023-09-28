@@ -77,7 +77,6 @@ setup(
              'netCDF4',
              'numpy',
              'scipy',
-             'six',
              'python-dateutil',
              'pyproj',
              'shapely',

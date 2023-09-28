@@ -9,8 +9,6 @@ order to adapt to simulation temporal extent.
 @author: lafaysse
 """
 
-import six
-
 from matplotlib import pyplot as plt
 from matplotlib.dates import HourLocator, DayLocator, MonthLocator, YearLocator, DateFormatter
 
@@ -52,7 +50,7 @@ class temporalplot_abstract(Mplfigure):
     def add_line(self, timeOut, varOut, **kwargs):
 
         linesargs = {}
-        for key, value in six.iteritems(kwargs):
+        for key, value in kwargs.items():
             if key not in ['forcemin', 'forcemax', 'ylabel', 'fillcolor']:
                 linesargs[key] = value
 
