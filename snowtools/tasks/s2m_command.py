@@ -253,6 +253,10 @@ class Surfex_command(_S2M_command):
                           action="store_true", dest="gridsimul", default=False,
                           help="This is a gridded simulation as defined in the namelist - default: False")
 
+        parser.add_option("--ecoclimap",
+                          action="store_true", dest="ecoclimap", default=False,
+                          help="Vegetation is extracted from ECOCLIMAP database - default: False")
+
         parser.add_option("--escroc",
                           action="store", type="string", dest="escroc", default=None,
                           help="ESCROC subensemble")
@@ -413,6 +417,12 @@ class Surfex_command(_S2M_command):
                                           workdir=self.options.workdir, datespinup=self.options.datespinup,
                                           execdir=self.options.exesurfex,
                                           namelist=self.options.namelist)
+                elif self.options.ecoclimap:
+                    run = runs.ecoclimaprun(self.options.datedeb, self.options.datefin, self.options.forcing,
+                                         self.options.diroutput, threshold=self.options.threshold,
+                                         workdir=self.options.workdir, datespinup=self.options.datespinup,
+                                         execdir=self.options.exesurfex,
+                                         namelist=self.options.namelist)
                 else:
                     run = runs.surfexrun(self.options.datedeb, self.options.datefin, self.options.forcing,
                                          self.options.diroutput, threshold=self.options.threshold,

@@ -355,11 +355,8 @@ class massifextractpro(massifrun):
         pass
 
 
-class griddedrun(surfexrun):
-    """Class for a PC gridded SURFEX run for which the geometry is defined in the namelist"""
-    def __init__(self, *args, **kwargs):
-        super(griddedrun, self).__init__(*args, **kwargs)
-        self.updateloc = False
+class ecoclimaprun(surfexrun):
+    """Class for a PC SURFEX run for which vegetation is taken from ECOCLIMAP"""
 
     def get_all_consts(self):
         super(griddedrun, self).get_all_consts()
@@ -372,6 +369,13 @@ class griddedrun(surfexrun):
             print(os.listdir(dirdatapgd))
             for fic in os.listdir(dirdatapgd):
                 get_file_const_or_crash(dirdatapgd + "/" + fic, fic, preferlink=True)
+
+
+class griddedrun(ecoclimaprun):
+    """Class for a PC gridded SURFEX run for which the geometry is defined in the namelist"""
+    def __init__(self, *args, **kwargs):
+        super(griddedrun, self).__init__(*args, **kwargs)
+        self.updateloc = False
 
 
 class interpolgriddedrun(interpolrun, griddedrun):
