@@ -386,7 +386,6 @@ class Vortex_conf_file(object):
     def escroc_variables(self):
 
         self.set_field("DEFAULT", 'subensemble', self.options.escroc)
-        # self.set_field("DEFAULT", 'duration', 'full')
 
         if self.options.nnodes > 1 and self.options.nmembers:
 
@@ -427,7 +426,13 @@ class Vortex_conf_file(object):
 
         self.set_field("DEFAULT", 'meteo', self.options.model)
 
-        self.set_field("DEFAULT", 'duration', 'yearly')
+        duration = {'ESM-SnowMIP' : 'full', 's2m' : 'yearly', 'safran' : 'yearly'}
+
+        if self.options.model not in duration.keys():
+            # Default: yearly forcing files
+            duration[self.options.model] = 'yearly'
+
+        self.set_field("DEFAULT", 'duration', duration[self.options.model])
 
     def surfex_variables(self):
 
