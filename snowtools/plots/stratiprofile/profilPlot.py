@@ -503,14 +503,14 @@ def heightplot(ax, value, value_ep, time, legend=None, color='b', direction_cut=
 
     # pas très pythonique: faire un truc avec np.apply_along_axis(np.searchsorted, 1, ep_from, height)
     if direction_cut == 'down':
-        for i in np.arange(np.alen(ep_from_topsnow)):
+        for i in np.arange(len(ep_from_topsnow)):
             if ep_from_topsnow[i, :].searchsorted(float(height_cut)) < int(value_ep.shape[1]) and \
                     float(height_cut) < ep_from_ground[i, -1]:
                 y.append(value[i, ep_from_topsnow[i, :].searchsorted(float(height_cut))])
             else:
                 y.append(None)
     if direction_cut == 'up':
-        for i in np.arange(np.alen(ep_from_ground)):
+        for i in np.arange(len(ep_from_ground)):
             if ep_from_ground[i, :].searchsorted(float(height_cut)) > 0 and \
                     float(height_cut) < ep_from_ground[i, -1]:
                 y.append(value[i, int(value_ep.shape[1]) - ep_from_ground[i, :].searchsorted(float(height_cut))])
