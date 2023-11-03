@@ -12,6 +12,8 @@ inherit from this class.
 """
 
 # General python modules
+import sys
+
 try:
     from snowtools.utils.resources import check_snowtools_install
     from snowtools.utils.resources import InstallException
@@ -35,8 +37,7 @@ class _S2M_command(object):
         self.mandatory_arguments = dict()
         # Read the options provided by the user
         self.options = self.parse_options(args)
-        self.check_mandatory_arguments(**{'--surfex': 'surfex', '--safran': 'safran',
-                                          '--oper': 'oper'})
+
         self.execute()
 
     def parse_options(self, arguments):
@@ -65,4 +66,4 @@ class _S2M_command(object):
 
         if len(missing_options) > 0:
             print('The following mandatory options are missing : ' + ','.join(missing_options))
-            self.exit_usage()
+            sys.exit(1)

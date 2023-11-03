@@ -8,7 +8,7 @@ Created on 30 Aug. 2017
 """
 
 # General python modules
-from optparse import OptionParser
+import argparse
 import os
 import sys
 import datetime
@@ -23,13 +23,7 @@ from snowtools.tasks.vortex_kitchen import vortex_kitchen
 from snowtools.tasks.crocO_vortex_kitchen import crocO_vortex_kitchen
 from snowtools.tasks.s2m_launcher import _S2M_command
 from snowtools.DATA import SNOWTOOLS_DIR
-from snowtools.utils.FileException import UndefinedDirectoryException
-
-usage = "usage: s2m -b begin_date -e end_date -f forcing [-m forcingmodel] [-o path_output] [-w workdir] " \
-        "[-n namelist] [-x date_end_spinup] [-a threshold_1aout] [-r region] [-l list_slopes] " \
-        "[-c nb_classes_aspects] [-L Lower-altitude] [-U Upper-altitude] [-s surfex_exe_directory]" \
-        "[--lptr]"
-
+from snowtools.utils.FileException import UndefinedDirectoryException, UnsupportedOptionException
 
 class Surfex_command(_S2M_command):
     """class for SURFEX experiments launching commands"""
@@ -43,7 +37,7 @@ class Surfex_command(_S2M_command):
 
     def check_and_convert_options(self, vortex=False):
 
-        if self.options.oper:
+        if self.options.command == 'oper':
             self.check_mandatory_arguments(**{'-r': 'region'})
 
             if self.options.datedeb:
@@ -77,8 +71,8 @@ class Surfex_command(_S2M_command):
                 self.check_mandatory_arguments(**{'-r': 'region', '-m': 'model'})
 
         # self.check_mandatory_arguments()
-        self.set_path(vortex)
-        self.set_geo(vortex)
+            self.set_path(vortex)
+            self.set_geo(vortex)
 
     def set_geo(self, vortex):
 
@@ -116,8 +110,8 @@ class Surfex_command(_S2M_command):
         [self.options.namelist, self.options.workdir, self.options.exesurfex] = \
             list(map(absolute_path, [self.options.namelist, self.options.workdir, self.options.exesurfex]))
 
-        if self.options.croco:
-            self.options.croco = absolute_path(self.options.croco)
+        if self.options.conf:
+            self.options.conf = absolute_path(self.options.conf)
 
         if not vortex:
             [self.options.forcing, self.options.diroutput] = \
@@ -130,203 +124,173 @@ class Surfex_command(_S2M_command):
 
     def parse_options(self, arguments):
 
-        parser = OptionParser(usage)
+        parser = argparse.ArgumentParser(description=" s2m simulations need ground temperature to be initialized. "
+                                 "If initial conditions are not known (PREP file not available for the starting date), "
+                                 "then an init_TG.nc file is expected to be found in the prep directory. It must "
+                                 "contain an initial ground temperature variable called TG with dimension "
+                                 "(Number_of_points). The init_TG.nc file can be generated using -G or -g options (see "
+                                 "their description). Otherwise, the command will crash.")
 
-        parser.add_option("-g", action="store_true", dest="ground", default=False)
-        parser.add_option("-G", action="store_true", dest="groundonly", default=False)
+        subparsers = parser.add_subparsers(dest='command')
+        parser_research = subparsers.add_parser('research')
 
-        parser.add_option("-b", "--begin",
-                          action="store", type="string", dest="datedeb", default=None,
-                          help="Date to start the simulation (YYYYMMDD): MANDATORY OPTION")
+        parser_research_main = parser_research.add_argument_group('main arguments')
 
-        parser.add_option("-e", "--end",
-                          action="store", type="string", dest="datefin", default=None,
-                          help="Date to finish the simulation (YYYYMMDD): MANDATORY OPTION (unless --oper)")
+        parser_research_main.add_argument("-b", "--begin",
+                          type=str, dest="datedeb", required=True,
+                          help="Date of the beginning of the simulation.")
 
-        parser.add_option("-o", "--output",
-                          action="store", type="string", dest="diroutput", default="output",
+        parser_research_main.add_argument("-e", "--end",
+                          type=str, dest="datefin", required=True,
+                          help="Date of the end of the simulation")
+
+        parser_research_main.add_argument("-o", "--output",
+                          type=str, dest="diroutput", default="output",
                           help="name of the output directory - default: output")
 
-        parser.add_option("-f", "--forcing",
-                          action="store", type="string", dest="forcing", default=None,
+        parser_research_main.add_argument("-f", "--forcing",
+                          type=str, dest="forcing", default=None,
                           help="path of the forcing file or of the directory with the forcing files - default: None")
 
-        parser.add_option("-m", "--model",
-                          action="store", type="string", dest="model", default=None,
-                          help="meteorological model used as forcing")
-
-        parser.add_option("-x", "--spinupdate",
-                          action="store", type="string", dest="datespinup", default=None,
-                          help="path of the directory with the spinup file - default: None")
-
-        parser.add_option("-l", "--list_slopes",
-                          action="store", type="string", dest="slopes", default=None,
-                          help="path of the file with the list of physical options - default: None")
-
-        parser.add_option("-r", "--region",
-                          action="store", type="string", dest="region", default=None,
-                          help="path of the file with the list of physical options - default: alpes")
-
-        parser.add_option("-n", "--namelist",
-                          action="store", type="string", dest="namelist",
+        parser_research_main.add_argument("-n", "--namelist",
+                          type=str, dest="namelist",
                           default=SNOWTOOLS_DIR + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam',
                           help="path of the mother namelist - default: " + SNOWTOOLS_DIR +
                           '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam')
 
-        parser.add_option("-s", "--surfexexec",
-                          action="store", type="string", dest="exesurfex", default=None,
-                          help="path of the mother namelist - default: $EXESURFEX")
+        parser_research_init = parser_research.add_argument_group('initialization set up')
+        parser_research_init.add_argument("-G", action="store_true", dest="groundonly", default=False,
+                            help="Generate a ground initialization file by computing a climatological average of air "
+                                 "temperature on the provided period. With this option, the simulation is not run, the "
+                                 "user can use -g instead to combine the ground temperature initialization and running "
+                                 "the simulation.")
 
-        parser.add_option("-w", "--workdir",
-                          action="store", type="string", dest="workdir", default=None,
-                          help="name of the output directory - default: output")
+        parser_research_init.add_argument("-g", action="store_true", dest="ground", default=False,
+                            help="Combines -G option and run the simulation aftterwards.")
 
-        parser.add_option("-a", "--august_threshold",
-                          action="store", type="int", dest="threshold", default=-999,
-                          help="name of the output directory - default: -999")
+        parser_research_init.add_argument("-x", "--spinupdate",
+                          type=str, dest="datespinup", default=None,
+                          help="date of validity of the spinup file - default: None")
 
-        parser.add_option("-L", "--lowest",
-                          action="store", type="int", dest="minlevel", default=None,
-                          help="name of the output directory - default: None")
+        parser_research_init.add_argument("-a", "--august_threshold",
+                          type=int, dest="threshold", default=-999,
+                          help="Limit the snow water equivalent each 1st August to the provided value in kg/m2 "
+                               "- default: -999")
 
-        parser.add_option("-U", "--upper",
-                          action="store", type="int", dest="maxlevel", default=None,
-                          help="name of the output directory - default: None")
+        parser_research_forcing =  parser_research.add_argument_group('forcing pre-processing')
 
-        parser.add_option("-c", "--classes_aspect",
-                          action="store", type="int", dest="aspects", default=None,
-                          help="name of the output directory - default: None")
+        parser_research_forcing.add_argument("-r", "--region",
+                          type=str, dest="region", default=None,
+                          help='''Extract a limited number of massifs in FORCING files or interpolate forcing files 
+                          in a given geometry.
+                          - If region is a single massif number or a list of massif numbers 
+                          separated by comas or a generic name for a group of massifs, extract the corresponding 
+                          massifs.
+                          - If region is a netcdf file describing the target geometry, interpolate SAFRAN fields on 
+                          this geometry. The netcdf file describing the geometry must contain the massif_number and ZS 
+                          variables. It can be 1d (Number_of_points) or 2d (y, x) in Lambert93 or 2d (latitude, 
+                          longitude). 1d files can optionnally provide aspect and slope. These variables will be 
+                          computed by the software for 2d files. Note that you need to compile the fortran interpolator 
+                          to use this option.
+                          ''')
 
-        parser.add_option("-E", "--extractforcing",
-                          action="store_true", dest="onlyextractforcing", default=False,
-                          help="only extract meteorological forcing - default: False")
+        parser_research_forcing.add_argument("-L", "--lowest",
+                          type=int, dest="minlevel", default=None,
+                          help="Eliminate elevations lower than this level in FORCING files (in meters) - "
+                               "default: None")
 
-        parser.add_option("-p", "--prep_xpid",
-                          action="store", type="string", dest="prep_xpid", default=None,
+        parser_research_forcing.add_argument("-U", "--upper",
+                          type=int, dest="maxlevel", default=None,
+                          help="Eliminate elevations upper than this level in FORCING files (in meters)- "
+                               "default: None")
+
+        parser_research_forcing.add_argument("-c", "--classes_aspect",
+                          type=int, dest="aspects", default=None,
+                          help='''Specify the number of aspect classes to extract or generate. Default:8
+
+                          -c 8 : N, NE, E, SE, S, SW, W, NW
+                          -c 4 : N, E, S, W
+                          -c 2 : N, S
+                          -c 135 : specify only 1 aspect in ° if multiple of 45°''')
+
+        parser_research_forcing.add_argument("-l", "--list_slopes",
+                          type=str, dest="slopes", default=None,
+                          help="Extract a reduced number of slope angles in FORCING files, or generate a larger number "
+                               "of slope angles for a flat FORCING file")
+
+        parser_research_forcing.add_argument("-E", "--extractforcing",
+                            action="store_true", dest="onlyextractforcing", default=False,
+                            help="only extract meteorological forcing - default: False")
+
+        parser_research_forcing.add_argument("--addmask",
+                            action="store_true", dest="addmask", default=False,
+                            help="apply shadows on solar radiation from surrounding masks")
+
+        parser_research_path = parser_research.add_argument_group('optional path definitions')
+
+        parser_research_path.add_argument("-s", "--surfexexec",
+                          type=str, dest="exesurfex", default=None,
+                          help="Specify the directory where to find SURFEX binaries (PGD, PREP, OFFLINE) - "
+                               "default: $EXESURFEX")
+
+        parser_research_path.add_argument("-w", "--workdir",
+                          type=str, dest="workdir", default=None,
+                          help="name of the running directory - default: workdir")
+
+        parser_research_others = parser_research.add_argument_group('other arguments')
+
+        parser_research_others.add_argument("--geotype",
+                          dest="geotype", default='unstructured',
+                          choices=['unstructured','grid'],
+                          help="Type of simulation geometry: grids must be defined in namelist while namelists are "
+                               "automatically updated for unstructured geometries according to the forcing file.")
+
+        parser_research_others.add_argument("--veg",
+                          dest="veg", default=None,
+                          choices=['namelist', 'ecoclimap'],
+                          help="When vegetation is extracted from ECOCLIMAP database, the corresponding files are "
+                               "downloaded in the working directory."
+                               "Default is namelist when --geotype=unstructured."
+                               "Default is eoclimap when --geotype=grid.")
+
+        parser_research_vortex = parser_research.add_argument_group('vortex options')
+
+        parser_research_vortex.add_argument("-m", "--model",
+                          type=str, dest="model", default=None,
+                          help="meteorological model used as forcing (for vortex runs)")
+        
+        parser_research_vortex.add_argument("-p", "--prep_xpid",
+                          action="store", type=str, dest="prep_xpid", default=None,
                           help="xpid in wich are the PREP files to be used")
 
-        parser.add_option("--addmask",
-                          action="store_true", dest="addmask", default=False,
-                          help="apply shadows on solar radiation from surrounding masks")
+        parser_research_vortex.add_argument("--obsxpid",
+                          action="store", type=str, dest="obsxpid", default=None,
+                          help="xpid of the obs you want to assimilate")
 
-        parser.add_option("--oper",
-                          action="store_true", dest="oper", default=False,
-                          help="Operational chain")
-
-        parser.add_option("--dev",
-                          action="store_true", dest="dev", default=False,
-                          help="Operational chain in development")
-
-        parser.add_option("--forecast",
-                          action="store_true", dest="forecast", default=False,
-                          help="To separate analysis and forecast modes")
-
-        parser.add_option("--reinit",
-                          action="store_true", dest="reinit", default=False,
-                          help="To reinitialize operational analyses with a reanalysis")
-
-        parser.add_option("--monthlyreanalysis",
-                          action="store_true", dest="monthlyreanalysis", default=False,
-                          help="Run monthly reanalysis")
-
-        parser.add_option("--monthlyreanalysissytron",
-                          action="store_true", dest="monthlyreanalysissytron", default=False,
-                          help="Run monthly reanalysis")
-
-        parser.add_option("--dailyprep",
-                          action="store_true", dest="dailyprep", default=False,
-                          help="Split reanalysis day by day to prepare initial conditions for reforecast")
-
-        parser.add_option("--croco",
-                          action="store", type='string', dest="croco", default=None,
-                          help="CrocO assimilation sequence activation and ABSOLUTE path to conf (assimdates (file)")
-
-        parser.add_option("--perturb",
-                          action="store_true", dest="perturb", default=False,
-                          help="Generate stochastic perturbations of forcing files")
-
-        parser.add_option("--nforcing",
-                          action="store", type="int", dest="nforcing", default=1,
-                          help="Number of members of forcing files")
-
-        parser.add_option("--grid",
-                          action="store_true", dest="gridsimul", default=False,
-                          help="This is a gridded simulation as defined in the namelist - default: False")
-
-        parser.add_option("--ecoclimap",
-                          action="store_true", dest="ecoclimap", default=False,
-                          help="Vegetation is extracted from ECOCLIMAP database - default: False")
-
-        parser.add_option("--escroc",
-                          action="store", type="string", dest="escroc", default=None,
-                          help="ESCROC subensemble")
-
-        parser.add_option("--scores",
-                          action="store_true", dest="scores", default=False,
-                          help="ESCROC scores")
-
-        parser.add_option("--nmembers",
-                          action="store", type="int", dest="nmembers", default=None,
-                          help="Number of members")
-
-        parser.add_option("--startmember",
-                          action="store", type="int", dest="startmember", default=None,
-                          help="Number of first member")
-
-        parser.add_option("--nnodes",
-                          action="store", type="int", dest="nnodes", default=1,
+        parser_research_vortex.add_argument("--nnodes",
+                          action="store", type=int, dest="nnodes", default=1,
                           help="Number of nodes")
-
-        parser.add_option("--openloop",
-                          action="store_true", dest="openloop", default=False,
-                          help="OFFLINE inout at assimdates without assim")
-
-        parser.add_option("--walltime",
-                          action="store", type="string", dest="walltime", default=None,
+        
+        parser_research_vortex.add_argument("--ntasks",
+                          action="store", type=int, dest="ntasks", default=None,
+                          help="Number of tasks (and procs) per node.")
+        
+        parser_research_vortex.add_argument("--walltime",
+                          action="store", type=str, dest="walltime", default=None,
                           help="specify your job walltime (format hh:mm:ss)")
 
-        parser.add_option("--writesx",
+        parser_research_vortex.add_argument("--writesx",
                           action="store_true", dest="writesx", default=False,
                           help="Optionnaly transfer the PRO files towards sxcen")
 
-        parser.add_option("--obsxpid",
-                          action="store", type="str", dest="obsxpid", default=None,
-                          help="xpid of the obs you want to assimilate")
-
-        parser.add_option("--sensor",
-                          action="store", type="str", dest="sensor", default="MODIS",
-                          help="specify the sensor name of the obs you want to assimilate")
-
-        parser.add_option("--synth",
-                          action="store", type = "int", dest="synth", default = None,
-                          help="activate synthetic assimilation and set the synthetic member to remove and replace (starting from 1)")
-        parser.add_option("--real",
-                          action="store_true", dest="real", default = False,
-                          help="activate real assimilation")
-        parser.add_option("--pickleit",
-                          action="store_true", dest = "pickleit", default = False,
-                          help ="pickle the output of sims instead of transferring outputs")
-
-        parser.add_option("--ntasks",
-                          action="store", type="int", dest="ntasks", default=None,
-                          help="Number of tasks (and procs) per node.")
-
-        parser.add_option("--debug",
-                          action="store_true", dest="debug", default=False,
-                          help="Debug task with files available on server")
-
-        parser.add_option("--lptr",
-                          action="store_true", dest="drhook", default=False,
-                          help="Profiling MPI task with DRHOOK")
-
-        parser.add_option("--save-pro",
+        parser_research_vortex.add_argument("--save-pro",
                           dest="save_pro", default='multi',
                           choices=['none', 'cache', 'archive', 'multi'],
                           help="Wheteher and where to save PRO_ output files. "
                                "multi is the default and store both in cache and in archive. "
                                "Use none not to save the PRO_ files at all. [Vortex only]")
 
-        parser.add_option("--postprocess",
+        parser_research_vortex.add_argument("--postprocess",
                           dest="postprocess_exe", default=None,
                           help="Postprocessing of PRO file. Provide executable path (absolute) "
                                "and its options as a single string. Will be executed after a"
@@ -334,18 +298,80 @@ class Surfex_command(_S2M_command):
                                "to be saved, please write in commnly used files (PRO, DIAG, CUMUL)."
                                "Please ensure yoursel that your algorithm is correctly parallelized."
                                "[Vortex only]")
+        
+        parser_research_vortex.add_argument("--drhook",
+                          action="store_true", dest="drhook", default=False,
+                          help="Profiling MPI task with DRHOOK")
 
-        (options, args) = parser.parse_args(arguments)
+        parser_research_vortex.add_argument("--task",
+                                            dest="task", type=str, default='surfex',
+                                            choices=["surfex", "surfex_dailyprep", "escroc", "escroc_scores", "croco",
+                                                     "croco_perturb", "reforecast", "debug"],
+                                            help="")
 
-        del args
+        parser_research_vortex.add_argument("--escroc",
+                                            type=str, dest="escroc", default='E2',
+                                            help="ESCROC subensemble in case --task=escroc")
 
+        parser_research_vortex.add_argument("--croco",
+                                            type=str, dest="croco", default='openloop',
+                                            choices=["openloop", "synth", "real"],
+                                            help="assimilation mode in case --task=croco")
+
+        parser_research_vortex.add_argument("--conf",
+                                            type=str, dest="conf", default=None,
+                                            help="configuration file in case --task=croco")
+
+        parser_research_vortex.add_argument("--synthmember",
+                                            type=str, dest="synthmember", default=1,
+                                            help="synthetic member if --croco=synth")
+
+        parser_research_vortex.add_argument("--nforcing",
+                                            action="store", type=int, dest="nforcing", default=1,
+                                             help="Number of members of forcing files")
+
+        parser_research_vortex.add_argument("--nmembers",
+                                            action="store", type=int, dest="nmembers", default=None,
+                                            help="Number of members")
+
+        parser_research_vortex.add_argument("--startmember",
+                                            action="store", type=int, dest="startmember", default=None,
+                                            help="Number of first member")
+
+        parser_research_vortex.add_argument("--sensor",
+                                            action="store", type=str, dest="sensor", default="MODIS",
+                                            help="specify the sensor name of the obs you want to assimilate")
+
+        parser_oper = subparsers.add_parser('oper')
+
+        parser_oper.add_argument("-b", "--begin",
+                                 type=str, dest="datedeb", required=True,
+                                 help="Rundate (réseau).")
+
+        parser_oper.add_argument("-r", "--region",
+                                 type=str, dest="region", required=True,
+                                 help='vconf of the operational run')
+
+        parser_oper.add_argument("--dev",
+                                 action="store_true", dest="dev", default=False,
+                                 help="Operational chain in development")
+
+        parser_oper.add_argument("--task",
+                                 dest="task", type=str, default='analysis',
+                                 choices=["analysis", "forecast", "monthlyreanalysis", "monthlyreanalysissytron"],
+                                 help="")
+
+        parser_oper.add_argument("--walltime",
+                                action="store", type=str, dest="walltime", default=None,
+                                help="specify your job walltime (format hh:mm:ss)")
+
+        options  = parser.parse_args(arguments)
+
+        #del args
         options.surfex = True
         options.safran = False
 
         return options
-
-    def exit_usage(self):
-        sys.exit(usage)
 
     def execute_without_vortex(self):
 
@@ -367,21 +393,19 @@ class Surfex_command(_S2M_command):
                                      namelist=self.options.namelist,
                                      addmask=True, onlyextractforcing=self.options.onlyextractforcing)
             elif self.interpol:
-                if self.options.gridsimul:
-                    run = runs.interpolgriddedrun(self.options.datedeb, self.options.datefin,
-                                                  self.options.forcing, self.options.diroutput,
+                if self.options.geotype=='grid':
+                    myclass = runs.interpolgriddedrun
+                else:
+                    myclass = runs.interpolrun
+
+                run = myclass(self.options.datedeb, self.options.datefin,
+                            self.options.forcing, self.options.diroutput,
                                                   threshold=self.options.threshold, workdir=self.options.workdir,
                                                   datespinup=self.options.datespinup,
                                                   geolist=[self.options.region], execdir=self.options.exesurfex,
-                                                  namelist=self.options.namelist, addmask=False,
+                                                  namelist=self.options.namelist,
                                                   onlyextractforcing=self.options.onlyextractforcing)
-                else:
-                    run = runs.interpolrun(self.options.datedeb, self.options.datefin, self.options.forcing,
-                                           self.options.diroutput, threshold=self.options.threshold,
-                                           workdir=self.options.workdir, datespinup=self.options.datespinup,
-                                           geolist=[self.options.region], execdir=self.options.exesurfex,
-                                           namelist=self.options.namelist, addmask=True,
-                                           onlyextractforcing=self.options.onlyextractforcing)
+
             elif self.options.region or self.options.slopes or self.options.aspects or self.options.minlevel \
                     or self.options.maxlevel:
 
@@ -411,25 +435,23 @@ class Surfex_command(_S2M_command):
                                                   self.options.maxlevel, self.options.slopes,
                                                   self.options.aspects])
             else:
-                if self.options.gridsimul:
-                    run = runs.griddedrun(self.options.datedeb, self.options.datefin, self.options.forcing,
+                if self.options.geotype == 'grid':
+                    if self.options.veg in ['ecoclimap', None]:
+                        myclass = runs.griddedrun
+                    else:
+                        raise UnsupportedOptionException("Gridded simulations (--geotype=grid) with homogeneous "
+                                                         "vegetation (--veg=namelist) are not implemented")
+                else:  # geotype=unstructured
+                    if self.options.veg in ['ecoclimap', None] :
+                        myclass = runs.ecoclimaprun
+                    else:
+                        myclass = runs.surfexrun
+
+                run = myclass(self.options.datedeb, self.options.datefin, self.options.forcing,
                                           self.options.diroutput, threshold=self.options.threshold,
                                           workdir=self.options.workdir, datespinup=self.options.datespinup,
                                           execdir=self.options.exesurfex,
                                           namelist=self.options.namelist)
-                elif self.options.ecoclimap:
-                    run = runs.ecoclimaprun(self.options.datedeb, self.options.datefin, self.options.forcing,
-                                         self.options.diroutput, threshold=self.options.threshold,
-                                         workdir=self.options.workdir, datespinup=self.options.datespinup,
-                                         execdir=self.options.exesurfex,
-                                         namelist=self.options.namelist)
-                else:
-                    run = runs.surfexrun(self.options.datedeb, self.options.datefin, self.options.forcing,
-                                         self.options.diroutput, threshold=self.options.threshold,
-                                         workdir=self.options.workdir, datespinup=self.options.datespinup,
-                                         execdir=self.options.exesurfex,
-                                         namelist=self.options.namelist)
-
             # Execute the run
             run.run()
 
@@ -438,23 +460,25 @@ class Surfex_command(_S2M_command):
         # Check option values and convert them in types suited for defining a run configuration
         self.check_and_convert_options(vortex=True)
 
-        if not self.options.workdir:
+        if hasattr(self.options, 'workdir'):
+            defaultworkdir = not self.options.workdir
+        else:
+            defaultworkdir = True #s2m oper command
+
+        if defaultworkdir:
             if 'WORKDIR' in list(os.environ.keys()):
                 self.options.workdir = os.environ['WORKDIR']
             else:
                 self.options.workdir = "."
 
         # Cook vortex task
-        if not self.options.croco:
-            vortex_kitchen(self.options)
-        elif self.options.escroc:
+        if self.options.task == 'croco':
             crocO_vortex_kitchen(self.options)
         else:
-            print("the croco sequence should run with escroc option")
-
+            vortex_kitchen(self.options)
 
 def main():
-    Surfex_command(sys.argv)
+    Surfex_command(sys.argv[1:])
 
 
 if __name__ == "__main__":

@@ -47,7 +47,8 @@ class ESCROC_subensembles(dict):
 
         if subensemble == "E1":
             self.physical_options, self.snow_parameters, self.members = self.E1(members, randomDraw)
-
+        elif subensemble == "E1B21":
+            self.physical_options, self.snow_parameters, self.members = self.E1B21(members, randomDraw)
         elif subensemble == "E1tartes":
             self.physical_options, self.snow_parameters, self.members = self.E1tartes(members, randomDraw)
 
@@ -95,6 +96,26 @@ class ESCROC_subensembles(dict):
         physical_options, snow_parameters, memberslist = self.drawMembers(members, randomDraw)
 
         return physical_options, snow_parameters, memberslist
+
+    def E1B21(self, members, randomDraw = False):
+        """
+        E1 subensemble: the most complete one with B21 metamorphism
+        """
+
+        self.snowflist = ['V12', 'S02', 'A76']
+        self.metamlist = ['B21', 'F06', 'S-F']
+        self.radlist = ['B60', 'B10', 'TAR', 'TA+']
+        self.turblist = ['RIL', 'RI1', 'RI2', 'M98']
+        self.condlist = ['Y81', 'I02']
+        self.holdlist = ['B92', 'SPK', 'B02']
+        self.complist = ['B92', 'S14', 'T11']
+        self.cvlist = ['CV10000', 'CV30000', 'CV50000']
+
+        self.size = len(self.snowflist) * len(self.metamlist) * len(self.radlist) * len(self.turblist) * len(self.condlist) * len(self.holdlist) * len(self.complist) * len(self.cvlist)
+        physical_options, snow_parameters, memberslist = self.drawMembers(members, randomDraw)
+
+        return physical_options, snow_parameters, memberslist
+
 
     def E1tartes(self, members, randomDraw):
         """
