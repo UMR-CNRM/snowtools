@@ -276,15 +276,19 @@ def get_data_multiple(fileobj, liste_points, var_master, var_react=None, additio
     data = {}
     data['dataplot_master'] = fileobj.get_data(var_master, list(liste_points), additional_options=additional_options)
     if var_react is not None:
-        data['dataplot_react'] = fileobj.get_data(var_react, list(liste_points), additional_options=additional_options)
+        data['dataplot_react'] = fileobj.get_data(var_react, list(liste_points),
+                                                  additional_options=additional_options)
+        data['limitplot_react'] = fileobj.limits_variable(var_react)
     else:
         data['dataplot_react'] = None
+        data['limitplot_react'] = None
 
     data['dztoplot'] = fileobj.get_data(fileobj.variable_dz, list(liste_points), fillnan=0.,
                                         additional_options=additional_options)
+
     data['timeplot'] = fileobj.get_time()
     data['colormap'] = fileobj.colorbar_variable(var_master)
-    data['ymax_react'] = np.max(np.nansum(data['dztoplot'], axis=2))  # axis=2 instead of axis=1
+    data['ymax_react'] = np.max(np.nansum(data['dztoplot'], axis=1))  # axis=1 because snowlayer is second dimension
     data['var_master_has_snl'] = fileobj.variable_desc(var_master)['has_snl']
     data['x_legend'] = [int(i) for i in list(liste_points)]
 
@@ -324,7 +328,7 @@ def give_master_args_multiple(ax1, data, dateslice, plot_colorbar=False):
             max_value = np.nanmax(data['dataplot_master'])
             min_value = np.nanmin(data['dataplot_master'])
         dataplot_master = np.transpose(data['dataplot_master'][dateslice, ...])
-        dztoplot = np.transpose(data['dztoplot'][self.dateslice, ...])
+        dztoplot = np.transpose(data['dztoplot'][dateslice, ...])
         ylimit = np.max(np.cumsum(data['dztoplot'], axis=1))
 
         return dict(ax=ax1, value=dataplot_master, time=data['x_legend'], dz=dztoplot, colormap=data['colormap'],

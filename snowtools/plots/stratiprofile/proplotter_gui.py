@@ -1207,7 +1207,7 @@ class ProPlotterControllerSlider(ProPlotterController):
         # initialisation dateslice to None is giving a problem for the first title
         self.dateslice = 0
 
-    def update_slice_date(self):
+    def update_slice_date(self, *args):
         """
         Redraw the ax1 graph and clear ax2 and ax3
         """
@@ -1348,19 +1348,18 @@ class ProPlotterControllerMultipleProfil(ProPlotterControllerMultiple):
         self.master = master
         super().__init__(master)
 
+    def give_react_args(self, x_event):
+        """
+        Collecting datas for the reacting figure, depending on the choice for the graph type.
+        """
+        # .shape[2] because shape = time, snowlayer, nb_points
+        xindex = max(min(int(x_event), self.data['dztoplot'].shape[2] - 1), 0)
 
-def give_react_args(self, x_event):
-    """
-    Collecting datas for the reacting figure, depending on the choice for the graph type.
-    """
-    # .shape[2] because shape = time, snowlayer, nb_points
-    xindex = max(min(int(x_event), self.data['dztoplot'].shape[2] - 1), 0)
-
-    return proplotter_functions.give_react_args_multiple_profil(self.master.main.ax['ax2'],
-                                                                self.master.main.ax['ax3'],
-                                                                self.data, xindex, self.dateslice,
-                                                                hauteur=self.hauteur,
-                                                                plot_colorbar=self.master.main.first_profil)
+        return proplotter_functions.give_react_args_multiple_profil(self.master.main.ax['ax2'],
+                                                                    self.master.main.ax['ax3'],
+                                                                    self.data, xindex, self.dateslice,
+                                                                    hauteur=self.hauteur,
+                                                                    plot_colorbar=self.master.main.first_profil)
 
 
 class ProPlotterControllerMultipleSaison(ProPlotterControllerMultiple):

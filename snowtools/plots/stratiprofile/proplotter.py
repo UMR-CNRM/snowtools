@@ -38,8 +38,8 @@ def main(version=version):
                         dest='variable_profil')
     parser.add_argument("--point", help="Point number to select", type=int)
     parser.add_argument("-s", "--select", type=str, action='append', dest='select',
-                        help="Selection of point with constraints on data: use as many '-s variable=value' as necessary to \
-                              select the point of interest. Note that if -p is given, these options are ignored.")
+                        help="Selection of point with constraints on data: use as many '-s variable=value' as necessary\
+                               to select the point of interest. Note that if -p is given, these options are ignored.")
 
 # Options for plotting 1D profile instead of time evolution
     parser.add_argument("--profil", action="store_true", default=False,
