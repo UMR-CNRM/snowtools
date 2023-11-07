@@ -3,7 +3,7 @@
 """
 GUI Application for proplotter
 
-The GUI is splitted in different parts :
+The GUI is divided in different parts :
 
 * The Application which is the overall Frame
 * The choice bar (left side) to select variables, divided in:
@@ -749,7 +749,7 @@ class ProPlotterMain(tk.Frame):
 
         self.fig1 = plt.figure()
         self.ax = {'ax1': None, 'ax2': None, 'ax3': None}
-        self.cid = None
+        self.cid = {'motion': None, 'right_click': None}
         self.first_profil = True
         self.first_master = True
         self.first_graph = True
@@ -766,10 +766,11 @@ class ProPlotterMain(tk.Frame):
         """Clean main frame (figure)"""
         for e in self.fig1.axes:
             self.fig1.delaxes(e.axes)
-        if self.cid is not None:
-            self.Canevas.mpl_disconnect(self.cid)
+        for key, value in self.cid.items():
+            if value is not None:
+                self.Canevas.mpl_disconnect(value)
+                self.cid[key] = None
         self.ax = {'ax1': None, 'ax2': None, 'ax3': None}
-        self.cid = None
         self.first_profil = True
         self.first_master = True
         self.first_graph = True
@@ -1115,8 +1116,10 @@ class ProPlotterController(abc.ABC):
                 self.master.main.ax['ax2'].set_ylim(0, self.data['ymax_react'])
 
             self.masterfig(**self.give_master_args())
-            self.master.main.cid = self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
-            self.master.main.Canevas.mpl_connect('button_press_event', button_press)
+            self.master.main.cid['motion'] = self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
+            self.master.main.cid['right_click'] = self.master.main.Canevas.mpl_connect('button_press_event',
+                                                                                       button_press)
+
 
         self.master.main.update()
 
@@ -1214,12 +1217,11 @@ class ProPlotterControllerSlider(ProPlotterController):
         self.dateslice = self.master.choices.params_w.scale_date.get()
         self.master.main.first_master = False
 
-        # Pas clair: à voir si ces alternatives sont nécessaires...
-        if self.master.main.ax['ax1'] is not None:
+        if 'ax1' in self.master.main.ax and self.master.main.ax['ax1'] is not None:
             self.master.main.ax['ax1'].clear()
-        if self.master.main.ax['ax2'] is not None:
+        if 'ax2' in self.master.main.ax and self.master.main.ax['ax2'] is not None:
             self.master.main.ax['ax2'].clear()
-        if self.master.main.ax['ax3'] is not None:
+        if 'ax3' in self.master.main.ax and self.master.main.ax['ax3'] is not None:
             self.master.main.ax['ax3'].clear()
 
         proplotter_functions.masterfig(**self.give_master_args())
@@ -1292,6 +1294,7 @@ class ProPlotterControllerEscrocSaison(ProPlotterControllerEscroc):
         """
          Collecting datas for the reacting figure, depending on the choice for the graph type.
          """
+        # .shape[0] because shape = nb_membres, time, snowlayer
         xindex = max(min(int(x_event), self.data['dztoplot'].shape[0] - 1), 0)
 
         return proplotter_functions.give_react_args_escroc_saison(self.master.main.ax['ax2'], self.data, xindex,
