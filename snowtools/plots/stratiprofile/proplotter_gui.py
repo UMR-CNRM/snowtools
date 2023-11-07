@@ -131,7 +131,7 @@ class ProPlotterApplication(tk.Frame):
 
         self.update_idletasks()
 
-    def close_window(self):
+    def close_window(self, *args, **kwargs):
         """
         Just to close the application
         """
@@ -219,7 +219,7 @@ class ProPlotterApplication(tk.Frame):
         self.choices.params_w = ProPlotterChoicesBarParamsEscroc(self, self.choices.params)
         self.controller = ProPlotterControllerEscrocSaison(self)
 
-    def open(self):
+    def open(self, *args, **kwargs):
         """
         Opening a file
         """
@@ -277,7 +277,7 @@ class ProPlotterApplication(tk.Frame):
         """
         Opening the help window with text inside
         """
-        messagebox.showinfo('CREDITS', 'Software coded by Meteo France, team: CNRM/CEN/CENMOD. \n' 
+        messagebox.showinfo('CREDITS', 'Software coded by Meteo France, team: CNRM/CEN/CENMOD. \n'
                                        'It benefits from numerous interns, doctoral students, etc. \n'
                                        'It benefits obviously also from our tremendous local geek \n'
                                        'The name of our geek is not given to avoid job offers far from CEN \n'
@@ -1047,10 +1047,6 @@ class ProPlotterController(abc.ABC):
         """
          Collecting datas for the reacting figure, depending on the choice for the graph type.
          """
-        if min(int(x_event), self.data['timeplot'].size - 1) < 0:
-            print('ERROR : x value out of bounds: value {}'.format(x_event))
-            print('for expected range 0 to {}.'.format(self.data['timeplot'].size))
-
         xindex = max(min(int(x_event), self.data['timeplot'].size - 1), 0)
         return proplotter_functions.give_react_args_std(self.master.main.ax['ax2'], self.master.main.ax['ax3'],
                                                         self.data, xindex, hauteur=self.hauteur,
@@ -1115,11 +1111,10 @@ class ProPlotterController(abc.ABC):
             if not self.data['var_master_has_snl']:
                 self.master.main.ax['ax2'].set_ylim(0, self.data['ymax_react'])
 
-            self.masterfig(**self.give_master_args())
-            self.master.main.cid['motion'] = self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
-            self.master.main.cid['right_click'] = self.master.main.Canevas.mpl_connect('button_press_event',
-                                                                                       button_press)
-
+        self.masterfig(**self.give_master_args())
+        self.master.main.cid['motion'] = self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
+        self.master.main.cid['right_click'] = self.master.main.Canevas.mpl_connect('button_press_event',
+                                                                                   button_press)
 
         self.master.main.update()
 
