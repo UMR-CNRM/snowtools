@@ -407,7 +407,7 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
         Max = xlimit[1]
         Min = xlimit[0]
     else:
-        Max = 0
+        Max = 0.1
         Min = 0
     if not np.isnan(value).all():
         Max = np.nanmax(value) if np.nanmax(value) > Max else Max

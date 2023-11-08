@@ -972,6 +972,8 @@ class ProPlotterController(abc.ABC):
         self.stop_right_click = False
         self.x_legend = None
         self.hauteur = None
+        self.master_xlim = None
+        self.master_ylim = None
         self.ratio = [2, 1]
         """Ratio of the different figures to plot (when several subplots on the graph)"""
 
@@ -1078,14 +1080,22 @@ class ProPlotterController(abc.ABC):
                 else:
                     self.hauteur = None
 
-                self.master.main.ax['ax2'].clear()
-                self.master.main.ax['ax3'].clear()
-
-                dico = self.give_react_args(event.xdata)
-                self.reactfig(**dico)
-
-                self.master.main.first_profil = False
+                plot_react(event.xdata)
                 self.master.main.update()
+
+        def plot_react(i):
+            self.master.main.ax['ax2'].clear()
+            self.master.main.ax['ax3'].clear()
+            dico = self.give_react_args(i)
+            self.reactfig(**dico)
+            self.master.main.first_profil = False
+
+        # In order to keep in memory the xlim and ylim after a zoom on master figure
+        def change_xlim(event):
+            self.master_xlim = event.get_xlim()
+
+        def change_ylim(event):
+            self.master_ylim = event.get_ylim()
 
         if self.master.fileobj is None:
             return
@@ -1112,9 +1122,18 @@ class ProPlotterController(abc.ABC):
                 self.master.main.ax['ax2'].set_ylim(0, self.data['ymax_react'])
 
         self.masterfig(**self.give_master_args())
+        plot_react(0)
+
+        if self.master_xlim is not None and self.master_ylim is not None:
+            self.master.main.toolbar.push_current()
+            self.master.main.ax['ax1'].set_xlim(self.master_xlim)
+            self.master.main.ax['ax1'].set_ylim(self.master_ylim)
+
         self.master.main.cid['motion'] = self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
         self.master.main.cid['right_click'] = self.master.main.Canevas.mpl_connect('button_press_event',
                                                                                    button_press)
+        self.master.main.ax['ax1'].callbacks.connect('xlim_changed', change_xlim)
+        self.master.main.ax['ax1'].callbacks.connect('ylim_changed', change_ylim)
 
         self.master.main.update()
 
@@ -1132,7 +1151,8 @@ class ProPlotterController(abc.ABC):
         """
         Update to do to specific components when a new file is opened.
         """
-        pass
+        self.master_xlim = None
+        self.master_ylim = None
 
 
 class ProPlotterControllerStandard(ProPlotterController):
