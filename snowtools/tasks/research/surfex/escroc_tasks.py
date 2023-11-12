@@ -35,7 +35,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
         t = self.ticket
 
         if not hasattr(self.conf, "genv"):
-            self.conf.genv = 'uenv:cen.09@CONST_CEN'
+            self.conf.genv = 'uenv:cen.10@CONST_CEN'
 
 
         # Definition of geometries, safran xpid/block and list of dates from S2MTaskMixIn methods
