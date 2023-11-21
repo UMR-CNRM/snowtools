@@ -18,7 +18,7 @@ def setup(t, **kw):
         ticket=t,
         nodes=[
                 Ensemble_Surfex_Task(tag='Ensemble_Surfex_Task', ticket=t, **kw, delay_component_errors=True, on_error='delayed_fail'),
-                Four_Seasons_Task(tag='S2m_pp_Task', ticket=t, **kw)],
+                Four_Seasons_Task(tag='S2m_pp_Task', ticket=t, **kw, delay_component_errors=True, on_error='delayed_fail')],
         options=kw
     )
 

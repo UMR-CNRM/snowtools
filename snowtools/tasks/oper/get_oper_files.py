@@ -6,7 +6,6 @@ Created on 3 aug. 2018
 """
 
 import sys
-import six
 from optparse import OptionParser
 from collections import defaultdict
 
@@ -88,7 +87,7 @@ class configcommand(config):
 
     def __init__(self, options):
         if options.dev:
-            for key, var in six.iteritems(vars(configdev())):
+            for key, var in vars(configdev()).items():
                 setattr(self, key, var)
 
         self.rundate = check_and_convert_date(options.datebegin)

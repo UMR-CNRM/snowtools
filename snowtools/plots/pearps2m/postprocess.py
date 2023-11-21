@@ -13,20 +13,8 @@ usage: python postprocess.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]
     #) Creates spaghetti plots for all massifs and stations
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-# The following lines are necessary with a French environment and python 2 to avoid a bronx crash when calling vortex
-# on months with an accent (Février, Décembre)
-# ----------------------------------------------------------
 import sys
-if sys.version_info.major == 2:  # Python2 only
-    import codecs
-    sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
-    sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
-# ----------------------------------------------------------
-
 import locale
-import six
 import os
 from optparse import OptionParser
 from collections import Counter, defaultdict
@@ -45,14 +33,10 @@ from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR
 
 from bronx.stdtypes.date import today
 from bronx.syntax.externalcode import ExternalCodeImportChecker
-if six.PY2:
-    echecker = ExternalCodeImportChecker('plots.maps.basemap')
-    with echecker:
-        from snowtools.plots.maps.basemap import Map_alpes, Map_pyrenees, Map_corse
-else:
-    echecker = ExternalCodeImportChecker('plots.maps.cartopy')
-    with echecker:
-        from snowtools.plots.maps.cartopy import Map_alpes, Map_pyrenees, Map_corse, Map_vosges, Map_jura, Map_central
+
+echecker = ExternalCodeImportChecker('plots.maps.cartopy')
+with echecker:
+    from snowtools.plots.maps.cartopy import Map_alpes, Map_pyrenees, Map_corse, Map_vosges, Map_jura, Map_central
 
 if 'fast' in matplotlib.style.available:
     matplotlib.style.use('fast')
@@ -344,7 +328,7 @@ class Ensemble(object):
     def spread(self, varname):
         """
         Calculate ensemble spread (standard deviation) for a given variable.
-        
+
         :param varname: variable name
         :type varname: str
         :return: ensemble spread
@@ -866,8 +850,7 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
         m = map_generic[domain[0:3]]()
         for var in self.list_var_map:
             m.init_massifs(**self.attributes[var])
-            if six.PY3:
-                m.addlogo()
+            m.addlogo()
             if 'nolevel' not in self.attributes[var].keys():
                 self.attributes[var]['nolevel'] = False
             if self.attributes[var]['nolevel']:
@@ -895,24 +878,18 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
 
                     m.plot_center_massif(massif[indalti], qmin, qmed, qmax, **self.attributes[var])
 
-                    if six.PY2:
-                        title = "pour le " + pretty_date(self.time[t]).decode('utf-8')
-                    else:
-                        title = "pour le " + pretty_date(self.time[t])
+                    title = "pour le " + pretty_date(self.time[t])
                     if not self.attributes[var]['nolevel']:
                         title += " - Altitude : " + str(int(level)) + "m"
 
                     m.set_title(title)
                     m.set_suptitle(suptitle)
-                    if six.PY2:
-                        m.addlogo()
                     ech = self.time[t] - self.time[0] + self.time[1] - self.time[0]
                     ech_str = '+%02d' % (ech.days * 24 + ech.seconds / 3600)
                     plotname = diroutput + "/" + domain[0:3] + "_" + var + "_" + str(int(level)) + ech_str + "." + self.formatplot
                     m.save(plotname, formatout=self.formatplot)
                     print(plotname + " is available.")
-                    if six.PY3:
-                        m.reset_massifs(rmcbar=False)
+                    m.reset_massifs(rmcbar=False)
             m.reset_massifs()
 
 
@@ -1010,8 +987,7 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
             m.init_massifs(**self.attributes[var])
             m.empty_massifs()
             m.add_north_south_info()
-            if six.PY3:
-                m.addlogo()
+            m.addlogo()
 
             list_loop_alti = list_alti[:]
             for level in list_loop_alti:
@@ -1034,23 +1010,17 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
                             list_values.append(self.quantiles[var][q][t, indalti])
                     # print(len(massif[indalti]))
                     m.rectangle_massif(massif[indalti], list_values, ncol=2, **self.attributes[var])
-                    if six.PY2:
-                        title = "pour le " + pretty_date(self.time[t]).decode('utf-8')
-                    else:
-                        title = "pour le " + pretty_date(self.time[t])
+                    title = "pour le " + pretty_date(self.time[t])
                     title += " - Altitude : " + str(int(level)) + "m"
 
                     m.set_title(title)
                     m.set_suptitle(suptitle)
-                    if six.PY2:
-                        m.addlogo()
                     ech = self.time[t] - self.time[0] + self.time[1] - self.time[0]
                     ech_str = '+%02d' % (ech.days * 24 + ech.seconds / 3600)
                     plotname = diroutput + "/" + domain[0:3] + "_" + var + "_" + str(int(level)) + ech_str + "." + self.formatplot
                     m.save(plotname, formatout=self.formatplot)
                     print(plotname + " is available.")
-                    if six.PY3:
-                        m.reset_massifs(rmcbar=False, rminfobox=False)
+                    m.reset_massifs(rmcbar=False, rminfobox=False)
             m.reset_massifs()
 
 

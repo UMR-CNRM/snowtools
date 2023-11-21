@@ -9,7 +9,6 @@ import os
 import shutil
 import tempfile
 import datetime
-import six
 import sys
 
 _here = os.path.dirname(os.path.realpath(__file__))
@@ -44,11 +43,8 @@ class TestWithTempFolder(unittest.TestCase):
 
         Let available the result in ``self.test_pass``
         """
-        if six.PY3:  # Python 3.4+
-            result = self.defaultTestResult()  # These two methods have no side effects
-            self._feedErrorsToResult(result, self._outcome.errors)
-        else:  # Python 2.7
-            result = getattr(self, '_outcomeForDoCleanups', self._resultForDoCleanups)
+        result = self.defaultTestResult()  # These two methods have no side effects
+        self._feedErrorsToResult(result, self._outcome.errors)
         error = self.list2reason(result.errors)
         failure = self.list2reason(result.failures)
         ok = not error and not failure

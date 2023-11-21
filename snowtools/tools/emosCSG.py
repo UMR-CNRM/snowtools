@@ -7,16 +7,6 @@ Created on 25 June 2018
 @author: lafaysse
 '''
 
-# The following lines are necessary with a French environment and python 2 to avoid a bronx crash when calling vortex
-# on months with an accent (Février, Décembre)
-# ----------------------------------------------------------
-import sys
-if sys.version_info.major == 2:  # Python2 only
-    import codecs
-    sys.stdout = codecs.getwriter('UTF-8')(sys.stdout)
-    sys.stderr = codecs.getwriter('UTF-8')(sys.stderr)
-# ----------------------------------------------------------
-
 import locale
 import datetime
 import os
