@@ -11,7 +11,7 @@ import numpy as np
 from snowtools.plots.stratiprofile import profilPlot
 
 
-def create_axis_for_figure(fig, nb_graph, same_y=False, rat1=2, rat2=1):
+def create_axis_for_figure(fig, nb_graph, same_y=False, ratio=None, same_x=False, third_axis=True):
     """
     Create axis for figure depending on snow-layers presence or not, use of ratios if 2 graphs in same figure.
 
@@ -20,23 +20,41 @@ def create_axis_for_figure(fig, nb_graph, same_y=False, rat1=2, rat2=1):
     :type nb_graph: int
     :param same_y: share y-axis if set to true. Usually set to true where ax1 is used to plot variable with snow-layers
     :type same_y: bool
-    :param rat1: ratio for the first graph (when there are two)
-    :type rat1: float
-    :param rat2: ratio for the second graph (when there are two)
-    :type rat2: float
+    :param ratio: ratios for the size of the two graphs (when there are two)
+    :type ratio: list of integers
+    :param third_axis: Create a third axis on the second subplot.
+    :type third_axis: bool
     """
     if nb_graph == 1:
         ax1 = fig.add_subplot(1, 1, 1)
         return {'ax1': ax1, 'ax2': None, 'ax3': None}
     elif nb_graph == 2:
+        rat1 = ratio[0] if ratio is not None else 1
+        rat2 = ratio[1] if ratio is not None else 1
         ax1 = fig.add_subplot(1, rat1 + rat2, (1, rat1))
+        add_params = {}
         if same_y:
-            ax2 = fig.add_subplot(1, rat1 + rat2, (rat1 + 1, rat1 + rat2), sharey=ax1)
-        else:
-            ax2 = fig.add_subplot(1, rat1 + rat2, (rat1 + 1, rat1 + rat2))
+            add_params['sharey'] = ax1
+        if same_x:
+            add_params['sharex'] = ax1
+        ax2 = fig.add_subplot(1, rat1 + rat2, (rat1 + 1, rat1 + rat2), **add_params)
         fig.subplots_adjust(left=0.1, bottom=0.08, wspace=0.1)
-        ax3 = ax2.twiny()
+        if third_axis:
+            ax3 = ax2.twiny()
+        else:
+            ax3 = None
         return {'ax1': ax1, 'ax2': ax2, 'ax3': ax3}
+    else:
+        ax1 = fig.add_subplot(1, nb_graph, 1)
+        axs = {'ax1': ax1}
+        add_params = {}
+        if same_y:
+            add_params['sharey'] = ax1
+        if same_x:
+            add_params['sharey'] = ax1
+        for i in range(1, nb_graph):
+            ii = i + 1
+            axs['ax{}'.format(ii)] = fig.add_subplot(1, nb_graph, ii, **add_params)
 
 
 def get_data(fileobj, point, var_master, var_react=None, direction_cut=None, height_cut=None, additional_options=None):
