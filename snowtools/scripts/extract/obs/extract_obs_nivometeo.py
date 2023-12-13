@@ -86,7 +86,8 @@ if args.rr:
     question1.run(outputfile=f'obs_nivometeo_{args.frequency}_RR_{begin.ymd}_{end.ymd}.csv')
 
     question2 = question(
-            listvar=[f"{table}.num_poste", "H_NIVO.ALTI_LPNX", "H_NIVO.DAT"], # ALTI_LPNX=altitude maximale de la LPN depuis la dernière obs
+            listvar=[f"{table}.num_poste", "H_NIVO.INDIC_LPNX", "H_NIVO.ALTI_LPNX", "H_NIVO.DAT", "poste_nivo.nom_usuel", "poste_nivo.alti", "poste_nivo.lat_dg", "poste_nivo.lon_dg",
+                "poste_nivo.massif_nivo"], # ALTI_LPNX=altitude maximale de la LPN depuis la dernière obs
             table=table,
             listorder=[f'{table}.num_poste', f'H_NIVO.DAT'],
             listjoin=[
