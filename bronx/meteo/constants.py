@@ -47,6 +47,8 @@ T0 = 273.16
 Lv0 = 2.5008E+6
 # : Sublimation heat constant
 Ls0 = 2.8345E+6
+# : Melting heat constant
+Lm0 = Ls0 - Lv0
 # : Saturation vapor pressure at triple point temperature
 Es0 = 611.14
 # : Constant for saturation vapor pressure function
