@@ -330,8 +330,13 @@ class ProCompareController(abc.ABC):
         self.info_text_bar(point, additional_options=additional_options)
         self.get_data(point, additional_options=additional_options)
         self.master.main.clear()
-
-        self.master.main.ready_to_plot(nb_graph=self.master.n_files, same_x=True, same_y=True, third_axis=False)
+        
+        # From matplotlib.pyplot.colorbar documentation:
+        # the parameter fraction is the Fraction of original axes to use for colorbar
+        # By default this is 0.15
+        # So, a ratio of 85 for firsts figures and 100 for last one allows figure of same size after colorbar
+        ratio = int(self.master.n_files - 1) * [85] + [100]
+        self.master.main.ready_to_plot(nb_graph=self.master.n_files, same_y=True, ratio=ratio, same_x=True, third_axis=False)
 
         # To ensure that the two graphs have the same colorbar, the value_min and value_max parameters are passed to
         # the plotting function

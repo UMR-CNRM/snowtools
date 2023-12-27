@@ -112,6 +112,9 @@ class ProPlotterChoicesBarVariables:
         self.label = tk.Label(self.frame, text='Choice of variables', relief=tk.RAISED)
         self.label.pack()
 
+        # choice of master and react variable. Vocabulary coming from the plotter application
+        # plotter application: one master graph and possibly one servant graph which is reacting from master
+        # compare application: used with only the master variable (several graph of same variable) 
         if self.master.master.fileobj is not None:
             self.variables_info = self.master.master.fileobj.variables_desc
             variables_list = [v['full_name'] if 'full_name' in v else k for k, v in self.variables_info.items()]
@@ -125,6 +128,7 @@ class ProPlotterChoicesBarVariables:
             self.choice_var_master.bind('<<ComboboxSelected>>', self.update_var_master)
             self.choice_var_master.pack()
 
+            # only for plotter application
             if self.n_variables >= 2:
                 self.label2 = tk.Label(self.frame, text='Variable profil:')
                 self.label2.pack()
@@ -134,6 +138,7 @@ class ProPlotterChoicesBarVariables:
                 self.choice_var_react.pack()
 
     def set_var_master(self, var):
+        """Set the value for the master graph which is the left graph"""
         if var in self.choice_var_master['values']:
             i = self.choice_var_master['values'].index(var)
             self.choice_var_master.current(i)
@@ -142,13 +147,17 @@ class ProPlotterChoicesBarVariables:
         return False
 
     def update_var_master(self, *args):
-        """Update the value for the master graph, is the left graph"""
+        """Update the value for the master graph which is the left graph"""
         value = self.choice_var_master.get()
         if value != self._var_master:
             self._var_master = value
             self.master.master.controls.plot_mark()
 
     def set_var_react(self, var):
+        """
+        For plotter application only. Not used for compare application.
+        Set the value for the servant graph which is the graph on the right
+        """
         if self.n_variables < 2:
             return False
         if var in self.choice_var_react['values']:
@@ -159,7 +168,10 @@ class ProPlotterChoicesBarVariables:
         return False
 
     def update_var_react(self, *args):
-        """Update the value for the servant graph, is the graph on the right"""
+        """
+        For plotter application only. Not used for compare application.
+        Update the value for the servant graph which is the graph on the right
+        """
         if self.n_variables < 2:
             return
         value = self.choice_var_react.get()
@@ -205,12 +217,17 @@ class ProPlotterChoicesBarPoint:
         self.label = tk.Label(self.frame, text='Choice of point selectors\n(fill from top to bottom)', relief=tk.RAISED)
         self.label.pack(pady=5)
 
+        # choice of the point for which the plot is made
         if self.master.master.fileobj is not None:
             self.variables_info = self.master.master.fileobj.variables_selection_point
             for v, info in self.variables_info.items():
                 label = tk.Label(self.frame, text=textwrap.fill(info['full_name'], width=self.master.WIDTH_TXT))
                 label.pack()
                 ii = len(self.llabels)
+                # 'type' can be:
+                #    - choices = the list of possible values
+                #    - int for point number
+                #    - float for point localization (PRO for 2D case)
                 if info['type'] == 'choices':
                     choices = list(info['choices'])  # Tkinter knows nothing of numpy arrays...
                     selector = ttk.Combobox(self.frame, state='readonly', values=[''] + choices,
@@ -325,6 +342,7 @@ class ProPlotterChoicesBarPoint:
 class ProPlotterchoicesBarAdditionalParams(tk.Frame):
     """
     Choice of additional information to select data in the file
+    Example: direction of cut for height plot, date for Escroc plot
     """
     def __init__(self, master, frame):
         self.master = master
@@ -350,6 +368,10 @@ class ProPlotterchoicesBarAdditionalParams(tk.Frame):
                 label = tk.Label(self.frame, text=textwrap.fill(info['name'], width=self.master.WIDTH_TXT))
                 label.pack()
                 ii = len(self.llabels)
+                # 'type' can be:
+                #    - choices = the list of possible values
+                #    - int for point number
+                #    - float for point localization (PRO for 2D case)
                 if info['type'] == 'choices':
                     choices = list(info['choices'])  # Tkinter knows nothing of numpy arrays...
                     selector = ttk.Combobox(self.frame, state='readonly', values=[''] + choices,
@@ -451,11 +473,20 @@ class ProPlotterMain(tk.Frame):
         This function include refreshing of surrounding dependent bricks
         such as the matplotlib navigation toolbar.
 
-        :param same_y: Boolean on whether to have same y dimension or not
+        :param same_y: Boolean on whether master and servant graph have same y dimension or not
         :type same_y: bool
         :param nb_graph: 1 or 2 to have one or two graphs.
-        :param rat1: The horizontal part of the figure allocated to 1st graph (in case of 2 graphs).
-        :param rat2: The horizontal part of the figure allocated to 2nd graph (in case of 2 graphs).
+        :param ratio: ratios for the size of the two graphs (when there are two)
+        :type ratio: list of integers
+        :param same_x: Boolean on whether master and servant graph have same x dimension or not
+        :type same_x: bool
+        :param third_axis: Create a third axis on the second subplot.
+        :type third_axis: bool
+        
+        .. note for developpers::
+            * same_x and same_y are true when you want to compare two graph of same variable/different simulation
+            * same_x false and same_y true when you want to plot on one simulation two variables with snowlayer dimension
+            * same_x false and same_y false if you want to plot albedo and see what happen on temperature for example
         """
         self.clear()
         self.ax = proplotter_functions.create_axis_for_figure(self.fig1, nb_graph, same_y, ratio=ratio,

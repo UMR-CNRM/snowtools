@@ -22,40 +22,44 @@ def create_axis_for_figure(fig, nb_graph, same_y=False, ratio=None, same_x=False
     :type same_y: bool
     :param ratio: ratios for the size of the two graphs (when there are two)
     :type ratio: list of integers
+    :param same_x: share x-axis if set to true. Usually set to true if it is used for compare
+    :type same_x: bool
     :param third_axis: Create a third axis on the second subplot.
     :type third_axis: bool
     """
     if nb_graph == 1:
         ax1 = fig.add_subplot(1, 1, 1)
-        return {'ax1': ax1, 'ax2': None, 'ax3': None}
-    elif nb_graph == 2:
-        rat1 = ratio[0] if ratio is not None else 1
-        rat2 = ratio[1] if ratio is not None else 1
-        ax1 = fig.add_subplot(1, rat1 + rat2, (1, rat1))
-        add_params = {}
-        if same_y:
-            add_params['sharey'] = ax1
-        if same_x:
-            add_params['sharex'] = ax1
-        ax2 = fig.add_subplot(1, rat1 + rat2, (rat1 + 1, rat1 + rat2), **add_params)
-        fig.subplots_adjust(left=0.1, bottom=0.08, wspace=0.1)
-        if third_axis:
-            ax3 = ax2.twiny()
-        else:
-            ax3 = None
-        return {'ax1': ax1, 'ax2': ax2, 'ax3': ax3}
+        return {'ax1': ax1}
     else:
-        ax1 = fig.add_subplot(1, nb_graph, 1)
+        # give equal ratio to all graphs if ratio is not defined
+        # Check that len(ratio) == nb_graph ? 
+        if ratio is None:
+            ratio = [1] * nb_graph
+        ax1 = fig.add_subplot(1, sum(ratio), (1, ratio[0]))
         axs = {'ax1': ax1}
         add_params = {}
         if same_y:
             add_params['sharey'] = ax1
         if same_x:
-            add_params['sharey'] = ax1
+            add_params['sharex'] = ax1
+        
+        # In add_subplot: use of (1, sum(ratio), (index_begin, index_end))
+        # where index_begin is 1, 1+ratio1, 1+ratio1+ratio2, 1+ratio1+ratio2+ratio3,...
+        # where index_end is ratio1, ratio1+ratio2, ratio1+ratio2+ratio3, ratio1+ratio2+ratio3+ratio4,...
+        # in add_subplot, we want (1, ratio1 + ratio2, (1, ratio1)) then (1, ratio1 + ratio2, (ratio1 + 1, ratio1+ratio2))
+        ind_begin = [1] + (np.cumsum(ratio)+1).tolist()[:-1]
+        ind_end = np.cumsum(ratio).tolist()
         for i in range(1, nb_graph):
             ii = i + 1
-            axs['ax{}'.format(ii)] = fig.add_subplot(1, nb_graph, ii, **add_params)
-
+            axs['ax{}'.format(ii)] = fig.add_subplot(1, sum(ratio), (ind_begin[i], ind_end[i]), **add_params)
+            
+        # Because figure was initially thought for two graph with two axes on second graph
+        if third_axis:
+            # instantiate a third axes that shares the same y-axis
+            # For profil plot: ax3 is the Resistance-Snowgrain part of the plot
+            axs['ax3'] = axs['ax2'].twiny()
+        return axs
+        
 
 def get_data(fileobj, point, var_master, var_react=None, direction_cut=None, height_cut=None, additional_options=None):
     """

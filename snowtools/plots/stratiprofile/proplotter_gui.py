@@ -572,13 +572,14 @@ class ProPlotterController(abc.ABC):
         """
         The plot machinery
         """
-        # Stop défilement avec bouton droit
+        # Stop the servant graph with right click on the mouse
         def button_press(event):
             if event.button > 1:
                 self.stop_right_click = not self.stop_right_click
                 return
 
-        # Graphe du profil animé à droite en fonction du mouvement de la souris
+        # Animation (or not) of the servant graph depending on the position of
+        # the mouse in master graph
         def motion(event):
             if self.stop_right_click:
                 return
@@ -591,6 +592,7 @@ class ProPlotterController(abc.ABC):
                 plot_react(event.xdata)
                 self.master.main.update()
 
+        # Plot the servant graph
         def plot_react(i):
             self.master.main.ax['ax2'].clear()
             self.master.main.ax['ax3'].clear()
@@ -605,6 +607,7 @@ class ProPlotterController(abc.ABC):
         def change_ylim(event):
             self.master_ylim = event.get_ylim()
 
+        # Checking existence of a selection, otherwise get out
         if self.master.fileobj is None:
             return
 
@@ -616,27 +619,33 @@ class ProPlotterController(abc.ABC):
         if point is None:
             return
 
+        # Get infos and prepare graph
         additional_options = self.get_additional_choices()
-
         self.info_text_bar(point, additional_options=additional_options)
         self.get_data(point, additional_options=additional_options)
         self.master.main.clear()
 
         if self.vartoplot_react_desc is None:
-            self.master.main.ready_to_plot(1)
+            self.master.main.ready_to_plot(same_y=False, nb_graph=1, ratio=None,
+                                           same_x=False, third_axis=False)
         else:
-            self.master.main.ready_to_plot(self.data['var_master_has_snl'], 2, ratio=self.ratio)
+            self.master.main.ready_to_plot(same_y=self.data['var_master_has_snl'],
+                                           nb_graph=2, ratio=self.ratio,
+                                           same_x=False, third_axis=True)
             if not self.data['var_master_has_snl']:
                 self.master.main.ax['ax2'].set_ylim(0, self.data['ymax_react'])
 
+        # Make graph
         self.masterfig(**self.give_master_args())
-        plot_react(0)
-
+        if self.vartoplot_react_desc is not None:
+            # Not optimal -> usefull for standard right plot (ie date profile) but not for season
+            plot_react(0)
         if self.master_xlim is not None and self.master_ylim is not None:
             self.master.main.toolbar.push_current()
             self.master.main.ax['ax1'].set_xlim(self.master_xlim)
             self.master.main.ax['ax1'].set_ylim(self.master_ylim)
 
+        # Management of graph interaction: moving servant graph, stopping, keeping zoom limits
         self.master.main.cid['motion'] = self.master.main.Canevas.mpl_connect('motion_notify_event', motion)
         self.master.main.cid['right_click'] = self.master.main.Canevas.mpl_connect('button_press_event',
                                                                                    button_press)
