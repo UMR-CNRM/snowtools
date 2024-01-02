@@ -53,8 +53,7 @@ def smart_copy(pathin, nameout, preferlink=False):
     If pathin includes /home do a symbolic link because we probably are on the disk.
     Otherwise, do a hard copy of the file to improve computing times.
     """
-
-    if pathin[0:5] == '/home' or pathin[0:8] == '/scratch' or preferlink:
+    if pathin[0:2] == './' or pathin[0:5] == '/home' or pathin[0:8] == '/scratch' or preferlink:
         if os.path.islink(nameout):
             os.remove(nameout)
         if os.path.isfile(nameout):
