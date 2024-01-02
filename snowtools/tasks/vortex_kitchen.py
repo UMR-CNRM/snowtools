@@ -317,14 +317,14 @@ class vortex_kitchen(object):
     def split_geo(self):
         if ':' in self.options.region:
             splitregion = self.options.region.split(':')
-            self.options.geoin = splitregion[0]
-            self.options.vconf = splitregion[1]
+            self.options.geoin = splitregion[0].lower()
+            self.options.vconf = splitregion[1].lower()
             self.options.interpol = len(splitregion) == 3
             if self.options.interpol:
                 self.options.gridout = splitregion[2]
         else:
             self.options.interpol = False
-            self.options.vconf = self.options.region
+            self.options.vconf = self.options.region.lower()
 
 
 class Vortex_conf_file(object):
