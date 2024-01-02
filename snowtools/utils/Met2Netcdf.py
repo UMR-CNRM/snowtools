@@ -19,21 +19,30 @@ from snowtools.utils.infomassifs import infomassifs
 from bronx.meteo.thermo import Thermo
 from bronx.meteo.constants import T0
 
-# Exemple d'appel: python3 Met2Netcdf.py -b 2000080106 -e 2001080106
-
-# Données EN DUR A MODIFIER REGULIEREMENT:
+###########################################################################
+# Script qui construit à partir des fichiers MET le fichier
+# CRYOBSCLIM.CDP.2018.MetInsitu.nc du doi de l'article 57 years.
 #
+# Exemple d'appel:
+# python3 Met2Netcdf.py -b 2000080106 -e 2001080106
+#
+# EN DUR DANS LE CODE:
+#      - année de fin du dernier fichier MET <- A CHANGER CHAQUE ANNEE
+#      - année où cdp60mn devient cdp60mn_2223 <- A CHANGER CHAQUE ANNEE
+#      - chemin d'accès aux réanalyses
+#      - chemin d'accès aux fichiers MET
+#
+###########################################################################
 # A CHANGER A CHAQUE AJOUT D'UN FICHIER MET DE YVES
-annee_last_MET = 2022
-#
+annee_last_MET = 2023
 # A CHANGER A CHAQUE BASCULE DE CDP60mn vers CDP60mn_... (= date de depart dans CDP60mn)
-annee_last_cdp60mn = 2022080100 # !!! 
-#
-# Autres données EN DUR dans le code: 
+annee_last_cdp60mn = 2023080100 # !!! 
+#########################
+# ACCES EN DUR:
 path_safran = "/rd/cenfic3/cenmod/era40/vortex/s2m/postes/reanalysis/meteo"
-path_met = "/rd/cenfic3/cenmod/mesure_data/col_de_porte/met/"
+path_met = "/rd/cenfic3/cenobs/mesure_data/col_de_porte/met/"
 pas_par_defaut = 3600
-
+#########################
 
 def recup_donnees_site(numero_site):
     """
