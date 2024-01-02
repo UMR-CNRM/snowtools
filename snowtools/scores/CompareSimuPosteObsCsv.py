@@ -413,10 +413,10 @@ class ComparisonSimObs(object):
                 if 'NIVOSE' in build_title(station):
                     nivose += 1
 
-                if self.nsim > 1:
-                    myplot.set_title(build_title(station))
                 if self.nsim == 1 and hasattr(self, 'bias') and hasattr(self, 'rmse'):
                     myplot.set_title(build_title_with_scores(station, self.bias[0, s], self.rmse[0, s]))
+                else:
+                    myplot.set_title(build_title(station))
 
                 plotfilename = options.dirplot + "/" + station + "_" + dateprobegin.strftime("%Y") + "_" + dateproend.strftime("%Y") + "." + options.format
 
