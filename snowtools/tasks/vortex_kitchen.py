@@ -467,7 +467,7 @@ class Vortex_conf_file(object):
             self.set_field("DEFAULT", 'climground', self.options.ground)
 
         if self.options.task == 'surfex_dailyprep':
-            self.set_field("DEFAULT", 'dailyprep', self.options.dailyprep)
+            self.set_field("DEFAULT", 'dailyprep', True)
 
         if self.options.geotype == 'grid':
             self.set_field("DEFAULT", 'simu2D', True)
