@@ -335,7 +335,8 @@ class ProCompareController(abc.ABC):
         # the parameter fraction is the Fraction of original axes to use for colorbar
         # By default this is 0.15
         # So, a ratio of 85 for firsts figures and 100 for last one allows figure of same size after colorbar
-        ratio = int(self.master.n_files - 1) * [85] + [100]
+        # Finally, in order to get some space between the graphs, ratio of 5 and 6 is OK. 
+        ratio = int(self.master.n_files - 1) * [5] + [6]
         self.master.main.ready_to_plot(nb_graph=self.master.n_files, same_y=True, ratio=ratio, same_x=True, third_axis=False)
 
         # To ensure that the two graphs have the same colorbar, the value_min and value_max parameters are passed to

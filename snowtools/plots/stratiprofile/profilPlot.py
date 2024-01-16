@@ -221,6 +221,7 @@ def saisonProfil(ax, dz, value, time, colormap='viridis', value_min=None, value_
                                       cmap=cmap, norm=norm, edgecolors='none')
     rect.set_clim(vmin, vmax)
     ax.add_collection(rect)
+    ax.set_xlim(0, len(time))
     ax.autoscale_view()
 
     if cbar_show:

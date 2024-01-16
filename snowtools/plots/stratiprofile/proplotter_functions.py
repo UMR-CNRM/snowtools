@@ -52,6 +52,8 @@ def create_axis_for_figure(fig, nb_graph, same_y=False, ratio=None, same_x=False
         for i in range(1, nb_graph):
             ii = i + 1
             axs['ax{}'.format(ii)] = fig.add_subplot(1, sum(ratio), (ind_begin[i], ind_end[i]), **add_params)
+            if same_y:
+                axs['ax{}'.format(ii)].tick_params('y', labelleft=False)
             
         # Because figure was initially thought for two graph with two axes on second graph
         if third_axis:
