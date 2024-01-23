@@ -45,7 +45,8 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                 listavaildate += daterange(Date(year, 3, 2, 6), Date(year+4, 3, 1, 6), 'P5D')
                 listavaildate += daterange(Date(year, 3, 4, 6), Date(year+4, 3, 1, 6), 'P5D')
 
-            listrundate = set(daterange(self.conf.datebegin, self.conf.dateend)) & set(listavaildate)
+            listrundate = list(set(daterange(self.conf.datebegin, self.conf.dateend)) & set(listavaildate))
+            listrundate.sort()
         else:
             listrundate = list(daterange(self.conf.datebegin, self.conf.dateend))
 
@@ -402,7 +403,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                         kind           = 'FORCING',
                         model          = 's2m',
                         namebuild      = 'flat@cen',
-                        namespace      = 'vortex.multi.fr',
+                        namespace      = 'vortex.archive.fr',
                         fatal          = True,
                     ),
                     print(t.prompt, 'tb10_tar =', tb10_tar)
@@ -420,7 +421,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                     kind='PRO',
                     model='surfex',
                     namebuild='flat@cen',
-                    namespace='vortex.multi.fr',
+                    namespace='vortex.archive.fr',
                     fatal=True,
                 ),
                 print(t.prompt, 'tb11_tar =', tb11_tar)
