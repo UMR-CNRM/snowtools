@@ -4,6 +4,7 @@ Created on 7 nov. 2017
 
 @author: lafaysse
 """
+import os
 
 from vortex.layout.nodes import Driver, Task
 from cen.layout.nodes import S2MTaskMixIn
@@ -11,7 +12,7 @@ from vortex import toolbox
 from bronx.stdtypes.date import daterange, Date
 import footprints
 from vortex.algo.components import DelayedAlgoComponentError
-
+from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 
 def setup(t, **kw):
     return Driver(
@@ -41,12 +42,30 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
             # Weird availabilities of reforecasts
             listavaildate = []
             for year in range(2000, 2022, 4):
-                listavaildate += daterange(Date(year, 3, 2, 6 ), Date(year+4, 3, 1, 6 ), 'P5D')
-                listavaildate += daterange(Date(year, 3, 4, 6 ), Date(year+4, 3, 1, 6 ), 'P5D')
+                listavaildate += daterange(Date(year, 3, 2, 6), Date(year+4, 3, 1, 6), 'P5D')
+                listavaildate += daterange(Date(year, 3, 4, 6), Date(year+4, 3, 1, 6), 'P5D')
 
             listrundate = set(daterange(self.conf.datebegin, self.conf.dateend)) & set(listavaildate)
         else:
             listrundate = list(daterange(self.conf.datebegin, self.conf.dateend))
+
+        # Following is used to produce yearly tar archives
+        list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = \
+            get_list_dates_files(listrundate[0], listrundate[-1], 'yearly')
+        dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
+
+        def tar_hook(t, rh):
+            # For only one of the resources list, create the tar archive for the whole list of dates
+            sh = t.sh
+            prefix = rh.container.basename.split('_')[0]  # FORCING et PRO
+            if rh.resource.datebegin == list_dates_begin_pro[0] and rh.provider.member == pearpmembers[0]:
+                for date_arch_begin, date_arch_end in zip(list_dates_begin_pro, list_dates_end_pro):
+                    list_dates_arch = \
+                    [mydate for mydate in listrundate if date_arch_begin <= mydate <= date_arch_end]
+                    listdir = sum([sh.glob(date_arch.ymdh + '/mb*/' + prefix + '*') for date_arch in list_dates_arch],
+                                  [])
+                    tarname = "_".join([prefix, date_arch_begin.ymdh, date_arch_end.ymdh]) + '.tar'
+                    sh.tar(tarname, *listdir)
 
         list_geometry = self.get_list_geometry()
         source_safran, block_safran = self.get_source_safran()
@@ -256,7 +275,49 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
             self.component_runner(tbalgo1, tbx1)
 
         if 'backup' in self.steps:
-            pass
+            if pearpmembers:
+                if source_safran != 's2m':
+                    self.sh.title('Toolbox output tb10')
+                    tb10 = toolbox.output(
+                        local='[datebegin:ymdh]/mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        experiment=self.conf.xpid,
+                        block='meteo',
+                        geometry=self.conf.geometry,
+                        date='[datebegin]',
+                        datebegin=listrundate,
+                        dateend='[datebegin]/+PT96H',
+                        member=pearpmembers,
+                        nativefmt='netcdf',
+                        kind='MeteorologicalForcing',
+                        model='s2m',
+                        namespace='vortex.cache.fr',
+                        cutoff='production',
+                        fatal=False,
+                        hook_autohook1=(tar_hook),
+                    ),
+                    print(t.prompt, 'tb10 =', tb10)
+                    print()
+
+                self.sh.title('Toolbox output tb11')
+                tb11 = toolbox.output(
+                    local='[datebegin:ymdh]/mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    experiment=self.conf.xpid,
+                    block='pro',
+                    geometry=self.conf.geometry,
+                    date='[datebegin]',
+                    datebegin=listrundate,
+                    dateend='[datebegin]/+PT96H',
+                    member=pearpmembers,
+                    nativefmt='netcdf',
+                    kind='SnowpackSimulation',
+                    model='surfex',
+                    namespace='vortex.cache.fr',
+                    cutoff='production' if self.conf.previ else 'assimilation',
+                    fatal=False,
+                    hook_autohook1=(tar_hook),
+                ),
+                print(t.prompt, 'tb11 =', tb11)
+                print()
 
         if 'late-backup' in self.steps:
             print("source_safran")
@@ -329,63 +390,38 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
             else:
 
                 if source_safran != 's2m':
-
-                    self.sh.title('Toolbox output tb10')
-                    tb10 = toolbox.output(
-                        local          = '[datebegin:ymdh]/mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    self.sh.title('Toolbox output tb10_tar')
+                    tb10_tar = toolbox.output(
+                        local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].tar',
                         experiment     = self.conf.xpid,
                         block          = 'meteo',
                         geometry       = self.conf.geometry,
-                        date           = '[datebegin]',
-                        datebegin      = listrundate,
-                        dateend        = '[datebegin]/+PT96H',
-                        member         = pearpmembers,
-                        nativefmt      = 'netcdf',
-                        kind           = 'MeteorologicalForcing',
+                        datebegin      = list_dates_begin_pro,
+                        dateend        = dict_dates_end_pro,
+                        nativefmt      = 'tar',
+                        kind           = 'FORCING',
                         model          = 's2m',
+                        namebuild      = 'flat@cen',
                         namespace      = 'vortex.multi.fr',
-                        cutoff         = 'production',
-                        fatal          = False
+                        fatal          = True,
                     ),
-                    print(t.prompt, 'tb10 =', tb10)
+                    print(t.prompt, 'tb10_tar =', tb10_tar)
                     print()
 
-                self.sh.title('Toolbox output tb11')
-                tb11 = toolbox.output(
-                    local          = '[datebegin:ymdh]/mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-                    experiment     = self.conf.xpid,
-                    block          = 'pro',
-                    geometry       = self.conf.geometry,
-                    date           = '[datebegin]',
-                    datebegin      = listrundate,
-                    dateend        = '[datebegin]/+PT96H',
-                    member         = pearpmembers,
-                    nativefmt      = 'netcdf',
-                    kind           = 'SnowpackSimulation',
-                    model          = 'surfex',
-                    namespace      = 'vortex.multi.fr',
-                    cutoff         = 'production' if self.conf.previ else 'assimilation',
-                    fatal          = False
+                self.sh.title('Toolbox output tb11_tar')
+                tb11_tar = toolbox.output(
+                    local='PRO_[datebegin:ymdh]_[dateend:ymdh].tar',
+                    experiment=self.conf.xpid,
+                    block='pro',
+                    geometry=self.conf.geometry,
+                    datebegin=list_dates_begin_pro,
+                    dateend=dict_dates_end_pro,
+                    nativefmt='tar',
+                    kind='PRO',
+                    model='surfex',
+                    namebuild='flat@cen',
+                    namespace='vortex.multi.fr',
+                    fatal=True,
                 ),
-                print(t.prompt, 'tb11 =', tb11)
-                print()
-
-                self.sh.title('Toolbox output tb12')
-                tb12 = toolbox.output(
-                    local          = '[date:ymdh]/mb[member]/PREP_[datevalidity:ymdh].nc',
-                    role           = 'SnowpackInit',
-                    experiment     = self.conf.xpid,
-                    block          = 'prep',
-                    geometry       = self.conf.geometry,
-                    date           = listrundate,
-                    datevalidity   = '[date]/+PT96H',
-                    member         = pearpmembers,
-                    nativefmt      = 'netcdf',
-                    kind           = 'PREP',
-                    model          = 'surfex',
-                    namespace      = 'vortex.multi.fr',
-                    cutoff         = 'production' if self.conf.previ else 'assimilation',
-                    fatal          = False
-                ),
-                print(t.prompt, 'tb12 =', tb12)
+                print(t.prompt, 'tb11_tar =', tb11_tar)
                 print()
