@@ -275,7 +275,7 @@ class vortex_kitchen(object):
             return Period(minutes=10).hms
 
         else:
-            if self.options.task in ['escroc', 'croco', 'croco_perturb']:
+            if self.options.task in ['escroc', 'croco', 'croco_perturb', 'reforecast']:
                 if self.options.nmembers:
                     nmembers = self.options.nmembers
                 elif len(self.options.escroc) >= 2 and self.options.escroc[0:2] == "E2":
@@ -288,9 +288,20 @@ class vortex_kitchen(object):
                 nmembers = 1
             # minutes per year for one member computing all points
             minutes_peryear = dict(alp_allslopes=15, pyr_allslopes=15, alp_flat=5, pyr_flat=5,
-                                   alp27_allslopes=20, pyr23_allslopes=20, alp27_flat=7, pyr23_flat=7,
-                                   cor_allslopes=5, cor_flat=1, postes = 5,
+                                   alp27_allslopes=20, pyr24_allslopes=20, alp27_flat=7, pyr24_flat=7,
+                                   mac11_allslopes=5, jur4_allslopes=2, vog3_allslopes=2,
+                                   mac11_flat = 2, jur4_flat = 1, vog3_flat = 1,
+                                   cor2_allslopes=2, cor2_flat=1, postes = 5, postes_2022 = 5,
+                                   cor_allslopes=2, cor_flat=1,
                                    lautaret=120, lautaretreduc=5, grandesrousses250=35)
+
+            minutes_perforecast = dict(alp_allslopes=1.5, pyr_allslopes=1.5, alp_flat=0.5, pyr_flat=0.5,
+                                       alp27_allslopes=2, pyr24_allslopes=2, alp27_flat=0.7, pyr24_flat=0.7,
+                                       cor2_allslopes=0.2, cor2_flat=0.1, cor_allslopes=0.2, cor_flat=0.1,
+                                       mac11_allslopes = 0.5, mac11_flat=0.2,
+                                       jur4_allslopes = 0.2, jur4_flat = 0.1,
+                                       vog3_allslopes = 0.2, vog3_flat = 0.1,
+                                       postes = 0.5, postes_2022 = 0.5)
 
             for site_snowmip in ["cdp", "oas", "obs", "ojp", "rme", "sap", "snb", "sod", "swa", "wfj"]:
                 if self.options.task == 'escroc_scores':
@@ -303,14 +314,19 @@ class vortex_kitchen(object):
 
             key = self.options.vconf if self.options.vconf in list(minutes_peryear.keys()) else "alp_allslopes"
 
-            estimation = Period(minutes=minutes_peryear[key]) * \
-                max(1, (self.options.datefin.year - self.options.datedeb.year)) * \
-                (1 + nmembers / (40 * self.options.nnodes))
+            if self.options.task in ['reforecast']:
+                time1forecast = Period(minutes=minutes_perforecast[key])
+                nforecast_per_year = 365/5*2
+                estimation = time1forecast * nforecast_per_year * \
+                             max(1, (self.options.datefin.year - self.options.datedeb.year))
+            else:
+                estimation = Period(minutes=minutes_peryear[key]) * \
+                    max(1, (self.options.datefin.year - self.options.datedeb.year)) * \
+                    (1 + nmembers / (40 * self.options.nnodes))
 
             # !!!! Ne marche pas à tous les coups...
-
             if estimation >= datetime.timedelta(hours=24):
-                raise WallTimeException(estimation)
+                raise WallTimeException(estimation.hms)
             else:
                 return estimation.hms
 
