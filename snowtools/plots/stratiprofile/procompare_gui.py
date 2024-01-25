@@ -358,9 +358,11 @@ class ProCompareController(abc.ABC):
 
         # Do the plots one by one from left to right
         for i in range(self.master.n_files):
-            if self.data[i] is not None:
+            if self.data[i] is not None and self.data[i]['var_master_has_snl']:
                 proplotter_functions.masterfig(**self.give_master_args(i),
                                                cbar_show=False if i < self.master.n_files - 1 else True)
+            elif self.data[i] is not None:
+                proplotter_functions.masterfig(**self.give_master_args(i))
 
         # Apply previous zoom if relevant and store zoom information
         if self.master_xlim is not None and self.master_ylim is not None:
