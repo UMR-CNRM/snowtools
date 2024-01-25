@@ -162,6 +162,7 @@ class vortex_kitchen(object):
             elif self.options.refill:
                 self.jobname = 'refill'
                 self.reftask = 'refill_surfex_output'
+                self.nnodes = 1
             else:
                 self.jobname = 'rea_s2m'
                 self.reftask = "surfex_task"
