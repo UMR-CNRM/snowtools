@@ -159,6 +159,9 @@ class vortex_kitchen(object):
                 self.jobname = 'perturb_forcing'
                 self.reftask = 'crocO_perturb'
                 self.nnodes = self.options.nnodes
+            elif self.options.refill:
+                self.jobname = 'refill'
+                self.reftask = 'refill_surfex_output'
             else:
                 self.jobname = 'rea_s2m'
                 self.reftask = "surfex_task"
