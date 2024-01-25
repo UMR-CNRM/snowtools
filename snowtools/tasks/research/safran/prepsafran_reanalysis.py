@@ -373,8 +373,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                 model          = 'safran',
                 source         = 'arpege',
                 date           = self.conf.dateend.ymd6h,
-                begindate      = self.conf.datebegin.ymdh,
-                enddate        = self.conf.dateend.ymdh,
+                datebegin      = self.conf.datebegin.ymdh,
+                dateend        = self.conf.dateend.ymdh,
             ),
             print(t.prompt, 'tb05 =', tb05)
             print()

@@ -293,8 +293,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
                     date           = datebegin.ymdh,
-                    begindate      = datebegin.ymdh,
-                    enddate        = dateend.ymdh,
+                    datebegin      = datebegin.ymdh,
+                    dateend        = dateend.ymdh,
                 ),
                 print(t.prompt, 'tb04 =', tb04)
                 print()
