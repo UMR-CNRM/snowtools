@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 '''
-Created on 7 nov. 2017
+Created on 15 January 2024
 
-@author: lafaysse
+@author: Vernay
+
+Refill task to use in the case when a simulation went well and the output have been stored in the local
+cache but not on Hendrix (for example after un password update).
+This task can be called with the exact same s2m command by adding a --refill option.
+It retrieves the ressources produced by the previous simulation on the local cache and put them on Hendrix
+as intended initially.
 '''
 
 import shlex
@@ -61,7 +67,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         if hasattr(self.conf, "simu2D"):
             self.conf.genv2D = 'uenv:pgd.002@SURFEX_CEN'
 
-        if 'fetch' in self.steps:
+        if 'early-fetch' in self.steps:
 
             namespace = 'vortex.cache.fr'
             if hasattr(self.conf, 'save_pro') and self.conf.save_pro in ['cache', 'archive', 'multi']:
