@@ -8,7 +8,7 @@ Created on 7 nov. 2017
 from vortex.layout.nodes import Driver, Task
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
-from bronx.stdtypes.date import daterange, yesterday, tomorrow, Period
+from bronx.stdtypes.date import daterange, Date
 import footprints
 from vortex.algo.components import DelayedAlgoComponentError
 
@@ -36,9 +36,18 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
         if not hasattr(self.conf, "genv"):
             self.conf.genv = 'uenv:cen.10@CONST_CEN'
         t = self.ticket
-        listrundate = list(daterange(self.conf.datebegin, self.conf.dateend))
-        # 5d time step for 2022 reforecasts
-        # listrundate = list(daterange(self.conf.datebegin, self.conf.dateend, 'P5d'))
+
+        if 'reforecast_2023' in self.conf.forcingid  or 'reforecast_2023' in self.conf.xpid:
+            # Weird availabilities of reforecasts
+            listavaildate = []
+            for year in range(2000, 2022, 4):
+                listavaildate += daterange(Date(year, 3, 2, 6 ), Date(year+4, 3, 1, 6 ), 'P5D')
+                listavaildate += daterange(Date(year, 3, 4, 6 ), Date(year+4, 3, 1, 6 ), 'P5D')
+
+            listrundate = set(daterange(self.conf.datebegin, self.conf.dateend)) & set(listavaildate)
+        else:
+            listrundate = list(daterange(self.conf.datebegin, self.conf.dateend))
+
         list_geometry = self.get_list_geometry()
         source_safran, block_safran = self.get_source_safran()
         self.conf.previ = True
@@ -230,7 +239,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
 
             tb09 = tbalgo1 = toolbox.algo(
                 engine         = 's2m',
-                kind           = "ensmeteo" if self.conf.geometry.area == 'postes' else "ensmeteo+sytron",
+                kind           = "ensmeteonodet",
                 multidates     = True,
                 datebegin      = self.conf.datebegin,
                 dateend        = self.conf.dateend,

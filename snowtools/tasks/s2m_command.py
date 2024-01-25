@@ -335,6 +335,11 @@ class Surfex_command(_S2M_command):
                                "Please ensure yoursel that your algorithm is correctly parallelized."
                                "[Vortex only]")
 
+        parser.add_option("--refill",
+                          action="store_true", dest="refill", default=False,
+                          help="Refill outputs of a previous simulation (in case the execution went well"
+                               "but the backup on hendrix crashed")
+
         (options, args) = parser.parse_args(arguments)
 
         del args

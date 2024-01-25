@@ -1172,14 +1172,14 @@ class EnsemblePostproc(_EnsembleMassif):
                 print(median.size)
                 self.outdataset.dataset[name][:] = median[:]
 
-
-if __name__ == "__main__":
-
+def main(c):
+    """
+    :param c: config
+    """
     # The following class has a vortex-dependence
     # Should not import than above to avoid problems when importing the module from vortex
     from snowtools.tasks.oper.get_oper_files import S2MExtractor, FutureS2MExtractor
 
-    c = config()
     os.chdir(c.diroutput)
     # if c.dev:
     #     S2ME = FutureS2MExtractor(c)
@@ -1250,3 +1250,7 @@ if __name__ == "__main__":
 
         E.close()
         del E
+
+if __name__ == "__main__":
+    c = config()
+    main(c)
