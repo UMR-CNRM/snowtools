@@ -47,7 +47,7 @@ class Safran(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input tb01')
             tb01 = toolbox.input(
                 role           = 'Ebauche',
-                local          = 'ebauches_[geometry:area]_[datebegin:ymdh]_[dateend:ymdh]',
+                local          = 'ebauches_[geometry:area]_[begindate:ymdh]_[enddate:ymdh]',
                 kind           = 'packedguess',
                 experiment     = self.conf.xpid,
                 #vconf          = 'common',
@@ -57,8 +57,8 @@ class Safran(Task, S2MTaskMixIn):
                 namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
                 date           = datebegin.ymdh,
-                datebegin      = datebegin.ymdh,
-                dateend        = dateend.ymdh,
+                begindate      = datebegin.ymdh,
+                enddate        = dateend.ymdh,
                 # The untar command is done in the Vortex algo component SurfexReforecast because
                 # it also provides the list of repositories to consider as members
                 #hook_autohook1 = (untar_hook, ),
@@ -445,8 +445,7 @@ class Safran(Task, S2MTaskMixIn):
                 kind           = 'sytist',
                 execution      = 'reforecast',
                 ntasks         = self.conf.ntasks,
-                #datebegin      = start.ymdh,
-                #dateend        = stop.ymdh,
+                metadata       = 'StandardSAFRAN',
             )
             print(t.prompt, 'tb18 =', tb18)
             print()
