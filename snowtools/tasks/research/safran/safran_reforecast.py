@@ -466,7 +466,7 @@ class Safran(Task, S2MTaskMixIn):
                 start = rundate if rundate.hour == 6 else rundate + Period(hours=12)
                 stop  = start + Period(days=4)
 
-                if not isinstance(self.conf.guess_xpid, dict):
+                if self.conf.origin in ['oper', 'dble']:  # Reforecast oper
 
                     self.sh.title('Toolbox output tb27')
                     tb27 = toolbox.output(
@@ -510,7 +510,9 @@ class Safran(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb28 =', tb28)
                     print()
 
-                if isinstance(self.conf.guess_xpid, dict) or self.conf.pearp:
+                    rundate = rundate + Period(days=1)
+
+                elif self.conf.origin == 'gmap':  # Reforecast GMAP
 
                     self.sh.title('Toolbox output tb27')
                     tb27 = toolbox.output(
@@ -556,11 +558,8 @@ class Safran(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb28 =', tb28)
                     print()
 
-                if isinstance(self.conf.guess_xpid, dict):
-                    # RECYF 2022 reforecast provides forecast every 2 days
+
                     rundate = rundate + Period(days=2) + Period(hours=12)
-                else:
-                    rundate = rundate + Period(days=1)
 
             print('==================================================================================================')
             print('==================================================================================================')
