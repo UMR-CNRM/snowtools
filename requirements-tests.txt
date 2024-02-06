@@ -1,1 +1,48 @@
-requirements-py37.txt
+# Basic requirements
+matplotlib==3.3.4
+netCDF4
+numpy
+scipy
+python-dateutil
+pyproj>=2.0.0
+shapely
+psycopg2
+pyshp
+
+# Other requirements
+# Pandas is a requirement for scripts/create_forcing/Template_creation_FORCING.py
+pandas
+# xarray is a requirement for plots/compare.py and utils/proximu.py in case of use of NETCDF-4 file format
+xarray
+# rpy2 is a requirement for tools/emosCSG.py
+# rpy2
+
+# Requirements for generating the documentation
+sphinx>=4.3
+git+https://github.com/VACUMM/sphinx-fortran.git
+
+# Cartopy:
+# Cartopy version need to be paired with matplotlib version to work properly and
+# require to be installed after numpy and matplotlib have been correctly installed.
+# Hence, it is not listed in this requirement and should be installed manually afterwards.
+cartopy==0.18
+
+# GDAL:
+#
+# Gdal is a requirement for interpolation and utils/skyline-bdclim.py
+# Requires libgdal and libgdal-dev (use `sudo apt install libgdal libgdal-dev`).
+#
+# To install python package, it is recommanded to installl the system package with:
+# sudo apt install python3-gdal
+#
+# However, if you want to install it in a virtual environment, you can install gdal python package, once
+# requirements fulfilled with the following command line:
+# pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="$(gdal-config --cflags)"
+#
+# Note that older versions of GDAL package
+# (e.g. version currently obtained with previously cited packages of Ubuntu 20.04LTS)
+# requires to have a version of setuptools<58.0.0
+#
+# Due to all these limitations, GDAL is not listed here as a requirement.
+
+pytest

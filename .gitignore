@@ -19,6 +19,9 @@ snowtools/interpolation/interpol
 GUI_selfcontain.zip
 DATA/shapefiles
 
+
+build/
+
 .coverage
 newvenevsnowtools
 *.egg-info
