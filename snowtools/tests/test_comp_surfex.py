@@ -38,14 +38,21 @@ class s2mTestPrepImpur(TestWithTempFolderWithLog):
         with Dataset(os.path.join(self.diroutput, 'prep/PREP_2017121606.nc'), 'r',
                      format='NETCDF4_CLASSIC') as ncfile:
             for layer in range(15):
+                # SG1 = SNOWGRAN1 = diamètre optique
                 str_sg1 = 'SG1_VEG' + str(int(layer + 1))
                 sg1 = ncfile.variables[str_sg1][:][0]
+                # SG2 = SNOWGRAN2 = sphéricité
                 str_sg2 = 'SG2_VEG' + str(int(layer + 1))
                 sg2 = ncfile.variables[str_sg2][:][0]
+                # RSN = SNOWRHO = densité (kg/m3)
                 str_rsn = 'RSN_VEG' + str(int(layer + 1))
                 rsn = ncfile.variables[str_rsn][:][0]
+                # WSN = SWE = contenu en eau (kg/m2)
                 str_wsn = 'WSN_VEG' + str(int(layer + 1))
                 wsn = ncfile.variables[str_wsn][:][0]
+                # HSN = SNOWHEAT = contenu en chaleur (J/m3)
+                str_hsn = 'HSN_VEG' + str(int(layer + 1))
+                hsn = ncfile.variables[str_hsn][:][0]
                 for point in range(9):
                     self.assertAlmostEqual(sg1[point], 0.003,
                                            msg=str_sg1 + ' in PREP not as expected for point number ' + str(point))
@@ -55,9 +62,14 @@ class s2mTestPrepImpur(TestWithTempFolderWithLog):
                                            msg=str_rsn + ' in PREP not as expected for point number ' + str(point))
                     self.assertAlmostEqual(wsn[point], 30,
                                            msg=str_wsn + ' in PREP not as expected for point number ' + str(point))
+                    self.assertAlmostEqual(hsn[point], -100211088,
+                                           msg=str_hsn + ' in PREP not as expected for point number ' + str(point))
             for layer in range(3):
+                # IMPURETE: unité PREP = masse (kg), unité namelist = proportion (kg impureté / kg neige)
+                # IM1 = IMPURETE 1 = BLACK CARBON.
                 str_im1 = 'IM1_VEG' + str(int(layer + 1))
                 im1 = ncfile.variables[str_im1][:][0]
+                # IM2 = IMPURETE 2 = DUST.
                 str_im2 = 'IM2_VEG' + str(int(layer + 1))
                 im2 = ncfile.variables[str_im2][:][0]
                 for point in range(9):
