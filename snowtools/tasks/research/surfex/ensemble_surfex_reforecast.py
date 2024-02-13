@@ -80,7 +80,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                 self.sh.title('Toolbox input tb01 deterministe')
                 tb01b = toolbox.input(
                     role           = 'Forcing',
-                    local          = '[datebegin:ymdh]/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else '[datebegin:ymdh]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    local          = '[datebegin:ymdh]/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else '[datebegin:ymdh]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     vapp           = self.conf.meteo,
                     vconf          = '[geometry:area]',
                     block          = block_safran,
@@ -105,7 +105,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                 self.sh.title('Toolbox input tbO1 pearp')
                 tb01b = toolbox.input(
                     role           = 'Forcing',
-                    local          = '[datebegin:ymdh]/mb[member]/[geometry::area]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else '[datebegin:ymdh]/mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    local          = '[datebegin:ymdh]/mb[member]/[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else '[datebegin:ymdh]/mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     vapp           = self.conf.meteo,
                     vconf          = '[geometry:area]',
                     block          = block_safran,
