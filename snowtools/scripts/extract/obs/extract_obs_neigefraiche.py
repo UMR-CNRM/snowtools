@@ -26,55 +26,17 @@ args = parser.parse_args()
 # On prend toutes les heures
 question = question(
         # Insert other variables here if needed
-        listvar=["h.num_poste", "to_char(dat,'YYYY-MM-DD-HH24-MI')", "neigetot", "type_nivo"],
-        table='H',
-        listorder=['dat', 'h.num_poste'],
+        listvar=["q.num_poste", "to_char(dat,'YYYY-MM-DD-HH24-MI')", "hneigef", "type_nivo"],
+        table='Q',
+        listorder=['dat', 'q.num_poste'],
         listjoin=[
-            'POSTE_NIVO ON H.NUM_POSTE = POSTE_NIVO.NUM_POSTE and type_nivo != 2',
+            'POSTE_NIVO ON Q.NUM_POSTE = POSTE_NIVO.NUM_POSTE and type_nivo != 2',
             ],
         listconditions=[
-            "to_char(dat,'HH24') = '06'", "neigetot is not null"
+            "hneigef is not null"
             ],
         period=[args.date_min, args.date_max],
         )
 question.run(outputfile=args.output,
-             header=['NUMPOST', 'Date UTC', "HTN cm", "type_nivo"] if not args.append else False,
+             header=['NUMPOST', 'Date UTC', "HN24 cm", "type_nivo"] if not args.append else False,
              mode='w' if not args.append else 'a')
-
-# Old code:
-# -------------------------------------------------------------------------------------
-# if append:
-#     ficname = appendfile
-#     if os.path.isfile(appendfile):
-#         # Fichier déjà existant
-#         os.rename(appendfile, "old.csv")
-#     else:
-#         append = False
-# else:
-#     ficname = "OBS_" + datedeb + "_" + datefin + ".csv"
-#
-# c = csv.writer(open(ficname, "wb"), delimiter=";")
-# c.writerow(['NUMPOST', 'Date UTC', "HTN cm", "type_nivo"])
-#
-# if append:
-#     csvold = open("old.csv", "r")
-#     r = csv.reader(csvold, delimiter=";")
-#     datedebtime = datetime.datetime(int(datedeb[0:4]), int(datedeb[4:6]), int(datedeb[6:8]), int(datedeb[8:10]))
-#     datefintime = datetime.datetime(int(datefin[0:4]), int(datefin[4:6]), int(datefin[6:8]), int(datefin[8:10]))
-#     for row in r:
-#         #                9 pour obs espagnoles
-#         if re.match("^\d{8}\d?$", row[0]):
-#             listdate = row[1].split("-")
-#             date = datetime.datetime(int(listdate[0]), int(listdate[1]), int(listdate[2]), int(listdate[3]), int(listdate[4]))
-#             if date < datedebtime or date > datefintime:
-#                 c.writerow(row)
-#
-# for ficin in ["HTN.obs"]:
-#     csvfile = open(ficin)
-#     reader = csv.reader(csvfile, delimiter="|", skipinitialspace=True)
-#     for row in reader:
-#         # Ajout d'un 0 si département < 10
-#         if re.match("^\d{7}$", row[1]):
-#             row[1] = "0" + row[1]
-#         if len(row[2]) > 0 and row[2].strip() != "-999":
-#             c.writerow([row[1], row[0], row[2], row[3]])

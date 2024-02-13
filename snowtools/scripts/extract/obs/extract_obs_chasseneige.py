@@ -26,17 +26,27 @@ args = parser.parse_args()
 # On prend toutes les heures
 question = question(
         # Insert other variables here if needed
-        listvar=["q.num_poste", "to_char(dat,'YYYY-MM-DD-HH24-MI')", "hneigef", "type_nivo"],
-        table='Q',
-        listorder=['dat', 'q.num_poste'],
+        listvar=["h_nivo.num_poste", "NOM_USUEL", "to_char(dat,'YYYY-MM-DD-HH24-MI')", "cn"],
+        table='H_NIVO',
+        listorder=['h_nivo.num_poste','dat'],
         listjoin=[
-            'POSTE_NIVO ON Q.NUM_POSTE = POSTE_NIVO.NUM_POSTE and type_nivo != 2',
+            'POSTE_NIVO ON H_NIVO.NUM_POSTE = POSTE_NIVO.NUM_POSTE',
             ],
         listconditions=[
-            "hneigef is not null"
+            "to_char(dat,'HH24') = '06'",  "cn is not null", 'POSTE_NIVO.TYPE_NIVO = 1', '(POSTE_NIVO.num_poste=73306403'
+                                                                                         ' or POSTE_NIVO.num_poste=73173400'
+                                                                                         ' or POSTE_NIVO.num_poste=73318400'
+                                                                                         ' or POSTE_NIVO.num_poste=73280402'
+                                                                                         ' or POSTE_NIVO.num_poste=38191400 '
+                                                                                         'or POSTE_NIVO.num_poste=38191408'
+                                                                                         ' or POSTE_NIVO.num_poste=38527400'
+                                                                                         ' or POSTE_NIVO.num_poste=38020400'
+                                                                                         ' or POSTE_NIVO.num_poste=05063407'
+                                                                                         ' or POSTE_NIVO.num_poste=38253400'
+                                                                                         ' or POSTE_NIVO.num_poste=38253407)'
             ],
         period=[args.date_min, args.date_max],
         )
 question.run(outputfile=args.output,
-             header=['NUMPOST', 'Date UTC', "HN24 cm", "type_nivo"] if not args.append else False,
+             header=['NUMPOST', 'Date UTC', "CN"] if not args.append else False,
              mode='w' if not args.append else 'a')
