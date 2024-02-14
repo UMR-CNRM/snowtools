@@ -50,6 +50,18 @@ Other things gathered by snowtools
 
    Data <code/data.rst>
 
+SURFEX Information
+------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   Installation of SURFEX <misc/surfex-install.rst>
+   Run a SURFEX-Crocus simulation <misc/surfex-run.rst>
+   Few informations on SURFEX-Crocus simulations <misc/surfex.rst>
+   Information for developpers <misc/surfex-dev.rst>
+
+
 Help improving this documentation !
 -----------------------------------
 

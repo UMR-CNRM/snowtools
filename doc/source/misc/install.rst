@@ -3,6 +3,10 @@
 Install Snowtools
 =================
 
+.. note::
+
+   If you are using snowtools on Meteo-France computers, go directly to the last section (:ref:`sec-install_dev`).
+
 Dependencies
 ------------
 
@@ -32,7 +36,7 @@ Some specific parts of the code (including test) require to have also:
 Install dependencies with system packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We encourage you to install these packages through system packages, for instance with the following command line on Debian or Ubuntu 20.04 system:
+We encourage you to install these packages through system packages, for instance with the following command line on Debian or Ubuntu 22.04 system:
 
 .. code-block:: bash
    
@@ -40,31 +44,32 @@ We encourage you to install these packages through system packages, for instance
                     python3-matplotlib python3-dateutil python3-pyproj \
                     python3-shapely python3-willow python3-scipy \
                     python3-psycopg2 python3-pandas python3-xarray \
-                    libgdal libgdal-dev python3-gdal python3-rpy2
+                    libgdal-dev python3-gdal python3-rpy2
+
+Install ``bronx`` package with ``pip install bronx`` (no distribution package for this python package).
 
 Install with pip
 ^^^^^^^^^^^^^^^^
 Most of the packages can easily be installed in a virtual environment with ``pip``: use ``pip install -r requirements.txt``.
 
-Only GDAL need to be installed manually to be installed consistently with your installed ``libgdal-dev`` version. Please install before the system packages ``ligdal`` and ``libgdal-dev`` (or similar) and run: ``pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="$(gdal-config --cflags)"``.
+Only GDAL python binding need to be installed manually to be installed consistently with your installed ``libgdal-dev`` version. Please install before the system packages ``ligdal`` and ``libgdal-dev`` (or similar) and run: ``pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="$(gdal-config --cflags)"``.
 
-Specific case of cartopy
-^^^^^^^^^^^^^^^^^^^^^^^^
+Snowtools install
+^^^^^^^^^^^^^^^^^
 
-Cartopy will need to be installed with ``pip install cartopy`` as you must specify the version corresponding to the matplotlib version installed (see :ref:`maps plots documentation <plots-maps>`).
+If you are only a user of snowtools, you can simply go into the snowtools directory and then run  ``pip install .``.
 
 
+.. _sec-install_dev:
 
 Install for developers
 ----------------------
-
-Snowtools is available on a git repository. See https://opensource.umr-cnrm.fr/projects/snowtools_git/wiki/Procedure_for_new_users for getting access.
 
 Clone the git repository on your computer. You have to add the install folder to your ``PYTHONPATH``. This can be done by adding these tho following lines to your ``.bashrc`` or ``.bash-profile``: 
 
 .. code-block:: bash
    
-   export SNOWTOOLS_CEN=/yourpath/snowtools_git
+   export SNOWTOOLS_CEN=/yourpath/snowtools
    export PYTHONPATH=$PYTHONPATH:$SNOWTOOLS_CEN
 
 It is also recommended to create useful aliases for s2m command and proreader graphical user interface in the same file:
@@ -72,4 +77,38 @@ It is also recommended to create useful aliases for s2m command and proreader gr
 .. code-block:: bash
 
    alias s2m="python $SNOWTOOLS_CEN/snowtools/tasks/s2m_command.py"
-   alias proreader="python3 $SNOWTOOLS_CEN/snowtools/plots/GUI_Proreader.py"
+   alias proplotter="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/proplotter.py"
+   alias procompare="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/procompare.py"
+
+Optional installations
+----------------------
+
+Spatial interploator for SAFRAN
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**On Meteo-France super-computers**, a precompiled binary is provided in the CEN uenv environment. Therefore, this step is not required unless you need to modify the interpolation software.
+If you want to use your own version :
+
+.. code-block:: bash
+
+   cd $SNOWTOOLS_CEN/snowtools/interpolation/
+   module purge
+   module load intel
+   module load intelmpi
+   
+   ln -sf Makefile_belenos Makefile
+   make
+
+Running the code does not require any module load command. It is much safer to purge all modules before running.
+Do never add module load commands in your .bashrc or .bash_profile files to avoid very tricky bugs.
+Do absolutely never load netcdf module before running the code as this would load conflictual library versions with the ones used for compilation
+
+**On your PC**, if you need the interpolation software of SAFRAN meteorological fields on list of points or regular grids, you need to compile the corresponding Fortran application even if you do not modify the code:
+
+.. code-block:: bash
+
+   cd $SNOWTOOLS_CEN/snowtools/interpolation/
+   ln -s Makefile_pc Makefile
+   make
+
+At CEN, Netcdf with parallel support must be installed in /opt/netcdf4-parallel (ask Romain if not available)

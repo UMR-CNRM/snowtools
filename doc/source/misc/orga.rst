@@ -4,7 +4,6 @@ Code organization
 =================
 
 * ``assim`` folder contains assimilation post-processing
-* ``bronx`` is an external package that contains a lot of useful tools
 * ``conf`` contains configuration files for research tools
 * ``DATA`` contains no code but files frequently used
 * ``evals`` contains routines to extract data for further evaluations (which are not in this folder...)
@@ -15,6 +14,8 @@ Code organization
 * ``tasks`` contains the typical sequence of instructions necessary to run a full simulation, both in operational or research mode
 * ``tools`` contains all the classes and methods shared by the vortex project and standalone applications. It is all the physics and links between simulation elements.
 * ``utils`` is a set of technical tools to help manipulating simulation objects (read and convert files, sun trajectory, etc.). Please check the tool your need is not already in bronx.
+
+* ``bronx`` is an external package that contains a lot of useful tools (this package is now an external package that have to be installed separately)
 
 A folder ``tests`` contains the test suite of snowtools and the ``doc`` folder contains this documentation code.
 
