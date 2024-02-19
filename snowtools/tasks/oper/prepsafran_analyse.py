@@ -227,9 +227,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb03 =', tb03)
                 print()
 
-        if 'fetch' in self.steps:
-
-            pass
 
         if 'compute' in self.steps:
 
@@ -254,10 +251,6 @@ class PrepSafran(Task, S2MTaskMixIn):
             self.component_runner(expresso, script, fortran = False)
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
-
-            pass
-
-        if 'late-backup' in self.steps:
 
             if True:  # To match IGA identation
 

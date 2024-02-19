@@ -435,7 +435,7 @@ class Safran(Task, S2MTaskMixIn):
 
             self.component_runner(tbalgo4, tbx4)
 
-        if 'late-backup' in self.steps:
+        if 'backup' in self.steps or 'late-backup' in self.steps:
 
             if True:  # To match IGA identation
 
