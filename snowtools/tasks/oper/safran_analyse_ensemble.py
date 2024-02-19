@@ -615,9 +615,6 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb21 =', tb21)
                 print()
 
-        if 'fetch' in self.steps:
-            pass
-
         if 'compute' in self.steps:
 
             # NB : La date des executions est fixée à J-1 car l'analyse SAFRAN va de J-1 6h à J 6H
@@ -705,7 +702,7 @@ class Safran(Task, S2MTaskMixIn):
 
             self.component_runner(tbalgo6, tbx6)
 
-        if 'late-backup' in self.steps:
+        if 'backup' in self.steps or 'late-backup' in self.steps:
 
             if True:  # To match IGA indentation
 

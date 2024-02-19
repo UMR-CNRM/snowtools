@@ -49,7 +49,7 @@ class Reanalyses(Task, S2MTaskMixIn):
                 sh.untar(tarname)
             sh.rm(tarname)
 
-        if 'early-fetch' in self.steps:  # Difference with IGA
+        if 'early-fetch' in self.steps or 'fetch' in self.steps:  # Difference with IGA
 
             if True:  # To match IGA identation
 
@@ -147,7 +147,7 @@ class Reanalyses(Task, S2MTaskMixIn):
 
             #TODO :prévoir de regénérer les éventuels guess manquants
 
-        if 'late-backup' in self.steps:
+        if 'backup' in self.steps or 'late-backup' in self.steps:
 
             if True:  # to match IGA identation
 
