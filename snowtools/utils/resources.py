@@ -222,11 +222,11 @@ def get_file_period(prefix, path, datebegin, dateend):
             return dateyear_beg, dateyear_end
 
         if os.path.isfile(yearlyfile2):
-            smart_copy(yearlyfile1, prefix + ".nc")
+            smart_copy(yearlyfile2, prefix + ".nc")
             return datebegin, dateyear_end
 
         if os.path.isfile(yearlyfile3):
-            smart_copy(yearlyfile1, prefix + ".nc")
+            smart_copy(yearlyfile3, prefix + ".nc")
             return dateyear_beg, dateend
 
         # Attempt to find a monthly file
