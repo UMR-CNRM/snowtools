@@ -20,7 +20,7 @@ usage = "usage: get_oper_files.py -b YYYYMMDD -r area [--dev] [--meteo] [--snow]
 class configdev(object):
     rundate = Date(2021, 3, 22, 12)    # Run date can be at 3TU, 6TU, 9TU
     previ = False  # False for analysis, True for forecast
-    xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
+    xpid = "nouveaux_guess@lafaysse"  # To be changed with IGA account when operational
     list_geometry = ["alp", "pyr", "cor", "postes"]
 
 
