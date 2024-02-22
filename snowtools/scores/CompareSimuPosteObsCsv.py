@@ -292,12 +292,13 @@ def fullplots(datebegin, dateend, dataObs):
 
     if options.scores:
         print ("Compute scores")
-        C.scores()
+        C.scores(datemin=datebegin, datemax=dateend)
         C.allboxplots()
 
     if options.plot:
         print ("Draw plots")
-        C.plot()
+        print(datebegin, dateend)
+        C.plot(datemin=datebegin, datemax=dateend)
 
 
 def fullplotsSIM2(datebegin, dateend, dataObs):
@@ -385,10 +386,19 @@ class ComparisonSimObs(object):
     def set_massifs_labels(self, list_labels):
         self.list_labels_massifs = list_labels
 
-    def plot(self):
+    def plot(self, datemin=None, datemax=None):
 
         dateprobegin = self.timeSim[0][0]
         dateproend = self.timeSim[0][-1]
+
+        if datemin:
+            dateplotbegin = max(dateprobegin, datemin)
+        else:
+            dateplotbegin = dateprobegin
+        if datemax:
+            dateplotend = min(dateproend, datemax)
+        else:
+            dateplotend = dateproend
 
         myplot = temporalplotObsMultipleSims()
 
@@ -399,14 +409,21 @@ class ComparisonSimObs(object):
         for s, station in enumerate(self.listStations):
             available_sim = []
             for indSim in range(0, self.nsim):
-                available, timeObs, timeSim, sdObs, sdSim  = self.get_obs_sim(station, indSim)
+                available, timeObs, timeSim, sdObs, sdSim  = self.get_obs_sim(station, indSim, datemin=datemin,
+                                                                              datemax=datemax)
                 available_sim.append(available)
+
                 if available:
+                    periodplot = (timeSim >= dateplotbegin) & (timeSim <= dateplotend)
+                    timeplot = timeSim[periodplot]
+                    sdSimplot = sdSim[periodplot]
                     if not any(available_sim[:-1]):
-                        myplot.draw(timeObs, sdObs, timeSim, sdSim, color=self.list_colors[indSim], label=self.list_labels[indSim])
+                        myplot.draw(timeObs, sdObs, timeplot, sdSimplot, color=self.list_colors[indSim],
+                                    label=self.list_labels[indSim])
                         timeOut = timeSim[:]
                     else:
-                        myplot.add_line(timeSim, sdSim, color=self.list_colors[indSim], label=self.list_labels[indSim])
+                        myplot.add_line(timeplot, sdSimplot, color=self.list_colors[indSim],
+                                        label=self.list_labels[indSim])
 
             if any(available_sim):
 
@@ -418,7 +435,8 @@ class ComparisonSimObs(object):
                 else:
                     myplot.set_title(build_title(station))
 
-                plotfilename = options.dirplot + "/" + station + "_" + dateprobegin.strftime("%Y") + "_" + dateproend.strftime("%Y") + "." + options.format
+                plotfilename = (options.dirplot + "/" + station + "_" + dateprobegin.strftime("%Y") + "_" +
+                                dateproend.strftime("%Y") + "." + options.format)
 
                 myplot.finalize(timeOut, ylabel="Snow depth (cm)")
                 print ('plot ' + plotfilename)
@@ -427,7 +445,7 @@ class ComparisonSimObs(object):
         print ("NUMBER OF NIVOSE")
         print (nivose)
 
-    def scores(self):
+    def scores(self, datemin=None, datemax=None):
         init = time.time()
         self.nvalues = np.zeros((self.nsim, self.nstations))
         self.bias = np.zeros((self.nsim, self.nstations))
@@ -440,7 +458,8 @@ class ComparisonSimObs(object):
 
             for indSim in range(0, self.nsim):
                 t1 = time.time()
-                available, timeObs, timeSim, sdObs, sdSim = self.get_obs_sim(station, indSim)
+                available, timeObs, timeSim, sdObs, sdSim = self.get_obs_sim(station, indSim, datemin=datemin,
+                                                                             datemax=datemax)
                 t2 = time.time()
                 print('Appel a get_obs_sim : {0:f}s'.format(t2-t1))
 
@@ -464,7 +483,7 @@ class ComparisonSimObs(object):
         self.boxplots_scores(arrayStations, np.array(self.elevations), self.rmse, 'rmse', ylabel='RMSD (cm)')
         self.boxplots_scores(arrayStations, np.array(self.elevations), self.meansd, 'mean_SD', ylabel='Mean simulated Snow Depth (cm)')
 
-    def get_obs_sim(self, station, indSim):
+    def get_obs_sim(self, station, indSim, datemin=None, datemax=None):
 
         timeObs = self.dataObs.get(station, "time")
         sdObs = self.dataObs.get(station, "SNOWDEPTH")  # cm
@@ -476,6 +495,12 @@ class ComparisonSimObs(object):
             winter[i] = (t.month >= 10) or (t.month <= 6)
 
         periodObs = periodObs & winter
+
+        if datemin:
+            periodObs = periodObs & (timeObs >= datemin)
+
+        if datemax:
+            periodObs = periodObs & (timeObs <= datemax)
 
         availObs = np.sum(sdObs[periodObs] > 0) > 5
         
