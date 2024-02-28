@@ -48,6 +48,8 @@ Please avoid relative imports in snowtools. Absolute imports must start at ``sno
 
 See PEP 8 import section https://www.python.org/dev/peps/pep-0008/#imports for more details on correct import order and other guidelines on imports.
 
+Of course star-imports (``from XXX import *``) are prohibited.
+
 
 Documentation and testing
 -------------------------
@@ -59,6 +61,8 @@ In addition, each new development should come with tests (unit tests and/or test
 Git commits
 -----------
 
+For both snowtools and SURFEX projects, all developments must be done in seperated git branches with frequent commit to ensure traceability of your modifications and the ability to include in your own branch the main bugfixes and developments of the main branches.
+
 We recoment to commit only when :
 
 - You have a state of the code that is self-sufficient (not work in progress that could not be used yet)
@@ -67,7 +71,15 @@ We recoment to commit only when :
 
 Each commit must contain a clear message that include in few words the part of the code that is affected and the reason of the commit. The commit message is composed of a title (1st line) that summarize the changes and could be complemented by more detailed description of the changes.
 
+Developpement branches must start from the ``dev`` branch and be named ``dev_<project>`` where ``<project>`` is the name of the project or obviously describe what is inside the branch.
+
 Language
 --------
 
 Of course, all comments in the code, documentation and commit message have to be in english.
+
+SURFEX
+======
+
+SURFEX developements must follow the specific coding rules of this project: http://www.cnrm.meteo.fr/surfex-lab/spip.php?rubrique93
+Contributions will not be accepted if they do not follow these requirements.
