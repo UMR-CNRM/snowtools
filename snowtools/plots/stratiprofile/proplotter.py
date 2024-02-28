@@ -38,8 +38,8 @@ def main(version=version):
                         dest='variable_profil')
     parser.add_argument("--point", help="Point number to select", type=int)
     parser.add_argument("-s", "--select", type=str, action='append', dest='select',
-                        help="Selection of point with constraints on data: use as many '-s variable=value' as necessary to \
-                              select the point of interest. Note that if -p is given, these options are ignored.")
+                        help="Selection of point with constraints on data: use as many '-s variable=value' as necessary\
+                               to select the point of interest. Note that if -p is given, these options are ignored.")
 
 # Options for plotting 1D profile instead of time evolution
     parser.add_argument("--profil", action="store_true", default=False,
@@ -75,9 +75,9 @@ def main(version=version):
             if variable is not None:
                 arguments['variable'] = variable['full_name']
         if args.variable_profil is not None:
-            variable = fileobj.variable_desc(args.variable_profil)
-            if variable is not None:
-                arguments['variable_profil'] = variable['full_name']
+            variable_p = fileobj.variable_desc(args.variable_profil)
+            if variable_p is not None:
+                arguments['variable_profil'] = variable_p['full_name']
         if args.point is not None:
             point = args.point
         elif args.select is not None:
@@ -101,11 +101,33 @@ def main(version=version):
         from snowtools.plots.stratiprofile import proplotter_gui as gui
         gui.main(fileobj=fileobj, point=point, arguments=arguments)
     else:
+        if fileobj is None:
+            raise ValueError("No file provided while -o option used")
+        if point is None and fileobj._npoints > 1:
+            raise ValueError("No point selected while -o option used")
+        if variable is None:
+            raise ValueError("No variable selected while -o option used")
+
+        if not args.type == 'standard':
+            raise ValueError('-o option is implemented only for standard graph')
+
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+
+        from snowtools.plots.stratiprofile import proplotter_functions
+
+        fig = plt.Figure()
+        axs = proplotter_functions.create_axis_for_figure(fig, 1)
+        # TODO: Implement additional options argument (tile)  <06-02-24, Léo Viallon-Galinier> #
+        data = proplotter_functions.get_data(fileobj, point, variable['name'])  # additional_options=additional_options)
+        args_plot = proplotter_functions.give_master_args_std(axs['ax1'], data)
+        proplotter_functions.masterfig(**args_plot)
+        fig.savefig(args.output)
+
         # TODO: Implement:
-        # - -o to write a file rather than opening GUI
         # - --profil / -d options
         # <10-02-23, Léo Viallon-Galinier> #
-        raise NotImplementedError('-o option is not yet implemented')
 
 
 if __name__ == "__main__":

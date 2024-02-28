@@ -41,7 +41,7 @@ all_packages_data['snowtools'] = [
 
 setup(
         name='Snowtools',
-        version='2.0.0',
+        version='2.0.1',
         description="Snowtools is a recommended python package to pre-process, run and post-process simulations with the SURFEX-Crocus snowpack model.",
         long_description="""
         Snowtools is a series of mostly python scripts that are designed to make our life simpler
@@ -70,6 +70,7 @@ setup(
             'console_scripts': [
                 's2m = snowtools.tasks.s2m_command:main',
                 'proreader = snowtools.plots.stratiprofile.proplotter:main',
+                'procompare = snowtools.plots.stratiprofile.procompare:main',
                 ],
             },
         install_requires=[

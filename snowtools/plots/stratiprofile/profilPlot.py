@@ -221,6 +221,7 @@ def saisonProfil(ax, dz, value, time, colormap='viridis', value_min=None, value_
                                       cmap=cmap, norm=norm, edgecolors='none')
     rect.set_clim(vmin, vmax)
     ax.add_collection(rect)
+    ax.set_xlim(0, len(time))
     ax.autoscale_view()
 
     if cbar_show:
@@ -407,7 +408,7 @@ def dateProfil(axe, axe2, value, value_dz, value_grain=None, value_ram=None, xli
         Max = xlimit[1]
         Min = xlimit[0]
     else:
-        Max = 0
+        Max = 0.1
         Min = 0
     if not np.isnan(value).all():
         Max = np.nanmax(value) if np.nanmax(value) > Max else Max
@@ -503,14 +504,14 @@ def heightplot(ax, value, value_ep, time, legend=None, color='b', direction_cut=
 
     # pas très pythonique: faire un truc avec np.apply_along_axis(np.searchsorted, 1, ep_from, height)
     if direction_cut == 'down':
-        for i in np.arange(np.alen(ep_from_topsnow)):
+        for i in np.arange(len(ep_from_topsnow)):
             if ep_from_topsnow[i, :].searchsorted(float(height_cut)) < int(value_ep.shape[1]) and \
                     float(height_cut) < ep_from_ground[i, -1]:
                 y.append(value[i, ep_from_topsnow[i, :].searchsorted(float(height_cut))])
             else:
                 y.append(None)
     if direction_cut == 'up':
-        for i in np.arange(np.alen(ep_from_ground)):
+        for i in np.arange(len(ep_from_ground)):
             if ep_from_ground[i, :].searchsorted(float(height_cut)) > 0 and \
                     float(height_cut) < ep_from_ground[i, -1]:
                 y.append(value[i, int(value_ep.shape[1]) - ep_from_ground[i, :].searchsorted(float(height_cut))])

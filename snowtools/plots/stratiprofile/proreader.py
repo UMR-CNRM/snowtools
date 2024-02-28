@@ -242,6 +242,7 @@ class reader(abc.ABC):
          * type: may be choices or float or int
          * choices: the array of possible values
          * limits: if type is float or int, a tuple of size 2 describing the
+                   range of the data (min, max)
          * default_value: If provided, replace none value by this default value.
         """
         return {}
@@ -481,6 +482,7 @@ class proreader(reader):
          * type: may be choices or float or int
          * choices: the array of possible values
          * limits: if type is float or int, a tuple of size 2 describing the
+                   range of the data (min, max)
          * default_value: If provided, replace none value by this default value.
         """
         if self._ntile is None or self._ntile <= 1:
@@ -559,6 +561,7 @@ class proreader(reader):
          * type: may be choices or float or int
          * choices: if type is choices, the list of possible values
          * limits: if type is float or int, a tuple of size 2 describing the
+                   range of the data (min, max)
 
         :param v: variable name
         :type v: str
