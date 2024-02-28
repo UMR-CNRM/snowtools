@@ -19,7 +19,7 @@ Snowtools is often used in combination with Surfex to run snow cover simulations
 
 Users interested by snow modeling with SURFEX/Crocus model must follow detailed instructions at <https://opensource.umr-cnrm.fr/projects/snowtools_git/wiki/Procedure_for_new_users>.
 
-Some additional information are provided directly here : 
+Some additional information are provided directly here:
 
 * [Installation of SURFEX](doc/source/misc/surfex-install.rst)
 * [Run a SURFEX-Crocus simulation](doc/source/misc/surfex-run.rst)

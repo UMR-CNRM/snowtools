@@ -154,5 +154,13 @@ SNOWPAPPUS instantaneous outputs:
 - SNFLX_1M_P = snow transport flux integrated up to 1m height
 - SNFLXINT_P = snow transport flux integrated on height
 
+
+Impurities explicit:
+- SNOWIMP1 = Concentration of Soot (g/g)
+- SNOWIMP2 = Concentration of Dust (g/g)
+- SPEC_TOT = Total incident spectral radiation (unit ?) over 186 spectral bands (300, 320, ..., 4000 nm)
+- SPEC_ALB = Snow spectral albedo over 186 spectral bands (300, 320, ..., 4000 nm)
+- DIFF_RATIO = Diffuse to total spectral irradiance ratio
+
 You can find other variables in SURFEX documentation:
 https://www.umr-cnrm.fr/surfex/spip.php?article30

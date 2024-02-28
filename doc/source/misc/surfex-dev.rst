@@ -190,6 +190,16 @@ In this script, you’re starting to work with ISBA_Diagnostic (named DMK here):
 - put the returning value in DMK%XVAR_NEWDIAG
 - As always, you can follow ACC_RAT to see what happens and how.
 
+**The (near) end**:
+
+Now your variable is ready and you can either
+
+1. use *snowcro_diag.F90:* if you want to compute a diagnostic with output variables from snowcro,
+2. and/or use *snowcro.F90:* if you want to set/get your variable in this main routine.
+
+In both case, your variable should appear in the subroutine arguments as IN, OUT or IN/OUT.
+Below the case 1 is described.
+
 **snowcro_diag.F90**:
 
 This is the science part : you have to calculate NEW_DIAG with the fields you need. Of course, you have to declare this new variable as INOUT and to put it in the call of the script.
