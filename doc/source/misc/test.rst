@@ -12,8 +12,7 @@ Please don't forget that tests are useful in both situations:
 Running the test
 ----------------
 
-To run the tests after a new developement. To do so, you can run any ``test_*`` file in the ``test`` folder or use the unittest discovery tool, running ``python3 -m unittest``.
-For python2 tests, run ``python2 -m unittest discover``.
+To run the tests after a new developement. To do so, you can run any ``test_*`` file in the ``test`` folder or just run ``python3 -m unittest`` or ``python3 -m pytest``.
 
 When running tests, your environment must:
 
@@ -31,7 +30,7 @@ Please note that only test files runnable with unittest are allowed to contain `
 Test of assimilation part
 -------------------------
 
-The assimilation tool can ba tested with :
+The assimilation tool can be tested with :
 
 .. code-block:: bash
 

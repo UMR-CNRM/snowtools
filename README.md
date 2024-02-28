@@ -2,9 +2,10 @@
 
 `snowtools` is a series of mostly python scripts that are designed to make our life simpler in terms of pre- and post-processing of SURFEX-Crocus snow model simulations.
 
+`snowtools` is freely distributed under CeCILL-C licence. See [LICENCE](LICENCE.txt) for details
+
 Note that this package is only useful for people interested in using numerical codes of snowpack modelling on a Linux environment. The package does not include any meteorological or snow data.
 It must be used in association with the [SURFEX project](http://www.cnrm-game-meteo.fr/surfex/spip.php)
-
 General informations about snowpack modelling with SURFEX-Crocus can be found here: <http://www.cnrm-game-meteo.fr/spip.php?rubrique73>
 
 The structure of snowtools code base is available [here](doc/source/misc/orga.rst).
@@ -24,9 +25,10 @@ Some additional information are provided directly here:
 * [Installation of SURFEX](doc/source/misc/surfex-install.rst)
 * [Run a SURFEX-Crocus simulation](doc/source/misc/surfex-run.rst)
 * [Few informations on SURFEX-Crocus simulations](doc/source/misc/surfex.rst)
-* [Information for SURFEX developpers](doc/source/misc/surfex-dev.rst)
+* [Information for SURFEX developers](doc/source/misc/surfex-dev.rst)
+* [Information for snowtools developers](doc/source/misc/contribute.rst)
 
-For Meteo-France People, also consider [installing Vortex](https://opensource.umr-cnrm.fr/projects/snowtools_git/wiki/Install_VORTEX)
+For Meteo-France developers, also consider [installing Vortex](https://opensource.umr-cnrm.fr/projects/snowtools_git/wiki/Install_VORTEX)
 
 ### First test
 If you correctly installed the snowtools and SURFEX projects, you must be able to run successfully the following test case:
@@ -39,12 +41,12 @@ s2m -f $SNOWTOOLS_CEN/snowtools/DATA/FORCING_test_base.nc -b 20100801 -e 2011080
 
 ## Plot tools
 
-As SURFEX-Crocus output files are netCDF files, the visualization of scalar variables is possible with classical visualization tools for netcdf files, for example :
+As SURFEX-Crocus output files are netCDF files, the visualization of scalar variables is possible with classical visualization tools for NetCDF files, for example :
 
 - ncview
 - pyncview
 
-However, visualization of the simulated vertical profiles of the snowpack can be difficult due to the lagrangian discretization of Crocus numerical layers and requires specific softwares. snowtools propose two dedicated softwares:
+However, visualization of the simulated vertical profiles of the snowpack can be difficult due to the lagrangian discretization of Crocus numerical layers and requires specific softwares. `snowtools` propose two dedicated softwares:
 
 - `proplotter`: a graphical user interface for plotting snow profiles evolution across simulations (point or gridded simulations, one point at each time).
 - `procompare`: a graphical user interface to compare two simulations
