@@ -142,7 +142,7 @@ CONTAINS
     INTEGER::IDVARGZS,IDVARGMASSIF,IDVARGASPECT,IDVARSLOPE,IDVARLAT,IDVARLON,IDY,IDX, IDVARSTATION ! nc variable identifier
     INTEGER,DIMENSION(:),ALLOCATABLE::IDDIMSVARG ! dimension ids of nc variable
     !
-    REAL(KIND=8),DIMENSION(:,:),ALLOCATABLE :: PX2D,PY2D, PZSALL
+    REAL(KIND=8),DIMENSION(:,:),ALLOCATABLE :: ZX2D,ZY2D, ZZSALL, ZASPECTALL, ZSLOPEALL ! variables covering the whole domain
     INTEGER,DIMENSION(NPROC) :: PROC_XCOUNT, PROC_YCOUNT, PROC_STRIDE
     !
     INTEGER::ID, IPROC ! dimension loop counter
@@ -198,8 +198,13 @@ CONTAINS
     ENDIF
     !
     ALLOCATE(PZSOUT(NX_PROC,NY_PROC))
+    PZSOUT= XUNDEF
+    ALLOCATE(PASPECTOUT(NX_PROC,NY_PROC))
+    PASPECTOUT = -1.
+    ALLOCATE(PSLOPEOUT(NX_PROC,NY_PROC))
+    PSLOPEOUT = 0.
     ALLOCATE(KMASSIFOUT(NX_PROC,NY_PROC), KMASSIFGATHER(NX,NY))
-    KMASSIFOUT = 0 ; PZSOUT= XUNDEF
+    KMASSIFOUT = 0
     !
     CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARGZS,PZSOUT, &
             start =(/IXSTART,IYSTART/) , count = (/NX_PROC,NY_PROC/)), "Cannot read "//HZS)
@@ -224,11 +229,7 @@ CONTAINS
     ! PRINT*, PROC_STRIDE
     CALL MPI_ALLGATHERV(KMASSIFOUT, NX_PROC*NY_PROC, MPI_INT, KMASSIFGATHER, PROC_XCOUNT*PROC_YCOUNT, PROC_STRIDE, &
             MPI_INT, COMM, IERR)
-    !
-    ALLOCATE(PASPECTOUT(NX,NY))
-    PASPECTOUT = -1.
-    ALLOCATE(PSLOPEOUT(NX,NY))
-    PSLOPEOUT = 0.
+    ! 
     IF(IRANK == 1)THEN
       !
       ALLOCATE(PLATOUT(NX))
@@ -273,15 +274,23 @@ CONTAINS
         CALL CHECK(NF90_INQ_VARID(FILE_ID_GEO,HX,IDX), "Cannot find "//HX)
         CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDX,PXOUT, &
                 start =(/1/) , count = (/NX/)), "Cannot read "//HX)
-        ALLOCATE(PZSALL(NX,NY))
-        PZSALL= XUNDEF
+        ALLOCATE(ZZSALL(NX,NY))
+        ALLOCATE(ZASPECTALL(NX,NY))
+        ALLOCATE(ZSLOPEALL(NX,NY))
+        ZZSALL= XUNDEF
         !maybe a gather from all procs is more efficient ?
-        CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARGZS,PZSALL, &
+        CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARGZS,ZZSALL, &
                 start =(/1,1/) , count = (/NX,NY/)), "Cannot read all "//HZS)
         ! Calcul slope, aspect
-        CALL EXPLICIT_SLOPE(PXOUT,PYOUT,PZSALL,PSLOPEOUT,PASPECTOUT)
+        CALL EXPLICIT_SLOPE(PXOUT,PYOUT,ZZSALL,ZSLOPEALL,ZASPECTALL)
         !
-        DEALLOCATE(PZSALL)
+        ! Local values of aspect and slope are extracted from the arrays covering the whole domain
+        PASPECTOUT(:,:) = ZASPECTALL(IXSTART:IXSTART+NX_PROC-1, IYSTART:IYSTART+NY_PROC-1)
+        PSLOPEOUT(:,:) = ZSLOPEALL(IXSTART:IXSTART+NX_PROC-1, IYSTART:IYSTART+NY_PROC-1)
+        !
+        DEALLOCATE(ZZSALL)
+        DEALLOCATE(ZASPECTALL)
+        DEALLOCATE(ZSLOPEALL)
       ELSEIF (GT == "LL") THEN  !LAT LON GRID
         ALLOCATE(PLATOUT(NY))
         ALLOCATE(PLONOUT(NX))
@@ -296,19 +305,26 @@ CONTAINS
         CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARLON,PLONOUT, &
                 start =(/1/) , count = (/NX/)), "Cannot read "//HLON)
         ! Calcul slope, aspect
-        ALLOCATE(PX2D(NX,NY))
-        ALLOCATE(PY2D(NX,NY))
-        CALL XY_IGN(PLATOUT,PLONOUT,PX2D,PY2D)
+        ALLOCATE(ZX2D(NX,NY))
+        ALLOCATE(ZY2D(NX,NY))
+        CALL XY_IGN(PLATOUT,PLONOUT,ZX2D,ZY2D)
 
-        ALLOCATE(PZSALL(NX,NY))
+        ALLOCATE(ZZSALL(NX,NY))
+        ALLOCATE(ZASPECTALL(NX,NY))
+        ALLOCATE(ZSLOPEALL(NX,NY))
         !maybe a gather from all procs is more efficient ?
-        CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARGZS,PZSALL, &
+        CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARGZS,ZZSALL, &
                 start =(/1,1/) , count = (/NX,NY/)), "Cannot read all "//HZS)
-        CALL EXPLICIT_SLOPE_LAT_LON(PX2D,PY2D,PZSALL,PSLOPEOUT,PASPECTOUT)
+        CALL EXPLICIT_SLOPE_LAT_LON(ZX2D,ZY2D,ZZSALL,ZSLOPEALL,ZASPECTALL)
+        ! Local values of aspect and slope are extracted from the arrays covering the whole domain
+        PASPECTOUT(:,:) = ZASPECTALL(IXSTART:IXSTART+NX_PROC-1, IYSTART:IYSTART+NY_PROC-1)
+        PSLOPEOUT(:,:) = ZSLOPEALL(IXSTART:IXSTART+NX_PROC-1, IYSTART:IYSTART+NY_PROC-1)
 
-        DEALLOCATE(PZSALL)
-        DEALLOCATE(PX2D)
-        DEALLOCATE(PY2D)
+        DEALLOCATE(ZZSALL)
+        DEALLOCATE(ZASPECTALL)
+        DEALLOCATE(ZSLOPEALL)
+        DEALLOCATE(ZX2D)
+        DEALLOCATE(ZY2D)
       ELSE
         CALL ABORT_INTERPOLATE("GRID 2D NOT TRAITED")
       ENDIF
@@ -387,7 +403,7 @@ CONTAINS
     !
   END SUBROUTINE READ_NC
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  SUBROUTINE INDICES2D(PZSOUT,KMASSIFOUT,PASPECTOUT,KZSIN,KMASSIFIN,&
+  SUBROUTINE INDICES2D(PZSOUT,KMASSIFOUT,PASPECTOUT,PSLOPEOUT,KZSIN,KMASSIFIN,&
           KASPECTIN, PSLOPEIN, KINDICESBAS,KINDICESHAUT)
    ! Determines the  indexes of input collection of points to interpolate between in order to obtain the output grid.
     !
@@ -397,6 +413,7 @@ CONTAINS
     ! DOUBLE PRECISION,DIMENSION(:,:),INTENT(IN):: PZSOUT
     REAL(KIND=8),DIMENSION(:,:),INTENT(IN):: PZSOUT ! Elevation of output collection of points
     REAL(KIND=8),DIMENSION(:,:),INTENT(IN):: PASPECTOUT ! Aspect of output collection of points
+    REAL(KIND=8),DIMENSION(:,:),INTENT(IN):: PSLOPEOUT ! Slope of output collection of points
     INTEGER,DIMENSION(:),INTENT(IN):: KZSIN ! Elevation of input collection of points
     INTEGER,DIMENSION(:),INTENT(IN):: KMASSIFIN ! Massif of input collection of points
     INTEGER,DIMENSION(:),INTENT(IN):: KASPECTIN ! Aspect of input collection of points
@@ -412,7 +429,7 @@ CONTAINS
     INTEGER::JI,JX,JY ! loop counters
     REAL::ZDIFFZS ! elevation difference between output point and input point TAKE CARE MUST BE REAL !
     !
-    LOGICAL :: GASPECT, GISFLAT
+    LOGICAL :: GASPECT, GSLOPE, GISFLAT
     INTEGER, PARAMETER::JPRESOL_ELEV = 300 ! elevation resolution of input collection of points
     !
     INX=SIZE(PZSOUT, 1)
@@ -432,11 +449,13 @@ CONTAINS
         DO JI=1,ININ
           IF (KMASSIFIN(JI) /= KMASSIFOUT(JX,JY)) CYCLE
           ! Take only zero slopes
-          IF (PSLOPEIN(JI) /= 0.) THEN
-            CYCLE
-          END IF
+          !IF (PSLOPEIN(JI) /= 0.) THEN
+          !  CYCLE
+          !END IF
           !Evaluate the aspect only if the input domain is not flat
           IF (.NOT. GISFLAT) THEN
+            CALL EVALUATE_SLOPE(PSLOPEIN(JI),PSLOPEOUT(JX,JY),GSLOPE)
+            IF (.NOT. GSLOPE) CYCLE
             IF (KASPECTIN(JI) /= -1) THEN
               CALL EVALUATE_ASPECT (KASPECTIN(JI),PASPECTOUT(JX,JY),GASPECT)
               IF (.NOT. GASPECT) CYCLE
@@ -480,6 +499,18 @@ CONTAINS
     ENDIF
     !
   END SUBROUTINE EVALUATE_ASPECT
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  SUBROUTINE EVALUATE_SLOPE(PSLOPEIN,PSLOPEOUT,LSLOPE)
+    ! Evaluate if the slope of the current input point correspond to the slope of the current output point
+    REAL(KIND=8),INTENT(IN):: PSLOPEOUT !Aspect of output points
+    REAL,INTENT(IN):: PSLOPEIN ! Aspect of input points
+    LOGICAL, INTENT(OUT) :: LSLOPE ! Aspect correspondence indicator
+    !
+    LSLOPE = (((PSLOPEOUT - PSLOPEIN) <= 10) .AND. ((PSLOPEOUT - PSLOPEIN) > -10)) &
+             .OR. ((PSLOPEOUT >= 40.) .AND. (INT(PSLOPEIN) == 40))
+    !
+  END SUBROUTINE EVALUATE_SLOPE
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE INTERPOLZS2D(PVAROUT,PVARIN,KINDBAS,KINDHAUT,PZSGRID,KZSSAFRAN)
     ! Linear interpolation between SAFRAN elevation levels over 2D grids
@@ -1437,7 +1468,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
   ! open a file FORCING.nc by massif, altitude, aspect
   CALL READ_NC(FILE_ID_IN,IZSIN,IMASSIFIN,IASPECTIN,ZSLOPEIN)
   !
-  CALL INDICES2D(ZZSOUT,IMASSIFOUT,ZASPECTOUT,IZSIN,IMASSIFIN,&
+  CALL INDICES2D(ZZSOUT,IMASSIFOUT,ZASPECTOUT,ZSLOPEOUT,IZSIN,IMASSIFIN,&
           IASPECTIN,ZSLOPEIN, IINDICESBAS,IINDICESHAUT)
   !
   IDOUT = 1
@@ -1704,6 +1735,17 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
                 "Cannot copy att from infile to outfile")
         !
       ENDDO
+      !
+      SELECT CASE (VAR_TYPE_IN(IV))
+        CASE (NF90_REAL)
+          CALL CHECK(NF90_DEF_VAR_FILL(FILE_ID_OUT, VAR_ID_OUT(IV), 0, XUNDEF), &
+                 "Cannot set _FillValue of variable " // VAR_NAME_IN(IV))
+        CASE (NF90_DOUBLE)
+          CALL CHECK(NF90_DEF_VAR_FILL(FILE_ID_OUT, VAR_ID_OUT(IV), 0, DBLE(XUNDEF)), &
+                 "Cannot set _FillValue of variable " // VAR_NAME_IN(IV))
+        CASE DEFAULT
+          ! do not update fill value
+      END SELECT
     ENDDO
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!End of definition of output file
@@ -1768,7 +1810,8 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
     PRINT*, VAR_NAME_IN(IV)
     IF (LSELECTVAR) THEN
       IF ((.NOT. ANY(VAR_NAME_IN(IV) == STANDARD_VARS)) .AND. (.NOT. ANY(VAR_NAME_IN(IV) == HVAR_LIST)) .AND. &
-              VAR_NAME_IN(IV) /= "LAT" .AND. VAR_NAME_IN(IV) /= "LON") THEN
+              VAR_NAME_IN(IV) /= "LAT" .AND. VAR_NAME_IN(IV) /= "LON" .AND.&
+              VAR_NAME_IN(IV) /= "latitude" .AND. VAR_NAME_IN(IV) /= "longitude") THEN
         CYCLE
       END IF
     END IF
@@ -1778,7 +1821,9 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
     
     ! Set independent access for coordinate variables (full writing by 1 thread)
     IF ((VAR_NAME_IN(IV) == "aspect") .OR. (VAR_NAME_IN(IV) == "slope")  .OR. &
-       ((VAR_NAME_IN(IV) == "LAT" .OR. VAR_NAME_IN(IV) == "LON") .AND. GRID_TYPE == "XY")) THEN
+       ((VAR_NAME_IN(IV) == "LAT" .OR. VAR_NAME_IN(IV) == "LON" &
+       .OR. VAR_NAME_IN(IV) == "latitude" .OR. VAR_NAME_IN(IV) == "longitude") &
+       .AND. GRID_TYPE == "XY")) THEN
       ! Special case: lat / lon computed for the full domain and written by a single thread
       IF (PROC_ID == 0) THEN
         PRINT*, "This thread writes the LAT LON coordinates of the full XY grid."
@@ -1821,15 +1866,15 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       END IF
     ELSEIF (VAR_NAME_IN(IV) == "aspect") THEN
       !ZASPECTOUT = Proc_id
-      IF ((LMULTIOUTPUT .OR. (JINFILE == 1)) .AND. (PROC_ID == 0)) THEN
+      IF (LMULTIOUTPUT .OR. (JINFILE == 1))  THEN
         CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZASPECTOUT, &
-              start =(/1,1/), count = (/NX, NY/)), &
+              start =(/IXSTART,IYSTART/), count = (/NX_PROC,NY_PROC/)), &
               "Cannot put var aspect")
       END IF
     ELSEIF (VAR_NAME_IN(IV) == "slope") THEN
-      IF ((LMULTIOUTPUT .OR. (JINFILE == 1)) .AND. (PROC_ID == 0)) THEN
+      IF (LMULTIOUTPUT .OR. (JINFILE == 1))  THEN
         CALL CHECK(NF90_PUT_VAR(FILE_ID_OUT,VAR_ID_OUT(IV),ZSLOPEOUT, &
-              start =(/1,1/), count = (/NX,NY/)), &
+              start =(/IXSTART,IYSTART/), count = (/NX_PROC,NY_PROC/)), &
               "Cannot put var slope")
       END IF
     ELSEIF (VAR_NAME_IN(IV) == "massif_number" .OR. VAR_NAME_IN(IV) == "massif_num") THEN
@@ -1838,7 +1883,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
               start =(/IXSTART,IYSTART/), count = (/NX_PROC,NY_PROC/)), &
               "Cannot put var massif_number")
       END IF
-    ELSEIF (VAR_NAME_IN(IV) == "LAT" .AND. GRID_TYPE == "XY") THEN
+    ELSEIF ((VAR_NAME_IN(IV) == "LAT" .OR. VAR_NAME_IN(IV) == "latitude") .AND. GRID_TYPE == "XY") THEN
       !
       IF ((LMULTIOUTPUT .OR. (JINFILE == 1)) .AND. (PROC_ID == 0)) THEN
         ! This could be parallelized, but it is not expensive.
@@ -1851,7 +1896,7 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
         DEALLOCATE(ZVARLATLON)
       END IF
       !!    !
-    ELSEIF (VAR_NAME_IN(IV) == "LON" .AND. GRID_TYPE == "XY") THEN
+    ELSEIF ((VAR_NAME_IN(IV) == "LON" .OR. VAR_NAME_IN(IV) == "longitude") .AND. GRID_TYPE == "XY") THEN
       !
       IF ((LMULTIOUTPUT .OR. (JINFILE == 1)) .AND. (PROC_ID == 0)) THEN
         ! This could be parallelized, but it is not expensive.

@@ -308,18 +308,41 @@ class postesrun(surfexrun):
 class interpolrun(surfexrun):
     addmask = True
 
-    def modify_forcing(self, *args):
+    def rename_input(self):
         os.rename("FORCING.nc", "input.nc")
+
+    def rename_output(self):
+        os.rename("output.nc", "FORCING.nc")
+
+    def modify_forcing(self, *args):
+        self.rename_input()
         print(args)
         if not os.path.islink('GRID.nc'):
             os.symlink(args[0], "GRID.nc")
         callSurfexOrDie(os.path.join(SNOWTOOLS_DIR, "interpolation/interpol"), moderun=self.modeinterpol, nproc=self.ninterpol)
-        os.rename("output.nc", "FORCING.nc")
+        self.rename_output()
 
     def save_output(self):
         if not self.onlyextractforcing:
             super(interpolrun, self).save_output()
         save_file_period(self.dirmeteo, "FORCING", self.dateforcbegin, self.dateforcend)
+
+
+class interpolpro(interpolrun):
+    addmask = False
+
+    def rename_input(self):
+        os.rename("PRO.nc", "input.nc")
+
+    def rename_output(self):
+        os.rename("output.nc", "PRO.nc")
+
+    def get_forcing(self):
+        ''' Look for a PRO file including the starting date'''
+        self.dateforcbegin, self.dateforcend = get_file_period("PRO", self.forcingpath, self.datebegin, self.dateend)
+
+    def save_output(self):
+        save_file_period(self.dirpro, "PRO", self.dateforcbegin, self.dateforcend)
 
 
 class massifextractforcing(massifrun):

@@ -431,7 +431,9 @@ class Surfex_command(_S2M_command):
                                      namelist=self.options.namelist,
                                      addmask=True, onlyextractforcing=self.options.onlyextractforcing)
             elif self.interpol:
-                if self.options.geotype == 'grid':
+                if 'pro' in self.options.forcing or 'PRO' in self.options.forcing:
+                    myclass = runs.interpolpro
+                elif self.options.geotype == 'grid':
                     myclass = runs.interpolgriddedrun
                 else:
                     myclass = runs.interpolrun
