@@ -35,22 +35,6 @@ class crocO_vortex_kitchen(vortex_kitchen):
         self.prepare_namelist()  # this must be moved to the preprocess step of offline I think.
 
     def check_options(self):
-        if self.options.openloop:
-            if (self.options.synth is not None) or (self.options.real is True):
-                print('''
-                --openloop, --synth <mbid> and --real are exclusive arguments.
-                so please chose one of them only.
-                      '''
-                      )
-                raise Exception
-        elif (self.options.synth is None and self.options.real is False):
-            raise Exception('''
-            Either you\'re running an assimilation experiment with (1) real data or (2)
-            with synthetic from previous openloop
-            (1) specify --real to s2m
-            (2) use --synth <mbid> (starting from 1)
-                to specify which member is the synthetic one in order to remove and replace it.
-                 ''')
         if self.options.nnodes > 1 and self.options.nnodes * self.options.ntasks > self.options.nmembers:
             # Adjust the number of nodes if excessive request:
             print('You want to run ' + str(self.options.nmembers) + ' members on ' +

@@ -264,6 +264,11 @@ class UnknownGridTypeException(Exception):
         red[1] = (self.gridtype, self.projtype)  # Les arguments qui seront passes a __init__
         return tuple(red)
 
+class UnsupportedOptionException(Exception):
+    """
+    Exception when s2m command arguments are inconsistent.
+    """
+    pass
 
 class VarDimensionException(Exception):
     """

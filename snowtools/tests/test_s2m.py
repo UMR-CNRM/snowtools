@@ -24,7 +24,7 @@ class s2mTest(TestWithTempFolderWithLog):
     def full_run(self, shortcommand):
         command = shortcommand + self.commonoptions
         with exportoutput(self.logfile):
-            s2m(command.split())
+            s2m(command.split()[1:])
 
     def runatcen(self):
         return os.path.isdir(DIRDATAPGD) or "DIRDATAPGD" in list(os.environ.keys())
@@ -38,13 +38,13 @@ class s2mMassifTest(s2mTest):
         self.commonoptions += " -f " + forcingtest
 
     def test_delayed_period(self):
-        self.full_run("s2m -b 20101001 -e 20101002")
+        self.full_run("s2m research -b 20101001 -e 20101002")
 
     def test_extract_domain(self):
-        self.full_run("s2m -b 20110101 -e 20110201 -U 2400")
+        self.full_run("s2m research -b 20110101 -e 20110201 -U 2400")
 
     def test_extend_slopes(self):
-        self.full_run("s2m -b 20110101 -e 20110201 -l 0,20,40 -c 8")
+        self.full_run("s2m research -b 20110101 -e 20110201 -l 0,20,40 -c 8")
 
 
 class s2m2DTest(s2mTest):
@@ -60,10 +60,10 @@ class s2m2DTest(s2mTest):
             os.makedirs(self.diroutput+"/prep")
             pgd = os.path.join(SNOWTOOLS_DATA, "PGD_test_2d.nc")
             os.symlink(pgd, self.diroutput+"/prep/PGD.nc")
-        self.commonoptions += " --grid -f " + forcingtest + " -n " + namelist
+        self.commonoptions += " --geotype=grid -f " + forcingtest + " -n " + namelist
 
     def test_2d_ign(self):
-        self.full_run("s2m -b 20150101 -e 20150201")
+        self.full_run("s2m research -b 20150101 -e 20150201")
 
 
 if __name__ == "__main__":

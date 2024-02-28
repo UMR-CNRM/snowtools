@@ -188,6 +188,19 @@ class forcinput_perturb(forcinput_tomodify):
     Stochastically perturbed meterological forcing file for assimilation purpose
     """
 
+    seuilmin = dict(Tair = 200.,
+                    LWdown = 100.,
+                    DIR_SWdown = 0.,
+                    SCA_LWdown = 0.,
+                    )
+                    
+    seuilmax = dict(Tair = 330.,
+                    LWdown = 450.,
+                    DIR_SWdown = 1500.,
+                    SCA_LWdown = 800.,
+                    )
+                    
+
     def modify(self, init_forcing_file, new_forcing_file, *args):
         """
         Add stochastic perturbations to a meterological forcing file
@@ -258,11 +271,11 @@ class forcinput_perturb(forcinput_tomodify):
                 print("Disturb " + varname)
                 # Variable-dependent disturbance before writing new variable
                 if varname in ['Tair', 'LWdown']:
-                    newvar[:] = addNoiseAdditive(var, param[varname][0], param[varname][1], dt,
+                    tempvar = addNoiseAdditive(var, param[varname][0], param[varname][1], dt,
                                                  fsys=param[varname][2], semiDistrib=semiDistrib)
 
                 elif varname in ['DIR_SWdown', 'Wind']:
-                    newvar[:] = addNoiseMultiplicative(var, param[varname][0], param[varname][1], dt,
+                    tempvar = addNoiseMultiplicative(var, param[varname][0], param[varname][1], dt,
                                                        fsys=param[varname][2], semiDistrib=semiDistrib)
 
                 elif varname in ['Rainf']:
@@ -270,17 +283,28 @@ class forcinput_perturb(forcinput_tomodify):
                     Precip = addNoiseMultiplicative(Precip, param['Precip'][0], param['Precip'][1], dt,
                                                     fsys=param['Precip'][2], semiDistrib=semiDistrib)
                     Tair = init_forcing_file.read('Tair')
-                    newvar[:], snowf  = \
+                    tempvar[:], snowf  = \
                         convertPrecipPhase(Tair, Precip, Tmin=272.65, Tmax=274.05)
                 elif varname in ['Snowf']:
-                    newvar[:] = snowf
+                    tempvar = snowf
                 elif varname in ['IMPWET1', 'IMPWET2', 'IMPDRY1', 'IMPDRY2']:
-                    newvar[:] = addNoise2Impur(var, varname, param[varname][0], param[varname][1], dt,
+                    tempvar = addNoise2Impur(var, varname, param[varname][0], param[varname][1], dt,
                                                semiDistrib=semiDistrib, brutal=brutal)
 
                 else:
                     # Perturbation prescribed in the parameter file but unknown method for this variable
                     raise Exception('Undefined perturbation method for variable ' + varname)
+                    
+                # Apply thresholds to avoid unrealistic values
+                if varname in self.seuilmax.keys():
+                    print ('Apply max threshold for ' + varname)
+                    tempvar = np.where(tempvar > self.seuilmax[varname], self.seuilmax[varname], tempvar)
+                if varname in self.seuilmin.keys():
+                    print ('Apply min threshold for ' + varname)
+                    tempvar = np.where(tempvar < self.seuilmin[varname], self.seuilmin[varname], tempvar)
+                
+                newvar[:] = tempvar
+                
                 # Specify that this is a disturbed variable
                 setattr(newvar, 'disturbed', 1)
             else:

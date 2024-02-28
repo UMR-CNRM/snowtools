@@ -34,7 +34,9 @@ class s2mTestPrepImpur(TestWithTempFolderWithLog):
         return os.path.isdir(DIRDATAPGD)
 
     def test_prep_impur(self):
-        self.full_run("s2m -b 20171216 -e 20171217")
+        self.full_run("s2m research -b 20171216 -e 20171217")
+        if not self.runatcen():
+            print('something to do for access to PATH_TEST')
         with Dataset(os.path.join(self.diroutput, 'prep/PREP_2017121606.nc'), 'r',
                      format='NETCDF4_CLASSIC') as ncfile:
             for layer in range(15):

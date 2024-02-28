@@ -27,15 +27,20 @@ from snowtools.DATA import SNOWTOOLS_DIR, DIRDATAPGD
 
 class surfexrun(object):
     """Class for any SURFEX run"""
-
+    addmask = False
     def __init__(self, datebegin, dateend, forcingpath, diroutput,
                  namelist=os.path.join(SNOWTOOLS_DIR, 'DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam'),
                  execdir=".", onlyextractforcing = False,
-                 threshold=-999, workdir=None, datespinup=None, geolist=[], addmask=False):
+                 threshold=-999, workdir=None, datespinup=None, geolist=[], addmask=None):
 
         # Convert arguments in attributes
-        for var in "datebegin", "dateend", "forcingpath", "diroutput", "namelist", "execdir", "onlyextractforcing", "threshold", "geolist", "addmask":
+        for var in ("datebegin", "dateend", "forcingpath", "diroutput", "namelist", "execdir", "onlyextractforcing",
+                    "threshold", "geolist"):
             setattr(self, var, locals()[var])
+
+        # Depending on the child classes, addmask can be provided in arguments of __init__ or in class attributes
+        if addmask is not None:
+            self.addmask = addmask
 
         self.dateforcbegin = datebegin
         self.dateforcend = dateend
@@ -301,6 +306,7 @@ class postesrun(surfexrun):
 
 
 class interpolrun(surfexrun):
+    addmask = True
 
     def modify_forcing(self, *args):
         os.rename("FORCING.nc", "input.nc")
@@ -379,6 +385,8 @@ class griddedrun(ecoclimaprun):
 
 
 class interpolgriddedrun(interpolrun, griddedrun):
+    addmask = False
+
     """Class for a PC gridded SURFEX run for which the geometry is defined in the namelist
     and the forcing requires a preliminary interpolation"""
     pass
