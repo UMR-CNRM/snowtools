@@ -17,8 +17,6 @@ snowtools/interpolation/interpol
 *.mod
 
 GUI_selfcontain.zip
-DATA/shapefiles
-
 
 build/
 

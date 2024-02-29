@@ -1,0 +1,20 @@
+include README.md
+include LICENSE.txt
+include LICENSE-en.txt
+
+grab snowtools
+grab cenutils
+
+exclude snowtools/tests/output*
+exclude snowtools/tests/fail_test
+exclude snowtools/tests/Manual_tests
+include snowtools/tests/Manual_tests/index_template.html
+
+exclude snowtools/interpolation/interpol_MPIAUTO
+exclude snowtools/interpolation/interpol
+
+global-exclude GUI_selfcontain.zip
+global-exclude *.py[cod]
+global-exclude *.o
+global-exclude *.mod
+global-exclude .*
