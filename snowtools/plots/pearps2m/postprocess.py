@@ -1039,7 +1039,7 @@ class EnsemblePostproc(_EnsembleMassif):
     Class for ensemble post-processing.
     """
 
-    def __init__(self, ensemble, variables, inputfiles, datebegin, dateend, decile=range(10, 100, 10)):
+    def __init__(self, ensemble, variables, inputfiles, datebegin, dateend, decile=range(10, 100, 10), outdir='.'):
         """
         :param ensemble: object to hold the ensemble data
         :type ensemble: instance of :py:class:`.Ensemble` or inheriting from :py:class:`.Ensemble`
@@ -1050,13 +1050,16 @@ class EnsemblePostproc(_EnsembleMassif):
         :param dateend: end date
         :type dateend: :py:class:`~.bronx.stdtypes.date.Date`
         :param decile: list of percentiles
+        :param outdir: Output directory
+        :type outdir: str
         """
         print(inputfiles)
         super(EnsemblePostproc, self).__init__()
         self.ensemble = ensemble  #: ensemble data
         self.variables = variables  #: list of variables
         self.ensemble.open(inputfiles)
-        self.outfile = 'PRO_post_{0}_{1}.nc'.format(datebegin.ymdh, dateend.ymdh)  #: output filename
+        #: output filename
+        self.outfile = os.path.join(outdir, 'PRO_post_{0}_{1}.nc'.format(datebegin.ymdh, dateend.ymdh))
         #: variables always written to the output file
         #: ['time', 'ZS', 'aspect', 'slope', 'massif_num', 'longitude', 'latitude']
         self.standardvars = ['time', 'ZS', 'aspect', 'slope', 'massif_num', 'longitude', 'latitude']
