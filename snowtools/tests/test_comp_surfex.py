@@ -28,7 +28,7 @@ class s2mTestPrepImpur(TestWithTempFolderWithLog):
     def full_run(self, shortcommand):
         command = shortcommand + self.commonoptions
         with exportoutput(self.logfile):
-            s2m(command.split())
+            s2m(command.split()[1:])
 
     def runatcen(self):
         return os.path.isdir(DIRDATAPGD)
