@@ -67,17 +67,19 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
             # Try to find a forcing covering the full simulation period
-            tb01 = toolbox.input(
+            self.sh.title('Toolbox input forcing (a)')
+            tb01a = toolbox.input(
                 role           = 'Forcing',
                 kind           = 'MeteorologicalForcing',
                 vapp           = self.conf.meteo,
-                vconf          = '[geometry:area]' if source_safran == 'safran' else '[geometry:tag]',
+                vconf          = '[geometry:area]' if source_safran == 'safran' else '[geometry:tag]',  # TODO : uniformiser le vconf
                 source_app     = dict_source_app_safran if source_safran == 'safran' else None,
                 source_conf    = dict_source_conf_safran if source_safran == 'safran' else None,
                 cutoff         = 'assimilation',
                 local          = '[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' \
                                  if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                 experiment     = self.conf.forcingid,
+                member         = self.conf.member if hasattr(self.conf, 'member') else None,
                 block          = block_safran,
                 geometry       = list_geometry,
                 nativefmt      = 'netcdf',
@@ -89,24 +91,27 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 namebuild      = 'flat@cen',
                 fatal          = False,
             ),
+            print(t.prompt, 'tb01a =', tb01a)
+            print()
 
-            if tb01[0]:
+            if tb01a[0]:
                 oneforcing = True
             else:
                 oneforcing = False
                 # Look for yearly forcing files
-                self.sh.title('Toolbox input tb01')
-                tb01 = toolbox.input(
+                self.sh.title('Toolbox input forcing (b)')
+                tb01b = toolbox.input(
                     role           = 'Forcing',
                     kind           = 'MeteorologicalForcing',
                     vapp           = self.conf.meteo,
-                    vconf          = '[geometry:area]' if source_safran == 'safran' else '[geometry:tag]',
+                    vconf          = '[geometry:area]' if source_safran == 'safran' else '[geometry:tag]',  # TODO : uniformiser le vconf
                     source_app     = dict_source_app_safran if source_safran == 'safran' else None,
                     source_conf    = dict_source_conf_safran if source_safran == 'safran' else None,
                     cutoff         = 'assimilation',
                     local          = '[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' \
                                      if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = self.conf.forcingid,
+                    member         = self.conf.member if hasattr(self.conf, 'member') else None,
                     block          = block_safran,
                     geometry       = list_geometry,
                     nativefmt      = 'netcdf',
@@ -118,12 +123,12 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     namebuild      = 'flat@cen',
                 ),
 
-                print(t.prompt, 'tb01 =', tb01)
+                print(t.prompt, 'tb01b =', tb01b)
                 print()
 
             # Look for a PGD file if already available for this xpid and geometry
-            self.sh.title('Toolbox input tb02')
-            tb02 = toolbox.input(
+            self.sh.title('Toolbox input pgd (a)')
+            tb02a = toolbox.input(
                 role           = 'SurfexClim',
                 kind           = 'pgdnc',
                 nativefmt      = 'netcdf',
@@ -136,13 +141,13 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 block          = 'pgd',
                 fatal          = False,
             ),
-            print(t.prompt, 'tb02_a =', tb02)
+            print(t.prompt, 'tb02a =', tb02a)
             print()
 
             # Alternate : look for a PGD file if already available for this geometry with the "spinup" xpid
             # If not available, do not fail because the PGD file will be automatically built.
-            self.sh.title('Toolbox input tb02a')
-            tb02_a = toolbox.input(
+            self.sh.title('Toolbox input pgd (b)')
+            tb02b = toolbox.input(
                 alternate      = 'SurfexClim',
                 kind           = 'pgdnc',
                 nativefmt      = 'netcdf',
@@ -155,12 +160,12 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 block          = 'pgd',
                 fatal          = False,
             ),
-            print(t.prompt, 'tb02_a =', tb02_a)
+            print(t.prompt, 'tb02b =', tb02b)
             print()
 
             # Look for a PREP file if already available for this xpid, geometry, and initial date
-            self.sh.title('Toolbox input tb03')
-            tb03 = toolbox.input(
+            self.sh.title('Toolbox input prep (a)')
+            tb03a = toolbox.input(
                 role           = 'SnowpackInit',
                 local          = 'PREP.nc',
                 experiment     = self.conf.xpid,
@@ -175,13 +180,13 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 block          = 'prep',
                 fatal          = False,
             ),
-            print(t.prompt, 'tb03 =', tb03)
+            print(t.prompt, 'tb03a =', tb03a)
             print()
 
             # 1st alternate : look for a PREP file if already available for this geometry,
             # and initial date for the "spinup" xpid
-            self.sh.title('Toolbox input tb03')
-            tb03a = toolbox.input(
+            self.sh.title('Toolbox input prep (b)')
+            tb03b = toolbox.input(
                 alternate      = 'SnowpackInit',
                 local          = 'PREP.nc',
                 experiment     = 'spinup@' + t.env.getvar("USER"),
@@ -196,14 +201,14 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 block          = 'prep',
                 fatal          = False,
             ),
-            print(t.prompt, 'tb03a =', tb03a)
+            print(t.prompt, 'tb03b =', tb03b)
             print()
 
             # 2nd alternate : look for a PREP file if already available for this geometry,
             # and initial date for the "reanalysis" xpid
             # If not available, do not fail because the PREP file will be automatically built.
-            self.sh.title('Toolbox input tb03')
-            tb03a2 = toolbox.input(
+            self.sh.title('Toolbox input prep (c)')
+            tb03c = toolbox.input(
                 alternate      = 'SnowpackInit',
                 local          = 'PREP.nc',
                 experiment     = self.ref_reanalysis,
@@ -218,10 +223,10 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 block          = 'prep',
                 fatal          = False,
             ),
-            print(t.prompt, 'tb03a2 =', tb03a2)
+            print(t.prompt, 'tb03c =', tb03c)
             print()
 
-            if not tb03[0] and not tb03a[0] and not tb03a2[0] and not self.conf.climground:
+            if not tb03a[0] and not tb03b[0] and not tb03c[0] and not self.conf.climground:
                 # not self.conf.climground means that the user does not allow the climatological file
                 # to be built by the system (-g option of the s2m command is not activated)
                 # If no prep file has been found, look for a climatological file to initialize the ground in the uenv
@@ -301,7 +306,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print()
 
             # For the 2d-simulation on Belenos: avoiding the PGD copy
-            if not (tb02[0] or tb02_a[0]) and self.conf.simu2D:
+            if not (tb02a[0] or tb02b[0]) and self.conf.simu2D:
                 # If no PGD file has been found, look for the PGD binary
                 # Binary Sand files are mandatory to run SURFEX for PGD construction in simu2D
                 self.sh.title('Toolbox input tb04b')
@@ -420,7 +425,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb06 =', tb06)
                 print()
 
-                if not (tb02[0] or tb02_a[0]):
+                if not (tb02a[0] or tb02b[0]):
                     # If no PGD file has been found, look for the PGD binary
                     self.sh.title('Toolbox executable tb07= tbx2')
                     tb07 = tbx1 = toolbox.executable(
@@ -434,7 +439,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb07 =', tb07)
                     print()
 
-                if not tb03[0] and not tb03a[0] and not tb03a2[0]:
+                if not tb03a[0] and not tb03b[0] and not tb03c[0]:
                     # If no PREP file has been found, look for the PREP binary
                     self.sh.title('Toolbox executable tb08= tbx3')
                     tb08 = tbx2 = toolbox.executable(
@@ -464,7 +469,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb06 =', tb06)
                 print()
 
-                if not (tb02[0] or tb02_a[0]):
+                if not (tb02a[0] or tb02b[0]):
                     # If no PGD file has been found, look for the PGD binary
                     self.sh.title('Toolbox executable tb07= tbx2')
                     tb07 = tbx1 = toolbox.executable(
@@ -479,7 +484,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb07 =', tb07)
                     print()
 
-                if not tb03[0] and not tb03a[0] and not tb03a2[0]:
+                if not tb03a[0] and not tb03b[0] and not tb03c[0]:
                     # If no PREP file has been found, look for the PREP binary
                     self.sh.title('Toolbox executable tb08= tbx3')
                     tb08 = tbx2 = toolbox.executable(
@@ -616,7 +621,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
 
             # Algo component to produce the PGD file if not found in the inputs
             # Take care : PGD parallelization will be available in v8.1 --> nproc and ntasks will have to be set to 40
-            if not (tb02[0] or tb02_a[0]):
+            if not (tb02a[0] or tb02b[0]):
                 self.sh.title('Toolbox algo tb09 = PGD')
                 tb09 = tbalgo2 = toolbox.algo(
                     kind         = 'pgd_from_forcing',
@@ -628,7 +633,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
 
             # Algo component to produce the PREP file if not found in the inputs
             # Take care : PREP parallelization will be available in v8.1 --> nproc and ntasks will have to be set to 40
-            if not tb03[0] and not tb03a[0] and not tb03a2[0]:
+            if not tb03a[0] and not tb03b[0] and not tb03c[0]:
                 self.sh.title('Toolbox algo tb09 = PREP')
                 tb10 = tbalgo3 = toolbox.algo(
                     engine     = 'parallel',
@@ -705,6 +710,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 namespace      = namespace,
                 namebuild      = 'flat@cen',
                 block          = 'pro',
+                member         = self.conf.member if hasattr(self.conf, 'member') else None,
                 fatal          = False
             ),
             print(t.prompt, 'tb19 =', tb19)
@@ -728,6 +734,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                         enforcesync = True, # to forbid asynchronous transfers and not saturate sxcen
                         namebuild   = 'flat@cen',
                         block       = 'pro',
+                        member         = self.conf.member if hasattr(self.conf, 'member') else None,
                         fatal       = False
                     ),
                     print(t.prompt, 'tb19bis =', tb19bis)
@@ -753,6 +760,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
                     block          = 'cumul',
+                    member         = self.conf.member if hasattr(self.conf, 'member') else None,
                     fatal          = False
                 ),
                 print(t.prompt, 'tb19bis =', tb19bis)
@@ -771,6 +779,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
                     block          = 'diag',
+                    member         = self.conf.member if hasattr(self.conf, 'member') else None,
                     fatal          = False
                 ),
                 print(t.prompt, 'tb19 =', tb19ter)
@@ -790,6 +799,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
                     block          = 'prep',
+                    member         = self.conf.member if hasattr(self.conf, 'member') else None,
                 ),
                 print(t.prompt, 'tb20 =', tb20)
                 print()
@@ -811,6 +821,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     namespace      = namespace,
                     namebuild      = 'flat@cen',
                     block          = 'pro',
+                    member         = self.conf.member if hasattr(self.conf, 'member') else None,
                 ),
                 print(t.prompt, 'tb19 =', tb19)
                 print()
@@ -833,6 +844,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                             enforcesync = True,  # to forbid asynchronous transfers and not saturate sxcen
                             namebuild   = 'flat@cen',
                             block       = 'pro',
+                            member         = self.conf.member if hasattr(self.conf, 'member') else None,
                         ),
                         print(t.prompt, 'tb19bis =', tb19bis)
                         print()
@@ -850,6 +862,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
                     block          = 'diag',
+                    member         = self.conf.member if hasattr(self.conf, 'member') else None,
                     fatal          = False,
                 ),
                 print(t.prompt, 'tb19b =', tb19b)
@@ -868,6 +881,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
                     block          = 'cumul',
+                    member         = self.conf.member if hasattr(self.conf, 'member') else None,
                     fatal          = False,
                 ),
                 print(t.prompt, 'tb19c =', tb19c)
@@ -887,12 +901,13 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
                     block          = 'prep',
+                    member         = self.conf.member if hasattr(self.conf, 'member') else None,
                 ),
                 print(t.prompt, 'tb20 =', tb20)
                 print()
 
 # The following condition does not work. --> Ask leffe how to do
-#                 if not (tb02[0] or tb02_a[0]):
+#                 if not (tb02a[0] or tb02b[0]):
             # Save the PGD file for this xpid and geometry
             tb21 = toolbox.output(
                 role           = 'SurfexClim',
@@ -904,7 +919,9 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 model          = 'surfex',
                 namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
-                block          = 'pgd'),
+                block          = 'pgd',
+                member         = self.conf.member if hasattr(self.conf, 'member') else None,
+            ),
             print(t.prompt, 'tb21 =', tb21)
             print()
 
@@ -920,7 +937,9 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     model          = 'surfex',
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
-                    block          = 'prep'),
+                    block          = 'prep',
+                    member         = self.conf.member if hasattr(self.conf, 'member') else None,
+                ),
                 print(t.prompt, 'tb22 =', tb22)
                 print()
 
@@ -939,6 +958,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
                     block          = 'meteo',
+                    member         = self.conf.member if hasattr(self.conf, 'member') else None,
                 ),
                 print(t.prompt, 'tb19 =', tb19)
                 print()
@@ -953,6 +973,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 model      = 'surfex',
                 local      = "drhook.prof.{glob:n:\d+}",
                 format     = "ascii",
+                member         = self.conf.member if hasattr(self.conf, 'member') else None,
             ),
             print(t.prompt, 'tb20 =', tb20)
             print()

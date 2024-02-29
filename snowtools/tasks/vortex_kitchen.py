@@ -36,13 +36,14 @@ class vortex_kitchen(object):
 
         self.split_geo()
 
-        if hasattr(self.options, 'diroutput'):
-            self.options.xpid = self.options.diroutput
-        elif self.options.command == 'oper':
+        if self.options.command == 'oper':
             if self.options.dev:
                 self.options.xpid = 'dev'
             else:
                 self.options.xpid = 'oper'
+        else:
+            self.options.xpid = self.options.diroutput  # diroutput is now always defined in research cases
+
         self.workingdir = "/".join([self.options.workdir, self.options.xpid, self.options.vapp, self.options.vconf])
         self.confdir    = "/".join([self.workingdir, 'conf'])
         self.jobdir     = "/".join([self.workingdir, "jobs"])
@@ -106,7 +107,7 @@ class vortex_kitchen(object):
             if not os.path.isdir(directory):
                 os.mkdir(directory)
 
-        if hasattr(self.options, 'uenv'):
+        if self.options.uenv is not None:
             if self.options.uenv.startswith('uenv'):
                 # The user already created a uenv and parsed the formatted uenv name
                 envname = self.options.uenv.split(':')[1].split('@')[0]
@@ -120,8 +121,10 @@ class vortex_kitchen(object):
             self.uenv = UserEnv(envname, targetdir=datadir)
             env_name, uenv_entries = self.uenv.run()  # {'FILE_NAME_EXTENSION':'my.file_name.extension.version',...}
             self.options.uenv = f'uenv:{env_name}@{user}'  # To be put in the configuration file
-            self.options.udata = 'dict(' + ' '.join([f'{key}:{".".join(value.split(".")[:-1])}' for key, value in uenv_entries.items()]) + ')'  # To be put in the configuration file
-            # ex : self.options.udata = dict('FILE_NAME_EXTENSION':'my.file_name.extension',...)  --> gvar='FILE_NAME_EXTENSION', local='my.file_name.extension'
+            self.options.udata = 'dict(' + ' '.join([f'{key}:{".".join(value.split(".")[:-1])}' \
+                    for key, value in uenv_entries.items()]) + ')'  # To be put in the configuration file
+            # ex : self.options.udata = dict('FILE_NAME_EXTENSION':'my.file_name.extension',...)
+            # ==> gvar='FILE_NAME_EXTENSION', local='my.file_name.extension'
 
     def init_job_task(self, jobname=None):
         if self.options.surfex:
@@ -168,8 +171,8 @@ class vortex_kitchen(object):
             )
 
             defaultjobname = dict(
-                surfex = 'rea_s2m',
-                surfex_dailyprep = 'rea_s2m',
+                surfex = 'rea_s2m',  # TODO : Pourquoi pas simplement "surfex" ?
+                surfex_dailyprep = 'rea_s2m',  # # TODO : Pourquoi pas simplement "surfex" ?
                 escroc = 'escroc',
                 escroc_scores = "scores_escroc",
                 croco = 'croco',
@@ -250,10 +253,15 @@ class vortex_kitchen(object):
         if not self.options.command == 'oper':
             self.conf_file = Vortex_conf_file(self.options, fullname)
             self.conf_file.create_conf(jobname=self.jobname)
-            self.conf_file.write_file()
-            self.conf_file.close()
+            # Do not write the configuration file now, additionnal informations may be added later
+            #self.conf_file.write_file()
+            #self.conf_file.close()
 
         os.chdir(self.workingdir)
+
+    def write_conf_file(self):
+        self.conf_file.write_file()
+        self.conf_file.close()
 
     def mkjob_command(self, jobname):
 
@@ -269,8 +277,27 @@ class vortex_kitchen(object):
             for node in range(1, self.options.nnodes + 1):
                 mkjob_list.append(self.mkjob_command(jobname=self.jobname + str(node)))
 
+            self.write_conf_file()  # The configuration file is now complete, time to write it
+
             return mkjob_list
+
+        elif self.options.nforcing > 1:
+            mkjob_list = []
+            for node in range(1, self.options.nforcing + 1):
+                jobname = self.jobname + str(node)
+                # Add a "jobname" block in the configuration file that will contain
+                # job-specific configuration variables
+                self.conf_file.set_field(jobname, 'member', node)  # Each job is assicated to 1 ensemble member
+                # It is necessary to overwrite the number of proc that is automatically set to natsks*nnodes :
+                self.conf_file.set_field(jobname, 'nprocs', self.options.ntasks)  # TODO : check if really necessary
+                mkjob_list.append(self.mkjob_command(jobname=jobname))
+
+            self.write_conf_file()  # The configuration file is now complete, time to write it
+
+            return mkjob_list
+
         else:
+            self.write_conf_file()  # The configuration file is now complete, time to write it
             return [self.mkjob_command(jobname=self.jobname)]
 
     def run(self):
@@ -429,7 +456,7 @@ class Vortex_conf_file(object):
                 if '@' not in self.options.prep_xpid:
                     self.options.prep_xpid = self.options.prep_xpid + '@' + os.getlogin()
                 self.set_field("DEFAULT", 'prep_xpid', self.options.prep_xpid)
-        if hasattr(self.options, 'uenv'):
+        if self.options.uenv is not None:
             self.set_field("DEFAULT", 'uenv', self.options.uenv)
             self.set_field("DEFAULT", 'udata', self.options.udata)
 
