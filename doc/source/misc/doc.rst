@@ -1,7 +1,7 @@
 .. _sec-doc:
 
-Documentation
-=============
+Snowtools code Documentation
+============================
 
 The documentation is managed through `Sphinx <www.sphinx-doc.org>` documentation generator.
 

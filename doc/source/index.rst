@@ -21,7 +21,7 @@ Basics
    Installation <misc/install.rst>
    Code organization <misc/orga.rst>
    Contribute to snowtools <misc/contribute.rst>
-   Documentation <misc/doc.rst>
+   Code Documentation <misc/doc.rst>
    Testing <misc/test.rst>
 
 
@@ -40,7 +40,6 @@ Technical documentation
    Plots tools (plots) <code/plots.rst>
    Assimilation scripts (assim) <code/assim.rst>
    Interpolation <code/interpolation.rst>
-   The bronx package <code/bronx.rst>
 
 Other things gathered by snowtools
 ----------------------------------
