@@ -290,6 +290,14 @@ class Surfex_command(_S2M_command):
                                             """
                                             )
 
+        parser_research_others.add_argument("--uenv",
+                                            action="store", dest="uenv", default=None,
+                                            help="In cases when additionnal input files are necessary, use this option to "
+                                            "define the absolute path of the repository where those files are stored. "
+                                            "This option works for both Vortex/HPC and local executions."
+                                            "In a Vortex execution, it is also possible (and advised) to provide a uenv with "
+                                            "the syntax '--uenv=uenv:{uenv_name}@{username}'.")
+
         parser_research_vortex = parser_research.add_argument_group('Vortex options '
                                                                     '(available only on Meteo-France supercomputers)')
 
@@ -333,8 +341,8 @@ class Surfex_command(_S2M_command):
                                             help="Postprocessing of PRO file. Provide executable path (absolute) "
                                                  "and its options as a single string. Will be executed after a"
                                                  "SURFEX execution in the working directory. If you want anything"
-                                                 "to be saved, please write in commnly used files (PRO, DIAG, CUMUL)."
-                                                 "Please ensure yoursel that your algorithm is correctly parallelized."
+                                                 "to be saved, please write in commonly used files (PRO, DIAG, CUMUL)."
+                                                 "Please ensure yourself that your algorithm is correctly parallelized."
                                             )
 
         parser_research_vortex.add_argument("--drhook",
@@ -492,6 +500,10 @@ class Surfex_command(_S2M_command):
                               workdir=self.options.workdir, datespinup=self.options.datespinup,
                               execdir=self.options.exesurfex,
                               namelist=self.options.namelist)
+
+            if self.options.uenv:
+                run.get_extra_files(self.options.uenv)
+
             # Execute the run
             run.run()
 

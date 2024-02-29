@@ -8,7 +8,10 @@ Created on 23 févr. 2018
 
 import datetime
 import os
+import shutil
+import glob
 import numpy as np
+import filecmp
 
 from snowtools.utils.dates import WallTimeException
 from snowtools.utils.resources import InstallException
@@ -108,6 +111,23 @@ class vortex_kitchen(object):
         for directory in ["conf", "jobs"]:
             if not os.path.isdir(directory):
                 os.mkdir(directory)
+
+        if hasattr(self.options, 'uenv'):
+            if self.options.uenv.startswith('uenv'):
+                # The user already created a uenv and parsed the formatted uenv name
+                envname = self.options.uenv.split(':')[1].split('@')[0]
+                datadir = None
+            else:
+                # The uenv needs to be generated
+                # Set up a uenv with all files in self.options.uenv repository
+                envname = '_'.join([self.options.vapp, self.options.vconf, self.options.xpid])
+                user = os.environ['USER']
+                datadir = self.options.uenv
+            self.uenv = UserEnv(envname, targetdir=datadir)
+            env_name, uenv_entries = self.uenv.run()  # {'FILE_NAME_EXTENSION':'my.file_name.extension.version',...}
+            self.options.uenv = f'uenv:{env_name}@{user}'  # To be put in the configuration file
+            self.options.udata = 'dict(' + ' '.join([f'{key}:{".".join(value.split(".")[:-1])}' for key, value in uenv_entries.items()]) + ')'  # To be put in the configuration file
+            # ex : self.options.udata = dict('FILE_NAME_EXTENSION':'my.file_name.extension',...)  --> gvar='FILE_NAME_EXTENSION', local='my.file_name.extension'
 
     def init_job_task(self, jobname=None):
         if self.options.surfex:
@@ -415,6 +435,9 @@ class Vortex_conf_file(object):
                 if '@' not in self.options.prep_xpid:
                     self.options.prep_xpid = self.options.prep_xpid + '@' + os.getlogin()
                 self.set_field("DEFAULT", 'prep_xpid', self.options.prep_xpid)
+        if hasattr(self.options, 'uenv'):
+            self.set_field("DEFAULT", 'uenv', self.options.uenv)
+            self.set_field("DEFAULT", 'udata', self.options.udata)
 
     def escroc_variables(self):
 
@@ -695,3 +718,266 @@ class Vortex_conf_file(object):
             meteo_draw = np.random.choice(list(range(1, int(self.options.nforcing) + 1)))
         print('mto draw', meteo_draw)
         return meteo_draw
+
+
+class UserEnv(object):
+    """
+    Class to manage a Vortex-like user environment (UEnv) in a transparent way for the user.
+
+    The basic mode is to prescribe the absolute path of a repository containing all
+    files used for SURFEX experiments (launched through Vortex) not already included
+    in surfex_task.py.
+    In this case a Vortex-like UEnv is created including all the files under {targetdir}
+    and named after the experiment vapp/vconf/xpid or {envname} argument if provided.
+
+    This class can also be used in a more advanced way for UEnvs versioning.
+    Different possibilities are provided :
+    - Check an existing UEnv
+    - Create a new version of the UEnv (adding or incrementing a version number)
+      with files under {targetdir}
+    [- Append an existing UEnv with files under {targetdir} not already in the UEnv]
+
+    In any case, a dict of the UEnv's entries is returned providing the list of keys/values
+    that make up the UEnv.
+    """
+
+    def __init__(self, envname, targetdir=None, verbose=True, max_size=1000000000, max_files=1000, append=False):
+        self.targetdir = targetdir
+        self.target_data = self.list_files(targetdir, max_size=max_size, max_files=max_files)
+        self.user = os.environ['USER']
+        self.envdir = os.path.join(os.environ['HOME'], '.vortexrc', 'hack', 'uget', self.user, 'env')
+        self.datadir = os.path.join(os.environ['HOME'], '.vortexrc', 'hack', 'uget', self.user, 'data')
+        self.envname = envname
+        self.envfile = os.path.join(self.envdir, envname)
+        self.verbose = verbose
+        self.append = append  # Avoid to allow the extension of an existing UEnv
+        self.valid_entries = dict()
+
+    def run(self):
+        """
+        Main method.
+        If the UEnv dos not exist --> create it
+        If the UEnv exists :
+            * If files in the UEnv match the user-defined ones --> nothing to do
+            * If the UEnv contains files that differ from those in the user-defined directory:
+              --> version the existing UEnv (backup) and update (do not duplicate common files)
+            * If the UEnv is OK but misses some user-defined files --> append the existing UEnv
+
+        Returns the list of valid entries associated to the uenv.
+
+        WARNING : does not check data already pushed on Hendrix (DEV mode only !)
+        """
+        self.get_current_version()  # First get version number of the uenv (=1 if this is a new uenv)
+        if not os.path.exists(f'{self.envfile}.{self.version}'):
+            if self.verbose:
+                print(f'Uenv {self.envname} does not exist')
+            self.create_env()
+        else:
+            if self.verbose:
+                print(f'Uenv {self.envname} already exist')
+            self.check_data()  # Return the list of data files associated to the current UEnv
+
+            current_files = self.current_files.keys()
+
+            missing_files = list()
+            different_files = list()
+            # Look for missing files or differences
+            for file in self.target_data:
+                filename = file.split('/')[-1]
+                if filename in current_files:
+                    # reconstruct current file name with its version number
+                    current_name = f'{filename}.{self.current_files[filename]}'
+                    if not filecmp.cmp(file, os.path.join(self.datadir, current_name)):
+                        different_files.append(file)  # Files differ
+                else:
+                    missing_files.append(file)  # Missing file
+
+            if len(different_files)>0 or (len(missing_files)>0 and not self.append):
+                # UEnv contains files different than those in the user-defined directory --> create a new version
+                self.update_env(diff=different_files, new=missing_files)
+            elif len(missing_files)>0:
+                # UEnv misses some user-defined files and the user allows an extension of the current UEnv
+                self.extend_env(missing_files)
+
+        actual_name = f'{self.envname}.{self.version}'
+
+        #TODO : ajouter un fichier dans {target_dir} content les informations du uenv
+        self.user_info()
+
+        return actual_name, self.valid_entries
+
+    def get_current_version(self):
+
+        self.version = 1
+        if os.path.exists(self.envdir):
+            if len(glob.glob(f'{self.envfile}.*'))>0:
+                versions = list()
+                for file in glob.glob(f'{self.envfile}.*'):
+                    versions.append(int(file.split('.')[-1]))
+                self.version = max(versions)
+
+    def list_files(self, directory, max_size=None, max_files=None):
+        """
+        Return list of absolute paths of files under 'directory'
+        """
+        if not os.path.exists(directory):
+            raise OSError(f'Directory {directory} doe not exist.')
+        elif len(glob.glob(os.path.join(directory, '*')))==0:
+            raise OSError(f'Directory {directory} is empty.')
+
+        out = list()
+        for fic in glob.glob(os.path.join(directory, '*')):
+            if os.path.basename(fic) != 'README':
+                if (max_size and os.path.getsize(fic) > max_size):
+                    raise OSError(f'File {fic} too large (>1Gb). If you want to increase the maximum size allowed,'
+                                   'please use the "max_size" keyword argument.')
+                out.append(fic)
+
+        if (max_files and len(out) > max_files):
+            raise OSError(f'Too many files in the {directory} directory (>{self.max_files}). If you want to increase '
+                           'the maximum number of files allowed, please use the "max_files" keyword argument.')
+
+        if len(out) == 0 and self.verbose:
+            print(f'WARNING : directory {directory} is empty')
+
+        return out
+
+    def create_env(self):
+        """
+        Create a uenv file under the user's hack 'env' directory and add all data
+        under 'targetdir' in it, and copy them into the user's hack data directory.
+        """
+        # Create user's hack environment if it does not exist
+        if not os.path.isdir(self.envdir):
+            os.makedirs(self.envdir)
+        if not os.path.isdir(self.datadir):
+            os.makedirs(self.datadir)
+
+        if self.verbose:
+            print(f'Creating UEnv {self.envname}.{self.version}')
+
+        self.valid_entries = dict()
+        for src in self.target_data:
+            self.copyfile(src)
+
+        self.write_env()
+
+    def update_env(self, diff=list(), new=list()):
+        if self.verbose:
+            print(f'Updating UEnv {self.envname}.{self.version}')
+        self.increment_version()
+        for src in self.target_data:
+            basename = src.split('/')[-1]
+            version = self.current_files[basename] if basename in self.current_files.keys() else 1
+            if src in diff:
+                # Update file with a new version number
+                self.copyfile(src, version=version+1)
+            elif src in new:
+                # create with a version=1
+                self.copyfile(src, version=1)
+            else:
+                # Use existing data
+                key = basename.replace('.', '_')
+                self.valid_entries[key] = f'{basename}.{version}'
+
+        self.write_env()
+
+    def extend_env(self, list_files):
+        """
+        Append the existing uenv with the given list of files.
+        """
+        if self.verbose:
+            print(f'Extending UEnv {self.envname}.{self.version}')
+        fileobject = open(f'{self.envfile}.{self.version}', 'a')
+        for src in list_files:
+            key, value = self.copyfile(src)
+            fileobject.write(f'{key.upper()}="uget:{value}@{self.user}"\n')
+            if self.verbose:
+                print(f'Adding file {key} to uenv {self.envname}.{self.version}')
+
+        fileobject.close()
+
+    def increment_version(self):
+        """
+        Save previous uenv file with a suffix indicating the version number
+        """
+        # First get the list of existing version of the uenv
+        self.version = self.version + 1
+        if self.verbose:
+            print(f'UEnv saved under : {self.envfile}.{self.version}')
+
+        self.valid_entries = dict()
+
+
+    def copyfile(self, src, version=1):
+        """
+        Copy the 'src' file in the user's hack data directory
+        """
+        basename = src.split('/')[-1]
+        key = basename.replace('.', '_')
+        fullname = f'{basename}.{version}'
+        dst = os.path.join(self.datadir, fullname)
+        if os.path.exists(dst):
+            print(f'Error : file {dst} already exists, this should not happen')
+        else:
+            shutil.copyfile(src, dst)
+            self.valid_entries[key] = fullname
+
+        return key, fullname
+
+    def write_env(self):
+        fileobject = open(f'{self.envfile}.{self.version}', 'w')
+        for key,value in self.valid_entries.items():
+            fileobject.write(f'{key.upper()}="uget:{value}@{self.user}"\n')
+        fileobject.close()
+
+        if self.verbose:
+            print(f'Uenv {self.envname}.{self.version} has been created under {self.envdir}')
+
+    def check_data(self):
+        """
+        Check the presence of all data defined in the uenv under the 'hack' data directory
+        Returns a dict conataining the list of files associated to the current UEnv and their version number
+        """
+        current = open(f'{self.envfile}.{self.version}', mode='r')
+        self.current_files = dict()  # {'filename': version}
+        self.valid_entries = dict()
+        for line in current.readlines():
+            if not line.startswith('#'):
+                key, value = line.split('=')
+                filename = value.split(':')[1].split('@')[0]  # Includes version number
+                if os.path.exists(os.path.join(self.datadir, filename)):
+                    # store to return the list of valid UEnv entries
+                    self.valid_entries[key] = filename
+                    basename = '.'.join(filename.split('.')[:-1])  # remove version
+                    version = int(filename.split('.')[-1])
+                    self.current_files[basename] = version
+
+    def user_info(self):
+        outname = os.path.join(self.targetdir, 'README')
+        if os.path.exists(outname):
+            out = open(outname, mode='a')
+        else:
+            out = open(outname, mode='w')
+            out.write("S2M/Vortex INFORMATION\n")
+            out.write("======================\n")
+            out.write("This file has been automatically generated when the s2m command ")
+            out.write("has been called with this repository in the --uenv option, and an automatic versioning ")
+            out.write("of the files present at the execution time has been done.\n")
+            out.write("This files provides all necessary informations on this versionning (and all the previous ones).\n")
+            out.write("It can be used to retrieve the files used in a specific experiment.\n")
+
+        out.write('\n')
+
+        date = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+        out.write(f"Execution time  {date}:\n")
+        out.write("------------------------------------\n")
+        out.write(f"The following user environment has been created : {self.envfile}.{self.version}\n")
+        out.write(f"The files present in this directory have been versionned under {self.datadir}:\n")
+        for key,value in self.valid_entries.items():
+            out.write(f"{self.datadir}/{value}\n")
+
+    def infos(self):
+        print(f'Uenv {self.envname} is stored under {self.envfile}.{self.version}')
+        print(f'Corresponding data are store in {self.datadir}')
+

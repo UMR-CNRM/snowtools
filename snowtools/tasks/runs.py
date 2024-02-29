@@ -190,6 +190,11 @@ class surfexrun(object):
             #line below is necessary for Tartes Optimisation Option
             #get_file_const_or_crash(self.execdir + "/../MY_RUN/DATA/CROCUS/refice_etotref.nc", "refice_etotref.nc")
 
+    def get_extra_files(self, path):
+        import glob
+        for extra_file in glob.glob(os.path.join(path, '*')):
+            get_file_const_or_crash(extra_file, os.path.basename(extra_file))
+
     def get_forcing(self):
         ''' Look for a FORCING file including the starting date'''
         self.dateforcbegin, self.dateforcend = get_file_period("FORCING", self.forcingpath, self.datebegin, self.dateend)

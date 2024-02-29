@@ -374,6 +374,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             # Target grid file if an interpolation is required before the run
             # and the path must be provided in the configuration file
             if self.conf.interpol:
+                self.sh.title('Toolbox input tbgrid')
                 tbgrid = toolbox.input(
                     role   = 'gridout',
                     remote = self.conf.gridout,
@@ -385,6 +386,24 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             else:
                 print(t.prompt, 'tbgrid = undefined')
             print()
+
+            if hasattr(self.conf, "uenv"):
+                # TODO : find a "Vortex" way to avoid this loop
+                for gvar, filename in self.conf.udata.items():
+                    self.sh.title('Toolbox input tbextra')
+                    tbextra = toolbox.input(
+                        role            = 'Extra_file',
+                        kind            = 'joker',
+                        model           = 'surfex',
+                        local           = filename,
+                        genv            = self.conf.uenv,
+                        gvar            = gvar,
+                        #gvar            = self.conf.udata.keys() --> Vortex loops over the list
+                                                                    # How to set local = self.conf.udata[gvar] ?
+                        format          = 'ascii',
+                    )
+                    print(t.prompt, 'tbextra =', tbextra)
+                    print()
 
             # SURFEX binaries are taken from the path in the configuration file is provided
             if hasattr(self.conf, "exesurfex"):
