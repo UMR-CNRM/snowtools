@@ -388,6 +388,11 @@ class Surfex_command(_S2M_command):
                                             action="store", type=str, dest="sensor", default="MODIS",
                                             help="specify the sensor name of the obs you want to assimilate")
 
+        parser_research_vortex.add_argument("--vapp",
+                                            action="store", type=str, dest="vapp", default="s2m",
+                                            choices=["s2m", "safran", "edelweiss"],  # TODO : réflexion nécessaire sur l'usage de la commande 's2m' pour des application 'non s2m' (edelweiss...)
+                                            help="specify the vortex vapp of the execution")
+
         parser_oper = subparsers.add_parser('oper', description="Do not use unless you know what it does. "
                                             "Use s2m oper --help for details")
 

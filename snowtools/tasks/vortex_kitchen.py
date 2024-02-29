@@ -34,12 +34,6 @@ class vortex_kitchen(object):
         self.check_vortex_install()
         self.options = options
 
-        # Initialization of vortex variables
-        if self.options.safran:
-            self.options.vapp = "safran"
-        else:
-            self.options.vapp = "s2m"
-
         self.split_geo()
 
         if hasattr(self.options, 'diroutput'):
