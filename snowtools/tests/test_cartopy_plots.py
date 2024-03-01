@@ -2,10 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-import shutil
-import tempfile
 import os
-from datetime import datetime
+
 import numpy as np
 from netCDF4 import Dataset
 from snowtools.utils.prosimu import prosimu
@@ -15,7 +13,8 @@ from snowtools.DATA import TESTBASE_DIR
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 TEST_DATA_DIR = os.path.join(TESTBASE_DIR, "PRO")
 # read the index file template and insert the testbase directory
-INDEX = open(os.path.join(THIS_DIR, "Manual_tests", "index_template.html")).read().format(testbase=TESTBASE_DIR)
+with open(os.path.join(THIS_DIR, "test_cartopy_plots_index_template.html")) as f:
+    INDEX = f.read().format(testbase=TESTBASE_DIR)
 # write the index.html file with the right testbase paths
 with open(os.path.join(THIS_DIR, "Manual_tests", "index.html"), 'w') as outfile:
     outfile.write(INDEX)
@@ -31,17 +30,15 @@ class TestCartopyFrance(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.mix = CartopyTestMixIn()
-        basediroutput = os.path.join(THIS_DIR, "fail_test")
+        basediroutput = os.path.join(THIS_DIR, "Manual_tests")
         if not os.path.isdir(basediroutput):
             os.makedirs(basediroutput)
-        prefix = "output" + datetime.today().strftime("%Y%m%d%H%M%S%f-")
-        cls.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
+        cls.diroutput = basediroutput
         path_new = os.path.join(TEST_DATA_DIR, "postproc", "grid_postproc_2021041112.nc")
         cls.ds = Dataset(path_new)
         cls.lats = cls.ds.variables['LAT'][:]
         cls.lons = cls.ds.variables['LON'][:]
         cls.snow = cls.ds.variables['SD_1DY_ISBA'][0, :, :, 8]
-        print(cls.snow.shape)
         # cls.mix.alphafile = path_new
 
     def test_colormesh(self):
@@ -56,21 +53,9 @@ class TestCartopyFrance(unittest.TestCase):
         self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
         self.m.close()
 
-    def tearDown(self):
-        result = self.defaultTestResult()  # These two methods have no side effects
-        self._feedErrorsToResult(result, self._outcome.errors)
-        error = self.mix.list2reason(result.errors)
-        failure = self.mix.list2reason(result.failures)
-        if not error and not failure:
-            shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
-                                                                                     self.outfilename))
-
     @classmethod
     def tearDownClass(cls):
         cls.ds.close()
-        if not os.listdir(cls.diroutput):
-            # Suppression des sous-dossiers de fail_test correspondant aux tests OK
-            shutil.rmtree(cls.diroutput)
 
 
 class TestZoomMassifError(unittest.TestCase):
@@ -88,11 +73,10 @@ class TestCartopyCor(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.mix = CartopyTestMixIn()
-        basediroutput = os.path.join(THIS_DIR, "fail_test")
+        basediroutput = os.path.join(THIS_DIR, "Manual_tests")
         if not os.path.isdir(basediroutput):
             os.makedirs(basediroutput)
-        prefix = "output" + datetime.today().strftime("%Y%m%d%H%M%S%f-")
-        cls.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
+        cls.diroutput = basediroutput
         path_new = os.path.join(TEST_DATA_DIR, "postproc", "Cor", "postproc_2021041006_2021041112.nc")
         cls.ps = prosimu(path_new)
         cls.points = cls.ps.get_points(ZS=2100, aspect=-1)
@@ -138,24 +122,13 @@ class TestCartopyCor(unittest.TestCase):
         self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
         self.m.close()
 
-    def tearDown(self):
-        result = self.defaultTestResult()  # These two methods have no side effects
-        self._feedErrorsToResult(result, self._outcome.errors)
-        error = self.mix.list2reason(result.errors)
-        failure = self.mix.list2reason(result.failures)
-        if not error and not failure:
-            shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
-                                                                                     self.outfilename))
-
     @classmethod
     def tearDownClass(cls):
         cls.ps.close()
-        if not os.listdir(cls.diroutput):
-            # Suppression des sous-dossiers de fail_test correspondant aux tests OK
-            shutil.rmtree(cls.diroutput)
 
 
-@unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "postproc", "Pyr", "postproc_2021041006_2021041112.nc")),
+@unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "postproc", "Pyr",
+                                                 "postproc_2021041006_2021041112.nc")),
                  "input file not available")
 class TestCartopyPyr(unittest.TestCase):
     """
@@ -164,11 +137,10 @@ class TestCartopyPyr(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.mix = CartopyTestMixIn()
-        basediroutput = os.path.join(THIS_DIR, "fail_test")
+        basediroutput = os.path.join(THIS_DIR, "Manual_tests")
         if not os.path.isdir(basediroutput):
             os.makedirs(basediroutput)
-        prefix = "output" + datetime.today().strftime("%Y%m%d%H%M%S%f-")
-        cls.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
+        cls.diroutput = basediroutput
         path_new = os.path.join(TEST_DATA_DIR, "postproc", "Pyr", "postproc_2021041006_2021041112.nc")
         cls.ps = prosimu(path_new)
         cls.points_nord = cls.ps.get_points(aspect=0, ZS=2100, slope=40)
@@ -228,21 +200,9 @@ class TestCartopyPyr(unittest.TestCase):
         self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
         self.m.close()
 
-    def tearDown(self):
-        result = self.defaultTestResult()  # These two methods have no side effects
-        self._feedErrorsToResult(result, self._outcome.errors)
-        error = self.mix.list2reason(result.errors)
-        failure = self.mix.list2reason(result.failures)
-        if not error and not failure:
-            shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
-                                                                                     self.outfilename))
-
     @classmethod
     def tearDownClass(cls):
         cls.ps.close()
-        if not os.listdir(cls.diroutput):
-            # Suppression des sous-dossiers de fail_test correspondant aux tests OK
-            shutil.rmtree(cls.diroutput)
 
 
 @unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "postproc", "Alp",
@@ -256,11 +216,10 @@ class TestCartopyAlp(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.mix = CartopyTestMixIn()
-        basediroutput = os.path.join(THIS_DIR, "fail_test")
+        basediroutput = os.path.join(THIS_DIR, "Manual_tests")
         if not os.path.isdir(basediroutput):
             os.makedirs(basediroutput)
-        prefix = "output" + datetime.today().strftime("%Y%m%d%H%M%S%f-")
-        cls.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
+        cls.diroutput = basediroutput
         path_new = os.path.join(TEST_DATA_DIR, "postproc", "Alp", "postproc_2021041006_2021041112.nc")
         cls.ps = prosimu(path_new)
         cls.points = cls.ps.get_points(ZS=2100, aspect=-1)
@@ -310,21 +269,9 @@ class TestCartopyAlp(unittest.TestCase):
         self.lo.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
         self.lo.close()
 
-    def tearDown(self):
-        result = self.defaultTestResult()  # These two methods have no side effects
-        self._feedErrorsToResult(result, self._outcome.errors)
-        error = self.mix.list2reason(result.errors)
-        failure = self.mix.list2reason(result.failures)
-        if not error and not failure and self.outfilename is not None:
-            shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
-                                                                                     self.outfilename))
-
     @classmethod
     def tearDownClass(cls):
         cls.ps.close()
-        if not os.listdir(cls.diroutput):
-            # Suppression des sous-dossiers de fail_test correspondant aux tests OK
-            shutil.rmtree(cls.diroutput)
 
 
 @unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "mac_mb035_PRO_2022031306_2022031706_selvar.nc")),
@@ -336,11 +283,10 @@ class TestCartopyMac(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.mix = CartopyTestMixIn()
-        basediroutput = os.path.join(THIS_DIR, "fail_test")
+        basediroutput = os.path.join(THIS_DIR, "Manual_tests")
         if not os.path.isdir(basediroutput):
             os.makedirs(basediroutput)
-        prefix = "output" + datetime.today().strftime("%Y%m%d%H%M%S%f-")
-        cls.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
+        cls.diroutput = basediroutput
         path_new = os.path.join(TEST_DATA_DIR, "mac_mb035_PRO_2022031306_2022031706_selvar.nc")
         cls.ps = prosimu(path_new)
         cls.points = cls.ps.get_points(ZS=1200, aspect=-1)
@@ -367,21 +313,9 @@ class TestCartopyMac(unittest.TestCase):
         self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
         self.m.close()
 
-    def tearDown(self):
-        result = self.defaultTestResult()  # These two methods have no side effects
-        self._feedErrorsToResult(result, self._outcome.errors)
-        error = self.mix.list2reason(result.errors)
-        failure = self.mix.list2reason(result.failures)
-        if not error and not failure and self.outfilename is not None:
-            shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(THIS_DIR, "Manual_tests",
-                                                                                     self.outfilename))
-
     @classmethod
     def tearDownClass(cls):
         cls.ps.close()
-        if not os.listdir(cls.diroutput):
-            # Suppression des sous-dossiers de fail_test correspondant aux tests OK
-            shutil.rmtree(cls.diroutput)
 
 
 class TestCartopyJura(unittest.TestCase):
@@ -391,16 +325,10 @@ class TestCartopyJura(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.mix = CartopyTestMixIn()
-        basediroutput = os.path.join(THIS_DIR, "fail_test")
+        basediroutput = os.path.join(THIS_DIR, "Manual_tests")
         if not os.path.isdir(basediroutput):
             os.makedirs(basediroutput)
-        prefix = "output" + datetime.today().strftime("%Y%m%d%H%M%S%f-")
-        cls.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
-        # path_new = os.path.join(TEST_DATA_DIR, "mac_mb035_PRO_2022031306_2022031706_selvar.nc")
-        # cls.ps = prosimu(path_new)
-        # cls.points = cls.ps.get_points(ZS=1200, aspect=-1)
-        # cls.swe = cls.ps.read('SWE_3DY_ISBA', selectpoint=cls.points, hasDecile=False)
-        # cls.massifs = cls.ps.read('massif_num', selectpoint=cls.points)
+        cls.diroutput = basediroutput
 
     def setUp(self):
         self.outfilename = None
@@ -418,24 +346,6 @@ class TestCartopyJura(unittest.TestCase):
         self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
         self.m.close()
 
-    def tearDown(self):
-        result = self.defaultTestResult()  # These two methods have no side effects
-        self._feedErrorsToResult(result, self._outcome.errors)
-        error = self.mix.list2reason(result.errors)
-        failure = self.mix.list2reason(result.failures)
-        if not error and not failure and self.outfilename is not None:
-            dirmantest = os.path.join(THIS_DIR, "Manual_tests")
-            if not os.path.isdir(dirmantest):
-                os.makedirs(dirmantest)
-            shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(dirmantest,
-                                                                                     self.outfilename))
-
-    @classmethod
-    def tearDownClass(cls):
-        if not os.listdir(cls.diroutput):
-            # Suppression des sous-dossiers de fail_test correspondant aux tests OK
-            shutil.rmtree(cls.diroutput)
-
 
 class TestCartopyVosges(unittest.TestCase):
     """
@@ -444,11 +354,10 @@ class TestCartopyVosges(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.mix = CartopyTestMixIn()
-        basediroutput = os.path.join(THIS_DIR, "fail_test")
+        basediroutput = os.path.join(THIS_DIR, "Manual_tests")
         if not os.path.isdir(basediroutput):
             os.makedirs(basediroutput)
-        prefix = "output" + datetime.today().strftime("%Y%m%d%H%M%S%f-")
-        cls.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
+        cls.diroutput = basediroutput
 
     def setUp(self):
         self.outfilename = None
@@ -465,24 +374,6 @@ class TestCartopyVosges(unittest.TestCase):
         self.outfilename = "vosges_names.png"
         self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
         self.m.close()
-
-    def tearDown(self):
-        result = self.defaultTestResult()  # These two methods have no side effects
-        self._feedErrorsToResult(result, self._outcome.errors)
-        error = self.mix.list2reason(result.errors)
-        failure = self.mix.list2reason(result.failures)
-        if not error and not failure and self.outfilename is not None:
-            dirmantest = os.path.join(THIS_DIR, "Manual_tests")
-            if not os.path.isdir(dirmantest):
-                os.makedirs(dirmantest)
-            shutil.move(os.path.join(self.diroutput, self.outfilename), os.path.join(dirmantest,
-                                                                                     self.outfilename))
-
-    @classmethod
-    def tearDownClass(cls):
-        if not os.listdir(cls.diroutput):
-            # Suppression des sous-dossiers de fail_test correspondant aux tests OK
-            shutil.rmtree(cls.diroutput)
 
 
 class CartopyTestMixIn(object):

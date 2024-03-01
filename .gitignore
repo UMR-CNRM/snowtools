@@ -7,7 +7,6 @@
 snowtools/tests/output*
 snowtools/tests/fail_test
 snowtools/tests/Manual_tests
-!snowtools/tests/Manual_tests/index_template.html
 oper_tag
 tag
 *.swp
