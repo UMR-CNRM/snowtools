@@ -17,9 +17,9 @@ SNOWTOOLS_CEN = os.path.dirname(SNOWTOOLS_DIR)
 Path to git repository base (folder in which snowtools folder is present)
 """
 
-TESTBASE_DIR = "/rd/cenfic3/cenmod/home/viallonl/testbase"
+TESTBASE_DIR = os.getenv("SNOWTOOLS_TESTBASE", "/rd/cenfic3/cenmod/home/viallonl/testbase")
 """
-Path to the testbase on cenfic3
+Path to the testbase on cenfic3 or specified by SNOWTOOLS_TESTBASE environment variable
 """
 
 DIRDATAPGD = '/rd/cenfic3/cenmod/simul_surfex_rech/lafaysse/FILES_PGD'

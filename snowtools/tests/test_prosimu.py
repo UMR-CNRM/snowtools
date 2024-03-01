@@ -9,7 +9,7 @@ import os
 import numpy as np
 
 from snowtools.utils.prosimu import prosimu_auto as prosimu, prosimu_old
-from snowtools.DATA import SNOWTOOLS_DATA, TESTBASE_DIR
+from snowtools.DATA import TESTBASE_DIR
 
 if not os.path.isdir(TESTBASE_DIR):
     SKIP = True
@@ -17,12 +17,15 @@ else:
     SKIP = False
 
 
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
+                                                 'pro_2018080306_2018080406.nc')),
+                 "input file not available")
 class TestProSimu(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         # fichier au nouveau format de la chaîne
-        path_new = os.path.join(SNOWTOOLS_DATA, 'pro_2018080306_2018080406.nc')
+        path_new = os.path.join(TESTBASE_DIR, "PRO", 'pro_2018080306_2018080406.nc')
         cls.ps = prosimu(path_new)
 
     def test_get_points_intargs(self):
@@ -61,11 +64,14 @@ class TestProSimu(unittest.TestCase):
         cls.ps.close()
 
 
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
+                                                 'pro_2018080306_2018080406.nc')),
+                 "input file not available")
 class TestProSimuWithCache(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        path_new = os.path.join(SNOWTOOLS_DATA, 'pro_2018080306_2018080406.nc')
+        path_new = os.path.join(TESTBASE_DIR, "PRO", 'pro_2018080306_2018080406.nc')
         cls.ps = prosimu(path_new)
         cls.ps.force_read_in_cache()
 
@@ -86,18 +92,20 @@ class TestProSimuWithCache(unittest.TestCase):
         cls.ps.close()
 
 
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
+                                                 "PRO_2014080106_2015010106_grille2d.nc")),
+                 "input file not available")
 class TestProSimu2d(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         # fichier au nouveau format de la chaîne
-        path = os.path.join(TESTBASE_DIR, 'PRO/PRO_2014080106_2015010106_grille2d.nc')
+        path = os.path.join(TESTBASE_DIR, "PRO", 'PRO_2014080106_2015010106_grille2d.nc')
         if not SKIP:
             cls.ps = prosimu(path)
         else:
             cls.ps = None
 
-    @unittest.skipIf(SKIP, 'Test files not available')
     def test_get_point(self):
         valx = self.ps.read('xx')
         valy = self.ps.read('yy')
@@ -105,7 +113,6 @@ class TestProSimu2d(unittest.TestCase):
             point = self.ps.get_point(xx=valx[x], yy=valy[y])
         self.assertEqual(point, len(valy) * x + y, "get_point method fail in 2d")
 
-    @unittest.skipIf(SKIP, 'Test files not available')
     def test_get_data(self):
         valx = self.ps.read('xx')
         valy = self.ps.read('yy')
@@ -117,7 +124,6 @@ class TestProSimu2d(unittest.TestCase):
             data_test = self.ps.read('DSN_T_ISBA', selectpoint=point)[-1]
         self.assertAlmostEqual(data_test, data_ok, "read method fail with selectpoint in 2d")
 
-    @unittest.skipIf(SKIP, 'Test files not available')
     def test_get_data_multiple_points(self):
         valx = self.ps.read('xx')
         valy = self.ps.read('yy')
@@ -135,24 +141,25 @@ class TestProSimu2d(unittest.TestCase):
             cls.ps.close()
 
 
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
+                                                 "PRO_patches.nc")),
+                 "input file not available")
 class TestProSimuTile(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         # fichier au nouveau format de la chaîne
-        path = os.path.join(TESTBASE_DIR, 'PRO/PRO_patches.nc')
+        path = os.path.join(TESTBASE_DIR, "PRO", 'PRO_patches.nc')
         if not SKIP:
             cls.ps = prosimu(path)
         else:
             cls.ps = None
 
-    @unittest.skipIf(SKIP, 'Test files not available')
     def test_tile_1(self):
         PATCH = 4
         data_ok = self.ps.dataset.variables['SNOWTYPE'][:, PATCH, :, 0, 0]
         data1 = self.ps.read('SNOWTYPE', tile=PATCH, selectpoint=0)
         self.assertTrue((data1 == data_ok).all(), "read method fail with tile argument")
 
-    @unittest.skipIf(SKIP, 'Test files not available')
     def test_tile_multi(self):
         PATCH = [4, 6]
         data_ok_1 = self.ps.dataset.variables['SNOWTYPE'][:, PATCH[0], :, 0, 0]
@@ -171,12 +178,15 @@ class TestProSimuTile(unittest.TestCase):
             cls.ps.close()
 
 
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
+                                                 'old_PRO_20180807032000_002400.nc')),
+                 "input file not available")
 class TestProSimuOld(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         # fichier au nouveau format de la chaîne
-        path_old = os.path.join(SNOWTOOLS_DATA, 'old_PRO_20180807032000_002400.nc')
+        path_old = os.path.join(TESTBASE_DIR, "PRO", 'old_PRO_20180807032000_002400.nc')
         cls.ps = prosimu_old(path_old)
 
     def test_get_points_intargs(self):
@@ -210,12 +220,15 @@ class TestProSimuOld(unittest.TestCase):
         cls.ps.close()
 
 
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
+                                                 'old_PRO_20180807032000_002400.nc')),
+                 "input file not available")
 class TestProSimuOldWithCache(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         # fichier au nouveau format de la chaîne
-        path_old = os.path.join(SNOWTOOLS_DATA, 'old_PRO_20180807032000_002400.nc')
+        path_old = os.path.join(TESTBASE_DIR, 'PRO', 'old_PRO_20180807032000_002400.nc')
         cls.ps = prosimu_old(path_old)
         cls.ps.force_read_in_cache()
 

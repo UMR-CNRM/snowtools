@@ -10,19 +10,22 @@ import os
 from netCDF4 import Dataset
 
 from snowtools.tasks.s2m_command import Surfex_command as s2m
-from snowtools.DATA import SNOWTOOLS_DATA
 from snowtools.tests.export_output import exportoutput
 from snowtools.tests.tempfolder import TestWithTempFolderWithLog
 from snowtools.DATA import DIRDATAPGD
+from snowtools.DATA import TESTBASE_DIR
 
 _here = os.path.dirname(os.path.realpath(__file__))
 
 
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "FORCING",
+                                                 "FORCING_test_impur.nc")),
+                 "input file not available")
 class s2mTestPrepImpur(TestWithTempFolderWithLog):
     def setUp(self):
         super(s2mTestPrepImpur, self).setUp()
         self.namelist = os.path.join(_here, 'namelists/namelist_prep_impur.nam')
-        self.forcingtest = os.path.join(SNOWTOOLS_DATA, "FORCING_test_impur.nc")
+        self.forcingtest = os.path.join(TESTBASE_DIR, "FORCING", "FORCING_test_impur.nc")
         self.commonoptions = " -o " + self.diroutput + " -f " + self.forcingtest + " -n " + self.namelist + " -g"
 
     def full_run(self, shortcommand):

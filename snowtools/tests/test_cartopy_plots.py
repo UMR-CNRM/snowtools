@@ -78,7 +78,8 @@ class TestZoomMassifError(unittest.TestCase):
         self.assertRaises(ValueError, cartopy.Zoom_massif, 42)
 
 
-@unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "postproc", "Cor", "postproc_2021041006_2021041112.nc")),
+@unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "postproc", "Cor",
+                                                 "postproc_2021041006_2021041112.nc")),
                  "input file not available")
 class TestCartopyCor(unittest.TestCase):
     """
@@ -244,7 +245,8 @@ class TestCartopyPyr(unittest.TestCase):
             shutil.rmtree(cls.diroutput)
 
 
-@unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "postproc", "Alp", "postproc_2021041006_2021041112.nc")),
+@unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "postproc", "Alp",
+                                                 "postproc_2021041006_2021041112.nc")),
                  "input file not available")
 class TestCartopyAlp(unittest.TestCase):
     """

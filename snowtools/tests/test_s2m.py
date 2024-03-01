@@ -9,10 +9,11 @@ import unittest
 import os
 
 from snowtools.tasks.s2m_command import Surfex_command as s2m
-from snowtools.DATA import SNOWTOOLS_DATA
 from snowtools.tests.export_output import exportoutput
 from snowtools.tests.tempfolder import TestWithTempFolderWithLog
+from snowtools.DATA import SNOWTOOLS_DATA
 from snowtools.DATA import DIRDATAPGD
+from snowtools.DATA import TESTBASE_DIR
 
 
 class s2mTest(TestWithTempFolderWithLog):
@@ -30,11 +31,14 @@ class s2mTest(TestWithTempFolderWithLog):
         return os.path.isdir(DIRDATAPGD) or "DIRDATAPGD" in list(os.environ.keys())
 
 
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "FORCING",
+                                                 "FORCING_test_massif.nc")),
+                 "input file not available")
 class s2mMassifTest(s2mTest):
 
     def setUp(self):
         super(s2mMassifTest, self).setUp()
-        forcingtest = os.path.join(SNOWTOOLS_DATA, "FORCING_test_massif.nc")
+        forcingtest = os.path.join(TESTBASE_DIR, "FORCING", "FORCING_test_massif.nc")
         self.commonoptions += " -f " + forcingtest
 
     def test_delayed_period(self):
@@ -47,12 +51,15 @@ class s2mMassifTest(s2mTest):
         self.full_run("s2m research -b 20110101 -e 20110201 -l 0,20,40 -c 8")
 
 
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "FORCING",
+                                                 "FORCING_test_impur.nc")),
+                 "input file not available")
 class s2m2DTest(s2mTest):
 
     def setUp(self):
 
         super(s2m2DTest, self).setUp()
-        forcingtest = os.path.join(SNOWTOOLS_DATA, "FORCING_test_2d.nc")
+        forcingtest = os.path.join(TESTBASE_DIR, "FORCING", "FORCING_test_2d.nc")
         namelist = os.path.join(SNOWTOOLS_DATA, "OPTIONS_test_2d.nam")
         # If the test is run at CEN, it can run PGD with available databases.
         # Otherwise, we do not test the PGD step and only take a PGD test file.
