@@ -145,7 +145,7 @@ class ProCompareApplication(gui_elements.Application):
         """
         if self.fileobj is None:
             return
-        self.openbar.update_filename(self.fileobj.get_filename(), i)
+        self.openbar.update_filename(self.fileobjs[i].get_filename(), i)
         self.controls.plot_mark()
         if i == 0:
             self.choices.variables_w.update()

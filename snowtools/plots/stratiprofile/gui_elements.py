@@ -376,13 +376,13 @@ class ProPlotterchoicesBarAdditionalParams(tk.Frame):
                     choices = list(info['choices'])  # Tkinter knows nothing of numpy arrays...
                     selector = ttk.Combobox(self.frame, state='readonly', values=[''] + choices,
                                             width=self.master.WIDTH)
-                    selector.bind('<<ComboboxSelected>>', lambda _, i=ii: self.update_var(i))
+                    selector.bind('<<ComboboxSelected>>', lambda _, i=ii: self.update_var())
                 elif info['type'] in ['int', 'float']:
                     choices = list(range(info['limits'][0], info['limits'][1] + 1))
                     sv = tk.StringVar()
                     selector = ttk.Spinbox(self.frame, values=choices, textvariable=sv,
                                            width=self.master.WIDTH,
-                                           command=lambda *_, i=ii: self.update_var(i))
+                                           command=lambda *_, i=ii: self.update_var())
                 else:
                     selector = ttk.Combobox(self.frame, state='readonly', values=[''],
                                             width=self.master.WIDTH)
