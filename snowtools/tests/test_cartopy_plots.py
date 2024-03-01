@@ -126,7 +126,7 @@ class TestCartopyCor(unittest.TestCase):
         self.m.close()
 
     def test_annotate(self):
-        self.m = cartopy.MultiMap_Cor(nrow=3, ncol=3, bgimage=True)
+        self.m = cartopy.MultiMap_Cor(nrow=3, ncol=3, bgimage=False)
         self.m.init_massifs(**self.mix.attributes['SD_1DY_ISBA'])
         centre = [shape.centroid.coords[0] for shape in self.m.llshape]
         self.m.addpoints(*list(zip(*centre)), color='magenta', marker="o")
