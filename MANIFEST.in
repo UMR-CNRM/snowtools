@@ -2,13 +2,12 @@ include README.md
 include LICENSE.txt
 include LICENSE-en.txt
 
-grab snowtools
-grab cenutils
+graft snowtools
+graft cenutils
 
 exclude snowtools/tests/output*
 exclude snowtools/tests/fail_test
 exclude snowtools/tests/Manual_tests
-include snowtools/tests/Manual_tests/index_template.html
 
 exclude snowtools/interpolation/interpol_MPIAUTO
 exclude snowtools/interpolation/interpol
