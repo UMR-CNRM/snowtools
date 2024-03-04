@@ -33,10 +33,9 @@ Some specific parts of the code (including test) require to have also:
 * ``cartopy``
 * The vortex toolbox for run on Meteo-France super-computers
 
-Install dependencies with system packages
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-We encourage you to install these packages through system packages, for instance with the following command line on Debian or Ubuntu 22.04 system:
+Install dependencies
+^^^^^^^^^^^^^^^^^^^^
+We encourage you to install dependencies through system packages, for instance with the following command line on Debian or Ubuntu 22.04 system:
 
 .. code-block:: bash
    
@@ -50,20 +49,20 @@ Install ``bronx`` package with ``pip install bronx`` (no distribution package fo
 
 Install with pip
 ^^^^^^^^^^^^^^^^
-Most of the packages can easily be installed in a virtual environment with ``pip``: use ``pip install -r requirements.txt``.
+Most of the packages can easily be installed in a virtual environment with ``pip`` (for instance with ``pip install -r requirements.txt``). This is useless if you plan to then install snowtools with  ``pip``.
 
 Only GDAL python binding need to be installed manually to be installed consistently with your installed ``libgdal-dev`` version. Please install before the system packages ``ligdal`` and ``libgdal-dev`` (or similar) and run: ``pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="$(gdal-config --cflags)"``.
 
-Snowtools install
-^^^^^^^^^^^^^^^^^
+Snowtools install for users
+---------------------------
 
-If you are only a user of snowtools, you can simply go into the snowtools directory and then run  ``pip install .``.
+If you are only a user of snowtools, you can simply go into the snowtools directory and then run  ``pip install .`` (possibly in a python virtual environment).
 
 
 .. _sec-install_dev:
 
-Install for developers
-----------------------
+Snowtools install for developers
+--------------------------------
 
 Clone the git repository on your computer. You have to add the install folder to your ``PYTHONPATH``. This can be done by adding these tho following lines to your ``.bashrc`` or ``.bash-profile``: 
 
