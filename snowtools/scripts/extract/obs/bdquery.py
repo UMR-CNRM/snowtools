@@ -162,7 +162,7 @@ class question(object):
         # construction of SQL request
         self.sql = 'SELECT {fields} FROM {table}'.format(fields=','.join(self.variables), table=self.table)
         if len(self.join) > 0:
-            self.sql += ' JOIN {}'.format('JOIN '.join(self.join))
+            self.sql += ' JOIN {}'.format(' JOIN '.join(self.join))
         if len(self.conditions) > 0 or len(self.period) > 0:
             conditions = self.conditions
             if len(self.period) > 0:
