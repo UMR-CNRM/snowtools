@@ -206,7 +206,7 @@ then
         --exclude "*.pyc" --exclude "*.bak" --exclude "*.sav" --exclude "*.backup" \
         --exclude ".*.swp" --exclude "*~" \
         --exclude "*.egg-info" --exclude "*.o" --exclude "*.bin" --exclude "*.exe" \
-        --exclude fail_tests --exclude "interpolation/*.mod" \
+        --exclude fail_test --exclude Manual_tests --exclude "interpolation/*.mod" \
         --exclude "interpolation/interpol_MPIAUTO" \
         --exclude /exe --exclude "src/dir_obj*" \
         --exclude 'profile_surfex' --exclude 'profile_surfex-LX*' \
