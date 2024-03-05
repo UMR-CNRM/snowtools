@@ -168,6 +168,7 @@ class vortex_kitchen(object):
                 reforecast = "ensemble_surfex_reforecast",
                 debug = 'debug_tasks',
                 refill = "refill",
+                interpol="interpol_task",
             )
 
             defaultjobname = dict(
@@ -180,6 +181,7 @@ class vortex_kitchen(object):
                 reforecast = "surfex_forecast",
                 debug = 'debug_s2m',
                 refill = "refill_surfex_output",
+                interpol="interpolator",
             )
 
             if self.options.task in ['escroc', 'croco', 'croco_perturb', 'reforecast', 'refill']:
