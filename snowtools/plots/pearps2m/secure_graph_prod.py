@@ -4,7 +4,7 @@ import os
 
 from snowtools.plots.pearps2m.postprocess import config
 
-usage = "usage: python scure_graph_prod.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]"
+usage = "usage: python secure_graph_prod.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]"
 
 c = config()
 
