@@ -14,7 +14,7 @@ import numpy as np
 import filecmp
 
 from snowtools.utils.dates import WallTimeException
-from snowtools.utils.resources import InstallException
+from snowtools.utils.resources import InstallException, absolute_path
 from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
 from snowtools.tools.execute import callSystemOrDie
 from snowtools.DATA import SNOWTOOLS_DIR
@@ -382,7 +382,7 @@ class vortex_kitchen(object):
             self.options.vconf = splitregion[1].lower()
             self.options.interpol = len(splitregion) == 3
             if self.options.interpol:
-                self.options.gridout = splitregion[2]
+                self.options.gridout = absolute_path(splitregion[2])
         else:
             self.options.interpol = False
             self.options.vconf = self.options.region.lower()
@@ -428,19 +428,39 @@ class Vortex_conf_file(object):
         elif self.options.safran:
             self.create_conf_safran()
 
+    def create_conf_interpol(self):
+        self.get_forcing_variables()
+
+        if self.options.namelist:
+            self.set_field("DEFAULT", 'namelist', self.options.namelist)
+
+        self.set_field("DEFAULT", 'gridout', self.options.gridout)
+        self.set_field("DEFAULT", 'geoin', self.options.geoin)
+
+        self.set_field("DEFAULT", 'drhook', self.options.drhook)
+
+        if hasattr(self.options, 'save_pro'):
+            self.set_field("DEFAULT", 'save_pro', self.options.save_pro)
+
+        if hasattr(self.options, 'interpol_blocks'):
+            self.set_field("DEFAULT", 'interpol_blocks', self.options.interpol_blocks)
+
     def create_conf_surfex(self):
-        self.surfex_variables()
-        # ESCROC on several nodes
-        if self.options.task in ['escroc', 'escroc_scores', 'croco', 'croco_perturb']:
-            self.escroc_variables()
-            if self.options.task in ['croco']:
-                self.croco_variables()
+        if self.options.task in ['interpol']:
+            self.create_conf_interpol()
         else:
-            self.set_field("DEFAULT", 'nnodes', self.options.nnodes)
-            if self.options.nmembers:
-                self.set_field("DEFAULT", 'nmembers', self.options.nmembers)
-            if self.options.startmember:
-                self.set_field("DEFAULT", 'startmember', self.options.startmember)
+            self.surfex_variables()
+            # ESCROC on several nodes
+            if self.options.task in ['escroc', 'escroc_scores', 'croco', 'croco_perturb']:
+                self.escroc_variables()
+                if self.options.task in ['croco']:
+                    self.croco_variables()
+            else:
+                self.set_field("DEFAULT", 'nnodes', self.options.nnodes)
+                if self.options.nmembers:
+                    self.set_field("DEFAULT", 'nmembers', self.options.nmembers)
+                if self.options.startmember:
+                    self.set_field("DEFAULT", 'startmember', self.options.startmember)
 
     def create_conf_safran(self):
         self.safran_variables()

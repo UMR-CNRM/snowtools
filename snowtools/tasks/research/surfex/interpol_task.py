@@ -43,60 +43,64 @@ class Interpol_Task(Task, S2MTaskMixIn):
         dict_dates_end_forc = get_dic_dateend(list_dates_begin_forc, list_dates_end_forc)
         dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
 
+        dickind = dict(meteo='MeteorologicalForcing', pro='SnowpackSimulation')
+        diclocal = dict(meteo='FORCING', pro='PRO')
+        dicmodel = dict(meteo=self.conf.meteo, pro='surfex')
         #######################################################################
         #                             Fetch steps                             #
         #######################################################################
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
-            # Try to find a forcing covering the full simulation period
-            # Role = Forcing because expected this way in the algo
-            tb01 = toolbox.input(
-                role           = 'Forcing',
-                kind           = 'SnowpackSimulation',
-                vapp           = self.conf.meteo,
-                vconf          = '[geometry:tag]',
-                local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-                experiment     = self.conf.forcingid,
-                block          = 'pro',
-                geometry       = self.conf.geoin,
-                nativefmt      = 'netcdf',
-                model          = 'surfex',
-                datebegin      = self.conf.datebegin,
-                dateend        = self.conf.dateend,
-                intent         = 'in',
-                namespace      = 'vortex.multi.fr',
-                namebuild      = 'flat@cen',
-                fatal          = False,
-            ),
-
-            if tb01[0]:
-                onepro = True
-            else:
-                onepro = False
-                # Look for yearly forcing files
+            for block in self.conf.interpol_blocks:
+                # Try to find a forcing covering the full simulation period
                 # Role = Forcing because expected this way in the algo
-                self.sh.title('Toolbox input tb01')
                 tb01 = toolbox.input(
                     role           = 'Forcing',
-                    kind           = 'SnowpackSimulation',
+                    kind           = dickind[block],
                     vapp           = self.conf.meteo,
                     vconf          = '[geometry:tag]',
-                    local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    local          = diclocal[block] + '_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = self.conf.forcingid,
-                    block          = 'pro',
+                    block          = block,
                     geometry       = self.conf.geoin,
                     nativefmt      = 'netcdf',
-                    model          = 'surfex',
-                    datebegin      = list_dates_begin_forc,
-                    dateend        = dict_dates_end_forc,
+                    model          = dicmodel[block],
+                    datebegin      = self.conf.datebegin,
+                    dateend        = self.conf.dateend,
                     intent         = 'in',
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
-                    fatal          = True,
+                    fatal          = False,
                 ),
 
-                print(t.prompt, 'tb01 =', tb01)
-                print()
+                if tb01[0]:
+                    onepro = True
+                else:
+                    onepro = False
+                    # Look for yearly forcing files
+                    # Role = Forcing because expected this way in the algo
+                    self.sh.title('Toolbox input tb01')
+                    tb01 = toolbox.input(
+                        role           = 'Forcing',
+                        kind           = dickind[block],
+                        vapp           = self.conf.meteo,
+                        vconf          = '[geometry:tag]',
+                        local          = diclocal[block] + '_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        experiment     = self.conf.forcingid,
+                        block          = block,
+                        geometry       = self.conf.geoin,
+                        nativefmt      = 'netcdf',
+                        model          = dicmodel[block],
+                        datebegin      = list_dates_begin_forc,
+                        dateend        = dict_dates_end_forc,
+                        intent         = 'in',
+                        namespace      = 'vortex.multi.fr',
+                        namebuild      = 'flat@cen',
+                        fatal          = True,
+                    ),
+
+                    print(t.prompt, 'tb01 =', tb01)
+                    print()
 
             # Target grid file
             # the path must be provided in the configuration file
@@ -109,6 +113,18 @@ class Interpol_Task(Task, S2MTaskMixIn):
             )
             print(t.prompt, 'tbgrid =', tbgrid)
             print()
+
+            if self.conf.namelist:
+                tbnamelist = toolbox.input(
+                    role            = 'Nam_surfex',
+                    remote          = self.conf.namelist,
+                    kind            = 'namelist',
+                    model           = 'surfex',
+                    local           = 'interpolate_safran.nam',
+                )
+
+                print(t.prompt, 'tbnamelist =', tbnamelist)
+                print()
 
             # take the interpolation binary from the uenv
             tbI = tbxi = toolbox.executable(
@@ -153,65 +169,24 @@ class Interpol_Task(Task, S2MTaskMixIn):
             if hasattr(self.conf, 'save_pro') and self.conf.save_pro in ['cache', 'archive', 'multi']:
                 namespace = 'vortex.' + self.conf.save_pro + '.fr'
 
-            # First we try to save a PRO file covering the whole simulation period if present
-            datebegin = self.conf.datebegin
-            dateend = self.conf.dateend
-            self.sh.title('Toolbox output tb19')
-            tb19 = toolbox.output(
-                local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-                experiment     = self.conf.xpid,
-                geometry       = self.conf.geometry,
-                datebegin      = datebegin,
-                dateend        = dateend,
-                nativefmt      = 'netcdf',
-                kind           = 'SnowpackSimulation',
-                model          = 'surfex',
-                namespace      = namespace,
-                namebuild      = 'flat@cen',
-                block          = 'pro',
-                fatal          = False
-            ),
-            print(t.prompt, 'tb19 =', tb19)
-            print()
-
-            if hasattr(self.conf, "writesx"):
-                if self.conf.writesx:
-                    self.sh.title('Toolbox output tb19bis')
-                    tb19bis = toolbox.output(
-                        local       = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-                        experiment  = self.conf.xpid,
-                        geometry    = self.conf.geometry,
-                        datebegin   = datebegin,
-                        dateend     = dateend,
-                        nativefmt   ='netcdf',
-                        kind        = 'SnowpackSimulation',
-                        model       = 'surfex',
-                        namespace   = 'vortex.archive.fr',
-                        storage     = 'sxcen.cnrm.meteo.fr',
-                        enforcesync = True, # to forbid asynchronous transfers and not saturate sxcen
-                        namebuild   = 'flat@cen',
-                        block       = 'pro',
-                        fatal       = False
-                    ),
-                    print(t.prompt, 'tb19bis =', tb19bis)
-                    print()
-
-            if not tb19[0]:
-                # PRO not available for the whole simulation period: try to save yearly PRO, DIAG, CUMUL 
-                # files + 1 PREP file per year
+            for block in self.conf.interpol_blocks:
+                # First we try to save a PRO file covering the whole simulation period if present
+                datebegin = self.conf.datebegin
+                dateend = self.conf.dateend
                 self.sh.title('Toolbox output tb19')
                 tb19 = toolbox.output(
-                    local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                    local          = diclocal[block] + '_[datebegin:ymdh]_[dateend:ymdh].nc',
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
-                    datebegin      = list_dates_begin_pro,
-                    dateend        = dict_dates_end_pro,
+                    datebegin      = datebegin,
+                    dateend        = dateend,
                     nativefmt      = 'netcdf',
-                    kind           = 'SnowpackSimulation',
-                    model          = 'surfex',
+                    kind           = dickind[block],
+                    model          = dicmodel[block],
                     namespace      = namespace,
                     namebuild      = 'flat@cen',
-                    block          = 'pro',
+                    block          = block,
+                    fatal          = False
                 ),
                 print(t.prompt, 'tb19 =', tb19)
                 print()
@@ -220,19 +195,61 @@ class Interpol_Task(Task, S2MTaskMixIn):
                     if self.conf.writesx:
                         self.sh.title('Toolbox output tb19bis')
                         tb19bis = toolbox.output(
-                            local       = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                            local       = diclocal[block] + '_[datebegin:ymdh]_[dateend:ymdh].nc',
                             experiment  = self.conf.xpid,
                             geometry    = self.conf.geometry,
-                            datebegin   = list_dates_begin_pro,
-                            dateend     = dict_dates_end_pro,
-                            nativefmt   = 'netcdf',
-                            kind        = 'SnowpackSimulation',
-                            model       = 'surfex',
-                            namespace   ='vortex.archive.fr',
+                            datebegin   = datebegin,
+                            dateend     = dateend,
+                            nativefmt   ='netcdf',
+                            kind        = dickind[block],
+                            model       = dicmodel[block],
+                            namespace   = 'vortex.archive.fr',
                             storage     = 'sxcen.cnrm.meteo.fr',
-                            enforcesync = True,  # to forbid asynchronous transfers and not saturate sxcen
+                            enforcesync = True, # to forbid asynchronous transfers and not saturate sxcen
                             namebuild   = 'flat@cen',
-                            block       = 'pro',
+                            block       = block,
+                            fatal       = False
                         ),
                         print(t.prompt, 'tb19bis =', tb19bis)
                         print()
+
+                if not tb19[0]:
+                    # PRO not available for the whole simulation period: try to save yearly PRO, DIAG, CUMUL
+                    # files + 1 PREP file per year
+                    self.sh.title('Toolbox output tb19')
+                    tb19 = toolbox.output(
+                        local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        experiment     = self.conf.xpid,
+                        geometry       = self.conf.geometry,
+                        datebegin      = list_dates_begin_pro,
+                        dateend        = dict_dates_end_pro,
+                        nativefmt      = 'netcdf',
+                        kind           = dickind[block],
+                        model          = dicmodel[block],
+                        namespace      = namespace,
+                        namebuild      = 'flat@cen',
+                        block          = block,
+                    ),
+                    print(t.prompt, 'tb19 =', tb19)
+                    print()
+
+                    if hasattr(self.conf, "writesx"):
+                        if self.conf.writesx:
+                            self.sh.title('Toolbox output tb19bis')
+                            tb19bis = toolbox.output(
+                                local       = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                                experiment  = self.conf.xpid,
+                                geometry    = self.conf.geometry,
+                                datebegin   = list_dates_begin_pro,
+                                dateend     = dict_dates_end_pro,
+                                nativefmt   = 'netcdf',
+                                kind        = dickind[block],
+                                model       = dicmodel[block],
+                                namespace   ='vortex.archive.fr',
+                                storage     = 'sxcen.cnrm.meteo.fr',
+                                enforcesync = True,  # to forbid asynchronous transfers and not saturate sxcen
+                                namebuild   = 'flat@cen',
+                                block       = block,
+                            ),
+                            print(t.prompt, 'tb19bis =', tb19bis)
+                            print()

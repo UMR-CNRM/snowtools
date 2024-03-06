@@ -207,7 +207,7 @@ then
         --exclude ".*.swp" --exclude "*~" \
         --exclude "*.egg-info" --exclude "*.o" --exclude "*.bin" --exclude "*.exe" \
         --exclude fail_test --exclude Manual_tests --exclude "interpolation/*.mod" \
-        --exclude "interpolation/interpol_MPIAUTO" \
+        --exclude "interpolation/interpol_*" \
         --exclude /exe --exclude "src/dir_obj*" \
         --exclude 'profile_surfex' --exclude 'profile_surfex-LX*' \
         --exclude "src/LIB/grib_api-*-Source" --exclude "src/LIB/eccodes*" --exclude STRATO \
