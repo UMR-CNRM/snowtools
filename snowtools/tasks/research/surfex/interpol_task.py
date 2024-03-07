@@ -46,6 +46,9 @@ class Interpol_Task(Task, S2MTaskMixIn):
         dickind = dict(meteo='MeteorologicalForcing', pro='SnowpackSimulation')
         diclocal = dict(meteo='FORCING', pro='PRO')
         dicmodel = dict(meteo=self.conf.meteo, pro='surfex')
+
+        if type(self.conf.interpol_blocks) is not list:
+            self.conf.interpol_blocks = [self.conf.interpol_blocks]
         #######################################################################
         #                             Fetch steps                             #
         #######################################################################
@@ -218,7 +221,7 @@ class Interpol_Task(Task, S2MTaskMixIn):
                     # files + 1 PREP file per year
                     self.sh.title('Toolbox output tb19')
                     tb19 = toolbox.output(
-                        local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        local          = diclocal[block] + '_[datebegin:ymdh]_[dateend:ymdh].nc',
                         experiment     = self.conf.xpid,
                         geometry       = self.conf.geometry,
                         datebegin      = list_dates_begin_pro,
@@ -237,7 +240,7 @@ class Interpol_Task(Task, S2MTaskMixIn):
                         if self.conf.writesx:
                             self.sh.title('Toolbox output tb19bis')
                             tb19bis = toolbox.output(
-                                local       = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                                local       = diclocal[block] + '_[datebegin:ymdh]_[dateend:ymdh].nc',
                                 experiment  = self.conf.xpid,
                                 geometry    = self.conf.geometry,
                                 datebegin   = list_dates_begin_pro,
