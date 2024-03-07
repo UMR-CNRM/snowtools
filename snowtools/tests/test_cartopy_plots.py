@@ -16,6 +16,9 @@ TEST_DATA_DIR = os.path.join(TESTBASE_DIR, "PRO")
 with open(os.path.join(THIS_DIR, "test_cartopy_plots_index_template.html")) as f:
     INDEX = f.read().format(testbase=TESTBASE_DIR)
 # write the index.html file with the right testbase paths
+BASEDIROUTPUT = os.path.join(THIS_DIR, "Manual_tests")
+if not os.path.isdir(BASEDIROUTPUT):
+    os.makedirs(BASEDIROUTPUT)
 with open(os.path.join(THIS_DIR, "Manual_tests", "index.html"), 'w') as outfile:
     outfile.write(INDEX)
 
@@ -30,10 +33,7 @@ class TestCartopyFrance(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.mix = CartopyTestMixIn()
-        basediroutput = os.path.join(THIS_DIR, "Manual_tests")
-        if not os.path.isdir(basediroutput):
-            os.makedirs(basediroutput)
-        cls.diroutput = basediroutput
+        cls.diroutput = BASEDIROUTPUT
         path_new = os.path.join(TEST_DATA_DIR, "postproc", "grid_postproc_2021041112.nc")
         cls.ds = Dataset(path_new)
         cls.lats = cls.ds.variables['LAT'][:]
@@ -73,10 +73,7 @@ class TestCartopyCor(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.mix = CartopyTestMixIn()
-        basediroutput = os.path.join(THIS_DIR, "Manual_tests")
-        if not os.path.isdir(basediroutput):
-            os.makedirs(basediroutput)
-        cls.diroutput = basediroutput
+        cls.diroutput = BASEDIROUTPUT
         path_new = os.path.join(TEST_DATA_DIR, "postproc", "Cor", "postproc_2021041006_2021041112.nc")
         cls.ps = prosimu(path_new)
         cls.points = cls.ps.get_points(ZS=2100, aspect=-1)
@@ -137,10 +134,7 @@ class TestCartopyPyr(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.mix = CartopyTestMixIn()
-        basediroutput = os.path.join(THIS_DIR, "Manual_tests")
-        if not os.path.isdir(basediroutput):
-            os.makedirs(basediroutput)
-        cls.diroutput = basediroutput
+        cls.diroutput = BASEDIROUTPUT
         path_new = os.path.join(TEST_DATA_DIR, "postproc", "Pyr", "postproc_2021041006_2021041112.nc")
         cls.ps = prosimu(path_new)
         cls.points_nord = cls.ps.get_points(aspect=0, ZS=2100, slope=40)
@@ -216,10 +210,7 @@ class TestCartopyAlp(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.mix = CartopyTestMixIn()
-        basediroutput = os.path.join(THIS_DIR, "Manual_tests")
-        if not os.path.isdir(basediroutput):
-            os.makedirs(basediroutput)
-        cls.diroutput = basediroutput
+        cls.diroutput = BASEDIROUTPUT
         path_new = os.path.join(TEST_DATA_DIR, "postproc", "Alp", "postproc_2021041006_2021041112.nc")
         cls.ps = prosimu(path_new)
         cls.points = cls.ps.get_points(ZS=2100, aspect=-1)
@@ -283,10 +274,7 @@ class TestCartopyMac(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.mix = CartopyTestMixIn()
-        basediroutput = os.path.join(THIS_DIR, "Manual_tests")
-        if not os.path.isdir(basediroutput):
-            os.makedirs(basediroutput)
-        cls.diroutput = basediroutput
+        cls.diroutput = BASEDIROUTPUT
         path_new = os.path.join(TEST_DATA_DIR, "mac_mb035_PRO_2022031306_2022031706_selvar.nc")
         cls.ps = prosimu(path_new)
         cls.points = cls.ps.get_points(ZS=1200, aspect=-1)
@@ -325,10 +313,7 @@ class TestCartopyJura(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.mix = CartopyTestMixIn()
-        basediroutput = os.path.join(THIS_DIR, "Manual_tests")
-        if not os.path.isdir(basediroutput):
-            os.makedirs(basediroutput)
-        cls.diroutput = basediroutput
+        cls.diroutput = BASEDIROUTPUT
 
     def setUp(self):
         self.outfilename = None
@@ -354,10 +339,7 @@ class TestCartopyVosges(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.mix = CartopyTestMixIn()
-        basediroutput = os.path.join(THIS_DIR, "Manual_tests")
-        if not os.path.isdir(basediroutput):
-            os.makedirs(basediroutput)
-        cls.diroutput = basediroutput
+        cls.diroutput = BASEDIROUTPUT
 
     def setUp(self):
         self.outfilename = None

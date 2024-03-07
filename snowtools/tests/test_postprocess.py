@@ -21,14 +21,14 @@ class TestEnsPP(TestWithTempFolderWithLog):
     @classmethod
     def setUpClass(cls):
         # create test file list
-        ens_path = os.path.join(TESTBASE_DIR, 'PRO', 'ensemble2')
-        cls.filelist = [ens_path + '/mb00{0:02d}/pro/PRO_2017080106_2018080106.nc'.format(mb) for mb in range(1, 36)]
+        ens_path = os.path.join(TESTBASE_DIR, 'PRO', 'ensemble3')
+        cls.filelist = [ens_path + '/mb00{0:02d}/pro/PRO_2017122906_2018010606.nc'.format(mb) for mb in range(1, 36)]
 
     @unittest.skipIf(SKIP, 'Test files not available')
     def test_ens_pp_algo(self):
         ens = EnsemblePostproc(Ensemble(), ['SWE_1DY_ISBA'], self.filelist,
-                               Date('2017080106'),
-                               Date('2018080106'),
+                               Date('2017122906'),
+                               Date('2018010606'),
                                outdir = self.diroutput)
         # do postprocessing
         ens.postprocess()
