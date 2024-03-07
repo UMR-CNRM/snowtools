@@ -236,6 +236,7 @@ then
       --exclude .idea/ \
       --exclude .settings/ \
       --exclude fail_tests  \
+      --exclude Manual_tests  \
       --exclude interpolation/interpol_MPIAUTO \
       --exclude exe/ \
       --exclude 'profile_surfex' \
