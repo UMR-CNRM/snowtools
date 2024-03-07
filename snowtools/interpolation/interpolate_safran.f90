@@ -1241,7 +1241,8 @@ INTEGER,DIMENSION(:),ALLOCATABLE::VAR_ID_IN, VAR_ID_OUT ! id of variables
 CHARACTER(LEN=20),DIMENSION(:),ALLOCATABLE::VAR_NAME_IN ! name of variables
 CHARACTER(LEN=20),DIMENSION(7):: STANDARD_VARS ! variables to select anyway
 CHARACTER(LEN=20) :: VARNAME_LOC ! temporary variable for variable name
-INTEGER,DIMENSION(:),ALLOCATABLE::VAR_TYPE_IN ! type of variables
+INTEGER,DIMENSION(:),ALLOCATABLE::VAR_TYPE_IN ! type of input variables
+INTEGER::VAR_TYPE_OUT ! type of output variable
 INTEGER,DIMENSION(:),ALLOCATABLE::VAR_NDIMS_IN ! variables domensions
 !
 INTEGER,DIMENSION(:,:),ALLOCATABLE::VAR_ID_DIMS_IN, VAR_ID_DIMS_OUT,VAR_ID_DIMS_OUT_ADJ ! id of dimensions for each variable
@@ -1707,6 +1708,13 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
               ANY( VAR_ID_DIMS_OUT(:,IV) == ILAYERTODELETE ).OR.               &
               (GRID_TYPE == "LL" .AND.  ANY(VAR_NAME_IN(IV) == LL_VARNAME))) CYCLE
       ! Create variable in output file
+      ! To reduce file volume, we force data type to be real instead of double in output files
+      IF (VAR_TYPE_IN(IV) == NF90_DOUBLE) THEN
+          VAR_TYPE_OUT = NF90_REAL
+      ELSE
+          VAR_TYPE_OUT = VAR_TYPE_IN(IV)
+      ENDIF
+      
       ! ML : on large domains (e.g. Gdes Rousses at 30 m resolution from Ange), hdf5 random crashes
       ! are obtained with NF90_PUT_VAR when defining the chunk size.
       ! Furthermore, running time is lower with standard definition (without chunk size).
@@ -1716,14 +1724,14 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
         PRINT*,"variable " // VAR_NAME_IN(IV) //" defined normally"      
         ! PRINT*, DIM_CHUNK_OUT, VAR_NAME_IN(IV), VAR_ID_DIMS_OUT(:,IV)
         ! PRINT*, DIM_CHUNK_OUT(PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0))
-        CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,VAR_NAME_IN(IV),VAR_TYPE_IN(IV), &
+        CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,VAR_NAME_IN(IV),VAR_TYPE_OUT, &
                 PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0),VAR_ID_OUT(IV)),&
                 "Cannot def var "//TRIM(VAR_NAME_IN(IV)))
       ELSE
         PRINT*,"variable " // VAR_NAME_IN(IV) //" defined with explicit chunksize :"
         ! PRINT*, DIM_CHUNK_OUT, VAR_NAME_IN(IV), VAR_ID_DIMS_OUT(:,IV)
         PRINT*, DIM_CHUNK_OUT(PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0))
-        CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,VAR_NAME_IN(IV),VAR_TYPE_IN(IV), &
+        CALL CHECK(NF90_DEF_VAR(FILE_ID_OUT,VAR_NAME_IN(IV),VAR_TYPE_OUT, &
               PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0),VAR_ID_OUT(IV), &
               chunksizes=DIM_CHUNK_OUT(PACK(VAR_ID_DIMS_OUT(:,IV),VAR_ID_DIMS_OUT(:,IV)/=0))),&
               "Cannot def var "//TRIM(VAR_NAME_IN(IV)))
@@ -1732,12 +1740,14 @@ DO JINFILE = 1,NNUMBER_INPUT_FILES
       DO IA=1,INATT(IV)
         CALL CHECK(NF90_INQ_ATTNAME(FILE_ID_IN,VAR_ID_IN(IV),IA,ATT_NAME)," Cannot get att name")
         !
-        CALL CHECK(NF90_COPY_ATT(FILE_ID_IN, VAR_ID_IN(IV),ATT_NAME, FILE_ID_OUT, VAR_ID_OUT(IV)), &
+        IF (TRIM(ATT_NAME) /= '_FillValue') THEN
+            CALL CHECK(NF90_COPY_ATT(FILE_ID_IN, VAR_ID_IN(IV),ATT_NAME, FILE_ID_OUT, VAR_ID_OUT(IV)), &
                 "Cannot copy att from infile to outfile")
+        ENDIF
         !
       ENDDO
       !
-      SELECT CASE (VAR_TYPE_IN(IV))
+      SELECT CASE (VAR_TYPE_OUT)
         CASE (NF90_REAL)
           CALL CHECK(NF90_DEF_VAR_FILL(FILE_ID_OUT, VAR_ID_OUT(IV), 0, XUNDEF), &
                  "Cannot set _FillValue of variable " // VAR_NAME_IN(IV))
