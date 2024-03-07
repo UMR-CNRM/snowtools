@@ -192,6 +192,9 @@ class vortex_kitchen(object):
                 self.nnodes = self.options.nnodes
 
             self.confcomplement = " taskconf=" + self.options.datedeb.strftime("%Y")
+            # take care to not overlap in case of simultaneous executions with meteo and pro blocks
+            if hasattr(self.options, 'interpol_blocks'):
+                self.confcomplement = self.confcomplement + self.options.interpol_blocks.replace(',', '')
 
         # Following common between oper and research
         self.reftask = reftask[self.options.task]
@@ -238,8 +241,12 @@ class vortex_kitchen(object):
                 if hasattr(self.options, 'confname'):
                     conffilename = self.options.confname.rstrip('.ini') + ".ini"
                 else:
+                    suffix = '.ini'
+                    if hasattr(self.options, 'interpol_blocks'):
+                        suffix = self.options.interpol_blocks.replace(',', '') + suffix
+
                     conffilename = self.options.vapp + "_" + self.options.vconf + "_" + \
-                        self.options.datedeb.strftime("%Y") + ".ini"
+                        self.options.datedeb.strftime("%Y") + suffix
 
         elif self.options.safran:
             if self.options.command == 'oper':
