@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*
 
 """
 Created on 23 févr. 2018
@@ -116,13 +116,15 @@ class vortex_kitchen(object):
                 # The uenv needs to be generated
                 # Set up a uenv with all files in self.options.uenv repository
                 envname = '_'.join([self.options.vapp, self.options.vconf, self.options.xpid])
-                user = os.environ['USER']
                 datadir = self.options.uenv
+            user = os.environ['USER']
             self.uenv = UserEnv(envname, targetdir=datadir)
             env_name, uenv_entries = self.uenv.run()  # {'FILE_NAME_EXTENSION':'my.file_name.extension.version',...}
-            self.options.uenv = f'uenv:{env_name}@{user}'  # To be put in the configuration file
-            self.options.udata = 'dict(' + ' '.join([f'{key}:{".".join(value.split(".")[:-1])}' \
-                    for key, value in uenv_entries.items()]) + ')'  # To be put in the configuration file
+            # uenv and udata variables will be written in the task's configuration file
+            self.options.uenv = f'uenv:{env_name}@{user}'
+
+            self.options.udata = 'dict(' + ' '.join([f'{key}:{".".join(value.split(".")[:-1])}'
+                                                    for key, value in uenv_entries.items()]) + ')'
             # ex : self.options.udata = dict('FILE_NAME_EXTENSION':'my.file_name.extension',...)
             # ==> gvar='FILE_NAME_EXTENSION', local='my.file_name.extension'
 
@@ -171,14 +173,14 @@ class vortex_kitchen(object):
             )
 
             defaultjobname = dict(
-                surfex = 'rea_s2m',  # TODO : Pourquoi pas simplement "surfex" ?
-                surfex_dailyprep = 'rea_s2m',  # # TODO : Pourquoi pas simplement "surfex" ?
+                surfex = 'rea_s2m',  # TODO : remplacer par "surfex" ou rea_surfex ?
+                surfex_dailyprep = 'rea_s2m',  # # TODO : remplacer par "surfex" ou rea_surfex ?
                 escroc = 'escroc',
                 escroc_scores = "scores_escroc",
                 croco = 'croco',
                 croco_perturb = 'perturb_forcing',
                 reforecast = "surfex_forecast",
-                debug = 'debug_s2m',
+                debug = 'debug_s2m',  # TODO : remplacer par "debug_surfex" ?
                 refill = "refill_surfex_output",
             )
 
@@ -254,8 +256,8 @@ class vortex_kitchen(object):
             self.conf_file = Vortex_conf_file(self.options, fullname)
             self.conf_file.create_conf(jobname=self.jobname)
             # Do not write the configuration file now, additionnal informations may be added later
-            #self.conf_file.write_file()
-            #self.conf_file.close()
+            # self.conf_file.write_file()
+            # self.conf_file.close()
 
         os.chdir(self.workingdir)
 
@@ -271,8 +273,8 @@ class vortex_kitchen(object):
 
     def mkjob_list_commands(self):
 
-        if not self.options.safran and (self.options.task in ['escroc', 'croco', 'croco_perturb', 'reforecast']
-                                        and self.options.nnodes > 1):
+        if not self.options.safran and (self.options.task in ['escroc', 'croco', 'croco_perturb',
+                                                              'reforecast'] and self.options.nnodes > 1):
             mkjob_list = []
             for node in range(1, self.options.nnodes + 1):
                 mkjob_list.append(self.mkjob_command(jobname=self.jobname + str(node)))
@@ -416,7 +418,7 @@ class Vortex_conf_file(object):
         self.fileobject.close()
 
     def create_conf(self, jobname):
-        """ Prepare configuration file from s2m options"""
+        """ Prepare task configuration file from s2m command options"""
         self.default_variables()
         self.add_block(jobname)
         self.jobname = jobname
@@ -600,7 +602,7 @@ class Vortex_conf_file(object):
 
         confObj = read_conf(self.options.conf)
 
-        # Attributes directly transfered to vortex conf file from s2m options or config file or default values
+        # Attributes directly transfered to vortex conf file from s2m command options or config file or default values
         for direct_attr in ['sensor', 'scope', 'spinup_xpid', 'obsxpid', 'openloop', 'nforcing']:
             if hasattr(self.options, direct_attr):
                 self.set_field('DEFAULT', direct_attr, getattr(self.options, direct_attr))
@@ -726,7 +728,8 @@ class Vortex_conf_file(object):
         # workaround to know the size of the ensemble
         sizeE1 = ESCROC_subensembles(self.options.escroc, allmembers, randomDraw = True).size
         # draw a member, excluding any ESCROC member already present in the ensemble.
-        members_id[self.options.synthmember - 1] = np.random.choice([e for e in range(1, sizeE1 + 1) if e not in members_id])
+        members_id[self.options.synthmember - 1] = np.random.choice([e for e in range(1, sizeE1 + 1)
+                                                                    if e not in members_id])
         return members_id
 
     def draw_meteo(self, confObj):
@@ -813,16 +816,15 @@ class UserEnv(object):
                 else:
                     missing_files.append(file)  # Missing file
 
-            if len(different_files)>0 or (len(missing_files)>0 and not self.append):
+            if len(different_files) > 0 or (len(missing_files) > 0 and not self.append):
                 # UEnv contains files different than those in the user-defined directory --> create a new version
                 self.update_env(diff=different_files, new=missing_files)
-            elif len(missing_files)>0:
+            elif len(missing_files) > 0:
                 # UEnv misses some user-defined files and the user allows an extension of the current UEnv
                 self.extend_env(missing_files)
 
         actual_name = f'{self.envname}.{self.version}'
 
-        #TODO : ajouter un fichier dans {target_dir} content les informations du uenv
         self.user_info()
 
         return actual_name, self.valid_entries
@@ -831,7 +833,7 @@ class UserEnv(object):
 
         self.version = 1
         if os.path.exists(self.envdir):
-            if len(glob.glob(f'{self.envfile}.*'))>0:
+            if len(glob.glob(f'{self.envfile}.*')) > 0:
                 versions = list()
                 for file in glob.glob(f'{self.envfile}.*'):
                     versions.append(int(file.split('.')[-1]))
@@ -843,7 +845,7 @@ class UserEnv(object):
         """
         if not os.path.exists(directory):
             raise OSError(f'Directory {directory} doe not exist.')
-        elif len(glob.glob(os.path.join(directory, '*')))==0:
+        elif len(glob.glob(os.path.join(directory, '*'))) == 0:
             raise OSError(f'Directory {directory} is empty.')
 
         out = list()
@@ -851,12 +853,12 @@ class UserEnv(object):
             if os.path.basename(fic) != 'README':
                 if (max_size and os.path.getsize(fic) > max_size):
                     raise OSError(f'File {fic} too large (>1Gb). If you want to increase the maximum size allowed,'
-                                   'please use the "max_size" keyword argument.')
+                                  'please use the "max_size" keyword argument.')
                 out.append(fic)
 
         if (max_files and len(out) > max_files):
             raise OSError(f'Too many files in the {directory} directory (>{self.max_files}). If you want to increase '
-                           'the maximum number of files allowed, please use the "max_files" keyword argument.')
+                          'the maximum number of files allowed, please use the "max_files" keyword argument.')
 
         if len(out) == 0 and self.verbose:
             print(f'WARNING : directory {directory} is empty')
@@ -892,7 +894,7 @@ class UserEnv(object):
             version = self.current_files[basename] if basename in self.current_files.keys() else 1
             if src in diff:
                 # Update file with a new version number
-                self.copyfile(src, version=version+1)
+                self.copyfile(src, version=version + 1)
             elif src in new:
                 # create with a version=1
                 self.copyfile(src, version=1)
@@ -929,7 +931,6 @@ class UserEnv(object):
 
         self.valid_entries = dict()
 
-
     def copyfile(self, src, version=1):
         """
         Copy the 'src' file in the user's hack data directory
@@ -948,7 +949,7 @@ class UserEnv(object):
 
     def write_env(self):
         fileobject = open(f'{self.envfile}.{self.version}', 'w')
-        for key,value in self.valid_entries.items():
+        for key, value in self.valid_entries.items():
             fileobject.write(f'{key.upper()}="uget:{value}@{self.user}"\n')
         fileobject.close()
 
@@ -985,7 +986,7 @@ class UserEnv(object):
             out.write("This file has been automatically generated when the s2m command ")
             out.write("has been called with this repository in the --uenv option, and an automatic versioning ")
             out.write("of the files present at the execution time has been done.\n")
-            out.write("This files provides all necessary informations on this versionning (and all the previous ones).\n")
+            out.write("This files provides all necessary informations on the versionning (and the previous ones).\n")
             out.write("It can be used to retrieve the files used in a specific experiment.\n")
 
         out.write('\n')
@@ -995,10 +996,9 @@ class UserEnv(object):
         out.write("------------------------------------\n")
         out.write(f"The following user environment has been created : {self.envfile}.{self.version}\n")
         out.write(f"The files present in this directory have been versionned under {self.datadir}:\n")
-        for key,value in self.valid_entries.items():
+        for key, value in self.valid_entries.items():
             out.write(f"{self.datadir}/{value}\n")
 
     def infos(self):
         print(f'Uenv {self.envname} is stored under {self.envfile}.{self.version}')
         print(f'Corresponding data are store in {self.datadir}')
-
