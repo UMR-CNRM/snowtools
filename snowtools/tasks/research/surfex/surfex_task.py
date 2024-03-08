@@ -72,7 +72,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 role           = 'Forcing',
                 kind           = 'MeteorologicalForcing',
                 vapp           = self.conf.meteo,
-                vconf          = '[geometry:area]' if source_safran == 'safran' else '[geometry:tag]',  # TODO : uniformiser le vconf
+                # TODO : uniformiser le vconf (utiliser systématiquement l'atribut area dans EDELWEISS)
+                vconf          = '[geometry:area]' if source_safran == 'safran' else '[geometry:tag]',
                 source_app     = dict_source_app_safran if source_safran == 'safran' else None,
                 source_conf    = dict_source_conf_safran if source_safran == 'safran' else None,
                 cutoff         = 'assimilation',
@@ -104,7 +105,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     role           = 'Forcing',
                     kind           = 'MeteorologicalForcing',
                     vapp           = self.conf.meteo,
-                    vconf          = '[geometry:area]' if source_safran == 'safran' else '[geometry:tag]',  # TODO : uniformiser le vconf
+                    # TODO : uniformiser le vconf (utiliser systématiquement l'atribut area dans EDELWEISS)
+                    vconf          = '[geometry:area]' if source_safran == 'safran' else '[geometry:tag]',
                     source_app     = dict_source_app_safran if source_safran == 'safran' else None,
                     source_conf    = dict_source_conf_safran if source_safran == 'safran' else None,
                     cutoff         = 'assimilation',
@@ -164,8 +166,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print()
 
             # Look for a PREP file if already available for this xpid, geometry, and initial date
-            self.sh.title('Toolbox input prep (a)')
-            tb03a = toolbox.input(
+            self.sh.title('Toolbox input PREP (a)')
+            prep_a = toolbox.input(
                 role           = 'SnowpackInit',
                 local          = 'PREP.nc',
                 experiment     = self.conf.xpid,
@@ -180,13 +182,13 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 block          = 'prep',
                 fatal          = False,
             ),
-            print(t.prompt, 'tb03a =', tb03a)
+            print(t.prompt, 'PREP (a) =', prep_a)
             print()
 
             # 1st alternate : look for a PREP file if already available for this geometry,
             # and initial date for the "spinup" xpid
-            self.sh.title('Toolbox input prep (b)')
-            tb03b = toolbox.input(
+            self.sh.title('Toolbox input PREP (b)')
+            prep_b = toolbox.input(
                 alternate      = 'SnowpackInit',
                 local          = 'PREP.nc',
                 experiment     = 'spinup@' + t.env.getvar("USER"),
@@ -201,14 +203,14 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 block          = 'prep',
                 fatal          = False,
             ),
-            print(t.prompt, 'tb03b =', tb03b)
+            print(t.prompt, 'PREP (b) =', prep_b)
             print()
 
             # 2nd alternate : look for a PREP file if already available for this geometry,
             # and initial date for the "reanalysis" xpid
             # If not available, do not fail because the PREP file will be automatically built.
-            self.sh.title('Toolbox input prep (c)')
-            tb03c = toolbox.input(
+            self.sh.title('Toolbox input PREP (c)')
+            prep_c = toolbox.input(
                 alternate      = 'SnowpackInit',
                 local          = 'PREP.nc',
                 experiment     = self.ref_reanalysis,
@@ -223,10 +225,10 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 block          = 'prep',
                 fatal          = False,
             ),
-            print(t.prompt, 'tb03c =', tb03c)
+            print(t.prompt, 'PREP (c) =', prep_c)
             print()
 
-            if not tb03a[0] and not tb03b[0] and not tb03c[0] and not self.conf.climground:
+            if not prep_a[0] and not prep_b[0] and not prep_c[0] and not self.conf.climground:
                 # not self.conf.climground means that the user does not allow the climatological file
                 # to be built by the system (-g option of the s2m command is not activated)
                 # If no prep file has been found, look for a climatological file to initialize the ground in the uenv
@@ -263,8 +265,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print()
 
             # Binary ECOCLIMAP I files are mandatory to run SURFEX and taken from the uenv
-            self.sh.title('Toolbox input tb03b')
-            tb03b = toolbox.input(
+            self.sh.title('Toolbox input ecoclimap1')
+            ecmap1 = toolbox.input(
                 role           = 'Surfex cover parameters',
                 kind           = 'coverparams',
                 nativefmt      = 'bin',
@@ -274,12 +276,12 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 source         = 'ecoclimap1',
                 model          = 'surfex',
             ),
-            print(t.prompt, 'tb03b =', tb03b)
+            print(t.prompt, 'ecoclimap1 =', ecmap1)
             print()
 
             # Binary ECOCLIMAP II files are mandatory to run SURFEX and taken from the uenv
-            self.sh.title('Toolbox input tb03c')
-            tb03c = toolbox.input(
+            self.sh.title('Toolbox input ecoclimap2')
+            ecmap2 = toolbox.input(
                 role           = 'Surfex cover parameters',
                 kind           = 'coverparams',
                 nativefmt      = 'bin',
@@ -289,7 +291,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 source         = 'ecoclimap2',
                 model          = 'surfex',
             ),
-            print(t.prompt, 'tb03c =', tb03c)
+            print(t.prompt, 'ecoclimap2 =', ecmap2)
             print()
 
             # Crocus metamorphism parameters mandatory to run SURFEX and taken from the uenv
@@ -315,7 +317,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     format         = 'dir/hdr',
                     genv           = self.conf.genv2D,
                     model          = 'surfex',
-                    kind           = 'sand', #'database'
+                    kind           = 'sand',  # 'database'
                     local          = 'sand_DB.02.tgz',
                     source         = 'sand_DB',
                     gvar           = 'sand_DB',
@@ -363,6 +365,9 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     model           = 'surfex',
                     local           = 'OPTIONS.nam',
                 )
+            elif hasattr(self.conf, "uenv") and 'OPTIONS.nam' in self.conf.udata.items():
+                # The OPTION.nam namelist will be retrived by the 'tbuenv' toolbox
+                pass
             else:
                 # If not provided, standard namelist taken from the uenv
                 tb05 = toolbox.input(
@@ -395,19 +400,19 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             if hasattr(self.conf, "uenv"):
                 # TODO : find a "Vortex" way to avoid this loop
                 for gvar, filename in self.conf.udata.items():
-                    self.sh.title('Toolbox input tbextra')
-                    tbextra = toolbox.input(
+                    self.sh.title('Toolbox input user environment')
+                    tbuenv = toolbox.input(
                         role            = 'Extra_file',
                         kind            = 'joker',
                         model           = 'surfex',
                         local           = filename,
                         genv            = self.conf.uenv,
                         gvar            = gvar,
-                        #gvar            = self.conf.udata.keys() --> Vortex loops over the list
-                                                                    # How to set local = self.conf.udata[gvar] ?
+                        # gvar            = self.conf.udata.keys() --> Vortex loops over the list
+                        # How to set local = self.conf.udata[gvar] ?
                         format          = 'ascii',
                     )
-                    print(t.prompt, 'tbextra =', tbextra)
+                    print(t.prompt, 'User Env =', tbuenv)
                     print()
 
             # SURFEX binaries are taken from the path in the configuration file is provided
@@ -439,7 +444,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb07 =', tb07)
                     print()
 
-                if not tb03a[0] and not tb03b[0] and not tb03c[0]:
+                if not prep_a[0] and not prep_b[0] and not prep_c[0]:
                     # If no PREP file has been found, look for the PREP binary
                     self.sh.title('Toolbox executable tb08= tbx3')
                     tb08 = tbx2 = toolbox.executable(
@@ -484,7 +489,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb07 =', tb07)
                     print()
 
-                if not tb03a[0] and not tb03b[0] and not tb03c[0]:
+                if not prep_a[0] and not prep_b[0] and not prep_c[0]:
                     # If no PREP file has been found, look for the PREP binary
                     self.sh.title('Toolbox executable tb08= tbx3')
                     tb08 = tbx2 = toolbox.executable(
@@ -535,7 +540,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         #######################################################################
         if 'compute' in self.steps:
 
-            print (self.conf.meteo, self.conf.interpol, self.conf.addmask)
+            print(self.conf.meteo, self.conf.interpol, self.conf.addmask)
 
             if self.conf.meteo == "safran":
                 # Forcing files need to be converted from flat to slopes geometry
@@ -577,7 +582,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 # Algo component for shadows
                 if self.conf.addmask:
                     self.sh.title('Toolbox algo tb09abis')
-                    tb09abis = tbalgo_shadows = toolbox.algo(
+                    tb09abis = toolbox.algo(
                         engine       = 's2m',
                         kind         = 'shadowsforcing',
                         datebegin    = list_dates_begin_forc if not oneforcing else [self.conf.datebegin],
@@ -633,7 +638,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
 
             # Algo component to produce the PREP file if not found in the inputs
             # Take care : PREP parallelization will be available in v8.1 --> nproc and ntasks will have to be set to 40
-            if not tb03a[0] and not tb03b[0] and not tb03c[0]:
+            if not prep_a[0] and not prep_b[0] and not prep_c[0]:
                 self.sh.title('Toolbox algo tb09 = PREP')
                 tb10 = tbalgo3 = toolbox.algo(
                     engine     = 'parallel',
@@ -676,10 +681,9 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             if hasattr(self.conf, 'postprocess_exe') and self.conf.postprocess_exe is not None:
                 self.sh.title('Toolbox algo tb12 = Postprocessing')
                 tbalgo5 = toolbox.algo(
-                        engine='blind',
-                        )
+                    engine = 'blind',
+                )
                 tbalgo5.run(tbx4[0])
-
 
         #######################################################################
         #                               Backup                                #
@@ -731,7 +735,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                         model       = 'surfex',
                         namespace   = 'vortex.archive.fr',
                         storage     = 'sxcen.cnrm.meteo.fr',
-                        enforcesync = True, # to forbid asynchronous transfers and not saturate sxcen
+                        enforcesync = True,  # to forbid asynchronous transfers and not saturate sxcen
                         namebuild   = 'flat@cen',
                         block       = 'pro',
                         member         = self.conf.member if hasattr(self.conf, 'member') else None,
@@ -739,7 +743,6 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     ),
                     print(t.prompt, 'tb19bis =', tb19bis)
                     print()
-
 
             if tb19[0]:
                 # Only one pro file for the whole simulation period
@@ -805,7 +808,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print()
 
             else:
-                # PRO not available for the whole simulation period: try to save yearly PRO, DIAG, CUMUL 
+                # PRO not available for the whole simulation period: try to save yearly PRO, DIAG, CUMUL
                 # files + 1 PREP file per year
                 self.sh.title('Toolbox output tb19')
                 tb19 = toolbox.output(
@@ -813,7 +816,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
                     datebegin      = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
-                    dateend        = dict_dates_end_pro if not self.conf.dailyprep else \
+                    dateend        = dict_dates_end_pro if not self.conf.dailyprep else
                                      list(daterange(tomorrow(base=datebegin), dateend)),
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
@@ -834,7 +837,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                             experiment  = self.conf.xpid,
                             geometry    = self.conf.geometry,
                             datebegin   = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
-                            dateend     = dict_dates_end_pro if not self.conf.dailyprep else \
+                            dateend     = dict_dates_end_pro if not self.conf.dailyprep else
                                           list(daterange(tomorrow(base=datebegin), dateend)),
                             nativefmt   = 'netcdf',
                             kind        = 'SnowpackSimulation',
@@ -854,7 +857,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
                     datebegin      = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
-                    dateend        = dict_dates_end_pro if not self.conf.dailyprep else \
+                    dateend        = dict_dates_end_pro if not self.conf.dailyprep else
                                      list(daterange(tomorrow(base=datebegin), dateend)),
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
@@ -873,7 +876,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
                     datebegin      = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
-                    dateend        = dict_dates_end_pro if not self.conf.dailyprep else \
+                    dateend        = dict_dates_end_pro if not self.conf.dailyprep else
                                      list(daterange(tomorrow(base=datebegin), dateend)),
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
@@ -893,7 +896,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     role           = 'SnowpackInit',
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
-                    date           = list_dates_end_pro if not self.conf.dailyprep else \
+                    date           = list_dates_end_pro if not self.conf.dailyprep else
                                      list(daterange(tomorrow(base=datebegin), dateend)),
                     nativefmt      = 'netcdf',
                     kind           = 'PREP',
