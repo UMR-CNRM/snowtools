@@ -1,9 +1,22 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+'''
+Created on 8 march 2024
+
+@author: Vernay
+
+Script for the computation of Sentinel2-like diagnostics (snow melt-out date, snow cover duration)
+from a SURFEX-Crocus simulation.
+This script can either be called directly or throught the "diag_sentinel2" Vortex task via the
+"Sentinel2_Diagnostics" Vortex algo component (cen/algo/postprocessing.py).
+'''
+
 import os
 import numpy as np
 import xarray as xr
 import pandas as pd
 import argparse
-
 
 
 def parse_command_line():
