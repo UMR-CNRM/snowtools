@@ -74,14 +74,11 @@ def update_precipitation(forcing, subdir=None):
     Replace Rainf and Snowf variables in a FORCING file by the ones coming from a precipitation analysis
     The subdir keyword argument is used when the FORCING file is part of an ensemble.
     """
-    outname = 'FORCING_OUT.nc'
     precipitation = xr.open_dataset('PRECIPITATION.nc', drop_variables=['Precipitation', 'snowfrac_ds', 'z_snowlim_ds'],
                                     chunks='auto')
 
     # Output file on common dates only
     dates = np.intersect1d(forcing.time, precipitation.time)
-    datedeb = pd.to_datetime(str(dates[0]))
-    datefin = pd.to_datetime(str(dates[-1]))
     forcing = forcing.sel({'time': dates})
     # Set time variable attributes
     forcing.time.encoding['units'] = f'hours since {forcing.time.data[0]}'
@@ -93,19 +90,26 @@ def update_precipitation(forcing, subdir=None):
     forcing['Rainf'] = precipitation['Rainf_ds'] / 3600.
     forcing['Snowf'] = precipitation['Snowf_ds'] / 3600.
 
-    forcing.to_netcdf(outname, unlimited_dims={'time': True}, format=DEFAULT_NETCDF_FORMAT)
+    return forcing
 
-    return datedeb, datefin
+
+def write(ds, outname):
+    datedeb = pd.to_datetime(str(ds.time[0]))
+    dateend = pd.to_datetime(str(ds.time[-1]))
+    ds.to_netcdf(outname, unlimited_dims={'time': True}, format=DEFAULT_NETCDF_FORMAT)
+    return datedeb, dateend
 
 
 def update(forcing, members):
+    outname = 'FORCING_OUT.nc'
     forcing = update_wind(forcing)
     if members is not None:
         for member in range(1, members + 1):
             subdir = f'mb{member}'
-            datebegin, dateend = update_precipitation(forcing, subdir=subdir)
+            forcing = update_precipitation(forcing, subdir=subdir)
     else:
-        datebegin, dateend = update_precipitation(forcing)
+        forcing = update_precipitation(forcing)
+    datebegin, dateend = write(forcing, outname)
 
 
 def clean(members):
@@ -113,6 +117,10 @@ def clean(members):
     shutil.rmtree('WIND.nc')
     for member in range(1, members + 1):
         shutil.rmtree(os.path.join(f'mb{member}', 'PRECIPITATION.nc'))
+
+
+def open(filename):
+    return xr.open_dataset(filename)
 
 
 if __name__ == '__main__':
@@ -147,6 +155,12 @@ if __name__ == '__main__':
 
     forcing = xr.open_dataset('FORCING_IN.nc')  # Read input forcing file
     datedeb, datefin = update(forcing, members)  # Single SAFRAN FORCING file --> 16 FORCINGs
-    vortexIO.put_forcing(datebegin, dateend, xpid, geometry, members=members, filename='FORCING_OUT.nc')
+
+    if datedeb != datebegin:
+        print(f'WARNING : begin date of the produced FORCING {datedeb} does not match the one prescribed {datebegin}')
+    if datefin != dateend:
+        print(f'WARNING : end date of the produced FORCING {datefin} does not match the one prescribed {dateend}')
+
+    vortexIO.put_forcing(datedeb, datefin, xpid, geometry, members=members, filename='FORCING_OUT.nc')
 
     clean()
