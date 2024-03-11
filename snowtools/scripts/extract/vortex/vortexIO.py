@@ -245,8 +245,8 @@ def put_precipitation(datebegin, dateend, xpid, geometry, namespace='vortex.mult
 
 
 def get_wind(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', filename='WIND.nc',
-             members=None, vapp='edelweiss', block='', abspath=None, source_app=None, source_conf=None,
-             model=None):
+             members=None, vapp='edelweiss', block='', abspath=None, source_app='arome', source_conf='devine',
+             model='devine'):
 
     wind = toolbox.input(
         role        = 'Wind',
@@ -274,8 +274,8 @@ def get_wind(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', fi
 
 
 def put_wind(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', filename='WIND.nc',
-             members=None, vapp='edelweiss', block='', abspath=None, source_app=None, source_conf=None,
-             model=None):
+             members=None, vapp='edelweiss', block='', abspath=None, source_app='arome', source_conf='devine',
+             model='devine'):
 
     wind = toolbox.output(
         role        = 'Wind',

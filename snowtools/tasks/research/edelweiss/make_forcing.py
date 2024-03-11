@@ -151,6 +151,9 @@ class Forcing(Task, S2MTaskMixIn):
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
 
+            # TODO : différencier le membre 0 (ANTILOPE Post-traité)
+            # des autres membres (avec perturbation)
+            # Ou bien conserver ANTILOPE PT comme le membre 0 et adapter plutot les tâches aval ?
             self.sh.title('Toolbox ouput FORCING')
             forcing = toolbox.output(
                 role        = 'Forcing file',
