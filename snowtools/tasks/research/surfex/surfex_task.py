@@ -10,7 +10,7 @@ import shlex
 from vortex.layout.nodes import Driver, Task
 from vortex import toolbox
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
-from bronx.stdtypes.date import Date, daterange, tomorrow
+from bronx.stdtypes.date import Date, daterange, tomorrow, Period
 from cen.layout.nodes import S2MTaskMixIn
 
 
@@ -72,7 +72,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 role           = 'Forcing',
                 kind           = 'MeteorologicalForcing',
                 vapp           = self.conf.meteo,
-                vconf          = '[geometry:area]' if source_safran == 'safran' else '[geometry:tag]',  # TODO : uniformiser le vconf
+                vconf          = '[geometry:area]' if source_safran == 'safran' or 'oper' in self.conf.forcingid \
+                                 else '[geometry:tag]',
                 source_app     = dict_source_app_safran if source_safran == 'safran' else None,
                 source_conf    = dict_source_conf_safran if source_safran == 'safran' else None,
                 cutoff         = 'assimilation',
@@ -86,10 +87,11 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 model          = 'safran',
                 datebegin      = self.conf.datebegin,
                 dateend        = self.conf.dateend,
+                date           = self.conf.dateend.replace(hour=12) + Period(days=4), # for monthly reanalysis only
                 intent         = 'in',
                 namespace      = 'vortex.multi.fr',
-                namebuild      = 'flat@cen',
-                fatal          = False,
+                namebuild      = 'flat@cen' if 'oper' not in self.conf.forcingid else None,
+                fatal          = False if 'oper' not in self.conf.forcingid else True,
             ),
             print(t.prompt, 'tb01a =', tb01a)
             print()
@@ -104,7 +106,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     role           = 'Forcing',
                     kind           = 'MeteorologicalForcing',
                     vapp           = self.conf.meteo,
-                    vconf          = '[geometry:area]' if source_safran == 'safran' else '[geometry:tag]',  # TODO : uniformiser le vconf
+                    vconf          = '[geometry:area]' if source_safran == 'safran' else '[geometry:tag]',
                     source_app     = dict_source_app_safran if source_safran == 'safran' else None,
                     source_conf    = dict_source_conf_safran if source_safran == 'safran' else None,
                     cutoff         = 'assimilation',
@@ -168,7 +170,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             tb03a = toolbox.input(
                 role           = 'SnowpackInit',
                 local          = 'PREP.nc',
-                experiment     = self.conf.xpid,
+                experiment     = self.conf.xpid if not hasattr(self.conf, 'prep_xpid') else self.conf.prep_xpid,
                 geometry       = self.conf.geometry,
                 date           = self.conf.datespinup,
                 intent         = 'inout',
@@ -178,7 +180,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
                 block          = 'prep',
-                fatal          = False,
+                fatal          = False if not hasattr(self.conf, 'prep_xpid') else True,
             ),
             print(t.prompt, 'tb03a =', tb03a)
             print()

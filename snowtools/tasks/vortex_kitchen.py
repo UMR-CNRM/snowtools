@@ -525,7 +525,8 @@ class Vortex_conf_file(object):
                 forcinglogin = os.getlogin()
 
             lf = self.options.forcing.split('/')
-            self.set_field("DEFAULT", 'forcingid', lf[0] + '@' + forcinglogin)
+            addlogin = '' if lf[0] == 'oper' else '@' + forcinglogin
+            self.set_field("DEFAULT", 'forcingid', lf[0] + addlogin)
 
             if len(lf) > 1:
                 self.set_field("DEFAULT", 'blockin', '/'.join(lf[1:]))
