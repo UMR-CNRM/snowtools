@@ -170,7 +170,8 @@ class Surfex_command(_S2M_command):
 
         parser_research_main.add_argument("-f", "--forcing",
                                           type=str, dest="forcing", default=None,
-                                          help="Path of the forcing file or of the directory with the forcing files")
+                                          help="Path of the forcing file or of the directory with the forcing files"
+                                               "or xpid of the forcing file")
 
         parser_research_main.add_argument("-n", "--namelist",
                                           type=str, dest="namelist",
@@ -352,9 +353,9 @@ class Surfex_command(_S2M_command):
                                             help="Profiling MPI task with DRHOOK")
 
         parser_research_vortex.add_argument("--task",
-                                            dest="task", type=str, default='surfex',
-                                            choices=["surfex", "surfex_dailyprep", "escroc", "escroc_scores", "croco",
-                                                     "croco_perturb", "reforecast", "debug", "refill"],
+                                            dest="task", action='store', type=str, default='surfex',
+                                            # choices=["surfex", "surfex_dailyprep", "escroc", "escroc_scores", "croco",
+                                            #          "croco_perturb", "reforecast", "debug", "refill"],
                                             help="The task, if not the default one.")
 
         parser_research_vortex.add_argument("--escroc",
@@ -392,8 +393,37 @@ class Surfex_command(_S2M_command):
 
         parser_research_vortex.add_argument("--vapp",
                                             action="store", type=str, dest="vapp", default="s2m",
-                                            choices=["s2m", "safran", "edelweiss"],
+                                            choices=["s2m", "croco", "surfex", "safran", "edelweiss"],
                                             help="specify the vortex vapp of the execution")
+
+        parser_research_vortex.add_argument("--namespace_in",
+                                            action="store", type=str, dest="namespace_in", default="multi",
+                                            choices=['none', 'cache', 'archive', 'multi', 'sxcen'],
+                                            help="Specify where to look for input resources")
+
+        parser_research_vortex.add_argument("--namespace_out",
+                                            action="store", type=str, dest="namespace_out", default="multi",
+                                            choices=['none', 'cache', 'archive', 'multi', 'sxcen'],
+                                            help="Specify where to save output resources")
+
+        # TODO : à associer à la tâche "make_forcing"
+        parser_research_vortex.add_argument("--wind_xpid",
+                                            action="store", type=str, dest="wind_xpid", default=None,
+                                            help="Specify the xpid of the experiment providing the FORCING's"
+                                                 "Wind and Wind_DIR variables. Task 'make_forcing' only")
+
+        # TODO : à associer à la tâche "make_forcing"
+        parser_research_vortex.add_argument("--precipitation_xpid",
+                                            action="store", type=str, dest="precipitation_xpid", default=None,
+                                            help="Specify the xpid of the experiment providing the FORCING's"
+                                                 "Rainf and Snowf variables. Task 'make_forcing' only")
+
+        # TODO : à associer à la tâche "make_forcing" (temporary)
+        parser_research_vortex.add_argument("--safran_xpid",
+                                            action="store", type=str, dest="safran_xpid", default=None,
+                                            help="Specify the xpid of the experiment providing all other FORCING"
+                                                 "variables. Task 'make_forcing' only. During the EDELWEISS"
+                                                 "development, this is the xpid of the re-gridded SAFRAN reanalysis")
 
         parser_oper = subparsers.add_parser('oper', description="Do not use unless you know what it does. "
                                             "Use s2m oper --help for details")
@@ -419,10 +449,11 @@ class Surfex_command(_S2M_command):
                                  action="store", type=str, dest="walltime", default=None,
                                  help="specify your job walltime (format hh:mm:ss)")
 
-        options  = parser.parse_args(arguments)
+        # Inutile, à l'avenir utiliser plutot option.vapp pour faire ce genre de switch ?
+        # options.surfex = True
+        # options.safran = False
 
-        options.surfex = True
-        options.safran = False
+        options  = parser.parse_args(arguments)
 
         return options
 
