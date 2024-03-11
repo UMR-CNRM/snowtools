@@ -24,7 +24,6 @@ import os
 import shutil
 import xarray as xr
 import numpy as np
-import pandas as pd
 import argparse
 
 DEFAULT_NETCDF_FORMAT = 'NETCDF3_CLASSIC'
@@ -94,8 +93,8 @@ def update_precipitation(forcing, subdir=None):
 
 
 def write(ds, outname):
-    datedeb = pd.to_datetime(str(ds.time[0]))
-    dateend = pd.to_datetime(str(ds.time[-1]))
+    datedeb = ds.time[0]
+    dateend = ds.time[-1]
     ds.to_netcdf(outname, unlimited_dims={'time': True}, format=DEFAULT_NETCDF_FORMAT)
     return datedeb, dateend
 
@@ -104,7 +103,7 @@ def update(forcing, members):
     outname = 'FORCING_OUT.nc'
     forcing = update_wind(forcing)
     if members is not None:
-        for member in range(1, members + 1):
+        for member in range(members):
             subdir = f'mb{member}'
             forcing = update_precipitation(forcing, subdir=subdir)
     else:
@@ -115,7 +114,7 @@ def update(forcing, members):
 def clean(members):
     shutil.rmtree('FORCING_IN.nc')
     shutil.rmtree('WIND.nc')
-    for member in range(1, members + 1):
+    for member in range(members):
         shutil.rmtree(os.path.join(f'mb{member}', 'PRECIPITATION.nc'))
 
 
@@ -135,6 +134,7 @@ if __name__ == '__main__':
     safran        = args.safran
     wind          = args.wind
     precipitation = args.precipitation
+    diroutput     = args.diroutput
     geometry      = 'GrandesRousses250m'
 
     os.chdir(workdir)
@@ -145,11 +145,13 @@ if __name__ == '__main__':
         vortexIO.get_forcing(datebegin, dateend, safran, geometry, filename='FORCING_IN.nc')
         vortexIO.get_wind(datebegin, dateend, wind, geometry)
         vortexIO.get_precipitation(datebegin, dateend, precipitation, geometry, members=members)
+        vortex = True
     except (ImportError, ModuleNotFoundError):
+        vortex = False
         # Retrieve input files without Vortex
         os.symlink(safran, 'FORCING_IN.nc')
         os.symlink(wind, 'WIND.nc')
-        for member in range(1, members + 1):
+        for member in range(members):
             os.makedirs(f'mb{member}')
             os.symlink(f'{precipitation}/mb{member}/PRECIPITATION.nc', f'mb{member}/PRECIPITATION.nc')
 
@@ -161,6 +163,12 @@ if __name__ == '__main__':
     if datefin != dateend:
         print(f'WARNING : end date of the produced FORCING {datefin} does not match the one prescribed {dateend}')
 
-    vortexIO.put_forcing(datedeb, datefin, xpid, geometry, members=members, filename='FORCING_OUT.nc')
-
-    clean()
+    if vortex:
+        vortexIO.put_forcing(datedeb, datefin, xpid, geometry, members=members, filename='FORCING_OUT.nc')
+        clean()
+    else:
+        # Save output files without Vortex
+        if diroutput is not None:
+            shutil.copyfile('FORCING_OUT.nc', diroutput)
+        else:
+            print(f'No {diroutput} argument provided, output files are left under {workdir}')

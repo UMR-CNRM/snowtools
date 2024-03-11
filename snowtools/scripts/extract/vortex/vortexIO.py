@@ -123,7 +123,7 @@ def put_diag(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', fi
         namespace      = namespace,
         namebuild      = 'flat@cen',
         block          = f'diag/{block}',
-        member         = None if members is None else footprints.util.rangex(1, members),
+        member         = None if members is None else footprints.util.rangex(0, members - 1),
         fatal          = True,
     ),
     print(t.prompt, 'DIAG ouput =', tbdiag)
@@ -151,7 +151,7 @@ def get_forcing(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr',
         datebegin   = datebegin,
         dateend     = dateend,
         namespace   = namespace,
-        member      = None if members is None else footprints.util.rangex(1, members),
+        member      = None if members is None else footprints.util.rangex(0, members - 1),
         block       = 'meteo',
     ),
     print(t.prompt, 'FORCING input =', forcing)
@@ -179,7 +179,7 @@ def put_forcing(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr',
         datebegin   = datebegin,
         dateend     = dateend,
         namespace   = namespace,
-        member      = None if members is None else footprints.util.rangex(1, members),
+        member      = None if members is None else footprints.util.rangex(0, members - 1),
         block       = 'meteo',
     ),
     print(t.prompt, 'FORCING input =', forcing)
@@ -208,7 +208,7 @@ def get_precipitation(datebegin, dateend, xpid, geometry, namespace='vortex.mult
         datebegin   = datebegin,
         dateend     = dateend,
         namespace   = namespace,
-        member      = None if members is None else footprints.util.rangex(1, members),
+        member      = None if members is None else footprints.util.rangex(0, members - 1),
         block       = 'meteo',
     )
     print(t.prompt, 'precipitation =', precipitation)
