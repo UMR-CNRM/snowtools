@@ -94,16 +94,20 @@ class vortex_kitchen(object):
             os.symlink(SNOWTOOLS_DIR, "snowtools")
 
         # TODO : pourquoi ne pas refaire le lien par sécurité ?
-        if not os.path.islink("tasks"):
-            if self.options.command == 'oper':
-                os.symlink(SNOWTOOLS_DIR + "/tasks/oper", "tasks")
-            else:
-                if self.options.task in ['croco', 'croco_perturb']:
-                    os.symlink(SNOWTOOLS_DIR + "/tasks/research/crocO", "tasks")
-                elif self.options.vapp != 's2m':  # TODO : TMP, à uniformiser
-                    os.symlink(os.path.join(SNOWTOOLS_DIR, "tasks/research", self.options.vapp), "tasks")
+        if os.path.islink("tasks"):
+            os.remove('tasks')
+        if self.options.command == 'oper':
+            os.symlink(SNOWTOOLS_DIR + "/tasks/oper", "tasks")
+        else:
+            if self.options.task in ['croco', 'croco_perturb']:
+                os.symlink(SNOWTOOLS_DIR + "/tasks/research/crocO", "tasks")
+            elif self.options.vapp == 'edelweiss':  # TODO : TMP, à uniformiser
+                if self.options.task == 'surfex':
+                    os.symlink(os.path.join(SNOWTOOLS_DIR, "tasks/research", "surfex"), "tasks")
                 else:
-                    os.symlink(SNOWTOOLS_DIR + "/tasks/research/surfex", "tasks")
+                    os.symlink(os.path.join(SNOWTOOLS_DIR, "tasks/research", self.options.vapp), "tasks")
+            else:
+                os.symlink(SNOWTOOLS_DIR + "/tasks/research/surfex", "tasks")
 
         for directory in ["conf", "jobs"]:
             if not os.path.isdir(directory):
@@ -833,7 +837,7 @@ class UserEnv(object):
         WARNING : does not check data already pushed on Hendrix (DEV mode only !)
 
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        TODO : 
+        TODO :
         1. gérer les changements de nom du targetdir contenant des fichiers identiques/similaires
         (cf Problème MF)
         2. Ajouter une option --tag pour archiver le uenv sur hendrix (uget.py push env...)
