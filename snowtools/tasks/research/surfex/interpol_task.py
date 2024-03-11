@@ -10,7 +10,7 @@ import shlex
 from vortex.layout.nodes import Driver, Task
 from vortex import toolbox
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
-from bronx.stdtypes.date import Date, daterange, tomorrow
+from bronx.stdtypes.date import Date, daterange, tomorrow, Period
 from cen.layout.nodes import S2MTaskMixIn
 
 
@@ -55,34 +55,35 @@ class Interpol_Task(Task, S2MTaskMixIn):
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
             for block in self.conf.interpol_blocks:
-                # Try to find a forcing covering the full simulation period
-                # Role = Forcing because expected this way in the algo
-                tb01 = toolbox.input(
-                    role           = 'Forcing',
-                    kind           = dickind[block],
-                    vapp           = self.conf.meteo,
-                    vconf          = '[geometry:tag]',
-                    local          = diclocal[block] + '_[datebegin:ymdh]_[dateend:ymdh].nc',
-                    experiment     = self.conf.forcingid,
-                    block          = block,
-                    geometry       = self.conf.geoin,
-                    nativefmt      = 'netcdf',
-                    model          = dicmodel[block],
-                    datebegin      = self.conf.datebegin,
-                    dateend        = self.conf.dateend,
-                    intent         = 'in',
-                    namespace      = 'vortex.multi.fr',
-                    namebuild      = 'flat@cen',
-                    fatal          = False,
-                ),
 
-                if tb01[0]:
-                    onepro = True
+                if 'oper' in self.conf.forcingid or 'OPER' in self.conf.forcingid:
+                    tboper = toolbox.input(
+                        role='Forcing',
+                        kind=dickind[block],
+                        vapp=self.conf.meteo,
+                        vconf='[geometry:tag]',
+                        local=diclocal[block] + '_[datebegin:ymdh]_[dateend:ymdh].nc',
+                        experiment=self.conf.forcingid,
+                        block=block,
+                        geometry=self.conf.geoin,
+                        nativefmt='netcdf',
+                        model=dicmodel[block],
+                        date=self.conf.dateend.replace(hour=12) + Period(days=4),
+                        datebegin=self.conf.datebegin,
+                        dateend=self.conf.dateend,
+                        cutoff='assimilation',
+                        intent='in',
+                        namespace='vortex.multi.fr',
+                        fatal=True,
+                    )
+
+                    print(t.prompt, 'tboper =', tboper)
+                    print()
+
                 else:
-                    onepro = False
-                    # Look for yearly forcing files
+
+                    # Try to find a forcing covering the full simulation period
                     # Role = Forcing because expected this way in the algo
-                    self.sh.title('Toolbox input tb01')
                     tb01 = toolbox.input(
                         role           = 'Forcing',
                         kind           = dickind[block],
@@ -94,16 +95,42 @@ class Interpol_Task(Task, S2MTaskMixIn):
                         geometry       = self.conf.geoin,
                         nativefmt      = 'netcdf',
                         model          = dicmodel[block],
-                        datebegin      = list_dates_begin_forc,
-                        dateend        = dict_dates_end_forc,
+                        datebegin      = self.conf.datebegin,
+                        dateend        = self.conf.dateend,
                         intent         = 'in',
                         namespace      = 'vortex.multi.fr',
                         namebuild      = 'flat@cen',
-                        fatal          = True,
+                        fatal          = False,
                     ),
 
-                    print(t.prompt, 'tb01 =', tb01)
-                    print()
+                    if tb01[0]:
+                        onepro = True
+                    else:
+                        onepro = False
+                        # Look for yearly forcing files
+                        # Role = Forcing because expected this way in the algo
+                        self.sh.title('Toolbox input tb01')
+                        tb01 = toolbox.input(
+                            role           = 'Forcing',
+                            kind           = dickind[block],
+                            vapp           = self.conf.meteo,
+                            vconf          = '[geometry:tag]',
+                            local          = diclocal[block] + '_[datebegin:ymdh]_[dateend:ymdh].nc',
+                            experiment     = self.conf.forcingid,
+                            block          = block,
+                            geometry       = self.conf.geoin,
+                            nativefmt      = 'netcdf',
+                            model          = dicmodel[block],
+                            datebegin      = list_dates_begin_forc,
+                            dateend        = dict_dates_end_forc,
+                            intent         = 'in',
+                            namespace      = 'vortex.multi.fr',
+                            namebuild      = 'flat@cen',
+                            fatal          = True,
+                        ),
+
+                        print(t.prompt, 'tb01 =', tb01)
+                        print()
 
             # Target grid file
             # the path must be provided in the configuration file
