@@ -26,7 +26,8 @@ import xarray as xr
 import numpy as np
 import argparse
 
-DEFAULT_NETCDF_FORMAT = 'NETCDF3_CLASSIC'
+# DEFAULT_NETCDF_FORMAT = 'NETCDF3_CLASSIC'  # WARNING : to_netcdf command very slow (>15')
+DEFAULT_NETCDF_FORMAT = 'NETCDF4_CLASSIC'
 
 
 def parse_command_line():
@@ -56,7 +57,7 @@ def update_wind(forcing):
     """
     print('Update wind')
     # 1 Open wind produced by HM with LLT method
-    wind = xr.open_dataset('WIND.nc')
+    wind = xr.open_dataset('WIND.nc', chunks='auto')
     dates = np.intersect1d(forcing.time, wind.time)
     forcing = forcing.sel({'time': dates})
     wind = wind.sel({'time': dates})
@@ -95,7 +96,7 @@ def update_precipitation(forcing, subdir=None):
 def write(ds, outname):
     datedeb = ds.time[0]
     dateend = ds.time[-1]
-    ds.to_netcdf(outname, unlimited_dims={'time': True}, format=DEFAULT_NETCDF_FORMAT)
+    ds.load().to_netcdf(outname, unlimited_dims={'time': True}, format=DEFAULT_NETCDF_FORMAT)
     return datedeb, dateend
 
 
@@ -118,8 +119,8 @@ def clean(members):
         shutil.rmtree(os.path.join(f'mb{member}', 'PRECIPITATION.nc'))
 
 
-def open(filename):
-    return xr.open_dataset(filename)
+def open_dataset(filename):
+    return xr.open_dataset(filename, chunks='auto')
 
 
 if __name__ == '__main__':
@@ -155,7 +156,7 @@ if __name__ == '__main__':
             os.makedirs(f'mb{member}')
             os.symlink(f'{precipitation}/mb{member}/PRECIPITATION.nc', f'mb{member}/PRECIPITATION.nc')
 
-    forcing = xr.open_dataset('FORCING_IN.nc')  # Read input forcing file
+    forcing = open_dataset('FORCING_IN.nc')  # Read input forcing file
     datedeb, datefin = update(forcing, members)  # Single SAFRAN FORCING file --> 16 FORCINGs
 
     if datedeb != datebegin:
