@@ -230,7 +230,7 @@ class Surfex_command(_S2M_command):
 
         parser_research_forcing.add_argument("-U", "--upper",
                                              type=int, dest="maxlevel", default=None,
-                                             help="Eliminate elevations upper than this level in FORCING files (in meters)")
+                                             help="Eliminate elevations above this level in FORCING files (in meters)")
 
         parser_research_forcing.add_argument("-c", "--classes_aspect",
                                              type=int, dest="aspects", default=None,
@@ -292,11 +292,13 @@ class Surfex_command(_S2M_command):
 
         parser_research_others.add_argument("--uenv",
                                             action="store", dest="uenv", default=None,
-                                            help="In cases when additionnal input files are necessary, use this option to "
-                                            "define the absolute path of the repository where those files are stored. "
+                                            help="In cases when additionnal input files are necessary, use this "
+                                            "option to define the absolute path of the repository where those files "
+                                            "are stored."
                                             "This option works for both Vortex/HPC and local executions."
-                                            "In a Vortex execution, it is also possible (and advised) to provide a uenv with "
-                                            "the syntax '--uenv=uenv:{uenv_name}@{username}'.")
+                                            "In a Vortex execution, it is also possible (and advised) to provide a "
+                                            "an existing uenv using the followong syntax : "
+                                            "'--uenv=uenv:{uenv_name}@{username}'.")
 
         parser_research_vortex = parser_research.add_argument_group('Vortex options '
                                                                     '(available only on Meteo-France supercomputers)')
@@ -390,7 +392,7 @@ class Surfex_command(_S2M_command):
 
         parser_research_vortex.add_argument("--vapp",
                                             action="store", type=str, dest="vapp", default="s2m",
-                                            choices=["s2m", "safran", "edelweiss"],  # TODO : réflexion nécessaire sur l'usage de la commande 's2m' pour des application 'non s2m' (edelweiss...)
+                                            choices=["s2m", "safran", "edelweiss"],
                                             help="specify the vortex vapp of the execution")
 
         parser_oper = subparsers.add_parser('oper', description="Do not use unless you know what it does. "
