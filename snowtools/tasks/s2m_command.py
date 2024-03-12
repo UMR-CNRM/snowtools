@@ -407,18 +407,21 @@ class Surfex_command(_S2M_command):
                                             help="Specify where to save output resources")
 
         # TODO : à associer à la tâche "make_forcing"
+        # TODO : gérer le @user proprement (ne pas l'ajouter si il est passé avec l'argument)
         parser_research_vortex.add_argument("--wind_xpid",
                                             action="store", type=str, dest="wind_xpid", default=None,
                                             help="Specify the xpid of the experiment providing the FORCING's"
                                                  "Wind and Wind_DIR variables. Task 'make_forcing' only")
 
         # TODO : à associer à la tâche "make_forcing"
+        # TODO : gérer le @user proprement (ne pas l'ajouter si il est passé avec l'argument)
         parser_research_vortex.add_argument("--precipitation_xpid",
                                             action="store", type=str, dest="precipitation_xpid", default=None,
                                             help="Specify the xpid of the experiment providing the FORCING's"
                                                  "Rainf and Snowf variables. Task 'make_forcing' only")
 
         # TODO : à associer à la tâche "make_forcing" (temporary)
+        # TODO : gérer le @user proprement (ne pas l'ajouter si il est passé avec l'argument)
         parser_research_vortex.add_argument("--safran_xpid",
                                             action="store", type=str, dest="safran_xpid", default=None,
                                             help="Specify the xpid of the experiment providing all other FORCING"

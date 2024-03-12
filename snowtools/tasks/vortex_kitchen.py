@@ -294,13 +294,11 @@ class vortex_kitchen(object):
 
         elif self.options.nforcing > 1:
             mkjob_list = []
-            for node in range(1, self.options.nforcing + 1):
+            for node in range(self.options.nforcing):
                 jobname = self.jobname + str(node)
                 # Add a "jobname" block in the configuration file that will contain
                 # job-specific configuration variables
                 self.conf_file.set_field(jobname, 'member', node)  # Each job is assicated to 1 ensemble member
-                # It is necessary to overwrite the number of proc that is automatically set to natsks*nnodes :
-                self.conf_file.set_field(jobname, 'nprocs', self.options.ntasks)  # TODO : check if really necessary
                 mkjob_list.append(self.mkjob_command(jobname=jobname))
 
             self.write_conf_file()  # The configuration file is now complete, time to write it
