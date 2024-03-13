@@ -102,7 +102,7 @@ class vortex_kitchen(object):
             if self.options.task in ['croco', 'croco_perturb']:
                 os.symlink(SNOWTOOLS_DIR + "/tasks/research/crocO", "tasks")
             elif self.options.vapp == 'edelweiss':  # TODO : TMP, à uniformiser
-                if self.options.task == 'surfex':
+                if self.options.task in ['surfex', 'diag_sentinel2']:
                     os.symlink(os.path.join(SNOWTOOLS_DIR, "tasks/research", "surfex"), "tasks")
                 else:
                     os.symlink(os.path.join(SNOWTOOLS_DIR, "tasks/research", self.options.vapp), "tasks")
@@ -114,8 +114,10 @@ class vortex_kitchen(object):
                 os.mkdir(directory)
 
         if self.options.uenv is not None:
+            user = os.environ['USER']
             if self.options.uenv.startswith('uenv'):
                 # The user already created a uenv and parsed the formatted uenv name
+                # In this cas we trust the user (we could check the uenv ?)
                 envname = self.options.uenv.split(':')[1].split('@')[0]
                 datadir = None
             else:
@@ -123,16 +125,14 @@ class vortex_kitchen(object):
                 # Set up a uenv with all files in self.options.uenv repository
                 envname = '_'.join([self.options.vapp, self.options.vconf, self.options.xpid])
                 datadir = self.options.uenv
-            user = os.environ['USER']
-            self.uenv = UserEnv(envname, targetdir=datadir)
-            env_name, uenv_entries = self.uenv.run()  # {'FILE_NAME_EXTENSION':'my.file_name.extension.version',...}
-            # uenv and udata variables will be written in the task's configuration file
-            self.options.uenv = f'uenv:{env_name}@{user}'
-
-            self.options.udata = 'dict(' + ' '.join([f'{key}:{".".join(value.split(".")[:-1])}'
-                                                    for key, value in uenv_entries.items()]) + ')'
-            # ex : self.options.udata = dict('FILE_NAME_EXTENSION':'my.file_name.extension',...)
-            # ==> gvar='FILE_NAME_EXTENSION', local='my.file_name.extension'
+                self.uenv = UserEnv(envname, targetdir=datadir)
+                env_name, uenv_entries = self.uenv.run()  # {'FILE_NAME_EXT':'my.file_name.ext.version',...}
+                # uenv and udata variables will be written in the task's configuration file
+                self.options.uenv = f'uenv:{env_name}@{user}'
+                self.options.udata = 'dict(' + ' '.join([f'{key}:{".".join(value.split(".")[:-1])}'
+                                                        for key, value in uenv_entries.items()]) + ')'
+                # ex : self.options.udata = dict('FILE_NAME_EXTENSION':'my.file_name.extension',...)
+                # ==> gvar='FILE_NAME_EXTENSION', local='my.file_name.extension'
 
     def init_job_task(self, jobname=None):
         if self.options.vapp == 'safran':
@@ -383,9 +383,11 @@ class vortex_kitchen(object):
                 return estimation.hms
 
     def split_geo(self):
+        # TODO : pourquoi ne pas renomer l'option 'region' en 'vconf' ou 'geometry' ?
+        # TODO : définir proprement le lien vconf/geometry (lequel est défini à partir de l'autre)
         if ':' in self.options.region:
             splitregion = self.options.region.split(':')
-            self.options.geoin = splitregion[0].lower()
+            self.options.geoin = splitregion[0].lower()  # TODO : la variable 'geoin' ne semble jamais utilée...
             self.options.vconf = splitregion[1].lower()
             self.options.interpol = len(splitregion) == 3
             if self.options.interpol:
@@ -477,7 +479,7 @@ class Vortex_conf_file(object):
         else:
             self.set_field("DEFAULT", 'namespace_in', f'vortex.{self.options.namespace_in}.fr')
             self.set_field("DEFAULT", 'storage', None)
-        if self.options.namespace_out == 'sxcen':
+        if self.options.namespace_out == 'sxcen' or self.options.writesx:
             self.set_field("DEFAULT", 'namespace_out', 'vortex.archive.fr')
             self.set_field("DEFAULT", 'storage', 'sxcen.cnrm.meteo.fr')
         else:
@@ -503,6 +505,7 @@ class Vortex_conf_file(object):
             self.set_field("DEFAULT", 'safran_xpid', self.options.safran_xpid)
         if self.options.uenv is not None:
             self.set_field("DEFAULT", 'uenv', self.options.uenv)
+        if hasattr(self.options, 'udata'):
             self.set_field("DEFAULT", 'udata', self.options.udata)
 
     def escroc_variables(self):
@@ -558,7 +561,10 @@ class Vortex_conf_file(object):
 
     def surfex_variables(self):
 
-        self.get_forcing_variables()
+        # -f (forcing) option is optional for any other task than surfex
+        # TODO : gérer ça différement (ne pas utiliser 'surfex_variables')
+        if self.options.forcing is not None:
+            self.get_forcing_variables()
 
         if self.options.namelist:
             self.set_field("DEFAULT", 'namelist', self.options.namelist)
@@ -896,7 +902,7 @@ class UserEnv(object):
         Return list of absolute paths of files under 'directory'
         """
         if not os.path.exists(directory):
-            raise OSError(f'Directory {directory} doe not exist.')
+            raise OSError(f'Directory {directory} does not exist.')
         elif len(glob.glob(os.path.join(directory, '*'))) == 0:
             raise OSError(f'Directory {directory} is empty.')
 

@@ -49,7 +49,7 @@ class Surfex_command(_S2M_command):
                 self.options.datedeb = self.set_default_date()
 
         else:
-            self.check_mandatory_arguments(**{'-b': 'datedeb', '-e': 'datefin', '-f': 'forcing'})
+            self.check_mandatory_arguments(**{'-b': 'datedeb', '-e': 'datefin'})
 
             if not self.options.onlyextractforcing:
                 try:

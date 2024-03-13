@@ -8,6 +8,8 @@ from vortex.layout.nodes import Driver, Task
 from vortex import toolbox
 from cen.layout.nodes import S2MTaskMixIn
 
+import footprints
+
 
 def setup(t, **kw):
     return Driver(
@@ -52,7 +54,7 @@ class Diag_sentinel2(Task, S2MTaskMixIn):
                 namespace      = self.conf.namespace_in,
                 namebuild      = 'flat@cen',
                 block          = 'pro',
-                member         = self.conf.member if hasattr(self.conf, 'member') else None,
+                member         = footprints.util.rangex(self.conf.members) if hasattr(self.conf, 'members') else None,
                 fatal          = True,
             ),
             print(t.prompt, 'PRO input =', pro)
@@ -64,7 +66,8 @@ class Diag_sentinel2(Task, S2MTaskMixIn):
                 local          = 'mask.nc',
                 nativefmt      = 'netcdf',
                 kind           = 'mask',
-                genv           = self.conf.cycle,
+                genv           = self.conf.uenv,
+                gvar           = 'mask',
                 intent         = 'in',  # Make a hard link rather than a copy
                 fatal          = False,
             ),
@@ -83,7 +86,7 @@ class Diag_sentinel2(Task, S2MTaskMixIn):
                 datebegin    = self.conf.datebegin,
                 dateend      = self.conf.dateend,
                 mask         = mask[0],
-                members      = self.conf.members,
+                members      = footprints.util.rangex(self.conf.members) if hasattr(self.conf, 'members') else None,
             )
             print(t.prompt, 'tbalgo =', tbalgo)
             print()
@@ -100,8 +103,11 @@ class Diag_sentinel2(Task, S2MTaskMixIn):
                 local          = 'mb[member]/DIAG.nc',
                 experiment     = self.conf.xpid,
                 geometry       = self.conf.geometry,
-                datebegin      = self.conf.datebegin,  # TODO : changer les dates ?
-                dateend        = self.conf.dateend,  # TODO : changer les dates ?
+                # CEN's convention is to name period footprints 'datebegin' and 'dateend'
+                # but for SURFEX diagnostics, we use objects from :
+                # common.data.diagnostics.SurfexPeriodDiagnostics
+                begindate      = self.conf.datebegin,  # TODO : changer les dates ?
+                enddate        = self.conf.dateend,  # TODO : changer les dates ?
                 date           = self.conf.dateend,  # TODO : changer les dates ?
                 scope          = 'SesonalSnowCoverDiagnostic',
                 nativefmt      = 'netcdf',
@@ -110,9 +116,10 @@ class Diag_sentinel2(Task, S2MTaskMixIn):
                 vconf          = '[geometry:tag]',
                 model          = 'surfex',
                 namespace      = self.conf.namespace_out,
+                storage        = self.conf.storage,
                 namebuild      = 'flat@cen',
                 block          = 'diag',
-                member         = self.conf.member if hasattr(self.conf, 'member') else None,
+                member         = footprints.util.rangex(self.conf.members) if hasattr(self.conf, 'members') else None,
                 fatal          = True,
             ),
             print(t.prompt, 'DIAG ouput =', tbdiag)
