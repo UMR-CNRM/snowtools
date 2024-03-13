@@ -290,7 +290,10 @@ class vortex_kitchen(object):
 
             return mkjob_list
 
-        elif self.options.nforcing > 1:
+        elif self.options.nforcing > 1 and self.options.nnodes > 1:
+            # Cas Matthieu Vernay (surfex_task forcé par ensemble)
+            # qui faisait planter le test Croco --> ajout condition sur options.nnodes mais cela
+            # veut dire qu'il faut changer l'utilisation de nnodes dans ce cas
             mkjob_list = []
             for node in range(1, self.options.nforcing + 1):
                 jobname = self.jobname + str(node)

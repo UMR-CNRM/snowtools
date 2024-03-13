@@ -315,7 +315,9 @@ class Surfex_command(_S2M_command):
 
         parser_research_vortex.add_argument("--nnodes",
                                             action="store", type=int, dest="nnodes", default=1,
-                                            help="Number of nodes")
+                                            help="Total number of nodes requested by the s2m command"
+                                                 "(can be split between several jobs or not)."
+                                                 "!!! This is not the number of nodes per job !!!")
 
         parser_research_vortex.add_argument("--ntasks",
                                             action="store", type=int, dest="ntasks", default=None,
@@ -374,11 +376,12 @@ class Surfex_command(_S2M_command):
 
         parser_research_vortex.add_argument("--nforcing",
                                             action="store", type=int, dest="nforcing", default=1,
-                                            help="Number of members of forcing files")
+                                            help="Number of members of forcing files in Croco task only")
 
         parser_research_vortex.add_argument("--nmembers",
                                             action="store", type=int, dest="nmembers", default=None,
-                                            help="Number of members")
+                                            help="Total number of executions of the binary or script associated"
+                                                 "with the main algocomponent of the task.")
 
         parser_research_vortex.add_argument("--startmember",
                                             action="store", type=int, dest="startmember", default=None,
