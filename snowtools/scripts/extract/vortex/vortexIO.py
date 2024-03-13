@@ -46,7 +46,7 @@ def get_pro(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', fil
         namespace      = namespace,
         namebuild      = 'flat@cen',
         block          = 'pro',
-        member         = None if members is None else footprints.util.rangex(1, members),
+        member         = None if members is None else footprints.util.rangex(0, members - 1),
         fatal          = True,
     ),
     print(t.prompt, 'PRO input =', tbpro)
@@ -71,7 +71,7 @@ def put_pro(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', fil
         namespace      = namespace,
         namebuild      = 'flat@cen',
         block          = 'pro',
-        member         = None if members is None else footprints.util.rangex(1, members),
+        member         = None if members is None else footprints.util.rangex(0, members - 1),
         fatal          = True,
     ),
     print(t.prompt, 'PRO output =', tbpro)
@@ -85,6 +85,9 @@ def get_diag(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', fi
         local          = f'mb[member]/{filename}' if members is not None else filename,
         experiment     = xpid,
         geometry       = geometry,
+        # CEN's convention is to name period footprints 'datebegin' and 'dateend'
+        # but for SURFEX diagnostics, we use objects from :
+        # common.data.diagnostics.SurfexPeriodDiagnostics
         begindate      = Date(datebegin),
         enddate        = Date(dateend),
         date           = Date(dateend),
@@ -97,7 +100,7 @@ def get_diag(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', fi
         namespace      = namespace,
         namebuild      = 'flat@cen',
         block          = f'diag/{block}',
-        member         = None if members is None else footprints.util.rangex(1, members),
+        member         = None if members is None else footprints.util.rangex(0, members - 1),
         fatal          = True,
     ),
     print(t.prompt, 'DIAG input =', tbdiag)
@@ -111,6 +114,9 @@ def put_diag(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', fi
         local          = f'mb[member]/{filename}' if members is not None else filename,
         experiment     = xpid,
         geometry       = geometry,
+        # CEN's convention is to name period footprints 'datebegin' and 'dateend'
+        # but for SURFEX diagnostics, we use objects from :
+        # common.data.diagnostics.SurfexPeriodDiagnostics
         begindate      = Date(datebegin),
         enddate        = Date(dateend),
         date           = Date(dateend),
@@ -237,7 +243,7 @@ def put_precipitation(datebegin, dateend, xpid, geometry, namespace='vortex.mult
         datebegin   = datebegin,
         dateend     = dateend,
         namespace   = namespace,
-        member      = None if members is None else footprints.util.rangex(1, members),
+        member      = None if members is None else footprints.util.rangex(0, members - 1),
         block       = 'meteo',
     )
     print(t.prompt, 'precipitation =', precipitation)
@@ -266,7 +272,7 @@ def get_wind(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', fi
         datebegin   = datebegin,
         dateend     = dateend,
         namespace   = namespace,
-        member      = None if members is None else footprints.util.rangex(1, members),
+        member      = None if members is None else footprints.util.rangex(0, members - 1),
         block       = 'meteo',
     )
     print(t.prompt, 'Wind =', wind)
@@ -295,7 +301,7 @@ def put_wind(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', fi
         datebegin   = datebegin,
         dateend     = dateend,
         namespace   = namespace,
-        member      = None if members is None else footprints.util.rangex(1, members),
+        member      = None if members is None else footprints.util.rangex(0, members - 1),
         block       = 'meteo',
     )
     print(t.prompt, 'Wind =', wind)
