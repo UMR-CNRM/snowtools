@@ -69,8 +69,12 @@ class Forcing(Task, S2MTaskMixIn):
                 RS   = 'RandomSampling',
                 EnKF = 'EnsembleKalmanFilter',
                 PF   = 'APrticleFilter',
+
             )
-            source_conf = conf_map[self.conf.precipitation_xpid.split('@')[0][:-2]]
+            if self.conf.precipitation_xpid.split('@')[0][:-2] in conf_map.keys():
+                source_conf = conf_map[self.conf.precipitation_xpid.split('@')[0][:-2]]
+            else:
+                source_conf = None
 
             self.sh.title('Toolbox input precipitation')
             precipitation = toolbox.input(
