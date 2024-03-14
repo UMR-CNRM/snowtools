@@ -50,14 +50,20 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         dict_source_app_safran, dict_source_conf_safran = self.get_safran_sources(list_dates_begin_forc, era5=self.era5)
 
         # Logicals to activate optional parts of the task
+        # TODO : always add interpol in the conf file (False by default)
         if not hasattr(self.conf, "interpol"):
             self.conf.interpol = False
+        # TODO : always add climground in the conf file (False by default)
         if not hasattr(self.conf, "climground"):
             self.conf.climground = False
+        # TODO : always add dailyprep in the conf file (False by default)
         if not hasattr(self.conf, "dailyprep"):
             self.conf.dailyprep = False
+        # TODO : always add simu2D in the conf file (False by default)
         if not hasattr(self.conf, "simu2D"):
             self.conf.simu2D = False
+        # TODO : always add genv2D in the conf file (False by default)
+        # TODO : erreur de nomage de la variable
         if hasattr(self.conf, "simu2D"):
             self.conf.genv2D = 'uenv:pgd.002@SURFEX_CEN'
 
@@ -383,6 +389,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
 
             # Target grid file if an interpolation is required before the run
             # and the path must be provided in the configuration file
+            # TODO : use a Uenv instead
             if self.conf.interpol:
                 self.sh.title('Toolbox input tbgrid')
                 tbgrid = toolbox.input(

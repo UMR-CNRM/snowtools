@@ -294,6 +294,7 @@ class vortex_kitchen(object):
 
         elif self.options.nforcing > 1:
             mkjob_list = []
+            # TODO : gérer la possibilité de relancer seulement certains membres
             for node in range(self.options.nforcing):
                 jobname = self.jobname + str(node)
                 # Add a "jobname" block in the configuration file that will contain
@@ -446,17 +447,18 @@ class Vortex_conf_file(object):
                 self.croco_variables()
         else:
             self.set_field("DEFAULT", 'nnodes', self.options.nnodes)
-            if self.options.nmembers:
-                # WARNING : there are 2 ways to convert s2m "member" options into a footprint argument :
-                # 1. Provide 2 conf variables (startmember and nmembers) that are then converted into
-                #    a list of members with footprint.util.rangex(startmember, nmembers)
-                # 2. Provide directly the list of members using the footprint-compatible syntax
-                #    'firstmemebr-lastmember-1'
-                # Option 1 is the original vortex_kitchen choice but option 2 offers the possibility to replace
-                # startmemebr and nmembers options by only one "members" option (either an int or a 'X-Y' string)
-                self.set_field("DEFAULT", 'nmembers', self.options.nmembers)
-                if self.options.startmember:
-                    self.set_field("DEFAULT", 'startmember', self.options.startmember)
+            # WARNING : there are 2 ways to convert s2m "member" options into a footprint argument :
+            # 1. Provide 2 conf variables (startmember and nmembers) that are then converted into
+            #    a list of members with footprint.util.rangex(startmember, nmembers)
+            # 2. Provide directly the list of members using the footprint-compatible syntax
+            #    'firstmemebr-lastmember-1'
+            # Option 1 is the original vortex_kitchen choice but option 2 offers the possibility to replace
+            # startmember and nmembers options by only one "members" option (either an int or a 'X-Y' string)
+            # Option 2 allows to directly use "members = self.conf.members" in the toolbox and should be prefered
+            self.set_field("DEFAULT", 'nmembers', self.options.nmembers)
+            self.set_field("DEFAULT", 'startmember', self.options.startmember)
+            if self.options.nmembers is not None:
+                if self.options.startmember is not None:
                     first = self.options.startmember
                     last  = first + self.options.nmembers - 1
                     self.set_field("DEFAULT", 'members', f'{first}-{last}-1')
@@ -464,6 +466,8 @@ class Vortex_conf_file(object):
                     first = 0
                     last  = self.options.nmembers - 1
                     self.set_field("DEFAULT", 'members', f'{first}-{last}-1')
+            else:
+                self.set_field("DEFAULT", 'members', None)
 
     def create_conf_safran(self):
         self.safran_variables()
