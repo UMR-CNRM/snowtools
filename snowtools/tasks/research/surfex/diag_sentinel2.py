@@ -40,7 +40,7 @@ class Diag_sentinel2(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox input PRO')
             pro = toolbox.input(
-                local          = 'mb[member]/PRO.nc',
+                local          = 'mb[member]/PRO.nc' if self.conf.members is not None else 'PRO.nc',
                 experiment     = self.conf.xpid,
                 geometry       = self.conf.geometry,
                 datebegin      = self.conf.datebegin,
@@ -54,7 +54,8 @@ class Diag_sentinel2(Task, S2MTaskMixIn):
                 namespace      = self.conf.namespace_in,
                 namebuild      = 'flat@cen',
                 block          = 'pro',
-                member         = footprints.util.rangex(self.conf.members) if hasattr(self.conf, 'members') else None,
+                member         = footprints.util.rangex(self.conf.members) if self.conf.members is not None else None,
+                # member         = footprints.util.rangex(self.conf.members) if hasattr(self.conf, 'members') else None,
                 fatal          = True,
             ),
             print(t.prompt, 'PRO input =', pro)
@@ -98,9 +99,9 @@ class Diag_sentinel2(Task, S2MTaskMixIn):
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
 
-            self.sh.title('Toolbox ouput DIAG')
-            tbdiag = toolbox.output(
-                local          = 'mb[member]/DIAG.nc',
+            self.sh.title('Toolbox output DIAG')
+            diag = toolbox.output(
+                local          = 'mb[member]/DIAG.nc' if self.conf.members is not None else 'DIAG.nc',
                 experiment     = self.conf.xpid,
                 geometry       = self.conf.geometry,
                 # CEN's convention is to name period footprints 'datebegin' and 'dateend'
@@ -119,8 +120,9 @@ class Diag_sentinel2(Task, S2MTaskMixIn):
                 storage        = self.conf.storage,
                 namebuild      = 'flat@cen',
                 block          = 'diag',
-                member         = footprints.util.rangex(self.conf.members) if hasattr(self.conf, 'members') else None,
+                member         = footprints.util.rangex(self.conf.members) if self.conf.members is not None else None,
+                # member         = footprints.util.rangex(self.conf.members) if hasattr(self.conf, 'members') else None,
                 fatal          = True,
             ),
-            print(t.prompt, 'DIAG ouput =', tbdiag)
+            print(t.prompt, 'DIAG output =', diag)
             print()

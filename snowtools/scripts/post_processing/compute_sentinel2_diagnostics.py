@@ -58,7 +58,9 @@ def maskgf(arr, method='nearest'):
 
     # Load the glacier mask dataset
     mask = xr.open_dataset('mask.nc')['Band1']
-    mask = mask.rename({'x': 'xx', 'y': 'yy'})
+    # TODO la commande rename est très lente
+    # --> faire le renomage directement dans le fichier pour éviter de le faire à chaque exécution
+    # mask = mask.rename({'x': 'xx', 'y': 'yy'})
 
     # Interpolate the glacier mask to the same resolution as the input array
     mask = mask.interp_like(arr, method=method)
@@ -157,6 +159,10 @@ def diag(subdir, datebegin, mask=True):
     pro = decode_time(pro)
     pro = filter_dates(pro, datebegin)
     diag = lcscd(pro.DSN_T_ISBA.resample(time='1D').mean())
+
+    # Add 'ZS' (DEM) variable
+    if 'ZS' in pro.keys():
+        diag = xr.merge([diag, pro['ZS']])
 
     if mask:
         # mask glacier/forest covered pixels
