@@ -40,6 +40,7 @@ class Diag_sentinel2(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox input PRO')
             pro = toolbox.input(
+                role           = 'SnowpackSimulation',
                 local          = 'mb[member]/PRO.nc' if self.conf.members is not None else 'PRO.nc',
                 experiment     = self.conf.xpid,
                 geometry       = self.conf.geometry,
@@ -87,7 +88,9 @@ class Diag_sentinel2(Task, S2MTaskMixIn):
                 datebegin    = self.conf.datebegin,
                 dateend      = self.conf.dateend,
                 mask         = mask[0],
-                members      = footprints.util.rangex(self.conf.members) if hasattr(self.conf, 'members') else None,
+                engine       = 'algo',  # _CENTaylorRun algo component "family" to execution a piece of python code
+                ntasks       = self.conf.ntasks,  # Do not forget to set the number of tasks for parallelisation
+                role_members = 'SnowpackSimulation',
             )
             print(t.prompt, 'tbalgo =', tbalgo)
             print()

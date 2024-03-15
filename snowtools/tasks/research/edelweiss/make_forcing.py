@@ -140,7 +140,7 @@ class Forcing(Task, S2MTaskMixIn):
                 kind         = 'ForcingConstructor',
                 datebegin    = self.conf.datebegin,
                 dateend      = self.conf.dateend,
-                engine       = 'parallel',
+                engine       = 'algo',  #  `_CENTaylorRun` algo components familly
                 members      = self.conf.members,
                 ntasks       = self.conf.ntasks,
                 role_members = 'Precipitation',
