@@ -1221,6 +1221,8 @@ PROGRAM INTERPOLATE_SAFRAN
   !   #) customize the NetCDF chunksize of the spatial output dimensions in order to optimise write performance for large fields. (:f:var:`lspatialchunk` = .TRUE. and :f:var:`nlonchunksize`,   :f:var:`nlatchunksize`)
   !   #) Select variables to be interpolated. (set :f:var:`lselectvar` = .TRUE., assign a list of variables to :f:var:`hvar_list` and give the number of selected variables to :f:var:`nnumber_of_variables`)
   !
+  ! Input variables can be of any type in input.nc.
+  ! In output variables, the type of variable of floating points is always single precision, integers types are not modified.
 USE SUBS
 !
 IMPLICIT NONE
