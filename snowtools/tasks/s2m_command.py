@@ -316,8 +316,9 @@ class Surfex_command(_S2M_command):
         parser_research_vortex.add_argument("--nnodes",
                                             action="store", type=int, dest="nnodes", default=1,
                                             help="Total number of nodes requested by the s2m command"
-                                                 "(can be split between several jobs or not)."
-                                                 "!!! This is not the number of nodes per job !!!")
+                                                 " (can be split between several jobs or not)."
+                                                 " Take care, this is not the number of nodes per job if several"
+                                                 " jobs !!!")
 
         parser_research_vortex.add_argument("--ntasks",
                                             action="store", type=int, dest="ntasks", default=None,
