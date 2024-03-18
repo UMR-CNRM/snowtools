@@ -388,7 +388,7 @@ class vortex_kitchen(object):
         # TODO : définir proprement le lien vconf/geometry (lequel est défini à partir de l'autre)
         if ':' in self.options.region:
             splitregion = self.options.region.split(':')
-            self.options.geoin = splitregion[0].lower()  # TODO : la variable 'geoin' ne semble jamais utilée...
+            self.options.geoin = splitregion[0].lower()
             self.options.vconf = splitregion[1].lower()
             self.options.interpol = len(splitregion) == 3
             if self.options.interpol:

@@ -97,7 +97,7 @@ class Template(Task, S2MTaskMixIn):  # The Task's class inherits from the standa
             #                                        * resource (what file ?)
             #                                        * container (where does the file go ?)
             print()
-            
+
             """
             If you are not sure to find the previous resource but want to ensure that the corresponding file is
             fetched, use the following "alternate" toolbox. It will only be used if 'forcing_a' returned False.
@@ -205,6 +205,7 @@ class Template(Task, S2MTaskMixIn):  # The Task's class inherits from the standa
                 *ntasks       = self.conf.ntasks,
                 # TODO : généraliser l'usage du *role_member* plutot que de créer une méthode dans les algos Vortex ?
                 *role_members = '...',  # Role of the resource to be used for the parallelisation (ex: 'Forcing')
+                # TODO : terminer la liste
 
             )
             # * optional footprints
@@ -218,11 +219,8 @@ class Template(Task, S2MTaskMixIn):  # The Task's class inherits from the standa
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
 
-            # TODO : différencier le membre 0 (ANTILOPE Post-traité)
-            # des autres membres (avec perturbation)
-            # Ou bien conserver ANTILOPE PT comme le membre 0 et adapter plutot les tâches aval ?
-            self.sh.title('Toolbox ouput FORCING')
-            forcing = toolbox.output(
+            self.sh.title('Toolbox ouput PRO')
+            pro = toolbox.output(
                 role        = 'Forcing file',
                 kind        = 'MeteorologicalForcing',
                 vapp        = self.conf.vapp,

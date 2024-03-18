@@ -4,11 +4,10 @@ Created on 7 mars 2024
 @author: Vernay.M
 '''
 
-from vortex.layout.nodes import Driver, Task
+from vortex.layout.nodes import Driver
 from vortex import toolbox
-from cen.layout.nodes import S2MTaskMixIn
-
-import footprints
+from snowtools.tasks.vortex_task_base import _VortexTask
+from snowtools.scripts.extract.vortex import vortexIO as io
 
 
 def setup(t, **kw):
@@ -22,110 +21,47 @@ def setup(t, **kw):
     )
 
 
-class Diag_sentinel2(Task, S2MTaskMixIn):
+class Diag_sentinel2(_VortexTask):
     '''
     Generic task for the computation of Sentinel2-like diagnostics of a SURFEX execution :
     * SMOD (Snow Melt Out Date)
     * SCD (Snow Cover Duration)
     '''
 
-    def process(self):
+    def get_remote_inputs(self):
+        """
+        TODO
+        """
 
+        self.sh.title('Toolbox input PRO')
+        self.pro = io.get_pro(*self.common_args, **self.common_kw, members=self.conf.members)
+
+        # Get a static mask file to remove glacier/forest pixels
+        self.sh.title('Toolbox input MASK')
+        self.mask = io.get_mask(**self.common_kw)
+
+    def algo(self):
+        """
+        TODO
+        """
         t = self.ticket
+        self.sh.title('Toolbox algo diag')
+        tbalgo = toolbox.algo(
+            kind         = 'S2diag',
+            datebegin    = self.conf.datebegin,
+            dateend      = self.conf.dateend,
+            mask         = self.mask[0],
+            engine       = 'algo',  # _CENTaylorRun algo component "family" to execution a piece of python code
+            ntasks       = self.conf.ntasks,  # Do not forget to set the number of tasks for parallelisation
+            role_members = 'SnowpackSimulation',
+        )
+        print(t.prompt, 'tbalgo =', tbalgo)
+        print()
+        tbalgo.run()
 
-        #######################################################################
-        #                             Fetch steps                             #
-        #######################################################################
-        if 'early-fetch' in self.steps or 'fetch' in self.steps:
-
-            self.sh.title('Toolbox input PRO')
-            pro = toolbox.input(
-                role           = 'SnowpackSimulation',
-                local          = 'mb[member]/PRO.nc' if self.conf.members is not None else 'PRO.nc',
-                experiment     = self.conf.xpid,
-                geometry       = self.conf.geometry,
-                datebegin      = self.conf.datebegin,
-                dateend        = self.conf.dateend,
-                date           = self.conf.dateend,
-                nativefmt      = 'netcdf',
-                kind           = 'SnowpackSimulation',
-                vapp           = self.conf.vapp,
-                vconf          = '[geometry:tag]',
-                model          = 'surfex',
-                namespace      = self.conf.namespace_in,
-                namebuild      = 'flat@cen',
-                block          = 'pro',
-                member         = footprints.util.rangex(self.conf.members) if self.conf.members is not None else None,
-                # member         = footprints.util.rangex(self.conf.members) if hasattr(self.conf, 'members') else None,
-                fatal          = True,
-            ),
-            print(t.prompt, 'PRO input =', pro)
-            print()
-
-            # Get a static mask file to remove glacier/forest pixels
-            self.sh.title('Toolbox input MASK')
-            mask = toolbox.input(
-                local          = 'mask.nc',
-                nativefmt      = 'netcdf',
-                kind           = 'mask',
-                genv           = self.conf.uenv,
-                gvar           = 'mask',
-                intent         = 'in',  # Make a hard link rather than a copy
-                fatal          = False,
-            ),
-            print(t.prompt, 'MASK input =', mask)
-            print()
-
-        #######################################################################
-        #                            Compute step                             #
-        #######################################################################
-
-        if 'compute' in self.steps:
-
-            self.sh.title('Toolbox algo diag')
-            tbalgo = toolbox.algo(
-                kind         = 'S2diag',
-                datebegin    = self.conf.datebegin,
-                dateend      = self.conf.dateend,
-                mask         = mask[0],
-                engine       = 'algo',  # _CENTaylorRun algo component "family" to execution a piece of python code
-                ntasks       = self.conf.ntasks,  # Do not forget to set the number of tasks for parallelisation
-                role_members = 'SnowpackSimulation',
-            )
-            print(t.prompt, 'tbalgo =', tbalgo)
-            print()
-            tbalgo.run()
-
-        #######################################################################
-        #                               Backup                                #
-        #######################################################################
-
-        if 'backup' in self.steps or 'late-backup' in self.steps:
-
-            self.sh.title('Toolbox output DIAG')
-            diag = toolbox.output(
-                local          = 'mb[member]/DIAG.nc' if self.conf.members is not None else 'DIAG.nc',
-                experiment     = self.conf.xpid,
-                geometry       = self.conf.geometry,
-                # CEN's convention is to name period footprints 'datebegin' and 'dateend'
-                # but for SURFEX diagnostics, we use objects from :
-                # common.data.diagnostics.SurfexPeriodDiagnostics
-                begindate      = self.conf.datebegin,  # TODO : changer les dates ?
-                enddate        = self.conf.dateend,  # TODO : changer les dates ?
-                date           = self.conf.dateend,  # TODO : changer les dates ?
-                scope          = 'SesonalSnowCoverDiagnostic',
-                nativefmt      = 'netcdf',
-                kind           = 'diagnostics',
-                vapp           = self.conf.vapp,
-                vconf          = '[geometry:tag]',
-                model          = 'surfex',
-                namespace      = self.conf.namespace_out,
-                storage        = self.conf.storage,
-                namebuild      = 'flat@cen',
-                block          = 'diag',
-                member         = footprints.util.rangex(self.conf.members) if self.conf.members is not None else None,
-                # member         = footprints.util.rangex(self.conf.members) if hasattr(self.conf, 'members') else None,
-                fatal          = True,
-            ),
-            print(t.prompt, 'DIAG output =', diag)
-            print()
+    def put_remote_outputs(self):
+        """
+        TODO
+        """
+        self.sh.title('Toolbox output DIAG')
+        self.diag = io.put_diag(*self.common_args, **self.common_kw, members=self.conf.members)

@@ -59,6 +59,10 @@ and name each PRO file "THIS_IS_A_PRO.nc" :
 >>> vortexIO.get_pro('yyyymmddhh', 'YYYYMMDDHH', 'a_nice_experiment@username', 'new_geometry',
         members=16, filename="THIS_IS_A_PRO.nc")
 
+TODO :
+    - Ajouter les 2 premiers exemples dans la base de tests
+    - Uniformiser la gestion du "role" (fixé pour chaque ressource ou modifiable en argument ?)
+
 '''
 
 import os
@@ -92,130 +96,79 @@ def get(kind, datebegin, dateend, xpid, geometry, namespace, filename, nativefmt
         block=None, model=None, source_app=None, source_conf=None, date=None, abspath=None, scope=None, role=None,
         cutoff='assimilation'):
     """
-    Main  method to fetch a Flow resurce with Vortex
+    Main  method to fetch a Flow resource with Vortex
     """
-
-    storage = None
-    if 'sxcen' in namespace:
-        storage = 'sxcen.cnrm.meteo.fr'
-
-    if scope == 'SesonalSnowCoverDiagnostic':
-        # CEN's convention is to name period footprints 'datebegin' and 'dateend', but for SURFEX diagnostics
-        # we use objects from common.data.diagnostics.SurfexPeriodDiagnostics with `begindate` and `enddate`
-        # footprints...
-        tb = toolbox.input(
-            role           = role,
-            kind           = kind,
-            local          = f'mb[member]/{filename}' if members is not None else filename,
-            nativefmt      = nativefmt,
-            experiment     = add_user(xpid),
-            geometry       = geometry,
-            begindate      = Date(datebegin),
-            enddate        = Date(dateend),
-            vapp           = vapp,
-            vconf          = '[geometry:tag]',
-            model          = model,
-            cutoff         = cutoff,
-            source_app     = source_app,
-            source_conf    = source_conf,
-            namespace      = namespace,
-            storage        = storage,
-            block          = block,
-            member         = None if members is None else footprints.util.rangex(0, members - 1),
-            fatal          = fatal
-        )
-        return tb
-    else:
-        tb = toolbox.input(
-            role           = role,
-            kind           = kind,
-            local          = f'mb[member]/{filename}' if members is not None else filename,
-            nativefmt      = nativefmt,
-            experiment     = add_user(xpid),
-            geometry       = geometry,
-            date           = Date(dateend) if date is None else date,
-            datebegin      = Date(datebegin),
-            dateend        = Date(dateend),
-            vapp           = vapp,
-            vconf          = '[geometry:tag]',
-            model          = model,
-            cutoff         = cutoff,
-            source_app     = source_app,
-            source_conf    = source_conf,
-            namespace      = namespace,
-            storage        = storage,
-            block          = block,
-            member         = None if members is None else footprints.util.rangex(0, members - 1),
-            fatal          = fatal
-        )
-        return tb
+    description = footprints_kitchen(**locals())  # Forward all arguments to the footprints_kitchen function
+    tb = toolbox.input(**description)
+    return tb
 
 
 def put(kind, datebegin, dateend, xpid, geometry, namespace, filename, nativefmt, members, vapp, namebuild, fatal,
         block=None, model=None, source_app=None, source_conf=None, date=None, abspath=None, scope=None, role=None,
         cutoff=None):
     """
-    Main  method to save a Flow resurce with Vortex
+    Main  method to save a Flow resource with Vortex
     """
+    description = footprints_kitchen(**locals())  # Forward all arguments to the footprints_kitchen function
+    tb = toolbox.output(**description)
+    return tb
 
-    storage = None
+
+def footprints_kitchen(kind, datebegin, dateend, xpid, geometry, namespace, filename, nativefmt, members, vapp,
+                       namebuild, fatal, block=None, model=None, source_app=None, source_conf=None, date=None,
+                       abspath=None, scope=None, role=None, cutoff='assimilation'):
+
+    # TODO : grouper les footprints par ressource/provider/container
+    description = dict(
+        role           = role,
+        kind           = kind,
+        local          = f'mb[member]/{filename}' if members is not None else filename,
+        nativefmt      = nativefmt,
+        experiment     = add_user(xpid),
+        geometry       = geometry,
+        # CEN's convention is to name period footprints 'datebegin' and 'dateend', but
+        # Vortex's convention is to name period footprints 'begindate'/'enddate'
+        # An alias in cen/syntax/stdattrs.py ensures the equivalence
+        begindate      = Date(datebegin),
+        enddate        = Date(dateend),
+        vapp           = vapp,
+        scope          = scope,
+        vconf          = '[geometry:tag]',
+        model          = model,
+        cutoff         = cutoff,
+        source_app     = source_app,
+        source_conf    = source_conf,
+        namespace      = namespace,
+        namebuild      = namebuild,
+        block          = block,
+        fatal          = fatal
+    )
+
+    # On peut actuellement passer à 'membres' un entier (le nombre de membres)
+    # ou un objet convertible en FPLIst (string au format X-Y-1)
+    # TODO : gérer ça plus proprement
+    # TODO : uniformiser la gestion des membres
+    if isinstance(members, int):
+        description['member'] = footprints.util.rangex(0, members - 1)
+    elif isinstance(members, str):
+        description['member'] = footprints.util.rangex(members)
+
     if 'sxcen' in namespace:
-        storage = 'sxcen.cnrm.meteo.fr'
+        description['storage'] = 'sxcen.cnrm.meteo.fr'
 
-    if scope == 'SesonalSnowCoverDiagnostic':
+#    if scope == 'SesonalSnowCoverDiagnostic':
         # CEN's convention is to name period footprints 'datebegin' and 'dateend', but for SURFEX diagnostics
         # we use objects from common.data.diagnostics.SurfexPeriodDiagnostics with `begindate` and `enddate`
         # footprints...
-        tb = toolbox.output(
-            role           = role,
-            kind           = kind,
-            local          = f'mb[member]/{filename}' if members is not None else filename,
-            nativefmt      = nativefmt,
-            experiment     = add_user(xpid),
-            geometry       = geometry,
-            begindate      = Date(datebegin),
-            enddate        = Date(dateend),
-            vapp           = vapp,
-            vconf          = '[geometry:tag]',
-            model          = model,
-            cutoff         = cutoff,
-            source_app     = source_app,
-            source_conf    = source_conf,
-            namespace      = namespace,
-            storage        = storage,
-            block          = block,
-            member         = None if members is None else footprints.util.rangex(0, members - 1),
-            fatal          = fatal
-        )
-        return tb
-    else:
-        tb = toolbox.output(
-            role           = role,
-            kind           = kind,
-            local          = f'mb[member]/{filename}' if members is not None else filename,
-            nativefmt      = nativefmt,
-            experiment     = add_user(xpid),
-            geometry       = geometry,
-            date           = Date(dateend) if date is None else date,
-            datebegin      = Date(datebegin),
-            dateend        = Date(dateend),
-            vapp           = vapp,
-            vconf          = '[geometry:tag]',
-            model          = model,
-            cutoff         = cutoff,
-            source_app     = source_app,
-            source_conf    = source_conf,
-            namespace      = namespace,
-            storage        = storage,
-            block          = block,
-            member         = None if members is None else footprints.util.rangex(0, members - 1),
-            fatal          = fatal
-        )
-        return tb
+#        description['begindate'] = description.pop('datebegin')
+#        description['enddate']   = description.pop('dateend')
+
+    return description
 
 
-def get_pro(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', filename='PRO.nc',
-            members=None, vapp='s2m', abspath=None, block='pro', date=None, namebuild='flat@cen', fatal=True):
+def get_pro(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', filename='PRO.nc', members=None,
+            vapp='s2m', abspath=None, block='pro', date=None, namebuild='flat@cen', fatal=True,
+            role='SnowpackSimulation', **kw):
 
     # PRO-specific footprints
     kind      = 'SnowpackSimulation'
@@ -223,14 +176,15 @@ def get_pro(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', fil
     nativefmt = 'netcdf'
 
     pro = get(kind, datebegin, dateend, xpid, geometry, namespace, filename, nativefmt, members, vapp,
-              namebuild, fatal, block=block, abspath=abspath, date=date, model=model)
+              namebuild, fatal, block=block, abspath=abspath, date=date, model=model, role=role)
 
     print(t.prompt, 'PRO input =', pro)
     print()
 
 
 def put_pro(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', filename='PRO.nc',
-            members=None, vapp='s2m', abspath=None, block='pro', date=None, namebuild='flat@cen', fatal=True):
+            members=None, vapp='s2m', abspath=None, block='pro', date=None, namebuild='flat@cen', fatal=True,
+            role='SnowpackSimulation', **kw):
 
     # PRO-specific footprints
     kind      = 'SnowpackSimulation'
@@ -238,14 +192,15 @@ def put_pro(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', fil
     nativefmt = 'netcdf'
 
     pro = put(kind, datebegin, dateend, xpid, geometry, namespace, filename, nativefmt, members, vapp,
-              namebuild, fatal, block=block, abspath=abspath, date=date, model=model)
+              namebuild, fatal, block=block, abspath=abspath, date=date, model=model, role=role)
 
     print(t.prompt, 'PRO output =', pro)
     print()
 
 
 def get_diag(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', filename='DIAG.nc',
-             members=None, vapp='s2m', block='diag', abspath=None, namebuild='flat@cen', fatal=True):
+             members=None, vapp='s2m', block='diag', abspath=None, namebuild='flat@cen', fatal=True,
+             role='SnowpackDiagnostics', **kw):
 
     # DIAG-specific footprints
     kind      = 'diagnostics'
@@ -254,14 +209,15 @@ def get_diag(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', fi
     model     = 'surfex'
 
     diag = get(kind, datebegin, dateend, xpid, geometry, namespace, filename, nativefmt, members, vapp,
-               namebuild, fatal, block=block, abspath=abspath, model=model, scope=scope)
+               namebuild, fatal, block=block, abspath=abspath, model=model, scope=scope, role=role)
 
     print(t.prompt, 'DIAG input =', diag)
     print()
 
 
 def put_diag(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', filename='DIAG.nc',
-             members=None, vapp='s2m', block='diag', abspath=None, namebuild='flat@cen', fatal=True):
+             members=None, vapp='s2m', block='diag', abspath=None, namebuild='flat@cen', fatal=True,
+             role='SnowpackDiagnostics', **kw):
 
     # DIAG-specific footprints
     kind      = 'diagnostics'
@@ -270,7 +226,7 @@ def put_diag(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', fi
     model     = 'surfex'
 
     diag = put(kind, datebegin, dateend, xpid, geometry, namespace, filename, nativefmt, members, vapp,
-               namebuild, fatal, block=block, abspath=abspath, model=model, scope=scope)
+               namebuild, fatal, block=block, abspath=abspath, model=model, scope=scope, role=role)
 
     print(t.prompt, 'DIAG ouput =', diag)
     print()
@@ -278,7 +234,7 @@ def put_diag(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', fi
 
 def get_forcing(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', filename='FORCING.nc', model='safran',
                 members=None, vapp='s2m', block='meteo', abspath=None, source_app=None, source_conf=None,
-                date=None, namebuild='flat@cen', fatal=True, cutoff='assimilation'):
+                date=None, namebuild='flat@cen', fatal=True, cutoff='assimilation', **kw):
 
     # FORCING-specific footprints
     role      = 'Forcing'
@@ -295,7 +251,7 @@ def get_forcing(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr',
 
 def put_forcing(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', filename='FORCING.nc', model='safran',
                 members=None, vapp='s2m', block='meteo', abspath=None, source_app=None, source_conf=None,
-                date=None, namebuild='flat@cen', fatal=True, cutoff='assimilation'):
+                date=None, namebuild='flat@cen', fatal=True, cutoff='assimilation', **kw):
 
     # FORCING-specific footprints
     role      = 'Forcing'
@@ -312,7 +268,7 @@ def put_forcing(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr',
 
 def get_precipitation(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', filename='PRECIPITATION.nc',
                       members=None, vapp='s2m', block='', abspath=None, source_app=None, source_conf=None,
-                      model=None, date=None, namebuild='flat@cen', fatal=True):
+                      model=None, date=None, namebuild='flat@cen', fatal=True, **kw):
 
     # Precipitation-specific footprints
     role      = 'Precipitation'
@@ -329,7 +285,7 @@ def get_precipitation(datebegin, dateend, xpid, geometry, namespace='vortex.mult
 
 def put_precipitation(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', filename='PRECIPITATION.nc',
                       members=None, vapp='s2m', block='', abspath=None, source_app=None, source_conf=None,
-                      model=None, date=None, namebuild='flat@cen', fatal=True):
+                      model=None, date=None, namebuild='flat@cen', fatal=True, **kw):
 
     # Precipitation-specific footprints
     role      = 'Precipitation'
@@ -346,7 +302,7 @@ def put_precipitation(datebegin, dateend, xpid, geometry, namespace='vortex.mult
 
 def get_wind(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', filename='WIND.nc',
              members=None, vapp='s2m', block='', abspath=None, source_app='arome', source_conf='devine',
-             model='devine', date=None, namebuild='flat@cen', fatal=True):
+             model='devine', date=None, namebuild='flat@cen', fatal=True, **kw):
 
     # Wind-specific footprints
     role      = 'Wind'
@@ -363,7 +319,7 @@ def get_wind(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', fi
 
 def put_wind(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', filename='WIND.nc',
              members=None, vapp='s2m', block='', abspath=None, source_app='arome', source_conf='devine',
-             model='devine', date=None, namebuild='flat@cen', fatal=True):
+             model='devine', date=None, namebuild='flat@cen', fatal=True, **kw):
 
     # Wind-specific footprints
     role      = 'Wind'
@@ -376,3 +332,56 @@ def put_wind(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', fi
 
     print(t.prompt, 'WIND output =', wind)
     print()
+
+#######################################################################################################################
+# WARNING : functions bellow this point are in development
+#######################################################################################################################
+
+
+def put_snow_obs_period(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', filename='SnowObs.nc',
+                        vapp='s2m', block='', abspath=None, date=None, namebuild='flat@cen', fatal=True, **kw):
+
+    # Specific footprints
+    members   = None
+    kind      = 'SnowObservations'
+    model     = 'surfex'
+    nativefmt = 'netcdf'
+
+    obs = put(kind, datebegin, dateend, xpid, geometry, namespace, filename, nativefmt, members, vapp,
+              namebuild, fatal, block=block, abspath=abspath, model=model)
+
+    print(t.prompt, 'SnowObsPeriod output =', obs)
+    print()
+
+
+def get_snow_obs_period(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', filename='SnowObs.nc',
+                        vapp='s2m', block='', abspath=None, date=None, namebuild='flat@cen', fatal=True, **kw):
+
+    # Specific footprints
+    members   = None
+    kind      = 'SnowObservations'
+    model     = 'surfex'
+    nativefmt = 'netcdf'
+
+    obs = get(kind, datebegin, dateend, xpid, geometry, namespace, filename, nativefmt, members, vapp,
+              namebuild, fatal, block=block, abspath=abspath, model=model)
+
+    print(t.prompt, 'SnowObsPeriod input =', obs)
+    print()
+
+
+def get_mask(uenv=None, filename='mask.nc', fmt='netcdf', intent='in', fatal=False, **kw):
+
+    mask = toolbox.input(
+        kind           = 'mask',
+        gvar           = 'mask',
+        genv           = uenv,
+        local          = filename,
+        nativefmt      = fmt,
+        intent         = intent,  # 'in' = make a hard link rather than a copy
+        fatal          = fatal,
+    ),
+    print(t.prompt, 'MASK input =', mask)
+    print()
+
+    return mask

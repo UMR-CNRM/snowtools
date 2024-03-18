@@ -138,7 +138,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             self.sh.title('Toolbox input pgd (a)')
             tb02a = toolbox.input(
                 role           = 'SurfexClim',
-                kind           = 'pgdnc',
+                kind           = 'pgdnc',  # TODO : à modifier, la classe common.data.surfex.PGDNC est obsolète !
                 nativefmt      = 'netcdf',
                 local          = 'PGD.nc',
                 experiment     = self.conf.xpid,
@@ -158,7 +158,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             tb02b = toolbox.input(
                 alternate      = 'SurfexClim',
                 kind           = 'pgdnc',
-                nativefmt      = 'netcdf',
+                nativefmt      = 'netcdf',  # TODO : à modifier, la classe common.data.surfex.PGDNC est obsolète !
                 local          = 'PGD.nc',
                 experiment     = 'spinup@' + t.env.getvar("USER"),
                 geometry       = self.conf.geometry,
@@ -921,7 +921,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             # Save the PGD file for this xpid and geometry
             tb21 = toolbox.output(
                 role           = 'SurfexClim',
-                kind           = 'pgdnc',
+                kind           = 'pgdnc',  # TODO : à modifier, la classe common.data.surfex.PGDNC est obsolète !
                 nativefmt      = 'netcdf',
                 local          = 'PGD.nc',
                 experiment     = self.conf.xpid,
