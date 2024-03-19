@@ -930,7 +930,6 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
                 block          = 'pgd',
-                member         = self.conf.member if hasattr(self.conf, 'member') else None,
             ),
             print(t.prompt, 'tb21 =', tb21)
             print()

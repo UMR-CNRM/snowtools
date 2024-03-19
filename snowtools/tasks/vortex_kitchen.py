@@ -102,7 +102,7 @@ class vortex_kitchen(object):
             if self.options.task in ['croco', 'croco_perturb']:
                 os.symlink(SNOWTOOLS_DIR + "/tasks/research/crocO", "tasks")
             elif self.options.vapp == 'edelweiss':  # TODO : TMP, à uniformiser
-                if self.options.task in ['surfex', 'diag_sentinel2']:
+                if self.options.task in ['surfex', 'diag_sentinel2', 'surfex_mpi']:
                     os.symlink(os.path.join(SNOWTOOLS_DIR, "tasks/research", "surfex"), "tasks")
                 else:
                     os.symlink(os.path.join(SNOWTOOLS_DIR, "tasks/research", self.options.vapp), "tasks")
