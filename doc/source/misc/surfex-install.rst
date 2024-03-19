@@ -166,12 +166,12 @@ Please check carefully the full names of your binaries (depending on SURFEX vers
    ln -s $EXESURFEX/PGD-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/PGD
    ln -s $EXESURFEX/SODA-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/SODA
 
-Test
-----
+Test your snowtools and SURFEX install
+--------------------------------------
 If you correctly installed the snowtools and SURFEX projects, you must be able to run successfully the following test case:
 
-```bash
-s2m research -f $SNOWTOOLS_CEN/snowtools/DATA/FORCING_test_base.nc -b 20100801 -e 20110801 -o output -g -s ...yoursurfexdirectory.../exe
-```
+.. code-block:: bash
+
+   s2m research -f $SNOWTOOLS_CEN/snowtools/DATA/FORCING_test_base.nc -b 20100801 -e 20110801 -o output -g -s ...yoursurfexdirectory.../exe
 
 
