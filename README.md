@@ -34,7 +34,7 @@ For Meteo-France developers, also consider [installing Vortex](https://opensourc
 If you correctly installed the snowtools and SURFEX projects, you must be able to run successfully the following test case:
 
 ```bash
-s2m -f $SNOWTOOLS_CEN/snowtools/DATA/FORCING_test_base.nc -b 20100801 -e 20110801 -o output -g -s ...yoursurfexdirectory.../exe
+s2m research -f $SNOWTOOLS_CEN/snowtools/DATA/FORCING_test_base.nc -b 20100801 -e 20110801 -o output -g -s ...yoursurfexdirectory.../exe
 ```
 
 :warning: If you installed SURFEX with MPIAUTO option, you have to set the environment variable NOFFLINE to 1 to make this test work (because this test have only one simulation point).
