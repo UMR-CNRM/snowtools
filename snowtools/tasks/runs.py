@@ -21,7 +21,7 @@ from snowtools.utils.resources import get_file_period, get_file_date, get_file_c
         save_file_date, save_file_const, get_file_const_or_crash, ldd
 from snowtools.utils.prosimu import prosimu
 from snowtools.utils.FileException import DirFileException
-from snowtools.utils.git import git_infos
+from snowtools.utils.git import get_summary_git
 from snowtools.DATA import SNOWTOOLS_DIR, DIRDATAPGD
 
 
@@ -257,7 +257,7 @@ class surfexrun(object):
 
     def postprocess(self):
 
-        surfex_commit = git_infos(self.execdir).get_commit(default='')
+        surfex_commit = get_summary_git(os.path.dirname(os.path.normpath(self.execdir)))
 
         profile = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode='a')
         profile.massif_natural_risk()
