@@ -20,11 +20,17 @@ Detailed instructions for getting access to the code are available at https://op
 .. warning::
    Caution: the directory where you are going to install SURFEX and all parent directories MUST NOT contain dots (.) in their names.
 
-Download the cen branch with the folowwing command:
+If you plan to launch simulation only (ie not for developer), download the cen branch with the folowwing command:
 
 .. code-block:: bash
 
    git clone -b cen --single-branch ssh://reader097@git.umr-cnrm.fr/git/Surfex_Git2.git cen
+   
+If you are a developer, you may prefer download the cen_dev branch with the folowwing command:
+
+.. code-block:: bash
+
+   git clone -b cen_dev ssh://admin097@git.umr-cnrm.fr/git/Surfex_Git2.git cen_dev
 
 If a password is requested, it means that your ssh keys have not been registered, please contact operator@meteo.fr
 
@@ -155,9 +161,17 @@ Please check carefully the full names of your binaries (depending on SURFEX vers
 
 .. code-block:: bash
 
-   ln -s $EXESURFEX/OFFLINE-LXgfortran-SFX-V8-1-1-NOMPI-O2 $EXESURFEX/OFFLINE
-   ln -s $EXESURFEX/PREP-LXgfortran-SFX-V8-1-1-NOMPI-O2 $EXESURFEX/PREP
-   ln -s $EXESURFEX/PGD-LXgfortran-SFX-V8-1-1-NOMPI-O2 $EXESURFEX/PGD
+   ln -s $EXESURFEX/OFFLINE-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/OFFLINE
+   ln -s $EXESURFEX/PREP-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/PREP
+   ln -s $EXESURFEX/PGD-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/PGD
+   ln -s $EXESURFEX/SODA-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/SODA
 
+Test your snowtools and SURFEX install
+--------------------------------------
+If you correctly installed the snowtools and SURFEX projects, you must be able to run successfully the following test case:
+
+.. code-block:: bash
+
+   s2m research -f $SNOWTOOLS_CEN/snowtools/DATA/FORCING_test_base.nc -b 20100801 -e 20110801 -o output -g -s ...yoursurfexdirectory.../exe
 
 

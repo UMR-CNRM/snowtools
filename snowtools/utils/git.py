@@ -407,10 +407,15 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Tool to read git informations easily (last commit)")
     parser.add_argument("path", default=None, help="Path for git repository. Default to current directory", nargs='?')
+    parser.add_argument("--summary", action="store_true", default=False, help="Get a summary "
+                        "(compatible with .git_info files) rather than full information.")
     args = parser.parse_args()
-    gi = git_infos(args.path)
-    if args.path is None:
-        print('Git info on current directory:')
+    if args.summary:
+        print(get_summary_git(path=args.path))
     else:
-        print('Git info on {}:'.format(args.path))
-    print(gi)
+        gi = git_infos(args.path)
+        if args.path is None:
+            print('Git info on current directory:')
+        else:
+            print('Git info on {}:'.format(args.path))
+        print(gi)

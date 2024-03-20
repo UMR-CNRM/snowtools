@@ -60,6 +60,22 @@ SURFEX Information
    Few informations on SURFEX-Crocus simulations <misc/surfex.rst>
    Information for developpers <misc/surfex-dev.rst>
 
+SURFEX-Crocus user documentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. toctree::
+   :maxdepth: 2
+
+   misc/surfex-crocus-user-doc
+
+Developments not yet merged into the ``cen`` branch are documented here :
+
+.. toctree::
+   :maxdepth: 1
+
+   Development in progress <misc/surfex-dev-in-progress.rst>
+
+
 
 Help improving this documentation !
 -----------------------------------
