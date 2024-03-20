@@ -8,7 +8,8 @@ from vortex.layout.nodes import Driver
 from vortex import toolbox
 from snowtools.tasks.vortex_task_base import _VortexTask
 from snowtools.scripts.extract.vortex import vortexIO as io
-from bronx.stdtypes.date import Date
+
+from . import prep
 
 
 def setup(t, **kw):
@@ -16,6 +17,7 @@ def setup(t, **kw):
         tag='Offline',
         ticket=t,
         nodes=[
+            prep.PrepRefill(tag='prep', ticket=t, **kw),
             Offline(tag='offline', ticket=t, **kw),
         ],
         options=kw
@@ -39,8 +41,8 @@ class Offline(_VortexTask):
                                       filename='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', **self.common_kw)
 
         self.sh.title('PREP')
-        self.prep_a, self.prep_b, self.prep_c = io.get_prep(*self.common_args, date=self.conf.datespinup,
-                                                            alternate_xpid=self.ref_reanalysis, **self.common_kw)
+        self.prep = io.get_prep(*self.common_args, date=self.conf.datespinup,
+                                alternate_xpid=self.ref_reanalysis, **self.common_kw)
 
         self.sh.title('PGD')
         self.pgd = io.get_pgd(*self.common_args, **self.common_kw)
@@ -70,14 +72,14 @@ class Offline(_VortexTask):
         """
         t = self.ticket
         # Algo component to produce to run the SURFEX OFFLINE simulation (MPI parallelization)
-        self.sh.title('Toolbox algo tb11 = OFFLINE')
+        self.sh.title('Toolbox algo OFFLINE')
         algo = toolbox.algo(
             engine         = 'parallel',
             binary         = 'OFFLINE',
             kind           = 'deterministic',
             datebegin      = self.conf.datebegin,
             dateend        = self.conf.dateend,
-            dateinit       = Date(self.conf.datespinup),
+            dateinit       = self.conf.datespinup,
             threshold      = self.conf.threshold,
             drhookprof     = self.conf.drhook,
         )

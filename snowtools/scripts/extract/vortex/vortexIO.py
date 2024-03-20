@@ -397,8 +397,8 @@ def prep(action, xpid, geometry, **kw):
     description = get_full_description(specific_footprints, kw, specific_default_footprints)
 
     # Look for a PREP file if already available for this xpid, geometry, and initial date
-    prep_a = function_map()[action](xpid, geometry, **description)
-    print(t.prompt, 'PREP (a) =', forcing)
+    prep = function_map()[action](xpid, geometry, **description)
+    print(t.prompt, 'PREP (a) =', prep)
     print()
 
     if action == 'get' and 'alternate_xpid' in kw.keys():
@@ -409,8 +409,8 @@ def prep(action, xpid, geometry, **kw):
         # and initial date for the "spinup" xpid
         description['alternate'] = description.pop('role')  # This is an alternative resource
         alternate_xpid = 'spinup@' + t.env.getvar("USER")
-        prep_b = function_map()[action](alternate_xpid, geometry, **description)
-        print(t.prompt, 'PREP (b) =', prep_b)
+        prep.extend(function_map()[action](alternate_xpid, geometry, **description))
+        print(t.prompt, 'PREP (b) =', prep)
         print()
 
         log_separator('PREP (c)')
@@ -419,15 +419,11 @@ def prep(action, xpid, geometry, **kw):
         # and initial date for the "reanalysis" xpid
         # If not available, crash : the PREP file should be build by calling the PREP task first
         # WARNING : this behaviour is different from the one in the surfex_task
-        prep_c = function_map()[action](kw['alternate_xpid'], geometry, **description)
-        print(t.prompt, 'PREP (c) =', prep_c)
+        prep.extend(function_map()[action](kw['alternate_xpid'], geometry, **description))
+        print(t.prompt, 'PREP (c) =', prep)
         print()
 
-        return prep_a, prep_b, prep_c
-
-    else:
-
-        return prep_a
+    return prep
 
 
 def pro(action, xpid, geometry, **kw):
@@ -681,6 +677,43 @@ def get_const_offline(geometry, genv):
         model           = 'surfex',
     )
     print(t.prompt, 'drdt_bst_fit_60 =', drdt_bst_fit_60)
+    print()
+
+
+def get_init_TG(geometry, genv, xpid):
+    # not self.conf.climground means that the user does not allow the climatological file
+    # to be built by the system (-g option of the s2m command is not activated)
+    # If no prep file has been found, look for a climatological file to initialize the ground in the uenv
+    initTG_a = toolbox.input(
+        role           = 'initial values of ground temperature',
+        kind           = 'climTG',
+        nativefmt      = 'netcdf',
+        local          = 'init_TG.nc',
+        geometry       = geometry,
+        genv           = genv,
+        gvar           = 'climtg_[geometry::tag]',
+        model          = 'surfex',
+        fatal          = False
+    ),
+    print(t.prompt, 'Init_TG (a) =', initTG_a)
+    print()
+
+    # Alternate : look for the climatological file if already available for this xpid and geometry
+    # Fail if not available because mandatory to build a prep file !
+    initTG_b = toolbox.input(
+        alternate      = 'initial values of ground temperature',
+        kind           = 'climTG',
+        nativefmt      = 'netcdf',
+        local          = 'init_TG.nc',
+        experiment     = xpid,
+        geometry       = geometry,
+        model          = 'surfex',
+        namespace      = 'vortex.multi.fr',
+        namebuild      = 'flat@cen',
+        block          = 'prep',
+    ),
+
+    print(t.prompt, 'Init_TG (b) =', initTG_b)
     print()
 
 #######################################################################################################################
