@@ -397,11 +397,6 @@ class Surfex_command(_S2M_command):
                                             choices=['meteo', 'pro', 'meteo,pro', 'pro,meteo'],
                                             help="List of blocks to interpol --task=interpol")
 
-        parser_research_vortex.add_argument("--vapp",
-                                            action="store", type=str, dest="vapp", default="s2m",
-                                            choices=["s2m", "safran", "edelweiss"],  # TODO : réflexion nécessaire sur l'usage de la commande 's2m' pour des application 'non s2m' (edelweiss...)
-                                            help="specify the vortex vapp of the execution")
-
         parser_oper = subparsers.add_parser('oper', description="Do not use unless you know what it does. "
                                             "Use s2m oper --help for details")
 

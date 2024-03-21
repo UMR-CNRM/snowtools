@@ -34,6 +34,8 @@ class vortex_kitchen(object):
         self.check_vortex_install()
         self.options = options
 
+        # Initialization of vortex variables
+        self.vapp = 's2m'
         self.split_geo()
 
         if self.options.command == 'oper':
@@ -44,7 +46,7 @@ class vortex_kitchen(object):
         else:
             self.options.xpid = self.options.diroutput  # diroutput is now always defined in research cases
 
-        self.workingdir = "/".join([self.options.workdir, self.options.xpid, self.options.vapp, self.options.vconf])
+        self.workingdir = "/".join([self.options.workdir, self.options.xpid, self.vapp, self.options.vconf])
         self.confdir    = "/".join([self.workingdir, 'conf'])
         self.jobdir     = "/".join([self.workingdir, "jobs"])
 
@@ -107,7 +109,7 @@ class vortex_kitchen(object):
             if not os.path.isdir(directory):
                 os.mkdir(directory)
 
-        if self.options.uenv is not None:
+        if hasattr(self.options, 'uenv') and self.options.uenv is not None:
             if self.options.uenv.startswith('uenv'):
                 # The user already created a uenv and parsed the formatted uenv name
                 envname = self.options.uenv.split(':')[1].split('@')[0]
@@ -115,7 +117,7 @@ class vortex_kitchen(object):
             else:
                 # The uenv needs to be generated
                 # Set up a uenv with all files in self.options.uenv repository
-                envname = '_'.join([self.options.vapp, self.options.vconf, self.options.xpid])
+                envname = '_'.join([self.vapp, self.options.vconf, self.options.xpid])
                 user = os.environ['USER']
                 datadir = self.options.uenv
             self.uenv = UserEnv(envname, targetdir=datadir)
@@ -221,9 +223,9 @@ class vortex_kitchen(object):
         os.chdir(self.confdir)
         if self.options.surfex:
             if self.options.command == 'oper':
-                conffilename = self.options.vapp + "_" + self.options.vconf + ".ini"
+                conffilename = self.vapp + "_" + self.options.vconf + ".ini"
                 if self.options.dev:
-                    conffilename_in = self.options.vapp + "devnew_" + self.options.vconf + ".ini"
+                    conffilename_in = self.vapp + "devnew_" + self.options.vconf + ".ini"
                 else:
                     conffilename_in = conffilename
 
@@ -245,14 +247,14 @@ class vortex_kitchen(object):
                     if hasattr(self.options, 'interpol_blocks'):
                         suffix = self.options.interpol_blocks.replace(',', '') + suffix
 
-                    conffilename = self.options.vapp + "_" + self.options.vconf + "_" + \
+                    conffilename = self.vapp + "_" + self.options.vconf + "_" + \
                         self.options.datedeb.strftime("%Y") + suffix
 
         elif self.options.safran:
             if self.options.command == 'oper':
                 pass
             else:
-                conffilename = self.options.vapp + "_" + self.options.vconf + ".ini"
+                conffilename = self.vapp + "_" + self.options.vconf + ".ini"
 
         if conffilename:
             fullname = '/'.join([self.confdir, conffilename])
@@ -269,8 +271,9 @@ class vortex_kitchen(object):
         os.chdir(self.workingdir)
 
     def write_conf_file(self):
-        self.conf_file.write_file()
-        self.conf_file.close()
+        if not self.options.command == 'oper':
+            self.conf_file.write_file()
+            self.conf_file.close()
 
     def mkjob_command(self, jobname):
 
@@ -290,10 +293,10 @@ class vortex_kitchen(object):
 
             return mkjob_list
 
-        elif self.options.nforcing > 1 and self.options.nnodes > 1:
-            # Cas Matthieu Vernay (surfex_task forcé par ensemble)
-            # qui faisait planter le test Croco --> ajout condition sur options.nnodes mais cela
-            # veut dire qu'il faut changer l'utilisation de nnodes dans ce cas
+        elif hasattr(self.options, 'nforcing') and self.options.nforcing > 1 and self.options.nnodes > 1:
+            # Case when surfex_task is forced by an ensemble
+            # Condition on options.nnodes allow to not use this case for croco tasks
+            # The use of options.nnodes must not be used to define the nb of nodes per domain in this case.
             mkjob_list = []
             for node in range(1, self.options.nforcing + 1):
                 jobname = self.jobname + str(node)
@@ -488,9 +491,10 @@ class Vortex_conf_file(object):
                 if '@' not in self.options.prep_xpid:
                     self.options.prep_xpid = self.options.prep_xpid + '@' + os.getlogin()
                 self.set_field("DEFAULT", 'prep_xpid', self.options.prep_xpid)
-        if self.options.uenv is not None:
-            self.set_field("DEFAULT", 'uenv', self.options.uenv)
-            self.set_field("DEFAULT", 'udata', self.options.udata)
+        if hasattr(self.options, 'uenv'):
+            if self.options.uenv is not None:
+                self.set_field("DEFAULT", 'uenv', self.options.uenv)
+                self.set_field("DEFAULT", 'udata', self.options.udata)
 
     def escroc_variables(self):
 
