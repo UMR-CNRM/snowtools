@@ -24,7 +24,7 @@ with open(os.path.join(THIS_DIR, "Manual_tests", "index.html"), 'w') as outfile:
 
 
 @unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "postproc",
-                                                 "grid_postproc_2021041112.nc")),
+                                                 "grid_postproc_2021041112_1v_deflate.nc")),
                  "input file not available")
 class TestCartopyFrance(unittest.TestCase):
     """
@@ -34,7 +34,7 @@ class TestCartopyFrance(unittest.TestCase):
     def setUpClass(cls):
         cls.mix = CartopyTestMixIn()
         cls.diroutput = BASEDIROUTPUT
-        path_new = os.path.join(TEST_DATA_DIR, "postproc", "grid_postproc_2021041112.nc")
+        path_new = os.path.join(TEST_DATA_DIR, "postproc", "grid_postproc_2021041112_1v_deflate.nc")
         cls.ds = Dataset(path_new)
         cls.lats = cls.ds.variables['LAT'][:]
         cls.lons = cls.ds.variables['LON'][:]

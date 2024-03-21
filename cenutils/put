@@ -84,8 +84,8 @@ case $key in
             FOLDER="$1"
         else
             SERVER="$1"
-        shift # shift to next argument
         fi
+        shift # shift to next argument
     ;;
 esac
 done

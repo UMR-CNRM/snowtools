@@ -9,6 +9,7 @@ snowtools/tests/fail_test
 snowtools/tests/Manual_tests
 oper_tag
 tag
+.git_info
 *.swp
 snowtools/interpolation/interpol_MPIAUTO
 snowtools/interpolation/interpol

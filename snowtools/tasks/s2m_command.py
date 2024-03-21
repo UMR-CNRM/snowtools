@@ -203,11 +203,13 @@ class Surfex_command(_S2M_command):
 
         parser_research_forcing = parser_research.add_argument_group('Forcing pre-processing')
 
-        parser_research_forcing.add_argument("-r", "--region",
+        parser_research_forcing.add_argument("-r", "--region", "--geometry",
                                              type=str, dest="region", default=None,
                                              help='''
-                                             Extract a limited number of massifs in FORCING files or interpolate
-                                             forcing files in a given geometry.
+                                             The geometry to use for SURFEX simulation.
+
+                                             This option is also used for pre-processing of the FORCING file by
+                                             extracting data or interpolating forcing files into a new geometry
 
                                              - If region is a single massif number or a list of massif numbers
                                              separated by comas or a generic name for a group of massifs,
@@ -220,7 +222,8 @@ class Surfex_command(_S2M_command):
                                              or 2d (latitude, longitude). 1d files can optionnally provide aspect
                                              and slope. These variables will be computed by the software for 2d files.
 
-                                             Note that you need to compile the fortran interpolator to use this option.
+                                             Note that you need to compile the fortran interpolator to use this
+                                             extended option.
                                              ''')
 
         parser_research_forcing.add_argument("-L", "--lowest",
@@ -230,7 +233,7 @@ class Surfex_command(_S2M_command):
 
         parser_research_forcing.add_argument("-U", "--upper",
                                              type=int, dest="maxlevel", default=None,
-                                             help="Eliminate elevations upper than this level in FORCING files (in meters)")
+                                             help="Eliminate elevations above this level in FORCING files (in meters)")
 
         parser_research_forcing.add_argument("-c", "--classes_aspect",
                                              type=int, dest="aspects", default=None,
@@ -292,18 +295,21 @@ class Surfex_command(_S2M_command):
 
         parser_research_others.add_argument("--uenv",
                                             action="store", dest="uenv", default=None,
-                                            help="In cases when additionnal input files are necessary, use this option to "
-                                            "define the absolute path of the repository where those files are stored. "
+                                            help="In cases when additionnal input files are necessary, use this "
+                                            "option to define the absolute path of the repository where those files "
+                                            "are stored."
                                             "This option works for both Vortex/HPC and local executions."
-                                            "In a Vortex execution, it is also possible (and advised) to provide a uenv with "
-                                            "the syntax '--uenv=uenv:{uenv_name}@{username}'.")
+                                            "In a Vortex execution, it is also possible (and advised) to provide a "
+                                            "an existing uenv using the followong syntax : "
+                                            "'--uenv=uenv:{uenv_name}@{username}'.")
 
         parser_research_vortex = parser_research.add_argument_group('Vortex options '
                                                                     '(available only on Meteo-France supercomputers)')
 
         parser_research_vortex.add_argument("-m", "--model",
                                             type=str, dest="model", default=None,
-                                            help="meteorological model used as forcing (for vortex runs)")
+                                            help="Meteorological forcing format: s2m for ready-to-use s2m-generated FORCING "
+                                                 " and safran for raw SAFRAN files.")
 
         parser_research_vortex.add_argument("-p", "--prep_xpid",
                                             action="store", type=str, dest="prep_xpid", default=None,
