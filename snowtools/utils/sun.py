@@ -161,12 +161,6 @@ class sun():
         # --------- Theoretical maximum radiation ---------
         max_theor_radiation = 1370 * (1 - sin_delta / 11.7)
 
-        # direct incident radiation (maximum value authorized is the theoretical maximum radiation)
-        direct_incident_radiation = tab_direct / sin_gamma # vertical equivalent
-
-        # M Lafaysse : remove this threshold because there are controls in SAFRAN and because there are numerical issues at sunset.
-        direct_incident_radiation = np.where(direct_incident_radiation >= max_theor_radiation, max_theor_radiation, direct_incident_radiation)
- 
         ######## Not used anymore, old code ########
         # solar zenith angle
         # ZSINPS = np.cos(ZDELTA) * np.sin(ZOMEGA) / np.cos(ZGAMMA)
@@ -239,7 +233,8 @@ class sun():
         ###########################################
 
         # direct incident radiation (maximum value authorized is the theoretical maximum radiation)
-        direct_incident = np.divide(tab_direct, sin_gamma, where=gamma!=0)
+        # If you don't pass `out` the indices where (sin_gamma == 0) will be uninitialized !
+        direct_incident = np.divide(tab_direct, sin_gamma, out=np.zeros_like(tab_direct), where=sin_gamma!=0)
 
         # M Lafaysse : remove this threshold because there are controls in SAFRAN and because there are numerical issues at sunset.
         # TODO L. Roussel: this one is useless ? 
