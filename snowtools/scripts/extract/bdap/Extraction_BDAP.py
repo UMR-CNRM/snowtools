@@ -6,19 +6,32 @@
 import os
 import argparse
 from datetime import datetime, timedelta
+import xarray as xr
 
 """
-Outil d'extraction de données de la BDAP.
+Outil d'extraction de données de la BDAP. Les données sont extraites sous forme de multiples fichiers grib (un
+par date et échéance) et converties en un unique fichier netcdf par xarray.
+
+Documentation :
+
+- Contenu BDAP : http://intradsi.meteo.fr/spip.php?page=private_access&file=/IMG/pdf/bdap_utilisateurs-249.pdf
+- Pour Alpha   : http://intradsi.meteo.fr/spip.php?page=private_access&file=/IMG/pdf/bdap_pprod-3.pdf
+- extraction   : http://intradsi.meteo.fr/spip.php?page=private_access&file=/IMG/pdf/doc_utilisateurs_bdap_extr-14.pdf
+  --> ce script utilise la commande dap3_dev
 
 Exemples :
 ----------
 
-1. Extraction de l'ISO_TPW de l'analyse ARPEGE entre le 2017073106 et le 2018080106 :
+1. Extraction des ISO_TPW 0°C 1°C de l'analyse AROME entre le 2017073106 et le 2018080106 :
    La grille EURW1S40 est displonible depuis le 05/12/2017, avant cette date il faut extraire la grille
    FRANGP0025.
    Le parametre ISO_WETBT s'appelle ISO_TPW avant le 01/07/2019
 
 >>> p Extraction_BDAP.py -b 2017073106 -e 2018080106 -t 0 -v ISO_TPW -l 27315 27415 -g FRANGP0025 -m PAAROME
+
+    La même chose en archivant le fichier netcdf produit avec Vortex:
+
+>>> p Extraction_BDAP.py -b 2017073106 -e 2018080106 -t 0 -v ISO_TPW -l 27315 27415 -g FRANGP0025 -m PAAROME -a
 
 """
 
@@ -35,12 +48,20 @@ coords = dict(
 # Pas en lat/lon de la grille cible en 1/1000 de °
 dl = dict(
     FRANXL0025 = ['25', '25'],
+    FRANGP0025 = ['25', '25'],
     EUROC25    = ['25', '25'],
     GLOB025    = ['25', '25'],
     EURW1S40   = ['25', '25'],
     EURAT01    = ['10', '10'],
     EURW1S100  = ['10', '10'],
     EURAT1S20  = ['05', '05'],
+)
+
+model_map = dict(
+    PAAROME = dict(vapp='arome', vconf='3dvarfr'),  # Analyse AROME
+    PAROME  = dict(vapp='arome', vconf='3dvarfr'),  # prevision AROME
+    PAA     = dict(vapp='arpege', vconf='4dvarfr'),  # Analyse ARPEGE
+    PA      = dict(vapp='arpege', vconf='4dvarfr'),  # Analyse ARPEGE
 )
 
 
@@ -70,6 +91,7 @@ def parse_command_line():
                                  'FRANX01', 'GLOB25', 'FRANGP0025'])
     parser.add_argument('-t', '--echeances', help='Echeances à extraire (integer or "first:last" format)')
     parser.add_argument('-H', '--pdt', help="Pas de temps du réseau d'extraction", type=int, default=None)
+    parser.add_argument('-a', '--archive', help="Archive output file with Vortex", action="store_true", default=False)
 
     args = parser.parse_args()
 
@@ -96,8 +118,6 @@ class ExtractBDAP(object):
         self.domain         = domain
         self.gribname       = f'{model}_{date.strftime("%Y%m%d%H")}_{ech}.grib'
 
-        self.run()
-
     def requete(self):
         self.rqst = 'requete.tmp'
         f = open(self.rqst, "w")
@@ -107,8 +127,8 @@ class ExtractBDAP(object):
         f.write(f'#PARAM {self.parameter}\n')  # paramater
         f.write(f'#Z_REF {self.grid}\n')  # BDAP grib name (see doc)
         f.write("#Z_EXTR INTERPOLATION\n")  # Interpolation on a user-defined grid
-        f.write('#Z_GEO ' + ' '.join(coords[self.domain]) + '\n')  # Coordonées d'extraction (N S W E)
-        f.write('#Z_STP 100 100\n')  # Pas en lat/lon (0.1/0.1)
+        f.write('#Z_GEO ' + ' '.join(coords[self.domain]) + '\n')  # Coordonées de la grille de sortie (N S WA E)
+        f.write('#Z_STP ' + ' '.join(dl[self.grid]) + '\n')  # Pas en lat/lon de la grille de sortie
         f.write('#L_LST ' + ' '.join(self.levels) + '\n')  # List de niveaux
         f.write(f'#L_TYP {self.level_type}\n')  # Type de niveau (SOL, ISOBARE, HAUTEUR, MER, ISO*,...)
 
@@ -121,7 +141,6 @@ class ExtractBDAP(object):
         # os.system(f"{cmd} {self.rqst}")  # Pour 'dap3_dev_echeance'
         if os.path.exists(self.gribname):
             if os.path.getsize(self.gribname) > 0:
-                self.extractedfiles.append(self.gribname)
                 return True
             else:
                 print('Removing empty file {0:s}'.format(self.gribname))
@@ -175,16 +194,62 @@ if __name__ == "__main__":
     print(workdir)
     goto(workdir)
 
-    extractedfiles = list()
-    date = datebegin
-    # Loop over dates and lead times
-    while date <= dateend:
-        for ech in echeances:
-            # Launch extraction
-            grib = ExtractBDAP(model, date, ech, parameter, level_type, levels, grid, domain)
-            if grib is not None:
-                extractedfiles.append(grib)
-        date = date + timedelta(hours=max(dt, 1))  # Avoid infinite loops
-    # Merge all grib files into a single one
-    outname = f'{model}_{args.datebegin}_{args.dateend}.grib'
-    os.system('cat ' + ' '.join(extractedfiles) + f' > {outname}')
+    outname = f'{level_type}_{args.datebegin}_{args.dateend}.nc'
+    if not os.path.exists(outname):
+        extractedfiles = list()
+        date = datebegin
+        # Loop over dates and lead times
+        while date <= dateend:
+            for ech in echeances:
+                # Launch extraction
+                extractor = ExtractBDAP(model, date, ech, parameter, level_type, levels, grid, domain)
+                grib = extractor.run()
+                if grib is not None:
+                    extractedfiles.append(grib)
+            date = date + timedelta(hours=max(dt, 1))  # Avoid infinite loops
+
+        # Open all extracted files with xarray
+        print('Opening grib files with xarray...')
+        ds  = xr.open_mfdataset(extractedfiles, concat_dim='valid_time', combine='nested', engine='cfgrib')
+        print('Dataset created')
+        ds.to_netcdf(outname)
+
+    ############################################
+    # Everything beyond this point is optional #
+    ############################################
+
+    if args.archive:
+        import cen  # Import necessary to load vortex CEN-specific ressourees
+        import vortex
+        from vortex import toolbox
+
+        t = vortex.ticket()
+
+        if level_type.startswith('ISO_'):
+            kind = level_type
+        else:
+            print('Kind not yet defined for this extraxction')
+            raise NotImplementedError
+
+        out = toolbox.output(
+            kind           = kind,
+            vapp           = 'edelweiss',
+            vconf          = domain,
+            source_app     = model_map[model]['vapp'],
+            source_conf    = model_map[model]['vconf'],
+            model          = '[vapp]',
+            cutoff         = 'assimilation',
+            filename       = outname,
+            experiment     = f'ExtractionBDAP@{os.environ["USER"]}',
+            geometry       = grid,
+            nativefmt      = 'netcdf',
+            namebuild      = 'flat@cen',
+            datebegin      = args.datebegin,
+            dateend        = args.dateend,
+            date           = '[dateend]',
+            namespace      = 'vortex.multi.fr',
+            block          = 'meteo',
+        )
+        out[0].quickview()
+        print(t.prompt, 'Output location =', out[0].location())
+        print()
