@@ -217,12 +217,15 @@ class sun():
         theor_diffus = ratio_clearsky * ZTHEOR
         theor_direct = ZTHEOR - theor_diffus
 
-        # Apply a threshold to the direct radiation (can not exceed the theorical direct component, otherwise, the projection can provide very strange values
+        # Apply a threshold to the direct radiation (can not exceed the theorical direct component, 
+        # otherwise, the projection can provide very strange values)
         tab_direct = np.where(tab_direct <= theor_direct, tab_direct, theor_direct)
 
         # Conserve energy by a transfer to the diffuse component
+        # TODO L. Roussel why we keep radiation in deep valleys
         tab_diffus = tab_global - tab_direct
-
+        ###########################################
+        exit()
         # direct incident radiation (maximum value authorized is the theoretical maximum radiation)
         direct_incident = np.divide(tab_direct, sin_gamma, out=np.zeros_like(tab_direct), where=sin_gamma!=0)
 
