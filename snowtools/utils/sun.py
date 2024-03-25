@@ -400,11 +400,11 @@ class sun():
         decimal_hours = np.ones(tab_time_date.shape, 'f')
         for i in range(len(tab_time_date)):
             #            tab_time_date_2[i] = time_init + datetime.timedelta(seconds = tab_time_date[i])
-            j = tab_time_date[i].timetuple()
-            julian_days[i] = j[7]  # extract Julian day (integer)
-            decimal_hours[i] = j[3]  # extrac time in day
-            # TODO correct here too
-
+            timetup = tab_time_date[i].timetuple()
+            julian_days[i] = timetup[7]  # extract Julian day (integer)
+            # L. Roussel: fix to decimal hour instead of integer hour
+            decimal_hours[i] = timetup[3] + timetup[4] / 60 + timetup[5] / 3600  # extrac time in hour
+            
         j = self.upscale_tab_time(julian_days, (tab_time_date.shape[0], 1))
         h = self.upscale_tab_time(decimal_hours, (tab_time_date.shape[0], 1))
 
