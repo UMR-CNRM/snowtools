@@ -5,6 +5,8 @@ import math
 
 from snowtools.utils.resources import print_used_memory
 
+# temporary
+import matplotlib.pyplot as plt
 
 def interp1d(x, y, tab):
     """
@@ -110,60 +112,115 @@ class sun():
         VSOL10 = 11.7,
         VSOL11 = 15.,
         VSOL12 = .001,
-        UDG2RD = math.pi / 180.
+        
         NUZENI = 12.
         UH2LON = 15.
         NUH2M = 60.
         UEPSI = 0.001
-        URD2DG = 180. / math.pi
+        
+        eps = 0.0001
+        PI = math.pi
+        DG2RD = PI / 180. # degree to radian
+        RD2DG = 180. / PI # radian to degree
 
-        # Conversion of slope and aspect to rad:
+        # Conversion of slope and aspect to radian:
+        slope, aspect = slope * DG2RD, aspect * DG2RD
 
-        slope, aspect = slope * UDG2RD, aspect * UDG2RD
-
-        # Time equation
-        ZDT = VSOL1 * np.sin((VSOL2 * (VSOL3 * j - VSOL4)) * UDG2RD)\
-            - VSOL5 * np.sin((VSOL3 * j - VSOL6) * UDG2RD)
-
-        # sun declination
-        ZSINDL = VSOL7 * np.sin(UDG2RD * (VSOL3 * j - VSOL8))
+        # Later computations are almost all approximations used for engineering
+        # --- Equation of Time --- (time shift, take in account orbit eccentricity, and obliquity):
+        ZDT = VSOL1 * np.sin((VSOL2 * (VSOL3 * j - VSOL4)) * DG2RD)\
+            - VSOL5 * np.sin((VSOL3 * j - VSOL6) * DG2RD)
+        eot = 9.9 * np.sin(2 * (0.986 * j - 100) * DG2RD) \
+            - 7.7 * np.sin((0.986 * j - 2) * DG2RD)
+        plt.plot(ZDT, label="ZDT")
+        plt.plot(eot, label="eot")
+        plt.legend()
+        plt.show()
+        
+        # --- Sun declination --- (angular distance of the sun's rays north (or south) of the equator):
+        ZSINDL = VSOL7 * np.sin(DG2RD * (VSOL3 * j - VSOL8))
         ZDELTA = np.arcsin(ZSINDL)
-
+        # L. Roussel, small changes here, but easier to understand
+        # old formula : 0.4 * np.sin((0.986 * j - 80) * DG2RD)
+        sin_delta = 0.4 * np.sin((j - 81) / 365 * 2 * PI) 
+        delta = np.arcsin(sin_delta)
+        plt.plot(ZSINDL, label="ZSINDL")
+        plt.plot(sin_delta, label="sin_delta")
+        plt.legend()
+        plt.show()
+        
         # M Lafaysse : remove this threshold because there are controls in SAFRAN and because there are numerical issues at sunset.
-        # theoretical maximum radiation
+        # --- Theoretical maximum radiation ---
         ZRSI0 = VSOL9 * (1. - ZSINDL / VSOL10)
+        max_theor_radiation = 1370 * (1 - sin_delta / 11.7)
+        plt.plot(ZRSI0, label="ZRSI0")
+        plt.plot(max_theor_radiation, label="max_theor_radiation")
+        plt.legend()
+        plt.show()
 
-        # solar angular time
-        ZOMEGA = VSOL11 * (h - NUZENI + ZDT / NUH2M + lon / UH2LON) * UDG2RD
+        # --- Solar angular time ---
+        ZOMEGA = VSOL11 * (h - NUZENI + ZDT / NUH2M + lon / UH2LON) * DG2RD
+        omega_time = 15 * (h - 12. + eot / 60 + lon / 15) * DG2RD
+        plt.plot(ZOMEGA, label="ZOMEGA")
+        plt.plot(omega_time, label="omega_time")
+        plt.legend()
+        plt.show()
 
-        # solar angular height
-
-        ZLAT = lat * UDG2RD
+        # --- Solar angular height ---
+        #   zenith, vertical
+        #   | 
+        #   |  solar zenith angle, sza (theta)
+        #   |---->x
+        #   |    x^
+        #   |   x |
+        #   |  x  | solar altitude angle (gamma)
+        #   | x   | ~ solar angular height
+        #   |x    |
+        #   +--------- horizon
+        # 
+        # cos(theta) = sin(gamma)
+        
+        ZLAT = lat * DG2RD
         ZSINGA = np.sin(ZLAT) * ZSINDL + np.cos(ZLAT) * np.cos(ZDELTA) * np.cos(ZOMEGA)
         ZSINGA = np.where(ZSINGA < UEPSI, VSOL12, ZSINGA)
         ZGAMMA = np.arcsin(ZSINGA)
-
+        
+        lat_radian = lat * DG2RD
+        sin_gamma = np.sin(lat_radian) * sin_delta + np.cos(lat_radian) * np.cos(delta) * np.cos(omega_time)
+        # L. Roussel: set as 0 if negative, not 0.001
+        sin_gamma = np.where(sin_gamma < eps, 0, sin_gamma)
+        gamma = np.arcsin(sin_gamma)
+        
+        plt.plot(ZGAMMA, label="ZGAMMA")
+        plt.plot(gamma, label="gamma")
+        plt.legend()
+        plt.show()
+        
+        exit()
+        
         # direct incident radiation (maximum value authorized is the theoretical maximum radiation)
         ZRSI = tab_direct / ZSINGA
 
         # M Lafaysse : remove this threshold because there are controls in SAFRAN and because there are numerical issues at sunset.
         ZRSI = np.where(ZRSI >= ZRSI0, ZRSI0, ZRSI)
-
+ 
+        ######## Not used anymore, old code ########
         # solar zenith angle
-        ZSINPS = np.cos(ZDELTA) * np.sin(ZOMEGA) / np.cos(ZGAMMA)
+        # ZSINPS = np.cos(ZDELTA) * np.sin(ZOMEGA) / np.cos(ZGAMMA)
 
         # F. Besson/M. Lafaysse : Threshold on ZSINPS (bug on some cells of SIM-FRANCE)
-        ZSINPS = np.where(ZSINPS < -1.0, -1.0, ZSINPS)
-        ZSINPS = np.where(ZSINPS > 1.0, 1.0, ZSINPS)
+        # ZSINPS = np.where(ZSINPS < -1.0, -1.0, ZSINPS)
+        # ZSINPS = np.where(ZSINPS > 1.0, 1.0, ZSINPS)
 
-#        Not used : ML comment this instruction
-#        ZCOSPS=(np.sin(ZLAT)*ZSINGA-ZSINDL)/(np.cos(ZLAT)*np.cos(ZGAMMA))
+        # Not used : ML comment this instruction
+        # ZCOSPS=(np.sin(ZLAT)*ZSINGA-ZSINDL)/(np.cos(ZLAT)*np.cos(ZGAMMA))
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         # Before summer 2017, we had this mistake :
         # # # # ZPSI = np.arcsin(ZSINPS)  # solar azimuth, 0. is South # # # # # NEVER USE THIS WRONG FORMULA
         # This gives a wrong trajectory in summer when the azimuth should be <90° or >270°
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+        #############################################
+        
         # The new computation of azimuth below is extracted from the theoricRadiation method
         # Who knows where it comes from ?
 
@@ -179,12 +236,12 @@ class sun():
         azimuth = np.where(sunvector1 <= 0., np.pi + azimuth, azimuth)
         azimuth = np.where(azimuth >= 2. * np.pi, azimuth - 2. * np.pi, azimuth)
 
-#         # diffuse/global theorical ratio for clear sky (SBDART modelling by M. Dumont for Col de Porte)
+       # diffuse/global theorical ratio for clear sky (SBDART modelling by M. Dumont for Col de Porte)
         a = -2.243613
         b = 5.199838
         c = -4.472389
         d = -0.276815
-#
+
         ratio_clearsky = np.exp(a * (mu ** 3) + b * (mu ** 2) + c * mu + d)
         ratio_clearsky = np.where(ratio_clearsky <= 1, ratio_clearsky, 1)
         # Note that it is not sufficient to apply the threshold on the ratio, it is necessary to apply a threshold to the direct radiation
@@ -215,9 +272,9 @@ class sun():
 
         # projection on slope/aspect surface - note that aspect is taken from North.
         # ZRSIP=ZRSI*(np.cos(ZGAMMA)*np.sin(slope)*np.cos(ZPSI - (np.pi + aspect))+ZSINGA*np.cos(slope))
-#
-#         print "WRONG ZRSIP"
-#         print ZRSIP[t,:]
+
+        # print "WRONG ZRSIP"
+        # print ZRSIP[t,:]
         ZRSIP = ZRSI * (np.cos(ZGAMMA) * np.sin(slope) * np.cos(azimuth - aspect) + ZSINGA * np.cos(slope))
         ZRSIP = np.where(ZRSIP <= 0., 0., ZRSIP)
 
@@ -226,12 +283,12 @@ class sun():
         # Matthieu 2014/09/16 : réécriture parce que les masques changent d'un point à l'autre
 
         if list_list_mask is not None:
-            ZPSI1 = azimuth * URD2DG  # solar azimuth, 0. is North
+            ZPSI1 = azimuth * RD2DG  # solar azimuth, 0. is North
             ZMASK = np.zeros_like(ZPSI1)
 
             for i, list_azim in enumerate(list_list_azim):
                 ZMASK[:, i] = interp1d(list_azim, list_list_mask[i], ZPSI1[:, i])
-            ZRSIP = np.where(ZMASK > ZGAMMA * URD2DG, 0., ZRSIP)  # set to zero direct radiation values when solar angle is below mask angle (computed as f(ZPSI1))
+            ZRSIP = np.where(ZMASK > ZGAMMA * RD2DG, 0., ZRSIP)  # set to zero direct radiation values when solar angle is below mask angle (computed as f(ZPSI1))
 
         if lnosof_surfex:
             # Now this is the normal case
@@ -338,7 +395,7 @@ class sun():
         VSOL10 = 11.7,
         VSOL11 = 15.,
         VSOL12 = .001,
-        UDG2RD = math.pi / 180.
+        DG2RD = math.pi / 180.
         NUZENI = 12.
         UH2LON = 15.
         NUH2M = 60.
@@ -346,25 +403,25 @@ class sun():
 
         # Conversion of slope and aspect to rad:
 
-        slope, aspect = slope * UDG2RD, aspect * UDG2RD
+        slope, aspect = slope * DG2RD, aspect * DG2RD
 
         # Time equation
-        ZDT = VSOL1 * np.sin((VSOL2 * (VSOL3 * j - VSOL4)) * UDG2RD)\
-            - VSOL5 * np.sin((VSOL3 * j - VSOL6) * UDG2RD)
+        ZDT = VSOL1 * np.sin((VSOL2 * (VSOL3 * j - VSOL4)) * DG2RD)\
+            - VSOL5 * np.sin((VSOL3 * j - VSOL6) * DG2RD)
 
         # sun declination
-        ZSINDL = VSOL7 * np.sin(UDG2RD * (VSOL3 * j - VSOL8))
+        ZSINDL = VSOL7 * np.sin(DG2RD * (VSOL3 * j - VSOL8))
         ZDELTA = np.arcsin(ZSINDL)
 
         # theoretical maximum radiation
         ZRSI0 = VSOL9 * (1. - ZSINDL / VSOL10)  # pylint: disable=possibly-unused-variable
 
         # solar angular time
-        ZOMEGA = VSOL11 * (h - NUZENI + ZDT / NUH2M + lon / UH2LON) * UDG2RD
+        ZOMEGA = VSOL11 * (h - NUZENI + ZDT / NUH2M + lon / UH2LON) * DG2RD
 
         # solar angular height
 
-        ZLAT = lat * UDG2RD
+        ZLAT = lat * DG2RD
         ZSINGA = np.sin(ZLAT) * ZSINDL + np.cos(ZLAT) * np.cos(ZDELTA) * np.cos(ZOMEGA)
         ZSINGA = np.where(ZSINGA < UEPSI, VSOL12, ZSINGA)
         ZGAMMA = np.arcsin(ZSINGA)
