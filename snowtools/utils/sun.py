@@ -127,17 +127,20 @@ class sun():
         slope, aspect = slope * DG2RD, aspect * DG2RD
 
         # Later computations are almost all approximations used for engineering
-        # --- Equation of Time --- (time shift, take in account orbit eccentricity, and obliquity):
+        
+        # --- Equation of Time --- 
+        # (time shift in minutes, take in account orbit eccentricity, and obliquity)
         ZDT = VSOL1 * np.sin((VSOL2 * (VSOL3 * j - VSOL4)) * DG2RD)\
             - VSOL5 * np.sin((VSOL3 * j - VSOL6) * DG2RD)
-        eot = 9.9 * np.sin(2 * (0.986 * j - 100) * DG2RD) \
-            - 7.7 * np.sin((0.986 * j - 2) * DG2RD)
+        eot = 9.9 * np.sin(2 * (j - 101.4) / 365 * 2 * PI) \
+            - 7.7 * np.sin((j - 2.027) / 365 * 2 * PI)
         plt.plot(ZDT, label="ZDT")
         plt.plot(eot, label="eot")
         plt.legend()
         plt.show()
         
-        # --- Sun declination --- (angular distance of the sun's rays north (or south) of the equator):
+        # --- Sun declination ---
+        # (angular distance of the sun's rays north (or south) of the equator):
         ZSINDL = VSOL7 * np.sin(DG2RD * (VSOL3 * j - VSOL8))
         ZDELTA = np.arcsin(ZSINDL)
         # L. Roussel, small changes here, but easier to understand
@@ -148,25 +151,25 @@ class sun():
         plt.plot(sin_delta, label="sin_delta")
         plt.legend()
         plt.show()
-        
-        # M Lafaysse : remove this threshold because there are controls in SAFRAN and because there are numerical issues at sunset.
-        # --- Theoretical maximum radiation ---
-        ZRSI0 = VSOL9 * (1. - ZSINDL / VSOL10)
-        max_theor_radiation = 1370 * (1 - sin_delta / 11.7)
-        plt.plot(ZRSI0, label="ZRSI0")
-        plt.plot(max_theor_radiation, label="max_theor_radiation")
-        plt.legend()
-        plt.show()
 
         # --- Solar angular time ---
+        # TODO do not take in account the shift from year to year
+        # h - 12: centered at noontime
+        # eot / 60: equation of time in hour
+        # lon / 15: position from Greenwhich (french Alps around 7° East, i.e ~30 min shift)
+        # / 24: in days
+        # * 2 * PI: to angle
         ZOMEGA = VSOL11 * (h - NUZENI + ZDT / NUH2M + lon / UH2LON) * DG2RD
-        omega_time = 15 * (h - 12. + eot / 60 + lon / 15) * DG2RD
+        omega_time = (h - 12 + eot / 60 + lon / 15) / 24 * 2 * PI
+
         plt.plot(ZOMEGA, label="ZOMEGA")
         plt.plot(omega_time, label="omega_time")
         plt.legend()
         plt.show()
 
         # --- Solar angular height ---
+        # cos(theta) = sin(gamma)
+        #
         #   zenith, vertical
         #   | 
         #   |  solar zenith angle, sza (theta)
@@ -178,8 +181,6 @@ class sun():
         #   |x    |
         #   +--------- horizon
         # 
-        # cos(theta) = sin(gamma)
-        
         ZLAT = lat * DG2RD
         ZSINGA = np.sin(ZLAT) * ZSINDL + np.cos(ZLAT) * np.cos(ZDELTA) * np.cos(ZOMEGA)
         ZSINGA = np.where(ZSINGA < UEPSI, VSOL12, ZSINGA)
@@ -196,13 +197,31 @@ class sun():
         plt.legend()
         plt.show()
         
-        exit()
+        
+        # M Lafaysse : remove this threshold because there are controls in SAFRAN and because there are numerical issues at sunset.
+        # --- Theoretical maximum radiation ---
+        ZRSI0 = VSOL9 * (1. - ZSINDL / VSOL10)
+        max_theor_radiation = 1370 * (1 - sin_delta / 11.7)
+        plt.plot(ZRSI0, label="ZRSI0")
+        plt.plot(max_theor_radiation, label="max_theor_radiation")
+        plt.legend()
+        plt.show()
+ 
         
         # direct incident radiation (maximum value authorized is the theoretical maximum radiation)
         ZRSI = tab_direct / ZSINGA
+        direct_incident_radiation = tab_direct / sin_gamma # vertical equivalent
+        # TODO recomment, this is the radiation in a plan orthogonal to the solar angle
 
         # M Lafaysse : remove this threshold because there are controls in SAFRAN and because there are numerical issues at sunset.
         ZRSI = np.where(ZRSI >= ZRSI0, ZRSI0, ZRSI)
+        direct_incident_radiation = np.where(direct_incident_radiation >= max_theor_radiation, max_theor_radiation, direct_incident_radiation)
+        plt.plot(ZRSI0, label="ZRSI0")
+        plt.plot(max_theor_radiation, label="max_theor_radiation")
+        plt.plot(ZRSI, label="ZRSI")
+        plt.plot(direct_incident_radiation, label="direct_incident_radiation")
+        plt.legend()
+        plt.show()
  
         ######## Not used anymore, old code ########
         # solar zenith angle
@@ -224,24 +243,31 @@ class sun():
         # The new computation of azimuth below is extracted from the theoricRadiation method
         # Who knows where it comes from ?
 
-        sunvector0 = -np.sin(ZOMEGA) * np.cos(ZDELTA)  # component x of azimuth angle
-        sunvector1 = np.sin(ZLAT) * np.cos(ZOMEGA) * np.cos(ZDELTA) - np.cos(ZLAT) * np.sin(ZDELTA)  # component y of azimuth angle
-        sunvector2 = np.cos(ZLAT) * np.cos(ZOMEGA) * np.cos(ZDELTA) + np.sin(ZLAT) * np.sin(ZDELTA)  # =cos of zenith angle
+        x_azimuth_angle = -np.sin(ZOMEGA) * np.cos(ZDELTA)  # component x of azimuth angle
+        y_azimuth_angle = np.sin(ZLAT) * np.cos(ZOMEGA) * np.cos(ZDELTA) - np.cos(ZLAT) * np.sin(ZDELTA)  # component y of azimuth angle
+        
+        azimuth = np.where((x_azimuth_angle == 0) & (y_azimuth_angle == 0), 0.,
+                    (np.pi) - np.arctan(x_azimuth_angle / y_azimuth_angle))
+        azimuth = np.where(y_azimuth_angle <= 0., azimuth + np.pi, azimuth)
+        azimuth = np.where(azimuth >= 2. * np.pi, azimuth - 2. * np.pi, azimuth) # back into [0, 2 * PI]
+        
+        # sunvector2 = np.cos(ZLAT) * np.cos(ZOMEGA) * np.cos(ZDELTA) + np.sin(ZLAT) * np.sin(ZDELTA)  # =cos of zenith angle
+        # sunvector2 = np.where(sunvector2 < 0., 0., sunvector2)
+        # = sin_gamma = cos_theta = cos(sza)
+        # plt.plot(sunvector2, label="sunvector2")
+        # plt.plot(sin_gamma, label="sin_gamma")
+        # plt.legend()
+        # plt.show()
 
-        sunvector2 = np.where(sunvector2 < 0., 0., sunvector2)
-        mu = sunvector2  # mu = cos of zenith angle
-
-        azimuth = np.where((sunvector0 == 0) & (sunvector1 == 0), 0.,
-                           (np.pi) - np.arctan(sunvector0 / sunvector1))
-        azimuth = np.where(sunvector1 <= 0., np.pi + azimuth, azimuth)
-        azimuth = np.where(azimuth >= 2. * np.pi, azimuth - 2. * np.pi, azimuth)
-
-       # diffuse/global theorical ratio for clear sky (SBDART modelling by M. Dumont for Col de Porte)
+        ######## Recompute diffuse/direct ########
+        # diffuse/global theorical ratio for clear sky (SBDART modelling by M. Dumont for Col de Porte)
         a = -2.243613
         b = 5.199838
         c = -4.472389
         d = -0.276815
 
+        # mu = sunvector2  # mu = cos of zenith angle
+        mu = sin_gamma.copy()
         ratio_clearsky = np.exp(a * (mu ** 3) + b * (mu ** 2) + c * mu + d)
         ratio_clearsky = np.where(ratio_clearsky <= 1, ratio_clearsky, 1)
         # Note that it is not sufficient to apply the threshold on the ratio, it is necessary to apply a threshold to the direct radiation
@@ -251,30 +277,30 @@ class sun():
         a1 = 0.620060537777
         a0 = -0.025767794921
 
-        ZTHEOR = ZRSI0 * (a3 * mu**3 + a2 * mu**2 + a1 * mu + a0 )
+        ZTHEOR = ZRSI0 * (a3 * mu**3 + a2 * mu**2 + a1 * mu + a0)
         ZTHEOR = np.where(ZTHEOR < 0., 0., ZTHEOR)
 
         # Compute theorical components
         theor_diffus = ratio_clearsky * ZTHEOR
         theor_direct = ZTHEOR - theor_diffus
 
-        # Apply a threshold to the direct radiation (can not exceed the theorical direct component, otherwise, the projection can provide very strange values
+        # Apply a threshold to the direct radiation (can not exceed the theorical direct component, 
+        # otherwise, the projection can provide very strange values)
         tab_direct = np.where(tab_direct <= theor_direct, tab_direct, theor_direct)
 
         # Conserve energy by a transfer to the diffuse component
+        # TODO L. Roussel why we keep radiation in deep valleys
         tab_diffus = tab_global - tab_direct
-
+        ###########################################
+        exit()
         # direct incident radiation (maximum value authorized is the theoretical maximum radiation)
         ZRSI = tab_direct / ZSINGA
 
         # M Lafaysse : remove this threshold because there are controls in SAFRAN and because there are numerical issues at sunset.
         ZRSI = np.where(ZRSI >= ZRSI0, ZRSI0, ZRSI)
 
-        # projection on slope/aspect surface - note that aspect is taken from North.
+        # --- Projection on slope/aspect surface --- note that aspect is taken from North.
         # ZRSIP=ZRSI*(np.cos(ZGAMMA)*np.sin(slope)*np.cos(ZPSI - (np.pi + aspect))+ZSINGA*np.cos(slope))
-
-        # print "WRONG ZRSIP"
-        # print ZRSIP[t,:]
         ZRSIP = ZRSI * (np.cos(ZGAMMA) * np.sin(slope) * np.cos(azimuth - aspect) + ZSINGA * np.cos(slope))
         ZRSIP = np.where(ZRSIP <= 0., 0., ZRSIP)
 
