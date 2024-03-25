@@ -3,6 +3,7 @@
 import numpy as np
 import math
 
+
 from snowtools.utils.resources import print_used_memory
 
 # L. Roussel dec. 2024 : modification start slope_aspect_correction when extracting dates
@@ -216,16 +217,22 @@ class sun():
         # Compute theorical components
         theor_diffus = ratio_clearsky * ZTHEOR
         theor_direct = ZTHEOR - theor_diffus
+        
+        plt.plot(tab_time_date, theor_diffus, marker=".", label="theor_diffus")
+        plt.plot(tab_time_date, theor_direct, marker=".", label="theor_direct")
+        plt.plot(tab_time_date, tab_direct, marker=".", label="tab_direct before")
 
         # Apply a threshold to the direct radiation (can not exceed the theorical direct component, 
         # otherwise, the projection can provide very strange values)
         tab_direct = np.where(tab_direct <= theor_direct, tab_direct, theor_direct)
-
+        plt.plot(tab_time_date, tab_direct, marker=".", label="tab_direct after")
+        plt.legend()
+        plt.show()
         # Conserve energy by a transfer to the diffuse component
-        # TODO L. Roussel why we keep radiation in deep valleys
-        tab_diffus = tab_global - tab_direct
+        # TODO L. Roussel why we keep radiation in deep valleys ?
+        # tab_diffus = tab_global - tab_direct
         ###########################################
-        exit()
+
         # direct incident radiation (maximum value authorized is the theoretical maximum radiation)
         direct_incident = np.divide(tab_direct, sin_gamma, out=np.zeros_like(tab_direct), where=sin_gamma!=0)
 
