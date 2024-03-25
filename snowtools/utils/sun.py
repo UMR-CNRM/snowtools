@@ -62,11 +62,11 @@ class sun():
         tab_diffus = diffus[:]
         tab_global = tab_direct + tab_diffus
 
-        slope = self.upscale_tab(slope_in, tab_direct.shape )
-        aspect = self.upscale_tab(aspect_in, tab_direct.shape )
+        slope = self.upscale_tab(slope_in, tab_direct.shape)
+        aspect = self.upscale_tab(aspect_in, tab_direct.shape)
 
-        lon = self.upscale_tab(lon_in, tab_direct.shape )
-        lat = self.upscale_tab(lat_in, tab_direct.shape )
+        lon = self.upscale_tab(lon_in, tab_direct.shape)
+        lat = self.upscale_tab(lat_in, tab_direct.shape)
 
         # extraction of date and computation of fractional Julian day, julian_days (1st january is 1)
         if convert_time is True:
@@ -299,30 +299,34 @@ class sun():
         # M Lafaysse : remove this threshold because there are controls in SAFRAN and because there are numerical issues at sunset.
         ZRSI = np.where(ZRSI >= ZRSI0, ZRSI0, ZRSI)
 
-        # --- Projection on slope/aspect surface --- note that aspect is taken from North.
-        # ZRSIP=ZRSI*(np.cos(ZGAMMA)*np.sin(slope)*np.cos(ZPSI - (np.pi + aspect))+ZSINGA*np.cos(slope))
-        ZRSIP = ZRSI * (np.cos(ZGAMMA) * np.sin(slope) * np.cos(azimuth - aspect) + ZSINGA * np.cos(slope))
-        ZRSIP = np.where(ZRSIP <= 0., 0., ZRSIP)
+        # --- Projection on slope/aspect surface --- 
+        # (note that aspect is taken from North)
+        # old code : ZRSIP=ZRSI*(np.cos(ZGAMMA)*np.sin(slope)*np.cos(ZPSI - (np.pi + aspect))+ZSINGA*np.cos(slope))
+        direct_plane_projected = ZRSI * (np.cos(gamma) * np.sin(slope) * np.cos(azimuth - aspect) + sin_gamma * np.cos(slope))
+        direct_plane_projected = np.where(direct_plane_projected <= 0., 0., direct_plane_projected)
 
-        # take solar masks into account
+        # --- Solar masking ---
+        # if mask are available, mask direct when relief between sun and location
         # (S. Morin 2014/06/27, taken from meteo.f90 in Crocus)
         # Matthieu 2014/09/16 : réécriture parce que les masques changent d'un point à l'autre
+        if list_list_mask is not None: 
+            simu_azimuth_degree = azimuth * RD2DG  # solar azimuth of the simulation, 0. is North
+            simu_interp_mask = np.zeros_like(simu_azimuth_degree) # init for computed solar mask (time, loc) or (time, x, y)
 
-        if list_list_mask is not None:
-            ZPSI1 = azimuth * RD2DG  # solar azimuth, 0. is North
-            ZMASK = np.zeros_like(ZPSI1)
-
-            for i, list_azim in enumerate(list_list_azim):
-                ZMASK[:, i] = interp1d(list_azim, list_list_mask[i], ZPSI1[:, i])
-            ZRSIP = np.where(ZMASK > ZGAMMA * RD2DG, 0., ZRSIP)  # set to zero direct radiation values when solar angle is below mask angle (computed as f(ZPSI1))
+            for i, list_azim in enumerate(list_list_azim): # for each point
+                # interp1d(x, y, interp_x)
+                simu_interp_mask[:, i] = interp1d(list_azim, list_list_mask[i], simu_azimuth_degree[:, i])
+            
+            # set to zero direct radiation values when solar angle is below mask angle
+            direct_plane_projected = np.where(simu_interp_mask > gamma * RD2DG, 0., direct_plane_projected)  
 
         if lnosof_surfex:
             # Now this is the normal case
-            tab_direct = ZRSIP
+            tab_direct = direct_plane_projected
         else:
             # Not recommended
             # put the result back on the horizontal ; surfex will carry out the inverse operation when lnosof=f.
-            tab_direct = ZRSIP / np.cos(slope)
+            tab_direct = direct_plane_projected / np.cos(slope)
 
         if self.printmemory:
             print_used_memory()
