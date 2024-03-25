@@ -66,25 +66,35 @@ class sun():
         lon = self.upscale_tab(lon_in, tab_direct.shape )
         lat = self.upscale_tab(lat_in, tab_direct.shape )
 
-        # extraction of date and computation of fractional Julian day, j_2 (1 january is 0)
+        # extraction of date and computation of fractional Julian day, julian_days (1st january is 1)
         if convert_time is True:
             # M. Lafaysse : convert date in date at the middle of the time step to compute angles more representative of the fluxes
+            # SAFRAN gives the hourly solar radiation at hour-30 minutes,
+            # then SURFEX uses this flux between H-1 and H.
             deltatime = time[1] - time[0]
             tab_time_date = time - deltatime / 2
         else:
             tab_time_date = time
-        j_2 = np.ones(tab_time_date.shape, 'f')
-        h_2 = np.ones(tab_time_date.shape, 'f')
+            
+        julian_days = np.ones(tab_time_date.shape, 'f')
+        decimal_hours = np.ones(tab_time_date.shape, 'f')
+        
         for i in range(len(tab_time_date)):
-            j = tab_time_date[i].timetuple()
-            j_2[i] = j[7]  # extract Julian day (integer)
-            h_2[i] = j[3]  # extrac time in day
+            # timetuple list description: 
+            # j[0]: year, j[1]: month, j[2]: day, 
+            # j[3]: hour, j[4]: minute, j[5]: second,
+            # j[6]: day of the week, j[7]: day of the year,
+            # j[8]: daylight saving time
+            timetup = tab_time_date[i].timetuple()
+            julian_days[i] = timetup[7]  # extract Julian day (integer)
+            # L. Roussel: fix to decimal hour instead of integer hour
+            decimal_hours[i] = timetup[3] + timetup[4] / 60 + timetup[5] / 3600  # extrac time in hour
 
-        j = self.upscale_tab_time(j_2, tab_direct.shape)
-        h = self.upscale_tab_time(h_2, tab_direct.shape)
+        j = self.upscale_tab_time(julian_days, tab_direct.shape)
+        h = self.upscale_tab_time(decimal_hours, tab_direct.shape)
 
         # all tabs now have the same dimension, which is that of tab_direct.
-        # method from crocus meteo.f90 original file (v2.4)
+        # method used id from crocus meteo.f90 original file (v2.4)
 
         # variables needed for solar computations
 
@@ -299,16 +309,17 @@ class sun():
         :param aspect: aspect (degrees)
         """
 
-        j_2 = np.ones(tab_time_date.shape, 'f')
-        h_2 = np.ones(tab_time_date.shape, 'f')
+        julian_days = np.ones(tab_time_date.shape, 'f')
+        decimal_hours = np.ones(tab_time_date.shape, 'f')
         for i in range(len(tab_time_date)):
             #            tab_time_date_2[i] = time_init + datetime.timedelta(seconds = tab_time_date[i])
             j = tab_time_date[i].timetuple()
-            j_2[i] = j[7]  # extract Julian day (integer)
-            h_2[i] = j[3]  # extrac time in day
+            julian_days[i] = j[7]  # extract Julian day (integer)
+            decimal_hours[i] = j[3]  # extrac time in day
+            # TODO correct here too
 
-        j = self.upscale_tab_time(j_2, (tab_time_date.shape[0], 1))
-        h = self.upscale_tab_time(h_2, (tab_time_date.shape[0], 1))
+        j = self.upscale_tab_time(julian_days, (tab_time_date.shape[0], 1))
+        h = self.upscale_tab_time(decimal_hours, (tab_time_date.shape[0], 1))
 
         # all tabs now have the same dimension, which is that of tab_direct.
         # method from crocus meteo.f90 original file (v2.4)
