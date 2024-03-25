@@ -175,7 +175,8 @@ class sun():
         # # # # ZPSI = np.arcsin(ZSINPS)  # solar azimuth, 0. is South # # # # # NEVER USE THIS WRONG FORMULA
         # This gives a wrong trajectory in summer when the azimuth should be <90° or >270°
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+        #############################################
+        
         # The new computation of azimuth below is extracted from the theoricRadiation method
         # Who knows where it comes from ?
 
