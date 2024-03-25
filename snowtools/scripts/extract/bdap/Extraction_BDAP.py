@@ -44,6 +44,10 @@ Exemples :
 
     ==> Durée d'extraction : environ 26h
 
+3. Pour extraire l'altitude du sol de la grille FRANGP0025 :
+
+>>> p Extraction_BDAP.py -b 2017073106 -t 0 -v SOL -g FRANGP0025 -m PAAROME -l SOL
+
 """
 
 # Liste des coordonnées attendues par la commande dap3: lat_max, lat_min, lon_max, lon_min
@@ -91,7 +95,7 @@ def parse_command_line():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('-b', '--datebegin', help='Begining date of extraction, format YYYYMMDDHH or YYMMDDHH',
                         required=True)
-    parser.add_argument('-e', '--dateend', help = 'Final date of extraction (default=datebegin)')
+    parser.add_argument('-e', '--dateend', help = 'Final date of extraction (default=datebegin)', default=None)
     parser.add_argument('-d', '--domain', help='Domain of the file', choices=coords.keys(), default='GrandesRousses')
     # WARNING : the 'parameters' and 'level-type' arguments depend on each other.
     # TODO : find a way (a very complex dict ?) ton ensure consistency
@@ -124,6 +128,12 @@ def goto(path):
     os.chdir(path)
 
 
+def clean():
+    import glob
+    for fic in glob.glob('*.idx') + glob.glob('*.grib'):
+        os.remove(fic)
+
+
 class ExtractBDAP(object):
 
     def __init__(self, model, date, ech, parameter, level_type, levels, grid, domain):
@@ -136,7 +146,7 @@ class ExtractBDAP(object):
         self.levels         = levels
         self.grid           = grid.upper()
         self.domain         = domain
-        self.gribname       = f'{model}_{date.strftime("%Y%m%d%H")}_{ech}.grib'
+        self.gribname       = f'{level_type}_{date.strftime("%Y%m%d%H")}_{ech}.grib'
 
     def requete(self):
         self.rqst = 'requete.tmp'
@@ -189,7 +199,10 @@ class ExtractBDAP(object):
 if __name__ == "__main__":
     args = parse_command_line()
     datebegin  = datetime.strptime(args.datebegin, '%Y%m%d%H')
-    dateend    = datetime.strptime(args.dateend, '%Y%m%d%H')
+    if args.dateend is not None:
+        dateend = datetime.strptime(args.dateend, '%Y%m%d%H')
+    else:
+        dateend = datebegin
     parameter  = args.parameter
     level_type = args.level_type
     model      = args.model
@@ -217,7 +230,10 @@ if __name__ == "__main__":
     print(workdir)
     goto(workdir)
 
-    outname = f'{level_type}_{args.datebegin}_{args.dateend}.nc'
+    if dateend != datebegin:  # The extraction covers a period
+        outname = f'{level_type}_{grid}_{args.datebegin}_{args.dateend}.nc'
+    else:  # The extraction is associated to a date
+        outname = f'{level_type}_{grid}_{args.datebegin}.nc'
     if not os.path.exists(outname):
         extractedfiles = list()
         date = datebegin
@@ -236,6 +252,8 @@ if __name__ == "__main__":
         ds  = xr.open_mfdataset(extractedfiles, concat_dim='valid_time', combine='nested', engine='cfgrib')
         print('Dataset created')
         ds.to_netcdf(outname)
+
+    clean()
 
     ############################################
     # Everything beyond this point is optional #
