@@ -2,22 +2,13 @@
 # -*- coding: utf-8 -*-
 
 '''
-Created on 8 march 2024
+Created on 25 march 2024
 
 @author: Vernay
 
-Script designed to merge together FORCING variables from different sources into a single FORCING file.
+Script designed to produce 'Rainf' and 'Snowf' variables from a precipitation analysis and AROME
+WETBT profiles (using V.Vionnet's Method) or ISO-0/1°C.
 
-At this stage of the EDELWEISS development, most meteorological variables still come from a single
-re-gridded SAFRAN reanalysis FORCING file except for :
-* Wind variables (Wind/Wind_DIR) that come from a single AROME-DEVINE downscaling
-* Precipitation (Snowf/Rainf) that come from an ANTILOPE/[PEAROME] ensemble precipitation analysis
-
-The current version of this script (march 2024) follows this workflow :
-    1. Start from a SINGLE FORCING.nc file (SAFRAN reanalysis)
-    2. Replace Wind/Wind_DIR variables from a SINGLE WIND.nc file (AROME/-DEVINE)
-    3. For each ensemble member: copy the modified FORCING.nc and replace Rainf/Snowf variables by the ones
-      in the corresponding PRECIPITATION.nc file.
 '''
 
 import os
@@ -26,7 +17,6 @@ import xarray as xr
 import numpy as np
 import argparse
 
-# DEFAULT_NETCDF_FORMAT = 'NETCDF3_CLASSIC'  # WARNING : to_netcdf command very slow (>15')
 DEFAULT_NETCDF_FORMAT = 'NETCDF4_CLASSIC'
 
 
@@ -39,10 +29,6 @@ def parse_command_line():
                         help="Last date covered by the simulation file, format YYYYMMDDHH.")
     parser.add_argument('-m', '--members', type=int, default=None,
                         help="Number of members associated to the experiment")
-    parser.add_argument('-s', '--safran', type=str, required=True,
-                        help="XPID (format xpid@username) OR abspath of the SAFRAN base FORCING")
-    parser.add_argument('-w', '--wind', type=str, required=True,
-                        help="XPID (format xpid@username) OR abspath of the file containing wind variables")
     parser.add_argument('-p', '--precipitation', type=str, required=True,
                         help="XPID (format xpid@username) OR abspath of the file containing  precipitation variables")
     parser.add_argument('-w', '--workdir', type=str, required=True,
@@ -51,28 +37,9 @@ def parse_command_line():
     return args
 
 
-def update_wind(forcing):
-    """
-    Replace Wind and Wind_DIR variables in a FORCING file by the ones coming from a DEVINE execution.
-    """
-    print('Update wind')
-    # 1 Open wind produced by HM with LLT method
-    wind = xr.open_dataset('WIND.nc', chunks='auto')
-    dates = np.intersect1d(forcing.time, wind.time)
-    forcing = forcing.sel({'time': dates})
-    wind = wind.sel({'time': dates})
-    forcing['Wind'].data = wind['Wind'].data
-    forcing['Wind_DIR'].data = wind['Wind_dir'].data
-    wind.close()
-    forcing.time.encoding['dtype'] = 'int32'
-
-    return forcing
-
-
 def update_precipitation(forcing, subdir=None):
     """
-    Replace Rainf and Snowf variables in a FORCING file by the ones coming from a precipitation analysis
-    The subdir keyword argument is used when the FORCING file is part of an ensemble.
+    Compute Rainf and Snowf variables.
     """
     precipitation = xr.open_dataset('PRECIPITATION.nc', drop_variables=['Precipitation', 'snowfrac_ds', 'z_snowlim_ds'],
                                     chunks='auto')
@@ -100,36 +67,19 @@ def write(ds, outname):
     return datedeb, dateend
 
 
-def check_date(datebegin_file, datebegin_arg, dateend_file, dateend_arg):
-    if datebegin_file != datebegin_arg:
-        print(f'WARNING : Begin date of the produced FORCING {datebegin_file} does not match the one prescribed'
-              '{datebegin_arg}')
-    if datebegin_file != datebegin_arg:
-        print(f'WARNING : End date of the produced FORCING {dateend_file} does not match the one prescribed'
-              '{dateend_arg}')
-
-
-def update(forcing, members, datebegin, dateend):
-    outname = 'FORCING_OUT.nc'
-    forcing = update_wind(forcing)
+def compute_phase(members):
+    outname = 'OUT.nc'
     if members is not None:
         for member in range(members):
             print(f'Member {member}')
             subdir = f'mb{member}'
-            forcing = update_precipitation(forcing, subdir=subdir)
-            datedeb, datefin = write(forcing, outname)
-            check_date(datedeb, datebegin, datefin, dateend)
+            update_precipitation(subdir=subdir)
     else:
-        forcing = update_precipitation(forcing)
-        datebegin, dateend = write(forcing, outname)
-        check_date(datedeb, datebegin, datefin, dateend)
-
-    return datebegin, dateend
+        update_precipitation()
+    datebegin, dateend = write(forcing, outname)
 
 
 def clean(members):
-    shutil.rmtree('FORCING_IN.nc')
-    shutil.rmtree('WIND.nc')
     for member in range(members):
         shutil.rmtree(os.path.join(f'mb{member}', 'PRECIPITATION.nc'))
 
@@ -147,8 +97,6 @@ if __name__ == '__main__':
     xpid          = args.xpid
     members       = args.members
     workdir       = args.workdir
-    safran        = args.safran
-    wind          = args.wind
     precipitation = args.precipitation
     diroutput     = args.diroutput
     geometry      = 'GrandesRousses250m'
@@ -158,28 +106,31 @@ if __name__ == '__main__':
     try:
         # Retrieve input files with Vortex
         from snowtools.scripts.extract.vortex import vortexIO
-        vortexIO.get_forcing(datebegin, dateend, safran, geometry, filename='FORCING_IN.nc')
-        vortexIO.get_wind(datebegin, dateend, wind, geometry)
         vortexIO.get_precipitation(datebegin, dateend, precipitation, geometry, members=members)
+        vortexIO.get_iso_wetbt(datebegin, dateend, precipitation, geometry, members=members)
         vortex = True
     except (ImportError, ModuleNotFoundError):
         vortex = False
         # Retrieve input files without Vortex
-        os.symlink(safran, 'FORCING_IN.nc')
-        os.symlink(wind, 'WIND.nc')
         for member in range(members):
             os.makedirs(f'mb{member}')
             os.symlink(f'{precipitation}/mb{member}/PRECIPITATION.nc', f'mb{member}/PRECIPITATION.nc')
 
-    forcing = open_dataset('FORCING_IN.nc')  # Read input forcing file
-    datedeb, datefin = update(forcing, members, datebegin, dateend)  # Single SAFRAN FORCING file --> 16 FORCINGs
+    datedeb, datefin = compute_phase(members)
+
+    if datedeb != datebegin:
+        print(f'WARNING : begin date of the produced FORCING {datedeb} does not match the one prescribed {datebegin}')
+    if datefin != dateend:
+        print(f'WARNING : end date of the produced FORCING {datefin} does not match the one prescribed {dateend}')
 
     if vortex:
-        vortexIO.put_forcing(datedeb, datefin, xpid, geometry, members=members, filename='FORCING_OUT.nc')
+        # TODO : Trouver une façon de différencier les resource de type "precipitation totale" avec les celles prêtes
+        # à intégrer un FORCING (contenant les variables 'Rainf' et 'Snowf')
+        vortexIO.put_precipitation(datebegin, dateend, precipitation, geometry, members=members)
         clean()
     else:
         # Save output files without Vortex
         if diroutput is not None:
-            shutil.copyfile('FORCING_OUT.nc', diroutput)
+            shutil.copyfile('OUT.nc', diroutput)
         else:
             print(f'No {diroutput} argument provided, output files are left under {workdir}')
