@@ -102,7 +102,7 @@ class sun():
         h = self.upscale_tab_time(decimal_hours, tab_direct.shape)
 
         # all tabs now have the same dimension, which is that of tab_direct.
-        # method from crocus meteo.f90 original file (v2.4)
+        # method used id from crocus meteo.f90 original file (v2.4)
 
         # --------- Math constants ---------
         eps = 0.0001
