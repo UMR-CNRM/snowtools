@@ -22,7 +22,8 @@ Documentation :
 Exemples :
 ----------
 
-1. Extraction des ISO_TPW 0°C 1°C de l'analyse AROME entre le 2017073106 et le 2018080106 :
+1. Extraction des ISO_TPW 0°C 1°C de l'analyse AROME entre le 2017073106 et le 2018080106 sur le domaine
+   des GrandesRousses (domain par défaut, coordonnées dans le dictionnaire 'coords').
    La grille EURW1S40 est displonible depuis le 05/12/2017, avant cette date il faut extraire la grille
    FRANGP0025.
    Le parametre ISO_WETBT s'appelle ISO_TPW avant le 01/07/2019
@@ -32,6 +33,16 @@ Exemples :
     La même chose en archivant le fichier netcdf produit avec Vortex:
 
 >>> p Extraction_BDAP.py -b 2017073106 -e 2018080106 -t 0 -v ISO_TPW -l 27315 27415 -g FRANGP0025 -m PAAROME -a
+
+    ==> Durée d'extraction : environ 1h
+
+
+2. Extraction de la WETBT de l'analyse AROME (TPW avant 01/07/2019) sur tous les niveaux hauteur disponibles et sur
+   la même période/grille que l'exemple 1 :
+
+>>> p Extraction_BDAP.py -b 2017073106 -e 2018080106 -t 0 -v HAUTEUR -p TPW -g FRANGP0025 -m PAAROME
+
+    ==> Durée d'extraction : environ 26h
 
 """
 
@@ -45,7 +56,7 @@ coords = dict(
     GrandesRousses = ['45640', '44590', '5610', '7100'],  # includes 0.2° margin
 )
 
-# Pas en lat/lon de la grille cible en 1/1000 de °
+# Pas en lat/lon de chaque grille en 1/1000 de °
 dl = dict(
     FRANXL0025 = ['25', '25'],
     FRANGP0025 = ['25', '25'],
@@ -64,6 +75,16 @@ model_map = dict(
     PA      = dict(vapp='arpege', vconf='4dvarfr'),  # Analyse ARPEGE
 )
 
+default_levels = dict(
+    ISOBARE   = [100, 125, 150, 175, 200, 225, 250, 275, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850,
+                 900, 925, 950, 1000],
+    HAUTEUR   = [2, 10, 20, 35, 50, 75, 100, 150, 200, 250, 375, 500, 625, 750, 875, 1000, 1125, 1250, 1375, 1500,
+                 1750, 2000, 2250, 2500, 2750, 3000],
+    ISO_T     = [25315, 26115, 26315, 27315],
+    ISO_TPW   = [27315, 27415],
+    ISO_WETBT = [27315, 27415],
+)
+
 
 def parse_command_line():
     description = "BDAP extraction of NWP (AS-PEAROME) model data."
@@ -75,9 +96,8 @@ def parse_command_line():
     # WARNING : the 'parameters' and 'level-type' arguments depend on each other.
     # TODO : find a way (a very complex dict ?) ton ensure consistency
     parser.add_argument('-p', '--parameter', help='Parameter to extract', default='ALTITUDE',
-                        choices=['PRECIP', 'WETBT', 'ALTITUDE'])
-    parser.add_argument('-l', '--levels', nargs='+', help='Level(s) of the parameter to extract',
-                        default=['27315', '27415', '27465'])
+                        choices=['PRECIP', 'WETBT', 'ALTITUDE', 'TPW'])
+    parser.add_argument('-l', '--levels', nargs='+', help='Level(s) of the parameter to extract', default=None)
     parser.add_argument('-v', '--level_type', help='Type of level of the parameter to extract', default='ISO_WETBT',
                         choices=['ISO_WETBT', 'SOL', 'HAUTEUR', 'ISOBARE', 'ISO_T', 'ISO_TPW'])
     parser.add_argument('-w', '--workdir', help="Runing directory (soprano's default)",)
@@ -171,12 +191,15 @@ if __name__ == "__main__":
     datebegin  = datetime.strptime(args.datebegin, '%Y%m%d%H')
     dateend    = datetime.strptime(args.dateend, '%Y%m%d%H')
     parameter  = args.parameter
-    levels     = args.levels
     level_type = args.level_type
     model      = args.model
     grid       = args.grid
     domain     = args.domain
     parameter  = args.parameter
+    if args.levels is None:
+        levels = [str(lvl) for lvl in default_levels[level_type]]
+    else:
+        levels = args.levels
     if ':' in args.echeances:
         first, last = args.echeances.split(':')
         echeances = range(int(first), int(last) + 1)
