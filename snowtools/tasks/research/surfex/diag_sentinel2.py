@@ -38,7 +38,7 @@ class Diag_sentinel2(_VortexTask):
 
         # Get a static mask file to remove glacier/forest pixels
         self.sh.title('Toolbox input MASK')
-        self.mask = io.get_mask(**self.common_kw)
+        self.mask = io.get_const(self.conf.uenv, 'mask', self.conf.geometry, **self.common_kw)
 
     def algo(self):
         """

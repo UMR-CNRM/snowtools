@@ -7,17 +7,21 @@ Created on 25 march 2024
 @author: Vernay
 
 Script designed to produce 'Rainf' and 'Snowf' variables from a precipitation analysis and AROME
-WETBT profiles (using V.Vionnet's Method) or ISO-0/1°C.
+Wet-bulb's iso 1°C (or 0°C alternatively).
+
+WARNING :
+AROME's wet-bulb temperature definition changed on 01/07/2019. Before that date, it was named 'TPW'.
 
 '''
 
 import os
 import shutil
 import xarray as xr
-import numpy as np
 import argparse
 
 DEFAULT_NETCDF_FORMAT = 'NETCDF4_CLASSIC'
+
+home = os.environ['HOME']
 
 
 def parse_command_line():
@@ -31,33 +35,53 @@ def parse_command_line():
                         help="Number of members associated to the experiment")
     parser.add_argument('-p', '--precipitation', type=str, required=True,
                         help="XPID (format xpid@username) OR abspath of the file containing  precipitation variables")
-    parser.add_argument('-w', '--workdir', type=str, required=True,
-                        help="Working directory")
+    parser.add_argument('-i', '--iso_wetbt', type=str, default='ExtractionBDAP@vernaym',
+                        help="XPID (format xpid@username)/abspath of the file containing iso wet-buld temperatures")
+    parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.1@vernaym",
+                        help="User environment for static resources (format 'uenv:name@user')")
+    parser.add_argument('-w', '--workdir', type=str, help="Working directory",
+                        default=os.path.join(home, 'EDELWEISS', 'meteo'))
+    parser.add_argument('-g', '--iso_grid', type=str, help="Grid of the iso_wetbt file",
+                        default='FRANGP0025', choices=['FRANGP0025', 'EURW1S40'])
     args = parser.parse_args()
     return args
 
 
-def update_precipitation(forcing, subdir=None):
+def goto(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    os.chdir(path)
+
+
+def compute_phase_from_iso_wetbt1(subdir=None):
     """
-    Compute Rainf and Snowf variables.
+    Compute Rainf and Snowf variables from the iso-wetbt (or iso-tpw before 7/12/2019) elevation.
     """
-    precipitation = xr.open_dataset('PRECIPITATION.nc', drop_variables=['Precipitation', 'snowfrac_ds', 'z_snowlim_ds'],
-                                    chunks='auto')
+    precipitation = xr.open_dataarray(os.path.join(subdir or '', 'PRECIPITATION.nc'))  # Hourly precipitation
+    # Open  Wet-bulb temperature iso-0/1°C dataset, and rename time as in the 'precipitation' ds
+    isowetbt  = xr.open_dataset('ISO_TPW.nc').drop('time').rename({'valid_time': 'time'})
+    # Fill missing dates with nearest value :
+    isowetbt  = isowetbt.reindex({'time': precipitation.time}, method='nearest')
+    isowetbt1 = isowetbt.sel({'ISO_TPW': 27415.})  # Wet-bulb temperature iso-1°C
+    source_relief = xr.open_dataset('SOURCE_RELIEF.nc')  # Iso-TPW grid's Digital Elevation Model
+    # Drop useless 'valid_time' dimension (len=1) added by xarray when converting grid files to netcdf
+    # TODO : do it at the netcdf generation (in the Extraction_BDAP.py script)
+    source_relief["ZS"] = source_relief.p3008.sel({'valid_time': source_relief.valid_time[0]}).drop_vars('valid_time')
+    iso_elevation = isowetbt1.sro + source_relief["ZS"]
+    target_relief = xr.open_dataarray('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
 
-    # Output file on common dates only
-    dates = np.intersect1d(forcing.time, precipitation.time)
-    forcing = forcing.sel({'time': dates})
-    # Set time variable attributes
-    forcing.time.encoding['units'] = f'hours since {forcing.time.data[0]}'
+    # Interpolation of all data to the target geometry
+    iso250m = iso_elevation.interp({'latitude': target_relief.latitude, 'longitude': target_relief.longitude})
+    precipitation250m = precipitation.interp({'latitude': target_relief.latitude, 'longitude': target_relief.longitude})
 
-    precipitation = precipitation.sel({'time': dates})
-    precipitation = precipitation.rename({'xx': 'x', 'yy': 'y'})
+    # Creation of the Rainf / Snowf variables
+    rain = precipitation250m.where(iso250m > target_relief, 0)
+    snow = precipitation250m.where(iso250m <= target_relief, 0)
+    rain = rain.rename('Rainf')
+    snow = snow.rename('Snowf')
+    output = rain.to_dataset().merge(snow).drop(['step', 'ISO_TPW', 'SOL'])
 
-    # Replace Rainf/Snowf variables by the ones from the ensemble analysis
-    forcing['Rainf'] = precipitation['Rainf_ds'] / 3600.
-    forcing['Snowf'] = precipitation['Snowf_ds'] / 3600.
-
-    return forcing
+    return output
 
 
 def write(ds, outname):
@@ -67,16 +91,23 @@ def write(ds, outname):
     return datedeb, dateend
 
 
-def compute_phase(members):
-    outname = 'OUT.nc'
+def compute_precipitation_phase(members):
+    """
+    Main function to be called in "script mode"
+    """
+    outname = 'PRECIPITATION_OUT.nc'
     if members is not None:
         for member in range(members):
             print(f'Member {member}')
-            subdir = f'mb{member}'
-            update_precipitation(subdir=subdir)
+            subdir = f'mb{member:03d}'
+            output = compute_phase_from_iso_wetbt1(subdir=subdir)
+            datedeb, dateend = write(output, os.path.join(subdir, outname))
+
     else:
-        update_precipitation()
-    datebegin, dateend = write(forcing, outname)
+        output = compute_phase_from_iso_wetbt1()
+        datedeb, dateend = write(output, outname)
+
+    return datedeb, dateend
 
 
 def clean(members):
@@ -94,29 +125,46 @@ if __name__ == '__main__':
 
     datebegin     = args.datebegin
     dateend       = args.dateend
-    xpid          = args.xpid
+    uenv          = args.uenv
     members       = args.members
-    workdir       = args.workdir
     precipitation = args.precipitation
-    diroutput     = args.diroutput
+    iso_wetbt     = args.iso_wetbt
+    iso_grid      = args.iso_grid
     geometry      = 'GrandesRousses250m'
 
-    os.chdir(workdir)
+    goto(args.workdir)
 
     try:
         # Retrieve input files with Vortex
-        from snowtools.scripts.extract.vortex import vortexIO
-        vortexIO.get_precipitation(datebegin, dateend, precipitation, geometry, members=members)
-        vortexIO.get_iso_wetbt(datebegin, dateend, precipitation, geometry, members=members)
+        # --------------------------------
+        from snowtools.scripts.extract.vortex import vortexIO as io
+        period = dict(datebegin=datebegin, dateend=dateend)
+        # Hourly total precipitation at 1km resolution --> use get_meteo since it is not FORCING-ready
+        io.get_meteo(
+            kind     = 'Precipitation',
+            geometry = 'GrandesRousses1km',
+            xpid     = precipitation,
+            members  = members,
+            vapp     = 'edelweiss',
+            block    = 'hourly',
+            **period
+        )
+        # Hourly iso Wet-bulb temperatures 0°C, 1°C [, 1.5°C] --> use get_meteo (not FORCING-ready)
+        io.get_meteo(kind='ISO_TPW', geometry=iso_grid, xpid=iso_wetbt, **period)
+        # Iso-TPW's grid relief
+        io.get_const(uenv, 'relief', 'FRANGP0025', filename='SOURCE_RELIEF.nc')
+        # Domain's DEM
+        io.get_const(uenv, 'relief', geometry, filename='TARGET_RELIEF.nc', gvar='RELIEF_GRANDESROUSSES250M_4326')
         vortex = True
     except (ImportError, ModuleNotFoundError):
         vortex = False
         # Retrieve input files without Vortex
         for member in range(members):
-            os.makedirs(f'mb{member}')
-            os.symlink(f'{precipitation}/mb{member}/PRECIPITATION.nc', f'mb{member}/PRECIPITATION.nc')
+            os.makedirs(f'mb{member:03d}')
+            os.symlink(f'{precipitation}/mb{member:03d}/PRECIPITATION.nc', f'mb{member:03d}/PRECIPITATION.nc')
 
-    datedeb, datefin = compute_phase(members)
+    # Call main function
+    datedeb, datefin = compute_precipitation_phase(members)
 
     if datedeb != datebegin:
         print(f'WARNING : begin date of the produced FORCING {datedeb} does not match the one prescribed {datebegin}')
@@ -124,13 +172,6 @@ if __name__ == '__main__':
         print(f'WARNING : end date of the produced FORCING {datefin} does not match the one prescribed {dateend}')
 
     if vortex:
-        # TODO : Trouver une façon de différencier les resource de type "precipitation totale" avec les celles prêtes
-        # à intégrer un FORCING (contenant les variables 'Rainf' et 'Snowf')
-        vortexIO.put_precipitation(datebegin, dateend, precipitation, geometry, members=members)
+        # FORCING-ready resource --> use specific the vortexIO method
+        io.put_precipitation(precipitation, geometry, members=members, filename='PRECIPITATION_OUT.nc', **period)
         clean()
-    else:
-        # Save output files without Vortex
-        if diroutput is not None:
-            shutil.copyfile('OUT.nc', diroutput)
-        else:
-            print(f'No {diroutput} argument provided, output files are left under {workdir}')

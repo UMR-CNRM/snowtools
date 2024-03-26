@@ -612,7 +612,7 @@ def get_precipitation(xpid, geometry, **kw):
 
 
 # TODO : use a decorator
-def put_precipitatin(xpid, geometry, **kw):
+def put_precipitation(xpid, geometry, **kw):
     return precipitation('put', xpid, geometry, **kw)
 
 
@@ -691,10 +691,15 @@ def put_pgd(xpid, geometry, **kw):
 
 def get_const(uenv, kind, geometry, fmt='nc', intent='in', fatal=False, **kw):
 
-    if 'filename' in kw.items():
+    if 'filename' in kw.keys():
         filename = kw['filename']
     else:
         filename = f'{kind.upper()}.{fmt}'
+
+    if 'gvar' in kw.keys():
+        gvar = kw['gvar']
+    else:
+        gvar = '[kind]_[gdomain]'  # Default value from Vortex
 
     const = toolbox.input(
         kind           = kind,
@@ -702,7 +707,7 @@ def get_const(uenv, kind, geometry, fmt='nc', intent='in', fatal=False, **kw):
         geometry       = geometry,
         local          = filename,
         gdomain        = '[geometry::area]',  # Default value from Vortex
-        gvar           = '[kind]_[gdomain]',  # Default value from Vortex
+        gvar           = gvar,
         nativefmt      = fmt,
         intent         = intent,  # 'in' = make a hard link rather than a copy
         fatal          = fatal,
