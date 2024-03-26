@@ -325,6 +325,7 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
     ################################################################
     # Création des listes d'intérêts venant des geotif
     liste_altitude_MNT = raster_to_points(path_MNT_alt, shape(shapes))
+    # TODO: bilinear interpolation does not work for angles (mean of 1° and 359° = 0°, not 180°)
     liste_aspect_MNT = raster_to_points(path_MNT_asp, shape(shapes))
     liste_slope_MNT = raster_to_points(path_MNT_slop, shape(shapes))
 
