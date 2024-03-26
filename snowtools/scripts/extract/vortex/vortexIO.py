@@ -24,7 +24,10 @@ However it is possible to use this tool in a more advanced way by precising :
         - 'vortex.multi.fr'   : both the local and Hendrix caches
         - TODO : inclure sxcen
     * the 'filename' of the target resource (its name in the working directory)
-    * the number of 'members' for ensemble simulations (TODO : utiliser la syntaxe X-Y-1)
+    * Either:
+       - the number of *members* for ensemble simulations
+      OR
+       - the explicit *member* list, using the 'X-Y-1' syntax
     * the 'vapp' ('s2m' or 'edelweiss' currently) TODO : ajuster en fonction de la convention choisie
     * an 'abspath' to look for a file not in the current workind directory (TODO : not implemented yet)
     * the 'block' (the last directory(ies) names where the resource is stored on the Vortex cache)
@@ -32,6 +35,25 @@ However it is possible to use this tool in a more advanced way by precising :
     * the 'source_conf' to precise the configuration of the producing application
     * the 'model' to precise the name of the model that produced the resource (TODO : redondant ?)
       NB : the last 3 arguments are only used for resources at the begining of the processing chain
+
+
+Specificities of 'meteorological' resources :
+---------------------------------------------
+Meteorological resources are all resources containing one or several meteorological variables.
+There are 3 possibilities :
+
+    1. The resource contains all variables necessary to run a SURFEX-Corcus simulation
+       --> This is a standard FORCING file, identified by a 'MeteorologicalForcing' *kind*
+           and stored in the 'meteo' *block*
+
+    2. The resource contains only some of the variables necessary to run a SURFEX-Corcus simulation
+      --> This resource must be called by a specific method identifying which variables are concerned
+          and is also store in the 'meteo' *block*
+
+    3. The resource contains meteorological variables that are not used by a SURFEX-Crocus experiment but
+       are necessary/used to compute some of these variables (ex: total precipitation, iso-temperature levels,...)
+       --> These resources must be called by the generic get[put]_meteo functions and are NOT stored under the
+           'meteo' *block* to avoid overwritings
 
 Examples :
 ==========
@@ -103,28 +125,31 @@ if 'MTOOLDIR' not in os.environ.keys():
     if not os.path.exists(os.environ['MTOOLDIR']):
         os.makedirs(os.environ['MTOOLDIR'])
 
-common_default_footprints = dict(
-    role        = None,
-    namespace   = 'vortex.multi.fr',  # Get/put resources on both Hendrix and the local cache
-    members     = None,
-    vapp        = 's2m',
-    abspath     = None,
-    block       = '',
-    namebuild   = 'flat@cen',  # CEN-specific file name builder (use only for CEN produced resources)
-    fatal       = True,  # Crash if the resource is not found
-    nativefmt   = 'netcdf',  # Most CEN standard files are netcdf files
-    source_app  = None,  # Use only for "external" resources (produced by another application)
-    source_conf = None,  # Use only for "external" resources (produced by another application)
-    scope       = None,
-    model       = None,  # TODO : réfléchir à la pertinence de mettre une valeur par défaut
-    cutoff      = 'assimilation',  # TODO : réfléchir à la pertinence de mettre une valeur par défaut
-    intent      = 'inout',  # Rights to give to the file (inout=read/write, in=read-only)
-)
-
-
 ########################
 # Some usefull functions
 ########################
+
+
+def init():
+
+    return dict(
+        role        = None,
+        namespace   = 'vortex.multi.fr',  # Get/put resources on both Hendrix and the local cache
+        members     = None,
+        vapp        = 's2m',
+        abspath     = None,
+        block       = '',
+        namebuild   = 'flat@cen',  # CEN-specific file name builder (use only for CEN produced resources)
+        fatal       = True,  # Crash if the resource is not found
+        nativefmt   = 'netcdf',  # Most CEN standard files are netcdf files
+        source_app  = None,  # Use only for "external" resources (produced by another application)
+        source_conf = None,  # Use only for "external" resources (produced by another application)
+        scope       = None,
+        model       = None,  # TODO : réfléchir à la pertinence de mettre une valeur par défaut
+        cutoff      = 'assimilation',  # TODO : réfléchir à la pertinence de mettre une valeur par défaut
+        intent      = 'inout',  # Rights to give to the file (inout=read/write, in=read-only)
+    )
+
 
 def function_map():
     """
@@ -134,8 +159,6 @@ def function_map():
 
 
 def add_user(xpid):
-    print(xpid)
-    print(type(xpid))
     if '@' in xpid:
         return xpid
     else:
@@ -208,6 +231,7 @@ def get_full_description(specific_footprints, user_kw, specific_default_footprin
     --> priority is given to the function called
     """
 
+    common_default_footprints = init()
     common_default_footprints.update(specific_default_footprints)
     common_default_footprints.update(user_kw)
     common_default_footprints.update(specific_footprints)
@@ -248,10 +272,10 @@ def footprints_kitchen(xpid, geometry, **kw):
         vconf          = '[geometry:tag]',
     )
 
-    if kw['members'] is not None:
+    if kw['members'] is not None or 'member' in kw.keys():
         description['local'] = f'mb[member]/{kw.pop("filename")}'
-        # On peut actuellement passer à 'membres' un entier (le nombre de membres)
-        # ou un objet convertible en FPLIst (string au format X-Y-1)
+        # On peut actuellement passer *members* =  un entier (le nombre de membres)
+        # ou un objet *member* convertible en FPLIst (string au format X-Y-1)
         # TODO : gérer ça plus proprement
         # TODO : uniformiser la gestion des membres
         if isinstance(kw['members'], int):
@@ -260,6 +284,9 @@ def footprints_kitchen(xpid, geometry, **kw):
             description['member'] = footprints.util.rangex(kw.pop('members'))
     else:
         description['local'] = kw.pop("filename")
+
+    if kw['model'] is None:
+        kw['model'] = kw['vapp']
 
     kw.update(description)
 
@@ -307,6 +334,46 @@ def precipitation(action, xpid, geometry, **kw):
     return precipitation
 
 
+def meteo(action, xpid, geometry, **kw):
+    """
+    Generic function for resources containing any non FORCING-ready meteorological variable(s) necessary to construct
+    a FORCING file but that can not be directly used as a FORCING variable (ex : total precipitation,
+    iso wet-bulb temperature,...)
+    """
+
+    if 'kind' not in kw.keys():
+        outstr = 'Missing mandatory *kind* keyword argument for meteo resource.\n'
+        'Possible values are "Precipitation", "Wind", "ISO_TPW"'  # TODO : == SurfaceForcing's *kind* values
+        raise KeyError(outstr)
+
+    kw = check_period(kw['kind'].upper(), **kw)
+
+    # Precipitation-specific footprints
+    specific_footprints = dict(
+        role      = kw['kind'],
+        nativefmt = 'netcdf',
+    )
+    # Precipitation-specific defaults values that can be overwritten by the function's kw
+    specific_default_footprints = dict(
+        filename = f'{kw["kind"].upper()}.nc',
+        block    = f'{kw["kind"].lower()}'
+    )
+
+    # Create full description dictionnary
+    description = get_full_description(specific_footprints, kw, specific_default_footprints)
+
+    if description['block'] == 'meteo':
+        outstr = "The block of a 'meteo' resource can not be 'meteo' (sorry for the confusion)\n"
+        "Use a different block or leave it to vortexIO to chose one"
+        raise KeyError(outstr)
+
+    precipitation = function_map()[action](xpid, geometry, **description)
+    print(t.prompt, f'{kw["kind"]} =', precipitation)
+    print()
+
+    return precipitation
+
+
 def wind(action, xpid, geometry, **kw):
 
     kw = check_period('WIND', **kw)
@@ -337,6 +404,9 @@ def wind(action, xpid, geometry, **kw):
 
 
 def forcing(action, xpid, geometry, **kw):
+    """
+    Main function for complete FORCING files (can be directly use to run a SURFEX-Crocus simulation)
+    """
 
     kw = check_period('FORCING', **kw)
 
@@ -427,6 +497,9 @@ def prep(action, xpid, geometry, **kw):
 
 
 def pro(action, xpid, geometry, **kw):
+    """
+    Main funciton for PRO files (SURFEX-Crocus) outputs.
+    """
 
     kw = check_period('PRO', **kw)
 
@@ -511,6 +584,16 @@ def get_forcing(xpid, geometry, **kw):
 # TODO : use a decorator
 def put_forcing(xpid, geometry, **kw):
     return forcing('put', xpid, geometry, **kw)
+
+
+# TODO : use a decorator
+def get_meteo(xpid, geometry, **kw):
+    return meteo('get', xpid, geometry, **kw)
+
+
+# TODO : use a decorator
+def put_meteo(xpid, geometry, **kw):
+    return meteo('put', xpid, geometry, **kw)
 
 
 # TODO : use a decorator
@@ -606,24 +689,35 @@ def put_pgd(xpid, geometry, **kw):
     return pgd('put', xpid, geometry, **kw)
 
 
-def get_mask(uenv=None, filename='mask.nc', fmt='netcdf', intent='in', fatal=False, **kw):
+def get_const(uenv, kind, geometry, fmt='nc', intent='in', fatal=False, **kw):
 
-    mask = toolbox.input(
-        kind           = 'mask',
-        gvar           = 'mask',
+    if 'filename' in kw.items():
+        filename = kw['filename']
+    else:
+        filename = f'{kind.upper()}.{fmt}'
+
+    const = toolbox.input(
+        kind           = kind,
         genv           = uenv,
+        geometry       = geometry,
         local          = filename,
+        gdomain        = '[geometry::area]',  # Default value from Vortex
+        gvar           = '[kind]_[gdomain]',  # Default value from Vortex
         nativefmt      = fmt,
         intent         = intent,  # 'in' = make a hard link rather than a copy
         fatal          = fatal,
     ),
-    print(t.prompt, 'MASK input =', mask)
+    print(t.prompt, f'{kind.upper()} =', const)
     print()
 
-    return mask
+    return const
 
 
 def get_surfex_namelist(genv):
+    """
+    Specific resource for SURFEX's namelist because a *role* attribute may be definied
+    for parallelisation configuration.
+    """
 
     namelist = toolbox.input(
         role            = 'Nam_surfex',
