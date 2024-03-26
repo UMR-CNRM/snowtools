@@ -217,16 +217,16 @@ class sun():
         theor_diffus = ratio_clearsky * ZTHEOR
         theor_direct = ZTHEOR - theor_diffus
         
-        plt.plot(tab_time_date, theor_diffus, marker=".", label="theor_diffus")
-        plt.plot(tab_time_date, theor_direct, marker=".", label="theor_direct")
-        plt.plot(tab_time_date, tab_direct, marker=".", label="tab_direct before")
+        # plt.plot(tab_time_date, theor_diffus, marker=".", label="theor_diffus")
+        # plt.plot(tab_time_date, theor_direct, marker=".", label="theor_direct")
+        # plt.plot(tab_time_date, tab_direct, marker=".", label="tab_direct before")
 
         # Apply a threshold to the direct radiation (can not exceed the theorical direct component, 
         # otherwise, the projection can provide very strange values)
         tab_direct = np.where(tab_direct <= theor_direct, tab_direct, theor_direct)
-        plt.plot(tab_time_date, tab_direct, marker=".", label="tab_direct after")
-        plt.legend()
-        plt.show()
+        # plt.plot(tab_time_date, tab_direct, marker=".", label="tab_direct after")
+        # plt.legend()
+        # plt.show()
         # Conserve energy by a transfer to the diffuse component
         # TODO L. Roussel why we keep radiation in deep valleys ?
         # tab_diffus = tab_global - tab_direct
@@ -272,15 +272,15 @@ class sun():
             pysolar_radiation.append(current_radiation)
         # décalage sur le maximum,pas la meme allure .. 
 
-        plt.plot(tab_time_date, tab_direct, marker=".", label="tab_direct")
-        plt.plot(tab_time_date, max_theor_radiation, marker=".", label="max_theor_radiation")
-        plt.plot(tab_time_date, direct_incident, marker=".", label="direct_incident")
-        plt.plot(tab_time_date, direct_plane_projected, marker=".", label="direct_plane_projected")
-        plt.plot(tab_time_date, direct_plane_projected_masked, marker=".", label="direct_plane_projected_masked")
-        plt.plot(tab_time_date, tab_diffus, marker=".", label="diffus")
-        plt.plot(tab_time_date, pysolar_radiation, marker=".", label="pysolar_radiation")
-        plt.legend()
-        plt.show()
+        # plt.plot(tab_time_date, tab_direct, marker=".", label="tab_direct")
+        # plt.plot(tab_time_date, max_theor_radiation, marker=".", label="max_theor_radiation")
+        # plt.plot(tab_time_date, direct_incident, marker=".", label="direct_incident")
+        # plt.plot(tab_time_date, direct_plane_projected, marker=".", label="direct_plane_projected")
+        # plt.plot(tab_time_date, direct_plane_projected_masked, marker=".", label="direct_plane_projected_masked")
+        # plt.plot(tab_time_date, tab_diffus, marker=".", label="diffus")
+        # plt.plot(tab_time_date, pysolar_radiation, marker=".", label="pysolar_radiation")
+        # plt.legend()
+        # plt.show()
         
         
         if lnosof_surfex:
