@@ -83,7 +83,7 @@ In the namelist, CSELECT allows you to choose output. For example, in the standa
 
 Here you can find long name for a part of these variables (alphabetical order for shortname):
 
-- ASN_VEG = Snow Age (days)
+- ASN_VEG = Albedo
 - DRAIN_ISBA = Subsurface_runoff_flux
 - DSN_T_ISBA = Thickness_of_snowfall_amount
 - EVAP_ISBA = Surface_water_evaporation_flux
@@ -99,6 +99,7 @@ Here you can find long name for a part of these variables (alphabetical order fo
 - RN_ISBA = Surface_net_downward_radiative_flux
 - RSN_VEG = Snow Density (kg/m3)
 - RUNOFF_ISBA = Surface_runoff_flux
+- SAG_VEG = Snow Age (days)
 - SD_1DY_ISBA = Accumulated snow thickness for past 1 days
 - SD_3DY_ISBA = Accumulated snow thickness for past 3 days
 - SD_5DY_ISBA = Accumulated snow thickness for past 5 days
