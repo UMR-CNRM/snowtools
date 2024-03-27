@@ -300,11 +300,11 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
         nodata_raster = band.GetNoDataValue()
         points_values = []
 
-        for i in range(len(shape)):
+        for s in shape.geoms:
             # Convert from map to pixel coordinates.
             # Only works for geotransforms with no rotation.
-            current_x = (shape[i].x - gt[0]) / gt[1]
-            current_y = (shape[i].y - gt[3]) / gt[5]
+            current_x = (s.x - gt[0]) / gt[1]
+            current_y = (s.y - gt[3]) / gt[5]
             px = int(current_x)  # x pixel
             py = int(current_y)  # y pixel
 
@@ -531,11 +531,11 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
     step = int((gt[1] + (-gt[5])) / 2)  # for further use in line interpolation
     print("step: ", step)
 
-    for k in range(len(shape_courant)):
+    for k, s in enumerate(shape_courant.geoms):
         in_stat = in_file[k]
         print('hello', in_stat[0], in_stat[3])
-        center_x = (shape_courant[k].x - gt[0]) / gt[1]
-        center_y = (shape_courant[k].y - gt[3]) / gt[5]
+        center_x = (s.x - gt[0]) / gt[1]
+        center_y = (s.y - gt[3]) / gt[5]
 
         px_c = int(center_x)  # x pixel centre
         py_c = int(center_y)  # y pixel centre
@@ -557,8 +557,8 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
         for azimut in range(0, 360, 5):
             angle = []
             for index, dist in enumerate(range(step, viewmax, step)):
-                current_x = (shape_courant[k].x + dist * math.sin(math.radians(azimut)) - gt[0]) / gt[1]
-                current_y = (shape_courant[k].y + dist * math.cos(math.radians(azimut)) - gt[3]) / gt[5]
+                current_x = (s.x + dist * math.sin(math.radians(azimut)) - gt[0]) / gt[1]
+                current_y = (s.y + dist * math.cos(math.radians(azimut)) - gt[3]) / gt[5]
 
                 px = int(current_x)  # x pixel le long de l'azimut
                 py = int(current_y)  # y pixel le long de l'azimut
@@ -594,7 +594,7 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
             a.set_rmax(rmax)
             a.set_rgrids([0.01, 10., 20., 30., float(int(rmax))], [str(int(rmax)), '30', '20', '10', '0'])
             a.set_thetagrids([0., 45., 90., 135., 180., 225., 270., 315.], ["N", "NE", "E", "SE", "S", "SW", "W", "NW"])
-            a.set_title(in_stat[3] + ' alt mnt:' + str(round(value_c, 1)) + ' m alt poste:' + str(in_stat[1]))
+            a.set_title(str(in_stat[3]) + ' alt mnt:' + str(round(value_c, 1)) + ' m alt poste:' + str(in_stat[1]))
             a.set_theta_zero_location('N')
             a.set_theta_direction(-1)
             plt.savefig('output/' + str(in_stat[0]) + '_skyline.png')
@@ -608,8 +608,8 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
             print("ajout du site : ", all_lists['nom'][k])
 
             metadataout.write('\t<Site>\n')
-            metadataout.write('\t\t<name> ' + all_lists['nom'][k] + ' </name>\n')
-            metadataout.write('\t\t<nameRed> ' + all_lists['nom'][k] + ' </nameRed>\n')
+            metadataout.write('\t\t<name> ' + str(all_lists['nom'][k]) + ' </name>\n')
+            metadataout.write('\t\t<nameRed> ' + str(all_lists['nom'][k]) + ' </nameRed>\n')
             metadataout.write('\t\t<number> ' + str(all_lists['id'][k]) + ' </number>\n')
             metadataout.write('\t\t<lat> ' + str(all_lists['lat'][k]) + ' </lat>\n')
             metadataout.write('\t\t<lon> ' + str(all_lists['lon'][k]) + ' </lon>\n')
