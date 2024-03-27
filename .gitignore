@@ -13,6 +13,7 @@ tag
 *.swp
 snowtools/interpolation/interpol_MPIAUTO
 snowtools/interpolation/interpol
+snowtools/interpolation/output
 *.o
 *.mod
 
