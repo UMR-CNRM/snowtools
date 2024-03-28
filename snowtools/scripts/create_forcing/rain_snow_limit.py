@@ -63,11 +63,10 @@ def compute_phase_from_iso_wetbt1(subdir=None):
     # Fill missing dates with nearest value :
     isowetbt  = isowetbt.reindex({'time': precipitation.time}, method='nearest')
     isowetbt1 = isowetbt.sel({'ISO_TPW': 27415.})  # Wet-bulb temperature iso-1°C
-    source_relief = xr.open_dataset('SOURCE_RELIEF.nc')  # Iso-TPW grid's Digital Elevation Model
+    source_relief = xr.open_dataarray('SOURCE_RELIEF.nc')  # Iso-TPW grid's Digital Elevation Model
     # Drop useless 'valid_time' dimension (len=1) added by xarray when converting grid files to netcdf
     # TODO : do it at the netcdf generation (in the Extraction_BDAP.py script)
-    source_relief["ZS"] = source_relief.p3008.sel({'valid_time': source_relief.valid_time[0]}).drop_vars('valid_time')
-    iso_elevation = isowetbt1.sro + source_relief["ZS"]
+    iso_elevation = isowetbt1.sro + source_relief
     target_relief = xr.open_dataarray('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
 
     # Interpolation of all data to the target geometry
@@ -79,7 +78,7 @@ def compute_phase_from_iso_wetbt1(subdir=None):
     snow = precipitation250m.where(iso250m <= target_relief, 0)
     rain = rain.rename('Rainf')
     snow = snow.rename('Snowf')
-    output = rain.to_dataset().merge(snow).drop(['step', 'ISO_TPW', 'SOL'])
+    output = rain.to_dataset().merge(snow).drop(['step', 'ISO_TPW'])
 
     return output
 
