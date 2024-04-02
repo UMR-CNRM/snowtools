@@ -83,7 +83,7 @@ In the namelist, CSELECT allows you to choose output. For example, in the standa
 
 Here you can find long name for a part of these variables (alphabetical order for shortname):
 
-- ASN_VEG = Albedo
+- ASN_VEG = Snow albedo
 - DRAIN_ISBA = Subsurface_runoff_flux
 - DSN_T_ISBA = Thickness_of_snowfall_amount
 - EVAP_ISBA = Surface_water_evaporation_flux
