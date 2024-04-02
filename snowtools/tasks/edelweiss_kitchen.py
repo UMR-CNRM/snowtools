@@ -34,8 +34,7 @@ class Edelweiss_kitchen(vortex_kitchen):
         self.datebegin = Date(self.options.datebegin)
         self.dateend   = Date(self.options.dateend)
 
-        # This is an Edelweiss-specific launcher
-        self.vapp  = 'edelweiss'
+        self.vapp  = self.options.vapp  # edelweiss by default, this is an Edelweiss-specific launcher
         # The vconf is defined by the geometry for all CEN experiments by convention
         self.vconf = self.options.geometry.lower()
 
@@ -105,6 +104,16 @@ class Edelweiss_kitchen(vortex_kitchen):
         for directory in ["conf", "jobs"]:
             if not os.path.isdir(directory):
                 os.mkdir(directory)
+
+        # Put the default 'geometries.ini' file (from snowtools/conf) in the user's '.vortexrc' directory
+        geometries = os.path.join(os.environ["HOME"], ".vortexrc", 'geometries.ini')
+        if os.path.isfile(geometries):
+            # Save existing file (TODO : Let a user-defined geometries.ini overwrite the default one)
+            shutil.move(geometries, f'{geometries}_save')
+        elif os.path.islink(geometries):
+            # Remove an existing link to ensure that the geometries.ini is up to date with the one in snowtools
+            os.remove(geometries)
+        os.symlink(os.path.join(SNOWTOOLS_DIR, "conf", "geometries.ini"), geometries)
 
         if self.options.uenv is not None:
             self.set_uenv()

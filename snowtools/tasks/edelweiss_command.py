@@ -116,6 +116,14 @@ class Edelweiss_command(object):
                                  "'sxcen'   : on sxcen (post-processing)"
                             )
 
+        parser.add_argument("-c", "--configuration", action="store", type=int, dest="defaultconf", default=None,
+                            # TODO : implementatin + doc
+                            help="Default user-defined configuration file."
+                                 "This option can be used to avoid to parser too many arguments in the command line")
+
+        parser.add_argument("-v", "--vapp", action="store", type=str, dest="vapp", default='edelweiss',
+                            help="Application name (if not 'edelweiss')")
+
         parser.add_argument("--walltime", "--time", action="store", type=str, dest="time", default=None,
                             help="specify your job walltime (format hh:mm:ss)")
 
@@ -125,53 +133,41 @@ class Edelweiss_command(object):
         parser.add_argument("--nnodes", action="store", type=int, dest="nnodes", default=1,
                             help="Number of nodes")
 
-        # TODO : Réfléchir à une autre méthode pour passer les arguments suivants
-        # - Trouver un moyen d'identifier les inputs pour éviter d'aller chercher le nom dans la tâche
-        # - Imposer les arguments pour chaque tâche dans des 'subparser' ?
-        # - Dictionnaire par 'input' contenant son xpid, namespace, geometry ?
-        # - Fichier de conf ?
-#        parser.add_argument("--input_xpids", dest="xinput", nargs='*', action=ParseKwargs,
-#                            help="Experiment's identifiers (xpids) of the various input files (see --xpid argument for"
-#                            "more informations on xpids) IF DIFFERENT FROM THE 'xpid' ARGUMENT"
-#                            "Provide the xpid associated to each input of your task as a dictionnary-like"
-#                            "({key}:{value}) list of arguments."
-#                            "For example the 'make_forcing' task takes 3 different inputs containing 'wind',"
-#                            "'precipitation' and 'safran' meteorological variables, the associated argument is :"
-#                            "--input_xpids=wind:{wind_xpid} precipitation={precipitation_xpid} safran={safran_xpid}")
-
-        # Task-specific arguments :
+        # Input-specific arguments :
         # =========================
 
-        # TODO : trouver / définir un nom d'argument générique
-        parser_forcing = parser.add_argument_group('Forcing generation task')
+        # TODO Faire une section "inputs"
+        # - 1 argument / input type, valeurs possibles :
+        #       * abspath du fichier
+        #       * Footrpint's dict (format : {xpid=..., geometry=..., vapp=...} par exemple)
+        #       [+ possibilité de passer tous ces arguments dans un fichier de conf par défaut]
+        #       ==> à gérer dans edelweiss_kitchen
+        # - Imposer les arguments nécessaire en foncion de ce qui est passé à --task :
+        #   required="task_name" in sys.argv
 
-        parser_forcing.add_argument("--xpid_precipitation", dest="xpid_precipitation", action="store",
+        parser_forcing = parser.add_argument_group('Specific input description')
+
+        parser_forcing.add_argument("--forcing", dest="forcing", action=ParseKwargs, nargs='*',
                                     type=str, default=None,
-                                    help="XPID of the experiment that generated the precipitation variables.")
+                                    # TODO : what if already in the user conf file ? --> overwrite ?
+                                    required="make_forcing" in sys.argv,  # Mandatory argument for 'make_forcing' task
+                                    help="Definition (footprint-like dict) of the default forcing variables input"
+                                         "Format : --forcing key1:var1 key2:var2 ..."
+                                         "Known dictionary keys : ['xpid', 'geometry', 'vapp', 'datebegin', 'dateend']")
 
-        parser_forcing.add_argument("--xpid_wind", dest="xpid_wind", action="store", type=str, default=None,
-                                    help="XPID of the experiment that generated the wind variables.")
+        parser_forcing.add_argument("--precipitation", dest="precipitation", action=ParseKwargs, nargs='*',
+                                    type=str, default=None,
+                                    # TODO : what if already in the user conf file ? --> overwrite ?
+                                    help="Definition (footprint-like) dict of precipitation variables input"
+                                         "Format : --forcing key1:var1 key2:var2 ..."
+                                         "Possible dictionary keys : ['xpid', 'geometry', 'vapp']")
 
-        parser_forcing.add_argument("--xpid_safran", dest="xpid_safran", action="store", type=str, default=None,
-                                    help="XPID of the experiment that generated all other meterological variables."
-                                         "INFO : this argument is temporary and will be split into several arguments"
-                                         "with ongoing EDELWEISS developments")
-
-        parser_precipitation = parser.add_argument_group('Precipitation generation task')
-
-        # WARNING : do not use "precipitation_geometry" because 'precipitation' is the tag of the task and
-        # vortex.layout.nodes overwrites the geometry with self.tag + '_geometry'...
-        parser_precipitation.add_argument("--geometry_precipitation", dest="geometry_precipitation", action="store",
-                                          type=str, default=None,
-                                          help="Geometry of the precipitation's input variables.")
-
-        parser_precipitation.add_argument("--xpid_tpw", dest="xpid_tpw", action="store",
-                                          type=str, default=None,
-                                          help="XPID of the experiment that generated the iso-TPW variables.")
-
-        parser_precipitation.add_argument("--geometry_tpw", dest="geometry_tpw", action="store",
-                                          type=str, default=None,
-                                          help="Geometry of the TPW's input variables.")
+        parser_forcing.add_argument("--wind", dest="wind", action=ParseKwargs, nargs='*',
+                                    type=str, default=None,
+                                    # TODO : what if already in the user conf file ? --> overwrite ?
+                                    help="Definition (footprint-like) dict of wind variables input"
+                                         "Format : --forcing key1:var1 key2:var2 ..."
+                                         "Possible dictionary keys : ['xpid', 'geometry', 'vapp']")
 
         options  = parser.parse_args(arguments)
 
@@ -191,6 +187,19 @@ class Edelweiss_command(object):
             else:
                 self.options.members = int(self.options.members)
 
+        args_to_dict = vars(self.options)  # Convert self.options *Namepace* object to a *dictionnary* object
+        # Convert *dictionary* arguments to proper configuration variables
+        for specific_input in ['forcing', 'precipitation', 'wind']:
+            # Check if a value has been parsed
+            if args_to_dict[specific_input] is not None:
+                # Convert dictionnary into proper configuration entries
+                for key, value in args_to_dict[specific_input].items():
+                    setattr(self.options, f'{key}_{specific_input}', value)
+            # Ensure that all "optionnal" conf variables are set
+            # Keys not provided by the user are set to the task's one
+            for key in ['geometry', 'vapp', 'datebegin', 'dateend']:
+                if not hasattr(self.options, f'{key}_{specific_input}'):
+                    setattr(self.options, f'{key}_{specific_input}', args_to_dict[key])
 
     def check_mandatory_arguments(self, **kw):
         missing_options = list()

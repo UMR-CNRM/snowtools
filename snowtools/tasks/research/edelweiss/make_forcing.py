@@ -4,11 +4,10 @@ Created on 7 mars 2024
 @author: Vernay.M
 '''
 
-from vortex.layout.nodes import Driver, Task
+from vortex.layout.nodes import Driver
 from vortex import toolbox
-from cen.layout.nodes import S2MTaskMixIn
-
-import footprints
+from snowtools.tasks.vortex_task_base import _VortexTask
+from snowtools.scripts.extract.vortex import vortexIO as io
 
 
 def setup(t, **kw):
@@ -22,162 +21,84 @@ def setup(t, **kw):
     )
 
 
-class Forcing(Task, S2MTaskMixIn):
+class Forcing(_VortexTask):
     '''
     Generic task for the generation of 'hybrid' FORCING files (variables coming from different sources)
     WARNING : TASK IN DEVELOPMENT
     This task will evolve in line with ongoing EDELWEISS developments.
     '''
 
-    def process(self):
+    def check_and_update_configuration(self):
+        pass
 
+    def get_remote_inputs(self):
+        """
+        Main method to fetch all input files
+        """
+
+        # Meteorological variables that are not yet processed in EDELWEISS system
+        # come from SAFRAN reanalysis.
+        # It is also possible to start with an already modified FORCING file. In this case the user
+        # must at least provide the xpid and optionally (if different from the task's ones) the geometry
+        # and vapp of the FORCING files
+        kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
+        # Update default vapp with specific conf values
+        kw.update(dict(vapp=self.conf.vapp_forcing, filename='FORCING_IN.nc', datebegin=self.conf.datebegin_forcing,
+            dateend=self.conf.dateend_forcing))
+        self.sh.title('FORCING input')
+        io.get_forcing(self.conf.xpid_forcing, self.conf.geometry_forcing, **kw)
+
+        # TODO : Cette verrue montre que le source_conf est inutile
+        # A retirer dans les toolbox de Sabine
+        conf_map    = dict(
+            RS   = 'RandomSampling',
+            EnKF = 'EnsembleKalmanFilter',
+            PF   = 'APrticleFilter',
+
+        )
+        # TODO modifier cette condition ridicule
+        if self.conf.xpid_precipitation.split('@')[0][:-2] in conf_map.keys() and False:
+            source_conf = conf_map[self.conf.xpid_precipitation.split('@')[0][:-2]]
+        else:
+            source_conf = None
+
+        # Update Rainf/Snowf variables
+        if self.conf.precipitation is not None:
+            # Update default vapp with specific conf values
+            kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
+            kw.update(dict(vapp=self.conf.vapp_precipitation, members=self.conf.members, source_conf=source_conf))
+            self.sh.title('Precipitation input')
+            io.get_precipitation(self.conf.xpid_precipitation, self.conf.geometry_precipitation, **kw)
+
+        # Update Wind / Wind_DIR variables
+        if self.conf.wind is not None:
+            kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
+            kw.update(dict(vapp=self.conf.vapp_wind))  # Update default vapp with specific conf value
+            self.sh.title('Wind input')
+            io.get_wind(self.conf.xpid_wind, self.conf.geometry_wind, **kw)
+
+    def algo(self):
+        """
+        Algo component
+        """
         t = self.ticket
+        self.sh.title('Toolbox algo FORCING generator')
+        tbalgo = toolbox.algo(
+            kind         = 'ForcingConstructor',
+            datebegin    = self.conf.datebegin,
+            dateend      = self.conf.dateend,
+            engine       = 'algo',  # `_CENTaylorRun` algo components familly
+            members      = self.conf.members,
+            ntasks       = self.conf.ntasks,
+            role_members = 'Precipitation',
+        )
+        print(t.prompt, 'tbalgo =', tbalgo)
+        print()
+        tbalgo.run()
 
-        #######################################################################
-        #                             Fetch steps                             #
-        #######################################################################
-        if 'early-fetch' in self.steps or 'fetch' in self.steps:
-
-            # TODO : Meteorological variables that are not yet processed in EDELWEISS system
-            # come from SAFRAN reanalysis
-            self.sh.title('Toolbox input safran')
-            safran = toolbox.input(
-                role        = 'Forcing file',
-                kind        = 'MeteorologicalForcing',
-                vapp        = self.conf.vapp,
-                vconf       = '[geometry:tag]',
-                cutoff      = 'assimilation',
-                filename    = 'FORCING_IN.nc',
-                experiment  = self.conf.safran_xpid,
-                geometry    = self.conf.geometry,
-                nativefmt   = 'netcdf',
-                namebuild   = 'flat@cen',
-                model       = 'edelweiss',
-                date        = self.conf.dateend,
-                datebegin   = self.conf.datebegin,
-                dateend     = self.conf.dateend,
-                namespace   = self.conf.namespace_in,
-                storage     = self.conf.storage,
-                block       = 'meteo',
-            )
-            print(t.prompt, 'SAFRAN =', safran)
-            print()
-
-            # TODO : Cette verrue montre que le source_conf est inutile
-            # A retirer dans les toolbox de Sabine
-            conf_map    = dict(
-                RS   = 'RandomSampling',
-                EnKF = 'EnsembleKalmanFilter',
-                PF   = 'APrticleFilter',
-
-            )
-            if self.conf.precipitation_xpid.split('@')[0][:-2] in conf_map.keys():
-                source_conf = conf_map[self.conf.precipitation_xpid.split('@')[0][:-2]]
-            else:
-                source_conf = None
-
-            self.sh.title('Toolbox input precipitation')
-            precipitation = toolbox.input(
-                role        = 'Precipitation',
-                kind        = 'Precipitation',
-                vapp        = 'edelweiss',
-                vconf       = '[geometry:tag]',
-                source_app  = 'antilope',
-                source_conf = source_conf,
-                cutoff      = 'assimilation',
-                filename    = 'mb[member]/PRECIPITATION.nc',
-                experiment  = self.conf.precipitation_xpid,
-                geometry    = self.conf.geometry,
-                nativefmt   = 'netcdf',
-                namebuild   = 'flat@cen',
-                model       = 'edelweiss',
-                date        = self.conf.dateend,
-                datebegin   = self.conf.datebegin.replace(day=2),  # TODO : virer cette verrue
-                dateend     = self.conf.dateend,
-                namespace   = self.conf.namespace_in,
-                storage     = self.conf.storage,
-                member      = footprints.util.rangex(self.conf.members),
-                # TODO : change block to 'meteo' in Sabine's task
-                # block       = 'meteo',
-                block       = 'analysis',
-            )
-            print(t.prompt, 'Precipitation =', precipitation)
-            print()
-
-            self.sh.title('Toolbox input wind')
-            wind = toolbox.input(
-                role        = 'Wind',
-                kind        = 'Wind',
-                vapp        = self.conf.vapp,
-                vconf       = '[geometry:tag]',
-                source_app  = 'arome',
-                source_conf = 'devine',
-                cutoff      = 'assimilation',
-                filename    = 'WIND.nc',
-                experiment  = self.conf.wind_xpid,
-                geometry    = self.conf.geometry,
-                nativefmt   = 'netcdf',
-                namebuild   = 'flat@cen',
-                model       = 'devine',
-                date        = self.conf.dateend,
-                datebegin   = self.conf.datebegin.replace(month=7, day=31),  # TODO : virer cette verrue
-                dateend     = self.conf.dateend,
-                namespace   = self.conf.namespace_in,
-                storage     = self.conf.storage,
-                block       = 'meteo',
-            )
-            print(t.prompt, 'Wind =', wind)
-            print()
-
-        #######################################################################
-        #                            Compute step                             #
-        #######################################################################
-
-        if 'compute' in self.steps:
-
-            self.sh.title('Toolbox algo FORCING generator')
-            tbalgo = toolbox.algo(
-                kind         = 'ForcingConstructor',
-                datebegin    = self.conf.datebegin,
-                dateend      = self.conf.dateend,
-                engine       = 'algo',  # `_CENTaylorRun` algo components familly
-                members      = self.conf.members,
-                ntasks       = self.conf.ntasks,
-                role_members = 'Precipitation',
-            )
-            print(t.prompt, 'tbalgo =', tbalgo)
-            print()
-            tbalgo.run()
-
-        #######################################################################
-        #                               Backup                                #
-        #######################################################################
-
-        if 'backup' in self.steps or 'late-backup' in self.steps:
-
-            # TODO : différencier le membre 0 (ANTILOPE Post-traité)
-            # des autres membres (avec perturbation)
-            # Ou bien conserver ANTILOPE PT comme le membre 0 et adapter plutot les tâches aval ?
-            self.sh.title('Toolbox ouput FORCING')
-            forcing = toolbox.output(
-                role        = 'Forcing file',
-                kind        = 'MeteorologicalForcing',
-                vapp        = self.conf.vapp,
-                vconf       = '[geometry:tag]',
-                cutoff      = 'assimilation',
-                filename    = 'mb[member]/FORCING_OUT.nc',
-                experiment  = self.conf.xpid,
-                geometry    = self.conf.geometry,
-                nativefmt   = 'netcdf',
-                namebuild   = 'flat@cen',
-                model       = 'edelweiss',
-                date        = self.conf.dateend,
-                datebegin   = self.conf.datebegin,
-                dateend     = self.conf.dateend,
-                namespace   = self.conf.namespace_out,
-                storage     = self.conf.storage,
-                member      = footprints.util.rangex(self.conf.members),
-                block       = 'meteo',
-            )
-            print(t.prompt, 'FORCING =', forcing)
-            print()
+    def put_remote_outputs(self):
+        """
+        Main method to save an OFFLINE execution outputs
+        """
+        self.sh.title('FORCING output')
+        io.put_forcing(self.conf.xpid, self.conf.geometry, filename='FORCING_OUT.nc', members=self.conf.members, **self.common_kw)

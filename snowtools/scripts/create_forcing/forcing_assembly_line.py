@@ -84,11 +84,24 @@ def update_precipitation(forcing, subdir=None):
     forcing.time.encoding['units'] = f'hours since {forcing.time.data[0]}'
 
     precipitation = precipitation.sel({'time': dates})
-    precipitation = precipitation.rename({'xx': 'x', 'yy': 'y'})
+    if hasattr(precipitation, 'xx'):
+        precipitation = precipitation.rename({'xx': 'x', 'yy': 'y'})
 
     # Replace Rainf/Snowf variables by the ones from the ensemble analysis
-    forcing['Rainf'] = precipitation['Rainf_ds'] / 3600.
-    forcing['Snowf'] = precipitation['Snowf_ds'] / 3600.
+    # TODO : prévoir de pouivoir passer en argument le nom des variables
+    if hasattr(precipitation, 'Rainf'):
+        forcing['Rainf'] = precipitation['Rainf'] / 3600.
+    elif hasattr(precipitation, 'Rainf_ds'):  # Sabine's script name
+        forcing['Rainf'] = precipitation['Rainf_ds'] / 3600.
+    else:
+        raise ValueError("Rain variable not in ['Rainf', 'Rainf_ds']")
+
+    if hasattr(precipitation, 'Snowf'):
+        forcing['Snowf'] = precipitation['Snowf'] / 3600.
+    elif hasattr(precipitation, 'Snowf_ds'):
+        forcing['Snowf'] = precipitation['Snowf_ds'] / 3600.
+    else:
+        raise ValueError("Snow variable not in ['Snowf', 'Snowf_ds']")
 
     return forcing
 
@@ -109,20 +122,23 @@ def check_date(datebegin_file, datebegin_arg, dateend_file, dateend_arg):
               '{dateend_arg}')
 
 
-def update(forcing, members, datebegin, dateend):
+def update(forcing, members, datebegin, dateend, wind=True, precipitation=True):
     outname = 'FORCING_OUT.nc'
-    forcing = update_wind(forcing)
-    if members is not None:
-        for member in range(members):
-            print(f'Member {member}')
-            subdir = f'mb{member}'
-            forcing = update_precipitation(forcing, subdir=subdir)
-            datedeb, datefin = write(forcing, outname)
+    if wind:
+        forcing = update_wind(forcing)
+
+    if precipitation:
+        if members is not None:
+            for member in range(members):
+                print(f'Member {member}')
+                subdir = f'mb{member}'
+                forcing = update_precipitation(forcing, subdir=subdir)
+                datedeb, datefin = write(forcing, outname)
+                check_date(datedeb, datebegin, datefin, dateend)
+        else:
+            forcing = update_precipitation(forcing)
+            datebegin, dateend = write(forcing, outname)
             check_date(datedeb, datebegin, datefin, dateend)
-    else:
-        forcing = update_precipitation(forcing)
-        datebegin, dateend = write(forcing, outname)
-        check_date(datedeb, datebegin, datefin, dateend)
 
     return datebegin, dateend
 
@@ -159,8 +175,8 @@ if __name__ == '__main__':
         # Retrieve input files with Vortex
         from snowtools.scripts.extract.vortex import vortexIO
         vortexIO.get_forcing(datebegin, dateend, safran, geometry, filename='FORCING_IN.nc')
-        vortexIO.get_wind(datebegin, dateend, wind, geometry)
-        vortexIO.get_precipitation(datebegin, dateend, precipitation, geometry, members=members)
+        wind = vortexIO.get_wind(datebegin, dateend, wind, geometry)
+        precipitation = vortexIO.get_precipitation(datebegin, dateend, precipitation, geometry, members=members)
         vortex = True
     except (ImportError, ModuleNotFoundError):
         vortex = False
@@ -172,7 +188,8 @@ if __name__ == '__main__':
             os.symlink(f'{precipitation}/mb{member}/PRECIPITATION.nc', f'mb{member}/PRECIPITATION.nc')
 
     forcing = open_dataset('FORCING_IN.nc')  # Read input forcing file
-    datedeb, datefin = update(forcing, members, datebegin, dateend)  # Single SAFRAN FORCING file --> 16 FORCINGs
+    # Update default FORCING file with wind and precipitation variables (if any)
+    datedeb, datefin = update(forcing, members, datebegin, dateend, wind=wind[0], precipitation=precipitation[0])
 
     if vortex:
         vortexIO.put_forcing(datedeb, datefin, xpid, geometry, members=members, filename='FORCING_OUT.nc')

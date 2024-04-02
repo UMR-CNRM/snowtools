@@ -147,7 +147,9 @@ def init():
         scope       = None,
         model       = None,  # TODO : réfléchir à la pertinence de mettre une valeur par défaut
         cutoff      = 'assimilation',  # TODO : réfléchir à la pertinence de mettre une valeur par défaut
-        intent      = 'inout',  # Rights to give to the file (inout=read/write, in=read-only)
+        # Leave intent to 'in' for more efficient IOs (symbolic links instead of copies)
+        intent      = 'in',  # Rights to give to the file (inout=read/write, in=read-only)
+        #intent      = 'inout',  # Rights to give to the file (inout=read/write, in=read-only)
     )
 
 
