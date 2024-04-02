@@ -40,9 +40,16 @@ def parse_args():
                         help="Explore a specific xpid. Format xpid@username authorised, in this case,"
                         "the users argument is automatically set to 'username'")
 
-    parser.add_argument("-k", "--block", dest="block",
+    # TODO : gérer les membres et les "subblocks"
+
+    parser.add_argument("-c", "--block", dest="block",
                         default=None, type=str,
                         help="Explore a specific block (for example 'meteo', 'prep', 'pro',...)")
+
+    parser.add_argument("-k", "--kind", dest="kind",
+                        default=None, type=str,
+                        help="Explore a specific block (for example 'FORCING', ,forcing', 'PRO', 'PREP',...)."
+                             "Both upper and lower case are valid")
 
     parser.add_argument("-o", "--output", dest="output",
                         default=None, type=str,
@@ -100,7 +107,7 @@ def add_entry(dictionary, user, vapp, vconf, xpid, block, value):
 
 
 def get_vortex_state(datebegin=None, dateend=None, date=None, users=None, vapp=None, vconf=None,
-                     xpid=None, block=None, **kw):
+                     xpid=None, block=None, kind=None, **kw):
 
     # VortexEnv = dict()  # Main dictionnary
     VortexEnv = list()  # OUtput initialisation
@@ -178,6 +185,9 @@ def get_vortex_state(datebegin=None, dateend=None, date=None, users=None, vapp=N
                                     if date is not None:
                                         list_files = [fic for fic in list_files if date in fic and
                                                 len(fic.split('.')[0].split('_')) == 2]
+                                    if kind is not None:
+                                        list_files = [fic for fic in list_files if kind.uppe() in fic]
+
                                     if len(list_files) > 0:
                                         for fic in list_files:
                                             abspath = os.path.join('home', user, 'vortex', app, conf, xp, bk, fic)
@@ -248,5 +258,6 @@ def print_request_info(env, **kw):
 
 if __name__ == '__main__':
     args = parse_args()
+    # vars(args) convert the args *Namespace* object into a *dictionnary* object
     env = get_vortex_state(**vars(args))
     print_request_info(env, **vars(args))
