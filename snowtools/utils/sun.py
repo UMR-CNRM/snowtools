@@ -232,6 +232,7 @@ class sun():
         # TODO L. Roussel why we keep radiation in deep valleys ?
         # tab_diffus = tab_global - tab_direct
         ###########################################
+        ###########################################
 
         # direct incident radiation (maximum value authorized is the theoretical maximum radiation)
         direct_incident = np.divide(tab_direct, sin_gamma, out=np.zeros_like(tab_direct), where=sin_gamma!=0)
