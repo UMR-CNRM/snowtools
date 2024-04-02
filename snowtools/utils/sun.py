@@ -43,7 +43,7 @@ class sun():
 
     def slope_aspect_correction(self, direct, diffus, time, lat_in, lon_in, aspect_in, slope_in, list_list_azim=None, list_list_mask=None, lnosof_surfex=True, convert_time = True, return_angles = False):
         """
-        This routine corrects the direct solar radiation because due to explicit slope or surrounding masks
+        This routine corrects the direct solar radiation because of explicit slope or surrounding masks
 
         :param direct: array of direct solar radiation over an infinite flat surface (time,loc) or (time,x,y)
         :param time: time vector
@@ -62,6 +62,10 @@ class sun():
 
         :returns: corrected direct solar radiation and optionally, the angular positions of sun
         """
+        # A bit of docs about solar radiation to start :
+        # "Basics in solar radiation at earth surface" (L. Wald) : https://minesparis-psl.hal.science/hal-01676634
+        # "Wikipedia: solar irradience" : https://en.wikipedia.org/wiki/Solar_irradiance 
+        
         tab_direct = direct[:]
         tab_diffus = diffus[:]
         tab_global = tab_direct + tab_diffus
@@ -121,14 +125,16 @@ class sun():
             - 7.7 * np.sin((j - 2.027) / 365 * 2 * PI)
         
         # --------- Sun declination (delta) ---------
-        # (angular distance of the sun's rays north (or south) of the equator):
-        # L. Roussel 03/2024, small changes here, but easier to understand
+        # (angular distance of the sun's rays north (or south) of the equator)
+        # L. Roussel 03/2024, small changes here, but easier to understand:
+        # 81th days of the year is the spring equinox
         # old formula : 0.4 * np.sin((0.986 * j - 80) * DG2RD)
         sin_delta = 0.4 * np.sin((j - 81) / 365 * 2 * PI) 
         delta = np.arcsin(sin_delta)
 
         # --------- Solar angular time ---------
-        # TODO do not take in account the shift from year to year
+        # Solar angle at time h of the day
+        # This do not take in account the shift from year to year (bissextil year and so on)
         # h - 12: centered at noontime
         # eot / 60: equation of time in hour
         # lon / 15: position from Greenwhich (french Alps around 7° East, i.e ~30 min shift)
@@ -152,7 +158,7 @@ class sun():
         # 
         lat_radian = lat * DG2RD
         sin_gamma = np.sin(lat_radian) * sin_delta + np.cos(lat_radian) * np.cos(delta) * np.cos(omega_time)
-        # L. Roussel: set as 0 if negative, not 0.001
+        # L. Roussel: set as 0 if negative (before 0.001)
         sin_gamma = np.where(sin_gamma < eps, 0, sin_gamma)
         gamma = np.arcsin(sin_gamma)
         
@@ -192,6 +198,7 @@ class sun():
         azimuth = np.where(y_azimuth_angle <= 0., azimuth + np.pi, azimuth)
         azimuth = np.where(azimuth >= 2. * np.pi, azimuth - 2. * np.pi, azimuth) # back into [0, 2 * PI]
 
+        ##########################################
         ######## Recompute diffuse/direct ########
         # diffuse/global theorical ratio for clear sky (SBDART modelling by M. Dumont for Col de Porte)
         a = -2.243613
@@ -231,13 +238,14 @@ class sun():
         # TODO L. Roussel why we keep radiation in deep valleys ?
         # tab_diffus = tab_global - tab_direct
         ###########################################
+        ###########################################
 
         # direct incident radiation (maximum value authorized is the theoretical maximum radiation)
         # If you don't pass `out` the indices where (sin_gamma == 0) will be uninitialized !
         direct_incident = np.divide(tab_direct, sin_gamma, out=np.zeros_like(tab_direct), where=sin_gamma!=0)
 
         # M Lafaysse : remove this threshold because there are controls in SAFRAN and because there are numerical issues at sunset.
-        # TODO L. Roussel: this one is useless ? 
+        # L. Roussel: this one looks useless, still keep it to control anyway
         direct_incident = np.where(direct_incident >= max_theor_radiation, max_theor_radiation, direct_incident)
 
         # --------- Projection on slope/aspect surface --------- 
@@ -251,34 +259,47 @@ class sun():
         # (S. Morin 2014/06/27, taken from meteo.f90 in Crocus)
         # Matthieu 2014/09/16 : réécriture parce que les masques changent d'un point à l'autre
         direct_plane_projected_masked = direct_plane_projected.copy()
-        if list_list_mask is not None: 
-            simu_azimuth_degree = azimuth * RD2DG  # solar azimuth of the simulation, 0. is North
+        if list_list_mask is not None: # if mask are given
+            simu_azimuth_degree = azimuth * RD2DG  # solar azimuths of the simulation, 0. is North
             simu_interp_mask = np.zeros_like(simu_azimuth_degree) # init for computed solar mask (time, loc) or (time, x, y)
 
             for i, list_azim in enumerate(list_list_azim): # for each point
                 # interp1d(x, y, interp_x)
+                # return interp_y with x, y and interp_x as arguments
                 simu_interp_mask[:, i] = interp1d(list_azim, list_list_mask[i], simu_azimuth_degree[:, i])
             
             # set to zero direct radiation values when solar angle is below mask angle
             direct_plane_projected_masked = np.where(simu_interp_mask > gamma * RD2DG, 0., direct_plane_projected)  
         
-        
-        # --------- Compare with ground truth ---------
-        pysolar_radiation = []
-        for date in tab_time_date:
-            date = date.replace(tzinfo=timezone.utc)
-            altitude_deg = get_altitude(lat_in[0], lon_in[0], date)
-            current_radiation = pysolar.radiation.get_radiation_direct(date, altitude_deg)
-            pysolar_radiation.append(current_radiation)
-        # décalage sur le maximum,pas la meme allure .. 
-
+        # --------- Comparison with ground truth ---------
+        # ### Pysolar
+        # pysolar_radiation = []
+        # for date in tab_time_date:
+        #     date = date.replace(tzinfo=timezone.utc)
+        #     altitude_deg = get_altitude(lat_in[0], lon_in[0], date)
+        #     current_radiation = pysolar.radiation.get_radiation_direct(date, altitude_deg)
+        #     # print(current_radiation)
+        #     pysolar_radiation.append(current_radiation)
+        # print(pysolar_radiation)
+        # ### PVLib
+        # import pvlib
+        # import pandas as pd
+        # tus = pvlib.location.Location(lat_in[0], lon_in[0], 'UTC', 0, 'Test')
+        # times = pd.date_range(start="2020-08-01", end="2021-08-01", freq='1h', tz=tus.tz)
+        # ephem_data = tus.get_solarposition(times)
+        # irrad_data = tus.get_clearsky(times)
         # plt.plot(tab_time_date, tab_direct, marker=".", label="tab_direct")
         # plt.plot(tab_time_date, max_theor_radiation, marker=".", label="max_theor_radiation")
-        # plt.plot(tab_time_date, direct_incident, marker=".", label="direct_incident")
+        # # plt.plot(tab_time_date, direct_incident, marker=".", label="direct_incident")
         # plt.plot(tab_time_date, direct_plane_projected, marker=".", label="direct_plane_projected")
         # plt.plot(tab_time_date, direct_plane_projected_masked, marker=".", label="direct_plane_projected_masked")
-        # plt.plot(tab_time_date, tab_diffus, marker=".", label="diffus")
+        # # plt.plot(tab_time_date, tab_diffus, marker=".", label="diffus")
         # plt.plot(tab_time_date, pysolar_radiation, marker=".", label="pysolar_radiation")
+        # sin_gamma = sin_gamma.flatten()
+        # pysolar_radiation = np.array(pysolar_radiation)
+        # plt.plot(tab_time_date, pysolar_radiation * sin_gamma, marker=".", label="pysolar_radiation * sin_gamma")
+        # plt.plot(times, irrad_data.ghi.values, label="ghi")
+        # plt.plot(times, irrad_data.dni.values, label="dni")
         # plt.legend()
         # plt.show()
         
@@ -358,12 +379,12 @@ class sun():
         :param slope: slope (degrees)
         :param aspect: aspect (degrees)
         """
-        # TODO L. Roussel did not correct everything here
+        # TODO L. Roussel did not change old Fortran code here
 
         julian_days = np.ones(tab_time_date.shape, 'f')
         decimal_hours = np.ones(tab_time_date.shape, 'f')
         for i in range(len(tab_time_date)):
-            #            tab_time_date_2[i] = time_init + datetime.timedelta(seconds = tab_time_date[i])
+            # tab_time_date_2[i] = time_init + datetime.timedelta(seconds = tab_time_date[i])
             timetup = tab_time_date[i].timetuple()
             julian_days[i] = timetup[7]  # extract Julian day (integer)
             # L. Roussel: fix to decimal hour instead of integer hour
