@@ -35,7 +35,7 @@ class Interpol_Task(Task, S2MTaskMixIn):
         t = self.ticket
 
         if not hasattr(self.conf, "genv"):
-            self.conf.genv = 'uenv:cen.11@CONST_CEN'
+            self.conf.genv = 'uenv:cen.12@CONST_CEN'
 
         # Definition of geometries, safran xpid/block and list of dates from S2MTaskMixIn methods
         list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = \
