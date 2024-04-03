@@ -236,14 +236,14 @@ CONTAINS
       ALLOCATE(PLONOUT(NX))
       IF(NF90_INQ_VARID(FILE_ID_GEO,HASPECT,IDVARGASPECT) == NF90_NOERR ) THEN
         CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARGASPECT,PASPECTOUT , &
-                start =(/1,1/) , count = (/NX,NY/)), &
+                start =(/IXSTART,IYSTART/) , count = (/NX_PROC,NY_PROC/)), &
                 "Cannot read "//HASPECT)
       ENDIF
       !
       IF (NF90_INQ_VARID(FILE_ID_GEO,HSLOPE,IDVARSLOPE) == NF90_NOERR) THEN
         !
         CALL CHECK(NF90_GET_VAR(FILE_ID_GEO,IDVARSLOPE,PSLOPEOUT , &
-                start =(/1,1/) , count = (/NX,NY/)), &
+                start =(/IXSTART,IYSTART/) , count = (/NX_PROC,NY_PROC/)), &
                 "Cannot read "//HSLOPE)
       ENDIF
       IF (NF90_INQ_VARID(FILE_ID_GEO, HLAT1D,IDVARLAT) == NF90_NOERR) THEN
