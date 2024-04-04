@@ -87,7 +87,7 @@ class sun():
             tab_time_date = time - deltatime / 2
         else:
             tab_time_date = time
-            
+
         julian_days = np.ones(tab_time_date.shape, 'f')
         decimal_hours = np.ones(tab_time_date.shape, 'f')
         
@@ -161,8 +161,7 @@ class sun():
         # L. Roussel: set as 0 if negative (before 0.001)
         sin_gamma = np.where(sin_gamma < eps, 0, sin_gamma)
         gamma = np.arcsin(sin_gamma)
-        
-        
+          
         # M Lafaysse : remove this threshold because there are controls in SAFRAN and because there are numerical issues at sunset.
         # --------- Theoretical maximum radiation ---------
         max_theor_radiation = 1370 * (1 - sin_delta / 11.7)
@@ -417,6 +416,7 @@ class sun():
     def coszenith(self, tab_time_date, lat, lon, slope, aspect):
         """
         Cosinus of solar zenith angle
+        (detailed explaination in function slope_aspect_correction)
 
         :param tab_time_date: time
         :param lat: latitude
@@ -424,8 +424,6 @@ class sun():
         :param slope: slope (degrees)
         :param aspect: aspect (degrees)
         """
-        # TODO L. Roussel did not change old Fortran code here
-
         julian_days = np.ones(tab_time_date.shape, 'f')
         decimal_hours = np.ones(tab_time_date.shape, 'f')
         for i in range(len(tab_time_date)):
@@ -441,52 +439,34 @@ class sun():
         # all tabs now have the same dimension, which is that of tab_direct.
         # method from crocus meteo.f90 original file (v2.4)
 
-        # variables needed for solar computations
+        # Variables needed for solar computations:
+        PI = math.pi
+        DG2RD = PI / 180.
+        eps = 0.001
 
-        VSOL1 = 9.9,
-        VSOL2 = 2.,
-        VSOL3 = .986,
-        VSOL4 = 100.,
-        VSOL5 = 7.7,
-        VSOL6 = 2.,
-        VSOL7 = .4,
-        VSOL8 = 80.,
-        VSOL9 = 1370.,
-        VSOL10 = 11.7,
-        VSOL11 = 15.,
-        VSOL12 = .001,
-        DG2RD = math.pi / 180.
-        NUZENI = 12.
-        UH2LON = 15.
-        NUH2M = 60.
-        UEPSI = 0.001
-
-        # Conversion of slope and aspect to rad:
-
+        # --------- Convert to radian ---------
         slope, aspect = slope * DG2RD, aspect * DG2RD
 
-        # Time equation
-        ZDT = VSOL1 * np.sin((VSOL2 * (VSOL3 * j - VSOL4)) * DG2RD)\
-            - VSOL5 * np.sin((VSOL3 * j - VSOL6) * DG2RD)
+        # --------- Equation of Time --------- 
+        eot = 9.9 * np.sin(2 * (j - 101.4) / 365 * 2 * PI) \
+            - 7.7 * np.sin((j - 2.027) / 365 * 2 * PI)
 
-        # sun declination
-        ZSINDL = VSOL7 * np.sin(DG2RD * (VSOL3 * j - VSOL8))
-        ZDELTA = np.arcsin(ZSINDL)
+        # --------- Sun declination (delta) ---------
+        sin_delta = 0.4 * np.sin((0.986 * j - 80) * DG2RD)
+        delta = np.arcsin(sin_delta)
 
-        # theoretical maximum radiation
-        ZRSI0 = VSOL9 * (1. - ZSINDL / VSOL10)  # pylint: disable=possibly-unused-variable
+        # --------- Solar angular time ---------
+        omega_time = (h - 12 + eot / 60 + lon / 15) / 24 * 2 * PI
 
-        # solar angular time
-        ZOMEGA = VSOL11 * (h - NUZENI + ZDT / NUH2M + lon / UH2LON) * DG2RD
+        # --------- Solar angular height ---------
+        # sza (solar zenith angle) = PI / 2 - gamma
+        # cos(sza) = sin(gamma)
+        lat_radian = lat * DG2RD
+        sin_gamma = np.sin(lat_radian) * sin_delta + np.cos(lat_radian) * np.cos(delta) * np.cos(omega_time)
+        # L. Roussel: set as 0 if negative (before 0.001)
+        sin_gamma = np.where(sin_gamma < eps, 0, sin_gamma)
 
-        # solar angular height
-
-        ZLAT = lat * DG2RD
-        ZSINGA = np.sin(ZLAT) * ZSINDL + np.cos(ZLAT) * np.cos(ZDELTA) * np.cos(ZOMEGA)
-        ZSINGA = np.where(ZSINGA < UEPSI, VSOL12, ZSINGA)
-        ZGAMMA = np.arcsin(ZSINGA)
-
-        return np.cos(math.pi / 2. - ZGAMMA)
+        return sin_gamma
 
     def directdiffus(self, SWglo, time, lat, lon, slope, aspect, site):
         """
@@ -562,7 +542,7 @@ class sun():
         SWdif = np.where(ratio <= 1, ratio * SWglo, SWglo)
         SWdir = SWglo - SWdif
 
-#         for hour in range(1, 24):
-#             print hour, coszenith[ndays * 24 + hour - 1], ratio[ndays * 24 + hour - 1], SWdir[ndays * 24 + hour - 1], SWdif[ndays * 24 + hour - 1], SWglo[ndays * 24 + hour - 1]
+    # for hour in range(1, 24):
+    #   print hour, coszenith[ndays * 24 + hour - 1], ratio[ndays * 24 + hour - 1], SWdir[ndays * 24 + hour - 1], SWdif[ndays * 24 + hour - 1], SWglo[ndays * 24 + hour - 1]
 
         return SWdir, SWdif
