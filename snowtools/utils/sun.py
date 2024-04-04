@@ -128,8 +128,8 @@ class sun():
         # (angular distance of the sun's rays north (or south) of the equator)
         # L. Roussel 03/2024, small changes here, but easier to understand:
         # 81th days of the year is the spring equinox
-        # old formula : 0.4 * np.sin((0.986 * j - 80) * DG2RD)
-        sin_delta = 0.4 * np.sin((j - 81) / 365 * 2 * PI) 
+        # equivalent to : 0.4 * np.sin((0.999694 * j - 81.111) / 365 * 2 * PI) ~ 0.4 * sin((j - 81) / 365 * 2.PI) 
+        sin_delta = 0.4 * np.sin((0.986 * j - 80) * DG2RD)
         delta = np.arcsin(sin_delta)
 
         # --------- Solar angular time ---------
@@ -270,6 +270,51 @@ class sun():
             
             # set to zero direct radiation values when solar angle is below mask angle
             direct_plane_projected_masked = np.where(simu_interp_mask > gamma * RD2DG, 0., direct_plane_projected)  
+        
+        # # --------- Plot Sun trajectory in the sky ---------
+        # fig, ax = plt.subplots(1, 1, figsize=(15 / 2.54, 10 / 2.54))
+        # day_21 = 21
+        # import matplotlib.colors as colors
+        # cmap = plt.get_cmap("winter")
+        # norm = colors.Normalize(0, 12)
+        # gamma_f = gamma.flatten() * RD2DG
+        # azimut_f = azimuth.flatten() * RD2DG
+        # import pandas as pd
+        # print(tab_time_date)
+        # print(azimut_f)
+        # print(gamma_f)
+        # df = pd.DataFrame({"Date": tab_time_date, "azimut": azimut_f, "gamma": gamma_f})
+        # df.set_index('Date', inplace=True)
+        
+        # """for i, t in enumerate(tab_time_date):
+        #     timetup = t.timetuple()
+        #     day = timetup[2]
+        #     if day == day_21:
+        #         print("day = 21")
+        #         julian_days = timetup[7]  # extract Julian day (integer)
+        #         month = timetup[1]
+        #         decimal_hours = timetup[3] + timetup[4] / 60 + timetup[5] / 3600  # extrac time in hour
+                
+        #         if gamma_f[i] > 0.0001:"""
+                    
+        # df = df[df.index.day == 21]
+        # # df = df[df.gamma >= 0.0001]
+        # # ax.scatter(df["azimut"], df["gamma"], marker=".", color=cmap(norm(df.index.month)))
+        # for month in df.index.month.unique():
+        #     current_df = df[df.index.month == month]
+        #     ax.plot(current_df["azimut"], current_df["gamma"], color=cmap(norm(month)))
+        # ax.set_ylim(0, 90)
+        # ax.set_xlim(0, 360)
+        # plt.grid()
+        # plt.show()
+        # exit()
+        
+        # smooth temporal : downsampling
+        # label with 21 december, ... 
+        # mask in the background
+        # fleche sens soleil
+        # pointillé sous le masque ? 
+        # label S, N, E, W, 0°, 10°, ...
         
         # --------- Comparison with ground truth ---------
         # ### Pysolar
