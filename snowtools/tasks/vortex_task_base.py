@@ -86,7 +86,8 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         Implement this method in your task to fetch all resources already stored on the local (HPC) cache.
         You can either use standard Vortex input toolboxes or the CEN-specific `vortexIO` tool.
         """
-        self.get_remote_inputs()  # TODO : check if really necessary / good practice
+        # self.get_remote_inputs()  # TODO : check if really necessary / good practice
+        pass
 
     def algo(self):
         """
@@ -100,7 +101,8 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         Implement this method in your task to save resources on the local (HPC) cache.
         You can either use standard Vortex input toolboxes or the CEN-specific `vortexIO` tool.
         """
-        self.put_remote_outputs()  # TODO : check if really necessary / good practice
+        # self.put_remote_outputs()  # TODO : check if really necessary / good practice
+        pass
 
     def put_remote_outputs(self):
         """

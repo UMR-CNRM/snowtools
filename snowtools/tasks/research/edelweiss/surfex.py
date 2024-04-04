@@ -28,7 +28,7 @@ class _Offline(_VortexTask):
 
     def put_remote_outputs(self):
         """
-        Main method to save an OFFLINE execution outputs
+        Main method to save an OFFLINE execution output (PRO file)
         """
         self.sh.title('PRO')
         self.pro = io.put_pro(*self.common_args, members=self.conf.members, **self.common_kw)
@@ -38,25 +38,31 @@ class _Offline(_VortexTask):
         Main method to fetch a single or an ensemble of FORCING files
         """
         self.sh.title('FORCING')
-        self.forcing = io.get_forcing(*self.common_args, members=self.conf.members,
+        self.forcing = io.get_forcing(*self.common_args, members=self.conf.members_forcing,
                                       filename='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', **self.common_kw)
 
     def get_surfex_namelist(self):
         """
         Main method to get an OPTIONS.nam namelist
+        The namelist file will be modifier by the pre-processing step, so a copy must be made
+        instead of a symbolic link (--> intent='inout' by default in vortexIO).
         """
         self.sh.title('NAMELIST')
+        # TODO : définir un source par défaut à appliquer partout ('namel_[binary]' dans common/data/const.py)
+        # --> variable à mettre dans le ficiher de conf par défaut
         self.namelist = io.get_surfex_namelist(self.conf.uenv)
 
     def get_prep(self):
         """
         Main method to get a PREP file
         Parsing an *alternate_xpid* to vortexIO.get_prep implies that alternate resources may
-        be used if not PREP file already exists for this geometry/xpid
+        be used if not PREP file already exists for this geometry/xpid.
+        The PREP file will be modified during the execution so a copy must be made
+        instead of a symbolic link (--> intent='inout').
         """
         self.sh.title('PREP')
-        self.prep = io.get_prep(*self.common_args, date=self.conf.datespinup,
-                                alternate_xpid=self.ref_reanalysis, **self.common_kw)
+        self.prep = io.get_prep(self.conf.xpid_prep, self.conf.geometry, date=self.conf.date_prep,
+                                alternate_xpid=self.ref_reanalysis, intent='inout', **self.common_kw)
 
     def get_pgd(self):
         """
@@ -72,7 +78,7 @@ class _Offline(_VortexTask):
         Main method to get all other OFFLINE-mandatory static resources
         """
         self.sh.title('STATIC OFFLINE INPUTS')
-        io.get_const_offline(self.conf.geometry, self.conf.uenv)
+        io.get_const_offline(self.conf.geometry, self.conf.uenv, alternate_uenv=self.conf.default_uenv)
 
     def get_additionnal_inputs(self):
         """
@@ -98,44 +104,49 @@ class OfflineMPI(_Offline):
         Get OFFLINE MPI executable
         TODO : use a VortexIO like tool
         """
-        t = self.ticket
-        self.sh.title('OFFLINE MPI')
-        self.offline = toolbox.executable(
-            role           = 'Binary',
-            kind           = 'offline',
-            local          = 'OFFLINE',
-            model          = 'surfex',
-            genv           = self.conf.uenv,
-            gvar           = 'master_surfex_offline_mpi',
-        )
-        print(t.prompt, 'Executable =', self.offline)
-        print()
+        self.offline = io.get_offline_mpi(self.conf.uenv, alternate_uenv=self.conf.default_uenv)
 
     def algo(self):
         """
-        Launch the OFFLINE executable with MPI parallelisation
+        Launch a single OFFLINE execution with MPI parallelisation
         """
+
+        # Launch *Surfex_PreProcess* (vortex/src/cen/algo/deterministic.py) algo component to
+        # preprocess the namelist (adjust dates, etc.)
+        # TODO : this piece of algo should be included the the OFFLINE algo component !
+        t = self.ticket
+        self.sh.title('ALGO : NAMELIST pre-processing')
+        preprocess = toolbox.algo(
+            kind         = 'surfex_preprocess',
+            datebegin    = self.conf.datebegin,
+            dateend      = self.conf.dateend,
+            forcingname  = self.forcing[0].container.basename,
+        )
+        print(t.prompt, 'Pre-process algo =', preprocess)
+        print()
+        preprocess.run()
+
         t = self.ticket
         # Algo component to produce to run the SURFEX OFFLINE simulation (MPI parallelization)
-        self.sh.title('Toolbox algo OFFLINE')
-        algo = toolbox.algo(
-            engine         = 'parallel',
+        self.sh.title('ALGO : OFFLINE MPI')
+        offline = toolbox.algo(
+            engine         = 'parallel',  # TODO : *engine* should be 'blind'
             binary         = 'OFFLINE',
             kind           = 'deterministic',
             datebegin      = self.conf.datebegin,
             dateend        = self.conf.dateend,
-            dateinit       = self.conf.datespinup,
-            threshold      = self.conf.threshold,
-            drhookprof     = self.conf.drhook,
+            dateinit       = self.conf.date_prep,
+            ntasks         = self.conf.ntasks,
+            verbose        = True,
         )
-        print(t.prompt, 'Algo =', algo)
+        print(t.prompt, 'Algo =', offline)
         print()
-        self.component_runner(algo, self.offline, mpiopts=dict(nprocs=self.conf.nprocs, ntasks=self.conf.ntasks))
+        self.component_runner(offline, self.offline, mpiopts=dict(nprocs=self.conf.nprocs, ntasks=self.conf.ntasks))
 
 
 class OfflineEnsemble(_Offline):
     """
-    Launch several instances of an OFFLINE executable in parallel.
+    Launch several instances of an OFFLINE executable (without an MPI parallelisation) in parallel.
     """
 
     def get_offline(self):
@@ -144,7 +155,7 @@ class OfflineEnsemble(_Offline):
         TODO : use a VortexIO like tool
         """
         t = self.ticket
-        self.sh.title('OFFLINE NO MPI')
+        self.sh.title('EXEC OFFLINE NO MPI')
         self.offline = toolbox.executable(
             role           = 'Binary',
             kind           = 'offline',
@@ -161,7 +172,7 @@ class OfflineEnsemble(_Offline):
         Launch several instances of the OFFLINE executable in parallel
         """
         t = self.ticket
-        self.sh.title('Toolbox algo tb09 = OFFLINE')
+        self.sh.title('ALGO OFFLINE NO MPI')
 
         # TODO : avoid this kind of call here
         list_geometry = self.get_list_geometry()

@@ -8,6 +8,7 @@ Created on 28 march. 2024
 
 import os
 import shutil
+import glob
 
 from snowtools.tasks.vortex_kitchen import vortex_kitchen, UserEnv
 from snowtools.utils.resources import InstallException
@@ -15,7 +16,8 @@ from snowtools.tools.execute import callSystemOrDie
 from snowtools.DATA import SNOWTOOLS_DIR
 from bronx.stdtypes.date import Date
 
-from vortex.util.config import GenericConfigParser
+import vortex
+from vortex.util.config import GenericConfigParser, load_template
 
 
 class Edelweiss_kitchen(vortex_kitchen):
@@ -30,13 +32,42 @@ class Edelweiss_kitchen(vortex_kitchen):
         # Check if a vortex installation is defined
         self.check_vortex_install()
         # Fetch user-defined options
-        self.options   = options
-        self.datebegin = Date(self.options.datebegin)
-        self.dateend   = Date(self.options.dateend)
+        self.options = options
+
+        if self.options.tasksinfo:
+            # Only print information from the default configuration file
+            self.tasksinfo()
+
+        else:
+            # Actual execution
+            self.set_class_variables()
+            self.execute()
+
+    @staticmethod
+    def check_vortex_install():
+
+        if "VORTEX" not in list(os.environ.keys()):
+            raise InstallException("VORTEX environment variable must be defined towards a valid vortex install.")
+
+    def tasksinfo(self):
+
+        # Read default configuration file
+        default_conf = os.path.join(SNOWTOOLS_DIR, 'conf', f'{self.options.vapp}.ini')
+        iniparser = GenericConfigParser(inifile=default_conf)
+        conf = iniparser.as_dict()  # Merge=False preserves the "DEFAULT" section
+        for task, section in conf.items():
+            for key, value in section.items():
+                if key == 'info':
+                    print(f'{task} : {value}')
+
+    def set_class_variables(self):
 
         self.vapp  = self.options.vapp  # edelweiss by default, this is an Edelweiss-specific launcher
         # The vconf is defined by the geometry for all CEN experiments by convention
         self.vconf = self.options.geometry.lower()
+
+        self.datebegin = Date(self.options.datebegin)
+        self.dateend   = Date(self.options.dateend)
 
         self.user = os.environ["USER"]
 
@@ -49,23 +80,56 @@ class Edelweiss_kitchen(vortex_kitchen):
             self.profile = 'rd'
 
         self.define_ntasks(machine)
-        self.execute()  # Inherited from vortex_kitchen
+
+        if isinstance(self.options.task, dict):
+            # self.options.task = dict(taskname=list(task1, task2,...))
+            self.taskname = list(self.options.task.keys())[0]
+            self.create_driver = True
+        elif isinstance(self.options.task, list):
+            pass
+        else:
+            # Standard case
+            self.taskname = self.options.task
+            self.create_driver = False
+        self.jobname  = self.taskname
+
+        self.nnodes = self.options.nnodes
 
     def define_ntasks(self, machine):
-        if hasattr(self.options, 'ntasks'):
-            define_ntasks = not self.options.ntasks
-        else:
-            define_ntasks = True
-        if define_ntasks:
-            if 'taranis' in machine or 'belenos' in machine:
-                self.options.ntasks = 80
+        if self.options.ntasks is None:
+            if ('taranis' in machine or 'belenos' in machine):
                 # optimum constaté pour la réanalyse Alpes avec léger dépeuplement parmi les 128 coeurs.
+                self.options.ntasks = 80
+                self.options.nprocs = self.options.ntasks * self.options.nnodes
+            else:
+                # TODO
+                pass
+        else:
+            self.options.nprocs = self.options.ntasks * self.options.nnodes
 
-    @staticmethod
-    def check_vortex_install():
+    def execute(self):
+        self.create_env()
+        self.init_conf_file()
+        if self.create_driver:
+            self.make_driver()
+        self.run()
 
-        if "VORTEX" not in list(os.environ.keys()):
-            raise InstallException("VORTEX environment variable must be defined towards a valid vortex install.")
+    def init_conf_file(self):
+
+        self.conffilename = os.path.join(self.confdir, f'{self.vapp}_{self.vconf}.ini')
+
+        # Ensure that the configuration file is up to date
+        if os.path.exists(self.conffilename):
+            os.remove(self.conffilename)
+
+        self.default_conf = os.path.join(SNOWTOOLS_DIR, 'conf', f'{self.vapp}.ini')
+        shutil.copyfile(self.default_conf, self.conffilename)
+        # TODO : read a potential user-defined configuration file (either provided in the command line or in .vortexrc)
+        user_conf    = None
+
+        self.iniparser = GenericConfigParser(inifile=self.conffilename, defaultinifile=user_conf)
+
+        self.set_task_conf(self.taskname)
 
     def create_env(self):
         """Prepare environment"""
@@ -95,15 +159,18 @@ class Edelweiss_kitchen(vortex_kitchen):
             os.remove("snowtools")
         os.symlink(SNOWTOOLS_DIR, "snowtools")
 
-        # Ensure that the tasks are those in the current snowtools module
-        if os.path.islink("tasks"):
-            os.remove('tasks')
-        os.symlink(os.path.join("snowtools", "tasks", "research", self.vapp), "tasks")
-
         # Add required repositories
+        # for directory in ["conf", "jobs", "tasks"]:
         for directory in ["conf", "jobs"]:
             if not os.path.isdir(directory):
                 os.mkdir(directory)
+
+        if os.path.islink("tasks"):
+            os.remove("tasks")
+        os.symlink(os.path.join(SNOWTOOLS_DIR, "tasks", "research", self.vapp), "tasks")
+#        for fic in glob.glob(os.path.join(SNOWTOOLS_DIR, "tasks", "research", self.vapp, "*")):
+#            basename = os.path.basename(fic)
+#            os.symlink(fic, f"tasks/{basename}")
 
         # Put the default 'geometries.ini' file (from snowtools/conf) in the user's '.vortexrc' directory
         geometries = os.path.join(os.environ["HOME"], ".vortexrc", 'geometries.ini')
@@ -143,86 +210,121 @@ class Edelweiss_kitchen(vortex_kitchen):
             # ex : self.options.udata = dict('FILE_NAME_EXTENSION':'my.file_name.extension',...)
             # ==> gvar='FILE_NAME_EXTENSION', local='my.file_name.extension'
 
-    def init_job_task(self):
+    def make_driver(self, tplfile='driver.tpl'):
+        t = vortex.ticket()
+        # TODO : réfléchir à un endroit plus approprié pour mettre le template
+        template = load_template(t, tplfile=os.path.join(SNOWTOOLS_DIR, 'tasks', 'research', self.vapp, tplfile))
+        dst = os.path.join(self.workingdir, 'tasks', f'{self.taskname}.py')
 
-        # TODO : gérer le nb de node/ membre / membre par node,...  proprement
-        if self.options.task in ['escroc', 'croco', 'croco_perturb', 'reforecast', 'refill']:
-            # In this case Taylorism prevents from using several nodes on the same run
-            # But several runs can be done separately
-            self.nnodes = 1
-        else:
-            self.nnodes = self.options.nnodes
+        fill = dict()
 
-        # Gérer les families (liste de taches)
-        self.reftask = self.options.task
-        self.jobname = self.options.task
+        fill['DriverTag'] = self.jobname  # =self.options.xpid
 
-    def set_conf_file(self):
+        # TODO : load template
+        nodes = []
+        for task in self.options.task:
+            # TODO : gérer les cas particulier (if Offline in task --> refillprep)
+            nodes.append(f"            {task}(tag='{task.lower()}', ticket=t, **kw),")
+            self.set_task_conf(task.lower())
 
-        conffilename = None
-        os.chdir(self.confdir)
+        fill['nodes'] = '\n'.join(nodes)
+        # Fill template and conver it into a string object
+        driver_core = template(**fill)
+        with open(dst, 'w') as driver:
+            driver.write(driver_core)
 
-        # TODO : lire / modifier le fichier de conf par défaut
+    def set_task_conf(self, taskname):
+        """
+        Task-specific configuration variables
+        """
+        if not self.iniparser.has_section(taskname):
+            # Create the section if it is not already in the dafault conf file
+            self.iniparser.add_section(taskname)
 
-        conffilename = f'{self.vapp}_{self.vconf}.ini'
-        fullname     = os.path.join(self.confdir, conffilename)
+    def set_job_conf(self, jobname, options):
+        """
+        Add a "jobname" block in the configuration file that will contain
+        job-specific configuration variables.
+        Variables in the default "self.jobname" (different from "jobname" in the standard case of an ensemble
+        of jobs, each dealing with a specific input from an input ensemble) are used to fill variables not
+        provided by the user.
+        """
+        # Ensure that a default section for this job exists (even if empty)
+        if not self.iniparser.has_section(self.jobname):
+            self.iniparser.add_section(self.jobname)
 
-        if os.path.exists(fullname):
-            os.remove(fullname)
+        # Create the actual job's section (redundant for a deterministic execution where jobname=self.jobname)
+        if not self.iniparser.has_section(jobname):
+            self.iniparser.add_section(jobname)
 
-        default_conf = os.path.join(SNOWTOOLS_DIR, 'conf', f'{self.vapp}.ini')
-        shutil.copyfile(default_conf, conffilename)
-        # TODO : read a potential user-defined configuration file (either provided in the command line or in .vortexrc)
-        user_conf    = None
-
-        options = vars(self.options)  # convert 'Namespace' object to 'dictionnary'
-        # WARNING section named after $task is actually the JOB section !
-        task = options.pop('task')  # Get user-defined task. TODO : check if task exists !
-
-        iniparser = GenericConfigParser(inifile=conffilename, defaultinifile=user_conf)
-        print(iniparser.sections())
-
-        default        = iniparser.as_dict(merged=False)  # Merge=False preserves the "DEFAULT" section
-
-#        if task in iniparser.sections():
-#            default = iniparser.as_dict()  # Each 'section' includes the default values
-#        else:  # security in case the default conf file is not up to date
-#            print(f"WARNING : Task {task} is not in the default configuration file '{self.vapp}.ini'."
-#                  "This file needs to be updated.")
-#            # Add all variables from "DEFAULT" section in the new task's section
-#            default        = iniparser.as_dict(merged=False)  # Merge=False preserves the "DEFAULT" section
-
+        default = self.iniparser.as_dict(merged=False)  # Merge=False preserves the "DEFAULT" section
+        # Update default configuration values without replacing default values with *None* :
         for key, value in options.items():
             # Overwrite defaults values with user's command line arguments
             # Update an existing default value only if the new value is not None
-            if value is None and (key in default['defaults'].keys() or
-                    (task in default.keys() and key in default[task].keys())):
-                pass
+            if value is None:
+                if key in default['defaults'].keys():
+                    # Variables in the DEFAULT section can stay there, they will be used
+                    pass
+                elif key in default[self.jobname].keys() and jobname != self.jobname:
+                    # Get value from the default's section
+                    self.iniparser.set(jobname, key, str(value))
             else:
-                iniparser.set(task, key, str(value))
-
-        # overwrite of iniparser 'save' methods that does not work (file open with 'rb') --> BUG ?
-        # iniparser.save()
-        with open(conffilename, 'w') as configfile:
-            iniparser.write(configfile)
-
-        os.chdir(self.workingdir)
+                self.iniparser.set(jobname, key, str(value))
 
     def write_conf_file(self):
-        self.conf_file.write_file()
-        self.conf_file.close()
+
+        # overwrite of iniparser 'save' methods that does not work (file open with 'rb') --> BUG ?
+        # self.iniparser.save()
+        with open(self.conffilename, 'w') as configfile:
+            self.iniparser.write(configfile)
 
     def mkjob_command(self, jobname):
 
         mkjob = "../vortex/bin/mkjob.py"
-        cmd = f"{mkjob} -j name={jobname} task={self.reftask} profile={self.profile} jobassistant=cen"
+        cmd = f"{mkjob} -j name={jobname} task={self.taskname} profile={self.profile} jobassistant=cen"
 
         return cmd
 
     def mkjob_list_commands(self):
 
-        # TODO : gérer les lancements d'ensemble sur plusieurs noeuds proprement
-        return [self.mkjob_command(jobname=self.jobname)]
+        self.set_parallelisation()
+
+        mkjob_list = []
+        options = vars(self.options)  # convert 'Namespace' object to 'dictionnary'
+        if self.njobs == 1:
+            self.set_job_conf(self.jobname, options)
+            mkjob_list.append(self.mkjob_command(jobname=self.jobname))
+        else:
+            options.pop('members_forcing')
+            for job_number in range(self.njobs):
+                options['members_forcing'] = str(job_number)
+                jobname = f'{self.jobname}_{str(job_number)}'
+                # jobname = f'{jobname}_mb{str(job_number)}'
+                self.set_job_conf(jobname, options)
+                mkjob_list.append(self.mkjob_command(jobname=jobname))
+
+        self.write_conf_file()  # The configuration file is now complete, time to write it
+
+        return mkjob_list
+
+    def set_parallelisation(self):
+
+        if self.options.parallelisation == 'mpi':
+            # Retrieve the number of FORCING files and launch 1 job per file
+            # Each job is associated to 1 specific member so the *members_forcing*
+            # attribute will be replaced by a *input_member* integer (different for each job)
+            first, last, step = self.options.members_forcing.split('-')
+            nforcings = int(last) - int(first) + 1
+            self.njobs = nforcings
+        elif self.options.parallelisation == 'forcing':
+            # Launch a single job (internal parallelisation over the FORCING files)
+            self.njobs = 1
+        elif self.options.parallelisation in ['namelist', 'multi']:
+            # Launch 1 job per node with internal parallelisation within each job
+            self.njobs = self.options.nnodes
+        else:
+            raise ValueError(f'Unknown parallelisatin configuration {self.options.parallelisation}')
 
     def run(self):
 

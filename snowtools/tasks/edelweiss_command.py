@@ -9,6 +9,7 @@ Created on 28 march. 2024
 
 # General python modules
 import argparse
+from argparse import RawTextHelpFormatter
 import sys
 
 # Import snowtools modules
@@ -18,6 +19,8 @@ from snowtools.tasks.edelweiss_kitchen import Edelweiss_kitchen
 class ParseKwargs(argparse.Action):
     """
     Proxy tool used to parse arguments as dictionnaries with argparse.
+    Syntax :
+        * --arg key1=value1 key2=value2 --> returns `dict(key1=value1, key2=value2)`
 
     Source :
     --------
@@ -25,9 +28,10 @@ class ParseKwargs(argparse.Action):
     """
 
     def __call__(self, parser, namespace, values, option_string=None):
+
         setattr(namespace, self.dest, dict())
         for value in values:
-            key, value = value.split(':')
+            key, value = value.split('=')
             getattr(namespace, self.dest)[key] = value
 
 
@@ -45,93 +49,144 @@ class Edelweiss_command(object):
 
     def parse_options(self, arguments):
 
-        description = """Command that allow to launch any EDELWEISS-related task."""
+        description = """
+                      Command that allow to launch any EDELWEISS-related task.\n
+                      ========================================================
+                      """
         parser = argparse.ArgumentParser(prog="edelweiss",
                                          description=description,
                                          epilog="For detailed documentation of general use case, "
                                          "edelweiss --help",
+                                         formatter_class=RawTextHelpFormatter,  # Preserve string format
                                          )
 
-        parser.add_argument("-b", "--datebegin", type=str, dest="datebegin", required=True,
-                            help="Date of the beginning of the simulation period. Format YYYYMMDDHH")
+        parser.add_argument("-b", "--datebegin", type=str, dest="datebegin",
+                            required='--tasksinfo' not in sys.argv,  # Print informations only
+                            help="Date of the beginning of the simulation period. Format YYYYMMDDHH\n"
+                                 " ")
 
-        parser.add_argument("-e", "--dateend", type=str, dest="dateend", required=True,
-                            help="Date of the end of the simulation period. Format YYYYMMDDHH")
+        parser.add_argument("-e", "--dateend", type=str, dest="dateend",
+                            required='--tasksinfo' not in sys.argv,  # Print informations only
 
-        parser.add_argument("-x", "--xpid", type=str, dest="xpid", required=True,
+                            help="Date of the end of the simulation period. Format YYYYMMDDHH\n"
+                                 " ")
+
+        parser.add_argument("-x", "--xpid", type=str, dest="xpid",
+                            required='--tasksinfo' not in sys.argv,  # Print informations only
                             help="Experiment's identifier (xpid). Use this xpid argument to 'tag' your execution."
                                  "A same xpid can (must) be used to launch the different tasks associated to a single"
                                  "SURFEX simulation (from the FORCING generation to the post-processing tasks), as well"
                                  "as for identical SURFEX simulations (same namelist, executables, FORCING origin,...)"
-                                 "over different time periods or different geometries."
+                                 "over different time periods or different geometries.\n"
                                  "On the contrary, a different XPID must be used when a different namelist or"
                                  "executable (or any other input file) is used, or when something changed in the"
-                                 "FORCING generation pprocess")
+                                 "FORCING generation pprocess\n"
+                                 " ")
 
-        parser.add_argument("-g", "--geometry", type=str, dest="geometry", required=True,
+        parser.add_argument("-g", "--geometry", type=str, dest="geometry",
+                            required='--tasksinfo' not in sys.argv,  # Print informations only
                             help="Geometry of the simulation. EDELWEISS simulations are always on a regular"
                                  "lat/loni grid. The geometry name should include information on the simulation area"
-                                 "and on the resolution (for example 'GrandesRousses250m')."
+                                 "and on the resolution (for example 'GrandesRousses250m').\n"
                                  "The geometry must also be defined in a 'geometries.ini' file (either in the Vortex's"
-                                 "'conf' directory or under the '.vortexrc' directory in your $HOME.")
+                                 "'conf' directory or under the '.vortexrc' directory in your $HOME.\n"
+                                 " ")
 
-        parser.add_argument("--task", dest="task", action='store', type=str,
-                            required='--family' not in sys.argv,  # either --task or --family must be provided
-                            choices = ['make_precipitation', 'make_forcing'],  # TODO : give the full list of choices
+        parser.add_argument("--task", dest="task", type=str,
+                            action='store',
+                            # action=ParseKwargs, nargs='*',
+                            required='--tasksinfo' not in sys.argv,  # either --task or --tasksinfo must be provided
+                            # TODO : créer un dictionnaire contenant les tâches standard
+                            # TODO : give the full list of known choices but allow other values
+                            # choices = ['make_precipitation', 'make_forcing'],
                             # TODO : ensure all tasks in this list are in the default edelweiss.ini file
-                            help="The name of the (single) task to launch."
-                                 "This argument must be used by default")
+                            help="The class name(s) of the task(s) to launch."
+                                 "This argument must be used by default.\n"
+                                 "To get more information on the possible arguments, use :\n"
+                                 "edelweiss --tasksinfo\n"
+                                 " ")
 
-        parser.add_argument("--family", dest="family", action='store', type=str, nargs="+",
-                            required="--task" not in sys.argv,  # either --task or --family must be provided
-                            help="ADVANCED USERS ONLY (alternative to --task argument)"
-                                 "List of tasks names or single family name to be launched."
-                                 "This option can be used to launch several tasks in one command.")
+        parser.add_argument("--tasksinfo", dest="tasksinfo", action='store_true',
+                            # TODO : use a sub-parser ?
+                            # required='--task' not in sys.argv,  # either --task or --tasksinfo must be provided
+                            # TODO : implémenter cette option (lire la variable "info" de chaque tâche du fichier de
+                            # conf par défaut
+                            help="Get information on the various tasks currently implemented\n"
+                                 " ")
+
+
+#        parser.add_argument("--family", dest="family", action='store', type=str, nargs="+",
+#                            required="--task" not in sys.argv,  # either --task or --family must be provided
+#                            help="ADVANCED USERS ONLY (alternative to --task argument)"
+#                                 "List of tasks names or single family name to be launched."
+#                                 "This option can be used to launch several tasks in one command.")
 
         parser.add_argument("-u", "--uenv", type=str, dest="uenv",
                             help="User Environment (UEnv). Use this argument to provide all constant files required"
-                                 "for your simulation that are different from the default ones."
+                                 "for your simulation that are different from the default ones.\n"
                                  "If a fitting UEnv already exists (genarated by a previous execution, another user or"
-                                 "manually), use the following syntax : "
-                                 "'-u uenv:{UEnv_name}@{username}'"
+                                 "manually), use the following syntax :\n"
+                                 "'-u uenv:{UEnv_name}@{username}'\n"
                                  "In any other case, put all concerned files in a specific directory (copy files or"
-                                 "symbolic links) and use the following syntax :"
-                                 "'-u {absolute/path/to/the/directory}'")
+                                 "symbolic links) and use the following syntax :\n"
+                                 "'-u {absolute/path/to/the/directory}'\n"
+                                 " ")
 
         parser.add_argument("-m", "--members", action="store", type=str, dest="members", default=None,
-                            help="Ensemble members in case of an ensemble simulation"
-                                 "Possible formats :"
-                                 "-m {number of members} (starts at 0 by default)"
-                                 "-m '{first_member}:{last-member}'")
-
-        parser.add_argument("-l", "--model", type=str, dest="model", default=None,
-                            help="Name of the model associated to the simulation (if any)")
+                            help="Output ensemble members in case of an ensemble simulation.\n"
+                                 "Each member correspond to a single execution of the algo component\n"
+                                 "Possible formats :\n"
+                                 "-m {number of members} (starts at 0 by default)\n"
+                                 "-m '{first_member}:{last-member}'\n"
+                                 " ")
 
         parser.add_argument("-n", "--namespace", type=str, dest="namespace", default='multi',
                             choices=['cache', 'archive', 'multi', 'sxcen'],
-                            help="Vortex's namespace defining where the produced files will be stored."
-                                 "'cache'   : local (HPC) cache only"
-                                 "'archive' : archive (Hendrix) cache only"
-                                 "'multi'   : local and archive caches"
-                                 "'sxcen'   : on sxcen (post-processing)"
-                            )
+                            help="Vortex's namespace defining where the produced files will be stored.\n"
+                                 " * cache   : local (HPC) cache only\n"
+                                 " * archive : archive (Hendrix) cache only\n"
+                                 " * multi   : local and archive caches\n"
+                                 " * sxcen   : on sxcen (post-processing)\n"
+                                 " ")
+
+        parser.add_argument("-v", "--vapp", action="store", type=str, dest="vapp", default='edelweiss',
+                            help="Application name (if not 'edelweiss')\n"
+                                 " ")
 
         parser.add_argument("-c", "--configuration", action="store", type=int, dest="defaultconf", default=None,
                             # TODO : implementatin + doc
-                            help="Default user-defined configuration file."
-                                 "This option can be used to avoid to parser too many arguments in the command line")
+                            help="Default user-defined configuration file.\n"
+                                 "This option can be used to avoid to parser too many arguments in the command line\n"
+                                 " ")
 
-        parser.add_argument("-v", "--vapp", action="store", type=str, dest="vapp", default='edelweiss',
-                            help="Application name (if not 'edelweiss')")
-
-        parser.add_argument("--walltime", "--time", action="store", type=str, dest="time", default=None,
-                            help="specify your job walltime (format hh:mm:ss)")
-
-        parser.add_argument("--ntasks", action="store", type=int, dest="ntasks", default=None,
-                            help="Number of tasks (and procs) per node.")
+        parser.add_argument("--parallelisation", action="store", type=str,
+                            dest="parallelisation", default="mpi",
+                            choices=['mpi', 'forcing', 'namelist', 'multi'],
+                            help="Type of parallelisation for one job :\n"
+                                 " * mpi      : parallelisation over the simulation domain for each FORCING file\n"
+                                 " * forcing  : parallelisation over FORCING files only (no MPI parallelisation)\n"
+                                 " * namelist : multi-physic (1 exec / namelist) parallelisation (ESCROC)\n"
+                                 " * multi    : forcing AND namelist parallelisation (CrocO)\n"
+                                 " ")
 
         parser.add_argument("--nnodes", action="store", type=int, dest="nnodes", default=1,
-                            help="Number of nodes")
+                            help="Number of nodes used with this command\n"
+                                 " ")
+
+        parser.add_argument("--walltime", "--time", action="store", type=str, dest="time", default=None,
+                            help="specify your job walltime (format hh:mm:ss)\n"
+                                 " ")
+
+#        parser.add_argument("--njobs", action="store", type=int, dest="njobs", default=None,
+#                            help="Number of jobs (/mkjob command) to launch")
+
+        parser.add_argument("--ntasks", action="store", type=int, dest="ntasks", default=None,
+                            help="Number of tasks (and procs) per node.\n"
+                                 " ")
+
+        parser.add_argument("-l", "--model", type=str, dest="model", default=None,
+                            help="Name of the model associated to the simulation (if any)\n"
+                                 " ")
 
         # Input-specific arguments :
         # =========================
@@ -145,29 +200,64 @@ class Edelweiss_command(object):
         # - Imposer les arguments nécessaire en foncion de ce qui est passé à --task :
         #   required="task_name" in sys.argv
 
-        parser_forcing = parser.add_argument_group('Specific input description')
+        parser_forcing = parser.add_argument_group("Specific input description :\n"
+                                                   "----------------------------\n"
+                                                   " ")
 
         parser_forcing.add_argument("--forcing", dest="forcing", action=ParseKwargs, nargs='*',
                                     type=str, default=None,
                                     # TODO : what if already in the user conf file ? --> overwrite ?
                                     required="make_forcing" in sys.argv,  # Mandatory argument for 'make_forcing' task
-                                    help="Definition (footprint-like dict) of the default forcing variables input"
-                                         "Format : --forcing key1:var1 key2:var2 ..."
-                                         "Known dictionary keys : ['xpid', 'geometry', 'vapp', 'datebegin', 'dateend']")
+                                    help="Definition (footprint-like dict) of the default forcing variables input.\n"
+                                         "Format : --forcing key1=var1 key2=var2 ...\n"
+                                         "Known dictionary keys :\n"
+                                         " * xpid      (str) : Experiment identifier (Format : {xpid}@{username})\n"
+                                         " * geometry  (str) : Experiment geometry"
+                                         " * vapp      (str) : Application that produced the FORCING (s2m/edelweiss)\n"
+                                         " * members   (int) : Number of input members (format 'X:Y' valid)\n"
+                                         " * datebegin (str) : If different from '-b' argument (format YYYYMMDDHH)\n"
+                                         " * dateend   (str) : If different from '-e' argument (format YYYYMMDDHH)\n"
+                                         " ")
+
+        parser_forcing.add_argument("--prep", dest="prep", action=ParseKwargs, nargs='*',
+                                    type=str, default=None,
+                                    # TODO : what if already in the user conf file ? --> overwrite ?
+                                    help="Definition (footprint-like dict) of the default forcing variables input.\n"
+                                         "Format : --prep key1=var1 key2=var2 ...\n"
+                                         "Known dictionary keys :\n"
+                                         " * xpid      (str) : Experiment identifier (Format : {xpid}@{username})\n"
+                                         " * geometry  (str) : Experiment geometry\n"
+                                         " * vapp      (str) : Application that produced the FORCING (s2m/edelweiss)\n"
+                                         " * date      (str) : Validity date (default = *datebegin*)\n"
+                                         " ")
 
         parser_forcing.add_argument("--precipitation", dest="precipitation", action=ParseKwargs, nargs='*',
                                     type=str, default=None,
                                     # TODO : what if already in the user conf file ? --> overwrite ?
-                                    help="Definition (footprint-like) dict of precipitation variables input"
-                                         "Format : --forcing key1:var1 key2:var2 ..."
-                                         "Possible dictionary keys : ['xpid', 'geometry', 'vapp']")
+                                    help="Definition (footprint-like) dict of precipitation variables input.\n"
+                                         "Format : --precipitation key1=var1 key2=var2 ...\n"
+                                         "Known dictionary keys :\n"
+                                         " * xpid      (str) : Experiment identifier (Format : {xpid}@{username})\n"
+                                         " * geometry  (str) : Experiment geometry\n"
+                                         " * vapp      (str) : Application that produced the FORCING (s2m/edelweiss)\n"
+                                         " * members   (int) : Number of input members (format 'X:Y' valid)\n"
+                                         " * datebegin (str) : If different from '-b' argument (format YYYYMMDDHH)\n"
+                                         " * dateend   (str) : If different from '-e' argument (format YYYYMMDDHH)\n"
+                                         " ")
 
         parser_forcing.add_argument("--wind", dest="wind", action=ParseKwargs, nargs='*',
                                     type=str, default=None,
                                     # TODO : what if already in the user conf file ? --> overwrite ?
                                     help="Definition (footprint-like) dict of wind variables input"
-                                         "Format : --forcing key1:var1 key2:var2 ..."
-                                         "Possible dictionary keys : ['xpid', 'geometry', 'vapp']")
+                                         "Format : --wind key1=var1 key2=var2 ...\n"
+                                         "Known dictionary keys :\n"
+                                         " * xpid      (str) : Experiment identifier (Format : {xpid}@{username})\n"
+                                         " * geometry  (str) : Experiment geometry\n"
+                                         " * vapp      (str) : Application that produced the FORCING (s2m/edelweiss)\n"
+                                         " * members   (int) : Number of input members (format 'X:Y' valid)\n"
+                                         " * datebegin (str) : If different from '-b' argument (format YYYYMMDDHH)\n"
+                                         " * dateend   (str) : If different from '-e' argument (format YYYYMMDDHH)\n"
+                                         " ")
 
         options  = parser.parse_args(arguments)
 
@@ -180,26 +270,50 @@ class Edelweiss_command(object):
         Edelweiss_kitchen(self.options)
 
     def check_and_convert_options(self):
+
         if self.options.members is not None:
-            if ':' in self.options.members:
-                first, last = self.options.members.split(':')
-                self.options.members = f'{first}-{last}-1'
-            else:
-                self.options.members = int(self.options.members)
+            self.options.members = self.convert_members(self.options.members)
 
         args_to_dict = vars(self.options)  # Convert self.options *Namepace* object to a *dictionnary* object
         # Convert *dictionary* arguments to proper configuration variables
-        for specific_input in ['forcing', 'precipitation', 'wind']:
+        for specific_input in ['forcing', 'precipitation', 'wind', 'prep']:
             # Check if a value has been parsed
             if args_to_dict[specific_input] is not None:
                 # Convert dictionnary into proper configuration entries
                 for key, value in args_to_dict[specific_input].items():
+                    if key == 'members':
+                        value = self.convert_members(value)
                     setattr(self.options, f'{key}_{specific_input}', value)
             # Ensure that all "optionnal" conf variables are set
             # Keys not provided by the user are set to the task's one
-            for key in ['geometry', 'vapp', 'datebegin', 'dateend']:
+            # The FORCING's 'member' variable is managed separately (depending on the type of execution)
+            if specific_input == 'prep':
+                # PREP files only need a validity *date*
+                optional_keys = ['xpid', 'geometry', 'vapp', 'date']
+            else:
+                # All other files cover a perdiod
+                optional_keys = ['xpid', 'geometry', 'vapp', 'datebegin', 'dateend', 'members']
+            for key in optional_keys:
                 if not hasattr(self.options, f'{key}_{specific_input}'):
-                    setattr(self.options, f'{key}_{specific_input}', args_to_dict[key])
+                    if key == 'date':
+                        # Default PREP validity *date* is *datebegin* of the simulation
+                        setattr(self.options, f'{key}_{specific_input}', args_to_dict['datebegin'])
+                    elif key == 'members':
+                        # If no *members* attribute is given, assume there is only 1 file
+                        setattr(self.options, f'{key}_{specific_input}', '1-1-1')
+                    else:
+                        setattr(self.options, f'{key}_{specific_input}', args_to_dict[key])
+
+    def convert_members(self, string):
+        """
+        Convert a *members* attribute (int-convertible or 'X-Y' string) into a X-Y-1 members 'list'
+        """
+        if ':' in string:
+            first, last = string.split(':')
+        else:
+            first = 0
+            last  = int(string) - 1
+        return f'{first}-{last}-1'
 
     def check_mandatory_arguments(self, **kw):
         missing_options = list()

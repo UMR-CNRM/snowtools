@@ -149,7 +149,8 @@ def init():
         cutoff      = 'assimilation',  # TODO : réfléchir à la pertinence de mettre une valeur par défaut
         # Leave intent to 'in' for more efficient IOs (symbolic links instead of copies)
         intent      = 'in',  # Rights to give to the file (inout=read/write, in=read-only)
-        #intent      = 'inout',  # Rights to give to the file (inout=read/write, in=read-only)
+        # intent      = 'inout',  # Rights to give to the file (inout=read/write, in=read-only)
+        download    = True,  # Download actual file (default mode, switch to False if you need Vortex object's only)
     )
 
 
@@ -172,6 +173,13 @@ def log_separator(resource):
     print('---------------------------------------------------------------------------------------------------------')
     print(f'-                                            ALTERNATIVE {resource}                                      ')
     print('---------------------------------------------------------------------------------------------------------')
+
+
+def title(string):
+
+    print('==========================================================================================================')
+    print(f'=                               {string}                                                                =')
+    print('==========================================================================================================')
 
 
 def check_period(resource_name, **kw):
@@ -252,7 +260,11 @@ def get(xpid, geometry, **kw):
     """
     # Forward all arguments to the footprints_kitchen function
     description = footprints_kitchen(xpid, geometry, **kw)
-    tb = toolbox.input(**description)
+    if description['download']:
+        tb = toolbox.input(**description)
+    else:
+        # Only load Vortex's *ResourceHandler* object, not the actual file
+        tb = toolbox.rload(**description)
     return tb
 
 
@@ -275,7 +287,6 @@ def footprints_kitchen(xpid, geometry, **kw):
     )
 
     if kw['members'] is not None or 'member' in kw.keys():
-        description['local'] = f'mb[member]/{kw.pop("filename")}'
         # On peut actuellement passer *members* =  un entier (le nombre de membres)
         # ou un objet *member* convertible en FPLIst (string au format X-Y-1)
         # TODO : gérer ça plus proprement
@@ -284,6 +295,11 @@ def footprints_kitchen(xpid, geometry, **kw):
             description['member'] = footprints.util.rangex(0, kw.pop('members') - 1)
         elif isinstance(kw['members'], str):
             description['member'] = footprints.util.rangex(kw.pop('members'))
+        # If there is more than 1 member, store the files in a sub-directory:
+        if len(description['member']) > 1:
+            description['local'] = f'mb[member]/{kw.pop("filename")}'
+        else:
+            description['local'] = kw.pop("filename")
     else:
         description['local'] = kw.pop("filename")
 
@@ -628,9 +644,9 @@ def put_wind(xpid, geometry, **kw):
     return precipitation('put', xpid, geometry, **kw)
 
 
-##########################################
-# Main static resources specific functions
-##########################################
+############################################
+# Main "static resources" specific functions
+############################################
 
 
 def pgd(action, xpid, geometry, **kw):
@@ -720,25 +736,56 @@ def get_const(uenv, kind, geometry, fmt='nc', intent='in', fatal=False, **kw):
     return const
 
 
-def get_surfex_namelist(genv):
+def get_surfex_namelist(uenv, alternate_uenv=None, source='OPTIONS.nam', intent='inout'):
     """
     Specific resource for SURFEX's namelist because a *role* attribute may be definied
-    for parallelisation configuration.
+    for parallelisation configuration.A
+    The namelist file will be modifier by the pre-processing step, so a copy must be made
+    instead of a symbolic link (--> intent='inout').
+
+    TODO : stocker toutes les namelists dans un même 'tar' et les identifier avec le
+    footprint *source* ?
     """
 
     namelist = toolbox.input(
         role            = 'Nam_surfex',
-        source          = 'OPTIONS_default.nam',
-        genv            = genv,
+        source          = source,
+        genv            = uenv,
         kind            = 'namelist',
         model           = 'surfex',
         local           = 'OPTIONS.nam',
+        intent          = 'inout',
     )
     print(t.prompt, 'OPTIONS.nam =', namelist)
     print()
 
+    if alternate_uenv is not None and not namelist:
 
-def get_const_offline(geometry, genv):
+        title('ALTERNATIVE SURFEX NAMELIST (b)')
+
+        namelist = toolbox.input(
+            alternate       = 'Nam_surfex',
+            source          = source,
+            genv            = alternate_uenv,
+            kind            = 'namelist',
+            model           = 'surfex',
+            local           = 'OPTIONS.nam',
+            intent          = 'inout',
+        )
+        print(t.prompt, 'OPTIONS.nam =', namelist)
+        print()
+
+    return namelist
+
+
+def get_const_offline(geometry, uenv, alternate_uenv=None):
+
+    if alternate_uenv is not None:
+        fatal = False
+    else:
+        fatal = True
+
+    title('STATIC OFFLINE INPUTS')
 
     # Binary ECOCLIMAP I files are mandatory to run SURFEX and taken from the uenv
     ecmap1 = toolbox.input(
@@ -747,9 +794,10 @@ def get_const_offline(geometry, genv):
         nativefmt      = 'bin',
         local          = 'ecoclimapI_covers_param.bin',
         geometry       = geometry,
-        genv           = genv,
+        genv           = uenv,
         source         = 'ecoclimap1',
         model          = 'surfex',
+        fatal          = fatal,
     ),
     print(t.prompt, 'ecoclimap1 =', ecmap1)
     print()
@@ -761,9 +809,10 @@ def get_const_offline(geometry, genv):
         nativefmt      = 'bin',
         local          = 'ecoclimapII_eu_covers_param.bin',
         geometry       = geometry,
-        genv           = genv,
+        genv           = uenv,
         source         = 'ecoclimap2',
         model          = 'surfex',
+        fatal          = fatal,
     ),
     print(t.prompt, 'ecoclimap2 =', ecmap2)
     print()
@@ -772,13 +821,58 @@ def get_const_offline(geometry, genv):
     drdt_bst_fit_60 = toolbox.input(
         role            = 'Parameters for F06 metamorphism',
         kind            = 'ssa_params',
-        genv            = genv,
+        genv            = uenv,
         nativefmt       = 'netcdf',
         local           = 'drdt_bst_fit_60.nc',
         model           = 'surfex',
+        fatal           = fatal,
     )
     print(t.prompt, 'drdt_bst_fit_60 =', drdt_bst_fit_60)
     print()
+
+    if alternate_uenv is not None:
+
+        title('ALTERNATIVE STATIC OFFLINE INPUTS (b)')
+
+        # Binary ECOCLIMAP I files are mandatory to run SURFEX and taken from the uenv
+        ecmap1 = toolbox.input(
+            alternate      = 'Surfex cover parameters',
+            kind           = 'coverparams',
+            nativefmt      = 'bin',
+            local          = 'ecoclimapI_covers_param.bin',
+            geometry       = geometry,
+            genv           = alternate_uenv,
+            source         = 'ecoclimap1',
+            model          = 'surfex',
+        ),
+        print(t.prompt, 'ecoclimap1 =', ecmap1)
+        print()
+
+        # Binary ECOCLIMAP II files are mandatory to run SURFEX and taken from the uenv
+        ecmap2 = toolbox.input(
+            alternate      = 'Surfex cover parameters',
+            kind           = 'coverparams',
+            nativefmt      = 'bin',
+            local          = 'ecoclimapII_eu_covers_param.bin',
+            geometry       = geometry,
+            genv           = alternate_uenv,
+            source         = 'ecoclimap2',
+            model          = 'surfex',
+        ),
+        print(t.prompt, 'ecoclimap2 =', ecmap2)
+        print()
+
+        # Crocus metamorphism parameters mandatory to run SURFEX and taken from the uenv
+        drdt_bst_fit_60 = toolbox.input(
+            alternate       = 'Parameters for F06 metamorphism',
+            kind            = 'ssa_params',
+            genv            = alternate_uenv,
+            nativefmt       = 'netcdf',
+            local           = 'drdt_bst_fit_60.nc',
+            model           = 'surfex',
+        )
+        print(t.prompt, 'drdt_bst_fit_60 =', drdt_bst_fit_60)
+        print()
 
 
 def get_init_TG(geometry, genv, xpid):
@@ -816,6 +910,50 @@ def get_init_TG(geometry, genv, xpid):
 
     print(t.prompt, 'Init_TG (b) =', initTG_b)
     print()
+
+#######################################
+# Main "executables" specific functions
+#######################################
+
+
+def get_offline_mpi(uenv, alternate_uenv=None, gvar='master_surfex_offline_mpi'):
+
+    if alternate_uenv is not None:
+        fatal = False
+    else:
+        fatal = True
+
+    title('OFFLINE MPI EXECUTABLE')
+
+    offline = toolbox.executable(
+        role           = 'Binary',
+        kind           = 'offline',
+        local          = 'OFFLINE',
+        model          = 'surfex',
+        genv           = uenv,
+        gvar           = gvar,
+        fatal          = fatal,
+    )
+    print(t.prompt, 'Executable =', offline)
+    print()
+
+    if alternate_uenv is not None and not offline:
+
+        title('ALTERNATIVE OFFLINE MPI EXECUTABLE (b)')
+
+        offline = toolbox.executable(
+            alternate      = 'Binary',
+            kind           = 'offline',
+            local          = 'OFFLINE',
+            model          = 'surfex',
+            genv           = alternate_uenv,
+            gvar           = gvar,
+        )
+        print(t.prompt, 'Executable =', offline)
+        print()
+
+    return offline
+
 
 #######################################################################################################################
 # WARNING : functions bellow this point are in development
