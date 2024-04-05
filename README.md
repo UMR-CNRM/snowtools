@@ -55,6 +55,6 @@ These two softwares are installed with the snowtools repository.
 
 ## Full documentation
 
-The full documentation is available directly for Meteo-France members on <http://intra.cnm.meteo.fr/cen/snowtools>.
+The full documentation is available directly for Meteo-France members on <http://intra.cnrm.meteo.fr/cen/snowtools>.
 
 Otherwise, full snowtools documentation could be generated from `doc` folder by simply running ``make html``.
