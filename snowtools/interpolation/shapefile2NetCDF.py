@@ -1,6 +1,127 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+This script needs a shapefile (in Lambert 93 coordonnates) of points.
+With this shapefile, it creates a NetCDF for the same points.
+The NetCDF file is necessary to launch Surfex-Crocus
 
+Furthermore, this script writes skylines in snowtools/DATA/METADATA.xml file (necessary for --addmask option)
+It also allows to keep the skyline views.
+
+#############
+# WHAT IS PROJECT NUMBER ?
+#############
+Because we add some points in METADATA.xml file, we want to avoid getting several points with same station code
+During the script conception, we tought that:
+- each project gets less than 10000 points
+- there will be less than 100 projects with the necessity to keep the points (and station code) in METADATA.xml
+(if you don't push METADATA.xml, you don't need to think too much about that) 
+
+So, the aim of Project Number is to avoid to get twice the same station code (8 numbers as OMM codes) 
+The idea is:
+- numbers between 10000001 and 10009999 are for project 0
+- numbers between 10010001 and 10019999 are for project 1
+- etc
+
+#############
+# RECORD FOR PROJECT NUMBER
+#############
+ORCHAMP = project 0 = orchamp geometry in vortex/conf/geometries.ini  (164 points)
+projet 1 utilisé sans référence ? (15 points)
+TOP_CBNA = project 2 = orchamp geometry in vortex/conf/geometries.ini (169 points)
+ORCHAMP_MAJ_2022 = project 3 = orchamp geometry in vortex/conf/geometries.ini (26 points)
+
+Remember: if your project doesn't need to stay a longtime, don't push METADATA.xml
+
+
+#############
+# EXAMPLES OF USE (script launch)
+#############
+python3 shapefile2NetCDF.py path_shapefile station_name_in_shapefile station_id_in_shapefile project_number
+        [--name_alt alti_name_in_shapefile] [-o path_name_of_NetCDF_output] [--MNT_alt path_of_MNT_altitude]
+        [--confirm_overwrite] [--list_skyline all or 1 5 6 if you want skyline for your id_station number 1, 5 and 6]
+
+python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti
+python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti 
+        --confirm_overwrite si on a déjà travaillé sur ce projet
+python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti
+        --list_skyline 1 34 47 (pour avoir dans le dossier output les tour d'horizon des stations numéros 1, 34 et 47
+python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2021/PlotsMaJ2021 codeplot idplot 0 
+        --confirm_overwrite
+
+TOP_CBNA:
+python3 shapefile2NetCDF.py /home/fructusm/Bureau/Shapefile_simu/cn_maille_points/cn_maille_points cd50m ORIG_FID 1
+
+MAJ Orchamp_2022
+python3 shapefile2NetCDF.py /home/fructusm/Travail_Orchamp/Orchamp_nouveaux_sites_2022/Plots_new_2022 codeplot idplot 3
+
+##############
+# EXAMPLES OF USE OF THE NETCDF FILE IN LOCAL SIMULATION
+##############
+s2m -f path_FORCING -b begin_date -e end_date -r path_netcdf.nc -o output_name -g --extractforcing
+give interpol_FORCING
+s2m -f path_interpol_FORCING -b begin_date -e end_date -o output_name_pour_PRO -g --addmask
+give the PRO file for the shapefile points. 
+
+Example:
+s2m -f /rd/cenfic3/cenmod/era40/vortex/s2m/alp_flat/reanalysis/meteo/FORCING_2017080106_2018080106.nc 
+    -b 20170801 -e 20180801 -r /home/fructusm/git/snowtools_git/interpolation/NetCDF_from_shapefile.nc
+    -o output_test_s2m -g --extractforcing
+s2m -f /home/fructusm/OUTPUT_et_PRO/output_test_s2m/meteo/FORCING_2017080106_2018080106.nc -b 20170801 -e 20180801 
+    -o output_test_s2m_Safran -g --addmask
+(NB: export NINTERPOL=1 if MPI problem for the extractforcing)
+
+####################
+# EXAMPLES OF USE OF THE NETCDF FILE IN HPC SIMULATION
+####################
+
+s2m -b 19580801 -e 20200801 -m s2m -f reanalysis2020.2@lafaysse 
+    -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc -o TEST1 
+    -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -g --addmask -a 400
+
+Options: 
+-m model
+-f forcing files -> -f reanalysis in order to get the forcing from reanalysis
+-r région: add geometry in vortex/conf/geometries.ini
+-n namelist (get the same options than reanalysis)
+-g if you don't have a prep -> a spinup has to be made
+--addmask in order to use the masks created at the same time than the NetCDF file
+-a 400 In order to limit Snow Water Equivalent to 400kg/m3 at the end of the year (1rst of august)
+--ntasks 8 if you have only 8 points -> otherwise crash
+
+####################
+# HPC SIMULATION: CLIMATE SIMULATIONS
+####################
+Where are the forcing of SMHI_RCA4_MOHC_HadGEM2_ES_RCP85 (for example) ?
+In Raphaelle Samacoits folders -> command looks like: 
+-m adamont -f RCM_GCM_EXP@samacoitsr -r alp_flat:geometryout:fichier.nc
+s2m -b 20100801 -e 20990801 -m adamont -f CLMcom_CCLM4_8_17_CNRM_CERFACS_CNRM_CM5_RCP45@samacoitsr
+    -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc -o TEST_Raphaelle 
+    -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -x 20200801 --addmask -a 400
+
+####################
+# HPC SIMULATION: SXCEN TRANSFERT
+####################
+Transfer files from Belenos to sxcen:
+Use get_reanalysis which is in snowtools_git/scripts/extract/vortex
+Sur SXCEN: python3 get_reanalysis.py --geometry=orchamp --snow --xpid=SPINUP@fructusm
+Sur SXCEN: python3 get_reanalysis.py --geometry=orchamp --snow --xpid=TEST_Raphaelle@fructusm
+                                     --byear=2010 --eyear=2099
+
+####################
+####################
+# DO NOT FORGET
+####################
+####################
+SPINUP
+SEND METADATA.xml ON BELENOS IN ORDER TO USE THE MASKS
+CHANGE THE NAMELIST: in CSELECT, you can't have station AND massif_num AT THE SAME TIME
+REMOVE IN NAMELIST AVALANCHES DIAG IN CSELECT (in that case, massif_num is necessary)
+
+In Surfex-Crocus code (normally OK now but in order to remember):
+/SURFEX/src/OFFLINE  init_output_oln.F90 (line 130) and ol_write_coord.F90 
+
+"""
 import os
 import argparse
 import sys
@@ -34,115 +155,6 @@ import matplotlib
 matplotlib.use('Agg')  # has to be before matplotlib.pyplot, because otherwise the backend is already chosen.
 # Even if that obviously is in conflict with PEP8.
 import matplotlib.pyplot as plt
-
-################################################################
-# On part d'un shapefile en Lambert 93
-# De ce shapefile, le programme fournit un NetCDF pour les besoins du lancement de Surfex (ou de réanalyse) dessus
-# Il fournit aussi les skyline qui sont ajoutées dans MEDATADA.xml
-# Il est possible de garder certain tracés des skylines.
-
-# NB: PROJECT NUMBER, C'EST QUOI ?
-# Comme nous allons ajouter des points dans le fichier METADATA.xml, il s'agit de savoir si ces points existent déjà.
-# A priori à la conception de l'algo, on se dit que:
-# - il y aura moins de 10 000 points par projet
-# - il y aura moins d'une centaine de projets
-# (et sinon, on réfléchira à quelque chose de mieux)
-# Le but est d'éviter d'avoir en double un code station (sur 8 chiffres comme les codes OMM)
-# Bref:
-# - les nombres entre 10000001 et 10009999 sont pour le projet 0
-# - les nombres entre 10010001 et 10019999 sont pour le projet 1
-# - etc
-#############
-# TRACABILITE DES NUMEROS DE PROJET
-#############
-#
-# Au 27 octobre 2021:
-# ORCHAMP = projet 0 = geometrie orchamp dans vortex/conf/geometries.ini  (164 points)
-# projet 1 utilisé sans référence ? (15 points)
-# TOP_CBNA = projet 2 = geometrie orchamp dans vortex/conf/geometries.ini (169 points)
-# ORCHAMP_MAJ_2022 = projet 3 = geometrie orchamp dans vortex/conf/geometries.ini (26 points)
-#
-#############
-# METTRE A JOUR CI DESSUS A CHAQUE NOUVEAU PROJET
-#############
-#
-#############
-# Exemple Lancement:
-#############
-# python3 shapefile2NetCDF.py path_shapefile station_name_in_shapefile station_id_in_shapefile project_number
-#         [--name_alt alti_name_in_shapefile] [-o path_name_of_NetCDF_output] [--MNT_alt path_of_MNT_altitude]
-#         [--confirm_overwrite] [--list_skyline all or 1 5 6 if you want skyline for your id_station number 1, 5 and 6]
-#
-# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti
-# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti 
-#         --confirm_overwrite si on a déjà travaillé sur ce projet
-# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti
-#         --list_skyline 1 34 47 (pour avoir dans le dossier output les tour d'horizon des stations numéros 1, 34 et 47
-# python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2021/PlotsMaJ2021 codeplot idplot 0 
-#         --confirm_overwrite
-#
-# TOP_CBNA:
-# python3 shapefile2NetCDF.py /home/fructusm/Bureau/Shapefile_simu/cn_maille_points/cn_maille_points cd50m ORIG_FID 1
-#
-# MAJ Orchamp_2022
-# python3 shapefile2NetCDF.py /home/fructusm/Travail_Orchamp/Orchamp_nouveaux_sites_2022/Plots_new_2022 codeplot idplot 3
-##############
-# Utilisation du fichier NetCDF pour reanalyse ou simulation en local
-##############
-# s2m -f path_FORCING -b begin_date -e end_date -r path_netcdf.nc -o output_name -g --extractforcing
-# give interpol_FORCING
-# s2m -f path_interpol_FORCING -b begin_date -e end_date -o output_name_pour_PRO -g --addmask
-# give the PRO file for the shapefile points. 
-#
-# Exemple:
-# s2m -f /rd/cenfic3/cenmod/era40/vortex/s2m/alp_flat/reanalysis/meteo/FORCING_2017080106_2018080106.nc 
-#     -b 20170801 -e 20180801 -r /home/fructusm/git/snowtools_git/interpolation/NetCDF_from_shapefile.nc
-#     -o output_test_s2m -g --extractforcing
-# s2m -f /home/fructusm/OUTPUT_et_PRO/output_test_s2m/meteo/FORCING_2017080106_2018080106.nc -b 20170801 -e 20180801 
-#     -o output_test_s2m_Safran -g --addmask
-# (NB: export NINTERPOL=1 if MPI problem for the extractforcing)
-#
-####################
-# Utilisation du fichier NetCDF sur belenos:
-####################
-#
-# s2m -b 19580801 -e 20200801 -m s2m -f reanalysis2020.2@lafaysse 
-#     -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc -o TEST1 
-#     -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -g --addmask -a 400
-#
-# !!!!
-# PENSER AU SPINUP
-# PENSER QU'IL FAUT BIEN ENVOYER SUR BELENOS LE METADATA.xml POUR PRENDRE EN COMPTE LES MASQUES
-# PENSER QU'IL FAUT CHANGER LA NAMELIST: dans le CSELECT, IL NE FAUT PAS station ET massif_num EN MEME TEMPS
-# PENSER DANS LA NAMELIST A ENLEVER LES DIAG AVALANCHES DANS LE CSELECT (massif_num nécessaire dans ce cas)
-# Pour info, dans /SURFEX/src/OFFLINE il faut faire attention à init_output_oln.F90 (ligne 130) et ol_write_coord.F90 
-# !!!!
-#
-# Options: 
-# -m pour le modèle
-# -f pour les fichiers de forcing -> on va les chercher chez Matthieu pour reanalyse. Bientôt -f reanalysis
-# -r pour la région: penser à rajouter la géométrie dans vortex/conf/geometries.ini
-# -n prendre les mêmes options que pour la réanalyse
-# -g car on n'a pas de prep au début -> il faut faire un spinup
-# --addmask pour tenir compte des masques calculés lors de la génération du fichier NetCDF
-# -a 400 pour limiter le Snow Water Equivalent à 400kg/m3 au 1er août
-# --ntasks 8 si on n'a que 8 points dans les pyrénées -> éviter les pbs
-#
-# question pour simulation: où trouver les forcing de SMHI_RCA4_MOHC_HadGEM2_ES_RCP85 (par exemple) ?
-# reponse: chez Raphaelle Samacoits d'où une commande avec quelque chose comme: 
-# -m adamont -f RCM_GCM_EXP@samacoitsr -r alp_flat:geometryout:fichier.nc
-# s2m -b 20100801 -e 20990801 -m adamont -f CLMcom_CCLM4_8_17_CNRM_CERFACS_CNRM_CM5_RCP45@samacoitsr
-#     -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc -o TEST_Raphaelle 
-#     -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -x 20200801 --addmask -a 400
-#
-#
-# Pour transférer les fichiers de Belenos à sxcen:
-# utiliser get_reanalysis qui est dans snowtools_git/scripts/extract/vortex
-# Sur SXCEN: python3 get_reanalysis.py --geometry=orchamp --snow --xpid=SPINUP@fructusm
-# Sur SXCEN: python3 get_reanalysis.py --geometry=orchamp --snow --xpid=TEST_Raphaelle@fructusm
-#                                      --byear=2010 --eyear=2099
-################################################################
-
 
 ################################################################
 # VALEURS PAR DEFAUT CHANGEABLE PAR OPTION:
@@ -300,11 +312,11 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
         nodata_raster = band.GetNoDataValue()
         points_values = []
 
-        for i in range(len(shape)):
+        for i in range(len(shape.geoms)):
             # Convert from map to pixel coordinates.
             # Only works for geotransforms with no rotation.
-            current_x = (shape[i].x - gt[0]) / gt[1]
-            current_y = (shape[i].y - gt[3]) / gt[5]
+            current_x = (shape.geoms[i].x - gt[0]) / gt[1]
+            current_y = (shape.geoms[i].y - gt[3]) / gt[5]
             px = int(current_x)  # x pixel
             py = int(current_y)  # y pixel
 
@@ -330,7 +342,7 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
 
     liste_altitude_MNT_arrondie = [int(round(liste_altitude_MNT[i])) for i in range(len(liste_altitude_MNT))]
     liste_aspect_MNT_arrondie = [int(round(liste_aspect_MNT[i])) % 360 for i in range(len(liste_aspect_MNT))]
-    liste_slope_MNT_arrondie = [int(round(liste_slope_MNT[i])) for i in range(len(liste_slope_MNT))]
+    liste_slope_MNT_arrondie = [int(min(40,round(liste_slope_MNT[i]))) for i in range(len(liste_slope_MNT))]
 
     ################################################################
     # Création liste massif
@@ -351,7 +363,7 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
     liste_latitude = [round(list_shape_WGS84[i].y, 6) for i in range(len(list_shape_WGS84))]
     # Création liste "id station" faite avec le field number de référence dans le shapefile
     # 8 chiffres significatifs pour être compatible avec les codes de infomassifs
-    liste_id_station = ['%08d' % int(geomet[i].record[indice_record_id_station] + add_for_METADATA)
+    liste_id_station = ['%08d' % (int(geomet[i].record[indice_record_id_station]) + int(add_for_METADATA))
                         for i in range(len(shapes))]
     # Création liste "name station" faite avec le field name de référence dans le shapefile
     liste_nom_station = [geomet[i].record[indice_record_nom_station] for i in range(len(shapes))]
@@ -520,7 +532,7 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
 
     r = shapefile.Reader(path_shapefile)
     shapes = r.shapes()
-    shape_courant = shape(shapes)
+    shape_courant = shape(shapes)  # rajouter un .geoms pour le Deprecated Warning ?
 
     raster = gdal.Open(path_MNT_alt)  # ouverture de l'image tif
     gt = raster.GetGeoTransform()
@@ -530,11 +542,11 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
     step = int((gt[1] + (-gt[5])) / 2)  # for further use in line interpolation
     print("step: ", step)
 
-    for k in range(len(shape_courant)):
+    for k in range(len(shape_courant.geoms)):
         in_stat = in_file[k]
         print('hello', in_stat[0], in_stat[3])
-        center_x = (shape_courant[k].x - gt[0]) / gt[1]
-        center_y = (shape_courant[k].y - gt[3]) / gt[5]
+        center_x = (shape_courant.geoms[k].x - gt[0]) / gt[1]
+        center_y = (shape_courant.geoms[k].y - gt[3]) / gt[5]
 
         px_c = int(center_x)  # x pixel centre
         py_c = int(center_y)  # y pixel centre
@@ -556,8 +568,8 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
         for azimut in range(0, 360, 5):
             angle = []
             for index, dist in enumerate(range(step, viewmax, step)):
-                current_x = (shape_courant[k].x + dist * math.sin(math.radians(azimut)) - gt[0]) / gt[1]
-                current_y = (shape_courant[k].y + dist * math.cos(math.radians(azimut)) - gt[3]) / gt[5]
+                current_x = (shape_courant.geoms[k].x + dist * math.sin(math.radians(azimut)) - gt[0]) / gt[1]
+                current_y = (shape_courant.geoms[k].y + dist * math.cos(math.radians(azimut)) - gt[3]) / gt[5]
 
                 px = int(current_x)  # x pixel le long de l'azimut
                 py = int(current_y)  # y pixel le long de l'azimut
@@ -687,8 +699,8 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
 
 
 def parseArguments(args):
-    """Parsing the arguments when you call the main program.
-
+    """
+    Parsing the arguments when you call the main program.
     :param args: The list of arguments when you call the main program (typically sys.argv[1:] )
     """
     # Create argument parser
@@ -716,8 +728,8 @@ def parseArguments(args):
 
 
 def main(args=None):
-    """Main program: parse argument then launch plot and text comparison for the 2 PRO files
-
+    """
+    Main program: parse argument then launch the creation of NetCDF and skylines
     """
     args = args if args is not None else sys.argv[1:]
     if len(sys.argv) > 1: 
