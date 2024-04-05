@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import argparse
+import matplotlib.pyplot as plt
 
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.scores import clusters
@@ -93,7 +94,8 @@ def plot_fields(xpids, obs, var):
             tmp = simu
         tmp = tmp.compute()
         savename = f'{var}_{shortid}.pdf'
-        plot2D.plot_field(tmp[var], var, savename, vmax=300)
+        cmap = plt.cm.Greens  # TODO : chose a better colormap ?
+        plot2D.plot_field(tmp[var], savename, vmax=300, cmap=cmap)
         savename = f'diff_{var}_{shortid}.pdf'
         plot2D.plot_error_fields(tmp[var], obs['Band1'], var, savename, vmax=100)
 

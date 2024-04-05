@@ -28,19 +28,22 @@ def plot_error_fields(simu, obs, varn, savename, vmin=None, vmax=None):
     cmap.set_bad('grey', 1.)
     im = ax.imshow(np.flipud(diff.data), cmap=cmap, vmin=vmin, vmax=vmax)
     fig.colorbar(im)
-    fig.savefig(f'{savename}.pdf', format='pdf')
+    if '.pdf' not in savename:
+        savename = f'{savename}.pdf'
+    fig.savefig(savename, format='pdf')
     plt.close('all')
 
 
-def plot_field(field, var, savename, vmin=None, vmax=None):
+def plot_field(field, savename, vmin=None, vmax=None, cmap=plt.cm.YlGnBu):
     fig, ax = plt.subplots()
     if vmax is None:
         vmax = np.max(np.abs(field))
     if vmin is None:
         vmin = 0
-    cmap = matplotlib.cm.Greens  # TODO : chose a better colormap ?
     cmap.set_bad('grey', 1.)
     im = ax.imshow(np.flipud(field.data), cmap=cmap, vmin=vmin, vmax=vmax)
     fig.colorbar(im)
-    fig.savefig(f'{savename}.pdf', format='pdf')
+    if '.pdf' not in savename:
+        savename = f'{savename}.pdf'
+    fig.savefig(savename, format='pdf')
     plt.close('all')
