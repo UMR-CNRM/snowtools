@@ -16,6 +16,9 @@ To plot yearly accumulations of Rainf, Snowf and the sum of the 2 (total precipi
 >>> p plot_variable.py -b 2017080106 -e 2018080106 -x Safran_tc@haddjeria -g gr250ls -a s2m -k FORCING
            -v Rainf+Snowf Rainf Snowf
 
+>>> p plot_variable.py -b 2017080106 -e 2018080106 -x RS27@vernaym -g GrandesRousses250m -k FORCING -m
+           -v Rainf+Snowf Rainf Snowf
+
 '''
 
 import os
@@ -72,12 +75,12 @@ def parse_command_line():
 
 def plot_var(ds, variables, xpid, date=None):
 
-    for var in variables:
+    if any(['Rainf' in var for var in variables]):
+        ds['Rainf'] = ds['Rainf'] * 3600.
+    if any(['Snowf' in var for var in variables]):
+        ds['Snowf'] = ds['Snowf'] * 3600.
 
-        if 'Rainf' in var:
-            ds['Rainf'] = ds['Rainf'] * 3600.
-        if 'Snowf' in var:
-            ds['Snowf'] = ds['Snowf'] * 3600.
+    for var in variables:
 
         if '+' in var:
             # Compute the sum of all variables in 'var'
@@ -96,7 +99,7 @@ def plot_var(ds, variables, xpid, date=None):
         else:
             tmp = tmp.sum(dim='time')
             savename = f'{var}_cumul_{xpid}.pdf'
-        plot2D.plot_field(tmp, savename)
+        plot2D.plot_field(tmp, savename, vmin=tmp.min(), vmax=tmp.max())
 
 
 if __name__ == '__main__':

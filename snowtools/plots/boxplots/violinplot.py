@@ -36,7 +36,7 @@ def plot_ange(dataplot, var, figname):
         inner        = 'box',  # Representation of the data in the violin interior ('box' --> mini-boxplot)
         hue          = 'experiment',  # Legend 'title'
         density_norm = 'width',  # all violin will have the same width
-        bw_adjust    = 0.1,  # Factor that scales the bandwidth to use more or less smoothing
+        bw_adjust    = 0.5,  # Factor that scales the bandwidth to use more or less smoothing
         cut          = 0,  # Limit the violin within the data range
         orient       = 'h',  # Horizontal violinplots
         palette      = (color for color in colors),
