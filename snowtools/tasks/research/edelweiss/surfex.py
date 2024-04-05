@@ -31,14 +31,14 @@ class _Offline(_VortexTask):
         Main method to save an OFFLINE execution output (PRO file)
         """
         self.sh.title('PRO')
-        self.pro = io.put_pro(*self.common_args, members=self.conf.members, **self.common_kw)
+        self.pro = io.put_pro(*self.common_args, member=self.conf.member, **self.common_kw)
 
     def get_forcing(self):
         """
         Main method to fetch a single or an ensemble of FORCING files
         """
         self.sh.title('FORCING')
-        self.forcing = io.get_forcing(*self.common_args, members=self.conf.members_forcing,
+        self.forcing = io.get_forcing(*self.common_args, member=self.conf.member,
                                       filename='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', **self.common_kw)
 
     def get_surfex_namelist(self):
@@ -184,7 +184,7 @@ class OfflineEnsemble(_Offline):
             datebegin      = self.conf.datebegin,
             dateend        = self.conf.dateend,
             threshold      = self.conf.threshold,
-            members        = self.conf.members,
+            members        = self.conf.member,
             geometry_in    = list_geometry,
             geometry_out   = self.conf.geometry.tag,
             ntasks         = 40,

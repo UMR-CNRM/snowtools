@@ -27,7 +27,10 @@ However it is possible to use this tool in a more advanced way by precising :
     * Either:
        - the number of *members* for ensemble simulations
       OR
-       - the explicit *member* list, using the 'X-Y-1' syntax
+       - the explicit *members* list, using the 'X-Y-1' syntax
+        Both *member* and *members* arguments are possible (the priority is given to *member*)
+        --> Use *members* when parsing a list (most of the time) and *member* when parsing a specific ensemble
+            member (in a parallelisation context)
     * the 'vapp' ('s2m' or 'edelweiss' currently) TODO : ajuster en fonction de la convention choisie
     * an 'abspath' to look for a file not in the current workind directory (TODO : not implemented yet)
     * the 'block' (the last directory(ies) names where the resource is stored on the Vortex cache)
@@ -135,7 +138,7 @@ def init():
     return dict(
         role        = None,
         namespace   = 'vortex.multi.fr',  # Get/put resources on both Hendrix and the local cache
-        members     = None,
+        member      = None,
         vapp        = 's2m',
         abspath     = None,
         block       = '',
@@ -318,17 +321,24 @@ def footprints_kitchen(xpid, geometry, **kw):
         vconf          = '[geometry:tag]',
     )
 
-    if kw['members'] is not None or 'member' in kw.keys():
-        # On peut actuellement passer *members* =  un entier (le nombre de membres)
-        # ou un objet *member* convertible en FPLIst (string au format X-Y-1)
-        # TODO : gérer ça plus proprement
-        # TODO : uniformiser la gestion des membres
+    # On peut actuellement passer *member(s)* =  un entier (le nombre de membres)
+    # ou un objet *member(s)* convertible en FPLIst (string au format X-Y-1)
+    # TODO : gérer ça plus proprement
+    # TODO : uniformiser la gestion des membres
+    if kw['member'] is not None:
+        # The *member* argument has the higher-priority
+        description['member'] = kw.pop('member')
+    elif 'members' in kw.keys():
+        # *members* can also be used to parse a list of members
         if isinstance(kw['members'], int):
             description['member'] = footprints.util.rangex(0, kw.pop('members') - 1)
         elif isinstance(kw['members'], str):
             description['member'] = footprints.util.rangex(kw.pop('members'))
+
+    # Now set a potential member-specific sub-directory
+    if 'member' in description.keys():
         # If there is more than 1 member, store the files in a sub-directory:
-        if len(description['member']) > 1:
+        if isinstance(description['member'], list) and len(description['member']) > 1:
             description['local'] = f'mb[member]/{kw.pop("filename")}'
         else:
             description['local'] = kw.pop("filename")
@@ -998,7 +1008,6 @@ def snow_obs_date(action, xpid, geometry, **kw):
     # DIAG-specific footprints
     specific_footprints = dict(
         # Specific footprints
-        members   = None,
         kind      = 'SnowObservations',
         model     = 'surfex',
         nativefmt = 'netcdf',
@@ -1031,7 +1040,6 @@ def snow_obs_period(action, xpid, geometry, **kw):
     # DIAG-specific footprints
     specific_footprints = dict(
         # Specific footprints
-        members   = None,
         kind      = 'SnowObservations',
         model     = 'surfex',
         nativefmt = 'netcdf',
