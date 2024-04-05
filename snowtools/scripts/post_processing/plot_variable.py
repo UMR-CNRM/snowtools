@@ -13,8 +13,8 @@ example:
 
 To plot yearly accumulations of Rainf, Snowf and the sum of the 2 (total precipitation):
 
->>> p plot_variable.py -b 2017080106 -e 2018080106 -x RS27@vernaym -g GrandesRousses250m -k FORCING
-         -v Rainf+Snowf Rainf Snowf
+>>> p plot_variable.py -b 2017080106 -e 2018080106 -x Safran_tc@haddjeria -g gr250ls -a s2m -k FORCING
+           -v Rainf+Snowf Rainf Snowf
 
 '''
 
@@ -50,6 +50,9 @@ def parse_command_line():
     parser.add_argument('-m', '--member', action='store_true',
                         help="If the file comes from an ensemble, take the first member (the control member"
                              "by convention)")
+
+    parser.add_argument('-a', '--vapp', type=str, default='edelweiss', choices=['s2m', 'edelweiss'],
+                        help="Application that produced the target file")
 
     parser.add_argument('-v', '--variable', nargs='+', type=str, default=None,
                         help="Variable(s) name to plot (see list for each specific file"
@@ -108,6 +111,7 @@ if __name__ == '__main__':
     geometry        = args.geometry
     kind            = args.kind
     member          = 0 if args.member else None
+    vapp            = args.vapp
     variable        = args.variable
     workdir         = args.workdir
 
@@ -125,7 +129,7 @@ if __name__ == '__main__':
 
         # Get DIAG files with Vortex
         filename = f'{kind}_{shortid}.nc'
-        kw = dict(datebegin=datebegin, dateend=dateend, vapp='edelweiss', member=member)
+        kw = dict(datebegin=datebegin, dateend=dateend, vapp=vapp, member=member)
         getattr(io, f'get_{kind.lower()}')(xpid, geometry, filename=filename, **kw)
 
         ds = xr.open_dataset(filename)

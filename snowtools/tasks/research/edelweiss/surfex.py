@@ -38,9 +38,12 @@ class _Offline(_VortexTask):
         """
         Main method to fetch a single or an ensemble of FORCING files
         """
+        kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
+        # Update default vapp with specific conf values
+        kw.update(dict(vapp=self.conf.vapp_forcing, filename='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+            datebegin=self.conf.datebegin_forcing, dateend=self.conf.dateend_forcing, member=self.conf.member))
         self.sh.title('FORCING')
-        self.forcing = io.get_forcing(*self.common_args, member=self.conf.member,
-                                      filename='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', **self.common_kw)
+        self.forcing = io.get_forcing(self.conf.xpid_forcing, self.conf.geometry_forcing, **kw)
 
     def get_surfex_namelist(self):
         """
