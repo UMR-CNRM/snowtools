@@ -35,7 +35,7 @@ def plot_error_fields(simu, obs, varn, savename, vmin=None, vmax=None):
 
 
 def plot_field(field, savename, vmin=None, vmax=None, cmap=plt.cm.YlGnBu):
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(12 * np.shape(field)[1] / np.shape(field)[0], 10))
     if vmax is None:
         vmax = np.max(np.abs(field))
     if vmin is None:

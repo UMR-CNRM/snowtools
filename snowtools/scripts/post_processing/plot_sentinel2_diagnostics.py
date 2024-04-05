@@ -11,7 +11,7 @@ WORK IN PROGRESS
 example:
 --------
 >>> p plot_sentinel2_diagnostics.py -b 2021080207 -e 2022080106
-    -x safran@vernaym safran_pappus@vernaym RawData@vernaym RawData_pappus@vernaym RS27@vernaym RS27_pappus@vernaym
+    -x safran@vernaym safran_pappus@vernaym ANTILOPE@vernaym ANTILOPE_pappus@vernaym RS27@vernaym RS27_pappus@vernaym
 
 '''
 
@@ -47,14 +47,22 @@ def parse_command_line():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('-b', '--datebegin', type=str,
                         help="First date covered by the simulation file, format YYYYMMDDHH.")
+
     parser.add_argument('-e', '--dateend', type=str,
                         help="Last date covered by the simulation file, format YYYYMMDDHH.")
+
     parser.add_argument('-x', '--xpids', nargs='+', type=str,
                         help="XPID(s) of the simulation(s) format XP_NAME@username")
+
+    parser.add_argument('-a', '--vapp', type=str, default='edelweiss', choices=['s2m', 'edelweiss'],
+                        help="Application that produced the target file")
+
     parser.add_argument('-z', '--elevation_bands', nargs='+', type=int, default=np.arange(1900, 3600, 300),
                         help='Define elevation bands for clustering')
+
     parser.add_argument('-w', '--workdir', type=str, default=f'{os.environ["HOME"]}/workdir/EDELWEISS/diag',
                         help='Working directory')
+
     parser.add_argument('-g', '--geometry', type=str, default='GrandesRousses250m',
                         help='Geometry of the simulation(s) / observation')
 
@@ -67,19 +75,27 @@ def read_mnt():
     return mnt
 
 
-def plot_fields(xpids, obs, var):
+def plot_fields(xpids, obs, var, member=None):
+
+    vmin = obs.min()
+    vmax = obs.max()
+
+    # Plot observation field
+    cmap = plt.cm.Greens  # TODO : chose a better colormap ?
+    savename = f'{var}_Sentinel2.pdf'
+    plot2D.plot_field(obs, savename, cmap=cmap, vmin=vmin, vmax=vmax)
+
     for xpid in xpids:
         shortid = xpid.split('@')[0]
-        members = members_map[shortid]
-        if members is None:
+        if member is None:
             simu = xr.open_dataset(f'DIAG_{shortid}.nc', decode_times=False)
         else:
             # Verrue : trouver une solution standard plus propre
-            if members == 1:
+            if member == 1:
                 # "Deterministic" member=0 by default (WARNING : different from the current 's2m oper' convention)
-                simu = xr.open_dataset(f'mb000/DIAG_{shortid}.nc', decode_times=False)
+                simu = xr.open_dataset(f'DIAG_{shortid}.nc', decode_times=False)
             else:
-                simu = xr.open_mfdataset([f'mb{member:03d}/DIAG_{shortid}.nc' for member in range(members)],
+                simu = xr.open_mfdataset([f'mb{mb:03d}/DIAG_{shortid}.nc' for mb in range(member)],
                                          combine='nested', concat_dim='member', decode_times=False)
         if 'x' in simu.keys():
             simu = simu.rename({'x': 'xx', 'y': 'yy'})
@@ -87,37 +103,36 @@ def plot_fields(xpids, obs, var):
         simu['xx'] = obs['xx']
         simu['yy'] = obs['yy']
 
-        if members is not None and members > 1:
-            simu['member'] = range(members)
+        if member is not None and member > 1:
+            simu['member'] = range(member)
             tmp = simu.mean(dim='member')
         else:
             tmp = simu
         tmp = tmp.compute()
         savename = f'{var}_{shortid}.pdf'
         cmap = plt.cm.Greens  # TODO : chose a better colormap ?
-        plot2D.plot_field(tmp[var], savename, vmax=300, cmap=cmap)
+        plot2D.plot_field(tmp[var], savename, cmap=cmap, vmin=vmin, vmax=vmax)
         savename = f'diff_{var}_{shortid}.pdf'
-        plot2D.plot_error_fields(tmp[var], obs['Band1'], var, savename, vmax=100)
+        plot2D.plot_error_fields(tmp[var], obs, var, savename, vmax=100)
 
 
-def violin_plot(xpids, obs, var, mask=True):
+def violin_plot(xpids, obs, var, mask=True, member=None):
     mnt = read_mnt()
 
-    filtered_obs = clusters.per_alt(obs.Band1, elevation_bands, mnt)
+    filtered_obs = clusters.per_alt(obs, elevation_bands, mnt)
     dataplot = filtered_obs.to_dataframe(name='obs').dropna().reset_index().drop(columns=['xx', 'yy'])
 
     for xpid in xpids:
         print(xpid)
         shortid = xpid.split('@')[0]
-        members = members_map[shortid]
-        if members is None:
+        if member is None:
             subdir = ''
             df = filter_simu(shortid, subdir, mnt)
         else:
             df = None
-            for member in range(members):
-                print(member)
-                subdir = f'mb{member:03d}'
+            for mb in range(member):
+                print(mb)
+                subdir = f'mb{mb:03d}'
                 dfm = filter_simu(shortid, subdir, mnt)
                 if df is not None:
                     df = pd.concat([df, dfm], ignore_index=True)
@@ -157,6 +172,7 @@ if __name__ == '__main__':
     xpids           = args.xpids
     workdir         = args.workdir
     geometry        = args.geometry
+    vapp            = args.vapp
     elevation_bands = args.elevation_bands
 
     if not os.path.exists(workdir):
@@ -175,9 +191,19 @@ if __name__ == '__main__':
             deb = '2021080106'
         else:
             deb = datebegin  # 2021080207
-        members = members_map[shortid]
+
+        # TODO : à gérer autrement pour être flexible
+        if shortid in ['safran', 'ANTILOPE', 'safran_pappus', 'ANTILOPE_pappus']:
+            member = None
+        else:
+            member = 0
+
         # Get DIAG files with Vortex
-        io.get_diag(deb, dateend, xpid, geometry, vapp='edelweiss', members=members, filename=f'DIAG_{shortid}.nc')
+        kw = dict(datebegin=deb, dateend=dateend, vapp=vapp, member=member, filename=f'DIAG_{shortid}.nc')
+        io.get_diag(xpid, geometry, **kw)
+
+    # TODO : à gérer autrement pour être flexible
+    member = None
 
     # 2. Compare simulated data with Sentinel2 data
     # TODO : concaténer les 2 variables dans 1 seul fichier
@@ -190,15 +216,14 @@ if __name__ == '__main__':
             obs = xr.open_dataset('/home/vernaym/These/DATA/Sentinel2/SCD_20210901.nc')
 
         # compare(obs, var=var)
-        violin_plot(xpids, obs, var)  # Violinplots by elevation range
-        plot_fields(xpids, obs, var)  # Field difference
+        violin_plot(xpids, obs['Band1'], var, member=member)  # Violinplots by elevation range
+        plot_fields(xpids, obs['Band1'], var, member=member)  # Field difference
 
     # 3. Clean data
     for xpid in xpids:
         shortid = xpid.split('@')[0]
-        members = members_map[shortid]
-        if members is None:
+        if member is None:
             os.remove(f'DIAG_{shortid}.nc')
         else:
-            for member in range(members):
+            for member in range(member):
                 os.remove(f'mb{member:03d}/DIAG_{shortid}.nc')
