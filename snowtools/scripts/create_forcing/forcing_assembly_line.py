@@ -60,11 +60,10 @@ def update_wind(forcing):
     wind = xr.open_dataset('WIND.nc', chunks='auto')
     dates = np.intersect1d(forcing.time, wind.time)
     forcing = forcing.sel({'time': dates})
-    wind = wind.sel({'time': dates})
+    wind = wind.sel({'time': dates}).transpose('time', 'y', 'x')
     forcing['Wind'].data = wind['Wind'].data
     forcing['Wind_DIR'].data = wind['Wind_dir'].data
     wind.close()
-    forcing.time.encoding['dtype'] = 'int32'
 
     return forcing
 
@@ -86,20 +85,23 @@ def update_precipitation(forcing, subdir=None):
     precipitation = precipitation.sel({'time': dates})
     if hasattr(precipitation, 'xx'):
         precipitation = precipitation.rename({'xx': 'x', 'yy': 'y'})
+    elif hasattr(precipitation, 'latitude'):
+        precipitation = precipitation.rename({'longitude': 'x', 'latitude': 'y'})
+    precipitation = precipitation.transpose('time', 'y', 'x')
 
     # Replace Rainf/Snowf variables by the ones from the ensemble analysis
     # TODO : prévoir de pouivoir passer en argument le nom des variables
     if hasattr(precipitation, 'Rainf'):
-        forcing['Rainf'] = precipitation['Rainf'] / 3600.
+        forcing['Rainf'].data = precipitation['Rainf'].data / 3600.
     elif hasattr(precipitation, 'Rainf_ds'):  # Sabine's script name
-        forcing['Rainf'] = precipitation['Rainf_ds'] / 3600.
+        forcing['Rainf'].data = precipitation['Rainf_ds'].data / 3600.
     else:
         raise ValueError("Rain variable not in ['Rainf', 'Rainf_ds']")
 
     if hasattr(precipitation, 'Snowf'):
-        forcing['Snowf'] = precipitation['Snowf'] / 3600.
+        forcing['Snowf'].data = precipitation['Snowf'].data / 3600.
     elif hasattr(precipitation, 'Snowf_ds'):
-        forcing['Snowf'] = precipitation['Snowf_ds'] / 3600.
+        forcing['Snowf'].data = precipitation['Snowf_ds'].data / 3600.
     else:
         raise ValueError("Snow variable not in ['Snowf', 'Snowf_ds']")
 
@@ -107,6 +109,7 @@ def update_precipitation(forcing, subdir=None):
 
 
 def write(ds, outname):
+    ds.time.encoding['dtype'] = 'int32'
     datedeb = ds.time[0]
     dateend = ds.time[-1]
     ds.load().to_netcdf(outname, unlimited_dims={'time': True}, format=DEFAULT_NETCDF_FORMAT)
@@ -175,8 +178,9 @@ if __name__ == '__main__':
         # Retrieve input files with Vortex
         from snowtools.scripts.extract.vortex import vortexIO
         vortexIO.get_forcing(datebegin, dateend, safran, geometry, filename='FORCING_IN.nc')
-        wind = vortexIO.get_wind(datebegin, dateend, wind, geometry)
-        precipitation = vortexIO.get_precipitation(datebegin, dateend, precipitation, geometry, members=members)
+        kw = dict(datebegin=datebegin, dateend=dateend)
+        wind = vortexIO.get_wind(wind, geometry, **kw)
+        precipitation = vortexIO.get_precipitation(precipitation, geometry, members=members, **kw)
         vortex = True
     except (ImportError, ModuleNotFoundError):
         vortex = False
@@ -192,7 +196,7 @@ if __name__ == '__main__':
     datedeb, datefin = update(forcing, members, datebegin, dateend, wind=wind[0], precipitation=precipitation[0])
 
     if vortex:
-        vortexIO.put_forcing(datedeb, datefin, xpid, geometry, members=members, filename='FORCING_OUT.nc')
+        vortexIO.put_forcing(xpid, geometry, members=members, filename='FORCING_OUT.nc', **kw)
         clean()
     else:
         # Save output files without Vortex

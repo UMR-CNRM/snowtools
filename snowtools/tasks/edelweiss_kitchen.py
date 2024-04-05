@@ -258,18 +258,19 @@ class Edelweiss_kitchen(vortex_kitchen):
             self.iniparser.add_section(jobname)
 
         default = self.iniparser.as_dict(merged=False)  # Merge=False preserves the "DEFAULT" section
+
+        # Fill the actual job's section with values from the default jobs's section
+        if jobname != self.jobname:
+            for key, value in default[self.jobname].items():
+                default[jobname][key] = value
+                # Add entry in the job's actual section of the iniparser
+                self.iniparser.set(jobname, key, value)
+
         # Update default configuration values without replacing default values with *None* :
         for key, value in options.items():
             # Overwrite defaults values with user's command line arguments
             # Update an existing default value only if the new value is not None
-            if value is None:
-                if key in default['defaults'].keys():
-                    # Variables in the DEFAULT section can stay there, they will be used
-                    pass
-                elif key in default[self.jobname].keys() and jobname != self.jobname:
-                    # Get value from the default's section
-                    self.iniparser.set(jobname, key, str(value))
-            else:
+            if not (value is None and (key in list(default['defaults']) + list(default[jobname]))):
                 self.iniparser.set(jobname, key, str(value))
 
     def write_conf_file(self):
@@ -299,7 +300,7 @@ class Edelweiss_kitchen(vortex_kitchen):
             options.pop('members_forcing')
             for job_number in range(self.njobs):
                 options['members_forcing'] = str(job_number)
-                jobname = f'{self.jobname}_{str(job_number)}'
+                jobname = f'{self.jobname}:{str(job_number)}'
                 # jobname = f'{jobname}_mb{str(job_number)}'
                 self.set_job_conf(jobname, options)
                 mkjob_list.append(self.mkjob_command(jobname=jobname))

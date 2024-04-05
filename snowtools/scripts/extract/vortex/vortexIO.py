@@ -227,6 +227,38 @@ def check_date(resource_name, **kw):
     return kw
 
 
+def check_datevalidity(resource_name, **kw):
+    """
+    Check for *datevalidity* footprint for snowpack observations and remove useless period specific
+    footprints. If *datevalidity* is not definied, use the *date* footprint.
+
+    TODO : Remplacer *datevalidity* par *date* dans les ressources Vortex (vérifier si la séparation à un sens)
+    """
+
+    if 'datevalidity' not in kw.keys() or 'date' not in kw.keys():
+        raise KeyError(f'Missing mandatory *date* keyword argument for resource {resource_name}')
+
+    # Remove useless footprints
+    for key in ['datebegin', 'begindate', 'dateend', 'enddate']:
+        if key in kw.keys():
+            kw.pop(key)
+
+    return kw
+
+
+def check_vapp(resource_name, **kw):
+    """
+    Check for mandatory *vapp* footprint for snowpack observation resources.
+    ex : Sentinel2, Pleiades,...
+    """
+
+    if 'vapp' not in kw.keys():
+        raise KeyError(f'Missing mandatory *vapp* (application) keyword argument for resource {resource_name}'
+                       'ex : Sentinel2, Pleiades')
+
+    return kw
+
+
 def get_full_description(specific_footprints, user_kw, specific_default_footprints):
     """
     Create full description dictionnary
@@ -310,14 +342,6 @@ def footprints_kitchen(xpid, geometry, **kw):
 
     if 'sxcen' in kw['namespace']:
         description['storage'] = 'sxcen.cnrm.meteo.fr'
-
-
-#    if scope == 'SesonalSnowCoverDiagnostic':
-        # CEN's convention is to name period footprints 'datebegin' and 'dateend', but for SURFEX diagnostics
-        # we use objects from common.data.diagnostics.SurfexPeriodDiagnostics with `begindate` and `enddate`
-        # footprints...
-#        description['begindate'] = description.pop('datebegin')
-#        description['enddate']   = description.pop('dateend')
 
     return kw
 
@@ -546,6 +570,9 @@ def pro(action, xpid, geometry, **kw):
 
 
 def diag(action, xpid, geometry, **kw):
+    """
+    Main function for DIAG (SURFEX-Crocus diagnostics) files.
+    """
 
     kw = check_period('DIAG', **kw)
 
@@ -960,37 +987,83 @@ def get_offline_mpi(uenv, alternate_uenv=None, gvar='master_surfex_offline_mpi')
 #######################################################################################################################
 
 
-def put_snow_obs_period(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', filename='SnowObs.nc',
-                        vapp='s2m', block='', abspath=None, date=None, namebuild='flat@cen', fatal=True, **kw):
+def snow_obs_date(action, xpid, geometry, **kw):
+    """
+    Main function for dated snowpack observations.
+    """
 
-    # Specific footprints
-    members   = None
-    kind      = 'SnowObservations'
-    model     = 'surfex'
-    nativefmt = 'netcdf'
+    kw = check_date('SnowObsDate', **kw)
+    kw = check_vapp('SnowObsPeriod', **kw)
 
-    obs = put(kind, datebegin, dateend, xpid, geometry, namespace, filename, nativefmt, members, vapp,
-              namebuild, fatal, block=block, abspath=abspath, model=model)
+    # DIAG-specific footprints
+    specific_footprints = dict(
+        # Specific footprints
+        members   = None,
+        kind      = 'SnowObservations',
+        model     = 'surfex',
+        nativefmt = 'netcdf',
+    )
 
-    print(t.prompt, 'SnowObsPeriod output =', obs)
+    # DIAG-specific defaults values that can be overwritten by the function's kw
+    specific_default_footprints = dict(
+        filename = 'SnowObs_[date].nc',
+    )
+
+    # Create full description dictionnary
+    description = get_full_description(specific_footprints, kw, specific_default_footprints)
+
+    # Call the common get/put method
+    obs = function_map()[action](xpid, geometry, **description)
+    print(t.prompt, 'SnowObsDate =', obs)
     print()
 
-    return obs
+    return diag
 
 
-def get_snow_obs_period(datebegin, dateend, xpid, geometry, namespace='vortex.multi.fr', filename='SnowObs.nc',
-                        vapp='s2m', block='', abspath=None, date=None, namebuild='flat@cen', fatal=True, **kw):
+def snow_obs_period(action, xpid, geometry, **kw):
+    """
+    Main function for dated snowpack observations.
+    """
 
-    # Specific footprints
-    members   = None
-    kind      = 'SnowObservations'
-    model     = 'surfex'
-    nativefmt = 'netcdf'
+    kw = check_period('SnowObsPeriod', **kw)
+    kw = check_vapp('SnowObsPeriod', **kw)
 
-    obs = get(kind, datebegin, dateend, xpid, geometry, namespace, filename, nativefmt, members, vapp,
-              namebuild, fatal, block=block, abspath=abspath, model=model)
+    # DIAG-specific footprints
+    specific_footprints = dict(
+        # Specific footprints
+        members   = None,
+        kind      = 'SnowObservations',
+        model     = 'surfex',
+        nativefmt = 'netcdf',
+    )
 
-    print(t.prompt, 'SnowObsPeriod input =', obs)
+    # DIAG-specific defaults values that can be overwritten by the function's kw
+    specific_default_footprints = dict(
+        filename = 'SnowObs_[begindate]_[enddate].nc',
+    )
+
+    # Create full description dictionnary
+    description = get_full_description(specific_footprints, kw, specific_default_footprints)
+
+    # Call the common get/put method
+    obs = function_map()[action](xpid, geometry, **description)
+    print(t.prompt, 'SnowObsPerdio =', obs)
     print()
 
-    return obs
+    return diag
+
+
+def put_snow_obs_date(xpid, geometry, **kw):
+    return snow_obs_date('put', xpid, geometry, **kw)
+
+
+def get_snow_obs_date(xpid, geometry, **kw):
+    return snow_obs_date('get', xpid, geometry, **kw)
+
+
+def put_snow_obs_period(xpid, geometry, **kw):
+    return snow_obs_period('put', xpid, geometry, **kw)
+
+
+def get_snow_obs_period(xpid, geometry, **kw):
+    return snow_obs_period('get', xpid, geometry, **kw)

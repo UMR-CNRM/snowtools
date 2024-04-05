@@ -46,7 +46,7 @@ class Forcing(_VortexTask):
         kw.update(dict(vapp=self.conf.vapp_forcing, filename='FORCING_IN.nc', datebegin=self.conf.datebegin_forcing,
             dateend=self.conf.dateend_forcing))
         self.sh.title('FORCING input')
-        io.get_forcing(self.conf.xpid_forcing, self.conf.geometry_forcing, **kw)
+        self.forcing = io.get_forcing(self.conf.xpid_forcing, self.conf.geometry_forcing, **kw)
 
         # TODO : Cette verrue montre que le source_conf est inutile
         # A retirer dans les toolbox de Sabine
@@ -68,7 +68,8 @@ class Forcing(_VortexTask):
             kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
             kw.update(dict(vapp=self.conf.vapp_precipitation, members=self.conf.members, source_conf=source_conf))
             self.sh.title('Precipitation input')
-            io.get_precipitation(self.conf.xpid_precipitation, self.conf.geometry_precipitation, **kw)
+            self.precipitation = io.get_precipitation(self.conf.xpid_precipitation, self.conf.geometry_precipitation,
+                                                    **kw)
 
         # Update Wind / Wind_DIR variables
         if self.conf.wind is not None:
@@ -89,7 +90,11 @@ class Forcing(_VortexTask):
             dateend      = self.conf.dateend,
             engine       = 'algo',  # `_CENTaylorRun` algo components familly
             members      = self.conf.members,
-            ntasks       = self.conf.ntasks,
+            # WARNING : the binding seem to be important since problems have been observed with the default
+            # '80 task per node' (one random worker does nothing). Maybe something to do with the fact that ntasks
+            # is not a multiple of the actual number of workers ?
+            # Update 5/04 : Le BUG se produit aussi avec ntasks=nworkers ...
+            ntasks       = len(self.precipitation),
             role_members = 'Precipitation',
         )
         print(t.prompt, 'tbalgo =', tbalgo)
@@ -101,4 +106,5 @@ class Forcing(_VortexTask):
         Main method to save an OFFLINE execution outputs
         """
         self.sh.title('FORCING output')
-        io.put_forcing(self.conf.xpid, self.conf.geometry, filename='FORCING_OUT.nc', members=self.conf.members, **self.common_kw)
+        io.put_forcing(self.conf.xpid, self.conf.geometry, filename='FORCING_OUT.nc', members=self.conf.members,
+                **self.common_kw)
