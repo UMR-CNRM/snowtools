@@ -86,6 +86,7 @@ class PrepRefill(Prep):
             pass
 
     def put_remote_outputs(self):
+        self.get_remote_inputs()
         if self.make_prep:
             super().put_remote_outputs()
         else:

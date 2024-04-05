@@ -31,7 +31,8 @@ class _Offline(_VortexTask):
         Main method to save an OFFLINE execution output (PRO file)
         """
         self.sh.title('PRO')
-        self.pro = io.put_pro(*self.common_args, member=self.conf.member, **self.common_kw)
+        self.pro = io.put_pro(*self.common_args, member=self.conf.member,
+                              filename='PRO_[datebegin:ymdh]_[dateend:ymdh].nc', **self.common_kw)
 
     def get_forcing(self):
         """
