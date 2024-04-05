@@ -4,6 +4,13 @@ from ftplib import FTP
 from netrc import netrc
 import argparse
 
+"""
+Vortex cache : {user}/vortex/{vapp}/{geometry.lower()}/{xpid}/mb{member:04d}/{block}/{subblock}/{filename}
+
+>>> p explore_hendrix.py -u haddjeria -g gr250ls -x spinup -d 2017080106
+
+"""
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description=
@@ -32,6 +39,7 @@ def parse_args():
                         help="Explore a specific application")
 
     parser.add_argument("-g", "--geometry", dest="geometry",
+                        # TODO : map identical geometries with different tags (GrandesRousses250m / gr250ls)
                         default=None, type=str,
                         help="Explore a specific geometry / vconf")
 
@@ -106,11 +114,57 @@ def add_entry(dictionary, user, vapp, vconf, xpid, block, value):
     return dictionary
 
 
+def explore_ensemble(ftpObject=None, VortexEnv=None, rootdir=None, user=None, app=None, conf=None, xp=None,
+                     datebegin=None, dateend=None, date=None, kind=None, mb=None, **kw):
+    try:
+        mbdir = os.path.join(rootdir, mb)
+        ftpObject.cwd(mbdir)
+        block_list = list_subdirectories(ftpObject)
+        subdirs = list_subdirectories(ftpObject)
+        for bk in subdirs:
+            rootdir = mbdir
+            VortexEnv = explore_block(**locals())
+    except ftplib.error_perm:
+        # WARNING : this ignores all files not under a 'block' directory
+        pass
+
+    return VortexEnv
+
+
+def explore_block(ftpObject=None, VortexEnv=None, rootdir=None, user=None, app=None, conf=None,
+                  xp=None, bk=None, datebegin=None, dateend=None, date=None, kind=None, **kw):
+    try:
+        blockdir = os.path.join(rootdir, bk)
+        ftpObject.cwd(blockdir)
+        # Get list of files
+        list_files = list_subdirectories(ftpObject)
+        if datebegin is not None:
+            list_files = [fic for fic in list_files if datebegin in fic]
+        if datebegin is not None:
+            list_files = [fic for fic in list_files if dateend in fic]
+        if date is not None:
+            list_files = [fic for fic in list_files if date in fic and
+                    len(fic.split('.')[0].split('_')) == 2]
+        if kind is not None:
+            list_files = [fic for fic in list_files if kind.upper() in fic]
+
+        if len(list_files) > 0:
+            for fic in list_files:
+                abspath = os.path.join('home', user, 'vortex', app, conf, xp, bk, fic)
+                VortexEnv.append(abspath)
+            # VortexEnv = add_entry(VortexEnv, user, app, conf, xp, bk, list_files)
+    except ftplib.error_perm:
+        # WARNING : this ignores all files not under a 'block' directory
+        pass
+
+    return VortexEnv
+
+
 def get_vortex_state(datebegin=None, dateend=None, date=None, users=None, vapp=None, vconf=None,
                      xpid=None, block=None, kind=None, **kw):
 
     # VortexEnv = dict()  # Main dictionnary
-    VortexEnv = list()  # OUtput initialisation
+    VortexEnv = list()  # Output initialisation
     ftpObject = ftpconnect("hendrix.meteo.fr")
 
     # ftpObject.pwd()  # Print (current) Working Directory
@@ -164,6 +218,7 @@ def get_vortex_state(datebegin=None, dateend=None, date=None, users=None, vapp=N
                             ftpObject.cwd(xpiddir)
 
                             block_list = list_subdirectories(ftpObject)
+                            subdirs = list_subdirectories(ftpObject)
                             if block is not None:
                                 if block in block_list:
                                     block_list = [block]
@@ -172,30 +227,16 @@ def get_vortex_state(datebegin=None, dateend=None, date=None, users=None, vapp=N
                                           f'and xpid {xpid}')
                                     block_list = []
 
-                            for bk in block_list:
-                                try:
-                                    blockdir = os.path.join(xpiddir, bk)
-                                    ftpObject.cwd(blockdir)
-                                    # Get list of files
-                                    list_files = list_subdirectories(ftpObject)
-                                    if datebegin is not None:
-                                        list_files = [fic for fic in list_files if datebegin in fic]
-                                    if datebegin is not None:
-                                        list_files = [fic for fic in list_files if dateend in fic]
-                                    if date is not None:
-                                        list_files = [fic for fic in list_files if date in fic and
-                                                len(fic.split('.')[0].split('_')) == 2]
-                                    if kind is not None:
-                                        list_files = [fic for fic in list_files if kind.uppe() in fic]
-
-                                    if len(list_files) > 0:
-                                        for fic in list_files:
-                                            abspath = os.path.join('home', user, 'vortex', app, conf, xp, bk, fic)
-                                            VortexEnv.append(abspath)
-                                        # VortexEnv = add_entry(VortexEnv, user, app, conf, xp, bk, list_files)
-                                except ftplib.error_perm:
-                                    # WARNING : this ignores all files not under a 'block' directory
-                                    pass
+                            for sub in subdirs:
+                                if 'mb' in sub:  # This is a *member*
+                                    mb = sub
+                                    rootdir = xpiddir
+                                    VortexEnv = explore_ensemble(**locals())
+                                    pass  # TODO
+                                else:  # this is a *block*
+                                    rootdir = xpiddir
+                                    bk = sub
+                                    VortexEnv = explore_block(**locals())
                         except ftplib.error_perm:
                             # WARNING : this ignores all files not under a 'xpid' directory
                             pass
@@ -241,7 +282,7 @@ def print_request_info(env, **kw):
                 command = None
 
             if kw['output'] is not None:
-                print(f'{eval(output)}  -->  {abspath}')
+                print(f'{eval(output)}  -->  /{abspath}')
             else:
                 print("Absolute path :")
                 print(f"/{abspath}")
