@@ -31,15 +31,15 @@ def plot_ange(dataplot, var, figname):
     sns.set_theme(style="whitegrid", font_scale=1.7)
     sns.violinplot(
         dataplot,  # data
-        y = 'Elevation Bands (m)',  # y-axis
-        x = var,  # X-axis
-        inner = 'box',  # ?
-        hue = 'experiment',  # Legend 'title'
-        scale = 'width',  # ?
-        bw = 'scott',  # ?
-        cut = 0,  # ?
-        orient = 'h',  # Horizontal violinplots
-        palette=(color for color in colors),
+        y            = 'Elevation Bands (m)',  # y-axis
+        x            = var,  # X-axis
+        inner        = 'box',  # Representation of the data in the violin interior ('box' --> mini-boxplot)
+        hue          = 'experiment',  # Legend 'title'
+        density_norm = 'width',  # all violin will have the same width
+        bw_adjust    = 0.1,  # Factor that scales the bandwidth to use more or less smoothing
+        cut          = 0,  # Limit the violin within the data range
+        orient       = 'h',  # Horizontal violinplots
+        palette      = (color for color in colors),
     )
     plt.ylim(reversed(plt.ylim()))
     plt.xlim([0, 375])

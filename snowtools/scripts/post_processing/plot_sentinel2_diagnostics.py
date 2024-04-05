@@ -66,7 +66,7 @@ def read_mnt():
     return mnt
 
 
-def plot_error_fields(xpids, obs, var):
+def plot_fields(xpids, obs, var):
     for xpid in xpids:
         shortid = xpid.split('@')[0]
         members = members_map[shortid]
@@ -92,9 +92,10 @@ def plot_error_fields(xpids, obs, var):
         else:
             tmp = simu
         tmp = tmp.compute()
+        savename = f'{var}_{shortid}.pdf'
+        plot2D.plot_field(tmp[var], var, savename, vmax=300)
         savename = f'diff_{var}_{shortid}.pdf'
-        vmax = 100
-        plot2D.plot_error_fields(tmp[var], obs['Band1'], var, savename, vmax=vmax)
+        plot2D.plot_error_fields(tmp[var], obs['Band1'], var, savename, vmax=100)
 
 
 def violin_plot(xpids, obs, var, mask=True):
@@ -188,7 +189,7 @@ if __name__ == '__main__':
 
         # compare(obs, var=var)
         violin_plot(xpids, obs, var)  # Violinplots by elevation range
-        plot_error_fields(xpids, obs, var)  # Field difference
+        plot_fields(xpids, obs, var)  # Field difference
 
     # 3. Clean data
     for xpid in xpids:
