@@ -5,7 +5,7 @@ from netrc import netrc
 import argparse
 
 """
-Vortex cache : {user}/vortex/{vapp}/{geometry.lower()}/{xpid}/mb{member:04d}/{block}/{subblock}/{filename}
+Vortex cache : /home/{user}/vortex/{vapp}/{geometry.lower()}/{xpid}/mb{member:04d}/{block}/{subblock}/{filename}
 
 Examples :
 ----------
@@ -17,7 +17,7 @@ Examples :
 2.  List all my experiments IDs that contain SURFEX simulations (PRO files) covering a specific year :
 
 >>> p ~/snowtools/snowtools/scripts/extract/vortex/explore_hendrix.py -u vernaym -a edelweiss
-      -b 2017080106 -e 2018080106 -k PRO -o xpid
+      -b 2017080106 -e 2018080106 -k PRO -o xpid [-s]
 
 """
 
@@ -58,8 +58,6 @@ def parse_args():
                         help="Explore a specific xpid. Format xpid@username authorised, in this case,"
                         "the users argument is automatically set to 'username'")
 
-    # TODO : gérer les membres et les "subblocks"
-
     parser.add_argument("-c", "--block", dest="block",
                         default=None, type=str,
                         help="Explore a specific block (for example 'meteo', 'prep', 'pro',...)")
@@ -69,10 +67,16 @@ def parse_args():
                         help="Explore a specific block (for example 'FORCING', ,forcing', 'PRO', 'PREP',...)."
                              "Both upper and lower case are valid")
 
-    parser.add_argument("-o", "--output", dest="output",
+    output = parser.add_argument_group("Expected request output")
+
+    output.add_argument("-o", "--output", dest="output",
                         default=None, type=str,
                         choices=['xpid', 'period', 'user', 'vapp', 'vconf', 'geometry', 'block'],
                         help="What specific information are you looking for ?")
+
+    output.add_argument("-s", "--succinct", dest="succinct", action='store_true',
+                        help="Display ensembles output informations in one line (unsing mbXXXX syntax to indicate that"
+                             "it concerns an ensemble simulation")
 
     args = parser.parse_args()
     if args.geometry is not None:
@@ -269,16 +273,17 @@ def print_request_info(env, **kw):
     else:
         if kw['output'] is not None:
             output = kw['output']
-            print(f'The following {output}(s) match the request :')
+            print(f'The following {output}(s) match(es) the request :')
             print()
         else:
-            print('The following files match the request :')
+            print('The following file(s) match(es) the request :')
             print()
 
         for abspath in env:
-            dirlist = abspath.split('/')
+            dirlist = abspath.lstrip('/').split('/')
             if len(dirlist) == 8:
                 home, user, vx, vapp, vconf, xpid, block, basename = dirlist
+                member = None
             elif len(dirlist) == 9:
                 home, user, vx, vapp, vconf, xpid, member, block, basename = dirlist
 
@@ -297,17 +302,26 @@ def print_request_info(env, **kw):
                 command = None
 
             if kw['output'] is not None:
-                print(f'{eval(output)}  -->  {abspath}')
+                if kw['succinct']:
+                    if member is None:
+                        print(f'{eval(output):30s}  -->  {abspath}')
+                    elif member == 'mb0001':
+                        # In case of ensemble simulation do not print a line per member, use mbXXXX syntax instead
+                        printpath = '/'.join([home, user, vx, vapp, vconf, xpid, 'mbXXXX', block, basename])
+                        fmt_output = f'{eval(output)} [ensemble]'
+                        print(f'{fmt_output:30s}  -->  /{printpath}')
+                else:
+                    print(f'{eval(output):20s}  -->  {abspath}')
             else:
-                print("Absolute path :")
+                #print("Absolute path :")
                 print(f"{abspath}")
                 if command is not None:
                     if vapp != 's2m':
-                        command = f"{command}, vapp='{vapp}'"
+                        command = f"--> {command}, vapp='{vapp}'"
                     # TODO find a way to detect default blocks to avoid to add it to the command line
                     command = f"{command}, block='{block}'"
                     command = f"{command})"
-                    print("vortexIO command to retrieve it :")
+                    #print("vortexIO command to retrieve it :")
                     print(command)
                     print()
 
