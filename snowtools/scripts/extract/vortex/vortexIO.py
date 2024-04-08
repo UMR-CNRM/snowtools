@@ -295,11 +295,14 @@ def get(xpid, geometry, **kw):
     """
     # Forward all arguments to the footprints_kitchen function
     description = footprints_kitchen(xpid, geometry, **kw)
-    if description['download']:
-        tb = toolbox.input(**description)
-    else:
-        # Only load Vortex's *ResourceHandler* object, not the actual file
-        tb = toolbox.rload(**description)
+    tb = toolbox.input(**description)
+    # The following is already managed by the *now* footprint
+#    if description['now']:
+#        tb = toolbox.input(**description)
+#    else:
+#        # Only load Vortex's *ResourceHandler* object, not the actual file
+#        tb = toolbox.rload(**description)
+
     return tb
 
 
