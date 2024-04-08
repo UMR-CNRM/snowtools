@@ -118,7 +118,7 @@ from vortex import toolbox
 
 import footprints
 
-toolbox.active_now = True
+# toolbox.active_now = True # overwritten by the default "now" footprint
 
 t = vortex.ticket()
 
@@ -153,7 +153,7 @@ def init():
         # Leave intent to 'in' for more efficient IOs (symbolic links instead of copies)
         intent      = 'in',  # Rights to give to the file (inout=read/write, in=read-only)
         # intent      = 'inout',  # Rights to give to the file (inout=read/write, in=read-only)
-        download    = True,  # Download actual file (default mode, switch to False if you need Vortex object's only)
+        now         = True,  # Download actual file (default mode, switch to False if you need Vortex object's only)
     )
 
 
@@ -181,7 +181,7 @@ def log_separator(resource):
 def title(string):
 
     print('==========================================================================================================')
-    print(f'=                               {string}                                                                =')
+    print(f'=                               {string}                                    =')
     print('==========================================================================================================')
 
 
