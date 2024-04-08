@@ -7,7 +7,17 @@ import argparse
 """
 Vortex cache : {user}/vortex/{vapp}/{geometry.lower()}/{xpid}/mb{member:04d}/{block}/{subblock}/{filename}
 
+Examples :
+----------
+
+1. Search for a specific PRE file :
 >>> p explore_hendrix.py -u haddjeria -g gr250ls -x spinup -d 2017080106
+
+
+2.  List all my experiments IDs that contain SURFEX simulations (PRO files) covering a specific year :
+
+>>> p ~/snowtools/snowtools/scripts/extract/vortex/explore_hendrix.py -u vernaym -a edelweiss
+      -b 2017080106 -e 2018080106 -k PRO -o xpid
 
 """
 
@@ -150,7 +160,7 @@ def explore_block(ftpObject=None, VortexEnv=None, rootdir=None, user=None, app=N
 
         if len(list_files) > 0:
             for fic in list_files:
-                abspath = os.path.join('home', user, 'vortex', app, conf, xp, bk, fic)
+                abspath = os.path.join(blockdir, fic)
                 VortexEnv.append(abspath)
             # VortexEnv = add_entry(VortexEnv, user, app, conf, xp, bk, list_files)
     except ftplib.error_perm:
@@ -266,7 +276,12 @@ def print_request_info(env, **kw):
             print()
 
         for abspath in env:
-            home, user, vx, vapp, vconf, xpid, block, basename = abspath.split('/')
+            dirlist = abspath.split('/')
+            if len(dirlist) == 8:
+                home, user, vx, vapp, vconf, xpid, block, basename = dirlist
+            elif len(dirlist) == 9:
+                home, user, vx, vapp, vconf, xpid, member, block, basename = dirlist
+
             split_basename = basename.split('.')[0].split('_')
             kind = split_basename.pop(0)  # Get first element value and remove it from list
             kind = kind.lower()
@@ -282,10 +297,10 @@ def print_request_info(env, **kw):
                 command = None
 
             if kw['output'] is not None:
-                print(f'{eval(output)}  -->  /{abspath}')
+                print(f'{eval(output)}  -->  {abspath}')
             else:
                 print("Absolute path :")
-                print(f"/{abspath}")
+                print(f"{abspath}")
                 if command is not None:
                     if vapp != 's2m':
                         command = f"{command}, vapp='{vapp}'"
