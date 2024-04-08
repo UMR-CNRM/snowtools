@@ -8,7 +8,6 @@ Created on 28 march. 2024
 
 import os
 import shutil
-import glob
 
 from snowtools.tasks.vortex_kitchen import vortex_kitchen, UserEnv
 from snowtools.utils.resources import InstallException

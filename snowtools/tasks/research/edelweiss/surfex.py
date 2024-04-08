@@ -12,6 +12,15 @@ from snowtools.scripts.extract.vortex import vortexIO as io
 class _Offline(_VortexTask):
     """
     Abstract class common to all OFFLINE executions
+
+    Sequence of methods called :
+    ----------------------------
+    1. get_remote_inputs   --> _Offline
+    2. get_local_inputs    --> _VortexTask
+    3. algo                --> _Offline
+    4. put_local_outputs   --> _VortexTask
+    5. put_remote_outputs  --> _Offline
+
     """
 
     def get_remote_inputs(self):
@@ -97,22 +106,14 @@ class _Offline(_VortexTask):
         """
         raise NotImplementedError()
 
-
-class OfflineMPI(_Offline):
-    """
-    Launch an OFFLINE executable with MPI parallelisation
-    """
-
-    def get_offline(self):
-        """
-        Get OFFLINE MPI executable
-        TODO : use a VortexIO like tool
-        """
-        self.offline = io.get_offline_mpi(self.conf.uenv, alternate_uenv=self.conf.default_uenv)
-
     def algo(self):
         """
-        Launch a single OFFLINE execution with MPI parallelisation
+       Before the launch of a single instance of any OFFLINE executable, the namelist ùmust be pre-processed.
+
+       -->  Launch *Surfex_PreProcess* (vortex/src/cen/algo/deterministic.py) algo component to
+            preprocess the namelist (adjust dates, etc.)
+
+        TODO : this piece of algo should be included the the OFFLINE algo component !
         """
 
         # Launch *Surfex_PreProcess* (vortex/src/cen/algo/deterministic.py) algo component to
@@ -129,6 +130,40 @@ class OfflineMPI(_Offline):
         print(t.prompt, 'Pre-process algo =', preprocess)
         print()
         preprocess.run()
+
+
+class OfflineMPI(_Offline):
+    """
+    Launch an OFFLINE executable with MPI parallelisation
+
+    Sequence of methods called :
+    ----------------------------
+    1. get_remote_inputs           --> _Offline
+        a) get_forcing             --> _Offline
+        b) get_surfex_namelist     --> _Offline
+        c) get_prep                --> _Offline
+        d) get_pgd                 --> _Offline
+        e) get_const_offline       --> _Offline
+        f) get_additionnal_inputs  --> _Offline
+        g) get_offline             --> OfflineMPI
+
+    2. algo                        --> OfflineMPI
+
+    3. put_remote_outputs          --> _Offline
+    """
+
+    def get_offline(self):
+        """
+        Get OFFLINE MPI executable
+        """
+        self.offline = io.get_offline_mpi(self.conf.uenv, alternate_uenv=self.conf.default_uenv)
+
+    def algo(self):
+        """
+        Launch a single OFFLINE execution with MPI parallelisation
+        """
+
+        super().algo()  # Call the common "pre-processing" required before OFFLINE executions
 
         t = self.ticket
         # Algo component to produce to run the SURFEX OFFLINE simulation (MPI parallelization)
@@ -151,6 +186,21 @@ class OfflineMPI(_Offline):
 class OfflineEnsemble(_Offline):
     """
     Launch several instances of an OFFLINE executable (without an MPI parallelisation) in parallel.
+
+    Sequence of methods called :
+    ----------------------------
+    1. get_remote_inputs           --> _Offline
+        a) get_forcing             --> _Offline
+        b) get_surfex_namelist     --> _Offline
+        c) get_prep                --> _Offline
+        d) get_pgd                 --> _Offline
+        e) get_const_offline       --> _Offline
+        f) get_additionnal_inputs  --> _Offline
+        g) get_offline             --> OfflineEnsemble
+
+    2. algo                        --> OfflineEnsemble
+
+    3. put_remote_outputs          --> _Offline
     """
 
     def get_offline(self):
@@ -174,12 +224,16 @@ class OfflineEnsemble(_Offline):
     def algo(self):
         """
         Launch several instances of the OFFLINE executable in parallel
+
+        # TODO : réorganiser l'algo `SurfexComponent` en plusieurs algos indépendants ( 1 algo / *kind*)
+
         """
+        super().algo()  # Call the common "pre-processing" required before OFFLINE executions
+
         t = self.ticket
         self.sh.title('ALGO OFFLINE NO MPI')
 
-        # TODO : avoid this kind of call here
-        list_geometry = self.get_list_geometry()
+        # TODO : réorganiser l'algo en plusieurs algos indépendants ( 1 algo / *kind*)
 
         algo = toolbox.algo(
             engine         = 's2m',
@@ -189,8 +243,6 @@ class OfflineEnsemble(_Offline):
             dateend        = self.conf.dateend,
             threshold      = self.conf.threshold,
             members        = self.conf.member,
-            geometry_in    = list_geometry,
-            geometry_out   = self.conf.geometry.tag,
             ntasks         = 40,
             daily          = not self.conf.previ,
         )
