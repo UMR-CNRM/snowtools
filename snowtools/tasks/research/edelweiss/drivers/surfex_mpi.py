@@ -2,7 +2,7 @@
 
 from vortex.layout.nodes import Driver
 from snowtools.tasks.research.edelweiss.surfex import OfflineMPI
-from snowtools.tasks.research.edelweiss.surfex_preprocess import PrepRefill
+from snowtools.tasks.research.edelweiss.surfex_preprocessing import PrepRefill
 
 
 def setup(t, **kw):

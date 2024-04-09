@@ -106,15 +106,6 @@ class Edelweiss_command(object):
                                  "edelweiss --tasksinfo\n"
                                  " ")
 
-        parser.add_argument("--tasksinfo", dest="tasksinfo", action='store_true',
-                            # TODO : use a sub-parser ?
-                            # required='--task' not in sys.argv,  # either --task or --tasksinfo must be provided
-                            # TODO : implémenter cette option (lire la variable "info" de chaque tâche du fichier de
-                            # conf par défaut
-                            help="Get information on the various tasks currently implemented\n"
-                                 " ")
-
-
 #        parser.add_argument("--family", dest="family", action='store', type=str, nargs="+",
 #                            required="--task" not in sys.argv,  # either --task or --family must be provided
 #                            help="ADVANCED USERS ONLY (alternative to --task argument)"
@@ -153,40 +144,65 @@ class Edelweiss_command(object):
                             help="Application name (if not 'edelweiss')\n"
                                  " ")
 
-        parser.add_argument("-c", "--configuration", action="store", type=int, dest="defaultconf", default=None,
-                            # TODO : implementatin + doc
-                            help="Default user-defined configuration file.\n"
-                                 "This option can be used to avoid to parser too many arguments in the command line\n"
-                                 " ")
+        conf_parser = parser.add_argument_group("Optional arguments not bounded to a specific task :\n"
+                                               "-----------------------------------------------------\n"
+                                               " ")
 
-        parser.add_argument("--parallelisation", action="store", type=str,
-                            dest="parallelisation", default="mpi",
-                            choices=['mpi', 'forcing', 'namelist', 'multi'],
-                            help="Type of parallelisation for one job :\n"
-                                 " * mpi      : parallelisation over the simulation domain for each FORCING file\n"
-                                 " * forcing  : parallelisation over FORCING files only (no MPI parallelisation)\n"
-                                 " * namelist : multi-physic (1 exec / namelist) parallelisation (ESCROC)\n"
-                                 " * multi    : forcing AND namelist parallelisation (CrocO)\n"
-                                 " ")
+        conf_parser.add_argument("--tasksinfo", dest="tasksinfo", action='store_true',
+                                 # TODO : use a sub-parser ?
+                                 # required='--task' not in sys.argv,  # either --task or --tasksinfo must be provided
+                                 # TODO : implémenter cette option (lire la variable "info" de chaque tâche du fichier
+                                 # de conf par défaut
+                                 help="Get information on the various tasks currently implemented\n"
+                                      " ")
 
-        parser.add_argument("--nnodes", action="store", type=int, dest="nnodes", default=1,
-                            help="Number of nodes used with this command\n"
-                                 " ")
+        conf_parser.add_argument("-c", "--configuration", action="store", type=int, dest="defaultconf", default=None,
+                                 # TODO : implementatin + doc
+                                 help="Default user-defined configuration file.\n"
+                                      "This option can be used to avoid to parser too many arguments in"
+                                      "the command line\n"
+                                      " ")
 
-        parser.add_argument("--walltime", "--time", action="store", type=str, dest="time", default=None,
-                            help="specify your job walltime (format hh:mm:ss)\n"
-                                 " ")
+        job_parser = parser.add_argument_group("Job configuration arguments :\n"
+                                               "-----------------------------\n"
+                                               " ")
+
+        job_parser.add_argument("--parallelisation", action="store", type=str,
+                               dest="parallelisation", default="mpi",
+                               choices=['mpi', 'forcing', 'namelist', 'multi'],
+                               help="Type of parallelisation for one job :\n"
+                                    " * mpi      : parallelisation over the simulation domain for each FORCING file\n"
+                                    " * forcing  : parallelisation over FORCING files only (no MPI parallelisation)\n"
+                                    " * namelist : multi-physic (1 exec / namelist) parallelisation (ESCROC)\n"
+                                    " * multi    : forcing AND namelist parallelisation (CrocO)\n"
+                                    " ")
+
+        job_parser.add_argument("--nnodes", action="store", type=int, dest="nnodes", default=1,
+                                help="Number of nodes used with this command\n"
+                                     " ")
+
+        job_parser.add_argument("--walltime", "--time", action="store", type=str, dest="time", default=None,
+                                help="specify your job walltime (format hh:mm:ss)\n"
+                                     " ")
 
 #        parser.add_argument("--njobs", action="store", type=int, dest="njobs", default=None,
 #                            help="Number of jobs (/mkjob command) to launch")
 
-        parser.add_argument("--ntasks", action="store", type=int, dest="ntasks", default=None,
-                            help="Number of tasks (and procs) per node.\n"
-                                 " ")
+        job_parser.add_argument("--ntasks", action="store", type=int, dest="ntasks", default=None,
+                                help="Number of tasks (and procs) per node.\n"
+                                     " ")
 
-        parser.add_argument("-l", "--model", type=str, dest="model", default=None,
-                            help="Name of the model associated to the simulation (if any)\n"
-                                 " ")
+        job_parser.add_argument("-l", "--model", type=str, dest="model", default=None,
+                                help="Name of the model associated to the simulation (if any)\n"
+                                     " ")
+
+        task_parser = parser.add_argument_group("Optional task-specific arguments :\n"
+                                               "-----------------------------------\n"
+                                               " ")
+
+        task_parser.add_argument("--extraction_dates", nargs='+', type=str, dest="extraction_dates", default=None,
+                                help="Liste of extraction dates for the 'extract_dates' surfex post-processing task\n"
+                                     " ")
 
         # Input-specific arguments :
         # =========================
@@ -200,64 +216,64 @@ class Edelweiss_command(object):
         # - Imposer les arguments nécessaire en foncion de ce qui est passé à --task :
         #   required="task_name" in sys.argv
 
-        parser_forcing = parser.add_argument_group("Specific input description :\n"
-                                                   "----------------------------\n"
-                                                   " ")
+        parser_input = parser.add_argument_group("Specific input description :\n"
+                                                 "----------------------------\n"
+                                                 " ")
 
-        parser_forcing.add_argument("--forcing", dest="forcing", action=ParseKwargs, nargs='*',
-                                    type=str, default=None,
-                                    # TODO : what if already in the user conf file ? --> overwrite ?
-                                    required="make_forcing" in sys.argv,  # Mandatory argument for 'make_forcing' task
-                                    help="Definition (footprint-like dict) of the default forcing variables input.\n"
-                                         "Format : --forcing key1=var1 key2=var2 ...\n"
-                                         "Known dictionary keys :\n"
-                                         " * xpid      (str) : Experiment identifier (Format : {xpid}@{username})\n"
-                                         " * geometry  (str) : Experiment geometry"
-                                         " * vapp      (str) : Application that produced the FORCING (s2m/edelweiss)\n"
-                                         " * members   (int) : Number of input members (format 'X:Y' valid)\n"
-                                         " * datebegin (str) : If different from '-b' argument (format YYYYMMDDHH)\n"
-                                         " * dateend   (str) : If different from '-e' argument (format YYYYMMDDHH)\n"
-                                         " ")
+        parser_input.add_argument("--forcing", dest="forcing", action=ParseKwargs, nargs='*',
+                                  type=str, default=None,
+                                  # TODO : what if already in the user conf file ? --> overwrite ?
+                                  required="make_forcing" in sys.argv,  # Mandatory argument for 'make_forcing' task
+                                  help="Definition (footprint-like dict) of the default forcing variables input.\n"
+                                       "Format : --forcing key1=var1 key2=var2 ...\n"
+                                       "Known dictionary keys :\n"
+                                       " * xpid      (str) : Experiment identifier (Format : {xpid}@{username})\n"
+                                       " * geometry  (str) : Experiment geometry"
+                                       " * vapp      (str) : Application that produced the FORCING (s2m/edelweiss)\n"
+                                       " * members   (int) : Number of input members (format 'X:Y' valid)\n"
+                                       " * datebegin (str) : If different from '-b' argument (format YYYYMMDDHH)\n"
+                                       " * dateend   (str) : If different from '-e' argument (format YYYYMMDDHH)\n"
+                                       " ")
 
-        parser_forcing.add_argument("--prep", dest="prep", action=ParseKwargs, nargs='*',
-                                    type=str, default=None,
-                                    # TODO : what if already in the user conf file ? --> overwrite ?
-                                    help="Definition (footprint-like dict) of the default forcing variables input.\n"
-                                         "Format : --prep key1=var1 key2=var2 ...\n"
-                                         "Known dictionary keys :\n"
-                                         " * xpid      (str) : Experiment identifier (Format : {xpid}@{username})\n"
-                                         " * geometry  (str) : Experiment geometry\n"
-                                         " * vapp      (str) : Application that produced the FORCING (s2m/edelweiss)\n"
-                                         " * date      (str) : Validity date (default = *datebegin*)\n"
-                                         " ")
+        parser_input.add_argument("--prep", dest="prep", action=ParseKwargs, nargs='*',
+                                  type=str, default=None,
+                                  # TODO : what if already in the user conf file ? --> overwrite ?
+                                  help="Definition (footprint-like dict) of the default forcing variables input.\n"
+                                       "Format : --prep key1=var1 key2=var2 ...\n"
+                                       "Known dictionary keys :\n"
+                                       " * xpid      (str) : Experiment identifier (Format : {xpid}@{username})\n"
+                                       " * geometry  (str) : Experiment geometry\n"
+                                       " * vapp      (str) : Application that produced the FORCING (s2m/edelweiss)\n"
+                                       " * date      (str) : Validity date (default = *datebegin*)\n"
+                                       " ")
 
-        parser_forcing.add_argument("--precipitation", dest="precipitation", action=ParseKwargs, nargs='*',
-                                    type=str, default=None,
-                                    # TODO : what if already in the user conf file ? --> overwrite ?
-                                    help="Definition (footprint-like) dict of precipitation variables input.\n"
-                                         "Format : --precipitation key1=var1 key2=var2 ...\n"
-                                         "Known dictionary keys :\n"
-                                         " * xpid      (str) : Experiment identifier (Format : {xpid}@{username})\n"
-                                         " * geometry  (str) : Experiment geometry\n"
-                                         " * vapp      (str) : Application that produced the FORCING (s2m/edelweiss)\n"
-                                         " * members   (int) : Number of input members (format 'X:Y' valid)\n"
-                                         " * datebegin (str) : If different from '-b' argument (format YYYYMMDDHH)\n"
-                                         " * dateend   (str) : If different from '-e' argument (format YYYYMMDDHH)\n"
-                                         " ")
+        parser_input.add_argument("--precipitation", dest="precipitation", action=ParseKwargs, nargs='*',
+                                  type=str, default=None,
+                                  # TODO : what if already in the user conf file ? --> overwrite ?
+                                  help="Definition (footprint-like) dict of precipitation variables input.\n"
+                                       "Format : --precipitation key1=var1 key2=var2 ...\n"
+                                       "Known dictionary keys :\n"
+                                       " * xpid      (str) : Experiment identifier (Format : {xpid}@{username})\n"
+                                       " * geometry  (str) : Experiment geometry\n"
+                                       " * vapp      (str) : Application that produced the FORCING (s2m/edelweiss)\n"
+                                       " * members   (int) : Number of input members (format 'X:Y' valid)\n"
+                                       " * datebegin (str) : If different from '-b' argument (format YYYYMMDDHH)\n"
+                                       " * dateend   (str) : If different from '-e' argument (format YYYYMMDDHH)\n"
+                                       " ")
 
-        parser_forcing.add_argument("--wind", dest="wind", action=ParseKwargs, nargs='*',
-                                    type=str, default=None,
-                                    # TODO : what if already in the user conf file ? --> overwrite ?
-                                    help="Definition (footprint-like) dict of wind variables input"
-                                         "Format : --wind key1=var1 key2=var2 ...\n"
-                                         "Known dictionary keys :\n"
-                                         " * xpid      (str) : Experiment identifier (Format : {xpid}@{username})\n"
-                                         " * geometry  (str) : Experiment geometry\n"
-                                         " * vapp      (str) : Application that produced the FORCING (s2m/edelweiss)\n"
-                                         " * members   (int) : Number of input members (format 'X:Y' valid)\n"
-                                         " * datebegin (str) : If different from '-b' argument (format YYYYMMDDHH)\n"
-                                         " * dateend   (str) : If different from '-e' argument (format YYYYMMDDHH)\n"
-                                         " ")
+        parser_input.add_argument("--wind", dest="wind", action=ParseKwargs, nargs='*',
+                                  type=str, default=None,
+                                  # TODO : what if already in the user conf file ? --> overwrite ?
+                                  help="Definition (footprint-like) dict of wind variables input"
+                                       "Format : --wind key1=var1 key2=var2 ...\n"
+                                       "Known dictionary keys :\n"
+                                       " * xpid      (str) : Experiment identifier (Format : {xpid}@{username})\n"
+                                       " * geometry  (str) : Experiment geometry\n"
+                                       " * vapp      (str) : Application that produced the FORCING (s2m/edelweiss)\n"
+                                       " * members   (int) : Number of input members (format 'X:Y' valid)\n"
+                                       " * datebegin (str) : If different from '-b' argument (format YYYYMMDDHH)\n"
+                                       " * dateend   (str) : If different from '-e' argument (format YYYYMMDDHH)\n"
+                                       " ")
 
         options  = parser.parse_args(arguments)
 
@@ -284,7 +300,7 @@ class Edelweiss_command(object):
                     if key == 'members':
                         value = self.convert_members(value)
                     setattr(self.options, f'{key}_{specific_input}', value)
-            # Ensure that all "optionnal" conf variables are set
+            # Ensure that all "optional" conf variables are set
             # Keys not provided by the user are set to the task's one
             # The FORCING's 'member' variable is managed separately (depending on the type of execution)
             if specific_input == 'prep':

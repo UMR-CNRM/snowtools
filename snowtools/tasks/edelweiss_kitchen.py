@@ -166,7 +166,7 @@ class Edelweiss_kitchen(vortex_kitchen):
 
         if os.path.islink("tasks"):
             os.remove("tasks")
-        os.symlink(os.path.join(SNOWTOOLS_DIR, "tasks", "research", self.vapp), "tasks")
+        os.symlink(os.path.join(SNOWTOOLS_DIR, "tasks", "research", self.vapp, "drivers"), "tasks")
 #        for fic in glob.glob(os.path.join(SNOWTOOLS_DIR, "tasks", "research", self.vapp, "*")):
 #            basename = os.path.basename(fic)
 #            os.symlink(fic, f"tasks/{basename}")
@@ -212,7 +212,7 @@ class Edelweiss_kitchen(vortex_kitchen):
     def make_driver(self, tplfile='driver.tpl'):
         t = vortex.ticket()
         # TODO : réfléchir à un endroit plus approprié pour mettre le template
-        template = load_template(t, tplfile=os.path.join(SNOWTOOLS_DIR, 'tasks', 'research', self.vapp, tplfile))
+        template = load_template(t, tplfile=os.path.join('tasks', tplfile))
         dst = os.path.join(self.workingdir, 'tasks', f'{self.taskname}.py')
 
         fill = dict()

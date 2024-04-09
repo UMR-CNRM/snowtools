@@ -25,18 +25,28 @@ def parse_command_line():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('-b', '--datebegin', type=str, required=True,
                         help="First date covered by the simulation file, format YYYYMMDDHH.")
+
     parser.add_argument('-e', '--dateend', type=str, default=None,
                         help="Last date covered by the simulation file, format YYYYMMDDHH.")
+
     parser.add_argument('-x', '--xpid', type=str, default=None,
                         help="XPID of the simulation format XP_NAME@username")
+
+    parser.add_argument('-g', '--geometry', type=str, default='GrandesRousses250m',
+                        help='Geometry of the simulation(s) / observation')
+
     parser.add_argument('-m', '--members', type=int, default=None,
                         help="Number of members associated to the experiment")
+
     parser.add_argument('-w', '--workdir', type=str, default=None,
                         help="Working directory")
+
     parser.add_argument('-k', '--mask', type=str,
                         help="Absolute path to the mask file")
+
     parser.add_argument('-p', '--pro', type=str,
                         help="Absolute path to the pro file")
+
     args = parser.parse_args()
     return args
 
