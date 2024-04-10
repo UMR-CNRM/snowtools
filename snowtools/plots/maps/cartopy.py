@@ -171,6 +171,9 @@ class MyCRS(ccrs.CRS):
     """
 
     def __init__(self, projdict, globe):
+        """
+        :meta private:
+        """
         if projdict['proj'] == 'lcc':
             ccrs.LambertConformal(central_longitude=projdict['lon_0'],
                                   central_latitude=projdict['lat_0'],
