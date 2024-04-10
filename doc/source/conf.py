@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.abspath('../../snowtools'))  # Folder inside snowtool
 # -- Project information -----------------------------------------------------
 
 project = 'Snowtools'
-copyright = '2021, Centre d\'Études de la Neige, Météo-France, CNRS'
+copyright = '2021-2024, Centre d\'Études de la Neige, Météo-France, CNRS'
 author = 'Centre d\'Études de la Neige, Météo-France, CNRS'
 
 # The short X.Y version
@@ -46,7 +46,6 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinxfortran.fortran_domain',
     'sphinxfortran.fortran_autodoc',
-    'sphinx.ext.autosectionlabel',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
