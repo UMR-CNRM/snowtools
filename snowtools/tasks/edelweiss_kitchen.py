@@ -212,7 +212,7 @@ class Edelweiss_kitchen(vortex_kitchen):
     def make_driver(self, tplfile='driver.tpl'):
         t = vortex.ticket()
         # TODO : réfléchir à un endroit plus approprié pour mettre le template
-        template = load_template(t, tplfile=os.path.join('tasks', tplfile))
+        template = load_template(t, tplfile=os.path.join('tasks', 'drivers', tplfile))
         dst = os.path.join(self.workingdir, 'tasks', f'{self.taskname}.py')
 
         fill = dict()
@@ -294,7 +294,12 @@ class Edelweiss_kitchen(vortex_kitchen):
           the configuration file
         """
 
-        self.set_parallelisation()
+        # Retrieve the number of FORCING files and launch 1 job per file
+        # Each job is associated to 1 specific member so the *members_forcing*
+        # attribute will be replaced by a *input_member* integer (different for each job)
+        first, last, step = self.options.members_forcing.split('-')
+        nforcings = int(last) - int(first) + 1
+        self.njobs = nforcings
 
         mkjob_list = []
         options = vars(self.options)  # convert 'Namespace' object to 'dictionnary'
@@ -312,24 +317,6 @@ class Edelweiss_kitchen(vortex_kitchen):
         self.write_conf_file()  # The configuration file is now complete, time to write it
 
         return mkjob_list
-
-    def set_parallelisation(self):
-
-        if self.options.parallelisation == 'mpi':
-            # Retrieve the number of FORCING files and launch 1 job per file
-            # Each job is associated to 1 specific member so the *members_forcing*
-            # attribute will be replaced by a *input_member* integer (different for each job)
-            first, last, step = self.options.members_forcing.split('-')
-            nforcings = int(last) - int(first) + 1
-            self.njobs = nforcings
-        elif self.options.parallelisation == 'forcing':
-            # Launch a single job (internal parallelisation over the FORCING files)
-            self.njobs = 1
-        elif self.options.parallelisation in ['namelist', 'multi']:
-            # Launch 1 job per node with internal parallelisation within each job
-            self.njobs = self.options.nnodes
-        else:
-            raise ValueError(f'Unknown parallelisatin configuration {self.options.parallelisation}')
 
     def run(self):
 
