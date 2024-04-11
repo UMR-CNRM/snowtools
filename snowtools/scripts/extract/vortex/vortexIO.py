@@ -351,6 +351,9 @@ def footprints_kitchen(xpid, geometry, **kw):
     if kw['model'] is None:
         kw['model'] = kw['vapp']
 
+    if kw['role'] is None:
+        description['role'] = kw['kind']
+
     if 'sxcen' in kw['namespace']:
         description['namespace'] = 'vortex.multi.fr'
         description['storage']   = 'sxcen.cnrm.meteo.fr'

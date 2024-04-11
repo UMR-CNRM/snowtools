@@ -82,10 +82,10 @@ class ExtractDates(_VortexTask):
             kind          = 'extract_dates',
             datebegin     = self.conf.datebegin,
             dateend       = self.conf.dateend,
-            mask          = self.mask,  # True if a RH (= a file) was returned
+            mask          = len(self.mask) > 0,  # True if a RH (= a file) was returned
             extract_dates = self.conf.extraction_dates,
             engine        = 'algo',  # _CENTaylorRun algo component "family" to execution a piece of python code
-            ntasks        = self.conf.ntasks,  # Do not forget to set the number of tasks for parallelisation
+            ntasks        = len(self.pro),  # Do not forget to set the number of tasks for parallelisation
             role_members  = 'SnowpackSimulation',
         )
         print(t.prompt, 'tbalgo =', tbalgo)
@@ -98,4 +98,7 @@ class ExtractDates(_VortexTask):
         """
         self.sh.title('Toolbox output PRO')
         # TODO : How to archive that resource ?
-        self.diag = io.put_pro(*self.common_args, **self.common_kw, members=self.conf.members, namebuild=None, )
+        # Actuellement, elle est archivée sous *date=datebegin* --> ca ne semble pas très pertinent
+        suffix = '_'.join(self.conf.extraction_dates)
+        self.diag = io.put_pro(*self.common_args, members=self.conf.members, filename=f'PRO_{suffix}.nc',
+                namebuild=None, **self.common_kw,)

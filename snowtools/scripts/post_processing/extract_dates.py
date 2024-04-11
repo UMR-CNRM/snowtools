@@ -131,11 +131,11 @@ def execute(subdir, dates, mask=True):
     proname = os.path.join(subdir, 'PRO.nc')
     pro     = xr.open_dataset(proname, decode_times=False)
     pro     = decode_time(pro)
-    out     = extract(dates, pro)
-
-    # Add 'ZS' (DEM) variable
     if 'ZS' in pro.keys():
-        out = xr.merge([out, out['ZS']])
+        pro     = pro[['DSN_T_ISBA', 'ZS']]
+    else:
+        pro = pro.DSN_T_ISBA
+    out     = extract(dates, pro)
 
     if mask:
         # mask glacier/forest covered pixels
@@ -155,14 +155,14 @@ def extract(dates, pro):
         # WARNING : this is the standard case when called by a Vortex task / algo
         # --> ensure that hours match (the 'resample' method set hour at 0)
         # Convert dates into pd.datetime objects (idem as in the pro 'time' dimension)
-        dates = [pd.to_datetime(date, format='%Y%m%d%H') for date in dates]
+        dates = [pd.to_datetime(date, format='%Y%m%d') for date in dates]
+        pro     = pro.resample(time='1D').mean()
     except ValueError:
         try:
             # if prescribed dates don't include a specific hour, resample PRO data
             # Convert dates into pd.datetime objects (idem as in the pro 'time' dimension)
-            dates = [pd.to_datetime(date, format='%Y%m%d') for date in dates]
+            dates = [pd.to_datetime(date, format='%Y%m%d%H') for date in dates]
             # Resample data
-            pro     = pro.DSN_T_ISBA.resample(time='1D').mean()
         except ValueError:
             raise
 
