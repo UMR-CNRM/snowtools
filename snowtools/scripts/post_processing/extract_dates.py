@@ -131,7 +131,7 @@ def execute(subdir, dates, mask=True):
     proname = os.path.join(subdir, 'PRO.nc')
     pro     = xr.open_dataset(proname, decode_times=False)
     pro     = decode_time(pro)
-    out     = extract_dates(dates, pro)
+    out     = extract(dates, pro)
 
     # Add 'ZS' (DEM) variable
     if 'ZS' in pro.keys():
@@ -146,21 +146,23 @@ def execute(subdir, dates, mask=True):
     out.to_netcdf(os.path.join(subdir, f'PRO_{suffix}.nc'))
 
 
-def extract_dates(dates, pro):
+def extract(dates, pro):
     """
     Method to extract a list of dates from a pro file
     """
-    # Convert dates into pd.datetime objects (idem as in the pro 'time' dimension)
-    pro     = pro.DSN_T_ISBA.resample(time='1D').mean()
     try:
         # Prescribed date(s) can include hour or not
         # WARNING : this is the standard case when called by a Vortex task / algo
         # --> ensure that hours match (the 'resample' method set hour at 0)
+        # Convert dates into pd.datetime objects (idem as in the pro 'time' dimension)
         dates = [pd.to_datetime(date, format='%Y%m%d%H') for date in dates]
     except ValueError:
         try:
             # if prescribed dates don't include a specific hour, resample PRO data
+            # Convert dates into pd.datetime objects (idem as in the pro 'time' dimension)
             dates = [pd.to_datetime(date, format='%Y%m%d') for date in dates]
+            # Resample data
+            pro     = pro.DSN_T_ISBA.resample(time='1D').mean()
         except ValueError:
             raise
 

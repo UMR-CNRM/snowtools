@@ -200,9 +200,10 @@ class Edelweiss_command(object):
                                                "-----------------------------------\n"
                                                " ")
 
-        task_parser.add_argument("--extraction_dates", nargs='+', type=str, dest="extraction_dates", default=None,
+        task_parser.add_argument("--extraction_dates", type=str, dest="extraction_dates", default=None,
                                 help="Liste of extraction dates for the 'extract_dates' surfex post-processing task\n"
-                                     " ")
+                                     "separeted by commas\n"
+                                     "Syntax : --extraction_dates yyyymmddhh,yyyymmddhh, ... ")
 
         # Input-specific arguments :
         # =========================

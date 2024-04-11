@@ -26,7 +26,7 @@ class Diag_sentinel2(_VortexTask):
 
         # Get a static mask file to remove glacier/forest pixels
         self.sh.title('Toolbox input MASK')
-        self.mask = io.get_const(self.conf.uenv, 'mask', self.conf.geometry, **self.common_kw)
+        self.mask = io.get_const(kind='mask', geometry=self.conf.geometry, **self.common_kw)
 
     def algo(self):
         """
@@ -70,7 +70,7 @@ class ExtractDates(_VortexTask):
 
         # Get a static mask file to remove glacier/forest pixels
         self.sh.title('Toolbox input MASK')
-        self.mask = io.get_const(self.conf.uenv, 'mask', self.conf.geometry, **self.common_kw)
+        self.mask = io.get_const(kind='mask', geometry=self.conf.geometry, **self.common_kw)
 
     def algo(self):
         """
@@ -79,14 +79,14 @@ class ExtractDates(_VortexTask):
         t = self.ticket
         self.sh.title('Toolbox algo diag')
         tbalgo = toolbox.algo(
-            kind         = 'extract_dates',
-            datebegin    = self.conf.datebegin,
-            dateend      = self.conf.dateend,
-            mask         = self.mask[0],
-            extract      = self.conf.extraction_dates,
-            engine       = 'algo',  # _CENTaylorRun algo component "family" to execution a piece of python code
-            ntasks       = self.conf.ntasks,  # Do not forget to set the number of tasks for parallelisation
-            role_members = 'SnowpackSimulation',
+            kind          = 'extract_dates',
+            datebegin     = self.conf.datebegin,
+            dateend       = self.conf.dateend,
+            mask          = self.mask,  # True if a RH (= a file) was returned
+            extract_dates = self.conf.extraction_dates,
+            engine        = 'algo',  # _CENTaylorRun algo component "family" to execution a piece of python code
+            ntasks        = self.conf.ntasks,  # Do not forget to set the number of tasks for parallelisation
+            role_members  = 'SnowpackSimulation',
         )
         print(t.prompt, 'tbalgo =', tbalgo)
         print()
@@ -97,4 +97,5 @@ class ExtractDates(_VortexTask):
         TODO
         """
         self.sh.title('Toolbox output PRO')
-        self.diag = io.put_diag(*self.common_args, **self.common_kw, members=self.conf.members)
+        # TODO : How to archive that resource ?
+        self.diag = io.put_pro(*self.common_args, **self.common_kw, members=self.conf.members, namebuild=None, )

@@ -47,6 +47,7 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
             dateend   = self.conf.dateend,
             uenv      = self.conf.uenv,
             vapp      = self.conf.vapp,
+            namespace = self.conf.namespace,
         )
 
         if 'early-fetch' in self.steps:  # Executed on a TRANSFERT NODE to fetch inputs from a remote
