@@ -351,10 +351,11 @@ def footprints_kitchen(xpid, geometry, **kw):
     if kw['model'] is None:
         kw['model'] = kw['vapp']
 
-    kw.update(description)
-
     if 'sxcen' in kw['namespace']:
-        description['storage'] = 'sxcen.cnrm.meteo.fr'
+        description['namespace'] = 'vortex.multi.fr'
+        description['storage']   = 'sxcen.cnrm.meteo.fr'
+
+    kw.update(description)
 
     return kw
 
@@ -747,7 +748,16 @@ def put_pgd(xpid, geometry, **kw):
     return pgd('put', xpid, geometry, **kw)
 
 
-def get_const(uenv, kind, geometry, fmt='nc', intent='in', fatal=False, **kw):
+def get_const(uenv=None, kind=None, geometry=None, fmt='nc', intent='in', fatal=False, **kw):
+    """
+    TODO : utiliser uniquement des keyword arguments (and check if mandatory ones have been parsed)
+    """
+    if uenv is None:
+        raise ValueError('Missing mandatory *uenv* argument')
+    if kind is None:
+        raise ValueError('Missing mandatory *kind* argument')
+    if geometry is None:
+        raise ValueError('Missing mandatory *geometry* argument')
 
     if 'filename' in kw.keys():
         filename = kw['filename']
