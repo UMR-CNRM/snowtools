@@ -45,7 +45,7 @@ def parse_args():
                         help="List of users whose environment you want to explore")
 
     parser.add_argument("-a", "--vapp", dest="vapp",
-                        default=None, type=str, choices=['s2m', 'edelweiss', 'safran'],
+                        default=None, type=str, choices=['s2m', 'edelweiss', 'safran', 'Pleiades', 'Sentinel2'],
                         help="Explore a specific application")
 
     parser.add_argument("-g", "--geometry", dest="geometry",
@@ -230,6 +230,8 @@ def get_vortex_state(datebegin=None, dateend=None, date=None, users=None, vapp=N
                         try:
                             xpiddir = os.path.join(vconfdir, xp)
                             ftpObject.cwd(xpiddir)
+
+                            # TODO : gérer les ressources stockée directement sous "xpid" (sans member/block)
 
                             block_list = list_subdirectories(ftpObject)
                             subdirs = list_subdirectories(ftpObject)
