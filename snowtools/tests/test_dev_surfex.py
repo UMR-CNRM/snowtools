@@ -26,7 +26,7 @@ class s2mTest(TestWithTempFolderWithLog):
     def setUp(self):
         super(s2mTest, self).setUp()
         self.path_namelist = os.path.join(_here, 'namelists/')
-        self.namelist = os.path.join(_here, 'namelists/namelist.nam')
+        self.namelist = os.path.join(self.diroutput, 'namelist.nam')
         self.forcingtest = os.path.join(SNOWTOOLS_DATA, "FORCING_test_base.nc")
         self.commonoptions = " -o " + self.diroutput + " -f " + self.forcingtest + " -n " + self.namelist + " -g"
 
