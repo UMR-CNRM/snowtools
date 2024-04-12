@@ -560,7 +560,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     dateend      = list_dates_end_forc if not oneforcing else [self.conf.dateend],
                     ntasks       = ntasks,
                     geometry_in  = list_geometry,
-                    geometry_out = self.conf.geometry.tag
+                    geometry_out = self.conf.geometry.tag,
+                    reprod_info  = self.get_reprod_info,
                 )
                 print(t.prompt, 'tb09a =', tb09a)
                 print()
@@ -587,7 +588,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                         kind         = 'shadowsforcing',
                         datebegin    = list_dates_begin_forc if not oneforcing else [self.conf.datebegin],
                         dateend      = list_dates_end_forc if not oneforcing else [self.conf.dateend],
-                        ntasks       = min(40, len(list_dates_begin_forc))
+                        ntasks       = min(40, len(list_dates_begin_forc)),
+                        reprod_info  = self.get_reprod_info,
                     )
                     print(t.prompt, 'tb09abis =', tb09abis)
                     print()
@@ -659,6 +661,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 threshold      = self.conf.threshold,
                 daily          = self.conf.dailyprep,
                 drhookprof     = self.conf.drhook,
+                reprod_info    = self.get_reprod_info,
             )
             print(t.prompt, 'tb11 =', tb11)
             print()

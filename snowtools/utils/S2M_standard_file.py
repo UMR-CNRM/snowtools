@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 20 août 2019
 
 @author: lafaysse
-'''
+"""
 
 import datetime
 import os
+import sys
 
 import netCDF4
 import configparser
@@ -16,16 +17,16 @@ import numpy as np
 from snowtools.utils.FileException import VarNameException, UnknownGridTypeException, FileNameException,\
     TimeUnitsException
 from snowtools.utils.infomassifs import infomassifs
-from snowtools.utils.git import git_infos
-from snowtools.DATA import SNOWTOOLS_DIR
+from snowtools.utils.git import get_summary_git
+from snowtools.DATA import SNOWTOOLS_DIR, SNOWTOOLS_CEN
 
 
 class _StandardNC(netCDF4.Dataset):
-    '''
+    """
     abstract class for S2M netcdf file based on ACDD conventions
-    '''
+    """
 
-    def read_config(self, section):
+    def read_constant_attributes(self, section):
         config = configparser.RawConfigParser()
         rootdir = SNOWTOOLS_DIR
         confile = os.path.join(rootdir, 'conf', 'S2M_Standard_Metadata.ini')
@@ -34,91 +35,46 @@ class _StandardNC(netCDF4.Dataset):
             myconfig = dict(config.items(section))
             # Add conf variables into the global attribute
             for key, value in list(myconfig.items()):
+                if type(value) is str:
+                    # Remove multiple spaces and line breaks
+                    value = ' '.join(value.split())
                 setattr(self, key, value)
         else:
             raise FileNameException(confile)
 
-    def GlobalAttributesReanalysis(self):
-        self.read_config('DEFAULT')
-        self.title = 'S2M reanalysis'
-        self.summary = 'This file takes part from a 61-years reanalysis of meteorological and snow conditions in the' \
-                       ' French Alps, Pyrenees and Corsica from 1958 to 2020. The simulations are performed over' \
-                       ' relatively homogeneous units designed to represent the main drivers of the spatial' \
-                       ' variability observed in mountain ranges (elevation, slope and aspect). The meteorological' \
-                       ' reanalysis is performed by the SAFRAN system, which adjusts a guess from a Numerical Weather' \
-                       ' Prediction model (ERA-40 reanalysis from 1958 to 2002, ARPEGE from 2002 to 2018) with the' \
-                       ' best possible set of available in-situ meteorological observations. SAFRAN outputs are used' \
-                       ' to force the Crocus detailed snowpack model within the land surface scheme SURFEX/ISBA.' \
-                       ' This provides the evolution of the snowpack and the associated avalanche hazard accounting' \
-                       ' for the main physical processes involved in a multilayer snowpack.'
-
-        self.id = 's2m_reanalysis_2022.1'
-
-        self.references = 'https://doi.org/10.5194/essd-14-1707-2022'
-
-        self.date_created = datetime.datetime.today().replace(second=0, microsecond=0).isoformat()
-
-        self.platform = 'MODELS_ANALYSES.REANALYSIS_MODELS'
-        self.platform_vocabulary = 'GCMD,AERIS'
-
-        self.contributor_name = 'Matthieu Vernay ; Matthieu Lafaysse'
-        self.contributor_role = 'Matthieu Vernay collected the input data and ran the SAFRAN reanalysis ;' \
-                                ' Matthieu Lafaysse ran the SURFEX-ISBA/Crocus simulations.'
-
-    def GlobalAttributesOper(self):
-        self.title = 'S2M operational chain'
-        self.summary = 'This file takes part from the operation modelling chain of meteorological and snow conditions' \
-                       ' in the French Alps, Pyrenees and Corsica. The simulations are performed over relatively' \
-                       ' homogeneous units designed to represent the main drivers of the spatial variability observed' \
-                       ' in mountain ranges (elevation, slope and aspect). The meteorological analysis and forecast' \
-                       ' is produced by the SAFRAN system, which adjusts a guess from a Numerical Weather Prediction' \
-                       ' model (ARPEGE or PEARP) with the best possible set of available in-situ meteorological' \
-                       ' observations. SAFRAN outputs are used to force the Crocus detailed snowpack model within' \
-                       ' the land surface scheme SURFEX/ISBA. This provides the evolution of the snowpack and the' \
-                       ' associated avalanche hazard accounting for the main physical processes involved in a' \
-                       ' multilayer snowpack.'
-
-        # For reproductibility tests, the hour is fixed in the operational chain
-        # In future versions it would be nice to use the operational rundate.
-        self.date_created = datetime.datetime.today().replace(hour=12, minute=0, second=0, microsecond=0).isoformat()
-
-        self.contributor_name = 'Matthieu Vernay ; Matthieu Lafaysse; Emmanuel Riggi-Carrolo'
-        self.contributor_role = 'Matthieu Vernay develops the SAFRAN analysis and forecast system ; Matthieu Lafaysse' \
-                                ' develops the SURFEX-ISBA/Crocus snowpack model ;' \
-                                ' Emmanuel Riggi-Carrolo set up the operational environment.'
-
-    def GlobalAttributes(self):
+    def GlobalAttributes(self, **reprod_info):
 
         time = self.readtime()
-        reanalysis = (time[-1] - time[0]) > datetime.timedelta(days=360)
+        reanalysis = (time[-1] - time[0]) > datetime.timedelta(days=360)  # Bad condition --> should be changed
 
         if reanalysis:
-            self.GlobalAttributesReanalysis()
+            self.read_constant_attributes('GlobalAttributesReanalysis')
+            self.date_created = datetime.datetime.today().replace(second=0, microsecond=0).isoformat()
         else:
-            self.GlobalAttributesOper()
+            self.read_constant_attributes('GlobalAttributesOper')
+            # For reproductibility tests, the hour is fixed in the operational chain
+            # In future versions it would be nice to use the operational rundate.
+            self.date_created = datetime.datetime.today().replace(hour=12, minute=0, second=0,
+                                                                  microsecond=0).isoformat()
 
-        self.keywords = 'MOUNTAINS'
-        self.keywords_vocabulary = 'GCMD'
-        self.Conventions = 'ACDD-1.3,CF-1.7'
-        self.naming_authority = 'fr.umr-cnrm.cen'
-        self.acknowledgement = 'Many contributors have developed and maintained the codes until today. The full list' \
-                               ' of contributors can be found in the associated publications. CNRM is a research unit' \
-                               ' of Météo-France and CNRS. CNRM/CEN, is part of LabEX OSUG@2020 (ANR10 LABX56).'
-        self.standard_name_vocabulary = 'CF Standard Name Table v67'
-        self.creator_name = "CNRM / Centre d'Etudes de la Neige"
-        self.creator_type = 'institution'
-        self.institution = "CNRM / Centre d'Etudes de la Neige"
-        self.publisher_name = "CNRM / Centre d'Etudes de la Neige"
-        self.publisher_type = 'institution'
+        contributors = ['Matthieu Vernay', 'Matthieu Lafaysse', 'Mathieu Fructus', 'Léo Viallon-Galinier',
+                        'Sabine Radanovics']
+        roles = ['Matthieu Vernay collected the input data and develops the SAFRAN reanalysis',
+                 'Matthieu Lafaysse leads the team and developments around the SURFEX-ISBA/Crocus simulations',
+                 'Mathieu Fructus contributes to the SURFEX-ISBA/Crocus development',
+                 'Léo Viallon-Galinier supervises the snowtools development',
+                 'Sabine Radanovics contributes to snowtools development']
 
-        self.project = 'S2M'
+        try:
+            login_who_run = os.getlogin()
+            contributors.append(login_who_run)
+            roles.append(login_who_run + ' ran this simulation')
+        except OSError:
+            # Note relevant on supercomputers, where by the way os.getlogin raises an error
+            pass
 
-        self.processing_level = 'L4'
-
-        self.comment = 'These data are provided on a semi-distributed grid based on relatively homogeneous areas' \
-                       ' called massifs where the variability of meteorological and snow conditions are assumed' \
-                       ' to depend only on elevation, aspect and slope. A metadata shapefile is associated with' \
-                       ' these data to describe the massif names and contours.'
+        self.contributor_name = ' ; '.join(contributors)
+        self.contributor_role = ' ; '.join(roles)
 
         lat, lon, alti = self.get_coord()
 
@@ -139,7 +95,14 @@ class _StandardNC(netCDF4.Dataset):
         if len(time) > 1:
             self.time_coverage_resolution = str(time[1] - time[0])
 
-        self.snowtools_commit = git_infos(os.path.dirname(os.path.abspath(__file__))).get_commit(default='')
+        self.snowtools_commit = get_summary_git(SNOWTOOLS_CEN)
+
+        self.python_version = sys.version
+        self.python_binary = os.path.realpath(sys.executable)
+
+        # Add attributes provided in the dictionnary to the netcdf file (can also be empty)
+        for attribute in reprod_info:
+            setattr(self, attribute, reprod_info[attribute])
 
     def standard_names(self):
         return dict(ZS = 'surface_altitude',
@@ -166,10 +129,10 @@ class _StandardNC(netCDF4.Dataset):
 
     def get_coord(self):
 
-        latname = self.getlatname()
-        lonname = self.getlonname()
+        latname = self.getlatname
+        lonname = self.getlonname
         altiname = "ZS"
-        xname, yname = self.getcoordname()
+        xname, yname = self.getcoordname
 
         if (set([latname, lonname]).issubset(set(self.variables.keys()))):
             lat, lon = self.variables[latname], self.variables[lonname]
@@ -254,7 +217,7 @@ class _StandardNC(netCDF4.Dataset):
 
     def special_long_names(self):
 
-        massifname = self.getmassifname()
+        massifname = self.getmassifname
         longnames = dict()
         longnames[massifname] = 'SAFRAN massif number. Metadata are provided in the associated shapefile.'
 
@@ -273,16 +236,19 @@ class _StandardNC(netCDF4.Dataset):
 
 class StandardSAFRANetMET(_StandardNC):
 
-    def GlobalAttributes(self):
-        super(StandardSAFRANetMET, self).GlobalAttributes()
-        self.read_config('StandardSAFRANetMET')
+    def GlobalAttributes(self, **reprod_info):
+        super(StandardSAFRANetMET, self).GlobalAttributes(**reprod_info)
+        self.read_constant_attributes('StandardSAFRANetMET')
 
+    @property
     def getlatname(self):
         return 'LAT'
 
+    @property
     def getlonname(self):
         return 'LON'
 
+    @property
     def getcoordname(self):
         return 'x', 'y'
 
@@ -315,9 +281,9 @@ class StandardSAFRANetMET(_StandardNC):
 
 class StandardSAFRAN(StandardSAFRANetMET):
 
-    def GlobalAttributes(self):
-        super(StandardSAFRAN, self).GlobalAttributes()
-        self.read_config('StandardSAFRAN')
+    def GlobalAttributes(self,  **reprod_info):
+        super(StandardSAFRAN, self).GlobalAttributes(**reprod_info)
+        self.read_constant_attributes('StandardSAFRAN')
         self.title = self.title + ": meteorological variables"
         self.summary = self.summary + ' This file provides the SAFRAN meteorological fields'
         self.keywords = self.keywords + ',INCOMING SOLAR RADIATION,LONGWAVE RADIATION,SHORTWAVE RADIATION,AIR' \
@@ -325,6 +291,7 @@ class StandardSAFRAN(StandardSAFRANetMET):
                                         'WIND DIRECTION,WIND SPEED,SURFACE WINDS,RAIN,LIQUID PRECIPITATION,' \
                                         'HOURLY PRECIPITATION AMOUNT,SOLID PRECIPITATION'
 
+    @property
     def getmassifname(self):
         return 'massif_number'
 
@@ -333,7 +300,7 @@ class StandardCDP(StandardSAFRANetMET):
 
     def GlobalAttributes(self):
         super(StandardCDP, self).GlobalAttributes()
-        self.read_config('StandardCDP')
+        self.read_constant_attributes('StandardCDP')
         self.title = self.title + ": meteorological variables"
         self.summary = self.summary + ' This file provides the Col de Porte observed meteorological fields, completed' \
                                       ' with SAFRAN'
@@ -347,7 +314,7 @@ class StandardPROSNOW(StandardSAFRAN):
 
     def GlobalAttributes(self):
         super(StandardPROSNOW, self).GlobalAttributes()
-        self.read_config('StandardPROSNOW')
+        self.read_constant_attributes('StandardPROSNOW')
         self.title = "SAFRAN: meteorological variables"
         self.summary = 'This file is a meteorological forcing file generated by the SAFRAN system. Is is based on the' \
                        ' 4 days forecasts of the 35 members french Ensemble Forecasting system PEARP with a 6-hours' \
@@ -390,27 +357,28 @@ class StandardPROSNOW(StandardSAFRAN):
 
 class StandardCROCUS(_StandardNC):
 
-    def GlobalAttributes(self, surfex_commit=None):
-        super(StandardCROCUS, self).GlobalAttributes()
-        self.read_config('StandardCROCUS')
+    def GlobalAttributes(self, **reprod_info):
+        super(StandardCROCUS, self).GlobalAttributes(**reprod_info)
+        self.read_constant_attributes('StandardCROCUS')
         self.title = self.title + ": snow variables"
         self.summary = self.summary + ' This file provides the snowpack properties of the Crocus model.'
         self.keywords = self.keywords + ',SNOW WATER EQUIVALENT,SNOW,ALBEDO,AVALANCHE,FREEZE/THAW,SNOW COVER,' \
                                         'SNOW DENSITY,SNOW DEPTH,SNOW ENERGY BALANCE,SNOW MELT,SNOW WATER EQUIVALENT,' \
                                         'SNOW/ICE TEMPERATURE'
 
-        if surfex_commit:
-            self.surfex_commit = surfex_commit
-
+    @property
     def getlatname(self):
         return 'latitude'
 
+    @property
     def getlonname(self):
         return 'longitude'
 
+    @property
     def getcoordname(self):
         return 'xx', 'yy'
 
+    @property
     def getmassifname(self):
         return 'massif_num'
 

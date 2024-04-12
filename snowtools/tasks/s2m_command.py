@@ -452,7 +452,8 @@ class Surfex_command(_S2M_command):
                                      workdir=self.options.workdir, datespinup=self.options.datespinup,
                                      execdir=self.options.exesurfex,
                                      namelist=self.options.namelist,
-                                     addmask=True, onlyextractforcing=self.options.onlyextractforcing)
+                                     addmask=True, onlyextractforcing=self.options.onlyextractforcing,
+                                     s2mcommand=self.command)
             elif self.interpol:
                 if 'pro' in self.options.forcing or 'PRO' in self.options.forcing:
                     myclass = runs.interpolpro
@@ -467,7 +468,8 @@ class Surfex_command(_S2M_command):
                               datespinup=self.options.datespinup,
                               geolist=[self.options.region], execdir=self.options.exesurfex,
                               namelist=self.options.namelist,
-                              onlyextractforcing=self.options.onlyextractforcing)
+                              onlyextractforcing=self.options.onlyextractforcing,
+                              s2mcommand=self.command)
 
             elif self.options.region or self.options.slopes or self.options.aspects or self.options.minlevel \
                     or self.options.maxlevel:
@@ -479,14 +481,16 @@ class Surfex_command(_S2M_command):
                                                     workdir=self.options.workdir,
                                                     geolist=[self.options.region, self.options.minlevel,
                                                              self.options.maxlevel, self.options.slopes,
-                                                             self.options.aspects])
+                                                             self.options.aspects],
+                                                    s2mcommand=self.command)
                     else:
                         run = runs.massifextractforcing(self.options.datedeb, self.options.datefin,
                                                         self.options.forcing, self.options.diroutput,
                                                         workdir=self.options.workdir,
                                                         geolist=[self.options.region, self.options.minlevel,
                                                                  self.options.maxlevel, self.options.slopes,
-                                                                 self.options.aspects])
+                                                                 self.options.aspects],
+                                                        s2mcommand=self.command)
                 else:
 
                     run = runs.massifrun(self.options.datedeb, self.options.datefin, self.options.forcing,
@@ -496,7 +500,8 @@ class Surfex_command(_S2M_command):
                                          namelist=self.options.namelist,
                                          geolist=[self.options.region, self.options.minlevel,
                                                   self.options.maxlevel, self.options.slopes,
-                                                  self.options.aspects])
+                                                  self.options.aspects],
+                                         s2mcommand=self.command)
             else:
                 if self.options.geotype == 'grid':
                     if self.options.veg in ['ecoclimap', None]:
@@ -514,7 +519,8 @@ class Surfex_command(_S2M_command):
                               self.options.diroutput, threshold=self.options.threshold,
                               workdir=self.options.workdir, datespinup=self.options.datespinup,
                               execdir=self.options.exesurfex,
-                              namelist=self.options.namelist)
+                              namelist=self.options.namelist,
+                              s2mcommand=self.command)
 
             if self.options.uenv:
                 run.get_extra_files(self.options.uenv)
@@ -540,13 +546,13 @@ class Surfex_command(_S2M_command):
 
         # Cook vortex task
         if self.options.task == 'croco':
-            crocO_vortex_kitchen(self.options)
+            crocO_vortex_kitchen(self.options, self.command)
         else:
-            vortex_kitchen(self.options)
+            vortex_kitchen(self.options, self.command)
 
 
 def main():
-    Surfex_command(sys.argv[1:])
+    Surfex_command(sys.argv)
 
 
 if __name__ == "__main__":

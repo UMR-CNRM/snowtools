@@ -194,6 +194,7 @@ class Offline_Task(_CrocO_Task):
                 # ntasks         = ntasksEsc,  # not consistent with the self.conf.membersnode
                 ntasks         = nmembersnode,  # BC 18/04/19 more consistent
                 nforcing       = self.conf.nforcing,
+                reprod_info    = self.get_reprod_info,
             )
             print(t.prompt, 'tb11 =', tb11)
             print()

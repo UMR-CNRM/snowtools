@@ -26,13 +26,14 @@ class vortex_kitchen(object):
     Interface between s2m command line and vortex utilities (tasks and mk_jobs)
     """
 
-    def __init__(self, options):
+    def __init__(self, options, snowtools_command):
         """
         Constructor
         """
         # Check if a vortex installation is defined
         self.check_vortex_install()
         self.options = options
+        self.snowtools_command = snowtools_command
 
         # Initialization of vortex variables
         self.vapp = 's2m'
@@ -265,7 +266,7 @@ class vortex_kitchen(object):
             fullname = None
 
         if not self.options.command == 'oper':
-            self.conf_file = Vortex_conf_file(self.options, fullname)
+            self.conf_file = Vortex_conf_file(self.options, self.snowtools_command, fullname)
             self.conf_file.create_conf(jobname=self.jobname)
             # Do not write the configuration file now, additionnal informations may be added later
             # self.conf_file.write_file()
@@ -405,9 +406,10 @@ class vortex_kitchen(object):
 
 
 class Vortex_conf_file(object):
-    def __init__(self, options, filename, mode='w'):
+    def __init__(self, options, snowtools_command, filename, mode='w'):
         self.name = filename
         self.options = options
+        self.snowtools_command = snowtools_command
         self.fileobject = open(filename, mode)
         self.blocks = dict()
 
@@ -498,6 +500,8 @@ class Vortex_conf_file(object):
             if self.options.uenv is not None:
                 self.set_field("DEFAULT", 'uenv', self.options.uenv)
                 self.set_field("DEFAULT", 'udata', self.options.udata)
+        # Archive the command instruction only for reproductibility
+        self.set_field("DEFAULT", 'snowtools_command', self.snowtools_command)
 
     def escroc_variables(self):
 

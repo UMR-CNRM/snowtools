@@ -9,11 +9,8 @@ import unittest
 import os
 import shutil
 
-from snowtools.tasks.s2m_command import Surfex_command as s2m
-from snowtools.tests.export_output import exportoutput
-from snowtools.tests.tempfolder import TestWithTempFolderWithLog
+from snowtools.tests.s2m_instance import s2mTest
 from snowtools.DATA import SNOWTOOLS_DATA
-from snowtools.DATA import DIRDATAPGD
 from snowtools.DATA import TESTBASE_DIR
 
 _here = os.path.dirname(os.path.realpath(__file__))
@@ -22,24 +19,16 @@ SKIP_TEST_SNOWPAPPUS = False if os.getenv('SNOWTOOLS_TEST_SNOWPAPPUS', False) el
 SKIP_TEST_AXEL_AARON = False if os.getenv('SNOWTOOLS_TEST_AXEL_AARON', False) else True
 
 
-class s2mTest(TestWithTempFolderWithLog):
+class s2mTestBase(s2mTest):
     def setUp(self):
-        super(s2mTest, self).setUp()
+        super(s2mTestBase, self).setUp()
         self.path_namelist = os.path.join(_here, 'namelists/')
         self.namelist = os.path.join(_here, 'namelists/namelist.nam')
         self.forcingtest = os.path.join(SNOWTOOLS_DATA, "FORCING_test_base.nc")
         self.commonoptions = " -o " + self.diroutput + " -f " + self.forcingtest + " -n " + self.namelist + " -g"
 
-    def full_run(self, shortcommand):
-        command = shortcommand + self.commonoptions
-        with exportoutput(self.logfile):
-            s2m(command.split()[1:])
 
-    def runatcen(self):
-        return os.path.isdir(DIRDATAPGD)
-
-
-class s2mTestForcageBase(s2mTest):
+class s2mTestForcageBase(s2mTestBase):
 
     def test_base(self):
         shutil.copy(self.path_namelist + "namelist_base.nam", self.namelist)
@@ -111,7 +100,7 @@ class s2mTestForcageBase(s2mTest):
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "FORCING",
                                                  "FORCING_test_impur.nc")),
                  "input file not available")
-class s2mTestForcageImpurete(s2mTest):
+class s2mTestForcageImpurete(s2mTestBase):
 
     def setUp(self):
         super(s2mTestForcageImpurete, self).setUp()
@@ -140,7 +129,7 @@ class s2mTestForcageImpurete(s2mTest):
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "FORCING",
                                                  "FORCING_test_2d.nc")),
                  "input file not available")
-class s2m2DTest(s2mTest):
+class s2m2DTest(s2mTestBase):
 
     def setUp(self):
         super(s2m2DTest, self).setUp()
@@ -148,7 +137,7 @@ class s2m2DTest(s2mTest):
         self.namelist = os.path.join(SNOWTOOLS_DATA, "OPTIONS_test_2d.nam")
         # If the test is run at CEN, it can run PGD with available databases.
         # Otherwise, we do not test the PGD step and only take a PGD test file.
-        if not self.runatcen():
+        if not self.runatcen:
             os.makedirs(self.diroutput + "/prep")
             pgd = os.path.join(SNOWTOOLS_DATA, "PGD_test_2d.nc")
             os.symlink(pgd, self.diroutput + "/prep/PGD.nc")
@@ -165,7 +154,7 @@ class s2m2DTest(s2mTest):
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "FORCING",
                                                  "FORCING_test_2d.nc")),
                  "input file not available")
-class s2m2DTest_pappus(s2mTest):
+class s2m2DTest_pappus(s2mTestBase):
 
     def setUp(self):
         super(s2m2DTest_pappus, self).setUp()
@@ -173,7 +162,7 @@ class s2m2DTest_pappus(s2mTest):
         self.namelist = os.path.join(SNOWTOOLS_DATA, "OPTIONS_test_2d_pappus.nam")
         # If the test is run at CEN, it can run PGD with available databases.
         # Otherwise, we do not test the PGD step and only take a PGD test file.
-        if not self.runatcen():
+        if not self.runatcen:
             os.makedirs(self.diroutput + "/prep")
             pgd = os.path.join(SNOWTOOLS_DATA, "PGD_test_2d.nc")
             os.symlink(pgd, self.diroutput + "/prep/PGD.nc")

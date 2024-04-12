@@ -24,11 +24,11 @@ class crocO_vortex_kitchen(vortex_kitchen):
     based on vortex_kitchen from M. Lafaysse
     '''
 
-    def __init__(self, options):
+    def __init__(self, options, command):
         """
         Constructor
         """
-        super().__init__(options)
+        super().__init__(options, command)
 
         # check the options consistency
         self.check_options()
