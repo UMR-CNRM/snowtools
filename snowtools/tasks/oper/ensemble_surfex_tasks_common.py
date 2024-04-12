@@ -462,6 +462,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 daily          = not self.conf.previ,
                 taskset        = "numapacked_taskset",
                 verbose        = True,
+                reprod_info    = self.get_reprod_info,
             )
             print(t.prompt, 'tb09 =', tb09)
             print()

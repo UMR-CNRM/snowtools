@@ -69,7 +69,7 @@ class forcinput_tomerge:
         for openedfic in init_forcing_file:
             openedfic.close()
 
-        new_forcing_file.GlobalAttributes()
+        new_forcing_file.GlobalAttributes(**kwargs)
         new_forcing_file.add_standard_names()
 
         new_forcing_file.close()
@@ -256,7 +256,7 @@ class forcinput_tomodify:
         init_forcing_file.close()
 
         if forcin != forcout:
-            new_forcing_file.GlobalAttributes()
+            new_forcing_file.GlobalAttributes(**kwargs)
             new_forcing_file.add_standard_names()
             new_forcing_file.close()
 

@@ -341,7 +341,7 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                 kind         = 'surfex_preprocess',
                 datebegin    = self.conf.datebegin,
                 dateend      = self.conf.dateend,
-                forcingname  = firstforcing
+                forcingname  = firstforcing,
             )
             print(t.prompt, 'tb09a =', tb09a)
             print()
@@ -388,7 +388,8 @@ class Escroc_Vortex_Task(Task, S2MTaskMixIn):
                 geometry_in    = [self.conf.geometry.tag],
                 geometry_out   = self.conf.geometry.tag,
                 subensemble    = self.conf.subensemble if hasattr(self.conf, "subensemble")  else "E2",
-                ntasks         = ntasks
+                ntasks         = ntasks,
+                reprod_info    = self.get_reprod_info,
             )
             print(t.prompt, 'tb11 =', tb11)
             print()

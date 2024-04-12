@@ -269,6 +269,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
                 geometry_out   = self.conf.geometry.tag,
                 ntasks         = 40,
                 daily          = not self.conf.previ,
+                reprod_info    = self.get_reprod_info,
             )
             print(t.prompt, 'tb09 =', tb09)
             print()
