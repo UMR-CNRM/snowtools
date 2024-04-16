@@ -81,6 +81,9 @@ The CSELECT options
 In the namelist, CSELECT allows you to choose output. For example, in the standard namelist, you have:
 ``CSELECT='time','ZS','aspect','slope','massif_num','station','TG1','WG1','WGI1','TG4','ASN_VEG'...``
 
+Core model options
+^^^^^^^^^^^^^^^^^^
+
 Here you can find long name for a part of these variables (alphabetical order for shortname):
 
 - ASN_VEG = Snow albedo
@@ -135,6 +138,9 @@ Here you can find long name for a part of these variables (alphabetical order fo
 - WSN_T_ISBA = Surface_snow_amount = Total_snow_reservoir
 - WSN_VEG = Snow Water Equivalent (m)
 
+SNOWPAPPUS
+^^^^^^^^^^
+
 SNOWPAPPUS cumulated outputs: (MPI grid only)
 
 - QDEP_TOT = total wind-blown snow net deposition rate q dep (kg.m −2 .s −1 )
@@ -156,12 +162,44 @@ SNOWPAPPUS instantaneous outputs:
 - SNFLXINT_P = snow transport flux integrated on height
 
 
-Impurities explicit:
+Impurities
+^^^^^^^^^^
+
 - SNOWIMP1 = Concentration of Soot (g/g)
 - SNOWIMP2 = Concentration of Dust (g/g)
 - SPEC_TOT = Total incident spectral radiation (unit ?) over 186 spectral bands (300, 320, ..., 4000 nm)
 - SPEC_ALB = Snow spectral albedo over 186 spectral bands (300, 320, ..., 4000 nm)
 - DIFF_RATIO = Diffuse to total spectral irradiance ratio
+
+MEPRA
+^^^^^
+
+Note that the MEPRA outputs depends on the selected output timestep (configuration in SURFEX namelist).
+The operational value used at Météo-France is 3h.
+
+stress/strength stability index :
+
+* NAT_RAT : MEPRA strength/stress ration without skier
+* ACC_RAT : MERPA strength/stress ratio with skier
+
+Expert risks :
+
+* NAT_LEV : MEPRA natural risk (range 0-5, 6 means undefined)
+* ACC_LEV : MERPA accidental risk (range 0-3, 4 means undefined)
+* AVA_TYP : MEPRA avalanche type (0: new snow dry, 1:new snow wet, 3: new snow mix, 4: surface melt, 5:depth melt, 6:undefined)
+
+Depth of identified avalanche problems:
+
+* DEP_HIG : MEPRA Depth of high level avalanche problem
+* DEP_MOD : MEPRA Depth of the second avalanche problem
+
+Mechanical properties :
+
+* SNOWRAM : RAM Resistance (daN)
+* SNOWSHEAR : Shear Resistance (kPa)
+
+Full documentation
+^^^^^^^^^^^^^^^^^^
 
 You can find other variables in SURFEX documentation:
 https://www.umr-cnrm.fr/surfex/spip.php?article30

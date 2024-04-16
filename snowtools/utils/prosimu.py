@@ -9,6 +9,48 @@ Created on 4 oct. 2012
 
 This module contains the ``prosimu`` class used to read simulation files
 (netCDF format) as produced by SURFEX/Crocus for instance.
+
+More in details, ``prosimu1d`` and ``prosimu2d`` classes are provided to
+read 1D files (ony one spatial dimension, Number_of_points) or 2D files
+(gridded simulations with x and y axes). Unless your application is
+specific to 1D or 2D files, please use ``prosimu_auto`` that will
+instantiate the appropriate class (``prosimu1d`` or ``prosimu2d``).
+
+A short example of how to use this module and read time dimension and
+snow density variables (``RSN_VEG``) for all layers at point in massif
+11, 2700m, northern aspect on 40 degree slope:
+
+.. code-block:: python
+
+   from snowtools.utils.prosimu import prosimu_auto
+
+   with prosimu_auto('/path/to/my/PRO_XXX.nc') as ff:
+           time= ff.readtime()
+           point = ff.get_point(ZS=2700, aspect=0, slope=40, massif=11)
+           density = ff.read('RSN_VEG', point=point)
+
+``time`` and ``density`` now contains the data in the form of numpy arrays
+for the selected point.
+
+
+Example to get total snow water equivalent of the snowpack (variable
+``WSN_T_ISBA``) across time for all points:
+
+.. code-block:: python
+
+   from snowtools.utils.prosimu import prosimu_auto
+
+   with prosimu_auto('/path/to/my/PRO_XXX.nc') as ff:
+           time= ff.readtime()
+           swe_total = ff.read('WSN_T_ISBA')
+
+
+Most useful methods are:
+
+* :meth:`prosimuAbstract.gettime` to read tim dimension
+* :meth:`prosimuAbstract.listvar` to have a list of available variables
+* :meth:`prosimuAbstract.read` to read data from one variable
+* :meth:`prosimuAbstract.get_point` to help in selecting a point across spatial dimensions
 """
 
 import os
