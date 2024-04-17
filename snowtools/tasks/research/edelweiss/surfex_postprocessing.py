@@ -66,11 +66,10 @@ class ExtractDates(_VortexTask):
         """
 
         self.sh.title('Toolbox input PRO')
-        self.pro = io.get_pro(*self.common_args, **self.common_kw, members=self.conf.members)
-
-        # Get a static mask file to remove glacier/forest pixels
-        self.sh.title('Toolbox input MASK')
-        self.mask = io.get_const(kind='mask', geometry=self.conf.geometry, **self.common_kw)
+        kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
+        # Update default vapp with specific conf values
+        kw.update(dict(vapp=self.conf.vapp_pro, datebegin=self.conf.datebegin_pro, dateend=self.conf.dateend_pro))
+        self.pro = io.get_pro(self.conf.xpid_pro, self.conf.geometry_pro, members=self.conf.members, **kw)
 
     def algo(self):
         """
@@ -82,7 +81,6 @@ class ExtractDates(_VortexTask):
             kind          = 'extract_dates',
             datebegin     = self.conf.datebegin,
             dateend       = self.conf.dateend,
-            mask          = len(self.mask) > 0,  # True if a RH (= a file) was returned
             extract_dates = self.conf.extraction_dates,
             engine        = 'algo',  # _CENTaylorRun algo component "family" to execution a piece of python code
             ntasks        = len(self.pro),  # Do not forget to set the number of tasks for parallelisation
@@ -98,7 +96,23 @@ class ExtractDates(_VortexTask):
         """
         self.sh.title('Toolbox output PRO')
         # TODO : How to archive that resource ?
-        # Actuellement, elle est archivée sous *date=datebegin* --> ca ne semble pas très pertinent
+        # Actuellement, elle est archivée sous "date=dateend" (car "namebuild=None")
+        # --> ca ne semble pas très pertinent
         suffix = '_'.join(self.conf.extraction_dates)
         self.diag = io.put_pro(*self.common_args, members=self.conf.members, filename=f'PRO_{suffix}.nc',
                 namebuild=None, **self.common_kw,)
+
+        # To put the file on sxcen only :
+        # WARNING : the default cache on sxcen is under */home* (defined by the *storeroot* footprint with a
+        # default value set in "vortex/conf/store-vortex-free-sxcnrm.ini" configuration file).
+        # --> It seems more relevant to use the "NO_SAVE" space for the Vortex cache
+        # TODO : find a better way to set this at a higher level
+        # TODO : In any case, this must match the user-defined "MTOOLDIR" or "WORKDIR" or "DATADIR"
+        # environment variable on sxcen
+        # TODO : Problème avec l'extension "username" de l'xpid :
+        # - le "put" depuis belenos ajoute le username au répertoire "xpid"
+        # - le "get" depuis sxcen retire le username
+        # user = self.env['USER']
+        # storeroot = f'/cnrm/cen/users/NO_SAVE/{user}/cache'
+        # self.diag = io.put_pro(*self.common_args, members=self.conf.members, filename=f'PRO_{suffix}.nc',
+        #        namebuild=None, storeroot=storeroot, **self.common_kw,)

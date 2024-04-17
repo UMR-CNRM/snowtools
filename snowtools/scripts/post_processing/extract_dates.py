@@ -58,10 +58,6 @@ def parse_command_line():
                              " * '{uenv_name}@{username}'"
                              " * '{uenv_name}' --> only if the uenv is yours")
 
-    parser.add_argument('-k', '--mask', type=str,
-                        help="Absolute path to the mask file (if any)"
-                             "WARNING : bad practice")
-
     parser.add_argument('-p', '--pro', type=str,
                         help="Absolute path to the pro file."
                              "WARNING : bad practice")
@@ -86,34 +82,6 @@ def parse_command_line():
     return args
 
 
-def maskgf(arr, method='nearest'):
-    """
-      Masks an input array (arr) using a reference mask dataset.
-
-      Args:
-          arr    : The input array to be masked.
-          method : The interpolation method to use when resampling the glacier mask
-                   to the same resolution as the input array. Valid options are
-                   'nearest', 'linear', 'cubic', etc. (default: 'nearest').
-
-      Returns:
-          A new array with the same shape as the input array, where values are masked
-          out based on the glacier mask. Masked values are set to NaN.
-    """
-
-    # Load the glacier mask dataset
-    mask = xr.open_dataset('MASK.nc')['Band1']
-    # TODO la commande rename est très lente
-    # --> faire le renomage directement dans le fichier pour éviter de le faire à chaque exécution
-    # mask = mask.rename({'x': 'xx', 'y': 'yy'})
-
-    # Interpolate the glacier mask to the same resolution as the input array
-    mask = mask.interp_like(arr, method=method)
-
-    # Mask the input array based on the glacier mask
-    return arr.where(mask == 0)
-
-
 def decode_time(pro):
     """
     Manually decode time variable since other variables can not be decoded automatically
@@ -124,7 +92,7 @@ def decode_time(pro):
     return pro
 
 
-def execute(subdir, dates, mask=True):
+def execute(subdir, dates):
     """
     Main method
     """
@@ -136,10 +104,6 @@ def execute(subdir, dates, mask=True):
     else:
         pro = pro.DSN_T_ISBA
     out     = extract(dates, pro)
-
-    if mask:
-        # mask glacier/forest covered pixels
-        out = maskgf(out)
 
     # Write DIAG file and remove PRO
     suffix = '_'.join(dates)
@@ -179,7 +143,6 @@ if __name__ == '__main__':
     xpid      = args.xpid
     members   = args.members
     workdir   = args.workdir
-    mask      = args.mask
     pro       = args.pro
     geometry  = args.geometry
     uenv      = args.uenv
@@ -191,19 +154,6 @@ if __name__ == '__main__':
 
     # 2. Fill working directory with input files
     # -------------------------------------------
-    try:
-        # Try to get the MASK file with vortexIO
-        mask = io.get_const(uenv, 'mask', geometry)
-        mask = True
-    except (NameError, ModuleNotFoundError):
-        if mask is not None:
-            # If a mask file was provided in argument, use it
-            # Get mask file
-            # import shutil
-            # shutil.copyfile(mask, 'mask.nc')
-            if not os.path.exists('MASK.nc'):  # TODO remplacer le lien par sécurité ?
-                os.symlink(mask, 'MASK.nc')
-            mask = True
 
     try:
         # Try to get the PRO file with vortexIO
@@ -219,11 +169,11 @@ if __name__ == '__main__':
     # ------------------------------------------------------------
     if members is None:
         subdir = ''
-        execute(subdir, dates, mask=mask)
+        execute(subdir, dates)
         os.remove('PRO.nc')
     else:
         for member in range(members):
             print(f'Member {member}')
             subdir = f'mb{member:03d}'
-            execute(subdir, dates, mask=mask)
+            execute(subdir, dates)
             os.remove(os.path.join(subdir, 'PRO.nc'))

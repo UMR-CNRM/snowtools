@@ -276,6 +276,19 @@ class Edelweiss_command(object):
                                        " * dateend   (str) : If different from '-e' argument (format YYYYMMDDHH)\n"
                                        " ")
 
+        parser_input.add_argument("--pro", dest="pro", action=ParseKwargs, nargs='*',
+                                  type=str, default=None,
+                                  help="Definition (footprint-like dict) of the PRO file input.\n"
+                                       "Format : --pro key1=var1 key2=var2 ...\n"
+                                       "Known dictionary keys :\n"
+                                       " * xpid      (str) : Experiment identifier (Format : {xpid}@{username})\n"
+                                       " * geometry  (str) : Experiment geometry"
+                                       " * vapp      (str) : Application that produced the FORCING (s2m/edelweiss)\n"
+                                       " * members   (int) : Number of input members (format 'X:Y' valid)\n"
+                                       " * datebegin (str) : If different from '-b' argument (format YYYYMMDDHH)\n"
+                                       " * dateend   (str) : If different from '-e' argument (format YYYYMMDDHH)\n"
+                                       " ")
+
         options  = parser.parse_args(arguments)
 
         return options  # Return a dictionnary object
@@ -288,12 +301,13 @@ class Edelweiss_command(object):
 
     def check_and_convert_options(self):
 
+        # Convert *members* argument into a 'X-Y-1' list
         if self.options.members is not None:
             self.options.members = self.convert_members(self.options.members)
 
         args_to_dict = vars(self.options)  # Convert self.options *Namepace* object to a *dictionnary* object
         # Convert *dictionary* arguments to proper configuration variables
-        for specific_input in ['forcing', 'precipitation', 'wind', 'prep']:
+        for specific_input in ['forcing', 'precipitation', 'wind', 'prep', 'pro']:
             # Check if a value has been parsed
             if args_to_dict[specific_input] is not None:
                 # Convert dictionnary into proper configuration entries
