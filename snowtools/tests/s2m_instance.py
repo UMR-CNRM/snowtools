@@ -7,6 +7,7 @@ Created on 9 Apr. 2023
 """
 
 import os
+import shlex
 
 from snowtools.tasks.s2m_command import Surfex_command as s2m
 from snowtools.tests.export_output import exportoutput
@@ -23,7 +24,7 @@ class s2mTest(TestWithTempFolderWithLog):
     def full_run(self, shortcommand):
         command = shortcommand + self.commonoptions
         with exportoutput(self.logfile):
-            s2m(command.split())
+            s2m(shlex.split(command))
 
     @property
     def runatcen(self):

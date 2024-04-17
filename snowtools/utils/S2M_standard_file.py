@@ -42,7 +42,7 @@ class _StandardNC(netCDF4.Dataset):
         else:
             raise FileNameException(confile)
 
-    def GlobalAttributes(self, **reprod_info):
+    def GlobalAttributes(self, **additionnal_attributes):
 
         time = self.readtime()
         reanalysis = (time[-1] - time[0]) > datetime.timedelta(days=360)  # Bad condition --> should be changed
@@ -95,14 +95,17 @@ class _StandardNC(netCDF4.Dataset):
         if len(time) > 1:
             self.time_coverage_resolution = str(time[1] - time[0])
 
-        self.snowtools_commit = get_summary_git(SNOWTOOLS_CEN)
+        # With vortex snowtools_commit is extracted by S2MTaskMixin because git is not available on computing nodes
+        # With snowtools on PC the commit is extracted here.
+        if 'snowtools_commit' not in additionnal_attributes:
+            self.snowtools_commit = get_summary_git(SNOWTOOLS_CEN)
 
         self.python_version = sys.version
         self.python_binary = os.path.realpath(sys.executable)
 
         # Add attributes provided in the dictionnary to the netcdf file (can also be empty)
-        for attribute in reprod_info:
-            setattr(self, attribute, reprod_info[attribute])
+        for attribute in additionnal_attributes:
+            setattr(self, attribute, additionnal_attributes[attribute])
 
     def standard_names(self):
         return dict(ZS = 'surface_altitude',
@@ -236,8 +239,8 @@ class _StandardNC(netCDF4.Dataset):
 
 class StandardSAFRANetMET(_StandardNC):
 
-    def GlobalAttributes(self, **reprod_info):
-        super(StandardSAFRANetMET, self).GlobalAttributes(**reprod_info)
+    def GlobalAttributes(self, **additionnal_attributes):
+        super(StandardSAFRANetMET, self).GlobalAttributes(**additionnal_attributes)
         self.read_constant_attributes('StandardSAFRANetMET')
 
     @property
@@ -281,8 +284,8 @@ class StandardSAFRANetMET(_StandardNC):
 
 class StandardSAFRAN(StandardSAFRANetMET):
 
-    def GlobalAttributes(self,  **reprod_info):
-        super(StandardSAFRAN, self).GlobalAttributes(**reprod_info)
+    def GlobalAttributes(self,  **additionnal_attributes):
+        super(StandardSAFRAN, self).GlobalAttributes(**additionnal_attributes)
         self.read_constant_attributes('StandardSAFRAN')
         self.title = self.title + ": meteorological variables"
         self.summary = self.summary + ' This file provides the SAFRAN meteorological fields'
@@ -357,8 +360,8 @@ class StandardPROSNOW(StandardSAFRAN):
 
 class StandardCROCUS(_StandardNC):
 
-    def GlobalAttributes(self, **reprod_info):
-        super(StandardCROCUS, self).GlobalAttributes(**reprod_info)
+    def GlobalAttributes(self, **additionnal_attributes):
+        super(StandardCROCUS, self).GlobalAttributes(**additionnal_attributes)
         self.read_constant_attributes('StandardCROCUS')
         self.title = self.title + ": snow variables"
         self.summary = self.summary + ' This file provides the snowpack properties of the Crocus model.'

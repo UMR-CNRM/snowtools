@@ -1,0 +1,2 @@
+2024-04-17:
+- From now, snowtools is incompatible with vortex before commit 64e0c068 (17 Apr 2024, tag cen.1.9.0.1, cen_dev branch). GlobalAttributes method of S2MStandardFile instances receive new arguments for better reproductibility of experiments.
