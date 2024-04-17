@@ -29,6 +29,19 @@ from bronx.stdtypes.date import Date
 
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.plots.maps import plot2D
+import matplotlib.pyplot as plt
+
+
+cmap = dict(
+    DSN_T_ISBA = plt.cm.Blues,
+)
+
+vmax_map = dict(
+    # WARNING : values defined for 2017/2018
+    DSN_T_ISBA = 6,  # m
+    Snowf      = 1500,  # kg/m² [mm]
+    Rainf      = 1400,  # kg/m² [mm]
+)
 
 
 def parse_command_line():
@@ -58,7 +71,7 @@ def parse_command_line():
                         help="Application that produced the target file")
 
     parser.add_argument('-v', '--variables', nargs='+', required=True,
-                        help="Variable(s) name to plot (see list for each specific file"
+                        help="Variable(s) name to plot (see list for each specific file)"
                              "It is possible to plot a combination of variables, for example :"
                              "-v Rainf+Snowf will plot the total precipitation from a FORCING file")
 
@@ -136,7 +149,18 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
         else:
             tmp = tmp.sum(dim='time')
             savename = f'{var}_cumul_{xpid}.pdf'
-        plot2D.plot_field(tmp, savename, vmin=tmp.min(), vmax=tmp.max())
+
+        if var in vmax_map.keys():
+            vmax = vmax_map[var]
+            vmin = 0
+        else:
+            vmax = tmp.max()
+            vmin = tmp.min()
+
+        if var in cmap.keys():
+            plot2D.plot_field(tmp, savename, vmin=vmin, vmax=vmax, cmap=cmap[var])
+        else:
+            plot2D.plot_field(tmp, savename, vmin=vmin, vmax=vmax)
 
 
 if __name__ == '__main__':
