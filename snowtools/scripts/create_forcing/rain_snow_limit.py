@@ -63,10 +63,11 @@ def compute_phase_from_iso_wetbt1(subdir=None):
     # Fill missing dates with nearest value :
     isowetbt  = isowetbt.reindex({'time': precipitation.time}, method='nearest')
     isowetbt1 = isowetbt.sel({'ISO_TPW': 27415.})  # Wet-bulb temperature iso-1°C
-    source_relief = xr.open_dataarray('SOURCE_RELIEF.nc')  # Iso-TPW grid's Digital Elevation Model
+    # source_relief = xr.open_dataarray('SOURCE_RELIEF.nc')  # Iso-TPW grid's Digital Elevation Model
     # Drop useless 'valid_time' dimension (len=1) added by xarray when converting grid files to netcdf
     # TODO : do it at the netcdf generation (in the Extraction_BDAP.py script)
-    iso_elevation = isowetbt1.sro + source_relief
+    # iso_elevation = isowetbt1.sro + source_relief
+    iso_elevation = isowetbt1.sro
     target_relief = xr.open_dataarray('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
 
     # Interpolation of all data to the target geometry
@@ -161,7 +162,7 @@ if __name__ == '__main__':
         # Hourly iso Wet-bulb temperatures 0°C, 1°C [, 1.5°C] --> use get_meteo (not FORCING-ready)
         io.get_meteo(kind='ISO_TPW', geometry=iso_grid, xpid=iso_wetbt, **period)
         # Iso-TPW's grid relief
-        io.get_const(uenv, 'relief', 'FRANGP0025', filename='SOURCE_RELIEF.nc')
+        # io.get_const(uenv, 'relief', 'FRANGP0025', filename='SOURCE_RELIEF.nc')
         # Domain's DEM
         io.get_const(uenv, 'relief', geometry, filename='TARGET_RELIEF.nc', gvar='RELIEF_GRANDESROUSSES250M_4326')
         vortex = True

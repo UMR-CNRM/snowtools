@@ -42,12 +42,15 @@ class Precipitation(_VortexTask):
             members  = self.conf.members,
             **self.common_kw,
         )
+
         # Hourly iso Wet-bulb temperatures 0°C, 1°C [, 1.5°C] --> use get_meteo (not FORCING-ready)
         self.sh.title('Toolbox input ISO WETBT/TPW')
         io.get_meteo(kind='ISO_TPW', geometry=self.conf.geometry_tpw, xpid=self.conf.xpid_tpw, **self.common_kw)
+
         # Iso-TPW's grid relief
-        self.sh.title('Toolbox input ISO WETBT/TPW RELIEF')
-        io.get_const(self.conf.uenv, 'relief', self.conf.geometry_tpw, filename='SOURCE_RELIEF.nc')
+        # self.sh.title('Toolbox input ISO WETBT/TPW RELIEF')
+        # io.get_const(self.conf.uenv, 'relief', self.conf.geometry_tpw, filename='SOURCE_RELIEF.nc')
+
         # Domain's DEM
         self.sh.title('Toolbox input TARGET RELIEF')
         io.get_const(self.conf.uenv, 'relief', self.conf.geometry, filename='TARGET_RELIEF.nc',
@@ -71,6 +74,14 @@ class Precipitation(_VortexTask):
         print(t.prompt, 'tbalgo =', tbalgo)
         print()
         tbalgo.run()
+
+    def put_remote_outputs(self):
+        """
+        Main method to save an OFFLINE execution outputs
+        """
+        self.sh.title('Precipitation output')
+        io.put_precipitation(*self.common_args, members=self.conf.members, filename='PRECIPITATION_OUT.nc',
+                **self.common_kw)
 
 
 class Forcing(_VortexTask):
@@ -105,7 +116,7 @@ class Forcing(_VortexTask):
         conf_map    = dict(
             RS   = 'RandomSampling',
             EnKF = 'EnsembleKalmanFilter',
-            PF   = 'APrticleFilter',
+            PF   = 'ParticleFilter',
 
         )
         # TODO modifier cette condition ridicule
