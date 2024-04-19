@@ -19,6 +19,16 @@ To plot yearly accumulations of Rainf, Snowf and the sum of the 2 (total precipi
 >>> p plot_variable.py -b 2017080106 -e 2018080106 -x RS27@vernaym -g GrandesRousses250m -k FORCING -m
            -v Rainf+Snowf Rainf Snowf
 
+Plot simulated snow depths
+
+>>> p plot_variable.py -b 2017080106 -e 2018080106 -x SAFRAN SAFRAN_pappus ANTILOPE ANTILOPE_pappus -v DSN_T_ISBA
+           -d 20180123
+
+Plot observed snow depth (Pleiade)
+
+>>> p plot_variable.py -b 2017080106 -e 2018080106 -x CesarDB_AngeH -g Lautaret250m -a Pleiades -v DSN_T_ISBA
+           -k snow_obs_date -d 2018012312
+
 '''
 
 import os
