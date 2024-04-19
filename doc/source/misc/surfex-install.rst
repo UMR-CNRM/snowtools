@@ -5,28 +5,45 @@ SURFEX is now available as open-source.
 
 Below is given an extract of the install procedure with the necessary information to get started with SURFEX in particular if snow on the ground is a target.
 
-Requirements
-------------
+Users at Meteo-France
+---------------------
+
+Simple users at Meteo-France do not need to install SURFEX, but rather should point at an existing install:
+
+* On supercomputers, no need to specify a SURFEX install path, snowtools will use an appropriate one automatically;
+* On Meteo-France PC or server at CEN, please set ``EXESURFEX`` environment variable to ``/rd/cenfic3/cenmod/home/lafaysse/common/SURFEX/surfex-cen-NOMPI-O2-X0/exe``;
+* On sxcen, point ``EXESURFEX`` to ``/home/lafaysse/common/SURFEX/surfex-cen-NOMPI-O2-X0/exe``.
+
+Note: If you need to work with more recent branch (``cen_dev`` for instance) or other compile options (``MPI``) have a look to available binaries in the previously pointed ``SURFEX`` folder where other compiled binaries are available.
+
+Requirements for users outside of Meteo-France
+----------------------------------------------
 
 For a first install, check the SURFEX requirements and the basics: http://www.cnrm.meteo.fr/surfex-lab/spip.php?article302
 
 Get the code
 ------------
 
-Rather than installing from an « export » archive, it is better to immediately get started from the most recent version of the git repository. Crocus users should in the general case install the cen branch. This is the most recent stable release of Crocus snowpack model which often includes new developments not already merged in the master SURFEX branch. Specific instructions on how to use git for SURFEX are provided in : http://www.umr-cnrm.fr/surfex/spip.php?article415
+Rather than installing from an « export » archive, it is better to immediately get started from the most recent version of the git repository. Crocus users should in the general case install the ``cen`` branch. This is the most recent stable release of Crocus snowpack model which often includes new developments not already merged in the master SURFEX branch. Specific instructions on how to use git for SURFEX are provided in : http://www.umr-cnrm.fr/surfex/spip.php?article415
 
 Detailed instructions for getting access to the code are available at https://opensource.umr-cnrm.fr/projects/snowtools_git/wiki/Procedure_for_new_users
 
 .. warning::
    Caution: the directory where you are going to install SURFEX and all parent directories MUST NOT contain dots (.) in their names.
 
-Download the cen branch with the folowwing command:
+If you plan to launch simulation only (ie not for developer), download the cen branch with the folowwing command:
 
 .. code-block:: bash
 
-   git clone -b cen --single-branch ssh://reader097@git.umr-cnrm.fr/git/Surfex_Git2.git cen
+   git clone -b cen ssh://reader097@git.umr-cnrm.fr/git/Surfex_Git2.git
+   
+If you are a developer, you may prefer download the cen_dev branch with the folowwing command:
 
-If a password is requested, it means that your ssh keys have not been registered, please contact operator@meteo.fr
+.. code-block:: bash
+
+   git clone -b cen_dev ssh://admin097@git.umr-cnrm.fr/git/Surfex_Git2.git
+
+If a password is requested, it means that your ssh keys have not been registered, please contact ``operator at meteo dot fr``
 
 This will download a number of folder and files. The SURFEX sources are in the src directory.
 
@@ -155,9 +172,17 @@ Please check carefully the full names of your binaries (depending on SURFEX vers
 
 .. code-block:: bash
 
-   ln -s $EXESURFEX/OFFLINE-LXgfortran-SFX-V8-1-1-NOMPI-O2 $EXESURFEX/OFFLINE
-   ln -s $EXESURFEX/PREP-LXgfortran-SFX-V8-1-1-NOMPI-O2 $EXESURFEX/PREP
-   ln -s $EXESURFEX/PGD-LXgfortran-SFX-V8-1-1-NOMPI-O2 $EXESURFEX/PGD
+   ln -s $EXESURFEX/OFFLINE-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/OFFLINE
+   ln -s $EXESURFEX/PREP-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/PREP
+   ln -s $EXESURFEX/PGD-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/PGD
+   ln -s $EXESURFEX/SODA-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/SODA
 
+Test your snowtools and SURFEX install
+--------------------------------------
+If you correctly installed the snowtools and SURFEX projects, you must be able to run successfully the following test case:
+
+.. code-block:: bash
+
+   s2m research -f $SNOWTOOLS_CEN/snowtools/DATA/FORCING_test_base.nc -b 20100801 -e 20110801 -o output -g -s ...yoursurfexdirectory.../exe
 
 

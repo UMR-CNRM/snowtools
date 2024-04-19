@@ -52,7 +52,7 @@ The success of the following commands must be checked before a new code release 
 .. code-block:: bash
 
     # Reanalysis test case:
-    s2m research -r alp_allslopes -b 20220801 -e 20230801 -m safran -f reanalysis2020.2 -o reanalysis_test -n snowtools_git/snowtools/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam
+    s2m research -r alp_allslopes -b 20220801 -e 20230801 -m safran -f reanalysis2020.2 -o reanalysis_test -n /home/cnrm_other/cen/mrns/lafaysse/PycharmProjects/snowtools_git/snowtools/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam
 
     # ESCROC test case:
     s2m research -r cdp -b 1994100101 -e 2014100100 -x 2014100100 -m ESM-SnowMIP -f obs@lafaysse -o E2_test --task=escroc --escroc=E2
@@ -71,4 +71,4 @@ The success of the following commands must be checked before a new code release 
     s2m research -r vog3_allslopes -b 20000801 -e 20010801 -a 400 -m s2m -f reanalysis_era5.2023 -p reanalysis_era5.2023 -o initialconditions_test -n snowtools_git/snowtools/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis_forprep.nam
 
     # Reforecast test case
-    s2m research -b 20000302 -e 20000327 -r vog3_allslopes -n /home/cnrm_other/cen/mrns/lafaysse/snowtools_git/snowtools/DATA/OPTIONS_reforecast.nam --task='reforecast' -m safran -f reforecast_2023 --nmembers=11 -p
+    s2m research -b 20000302 -e 20000327 -r vog3_allslopes -n /home/cnrm_other/cen/mrns/lafaysse/PycharmProjects/snowtools_git/snowtools/DATA/OPTIONS_reforecast.nam --task='reforecast' -m safran -f reforecast_2023 --nmembers=11 -p initdaily_era5.2023@lafaysse -o reforecast_test

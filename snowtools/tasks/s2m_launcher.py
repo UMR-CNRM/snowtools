@@ -36,8 +36,9 @@ class _S2M_command(object):
     def __init__(self, args):
         self.mandatory_arguments = dict()
         # Read the options provided by the user
-        self.options = self.parse_options(args)
-
+        self.options = self.parse_options(args[1:])
+        # Archive the command for reproductibility
+        self.command = ' '.join(args)
         self.execute()
 
     def parse_options(self, arguments):

@@ -84,8 +84,8 @@ case $key in
             FOLDER="$1"
         else
             SERVER="$1"
-        shift # shift to next argument
         fi
+        shift # shift to next argument
     ;;
 esac
 done
@@ -207,8 +207,8 @@ then
         --exclude ".*.swp" --exclude "*~" \
         --exclude "*.egg-info" --exclude "*.o" --exclude "*.bin" --exclude "*.exe" \
         --exclude fail_test --exclude Manual_tests --exclude "interpolation/*.mod" \
-        --exclude "interpolation/interpol_MPIAUTO" \
-        --exclude /exe --exclude "src/dir_obj*" \
+        --exclude "interpolation/interpol_*" \
+        --exclude /exe --exclude "src/dir_obj*" --exclude "exe_*" \
         --exclude 'profile_surfex' --exclude 'profile_surfex-LX*' \
         --exclude "src/LIB/grib_api-*-Source" --exclude "src/LIB/eccodes*" --exclude STRATO \
         $folder_orig $SERVER:$folder_dest
@@ -239,6 +239,7 @@ then
       --exclude Manual_tests  \
       --exclude interpolation/interpol_MPIAUTO \
       --exclude exe/ \
+      --exclude-glob exe_*/ \
       --exclude 'profile_surfex' \
       --exclude-glob interpolation/*.mod \
       --exclude-glob venv* \
@@ -252,9 +253,10 @@ then
       --exclude-glob  *.o \
       --exclude-glob *.bin \
       --exclude-glob *.exe \
-      --exclude-glob src/dir_obj* \
+      --exclude-glob src/dir_obj*/ \
       --exclude-glob 'profile_surfex-LX*' \
-      --exclude-glob src/LIB/grib_api-*-Source \
+      --exclude-glob src/LIB/grib_api-*-Source/ \
+      --exclude-glob src/LIB/eccodes*/ \
       --exclude-glob src/LIB/eccodes* \
       --exclude STRATO \
       $folder_orig $folder_dest"

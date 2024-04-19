@@ -311,7 +311,8 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 dateend      = [dateend],
                 ntasks       = 1,
                 geometry_in  = list_geometry,
-                geometry_out = self.conf.geometry.tag
+                geometry_out = self.conf.geometry.tag,
+                reprod_info  = self.get_reprod_info,
             )
             print((t.prompt, 'tb09a =', tb09))
             print()
@@ -339,7 +340,8 @@ class Monthly_Surfex_Reanalysis(S2MTaskMixIn, Task):
                 dateend        = dateend,
                 dateinit       = datebegin,
                 threshold      = self.conf.threshold,
-                daily          = False
+                daily          = False,
+                reprod_info=self.get_reprod_info,
             )
             print((t.prompt, 'tb11 =', tb11))
             print()

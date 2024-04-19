@@ -120,7 +120,8 @@ class Perturb_Task(Task, S2MTaskMixIn):
                 dateend=self.conf.dateend,
                 ntasks=self.conf.nmembers,
                 geometry_in=list_geometry,
-                geometry_out=self.conf.geometry.tag
+                geometry_out=self.conf.geometry.tag,
+                reprod_info=self.get_reprod_info,
             )
             print(t.prompt, 'tbalgo =', tbalgo)
             print()

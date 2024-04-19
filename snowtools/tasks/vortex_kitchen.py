@@ -14,7 +14,7 @@ import numpy as np
 import filecmp
 
 from snowtools.utils.dates import WallTimeException
-from snowtools.utils.resources import InstallException
+from snowtools.utils.resources import InstallException, absolute_path
 from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
 from snowtools.tools.execute import callSystemOrDie
 from snowtools.DATA import SNOWTOOLS_DIR
@@ -26,14 +26,17 @@ class vortex_kitchen(object):
     Interface between s2m command line and vortex utilities (tasks and mk_jobs)
     """
 
-    def __init__(self, options):
+    def __init__(self, options, snowtools_command):
         """
         Constructor
         """
         # Check if a vortex installation is defined
         self.check_vortex_install()
         self.options = options
+        self.snowtools_command = snowtools_command
 
+        # Initialization of vortex variables
+        self.vapp = 's2m'
         self.split_geo()
 
         if self.options.command == 'oper':
@@ -44,7 +47,7 @@ class vortex_kitchen(object):
         else:
             self.options.xpid = self.options.diroutput  # diroutput is now always defined in research cases
 
-        self.workingdir = "/".join([self.options.workdir, self.options.xpid, self.options.vapp, self.options.vconf])
+        self.workingdir = "/".join([self.options.workdir, self.options.xpid, self.vapp, self.options.vconf])
         self.confdir    = "/".join([self.workingdir, 'conf'])
         self.jobdir     = "/".join([self.workingdir, "jobs"])
 
@@ -107,7 +110,7 @@ class vortex_kitchen(object):
             if not os.path.isdir(directory):
                 os.mkdir(directory)
 
-        if self.options.uenv is not None:
+        if hasattr(self.options, 'uenv') and self.options.uenv is not None:
             if self.options.uenv.startswith('uenv'):
                 # The user already created a uenv and parsed the formatted uenv name
                 envname = self.options.uenv.split(':')[1].split('@')[0]
@@ -115,7 +118,8 @@ class vortex_kitchen(object):
             else:
                 # The uenv needs to be generated
                 # Set up a uenv with all files in self.options.uenv repository
-                envname = '_'.join([self.options.vapp, self.options.vconf, self.options.xpid])
+                envname = '_'.join([self.vapp, self.options.vconf, self.options.xpid])
+                user = os.environ['USER']
                 datadir = self.options.uenv
             user = os.environ['USER']
             self.uenv = UserEnv(envname, targetdir=datadir)
@@ -170,6 +174,7 @@ class vortex_kitchen(object):
                 reforecast = "ensemble_surfex_reforecast",
                 debug = 'debug_tasks',
                 refill = "refill",
+                interpol="interpol_task",
             )
 
             defaultjobname = dict(
@@ -182,6 +187,7 @@ class vortex_kitchen(object):
                 reforecast = "surfex_forecast",
                 debug = 'debug_s2m',  # TODO : remplacer par "debug_surfex" ?
                 refill = "refill_surfex_output",
+                interpol="interpolator",
             )
 
             if self.options.task in ['escroc', 'croco', 'croco_perturb', 'reforecast', 'refill']:
@@ -192,6 +198,9 @@ class vortex_kitchen(object):
                 self.nnodes = self.options.nnodes
 
             self.confcomplement = " taskconf=" + self.options.datedeb.strftime("%Y")
+            # take care to not overlap in case of simultaneous executions with meteo and pro blocks
+            if hasattr(self.options, 'interpol_blocks'):
+                self.confcomplement = self.confcomplement + self.options.interpol_blocks.replace(',', '')
 
         # Following common between oper and research
         self.reftask = reftask[self.options.task]
@@ -218,9 +227,9 @@ class vortex_kitchen(object):
         os.chdir(self.confdir)
         if self.options.surfex:
             if self.options.command == 'oper':
-                conffilename = self.options.vapp + "_" + self.options.vconf + ".ini"
+                conffilename = self.vapp + "_" + self.options.vconf + ".ini"
                 if self.options.dev:
-                    conffilename_in = self.options.vapp + "devnew_" + self.options.vconf + ".ini"
+                    conffilename_in = self.vapp + "devnew_" + self.options.vconf + ".ini"
                 else:
                     conffilename_in = conffilename
 
@@ -238,14 +247,18 @@ class vortex_kitchen(object):
                 if hasattr(self.options, 'confname'):
                     conffilename = self.options.confname.rstrip('.ini') + ".ini"
                 else:
-                    conffilename = self.options.vapp + "_" + self.options.vconf + "_" + \
-                        self.options.datedeb.strftime("%Y") + ".ini"
+                    suffix = '.ini'
+                    if hasattr(self.options, 'interpol_blocks'):
+                        suffix = self.options.interpol_blocks.replace(',', '') + suffix
+
+                    conffilename = self.vapp + "_" + self.options.vconf + "_" + \
+                        self.options.datedeb.strftime("%Y") + suffix
 
         elif self.options.safran:
             if self.options.command == 'oper':
                 pass
             else:
-                conffilename = self.options.vapp + "_" + self.options.vconf + ".ini"
+                conffilename = self.vapp + "_" + self.options.vconf + ".ini"
 
         if conffilename:
             fullname = '/'.join([self.confdir, conffilename])
@@ -253,7 +266,7 @@ class vortex_kitchen(object):
             fullname = None
 
         if not self.options.command == 'oper':
-            self.conf_file = Vortex_conf_file(self.options, fullname)
+            self.conf_file = Vortex_conf_file(self.options, self.snowtools_command, fullname)
             self.conf_file.create_conf(jobname=self.jobname)
             # Do not write the configuration file now, additionnal informations may be added later
             # self.conf_file.write_file()
@@ -262,8 +275,9 @@ class vortex_kitchen(object):
         os.chdir(self.workingdir)
 
     def write_conf_file(self):
-        self.conf_file.write_file()
-        self.conf_file.close()
+        if not self.options.command == 'oper':
+            self.conf_file.write_file()
+            self.conf_file.close()
 
     def mkjob_command(self, jobname):
 
@@ -283,7 +297,10 @@ class vortex_kitchen(object):
 
             return mkjob_list
 
-        elif self.options.nforcing > 1:
+        elif hasattr(self.options, 'nforcing') and self.options.nforcing > 1 and self.options.nnodes > 1:
+            # Case when surfex_task is forced by an ensemble
+            # Condition on options.nnodes allow to not use this case for croco tasks
+            # The use of options.nnodes must not be used to define the nb of nodes per domain in this case.
             mkjob_list = []
             for node in range(1, self.options.nforcing + 1):
                 jobname = self.jobname + str(node)
@@ -382,16 +399,17 @@ class vortex_kitchen(object):
             self.options.vconf = splitregion[1].lower()
             self.options.interpol = len(splitregion) == 3
             if self.options.interpol:
-                self.options.gridout = splitregion[2]
+                self.options.gridout = absolute_path(splitregion[2])
         else:
             self.options.interpol = False
             self.options.vconf = self.options.region.lower()
 
 
 class Vortex_conf_file(object):
-    def __init__(self, options, filename, mode='w'):
+    def __init__(self, options, snowtools_command, filename, mode='w'):
         self.name = filename
         self.options = options
+        self.snowtools_command = snowtools_command
         self.fileobject = open(filename, mode)
         self.blocks = dict()
 
@@ -428,19 +446,39 @@ class Vortex_conf_file(object):
         elif self.options.safran:
             self.create_conf_safran()
 
+    def create_conf_interpol(self):
+        self.get_forcing_variables()
+
+        if self.options.namelist:
+            self.set_field("DEFAULT", 'namelist', self.options.namelist)
+
+        self.set_field("DEFAULT", 'gridout', self.options.gridout)
+        self.set_field("DEFAULT", 'geoin', self.options.geoin)
+
+        self.set_field("DEFAULT", 'drhook', self.options.drhook)
+
+        if hasattr(self.options, 'save_pro'):
+            self.set_field("DEFAULT", 'save_pro', self.options.save_pro)
+
+        if hasattr(self.options, 'interpol_blocks'):
+            self.set_field("DEFAULT", 'interpol_blocks', self.options.interpol_blocks)
+
     def create_conf_surfex(self):
-        self.surfex_variables()
-        # ESCROC on several nodes
-        if self.options.task in ['escroc', 'escroc_scores', 'croco', 'croco_perturb']:
-            self.escroc_variables()
-            if self.options.task in ['croco']:
-                self.croco_variables()
+        if self.options.task in ['interpol']:
+            self.create_conf_interpol()
         else:
-            self.set_field("DEFAULT", 'nnodes', self.options.nnodes)
-            if self.options.nmembers:
-                self.set_field("DEFAULT", 'nmembers', self.options.nmembers)
-            if self.options.startmember:
-                self.set_field("DEFAULT", 'startmember', self.options.startmember)
+            self.surfex_variables()
+            # ESCROC on several nodes
+            if self.options.task in ['escroc', 'escroc_scores', 'croco', 'croco_perturb']:
+                self.escroc_variables()
+                if self.options.task in ['croco']:
+                    self.croco_variables()
+            else:
+                self.set_field("DEFAULT", 'nnodes', self.options.nnodes)
+                if self.options.nmembers:
+                    self.set_field("DEFAULT", 'nmembers', self.options.nmembers)
+                if self.options.startmember:
+                    self.set_field("DEFAULT", 'startmember', self.options.startmember)
 
     def create_conf_safran(self):
         self.safran_variables()
@@ -458,9 +496,12 @@ class Vortex_conf_file(object):
                 if '@' not in self.options.prep_xpid:
                     self.options.prep_xpid = self.options.prep_xpid + '@' + os.getlogin()
                 self.set_field("DEFAULT", 'prep_xpid', self.options.prep_xpid)
-        if self.options.uenv is not None:
-            self.set_field("DEFAULT", 'uenv', self.options.uenv)
-            self.set_field("DEFAULT", 'udata', self.options.udata)
+        if hasattr(self.options, 'uenv'):
+            if self.options.uenv is not None:
+                self.set_field("DEFAULT", 'uenv', self.options.uenv)
+                self.set_field("DEFAULT", 'udata', self.options.udata)
+        # Archive the command instruction only for reproductibility
+        self.set_field("DEFAULT", 'snowtools_command', self.snowtools_command)
 
     def escroc_variables(self):
 
@@ -498,7 +539,8 @@ class Vortex_conf_file(object):
                 forcinglogin = os.getlogin()
 
             lf = self.options.forcing.split('/')
-            self.set_field("DEFAULT", 'forcingid', lf[0] + '@' + forcinglogin)
+            addlogin = '' if lf[0] == 'oper' else '@' + forcinglogin
+            self.set_field("DEFAULT", 'forcingid', lf[0] + addlogin)
 
             if len(lf) > 1:
                 self.set_field("DEFAULT", 'blockin', '/'.join(lf[1:]))

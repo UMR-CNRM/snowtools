@@ -8,27 +8,9 @@ Created on 11 oct. 2017
 import unittest
 import os
 
-from snowtools.tasks.s2m_command import Surfex_command as s2m
-from snowtools.tests.export_output import exportoutput
-from snowtools.tests.tempfolder import TestWithTempFolderWithLog
+from snowtools.tests.s2m_instance import s2mTest
 from snowtools.DATA import SNOWTOOLS_DATA
-from snowtools.DATA import DIRDATAPGD
 from snowtools.DATA import TESTBASE_DIR
-
-
-class s2mTest(TestWithTempFolderWithLog):
-
-    def setUp(self):
-        super(s2mTest, self).setUp()
-        self.commonoptions = " -o " + self.diroutput + " -g"
-
-    def full_run(self, shortcommand):
-        command = shortcommand + self.commonoptions
-        with exportoutput(self.logfile):
-            s2m(command.split()[1:])
-
-    def runatcen(self):
-        return os.path.isdir(DIRDATAPGD) or "DIRDATAPGD" in list(os.environ.keys())
 
 
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "FORCING",
@@ -63,7 +45,7 @@ class s2m2DTest(s2mTest):
         namelist = os.path.join(SNOWTOOLS_DATA, "OPTIONS_test_2d.nam")
         # If the test is run at CEN, it can run PGD with available databases.
         # Otherwise, we do not test the PGD step and only take a PGD test file.
-        if not self.runatcen():
+        if not self.runatcen:
             os.makedirs(self.diroutput+"/prep")
             pgd = os.path.join(SNOWTOOLS_DATA, "PGD_test_2d.nc")
             os.symlink(pgd, self.diroutput+"/prep/PGD.nc")

@@ -9,10 +9,7 @@ import unittest
 import os
 from netCDF4 import Dataset
 
-from snowtools.tasks.s2m_command import Surfex_command as s2m
-from snowtools.tests.export_output import exportoutput
-from snowtools.tests.tempfolder import TestWithTempFolderWithLog
-from snowtools.DATA import DIRDATAPGD
+from snowtools.tests.s2m_instance import s2mTest
 from snowtools.DATA import TESTBASE_DIR
 
 _here = os.path.dirname(os.path.realpath(__file__))
@@ -21,24 +18,16 @@ _here = os.path.dirname(os.path.realpath(__file__))
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "FORCING",
                                                  "FORCING_test_impur.nc")),
                  "input file not available")
-class s2mTestPrepImpur(TestWithTempFolderWithLog):
+class s2mTestPrepImpur(s2mTest):
     def setUp(self):
         super(s2mTestPrepImpur, self).setUp()
         self.namelist = os.path.join(_here, 'namelists/namelist_prep_impur.nam')
         self.forcingtest = os.path.join(TESTBASE_DIR, "FORCING", "FORCING_test_impur.nc")
         self.commonoptions = " -o " + self.diroutput + " -f " + self.forcingtest + " -n " + self.namelist + " -g"
 
-    def full_run(self, shortcommand):
-        command = shortcommand + self.commonoptions
-        with exportoutput(self.logfile):
-            s2m(command.split()[1:])
-
-    def runatcen(self):
-        return os.path.isdir(DIRDATAPGD)
-
     def test_prep_impur(self):
         self.full_run("s2m research -b 20171216 -e 20171217")
-        if not self.runatcen():
+        if not self.runatcen:
             print('something to do for access to PATH_TEST')
         with Dataset(os.path.join(self.diroutput, 'prep/PREP_2017121606.nc'), 'r',
                      format='NETCDF4_CLASSIC') as ncfile:

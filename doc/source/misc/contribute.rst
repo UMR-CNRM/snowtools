@@ -10,6 +10,11 @@ To contribute to snowtools, you must :
 
 * use the **git** versioning tool 
 * use PyCharm as code editor
+* work in a branch, deriving from ``dev`` (except for simple commits that can be directly done on ``dev`` branch)
+* Test your branch on your personal computer and with the test server
+* Ensure new development are tested
+* Ensure you followed guidelines below
+* Ask for a code review before merging
 
 To add the git project to PyCharm directly, click on ``VCS``, then ``checkout from version control`` and then ``git``.
 
@@ -69,7 +74,13 @@ We recoment to commit only when :
 - Tests are passing
 - You have in your commit only changes on one topic (and not mixed changes that are unrelated)
 
-Each commit must contain a clear message that include in few words the part of the code that is affected and the reason of the commit. The commit message is composed of a title (1st line) that summarize the changes and could be complemented by more detailed description of the changes.
+Each commit must contain a clear message that include:
+
+* The type of commit (bugfix, development, documentation, etc.
+* In few words, the part of the code that is affected
+* The reason of the commit.
+
+The commit message is composed of a title (1st line) that summarize the changes and could be complemented by more detailed description of the changes explaining the reasons of the changes for future generations.
 
 Developpement branches must start from the ``dev`` branch and be named ``dev_<project>`` where ``<project>`` is the name of the project or obviously describe what is inside the branch.
 

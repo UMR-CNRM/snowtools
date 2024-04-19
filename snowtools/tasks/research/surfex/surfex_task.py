@@ -10,7 +10,7 @@ import shlex
 from vortex.layout.nodes import Driver, Task
 from vortex import toolbox
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
-from bronx.stdtypes.date import Date, daterange, tomorrow
+from bronx.stdtypes.date import Date, daterange, tomorrow, Period
 from cen.layout.nodes import S2MTaskMixIn
 
 
@@ -35,7 +35,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         t = self.ticket
 
         if not hasattr(self.conf, "genv"):
-            self.conf.genv = 'uenv:cen.10@CONST_CEN'
+            self.conf.genv = 'uenv:cen.12@CONST_CEN'
 
         # Definition of geometries, safran xpid/block and list of dates from S2MTaskMixIn methods
         list_geometry = self.get_list_geometry(meteo=self.conf.meteo)
@@ -72,8 +72,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 role           = 'Forcing',
                 kind           = 'MeteorologicalForcing',
                 vapp           = self.conf.meteo,
-                # TODO : uniformiser le vconf (utiliser systématiquement l'atribut area dans EDELWEISS)
-                vconf          = '[geometry:area]' if source_safran == 'safran' else '[geometry:tag]',
+                vconf          = '[geometry:area]' if source_safran == 'safran' or 'oper' in self.conf.forcingid \
+                                 else '[geometry:tag]',
                 source_app     = dict_source_app_safran if source_safran == 'safran' else None,
                 source_conf    = dict_source_conf_safran if source_safran == 'safran' else None,
                 cutoff         = 'assimilation',
@@ -87,10 +87,11 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 model          = 'safran',
                 datebegin      = self.conf.datebegin,
                 dateend        = self.conf.dateend,
+                date           = self.conf.dateend.replace(hour=12) + Period(days=4), # for monthly reanalysis only
                 intent         = 'in',
                 namespace      = 'vortex.multi.fr',
-                namebuild      = 'flat@cen',
-                fatal          = False,
+                namebuild      = 'flat@cen' if 'oper' not in self.conf.forcingid else None,
+                fatal          = False if 'oper' not in self.conf.forcingid else True,
             ),
             print(t.prompt, 'tb01a =', tb01a)
             print()
@@ -105,7 +106,6 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     role           = 'Forcing',
                     kind           = 'MeteorologicalForcing',
                     vapp           = self.conf.meteo,
-                    # TODO : uniformiser le vconf (utiliser systématiquement l'atribut area dans EDELWEISS)
                     vconf          = '[geometry:area]' if source_safran == 'safran' else '[geometry:tag]',
                     source_app     = dict_source_app_safran if source_safran == 'safran' else None,
                     source_conf    = dict_source_conf_safran if source_safran == 'safran' else None,
@@ -170,7 +170,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             prep_a = toolbox.input(
                 role           = 'SnowpackInit',
                 local          = 'PREP.nc',
-                experiment     = self.conf.xpid,
+                experiment     = self.conf.xpid if not hasattr(self.conf, 'prep_xpid') else self.conf.prep_xpid,
                 geometry       = self.conf.geometry,
                 date           = self.conf.datespinup,
                 intent         = 'inout',
@@ -180,7 +180,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 namespace      = 'vortex.multi.fr',
                 namebuild      = 'flat@cen',
                 block          = 'prep',
-                fatal          = False,
+                fatal          = False if not hasattr(self.conf, 'prep_xpid') else True,
             ),
             print(t.prompt, 'PREP (a) =', prep_a)
             print()
@@ -560,7 +560,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     dateend      = list_dates_end_forc if not oneforcing else [self.conf.dateend],
                     ntasks       = ntasks,
                     geometry_in  = list_geometry,
-                    geometry_out = self.conf.geometry.tag
+                    geometry_out = self.conf.geometry.tag,
+                    reprod_info  = self.get_reprod_info,
                 )
                 print(t.prompt, 'tb09a =', tb09a)
                 print()
@@ -587,7 +588,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                         kind         = 'shadowsforcing',
                         datebegin    = list_dates_begin_forc if not oneforcing else [self.conf.datebegin],
                         dateend      = list_dates_end_forc if not oneforcing else [self.conf.dateend],
-                        ntasks       = min(40, len(list_dates_begin_forc))
+                        ntasks       = min(40, len(list_dates_begin_forc)),
+                        reprod_info  = self.get_reprod_info,
                     )
                     print(t.prompt, 'tb09abis =', tb09abis)
                     print()
@@ -659,6 +661,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 threshold      = self.conf.threshold,
                 daily          = self.conf.dailyprep,
                 drhookprof     = self.conf.drhook,
+                reprod_info    = self.get_reprod_info,
             )
             print(t.prompt, 'tb11 =', tb11)
             print()

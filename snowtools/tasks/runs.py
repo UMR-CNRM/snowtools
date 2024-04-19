@@ -21,17 +21,18 @@ from snowtools.utils.resources import get_file_period, get_file_date, get_file_c
         save_file_date, save_file_const, get_file_const_or_crash, ldd
 from snowtools.utils.prosimu import prosimu
 from snowtools.utils.FileException import DirFileException
-from snowtools.utils.git import git_infos
+from snowtools.utils.git import get_summary_git
 from snowtools.DATA import SNOWTOOLS_DIR, DIRDATAPGD
 
 
 class surfexrun(object):
     """Class for any SURFEX run"""
     addmask = False
+
     def __init__(self, datebegin, dateend, forcingpath, diroutput,
                  namelist=os.path.join(SNOWTOOLS_DIR, 'DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam'),
                  execdir=".", onlyextractforcing = False,
-                 threshold=-999, workdir=None, datespinup=None, geolist=[], addmask=None):
+                 threshold=-999, workdir=None, datespinup=None, geolist=[], addmask=None, s2mcommand=None):
 
         # Convert arguments in attributes
         for var in ("datebegin", "dateend", "forcingpath", "diroutput", "namelist", "execdir", "onlyextractforcing",
@@ -60,6 +61,11 @@ class surfexrun(object):
             self.dateinit = datespinup
         else:
             self.dateinit = self.datebegin
+
+        if s2mcommand:
+            self.s2mcommand = s2mcommand
+        else:
+            self.s2mcommand = 'unknown'
 
     def defaults_from_env(self, moderun="NORMAL"):
         machine = os.uname()[1]
@@ -257,11 +263,11 @@ class surfexrun(object):
 
     def postprocess(self):
 
-        surfex_commit = git_infos(self.execdir).get_commit(default='')
+        surfex_commit = get_summary_git(os.path.dirname(os.path.normpath(self.execdir)))
 
         profile = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode='a')
         profile.massif_natural_risk()
-        profile.dataset.GlobalAttributes(surfex_commit=surfex_commit)
+        profile.dataset.GlobalAttributes(surfex_commit=surfex_commit, snowtools_command=self.s2mcommand)
         profile.dataset.add_standard_names()
         profile.close()
 
@@ -271,7 +277,8 @@ class massifrun(surfexrun):
     def modify_forcing(self, list_massif_number, min_alt, max_alt, liste_pentes, list_exp):
         ''' Extract the simulation points in the forcing file.'''
         os.rename("FORCING.nc", "FORCING_base.nc")
-        forcinput_select("FORCING_base.nc", "FORCING.nc", list_massif_number, min_alt, max_alt, liste_pentes, list_exp)
+        forcinput_select("FORCING_base.nc", "FORCING.nc", list_massif_number, min_alt, max_alt,
+                         liste_pentes, list_exp, snowtools_command=self.s2mcommand)
 
     def save_output(self):
         super(massifrun, self).save_output()
@@ -300,9 +307,9 @@ class postesrun(surfexrun):
         for i in range(0, len(self.forcingpathlist)):
             list_forcing.append("FORCING_" + str(i) + ".nc")
         if addmask:
-            forcinput_applymask(list_forcing, "FORCING.nc")
+            forcinput_applymask(list_forcing, "FORCING.nc",  snowtools_command=self.s2mcommand)
         else:
-            forcinput_tomerge(list_forcing, "FORCING.nc")
+            forcinput_tomerge(list_forcing, "FORCING.nc", snowtools_command=self.s2mcommand)
 
     def save_output(self):
         if not self.onlyextractforcing:

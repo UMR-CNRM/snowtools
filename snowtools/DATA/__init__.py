@@ -2,9 +2,9 @@
 
 import os
 
-SNOWTOOLS_DATA = os.path.dirname(os.path.abspath(__file__))
+SNOWTOOLS_DATA = os.path.dirname(os.path.realpath(__file__))
 """
-Path to this folder (DATA)
+Path to this folder (DATA). Resolving symbolink links (realpath) is necessary for git info retrieval.
 """
 
 SNOWTOOLS_DIR = os.path.dirname(SNOWTOOLS_DATA)
