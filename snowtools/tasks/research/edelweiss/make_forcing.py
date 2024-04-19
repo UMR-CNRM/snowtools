@@ -150,5 +150,5 @@ class Diag_sentinel2(Task, S2MTaskMixIn):
                     dateend     = self.conf.dateend,
                     namespace   = self.conf.namespace_out,  # TODO : à définir
                     member      = self.conf.members,
-                    block       = 'meteo,
+                    block       = 'meteo',
                 )
