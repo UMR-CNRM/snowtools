@@ -30,6 +30,13 @@ Tool to compute individual deterministic score for each member
    :members:
    :inherited-members:
 
+Rank histogram computation
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: scores.generic
+   :members:
+   :inherited-members:
+
 Script for comparing simulations
 --------------------------------
 
