@@ -118,7 +118,7 @@ from vortex import toolbox
 
 import footprints
 
-# toolbox.active_now = True # overwritten by the default "now" footprint
+toolbox.active_now = True  # overwritten by the default "now" footprint
 
 t = vortex.ticket()
 
@@ -1032,7 +1032,7 @@ def snow_obs_date(action, xpid, geometry, **kw):
 
     # DIAG-specific defaults values that can be overwritten by the function's kw
     specific_default_footprints = dict(
-        filename = 'SnowObs_[date].nc',
+        filename = 'SnowObs_[date:ymdh].nc',
     )
 
     # Create full description dictionnary
@@ -1064,7 +1064,7 @@ def snow_obs_period(action, xpid, geometry, **kw):
 
     # DIAG-specific defaults values that can be overwritten by the function's kw
     specific_default_footprints = dict(
-        filename = 'SnowObs_[begindate]_[enddate].nc',
+        filename = 'SnowObs_[begindate:ymdh]_[enddate:ymdh].nc',
     )
 
     # Create full description dictionnary

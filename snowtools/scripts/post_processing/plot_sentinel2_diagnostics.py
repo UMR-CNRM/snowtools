@@ -4,7 +4,7 @@
 '''
 Created on 18 march 2024
 
-@author: Vernay
+@author: Vernay. M (core code comes from Haddjeri. A)
 
 WORK IN PROGRESS
 
@@ -116,7 +116,7 @@ def plot_fields(xpids, obs, var, member=None):
         plot2D.plot_error_fields(tmp[var], obs, var, savename, vmax=100)
 
 
-def violin_plot(xpids, obs, var, mask=True, member=None):
+def violin_plot(xpids, obs, var, member=None):
     mnt = read_mnt()
 
     filtered_obs = clusters.per_alt(obs, elevation_bands, mnt)

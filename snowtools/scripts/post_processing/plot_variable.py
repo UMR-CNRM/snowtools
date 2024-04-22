@@ -39,6 +39,8 @@ from bronx.stdtypes.date import Date
 
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.plots.maps import plot2D
+from snowtools.scripts.post_processing import common_tools as ct
+
 import matplotlib.pyplot as plt
 
 
@@ -100,39 +102,13 @@ def parse_command_line():
     return args
 
 
-def maskgf(arr, method='nearest'):
-    """
-    Masks an input array (arr) using a reference mask dataset.
-
-    Args:
-        arr    : The input array to be masked.
-        method : The interpolation method to use when resampling the glacier mask
-                  to the same resolution as the input array. Valid options are
-                  'nearest', 'linear', 'cubic', etc. (default: 'nearest').
-
-    Returns:
-        A new array with the same shape as the input array, where values are masked
-        out based on the glacier mask. Masked values are set to NaN.
-    """
-
-    # Load the glacier mask dataset
-    mask = xr.open_dataset('MASK.nc')['Band1']
-    # TODO la commande rename est très lente
-    # --> faire le renomage directement dans le fichier pour éviter de le faire à chaque exécution
-    # mask = mask.rename({'x': 'xx', 'y': 'yy'})
-
-    # Interpolate the glacier mask to the same resolution as the input array
-    mask = mask.interp_like(arr, method=method)
-
-    # Mask the input array based on the glacier mask
-    return arr.where(mask == 0)
 
 
 def plot_var(ds, variables, xpid, date=None, mask=True):
 
     if mask:
         # mask glacier/forest covered pixels
-        ds = maskgf(ds)
+        ds = ct.maskgf(ds)
 
     if any(['Rainf' in var for var in variables]):
         ds['Rainf'] = ds['Rainf'] * 3600.

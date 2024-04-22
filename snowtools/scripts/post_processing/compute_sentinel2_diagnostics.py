@@ -18,6 +18,8 @@ import xarray as xr
 import pandas as pd
 import argparse
 
+from snowtools.scripts.post_processing import common_tools as ct
+
 
 def parse_command_line():
     description = "Computation of Sentinel2-like diagnostics (snow melt-out date, snow cover duration) associated \
@@ -49,34 +51,6 @@ def parse_command_line():
 
     args = parser.parse_args()
     return args
-
-
-def maskgf(arr, method='nearest'):
-    """
-      Masks an input array (arr) using a reference mask dataset.
-
-      Args:
-          arr    : The input array to be masked.
-          method : The interpolation method to use when resampling the glacier mask
-                   to the same resolution as the input array. Valid options are
-                   'nearest', 'linear', 'cubic', etc. (default: 'nearest').
-
-      Returns:
-          A new array with the same shape as the input array, where values are masked
-          out based on the glacier mask. Masked values are set to NaN.
-    """
-
-    # Load the glacier mask dataset
-    mask = xr.open_dataset('mask.nc')['Band1']
-    # TODO la commande rename est très lente
-    # --> faire le renomage directement dans le fichier pour éviter de le faire à chaque exécution
-    # mask = mask.rename({'x': 'xx', 'y': 'yy'})
-
-    # Interpolate the glacier mask to the same resolution as the input array
-    mask = mask.interp_like(arr, method=method)
-
-    # Mask the input array based on the glacier mask
-    return arr.where(mask == 0)
 
 
 def lcscd(data, threshold=.2):
@@ -176,7 +150,7 @@ def diag(subdir, datebegin, mask=True):
 
     if mask:
         # mask glacier/forest covered pixels
-        diag = maskgf(diag)
+        diag = ct.maskgf(diag)
 
     # Write DIAG file and remove PRO
     diag.to_netcdf(os.path.join(subdir, 'DIAG.nc'))
