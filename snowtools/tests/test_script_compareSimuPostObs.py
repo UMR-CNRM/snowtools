@@ -17,13 +17,13 @@ from snowtools.DATA import TESTBASE_DIR
 from snowtools.scores.list_scores import ESCROC_list_scores, scores_file, ensemble_scores_file
 from snowtools.scores.deterministic import SURFEX_dicvarnames
 from snowtools.scores.ensemble import ESCROC_EnsembleScores
+from snowtools.scores.generic import rankDiagram
 from snowtools.utils.obscsv import obscsv
 
 if not os.path.isdir(TESTBASE_DIR):
     SKIP = True
 else:
     SKIP = False
-
 
 class ScorePlotTest(TestWithTempFolderWithLog):
     """
@@ -62,6 +62,16 @@ class ScoreCalcTest(TestWithTempFolderWithLog):
         self.obsfile = os.path.join(TESTBASE_DIR, "OBS_htn_2017122806_2018010606_rochilles.nc")
 
     @unittest.skipIf(SKIP, "input file not available")
+    def test_rank_histo(self):
+        """
+        test rank histogram calculation
+        """
+        e = ESCROC_EnsembleScores(self.list_pro, self.obsfile, self.list_varnames[0])
+        freq, ranksum = rankDiagram(e.ensCommon, e.obsCommon, nbins=9)
+        [self.assertAlmostEqual(f, o) for f, o in zip(freq.tolist(),
+                                                      [0., 0., 0., 0., 0., 0.11111111, 0., 0., 0.88888889])]
+
+    @unittest.skipIf(SKIP, "input file not available")
     def test_escroc_scores_by_member(self):
         """
         test for escroc_tasks
@@ -91,6 +101,10 @@ class ScoreCalcTest(TestWithTempFolderWithLog):
         """
         print(self.list_pro)
         e = ESCROC_EnsembleScores(self.list_pro, self.obsfile, self.list_varnames[0])
+        crps1, reli, pot = e.CRPS_decomp()
+        self.assertAlmostEqual(crps1, 0.10290882106870172)
+        self.assertAlmostEqual(reli, 0.0924720315272686)
+        self.assertAlmostEqual(pot, 0.010436789541433122)
         crps = e.CRPS()
         self.assertAlmostEqual(crps, 0.102908821068702)
         dispersion, rmse, ss = e.dispersionEnsemble()
