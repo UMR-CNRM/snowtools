@@ -37,7 +37,7 @@ def parse_command_line():
 
     parser.add_argument('-d', '--date', type=str, required=True,
                         help="Date of the reference Pleiade observation."
-                             "Format YYYYMMDD")
+                             "Format YYYYMMDDHH")
 
     parser.add_argument('-x', '--xpids', nargs='+', type=str,
                         help="XPID(s) of the simulation(s) format XP_NAME@username")
@@ -61,7 +61,7 @@ def parse_command_line():
     return args
 
 
-def violin_plot(xpids, obs, var, mask=True, member=None):
+def violin_plot(xpids, obs, var, date, mask=True, member=None):
 
     mnt = xr.open_dataarray('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
 
@@ -84,13 +84,13 @@ def violin_plot(xpids, obs, var, mask=True, member=None):
         shortid = xpid.split('@')[0]
         if member is None:
             subdir = ''
-            df = filter_simu(shortid, subdir, var, mnt)
+            df = filter_simu(shortid, subdir, var, date, mnt)
         else:
             df = None
             for mb in range(member):
                 print(mb)
                 subdir = f'mb{mb:03d}'
-                dfm = filter_simu(shortid, subdir, var, mnt)
+                dfm = filter_simu(shortid, subdir, var, date, mnt)
                 if df is not None:
                     df = pd.concat([df, dfm], ignore_index=True)
                 else:
@@ -102,21 +102,33 @@ def violin_plot(xpids, obs, var, mask=True, member=None):
     dataplot.columns = dataplot.columns.str.replace('middle_slices_ZS', 'Elevation Bands (m)')
     dataplot = dataplot.melt('Elevation Bands (m)', var_name='experiment', value_name=var)
 
-    violinplot.plot_ange(dataplot, var)
+    title = f'Pleiades, {geometry}, {date[:8]}\n'
+    violinplot.plot_ange(dataplot, var, figname=f'{var}_{date}', title=title)
 
 
-def filter_simu(xpid, subdir, var, mnt):
+def filter_simu(xpid, subdir, var, date, mnt):
 
     proname = os.path.join(subdir, f'PRO_{xpid}.nc')
     simu = xr.open_dataset(proname, decode_times=False)
     # TODO : gérer le problème de coordonnées pour éviter les "rename" très lents !
+    simu = decode_time(simu)
+    simu = simu.sel({'time': pd.to_datetime(date[:8], format='%Y%m%d')})
     mnt = mnt.rename({'x': 'xx', 'y': 'yy'})
     simu = ct.maskgf(simu)
     filtered_simu = clusters.per_alt(simu[var], elevation_bands, mnt)
 
     df = filtered_simu.to_dataframe(name=xpid).dropna().reset_index().drop(columns=['xx', 'yy', 'time'])
-    #df = df.set_index('middle_slices_ZS')
     return df
+
+
+def decode_time(pro):
+    """
+    Manually decode time variable since other variables can not be decoded automatically
+    """
+    ds = xr.Dataset({"time": pro.time})
+    ds = xr.decode_cf(ds)
+    pro['time'] = ds.time
+    return pro
 
 
 if __name__ == '__main__':
@@ -164,7 +176,7 @@ if __name__ == '__main__':
 #            deb = datebegin  # 2021080207
 
         # TODO : à gérer autrement pour être flexible
-        if shortid in ['safran', 'ANTILOPE', 'safran_pappus', 'ANTILOPE_pappus']:
+        if shortid in ['SAFRAN', 'ANTILOPE', 'SAFRAN_pappus', 'ANTILOPE_pappus']:
             member = None
         else:
             member = 0
@@ -177,7 +189,7 @@ if __name__ == '__main__':
     # TODO : à gérer autrement pour être flexible
     member = None
 
-    violin_plot(xpids, obs, 'DSN_T_ISBA', member=member)  # Violinplots by elevation range
+    violin_plot(xpids, obs, 'DSN_T_ISBA', date, member=member)  # Violinplots by elevation range
 
     # 3. Clean data
     for xpid in xpids:
