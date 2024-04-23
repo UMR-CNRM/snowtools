@@ -35,7 +35,11 @@ class EnsembleScores(object):
 
     def __init__(self, timeObs, timeSim, obs, ensemble):
         """
-        Constructor
+
+        :param timeObs:
+        :param timeSim:
+        :param obs: array of observations dimension : time
+        :param ensemble: array of forecasts dimensions (member, time)
         """
         self.obsCommon = obs
         self.ensCommon = ensemble
@@ -202,9 +206,28 @@ class EnsembleScores(object):
 class ESCROC_EnsembleScores(EnsembleScores):
 
     def __init__(self, profiles, obsfile, varname):
+        """
+
+        :param profiles: list of simulation files (one per ensemble member
+        :param obsfile: observation file (netCDF format)
+        :param varname: variable name
+        """
         self.read(profiles, obsfile, varname)
 
     def read_var_ifpresent(self, dataNc, varname, convert1d=False):
+        """
+        read a variable if present in file else return an empty numpy array.
+
+        convert degrees C to Kelvin if the variable name is Ts and convert1d=False.
+        :param dataNc: dataset
+        :type dataNc: prosimu
+        :param varname: variable name
+        :type varname: str
+        :param convert1d:
+        :type convert1d: bool
+        :return: data array
+        :rtype: np.array
+        """
 
         if varname not in dataNc.listvar():
             if varname in list(ESMSnowMIP_alternate_varnames.keys()):
@@ -212,7 +235,7 @@ class ESCROC_EnsembleScores(EnsembleScores):
 
         if varname in dataNc.listvar():
             if convert1d:
-                array = dataNc.read1d(varname)
+                array = dataNc.read(varname, selectpoint=0)
                 if varname == "ts":
                     array = np.where(array > 273.16, np.nan, array)
                 return array
@@ -229,15 +252,46 @@ class ESCROC_EnsembleScores(EnsembleScores):
             return emptyvar
 
     def read_sim_ifpresent(self, dataNc, varname):
+        """
+        read a variable from simulation file
+        :param dataNc: dataset
+        :type dataNc: prosimu
+        :param varname: variable name to read
+        :type varname: str
+        :return:
+        """
         return self.read_var_ifpresent(dataNc, varname, convert1d=True)
 
     def varsimname(self, varname):
+        """
+        convert variable name to variable name in SURFEX output
+        :param varname: variable name
+        :type varname: str
+        :return: corresponding value from `SURFEX_dicvarnames`
+        :rtype: str
+        """
         return SURFEX_dicvarnames[varname]
 
     def varobsname(self, varname):
+        """
+        convert variable name to ESMSnowMIP variable name
+        :param varname: variable name
+        :type varname: str
+        :return: corresponding value from `ESMSnowMIP_dicvarnames`
+        :rtype: str
+        """
         return ESMSnowMIP_dicvarnames[varname]
 
     def read(self, profiles, obsfile, varname):
+        """
+        read simulation files and observation file and extract dates with available observations in winter.
+        sets self.obsCommon and self.ensCommon
+        :param profiles: list of simulation files (one per ensemble member, netCDF format)
+        :type profiles: list of path-likes
+        :param obsfile: observation file in NetCDF format
+        :type obsfile: pathlike
+        :param varname: variable to be read
+        """
 
         for p, profile in enumerate(profiles):
             print("open file " + profile)
