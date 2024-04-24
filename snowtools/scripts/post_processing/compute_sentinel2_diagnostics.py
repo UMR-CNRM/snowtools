@@ -18,14 +18,12 @@ import xarray as xr
 import pandas as pd
 import argparse
 
-from snowtools.scripts.post_processing import common_tools as ct
-
 
 def parse_command_line():
     description = "Computation of Sentinel2-like diagnostics (snow melt-out date, snow cover duration) associated \
                    to a SURFEX simulation"
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('-b', '--datebegin', type=str, required=True,
+    parser.add_argument('-b', '--datebegin', type=str, default=None,
                         help="First date covered by the simulation file, format YYYYMMDDHH.")
 
     parser.add_argument('-e', '--dateend', type=str, default=None,
@@ -149,6 +147,7 @@ def diag(subdir, datebegin, mask=True):
         diag = xr.merge([diag, pro['ZS']])
 
     if mask:
+        from snowtools.scripts.post_processing import common_tools as ct
         # mask glacier/forest covered pixels
         diag = ct.maskgf(diag)
 
@@ -179,24 +178,25 @@ if __name__ == '__main__':
             os.symlink(mask, 'mask.nc')
         mask = True
 
-    if xpid is not None:
-        try:
-            # Retrieve PRO files with Vortex
-            from snowtools.scripts.extract.vortex import vortexIO
-            vortexIO.get_pro(datebegin, dateend, xpid, geometry, members=members)
-        except (ImportError, ModuleNotFoundError):
-            # TODO : Le code actuel ne gère qu'un unique fichier PRO
-            # TODO : il reste à gérer les simulations d'ensemble avec 1 PRO/membre
-            # shutil.copyfile(pro, 'PRO.nc')
-            os.symlink(pro, 'PRO.nc')
+    try:
+        # Retrieve PRO files with Vortex
+        from snowtools.scripts.extract.vortex import vortexIO
+        vortexIO.get_pro(xpid, geometry, datebegin=datebegin, dateend=dateend, members=members)
+    except (ImportError, ModuleNotFoundError):
+        # TODO : Le code actuel ne gère qu'un unique fichier PRO
+        # TODO : il reste à gérer les simulations d'ensemble avec 1 PRO/membre
+        # shutil.copyfile(pro, 'PRO.nc')
+        os.symlink(pro, 'PRO.nc')
+    except(TypeError):
+        raise
 
     if members is None:
         subdir = ''
+        # Call main method
         diag(subdir, datebegin, mask=mask)
-        os.remove('PRO.nc')
     else:
         for member in range(members):
             print(f'Member {member}')
             subdir = f'mb{member:03d}'
+            # Call main method
             diag(subdir, datebegin, mask=mask)
-            os.remove(os.path.join(subdir, 'PRO.nc'))
