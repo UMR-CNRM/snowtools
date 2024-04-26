@@ -1,4 +1,8 @@
+import os
 import xarray as xr
+import pandas as pd
+
+from snowtools.scores import clusters
 
 
 def maskgf(arr, method='nearest', maskfile='MASK.nc'):
@@ -47,3 +51,29 @@ def elevation_string(band):
         out.append(formatted_string)
 
     return out
+
+
+def filter_dataset(ds, date, mnt, elevation_bands):
+
+    # TODO : gérer le problème de coordonnées pour éviter les "rename" très lents !
+    ds = decode_time(ds)
+    ds = ds.sel({'time': pd.to_datetime(date[:8], format='%Y%m%d')})
+    mnt = mnt.rename({'x': 'xx', 'y': 'yy'})
+    ds = maskgf(ds)
+    filtered_ds = clusters.per_alt(ds, elevation_bands, mnt)
+
+    return filtered_ds
+
+    # df = filtered_simu.to_dataframe(name=xpid).dropna().reset_index().drop(columns=['xx', 'yy', 'time'])
+    #df = filtered_simu.to_dataframe(name=xpid).dropna().drop(columns=['time'])
+    #return df
+
+
+def decode_time(pro):
+    """
+    Manually decode time variable since other variables can not be decoded automatically
+    """
+    ds = xr.Dataset({"time": pro.time})
+    ds = xr.decode_cf(ds)
+    pro['time'] = ds.time
+    return pro
