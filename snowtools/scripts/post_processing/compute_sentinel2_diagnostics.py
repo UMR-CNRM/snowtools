@@ -55,7 +55,12 @@ def xr_ffill(da, dim='time', fillna=False):
     """
     Solution inspired from :
     https://stackoverflow.com/questions/41190852/most-efficient-way-to-forward-fill-nan-values-in-numpy-array
-    * da : DFatArray object
+
+    Arguments :
+    -----------
+    * da     : DataArray.
+    * dim    : string. Name of the dimension along which the forward-fill should be applied
+    * fillna : bool. If True, fill remaining NaN values with 0
     """
     axis = np.where(np.array([dimension for dimension in da.dims]) == dim)[0][0]
     arr = da.data
@@ -74,48 +79,71 @@ def xr_ffill(da, dim='time', fillna=False):
     return da
 
 
-def scd_periods_np(array):
-    # This method is appplied to each 1D array (implicit loop over the domain's pixels) of the
-    # data.cumsum(dim='time').values numpy array.
-    # In the previous example, array would be array([1, 1, 2, 3, 4, 4, 5, 6])
-    out = np.zeros(np.shape(array))  # array([0, 0, 0, 0, 0, 0, 0, 0])
-    out[0] = array[0]  # Initialisation of the first date --> array([1, 0, 0, 0, 0, 0, 0, 0])
-    for idx in range(1, len(array)):
-        if array[idx] == array[idx - 1]:
-            out[idx] = 0  # snow free date --> reset the counter (array([1, 0,...]))
-        else:
-            out[idx] = out[idx - 1] + 1  # increment the current concurent snow cover period duration
-            # array([1, 0, 1,...]) ; array([1, 0, 1, 2,...]) ; array([1, 0, 1, 2, 3,...])
-    # out = array([1, 0, 1, 2, 3, 0, 1, 2])
-    return out
-
-
 def lcscd(data, threshold=.2):
     """
-    Compute the following diagnostic variables from PRO DSN_T_ISBA (snow depth) variable :
-    * LCSCD  : Longest Concurent Snow Cover Duration period
-    * LCSMOD : Snow Melt Out Date of the Longest Concurent snow cover period
-    * LCSOD  : Snow Cover Onset date of the Longest Concurent snow cover period
+    Arguments :
+    -----------
+    * Data (xarray.DataArray) :  Daily snow depths (can cover several years : in this case the diagnostics
+                  are computed for every 01/09 --> 31/08 time period in *data*)
+    * threshold (float)       : Snow depth threshold to consider a date/pixel as "snow covered"
 
-    *Data* can cover several years. In this case the diagnostics are computed for every 01/09 --> 31/08
-    time period in *data*.
+    Output :
+    --------
+    * xarray.Dataset containing the following variables :
+    - LCSCD  : Longest Concurent Snow Cover Duration period
+    - LCSMOD : Snow Melt Out Date of the Longest Concurent snow cover period
+    - LCSOD  : Snow Cover Onset date of the Longest Concurent snow cover period
+    - SD     : Snow duration : total number of snow coverage
 
-    The way to do this is :
-        - associate to each value of the "time" dimension of *data* the starting date of the corresponding season
-          (the previous 1 septembre)
-        - use the xarray "groupby" method to compute the diagnostics for each season
+    Method :
+    --------
+
+    1. Classify each date/day as "snow covered" or "snow free" using the prescribed threshold
+
+    2. Associate to each time/day of *data* the starting date of the corresponding season (the previous 1 septembre)
+        - Get indices of all dates corresponding to september 1st
+        - "forward fill" (see warning below) these values to associate each date to its season's starting date
+        - Remove dates before the first 1st september and force all 1 september as snow free dates to match Sentinel2
+          convention
+
+    3. Use the xarray "groupby" method to compute the diagnostics for each season
+        - Create a time serie containing the number of snow covered dates since the begining of the seaon with
+          the xarray's "cumsum" method (see warning below)
+        - Create a time serie containing the number of snow free days since the begining of the season after
+          each snow cover period
+        --> the difference between these 2 time series is a time serie containing the number of days since the
+            apparition of snow for each snow covered period of the season
+
+    4. Comute all diagnotics from the time serie obtained in step 3
+        - SCD = maximum value (higher number of concurent snow covered days)
+        - MOD = index (number of days since 1 september) of the SCD value
+        - SOD = MOD - SCD (retract the number of snow days to get the index of the begining of the period)
+        - SD  = Total number of days counted as snow covered
 
 
-    WARNING :
+    WARNINGs :
+    ----------
 
-    Note that the standard solution to compute the longest continuous snow cover duration relies on the use of the
-    xarray "ffill" method that uses the "bottleneck" module which is not available on MF's HPC.
+    * The standard solution to compute the longest continuous snow cover duration relies on the use of the
+      xarray "ffill" method that uses the "bottleneck" module which is not available on MF's HPC.
+      --> a custom "xr_ffill" method based on numpy only is used in this case
+      TODO : compare the performances of both methods
 
-    A (very bad) workaround looping on each pixel of the domain is proposed in this case but a better solution should
-    be found in the future.
+    * The "cumsum" method as be added to xarray objects after the current version 2023.3.0 installed by default
+     --> This script requires an upgrade of xarray (or the developpement of an alternative numpy-based solution)
 
+     NB :
+     ----
+
+    The use of xarray.DataArray object instead of numpy arrays is motivated by several reasons :
+    - The multi-season situation is managed using the "groupby" method that does not exist in numpy
+    - The "cumsum" and "ffill" methods exist in numpy (with the same core than the xarray's ones), but with xarray
+      the dimension order management is explicit (parsing a dimension name instead of an index number that can vary
+      between numpy arrays)
+    - The final goal is to write a netcdf file, which is straightforward with a DataArray but requires
+      (a bit of) formatting with numpy
     """
-    data = data.transpose('time', ...)  # Ensure that the "time" dimension is in position 0
+
     # Select snow covered pixels
     data = xr.where(data > threshold, True, False)
     # Add "startseason" information
@@ -188,20 +216,6 @@ def decode_time(pro):
     return pro
 
 
-def filter_dates(pro):
-    """
-    Sentinel 2 SCD/SMOD are defined as days since sept. 1 and PRO files start on aug. 1.
-    This method ensures that the unit diagnostics computed from the PRO files is
-    'days since sept. 1'.
-    WARNING : Pixels detected by Sentinel2 as 'snow covered' after aug. 1 of the next year must also be filtered
-    out since SMOD/SCD can not be computed from the simulation in this case.
-    """
-    deb = pro.time.data[0]
-    deb = deb.replace(month=9, day=1)
-    pro = pro.sel({'time': pro.time.data > deb})
-    return pro
-
-
 def diag(subdir, mask=True):
     """
     Main method to compute Sentinel2-like diagnostics from a SURFEX simulation
@@ -209,7 +223,6 @@ def diag(subdir, mask=True):
     proname = os.path.join(subdir, 'PRO.nc')
     pro = xr.open_dataset(proname, decode_times=False, engine='netcdf4')
     pro = decode_time(pro)
-    # pro = filter_dates(pro)
     diag = lcscd(pro.DSN_T_ISBA.resample(time='1D').mean())
 
     # Add 'ZS' (DEM) variable
