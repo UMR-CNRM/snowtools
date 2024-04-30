@@ -51,42 +51,14 @@ def parse_command_line():
     return args
 
 
-def numpy_ffill(arr):
-    """
-    Solution from :
-    https://stackoverflow.com/questions/41190852/most-efficient-way-to-forward-fill-nan-values-in-numpy-array
-    WARNING : assumues *arr* is a 2D array
-    """
-    mask = np.isnan(arr)
-    idx = np.where(~mask, np.arange(mask.shape[1]), 0)
-    np.maximum.accumulate(idx, axis=1, out=idx)
-    out = arr[np.arange(idx.shape[0])[:, None], idx]
-    return out
-
-
-def np_ffill(arr, axis):
-    """
-    Solution from :
-    https://stackoverflow.com/questions/41190852/most-efficient-way-to-forward-fill-nan-values-in-numpy-array
-    """
-    idx_shape = tuple([slice(None)] + [np.newaxis] * (len(arr.shape) - axis - 1))
-    idx = np.where(~np.isnan(arr), np.arange(arr.shape[axis])[idx_shape], 0)
-    np.maximum.accumulate(idx, axis=axis, out=idx)
-    slc = [np.arange(k)[tuple([slice(None) if dim == i else np.newaxis
-        for dim in range(len(arr.shape))])]
-        for i, k in enumerate(arr.shape)]
-    slc[axis] = idx
-    out = arr[tuple(slc)]
-    out[np.isnan(out)] = 0
-
-    return out
-
-
-def xr_ffill(arr, dim='time'):
+def xr_ffill(da, dim='time', fillna=False):
     """
     Solution inspired from :
     https://stackoverflow.com/questions/41190852/most-efficient-way-to-forward-fill-nan-values-in-numpy-array
+    * da : DFatArray object
     """
+    axis = np.where(np.array([dimension for dimension in da.dims]) == dim)[0][0]
+    arr = da.data
     idx_shape = tuple([slice(None)] + [np.newaxis] * (len(arr.shape) - axis - 1))
     idx = np.where(~np.isnan(arr), np.arange(arr.shape[axis])[idx_shape], 0)
     np.maximum.accumulate(idx, axis=axis, out=idx)
@@ -94,21 +66,12 @@ def xr_ffill(arr, dim='time'):
         for dim in range(len(arr.shape))])]
         for i, k in enumerate(arr.shape)]
     slc[axis] = idx
-    out = arr[tuple(slc)]
-    out[np.isnan(out)] = 0
+    outdata = arr[tuple(slc)]
+    if fillna:
+        outdata[np.isnan(outdata)] = 0
+    da.data = outdata
 
-    return out
-
-
-def fill_zeros_with_last(arr):
-    """
-    Solution from :
-    https://stackoverflow.com/questions/30488961/fill-zero-values-of-1d-numpy-array-with-last-non-zero-values
-    """
-    prev = np.arange(len(arr))
-    prev[arr == 0] = 0
-    prev = np.maximum.accumulate(prev)
-    return arr[prev]
+    return da
 
 
 def scd_periods_np(array):
@@ -152,23 +115,21 @@ def lcscd(data, threshold=.2):
     be found in the future.
 
     """
-
+    data = data.transpose('time', ...)  # Ensure that the "time" dimension is in position 0
     # Select snow covered pixels
     data = xr.where(data > threshold, True, False)
     # Add "startseason" information
     startseason = data.time.where((data.time.dt.month == 9) & (data.time.dt.day == 1))
     try:
+        # Try to use xarray's native "ffill" method based on bottleneck (not available on MF's HPC)
         # Return a "startseason" variable containing the preceding 1 septembre of each date
-        raise ModuleNotFoundError
         startseason = startseason.ffill(dim='time')
     except ModuleNotFoundError:
-        # startseason.data = fill_zeros_with_last(startseason.data)
-        startseason.data = np_ffill(startseason.data, 0)
-        # startseason.data = np.apply_along_axis(numpy_ffill, 0, startseason.data)
-        # startseason.data = numpy_ffill(startseason.data)
-        # startseason.data = np.apply_along_axis(fill_zeros_with_last, 0, startseason.data)
+        # If "bottleneck" not available, use a custom ffill function
+        startseason = xr_ffill(startseason)
     data['startseason'] = startseason
-    data = data[~np.isnan(startseason)]
+    data = data[~np.isnan(startseason)]  # Remove dates before the first 1 september in data
+    data = xr.where(data.time == startseason, 0, data)  # Force 1 september as snow free day
     # Group data by seasons (from 1 septembre of each year)
     gp = data.groupby('startseason')
 
@@ -178,39 +139,33 @@ def lcscd(data, threshold=.2):
     # Example :
     # data = np.array([True,False,True,True,True,False,True,True])
     # the expected output is :
-    # cumul = [1, 0, 1, 2, 3, 0, 1, 1]
+    # cumul = [1, 0, 1, 2, 3, 0, 1, 2]
     # then :
     # * scd = 3 (max(cumul))
     # * mod = 6 (max(cumul) on position 4 --> first snow free day on position 5 = 6th day since the begining)
     # * sod = 3 (3th day since the begining of the season)
-
     try:
+        # Try to use xarray's native "ffill" method based on bottleneck (not available on MF's HPC)
         # 1. Smart solution to use on local computer or sxcen
         # WARNING : ffill does not work on Meteo-France's HPC dur to a dependency to the "bottleneck" module,
         # which is not currently installed on belneos/taranis
-        # data.cumsum(dim='time') = array([1, 1, 2, 3, 4, 4, 5, 6]) (numpy syntax : data.cumsum())
-        # data.cumsum(dim='time').where(data.values == 0) = array([1, 4]) (numpy : data.cumsum()[np.where(data==0)])
-        # data.cumsum(dim='time').where(data.values == 0).ffill(dim='time') = array([nan, 1, 1, 1, 1, 4, 4, 4])
-        # data.cumsum(dim='time').where(data.values == 0).ffill(dim='time').fillna(0) = [0, 1, 1, 1, 1, 4, 4, 4]
-        # cumul = array([1, 0, 1, 2, 3, 0, 1, 2])
-        # cumul = data.cumsum(dim='time') - data.cumsum(dim='time').where(data.values == 0).ffill(dim='time').fillna(0)
+        # data.cumsum(dim='time') --> array([1, 1, 2, 3, 4, 4, 5, 6]) --> Snow days since the begining of the season
+        # data.cumsum(dim='time').where(data.values == 0) --> array([1, 4]) --> Snow free days
+        # data.cumsum(dim='time').where(data.values == 0).ffill(dim='time') --> array([nan, 1, 1, 1, 1, 4, 4, 4])
+        # --> Number of snow days occurences before each snow free day
+        # data.cumsum(dim='time').where(data.values == 0).ffill(dim='time').fillna(0) --> [0, 1, 1, 1, 1, 4, 4, 4]
+        # fillna(0) deal with snow days starting before 1 september
+        # cumul --> array([1, 0, 1, 2, 3, 0, 1, 2])
         # WARNING : applying cumsum method on a *DataArrayGroupBy* method requires version 2024.3.0 of xarray
-        raise ModuleNotFoundError
         cumul = gp.cumsum(dim='time') - gp.cumsum(dim='time').where(data.values == 0).ffill(dim='time').fillna(0)
     except ModuleNotFoundError:
-        # This workaround is 10 times slower than the (better) solution above but it works on Meteo-France's HPC and
-        # it returns the same result.
-        # See https://stackoverflow.com/questions/41190852/most-efficient-way-to-forward-fill-nan-values-in-numpy-array
-        # for a better solution (maybe ?)
-
-        # TODO : WORK IN PROGRESS (à tester !)
-
+        # If "bottleneck" not available, use a custom ffill function
         cumul = data.copy()  # Construct an array similar to data
         cs = gp.cumsum(dim='time')
-        # Apply "numpy_fill" method to axis 0 of numpy array "data.cumsum(dim='time').values"
-        # npfill = np.apply_along_axis(fill_zeros_with_last, 0, cs.where(data.values == 0))
-        npfill = np_ffill(cs.where(data.values == 0).data, 0)
-        cumul.data = cs - npfill
+        # cs --> array([1, 1, 2, 3, 4, 4, 5, 6]) (numpy syntax : data.cumsum())
+        # Apply custom "xr_ffill" function that does not depend on bottleneck
+        npfill = xr_ffill(cs.where(data.values == 0), fillna=True)
+        cumul = cs - npfill
 
     # Compute longest snow cover duration for each group/season as the maximum value along the time dimension
     scd = cumul.groupby('startseason').max(dim='time').rename('scd_concurent')
