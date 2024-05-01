@@ -134,13 +134,14 @@ def lcscd(data, threshold=.2):
 
      NB :
      ----
-
     The use of xarray.DataArray object instead of numpy arrays is motivated by several reasons :
-    - The multi-season situation is managed using the "groupby" method that does not exist in numpy
-    - The "cumsum" and "ffill" methods exist in numpy (with the same core than the xarray's ones), but with xarray
+    * The "resample" method used to resample hourly HTN values to daily one has not equivalent in prosimu / numpy
+    * The multi-season situation is managed using the "groupby" method that does not exist in numpy
+    * The "cumsum" method exists in numpy (with the same core than the xarray's one), but with xarray
       the dimension order management is explicit (parsing a dimension name instead of an index number that can vary
       between numpy arrays)
-    - The final goal is to write a netcdf file, which is straightforward with a DataArray but requires
+    * The "ffill" method has no equivalent in numpy
+    * The final goal is to write a netcdf file, which is straightforward with a DataArray but requires
       (a bit of) formatting with numpy
     """
 

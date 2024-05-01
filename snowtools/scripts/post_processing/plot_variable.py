@@ -102,8 +102,6 @@ def parse_command_line():
     return args
 
 
-
-
 def plot_var(ds, variables, xpid, date=None, mask=True):
 
     if mask:
