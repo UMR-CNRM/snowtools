@@ -1,4 +1,5 @@
 interpolation/shapefile2NetCDF.py
+interpolation/shapefile2NetCDF_2D.py
 plots/temporal/compare_sims.py
 plots/stratiprofile/proplotter.py
 scores/CompareSimuPosteObsCsv.py
