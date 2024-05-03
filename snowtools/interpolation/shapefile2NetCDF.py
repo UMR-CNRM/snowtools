@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-This script needs a shapefile (in Lambert 93 coordonnates) of points.
-With this shapefile, it creates a NetCDF for the same points.
-The NetCDF file is necessary to launch Surfex-Crocus
+This script needs a shapefile (in Lambert 93 coordinates) of points.
+It is useful for simulations on several differents points.
+
+If you want a simulation on a 2D domain delimited by a shapefile:
+see shapefile2NetCDF_2D.py instead.
 
 General documentation of shapefile2NetCDF script
 -------------------------------------------------
+This script creates a NetCDF with the same points than in shapefile.
+The NetCDF file is necessary to launch Surfex-Crocus simulations.
+It allows to interpolate FORCING values from SAFRAN reanalysis to your shapefile points.
+It also allows to take into account the solar mask from mountains around.
 
-Furthermore, this script writes skylines in snowtools/DATA/METADATA.xml file (necessary for --addmask option)
-It also allows to keep the skyline views.
+Precisely, this script writes skylines in snowtools/DATA/METADATA.xml file.
+These skylines are necessary for the --addmask option in SURFEX Crocus simulations.
+This script also allows to keep the skyline views if you want to check them.
 
 WHAT IS PROJECT NUMBER ?
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -20,10 +27,9 @@ During the script conception, we tought that:
 - each project gets less than 10000 points
 - there will be less than 100 projects with the necessity to keep the points (and station code) in METADATA.xml
 
-(if you don't push METADATA.xml, you don't need to think too much about that)
+If you don't push METADATA.xml, you don't need to think too much about that
 
-So, the aim of Project Number is to avoid to get twice the same station code (8 numbers as OMM codes)
-The idea is:
+The aim of Project Number is to avoid to get twice the same station code (8 numbers as OMM codes). The idea is:
 
 - numbers between 10000001 and 10009999 are for project 0
 - numbers between 10010001 and 10019999 are for project 1
@@ -33,11 +39,11 @@ RECORD FOR PROJECT NUMBER
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * ORCHAMP = project 0 = orchamp geometry in vortex/conf/geometries.ini  (164 points)
-* projet 1 utilisé sans référence ? (15 points)
+* projet 1 used without references ? (15 points)
 * TOP_CBNA = project 2 = orchamp geometry in vortex/conf/geometries.ini (169 points)
 * ORCHAMP_MAJ_2022 = project 3 = orchamp geometry in vortex/conf/geometries.ini (26 points)
 
-Remember: if your project doesn't need to stay a longtime, don't push METADATA.xml
+Reminder: if your project doesn't need to stay a longtime, don't push METADATA.xml
 
 EXAMPLES OF USE (script launch)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -49,10 +55,13 @@ EXAMPLES OF USE (script launch)
            [--confirm_overwrite] [--list_skyline all or 1 5 6 if you want skyline for your id_station number 1, 5 and 6]
    
    python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti
+   
    python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti
-           --confirm_overwrite si on a déjà travaillé sur ce projet
+           --confirm_overwrite (if you have already work on this project)
+           
    python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti
-           --list_skyline 1 34 47 (pour avoir dans le dossier output les tour d'horizon des stations numéros 1, 34 et 47
+           --list_skyline 1 34 47 (in folder output, you'll have skylines for stations 1, 34 and 47)
+           
    python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2021/PlotsMaJ2021 codeplot idplot 0
            --confirm_overwrite
 
@@ -66,44 +75,44 @@ MAJ Orchamp_2022
 
 .. code-block:: bash
 
-   python3 shapefile2NetCDF.py /home/fructusm/Travail_Orchamp/Orchamp_nouveaux_sites_2022/Plots_new_2022 codeplot \
+   python3 shapefile2NetCDF.py /home/fructusm/Travail_Orchamp/Orchamp_nouveaux_sites_2022/Plots_new_2022 codeplot
            idplot 3
 
 EXAMPLES OF USE OF THE NETCDF FILE IN LOCAL SIMULATION
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-to have interpol_FORCING:
+Get the interpolation of the FORCING file, interpol_FORCING:
 
 .. code-block:: bash
 
-   s2m -f path_FORCING -b begin_date -e end_date -r path_netcdf.nc -o output_name -g --extractforcing
+   s2m research -f path_FORCING -b begin_date -e end_date -r path_netcdf.nc -o output_name -g --extractforcing
 
-and to obtain the PRO file for the shapefile points:
+Obtain the PRO file for the shapefile points:
 
 .. code-block:: bash
 
-   s2m -f path_interpol_FORCING -b begin_date -e end_date -o output_name_pour_PRO -g --addmask
+   s2m research -f path_interpol_FORCING -b begin_date -e end_date -o output_name_pour_PRO -g --addmask
 
 Example:
 
 .. code-block:: bash
 
-   s2m -f /rd/cenfic3/cenmod/era40/vortex/s2m/alp_flat/reanalysis/meteo/FORCING_2017080106_2018080106.nc
-       -b 20170801 -e 20180801 -r /home/fructusm/git/snowtools_git/interpolation/NetCDF_from_shapefile.nc
-       -o output_test_s2m -g --extractforcing
-   s2m -f /home/fructusm/OUTPUT_et_PRO/output_test_s2m/meteo/FORCING_2017080106_2018080106.nc -b 20170801 -e 20180801
-       -o output_test_s2m_Safran -g --addmask
+   s2m research -f /rd/cenfic3/cenmod/era40/vortex/s2m/alp_flat/reanalysis/meteo/FORCING_2017080106_2018080106.nc
+                -b 20170801 -e 20180801 -r /home/fructusm/git/snowtools_git/interpolation/NetCDF_from_shapefile.nc
+                -o output_test_s2m -g --extractforcing
+                
+   s2m research -f /home/fructusm/OUTPUT_et_PRO/output_test_s2m/meteo/FORCING_2017080106_2018080106.nc
+                -b 20170801 -e 20180801 -o output_test_s2m_Safran -g --addmask
 
-NB: export NINTERPOL=1 if MPI problem for the extractforcing
 
 EXAMPLES OF USE OF THE NETCDF FILE IN HPC SIMULATION
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: bash
+.. code-block:: python
 
-   s2m -b 19580801 -e 20200801 -m s2m -f reanalysis2020.2@lafaysse
-       -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc -o TEST1
-       -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -g --addmask -a 400
+   s2m research -b 19580801 -e 20200801 -m s2m -f reanalysis2020.2@lafaysse
+                -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc
+                -o TEST1 -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -g --addmask -a 400
 
 Options:
 
@@ -119,27 +128,27 @@ Options:
 HPC SIMULATION: CLIMATE SIMULATIONS
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Where are the forcing of SMHI_RCA4_MOHC_HadGEM2_ES_RCP85 (for example) ?
-In Raphaelle Samacoits folders -> command looks like:
-``-m adamont -f RCM_GCM_EXP@samacoitsr -r alp_flat:geometryout:fichier.nc``
+Forcing files from SMHI_RCA4_MOHC_HadGEM2_ES_RCP85 (for example) are in Raphaelle Samacoits folders
 
 .. code-block:: bash
 
-   s2m -b 20100801 -e 20990801 -m adamont -f CLMcom_CCLM4_8_17_CNRM_CERFACS_CNRM_CM5_RCP45@samacoitsr
-       -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc -o TEST_Raphaelle
-       -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -x 20200801 --addmask -a 400
+   s2m research -b 20100801 -e 20990801 -m adamont -f CLMcom_CCLM4_8_17_CNRM_CERFACS_CNRM_CM5_RCP45@samacoitsr
+                -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc -o TEST_Raphaelle
+                -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -x 20200801 --addmask -a 400
 
 HPC SIMULATION: SXCEN TRANSFERT
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Transfer files from Belenos to sxcen:
-Use get_reanalysis which is in snowtools_git/scripts/extract/vortex and run on sxcen:
+Use get_reanalysis which is in snowtools/scripts/extract/vortex
+
+On SXCEN:
 
 .. code-block:: bash
 
    python3 get_reanalysis.py --geometry=orchamp --snow --xpid=SPINUP@fructusm
    python3 get_reanalysis.py --geometry=orchamp --snow --xpid=TEST_Raphaelle@fructusm
-                                     --byear=2010 --eyear=2099
+                             --byear=2010 --eyear=2099
 
 DO NOT FORGET
 ^^^^^^^^^^^^^
@@ -188,8 +197,8 @@ matplotlib.use('Agg')  # has to be before matplotlib.pyplot, because otherwise t
 import matplotlib.pyplot as plt
 
 ################################################################
-# VALEURS PAR DEFAUT CHANGEABLE PAR OPTION:
-# MNT (30m) et Nom NetCDF de sortie
+# DEFAULT VALUES (but can change with options):
+# MNT (30m) and name of the output NetCDF
 ################################################################
 NetCDF_out = 'NetCDF_from_shapefile.nc'
 
@@ -205,18 +214,13 @@ path_MNT_aspect_defaut = "/rd/cenfic3/cenmod/home/haddjeria/mnt_ange/ange-factor
 # path_MNT_aspect_defaut = '/home/fructusm/MNT_aspect.tif'
 
 ################################################################
-# Infos shapefile massif, a priori pérenne
+# Infos shapefile massif, normally stable and durable
 ################################################################
 path_shapefile_massif = SNOWTOOLS_DIR + '/DATA/massifs'
-indice_record_massif = 0
+indice_record_massif = 0 # If changes in snowtools massif, check that massif number is still record[0]
 
 ################################################################
-#            FIN DUR DANS LE CODE
-################################################################
-
-
-################################################################
-# Mise en place des log
+# Log
 ################################################################
 logger = logging.getLogger()
 logger.setLevel(logging.WARNING)
@@ -227,55 +231,55 @@ logger.addHandler(console_handler)
 
 
 ################################################################
-# Creation des listes de données
+# Creation of data lists
 ################################################################
 def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, nom_slop, path_MNT_alt, path_MNT_asp,
                    path_MNT_slop, add_for_METADATA):
     """
-    Crée un dictionnaire de listes à partir des données du shapefile et des données des MNT
+    Create a dictionary of lists from datas in shapefile and data in MNT
 
-    :param path_shapefile: Chemin du shapefile dont on souhaite extraire les points.
+    :param path_shapefile: shapefile path
     :type path_shapefile: str
-    :param id_station: Numéro de l'attribut du shapefile correspondant à un identifiant unique pour chaque point
+    :param id_station: name of parameter in shapefile for point number (each point has a unique number)
     :type id_station: str
-    :param nom_station: Nom de l'attribut du shapefile correspondant à un identifiant unique pour chaque point
+    :param nom_station: name of parameter in shapefile for point name (each point has a unique name)
     :type nom_station: str
-    :param nom_alt: si présent dans le shapefile, nom de l'attribut d'altitude. Si absent, ce champ est à None
+    :param nom_alt: if present in shapefile, name of altitude parameter. If not present, value is None.
     :type nom_alt: str
-    :param nom_asp: si présent dans le shapefile, nom de l'attribut d'orientation. Si absent, ce champ est à None
+    :param nom_asp: if present in shapefile, name of aspect parameter. If not present, value is None.
     :type nom_asp: str
-    :param nom_slop: si présent dans le shapefile, nom de l'attribut de pente. Si absent, ce champ est à None
+    :param nom_slop: if present in shapefile, name of slope parameter. If not present, value is None.
     :type nom_slop: str
-    :param path_MNT_alt: Chemin du MNT contenant les valeurs d'altitude
+    :param path_MNT_alt: MNT path for altitude
     :type path_MNT_alt: str
-    :param path_MNT_asp: Chemin du MNT contenant les valeurs d'aspect
+    :param path_MNT_asp: MNT path for aspect
     :type path_MNT_asp: str
-    :param path_MNT_slop: Chemin du MNT contenant les valeurs de pente
+    :param path_MNT_slop: MNT path for slopes
     :type path_MNT_slop: str
-    :param add_for_METADATA: entier sur 8 chiffres pour le codage de la station dans le fichier METADATA.xml
+    :param add_for_METADATA: integer (8 figures) for station code in METADATA.xml file
     :type add_for_METADATA: int
 
-    :returns: dictionnaire de listes:{ 'lat': liste_latitude, 'lon':liste_longitude,
-                                       'alt': liste_altitude, 'asp': liste_aspect,
-                                       'm': liste_massif, 'slop': liste_slope,
-                                       'id': liste_id_station, 'nom': liste_nom_station }
+    :returns: dictionary of lists:{ 'lat': list_latitude, 'lon':list_longitude,
+                                    'alt': list_altitude, 'asp': list_aspect,
+                                    'm': list_massif, 'slop': list_slope,
+                                    'id': list_id_station, 'nom': list_nom_station }
     """
-    # Ouverture du shapefile d'intérêt. Conversion éventuelle
+    # Open shapefile.
     r = shapefile.Reader(path_shapefile)
     shapes = r.shapes()
     geomet = r.shapeRecords()
 
-    # Permet de convertir du Lambert93 (EPSG 2154) en WGS84 (EPSG 4326)
-    # Lambert93: coordonnées en mètre sur la France métropolitaine élargie (avec Corse)
-    # WSG84: coordonnées en (lon, lat) type GPS pour le monde entier
+    # Convert from Lambert93 (EPSG 2154) to WGS84 (EPSG 4326)
+    # Lambert93: coordinates for France (with Corsica), unit = meters.
+    # WSG84: coordinates (lon, lat) like GPS. OK for entire world
     project_from_L93_to_WGS84 = partial(pyproj.transform, pyproj.Proj(init='epsg:2154'), pyproj.Proj(init='epsg:4326'))
     list_shape_WGS84 = [transform(project_from_L93_to_WGS84, shape(shapes[i])) for i in range(len(shapes))]
 
-    # Un petit print pour voir les attributs du shapefile: noms, coordonnées, altitude, ...
+    # Little print for shapefile: names, coordinates, altitude, ...
     # Just_to_see = geomet[0].record
     # print(Just_to_see)
 
-    # Recherche des indices de champs pour le shapefile
+    # Research of fields index in shapefile
     for i in range(len(r.fields)):
         if nom_alt is not None and r.fields[i][0] == nom_alt:
             indice_record_altitude = i - 1
@@ -288,55 +292,38 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
         if r.fields[i][0] == nom_station:
             indice_record_nom_station = i - 1
 
-    ################################################################
-    # Ouverture du shapefile massif. Conversion éventuelle
-    '''
-    # Version snwotools_git/DATA actuelle
+    # Work with massif shapefiles (which are in snowtools)
     massif = shapefile.Reader(path_shapefile_massif)
     shape_massif = massif.shapes()
     geomet_massif = massif.shapeRecords()
+    # !! If changes in snowtools massif, check that geomet_massif.record[0] is still the massif number.
+    # If this is another number, change indice_record_massif value
 
-    # Permet de convertir du Lambert_II (EPSG 27572) en WGS84 (EPSG 4326)
-    # Lambert_II: coordonnées en mètre sur la France métropolitaine (sans la Corse ? voir https://epsg.io/27572 )
-    # WSG84: coordonnées en (lon, lat) type GPS pour le monde entier
-    project_from_LII_to_WGS84 = partial(pyproj.transform, pyproj.Proj(init='epsg:27572'),pyproj.Proj(init='epsg:4326'))
-    list_shape_massif_WGS84 = [transform(project_from_LII_to_WGS84,shape(shape_massif[i]))
-                               for i in range(len(shape_massif))]'''
-
-    # Version snwotools_git/DATA future
-    # NB: Bien vérifier sur le shapefile massif que le numéro de massif est record[0].
-    # Pour les shapefile massif en LambertII, c'est record[1] qu'il faut prendre -> à changer dans DUR DANS LE CODE
-    massif = shapefile.Reader(path_shapefile_massif)
-    shape_massif = massif.shapes()
-    geomet_massif = massif.shapeRecords()
-
-    # Permet de convertir du Lambert93 (EPSG 2154) en WGS84 (EPSG 4326)
-    # Lambert93: coordonnées en mètre sur la France métropolitaine élargie (avec Corse)
-    # WSG84: coordonnées en (lon, lat) type GPS pour le monde entier
+    # Conversion from Lambert93 (EPSG 2154) to WGS84 (EPSG 4326)
     project_from_L93_to_WGS84 = partial(pyproj.transform, pyproj.Proj(init='epsg:2154'), pyproj.Proj(init='epsg:4326'))
     list_shape_massif_WGS84 = [transform(project_from_L93_to_WGS84, shape(shape_massif[i]))
                                for i in range(len(shape_massif))]
 
-    # Fonction d'Ambroise Guiot pour lire les valeurs d'un geotif en des points.
+    # Function from Ambroise Guiot: read points in a geotif
     def raster_to_points(raster_src, shape, nodata=np.nan):
         """
-        Associe pour chaque point de la GeometryCollection shape en entrée l'interpolation bilinéaire des valeurs
-        des 4 pixels les plus proches issus du raster_src.
+        For each point of GeometryCollection shape, give the bilinear interpolation of the values of
+        the closest 4 pixels from raster_src.
 
-        Attention : - le fichier géotif et le shape doivent être dans la même projection
-                    - la projection ne doit pas utiliser de rotation (Lambert 93 OK, WSG84 pas clair du tout)
+        Beware : - geotif file and shape must have same projection
+                   the projection should not use rotation (Lambert 93 OK, WSG84 ?)
 
-        :param raster_src: Chemin du fichier géotif dont on souhaite extraire les valeurs.
+        :param raster_src: geotif file path (file from which we extract values)
         :type raster_src: str
-        :param shape: Liste contenant la liste des points. Format en shapely.geometry.collection.GeometryCollection
-        (obtenu avec shape( shapefile.Reader('...').shapes() )
-        :param nodata: Valeurs attribuée aux points n'ayant pas de pixel à proximité. The default is np.nan.
+        :param shape: List of points list.  shapely.geometry.collection.GeometryCollection format
+        (get with shape( shapefile.Reader('...').shapes() )
+        :param nodata: Values for points without close pixel. Default is np.nan.
         :type nodata: float
 
-        :returns: Liste dans le même ordre que la GeometryCollection fournie en entrée.
-        Elle contient pour chaque point la valeur issue du fichier geotif.
+        :returns: List in same order as GeometryCollection given.
+        For each point, it has the value coming from geotif file.
         """
-        raster = gdal.Open(raster_src)  # ouverture de l'image tif
+        raster = gdal.Open(raster_src)  # open tif image
         gt = raster.GetGeoTransform()
         # wkt = raster.GetProjection()
         band = raster.GetRasterBand(1)
@@ -366,7 +353,7 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
         return points_values
 
     ################################################################
-    # Création des listes d'intérêts venant des geotif
+    # Creation of lists coming from geotif
     liste_altitude_MNT = raster_to_points(path_MNT_alt, shape(shapes))
     liste_aspect_MNT = raster_to_points(path_MNT_asp, shape(shapes))
     liste_slope_MNT = raster_to_points(path_MNT_slop, shape(shapes))
@@ -376,31 +363,31 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
     liste_slope_MNT_arrondie = [int(min(40, round(liste_slope_MNT[i]))) for i in range(len(liste_slope_MNT))]
 
     ################################################################
-    # Création liste massif
+    # Creation lof massif list
     liste_massif = [geomet_massif[j].record[indice_record_massif] for i in range(len(shapes))
                     for j in range(len(shape_massif)) if list_shape_massif_WGS84[j].contains(list_shape_WGS84[i])]
-    ''' MODE NON PYTHONIQUE POUR COMPRENDRE SI BESOIN:
+    ''' NON PYTHONIC MODE IN ORDER TO UNDERSTAND BETTER:
     liste_massif = []
     for i in range(len(shapes)):
         for j in range(len(shape_massif)):
             if list_shape_massif_WGS84[j].contains(list_shape_WGS84[i]):
                 liste_massif.append(geomet_massif[j].record[0])
-    FIN MODE NON PYTHONIQUE '''
+    END OF NON PYTHONIC MODE'''
 
     ################################################################
-    # Création liste longitudes:
+    # Creation longitude list:
     liste_longitude = [round(list_shape_WGS84[i].x, 6) for i in range(len(list_shape_WGS84))]
-    # Création liste latitudes:
+    # Creation latitude list:
     liste_latitude = [round(list_shape_WGS84[i].y, 6) for i in range(len(list_shape_WGS84))]
-    # Création liste "id station" faite avec le field number de référence dans le shapefile
-    # 8 chiffres significatifs pour être compatible avec les codes de infomassifs
+    # Creation "id station" list made with field number from shapefile
+    # 8 figures because infomassifs.py code is using OMM convention
     liste_id_station = ['%08d' % (int(geomet[i].record[indice_record_id_station]) + int(add_for_METADATA))
                         for i in range(len(shapes))]
-    # Création liste "name station" faite avec le field name de référence dans le shapefile
+    # Creation "name station" list made with field name from shapefile
     liste_nom_station = [geomet[i].record[indice_record_nom_station] for i in range(len(shapes))]
 
     ################################################################
-    # Création des listes via shapefile ou MNT + Vérification-Comparaison éventuelle avec MNT
+    # Creation of lists via shapefile or MNT + Verification and eventually compare with MNT
     if nom_alt is not None:
         liste_altitude = [geomet[i].record[indice_record_altitude] for i in range(len(shapes))]
         print('########### Vérification MNT vs shapefile ##############')
@@ -435,13 +422,13 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
 
 def check_id_station_in_Metadata(all_lists):
     """
-    Vérifie que les id des stations (création via make_dict_list) ne sont pas présentes dans METADATA.xml.
-    On ne passe pas par cette routine si l'option confirm_overwrite est activée
+    Check that id from stations (creation via make_dict_list) are not in METADATA.xml.
+    Skip this verification if confirm_overwrite is set to True.
 
-    :param all_lists: Dictionnaire de listes pour avoir la liste des id_station
-    :returns: au sens Python, ne retourne rien.
-        Ecritures écrans et sortie du programme si les id stations sont présentes dans METADATA.xml.
-        Sinon, il ne se passe rien
+    :param all_lists: Dictionary of lists in order to get id_station list
+    :returns: nothing (in a pythonic way)
+        Screen printings if id stations in METADATA.xml.
+        Othewise: nothing happens
     """
     # chemin d ecriture du fichier XML
     chemxml = SNOWTOOLS_DIR + "/DATA"
@@ -463,18 +450,18 @@ def check_id_station_in_Metadata(all_lists):
 
 
 ################################################################
-# Creation du NetCDF
+# Creation of NetCDF
 ################################################################
 def create_NetCDF(all_lists, output_name):
     """
-    Crée un NetCDF 1D pour simulation réanalyse-projection à partir d'un dictionnaire de listes et d'un nom de sortie.
-    Le dictionnaire de listes est issue d'un shapefile et se construit avec la routine make_dict_list.
+    Creation of 1D NetCDF for simulation reanalysis-projection from dictionary of lists and output name.
+    Dictionary of lists is coming from the shapefile and is built with make_dict_list.
 
-    :param all_lists: Dictionnaire de listes pour remplir les variables du NetCDF
-    :param output_name: Le nom du fichier NetCDF qui sera produit
+    :param all_lists: Dictionary of lists in order to fill NetCDF variables
+    :param output_name: output name for the NetCDF file
     :type output_name: str
 
-    :returns: au sens Python, ne retourne rien. Permet d'écrire un fichier à l'emplacement donné par output_name.
+    :returns: nothing (in a pythonic way). Write a netcdf file.
     """
     outputs = Dataset(output_name, 'w', format='NETCDF4')
     outputs.createDimension('Number_of_points', len(all_lists['alt']))
@@ -506,23 +493,21 @@ def create_NetCDF(all_lists, output_name):
 
 
 ################################################################
-# Creation des skyline
+# Creation of skylines
 ################################################################
 def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
     """
-    Ajoute dans le fichier METADATA.xml les points du shapefile en y ajoutant les masques
-    (ie les hauteurs d'angle de vue pour les différents azimuts).
+    Add in METADATA.xml the points from shapefile with skylines masks
+    (ie the angles of view for the azimuts).
 
-
-    :param all_lists : Dictionnaire de listes
-    :param path_MNT_alt: Chemin du MNT contenant les valeurs d'altitude
+    :param all_lists: Dictionary of lists
+    :param path_MNT_alt: MNT path for altitude values
     :type path_MNT_alt: str
-    :param path_shapefile: Chemin du shapefile dont on souhaite extraire les points.
+    :param path_shapefile: shapefile path
     :param path_shapefile: str
-    :param list_skyline: Liste des identifiants du shapefile dont on souhaite avoir le tracé des lignes d'horizon
+    :param list_skyline: List of identification points of shapefile from which we want the skyline.
 
-    :returns: au sens Python, ne retourne rien. Permet d'une part de tracer les graphiques de ligne d'horizon
-        et d'autre part de compléter METADATA.xml
+    :returns: nothing (in a pythonic way). Plot the skyline and add lines in METADATA.xml
     """
     start_time = time.time()
 
@@ -532,7 +517,7 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
     #                        'formats': (int, int, int, '|S24', float, float)})
 
     #######################################################
-    #  AJOUT DE NOUVEAUX SITES DANS LE FICHIER XML Partie I
+    #  ADD NEW SITES IN XML FILE, Part I
     #######################################################
     # Sites existants:
     SitesExistants = infomassifs().getListSites()
@@ -552,7 +537,7 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
         if '<Sites>' in line:
             break
     #####################
-    #  FIN AJOUT Partie I
+    #  END Part I
     #####################
 
     # output folder for skyline graph (if asked via options)
@@ -644,7 +629,7 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
             plt.close()
 
         ########################################################
-        #  AJOUT DE NOUVEAUX SITES DANS LE FICHIER XML Partie II
+        #  ADD NEW SITES IN XML FILE, Part II
         ########################################################
         if str(all_lists['id'][k]) not in SitesExistants:
             print("ajout du site : ", all_lists['nom'][k])
