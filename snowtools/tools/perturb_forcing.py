@@ -71,7 +71,9 @@ def convertPrecipPhase(Tair, precip, Tmin=272.65, Tmax=274.05):
     """
 
     frac_liquid = (Tair - Tmin) / (Tmax - Tmin)  # mix of liquid and solid precip if Tair within [Tmin,Tmax]
+    # TODO frac_liquid[frac_liquid < 0] = 0.
     frac_liquid[Tair < Tmin] = 0.  # solid precip if Tair < Tmin
+    # TODO frac_liquid[frac_liquid > 1] = 0.
     frac_liquid[Tair > Tmax] = 1.  # liquid precip if Tair > Tmax
 
     # Write Rainf, Snowf
@@ -282,10 +284,12 @@ class forcinput_perturb(forcinput_tomodify):
                     Precip = init_forcing_file.read('Snowf') + init_forcing_file.read('Rainf')
                     Precip = addNoiseMultiplicative(Precip, param['Precip'][0], param['Precip'][1], dt,
                                                     fsys=param['Precip'][2], semiDistrib=semiDistrib)
-                    Tair = init_forcing_file.read('Tair')
+                    Tair = init_forcing_file.read('Tair') 
+                    # TODO old temperature chosen to correct precip... --> isnt it the new one ?
                     tempvar[:], snowf  = \
                         convertPrecipPhase(Tair, Precip, Tmin=272.65, Tmax=274.05)
                 elif varname in ['Snowf']:
+                    # TODO assume snowf have been computed before... risky
                     tempvar = snowf
                 elif varname in ['IMPWET1', 'IMPWET2', 'IMPDRY1', 'IMPDRY2']:
                     tempvar = addNoise2Impur(var, varname, param[varname][0], param[varname][1], dt,
