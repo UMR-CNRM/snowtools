@@ -36,11 +36,17 @@ Module content:
    utils-operational_repro-compare2versions.rst
 
 
-File conversions : et and netCDF
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File conversions : Met and netCDF
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Met2Netcdf tool
+---------------
 
-.. todo:: 
-   Document utils/Met2NetCDF
+.. automodule:: utils.Met2Netcdf
+   :members:
+
+This module is also an executable script:
+
+.. include:: ./autoscripts/utils--Met2Netcdf.rst
 
 Read observations from csv files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
