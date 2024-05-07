@@ -6,6 +6,7 @@ scores/CompareSimuPosteObsCsv.py
 scripts/extract/vortex/get_escroc.py
 scripts/extract/vortex/get_reanalysis.py
 utils/operational_reproductibility/compare2versions.py
+utils/Met2Netcdf.py
 scripts/extract/obs/extract_obs.py
 scripts/extract/obs/extract_obs_meteo.py
 scripts/extract/obs/extract_obs_meteo_mb.py
