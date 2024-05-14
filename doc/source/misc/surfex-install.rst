@@ -104,6 +104,8 @@ The next step of the configuration depends on your application:
     export VER_MPI=NOMPI
     export VER_CDF=CDF2020
 
+You will also need to install :ref:`install-vortex`.
+
 Common configuration
 ^^^^^^^^^^^^^^^^^^^^
 At this step, it is also possible to modify the optimization level by :
