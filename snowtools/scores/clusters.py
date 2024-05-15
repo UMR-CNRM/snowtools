@@ -37,3 +37,16 @@ def per_alt(data, ls_alt, mnt, elevation_label=None):
     data_per_alt['middle_slices_ZS'] = ls_alt[1:] - (ls_alt[1] - ls_alt[0]) / 2
 
     return data_per_alt
+
+
+def groupby_elevation(ds, elevations, mnt=None, elevation_label=None):
+    """
+    Add an elevation band dimension to a dataset to ienable the use of "groupby" method
+    to compute diagnostics by elevation bands.
+
+    It is assumed that "ds" contains a 'ZS' (relief elevation) variable.
+    """
+    ds['elevation_band'] = ds.ZS.copy()
+    gb = ds.groupby_bins('ZS', elevations, labels=elevations[1:], restore_coord_dims=True, include_lowest=True)
+    gb.var(keep_attrs=True)
+    gb.groups

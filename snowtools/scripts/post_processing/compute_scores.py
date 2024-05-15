@@ -70,12 +70,14 @@ def execute(xpids, obsname, var, date, mask=True, member=None):
     if 'x' in mnt.dims:
         mnt = mnt.rename({'x': 'xx', 'y': 'yy'})
 
+    # Open observation file as DataArray
     obs = xr.open_dataarray(obsname)
     if 'x' in obs.dims:
         obs = obs.rename({'x': 'xx', 'y': 'yy'})
 
     listfiles = list()  # List of simulation PRO files
     products  = list()  # List of simulation (products) names
+    # Get the list of simulation (PRO) files to read
     for xpid in xpids:
         shortid = xpid.split('@')[0]
         proname = f'PRO_{shortid}.nc'
@@ -89,29 +91,96 @@ def execute(xpids, obsname, var, date, mask=True, member=None):
 
     # Open all simulation PRO files at once
     simu = xr.open_mfdataset(listfiles, concat_dim='xpid', combine='nested').compute()
+    # <xarray.Dataset>
+    # Dimensions:     (time: 2, xx: 143, yy: 101, xpid: 3)
+    # Coordinates:
+    #   * time        (time) datetime64[ns] 2018-01-23 2018-03-16
+    #   * xx          (xx) float64 9.379e+05 9.381e+05 ... 9.731e+05 9.734e+05
+    #   * yy          (yy) float64 6.439e+06 6.439e+06 ... 6.464e+06 6.464e+06
+    # Dimensions without coordinates: xpid
+    # Data variables:
+    #     DSN_T_ISBA  (xpid, time, yy, xx) float64 1.997 1.918 ... 0.0001194 0.2854
+
     # Get variable's DataArray
-    simu = simu.sel({'time': pd.to_datetime(date[:8], format='%Y%m%d')})[var]
+    simu = simu.sel({'time': pd.to_datetime(date[:8], format='%Y%m%d')})
+    #simu = simu.sel({'time': pd.to_datetime(date[:8], format='%Y%m%d')})[var]
+    # <xarray.Dataset>
+    # Dimensions:     (xx: 143, yy: 101, xpid: 3)
+    # Coordinates:
+    #   time        datetime64[ns] 2018-01-23
+    #   * xx        (xx) float64 9.379e+05 9.381e+05 ... 9.731e+05 9.734e+05
+    #   * yy        (yy) float64 6.439e+06 6.439e+06 ... 6.464e+06 6.464e+06
+    # Dimensions without coordinates: xpid
+    # Data variables:
+    #     DSN_T_ISBA  (xpid, time, yy, xx) float64 1.997 1.918 ... 0.0001194 0.2854
+
     # Set the 'xpid' dimension for simulation identification
     simu['xpid'] = products
+    # <xarray.Dataset>
+    # Dimensions:     (xx: 143, yy: 101, xpid: 3)
+    # Coordinates:
+    #   time        datetime64[ns] 2018-01-23
+    #   * xx        (xx) float64 9.379e+05 9.381e+05 ... 9.731e+05 9.734e+05
+    #   * yy        (yy) float64 6.439e+06 6.439e+06 ... 6.464e+06 6.464e+06
+    #   * xpid      (xpid) <U15 'SAFRAN_pappus' 'ANTILOPE_pappus' 'RS27_pappus'
+    # Dimensions without coordinates: xpid
+    # Data variables:
+    #     DSN_T_ISBA  (xpid, time, yy, xx) float64 1.997 1.918 ... 0.0001194 0.2854
 
     # Select common domains
     obs  = obs.sel({'xx': np.intersect1d(obs.xx, simu.xx), 'yy': np.intersect1d(obs.yy, simu.yy)})
     simu = simu.sel({'xx': np.intersect1d(obs.xx, simu.xx), 'yy': np.intersect1d(obs.yy, simu.yy)})
     mnt  = mnt.sel({'xx': np.intersect1d(obs.xx, simu.xx), 'yy': np.intersect1d(obs.yy, simu.yy)})
+    # Mask missing values from the observatin dataset in the simulation dataset
+    simu = simu.where(~np.isnan(obs))
+    # <xarray.Dataset>
+    # Dimensions:     (xpid: 1, yy: 79, xx: 63)
+    # Coordinates:
+    #  * xx          (xx) float64 9.579e+05 9.581e+05 ... 9.731e+05 9.734e+05
+    #  * yy          (yy) float64 6.439e+06 6.439e+06 ... 6.458e+06 6.459e+06
+    # Dimensions without coordinates: xpid
+    # Data variables:
+    #    DSN_T_ISBA  (xpid, yy, xx) float64 nan nan 1.132 1.234 ... 1.918 1.997  nan nan
+
+
+    # TODO : check if 'ZS' in PRO (if not, "mnt" is necessary)
+    simu['ZS'] = mnt
+    obs['ZS']  = mnt
+
+    # TODO : convert to dataframe here (no need to keep x/y coordinates any more)
+    # df = obs.to_dataframe().dropna().reset_index().drop(columns=['xx', 'yy', 'time'])
+    # df.groupby(pd.cut(df["ZS"], elevation_bands))
+
+    gbo = obs.groupby_bins('ZS', elevation_bands, restore_coord_dims=True, include_lowest=True)
+    gbs = simu.groupby_bins('ZS', elevation_bands, restore_coord_dims=True, include_lowest=True)
+
+    npoints = gbo.count()  # Number of pixels in each elevation band
+    bias = gbs.mean() - gbo.mean()  # Mean bias for each elevation band
+    std  = gbs.std() - gbo.std()  # Standard deviation ratio for each elevation band
+
+
+    import pdb
+    pdb.set_trace()
+
+
+
+    #simu.groupby_bins('ZS', elevation_bands, restore_coord_dims=True, include_lowest=True).mean()
+    # ds.groupby_bins('ZS', elevations, labels=elevations[1:], restore_coord_dims=True, include_lowest=True)
 
     for zmin, zmax in zip(elevation_bands[:-1], elevation_bands[1:]):
-        # TODO : mask NaN values from obs dataset in simu dataset
         cluster = (mnt >= zmin) & (mnt < zmax)
         tmpobs  = obs.where(cluster)
         tmpsimu = simu.where(cluster)
         diff = tmpsimu - tmpobs
-        #bias = diff.mean(["xx", "yy"], skipna=True)
+        # bias = diff.mean(["xx", "yy"], skipna=True)
         bias = diff.mean(["xx", "yy"])
+        std  = tmpsimu.std() / tmpobs.std()
+
 
         import pdb
         pdb.set_trace()
 
-    data = clusters.per_alt(obs[var], elevation_bands, mnt)
+    # data = clusters.per_alt(obs[var], elevation_bands, mnt)
 
     for xpid in xpids:
         print(xpid)
