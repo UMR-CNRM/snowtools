@@ -14,7 +14,7 @@ import numpy as np
 import filecmp
 
 from snowtools.utils.dates import WallTimeException
-from snowtools.utils.resources import InstallException
+from snowtools.utils.resources import InstallException, absolute_path
 from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
 from snowtools.tools.execute import callSystemOrDie
 from snowtools.DATA import SNOWTOOLS_DIR
@@ -26,14 +26,17 @@ class vortex_kitchen(object):
     Interface between s2m command line and vortex utilities (tasks and mk_jobs)
     """
 
-    def __init__(self, options):
+    def __init__(self, options, snowtools_command):
         """
         Constructor
         """
         # Check if a vortex installation is defined
         self.check_vortex_install()
         self.options = options
+        self.snowtools_command = snowtools_command
 
+        # Initialization of vortex variables
+        self.vapp = 's2m'
         self.split_geo()
 
         if self.options.command == 'oper':
@@ -44,7 +47,7 @@ class vortex_kitchen(object):
         else:
             self.options.xpid = self.options.diroutput  # diroutput is now always defined in research cases
 
-        self.workingdir = "/".join([self.options.workdir, self.options.xpid, self.options.vapp, self.options.vconf])
+        self.workingdir = "/".join([self.options.workdir, self.options.xpid, self.vapp, self.options.vconf])
         self.confdir    = "/".join([self.workingdir, 'conf'])
         self.jobdir     = "/".join([self.workingdir, "jobs"])
 
@@ -85,60 +88,55 @@ class vortex_kitchen(object):
             os.makedirs(self.workingdir)
         os.chdir(self.workingdir)
 
-        # TODO : pourquoi ne pas refaire le lien par sécurité ?
         if not os.path.islink("vortex"):
             os.symlink(os.environ["VORTEX"], "vortex")
 
-        # TODO : pourquoi ne pas refaire le lien par sécurité ?
         if not os.path.islink("snowtools"):
             os.symlink(SNOWTOOLS_DIR, "snowtools")
 
-        # TODO : pourquoi ne pas refaire le lien par sécurité ?
-        if os.path.islink("tasks"):
-            os.remove('tasks')
-        if self.options.command == 'oper':
-            os.symlink(SNOWTOOLS_DIR + "/tasks/oper", "tasks")
-        else:
-            if self.options.task in ['croco', 'croco_perturb']:
-                os.symlink(SNOWTOOLS_DIR + "/tasks/research/crocO", "tasks")
-            elif self.options.vapp == 'edelweiss':  # TODO : TMP, à uniformiser
-                if self.options.task in ['surfex', 'diag_sentinel2', 'surfex_mpi']:
-                    os.symlink(os.path.join(SNOWTOOLS_DIR, "tasks/research", "surfex"), "tasks")
-                else:
-                    os.symlink(os.path.join(SNOWTOOLS_DIR, "tasks/research", self.options.vapp), "tasks")
+        if not os.path.islink("tasks"):
+            if self.options.command == 'oper':
+                os.symlink(SNOWTOOLS_DIR + "/tasks/oper", "tasks")
             else:
-                os.symlink(SNOWTOOLS_DIR + "/tasks/research/surfex", "tasks")
+                if self.options.safran:
+                    os.symlink(SNOWTOOLS_DIR + "/tasks/research/safran", "tasks")
+                elif self.options.surfex:
+                    if self.options.task in ['croco', 'croco_perturb']:
+                        os.symlink(SNOWTOOLS_DIR + "/tasks/research/crocO", "tasks")
+                    else:
+                        os.symlink(SNOWTOOLS_DIR + "/tasks/research/surfex", "tasks")
 
         for directory in ["conf", "jobs"]:
             if not os.path.isdir(directory):
                 os.mkdir(directory)
 
-        if self.options.uenv is not None:
-            user = os.environ['USER']
+        if hasattr(self.options, 'uenv') and self.options.uenv is not None:
             if self.options.uenv.startswith('uenv'):
                 # The user already created a uenv and parsed the formatted uenv name
-                # In this cas we trust the user (we could check the uenv ?)
                 envname = self.options.uenv.split(':')[1].split('@')[0]
                 datadir = None
             else:
                 # The uenv needs to be generated
                 # Set up a uenv with all files in self.options.uenv repository
-                envname = '_'.join([self.options.vapp, self.options.vconf, self.options.xpid])
+                envname = '_'.join([self.vapp, self.options.vconf, self.options.xpid])
+                user = os.environ['USER']
                 datadir = self.options.uenv
-                self.uenv = UserEnv(envname, targetdir=datadir)
-                env_name, uenv_entries = self.uenv.run()  # {'FILE_NAME_EXT':'my.file_name.ext.version',...}
-                # uenv and udata variables will be written in the task's configuration file
-                self.options.uenv = f'uenv:{env_name}@{user}'
-                self.options.udata = 'dict(' + ' '.join([f'{key}:{".".join(value.split(".")[:-1])}'
-                                                        for key, value in uenv_entries.items()]) + ')'
-                # ex : self.options.udata = dict('FILE_NAME_EXTENSION':'my.file_name.extension',...)
-                # ==> gvar='FILE_NAME_EXTENSION', local='my.file_name.extension'
+            user = os.environ['USER']
+            self.uenv = UserEnv(envname, targetdir=datadir)
+            env_name, uenv_entries = self.uenv.run()  # {'FILE_NAME_EXTENSION':'my.file_name.extension.version',...}
+            # uenv and udata variables will be written in the task's configuration file
+            self.options.uenv = f'uenv:{env_name}@{user}'
+
+            self.options.udata = 'dict(' + ' '.join([f'{key}:{".".join(value.split(".")[:-1])}'
+                                                    for key, value in uenv_entries.items()]) + ')'
+            # ex : self.options.udata = dict('FILE_NAME_EXTENSION':'my.file_name.extension',...)
+            # ==> gvar='FILE_NAME_EXTENSION', local='my.file_name.extension'
 
     def init_job_task(self, jobname=None):
-        if self.options.vapp == 'safran':
-            self.init_job_task_safran()
-        else:
+        if self.options.surfex:
             self.init_job_task_surfex(jobname=jobname)
+        else:
+            self.init_job_task_safran()
 
     def init_job_task_surfex(self, jobname=None):
         if self.options.command == 'oper':
@@ -176,18 +174,20 @@ class vortex_kitchen(object):
                 reforecast = "ensemble_surfex_reforecast",
                 debug = 'debug_tasks',
                 refill = "refill",
+                interpol="interpol_task",
             )
 
             defaultjobname = dict(
-                surfex           = 'rea_s2m',  # TODO : remplacer par "surfex" ou rea_surfex ?
+                surfex = 'rea_s2m',  # TODO : remplacer par "surfex" ou rea_surfex ?
                 surfex_dailyprep = 'rea_s2m',  # # TODO : remplacer par "surfex" ou rea_surfex ?
-                escroc           = 'escroc',
-                escroc_scores    = "scores_escroc",
-                croco            = 'croco',
-                croco_perturb    = 'perturb_forcing',
-                reforecast       = "surfex_forecast",
-                debug            = 'debug_s2m',  # TODO : remplacer par "debug_surfex" ?
-                refill           = "refill_surfex_output",
+                escroc = 'escroc',
+                escroc_scores = "scores_escroc",
+                croco = 'croco',
+                croco_perturb = 'perturb_forcing',
+                reforecast = "surfex_forecast",
+                debug = 'debug_s2m',  # TODO : remplacer par "debug_surfex" ?
+                refill = "refill_surfex_output",
+                interpol="interpolator",
             )
 
             if self.options.task in ['escroc', 'croco', 'croco_perturb', 'reforecast', 'refill']:
@@ -198,21 +198,16 @@ class vortex_kitchen(object):
                 self.nnodes = self.options.nnodes
 
             self.confcomplement = " taskconf=" + self.options.datedeb.strftime("%Y")
+            # take care to not overlap in case of simultaneous executions with meteo and pro blocks
+            if hasattr(self.options, 'interpol_blocks'):
+                self.confcomplement = self.confcomplement + self.options.interpol_blocks.replace(',', '')
 
         # Following common between oper and research
-        if self.options.task not in reftask.keys():
-            # Try to avoid to add a dict entry for each new task
-            self.reftask = self.options.task
-        else:
-            self.reftask = reftask[self.options.task]
-
+        self.reftask = reftask[self.options.task]
         if jobname:
             self.jobname = jobname
-        elif self.options.task in defaultjobname.keys():
-            # Try to avoid to add a dict entry for each new task
-            self.jobname = defaultjobname[self.options.task]
         else:
-            self.jobname = self.options.task
+            self.jobname = defaultjobname[self.options.task]
 
     def init_job_task_safran(self):
         if self.options.command == 'oper':
@@ -230,39 +225,48 @@ class vortex_kitchen(object):
 
         conffilename = None
         os.chdir(self.confdir)
-        if self.options.command == 'oper':
-            conffilename = self.options.vapp + "_" + self.options.vconf + ".ini"
-            if self.options.dev:
-                conffilename_in = self.options.vapp + "devnew_" + self.options.vconf + ".ini"
-            else:
-                conffilename_in = conffilename
+        if self.options.surfex:
+            if self.options.command == 'oper':
+                conffilename = self.vapp + "_" + self.options.vconf + ".ini"
+                if self.options.dev:
+                    conffilename_in = self.vapp + "devnew_" + self.options.vconf + ".ini"
+                else:
+                    conffilename_in = conffilename
 
-            # Remove existing link (to allow to switch from one configuration file to another one)
-            if os.path.islink(conffilename):
-                os.remove(conffilename)
+                # Remove existing link (to allow to switch from one configuration file to another one)
+                if os.path.islink(conffilename):
+                    os.remove(conffilename)
 
-            # Operational case : the configuration files are provided :
-            # only create a symbolic link in the appropriate directory
-            if os.path.exists("../snowtools/conf/" + conffilename_in):
-                os.symlink("../snowtools/conf/" + conffilename_in, conffilename)
+                # Operational case : the configuration files are provided :
+                # only create a symbolic link in the appropriate directory
+                if os.path.exists("../snowtools/conf/" + conffilename_in):
+                    os.symlink("../snowtools/conf/" + conffilename_in, conffilename)
+                else:
+                    print("WARNING : No conf file found in snowtools")
             else:
-                print("WARNING : No conf file found in snowtools")
-        else:
-            if hasattr(self.options, 'confname'):
-                conffilename = self.options.confname.rstrip('.ini') + ".ini"
+                if hasattr(self.options, 'confname'):
+                    conffilename = self.options.confname.rstrip('.ini') + ".ini"
+                else:
+                    suffix = '.ini'
+                    if hasattr(self.options, 'interpol_blocks'):
+                        suffix = self.options.interpol_blocks.replace(',', '') + suffix
+
+                    conffilename = self.vapp + "_" + self.options.vconf + "_" + \
+                        self.options.datedeb.strftime("%Y") + suffix
+
+        elif self.options.safran:
+            if self.options.command == 'oper':
+                pass
             else:
-                # TODO : quel intéret de rajouter l'année ?
-                # Pourquoi ne pas utiliser plutot différents blocks dans le fichier de conf ?
-                conffilename = self.options.vapp + "_" + self.options.vconf + "_" + \
-                    self.options.datedeb.strftime("%Y") + ".ini"
+                conffilename = self.vapp + "_" + self.options.vconf + ".ini"
 
         if conffilename:
             fullname = '/'.join([self.confdir, conffilename])
         else:
-            fullname = None  # TODO : fullname = None fait crasher Vortex_conf_file --> définir un nom par défaut ?
+            fullname = None
 
         if not self.options.command == 'oper':
-            self.conf_file = Vortex_conf_file(self.options, fullname)
+            self.conf_file = Vortex_conf_file(self.options, self.snowtools_command, fullname)
             self.conf_file.create_conf(jobname=self.jobname)
             # Do not write the configuration file now, additionnal informations may be added later
             # self.conf_file.write_file()
@@ -271,8 +275,9 @@ class vortex_kitchen(object):
         os.chdir(self.workingdir)
 
     def write_conf_file(self):
-        self.conf_file.write_file()
-        self.conf_file.close()
+        if not self.options.command == 'oper':
+            self.conf_file.write_file()
+            self.conf_file.close()
 
     def mkjob_command(self, jobname):
 
@@ -282,8 +287,8 @@ class vortex_kitchen(object):
 
     def mkjob_list_commands(self):
 
-        if not self.options.vapp == 'safran' and (self.options.task in ['escroc', 'croco', 'croco_perturb',
-                                                                        'reforecast'] and self.options.nnodes > 1):
+        if not self.options.safran and (self.options.task in ['escroc', 'croco', 'croco_perturb',
+                                                              'reforecast'] and self.options.nnodes > 1):
             mkjob_list = []
             for node in range(1, self.options.nnodes + 1):
                 mkjob_list.append(self.mkjob_command(jobname=self.jobname + str(node)))
@@ -292,14 +297,18 @@ class vortex_kitchen(object):
 
             return mkjob_list
 
-        elif self.options.nforcing > 1:
+        elif hasattr(self.options, 'nforcing') and self.options.nforcing > 1 and self.options.nnodes > 1:
+            # Case when surfex_task is forced by an ensemble
+            # Condition on options.nnodes allow to not use this case for croco tasks
+            # The use of options.nnodes must not be used to define the nb of nodes per domain in this case.
             mkjob_list = []
-            # TODO : gérer la possibilité de relancer seulement certains membres
-            for node in range(self.options.nforcing):
+            for node in range(1, self.options.nforcing + 1):
                 jobname = self.jobname + str(node)
                 # Add a "jobname" block in the configuration file that will contain
                 # job-specific configuration variables
                 self.conf_file.set_field(jobname, 'member', node)  # Each job is assicated to 1 ensemble member
+                # It is necessary to overwrite the number of proc that is automatically set to natsks*nnodes :
+                self.conf_file.set_field(jobname, 'nprocs', self.options.ntasks)  # TODO : check if really necessary
                 mkjob_list.append(self.mkjob_command(jobname=jobname))
 
             self.write_conf_file()  # The configuration file is now complete, time to write it
@@ -384,24 +393,23 @@ class vortex_kitchen(object):
                 return estimation.hms
 
     def split_geo(self):
-        # TODO : pourquoi ne pas renomer l'option 'region' en 'vconf' ou 'geometry' ?
-        # TODO : définir proprement le lien vconf/geometry (lequel est défini à partir de l'autre)
         if ':' in self.options.region:
             splitregion = self.options.region.split(':')
             self.options.geoin = splitregion[0].lower()
             self.options.vconf = splitregion[1].lower()
             self.options.interpol = len(splitregion) == 3
             if self.options.interpol:
-                self.options.gridout = splitregion[2]
+                self.options.gridout = absolute_path(splitregion[2])
         else:
             self.options.interpol = False
             self.options.vconf = self.options.region.lower()
 
 
 class Vortex_conf_file(object):
-    def __init__(self, options, filename, mode='w'):
+    def __init__(self, options, snowtools_command, filename, mode='w'):
         self.name = filename
         self.options = options
+        self.snowtools_command = snowtools_command
         self.fileobject = open(filename, mode)
         self.blocks = dict()
 
@@ -432,42 +440,45 @@ class Vortex_conf_file(object):
         self.default_variables()
         self.add_block(jobname)
         self.jobname = jobname
-        if self.options.vapp == 'safran':
-            self.create_conf_safran()
-        else:  # TODO : à modifier si l'option vapp est maintenue
+        if self.options.surfex:
             self.create_conf_surfex()
             self.setwritesx()
+        elif self.options.safran:
+            self.create_conf_safran()
+
+    def create_conf_interpol(self):
+        self.get_forcing_variables()
+
+        if self.options.namelist:
+            self.set_field("DEFAULT", 'namelist', self.options.namelist)
+
+        self.set_field("DEFAULT", 'gridout', self.options.gridout)
+        self.set_field("DEFAULT", 'geoin', self.options.geoin)
+
+        self.set_field("DEFAULT", 'drhook', self.options.drhook)
+
+        if hasattr(self.options, 'save_pro'):
+            self.set_field("DEFAULT", 'save_pro', self.options.save_pro)
+
+        if hasattr(self.options, 'interpol_blocks'):
+            self.set_field("DEFAULT", 'interpol_blocks', self.options.interpol_blocks)
 
     def create_conf_surfex(self):
-        self.surfex_variables()
-        # ESCROC on several nodes
-        if self.options.task in ['escroc', 'escroc_scores', 'croco', 'croco_perturb']:
-            self.escroc_variables()
-            if self.options.task in ['croco']:
-                self.croco_variables()
+        if self.options.task in ['interpol']:
+            self.create_conf_interpol()
         else:
-            self.set_field("DEFAULT", 'nnodes', self.options.nnodes)
-            # WARNING : there are 2 ways to convert s2m "member" options into a footprint argument :
-            # 1. Provide 2 conf variables (startmember and nmembers) that are then converted into
-            #    a list of members with footprint.util.rangex(startmember, nmembers)
-            # 2. Provide directly the list of members using the footprint-compatible syntax
-            #    'firstmemebr-lastmember-1'
-            # Option 1 is the original vortex_kitchen choice but option 2 offers the possibility to replace
-            # startmember and nmembers options by only one "members" option (either an int or a 'X-Y' string)
-            # Option 2 allows to directly use "members = self.conf.members" in the toolbox and should be prefered
-            self.set_field("DEFAULT", 'nmembers', self.options.nmembers)
-            self.set_field("DEFAULT", 'startmember', self.options.startmember)
-            if self.options.nmembers is not None:
-                if self.options.startmember is not None:
-                    first = self.options.startmember
-                    last  = first + self.options.nmembers - 1
-                    self.set_field("DEFAULT", 'members', f'{first}-{last}-1')
-                else:
-                    first = 0
-                    last  = self.options.nmembers - 1
-                    self.set_field("DEFAULT", 'members', f'{first}-{last}-1')
+            self.surfex_variables()
+            # ESCROC on several nodes
+            if self.options.task in ['escroc', 'escroc_scores', 'croco', 'croco_perturb']:
+                self.escroc_variables()
+                if self.options.task in ['croco']:
+                    self.croco_variables()
             else:
-                self.set_field("DEFAULT", 'members', None)
+                self.set_field("DEFAULT", 'nnodes', self.options.nnodes)
+                if self.options.nmembers:
+                    self.set_field("DEFAULT", 'nmembers', self.options.nmembers)
+                if self.options.startmember:
+                    self.set_field("DEFAULT", 'startmember', self.options.startmember)
 
     def create_conf_safran(self):
         self.safran_variables()
@@ -477,23 +488,7 @@ class Vortex_conf_file(object):
         self.set_field("DEFAULT", 'ntasks', self.options.ntasks)
         self.set_field("DEFAULT", 'nprocs', self.options.ntasks * self.options.nnodes)
         self.set_field("DEFAULT", 'openmp', 1)
-        if self.options.namespace_in == 'sxcen':
-            self.set_field("DEFAULT", 'namespace_in', 'vortex.archive.fr')
-            self.set_field("DEFAULT", 'storage', 'sxcen.cnrm.meteo.fr')
-        else:
-            self.set_field("DEFAULT", 'namespace_in', f'vortex.{self.options.namespace_in}.fr')
-            self.set_field("DEFAULT", 'storage', None)
-        if self.options.namespace_out == 'sxcen' or self.options.writesx:
-            self.set_field("DEFAULT", 'namespace_out', 'vortex.archive.fr')
-            self.set_field("DEFAULT", 'storage', 'sxcen.cnrm.meteo.fr')
-        else:
-            self.set_field("DEFAULT", 'namespace_out', f'vortex.{self.options.namespace_out}.fr')
-            self.set_field("DEFAULT", 'storage', None)
-        # TODO : ne pas maintenir la confusion "vconf <==> geometry" dans les futures tâches
-        if self.options.vapp == 'edelweiss':
-            self.set_field("DEFAULT", 'geometry', self.options.region)
-        else:
-            self.set_field("DEFAULT", 'geometry', self.options.vconf)
+        self.set_field("DEFAULT", 'geometry', self.options.vconf)
         if hasattr(self.options, 'addmask'):
             self.set_field("DEFAULT", 'addmask', self.options.addmask)
         if hasattr(self.options, 'prep_xpid'):
@@ -501,16 +496,12 @@ class Vortex_conf_file(object):
                 if '@' not in self.options.prep_xpid:
                     self.options.prep_xpid = self.options.prep_xpid + '@' + os.getlogin()
                 self.set_field("DEFAULT", 'prep_xpid', self.options.prep_xpid)
-        if self.options.wind_xpid is not None:
-            self.set_field("DEFAULT", 'wind_xpid', self.options.wind_xpid)
-        if self.options.precipitation_xpid is not None:
-            self.set_field("DEFAULT", 'precipitation_xpid', self.options.precipitation_xpid)
-        if self.options.safran_xpid is not None:
-            self.set_field("DEFAULT", 'safran_xpid', self.options.safran_xpid)
-        if self.options.uenv is not None:
-            self.set_field("DEFAULT", 'uenv', self.options.uenv)
-        if hasattr(self.options, 'udata'):
-            self.set_field("DEFAULT", 'udata', self.options.udata)
+        if hasattr(self.options, 'uenv'):
+            if self.options.uenv is not None:
+                self.set_field("DEFAULT", 'uenv', self.options.uenv)
+                self.set_field("DEFAULT", 'udata', self.options.udata)
+        # Archive the command instruction only for reproductibility
+        self.set_field("DEFAULT", 'snowtools_command', self.snowtools_command)
 
     def escroc_variables(self):
 
@@ -548,7 +539,8 @@ class Vortex_conf_file(object):
                 forcinglogin = os.getlogin()
 
             lf = self.options.forcing.split('/')
-            self.set_field("DEFAULT", 'forcingid', lf[0] + '@' + forcinglogin)
+            addlogin = '' if lf[0] == 'oper' else '@' + forcinglogin
+            self.set_field("DEFAULT", 'forcingid', lf[0] + addlogin)
 
             if len(lf) > 1:
                 self.set_field("DEFAULT", 'blockin', '/'.join(lf[1:]))
@@ -565,10 +557,7 @@ class Vortex_conf_file(object):
 
     def surfex_variables(self):
 
-        # -f (forcing) option is optional for any other task than surfex
-        # TODO : gérer ça différement (ne pas utiliser 'surfex_variables')
-        if self.options.forcing is not None:
-            self.get_forcing_variables()
+        self.get_forcing_variables()
 
         if self.options.namelist:
             self.set_field("DEFAULT", 'namelist', self.options.namelist)
@@ -843,15 +832,6 @@ class UserEnv(object):
         Returns the list of valid entries associated to the uenv.
 
         WARNING : does not check data already pushed on Hendrix (DEV mode only !)
-
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        TODO :
-        1. gérer les changements de nom du targetdir contenant des fichiers identiques/similaires
-        (cf Problème MF)
-        2. Ajouter une option --tag pour archiver le uenv sur hendrix (uget.py push env...)
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
         """
         self.get_current_version()  # First get version number of the uenv (=1 if this is a new uenv)
         if not os.path.exists(f'{self.envfile}.{self.version}'):
@@ -906,7 +886,7 @@ class UserEnv(object):
         Return list of absolute paths of files under 'directory'
         """
         if not os.path.exists(directory):
-            raise OSError(f'Directory {directory} does not exist.')
+            raise OSError(f'Directory {directory} doe not exist.')
         elif len(glob.glob(os.path.join(directory, '*'))) == 0:
             raise OSError(f'Directory {directory} is empty.')
 

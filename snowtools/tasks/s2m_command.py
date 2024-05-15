@@ -49,7 +49,7 @@ class Surfex_command(_S2M_command):
                 self.options.datedeb = self.set_default_date()
 
         else:
-            self.check_mandatory_arguments(**{'-b': 'datedeb', '-e': 'datefin'})
+            self.check_mandatory_arguments(**{'-b': 'datedeb', '-e': 'datefin', '-f': 'forcing'})
 
             if not self.options.onlyextractforcing:
                 try:
@@ -170,8 +170,7 @@ class Surfex_command(_S2M_command):
 
         parser_research_main.add_argument("-f", "--forcing",
                                           type=str, dest="forcing", default=None,
-                                          help="Path of the forcing file or of the directory with the forcing files"
-                                               "or xpid of the forcing file")
+                                          help="Path of the forcing file or of the directory with the forcing files")
 
         parser_research_main.add_argument("-n", "--namelist",
                                           type=str, dest="namelist",
@@ -322,7 +321,10 @@ class Surfex_command(_S2M_command):
 
         parser_research_vortex.add_argument("--nnodes",
                                             action="store", type=int, dest="nnodes", default=1,
-                                            help="Number of nodes")
+                                            help="Total number of nodes requested by the s2m command"
+                                                 " (can be split between several jobs or not)."
+                                                 " Take care, this is not the number of nodes per job if several"
+                                                 " jobs !!!")
 
         parser_research_vortex.add_argument("--ntasks",
                                             action="store", type=int, dest="ntasks", default=None,
@@ -357,9 +359,9 @@ class Surfex_command(_S2M_command):
                                             help="Profiling MPI task with DRHOOK")
 
         parser_research_vortex.add_argument("--task",
-                                            dest="task", action='store', type=str, default='surfex',
-                                            # choices=["surfex", "surfex_dailyprep", "escroc", "escroc_scores", "croco",
-                                            #          "croco_perturb", "reforecast", "debug", "refill"],
+                                            dest="task", type=str, default='surfex',
+                                            choices=["surfex", "surfex_dailyprep", "escroc", "escroc_scores", "croco",
+                                                     "croco_perturb", "reforecast", "debug", "refill", "interpol"],
                                             help="The task, if not the default one.")
 
         parser_research_vortex.add_argument("--escroc",
@@ -381,11 +383,12 @@ class Surfex_command(_S2M_command):
 
         parser_research_vortex.add_argument("--nforcing",
                                             action="store", type=int, dest="nforcing", default=1,
-                                            help="Number of members of forcing files")
+                                            help="Number of members of forcing files in Croco task only")
 
         parser_research_vortex.add_argument("--nmembers",
                                             action="store", type=int, dest="nmembers", default=None,
-                                            help="Number of members")
+                                            help="Total number of executions of the binary or script associated"
+                                                 "with the main algocomponent of the task.")
 
         parser_research_vortex.add_argument("--startmember",
                                             action="store", type=int, dest="startmember", default=None,
@@ -395,42 +398,10 @@ class Surfex_command(_S2M_command):
                                             action="store", type=str, dest="sensor", default="MODIS",
                                             help="specify the sensor name of the obs you want to assimilate")
 
-        parser_research_vortex.add_argument("--vapp",
-                                            action="store", type=str, dest="vapp", default="s2m",
-                                            choices=["s2m", "croco", "surfex", "safran", "edelweiss"],
-                                            help="specify the vortex vapp of the execution")
-
-        parser_research_vortex.add_argument("--namespace_in",
-                                            action="store", type=str, dest="namespace_in", default="multi",
-                                            choices=['none', 'cache', 'archive', 'multi', 'sxcen'],
-                                            help="Specify where to look for input resources")
-
-        parser_research_vortex.add_argument("--namespace_out",
-                                            action="store", type=str, dest="namespace_out", default="multi",
-                                            choices=['none', 'cache', 'archive', 'multi', 'sxcen'],
-                                            help="Specify where to save output resources")
-
-        # TODO : à associer à la tâche "make_forcing"
-        # TODO : gérer le @user proprement (ne pas l'ajouter si il est passé avec l'argument)
-        parser_research_vortex.add_argument("--wind_xpid",
-                                            action="store", type=str, dest="wind_xpid", default=None,
-                                            help="Specify the xpid of the experiment providing the FORCING's"
-                                                 "Wind and Wind_DIR variables. Task 'make_forcing' only")
-
-        # TODO : à associer à la tâche "make_forcing"
-        # TODO : gérer le @user proprement (ne pas l'ajouter si il est passé avec l'argument)
-        parser_research_vortex.add_argument("--precipitation_xpid",
-                                            action="store", type=str, dest="precipitation_xpid", default=None,
-                                            help="Specify the xpid of the experiment providing the FORCING's"
-                                                 "Rainf and Snowf variables. Task 'make_forcing' only")
-
-        # TODO : à associer à la tâche "make_forcing" (temporary)
-        # TODO : gérer le @user proprement (ne pas l'ajouter si il est passé avec l'argument)
-        parser_research_vortex.add_argument("--safran_xpid",
-                                            action="store", type=str, dest="safran_xpid", default=None,
-                                            help="Specify the xpid of the experiment providing all other FORCING"
-                                                 "variables. Task 'make_forcing' only. During the EDELWEISS"
-                                                 "development, this is the xpid of the re-gridded SAFRAN reanalysis")
+        parser_research_vortex.add_argument("--interpol_blocks",
+                                            type=str, dest="interpol_blocks", default='',
+                                            choices=['meteo', 'pro', 'meteo,pro', 'pro,meteo'],
+                                            help="List of blocks to interpol --task=interpol")
 
         parser_oper = subparsers.add_parser('oper', description="Do not use unless you know what it does. "
                                             "Use s2m oper --help for details")
@@ -456,11 +427,10 @@ class Surfex_command(_S2M_command):
                                  action="store", type=str, dest="walltime", default=None,
                                  help="specify your job walltime (format hh:mm:ss)")
 
-        # Inutile, à l'avenir utiliser plutot option.vapp pour faire ce genre de switch ?
-        # options.surfex = True
-        # options.safran = False
-
         options  = parser.parse_args(arguments)
+
+        options.surfex = True
+        options.safran = False
 
         return options
 
@@ -482,7 +452,8 @@ class Surfex_command(_S2M_command):
                                      workdir=self.options.workdir, datespinup=self.options.datespinup,
                                      execdir=self.options.exesurfex,
                                      namelist=self.options.namelist,
-                                     addmask=True, onlyextractforcing=self.options.onlyextractforcing)
+                                     addmask=True, onlyextractforcing=self.options.onlyextractforcing,
+                                     s2mcommand=self.command)
             elif self.interpol:
                 if 'pro' in self.options.forcing or 'PRO' in self.options.forcing:
                     myclass = runs.interpolpro
@@ -497,7 +468,8 @@ class Surfex_command(_S2M_command):
                               datespinup=self.options.datespinup,
                               geolist=[self.options.region], execdir=self.options.exesurfex,
                               namelist=self.options.namelist,
-                              onlyextractforcing=self.options.onlyextractforcing)
+                              onlyextractforcing=self.options.onlyextractforcing,
+                              s2mcommand=self.command)
 
             elif self.options.region or self.options.slopes or self.options.aspects or self.options.minlevel \
                     or self.options.maxlevel:
@@ -509,14 +481,16 @@ class Surfex_command(_S2M_command):
                                                     workdir=self.options.workdir,
                                                     geolist=[self.options.region, self.options.minlevel,
                                                              self.options.maxlevel, self.options.slopes,
-                                                             self.options.aspects])
+                                                             self.options.aspects],
+                                                    s2mcommand=self.command)
                     else:
                         run = runs.massifextractforcing(self.options.datedeb, self.options.datefin,
                                                         self.options.forcing, self.options.diroutput,
                                                         workdir=self.options.workdir,
                                                         geolist=[self.options.region, self.options.minlevel,
                                                                  self.options.maxlevel, self.options.slopes,
-                                                                 self.options.aspects])
+                                                                 self.options.aspects],
+                                                        s2mcommand=self.command)
                 else:
 
                     run = runs.massifrun(self.options.datedeb, self.options.datefin, self.options.forcing,
@@ -526,7 +500,8 @@ class Surfex_command(_S2M_command):
                                          namelist=self.options.namelist,
                                          geolist=[self.options.region, self.options.minlevel,
                                                   self.options.maxlevel, self.options.slopes,
-                                                  self.options.aspects])
+                                                  self.options.aspects],
+                                         s2mcommand=self.command)
             else:
                 if self.options.geotype == 'grid':
                     if self.options.veg in ['ecoclimap', None]:
@@ -544,7 +519,8 @@ class Surfex_command(_S2M_command):
                               self.options.diroutput, threshold=self.options.threshold,
                               workdir=self.options.workdir, datespinup=self.options.datespinup,
                               execdir=self.options.exesurfex,
-                              namelist=self.options.namelist)
+                              namelist=self.options.namelist,
+                              s2mcommand=self.command)
 
             if self.options.uenv:
                 run.get_extra_files(self.options.uenv)
@@ -570,13 +546,13 @@ class Surfex_command(_S2M_command):
 
         # Cook vortex task
         if self.options.task == 'croco':
-            crocO_vortex_kitchen(self.options)
+            crocO_vortex_kitchen(self.options, self.command)
         else:
-            vortex_kitchen(self.options)
+            vortex_kitchen(self.options, self.command)
 
 
 def main():
-    Surfex_command(sys.argv[1:])
+    Surfex_command(sys.argv)
 
 
 if __name__ == "__main__":
