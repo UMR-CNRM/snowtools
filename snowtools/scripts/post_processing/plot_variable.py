@@ -50,9 +50,18 @@ cmap = dict(
 
 vmax_map = dict(
     # WARNING : values defined for 2017/2018
-    DSN_T_ISBA = 6,  # m
-    Snowf      = 1500,  # kg/m² [mm]
-    Rainf      = 1400,  # kg/m² [mm]
+    DSN_T_ISBA  = 6,  # m
+    Snowf       = 1500,  # kg/m² [mm]
+    Rainf       = 1400,  # kg/m² [mm]
+    RainfSnowf  = 1700,  # kg/m² [mm]
+)
+
+vmin_map = dict(
+    # WARNING : values defined for 2017/2018
+    DSN_T_ISBA  = 0,  # m
+    Snowf       = 0,  # kg/m² [mm]
+    Rainf       = 800,  # kg/m² [mm]
+    RainfSnowf  = 800,  # kg/m² [mm]
 )
 
 
@@ -122,6 +131,7 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
             sumvar = var.split('+')
             extract = ds[sumvar]  # ex : ['Rainf', 'Snowf']
             tmp = extract.to_array().sum("variable")
+            var = var.replace('+', '')
         else:
             tmp = ds[var]
 
@@ -134,12 +144,8 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
             tmp = tmp.sum(dim='time')
             savename = f'{var}_cumul_{xpid}.pdf'
 
-        if var in vmax_map.keys():
-            vmax = vmax_map[var]
-            vmin = 0
-        else:
-            vmax = tmp.max()
-            vmin = tmp.min()
+        vmax = vmax_map[var] if var in vmax_map.keys() else tmp.max()
+        vmin = vmin_map[var] if var in vmin_map.keys() else tmp.min()
 
         if var in cmap.keys():
             plot2D.plot_field(tmp, savename, vmin=vmin, vmax=vmax, cmap=cmap[var])

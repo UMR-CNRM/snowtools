@@ -113,13 +113,14 @@ def plot_fields(xpids, obs, var, member=None):
         cmap = plt.cm.Greens  # TODO : chose a better colormap ?
         plot2D.plot_field(tmp[var], savename, cmap=cmap, vmin=vmin, vmax=vmax)
         savename = f'diff_{var}_{shortid}.pdf'
-        plot2D.plot_error_fields(tmp[var], obs, var, savename, vmax=100)
+        diff = tmp[var] - obs
+        plot2D.plot_field(diff, savename, cmap=plt.cm.RdBu, vmin=-100, vmax=100)
 
 
 def violin_plot(xpids, obs, var, member=None):
     mnt = read_mnt()
 
-    filtered_obs = clusters.per_alt(obs, elevation_bands, mnt)
+    filtered_obs = clusters.per_alt(obs, elevation_bands, mnt.ZS)
     dataplot = filtered_obs.to_dataframe(name='obs').dropna().reset_index().drop(columns=['xx', 'yy'])
 
     for xpid in xpids:
@@ -145,7 +146,7 @@ def violin_plot(xpids, obs, var, member=None):
     dataplot = dataplot.melt('Elevation Bands (m)', var_name='experiment', value_name=var)
 
     figname = f'{var}.pdf'
-    violinplot.plot_ange(dataplot, var, figname)
+    violinplot.plot_ange(dataplot, var, figname, xmax=375)
 
 
 def filter_simu(xpid, subdir, mnt):
@@ -157,7 +158,7 @@ def filter_simu(xpid, subdir, mnt):
     # TODO : résoudre le problème de décallage des coordonnées en amont
     simu['xx'] = mnt['xx']
     simu['yy'] = mnt['yy']
-    filtered_simu = clusters.per_alt(simu[var], elevation_bands, mnt)
+    filtered_simu = clusters.per_alt(simu[var], elevation_bands, mnt.ZS)
     df = filtered_simu.to_dataframe(name=xpid).dropna().reset_index().drop(columns=['xx', 'yy'])
     return df
 
