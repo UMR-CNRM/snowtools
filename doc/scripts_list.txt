@@ -11,4 +11,9 @@ scripts/extract/obs/extract_obs_meteo_mb.py
 scripts/extract/obs/extract_obs_allhtn.py
 scripts/create_forcing/Template_creation_FORCING.py
 interpolation/Netcdf_add_massif_info.py
-
+scripts/post_processing/compute_scores.py
+scripts/post_processing/compute_sentinel2_diagnostics.py
+scripts/post_processing/extract_dates.py
+scripts/post_processing/plot_Pleiades_comparison.py
+scripts/post_processing/plot_sentinel2_diagnostics.py
+scripts/post_processing/plot_variable.py

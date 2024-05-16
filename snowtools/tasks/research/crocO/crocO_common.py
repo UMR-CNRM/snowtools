@@ -39,7 +39,7 @@ class _CrocO_Task(Task, S2MTaskMixIn):
         t = self.ticket
 
         if not hasattr(self.conf, "genv"):
-            self.conf.genv = 'uenv:cen.06@CONST_CEN'
+            self.conf.genv = 'uenv:cen.12@CONST_CEN'
 
         # #################### FETCH CONSTANT FILES ##########################
         self.sh.title('Toolbox input tb02_s (PGD)')  # this step should work if PGD properly in spinup on hendrix
@@ -128,7 +128,8 @@ class _CrocO_Task(Task, S2MTaskMixIn):
         date_begin_forc = date_begin_forc[0]
         date_end_forc = date_end_forc[0]  # replace one-item list by item.
         forcExp = self.conf.forcingid
-        meteo_members = {str(m): ((m - 1) % int(self.conf.nforcing)) + 1 for m in self.conf.members}
+        # TODO : use "startmember" information...
+        meteo_members = {str(m): ((m - 1) % int(self.conf.nforcing)) for m in self.conf.members}
 
         if hasattr(self.conf, 'synth'):
             if self.conf.synth is not None:

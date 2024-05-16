@@ -43,26 +43,29 @@ class Soda_Task(_CrocO_Task):
 
             # ############### FETCH OBSERVATIONS  ##########
             self.sh.title('Toolbox input tobs (obs)')
-            tobs = toolbox.input(
-                geometry        = self.conf.geometry,
-                model           = 'surfex',
-                nativefmt       = 'netcdf',
-                datevalidity    = assDate,
-                block           = self.conf.sensor,
-                scope           = self.conf.scope,
-                kind            = 'SnowObservations',
-                namespace       = 'vortex.multi.fr',
-                namebuild       = 'flat@cen',
-                experiment      = self.conf.obsxpid,
-                local           = 'OBSERVATIONS_[datevalidity:ymdHh].nc',
-                fatal           = True
-            )
-            print(t.prompt, 'tobs =', tobs)
-            print()
+#            tobs = toolbox.input(
+#                geometry        = self.conf.geometry,
+#                model           = 'surfex',
+#                nativefmt       = 'netcdf',
+#                datevalidity    = assDate,
+#                block           = self.conf.sensor,
+#                scope           = self.conf.scope,
+#                kind            = 'SnowObservations',
+#                namespace       = 'vortex.multi.fr',
+#                namebuild       = 'flat@cen',
+#                experiment      = self.conf.obsxpid,
+#                local           = 'OBSERVATIONS_[datevalidity:ymdHh].nc',
+#                fatal           = True
+#            )
+#            print(t.prompt, 'tobs =', tobs)
+#            print()
+            from snowtools.scripts.extract.vortex import vortexIO as io
+            tobs = io.get_snow_obs_date(xpid='CesarDB_AngeH', geometry='Lautaret250m', date=assDate, vapp='Pleiades',
+                    filename='OBSERVATIONS_[datevalidity:ymdHh].nc',)
 
         if 'fetch' in self.steps:
 
-            self.get_common_fetch() # get the namelist
+            self.get_common_fetch()  # get the namelist
 
             # ################# FETCH PREP FILES ################
             # put it in a filetree(/mb0001 etc.) inside the soda task rep for backward comp.
@@ -144,7 +147,7 @@ class Soda_Task(_CrocO_Task):
 
                 # ########## PF DIAGNOSTICS ################################################
 
-                diags_kind = [k for k in  ('PART', 'BG_CORR', 'IMASK', 'ALPHA')
+                diags_kind = [k for k in ('PART', 'BG_CORR', 'IMASK', 'ALPHA')
                               if self.sh.path.exists(k + '_' + assDate.ymdh + '.txt')]
                 if 'PART' not in diags_kind:
                     print('PART_' + assDate.ymdh + '.txt does not exist')
@@ -165,4 +168,3 @@ class Soda_Task(_CrocO_Task):
                 )
                 print(t.prompt, 'tb242 =', tb242)
                 print()
-

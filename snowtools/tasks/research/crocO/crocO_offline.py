@@ -51,7 +51,7 @@ class Offline_Task(_CrocO_Task):
                 tb03_s = toolbox.input(
                     alternate      = 'SnowpackInit',
                     local          = 'PREP.nc',
-                    experiment     = self.conf.spinup_xpid,
+                    experiment     = self.conf.spinup_xpid if not hasattr(self.conf, 'prep_xpid') else self.conf.prep_xpid,
                     geometry       = self.conf.geometry,
                     date           = self.conf.datespinup,
                     intent         = 'inout',
@@ -85,8 +85,8 @@ class Offline_Task(_CrocO_Task):
 
         if 'fetch' in self.steps:
 
-            self.get_common_fetch() # get the namelist
-            self.get_forcings() # the early-fetch is done in crocO_common
+            self.get_common_fetch()  # get the namelist
+            self.get_forcings()  # the early-fetch is done in crocO_common
 
             # ############# FETCH PREPS : either 1 spinup (firstloop=True,
             # could be moved to early-fetch) or a list of PREPS ##########
@@ -177,7 +177,7 @@ class Offline_Task(_CrocO_Task):
             stopstep = 1  # useless ?
             self.sh.title('Toolbox algo tb11 (offline)')
             tb11 = tbalgo4 = toolbox.algo(
-                engine         = 's2m',
+                engine         = 'blind',  # "ParaBlindRun" algo component family
                 binary         = 'OFFLINE',
                 kind           = "croco",
                 verbose        = True,
@@ -201,6 +201,7 @@ class Offline_Task(_CrocO_Task):
             stopstep += 1
 
         if 'backup' in self.steps:
+
             # ########### PUT PREP FILES FOR SODA ###########
             localbg = 'mb[member%04d]/PREP_[date:ymdh].nc'
             self.sh.title('Toolbox output tb21bg_bk (background backup)')
@@ -322,4 +323,3 @@ class Offline_Task(_CrocO_Task):
                 ),
                 print(t.prompt, 'tb23 =', tb23)
                 print()
-

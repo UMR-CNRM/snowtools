@@ -642,6 +642,7 @@ class Vortex_conf_file(object):
 
         # local import since there are dependencies with vortex.
 
+        # TODO : utiliser Vortex's GenereicConfigParser instead
         confObj = read_conf(self.options.conf)
 
         # Attributes directly transfered to vortex conf file from s2m command options or config file or default values
