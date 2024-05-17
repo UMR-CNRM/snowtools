@@ -144,9 +144,10 @@ def elevation_string(elevations):
     """
 
     out = []
+    dz = int(np.abs(elevations[1] - elevations[0]) / 2)
     for elevation in elevations:
         # Format each string with elevation range and a newline character
-        formatted_string = f"{int(elevation)-150}-{int(elevation)+150}"
+        formatted_string = f"{int(elevation)-dz}-{int(elevation)+dz}"
         out.append(formatted_string)
 
     return out

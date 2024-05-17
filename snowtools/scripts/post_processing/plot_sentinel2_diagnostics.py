@@ -66,6 +66,13 @@ def parse_command_line():
     parser.add_argument('-g', '--geometry', type=str, default='GrandesRousses250m',
                         help='Geometry of the simulation(s) / observation')
 
+    parser.add_argument('--mask', type=str,
+                        help="Absolute path to the mask file (if any)"
+                             "WARNING : bad practice")
+
+    parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.1@vernaym",
+                        help="User environment for static resources (format 'uenv:name@user')")
+
     args = parser.parse_args()
     return args
 
@@ -82,7 +89,7 @@ def plot_fields(xpids, obs, var, member=None):
 
     # Plot observation field
     cmap = plt.cm.Greens  # TODO : chose a better colormap ?
-    savename = f'{var}_Sentinel2.pdf'
+    savename = f'{var}_Sentinel2_{datebegin}_{dateend}.pdf'
     plot2D.plot_field(obs, savename, cmap=cmap, vmin=vmin, vmax=vmax)
 
     for xpid in xpids:
@@ -109,15 +116,15 @@ def plot_fields(xpids, obs, var, member=None):
         else:
             tmp = simu
         tmp = tmp.compute()
-        savename = f'{var}_{shortid}.pdf'
+        savename = f'{var}_{shortid}_{datebegin}_{dateend}.pdf'
         cmap = plt.cm.Greens  # TODO : chose a better colormap ?
         plot2D.plot_field(tmp[var], savename, cmap=cmap, vmin=vmin, vmax=vmax)
-        savename = f'diff_{var}_{shortid}.pdf'
+        savename = f'diff_{var}_{shortid}_{datebegin}_{dateend}.pdf'
         diff = tmp[var] - obs
         plot2D.plot_field(diff, savename, cmap=plt.cm.RdBu, vmin=-100, vmax=100)
 
 
-def violin_plot(xpids, obs, var, member=None):
+def violin_plot(xpids, obs, var, member=None, mask=True):
     mnt = read_mnt()
 
     filtered_obs = clusters.per_alt(obs, elevation_bands, mnt.ZS)
@@ -145,7 +152,7 @@ def violin_plot(xpids, obs, var, member=None):
     dataplot.columns = dataplot.columns.str.replace('middle_slices_ZS', 'Elevation Bands (m)')
     dataplot = dataplot.melt('Elevation Bands (m)', var_name='experiment', value_name=var)
 
-    figname = f'{var}.pdf'
+    figname = f'{var}_{datebegin}_{dateend}.pdf'
     violinplot.plot_ange(dataplot, var, figname, xmax=375)
 
 
@@ -175,10 +182,26 @@ if __name__ == '__main__':
     geometry        = args.geometry
     vapp            = args.vapp
     elevation_bands = args.elevation_bands
+    mask            = args.mask
+    uenv            = args.uenv
 
     if not os.path.exists(workdir):
         os.makedirs(workdir)
     os.chdir(workdir)
+
+    try:
+        # Try to get the MASK file with vortexIO
+        mask = io.get_const(uenv, 'mask', geometry)
+        mask = True
+    except (NameError, ModuleNotFoundError):
+        if mask is not None:
+            # If a mask file was provided in argument, use it
+            # Get mask file
+            # import shutil
+            # shutil.copyfile(mask, 'mask.nc')
+            if not os.path.exists('MASK.nc'):  # TODO remplacer le lien par sécurité ?
+                os.symlink(mask, 'MASK.nc')
+            mask = True
 
     # 1. Get all input data
     for xpid in xpids:
@@ -188,7 +211,7 @@ if __name__ == '__main__':
             xpid = f'{xpid}@{user}'
         shortid = xpid.split('@')[0]
         # VERRUE pour gérer le décallage d'un jour en attendant de combler les données
-        if shortid.startswith('safran'):
+        if shortid.startswith('safran') and datebegin == '2021080207':
             deb = '2021080106'
         else:
             deb = datebegin  # 2021080207
@@ -215,6 +238,11 @@ if __name__ == '__main__':
             obs = xr.open_dataset('/home/vernaym/These/DATA/Sentinel2/SMOD_20210901.nc')
         elif var == 'scd_concurent':
             obs = xr.open_dataset('/home/vernaym/These/DATA/Sentinel2/SCD_20210901.nc')
+
+        if mask:
+            from snowtools.scripts.post_processing import common_tools as ct
+            # mask glacier/forest covered pixels
+            obs = ct.maskgf(obs)
 
         # compare(obs, var=var)
         violin_plot(xpids, obs['Band1'], var, member=member)  # Violinplots by elevation range

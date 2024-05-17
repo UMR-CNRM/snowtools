@@ -48,7 +48,7 @@ def parse_command_line():
     parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.1@vernaym",
                         help="User environment for static resources (format 'uenv:name@user')")
 
-    parser.add_argument('-z', '--elevation_bands', nargs='+', type=int, default=np.arange(1900, 3600, 300),
+    parser.add_argument('-z', '--elevation_bands', nargs='+', type=int, default=np.arange(1800, 3500, 400),
                         help='Define elevation bands for clustering')
 
     parser.add_argument('-w', '--workdir', type=str, default=f'{os.environ["HOME"]}/workdir/EDELWEISS/plot/Pleiades',
@@ -64,8 +64,11 @@ def parse_command_line():
 def violin_plot(xpids, obs, var, date, mask=True, member=None):
 
     mnt = xr.open_dataarray('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
+    mnt = mnt.rename({'x': 'xx', 'y': 'yy'})
 
     # Construct *dataplot* DataFrame with elevation bands as index and 1 column per product
+    obs = obs.rename({'x': 'xx', 'y': 'yy'})
+    # obs = ct.maskgf(obs)
     filtered_obs = clusters.per_alt(obs[var], elevation_bands, mnt)
     dataplot = filtered_obs.to_dataframe(name='obs').dropna().reset_index().drop(columns=['time'])
     try:
@@ -84,13 +87,13 @@ def violin_plot(xpids, obs, var, date, mask=True, member=None):
         shortid = xpid.split('@')[0]
         if member is None:
             subdir = ''
-            df = filter_simu(shortid, subdir, var, date, mnt)
+            df = filter_simu(shortid, obs, subdir, var, date, mnt)
         else:
             df = None
             for mb in range(member):
                 print(mb)
                 subdir = f'mb{mb:03d}'
-                dfm = filter_simu(shortid, subdir, var, date, mnt)
+                dfm = filter_simu(shortid, obs, subdir, var, date, mnt)
                 if df is not None:
                     df = pd.concat([df, dfm], ignore_index=True)
                 else:
@@ -106,18 +109,17 @@ def violin_plot(xpids, obs, var, date, mask=True, member=None):
     violinplot.plot_ange(dataplot, var, figname=f'{var}_{date}', title=title)
 
 
-def filter_simu(xpid, subdir, var, date, mnt):
+def filter_simu(xpid, obs, subdir, var, date, mnt):
 
     proname = os.path.join(subdir, f'PRO_{xpid}.nc')
     simu = xr.open_dataset(proname, decode_times=False)
     # TODO : gérer le problème de coordonnées pour éviter les "rename" très lents !
     simu = decode_time(simu)
-    simu = simu.sel({'time': pd.to_datetime(date[:8], format='%Y%m%d')})
-    mnt = mnt.rename({'x': 'xx', 'y': 'yy'})
-    simu = ct.maskgf(simu)
+    simu = simu.sel({'xx': obs.xx.data, 'yy': obs.yy.data, 'time': pd.to_datetime(date[:8], format='%Y%m%d')})
+    simu = xr.where(~obs.isnull(), simu, np.nan)
     filtered_simu = clusters.per_alt(simu[var], elevation_bands, mnt)
 
-    df = filtered_simu.to_dataframe(name=xpid).dropna().reset_index().drop(columns=['xx', 'yy', 'time'])
+    df = filtered_simu.to_dataframe(name=xpid).dropna().reset_index().drop(columns=['xx', 'yy'])
     return df
 
 

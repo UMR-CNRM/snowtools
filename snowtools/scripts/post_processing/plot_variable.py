@@ -64,6 +64,10 @@ vmin_map = dict(
     RainfSnowf  = 800,  # kg/m² [mm]
 )
 
+domain_map = dict(
+    Lautaret = dict(xmin=957875., xmax=973375., ymin=6439125., ymax=6458625.),
+)
+
 
 def parse_command_line():
     description = "Computation of Sentinel2-like diagnostics (snow melt-out date, snow cover duration) associated \
@@ -91,6 +95,9 @@ def parse_command_line():
     parser.add_argument('-a', '--vapp', type=str, default='edelweiss', choices=['s2m', 'edelweiss', 'Pleiades'],
                         help="Application that produced the target file")
 
+    parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.1@vernaym",
+                        help="User environment for static resources (format 'uenv:name@user')")
+
     parser.add_argument('-v', '--variables', nargs='+', required=True,
                         help="Variable(s) name to plot (see list for each specific file)"
                              "It is possible to plot a combination of variables, for example :"
@@ -99,6 +106,9 @@ def parse_command_line():
     parser.add_argument('-d', '--date', type=str, default=None,
                         help="Plot the variable for a specific date."
                              "If no *date* is provided, plot the variable's accumulation over the simulation period")
+
+    parser.add_argument('--domain', type=str, default=None, choices=domain_map.keys(),
+                        help="Plot a specific sub-domain.")
 
     parser.add_argument('-w', '--workdir', type=str, default=f'{os.environ["HOME"]}/workdir/EDELWEISS/plot',
                         help='Working directory')
@@ -165,10 +175,12 @@ if __name__ == '__main__':
     geometry        = args.geometry
     kind            = args.kind
     member          = 0 if args.member else None
+    uenv            = args.uenv
     vapp            = args.vapp
     variables       = args.variables
     workdir         = args.workdir
     mask            = args.mask
+    domain          = args.domain
 
     if not os.path.exists(workdir):
         os.makedirs(workdir)
@@ -219,6 +231,11 @@ if __name__ == '__main__':
             getattr(io, f'get_{kind.lower()}')(xpid, geometry, **kw)
 
         ds = xr.open_dataset(filename)
+
+        if domain is not None:
+            dom = domain_map[domain]
+            ds = ds.where((ds.xx >= dom['xmin']) & (ds.xx <= dom['xmax']) & (ds.yy >= dom['ymin']) &
+                    (ds.yy <= dom['ymax']), drop=True)
 
         plot_var(ds, variables, shortid, date=date, mask=mask)
 
