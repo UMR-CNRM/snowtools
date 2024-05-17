@@ -17,17 +17,18 @@ def mincoverage_small(fc, obs, kl, threshold_lower, threshold_increment, perzone
     """
     Calculate POD, FAR, TS, ETS, HK between two fields using a given neighborhood size kl, and
     a given threshold and threshold increment to define an event.
+
     :param fc: forecast field
     :type fc: np.array (2d)
     :param obs: observation field
     :type obs: np.array (2d)
     :param kl: neighbourhood (kernel) size in number of pixels in each direction ex. : 3 for a 3x3 pixel kernel
-    impair number
+        impair number
     :type kl: int
     :param threshold_lower: lower bound of event interval
     :param threshold_increment: size of event interval
     :param perzone: minimum fraction of values needed to be present in the neighborhood in order to take
-    the pixel into account for score calculation. Default None will be set to 1 / (kl * kl)
+        the pixel into account for score calculation. Default None will be set to 1 / (kl * kl)
     :type perzone: float
     :return: POD, FAR, TS, ETS, HK
     """
@@ -97,12 +98,17 @@ class SpatialScores(ABC):
     def get_fc_data(self, filenames, list_of_experiments):
         """
         read forecast data
+
         :param list_of_experiments: list of experiment labels
         :param filenames: list of forecast file names (paths)
         :return: dict with experiment labels as keys and np.arrays of forecast fields as values
         """
         pass
 
+    # def maskgf(pro, method='nearest'):
+    #     masque = xr.open_dataset('/home/haddjeria/masque_glacier2017_foret_ville_riviere.nc').Band1.interp_like(pro,
+    #                                                                                                             method=method)
+    #     return pro.where(masque == 0)
     # simu = maskgf(Sn.DSN_T_ISBA)
     # obs = maskgf(Q.DSN_T_ISBA)
     # simu = maskgf(Sn_30.DSN_T_ISBA)
@@ -134,20 +140,21 @@ class SpatialScores(ABC):
     def make_fuzzy_scores(self):
         """
         calculate POD, FAR, TS, ETS, HK for different forecast experiments.
+
         :param fc_experiments: dict of forecast fields where dict keys are experiment names
          and values the corresponding fields. (2d np.array)
         :type fc_experiments: dict
         :param observation: observation or reference field
         :type observation: np.array (2d)
         :param list_kernel_size: list of kernel sizes for which to calculate scores.
-        neighbourhood (kernel) size in number of pixels in each direction ex. : 3 for a 3x3 pixel kernel
-        impair number
+            neighbourhood (kernel) size in number of pixels in each direction ex. : 3 for a 3x3 pixel kernel
+            impair number
         :param list_thresholds: list of event thresholds. lower bounds of event intervals.
         :type list_thresholds: list
         :param list_threshold_increment: list of corresponding sizes of event intervals.
         :type list_threshold_increment: list
         :param perzone: minimum fraction of values needed to be present in the neighborhood in order to take
-        the pixel into account for score calculation. Default None will be set to 1 / (kl * kl)
+            the pixel into account for score calculation. Default None will be set to 1 / (kl * kl)
         :type perzone: float
         :return:
         """
@@ -168,4 +175,45 @@ class SpatialScores(ABC):
         self.make_fuzzy_scores()
         if self.score_file:
             self.score_ds.to_netcdf(self.score_file_name)
+
+##################################
+# structural similarity
+###############################
+# SSIM(x, y) = ((2 μx μy + C1)*(2 σxy + C2))/((μx² + μy² + C1)*(σx² + σy² + C2))
+# @ARTICLE{1284395,
+#   author={Zhou Wang and Bovik, A.C. and Sheikh, H.R. and Simoncelli, E.P.},
+#   journal={IEEE Transactions on Image Processing},
+#   title={Image quality assessment: from error visibility to structural similarity},
+#   year={2004},
+#   volume={13},
+#   number={4},
+#   pages={600-612},
+#   keywords={Image quality;Humans;Transform coding;Visual system;Visual perception;Data mining;Layout;Quality assessment;Degradation;Indexes},
+#   doi={10.1109/TIP.2003.819861}}
+
+# from skimage.metrics import structural_similarity,mean_squared_error
+#
+# statistic = structural_similarity(s.fillna(0).to_numpy(),q.fillna(0).to_numpy(),data_range=(np.min((s.fillna(0).to_numpy().min(),q.fillna(0).to_numpy().min())),np.max((s.fillna(0).to_numpy().max(),q.fillna(0).to_numpy().max()))))
+# statisticn =structural_similarity(sn.fillna(0).to_numpy(),q.fillna(0).to_numpy(),data_range=(np.min((sn.fillna(0).to_numpy().min(),q.fillna(0).to_numpy().min())),np.max((sn.fillna(0).to_numpy().max(),q.fillna(0).to_numpy().max()))))
+# mse = mean_squared_error(s,q)
+# msen =mean_squared_error(sn,q)
+
+###############################
+# correlation
+#################################
+# a=np.lib.stride_tricks.sliding_window_view(s, (3,3))
+# def vec_corrcoef(X, y, axis=1):
+#     Xm = np.mean(X, axis=axis, keepdims=True)
+#     ym = np.mean(y)
+#     n = np.sum((X - Xm) * (y - ym), axis=axis)
+#     d = np.sqrt(np.sum((X - Xm)**2, axis=axis) * np.sum((y - ym)**2))
+#     return n / d
+# vec_corrcoef(a, np.arange(3))
+
+# from scipy.stats import pearsonr
+# statistic, pvalue = pearsonr(np.nan_to_num(s.where(f>2700).to_numpy().ravel()),np.nan_to_num(q.where(f>2700).to_numpy().ravel()))
+# statisticn, pvaluen =pearsonr(np.nan_to_num(sn.where(f>2700).to_numpy().ravel()),np.nan_to_num(q.where(f>2700).to_numpy().ravel()))
+#
+# print('Avec transport', statistic, 'pvalue=',pvalue)
+# print('Sans transport', statisticn, 'pvalue=',pvaluen)
 
