@@ -26,6 +26,7 @@ if not os.path.isdir(TESTBASE_DIR):
 else:
     SKIP = False
 
+
 class ScorePlotTest(TestWithTempFolderWithLog):
     """
     test the creation of score plots

@@ -629,3 +629,44 @@ class ProVsPleiade(SpatialScores):
 
 
 
+##################################
+# structural similarity
+###############################
+# SSIM(x, y) = ((2 μx μy + C1)*(2 σxy + C2))/((μx² + μy² + C1)*(σx² + σy² + C2))
+# @ARTICLE{1284395,
+#   author={Zhou Wang and Bovik, A.C. and Sheikh, H.R. and Simoncelli, E.P.},
+#   journal={IEEE Transactions on Image Processing},
+#   title={Image quality assessment: from error visibility to structural similarity},
+#   year={2004},
+#   volume={13},
+#   number={4},
+#   pages={600-612},
+#   keywords={Image quality;Humans;Transform coding;Visual system;Visual perception;Data mining;Layout;Quality assessment;Degradation;Indexes},
+#   doi={10.1109/TIP.2003.819861}}
+
+# from skimage.metrics import structural_similarity,mean_squared_error
+#
+# statistic = structural_similarity(s.fillna(0).to_numpy(),q.fillna(0).to_numpy(),data_range=(np.min((s.fillna(0).to_numpy().min(),q.fillna(0).to_numpy().min())),np.max((s.fillna(0).to_numpy().max(),q.fillna(0).to_numpy().max()))))
+# statisticn =structural_similarity(sn.fillna(0).to_numpy(),q.fillna(0).to_numpy(),data_range=(np.min((sn.fillna(0).to_numpy().min(),q.fillna(0).to_numpy().min())),np.max((sn.fillna(0).to_numpy().max(),q.fillna(0).to_numpy().max()))))
+# mse = mean_squared_error(s,q)
+# msen =mean_squared_error(sn,q)
+
+###############################
+# correlation
+#################################
+# a=np.lib.stride_tricks.sliding_window_view(s, (3,3))
+# def vec_corrcoef(X, y, axis=1):
+#     Xm = np.mean(X, axis=axis, keepdims=True)
+#     ym = np.mean(y)
+#     n = np.sum((X - Xm) * (y - ym), axis=axis)
+#     d = np.sqrt(np.sum((X - Xm)**2, axis=axis) * np.sum((y - ym)**2))
+#     return n / d
+# vec_corrcoef(a, np.arange(3))
+
+# from scipy.stats import pearsonr
+# statistic, pvalue = pearsonr(np.nan_to_num(s.where(f>2700).to_numpy().ravel()),np.nan_to_num(q.where(f>2700).to_numpy().ravel()))
+# statisticn, pvaluen =pearsonr(np.nan_to_num(sn.where(f>2700).to_numpy().ravel()),np.nan_to_num(q.where(f>2700).to_numpy().ravel()))
+#
+# print('Avec transport', statistic, 'pvalue=',pvalue)
+# print('Sans transport', statisticn, 'pvalue=',pvaluen)
+
