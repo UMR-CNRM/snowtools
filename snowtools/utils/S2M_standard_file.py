@@ -13,12 +13,14 @@ import sys
 import netCDF4
 import configparser
 import numpy as np
+import pyproj
 
 from snowtools.utils.FileException import VarNameException, UnknownGridTypeException, FileNameException,\
     TimeUnitsException
 from snowtools.utils.infomassifs import infomassifs
 from snowtools.utils.git import get_summary_git
 from snowtools.DATA import SNOWTOOLS_DIR, SNOWTOOLS_CEN
+from snowtools.interpolation.shapefile2NetCDF_2D import conversion_to_L93_if_lat_lon
 
 
 class _StandardNC(netCDF4.Dataset):
@@ -460,3 +462,84 @@ class StandardCROCUS(_StandardNC):
                     if hasattr(self.variables[varname], 'long_name'):
                         self.variables[varname].long_name = self.variables[varname].long_name + \
                                                             self.soil_long_names(varname)
+
+
+class LCCProjectionType(object):
+    """
+    Class for Lambert Conformal Conic Projection attributes.
+    """
+    def __init__(self, x, y, grid_mapping_name="lambert_conformal_conic", ellipsoid="GRS80",
+                 semi_major_axis=None, semi_minor_axis=None, longitude_of_central_meridian = 3.,
+                 latitude_of_projection_origin = 46.5, standard_parallel = (44., 49),
+                 false_easting=None, false_northing=None, x_resolution=None, y_resolution=None):
+        """
+
+        :param x: vector of Lambert93 x-coordinate values
+        :param y: vector of Lambert93 y-coordinate values
+        :param grid_mapping_name: default: "lambert_conformal_conic"
+        :param ellipsoid: default: "GRS80"
+        :param semi_major_axis: earth radius at the equator. If None, will be derived from ellipsoid.
+        :param semi_minor_axis: earth radius at the poles. If None, will be derived from ellipsoid.
+        :param longitude_of_central_meridian: default: 3.
+        :param latitude_of_projection_origin: default 46.5
+        :param standard_parallel: default: (44., 49)
+        :param false_easting: distance in x direction between the center point of the
+            map projection and the south-western corner of the actual domain.
+            If None, will be derived from longitude_of_central_meridian, latitude_of_projection_origin and
+            the minimum value of x.
+        :param false_northing: distance in y direction between the center point of the
+            map projection and the south-western corner of the actual domain.
+            If None, will be derived from longitude_of_central_meridian, latitude_of_projection_origin and
+            the minimum value of y.
+        :param x_resolution: resolution in x direction. If None, will be derived as
+            the difference between the first two values of the x vector.
+        :param y_resolution: resolution in y direction. If None, will be derived as
+            the difference between the first two values of the y vector
+        """
+        self.grid_mapping_name=grid_mapping_name
+        self.ellipsoid=ellipsoid
+        if semi_major_axis:
+            self.semi_major_axis=semi_major_axis
+        else:
+            geoid = pyproj.Geod(ellps=ellipsoid)
+            self.semi_major_axis = geoid.a
+            self.semi_minor_axis = geoid.b
+        if semi_minor_axis:
+            self.semi_minor_axis = semi_minor_axis
+        if not hasattr(self, 'semi_minor_axis'):
+            geoid = pyproj.Geod(ellps=ellipsoid)
+            self.semi_minor_axis = geoid.b
+        self.longitude_of_central_meridian = longitude_of_central_meridian
+        self.latitude_of_projection_origin = latitude_of_projection_origin
+        self.standard_parallel = standard_parallel
+        if false_easting:
+            self.false_easting=false_easting
+        else:
+            xc, yc, _, _ = conversion_to_L93_if_lat_lon([self.longitude_of_central_meridian,
+                                                   self.latitude_of_projection_origin,
+                                                   self.longitude_of_central_meridian,
+                                                   self.latitude_of_projection_origin
+                                                   ])
+            self.false_easting = xc - np.min(x)
+            self.false_northing = yc - np.min(y)
+        if false_northing:
+            self.false_northing = false_northing
+        if not hasattr(self, 'false_northing'):
+            xc, yc, _, _ = conversion_to_L93_if_lat_lon([self.longitude_of_central_meridian,
+                                                   self.latitude_of_projection_origin,
+                                                   self.longitude_of_central_meridian,
+                                                   self.latitude_of_projection_origin
+                                                   ])
+            self.false_northing = yc - np.min(y)
+        if x_resolution:
+            self.x_resolution = x_resolution
+        else:
+            self.x_resolution = x[1]-x[0]
+        if y_resolution:
+            self.y_resolution = y_resolution
+        else:
+            self.y_resolution = y[1]-y[0]
+
+
+
+
