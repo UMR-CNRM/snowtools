@@ -76,6 +76,14 @@ Developments not yet merged into the ``cen`` branch are documented here :
 
    Development in progress <misc/surfex-dev-in-progress.rst>
 
+Other documentations
+--------------------
+
+.. toctree::
+   :maxdepth: 2
+
+   extra_documentation/these_ange.rst
+
 
 
 Help improving this documentation !
