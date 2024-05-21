@@ -620,72 +620,72 @@ def diag(action, xpid, geometry, **kw):
 
 
 # TODO : use a decorator
-def get_pro(xpid, geometry, **kw):
+def get_pro(*, xpid, geometry, **kw):
     return pro('get', xpid, geometry, **kw)
 
 
 # TODO : use a decorator
-def put_pro(xpid, geometry, **kw):
+def put_pro(*, xpid, geometry, **kw):
     return pro('put', xpid, geometry, **kw)
 
 
 # TODO : use a decorator
-def get_diag(xpid, geometry, **kw):
+def get_diag(*, xpid, geometry, **kw):
     return diag('get', xpid, geometry, **kw)
 
 
 # TODO : use a decorator
-def put_diag(xpid, geometry, **kw):
+def put_diag(*, xpid, geometry, **kw):
     return diag('put', xpid, geometry, **kw)
 
 
 # TODO : use a decorator
-def get_forcing(xpid, geometry, **kw):
+def get_forcing(*, xpid, geometry, **kw):
     return forcing('get', xpid, geometry, **kw)
 
 
 # TODO : use a decorator
-def put_forcing(xpid, geometry, **kw):
+def put_forcing(*, xpid, geometry, **kw):
     return forcing('put', xpid, geometry, **kw)
 
 
 # TODO : use a decorator
-def get_meteo(xpid, geometry, **kw):
+def get_meteo(*, xpid, geometry, **kw):
     return meteo('get', xpid, geometry, **kw)
 
 
 # TODO : use a decorator
-def put_meteo(xpid, geometry, **kw):
+def put_meteo(*, xpid, geometry, **kw):
     return meteo('put', xpid, geometry, **kw)
 
 
 # TODO : use a decorator
-def get_prep(xpid, geometry, **kw):
+def get_prep(*, xpid, geometry, **kw):
     return prep('get', xpid, geometry, **kw)
 
 
 # TODO : use a decorator
-def put_prep(xpid, geometry, **kw):
+def put_prep(*, xpid, geometry, **kw):
     return prep('put', xpid, geometry, **kw)
 
 
 # TODO : use a decorator
-def get_precipitation(xpid, geometry, **kw):
+def get_precipitation(*, xpid, geometry, **kw):
     return precipitation('get', xpid, geometry, **kw)
 
 
 # TODO : use a decorator
-def put_precipitation(xpid, geometry, **kw):
+def put_precipitation(*, xpid, geometry, **kw):
     return precipitation('put', xpid, geometry, **kw)
 
 
 # TODO : use a decorator
-def get_wind(xpid, geometry, **kw):
+def get_wind(*, xpid, geometry, **kw):
     return precipitation('get', xpid, geometry, **kw)
 
 
 # TODO : use a decorator
-def put_wind(xpid, geometry, **kw):
+def put_wind(*, xpid, geometry, **kw):
     return precipitation('put', xpid, geometry, **kw)
 
 
@@ -694,7 +694,7 @@ def put_wind(xpid, geometry, **kw):
 ############################################
 
 
-def pgd(action, xpid, geometry, **kw):
+def pgd(action, *, xpid, geometry, **kw):
     """
     Function to get a PGD file for a SURFEX (OFFLINE) simulation.
 
@@ -744,11 +744,11 @@ def pgd(action, xpid, geometry, **kw):
         return pgd_a
 
 
-def get_pgd(xpid, geometry, **kw):
+def get_pgd(*, xpid, geometry, **kw):
     return pgd('get', xpid, geometry, **kw)
 
 
-def put_pgd(xpid, geometry, **kw):
+def put_pgd(*, xpid, geometry, **kw):
     return pgd('put', xpid, geometry, **kw)
 
 
@@ -1014,7 +1014,7 @@ def get_offline_mpi(uenv, alternate_uenv=None, gvar='master_surfex_offline_mpi')
 #######################################################################################################################
 
 
-def snow_obs_date(action, xpid, geometry, **kw):
+def snow_obs_date(action, *, xpid, geometry, **kw):
     """
     Main function for dated snowpack observations.
     """
@@ -1046,7 +1046,7 @@ def snow_obs_date(action, xpid, geometry, **kw):
     return diag
 
 
-def snow_obs_period(action, xpid, geometry, **kw):
+def snow_obs_period(action, *, xpid, geometry, **kw):
     """
     Main function for dated snowpack observations.
     """
@@ -1078,17 +1078,17 @@ def snow_obs_period(action, xpid, geometry, **kw):
     return diag
 
 
-def put_snow_obs_date(xpid, geometry, **kw):
+def put_snow_obs_date(*, xpid, geometry, **kw):
     return snow_obs_date('put', xpid, geometry, **kw)
 
 
-def get_snow_obs_date(xpid, geometry, **kw):
+def get_snow_obs_date(*, xpid, geometry, **kw):
     return snow_obs_date('get', xpid, geometry, **kw)
 
 
-def put_snow_obs_period(xpid, geometry, **kw):
+def put_snow_obs_period(*, xpid, geometry, **kw):
     return snow_obs_period('put', xpid, geometry, **kw)
 
 
-def get_snow_obs_period(xpid, geometry, **kw):
+def get_snow_obs_period(*, xpid, geometry, **kw):
     return snow_obs_period('get', xpid, geometry, **kw)
