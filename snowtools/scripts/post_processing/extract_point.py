@@ -15,8 +15,8 @@ except ImportError:
 
 
 reference_points = dict(
-    # Galibier = dict(xx=968139.97, yy=6446319.56),
-    Galibier = dict(xx=968125., yy=6446375.),
+    # Galibier = dict(xx=968139.97, yy=6446319.56),  # Col
+    Galibier = dict(xx=965767.64, yy=6445415.30),  # Nivose
 )
 
 
@@ -64,11 +64,13 @@ def execute(subdir, point):
     """
     proname = os.path.join(subdir, 'PRO.nc')
     pro     = xr.open_dataset(proname, decode_times=False)
+    pro = pro.chunk({"xx": len(pro.xx), 'yy': len(pro.yy)})
     if 'ZS' in pro.keys():
         pro     = pro[['DSN_T_ISBA', 'ZS']]
     else:
         pro = pro.DSN_T_ISBA
-    out = pro.sel({'xx': reference_points[point]['xx'], 'yy': reference_points[point]['yy']})
+    # out = pro.sel({'xx': reference_points[point]['xx'], 'yy': reference_points[point]['yy']})
+    out = pro.interp({'xx': reference_points[point]['xx'], 'yy': reference_points[point]['yy']}, method='nearest')
 
     # Write output file
     outname = os.path.join(subdir, f'PRO_{point}.nc')
