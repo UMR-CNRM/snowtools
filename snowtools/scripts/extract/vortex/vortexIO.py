@@ -321,8 +321,10 @@ def footprints_kitchen(xpid, geometry, **kw):
     description = dict(
         experiment     = add_user(xpid),
         geometry       = geometry,
-        vconf          = '[geometry:tag]',
     )
+
+    if 'vconf' not in kw.keys():
+        description['vconf'] = '[geometry:tag]',
 
     # On peut actuellement passer *member(s)* =  un entier (le nombre de membres)
     # ou un objet *member(s)* convertible en FPLIst (string au format X-Y-1)
