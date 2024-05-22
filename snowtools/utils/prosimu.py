@@ -1009,6 +1009,119 @@ class prosimu2d(_prosimu1d2d, prosimuAbstract):
             r.append(r1)
         return r
 
+class prosimu_xr():
+    """
+    class to read simulation files using xarray and returning an xarray dataset.
+    """
+    def __init__(self, path, openmode='r'):
+        """
+
+        :param path:
+        :param openmode:
+        """
+        import xarray
+        if type(path) is str:
+            if openmode == 'w':
+                raise NotImplementedError
+            else:
+                glob_path = glob.glob(path)
+            if len(glob_path) == 0:
+                raise FileNameException(path)
+            path = sorted(glob_path)
+
+            # At this point path is supposed to be a list of at least 1 element.
+
+            # Reading of several files: use open_mfdataset
+            # And do not allow r+ or w open modes.
+        if len(path) > 1:
+            if openmode == 'r':
+                for fichier in path:
+                    if not os.path.isfile(fichier):
+                        raise FileNameException(fichier)
+                try:
+                    self.dataset = xarray.open_mfdataset(path)
+                    self.path = path
+                    self.mfile = 1
+
+                except ValueError:
+                    # Conversion in netcdf4_classic
+                    import xarray
+                    classic_path = list()
+                    for fichier in path:
+                        newname = 'CLASSIC_' + fichier
+                        ds = xarray.open_dataset(fichier)
+                        ds.to_netcdf(path=newname, format='NETCDF4_CLASSIC')
+                        ds.close()
+                        classic_path.append(newname)
+                    self.dataset = xarray.open_mfdataset(classic_path)
+                    self.path = classic_path
+                    self.mfile = 1
+            else:
+                logging.error(('prosimu - Open several NetCDF dataset with openmode \'{}\''
+                               ' is not supported. '
+                               'Only \'r\' mode is supported.').format(openmode))
+                raise FileNameException('+'.join(path))
+
+        elif os.path.isfile(path[0]):
+            self.path = path[0]
+            self.mfile = 0
+            try:
+                if openmode == "w":
+                    raise NotImplementedError
+                   # self.dataset = StandardCROCUS(self.path, openmode, format=ncformat)
+                else:
+                    self.dataset = xarray.open_dataset(self.path)
+            except Exception:
+                raise FileOpenException(self.path)
+
+            # Create the file if openmode is w and one file only
+        elif openmode == "w":
+           raise NotImplementedError
+
+            # Else, we could not either read or create the file -> crash
+        else:
+            logging.error("I am going to crash because there is a filename exception: \
+                              file {} not found and openmode is not 'w'".format(path))
+            raise FileNameException(path[0])
+
+        self.varcache = {}
+
+        if "time" in self.dataset.dims:
+            self.timedim = range(self.dataset.dims['time'])
+        else:
+            self.timedim = None
+
+        # Get the dimension of the dataset
+        # self.pointsdim is a list of indices available
+        #                  (list of integers)
+        # self.pointsdim_n give its length
+        #                  (integer)
+        # self.pointsdim_l give the dimension of each point dimension of the dataset
+        #                  (list of integers)
+        self.pointsdim_l = self._get_pointsdim()
+        if self.pointsdim_l is None:
+            self.pointsdim = None
+            self.pointsdim_n = None
+        else:
+            self.pointsdim_n = 1
+            for n in self.pointsdim_l:
+                self.pointsdim_n *= n
+            self.pointsdim = range(self.pointsdim_n)
+
+    def _get_pointsdim(self):
+        """
+        Return a list of dimensions for Points_dimensions
+        """
+        r = []
+        if 'Number_of_points' in self.dataset.dims:
+            r.append(self.dataset.dims['Number_of_points'])
+        elif 'xx' in self.dataset.dims and 'yy' in self.dataset.dims:
+            r.append(self.dataset.dims['xx'])
+            r.append(self.dataset.dims['yy'])
+        else:
+            return None
+        return r
+
 
 class prosimu_old(prosimu1d):
     """
