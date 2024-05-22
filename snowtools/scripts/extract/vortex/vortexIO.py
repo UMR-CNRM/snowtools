@@ -1016,7 +1016,7 @@ def get_offline_mpi(uenv, alternate_uenv=None, gvar='master_surfex_offline_mpi')
 #######################################################################################################################
 
 
-def snow_obs_date(action, *, xpid, geometry, **kw):
+def snow_obs_date(action, xpid, geometry, **kw):
     """
     Main function for dated snowpack observations.
     """
@@ -1048,7 +1048,7 @@ def snow_obs_date(action, *, xpid, geometry, **kw):
     return diag
 
 
-def snow_obs_period(action, *, xpid, geometry, **kw):
+def snow_obs_period(action, xpid, geometry, **kw):
     """
     Main function for dated snowpack observations.
     """

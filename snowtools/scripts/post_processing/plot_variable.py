@@ -40,6 +40,7 @@ from bronx.stdtypes.date import Date
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.plots.maps import plot2D
 from snowtools.scripts.post_processing import common_tools as ct
+import snowtools.tools.xarray_preprocess as xrp
 
 import matplotlib.pyplot as plt
 
@@ -215,22 +216,23 @@ if __name__ == '__main__':
         if date is not None:
             if vapp == 'Pleiades':
                 kw.update(date=date)
-                getattr(io, f'get_{kind.lower()}')(xpid, geometry, **kw)
+                getattr(io, f'get_{kind.lower()}')(xpid=xpid, geometry=geometry, **kw)
             else:
                 from vortex.layout.dataflow import SectionFatalError
                 try:
                     # If a simulation file with extracted dates already exists (nambuild=None), take it
                     # TODO :  find a better way to store these files
                     kw.update(date=dateend, namebuild=None)
-                    getattr(io, f'get_{kind.lower()}')(xpid, geometry, **kw)
+                    getattr(io, f'get_{kind.lower()}')(xpid=xpid, geometry=geometry, **kw)
                 except SectionFatalError:
                     # Else get the entire file
                     kw.pop('namebuild')
-                    getattr(io, f'get_{kind.lower()}')(xpid, geometry, **kw)
+                    getattr(io, f'get_{kind.lower()}')(xpid=xpid, geometry=geometry, **kw)
         else:
-            getattr(io, f'get_{kind.lower()}')(xpid, geometry, **kw)
+            getattr(io, f'get_{kind.lower()}')(xpid=xpid, geometry=geometry, **kw)
 
         ds = xr.open_dataset(filename)
+        ds = xrp.update_varname(ds)
 
         if domain is not None:
             dom = domain_map[domain]

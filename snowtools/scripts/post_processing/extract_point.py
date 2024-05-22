@@ -13,7 +13,6 @@ try:
 except ImportError:
     print('Vortex not available, input files must be defined by their absolute path')
 
-
 reference_points = dict(
     # Galibier = dict(xx=968139.97, yy=6446319.56),  # Col
     Galibier = dict(xx=965767.64, yy=6445415.30),  # Nivose
