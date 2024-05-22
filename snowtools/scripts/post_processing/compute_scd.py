@@ -47,6 +47,10 @@ def parse_command_line():
     parser.add_argument('-p', '--pro', type=str, required=not any(arg in sys.argv for arg in ['-x', '--xpid']),
                         help="Absolute path to the pro file")
 
+    parser.add_argument('-t', '--threshold', type=str, defaul=0.2,
+                        help="Threshold to apply to the simulated snow depth in order to consider that the pixel"
+                             "is covered by snow.")
+
     args = parser.parse_args()
     return args
 
@@ -79,13 +83,13 @@ def xr_ffill(da, dim='time', fillna=False):
     return da
 
 
-def lcscd(data, threshold=.2):
+def lcscd(data, threshold):
     """
     Arguments :
     -----------
     * Data (xarray.DataArray) :  Daily snow depths (can cover several years : in this case the diagnostics
                   are computed for every 01/09 --> 31/08 time period in *data*)
-    * threshold (float)       : Snow depth threshold to consider a date/pixel as "snow covered"
+    * threshold (float)       : Snow depth threshold to consider a pixel as "snow covered"
 
     Output :
     --------
@@ -217,14 +221,14 @@ def decode_time(pro):
     return pro
 
 
-def diag(subdir, mask=True):
+def execute(subdir, threshold=0.2, mask=True):
     """
     Main method to compute Sentinel2-like diagnostics from a SURFEX simulation
     """
     proname = os.path.join(subdir, 'PRO.nc')
     pro = xr.open_dataset(proname, decode_times=False, engine='netcdf4')
     pro = decode_time(pro)
-    diag = lcscd(pro.DSN_T_ISBA.resample(time='1D').mean())
+    diag = lcscd(pro.DSN_T_ISBA.resample(time='1D').mean(), threshold)
 
     # Add 'ZS' (DEM) variable
     if 'ZS' in pro.keys():
@@ -249,6 +253,7 @@ if __name__ == '__main__':
     workdir   = args.workdir
     mask      = args.mask
     pro       = args.pro
+    threshold = args.threshold
     geometry  = 'GrandesRousses250m'
 
     if workdir is not None:
@@ -277,10 +282,10 @@ if __name__ == '__main__':
     if members is None:
         subdir = ''
         # Call main method
-        diag(subdir, mask=mask)
+        execute(subdir, threshold=threshold, mask=mask)
     else:
         for member in range(members):
             print(f'Member {member}')
             subdir = f'mb{member:03d}'
             # Call main method
-            diag(subdir, datebegin, mask=mask)
+            execute(subdir, datebegin, threshold=threshold, mask=mask)
