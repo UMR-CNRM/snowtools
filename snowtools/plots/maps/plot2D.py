@@ -22,7 +22,8 @@ def plot_field(field, savename, vmin=None, vmax=None, cmap=plt.cm.YlGnBu):
     if vmin is None:
         vmin = 0
     cmap.set_bad('grey', 1.)
-    field.plot(cmap=cmap, vmin=vmin, vmax=vmax)
+    cml = field.plot(cmap=cmap, vmin=vmin, vmax=vmax)
+    cml.set_edgecolor('face')
     if '.pdf' not in savename:
         savename = f'{savename}.pdf'
     ax.plot(reference_point[0], reference_point[1], marker='.', linestyle='', color='k', markersize=20)
