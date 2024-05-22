@@ -9,7 +9,7 @@ Issue du Notebook avec les principales information pour reproduire les résultat
 .. toctree::
    :maxdepth: 1
 
-   Simulations preparation <simulations.rst>
+   Simulations preparation <Forcing_modification.rst>
    Pleiades observation <Pleiades.rst>
    Theia Snow observations <Sentinel_2.rst>
    Masks used in the experiments <Masks.rst>

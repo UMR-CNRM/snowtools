@@ -249,7 +249,7 @@ Function to format dataset for ESMF
 
 
 Example to spatially resample simulation from 30m to 250m:
-************************************************
+**********************************************************
 ::
 
 
