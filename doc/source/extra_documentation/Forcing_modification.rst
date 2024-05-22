@@ -15,6 +15,7 @@ Forcing simulation prep
 
 
 .. _louis:
+
 Louis' DEVINE wind
 ******************
 
@@ -201,6 +202,7 @@ The following code result in two files *devine_speed_250m_rioxarray.nc* and *dev
 
 
 .. _fmod:
+
 Forcing modification
 ********************
 
@@ -306,8 +308,10 @@ Adding Attributes to Variables::
 Encoding and saving:
 
 .. note::
+
   Please note that the generation of the final forcing file to be read by SURFEX need precised characteristics. File need to be in NETCDF4_CLASSIC format, the time dimension need to be UNLIMITED and encoded in int32.
   If the file is large, it can be compressed to reduce transfert time (at cost of small read overtime)
+
 ::
 
   # Compression settings for the NetCDF file
