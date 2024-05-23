@@ -1,3 +1,6 @@
+.. Author: Ange Haddjeri
+.. Date: 2024
+
 Masks
 =====
 
@@ -49,8 +52,11 @@ The geomorphons concept is based on line-of-sight analysis for the eight topogra
     :alt: my-picture1
 
 I used the command line interface of the whitebox_tools software (see website to install) with the *-r=Geomorphons* option. This command take as input a DEM (need to be on the same grid as the simulation),
-the DEM zone must be larger than the zone of interest because we are using a search radius to detect the different landform feature. I chose a search radius of 2.5 km (100 pixel at 250m resolution). The larger the search radius is, the less dependant to resolution the classification is.
-I also choose a flat threshold of 1 degree. Finally the output is presented for the 10 most common landforms as in [#f1]_.
+the DEM zone must be larger than the zone of interest because we are using a search radius to detect the different landform feature.
+I chose a search radius of 2.5 km (100 pixel at 250m resolution so option *search=100*).
+The larger the search radius is, the less dependant to resolution the classification is.
+I also choose a flat threshold of 1 degree with option *threshold=1*.
+Finally the output is presented for the 10 most common landforms as in [#f1]_ with the option *forms*.
 
 Full command documentation : https://www.whiteboxgeo.com/manual/wbt_book/available_tools/geomorphometric_analysis.html#geomorphons
 

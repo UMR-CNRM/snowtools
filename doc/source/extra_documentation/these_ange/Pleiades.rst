@@ -1,3 +1,6 @@
+.. Author: Ange Haddjeri
+.. Date: 2024
+
 Pleiades observation
 ====================
 
@@ -67,7 +70,7 @@ We only keep 1 and 5 classification::
   combi1803 = xr.where(foret1803==1,np.nan,combi1803)
   combi1806 = xr.where(foret1806==1,np.nan,combi1806)
 
-Filtering extreme values [-0.5 , 20m] and saving::
+Filtering extreme values [-0.5 , 20m] [#f2]_ and saving::
 
   f1801=xr.where(combi1801<20,combi1801,np.nan)
   combi1801filtred = xr.where(f1801>-.5,f1801,np.nan)

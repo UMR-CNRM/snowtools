@@ -1,27 +1,36 @@
+.. Author: Ange Haddjeri
+.. Date: 2024
+
 Forcing simulation prep
 =======================
 
-For blowing snow transport simulations, having a realistic wind is essential. In our simulations we used Louis' DEVINE wind. We therefore had to cook specific forcings.
+For blowing snow transport simulations, having a realistic wind is essential. In our simulations we used Louis' DEVINE high resolution wind.
+
+We therefore had to hand-cook modified forcings.
 
 
 Louis' DEVINE wind
 ******************
+
+.. image:: https://raw.githubusercontent.com/louisletoumelin/wind_downscaling_cnn/master/images/SchemeDevine.png
+    :width: 600
 
 Louis Le Toumelin developped a machine learning method to downscale the wind speed and direction for AROME coarse simulation model named **DEVINE**. [#f1]_ [#f2]_
 If the simulation forcings and the wind are on the same grid (30m) the Wind and Wind_DIR forcing fields can be replaced in files transparently.
 If the two grid are different, the two wind fields (Wind and Wind_DIR) need to be resample to the simulation grid.
 
 
-Typical workflow for an experiment from scratch on Belenos :
-************************************************************
-1. Geometry creation
+Typical workflow for a blowing snow experiment from scratch on Belenos :
+************************************************************************
+1. S2M Geometry creation
 2. PREP + PGD + Forcing (SAFRAN) creation
 3. Forcing modification
 
   * :ref:`High resolution wind resampling <louis>`
-  * :ref:`Forcing modification <fmod>`
+  * :ref:`Forcing wind modification <fmod>`
+  * Forcing precipitation modification (optional)
 
-4. Simulation launch (do not forget to clean vortex cache)
+4. Simulation launch with S2M (**do not forget to clean vortex cache before to override previous forcing file**)
 
 
 
@@ -30,7 +39,7 @@ Typical workflow for an experiment from scratch on Belenos :
 Louis' wind resampling
 **********************
 
-This regridding workflow is based on the folowing functions defined by Louis in is `github repo <https://github.com/louisletoumelin/bias_correction>`_::
+This regridding workflow is based on the folowing functions defined by Louis in is `github repo <https://github.com/louisletoumelin/bias_correction>`_ <3::
 
   #source : https://github.com/louisletoumelin/bias_correction/blob/12e806af084d086d30e429b21deb8ab7f243a381/bias_correction/train/wind_utils.py#L37
   def wind2comp(uv, dir, unit_direction="radian"):
@@ -119,21 +128,22 @@ This regridding workflow is based on the folowing functions defined by Louis in 
 
 
 .. note::
-  To start regridding you will need the high resolution wind files and the simulation grid.
-  At the moment of the writing of this file, the high resolution wind database was located on sxcen server at */mnt/lfs/d10/mrns/users/NO_SAVE/gouttevini/ARCHIVE_LeToumelin_NOSAVE/letoumelinl/Wind_250m/latest/Wind_2017_08_02_to_2020_05_31.nc* but it is best to ask to Hugo or Isabelle for the file.
+  To start regridding you will need the high resolution wind files and the target simulation grid.
+  At the moment of the writing of this file, the high resolution wind database was located on sxcen server at */mnt/lfs/d10/mrns/users/NO_SAVE/gouttevini/ARCHIVE_LeToumelin_NOSAVE/letoumelinl/Wind_250m/latest/Wind_2017_08_02_to_2020_05_31.nc*
+  but it is best to ask Hugo or Isabelle for the file.
 
 The regridding unfolds in tree steps :
 --------------------------------------
 
-* Convert Louis' wind speed and direction to rectangular components (u,v) (*wind2comp*)
-* Regrid the rectangular components (u,v) to the desired grid (*rio.reproject_match*)
-* Convert back the rectangular components to the wind speed and direction format (*comp2dir*, *comp2speed*)
+#. Convert Louis' wind speed and direction to rectangular components (u,v) (*wind2comp*)
+#. Regrid the rectangular components (u,v) to the desired grid (*rio.reproject_match*)
+#. Convert back the rectangular components to the wind speed and direction format (*comp2dir*, *comp2speed*)
 
 The following code result in two files *devine_speed_250m_rioxarray.nc* and *devine_direction_250m_rioxarray.nc* containing the resampled wind speed and direction.
 
 .. note::
   You can find bellow a code example to regrid Louis' wind to the 250m grid used in my paper.
-  Please note that the path need to be changed. The regridding uses *rioxarray library* to average wind to the simulation grid (bilinear method is not recommended for resampling to coarser grid).
+  Please note that the path need to be changed. The regridding uses *rioxarray* library to average wind to the simulation grid **(bilinear method is not recommended for resampling to coarser grid)**.
   In this example, files are saved at each steps, the amount of intermediate files can be reduced for same results.
 
 ::
@@ -313,7 +323,7 @@ Adding Attributes to Variables::
 
 Encoding and saving:
 
-.. note::
+.. warning::
 
   Please note that the generation of the final forcing file to be read by SURFEX need precised characteristics. File need to be in NETCDF4_CLASSIC format, the time dimension need to be UNLIMITED and encoded in int32.
   If the file is large, it can be compressed to reduce transfert time (at cost of small read overtime)
@@ -349,6 +359,7 @@ Encoding and saving:
 
 Cleaning::
 
+  # to relieve RAM
   del louismixtapesafran17
   del a
   del wind_speed

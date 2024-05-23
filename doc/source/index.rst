@@ -82,7 +82,7 @@ Other documentations
 .. toctree::
    :maxdepth: 2
 
-   extra_documentation/these_ange.rst
+   extra_documentation/these_ange/these_ange_index.rst
 
 
 

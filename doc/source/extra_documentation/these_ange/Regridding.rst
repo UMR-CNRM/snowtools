@@ -1,3 +1,6 @@
+.. Author: Ange Haddjeri
+.. Date: 2024
+
 Methods of regridding
 =====================
 
@@ -7,8 +10,11 @@ Methods of regridding
 Spatial regrid with `ESMF <https://earthsystemmodeling.org/>`_
 **************************************************************
 In some situation it can be interesing to regrid simulations files.
-For example downgrade high resolution simulation from 30 to 250m.
-The advantage of regriding with `ESMF <https://earthsystemmodeling.org/>`_ is that the dimension of the input file is not limited to 2. It permit to use 1st and 2nd order conservative regridding methods (important for downscalling 30=>250) and regrid non-map data.
+For my PhD I had to downgrade high resolution simulation from 30m to 250m.
+The advantage of regriding with `ESMF <https://earthsystemmodeling.org/>`_ is that the dimension of the input file is not limited
+to 2 (can regrid NetCDF with time dimension, which is not the case for gdal).
+Can regrid using advanced methods such 1st and 2nd order conservative regridding methods (usefull for downscalling resolution)
+or regrid non-map data.
 
 .. note::
   Additional references:
@@ -21,9 +27,9 @@ The advantage of regriding with `ESMF <https://earthsystemmodeling.org/>`_ is th
 
 Basic principle:
 ****************
-Resample a 30m simulation to 250m using conservative method. Two simulations S18_30 (30m), S18 (250m).
+Resample a 30m simulation to 250m using conservative method. The two simulations are named *S18_30* (30m) and *S18* (250m).
 
-**Need esmpy python library** (python wraper of ESMF lib)
+**Need esmpy python library** (python wraper of ESMF regrid lib)
 
 1. Format the dataset for ESMF with *ESMF_format_dataset(S18_30)*.
 2. Format the dataset for ESMF with *ESMF_format_dataset(s18)*.
@@ -52,6 +58,7 @@ Function to format dataset for ESMF
       from pyproj import Transformer
       import numpy as np
 
+      print("Made with\033[0;31m <3 \033[0;30mby Ange")
       # test inputs
       try :
           input_data.x
@@ -197,6 +204,7 @@ Function to format dataset for ESMF
       :param ctk: the coordinate typekind
       :return: grid
       """
+      print("Made with\033[0;31m <3 \033[0;30mby Ange")
       [x, y] = [0, 1]
 
       # create a grid given the number of grid cells in each dimension, the center stagger location is allocated, the
@@ -248,8 +256,8 @@ Function to format dataset for ESMF
 
 
 
-Example to spatially resample simulation from 30m to 250m:
-**********************************************************
+Example of script to spatially resample simulation from 30m to 250m:
+********************************************************************
 ::
 
 
@@ -307,3 +315,33 @@ This can be achieved with xarray. In this following example we average simulatio
   pap_lsm=tc_pap_lsm.sel(time=slice('2018-09-01T00:00','2019-09-01T00:00')).DSN_T_ISBA.chunk((15000,101,143)).resample(time='1D').mean() # on chunk le netcdf selon la dimension temp, choix d'une année => on moyenne la valeur de htn
   #pap_lsm.persist() # start computation asynchonous
   pap_lsm.to_dataset().to_zarr("/scratch/mtool/haddjeria/hendrix/tc/pap_lsm_2018-1D.zarr") # on enregistre en zarr car plus efficace que le netcdf
+
+
+Regridding PDG or transpose Number_of_points to (X, Y)
+******************************************************
+
+.. image:: https://i.ibb.co/2d2xwPM/Capture-d-cran-2024-05-23-16-43-01.png
+  :width: 600
+
+In some situations, it can be interesting to transpose PGD or PREP files from Number_of_points to X Y. I put the following code for
+the records. It does a transposition from Number_of_points to X Y dims, interpolate the variables to a new grid an then stack back
+the X Y coordinates to Number_of_points.
+The first part of the code can be used to only transpose Number_of_points to (X, Y) coordinates.
+::
+
+  import xarray as xr
+  import pandas as pd
+
+  p = xr.open_dataset('~/PGD_gr250ls.nc')# fichier a interpoler avec Number_of_points
+  i = xr.open_dataset('~/scriptMNT30.nc')# grille source d'interpolation
+  index = pd.MultiIndex.from_arrays([p.XX.values,p.XY.values],names=['x','y']) # création de l'array bijectif Numberof point => xy
+  p1 = p
+  p1['Number_of_points']=index# remplacement de number of point
+  p1= p1.unstack() # suppression des doublons dans xxxxxxx yyyyyy => xy
+  pi =p1.interp_like(i.ZS)# interpolation, les dimension et coordonées doivent avoir strictement le meme nom !!
+  # stack back to Number_of_points
+  pi=pi.stack(Number_of_points=[...])# regrillage de l'array de x,y en number of points
+  pi
+  with ProgressBar(): # ecriture dans un netcdf
+      file = 'PGD_grandesrousses30LouisSafran.nc'
+      pi.to_netcdf(file,format='NETCDF4_CLASSIC')
