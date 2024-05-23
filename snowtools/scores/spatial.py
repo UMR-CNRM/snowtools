@@ -210,10 +210,29 @@ class SpatialScores(ABC):
 #     return n / d
 # vec_corrcoef(a, np.arange(3))
 
-# from scipy.stats import pearsonr
-# statistic, pvalue = pearsonr(np.nan_to_num(s.where(f>2700).to_numpy().ravel()),np.nan_to_num(q.where(f>2700).to_numpy().ravel()))
-# statisticn, pvaluen =pearsonr(np.nan_to_num(sn.where(f>2700).to_numpy().ravel()),np.nan_to_num(q.where(f>2700).to_numpy().ravel()))
-#
-# print('Avec transport', statistic, 'pvalue=',pvalue)
-# print('Sans transport', statisticn, 'pvalue=',pvaluen)
 
+from scipy.stats import pearsonr
+
+def pearson_corr(simu_data, ref_data, p_value=True):
+    """
+    Compute Pearson correlation coefficient and p-value for testing non-correlation (optional).
+    Important: Nan areas must be identical.
+
+    Args:
+        simu_data: The simulation dataset.
+        ref_data: The reference dataset.
+        p_value: option to return p-value
+
+    Returns:
+        statistic : float
+            Pearson product-moment correlation coefficient.
+        p-value : float (if option is True)
+            The p-value associated with the default scipy function options.
+    """
+    simu_data=simu_data.to_numpy().ravel()
+    ref_data=ref_data.to_numpy().ravel()
+    if (p_value):
+        return pearsonr(simu_data[~np.isnan(simu_data)],ref_data[~np.isnan(ref_data)])
+    else:
+        statistic, pvalue = pearsonr(simu_data[~np.isnan(simu_data)],ref_data[~np.isnan(ref_data)])
+        return statistic
