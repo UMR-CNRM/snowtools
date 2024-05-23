@@ -4,15 +4,15 @@
 '''
 Created on 8 march 2024
 
-@author: Vernay
+@author: Vernay, Haddjeri
 
 Collection of functions to clusterize data.
 '''
 
 import xarray as xr
+import numpy as np
 
-
-def per_alt(data, ls_alt, mnt, elevation_label=None):
+def per_alt(data, ls_alt, mnt):
     """
       Groups data into slices based on altitude ranges.
 
@@ -20,8 +20,7 @@ def per_alt(data, ls_alt, mnt, elevation_label=None):
           data: The input dataset containing the data to be grouped.
           ls_alt: A list of altitude values defining the boundaries of each slice.
                   Values should be in ascending order.
-          elevation_label: The name of the variable in the dataset containing
-                  elevation values (default: 'ZS').
+          mnt: The datavariable containing elevation values
 
       Returns:
           A new dataset with the same variables as the input data, but with an
@@ -67,3 +66,62 @@ def by_slices(data, criterion, thresholds):
     out['slices'] = labels
 
     return out
+
+
+def per_landform_types(data,landform, test_coords=False):
+    """
+    Groups data into landform types as defined by https://doi.org/10.1016/j.geomorph.2012.11.00
+
+    Args:
+        data: The input dataset containing the data to be grouped.
+        landform: The DEM landform data array. SHOULD BE ON THE SAME GRID AS DATA AND COMPUTED BEFORE
+            (doc : http://intra.cnrm.meteo.fr/cen/snowtools/extra_documentation/Masks.html#geomorphons-masks)
+        test_coords: The grouping fail if landform and data are not on the same grid (does not share coordinates).
+            This option test if common values exist between the two inputs.
+
+    Returns:
+        A new dataset with the same variables as the input data, but with an additional dimension and
+        coordinate named 'landforms' with value corresponding to each pixels respective landform type.
+    """
+    if (test_coords):
+        print('Testing coordinates')
+        for k in data.coords.keys():
+            for m in landform.coords.keys():
+                try: np.intersect1d(landform[m],data[k])
+                except: print('No common coordinate between '+str(m)+' and '+str(k))
+                else: print('Common coordinate found between '+str(m)+' and '+str(k))
+
+    ii=0
+    for i in np.unique(landform.values)[~np.isnan(np.unique(landform.values))]:
+        if ii==0:
+            dd=xr.where(landform.values==i,data,np.nan).assign_coords({'landforms':geomorpho_switch(i)}).expand_dims('landforms')
+            ii=ii+1
+        else:
+            dd=xr.concat((dd,xr.where(landform.values==i,data,np.nan).assign_coords({'landforms':geomorpho_switch(i)}).expand_dims('landforms')),'landforms')
+
+    return dd
+
+
+
+def geomorpho_switch(i):
+    """
+    Function to convert the numeral code to the name of the 10 most common
+    landforms types defined by https://doi.org/10.1016/j.geomorph.2012.11.005
+
+    Args:
+        i: the numeral landform code
+
+    Returns:
+        The litteral translation of the code according to paper convention.
+    """
+
+    if i==1.: return 'Flat'
+    if i==2.: return 'Peak (summit)'
+    if i==3.: return 'Ridge'
+    if i==4.: return 'Shoulder'
+    if i==5.: return 'Spur (Convex)'
+    if i==6.: return 'Slope'
+    if i==7.: return 'Hollow (concave)'
+    if i==8.: return 'Footslope'
+    if i==9.: return 'Valley'
+    if i==10.: return 'Pit'
