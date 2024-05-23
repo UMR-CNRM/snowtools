@@ -11,7 +11,7 @@ def preprocess(ds):
 
 def update_varname(ds):
     update_dict = {key: variables_map[key] for key in ds.var() if key in variables_map.keys()}
-    uopdate_dict = update_dict.update({key: variables_map[key] for key in ds.coords if key in variables_map.keys()})
+    update_dict.update({key: variables_map[key] for key in ds.coords if key in variables_map.keys()})
     ds = ds.rename(update_dict)
     return ds
 

@@ -26,7 +26,7 @@ var_labels = dict(
 )
 
 
-def plot_ange(dataplot, var, figname=None, xmax=7, title=None):
+def plot_ange(dataplot, var, figname=None, xmax=7, yaxis='Elevation Bands (m)', title=None):
     """
     WORK IN PROGRESS
     * xmax     : set maximum x-axis value. Default for HTN / DSN_T_ISBA variable (6m)
@@ -47,17 +47,17 @@ def plot_ange(dataplot, var, figname=None, xmax=7, title=None):
     colors = ["silver", "#D65F5F", "#4878D0", "#6ACC64", "#EE854A"]
     # colors = ["silver", "#D65F5F", "#D65F5F", "#4878D0", "#4878D0", "#6ACC64", "#6ACC64", "#EE854A", "#EE854A"]
 
-    elevation_bands = np.flip(dataplot['Elevation Bands (m)'].unique())
+    bands = np.flip(dataplot[yaxis].unique())
 
     sns.set(rc={"figure.figsize": (12, 15)})
     sns.set_theme(style="whitegrid", font_scale=1.7)
     myplot = sns.violinplot(
         dataplot,  # data
-        y            = 'Elevation Bands (m)',  # y-axis
+        y            = yaxis,  # y-axis
         x            = var,  # X-axis
         inner        = 'box',  # Representation of the data in the violin interior ('box' --> mini-boxplot)
         hue          = 'experiment',  # Legend 'title'
-        order        = elevation_bands,
+        order        = bands,
         density_norm = 'width',  # all violin will have the same width
         bw_adjust    = 0.5,  # Factor that scales the bandwidth to use more or less smoothing
         cut          = 0,  # Limit the violin within the data range
@@ -72,7 +72,7 @@ def plot_ange(dataplot, var, figname=None, xmax=7, title=None):
     myplot.yaxis.set_minor_locator(ticker.FixedLocator(minor_ticks))
     myplot.yaxis.grid(True, which='minor')
     # Custom yaxis ticks labels
-    myplot.set_yticklabels(elevation_string(elevation_bands))
+    myplot.set_yticklabels(label_format(bands))
     # Set x-axis limits and label
     plt.xlim([0, xmax])  # DSN_T_ISBA / HTN (m)
     if var in var_labels.keys():
@@ -99,7 +99,7 @@ def plot_ange(dataplot, var, figname=None, xmax=7, title=None):
 #    plt.legend(handles = [circ0, circ1, circ2, circ3, circ4, circ5, circ6])
 
     # Add number of pixels associated to each violin plot
-    tmp = dataplot.set_index(['Elevation Bands (m)', 'experiment'])
+    tmp = dataplot.set_index([yaxis, 'experiment'])
     npixels = tmp.groupby(level=tmp.index.names).count()
     subensemble_size = np.flip(npixels.values.flatten())
     #                                         DSN_T_ISBA
@@ -132,7 +132,7 @@ def plot_ange(dataplot, var, figname=None, xmax=7, title=None):
     plt.close('all')
 
 
-def elevation_string(elevations):
+def label_format(elevations):
     """
     Formats an array of elevation values into a string representation with line breaks.
 

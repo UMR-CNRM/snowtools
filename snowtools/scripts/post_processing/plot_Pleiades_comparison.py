@@ -21,7 +21,6 @@ import argparse
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.scores import clusters
 from snowtools.plots.boxplots import violinplot
-from snowtools.scripts.post_processing import common_tools as ct
 
 
 def parse_command_line():
@@ -68,7 +67,6 @@ def violin_plot(xpids, obs, var, date, mask=True, member=None):
 
     # Construct *dataplot* DataFrame with elevation bands as index and 1 column per product
     obs = obs.rename({'x': 'xx', 'y': 'yy'})
-    # obs = ct.maskgf(obs)
     filtered_obs = clusters.per_alt(obs[var], elevation_bands, mnt)
     dataplot = filtered_obs.to_dataframe(name='obs').dropna().reset_index().drop(columns=['time'])
     try:
@@ -186,7 +184,7 @@ if __name__ == '__main__':
         # Get (filtered) PRO files with Vortex
         kw = dict(datebegin=datebegin, dateend=dateend, vapp=vapp, member=member, namebuild=None,
                 filename=f'PRO_{shortid}.nc')
-        io.get_pro(xpid, geometry, **kw)
+        io.get_pro(xpid=xpid, geometry=geometry, **kw)
 
     # TODO : à gérer autrement pour être flexible
     member = None
