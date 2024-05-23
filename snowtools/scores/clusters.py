@@ -39,6 +39,16 @@ def per_alt(data, ls_alt, mnt, elevation_label=None):
     return data_per_alt
 
 
+def per_uncertainty(data, uncertainty, thresholds):
+    out = []
+    for i in range(0, len(thresholds) - 1):
+        out.append(data.where((uncertainty >= thresholds[i]) & (uncertainty < thresholds[i + 1])))
+    out = xr.concat(out, dim='middle_slices')
+    out['middle_slices'] = thresholds[1:] - (thresholds[1] - thresholds[0]) / 2
+
+    return out
+
+
 def groupby_elevation(ds, elevations, mnt=None, elevation_label=None):
     """
     Add an elevation band dimension to a dataset to ienable the use of "groupby" method
