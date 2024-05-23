@@ -17,7 +17,7 @@ This section present an example to pre-process Pleiades images from files provid
 
   1. classif file (*classif_r*) => gives the type of surface on each pixel (snow not snow other...)
   2. height file (*dH_XXXXXX*)=> gives the "raw" stereo-imagery value
-  3. forests files (*classif_Glb_foret*) => gives forest pixels
+  3. forests masks (*classif_Glb_foret*) => gives forest pixels
 
   Filters must be applied to obtain heights on snow only.
   In addition, unrealistic snow heights are filtered out [-0.5 , 20m] (cf mail and cesar paper [#f2]_)

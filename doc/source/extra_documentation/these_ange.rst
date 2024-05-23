@@ -1,10 +1,7 @@
 Documentations from Ange PhD
 ============================
 
-Ajouter une intro sur le ce dont on va parler
-Issue du Notebook avec les principales information pour reproduire les résultats du papier The Cryosphere
-
-
+You can find below the documentation (from my Jupyter notebooks) with the main information for relaunching my PhD simulations.
 
 .. toctree::
    :maxdepth: 1
@@ -14,3 +11,8 @@ Issue du Notebook avec les principales information pour reproduire les résultat
    Theia Snow observations <Sentinel_2.rst>
    Masks used in the experiments <Masks.rst>
    Methods for simulation regridding <Regridding.rst>
+
+
+.. image:: https://i.ibb.co/93t9ZvS/visu-these-ange.png
+    :alt: my-picture1
+    :width: 800

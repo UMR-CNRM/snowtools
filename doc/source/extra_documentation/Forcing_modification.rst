@@ -1,28 +1,34 @@
 Forcing simulation prep
 =======================
 
+For blowing snow transport simulations, having a realistic wind is essential. In our simulations we used Louis' DEVINE wind. We therefore had to cook specific forcings.
 
-**Typical workflow from Belenos :**
-
-1. Geometry creation
-2. PREP + PGD + Forcages (SAFRAN) creation
-3. Forcing preps
-
-  * :ref:`Wind resampling <louis>`
-  * :ref:`Forcing modification <fmod>`
-
-4. Simulation launch
-
-
-.. _louis:
 
 Louis' DEVINE wind
 ******************
 
-
 Louis Le Toumelin developped a machine learning method to downscale the wind speed and direction for AROME coarse simulation model named **DEVINE**. [#f1]_ [#f2]_
 If the simulation forcings and the wind are on the same grid (30m) the Wind and Wind_DIR forcing fields can be replaced in files transparently.
 If the two grid are different, the two wind fields (Wind and Wind_DIR) need to be resample to the simulation grid.
+
+
+Typical workflow for an experiment from scratch on Belenos :
+************************************************************
+1. Geometry creation
+2. PREP + PGD + Forcing (SAFRAN) creation
+3. Forcing modification
+
+  * :ref:`High resolution wind resampling <louis>`
+  * :ref:`Forcing modification <fmod>`
+
+4. Simulation launch (do not forget to clean vortex cache)
+
+
+
+.. _louis:
+
+Louis' wind resampling
+**********************
 
 This regridding workflow is based on the folowing functions defined by Louis in is `github repo <https://github.com/louisletoumelin/bias_correction>`_::
 
@@ -121,7 +127,7 @@ The regridding unfolds in tree steps :
 
 * Convert Louis' wind speed and direction to rectangular components (u,v) (*wind2comp*)
 * Regrid the rectangular components (u,v) to the desired grid (*rio.reproject_match*)
-* Convert back the rectangular components to the wind speed and direction format (*comp2dir*)
+* Convert back the rectangular components to the wind speed and direction format (*comp2dir*, *comp2speed*)
 
 The following code result in two files *devine_speed_250m_rioxarray.nc* and *devine_direction_250m_rioxarray.nc* containing the resampled wind speed and direction.
 
