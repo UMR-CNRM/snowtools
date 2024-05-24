@@ -153,7 +153,7 @@ def violin_plot(xpids, obs, var, member=None, mask=True):
     dataplot = dataplot.melt('Elevation Bands (m)', var_name='experiment', value_name=var)
 
     figname = f'{var}_{datebegin}_{dateend}.pdf'
-    violinplot.plot_ange(dataplot, var, figname, xmax=375)
+    violinplot.plot_ange(dataplot, var, figname, xmax=375, violinplot=False)
 
 
 def filter_simu(xpid, subdir, mnt):
@@ -224,7 +224,7 @@ if __name__ == '__main__':
 
         # Get DIAG files with Vortex
         kw = dict(datebegin=deb, dateend=dateend, vapp=vapp, member=member, filename=f'DIAG_{shortid}.nc')
-        io.get_diag(xpid, geometry, **kw)
+        io.get_diag(xpid=xpid, geometry=geometry, **kw)
 
     # TODO : à gérer autrement pour être flexible
     member = None

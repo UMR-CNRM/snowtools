@@ -26,7 +26,7 @@ var_labels = dict(
 )
 
 
-def plot_ange(dataplot, var, figname=None, xmax=7, yaxis='Elevation Bands (m)', title=None):
+def plot_ange(dataplot, var, figname=None, xmax=7, yaxis='Elevation Bands (m)', title=None, violinplot=True):
     """
     WORK IN PROGRESS
     * xmax     : set maximum x-axis value. Default for HTN / DSN_T_ISBA variable (6m)
@@ -51,19 +51,34 @@ def plot_ange(dataplot, var, figname=None, xmax=7, yaxis='Elevation Bands (m)', 
 
     sns.set(rc={"figure.figsize": (12, 15)})
     sns.set_theme(style="whitegrid", font_scale=1.7)
-    myplot = sns.violinplot(
-        dataplot,  # data
-        y            = yaxis,  # y-axis
-        x            = var,  # X-axis
-        inner        = 'box',  # Representation of the data in the violin interior ('box' --> mini-boxplot)
-        hue          = 'experiment',  # Legend 'title'
-        order        = bands,
-        density_norm = 'width',  # all violin will have the same width
-        bw_adjust    = 0.5,  # Factor that scales the bandwidth to use more or less smoothing
-        cut          = 0,  # Limit the violin within the data range
-        orient       = 'h',  # Horizontal violinplots
-        palette      = (color for color in colors),
-    )
+    if violinplot:
+        myplot = sns.violinplot(
+            dataplot,  # data
+            y            = yaxis,  # y-axis
+            x            = var,  # X-axis
+            inner        = 'box',  # Representation of the data in the violin interior ('box' --> mini-boxplot)
+            hue          = 'experiment',  # Legend 'title'
+            order        = bands,
+            density_norm = 'width',  # all violin will have the same width
+            bw_adjust    = 0.5,  # Factor that scales the bandwidth to use more or less smoothing
+            cut          = 0,  # Limit the violin within the data range
+            orient       = 'h',  # Horizontal violinplots
+            palette      = (color for color in colors),
+        )
+    else:
+        myplot = sns.boxplot(
+            data         = dataplot,  # data
+            y            = yaxis,  # y-axis
+            x            = var,  # X-axis
+            hue          = 'experiment',  # Legend 'title'
+            order        = bands,
+            orient       = 'h',  # Horizontal violinplots
+            palette      = (color for color in colors),
+            notch        = True,
+            flierprops   = {"marker": "x"},
+            medianprops  = {"linewidth": 3},
+        )
+
     if title is not None:
         myplot.set(title=title)
 
