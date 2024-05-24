@@ -17,7 +17,10 @@ Documentation :
 - Contenu BDAP : http://intradsi.meteo.fr/spip.php?page=private_access&file=/IMG/pdf/bdap_utilisateurs-249.pdf
 - Pour Alpha   : http://intradsi.meteo.fr/spip.php?page=private_access&file=/IMG/pdf/bdap_pprod-3.pdf
 - extraction   : http://intradsi.meteo.fr/spip.php?page=private_access&file=/IMG/pdf/doc_utilisateurs_bdap_extr-14.pdf
-  --> ce script utilise la commande dap3_dev
+
+This script uses the dap3_dev command available on SOPRANO servers after loading the following tools :
+source /usr/local/sopra/etc/config_taches.soprano-dev
+source /opt/metwork-mfext-2.1/share/profile
 
 Exemples :
 ----------
