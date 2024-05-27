@@ -40,8 +40,8 @@ class _Offline(_VortexTask):
         Main method to save an OFFLINE execution output (PRO file)
         """
         self.sh.title('PRO')
-        self.pro = io.put_pro(*self.common_args, member=self.conf.member,
-                              filename='PRO_[datebegin:ymdh]_[dateend:ymdh].nc', **self.common_kw)
+        self.pro = io.put_pro(member=self.conf.member, filename='PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                **self.common_kw)
 
     def get_forcing(self):
         """
@@ -50,9 +50,10 @@ class _Offline(_VortexTask):
         kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
         # Update default vapp with specific conf values
         kw.update(dict(vapp=self.conf.vapp_forcing, filename='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-            datebegin=self.conf.datebegin_forcing, dateend=self.conf.dateend_forcing, member=self.conf.member))
+            datebegin=self.conf.datebegin_forcing, dateend=self.conf.dateend_forcing, member=self.conf.member,
+            xpid=self.conf.xpid_forcing, geometry=self.conf.geometry_forcing))
         self.sh.title('FORCING')
-        self.forcing = io.get_forcing(self.conf.xpid_forcing, self.conf.geometry_forcing, **kw)
+        self.forcing = io.get_forcing(**kw)
 
     def get_surfex_namelist(self):
         """
@@ -74,8 +75,11 @@ class _Offline(_VortexTask):
         instead of a symbolic link (--> intent='inout').
         """
         self.sh.title('PREP')
-        self.prep = io.get_prep(self.conf.xpid_prep, self.conf.geometry, date=self.conf.date_prep,
-                                alternate_xpid=self.ref_reanalysis, intent='inout', **self.common_kw)
+        kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
+        # Update default vapp with specific conf values
+        kw.update(dict(xpid=self.conf.xpid_prep, geometry=self.conf.geometry_prep, date=self.conf.date_prep,
+            alternate_xpid=self.ref_reanalysis, intent='inout', vapp=self.conf.vapp_prep))
+        self.prep = io.get_prep(**kw)
 
     def get_pgd(self):
         """
@@ -84,7 +88,7 @@ class _Offline(_VortexTask):
         TODO : this should be included in the 'get_const_offline' method
         """
         self.sh.title('PGD')
-        self.pgd = io.get_pgd(*self.common_args, **self.common_kw)
+        self.pgd = io.get_pgd(**self.common_kw)
 
     def get_const_offline(self):
         """

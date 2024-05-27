@@ -696,7 +696,7 @@ def put_wind(*, xpid, geometry, **kw):
 ############################################
 
 
-def pgd(action, *, xpid, geometry, **kw):
+def pgd(action, xpid, geometry, **kw):
     """
     Function to get a PGD file for a SURFEX (OFFLINE) simulation.
 

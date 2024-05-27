@@ -55,7 +55,7 @@ class Prep(_VortexTask):
         TODO
         """
         self.sh.title('PREP')
-        io.put_prep(*self.common_args, date=self.conf.dateend, filename='PREP_[date:ymdh].nc',
+        io.put_prep(date=self.conf.dateend, filename='PREP_[date:ymdh].nc',
                     **self.common_kw)
 
 
@@ -69,8 +69,13 @@ class PrepRefill(Prep):
         TODO
         """
         self.sh.title('PREP')
-        prep = io.get_prep(*self.common_args, date=self.conf.date_prep,
-                           alternate_xpid=self.ref_reanalysis, **self.common_kw)
+        prep = io.get_prep(
+            vapp           = self.conf.vapp_prep,
+            geometry       = self.conf.geometry_prep,
+            date           = self.conf.date_prep,
+            xpid           = self.conf.xpid_prep,
+            alternate_xpid = self.ref_reanalysis,
+        )
 
         if len(prep) == 0:
             # If no valid prep found, make one

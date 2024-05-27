@@ -40,13 +40,14 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         """
         Main method definig the task's sequence of actions
         """
-        self.common_args = [self.conf.xpid, self.conf.geometry]
         # TODO : passer toute la conf en kw ?
         self.common_kw   = dict(
             datebegin = self.conf.datebegin,
             dateend   = self.conf.dateend,
             uenv      = self.conf.uenv,
             vapp      = self.conf.vapp,
+            xpid      = self.conf.xpid,
+            geometry  = self.conf.geometry,
         )
 
         if 'early-fetch' in self.steps:  # Executed on a TRANSFERT NODE to fetch inputs from a remote

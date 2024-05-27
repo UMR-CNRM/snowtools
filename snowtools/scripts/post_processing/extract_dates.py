@@ -157,7 +157,7 @@ if __name__ == '__main__':
 
     try:
         # Try to get the PRO file with vortexIO
-        io.get_pro(datebegin, dateend, xpid, geometry, members=members)
+        io.get_pro(datebegin=datebegin, dateend=dateend, xpid=xpid, geometry=geometry, members=members)
     except (ImportError, NameError, ModuleNotFoundError):
         # Otherwise a PRO file should be provided
         # TODO : Le code actuel ne gère qu'un unique fichier PRO

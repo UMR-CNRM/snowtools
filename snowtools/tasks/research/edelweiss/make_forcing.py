@@ -34,18 +34,18 @@ class Precipitation(_VortexTask):
         """
         # Hourly total precipitation at 1km resolution --> use get_meteo since it is not FORCING-ready
         self.sh.title('Toolbox input Precipitation 1km')
-        io.get_meteo(
-            kind     = 'Precipitation',
-            geometry = self.conf.geometry_precipitation,
-            xpid     = self.conf.xpid_precipitation,
-            block    = 'hourly',
-            members  = self.conf.members,
-            **self.common_kw,
-        )
+        kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
+        # Update default vapp with specific conf values
+        kw.update(dict(kind='Precipitation', geometry=self.conf.geometry_precipitation,
+            xpid=self.conf.xpid_precipitation, block='hourly', members=self.conf.members,))
+        io.get_meteo(**kw)
 
         # Hourly iso Wet-bulb temperatures 0°C, 1°C [, 1.5°C] --> use get_meteo (not FORCING-ready)
         self.sh.title('Toolbox input ISO WETBT/TPW')
-        io.get_meteo(kind='ISO_TPW', geometry=self.conf.geometry_tpw, xpid=self.conf.xpid_tpw, **self.common_kw)
+        kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
+        # Update default vapp with specific conf values
+        kw.update(dict(kind='ISO_TPW', geometry=self.conf.geometry_tpw, xpid=self.conf.xpid_tpw))
+        io.get_meteo(**kw)
 
         # Iso-TPW's grid relief
         # self.sh.title('Toolbox input ISO WETBT/TPW RELIEF')
@@ -80,7 +80,7 @@ class Precipitation(_VortexTask):
         Main method to save an OFFLINE execution outputs
         """
         self.sh.title('Precipitation output')
-        io.put_precipitation(*self.common_args, members=self.conf.members, filename='PRECIPITATION_OUT.nc',
+        io.put_precipitation(members=self.conf.members, filename='PRECIPITATION_OUT.nc',
                 **self.common_kw)
 
 
@@ -107,9 +107,9 @@ class Forcing(_VortexTask):
         kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
         # Update default vapp with specific conf values
         kw.update(dict(vapp=self.conf.vapp_forcing, filename='FORCING_IN.nc', datebegin=self.conf.datebegin_forcing,
-            dateend=self.conf.dateend_forcing))
+            dateend=self.conf.dateend_forcing, xpid=self.conf.xpid_forcing, geometry=self.conf.geometry_forcing))
         self.sh.title('FORCING input')
-        self.forcing = io.get_forcing(self.conf.xpid_forcing, self.conf.geometry_forcing, **kw)
+        self.forcing = io.get_forcing(**kw)
 
         # TODO : Cette verrue montre que le source_conf est inutile
         # A retirer dans les toolbox de Sabine
@@ -129,17 +129,18 @@ class Forcing(_VortexTask):
         if self.conf.precipitation is not None:
             # Update default vapp with specific conf values
             kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
-            kw.update(dict(vapp=self.conf.vapp_precipitation, members=self.conf.members, source_conf=source_conf))
+            kw.update(dict(vapp=self.conf.vapp_precipitation, members=self.conf.members, source_conf=source_conf,
+                xpid=self.conf.xpid_precipitation, geometry=self.conf.geometry_precipitation))
             self.sh.title('Precipitation input')
-            self.precipitation = io.get_precipitation(self.conf.xpid_precipitation, self.conf.geometry_precipitation,
-                                                    **kw)
+            self.precipitation = io.get_precipitation(**kw)
 
         # Update Wind / Wind_DIR variables
         if self.conf.wind is not None:
             kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
-            kw.update(dict(vapp=self.conf.vapp_wind))  # Update default vapp with specific conf value
+            # Update default vapp with specific conf value
+            kw.update(dict(vapp=self.conf.vapp_wind, xpid=self.conf.xpid_wind, geometry=self.conf.geometry_wind))
             self.sh.title('Wind input')
-            io.get_wind(self.conf.xpid_wind, self.conf.geometry_wind, **kw)
+            io.get_wind(**kw)
 
     def algo(self):
         """
@@ -169,5 +170,4 @@ class Forcing(_VortexTask):
         Main method to save an OFFLINE execution outputs
         """
         self.sh.title('FORCING output')
-        io.put_forcing(self.conf.xpid, self.conf.geometry, filename='FORCING_OUT.nc', members=self.conf.members,
-                **self.common_kw)
+        io.put_forcing(filename='FORCING_OUT.nc', members=self.conf.members, **self.common_kw)
