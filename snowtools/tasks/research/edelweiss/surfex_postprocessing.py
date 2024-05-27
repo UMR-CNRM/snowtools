@@ -22,11 +22,11 @@ class Diag_sentinel2(_VortexTask):
         """
 
         self.sh.title('Toolbox input PRO')
-        self.pro = io.get_pro(*self.common_args, **self.common_kw, members=self.conf.members)
+        self.pro = io.get_pro(**self.common_kw, members=self.conf.members)
 
         # Get a static mask file to remove glacier/forest pixels
         self.sh.title('Toolbox input MASK')
-        self.mask = io.get_const(kind='mask', geometry=self.conf.geometry, **self.common_kw)
+        self.mask = io.get_const(kind='mask', **self.common_kw)
 
     def algo(self):
         """
@@ -35,7 +35,7 @@ class Diag_sentinel2(_VortexTask):
         t = self.ticket
         self.sh.title('Toolbox algo diag')
         tbalgo = toolbox.algo(
-            kind         = 'S2diag',
+            kind         = 'scd',
             datebegin    = self.conf.datebegin,
             dateend      = self.conf.dateend,
             mask         = self.mask[0],
@@ -52,7 +52,7 @@ class Diag_sentinel2(_VortexTask):
         TODO
         """
         self.sh.title('Toolbox output DIAG')
-        self.diag = io.put_diag(*self.common_args, **self.common_kw, members=self.conf.members)
+        self.diag = io.put_diag(**self.common_kw, members=self.conf.members)
 
 
 class ExtractDates(_VortexTask):
@@ -68,8 +68,9 @@ class ExtractDates(_VortexTask):
         self.sh.title('Toolbox input PRO')
         kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
         # Update default vapp with specific conf values
-        kw.update(dict(vapp=self.conf.vapp_pro, datebegin=self.conf.datebegin_pro, dateend=self.conf.dateend_pro))
-        self.pro = io.get_pro(self.conf.xpid_pro, self.conf.geometry_pro, members=self.conf.members, **kw)
+        kw.update(dict(vapp=self.conf.vapp_pro, datebegin=self.conf.datebegin_pro, dateend=self.conf.dateend_pro,
+            xpid=self.conf.xpid_pro, geometry=self.conf.geometry_pro, members=self.conf.members))
+        self.pro = io.get_pro(**kw)
 
     def algo(self):
         """
@@ -99,7 +100,7 @@ class ExtractDates(_VortexTask):
         # Actuellement, elle est archivée sous "date=dateend" (car "namebuild=None")
         # --> ca ne semble pas très pertinent
         suffix = '_'.join(self.conf.extraction_dates)
-        self.diag = io.put_pro(*self.common_args, members=self.conf.members, filename=f'PRO_{suffix}.nc',
+        self.diag = io.put_pro(members=self.conf.members, filename=f'PRO_{suffix}.nc',
                 namebuild=None, **self.common_kw,)
 
         # To put the file on sxcen only :
@@ -114,5 +115,5 @@ class ExtractDates(_VortexTask):
         # - le "get" depuis sxcen retire le username
         # user = self.env['USER']
         # storeroot = f'/cnrm/cen/users/NO_SAVE/{user}/cache'
-        # self.diag = io.put_pro(*self.common_args, members=self.conf.members, filename=f'PRO_{suffix}.nc',
+        # self.diag = io.put_pro(members=self.conf.members, filename=f'PRO_{suffix}.nc',
         #        namebuild=None, storeroot=storeroot, **self.common_kw,)

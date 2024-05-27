@@ -191,10 +191,15 @@ def lcscd(data, threshold):
         # cumul --> array([1, 0, 1, 2, 3, 0, 1, 2])
         # WARNING : applying cumsum method on a *DataArrayGroupBy* method requires version 2024.3.0 of xarray
         cumul = gp.cumsum(dim='time') - gp.cumsum(dim='time').where(data.values == 0).ffill(dim='time').fillna(0)
-    except ModuleNotFoundError:
+    except (ModuleNotFoundError, AttributeError):
         # If "bottleneck" not available, use a custom ffill function
         cumul = data.copy()  # Construct an array similar to data
-        cs = gp.cumsum(dim='time')
+        # cumsum method not available on xarray's version 0.16.0 (MF HPC's valid install on 27/05/2024)
+        # --> replace by an "apply" function untill the next version update
+        try:
+            cs = gp.cumsum(dim='time')
+        except AttributeError:
+            cs = gp.apply(lambda x: x.cumsum(dim='time'))
         # cs --> array([1, 1, 2, 3, 4, 4, 5, 6]) (numpy syntax : data.cumsum())
         # Apply custom "xr_ffill" function that does not depend on bottleneck
         npfill = xr_ffill(cs.where(data.values == 0), fillna=True)
