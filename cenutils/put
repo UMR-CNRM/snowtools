@@ -228,7 +228,6 @@ then
     set mirror:sort-by name;
     set mirror:overwrite true;
     lcd ./ ;
-    cd $HOME;
     mirror --reverse \
       --delete --use-cache --verbose \
       --allow-chown  --allow-suid --no-umask --parallel=2 \
@@ -259,6 +258,8 @@ then
       --exclude-glob src/LIB/eccodes*/ \
       --exclude-glob src/LIB/eccodes* \
       --exclude STRATO \
+      --exclude-glob figures \
+      --exclude-glob DATA \
       $folder_orig $folder_dest"
     retcode=$?
     set -e
