@@ -201,9 +201,11 @@ class Edelweiss_command(object):
                                                " ")
 
         task_parser.add_argument("--extraction_dates", type=str, dest="extraction_dates", default=None,
-                                help="Liste of extraction dates for the 'extract_dates' surfex post-processing task\n"
+                                help="List of extraction dates for the 'extract_dates' surfex post-processing task\n"
                                      "separeted by commas\n"
-                                     "Syntax : --extraction_dates yyyymmddhh,yyyymmddhh, ... ")
+                                     "Syntax : --extraction_dates yyyymmddhh,yyyymmddhh, ... \n"
+                                     "The final value in the configuration file should be :\n"
+                                     "extraction_dates = list(yyyymmddhh,yyyymmddhh)")
 
         # Input-specific arguments :
         # =========================
@@ -334,6 +336,10 @@ class Edelweiss_command(object):
                         setattr(self.options, f'{key}_{specific_input}', '1-1-1')
                     else:
                         setattr(self.options, f'{key}_{specific_input}', args_to_dict[key])
+
+        if self.options.extraction_dates is not None:
+            # Ensure that this variable will be interprested as a list (FPList) by footprints
+            self.options.extraction_dates = f'list({self.options.extraction_dates})'
 
     def convert_members(self, string):
         """
