@@ -58,6 +58,7 @@ def compute_phase_from_iso_wetbt1(subdir=None):
     Compute Rainf and Snowf variables from the iso-wetbt (or iso-tpw before 7/12/2019) elevation.
     """
     precipitation = xr.open_dataarray(os.path.join(subdir or '', 'PRECIPITATION.nc'))  # Hourly precipitation
+    precipitation = precipitation.fillna(0)
     # Open  Wet-bulb temperature iso-0/1°C dataset, and rename time as in the 'precipitation' ds
     isowetbt  = xr.open_dataset('ISO_TPW.nc').drop('time').rename({'valid_time': 'time'})
     # Fill missing dates with nearest value :
