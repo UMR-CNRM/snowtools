@@ -12,10 +12,8 @@ Collection of functions to plot 2D fields.
 import numpy as np
 import matplotlib.pyplot as plt
 
-reference_point = (965767.64, 6445415.30)  # Nivose Galibier
 
-
-def plot_field(field, savename, vmin=None, vmax=None, cmap=plt.cm.YlGnBu):
+def plot_field(field, savename, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoint=None):
     fig, ax = plt.subplots(figsize=(12 * np.shape(field)[1] / np.shape(field)[0], 10))
     if vmax is None:
         vmax = np.max(np.abs(field))
@@ -26,7 +24,8 @@ def plot_field(field, savename, vmin=None, vmax=None, cmap=plt.cm.YlGnBu):
     cml.set_edgecolor('face')
     if '.pdf' not in savename:
         savename = f'{savename}.pdf'
-    ax.plot(reference_point[0], reference_point[1], marker='.', linestyle='', color='k', markersize=20)
+    if addpoint is not None:
+        ax.plot(addpoint[0], addpoint[1], marker='.', linestyle='', color='k', markersize=20)
     plt.tight_layout()
     fig.savefig(savename, format='pdf')
     plt.close('all')

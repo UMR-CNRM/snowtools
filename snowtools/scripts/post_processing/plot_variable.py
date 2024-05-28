@@ -67,6 +67,12 @@ vmin_map = dict(
 
 domain_map = dict(
     Lautaret = dict(xmin=957875., xmax=973375., ymin=6439125., ymax=6458625.),
+    Huez     = dict(xmin=941625., xmax=951875., ymin=6441125., ymax=6459625.),
+)
+
+reference_point = dict(
+    Lautaret = (965767.64, 6445415.30),  # Nivose Galibier
+    Huez     = (944584.42, 6452410.74),  # Nivose col du lac Blanc
 )
 
 
@@ -158,10 +164,11 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
         vmax = vmax_map[var] if var in vmax_map.keys() else tmp.max()
         vmin = vmin_map[var] if var in vmin_map.keys() else tmp.min()
 
+        addpoint = reference_point[domain]
         if var in cmap.keys():
-            plot2D.plot_field(tmp, savename, vmin=vmin, vmax=vmax, cmap=cmap[var])
+            plot2D.plot_field(tmp, savename, vmin=vmin, vmax=vmax, cmap=cmap[var], addpoint=addpoint)
         else:
-            plot2D.plot_field(tmp, savename, vmin=vmin, vmax=vmax)
+            plot2D.plot_field(tmp, savename, vmin=vmin, vmax=vmax, addpoint=addpoint)
 
 
 if __name__ == '__main__':

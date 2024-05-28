@@ -16,6 +16,7 @@ except ImportError:
 reference_points = dict(
     # Galibier = dict(xx=968139.97, yy=6446319.56),  # Col
     Galibier = dict(xx=965767.64, yy=6445415.30),  # Nivose
+    LacBlanc = dict(xx=944584.42, yy=6452410.74),  # Nivose
 )
 
 
