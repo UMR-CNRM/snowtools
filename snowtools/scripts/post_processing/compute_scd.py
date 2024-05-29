@@ -47,7 +47,7 @@ def parse_command_line():
     parser.add_argument('-p', '--pro', type=str, required=not any(arg in sys.argv for arg in ['-x', '--xpid']),
                         help="Absolute path to the pro file")
 
-    parser.add_argument('-t', '--threshold', type=str, defaul=0.2,
+    parser.add_argument('-t', '--threshold', type=str, default=0.2,
                         help="Threshold to apply to the simulated snow depth in order to consider that the pixel"
                              "is covered by snow.")
 
@@ -209,6 +209,8 @@ def lcscd(data, threshold):
     scd = cumul.groupby('startseason').max(dim='time').rename('scd_concurent')
     # Compute the snow melt out date for each group/season as the index of the maximum value along the time dimension
     mod = (cumul.groupby('startseason').apply(lambda c: c.argmax(dim="time")) + 1).rename('mod')
+    # Return Nan when snow cover duration is 0 (no day with snow depth above threshold)
+    mod = xr.where(scd.data == 0, np.nan, mod)
     # scd = (cumul.max(dim = 'time')).rename('scd_concurent')
     # mod = (cumul.argmax(dim = 'time') + 1).rename('mod')
     sod = (mod - scd).rename('sod')
@@ -275,6 +277,7 @@ if __name__ == '__main__':
     if pro is not None:
         # TODO : Le code actuel ne gère qu'un unique fichier PRO
         # TODO : il reste à gérer les simulations d'ensemble avec 1 PRO/membre
+        # --> open_mfdataset(list_pro, concat_dim='member')
         if os.path.islink('PRO.nc'):
             os.remove('PRO.nc')
         if not os.path.exists('PRO.nc'):

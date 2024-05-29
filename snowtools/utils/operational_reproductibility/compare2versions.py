@@ -14,7 +14,7 @@ import datetime
 
 import numpy as np
 import netCDF4
-from scipy import nanmean
+from numpy import nanmean
 
 from snowtools.utils.FileException import FileNameException, VarNameException
 # Not necessary to transfer in vortex
