@@ -304,11 +304,12 @@ class Edelweiss_kitchen(vortex_kitchen):
         mkjob_list = []
         options = vars(self.options)  # convert 'Namespace' object to 'dictionnary'
         if self.njobs == 1:
+            options['members_forcing'] = int(first)
             self.set_job_conf(options)
             mkjob_list.append(self.mkjob_command(jobname=self.jobname))
         else:
             options.pop('members_forcing')
-            for job_number in range(self.njobs):
+            for job_number in range(int(first), int(last), int(step)):
                 options['members_forcing'] = str(job_number)
                 jobname = f'{self.jobname}_mb{str(job_number)}'
                 self.set_job_conf(options)
