@@ -31,15 +31,15 @@ def plot_ange(dataplot, var, figname=None, xmax=7, yaxis='Elevation Bands (m)', 
     WORK IN PROGRESS
     * xmax     : set maximum x-axis value. Default for HTN / DSN_T_ISBA variable (6m)
     * dataplot : Pandas DataFrame
-                    Elevation Bands (m)       experiment  DSN_T_ISBA
-        0                    2050.0              obs    1.937780
-        1                    2050.0              obs    1.741148
+                    Elevation Bands (m)     experiment  DSN_T_ISBA
+        0                 1900-2200              obs    1.937780
+        1                 1900-2200              obs    1.741148
         ...                     ...              ...         ...
-        xxxxxx               3250.0            XPID1    0.773394
-        xxxxxx               3250.0            XPID1    0.446745
+        xxxxxx            3100-3400            XPID1    0.773394
+        xxxxxx            3100-3400            XPID1    0.446745
         ...                     ...              ...         ...
-        104214               3250.0            XPID2    3.284174
-        104215               3250.0            XPID2    0.253465
+        104214            3100-3400            XPID2    3.284174
+        104215            3100-3400            XPID2    0.253465
     """
 
     # Ange's paper color palette
@@ -87,7 +87,8 @@ def plot_ange(dataplot, var, figname=None, xmax=7, yaxis='Elevation Bands (m)', 
     myplot.yaxis.set_minor_locator(ticker.FixedLocator(minor_ticks))
     myplot.yaxis.grid(True, which='minor')
     # Custom yaxis ticks labels
-    myplot.set_yticklabels(label_format(bands))
+    # myplot.set_yticklabels(label_format(bands))
+    myplot.set_yticklabels(bands)
     # Set x-axis limits and label
     plt.xlim([0, xmax])  # DSN_T_ISBA / HTN (m)
     if var in var_labels.keys():
@@ -117,20 +118,7 @@ def plot_ange(dataplot, var, figname=None, xmax=7, yaxis='Elevation Bands (m)', 
     tmp = dataplot.set_index([yaxis, 'experiment'])
     npixels = tmp.groupby(level=tmp.index.names).count()
     subensemble_size = np.flip(npixels.values.flatten())
-    #                                         DSN_T_ISBA
-    # Elevation Bands (m) experiment
-    # 2050.0              ANTILOPE_pappus        5588
-    #                     obs                     645
-    # 2350.0              ANTILOPE_pappus        6132
-    #                     obs                     771
-    # 2650.0              ANTILOPE_pappus        3514
-    #                     obs                     436
-    # 2950.0              ANTILOPE_pappus        1052
-    #                     obs                     112
-    # 3250.0              ANTILOPE_pappus         100
-    #                     obs                       3
-    # for idx, np in enumerate(npixels.values.flatten().flip()):
-    #
+
     # Compute configuration-specific values for annotation positions
     nexperiments = len(dataplot.experiment.unique())
     dy = 1 / (nexperiments + 1)
