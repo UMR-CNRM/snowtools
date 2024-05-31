@@ -67,7 +67,7 @@ def violin_plot(xpids, obs, var, date, mask=True, member=None):
 
     # Construct *dataplot* DataFrame with elevation bands as index and 1 column per product
     obs = obs.rename({'x': 'xx', 'y': 'yy'})
-    filtered_obs = clusters.per_alt(obs[var], elevation_bands, mnt)
+    filtered_obs = clusters.slices(obs[var], mnt, elevation_bands)
     dataplot = filtered_obs.to_dataframe(name='obs').dropna().reset_index().drop(columns=['time'])
     try:
         dataplot = dataplot.drop(columns=['xx', 'yy'])
@@ -100,7 +100,7 @@ def violin_plot(xpids, obs, var, date, mask=True, member=None):
         # Concatenate datasets into the *dataplot* DataFrame
         dataplot = pd.concat([dataplot, df])
 
-    dataplot.columns = dataplot.columns.str.replace('middle_slices_ZS', 'Elevation Bands (m)')
+    dataplot.columns = dataplot.columns.str.replace('slices', 'Elevation Bands (m)')
     dataplot = dataplot.melt('Elevation Bands (m)', var_name='experiment', value_name=var)
 
     title = f'Pleiades, {geometry}, {date[:8]}\n'
@@ -115,7 +115,7 @@ def filter_simu(xpid, obs, subdir, var, date, mnt):
     simu = decode_time(simu)
     simu = simu.sel({'xx': obs.xx.data, 'yy': obs.yy.data, 'time': pd.to_datetime(date[:8], format='%Y%m%d')})
     simu = xr.where(~obs.isnull(), simu, np.nan)
-    filtered_simu = clusters.per_alt(simu[var], elevation_bands, mnt)
+    filtered_simu = clusters.slices(simu[var], mnt, elevation_bands)
 
     df = filtered_simu.to_dataframe(name=xpid).dropna().reset_index().drop(columns=['xx', 'yy'])
     return df

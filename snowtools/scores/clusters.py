@@ -39,24 +39,31 @@ def per_alt(data, ls_alt, mnt, elevation_label=None):
     return data_per_alt
 
 
-def per_uncertainty(data, uncertainty, thresholds):
-    out = []
-    for i in range(0, len(thresholds) - 1):
-        out.append(data.where((uncertainty >= thresholds[i]) & (uncertainty < thresholds[i + 1])))
-    out = xr.concat(out, dim='middle_slices')
-    out['middle_slices'] = thresholds[1:] - (thresholds[1] - thresholds[0]) / 2
+def by_slices(data, criterion, thresholds):
+    """
+      Groups data into slices according to a given criterion
+
+      Args:
+          data      : The input dataset containing the data to be grouped.
+          criterion : Dataarray of the variable to use for clustering
+          threshold : A list of values defining the boundaries of each slice.
+                  Values should be in ascending order.
+
+      Returns:
+          A new dataset with the same variables as the input data, but with an
+          additional dimension 'middle_slices' corresponding to the mean value of each
+          slice. Each element along this dimension represents data within a
+          specific range.
+
+      THIS METHOD SHOULD BE USED INSTEAD OF THE "per_alt" ONE
+    """
+    thresholds = [float(value) for value in thresholds]
+    out    = []
+    labels = []
+    for i in range(len(thresholds) - 1):
+        out.append(data.where((criterion >= thresholds[i]) & (criterion < thresholds[i + 1])))
+        labels.append(f'{thresholds[i]}-{thresholds[i+1]}')
+    out = xr.concat(out, dim='slices')
+    out['slices'] = labels
 
     return out
-
-
-def groupby_elevation(ds, elevations, mnt=None, elevation_label=None):
-    """
-    Add an elevation band dimension to a dataset to ienable the use of "groupby" method
-    to compute diagnostics by elevation bands.
-
-    It is assumed that "ds" contains a 'ZS' (relief elevation) variable.
-    """
-    ds['elevation_band'] = ds.ZS.copy()
-    gb = ds.groupby_bins('ZS', elevations, labels=elevations[1:], restore_coord_dims=True, include_lowest=True)
-    gb.var(keep_attrs=True)
-    gb.groups

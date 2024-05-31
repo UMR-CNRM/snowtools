@@ -127,7 +127,7 @@ def plot_fields(xpids, obs, var, member=None):
 def violin_plot(xpids, obs, var, member=None, mask=True):
     mnt = read_mnt()
 
-    filtered_obs = clusters.per_alt(obs, elevation_bands, mnt.ZS)
+    filtered_obs = clusters.slices(obs, mnt.ZS, elevation_bands)
     dataplot = filtered_obs.to_dataframe(name='obs').dropna().reset_index().drop(columns=['xx', 'yy'])
 
     for xpid in xpids:
@@ -149,7 +149,7 @@ def violin_plot(xpids, obs, var, member=None, mask=True):
 
         dataplot = pd.concat([dataplot, df])
 
-    dataplot.columns = dataplot.columns.str.replace('middle_slices_ZS', 'Elevation Bands (m)')
+    dataplot.columns = dataplot.columns.str.replace('slices', 'Elevation Bands (m)')
     dataplot = dataplot.melt('Elevation Bands (m)', var_name='experiment', value_name=var)
 
     figname = f'{var}_{datebegin}_{dateend}.pdf'
@@ -165,7 +165,7 @@ def filter_simu(xpid, subdir, mnt):
     # TODO : résoudre le problème de décallage des coordonnées en amont
     simu['xx'] = mnt['xx']
     simu['yy'] = mnt['yy']
-    filtered_simu = clusters.per_alt(simu[var], elevation_bands, mnt.ZS)
+    filtered_simu = clusters.slices(simu[var], mnt.ZS, elevation_bands)
     df = filtered_simu.to_dataframe(name=xpid).dropna().reset_index().drop(columns=['xx', 'yy'])
     return df
 
