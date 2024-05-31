@@ -26,6 +26,8 @@ import xarray as xr
 import numpy as np
 import argparse
 
+import snowtools.tools.xarray_preprocess as xrp
+
 # DEFAULT_NETCDF_FORMAT = 'NETCDF3_CLASSIC'  # WARNING : to_netcdf command very slow (>15')
 DEFAULT_NETCDF_FORMAT = 'NETCDF4_CLASSIC'
 
@@ -83,27 +85,11 @@ def update_precipitation(forcing, subdir=None):
     forcing.time.encoding['units'] = f'hours since {forcing.time.data[0]}'
 
     precipitation = precipitation.sel({'time': dates})
-    if hasattr(precipitation, 'xx'):
-        precipitation = precipitation.rename({'xx': 'x', 'yy': 'y'})
-    elif hasattr(precipitation, 'latitude'):
-        precipitation = precipitation.rename({'longitude': 'x', 'latitude': 'y'})
+    precipitation = xrp.update_varname(precipitation)
     precipitation = precipitation.transpose('time', 'y', 'x')
 
-    # Replace Rainf/Snowf variables by the ones from the ensemble analysis
-    # TODO : prévoir de pouivoir passer en argument le nom des variables
-    if hasattr(precipitation, 'Rainf'):
-        forcing['Rainf'].data = precipitation['Rainf'].data / 3600.
-    elif hasattr(precipitation, 'Rainf_ds'):  # Sabine's script name
-        forcing['Rainf'].data = precipitation['Rainf_ds'].data / 3600.
-    else:
-        raise ValueError("Rain variable not in ['Rainf', 'Rainf_ds']")
-
-    if hasattr(precipitation, 'Snowf'):
-        forcing['Snowf'].data = precipitation['Snowf'].data / 3600.
-    elif hasattr(precipitation, 'Snowf_ds'):
-        forcing['Snowf'].data = precipitation['Snowf_ds'].data / 3600.
-    else:
-        raise ValueError("Snow variable not in ['Snowf', 'Snowf_ds']")
+    forcing['Rainf'].data = precipitation['Rainf'].data / 3600.
+    forcing['Snowf'].data = precipitation['Snowf'].data / 3600.
 
     return forcing
 

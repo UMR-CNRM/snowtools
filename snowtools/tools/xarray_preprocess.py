@@ -1,6 +1,6 @@
 import xarray as xr
 
-variables_map = {'x': 'xx', 'y': 'yy'}
+variables_map = {'x': 'xx', 'y': 'yy', 'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf'}
 
 
 def preprocess(ds):
@@ -10,6 +10,7 @@ def preprocess(ds):
 
 
 def update_varname(ds):
+
     update_dict = {key: variables_map[key] for key in ds.var() if key in variables_map.keys()}
     update_dict.update({key: variables_map[key] for key in ds.coords if key in variables_map.keys()})
     ds = ds.rename(update_dict)
