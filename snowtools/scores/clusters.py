@@ -12,6 +12,22 @@ Collection of functions to clusterize data.
 import xarray as xr
 import numpy as np
 
+# Dict to convert the numeral code to the name of the 10 most common
+# landforms types defined by https://doi.org/10.1016/j.geomorph.2012.11.005
+geomorpho_map = dict([
+    (1, 'Flat'),
+    (2, 'Peak (summit)'),
+    (3, 'Ridge'),
+    (4, 'Shoulder'),
+    (5, 'Spur (Convex)'),
+    (6, 'Slope'),
+    (7, 'Hollow (concave)'),
+    (8, 'Footslope'),
+    (9, 'Valley'),
+    (10, 'Pit'),
+])
+
+
 def per_alt(data, ls_alt, mnt):
     """
       Groups data into slices based on altitude ranges.
@@ -68,9 +84,9 @@ def by_slices(data, criterion, thresholds):
     return out
 
 
-def per_landform_types(data,landform, test_coords=False):
+def per_landform_types(data, landform, test_coords=False):
     """
-    Groups data into landform types as defined by https://doi.org/10.1016/j.geomorph.2012.11.00
+    Groups data into landform types as defined by https://doi.org/10.1016/j.geomorph.2012.11.005
 
     Args:
         data: The input dataset containing the data to be grouped.
@@ -87,41 +103,21 @@ def per_landform_types(data,landform, test_coords=False):
         print('Testing coordinates')
         for k in data.coords.keys():
             for m in landform.coords.keys():
-                try: np.intersect1d(landform[m],data[k])
-                except: print('No common coordinate between '+str(m)+' and '+str(k))
-                else: print('Common coordinate found between '+str(m)+' and '+str(k))
+                try:
+                    np.intersect1d(landform[m], data[k])
+                except:
+                    print('No common coordinate between {m} and {k}')
+                else:
+                    print('Common coordinate found between {m} and {k}')
 
-    ii=0
+    ii = 0
     for i in np.unique(landform.values)[~np.isnan(np.unique(landform.values))]:
-        if ii==0:
-            dd=xr.where(landform.values==i,data,np.nan).assign_coords({'landforms':geomorpho_switch(i)}).expand_dims('landforms')
-            ii=ii+1
+        mask = xr.where(landform.values == i, data, np.nan)
+        mask = mask.assign_coords({'landforms': geomorpho_map[i]}).expand_dims('landforms')
+        if ii == 0:
+            dd = mask
+            ii = ii + 1
         else:
-            dd=xr.concat((dd,xr.where(landform.values==i,data,np.nan).assign_coords({'landforms':geomorpho_switch(i)}).expand_dims('landforms')),'landforms')
+            dd = xr.concat((dd, mask), 'landforms')
 
     return dd
-
-
-
-def geomorpho_switch(i):
-    """
-    Function to convert the numeral code to the name of the 10 most common
-    landforms types defined by https://doi.org/10.1016/j.geomorph.2012.11.005
-
-    Args:
-        i: the numeral landform code
-
-    Returns:
-        The litteral translation of the code according to paper convention.
-    """
-
-    if i==1.: return 'Flat'
-    if i==2.: return 'Peak (summit)'
-    if i==3.: return 'Ridge'
-    if i==4.: return 'Shoulder'
-    if i==5.: return 'Spur (Convex)'
-    if i==6.: return 'Slope'
-    if i==7.: return 'Hollow (concave)'
-    if i==8.: return 'Footslope'
-    if i==9.: return 'Valley'
-    if i==10.: return 'Pit'
