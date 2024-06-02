@@ -1,18 +1,29 @@
 import xarray as xr
 
-variables_map = {'x': 'xx', 'y': 'yy', 'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf'}
+dimension_map = {'x': 'xx', 'y': 'yy'}
+variables_map = {'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf'}
 
 
-def preprocess(ds):
-    ds = decode_time(ds)
+def preprocess(ds, decode_time=True):
+    if decode_time:
+        ds = decode_time(ds)
     ds = update_varname(ds)
+    ds = update_dimname(ds)
     return ds
 
 
 def update_varname(ds):
+    if isinstance(ds, xr.core.dataarray.DataArray):
+        if ds.name in variables_map:
+            ds = ds.rename(variables_map[ds.name])
+    else:
+        update_dict = {key: variables_map[key] for key in ds.var() if key in variables_map.keys()}
+        ds = ds.rename(update_dict)
+    return ds
 
-    update_dict = {key: variables_map[key] for key in ds.var() if key in variables_map.keys()}
-    update_dict.update({key: variables_map[key] for key in ds.coords if key in variables_map.keys()})
+
+def update_dimname(ds):
+    update_dict = {key: dimension_map[key] for key in ds.coords if key in dimension_map.keys()}
     ds = ds.rename(update_dict)
     return ds
 
