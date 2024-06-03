@@ -6,7 +6,7 @@ variables_map = {'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf'}
 
 def preprocess(ds, decode_time=True):
     if decode_time:
-        ds = decode_time(ds)
+        ds = decode_time_dimension(ds)
     ds = update_varname(ds)
     ds = update_dimname(ds)
     return ds
@@ -28,7 +28,7 @@ def update_dimname(ds):
     return ds
 
 
-def decode_time(ds):
+def decode_time_dimension(ds):
     """
     Manually decode time variable since other variables can not be decoded automatically
     """
