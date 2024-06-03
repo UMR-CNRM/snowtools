@@ -28,6 +28,13 @@ geomorpho_map = dict([
 ])
 
 
+label_map = dict(
+    elevation   = 'Elevation (m)',
+    uncertainty = 'Uncertainty',
+    landforms   = 'Geomorphon',
+)
+
+
 def per_alt(data, ls_alt, mnt):
     """
       Groups data into slices based on altitude ranges.
@@ -105,7 +112,7 @@ def per_landform_types(data, landform, test_coords=False):
             for m in landform.coords.keys():
                 try:
                     np.intersect1d(landform[m], data[k])
-                except:
+                except:  # TODO : Precise which Exceptions are concerned ?
                     print('No common coordinate between {m} and {k}')
                 else:
                     print('Common coordinate found between {m} and {k}')

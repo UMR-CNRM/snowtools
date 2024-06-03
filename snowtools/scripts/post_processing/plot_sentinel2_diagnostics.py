@@ -26,6 +26,8 @@ from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.scores import clusters
 from snowtools.plots.maps import plot2D
 from snowtools.plots.boxplots import violinplot
+from snowtools.tools import common_tools as ct
+import snowtools.tools.xarray_preprocess as xrp
 
 members_map = dict(
     safran         = None,
@@ -39,6 +41,9 @@ members_map = dict(
     EnKF36         = range(1, 17),  # TODO : syntaxe à implémenter
     EnKF36_pappus  = range(1, 17),  # TODO : syntaxe à implémenter
 )
+
+# Retrieve dictionnary to map clustering type to a proper label
+label_map = clusters.label_map
 
 
 def parse_command_line():
@@ -57,8 +62,11 @@ def parse_command_line():
     parser.add_argument('-a', '--vapp', type=str, default='edelweiss', choices=['s2m', 'edelweiss'],
                         help="Application that produced the target file")
 
-    parser.add_argument('-z', '--elevation_bands', nargs='+', type=int, default=np.arange(1900, 3600, 300),
-                        help='Define elevation bands for clustering')
+    parser.add_argument('-t', '--thresholds', nargs='+', default=np.arange(2, 30, 6),
+                        help='Define bands for clustering (default for uncertainty clustering)')
+
+    parser.add_argument('-c', '--clustering', type=str, default='uncertainty', choices=label_map.keys(),
+                        help='Define clustering type')
 
     parser.add_argument('-w', '--workdir', type=str, default=f'{os.environ["HOME"]}/workdir/EDELWEISS/diag',
                         help='Working directory')
@@ -66,128 +74,21 @@ def parse_command_line():
     parser.add_argument('-g', '--geometry', type=str, default='GrandesRousses250m',
                         help='Geometry of the simulation(s) / observation')
 
-    parser.add_argument('--mask', type=str,
+    parser.add_argument('--mask', type=str, default=None,
                         help="Absolute path to the mask file (if any)"
                              "WARNING : bad practice")
 
-    parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.1@vernaym",
+    parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.2@vernaym",
                         help="User environment for static resources (format 'uenv:name@user')")
+
+    parser.add_argument('-f', '--plot_fields', action='store_true',
+                        help="Wether to plot fields or not (avoid duplicates)")
 
     args = parser.parse_args()
     return args
 
 
-def read_mnt():
-    mnt = xr.open_dataset(os.path.join(mntdir, "MNTLouisGRoussecorrected.nc"))
-    return mnt
-
-
-def plot_fields(xpids, obs, var, member=None):
-
-    vmin = obs.min()
-    vmax = obs.max()
-
-    # Plot observation field
-    cmap = plt.cm.Greens  # TODO : chose a better colormap ?
-    savename = f'{var}_Sentinel2_{datebegin}_{dateend}.pdf'
-    plot2D.plot_field(obs, savename, cmap=cmap, vmin=vmin, vmax=vmax)
-
-    for xpid in xpids:
-        shortid = xpid.split('@')[0]
-        if member is None:
-            simu = xr.open_dataset(f'DIAG_{shortid}.nc', decode_times=False)
-        else:
-            # Verrue : trouver une solution standard plus propre
-            if member == 1:
-                # "Deterministic" member=0 by default (WARNING : different from the current 's2m oper' convention)
-                simu = xr.open_dataset(f'DIAG_{shortid}.nc', decode_times=False)
-            else:
-                simu = xr.open_mfdataset([f'mb{mb:03d}/DIAG_{shortid}.nc' for mb in range(member)],
-                                         combine='nested', concat_dim='member', decode_times=False)
-        if 'x' in simu.keys():
-            simu = simu.rename({'x': 'xx', 'y': 'yy'})
-        # TODO : résoudre le problème de décallage des coordonnées en amont (dans OPTIONS.nam)
-        simu['xx'] = obs['xx']
-        simu['yy'] = obs['yy']
-
-        if member is not None and member > 1:
-            simu['member'] = range(member)
-            tmp = simu.mean(dim='member')
-        else:
-            tmp = simu
-        tmp = tmp.compute()
-        savename = f'{var}_{shortid}_{datebegin}_{dateend}.pdf'
-        cmap = plt.cm.Greens  # TODO : chose a better colormap ?
-        plot2D.plot_field(tmp[var], savename, cmap=cmap, vmin=vmin, vmax=vmax)
-        savename = f'diff_{var}_{shortid}_{datebegin}_{dateend}.pdf'
-        diff = tmp[var] - obs
-        plot2D.plot_field(diff, savename, cmap=plt.cm.RdBu, vmin=-100, vmax=100)
-
-
-def violin_plot(xpids, obs, var, member=None, mask=True):
-    mnt = read_mnt()
-
-    filtered_obs = clusters.slices(obs, mnt.ZS, elevation_bands)
-    dataplot = filtered_obs.to_dataframe(name='obs').dropna().reset_index().drop(columns=['xx', 'yy'])
-
-    for xpid in xpids:
-        print(xpid)
-        shortid = xpid.split('@')[0]
-        if member is None:
-            subdir = ''
-            df = filter_simu(shortid, subdir, mnt)
-        else:
-            df = None
-            for mb in range(member):
-                print(mb)
-                subdir = f'mb{mb:03d}'
-                dfm = filter_simu(shortid, subdir, mnt)
-                if df is not None:
-                    df = pd.concat([df, dfm], ignore_index=True)
-                else:
-                    df = dfm
-
-        dataplot = pd.concat([dataplot, df])
-
-    dataplot.columns = dataplot.columns.str.replace('slices', 'Elevation Bands (m)')
-    dataplot = dataplot.melt('Elevation Bands (m)', var_name='experiment', value_name=var)
-
-    figname = f'{var}_{datebegin}_{dateend}.pdf'
-    violinplot.plot_ange(dataplot, var, figname, xmax=375, violinplot=False)
-
-
-def filter_simu(xpid, subdir, mnt):
-    diagname = os.path.join(subdir, f'DIAG_{xpid}.nc')
-    simu = xr.open_dataset(diagname, decode_times=False)
-    # TODO : gérer le problème de coordonnées pour éviter les "rename" très lents !
-    if 'x' in simu.keys():
-        simu = simu.rename({'x': 'xx', 'y': 'yy'})
-    # TODO : résoudre le problème de décallage des coordonnées en amont
-    simu['xx'] = mnt['xx']
-    simu['yy'] = mnt['yy']
-    filtered_simu = clusters.slices(simu[var], mnt.ZS, elevation_bands)
-    df = filtered_simu.to_dataframe(name=xpid).dropna().reset_index().drop(columns=['xx', 'yy'])
-    return df
-
-
-if __name__ == '__main__':
-
-    mntdir = '/home/vernaym/These/DATA'
-
-    args = parse_command_line()
-    datebegin       = args.datebegin
-    dateend         = args.dateend
-    xpids           = args.xpids
-    workdir         = args.workdir
-    geometry        = args.geometry
-    vapp            = args.vapp
-    elevation_bands = args.elevation_bands
-    mask            = args.mask
-    uenv            = args.uenv
-
-    if not os.path.exists(workdir):
-        os.makedirs(workdir)
-    os.chdir(workdir)
+def main():
 
     try:
         # Try to get the MASK file with vortexIO
@@ -202,6 +103,8 @@ if __name__ == '__main__':
             if not os.path.exists('MASK.nc'):  # TODO remplacer le lien par sécurité ?
                 os.symlink(mask, 'MASK.nc')
             mask = True
+
+    cluster = cluster_criterion(clustering)
 
     # 1. Get all input data
     for xpid in xpids:
@@ -238,15 +141,17 @@ if __name__ == '__main__':
             obs = xr.open_dataset('/home/vernaym/These/DATA/Sentinel2/SMOD_20210901.nc')
         elif var == 'scd_concurent':
             obs = xr.open_dataset('/home/vernaym/These/DATA/Sentinel2/SCD_20210901.nc')
+        obs = xrp.preprocess(obs.Band1, decode_time=False)
+        cluster = cluster.interp({'xx': obs.xx, 'yy': obs.yy}, method='nearest')
 
         if mask:
-            from snowtools.scripts.post_processing import common_tools as ct
             # mask glacier/forest covered pixels
             obs = ct.maskgf(obs)
 
         # compare(obs, var=var)
-        violin_plot(xpids, obs['Band1'], var, member=member)  # Violinplots by elevation range
-        plot_fields(xpids, obs['Band1'], var, member=member)  # Field difference
+        violin_plot(xpids, obs, var, cluster, member=member)  # Violinplots by elevation range
+        if plot_fields:
+            plot_all_fields(xpids, obs, var, member=member)  # Field difference
 
     # 3. Clean data
     for xpid in xpids:
@@ -256,3 +161,134 @@ if __name__ == '__main__':
         else:
             for member in range(member):
                 os.remove(f'mb{member:03d}/DIAG_{shortid}.nc')
+
+
+def cluster_criterion(clustering):
+
+    if clustering == 'elevation':
+        # Get Domain's DEM in case ZS not in simulation file
+        io.get_const(uenv, 'relief', geometry, filename='TARGET_RELIEF.nc', gvar='RELIEF_GRANDESROUSSES250M_L93')
+        mnt = xr.open_dataset('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
+        mnt = xrp.preprocess(mnt, decode_time=False)
+        mask = mnt.ZS
+    elif clustering == 'uncertainty':
+        ds = xr.open_dataset('/home/vernaym/workdir/ASSIMILATION/mask/GrandesRousses/Observation_error_L93.nc')
+        ds = xrp.preprocess(ds, decode_time=False)
+        mask = ds.Uncertainty
+    elif clustering == 'landforms':
+        # Get Domain's DEM in case ZS not in simulation file
+        io.get_const(uenv=uenv, kind='geomorph', geometry=geometry, filename='GEOMORPH.nc')
+        geomorph = xr.open_dataset('GEOMORPH.nc')  # Target domain's Geomorphons mask
+        mask = xrp.preprocess(geomorph.Band1, decode_time=False)
+    mask = mask.rename(clustering)
+
+    return mask
+
+
+def plot_all_fields(xpids, obs, var, member=None):
+
+    vmin = obs.min()
+    vmax = obs.max()
+
+    # Plot observation field
+    cmap = plt.cm.Greens  # TODO : chose a better colormap ?
+    savename = f'{var}_Sentinel2_{datebegin}_{dateend}.pdf'
+    plot2D.plot_field(obs, savename, cmap=cmap, vmin=vmin, vmax=vmax)
+
+    for xpid in xpids:
+        shortid = xpid.split('@')[0]
+        if member is None:
+            simu = xr.open_dataset(f'DIAG_{shortid}.nc', decode_times=False)
+        else:
+            # Verrue : trouver une solution standard plus propre
+            if member == 1:
+                # "Deterministic" member=0 by default (WARNING : different from the current 's2m oper' convention)
+                simu = xr.open_dataset(f'DIAG_{shortid}.nc', decode_times=False)
+            else:
+                simu = xr.open_mfdataset([f'mb{mb:03d}/DIAG_{shortid}.nc' for mb in range(member)],
+                                         combine='nested', concat_dim='member', decode_times=False)
+        simu = xrp.preprocess(simu, decode_time=False)
+
+        if member is not None and member > 1:
+            simu['member'] = range(member)
+            tmp = simu.mean(dim='member')
+        else:
+            tmp = simu
+        tmp = tmp.compute()
+        savename = f'{var}_{shortid}_{datebegin}_{dateend}.pdf'
+        cmap = plt.cm.Greens  # TODO : chose a better colormap ?
+        plot2D.plot_field(tmp[var], savename, cmap=cmap, vmin=vmin, vmax=vmax)
+        savename = f'diff_{var}_{shortid}_{datebegin}_{dateend}.pdf'
+        diff = tmp[var] - obs
+        plot2D.plot_field(diff, savename, cmap=plt.cm.RdBu, vmin=-100, vmax=100)
+
+
+def violin_plot(xpids, obs, var, mask, member=None):
+
+    if clustering in ['elevation', 'uncertainty']:
+        filtered_obs = clusters.by_slices(obs, mask, thresholds)
+    elif clustering == 'landforms':
+        filtered_obs = clusters.per_landform_types(obs, mask)
+    dataplot = filtered_obs.to_dataframe(name='obs').dropna().reset_index().drop(columns=['xx', 'yy'])
+
+    for xpid in xpids:
+        print(xpid)
+        shortid = xpid.split('@')[0]
+        if member is None:
+            subdir = ''
+            df = filter_simu(shortid, subdir, mask, var)
+        else:
+            df = None
+            for mb in range(member):
+                print(mb)
+                subdir = f'mb{mb:03d}'
+                dfm = filter_simu(shortid, subdir, mask, var)
+                if df is not None:
+                    df = pd.concat([df, dfm], ignore_index=True)
+                else:
+                    df = dfm
+
+        dataplot = pd.concat([dataplot, df])
+
+    dataplot = dataplot.rename(columns={'slices': label_map[clustering], clustering: label_map[clustering]})
+    dataplot = dataplot.melt(label_map[clustering], var_name='experiment', value_name=var)
+
+    figname = f'{var}_by_{clustering}_{datebegin}_{dateend}.pdf'
+    violinplot.plot_ange(dataplot, var, figname, yaxis=label_map[clustering], violinplot=False, xmax=375)
+
+
+def filter_simu(xpid, subdir, mask, var):
+    diagname = os.path.join(subdir, f'DIAG_{xpid}.nc')
+    simu = xr.open_dataset(diagname, decode_times=False)
+    simu = xrp.preprocess(simu[var], decode_time=False)
+    if clustering in ['elevation', 'uncertainty']:
+        filtered_simu = clusters.by_slices(simu, mask, thresholds)
+    elif clustering == 'landforms':
+        filtered_simu = clusters.per_landform_types(simu, mask)
+    df = filtered_simu.to_dataframe(name=xpid).dropna().reset_index().drop(columns=['xx', 'yy'])
+    return df
+
+
+if __name__ == '__main__':
+
+    mntdir = '/home/vernaym/These/DATA'
+
+    args = parse_command_line()
+    datebegin       = args.datebegin
+    dateend         = args.dateend
+    xpids           = args.xpids
+    workdir         = args.workdir
+    geometry        = args.geometry
+    vapp            = args.vapp
+    mask            = args.mask
+    uenv            = args.uenv
+    clustering      = args.clustering
+    thresholds      = args.thresholds
+    plot_fields     = args.plot_fields
+
+    if not os.path.exists(workdir):
+        os.makedirs(workdir)
+    os.chdir(workdir)
+
+    main()
+    ct.execution_info(workdir)
