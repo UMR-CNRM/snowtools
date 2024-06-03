@@ -21,7 +21,7 @@ import scipy as scp
 
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.scores import clusters
-from snowtools.scripts.post_processing import common_tools as ct
+from snowtools.tools import common_tools as ct
 
 
 def parse_command_line():

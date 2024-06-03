@@ -242,7 +242,7 @@ def execute(subdir, threshold=0.2, mask=True):
         diag = xr.merge([diag, pro['ZS']])
 
     if mask:
-        from snowtools.scripts.post_processing import common_tools as ct
+        from snowtools.tools import common_tools as ct
         # mask glacier/forest covered pixels
         diag = ct.maskgf(diag)
 
