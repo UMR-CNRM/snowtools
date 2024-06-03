@@ -39,7 +39,7 @@ from bronx.stdtypes.date import Date
 
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.plots.maps import plot2D
-from snowtools.scripts.post_processing import common_tools as ct
+from snowtools.tools import common_tools as ct
 import snowtools.tools.xarray_preprocess as xrp
 
 import matplotlib.pyplot as plt
@@ -120,7 +120,7 @@ def parse_command_line():
     parser.add_argument('-w', '--workdir', type=str, default=f'{os.environ["HOME"]}/workdir/EDELWEISS/plot',
                         help='Working directory')
 
-    parser.add_argument('--mask', type=str,
+    parser.add_argument('--mask', type=str, default=None,
                         help="Absolute path to the mask file (if any)"
                              "WARNING : bad practice")
 
@@ -164,7 +164,10 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
         vmax = vmax_map[var] if var in vmax_map.keys() else tmp.max()
         vmin = vmin_map[var] if var in vmin_map.keys() else tmp.min()
 
-        addpoint = reference_point[domain]
+        if domain is not None:
+            addpoint = reference_point[domain]
+        else:
+            addpoint = None
         if var in cmap.keys():
             plot2D.plot_field(tmp, savename, vmin=vmin, vmax=vmax, cmap=cmap[var], addpoint=addpoint)
         else:
@@ -195,20 +198,22 @@ if __name__ == '__main__':
     os.chdir(workdir)
 
     # 1. Get all input data
-
-    try:
-        # Try to get the MASK file with vortexIO
-        mask = io.get_const(uenv, 'mask', geometry)
-        mask = True
-    except (NameError, ModuleNotFoundError):
-        if mask is not None:
-            # If a mask file was provided in argument, use it
-            # Get mask file
-            # import shutil
-            # shutil.copyfile(mask, 'mask.nc')
-            if not os.path.exists('MASK.nc'):  # TODO remplacer le lien par sécurité ?
-                os.symlink(mask, 'MASK.nc')
+    if mask is not None:
+        try:
+            # Try to get the MASK file with vortexIO
+            mask = io.get_const(uenv, 'mask', geometry)
             mask = True
+        except (NameError, ModuleNotFoundError):
+            if mask is not None:
+                # If a mask file was provided in argument, use it
+                # Get mask file
+                # import shutil
+                # shutil.copyfile(mask, 'mask.nc')
+                if not os.path.exists('MASK.nc'):  # TODO remplacer le lien par sécurité ?
+                    os.symlink(mask, 'MASK.nc')
+                mask = True
+    else:
+        mask = False
 
     for xpid in xpids:
         # TODO : gérer ça plus proprement
@@ -239,7 +244,7 @@ if __name__ == '__main__':
             getattr(io, f'get_{kind.lower()}')(xpid=xpid, geometry=geometry, **kw)
 
         ds = xr.open_dataset(filename)
-        ds = xrp.update_varname(ds)
+        ds = xrp.preprocess(ds)
 
         if domain is not None:
             dom = domain_map[domain]
