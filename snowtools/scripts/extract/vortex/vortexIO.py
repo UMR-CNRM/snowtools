@@ -593,9 +593,10 @@ def pro(action, xpid, geometry, **kw):
     return pro
 
 
-def diag(action, xpid, geometry, **kw):
+def diag_surfex(action, xpid, geometry, **kw):
     """
-    Main function for DIAG (SURFEX-Crocus diagnostics) files.
+    Main function for DIAG (SURFEX diagnostics) files.
+    *SurfexPeriodDiagnostics* / *SurfexDiagnostics* (common/data/diagnostics.py)
     """
 
     kw = check_period('DIAG', **kw)
@@ -606,6 +607,39 @@ def diag(action, xpid, geometry, **kw):
         scope     = 'SesonalSnowCoverDiagnostic',
         nativefmt = 'netcdf',
         model     = 'surfex',
+    )
+
+    # DIAG-specific defaults values that can be overwritten by the function's kw
+    specific_default_footprints = dict(
+        filename = 'DIAG.nc',
+        block    = 'diag',
+    )
+
+    # Create full description dictionnary
+    description = get_full_description(specific_footprints, kw, specific_default_footprints)
+
+    # Call the common get/put method
+    diag = function_map()[action](xpid, geometry, **description)
+    print(t.prompt, 'DIAG =', diag)
+    print()
+
+    return diag
+
+
+def diag(action, xpid, geometry, **kw):
+    """
+    Main function for DIAG (SURFEX-Crocus diagnostics) resources.
+    *Postproc* (cen/data/flow.py)
+    """
+
+    kw = check_period('DIAG', **kw)
+
+    # DIAG-specific footprints
+    specific_footprints = dict(
+        kind      = 'SnowpackSimulation',
+        # scope     = 'SnowpackSimulation',
+        nativefmt = 'netcdf',
+        model     = 'postproc',
     )
 
     # DIAG-specific defaults values that can be overwritten by the function's kw
