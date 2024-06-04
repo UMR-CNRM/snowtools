@@ -24,10 +24,6 @@ class Diag_sentinel2(_VortexTask):
         self.sh.title('Toolbox input PRO')
         self.pro = io.get_pro(**self.common_kw, members=self.conf.members)
 
-        # Get a static mask file to remove glacier/forest pixels
-        self.sh.title('Toolbox input MASK')
-        self.mask = io.get_const(kind='mask', **self.common_kw)
-
     def algo(self):
         """
         TODO
@@ -38,7 +34,6 @@ class Diag_sentinel2(_VortexTask):
             kind         = 'scd',
             datebegin    = self.conf.datebegin,
             dateend      = self.conf.dateend,
-            mask         = self.mask[0],
             engine       = 'algo',  # _CENTaylorRun algo component "family" to execution a piece of python code
             ntasks       = self.conf.ntasks,  # Do not forget to set the number of tasks for parallelisation
             role_members = 'SnowpackSimulation',
