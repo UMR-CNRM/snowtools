@@ -117,6 +117,10 @@ import cen  # Import necessary to load vortex CEN-specific ressourees
 from vortex import toolbox
 
 import footprints
+# To activate the footprint's debug mode, un-comment the 2 following lines
+#import logging
+#footprints.logger.setLevel(logging.DEBUG)
+
 
 toolbox.active_now = True  # overwritten by the default "now" footprint
 
@@ -319,7 +323,7 @@ def put(xpid, geometry, **kw):
 def footprints_kitchen(xpid, geometry, **kw):
 
     description = dict(
-        experiment     = add_user(xpid),
+        experiment     = add_user(xpid),  # Mandatory for "FreeXPid" stdattrs
         geometry       = geometry,
     )
 

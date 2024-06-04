@@ -34,13 +34,20 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
     * put_remote_inputs
 
     See their respective documentation for more details.
+
+
+    # TODO : consulter la doc : http://intra.cnrm.meteo.fr/algopy/trainings/vortex_dev2022_1/presentation/beamer/vortex_dev_jobs2_presentation.pdf
+
     '''
+
 
     def process(self):
         """
         Main method definig the task's sequence of actions
         """
         # TODO : passer toute la conf en kw ?
+        # Les variables de conf suivante sont automatiquement passées à footprint :
+        # model, date, cutoff, geometry, cycle et namespace
         self.common_kw   = dict(
             datebegin = self.conf.datebegin,
             dateend   = self.conf.dateend,

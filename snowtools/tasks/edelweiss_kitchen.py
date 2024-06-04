@@ -292,6 +292,10 @@ class Edelweiss_kitchen(vortex_kitchen):
           dictionary)
         - rename all jobs 'surfex_mpi' so that they all use the same section of
           the configuration file
+
+        # TODO : Mettre en place une solution plus Vortexienne en utilisant les Family :
+        http://intra.cnrm.meteo.fr/algopy/trainings/vortex_dev2022_1/presentation/beamer/vortex_dev_jobs2_presentation.pdf
+
         """
 
         # Retrieve the number of FORCING files and launch 1 job per file

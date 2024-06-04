@@ -116,4 +116,4 @@ class ExtractDates(_VortexTask):
         # user = self.env['USER']
         # storeroot = f'/cnrm/cen/users/NO_SAVE/{user}/cache'
         # self.diag = io.put_pro(members=self.conf.members, filename=f'PRO_{suffix}.nc',
-        #        namebuild=None, storeroot=storeroot, **self.common_kw,)
+        #        namebuild=None, storeroot=storeroot, storage='sxcen.cnrm.meteo.fr', **self.common_kw)

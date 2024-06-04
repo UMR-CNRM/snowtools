@@ -11,7 +11,7 @@ WORK IN PROGRESS
 example:
 --------
 >>> p plot_sentinel2_diagnostics.py -b 2021080207 -e 2022080106
-    -x safran@vernaym safran_pappus@vernaym ANTILOPE@vernaym ANTILOPE_pappus@vernaym RS27@vernaym RS27_pappus@vernaym
+    -x SAFRAN@vernaym SAFRAN_pappus@vernaym ANTILOPE@vernaym ANTILOPE_pappus@vernaym RS27@vernaym RS27_pappus@vernaym
 
 '''
 
@@ -32,6 +32,8 @@ import snowtools.tools.xarray_preprocess as xrp
 members_map = dict(
     safran         = None,
     safran_pappus  = None,
+    SAFRAN         = None,
+    SAFRAN_pappus  = None,
     RawData        = None,
     RawData_pappus = None,
     RS27           = 1,  # post-processed ANTILOPE only
@@ -120,7 +122,7 @@ def main():
             deb = datebegin  # 2021080207
 
         # TODO : à gérer autrement pour être flexible
-        if shortid in ['safran', 'ANTILOPE', 'safran_pappus', 'ANTILOPE_pappus']:
+        if shortid in ['safran', 'ANTILOPE', 'safran_pappus', 'ANTILOPE_pappus', 'SAFRAN', 'SAFRAN_pappus']:
             member = None
         else:
             member = 0
