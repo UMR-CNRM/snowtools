@@ -1,0 +1,147 @@
+import os
+import argparse
+
+import cen  # Import necessary to load vortex CEN-specific ressourees
+from vortex import toolbox
+
+"""
+WORK IN PROGRESS
+"""
+
+kind_map = dict(
+    FORCING = 'MeteorologicalForcing',
+    PRO     = 'SnowpackSimulation',
+    DIAG    = 'SnowpackSimulation',  # TODO : à modifier après ré-organisation des resources Vortex
+)
+
+block_map = dict(
+    MeteorologicalForcing = 'meteo',
+    FORCING               = 'meteo',
+    SnowpackSimulation    = 'pro',
+    PRO                   = 'pro',
+    DIAG                  = 'diag',
+)
+
+description = dict(
+    namebuild = 'flat@cen',
+    nativefmt = 'netcdf',
+    model     = 'surfex',
+    vconf     = '[geometry:tag]',
+)
+
+
+def function_map():
+    """
+    Returns a dictionary to map function names to function objects
+    """
+    return {"get": get, "put": put, "clean": clean}
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Manage Vortex resources')
+
+    parser.add_argument("--action", required=True, choices=['get', 'put', 'clean'],
+                        help="What to do with the specified resource(s)")
+
+    parser.add_argument("-b", "--datebegin", dest="datebegin", default=None, type=str,
+                        help="Date of begining of the simulation.")
+
+    parser.add_argument("-e", "--dateend", dest="dateend", default=None, type=str,
+                        help="Date of end of the simulation.")
+
+    parser.add_argument("-d", "--date", dest="date", default=None, type=str,
+                        help="Date of the simulation.")
+
+    parser.add_argument("-x", "--xpid", dest="experiment", nargs="+", required=True, type=str,
+                        help="XPID of the simulation (format 'xpid@user').")
+
+    parser.add_argument("-g", "--geometry", dest="geometry", required=True, type=str,
+                        help="Explore a specific geometry / vconf")
+
+    parser.add_argument("-k", "--kind", dest="kind", required=True, type=str, choices=block_map.keys(),
+                        help="Kind of resource (values such as 'FORCING', 'PRO', 'DIAG',...) are accepted")
+
+    parser.add_argument("--filename", dest="filename", default=None, type=str,
+                        help="Local name of the file to get / put.")
+
+    parser.add_argument("--vapp", dest="vapp", default='s2m', type=str,
+                        choices=['s2m', 'edelweiss', 'safran', 'Pleiades', 'Sentinel2'],
+                        help="vapp of the simulation")
+
+    parser.add_argument("--block", dest="block", default=None, type=str,
+                        help="Explore a specific block (for example 'meteo', 'prep', 'pro',...)")
+
+    parser.add_argument("-n", "--namespace", dest="namespace", default='vortex.multi.fr', type=str,
+                        help="Provider namespace")
+
+    parser.add_argument("-m", "--member", dest="member", default=None, type=str,
+                        help="Simulation members (format first:last)")
+
+    args = parser.parse_args()
+
+    if args.action == 'clean':
+        args.namespace = 'vortex.cache.fr',
+
+    return args
+
+
+def clean(description):
+
+    target = toolbox.rload(**description)
+    for rh in target:
+        rh.quickview()
+        filename = rh.locate()
+        if os.path.exists(filename):
+            os.remove(filename)
+            print(f'File {filename} has been removed')
+        else:
+            print(f'File {filename} does not exists')
+
+
+def get(description):
+    toolbox.input(**description, now=True)
+
+
+def put(description):
+    toolbox.output(**description, now=True)
+
+
+def footprint_kitchen(kw):
+
+    if 'vconf' not in kw.keys():
+        kw['vconf'] = '[geometry:tag]',
+
+    if 'role' not in kw.keys() or kw['role'] is None:
+        description['role'] = kw['kind']
+
+    if kw['filename'] is None:
+        kw['filename'] = f'{args.kind}.nc'
+
+    if kw['member'] is not None:
+        first_mb, last_mb = kw['member'].split(':')
+        kw['member'] = [mb for mb in range(int(first_mb), int(last_mb) + 1)]
+        kw['filename'] = f'mb[member]/{kw["filename"]}'
+
+    kw['block'] = block_map[kw['kind']]
+
+    if kw['model'] is None:
+        kw['model'] = kw['vapp']
+    elif kw['kind'] in ['DIAG']:
+        kw['model'] = 'postproc'  # TODO : à modifier après ré-organisation de Vortex
+
+    if kw['kind'] in kind_map.keys():
+        kw['kind'] = kind_map[kw['kind']]
+
+    if kw['date'] is None:
+        kw['date'] = kw['dateend']
+
+    return kw
+
+
+if __name__ == '__main__':
+    args = parse_args()
+    user_footprints = vars(args)
+    action = user_footprints.pop('action')
+    description.update(user_footprints)
+    description = footprint_kitchen(description)
+    function_map()[action](description)
