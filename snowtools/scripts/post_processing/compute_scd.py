@@ -18,6 +18,8 @@ import numpy as np
 import xarray as xr
 import argparse
 
+import snowtools.tools.xarray_preprocess as xrp
+
 
 def parse_command_line():
     description = "Computation of Sentinel2-like diagnostics (snow melt-out date, snow cover duration) associated \
@@ -231,6 +233,7 @@ def execute(subdir='', threshold=0.2):
     """
     proname = os.path.join(subdir, 'PRO.nc')
     pro = xr.open_dataset(proname, decode_times=False, engine='netcdf4')
+    pro = xrp.preprocess(pro)
     pro = decode_time(pro)
     diag = lcscd(pro.DSN_T_ISBA.resample(time='1D').mean(), threshold)
 
