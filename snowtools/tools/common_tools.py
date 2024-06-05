@@ -1,8 +1,4 @@
-import os
 import xarray as xr
-import pandas as pd
-
-from snowtools.scores import clusters
 
 
 def maskgf(arr, method='nearest', maskfile='MASK.nc'):

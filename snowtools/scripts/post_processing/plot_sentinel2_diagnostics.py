@@ -86,6 +86,9 @@ def parse_command_line():
     parser.add_argument('-f', '--plot_fields', action='store_true',
                         help="Wether to plot fields or not (avoid duplicates)")
 
+    parser.add_argument('-o', '--overwrite_cache', action='store_true',
+                        help="Get simulations from Hendrix instead of the local cache in case they have beeen updated")
+
     args = parser.parse_args()
     return args
 
@@ -128,8 +131,11 @@ def main():
             member = 0
 
         # Get DIAG files with Vortex
-        kw = dict(datebegin=deb, dateend=dateend, vapp=vapp, member=member, filename=f'DIAG_{shortid}.nc')
-        io.get_diag(xpid=xpid, geometry=geometry, **kw)
+        kw = dict(datebegin=deb, dateend=dateend, vapp=vapp, member=member, filename=f'DIAG_{shortid}.nc',
+                xpid=xpid, geometry=geometry)
+        if overwrite_cache:
+            kw['namespace'] = 'vortex.archive.fr'
+        io.get_diag(**kw)
 
     # TODO : à gérer autrement pour être flexible
     member = None
@@ -295,6 +301,7 @@ if __name__ == '__main__':
     clustering      = args.clustering
     thresholds      = args.thresholds
     plot_fields     = args.plot_fields
+    overwrite_cache = args.overwrite_cache
 
     if not os.path.exists(workdir):
         os.makedirs(workdir)
