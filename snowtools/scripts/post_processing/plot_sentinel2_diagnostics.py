@@ -149,6 +149,7 @@ def main():
         if mask:
             # mask glacier/forest covered pixels
             obs = ct.maskgf(obs)
+        cluster = xr.where(~np.isnan(obs.data), cluster, np.nan)
 
         # compare(obs, var=var)
         violin_plot(xpids, obs, var, cluster, member=member)  # Violinplots by elevation range
@@ -210,6 +211,10 @@ def plot_all_fields(xpids, obs, var, member=None):
                 simu = xr.open_mfdataset([f'mb{mb:03d}/DIAG_{shortid}.nc' for mb in range(member)],
                                          combine='nested', concat_dim='member', decode_times=False)
         simu = xrp.preprocess(simu, decode_time=False)
+        simu.squeeze(drop=True)
+
+        if 'startseason' in simu.dims:
+            simu = simu.drop('startseason').squeeze()
 
         if member is not None and member > 1:
             simu['member'] = range(member)
@@ -263,6 +268,9 @@ def filter_simu(xpid, subdir, mask, var):
     diagname = os.path.join(subdir, f'DIAG_{xpid}.nc')
     simu = xr.open_dataset(diagname, decode_times=False)
     simu = xrp.preprocess(simu[var], decode_time=False)
+    simu.squeeze(drop=True)  # Remove len(1) dimensions
+    if 'startseason' in simu.dims:
+        simu = simu.drop('startseason').squeeze()
     if clustering in ['elevation', 'uncertainty']:
         filtered_simu = clusters.by_slices(simu, mask, thresholds)
     elif clustering == 'landforms':
