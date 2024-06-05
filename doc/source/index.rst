@@ -57,6 +57,7 @@ SURFEX Information
 
    Installation of SURFEX <misc/surfex-install.rst>
    Run a SURFEX-Crocus simulation <misc/surfex-run.rst>
+   Running SURFEX on Meteo-France HPC <misc/surfex-hpc.rst>
    Few informations on SURFEX-Crocus simulations <misc/surfex.rst>
    Information for developpers <misc/surfex-dev.rst>
 
@@ -74,6 +75,14 @@ Developments not yet merged into the ``cen`` branch are documented here :
    :maxdepth: 1
 
    Development in progress <misc/surfex-dev-in-progress.rst>
+
+Other documentations
+--------------------
+
+.. toctree::
+   :maxdepth: 2
+
+   extra_documentation/these_ange/these_ange_index.rst
 
 
 

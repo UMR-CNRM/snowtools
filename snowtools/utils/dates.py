@@ -259,6 +259,24 @@ def get_list_dates_files(datebegin, dateend, duration, listDateStop=None):
     return list_dates_begin_forcing, list_dates_end_forcing, list_dates_begin_pro, list_dates_end_pro
 
 
+def get_standad_nivology_season(date):
+    """
+    Get the *datebegin* and *dateend* dates of the nivology season associated to a *date*
+
+    :returns: datebegin, dateen
+    """
+    if date.month >= 8:
+        datebegin = Date(date.year, 8, 1, 6, 0, 0)
+        dateend   = Date(date.year + 1, 8, 1, 6, 0, 0)
+    else:
+        datebegin = Date(date.year - 1, 8, 1, 6, 0, 0)
+        dateend   = Date(date.year, 8, 1, 6, 0, 0)
+
+    return datebegin, dateend
+
+
 def get_dic_dateend(list_dates_begin, list_dates_end):
-    # For footprints, to not combine all datebegin values with all dateend values, dictionnaries are necessary for dateend
+    """
+    For footprints, to not combine all datebegin values with all dateend values, dictionnaries are necessary for dateend
+    """
     return dict(datebegin= {str(k): v for k, v in zip(list_dates_begin, list_dates_end)})
