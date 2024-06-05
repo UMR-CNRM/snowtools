@@ -41,9 +41,6 @@ def parse_command_line():
     parser.add_argument('-w', '--workdir', type=str, default=None,
                         help="Working directory")
 
-    parser.add_argument('-k', '--mask', type=str,
-                        help="Absolute path to the mask file")
-
     parser.add_argument('-p', '--pro', type=str, required=not any(arg in sys.argv for arg in ['-x', '--xpid']),
                         help="Absolute path to the pro file")
 
@@ -228,7 +225,7 @@ def decode_time(pro):
     return pro
 
 
-def execute(subdir, threshold=0.2, mask=True):
+def execute(subdir='', threshold=0.2):
     """
     Main method to compute Sentinel2-like diagnostics from a SURFEX simulation
     """
@@ -240,11 +237,6 @@ def execute(subdir, threshold=0.2, mask=True):
     # Add 'ZS' (DEM) variable
     if 'ZS' in pro.keys():
         diag = xr.merge([diag, pro['ZS']])
-
-    if mask:
-        from snowtools.scripts.post_processing import common_tools as ct
-        # mask glacier/forest covered pixels
-        diag = ct.maskgf(diag)
 
     # Write DIAG file and remove PRO
     diag.to_netcdf(os.path.join(subdir, 'DIAG.nc'))
@@ -258,21 +250,12 @@ if __name__ == '__main__':
     xpid      = args.xpid
     members   = args.members
     workdir   = args.workdir
-    mask      = args.mask
     pro       = args.pro
     threshold = args.threshold
     geometry  = 'GrandesRousses250m'
 
     if workdir is not None:
         os.chdir(workdir)
-
-    if mask is not None:
-        # Get mask file
-        # import shutil
-        # shutil.copyfile(mask, 'mask.nc')
-        if not os.path.exists('mask.nc'):  # TODO remplacer le lien par sécurité ?
-            os.symlink(mask, 'mask.nc')
-        mask = True
 
     if pro is not None:
         # TODO : Le code actuel ne gère qu'un unique fichier PRO
@@ -290,10 +273,10 @@ if __name__ == '__main__':
     if members is None:
         subdir = ''
         # Call main method
-        execute(subdir, threshold=threshold, mask=mask)
+        execute(subdir=subdir, threshold=threshold)
     else:
         for member in range(members):
             print(f'Member {member}')
             subdir = f'mb{member:03d}'
             # Call main method
-            execute(subdir, datebegin, threshold=threshold, mask=mask)
+            execute(subdir=subdir, threshold=threshold)
