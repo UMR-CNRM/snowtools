@@ -64,6 +64,7 @@ def execute(subdir, point):
     """
     proname = os.path.join(subdir, 'PRO.nc')
     pro     = xr.open_dataset(proname, decode_times=False)
+    pro     = xrp.preprocess(pro)
     pro = pro.chunk({"xx": len(pro.xx), 'yy': len(pro.yy)})
     if 'ZS' in pro.keys():
         pro     = pro[['DSN_T_ISBA', 'ZS']]

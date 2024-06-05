@@ -21,6 +21,7 @@ import argparse
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.scores import clusters
 from snowtools.plots.boxplots import violinplot
+import snowtools.tools.xarray_preprocess as xrp
 
 
 def parse_command_line():
@@ -63,10 +64,9 @@ def parse_command_line():
 def violin_plot(xpids, obs, var, date, mask=True, member=None):
 
     mnt = xr.open_dataarray('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
-    mnt = mnt.rename({'x': 'xx', 'y': 'yy'})
+    mnt = xrp.preprocess(mnt, decode_time=False)
 
     # Construct *dataplot* DataFrame with elevation bands as index and 1 column per product
-    obs = obs.rename({'x': 'xx', 'y': 'yy'})
     filtered_obs = clusters.slices(obs[var], mnt, elevation_bands)
     dataplot = filtered_obs.to_dataframe(name='obs').dropna().reset_index().drop(columns=['time'])
     try:
@@ -111,8 +111,7 @@ def filter_simu(xpid, obs, subdir, var, date, mnt):
 
     proname = os.path.join(subdir, f'PRO_{xpid}.nc')
     simu = xr.open_dataset(proname, decode_times=False)
-    # TODO : gérer le problème de coordonnées pour éviter les "rename" très lents !
-    simu = decode_time(simu)
+    simu = xrp.preprocess(simu)
     simu = simu.sel({'xx': obs.xx.data, 'yy': obs.yy.data, 'time': pd.to_datetime(date[:8], format='%Y%m%d')})
     simu = xr.where(~obs.isnull(), simu, np.nan)
     filtered_simu = clusters.slices(simu[var], mnt, elevation_bands)
@@ -155,6 +154,7 @@ if __name__ == '__main__':
     obsname = f'PLEIADES_{date}.nc'
     io.get_snow_obs_date(xpid='CesarDB_AngeH', geometry='Lautaret250m', date=date, vapp='Pleiades', filename=obsname)
     obs = xr.open_dataset(obsname)
+    obs = xrp.preprocess(obs, decode_time=False)
 
     # b) Domain's DEM
     io.get_const(uenv, 'relief', geometry, filename='TARGET_RELIEF.nc', gvar='RELIEF_GRANDESROUSSES250M_L93')
