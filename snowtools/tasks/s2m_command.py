@@ -530,7 +530,7 @@ class Surfex_command(_S2M_command):
                         raise UnsupportedOptionException("Gridded simulations (--geotype=grid) with homogeneous "
                                                          "vegetation (--veg=namelist) are not implemented")
                 else:  # geotype=unstructured
-                    if self.options.veg in ['ecoclimap', None]:
+                    if self.options.veg in ['ecoclimap']:
                         myclass = runs.ecoclimaprun
                     else:
                         myclass = runs.surfexrun
