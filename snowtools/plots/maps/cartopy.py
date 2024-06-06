@@ -492,7 +492,7 @@ class _Map_massifs(Mplfigure):
             config_datadir = str(config["data_dir"])
             json_filepath = os.path.join(config_datadir, 'images.json')
             if os.path.isfile(json_filepath):
-                os.environ["CARTOPY_USER_BACKGROUNDS"] = config_datadir
+                os.environ["CARTOPY_USER_BACKGROUNDS"] = str(json_filepath)
                 ax_pl.background_img(resolution="high")
         # else:
         #     ax_pl.coastlines(resolution='10m')
