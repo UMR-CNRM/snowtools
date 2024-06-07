@@ -205,6 +205,8 @@ then
         --exclude "venv*" \
         --exclude "*.pyc" --exclude "*.bak" --exclude "*.sav" --exclude "*.backup" \
         --exclude ".*.swp" --exclude "*~" \
+        --exclude sphinx \
+        --exclude examples \
         --exclude "*.egg-info" --exclude "*.o" --exclude "*.bin" --exclude "*.exe" \
         --exclude fail_test --exclude Manual_tests --exclude "interpolation/*.mod" \
         --exclude "interpolation/interpol_*" \
@@ -258,8 +260,10 @@ then
       --exclude-glob src/LIB/eccodes*/ \
       --exclude-glob src/LIB/eccodes* \
       --exclude STRATO \
-      --exclude-glob figures \
-      --exclude-glob DATA \
+      --exclude figures \
+      --exclude sphinx \
+      --exclude examples \
+      --exclude DATA \
       $folder_orig $folder_dest"
     retcode=$?
     set -e
