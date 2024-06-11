@@ -20,7 +20,7 @@ A new script, called ``proplotter`` allow to easily and quickly plot Crocus outp
 .. toctree::
    :maxdepth: 2
 
-   The GUI/CLI script stratiprofile <plots-proplotter>
+   plots-proplotter
 
 Script for plotting results from operational simulations (s2m based on PEARP)
 -----------------------------------------------------------------------------
