@@ -8,6 +8,7 @@ Blowing snow simulation preparation
 | For blowing snow transport simulations, having a realistic wind is essential. In our simulations we used Louis' DEVINE high resolution wind.
 | To proceed to our simulations we therefore had to hand-cook wind modified simulation forcings.
 
+We therefore had to hand-cook modified simulation forcings.
 
 .. _simscratch:
 
@@ -105,7 +106,7 @@ I suggest to use the following workflow:
   To have a correct ground temperature initialisation using the :file:`-g` S2M option, the good practice is to do a spinup over a period of 10 years or more before the target simulation date (to allow time for the soil temperature to stabilise).
 
 Louis' DEVINE wind
-******************
+------------------
 
 .. image:: https://raw.githubusercontent.com/louisletoumelin/wind_downscaling_cnn/master/images/SchemeDevine.png
     :width: 600
@@ -113,6 +114,25 @@ Louis' DEVINE wind
 Louis Le Toumelin developped a machine learning method to downscale the wind speed and direction for AROME coarse simulation model named **DEVINE**. [#f1]_ [#f2]_
 If the simulation forcings and the wind are on the same grid (30m) the Wind and Wind_DIR forcing fields can be replaced in files transparently.
 If the two grid are different, the two wind fields (Wind and Wind_DIR) need to be resample to the simulation grid.
+
+
+Typical workflow for a blowing snow experiment from scratch on Belenos :
+************************************************************************
+
+#. S2M Geometry creation
+
+#. PREP + PGD + Forcing (SAFRAN) creation
+
+#. Forcing modification :
+
+    #. :ref:`High resolution wind resampling <louis>`
+
+    #. :ref:`Forcing wind modification <fmod>` (or any other field)
+
+#. Simulation launch with S2M
+
+.. warning::
+  Do not forget to clean the vortex cache before launching simulation to override the previous cached forcing file
 
 .. _louis:
 
@@ -297,8 +317,8 @@ The following code result in two files *devine_speed_250m_rioxarray.nc* and *dev
 
 .. _fmod:
 
-3.2 Forcing modification
-========================
+Forcing modification
+--------------------
 
 
 You can find bellow an example to replace Wind and Wind_DIR forcing fields in forcings.
