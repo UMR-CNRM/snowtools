@@ -6,11 +6,11 @@ Forcing simulation prep
 
 For blowing snow transport simulations, having a realistic wind is essential. In our simulations we used Louis' DEVINE high resolution wind.
 
-We therefore had to hand-cook modified forcings.
+We therefore had to hand-cook modified simulation forcings.
 
 
 Louis' DEVINE wind
-******************
+------------------
 
 .. image:: https://raw.githubusercontent.com/louisletoumelin/wind_downscaling_cnn/master/images/SchemeDevine.png
     :width: 600
@@ -22,17 +22,21 @@ If the two grid are different, the two wind fields (Wind and Wind_DIR) need to b
 
 Typical workflow for a blowing snow experiment from scratch on Belenos :
 ************************************************************************
-1. S2M Geometry creation
-2. PREP + PGD + Forcing (SAFRAN) creation
-3. Forcing modification
 
-  * :ref:`High resolution wind resampling <louis>`
-  * :ref:`Forcing wind modification <fmod>`
-  * Forcing precipitation modification (optional)
+#. S2M Geometry creation
 
-4. Simulation launch with S2M (**do not forget to clean vortex cache before to override previous forcing file**)
+#. PREP + PGD + Forcing (SAFRAN) creation
 
+#. Forcing modification :
 
+    #. :ref:`High resolution wind resampling <louis>`
+
+    #. :ref:`Forcing wind modification <fmod>` (or any other field)
+
+#. Simulation launch with S2M
+
+.. warning::
+  Do not forget to clean the vortex cache before launching simulation to override the previous cached forcing file
 
 .. _louis:
 
@@ -209,25 +213,17 @@ The following code result in two files *devine_speed_250m_rioxarray.nc* and *dev
   # Save the calculated wind speed to nectdf storage
   speed_250_rioxarray.to_necdf('devine_speed_250m_rioxarray.nc/')
 
-
-
-
-
-
-
-
-
 .. _fmod:
 
 Forcing modification
-********************
+--------------------
 
 
 You can find bellow an example to replace Wind and Wind_DIR forcing fields in forcings.
 
 .. note::
   In this example, already resampled 250m Louis' wind is added to 250m SAFRAN forcing.
-  Same method can be applied to different fields and resolution.
+  *Same method can be applied to different fields and resolution.*
   Please note that the path need to be changed.
 
 Imports::

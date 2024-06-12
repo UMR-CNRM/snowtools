@@ -8,7 +8,7 @@ Methods of regridding
     :alt: my-picture1
 
 Spatial regrid with `ESMF <https://earthsystemmodeling.org/>`_
-**************************************************************
+--------------------------------------------------------------
 In some situation it can be interesing to regrid simulations files.
 For my PhD I had to downgrade high resolution simulation from 30m to 250m.
 The advantage of regriding with `ESMF <https://earthsystemmodeling.org/>`_ is that the dimension of the input file is not limited
@@ -33,12 +33,12 @@ Resample a 30m simulation to 250m using conservative method. The two simulations
 
 1. Format the dataset for ESMF with *ESMF_format_dataset(S18_30)*.
 2. Format the dataset for ESMF with *ESMF_format_dataset(s18)*.
-3. build the start grid with *grid_create_from_coordinates(t30.x.to_numpy(),t30.y.to_numpy(),xcorners=t30.x_bnds.to_numpy(),ycorners=t30.y_bnds.to_numpy(),corners=True)*.
-4. build the arrival grid with *grid_create_from_coordinates(t250.x.to_numpy(),t250.y.to_numpy(),xcorners=t250.x_bnds.to_numpy(),ycorners=t250.y_bnds.to_numpy(),corners=True)*.
-5. create the original regrid field and fill it with the dataset *esmpy.Field(source_grid, name='Source data 30m')*
-6. create the original regrind field *esmpy.Field(dest_grid, name='Resampled data 250m')*
-7. create the interpolator using the conservative method *regrid_conserve = esmpy.Regrid(sourcefield, destfield, regrid_method=esmpy.RegridMethod.CONSERVE, unmapped_action=esmpy.UnmappedAction.IGNORE)*.
-8. apply interpolator and fill *regrid_conserve(sourcefield, destfield)* field
+3. Build the start grid with *grid_create_from_coordinates(t30.x.to_numpy(),t30.y.to_numpy(),xcorners=t30.x_bnds.to_numpy(),ycorners=t30.y_bnds.to_numpy(),corners=True)*.
+4. Build the arrival grid with *grid_create_from_coordinates(t250.x.to_numpy(),t250.y.to_numpy(),xcorners=t250.x_bnds.to_numpy(),ycorners=t250.y_bnds.to_numpy(),corners=True)*.
+5. Create the original regrid field and fill it with the dataset *esmpy.Field(source_grid, name='Source data 30m')*
+6. Create the original regrind field *esmpy.Field(dest_grid, name='Resampled data 250m')*
+7. Create the interpolator using the conservative method *regrid_conserve = esmpy.Regrid(sourcefield, destfield, regrid_method=esmpy.RegridMethod.CONSERVE, unmapped_action=esmpy.UnmappedAction.IGNORE)*.
+8. Apply interpolator and fill *regrid_conserve(sourcefield, destfield)* field
 
 
 
@@ -271,8 +271,8 @@ Example of script to spatially resample simulation from 30m to 250m:
 
   t250=ESMF_format_dataset(s18) #formate de dataset 250m
 
-  source_grid=pn.grid_create_from_coordinates(t30.x.to_numpy(),t30.y.to_numpy(),xcorners=t30.x_bnds.to_numpy(),ycorners=t30.y_bnds.to_numpy(),corners=True)
-  dest_grid=pn.grid_create_from_coordinates(t250.x.to_numpy(),t250.y.to_numpy(),xcorners=t250.x_bnds.to_numpy(),ycorners=t250.y_bnds.to_numpy(),corners=True)
+  source_grid=grid_create_from_coordinates(t30.x.to_numpy(),t30.y.to_numpy(),xcorners=t30.x_bnds.to_numpy(),ycorners=t30.y_bnds.to_numpy(),corners=True)
+  dest_grid=grid_create_from_coordinates(t250.x.to_numpy(),t250.y.to_numpy(),xcorners=t250.x_bnds.to_numpy(),ycorners=t250.y_bnds.to_numpy(),corners=True)
 
   import esmpy
   variable="DSN_T_ISBA" # variable a regriller
@@ -299,7 +299,7 @@ Example of script to spatially resample simulation from 30m to 250m:
 
 
 Temporal regrid with xarray
-***************************
+---------------------------
 
 
 .. image:: https://docs.xarray.dev/en/stable/_static/Xarray_Logo_RGB_Final.svg
@@ -317,8 +317,8 @@ This can be achieved with xarray. In this following example we average simulatio
   pap_lsm.to_dataset().to_zarr("/scratch/mtool/haddjeria/hendrix/tc/pap_lsm_2018-1D.zarr") # on enregistre en zarr car plus efficace que le netcdf
 
 
-Regridding PDG or transpose Number_of_points to (X, Y)
-******************************************************
+Regridding PDG or transpose Number_of_points to cartesian (X, Y)
+****************************************************************
 
 .. image:: https://i.ibb.co/2d2xwPM/Capture-d-cran-2024-05-23-16-43-01.png
   :width: 600
