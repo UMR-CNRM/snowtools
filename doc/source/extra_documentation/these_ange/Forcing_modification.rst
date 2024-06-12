@@ -294,7 +294,7 @@ I suggest to use the following workflow:
   To have a correct ground temperature initialisation using the :file:`-g` S2M option, the good practice is to do a spinup over a period of 10 years or more before the target simulation date (to allow time for the soil temperature to stabilise).
 
 Louis' DEVINE wind
-******************
+------------------
 
 .. image:: https://raw.githubusercontent.com/louisletoumelin/wind_downscaling_cnn/master/images/SchemeDevine.png
     :width: 600
