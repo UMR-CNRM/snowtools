@@ -260,6 +260,7 @@ then
       --exclude-glob src/LIB/grib_api-*-Source/ \
       --exclude-glob src/LIB/eccodes*/ \
       --exclude-glob src/LIB/eccodes* \
+      --exclude-glob NO_TRANSFER* \
       --exclude STRATO \
       --exclude figures \
       --exclude sphinx \
