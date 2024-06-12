@@ -211,6 +211,7 @@ then
         --exclude /exe --exclude "src/dir_obj*" --exclude "exe_*" \
         --exclude 'profile_surfex' --exclude 'profile_surfex-LX*' \
         --exclude "src/LIB/grib_api-*-Source" --exclude "src/LIB/eccodes*" --exclude STRATO \
+        --exclude "NO_TRANSFER*" \
         $folder_orig $SERVER:$folder_dest
     retcode=$?
     set -e
@@ -257,9 +258,8 @@ then
       --exclude-glob src/LIB/grib_api-*-Source/ \
       --exclude-glob src/LIB/eccodes*/ \
       --exclude-glob src/LIB/eccodes* \
+      --exclude-glob NO_TRANSFER* \
       --exclude STRATO \
-      --exclude-glob figures \
-      --exclude-glob DATA \
       $folder_orig $folder_dest"
     retcode=$?
     set -e
