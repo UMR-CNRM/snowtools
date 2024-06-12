@@ -4,6 +4,7 @@
 Masks
 =====
 
+Collection of different masks used in my simulations.
 
 Forest Masks
 ************
@@ -15,8 +16,10 @@ Forest Masks
 Forest masks were made by Matthieu Baron from the forest dataset of IGN `BD Foret V2 <https://geoservices.ign.fr/bdforet>`_.
 The code and a note [#f2]_ to reproduce the masks can be found in his git depot [#f3]_.
 
-To simplify, the BD foret dataset present polygones of different vegetation cover. Different vegetation types are selected. Vegetation formation of "landes" and "formation herbacées" are removed. The
-The polygones are then rasterized to the simulation grid.
+To summarize, the BD foret dataset present polygones of vegetation cover of different types.
+Different vegetation types are selected according to characteristics choosen by Matthieu B.
+In the current version, the vegetation formations called "landes" and "formation herbacées" are removed, all the others are used to build the mask.
+The different polygones are then rasterized to the simulation grid.
 
 
 RGI Glacier Masks
@@ -58,7 +61,8 @@ The larger the search radius is, the less dependant to resolution the classifica
 I also choose a flat threshold of 1 degree with option *threshold=1*.
 Finally the output is presented for the 10 most common landforms as in [#f1]_ with the option *forms*.
 
-Full command documentation : https://www.whiteboxgeo.com/manual/wbt_book/available_tools/geomorphometric_analysis.html#geomorphons
+.. note::
+  Full command documentation : https://www.whiteboxgeo.com/manual/wbt_book/available_tools/geomorphometric_analysis.html#geomorphons
 
 Example of command::
 
