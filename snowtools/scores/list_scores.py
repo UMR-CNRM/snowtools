@@ -201,8 +201,16 @@ class SpatialScoreFile(xr.Dataset):
         self['ETS'].data.fill(np.nan)
         self['HK'] = xr.DataArray(np.empty((len(list_of_experiments), len(list_of_kernels), len(list_of_thresholds))),
                                   dims=('experiment', 'kernel', 'threshold'),
-                                  attrs={'long_name': ''})
+                                  attrs={'long_name': 'Hanssen and Kuippers skill score or True Skill Statistic'})
         self['HK'].data.fill(np.nan)
+        self['ACC'] = xr.DataArray(np.empty((len(list_of_experiments), len(list_of_kernels), len(list_of_thresholds))),
+                                   dims=('experiment', 'kernel', 'threshold'),
+                                   attrs={'long_name': 'Accuracy'})
+        self['ACC'].data.fill(np.nan)
+        self['PAG'] = xr.DataArray(np.empty((len(list_of_experiments), len(list_of_kernels), len(list_of_thresholds))),
+                                   dims=('experiment', 'kernel', 'threshold'),
+                                   attrs={'long_name': 'Post Agreement'})
+        self['PAG'].data.fill(np.nan)
 
     # def to_netcdf(self, **kwargs):
     #     """
