@@ -629,6 +629,47 @@ class ProVsPleiade(SpatialScores):
 
 
 
+
+class ProVsPleiade(SpatialScores):
+    """
+    class for comparing simulations data with a pleiade image.
+    """
+    def get_fc_data(self, filenames, list_of_experiments, varname):
+        outdict = {}
+        for exp, path in zip(list_of_experiments, filenames):
+            fc_ds = prosimu_xr(path)
+            outdict[exp] = fc_ds.dataset[varname]
+        return outdict
+
+
+    def get_obs_data(self, filename, varname):
+        """
+        read pleiade observation data
+
+        :param filename: file name
+        :return: xarray data array
+        """
+        obs_ds = prosimu_xr(filename)
+        obs_ds.dataset = obs_ds.dataset.rename(x="xx", y="yy")
+        return obs_ds.dataset[varname]
+
+        #     time = obs_ds.readtime()
+        #     snowheight = obs_ds.read_var('DSN_T_ISBA')
+        #     x = obs_ds.read_var('x')
+        #     y = obs_ds.read_var('y')
+        #
+        # return dict(time=time, x=x, y=y, values=snowheight)
+
+    def select_fc_at_obs(self):
+        for exp in self.fc_data.keys():
+            self.fc_data[exp] = self.fc_data[exp].sel(time=self.obs_data['time'], xx=self.obs_data['xx'],
+                                                      yy=self.obs_data['yy'])
+
+    def apply_mask(self):
+        pass
+
+
+
 ##################################
 # structural similarity
 ###############################
