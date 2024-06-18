@@ -72,6 +72,11 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         if 'late-backup' in self.steps:  # Executed on a TRANSFERT NODE to save outputs to a remote destination
             self.put_remote_outputs()
 
+            # Un-comment these lines to save the working directory after the execution
+#            print('==================================================================================================')
+#            print('==================================================================================================')
+#            raise Exception('INFO :The execution went well, do not take into account the following error')
+
     def get_remote_inputs(self):
         """
         Implement this method in your task to fetch all resources stored remotely (on Hendrix, sxcen,...).
