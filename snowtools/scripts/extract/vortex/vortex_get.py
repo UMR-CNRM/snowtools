@@ -20,13 +20,16 @@ block_map = dict(
     SnowpackSimulation    = 'pro',
     PRO                   = 'pro',
     DIAG                  = 'diag',
+    SnowObservations      = '',
 )
 
-description = dict(
+default = dict(
+    namespace = 'vortex.multi.fr',
     namebuild = 'flat@cen',
     nativefmt = 'netcdf',
     model     = 'surfex',
     vconf     = '[geometry:tag]',
+    now       = True,
 )
 
 
@@ -98,26 +101,32 @@ def clean(description):
             print(f'File {filename} does not exists')
 
 
-def get(description):
-    toolbox.input(**description, now=True)
+def get(**description):
+    default.update(description)
+    description = footprint_kitchen(**default)
+    toolbox.input(**description)
 
 
-def put(description):
-    toolbox.output(**description, now=True)
+def put(**description):
+    default.update(description)
+    description = footprint_kitchen(**default)
+    toolbox.output(**description)
 
 
-def footprint_kitchen(kw):
+def footprint_kitchen(**kw):
+
+    kw['experiment'] = kw.pop('xpid')
 
     if 'vconf' not in kw.keys():
         kw['vconf'] = '[geometry:tag]',
 
     if 'role' not in kw.keys() or kw['role'] is None:
-        description['role'] = kw['kind']
+        kw['role'] = kw['kind']
 
-    if kw['filename'] is None:
-        kw['filename'] = f'{args.kind}.nc'
+    if 'filename' in kw.keys() or kw['filename'] is None:
+        kw['filename'] = f'{kw["kind"]}.nc'
 
-    if kw['member'] is not None:
+    if 'member' in kw.keys():
         first_mb, last_mb = kw['member'].split(':')
         kw['member'] = [mb for mb in range(int(first_mb), int(last_mb) + 1)]
         kw['filename'] = f'mb[member]/{kw["filename"]}'
@@ -132,7 +141,7 @@ def footprint_kitchen(kw):
     if kw['kind'] in kind_map.keys():
         kw['kind'] = kind_map[kw['kind']]
 
-    if kw['date'] is None:
+    if 'date' not in kw.keys() or kw['date'] is None:
         kw['date'] = kw['dateend']
 
     return kw
@@ -142,6 +151,4 @@ if __name__ == '__main__':
     args = parse_args()
     user_footprints = vars(args)
     action = user_footprints.pop('action')
-    description.update(user_footprints)
-    description = footprint_kitchen(description)
-    function_map()[action](description)
+    function_map()[action](user_footprints)
