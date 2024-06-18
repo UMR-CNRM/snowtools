@@ -1,6 +1,6 @@
 import xarray as xr
 
-dimension_map = {'x': 'xx', 'y': 'yy'}
+dimension_map = {'x': 'xx', 'y': 'yy', 'lat': 'latitude', 'lon': 'longitude'}
 variables_map = {'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf'}
 
 
@@ -9,6 +9,7 @@ def preprocess(ds, decode_time=True):
         ds = decode_time_dimension(ds)
     ds = update_varname(ds)
     ds = update_dimname(ds)
+    ds = transpose(ds)
     return ds
 
 
@@ -36,3 +37,19 @@ def decode_time_dimension(ds):
     time = xr.decode_cf(time)
     ds['time'] = time.time
     return ds
+
+
+def transpose(ds):
+    if 'time' in ds.dims:
+        return ds.transpose('time', ...)
+    else:
+        return ds
+
+
+def proj_array(ds, crs_in="EPSG:4326", crs_out="EPSG:2154"):
+    # WARNING : rioxarray not available on HPC yet
+    # TODO : check crs_in ?
+    ds.rio.write_crs(crs_in, inplace=True)
+    ds  = ds.rename({'longitude': 'xx', 'latitude': 'yy'})
+    out = ds.rio.reproject(crs_out)
+    return out

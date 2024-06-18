@@ -19,6 +19,8 @@ import shutil
 import xarray as xr
 import argparse
 
+import snowtools.tools.xarray_preprocess as xrp
+
 DEFAULT_NETCDF_FORMAT = 'NETCDF4_CLASSIC'
 
 home = os.environ['HOME']
@@ -58,9 +60,11 @@ def compute_phase_from_iso_wetbt1(subdir=None):
     Compute Rainf and Snowf variables from the iso-wetbt (or iso-tpw before 7/12/2019) elevation.
     """
     precipitation = xr.open_dataarray(os.path.join(subdir or '', 'PRECIPITATION.nc'))  # Hourly precipitation
+    precipitation = xrp.preprocess(precipitation, decode_time=False)
     precipitation = precipitation.fillna(0)
     # Open  Wet-bulb temperature iso-0/1°C dataset, and rename time as in the 'precipitation' ds
     isowetbt  = xr.open_dataset('ISO_TPW.nc').drop('time').rename({'valid_time': 'time'})
+    isowetbt = xrp.preprocess(isowetbt, decode_time=False)
     # Fill missing dates with nearest value :
     isowetbt  = isowetbt.reindex({'time': precipitation.time}, method='nearest')
     isowetbt1 = isowetbt.sel({'ISO_TPW': 27415.})  # Wet-bulb temperature iso-1°C
@@ -70,16 +74,13 @@ def compute_phase_from_iso_wetbt1(subdir=None):
     # iso_elevation = isowetbt1.sro + source_relief
     iso_elevation = isowetbt1.sro
     target_relief = xr.open_dataarray('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
+    target_relief = xrp.preprocess(target_relief, decode_time=False)
 
     # Interpolation of all data to the target geometry
     iso250m = iso_elevation.interp({'latitude': target_relief.latitude, 'longitude': target_relief.longitude})
     if hasattr(precipitation, 'latitude'):
         precipitation250m = precipitation.interp({'latitude': target_relief.latitude,
             'longitude': target_relief.longitude})
-    elif hasattr(precipitation, 'lat'):
-        precipitation250m = precipitation.interp({'lat': target_relief.latitude, 'lon': target_relief.longitude})
-    elif hasattr(precipitation, 'x'):
-        precipitation250m = precipitation.interp({'y': target_relief.latitude, 'x': target_relief.longitude})
     elif hasattr(precipitation, 'xx'):
         precipitation250m = precipitation.interp({'yy': target_relief.latitude, 'xx': target_relief.longitude})
     else:
@@ -98,7 +99,8 @@ def compute_phase_from_iso_wetbt1(subdir=None):
 def write(ds, outname):
     datedeb = ds.time[0]
     dateend = ds.time[-1]
-    ds.load().to_netcdf(outname, unlimited_dims={'time': True}, format=DEFAULT_NETCDF_FORMAT)
+    ds.load().to_netcdf(outname, unlimited_dims={'time': True}, format=DEFAULT_NETCDF_FORMAT,
+            encoding={'time': {'dtype': 'int32'}})
     return datedeb, dateend
 
 

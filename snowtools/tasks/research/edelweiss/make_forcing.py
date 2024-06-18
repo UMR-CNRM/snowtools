@@ -44,7 +44,9 @@ class Precipitation(_VortexTask):
         self.sh.title('Toolbox input ISO WETBT/TPW')
         kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
         # Update default vapp with specific conf values
-        kw.update(dict(kind='ISO_TPW', geometry=self.conf.geometry_tpw, xpid=self.conf.xpid_tpw))
+        kw.update(dict(datebegin=self.conf.datebegin_lpn, kind=self.conf.kind_lpn, geometry=self.conf.geometry_lpn,
+            xpid=self.conf.xpid_lpn, source_app='arome', source_conf='3dvarfr',
+            filename='ISO_TPW.nc'))  # TODO : modifier le filename
         io.get_meteo(**kw)
 
         # Iso-TPW's grid relief
@@ -80,6 +82,7 @@ class Precipitation(_VortexTask):
         Main method to save an OFFLINE execution outputs
         """
         self.sh.title('Precipitation output')
+        # TODO : Do not archive on Hendrix !
         io.put_precipitation(members=self.conf.members, filename='PRECIPITATION_OUT.nc',
                 **self.common_kw)
 
@@ -138,7 +141,8 @@ class Forcing(_VortexTask):
         if self.conf.wind is not None:
             kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
             # Update default vapp with specific conf value
-            kw.update(dict(vapp=self.conf.vapp_wind, xpid=self.conf.xpid_wind, geometry=self.conf.geometry_wind))
+            kw.update(dict(vapp=self.conf.vapp_wind, xpid=self.conf.xpid_wind, geometry=self.conf.geometry_wind,
+                datebegin=self.conf.datebegin_wind))
             self.sh.title('Wind input')
             io.get_wind(**kw)
 
@@ -171,3 +175,8 @@ class Forcing(_VortexTask):
         """
         self.sh.title('FORCING output')
         io.put_forcing(filename='FORCING_OUT.nc', members=self.conf.members, **self.common_kw)
+
+        # Un-comment these lines to save the working directory after the execution
+#        print('==================================================================================================')
+#        print('==================================================================================================')
+#        raise Exception('INFO :The execution went well, do not take into account the following error')

@@ -264,6 +264,20 @@ class Edelweiss_command(object):
                                        " * dateend   (str) : If different from '-e' argument (format YYYYMMDDHH)\n"
                                        " ")
 
+        parser_input.add_argument("--lpn", dest="lpn", action=ParseKwargs, nargs='*',
+                                  type=str, default=None,
+                                  # TODO : what if already in the user conf file ? --> overwrite ?
+                                  help="Definition (footprint-like) dict of the variable to be used to compute the"
+                                       "rain snow limit.\n"
+                                       "Format : --precipitation key1=var1 key2=var2 ...\n"
+                                       "Known dictionary keys :\n"
+                                       " * xpid      (str) : Experiment identifier (Format : {xpid}@{username})\n"
+                                       " * kind      (str) : Kind of file (iso-t level or full vertical profile\n"
+                                       " * geometry  (str) : Experiment geometry\n"
+                                       " * datebegin (str) : If different from '-b' argument (format YYYYMMDDHH)\n"
+                                       " * dateend   (str) : If different from '-e' argument (format YYYYMMDDHH)\n"
+                                       " ")
+
         parser_input.add_argument("--wind", dest="wind", action=ParseKwargs, nargs='*',
                                   type=str, default=None,
                                   # TODO : what if already in the user conf file ? --> overwrite ?
@@ -309,7 +323,10 @@ class Edelweiss_command(object):
 
         args_to_dict = vars(self.options)  # Convert self.options *Namepace* object to a *dictionnary* object
         # Convert *dictionary* arguments to proper configuration variables
-        for specific_input in ['forcing', 'precipitation', 'wind', 'prep', 'pro']:
+        for specific_input in ['forcing', 'precipitation', 'wind', 'prep', 'pro', 'lpn']:
+
+            # TODO : return a footprint-like dictionnary to be used directly !
+
             # Check if a value has been parsed
             if args_to_dict[specific_input] is not None:
                 # Convert dictionnary into proper configuration entries
@@ -325,7 +342,7 @@ class Edelweiss_command(object):
                 optional_keys = ['xpid', 'geometry', 'vapp', 'date']
             else:
                 # All other files cover a perdiod
-                optional_keys = ['xpid', 'geometry', 'vapp', 'datebegin', 'dateend', 'members']
+                optional_keys = ['kind', 'xpid', 'geometry', 'vapp', 'datebegin', 'dateend', 'members']
             for key in optional_keys:
                 if not hasattr(self.options, f'{key}_{specific_input}'):
                     if key == 'date':
@@ -334,6 +351,8 @@ class Edelweiss_command(object):
                     elif key == 'members':
                         # If no *members* attribute is given, assume there is only 1 file
                         setattr(self.options, f'{key}_{specific_input}', '1-1-1')
+                    elif key == 'kind':
+                        setattr(self.options, f'{key}_{specific_input}', specific_input)
                     else:
                         setattr(self.options, f'{key}_{specific_input}', args_to_dict[key])
 

@@ -59,10 +59,10 @@ def update_wind(forcing):
     """
     print('Update wind')
     # 1 Open wind produced by HM with LLT method
-    wind = xr.open_dataset('WIND.nc', chunks='auto')
+    wind = open_dataset('WIND.nc')
     dates = np.intersect1d(forcing.time, wind.time)
     forcing = forcing.sel({'time': dates})
-    wind = wind.sel({'time': dates}).transpose('time', 'y', 'x')
+    wind = wind.sel({'time': dates})
     forcing['Wind'].data = wind['Wind'].data
     forcing['Wind_DIR'].data = wind['Wind_dir'].data
     wind.close()
@@ -85,8 +85,7 @@ def update_precipitation(forcing, subdir=None):
     forcing.time.encoding['units'] = f'hours since {forcing.time.data[0]}'
 
     precipitation = precipitation.sel({'time': dates})
-    precipitation = xrp.update_varname(precipitation)
-    precipitation = precipitation.transpose('time', 'y', 'x')
+    precipitation = xrp.preprocess(precipitation)
 
     forcing['Rainf'].data = precipitation['Rainf'].data / 3600.
     forcing['Snowf'].data = precipitation['Snowf'].data / 3600.
@@ -95,10 +94,11 @@ def update_precipitation(forcing, subdir=None):
 
 
 def write(ds, outname):
-    ds.time.encoding['dtype'] = 'int32'
+    # ds.time.encoding['dtype'] = 'int32'
     datedeb = ds.time[0]
     dateend = ds.time[-1]
-    ds.load().to_netcdf(outname, unlimited_dims={'time': True}, format=DEFAULT_NETCDF_FORMAT)
+    ds.load().to_netcdf(outname, unlimited_dims={'time': True}, format=DEFAULT_NETCDF_FORMAT,
+            encoding={'time': {'dtype': 'int32'}})
     return datedeb, dateend
 
 
