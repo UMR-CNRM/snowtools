@@ -721,12 +721,12 @@ def put_precipitation(*, xpid, geometry, **kw):
 
 # TODO : use a decorator
 def get_wind(*, xpid, geometry, **kw):
-    return precipitation('get', xpid, geometry, **kw)
+    return wind('get', xpid, geometry, **kw)
 
 
 # TODO : use a decorator
 def put_wind(*, xpid, geometry, **kw):
-    return precipitation('put', xpid, geometry, **kw)
+    return wind('put', xpid, geometry, **kw)
 
 
 ############################################
