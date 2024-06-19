@@ -38,7 +38,7 @@ Then s2m command:
 
 .. code-block:: bash
 
-   s2m research --walltime='2:00:00' -b 20190801 -e 20200801 -m s2m -f reanalysis2020.2@lafaysse 
+   s2m research --walltime='2:00:00' -b 20190801 -e 20200801 -m s2m -f reanalysis2020.2@lafaysse
                 -r alp_flat:Aussois250:/home/cnrm_other/cen/mrns/fructusm/SIMU_TOP2D/NetCDF2D_Aussois.nc
                 -n /home/cnrm_other/cen/mrns/fructusm/SIMU_TOP2D/Aussois.nam --grid --ntasks=52
                 -g -o Aussois_2D
@@ -92,8 +92,8 @@ from snowtools.DATA import SNOWTOOLS_DIR
 NetCDF_out = 'NetCDF2D_from_shapefile.nc'
 
 # PATH_MNT
-path_MNT_alti_30m = '/rd/cenfic3/cenmod/home/haddjeria/mnt_ange/ange-factory/prod1/france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
-path_MNT_alti_250m = '/rd/cenfic3/cenmod/home/haddjeria/mnt_ange/ange-factory/prod1/france_250m/DEM_FRANCE_L93_250m_bilinear.tif'
+path_MNT_alti_30m = '/rd/cenfic3/cenmod/dem_cen/definitive/france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
+path_MNT_alti_250m = '/rd/cenfic3/cenmod/dem_cen/definitive/france_250m/DEM_FRANCE_L93_250m_bilinear.tif'
 
 ################################################################
 # Infos shapefile massif, normally stable and durable
@@ -308,7 +308,7 @@ def find_most_common_massif(dict_info):
         print('cette valeur est trop faible')
         print('on ne regroupe pas tous les points dans le même massif')
         return massif_num
-        
+
 
 ################################################################
 #   STEP 6: constraint altitudes between min and max of massif
@@ -391,7 +391,7 @@ def print_for_namelist(dict_info, output_name):
 
 
 ################################################################
-#   Get arguments 
+#   Get arguments
 ################################################################
 def parseArguments(args):
     """
@@ -422,7 +422,7 @@ def main(args=None):
     Main program: parse argument then launch the creation of NetCDF
     """
     args = args if args is not None else sys.argv[1:]
-    if len(sys.argv) > 1: 
+    if len(sys.argv) > 1:
         args = parseArguments(args)
 
         # argument for command line call

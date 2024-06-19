@@ -1,12 +1,102 @@
 .. Author: Ange Haddjeri
 .. Date: 2024
 
-Forcing simulation prep
-=======================
+Blowing snow simulation preparation
+===================================
 
 For blowing snow transport simulations, having a realistic wind is essential. In our simulations we used Louis' DEVINE high resolution wind.
 
 We therefore had to hand-cook modified simulation forcings.
+
+
+.. _simscratch:
+
+Typical workflow for a blowing snow experiment from scratch on Belenos :
+************************************************************************
+
+#. :ref:`S2M Geometry creation <geom>`
+
+#. :ref:`Spinup creation <spinup>` (PREP + PGD + raw forcings (SAFRAN))
+
+#. Forcing modification :
+
+    #. :ref:`High resolution wind resampling <louis>`
+
+    #. :ref:`Forcing wind modification <fmod>` (or any other field)
+
+#. :ref:`Simulation launch with S2M <s2m-command>`
+
+.. warning::
+  Do not forget to clean the vortex cache before launching simulation with modified forcings to **override the previous cached forcing files**.
+
+
+.. _geom:
+
+S2M geometry creation from scratch:
+***********************************
+
+.. |ico1| image:: https://i.ibb.co/KrtJCMV/Capture-d-cran-2024-06-19-10-36-19-copie.png
+    :alt: shapefile
+    :width: 50
+
+.. |ico2| image:: https://i.ibb.co/GFk7mZJ/Capture-d-cran-2024-06-19-10-36-40.png
+    :alt: rectangle
+    :width: 50
+
+To generate a simulation geometry from scratch, the first step is to determine the simulation area.
+I suggest to use the following workflow:
+
+1. Generate a shapefile of the simulation area
+
+    The shapefile need to be a rectangle in the EPSG:2154 projection and can be made using QGIS |ico1| and the rectangle creation tool from center |ico2| (to get target aligned pixels).
+
+2. It's possible to create the S2M geometry seed file using the :file:`/snowtools/interpolation/shapefile2NetCDF_2D.py` script.
+
+  This command create a NetCDF geometry seed file containing the DEM and massif number values needed for the spinup creation.
+  An example of command to create this file can be found bellow. Option :file:`-rlon -rlat` for resolution, :file:`--MNT_alt` get the path of the DEM file.
+  A list of CEN MNT/DEM files can be found on `confluence <http://confluence.meteo.fr/pages/viewpage.action?pageId=276547824>`_
+
+  :file:`python shapefile2NetCDF_2D.py ~/Téléchargements/eaudolle\@gdmaison/domaineEAUDOLLE.shp -m 12 -rlon 250 -rlat 250 -o eaudolle_250m.nc`
+
+  This command also output the geometry description to be added the namelist::
+
+    In namelist &NAM_IGN:
+    XCELLSIZE= 250
+    XX_LLCORNER= 929876
+    XY_LLCORNER= 6445476
+    !! Check with NETCDF dimensions (gap of 1 possible):
+    NCOLS= 127
+    NROWS= 129
+    !! For BELENOS, take ntasks < min(NCOLS, NROWS)
+
+.. warning::
+  To get more uniform forcings in the Grandes Rousses domain, we did choose a single massif number for the entire domain. This might need DEM alteration as the MIN and MAX elevation need to be within the bound of the elevation MIN/MAX S2M reanalysis for the forcing interpolation to run properly.
+
+
+3. Create or modify your namelist and move the geometry seed file and the namelist on the server.
+
+
+.. _spinup:
+
+Spinup creation on BELENOS
+**************************
+
+#. Name and add the new geometry info in the :file:`~/.vortexrc/geometries.ini` file on BELENOS server::
+
+    [eaudolle250]
+    info = zone de simulation pour le bassin EDF de EAUDOLLE
+    kind = projected
+    resolution = 0.250
+    area = eaudolle250
+    runit = km
+
+
+.. warning::
+  Do not use capital letter in the geometry and area name.
+
+2. Create the spinup, PREP, PGD and forcings interpolation (SAFRAN) of the new geometry using a command like the folowing::
+
+    s2m research --ntasks=60 --walltime=23:59:00 -b 20070801 -e 20170801 -m s2m -f reanalysis2020.2@lafaysse -r alp_flat:eaudolle250:/home/cnrm_other/cen/mrns/haddjeria/eaudolle_250m.nc -n /home/cnrm_other/cen/mrns/haddjeria/git/namelist/GRID_EAUDOLLE_250.nam -g --geotype grid -o spinup
 
 
 Louis' DEVINE wind
@@ -19,29 +109,11 @@ Louis Le Toumelin developped a machine learning method to downscale the wind spe
 If the simulation forcings and the wind are on the same grid (30m) the Wind and Wind_DIR forcing fields can be replaced in files transparently.
 If the two grid are different, the two wind fields (Wind and Wind_DIR) need to be resample to the simulation grid.
 
-
-Typical workflow for a blowing snow experiment from scratch on Belenos :
-************************************************************************
-
-#. S2M Geometry creation
-
-#. PREP + PGD + Forcing (SAFRAN) creation
-
-#. Forcing modification :
-
-    #. :ref:`High resolution wind resampling <louis>`
-
-    #. :ref:`Forcing wind modification <fmod>` (or any other field)
-
-#. Simulation launch with S2M
-
-.. warning::
-  Do not forget to clean the vortex cache before launching simulation to override the previous cached forcing file
-
 .. _louis:
 
 Louis' wind resampling
 **********************
+
 
 This regridding workflow is based on the folowing functions defined by Louis in is `github repo <https://github.com/louisletoumelin/bias_correction>`_ <3::
 
@@ -133,7 +205,8 @@ This regridding workflow is based on the folowing functions defined by Louis in 
 
 .. note::
   To start regridding you will need the high resolution wind files and the target simulation grid.
-  At the moment of the writing of this file, the high resolution wind database was located on sxcen server at */mnt/lfs/d10/mrns/users/NO_SAVE/gouttevini/ARCHIVE_LeToumelin_NOSAVE/letoumelinl/Wind_250m/latest/Wind_2017_08_02_to_2020_05_31.nc*
+  At the moment of the writing of this file, the high resolution wind database was located on sxcen server at :file:`/mnt/lfs/d10/mrns/users/NO_SAVE/gouttevini/ARCHIVE_LeToumelin_NOSAVE/letoumelinl/Wind_250m/
+  latest/Wind_2017_08_02_to_2020_05_31.nc`
   but it is best to ask Hugo or Isabelle for the file.
 
 The regridding unfolds in tree steps :
