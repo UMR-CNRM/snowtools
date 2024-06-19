@@ -14,7 +14,7 @@ Ange
 .. toctree::
    :maxdepth: 1
 
-   Build snow simulation from scratch and modify wind forcings for blowing snow <Forcing_modification.rst>
+   Build snow simulation from scratch on Belenos server and modify wind forcings for blowing snow <Forcing_modification.rst>
    Pleiades observation <Pleiades.rst>
    Theia Snow observations <Sentinel_2.rst>
    Masks used in the experiments <Masks.rst>
