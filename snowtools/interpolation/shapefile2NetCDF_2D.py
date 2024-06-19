@@ -450,7 +450,7 @@ def main(args=None):
         else:
             massif_num = find_most_common_massif(dict_info)
 
-        massif_num = find_most_common_massif(dict_info)
+        #massif_num = find_most_common_massif(dict_info)
         create_netcdf(massif_num, output_name)
         clean_the_mess(path_shapefile, clean_all)
         print_for_namelist(dict_info, output_name)
