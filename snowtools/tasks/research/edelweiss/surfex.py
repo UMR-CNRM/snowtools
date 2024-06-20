@@ -49,7 +49,9 @@ class _Offline(_VortexTask):
         """
         kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
         # Update default vapp with specific conf values
-        kw.update(dict(vapp=self.conf.vapp_forcing, filename='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+        # Verrue pour gérer les FORCINGs 2021/2022 qui commencent à 7h !
+        kw.update(dict(vapp=self.conf.vapp_forcing, filename=f'FORCING_{self.conf.datebegin}_[dateend:ymdh].nc',
+        #kw.update(dict(vapp=self.conf.vapp_forcing, filename='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
             datebegin=self.conf.datebegin_forcing, dateend=self.conf.dateend_forcing, member=self.conf.member,
             xpid=self.conf.xpid_forcing, geometry=self.conf.geometry_forcing))
         self.sh.title('FORCING')
