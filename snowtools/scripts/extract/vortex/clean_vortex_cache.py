@@ -64,7 +64,7 @@ def parse_args():
     parser.add_argument("--kind", dest="kind", required=True, type=str, choices=block_map.keys(),
                         help="Kind of resource (values such as 'FORCING', 'PRO', 'DIAG',...) are accepted")
 
-    parser.add_argument("-m", "--member", dest="member", default=False, type=str,
+    parser.add_argument("-m", "--member", dest="member", default=None, type=str,
             help="Simulation members (format first:last)")
 
     args = parser.parse_args()

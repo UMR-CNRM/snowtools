@@ -115,7 +115,8 @@ def put(**description):
 
 def footprint_kitchen(**kw):
 
-    kw['experiment'] = kw.pop('xpid')
+    if 'xpid' in kw.keys():
+        kw['experiment'] = kw.pop('xpid')
 
     if 'vconf' not in kw.keys():
         kw['vconf'] = '[geometry:tag]',
@@ -123,7 +124,7 @@ def footprint_kitchen(**kw):
     if 'role' not in kw.keys() or kw['role'] is None:
         kw['role'] = kw['kind']
 
-    if 'filename' in kw.keys() or kw['filename'] is None:
+    if 'filename' not in kw.keys() or kw['filename'] is None:
         kw['filename'] = f'{kw["kind"]}.nc'
 
     if 'member' in kw.keys():
