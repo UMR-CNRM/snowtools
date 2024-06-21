@@ -18,13 +18,13 @@ def update_varname(ds):
         if ds.name in variables_map:
             ds = ds.rename(variables_map[ds.name])
     else:
-        update_dict = {key: variables_map[key] for key in ds.var() if key in variables_map.keys()}
+        update_dict = {key: variables_map[key] for key in list(ds.keys()) if key in variables_map.keys()}
         ds = ds.rename(update_dict)
     return ds
 
 
 def update_dimname(ds):
-    update_dict = {key: dimension_map[key] for key in ds.coords if key in dimension_map.keys()}
+    update_dict = {key: dimension_map[key] for key in list(ds.coords) if key in dimension_map.keys()}
     ds = ds.rename(update_dict)
     return ds
 
