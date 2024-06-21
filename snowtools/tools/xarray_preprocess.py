@@ -4,16 +4,22 @@ dimension_map = {'x': 'xx', 'y': 'yy', 'lat': 'latitude', 'lon': 'longitude'}
 variables_map = {'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf'}
 
 
-def preprocess(ds, decode_time=True):
+def preprocess(ds, decode_time=True, rename=dict()):
+    """
+    * ds: xarray.Dataset or Dataarray
+    * decode_time: Need to decode time manually
+    * rename: User-defined variable re-naming
+    """
     if decode_time:
         ds = decode_time_dimension(ds)
-    ds = update_varname(ds)
-    ds = update_dimname(ds)
+    ds = update_varname(ds, rename)
+    ds = update_dimname(ds, rename)
     ds = transpose(ds)
     return ds
 
 
-def update_varname(ds):
+def update_varname(ds, rename):
+    variables_map.update(rename)
     if isinstance(ds, xr.core.dataarray.DataArray):
         if ds.name in variables_map:
             ds = ds.rename(variables_map[ds.name])
@@ -23,7 +29,8 @@ def update_varname(ds):
     return ds
 
 
-def update_dimname(ds):
+def update_dimname(ds, rename):
+    dimension_map.update(rename)
     update_dict = {key: dimension_map[key] for key in list(ds.coords) if key in dimension_map.keys()}
     ds = ds.rename(update_dict)
     return ds
