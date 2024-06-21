@@ -36,10 +36,10 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
     See their respective documentation for more details.
 
 
-    # TODO : consulter la doc : http://intra.cnrm.meteo.fr/algopy/trainings/vortex_dev2022_1/presentation/beamer/vortex_dev_jobs2_presentation.pdf
+    # TODO : consulter la doc :
+    http://intra.cnrm.meteo.fr/algopy/trainings/vortex_dev2022_1/presentation/beamer/vortex_dev_jobs2_presentation.pdf
 
     '''
-
 
     def process(self):
         """

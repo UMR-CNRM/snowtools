@@ -133,6 +133,9 @@ class Edelweiss_kitchen(vortex_kitchen):
     def create_env(self):
         """Prepare environment"""
 
+        # TODO : create a specific environment for each execution to avoid overwriting
+        # the configuration file when launching several executions in parallel
+
         # Check for a working directory
         if 'WORKDIR' in os.environ.keys():
             workdir = os.environ['WORKDIR']

@@ -30,18 +30,12 @@ from snowtools.tools import common_tools as ct
 import snowtools.tools.xarray_preprocess as xrp
 
 members_map = dict(
-    safran         = None,
-    safran_pappus  = None,
-    SAFRAN         = None,
-    SAFRAN_pappus  = None,
-    RawData        = None,
-    RawData_pappus = None,
-    RS27           = 1,  # post-processed ANTILOPE only
-    RS27_pappus    = 1,  # post-processed ANTILOPE only
-    # RS27           = 17,  # All members
-    # RS27_pappus    = 17,  # All members
-    EnKF36         = range(1, 17),  # TODO : syntaxe à implémenter
-    EnKF36_pappus  = range(1, 17),  # TODO : syntaxe à implémenter
+    RS27_pappus        = [mb for mb in range(17)],
+    EnKF36_pappus      = [mb for mb in range(17)],
+    PF32_pappus        = [mb for mb in range(17)],
+    RS27_sorted_pappus = [mb for mb in range(17)],
+    ANTILOPE_pappus    = None,
+    SAFRAN_pappus      = None,
 )
 
 # Retrieve dictionnary to map clustering type to a proper label
@@ -86,6 +80,9 @@ def parse_command_line():
     parser.add_argument('-f', '--plot_fields', action='store_true',
                         help="Wether to plot fields or not (avoid duplicates)")
 
+    parser.add_argument('-m', '--members', action='store_true',
+                        help="To activate ensemble simulations")
+
     parser.add_argument('-o', '--overwrite_cache', action='store_true',
                         help="Get simulations from Hendrix instead of the local cache in case they have beeen updated")
 
@@ -119,16 +116,19 @@ def main():
             xpid = f'{xpid}@{user}'
         shortid = xpid.split('@')[0]
         # VERRUE pour gérer le décallage d'un jour en attendant de combler les données
-        if shortid.startswith('safran') and datebegin == '2021080207':
+        if (shortid.startswith('SAFRAN') or shortid.startswith('ANTILOPE')) and datebegin == '2021080207':
             deb = '2021080106'
         else:
             deb = datebegin  # 2021080207
 
         # TODO : à gérer autrement pour être flexible
-        if shortid in ['safran', 'ANTILOPE', 'safran_pappus', 'ANTILOPE_pappus', 'SAFRAN', 'SAFRAN_pappus']:
-            member = None
+        if members:
+            member = members_map[shortid]
         else:
-            member = 0
+            if shortid in ['safran', 'ANTILOPE', 'safran_pappus', 'ANTILOPE_pappus', 'SAFRAN', 'SAFRAN_pappus']:
+                member = None
+            else:
+                member = [0]
 
         # Get DIAG files with Vortex
         kw = dict(datebegin=deb, dateend=dateend, vapp=vapp, member=member, filename=f'DIAG_{shortid}.nc',
@@ -136,9 +136,6 @@ def main():
         if overwrite_cache:
             kw['namespace'] = 'vortex.archive.fr'
         io.get_diag(**kw)
-
-    # TODO : à gérer autrement pour être flexible
-    member = None
 
     # 2. Compare simulated data with Sentinel2 data
     # TODO : concaténer les 2 variables dans 1 seul fichier
@@ -168,8 +165,8 @@ def main():
         if member is None:
             os.remove(f'DIAG_{shortid}.nc')
         else:
-            for member in range(member):
-                os.remove(f'mb{member:03d}/DIAG_{shortid}.nc')
+            for mb in member:
+                os.remove(f'mb{mb:03d}/DIAG_{shortid}.nc')
 
 
 def cluster_criterion(clustering):
@@ -210,11 +207,11 @@ def plot_all_fields(xpids, obs, var, member=None):
             simu = xr.open_dataset(f'DIAG_{shortid}.nc', decode_times=False)
         else:
             # Verrue : trouver une solution standard plus propre
-            if member == 1:
+            if len(member) == 1:
                 # "Deterministic" member=0 by default (WARNING : different from the current 's2m oper' convention)
                 simu = xr.open_dataset(f'DIAG_{shortid}.nc', decode_times=False)
             else:
-                simu = xr.open_mfdataset([f'mb{mb:03d}/DIAG_{shortid}.nc' for mb in range(member)],
+                simu = xr.open_mfdataset([f'mb{mb:03d}/DIAG_{shortid}.nc' for mb in member],
                                          combine='nested', concat_dim='member', decode_times=False)
         simu = xrp.preprocess(simu, decode_time=False)
         simu.squeeze(drop=True)
@@ -222,8 +219,8 @@ def plot_all_fields(xpids, obs, var, member=None):
         if 'startseason' in simu.dims:
             simu = simu.drop('startseason').squeeze()
 
-        if member is not None and member > 1:
-            simu['member'] = range(member)
+        if member is not None and len(member) > 1:
+            simu['member'] = member
             tmp = simu.mean(dim='member')
         else:
             tmp = simu
@@ -252,8 +249,7 @@ def violin_plot(xpids, obs, var, mask, member=None):
             df = filter_simu(shortid, subdir, mask, var)
         else:
             df = None
-            for mb in range(member):
-                print(mb)
+            for mb in member:
                 subdir = f'mb{mb:03d}'
                 dfm = filter_simu(shortid, subdir, mask, var)
                 if df is not None:
@@ -301,6 +297,7 @@ if __name__ == '__main__':
     clustering      = args.clustering
     thresholds      = args.thresholds
     plot_fields     = args.plot_fields
+    members         = args.members
     overwrite_cache = args.overwrite_cache
 
     if not os.path.exists(workdir):

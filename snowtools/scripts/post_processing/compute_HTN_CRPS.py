@@ -33,12 +33,23 @@ from snowtools.plots.boxplots import violinplot
 
 
 members_map = dict(
-    RS27_pappus     = [mb for mb in range(17)],
-    EnKF_pappus     = [mb for mb in range(17)],
-    PF_pappus       = [mb for mb in range(17)],
-    ANTILOPE_pappus = None,
-    SAFRAN_pappus   = None,
+    RS27_pappus        = [mb for mb in range(17)],
+    EnKF36_pappus      = [mb for mb in range(17)],
+    PF32_pappus        = [mb for mb in range(17)],
+    RS27_sorted_pappus = [mb for mb in range(17)],
+    ANTILOPE_pappus    = None,
+    SAFRAN_pappus      = None,
 )
+
+xpid_map = {
+    '2018012312': 'CesarDB_AngeH',
+    '2018031612': 'CesarDB_AngeH',
+    '2018031612': 'CesarDB_AngeH',
+    '2019051312': 'CesarDB_AngeH',
+    '2022022612': 'CesarDB',
+    '2022050112': 'CesarDB',
+}
+
 
 # Retrieve dictionnary to map clustering type to a proper label
 label_map = clusters.label_map
@@ -61,9 +72,6 @@ def parse_command_line():
 
     parser.add_argument('-x', '--xpids', nargs='+', type=str,
                         help="XPID(s) of the simulation(s) format XP_NAME@username")
-
-#    parser.add_argument('-m', '--members', type=str, default='0:16',
-#            help="Members associated to the experiment. Syntax first:last")
 
     parser.add_argument('-a', '--vapp', type=str, default='edelweiss', choices=['s2m', 'edelweiss'],
                         help="Application that produced the target file")
@@ -89,6 +97,9 @@ def parse_command_line():
     parser.add_argument('-o', '--obs_geometry', type=str, choices=['Lautaret250m', 'Huez250m'], required=True,
                         help='Geometry of the observation')
 
+    parser.add_argument('-m', '--members', action='store_true',
+                        help="To activate ensemble simulations")
+
     args = parser.parse_args()
     return args
 
@@ -100,10 +111,10 @@ def execute():
     # a) Pleiades observations
     kw = dict(date=datebegin, vapp=vapp)
     obsname = f'PLEIADES_{date}.nc'
-    io.get_snow_obs_date(xpid='CesarDB_AngeH', geometry=obs_geometry, date=date, vapp='Pleiades', filename=obsname)
+    io.get_snow_obs_date(xpid=xpid_map[date], geometry=obs_geometry, date=date, vapp='Pleiades', filename=obsname)
     # Open observation file as DataArray
     obs = xr.open_dataset(obsname)
-    obs = xrp.preprocess(obs, decode_time=False)
+    obs = xrp.preprocess(obs, decode_time=False, rename={'Band1': 'DSN_T_ISBA'})
 
     if clustering == 'elevation':
         # Get Domain's DEM in case ZS not in simulation file
@@ -134,21 +145,34 @@ def execute():
         shortid = xpid.split('@')[0]
 
         # Get (filtered) PRO files with Vortex
-        members = members_map[shortid]
-        kw = dict(datebegin=datebegin, dateend=dateend, vapp=vapp, member=members, namebuild=None,
+        if members:
+            member = members_map[shortid]
+        else:
+            if shortid in ['safran', 'ANTILOPE', 'safran_pappus', 'ANTILOPE_pappus', 'SAFRAN', 'SAFRAN_pappus']:
+                member = None
+            else:
+                member = [0]
+
+        # VERRUE pour gérer le décallage d'un jour en attendant de combler les données
+        if (shortid.startswith('SAFRAN') or shortid.startswith('ANTILOPE')) and datebegin == '2021080207':
+            deb = '2021080106'
+        else:
+            deb = datebegin  # 2021080207
+
+        kw = dict(datebegin=deb, dateend=dateend, vapp=vapp, member=member, namebuild=None,
                 filename=f'PRO_{shortid}.nc', xpid=xpid, geometry=geometry)
         io.get_pro(**kw)
 
-        simu = read_simu(xpid, members, date)
+        simu = read_simu(xpid, member, date)
 
-        if members is not None:
+        if member is not None and len(member) > 1:
             plot_ensemble(simu, obs.DSN_T_ISBA, shortid, date)
 
         pearson[shortid], crps = compute_scores(simu, obs)
 
-        savename = f'CRPS_{xpid}_{date}.pdf'
+        savename = f'CRPS_{shortid}_{date}.pdf'
         vmin = 0
-        vmax = 4
+        vmax = 6
         plot2D.plot_field(crps, savename, vmin=vmin, vmax=vmax, cmap=plt.cm.Reds)
 
         if clustering in ['elevation', 'uncertainty']:
@@ -158,7 +182,7 @@ def execute():
         df = tmp.to_dataframe(name=shortid).dropna().reset_index().drop(columns=['xx', 'yy', 'time'], errors='ignore')
         dataplot = pd.concat([dataplot, df])
 
-        clean(shortid, members)
+        clean(shortid, member)
 
     dataplot = dataplot.rename(columns={'slices': label_map[clustering], clustering: label_map[clustering]})
     dataplot = dataplot.melt(label_map[clustering], var_name='experiment', value_name='CRPS (m)')
@@ -176,7 +200,7 @@ def read_simu(xpid, members, date):
     listfiles = list()  # List of simulation PRO files
     shortid = xpid.split('@')[0]
     proname = f'PRO_{shortid}.nc'
-    if members is not None:
+    if members is not None and len(members) > 1:
         for mb in members:
             listfiles.append(f'mb{mb:03d}/{proname}')
     else:
@@ -274,7 +298,7 @@ def compute_scores(simu, obs):
 
 
 def clean(xpid, members):
-    if members is not None:
+    if members is not None and len(members) > 1:
         for member in members:
             os.remove(f'mb{member:03d}/PRO_{xpid}.nc')
     else:
@@ -305,6 +329,8 @@ if __name__ == '__main__':
     obs_geometry    = args.obs_geometry
     clustering      = args.clustering
     thresholds      = args.thresholds
+    members         = args.members
+
 #    if ':' in args.members:
 #        first_mb, last_mb = args.members.split(':')
 #        members         = [mb for mb in range(int(first_mb), int(last_mb) + 1)]
