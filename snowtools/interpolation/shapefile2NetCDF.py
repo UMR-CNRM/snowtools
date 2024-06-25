@@ -204,9 +204,15 @@ import matplotlib.pyplot as plt
 NetCDF_out = 'NetCDF_from_shapefile.nc'
 
 # PATH_MNT
-path_MNT_alti_defaut = DIRDATADEM + 'france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
-path_MNT_slope_defaut = DIRDATADEM + 'france_30m/SLP_FRANCE_L93_30m_bilinear.tif'
-path_MNT_aspect_defaut = DIRDATADEM + 'france_30m/ASP_FRANCE_L93_30m_bilinear.tif'
+path_MNT_alti_defaut = "/rd/cenfic3/cenmod/home/haddjeria/mnt_ange/ange-factory/attentevalidation/france_30m/DEM_FRANCE_L93_30m_bilinear.tif"
+path_MNT_slope_defaut = "/rd/cenfic3/cenmod/home/haddjeria/mnt_ange/ange-factory/attentevalidation/france_30m/SLP_FRANCE_L93_30m_bilinear.tif"
+path_MNT_aspect_defaut = "/rd/cenfic3/cenmod/home/haddjeria/mnt_ange/ange-factory/attentevalidation/france_30m/ASP_FRANCE_L93_30m_bilinear.tif"
+
+# Pour test en local:
+# path_MNT_alti_defaut =
+#                '/home/fructusm/MNT_FRANCEandBORDER_30m_fusion:IGN5m+COPERNICUS30m_EPSG:2154_INT:AVERAGE_2021-03.tif'
+# path_MNT_slope_defaut = '/home/fructusm/MNT_slope.tif'
+# path_MNT_aspect_defaut = '/home/fructusm/MNT_aspect.tif'
 
 ################################################################
 # Infos shapefile massif, normally stable and durable
