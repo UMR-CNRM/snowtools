@@ -172,7 +172,7 @@ def execute():
 
         savename = f'CRPS_{shortid}_{date}.pdf'
         vmin = 0
-        vmax = 6
+        vmax = 3
         plot2D.plot_field(crps, savename, vmin=vmin, vmax=vmax, cmap=plt.cm.Reds)
 
         if clustering in ['elevation', 'uncertainty']:
@@ -189,11 +189,21 @@ def execute():
 
     title = f'Pleiades, {geometry}, {date[:8]}\n'
     violinplot.plot_ange(dataplot, 'CRPS (m)', figname=f'CRPS_by_{clustering}_{date}_' + '_'.join(xpids),
-            title=title, yaxis=label_map[clustering], violinplot=False, xmax=4)
+            title=title, yaxis=label_map[clustering], violinplot=False, xmax=3)
 
     print()
-    for shortid, pearson_corr in pearson.items():
-        print(f'Pearson coefficient for experiment {shortid} : ', pearson_corr.data)
+    if member is not None and len(member) > 1:
+        with open(f'PearsonCoeff_{date[:8]}.csv', 'a') as f:
+            for shortid, pearson_corr in pearson.items():
+                f.write(f'{shortid};{pearson_corr.data[0]}\n')
+    else:
+        fig, ax = plt.figure()
+        pos = 1
+        for shortid, pearson_corr in pearson.items():
+            plt.boxplot(pearson_corr.data, notch=True, labels=shortid, positions=pos)
+            pos = pos + 1
+        plt.legend()
+        plt.savefig(f'PearsonCoeff_{date[:8]}.pdf')
 
 
 def read_simu(xpid, members, date):
@@ -259,7 +269,7 @@ def plot_ensemble(simu, obs, xpid, date):
     spread = simu.DSN_T_ISBA.std(dim='member')
     savename = f'Spread_HTN_{xpid}_{date}.pdf'
     vmin = 0
-    vmax = 0.2
+    vmax = 0.5
     plot2D.plot_field(spread, savename, vmin=vmin, vmax=vmax, cmap=plt.cm.Purples)
 
     error = mean - obs
@@ -287,8 +297,8 @@ def compute_scores(simu, obs):
     # We want a CRPS for each pixel of the domain, so we add a "fake" dimension to cmpute
     # the CRPS along this dimension and get 1 value per pixel
 
-    control_member = simu.sel({'member': 0})
-    pearson = xr.corr(control_member, obs)
+    # control_member = simu.sel({'member': 0})
+    pearson = xr.corr(simu, obs, dim='member')
 
     simu = simu.expand_dims(dim="time")
     obs  = obs.expand_dims(dim="time")
