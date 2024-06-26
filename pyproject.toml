@@ -52,7 +52,7 @@ Issues = "https://opensource.umr-cnrm.fr/projects/snowtools_git/wiki/Procedure_f
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["snowtools*", "cenutils*"]
-namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
+namespaces = true  # to disable scanning PEP 420 namespaces (true by default)
 
 [project.scripts]
 s2m = 'snowtools.tasks.s2m_command:main'
