@@ -3,7 +3,7 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "Snowtools"
+name = "snowtools"
 version = "2.0.1"
 dependencies = [
     'matplotlib',
