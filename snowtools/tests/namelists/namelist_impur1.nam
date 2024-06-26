@@ -11,14 +11,14 @@ CROUGH = "Z01D"
                        CALBEDO      = 'MEAN'	,
                        XSOILGRID= 0.01,0.03,0.06,0.10,0.20,0.30,0.45,0.60,0.80,1.00,1.25,1.50,2.00,2.50,3.00,4.00,5.00,6.50,8.00,10.0
 /
-&NAM_ISBAn             CSCOND       = 'PL98'	,
-                       CSOILFRZ     = 'LWT'	,
-                       CDIFSFCOND   = 'DEF '	,
-                       CSNOWRES     = 'RIL'	,
-                       CCPSURF      = 'DRY'  ,
-                       XCVHEATF     = 0.2                           
+&NAM_ISBAn             CSCOND       = 'PL98',
+                       CSOILFRZ     = 'LWT',
+                       CDIFSFCOND   = 'DEF ',
+                       CSNOWRES     = 'RIL',
+                       CCPSURF      = 'DRY',
+                       XCVHEATF     = 0.2
 /
-&NAM_SGH_ISBAn         CRUNOFF    = "DT92"                       
+&NAM_SGH_ISBAn         CRUNOFF    = "DT92"
 /
 &NAM_DATA_ISBA         XUNIF_VEGTYPE(1)     = 0.,
                        XUNIF_VEGTYPE(2)     = 0.,
@@ -216,9 +216,14 @@ CROUGH = "Z01D"
     NDAY = 1
     XTIME = 21600.0
 /
-&NAM_PREP_ISBA     XHUG_SURF = 0.10,
-                   XHUG_ROOT = 0.10,
-                   XHUG_DEEP = 0.10,
+&NAM_PREP_ISBA
+                   XUNIF_HUG_SOIL(1) = 0.1,
+                   XUNIF_HUG_SOIL(2) = 0.1,
+                   XUNIF_HUG_SOIL(3) = 0.1,
+                   XUNIF_HUGI_SOIL(1) = 0.001,
+                   XUNIF_HUGI_SOIL(2) = 0.001,
+                   XUNIF_HUGI_SOIL(3) = 0.001,
+                   NINFILES=3,
                    CFILE_TG="init_TG.nc",
                    CTYPE_TG="NETCDF"
 /

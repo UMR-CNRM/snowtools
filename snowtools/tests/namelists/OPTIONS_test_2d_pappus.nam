@@ -67,11 +67,12 @@
    CCPSURF='DRY',
  /
  &NAM_ISBA_SNOWN
-   CSNOWDRIFT='VI13',
-   LSNOWDRIFT_SUBLIM=.FALSE.,
-   LSNOW_ABS_ZENITH=.FALSE.,
-   CSNOWMETAMO='B21',
-   CSNOWRAD='B92',
+  CSNOWDRIFT='NONE'
+  LSNOWDRIFT_SUBLIM= .FALSE.
+  LSNOW_ABS_ZENITH= .FALSE.
+  CSNOWMETAMO='B21'
+  CSNOWRAD='B92'
+  LSNOWPAPPUS=.TRUE.
  /
  &NAM_PGD_ARRANGE_COVER
    LWATER_TO_NATURE=.TRUE.,
@@ -87,12 +88,16 @@
    CWATER='NONE',
  /
  &NAM_PREP_ISBA
-   XHUG_SURF=0.1,
-   XHUG_ROOT=0.1,
-   XHUG_DEEP=0.1,
-   XTG_SURF=273.16,
-   XTG_ROOT=273.16,
-   XTG_DEEP=273.16,
+                   XUNIF_HUG_SOIL(1) = 0.1,
+                   XUNIF_HUG_SOIL(2) = 0.1,
+                   XUNIF_HUG_SOIL(3) = 0.1,
+                   XUNIF_HUGI_SOIL(1) = 0.001,
+                   XUNIF_HUGI_SOIL(2) = 0.001,
+                   XUNIF_HUGI_SOIL(3) = 0.001,
+                   XUNIF_TG_SOIL(1) = 273.16,
+                   XUNIF_TG_SOIL(2) = 273.16,
+                   XUNIF_TG_SOIL(3) = 273.16,
+                   NINFILES=3
  /
  &NAM_PREP_ISBA_SNOW
    CSNOW='CRO',

@@ -12,9 +12,9 @@
                        CDIFSFCOND   = 'DEF '	,
                        CSNOWRES     = 'RIL'	,
                        CCPSURF      = 'DRY'  ,
-                       XCVHEATF     = 0.6                             
+                       XCVHEATF     = 0.6
 /
-&NAM_SGH_ISBAn         CRUNOFF    = "DT92"                       
+&NAM_SGH_ISBAn         CRUNOFF    = "DT92"
 /
 &NAM_DATA_ISBA         XUNIF_VEGTYPE(1)     = 0.,
                        XUNIF_VEGTYPE(2)     = 0.,
@@ -206,15 +206,20 @@
     YSLOPE = 'FORCING.nc'
     YSLOPEFILETYPE='NETCDF'
 /
-&NAM_PREP_SURF_ATM 
+&NAM_PREP_SURF_ATM
                    NYEAR  = 1993,
                    NMONTH = 08,
                    NDAY   = 01,
                    XTIME  = 21600. 
 /
-&NAM_PREP_ISBA     XHUG_SURF = 0.10,
-                   XHUG_ROOT = 0.10,
-                   XHUG_DEEP = 0.10,
+&NAM_PREP_ISBA
+                   XUNIF_HUG_SOIL(1) = 0.1,
+                   XUNIF_HUG_SOIL(2) = 0.1,
+                   XUNIF_HUG_SOIL(3) = 0.1,
+                   XUNIF_HUGI_SOIL(1) = 0.001,
+                   XUNIF_HUGI_SOIL(2) = 0.001,
+                   XUNIF_HUGI_SOIL(3) = 0.001,
+                   NINFILES=3,
                    CFILE_TG="init_TG.nc",
                    CTYPE_TG="NETCDF"
 /

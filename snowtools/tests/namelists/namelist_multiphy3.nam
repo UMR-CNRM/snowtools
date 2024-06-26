@@ -212,9 +212,14 @@
                    NDAY   = 01,
                    XTIME  = 21600. 
 /
-&NAM_PREP_ISBA     XHUG_SURF = 0.10,
-                   XHUG_ROOT = 0.10,
-                   XHUG_DEEP = 0.10,
+&NAM_PREP_ISBA
+                   XUNIF_HUG_SOIL(1) = 0.1,
+                   XUNIF_HUG_SOIL(2) = 0.1,
+                   XUNIF_HUG_SOIL(3) = 0.1,
+                   XUNIF_HUGI_SOIL(1) = 0.001,
+                   XUNIF_HUGI_SOIL(2) = 0.001,
+                   XUNIF_HUGI_SOIL(3) = 0.001,
+                   NINFILES=3,
                    CFILE_TG="init_TG.nc",
                    CTYPE_TG="NETCDF"
 /

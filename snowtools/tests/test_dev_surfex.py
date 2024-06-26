@@ -15,10 +15,6 @@ from snowtools.DATA import TESTBASE_DIR
 
 _here = os.path.dirname(os.path.realpath(__file__))
 
-SKIP_TEST_SNOWPAPPUS = False if os.getenv('SNOWTOOLS_TEST_SNOWPAPPUS', False) else True
-SKIP_TEST_AXEL_AARON = False if os.getenv('SNOWTOOLS_TEST_AXEL_AARON', False) else True
-
-
 class s2mTestBase(s2mTest):
     def setUp(self):
         super(s2mTestBase, self).setUp()
@@ -34,17 +30,11 @@ class s2mTestForcageBase(s2mTestBase):
         shutil.copy(self.path_namelist + "namelist_base.nam", self.namelist)
         self.full_run("s2m research -b 20101215 -e 20110115")
 
-    @unittest.skipIf(SKIP_TEST_SNOWPAPPUS,
-                     'SnowPappus not yet implemented in SURFEX cen branch. '
-                     'Please use SNOWTOOLS_TEST_PAPPUS env variable to force test')
     def test_snowpappus(self):
         # NAM_ISBA_SNOW: LSNOWPAPPUS = TRUE
         shutil.copy(self.path_namelist + "namelist_pappus_1.nam", self.namelist)
         self.full_run("s2m research -b 20101215 -e 20110115")
 
-    @unittest.skipIf(SKIP_TEST_AXEL_AARON,
-                     'Work of Axel and Aaron on MEB not yet implemented in SURFEX cen branch. '
-                     'Please use SNOWTOOLS_TEST_AXEL_AARON env variable to force test')
     def test_axel_aaron(self):
         # NAM_MEB_ISBA:  LMEB_TALL_VEG       = .TRUE., LMEB_INT_PHASE_LUN  = .TRUE.,
         #                LMEB_INT_UNLOAD_LUN = .TRUE., LMEB_INT_UNLOAD_SFC = .TRUE.,
@@ -134,7 +124,7 @@ class s2m2DTest(s2mTestBase):
     def setUp(self):
         super(s2m2DTest, self).setUp()
         self.forcingtest = os.path.join(TESTBASE_DIR, "FORCING", "FORCING_test_2d.nc")
-        self.namelist = os.path.join(SNOWTOOLS_DATA, "OPTIONS_test_2d.nam")
+        self.namelist = os.path.join(_here, 'namelists/OPTIONS_test_2d.nam')
         # If the test is run at CEN, it can run PGD with available databases.
         # Otherwise, we do not test the PGD step and only take a PGD test file.
         if not self.runatcen:
@@ -148,9 +138,6 @@ class s2m2DTest(s2mTestBase):
         self.full_run("s2m research -b 20150101 -e 20150201")
 
 
-@unittest.skipIf(SKIP_TEST_SNOWPAPPUS,
-                 'SnowPappus not yet implemented in SURFEX cen branch. '
-                 'Please use SNOWTOOLS_TEST_PAPPUS env variable to force test')
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "FORCING",
                                                  "FORCING_test_2d.nc")),
                  "input file not available")
@@ -159,7 +146,7 @@ class s2m2DTest_pappus(s2mTestBase):
     def setUp(self):
         super(s2m2DTest_pappus, self).setUp()
         self.forcingtest = os.path.join(TESTBASE_DIR, "FORCING", "FORCING_test_2d.nc")
-        self.namelist = os.path.join(SNOWTOOLS_DATA, "OPTIONS_test_2d_pappus.nam")
+        self.namelist = os.path.join(_here, 'namelists/OPTIONS_test_2d_pappus.nam')
         # If the test is run at CEN, it can run PGD with available databases.
         # Otherwise, we do not test the PGD step and only take a PGD test file.
         if not self.runatcen:
