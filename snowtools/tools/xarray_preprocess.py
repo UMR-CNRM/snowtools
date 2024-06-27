@@ -1,6 +1,7 @@
 import xarray as xr
 
-dimension_map = {'x': 'xx', 'y': 'yy', 'lat': 'latitude', 'lon': 'longitude'}
+#dimension_map = {'x': 'xx', 'y': 'yy', 'lat': 'latitude', 'lon': 'longitude'}
+dimension_map = {'x': 'xx', 'y': 'yy', 'lat': 'yy', 'latitude': 'yy', 'lon': 'xx', 'longitude': 'xx'}
 variables_map = {'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf'}
 
 
@@ -40,9 +41,10 @@ def decode_time_dimension(ds):
     """
     Manually decode time variable since other variables can not be decoded automatically
     """
-    time = xr.Dataset({"time": ds.time})
-    time = xr.decode_cf(time)
-    ds['time'] = time.time
+    if 'time' in list(ds.coords):
+        time = xr.Dataset({"time": ds.time})
+        time = xr.decode_cf(time)
+        ds['time'] = time.time
     return ds
 
 
