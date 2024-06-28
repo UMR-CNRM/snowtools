@@ -165,7 +165,7 @@ def execute():
 
         simu = read_simu(xpid, member, date)
 
-        if member is not None and len(member) > 1:
+        if member is not None and len(member) > 1 and clustering in 'elevation':
             plot_ensemble(simu, obs.DSN_T_ISBA, shortid, date)
 
         pearson[shortid], crps = compute_scores(simu, obs)
@@ -173,7 +173,10 @@ def execute():
         savename = f'CRPS_{shortid}_{date}.pdf'
         vmin = 0
         vmax = 3
-        plot2D.plot_field(crps, savename, vmin=vmin, vmax=vmax, cmap=plt.cm.Reds)
+        print(f'plot crps {xpid}')
+        fig, ax = plot2D.plot_field(crps, vmin=vmin, vmax=vmax, cmap=plt.cm.Reds)
+        print(f'save crps {xpid}')
+        plot2D.save_fig(fig, savename)
 
         if clustering in ['elevation', 'uncertainty']:
             tmp = clusters.by_slices(crps, mask, thresholds)
@@ -193,17 +196,14 @@ def execute():
 
     print()
     if member is not None and len(member) > 1:
+        fig, ax = plt.subplots()
+        ax.boxplot(pearson.values(), notch=True, labels=pearson.keys())
+        ax.legend()
+        fig.savefig(f'PearsonCoeff_{date[:8]}.pdf')
+    else:
         with open(f'PearsonCoeff_{date[:8]}.csv', 'a') as f:
             for shortid, pearson_corr in pearson.items():
                 f.write(f'{shortid};{pearson_corr.data[0]}\n')
-    else:
-        fig, ax = plt.figure()
-        pos = 1
-        for shortid, pearson_corr in pearson.items():
-            plt.boxplot(pearson_corr.data, notch=True, labels=shortid, positions=pos)
-            pos = pos + 1
-        plt.legend()
-        plt.savefig(f'PearsonCoeff_{date[:8]}.pdf')
 
 
 def read_simu(xpid, members, date):
@@ -264,17 +264,26 @@ def plot_ensemble(simu, obs, xpid, date):
     savename = f'Mean_HTN_{xpid}_{date}.pdf'
     vmin = 0
     vmax = 3
-    plot2D.plot_field(mean, savename, vmin=vmin, vmax=vmax, cmap=plt.cm.Blues)
+    print(f'plot mean {xpid}')
+    fig, ax = plot2D.plot_field(mean, vmin=vmin, vmax=vmax, cmap=plt.cm.Blues)
+    print(f'save mean {xpid}')
+    plot2D.save_fig(fig, savename)
 
     spread = simu.DSN_T_ISBA.std(dim='member')
     savename = f'Spread_HTN_{xpid}_{date}.pdf'
     vmin = 0
-    vmax = 0.5
-    plot2D.plot_field(spread, savename, vmin=vmin, vmax=vmax, cmap=plt.cm.Purples)
+    vmax = 1
+    print(f'plot spread {xpid}')
+    fig, ax = plot2D.plot_field(spread, vmin=vmin, vmax=vmax, cmap=plt.cm.Purples)
+    print(f'save spread {xpid}')
+    plot2D.save_fig(fig, savename)
 
     error = mean - obs
     savename = f'Error_HTN_{xpid}_{date}.pdf'
-    plot2D.plot_field(error, savename, cmap=plt.cm.RdBu)
+    print(f'plot error {xpid}')
+    fig, ax = plot2D.plot_field(error, cmap=plt.cm.RdBu)
+    print(f'save error {xpid}')
+    plot2D.save_fig(fig, savename)
 
 
 def compute_scores(simu, obs):
@@ -298,7 +307,8 @@ def compute_scores(simu, obs):
     # the CRPS along this dimension and get 1 value per pixel
 
     # control_member = simu.sel({'member': 0})
-    pearson = xr.corr(simu, obs, dim='member')
+    pearson = xr.corr(simu, obs, dim=['xx', 'yy'])
+    pearson = pearson[~np.isnan(pearson)]  # Remove nan values (all 0s simulations)
 
     simu = simu.expand_dims(dim="time")
     obs  = obs.expand_dims(dim="time")
