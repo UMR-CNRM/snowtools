@@ -90,7 +90,7 @@ It is also recommended to create useful aliases for s2m command and proreader gr
    alias s2m="python $SNOWTOOLS_CEN/snowtools/tasks/s2m_command.py"
    alias proplotter="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/proplotter.py"
    alias procompare="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/procompare.py"
-   alias put="$SNOWTOOLS_CEN/cenutils/put"
+   alias put="python3 $SNOWTOOLS_CEN/cenutils/put"
 
 Optional installations
 ----------------------
