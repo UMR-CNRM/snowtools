@@ -12,7 +12,6 @@ Collection of functions to plot 2D fields.
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
 import matplotlib.patches as patches
 
 matplotlib.rcParams.update({'font.size': 22})
@@ -31,8 +30,7 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
     """
     # In case the figure has not been initialized
     if ax is None:
-        fig, ax = plt.subplots(figsize=(12 * np.shape(field)[1] / np.shape(field)[0], 10),
-                subplot_kw=dict(projection=ccrs.PlateCarree()))
+        fig, ax = plt.subplots(figsize=(12 * np.shape(field)[1] / np.shape(field)[0], 10),)
 
     # Set defailt vmin/vmax values from field if necessary
     if vmax is None:
@@ -51,8 +49,7 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
     # Add specific point(s)
     if addpoint is not None:
         for point in addpoint:
-            ax.plot(point[0], point[1], marker='.', linestyle='', color='k', markersize=20,
-                    transform=ccrs.PlateCarree())
+            ax.plot(point[0], point[1], marker='.', linestyle='', color='k', markersize=20,)
 
     return fig, ax
 
@@ -61,8 +58,7 @@ def add_iso_elevation(ax, dem, levels=[1200, 2400, 3600]):
     """
     Add iso-elevation bands to show the relief
     """
-    c = ax.contour(dem.xx, dem.yy, dem.data, colors='dimgray', levels=levels, transform=ccrs.PlateCarree(),
-            alpha=0.9)
+    c = ax.contour(dem.xx, dem.yy, dem.data, colors='dimgray', levels=levels, alpha=0.9,)
     ax.clabel(c, inline=1, fontsize=14)
 
 
