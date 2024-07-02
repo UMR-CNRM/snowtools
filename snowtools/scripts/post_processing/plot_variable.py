@@ -58,6 +58,7 @@ vmax_map = dict(
     Snowf       = 1500,  # kg/m² [mm]
     Rainf       = 1400,  # kg/m² [mm]
     RainfSnowf  = 1700,  # kg/m² [mm]
+    SnowfRainf  = 1200,  # kg/m² [mm]
 )
 
 vmin_map = dict(
@@ -152,6 +153,7 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
             extract = ds[sumvar]  # ex : ['Rainf', 'Snowf']
             tmp = extract.to_array().sum("variable")
             var = var.replace('+', '')
+            tmp.name = var
         else:
             tmp = ds[var]
 
@@ -163,10 +165,11 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
         else:
             if 'member' in list(tmp.dims):
                 tmp = tmp.sum('time').mean('member')
-                tmp.compute()
+                tmp = tmp.compute()
+                savename = f'{var}_mean_cumul_{xpid}_{datebegin}_{dateend}.pdf'
             else:
                 tmp = tmp.sum(dim='time')
-            savename = f'{var}_cumul_{xpid}.pdf'
+                savename = f'{var}_cumul_{xpid}_{datebegin}_{dateend}.pdf'
 
         vmax = vmax_map[var] if var in vmax_map.keys() else tmp.max()
         vmin = vmin_map[var] if var in vmin_map.keys() else tmp.min()
