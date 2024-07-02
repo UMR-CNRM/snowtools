@@ -1083,7 +1083,7 @@ def snow_obs_date(action, xpid, geometry, **kw):
     print(t.prompt, 'SnowObsDate =', obs)
     print()
 
-    return diag
+    return obs
 
 
 def snow_obs_period(action, xpid, geometry, **kw):
@@ -1115,7 +1115,7 @@ def snow_obs_period(action, xpid, geometry, **kw):
     print(t.prompt, 'SnowObsPerdio =', obs)
     print()
 
-    return diag
+    return obs
 
 
 def put_snow_obs_date(*, xpid, geometry, **kw):

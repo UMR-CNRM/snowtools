@@ -32,7 +32,7 @@ def update_varname(ds, rename):
 
 def update_dimname(ds, rename):
     dimension_map.update(rename)
-    update_dict = {key: dimension_map[key] for key in list(ds.coords) if key in dimension_map.keys()}
+    update_dict = {key: dimension_map[key] for key in list(ds.dims) if key in dimension_map.keys()}
     ds = ds.rename(update_dict)
     return ds
 
