@@ -77,14 +77,8 @@ def compute_phase_from_iso_wetbt1(subdir=None):
     target_relief = xrp.preprocess(target_relief, decode_time=False)
 
     # Interpolation of all data to the target geometry
-    iso250m = iso_elevation.interp({'latitude': target_relief.latitude, 'longitude': target_relief.longitude})
-    if hasattr(precipitation, 'latitude'):
-        precipitation250m = precipitation.interp({'latitude': target_relief.latitude,
-            'longitude': target_relief.longitude})
-    elif hasattr(precipitation, 'xx'):
-        precipitation250m = precipitation.interp({'yy': target_relief.latitude, 'xx': target_relief.longitude})
-    else:
-        raise ValueError('Unknown dimensions in file PRECIPITATION.nc')
+    iso250m = iso_elevation.interp({'yy': target_relief.yy, 'xx': target_relief.xx})
+    precipitation250m = precipitation.interp({'yy': target_relief.yy, 'xx': target_relief.xx})
 
     # Creation of the Rainf / Snowf variables
     rain = precipitation250m.where(iso250m > target_relief, 0)
