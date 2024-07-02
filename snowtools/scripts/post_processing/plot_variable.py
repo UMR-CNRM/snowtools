@@ -37,6 +37,8 @@ import argparse
 
 from bronx.stdtypes.date import Date
 
+import footprints
+
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.plots.maps import plot2D
 from snowtools.tools import common_tools as ct
@@ -51,7 +53,8 @@ cmap = dict(
 
 vmax_map = dict(
     # WARNING : values defined for 2017/2018
-    DSN_T_ISBA  = 6,  # m
+    DSN_T_ISBA  = 3,  # m
+    # DSN_T_ISBA  = 6,  # m
     Snowf       = 1500,  # kg/m² [mm]
     Rainf       = 1400,  # kg/m² [mm]
     RainfSnowf  = 1700,  # kg/m² [mm]
@@ -80,10 +83,10 @@ def parse_command_line():
     description = "Computation of Sentinel2-like diagnostics (snow melt-out date, snow cover duration) associated \
                    to a SURFEX simulation"
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('-b', '--datebegin', type=str, required=True,
+    parser.add_argument('-b', '--datebegin', type=str, default=None,
                         help="First date covered by the simulation file, format YYYYMMDDHH.")
 
-    parser.add_argument('-e', '--dateend', type=str, required=True,
+    parser.add_argument('-e', '--dateend', type=str, default=None,
                         help="Last date covered by the simulation file, format YYYYMMDDHH.")
 
     parser.add_argument('-x', '--xpids', nargs='+', type=str, required=True,
@@ -95,9 +98,9 @@ def parse_command_line():
     parser.add_argument('-k', '--kind', type=str, default='PRO', choices=['FORCING', 'PRO', 'snow_obs_date'],
                         help='kind file containing the variable(s) to plot')
 
-    parser.add_argument('-m', '--member', action='store_true',
-                        help="If the file comes from an ensemble, take the first member (the control member"
-                             "by convention)")
+    parser.add_argument('-m', '--ensemble', action='store', default=None, choices=['mean', 'first'],
+                        help="If the file comes from an ensemble, either plot the ensemble mean or only"
+                             "the first member (the control member by convention)")
 
     parser.add_argument('-a', '--vapp', type=str, default='edelweiss', choices=['s2m', 'edelweiss', 'Pleiades'],
                         help="Application that produced the target file")
@@ -158,7 +161,11 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
                 tmp = tmp.sel({'time': date})
             savename = f'{var}_{date.ymdh}_{xpid}.pdf'
         else:
-            tmp = tmp.sum(dim='time')
+            if 'member' in list(tmp.dims):
+                tmp = tmp.sum('time').mean('member')
+                tmp.compute()
+            else:
+                tmp = tmp.sum(dim='time')
             savename = f'{var}_cumul_{xpid}.pdf'
 
         vmax = vmax_map[var] if var in vmax_map.keys() else tmp.max()
@@ -168,10 +175,13 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
             addpoint = reference_point[domain]
         else:
             addpoint = None
+
+        fig, ax = plt.subplots(figsize=(12 * len(tmp.xx) / len(tmp.yy), 10))
         if var in cmap.keys():
-            plot2D.plot_field(tmp, savename, vmin=vmin, vmax=vmax, cmap=cmap[var], addpoint=addpoint)
+            plot2D.plot_field(tmp, ax=ax, vmin=vmin, vmax=vmax, cmap=cmap[var], addpoint=addpoint)
         else:
-            plot2D.plot_field(tmp, savename, vmin=vmin, vmax=vmax, addpoint=addpoint)
+            plot2D.plot_field(tmp, ax=ax, vmin=vmin, vmax=vmax, addpoint=addpoint)
+        plot2D.save_fig(fig, savename)
 
 
 if __name__ == '__main__':
@@ -185,7 +195,13 @@ if __name__ == '__main__':
     xpids           = args.xpids
     geometry        = args.geometry
     kind            = args.kind
-    member          = 0 if args.member else None
+    ensemble        = args.ensemble
+    if ensemble == 'mean':
+        member = footprints.util.rangex('0-16-1')
+    elif ensemble == 'first':
+        member = 0
+    else:
+        member = None
     uenv            = args.uenv
     vapp            = args.vapp
     variables       = args.variables
@@ -243,7 +259,11 @@ if __name__ == '__main__':
         else:
             getattr(io, f'get_{kind.lower()}')(xpid=xpid, geometry=geometry, **kw)
 
-        ds = xr.open_dataset(filename)
+        if ensemble == 'mean':
+            ds = xr.open_mfdataset([f'mb{member:03d}/{filename}' for member in range(17)],
+                    concat_dim='member', combine='nested', chunks='auto')
+        else:
+            ds = xr.open_dataset(filename)
         ds = xrp.preprocess(ds)
 
         if domain is not None:
@@ -256,7 +276,11 @@ if __name__ == '__main__':
     # 3. Clean data
     for xpid in xpids:
         shortid = xpid.split('@')[0]
-        os.remove(f'{kind}_{shortid}.nc')
+        if ensemble == 'mean':
+            for member in range(17):
+                os.remove(f'mb{member:03d}/{kind}_{shortid}.nc')
+        else:
+            os.remove(f'{kind}_{shortid}.nc')
 
     print()
     print("===========================================================================================")

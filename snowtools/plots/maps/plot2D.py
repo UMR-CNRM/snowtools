@@ -51,7 +51,9 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
         for point in addpoint:
             ax.plot(point[0], point[1], marker='.', linestyle='', color='k', markersize=20,)
 
-    return fig, ax
+    if ax is None:
+        return fig, ax
+    return ax
 
 
 def add_iso_elevation(ax, dem, levels=[1200, 2400, 3600]):
