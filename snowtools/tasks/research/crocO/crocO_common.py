@@ -143,21 +143,23 @@ class _CrocO_Task(Task, S2MTaskMixIn):
                        for m in self.conf.members}
         self.sh.title('Toolbox input tb01 (forcings)')
         tb01 = toolbox.input(
-            role='Forcing',
-            realmember=self.conf.members,
-            local=dict(realmember=local_names),
-            vapp=self.conf.meteo,
-            experiment=forcExp,
-            member=dict(realmember=meteo_members),
-            geometry=self.conf.geometry,
-            datebegin=date_begin_forc,
-            dateend=date_end_forc,
-            nativefmt='netcdf',
-            kind='MeteorologicalForcing',
-            model='safran',
-            namespace='vortex.multi.fr',
-            namebuild='flat@cen',  # ???
-            block='meteo'
+            role         = 'Forcing',
+            realmember   = self.conf.members,
+            local        = dict(realmember=local_names),
+            vapp         = self.conf.meteo,
+            experiment   = forcExp,
+            member       = dict(realmember=meteo_members),
+            geometry     = self.conf.geometry,
+            #datebegin    = date_begin_forc,
+            #dateend      = date_end_forc,
+            datebegin    = self.conf.datebegin,
+            dateend      = self.conf.dateend,
+            nativefmt    = 'netcdf',
+            kind         = 'MeteorologicalForcing',
+            model        = 'safran',
+            namespace    = 'vortex.multi.fr',
+            namebuild    = 'flat@cen',  # ???
+            block        = 'meteo'
         ),
         print(t.prompt, 'tb01 =', tb01)
         print()
