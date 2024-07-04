@@ -132,7 +132,8 @@ def footprint_kitchen(**kw):
         kw['member'] = [mb for mb in range(int(first_mb), int(last_mb) + 1)]
         kw['filename'] = f'mb[member]/{kw["filename"]}'
 
-    kw['block'] = block_map[kw['kind']]
+    if 'block' not in kw.keys():
+        kw['block'] = block_map[kw['kind']]
 
     if kw['model'] is None:
         kw['model'] = kw['vapp']
