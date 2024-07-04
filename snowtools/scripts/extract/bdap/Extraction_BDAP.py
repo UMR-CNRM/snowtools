@@ -61,6 +61,7 @@ coords = dict(
     pyr = ['43500', '42000', '-2000', '3500'],
     cor = ['43000', '41000', '8000', '11500'],
     GrandesRousses = ['45640', '44590', '5610', '7100'],  # includes 0.2° margin
+    LaBerarde = ['45100', '44700', '6000', '6530']
 )
 
 # Pas en lat/lon de chaque grille en 1/1000 de °
@@ -90,34 +91,50 @@ default_levels = dict(
     ISO_T     = [25315, 26115, 26315, 27315],
     ISO_TPW   = [27315, 27415],
     ISO_WETBT = [27315, 27415],
+    SOL       = ['SOL'],
 )
 
 
 def parse_command_line():
     description = "BDAP extraction of NWP (AS-PEAROME) model data."
     parser = argparse.ArgumentParser(description=description)
+
     parser.add_argument('-b', '--datebegin', help='Begining date of extraction, format YYYYMMDDHH or YYMMDDHH',
                         required=True)
+
     parser.add_argument('-e', '--dateend', help = 'Final date of extraction (default=datebegin)', default=None)
+
     parser.add_argument('-d', '--domain', help='Domain of the file', choices=coords.keys(), default='GrandesRousses')
+
     # WARNING : the 'parameters' and 'level-type' arguments depend on each other.
     # TODO : find a way (a very complex dict ?) ton ensure consistency
+    # TODO : mutualiser avec ce qu'a fait Hugo
     parser.add_argument('-p', '--parameter', help='Parameter to extract', default='ALTITUDE',
-                        choices=['PRECIP', 'WETBT', 'ALTITUDE', 'TPW'])
+                        choices=['PRECIP', 'WETBT', 'ALTITUDE', 'TPW', 'T', 'U', 'V', 'FLSOLAIRE', 'FLTHERM',
+                                'FLSOLAIRE_D', 'FLTHERM_D'])
+
     parser.add_argument('-l', '--levels', nargs='+', help='Level(s) of the parameter to extract', default=None)
+
     parser.add_argument('-v', '--level_type', help='Type of level of the parameter to extract', default='ISO_WETBT',
                         choices=['ISO_WETBT', 'SOL', 'HAUTEUR', 'ISOBARE', 'ISO_T', 'ISO_TPW'])
+
     parser.add_argument('-w', '--workdir', help="Runing directory (soprano's default)",)
+
     parser.add_argument('-m', '--model', help='NWP model from which the data must be extracted',
                         choices=['PAAROME', 'PAROME', 'PAA'], default='PAA')
+
     parser.add_argument('-c', '--cutoff', help='NWP model cutoff from which the data must be extracted',
                         choices=['assimilation', 'prevision'], default='assimilation')
+
     # TODO : documenter les périodes de disponibilités modèle/grille
     parser.add_argument('-g', '--grid', help='BDAP grid name from which to extract data', default='EURAT01',
                         choices=['FRANXL0025', 'EURW1S40', 'EURW1S100', 'EUROC25', 'GLOB025', 'EURAT01', 'EURAT1S20',
                                  'FRANX01', 'GLOB25', 'FRANGP0025'])
+
     parser.add_argument('-t', '--echeances', help='Echeances à extraire (integer or "first:last" format)')
+
     parser.add_argument('-H', '--pdt', help="Pas de temps du réseau d'extraction", type=int, default=None)
+
     parser.add_argument('-a', '--archive', help="Archive output file with Vortex", action="store_true", default=False)
 
     args = parser.parse_args()
