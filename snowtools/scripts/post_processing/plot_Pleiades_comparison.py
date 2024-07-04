@@ -23,6 +23,17 @@ from snowtools.scores import clusters
 from snowtools.plots.boxplots import violinplot
 import snowtools.tools.xarray_preprocess as xrp
 
+xpid_map = {
+    '2021080106': 'CesarDB',
+    '2019080106': 'CesarDB_AngeH',
+    '2018080106': 'CesarDB_AngeH',
+}
+geometry_map = {
+    '2021080106': 'Huez250m',
+    '2019080106': 'Huez250m',
+    '2018080106': 'Lautaret250m',
+}
+
 
 def parse_command_line():
     description = "Plot figures comparing snow depth simulation(s) to a Pleiade observation"
@@ -67,8 +78,10 @@ def violin_plot(xpids, obs, var, date, mask=True, member=None):
     mnt = xrp.preprocess(mnt, decode_time=False)
 
     # Construct *dataplot* DataFrame with elevation bands as index and 1 column per product
-    filtered_obs = clusters.slices(obs[var], mnt, elevation_bands)
-    dataplot = filtered_obs.to_dataframe(name='obs').dropna().reset_index().drop(columns=['time'])
+    filtered_obs = clusters.by_slices(obs[var], mnt, elevation_bands)
+    dataplot = filtered_obs.to_dataframe(name='obs').dropna().reset_index()
+    if 'time' in dataplot.columns:
+        dataplot = dataplot.drop(columns=['time'])
     try:
         dataplot = dataplot.drop(columns=['xx', 'yy'])
     except KeyError:
@@ -152,9 +165,9 @@ if __name__ == '__main__':
     # a) Pleiades observations
     kw = dict(date=datebegin, vapp=vapp)
     obsname = f'PLEIADES_{date}.nc'
-    io.get_snow_obs_date(xpid='CesarDB_AngeH', geometry='Lautaret250m', date=date, vapp='Pleiades', filename=obsname)
+    io.get_snow_obs_date(xpid=xpid_map[datebegin], geometry=geometry_map[datebegin], date=date, vapp='Pleiades', filename=obsname)
     obs = xr.open_dataset(obsname)
-    obs = xrp.preprocess(obs, decode_time=False)
+    obs = xrp.preprocess(obs.DSN_T_ISBA, decode_time=False)
 
     # b) Domain's DEM
     io.get_const(uenv, 'relief', geometry, filename='TARGET_RELIEF.nc', gvar='RELIEF_GRANDESROUSSES250M_L93')
@@ -164,16 +177,10 @@ if __name__ == '__main__':
 
     # d) Simulations
     for xpid in xpids:
-        # TODO : gérer ça plus proprement
         if '@' not in xpid:
             user = os.environ["USER"]
             xpid = f'{xpid}@{user}'
         shortid = xpid.split('@')[0]
-        # VERRUE pour gérer le décallage d'un jour en attendant de combler les données
-#        if shortid.startswith('safran'):
-#            deb = '2021080106'
-#        else:
-#            deb = datebegin  # 2021080207
 
         # TODO : à gérer autrement pour être flexible
         if shortid in ['SAFRAN', 'ANTILOPE', 'SAFRAN_pappus', 'ANTILOPE_pappus']:
@@ -181,8 +188,13 @@ if __name__ == '__main__':
         else:
             member = 0
 
+        if datebegin == '2021080106' and shortid in ['RS27_pappus', 'EnKF36_pappus', 'RS27_sorted_pappus', 'PF32_pappus']:
+            deb = '2021080207'
+        else:
+            deb = datebegin
+
         # Get (filtered) PRO files with Vortex
-        kw = dict(datebegin=datebegin, dateend=dateend, vapp=vapp, member=member, namebuild=None,
+        kw = dict(datebegin=deb, dateend=dateend, vapp=vapp, member=member, namebuild=None,
                 filename=f'PRO_{shortid}.nc')
         io.get_pro(xpid=xpid, geometry=geometry, **kw)
 
