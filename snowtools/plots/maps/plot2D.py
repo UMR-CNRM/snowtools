@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+from matplotlib import ticker
 
 matplotlib.rcParams.update({'font.size': 22})
 
@@ -24,13 +25,19 @@ domain_coords = dict(
 )
 
 
-def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoint=None):
+def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoint=None, alpha=1., dem=None):
     """
     :kwargs dem: Digital elevation model (xarray.DataArray)
     """
-    # In case the figure has not been initialized
     if ax is None:
-        fig, ax = plt.subplots(figsize=(12 * np.shape(field)[1] / np.shape(field)[0], 10),)
+        plt.figure(figsize=(12 * len(field.xx) / len(field.yy), 10))
+
+    if dem is not None:
+        if field.isnull().sum() == 0:
+            add_relief_shading(dem, ax=ax, extent=[field.xx.min(), field.xx.max(), field.yy.min(), field.yy.max()])
+            alpha = 0.8
+        else:
+            add_iso_elevation(dem, ax=ax)
 
     # Set defailt vmin/vmax values from field if necessary
     if vmax is None:
@@ -42,34 +49,78 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
     cmap.set_bad('grey', 1.)
 
     # Plot field
-    cml = field.plot(cmap=cmap, vmin=vmin, vmax=vmax)
-    # Remove pixel edges
-    cml.set_edgecolor('face')
+    # If alpha < 1, the overlaping pixels look like grid lines that
+    # The workaround is to use "contourf" instead.
+    # WARNING : this can "hide" some varibility in *filed*
+    if alpha < 1:
+        cml = plt.contourf(
+            field.xx, field.yy, field.data,
+            levels = np.linspace(vmin, vmax, 1000),  # Data slices
+            # 1000,  # Number of different slices to plot
+            antialiased=True,  # Remove lines
+            cmap=cmap,
+            vmin=vmin,
+            vmax=vmax,
+            alpha=alpha,  # Transparency
+            rasterized=True,  # Reduce figure size
+        )
+        plt.colorbar(
+            ticks = ticker.MaxNLocator(10)
+        )
+    else:
+        cml = field.plot(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax, alpha=alpha, rasterized=True)
+        # Remove pixel edges
+        cml.set_edgecolor('face')
 
     # Add specific point(s)
     if addpoint is not None:
         for point in addpoint:
-            ax.plot(point[0], point[1], marker='.', linestyle='', color='k', markersize=20,)
+            if ax is not None:
+                ax.plot(point[0], point[1], marker='.', linestyle='', color='k', markersize=20,)
+            else:
+                plt.plot(point[0], point[1], marker='.', linestyle='', color='k', markersize=20,)
 
-    if ax is None:
-        return fig, ax
-    return ax
+    if ax is not None:
+        return ax
 
 
-def add_iso_elevation(ax, dem, levels=[1200, 2400, 3600]):
+def add_iso_elevation(dem, ax=None, levels=[1200, 2400, 3600]):
     """
     Add iso-elevation bands to show the relief
     """
-    c = ax.contour(dem.xx, dem.yy, dem.data, colors='dimgray', levels=levels, alpha=0.9,)
-    ax.clabel(c, inline=1, fontsize=14)
+    if ax is not None:
+        c = ax.contour(dem.xx, dem.yy, dem.data, colors='k', levels=levels, alpha=0.5,)
+        ax.clabel(c, inline=1, fontsize=14)
+    else:
+        c = plt.contour(dem.xx, dem.yy, dem.data, colors='k', levels=levels, alpha=0.5,)
+        plt.clabel(c, inline=1, fontsize=14)
 
 
-def save_fig(fig, savename):
+def add_relief_shading(dem, ax=None, extent=None):
+    """
+    Add DEM's shading to show the relief
+    """
+
+    if extent is None:
+        extent = [dem.xx.min(), dem.xx.max(), dem.yy.min(), dem.yy.max()]
+
+    from matplotlib.colors import LightSource
+    ls = LightSource(azdeg=315, altdeg=45)
+    if ax is not None:
+        ax.imshow(ls.hillshade(dem.data, dx=30, dy=30), cmap=plt.cm.gray, extent=extent, rasterized=True)
+    else:
+        plt.imshow(ls.hillshade(dem.data, dx=30, dy=30), cmap=plt.cm.gray, extent=extent, rasterized=True)
+
+
+def save_fig(savename, fig=None):
 
     plt.tight_layout()
     if '.pdf' not in savename:
         savename = f'{savename}.pdf'
-    fig.savefig(savename, format='pdf')
+    if fig is not None:
+        fig.savefig(savename, format='pdf')
+    else:
+        plt.savefig(savename, format='pdf')
     plt.close('all')
 
 

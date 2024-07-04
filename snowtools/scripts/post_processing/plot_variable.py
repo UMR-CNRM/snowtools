@@ -55,28 +55,31 @@ vmax_map = dict(
     # WARNING : values defined for 2017/2018
     DSN_T_ISBA  = 3,  # m
     # DSN_T_ISBA  = 6,  # m
-    Snowf       = 1500,  # kg/m² [mm]
+    Snowf       = 1200,  # kg/m² [mm]
     Rainf       = 1400,  # kg/m² [mm]
-    RainfSnowf  = 1700,  # kg/m² [mm]
-    SnowfRainf  = 1200,  # kg/m² [mm]
+    RainfSnowf  = 1400,  # kg/m² [mm]
+    SnowfRainf  = 1400,  # kg/m² [mm]
 )
 
 vmin_map = dict(
     # WARNING : values defined for 2017/2018
     DSN_T_ISBA  = 0,  # m
     Snowf       = 0,  # kg/m² [mm]
-    Rainf       = 800,  # kg/m² [mm]
-    RainfSnowf  = 800,  # kg/m² [mm]
+    Rainf       = 400,  # kg/m² [mm]
+    RainfSnowf  = 400,  # kg/m² [mm]
+    SnowfRainf  = 400,  # kg/m² [mm]
 )
 
 domain_map = dict(
     Lautaret = dict(xmin=957875., xmax=973375., ymin=6439125., ymax=6458625.),
-    Huez     = dict(xmin=941625., xmax=951875., ymin=6441125., ymax=6459625.),
+    Huez2019 = dict(xmin=941625., xmax=951875., ymin=6441125., ymax=6459625.),
+    Huez2022 = dict(xmin=937875., xmax=973375., ymin=6464125., ymax=6439125.),
 )
 
 reference_point = dict(
     Lautaret = (965767.64, 6445415.30),  # Nivose Galibier
-    Huez     = (944584.42, 6452410.74),  # Nivose col du lac Blanc
+    Huez2019     = (944584.42, 6452410.74),  # Nivose col du lac Blanc
+    Huez2022 = (942705.64, 6447916.82),  # Poste nivometeo Huez (1860m)
 )
 
 
@@ -107,6 +110,9 @@ def parse_command_line():
                         help="Application that produced the target file")
 
     parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.1@vernaym",
+                        help="User environment for static resources (format 'uenv:name@user')")
+
+    parser.add_argument('-n', '--uenv_dem', type=str, default="uenv:dem.1@vernaym",
                         help="User environment for static resources (format 'uenv:name@user')")
 
     parser.add_argument('-v', '--variables', nargs='+', required=True,
@@ -179,12 +185,24 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
         else:
             addpoint = None
 
-        fig, ax = plt.subplots(figsize=(12 * len(tmp.xx) / len(tmp.yy), 10))
+        # fig, ax = plt.subplots(figsize=(12 * len(tmp.xx) / len(tmp.yy), 10))
+
+        # Add relief
+        # dem = xr.open_dataset('TARGET_RELIEF.tif', engine='rasterio')  # Target domain's Digital Elevation Model
+        dem = xr.open_dataset('TARGET_RELIEF.tif')  # Target domain's Digital Elevation Model
+        dem = xrp.preprocess(dem, decode_time=False)
+        dem = dem.squeeze()
+
         if var in cmap.keys():
-            plot2D.plot_field(tmp, ax=ax, vmin=vmin, vmax=vmax, cmap=cmap[var], addpoint=addpoint)
+            plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, cmap=cmap[var], addpoint=addpoint, dem=dem.band_data)
         else:
-            plot2D.plot_field(tmp, ax=ax, vmin=vmin, vmax=vmax, addpoint=addpoint)
-        plot2D.save_fig(fig, savename)
+            # plot2D.plot_field(tmp, ax=ax, vmin=vmin, vmax=vmax, addpoint=addpoint)
+            plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, addpoint=addpoint, dem=dem.band_data)
+
+        # Add relief
+        # plot2D.add_iso_elevation(ax, dem.ZS)
+
+        plot2D.save_fig(savename)
 
 
 if __name__ == '__main__':
@@ -206,6 +224,7 @@ if __name__ == '__main__':
     else:
         member = None
     uenv            = args.uenv
+    uenv_dem        = args.uenv_dem
     vapp            = args.vapp
     variables       = args.variables
     workdir         = args.workdir
@@ -215,6 +234,8 @@ if __name__ == '__main__':
     if not os.path.exists(workdir):
         os.makedirs(workdir)
     os.chdir(workdir)
+
+    io.get_const(uenv_dem, 'relief', geometry, filename='TARGET_RELIEF.tif', gvar='DEM_GRANDESROUSSES25M_L93')
 
     # 1. Get all input data
     if mask is not None:
@@ -277,6 +298,7 @@ if __name__ == '__main__':
         plot_var(ds, variables, shortid, date=date, mask=mask)
 
     # 3. Clean data
+    os.remove('TARGET_RELIEF.tif')
     for xpid in xpids:
         shortid = xpid.split('@')[0]
         if ensemble == 'mean':
