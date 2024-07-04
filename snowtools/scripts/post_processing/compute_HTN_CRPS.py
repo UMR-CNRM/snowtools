@@ -116,12 +116,14 @@ def execute():
     obs = xr.open_dataset(obsname)
     obs = xrp.preprocess(obs, decode_time=False, rename={'Band1': 'DSN_T_ISBA'})
 
+    io.get_const(uenv, 'relief', geometry, filename='TARGET_RELIEF.nc', gvar='RELIEF_GRANDESROUSSES250M_L93')
+    # Get Domain's DEM in case ZS not in simulation file
+    mnt = xr.open_dataset('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
+    mnt = xrp.preprocess(mnt, decode_time=False)
+    mnt =mnt['ZS']
+
     if clustering == 'elevation':
-        # Get Domain's DEM in case ZS not in simulation file
-        io.get_const(uenv, 'relief', geometry, filename='TARGET_RELIEF.nc', gvar='RELIEF_GRANDESROUSSES250M_L93')
-        mnt = xr.open_dataset('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
-        mnt = xrp.preprocess(mnt, decode_time=False)
-        mask = mnt.ZS
+        mask = mnt
     elif clustering == 'uncertainty':
         ds = xr.open_dataset('/home/vernaym/workdir/ASSIMILATION/mask/GrandesRousses/Observation_error_L93.nc')
         ds = xrp.preprocess(ds, decode_time=False)
@@ -166,7 +168,7 @@ def execute():
         simu = read_simu(xpid, member, date)
 
         if member is not None and len(member) > 1 and clustering in 'elevation':
-            plot_ensemble(simu, obs.DSN_T_ISBA, shortid, date)
+            plot_ensemble(simu, obs.DSN_T_ISBA, shortid, date, dem=mnt)
 
         pearson[shortid], crps = compute_scores(simu, obs)
 
@@ -174,9 +176,9 @@ def execute():
         vmin = 0
         vmax = 3
         print(f'plot crps {xpid}')
-        fig, ax = plot2D.plot_field(crps, vmin=vmin, vmax=vmax, cmap=plt.cm.Reds, dem=dem)
+        plot2D.plot_field(crps, vmin=vmin, vmax=vmax, cmap=plt.cm.Reds, dem=mnt)
         print(f'save crps {xpid}')
-        plot2D.save_fig(fig, savename)
+        plot2D.save_fig(savename)
 
         if clustering in ['elevation', 'uncertainty']:
             tmp = clusters.by_slices(crps, mask, thresholds)
@@ -196,10 +198,12 @@ def execute():
 
     print()
     if member is not None and len(member) > 1:
-        fig, ax = plt.subplots()
-        ax.boxplot(pearson.values(), notch=True, labels=pearson.keys())
-        ax.legend()
-        fig.savefig(f'PearsonCoeff_{date[:8]}.pdf')
+        plt.figure()
+        plt.boxplot(pearson.values(), notch=True, labels=pearson.keys())
+        plt.legend()
+        plt.ylim(0, 1)
+        plt.savefig(f'PearsonCoeff_{date[:8]}.pdf')
+        plt.close()
     else:
         with open(f'PearsonCoeff_{date[:8]}.csv', 'a') as f:
             for shortid, pearson_corr in pearson.items():
@@ -259,31 +263,31 @@ def read_simu(xpid, members, date):
     return simu
 
 
-def plot_ensemble(simu, obs, xpid, date):
+def plot_ensemble(simu, obs, xpid, date, dem=None):
+    savename = f'HTN_{xpid}_{date}.pdf'
+
+    fig, ax = plt.subplots(1, 3, figsize=(36 * len(simu.xx) / len(simu.yy), 10), sharey=True)
+
     mean = simu.DSN_T_ISBA.mean(dim='member')
-    savename = f'Mean_HTN_{xpid}_{date}.pdf'
     vmin = 0
     vmax = 3
     print(f'plot mean {xpid}')
-    fig, ax = plot2D.plot_field(mean, vmin=vmin, vmax=vmax, cmap=plt.cm.Blues)
-    print(f'save mean {xpid}')
-    plot2D.save_fig(fig, savename)
+    plot2D.plot_field(mean, ax=ax[0], vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=False)
+    ax[0].set_title('Ensemble mean snow depth (m)')
 
     spread = simu.DSN_T_ISBA.std(dim='member')
-    savename = f'Spread_HTN_{xpid}_{date}.pdf'
     vmin = 0
     vmax = 1
     print(f'plot spread {xpid}')
-    fig, ax = plot2D.plot_field(spread, vmin=vmin, vmax=vmax, cmap=plt.cm.Purples)
-    print(f'save spread {xpid}')
-    plot2D.save_fig(fig, savename)
+    plot2D.plot_field(spread, ax=ax[1], vmin=vmin, vmax=vmax, cmap=plt.cm.Purples, dem=dem, shade=False)
+    ax[1].set_title('Ensemble spread (m)')
 
     error = mean - obs
-    savename = f'Error_HTN_{xpid}_{date}.pdf'
     print(f'plot error {xpid}')
-    fig, ax = plot2D.plot_field(error, cmap=plt.cm.RdBu)
-    print(f'save error {xpid}')
-    plot2D.save_fig(fig, savename)
+    plot2D.plot_field(error, ax=ax[2], cmap=plt.cm.RdBu, dem=dem, shade=False)
+    ax[2].set_title('Ensemble mean error (m)')
+
+    plot2D.save_fig(savename, fig)
 
 
 def compute_scores(simu, obs):

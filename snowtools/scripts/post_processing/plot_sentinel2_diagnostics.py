@@ -106,7 +106,7 @@ def main():
                 os.symlink(mask, 'MASK.nc')
             mask = True
 
-    cluster = cluster_criterion(clustering)
+    mnt, cluster = cluster_criterion(clustering)
 
     # 1. Get all input data
     for xpid in xpids:
@@ -157,7 +157,7 @@ def main():
         # compare(obs, var=var)
         violin_plot(xpids, obs, var, cluster, member=member)  # Violinplots by elevation range
         if plot_fields:
-            plot_all_fields(xpids, obs, var, member=member)  # Field difference
+            plot_all_fields(xpids, obs, var, member=member, mnt=mnt)  # Field difference
 
     # 3. Clean data
     for xpid in xpids:
@@ -171,12 +171,13 @@ def main():
 
 def cluster_criterion(clustering):
 
+    # Get Domain's DEM in case ZS not in simulation file
+    io.get_const(uenv, 'relief', geometry, filename='TARGET_RELIEF.nc', gvar='RELIEF_GRANDESROUSSES250M_L93')
+    mnt = xr.open_dataset('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
+    mnt = xrp.preprocess(mnt, decode_time=False)
+    mnt = mnt.ZS
     if clustering == 'elevation':
-        # Get Domain's DEM in case ZS not in simulation file
-        io.get_const(uenv, 'relief', geometry, filename='TARGET_RELIEF.nc', gvar='RELIEF_GRANDESROUSSES250M_L93')
-        mnt = xr.open_dataset('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
-        mnt = xrp.preprocess(mnt, decode_time=False)
-        mask = mnt.ZS
+        mask = mnt
     elif clustering == 'uncertainty':
         ds = xr.open_dataset('/home/vernaym/workdir/ASSIMILATION/mask/GrandesRousses/Observation_error_L93.nc')
         ds = xrp.preprocess(ds, decode_time=False)
@@ -188,10 +189,10 @@ def cluster_criterion(clustering):
         mask = xrp.preprocess(geomorph.Band1, decode_time=False)
     mask = mask.rename(clustering)
 
-    return mask
+    return mnt, mask
 
 
-def plot_all_fields(xpids, obs, var, member=None):
+def plot_all_fields(xpids, obs, var, member=None, mnt=None):
 
     vmin = obs.min()
     vmax = obs.max()
@@ -199,7 +200,7 @@ def plot_all_fields(xpids, obs, var, member=None):
     # Plot observation field
     cmap = plt.cm.Greens  # TODO : chose a better colormap ?
     savename = f'{var}_Sentinel2_{datebegin}_{dateend}.pdf'
-    plot2D.plot_field(obs, savename, cmap=cmap, vmin=vmin, vmax=vmax)
+    plot2D.plot_field(obs, savename, cmap=cmap, vmin=vmin, vmax=vmax, dem=mnt)
 
     for xpid in xpids:
         shortid = xpid.split('@')[0]
@@ -227,10 +228,10 @@ def plot_all_fields(xpids, obs, var, member=None):
         tmp = tmp.compute()
         savename = f'{var}_{shortid}_{datebegin}_{dateend}.pdf'
         cmap = plt.cm.Greens  # TODO : chose a better colormap ?
-        plot2D.plot_field(tmp[var], savename, cmap=cmap, vmin=vmin, vmax=vmax)
+        plot2D.plot_field(tmp[var], savename, cmap=cmap, vmin=vmin, vmax=vmax, dem=mnt)
         savename = f'diff_{var}_{shortid}_{datebegin}_{dateend}.pdf'
         diff = tmp[var] - obs
-        plot2D.plot_field(diff, savename, cmap=plt.cm.RdBu, vmin=-100, vmax=100)
+        plot2D.plot_field(diff, savename, cmap=plt.cm.RdBu, vmin=-100, vmax=100, dem=mnt)
 
 
 def violin_plot(xpids, obs, var, mask, member=None):

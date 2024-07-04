@@ -76,6 +76,12 @@ domain_map = dict(
     Huez2022 = dict(xmin=937875., xmax=973375., ymin=6464125., ymax=6439125.),
 )
 
+gvar_map = dict(
+    GrandesRousses250m = 'DEM_GRANDESROUSSES25M_L93',
+    Alp250m            = 'DEM_FRANCE25M_L93',
+    Alp1km             = 'DEM_FRANCE25M_L93',
+)
+
 reference_point = dict(
     Lautaret = (965767.64, 6445415.30),  # Nivose Galibier
     Huez2019     = (944584.42, 6452410.74),  # Nivose col du lac Blanc
@@ -99,7 +105,8 @@ def parse_command_line():
     parser.add_argument('-g', '--geometry', type=str, default='GrandesRousses250m',
                         help='Geometry of the simulation(s) / observation')
 
-    parser.add_argument('-k', '--kind', type=str, default='PRO', choices=['FORCING', 'PRO', 'snow_obs_date'],
+    parser.add_argument('-k', '--kind', type=str, default='PRO',
+                        choices=['FORCING', 'PRO', 'snow_obs_date', 'Precipitation'],
                         help='kind file containing the variable(s) to plot')
 
     parser.add_argument('-m', '--ensemble', action='store', default=None, choices=['mean', 'first'],
@@ -235,7 +242,7 @@ if __name__ == '__main__':
         os.makedirs(workdir)
     os.chdir(workdir)
 
-    io.get_const(uenv_dem, 'relief', geometry, filename='TARGET_RELIEF.tif', gvar='DEM_GRANDESROUSSES25M_L93')
+    io.get_const(uenv_dem, 'relief', geometry, filename='TARGET_RELIEF.tif', gvar=gvar_map[geometry])
 
     # 1. Get all input data
     if mask is not None:

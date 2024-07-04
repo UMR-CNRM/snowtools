@@ -25,15 +25,16 @@ domain_coords = dict(
 )
 
 
-def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoint=None, alpha=1., dem=None):
+def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoint=None, alpha=1., dem=None, shade=True):
     """
     :kwargs dem: Digital elevation model (xarray.DataArray)
     """
     if ax is None:
         plt.figure(figsize=(12 * len(field.xx) / len(field.yy), 10))
+        ax = plt.gca()
 
     if dem is not None:
-        if field.isnull().sum() == 0:
+        if shade and field.isnull().sum() == 0:
             add_relief_shading(dem, ax=ax, extent=[field.xx.min(), field.xx.max(), field.yy.min(), field.yy.max()])
             alpha = 0.8
         else:
@@ -53,20 +54,22 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
     # The workaround is to use "contourf" instead.
     # WARNING : this can "hide" some varibility in *filed*
     if alpha < 1:
-        cml = plt.contourf(
+        cml = ax.contourf(
             field.xx, field.yy, field.data,
-            levels = np.linspace(vmin, vmax, 1000),  # Data slices
-            # 1000,  # Number of different slices to plot
-            antialiased=True,  # Remove lines
-            cmap=cmap,
-            vmin=vmin,
-            vmax=vmax,
-            alpha=alpha,  # Transparency
-            rasterized=True,  # Reduce figure size
+            levels      = np.linspace(vmin, vmax, 1000),  # Data slices
+            antialiased = True,  # Remove lines
+            cmap        = cmap,
+            vmin        = vmin,
+            vmax        = vmax,
+            alpha       = alpha,  # Transparency
+            locator     = ticker.MaxNLocator(10)
         )
-        plt.colorbar(
+        cml.colorbar(
             ticks = ticker.MaxNLocator(10)
         )
+        # Rasterize to reduce figure size
+        for c in cml.collections:
+            c.set_rasterized(True)
     else:
         cml = field.plot(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax, alpha=alpha, rasterized=True)
         # Remove pixel edges
