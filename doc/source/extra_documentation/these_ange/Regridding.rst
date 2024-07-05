@@ -4,9 +4,6 @@
 Methods of regridding
 =====================
 
-.. image:: https://earthsystemmodeling.org/assets/images/esmf.png
-    :alt: my-picture1
-
 Spatial regrid with `ESMF <https://earthsystemmodeling.org/>`_
 --------------------------------------------------------------
 In some situation it can be interesing to regrid simulations files.
@@ -27,18 +24,40 @@ or regrid non-map data.
 
 Basic principle:
 ****************
-Resample a 30m simulation to 250m using conservative method. The two simulations are named *S18_30* (30m) and *S18* (250m).
 
-**Need esmpy python library** (python wraper of ESMF regrid lib)
+| Resample a 30m simulation to 250m using conservative method. The two simulations are named *S18_30* (30m) and *S18* (250m).
+| **Need esmpy python library** (the python wraper of ESMF regrid lib)
 
-1. Format the dataset for ESMF with *ESMF_format_dataset(S18_30)*.
-2. Format the dataset for ESMF with *ESMF_format_dataset(s18)*.
-3. Build the start grid with *grid_create_from_coordinates(t30.x.to_numpy(),t30.y.to_numpy(),xcorners=t30.x_bnds.to_numpy(),ycorners=t30.y_bnds.to_numpy(),corners=True)*.
-4. Build the arrival grid with *grid_create_from_coordinates(t250.x.to_numpy(),t250.y.to_numpy(),xcorners=t250.x_bnds.to_numpy(),ycorners=t250.y_bnds.to_numpy(),corners=True)*.
-5. Create the original regrid field and fill it with the dataset *esmpy.Field(source_grid, name='Source data 30m')*
-6. Create the original regrind field *esmpy.Field(dest_grid, name='Resampled data 250m')*
-7. Create the interpolator using the conservative method *regrid_conserve = esmpy.Regrid(sourcefield, destfield, regrid_method=esmpy.RegridMethod.CONSERVE, unmapped_action=esmpy.UnmappedAction.IGNORE)*.
-8. Apply interpolator and fill *regrid_conserve(sourcefield, destfield)* field
+1. Format the datasets for ESMF with ::
+
+    ESMF_format_dataset(S18_30)
+    ESMF_format_dataset(s18)
+
+
+2. Define the start grid with ::
+
+    grid_create_from_coordinates(t30.x.to_numpy(),t30.y.to_numpy(),xcorners=t30.x_bnds.to_numpy(),ycorners=t30.y_bnds.to_numpy(),corners=True)
+
+3. Define the arrival grid with ::
+
+    grid_create_from_coordinates(t250.x.to_numpy(),t250.y.to_numpy(),xcorners=t250.x_bnds.to_numpy(),ycorners=t250.y_bnds.to_numpy(),corners=True)
+
+4. Create the original regrid field and fill it with the dataset ::
+
+    sourcefield = esmpy.Field(source_grid, name='Source data 30m')
+    sourcefield.data[...] = t30[variable].transpose().to_numpy()
+
+5. Create the original regrind field ::
+
+    esmpy.Field(dest_grid, name='Resampled data 250m')
+
+6. Create the interpolator using the conservative method ::
+
+    regrid_conserve = esmpy.Regrid(sourcefield, destfield, regrid_method=esmpy.RegridMethod.CONSERVE, unmapped_action=esmpy.UnmappedAction.IGNORE)
+
+7. Apply interpolator and fill ::
+
+    regrid_conserve(sourcefield, destfield)
 
 
 
@@ -300,12 +319,6 @@ Example of script to spatially resample simulation from 30m to 250m:
 
 Temporal regrid with xarray
 ---------------------------
-
-
-.. image:: https://docs.xarray.dev/en/stable/_static/Xarray_Logo_RGB_Final.svg
-    :alt: my-picture1
-    :width: 300
-
 
 Time re-gridding may be necessary to calculate smod from september to september.
 This can be achieved with xarray. In this following example we average simulations to a single value a day::

@@ -3,6 +3,8 @@ Snowtools's |version| documentation
 
 Documentation of Snowtools |version| generated on |today|.
 
+The code is available at https://github.com/UMR-CNRM/snowtools
+
 Presentation of the Snowtools project
 -------------------------------------
 
@@ -11,6 +13,8 @@ Snowtools is a series of scripts, mostly written in python, that are designed to
 Note that this package is only useful for people interested in using numerical codes of **snowpack modelling** on a **Linux environment**. The package does not include any meteorological or snow data. It may be associated for most of its scripts with the SURFEX project (http://www.umr-cnrm.fr/surfex/spip.php).
 
 General informations about snowpack modelling with SURFEX-Crocus can be found here: http://www.umr-cnrm.fr/spip.php?rubrique73.
+
+For users which meet technical difficulties during the installation or the execution of the codes, we only provide support through the dedicated interface on https://github.com/UMR-CNRM/snowtools-tickets. We will try to answer as soon as possible although we can not guarantee a fixed response time. Note that the access to tickets is limited to known users of the SURFEX-Crocus or snowtools. If you do not already have an access, please ask for access by email to crocus at meteo dot fr.
 
 Basics
 ------
