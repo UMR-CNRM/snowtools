@@ -110,9 +110,9 @@ def parse_command_line():
                         choices=['FORCING', 'PRO', 'snow_obs_date', 'Precipitation'],
                         help='kind file containing the variable(s) to plot')
 
-    parser.add_argument('-m', '--ensemble', action='store', default=None, choices=['mean', 'first'],
+    parser.add_argument('-m', '--ensemble', action='store', default=None, choices=['mean'] + [str(mb) for mb in range(17)],
                         help="If the file comes from an ensemble, either plot the ensemble mean or only"
-                             "the first member (the control member by convention)")
+                             "one specific member (the control member is member 0 by convention)")
 
     parser.add_argument('-a', '--vapp', type=str, default='edelweiss', choices=['s2m', 'edelweiss', 'Pleiades'],
                         help="Application that produced the target file")
@@ -183,7 +183,10 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
                 savename = f'{var}_mean_cumul_{xpid}_{datebegin}_{dateend}.pdf'
             else:
                 tmp = tmp.sum(dim='time')
-                savename = f'{var}_cumul_{xpid}_{datebegin}_{dateend}.pdf'
+                if member is None:
+                    savename = f'{var}_cumul_{xpid}_{datebegin}_{dateend}.pdf'
+                else:
+                    savename = f'{var}_cumul_{xpid}_mb{member:03d}_{datebegin}_{dateend}.pdf'
 
         vmax = vmax_map[var] if var in vmax_map.keys() else tmp.max()
         vmin = vmin_map[var] if var in vmin_map.keys() else tmp.min()
@@ -227,10 +230,10 @@ if __name__ == '__main__':
     ensemble        = args.ensemble
     if ensemble == 'mean':
         member = footprints.util.rangex('0-16-1')
-    elif ensemble == 'first':
-        member = 0
-    else:
+    elif ensemble is None:
         member = None
+    else:
+        member = int(ensemble)
     uenv            = args.uenv
     uenv_dem        = args.uenv_dem
     vapp            = args.vapp
