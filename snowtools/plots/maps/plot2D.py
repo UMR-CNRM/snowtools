@@ -25,7 +25,8 @@ domain_coords = dict(
 )
 
 
-def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoint=None, alpha=1., dem=None, shade=True):
+def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoint=None, alpha=1., dem=None,
+        shade=True, isolevels=None):
     """
     :kwargs dem: Digital elevation model (xarray.DataArray)
     """
@@ -36,9 +37,12 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
     if dem is not None:
         if shade and field.isnull().sum() == 0:
             add_relief_shading(dem, ax=ax, extent=[field.xx.min(), field.xx.max(), field.yy.min(), field.yy.max()])
-            alpha = 0.8
+            alpha = 0.7
         else:
-            add_iso_elevation(dem, ax=ax)
+            if isolevels is not None:
+                add_iso_elevation(dem, ax=ax, levels=isolevels)
+            else:
+                add_iso_elevation(dem, ax=ax)
 
     # Set defailt vmin/vmax values from field if necessary
     if vmax is None:
@@ -56,17 +60,15 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
     if alpha < 1:
         cml = ax.contourf(
             field.xx, field.yy, field.data,
-            levels      = np.linspace(vmin, vmax, 1000),  # Data slices
-            antialiased = True,  # Remove lines
+            levels      = np.linspace(vmin, vmax, 100),  # Data slices
             cmap        = cmap,
             vmin        = vmin,
             vmax        = vmax,
             alpha       = alpha,  # Transparency
-            locator     = ticker.MaxNLocator(10)
+            # Try to remove lines :
+            antialiased = True,
         )
-        cml.colorbar(
-            ticks = ticker.MaxNLocator(10)
-        )
+        plt.colorbar(cml, ticks=ticker.MaxNLocator(6))
         # Rasterize to reduce figure size
         for c in cml.collections:
             c.set_rasterized(True)

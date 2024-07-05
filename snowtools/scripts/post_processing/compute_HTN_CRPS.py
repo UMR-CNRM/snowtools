@@ -120,7 +120,7 @@ def execute():
     # Get Domain's DEM in case ZS not in simulation file
     mnt = xr.open_dataset('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
     mnt = xrp.preprocess(mnt, decode_time=False)
-    mnt =mnt['ZS']
+    mnt = mnt['ZS']
 
     if clustering == 'elevation':
         mask = mnt
@@ -272,19 +272,21 @@ def plot_ensemble(simu, obs, xpid, date, dem=None):
     vmin = 0
     vmax = 3
     print(f'plot mean {xpid}')
-    plot2D.plot_field(mean, ax=ax[0], vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=False)
+    plot2D.plot_field(mean, ax=ax[0], vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=False,
+            isolevels=thresholds)
     ax[0].set_title('Ensemble mean snow depth (m)')
 
     spread = simu.DSN_T_ISBA.std(dim='member')
     vmin = 0
     vmax = 1
     print(f'plot spread {xpid}')
-    plot2D.plot_field(spread, ax=ax[1], vmin=vmin, vmax=vmax, cmap=plt.cm.Purples, dem=dem, shade=False)
+    plot2D.plot_field(spread, ax=ax[1], vmin=vmin, vmax=vmax, cmap=plt.cm.Purples, dem=dem, shade=False,
+            isolevels=thresholds)
     ax[1].set_title('Ensemble spread (m)')
 
     error = mean - obs
     print(f'plot error {xpid}')
-    plot2D.plot_field(error, ax=ax[2], cmap=plt.cm.RdBu, dem=dem, shade=False)
+    plot2D.plot_field(error, ax=ax[2], cmap=plt.cm.RdBu, dem=dem, shade=False, isolevels=thresholds)
     ax[2].set_title('Ensemble mean error (m)')
 
     plot2D.save_fig(savename, fig)
