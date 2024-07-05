@@ -77,6 +77,7 @@ domain_map = dict(
 )
 
 gvar_map = dict(
+    # GrandesRousses250m = 'RELIEF_GRANDESROUSSES250M_L93',
     GrandesRousses250m = 'DEM_GRANDESROUSSES25M_L93',
     Alp250m            = 'DEM_FRANCE25M_L93',
     Alp1km             = 'DEM_FRANCE25M_L93',
@@ -201,10 +202,10 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
         dem = dem.squeeze()
 
         if var in cmap.keys():
-            plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, cmap=cmap[var], addpoint=addpoint, dem=dem.band_data)
+            plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, cmap=cmap[var], addpoint=addpoint, dem=dem.ZS)
         else:
             # plot2D.plot_field(tmp, ax=ax, vmin=vmin, vmax=vmax, addpoint=addpoint)
-            plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, addpoint=addpoint, dem=dem.band_data)
+            plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, addpoint=addpoint, dem=dem.ZS)
 
         # Add relief
         # plot2D.add_iso_elevation(ax, dem.ZS)
