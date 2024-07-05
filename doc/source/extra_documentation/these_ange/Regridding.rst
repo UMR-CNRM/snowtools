@@ -4,9 +4,6 @@
 Methods of regridding
 =====================
 
-.. image:: https://earthsystemmodeling.org/assets/images/esmf.png
-    :alt: my-picture1
-
 Spatial regrid with `ESMF <https://earthsystemmodeling.org/>`_
 --------------------------------------------------------------
 In some situation it can be interesing to regrid simulations files.
@@ -322,12 +319,6 @@ Example of script to spatially resample simulation from 30m to 250m:
 
 Temporal regrid with xarray
 ---------------------------
-
-
-.. image:: https://docs.xarray.dev/en/stable/_static/Xarray_Logo_RGB_Final.svg
-    :alt: my-picture1
-    :width: 300
-
 
 Time re-gridding may be necessary to calculate smod from september to september.
 This can be achieved with xarray. In this following example we average simulations to a single value a day::
