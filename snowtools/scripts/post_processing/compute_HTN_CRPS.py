@@ -170,7 +170,12 @@ def execute():
         if member is not None and len(member) > 1 and clustering in 'elevation':
             plot_ensemble(simu, obs.DSN_T_ISBA, shortid, date, dem=mnt)
 
-        pearson[shortid], crps = compute_scores(simu, obs)
+        if clustering in 'elevation' and member is None or len(member) == 1:
+            plot_HTN = True
+        else:
+            plot_HTN = False
+
+        pearson[shortid], crps = compute_scores(simu, obs, shortid, date, plot_HTN, dem=mnt)
 
         savename = f'CRPS_{shortid}_{date}.pdf'
         vmin = 0
@@ -292,11 +297,21 @@ def plot_ensemble(simu, obs, xpid, date, dem=None):
     plot2D.save_fig(savename, fig)
 
 
-def compute_scores(simu, obs):
+def compute_scores(simu, obs, xpid, date, plot_HTN, dem=None):
 
     # Select common domains
     obs  = obs.sel({'xx': np.intersect1d(obs.xx, simu.xx), 'yy': np.intersect1d(obs.yy, simu.yy)})['DSN_T_ISBA']
     simu = simu.sel({'xx': np.intersect1d(obs.xx, simu.xx), 'yy': np.intersect1d(obs.yy, simu.yy)})['DSN_T_ISBA']
+
+    if plot_HTN:
+        savename = f'HTN_{xpid}_{date}.pdf'
+        plt.figure(figsize=(12 * len(simu.xx) / len(simu.yy), 10))
+        vmin = 0
+        vmax = 3
+        plot2D.plot_field(simu.squeeze(), vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=False,
+                isolevels=thresholds)
+        plot2D.save_fig(savename)
+
     # Mask missing values from the observatin dataset in the simulation dataset
     simu = simu.where(~np.isnan(obs))
     # <xarray.Dataset>
@@ -315,6 +330,8 @@ def compute_scores(simu, obs):
     # control_member = simu.sel({'member': 0})
     pearson = xr.corr(simu, obs, dim=['xx', 'yy'])
     pearson = pearson[~np.isnan(pearson)]  # Remove nan values (all 0s simulations)
+
+    # TODO : check https://scikit-image.org/docs/stable/auto_examples/transform/plot_ssim.html
 
     simu = simu.expand_dims(dim="time")
     obs  = obs.expand_dims(dim="time")
