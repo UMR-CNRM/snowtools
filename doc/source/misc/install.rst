@@ -58,6 +58,8 @@ Most of the packages can easily be installed in a virtual environment with ``pip
 
 Only GDAL python binding need to be installed manually to be installed consistently with your installed ``libgdal-dev`` version. Please install before the system packages ``ligdal`` and ``libgdal-dev`` (or similar) and run: ``pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="$(gdal-config --cflags)"``.
 
+.. _sec-install_users:
+
 Snowtools install for users
 ---------------------------
 
@@ -91,6 +93,92 @@ It is also recommended to create useful aliases for s2m command and proreader gr
    alias proplotter="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/proplotter.py"
    alias procompare="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/procompare.py"
    alias put="$SNOWTOOLS_CEN/cenutils/put"
+
+run either the ``install_crps_belenos.sh`` or the ``install_crps_ubuntu.sh``
+script in order to compile the crps extension module written in Fortran.
+
+
+Method 2
+^^^^^^^^
+
+editable install with ``pip``.
+
+.. note::
+
+    If using this method make sure **not** to have
+    your snowtools directory in your PYTHONPATH.
+    So do not mix with method 1.
+
+
+1. Clone the git repository on your computer.
+2. create or choose a virtual environment.
+To create a virtual environment you can run:
+
+.. code-block:: bash
+
+    python -m venv nameofmyenv --system-site-packages
+
+where ``nameofmyenv`` is a freely chosen name for the environment
+and --system-site-packages makes the packages already installed on
+the system available inside the virtual environment.
+
+Or create a virtual environment within the PyCharm IDE:
+
+
+    File -> Settings
+
+    In settings go to
+    Project -> Python Interpreter
+
+    Next to the Interpreter line clic "add interpreter" -> "add local interpreter"
+
+    choose "virtuelenv environment" from the left-hand list,
+    on the right-hand side of the dialog
+    choose the location and a base interpreter
+    (typically the system python install /usr/bin/python3.XX)
+
+    Hint: tick the "inherit global site-packages" check box
+    for the --system-site-packages option.
+
+    clic the "Ok" button.
+
+3. source the virtual environment
+
+.. code-block:: bash
+    source ./<pathtovenv>/nameofmyenv/bin/activate
+
+now the commandline prompt should start with ``(nameofmyenv)``
+and thus look like ``(nameofmyenv) username@host:~$`` for example.
+
+4. install build dependencies ``meson-python``, ``meson`` and ``ninja`` inside the virtual environment.
+
+.. code-block:: bash
+
+        pip install meson-python meson ninja
+
+.. note::
+
+    Snowtools contains a compiled extension module written in Fortran.
+    In order to render compiled extension modules editable similarly to ordinary python code,
+    they are compiled at import time in an editable install rather than during
+    installation in case of a classical install (:ref:`sec-install_users`).
+    This means that the build dependencies have to be available at runtime in
+    the virtual environment and not just temporarily during the install.
+    The advantage is, that edits in the Fortran code trigger the (partial) re-compilation of
+    the extension module at the next import in a new interpreter instance.
+    https://mesonbuild.com/meson-python/how-to-guides/editable-installs.html
+
+5. install snowtools: inside the snowtools directory do:
+
+.. code-block:: bash
+
+    pip install --no-build-isolation -e .
+
+.. note::
+
+    ``--no-build-isolation`` disables build isolation.
+    Disabling build isolation is necessary in order to be able to re-build extensions
+    at import time in editable installs. For ordinary installs build isolation is a desired feature.
 
 Optional installations
 ----------------------
