@@ -634,13 +634,35 @@ class ProVsPleiade(SpatialScores):
     """
     class for comparing simulations data with a pleiade image.
     """
+
+    def __init__(self, fc_filenames, list_of_experiments, obs_filename, varname, list_of_kernels, list_of_thresholds,
+                 list_of_threshold_increments, per_zone=None, score_file=True, score_file_name="spatial_scores.nc",
+                 perf_plot=True, perf_plot_file="perfdiag.png"):
+        super(ProVsPleiade, self).__init__(fc_filenames, list_of_experiments, obs_filename,
+                                           varname, list_of_kernels, list_of_thresholds,
+                                           list_of_threshold_increments, per_zone=per_zone,
+                                           score_file=score_file, score_file_name=score_file_name,
+                                           perf_plot=perf_plot, perf_plot_file=perf_plot_file)
+        self.select_fc_at_obs()
+
     def get_fc_data(self, filenames, list_of_experiments, varname):
+        """
+        read forecast data for different experiments.
+
+        :param filenames: list of filenames with path
+        :type filenames: str or path-like
+        :param list_of_experiments: list of experiment names or tags
+        :type list_of_experiments: list of strings
+        :param varname: variable name to get from the input files
+        :type varname: str
+        :return: dict with forecast data with experiment names as keys and xarray data variables as values.
+        :rtype: dict
+        """
         outdict = {}
         for exp, path in zip(list_of_experiments, filenames):
             fc_ds = prosimu_xr(path)
             outdict[exp] = fc_ds.dataset[varname]
         return outdict
-
 
     def get_obs_data(self, filename, varname):
         """
@@ -661,12 +683,43 @@ class ProVsPleiade(SpatialScores):
         # return dict(time=time, x=x, y=y, values=snowheight)
 
     def select_fc_at_obs(self):
+        """
+        select a subset of the forecast data at times and location where the observation data
+        (Pleiade image or alike) are available.
+        """
         for exp in self.fc_data.keys():
             self.fc_data[exp] = self.fc_data[exp].sel(time=self.obs_data['time'], xx=self.obs_data['xx'],
                                                       yy=self.obs_data['yy'])
 
-    def apply_mask(self):
-        pass
+    def get_mask(self, maskfile='masque_glacier2017_foret_ville_riviere.nc', mask_varname='Band1',
+                   method='nearest'):
+        """
+        get a mask object.
+
+        :param maskfile: a netcdf file defining the mask
+        :param mask_varname: netcdf variable name containing the mask
+        :param method: interpolation method to use in order to map the mask onto the observation data grid.
+        :return: mask on self.obs_data grid.
+        """
+        masque = xr.open_dataset(maskfile)[mask_varname].rename(x="xx", y="yy").interp_like(self.obs_data,
+                                                                                            method=method)
+        return self.obs_data.where(masque == 0)
+
+    def apply_mask(self, maskfile='masque_glacier2017_foret_ville_riviere.nc', mask_varname='Band1',
+                   method='nearest'):
+        """
+        apply a mask to the forecast and observation data.
+
+        :param maskfile: a netcdf file defining the mask
+        :param mask_varname: netcdf variable name containing the mask
+        :param method: interpolation method to use in order to map the mask onto the observation data grid.
+        """
+        mask = self.get_mask(maskfile=maskfile, mask_varname=mask_varname, method=method)
+        for exp in self.fc_data.keys():
+            self.fc_data[exp] = self.fc_data[exp].where(~np.isnan(mask))
+        self.obs_data = self.obs_data.where(~np.isnan(mask))
+
+
 
 
 
@@ -705,28 +758,4 @@ class ProVsPleiade(SpatialScores):
 # vec_corrcoef(a, np.arange(3))
 
 
-from scipy.stats import pearsonr
 
-def pearson_corr(simu_data, ref_data, p_value=True):
-    """
-    Compute Pearson correlation coefficient and p-value for testing non-correlation (optional).
-    Important: Nan areas must be identical.
-
-    Args:
-        simu_data: The simulation dataset.
-        ref_data: The reference dataset.
-        p_value: option to return p-value
-
-    Returns:
-        statistic : float
-            Pearson product-moment correlation coefficient.
-        p-value : float (if option is True)
-            The p-value associated with the default scipy function options.
-    """
-    simu_data=simu_data.to_numpy().ravel()
-    ref_data=ref_data.to_numpy().ravel()
-    if (p_value):
-        return pearsonr(simu_data[~np.isnan(simu_data)],ref_data[~np.isnan(ref_data)])
-    else:
-        statistic, pvalue = pearsonr(simu_data[~np.isnan(simu_data)],ref_data[~np.isnan(ref_data)])
-        return statistic
