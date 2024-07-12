@@ -1043,8 +1043,10 @@ class prosimu_xr():
     def __init__(self, path, openmode='r'):
         """
 
-        :param path:
-        :param openmode:
+        :param path: path of the file to read
+        :type path: path-like or list
+        :param openmode: open mode (mainly ``r``, ``w`` or ``r+``) only ``r`` is implemented for the moment
+        :type openmode: str
         """
         import xarray
         if type(path) is str:

@@ -240,3 +240,17 @@ class PerfDiag(Mplfigure):
 # plt.clabel(csi_contour, inline=True, fontsize=9)
 # plt.clabel(b_contour, fmt="%1.1f", )  # manual=[(0.2, 0.9), (0.4, 0.9), (0.6, 0.9), (0.7, 0.7)])
 # plt.savefig("CHAP4/perfdiagram.pdf", bbox_inches="tight")
+
+
+class FuzzyScoreDiagram(Mplfigure):
+
+    def __init__(self, figsize=(9, 8), cmap='winter', title="Fuzzy Score Diagram"):
+        self.fig = plt.figure(figsize=figsize)
+        self.plot = plt.subplot(111)
+        self.xlabel = "Thresholds"
+        self.ylabel = "Neighborhood size"
+        self.cmap = cmap
+        self.set_title(title, fontsize=14)
+
+    def draw(self, data, xlabels, ylabels):
+        self.plot.pcolormesh(data, cmap=self.cmap)

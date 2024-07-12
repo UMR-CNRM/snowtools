@@ -20,9 +20,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     ds = xr.open_dataset(args.inputnc)
     if args.xname:
-        ds[args.xname].attrs['standard_name'] == 'projection_x_coordinate'
+        ds[args.xname].attrs['standard_name'] = 'projection_x_coordinate'
     if args.yname:
-        ds[args.yname].attrs['standard_name'] == 'projection_y_coordinate'
+        ds[args.yname].attrs['standard_name'] = 'projection_y_coordinate'
     for var in ds.data_vars:
         x = None
         y = None
