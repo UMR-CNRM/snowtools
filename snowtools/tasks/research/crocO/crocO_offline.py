@@ -144,14 +144,12 @@ class Offline_Task(_CrocO_Task):
 
         if 'compute' in self.steps:
             # force first forcing to the first forcing of first member 0001 doesn't work on several nodes...
-            #date_begin_forc, date_end_forc, _, _ = \
-            #    get_list_dates_files(self.conf.datebegin, Date(check_and_convert_date(self.conf.stopdate)),
-            #                         self.conf.duration)  # each one of these items has only one item
-            #date_begin_forc = date_begin_forc[0]
-            #date_end_forc = date_end_forc[0]  # replace one-item list by item.
-            firstforcing = f'mb{self.conf.membersnode[0]:04d}/FORCING_{self.conf.datebegin.ymdh}_{self.conf.dateend.ymdh}.nc'
-#                           '/FORCING_' + date_begin_forc.strftime("%Y%m%d%H") +\
-#                           "_" + date_end_forc.strftime("%Y%m%d%H") + ".nc"
+            date_begin_forc, date_end_forc, _, _ = \
+                get_list_dates_files(self.conf.datebegin, Date(check_and_convert_date(self.conf.stopdate)),
+                                     self.conf.duration)  # each one of these items has only one item
+            date_begin_forc = date_begin_forc[0]
+            date_end_forc = date_end_forc[0]  # replace one-item list by item.
+            firstforcing = f'mb{self.conf.membersnode[0]:04d}/FORCING_{date_begin_forc.ymdh}_{date_end_forc.ymdh}.nc'
 
             self.sh.title('Toolbox algo tb09a (preprocess)')
 

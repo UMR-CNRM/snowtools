@@ -35,6 +35,7 @@ class Soda_Task(_CrocO_Task):
                 kind           = 'soda',
                 local          = 'SODA',
                 model          = 'surfex',
+                # TODO : prendre un exécutable "MPI" !!
                 remote         = self.conf.exesurfex + "/SODA"
             )
 
@@ -59,9 +60,26 @@ class Soda_Task(_CrocO_Task):
 #            )
 #            print(t.prompt, 'tobs =', tobs)
 #            print()
-            from snowtools.scripts.extract.vortex import vortexIO as io
-            tobs = io.get_snow_obs_date(xpid='CesarDB_AngeH', geometry='Lautaret250m', date=assDate, vapp='Pleiades',
-                    filename='OBSERVATIONS_[datevalidity:ymdHh].nc',)
+            from snowtools.scripts.extract.vortex import vortex_get as io
+            if self.conf.dateend.year == 2022:
+                obs_xpid     = 'CesarDB@vernaym'
+            else:
+                obs_xpid     = 'CesarDB_AngeH@vernaym'
+
+            if self.conf.dateend.year == 2018:
+                obs_geometry = 'Lautaret250m'
+            else:
+                obs_geometry = 'Huez250m'
+            tobs = io.get(
+                filename   = 'OBSERVATIONS_[datevalidity:ymdHh].nc',
+                date       = assDate,
+                vapp       = 'Pleiades',
+                experiment = obs_xpid,
+                geometry   = obs_geometry,
+                kind       = 'SnowObservations'
+            )
+            print(t.prompt, 'Observation = ', tobs)
+            print()
 
         if 'fetch' in self.steps:
 
@@ -94,6 +112,9 @@ class Soda_Task(_CrocO_Task):
 
             # ################## SODA toolbox.algo
             # test of obs exists/successfully downloaded
+            print('DBUG tobs = ',tobs)
+            print(dir(tobs))
+            print(dir(tobs[0]))
             if any([s.stage == 'get' for s in tobs]):
 
                 # soda

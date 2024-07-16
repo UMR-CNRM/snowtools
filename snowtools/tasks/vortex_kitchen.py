@@ -505,7 +505,10 @@ class Vortex_conf_file(object):
 
     def escroc_variables(self):
 
-        self.set_field("DEFAULT", 'subensemble', self.options.escroc)
+        if self.options.escroc is None and self.options.task == 'escroc':
+            self.set_field("DEFAULT", 'subensemble', 'E2')
+        else:
+            self.set_field("DEFAULT", 'subensemble', self.options.escroc)
 
         if self.options.nnodes > 1 and self.options.nmembers:
 
@@ -682,7 +685,9 @@ class Vortex_conf_file(object):
 
         # BC 01/04/20: this rangeX will cause us some trouble...
         self.set_field('DEFAULT', 'members', 'rangex(start:1 end:' + str(self.options.nmembers) + ')')
-        if 'E1' in self.options.escroc:
+        if self.options.escroc is None:
+            members_id = allmembers
+        elif 'E1' in self.options.escroc:
             if hasattr(confObj, 'members_id'):
                 members_id = np.array(list(map(int, confObj.members_id)))
 

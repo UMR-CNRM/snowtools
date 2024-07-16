@@ -365,8 +365,10 @@ class Surfex_command(_S2M_command):
                                             help="The task, if not the default one.")
 
         parser_research_vortex.add_argument("--escroc",
-                                            type=str, dest="escroc", default='E2',
+                                            type=str, dest="escroc", default=None,
                                             help="ESCROC subensemble in case --task=escroc")
+                                            # WARNING : this is also used by the crocO task
+                                            # TODO : check consistency
 
         parser_research_vortex.add_argument("--croco",
                                             type=str, dest="croco", default='openloop',

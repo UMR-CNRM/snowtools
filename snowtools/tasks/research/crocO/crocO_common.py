@@ -139,8 +139,16 @@ class _CrocO_Task(Task, S2MTaskMixIn):
                 if int(self.conf.synth) <= int(self.conf.nmembers):
                     synth = str(int(self.conf.synth))
                     meteo_members[synth] = self.conf.meteo_draw
-        local_names = {str(m): 'mb{0:04d}'.format(m) + '/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
+        # MV 9/07/2024 : VERRUE
+        # Always name FORCING from 08/01/yyyy to 08/01/YYYY enven for other periods
+        # This is necessary for the next OFFLINE loop to find the FORCING file
+        local_names = {str(m): f'mb{m:04d}/FORCING_{date_begin_forc.ymdh}_{date_end_forc.ymdh}.nc'
                        for m in self.conf.members}
+        if self.conf.datebegin == '2021080207':
+            deb = '2021080206'
+        else:
+            deb = self.conf.datebegin
+
         self.sh.title('Toolbox input tb01 (forcings)')
         tb01 = toolbox.input(
             role         = 'Forcing',
@@ -151,9 +159,8 @@ class _CrocO_Task(Task, S2MTaskMixIn):
             member       = dict(realmember=meteo_members),
             geometry     = self.conf.geometry,
             #datebegin    = date_begin_forc,
-            #dateend      = date_end_forc,
-            datebegin    = self.conf.datebegin,
-            dateend      = self.conf.dateend,
+            datebegin    = deb,
+            dateend      = date_end_forc,
             nativefmt    = 'netcdf',
             kind         = 'MeteorologicalForcing',
             model        = 'safran',
