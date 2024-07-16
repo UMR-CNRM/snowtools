@@ -104,13 +104,17 @@ def clean(description):
 def get(**description):
     default.update(description)
     description = footprint_kitchen(**default)
-    toolbox.input(**description)
+    rh = toolbox.input(**description)
+
+    return rh
 
 
 def put(**description):
     default.update(description)
     description = footprint_kitchen(**default)
-    toolbox.output(**description)
+    rh = toolbox.output(**description)
+
+    return rh
 
 
 def footprint_kitchen(**kw):
