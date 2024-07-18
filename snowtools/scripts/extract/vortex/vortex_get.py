@@ -131,7 +131,7 @@ def footprint_kitchen(**kw):
     if 'filename' not in kw.keys() or kw['filename'] is None:
         kw['filename'] = f'{kw["kind"]}.nc'
 
-    if 'member' in kw.keys():
+    if 'member' in kw.keys() and kw['member'] is not None:
         first_mb, last_mb = kw['member'].split(':')
         kw['member'] = [mb for mb in range(int(first_mb), int(last_mb) + 1)]
         kw['filename'] = f'mb[member]/{kw["filename"]}'
