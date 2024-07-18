@@ -33,12 +33,29 @@ from snowtools.plots.boxplots import violinplot
 
 
 members_map = dict(
-    RS27_pappus        = [mb for mb in range(17)],
-    EnKF36_pappus      = [mb for mb in range(17)],
-    PF32_pappus        = [mb for mb in range(17)],
-    RS27_sorted_pappus = [mb for mb in range(17)],
-    ANTILOPE_pappus    = None,
-    SAFRAN_pappus      = None,
+    RS27_pappus              = [mb for mb in range(17)],
+    EnKF36_pappus            = [mb for mb in range(17)],
+    PF32_pappus              = [mb for mb in range(17)],
+    RS27_sorted_pappus       = [mb for mb in range(17)],
+    RS27_pappus_assim        = [mb for mb in range(1, 18)],
+    EnKF36_pappus_assim      = [mb for mb in range(1, 18)],
+    PF32_pappus_assim        = [mb for mb in range(1, 18)],
+    RS27_sorted_pappus_assim = [mb for mb in range(1, 18)],
+    ANTILOPE_pappus          = None,
+    SAFRAN_pappus            = None,
+)
+
+product_map = dict(
+    RS27_pappus              = 'RS',
+    EnKF36_pappus            = 'EnKF',
+    PF32_pappus              = 'PF',
+    RS27_sorted_pappus       = 'SRS',
+    RS27_pappus_assim        = 'RS_assim',
+    EnKF36_pappus_assim      = 'EnKF_assim',
+    PF32_pappus_assim        = 'PF_assim',
+    RS27_sorted_pappus_assim = 'SRS_assim',
+    ANTILOPE_pappus          = 'ANTILOPE',
+    SAFRAN_pappus            = 'SAFRAN',
 )
 
 xpid_map = {
@@ -50,6 +67,18 @@ xpid_map = {
     '2022050112': 'CesarDB',
 }
 
+colors_map = dict(
+    SAFRAN     = "silver",
+    ANTILOPE   = "#D65F5F",
+    RS         = "#4878D0",
+    SRS        = "#D65F5F",
+    EnKF       = "#6ACC64",
+    PF         = "#EE854A",
+    RS_assim   = "#4878D0",
+    SRS_assim  = "#D65F5F",
+    EnKF_assim = "#6ACC64",
+    PF_assim   = "#EE854A",
+)
 
 # Retrieve dictionnary to map clustering type to a proper label
 label_map = clusters.label_map
@@ -153,7 +182,7 @@ def execute():
             if shortid in ['safran', 'ANTILOPE', 'safran_pappus', 'ANTILOPE_pappus', 'SAFRAN', 'SAFRAN_pappus']:
                 member = None
             else:
-                member = [0]
+                member = [members_map[shortid][0]]
 
         # VERRUE pour gérer le décallage d'un jour en attendant de combler les données
         if (shortid.startswith('SAFRAN') or shortid.startswith('ANTILOPE')) and datebegin == '2021080207':
@@ -177,19 +206,21 @@ def execute():
 
         pearson[shortid], crps = compute_scores(simu, obs, shortid, date, plot_HTN, dem=mnt)
 
-        savename = f'CRPS_{shortid}_{date}.pdf'
-        vmin = 0
-        vmax = 3
-        print(f'plot crps {xpid}')
-        plot2D.plot_field(crps, vmin=vmin, vmax=vmax, cmap=plt.cm.Reds, dem=mnt)
-        print(f'save crps {xpid}')
-        plot2D.save_fig(savename)
+        if member is not None and len(member) > 1 and clustering in 'elevation':
+            savename = f'CRPS_{shortid}_{date}.pdf'
+            vmin = 0
+            vmax = 3
+            print(f'plot crps {xpid}')
+            plot2D.plot_field(crps, vmin=vmin, vmax=vmax, cmap=plt.cm.Reds, dem=mnt)
+            print(f'save crps {xpid}')
+            plot2D.save_fig(savename)
 
         if clustering in ['elevation', 'uncertainty']:
             tmp = clusters.by_slices(crps, mask, thresholds)
         elif clustering == 'landforms':
             tmp = clusters.per_landform_types(crps, mask)
-        df = tmp.to_dataframe(name=shortid).dropna().reset_index().drop(columns=['xx', 'yy', 'time'], errors='ignore')
+        df = tmp.to_dataframe(name=product_map[shortid]).dropna().reset_index().drop(columns=['xx', 'yy', 'time'],
+                errors='ignore')
         dataplot = pd.concat([dataplot, df])
 
         clean(shortid, member)
@@ -199,7 +230,7 @@ def execute():
 
     title = f'Pleiades, {geometry}, {date[:8]}\n'
     violinplot.plot_ange(dataplot, 'CRPS (m)', figname=f'CRPS_by_{clustering}_{date}_' + '_'.join(xpids),
-            title=title, yaxis=label_map[clustering], violinplot=False, xmax=3)
+            title=title, yaxis=label_map[clustering], violinplot=False, xmax=3, colors=colors_map)
 
     print()
     if member is not None and len(member) > 1:

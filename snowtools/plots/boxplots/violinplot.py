@@ -15,6 +15,7 @@ https://editor.copernicus.org/index.php?_mdl=msover_md&_jrl=778&_lcm=oc73lcm74a&
 
 import numpy as np
 
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 #  import matplotlib.patches as mpatches
@@ -26,8 +27,11 @@ var_labels = dict(
 )
 
 
-def plot_ange(dataplot, var, figname=None, xmax=7, yaxis='Elevation Bands (m)', title=None, violinplot=True):
+def plot_ange(dataplot, var, figname=None, xmax=7, yaxis='Elevation Bands (m)', title=None,
+        violinplot=True, colors=None):
     """
+    colors: User-defined dictionary {product:color} to customize colors for each "product" in dataplot
+
     WORK IN PROGRESS
     * xmax     : set maximum x-axis value. Default for HTN / DSN_T_ISBA variable (6m)
     * dataplot : Pandas DataFrame
@@ -44,10 +48,16 @@ def plot_ange(dataplot, var, figname=None, xmax=7, yaxis='Elevation Bands (m)', 
 
     # Ange's paper color palette
     # TODO : automatiser le choix de la palette
-    colors = ["silver", "#D65F5F", "#4878D0", "#6ACC64", "#EE854A"]
-    # colors = ["silver", "#D65F5F", "#D65F5F", "#4878D0", "#4878D0", "#6ACC64", "#6ACC64", "#EE854A", "#EE854A"]
+    if colors is None:
+        default_colors = ["silver", "#D65F5F", "#4878D0", "#6ACC64", "#EE854A"]
+        colors = {key: default_colors[i] for i, key in dataplot.experiment.unique()}
+    else:
+        colors = {key: colors[key] for key in dataplot.experiment.unique()}
 
     bands = np.flip(dataplot[yaxis].unique())
+
+    # Set hatches for boxplot of 'assim' products
+    hatch = ['assim' in item for item in dataplot.experiment.unique() for _ in range(len(bands))]
 
     sns.set(rc={"figure.figsize": (12, 15)})
     sns.set_theme(style="whitegrid", font_scale=1.7)
@@ -63,8 +73,12 @@ def plot_ange(dataplot, var, figname=None, xmax=7, yaxis='Elevation Bands (m)', 
             bw_adjust    = 0.5,  # Factor that scales the bandwidth to use more or less smoothing
             cut          = 0,  # Limit the violin within the data range
             orient       = 'h',  # Horizontal violinplots
-            palette      = (color for color in colors),
+            palette      = colors,
         )
+        # Set Ange's hatches for simulations with assimilation
+        for i, item in enumerate(myplot.findobj(matplotlib.collections.PolyCollection)):
+            if hatch[i]:
+                item.set_hatch(r'\\\\')
     else:
         myplot = sns.boxplot(
             data         = dataplot,  # data
@@ -73,11 +87,21 @@ def plot_ange(dataplot, var, figname=None, xmax=7, yaxis='Elevation Bands (m)', 
             hue          = 'experiment',  # Legend 'title'
             order        = bands,
             orient       = 'h',  # Horizontal violinplots
-            palette      = (color for color in colors),
             notch        = True,
             flierprops   = {"marker": "x"},
             medianprops  = {"linewidth": 3},
+            palette      = colors,
         )
+        # Set Ange's hatches for simulations with assimilation
+        # In the boxplot
+        for i, item in enumerate(myplot.findobj(matplotlib.patches.PathPatch)):
+            if hatch[i]:
+                item.set_hatch(r'\\\\')
+
+        # In the legend
+        for item in myplot.findobj(matplotlib.patches.Rectangle):
+            if 'assim' in item.get_label():
+                item.set_hatch(r'\\\\')
 
     if title is not None:
         myplot.set(title=title)
@@ -98,10 +122,6 @@ def plot_ange(dataplot, var, figname=None, xmax=7, yaxis='Elevation Bands (m)', 
     myplot.set_xlabel(label)
 
     plt.tight_layout()
-
-#    # Set Ange's hatches for simulations without pappus
-#    for violin in g.findobj(mpl.collections.PolyCollection)[0:-1:2]:
-#        violin.set_hatch(r'\\\\')
 
     # Set Ange's color and hatches
     # TODO : à automatiser
