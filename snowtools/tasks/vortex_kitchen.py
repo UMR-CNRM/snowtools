@@ -101,7 +101,7 @@ class vortex_kitchen(object):
                 if self.options.safran:
                     os.symlink(SNOWTOOLS_DIR + "/tasks/research/safran", "tasks")
                 elif self.options.surfex:
-                    if self.options.task in ['croco', 'croco_perturb']:
+                    if self.options.task in ['croco', 'croco_perturb', 'croco_postprocess']:
                         os.symlink(SNOWTOOLS_DIR + "/tasks/research/crocO", "tasks")
                     else:
                         os.symlink(SNOWTOOLS_DIR + "/tasks/research/surfex", "tasks")
@@ -171,6 +171,7 @@ class vortex_kitchen(object):
                 escroc_scores = "crps_task",  # older values scores_task optim_task
                 croco = "crocO_driver",
                 croco_perturb = 'crocO_perturb',
+                croco_postprocess = "crocO_postprocess",
                 reforecast = "ensemble_surfex_reforecast",
                 debug = 'debug_tasks',
                 refill = "refill",
@@ -184,13 +185,14 @@ class vortex_kitchen(object):
                 escroc_scores = "scores_escroc",
                 croco = 'croco',
                 croco_perturb = 'perturb_forcing',
+                croco_postprocess = "crocO_postprocess",
                 reforecast = "surfex_forecast",
                 debug = 'debug_s2m',  # TODO : remplacer par "debug_surfex" ?
                 refill = "refill_surfex_output",
                 interpol="interpolator",
             )
 
-            if self.options.task in ['escroc', 'croco', 'croco_perturb', 'reforecast', 'refill']:
+            if self.options.task in ['escroc', 'croco', 'croco_perturb', 'croco_postprocess', 'reforecast', 'refill']:
                 # In this case Taylorism prevents from using several nodes on the same run
                 # But several runs can be done separately
                 self.nnodes = 1
@@ -287,7 +289,7 @@ class vortex_kitchen(object):
 
     def mkjob_list_commands(self):
 
-        if not self.options.safran and (self.options.task in ['escroc', 'croco', 'croco_perturb',
+        if not self.options.safran and (self.options.task in ['escroc', 'croco', 'croco_postprocess', 'croco_perturb',
                                                               'reforecast'] and self.options.nnodes > 1):
             mkjob_list = []
             for node in range(1, self.options.nnodes + 1):
@@ -337,7 +339,7 @@ class vortex_kitchen(object):
             return Period(minutes=10).hms
 
         else:
-            if self.options.task in ['escroc', 'croco', 'croco_perturb', 'reforecast']:
+            if self.options.task in ['escroc', 'croco', 'croco_postprocess', 'croco_perturb', 'reforecast']:
                 if self.options.nmembers:
                     nmembers = self.options.nmembers
                 elif len(self.options.escroc) >= 2 and self.options.escroc[0:2] == "E2":
@@ -469,9 +471,9 @@ class Vortex_conf_file(object):
         else:
             self.surfex_variables()
             # ESCROC on several nodes
-            if self.options.task in ['escroc', 'escroc_scores', 'croco', 'croco_perturb']:
+            if self.options.task in ['escroc', 'escroc_scores', 'croco', 'croco_postprocess', 'croco_perturb']:
                 self.escroc_variables()
-                if self.options.task in ['croco']:
+                if self.options.task in ['croco', 'croco_postprocess']:
                     self.croco_variables()
             else:
                 self.set_field("DEFAULT", 'nnodes', self.options.nnodes)

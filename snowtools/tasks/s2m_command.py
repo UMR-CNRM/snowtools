@@ -361,7 +361,8 @@ class Surfex_command(_S2M_command):
         parser_research_vortex.add_argument("--task",
                                             dest="task", type=str, default='surfex',
                                             choices=["surfex", "surfex_dailyprep", "escroc", "escroc_scores", "croco",
-                                                     "croco_perturb", "reforecast", "debug", "refill", "interpol"],
+                                                     "croco_perturb", "croco_postprocess", "reforecast", "debug",
+                                                     "refill", "interpol"],
                                             help="The task, if not the default one.")
 
         parser_research_vortex.add_argument("--escroc",
