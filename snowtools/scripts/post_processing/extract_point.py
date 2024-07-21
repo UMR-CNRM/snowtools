@@ -5,10 +5,11 @@
 '''
 
 import os
+import glob
+import time
 import numpy as np
 import xarray as xr
 import argparse
-import snowtools.tools.xarray_preprocess as xrp
 try:
     # Retrieve input files with Vortex
     from snowtools.scripts.extract.vortex import vortexIO as io
@@ -20,16 +21,21 @@ reference_points = dict(
     Galibier = dict(xx=965767.64, yy=6445415.30),  # Nivose
     LacBlanc = dict(xx=944584.42, yy=6452410.74),  # Nivose
     RochillesNivose = dict(xx=972852.5, yy=6448853.87),  # Nivose
-    NivometeoHuez = dict(xx=941654.19, yy=6448968.81),  # 1860m
+    NivometeoHuez = dict(xx=942705.64, yy=6447916.82),  # 1860m
+    #NivometeoHuez = dict(xx=941654.19, yy=6448968.81),  # 1860m
 )
 
 members_map = dict(
-    RS27_pappus        = [mb for mb in range(17)],
-    EnKF36_pappus      = [mb for mb in range(17)],
-    PF32_pappus        = [mb for mb in range(17)],
-    RS27_sorted_pappus = [mb for mb in range(17)],
-    ANTILOPE_pappus    = None,
-    SAFRAN_pappus      = None,
+    RS27_pappus              = [mb for mb in range(17)],
+    EnKF36_pappus            = [mb for mb in range(17)],
+    PF32_pappus              = [mb for mb in range(17)],
+    RS27_sorted_pappus       = [mb for mb in range(17)],
+    RS27_pappus_assim        = [mb for mb in range(1, 18)],
+    EnKF36_pappus_assim      = [mb for mb in range(1, 18)],
+    PF32_pappus_assim        = [mb for mb in range(1, 18)],
+    RS27_sorted_pappus_assim = [mb for mb in range(1, 18)],
+    ANTILOPE_pappus          = None,
+    SAFRAN_pappus            = None,
 )
 
 
@@ -44,13 +50,16 @@ def parse_command_line():
     parser.add_argument('-e', '--dateend', type=str, default=None,
                         help="Last date covered by the simulation file, format YYYYMMDDHH.")
 
+    parser.add_argument('-a', '--datesassim', nargs='+', default=None,
+                        help="Assimilation date(s)")
+
     parser.add_argument('-x', '--xpid', type=str, default=None,
                         help="XPID of the simulation format XP_NAME@username")
 
     parser.add_argument('-g', '--geometry', type=str, default='GrandesRousses250m',
                         help='Geometry of the simulation(s) / observation')
 
-    parser.add_argument('-a', '--vapp', type=str, default='s2m', choices=['s2m', 'edelweiss'],
+    parser.add_argument('-v', '--vapp', type=str, default='s2m', choices=['s2m', 'edelweiss'],
                         help='vapp of the file')
 
     # parser.add_argument('-m', '--members', type=int, default=None,
@@ -78,7 +87,7 @@ def nearest(value, array):
     return array[np.abs(array - value).argmin()]
 
 
-def execute(point, member):
+def execute(point, member, datebegin=None, datesassim=None):
     """
     Main method
     """
@@ -86,21 +95,51 @@ def execute(point, member):
     if member is None or len(member) == 1:
         pro = xr.open_dataset(proname, decode_times=False)
     else:
-        pro = xr.open_mfdataset([f'mb{mb:03d}/{proname}' for mb in member],
-                concat_dim='member', combine='nested', chunks='auto')
-    pro = xrp.preprocess(pro)
-    pro = pro.chunk({"xx": 10, 'yy': 10})
-    if 'ZS' in pro.keys():
-        pro     = pro[['DSN_T_ISBA', 'ZS']]
-    else:
-        pro = pro.DSN_T_ISBA
+        if datesassim is None:
+            pro = xr.open_mfdataset([f'mb{mb:03d}/{proname}' for mb in member],
+                    concat_dim='member', combine='nested', chunks='auto',
+                    preprocess=lambda ds: ds[['DSN_T_ISBA']])
+        else:
+            listpro = list()
+            for date in datesassim:
+                proname = f'PRO_{datebegin}_{date}.nc'
+                outname = f'PRO_{datebegin}_{date}_reduced.nc'
+
+                # Very slow !
+#                listpro.append(xr.open_mfdataset([f'mb{mb:03d}/{proname}' for mb in member],
+#                    concat_dim='member', combine='nested', chunks={"xx": 10, 'yy': 10, 'time': 1000},
+#                    #preprocess=lambda ds: ds[['DSN_T_ISBA']]))
+#                    preprocess=lambda ds: ds[['DSN_T_ISBA']].sel({'xx':reference_points[point]['xx'],
+#                       'yy':reference_points[point]['yy']}, method='nearest')))
+#                    #data_vars=['DSN_T_ISBA'], preprocess=lambda ds: ds.sel({'time':ds.time[1::50]})))
+
+                for mb in member:
+                    t1 = time.time()
+                    print(mb)
+                    if not os.path.exists(f'mb{mb:03d}/{outname}'):
+                        ds = xr.open_dataset(f'mb{mb:03d}/{proname}')[['DSN_T_ISBA']]
+                        ds = ds.sel({'xx': reference_points[point]['xx'], 'yy': reference_points[point]['yy']},
+                                method='nearest')
+                        ds.to_netcdf(f'mb{mb:03d}/{outname}')
+                    t2 = time.time()
+                    print(f'{t2-t1}s')
+                print(date)
+                datebegin = date
+
+                listpro.append(xr.open_mfdataset([f'mb{mb:03d}/{outname}' for mb in member],
+                    concat_dim='member', combine='nested', chunks='auto'))
+            pro = xr.concat(listpro, dim='time')
+
+    # pro = xrp.preprocess(pro)
+    # pro = pro.chunk({"xx": 10, 'yy': 10})
 
     # The "sel" method is far more efficient in this case since it requires to read only 1 chunk
     # But the "reference_point" may not by within the dataset coordinates...
     # The workaround is to find first the nearest point of the domain with the custom "nearest" method,
     # and then use the faster "sel" method
-    out = pro.sel({'xx': nearest(reference_points[point]['xx'], pro.xx.data),
-        'yy': nearest(reference_points[point]['yy'], pro.yy.data)})
+    # out = pro.sel({'xx': nearest(reference_points[point]['xx'], pro.xx.data),
+    #    'yy': nearest(reference_points[point]['yy'], pro.yy.data)})
+    # out = pro.sel({'xx': reference_points[point]['xx'], 'yy': reference_points[point]['yy']}, method='nearest')
     # The "interp" method needs to read all coordinates to find the nearest one, thus chunking is useless
     # and the computation is very very slow
     # out = pro.interp({'xx': reference_points[point]['xx'], 'yy': reference_points[point]['yy']}, method='nearest')
@@ -109,7 +148,7 @@ def execute(point, member):
     if os.path.exists(outname):
         os.remove(outname)
     print('Writing output file...')
-    out.to_netcdf(outname)
+    pro.to_netcdf(outname)
     return outname
 
 
@@ -123,15 +162,16 @@ def save_output(outname):
 if __name__ == '__main__':
 
     args = parse_command_line()
-    datebegin = args.datebegin
-    dateend   = args.dateend
-    xpid      = args.xpid
-    vapp      = args.vapp
-    members   = args.members
-    workdir   = args.workdir
-    pro       = args.pro
-    geometry  = args.geometry
-    point     = args.point
+    datebegin  = args.datebegin
+    dateend    = args.dateend
+    datesassim = args.datesassim
+    xpid       = args.xpid
+    vapp       = args.vapp
+    members    = args.members
+    workdir    = args.workdir
+    pro        = args.pro
+    geometry   = args.geometry
+    point      = args.point
 
     # 1. Move in a (clean) working directory
     # --------------------------------------
@@ -147,11 +187,20 @@ if __name__ == '__main__':
         if xpid in ['safran_pappus', 'ANTILOPE_pappus', 'SAFRAN_pappus']:
             member = None
         else:
-            member = [0]
+            member = [members_map[xpid][0]]
     try:
         subdir = 'mb[member:03d]' if member is not None else ''
         # Try to get the PRO file with vortexIO
-        io.get_pro(datebegin=datebegin, dateend=dateend, xpid=xpid, geometry=geometry, member=member, vapp=vapp)
+        if datesassim is None:
+            io.get_pro(datebegin=datebegin, dateend=dateend, xpid=xpid, geometry=geometry, member=member, vapp=vapp)
+        else:
+            datesassim = datesassim + [dateend]
+            deb = datebegin
+            for date in datesassim:
+                io.get_pro(datebegin=deb, dateend=date, xpid=xpid, geometry=geometry, member=member, vapp=vapp,
+                        filename='PRO_[datebegin:ymdh]_[dateend:ymdh].nc')
+                deb = date
+
     except (ImportError, NameError, ModuleNotFoundError):
         # Otherwise a PRO file should be provided
         # TODO : Le code actuel ne gère qu'un unique fichier PRO
@@ -161,12 +210,10 @@ if __name__ == '__main__':
 
     # 3. Execute the core algorithm and clean up working directory
     # ------------------------------------------------------------
-    outname = execute(point, member)
+    outname = execute(point, member, datebegin=datebegin, datesassim=datesassim)
     save_output(outname)
     if member is None or len(member) == 1:
         os.remove('PRO.nc')
     else:
-        for mb in member:
-            print(f'Member {mb}')
-            subdir = f'mb{mb:03d}'
-            os.remove(os.path.join(subdir, 'PRO.nc'))
+        for pro in glob.glob('mb*/PRO*.nc'):
+            os.remove(pro)
