@@ -125,6 +125,32 @@ Saving::
 
   quantiledata17.to_nectdf('~/P250_Glb_16_03_18.nc')
 
+
+
+Assimilation-specific processing (SODA)
+***************************************
+
+Set snow depth variable name as "DEP"::
+
+  ds = xr.open_dataset('P250_Glb_16_03_18.nc')
+  ds = ds.rename({'DSN_T_ISBA': DEP})
+
+Ensure that xx/yy dimensions are sorted (implicit in SODA)::
+
+  ds=ds.reindex(yy=ds.yy.sortby('yy'), xx=ds.xx.sortby('xx'))
+
+
+Replace NaN by SURFEX/SODA XUNDEF value (1e20, with 'float64' dtype)::
+
+  ds.DEP.encoding['dtype'] = 'float64'
+  ds = ds.fillna(1e20)
+  ds.DEP.encoding['missing_value'] = 1e20
+  ds.to_netcdf(outname)
+
+or with CDO::
+
+  cdo setmissval,1e20 -b 64 filein fileout
+
 .. rubric:: Footnotes
 
 .. [#f1] https://doi.org/10.5194/tc-10-1361-2016
