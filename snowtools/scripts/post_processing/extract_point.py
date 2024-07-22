@@ -18,11 +18,30 @@ except ImportError:
 
 reference_points = dict(
     # Galibier = dict(xx=968139.97, yy=6446319.56),  # Col
-    Galibier = dict(xx=965767.64, yy=6445415.30),  # Nivose
-    LacBlanc = dict(xx=944584.42, yy=6452410.74),  # Nivose
-    RochillesNivose = dict(xx=972852.5, yy=6448853.87),  # Nivose
-    NivometeoHuez = dict(xx=942705.64, yy=6447916.82),  # 1860m
-    #NivometeoHuez = dict(xx=941654.19, yy=6448968.81),  # 1860m
+    Galibier = dict(
+        xx   = 965767.64,
+        yy   = 6445415.30
+    ),  # Nivose
+    LacBlanc = dict(
+        xx   = 944584.42,
+        yy   = 6452410.74
+    ),  # Nivose
+    RochillesNivose = dict(
+        xx   = 972852.5,
+        yy   = 6448853.87
+    ),  # Nivose
+    NivometeoHuez = dict(
+        xx   = 942705.64,
+        yy   = 6447916.82
+    ),  # 1860m
+    MaxPleiades20220501 = dict(
+        xx   = 946375.,
+        yy   = 6451625.
+    ),
+    BestCRPSImprovement = dict(
+        xx   = 943875.,
+        yy   = 6453125.
+    ),
 )
 
 members_map = dict(
