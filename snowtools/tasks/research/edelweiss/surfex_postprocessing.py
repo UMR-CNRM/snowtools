@@ -22,7 +22,11 @@ class Diag_sentinel2(_VortexTask):
         """
 
         self.sh.title('Toolbox input PRO')
-        self.pro = io.get_pro(**self.common_kw, members=self.conf.members)
+        kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
+        # Update default vapp with specific conf values
+        kw.update(dict(vapp=self.conf.vapp_pro, datebegin=self.conf.datebegin_pro, dateend=self.conf.dateend_pro,
+            xpid=self.conf.xpid_pro, geometry=self.conf.geometry_pro, members=self.conf.members))
+        self.pro = io.get_pro(**kw)
 
     def algo(self):
         """
