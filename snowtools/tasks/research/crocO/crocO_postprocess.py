@@ -66,7 +66,7 @@ class PostPocess(_CrocO_Task):
                 datebegin     = self.conf.datebegin,
                 dateend       = self.conf.dateend,
                 engine        = 'algo',  # _CENTaylorRun algo component "family" to execution a piece of python code
-                ntasks        = len(tbin),  # Do not forget to set the number of tasks for parallelisation
+                ntasks        = max(2, len(tbin)),  # Do not forget to set the number of tasks for parallelisation
                 role_members  = 'SnowpackSimulation',
             )
             print(t.prompt, 'tbalgo =', tbalgo)
@@ -76,13 +76,15 @@ class PostPocess(_CrocO_Task):
         if 'late-backup' in self.steps:
 
             self.sh.title('Toolbox output PRO')
-            tbout = toolbox.input(
-                local          = 'mb[(member+1)%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+            tbout = toolbox.output(
+                #local          = 'mb[(member+1)%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                local          = 'mb[member%04d]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
                 experiment     = self.conf.xpid,
                 geometry       = self.conf.geometry,
                 datebegin      = self.conf.datebegin,
                 dateend        = self.conf.dateend,
-                member         = self.conf.members - 1,
+                #member         = [mb - 1 for mb in self.conf.members],
+                member         = self.conf.members,
                 nativefmt      = 'netcdf',
                 kind           = 'SnowpackSimulation',
                 model          = 'surfex',
