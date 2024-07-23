@@ -44,9 +44,13 @@ class Precipitation(_VortexTask):
         self.sh.title('Toolbox input ISO WETBT/TPW')
         kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
         # Update default vapp with specific conf values
-        kw.update(dict(datebegin=self.conf.datebegin_lpn, kind=self.conf.kind_lpn, geometry=self.conf.geometry_lpn,
-            xpid=self.conf.xpid_lpn, source_app='arome', source_conf='3dvarfr',
-            filename='ISO_TPW.nc'))  # TODO : modifier le filename
+        if self.conf.dateend == '2022080106':
+            kw.update(dict(datebegin=self.conf.datebegin_lpn, kind=self.conf.kind_lpn, geometry=self.conf.geometry_lpn,
+                xpid=self.conf.xpid_lpn, source_app='arome', source_conf='3dvarfr',
+                filename='ISO_TPW.nc'))  # TODO : modifier le filename
+        else:
+            kw.update(dict(datebegin=self.conf.datebegin_lpn, kind=self.conf.kind_lpn, geometry=self.conf.geometry_lpn,
+                xpid=self.conf.xpid_lpn, filename='ISO_TPW.nc'))  # TODO : modifier le filename
         io.get_meteo(**kw)
 
         # Iso-TPW's grid relief

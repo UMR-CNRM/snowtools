@@ -26,7 +26,7 @@ class Diag_sentinel2(_VortexTask):
         # Update default vapp with specific conf values
         kw.update(dict(vapp=self.conf.vapp_pro, datebegin=self.conf.datebegin_pro, dateend=self.conf.dateend_pro,
             xpid=self.conf.xpid_pro, geometry=self.conf.geometry_pro, members=self.conf.members))
-        self.pro = io.get_pro(**kw)
+        self.pro = io.get_pro(filename='mb[member:03d]/PRO.nc', **kw)
 
     def algo(self):
         """
@@ -68,7 +68,8 @@ class ExtractDates(_VortexTask):
         kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
         # Update default vapp with specific conf values
         kw.update(dict(vapp=self.conf.vapp_pro, datebegin=self.conf.datebegin_pro, dateend=self.conf.dateend_pro,
-            xpid=self.conf.xpid_pro, geometry=self.conf.geometry_pro, members=self.conf.members))
+            xpid=self.conf.xpid_pro, geometry=self.conf.geometry_pro, members=self.conf.members,
+            filename='mb[member:03d]/PRO.nc'))
         self.pro = io.get_pro(**kw)
 
     def algo(self):
