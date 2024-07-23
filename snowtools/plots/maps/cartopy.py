@@ -20,6 +20,10 @@ Which cartopy version is based on which matplotlib version? (according to docume
 * cartopy 0.14 -> matplotlib 1.5.1
 * cartopy 0.13 -> matplotlib 1.4.3
 
+Other apparently working combinations:
+
+* cartopy 0.22.0 and matplotlib 3.6.3
+
 Usage :
 example :
 create a Map instance for the Alps. ``Map_alpes`` can take optional kwargs.

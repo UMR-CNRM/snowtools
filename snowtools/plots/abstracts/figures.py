@@ -66,7 +66,7 @@ class Mplfigure(object):
             position.x0 = 0.08
             position.x1 = 0.87
             self.plot.set_position(position)
-            if "cbar" in dir(self):
+            try:
                 c_position = self.cbar.ax.get_position()
                 # print(c_position)
                 diff_x = c_position.x1 - c_position.x0
@@ -74,6 +74,8 @@ class Mplfigure(object):
                 c_position.x1 = c_position.x0 + diff_x
                 c_position.y0 = 0.15
                 self.cbar.ax.set_position(c_position)
+            except AttributeError:
+                pass
 
     def save(self, figname, formatout="pdf", **kw):
         plt.savefig(figname, format=formatout, **kw)
