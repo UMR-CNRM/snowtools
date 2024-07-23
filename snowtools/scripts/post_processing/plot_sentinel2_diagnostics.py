@@ -28,15 +28,12 @@ from snowtools.plots.maps import plot2D
 from snowtools.plots.boxplots import violinplot
 from snowtools.tools import common_tools as ct
 import snowtools.tools.xarray_preprocess as xrp
+from snowtools.scripts.post_processing import common_dict
 
-members_map = dict(
-    RS27_pappus        = [mb for mb in range(17)],
-    EnKF36_pappus      = [mb for mb in range(17)],
-    PF32_pappus        = [mb for mb in range(17)],
-    RS27_sorted_pappus = [mb for mb in range(17)],
-    ANTILOPE_pappus    = None,
-    SAFRAN_pappus      = None,
-)
+members_map = common_dict.members_map
+product_map = common_dict.product_map
+xpid_map    = common_dict.xpid_map
+colors_map  = common_dict.colors_map
 
 # Retrieve dictionnary to map clustering type to a proper label
 label_map = clusters.label_map
@@ -90,6 +87,17 @@ def parse_command_line():
     return args
 
 
+def get_member(xpid, members):
+    # TODO : à gérer autrement pour être flexible
+    if members:
+        member = members_map[xpid]
+    else:
+        if xpid in ['safran', 'ANTILOPE', 'safran_pappus', 'ANTILOPE_pappus', 'SAFRAN', 'SAFRAN_pappus']:
+            member = None
+        else:
+            member = [0]
+    return member
+
 def main():
 
     try:
@@ -122,13 +130,7 @@ def main():
             deb = datebegin  # 2021080207
 
         # TODO : à gérer autrement pour être flexible
-        if members:
-            member = members_map[shortid]
-        else:
-            if shortid in ['safran', 'ANTILOPE', 'safran_pappus', 'ANTILOPE_pappus', 'SAFRAN', 'SAFRAN_pappus']:
-                member = None
-            else:
-                member = [0]
+        member = get_member(shortid, members)
 
         # Get DIAG files with Vortex
         kw = dict(datebegin=deb, dateend=dateend, vapp=vapp, member=member, filename=f'DIAG_{shortid}.nc',
@@ -155,14 +157,15 @@ def main():
         cluster = xr.where(~np.isnan(obs.data), cluster, np.nan)
 
         # compare(obs, var=var)
-        violin_plot(xpids, obs, var, cluster, member=member)  # Violinplots by elevation range
+        violin_plot(xpids, obs, var, cluster, members)  # Violinplots by elevation range
         if plot_fields:
-            plot_all_fields(xpids, obs, var, member=member, mnt=mnt)  # Field difference
+            plot_all_fields(xpids, obs, var, members, mnt=mnt)  # Field difference
 
     # 3. Clean data
     for xpid in xpids:
         shortid = xpid.split('@')[0]
-        if member is None:
+        member = get_member(shortid, members)
+        if member is None or len(member) == 1:
             os.remove(f'DIAG_{shortid}.nc')
         else:
             for mb in member:
@@ -192,7 +195,7 @@ def cluster_criterion(clustering):
     return mnt, mask
 
 
-def plot_all_fields(xpids, obs, var, member=None, mnt=None):
+def plot_all_fields(xpids, obs, var, members, mnt=None):
 
     vmin = obs.min()
     vmax = obs.max()
@@ -204,16 +207,13 @@ def plot_all_fields(xpids, obs, var, member=None, mnt=None):
 
     for xpid in xpids:
         shortid = xpid.split('@')[0]
-        if member is None:
+        member = get_member(shortid, members)
+        if member is None or len(member) == 1:
+            # "Deterministic" member=0 by default (WARNING : different from the current 's2m oper' convention)
             simu = xr.open_dataset(f'DIAG_{shortid}.nc', decode_times=False)
         else:
-            # Verrue : trouver une solution standard plus propre
-            if len(member) == 1:
-                # "Deterministic" member=0 by default (WARNING : different from the current 's2m oper' convention)
-                simu = xr.open_dataset(f'DIAG_{shortid}.nc', decode_times=False)
-            else:
-                simu = xr.open_mfdataset([f'mb{mb:03d}/DIAG_{shortid}.nc' for mb in member],
-                                         combine='nested', concat_dim='member', decode_times=False)
+            simu = xr.open_mfdataset([f'mb{mb:03d}/DIAG_{shortid}.nc' for mb in member],
+                                     combine='nested', concat_dim='member', decode_times=False)
         simu = xrp.preprocess(simu, decode_time=False)
         simu.squeeze(drop=True)
 
@@ -234,7 +234,7 @@ def plot_all_fields(xpids, obs, var, member=None, mnt=None):
         plot2D.plot_field(diff, savename, cmap=plt.cm.RdBu, vmin=-100, vmax=100, dem=mnt)
 
 
-def violin_plot(xpids, obs, var, mask, member=None):
+def violin_plot(xpids, obs, var, mask, members):
 
     if clustering in ['elevation', 'uncertainty']:
         filtered_obs = clusters.by_slices(obs, mask, thresholds)
@@ -245,7 +245,8 @@ def violin_plot(xpids, obs, var, mask, member=None):
     for xpid in xpids:
         print(xpid)
         shortid = xpid.split('@')[0]
-        if member is None:
+        member = get_member(shortid, members)
+        if member is None or len(member) == 1:
             subdir = ''
             df = filter_simu(shortid, subdir, mask, var)
         else:
@@ -264,7 +265,8 @@ def violin_plot(xpids, obs, var, mask, member=None):
     dataplot = dataplot.melt(label_map[clustering], var_name='experiment', value_name=var)
 
     figname = f'{var}_by_{clustering}_{datebegin}_{dateend}.pdf'
-    violinplot.plot_ange(dataplot, var, figname, yaxis=label_map[clustering], violinplot=False, xmax=375)
+    violinplot.plot_ange(dataplot, var, figname, yaxis=label_map[clustering], violinplot=False, xmin=150, xmax=300,
+            colors=colors_map, hatchid='assim')
 
 
 def filter_simu(xpid, subdir, mask, var):
@@ -278,7 +280,7 @@ def filter_simu(xpid, subdir, mask, var):
         filtered_simu = clusters.by_slices(simu, mask, thresholds)
     elif clustering == 'landforms':
         filtered_simu = clusters.per_landform_types(simu, mask)
-    df = filtered_simu.to_dataframe(name=xpid).dropna().reset_index().drop(columns=['xx', 'yy'])
+    df = filtered_simu.to_dataframe(name=product_map[xpid]).dropna().reset_index().drop(columns=['xx', 'yy'])
     return df
 
 

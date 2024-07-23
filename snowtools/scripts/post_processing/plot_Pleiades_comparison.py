@@ -23,11 +23,13 @@ from snowtools.scores import clusters
 from snowtools.plots.boxplots import violinplot
 import snowtools.tools.xarray_preprocess as xrp
 
-xpid_map = {
-    '2021080106': 'CesarDB',
-    '2019080106': 'CesarDB_AngeH',
-    '2018080106': 'CesarDB_AngeH',
-}
+from snowtools.scripts.post_processing import common_dict
+
+members_map = common_dict.members_map
+product_map = common_dict.product_map
+xpid_map    = common_dict.xpid_map
+colors_map  = common_dict.colors_map
+
 geometry_map = {
     '2021080106': 'Huez250m',
     '2019080106': 'Huez250m',
@@ -117,7 +119,8 @@ def violin_plot(xpids, obs, var, date, mask=True, member=None):
     dataplot = dataplot.melt('Elevation Bands (m)', var_name='experiment', value_name=var)
 
     title = f'Pleiades, {geometry}, {date[:8]}\n'
-    violinplot.plot_ange(dataplot, var, figname=f'{var}_{date}', title=title)
+    violinplot.plot_ange(dataplot, 'Snow depth (m)', figname=f'{var}_{date}_' + '_'.join(xpids),
+            title=title, violinplot=False, xmax=3, colors=colors_map, hatchid='assim')
 
 
 def filter_simu(xpid, obs, subdir, var, date, mnt):

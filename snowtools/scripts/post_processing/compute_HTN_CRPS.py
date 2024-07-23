@@ -31,54 +31,12 @@ from snowtools.plots.maps import plot2D
 from snowtools.scores import clusters
 from snowtools.plots.boxplots import violinplot
 
+from snowtools.scripts.post_processing import common_dict
 
-members_map = dict(
-    RS27_pappus              = [mb for mb in range(17)],
-    EnKF36_pappus            = [mb for mb in range(17)],
-    PF32_pappus              = [mb for mb in range(17)],
-    RS27_sorted_pappus       = [mb for mb in range(17)],
-    RS27_pappus_assim        = [mb for mb in range(1, 18)],
-    EnKF36_pappus_assim      = [mb for mb in range(1, 18)],
-    PF32_pappus_assim        = [mb for mb in range(1, 18)],
-    RS27_sorted_pappus_assim = [mb for mb in range(1, 18)],
-    ANTILOPE_pappus          = None,
-    SAFRAN_pappus            = None,
-)
-
-product_map = dict(
-    RS27_pappus              = 'RS',
-    EnKF36_pappus            = 'EnKF',
-    PF32_pappus              = 'PF',
-    RS27_sorted_pappus       = 'SRS',
-    RS27_pappus_assim        = 'RS_assim',
-    EnKF36_pappus_assim      = 'EnKF_assim',
-    PF32_pappus_assim        = 'PF_assim',
-    RS27_sorted_pappus_assim = 'SRS_assim',
-    ANTILOPE_pappus          = 'ANTILOPE',
-    SAFRAN_pappus            = 'SAFRAN',
-)
-
-xpid_map = {
-    '2018012312': 'CesarDB_AngeH',
-    '2018031612': 'CesarDB_AngeH',
-    '2018031612': 'CesarDB_AngeH',
-    '2019051312': 'CesarDB_AngeH',
-    '2022022612': 'CesarDB',
-    '2022050112': 'CesarDB',
-}
-
-colors_map = dict(
-    SAFRAN     = "silver",
-    ANTILOPE   = "#D65F5F",
-    RS         = "#4878D0",
-    SRS        = "#D65F5F",
-    EnKF       = "#6ACC64",
-    PF         = "#EE854A",
-    RS_assim   = "#4878D0",
-    SRS_assim  = "#D65F5F",
-    EnKF_assim = "#6ACC64",
-    PF_assim   = "#EE854A",
-)
+members_map = common_dict.members_map
+product_map = common_dict.product_map
+xpid_map    = common_dict.xpid_map
+colors_map  = common_dict.colors_map
 
 # Retrieve dictionnary to map clustering type to a proper label
 label_map = clusters.label_map
@@ -230,7 +188,7 @@ def execute():
 
     title = f'Pleiades, {geometry}, {date[:8]}\n'
     violinplot.plot_ange(dataplot, 'CRPS (m)', figname=f'CRPS_by_{clustering}_{date}_' + '_'.join(xpids),
-            title=title, yaxis=label_map[clustering], violinplot=False, xmax=3, colors=colors_map)
+            title=title, yaxis=label_map[clustering], violinplot=False, xmax=3, colors=colors_map, hatchid='assim')
 
     print()
     if member is not None and len(member) > 1:

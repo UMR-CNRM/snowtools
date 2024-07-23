@@ -27,8 +27,8 @@ var_labels = dict(
 )
 
 
-def plot_ange(dataplot, var, figname=None, xmax=7, yaxis='Elevation Bands (m)', title=None,
-        violinplot=True, colors=None):
+def plot_ange(dataplot, var, figname=None, xmin=0, xmax=7, yaxis='Elevation Bands (m)', title=None,
+        violinplot=True, colors=None, hatchid=None):
     """
     colors: User-defined dictionary {product:color} to customize colors for each "product" in dataplot
 
@@ -50,14 +50,15 @@ def plot_ange(dataplot, var, figname=None, xmax=7, yaxis='Elevation Bands (m)', 
     # TODO : automatiser le choix de la palette
     if colors is None:
         default_colors = ["silver", "#D65F5F", "#4878D0", "#6ACC64", "#EE854A"]
-        colors = {key: default_colors[i] for i, key in dataplot.experiment.unique()}
+        colors = {key: default_colors[i] for i, key in enumerate(dataplot.experiment.unique())}
     else:
         colors = {key: colors[key] for key in dataplot.experiment.unique()}
 
     bands = np.flip(dataplot[yaxis].unique())
 
-    # Set hatches for boxplot of 'assim' products
-    hatch = ['assim' in item for item in dataplot.experiment.unique() for _ in range(len(bands))]
+    # Set hatches for boxplot of products containing 'hatchid' in their name
+    if hatchid is not None:
+        hatch = [hatchid in item for item in dataplot.experiment.unique() for _ in range(len(bands))]
 
     sns.set(rc={"figure.figsize": (12, 15)})
     sns.set_theme(style="whitegrid", font_scale=1.7)
@@ -75,10 +76,11 @@ def plot_ange(dataplot, var, figname=None, xmax=7, yaxis='Elevation Bands (m)', 
             orient       = 'h',  # Horizontal violinplots
             palette      = colors,
         )
-        # Set Ange's hatches for simulations with assimilation
-        for i, item in enumerate(myplot.findobj(matplotlib.collections.PolyCollection)):
-            if hatch[i]:
-                item.set_hatch(r'\\\\')
+        # Set hatches
+        if hatchid is not None:
+            for i, item in enumerate(myplot.findobj(matplotlib.collections.PolyCollection)):
+                if hatch[i]:
+                    item.set_hatch(r'\\\\')
     else:
         myplot = sns.boxplot(
             data         = dataplot,  # data
@@ -114,7 +116,7 @@ def plot_ange(dataplot, var, figname=None, xmax=7, yaxis='Elevation Bands (m)', 
     # myplot.set_yticklabels(label_format(bands))
     myplot.set_yticklabels(bands)
     # Set x-axis limits and label
-    plt.xlim([0, xmax])  # DSN_T_ISBA / HTN (m)
+    plt.xlim([xmin, xmax])  # DSN_T_ISBA / HTN (m)
     if var in var_labels.keys():
         label = var_labels[var]
     else:
