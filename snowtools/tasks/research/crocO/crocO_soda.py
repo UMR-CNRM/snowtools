@@ -60,22 +60,15 @@ class Soda_Task(_CrocO_Task):
 #            )
 #            print(t.prompt, 'tobs =', tobs)
 #            print()
-            from snowtools.scripts.extract.vortex import vortex_get as io
-            if self.conf.dateend.year == 2022:
-                obs_xpid     = 'CesarDB@vernaym'
-            else:
-                obs_xpid     = 'CesarDB_AngeH@vernaym'
 
-            if self.conf.dateend.year == 2018:
-                obs_geometry = 'Lautaret250m'
-            else:
-                obs_geometry = 'Huez250m'
+            from snowtools.scripts.extract.vortex import vortex_get as io
+            # TODO : ensure that the observation is in the simulation's geometry !
             tobs = io.get(
                 filename   = 'OBSERVATIONS_[datevalidity:ymdHh].nc',
                 date       = assDate,
                 vapp       = 'Pleiades',
-                experiment = obs_xpid,
-                geometry   = obs_geometry,
+                experiment = 'CesarDB@vernaym',
+                geometry   = self.conf.geometry,
                 kind       = 'SnowObservations'
             )
             print(t.prompt, 'Observation = ', tobs)

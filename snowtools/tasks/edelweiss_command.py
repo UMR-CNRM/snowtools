@@ -8,9 +8,10 @@ Created on 28 march. 2024
 """
 
 # General python modules
+import os
+import sys
 import argparse
 from argparse import RawTextHelpFormatter
-import sys
 
 # Import snowtools modules
 from snowtools.tasks.edelweiss_kitchen import Edelweiss_kitchen
@@ -162,6 +163,9 @@ class Edelweiss_command(object):
                                       "This option can be used to avoid to parser too many arguments in"
                                       "the command line\n"
                                       " ")
+
+        conf_parser.add_argument("-a", "--assimdates", action="store", nargs='+', dest="assimdates", default=None,
+                                 help="Assimilation date(s) for croco task\n")
 
         job_parser = parser.add_argument_group("Job configuration arguments :\n"
                                                "-----------------------------\n"
@@ -321,6 +325,9 @@ class Edelweiss_command(object):
         if self.options.members is not None:
             self.options.members = self.convert_members(self.options.members)
 
+        if '@' not in self.options.xpid:
+            self.options.xpid = f'{self.options.xpid}@{os.getlogin()}'
+
         args_to_dict = vars(self.options)  # Convert self.options *Namepace* object to a *dictionnary* object
         # Convert *dictionary* arguments to proper configuration variables
         for specific_input in ['forcing', 'precipitation', 'wind', 'prep', 'pro', 'lpn']:
@@ -341,7 +348,7 @@ class Edelweiss_command(object):
                 # PREP files only need a validity *date*
                 optional_keys = ['xpid', 'geometry', 'vapp', 'date']
             else:
-                # All other files cover a perdiod
+                # All other files cover a period
                 optional_keys = ['kind', 'xpid', 'geometry', 'vapp', 'datebegin', 'dateend', 'members']
             for key in optional_keys:
                 if not hasattr(self.options, f'{key}_{specific_input}'):
@@ -369,7 +376,7 @@ class Edelweiss_command(object):
         else:
             first = 0
             last  = int(string) - 1
-        return f'{first}-{last}-1'
+        return f'rangex(start:{first} end:{last})'
 
     def check_mandatory_arguments(self, **kw):
         missing_options = list()

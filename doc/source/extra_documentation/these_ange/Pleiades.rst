@@ -151,6 +151,16 @@ or with CDO::
 
   cdo setmissval,1e20 -b 64 filein fileout
 
+Resample the observation file on the simulation's geometry::
+
+   ds = ds.interp({'xx':target.xx, 'yy': target.yy}, method='nearest')
+
+.. warning::
+
+    An observation file on a different geometry or with un-sorted dimensions will not make SODA crash but rather lead to the assimilaiton of incorrect snow depth.
+    To ensure that the assimilation went as expected, plot the simulation members and the assimilated observation for 1 specific pixel.
+
+
 .. rubric:: Footnotes
 
 .. [#f1] https://doi.org/10.5194/tc-10-1361-2016

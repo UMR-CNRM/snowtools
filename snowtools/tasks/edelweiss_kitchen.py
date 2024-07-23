@@ -261,7 +261,12 @@ class Edelweiss_kitchen(vortex_kitchen):
             # Overwrite defaults values with user's command line arguments
             # Update an existing default value only if the new value is not None
             if not (value is None and (key in list(default['defaults']) + list(default[self.jobname]))):
-                self.iniparser.set(self.jobname, key, str(value))
+                if isinstance(value, list):
+                    # Ensure that the variable is interpreted as list
+                    string = ','.join(value)
+                    self.iniparser.set(self.jobname, key, f'list({string})')
+                else:
+                    self.iniparser.set(self.jobname, key, str(value))
 
     def write_conf_file(self):
 

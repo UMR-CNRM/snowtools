@@ -17,13 +17,13 @@ def setup(t, **kw):
         tag='croco_postprocess',
         ticket=t,
         nodes=[
-            PostPocess(tag='croco_postprocess', ticket=t, **kw),
+            PostProcess(tag='croco_postprocess', ticket=t, **kw),
         ],
         options=kw
     )
 
 
-class PostPocess(_CrocO_Task):
+class PostProcess(_CrocO_Task):
     '''
     '''
 
@@ -32,12 +32,13 @@ class PostPocess(_CrocO_Task):
 
         if 'early-fetch' in self.steps:
 
-            for i, dateend in enumerate(self.conf.stopdates):
+            if not hasattr(self.conf, 'stopdates'):
+                stopdates = self.conf.assimdates + [str(self.conf.dateend)]
+            else:
+                stopdates = self.conf.stopdates
 
-                if i == 0:
-                    datebegin = self.conf.datebegin
-                else:
-                    datebegin = self.conf.stopdates[i - 1]
+            datebegin = self.conf.datebegin
+            for i, dateend in enumerate(stopdates):
 
                 self.sh.title('Toolbox input PRO')
                 tbin = toolbox.input(
@@ -47,6 +48,7 @@ class PostPocess(_CrocO_Task):
                     geometry       = self.conf.geometry,
                     datebegin      = datebegin,
                     dateend        = dateend,
+                    date           = '[dateend]',
                     member         = self.conf.members,
                     nativefmt      = 'netcdf',
                     kind           = 'SnowpackSimulation',
@@ -54,9 +56,12 @@ class PostPocess(_CrocO_Task):
                     namespace      = 'vortex.multi.fr',
                     namebuild      = 'flat@cen',
                     block          = 'pro',
+                    vapp           = 's2m',
                 ),
                 print(t.prompt, 'tbin =', tbin)
                 print()
+
+                datebegin = dateend
 
         if 'compute' in self.steps:
 
@@ -83,6 +88,7 @@ class PostPocess(_CrocO_Task):
                 geometry       = self.conf.geometry,
                 datebegin      = self.conf.datebegin,
                 dateend        = self.conf.dateend,
+                date           = '[dateend]',
                 #member         = [mb - 1 for mb in self.conf.members],
                 member         = self.conf.members,
                 nativefmt      = 'netcdf',
