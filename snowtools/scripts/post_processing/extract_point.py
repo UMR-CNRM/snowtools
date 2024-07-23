@@ -10,6 +10,8 @@ import time
 import numpy as np
 import xarray as xr
 import argparse
+
+import snowtools.tools.xarray_preprocess as xrp
 try:
     # Retrieve input files with Vortex
     from snowtools.scripts.extract.vortex import vortexIO as io
@@ -116,8 +118,16 @@ def execute(point, member, datebegin=None, datesassim=None):
     else:
         if datesassim is None:
             pro = xr.open_mfdataset([f'mb{mb:03d}/{proname}' for mb in member],
-                    concat_dim='member', combine='nested', chunks='auto',
-                    preprocess=lambda ds: ds[['DSN_T_ISBA']])
+                    concat_dim='member', combine='nested', chunks='auto',)
+                    # preprocess=lambda ds: ds[['DSN_T_ISBA']])  # Very slow
+            pro = xrp.preprocess(pro)
+            pro = pro.chunk({"xx": 10, 'yy': 10})
+            if 'ZS' in pro.keys():
+                pro     = pro[['DSN_T_ISBA', 'ZS']]
+            else:
+                pro = pro.DSN_T_ISBA
+            pro = pro.sel({'xx': nearest(reference_points[point]['xx'], pro.xx.data),
+                'yy': nearest(reference_points[point]['yy'], pro.yy.data)})
         else:
             listpro = list()
             for date in datesassim:
@@ -148,9 +158,6 @@ def execute(point, member, datebegin=None, datesassim=None):
                 listpro.append(xr.open_mfdataset([f'mb{mb:03d}/{outname}' for mb in member],
                     concat_dim='member', combine='nested', chunks='auto'))
             pro = xr.concat(listpro, dim='time')
-
-    # pro = xrp.preprocess(pro)
-    # pro = pro.chunk({"xx": 10, 'yy': 10})
 
     # The "sel" method is far more efficient in this case since it requires to read only 1 chunk
     # But the "reference_point" may not by within the dataset coordinates...
