@@ -14,8 +14,8 @@ from snowtools.plots.abstracts.figures import Mplfigure
 
 
 class boxplots(Mplfigure):
-    '''
-    '''
+    """
+    """
     figsize = (10, 8)
 
     def __init__(self, *args, **kwargs):
@@ -33,7 +33,8 @@ class boxplots(Mplfigure):
             if key not in ['forcemin', 'forcemax', 'label', 'ylabel', 'fillcolor', 'fontsize']:
                 boxplotargs[key] = value
 
-        self.bp.append(self.plot.boxplot(list_scores, notch=True, bootstrap=1000, showfliers=False, patch_artist=True, **boxplotargs))
+        self.bp.append(self.plot.boxplot(list_scores, notch=True, bootstrap=1000, showfliers=False,
+                                         patch_artist=True, **boxplotargs))
 
         if 'fillcolor' in kwargs.keys():
 
