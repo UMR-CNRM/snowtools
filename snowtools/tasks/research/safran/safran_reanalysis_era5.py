@@ -650,4 +650,24 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb32 =', tb29)
                 print()
 
+#                self.sh.title('Toolbox output listings execution')
+#                tb31 = toolbox.output(
+#                    role           = 'Listing',
+#                    block          = 'listing',
+#                    experiment     = self.conf.xpid,
+#                    cutoff         = 'assimilation',
+#                    geometry        = self.conf.geometry[self.conf.vconf],
+#                    kind           = 'packedlisting',
+#                    datebegin      = datebegin.ymd6h,
+#                    dateend        = dateend.ymd6h,
+#                    date           = dateend.ymd6h,
+#                    local          = '{datebegin.ymd6h}_{dateend.ymd6h}/listings_safran_[datebegin::ymdh]_[dateend::ymdh].tar.gz',
+#                    nativefmt      = 'tar',
+#                    model          = 'safran',
+#                    namespace      = self.conf.namespace,
+#                    namebuild      = 'flat@cen',
+#                )
+#                print(t.prompt, 'tb31 =', tb31)
+#                print()
+
             raise ExecutionError('')
