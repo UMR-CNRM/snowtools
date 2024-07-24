@@ -149,7 +149,8 @@ Replace NaN by SURFEX/SODA XUNDEF value (1e20, with 'float64' dtype)::
 
 or with CDO::
 
-  cdo setmissval,1e20 -b 64 filein fileout
+  cdo setmissval,1e20 filein fileout
+  cdo -b 64 filein fileout
 
 Resample the observation file on the simulation's geometry::
 

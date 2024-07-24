@@ -31,7 +31,7 @@ reference_points = dict(
     RochillesNivose = dict(
         xx   = 972852.5,
         yy   = 6448853.87
-    ),  # Nivose
+    ),  # Nivose (2444m)
     NivometeoHuez = dict(
         xx   = 942705.64,
         yy   = 6447916.82
