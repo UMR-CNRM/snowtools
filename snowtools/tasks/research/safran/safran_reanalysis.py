@@ -247,7 +247,6 @@ class Safran(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb03 =', tb03)
                     print()
 
-
             self.sh.title('Toolbox input tb07')
             tb07 = toolbox.input(
                 role            = 'ListeMassif',
@@ -569,6 +568,9 @@ class Safran(Task, S2MTaskMixIn):
             )
             print(t.prompt, 'tb21 =', tb21)
             print()
+
+        if 'fetch' in self.steps:
+            pass
 
         if 'compute' in self.steps:
 
