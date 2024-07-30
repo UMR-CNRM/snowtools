@@ -25,8 +25,8 @@ class Diag_sentinel2(_VortexTask):
         kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
         # Update default vapp with specific conf values
         kw.update(dict(vapp=self.conf.vapp_pro, datebegin=self.conf.datebegin_pro, dateend=self.conf.dateend_pro,
-            xpid=self.conf.xpid_pro, geometry=self.conf.geometry_pro, members=self.conf.members))
-        self.pro = io.get_pro(filename='mb[member:03d]/PRO.nc', **kw)
+            xpid=self.conf.xpid_pro, geometry=self.conf.geometry_pro, member=self.conf.members))
+        self.pro = io.get_pro(**kw)
 
     def algo(self):
         """
@@ -51,7 +51,7 @@ class Diag_sentinel2(_VortexTask):
         TODO
         """
         self.sh.title('Toolbox output DIAG')
-        self.diag = io.put_diag(**self.common_kw, members=self.conf.members)
+        self.diag = io.put_diag(**self.common_kw, member=self.conf.members)
 
 
 class ExtractDates(_VortexTask):
@@ -68,8 +68,7 @@ class ExtractDates(_VortexTask):
         kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
         # Update default vapp with specific conf values
         kw.update(dict(vapp=self.conf.vapp_pro, datebegin=self.conf.datebegin_pro, dateend=self.conf.dateend_pro,
-            xpid=self.conf.xpid_pro, geometry=self.conf.geometry_pro, members=self.conf.members,
-            filename='mb[member:03d]/PRO.nc'))
+            xpid=self.conf.xpid_pro, geometry=self.conf.geometry_pro, member=self.conf.members))
         self.pro = io.get_pro(**kw)
 
     def algo(self):
@@ -100,7 +99,7 @@ class ExtractDates(_VortexTask):
         # Actuellement, elle est archivée sous "date=dateend" (car "namebuild=None")
         # --> ca ne semble pas très pertinent
         suffix = '_'.join(self.conf.extraction_dates)
-        self.diag = io.put_pro(members=self.conf.members, filename=f'PRO_{suffix}.nc',
+        self.diag = io.put_pro(member=self.conf.members, filename=f'PRO_{suffix}.nc',
                 namebuild=None, **self.common_kw,)
 
         # To put the file on sxcen only :

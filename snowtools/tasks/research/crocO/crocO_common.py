@@ -188,8 +188,8 @@ class CrocO_In(_CrocO_Task):
                 remote          = self.conf.namelist,
                 kind            = 'namelist',
                 model           = 'surfex',
-                local           = 'OPTIONS.nam',
-                nativefmt='nam',
+                local           = 'OPTIONS_IN.nam',
+                nativefmt       = 'nam',
             )
             print(t.prompt, 'tb02 =', tb02)
             print()
@@ -214,7 +214,7 @@ class CrocO_In(_CrocO_Task):
                 kind            = 'namelist',
                 model           = 'surfex',
                 local           = 'OPTIONS.nam',
-                experiment            = self.conf.xpid,
+                experiment      = self.conf.xpid,
                 namespace       = 'vortex.cache.fr',
                 block           = 'namelist',
                 nativefmt       = 'nam',
