@@ -81,8 +81,8 @@ def parse_command_line():
     parser.add_argument('-v', '--variable', type=str, default='DSN_T_ISBA',
                         help='Variable of interest (default : SnowDepth)')
 
-    parser.add_argument('-o', '--obs_geometry', type=str, choices=['Lautaret250m', 'Huez250m'], required=True,
-                        help='Geometry of the observation')
+    parser.add_argument('-o', '--obs_geometry', type=str, choices=['Lautaret250m', 'Huez250m', 'GrandesRousses250m'],
+                        required=True, help='Geometry of the observation')
 
     parser.add_argument('-m', '--members', action='store_true',
                         help="To activate ensemble simulations")
@@ -96,14 +96,18 @@ def execute():
     # 1. Get all input data
 
     # a) Pleiades observations
-    kw = dict(date=datebegin, vapp=vapp)
     obsname = f'PLEIADES_{date}.nc'
     io.get_snow_obs_date(xpid=xpid_map[date], geometry=obs_geometry, date=date, vapp='Pleiades', filename=obsname)
     # Open observation file as DataArray
     obs = xr.open_dataset(obsname)
     obs = xrp.preprocess(obs, decode_time=False, rename={'Band1': 'DSN_T_ISBA'})
 
-    io.get_const(uenv, 'relief', geometry, filename='TARGET_RELIEF.nc', gvar='RELIEF_GRANDESROUSSES250M_L93')
+    # b) DEM
+    # io.get_const(uenv, 'relief', geometry, filename='TARGET_RELIEF.nc', gvar='RELIEF_GRANDESROUSSES250M_L93')
+    # High-resolution (25m) DEM for fancy figures (set shade=True in plot_field calls)
+    io.get_const('uenv:dem.1@vernaym', 'relief', geometry, filename='TARGET_RELIEF.nc',
+            gvar='DEM_GRANDESROUSSES25M_L93')
+
     # Get Domain's DEM in case ZS not in simulation file
     mnt = xr.open_dataset('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
     mnt = xrp.preprocess(mnt, decode_time=False)
@@ -147,7 +151,6 @@ def execute():
             deb = '2021080106'
         else:
             deb = datebegin  # 2021080207
-
         kw = dict(datebegin=deb, dateend=dateend, vapp=vapp, member=member, namebuild=None,
                 filename=f'PRO_{shortid}.nc', xpid=xpid, geometry=geometry)
         io.get_pro(**kw)
@@ -169,7 +172,7 @@ def execute():
             vmin = 0
             vmax = 3
             print(f'plot crps {xpid}')
-            plot2D.plot_field(crps, vmin=vmin, vmax=vmax, cmap=plt.cm.Reds, dem=mnt)
+            plot2D.plot_field(crps, vmin=vmin, vmax=vmax, cmap=plt.cm.Reds, dem=mnt, shade=True)
             print(f'save crps {xpid}')
             plot2D.save_fig(savename)
 
@@ -266,21 +269,22 @@ def plot_ensemble(simu, obs, xpid, date, dem=None):
     vmin = 0
     vmax = 3
     print(f'plot mean {xpid}')
-    plot2D.plot_field(mean, ax=ax[0], vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=False,
-            isolevels=thresholds)
+    plot2D.plot_field(mean, ax=ax[0], vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=True,)
+    # isolevels=thresholds)
     ax[0].set_title('Ensemble mean snow depth (m)')
 
     spread = simu.DSN_T_ISBA.std(dim='member')
     vmin = 0
     vmax = 1
     print(f'plot spread {xpid}')
-    plot2D.plot_field(spread, ax=ax[1], vmin=vmin, vmax=vmax, cmap=plt.cm.Purples, dem=dem, shade=False,
-            isolevels=thresholds)
+    plot2D.plot_field(spread, ax=ax[1], vmin=vmin, vmax=vmax, cmap=plt.cm.Purples, dem=dem, shade=True,)
+    # isolevels=thresholds)
     ax[1].set_title('Ensemble spread (m)')
 
     error = mean - obs
     print(f'plot error {xpid}')
-    plot2D.plot_field(error, ax=ax[2], cmap=plt.cm.RdBu, dem=dem, shade=False, isolevels=thresholds)
+    plot2D.plot_field(error, ax=ax[2], cmap=plt.cm.RdBu, dem=dem, shade=True,)
+    # isolevels=thresholds)
     ax[2].set_title('Ensemble mean error (m)')
 
     plot2D.save_fig(savename, fig)
@@ -297,8 +301,8 @@ def compute_scores(simu, obs, xpid, date, plot_HTN, dem=None):
         plt.figure(figsize=(12 * len(simu.xx) / len(simu.yy), 10))
         vmin = 0
         vmax = 3
-        plot2D.plot_field(simu.squeeze(), vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=False,
-                isolevels=thresholds)
+        plot2D.plot_field(simu.squeeze(), vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=True,)
+        # isolevels=thresholds)
         plot2D.save_fig(savename)
 
     # Mask missing values from the observatin dataset in the simulation dataset

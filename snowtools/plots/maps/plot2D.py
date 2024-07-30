@@ -34,10 +34,14 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
         plt.figure(figsize=(12 * len(field.xx) / len(field.yy), 10))
         ax = plt.gca()
 
+    # Plot Nan values in grey
+    cmap.set_bad('grey', 1.)
     if dem is not None:
-        if shade and field.isnull().sum() == 0:
+        if shade:
             add_relief_shading(dem, ax=ax, extent=[field.xx.min(), field.xx.max(), field.yy.min(), field.yy.max()])
-            alpha = 0.7
+            alpha = 0.8
+            # Plot Nan values transparent
+            cmap.set_bad(alpha=0)
         else:
             if isolevels is not None:
                 add_iso_elevation(dem, ax=ax, levels=isolevels)
@@ -49,9 +53,6 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
         vmax = np.max(np.abs(field))
     if vmin is None:
         vmin = -vmax
-
-    # Plot Nan values in grey
-    cmap.set_bad('grey', 1.)
 
     # Plot field
     # If alpha < 1, the overlaping pixels look like grid lines that
