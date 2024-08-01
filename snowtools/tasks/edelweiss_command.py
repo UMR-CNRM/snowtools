@@ -376,7 +376,8 @@ class Edelweiss_command(object):
         else:
             first = 0
             last  = int(string) - 1
-        return f'rangex(start:{first} end:{last})'
+        return f'{first}-{last}-1'
+        #return f'rangex(start:{first} end:{last})'
 
     def check_mandatory_arguments(self, **kw):
         missing_options = list()
