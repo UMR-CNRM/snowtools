@@ -173,7 +173,7 @@ def execute():
             vmin = 0
             vmax = 3
             print(f'plot crps {xpid}')
-            plot2D.plot_field(crps, vmin=vmin, vmax=vmax, cmap=plt.cm.Reds, dem=mnt, shade=True)
+            plot2D.plot_field(crps, vmin=vmin, vmax=vmax, cmap=plt.cm.Reds, dem=mnt, shade=False)
             print(f'save crps {xpid}')
             plot2D.save_fig(savename)
 
