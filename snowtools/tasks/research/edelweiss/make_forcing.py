@@ -37,7 +37,7 @@ class Precipitation(_VortexTask):
         kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
         # Update default vapp with specific conf values
         kw.update(dict(kind='Precipitation', geometry=self.conf.geometry_precipitation,
-            xpid=self.conf.xpid_precipitation, block='hourly', members=self.conf.members,))
+            xpid=self.conf.xpid_precipitation, block='hourly', member=self.conf.members,))
         io.get_meteo(**kw)
 
         # Hourly iso Wet-bulb temperatures 0°C, 1°C [, 1.5°C] --> use get_meteo (not FORCING-ready)
@@ -87,7 +87,7 @@ class Precipitation(_VortexTask):
         """
         self.sh.title('Precipitation output')
         # TODO : Do not archive on Hendrix !
-        io.put_precipitation(members=self.conf.members, filename='PRECIPITATION_OUT.nc',
+        io.put_precipitation(member=self.conf.members, filename='PRECIPITATION_OUT.nc',
                 **self.common_kw)
 
 
@@ -136,7 +136,7 @@ class Forcing(_VortexTask):
         if self.conf.precipitation is not None:
             # Update default vapp with specific conf values
             kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
-            kw.update(dict(vapp=self.conf.vapp_precipitation, members=self.conf.members, source_conf=source_conf,
+            kw.update(dict(vapp=self.conf.vapp_precipitation, member=self.conf.members, source_conf=source_conf,
                 xpid=self.conf.xpid_precipitation, geometry=self.conf.geometry_precipitation))
             self.sh.title('Precipitation input')
             self.precipitation = io.get_precipitation(**kw)
@@ -178,7 +178,7 @@ class Forcing(_VortexTask):
         Main method to save an OFFLINE execution outputs
         """
         self.sh.title('FORCING output')
-        io.put_forcing(filename='FORCING_OUT.nc', members=self.conf.members, **self.common_kw)
+        io.put_forcing(filename='FORCING_OUT.nc', member=self.conf.members, **self.common_kw)
 
         # Un-comment these lines to save the working directory after the execution
 #        print('==================================================================================================')
