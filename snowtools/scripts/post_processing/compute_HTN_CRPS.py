@@ -167,7 +167,8 @@ def execute():
 
         pearson[shortid], crps = compute_scores(simu, obs, shortid, date, plot_HTN, dem=mnt)
 
-        if member is not None and len(member) > 1 and clustering in 'elevation':
+        # if member is not None and len(member) > 1 and clustering in 'elevation':
+        if False:
             savename = f'CRPS_{shortid}_{date}.pdf'
             vmin = 0
             vmax = 3
@@ -269,22 +270,25 @@ def plot_ensemble(simu, obs, xpid, date, dem=None):
     vmin = 0
     vmax = 3
     print(f'plot mean {xpid}')
-    plot2D.plot_field(mean, ax=ax[0], vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=True,)
-    # isolevels=thresholds)
+    plot2D.plot_field(mean, ax=ax[0], vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem,
+            isolevels=thresholds)
+    #        shade=True,)
     ax[0].set_title('Ensemble mean snow depth (m)')
 
     spread = simu.DSN_T_ISBA.std(dim='member')
     vmin = 0
     vmax = 1
     print(f'plot spread {xpid}')
-    plot2D.plot_field(spread, ax=ax[1], vmin=vmin, vmax=vmax, cmap=plt.cm.Purples, dem=dem, shade=True,)
-    # isolevels=thresholds)
+    plot2D.plot_field(spread, ax=ax[1], vmin=vmin, vmax=vmax, cmap=plt.cm.Purples, dem=dem,
+            isolevels=thresholds)
+    #        shade=True,)
     ax[1].set_title('Ensemble spread (m)')
 
     error = mean - obs
     print(f'plot error {xpid}')
-    plot2D.plot_field(error, ax=ax[2], cmap=plt.cm.RdBu, dem=dem, shade=True,)
-    # isolevels=thresholds)
+    plot2D.plot_field(error, ax=ax[2], cmap=plt.cm.RdBu, dem=dem,
+            isolevels=thresholds)
+    #        shade=True,)
     ax[2].set_title('Ensemble mean error (m)')
 
     plot2D.save_fig(savename, fig)
@@ -301,8 +305,9 @@ def compute_scores(simu, obs, xpid, date, plot_HTN, dem=None):
         plt.figure(figsize=(12 * len(simu.xx) / len(simu.yy), 10))
         vmin = 0
         vmax = 3
-        plot2D.plot_field(simu.squeeze(), vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=True,)
-        # isolevels=thresholds)
+        plot2D.plot_field(simu.squeeze(), vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem,
+                isolevels=thresholds)
+        #        shade=True,)
         plot2D.save_fig(savename)
 
     # Mask missing values from the observatin dataset in the simulation dataset

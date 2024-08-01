@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 
 members_map = dict(
+    SAFRAN_perturb           = [mb for mb in range(17)],
     RS27_pappus              = [mb for mb in range(17)],
     EnKF36_pappus            = [mb for mb in range(17)],
     PF32_pappus              = [mb for mb in range(17)],
     RS27_sorted_pappus       = [mb for mb in range(17)],
+    SAFRAN_perturb_assim     = [mb for mb in range(1, 18)],
     RS27_pappus_assim        = [mb for mb in range(1, 18)],
     EnKF36_pappus_assim      = [mb for mb in range(1, 18)],
     PF32_pappus_assim        = [mb for mb in range(1, 18)],
@@ -25,6 +27,7 @@ product_map = dict(
     RS27_sorted_pappus_assim = 'SRS_assim',
     ANTILOPE_pappus          = 'ANTILOPE',
     SAFRAN_pappus            = 'SAFRAN',
+    SAFRAN_perturb           = 'SAFRAN_perturb',
 )
 
 xpid_map = {
@@ -37,15 +40,17 @@ xpid_map = {
 }
 
 colors_map = dict(
-    obs        = "snow",
-    SAFRAN     = "silver",
-    ANTILOPE   = "#D65F5F",
-    RS         = "#4878D0",
-    SRS        = "#D65F5F",
-    EnKF       = "#6ACC64",
-    PF         = "#EE854A",
-    RS_assim   = "#4878D0",
-    SRS_assim  = "#D65F5F",
-    EnKF_assim = "#6ACC64",
-    PF_assim   = "#EE854A",
+    obs            = "snow",
+    SAFRAN         = "silver",
+    SAFRAN_perturb = "silver",
+    ANTILOPE       = "#D65F5F",
+    RS             = "#4878D0",
+    SRS            = "#D65F5F",
+    SRS28          = "#6ACC64",
+    EnKF           = "#6ACC64",
+    PF             = "#EE854A",
+    RS_assim       = "#4878D0",
+    SRS_assim      = "#D65F5F",
+    EnKF_assim     = "#6ACC64",
+    PF_assim       = "#EE854A",
 )
