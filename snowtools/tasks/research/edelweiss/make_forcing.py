@@ -140,6 +140,8 @@ class Forcing(_VortexTask):
                 xpid=self.conf.xpid_precipitation, geometry=self.conf.geometry_precipitation))
             self.sh.title('Precipitation input')
             self.precipitation = io.get_precipitation(**kw)
+        else:
+            self.precipitation = False
 
         # Update Wind / Wind_DIR variables
         if self.conf.wind is not None:
@@ -166,8 +168,70 @@ class Forcing(_VortexTask):
             # '80 task per node' (one random worker does nothing). Maybe something to do with the fact that ntasks
             # is not a multiple of the actual number of workers ?
             # Update 5/04 : Le BUG se produit aussi avec ntasks=nworkers ...
-            ntasks       = len(self.precipitation),
-            role_members = 'Precipitation',
+            ntasks       = len(self.conf.members) if self.conf.members is not None else 1,
+            # ntasks       = len(self.precipitation),
+            role_members = 'Precipitation' if self.precipitation else None,
+        )
+        print(t.prompt, 'tbalgo =', tbalgo)
+        print()
+        tbalgo.run()
+
+    def put_remote_outputs(self):
+        """
+        Main method to save an OFFLINE execution outputs
+        """
+        self.sh.title('FORCING output')
+        io.put_forcing(filename='FORCING_OUT.nc', member=self.conf.members, **self.common_kw)
+
+
+class _PertubForcing(_VortexTask):
+    '''
+    Abstract class for FORCING perturbation tasks
+    '''
+
+    def check_and_update_configuration(self):
+        pass
+
+    def get_remote_inputs(self):
+        """
+        Main method to fetch all input files
+        """
+
+        # Meteorological variables that are not yet processed in EDELWEISS system
+        # come from SAFRAN reanalysis.
+        # It is also possible to start with an already modified FORCING file. In this case the user
+        # must at least provide the xpid and optionally (if different from the task's ones) the geometry
+        # and vapp of the FORCING files
+        kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
+        # Update default vapp with specific conf values
+        kw.update(dict(vapp=self.conf.vapp_forcing, filename='FORCING_IN.nc', datebegin=self.conf.datebegin_forcing,
+            dateend=self.conf.dateend_forcing, xpid=self.conf.xpid_forcing, geometry=self.conf.geometry_forcing))
+        self.sh.title('FORCING input')
+        self.forcing = io.get_forcing(**kw)
+
+
+class PerturbPrecipitation(_PertubForcing):
+    '''
+    Abstract class for precipitation perturbation
+    '''
+
+    def algo(self):
+        """
+        Algo component
+        """
+        t = self.ticket
+        self.sh.title('Toolbox algo PRECIP perturbation')
+        tbalgo = toolbox.algo(
+            kind         = 'PerturbPrecip',
+            datebegin    = self.conf.datebegin,
+            dateend      = self.conf.dateend,
+            engine       = 'algo',  # `_CENTaylorRun` algo components familly
+            members      = self.conf.members,
+            # WARNING : the binding seem to be important since problems have been observed with the default
+            # '80 task per node' (one random worker does nothing). Maybe something to do with the fact that ntasks
+            # is not a multiple of the actual number of workers ?
+            # Update 5/04 : Le BUG se produit aussi avec ntasks=nworkers ...
+            ntasks       = len(self.conf.members),
         )
         print(t.prompt, 'tbalgo =', tbalgo)
         print()

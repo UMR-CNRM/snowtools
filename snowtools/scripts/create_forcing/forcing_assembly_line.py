@@ -24,6 +24,7 @@ import os
 import shutil
 import xarray as xr
 import numpy as np
+import pandas as pd
 import argparse
 
 import snowtools.tools.xarray_preprocess as xrp
@@ -35,20 +36,29 @@ DEFAULT_NETCDF_FORMAT = 'NETCDF4_CLASSIC'
 def parse_command_line():
     description = "Merge meteorological variables from different sources into 1 FORCING file"
     parser = argparse.ArgumentParser(description=description)
+
     parser.add_argument('-b', '--datebegin', type=str, required=True,
                         help="First date covered by the simulation file, format YYYYMMDDHH.")
+
     parser.add_argument('-e', '--dateend', type=str,
                         help="Last date covered by the simulation file, format YYYYMMDDHH.")
+
     parser.add_argument('-m', '--members', type=int, default=None,
                         help="Number of members associated to the experiment")
+
     parser.add_argument('-s', '--safran', type=str, required=True,
                         help="XPID (format xpid@username) OR abspath of the SAFRAN base FORCING")
+
     parser.add_argument('-w', '--wind', type=str, required=True,
                         help="XPID (format xpid@username) OR abspath of the file containing wind variables")
-    parser.add_argument('-p', '--precipitation', type=str, required=True,
-                        help="XPID (format xpid@username) OR abspath of the file containing  precipitation variables")
+
+    parser.add_argument('-p', '--precipitation', type=str, default=None,
+                        help="XPID (format xpid@username) OR abspath of the file containing  precipitation variables"
+                             "If 'none', then perturb the precipitation of the reference forcing file.")
+
     parser.add_argument('-w', '--workdir', type=str, required=True,
                         help="Working directory")
+
     args = parser.parse_args()
     return args
 
@@ -75,6 +85,7 @@ def update_precipitation(forcing, subdir=None):
     Replace Rainf and Snowf variables in a FORCING file by the ones coming from a precipitation analysis
     The subdir keyword argument is used when the FORCING file is part of an ensemble.
     """
+
     precipitation = xr.open_dataset('PRECIPITATION.nc', drop_variables=['Precipitation', 'snowfrac_ds', 'z_snowlim_ds'],
                                     chunks='auto')
 
@@ -89,6 +100,39 @@ def update_precipitation(forcing, subdir=None):
 
     forcing['Rainf'].data = precipitation['Rainf'].data / 3600.
     forcing['Snowf'].data = precipitation['Snowf'].data / 3600.
+
+    return forcing
+
+
+def perturb_precipitation(forcing):
+    """
+    Perturb Rainf and Snowf variables of a FORCING file
+    """
+
+    import csv
+    from snowtools.DATA import SNOWTOOLS_DATA
+    from snowtools.tools.perturb_forcing import addNoiseMultiplicative
+
+    conf = os.path.join(SNOWTOOLS_DATA, 'perturbations_param.txt')
+
+    # read parameters: sigma and tau from a csv file
+    with open(conf, mode='r') as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        print('Param value')
+        for row in csv_reader:
+            if row['varName'] == 'Precip':
+                std  = float(row['std'])
+                tau  = float(row['tau'])
+                fsys = float(row['fsys'])
+
+    time = forcing['time'].data
+    delta = time[1] - time[0]
+    dt = pd.Timedelta(delta).total_seconds() / 3600
+
+    forcing['Rainf'].data = addNoiseMultiplicative(forcing['Rainf'].data, std, tau, dt,
+                                                  fsys=fsys, semiDistrib=False)
+    forcing['Snowf'].data = addNoiseMultiplicative(forcing['Snowf'].data, std, tau, dt,
+                                                  fsys=fsys, semiDistrib=False)
 
     return forcing
 
@@ -128,6 +172,12 @@ def update(forcing, members, datebegin, dateend, wind=True, precipitation=True):
             forcing = update_precipitation(forcing)
             datebegin, dateend = write(forcing, outname)
             check_date(datedeb, datebegin, datefin, dateend)
+    elif precipitation is None and members is not None:
+        for member in range(members):
+            outfile = f'mb{member}/{outname}'
+            forcing = perturb_precipitation(forcing)
+            datedeb, datefin = write(forcing, outfile)
+            check_date(datedeb, datebegin, datefin, dateend)
 
     return datebegin, dateend
 
@@ -160,26 +210,28 @@ if __name__ == '__main__':
 
     os.chdir(workdir)
 
-    try:
-        # Retrieve input files with Vortex
-        from snowtools.scripts.extract.vortex import vortexIO
-        vortexIO.get_forcing(datebegin, dateend, safran, geometry, filename='FORCING_IN.nc')
-        kw = dict(datebegin=datebegin, dateend=dateend)
-        wind = vortexIO.get_wind(wind, geometry, **kw)
-        precipitation = vortexIO.get_precipitation(precipitation, geometry, members=members, **kw)
-        vortex = True
-    except (ImportError, ModuleNotFoundError):
-        vortex = False
-        # Retrieve input files without Vortex
-        os.symlink(safran, 'FORCING_IN.nc')
-        os.symlink(wind, 'WIND.nc')
-        for member in range(members):
-            os.makedirs(f'mb{member}')
-            os.symlink(f'{precipitation}/mb{member}/PRECIPITATION.nc', f'mb{member}/PRECIPITATION.nc')
+    if precipitation is not None:
+        try:
+            # Retrieve input files with Vortex
+            from snowtools.scripts.extract.vortex import vortexIO
+            vortexIO.get_forcing(datebegin, dateend, safran, geometry, filename='FORCING_IN.nc')
+            kw = dict(datebegin=datebegin, dateend=dateend)
+            wind = vortexIO.get_wind(wind, geometry, **kw)
+            precipitation = vortexIO.get_precipitation(precipitation, geometry, members=members, **kw)[0]
+            vortex = True
+        except (ImportError, ModuleNotFoundError):
+            vortex = False
+            # Retrieve input files without Vortex
+            os.symlink(safran, 'FORCING_IN.nc')
+            os.symlink(wind, 'WIND.nc')
+            for member in range(members):
+                os.makedirs(f'mb{member}')
+                os.symlink(f'{precipitation}/mb{member}/PRECIPITATION.nc', f'mb{member}/PRECIPITATION.nc')
+            precipitation = True
 
     forcing = open_dataset('FORCING_IN.nc')  # Read input forcing file
     # Update default FORCING file with wind and precipitation variables (if any)
-    datedeb, datefin = update(forcing, members, datebegin, dateend, wind=wind[0], precipitation=precipitation[0])
+    datedeb, datefin = update(forcing, members, datebegin, dateend, wind=wind[0], precipitation=precipitation)
 
     if vortex:
         vortexIO.put_forcing(xpid, geometry, members=members, filename='FORCING_OUT.nc', **kw)
