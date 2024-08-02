@@ -28,11 +28,11 @@ product_map = dict(
     ANTILOPE_pappus          = 'ANTILOPE',
     SAFRAN_pappus            = 'SAFRAN',
     SAFRAN_perturb           = 'SAFRAN_perturb',
+    SAFRAN_perturb_assim     = 'SAFRAN_perturb_assim',
 )
 
 xpid_map = {
-    '2018012312': 'CesarDB_AngeH',
-    '2018031612': 'CesarDB',
+    '2018012312': 'CesarDB',
     '2018031612': 'CesarDB_AngeH',
     '2019051312': 'CesarDB_AngeH',
     '2022022612': 'CesarDB',
@@ -40,17 +40,18 @@ xpid_map = {
 }
 
 colors_map = dict(
-    obs            = "snow",
-    SAFRAN         = "silver",
-    SAFRAN_perturb = "silver",
-    ANTILOPE       = "#D65F5F",
-    RS             = "#4878D0",
-    SRS            = "#D65F5F",
-    SRS28          = "#6ACC64",
-    EnKF           = "#6ACC64",
-    PF             = "#EE854A",
-    RS_assim       = "#4878D0",
-    SRS_assim      = "#D65F5F",
-    EnKF_assim     = "#6ACC64",
-    PF_assim       = "#EE854A",
+    obs                  = "snow",
+    SAFRAN               = "silver",
+    SAFRAN_perturb       = "silver",
+    SAFRAN_perturb_assim = "silver",
+    ANTILOPE             = "#D65F5F",
+    RS                   = "#4878D0",
+    SRS                  = "#D65F5F",
+    SRS28                = "#6ACC64",
+    EnKF                 = "#6ACC64",
+    PF                   = "#EE854A",
+    RS_assim             = "#4878D0",
+    SRS_assim            = "#D65F5F",
+    EnKF_assim           = "#6ACC64",
+    PF_assim             = "#EE854A",
 )

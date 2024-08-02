@@ -1,38 +1,43 @@
 import xarray as xr
 
-#dimension_map = {'x': 'xx', 'y': 'yy', 'lat': 'latitude', 'lon': 'longitude'}
 dimension_map = {'x': 'xx', 'y': 'yy', 'lat': 'yy', 'latitude': 'yy', 'lon': 'xx', 'longitude': 'xx'}
 variables_map = {'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf', 'band_data': 'ZS'}
 
 
-def preprocess(ds, decode_time=True, rename=dict()):
+def preprocess(ds, decode_time=True, mapping=dict()):
     """
     * ds: xarray.Dataset or Dataarray
     * decode_time: Need to decode time manually
-    * rename: User-defined variable re-naming
+    * mapping: User-defined variable re-naming
     """
     if decode_time:
         ds = decode_time_dimension(ds)
-    ds = update_varname(ds, rename)
-    ds = update_dimname(ds, rename)
+    ds = update_varname(ds, mapping)
+    ds = update_dimname(ds, mapping)
     ds = transpose(ds)
     return ds
 
 
-def update_varname(ds, rename):
-    variables_map.update(rename)
+def update_varname(ds, mapping):
+    # Do not directly modify *variables_map* in case several calls to "preprocess" are made from
+    # the same session
+    tmpmap = variables_map.copy()
+    tmpmap.update(mapping)
     if isinstance(ds, xr.core.dataarray.DataArray):
-        if ds.name in variables_map:
-            ds = ds.rename(variables_map[ds.name])
+        if ds.name in tmpmap:
+            ds = ds.rename(tmpmap[ds.name])
     else:
-        update_dict = {key: variables_map[key] for key in list(ds.keys()) if key in variables_map.keys()}
+        update_dict = {key: tmpmap[key] for key in list(ds.keys()) if key in tmpmap.keys()}
         ds = ds.rename(update_dict)
     return ds
 
 
-def update_dimname(ds, rename):
-    dimension_map.update(rename)
-    update_dict = {key: dimension_map[key] for key in list(ds.dims) if key in dimension_map.keys()}
+def update_dimname(ds, mapping):
+    # Do not directly modify *dimensions_map* in case several calls to "preprocess" are made from
+    # the same session
+    tmpmap = dimension_map.copy()
+    tmpmap.update(mapping)
+    update_dict = {key: tmpmap[key] for key in list(ds.dims) if key in tmpmap.keys()}
     ds = ds.rename(update_dict)
     return ds
 

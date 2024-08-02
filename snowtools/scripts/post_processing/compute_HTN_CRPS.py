@@ -99,8 +99,13 @@ def execute():
     obsname = f'PLEIADES_{date}.nc'
     io.get_snow_obs_date(xpid=xpid_map[date], geometry=obs_geometry, date=date, vapp='Pleiades', filename=obsname)
     # Open observation file as DataArray
-    obs = xr.open_dataset(obsname)
-    obs = xrp.preprocess(obs, decode_time=False, rename={'Band1': 'DSN_T_ISBA'})
+    try:
+        obs = xr.open_dataarray(obsname)
+        obs = xrp.preprocess(obs, decode_time=False)
+    except ValueError:
+        obs = xr.open_dataset(obsname)
+        obs = xrp.preprocess(obs, decode_time=False, mapping={'Band1': 'HTN', 'DEP': 'HTN', 'DSN_T_ISBA': 'HTN'})
+        obs = obs['HTN']
 
     # b) DEM
     # io.get_const(uenv, 'relief', geometry, filename='TARGET_RELIEF.nc', gvar='RELIEF_GRANDESROUSSES250M_L93')
@@ -158,7 +163,7 @@ def execute():
         simu = read_simu(xpid, member, date)
 
         if member is not None and len(member) > 1 and clustering in 'elevation':
-            plot_ensemble(simu, obs.DSN_T_ISBA, shortid, date, dem=mnt)
+            plot_ensemble(simu, obs, shortid, date, dem=mnt)
 
         if clustering in 'elevation' and member is None or len(member) == 1:
             plot_HTN = True
@@ -181,8 +186,8 @@ def execute():
             tmp = clusters.by_slices(crps, mask, thresholds)
         elif clustering == 'landforms':
             tmp = clusters.per_landform_types(crps, mask)
-        df = tmp.to_dataframe(name=product_map[shortid]).dropna().reset_index().drop(columns=['xx', 'yy', 'time'],
-                errors='ignore')
+        df = tmp.to_dataframe(name=product_map[shortid]).dropna().reset_index().drop(
+            columns=['xx', 'yy', 'time', 'band', 'spatial_ref'], errors='ignore')
         dataplot = pd.concat([dataplot, df])
 
         clean(shortid, member)
@@ -231,7 +236,7 @@ def read_simu(xpid, members, date):
     # Data variables:
     #     DSN_T_ISBA  (member, time, yy, xx) float64 1.997 1.918 ... 0.0001194 0.2854
     # Get variable's DataArray
-    simu = simu.sel({'time': pd.to_datetime(date[:8], format='%Y%m%d')})
+    simu = simu.sel({'time': pd.to_datetime(date[:8], format='%Y%m%d')}, method='nearest')
     # <xarray.Dataset>
     # Dimensions:     (xx: 143, yy: 101, member: 16)
     # Coordinates:
@@ -297,7 +302,7 @@ def plot_ensemble(simu, obs, xpid, date, dem=None):
 def compute_scores(simu, obs, xpid, date, plot_HTN, dem=None):
 
     # Select common domains
-    obs  = obs.sel({'xx': np.intersect1d(obs.xx, simu.xx), 'yy': np.intersect1d(obs.yy, simu.yy)})['DSN_T_ISBA']
+    obs  = obs.sel({'xx': np.intersect1d(obs.xx, simu.xx), 'yy': np.intersect1d(obs.yy, simu.yy)})
     simu = simu.sel({'xx': np.intersect1d(obs.xx, simu.xx), 'yy': np.intersect1d(obs.yy, simu.yy)})['DSN_T_ISBA']
 
     if plot_HTN:
