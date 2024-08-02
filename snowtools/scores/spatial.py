@@ -6,14 +6,222 @@ Created on 23 April 2024
 
 based on code from Ange Haddjeri thesis.
 """
+
+import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+# import libpysal
 from scipy.signal import convolve2d
 from scipy.stats import pearsonr
 from abc import ABC, abstractmethod
 from snowtools.scores.list_scores import SpatialScoreFile
 from snowtools.utils.prosimu import prosimu_xr
 from snowtools.scores import crps
+from snowtools.plots.scores.moran_scatter import MoranScatter, MoranScatterColored
+from snowtools.plots.maps.cartopy import MoranMap
+
+
+def rolling_window(array, window_shape):
+    """
+    rolling window for 2D array
+    :param array: 2d array
+    :type array: np.ndarray
+    :param window_shape: shape of the desired rolling window
+    :type window_shape: tuple
+    """
+    if np.__version__ >= '1.20.0':
+        return np.lib.stride_tricks.sliding_window_view(array, window_shape)
+    else:
+        s = (array.shape[0] - window_shape[0] + 1,) + (array.shape[1] - window_shape[1] + 1,) + window_shape
+        strides = array.strides + array.strides
+        return np.lib.stride_tricks.as_strided(array, shape=s, strides=strides)
+
+
+class LocalMoranData:
+    """
+    class containing local Moran's Is statistics.
+    """
+    def __init__(self, field, neighbors=3):
+        """
+
+            :param field: field to analyse
+            :type field: xarray.DataArray
+            :param neighbors: size of the neighborhood to consider for the local moran calculation.
+            Total number of cells in one direction. Exemple: neighbors=3 will calculate the local moran Is
+            for neighborhood of 3x3 grid cells.
+            :type neighbors: int (odd >=3)
+        """
+        # check number of neighbors
+        if not isinstance(neighbors, int):
+            raise TypeError("neighbors argument must be type integer")
+        min_shape = min(field.shape[0], field.shape[1])
+        if neighbors < 3 or neighbors > min_shape:
+            raise ValueError("Minimum neighborhood size is 3, maximum neighborhood size for given field is ", min_shape)
+        if (neighbors % 2) == 0:
+            raise ValueError("Neighborhood size must be an odd integer number")
+        self.neighbors = neighbors
+        # prepare weights matrix
+        self.weights = self.get_weight_matrix()
+        self.field_anom = field - np.nanmean(field)
+        self.field_anom_lagged = self.get_spatially_lagged_field()
+        self.sum_z2 = np.nansum(self.field_anom[~np.isnan(self.field_anom_lagged)] ** 2)
+        self.local_moran_I = self.field_anom * self.field_anom_lagged/self.sum_z2
+        self.moran_I = np.nansum(self.local_moran_I)
+        self.random_sigma = self.get_random_sigma()
+        self.quadrant_numbers = self.get_quadrant_numbers(significance=(self.random_sigma * 1.96)) # 0) #
+
+    def plot_moran_scatter_simple(self, variable_name, filename=None, **kwargs):
+        """
+        do a simple moran scatter plot with all the points the same color
+
+        :param variable_name: which variable is plotted? used to construct axis labels
+        :type variable_name: str
+        :param filename: optional output file name for the graphic
+        :type filename: pathlike
+        :param kwargs:
+        :return:
+        """
+        if 'title' in kwargs.keys():
+            pl = MoranScatter(variable_name=variable_name, title=kwargs['title'])
+        else:
+            pl = MoranScatter(variable_name=variable_name)
+        pl.plot_var(self.field_anom, self.field_anom_lagged)
+        if filename is None:
+            plt.show()
+        else:
+            pl.save(filename, formatout='png')
+
+    def plot_moran_scatter_colored(self, variable_name, filename=None, **kwargs):
+        """
+        Do a colored moran scatter plot coloring the points according to the self.quadrant_numbers
+
+        :param variable_name: which variable is plotted? used to construct axis labels
+        :type variable_name: str
+        :param filename: optional output file name for the graphic
+        :type filename: pathlike
+        :param kwargs:
+        :return:
+        """
+        if 'title' in kwargs.keys():
+            pl = MoranScatterColored(variable_name=variable_name, title=kwargs['title'])
+        else:
+            pl = MoranScatterColored(variable_name=variable_name)
+
+        pl.plot_var(self.field_anom, self.field_anom_lagged, color=self.quadrant_numbers)
+        if filename is None:
+            plt.show()
+        else:
+            pl.save(filename, formatout='png')
+
+    # TODO: improve quadrant map
+    def plot_quadrant_map(self, x, y, crs, filename=None):
+        """
+        plot a map where pixels are colored according to the quadrant of the Moran Scatter plot for
+        its local Morans I.
+
+        :param x: x-coordinates
+        :type x: 1D array like
+        :param y: y-coordinates
+        :type y: 1D array like
+        :param crs: map projection
+        :type crs: cartopy.crs
+        :param filename: ptional output file name for the graphic
+        :type filename: pathlike
+        """
+        pl = MoranMap(projection=crs)
+        pl.add_gridlines(crs=crs)
+        pl.map.pcolormesh(x, y, self.quadrant_numbers, cmap=pl.palette, norm=pl.norm)
+        if filename is None:
+            plt.show()
+        else:
+            pl.save(filename, formatout='png')
+
+
+    def get_random_sigma(self):
+        """
+        calculate local moran Is for the randomized field and returns the standard
+        deviation of the resulting local moran Is values.
+        :return: standard deviation of local moran Is for the randomized anomaly field.
+        :rtype: float
+        """
+        rng = np.random.default_rng(11234)
+        rand_field = self.field_anom.copy()
+        rng.shuffle(rand_field)
+        rand_field_lagged = self.get_spatially_lagged_field(rand_field)
+        rand_local_moran_I = rand_field*rand_field_lagged/self.sum_z2
+        return np.nanstd(rand_local_moran_I)
+
+    def get_weight_matrix(self):
+        """
+        get weight matrix with constant weights over the neighborhood and zero weight for the
+        center point
+        :return: weight matrix with shape (neighbors, neighbors)
+        :rtype: np.ndarray (2D)
+        """
+        weights = np.ones((self.neighbors, self.neighbors))
+        center_index = np.floor_divide((self.neighbors - 1), 2)
+        weights[center_index, center_index] = 0
+        # weights = weights / weights.sum()
+        return weights
+
+    def get_spatially_lagged_field(self, field=None):
+        """
+        Create a spatially lagged field by applying weighted averages over rolling windows.
+        :param field: Optional
+        :type field: np.ndarray (2D)
+        :return: padded (with np.nan) array with lagged anomalies
+        :rtype: np.ndarray (2D)
+        """
+        if field is None:
+            field = self.field_anom
+
+        # half_window = np.floor_divide(self.neighbors, 2)
+        # print(half_window)
+        # print(field[(6-half_window):(6+half_window+1), (35-half_window):(35+half_window+1)])
+        # for i in range(half_window, field.shape[0]-half_window):
+        #     for j in range(half_window, field.shape[1]-half_window):
+        #         # print(field[(i-half_window):(i+half_window+1),
+        #         #                                            (j-half_window):(j+half_window+1)])
+        #         # print(i, j)
+        #         field[i, j] = np.nan_to_num(field[i, j],
+        #                                     nan=np.nanmean(field[(i-half_window):(i+half_window+1),
+        #                                                    (j-half_window):(j+half_window+1)])).reshape(-1)
+        # create rolling windows
+        rolling_anom_field = rolling_window(field, (self.neighbors, self.neighbors))
+        # calculate weighted averages over windows
+        field_anom_lagged = np.empty(rolling_anom_field.shape[0:2])
+        for i in range(rolling_anom_field.shape[0]):
+            for j in range(rolling_anom_field.shape[1]):
+                weight_sum = np.sum(self.weights[~np.isnan(rolling_anom_field[i, j, :, :])])
+                if weight_sum > 0:
+                    field_anom_lagged[i, j] = np.nansum(self.weights * rolling_anom_field[i, j, :, :])/weight_sum
+                else:
+                    field_anom_lagged[i, j] = np.nan
+
+        # field_anom_lagged = np.nanmean(self.weights * rolling_anom_field, axis=(2, 3))
+        # pad the lagged anomaly array in order to be of same shape as the original field.
+        pad_width = np.floor_divide(self.neighbors, 2)
+        field_anom_lagged = np.pad(field_anom_lagged, pad_width=pad_width, mode='constant',
+                                   constant_values=np.nan)
+        return field_anom_lagged
+
+    def get_quadrant_numbers(self, significance=0.):
+        """
+        construct an array of quadrant numbers indicating in which quadrant of
+        the Moran Scatterplot a data point is situated. (from pysal.esda)
+        :return: array of quadrant numbers
+        :rtype: np.ndarray (2D)
+        """
+        zp = self.field_anom > 0
+        lp = self.field_anom_lagged > 0
+        sig = abs(self.local_moran_I) > significance
+        pp = zp * lp * sig
+        np = (1 - zp) * lp * sig
+        nn = (1 - zp) * (1 - lp) * sig
+        pn = zp * (1 - lp) * sig
+
+        q0, q1, q2, q3 = [1, 2, 3, 4]
+        return (q0 * pp) + (q1 * np) + (q2 * nn) + (q3 * pn)
 
 
 def pearson_corr(simu_data, ref_data, p_value=True):

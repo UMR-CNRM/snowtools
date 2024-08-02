@@ -8,14 +8,35 @@ based on code from Ange Haddjeri thesis. (chapter 5 notebook)
 """
 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 from snowtools.plots.abstracts.figures import Mplfigure
+
+
+def get_moran_palette():
+    """
+    get colors for the local moran Is plots.
+    The color map is derived from the 'Paired' colormap, but only dark and light red
+    and dark and light blue are selected. The under color is set to light grey.
+    :return: a color palette
+    :rtype: matplotlib.colors.LinearSegmentedColormap
+    """
+    palette = plt.get_cmap('Paired').copy()
+    # print(palette)
+    # print(palette.colors[0])
+    mypalette = matplotlib.colors.LinearSegmentedColormap.from_list('moran_colors',
+                                                                    colors=[palette.colors[i] for i in [5, 0, 1, 4]],
+                                                                    N=4)
+    # palette.colors = (palette.colors[5], palette.colors[0], palette.colors[1], palette.colors[4])
+    mypalette.set_under(color='lightgrey')
+    return mypalette
 
 
 class MoranScatter(Mplfigure):
     """
         Moran Scatter plot.
         Scatter plot between a variable and a spatially lagged variable.
+        https://dces.wisc.edu/wp-content/uploads/sites/128/2013/08/W4_Anselin1996.pdf
 
         Example:
 
@@ -69,7 +90,7 @@ class MoranScatter(Mplfigure):
     def ylabel(self, value):
         self._ylabel = value
 
-    def plot_var(self, variable, lagged_variable, color='firebrick', marker='.', slopecolor='r'):
+    def plot_var(self, variable, lagged_variable, color='firebrick',  marker='.', slopecolor='r'):
         """
         plot data.
         :param variable: data variable
@@ -84,9 +105,8 @@ class MoranScatter(Mplfigure):
             assert len(variable) == len(lagged_variable)
         except AssertionError:
             raise AssertionError("variable and lagged_variable arrays have to be same length")
-        b, a = np.polyfit(variable, lagged_variable, 1)
-        self.plot.scatter(variable, lagged_variable, marker=marker, color=color)
 
+        self.plot.scatter(variable, lagged_variable, marker=marker, color=color)
         # dashed vertical line at mean of the variable
         self.plot.vlines(np.nanmean(variable), np.nanmin(lagged_variable),
                          np.nanmax(lagged_variable), linestyle='--')
@@ -94,4 +114,85 @@ class MoranScatter(Mplfigure):
         self.plot.hlines(np.nanmean(lagged_variable), np.nanmin(variable),
                          np.nanmax(variable), linestyle='--')
         # line of best fit using global I as slope
-        self.plot.plot(variable, a + b * variable, color=slopecolor)
+        variable[np.isnan(lagged_variable)] = np.nan
+        lagged_variable[np.isnan(variable)] = np.nan
+        b, a = np.polyfit(np.ravel(variable[~np.isnan(variable)]),
+                          np.ravel(lagged_variable[~np.isnan(lagged_variable)]), 1)
+        # print(a, b)
+        self.plot.plot(np.ravel(variable), a + b * np.ravel(variable), color=slopecolor)
+
+
+class MoranScatterColored(MoranScatter):
+    """
+    class for colored Moran Scatter Plot. The points are colored according to the quandrant
+    and non-significant local Moran values are plotted in grey.
+    """
+
+    @property
+    def palette(self):
+        return get_moran_palette()
+
+    @property
+    def norm(self):
+        return matplotlib.colors.Normalize(vmax=4, vmin=1)
+
+    @property
+    def legend_params(self):
+        return dict(loc='upper left', fontsize=12, framealpha=0.9, frameon=True)
+
+    def plot_var(self, variable, lagged_variable, color=None, marker='.', slopecolor='r'):
+        """
+        plot data.
+        :param variable: data variable
+        :type variable: np.array
+        :param lagged_variable: lagged data variable
+        :type lagged_variable: np.array
+        :param color: array of quadrant numbers to use for coloring
+        :type color: np.array
+        :param marker: marker type. Default: '.'
+        :param slopecolor: color of regression line. Default: 'r' (red)
+        """
+        try:
+            assert len(variable) == len(lagged_variable)
+        except AssertionError:
+            raise AssertionError("variable and lagged_variable arrays have to be same length")
+        try:
+            assert len(color) == len(variable)
+        except AssertionError:
+            raise AssertionError("variable and color (quadrants) arrays have to be same length")
+
+        s = self.plot.scatter(variable, lagged_variable, marker=marker, c=color, cmap=self.palette,
+                              norm=self.norm)
+        self.plot.legend(s, labels=['ns', 'hot', 'doghnut', 'cold', 'diamond'])
+
+        # self.plot.legend((0, 1, 2, 3, 4), ('ns', 'hot', 'doghnut', 'cold', 'diamond'))  # , **self.legend_params
+        # dashed vertical line at mean of the variable
+        self.plot.vlines(np.nanmean(variable), np.nanmin(lagged_variable),
+                         np.nanmax(lagged_variable), linestyle='--')
+        # dashed horizontal line at mean of lagged variable
+        self.plot.hlines(np.nanmean(lagged_variable), np.nanmin(variable),
+                         np.nanmax(variable), linestyle='--')
+        # line of best fit using global I as slope
+        variable[np.isnan(lagged_variable)] = np.nan
+        lagged_variable[np.isnan(variable)] = np.nan
+        b, a = np.polyfit(np.ravel(variable[~np.isnan(variable)]),
+                          np.ravel(lagged_variable[~np.isnan(lagged_variable)]), 1)
+        # print(a, b)
+        self.plot.plot(np.ravel(variable), a + b * np.ravel(variable), color=slopecolor)
+
+        self.add_legend()
+
+    def add_legend(self):
+        """
+        add a legend to the moran scatter plot
+        """
+        from matplotlib.patches import Patch
+        legend_elements = [Patch(color=self.palette.get_under(),
+                                 label='not significant'),
+                           Patch(color=self.palette(0), label='hot spot'),
+                           Patch(color=self.palette(1), label='doughnut'),
+                           Patch(color=self.palette(2), label='cold spot'),
+                           Patch(color=self.palette(3), label='diamond')]
+        legend2 = plt.legend(handles=legend_elements, **self.legend_params)
+
+
