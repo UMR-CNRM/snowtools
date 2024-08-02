@@ -9,9 +9,11 @@ import numpy as np
 import timeit
 
 from snowtools.scores.list_scores import SpatialScoreFile
-from snowtools.scores.spatial import ProVsPleiade, call_crps
+from snowtools.scores.spatial import ProVsPleiade, call_crps, LocalMoranData
 from snowtools.scores.ensemble import EnsembleScores
 from snowtools.plots.scores.perfdiag import PerfDiag, FuzzyScoreDiagram
+from snowtools.plots.scores.moran_scatter import MoranScatter
+from snowtools.utils.S2M_standard_file import LCCProjectionType
 from snowtools.tests.tempfolder import TestWithTempFolderWithLog
 from snowtools.DATA import TESTBASE_DIR
 
@@ -84,6 +86,19 @@ class TestSpatialFile(unittest.TestCase):
         self.assertAlmostEqual(self.myscores.score_ds['SPS'].data[0], 0.05011011529)
         # print(self.myscores.score_ds)
 
+    def test_local_moran(self):
+        self.myscores.apply_mask(maskfile=os.path.join(TESTBASE_DIR,
+                                                       "masque_glacier2017_foret_ville_riviere.nc"))
+        local_moran = LocalMoranData(self.myscores.fc_data['bli'].data)
+        self.assertAlmostEqual(local_moran.moran_I, 0.876794444)
+        # TODO: implement tests for colored moran scatter plot and quadrant map
+        # local_moran.plot_moran_scatter_colored('snow height', title=self.myscores.experiments[0])
+        # lcc = LCCProjectionType(self.myscores.fc_data['bli'].xx.data, self.myscores.fc_data['bli'].yy.data)
+        # print(lcc.crs)
+        # local_moran.plot_quadrant_map(self.myscores.obs_data.xx.data, self.myscores.obs_data.yy.data, lcc.crs)
+
+        # print(loca_moran)
+
 
 class TestPerfDiag(TestWithTempFolderWithLog):
 
@@ -102,6 +117,16 @@ class TestFuzzyDiag(TestWithTempFolderWithLog):
         rng = np.random.default_rng(12345)
         diag.draw(rng.uniform(low=0., high=1, size=(5, 10)), range(1, 6), range(0, 10))
         diag.save(os.path.join(self.diroutput, "fuzzydiag.png"), formatout="png")
+
+
+class TestMoranScatter(TestWithTempFolderWithLog):
+
+    def test_moran_scatter_fig(self):
+        diag = MoranScatter('snow height')
+        diag.plot_var(np.array([0.2, 0.5, 0.6, 0.9, 0.1, 0.4, 1.3, 0.3, 0.15, 0.25]),
+                      np.array([0.1, 0.5, 0.7, 1.1, 0.4, 0.5, 0.8, 0.9, 0.2, 0.15]))
+        diag.addlogo()
+        diag.save(os.path.join(self.diroutput, "moranscatter.png"), formatout="png")
 
 
 if __name__ == "__main__":
