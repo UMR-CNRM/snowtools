@@ -7,6 +7,9 @@ Created on 4 oct. 2012
     - lafaysse
     - LVG
 
+Introduction
+^^^^^^^^^^^^
+
 This module contains the ``prosimu`` class used to read simulation files
 (netCDF format) as produced by SURFEX/Crocus for instance.
 
@@ -15,6 +18,10 @@ read 1D files (ony one spatial dimension, Number_of_points) or 2D files
 (gridded simulations with x and y axes). Unless your application is
 specific to 1D or 2D files, please use ``prosimu_auto`` that will
 instantiate the appropriate class (``prosimu1d`` or ``prosimu2d``).
+
+
+Examples
+^^^^^^^^
 
 A short example of how to use this module and read time dimension and
 snow density variables (``RSN_VEG``) for all layers at point in massif
@@ -26,11 +33,29 @@ snow density variables (``RSN_VEG``) for all layers at point in massif
 
    with prosimu_auto('/path/to/my/PRO_XXX.nc') as ff:
            time= ff.readtime()
-           point = ff.get_point(ZS=2700, aspect=0, slope=40, massif=11)
-           density = ff.read('RSN_VEG', point=point)
+           point = ff.get_point(ZS=2700, aspect=0, slope=40, massif_num=11)
+           density = ff.read('RSN_VEG', selectpoint=point)
 
 ``time`` and ``density`` now contains the data in the form of numpy arrays
-for the selected point.
+for the selected point. As ``RSN_VEG`` is a variable available for all layers,
+the ``density`` array is a 3D numpy ndarray with dimensions
+(time, layers).
+
+A short example to get multiple points at once:
+
+.. code-block:: python
+
+   from snowtools.utils.prosimu import prosimu_auto
+
+   with prosimu_auto('/path/to/my/PRO_XXX.nc') as ff:
+           time= ff.readtime()
+           points = ff.get_points(ZS=2700, slope=40, massif_num=11)
+           density = ff.read('RSN_VEG', selectpoint=points)
+
+``time`` and ``density`` now contains the data in the form of numpy arrays
+for the selected points (all aspects). The ``density`` is a 3D numpy array with
+first dimension being time, second dimension being layers and the last one is points.
+
 
 
 Example to get total snow water equivalent of the snowpack (variable
@@ -44,6 +69,8 @@ Example to get total snow water equivalent of the snowpack (variable
            time= ff.readtime()
            swe_total = ff.read('WSN_T_ISBA')
 
+Main methods
+^^^^^^^^^^^^
 
 Most useful methods are:
 
