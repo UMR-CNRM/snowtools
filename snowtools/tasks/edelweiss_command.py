@@ -321,7 +321,7 @@ class Edelweiss_command(object):
 
     def check_and_convert_options(self):
 
-        # Convert *members* argument into a 'X-Y-1' list
+        # Convert *members* argument into a rangex object
         if self.options.members is not None:
             self.options.members = self.convert_members(self.options.members)
 
@@ -357,7 +357,7 @@ class Edelweiss_command(object):
                         setattr(self.options, f'{key}_{specific_input}', args_to_dict['datebegin'])
                     elif key == 'members':
                         # If no *members* attribute is given, assume there is only 1 file
-                        setattr(self.options, f'{key}_{specific_input}', '1-1-1')
+                        setattr(self.options, f'{key}_{specific_input}', 'rangex(start:1 end:1)')
                     elif key == 'kind':
                         setattr(self.options, f'{key}_{specific_input}', specific_input)
                     else:
@@ -376,8 +376,8 @@ class Edelweiss_command(object):
         else:
             first = 0
             last  = int(string) - 1
-        return f'{first}-{last}-1'
-        #return f'rangex(start:{first} end:{last})'
+        # Return a rangex to ensure that it will be considered as a list in crocO task
+        return f'rangex(start:{first} end:{last})'
 
     def check_mandatory_arguments(self, **kw):
         missing_options = list()

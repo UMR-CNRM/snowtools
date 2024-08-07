@@ -8,6 +8,7 @@ Created on 28 march. 2024
 
 import os
 import shutil
+import re
 
 from snowtools.tasks.vortex_kitchen import vortex_kitchen, UserEnv
 from snowtools.utils.resources import InstallException
@@ -307,21 +308,25 @@ class Edelweiss_kitchen(vortex_kitchen):
         """
 
         # Retrieve the number of FORCING files and launch 1 job per file
-        # Each job is associated to 1 specific member so the *members_forcing*
-        # attribute will be replaced by a *input_member* integer (different for each job)
-        first, last, step = self.options.members_forcing.split('-')
-        nforcings = int(last) - int(first) + 1
+        # Each job is associated to 1 specific member so the *members_forcing* list
+        # attribute will be replaced by an integer (different for each job)
+        # At this stage, *options/members_forcing* is a string returned by the "convert_members"
+        # method with a fixed format : "rangex(start:${first} end:${last})"
+        members = re.search('rangex.start:(.*) end:(.*).', self.options.members_forcing)
+        first   = int(members.group(1))
+        last    = int(members.group(2))
+        nforcings = last - first + 1
         self.njobs = nforcings
 
         mkjob_list = []
         options = vars(self.options)  # convert 'Namespace' object to 'dictionnary'
         if self.njobs == 1:
-            options['members_forcing'] = int(first)
+            options['members_forcing'] = first
             self.set_job_conf(options)
             mkjob_list.append(self.mkjob_command(jobname=self.jobname))
         else:
             options.pop('members_forcing')
-            for job_number in range(int(first), int(last), int(step)):
+            for job_number in range(first, last):
                 options['members_forcing'] = str(job_number)
                 jobname = f'{self.jobname}_mb{str(job_number)}'
                 self.set_job_conf(options)
