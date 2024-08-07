@@ -122,7 +122,7 @@ def extract(dates, pro):
         except ValueError:
             raise
 
-    out = pro.sel({'time': dates})
+    out = pro.sel({'time': dates}, method='nearest')
     return out
 
 
