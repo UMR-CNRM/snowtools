@@ -26,9 +26,10 @@ domain_coords = dict(
 
 
 def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoint=None, alpha=1., dem=None,
-        shade=True, isolevels=None):
+        shade=True, isolevels=None, slices=None):
     """
     :kwargs dem: Digital elevation model (xarray.DataArray)
+    slices:: (int) cluster data (and colorbar) into *slices* slices
     """
     if ax is None:
         plt.figure(figsize=(12 * len(field.xx) / len(field.yy), 10))
@@ -54,6 +55,18 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
     if vmin is None:
         vmin = -vmax
 
+    if slices:
+        cmaplist = [cmap(i) for i in range(cmap.N)]
+        # create the new map
+        cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
+            'Custom cmap', cmaplist, cmap.N)
+
+        # define the bins and normalize
+        bounds = np.linspace(vmin, vmax, slices + 1)
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+    else:
+        norm = None
+
     # Plot field
     # If alpha < 1, the overlaping pixels look like grid lines that
     # The workaround is to use "contourf" instead.
@@ -61,7 +74,7 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
     if alpha < 1:
         cml = ax.contourf(
             field.xx, field.yy, field.data,
-            levels      = np.linspace(vmin, vmax, 100),  # Data slices
+            levels      = np.linspace(vmin, vmax, slices) if slices is not None else np.linspace(vmin, vmax, 50),
             cmap        = cmap,
             vmin        = vmin,
             vmax        = vmax,
@@ -74,7 +87,7 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
         for c in cml.collections:
             c.set_rasterized(True)
     else:
-        cml = field.plot(ax=ax, cmap=cmap, vmin=vmin, vmax=vmax, alpha=alpha, rasterized=True)
+        cml = field.plot(ax=ax, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax, alpha=alpha, rasterized=True)
         # Remove pixel edges
         cml.set_edgecolor('face')
 
