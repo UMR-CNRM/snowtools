@@ -12,6 +12,7 @@ members_map = dict(
     EnKF36_pappus_assim      = [mb for mb in range(1, 18)],
     PF32_pappus_assim        = [mb for mb in range(1, 18)],
     RS27_sorted_pappus_assim = [mb for mb in range(1, 18)],
+    RS27_spa_erroOBS_025     = [mb for mb in range(1, 18)],
     ANTILOPE_pappus          = None,
     SAFRAN_pappus            = None,
 )
@@ -25,6 +26,7 @@ product_map = dict(
     EnKF36_pappus_assim      = 'EnKF_assim',
     PF32_pappus_assim        = 'PF_assim',
     RS27_sorted_pappus_assim = 'SRS_assim',
+    RS27_spa_erroOBS_025     = 'SRS_assim_err025',
     ANTILOPE_pappus          = 'ANTILOPE',
     SAFRAN_pappus            = 'SAFRAN',
     SAFRAN_perturb           = 'SAFRAN_perturb',
@@ -52,6 +54,7 @@ colors_map = dict(
     PF                   = "#EE854A",
     RS_assim             = "#4878D0",
     SRS_assim            = "#D65F5F",
+    SRS_assim_err025     = 'darkgreen',
     EnKF_assim           = "#6ACC64",
     PF_assim             = "#EE854A",
 )

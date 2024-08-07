@@ -55,6 +55,7 @@ members_map = dict(
     EnKF36_pappus_assim      = [mb for mb in range(1, 18)],
     PF32_pappus_assim        = [mb for mb in range(1, 18)],
     RS27_sorted_pappus_assim = [mb for mb in range(1, 18)],
+    RS27_spa_erroOBS_025     = [mb for mb in range(1, 18)],
     ANTILOPE_pappus          = None,
     SAFRAN_pappus            = None,
 )
