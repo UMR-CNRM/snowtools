@@ -331,14 +331,14 @@ def compute_scores(simu, obs, xpid, date, plot_HTN, dem=None):
     # the CRPS along this dimension and get 1 value per pixel
 
     # control_member = simu.sel({'member': 0})
-    pearson = xr.corr(simu, obs, dim=['xx', 'yy'])
+    pearson = xr.corr(simu.where(obs > 0, drop=True), obs.where(obs > 0, drop=True), dim=['xx', 'yy'])
     pearson = pearson[~np.isnan(pearson)]  # Remove nan values (all 0s simulations)
 
     # TODO : check https://scikit-image.org/docs/stable/auto_examples/transform/plot_ssim.html
 
-    simu = simu.expand_dims(dim="time")
-    obs  = obs.expand_dims(dim="time")
-    crps = xskillscore.crps_ensemble(obs, simu, dim='time')
+    # simu = simu.expand_dims(dim="time")
+    # obs  = obs.expand_dims(dim="time")
+    crps = xskillscore.crps_ensemble(obs, simu, dim=[])
 
     return pearson, crps
 
