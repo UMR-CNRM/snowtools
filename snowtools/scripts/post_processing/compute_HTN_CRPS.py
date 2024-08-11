@@ -152,7 +152,7 @@ def execute():
                 member = [members_map[shortid][0]]
 
         # VERRUE pour gérer le décallage d'un jour en attendant de combler les données
-        if (shortid.startswith('SAFRAN') or shortid.startswith('ANTILOPE')) and datebegin == '2021080207':
+        if (shortid.split('_')[0] in ['SAFRAN', 'ANTILOPE', 'KRIGING']) and datebegin == '2021080207':
             deb = '2021080106'
         else:
             deb = datebegin  # 2021080207
@@ -165,7 +165,7 @@ def execute():
         if member is not None and len(member) > 1 and clustering in 'elevation':
             plot_ensemble(simu, obs, shortid, date, dem=mnt)
 
-        if clustering in 'elevation' and member is None or len(member) == 1:
+        if clustering in 'elevation' and (member is None or len(member) == 1):
             plot_HTN = True
         else:
             plot_HTN = False
@@ -275,7 +275,7 @@ def plot_ensemble(simu, obs, xpid, date, dem=None):
     vmin = 0
     vmax = 3
     print(f'plot mean {xpid}')
-    plot2D.plot_field(mean, ax=ax[0], vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem,
+    plot2D.plot_field(mean, ax=ax[0], vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=False,
             isolevels=thresholds)
     #        shade=True,)
     ax[0].set_title('Ensemble mean snow depth (m)')
@@ -284,14 +284,14 @@ def plot_ensemble(simu, obs, xpid, date, dem=None):
     vmin = 0
     vmax = 1
     print(f'plot spread {xpid}')
-    plot2D.plot_field(spread, ax=ax[1], vmin=vmin, vmax=vmax, cmap=plt.cm.Purples, dem=dem,
+    plot2D.plot_field(spread, ax=ax[1], vmin=vmin, vmax=vmax, cmap=plt.cm.Purples, dem=dem, shade=False,
             isolevels=thresholds)
     #        shade=True,)
     ax[1].set_title('Ensemble spread (m)')
 
     error = mean - obs
     print(f'plot error {xpid}')
-    plot2D.plot_field(error, ax=ax[2], cmap=plt.cm.RdBu, dem=dem,
+    plot2D.plot_field(error, ax=ax[2], cmap=plt.cm.RdBu, dem=dem, shade=False,
             isolevels=thresholds)
     #        shade=True,)
     ax[2].set_title('Ensemble mean error (m)')
@@ -310,7 +310,7 @@ def compute_scores(simu, obs, xpid, date, plot_HTN, dem=None):
         plt.figure(figsize=(12 * len(simu.xx) / len(simu.yy), 10))
         vmin = 0
         vmax = 3
-        plot2D.plot_field(simu.squeeze(), vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem,
+        plot2D.plot_field(simu.squeeze(), vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=False,
                 isolevels=thresholds)
         #        shade=True,)
         plot2D.save_fig(savename)
