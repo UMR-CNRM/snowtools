@@ -219,6 +219,9 @@ class PerturbPrecipitation(_PertubForcing):
         """
         Algo component
         """
+
+        # TODO : ensure that member 0 is the unperturbed precipitation field (control member)
+
         t = self.ticket
         self.sh.title('Toolbox algo PRECIP perturbation')
         tbalgo = toolbox.algo(
@@ -241,7 +244,11 @@ class PerturbPrecipitation(_PertubForcing):
         """
         Main method to save an OFFLINE execution outputs
         """
-        self.sh.title('FORCING output')
+
+        self.sh.title('Unperturbed FORCING output (member 0  = control member)')
+        io.put_forcing(filename='FORCING_IN.nc', member=0, **self.common_kw)
+
+        self.sh.title('Perturbed FORCING output')
         io.put_forcing(filename='FORCING_OUT.nc', member=self.conf.members, **self.common_kw)
 
         # Un-comment these lines to save the working directory after the execution
