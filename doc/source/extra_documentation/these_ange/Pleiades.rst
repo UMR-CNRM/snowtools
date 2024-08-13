@@ -133,7 +133,7 @@ Assimilation-specific processing (SODA)
 Set snow depth variable name as "DEP"::
 
   ds = xr.open_dataset('P250_Glb_16_03_18.nc')
-  ds = ds.rename({'DSN_T_ISBA': DEP})
+  ds = ds.rename({'DSN_T_ISBA': 'DEP'})
 
 Ensure that xx/yy dimensions are sorted (implicit in SODA)::
 

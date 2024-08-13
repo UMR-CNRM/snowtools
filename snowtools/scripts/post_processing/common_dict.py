@@ -40,7 +40,7 @@ product_map = dict(
 
 xpid_map = {
     '2018012312': 'CesarDB',
-    '2018031612': 'CesarDB_AngeH',
+    '2018031612': 'CesarDB',
     '2019051312': 'CesarDB_AngeH',
     '2022022612': 'CesarDB',
     '2022050112': 'CesarDB',

@@ -81,7 +81,7 @@ def parse_command_line():
     parser.add_argument('-v', '--variable', type=str, default='DSN_T_ISBA',
                         help='Variable of interest (default : SnowDepth)')
 
-    parser.add_argument('-o', '--obs_geometry', type=str, choices=['Lautaret250m', 'Huez250m', 'GrandesRousses250m'],
+    parser.add_argument('-o', '--obs_geometry', type=str, choices=['Huez250m', 'GrandesRousses250m'],
                         required=True, help='Geometry of the observation')
 
     parser.add_argument('-m', '--members', action='store_true',
