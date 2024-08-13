@@ -26,7 +26,7 @@ domain_coords = dict(
 
 
 def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoint=None, alpha=1., dem=None,
-        shade=True, isolevels=None, slices=None):
+        shade=True, isolevels=None, slices=None, add_colorbar=True):
     """
     :kwargs dem: Digital elevation model (xarray.DataArray)
     slices:: (int) cluster data (and colorbar) into *slices* slices
@@ -34,6 +34,21 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
     if ax is None:
         plt.figure(figsize=(12 * len(field.xx) / len(field.yy), 10))
         ax = plt.gca()
+        newfig = True
+    else:
+        newfig = False
+
+    if slices:
+        cmaplist = [cmap(i) for i in range(cmap.N)]
+        # create the new map
+        cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
+            'Custom cmap', cmaplist, cmap.N)
+
+        # define the bins and normalize
+        bounds = np.linspace(vmin, vmax, slices + 1)
+        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
+    else:
+        norm = None
 
     # Plot Nan values in grey
     cmap.set_bad('grey', 1.)
@@ -55,18 +70,6 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
     if vmin is None:
         vmin = -vmax
 
-    if slices:
-        cmaplist = [cmap(i) for i in range(cmap.N)]
-        # create the new map
-        cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
-            'Custom cmap', cmaplist, cmap.N)
-
-        # define the bins and normalize
-        bounds = np.linspace(vmin, vmax, slices + 1)
-        norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
-    else:
-        norm = None
-
     # Plot field
     # If alpha < 1, the overlaping pixels look like grid lines that
     # The workaround is to use "contourf" instead.
@@ -87,7 +90,7 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
         for c in cml.collections:
             c.set_rasterized(True)
     else:
-        cml = field.plot(ax=ax, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax, alpha=alpha, rasterized=True)
+        cml = field.plot(ax=ax, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax, alpha=alpha, add_colorbar=add_colorbar)
         # Remove pixel edges
         cml.set_edgecolor('face')
 
@@ -99,8 +102,10 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
             else:
                 plt.plot(point[0], point[1], marker='.', linestyle='', color='k', markersize=20,)
 
-    if ax is not None:
-        return ax
+    if newfig:
+        return cml, ax
+    else:
+        return cml
 
 
 def add_iso_elevation(dem, ax=None, levels=[1200, 2400, 3600]):

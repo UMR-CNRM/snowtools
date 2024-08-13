@@ -49,6 +49,7 @@ import matplotlib.pyplot as plt
 
 cmap = dict(
     DSN_T_ISBA = plt.cm.Blues,
+    DEP        = plt.cm.Blues,
 )
 
 vmax_map = dict(
@@ -205,13 +206,16 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
         dem = dem.squeeze()
 
         if var in cmap.keys():
-            plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, cmap=cmap[var], addpoint=addpoint, dem=dem.ZS)
+            plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, cmap=cmap[var], addpoint=addpoint, dem=dem.ZS, shade=False)
         else:
             # plot2D.plot_field(tmp, ax=ax, vmin=vmin, vmax=vmax, addpoint=addpoint)
-            plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, addpoint=addpoint, dem=dem.ZS)
+            plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, addpoint=addpoint, dem=dem.ZS, shade=False)
 
-        # Add relief
-        # plot2D.add_iso_elevation(ax, dem.ZS)
+        ax = plt.gca()
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_xlabel('')
+        ax.set_ylabel('')
 
         plot2D.save_fig(savename)
 
