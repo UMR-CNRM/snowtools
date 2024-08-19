@@ -164,6 +164,8 @@ def execute():
 
         if member is not None and len(member) > 1 and clustering in 'elevation':
             plot_ensemble(simu, obs, shortid, date, dem=mnt)
+        else:
+            plot_deterministe(simu, obs, shortid, date, dem=mnt, member=member)
 
         if clustering in 'elevation' and (member is None or len(member) == 1):
             plot_HTN = True
@@ -172,8 +174,8 @@ def execute():
 
         pearson[shortid], crps = compute_scores(simu, obs, shortid, date, plot_HTN, dem=mnt)
 
-        # if member is not None and len(member) > 1 and clustering in 'elevation':
-        if False:
+        if member is not None and len(member) > 1 and clustering in 'elevation':
+        #if False:
             savename = f'CRPS_{shortid}_{date}.pdf'
             vmin = 0
             vmax = 3
@@ -295,6 +297,34 @@ def plot_ensemble(simu, obs, xpid, date, dem=None):
             isolevels=thresholds)
     #        shade=True,)
     ax[2].set_title('Ensemble mean error (m)')
+
+    plot2D.save_fig(savename, fig)
+
+
+def plot_deterministe(simu, obs, xpid, date, dem=None, member=None):
+
+    if member is not None:
+        savename = f'HTN_{xpid}_mb{member}_{date}.pdf'
+    else:
+        savename = f'HTN_{xpid}_{date}.pdf'
+
+    fig, ax = plt.subplots(1, 2, figsize=(24 * len(simu.xx) / len(simu.yy), 10), sharey=True)
+
+    field = simu.DSN_T_ISBA
+    vmin = 0
+    vmax = 3
+    print(f'plot mean {xpid}')
+    plot2D.plot_field(field, ax=ax[0], vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=False,
+            isolevels=thresholds)
+    #        shade=True,)
+    ax[0].set_title('Ensemble mean snow depth (m)')
+
+    error = field - obs
+    print(f'plot error {xpid}')
+    plot2D.plot_field(error, ax=ax[1], cmap=plt.cm.RdBu, dem=dem, shade=False,
+            isolevels=thresholds)
+    #        shade=True,)
+    ax[1].set_title('Error (m)')
 
     plot2D.save_fig(savename, fig)
 
