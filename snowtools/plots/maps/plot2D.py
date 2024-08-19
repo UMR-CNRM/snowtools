@@ -108,7 +108,7 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
         return cml
 
 
-def add_iso_elevation(dem, ax=None, levels=[1200, 2400, 3600]):
+def add_iso_elevation(dem, ax=None, levels=[1500, 2000, 2500, 3000, 3500]):
     """
     Add iso-elevation bands to show the relief
     """
