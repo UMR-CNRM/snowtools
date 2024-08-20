@@ -46,6 +46,10 @@ import snowtools.tools.xarray_preprocess as xrp
 
 import matplotlib.pyplot as plt
 
+label_map = dict(
+    Snowf = 'Snowfall accumulation (kg/m²)',
+    SnowfRainf = 'Total precipitation accumulation (kg/m²)',
+)
 
 cmap = dict(
     DSN_T_ISBA = plt.cm.Blues,
@@ -173,9 +177,9 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
             extract = ds[sumvar]  # ex : ['Rainf', 'Snowf']
             tmp = extract.to_array().sum("variable")
             var = var.replace('+', '')
-            tmp.name = var
         else:
             tmp = ds[var]
+        tmp.name = label_map[var]
 
         if date is not None:
             date = Date(date)

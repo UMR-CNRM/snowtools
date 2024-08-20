@@ -49,7 +49,7 @@ def plot_ange(dataplot, var, figname=None, xmin=0, xmax=7, yaxis='Elevation Band
     # Ange's paper color palette
     # TODO : automatiser le choix de la palette
     if colors is None:
-        default_colors = ["silver", "#D65F5F", "#4878D0", "#6ACC64", "#EE854A"]
+        default_colors = ["silver", "#D65F5F", "#4878D0", "#6ACC64", "#EE854A", "darkgreen", 'purple']
         colors = {key: default_colors[i] for i, key in enumerate(dataplot.experiment.unique())}
     else:
         colors = {key: colors[key] for key in dataplot.experiment.unique()}

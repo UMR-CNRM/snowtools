@@ -26,7 +26,7 @@ domain_coords = dict(
 
 
 def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoint=None, alpha=1., dem=None,
-        shade=True, isolevels=None, slices=None, add_colorbar=True):
+        shade=True, isolevels=None, slices=None, add_colorbar=True, transform=None):
     """
     :kwargs dem: Digital elevation model (xarray.DataArray)
     slices:: (int) cluster data (and colorbar) into *slices* slices
@@ -38,7 +38,7 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
     else:
         newfig = False
 
-    if slices:
+    if slices is not None:
         cmaplist = [cmap(i) for i in range(cmap.N)]
         # create the new map
         cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
@@ -51,7 +51,7 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
         norm = None
 
     # Plot Nan values in grey
-    cmap.set_bad('grey', 1.)
+    cmap.set_bad('grey', 1)
     if dem is not None:
         if shade:
             add_relief_shading(dem, ax=ax, extent=[field.xx.min(), field.xx.max(), field.yy.min(), field.yy.max()])
@@ -90,7 +90,10 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
         for c in cml.collections:
             c.set_rasterized(True)
     else:
-        cml = field.plot(ax=ax, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax, alpha=alpha, add_colorbar=add_colorbar)
+        if transform is not None:
+            cml = field.plot(ax=ax, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax, alpha=alpha, add_colorbar=add_colorbar, transform=None)
+        else:
+            cml = field.plot(ax=ax, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax, alpha=alpha, add_colorbar=add_colorbar)
         # Remove pixel edges
         cml.set_edgecolor('face')
 
@@ -136,11 +139,12 @@ def add_relief_shading(dem, ax=None, extent=None):
         plt.imshow(ls.hillshade(dem.data, dx=30, dy=30), cmap=plt.cm.gray, extent=extent, rasterized=True)
 
 
-def save_fig(savename, fig=None):
+def save_fig(savename, fig=None, tight_layout=True):
 
-    plt.tight_layout()
     if '.pdf' not in savename:
         savename = f'{savename}.pdf'
+    if tight_layout:
+        plt.tight_layout()
     if fig is not None:
         fig.savefig(savename, format='pdf')
     else:

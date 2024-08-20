@@ -144,12 +144,12 @@ def execute():
 
         # Get (filtered) PRO files with Vortex
         if members:
-            member = members_map[shortid]
+            member = members_map(shortid)
         else:
             if shortid in ['safran', 'ANTILOPE', 'safran_pappus', 'ANTILOPE_pappus', 'SAFRAN', 'SAFRAN_pappus']:
                 member = None
             else:
-                member = [members_map[shortid][0]]
+                member = [members_map(shortid)[0]]
 
         # VERRUE pour gérer le décallage d'un jour en attendant de combler les données
         if (shortid.split('_')[0] in ['SAFRAN', 'ANTILOPE', 'KRIGING']) and datebegin == '2021080207':
@@ -162,10 +162,11 @@ def execute():
 
         simu = read_simu(xpid, member, date)
 
-        if member is not None and len(member) > 1 and clustering in 'elevation':
-            plot_ensemble(simu, obs, shortid, date, dem=mnt)
-        else:
-            plot_deterministe(simu, obs, shortid, date, dem=mnt, member=member)
+        if clustering in 'elevation':
+            if member is not None and len(member) > 1:
+                plot_ensemble(simu, obs, shortid, date, dem=mnt)
+            else:
+                plot_deterministe(simu, obs, shortid, date, dem=mnt, member=member)
 
         if clustering in 'elevation' and (member is None or len(member) == 1):
             plot_HTN = True
@@ -174,12 +175,16 @@ def execute():
 
         pearson[shortid], crps = compute_scores(simu, obs, shortid, date, plot_HTN, dem=mnt)
 
-        if member is not None and len(member) > 1 and clustering in 'elevation':
+        #if member is not None and len(member) > 1 and clustering in 'elevation':
         #if False:
+        if True:
             savename = f'CRPS_{shortid}_{date}.pdf'
             vmin = 0
             vmax = 3
             print(f'plot crps {xpid}')
+            # To plot data by elevation cluster :
+            #tmp = mnt.interp({'xx': crps.xx, 'yy': crps.yy})
+            #plot2D.plot_field(crps.where((tmp.data>2000) & (tmp.data<=2500)), vmin=vmin, vmax=vmax, cmap=plt.cm.Reds, dem=mnt, shade=False)
             plot2D.plot_field(crps, vmin=vmin, vmax=vmax, cmap=plt.cm.Reds, dem=mnt, shade=False)
             print(f'save crps {xpid}')
             plot2D.save_fig(savename)
@@ -188,7 +193,8 @@ def execute():
             tmp = clusters.by_slices(crps, mask, thresholds)
         elif clustering == 'landforms':
             tmp = clusters.per_landform_types(crps, mask)
-        df = tmp.to_dataframe(name=product_map[shortid]).dropna().reset_index().drop(
+        name = product_map(shortid)
+        df = tmp.to_dataframe(name=name).dropna().reset_index().drop(
             columns=['xx', 'yy', 'time', 'band', 'spatial_ref'], errors='ignore')
         dataplot = pd.concat([dataplot, df])
 
@@ -199,7 +205,8 @@ def execute():
 
     title = f'Pleiades, {geometry}, {date[:8]}\n'
     violinplot.plot_ange(dataplot, 'CRPS (m)', figname=f'CRPS_by_{clustering}_{date}_' + '_'.join(xpids),
-            title=title, yaxis=label_map[clustering], violinplot=False, xmax=3, colors=colors_map, hatchid='assim')
+            title=title, yaxis=label_map[clustering], violinplot=False, xmax=3, hatchid='assim')
+            #title=title, yaxis=label_map[clustering], violinplot=False, xmax=3, colors=colors_map, hatchid='assim')
 
     print()
     if member is not None and len(member) > 1:
@@ -304,9 +311,9 @@ def plot_ensemble(simu, obs, xpid, date, dem=None):
 def plot_deterministe(simu, obs, xpid, date, dem=None, member=None):
 
     if member is not None:
-        savename = f'HTN_{xpid}_mb{member}_{date}.pdf'
+        savename = f'HTN_error_{xpid}_mb{member}_{date}.pdf'
     else:
-        savename = f'HTN_{xpid}_{date}.pdf'
+        savename = f'HTN_error_{xpid}_{date}.pdf'
 
     fig, ax = plt.subplots(1, 2, figsize=(24 * len(simu.xx) / len(simu.yy), 10), sharey=True)
 
