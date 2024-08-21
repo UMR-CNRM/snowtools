@@ -12,10 +12,11 @@ def members_map(xpid):
 def product_map(xpid):
 
     mapping = dict(
-        RS27_pappus              = 'AS-ANTILOPE',
+        RS27_pappus              = 'AS_ANTILOPE',
         EnKF36_pappus            = 'EnKF',
         PF32_pappus              = 'PF',
         RS27_sorted_pappus       = 'SRS',
+        RS27_perturb             = 'SRS_perturb',
         RS27_pappus_assim        = 'RS_assim',
         EnKF36_pappus_assim      = 'EnKF_assim',
         PF32_pappus_assim        = 'PF_assim',
@@ -53,7 +54,10 @@ colors_map = dict(
     KRIGING_perturb_assim = "indigo",
     ANTILOPE              = "#D65F5F",
     RS                    = "#D65F5F",
+    AS_ANTILOPE           = "#4878D0",
     SRS                   = "#4878D0",
+    SRS27_LPNp200         = "#6ACC64",  # Green
+    SRS_perturb           = "#6ACC64",
     SRS30                 = "#6ACC64",
     SRS35                 = "#EE854A",
     SRS32                 = "darkgreen",
