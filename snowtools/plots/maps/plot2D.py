@@ -91,7 +91,8 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
             c.set_rasterized(True)
     else:
         if transform is not None:
-            cml = field.plot(ax=ax, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax, alpha=alpha, add_colorbar=add_colorbar, transform=None)
+            cml = field.plot(ax=ax, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax, alpha=alpha, add_colorbar=add_colorbar,
+                    transform=None)
         else:
             cml = field.plot(ax=ax, cmap=cmap, norm=norm, vmin=vmin, vmax=vmax, alpha=alpha, add_colorbar=add_colorbar)
         # Remove pixel edges
@@ -172,3 +173,39 @@ def add_quadrilateral(ax, label, color='k', **kw):
     full_kw.update(**kw)
     poly = patches.Polygon(domain_coords[label], edgecolor=color, label=label, **full_kw)
     ax.add_patch(poly)
+
+
+def plot_ensemble(ensemble, vmin=0, vmax=1, cmap=plt.cm.Blues, dem=None, isolevels=None):
+    """
+    ensemble:: DataArray with a *member* dimension (its name is used as label)
+    """
+
+    # Assume ensemble size = 16
+    fig, ax = plt.subplots(nrows=4, ncols=4, figsize=(22, 15))
+    i = 0
+    j = 0
+    for mb in ensemble.member.data[1:]:
+        tmp = ensemble.sel({'member': mb})
+        im = plot_field(tmp, ax=ax[i, j], vmin=vmin, vmax=vmax, cmap=cmap, dem=dem,
+                isolevels=isolevels, add_colorbar=False)
+        j = j + 1
+        if j == 4:
+            j = 0
+            i = i + 1
+
+    for axis in ax.flatten():
+        axis.margins(0.02)
+        axis.set_title('')
+        axis.set_xticks([])
+        axis.set_yticks([])
+        axis.set_xlabel('')
+        axis.set_ylabel('')
+
+    fig.subplots_adjust(left=0.01, top=0.99, bottom=0.01, right=0.85, wspace=0.02, hspace=0.02)
+    cax = fig.add_axes([0.86, 0.02, 0.05, 0.96])
+    cb = fig.colorbar(im, cax=cax)
+    # cb.ax.tick_params(labelsize=20)
+
+    cb.set_label(ensemble.name, size=24)
+
+    return fig

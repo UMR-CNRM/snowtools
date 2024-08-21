@@ -54,6 +54,9 @@ label_map = dict(
 cmap = dict(
     DSN_T_ISBA = plt.cm.Blues,
     DEP        = plt.cm.Blues,
+    SnowfRainf = plt.cm.YlGnBu,
+    Rainf      = plt.cm.YlGnBu,
+    Snowf      = plt.cm.YlGnBu,
 )
 
 vmax_map = dict(
@@ -116,7 +119,7 @@ def parse_command_line():
                         help='kind file containing the variable(s) to plot')
 
     parser.add_argument('-m', '--ensemble', action='store', default=None,
-                        choices=['mean', 'spread'] + [str(mb) for mb in range(17)],
+                        choices=['mean', 'spread', 'all'] + [str(mb) for mb in range(17)],
                         help="If the file comes from an ensemble, either plot the ensemble mean, spread or only"
                              "one specific member (the control member is member 0 by convention)")
 
@@ -187,20 +190,21 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
                 tmp = tmp.sel({'time': date})
             savename = f'{var}_{date.ymdh}_{xpid}.pdf'
         else:
+            tmp = tmp.sum('time')
             if ensemble == 'mean':
-                tmp = tmp.sum('time').mean('member')
-                tmp = tmp.compute()
+                tmp = tmp.mean('member')
                 savename = f'{var}_mean_cumul_{xpid}_{datebegin}_{dateend}.pdf'
             elif ensemble == 'spread':
-                tmp = tmp.sum('time').std('member')
+                tmp = tmp.std('member')
                 tmp = tmp.rename('Spread (mm)')
                 savename = f'{var}_spread_cumul_{xpid}_{datebegin}_{dateend}.pdf'
                 mycmap = plt.cm.Purples
                 vmin = 0
                 # vmax = tmp.max().data
                 vmax = 350
+            elif ensemble == 'all':
+                savename = f'{var}_ensemble_{xpid}_{datebegin}_{dateend}.pdf'
             else:
-                tmp = tmp.sum(dim='time')
                 if member is None:
                     savename = f'{var}_cumul_{xpid}_{datebegin}_{dateend}.pdf'
                 else:
@@ -224,22 +228,27 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
         dem = xrp.preprocess(dem, decode_time=False)
         dem = dem.squeeze()
 
-        if mycmap is not None:
-            plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, cmap=mycmap, addpoint=addpoint, dem=dem.ZS, shade=False)
+        if ensemble == 'all':
+            fig = plot2D.plot_ensemble(tmp, vmin=vmin, vmax=vmax, cmap=cmap[var])
+            plot2D.save_fig(savename, fig, tight_layout=False)  # subplots_adjust does not work with tight_layout
+
         else:
-            if var in cmap.keys():
-                plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, cmap=cmap[var], addpoint=addpoint, dem=dem.ZS, shade=False)
+            if mycmap is not None:
+                plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, cmap=mycmap, addpoint=addpoint, dem=dem.ZS)
             else:
-                # plot2D.plot_field(tmp, ax=ax, vmin=vmin, vmax=vmax, addpoint=addpoint)
-                plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, addpoint=addpoint, dem=dem.ZS, shade=False)
+                if var in cmap.keys():
+                    plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, cmap=cmap[var], addpoint=addpoint, dem=dem.ZS)
+                else:
+                    # plot2D.plot_field(tmp, ax=ax, vmin=vmin, vmax=vmax, addpoint=addpoint)
+                    plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, addpoint=addpoint, dem=dem.ZS, shade=False)
 
-        ax = plt.gca()
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.set_xlabel('')
-        ax.set_ylabel('')
+            ax = plt.gca()
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_xlabel('')
+            ax.set_ylabel('')
 
-        plot2D.save_fig(savename)
+            plot2D.save_fig(savename)
 
 
 if __name__ == '__main__':
@@ -254,7 +263,7 @@ if __name__ == '__main__':
     geometry        = args.geometry
     kind            = args.kind
     ensemble        = args.ensemble
-    if ensemble in ['mean', 'spread']:
+    if ensemble in ['mean', 'spread', 'all']:
         member = footprints.util.rangex('0-16-1')
     elif ensemble is None:
         member = None
@@ -320,7 +329,7 @@ if __name__ == '__main__':
         else:
             getattr(io, f'get_{kind.lower()}')(xpid=xpid, geometry=geometry, **kw)
 
-        if ensemble in ['mean', 'spread']:
+        if ensemble in ['mean', 'spread', 'all']:
             ds = xr.open_mfdataset([f'mb{member:03d}/{filename}' for member in range(17)],
                     concat_dim='member', combine='nested', chunks='auto')
         else:
@@ -338,7 +347,7 @@ if __name__ == '__main__':
     os.remove('TARGET_RELIEF.tif')
     for xpid in xpids:
         shortid = xpid.split('@')[0]
-        if ensemble in ['mean', 'spread']:
+        if ensemble in ['mean', 'spread', 'all']:
             for member in range(17):
                 os.remove(f'mb{member:03d}/{kind}_{shortid}.nc')
         else:
