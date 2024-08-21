@@ -173,19 +173,32 @@ def execute():
         else:
             plot_HTN = False
 
-        pearson[shortid], crps = compute_scores(simu, obs, shortid, date, plot_HTN, dem=mnt)
-
-        #if member is not None and len(member) > 1 and clustering in 'elevation':
-        #if False:
-        if True:
-            savename = f'CRPS_{shortid}_{date}.pdf'
+        if (member is None or len(member) == 1) and clustering != 'uncertainty':
+            # Uncertainty is a measure of the absolute error
+            pearson[shortid], crps = compute_scores(simu, obs, shortid, date, plot_HTN, dem=mnt, deterministic=True)
+            vmin = -3
+            vmax = 3  # set colobar extend in CRPS/Error plot
+            xmax = 5  # xlim in violinplot (Add margin for legend)
+            cmap = plt.cm.RdBu
+            label = 'Error (m)'
+        else:
+            pearson[shortid], crps = compute_scores(simu, obs, shortid, date, plot_HTN, dem=mnt)
             vmin = 0
             vmax = 3
+            xmax = vmax
+            cmap = plt.cm.Reds
+            label = 'CRPS (m)'
+
+        # if False:
+        # if True:
+        if member is not None and len(member) > 1 and clustering in ['elevation']:
+            savename = f'CRPS_{shortid}_{date}.pdf'
             print(f'plot crps {xpid}')
             # To plot data by elevation cluster :
-            #tmp = mnt.interp({'xx': crps.xx, 'yy': crps.yy})
-            #plot2D.plot_field(crps.where((tmp.data>2000) & (tmp.data<=2500)), vmin=vmin, vmax=vmax, cmap=plt.cm.Reds, dem=mnt, shade=False)
-            plot2D.plot_field(crps, vmin=vmin, vmax=vmax, cmap=plt.cm.Reds, dem=mnt, shade=False)
+            # tmp = mnt.interp({'xx': crps.xx, 'yy': crps.yy})
+            # plot2D.plot_field(crps.where((tmp.data>2000) & (tmp.data<=2500)), vmin=vmin, vmax=vmax, cmap=cmap,
+            #    dem=mnt, shade=False)
+            plot2D.plot_field(crps, vmin=vmin, vmax=vmax, cmap=cmap, dem=mnt, shade=False)
             print(f'save crps {xpid}')
             plot2D.save_fig(savename)
 
@@ -201,12 +214,12 @@ def execute():
         clean(shortid, member)
 
     dataplot = dataplot.rename(columns={'slices': label_map[clustering], clustering: label_map[clustering]})
-    dataplot = dataplot.melt(label_map[clustering], var_name='experiment', value_name='CRPS (m)')
+    dataplot = dataplot.melt(label_map[clustering], var_name='experiment', value_name=label)
 
     title = f'Pleiades, {geometry}, {date[:8]}\n'
-    violinplot.plot_ange(dataplot, 'CRPS (m)', figname=f'CRPS_by_{clustering}_{date}_' + '_'.join(xpids),
-            title=title, yaxis=label_map[clustering], violinplot=False, xmax=3, hatchid='assim')
-            #title=title, yaxis=label_map[clustering], violinplot=False, xmax=3, colors=colors_map, hatchid='assim')
+    violinplot.plot_ange(dataplot, label, figname=f'{label.split(" ")[0]}_by_{clustering}_{date}_' + '_'.join(xpids),
+            title=title, yaxis=label_map[clustering], violinplot=False, xmin=vmin, xmax=xmax, hatchid='assim',
+            colors=colors_map)
 
     print()
     if member is not None and len(member) > 1:
@@ -320,11 +333,11 @@ def plot_deterministe(simu, obs, xpid, date, dem=None, member=None):
     field = simu.DSN_T_ISBA
     vmin = 0
     vmax = 3
-    print(f'plot mean {xpid}')
+    print(f'plot HTN {xpid}')
     plot2D.plot_field(field, ax=ax[0], vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=False,
             isolevels=thresholds)
     #        shade=True,)
-    ax[0].set_title('Ensemble mean snow depth (m)')
+    ax[0].set_title('Snow depth (m)')
 
     error = field - obs
     print(f'plot error {xpid}')
@@ -336,7 +349,7 @@ def plot_deterministe(simu, obs, xpid, date, dem=None, member=None):
     plot2D.save_fig(savename, fig)
 
 
-def compute_scores(simu, obs, xpid, date, plot_HTN, dem=None):
+def compute_scores(simu, obs, xpid, date, plot_HTN, dem=None, deterministic=False):
 
     # Select common domains
     obs  = obs.sel({'xx': np.intersect1d(obs.xx, simu.xx), 'yy': np.intersect1d(obs.yy, simu.yy)})
@@ -375,7 +388,12 @@ def compute_scores(simu, obs, xpid, date, plot_HTN, dem=None):
 
     # simu = simu.expand_dims(dim="time")
     # obs  = obs.expand_dims(dim="time")
-    crps = xskillscore.crps_ensemble(obs, simu, dim=[])
+    if deterministic:
+        if 'member' in simu.dims:
+            simu = simu.squeeze().drop('member')
+        crps = simu - obs
+    else:
+        crps = xskillscore.crps_ensemble(obs, simu, dim=[])
 
     return pearson, crps
 
