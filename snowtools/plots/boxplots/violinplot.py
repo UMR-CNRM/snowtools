@@ -123,6 +123,11 @@ def plot_ange(dataplot, var, figname=None, xmin=0, xmax=7, yaxis='Elevation Band
         label = var
     myplot.set_xlabel(label)
 
+    if xmin < 0:
+        ax = plt.gca()
+        ymin, ymax = ax.get_ylim()
+        plt.vlines(x=0, ymin=ymin, ymax=ymax, color='k', ls='-')
+
     plt.tight_layout()
 
     # Set Ange's color and hatches
@@ -139,19 +144,22 @@ def plot_ange(dataplot, var, figname=None, xmin=0, xmax=7, yaxis='Elevation Band
     # Add number of pixels associated to each violin plot
     tmp = dataplot.set_index([yaxis, 'experiment'])
     npixels = tmp.groupby(level=tmp.index.names).count()
-    subensemble_size = np.flip(npixels.values.flatten())
 
     # Compute configuration-specific values for annotation positions
-    nexperiments = len(dataplot.experiment.unique())
-    dy = 1 / (nexperiments + 1)
-    for idx, pixels in enumerate(subensemble_size):
+    # subensemble_size = np.flip(npixels.values.flatten())
+    # nexperiments = len(dataplot.experiment.unique())
+    # dy = 1 / (nexperiments + 1)
+    # for idx, pixels in enumerate(subensemble_size):
+    for idx, pixels in enumerate(np.unique(npixels.values)):
         txt = f'n={pixels:d}'
-        plt.text(xmax * 0.5, (idx + np.floor(idx / nexperiments) - 1) * dy, txt, fontsize='small')
+        # plt.text(xmax * 0.5, (idx + np.floor(idx / nexperiments) - 1) * dy, txt, fontsize='small')
+        plt.text(xmax * 0.75, idx, txt, fontsize='small')
 
     if figname is None:
         figname = f'{var}.pdf'
     elif '.pdf' not in figname:
         figname = f'{figname}.pdf'
+    #plt.legend(loc='upper left', bbox_to_anchor=(-0.3, 1.05))
     plt.legend()
     plt.savefig(figname, format='pdf')
     plt.close('all')

@@ -26,7 +26,7 @@ domain_coords = dict(
 
 
 def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoint=None, alpha=1., dem=None,
-        shade=True, isolevels=None, slices=None, add_colorbar=True, transform=None):
+        shade=False, isolevels=None, slices=None, add_colorbar=True, transform=None):
     """
     :kwargs dem: Digital elevation model (xarray.DataArray)
     slices:: (int) cluster data (and colorbar) into *slices* slices
