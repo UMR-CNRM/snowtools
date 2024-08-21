@@ -312,10 +312,14 @@ class Edelweiss_kitchen(vortex_kitchen):
         # attribute will be replaced by an integer (different for each job)
         # At this stage, *options/members_forcing* is a string returned by the "convert_members"
         # method with a fixed format : "rangex(start:${first} end:${last})"
-        members = re.search('rangex.start:(.*) end:(.*).', self.options.members_forcing)
-        first   = int(members.group(1))
-        last    = int(members.group(2))
-        nforcings = last - first + 1
+        if self.options.members_forcing is None:
+            nforcings = 1
+            first = None
+        else:
+            members = re.search('rangex.start:(.*) end:(.*).', self.options.members_forcing)
+            first   = int(members.group(1))
+            last    = int(members.group(2))
+            nforcings = last - first + 1
         self.njobs = nforcings
 
         mkjob_list = []

@@ -349,15 +349,19 @@ class Edelweiss_command(object):
                 optional_keys = ['xpid', 'geometry', 'vapp', 'date']
             else:
                 # All other files cover a period
+                # TODO : members_forcing ne devrait pas être optionnel puisqu'il est utilisé pour définir le nombre
+                # de jobs
+                # --> gérer ça plus proprement
                 optional_keys = ['kind', 'xpid', 'geometry', 'vapp', 'datebegin', 'dateend', 'members']
             for key in optional_keys:
+                print(key, specific_input, )
                 if not hasattr(self.options, f'{key}_{specific_input}'):
                     if key == 'date':
                         # Default PREP validity *date* is *datebegin* of the simulation
                         setattr(self.options, f'{key}_{specific_input}', args_to_dict['datebegin'])
                     elif key == 'members':
-                        # If no *members* attribute is given, assume there is only 1 file
-                        setattr(self.options, f'{key}_{specific_input}', 'rangex(start:1 end:1)')
+                        # If no *members* attribute is given
+                        setattr(self.options, f'{key}_{specific_input}', None)
                     elif key == 'kind':
                         setattr(self.options, f'{key}_{specific_input}', specific_input)
                     else:

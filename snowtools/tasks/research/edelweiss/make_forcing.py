@@ -204,8 +204,15 @@ class _PertubForcing(_VortexTask):
         # and vapp of the FORCING files
         kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
         # Update default vapp with specific conf values
-        kw.update(dict(vapp=self.conf.vapp_forcing, filename='FORCING_IN.nc', datebegin=self.conf.datebegin_forcing,
-            dateend=self.conf.dateend_forcing, xpid=self.conf.xpid_forcing, geometry=self.conf.geometry_forcing))
+        kw.update(dict(
+            vapp      = self.conf.vapp_forcing,
+            filename  = 'FORCING_IN.nc',
+            datebegin = self.conf.datebegin_forcing,
+            dateend   = self.conf.dateend_forcing,
+            xpid      = self.conf.xpid_forcing,
+            geometry  = self.conf.geometry_forcing,
+            member    = self.conf.members_forcing,
+        ))
         self.sh.title('FORCING input')
         self.forcing = io.get_forcing(**kw)
 
