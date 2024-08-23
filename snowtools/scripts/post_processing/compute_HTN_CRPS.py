@@ -37,6 +37,7 @@ members_map = common_dict.members_map
 product_map = common_dict.product_map
 xpid_map    = common_dict.xpid_map
 colors_map  = common_dict.colors_map
+vmax_map    = common_dict.vmax_map
 
 # Retrieve dictionnary to map clustering type to a proper label
 label_map = clusters.label_map
@@ -176,16 +177,16 @@ def execute():
         if (member is None or len(member) == 1) and clustering != 'uncertainty':
             # Uncertainty is a measure of the absolute error
             pearson[shortid], crps = compute_scores(simu, obs, shortid, date, plot_HTN, dem=mnt, deterministic=True)
-            vmin = -3
-            vmax = 3  # set colobar extend in CRPS/Error plot
-            xmax = 5  # xlim in violinplot (Add margin for legend)
+            vmax = vmax_map[date]  # set colobar extend in CRPS/Error plot
+            vmin = -vmax
+            xmax = + 2  # xlim in violinplot (Add margin for legend)
             cmap = plt.cm.RdBu
             label = 'Error (m)'
         else:
             pearson[shortid], crps = compute_scores(simu, obs, shortid, date, plot_HTN, dem=mnt)
             vmin = 0
-            vmax = 3
-            xmax = vmax
+            vmax = vmax_map[date]
+            xmax = vmax + 2  # xlim in violinplot (Add margin for legend)
             cmap = plt.cm.Reds
             label = 'CRPS (m)'
 
@@ -198,7 +199,7 @@ def execute():
             # tmp = mnt.interp({'xx': crps.xx, 'yy': crps.yy})
             # plot2D.plot_field(crps.where((tmp.data>2000) & (tmp.data<=2500)), vmin=vmin, vmax=vmax, cmap=cmap,
             #    dem=mnt, shade=False)
-            plot2D.plot_field(crps, vmin=vmin, vmax=vmax, cmap=cmap, dem=mnt, shade=False)
+            plot2D.plot_field(crps, vmin=vmin, vmax=vmax, cmap=cmap, dem=mnt, label=label, shade=False)
             print(f'save crps {xpid}')
             plot2D.save_fig(savename)
 
@@ -207,6 +208,8 @@ def execute():
         elif clustering == 'landforms':
             tmp = clusters.per_landform_types(crps, mask)
         name = product_map(shortid)
+        if member is None or len(member) == 1:  # Deterministic case
+            name = name.split('_')[0]
         df = tmp.to_dataframe(name=name).dropna().reset_index().drop(
             columns=['xx', 'yy', 'time', 'band', 'spatial_ref'], errors='ignore')
         dataplot = pd.concat([dataplot, df])
@@ -285,6 +288,8 @@ def read_simu(xpid, members, date):
     # Data variables:
     #     DSN_T_ISBA  (member, time, yy, xx) float64 1.997 1.918 ... 0.0001194 0.2854
 
+    simu = simu.DSN_T_ISBA.rename('Snow depth (m)')
+
     return simu
 
 
@@ -293,27 +298,28 @@ def plot_ensemble(simu, obs, xpid, date, dem=None):
 
     fig, ax = plt.subplots(1, 3, figsize=(36 * len(simu.xx) / len(simu.yy), 10), sharey=True)
 
-    mean = simu.DSN_T_ISBA.mean(dim='member')
+    mean = simu.mean(dim='member')
     vmin = 0
-    vmax = 3
+    vmax = vmax_map[date]
     print(f'plot mean {xpid}')
     plot2D.plot_field(mean, ax=ax[0], vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=False,
             isolevels=thresholds)
     #        shade=True,)
     ax[0].set_title('Ensemble mean snow depth (m)')
 
-    spread = simu.DSN_T_ISBA.std(dim='member')
-    vmin = 0
-    vmax = 1
+    spread = simu.std(dim='member')
+    smin = 0
+    smax = 1
     print(f'plot spread {xpid}')
-    plot2D.plot_field(spread, ax=ax[1], vmin=vmin, vmax=vmax, cmap=plt.cm.Purples, dem=dem, shade=False,
+    plot2D.plot_field(spread, ax=ax[1], vmin=smin, vmax=smax, cmap=plt.cm.Purples, dem=dem, shade=False,
             isolevels=thresholds)
     #        shade=True,)
     ax[1].set_title('Ensemble spread (m)')
 
-    error = mean - obs
+    error = (mean - obs).rename('Mean snow depth error (m)')
+    vmin = -vmax
     print(f'plot error {xpid}')
-    plot2D.plot_field(error, ax=ax[2], cmap=plt.cm.RdBu, dem=dem, shade=False,
+    plot2D.plot_field(error, ax=ax[2], vmin=vmin, vmax=vmax, cmap=plt.cm.RdBu, dem=dem, shade=False,
             isolevels=thresholds)
     #        shade=True,)
     ax[2].set_title('Ensemble mean error (m)')
@@ -330,18 +336,19 @@ def plot_deterministe(simu, obs, xpid, date, dem=None, member=None):
 
     fig, ax = plt.subplots(1, 2, figsize=(24 * len(simu.xx) / len(simu.yy), 10), sharey=True)
 
-    field = simu.DSN_T_ISBA
+    field = simu
     vmin = 0
-    vmax = 3
+    vmax = vmax_map[date]
     print(f'plot HTN {xpid}')
     plot2D.plot_field(field, ax=ax[0], vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=False,
             isolevels=thresholds)
     #        shade=True,)
     ax[0].set_title('Snow depth (m)')
 
-    error = field - obs
+    error = (field - obs).rename('Snow depth error (m)')
+    vmin = -vmax
     print(f'plot error {xpid}')
-    plot2D.plot_field(error, ax=ax[1], cmap=plt.cm.RdBu, dem=dem, shade=False,
+    plot2D.plot_field(error, ax=ax[1], vmin=vmin, vmax=vmax, cmap=plt.cm.RdBu, dem=dem, shade=False,
             isolevels=thresholds)
     #        shade=True,)
     ax[1].set_title('Error (m)')
@@ -353,13 +360,13 @@ def compute_scores(simu, obs, xpid, date, plot_HTN, dem=None, deterministic=Fals
 
     # Select common domains
     obs  = obs.sel({'xx': np.intersect1d(obs.xx, simu.xx), 'yy': np.intersect1d(obs.yy, simu.yy)})
-    simu = simu.sel({'xx': np.intersect1d(obs.xx, simu.xx), 'yy': np.intersect1d(obs.yy, simu.yy)})['DSN_T_ISBA']
+    simu = simu.sel({'xx': np.intersect1d(obs.xx, simu.xx), 'yy': np.intersect1d(obs.yy, simu.yy)})
 
     if plot_HTN:
         savename = f'HTN_{xpid}_{date}.pdf'
         plt.figure(figsize=(12 * len(simu.xx) / len(simu.yy), 10))
         vmin = 0
-        vmax = 3
+        vmax = vmax_map[date]
         plot2D.plot_field(simu.squeeze(), vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=False,
                 isolevels=thresholds)
         #        shade=True,)

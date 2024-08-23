@@ -160,7 +160,7 @@ def plot_ange(dataplot, var, figname=None, xmin=0, xmax=7, yaxis='Elevation Band
     elif '.pdf' not in figname:
         figname = f'{figname}.pdf'
     #plt.legend(loc='upper left', bbox_to_anchor=(-0.3, 1.05))
-    plt.legend()
+    plt.legend(loc = 'center right')
     plt.savefig(figname, format='pdf')
     plt.close('all')
 
