@@ -18,6 +18,13 @@ try:
 except ImportError:
     print('Vortex not available, input files must be defined by their absolute path')
 
+from snowtools.scripts.post_processing import common_dict
+
+members_map = common_dict.members_map
+product_map = common_dict.product_map
+xpid_map    = common_dict.xpid_map
+colors_map  = common_dict.colors_map
+
 reference_points = dict(
     # Galibier = dict(xx=968139.97, yy=6446319.56),  # Col
     Galibier = dict(
@@ -45,21 +52,6 @@ reference_points = dict(
         yy   = 6453125.
     ),
 )
-
-members_map = dict(
-    RS27_pappus              = [mb for mb in range(17)],
-    EnKF36_pappus            = [mb for mb in range(17)],
-    PF32_pappus              = [mb for mb in range(17)],
-    RS27_sorted_pappus       = [mb for mb in range(17)],
-    RS27_pappus_assim        = [mb for mb in range(1, 18)],
-    EnKF36_pappus_assim      = [mb for mb in range(1, 18)],
-    PF32_pappus_assim        = [mb for mb in range(1, 18)],
-    RS27_sorted_pappus_assim = [mb for mb in range(1, 18)],
-    RS27_spa_erroOBS_025     = [mb for mb in range(1, 18)],
-    ANTILOPE_pappus          = None,
-    SAFRAN_pappus            = None,
-)
-
 
 def parse_command_line():
     description = "Extract a specific simulation point"
@@ -127,8 +119,6 @@ def execute(point, member, datebegin=None, datesassim=None):
                 pro     = pro[['DSN_T_ISBA', 'ZS']]
             else:
                 pro = pro.DSN_T_ISBA
-            pro = pro.sel({'xx': nearest(reference_points[point]['xx'], pro.xx.data),
-                'yy': nearest(reference_points[point]['yy'], pro.yy.data)})
         else:
             listpro = list()
             for date in datesassim:
@@ -159,6 +149,9 @@ def execute(point, member, datebegin=None, datesassim=None):
                 listpro.append(xr.open_mfdataset([f'mb{mb:03d}/{outname}' for mb in member],
                     concat_dim='member', combine='nested', chunks='auto'))
             pro = xr.concat(listpro, dim='time')
+
+    pro = pro.sel({'xx': nearest(reference_points[point]['xx'], pro.xx.data),
+        'yy': nearest(reference_points[point]['yy'], pro.yy.data)})
 
     # The "sel" method is far more efficient in this case since it requires to read only 1 chunk
     # But the "reference_point" may not by within the dataset coordinates...
@@ -209,12 +202,12 @@ if __name__ == '__main__':
     # -------------------------------------------
 
     if members:
-        member = members_map[xpid]
+        member = members_map(xpid)
     else:
         if xpid in ['safran_pappus', 'ANTILOPE_pappus', 'SAFRAN_pappus']:
             member = None
         else:
-            member = [members_map[xpid][0]]
+            member = [members_map(xpid)[0]]
     try:
         subdir = 'mb[member:03d]' if member is not None else ''
         # Try to get the PRO file with vortexIO

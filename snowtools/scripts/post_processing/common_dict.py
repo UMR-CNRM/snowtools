@@ -12,7 +12,7 @@ def members_map(xpid):
 def product_map(xpid):
 
     mapping = dict(
-        RS27_pappus              = 'AS_ANTILOPE',
+        RS27_pappus              = 'ASANTILOPE',
         EnKF36_pappus            = 'EnKF',
         PF32_pappus              = 'PF',
         RS27_sorted_pappus       = 'SRS',
@@ -44,6 +44,14 @@ xpid_map = {
     '2022050112': 'CesarDB',
 }
 
+vmax_map = {
+    '2018012312': 3,
+    '2018031612': 4,
+    '2019051312': 3,
+    '2022022612': 3,
+    '2022050112': 2,
+}
+
 colors_map = dict(
     obs                   = "snow",
     SAFRAN                = "silver",
@@ -54,7 +62,7 @@ colors_map = dict(
     KRIGING_perturb_assim = "indigo",
     ANTILOPE              = "#D65F5F",
     RS                    = "#D65F5F",
-    AS_ANTILOPE           = "#4878D0",
+    ASANTILOPE            = "#4878D0",
     SRS                   = "#4878D0",
     SRS27_LPNp200         = "#6ACC64",  # Green
     SRS_perturb           = "#6ACC64",
@@ -63,7 +71,8 @@ colors_map = dict(
     SRS32                 = "darkgreen",
     SRS34                 = "#D65F5F",
     SRS28                 = "#6ACC64",
-    EnKF                  = "#6ACC64",
+    SRS37                 = "#6ACC64",
+    EnKF                  = "#D65F5F",
     PF                    = "#EE854A",
     RS_assim              = "#4878D0",
     SRS_assim             = "#D65F5F",
