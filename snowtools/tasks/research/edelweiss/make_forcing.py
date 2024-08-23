@@ -256,6 +256,7 @@ class PerturbPrecipitation(_PertubForcing):
         io.put_forcing(filename='FORCING_IN.nc', member=0, **self.common_kw)
 
         self.sh.title('Perturbed FORCING output')
+        # TODO : ensure that 0 is not in members to avoid overwriting the control member !
         io.put_forcing(filename='FORCING_OUT.nc', member=self.conf.members, **self.common_kw)
 
         # Un-comment these lines to save the working directory after the execution
