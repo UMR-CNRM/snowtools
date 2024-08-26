@@ -354,7 +354,6 @@ class Edelweiss_command(object):
                 # --> gérer ça plus proprement
                 optional_keys = ['kind', 'xpid', 'geometry', 'vapp', 'datebegin', 'dateend', 'members']
             for key in optional_keys:
-                print(key, specific_input, )
                 if not hasattr(self.options, f'{key}_{specific_input}'):
                     if key == 'date':
                         # Default PREP validity *date* is *datebegin* of the simulation
