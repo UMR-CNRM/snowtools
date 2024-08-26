@@ -179,7 +179,7 @@ def execute():
             pearson[shortid], crps = compute_scores(simu, obs, shortid, date, plot_HTN, dem=mnt, deterministic=True)
             vmax = vmax_map[date]  # set colobar extend in CRPS/Error plot
             vmin = -vmax
-            xmax = + 2  # xlim in violinplot (Add margin for legend)
+            xmax = vmax + 2  # xlim in violinplot (Add margin for legend)
             cmap = plt.cm.RdBu
             label = 'Error (m)'
         else:
@@ -189,6 +189,7 @@ def execute():
             xmax = vmax + 2  # xlim in violinplot (Add margin for legend)
             cmap = plt.cm.Reds
             label = 'CRPS (m)'
+        crps = crps.rename(label)
 
         # if False:
         # if True:
@@ -199,7 +200,7 @@ def execute():
             # tmp = mnt.interp({'xx': crps.xx, 'yy': crps.yy})
             # plot2D.plot_field(crps.where((tmp.data>2000) & (tmp.data<=2500)), vmin=vmin, vmax=vmax, cmap=cmap,
             #    dem=mnt, shade=False)
-            plot2D.plot_field(crps, vmin=vmin, vmax=vmax, cmap=cmap, dem=mnt, label=label, shade=False)
+            plot2D.plot_field(crps, vmin=vmin, vmax=vmax, cmap=cmap, dem=mnt, shade=False)
             print(f'save crps {xpid}')
             plot2D.save_fig(savename)
 
@@ -298,23 +299,23 @@ def plot_ensemble(simu, obs, xpid, date, dem=None):
 
     fig, ax = plt.subplots(1, 3, figsize=(36 * len(simu.xx) / len(simu.yy), 10), sharey=True)
 
-    mean = simu.mean(dim='member')
+    mean = simu.mean(dim='member').rename('Ensemble mean snow depth (m)')
     vmin = 0
     vmax = vmax_map[date]
     print(f'plot mean {xpid}')
     plot2D.plot_field(mean, ax=ax[0], vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=False,
             isolevels=thresholds)
     #        shade=True,)
-    ax[0].set_title('Ensemble mean snow depth (m)')
+    # ax[0].set_title('Ensemble mean snow depth (m)')
 
-    spread = simu.std(dim='member')
+    spread = simu.std(dim='member').rename('Ensemble spread(m)')
     smin = 0
     smax = 1
     print(f'plot spread {xpid}')
     plot2D.plot_field(spread, ax=ax[1], vmin=smin, vmax=smax, cmap=plt.cm.Purples, dem=dem, shade=False,
             isolevels=thresholds)
     #        shade=True,)
-    ax[1].set_title('Ensemble spread (m)')
+    # ax[1].set_title('Ensemble spread (m)')
 
     error = (mean - obs).rename('Mean snow depth error (m)')
     vmin = -vmax
@@ -322,7 +323,7 @@ def plot_ensemble(simu, obs, xpid, date, dem=None):
     plot2D.plot_field(error, ax=ax[2], vmin=vmin, vmax=vmax, cmap=plt.cm.RdBu, dem=dem, shade=False,
             isolevels=thresholds)
     #        shade=True,)
-    ax[2].set_title('Ensemble mean error (m)')
+    # ax[2].set_title('Ensemble mean error (m)')
 
     plot2D.save_fig(savename, fig)
 
@@ -336,14 +337,14 @@ def plot_deterministe(simu, obs, xpid, date, dem=None, member=None):
 
     fig, ax = plt.subplots(1, 2, figsize=(24 * len(simu.xx) / len(simu.yy), 10), sharey=True)
 
-    field = simu
+    field = simu.rename('Snow depth (m)')
     vmin = 0
     vmax = vmax_map[date]
     print(f'plot HTN {xpid}')
     plot2D.plot_field(field, ax=ax[0], vmin=vmin, vmax=vmax, cmap=plt.cm.Blues, dem=dem, shade=False,
             isolevels=thresholds)
     #        shade=True,)
-    ax[0].set_title('Snow depth (m)')
+    # ax[0].set_title('Snow depth (m)')
 
     error = (field - obs).rename('Snow depth error (m)')
     vmin = -vmax
@@ -351,7 +352,7 @@ def plot_deterministe(simu, obs, xpid, date, dem=None, member=None):
     plot2D.plot_field(error, ax=ax[1], vmin=vmin, vmax=vmax, cmap=plt.cm.RdBu, dem=dem, shade=False,
             isolevels=thresholds)
     #        shade=True,)
-    ax[1].set_title('Error (m)')
+    #ax[1].set_title('Error (m)')
 
     plot2D.save_fig(savename, fig)
 

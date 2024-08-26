@@ -17,12 +17,12 @@ from matplotlib import ticker
 
 matplotlib.rcParams.update({'font.size': 22})
 
-domain_coords = dict(
-    GrandesRousses = dict(latmax=45.240, latmin=44.990, lonmin=6.010, lonmax = 6.490),
-    Pleiades2018   = [(6.385, 45.177), (6.490, 45.150), (6.490, 44.990), (6.3167, 44.990)],
-    Pleiades2019   = [(6.076, 45.195), (6.201, 45.195), (6.202, 45.023), (6.069, 45.024)],
-    Pleiades2022   = [(6.065, 45.020), (6.068, 45.200), (6.324, 45.198), (6.317, 45.017)],
-)
+domain_coords = {
+    'GrandesRousses': dict(latmax=45.240, latmin=44.990, lonmin=6.010, lonmax = 6.490),
+    'Lautaret area (Pleiades 2018)': [(6.385, 45.177), (6.490, 45.150), (6.490, 44.990), (6.3167, 44.990)],
+    # Pleiades2019   = [(6.076, 45.195), (6.201, 45.195), (6.202, 45.023), (6.069, 45.024)],
+    'Huez area (Pleiades 2022)': [(6.065, 45.020), (6.068, 45.200), (6.324, 45.198), (6.317, 45.017)],
+}
 
 
 def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoint=None, alpha=1., dem=None,

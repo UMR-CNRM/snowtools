@@ -93,6 +93,7 @@ def plot_ange(dataplot, var, figname=None, xmin=0, xmax=7, yaxis='Elevation Band
             flierprops   = {"marker": "x"},
             medianprops  = {"linewidth": 3},
             palette      = colors,
+            boxprops     = dict(alpha=.8)
         )
         # Set Ange's hatches for simulations with assimilation
         # In the boxplot
@@ -130,17 +131,6 @@ def plot_ange(dataplot, var, figname=None, xmin=0, xmax=7, yaxis='Elevation Band
 
     plt.tight_layout()
 
-    # Set Ange's color and hatches
-    # TODO : à automatiser
-#    circ0 = mpatches.Patch(facecolor=colors[0], label='Sentinel 2 A obs')
-#    circ1 = mpatches.Patch(facecolor=colors[1], hatch=r'\\\\', label='Safran')
-#    circ2 = mpatches.Patch(facecolor=colors[2], label='Safran Pappus')
-#    circ3 = mpatches.Patch(facecolor=colors[3], hatch=r'\\\\', label='Raw ANTILOPE')
-#    circ4 = mpatches.Patch(facecolor=colors[4], label='Raw ANTILOPE Pappus')
-#    circ5 = mpatches.Patch(facecolor=colors[5], hatch=r'\\\\', label='AS-ANTILOPE')
-#    circ6 = mpatches.Patch(facecolor=colors[6], label='AS-ANTILOPE Pappus')
-#    plt.legend(handles = [circ0, circ1, circ2, circ3, circ4, circ5, circ6])
-
     # Add number of pixels associated to each violin plot
     tmp = dataplot.set_index([yaxis, 'experiment'])
     npixels = tmp.groupby(level=tmp.index.names).count()
@@ -159,7 +149,7 @@ def plot_ange(dataplot, var, figname=None, xmin=0, xmax=7, yaxis='Elevation Band
         figname = f'{var}.pdf'
     elif '.pdf' not in figname:
         figname = f'{figname}.pdf'
-    #plt.legend(loc='upper left', bbox_to_anchor=(-0.3, 1.05))
+    # plt.legend(loc='upper left', bbox_to_anchor=(-0.3, 1.05))
     plt.legend(loc = 'center right')
     plt.savefig(figname, format='pdf')
     plt.close('all')
