@@ -59,7 +59,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             tbmeta = toolbox.input(
                 role           = 'Metadata',
                 format         = 'grib',
-                genv            = self.conf.cycle,
+                genv           = self.conf.cycle,
                 geometry       = self.conf.cpl_geometry, #EURAT01
                 gdomain        = '[geometry:area]',
                 kind           = 'relief',
