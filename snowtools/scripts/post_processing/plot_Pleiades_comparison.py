@@ -58,7 +58,7 @@ def parse_command_line():
     parser.add_argument('-a', '--vapp', type=str, default='edelweiss', choices=['s2m', 'edelweiss'],
                         help="Application that produced the target file")
 
-    parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.1@vernaym",
+    parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.3@vernaym",
                         help="User environment for static resources (format 'uenv:name@user')")
 
     parser.add_argument('-z', '--elevation_bands', nargs='+', type=int, default=np.arange(1800, 3500, 400),

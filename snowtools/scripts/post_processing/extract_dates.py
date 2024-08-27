@@ -53,7 +53,7 @@ def parse_command_line():
     parser.add_argument('-w', '--workdir', type=str, default=None,
                         help="Working directory")
 
-    parser.add_argument('-u', '--uenv', type=str, default='uenv:edelweiss.2024.1@vernaym',
+    parser.add_argument('-u', '--uenv', type=str, default='uenv:edelweiss.3024.1@vernaym',
                         help="Uenv containing the mask file (if any)"
                              "Authorised formats :"
                              " * 'uenv:{uenv_name}@{username}' (recomended)"

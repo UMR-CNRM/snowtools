@@ -31,6 +31,7 @@ geomorpho_map = dict([
 label_map = dict(
     elevation   = 'Elevation (m)',
     uncertainty = 'Uncertainty',
+    ratio       = 'Ratio',
     landforms   = 'Geomorphon',
 )
 

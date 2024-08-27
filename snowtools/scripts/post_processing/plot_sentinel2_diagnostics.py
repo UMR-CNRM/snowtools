@@ -71,7 +71,7 @@ def parse_command_line():
                         help="Absolute path to the mask file (if any)"
                              "WARNING : bad practice")
 
-    parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.2@vernaym",
+    parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.3@vernaym",
                         help="User environment for static resources (format 'uenv:name@user')")
 
     parser.add_argument('-f', '--plot_fields', action='store_true',

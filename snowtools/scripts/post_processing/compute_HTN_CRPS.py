@@ -30,8 +30,8 @@ from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.plots.maps import plot2D
 from snowtools.scores import clusters
 from snowtools.plots.boxplots import violinplot
-
 from snowtools.scripts.post_processing import common_dict
+from snowtools.tools import common_tools as ct
 
 members_map = common_dict.members_map
 product_map = common_dict.product_map
@@ -64,7 +64,7 @@ def parse_command_line():
     parser.add_argument('-a', '--vapp', type=str, default='edelweiss', choices=['s2m', 'edelweiss'],
                         help="Application that produced the target file")
 
-    parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.2@vernaym",
+    parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.3@vernaym",
                         help="User environment for static resources (format 'uenv:name@user')")
 
     parser.add_argument('-c', '--clustering', type=str, default='uncertainty', choices=label_map.keys(),
@@ -122,9 +122,19 @@ def execute():
     if clustering == 'elevation':
         mask = mnt
     elif clustering == 'uncertainty':
-        ds = xr.open_dataset('/home/vernaym/workdir/ASSIMILATION/mask/GrandesRousses/Observation_error_L93.nc')
+        io.get_const(uenv=uenv, kind='geomorph', geometry=geometry, filename='Estimated_error.nc',
+                gvar='ANTILOPE_ERROR_ALP1KM_RS27')
+        ds = xr.open_dataset('Estimated_error.nc')
+        ds = ct.proj_array(ds)
         ds = xrp.preprocess(ds, decode_time=False)
         mask = ds.Uncertainty
+    elif clustering == 'ratio':
+        io.get_const(uenv=uenv, kind='geomorph', geometry=geometry, filename='Estimated_ratio.nc',
+                gvar='ANTILOPE_RATIO_ALP1KM_RS27')
+        ds = xr.open_dataset('Estimated_ratio.nc')
+        ds = ct.proj_array(ds)
+        ds = xrp.preprocess(ds, decode_time=False)
+        mask = ds.Ratio
     elif clustering == 'landforms':
         # Get Domain's DEM in case ZS not in simulation file
         io.get_const(uenv=uenv, kind='geomorph', geometry=geometry, filename='GEOMORPH.nc')
@@ -204,7 +214,7 @@ def execute():
             print(f'save crps {xpid}')
             plot2D.save_fig(savename)
 
-        if clustering in ['elevation', 'uncertainty']:
+        if clustering in ['elevation', 'uncertainty', 'ratio']:
             tmp = clusters.by_slices(crps, mask, thresholds)
         elif clustering == 'landforms':
             tmp = clusters.per_landform_types(crps, mask)
@@ -352,7 +362,7 @@ def plot_deterministe(simu, obs, xpid, date, dem=None, member=None):
     plot2D.plot_field(error, ax=ax[1], vmin=vmin, vmax=vmax, cmap=plt.cm.RdBu, dem=dem, shade=False,
             isolevels=thresholds)
     #        shade=True,)
-    #ax[1].set_title('Error (m)')
+    # ax[1].set_title('Error (m)')
 
     plot2D.save_fig(savename, fig)
 
