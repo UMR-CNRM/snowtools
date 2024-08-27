@@ -13,9 +13,6 @@ from vortex.tools.systems import ExecutionError
 logger = footprints.loggers.getLogger(__name__)
 
 
-
-
-
 def setup(t, **kw):
     return Driver(
         tag='safran_reana',

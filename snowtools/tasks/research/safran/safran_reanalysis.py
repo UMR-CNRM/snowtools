@@ -116,7 +116,7 @@ class Safran(Task, S2MTaskMixIn):
                             tb01_c = toolbox.input(
                                 role           = 'Ebauche',
                                 kind           = 'packedguess',
-                                local          = '{0:d}/p{1:s}.tar'.format(y1, next_season),
+                                local          = '[datebegin::ymd6h]_[dateend::ymd6h]/p{next_season}.tar',
                                 #remote         = '/home/vernaym/s2m/[geometry:area]/{0:s}/p{1:s}.tar'.format(
                                 #    self.conf.guess_block, next_season),
                                 #hostname       = 'hendrix.meteo.fr',
@@ -175,7 +175,7 @@ class Safran(Task, S2MTaskMixIn):
                     tb01 = toolbox.input(
                         role           = 'Ebauche',
                         kind           = 'packedguess',
-                        local          = '{0:d}/p{1:s}.tar'.format(y1, season),
+                        local          = '[datebegin::ymd6h]_[dateend::ymd6h]/p{season}.tar',
                         #remote         = '/home/vernaym/s2m/[geometry:area]/{0:s}/p{1:s}.tar'.format(
                         #    self.conf.guess_block, season),
                         #hostname       = 'hendrix.meteo.fr',
