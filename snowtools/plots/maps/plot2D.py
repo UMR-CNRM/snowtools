@@ -28,8 +28,12 @@ domain_coords = {
 def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoint=None, alpha=1., dem=None,
         shade=False, isolevels=None, slices=None, add_colorbar=True, transform=None):
     """
+    field:: xarray DataArray containing the 2D data to plot.
     :kwargs dem: Digital elevation model (xarray.DataArray)
     slices:: (int) cluster data (and colorbar) into *slices* slices
+
+    If *field* has 'long_name' and 'units' attributes, thos ware used for the colorbar label
+    (format : '{long_name} [{units}]'). In other cases the *field* name is used.
     """
     if ax is None:
         plt.figure(figsize=(12 * len(field.xx) / len(field.yy), 10))

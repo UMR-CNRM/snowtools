@@ -47,8 +47,16 @@ import snowtools.tools.xarray_preprocess as xrp
 import matplotlib.pyplot as plt
 
 label_map = dict(
-    Snowf = 'Snowfall accumulation (kg/m²)',
-    SnowfRainf = 'Total precipitation accumulation (kg/m²)',
+    Snowf      = 'Snowfall accumulation',
+    SnowfRainf = 'Total precipitation accumulation',
+    DEP        = 'Snow depth',
+    DSN_T_ISBA = 'Snow depth',
+)
+units_map = dict(
+    Snowf      = 'kg/m²',
+    SnowfRainf = 'kg/m²',
+    DEP        = 'm',
+    DSN_T_ISBA = 'm',
 )
 
 cmap = dict(
@@ -61,6 +69,7 @@ cmap = dict(
 
 vmax_map = dict(
     # WARNING : values defined for 2017/2018
+    DEP         = 3,  # m
     DSN_T_ISBA  = 3,  # m
     # DSN_T_ISBA  = 6,  # m
     Snowf       = 1200,  # kg/m² [mm]
@@ -71,6 +80,7 @@ vmax_map = dict(
 
 vmin_map = dict(
     # WARNING : values defined for 2017/2018
+    DEP         = 0,  # m
     DSN_T_ISBA  = 0,  # m
     Snowf       = 0,  # kg/m² [mm]
     Rainf       = 400,  # kg/m² [mm]
@@ -126,7 +136,7 @@ def parse_command_line():
     parser.add_argument('-a', '--vapp', type=str, default='edelweiss', choices=['s2m', 'edelweiss', 'Pleiades'],
                         help="Application that produced the target file")
 
-    parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.1@vernaym",
+    parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.3@vernaym",
                         help="User environment for static resources (format 'uenv:name@user')")
 
     parser.add_argument('-n', '--uenv_dem', type=str, default="uenv:dem.1@vernaym",
@@ -182,7 +192,10 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
             var = var.replace('+', '')
         else:
             tmp = ds[var]
-        tmp.name = label_map[var]
+
+        # Set array attributes for colorbar label
+        tmp.attrs['long_name'] = label_map[var]
+        tmp.attrs['units']     = units_map[var]
 
         if date is not None:
             date = Date(date)
