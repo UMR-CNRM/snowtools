@@ -59,7 +59,7 @@ units_map = dict(
     DSN_T_ISBA = 'm',
 )
 
-cmap = dict(
+cmap_map = dict(
     DSN_T_ISBA = plt.cm.Blues,
     DEP        = plt.cm.Blues,
     SnowfRainf = plt.cm.YlGnBu,
@@ -204,24 +204,28 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
             savename = f'{var}_{date.ymdh}_{xpid}.pdf'
         else:
             tmp = tmp.sum('time')
-            if ensemble == 'mean':
-                tmp = tmp.mean('member')
-                savename = f'{var}_mean_cumul_{xpid}_{datebegin}_{dateend}.pdf'
-            elif ensemble == 'spread':
-                tmp = tmp.std('member')
-                tmp = tmp.rename('Spread (mm)')
-                savename = f'{var}_spread_cumul_{xpid}_{datebegin}_{dateend}.pdf'
-                mycmap = plt.cm.Purples
-                vmin = 0
-                # vmax = tmp.max().data
-                vmax = 350
-            elif ensemble == 'all':
-                savename = f'{var}_ensemble_{xpid}_{datebegin}_{dateend}.pdf'
+
+        if ensemble == 'mean':
+            tmp = tmp.mean('member')
+            savename = f'{var}_mean_cumul_{xpid}_{datebegin}_{dateend}.pdf'
+        elif ensemble == 'spread':
+            tmp = tmp.std('member')
+            tmp = tmp.rename('Spread (mm)')
+            savename = f'{var}_spread_cumul_{xpid}_{datebegin}_{dateend}.pdf'
+            mycmap = plt.cm.Purples
+            vmin = 0
+            # vmax = tmp.max().data
+            if var == 'DSN_T_ISBA':
+                vmax = 1
             else:
-                if member is None:
-                    savename = f'{var}_cumul_{xpid}_{datebegin}_{dateend}.pdf'
-                else:
-                    savename = f'{var}_cumul_{xpid}_mb{member:03d}_{datebegin}_{dateend}.pdf'
+                vmax = 350
+        elif ensemble == 'all':
+            savename = f'{var}_ensemble_{xpid}_{datebegin}_{dateend}.pdf'
+        else:
+            if member is None:
+                savename = f'{var}_cumul_{xpid}_{datebegin}_{dateend}.pdf'
+            else:
+                savename = f'{var}_cumul_{xpid}_mb{member:03d}_{datebegin}_{dateend}.pdf'
 
         if vmax is None:
             vmax = vmax_map[var] if var in vmax_map.keys() else tmp.max()
@@ -242,15 +246,15 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
         dem = dem.squeeze()
 
         if ensemble == 'all':
-            fig = plot2D.plot_ensemble(tmp, vmin=vmin, vmax=vmax, cmap=cmap[var])
+            fig = plot2D.plot_ensemble(tmp, vmin=vmin, vmax=vmax, cmap=cmap_map[var])
             plot2D.save_fig(savename, fig, tight_layout=False)  # subplots_adjust does not work with tight_layout
 
         else:
             if mycmap is not None:
                 plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, cmap=mycmap, addpoint=addpoint, dem=dem.ZS)
             else:
-                if var in cmap.keys():
-                    plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, cmap=cmap[var], addpoint=addpoint, dem=dem.ZS)
+                if var in cmap_map.keys():
+                    plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, cmap=cmap_map[var], addpoint=addpoint, dem=dem.ZS)
                 else:
                     # plot2D.plot_field(tmp, ax=ax, vmin=vmin, vmax=vmax, addpoint=addpoint)
                     plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, addpoint=addpoint, dem=dem.ZS, shade=False)
