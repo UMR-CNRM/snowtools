@@ -21,6 +21,7 @@ block_map = dict(
     PRO                   = 'pro',
     DIAG                  = 'diag',
     SnowObservations      = '',
+    Precipitation         = '',
 )
 
 default = dict(
@@ -43,7 +44,7 @@ def function_map():
 def parse_args():
     parser = argparse.ArgumentParser(description='Manage Vortex resources')
 
-    parser.add_argument("--action", required=True, choices=['get', 'put', 'clean'],
+    parser.add_argument("action", choices=['get', 'put', 'clean'],
                         help="What to do with the specified resource(s)")
 
     parser.add_argument("-b", "--datebegin", dest="datebegin", default=None, type=str,
@@ -55,7 +56,7 @@ def parse_args():
     parser.add_argument("-d", "--date", dest="date", default=None, type=str,
                         help="Date of the simulation.")
 
-    parser.add_argument("-x", "--xpid", dest="experiment", nargs="+", required=True, type=str,
+    parser.add_argument("-x", "--xpid", dest="experiment", required=True, type=str,
                         help="XPID of the simulation (format 'xpid@user').")
 
     parser.add_argument("-g", "--geometry", dest="geometry", required=True, type=str,
@@ -64,12 +65,11 @@ def parse_args():
     parser.add_argument("-k", "--kind", dest="kind", required=True, type=str, choices=block_map.keys(),
                         help="Kind of resource (values such as 'FORCING', 'PRO', 'DIAG',...) are accepted")
 
-    parser.add_argument("--filename", dest="filename", default=None, type=str,
+    parser.add_argument("-f", "--filename", dest="filename", default=None, type=str,
                         help="Local name of the file to get / put.")
 
     parser.add_argument("--vapp", dest="vapp", default='s2m', type=str,
-                        choices=['s2m', 'edelweiss', 'safran', 'Pleiades', 'Sentinel2'],
-                        help="vapp of the simulation")
+                        help="vapp of the simulation (ex: s2m, edelweiss, antilope, arome,...)")
 
     parser.add_argument("--block", dest="block", default=None, type=str,
                         help="Explore a specific block (for example 'meteo', 'prep', 'pro',...)")
@@ -132,8 +132,8 @@ def footprint_kitchen(**kw):
         kw['filename'] = f'{kw["kind"]}.nc'
 
     if 'member' in kw.keys() and kw['member'] is not None:
-        first_mb, last_mb = kw['member'].split(':')
-        kw['member'] = [mb for mb in range(int(first_mb), int(last_mb) + 1)]
+        #first_mb, last_mb = kw['member'].split(':')
+        #kw['member'] = [mb for mb in range(int(first_mb), int(last_mb) + 1)]
         kw['filename'] = f'mb[member]/{kw["filename"]}'
 
     if 'block' not in kw.keys():
@@ -157,4 +157,4 @@ if __name__ == '__main__':
     args = parse_args()
     user_footprints = vars(args)
     action = user_footprints.pop('action')
-    function_map()[action](user_footprints)
+    function_map()[action](**user_footprints)
