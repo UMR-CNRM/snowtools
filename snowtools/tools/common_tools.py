@@ -51,7 +51,8 @@ def elevation_string(band):
 
 def proj_array(ds, proj_in='EPSG:4326', proj_out='EPSG:2154'):
     ds.rio.write_crs(proj_in, inplace=True)
-    ds  = ds.rename({'lon': 'x', 'lat': 'y'})
+    if 'lat' in ds.keys():
+        ds  = ds.rename({'lon': 'x', 'lat': 'y'})
 #    if 'time' in ds.keys():
 #        ds = ds.transpose('time', 'y', 'x')
     out = ds.rio.reproject(proj_out)
