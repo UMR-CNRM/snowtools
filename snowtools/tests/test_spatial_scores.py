@@ -30,6 +30,7 @@ class TestSpatialFile(unittest.TestCase):
                                      os.path.join(TESTBASE_DIR, 'PRO', 'PRO_2019051300_2019051400.nc')],
                                      ['bli', 'bla'], os.path.join(TESTBASE_DIR, 'P250_GR_13_05_19_attr.nc'),
                                      'DSN_T_ISBA', [1, 3, 5], [2.], [1.])
+        cls.myscores.apply_mask(maskfile=os.path.join(TESTBASE_DIR, "masque_glacier2017_foret_ville_riviere.nc"))
 
     def test_create_file(self):
         sf = SpatialScoreFile(['bli', 'bla'], [1, 3, 5], [2.], [1.])
@@ -37,7 +38,6 @@ class TestSpatialFile(unittest.TestCase):
 
     @unittest.skipIf(not TIME_CRPS, "No crps timing required")
     def test_time_crps_methods(self):
-        self.myscores.apply_mask(maskfile=os.path.join(TESTBASE_DIR, "masque_glacier2017_foret_ville_riviere.nc"))
         fc = self.myscores.fc_data['bli'].data[~np.isnan(self.myscores.fc_data['bli'].data)]  # *100
         obs = self.myscores.obs_data.data[~np.isnan(self.myscores.obs_data.data)]  # *100
         meanobs = np.nanmean(obs)
@@ -54,8 +54,6 @@ class TestSpatialFile(unittest.TestCase):
                             globals=vars, number=30))
 
     def test_crps_functions(self):
-
-        self.myscores.apply_mask(maskfile=os.path.join(TESTBASE_DIR, "masque_glacier2017_foret_ville_riviere.nc"))
         fc = self.myscores.fc_data['bli'].data[~np.isnan(self.myscores.fc_data['bli'].data)] # *100
         obs = self.myscores.obs_data.data[~np.isnan(self.myscores.obs_data.data)] # *100
         meanobs = np.nanmean(obs)
@@ -81,14 +79,11 @@ class TestSpatialFile(unittest.TestCase):
         self.assertAlmostEqual(sps3, 0.375)
 
     def test_calc_spatial_scores(self):
-        self.myscores.apply_mask(maskfile=os.path.join(TESTBASE_DIR, "masque_glacier2017_foret_ville_riviere.nc"))
         self.myscores.process()
         self.assertAlmostEqual(self.myscores.score_ds['SPS'].data[0], 0.05011011529)
         # print(self.myscores.score_ds)
 
     def test_local_moran(self):
-        self.myscores.apply_mask(maskfile=os.path.join(TESTBASE_DIR,
-                                                       "masque_glacier2017_foret_ville_riviere.nc"))
         local_moran = LocalMoranData(self.myscores.fc_data['bli'].data)
         self.assertAlmostEqual(local_moran.moran_I, 0.876794444)
         # TODO: implement tests for colored moran scatter plot and quadrant map
