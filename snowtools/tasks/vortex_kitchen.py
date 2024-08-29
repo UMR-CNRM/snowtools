@@ -638,7 +638,7 @@ class Vortex_conf_file(object):
             # PGD xpid can be either prescribed in the conf file or taken by default to a reference spinup
             spinup_xpid = 'spinup@' + os.getlogin(),
             obsxpid = 'obs@' + os.getlogin(),
-            openloop = False
+            openloop = self.options.croco == 'openloop'
         )
 
         # ########### READ THE USER-PROVIDED conf file ##########################
