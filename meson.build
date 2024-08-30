@@ -1,5 +1,8 @@
 project('snowtools', 'c',
    version: '2.0.1',
+   default_options: [
+    'c_std=c99'
+  ],
   )
 
 py = import('python').find_installation(pure: false)
