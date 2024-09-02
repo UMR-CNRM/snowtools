@@ -48,7 +48,7 @@ py.extension_module(
 )
 
 run_command(ls)
-run_command(ls snowtools/)
-run_command(ls snowtools/scores)
+run_command(ls ['snowtools/'])
+run_command(ls ['snowtools/scores'])
 
 subdir('snowtools')
