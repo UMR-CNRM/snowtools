@@ -21,7 +21,7 @@ On a CEN machine (including your laptop):
 
    export VORTEX=/rd/cenfic3/cenmod/home/lafaysse/common/vortex/vortex-cen
    export PYTHONPATH=$PYTHONPATH:$VORTEX/site:$VORTEX/src:$VORTEX/project
-   export MTOOLDIR=$HOME
+   export MTOOLDIR=$WORKDIR
 
 On belenos:
 
@@ -37,9 +37,7 @@ On sxcen:
 
    export VORTEX=/home/lafaysse/common/vortex/vortex-cen
    export PYTHONPATH=$PYTHONPATH:$VORTEX/site:$VORTEX/src:$VORTEX/project
-   export MTOOLDIR=/cnrm/cen/users/NO_SAVE/<login>
-
-Note: Make sure that the folder ``/cnrm/cen/users/NO_SAVE/<login>`` exist for sxcen.
+   export MTOOLDIR=$WORKDIR
 
 Then, go the last section of this documentation (:ref:`vortex-file-transfer`).
 
