@@ -14,7 +14,7 @@ import netCDF4
 import configparser
 import numpy as np
 import pyproj
-import cartopy.crs as ccrs
+# import cartopy.crs as ccrs # TODO: reactivate here when test server is working with proj
 
 from snowtools.utils.FileException import VarNameException, UnknownGridTypeException, FileNameException,\
     TimeUnitsException
