@@ -32,7 +32,7 @@ incdir_numpy = run_command(py,
 crps_source = custom_target('crpsmodule.c',
   input : ['./snowtools/scores/crps.f90'],
   output : 'crpsmodule.c',
-  command : [py, '-m', 'numpy.f2py', '@INPUT@', '-m', 'crps', '--lower', '--build-dir', '.'],
+  command : [py, '-m', 'numpy.f2py', '@INPUT@', '-m', 'crps', '--lower'],
 )
 
 inc_np = include_directories(incdir_numpy, incdir_f2py)
@@ -46,5 +46,9 @@ py.extension_module(
     subdir: 'snowtools/scores',
     install: true,
 )
+
+run_command(ls)
+run_command(ls snowtools/)
+run_command(ls snowtools/scores)
 
 subdir('snowtools')
