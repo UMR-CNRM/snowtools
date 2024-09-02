@@ -28,11 +28,11 @@ TIME_CRPS = False
 class TestInstall(unittest.TestCase):
 
     def test_paths(self):
-        str = snowtools.__path__
-        # str = os.system('ls $VIRTUAL_ENV/lib/python3.8/site-packages/snowtools/')
+        # str = snowtools.__path__
+        str = os.system('ls $PWD/snowtools/')
         raise Warning(str)
-        # str = os.system('ls $VIRTUAL_ENV/lib/python3.8/site-packages/snowtools/scores/')
-        # raise Warning(str)
+        str = os.system('ls $PWD/snowtools/scores/')
+        raise Warning(str)
 
 # class TestSpatialFile(unittest.TestCase):
 #     @classmethod
