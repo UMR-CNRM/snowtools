@@ -14,7 +14,7 @@ import netCDF4
 import configparser
 import numpy as np
 import pyproj
-import cartopy.crs as ccrs
+# import cartopy.crs as ccrs # TODO: reactivate here when test server is working with proj
 
 from snowtools.utils.FileException import VarNameException, UnknownGridTypeException, FileNameException,\
     TimeUnitsException
@@ -466,9 +466,12 @@ class StandardCROCUS(_StandardNC):
 
 
 class LCCProjectionType(object):
+
     """
     Class for Lambert Conformal Conic Projection attributes.
     """
+
+
     def __init__(self, x, y, grid_mapping_name="lambert_conformal_conic", ellipsoid="GRS80",
                  semi_major_axis=None, semi_minor_axis=None, longitude_of_central_meridian=3.,
                  latitude_of_projection_origin=46.5, standard_parallel=(44., 49),
@@ -547,6 +550,8 @@ class LCCProjectionType(object):
         :return: projection information in cartopy crs format.
         :rtype: cartopy.crs
         """
+        import cartopy.crs as ccrs  # Todo: remove from here when import is working on test server
+
         return ccrs.LambertConformal(central_longitude=self.longitude_of_central_meridian,
                                      central_latitude=self.latitude_of_projection_origin,
                                      false_easting=self.false_easting,
