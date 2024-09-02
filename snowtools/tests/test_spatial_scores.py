@@ -29,11 +29,11 @@ PROJ_avail = False
 class TestInstall(unittest.TestCase):
 
     def test_paths(self):
-        str = snowtools.__path__
-        # str = os.system('ls $VIRTUAL_ENV/lib/python3.8/site-packages/snowtools/')
+        # str = snowtools.__path__
+        str = os.system('ls $PWD/snowtools/')
         raise Warning(str)
-        # str = os.system('ls $VIRTUAL_ENV/lib/python3.8/site-packages/snowtools/scores/')
-        # raise Warning(str)
+        str = os.system('ls $PWD/snowtools/scores/')
+        raise Warning(str)
 
     def test_create_file(self):
         sf = SpatialScoreFile(['bli', 'bla'], [1, 3, 5], [2.], [1.])
