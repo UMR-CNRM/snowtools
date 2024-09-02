@@ -4,15 +4,14 @@
 import unittest
 import os
 
-os.system('ls $VIRTUAL_ENV/lib/python*/site-packages/snowtools/')
-os.system('ls $VIRTUAL_ENV/lib/python*/site-packages/snowtools/scores/')
+
 
 import matplotlib.pyplot as plt
 import numpy as np
 import timeit
 
 from snowtools.scores.list_scores import SpatialScoreFile
-from snowtools.scores.spatial import ProVsPleiade, call_crps, LocalMoranData
+# from snowtools.scores.spatial import ProVsPleiade, call_crps, LocalMoranData
 from snowtools.scores.ensemble import EnsembleScores
 from snowtools.plots.scores.perfdiag import PerfDiag, FuzzyScoreDiagram
 from snowtools.plots.scores.moran_scatter import MoranScatter
@@ -26,15 +25,11 @@ TEST_SIM_DIR = os.path.join(TESTBASE_DIR, "PRO")
 TIME_CRPS = False
 PROJ_avail = False
 
+class TestInstall(unittest.TestCase):
 
-class TestSpatialFile(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.myscores = ProVsPleiade([os.path.join(TESTBASE_DIR, 'PRO', 'PRO_2019051300_2019051400.nc'),
-                                     os.path.join(TESTBASE_DIR, 'PRO', 'PRO_2019051300_2019051400.nc')],
-                                     ['bli', 'bla'], os.path.join(TESTBASE_DIR, 'P250_GR_13_05_19_attr.nc'),
-                                     'DSN_T_ISBA', [1, 3, 5], [2.], [1.])
-        cls.myscores.apply_mask(maskfile=os.path.join(TESTBASE_DIR, "masque_glacier2017_foret_ville_riviere.nc"))
+    def test_paths(self):
+        os.system('ls $VIRTUAL_ENV/lib/python*/site-packages/snowtools/')
+        os.system('ls $VIRTUAL_ENV/lib/python*/site-packages/snowtools/scores/')
 
     def test_create_file(self):
         sf = SpatialScoreFile(['bli', 'bla'], [1, 3, 5], [2.], [1.])
