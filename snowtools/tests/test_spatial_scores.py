@@ -18,6 +18,7 @@ from snowtools.plots.scores.moran_scatter import MoranScatter
 from snowtools.utils.S2M_standard_file import LCCProjectionType
 from snowtools.tests.tempfolder import TestWithTempFolderWithLog
 from snowtools.DATA import TESTBASE_DIR
+import snowtools
 
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -28,10 +29,11 @@ PROJ_avail = False
 class TestInstall(unittest.TestCase):
 
     def test_paths(self):
-        str = os.system('ls $VIRTUAL_ENV/lib/python3.8/site-packages/snowtools/')
+        str = snowtools.__path__
+        # str = os.system('ls $VIRTUAL_ENV/lib/python3.8/site-packages/snowtools/')
         raise Warning(str)
-        str = os.system('ls $VIRTUAL_ENV/lib/python3.8/site-packages/snowtools/scores/')
-        raise Warning(str)
+        # str = os.system('ls $VIRTUAL_ENV/lib/python3.8/site-packages/snowtools/scores/')
+        # raise Warning(str)
 
     def test_create_file(self):
         sf = SpatialScoreFile(['bli', 'bla'], [1, 3, 5], [2.], [1.])
