@@ -28,9 +28,9 @@ PROJ_avail = False
 class TestInstall(unittest.TestCase):
 
     def test_paths(self):
-        str = os.system('ls $VIRTUAL_ENV/lib/python*/site-packages/snowtools/')
+        str = os.system('ls $VIRTUAL_ENV/lib/python3.8/site-packages/snowtools/')
         raise Warning(str)
-        str = os.system('ls $VIRTUAL_ENV/lib/python*/site-packages/snowtools/scores/')
+        str = os.system('ls $VIRTUAL_ENV/lib/python3.8/site-packages/snowtools/scores/')
         raise Warning(str)
 
     def test_create_file(self):
