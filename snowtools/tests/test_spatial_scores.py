@@ -4,6 +4,9 @@
 import unittest
 import os
 
+os.system('ls $VIRTUAL_ENV/lib/python*/site-packages/snowtools/')
+os.system('ls $VIRTUAL_ENV/lib/python*/site-packages/snowtools/scores/')
+
 import matplotlib.pyplot as plt
 import numpy as np
 import timeit
