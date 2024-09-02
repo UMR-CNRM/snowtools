@@ -95,6 +95,13 @@ It is also recommended to create useful aliases for s2m command and proreader gr
 Optional installations
 ----------------------
 
+
+Vortex package
+^^^^^^^^^^^^^^
+
+Only Météo-France users who need to either extract operational S2M files either to run their own experiments on the HPC system need to install the vortex package by following this link :ref:`install-vortex`
+
+
 Spatial interploator for SAFRAN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
