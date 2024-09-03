@@ -29,11 +29,13 @@ class TestInstall(unittest.TestCase):
 
     def test_paths(self):
         # str = snowtools.__path__
-        str = os.system('ls $PWD')
-        raise Warning(str)
+        # str = os.system('ls $PWD')
+        # raise Warning(str)
         str = os.system('ls $PWD/snowtools/')
+        print(str)
         raise Warning(str)
         str = os.system('ls $PWD/snowtools/scores/')
+        print(str)
         raise Warning(str)
 
 # class TestSpatialFile(unittest.TestCase):
