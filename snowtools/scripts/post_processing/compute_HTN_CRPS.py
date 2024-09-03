@@ -146,6 +146,12 @@ def execute():
     dataplot = pd.DataFrame()
     # c) Simulations
     pearson = dict()
+
+    safran_elevations = [z for z in reversed(range(1800, 2700, 300))]
+    fig0, ax0 = plt.subplots(len(safran_elevations), 1, figsize=(14, 14))
+    for i, elevation in enumerate(safran_elevations):
+        tmp = obs.where((mnt > elevation - 150) & (mnt < elevation + 150), drop=True)
+        tmp.mean('yy').plot(ax=ax0[i], color='k', label='Observation', linewidth=3)
     for xpid in xpids:
         # TODO : gérer ça plus proprement
         if '@' not in xpid:
@@ -159,8 +165,11 @@ def execute():
         else:
             if shortid in ['safran', 'ANTILOPE', 'safran_pappus', 'ANTILOPE_pappus', 'SAFRAN', 'SAFRAN_pappus']:
                 member = None
+            elif shortid in ['EnKF36_pappus', 'PF32_pappus']:
+                member = [1]
             else:
                 member = [members_map(shortid)[0]]
+        name = product_map(shortid)
 
         # VERRUE pour gérer le décallage d'un jour en attendant de combler les données
         if (shortid.split('_')[0] in ['SAFRAN', 'ANTILOPE', 'KRIGING']) and datebegin == '2021080207':
@@ -172,6 +181,10 @@ def execute():
         io.get_pro(**kw)
 
         simu = read_simu(xpid, member, date)
+
+        for i, elevation in enumerate(safran_elevations):
+            tmp = simu.where((~np.isnan(obs)) & (mnt > elevation - 150) & (mnt < elevation + 150), drop=True)
+            tmp.mean('yy').squeeze().plot(ax=ax0[i], color=colors_map[name], label=name, linewidth=3)
 
         if clustering in 'elevation':
             if member is not None and len(member) > 1:
@@ -218,7 +231,6 @@ def execute():
             tmp = clusters.by_slices(crps, mask, thresholds)
         elif clustering == 'landforms':
             tmp = clusters.per_landform_types(crps, mask)
-        name = product_map(shortid)
         if member is None or len(member) == 1:  # Deterministic case
             name = name.split('_')[0]
         df = tmp.to_dataframe(name=name).dropna().reset_index().drop(
@@ -226,6 +238,16 @@ def execute():
         dataplot = pd.concat([dataplot, df])
 
         clean(shortid, member)
+
+    for i, elevation in enumerate(safran_elevations):
+        ax0[i].set_title(f'{elevation-150}m - {elevation+150}m')
+        ax0[i].set_ylabel('')
+        if elevation != safran_elevations[-1]:
+            ax0[i].set_xlabel('')
+            ax0[i].set_xticklabels([])
+    fig0.supylabel("Mean snow depth (m)")
+    ax0[0].legend(loc='upper center', bbox_to_anchor=(0.5, 1.5), ncol=len(xpids) + 1)
+    fig0.savefig('Gradient_HTN_WE_' + '_'.join(xpids) + '.pdf')
 
     dataplot = dataplot.rename(columns={'slices': label_map[clustering], clustering: label_map[clustering]})
     dataplot = dataplot.melt(label_map[clustering], var_name='experiment', value_name=label)

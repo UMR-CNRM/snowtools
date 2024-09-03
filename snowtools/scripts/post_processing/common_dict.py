@@ -70,6 +70,7 @@ colors_map = dict(
     EnKF_assim            = "#6a3d9a",
     PF                    = "#cab2d6",
     PF_assim              = "#cab2d6",
+    SRS37                 = "red",
 )
 
 
