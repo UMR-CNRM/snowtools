@@ -16,9 +16,12 @@ from scipy.stats import pearsonr
 from abc import ABC, abstractmethod
 from snowtools.scores.list_scores import SpatialScoreFile
 from snowtools.utils.prosimu import prosimu_xr
-from snowtools.scores import crps
 from snowtools.plots.scores.moran_scatter import MoranScatter, MoranScatterColored
 from snowtools.plots.maps.cartopy import MoranMap
+try:
+    from snowtools.scores import crps
+except ImportError:
+    raise ImportError("failed to import compiled module crps. \nMake sure the library was compiled.")
 
 
 def rolling_window(array, window_shape):
