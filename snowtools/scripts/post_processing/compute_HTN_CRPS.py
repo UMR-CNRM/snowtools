@@ -147,11 +147,16 @@ def execute():
     # c) Simulations
     pearson = dict()
 
-    safran_elevations = [z for z in reversed(range(1800, 2700, 300))]
-    fig0, ax0 = plt.subplots(len(safran_elevations), 1, figsize=(14, 14))
-    for i, elevation in enumerate(safran_elevations):
-        tmp = obs.where((mnt > elevation - 150) & (mnt < elevation + 150), drop=True)
-        tmp.mean('yy').plot(ax=ax0[i], color='k', label='Observation', linewidth=3)
+    if clustering in 'elevation':
+        safran_elevations = [z for z in reversed(range(1800, 3000, 300))]
+        fig0, ax0 = plt.subplots(len(safran_elevations), 1, figsize=(14, 14))
+        im = list()  # List of products for common legend
+        #im.append(plt.plot([], [], color='k', label='Observation', linewidth=3))
+        for i, elevation in enumerate(safran_elevations):
+            tmp = obs.where((mnt > elevation - 150) & (mnt <= elevation + 150), drop=True)
+            tmp.mean('yy').plot(ax=ax0[i], color='k', linewidth=3)
+            # Add empty plot for common legend
+
     for xpid in xpids:
         # TODO : gérer ça plus proprement
         if '@' not in xpid:
@@ -182,11 +187,19 @@ def execute():
 
         simu = read_simu(xpid, member, date)
 
-        for i, elevation in enumerate(safran_elevations):
-            tmp = simu.where((~np.isnan(obs)) & (mnt > elevation - 150) & (mnt < elevation + 150), drop=True)
-            tmp.mean('yy').squeeze().plot(ax=ax0[i], color=colors_map[name], label=name, linewidth=3)
-
         if clustering in 'elevation':
+            # Add empty plot for common legend
+            #im.append(plt.plot([], [], color=colors_map[name], label=name, linewidth=3))
+            for i, elevation in enumerate(safran_elevations):
+                tmpobs = obs.where((obs.notnull()) & (mnt > elevation - 150) & (mnt <= elevation + 150))
+                tmp = simu.where(tmpobs.notnull()).squeeze()
+                #tmp = tmp.where((mnt > elevation - 150) & (mnt <= elevation + 150))
+                #tmp = tmp.where(~np.isnan(obs))
+                # Compute Pearson correlation for this elevation band
+                p = xr.corr(tmp, tmpobs, dim=['xx', 'yy'])
+                label = f'Pearson={np.round(p.data, 2):.2f}'
+                tmp.mean('yy').plot(ax=ax0[i], color=colors_map[name], label=label, linewidth=3)
+
             if member is not None and len(member) > 1:
                 plot_ensemble(simu, obs, shortid, date, dem=mnt)
             else:
@@ -239,18 +252,20 @@ def execute():
 
         clean(shortid, member)
 
-    for i, elevation in enumerate(safran_elevations):
-        ax0[i].set_title(f'{elevation-150}m - {elevation+150}m')
-        ax0[i].set_ylabel('')
-        if elevation != safran_elevations[-1]:
-            ax0[i].set_xlabel('')
-            ax0[i].set_xticklabels([])
-        # ax0[i].axhline(0, color='k')
-    fig0.supylabel("Mean snow depth (m)")
-    # ax0[0].legend(loc='upper center', bbox_to_anchor=(0.5, 1.5), ncol=len(xpids) + 1)
-    ax0[0].legend(loc='upper center', bbox_to_anchor=(0.5, 1.5), ncol=3)
-    fig0.savefig(f'Gradient_HTN_WE_{date}_' + '_'.join(xpids) + '.pdf')
-    plt.close('all')
+    if clustering in 'elevation':
+        for i, elevation in enumerate(safran_elevations):
+            ax0[i].legend(loc='upper right', ncol=3, fontsize=10)
+            ax0[i].set_title(f'{elevation-150}m - {elevation+150}m')
+            ax0[i].set_ylabel('')
+            if elevation != safran_elevations[-1]:
+                ax0[i].set_xlabel('')
+                ax0[i].set_xticklabels([])
+        fig0.supylabel("Mean snow depth (m)")
+        # ax0[0].legend(loc='upper center', bbox_to_anchor=(0.5, 1.5), ncol=len(xpids) + 1)
+        #fig0.legend(im, loc='upper center', bbox_to_anchor=(0.5, 1.1), ncol=3)
+        plt.tight_layout()
+        fig0.savefig(f'Gradient_HTN_WE_{date}_' + '_'.join(xpids) + '.pdf')
+        plt.close('all')
 
     dataplot = dataplot.rename(columns={'slices': label_map[clustering], clustering: label_map[clustering]})
     dataplot = dataplot.melt(label_map[clustering], var_name='experiment', value_name=label)
