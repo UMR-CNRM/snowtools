@@ -33,6 +33,17 @@ default = dict(
     now       = True,
 )
 
+namespace_map = dict(
+    hendrix = dict(
+        namespace = 'vortex.archive.fr',
+        storage   = 'hendrix.meteo.fr',
+    ),
+    soprano = dict(
+        namespace = 'vortex.archive.fr',
+        storage   = 'sotrtm35-sidev.meteo.fr'
+    ),
+)
+
 
 def function_map():
     """
@@ -74,8 +85,11 @@ def parse_args():
     parser.add_argument("--block", dest="block", default=None, type=str,
                         help="Explore a specific block (for example 'meteo', 'prep', 'pro',...)")
 
-    parser.add_argument("-n", "--namespace", dest="namespace", default='vortex.multi.fr', type=str,
-                        help="Provider namespace")
+    parser.add_argument("-s", "--server", type=str, default=None,
+                        choices=['hendrix', 'soprano'],
+                        help="Provider namespace. Use this option to force the target file(s) to be taken"
+                        "from a specific server. Use this option to refill a resource that has been modified remotely"
+                        "but is already on the local cache")
 
     parser.add_argument("-m", "--member", dest="member", default=None, type=str,
                         help="Simulation members (format first:last)")
@@ -132,8 +146,8 @@ def footprint_kitchen(**kw):
         kw['filename'] = f'{kw["kind"]}.nc'
 
     if 'member' in kw.keys() and kw['member'] is not None:
-        #first_mb, last_mb = kw['member'].split(':')
-        #kw['member'] = [mb for mb in range(int(first_mb), int(last_mb) + 1)]
+        # first_mb, last_mb = kw['member'].split(':')
+        # kw['member'] = [mb for mb in range(int(first_mb), int(last_mb) + 1)]
         kw['filename'] = f'mb[member]/{kw["filename"]}'
 
     if 'block' not in kw.keys():
@@ -149,6 +163,13 @@ def footprint_kitchen(**kw):
 
     if 'date' not in kw.keys() or kw['date'] is None:
         kw['date'] = kw['dateend']
+
+    if "server" in kw.keys():
+        if kw["server"] is not None:
+            kw["namespace"] = namespace_map[kw["server"]]["namespace"]
+            kw["storage"] = namespace_map[kw["server"]]["storage"]
+        else:
+            kw.pop("server")
 
     return kw
 
