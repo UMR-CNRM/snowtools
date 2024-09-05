@@ -59,11 +59,20 @@ def compute_phase_from_iso_wetbt1(subdir=None):
     """
     Compute Rainf and Snowf variables from the iso-wetbt (or iso-tpw before 7/12/2019) elevation.
     """
-    precipitation = xr.open_dataarray(os.path.join(subdir or '', 'PRECIPITATION.nc'))  # Hourly precipitation
-    precipitation = xrp.preprocess(precipitation, decode_time=False)
+    try:
+        precipitation = xr.open_dataarray(os.path.join(subdir or '', 'PRECIPITATION.nc'))  # Hourly precipitation
+        precipitation = xrp.preprocess(precipitation, decode_time=False)
+    except ValueError:
+        precipitation = xr.open_dataset(os.path.join(subdir or '', 'PRECIPITATION.nc'))
+        precipitation = xrp.preprocess(precipitation, decode_time=False)
+        precipitation = precipitation.Precipitation
+    # Fill potentially missing dates from the BDAP with 0
     precipitation = precipitation.fillna(0)
+
     # Open  Wet-bulb temperature iso-0/1°C dataset, and rename time as in the 'precipitation' ds
-    isowetbt  = xr.open_dataset('ISO_TPW.nc').drop('time').rename({'valid_time': 'time'})
+    isowetbt  = xr.open_dataset('ISO_TPW.nc')
+    if 'valid_time' in isowetbt.keys():
+        isowetbt = isowetbt.drop('time').rename({'valid_time': 'time'})
     isowetbt = xrp.preprocess(isowetbt, decode_time=False)
     # Fill missing dates with nearest value :
     isowetbt  = isowetbt.reindex({'time': precipitation.time}, method='nearest')
@@ -79,6 +88,9 @@ def compute_phase_from_iso_wetbt1(subdir=None):
     # Interpolation of all data to the target geometry
     iso250m = iso_elevation.interp({'yy': target_relief.yy, 'xx': target_relief.xx})
     precipitation250m = precipitation.interp({'yy': target_relief.yy, 'xx': target_relief.xx})
+
+    # Remove small precipitation to avoid problems in Crocus
+    precipitation250m = precipitation250m.where(precipitation250m > 0.01, 0)
 
     # Creation of the Rainf / Snowf variables
     rain = precipitation250m.where(iso250m > target_relief, 0)

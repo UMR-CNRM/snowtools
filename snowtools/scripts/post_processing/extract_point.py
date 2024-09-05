@@ -204,7 +204,7 @@ if __name__ == '__main__':
     if members:
         member = members_map(xpid)
     else:
-        if xpid in ['safran_pappus', 'ANTILOPE_pappus', 'SAFRAN_pappus']:
+        if xpid in ['safran_pappus', 'ANTILOPE_pappus', 'SAFRAN_pappus', 'AROME_pappus']:
             member = None
         else:
             member = [members_map(xpid)[0]]

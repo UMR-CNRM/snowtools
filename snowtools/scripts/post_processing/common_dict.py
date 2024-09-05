@@ -29,6 +29,9 @@ def product_map(xpid):
         KRIGING                  = 'KRIGING',
         KRIGING_perturb          = 'KRIGING_perturb',
         KRIGING_perturb_assim    = 'KRIGING_perturb_assim',
+        AROME                    = 'AROME',
+        AROME_perturb            = 'AROME_perturb',
+        AROME_perturb_assim      = 'AROME_perturb_assim',
     )
     if xpid in mapping.keys():
         return mapping[xpid]
@@ -71,6 +74,10 @@ colors_map = dict(
     PF                    = "#cab2d6",
     PF_assim              = "#cab2d6",
     SRS37                 = "red",
+    SRS27_LPNp200         = "red",
+    AROME                 = "#6a3d9a",
+    AROME_perturb         = "#6a3d9a",
+    AROME_perturb_assim   = "#6a3d9a",
 )
 
 

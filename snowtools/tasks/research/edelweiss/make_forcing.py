@@ -36,8 +36,14 @@ class Precipitation(_VortexTask):
         self.sh.title('Toolbox input Precipitation 1km')
         kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
         # Update default vapp with specific conf values
-        kw.update(dict(kind='Precipitation', geometry=self.conf.geometry_precipitation,
-            xpid=self.conf.xpid_precipitation, block='hourly', member=self.conf.members,))
+        kw.update(dict(
+            kind     = 'Precipitation',
+            geometry = self.conf.geometry_precipitation,
+            xpid     = self.conf.xpid_precipitation,
+            block    = 'hourly',
+            member   = self.conf.members,
+            vapp     = self.conf.vapp_precipitation,
+        ))
         io.get_meteo(**kw)
 
         # Hourly iso Wet-bulb temperatures 0°C, 1°C [, 1.5°C] --> use get_meteo (not FORCING-ready)
@@ -145,12 +151,23 @@ class Forcing(_VortexTask):
 
         # Update Wind / Wind_DIR variables
         if self.conf.wind is not None:
-            kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
-            # Update default vapp with specific conf value
-            kw.update(dict(vapp=self.conf.vapp_wind, xpid=self.conf.xpid_wind, geometry=self.conf.geometry_wind,
-                datebegin=self.conf.datebegin_wind))
             self.sh.title('Wind input')
-            io.get_wind(**kw)
+            toolbox.input(
+                vapp           = self.conf.vapp_wind,
+                experiment     = self.conf.xpid_wind,
+                geometry       = self.conf.geometry_wind,
+                datebegin      = self.conf.datebegin_wind,
+                dateend        = self.conf.dateend,
+                date           = self.conf.dateend,
+                kind           = 'Wind',
+                block          = 'meteo',
+                filename       = 'WIND.nc',
+                namespace      = 'vortex.multi.fr',
+                namebuild      = 'flat@cen',
+                model          = 'devine',  # TODO : understand why *model* is required
+                source_app     = 'arome',
+                source_conf    = 'devine',
+            )
 
     def algo(self):
         """

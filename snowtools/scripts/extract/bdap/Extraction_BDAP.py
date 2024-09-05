@@ -6,6 +6,7 @@
 import os
 import argparse
 from datetime import datetime, timedelta
+import numpy as np
 import xarray as xr
 
 """
@@ -77,10 +78,12 @@ dl = dict(
 )
 
 model_map = dict(
-    PAAROME = dict(vapp='arome', vconf='3dvarfr'),  # Analyse AROME
-    PAROME  = dict(vapp='arome', vconf='3dvarfr'),  # prevision AROME
-    PAA     = dict(vapp='arpege', vconf='4dvarfr'),  # Analyse ARPEGE
-    PA      = dict(vapp='arpege', vconf='4dvarfr'),  # Analyse ARPEGE
+    PAAROME      = dict(vapp='arome', vconf='3dvarfr'),  # Analyse AROME
+    PAROME       = dict(vapp='arome', vconf='3dvarfr'),  # prevision AROME
+    PAA          = dict(vapp='arpege', vconf='4dvarfr'),  # Analyse ARPEGE
+    PA           = dict(vapp='arpege', vconf='4dvarfr'),  # Analyse ARPEGE
+    ANTILOPEH    = dict(vapp='antilope', vconf=None),
+    ANTILOPEJP1H = dict(vapp='antilope', vconf=None),
 )
 
 default_levels = dict(
@@ -104,30 +107,30 @@ def parse_command_line():
 
     parser.add_argument('-e', '--dateend', help = 'Final date of extraction (default=datebegin)', default=None)
 
-    parser.add_argument('-d', '--domain', help='Domain of the file', choices=coords.keys(), default='GrandesRousses')
+    parser.add_argument('-d', '--domain', help='Domain of the file', choices=coords.keys(), default=None)
 
     # WARNING : the 'parameters' and 'level-type' arguments depend on each other.
     # TODO : find a way (a very complex dict ?) ton ensure consistency
     # TODO : mutualiser avec ce qu'a fait Hugo
-    parser.add_argument('-p', '--parameter', help='Parameter to extract', default='ALTITUDE',
+    parser.add_argument('-p', '--parameter', help='Parameter to extract', default=None,
                         choices=['PRECIP', 'WETBT', 'ALTITUDE', 'TPW', 'T', 'U', 'V', 'FLSOLAIRE', 'FLTHERM',
                                 'FLSOLAIRE_D', 'FLTHERM_D'])
 
     parser.add_argument('-l', '--levels', nargs='+', help='Level(s) of the parameter to extract', default=None)
 
-    parser.add_argument('-v', '--level_type', help='Type of level of the parameter to extract', default='ISO_WETBT',
+    parser.add_argument('-v', '--level_type', help='Type of level of the parameter to extract', default=None,
                         choices=['ISO_WETBT', 'SOL', 'HAUTEUR', 'ISOBARE', 'ISO_T', 'ISO_TPW'])
 
     parser.add_argument('-w', '--workdir', help="Runing directory (soprano's default)",)
 
     parser.add_argument('-m', '--model', help='NWP model from which the data must be extracted',
-                        choices=['PAAROME', 'PAROME', 'PAA'], default='PAA')
+                        choices=model_map.keys(), default=None)
 
     parser.add_argument('-c', '--cutoff', help='NWP model cutoff from which the data must be extracted',
-                        choices=['assimilation', 'prevision'], default='assimilation')
+                        choices=['assimilation', 'prevision'], default=None)
 
     # TODO : documenter les périodes de disponibilités modèle/grille
-    parser.add_argument('-g', '--grid', help='BDAP grid name from which to extract data', default='EURAT01',
+    parser.add_argument('-g', '--grid', help='BDAP grid name from which to extract data', default=None,
                         choices=['FRANXL0025', 'EURW1S40', 'EURW1S100', 'EUROC25', 'GLOB025', 'EURAT01', 'EURAT1S20',
                                  'FRANX01', 'GLOB25', 'FRANGP0025'])
 
@@ -148,9 +151,9 @@ def goto(path):
     os.chdir(path)
 
 
-def clean():
+def clean(listfiles):
     import glob
-    for fic in glob.glob('*.idx') + glob.glob('*.grib'):
+    for fic in glob.glob('*.idx') + listfiles:
         os.remove(fic)
 
 
@@ -168,25 +171,25 @@ class ExtractBDAP(object):
         self.domain         = domain
         self.gribname       = f'{level_type}_{date.strftime("%Y%m%d%H")}_{ech}.grib'
 
-    def requete(self):
+    def requete(self, grid):
         self.rqst = 'requete.tmp'
         f = open(self.rqst, "w")
         f.write('#RQST\n')
         f.write(f'#NFIC {self.gribname}\n')  # Output file name
         f.write(f'#MOD {self.model}\n')  # BDAP model name (see doc)
         f.write(f'#PARAM {self.parameter}\n')  # paramater
-        f.write(f'#Z_REF {self.grid}\n')  # BDAP grib name (see doc)
+        f.write(f'#Z_REF {grid}\n')  # BDAP grib name (see doc)
         f.write("#Z_EXTR INTERPOLATION\n")  # Interpolation on a user-defined grid
         f.write('#Z_GEO ' + ' '.join(coords[self.domain]) + '\n')  # Coordonées de la grille de sortie (N S WA E)
-        f.write('#Z_STP ' + ' '.join(dl[self.grid]) + '\n')  # Pas en lat/lon de la grille de sortie
+        f.write('#Z_STP ' + ' '.join(dl[grid]) + '\n')  # Pas en lat/lon de la grille de sortie
         f.write('#L_LST ' + ' '.join(self.levels) + '\n')  # List de niveaux
         f.write(f'#L_TYP {self.level_type}\n')  # Type de niveau (SOL, ISOBARE, HAUTEUR, MER, ISO*,...)
 
-    def extract_from_bdap(self, cmd='dap3_dev'):
+    def extract_from_bdap(self, grid, cmd='dap3_dev'):
         """
         Utiliser la commande 'dap3_dev' pour les données archivées (>5jours ?)
         """
-        self.requete()
+        self.requete(grid)
         os.system(f"{cmd} {self.ech} {self.rqst}".format(cmd, self.ech, self.rqst))  # Pour 'dap3_dev'
         # os.system(f"{cmd} {self.rqst}")  # Pour 'dap3_dev_echeance'
         if os.path.exists(self.gribname):
@@ -208,12 +211,24 @@ class ExtractBDAP(object):
                 os.remove(self.gribname)
 
         os.environ["DMT_DATE_PIVOT"] = self.date.strftime('%Y%m%d%H%M%S')
-        result = self.extract_from_bdap()
+        grid = self.grid_map()
+        result = self.extract_from_bdap(grid)
 
         if result:
             return self.gribname
         else:
             return None
+
+    def grid_map(self):
+        if self.grid == 'EURW1S40' and self.model == 'PAAROME':
+            # From BDAP documentation :
+            # "FRANGP0025 (grille virtuelle) est directement dérivée de EURW1S40 depuis le 05/12/2017 réseau 9h"
+            if self.date < datetime.strptime('2017120509', '%Y%m%d%H'):
+                return 'FRANGP0025'
+            else:
+                return 'EURW1S40'
+        else:
+            return self.grid
 
 
 if __name__ == "__main__":
@@ -242,6 +257,8 @@ if __name__ == "__main__":
         # The default beahvior to try to get hourly outputs
         # --> extract all N=H1-H0 echeances from H0 execution to cover H0 --> H1
         dt = max(echeances)
+    else:
+        dt = args.pdt
 
     if args.workdir is None:
         workdir = os.path.join(os.environ['HOME'], 'workdir', f'extraction_{args.model.upper()}', domain, parameter)
@@ -256,10 +273,13 @@ if __name__ == "__main__":
         outname = f'{level_type}_{grid}_{args.datebegin}.nc'
     if not os.path.exists(outname):
         extractedfiles = list()
+
         date = datebegin
+        extract_period = list()
         # Loop over dates and lead times
         while date <= dateend:
             for ech in echeances:
+                extract_period.append(np.datetime64(date + timedelta(hours=ech)))
                 # Launch extraction
                 extractor = ExtractBDAP(model, date, ech, parameter, level_type, levels, grid, domain)
                 grib = extractor.run()
@@ -271,9 +291,13 @@ if __name__ == "__main__":
         print('Opening grib files with xarray...')
         ds  = xr.open_mfdataset(extractedfiles, concat_dim='valid_time', combine='nested', engine='cfgrib')
         print('Dataset created')
+        ds = ds.drop('time').rename(valid_time= 'time')
+
+        ds = ds.reindex(time=extract_period, fill_value=np.nan).sortby("time")
+
         ds.to_netcdf(outname)
 
-    clean()
+        clean(extractedfiles)
 
     ############################################
     # Everything beyond this point is optional #
@@ -281,7 +305,7 @@ if __name__ == "__main__":
 
     if args.archive:
         import vortex
-        from snowtools.scripts.extract.vortex import vortexIO as io
+        from snowtools.scripts.extract.vortex import vortex_get as io
 
         t = vortex.ticket()
 
@@ -289,18 +313,22 @@ if __name__ == "__main__":
             kind = level_type
         elif level_type == 'HAUTEUR':
             kind = parameter
+        elif parameter == 'PRECIP':
+            kind = 'Precipitation'
         else:
-            print('Kind not yet defined for this extraxction')
+            print('Kind not yet defined for this extraction')
             raise NotImplementedError
-        out = io.put_meteo(
+
+        block = 'hourly'  # Default behaviour. TODO : Adapt for other use
+
+        out = io.put(
             kind           = kind,
-            vapp           = 'edelweiss',
-            vconf          = domain,
-            source_app     = model_map[model]['vapp'],
-            source_conf    = model_map[model]['vconf'],
-            geometry       = grid,
-            experiment     = f'ExtractionBDAP@{os.environ["USER"]}',
-            datebegin      = args.datebegin,
+            vapp           = model_map[model]['vapp'],
+            # source_conf    = model_map[model]['vconf'],
+            geometry       = f'{domain}_{grid}',
+            experiment     = 'raw@vernaym',
+            block          = block,
+            datebegin      = f'{args.datebegin}/+PT24H',
             dateend        = args.dateend,
             filename       = outname,
         )
