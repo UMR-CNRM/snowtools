@@ -149,9 +149,9 @@ def execute():
 
     safran_elevations = [z for z in reversed(range(1800, 2700, 300))]
     fig0, ax0 = plt.subplots(len(safran_elevations), 1, figsize=(14, 14))
-#    for i, elevation in enumerate(safran_elevations):
-#        tmp = obs.where((mnt > elevation - 150) & (mnt < elevation + 150), drop=True)
-#        tmp.mean('yy').plot(ax=ax0[i], color='k', label='Observation', linewidth=3)
+    for i, elevation in enumerate(safran_elevations):
+        tmp = obs.where((mnt > elevation - 150) & (mnt < elevation + 150), drop=True)
+        tmp.mean('yy').plot(ax=ax0[i], color='k', label='Observation', linewidth=3)
     for xpid in xpids:
         # TODO : gérer ça plus proprement
         if '@' not in xpid:
@@ -163,7 +163,7 @@ def execute():
         if members:
             member = members_map(shortid)
         else:
-            if shortid in ['safran', 'ANTILOPE', 'safran_pappus', 'ANTILOPE_pappus', 'SAFRAN', 'SAFRAN_pappus']:
+            if shortid in ['ANTILOPE', 'safran_pappus', 'ANTILOPE_pappus', 'SAFRAN', 'SAFRAN_pappus', 'AROME_pappus']:
                 member = None
             elif shortid in ['EnKF36_pappus', 'PF32_pappus']:
                 member = [1]
@@ -172,7 +172,7 @@ def execute():
         name = product_map(shortid)
 
         # VERRUE pour gérer le décallage d'un jour en attendant de combler les données
-        if (shortid.split('_')[0] in ['SAFRAN', 'ANTILOPE', 'KRIGING']) and datebegin == '2021080207':
+        if (shortid.split('_')[0] in ['SAFRAN', 'ANTILOPE', 'KRIGING', 'AROME']) and datebegin == '2021080207':
             deb = '2021080106'
         else:
             deb = datebegin  # 2021080207
@@ -183,7 +183,7 @@ def execute():
         simu = read_simu(xpid, member, date)
 
         for i, elevation in enumerate(safran_elevations):
-            tmp = (simu - obs).where((~np.isnan(obs)) & (mnt > elevation - 150) & (mnt < elevation + 150), drop=True)
+            tmp = simu.where((~np.isnan(obs)) & (mnt > elevation - 150) & (mnt < elevation + 150), drop=True)
             tmp.mean('yy').squeeze().plot(ax=ax0[i], color=colors_map[name], label=name, linewidth=3)
 
         if clustering in 'elevation':
@@ -245,10 +245,12 @@ def execute():
         if elevation != safran_elevations[-1]:
             ax0[i].set_xlabel('')
             ax0[i].set_xticklabels([])
-        ax0[i].axhline(0, color='k')
-    fig0.supylabel("Mean snow depth error (m)")
-    ax0[0].legend(loc='upper center', bbox_to_anchor=(0.5, 1.5), ncol=len(xpids) + 1)
-    fig0.savefig('Gradient_HTN_error_WE_' + '_'.join(xpids) + '.pdf')
+        # ax0[i].axhline(0, color='k')
+    fig0.supylabel("Mean snow depth (m)")
+    # ax0[0].legend(loc='upper center', bbox_to_anchor=(0.5, 1.5), ncol=len(xpids) + 1)
+    ax0[0].legend(loc='upper center', bbox_to_anchor=(0.5, 1.5), ncol=3)
+    fig0.savefig(f'Gradient_HTN_WE_{date}_' + '_'.join(xpids) + '.pdf')
+    plt.close('all')
 
     dataplot = dataplot.rename(columns={'slices': label_map[clustering], clustering: label_map[clustering]})
     dataplot = dataplot.melt(label_map[clustering], var_name='experiment', value_name=label)
