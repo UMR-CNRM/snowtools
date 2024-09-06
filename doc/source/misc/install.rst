@@ -33,6 +33,11 @@ Some specific parts of the code (including test) require to have also:
 * ``cartopy``
 * The vortex toolbox for run on Meteo-France super-computers
 
+The detailed list of dependencies could be find in the file ``requirements.txt``.
+
+.. note::
+   On Meteo-France computers, you do not have take care of dependecies that are already on your professional computer.
+
 Install dependencies
 ^^^^^^^^^^^^^^^^^^^^
 We encourage you to install dependencies through system packages, for instance with the following command line on Debian or Ubuntu 22.04 system:
@@ -56,7 +61,8 @@ Only GDAL python binding need to be installed manually to be installed consisten
 Snowtools install for users
 ---------------------------
 
-If you are only a user of snowtools, you can simply go into the snowtools directory and then run  ``pip install .`` (possibly in a python virtual environment).
+If you are only a user of snowtools, download the data with git: ``git clone https://github.com/UMR-CNRM/snowtools.git``.
+To install, you can simply go into the snowtools directory and then run  ``pip install -e .`` (possibly in a python virtual environment).
 
 
 .. _sec-install_dev:
@@ -64,23 +70,37 @@ If you are only a user of snowtools, you can simply go into the snowtools direct
 Snowtools install for developers
 --------------------------------
 
-Clone the git repository on your computer. You have to add the install folder to your ``PYTHONPATH``. This can be done by adding these tho following lines to your ``.bashrc`` or ``.bash-profile``: 
+Make sure you have a github account, linked to snowtools repository (send a mail to crocus at meteo dot fr) and that you have a SSH key attached to your github account [#footnote1]_. You can then clone the git repository on your computer with :
 
 .. code-block:: bash
-   
+
+   git clone git@github.com:UMR-CNRM/snowtools.git
+
+To install, you have to add the install folder to your ``PYTHONPATH``. This can be done by adding these tho following lines to your ``.profile`` (or ``.bash-profile`` if the first one does not exist):
+
+.. code-block:: bash
+
    export SNOWTOOLS_CEN=/yourpath/snowtools
    export PYTHONPATH=$PYTHONPATH:$SNOWTOOLS_CEN
 
-It is also recommended to create useful aliases for s2m command and proreader graphical user interface in the same file:
+It is also recommended to create useful aliases for s2m command and proreader graphical user interface in the ``~/.bashrc`` file:
 
 .. code-block:: bash
 
    alias s2m="python $SNOWTOOLS_CEN/snowtools/tasks/s2m_command.py"
    alias proplotter="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/proplotter.py"
    alias procompare="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/procompare.py"
+   alias put="$SNOWTOOLS_CEN/cenutils/put"
 
 Optional installations
 ----------------------
+
+
+Vortex package
+^^^^^^^^^^^^^^
+
+Only Météo-France users who need to either extract operational S2M files either to run their own experiments on the HPC system need to install the vortex package by following this link :ref:`install-vortex`
+
 
 Spatial interploator for SAFRAN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -111,3 +131,5 @@ Do absolutely never load netcdf module before running the code as this would loa
    make
 
 At CEN, Netcdf with parallel support must be installed in /opt/netcdf4-parallel (ask Romain if not available)
+
+.. [#footnote1] To generate a new ssh key, go to your ``~/.ssh`` folder (create if it does not exist) and run ``ssh-keygen -t rsa -b 4096 -f github``. You will be asked for an optional password to protect your key. Once created, go to your `github account, section SSH keys <https://github.com/settings/keys>`_, click on "add a SSH key" and copy the content of the file ``~/.ssh/github.pub`` in the "key" field.

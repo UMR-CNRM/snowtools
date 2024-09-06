@@ -28,8 +28,6 @@ Some additional information are provided directly here:
 * [Information for SURFEX developers](doc/source/misc/surfex-dev.rst)
 * [Information for snowtools developers](doc/source/misc/contribute.rst)
 
-For Meteo-France developers, also consider [installing Vortex](doc/source.misc/surfex-install-vortex.rst).
-
 ### First test
 If you correctly installed the snowtools and SURFEX projects, you must be able to run successfully the following test case:
 

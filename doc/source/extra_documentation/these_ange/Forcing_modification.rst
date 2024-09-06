@@ -2,11 +2,11 @@
 .. Date: 2024
 
 Blowing snow simulation preparation
-===================================
+###################################
 
-For blowing snow transport simulations, having a realistic wind is essential. In our simulations we used Louis' DEVINE high resolution wind.
-
-We therefore had to hand-cook modified simulation forcings.
+| During my PhD, we developped with Matthieu Baron **SnowPappus** [#f0]_, a distributed blowing snow model. :)
+| For blowing snow transport simulations, having a realistic wind is essential. In our simulations we used Louis' DEVINE high resolution wind.
+| To proceed to our simulations we therefore had to hand-cook wind modified simulation forcings.
 
 
 .. _simscratch:
@@ -26,14 +26,16 @@ Typical workflow for a blowing snow experiment from scratch on Belenos :
 
 #. :ref:`Simulation launch with S2M <s2m-command>`
 
+    Don't forget to remove the :file:`-g` option for classical S2M launch with precomputed spinup.
+
 .. warning::
   Do not forget to clean the vortex cache before launching simulation with modified forcings to **override the previous cached forcing files**.
 
 
 .. _geom:
 
-S2M geometry creation from scratch:
-***********************************
+1. S2M geometry creation from scratch:
+======================================
 
 .. |ico1| image:: https://i.ibb.co/KrtJCMV/Capture-d-cran-2024-06-19-10-36-19-copie.png
     :alt: shapefile
@@ -50,36 +52,37 @@ I suggest to use the following workflow:
 
     The shapefile need to be a rectangle in the EPSG:2154 projection and can be made using QGIS |ico1| and the rectangle creation tool from center |ico2| (to get target aligned pixels).
 
-2. It's possible to create the S2M geometry seed file using the :file:`/snowtools/interpolation/shapefile2NetCDF_2D.py` script.
+2. Create the S2M geometry definition file using the :file:`/snowtools/interpolation/shapefile2NetCDF_2D.py` script.
 
-  This command create a NetCDF geometry seed file containing the DEM and massif number values needed for the spinup creation.
-  An example of command to create this file can be found bellow. Option :file:`-rlon -rlat` for resolution, :file:`--MNT_alt` get the path of the DEM file.
-  A list of CEN MNT/DEM files can be found on `confluence <http://confluence.meteo.fr/pages/viewpage.action?pageId=276547824>`_
+    This command create a NetCDF geometry definition file containing the DEM and massif number values needed for the spinup creation.
+    An example of command to create this file can be found bellow. Option :file:`-rlon -rlat` for resolution, :file:`--MNT_alt` to get different path for the DEM file and :file:`-m` to precribe a massif number for the entire area.
 
-  :file:`python shapefile2NetCDF_2D.py ~/Téléchargements/eaudolle\@gdmaison/domaineEAUDOLLE.shp -m 12 -rlon 250 -rlat 250 -o eaudolle_250m.nc`
+    A list of CEN MNT/DEM files can be found on `confluence <http://confluence.meteo.fr/pages/viewpage.action?pageId=276547824>`_
 
-  This command also output the geometry description to be added the namelist::
+    :file:`python shapefile2NetCDF_2D.py ~/Téléchargements/eaudolle\@gdmaison/domaineEAUDOLLE.shp -m 12 -rlon 250 -rlat 250 -o eaudolle_250m.nc`
 
-    In namelist &NAM_IGN:
-    XCELLSIZE= 250
-    XX_LLCORNER= 929876
-    XY_LLCORNER= 6445476
-    !! Check with NETCDF dimensions (gap of 1 possible):
-    NCOLS= 127
-    NROWS= 129
-    !! For BELENOS, take ntasks < min(NCOLS, NROWS)
+    This command also output the geometry specific description that need to be added the namelist::
+
+      In namelist &NAM_IGN:
+      XCELLSIZE= 250
+      XX_LLCORNER= 929876
+      XY_LLCORNER= 6445476
+      !! Check with NETCDF dimensions (gap of 1 possible):
+      NCOLS= 127
+      NROWS= 129
+      !! For BELENOS, take ntasks < min(NCOLS, NROWS)
 
 .. warning::
-  To get more uniform forcings in the Grandes Rousses domain, we did choose a single massif number for the entire domain. This might need DEM alteration as the MIN and MAX elevation need to be within the bound of the elevation MIN/MAX S2M reanalysis for the forcing interpolation to run properly.
+  To get more uniform forcings in the Grandes Rousses domain, we did choose a single massif number for the entire domain. This might need DEM alteration for the step of forcing interpolation as the MIN and MAX elevation need to be within the bound of the S2M reanalysis elevation.  Otherwise, the interpolation will crash.
 
 
-3. Create or modify your namelist and move the geometry seed file and the namelist on the server.
+3. Don't forget to create or modify your namelist and move the geometry seed file and the namelist on Belenos HPC.
 
 
 .. _spinup:
 
-Spinup creation on BELENOS
-**************************
+2. Spinup creation on BELENOS
+=============================
 
 #. Name and add the new geometry info in the :file:`~/.vortexrc/geometries.ini` file on BELENOS server::
 
@@ -94,13 +97,15 @@ Spinup creation on BELENOS
 .. warning::
   Do not use capital letter in the geometry and area name.
 
-2. Create the spinup, PREP, PGD and forcings interpolation (SAFRAN) of the new geometry using a command like the folowing::
+2. Launch first simulation on Belenos to create SPINUP, PREP, PGD and forcings interpolation (SAFRAN) of the new geometry using a command like the folowing::
 
     s2m research --ntasks=60 --walltime=23:59:00 -b 20070801 -e 20170801 -m s2m -f reanalysis2020.2@lafaysse -r alp_flat:eaudolle250:/home/cnrm_other/cen/mrns/haddjeria/eaudolle_250m.nc -n /home/cnrm_other/cen/mrns/haddjeria/git/namelist/GRID_EAUDOLLE_250.nam -g --geotype grid -o spinup
 
+.. note::
+  To have a correct ground temperature initialisation using the :file:`-g` S2M option, the good practice is to do a spinup over a period of 10 years or more before the target simulation date (to allow time for the soil temperature to stabilise).
 
 Louis' DEVINE wind
-------------------
+******************
 
 .. image:: https://raw.githubusercontent.com/louisletoumelin/wind_downscaling_cnn/master/images/SchemeDevine.png
     :width: 600
@@ -111,8 +116,8 @@ If the two grid are different, the two wind fields (Wind and Wind_DIR) need to b
 
 .. _louis:
 
-Louis' wind resampling
-**********************
+3.1 Louis' wind resampling
+==========================
 
 
 This regridding workflow is based on the folowing functions defined by Louis in is `github repo <https://github.com/louisletoumelin/bias_correction>`_ <3::
@@ -288,8 +293,8 @@ The following code result in two files *devine_speed_250m_rioxarray.nc* and *dev
 
 .. _fmod:
 
-Forcing modification
---------------------
+3.2 Forcing modification
+========================
 
 
 You can find bellow an example to replace Wind and Wind_DIR forcing fields in forcings.
@@ -437,5 +442,6 @@ Cleaning::
 
 .. rubric:: Footnotes
 
+.. [#f0] https://doi.org/10.5194/gmd-17-1297-2024
 .. [#f1] https://doi.org/10.5194/npg-31-75-2024
 .. [#f2] https://doi.org/10.1175/AIES-D-22-0034.1
