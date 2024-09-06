@@ -254,6 +254,9 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
                 plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, cmap=mycmap, addpoint=addpoint, dem=dem.ZS)
             else:
                 if var in cmap_map.keys():
+                    # Un-comment the following lines to plot elevation bands
+                    # elevation = 1800
+                    # tmp = tmp.where((dem.ZS > elevation - 150) & (dem.ZS <= elevation + 150))
                     plot2D.plot_field(tmp, vmin=vmin, vmax=vmax, cmap=cmap_map[var], addpoint=addpoint, dem=dem.ZS)
                 else:
                     # plot2D.plot_field(tmp, ax=ax, vmin=vmin, vmax=vmax, addpoint=addpoint)
