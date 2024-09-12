@@ -93,8 +93,8 @@ from snowtools.DATA import DIRDATADEM
 NetCDF_out = 'NetCDF2D_from_shapefile.nc'
 
 # PATH_MNT
-path_MNT_alti_30m = '/rd/cenfic3/cenmod/dem_cen/definitive/france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
-path_MNT_alti_250m = '/rd/cenfic3/cenmod/dem_cen/definitive/france_250m/DEM_FRANCE_L93_250m_bilinear.tif'
+path_MNT_alti_30m = DIRDATADEM + 'france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
+path_MNT_alti_250m = DIRDATADEM + 'france_250m/DEM_FRANCE_L93_250m_bilinear.tif'
 
 ################################################################
 # Infos shapefile massif, normally stable and durable
