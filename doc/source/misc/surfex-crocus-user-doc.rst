@@ -691,10 +691,10 @@ by satisfying the snownlfall condition of snowfall xuepsi all the time.
 
   'CSNOWPAPPUSERODEPO' : Determines how the deposition flux q dep is
   computed from Q t 'ERO' : fictive ”pure erosion” case q dep = − Q l t with
-  l = 250m, 'DEP' : fictive ”pure deposition” case q dep = + Q l t , 'DIV'
+  l = 250m, 'DEPO' : fictive ”pure deposition” case q dep = + Q l t , 'DIV'
   (default): q dep computed with a mass balance ( needs 2D grids, described
   in SnowPappus article ), 'NON' : q dep = 0 =¿ SnowPappus diagnostics
-  are computed but it does not adds or removes any snow. 'ERO', 'DEP'
+  are computed but it does not adds or removes any snow. 'ERO', 'DEPO'
   and 'NON' options can be used in point-scale simulations.
 
 
