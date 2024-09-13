@@ -821,3 +821,247 @@ Full Description
 
 **LMEB_INT_UNLOAD_SFC** : enable this key in order to separate snow unloading from snowfalls in Crocus fresh snow incorporation. When the key is set at True, snow unloading will be included into the Crocus snowpack as “old” snow, with properties of melt forms and a density of 200kg.m^-2 .
 
+Basic information
+^^^^^^^^^^^^^^^^^
+This documentation is heavily inspired by the Snowpappus user guide written by Matthieu Baron. (see file: https://doi.org/10.5281/zenodo.7681340)
+
+The mathematics-style notations used in this user guide are the same as in the SnowPappus description paper. (Baron M., Haddjeri A et al., 2024)
+
+Recommendations of general namelist options
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SnowPappus is not designed to work with some other options of SURFEX, in the other snow transport modules (SYTRON, Crocus-Meso-NH), and some options of Crocus. To avoid problems, here is a list of namelist parameters which should
+be fixed to these values :
+
+.. code-block:: bash
+
+    &NAM ISBA SNOWn
+  CSNOWDRIFT= 'NONE'
+  LSNOWDRIFT_SUBLIM= .FALSE.
+  LSNOWSYTRON=.FALSE. ( default )
+
+More justification about some of these requirements will be given in the fol-
+lowing sections. More generally, SnowPappus has currently be tested with the
+”default” Crocus options. They are given in the provided namelists. The con-
+sistent behaviour of SnowPappus with other physical options (metamorphism,
+compaction, properties of falling snow) should be carefully evaluated before any
+large scale application.
+
+
+Snowpappus specific namelist parameters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Snowpappus options ( to activate or disactivate SnowPappus and different sub-
+processes, choose the parameterizations ... ). They are all gathered in the group
+&NAM ISBA SNOWn .
+
+**Activating or disactivating SnowPappus**: LSNOWPAPPUS ( logical ) :
+Activates SnowPappus if set to .TRUE. . If .FALSE. (default) , the program
+does not run SnowPappus code.
+
+**Snowfall, blowing snow occurence and wind-induced snow metamorphism**: Blowing snow occurrence detection depends mainly on :
+
+#. The parameterization linking surface properties to threshold friction velocity u∗t
+#. The properties of snowfall (in terms on microstructure and possibly density).
+
+An important thing to know is that :
+
+#. Wind-induced snow metamorphism can be computed by the SNOWCRO routine ( Crocus main routine )
+#. Several options are available for fresh snow properties
+#. Activating or disactivating wind-induced snow metamorphism interacts with the snowfall properties option.
+
+First of all, we will explain how it works in Crocus without SnowPappus.
+Second, we will explain the modifications and additional SnowPappus option.
+In Crocus without SnowPappus :
+
+.. code-block:: bash
+
+  'CSNOWFALL' controls falling snow density ( see SURFEX documentation for more details )
+
+  'CSNOWDRIFT' controls wind-induced snow metamorphism and falling
+  snow microstructure.'NONE': falling snow microstructure as described in
+  Vionnet et al. 2012 and Guyomar`ch et al. 1998, no wind-induced snow
+  metamorphism; 'VI13': falling snow microstructure as described in Vion-
+  net et al. 2013, wind-induced snow metamorphism as described in Vionnet
+  et al. 2012; 'DFLT'(default) : not described here; 'GA01' : not described
+  here.
+
+  'CSNOWMOB': gives the option for threshold wind speed. Threshold
+  wind speed is computed in the SNOWCRO routine.
+
+For SnowPappus use, we have to set CSNOWDRIFT='NONE' so that all
+snow transport-related computations are done by SnowPappus. In order to
+keep control on falling snow properties, we enabled independent selection of
+wind-induced snow metamorphism option and snowfall properties
+
+.. code-block:: bash
+
+
+  'CSNOWFPAPPUS' overcomes 'CSNOWDRIFT' to select falling snow microstructure.'GM98'
+  (Guyomar`ch & merindol 1998, Vionnet 2012) ; 'VI13' Vionnet 2013,
+  'NONE'(default) : no effect, CSNOWDRIFT prevails.
+
+  'CSNOWMOB' : Chooses the way threshold wind speed is computed in
+  SnowPappus when surface snow age is superior to the threshold value
+  XAGELIMPAPPUS ( and in snowcro if HSNOWDRIFT=.TRUE. ). 'GM98'
+  (default) historical version, Guyomar`ch et Mérindol (1998), see SnowPap-
+  pus description article ,'CONS' threshold wind speed is constant equalling
+  9 m/s ( at 5m height ), see SnowPappus description article, 'VI12' param-
+  eterization described in Vionnet et al 2012, 'LI07' parameterization as a
+  function of density as described in Liston et al. 2007, 'COGM' constant at
+  9 m/s if snow is non-dendritic, given by GM98 parameterization for den-
+  dritic snow ( beware: this option is also used for Crocus alone or Sytron.
+  Only 'GM98' and 'VI12' work in these cases )
+
+  'CDRIFTPAPPUS' : 'NON' (default): no wind-induced snow metamor-
+  phism (WISM) in snowpappus, 'CRO' : WISM with its own threshold
+  wind speed computed with the same code as in SNOWCRO routine. This
+  threshold wind speed does not apply to the computation of fluxes, 'CRM':
+  WISM. with it's own thr wind speed applying to all snowpappus (over-
+  passing HSNOWMOB');'PAP' : ”” using pappus threshold wind speed to
+  compute the mobility index ( see Vionnet et al. 2012 for more details ).
+
+**other options**
+
+.. code-block:: bash
+
+  'OPAPPUDEBUG' : Boolean. If True triggers snowpappus debug mode.
+  This option displays additional information on the computation. It dis-
+  plays warnings, swe conservation verification results, time and date during
+  computation for easier debugging. And proof of SnowPappus mass con-
+  servation. (default .False.)
+
+  'CSALTPAPPUS' : 'P90' (default) : Saltation transport given by Pomeroy
+  1990 formulation, 'S04' : Sorensen 2004 - Vionnet 2012 formulation. More
+  details about it in Baron et al. 2023 Snowpappus description paper
+
+  'CLIMVFALL' : 'DEND' fall speed v f ∗ of suspended snow particles is com-
+  puted as old snow if snow is non-dendritic,'PREC' old snow = non-dendritic
+  OR age ¡ XAGELIMPAPPUS2, 'MIXT' (default) old snow for non-dendritic,
+  new snow for dendritic and age¡XAGELIMPAPPUS2 , weighted average
+  if dendritic more aged snow, the option is described in SnowPappus de-
+  scription paper
+
+  'CPAPPUSSUBLI' : 'NONE' : no sublimation in pappus transport scheme,
+  'SBSM': SBSM sublimation parametrisation, 'B9810': Bintanja 1998 with
+  10m wind , 'B9803' : Bintanja 1998 with 3m wind, 'GR06' : Gordon 2006
+  sublimation parameterization.
+
+  'OPAPPULIMTFLUX' : Boolean. If True = snow transport flux limitation
+  activated. It limits the flux on a pixel if there is not enough snow on it to
+  avoid removing more snow than there is on it. There is limitations on Q t
+  and q subl .
+
+The condition is the following :
+
+.. math::
+  q_{subl}\leq\frac{P_{SWE}}{Pt_{step}} \\
+  Q_t \leq (\frac{P_{SWE}}{Pt_{step}} - q_{subl})\frac{P_{mesh}}{cos(\theta)}
+
+with PSWE being the snow mass for each pixel in kg/m 2 , P t step the com-
+putation time step in s, P mesh the pixel size in m and θ the slope angle.
+(default: False) It also limits the mass bilan of snowcro.F90 to XUEPSI.
+It also corrects the water mass flux balance to a precision of XUEPSI. The
+condition is the following:
+
+.. code-block:: bash
+
+  WHERE (ZQDEP_TOT(:)<XUEPSI .AND. ZQDEP_TOT(:)>-XUEPSI)
+  ZQDEP_TOT(:) = 0.
+  ENDWHERE
+
+The drawback of this condition is that it reduces the mass balance of
+snowpappus (error of xuepsi possible if there is more than 2 pixels con-
+tributing to the mass balance of one pixel) but improves the snowcro one
+by satisfying the snownlfall condition of snowfall xuepsi all the time.
+
+.. code-block:: bash
+
+  'CSNOWPAPPUSERODEPO' : Determines how the deposition flux q dep is
+  computed from Q t 'ERO' : fictive ”pure erosion” case q dep = − Q l t with
+  l = 250m, 'DEPO' : fictive ”pure deposition” case q dep = + Q l t , 'DIV'
+  (default): q dep computed with a mass balance ( needs 2D grids, described
+  in SnowPappus article ), 'NON' : q dep = 0 =¿ SnowPappus diagnostics
+  are computed but it does not adds or removes any snow. 'ERO', 'DEPO'
+  and 'NON' options can be used in point-scale simulations.
+
+
+
+Constant parameters can be specified in the namelist. They all are in the group
+&NAM SURF SNOW CSTS :
+
+.. code-block:: bash
+
+  'XAGELIMPAPPUS' : maximum age of snow layer for which wind speed
+  threshold is set to fresh threshold wind speed !(default: 0.05 days)
+
+  'XAGELIMPAPPUS2' : maximum age of snow for using Naaim96 formu-
+  lation of terminall fall speed in snowpappus (default: 0.05 days)
+
+  'XWINDTHRFRESH' : 5 m wind speed threshold for transport of freshly
+  fallen ( or deposited ) snow (default: 6 m.s 1 )·
+
+  'XRHODEPPAPPUS', 'XDIAMDEPPAPPUS', 'XSPHDEPPAPPUS' :den-
+  sity (kg.m −3 ), optical diameter (m) and sphericity of wind blown deposited
+  snow ( default :ρ = 250 kg.m −3 , D opt =3.10 −4 m, s = 1 )
+
+  'XLFETCHPAPPUS' : constant fetch distance l fetch applied to all points for
+  snowpappus blowing snow flux calculation (m)· (default : l f etch = 250m )
+
+  'XDEMAXVFALL' : when option MIXT is chosen for terminal fall speed
+  calculation, maximum dendricity d max to have pure young snow fall speed.
+  (default : d max = 0.3)
+
+Snowpappus diagnostic variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In general in SURFEX, the list of diagnostic variables names which are to be
+written in the output file has to be specified in the namelist option CSELECT,
+in group &NAM WRITE DIAG SURFn.
+
+Here we give the exhaustive list of SnowPappus - related diagnostics.in
+SURFEX, time step at which diagnostic variables are given (namelist option
+XTSTEP OUTPUT in &NAM IO OFFLINE) is not the same as model time
+step. Thus, the output value is either ”instantaneous” ( i.e. the given value is
+the one at the model time step which equals the output time ) or ”cumulated”
+( i.e. the given value is the averaged value on the whole output time step )
+
+**”cumulated” diagnostic variables:**
+
+.. code-block:: bash
+
+  'XQDEP_TOT' : total wind-blown snow net deposition rate q dep (kg.m −2 .s −1 )
+
+  'XQ_OUT_SUBL' : sublimation rate q subl (kg.m −2 .s −1 )
+
+  'XQT_TOT' : total wind-blown horizontal vertically integrated snow transport rate Q t (kg.m −1 .s −1 )
+
+  'XSNOWDEBTC' : cumulated amount of snow which should have been removed on the oint but was not because it became snowfree (kg.m −2 ) (see the paragraph ”mass balance” in the article )
+
+
+**”instantaneous” diagnostic variables:**
+
+.. code-block:: bash
+
+  'XBLOWSNWFLUX_1M' : horizontal blowing snow flux 1 m above snow
+  surface (kg.m −2 .s −1 )
+
+  'XBLOWSNWFLUXINT' : average horizontal blowing snow flux between
+  0.2 and 1.2 m Qt,int (kg.m −1 .s −1 )
+
+  'XQ_OUT_SALT' : total horizontal transport rate in the saltation layer
+  Qsalt (kg.m −1 .s −1 )
+
+  'XQ_OUT_SUSP' : total horizontal transport rate in the suspension layer
+  Qsusp (kg.m −1 .s −1 )
+
+  'XVFRIC_PAPPUS' : wind friction velocity computed by Snowpappus u∗ (m.s −1 )
+
+  'XVFRIC_T_PAPPUS' : threshold friction velocity (at ground level) for
+  snow transport u∗,t (m.s −1 )
+
+  'XPZ0_PAPPUS' : roughness length for momentum z0 (m) used by Snowpappus
+
+  'XVFALL_PAPPUS' : mass averaged terminal fall velocity of snow particles
+  at the bottom of the suspension layer v f (m.s −1 )
+
+References
+^^^^^^^^^^
+Baron M., Haddjeri A et al. , SnowPappus v1.0, a blowing-snow model for large-scale applications of the Crocus snow scheme, 2024, https://doi.org/10.5194/gmd-17-1297-2024
