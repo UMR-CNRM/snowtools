@@ -122,26 +122,25 @@ If the two grid are different, the two wind fields (Wind and Wind_DIR) need to b
 
 This regridding workflow is based on the folowing functions defined by Louis in is `github repo <https://github.com/louisletoumelin/bias_correction>`_ <3::
 
-  #source : https://github.com/louisletoumelin/bias_correction/blob/12e806af084d086d30e429b21deb8ab7f243a381/bias_correction/train/wind_utils.py#L37
+  # source : https://github.com/louisletoumelin/bias_correction/blob/12e806af084d086d30e429b21deb8ab7f243a381/bias_correction/train/wind_utils.py#L37
   def wind2comp(uv, dir, unit_direction="radian"):
-        """
-        Converts wind speed and direction from polar coordinates to rectangular components (u, v).
+      """
+      Converts wind speed and direction from polar coordinates to rectangular components (u, v).
 
-        Args:
-            uv (float): Wind speed magnitude.
-            dir (float): Wind direction in degrees or radians (depending on unit_direction).
-            unit_direction (str, optional): Unit of wind direction. Defaults to "radian".
+      Args:
+          uv (float): Wind speed magnitude.
+          dir (float): Wind direction in degrees or radians (depending on unit_direction).
+          unit_direction (str, optional): Unit of wind direction. Defaults to "radian".
 
-        Returns:
-            tuple: A tuple containing two elements:
-                - u (float): Easting component of the wind (positive for eastward wind).
-                - v (float): Northing component of the wind (positive for northward wind).
-        """
+      Returns:
+          tuple: A tuple containing two elements:
+              - u (float): Easting component of the wind (positive for eastward wind).
+              - v (float): Northing component of the wind (positive for northward wind).
+      """
 
       # Convert wind direction to radians if necessary
       if unit_direction == "degree":
           dir = np.deg2rad(dir)
-
       # Calculate easting (u) and northing (v) components using trigonometric functions
       u = -np.sin(dir) * uv
       v = -np.cos(dir) * uv
@@ -150,26 +149,26 @@ This regridding workflow is based on the folowing functions defined by Louis in 
       return u, v
 
 
-  #source: https://github.com/louisletoumelin/bias_correction/blob/12e806af084d086d30e429b21deb8ab7f243a381/bias_correction/train/wind_utils.py#L48
+  # source: https://github.com/louisletoumelin/bias_correction/blob/12e806af084d086d30e429b21deb8ab7f243a381/bias_correction/train/wind_utils.py#L48
   def comp2dir(u, v, unit_output="degree"):
-    """
-    Calculates wind direction from rectangular components (u, v).
+      """
+      Calculates wind direction from rectangular components (u, v).
 
-    Args:
-        u (float): Easting component of the wind.
-        v (float): Northing component of the wind.
-        unit_output (str, optional): Desired unit for the output wind direction.
-            Defaults to "degree".
+      Args:
+          u (float): Easting component of the wind.
+          v (float): Northing component of the wind.
+          unit_output (str, optional): Desired unit for the output wind direction.
+              Defaults to "degree".
 
-    Returns:
-        float: Wind direction in the specified unit (degrees or radians).
+      Returns:
+          float: Wind direction in the specified unit (degrees or radians).
 
-    Raises:
-        NotImplementedError: If the desired unit_output is not "degree".
-    """
+      Raises:
+          NotImplementedError: If the desired unit_output is not "degree".
+      """
 
-        # Check if desired output unit is degree
-        if unit_output == "degree":
+      # Check if desired output unit is degree
+      if unit_output == "degree":
           # Calculate direction in radians using arctangent function
           direction_rad = np.arctan2(u, v)
           # Convert direction to degrees and ensure it's between 0 and 360
@@ -178,33 +177,37 @@ This regridding workflow is based on the folowing functions defined by Louis in 
           return direction_deg
       else:
           # Raise an error if the unit is not supported
-          raise NotImplementedError("Wind direction calculation is only implemented for 'degree' output unit.")
+          raise NotImplementedError(
+              "Wind direction calculation is only implemented for 'degree' output unit."
+          )
 
-  #source: https://github.com/louisletoumelin/bias_correction/blob/12e806af084d086d30e429b21deb8ab7f243a381/bias_correction/train/wind_utils.py#L4
+
+  # source: https://github.com/louisletoumelin/bias_correction/blob/12e806af084d086d30e429b21deb8ab7f243a381/bias_correction/train/wind_utils.py#L4
   def comp2speed(u, v, w=None):
-    """
-    Calculates wind speed from rectangular components (u, v) or (u, v, w).
+      """
+      Calculates wind speed from rectangular components (u, v) or (u, v, w).
 
-    Args:
-        u (float): Easting component of the wind.
-        v (float): Northing component of the wind.
-        w (float, optional): Vertical component of the wind. Defaults to None
-            (assuming a 2D wind field).
+      Args:
+          u (float): Easting component of the wind.
+          v (float): Northing component of the wind.
+          w (float, optional): Vertical component of the wind. Defaults to None
+              (assuming a 2D wind field).
 
-    Returns:
-        float: Wind speed magnitude.
-    """
+      Returns:
+          float: Wind speed magnitude.
+      """
 
       # Check if vertical wind component is provided
       if w is None:
-      # Calculate speed for a 2D wind field using Pythagorean theorem
+          # Calculate speed for a 2D wind field using Pythagorean theorem
           speed = np.sqrt(u**2 + v**2)
       else:
           # Calculate speed for a 3D wind field using Pythagorean theorem
           speed = np.sqrt(u**2 + v**2 + w**2)
 
-        # Return the calculated wind speed
+      # Return the calculated wind speed
       return speed
+
 
 
 
@@ -230,6 +233,7 @@ The following code result in two files *devine_speed_250m_rioxarray.nc* and *dev
 
 ::
 
+  import rioxarray
   # Load Louis' wind data from Netcdf storage (sdir)
   spd = xr.open_dataset('devine_wind.nc/')
   # Assuming 'spd' contains wind data with a variable named 'Wind' and 'Wind_DIR'
