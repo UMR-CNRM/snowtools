@@ -116,7 +116,7 @@ class Safran(Task, S2MTaskMixIn):
                             tb01_c = toolbox.input(
                                 role           = 'Ebauche',
                                 kind           = 'packedguess',
-                                local          = '{0:d}/p{1:s}.tar'.format(y1, next_season),
+                                local          = '[datebegin::ymd6h]_[dateend::ymd6h]/p{next_season}.tar',
                                 #remote         = '/home/vernaym/s2m/[geometry:area]/{0:s}/p{1:s}.tar'.format(
                                 #    self.conf.guess_block, next_season),
                                 #hostname       = 'hendrix.meteo.fr',
@@ -175,7 +175,7 @@ class Safran(Task, S2MTaskMixIn):
                     tb01 = toolbox.input(
                         role           = 'Ebauche',
                         kind           = 'packedguess',
-                        local          = '{0:d}/p{1:s}.tar'.format(y1, season),
+                        local          = '[datebegin::ymd6h]_[dateend::ymd6h]/p{season}.tar',
                         #remote         = '/home/vernaym/s2m/[geometry:area]/{0:s}/p{1:s}.tar'.format(
                         #    self.conf.guess_block, season),
                         #hostname       = 'hendrix.meteo.fr',
@@ -206,7 +206,7 @@ class Safran(Task, S2MTaskMixIn):
                     kind           = 'packedobs',
                     #nativefmt      = 'tar',
                     #unknownflow    = True,
-                    local          = '{0:d}/rs{1:s}.tar'.format(y1, season),
+                    local          = '{0:s}_{1:s}/rs{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
                     namespace      = 's2m.archive.fr',
                     #remote         = '/home/vernaym/s2m/[geometry]/obs/rs{0:s}.tar'.format(season),
                     #hostname       = 'hendrix.meteo.fr',
@@ -231,7 +231,7 @@ class Safran(Task, S2MTaskMixIn):
                         kind           = 'packedobs',
                         #nativefmt      = 'tar',
                         #unknownflow    = True,
-                        local          = '{0:d}/n{1:s}.tar'.format(y1, season),
+                        local          = '{0:s}_{1:s}/n{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
                         namespace      = 's2m.archive.fr',
                         #remote         = '/home/vernaym/s2m/[geometry]/obs/n{0:s}.tar'.format(season),
                         #hostname       = 'hendrix.meteo.fr',
@@ -246,7 +246,6 @@ class Safran(Task, S2MTaskMixIn):
                     )
                     print(t.prompt, 'tb03 =', tb03)
                     print()
-
 
             self.sh.title('Toolbox input tb07')
             tb07 = toolbox.input(
@@ -570,6 +569,9 @@ class Safran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb21 =', tb21)
             print()
 
+        if 'fetch' in self.steps:
+            pass
+
         if 'compute' in self.steps:
 
             if self.conf.datebegin < Date(2002, 8, 1):
@@ -715,7 +717,7 @@ class Safran(Task, S2MTaskMixIn):
                     source_conf    = source_conf,
                     cutoff         = 'assimilation',
                     # local          = 'mb035/FORCING_massif.nc',
-                    local          = '{0:d}/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(y1),
+                    local          = '[datebegin::ymd6h]_[dateend::ymd6h]/FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = self.conf.xpid,
                     block          = 'massifs',
                     geometry       = self.conf.geometry[self.conf.vconf],
@@ -738,7 +740,7 @@ class Safran(Task, S2MTaskMixIn):
                     source_conf    = source_conf,
                     cutoff         = 'assimilation',
                     # local          = 'mb035/FORCING_postes.nc',
-                    local          = '{0:d}/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc'.format(y1),
+                    local          = '[datebegin::ymd6h]_[dateend::ymd6h]/FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = self.conf.xpid,
                     block          = 'postes',
                     geometry       = self.conf.geometry[self.conf.vconf],
@@ -766,7 +768,7 @@ class Safran(Task, S2MTaskMixIn):
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
                     date           = dateend.ymd6h,
-                    local          = '{0:d}/liste_obs_[datebegin::ymd6h]_[dateend::ymd6h].tar.gz'.format(y1),
+                    local          = '[datebegin::ymd6h]_[dateend::ymd6h]/liste_obs_[datebegin::ymd6h]_[dateend::ymd6h].tar.gz',
                     namespace      = self.conf.namespace,
                     namebuild      = 'flat@cen',
                 )

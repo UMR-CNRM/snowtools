@@ -84,16 +84,6 @@ def parse_command_line():
     return args
 
 
-def decode_time(pro):
-    """
-    Manually decode time variable since other variables can not be decoded automatically
-    """
-    ds = xr.Dataset({"time": pro.time})
-    ds = xr.decode_cf(ds)
-    pro['time'] = ds.time
-    return pro
-
-
 def execute(subdir, dates):
     """
     Main method

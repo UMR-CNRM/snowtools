@@ -185,6 +185,7 @@ import pyproj
 
 from snowtools.utils.infomassifs import infomassifs
 from snowtools.DATA import SNOWTOOLS_DIR
+from snowtools.DATA import DIRDATADEM
 
 # Bibliothèque ad hoc de Matthieu L pour ouvrir les shapefiles
 import shapefile
@@ -203,9 +204,9 @@ import matplotlib.pyplot as plt
 NetCDF_out = 'NetCDF_from_shapefile.nc'
 
 # PATH_MNT
-path_MNT_alti_defaut = '/rd/cenfic3/cenmod/dem_cen/definitive/france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
-path_MNT_slope_defaut = '/rd/cenfic3/cenmod/dem_cen/definitive/france_30m/SLP_FRANCE_L93_30m_bilinear.tif'
-path_MNT_aspect_defaut = '/rd/cenfic3/cenmod/dem_cen/definitive/france_30m/ASP_FRANCE_L93_30m_bilinear.tif'
+path_MNT_alti_defaut = DIRDATADEM + 'france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
+path_MNT_slope_defaut = DIRDATADEM + 'france_30m/SLP_FRANCE_L93_30m_bilinear.tif'
+path_MNT_aspect_defaut = DIRDATADEM + 'france_30m/ASP_FRANCE_L93_30m_bilinear.tif'
 
 ################################################################
 # Infos shapefile massif, normally stable and durable

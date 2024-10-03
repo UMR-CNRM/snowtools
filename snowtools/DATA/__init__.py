@@ -27,6 +27,11 @@ DIRDATAPGD = '/rd/cenfic3/cenmod/simul_surfex_rech/lafaysse/FILES_PGD'
 PGD files at CEN
 """
 
+DIRDATADEM = '/rd/cenfic3/cenmod/dem_cen/definitive/'
+"""
+Path to the 30m and 250m Digital Elevation Model folders on cenfic3
+"""
+
 LUSTRE_NOSAVE_DIR = '/cnrm/mrns/users/NO_SAVE'
 
 try:
