@@ -25,12 +25,17 @@ block_map = dict(
 )
 
 default = dict(
-    namespace = 'vortex.multi.fr',
-    namebuild = 'flat@cen',
-    nativefmt = 'netcdf',
-    model     = 'surfex',
-    vconf     = '[geometry:tag]',
-    now       = True,
+    namespace  = 'vortex.multi.fr',
+    namebuild  = 'flat@cen',
+    nativefmt  = 'netcdf',
+    vconf      = '[geometry:tag]',  # CEN-specific norm
+    filename   = '[kind]_[datebegin:ymdh]_[dateend:ymdh].nc',
+    role       = '[kind]',
+    date       = '[dateend]',
+    # TODO : The *model* footprint should (almost ?) always be optionnal for CEN resources
+    model      = 'surfex',
+    #model      = '[vapp]' if '[kind]' != 'DIAG' else 'postproc',
+    now        = True,
 )
 
 namespace_map = dict(
@@ -74,7 +79,7 @@ def parse_args():
                         help="XPID of the simulation (format 'xpid@user').")
 
     parser.add_argument("-g", "--geometry", dest="geometry", required=True, type=str,
-                        help="Explore a specific geometry / vconf")
+                        help="The geometry of the ressource (must be defined in the 'geometries.ini' file !)")
 
     parser.add_argument("-k", "--kind", dest="kind", required=True, type=str, choices=block_map.keys(),
                         help="Kind of resource (values such as 'FORCING', 'PRO', 'DIAG',...) are accepted")
@@ -104,6 +109,9 @@ def parse_args():
 
     if args.action == 'clean':
         args.namespace = 'vortex.cache.fr',
+
+    if args.block is None:
+        args.block = block_map[args.kind]
 
     return args
 
@@ -149,47 +157,32 @@ def put(**description):
 
 def footprint_kitchen(**kw):
 
-    if 'xpid' in kw.keys():
-        kw['experiment'] = kw.pop('xpid')
+    #if 'xpid' in kw.keys():
+    #    # Use proper footprint (optionnal)
+    #    kw['experiment'] = kw.pop('xpid')
 
-    if 'vconf' not in kw.keys():
-        kw['vconf'] = '[geometry:tag]',
-
-    if 'role' not in kw.keys() or kw['role'] is None:
-        kw['role'] = kw['kind']
-
-    if 'filename' not in kw.keys() or kw['filename'] is None:
-        kw['filename'] = f'{kw["kind"]}_[datebegin:ymdh]_[dateend:ymdh].nc'
-
-    if 'member' in kw.keys() and kw['member'] is not None:
-        first_mb, last_mb = kw['member'].split(':')
-        kw['member'] = [mb for mb in range(int(first_mb), int(last_mb) + 1)]
+    if 'member' in kw.keys():
+        if ':' in kw['member']:
+            first_mb, last_mb = kw['member'].split(':')
+            kw['member'] = [mb for mb in range(int(first_mb), int(last_mb) + 1)]
         kw['filename'] = f'mb[member]/{kw["filename"]}'
 
-    if kw["workdir"] is not None:
+    if "workdir" in kw.keys():
         kw['filename'] = f'{kw["workdir"]}/{kw["filename"]}'
         kw.pop("workdir")
 
-    if 'block' not in kw.keys() or kw['block'] is None:
-        kw['block'] = block_map[kw['kind']]
+    # TODO : le bloc suivant sera à modifier après ré-organisation de Vortex
+#    if kw['model'] is None:
+#        kw['model'] = kw['vapp']
+#    elif kw['kind'] in ['DIAG']:
+#        kw['model'] = 'postproc'
 
-    if kw['model'] is None:
-        kw['model'] = kw['vapp']
-    elif kw['kind'] in ['DIAG']:
-        kw['model'] = 'postproc'  # TODO : à modifier après ré-organisation de Vortex
-
-    if kw['kind'] in kind_map.keys():
-        kw['kind'] = kind_map[kw['kind']]
-
-    if 'date' not in kw.keys() or kw['date'] is None:
-        kw['date'] = kw['dateend']
+#    if kw['kind'] in kind_map.keys():
+#        kw['kind'] = kind_map[kw['kind']]
 
     if "server" in kw.keys():
-        if kw["server"] is not None:
-            kw["namespace"] = namespace_map[kw["server"]]["namespace"]
-            kw["storage"] = namespace_map[kw["server"]]["storage"]
-        else:
-            kw.pop("server")
+        kw["namespace"] = namespace_map[kw["server"]]["namespace"]
+        kw["storage"] = namespace_map[kw["server"]]["storage"]
 
     return kw
 
@@ -198,4 +191,6 @@ if __name__ == '__main__':
     args = parse_args()
     user_footprints = vars(args)
     action = user_footprints.pop('action')
-    function_map()[action](**user_footprints)
+    # Remove None values (a default value should be defined)
+    actual_user_footprints = {k: v for k, v in user_footprints.items() if v is not None}
+    function_map()[action](**actual_user_footprints)
