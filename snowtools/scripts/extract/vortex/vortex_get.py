@@ -64,6 +64,9 @@ def parse_args():
     parser.add_argument("-e", "--dateend", dest="dateend", default=None, type=str,
                         help="Date of end of the simulation.")
 
+    parser.add_argument("-a", "--assimdates", dest="assimdates", default=None, nargs='+',
+                        help="Assimilation date(s)")
+
     parser.add_argument("-d", "--date", dest="date", default=None, type=str,
                         help="Date of the simulation.")
 
@@ -77,7 +80,10 @@ def parse_args():
                         help="Kind of resource (values such as 'FORCING', 'PRO', 'DIAG',...) are accepted")
 
     parser.add_argument("-f", "--filename", dest="filename", default=None, type=str,
-                        help="Local name of the file to get / put.")
+                        help="local name of the file to get / put.")
+
+    parser.add_argument("-w", "--workdir", dest="workdir", default=None, type=str,
+                        help="Local working directory to get / puyt the ressource(s)")
 
     parser.add_argument("--vapp", dest="vapp", default='s2m', type=str,
                         help="vapp of the simulation (ex: s2m, edelweiss, antilope, arome,...)")
@@ -118,7 +124,17 @@ def clean(description):
 def get(**description):
     default.update(description)
     description = footprint_kitchen(**default)
-    rh = toolbox.input(**description)
+
+    if description['assimdates'] is not None:
+        # Retrieve files covering sub-periods between each assimilation date
+        # TODO : trouver un moyen plus élégante en utilisant un dictionnaire dans les footprints
+        datesassim = description.pop("assimdates") + [description["dateend"]]
+        for date in datesassim:
+            description["dateend"] = date
+            rh = toolbox.input(**description)
+            description["datebegin"] = description["dateend"]
+    else:
+        rh = toolbox.input(**description)
 
     return rh
 
@@ -143,14 +159,18 @@ def footprint_kitchen(**kw):
         kw['role'] = kw['kind']
 
     if 'filename' not in kw.keys() or kw['filename'] is None:
-        kw['filename'] = f'{kw["kind"]}.nc'
+        kw['filename'] = f'{kw["kind"]}_[datebegin:ymdh]_[dateend:ymdh].nc'
 
     if 'member' in kw.keys() and kw['member'] is not None:
-        # first_mb, last_mb = kw['member'].split(':')
-        # kw['member'] = [mb for mb in range(int(first_mb), int(last_mb) + 1)]
+        first_mb, last_mb = kw['member'].split(':')
+        kw['member'] = [mb for mb in range(int(first_mb), int(last_mb) + 1)]
         kw['filename'] = f'mb[member]/{kw["filename"]}'
 
-    if 'block' not in kw.keys():
+    if kw["workdir"] is not None:
+        kw['filename'] = f'{kw["workdir"]}/{kw["filename"]}'
+        kw.pop("workdir")
+
+    if 'block' not in kw.keys() or kw['block'] is None:
         kw['block'] = block_map[kw['kind']]
 
     if kw['model'] is None:
