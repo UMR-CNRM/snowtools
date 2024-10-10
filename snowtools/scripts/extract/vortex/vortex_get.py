@@ -12,16 +12,21 @@ kind_map = dict(
     FORCING = 'MeteorologicalForcing',
     PRO     = 'SnowpackSimulation',
     DIAG    = 'SnowpackSimulation',  # TODO : à modifier après ré-organisation des resources Vortex
+    # SODA    = ['PART', 'BG_CORR', 'IMASK', 'ALPHA'],
+    SODA    = ['PART', 'IMASK', 'ALPHA'],
 )
 
 block_map = dict(
-    MeteorologicalForcing = 'meteo',
-    FORCING               = 'meteo',
-    SnowpackSimulation    = 'pro',
-    PRO                   = 'pro',
-    DIAG                  = 'diag',
-    SnowObservations      = '',
-    Precipitation         = '',
+    FORCING = 'meteo',
+    PRO     = 'pro',
+    DIAG    = 'diag',
+    SODA    = 'soda',
+)
+
+model_map = dict(
+    DIAG    = 'postproc',
+    SODA    = 'soda',
+    PRO     = 'surfex',
 )
 
 default = dict(
@@ -31,10 +36,6 @@ default = dict(
     vconf      = '[geometry:tag]',  # CEN-specific norm
     filename   = '[kind]_[datebegin:ymdh]_[dateend:ymdh].nc',
     role       = '[kind]',
-    date       = '[dateend]',
-    # TODO : The *model* footprint should (almost ?) always be optionnal for CEN resources
-    model      = 'surfex',
-    #model      = '[vapp]' if '[kind]' != 'DIAG' else 'postproc',
     now        = True,
 )
 
@@ -69,7 +70,7 @@ def parse_args():
     parser.add_argument("-e", "--dateend", dest="dateend", default=None, type=str,
                         help="Date of end of the simulation.")
 
-    parser.add_argument("-a", "--assimdates", dest="assimdates", default=None, nargs='+',
+    parser.add_argument("-a", "--dateassim", dest="dateassim", default=None, nargs='+',
                         help="Assimilation date(s)")
 
     parser.add_argument("-d", "--date", dest="date", default=None, type=str,
@@ -81,7 +82,7 @@ def parse_args():
     parser.add_argument("-g", "--geometry", dest="geometry", required=True, type=str,
                         help="The geometry of the ressource (must be defined in the 'geometries.ini' file !)")
 
-    parser.add_argument("-k", "--kind", dest="kind", required=True, type=str, choices=block_map.keys(),
+    parser.add_argument("-k", "--kind", dest="kind", required=True, type=str, choices=kind_map.keys(),
                         help="Kind of resource (values such as 'FORCING', 'PRO', 'DIAG',...) are accepted")
 
     parser.add_argument("-f", "--filename", dest="filename", default=None, type=str,
@@ -110,9 +111,6 @@ def parse_args():
     if args.action == 'clean':
         args.namespace = 'vortex.cache.fr',
 
-    if args.block is None:
-        args.block = block_map[args.kind]
-
     return args
 
 
@@ -133,16 +131,25 @@ def get(**description):
     default.update(description)
     description = footprint_kitchen(**default)
 
-    if description['assimdates'] is not None:
-        # Retrieve files covering sub-periods between each assimilation date
-        # TODO : trouver un moyen plus élégante en utilisant un dictionnaire dans les footprints
-        datesassim = description.pop("assimdates") + [description["dateend"]]
-        for date in datesassim:
-            description["dateend"] = date
-            rh = toolbox.input(**description)
-            description["datebegin"] = description["dateend"]
-    else:
-        rh = toolbox.input(**description)
+    if description['dateassim'] is not None:
+        # Verrue pour gérer les ressources issues de l'assimilation (plusieurs fichiers par saison)
+        # TODO : Trouver une solution plus propre
+        if description["block"] == "soda":
+            # TODO : Gérer ce changement de valeur par défaut plus proprement ?
+            description["nativefmt"]  = 'ascii'
+            description["filename"] = '[kind]_[dateassim:ymdh].txt'
+        else:
+            # Retrieve files covering sub-periods between each assimilation date
+            # TODO : trouver un moyen plus élégant en utilisant un dictionnaire dans les footprints ?
+            datesassim = description.pop("dateassim") + [description["dateend"]]
+            rh = list()
+            for date in datesassim:
+                description["dateend"] = date
+                rh.append(toolbox.input(**description))
+                description["datebegin"] = description["dateend"]
+            return rh
+
+    rh = toolbox.input(**description)
 
     return rh
 
@@ -156,10 +163,9 @@ def put(**description):
 
 
 def footprint_kitchen(**kw):
-
-    #if 'xpid' in kw.keys():
-    #    # Use proper footprint (optionnal)
-    #    kw['experiment'] = kw.pop('xpid')
+    """
+    This is the method used to set default footprint values
+    """
 
     if 'member' in kw.keys():
         if ':' in kw['member']:
@@ -172,17 +178,26 @@ def footprint_kitchen(**kw):
         kw.pop("workdir")
 
     # TODO : le bloc suivant sera à modifier après ré-organisation de Vortex
-#    if kw['model'] is None:
-#        kw['model'] = kw['vapp']
-#    elif kw['kind'] in ['DIAG']:
-#        kw['model'] = 'postproc'
+    # TODO : The *model* footprint should (almost ?) always be optionnal for CEN resources
+    if kw['kind'] in model_map.keys():
+        kw['model'] = model_map[kw['kind']]
+    else:
+        kw['model'] = kw['vapp']
 
-#    if kw['kind'] in kind_map.keys():
-#        kw['kind'] = kind_map[kw['kind']]
+    if 'block' not in kw.keys():
+        kw['block'] = block_map[kw["kind"]]
+
+    kw['kind'] = kind_map[kw["kind"]]
 
     if "server" in kw.keys():
         kw["namespace"] = namespace_map[kw["server"]]["namespace"]
         kw["storage"] = namespace_map[kw["server"]]["storage"]
+
+    if 'date' not in kw.keys():
+        if 'dateend' in kw.keys():
+            kw['date'] = '[dateend]'
+        elif 'dateassim' in kw.keys():
+            kw['date'] = '[dateassim]'
 
     return kw
 
