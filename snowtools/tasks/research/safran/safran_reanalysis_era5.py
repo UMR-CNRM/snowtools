@@ -13,9 +13,6 @@ from vortex.tools.systems import ExecutionError
 logger = footprints.loggers.getLogger(__name__)
 
 
-
-
-
 def setup(t, **kw):
     return Driver(
         tag='safran_reana',
@@ -469,7 +466,7 @@ class Safran(Task, S2MTaskMixIn):
             # NB : La date des executions est fixée à J-1 car l'analyse SAFRAN va de J-1 6h à J 6H
             self.sh.title('Toolbox algo tb22 = SAFRANE')
             tb22 = tbalgo1 = toolbox.algo(
-                engine         = 's2m',
+                engine         = 'blind',
                 kind           = 'safrane',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
@@ -493,7 +490,7 @@ class Safran(Task, S2MTaskMixIn):
                 # SAFRAN les cherche dans le répertoire courrant.
                 self.sh.title('Toolbox algo tb23 = SYRPLUIE')
                 tb23 = tbalgo2 = toolbox.algo(
-                    engine         = 's2m',
+                    engine         = 'blind',
                     kind           = 'syrpluie',
                     datebegin      = self.conf.datebegin.ymd6h,
                     dateend        = self.conf.dateend.ymd6h,
@@ -508,7 +505,7 @@ class Safran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox algo tb23_b = SYPLUIE')
             tb23 = tbalgo3 = toolbox.algo(
-                engine         = 's2m',
+                engine         = 'blind',
                 kind           = 'sypluie',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
@@ -523,7 +520,7 @@ class Safran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox algo tb24 = SYVAPR')
             tb24 = tbalgo4 = toolbox.algo(
-                engine         = 's2m',
+                engine         = 'blind',
                 kind           = 'syvapr',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
@@ -538,7 +535,7 @@ class Safran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox algo tb25 = SYVAFI')
             tb25 = tbalgo5 = toolbox.algo(
-                engine         = 's2m',
+                engine         = 'blind',
                 kind           = 'syvafi',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
@@ -553,7 +550,7 @@ class Safran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox algo tb26 = SYTIST')
             tb26 = tbalgo6 = toolbox.algo(
-                engine         = 's2m',
+                engine         = 'blind',
                 kind           = 'sytist',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
@@ -573,7 +570,6 @@ class Safran(Task, S2MTaskMixIn):
                 datebegin = rundate
                 dateend = min(datebegin.replace(year=datebegin.year + 1), self.conf.dateend)
                 season = datebegin.nivologyseason
-                next_season = dateend.nivologyseason
 
                 if rundate >= Date(2021, 8, 1):
                     source_app = 'arpege'
@@ -650,5 +646,25 @@ class Safran(Task, S2MTaskMixIn):
                 )
                 print(t.prompt, 'tb32 =', tb29)
                 print()
+
+#                self.sh.title('Toolbox output listings execution')
+#                tb31 = toolbox.output(
+#                    role           = 'Listing',
+#                    block          = 'listing',
+#                    experiment     = self.conf.xpid,
+#                    cutoff         = 'assimilation',
+#                    geometry        = self.conf.geometry[self.conf.vconf],
+#                    kind           = 'packedlisting',
+#                    datebegin      = datebegin.ymd6h,
+#                    dateend        = dateend.ymd6h,
+#                    date           = dateend.ymd6h,
+#                    local          = '{datebegin.ymd6h}_{dateend.ymd6h}/listings_safran_[datebegin::ymdh]_[dateend::ymdh].tar.gz',
+#                    nativefmt      = 'tar',
+#                    model          = 'safran',
+#                    namespace      = self.conf.namespace,
+#                    namebuild      = 'flat@cen',
+#                )
+#                print(t.prompt, 'tb31 =', tb31)
+#                print()
 
             raise ExecutionError('')

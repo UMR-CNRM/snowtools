@@ -78,7 +78,7 @@ class Reanalyses(Task, S2MTaskMixIn):
                         self.sh.title(f'Toolbox input tb01 : {rundate.ymdh}')
                         tb01 = toolbox.input(
                             role           = 'Reanalyse',
-                            local          = 'p{0:s}_{1:s}.tar'.format(season, self.conf.vconf),
+                            local          = 'p{0:s}_{1:s}_in.tar'.format(season, self.conf.vconf),
                             experiment     = self.conf.xpid,
                             block          = 'guess',
                             nativefmt      = 'tar',
@@ -147,20 +147,20 @@ class Reanalyses(Task, S2MTaskMixIn):
 
             #TODO :prévoir de regénérer les éventuels guess manquants
 
+            # Mise à jour de l'archive,
+            # TODO :
+            # Elle devrait désormais couvrir au moins la période allant du 31/07 6h jusqu'à J 6h
+            self.sh.tar('p{0:s}_{1:s}_out.tar'.format(season, self.conf.vconf), "P????????")
+
         if 'backup' in self.steps or 'late-backup' in self.steps:
 
             if True:  # to match IGA identation
-
-                # Mise à jour de l'archive,
-                # TODO :
-                # Elle devrait désormais couvrir au moins la période allant du 31/07 6h jusqu'à J 6h
-                self.sh.tar('p{0:s}_{1:s}.tar'.format(season, self.conf.vconf), "P????????")
 
                 self.sh.title('Toolbox output tb03')
                 tb03 = toolbox.output(
                     role           = 'Reanalyses',
                     kind           = 'packedguess',
-                    local          = 'p{0:s}_{1:s}.tar'.format(season, self.conf.vconf),
+                    local          = 'p{0:s}_{1:s}_out.tar'.format(season, self.conf.vconf),
                     experiment     = self.conf.xpid,
                     cutoff         = 'assimilation',
                     block          = 'guess',
