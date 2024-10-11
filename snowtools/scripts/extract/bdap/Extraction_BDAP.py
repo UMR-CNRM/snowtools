@@ -58,23 +58,26 @@ Exemples :
 # TODO : assurer que les points de grilles du sous domaines (coordonnées + pas lat/lon) sont
 # bien confondus aves les points de la grille native pour éviter une interpolation
 coords = dict(
-    alp = ['46800', '43700', '5000', '7600'],
-    pyr = ['43500', '42000', '-2000', '3500'],
-    cor = ['43000', '41000', '8000', '11500'],
+    alp            = ['46800', '43700', '5000', '7600'],
+    pyr            = ['43500', '42000', '-2000', '3500'],
+    cor            = ['43000', '41000', '8000', '11500'],
     GrandesRousses = ['45640', '44590', '5610', '7100'],  # includes 0.2° margin
-    LaBerarde = ['45100', '44700', '6000', '6530']
+    LaBerarde      = ['45100', '44700', '6000', '6530'],
+    MercantourTheo = ['44650', '43200', '6350', '8000'],  # includes 0.2° margin
 )
 
 # Pas en lat/lon de chaque grille en 1/1000 de °
 dl = dict(
-    FRANXL0025 = ['25', '25'],
-    FRANGP0025 = ['25', '25'],
-    EUROC25    = ['25', '25'],
-    GLOB025    = ['25', '25'],
-    EURW1S40   = ['25', '25'],
-    EURAT01    = ['10', '10'],
-    EURW1S100  = ['10', '10'],
-    EURAT1S20  = ['05', '05'],
+    FRANXL0025  = ['25', '25'],
+    FRANGP0025  = ['25', '25'],
+    EUROC25     = ['25', '25'],
+    GLOB025     = ['25', '25'],
+    EURW1S40    = ['25', '25'],
+    EURAT01     = ['10', '10'],
+    EURW1S100   = ['10', '10'],
+    EURAT1S20   = ['05', '05'],
+    FRAN0012    = ['10', '10'],
+    FRANXL1S100 = ['10', '10'],
 )
 
 model_map = dict(
@@ -112,7 +115,7 @@ def parse_command_line():
     # WARNING : the 'parameters' and 'level-type' arguments depend on each other.
     # TODO : find a way (a very complex dict ?) ton ensure consistency
     # TODO : mutualiser avec ce qu'a fait Hugo
-    parser.add_argument('-p', '--parameter', help='Parameter to extract', default=None,
+    parser.add_argument('-p', '--parameter', help='Parameter to extract', required=True,
                         choices=['PRECIP', 'WETBT', 'ALTITUDE', 'TPW', 'T', 'U', 'V', 'FLSOLAIRE', 'FLTHERM',
                                 'FLSOLAIRE_D', 'FLTHERM_D'])
 
@@ -124,15 +127,15 @@ def parse_command_line():
     parser.add_argument('-w', '--workdir', help="Runing directory (soprano's default)",)
 
     parser.add_argument('-m', '--model', help='NWP model from which the data must be extracted',
-                        choices=model_map.keys(), default=None)
+                        choices=model_map.keys(), required=True)
 
     parser.add_argument('-c', '--cutoff', help='NWP model cutoff from which the data must be extracted',
                         choices=['assimilation', 'prevision'], default=None)
 
     # TODO : documenter les périodes de disponibilités modèle/grille
-    parser.add_argument('-g', '--grid', help='BDAP grid name from which to extract data', default=None,
+    parser.add_argument('-g', '--grid', help='BDAP grid name from which to extract data', required=True,
                         choices=['FRANXL0025', 'EURW1S40', 'EURW1S100', 'EUROC25', 'GLOB025', 'EURAT01', 'EURAT1S20',
-                                 'FRANX01', 'GLOB25', 'FRANGP0025'])
+                                 'FRANX01', 'GLOB25', 'FRANGP0025', 'FRAN0012', 'FRANXL1S100'])
 
     parser.add_argument('-t', '--echeances', help='Echeances à extraire (integer or "first:last" format)')
 
@@ -243,7 +246,6 @@ if __name__ == "__main__":
     model      = args.model
     grid       = args.grid
     domain     = args.domain
-    parameter  = args.parameter
     if args.levels is None:
         levels = [str(lvl) for lvl in default_levels[level_type]]
     else:
@@ -261,7 +263,7 @@ if __name__ == "__main__":
         dt = args.pdt
 
     if args.workdir is None:
-        workdir = os.path.join(os.environ['HOME'], 'workdir', f'extraction_{args.model.upper()}', domain, parameter)
+        workdir = os.path.join(os.environ['HOME'], 'workdir', f'extraction_{model.upper()}', domain, parameter)
     else:
         workdir = args.workdir
     print(workdir)
@@ -293,7 +295,9 @@ if __name__ == "__main__":
         print('Dataset created')
         ds = ds.drop('time').rename(valid_time= 'time')
 
-        ds = ds.reindex(time=extract_period, fill_value=np.nan).sortby("time")
+        ds = ds.reindex(time=extract_period).sortby("time")
+        #ds = ds.reindex(time=extract_period, fill_value=np.nan).sortby("time")
+        # --> *** TypeError: The DType <class 'numpy.dtype[timedelta64]'> could not be promoted by <class 'numpy.dtype[float64]'>. This means that no common DType exists for the given inputs. For example they cannot be stored in a single array unless the dtype is `object`. The full list of DTypes is: (<class 'numpy.dtype[timedelta64]'>, <class 'numpy.dtype[float64]'>)
 
         ds.to_netcdf(outname)
 
