@@ -1,7 +1,10 @@
 import xarray as xr
 
-dimension_map = {'x': 'xx', 'y': 'yy', 'lat': 'yy', 'latitude': 'yy', 'lon': 'xx', 'longitude': 'xx'}
-variables_map = {'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf', 'band_data': 'ZS', 'tp': 'Precipitation'}
+# TODO : Use xarray's accessors instead ?
+# --> https://docs.xarray.dev/en/stable/internals/extending-xarray.html
+
+dimension_map = {'x': 'xx', 'y': 'yy'}
+variables_map = {'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf'}
 
 
 def preprocess(ds, decode_time=True, mapping=dict()):
