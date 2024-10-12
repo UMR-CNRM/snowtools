@@ -14,13 +14,20 @@ from snowtools.scripts.extract.obs.bdquery import question
 
 
 def usage():
-    print("USAGE extract_pluvios_antilope.py [datedeb datefin]")
+    print("USAGE extract_pluvios_antilope.py domain [datedeb datefin]")
     print("format des dates : YYYYMMDDHH")
     sys.exit(1)
 
 
+domain_map = dict(
+    alp            = (47., 41., 4., 10.),
+    MercantourTheo = (44.7, 43.2, 6.3, 8.),
+)
+
 if __name__ == "__main__":
 
+    domain = sys.argv[1]
+    latmax, latmin, lonmin, lonmax = domain_map[domain]
     listconditions = [
         # Apply ANTILOPE filter for "reseau_poste" (Cf mail from O.Laurantin on may 2022)
         "hist_reseau_poste.reseau_poste not in ('00','01','02','03','04','09','40','42','43','44','50','51','52','53',"
@@ -28,22 +35,23 @@ if __name__ == "__main__":
         # Filter out EDF-nivo observations
         "not nom_usuel like '%EDFNIVO'",
         # French Alps domain
-        "poste.lat_dg<=47.0 and poste.lat_dg>=41.0 and poste.lon_dg<=10. and poste.lon_dg>=4.0",
+        f"poste.lat_dg<={latmax} and poste.lat_dg>={latmin} and poste.lon_dg<={lonmax} and poste.lon_dg>={lonmin}",
     ]
     listvar = ["poste.num_poste", "poste.nom_usuel", "poste.lat_dg", "poste.lon_dg", "poste.alti",
             "hist_reseau_poste.reseau_poste"]
 
-    if len(sys.argv) == 1:
+
+    if len(sys.argv) == 2:
         period     = []
         table      = 'POSTE'
         listjoin   = ['HIST_RESEAU_POSTE ON HIST_RESEAU_POSTE.NUM_POSTE=POSTE.NUM_POSTE']
         listorder  = ['poste.num_poste']
         header     = ['num_poste', 'poste', 'lat', 'lon', 'alti', 'reseau_poste']
-        outputfile = 'liste_stations_ANTILOPE.csv'
+        outputfile = 'liste_stations_ANTILOPE_{domain}.csv'
 
-    elif len(sys.argv) == 3:
-        datedeb = sys.argv[1]
-        datefin = sys.argv[2]
+    elif len(sys.argv) == 4:
+        datedeb = sys.argv[2]
+        datefin = sys.argv[3]
         period = [datedeb, datefin]
         table      = 'H'
         listvar.extend(["h.dat", "h.rr1"])
@@ -51,7 +59,7 @@ if __name__ == "__main__":
             'HIST_RESEAU_POSTE ON HIST_RESEAU_POSTE.NUM_POSTE=H.NUM_POSTE']
         listorder      = ['h.dat', 'h.num_poste']
         header = ['dat', 'num_poste', 'poste', 'lat', 'lon', 'alti', 'reseau_poste', 'rr']
-        outputfile = f"obs_quotidiennes_RR_{datedeb}_{datefin}.data"
+        outputfile = f"obs_quotidiennes_RR_{domain}_{datedeb}_{datefin}.data"
 
     else:
         usage()
