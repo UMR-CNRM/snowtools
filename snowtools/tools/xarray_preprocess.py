@@ -1,5 +1,8 @@
 import xarray as xr
 
+# TODO : Use xarray's accessors instead ?
+# --> https://docs.xarray.dev/en/stable/internals/extending-xarray.html
+
 dimension_map = {'x': 'xx', 'y': 'yy'}
 variables_map = {'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf'}
 
