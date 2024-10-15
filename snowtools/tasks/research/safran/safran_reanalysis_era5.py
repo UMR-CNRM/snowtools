@@ -49,7 +49,7 @@ class Safran(Task, S2MTaskMixIn):
                 y1 = datebegin.year
                 y2 = dateend.year
 
-                self.sh.title(f'Toolbox input tb01 - {y1:d}/{y2:d}')
+                self.sh.title(f'Toolbox input tb01 - {y1}/{y2}')
                 tb01 = toolbox.input(
                     role           = 'Ebauche',
                     kind           = 'packedguess',
@@ -69,29 +69,31 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb01 =', tb01)
                 print()
 
-                # TODO : Gérer le fait de ne pas prendre le fichier 2 de 6h le 01/08
-                self.sh.title(f'Toolbox input tb02 - {y1:d}/{y2:d}')
-                tb02 = toolbox.input(
-                    role           = 'Observations',
-                    part           = 'all',
-                    geometry       = self.conf.geometry[self.conf.vconf],
-                    kind           = 'packedobs',
-                    #nativefmt      = 'tar',
-                    #unknownflow    = True,
-                    local          = '{0:s}_{1:s}/rs{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
-                    namespace      = 's2m.archive.fr',
-                    #remote         = '/home/vernaym/s2m/[geometry]/obs/rs{0:s}.tar'.format(season),
-                    #hostname       = 'hendrix.meteo.fr',
-                    date           = dateend.ymdh,
-                    datebegin      = datebegin.ymdh,
-                    dateend        = dateend.ymdh,
-                    #tube           = 'ftp',
-                    model          = self.conf.model,
-                    source         = 'surfaceobs',
-                    now            = True,
-                )
-                print(t.prompt, 'tb02 =', tb02)
-                print()
+                if self.conf.assim:
+
+                    # TODO : Gérer le fait de ne pas prendre le fichier 2 de 6h le 01/08
+                    self.sh.title(f'Toolbox input tb02 - {y1}/{y2}')
+                    tb02 = toolbox.input(
+                        role           = 'Observations',
+                        part           = 'all',
+                        geometry       = self.conf.geometry[self.conf.vconf],
+                        kind           = 'packedobs',
+                        #nativefmt      = 'tar',
+                        #unknownflow    = True,
+                        local          = '{0:s}_{1:s}/rs{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
+                        namespace      = 's2m.archive.fr',
+                        #remote         = '/home/vernaym/s2m/[geometry]/obs/rs{0:s}.tar'.format(season),
+                        #hostname       = 'hendrix.meteo.fr',
+                        date           = dateend.ymdh,
+                        datebegin      = datebegin.ymdh,
+                        dateend        = dateend.ymdh,
+                        #tube           = 'ftp',
+                        model          = self.conf.model,
+                        source         = 'surfaceobs',
+                        now            = True,
+                    )
+                    print(t.prompt, 'tb02 =', tb02)
+                    print()
 
                 if datebegin >= Date(1991, 8, 1, 6) and dateend <= Date(2018, 8, 1, 6) and self.conf.vconf in ['alp', 'pyr', 'cor']:
 
