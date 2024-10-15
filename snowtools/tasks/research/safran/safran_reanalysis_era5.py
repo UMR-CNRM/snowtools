@@ -15,10 +15,10 @@ logger = footprints.loggers.getLogger(__name__)
 
 def setup(t, **kw):
     return Driver(
-        tag='safran_reana',
+        tag='safran_reana_era5',
         ticket=t,
         nodes=[
-            Safran(tag='safran_reana', ticket=t, **kw),
+            Safran(tag='safran_reana_era5', ticket=t, **kw),
         ],
         options=kw,
     )
@@ -403,38 +403,53 @@ class Safran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb18 =', tbx2)
             print()
 
-            self.sh.title('Toolbox executable tb18_b = tbx3')
-            tb18_b = tbx3 = toolbox.executable(
-                role           = 'Binary',
-                genv           = self.conf.cycle,
-                kind           = 'sypluie',
-                local          = 'sypluie',
-                model          = self.conf.model,
-            )
-            print(t.prompt, 'tb18_b =', tb18_b)
-            print()
+            if self.conf.assim:
 
-            self.sh.title('Toolbox executable tb19 = tbx4')
-            tb19 = tbx4 = toolbox.executable(
-                role           = 'Binary',
-                genv           = self.conf.cycle,
-                kind           = 'syvapr',
-                local          = 'syvapr',
-                model          = self.conf.model,
-            )
-            print(t.prompt, 'tb19 =', tb19)
-            print()
+                self.sh.title('Toolbox executable tb18_b = tbx3')
+                tb18_b = tbx3 = toolbox.executable(
+                    role           = 'Binary',
+                    genv           = self.conf.cycle,
+                    kind           = 'sypluie',
+                    local          = 'sypluie',
+                    model          = self.conf.model,
+                )
+                print(t.prompt, 'tb18_b =', tb18_b)
+                print()
 
-            self.sh.title('Toolbox executable tb20 = tbx5')
-            tb20 = tbx5 = toolbox.executable(
-                role           = 'Binary',
-                genv           = self.conf.cycle,
-                kind           = 'syvafi',
-                local          = 'syvafi',
-                model          = self.conf.model,
-            )
-            print(t.prompt, 'tb20 =', tb20)
-            print()
+                self.sh.title('Toolbox executable tb19 = tbx4')
+                tb19 = tbx4 = toolbox.executable(
+                    role           = 'Binary',
+                    genv           = self.conf.cycle,
+                    kind           = 'syvapr',
+                    local          = 'syvapr',
+                    model          = self.conf.model,
+                )
+                print(t.prompt, 'tb19 =', tb19)
+                print()
+
+                self.sh.title('Toolbox executable tb20 = tbx5')
+                tb20 = tbx5 = toolbox.executable(
+                    role           = 'Binary',
+                    genv           = self.conf.cycle,
+                    kind           = 'syvafi',
+                    local          = 'syvafi',
+                    model          = self.conf.model,
+                )
+                print(t.prompt, 'tb20 =', tb20)
+                print()
+
+            else:
+
+                self.sh.title('Toolbox executable syrmRR')
+                tb13 = tbx3 = toolbox.executable(
+                    role           = 'Binary',
+                    genv           = self.conf.cycle,
+                    kind           = 'syrmrr',
+                    local          = 'syrmRR',
+                    model          = self.conf.model,
+                )
+                print(t.prompt, 'tb13 =', tb13)
+                print()
 
             self.sh.title('Toolbox executable tb21 = tbx6')
             tb21 = tbx6 = toolbox.executable(
@@ -505,50 +520,68 @@ class Safran(Task, S2MTaskMixIn):
 
                 self.component_runner(tbalgo2, tbx2)
 
-            self.sh.title('Toolbox algo tb23_b = SYPLUIE')
-            tb23 = tbalgo3 = toolbox.algo(
-                engine         = 'blind',
-                kind           = 'sypluie',
-                datebegin      = self.conf.datebegin.ymd6h,
-                dateend        = self.conf.dateend.ymd6h,
-                # members        = footprints.util.rangex(self.conf.members),
-                ntasks         = self.conf.ntasks,
-                execution      = self.conf.execution,
-            )
-            print(t.prompt, 'tb23 =', tb23)
-            print()
+            if self.conf.assim:
 
-            self.component_runner(tbalgo3, tbx3)
+                self.sh.title('Toolbox algo tb23_b = SYPLUIE')
+                tb23 = tbalgo3 = toolbox.algo(
+                    engine         = 'blind',
+                    kind           = 'sypluie',
+                    datebegin      = self.conf.datebegin.ymd6h,
+                    dateend        = self.conf.dateend.ymd6h,
+                    # members        = footprints.util.rangex(self.conf.members),
+                    ntasks         = self.conf.ntasks,
+                    execution      = self.conf.execution,
+                )
+                print(t.prompt, 'tb23 =', tb23)
+                print()
 
-            self.sh.title('Toolbox algo tb24 = SYVAPR')
-            tb24 = tbalgo4 = toolbox.algo(
-                engine         = 'blind',
-                kind           = 'syvapr',
-                datebegin      = self.conf.datebegin.ymd6h,
-                dateend        = self.conf.dateend.ymd6h,
-                # members        = footprints.util.rangex(self.conf.members),
-                ntasks         = self.conf.ntasks,
-                execution      = self.conf.execution,
-            )
-            print(t.prompt, 'tb24 =', tb24)
-            print()
+                self.component_runner(tbalgo3, tbx3)
 
-            self.component_runner(tbalgo4, tbx4)
+                self.sh.title('Toolbox algo tb24 = SYVAPR')
+                tb24 = tbalgo4 = toolbox.algo(
+                    engine         = 'blind',
+                    kind           = 'syvapr',
+                    datebegin      = self.conf.datebegin.ymd6h,
+                    dateend        = self.conf.dateend.ymd6h,
+                    # members        = footprints.util.rangex(self.conf.members),
+                    ntasks         = self.conf.ntasks,
+                    execution      = self.conf.execution,
+                )
+                print(t.prompt, 'tb24 =', tb24)
+                print()
 
-            self.sh.title('Toolbox algo tb25 = SYVAFI')
-            tb25 = tbalgo5 = toolbox.algo(
-                engine         = 'blind',
-                kind           = 'syvafi',
-                datebegin      = self.conf.datebegin.ymd6h,
-                dateend        = self.conf.dateend.ymd6h,
-                # members        = footprints.util.rangex(self.conf.members),
-                ntasks         = self.conf.ntasks,
-                execution      = self.conf.execution,
-            )
-            print(t.prompt, 'tb25 =', tb25)
-            print()
+                self.component_runner(tbalgo4, tbx4)
 
-            self.component_runner(tbalgo5, tbx5)
+                self.sh.title('Toolbox algo tb25 = SYVAFI')
+                tb25 = tbalgo5 = toolbox.algo(
+                    engine         = 'blind',
+                    kind           = 'syvafi',
+                    datebegin      = self.conf.datebegin.ymd6h,
+                    dateend        = self.conf.dateend.ymd6h,
+                    # members        = footprints.util.rangex(self.conf.members),
+                    ntasks         = self.conf.ntasks,
+                    execution      = self.conf.execution,
+                )
+                print(t.prompt, 'tb25 =', tb25)
+                print()
+
+                self.component_runner(tbalgo5, tbx5)
+
+            else:
+
+                self.sh.title('Toolbox algo SYRMRR')
+                tb17 = tbalgo3 = toolbox.algo(
+                    engine         = 'blind',
+                    kind           = 'syrmrr',
+                    datebegin      = self.conf.datebegin.ymd6h,
+                    dateend        = self.conf.dateend.ymd6h,
+                    ntasks         = self.conf.ntasks,
+                    execution      = self.conf.execution,
+                )
+                print(t.prompt, 'tb17 =', tb17)
+                print()
+
+                self.component_runner(tbalgo3, tbx3)
 
             self.sh.title('Toolbox algo tb26 = SYTIST')
             tb26 = tbalgo6 = toolbox.algo(
