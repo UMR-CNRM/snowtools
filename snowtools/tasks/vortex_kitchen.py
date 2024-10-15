@@ -17,6 +17,7 @@ from snowtools.utils.dates import WallTimeException
 from snowtools.utils.resources import InstallException, absolute_path
 from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
 from snowtools.tools.execute import callSystemOrDie
+from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 from snowtools.DATA import SNOWTOOLS_DIR
 from bronx.stdtypes.date import Period
 
@@ -654,18 +655,20 @@ class Vortex_conf_file(object):
                 self.set_field('DEFAULT', direct_attr, default_attr[direct_attr])
 
         if hasattr(confObj, 'assimdates'):
+            # TODO : à gérer plus proprement
             if type(confObj.assimdates) is list:
-                # case for only 1 assimilation date --> confObj.assimdates is list
+                # case for more than 1 assimilation date --> confObj.assimdates is list
                 intdates = list(map(int, confObj.assimdates))
             else:
                 # case for only 1 assimilation date --> confObj.assimdates is str
                 intdates = [int(confObj.assimdates)]
 
-            intdatefin = int(self.options.datefin.strftime("%Y%m%d%H"))
+            list_dates_begin_forc, list_dates_end_forc, list_dates_begin_pro, list_dates_end_pro = \
+                get_list_dates_files(self.options.datedeb, self.options.datefin, "yearly")
+
+            intdates.extend([int(d.ymdh) for d in list_dates_end_forc])
             intdates.sort()
-            bisect.insort(intdates, intdatefin)
             intdates = np.array(intdates)
-            intdates = intdates[intdates <= intdatefin]
             print('stopdates', intdates)
             intdates = intdates.tolist()
             # BC june 2020 bug in driver when stopdates has only one item

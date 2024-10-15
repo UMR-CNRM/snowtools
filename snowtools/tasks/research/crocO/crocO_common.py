@@ -125,8 +125,12 @@ class _CrocO_Task(Task, S2MTaskMixIn):
         # since we usually have more members than forcing files, we loop over forcing files
         date_begin_forc, date_end_forc, _, _ = \
             get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
-        date_begin_forc = date_begin_forc[0]
-        date_end_forc = date_end_forc[0]  # replace one-item list by item.
+
+        # In case of a multi-year execution, datebegin=yyyy0801 and date_begin_forc is a 2-element list
+        # --> take the forcing STARTIN on *datebegin* (the 2nd element of the list)
+        # In other cases, date_begin_forc is a 1-item list
+        date_begin_forc = date_begin_forc[-1]
+        date_end_forc = date_end_forc[-1]
         forcExp = self.conf.forcingid
         meteo_members = {str(m): ((m - 1) % int(self.conf.nforcing)) + 1 for m in self.conf.members}
 

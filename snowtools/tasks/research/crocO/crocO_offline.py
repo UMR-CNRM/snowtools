@@ -147,8 +147,11 @@ class Offline_Task(_CrocO_Task):
             date_begin_forc, date_end_forc, _, _ = \
                 get_list_dates_files(self.conf.datebegin, Date(check_and_convert_date(self.conf.stopdate)),
                                      self.conf.duration)  # each one of these items has only one item
-            date_begin_forc = date_begin_forc[0]
-            date_end_forc = date_end_forc[0]  # replace one-item list by item.
+            # In case of a multi-year execution, datebegin=yyyy0801 and date_begin_forc is a 2-element list
+            # --> take the forcing STARTIN on *datebegin* (the 2nd element of the list)
+            # In other cases, date_begin_forc is a 1-item list
+            date_begin_forc = date_begin_forc[-1]
+            date_end_forc = date_end_forc[-1]
             firstforcing = 'mb{0:04d}'.format(self.conf.membersnode[0]) +\
                            '/FORCING_' + date_begin_forc.strftime("%Y%m%d%H") +\
                            "_" + date_end_forc.strftime("%Y%m%d%H") + ".nc"
