@@ -438,18 +438,18 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb20 =', tb20)
                 print()
 
-            else:
-
-                self.sh.title('Toolbox executable syrmRR')
-                tb13 = tbx3 = toolbox.executable(
-                    role           = 'Binary',
-                    genv           = self.conf.cycle,
-                    kind           = 'syrmrr',
-                    local          = 'syrmRR',
-                    model          = self.conf.model,
-                )
-                print(t.prompt, 'tb13 =', tb13)
-                print()
+#            else:
+#
+#                self.sh.title('Toolbox executable syrmRR')
+#                tb13 = tbx3 = toolbox.executable(
+#                    role           = 'Binary',
+#                    genv           = self.conf.cycle,
+#                    kind           = 'syrmrr',
+#                    local          = 'syrmRR',
+#                    model          = self.conf.model,
+#                )
+#                print(t.prompt, 'tb13 =', tb13)
+#                print()
 
             self.sh.title('Toolbox executable tb21 = tbx6')
             tb21 = tbx6 = toolbox.executable(
@@ -495,30 +495,30 @@ class Safran(Task, S2MTaskMixIn):
 
             self.component_runner(tbalgo1, tbx1)
 
-            if self.conf.execution == 'analysis':
+#            if self.conf.execution == 'analysis':
 
-                # Cas d'une execution où l'on veut utiliser les rr ARPEGE comme guess
-                # A lancer avec un job_name=with_rr_arpege (cf fichier de conf)
-                # WARNING : si execution="analysis" l'algo component définit les
-                # observations comme des fichiers "communs", ce qui n'est pas le
-                # cas.
-                # Les obs sont néanmoins bien assimilées car si les fichiers d'obs ne sont pas 
-                # au chemin indiqué dans les fichiers OP* (ce qui dépend de la variable "execution"),
-                # SAFRAN les cherche dans le répertoire courrant.
-                self.sh.title('Toolbox algo tb23 = SYRPLUIE')
-                tb23 = tbalgo2 = toolbox.algo(
-                    engine         = 'blind',
-                    kind           = 'syrpluie',
-                    datebegin      = self.conf.datebegin.ymd6h,
-                    dateend        = self.conf.dateend.ymd6h,
-                    # members        = footprints.util.rangex(self.conf.members),
-                    ntasks         = self.conf.ntasks,
-                    execution      = self.conf.execution,
-                )
-                print(t.prompt, 'tb23 =', tb23)
-                print()
+            # Cas d'une execution où l'on veut utiliser les rr ARPEGE comme guess
+            # A lancer avec un job_name=with_rr_arpege (cf fichier de conf)
+            # WARNING : si execution="analysis" l'algo component définit les
+            # observations comme des fichiers "communs", ce qui n'est pas le
+            # cas.
+            # Les obs sont néanmoins bien assimilées car si les fichiers d'obs ne sont pas 
+            # au chemin indiqué dans les fichiers OP* (ce qui dépend de la variable "execution"),
+            # SAFRAN les cherche dans le répertoire courrant.
+            self.sh.title('Toolbox algo tb23 = SYRPLUIE')
+            tb23 = tbalgo2 = toolbox.algo(
+                engine         = 'blind',
+                kind           = 'syrpluie',
+                datebegin      = self.conf.datebegin.ymd6h,
+                dateend        = self.conf.dateend.ymd6h,
+                # members        = footprints.util.rangex(self.conf.members),
+                ntasks         = self.conf.ntasks,
+                execution      = self.conf.execution,
+            )
+            print(t.prompt, 'tb23 =', tb23)
+            print()
 
-                self.component_runner(tbalgo2, tbx2)
+            self.component_runner(tbalgo2, tbx2)
 
             if self.conf.assim:
 
@@ -567,21 +567,21 @@ class Safran(Task, S2MTaskMixIn):
 
                 self.component_runner(tbalgo5, tbx5)
 
-            else:
-
-                self.sh.title('Toolbox algo SYRMRR')
-                tb17 = tbalgo3 = toolbox.algo(
-                    engine         = 'blind',
-                    kind           = 'syrmrr',
-                    datebegin      = self.conf.datebegin.ymd6h,
-                    dateend        = self.conf.dateend.ymd6h,
-                    ntasks         = self.conf.ntasks,
-                    execution      = self.conf.execution,
-                )
-                print(t.prompt, 'tb17 =', tb17)
-                print()
-
-                self.component_runner(tbalgo3, tbx3)
+#            else:
+#
+#                self.sh.title('Toolbox algo SYRMRR')
+#                tb17 = tbalgo3 = toolbox.algo(
+#                    engine         = 'blind',
+#                    kind           = 'syrmrr',
+#                    datebegin      = self.conf.datebegin.ymd6h,
+#                    dateend        = self.conf.dateend.ymd6h,
+#                    ntasks         = self.conf.ntasks,
+#                    execution      = self.conf.execution,
+#                )
+#                print(t.prompt, 'tb17 =', tb17)
+#                print()
+#
+#                self.component_runner(tbalgo3, tbx3)
 
             self.sh.title('Toolbox algo tb26 = SYTIST')
             tb26 = tbalgo6 = toolbox.algo(
