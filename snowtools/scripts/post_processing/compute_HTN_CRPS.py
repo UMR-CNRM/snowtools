@@ -111,7 +111,7 @@ def execute():
     # b) DEM
     # io.get_const(uenv, 'relief', geometry, filename='TARGET_RELIEF.nc', gvar='RELIEF_GRANDESROUSSES250M_L93')
     # High-resolution (25m) DEM for fancy figures (set shade=True in plot_field calls)
-    io.get_const('uenv:dem.1@vernaym', 'relief', geometry, filename='TARGET_RELIEF.nc',
+    io.get_const('uenv:dem.2@vernaym', 'relief', geometry, filename='TARGET_RELIEF.nc',
             gvar='DEM_GRANDESROUSSES25M_L93')
 
     # Get Domain's DEM in case ZS not in simulation file
@@ -187,7 +187,7 @@ def execute():
 
         simu = read_simu(xpid, member, date)
 
-        if clustering in 'elevation':
+        if clustering in 'elevation' and (member is None or len(member) == 1):
             # Add empty plot for common legend
             #im.append(plt.plot([], [], color=colors_map[name], label=name, linewidth=3))
             for i, elevation in enumerate(safran_elevations):
