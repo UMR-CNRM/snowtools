@@ -9,6 +9,7 @@ based on code from Ange Haddjeri thesis. (chapter 5 notebook)
 
 import numpy as np
 import matplotlib
+from matplotlib import cm
 import matplotlib.pyplot as plt
 from snowtools.plots.abstracts.figures import Mplfigure
 
@@ -21,14 +22,19 @@ def get_moran_palette():
     :return: a color palette
     :rtype: matplotlib.colors.LinearSegmentedColormap
     """
-    palette = plt.get_cmap('Paired').copy()
-    # print(palette)
-    # print(palette.colors[0])
-    mypalette = matplotlib.colors.LinearSegmentedColormap.from_list('moran_colors',
-                                                                    colors=[palette.colors[i] for i in [5, 0, 1, 4]],
-                                                                    N=4)
-    # palette.colors = (palette.colors[5], palette.colors[0], palette.colors[1], palette.colors[4])
-    mypalette.set_under(color='lightgrey')
+    try:
+        mypalette = cm.get_cmap('moran_colors')
+    except ValueError:
+        palette = plt.get_cmap('Paired').copy()
+        mypalette = matplotlib.colors.LinearSegmentedColormap.from_list('moran_colors',
+                                                                        colors=['lightgrey'] + [palette.colors[i] for i in [5, 0, 1, 4]],
+                                                                        N=5)
+        # mypalette.set_under(color='lightgrey')
+        if matplotlib.__version__ >= '3.5':
+            matplotlib.colormap.register(cmap=mypalette) # for matplotlib >= 3.5
+        else:
+            cm.register_cmap(cmap=mypalette) # for matplotlib 3.4
+
     return mypalette
 
 
@@ -130,14 +136,24 @@ class MoranScatterColored(MoranScatter):
 
     @property
     def palette(self):
+        """
+        Moran scatter specific colormap
+        :return: colormap instance
+        :rtype: matplotlib.colors.LinearSegmentedColormap
+        """
         return get_moran_palette()
 
     @property
     def norm(self):
-        return matplotlib.colors.Normalize(vmax=4, vmin=1)
+        return matplotlib.colors.Normalize(vmax=4, vmin=0)
 
     @property
     def legend_params(self):
+        """
+        standard legend parameters for Moran Scatter plot
+        :return: legend parameters
+        :rtype: dict
+        """
         return dict(loc='upper left', fontsize=12, framealpha=0.9, frameon=True)
 
     def plot_var(self, variable, lagged_variable, color=None, marker='.', slopecolor='r'):
@@ -162,10 +178,7 @@ class MoranScatterColored(MoranScatter):
             raise AssertionError("variable and color (quadrants) arrays have to be same length")
 
         s = self.plot.scatter(variable, lagged_variable, marker=marker, c=color, cmap=self.palette,
-                              norm=self.norm)
-        self.plot.legend(s, labels=['ns', 'hot', 'doghnut', 'cold', 'diamond'])
-
-        # self.plot.legend((0, 1, 2, 3, 4), ('ns', 'hot', 'doghnut', 'cold', 'diamond'))  # , **self.legend_params
+                             norm=self.norm)
         # dashed vertical line at mean of the variable
         self.plot.vlines(np.nanmean(variable), np.nanmin(lagged_variable),
                          np.nanmax(lagged_variable), linestyle='--')
@@ -187,12 +200,12 @@ class MoranScatterColored(MoranScatter):
         add a legend to the moran scatter plot
         """
         from matplotlib.patches import Patch
-        legend_elements = [Patch(color=self.palette.get_under(),
+        legend_elements = [Patch(color=self.palette(0),
                                  label='not significant'),
-                           Patch(color=self.palette(0), label='hot spot'),
-                           Patch(color=self.palette(1), label='doughnut'),
-                           Patch(color=self.palette(2), label='cold spot'),
-                           Patch(color=self.palette(3), label='diamond')]
+                           Patch(color=self.palette(1), label='hot spot'),
+                           Patch(color=self.palette(2), label='doughnut'),
+                           Patch(color=self.palette(3), label='cold spot'),
+                           Patch(color=self.palette(4), label='diamond')]
         legend2 = plt.legend(handles=legend_elements, **self.legend_params)
 
 

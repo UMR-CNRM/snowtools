@@ -7,6 +7,10 @@ Created on 23 April 2024
 based on code from Ange Haddjeri thesis.
 """
 
+import epygram
+import footprints
+from footprints import proxy as fpx
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
@@ -16,8 +20,9 @@ from scipy.stats import pearsonr
 from abc import ABC, abstractmethod
 from snowtools.scores.list_scores import SpatialScoreFile
 from snowtools.utils.prosimu import prosimu_xr
-from snowtools.plots.scores.moran_scatter import MoranScatter, MoranScatterColored
+from snowtools.plots.scores.moran_scatter import MoranScatter, MoranScatterColored, get_moran_palette
 from snowtools.plots.maps.cartopy import MoranMap
+
 try:
     from snowtools.scores import crps
 except ImportError:
@@ -72,6 +77,7 @@ class LocalMoranData:
         self.moran_I = np.nansum(self.local_moran_I)
         self.random_sigma = self.get_random_sigma()
         self.quadrant_numbers = self.get_quadrant_numbers(significance=(self.random_sigma * 1.96)) # 0) #
+        # self.quadrant_numbers = self.get_quadrant_numbers(significance=(self.random_sigma * 0))  # 0)
 
     def plot_moran_scatter_simple(self, variable_name, filename=None, **kwargs):
         """
@@ -102,8 +108,7 @@ class LocalMoranData:
         :type variable_name: str
         :param filename: optional output file name for the graphic
         :type filename: pathlike
-        :param kwargs:
-        :return:
+        :param kwargs: used plot kwargs: 'title'
         """
         if 'title' in kwargs.keys():
             pl = MoranScatterColored(variable_name=variable_name, title=kwargs['title'])
@@ -115,9 +120,9 @@ class LocalMoranData:
             plt.show()
         else:
             pl.save(filename, formatout='png')
+            pl.close()
 
-    # TODO: improve quadrant map
-    def plot_quadrant_map(self, x, y, crs, filename=None):
+    def plot_quadrant_map(self, x, y, geometry, filename=None):
         """
         plot a map where pixels are colored according to the quadrant of the Moran Scatter plot for
         its local Morans I.
@@ -126,19 +131,37 @@ class LocalMoranData:
         :type x: 1D array like
         :param y: y-coordinates
         :type y: 1D array like
-        :param crs: map projection
-        :type crs: cartopy.crs
+        :param geometry: map projection
+        :type geometry: epygram.geometry
         :param filename: ptional output file name for the graphic
         :type filename: pathlike
         """
-        pl = MoranMap(projection=crs)
-        pl.add_gridlines(crs=crs)
-        pl.map.pcolormesh(x, y, self.quadrant_numbers, cmap=pl.palette, norm=pl.norm)
+        field_kwargs = {'fid': {'netCDF' : 'moran_quadrant_numbers'}}
+        field_kwargs['geometry'] = geometry
+        field_kwargs['structure'] = geometry.structure
+        field = fpx.field(**field_kwargs)
+        field.setdata(self.quadrant_numbers)
+        palette = get_moran_palette()
+        fig, ax = field.cartoplot(parallels=0.05, meridians=0.05,
+                                  title = 'Local Moran Scatter Quadrant Map',
+                                  pcolormesh_kw={'vmin': 0, 'vmax': 4},
+                                  colormap_helper=epygram.colormapping.ColormapHelper('moran_colors',
+                                                                                      normalize=False,
+                                                                                      explicit_colorbounds=[0, 1, 2, 3, 4],
+                                                                                      explicit_ticks=[0.4, 1.2, 2, 2.8, 3.6]),
+                                  minmax_along_colorbar=False,
+                                  colorbar_kw={'format': matplotlib.ticker.FixedFormatter(['ns',
+                                                                                           'hot', 'doghnut',
+                                                                                           'cold', 'diamond'])})
+        # pl = MoranMap(projection=crs)
+        # pl.add_gridlines(crs=crs)
+        # pl.map.pcolormesh(x, y, self.quadrant_numbers, cmap=pl.palette, norm=pl.norm)
         if filename is None:
             plt.show()
         else:
-            pl.save(filename, formatout='png')
-
+            fig.savefig(filename, format='png')
+            fig.clear()
+            plt.close(fig)
 
     def get_random_sigma(self):
         """
