@@ -21,6 +21,7 @@ from snowtools.DATA import TESTBASE_DIR
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 TEST_SIM_DIR = os.path.join(TESTBASE_DIR, "PRO")
 TIME_CRPS = False
+PROJ_avail = False
 
 
 class TestSpatialFile(unittest.TestCase):
@@ -86,13 +87,28 @@ class TestSpatialFile(unittest.TestCase):
     def test_local_moran(self):
         local_moran = LocalMoranData(self.myscores.fc_data['bli'].data)
         self.assertAlmostEqual(local_moran.moran_I, 0.876794444)
-        # TODO: implement tests for colored moran scatter plot and quadrant map
-        # local_moran.plot_moran_scatter_colored('snow height', title=self.myscores.experiments[0])
-        # lcc = LCCProjectionType(self.myscores.fc_data['bli'].xx.data, self.myscores.fc_data['bli'].yy.data)
-        # print(lcc.crs)
-        # local_moran.plot_quadrant_map(self.myscores.obs_data.xx.data, self.myscores.obs_data.yy.data, lcc.crs)
 
-        # print(loca_moran)
+class TestMoranDiags(TestWithTempFolderWithLog, TestSpatialFile):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.local_moran = LocalMoranData(cls.myscores.fc_data['bli'].data)
+
+    def test_moran_scatter_colored(self):
+        self.local_moran.plot_moran_scatter_colored('snow height',
+                                                    title=self.myscores.experiments[0],
+                                                    filename=os.path.join(self.diroutput,
+                                                                          "moran_scatter_colored.png"))
+
+    @unittest.skipIf(not PROJ_avail, "PROJ not available")
+    def test_moran_quadrant_map(self):
+        lcc = LCCProjectionType(self.myscores.fc_data['bli'].xx.data, self.myscores.fc_data['bli'].yy.data)
+        self.local_moran.plot_quadrant_map(self.myscores.obs_data.xx.data,
+                                           self.myscores.obs_data.yy.data, lcc.geometry,
+                                           filename=os.path.join(self.diroutput, "moran_quadrant_map.png"))
+        # self.local_moran.plot_quadrant_map(self.myscores.obs_data.xx.data,
+        #                                    self.myscores.obs_data.yy.data, lcc.geometry)
+
 
 
 class TestPerfDiag(TestWithTempFolderWithLog):
@@ -103,6 +119,7 @@ class TestPerfDiag(TestWithTempFolderWithLog):
         diag.add_legend()
         diag.addlogo()
         diag.save(os.path.join(self.diroutput, "perfdiag.png"), formatout="png")
+        diag.close()
 
 
 class TestFuzzyDiag(TestWithTempFolderWithLog):
@@ -112,6 +129,7 @@ class TestFuzzyDiag(TestWithTempFolderWithLog):
         rng = np.random.default_rng(12345)
         diag.draw(rng.uniform(low=0., high=1, size=(5, 10)), range(1, 6), range(0, 10))
         diag.save(os.path.join(self.diroutput, "fuzzydiag.png"), formatout="png")
+        diag.close()
 
 
 class TestMoranScatter(TestWithTempFolderWithLog):
@@ -122,6 +140,7 @@ class TestMoranScatter(TestWithTempFolderWithLog):
                       np.array([0.1, 0.5, 0.7, 1.1, 0.4, 0.5, 0.8, 0.9, 0.2, 0.15]))
         diag.addlogo()
         diag.save(os.path.join(self.diroutput, "moranscatter.png"), formatout="png")
+        diag.close()
 
 
 if __name__ == "__main__":
