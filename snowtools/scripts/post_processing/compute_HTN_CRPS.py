@@ -245,7 +245,8 @@ def execute():
         elif clustering == 'landforms':
             tmp = clusters.per_landform_types(crps, mask)
         if member is None or len(member) == 1:  # Deterministic case
-            name = name.split('_')[0]
+            name = name.rstrip('_pappus')
+
         df = tmp.to_dataframe(name=name).dropna().reset_index().drop(
             columns=['xx', 'yy', 'time', 'band', 'spatial_ref'], errors='ignore')
         dataplot = pd.concat([dataplot, df])

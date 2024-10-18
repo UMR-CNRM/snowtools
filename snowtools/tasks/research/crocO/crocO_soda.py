@@ -43,7 +43,7 @@ class Soda_Task(_CrocO_Task):
             print()
 
             # ############### FETCH OBSERVATIONS  ##########
-            self.sh.title('Toolbox input tobs (obs)')
+#            self.sh.title('Toolbox input tobs (obs)')
 #            tobs = toolbox.input(
 #                geometry        = self.conf.geometry,
 #                model           = 'surfex',
@@ -61,15 +61,16 @@ class Soda_Task(_CrocO_Task):
 #            print(t.prompt, 'tobs =', tobs)
 #            print()
 
-            from snowtools.scripts.extract.vortex import vortex_get as io
             # TODO : ensure that the observation is in the simulation's geometry !
-            tobs = io.get(
+            self.sh.title('Toolbox input tobs (obs)')
+            tobs = toolbox.input(
                 filename   = 'OBSERVATIONS_[datevalidity:ymdHh].nc',
                 date       = assDate,
                 vapp       = 'Pleiades',
                 experiment = 'CesarDB@vernaym',
                 geometry   = self.conf.geometry,
-                kind       = 'SnowObservations'
+                kind       = 'SnowObservations',
+                fatal      = True
             )
             print(t.prompt, 'Observation = ', tobs)
             print()

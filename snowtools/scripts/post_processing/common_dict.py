@@ -32,6 +32,7 @@ def product_map(xpid):
         AROME                    = 'AROME',
         AROME_perturb            = 'AROME_perturb',
         AROME_perturb_assim      = 'AROME_perturb_assim',
+        RS27_LHR                 = 'ASANTILOPE_LHRM',
     )
     if xpid in mapping.keys():
         return mapping[xpid]
@@ -78,6 +79,7 @@ colors_map = dict(
     AROME                 = "#6a3d9a",
     AROME_perturb         = "#6a3d9a",
     AROME_perturb_assim   = "#6a3d9a",
+    ASANTILOPE_LHRM       = "#1f78b4",
 )
 
 
