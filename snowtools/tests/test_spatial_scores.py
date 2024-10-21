@@ -23,15 +23,27 @@ TEST_SIM_DIR = os.path.join(TESTBASE_DIR, "PRO")
 TIME_CRPS = False
 PROJ_avail = False
 
+class TestInstall(unittest.TestCase):
 
+    def test_paths(self):
+        # str = snowtools.__path__
+        # str = os.system('ls $PWD')
+        # raise Warning(str)
+        # str = os.system('ls $PWD/snowtools/')
+        # print(str)
+        # raise Warning(str)
+        str = os.system('ls $PWD/snowtools/scores/')
+        print(str)
+        raise Warning(str)
 class TestSpatialFile(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.myscores = ProVsPleiade([os.path.join(TESTBASE_DIR, 'PRO', 'PRO_2019051300_2019051400.nc'),
                                      os.path.join(TESTBASE_DIR, 'PRO', 'PRO_2019051300_2019051400.nc')],
-                                     ['bli', 'bla'], os.path.join(TESTBASE_DIR, 'P250_GR_13_05_19_attr.nc'),
-                                     'DSN_T_ISBA', [1, 3, 5], [2.], [1.])
+                                    ['bli', 'bla'], os.path.join(TESTBASE_DIR, 'P250_GR_13_05_19_attr.nc'),
+                                    'DSN_T_ISBA', [1, 3, 5], [2.], [1.])
         cls.myscores.apply_mask(maskfile=os.path.join(TESTBASE_DIR, "masque_glacier2017_foret_ville_riviere.nc"))
+
 
     def test_create_file(self):
         sf = SpatialScoreFile(['bli', 'bla'], [1, 3, 5], [2.], [1.])
