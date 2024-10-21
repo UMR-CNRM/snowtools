@@ -23,7 +23,6 @@ from snowtools.utils.infomassifs import infomassifs
 from snowtools.utils.git import get_summary_git
 from snowtools.DATA import SNOWTOOLS_DIR, SNOWTOOLS_CEN
 from snowtools.interpolation.shapefile2NetCDF_2D import conversion_to_L93_if_lat_lon
-from soupsieve import select_one
 
 
 class _StandardNC(netCDF4.Dataset):
