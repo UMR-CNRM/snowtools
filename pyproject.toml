@@ -19,6 +19,8 @@ dependencies = [
     'xarray',
     'cartopy',
     'bronx',
+    'footprints',
+    'epygram'
 ]
 requires-python = ">=3.6"
 readme = "README.md"

@@ -11,6 +11,8 @@ psycopg2
 pyshp
 pandas
 cartopy
+footprints
+epygram
 
 # Other requirements
 # xarray is a requirement for plots/compare.py and utils/proximu.py in case of use of NETCDF-4 file format
