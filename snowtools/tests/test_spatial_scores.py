@@ -82,7 +82,13 @@ class TestSpatialFile(unittest.TestCase):
     def test_calc_spatial_scores(self):
         self.myscores.process()
         self.assertAlmostEqual(self.myscores.score_ds['SPS'].data[0], 0.05011011529)
-        # print(self.myscores.score_ds)
+        self.assertAlmostEqual(self.myscores.score_ds["POD"].data[0, 1, 0], 0.76595744680)
+        self.assertAlmostEqual(self.myscores.score_ds["FAR"].data[0, 1, 0], 0.22)
+        self.assertAlmostEqual(self.myscores.score_ds["CSI"].data[0, 1, 0], 0.62987886944)
+        self.assertAlmostEqual(self.myscores.score_ds["ETS"].data[0, 1, 0], 0.54658958515)
+        self.assertAlmostEqual(self.myscores.score_ds["HK"].data[0, 1, 0], 336.0)
+        self.assertAlmostEqual(self.myscores.score_ds["ACC"].data[0, 1, 0], 3157.180032733)
+        self.assertAlmostEqual(self.myscores.score_ds["PAG"].data[0, 1, 0], 0.78)
 
     def test_local_moran(self):
         local_moran = LocalMoranData(self.myscores.fc_data['bli'].data)
