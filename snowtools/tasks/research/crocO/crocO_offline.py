@@ -11,7 +11,7 @@ from vortex import toolbox
 
 from bronx.stdtypes.date import Date
 from snowtools.tasks.research.crocO.crocO_common import _CrocO_Task
-from snowtools.utils.dates import get_list_dates_files, check_and_convert_date
+from snowtools.utils.dates import get_list_dates_files, check_and_convert_date, get_dic_dateend
 
 
 class Offline_Task(_CrocO_Task):
@@ -144,17 +144,16 @@ class Offline_Task(_CrocO_Task):
 
         if 'compute' in self.steps:
             # force first forcing to the first forcing of first member 0001 doesn't work on several nodes...
-            date_begin_forc, date_end_forc, _, _ = \
+            list_dates_begin_forc, list_dates_end_forc, _, _ = \
                 get_list_dates_files(self.conf.datebegin, Date(check_and_convert_date(self.conf.stopdate)),
-                                     self.conf.duration)  # each one of these items has only one item
-            # In case of a multi-year execution, datebegin=yyyy0801 and date_begin_forc is a 2-element list
-            # --> take the forcing STARTIN on *datebegin* (the 2nd element of the list)
+                                     self.conf.duration)
+            # In case of a multi-year execution, datebegin=yyyy0801 and date_begin_forc / date_end_forc are lists
+            # --> take all the forcings for *date_begin_forc* list
             # In other cases, date_begin_forc is a 1-item list
-            date_begin_forc = date_begin_forc[-1]
-            date_end_forc = date_end_forc[-1]
+            dict_dates_end_forc = get_dic_dateend(list_dates_begin_forc, list_dates_end_forc)
             firstforcing = 'mb{0:04d}'.format(self.conf.membersnode[0]) +\
-                           '/FORCING_' + date_begin_forc.strftime("%Y%m%d%H") +\
-                           "_" + date_end_forc.strftime("%Y%m%d%H") + ".nc"
+                           '/FORCING_' + list_dates_begin_forc[0].strftime("%Y%m%d%H") +\
+                           "_" + list_dates_end_forc[0].strftime("%Y%m%d%H") + ".nc"
 
             self.sh.title('Toolbox algo tb09a (preprocess)')
 
@@ -180,7 +179,7 @@ class Offline_Task(_CrocO_Task):
             stopstep = 1  # useless ?
             self.sh.title('Toolbox algo tb11 (offline)')
             tb11 = tbalgo4 = toolbox.algo(
-                engine         = 's2m',
+                engine         = 'blind',
                 binary         = 'OFFLINE',
                 kind           = "croco",
                 verbose        = True,

@@ -6,7 +6,7 @@ Created on 17 avr. 2019
 @author: cluzetb
 """
 from bronx.stdtypes.date import Date
-from snowtools.utils.dates import check_and_convert_date, get_list_dates_files
+from snowtools.utils.dates import check_and_convert_date, get_list_dates_files, get_dic_dateend
 from vortex import toolbox
 from vortex.layout.nodes import Task
 from cen.layout.nodes import S2MTaskMixIn
@@ -123,14 +123,16 @@ class _CrocO_Task(Task, S2MTaskMixIn):
         # ############## FETCH FORCINGS #######################################
         # we fetch forcing files into the members directories using the remainder function %
         # since we usually have more members than forcing files, we loop over forcing files
-        date_begin_forc, date_end_forc, _, _ = \
-            get_list_dates_files(self.conf.datebegin, self.conf.dateend, self.conf.duration)
 
-        # In case of a multi-year execution, datebegin=yyyy0801 and date_begin_forc is a 2-element list
-        # --> take the forcing STARTIN on *datebegin* (the 2nd element of the list)
+        # force first forcing to the first forcing of first member 0001 doesn't work on several nodes...
+        list_dates_begin_forc, list_dates_end_forc, _, _ = \
+            get_list_dates_files(self.conf.datebegin, self.conf.dateend,
+                                 self.conf.duration)
+        # In case of a multi-year execution, datebegin=yyyy0801 and date_begin_forc / date_end_forc are lists
+        # --> take all the forcings for *date_begin_forc* list
         # In other cases, date_begin_forc is a 1-item list
-        date_begin_forc = date_begin_forc[-1]
-        date_end_forc = date_end_forc[-1]
+        dict_dates_end_forc = get_dic_dateend(list_dates_begin_forc, list_dates_end_forc)
+
         forcExp = self.conf.forcingid
         meteo_members = {str(m): ((m - 1) % int(self.conf.nforcing)) + 1 for m in self.conf.members}
 
@@ -142,25 +144,27 @@ class _CrocO_Task(Task, S2MTaskMixIn):
                 if int(self.conf.synth) <= int(self.conf.nmembers):
                     synth = str(int(self.conf.synth))
                     meteo_members[synth] = self.conf.meteo_draw
-        local_names = {str(m): 'mb{0:04d}'.format(m) + '/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
+
+        local_names = {str(m): f'mb{m:04d}/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
                        for m in self.conf.members}
+
         self.sh.title('Toolbox input tb01 (forcings)')
         tb01 = toolbox.input(
-            role='Forcing',
-            realmember=self.conf.members,
-            local=dict(realmember=local_names),
-            vapp=self.conf.meteo,
-            experiment=forcExp,
-            member=dict(realmember=meteo_members),
-            geometry=self.conf.geometry,
-            datebegin=date_begin_forc,
-            dateend=date_end_forc,
-            nativefmt='netcdf',
-            kind='MeteorologicalForcing',
-            model='safran',
-            namespace='vortex.multi.fr',
-            namebuild='flat@cen',  # ???
-            block='meteo'
+            role           = 'Forcing',
+            realmember     = self.conf.members,
+            local          = dict(realmember=local_names),
+            vapp           = self.conf.meteo,
+            experiment     = forcExp,
+            member         = dict(realmember=meteo_members),
+            geometry       = self.conf.geometry,
+            datebegin      = list_dates_begin_forc,
+            dateend        = dict_dates_end_forc,
+            nativefmt      = 'netcdf',
+            kind           = 'MeteorologicalForcing',
+            model          = 'safran',
+            namespace      = 'vortex.multi.fr',
+            namebuild      = 'flat@cen',
+            block          = 'meteo',
         ),
         print(t.prompt, 'tb01 =', tb01)
         print()
