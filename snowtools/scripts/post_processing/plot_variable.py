@@ -48,12 +48,14 @@ import matplotlib.pyplot as plt
 
 label_map = dict(
     Snowf      = 'Snowfall accumulation',
+    Rainf      = 'Rainfall accumulation',
     SnowfRainf = 'Total precipitation accumulation',
     DEP        = 'Snow depth',
     DSN_T_ISBA = 'Snow depth',
 )
 units_map = dict(
     Snowf      = 'kg/m²',
+    Rainf      = 'kg/m²',
     SnowfRainf = 'kg/m²',
     DEP        = 'm',
     DSN_T_ISBA = 'm',
@@ -139,7 +141,7 @@ def parse_command_line():
     parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.3@vernaym",
                         help="User environment for static resources (format 'uenv:name@user')")
 
-    parser.add_argument('-n', '--uenv_dem', type=str, default="uenv:dem.1@vernaym",
+    parser.add_argument('-n', '--uenv_dem', type=str, default="uenv:dem.2@vernaym",
                         help="User environment for static resources (format 'uenv:name@user')")
 
     parser.add_argument('-v', '--variables', nargs='+', required=True,
@@ -187,8 +189,8 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
             # The solution to that comes from :
             # https://stackoverflow.com/questions/69537081/sum-data-variables-of-dataset
             sumvar = var.split('+')
-            extract = ds[sumvar]  # ex : ['Rainf', 'Snowf']
-            tmp = extract.to_array().sum("variable")
+            extract = ds[sumvar]  # ex : ['Rainf', 'Snowf'] -->  extract = DataArrray(xx, yy, time, 'variable')
+            tmp = extract.to_array().sum("variable")  # tmp = DataArrray(xx, yy, time)
             var = var.replace('+', '')
         else:
             tmp = ds[var]
@@ -198,12 +200,15 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
         tmp.attrs['units']     = units_map[var]
 
         if date is not None:
+            # plot data for a specific date
             date = Date(date)
             if 'time' in tmp.dims:
                 tmp = tmp.sel({'time': date})
             savename = f'{var}_{date.ymdh}_{xpid}.pdf'
         else:
+            # plot data accumulated over time
             tmp = tmp.sum('time')
+        # TODO : Add possibility to plot a sub-period
 
         if ensemble == 'mean':
             tmp = tmp.mean('member')
