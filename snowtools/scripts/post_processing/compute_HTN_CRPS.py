@@ -85,7 +85,7 @@ def parse_command_line():
     parser.add_argument('-o', '--obs_geometry', type=str, choices=['Huez250m', 'GrandesRousses250m'],
                         required=True, help='Geometry of the observation')
 
-    parser.add_argument('-m', '--members', action='store_true',
+    parser.add_argument('-m', '--members', choices=['all', 'mean'], default=None,
                         help="To activate ensemble simulations")
 
     args = parser.parse_args()
@@ -147,11 +147,11 @@ def execute():
     # c) Simulations
     pearson = dict()
 
-    if clustering in 'elevation':
+    if (clustering in 'elevation') and (members is None):
         safran_elevations = [z for z in reversed(range(1800, 3000, 300))]
         fig0, ax0 = plt.subplots(len(safran_elevations), 1, figsize=(14, 14))
-        im = list()  # List of products for common legend
-        #im.append(plt.plot([], [], color='k', label='Observation', linewidth=3))
+        # im = list()  # List of products for common legend
+        # im.append(plt.plot([], [], color='k', label='Observation', linewidth=3))
         for i, elevation in enumerate(safran_elevations):
             tmp = obs.where((mnt > elevation - 150) & (mnt <= elevation + 150), drop=True)
             tmp.mean('yy').plot(ax=ax0[i], color='k', linewidth=3)
@@ -165,7 +165,7 @@ def execute():
         shortid = xpid.split('@')[0]
 
         # Get (filtered) PRO files with Vortex
-        if members:
+        if members is not None:
             member = members_map(shortid)
         else:
             if shortid in ['ANTILOPE', 'safran_pappus', 'ANTILOPE_pappus', 'SAFRAN', 'SAFRAN_pappus', 'AROME_pappus']:
@@ -189,12 +189,12 @@ def execute():
 
         if clustering in 'elevation' and (member is None or len(member) == 1):
             # Add empty plot for common legend
-            #im.append(plt.plot([], [], color=colors_map[name], label=name, linewidth=3))
+            # im.append(plt.plot([], [], color=colors_map[name], label=name, linewidth=3))
             for i, elevation in enumerate(safran_elevations):
                 tmpobs = obs.where((obs.notnull()) & (mnt > elevation - 150) & (mnt <= elevation + 150))
                 tmp = simu.where(tmpobs.notnull()).squeeze()
-                #tmp = tmp.where((mnt > elevation - 150) & (mnt <= elevation + 150))
-                #tmp = tmp.where(~np.isnan(obs))
+                # tmp = tmp.where((mnt > elevation - 150) & (mnt <= elevation + 150))
+                # tmp = tmp.where(~np.isnan(obs))
                 # Compute Pearson correlation for this elevation band
                 p = xr.corr(tmp, tmpobs, dim=['xx', 'yy'])
                 label = f'Pearson={np.round(p.data, 2):.2f}'
@@ -210,7 +210,7 @@ def execute():
         else:
             plot_HTN = False
 
-        if (member is None or len(member) == 1) and clustering != 'uncertainty':
+        if (member is None or len(member) == 1 or members == 'mean') and clustering != 'uncertainty':
             # Uncertainty is a measure of the absolute error
             pearson[shortid], crps = compute_scores(simu, obs, shortid, date, plot_HTN, dem=mnt, deterministic=True)
             vmax = vmax_map[date]  # set colobar extend in CRPS/Error plot
@@ -263,7 +263,7 @@ def execute():
                 ax0[i].set_xticklabels([])
         fig0.supylabel("Mean snow depth (m)")
         # ax0[0].legend(loc='upper center', bbox_to_anchor=(0.5, 1.5), ncol=len(xpids) + 1)
-        #fig0.legend(im, loc='upper center', bbox_to_anchor=(0.5, 1.1), ncol=3)
+        # fig0.legend(im, loc='upper center', bbox_to_anchor=(0.5, 1.1), ncol=3)
         plt.tight_layout()
         fig0.savefig(f'Gradient_HTN_WE_{date}_' + '_'.join(xpids) + '.pdf')
         plt.close('all')
@@ -408,7 +408,12 @@ def plot_deterministe(simu, obs, xpid, date, dem=None, member=None):
     plot2D.save_fig(savename, fig)
 
 
-def compute_scores(simu, obs, xpid, date, plot_HTN, dem=None, deterministic=False):
+def compute_scores(simu, obs, xpid, date, plot_HTN, dem=None, deterministic=False, mean=False):
+    """
+    deterministic --> return error
+    mean --> return error
+    else --> return CRPS
+    """
 
     # Select common domains
     obs  = obs.sel({'xx': np.intersect1d(obs.xx, simu.xx), 'yy': np.intersect1d(obs.yy, simu.yy)})
@@ -449,7 +454,8 @@ def compute_scores(simu, obs, xpid, date, plot_HTN, dem=None, deterministic=Fals
     # obs  = obs.expand_dims(dim="time")
     if deterministic:
         if 'member' in simu.dims:
-            simu = simu.squeeze().drop('member')
+            simu = simu.mean('member')
+            # simu = simu.squeeze().drop('member')
         crps = simu - obs
     else:
         crps = xskillscore.crps_ensemble(obs, simu, dim=[])
