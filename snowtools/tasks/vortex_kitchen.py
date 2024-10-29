@@ -47,7 +47,8 @@ class vortex_kitchen(object):
         else:
             self.options.xpid = self.options.diroutput  # diroutput is now always defined in research cases
 
-        self.workingdir = "/".join([self.options.workdir, self.options.xpid, self.vapp, self.options.vconf])
+        self.workingdir = "/".join([self.options.workdir, self.options.task, self.options.xpid, self.vapp,
+            self.options.vconf])
         self.confdir    = "/".join([self.workingdir, 'conf'])
         self.jobdir     = "/".join([self.workingdir, "jobs"])
 
