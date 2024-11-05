@@ -32,10 +32,12 @@ default = dict(
     filename   = '[kind]_[datebegin:ymdh]_[dateend:ymdh].nc',
     role       = '[kind]',
     date       = '[dateend]',
+    experiment = '[xpid]',
     # TODO : The *model* footprint should (almost ?) always be optionnal for CEN resources
-    model      = 'surfex',
+    #model      = 'surfex',
     #model      = '[vapp]' if '[kind]' != 'DIAG' else 'postproc',
     now        = True,
+    assimdates = None,
 )
 
 namespace_map = dict(
