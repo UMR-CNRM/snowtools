@@ -6,6 +6,7 @@ Created on 18 mars 2024
 
 from vortex.layout.nodes import Task
 from cen.layout.nodes import S2MTaskMixIn
+from vortex import toolbox
 
 
 class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task and CEN-specific methods
@@ -55,6 +56,12 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
             vapp      = self.conf.vapp,
             xpid      = self.conf.xpid,
             geometry  = self.conf.geometry,
+        )
+
+        toolbox.defaults.update(
+            dict(
+                model = 's2m',
+            )
         )
 
         if 'early-fetch' in self.steps:  # Executed on a TRANSFERT NODE to fetch inputs from a remote

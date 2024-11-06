@@ -8,6 +8,7 @@ from vortex.layout.nodes import Driver
 from vortex import toolbox
 from snowtools.tasks.vortex_task_base import _VortexTask
 from snowtools.scripts.extract.vortex import vortexIO as io
+from snowtools.scripts.extract.vortex import vortex_get
 
 
 def setup(t, **kw):
@@ -199,6 +200,82 @@ class Forcing(_VortexTask):
         """
         self.sh.title('FORCING output')
         io.put_forcing(filename='FORCING_OUT.nc', member=self.conf.members, **self.common_kw)
+
+
+class CombineForcings(_VortexTask):
+    '''
+    Generic task for the generation of a FORCING over a gevien period from different FORCING files over
+    different sub-periods.
+    WARNING : TASK IN DEVELOPMENT
+    This task will evolve in line with ongoing EDELWEISS developments.
+    '''
+
+    def check_and_update_configuration(self):
+        pass
+
+    def get_remote_inputs(self):
+        """
+        Main method to fetch all input files
+        """
+        vortex_get.get(
+            role           = 'RefForcing',
+            kind           = 'MeteorologicalForcing',
+            datebegin      = self.conf.datebegin,
+            dateend        = self.conf.dateend,
+            xpid           = self.conf.xpid1,
+            geometry       = self.conf.geometry,
+            member         = self.conf.members,
+            block          = 'meteo',
+            filename       = 'FORCING1.nc'
+        )
+
+        vortex_get.get(
+            kind           = 'MeteorologicalForcing',
+            datebegin      = self.conf.datebegin,
+            dateend        = self.conf.dateend,
+            xpid           = self.conf.xpid2,
+            geometry       = self.conf.geometry,
+            member         = self.conf.members,
+            block          = 'meteo',
+            filename       = 'FORCING2.nc'
+        )
+
+    def algo(self):
+        """
+        Algo component
+        """
+        t = self.ticket
+        self.sh.title('Toolbox algo FORCING generator')
+        tbalgo = toolbox.algo(
+            kind         = 'CombineForcings',
+            date         = self.conf.assimdate,
+            engine       = 'algo',  # `_CENTaylorRun` algo components familly
+            members      = self.conf.members,
+            # WARNING : the binding seem to be important since problems have been observed with the default
+            # '80 task per node' (one random worker does nothing). Maybe something to do with the fact that ntasks
+            # is not a multiple of the actual number of workers ?
+            # Update 5/04 : Le BUG se produit aussi avec ntasks=nworkers ...
+            ntasks       = len(self.conf.members) if self.conf.members is not None else 1,
+            # ntasks       = len(self.precipitation),
+            role_members = 'RefForcing',
+        )
+        print(t.prompt, 'tbalgo =', tbalgo)
+        print()
+        tbalgo.run()
+
+    def put_remote_outputs(self):
+        """
+        Main method to save an OFFLINE execution outputs
+        """
+
+        vortex_get.put(
+            kind           = 'MeteorologicalForcing',
+            xpid           = self.conf.xpid_out,
+            geometry       = self.conf.geometry,
+            members        = self.conf.members,
+            block          = 'meteo',
+            filename       = '[member:03d]/FORCING_OUT.nc'
+        )
 
 
 class _PertubForcing(_VortexTask):
