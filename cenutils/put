@@ -213,7 +213,7 @@ then
         --exclude /exe --exclude "src/dir_obj*" --exclude "exe_*" \
         --exclude 'profile_surfex' --exclude 'profile_surfex-LX*' \
         --exclude "src/LIB/grib_api-*-Source" --exclude "src/LIB/eccodes*" --exclude STRATO \
-        --exclude "DATA/*" --exclude "figures/*" \
+        --exclude "NO_TRANSFER*" \
         $folder_orig $SERVER:$folder_dest
     retcode=$?
     set -e
