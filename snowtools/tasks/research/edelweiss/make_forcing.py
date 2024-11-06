@@ -270,7 +270,9 @@ class CombineForcings(_VortexTask):
 
         vortex_get.put(
             kind           = 'MeteorologicalForcing',
-            xpid           = self.conf.xpid_out,
+            datebegin      = self.conf.datebegin,
+            dateend        = self.conf.dateend,
+            xpid           = self.conf.xpid,
             geometry       = self.conf.geometry,
             members        = self.conf.members,
             block          = 'meteo',

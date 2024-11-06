@@ -52,9 +52,9 @@ def execute(date):
     """
     """
 
-    forcing1 = xr.open_dataset('FORCING1.nc', chunks={'time': 30})
+    forcing1 = xr.open_dataset('FORCING1.nc', chunks={'time': 24})
     forcing1 = forcing1.sel(time=slice(forcing1.time[0], date))
-    forcing2 = xr.open_dataset('FORCING2.nc', chunks={'time': 30})
+    forcing2 = xr.open_dataset('FORCING2.nc', chunks={'time': 24})
     forcing2 = forcing2.sel(time=slice(date, forcing2.time[-1]))
     # Solution to remove time duplicates
     out = xr.concat([forcing1, forcing2], dim='new_dim').max(dim='new_dim')
