@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import os
 import argparse
 
@@ -7,6 +10,7 @@ from vortex import toolbox
 """
 WORK IN PROGRESS
 """
+
 
 kind_map = dict(
     FORCING = 'MeteorologicalForcing',
@@ -24,6 +28,7 @@ block_map = dict(
     Precipitation         = '',
 )
 
+#toolbox.defaults(
 default = dict(
     namespace  = 'vortex.multi.fr',
     namebuild  = 'flat@cen',
@@ -34,11 +39,12 @@ default = dict(
     date       = '[dateend]',
     experiment = '[xpid]',
     # TODO : The *model* footprint should (almost ?) always be optionnal for CEN resources
-    #model      = 'surfex',
+    model      = 's2m',
     #model      = '[vapp]' if '[kind]' != 'DIAG' else 'postproc',
     now        = True,
     assimdates = None,
 )
+
 
 namespace_map = dict(
     hendrix = dict(
@@ -118,7 +124,10 @@ def parse_args():
     return args
 
 
-def clean(description):
+def clean(**description):
+
+    default.update(description)
+    description = footprint_kitchen(**default)
 
     target = toolbox.rload(**description)
     for rh in target:
