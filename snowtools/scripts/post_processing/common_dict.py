@@ -33,6 +33,9 @@ def product_map(xpid):
         AROME_perturb            = 'AROME_perturb',
         AROME_perturb_assim      = 'AROME_perturb_assim',
         RS27_LHR                 = 'ASANTILOPE_LHRM',
+        RS27_sorted_feedback     = 'SRS_feedback',
+        RS27_sorted_assim_feedback    = 'SRS_assim_feedback',
+        RS27_sorted_feedback_extended = 'SRS_feedback',
     )
     if xpid in mapping.keys():
         return mapping[xpid]
@@ -76,9 +79,11 @@ colors_map = dict(
     PF_assim              = "#cab2d6",
     SRS37                 = "red",
     SRS27_LPNp200         = "red",
+    SRS_feedback          = "red",
     AROME                 = "#6a3d9a",
     AROME_perturb         = "#6a3d9a",
     AROME_perturb_assim   = "#6a3d9a",
+    SRS_assim_feedback    = "#6a3d9a",
     ASANTILOPE_LHRM       = "#1f78b4",
 )
 

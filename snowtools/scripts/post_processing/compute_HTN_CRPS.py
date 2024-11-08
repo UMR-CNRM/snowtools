@@ -253,7 +253,7 @@ def execute():
 
         clean(shortid, member)
 
-    if clustering in 'elevation':
+    if clustering in 'elevation' and member is None:
         for i, elevation in enumerate(safran_elevations):
             ax0[i].legend(loc='upper right', ncol=3, fontsize=10)
             ax0[i].set_title(f'{elevation-150}m - {elevation+150}m')
