@@ -61,7 +61,9 @@ class Soda_Task(_CrocO_Task):
 #            print(t.prompt, 'tobs =', tobs)
 #            print()
 
-            # TODO : ensure that the observation is in the simulation's geometry !
+            # TODO : Ensure that the observation is in the simulation's geometry !
+            # TODO : Put the Observation input in the common input to crash immediately 
+            # if the observation file is missing instead of waiting for soda to be called
             self.sh.title('Toolbox input tobs (obs)')
             tobs = toolbox.input(
                 filename   = 'OBSERVATIONS_[datevalidity:ymdHh].nc',
@@ -70,7 +72,11 @@ class Soda_Task(_CrocO_Task):
                 experiment = 'CesarDB@vernaym',
                 geometry   = self.conf.geometry,
                 kind       = 'SnowObservations',
-                fatal      = True
+                model      = 'surfex',
+                block      = '',
+                namespace  = 'vortex.multi.fr',
+                namebuild  = 'flat@cen',
+                fatal      = True,
             )
             print(t.prompt, 'Observation = ', tobs)
             print()
