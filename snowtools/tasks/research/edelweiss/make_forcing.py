@@ -274,9 +274,9 @@ class CombineForcings(_VortexTask):
             dateend        = self.conf.dateend,
             xpid           = self.conf.xpid,
             geometry       = self.conf.geometry,
-            members        = self.conf.members,
+            member         = self.conf.members,
             block          = 'meteo',
-            filename       = '[member:03d]/FORCING_OUT.nc'
+            filename       = 'FORCING_OUT.nc'
         )
 
 
