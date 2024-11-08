@@ -40,6 +40,7 @@ from bronx.stdtypes.date import Date
 import footprints
 
 from snowtools.scripts.extract.vortex import vortexIO as io
+from snowtools.scripts.extract.vortex import vortex_get
 from snowtools.plots.maps import plot2D
 from snowtools.tools import common_tools as ct
 import snowtools.tools.xarray_preprocess as xrp
@@ -47,47 +48,52 @@ import snowtools.tools.xarray_preprocess as xrp
 import matplotlib.pyplot as plt
 
 label_map = dict(
-    Snowf      = 'Snowfall accumulation',
-    Rainf      = 'Rainfall accumulation',
-    SnowfRainf = 'Total precipitation accumulation',
-    DEP        = 'Snow depth',
-    DSN_T_ISBA = 'Snow depth',
+    Snowf         = 'Snowfall accumulation',
+    Rainf         = 'Rainfall accumulation',
+    Precipitation = 'Total precipitation accumulation',
+    SnowfRainf    = 'Total precipitation accumulation',
+    DEP           = 'Snow depth',
+    DSN_T_ISBA    = 'Snow depth',
 )
 units_map = dict(
-    Snowf      = 'kg/m²',
-    Rainf      = 'kg/m²',
-    SnowfRainf = 'kg/m²',
-    DEP        = 'm',
-    DSN_T_ISBA = 'm',
+    Snowf         = 'kg/m²',
+    Rainf         = 'kg/m²',
+    Precipitation = 'kg/m²',
+    SnowfRainf    = 'kg/m²',
+    DEP           = 'm',
+    DSN_T_ISBA    = 'm',
 )
 
 cmap_map = dict(
-    DSN_T_ISBA = plt.cm.Blues,
-    DEP        = plt.cm.Blues,
-    SnowfRainf = plt.cm.YlGnBu,
-    Rainf      = plt.cm.YlGnBu,
-    Snowf      = plt.cm.YlGnBu,
+    DSN_T_ISBA    = plt.cm.Blues,
+    DEP           = plt.cm.Blues,
+    SnowfRainf    = plt.cm.YlGnBu,
+    Precipitation = plt.cm.YlGnBu,
+    Rainf         = plt.cm.YlGnBu,
+    Snowf         = plt.cm.YlGnBu,
 )
 
 vmax_map = dict(
     # WARNING : values defined for 2017/2018
-    DEP         = 3,  # m
-    DSN_T_ISBA  = 3,  # m
-    # DSN_T_ISBA  = 6,  # m
-    Snowf       = 1200,  # kg/m² [mm]
-    Rainf       = 1400,  # kg/m² [mm]
-    RainfSnowf  = 1400,  # kg/m² [mm]
-    SnowfRainf  = 1400,  # kg/m² [mm]
+    DEP            = 3,  # m
+    DSN_T_ISBA     = 3,  # m
+    # DSN_T_ISBA     = 6,  # m
+    Snowf          = 1200,  # kg/m² [mm]
+    Rainf          = 1400,  # kg/m² [mm]
+    RainfSnowf     = 1400,  # kg/m² [mm]
+    SnowfRainf     = 1400,  # kg/m² [mm]
+    Precipitation  = 1400,  # kg/m² [mm]
 )
 
 vmin_map = dict(
     # WARNING : values defined for 2017/2018
-    DEP         = 0,  # m
-    DSN_T_ISBA  = 0,  # m
-    Snowf       = 0,  # kg/m² [mm]
-    Rainf       = 400,  # kg/m² [mm]
-    RainfSnowf  = 400,  # kg/m² [mm]
-    SnowfRainf  = 400,  # kg/m² [mm]
+    DEP           = 0,  # m
+    DSN_T_ISBA    = 0,  # m
+    Snowf         = 0,  # kg/m² [mm]
+    Rainf         = 400,  # kg/m² [mm]
+    RainfSnowf    = 400,  # kg/m² [mm]
+    SnowfRainf    = 400,  # kg/m² [mm]
+    Precipitation = 400,  # kg/m² [mm]
 )
 
 domain_map = dict(
@@ -99,6 +105,7 @@ domain_map = dict(
 gvar_map = dict(
     # GrandesRousses250m = 'RELIEF_GRANDESROUSSES250M_L93',
     GrandesRousses250m = 'DEM_GRANDESROUSSES25M_L93',
+    GrandesRousses1km  = 'DEM_FRANCE25M_L93',
     Alp250m            = 'DEM_FRANCE25M_L93',
     Alp1km             = 'DEM_FRANCE25M_L93',
 )
@@ -137,6 +144,9 @@ def parse_command_line():
 
     parser.add_argument('-a', '--vapp', type=str, default='edelweiss', choices=['s2m', 'edelweiss', 'Pleiades'],
                         help="Application that produced the target file")
+
+    parser.add_argument('--block', type=str,
+                        help="Provider's block")
 
     parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.3@vernaym",
                         help="User environment for static resources (format 'uenv:name@user')")
@@ -177,9 +187,9 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
         # mask glacier/forest covered pixels
         ds = ct.maskgf(ds)
 
-    if any(['Rainf' in var for var in variables]):
+    if any(['Rainf' in var for var in variables]) and kind != 'Precipitation':
         ds['Rainf'] = ds['Rainf'] * 3600.
-    if any(['Snowf' in var for var in variables]):
+    if any(['Snowf' in var for var in variables]) and kind != 'Precipitation':
         ds['Snowf'] = ds['Snowf'] * 3600.
 
     for var in variables:
@@ -287,6 +297,7 @@ if __name__ == '__main__':
     xpids           = args.xpids
     geometry        = args.geometry
     kind            = args.kind
+    block           = args.block
     ensemble        = args.ensemble
     if ensemble in ['mean', 'spread', 'all']:
         member = footprints.util.rangex('0-16-1')
@@ -338,21 +349,59 @@ if __name__ == '__main__':
         kw = dict(datebegin=datebegin, dateend=dateend, vapp=vapp, member=member, filename=filename)
         if date is not None:
             if vapp == 'Pleiades':
-                kw.update(date=date)
-                getattr(io, f'get_{kind.lower()}')(xpid=xpid, geometry=geometry, **kw)
+                vortex_get.get(
+                    kind      = kind,
+                    xpid      = xpid,
+                    date      = date,
+                    geometry  = geometry,
+                    vapp      = vapp,
+                    member    = member,
+                    filename  = filename,
+                )
             else:
                 from vortex.layout.dataflow import SectionFatalError
                 try:
                     # If a simulation file with extracted dates already exists (nambuild=None), take it
                     # TODO :  find a better way to store these files
-                    kw.update(date=dateend, namebuild=None)
-                    getattr(io, f'get_{kind.lower()}')(xpid=xpid, geometry=geometry, **kw)
+                    vortex_get.get(
+                        kind      = kind,
+                        xpid      = xpid,
+                        datebegin = datebegin,
+                        dateend   = dateend,
+                        date      = dateend,
+                        geometry  = geometry,
+                        vapp      = vapp,
+                        member    = member,
+                        filename  = filename,
+                        block     = block,
+                        namebuild = None,
+                    )
                 except SectionFatalError:
                     # Else get the entire file
-                    kw.pop('namebuild')
-                    getattr(io, f'get_{kind.lower()}')(xpid=xpid, geometry=geometry, **kw)
+                    vortex_get.get(
+                        kind      = kind,
+                        xpid      = xpid,
+                        datebegin = datebegin,
+                        dateend   = dateend,
+                        date      = dateend,
+                        geometry  = geometry,
+                        vapp      = vapp,
+                        member    = member,
+                        filename  = filename,
+                        block     = block,
+                    )
         else:
-            getattr(io, f'get_{kind.lower()}')(xpid=xpid, geometry=geometry, **kw)
+            vortex_get.get(
+                kind      = kind,
+                xpid      = xpid,
+                datebegin = datebegin,
+                dateend   = dateend,
+                geometry  = geometry,
+                vapp      = vapp,
+                member    = member,
+                filename  = filename,
+                block     = block,
+            )
 
         if ensemble in ['mean', 'spread', 'all']:
             ds = xr.open_mfdataset([f'mb{member:03d}/{filename}' for member in range(17)],
