@@ -187,23 +187,22 @@ def execute():
 
         simu = read_simu(xpid, member, date)
 
-        if clustering in 'elevation' and (member is None or len(member) == 1):
-            # Add empty plot for common legend
-            # im.append(plt.plot([], [], color=colors_map[name], label=name, linewidth=3))
-            for i, elevation in enumerate(safran_elevations):
-                tmpobs = obs.where((obs.notnull()) & (mnt > elevation - 150) & (mnt <= elevation + 150))
-                tmp = simu.where(tmpobs.notnull()).squeeze()
-                # tmp = tmp.where((mnt > elevation - 150) & (mnt <= elevation + 150))
-                # tmp = tmp.where(~np.isnan(obs))
-                # Compute Pearson correlation for this elevation band
-                p = xr.corr(tmp, tmpobs, dim=['xx', 'yy'])
-                label = f'Pearson={np.round(p.data, 2):.2f}'
-                tmp.mean('yy').plot(ax=ax0[i], color=colors_map[name], label=label, linewidth=3)
-
-            if member is not None and len(member) > 1:
-                plot_ensemble(simu, obs, shortid, date, dem=mnt)
-            else:
+        if clustering in 'elevation':
+            if (member is None or len(member) == 1):
+                # Add empty plot for common legend
+                # im.append(plt.plot([], [], color=colors_map[name], label=name, linewidth=3))
+                for i, elevation in enumerate(safran_elevations):
+                    tmpobs = obs.where((obs.notnull()) & (mnt > elevation - 150) & (mnt <= elevation + 150))
+                    tmp = simu.where(tmpobs.notnull()).squeeze()
+                    # tmp = tmp.where((mnt > elevation - 150) & (mnt <= elevation + 150))
+                    # tmp = tmp.where(~np.isnan(obs))
+                    # Compute Pearson correlation for this elevation band
+                    p = xr.corr(tmp, tmpobs, dim=['xx', 'yy'])
+                    label = f'Pearson={np.round(p.data, 2):.2f}'
+                    tmp.mean('yy').plot(ax=ax0[i], color=colors_map[name], label=label, linewidth=3)
                 plot_deterministe(simu, obs, shortid, date, dem=mnt, member=member)
+            else:
+                plot_ensemble(simu, obs, shortid, date, dem=mnt)
 
         if clustering in 'elevation' and (member is None or len(member) == 1):
             plot_HTN = True
