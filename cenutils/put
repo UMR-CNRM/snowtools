@@ -84,8 +84,8 @@ case $key in
             FOLDER="$1"
         else
             SERVER="$1"
-        shift # shift to next argument
         fi
+        shift # shift to next argument
     ;;
 esac
 done
@@ -205,12 +205,15 @@ then
         --exclude "venv*" \
         --exclude "*.pyc" --exclude "*.bak" --exclude "*.sav" --exclude "*.backup" \
         --exclude ".*.swp" --exclude "*~" \
+        --exclude sphinx \
+        --exclude examples \
         --exclude "*.egg-info" --exclude "*.o" --exclude "*.bin" --exclude "*.exe" \
-        --exclude fail_tests --exclude "interpolation/*.mod" \
-        --exclude "interpolation/interpol_MPIAUTO" \
-        --exclude /exe --exclude "src/dir_obj*" \
+        --exclude fail_test --exclude Manual_tests --exclude "interpolation/*.mod" \
+        --exclude "interpolation/interpol_*" \
+        --exclude /exe --exclude "src/dir_obj*" --exclude "exe_*" \
         --exclude 'profile_surfex' --exclude 'profile_surfex-LX*' \
         --exclude "src/LIB/grib_api-*-Source" --exclude "src/LIB/eccodes*" --exclude STRATO \
+        --exclude "NO_TRANSFER*" \
         $folder_orig $SERVER:$folder_dest
     retcode=$?
     set -e
@@ -228,16 +231,17 @@ then
     set mirror:sort-by name;
     set mirror:overwrite true;
     lcd ./ ;
-    cd $HOME;
     mirror --reverse \
       --delete --use-cache --verbose \
       --allow-chown  --allow-suid --no-umask --parallel=2 \
       --exclude .git/ \
       --exclude .idea/ \
       --exclude .settings/ \
-      --exclude fail_tests  \
+      --exclude fail_test  \
+      --exclude Manual_tests  \
       --exclude interpolation/interpol_MPIAUTO \
       --exclude exe/ \
+      --exclude-glob exe_*/ \
       --exclude 'profile_surfex' \
       --exclude-glob interpolation/*.mod \
       --exclude-glob venv* \
@@ -251,11 +255,17 @@ then
       --exclude-glob  *.o \
       --exclude-glob *.bin \
       --exclude-glob *.exe \
-      --exclude-glob src/dir_obj* \
+      --exclude-glob src/dir_obj*/ \
       --exclude-glob 'profile_surfex-LX*' \
-      --exclude-glob src/LIB/grib_api-*-Source \
+      --exclude-glob src/LIB/grib_api-*-Source/ \
+      --exclude-glob src/LIB/eccodes*/ \
       --exclude-glob src/LIB/eccodes* \
+      --exclude-glob NO_TRANSFER* \
       --exclude STRATO \
+      --exclude figures \
+      --exclude sphinx \
+      --exclude examples \
+      --exclude DATA \
       $folder_orig $folder_dest"
     retcode=$?
     set -e
