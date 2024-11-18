@@ -114,10 +114,10 @@ class PrepSafran(Task, S2MTaskMixIn):
                         print(t.prompt, 'tb02 =', tbarp)
                         print()
 
-                    elif rundate < Date(2018, 7, 1):
+                    elif rundate <= Date(2023, 8, 1):
                         # Pour les dates les plus anciennes aucun archivage sur hendrix n'est disponible
-                        # Il faut alors extraire les champs des guess depuis la BDPE avec le script 
-                        # creation_fichiers_RST.py sur guppy
+                        # Il faut alors extraire les champs des guess depuis la BDPE avec le script
+                        # Extraction_bdap.py sur soprano
 
                         self.sh.title('Toolbox input tb02')
                         tbarp.extend(toolbox.input(
@@ -130,8 +130,8 @@ class PrepSafran(Task, S2MTaskMixIn):
                                               for d in footprints.util.rangex(0, 24, self.conf.cumul)],
                             term           = self.conf.cumul,
                             nativefmt      = '[format]',
-                            remote         = '/home/mrns/vernaym/extraction_bdap/[vconf]/arpege_[date::ymdh]_[term::hour].grib',
-                            hostname       = 'guppy.meteo.fr',
+                            remote         = '//home/mrns/vernaym/workdir/extraction_ARPEGE[vconf]/arpege_[date::ymdh]_[term::hour].grib',
+                            hostname       = 'sotrtm35-sidev.meteo.fr',
                             tube           = 'ftp',
                             origin         = 'arpege',
                             fatal          = False,
