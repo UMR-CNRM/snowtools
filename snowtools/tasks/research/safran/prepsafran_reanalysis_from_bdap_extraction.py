@@ -39,9 +39,12 @@ class PrepSafran(Task, S2MTaskMixIn):
 
         def tb01_generic_hook1(t, rh):
             sh = t.sh
-            tarname = sh.path.basename(rh.container.localpath())
-            if sh.is_tarfile(tarname):
-                sh.untar(tarname)
+            tarname = rh.container.localpath()
+            # dirname = sh.path.dirname(tarname)
+            # basename = sh.path.basename(tarname)
+            # with sh.cdcontext(dirname):
+            #     sh.untar(basename)
+            sh.untar(tarname)
             sh.rm(tarname)
 
         t = self.ticket
