@@ -149,19 +149,6 @@ class PrepSafran(Task, S2MTaskMixIn):
                         print()
 
 
-                        self.sh.title('Toolbox input tb_ebauche')
-                        tb_ebauche = toolbox.input(
-                            role            = 'Nam_ebauche',
-                            source          = 'namelist_ebauche_[geometry]',
-                            geometry        = self.conf.vconf,
-                            genv            = self.conf.cycle,
-                            kind            = 'namelist',
-                            model           = self.conf.model,
-                            local           = 'EBAUCHE_[vconf]',
-                        )
-                        print(t.prompt, 'tb_tb_ebauche =', tb_ebauche)
-                        print()
-                        
                         interp = ''
 
                     else:
@@ -195,6 +182,21 @@ class PrepSafran(Task, S2MTaskMixIn):
                         print()
 
                 rundate = rundate + Period(days=1)
+
+            if interp == '':
+
+                self.sh.title('Toolbox input tb_ebauche')
+                tb_ebauche = toolbox.input(
+                    role            = 'Nam_ebauche',
+                    source          = 'namelist_ebauche_[geometry]',
+                    geometry        = self.conf.vconf,
+                    genv            = self.conf.cycle,
+                    kind            = 'namelist',
+                    model           = self.conf.model,
+                    local           = 'EBAUCHE_[vconf]',
+                )
+                print(t.prompt, 'tb_tb_ebauche =', tb_ebauche)
+                print()
 
             self.sh.title('Toolbox input tb03 = PRE-TRAITEMENT FORCAGE script')
             tb03 = script = toolbox.input(
