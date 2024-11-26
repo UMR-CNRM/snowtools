@@ -45,11 +45,10 @@ class Safran(Task, S2MTaskMixIn):
                 dateend = rundate.replace(year = rundate.year + 1)
 #                dateend = rundate + Period(years=1)
                 season = datebegin.nivologyseason
-                next_season = dateend.nivologyseason
                 y1 = datebegin.year
                 y2 = dateend.year
 
-                self.sh.title(f'Toolbox input tb01 - {y1}/{y2}')
+                self.sh.title(f'Toolbox input tb01 - {y1:d}/{y2:d}')
                 tb01 = toolbox.input(
                     role           = 'Ebauche',
                     kind           = 'packedguess',
@@ -72,7 +71,7 @@ class Safran(Task, S2MTaskMixIn):
                 if self.conf.assim:
 
                     # TODO : Gérer le fait de ne pas prendre le fichier 2 de 6h le 01/08
-                    self.sh.title(f'Toolbox input tb02 - {y1}/{y2}')
+                    self.sh.title(f'Toolbox input tb02 - {y1:d}/{y2:d}')
                     tb02 = toolbox.input(
                         role           = 'Observations',
                         part           = 'all',
