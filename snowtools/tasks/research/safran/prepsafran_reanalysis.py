@@ -48,16 +48,17 @@ class PrepSafran(Task, S2MTaskMixIn):
             rundate = self.conf.datebegin
             while rundate <= self.conf.dateend:
 
-                if rundate <= Date(2023, 8, 1):
+                if rundate < Date(2023, 7, 31, 6):
                     # Pour les dates les plus anciennes aucun archivage sur hendrix n'est disponible
                     # Il faut alors extraire les champs des guess depuis la BDPE avec le script
                     # Extraction_bdap.py sur soprano
 
-                    self.sh.title('Toolbox input tb02')
+                    self.sh.title(f'Toolbox input refill {rundate.ymdh}')
                     tbarp.extend(toolbox.input(
                         role           = 'Gridpoint',
                         format         = 'grib',
-                        geometry       = 'euroc25',
+                        # geometry       = 'euroc25',
+                        geometry       = 'glob025',
                         kind           = 'gridpoint',
                         local          = '[date::ymdh]/ARPEGE[date::ymdh]_[term::hour]',
                         date           = ['{0:s}/-PT6H/-PT{1:s}H'.format(rundate.ymd6h, str(d))
@@ -70,7 +71,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         origin         = 'arpege',
                         fatal          = False,
                     ))
-                    print(t.prompt, 'tb02 =', tbarp[-1])
+                    print(t.prompt, 'tb02 =', [str(rh.container.basename) for rh in tbarp])
                     print()
 
                     interp = ''
@@ -83,7 +84,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     # Pour les dates les plus récentes les sorties de la chaine ARPEGE oper en vortex sont
                     # normalement disponibles sur hendrix
 
-                    self.sh.title('Toolbox input tb02')
+                    self.sh.title(f'Toolbox input oper {rundate.ymdh}')
                     tbarp.extend(toolbox.input(
                         role           = 'Gridpoint',
                         format         = 'grib',
@@ -106,7 +107,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                         vconf          = self.conf.deterministic_conf,
                         fatal          = False,
                     ))
-                    print(t.prompt, 'tb02 =', tbarp[-1])
+                    print(t.prompt, 'tb02 =', [str(rh.container.basename) for rh in tbarp])
                     print()
 
                 rundate = rundate + Period(days=1)
@@ -125,6 +126,10 @@ class PrepSafran(Task, S2MTaskMixIn):
                 )
                 print(t.prompt, 'tb_tb_ebauche =', tb_ebauche)
                 print()
+
+            print(len(tbarp))
+
+        if 'early-fetch' in self.steps:
 
             self.sh.title('Toolbox input tb03 = PRE-TRAITEMENT FORCAGE script')
             tb03 = script = toolbox.input(
