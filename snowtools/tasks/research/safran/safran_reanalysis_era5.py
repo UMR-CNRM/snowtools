@@ -48,17 +48,23 @@ class Safran(Task, S2MTaskMixIn):
                 y1 = datebegin.year
                 y2 = dateend.year
 
+                tarname = f'guess_era5_{datebegin.ymdh}_{dateend.ymdh}_{self.conf.vconf}.tar'
+
                 self.sh.title(f'Toolbox input tb01 - {y1:d}/{y2:d}')
                 tb01 = toolbox.input(
                     role           = 'Ebauche',
                     kind           = 'packedguess',
                     local          = '{0:s}_{1:s}/guess{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
-                    namespace      = 's2m.archive.fr',
+                    remote         = f'/home/vernaym/s2m/[geometry:area]/guess/era5/{tarname}',
+                    hostname       = 'hendrix.meteo.fr',
+                    unknownflow    = True,
+                    username       = 'vernaym',
+                    tube           = 'ftp',
                     geometry       = self.conf.geometry[self.conf.vconf],
                     cumul          = self.conf.cumul,
                     nativefmt      = 'tar',
                     model          = 'safran',
-                    source         = 'arpege' if y1 > 2020 else 'era5',
+                    source         = 'arpege' if y1 > 2023 else 'era5',
                     now            = True,
                     fatal          = False,
                     date           = dateend.ymdh,
