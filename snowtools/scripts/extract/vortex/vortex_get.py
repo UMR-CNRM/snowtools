@@ -12,18 +12,22 @@ WORK IN PROGRESS
 """
 
 kind_map = dict(
-    FORCING = 'MeteorologicalForcing',
-    PRO     = 'SnowpackSimulation',
-    DIAG    = 'SnowpackSimulation',  # TODO : à modifier après ré-organisation des resources Vortex
-    # SODA    = ['PART', 'BG_CORR', 'IMASK', 'ALPHA'],
-    SODA    = ['PART', 'IMASK', 'ALPHA'],
+    FORCING       = 'MeteorologicalForcing',
+    PRO           = 'SnowpackSimulation',
+    DIAG          = 'SnowpackSimulation',  # TODO : à modifier après ré-organisation des resources Vortex
+    # SODA          = ['PART', 'BG_CORR', 'IMASK', 'ALPHA'],
+    SODA          = ['PART', 'IMASK', 'ALPHA'],
+    Precipitation = 'Precipitation',
+    SnowObs       = 'SnowObservations',
 )
 
 block_map = dict(
-    FORCING = 'meteo',
-    PRO     = 'pro',
-    DIAG    = 'diag',
-    SODA    = 'soda',
+    FORCING               = 'meteo',
+    PRO                   = 'pro',
+    DIAG                  = 'diag',
+    SODA                  = 'soda',
+    SnowObservations      = '',
+    Precipitation         = '',
 )
 
 model_map = dict(
@@ -32,6 +36,7 @@ model_map = dict(
     PRO     = 'surfex',
 )
 
+# toolbox.defaults(
 default = dict(
     namespace  = 'vortex.multi.fr',
     namebuild  = 'flat@cen',
@@ -39,7 +44,13 @@ default = dict(
     vconf      = '[geometry:tag]',  # CEN-specific norm
     filename   = '[kind]_[datebegin:ymdh]_[dateend:ymdh].nc',
     role       = '[kind]',
+    date       = '[dateend]',
+    experiment = '[xpid]',
+    # TODO : The *model* footprint should (almost ?) always be optionnal for CEN resources
+    model      = 's2m',
+    # model      = '[vapp]' if '[kind]' != 'DIAG' else 'postproc',
     now        = True,
+    dateassim = None,
 )
 
 namespace_map = dict(
@@ -170,6 +181,12 @@ def footprint_kitchen(**kw):
     This is the method used to set default footprint values
     """
 
+    # if 'xpid' in kw.keys():
+    #     # Use proper footprint (optionnal)
+    #     kw['experiment'] = kw.pop('xpid')
+    if kw['block'] is None:
+        kw['block'] = block_map[kw['kind']]
+
     if 'member' in kw.keys():
         if ':' in kw['member']:
             first_mb, last_mb = kw['member'].split(':')
@@ -187,10 +204,8 @@ def footprint_kitchen(**kw):
     else:
         kw['model'] = kw['vapp']
 
-    if 'block' not in kw.keys():
-        kw['block'] = block_map[kw["kind"]]
-
-    kw['kind'] = kind_map[kw["kind"]]
+    if kw['kind'] in kind_map.keys():
+        kw['kind'] = kind_map[kw['kind']]
 
     if "server" in kw.keys():
         kw["namespace"] = namespace_map[kw["server"]]["namespace"]
