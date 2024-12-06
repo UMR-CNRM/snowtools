@@ -35,6 +35,8 @@ matplotlib.use('Agg')  # has to be before matplotlib.pyplot, because otherwise t
 # Even if that obviously is in conflict with PEP8.
 import matplotlib.pyplot as plt
 
+# L. Roussel 2024: fix interpolation angles in 'raster_to_points'
+
 ################################################################
 # On part d'un shapefile en Lambert 93
 # De ce shapefile, le programme fournit un NetCDF pour les besoins du lancement de Surfex (ou de réanalyse) dessus
@@ -275,7 +277,8 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
                                for i in range(len(shape_massif))]
 
     # Fonction d'Ambroise Guiot pour lire les valeurs d'un geotif en des points.
-    def raster_to_points(raster_src, shape, nodata=np.nan):
+    # L.Roussel 2024: bilinear interpolation does not work for angles (in real mean of 1° and 359° = 0°, not 180°)
+    def raster_to_points(raster_src, shape, nodata=np.nan, interp_method="bilinear"):
         """
         Associe pour chaque point de la GeometryCollection shape en entrée l'interpolation bilinéaire des valeurs
         des 4 pixels les plus proches issus du raster_src.
@@ -293,6 +296,9 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
         :returns: Liste dans le même ordre que la GeometryCollection fournie en entrée.
         Elle contient pour chaque point la valeur issue du fichier geotif.
         """
+        if interp_method not in ["bilinear", "bilinear_angle"]:
+            raise ValueError("Parameter 'interp_method' has an impossible value.")
+        
         raster = gdal.Open(raster_src)  # ouverture de l'image tif
         gt = raster.GetGeoTransform()
         # wkt = raster.GetProjection()
@@ -313,10 +319,25 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
                        and val[1][1] != nodata_raster)
 
             if val is not None and test_ok:
-                value = ((1 - current_x % 1) * (1 - current_y % 1) * val[0][0]
-                         + (current_x % 1) * (1 - current_y % 1) * val[0][1]
-                         + (1 - current_x % 1) * (current_y % 1) * val[1][0]
-                         + (current_x % 1) * (current_y % 1) * val[1][1])
+                value = None
+                if interp_method == "bilinear":
+                    value = ((1 - current_x % 1) * (1 - current_y % 1) * val[0][0]
+                            + (current_x % 1) * (1 - current_y % 1) * val[0][1]
+                            + (1 - current_x % 1) * (current_y % 1) * val[1][0]
+                            + (current_x % 1) * (current_y % 1) * val[1][1])
+                elif interp_method == "bilinear_angle":
+                    # switch to vectors weighted by euclidian distances to grid point
+                    # (no need to normalize as we get only the angle of the vector next)
+                    weights = np.array([(1 - current_x % 1) * (1 - current_y % 1),
+                                (current_x % 1) * (1 - current_y % 1),
+                                (1 - current_x % 1) * (current_y % 1),
+                                (current_x % 1) * (current_y % 1)])
+                    angle_rad_values = np.array([val[0][0], val[0][1], val[1][0], val[1][1]]) * np.pi / 180 # degrees to radians
+                    cos_values, sin_values = np.cos(angle_rad_values), np.sin(angle_rad_values)
+                    cos_weighted, sin_weighted = cos_values @ weights, sin_values @ weights
+                    # (np.arctan in [-pi/2, pi/2])
+                    # np.arctan2 in the four quadrants
+                    value = (np.arctan2(sin_weighted, cos_weighted) / np.pi * 180 + 360) % 360 # radian to degree + assert between 0, 360°
                 points_values.append(value)
             else:
                 points_values.append(nodata)
@@ -325,8 +346,7 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
     ################################################################
     # Création des listes d'intérêts venant des geotif
     liste_altitude_MNT = raster_to_points(path_MNT_alt, shape(shapes))
-    # TODO: bilinear interpolation does not work for angles (mean of 1° and 359° = 0°, not 180°)
-    liste_aspect_MNT = raster_to_points(path_MNT_asp, shape(shapes))
+    liste_aspect_MNT = raster_to_points(path_MNT_asp, shape(shapes), interp_method="bilinear_angle")
     liste_slope_MNT = raster_to_points(path_MNT_slop, shape(shapes))
 
     liste_altitude_MNT_arrondie = [int(round(liste_altitude_MNT[i])) for i in range(len(liste_altitude_MNT))]
