@@ -197,6 +197,8 @@ import matplotlib
 matplotlib.use('Agg')  # has to be before matplotlib.pyplot, because otherwise the backend is already chosen.
 import matplotlib.pyplot as plt
 
+# L. Roussel 2024: fix interpolation angles in 'raster_to_points'
+
 ################################################################
 # DEFAULT VALUES (but can change with options):
 # MNT (30m) and name of the output NetCDF
