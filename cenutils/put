@@ -206,8 +206,6 @@ then
         --exclude "venv*" \
         --exclude "*.pyc" --exclude "*.bak" --exclude "*.sav" --exclude "*.backup" \
         --exclude ".*.swp" --exclude "*~" \
-        --exclude sphinx \
-        --exclude examples \
         --exclude "*.egg-info" --exclude "*.o" --exclude "*.bin" --exclude "*.exe" \
         --exclude fail_test --exclude Manual_tests --exclude "interpolation/*.mod" \
         --exclude "interpolation/output1980" \
