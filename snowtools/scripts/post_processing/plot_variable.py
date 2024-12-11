@@ -233,7 +233,7 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
             if var == 'DSN_T_ISBA':
                 vmax = 1
             else:
-                vmax = 350
+                vmax = 500
         elif ensemble == 'all':
             savename = f'{var}_ensemble_{xpid}_{datebegin}_{dateend}.pdf'
         else:
