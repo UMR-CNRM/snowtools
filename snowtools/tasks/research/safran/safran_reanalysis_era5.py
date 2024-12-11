@@ -611,7 +611,7 @@ class Safran(Task, S2MTaskMixIn):
                 dateend = min(datebegin.replace(year=datebegin.year + 1), self.conf.dateend)
                 season = datebegin.nivologyseason
 
-                if rundate >= Date(2021, 8, 1):
+                if rundate >= Date(2023, 8, 1):
                     source_app = 'arpege'
                     source_conf = '4dvarfr'
                 else:
