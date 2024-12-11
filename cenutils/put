@@ -206,13 +206,11 @@ then
         --exclude "venv*" \
         --exclude "*.pyc" --exclude "*.bak" --exclude "*.sav" --exclude "*.backup" \
         --exclude ".*.swp" --exclude "*~" \
-        --exclude sphinx \
-        --exclude examples \
         --exclude "*.egg-info" --exclude "*.o" --exclude "*.bin" --exclude "*.exe" \
         --exclude fail_test --exclude Manual_tests --exclude "interpolation/*.mod" \
         --exclude "interpolation/output1980" \
         --exclude "interpolation/interpol_*" \
-        --exclude /exe --exclude "src/dir_obj*" --exclude "exe_*" \
+        --exclude "src/dir_obj*" --exclude "exe_*" \
         --exclude 'profile_surfex' --exclude 'profile_surfex-LX*' \
         --exclude "src/LIB/grib_api-*-Source" --exclude "src/LIB/eccodes*" --exclude STRATO \
         --exclude "NO_TRANSFER*" \
@@ -241,11 +239,7 @@ then
       --exclude .settings/ \
       --exclude fail_test  \
       --exclude Manual_tests  \
-      --exclude interpolation/interpol_MPIAUTO \
       --exclude exe/ \
-      --exclude-glob exe_*/ \
-      --exclude 'profile_surfex' \
-      --exclude-glob interpolation/*.mod \
       --exclude-glob venv* \
       --exclude-glob *.pyc \
       --exclude-glob *.bak \
@@ -257,10 +251,13 @@ then
       --exclude-glob  *.o \
       --exclude-glob *.bin \
       --exclude-glob *.exe \
+      --exclude-glob interpolation/*.mod \
+      --exclude-glob interpolation/interpol_* \
       --exclude-glob src/dir_obj*/ \
+      --exclude-glob exe_*/ \
+      --exclude 'profile_surfex' \
       --exclude-glob 'profile_surfex-LX*' \
       --exclude-glob src/LIB/grib_api-*-Source/ \
-      --exclude-glob src/LIB/eccodes*/ \
       --exclude-glob src/LIB/eccodes* \
       --exclude-glob NO_TRANSFER*/ \
       --exclude STRATO \
