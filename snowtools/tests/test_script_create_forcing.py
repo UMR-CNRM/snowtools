@@ -36,7 +36,7 @@ class TemplateCreationForcingTest(unittest.TestCase):
         p = subprocess.run([sys.executable, os.path.join(SNOWTOOLS_DIR, 'scripts/create_forcing/Template_creation_FORCING.py'),
                             '-i',
                             os.path.join(TEST_DATA_DIR, "METEO_KENTTAROVA.csv"), '-o',
-                            os.path.join(self.diroutput, 'created_forcing.nc')])
+                            os.path.join(self.diroutput, 'created_forcing.nc')], env=os.environ)
         self.assertEqual(p.returncode, 0, 'snowtools/scripts/create_forcing/Template_creation_FORCING.py failed')
         self.assertTrue(os.path.isfile(os.path.join(self.diroutput, 'created_forcing.nc')))
         with Dataset(os.path.join(self.diroutput, 'created_forcing.nc'), 'r', format='NETCDF4_CLASSIC') as ncfile:
@@ -50,7 +50,7 @@ class TemplateCreationForcingTest(unittest.TestCase):
                             os.path.join(self.diroutput, 'created_forcing_fantasy_station.nc'), '--lon', '15.5',
                             '--lat', '46.2', '--zs', '400', '--meta', 'title=FORCING for fantasy station',
                             '--meta', 'contributor_name=pink rhinoceros', '--meta',
-                            'contributor_role=drank a lot of coffee'])
+                            'contributor_role=drank a lot of coffee'], env=os.environ)
         self.assertEqual(p.returncode, 0, 'snowtools/scripts/create_forcing/Template_creation_FORCING.py failed')
         self.assertTrue(os.path.isfile(os.path.join(self.diroutput, 'created_forcing_fantasy_station.nc')))
         with Dataset(os.path.join(self.diroutput, 'created_forcing_fantasy_station.nc'), 'r',
