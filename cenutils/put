@@ -247,7 +247,7 @@ then
       --exclude-glob *.backup \
       --exclude-glob .*.swp \
       --exclude-glob *~ \
-      --exclude-glob *.egg-info \
+      --exclude-glob *.egg-info/ \
       --exclude-glob  *.o \
       --exclude-glob *.bin \
       --exclude-glob *.exe \

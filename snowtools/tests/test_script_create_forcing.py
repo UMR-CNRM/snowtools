@@ -33,7 +33,7 @@ class TemplateCreationForcingTest(unittest.TestCase):
         self.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
 
     def test_create_forcing_default(self):
-        p = subprocess.run([sys.executable, os.path.join(SNOWTOOLS_DIR, 'scripts/create_forcing/Template_creation_FORCING.py'),
+        p = subprocess.run([sys.executable, '-m', 'snowtools.scripts.create_forcing.Template_creation_FORCING',
                             '-i',
                             os.path.join(TEST_DATA_DIR, "METEO_KENTTAROVA.csv"), '-o',
                             os.path.join(self.diroutput, 'created_forcing.nc')], env=os.environ)
@@ -44,7 +44,7 @@ class TemplateCreationForcingTest(unittest.TestCase):
             self.assertAlmostEqual(humrel[0], 76., msg='humidity data not as expected')
 
     def test_create_forcing_station_info(self):
-        p = subprocess.run([sys.executable, os.path.join(SNOWTOOLS_DIR, 'scripts/create_forcing/Template_creation_FORCING.py'),
+        p = subprocess.run([sys.executable, '-m', 'snowtools.scripts.create_forcing.Template_creation_FORCING',
                             '-i',
                             os.path.join(TEST_DATA_DIR, "METEO_KENTTAROVA.csv"), '-o',
                             os.path.join(self.diroutput, 'created_forcing_fantasy_station.nc'), '--lon', '15.5',
