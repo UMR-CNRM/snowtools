@@ -43,8 +43,11 @@ class TestWithTempFolder(unittest.TestCase):
 
         Let available the result in ``self.test_pass``
         """
-        result = self.defaultTestResult()  # These two methods have no side effects
-        self._feedErrorsToResult(result, self._outcome.errors)
+        if hasattr(self._outcome, 'errors'):  # Python <= 3.10
+            result = self.defaultTestResult()  # These two methods have no side effects
+            self._feedErrorsToResult(result, self._outcome.errors)
+        else:  # Python >= 3.11
+            result = self._outcome.result
         error = self.list2reason(result.errors)
         failure = self.list2reason(result.failures)
         ok = not error and not failure

@@ -185,6 +185,7 @@ import pyproj
 
 from snowtools.utils.infomassifs import infomassifs
 from snowtools.DATA import SNOWTOOLS_DIR
+from snowtools.DATA import DIRDATADEM
 
 # Bibliothèque ad hoc de Matthieu L pour ouvrir les shapefiles
 import shapefile
@@ -203,15 +204,9 @@ import matplotlib.pyplot as plt
 NetCDF_out = 'NetCDF_from_shapefile.nc'
 
 # PATH_MNT
-path_MNT_alti_defaut = "/rd/cenfic3/cenmod/home/haddjeria/mnt_ange/ange-factory/prod1/france_30m/DEM_FRANCE_L93_30m_bilinear.tif"
-path_MNT_slope_defaut = "/rd/cenfic3/cenmod/home/haddjeria/mnt_ange/ange-factory/prod1/france_30m/SLP_FRANCE_L93_30m_bilinear.tif"
-path_MNT_aspect_defaut = "/rd/cenfic3/cenmod/home/haddjeria/mnt_ange/ange-factory/prod1/france_30m/ASP_FRANCE_L93_30m_bilinear.tif"
-
-# Pour test en local:
-# path_MNT_alti_defaut =
-#                '/home/fructusm/MNT_FRANCEandBORDER_30m_fusion:IGN5m+COPERNICUS30m_EPSG:2154_INT:AVERAGE_2021-03.tif'
-# path_MNT_slope_defaut = '/home/fructusm/MNT_slope.tif'
-# path_MNT_aspect_defaut = '/home/fructusm/MNT_aspect.tif'
+path_MNT_alti_defaut = DIRDATADEM + 'france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
+path_MNT_slope_defaut = DIRDATADEM + 'france_30m/SLP_FRANCE_L93_30m_bilinear.tif'
+path_MNT_aspect_defaut = DIRDATADEM + 'france_30m/ASP_FRANCE_L93_30m_bilinear.tif'
 
 ################################################################
 # Infos shapefile massif, normally stable and durable
@@ -305,7 +300,7 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
                                for i in range(len(shape_massif))]
 
     # Function from Ambroise Guiot: read points in a geotif
-    def raster_to_points(raster_src, shape, nodata=np.nan):
+    def raster_to_points(raster_src, shape, nodata=np.nan, interp_method="bilinear"):
         """
         For each point of GeometryCollection shape, give the bilinear interpolation of the values of
         the closest 4 pixels from raster_src.
@@ -319,10 +314,15 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
         (get with shape( shapefile.Reader('...').shapes() )
         :param nodata: Values for points without close pixel. Default is np.nan.
         :type nodata: float
+        :param interp_method: Option chosen for interpolation, either usual 'bilinear' or for angles 'bilinear_angle'.
+        :type interp_method: string
 
         :returns: List in same order as GeometryCollection given.
         For each point, it has the value coming from geotif file.
         """
+        if interp_method not in ["bilinear", "bilinear_angle"]:
+            raise ValueError("Parameter 'interp_method' has an impossible value.")
+        print(interp_method)
         raster = gdal.Open(raster_src)  # open tif image
         gt = raster.GetGeoTransform()
         # wkt = raster.GetProjection()
@@ -339,14 +339,31 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
             py = int(current_y)  # y pixel
 
             val = band.ReadAsArray(px, py, 2, 2)
-            test_ok = (val[0][0] != nodata_raster and val[0][1] != nodata_raster and val[1][0] != nodata_raster
+            test_values_not_nodata = (val[0][0] != nodata_raster and val[0][1] != nodata_raster and val[1][0] != nodata_raster
                        and val[1][1] != nodata_raster)
 
-            if val is not None and test_ok:
-                value = ((1 - current_x % 1) * (1 - current_y % 1) * val[0][0]
-                         + (current_x % 1) * (1 - current_y % 1) * val[0][1]
-                         + (1 - current_x % 1) * (current_y % 1) * val[1][0]
-                         + (current_x % 1) * (current_y % 1) * val[1][1])
+            if val is not None and test_values_not_nodata:
+                value = None
+                if interp_method == "bilinear_angle":
+                    # switch to vectors weighted by euclidian distances to grid point
+                    # (no need to normalize as we get only the angle of the vector next)
+                    weights = np.array([(1 - current_x % 1) * (1 - current_y % 1),
+                                (current_x % 1) * (1 - current_y % 1),
+                                (1 - current_x % 1) * (current_y % 1),
+                                (current_x % 1) * (current_y % 1)])
+                    angle_rad_values = np.array([val[0][0], val[0][1], val[1][0], val[1][1]]) * np.pi / 180 # degrees to radians
+                    cos_values, sin_values = np.cos(angle_rad_values), np.sin(angle_rad_values)
+                    cos_weighted, sin_weighted = cos_values @ weights, sin_values @ weights
+                    # (np.arctan in [-pi/2, pi/2])
+                    # np.arctan2 in the four quadrants
+                    value = (np.arctan2(sin_weighted, cos_weighted) / np.pi * 180 + 360) % 360 # radian to degree + assert between 0, 360°
+                    
+                else:
+                    # 'bilinear' case, normal case
+                    value = ((1 - current_x % 1) * (1 - current_y % 1) * val[0][0]
+                            + (current_x % 1) * (1 - current_y % 1) * val[0][1]
+                            + (1 - current_x % 1) * (current_y % 1) * val[1][0]
+                            + (current_x % 1) * (current_y % 1) * val[1][1])
                 points_values.append(value)
             else:
                 points_values.append(nodata)
@@ -355,7 +372,7 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
     ################################################################
     # Creation of lists coming from geotif
     liste_altitude_MNT = raster_to_points(path_MNT_alt, shape(shapes))
-    liste_aspect_MNT = raster_to_points(path_MNT_asp, shape(shapes))
+    liste_aspect_MNT = raster_to_points(path_MNT_asp, shape(shapes), interp_method="bilinear_angle")
     liste_slope_MNT = raster_to_points(path_MNT_slop, shape(shapes))
 
     liste_altitude_MNT_arrondie = [int(round(liste_altitude_MNT[i])) for i in range(len(liste_altitude_MNT))]

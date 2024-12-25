@@ -32,7 +32,7 @@ EXAMPLES OF USE
 .. code-block:: bash
 
    python3 Met2Netcdf.py -b 2000080106 -e 2001080106
-   python3 Met2Netcdf.py -b 1958080106 -e 2023080106 -o MAJ_MetInsitu.nc
+   python3 Met2Netcdf.py -b 1993080106 -e 2023080106 -o MAJ_MetInsitu.nc
    python3 Met2Netcdf.py -b 2000080106 -e 2001080106 --one_file -p partial_MET.txt
 
 Options:
@@ -544,7 +544,10 @@ def compilation_ttes_periodes(date_entree_debut, date_entree_fin, site, option_r
     list_path_met, list_date_debut, list_date_fin = decoupe_periode(date_entree_debut, date_entree_fin)
     Liste_field = ['CO2air', 'DIR_SWdown', 'Flag_in_situ', 'Humrel', 'LWdown', 'NEB', 'PSurf',
                    'Qair', 'Rainf', 'SCA_SWdown', 'Snowf', 'Tair', 'Wind', 'Wind_DIR']
-    xr_out = xr.DataArray(np.empty((0,14)),coords={'time': [], 'fields': Liste_field}, dims=['time','fields'])
+    xr_out = xr.DataArray(np.empty((0,14)), coords={'time': [], 'fields': Liste_field}, dims=['time','fields'])
+    # NB: useful for empty files -> keep in mind this possibility
+    # xr_out = xr.DataArray(np.empty((0,14)), coords={'time': np.array([],dtype='datetime64[ns]'),
+    #                                                 'fields': Liste_field}, dims=['time','fields'])
 
     for i in range(len(list_path_met)):
         print(str(list_date_debut[i]) + ' - ' + str(list_date_fin[i]))
@@ -658,8 +661,10 @@ if __name__ == '__main__':
     Tab_point, name = recup_donnees_site(site)
     message_accueil(option_recup, name)
     if args.one_file:
+        if pathout == 'out_met2netcdf.nc':
+            pathout = 'FORCING_'+ date_beg.ymdh + '_' + date_end.ymdh + '.nc'
         xr, date_beg, date_end = open_met_file_and_create_xr(args.path_MET, option_recup, site)
-        create_netcdf('FORCING_'+ date_beg.ymdh + '_' + date_end.ymdh + '.nc', xr, Tab_point)
+        create_netcdf(pathout, xr, Tab_point)
     else:
         xr_compil = compilation_ttes_periodes(date_entree_debut, date_entree_fin, site, option_recup)
         create_netcdf(pathout, xr_compil, Tab_point)

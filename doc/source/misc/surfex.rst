@@ -87,77 +87,74 @@ Core model options
 Here you can find long name for a part of these variables (alphabetical order for shortname):
 
 - ASN_VEG = Snow albedo
-- DRAIN_ISBA = Subsurface_runoff_flux
-- DSN_T_ISBA = Thickness_of_snowfall_amount
-- EVAP_ISBA = Surface_water_evaporation_flux
-- GFLUX_ISBA = Ground flux over tile nature
-- H_ISBA = Surface_upward_sensible_heat_flux
-- LE_ISBA = Surface_upward_latent_heat_flux
-- LWD_ISBA = Surface_downwelling_longwave_flux_in_air
-- LWU_ISBA = Surface_upwelling_longwave_flux_in_air
+- DRAIN_ISBA = Subsurface_runoff_flux (kg/m2)
+- DSN_T_ISBA = Thickness_of_snowfall_amount (m)
+- EVAP_ISBA = Surface_water_evaporation_flux (kg/m2)
+- GFLUX_ISBA = Total surface heat flux (W/m2)
+- H_ISBA = Surface_upward_sensible_heat_flux (W/m2)
+- LE_ISBA = Surface_upward_latent_heat_flux (W/m2)
+- LWD_ISBA = Surface_downwelling_longwave_flux_in_air (W/m2)
+- LWU_ISBA = Surface_upwelling_longwave_flux_in_air (W/m2)
 - MMP_VEG = Cumulative water consumption for snowmaking (kg/m2)
-- RAINF_ISBA = Rainfall_flux
-- RAMSOND_ISBA = Penetration of ram resistance sensor
-- REFRZTH_ISBA = Thickness of refrozen snow at the top of the snowpack
-- RN_ISBA = Surface_net_downward_radiative_flux
+- RAINF_ISBA = Rainfall_flux (kg/m2)
+- RAMSOND_ISBA = Penetration of ram resistance sensor (m)
+- REFRZTH_ISBA = Thickness of refrozen snow at the top of the snowpack (m)
+- RN_ISBA = Surface_net_downward_radiative_flux (W/m2)
 - RSN_VEG = Snow Density (kg/m3)
-- RUNOFF_ISBA = Surface_runoff_flux
+- RUNOFF_ISBA = Surface_runoff_flux (kg/m2)
 - SAG_VEG = Snow Age (days)
-- SD_1DY_ISBA = Accumulated snow thickness for past 1 days
-- SD_3DY_ISBA = Accumulated snow thickness for past 3 days
-- SD_5DY_ISBA = Accumulated snow thickness for past 5 days
-- SD_7DY_ISBA = Accumulated snow thickness for past 7 days
-- SNOWDEND = Dendricity
+- SD_1DY_ISBA = Accumulated snow thickness for past 1 days (m)
+- SD_3DY_ISBA = Accumulated snow thickness for past 3 days (m)
+- SD_5DY_ISBA = Accumulated snow thickness for past 5 days (m)
+- SD_7DY_ISBA = Accumulated snow thickness for past 7 days (m)
 - SNOWDZ = Thickness (m)
-- SNOWGRAN1 = Optical diameter (m)
-- SNOWGRAN2 = Sphericity
 - SNOWHEAT = Snow Enthalpy (J/m2)
 - SNOWLIQ = Snow Liquid Water Content (kg/m3)
-- SNOMLT_ISBA = Snow melting rate
+- SNOMLT_ISBA = Snow melting rate (kg/m2)
 - SNOWRAM = RAM Resistance (daN)
 - SNOWSHEAR = Shear Resistance (kPa)
 - SNOWSIZE = Grain size (m)
-- SNOWSPHER = Sphericity
+- SNOWSPHER = Sphericity (0-1)
 - SNOWSSA = Snow SSA (specific surface area, m2/kg)
 - SNOWTEMP = Temperature (K)
 - SNOWTYPE = Grain type (EN)
-- SWE_1DY_ISBA = Accumulated snow water equivalent for past 1 days
-- SWE_3DY_ISBA = Accumulated snow water equivalent for past 3 days
-- SWE_5DY_ISBA = Accumulated snow water equivalent for past 5 days
-- SWE_7DY_ISBA = Accumulated snow water equivalent for past 7 days
-- SWD_ISBA = Surface_downwelling_shortwave_flux_in_air
-- SWU_ISBA = Surface_upwelling_shortwave_flux_in_air
+- SWE_1DY_ISBA = Accumulated snow water equivalent for past 1 days (kg/m2)
+- SWE_3DY_ISBA = Accumulated snow water equivalent for past 3 days (kg/m2)
+- SWE_5DY_ISBA = Accumulated snow water equivalent for past 5 days (kg/m2)
+- SWE_7DY_ISBA = Accumulated snow water equivalent for past 7 days (kg/m2)
+- SWD_ISBA = Surface_downwelling_shortwave_flux_in_air (W/m2)
+- SWU_ISBA = Surface_upwelling_shortwave_flux_in_air (W/m2)
 - TALB_ISBA = Surface_albedo
-- TG1 = Temperature of soil layer 1(depth 0.0050 m)
-- TG4 = Temperature of soil layer 4(depth 0.0800 m)
-- TS_ISBA = Surface_temperature
+- TG1 = Temperature of soil layer 1(depth 0.0050 m) (K)
+- TG4 = Temperature of soil layer 4(depth 0.0800 m) (K)
+- TS_ISBA = Surface_temperature (K)
 - WBT = Wet bulb temperature (°C)
-- WET_TH_ISBA = Thickness of wet snow at the top of the snowpack
-- WG1 = Liquid water content of soil layer 1(depth 0.0050 m)
-- WGI1 = Solid water content of soil layer 1(depth 0.0050 m)
-- WSN_T_ISBA = Surface_snow_amount = Total_snow_reservoir
-- WSN_VEG = Snow Water Equivalent (m)
+- WET_TH_ISBA = Thickness of wet snow at the top of the snowpack (m)
+- WG1 = Liquid water content of soil layer 1(depth 0.0050 m) (kg/m2)
+- WGI1 = Solid water content of soil layer 1(depth 0.0050 m) (kg/m2)
+- WSN_T_ISBA = Surface_snow_amount = Total_snow_reservoir (kg/m2)
+- WSN_VEG = Snow Water Equivalent (kg/m2)
 
 SNOWPAPPUS
 ^^^^^^^^^^
 
 SNOWPAPPUS cumulated outputs: (MPI grid only)
 
-- QDEP_TOT = total wind-blown snow net deposition rate q dep (kg.m −2 .s −1 )
-- QT_TOT = total wind-blown horizontal vertically integrated snow transport rate Q t (kg.m −1 .s −1 )
-- Q_OUT_SUBL = sublimation rate q subl (kg.m −2 .s −1 )
-- SNOWDEBTC = cumulated amount of snow which should have been removed on the point but was not because it became snow-free (kg.m −2 )
+- QDEP_TOT = total wind-blown snow net deposition rate q dep (kg.m -2 .s -1 )
+- QT_TOT = total wind-blown horizontal vertically integrated snow transport rate Q t (kg.m -1 .s -1 )
+- Q_OUT_SUBL = sublimation rate q subl (kg.m -2 .s -1 )
+- SNOWDEBTC = cumulated amount of snow which should have been removed on the point but was not because it became snow-free (kg.m -2 )
 
 SNOWPAPPUS instantaneous outputs:
 
-- BLOWSNWFLUX_1M = horizontal blowing snow flux 1 m above snow surface (kg.m −2 .s −1 )
-- BLOWSNWFLUXINT = average horizontal blowing snow flux between 0.2 and 1.2 m Q t,int (kg.m −1 .s −1 )
-- Q_OUT_SALT = total horizontal transport rate in the saltation layer Q salt (kg.m −1 .s −1 )
-- Q_OUT_SUSP = total horizontal transport rate in the suspension layer Q susp (kg.m −1 .s −1 )
-- XVFRIC_PAPPUS = wind friction velocity computed by Snowpappus u ∗ (m.s −1 )
-- XVFRIC_T_PAPPUS = threshold friction velocity (at ground level) for snow transport u ∗,t (m.s −1 )
+- BLOWSNWFLUX_1M = horizontal blowing snow flux 1 m above snow surface (kg.m -2 .s -1 )
+- BLOWSNWFLUXINT = average horizontal blowing snow flux between 0.2 and 1.2 m Q t,int (kg.m -1 .s -1 )
+- Q_OUT_SALT = total horizontal transport rate in the saltation layer Q salt (kg.m -1 .s -1 )
+- Q_OUT_SUSP = total horizontal transport rate in the suspension layer Q susp (kg.m -1 .s -1 )
+- XVFRIC_PAPPUS = wind friction velocity computed by Snowpappus u_star (m.s -1 )
+- XVFRIC_T_PAPPUS = threshold friction velocity (at ground level) for snow transport u_star,t (m.s -1 )
 - XPZ0_PAPPUS = roughness length for momentum z 0 (m) used by Snowpappus
-- XVFALL_PAPPUS = mass averaged terminal fall velocity of snow particles at the bottom of the suspension layer v f (m.s −1 )
+- XVFALL_PAPPUS = mass averaged terminal fall velocity of snow particles at the bottom of the suspension layer v f (m.s -1 )
 - SNFLX_1M_P = snow transport flux integrated up to 1m height
 - SNFLXINT_P = snow transport flux integrated on height
 

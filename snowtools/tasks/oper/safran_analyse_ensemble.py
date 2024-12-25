@@ -44,88 +44,47 @@ class Safran(Task, S2MTaskMixIn):
 
             if True:
 
-                if self.conf.rundate.hour == 12:
+                self.sh.title('Toolbox input tb01wi')
+                tb01wi = toolbox.input(
+                    role           = 'Observations',
+                    block          = 'observations',
+                    experiment     = self.conf.xpid,
+                    vapp           = 's2m',
+                    geometry       = self.conf.geometry[self.conf.vconf],  # Distinction entre géométrie SAFRAN et Surfex spécifique aux taches oper
+                    kind           = 'packedobs',
+                    date           = self.conf.rundate.ymdh,
+                    datebegin      = '{0:s}/-PT24H'.format(datebegin.ymd6h) if self.conf.rundate.hour == 12 else datebegin.ymd6h,
+                    dateend        = dateend.ymd6h,
+                    local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:area].tar',
+                    model          = 'safran',
+                    fatal          = False,
+                    namespace      = 'bdpe.archive.fr',
+                    bdpeid         = self.conf.bdpe_id[self.conf.vconf],
+                    cutoff         = 'assimilation',
+                )
+                print((t.prompt, 'tb01wi =', tb01wi))
+                print()
 
-                    self.sh.title('Toolbox input tb01wi')
-                    tb01wi = toolbox.input(
-                        role           = 'Observations',
-                        block          = 'observations',
-                        #suite          = self.conf.suite,  # Non nécessaire (utilisé par défaut)
-                        vapp           = 's2m',
-                        geometry       = self.conf.geometry[self.conf.vconf],
-                        kind           = 'packedobs',
-                        date           = self.conf.rundate.ymdh,
-                        datebegin      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
-                        dateend        = dateend.ymd6h,
-                        local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:area].tar',
-                        model          = 'safran',
-                        fatal          = False,
-                        namespace      = 'bdpe.archive.fr',
-                        bdpeid         = self.conf.bdpe_id[self.conf.vconf],
-                        cutoff         = 'assimilation',
-                    )
-                    print((t.prompt, 'tb01wi =', tb01wi))
-                    print()
+                self.sh.title('Toolbox output tb01wo')
+                tb01wo = toolbox.output(
+                    role           = 'Observations',
+                    block          = 'observations',
+                    experiment     = self.conf.xpid,
+                    vapp           = 's2m',
+                    fatal          = False,
+                    geometry       = self.conf.geometry[self.conf.vconf],   # Distinction entre géométrie SAFRAN et Surfex spécifique aux taches oper
+                    kind           = 'packedobs',
+                    date           = self.conf.rundate.ymdh,
+                    datebegin      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
+                    dateend        = dateend.ymd6h,
+                    local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:area].tar',
+                    model          = 'safran',
+                    cutoff         = 'assimilation',
+                    namespace      = self.conf.namespace_out,
+                )
+                print((t.prompt, 'tb01wo =', tb01wo))
+                print()
 
-                    self.sh.title('Toolbox output tb01wo')
-                    tb01wo = toolbox.output(
-                        role           = 'Observations',
-                        block          = 'observations',
-                        experiment     = self.conf.xpid,
-                        vapp           = 's2m',
-                        fatal          = False,
-                        geometry       = self.conf.geometry[self.conf.vconf],
-                        kind           = 'packedobs',
-                        date           = self.conf.rundate.ymdh,
-                        datebegin      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
-                        dateend        = dateend.ymd6h,
-                        local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:area].tar',
-                        model          = 'safran',
-                        cutoff         = 'assimilation',
-                        namespace      = self.conf.namespace_out,
-                    )
-                    print((t.prompt, 'tb01wo =', tb01wo))
-                    print()
-
-                else:
-
-                    self.sh.title('Toolbox input observations')
-                    tb01wi = toolbox.input(
-                        role             = 'Observations',
-                        vapp             = 's2m',
-                        geometry         = self.conf.geometry[self.conf.vconf],
-                        kind             = 'packedobs',
-                        date             = self.conf.rundate.ymdh,
-                        datebegin        = datebegin.ymd6h,
-                        dateend          = dateend.ymd6h,
-                        local            = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:area].tar',
-                        model            = 'safran',
-                        namespace        = 'bdpe.archive.fr',
-                        cutoff           = 'assim',
-                        bdpeid           = self.conf.bdpe_id[self.conf.vconf],
-                    )
-                    print(t.prompt, 'tb01wi =', tb01wi)
-                    print()
-
-                    self.sh.title('Toolbox output refill observations')
-                    tb01wo = toolbox.output(
-                        role           = 'Observations',
-                        block          = 'observations',
-                        experiment     = self.conf.xpid,
-                        vapp           = 's2m',
-                        geometry       = self.conf.vconf,
-                        kind           = 'packedobs',
-                        date           = self.conf.rundate.ymdh,
-                        datebegin      = datebegin.ymd6h,
-                        dateend        = dateend.ymd6h,
-                        local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:area].tar',
-                        model          = 'safran',
-                        cutoff         = 'assim',
-                        delayed        = True,
-                        namespace      = self.conf.namespace_out,
-                    )
-                    print(t.prompt, 'tb01wo =', tb01wo)
-                    print()
 
     def process(self):
         """Safran analysis"""
@@ -146,86 +105,57 @@ class Safran(Task, S2MTaskMixIn):
 
             if True:  # To match IGA indentation
 
-                if self.conf.rundate.hour == 12:
+                ################################################
+                ##### Difference between dev and oper task #####
 
-                    ################################################
-                    ##### Difference between dev and oper task #####
+                self.sh.title('Toolbox input tb01 (Observations)')
+                tb01 = toolbox.input(
+                    role           = 'Observations',
+                    geometry       = self.conf.geometry[self.conf.vconf],
+                    #suite          = self.conf.suite,  # Non nécessaire (utilisé par défaut)
+                    kind           = 'packedobs',
+                    date           = self.conf.rundate.ymdh,
+                    datebegin      = '{0:s}/-PT24H'.format(datebegin.ymd6h) if self.conf.rundate.hour == 12 else datebegin.ymd6h,
+                    dateend        = dateend.ymd6h,
+                    local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:area].tar',
+                    model          = 'safran',
+                    hostname       = 'sotrtm35-sidev.meteo.fr',
+                    username       = 'vernaym',
+                    tube           = 'ftp',
+                    remote         = '/home/mrns/vernaym/extraction_obs/oper/rep_[geometry:area]/observations_safran_[vconf]_[date::ymdh].tar',
+                    cutoff         = 'assimilation',
+                    now            = True,
+                    hook_autohook1 = (tb01_generic_hook1, ),
+                )
+                print((t.prompt, 'tb01 =', tb01))
+                print()
 
-                    self.sh.title('Toolbox input observations')
-                    tb01 = toolbox.input(
-                        role           = 'Observations',
-                        geometry       = self.conf.geometry[self.conf.vconf],
-                        #suite          = self.conf.suite,  # Non nécessaire (utilisé par défaut)
-                        kind           = 'packedobs',
-                        date           = self.conf.rundate.ymdh,
-                        datebegin      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
-                        dateend        = dateend.ymd6h,
-                        local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:area].tar',
-                        model          = 'safran',
-                        hostname       = 'sotrtm35-sidev.meteo.fr',
-                        username       = 'vernaym',
-                        tube           = 'ftp',
-                        remote         = '/home/mrns/vernaym/extraction_obs/oper/rep_[geometry:area]/observations_safran_[vconf]_[date::ymdh].tar',
-                        cutoff         = 'assimilation',
-                        now            = True,
-                        hook_autohook1 = (tb01_generic_hook1, ),
-                    )
-                    print(t.prompt, 'tb01 =', tb01)
-                    print()
+                # Dans le cas d'une execution sur une date ancienne le cache de guppy est nettoyé,
+                # il faut donc aller chercher les obs sur hendrix (cache oper)
+                self.sh.title('Toolbox input tb01_b')
+                tb01 = toolbox.input(
+                    alternate      = 'Observations',
+                    block          = 'observations',
+                    experiment     = self.conf.xpid,
+                    vapp           = 's2m',
+                    geometry       = self.conf.geometry[self.conf.vconf],
+                    #suite          = self.conf.suite,  # Non nécessaire (utilisé par défaut)
+                    kind           = 'packedobs',
+                    date           = self.conf.rundate.ymdh,
+                    datebegin      = '{0:s}/-PT24H'.format(datebegin.ymd6h) if self.conf.rundate.hour == 12 else datebegin.ymd6h,
+                    dateend        = dateend.ymd6h,
+                    local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:area].tar',
+                    model          = 'safran',
+                    namespace      = self.conf.namespace_in,
+                    cutoff         = 'assimilation',
+                    hook_autohook1 = (tb01_generic_hook1, ),
+                )
+                print(t.prompt, 'tb01 =', tb01)
+                print()
 
-                else:
 
-                    self.sh.title('Toolbox input observations')
-                    tb01 = toolbox.input(
-                        role           = 'Observations',
-                        # block          = 'observations',
-                        # experiment     = self.conf.xpid,
-                        # vapp           = 's2m',
-                        geometry       = self.conf.geometry[self.conf.vconf],
-                        #suite          = self.conf.suite,  # Non nécessaire (utilisé par défaut)
-                        kind           = 'packedobs',
-                        date           = self.conf.rundate.ymdh,
-                        datebegin      = datebegin.ymd6h,
-                        dateend        = dateend.ymd6h,
-                        local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:area].tar',
-                        model          = 'safran',
-                        hostname       = 'sotrtm35-sidev.meteo.fr',
-                        username       = 'vernaym',
-                        tube           = 'ftp',
-                        remote         = '/home/mrns/vernaym/extraction_obs/oper/observations_safran_[vconf]_[date::ymdh].tar',
-                        # namespace      = 'vortex.archive.fr',
-                        cutoff         = 'assimilation',
-                        now            = True,
-                        hook_autohook1 = (tb01_generic_hook1, ),
-                    )
-                    print(t.prompt, 'tb01 =', tb01)
-                    print()
-
-                    # Dans le cas d'une execution sur une date ancienne le cache de guppy est nettoyé,
-                    # il faut donc aller chercher les obs sur hendrix (cache oper)
-                    self.sh.title('Toolbox input tb01_b')
-                    tb01 = toolbox.input(
-                        alternate      = 'Observations',
-                        block          = 'observations',
-                        experiment     = self.conf.xpid,
-                        vapp           = 's2m',
-                        geometry       = self.conf.geometry[self.conf.vconf],
-                        #suite          = self.conf.suite,  # Non nécessaire (utilisé par défaut)
-                        kind           = 'packedobs',
-                        date           = self.conf.rundate.ymdh,
-                        datebegin      = datebegin.ymd6h,
-                        dateend        = dateend.ymd6h,
-                        local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:area].tar',
-                        model          = 'safran',
-                        namespace      = self.conf.namespace_in,
-                        cutoff         = 'assimilation',
-                        hook_autohook1 = (tb01_generic_hook1, ),
-                    )
-                    print(t.prompt, 'tb01 =', tb01)
-                    print()
-
-                    ###########    End of differences    ###########
-                    ################################################
+                ###########    End of differences    ###########
+                ################################################
 
                 self.sh.title('Toolbox input listem')
                 tb03 = toolbox.input(

@@ -103,6 +103,7 @@ class configcommand(config):
 
         self.meteo = options.meteo
         self.snow = options.snow
+        self.previ = options.previ
 
 
 class configcommanddev(configdev):
@@ -379,7 +380,7 @@ if __name__ == "__main__":
 
     options = parse_options(sys.argv)
 
-    S2ME = S2MExtractor(conf=configcommand(options))
+    S2ME = FutureS2MExtractor(conf=configcommand(options))
 
     datebegin = check_and_convert_date(options.datebegin)
     dateend = check_and_convert_date(options.dateend)

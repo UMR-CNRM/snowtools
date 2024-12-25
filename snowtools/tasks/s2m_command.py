@@ -170,7 +170,12 @@ class Surfex_command(_S2M_command):
 
         parser_research_main.add_argument("-f", "--forcing",
                                           type=str, dest="forcing", default=None,
-                                          help="Path of the forcing file or of the directory with the forcing files")
+                                          help='''
+                                          Standard use : Path of the forcing file or of the directory with
+                                          the forcing files.
+                                          
+                                          Vortex use : xpid or xpid@login of forcing data
+                                          ''')
 
         parser_research_main.add_argument("-n", "--namelist",
                                           type=str, dest="namelist",
@@ -211,6 +216,7 @@ class Surfex_command(_S2M_command):
                                              This option is also used for pre-processing of the FORCING file by
                                              extracting data or interpolating forcing files into a new geometry
 
+                                             Standard use:
                                              - If region is a single massif number or a list of massif numbers
                                              separated by comas or a generic name for a group of massifs,
                                              extract the corresponding massifs.
@@ -224,6 +230,17 @@ class Surfex_command(_S2M_command):
 
                                              Note that you need to compile the fortran interpolator to use this
                                              extended option.
+                                             
+                                             Vortex use:
+                                             - region must be a well-defined geometry either in vortex either
+                                             in.vortexrc/geometries.ini
+                                             
+                                             - In case of a geometry change, the syntax is
+                                             -r geometry_in:geometry_out:GRID.nc where GRID.nc is the netcdf file
+                                             describing the target geometry. Both geometry_in and geometry_out must be
+                                             defined either in vortex either
+                                             in.vortexrc/geometries.ini
+                                             
                                              ''')
 
         parser_research_forcing.add_argument("-L", "--lowest",
@@ -510,7 +527,7 @@ class Surfex_command(_S2M_command):
                         raise UnsupportedOptionException("Gridded simulations (--geotype=grid) with homogeneous "
                                                          "vegetation (--veg=namelist) are not implemented")
                 else:  # geotype=unstructured
-                    if self.options.veg in ['ecoclimap', None]:
+                    if self.options.veg in ['ecoclimap']:
                         myclass = runs.ecoclimaprun
                     else:
                         myclass = runs.surfexrun

@@ -488,8 +488,12 @@ class _Map_massifs(Mplfigure):
                                                                   edgecolor=cartopy.feature.COLORS['water'],
                                                                   facecolor='none', alpha=0.5))
         elif bgimage:
-            os.environ["CARTOPY_USER_BACKGROUNDS"] = config["data_dir"]  # os.path.join(SNOWTOOLS_DIR, 'DATA')
-            ax_pl.background_img(resolution="high")
+            # Add the user downloaded image if present
+            config_datadir = str(config["data_dir"])
+            json_filepath = os.path.join(config_datadir, 'images.json')
+            if os.path.isfile(json_filepath):
+                os.environ["CARTOPY_USER_BACKGROUNDS"] = config_datadir
+                ax_pl.background_img(resolution="high")
         # else:
         #     ax_pl.coastlines(resolution='10m')
         return ax_pl
