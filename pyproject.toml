@@ -47,7 +47,6 @@ maintainers = [
 [project.urls]
 Homepage = "https://github.com/UMR-CNRM/snowtools"
 Repository = "https://github.com/UMR-CNRM/snowtools"
-Issues = "https://opensource.umr-cnrm.fr/projects/snowtools_git/wiki/Procedure_for_new_users"
 
 [tool.setuptools.packages.find]
 where = ["."]
