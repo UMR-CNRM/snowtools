@@ -49,7 +49,6 @@ maintainers = [
 [project.urls]
 Homepage = "https://github.com/UMR-CNRM/snowtools"
 Repository = "https://github.com/UMR-CNRM/snowtools"
-Issues = "https://opensource.umr-cnrm.fr/projects/snowtools_git/wiki/Procedure_for_new_users"
 
 [project.scripts]
 s2m = 'snowtools.tasks.s2m_command:main'
