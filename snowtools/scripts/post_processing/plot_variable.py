@@ -37,15 +37,20 @@ import argparse
 
 from bronx.stdtypes.date import Date
 
+import pandas as pd
+import numpy as np
+
+import matplotlib.pyplot as plt
+
+
 import footprints
+from vortex import toolbox
 
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.scripts.extract.vortex import vortex_get
 from snowtools.plots.maps import plot2D
 from snowtools.tools import common_tools as ct
 import snowtools.tools.xarray_preprocess as xrp
-
-import matplotlib.pyplot as plt
 
 label_map = dict(
     Snowf         = 'Snowfall accumulation',
@@ -116,6 +121,11 @@ reference_point = dict(
     Huez2022 = (942705.64, 6447916.82),  # Poste nivometeo Huez (1860m)
 )
 
+assim_xpid_map = dict(
+    RS27_sorted = 'RS27_sorted_pappus_assim',
+    SAFRAN      = 'SAFRAN_perturb_assim',
+)
+
 
 def parse_command_line():
     description = "Computation of Sentinel2-like diagnostics (snow melt-out date, snow cover duration) associated \
@@ -163,6 +173,10 @@ def parse_command_line():
                         help="Plot the variable for a specific date."
                              "If no *date* is provided, plot the variable's accumulation over the simulation period")
 
+    parser.add_argument('--dateassim', type=str, default=None,
+                        help="Assimilation date to plot the variable by taking into account the snow assimilation"
+                             "update. In this case, only the selected member are considered before *dateassim*")
+
     parser.add_argument('--domain', type=str, default=None, choices=domain_map.keys(),
                         help="Plot a specific sub-domain.")
 
@@ -177,7 +191,7 @@ def parse_command_line():
     return args
 
 
-def plot_var(ds, variables, xpid, date=None, mask=True):
+def plot_var(ds, variables, xpid, date=None, dateassim=None, mask=True):
 
     vmin = None
     vmax = None
@@ -209,6 +223,7 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
         tmp.attrs['long_name'] = label_map[var]
         tmp.attrs['units']     = units_map[var]
 
+        suffix = None
         if date is not None:
             # plot data for a specific date
             date = Date(date)
@@ -216,17 +231,51 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
                 tmp = tmp.sel({'time': date})
             savename = f'{var}_{date.ymdh}_{xpid}.pdf'
         else:
-            # plot data accumulated over time
-            tmp = tmp.sum('time')
+            if dateassim is not None:
+                suffix = 'assim'
+                # Compute accumulation for the 2 sub-periods
+                tmp['member'] = range(len(tmp.member))
+                cumul1 = tmp.sel(time=slice(tmp.time.data[0], Date(dateassim))).sum('time')
+                cumul2 = tmp.sel(time=slice(Date(dateassim), tmp.time.data[-1])).sum('time')
+
+                # Compute accumulation of period 1 based on the selected members until *dateassim*
+                df  = pd.read_csv(f'PART_{xpid}_{dateassim}.txt', sep=',', header=None)
+                # Convention : members starts at 0
+                # In SODA : members starts at 1
+                df = (df - 1).drop(columns=17)
+                particles = xr.DataArray(
+                    data = np.array([df[member].values.reshape(len(ds.yy), len(ds.xx))
+                        for member in range(17)]),
+                    dims = ["member", "yy", "xx"],
+                    coords = dict(
+                        xx = (('xx'), ds.xx.data),
+                        yy = (('yy'), ds.yy.data),
+                        member = (('member'), range(17)),
+                    ),
+                    attrs  = dict(description="SODA output"),
+                )
+
+                cumul1 = cumul1.compute()
+                newcumul1 = cumul1.copy()
+                # Select sub_domain (test code)
+                # particles.isel(member=0, xx=slice(48, 52), yy=slice(80, 83))
+                for mb in newcumul1.member.data:
+                    newcumul1.loc[{'member': mb}] = cumul1.sel(member=particles.sel(member=mb))
+
+                tmp = newcumul1 + cumul2
+
+            else:
+                # plot data accumulated over time
+                tmp = tmp.sum('time')
         # TODO : Add possibility to plot a sub-period
 
         if ensemble == 'mean':
             tmp = tmp.mean('member')
-            savename = f'{var}_mean_cumul_{xpid}_{datebegin}_{dateend}.pdf'
+            savename = f'{var}_mean_cumul_{xpid}_{datebegin}_{dateend}'
         elif ensemble == 'spread':
             tmp = tmp.std('member')
             tmp = tmp.rename('Spread (mm)')
-            savename = f'{var}_spread_cumul_{xpid}_{datebegin}_{dateend}.pdf'
+            savename = f'{var}_spread_cumul_{xpid}_{datebegin}_{dateend}'
             mycmap = plt.cm.Purples
             vmin = 0
             # vmax = tmp.max().data
@@ -235,12 +284,16 @@ def plot_var(ds, variables, xpid, date=None, mask=True):
             else:
                 vmax = 500
         elif ensemble == 'all':
-            savename = f'{var}_ensemble_{xpid}_{datebegin}_{dateend}.pdf'
+            savename = f'{var}_ensemble_{xpid}_{datebegin}_{dateend}'
         else:
             if member is None:
-                savename = f'{var}_cumul_{xpid}_{datebegin}_{dateend}.pdf'
+                savename = f'{var}_cumul_{xpid}_{datebegin}_{dateend}'
             else:
-                savename = f'{var}_cumul_{xpid}_mb{member:03d}_{datebegin}_{dateend}.pdf'
+                savename = f'{var}_cumul_{xpid}_mb{member:03d}_{datebegin}_{dateend}'
+        if suffix is not None:
+            savename = f'{savename}_{suffix}.pdf'
+        else:
+            savename = f'{savename}.pdf'
 
         if vmax is None:
             vmax = vmax_map[var] if var in vmax_map.keys() else tmp.max()
@@ -294,6 +347,7 @@ if __name__ == '__main__':
     datebegin       = args.datebegin
     dateend         = args.dateend
     date            = args.date
+    dateassim       = args.dateassim
     xpids           = args.xpids
     geometry        = args.geometry
     kind            = args.kind
@@ -403,6 +457,25 @@ if __name__ == '__main__':
                 block     = block,
             )
 
+        if dateassim is not None:
+
+            # Get SODA PF's output with the list of selected members
+            toolbox.input(
+                kind           = 'PART',
+                model          = 'soda',
+                block          = 'soda',
+                namebuild      = 'flat@cen',
+                namespace      = 'vortex.multi.fr',
+                vapp           = 's2m',
+                vconf          = '[geometry:tag]',
+                date           = dateassim,
+                dateassim      = dateassim,
+                geometry       = geometry,
+                experiment     = f'{assim_xpid_map[shortid]}@vernaym',
+                local          = f'PART_{shortid}_{dateassim}.txt',
+                fatal          = True,
+            )
+
         if ensemble in ['mean', 'spread', 'all']:
             ds = xr.open_mfdataset([f'mb{member:03d}/{filename}' for member in range(17)],
                     concat_dim='member', combine='nested', chunks='auto')
@@ -415,7 +488,7 @@ if __name__ == '__main__':
             ds = ds.where((ds.xx >= dom['xmin']) & (ds.xx <= dom['xmax']) & (ds.yy >= dom['ymin']) &
                     (ds.yy <= dom['ymax']), drop=True)
 
-        plot_var(ds, variables, shortid, date=date, mask=mask)
+        plot_var(ds, variables, shortid, date=date, dateassim=dateassim, mask=mask)
 
     # 3. Clean data
     os.remove('TARGET_RELIEF.tif')
