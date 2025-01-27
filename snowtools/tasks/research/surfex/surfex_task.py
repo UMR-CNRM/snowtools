@@ -545,7 +545,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             if self.conf.meteo == "safran":
                 # Forcing files need to be converted from flat to slopes geometry
                 # Parallelization on the years but limited for memory issues on alp_allslopes and pyr_allslopes domains
-                if self.conf.geometry.tag in ["alp_allslopes", "pyr_allslopes", "alp27_allslopes", "pyr23_allslopes"]:
+                if self.conf.geometry.tag in ["alp_allslopes", "pyr_allslopes", "alp27_allslopes", "pyr24_allslopes"]:
                     ntasks = min(5, len(list_dates_begin_forc))
                 else:
                     ntasks = min(40, len(list_dates_begin_forc))
