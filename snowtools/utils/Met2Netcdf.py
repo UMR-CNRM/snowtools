@@ -34,6 +34,7 @@ EXAMPLES OF USE
    python3 Met2Netcdf.py -b 2000080106 -e 2001080106
    python3 Met2Netcdf.py -b 1993080106 -e 2023080106 -o MAJ_MetInsitu.nc
    python3 Met2Netcdf.py -b 2000080106 -e 2001080106 --one_file -p partial_MET.txt
+   python3 Met2Netcdf.py -b 2023080106 -e 2024080106 -c --one_file -p /rd/cenfic3/cenobs/mesure_data/col_de_porte/met/MET_2023_2024_fmt
 
 Options:
 
@@ -607,6 +608,7 @@ def create_netcdf(output, xr, Tableau_valeurs_nbpoint):
                                    'Near Surface Air Temperature', 'Wind Speed', 'Wind Direction']
 
     Liste_nom_nbpoint = ['LAT', 'LON', 'UREF', 'ZREF', 'ZS', 'aspect', 'slope', 'station']
+    Liste_type_nbpoint = ['f', 'f', 'f', 'f', 'f', 'f', 'f', 'i4']
     Liste_unite_nbpoint = ['degrees_north', 'degrees_east', 'm', 'm', 'm', 'degrees from north',
                            'degrees from horizontal', '']
     Liste_longname_nbpoint = ['latitude', 'longitude', 'Reference_Height_for_Wind', 'Reference_Height', 'altitude',
@@ -620,7 +622,7 @@ def create_netcdf(output, xr, Tableau_valeurs_nbpoint):
         fic_nc[:] = xr.data[:,i]
 
     for i in range(len(Liste_nom_nbpoint)):
-        fic_nc = fic_forcing.createVariable(Liste_nom_nbpoint[i], 'f', ('Number_of_points',), fill_value=-9999999)
+        fic_nc = fic_forcing.createVariable(Liste_nom_nbpoint[i], Liste_type_nbpoint[i], ('Number_of_points',), fill_value=-9999999)
         fic_nc.units = Liste_unite_nbpoint[i]
         fic_nc.long_name = Liste_longname_nbpoint[i]
         fic_nc[:] = Tableau_valeurs_nbpoint[i]
@@ -661,9 +663,9 @@ if __name__ == '__main__':
     Tab_point, name = recup_donnees_site(site)
     message_accueil(option_recup, name)
     if args.one_file:
+        xr, date_beg, date_end = open_met_file_and_create_xr(args.path_MET, option_recup, site)
         if pathout == 'out_met2netcdf.nc':
             pathout = 'FORCING_'+ date_beg.ymdh + '_' + date_end.ymdh + '.nc'
-        xr, date_beg, date_end = open_met_file_and_create_xr(args.path_MET, option_recup, site)
         create_netcdf(pathout, xr, Tab_point)
     else:
         xr_compil = compilation_ttes_periodes(date_entree_debut, date_entree_fin, site, option_recup)
