@@ -8,51 +8,62 @@ export VER_MPI=MPIAUTO
 export OPTLEVEL=O2
 export VER_XIOS=0
 ./configure
+. ../conf/profile_surfex-LXgfortran-SFX-V9-0-0-MPIAUTO-OMP-O2-X0
 make clean
 make -j 4
 make installmaster
 
 export XYZ=""
+export SRC_SURFEX=""
 export VER_MPI=MPIAUTO
 export OPTLEVEL=DEBUG
 export VER_XIOS=0
 ./configure
+. ../conf/profile_surfex-LXgfortran-SFX-V9-0-0-MPIAUTO-OMP-DEBUG-X0
 make clean
 make -j 4
 make installmaster
 
 export XYZ=""
+export SRC_SURFEX=""
 export VER_MPI=NOMPI
 export OPTLEVEL=O2
 export VER_XIOS=0
 ./configure
+. ../conf/profile_surfex-LXgfortran-SFX-V9-0-0-NOMPI-OMP-O2-X0
 make clean
 make -j 4
 make installmaster
 
 export XYZ=""
+export SRC_SURFEX=""
 export VER_MPI=NOMPI
 export OPTLEVEL=DEBUG
 export VER_XIOS=0
 ./configure
+. ../conf/profile_surfex-LXgfortran-SFX-V9-0-0-NOMPI-OMP-DEBUG-X0
 make clean
 make -j 4
 make installmaster
 
 export XYZ=""
+export SRC_SURFEX=""
 export VER_MPI=MPIAUTO
 export OPTLEVEL=O2
 export VER_XIOS=2
 ./configure
+. ../conf/profile_surfex-LXgfortran-SFX-V9-0-0-MPIAUTO-OMP-O2-X2
 make clean
 make -j 4
 make installmaster
 
 export XYZ=""
+export SRC_SURFEX=""
 export VER_MPI=MPIAUTO
 export OPTLEVEL=DEBUG
 export VER_XIOS=2
 ./configure
+. ../conf/profile_surfex-LXgfortran-SFX-V9-0-0-MPIAUTO-OMP-DEBUG-X2
 make clean
 make -j 4
 make installmaster
