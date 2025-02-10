@@ -649,8 +649,8 @@ wind-induced snow metamorphism option and snowfall properties
 
   'CLIMVFALL' : 'DEND' fall speed v f ∗ of suspended snow particles is com-
   puted as old snow if snow is non-dendritic,'PREC' old snow = non-dendritic
-  OR age ¡ XAGELIMPAPPUS2, 'MIXT' (default) old snow for non-dendritic,
-  new snow for dendritic and age¡XAGELIMPAPPUS2 , weighted average
+  OR age < XAGELIMPAPPUS2, 'MIXT' (default) old snow for non-dendritic,
+  new snow for dendritic and age < XAGELIMPAPPUS2 , weighted average
   if dendritic more aged snow, the option is described in SnowPappus de-
   scription paper
 
