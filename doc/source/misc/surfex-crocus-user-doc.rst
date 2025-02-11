@@ -402,7 +402,7 @@ Changes in namelist
        XSM_END      = 4,30,4,30   Month and day to stop grooming (for LSNOWMAK_BOOL = F and for LSNOWMAK_BOOL = T, respectively).
        XFREQ_GRO    = 1           Grooming frequency (usually 1/day).
        XPP_D1       = 342.        Beginning of base-layer generation production period (default 1st of November [11*31+1=342])
-       XPP_D2       = 387.        End of base-layer generation production period (default 15th of December [12*31+1=387])
+       XPP_D2       = 387.        End of base-layer generation production period (default 15th of December [12*31+15=387])
        XPP_D3       = 124.        End of reinforcement production period (default 31st of March [3*31+31=124])
 
        XPP_H1       = 0.          Beginning of base-layer generation production period (seconds)
@@ -573,8 +573,8 @@ does not run SnowPappus code.
 
 **Snowfall, blowing snow occurence and wind-induced snow metamorphism**: Blowing snow occurrence detection depends mainly on :
 
-#. The parameterization linking surface properties to threshold friction velocity u∗t
-#. The properties of snowfall (in terms on microstructure and possibly density).
+#. The parameterization linking surface properties to threshold friction velocity
+#. The properties of snowfall (in terms on microstructure and possibly density)
 
 An important thing to know is that :
 
@@ -647,7 +647,7 @@ wind-induced snow metamorphism option and snowfall properties
   1990 formulation, 'S04' : Sorensen 2004 - Vionnet 2012 formulation. More
   details about it in Baron et al. 2023 Snowpappus description paper
 
-  'CLIMVFALL' : 'DEND' fall speed v f ∗ of suspended snow particles is com-
+  'CLIMVFALL' : 'DEND' fall speed of suspended snow particles is com-
   puted as old snow if snow is non-dendritic,'PREC' old snow = non-dendritic
   OR age < XAGELIMPAPPUS2, 'MIXT' (default) old snow for non-dendritic,
   new snow for dendritic and age < XAGELIMPAPPUS2 , weighted average
@@ -671,7 +671,7 @@ The condition is the following :
   Q_t \leq (\frac{P_{SWE}}{Pt_{step}} - q_{subl})\frac{P_{mesh}}{cos(\theta)}
 
 with PSWE being the snow mass for each pixel in kg/m 2 , P t step the com-
-putation time step in s, P mesh the pixel size in m and θ the slope angle.
+putation time step in s, P mesh the pixel size in m and theta the slope angle.
 (default: False) It also limits the mass bilan of snowcro.F90 to XUEPSI.
 It also corrects the water mass flux balance to a precision of XUEPSI. The
 condition is the following:
@@ -690,7 +690,7 @@ by satisfying the snownlfall condition of snowfall xuepsi all the time.
 .. code-block:: bash
 
   'CSNOWPAPPUSERODEPO' : Determines how the deposition flux q dep is
-  computed from Q t 'ERO' : fictive ”pure erosion” case q dep = − Q l t with
+  computed from Q t 'ERO' : fictive ”pure erosion” case q dep = - Q l t with
   l = 250m, 'DEP' : fictive ”pure deposition” case q dep = + Q l t , 'DIV'
   (default): q dep computed with a mass balance ( needs 2D grids, described
   in SnowPappus article ), 'NON' : q dep = 0 =¿ SnowPappus diagnostics
@@ -714,8 +714,8 @@ Constant parameters can be specified in the namelist. They all are in the group
   fallen ( or deposited ) snow (default: 6 m.s 1 )·
 
   'XRHODEPPAPPUS', 'XDIAMDEPPAPPUS', 'XSPHDEPPAPPUS' :den-
-  sity (kg.m −3 ), optical diameter (m) and sphericity of wind blown deposited
-  snow ( default :ρ = 250 kg.m −3 , D opt =3.10 −4 m, s = 1 )
+  sity (kg.m-3), optical diameter (m) and sphericity of wind blown deposited
+  snow (default: rho = 250 kg.m-3 , D opt=3.10-4 m, s = 1 )
 
   'XLFETCHPAPPUS' : constant fetch distance l fetch applied to all points for
   snowpappus blowing snow flux calculation (m)· (default : l f etch = 250m )
@@ -741,13 +741,13 @@ the one at the model time step which equals the output time ) or ”cumulated”
 
 .. code-block:: bash
 
-  'XQDEP_TOT' : total wind-blown snow net deposition rate q dep (kg.m −2 .s −1 )
+  'XQDEP_TOT' : total wind-blown snow net deposition rate q dep (kg.m -2 .s -1 )
 
-  'XQ_OUT_SUBL' : sublimation rate q subl (kg.m −2 .s −1 )
+  'XQ_OUT_SUBL' : sublimation rate q subl (kg.m -2 .s -1 )
 
-  'XQT_TOT' : total wind-blown horizontal vertically integrated snow transport rate Q t (kg.m −1 .s −1 )
+  'XQT_TOT' : total wind-blown horizontal vertically integrated snow transport rate Q t (kg.m -1 .s -1 )
 
-  'XSNOWDEBTC' : cumulated amount of snow which should have been removed on the oint but was not because it became snowfree (kg.m −2 ) (see the paragraph ”mass balance” in the article )
+  'XSNOWDEBTC' : cumulated amount of snow which should have been removed on the oint but was not because it became snowfree (kg.m -2 ) (see the paragraph ”mass balance” in the article )
 
 
 **”instantaneous” diagnostic variables:**
@@ -755,26 +755,26 @@ the one at the model time step which equals the output time ) or ”cumulated”
 .. code-block:: bash
 
   'XBLOWSNWFLUX_1M' : horizontal blowing snow flux 1 m above snow
-  surface (kg.m −2 .s −1 )
+  surface (kg.m -2 .s -1 )
 
   'XBLOWSNWFLUXINT' : average horizontal blowing snow flux between
-  0.2 and 1.2 m Qt,int (kg.m −1 .s −1 )
+  0.2 and 1.2 m Qt,int (kg.m -1 .s -1 )
 
   'XQ_OUT_SALT' : total horizontal transport rate in the saltation layer
-  Qsalt (kg.m −1 .s −1 )
+  Qsalt (kg.m -1 .s -1 )
 
   'XQ_OUT_SUSP' : total horizontal transport rate in the suspension layer
-  Qsusp (kg.m −1 .s −1 )
+  Qsusp (kg.m -1 .s -1 )
 
-  'XVFRIC_PAPPUS' : wind friction velocity computed by Snowpappus u∗ (m.s −1 )
+  'XVFRIC_PAPPUS' : wind friction velocity computed by Snowpappus (m.s -1 )
 
   'XVFRIC_T_PAPPUS' : threshold friction velocity (at ground level) for
-  snow transport u∗,t (m.s −1 )
+  snow transport (m.s -1 )
 
   'XPZ0_PAPPUS' : roughness length for momentum z0 (m) used by Snowpappus
 
   'XVFALL_PAPPUS' : mass averaged terminal fall velocity of snow particles
-  at the bottom of the suspension layer v f (m.s −1 )
+  at the bottom of the suspension layer (m.s -1 )
 
 References
 ^^^^^^^^^^
