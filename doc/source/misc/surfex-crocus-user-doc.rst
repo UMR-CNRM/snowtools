@@ -655,8 +655,8 @@ wind-induced snow metamorphism option and snowfall properties
   scription paper
 
   'CPAPPUSSUBLI' : 'NONE' : no sublimation in pappus transport scheme,
-  'SBSM': SBSM sublimation parametrisation, 'B9810': Bintanja 1998 with
-  10m wind , 'B9803' : Bintanja 1998 with 3m wind, 'GR06' : Gordon 2006
+  'SBSM': SBSM sublimation parametrisation, 'BJ10': Bintanja 1998 with
+  10m wind , 'BJ03' : Bintanja 1998 with 3m wind, 'GR06' : Gordon 2006
   sublimation parameterization.
 
   'OPAPPULIMTFLUX' : Boolean. If True = snow transport flux limitation
