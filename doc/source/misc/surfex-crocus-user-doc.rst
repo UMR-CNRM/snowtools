@@ -911,14 +911,6 @@ wind-induced snow metamorphism option and snowfall properties
   dritic snow ( beware: this option is also used for Crocus alone or Sytron.
   Only 'GM98' and 'VI12' work in these cases )
 
-  'CDRIFTPAPPUS' : 'NON' (default): no wind-induced snow metamor-
-  phism (WISM) in snowpappus, 'CRO' : WISM with its own threshold
-  wind speed computed with the same code as in SNOWCRO routine. This
-  threshold wind speed does not apply to the computation of fluxes, 'CRM':
-  WISM. with it's own thr wind speed applying to all snowpappus (over-
-  passing HSNOWMOB');'PAP' : ”” using pappus threshold wind speed to
-  compute the mobility index ( see Vionnet et al. 2012 for more details ).
-
 **other options**
 
 .. code-block:: bash
