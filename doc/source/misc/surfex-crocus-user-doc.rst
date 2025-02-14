@@ -772,3 +772,52 @@ the one at the model time step which equals the output time ) or ”cumulated”
 References
 ^^^^^^^^^^
 Baron M., Haddjeri A et al. , SnowPappus v1.0, a blowing-snow model for large-scale applications of the Crocus snow scheme, 2024, https://doi.org/10.5194/gmd-17-1297-2024
+
+8-MEB-Crocus coupling for snow-vegetation interactions
+--------------------------------------------------------
+
+Basic information
+^^^^^^^^^^^^^^^^^
+
+* **Developer name** : Axel Bouchet - Aaron Boone
+* **Status of the development** : [Finished]
+* **Date of start of development** : 02/2022
+* **Date of end of development** : 09/2022
+* **Commit of development** : 676f9308
+* **Branches on which the developpment is present** : [cen/cen_dev]
+* **Evaluated against SURFEX test database ?** : [Yes]
+* **New test added to database ?** :  [Yes]
+
+Description of the development
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This configuration was developed in order to better describe snow-vegetation interactions in temperate midlatitude climates.
+
+It was initially produced in order to improve snow amount simulations (height and SWE) at the Col de Porte experimental site.
+You can try this parameterization for any other site, even in cold climates like boreal forests (but we need more validations to be sure it makes no major degradation in this kind of vegetation).
+
+Changes in namelist
+^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   &NAM_ISBA
+       LMEB = .TRUE.
+
+   &NAM_MEB_ISBA
+       LMEB_TALL_VEG       = .TRUE.
+       LMEB_INT_PHASE_LUN  = .TRUE.
+       LMEB_INT_UNLOAD_LUN = .TRUE.
+       LMEB_INT_UNLOAD_SFC = .TRUE.
+
+Full Description
+^^^^^^^^^^^^^^^^^
+
+**LMEB_TALL_VEG** : enable this key to use vegetation height as a major variable to calculate maximum snow load on trees and turbulent fluxes. It will mainly increase evaporation and sublimation mass loss on tree branches.
+
+**LMEB_INT_PHASE_LUN** : enable this key if you want to use the [Lundquist et al., 2021] intercepted snow melt formulation. When you set this key at True, the snow intercepted by the trees (= the snow which is ON the tree branches) melts faster (4kg.m^-2.K^-1.jour^-1) than using the classical config.
+
+**LMEB_INT_UNLOAD_LUN** : enable this key if you want to use the snow unloading scheme of [Lundquist et al., 2021] (calibration of the [Roesh et al., 2001] scheme). This scheme is globally slowing the solid unloading, which favors snowmelt and sublimation of the intercepted snow as it stays a bit longer on the branches.
+
+**LMEB_INT_UNLOAD_SFC** : enable this key in order to separate snow unloading from snowfalls in Crocus fresh snow incorporation. When the key is set at True, snow unloading will be included into the Crocus snowpack as “old” snow, with properties of melt forms and a density of 200kg.m^-2 .
+
