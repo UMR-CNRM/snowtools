@@ -596,7 +596,8 @@ In Crocus without SnowPappus :
   metamorphism; 'VI13': falling snow microstructure as described in Vion-
   net et al. 2013, wind-induced snow metamorphism as described in Vionnet
   et al. 2012; 'DFLT'(default) : not described here; 'GA01' : not described
-  here.
+  here; 'PAPP' : using pappus threshold wind speed to compute the mobility
+  index ( see Vionnet et al. 2012 for more details ).
 
   'CSNOWMOB': gives the option for threshold wind speed. Threshold
   wind speed is computed in the SNOWCRO routine.
@@ -624,14 +625,6 @@ wind-induced snow metamorphism option and snowfall properties
   9 m/s if snow is non-dendritic, given by GM98 parameterization for den-
   dritic snow ( beware: this option is also used for Crocus alone or Sytron.
   Only 'GM98' and 'VI12' work in these cases )
-
-  'CDRIFTPAPPUS' : 'NON' (default): no wind-induced snow metamor-
-  phism (WISM) in snowpappus, 'CRO' : WISM with its own threshold
-  wind speed computed with the same code as in SNOWCRO routine. This
-  threshold wind speed does not apply to the computation of fluxes, 'CRM':
-  WISM. with it's own thr wind speed applying to all snowpappus (over-
-  passing HSNOWMOB');'PAP' : ”” using pappus threshold wind speed to
-  compute the mobility index ( see Vionnet et al. 2012 for more details ).
 
 **other options**
 
