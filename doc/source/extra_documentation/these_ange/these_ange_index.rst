@@ -23,12 +23,15 @@ Ange
 |
 
 .. image:: https://i.ibb.co/93t9ZvS/visu-these-ange.png
-    :alt: my-picture1
-    :width: 800
+    :alt: Snow cover over Grandes Rousses
+    :width: 100%
 
 
 Additional information :
 ########################
+
+.. warning::
+   This is not recommended !
 
 | How to connect to a Jupyter Notebook running on a Belenos computing nodes ?
 | (to avoid spending your life on Belenoslogin like I did)
@@ -67,20 +70,3 @@ Suggestion of shortcuts I used for belenos::
     alias golastabort=$'cd /scratch/mtool/haddjeria/abort; lstxp=(`ls|sort -r`); cd "$lstxp";unset lstxp;cd root/surfex_vortex_task/'
     alias golastspool=$'cd /scratch/mtool/haddjeria/spool; lstxp=(`ls|sort -r`); cd "$lstxp";unset lstxp;cd root/surfex_vortex_task/'
 
-
-Suggestion of belenos prompt using `starship <https://starship.rs>`_ bash prompt to get more info on simulation outputs::
-
-  in starship.toml
-
-  [custom.xpid]
-  detect_files=["step.01"]
-  command="grep 'xpid' step.01| cut -c 19-"
-  format = "xpid:[$output](250)"
-
-  [custom.elapsedtime]
-  detect_files=["step.04.out"]
-  command="grep 'Elapsed time' step.02.out | cut -c 24-32"
-  format = " time:[$output](250)"
-
-.. image:: https://i.ibb.co/nM5F9LK/Capture-d-cran-2024-06-21-11-33-51.png
-    :width: 800

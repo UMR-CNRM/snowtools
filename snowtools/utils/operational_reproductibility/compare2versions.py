@@ -14,7 +14,8 @@ import datetime
 
 import numpy as np
 import netCDF4
-from numpy import nanmean
+# nanmean no longer exist in scipy, replace by np.nanmean
+# from scipy import nanmean
 
 from snowtools.utils.FileException import FileNameException, VarNameException
 # Not necessary to transfer in vortex
@@ -211,7 +212,7 @@ class ComparisonNetcdf(object):
                                 self.report(varname + " : only missing values in second file but defined in first file")
                         else:
                             diff = var1[:] - var2[:]
-                            mindiff, maxdiff, meandiff = np.nanmin(diff), np.nanmax(diff), nanmean(diff.flatten())
+                            mindiff, maxdiff, meandiff = np.nanmin(diff), np.nanmax(diff), np.nanmean(diff.flatten())
 
                             if mindiff == 0 and maxdiff == 0:
                                 # self.report(varname + " : CONFORME")

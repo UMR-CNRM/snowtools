@@ -18,9 +18,7 @@ Snowtools is often used in combination with [SURFEX](http://www.cnrm-game-meteo.
 
 General informations about snowpack modelling with SURFEX-Crocus can be found here: <http://www.cnrm-game-meteo.fr/spip.php?rubrique73>
 
-Users interested by snow modeling with SURFEX/Crocus model must follow detailed instructions at <https://opensource.umr-cnrm.fr/projects/snowtools_git/wiki/Procedure_for_new_users> to get access to SURFEX source code.
-
-Some additional information are provided directly here:
+Users interested by snow modeling with SURFEX/Crocus model must follow detailed instructions below:
 
 * [Installation of SURFEX](doc/source/misc/surfex-install.rst)
 * [Run a SURFEX-Crocus simulation](doc/source/misc/surfex-run.rst)
