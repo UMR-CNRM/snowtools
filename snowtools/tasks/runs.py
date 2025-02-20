@@ -17,6 +17,7 @@ from snowtools.tools.change_prep import prep_tomodify
 from snowtools.tools.update_namelist import update_surfex_namelist_file
 from snowtools.tools.execute import callSurfexOrDie
 from snowtools.tools.massif_diags import massif_simu
+from snowtools.tools.hydro import hydro
 from snowtools.utils.resources import get_file_period, get_file_date, get_file_const, save_file_period, \
         save_file_date, save_file_const, get_file_const_or_crash, ldd
 from snowtools.utils.prosimu import prosimu
@@ -174,11 +175,15 @@ class surfexrun(object):
             # 5. Post-processing if required
             self.postprocess()
 
-        # 5. Save outputs
+        # 6. Post-processing applied even without surfex run
+        self.finalpostprocess()
+
+        # 7. Save outputs
         self.save_output()
 
         if need_other_run:
-            # Recursive call to this routine while an other run is required, the next simulation starts at the end of the previous one.
+            # Recursive call to this routine while an other run is required,
+            # the next simulation starts at the end of the previous one.
             self.datebegin = self.dateforcend
             self.dateinit = self.dateforcend
             self.run(firstrun=False)
@@ -270,6 +275,9 @@ class surfexrun(object):
         profile.dataset.GlobalAttributes(surfex_commit=surfex_commit, snowtools_command=self.s2mcommand)
         profile.dataset.add_standard_names()
         profile.close()
+
+    def finalpostprocess(self, **kwargs):
+        pass
 
 
 class massifrun(surfexrun):
@@ -426,4 +434,59 @@ class interpolgriddedrun(interpolrun, griddedrun):
 
     """Class for a PC gridded SURFEX run for which the geometry is defined in the namelist
     and the forcing requires a preliminary interpolation"""
+    pass
+
+
+class hydrorun(surfexrun):
+    """Class to compute hydrological aggregations of simulation outputs"""
+
+    def __init__(self, areasfile, hydrovar, datebegin, dateend, forcingpath, diroutput, workdir=None, geolist=[],
+                 s2mcommand=None):
+        super(hydrorun, self).__init__(datebegin, dateend, forcingpath, diroutput, workdir=workdir, geolist=geolist,
+                                       s2mcommand=s2mcommand)
+        self.areasfile = areasfile
+        self.hydrovar = hydrovar
+        self.onlyextractforcing = True
+
+    def finalpostprocess(self):
+
+        # list_var = ['SNOMLT_ISBA', 'WSN_T_ISBA', 'DSN_T_ISBA', 'Tair', 'Rainf', 'Snowf']
+        list_files_in = list()
+        for i, path in enumerate(self.forcingpathlist):
+            list_files_in.append("FORCING_or_PRO_" + str(i) + ".nc")
+
+        with hydro(list_files_in, self.areasfile, 'HYDRO.nc') as h:
+            h.integration(self.hydrovar, var_sca='DSN_T_ISBA')
+
+    def save_output(self):
+        save_file_period(self.dirpro, "HYDRO", self.dateforcbegin, self.dateforcend)
+
+    @property
+    def forcingpathlist(self):
+        if type(self.forcingpath) is list:
+            return self.forcingpath
+        else:
+            return [self.forcingpath]
+
+    def get_forcing(self):
+        """ Look for a FORCING / PRO file including the starting date"""
+        for i, path in enumerate(self.forcingpathlist):
+            if 'pro' in path or 'PRO' in path:
+                prefix = 'PRO'
+            else:
+                prefix = 'FORCING'
+            self.dateforcbegin, self.dateforcend = get_file_period(prefix, path, self.datebegin, self.dateend)
+            filenamein = "FORCING_or_PRO_" + str(i) + ".nc"
+            os.rename(prefix + ".nc", filenamein)
+
+    def get_all_consts(self):
+        pass
+
+    def defaults_from_env(self):
+        pass
+
+
+class hydropostprocess(hydrorun, massifextractpro):
+    """Class to compute hydrological aggregations of simulation outputs after extraction of PRO file"""
+
     pass

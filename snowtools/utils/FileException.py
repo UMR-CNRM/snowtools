@@ -82,6 +82,44 @@ class FileNameException(Exception):
         return tuple(red)
 
 
+class FileExistsException(Exception):
+    """
+    Exception for an existing file for which overwriting is not allowed
+
+    :param path: the file conerned
+    """
+
+    def __init__(self, path):
+        self.path = path
+
+    def __str__(self):
+        return "This file already exists : " + self.path
+
+    def __reduce__(self):
+        red = list(super(FileExistsException, self).__reduce__())
+        red[1] = tuple([self.path])  # Les arguments qui seront passes a __init__
+        return tuple(red)
+
+
+class FileExtensionException(Exception):
+    """
+    Exception for a non-existent file
+
+    :param path: the file conerned
+    """
+
+    def __init__(self, path):
+        self.path = path
+
+    def __str__(self):
+        return "Unsupported extension for file : " + self.path
+
+    def __reduce__(self):
+        red = list(super(FileExtensionException, self).__reduce__())
+        red[1] = tuple([self.path])  # Les arguments qui seront passes a __init__
+        return tuple(red)
+
+
 class FileOpenException(Exception):
     """
     Exception when a file cannot be openned
@@ -97,7 +135,6 @@ class FileOpenException(Exception):
             return "Can not open the file : " + self.path
         else:
             return "self.path is not a string:" + str(self.path)
-
 
     def __reduce__(self):
         red = list(super(FileOpenException, self).__reduce__())
