@@ -40,6 +40,10 @@ Diagnostics
 .. automodule:: tools.massif_diags
    :members:
 
+.. automodule:: tools.hydro
+   :member-order: bysource
+   :members:
+
 .. automodule:: tools.special_diags
    :members:
 

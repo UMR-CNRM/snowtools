@@ -24,11 +24,29 @@ class SystemException(Exception):
 def callSystemOrDie(commande, errorcode=None):
     """Method to execute a system command and kill the current program if it fails."""
 
-    status = subprocess.call(commande.split(), stdout=sys.stdout, stderr=sys.stderr)
+    if type(commande) is list:
+        # This can be the only way to call subprocess when args include spaces
+        status = subprocess.call(commande, stdout=sys.stdout, stderr=sys.stderr)
+        if status != 0:
+            raise SystemException(status, ' '.join(commande))
+        return status
+    else:
+        # Standard case: commande is a string, should be preferred if no space in args
+        status = subprocess.call(commande.split(), stdout=sys.stdout, stderr=sys.stderr)
 
-    if status != 0:
-        raise SystemException(status, commande)
-    return status
+        if status != 0:
+            raise SystemException(status, commande)
+        return status
+
+
+def printandcallSystemOrDie(commande, errorcode=None):
+    """Method to print and execute a system command and kill the current program if it fails."""
+
+    if type(commande) is list:
+        print (' '.join(commande))
+    else:
+        print(commande)
+    callSystemOrDie(commande, errorcode=errorcode)
 
 
 def callSurfexOrDie(commande, moderun="NORMAL", nproc=1, errorcode=None):

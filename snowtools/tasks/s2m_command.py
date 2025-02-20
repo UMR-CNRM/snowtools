@@ -76,6 +76,15 @@ class Surfex_command(_S2M_command):
             self.set_path(vortex)
             self.set_geo(vortex)
 
+        # Check and convert hydrological options
+        if self.options.hydro:
+            if self.options.hydrovar:
+                self.options.hydrovar = self.options.hydrovar.split(',')
+            else:
+                raise UnsupportedOptionException('hydrovar option is mandatory if hydro option is provided')
+        elif self.options.hydrovar:
+            raise UnsupportedOptionException('hydro option is mandatory if hydrovar option is provided')
+
     def set_geo(self, vortex):
 
         #
@@ -114,6 +123,9 @@ class Surfex_command(_S2M_command):
 
         if self.options.conf:
             self.options.conf = absolute_path(self.options.conf)
+
+        if self.options.hydro:
+            self.options.hydro = absolute_path(self.options.hydro)
 
         if not vortex:
             [self.options.forcing, self.options.diroutput] = \
@@ -310,6 +322,26 @@ class Surfex_command(_S2M_command):
                                             """
                                             )
 
+        parser_research_others.add_argument("--hydro",
+                                            dest="hydro", default=None,
+                                            type=str,
+                                            help="""
+                                            Netcdf file of areas describing the repartition of S2M units
+                                            for a listhydrological basins. If provided, hydrological diagnostics are
+                                            provided in a dedicated output file for the variables listed by --hydrovar 
+                                            """
+                                            )
+
+        parser_research_others.add_argument("--hydrovar",
+                                            dest="hydrovar", default=None,
+                                            type=str,
+                                            help="""
+                                            List of FORCING or PRO diagnostics separated by coma that should be
+                                            spatially aggregated at the scale of hydrological basins. The basins are
+                                            described in the file provided with the --hydro option
+                                            """
+                                            )
+
         parser_research_others.add_argument("--uenv",
                                             action="store", dest="uenv", default=None,
                                             help="In cases when additionnal input files are necessary, use this "
@@ -466,7 +498,15 @@ class Surfex_command(_S2M_command):
         if not self.options.groundonly:
 
             # Define a run object
-            if type(self.options.forcing) is list or self.options.addmask:
+            if self.options.hydro:
+                run = runs.hydrorun(self.options.hydro, self.options.hydrovar,
+                                    self.options.datedeb, self.options.datefin,
+                                    self.options.forcing, self.options.diroutput,
+                                    workdir = self.options.workdir,
+                                    geolist = [self.options.region],
+                                    s2mcommand = self.command)
+
+            elif type(self.options.forcing) is list or self.options.addmask:
                 run = runs.postesrun(self.options.datedeb, self.options.datefin, self.options.forcing,
                                      self.options.diroutput, threshold=self.options.threshold,
                                      workdir=self.options.workdir, datespinup=self.options.datespinup,
@@ -496,21 +536,16 @@ class Surfex_command(_S2M_command):
 
                 if self.options.onlyextractforcing:
                     if 'pro' in self.options.forcing or 'PRO' in self.options.forcing:
-                        run = runs.massifextractpro(self.options.datedeb, self.options.datefin,
-                                                    self.options.forcing, self.options.diroutput,
-                                                    workdir=self.options.workdir,
-                                                    geolist=[self.options.region, self.options.minlevel,
-                                                             self.options.maxlevel, self.options.slopes,
-                                                             self.options.aspects],
-                                                    s2mcommand=self.command)
+                        myclass = runs.massifextractpro
                     else:
-                        run = runs.massifextractforcing(self.options.datedeb, self.options.datefin,
-                                                        self.options.forcing, self.options.diroutput,
-                                                        workdir=self.options.workdir,
-                                                        geolist=[self.options.region, self.options.minlevel,
-                                                                 self.options.maxlevel, self.options.slopes,
-                                                                 self.options.aspects],
-                                                        s2mcommand=self.command)
+                        myclass = runs.massifextractforcing
+                    run = myclass(self.options.datedeb, self.options.datefin,
+                                  self.options.forcing, self.options.diroutput,
+                                  workdir=self.options.workdir,
+                                  geolist=[self.options.region, self.options.minlevel,
+                                  self.options.maxlevel, self.options.slopes,
+                                  self.options.aspects],
+                                  s2mcommand=self.command)
                 else:
 
                     run = runs.massifrun(self.options.datedeb, self.options.datefin, self.options.forcing,
