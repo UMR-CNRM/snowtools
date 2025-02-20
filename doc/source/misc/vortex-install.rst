@@ -37,7 +37,9 @@ On sxcen:
 
    export VORTEX=/home/lafaysse/common/vortex/vortex-cen
    export PYTHONPATH=$PYTHONPATH:$VORTEX/site:$VORTEX/src:$VORTEX/project
-   export MTOOLDIR=/cnrm/cen/users/NO_SAVE/login
+   export MTOOLDIR=/cnrm/cen/users/NO_SAVE/<login>
+
+Note: Make sure that the folder ``/cnrm/cen/users/NO_SAVE/<login>`` exist for sxcen.
 
 Then, go the last section of this documentation (:ref:`vortex-file-transfer`).
 

@@ -402,7 +402,7 @@ Changes in namelist
        XSM_END      = 4,30,4,30   Month and day to stop grooming (for LSNOWMAK_BOOL = F and for LSNOWMAK_BOOL = T, respectively).
        XFREQ_GRO    = 1           Grooming frequency (usually 1/day).
        XPP_D1       = 342.        Beginning of base-layer generation production period (default 1st of November [11*31+1=342])
-       XPP_D2       = 387.        End of base-layer generation production period (default 15th of December [12*31+1=387])
+       XPP_D2       = 387.        End of base-layer generation production period (default 15th of December [12*31+15=387])
        XPP_D3       = 124.        End of reinforcement production period (default 31st of March [3*31+31=124])
 
        XPP_H1       = 0.          Beginning of base-layer generation production period (seconds)
@@ -573,8 +573,8 @@ does not run SnowPappus code.
 
 **Snowfall, blowing snow occurence and wind-induced snow metamorphism**: Blowing snow occurrence detection depends mainly on :
 
-#. The parameterization linking surface properties to threshold friction velocity u∗t
-#. The properties of snowfall (in terms on microstructure and possibly density).
+#. The parameterization linking surface properties to threshold friction velocity
+#. The properties of snowfall (in terms on microstructure and possibly density)
 
 An important thing to know is that :
 
@@ -596,7 +596,8 @@ In Crocus without SnowPappus :
   metamorphism; 'VI13': falling snow microstructure as described in Vion-
   net et al. 2013, wind-induced snow metamorphism as described in Vionnet
   et al. 2012; 'DFLT'(default) : not described here; 'GA01' : not described
-  here.
+  here; 'PAPP' : using pappus threshold wind speed to compute the mobility
+  index ( see Vionnet et al. 2012 for more details ).
 
   'CSNOWMOB': gives the option for threshold wind speed. Threshold
   wind speed is computed in the SNOWCRO routine.
@@ -625,14 +626,6 @@ wind-induced snow metamorphism option and snowfall properties
   dritic snow ( beware: this option is also used for Crocus alone or Sytron.
   Only 'GM98' and 'VI12' work in these cases )
 
-  'CDRIFTPAPPUS' : 'NON' (default): no wind-induced snow metamor-
-  phism (WISM) in snowpappus, 'CRO' : WISM with its own threshold
-  wind speed computed with the same code as in SNOWCRO routine. This
-  threshold wind speed does not apply to the computation of fluxes, 'CRM':
-  WISM. with it's own thr wind speed applying to all snowpappus (over-
-  passing HSNOWMOB');'PAP' : ”” using pappus threshold wind speed to
-  compute the mobility index ( see Vionnet et al. 2012 for more details ).
-
 **other options**
 
 .. code-block:: bash
@@ -647,16 +640,16 @@ wind-induced snow metamorphism option and snowfall properties
   1990 formulation, 'S04' : Sorensen 2004 - Vionnet 2012 formulation. More
   details about it in Baron et al. 2023 Snowpappus description paper
 
-  'CLIMVFALL' : 'DEND' fall speed v f ∗ of suspended snow particles is com-
+  'CLIMVFALL' : 'DEND' fall speed of suspended snow particles is com-
   puted as old snow if snow is non-dendritic,'PREC' old snow = non-dendritic
-  OR age ¡ XAGELIMPAPPUS2, 'MIXT' (default) old snow for non-dendritic,
-  new snow for dendritic and age¡XAGELIMPAPPUS2 , weighted average
+  OR age < XAGELIMPAPPUS2, 'MIXT' (default) old snow for non-dendritic,
+  new snow for dendritic and age < XAGELIMPAPPUS2 , weighted average
   if dendritic more aged snow, the option is described in SnowPappus de-
   scription paper
 
   'CPAPPUSSUBLI' : 'NONE' : no sublimation in pappus transport scheme,
-  'SBSM': SBSM sublimation parametrisation, 'B9810': Bintanja 1998 with
-  10m wind , 'B9803' : Bintanja 1998 with 3m wind, 'GR06' : Gordon 2006
+  'SBSM': SBSM sublimation parametrisation, 'BJ10': Bintanja 1998 with
+  10m wind , 'BJ03' : Bintanja 1998 with 3m wind, 'GR06' : Gordon 2006
   sublimation parameterization.
 
   'OPAPPULIMTFLUX' : Boolean. If True = snow transport flux limitation
@@ -671,7 +664,7 @@ The condition is the following :
   Q_t \leq (\frac{P_{SWE}}{Pt_{step}} - q_{subl})\frac{P_{mesh}}{cos(\theta)}
 
 with PSWE being the snow mass for each pixel in kg/m 2 , P t step the com-
-putation time step in s, P mesh the pixel size in m and θ the slope angle.
+putation time step in s, P mesh the pixel size in m and theta the slope angle.
 (default: False) It also limits the mass bilan of snowcro.F90 to XUEPSI.
 It also corrects the water mass flux balance to a precision of XUEPSI. The
 condition is the following:
@@ -690,7 +683,7 @@ by satisfying the snownlfall condition of snowfall xuepsi all the time.
 .. code-block:: bash
 
   'CSNOWPAPPUSERODEPO' : Determines how the deposition flux q dep is
-  computed from Q t 'ERO' : fictive ”pure erosion” case q dep = − Q l t with
+  computed from Q t 'ERO' : fictive ”pure erosion” case q dep = - Q l t with
   l = 250m, 'DEP' : fictive ”pure deposition” case q dep = + Q l t , 'DIV'
   (default): q dep computed with a mass balance ( needs 2D grids, described
   in SnowPappus article ), 'NON' : q dep = 0 =¿ SnowPappus diagnostics
@@ -714,8 +707,8 @@ Constant parameters can be specified in the namelist. They all are in the group
   fallen ( or deposited ) snow (default: 6 m.s 1 )·
 
   'XRHODEPPAPPUS', 'XDIAMDEPPAPPUS', 'XSPHDEPPAPPUS' :den-
-  sity (kg.m −3 ), optical diameter (m) and sphericity of wind blown deposited
-  snow ( default :ρ = 250 kg.m −3 , D opt =3.10 −4 m, s = 1 )
+  sity (kg.m-3), optical diameter (m) and sphericity of wind blown deposited
+  snow (default: rho = 250 kg.m-3 , D opt=3.10-4 m, s = 1 )
 
   'XLFETCHPAPPUS' : constant fetch distance l fetch applied to all points for
   snowpappus blowing snow flux calculation (m)· (default : l f etch = 250m )
@@ -741,13 +734,13 @@ the one at the model time step which equals the output time ) or ”cumulated”
 
 .. code-block:: bash
 
-  'XQDEP_TOT' : total wind-blown snow net deposition rate q dep (kg.m −2 .s −1 )
+  'XQDEP_TOT' : total wind-blown snow net deposition rate q dep (kg.m -2 .s -1 )
 
-  'XQ_OUT_SUBL' : sublimation rate q subl (kg.m −2 .s −1 )
+  'XQ_OUT_SUBL' : sublimation rate q subl (kg.m -2 .s -1 )
 
-  'XQT_TOT' : total wind-blown horizontal vertically integrated snow transport rate Q t (kg.m −1 .s −1 )
+  'XQT_TOT' : total wind-blown horizontal vertically integrated snow transport rate Q t (kg.m -1 .s -1 )
 
-  'XSNOWDEBTC' : cumulated amount of snow which should have been removed on the oint but was not because it became snowfree (kg.m −2 ) (see the paragraph ”mass balance” in the article )
+  'XSNOWDEBTC' : cumulated amount of snow which should have been removed on the oint but was not because it became snowfree (kg.m -2 ) (see the paragraph ”mass balance” in the article )
 
 
 **”instantaneous” diagnostic variables:**
@@ -755,27 +748,76 @@ the one at the model time step which equals the output time ) or ”cumulated”
 .. code-block:: bash
 
   'XBLOWSNWFLUX_1M' : horizontal blowing snow flux 1 m above snow
-  surface (kg.m −2 .s −1 )
+  surface (kg.m -2 .s -1 )
 
   'XBLOWSNWFLUXINT' : average horizontal blowing snow flux between
-  0.2 and 1.2 m Qt,int (kg.m −1 .s −1 )
+  0.2 and 1.2 m Qt,int (kg.m -1 .s -1 )
 
   'XQ_OUT_SALT' : total horizontal transport rate in the saltation layer
-  Qsalt (kg.m −1 .s −1 )
+  Qsalt (kg.m -1 .s -1 )
 
   'XQ_OUT_SUSP' : total horizontal transport rate in the suspension layer
-  Qsusp (kg.m −1 .s −1 )
+  Qsusp (kg.m -1 .s -1 )
 
-  'XVFRIC_PAPPUS' : wind friction velocity computed by Snowpappus u∗ (m.s −1 )
+  'XVFRIC_PAPPUS' : wind friction velocity computed by Snowpappus (m.s -1 )
 
   'XVFRIC_T_PAPPUS' : threshold friction velocity (at ground level) for
-  snow transport u∗,t (m.s −1 )
+  snow transport (m.s -1 )
 
   'XPZ0_PAPPUS' : roughness length for momentum z0 (m) used by Snowpappus
 
   'XVFALL_PAPPUS' : mass averaged terminal fall velocity of snow particles
-  at the bottom of the suspension layer v f (m.s −1 )
+  at the bottom of the suspension layer (m.s -1 )
 
 References
 ^^^^^^^^^^
 Baron M., Haddjeri A et al. , SnowPappus v1.0, a blowing-snow model for large-scale applications of the Crocus snow scheme, 2024, https://doi.org/10.5194/gmd-17-1297-2024
+
+8-MEB-Crocus coupling for snow-vegetation interactions
+--------------------------------------------------------
+
+Basic information
+^^^^^^^^^^^^^^^^^
+
+* **Developer name** : Axel Bouchet - Aaron Boone
+* **Status of the development** : [Finished]
+* **Date of start of development** : 02/2022
+* **Date of end of development** : 09/2022
+* **Commit of development** : 676f9308
+* **Branches on which the developpment is present** : [cen/cen_dev]
+* **Evaluated against SURFEX test database ?** : [Yes]
+* **New test added to database ?** :  [Yes]
+
+Description of the development
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This configuration was developed in order to better describe snow-vegetation interactions in temperate midlatitude climates.
+
+It was initially produced in order to improve snow amount simulations (height and SWE) at the Col de Porte experimental site.
+You can try this parameterization for any other site, even in cold climates like boreal forests (but we need more validations to be sure it makes no major degradation in this kind of vegetation).
+
+Changes in namelist
+^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   &NAM_ISBA
+       LMEB = .TRUE.
+
+   &NAM_MEB_ISBA
+       LMEB_TALL_VEG       = .TRUE.
+       LMEB_INT_PHASE_LUN  = .TRUE.
+       LMEB_INT_UNLOAD_LUN = .TRUE.
+       LMEB_INT_UNLOAD_SFC = .TRUE.
+
+Full Description
+^^^^^^^^^^^^^^^^^
+
+**LMEB_TALL_VEG** : enable this key to use vegetation height as a major variable to calculate maximum snow load on trees and turbulent fluxes. It will mainly increase evaporation and sublimation mass loss on tree branches.
+
+**LMEB_INT_PHASE_LUN** : enable this key if you want to use the [Lundquist et al., 2021] intercepted snow melt formulation. When you set this key at True, the snow intercepted by the trees (= the snow which is ON the tree branches) melts faster (4kg.m^-2.K^-1.jour^-1) than using the classical config.
+
+**LMEB_INT_UNLOAD_LUN** : enable this key if you want to use the snow unloading scheme of [Lundquist et al., 2021] (calibration of the [Roesh et al., 2001] scheme). This scheme is globally slowing the solid unloading, which favors snowmelt and sublimation of the intercepted snow as it stays a bit longer on the branches.
+
+**LMEB_INT_UNLOAD_SFC** : enable this key in order to separate snow unloading from snowfalls in Crocus fresh snow incorporation. When the key is set at True, snow unloading will be included into the Crocus snowpack as “old” snow, with properties of melt forms and a density of 200kg.m^-2 .
+
