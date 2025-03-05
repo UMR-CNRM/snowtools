@@ -10,13 +10,7 @@ import shutil
 import numpy as np
 import os
 
-# Dependencies to shapefile and shapely to be removed before Dec 2025 (only for obsolete classes)
-import shapefile
-from shapely.geometry import Point
-from shapely.geometry import shape as ShapelyShape
-#-------------------------------------------------------
-
-from snowtools.utils.S2M_standard_file import _StandardNC
+from snowtools.utils.S2M_standard_file import StandardHYDRO
 from snowtools.utils.prosimu import prosimu
 from snowtools.utils.FileException import (TimeListException, VarNameException, FileNameException, FileExistsException,
                                            FileExtensionException)
@@ -73,7 +67,7 @@ class hydro(object):
         """
         for onepro in self.metaprolist:
             onepro.close()
-        #self.hydrofile.GlobalAttributes()
+        self.hydrofile.GlobalAttributes()
         self.hydrofile.close()
 
     def checktime(self, profilename):
@@ -154,7 +148,7 @@ class hydro(object):
         Create a catchment scale diagnostic file
         """
 
-        self.hydrofile = _StandardNC(hydrofilename, 'w', format='NETCDF4')
+        self.hydrofile = StandardHYDRO(hydrofilename, 'w', format='NETCDF4')
         # Create time dimension and coordinate
         self.hydrofile.createDimension('time', size=None)
         timeout = self.hydrofile.createVariable('time', 'f8', dimensions=('time',))
@@ -353,7 +347,7 @@ class metaprosimu(prosimu):
 
             for var in ['zs', 'aspect', 'slope', 'massif']:
                 auxil.dataset.createVariable(var, self.gettypevar(self.reftopovarnames[var]),
-                                             dimensions=('Number_of_points'))
+                                             dimensions='Number_of_points')
                 auxil.dataset.variables[var][...] = getattr(self, var)[...]
 
 
@@ -371,6 +365,20 @@ def diff_aspect(aspect1, aspect2):
     # Compute aspect angle absolute difference
     diffabs = abs(aspect1 - aspect2)
     return np.where(diffabs > 180, 360 - diffabs, diffabs)
+
+
+def bbox(img):
+    """
+    This method provides the bounding box of True components of a given field
+
+    :param img: Field of logical values
+    :type img: 2d np.array
+    """
+    rows = np.any(img, axis=1)
+    cols = np.any(img, axis=0)
+    rmin, rmax = np.where(rows)[0][[0, -1]]
+    cmin, cmax = np.where(cols)[0][[0, -1]]
+    return rmin, rmax, cmin, cmax
 
 
 class basin_areas_file(object):
@@ -457,19 +465,6 @@ class basin_areas_file(object):
         else:
             return metaprosimu(listprofilename)
 
-    def bbox(self, img):
-        """
-        This method provides the bounding box of True components of a given field
-
-        :param img: Field of logical values
-        :type img: 2d np.array
-        """
-        rows = np.any(img, axis=1)
-        cols = np.any(img, axis=0)
-        rmin, rmax = np.where(rows)[0][[0, -1]]
-        cmin, cmax = np.where(cols)[0][[0, -1]]
-        return rmin, rmax, cmin, cmax
-
     def compute_areas(self, basins_list, metaprolist):
         """
         This method computes the areas of S2M units for each basin of the list.
@@ -496,19 +491,19 @@ class basin_areas_file(object):
         nmaxbasins = len(basins_list)
         for m, metapro in enumerate(metaprolist):
             indexbasin[m] = -1
-            self.areas[m] = np.zeros((metapro.nbpoints,nmaxbasins), 'float')
-            self.basin[m] = np.zeros((nmaxbasins), 'int')
-            self.total_area[m] = np.zeros((nmaxbasins), 'float')
-            self.mean_elevation[m] = np.zeros((nmaxbasins), 'float')
-            self.min_elevation[m] = np.zeros((nmaxbasins), 'float')
-            self.max_elevation[m] = np.zeros((nmaxbasins), 'float')
+            self.areas[m] = np.zeros((metapro.nbpoints, nmaxbasins), 'float')
+            self.basin[m] = np.zeros(nmaxbasins, 'int')
+            self.total_area[m] = np.zeros(nmaxbasins, 'float')
+            self.mean_elevation[m] = np.zeros(nmaxbasins, 'float')
+            self.min_elevation[m] = np.zeros(nmaxbasins, 'float')
+            self.max_elevation[m] = np.zeros(nmaxbasins, 'float')
 
         for basin in basins_list:
 
             # Extract dem for this basin to reduce computing time
             print ('Basin ' + str(basin))
             isinsidebasin = self.basins_br == basin
-            rmin, rmax, cmin, cmax = self.bbox(isinsidebasin)
+            rmin, rmax, cmin, cmax = bbox(isinsidebasin)
 
             zs_dem_basin = self.zs_dem[rmin:rmax+1, cmin:cmax+1]
             aspect_dem_basin = self.aspect_dem[rmin:rmax+1, cmin:cmax+1]
@@ -593,17 +588,17 @@ class basin_areas_file(object):
 
         for m, metapro in enumerate(metaprolist):
             region = i.operregionofmassifs[metapro.massif[0]]
-            auxfile = os.path.join(outputdir, 'areas_' + region +'.nc')
+            auxfile = os.path.join(outputdir, 'areas_' + region + '.nc')
             metapro.create_auxiliary_file(auxfile)
             nb = self.nbasins[m]
             with prosimu(auxfile, openmode='a') as surffile:
                 # Create basin dimension
                 surffile.dataset.createDimension('basin', nb)
-                surffile.dataset.createVariable('basin', 'i', dimensions=('basin'))
+                surffile.dataset.createVariable('basin', 'i', dimensions='basin')
                 # Create output variables
                 surffile.dataset.createVariable('areas', 'f', ('Number_of_points','basin'))
                 for varname in 'total_area', 'mean_elevation', 'min_elevation', 'max_elevation':
-                    surffile.dataset.createVariable(varname, 'f', dimensions=('basin'))
+                    surffile.dataset.createVariable(varname, 'f', dimensions='basin')
 
                 # Define variables attributes
                 setattr(surffile.dataset.variables['areas'], 'long_name', 'Area of the topographic class in the basin')
@@ -701,473 +696,6 @@ def rasterized_shapefile(shapefilepath, attribute, refraster):
     os.remove(tmpraster)
 
     return True
-
-
-# Below are several obsolete classes that should be removed before Dec 2025 but are temporarily saved in case something
-# should be reused by the end of this development (operational transfer planned in summer 2025)
-class _obsolete_hydro(object):
-    """
-    This class is an object designed to produce hydrological diagnostics of snow simulations.
-    It includes the diagnostic file and the methods to read the associated metadata.
-
-    :param basinshapefile: Address of the shapefile or list of catchment objects instead
-    :type basinshapefile: str or list of :class:catchment
-    :param dirdem: Address of the directory with digital elevation models (that can be built by shapefile2NETCDF_2D.py)
-    :type dirdem: str
-    :param profilename: Address of the FORCING or PRO file or list of addresses for FORCING + PRO and/or if
-    several areas (Alps, Pyrenees, etc.) with same temporal coverage
-    :type profilename: str or list
-    :param args: Args to pass to :class:`netCDF.Dataset` instance (at least name of output file)
-    :param kwargs: Kwargs to pass to :class:`netCDF.Dataset` instance
-    """
-
-    def __init__(self, basinshapefile, dirdem, profilename, *args, **kwargs):
-
-        raise Exception('Obsolete class that should not be instanced')
-        # Store directory of DEM
-        self.dirdem = dirdem
-
-        # Convert profilename arg to list
-        if type(profilename) is str:
-            profilename = [profilename]
-
-        # Open all PRO files, read and store metadata
-        self.metaprolist = list()
-        for onepro in profilename:
-            self.metaprolist.append(metaprosimu(onepro))
-
-        # Here, should check that all pro files share the same temporal axis or crash otherwise
-        # To be implemented
-        self.time, self.timeunits = self.checktime(profilename)
-
-        # Get basins descriptions from a previous run
-        if type(basinshapefile) is list:
-            if isinstance(basinshapefile[0], catchment):
-                self.basins = basinshapefile
-            else:
-                raise TypeError('Incorrect instance for basinshapefile arg, should be a cacthment diag or a string')
-        else:
-            # Read basin description
-            self.basins = self.get_basins(basinshapefile)
-
-        self.nbasins = len(self.basins)
-
-        # Open output file
-        self.hydrofile = hydrofile(self.basins, self.time, self.timeunits,
-                                   format='NETCDF4', *args, **kwargs)
-
-        # Write basin surface area
-        self.hydrofile.createVariable('simularea', 'f4', dimensions=('basin',))
-        self.hydrofile.variables['simularea'][...] = np.array([b.total_area for b in self.basins])
-        self.hydrofile.variables['simularea'].units = 'm2'
-
-        # Write basin mean altitude
-        self.hydrofile.createVariable('ZS', 'f4', dimensions=('basin',))
-        self.hydrofile.variables['ZS'][...] = np.array([b.mean_elevation for b in self.basins])
-        self.hydrofile.variables['ZS'].units = 'm'
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
-
-    @property
-    def reffieldnames(self):
-        """
-        Provide the attribute names to read in the shapefile
-
-        :return: dictionnary
-        """
-        return dict(name="IDBNBV", surface="SURFCALC", x="XL93REPL", y="YL93REPL")
-
-    def close(self):
-        """
-        Write global attributes and close the PRO and diagnostic files associated with this class
-        """
-        for onepro in self.metaprolist:
-            onepro.close()
-        self.hydrofile.globalattrs_and_close()
-
-    def checktime(self, profilename):
-        """
-        Check if time vectors are compatible between the different input files and return time to copy in output file
-
-        :param profilename: list of pro file names (for error message)
-        :type profilename: str
-        :return:
-        """
-
-        arrayntime = np.array([metapro.ntime for metapro in self.metaprolist])
-        uniquentime = np.unique(arrayntime)
-
-        if len(uniquentime) == 1:
-            for metapro in self.metaprolist:
-                metapro.removefirsttime = False
-            return self.metaprolist[0].readtime_for_copy()
-        elif len(uniquentime) == 2:
-            if abs(uniquentime[1] - uniquentime[0]) == 1:
-                # Case with PRO and FORCING files with same time step but with initial value in FORCING file that must
-                # be removed
-                ntime = np.min(uniquentime)
-                for metapro in self.metaprolist:
-                    metapro.removefirsttime = metapro.ntime > ntime
-                return self.metaprolist[np.argmin(arrayntime)].readtime_for_copy()
-            else:
-                raise TimeListException(profilename, [m.ntime for m in self.metaprolist])
-        else:
-            raise TimeListException(profilename, [m.ntime for m in self.metaprolist])
-
-    def get_basins(self, basinshapefile):
-        """
-        This method reads a shapefile to provide a list of catchment objects
-
-        :param basinshapefile: Path of the shapefile
-        :type basinshapefile: str
-        """
-        with shapefile.Reader(basinshapefile) as r:
-            shapes = r.shapes()
-            records = r.records()
-            fieldnames = [f[0] for f in r.fields[1:]]
-
-        basins = list()
-
-        for i, shape in enumerate(shapes):
-            b = catchment(i, shape, records[i], fieldnames, self.reffieldnames)
-            demfilename = os.path.join(self.dirdem, b.name + ".nc")
-
-            if b.get_infos_fromdem(self.metaprolist, demfilename):
-                basins.append(b)
-                print('Surface computed for basin ' + b.name)
-            else:
-                print('For basin ' + b.name + ' massifs not available in PRO files')
-
-        return basins
-
-    def integration(self, listvarname, average=True, var_sca=None):
-        """
-        Loop over a list of output variables to compute and write spatially aggregated diagnostics
-
-        :param listvarname: List of variables required in output
-        :type listvarname: list
-        :param average: Logical to provide spatial average
-        :type average: logical
-        :param var_sca: Variable to compute snow cover area (e.g. DSN_T_ISBA, WSN_T_ISBA)
-        :type var_sca: str
-        """
-        # Loop over all output variables
-        for varname in listvarname:
-            varfound = False
-            varintegr = np.empty((self.metaprolist[0].ntime, self.nbasins))
-
-            if var_sca:
-                if varname == var_sca:
-                    sca = np.empty((self.metaprolist[0].ntime, self.nbasins))
-
-            # Look for a file containing this variable to initialize fillvalue
-            for m, metapro in enumerate(self.metaprolist):
-                if varname in metapro.listvar():
-                    fillvalue = metapro.getfillvalue(varname)
-                    varfound = True
-                    break
-
-            # Exit if variable not available in any file
-            if not varfound:
-                print(varname + " is not available in output files")
-                continue
-
-            # Initialize
-            varintegr[...] = fillvalue
-
-            # Loop over available FORCING or PRO files
-            for m, metapro in enumerate(self.metaprolist):
-                # Read only once each variable
-                if varname in metapro.listvar():
-                    print('Aggregate variable ' + varname + " from " + metapro.filepath())
-                    if metapro.removefirsttime:
-                        varin = metapro.read(varname)[1:, ...]
-                    else:
-                        varin = metapro.read(varname)
-
-                    # Loop over basins
-                    for b, basin in enumerate(self.basins):
-                        # Test if this basin is included in this FORCING or PRO file
-                        if m in basin.indexmetapro:
-                            print('Compute average for basin ' + basin.name)
-                            # Compute integrated diagnostic for this basin and variable
-                            integre = basin.average if average else basin.cumul
-                            basinvalue = integre(varin)
-                            # Replace nan values by fillvalue
-                            varintegr[:, b] = np.where(np.isnan(basinvalue), fillvalue, basinvalue)
-
-                            # Compute snow covered area
-                            if var_sca:
-                                if varname == var_sca:
-                                    sca[:, b] = basin.sca(varin, 0)
-
-            # Create variable in output file, write values and copy attributes from input file
-            self.hydrofile.createVariable(varname, 'f4', dimensions=('time', 'basin'),
-                                          fill_value=fillvalue)
-            self.hydrofile.variables[varname][...] = varintegr
-            self.copyvarattrs(varname)
-
-            # Create and write SCA variable
-            if var_sca:
-                if varname == var_sca:
-                    self.hydrofile.createVariable('SCA', 'f4', dimensions=('time', 'basin'),
-                                                  fill_value=fillvalue)
-                    self.hydrofile.variables['SCA'][...] = sca
-                    self.hydrofile.variables['SCA'].long_name = 'Snow Covered Area'
-                    self.hydrofile.variables['SCA'].units = '0-1'
-
-    def copyvarattrs(self, varname):
-        """
-        Copy attributes from a variable in input file to a variable in output file
-
-        :param varname: variable name in input and output files
-        :type varname: str
-        """
-
-        # Look for a file containing this variable to get attributes
-        for m, metapro in enumerate(self.metaprolist):
-            if varname in metapro.listvar():
-                for attrname in metapro.listattr(varname):
-                    if attrname not in "_FillValue":
-                        setattr(self.hydrofile.variables[varname], attrname, metapro.getattr(varname, attrname))
-                break
-
-
-class _obsolete_hydrofile(_StandardNC):
-    """
-    This class is a catchment scale diagnostic file
-
-    :param basins: catchment diag objects associated with this hydro file
-    :type basins: list of catchment_diag instances
-    :param time: time vector
-    :type time: :class:`numpy.array`
-    :param timeunits: units attribute of the time vector
-    :type timeunits: str
-    :param args: args of :class:`netCDF4.Dataset` instance
-    :param kwargs: kwargs of :class:`netCDF4.Dataset` instance
-    """
-
-    def __init__(self, basins, time, timeunits, *args, **kwargs):
-        raise Exception('Obsolete class that should not be instanced')
-
-        # Open shapefile and get list of basins
-
-        # Open netCDF4.Dataset init method
-        super(hydrofile, self).__init__(*args, **kwargs)
-        # Create time dimension and coordinate
-        self.createDimension('time', size=None)
-        timeout = self.createVariable('time', 'f8', dimensions=('time',))
-
-        timeout[:] = time[:]
-        timeout.units = timeunits
-
-        # Create basin dimension and list
-        self.createDimension('basin', size=len(basins))
-        basinid = self.createVariable('basin', 'i4', dimensions=('basin',))
-        basinout = self.createVariable('basinname', 'str', dimensions=('basin',))
-        latout = self.createVariable(self.getlatname, 'f4', dimensions=('basin',))
-        lonout = self.createVariable(self.getlonname, 'f4', dimensions=('basin',))
-
-        for b, basin in enumerate(basins):
-            basinout[b] = basin.name
-            basinid[b] = basin.id
-            latout[b], lonout[b] = self.xy2latlon(basin.x, basin.y)
-
-    @property
-    def getlatname(self):
-        """
-        :return: Define variable name for latitude in output file
-        """
-        return 'latitude'
-
-    @property
-    def getlonname(self):
-        """
-        :return: Define variable name for longitude in output file
-        """
-        return 'longitude'
-
-    @property
-    def getcoordname(self):
-        """
-        :return: Define coordinates name in DEM file
-        """
-        return 'x', 'y'
-
-    def globalattrs_and_close(self):
-        """
-        Closure of the catchment scale diagnostic file
-        """
-        self.GlobalAttributes()
-        self.close()
-
-
-class _obsolete_catchment(object):
-    """
-    Class to store shapefile components of a catchment
-
-    :param shape: shapefile shape for this polygon
-    :type shape: :class:`shapefile.shape`
-    :param record: shapefile records for this polygon
-    :type record: :class:`shapefile.records`
-    :param fieldnames: Available field names in shapefile
-    :type fieldnames: list of str
-    :param reffieldnames: Reference field names in shapefile
-    :type reffieldnames: dict
-    """
-
-    def __init__(self, id, shape, record, fieldnames, reffieldnames):
-
-        raise Exception('Obsolete class that should not be instanced')
-
-        self.id = id
-        self.shape = shape
-
-        for key, value in reffieldnames.items():
-            indexattr = fieldnames.index(value)
-            setattr(self, key, record[indexattr])
-
-    def extract_dem(self, demfilename):
-        # Here we should implement a function that replace shapefileNetCDF_2D.py script
-        pass
-
-    def get_infos_fromdem(self, metaprolist, demfilename):
-        """
-        This method provides the areas of each spatial unit of the pro file for this catchment
-
-        :param metaprolist: List of available pro files as metapro
-        :type metaprolist: list of :class:`metapro` instances
-        :param demfilename: Digital elevation model file
-        :type demfilename: str
-        """
-
-        # Read grid file, massif and topography
-        with prosimu(demfilename) as dem:
-            massif_dem = dem.read('massif_number', fill2zero=True)
-            zs_dem = dem.read('ZS')
-            aspect_dem = dem.read('aspect')
-            slope_dem = dem.read('slope')
-            x_dem = dem.read('x')
-            y_dem = dem.read('y')
-
-        # Identify the FORCING or PRO files that contains massifs shared with the basin
-        availarea = False
-        indexmetapro = list()
-        for m, metapro in enumerate(metaprolist):
-            basin_massifs = np.unique(massif_dem)
-            if any(np.isin(basin_massifs, metapro.avail_massifs)):
-                availarea = True
-                indexmetapro.append(m)
-
-        if not availarea:
-            self.indexpro = None
-            self.area = None
-            return False
-
-        metapro = metaprolist[indexmetapro[0]]
-        self.ntime = metapro.ntime
-
-        # Apply a threshold on maximum slope to include all pixels even if > 50°
-        slopemax = np.max(metapro.slope)
-        slope_dem_threshold = np.where(slope_dem > slopemax, slopemax, slope_dem)
-
-        # Compute area of a DEM pixel
-        area_pixel_dem = abs(x_dem[1] - x_dem[0]) * abs(y_dem[1] - y_dem[0])
-        area = np.zeros_like(metapro.zs)
-        count = np.zeros_like(zs_dem)
-
-        # Mask true when inside the basin
-        issinsidebasin = self.rasterize_basin(x_dem, y_dem) == 1
-
-        # Loop over S2M points and count the number of points associated with the topographic class
-        for point in range(1, metapro.nbpoints):
-            issamemassif = massif_dem == metapro.massif[point]
-            issameelevation = abs(zs_dem - metapro.zs[point]) < metapro.resol_zs / 2
-            issameaspect = (diff_aspect(aspect_dem, metapro.aspect[point])
-                            < metapro.resol_aspect / 2) | (metapro.slope[point] <
-                                                           metapro.resol_slope / 2)
-            issameslope = abs(slope_dem_threshold - metapro.slope[point]) < metapro.resol_slope / 2
-
-            issameunit = issinsidebasin & issamemassif & issameelevation & issameaspect & issameslope
-
-            count[issameunit] += 1
-
-            area[point] = np.sum(issameunit) * area_pixel_dem
-
-        self.indexmetapro = indexmetapro
-        self.areas = area
-        self.total_area = np.sum(self.areas)
-        self.mean_elevation = self.average(metapro.zs)
-
-        return True
-
-    def rasterize_basin(self, xcoord, ycoord):
-        """
-        Very expensive function that should be soon replaced by something more efficient based on gdal.RasterizeLayer
-        Convert the shape of a catchment into a rasterized mask
-        Expensive method that should be optimized
-
-        :param xcoord: Array of x
-        :param ycoord: Array of y
-        :return: 2d raster with 1 if inside the catchment and 0 otherwise
-        """
-        shape = ShapelyShape(self.shape)
-        raster = np.zeros((len(ycoord), len(xcoord))) + 1
-        return raster
-
-        for j in range(len(ycoord)):
-            for i in range(len(xcoord)):
-                point = Point(xcoord[i], ycoord[j])
-                if shape.contains(point):
-                    raster[j, i] = 1
-        return raster
-
-    def cumul(self, varin):
-        """
-        This method cumulates the diagnostic varname in pro file across the catchment
-
-        :param varin: Variable to cumulate spatially
-        :type varin: array of any type with time as first dimension as read from a PRO file
-        :return: array of same type as varin with time dimension length
-        """
-        if self.total_area > 0:
-            # Dot product (produit scalaire) : mutiply each term from a vector of point dimension by each term
-            # from a vector of point dimension for each time step
-            return np.dot(varin, self.areas)
-        else:
-            empty = np.empty(self.ntime)
-            empty.fill(np.nan)
-            return empty
-
-    def average(self, varin):
-        """
-        This method averages the diagnostic varname in pro file across the catchment
-
-        :param varin: Variable to average spatially
-        :type varin: array of any type with time as first dimension as read from a PRO file
-        :return: array of same type as varin with time dimension length
-        """
-        if self.total_area > 0:
-            return self.cumul(varin) / self.total_area
-        else:
-            # Will provide array filled with np.nan in this case
-            return self.cumul(varin)
-
-    def sca(self, varin, threshold):
-        """
-        This methods return the surface of the catchment for which varin > threshold
-
-        :param varin: Variable for which a surface of exceedance should be computed (snow depth, snow water equivalent)
-        :type varin: array of any type with time as first dimension as read from a PRO file
-        :param threshold: Threhold
-        :type threshold: int or float
-        :return: array of same type as varin with time dimension length
-        """
-        return np.dot((varin > threshold) * 1, self.areas) / self.total_area
 
 
 if __name__ == '__main__':

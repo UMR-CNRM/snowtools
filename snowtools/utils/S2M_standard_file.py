@@ -80,18 +80,7 @@ class _StandardNC(netCDF4.Dataset):
         self.contributor_name = ' ; '.join(contributors)
         self.contributor_role = ' ; '.join(roles)
 
-        lat, lon, alti = self.get_coord()
-
-        self.geospatial_lat_min = np.min(lat)
-        self.geospatial_lat_max = np.max(lat)
-        self.geospatial_lon_min = np.min(lon)
-        self.geospatial_lon_max = np.max(lon)
-        self.geospatial_lat_units = "degree_north"
-        self.geospatial_lon_units = "degree_east"
-        self.geospatial_vertical_min = np.min(alti)
-        self.geospatial_vertical_max = np.max(alti)
-        self.geospatial_vertical_units = 'm'
-        self.geospatial_vertical_positive = 'up'
+        self.get_coord()
 
         self.time_coverage_start = time[0].isoformat()
         self.time_coverage_end = time[-1].isoformat()
@@ -158,7 +147,16 @@ class _StandardNC(netCDF4.Dataset):
         else:
             alti = np.nan
 
-        return lat, lon, alti
+        self.geospatial_lat_min = np.min(lat)
+        self.geospatial_lat_max = np.max(lat)
+        self.geospatial_lon_min = np.min(lon)
+        self.geospatial_lon_max = np.max(lon)
+        self.geospatial_lat_units = "degree_north"
+        self.geospatial_lon_units = "degree_east"
+        self.geospatial_vertical_min = np.min(alti)
+        self.geospatial_vertical_max = np.max(alti)
+        self.geospatial_vertical_units = 'm'
+        self.geospatial_vertical_positive = 'up'
 
     def xy2latlon(self, x, y):
         from pyproj import Transformer
