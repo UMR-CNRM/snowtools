@@ -112,7 +112,8 @@ def execute():
     # io.get_const(uenv, 'relief', geometry, filename='TARGET_RELIEF.nc', gvar='RELIEF_GRANDESROUSSES250M_L93')
     # High-resolution (25m) DEM for fancy figures (set shade=True in plot_field calls)
     io.get_const('uenv:dem.2@vernaym', 'relief', geometry, filename='TARGET_RELIEF.nc',
-            gvar='DEM_GRANDESROUSSES25M_L93')
+            gvar='RELIEF_GRANDESROUSSES250M_L93')
+#            gvar='DEM_GRANDESROUSSES25M_L93')
 
     # Get Domain's DEM in case ZS not in simulation file
     mnt = xr.open_dataset('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
