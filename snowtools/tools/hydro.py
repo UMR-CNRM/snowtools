@@ -165,17 +165,26 @@ class hydro(object):
             for attrname, value in self.attr_descriptors[varname].items():
                 setattr(basinid, attrname, value)
 
-    def integration(self, listvarname, average=True, var_sca=None):
+    def integration(self, listvarname, agg_method = 'average', var_sca=None):
         """
         Loop over a list of output variables to compute and write spatially aggregated diagnostics
 
         :param listvarname: List of variables required in output
         :type listvarname: list
-        :param average: Logical to provide spatial average
-        :type average: logical
+        :param agg_method: Method used for spatial aggregation: average (default), cumul
+        :type average: str
         :param var_sca: Variable to compute snow cover area (e.g. DSN_T_ISBA, WSN_T_ISBA)
         :type var_sca: str
         """
+        # Check availability of aggregation method
+        _dict_methods = dict(average = self.average, cumul = self.cumul)
+        if agg_method not in _dict_methods:
+            msg_error = ('Incorrect method ' + aggregation_method +
+                         ' should be chosen between:' + ','.join(_dict_methods.keys()))
+            raise ValueError(msg_error)
+        else:
+            integre = _dict_methods[agg_method]
+
         # Loop over all output variables
         for varname in listvarname:
             varfound = False
@@ -210,7 +219,6 @@ class hydro(object):
                     else:
                         varin = metapro.read(varname)
 
-                    integre = self.average if average else self.cumul
                     basinvalue = integre(varin)
                     # Replace nan values by fillvalue
                     varintegr = np.where(np.isnan(basinvalue), fillvalue, basinvalue)
@@ -687,7 +695,7 @@ def rasterized_shapefile(shapefilepath, attribute, refraster):
     renamevar = f'ncrename -v {varnamefromgdal},basin {outputfile}'
     floattoint = f'ncap2 -O -s basin=int(basin) {outputfile} {outputfile}'
     # Due to the spaces in long_name attribute, we need to give directly a list to callSystemOrDie
-    setlongname = ['ncatted', '-O', '-a', f'long_name,basin,o,c,basin identifier {attribute}', outputfile]
+    setlongname = f'ncatted -O -a long_name,basin,o,c,"basin identifier {attribute}" {outputfile}'
     printandcallSystemOrDie(renamevar)
     printandcallSystemOrDie(floattoint)
     printandcallSystemOrDie(setlongname)

@@ -446,11 +446,12 @@ class hydrorun(surfexrun):
                                        s2mcommand=s2mcommand)
         self.areasfile = areasfile
         self.hydrovar = hydrovar
+        # set onlyextractforcing to True in order to disactive surfex run
+        # (get FORCING and PRO files only to compute hydro diagnostics)
         self.onlyextractforcing = True
 
     def finalpostprocess(self):
 
-        # list_var = ['SNOMLT_ISBA', 'WSN_T_ISBA', 'DSN_T_ISBA', 'Tair', 'Rainf', 'Snowf']
         list_files_in = list()
         for i, path in enumerate(self.forcingpathlist):
             list_files_in.append("FORCING_or_PRO_" + str(i) + ".nc")
