@@ -27,18 +27,15 @@ def callSystemOrDie(commande, errorcode=None):
 
     status = subprocess.call(shlex.split(commande), stdout=sys.stdout, stderr=sys.stderr)
 
-        if status != 0:
-            raise SystemException(status, commande)
-        return status
+    if status != 0:
+        raise SystemException(status, commande)
+    return status
 
 
 def printandcallSystemOrDie(commande, errorcode=None):
     """Method to print and execute a system command and kill the current program if it fails."""
 
-    if type(commande) is list:
-        print (' '.join(commande))
-    else:
-        print(commande)
+    print(commande)
     callSystemOrDie(commande, errorcode=errorcode)
 
 
