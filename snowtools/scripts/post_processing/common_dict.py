@@ -18,6 +18,7 @@ def product_map(xpid):
         RS27_sorted_pappus       = 'SRS',
         RS27_perturb             = 'ASANTILOPE_perturb',
         RS27_pappus_assim        = 'RS_assim',
+        RS28                     = 'SRS_Debiasing',
         EnKF36_pappus_assim      = 'EnKF_assim',
         PF32_pappus_assim        = 'PF_assim',
         RS27_sorted_pappus_assim = 'SRS_assim',
@@ -89,6 +90,10 @@ colors_map = dict(
     ASANTILOPE_LHRM       = "#1f78b4",
     SRS_full_feedback     = "#1f78b4",
     SRS_feedback_extended = "#cab2d6",
+    SRS38                 = "red",
+    SRS39                 = "#6a3d9a",
+    SRS40                 = "#1f78b4",
+    SRS41                 = "#cab2d6",
 )
 
 
