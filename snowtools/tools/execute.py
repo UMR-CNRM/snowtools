@@ -8,6 +8,7 @@ Created on 9 oct. 2012
 import os
 import subprocess
 import sys
+import shlex
 
 
 class SystemException(Exception):
@@ -24,28 +25,17 @@ class SystemException(Exception):
 def callSystemOrDie(commande, errorcode=None):
     """Method to execute a system command and kill the current program if it fails."""
 
-    if type(commande) is list:
-        # This can be the only way to call subprocess when args include spaces
-        status = subprocess.call(commande, stdout=sys.stdout, stderr=sys.stderr)
-        if status != 0:
-            raise SystemException(status, ' '.join(commande))
-        return status
-    else:
-        # Standard case: commande is a string, should be preferred if no space in args
-        status = subprocess.call(commande.split(), stdout=sys.stdout, stderr=sys.stderr)
+    status = subprocess.call(shlex.split(commande), stdout=sys.stdout, stderr=sys.stderr)
 
-        if status != 0:
-            raise SystemException(status, commande)
-        return status
+    if status != 0:
+        raise SystemException(status, commande)
+    return status
 
 
 def printandcallSystemOrDie(commande, errorcode=None):
     """Method to print and execute a system command and kill the current program if it fails."""
 
-    if type(commande) is list:
-        print (' '.join(commande))
-    else:
-        print(commande)
+    print(commande)
     callSystemOrDie(commande, errorcode=errorcode)
 
 
