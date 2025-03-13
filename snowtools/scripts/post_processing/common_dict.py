@@ -93,7 +93,7 @@ colors_map = dict(
     SRS38                 = "red",
     SRS39                 = "#6a3d9a",
     SRS40                 = "#1f78b4",
-    SRS41                 = "#cab2d6",
+    SRS42                 = "#cab2d6",
 )
 
 

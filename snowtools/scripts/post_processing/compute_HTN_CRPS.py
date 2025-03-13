@@ -32,6 +32,7 @@ from snowtools.scores import clusters
 from snowtools.plots.boxplots import violinplot
 from snowtools.scripts.post_processing import common_dict
 from snowtools.tools import common_tools as ct
+from snowtools.plots.scatterplots import scatterplots
 
 members_map = common_dict.members_map
 product_map = common_dict.product_map
@@ -377,6 +378,18 @@ def plot_ensemble(simu, obs, xpid, date, dem=None):
     # ax[2].set_title('Ensemble mean error (m)')
 
     plot2D.save_fig(savename, fig)
+
+    plt.close('all')
+
+    fig, ax = plt.subplots(figsize=(10, 10))
+    scatterplots.scatterplot(ax, np.abs(error.data), spread.data, color=obs.data, lims=[0, 2], cmap='Blues')
+    ax.set_xlabel('Absolute error of the ensemble mean (kg/m²)')
+    ax.set_ylabel('Ensemble spread (kg/m²)')
+    # Setting Background colour grey
+    ax.set_facecolor("lightgrey")
+    plt.tight_layout()
+    fig.savefig(f"Spread_Skill_{xpid}_{date}.pdf", format='pdf')
+    plt.close(fig)
 
 
 def plot_deterministe(simu, obs, xpid, date, dem=None, member=None):
