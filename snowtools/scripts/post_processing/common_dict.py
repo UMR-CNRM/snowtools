@@ -39,6 +39,7 @@ def product_map(xpid):
         RS27_sorted_assim_feedback    = 'SRS_assim_feedback',
         RS27_sorted_full_feedback     = 'SRS_full_feedback',
         RS27_sorted_feedback_extended = 'SRS_feedback_extended',
+        RS47_nearest                  = 'SRS47_nearest',
     )
     if xpid in mapping.keys():
         return mapping[xpid]
@@ -93,7 +94,17 @@ colors_map = dict(
     SRS38                 = "red",
     SRS39                 = "#6a3d9a",
     SRS40                 = "#1f78b4",
-    SRS42                 = "#cab2d6",
+    SRS42                 = "red",
+    SRS43                 = "#cab2d6",
+    SRS44                 = "#1f78b4",
+    SRS45                 = "#6a3d9a",
+    SRS46                 = "#6a3d9a",
+    SRS47                 = "#1f78b4",
+    SRS47_nearest         = "#6a3d9a",
+    SRS48                 = "#6a3d9a",
+    SRS49                 = "#1f78b4",
+    SRS50                 = "#1f78b4",
+    SRS51                 = "#1f78b4",
 )
 
 

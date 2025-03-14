@@ -32,6 +32,7 @@ def scatterplot(ax, xdata, ydata, color=None, addtext=None, yaxis=False, lims=[0
     # Add linear regression line
     ax.plot(x, z, color='blue', linewidth=1.5,
             label=f'Slope={reg.coef_[0]:.3f}, Intercept={reg.intercept_:.3f}\nR²={r2:.4}, bias={bias}, rmse={rmse}')
+    ax.legend()
 
     if addtext is not None:
         addtext = addtext[mask]

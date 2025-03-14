@@ -107,7 +107,7 @@ def list_subdirectories(ftpObject):
 
 def read_list_user_CEN():
     # TODO définir la liste complète des utilisateurs
-    return ['haddjeria', 'fructusm']
+    return ['vernaym']
 
 
 def add_entry(dictionary, user, vapp, vconf, xpid, block, value):

@@ -87,6 +87,7 @@ def compute_phase_from_iso_wetbt1(subdir=None):
 
     # Interpolation of all data to the target geometry
     iso250m = iso_elevation.interp({'yy': target_relief.yy, 'xx': target_relief.xx})
+    # Default interpolation method = 'linear', low impact on HTN scores (RS47 / RS47_nearest)
     precipitation250m = precipitation.interp({'yy': target_relief.yy, 'xx': target_relief.xx})
 
     # Remove small precipitation to avoid problems in Crocus
