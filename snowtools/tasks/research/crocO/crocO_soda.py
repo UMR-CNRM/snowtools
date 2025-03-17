@@ -62,7 +62,7 @@ class Soda_Task(_CrocO_Task):
 #            print()
 
             # TODO : Ensure that the observation is in the simulation's geometry !
-            # TODO : Put the Observation input in the common input to crash immediately 
+            # TODO : Put the Observation input in the common input to crash immediately
             # if the observation file is missing instead of waiting for soda to be called
             self.sh.title('Toolbox input tobs (obs)')
             tobs = toolbox.input(
@@ -75,6 +75,7 @@ class Soda_Task(_CrocO_Task):
                 model      = 'surfex',
                 block      = '',
                 namespace  = 'vortex.multi.fr',
+                #namespace  = self.conf.namespace_observation,
                 namebuild  = 'flat@cen',
                 fatal      = True,
             )

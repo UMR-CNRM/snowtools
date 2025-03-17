@@ -211,6 +211,8 @@ class Edelweiss_command(object):
                                      "The final value in the configuration file should be :\n"
                                      "extraction_dates = list(yyyymmddhh,yyyymmddhh)")
 
+        # TODO : ajouter une option pour conserver le répertoire d'exécution
+
         # Input-specific arguments :
         # =========================
 
