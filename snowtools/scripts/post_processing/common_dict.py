@@ -5,6 +5,8 @@
 def members_map(xpid):
     if 'assim' in xpid or 'full_feedback' in xpid:
         return [mb for mb in range(1, 18)]
+    elif xpid in ['RS27_LHR', 'RS27_ISO']:
+        return [0]
     else:
         return [mb for mb in range(17)]
 
@@ -35,6 +37,7 @@ def product_map(xpid):
         #AROME_perturb            = 'AROME_perturb',
         AROME_perturb_assim      = 'AROME_perturb_assim',
         RS27_LHR                 = 'ASANTILOPE_LHRM',
+        RS27_ISO                 = 'ASANTILOPE_ISO',
         RS27_sorted_feedback     = 'SRS_feedback',
         RS27_sorted_assim_feedback    = 'SRS_assim_feedback',
         RS27_sorted_full_feedback     = 'SRS_full_feedback',
@@ -89,6 +92,7 @@ colors_map = dict(
     AROME_perturb_assim   = "#6a3d9a",
     SRS_assim_feedback    = "#6a3d9a",
     ASANTILOPE_LHRM       = "#1f78b4",
+    ASANTILOPE_ISO        = "#cab2d6",
     SRS_full_feedback     = "#1f78b4",
     SRS_feedback_extended = "#cab2d6",
     SRS38                 = "red",

@@ -479,8 +479,10 @@ if __name__ == '__main__':
         if ensemble in ['mean', 'spread', 'all']:
             ds = xr.open_mfdataset([f'mb{member:03d}/{filename}' for member in range(17)],
                     concat_dim='member', combine='nested', chunks='auto')
-        else:
+        elif ensemble is None:
             ds = xr.open_dataset(filename)
+        else:
+            ds = xr.open_dataset(f'mb{int(ensemble):03d}/{filename}')
         ds = xrp.preprocess(ds)
 
         if domain is not None:
@@ -497,8 +499,11 @@ if __name__ == '__main__':
         if ensemble in ['mean', 'spread', 'all']:
             for member in range(17):
                 os.remove(f'mb{member:03d}/{kind}_{shortid}.nc')
-        else:
+        elif ensemble is None:
             os.remove(f'{kind}_{shortid}.nc')
+        else:
+            os.remove(f'mb{int(ensemble):03d}/{filename}')
+
 
     print()
     print("===========================================================================================")
