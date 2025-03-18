@@ -28,6 +28,8 @@ block_map = dict(
     SODA                  = 'soda',
     SnowObservations      = '',
     Precipitation         = '',
+    MeteorologicalForcing = 'meteo',
+    SnowpackSimulation    = 'pro',
 )
 
 model_map = dict(
@@ -50,7 +52,8 @@ default = dict(
     model      = 's2m',
     # model      = '[vapp]' if '[kind]' != 'DIAG' else 'postproc',
     now        = True,
-    dateassim = None,
+    dateassim  = None,
+    block      = None,
 )
 
 namespace_map = dict(
@@ -188,7 +191,9 @@ def footprint_kitchen(**kw):
         kw['block'] = block_map[kw['kind']]
 
     if 'member' in kw.keys():
-        if ':' in kw['member']:
+        if isinstance(kw['member'], int):
+            kw['member'] = [kw['member']]
+        elif ':' in kw['member']:
             first_mb, last_mb = kw['member'].split(':')
             kw['member'] = [mb for mb in range(int(first_mb), int(last_mb) + 1)]
         kw['filename'] = f'mb[member]/{kw["filename"]}'

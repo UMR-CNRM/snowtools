@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import os
 import ftplib
 from ftplib import FTP
@@ -25,7 +28,7 @@ Examples :
 def parse_args():
     parser = argparse.ArgumentParser(description=
     """
-    Vortex arhive caches explorer.
+    Vortex arhive caches explorer
     """)
 
     parser.add_argument("-b", "--datebegin", dest="datebegin",
