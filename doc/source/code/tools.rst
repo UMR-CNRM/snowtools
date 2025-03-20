@@ -34,18 +34,19 @@ Prep edition
 .. automodule:: tools.change_prep
    :members:
 
-Diagnostics
------------
+Massif-scale diagnostics
+------------------------
 
 .. automodule:: tools.massif_diags
    :members:
+
+Hydrological diagnostics
+------------------------
 
 .. automodule:: tools.hydro
    :member-order: bysource
    :members:
 
-.. automodule:: tools.special_diags
-   :members:
 
 Simulation execution helpers
 ----------------------------

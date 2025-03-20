@@ -1,9 +1,61 @@
 # -*- coding: utf-8 -*-
 
 """
-Created on 17 Jun 2024
+snowtools contains hydrological routines designed to agregate S2M outputs into hydrological basins.
 
-@author: lafaysse
+Starting from a shapefile of hydrological basins and a digital elevation model including massif numbers, two
+preliminary steps are necessary:
+
+1. Rasterize the shapefile of basin on the same grid as the DEM using the following:
+
+.. code-block:: python
+
+    from snowtools.tools.hydro import rasterized_shapefile
+    from snowtools.DATA import TESTBASE_DIR
+    import os
+
+    dem = os.path.join(TESTBASE_DIR, 'hydro', '/home/lafaysse/hydroMF/DEM_FRANCE_L93_250m_bilinear.nc')
+    shapefilebasin = os.path.join(TESTBASE_DIR, 'hydro', 'BVTopo_Topage2024_inmassifs.shp')
+
+    # Rasterize shapefilebasin on the same grid as dem using the value of the 'gid' attribute in the shapefile
+    # Note that the attribute should be an integer in the shapefile.
+    # If not please use QGIS to previously add an integer id attribute in your basins shapefile.
+
+    rasterized_shapefile(shapefilebasin, 'gid', dem, output='raster_basins.nc')
+
+2. Compute the areas of S2M simulation units inside each basin using the following example where rasterbasin can be
+replaced by the file obtained at the previous step:
+
+.. code-block:: python
+
+    from snowtools.tools.hydro import basin_areas_file
+    from snowtools.DATA import TESTBASE_DIR
+    import os
+
+    dem = os.path.join(TESTBASE_DIR, 'hydro', '/home/lafaysse/hydroMF/DEM_FRANCE_L93_250m_bilinear.nc')
+    rasterbasin = os.path.join(TESTBASE_DIR, 'hydro', 'BNBV_SCHAPI_FRANCE250m.nc')
+    listpro = [os.path.join(TESTBASE_DIR, "PRO", "pro_testhydro_alp_oper_2025031906_2025032306.nc")]
+    outputdir = '.'
+
+    # Compute the areas of basins in rasterbasin corresponding to the geometry of the pro file
+    # and store them in outputdir
+    b = basin_areas_file(dem, rasterbasin, listpro, outputdir)
+
+Once this areas file is available, the computation of hydrological diagnostics can be done using the following example
+where a list of variables are agregated and saved in the HYDRO.nc file
+
+.. code-block:: python
+
+        from snowtools.tools.hydro import hydro
+        from snowtools.DATA import TESTBASE_DIR
+        import os
+        forcing = os.path.join(TESTBASE_DIR, "FORCING", "forcing_testhydro_alp_oper_2025031806_2025032306.nc")
+        pro = os.path.join(TESTBASE_DIR, "PRO", "pro_testhydro_alp_oper_2025031906_2025032306.nc")
+        areas = os.path.join(TESTBASE_DIR, "hydro", "areas_alp27_allslopes.nc")
+        with hydro([forcing, pro], areas, 'HYDRO.nc') as h:
+            h.integration(['Tair', 'Rainf', 'Snowf', 'SNOMLT_ISBA', 'WSN_T_ISBA', 'DSN_T_ISBA'], var_sca='WSN_T_ISBA')
+
+@author: Matthieu Lafaysse, March 2025
 """
 import shutil
 
@@ -95,7 +147,26 @@ class hydro(object):
                     metapro.removefirsttime = metapro.ntime > ntime
                 return self.metaprolist[np.argmin(arrayntime)].readtime_for_copy()
             else:
-                raise TimeListException(profilename, [m.ntime for m in self.metaprolist])
+                ntime = np.min(uniquentime)
+                timeshort = self.metaprolist[np.argmin(arrayntime)].readtime()
+                timelong = self.metaprolist[np.argmax(arrayntime)].readtime()
+
+                # Check if all dates of timeshort (e.g pro file) are included in timelong (e.g. forcing file)
+                if np.all(np.isin(timeshort, timelong)):
+                    timestepshort = timeshort[1] - timeshort[0]
+                    timesteplong = timelong[1] - timelong[0]
+                    for metapro in self.metaprolist:
+                        metapro.removefirsttime = False
+                        if metapro.ntime > ntime:
+                            metapro.ntimestep_integration = int(timestepshort / timesteplong)
+                            metapro.firsttimestep_integration = (np.where(timelong == timeshort[0])[0][0]
+                                                                 - metapro.ntimestep_integration + 1)
+                            print(metapro.ntimestep_integration)
+                            print(metapro.firsttimestep_integration)
+                    return self.metaprolist[np.argmin(arrayntime)].readtime_for_copy()
+
+                else:
+                    raise TimeListException(profilename, [m.ntime for m in self.metaprolist])
         else:
             raise TimeListException(profilename, [m.ntime for m in self.metaprolist])
 
@@ -141,7 +212,7 @@ class hydro(object):
                     setattr(self, varname, p.read(varname))
                     self.attr_descriptors[varname] = dict()
                     for attrname in p.listattr(varname):
-                        self.attr_descriptors[varname][attrname] = p.getattr(varname,attrname)
+                        self.attr_descriptors[varname][attrname] = p.getattr(varname, attrname)
 
     def createhydrofile(self, hydrofilename):
         """
@@ -172,7 +243,7 @@ class hydro(object):
         :param listvarname: List of variables required in output
         :type listvarname: list
         :param agg_method: Method used for spatial aggregation: average (default), cumul
-        :type average: str
+        :type agg_method: str
         :param var_sca: Variable to compute snow cover area (e.g. DSN_T_ISBA, WSN_T_ISBA)
         :type var_sca: str
         """
@@ -203,7 +274,7 @@ class hydro(object):
 
             # Exit if variable not available in any file
             if not varfound:
-                print (varname + " is not available in output files")
+                print(varname + " is not available in output files")
                 continue
 
             # Initialize
@@ -215,9 +286,14 @@ class hydro(object):
                 if varname in metapro.listvar():
                     print('Aggregate variable ' + varname + " in " + metapro.filepath())
                     if metapro.removefirsttime:
-                        varin = metapro.read(varname)[1:,...]
+                        varin = metapro.read(varname)[1:, ...]
                     else:
                         varin = metapro.read(varname)
+
+                    if hasattr(metapro, 'ntimestep_integration'):
+                        if metapro.ntimestep_integration > 1:
+                            varin = metapro.moytempo(varin, metapro.ntimestep_integration,
+                                                     metapro.firsttimestep_integration)
 
                     basinvalue = integre(varin)
                     # Replace nan values by fillvalue
@@ -297,98 +373,6 @@ class hydro(object):
                 break
 
 
-class metaprosimu(prosimu):
-    """
-    This class adds topographic and time metadata to a prosimu instance
-    :param profilename: Path of the PRO.nc filename
-    :type profilename: str
-    """
-
-    # Correspondance between topo attributes and allowed varnames in PRO files
-    allowedtopovarnames = dict(zs='ZS', aspect='aspect', slope='slope', massif=['massif_num', 'massif_number'])
-    reftopovarnames = dict()
-
-    def __init__(self, profilename):
-        self.filename = profilename
-        super(metaprosimu, self).__init__(profilename)
-        # Read metadata of S2M file and store them in attributes
-        for topovar, topovarnames in self.allowedtopovarnames.items():
-            if type(topovarnames) is not list:
-                topovarnames = [topovarnames]
-            availtopovar = False
-            for varname in topovarnames:
-                # Test if variable is available in the file
-                if varname in self.listvar():
-                    availtopovar = True
-                    # Actual variable names available in PRO file
-                    self.reftopovarnames[topovar] = varname
-                    # Read the variable and store as attribute of the class
-                    setattr(self, topovar, self.read(varname))
-                    break
-            # Exception if topographic variable unavailable in the file
-            if not availtopovar:
-                raise VarNameException(varname, self.filename)
-
-        # Compute dimension lengths
-        self.nbpoints = len(self.zs)
-        self.ntime = len(self.timedim)
-        self.time, self.timeunits = self.readtime_for_copy()
-
-        # Compute resolution of topographic classes
-        list_zs = np.unique(self.zs)
-        list_aspects = np.unique(self.aspect)
-        list_slopes = np.unique(self.slope)
-        self.resol_zs = list_zs[1] - list_zs[0]
-        self.resol_slope = list_slopes[1] - list_slopes[0]
-        self.resol_aspect = list_aspects[2] - list_aspects[1]
-
-        # Available massifs
-        self.avail_massifs = np.unique(self.massif)
-
-    def filepath(self):
-        # Future method of netCDF4.Dataset with netcdf >= 4.1.2
-        return self.filename
-
-    def create_auxiliary_file(self, filename):
-        with prosimu(filename, openmode = 'w') as auxil:
-            auxil.dataset.createDimension('Number_of_points', self.nbpoints)
-
-            for var in ['zs', 'aspect', 'slope', 'massif']:
-                auxil.dataset.createVariable(var, self.gettypevar(self.reftopovarnames[var]),
-                                             dimensions='Number_of_points')
-                auxil.dataset.variables[var][...] = getattr(self, var)[...]
-
-
-def diff_aspect(aspect1, aspect2):
-    """
-    Compute the angle absolute difference between two aspects (0-360 degrees) or two arrays of aspects
-
-    :param aspect1: Aspect or array of aspect (0-360 degrees)
-    :type aspect1: int, float or array of float
-    :param aspect2: Aspect or array of aspect (0-360 degrees)
-    :type aspect2: int, float or array of float of same type as aspect1
-    :return: array of type of aspect1 and aspect2
-    """
-
-    # Compute aspect angle absolute difference
-    diffabs = abs(aspect1 - aspect2)
-    return np.where(diffabs > 180, 360 - diffabs, diffabs)
-
-
-def bbox(img):
-    """
-    This method provides the bounding box of True components of a given field
-
-    :param img: Field of logical values
-    :type img: 2d np.array
-    """
-    rows = np.any(img, axis=1)
-    cols = np.any(img, axis=0)
-    rmin, rmax = np.where(rows)[0][[0, -1]]
-    cmin, cmax = np.where(cols)[0][[0, -1]]
-    return rmin, rmax, cmin, cmax
-
-
 class basin_areas_file(object):
     """
     Class to provide a file describing the areas of S2M units for hydrological basins
@@ -427,7 +411,7 @@ class basin_areas_file(object):
 
         # Read grid file, massif and topography
         with prosimu(demfilename) as dem:
-            self.massif_dem = dem.read('massif_number', fill2zero=True) # missing integers can not be np.nan
+            self.massif_dem = dem.read('massif_number', fill2zero=True)  # missing integers can not be np.nan
             self.zs_dem = dem.read('ZS')
             self.aspect_dem = dem.read('aspect')
             self.slope_dem = dem.read('slope')
@@ -442,7 +426,7 @@ class basin_areas_file(object):
         :type basinraster: str
         """
         with prosimu(basinraster) as br:
-            self.basins_br = br.read('basin', fill2zero=True) # missing integers can not be np.nan
+            self.basins_br = br.read('basin', fill2zero=True)  # missing integers can not be np.nan
             self.x_br = br.read('x')
             self.y_br = br.read('y')
 
@@ -509,7 +493,7 @@ class basin_areas_file(object):
         for basin in basins_list:
 
             # Extract dem for this basin to reduce computing time
-            print ('Basin ' + str(basin))
+            print('Basin ' + str(basin))
             isinsidebasin = self.basins_br == basin
             rmin, rmax, cmin, cmax = bbox(isinsidebasin)
 
@@ -604,7 +588,7 @@ class basin_areas_file(object):
                 surffile.dataset.createDimension('basin', nb)
                 surffile.dataset.createVariable('basin', 'i', dimensions='basin')
                 # Create output variables
-                surffile.dataset.createVariable('areas', 'f', ('Number_of_points','basin'))
+                surffile.dataset.createVariable('areas', 'f', ('Number_of_points', 'basin'))
                 for varname in 'total_area', 'mean_elevation', 'min_elevation', 'max_elevation':
                     surffile.dataset.createVariable(varname, 'f', dimensions='basin')
 
@@ -631,7 +615,7 @@ class basin_areas_file(object):
                 surffile.dataset.variables['max_elevation'][...] = self.max_elevation[m][0:nb]
 
 
-def rasterized_shapefile(shapefilepath, attribute, refraster):
+def rasterized_shapefile(shapefilepath, attribute, refraster, output=None):
     """
     Rasterize the attribute value of the shapefile shapefilepath on the same grid as the refraster file
     Dependencies on gdal and nco for this function
@@ -642,6 +626,8 @@ def rasterized_shapefile(shapefilepath, attribute, refraster):
     :type attribute: str
     :param refraster: reference file describing the grid  (allowed format: tif)
     :type refraster: str
+    :param output: output file address (optional, if not available just change the extension of shapefilepath)
+    :type output: str
     :return: True if all commands succeed
     """
     # Check availability of input files
@@ -669,7 +655,8 @@ def rasterized_shapefile(shapefilepath, attribute, refraster):
         varnamefromgdal = 'Band1'
 
     tmpraster = 'temp.tif'
-    outputfile = f'{shapefileName}.nc'
+
+    outputfile = output if output else f'{shapefileName}.nc'
 
     # Check if outputfile does not already exists to not overwrite
     if os.path.isfile(outputfile):
@@ -706,6 +693,98 @@ def rasterized_shapefile(shapefilepath, attribute, refraster):
     return True
 
 
+class metaprosimu(prosimu):
+    """
+    This class adds topographic and time metadata to a prosimu instance
+    :param profilename: Path of the PRO.nc filename
+    :type profilename: str
+    """
+
+    # Correspondance between topo attributes and allowed varnames in PRO files
+    allowedtopovarnames = dict(zs='ZS', aspect='aspect', slope='slope', massif=['massif_num', 'massif_number'])
+    reftopovarnames = dict()
+
+    def __init__(self, profilename):
+        self.filename = profilename
+        super(metaprosimu, self).__init__(profilename)
+        # Read metadata of S2M file and store them in attributes
+        for topovar, topovarnames in self.allowedtopovarnames.items():
+            if type(topovarnames) is not list:
+                topovarnames = [topovarnames]
+            availtopovar = False
+            for varname in topovarnames:
+                # Test if variable is available in the file
+                if varname in self.listvar():
+                    availtopovar = True
+                    # Actual variable names available in PRO file
+                    self.reftopovarnames[topovar] = varname
+                    # Read the variable and store as attribute of the class
+                    setattr(self, topovar, self.read(varname))
+                    break
+            # Exception if topographic variable unavailable in the file
+            if not availtopovar:
+                raise VarNameException(varname, self.filename)
+
+        # Compute dimension lengths
+        self.nbpoints = len(self.zs)
+        self.ntime = len(self.timedim)
+        self.time, self.timeunits = self.readtime_for_copy()
+
+        # Compute resolution of topographic classes
+        list_zs = np.unique(self.zs)
+        list_aspects = np.unique(self.aspect)
+        list_slopes = np.unique(self.slope)
+        self.resol_zs = list_zs[1] - list_zs[0]
+        self.resol_slope = list_slopes[1] - list_slopes[0]
+        self.resol_aspect = list_aspects[2] - list_aspects[1]
+
+        # Available massifs
+        self.avail_massifs = np.unique(self.massif)
+
+    def filepath(self):
+        # Future method of netCDF4.Dataset with netcdf >= 4.1.2
+        return self.filename
+
+    def create_auxiliary_file(self, filename):
+        with prosimu(filename, openmode = 'w') as auxil:
+            auxil.dataset.createDimension('Number_of_points', self.nbpoints)
+
+            for var in ['zs', 'aspect', 'slope', 'massif']:
+                auxil.dataset.createVariable(var, self.gettypevar(self.reftopovarnames[var]),
+                                             dimensions='Number_of_points')
+                auxil.dataset.variables[var][...] = getattr(self, var)[...]
+
+
+def diff_aspect(aspect1, aspect2):
+    """
+    Compute the angle absolute difference between two aspects (0-360 degrees) or two arrays of aspects
+
+    :param aspect1: Aspect or array of aspect (0-360 degrees)
+    :type aspect1: int, float or array of float
+    :param aspect2: Aspect or array of aspect (0-360 degrees)
+    :type aspect2: int, float or array of float of same type as aspect1
+    :return: array of type of aspect1 and aspect2
+    """
+
+    # Compute aspect angle absolute difference
+    diffabs = abs(aspect1 - aspect2)
+    return np.where(diffabs > 180, 360 - diffabs, diffabs)
+
+
+def bbox(img):
+    """
+    This method provides the bounding box of True components of a given field
+
+    :param img: Field of logical values
+    :type img: 2d np.array
+    """
+    rows = np.any(img, axis=1)
+    cols = np.any(img, axis=0)
+    rmin, rmax = np.where(rows)[0][[0, -1]]
+    cmin, cmax = np.where(cols)[0][[0, -1]]
+    return rmin, rmax, cmin, cmax
+
+
 if __name__ == '__main__':
 
     # Demonstrator for test purposes.
@@ -737,7 +816,7 @@ if __name__ == '__main__':
     outputdir = '/home/lafaysse/hydroMF'
 
     if testareas:
-        b=basin_areas_file(dem, rasterbasin, listpro, outputdir)
+        b = basin_areas_file(dem, rasterbasin, listpro, outputdir)
 
     listareas = ['/home/lafaysse/hydroMF/areas_' + vconf + '.nc' for vconf in listregions]
 
