@@ -402,9 +402,9 @@ class prosimuAbstract(abc.ABC):
 
     def getlendim(self, dimname):
         """
-        Return the number of dimensions
+        Return the length of dimension dimname
 
-        :returns: number of dimensions
+        :returns: length of dimension dimname
         :rtype: int
         """
         return len(self.dataset.dimensions[dimname])
