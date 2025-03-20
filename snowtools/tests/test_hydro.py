@@ -17,7 +17,7 @@ from snowtools.tools.hydro import basin_areas_file, hydro
 class HydroTest(TestWithTempFolderWithLog):
     def setUp(self):
         super(HydroTest, self).setUp()
-        self.dem = os.path.join(TESTBASE_DIR, 'hydro', '/home/lafaysse/hydroMF/DEM_FRANCE_L93_250m_bilinear.nc')
+        self.dem = os.path.join(TESTBASE_DIR, 'hydro', 'DEM_FRANCE_L93_250m_bilinear.nc')
         self.meteo = os.path.join(TESTBASE_DIR, "FORCING", "forcing_testhydro_alp_oper_2025031806_2025032306.nc")
         self.pro = os.path.join(TESTBASE_DIR, "PRO", "pro_testhydro_alp_oper_2025031906_2025032306.nc")
         self.rasterbasin = os.path.join(TESTBASE_DIR, 'hydro', 'BNBV_SCHAPI_FRANCE250m.nc')
