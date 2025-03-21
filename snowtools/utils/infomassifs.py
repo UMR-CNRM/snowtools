@@ -152,6 +152,9 @@ class infomassifs():
 
         self.dicAltArea = {}
 
+        self.listOperRegions = ['alp27_allslopes', 'pyr24_allslopes', 'cor2_allslopes', 'mac11_allslopes',
+                                'jur4_allslopes', 'vog3_allslopes']
+
         self.dicPostesArea = {}
 
         self.dicPostesArea["alpes"] = []
@@ -191,6 +194,25 @@ class infomassifs():
 
         except Exception:
             raise FileParseException(metadata)
+
+    @property
+    def operregions(self):
+        return self.listOperRegions
+
+    @property
+    def opermassifs(self):
+        d = dict()
+        for region in self.operregions:
+            d[region] = self.getListMassif_of_region(region)
+        return d
+
+    @property
+    def operregionofmassifs(self):
+        d = dict()
+        for region in self.operregions:
+            for massif in self.getListMassif_of_region(region):
+                d[massif] = region
+        return d
 
     def region2massifs(self, region):
         if region:

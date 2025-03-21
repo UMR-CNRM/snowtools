@@ -17,6 +17,18 @@ If your 2D domain is belonging to several "SAFRAN massif", by default:
 If more than 50% of points are in one massif, all the points are artificially associated with this massif
 After the execution you have some infos for the NAM_IGN part of the namelist.
 
+Options :
+
+.. code-block:: text
+
+   * -o Path to shapefile (with extension .kml or .shp)
+   * -rlon Longitude Resolution for 2D grid (250 or 30)
+   * -rlat Latitude Resolution for 2D grid (250 or 30)
+   * --MNT_alt Path for MNT altitude
+   * -m Massif number if you want to choose the massif that will be applied to your zone
+        (Massif number can be found in snowtools/DATA/METADATA.xml)
+
+
 EXAMPLES OF USE (script launch)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -40,20 +52,26 @@ Then s2m command:
 
    s2m research --walltime='2:00:00' -b 20190801 -e 20200801 -m s2m -f reanalysis2020.2@lafaysse
                 -r alp_flat:Aussois250:/home/cnrm_other/cen/mrns/fructusm/SIMU_TOP2D/NetCDF2D_Aussois.nc
-                -n /home/cnrm_other/cen/mrns/fructusm/SIMU_TOP2D/Aussois.nam --grid --ntasks=52
+                -n /home/cnrm_other/cen/mrns/fructusm/SIMU_TOP2D/Aussois.nam --geotype grid --ntasks=52
                 -g -o Aussois_2D
 
-!! DO NOT FORGET THE SPINUP !!
+.. warning::
+   DO NOT FORGET THE SPINUP
 
 Options:
 
-* -m model
-* -f forcing files -> -f reanalysis in order to get the forcing from reanalysis
-* -r région: add geometry in vortex/conf/geometries.ini
-* -n namelist (get the same options than reanalysis)
-* -g if you don't have a prep -> a spinup has to be made
-* -a 400 In order to limit Snow Water Equivalent to 400kg/m3 at the end of the year (1rst of august)
-* --ntasks 50 if 50 < min(column, lines) of netcdf 2D domain
+.. code-block:: text
+
+   * -m model
+   * -f forcing files -> -f reanalysis in order to get the forcing from reanalysis
+   * -r région: add geometry in vortex/conf/geometries.ini
+   * -n namelist (get the same options than reanalysis)
+   * -g if you don't have a prep -> a spinup has to be made
+   * -a 400 In order to limit Snow Water Equivalent to 400kg/m3 at the end of the year (1rst of august)
+   * --geotype grid Type of simulation geometry: grids must be defined in namelist while namelists are automatically
+                    updated for unstructured geometries according to the forcing file. (default:
+                    unstructured) (from s2m research -h)
+   * --ntasks 50 if 50 < min(column, lines) of netcdf 2D domain
 
 File transfert from Belenos to sxcen:
 use get_reanalysis which is in snowtools/scripts/extract/vortex
@@ -412,7 +430,7 @@ def parseArguments(args):
     parser.add_argument("-rlat", "--resol_lat", help="Latitude Resolution for 2D grid (250 or 30)", type=int,
                         default=250)
     parser.add_argument("--MNT_alt", help="Path for MNT altitude", type=str, default=None)
-    parser.add_argument("-m", "--massif_number", help="massif number if you want to choose the massif that will be applied to your zone", type=int, default=None)
+    parser.add_argument("-m", "--massif_number", help="Massif number if you want to choose the massif that will be applied to your zone", type=int, default=None)
 
     args = parser.parse_args(args)
     return args

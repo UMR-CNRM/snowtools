@@ -8,6 +8,7 @@ Created on 9 oct. 2012
 import os
 import subprocess
 import sys
+import shlex
 
 
 class SystemException(Exception):
@@ -24,11 +25,18 @@ class SystemException(Exception):
 def callSystemOrDie(commande, errorcode=None):
     """Method to execute a system command and kill the current program if it fails."""
 
-    status = subprocess.call(commande.split(), stdout=sys.stdout, stderr=sys.stderr)
+    status = subprocess.call(shlex.split(commande), stdout=sys.stdout, stderr=sys.stderr)
 
     if status != 0:
         raise SystemException(status, commande)
     return status
+
+
+def printandcallSystemOrDie(commande, errorcode=None):
+    """Method to print and execute a system command and kill the current program if it fails."""
+
+    print(commande)
+    callSystemOrDie(commande, errorcode=errorcode)
 
 
 def callSurfexOrDie(commande, moderun="NORMAL", nproc=1, errorcode=None):

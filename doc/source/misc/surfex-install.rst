@@ -26,7 +26,9 @@ Get the code
 
 Rather than installing from an « export » archive, it is better to immediately get started from the most recent version of the git repository. Crocus users should in the general case install the ``cen`` branch. This is the most recent stable release of Crocus snowpack model which often includes new developments not already merged in the master SURFEX branch. Specific instructions on how to use git for SURFEX are provided in : http://www.umr-cnrm.fr/surfex/spip.php?article415
 
-Detailed instructions for getting access to the code are available at https://opensource.umr-cnrm.fr/projects/snowtools_git/wiki/Procedure_for_new_users
+Access the code by registering on this website (top right of the window): https://opensource.umr-cnrm.fr/. Please always fill in the "comments" field asking for an access to SURFEX project. If you have never been in contact with the Crocus team before your request, please explain briefly your interest in this model. Once you have received a confirmation of your account creation, you will have to send a public ssh key to operator at meteo dot fr. This ssh key have to be created with ``ssh-keygen -t rsa``. If you are not familiar with SSH keys, let the default key name (id_rsa), and do not provide any passphrase. The public key is available under ~/.ssh/id_rsa.pub.
+
+For users which need scientific advices about the relevance of using Crocus for their application, please contact crocus at meteo.fr
 
 .. warning::
    Caution: the directory where you are going to install SURFEX and all parent directories MUST NOT contain dots (.) in their names.

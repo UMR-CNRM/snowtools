@@ -3,8 +3,8 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "Snowtools"
-version = "2.0.1"
+name = "snowtools"
+version = "2.0.2"
 dependencies = [
     'matplotlib',
     'netCDF4',
@@ -47,12 +47,11 @@ maintainers = [
 [project.urls]
 Homepage = "https://github.com/UMR-CNRM/snowtools"
 Repository = "https://github.com/UMR-CNRM/snowtools"
-Issues = "https://opensource.umr-cnrm.fr/projects/snowtools_git/wiki/Procedure_for_new_users"
 
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["snowtools*", "cenutils*"]
-namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
+namespaces = true  # to disable scanning PEP 420 namespaces (true by default)
 
 [project.scripts]
 s2m = 'snowtools.tasks.s2m_command:main'
