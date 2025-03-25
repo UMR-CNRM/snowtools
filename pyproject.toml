@@ -3,12 +3,12 @@ build-backend = 'mesonpy'
 requires = ['meson-python','numpy>=1.24.4', 'ninja', 'wheel']
 
 [project]
-name = "Snowtools"
-version = "2.0.1"
+name = "snowtools"
+version = "2.0.2"
 dependencies = [
     'matplotlib',
     'netCDF4',
-    'numpy',
+    'numpy>=1.8',
     'scipy',
     'python-dateutil',
     'pyproj',
@@ -49,7 +49,6 @@ maintainers = [
 [project.urls]
 Homepage = "https://github.com/UMR-CNRM/snowtools"
 Repository = "https://github.com/UMR-CNRM/snowtools"
-Issues = "https://opensource.umr-cnrm.fr/projects/snowtools_git/wiki/Procedure_for_new_users"
 
 [project.scripts]
 s2m = 'snowtools.tasks.s2m_command:main'

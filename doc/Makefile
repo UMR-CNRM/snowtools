@@ -46,6 +46,21 @@ $(SCRIPTSHELPDESTDIR)%.rst: $(subst --,/,$(patsubst $(SCRIPTSHELPDESTDIR)%.rst, 
 	    sed -e 's/^ *Vortex.*\(loaded\|completed\) (.*, at [0-9:]* )$$//' | sed -e 's/^/   /' >> $@
 	@echo "\n\n" >> $@
 
+s2mresearch: $(SCRIPTHELPSRCDIR)/tasks/s2m_command.py
+	$(info Generate documentation for s2m research command)
+	@# Create directory if not exist
+	@mkdir -p $(SCRIPTSHELPDESTDIR)
+	@# Introduction
+	@echo "s2m command help:\n\n" > $(SCRIPTSHELPDESTDIR)/s2mresearch.rst
+	@echo ".. code-block:: none\n" >> $(SCRIPTSHELPDESTDIR)/s2mresearch.rst
+	@# Get -h, remove vortex import messages and indent correctly for ResT
+	@$(PYTHON) $< research -h | \
+	    sed -e 's/^ *Vortex.*\(loaded\|completed\) (.*, at [0-9:]* )$$//' | \
+	    sed -e 's/^SNOWTOOLS Directory .*$$//' | sed -e 's/^Snowtools installation has been successfully checked.$$//' | \
+	    sed -e 's/^/   /' >> $(SCRIPTSHELPDESTDIR)/s2mresearch.rst
+	@echo "\n\n" >> $(SCRIPTSHELPDESTDIR)/s2mresearch.rst
+
+
 
 #######################################################################
 #                           Sphinx targets                            #
@@ -55,19 +70,19 @@ $(SCRIPTSHELPDESTDIR)%.rst: $(subst --,/,$(patsubst $(SCRIPTSHELPDESTDIR)%.rst, 
 #%: Makefile
 #	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-html: scripthelp  ## Generate HTML documentation
+html: scripthelp s2mresearch  ## Generate HTML documentation
 	$(SPHINXBUILD) -b html $(SPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/html
 	@echo "Build done in $(BUILDDIR)/html"
 
-pdf: scripthelp   ## Generate a PDF documentation (with pdflatex)
+pdf: scripthelp s2mresearch   ## Generate a PDF documentation (with pdflatex)
 	$(SPHINXBUILD) -M latexpdf $(SPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/pdf
 	@echo "Build done in $(BUILDDIR)/pdf"
 
-latex: scripthelp ## Generate a latex documentation (do not compile it)
+latex: scripthelp s2mresearch ## Generate a latex documentation (do not compile it)
 	$(SPHINXBUILD) -b latex $(SPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/latex
 	@echo "Build done in $(BUILDDIR)/latex"
 
-man: scripthelp   ## Generate a unix man format documentation
+man: scripthelp s2mresearch   ## Generate a unix man format documentation
 	$(SPHINXBUILD) -b man $(SPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/man
 	@echo "Build done in $(BUILDDIR)/man"
 

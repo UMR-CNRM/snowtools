@@ -56,7 +56,7 @@ The GUI proplotter have to be manually tested before any commit. Here is a possi
 18. Open 2D file
     - go back to Standard graph
     - Use `Ctrl + O`
-    - Select the `?????` file.
+    - Select the `/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/PRO_2014080106_2015010106_grille2d.nc` file.
     - Select SNOWTEMP and SNOWTEMP variables
     - Select first x and y values
     - Plot

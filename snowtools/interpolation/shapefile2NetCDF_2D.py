@@ -1,5 +1,89 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+This script needs a shapefile (Lambert 93 or (lat-lon) coordinates).
+This shapefile can be in .shp or .kml format.
+This shapefile is delimitating a 2D domain on which you want to make a SURFEX-Crocus simulation.
+
+If you want to do a simulation for several distincts differents points and not a domain:
+see shapefile2NetCDF.py instead.
+
+General documentation of shapefile2NetCDF_2D script
+---------------------------------------------------
+This script creates a NetCDF file using the shapefile.
+The NetCDF file is necessary to launch Surfex-Crocus 2D simulations.
+The NetCDF will define a rectangular 2D domain which contains your shapefile.
+If your 2D domain is belonging to several "SAFRAN massif", by default:
+If more than 50% of points are in one massif, all the points are artificially associated with this massif
+After the execution you have some infos for the NAM_IGN part of the namelist.
+
+Options :
+
+.. code-block:: text
+
+   * -o Path to shapefile (with extension .kml or .shp)
+   * -rlon Longitude Resolution for 2D grid (250 or 30)
+   * -rlat Latitude Resolution for 2D grid (250 or 30)
+   * --MNT_alt Path for MNT altitude
+   * -m Massif number if you want to choose the massif that will be applied to your zone
+        (Massif number can be found in snowtools/DATA/METADATA.xml)
+
+
+EXAMPLES OF USE (script launch)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   python3 shapefile2NetCDF_2D.py SP_Abries_Ristolas.kml -o NetCDF2D_Ristolas.nc
+
+
+EXAMPLES OF USE OF NETCDF FILE IN HPC SIMULATION
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+First, push on Belenos with scp:
+
+.. code-block:: bash
+
+   scp NetCDF2D_* fructusm@belenos:/home/fructusm/SIMU_TOP2D/.
+
+Then s2m command:
+
+.. code-block:: bash
+
+   s2m research --walltime='2:00:00' -b 20190801 -e 20200801 -m s2m -f reanalysis2020.2@lafaysse
+                -r alp_flat:Aussois250:/home/cnrm_other/cen/mrns/fructusm/SIMU_TOP2D/NetCDF2D_Aussois.nc
+                -n /home/cnrm_other/cen/mrns/fructusm/SIMU_TOP2D/Aussois.nam --geotype grid --ntasks=52
+                -g -o Aussois_2D
+
+.. warning::
+   DO NOT FORGET THE SPINUP
+
+Options:
+
+.. code-block:: text
+
+   * -m model
+   * -f forcing files -> -f reanalysis in order to get the forcing from reanalysis
+   * -r région: add geometry in vortex/conf/geometries.ini
+   * -n namelist (get the same options than reanalysis)
+   * -g if you don't have a prep -> a spinup has to be made
+   * -a 400 In order to limit Snow Water Equivalent to 400kg/m3 at the end of the year (1rst of august)
+   * --geotype grid Type of simulation geometry: grids must be defined in namelist while namelists are automatically
+                    updated for unstructured geometries according to the forcing file. (default:
+                    unstructured) (from s2m research -h)
+   * --ntasks 50 if 50 < min(column, lines) of netcdf 2D domain
+
+File transfert from Belenos to sxcen:
+use get_reanalysis which is in snowtools/scripts/extract/vortex
+
+On SXCEN:
+
+.. code-block:: bash
+
+   python3 get_reanalysis.py --geometry=orchamp --snow --xpid=TEST_Raphaelle@fructusm
+                              -byear=2010 --eyear=2099
+
+"""
 
 import os
 import argparse
@@ -18,87 +102,25 @@ import pyproj
 
 from snowtools.utils.infomassifs import infomassifs
 from snowtools.DATA import SNOWTOOLS_DIR
+from snowtools.DATA import DIRDATADEM
 
 ################################################################
-# On part d'un shapefile au format .kml ou bien .shp
-# Ce shapefile peut être en coordonnées (lat, lon) ou bien en Lambert93
-# De ce shapefile, le programme fournit un NetCDF2D, ie un NetCDF pour simulations 2D
-##################################
-# Exemple Lancement
-##################################
-# python3 shapefile2NetCDF_2D.py SP_Abries_Ristolas.kml -o NetCDF2D_Ristolas.nc
-#
-####################
-# Utilisation du fichier NetCDF sur belenos: 
-####################
-# d'abord, on pushe sur Belenos avec scp:
-# scp NetCDF2D_* fructusm@belenos:/home/fructusm/SIMU_TOP2D/.
-#
-# s2m  --walltime='2:00:00' -b 20190801 -e 20200801 -m s2m -f reanalysis2020.2@lafaysse 
-# -r alp_flat:Aussois250:/home/cnrm_other/cen/mrns/fructusm/SIMU_TOP2D/NetCDF2D_Aussois.nc
-# -n /home/cnrm_other/cen/mrns/fructusm/SIMU_TOP2D/Aussois.nam --grid --ntasks=52 -g -o Aussois_2D
-#
-# s2m  --walltime='6:00:00' -b 19580801 -e 20210801 -m s2m -f reanalysis2020.2@lafaysse
-# -r alp_flat:Belledonne250:/home/cnrm_other/cen/mrns/fructusm/SIMU_TOP2D/NetCDF2D_Belledonne.nc
-# -n /home/cnrm_other/cen/mrns/fructusm/SIMU_TOP2D/Belledonne.nam --grid --ntasks=44 -x 19680801 -o Belledonne_2D
-#
-# s2m  --walltime='6:00:00' -b 19580801 -e 20210801 -m s2m -f reanalysis2020.2@lafaysse
-# -r alp_flat:Cayolle250:/home/cnrm_other/cen/mrns/fructusm/SIMU_TOP2D/NetCDF2D_Cayolle.nc
-# -n /home/cnrm_other/cen/mrns/fructusm/SIMU_TOP2D/Cayolle.nam --grid --ntasks=38 -x 19680801 -o Cayolle_2D
-#
-# s2m  --walltime='6:00:00' -b 19580801 -e 20210801 -m s2m -f reanalysis2020.2@lafaysse
-# -r alp_flat:Oisan250:/home/cnrm_other/cen/mrns/fructusm/SIMU_TOP2D/NetCDF2D_Oisan.nc
-# -n /home/cnrm_other/cen/mrns/fructusm/SIMU_TOP2D/Oisan.nam --grid --ntasks=45 -x 19680801 -o Oisan_2D
-#
-# s2m  --walltime='6:00:00' -b 19580801 -e 20210801 -m s2m -f reanalysis2020.2@lafaysse 
-# -r alp_flat:Ristolas250:/home/cnrm_other/cen/mrns/fructusm/SIMU_TOP2D/NetCDF2D_Ristolas.nc 
-# -n /home/cnrm_other/cen/mrns/fructusm/SIMU_TOP2D/Ristolas.nam --grid --ntasks=65 -x 19680801 -o Ristolas_2D
-#
-#  
-# !!!!
-# PENSER AU SPINUP
-# !!!!
-#
-#
-# Options: 
-# -m pour le modèle
-# -f pour les fichiers de forcing -> on va les chercher chez Matthieu pour reanalyse. Bientôt -f reanalysis
-# -r pour la région: penser à rajouter la géométrie dans vortex/conf/geometries.ini
-# -g car on n'a pas de prep au début -> il faut faire un spinup
-# -a 400 pour limiter le Snow Water Equivalent à 400kg/m3 au 1er août
-# --ntasks 50 si on n'a que 50 points dans un fichier netcdf 2D (je ne sais plus si c'est le min des lignes ou le 
-# min des colonnes qu'il faut prendre)
-#
-# Pour transférer les fichiers de Belenos à sxcen:
-# utiliser get_reanalysis qui est dans snowtools_git/scripts/extract/vortex
-# Sur SXCEN: python3 get_reanalysis.py --geometry=orchamp --snow --xpid=SPINUP@fructusm
-# Sur SXCEN: python3 get_reanalysis.py --geometry=orchamp --snow --xpid=TEST_Raphaelle@fructusm
-#                                      --byear=2010 --eyear=2099
-################################################################
-
-
-################################################################
-# VALEURS PAR DEFAUT CHANGEABLE PAR OPTION:
-# MNT (30m) et Nom NetCDF de sortie
+# DEFAULT VALUES (but can change with options):
+# MNT (30m) and name of the output NetCDF
 ################################################################
 NetCDF_out = 'NetCDF2D_from_shapefile.nc'
 
 # PATH_MNT
-path_MNT_alti_30m = '/rd/cenfic3/cenmod/home/haddjeria/mnt_ange/ange-factory/prod1/france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
-path_MNT_alti_250m = '/rd/cenfic3/cenmod/home/haddjeria/mnt_ange/ange-factory/prod1/france_250m/DEM_FRANCE_L93_250m_bilinear.tif'
+path_MNT_alti_30m = DIRDATADEM + 'france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
+path_MNT_alti_250m = DIRDATADEM + 'france_250m/DEM_FRANCE_L93_250m_bilinear.tif'
 
 ################################################################
-# Infos shapefile massif, a priori pérenne 
+# Infos shapefile massif, normally stable and durable
 ################################################################
 path_shapefile_massif = SNOWTOOLS_DIR + '/DATA/massifs'
 
 ################################################################
-#            FIN DUR DANS LE CODE
-################################################################
-
-
-################################################################
-# Mise en place des log
+# Log
 ################################################################
 logger = logging.getLogger()
 logger.setLevel(logging.WARNING)
@@ -107,16 +129,16 @@ console_handler.setFormatter(logging.Formatter('%(levelname)s :: %(message)s'))
 console_handler.setLevel(logging.DEBUG)
 logger.addHandler(console_handler)
 
-
 ################################################################
-#   ETAPE 1: convertir le kml en shapefile pour pouvoir le lire
+#   STEP 1: convert kml in shapefile in order to read it
 ################################################################
 def convert_kml2shp(path_shape_kml):
     """
-    Les fichiers en .kml (Keyhole Markup Language, google format) sont transformés en .shp (format GIS Geographic
-    Information System de l'ESRI) pour éviter d'avoir à rajouter des imports de librairie "non standard" dans la
-    configuration actuelle des PC du CEN. C'est un choix évidemment discutable.
-    :param path_shape_kml: le chemin vers le fichier de shapefile au format kml
+    kml files (Keyhole Markup Language, google format) are transform in .shp (format GIS Geographic
+    Information System from ESRI) in order to avoid imports from "non standard" librairies in CEN
+    actual configuration of PC.
+
+    :param path_shape_kml: path to kml shapefile
     :type path_shape_kml: str
     :return: a string: the path to the .shp file after conversion from the .kml file.
     """
@@ -127,13 +149,14 @@ def convert_kml2shp(path_shape_kml):
 
 
 ################################################################
-#   ETAPE 2: récupérer bornes du shapefile
+#   STEP 2: get boundaries of shapefile
 ################################################################
 def get_bounds(path_shape_shp):
     """
-    sf.bbox retourne [6.61446151100006, 45.189366518, 6.8154706149867, 45.2979826160001]
+    sf.bbox return [6.61446151100006, 45.189366518, 6.8154706149867, 45.2979826160001]
     ie [lon_min, lat_min, lon_max, lat_max]
-    :param path_shape_shp: le chemin vers le fichier de shapefile
+
+    :param path_shape_shp: path to shapefile
     :type path_shape_shp: str
     :return: a list of 4 values [lon_min, lat_min, lon_max, lat_max]
     """
@@ -142,16 +165,16 @@ def get_bounds(path_shape_shp):
 
 
 ################################################################
-#   ETAPE 2 bis: si c'est du lat - lon, convertir en L93
+#   STEP 2 bis: if (lat - lon), convert to L93
 ################################################################
 def conversion_to_L93_if_lat_lon(list_of_four):
     """
-    Idée: on a une liste bbox [lon_min, lat_min, lon_max, lat_max] que l'on convertit éventuellement en Lambert93
-    Par défaut, on agrandit un peu au cas où
-    Critère: si dans la bbox, ce n'est pas inférieur à 200, alors on est déjà en L93
-    L'idée est que les coordonnées sont soit en WGS84 (ie coordonnées lat-lon -> tout est inférieur à 200), soit en L93
+    Idea: we have a list bbox [lon_min, lat_min, lon_max, lat_max]. We convert it in Lambert93
+    By default, we raise a little in case of
+    Criteria: if in bbox, this is not lower than 200, we are already in L93
+    Because coordinates are in WGS84 (ie lat-lon -> everything below 200), or in L93
 
-    POUR RAPPEL:     L93 = EPSG 2154      WGS84 = EPSG 4326
+    REMINDER:     L93 = EPSG 2154      WGS84 = EPSG 4326
 
     :param list_of_four: list of 4 floats ([lon_min, lat_min, lon_max, lat_max])
     :type list_of_four: list
@@ -170,11 +193,12 @@ def conversion_to_L93_if_lat_lon(list_of_four):
 
 
 ################################################################
-#   ETAPE 3: nettoyer shapefile
+#   STEP 3: clean shapefile
 ################################################################
 def clean_the_mess(path_shape_shp, clean_all):
     """
     Remove all the temporary files created with the script
+
     :param path_shape_shp: le chemin vers le fichier de shapefile
     :type path_shape_shp: str
     :return: In a pythonic point of view, nothing. Some files are deleted.
@@ -189,12 +213,13 @@ def clean_the_mess(path_shape_shp, clean_all):
 
 
 ################################################################
-#   ETAPE 4: faire la grille en (250m * 250m)
+#   STEP 4: create grid (250m * 250m)
 ################################################################
 def create_dict_all_infos(list_of_four, resol_x=250, resol_y=250):
     """
     Create a dictionnary with all the important information (coordinates of the lower-left and upper-right points,
     number of pixel in x and y direction, resolution in x and y direction).
+
     :param list_of_four: list of four coordinates in L93 format
     :type list_of_four: list
     :param resol_x: resolution in x direction
@@ -217,13 +242,14 @@ def create_dict_all_infos(list_of_four, resol_x=250, resol_y=250):
 
 
 ################################################################
-#   ETAPE 4 bis: créer le .tif de la grille
+#   STEP 4 bis: create .tif from grid
 ################################################################
 def create_MNT_tif(dict_info, path_MNT_given=None):
     """
     Use the dictionary with all the information (coordinates of the lower-left and upper-right points, number of pixel
     in x and y direction, resolution in x and y direction) and and a MNT (with the good resolution) to create a .tif
     file with altitude values on the grid define by the information.
+
     :param dict_info: dictionary with all the information for the grid
     :type dict_info: dict
     :param path_MNT_given: optional, a path for the MNT (without a path, the standard MNT in cenfic3 is used)
@@ -246,7 +272,7 @@ def create_MNT_tif(dict_info, path_MNT_given=None):
 
 
 ################################################################
-#   ETAPE 5: repérer le massif prédominant
+#   STEP 5: most common massif
 ################################################################
 def find_most_common_massif(dict_info):
     """
@@ -254,10 +280,10 @@ def find_most_common_massif(dict_info):
     common massif on the grid. If there are more than 50% of points in the most common massif, all the points are
     artificially associated with the most common massif. Otherwise, all the points in the grid keep the massif they
     belong.
+
     :param dict_info: dictionary with all the information for the grid
     :type dict_info: dict
-    :return: an integer (the massif number of the most common massif) if there is more than 50% point in the most common
-     massif, a numpy array with the size of the grid otherwise.
+    :return: an integer (the massif number of the most common massif) or a numpy array (if there is not common massif).
     """
     massif_num = np.zeros((dict_info['Nb_pixel_y'], dict_info['Nb_pixel_x']))
     massif_num = massif_num.astype(int)
@@ -301,14 +327,15 @@ def find_most_common_massif(dict_info):
         print('cette valeur est trop faible')
         print('on ne regroupe pas tous les points dans le même massif')
         return massif_num
-        
+
 
 ################################################################
-#   ETAPE 6: confiner les altitudes entre le min et le max du massif
+#   STEP 6: constraint altitudes between min and max of massif
 ################################################################
 def create_netcdf(massif_number, file_out=NetCDF_out):
     """
     Creation of the 2D_NetCDF with 2 values: 'ZS' for the altitude and 'Massif number' for the massif number.
+
     :param massif_number: an integer or a numpy array depending of the percentage of points in the most common massif
     :param file_out: the name of the output for the netcdf file
     :type file_out: str
@@ -358,31 +385,32 @@ def create_netcdf(massif_number, file_out=NetCDF_out):
 
 
 ################################################################
-#   ETAPE 7: sortie écran pour les infos à mettre dans la namelist
+#   STEP 7: infos for NAM_IGN part of namelist on screen
 ################################################################
 def print_for_namelist(dict_info, output_name):
     """
     Just to have a print on the screen in order to have all the relevant information for the namelist used later in the
     Surfex simulations.
+
     :param dict_info: dictionary with all the information for the grid
     :type dict_info: dict
     :param output_name: the name of the output for the netcdf file
     :type output_name: str
     :return: In a pythonic point of view, nothing. Some information are printed on the screen.
     """
-    print('pour le fichier: ', output_name)
-    print('dans la namelist &NAM_IGN, on prend:')
+    print('File: ', output_name)
+    print('In namelist &NAM_IGN:')
     print('XCELLSIZE=', dict_info['resol_x'])
     print('XX_LLCORNER=', dict_info['XLL'])
     print('XY_LLCORNER=', dict_info['YLL'])
-    print('A vérifier avec NETCDF dimension (décalage de 1 possible):')
+    print('!! Check with NETCDF dimensions (gap of 1 possible):')
     print('NCOLS=', dict_info['Nb_pixel_x'])
     print('NROWS=', dict_info['Nb_pixel_y'])
-    print('pour lancement BELENOS, prendre ntasks < min(NCOLS, NROWS)')
+    print('!! For BELENOS, take ntasks < min(NCOLS, NROWS)')
 
 
 ################################################################
-#   Récupération des arguments 
+#   Get arguments
 ################################################################
 def parseArguments(args):
     """
@@ -402,7 +430,7 @@ def parseArguments(args):
     parser.add_argument("-rlat", "--resol_lat", help="Latitude Resolution for 2D grid (250 or 30)", type=int,
                         default=250)
     parser.add_argument("--MNT_alt", help="Path for MNT altitude", type=str, default=None)
-    parser.add_argument("-m", "--massif_number", help="massif number if you want to choose the massif that will be applied to your zone", type=int, default=None)
+    parser.add_argument("-m", "--massif_number", help="Massif number if you want to choose the massif that will be applied to your zone", type=int, default=None)
 
     args = parser.parse_args(args)
     return args
@@ -413,7 +441,7 @@ def main(args=None):
     Main program: parse argument then launch the creation of NetCDF
     """
     args = args if args is not None else sys.argv[1:]
-    if len(sys.argv) > 1: 
+    if len(sys.argv) > 1:
         args = parseArguments(args)
 
         # argument for command line call
@@ -441,7 +469,7 @@ def main(args=None):
         else:
             massif_num = find_most_common_massif(dict_info)
 
-        massif_num = find_most_common_massif(dict_info)
+        #massif_num = find_most_common_massif(dict_info)
         create_netcdf(massif_num, output_name)
         clean_the_mess(path_shapefile, clean_all)
         print_for_namelist(dict_info, output_name)

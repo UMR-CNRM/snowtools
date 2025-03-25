@@ -260,36 +260,29 @@ if __name__ == "__main__":
     ############################################
 
     if args.archive:
-        import cen  # Import necessary to load vortex CEN-specific ressourees
         import vortex
-        from vortex import toolbox
+        from snowtools.scripts.extract.vortex import vortexIO as io
 
         t = vortex.ticket()
 
         if level_type.startswith('ISO_'):
             kind = level_type
+        elif level_type == 'HAUTEUR':
+            kind = parameter
         else:
             print('Kind not yet defined for this extraxction')
             raise NotImplementedError
-
-        out = toolbox.output(
+        out = io.put_meteo(
             kind           = kind,
             vapp           = 'edelweiss',
             vconf          = domain,
             source_app     = model_map[model]['vapp'],
             source_conf    = model_map[model]['vconf'],
-            model          = '[vapp]',
-            cutoff         = 'assimilation',
-            filename       = outname,
-            experiment     = f'ExtractionBDAP@{os.environ["USER"]}',
             geometry       = grid,
-            nativefmt      = 'netcdf',
-            namebuild      = 'flat@cen',
+            experiment     = f'ExtractionBDAP@{os.environ["USER"]}',
             datebegin      = args.datebegin,
             dateend        = args.dateend,
-            date           = '[dateend]',
-            namespace      = 'vortex.multi.fr',
-            block          = 'meteo',
+            filename       = outname,
         )
         out[0].quickview()
         print(t.prompt, 'Output location =', out[0].location())

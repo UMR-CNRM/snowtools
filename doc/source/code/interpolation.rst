@@ -21,6 +21,16 @@ This module is also an executable script:
 
 .. include:: ./autoscripts/interpolation--shapefile2NetCDF.rst
 
+shapefile2NetCDF_2D tool
+------------------------
+
+.. automodule:: interpolation.shapefile2NetCDF_2D
+   :members:
+
+This module is also an executable script:
+
+.. include:: ./autoscripts/interpolation--shapefile2NetCDF_2D.rst
+
 The interpolation tool
 ----------------------
 

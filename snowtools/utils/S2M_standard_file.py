@@ -412,10 +412,12 @@ class StandardCROCUS(_StandardNC):
 
     def soil_long_names(self, varname):
         import re
-        try:
-            layer = int(re.search(r'\d+', varname).group()) - 1
-        except:
+        r = re.search(r'\d+', varname)
+        # r is None for varname without number: 'WGTOT_ISBA'
+        if r is None:
             return ''
+        else:
+            layer = int(r.group()) - 1
 
         if not hasattr(self, 'soilgrid'):
             self.getsoilgrid()

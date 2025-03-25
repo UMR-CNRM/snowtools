@@ -16,7 +16,6 @@ import copy
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-import matplotlib.cm as cm
 from matplotlib import collections
 import matplotlib.colors as colors
 from matplotlib.colors import BoundaryNorm
@@ -141,14 +140,14 @@ def saisonProfil(ax, dz, value, time, colormap='viridis', value_min=None, value_
         vmin = -0.5
         vmax = 14.5
     elif colormap == 'echelle_log':
-        cmap = cm.gray_r
+        cmap = plt.get_cmap('gray_r')
         vmin = max(minval, 0.0000000001)
         vmax = min(max(0.000000001, maxval), 1)
         norm = colors.LogNorm(vmin=vmin, vmax=vmax)
         cmap.set_under('#fff2fd')
         extend = 'min'
     elif colormap == 'echelle_log_sahara':
-        cmap = cm.gist_heat_r
+        cmap = plt.get_cmap('gist_heat_r')
         vmin = max(minval, 0.0000000001)
         vmax = min(max(0.000000001, maxval), 1)
         value = value.clip(vmin / 2, vmax)
@@ -156,7 +155,7 @@ def saisonProfil(ax, dz, value, time, colormap='viridis', value_min=None, value_
         cmap.set_under('#fff2fd')
         extend = 'min'
     elif colormap == 'ratio_cisaillement':
-        cmap = cm.get_cmap('viridis')
+        cmap = plt.get_cmap('viridis')
         vmin = 0
         vmax = 20
         norm = colors.Normalize(vmin=vmin, vmax=vmax, clip=True)
@@ -195,7 +194,7 @@ def saisonProfil(ax, dz, value, time, colormap='viridis', value_min=None, value_
         norm = colors.Normalize(vmin=vmin, vmax=vmax)
         value = np.clip(value, vmin, vmax)
         # value[value < vmin if ~np.isnan(vmin) else False] = vmin
-        cmap = copy.copy(cm.get_cmap('RdBu_r'))
+        cmap = copy.copy(plt.get_cmap('RdBu_r'))
         cmap.set_over((0.32, 0.0, 0.097))
         extend = 'max'
     elif colormap == 'lwc':
@@ -208,12 +207,12 @@ def saisonProfil(ax, dz, value, time, colormap='viridis', value_min=None, value_
         # value[value > vmax if ~np.isnan(vmax) else False] = vmax
         value = np.clip(value, vmin, vmax)
         value[value == 0] = -1
-        cmap = copy.copy(cm.get_cmap('viridis'))
+        cmap = copy.copy(plt.get_cmap('viridis'))
         cmap.set_under('#fff2fd')
         extend = 'min'
     else:
         norm = None
-        cmap = cm.get_cmap(colormap)
+        cmap = plt.get_cmap(colormap)
         vmax = maxval
         vmin = minval
 

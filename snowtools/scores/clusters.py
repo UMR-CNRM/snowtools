@@ -12,6 +12,28 @@ Collection of functions to clusterize data.
 import xarray as xr
 import numpy as np
 
+# Dict to convert the numeral code to the name of the 10 most common
+# landforms types defined by https://doi.org/10.1016/j.geomorph.2012.11.005
+geomorpho_map = dict([
+    (1, 'Flat'),
+    (2, 'Peak (summit)'),
+    (3, 'Ridge'),
+    (4, 'Shoulder'),
+    (5, 'Spur (Convex)'),
+    (6, 'Slope'),
+    (7, 'Hollow (concave)'),
+    (8, 'Footslope'),
+    (9, 'Valley'),
+    (10, 'Pit'),
+])
+
+
+label_map = dict(
+    elevation   = 'Elevation (m)',
+    uncertainty = 'Uncertainty',
+    landforms   = 'Geomorphon',
+)
+
 
 def per_alt(data, ls_alt, mnt):
     """
@@ -40,6 +62,36 @@ def per_alt(data, ls_alt, mnt):
     return data_per_alt
 
 
+def by_slices(data, criterion, thresholds):
+    """
+      Groups data into slices according to a given criterion
+
+      Args:
+          data      : The input dataset containing the data to be grouped.
+          criterion : Dataarray of the variable to use for clustering
+          threshold : A list of values defining the boundaries of each slice.
+                  Values should be in ascending order.
+
+      Returns:
+          A new dataset with the same variables as the input data, but with an
+          additional dimension 'middle_slices' corresponding to the mean value of each
+          slice. Each element along this dimension represents data within a
+          specific range.
+
+      THIS METHOD SHOULD BE USED INSTEAD OF THE "per_alt" ONE
+    """
+    thresholds = [float(value) for value in thresholds]
+    out    = []
+    labels = []
+    for i in range(len(thresholds) - 1):
+        out.append(data.where((criterion >= thresholds[i]) & (criterion < thresholds[i + 1])))
+        labels.append(f'{thresholds[i]}-{thresholds[i+1]}')
+    out = xr.concat(out, dim='slices')
+    out['slices'] = labels
+
+    return out
+
+
 def per_landform_types(data, landform, test_coords=False):
     """
     Groups data into landform types as defined by https://doi.org/10.1016/j.geomorph.2012.11.00
@@ -63,55 +115,19 @@ def per_landform_types(data, landform, test_coords=False):
             for m in landform.coords.keys():
                 try:
                     np.intersect1d(landform[m], data[k])
-                except:
+                except:  # TODO : Precise which Exceptions are concerned ?
                     print('No common coordinate between '+str(m)+' and '+str(k))
                 else:
                     print('Common coordinate found between '+str(m)+' and '+str(k))
 
     ii = 0
     for i in np.unique(landform.values)[~np.isnan(np.unique(landform.values))]:
+        mask = xr.where(landform.values == i, data, np.nan)
+        mask = mask.assign_coords({'landforms': geomorpho_map[i]}).expand_dims('landforms')
         if ii == 0:
-            dd = xr.where(landform.values == i, data, np.nan).assign_coords({'landforms': geomorpho_switch(i)
-                                                                             }).expand_dims('landforms')
-            ii = ii+1
+            dd = mask
+            ii = ii + 1
         else:
-            dd = xr.concat((dd,
-                            xr.where(landform.values == i, data, np.nan).assign_coords({'landforms': geomorpho_switch(i)
-                                                                                        }).expand_dims('landforms')),
-                           'landforms')
+            dd = xr.concat((dd, mask), 'landforms')
 
     return dd
-
-
-def geomorpho_switch(i):
-    """
-    Function to convert the numeral code to the name of the 10 most common
-    landforms types defined by https://doi.org/10.1016/j.geomorph.2012.11.005
-
-    :param i: the numeral landform code
-
-    :returns:
-        The litteral translation of the code according to paper convention.
-    :rtype: str
-    """
-
-    if i == 1.:
-        return 'Flat'
-    if i == 2.:
-        return 'Peak (summit)'
-    if i == 3.:
-        return 'Ridge'
-    if i == 4.:
-        return 'Shoulder'
-    if i == 5.:
-        return 'Spur (Convex)'
-    if i == 6.:
-        return 'Slope'
-    if i == 7.:
-        return 'Hollow (concave)'
-    if i == 8.:
-        return 'Footslope'
-    if i == 9.:
-        return 'Valley'
-    if i == 10.:
-        return 'Pit'

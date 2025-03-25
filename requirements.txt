@@ -2,7 +2,7 @@
 bronx
 matplotlib
 netCDF4
-numpy
+numpy>=1.8
 scipy
 python-dateutil
 pyproj

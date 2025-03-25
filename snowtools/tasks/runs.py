@@ -358,8 +358,9 @@ class interpolpro(interpolrun):
 
 
 class massifextractforcing(massifrun):
-    def __init__(self, datebegin, dateend, forcingpath, diroutput, workdir=None, geolist=[]):
-        super(massifextractforcing, self).__init__(datebegin, dateend, forcingpath, diroutput, workdir= workdir, geolist= geolist)
+    def __init__(self, datebegin, dateend, forcingpath, diroutput, workdir=None, geolist=[], s2mcommand=None):
+        super(massifextractforcing, self).__init__(datebegin, dateend, forcingpath, diroutput, workdir= workdir,
+                                                   geolist=geolist, s2mcommand=s2mcommand)
         self.onlyextractforcing = True
 
     def save_output(self):
@@ -373,8 +374,9 @@ class massifextractforcing(massifrun):
 
 
 class massifextractpro(massifrun):
-    def __init__(self, datebegin, dateend, forcingpath, diroutput, workdir=None, geolist=[]):
-        super(massifextractpro, self).__init__(datebegin, dateend, forcingpath, diroutput, workdir= workdir, geolist= geolist)
+    def __init__(self, datebegin, dateend, forcingpath, diroutput, workdir=None, geolist=[], s2mcommand=None):
+        super(massifextractpro, self).__init__(datebegin, dateend, forcingpath, diroutput, workdir= workdir,
+                                               geolist=geolist, s2mcommand=s2mcommand)
         self.onlyextractforcing = True
 
     def get_forcing(self):
