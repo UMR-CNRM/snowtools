@@ -9,6 +9,7 @@ based on code from Ange Haddjeri thesis.
 
 import epygram
 import footprints
+import xarray
 from footprints import proxy as fpx
 import matplotlib
 import matplotlib.pyplot as plt
@@ -19,7 +20,7 @@ from scipy.signal import convolve2d
 from scipy.stats import pearsonr
 from abc import ABC, abstractmethod
 from snowtools.scores.list_scores import SpatialScoreFile
-from snowtools.utils.prosimu import prosimu_xr
+from snowtools.utils.prosimu import prosimu_auto
 from snowtools.plots.scores.moran_scatter import MoranScatter, MoranScatterColored, get_moran_palette
 # from snowtools.plots.maps.cartopy import MoranMap
 
@@ -516,8 +517,16 @@ class ProVsPleiade(SpatialScores):
         """
         outdict = {}
         for exp, path in zip(list_of_experiments, filenames):
-            fc_ds = prosimu_xr(path)
-            outdict[exp] = fc_ds.dataset[varname]
+            fc = prosimu_auto(path)
+            var = fc.read(varname)
+            dims = fc.getdimvar(varname)
+            # print(dims)
+            time = fc.readtime()
+            coords = [fc.read(dim) for dim in dims if dim != 'time']
+            fc_ds = xarray.DataArray(var, coords=[time, *coords], dims=dims)
+            # print(fc_ds)
+            outdict[exp] = fc_ds
+            fc.close()
         return outdict
 
     def get_obs_data(self, filename, varname):
@@ -527,9 +536,13 @@ class ProVsPleiade(SpatialScores):
         :param filename: file name
         :return: xarray data array
         """
-        obs_ds = prosimu_xr(filename)
-        obs_ds.dataset = obs_ds.dataset.rename(x="xx", y="yy")
-        return obs_ds.dataset[varname]
+        obs_ds = xarray.open_dataset(filename)
+        obs_ds = obs_ds.rename(x="xx", y="yy")
+        # print(obs_ds[varname])
+        # necessary in order not to pass a dask array to further computations
+        obs = xarray.DataArray(obs_ds[varname])
+        # print(obs)
+        return obs #obs_ds[varname]
 
         #     time = obs_ds.readtime()
         #     snowheight = obs_ds.read_var('DSN_T_ISBA')
@@ -544,6 +557,7 @@ class ProVsPleiade(SpatialScores):
         (Pleiade image or alike) are available.
         """
         for exp in self.fc_data.keys():
+            # print(exp)
             self.fc_data[exp] = self.fc_data[exp].sel(time=self.obs_data['time'], xx=self.obs_data['xx'],
                                                       yy=self.obs_data['yy'])
 
