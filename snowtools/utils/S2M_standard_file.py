@@ -161,8 +161,7 @@ class _StandardNC(netCDF4.Dataset):
         return lat, lon, alti
 
     def xy2latlon(self, x, y):
-        # TO BE CHANGED
-        from pyproj import Proj, transform
+        from pyproj import Transformer
         from bronx.datagrip.namelist import NamelistParser
         n = NamelistParser()
         N = n.parse("OPTIONS.nam")
@@ -182,12 +181,10 @@ class _StandardNC(netCDF4.Dataset):
         else:
             raise UnknownGridTypeException(gridtype, "")
 
-        inProj = Proj(epsg)
-        outProj = Proj('epsg:4326')
+        transformer = Transformer.from_crs(epsg, 'epsg:4326')
 
         XX, YY = np.meshgrid(np.array(x), np.array(y))
-
-        lon, lat = transform(inProj, outProj, XX, YY)
+        lon, lat = transformer.transform(XX, YY)
 
         return lat, lon
 
