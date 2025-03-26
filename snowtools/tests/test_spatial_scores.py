@@ -26,18 +26,18 @@ TEST_SIM_DIR = os.path.join(TESTBASE_DIR, "PRO")
 TIME_CRPS = False
 PROJ_avail = False
 
-class TestInstall(unittest.TestCase):
-
-    def test_paths(self):
-        # str = snowtools.__path__
-        # str = os.system('ls $PWD')
-        # raise Warning(str)
-        # str = os.system('ls $PWD/snowtools/')
-        # print(str)
-        # raise Warning(str)
-        str = os.system('ls $PWD/snowtools/scores/')
-        print(str)
-        raise Warning(str)
+# class TestInstall(unittest.TestCase):
+#
+#     def test_paths(self):
+#         # str = snowtools.__path__
+#         # str = os.system('ls $PWD')
+#         # raise Warning(str)
+#         # str = os.system('ls $PWD/snowtools/')
+#         # print(str)
+#         # raise Warning(str)
+#         str = os.system('ls $PWD/snowtools/scores/')
+#         print(str)
+#         raise Warning(str)
 
     def test_create_file(self):
         sf = SpatialScoreFile(['bli', 'bla'], [1, 3, 5], [2.], [1.])
