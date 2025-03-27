@@ -82,6 +82,12 @@ def plot_ange(dataplot, var, figname=None, xmin=0, xmax=7, yaxis='Elevation Band
                 if hatch[i]:
                     item.set_hatch(r'\\\\')
     else:
+        # For detailed plots
+        # tmp = dataplot.copy()
+        # tmp['Error (m)'] = tmp['Error (m)'].where((tmp['experiment'] == 'SAFRAN') | (tmp['experiment'] == 'AROME') |
+        #                     (tmp['experiment'] == 'ANTILOPE'))
+        # tmp = tmp[(tmp['Elevation (m)'] == '3000.0-3500.0') | (tmp['Elevation (m)'] == '2500.0-3000.0') |
+        #           (tmp['Elevation (m)'] == '2000.0-2500.0')]
         myplot = sns.boxplot(
             data         = dataplot,  # data
             y            = yaxis,  # y-axis
