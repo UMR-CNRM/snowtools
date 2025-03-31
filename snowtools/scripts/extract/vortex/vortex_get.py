@@ -12,13 +12,13 @@ WORK IN PROGRESS
 """
 
 kind_map = dict(
-    FORCING       = 'MeteorologicalForcing',
-    PRO           = 'SnowpackSimulation',
-    DIAG          = 'SnowpackSimulation',  # TODO : à modifier après ré-organisation des resources Vortex
-    # SODA          = ['PART', 'BG_CORR', 'IMASK', 'ALPHA'],
-    SODA          = ['PART', 'IMASK', 'ALPHA'],
-    Precipitation = 'Precipitation',
-    SnowObs       = 'SnowObservations',
+    FORCING          = 'MeteorologicalForcing',
+    PRO              = 'SnowpackSimulation',
+    DIAG             = 'SnowpackSimulation',  # TODO : à modifier après ré-organisation des resources Vortex
+    # SODA             = ['PART', 'BG_CORR', 'IMASK', 'ALPHA'],
+    SODA             = ['PART', 'IMASK', 'ALPHA'],
+    Precipitation    = 'Precipitation',
+    SnowObservations = 'SnowObservations',
 )
 
 block_map = dict(
@@ -33,9 +33,10 @@ block_map = dict(
 )
 
 model_map = dict(
-    DIAG    = 'postproc',
-    SODA    = 'soda',
-    PRO     = 'surfex',
+    DIAG             = 'postproc',
+    SODA             = 'soda',
+    PRO              = 'surfex',
+    SnowObservations = 'surfex',  # TODO : A modifier dans Vortex --> model doit être optionnel et non défini
 )
 
 # toolbox.defaults(
@@ -146,7 +147,7 @@ def clean(description):
 
 def get(**description):
     default.update(description)
-    description = footprint_kitchen(**default)
+    description = _footprints_kitchen(**default)
 
     if description['dateassim'] is not None:
         # Verrue pour gérer les ressources issues de l'assimilation (plusieurs fichiers par saison)
@@ -173,13 +174,13 @@ def get(**description):
 
 def put(**description):
     default.update(description)
-    description = footprint_kitchen(**default)
+    description = _footprints_kitchen(**default)
     rh = toolbox.output(**description)
 
     return rh
 
 
-def footprint_kitchen(**kw):
+def _footprints_kitchen(**kw):
     """
     This is the method used to set default footprint values
     """
@@ -190,7 +191,7 @@ def footprint_kitchen(**kw):
     if kw['block'] is None:
         kw['block'] = block_map[kw['kind']]
 
-    if 'member' in kw.keys():
+    if 'member' in kw.keys() and kw['member'] is not None:
         if isinstance(kw['member'], int):
             kw['member'] = [kw['member']]
         elif ':' in kw['member']:

@@ -144,7 +144,7 @@ def parse_command_line():
                         help='Geometry of the simulation(s) / observation')
 
     parser.add_argument('-k', '--kind', type=str, default='PRO',
-                        choices=['FORCING', 'PRO', 'snow_obs_date', 'Precipitation'],
+                        choices=['FORCING', 'PRO', 'SnowObservations', 'Precipitation'],
                         help='kind file containing the variable(s) to plot')
 
     parser.add_argument('-m', '--ensemble', action='store', default=None,
