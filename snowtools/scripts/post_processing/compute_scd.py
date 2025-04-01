@@ -18,7 +18,7 @@ import numpy as np
 import xarray as xr
 import argparse
 
-import snowtools.tools.xarray_preprocess as xrp
+import snowtools.tools.xarray_backend  # Ignore "import not used" error --> load `CENBackendEntrypoint` api
 
 
 def parse_command_line():
@@ -233,7 +233,6 @@ def execute(subdir='', threshold=0.2):
     """
     proname = os.path.join(subdir, 'PRO.nc')
     pro = xr.open_dataset(proname, decode_times=False, engine='netcdf4')
-    pro = xrp.preprocess(pro)
     pro = decode_time(pro)
     diag = lcscd(pro.DSN_T_ISBA.resample(time='1D').mean(), threshold)
 

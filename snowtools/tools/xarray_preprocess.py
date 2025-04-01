@@ -1,20 +1,27 @@
-import xarray as xr
+
+import xarray
 
 # TODO : Use xarray's accessors instead ?
 # --> https://docs.xarray.dev/en/stable/internals/extending-xarray.html
+
+# Use "pipe" function ?
+# https://docs.xarray.dev/en/v0.8.2/generated/xarray.Dataset.pipe.html
+
+# Use backends ?
+# https://docs.xarray.dev/en/v0.8.2/generated/xarray.Dataset.pipe.html
 
 dimension_map = {'x': 'xx', 'y': 'yy', 'lat': 'yy', 'latitude': 'yy', 'lon': 'xx', 'longitude': 'xx'}
 variables_map = {'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf', 'band_data': 'ZS'}
 
 
-def preprocess(ds, decode_time=True, mapping=dict()):
+def preprocess(ds, mapping=dict()):
     """
     * ds: xarray.Dataset or Dataarray
     * decode_time: Need to decode time manually
     * mapping: User-defined variable re-naming
     """
-    if decode_time:
-        ds = decode_time_dimension(ds)
+    # if decode_time:
+    #     ds = decode_time_dimension(ds)
     ds = update_varname(ds, mapping)
     ds = update_dimname(ds, mapping)
     ds = transpose(ds)
@@ -26,7 +33,7 @@ def update_varname(ds, mapping):
     # the same session
     tmpmap = variables_map.copy()
     tmpmap.update(mapping)
-    if isinstance(ds, xr.core.dataarray.DataArray):
+    if isinstance(ds, xarray.core.dataarray.DataArray):
         if ds.name in tmpmap:
             ds = ds.rename(tmpmap[ds.name])
     else:
@@ -47,11 +54,11 @@ def update_dimname(ds, mapping):
 
 def decode_time_dimension(ds):
     """
-    Manually decode time variable since other variables can not be decoded automatically
+    Manually decode time variable if other variables can not be decoded automatically
     """
     if 'time' in list(ds.coords):
-        time = xr.Dataset({"time": ds.time})
-        time = xr.decode_cf(time)
+        time = xarray.Dataset({"time": ds.time})
+        time = xarray.decode_cf(time)
         ds['time'] = time.time
     return ds
 

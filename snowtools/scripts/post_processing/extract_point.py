@@ -11,7 +11,8 @@ import numpy as np
 import xarray as xr
 import argparse
 
-import snowtools.tools.xarray_preprocess as xrp
+import snowtools.tools.xarray_backend  # Ignore "import not used" error --> load `CENBackendEntrypoint` api
+
 try:
     # Retrieve input files with Vortex
     from snowtools.scripts.extract.vortex import vortexIO as io
@@ -19,6 +20,7 @@ except ImportError:
     print('Vortex not available, input files must be defined by their absolute path')
 
 from snowtools.scripts.post_processing import common_dict
+
 
 members_map = common_dict.members_map
 product_map = common_dict.product_map
@@ -113,7 +115,6 @@ def execute(point, member, datebegin=None, datesassim=None):
             pro = xr.open_mfdataset([f'mb{mb:03d}/{proname}' for mb in member],
                     concat_dim='member', combine='nested', chunks='auto',)
                     # preprocess=lambda ds: ds[['DSN_T_ISBA']])  # Very slow
-            pro = xrp.preprocess(pro)
             pro = pro.chunk({"xx": 10, 'yy': 10})
             if 'ZS' in pro.keys():
                 pro     = pro[['DSN_T_ISBA', 'ZS']]

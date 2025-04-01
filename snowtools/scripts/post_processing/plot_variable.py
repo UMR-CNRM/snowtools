@@ -50,7 +50,8 @@ from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.scripts.extract.vortex import vortex_get
 from snowtools.plots.maps import plot2D
 from snowtools.tools import common_tools as ct
-import snowtools.tools.xarray_preprocess as xrp
+import snowtools.tools.xarray_backend  # Ignore "import not used" error --> load `CENBackendEntrypoint` api
+
 
 label_map = dict(
     Snowf         = 'Snowfall accumulation',
@@ -310,7 +311,7 @@ def plot_var(ds, variables, xpid, date=None, dateassim=None, mask=True):
         # Add relief
         # dem = xr.open_dataset('TARGET_RELIEF.tif', engine='rasterio')  # Target domain's Digital Elevation Model
         dem = xr.open_dataset('TARGET_RELIEF.tif')  # Target domain's Digital Elevation Model
-        dem = xrp.preprocess(dem, decode_time=False)
+        # dem = xrp.preprocess(dem, decode_time=False)
         dem = dem.squeeze()
 
         if ensemble == 'all':
@@ -483,7 +484,7 @@ if __name__ == '__main__':
             ds = xr.open_dataset(filename)
         else:
             ds = xr.open_dataset(f'mb{int(ensemble):03d}/{filename}')
-        ds = xrp.preprocess(ds)
+        #ds = xrp.preprocess(ds)
 
         if domain is not None:
             dom = domain_map[domain]

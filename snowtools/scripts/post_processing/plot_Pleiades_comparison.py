@@ -21,7 +21,7 @@ import argparse
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.scores import clusters
 from snowtools.plots.boxplots import violinplot
-import snowtools.tools.xarray_preprocess as xrp
+import snowtools.tools.xarray_backend  # Ignore "import not used" error --> load `CENBackendEntrypoint` api
 
 from snowtools.scripts.post_processing import common_dict
 
@@ -77,7 +77,6 @@ def parse_command_line():
 def violin_plot(xpids, obs, var, date, mask=True, member=None):
 
     mnt = xr.open_dataarray('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
-    mnt = xrp.preprocess(mnt, decode_time=False)
 
     # Construct *dataplot* DataFrame with elevation bands as index and 1 column per product
     filtered_obs = clusters.by_slices(obs[var], mnt, elevation_bands)
@@ -127,7 +126,6 @@ def filter_simu(xpid, obs, subdir, var, date, mnt):
 
     proname = os.path.join(subdir, f'PRO_{xpid}.nc')
     simu = xr.open_dataset(proname, decode_times=False)
-    simu = xrp.preprocess(simu)
     simu = simu.sel({'xx': obs.xx.data, 'yy': obs.yy.data, 'time': pd.to_datetime(date[:8], format='%Y%m%d')})
     simu = xr.where(~obs.isnull(), simu, np.nan)
     filtered_simu = clusters.slices(simu[var], mnt, elevation_bands)
@@ -170,7 +168,6 @@ if __name__ == '__main__':
     obsname = f'PLEIADES_{date}.nc'
     io.get_snow_obs_date(xpid=xpid_map[datebegin], geometry=geometry_map[datebegin], date=date, vapp='Pleiades', filename=obsname)
     obs = xr.open_dataset(obsname)
-    obs = xrp.preprocess(obs.DSN_T_ISBA, decode_time=False)
 
     # b) Domain's DEM
     io.get_const(uenv, 'relief', geometry, filename='TARGET_RELIEF.nc', gvar='RELIEF_GRANDESROUSSES250M_L93')

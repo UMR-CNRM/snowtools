@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import xskillscore  # Requires an installation : pip install xskillscore
 # https://xskillscore.readthedocs.io/en/stable/api/xskillscore.crps_ensemble.html
 
-import snowtools.tools.xarray_preprocess as xrp
+import snowtools.tools.xarray_backend  # Ignore "import not used" error --> load `CENBackendEntrypoint` api
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.plots.maps import plot2D
 from snowtools.scores import clusters
@@ -42,6 +42,15 @@ vmax_map    = common_dict.vmax_map
 
 # Retrieve dictionnary to map clustering type to a proper label
 label_map = clusters.label_map
+
+
+#def guess_engine(store_spec):
+#    return 'cen'
+
+
+# WARNING : this changes the default behavior of ALL xarray `open_*` methods in this script
+# by forcing the use of the custom `CENBackendEntrypoint` api.
+#plugins.guess_engine = guess_engine
 
 
 def parse_command_line():
@@ -103,10 +112,10 @@ def execute():
     # Open observation file as DataArray
     try:
         obs = xr.open_dataarray(obsname)
-        obs = xrp.preprocess(obs, decode_time=False)
+        #obs = xrp.preprocess(obs, decode_time=False)
     except ValueError:
         obs = xr.open_dataset(obsname)
-        obs = xrp.preprocess(obs, decode_time=False, mapping={'Band1': 'HTN', 'DEP': 'HTN', 'DSN_T_ISBA': 'HTN'})
+        #obs = xrp.preprocess(obs, decode_time=False, mapping={'Band1': 'HTN', 'DEP': 'HTN', 'DSN_T_ISBA': 'HTN'})
         obs = obs['HTN']
 
     # b) DEM
@@ -118,7 +127,7 @@ def execute():
 
     # Get Domain's DEM in case ZS not in simulation file
     mnt = xr.open_dataset('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
-    mnt = xrp.preprocess(mnt, decode_time=False)
+    #mnt = xrp.preprocess(mnt, decode_time=False)
     mnt = mnt['ZS']
 
     if clustering == 'elevation':
@@ -128,20 +137,21 @@ def execute():
                 gvar='ANTILOPE_ERROR_ALP1KM_RS27')
         ds = xr.open_dataset('Estimated_error.nc')
         ds = ct.proj_array(ds)
-        ds = xrp.preprocess(ds, decode_time=False)
+        #ds = xrp.preprocess(ds, decode_time=False)
         mask = ds.Uncertainty
     elif clustering == 'ratio':
         io.get_const(uenv=uenv, kind='geomorph', geometry=geometry, filename='Estimated_ratio.nc',
                 gvar='ANTILOPE_RATIO_ALP1KM_RS27')
         ds = xr.open_dataset('Estimated_ratio.nc')
         ds = ct.proj_array(ds)
-        ds = xrp.preprocess(ds, decode_time=False)
+        #ds = xrp.preprocess(ds, decode_time=False)
         mask = ds.Ratio
     elif clustering == 'landforms':
         # Get Domain's DEM in case ZS not in simulation file
         io.get_const(uenv=uenv, kind='geomorph', geometry=geometry, filename='GEOMORPH.nc')
         geomorph = xr.open_dataset('GEOMORPH.nc')  # Target domain's Geomorphons mask
-        mask = xrp.preprocess(geomorph.Band1, decode_time=False)
+        mask = geomorph.Band1
+        #mask = xrp.preprocess(geomorph.Band1, decode_time=False)
     mask = mask.interp({'xx': obs.xx, 'yy': obs.yy}, method='nearest')
     mask = mask.rename(clustering)
 
@@ -303,7 +313,7 @@ def read_simu(xpid, members, date):
 
     # Open all simulation PRO files at once
     simu = xr.open_mfdataset(listfiles, concat_dim='member', combine='nested').compute()
-    simu = xrp.preprocess(simu, decode_time=False)
+    #simu = xrp.preprocess(simu, decode_time=False)
     # <xarray.Dataset>
     # Dimensions:     (time: 3, xx: 143, yy: 101, member: 16)
     # Coordinates:
