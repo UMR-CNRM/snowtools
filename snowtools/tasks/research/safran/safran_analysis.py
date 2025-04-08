@@ -556,7 +556,7 @@ class Safran(Task, S2MTaskMixIn):
             # NB : La date des executions est fixée à J-1 car l'analyse SAFRAN va de J-1 6h à J 6H
             self.sh.title('Toolbox algo tb22 = SAFRANE')
             tb22 = tbalgo1 = toolbox.algo(
-                engine         = 's2m',
+                engine         = 'blind',
                 kind           = 'safrane',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
@@ -587,7 +587,7 @@ class Safran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox algo tb23_b = SYPLUIE')
             tb23 = tbalgo3 = toolbox.algo(
-                engine         = 's2m',
+                engine         = 'blind',
                 kind           = 'sypluie',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
@@ -603,7 +603,7 @@ class Safran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox algo tb24 = SYVAPR')
             tb24 = tbalgo4 = toolbox.algo(
-                engine         = 's2m',
+                engine         = 'blind',
                 kind           = 'syvapr',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
@@ -619,7 +619,7 @@ class Safran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox algo tb25 = SYVAFI')
             tb25 = tbalgo5 = toolbox.algo(
-                engine         = 's2m',
+                engine         = 'blind',
                 kind           = 'syvafi',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
@@ -635,7 +635,7 @@ class Safran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox algo tb26 = SYTIST')
             tb26 = tbalgo6 = toolbox.algo(
-                engine         = 's2m',
+                engine         = 'blind',
                 kind           = 'sytist',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
