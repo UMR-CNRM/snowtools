@@ -2,7 +2,6 @@
 import xarray
 from xarray.backends import BackendEntrypoint
 from xarray.backends.common import BACKEND_ENTRYPOINTS
-import xarray.backends.plugins as plugins
 
 import snowtools.tools.xarray_preprocess as xrp
 
@@ -21,7 +20,8 @@ def guess_engine(store_spec):
 
 # WARNING : the following line changes the default behavior of ALL subsequent xarray `open_*`
 # by forcing the use of the custom `CENBackendEntrypoint` entry point.
-plugins.guess_engine = guess_engine
+# import xarray.backends.plugins as plugins
+# plugins.guess_engine = guess_engine
 
 
 class CENBackendEntrypoint(BackendEntrypoint):
