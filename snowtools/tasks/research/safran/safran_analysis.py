@@ -660,7 +660,7 @@ class Safran(Task, S2MTaskMixIn):
                 dateend = min(datebegin.replace(year=datebegin.year + 1), self.conf.dateend)
                 y1 = datebegin.year
                 y2 = dateend.year
-                rundir = '{0:d}{1:d}'.format(y1, y2)
+                rundir = f'{datebegin.ymd6h}_{dateend.ymd6h}'
 
                 if 'source_app' not in self.conf:
                     if rundate >= Date(2002, 8, 1):
