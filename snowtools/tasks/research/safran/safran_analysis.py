@@ -57,14 +57,13 @@ class Safran(Task, S2MTaskMixIn):
                             username = self.conf.guess_path.split(':')[0].split('@')[0]
                         else:
                             username = None
-                        y1 = datebegin.year
-                        y2 = dateend.year
                         actual_path = self.conf.guess_path.split(':')[1].rstrip('/')
 
                         self.sh.title('Toolbox input tb01')
                         tb01 = toolbox.input(
                             role           = 'Ebauche',
-                            local          = '{0:s}/{0:s}.tar'.format(rundir),
+                            #local          = '{0:s}/{0:s}.tar'.format(rundir),
+                            local          = f'{datebegin.ymd6h}_{dateend.ymd6h}/{rundir}.tar',
                             remote         = '{0:s}/{1:s}.tar'.format(actual_path, season),
                             hostname       = hostname,
                             username       = username,
@@ -85,7 +84,8 @@ class Safran(Task, S2MTaskMixIn):
                         tb01 = toolbox.input(
                             role           = 'Ebauche',
                             remote         = '{0:s}/P[date:yymdh]'.format(self.conf.guess_path),
-                            local          = '{0:s}/P[date:yymdh]'.format(rundir),
+                            #local          = '{0:s}/P[date:yymdh]'.format(rundir),
+                            local          = f'{datebegin.ymd6h}_{dateend.ymd6h}/P[date:yymdh]',
                             kind           = 'guess',
                             model          = 'safran',
                             cutoff         = 'assimilation',
@@ -103,7 +103,7 @@ class Safran(Task, S2MTaskMixIn):
                         tb01 = toolbox.input(
                             alternate      = 'Ebauche',
                             remote         = '{0:s}/{1:s}/P[date:yymdh]'.format(self.conf.guess_path, season),
-                            local          = '{0:s}/P[date:yymdh]'.format(rundir),
+                            local          = f'{datebegin.ymd6h}_{dateend.ymd6h}/P[date:yymdh]',
                             kind           = 'guess',
                             model          = 'safran',
                             cutoff         = 'assimilation',
@@ -120,7 +120,8 @@ class Safran(Task, S2MTaskMixIn):
                         tb01 = toolbox.input(
                             alternate      = 'Ebauche',
                             remote         = '{0:s}/E[date:yymdh]'.format(self.conf.guess_path),
-                            local          = '{0:s}/P[date:yymdh]'.format(rundir),
+                            #local          = '{0:s}/P[date:yymdh]'.format(rundir),
+                            local          = f'{datebegin.ymd6h}_{dateend.ymd6h}/P[date:yymdh]',
                             kind           = 'guess',
                             model          = 'safran',
                             cutoff         = 'assimilation',
@@ -137,7 +138,8 @@ class Safran(Task, S2MTaskMixIn):
                         tb01 = toolbox.input(
                             alternate      = 'Ebauche',
                             remote         = '{0:s}/{1:s}/E[date:yymdh]'.format(self.conf.guess_path, season),
-                            local          = '{0:s}/P[date:yymdh]'.format(rundir),
+                            #local          = '{0:s}/P[date:yymdh]'.format(rundir),
+                            local          = f'{datebegin.ymd6h}_{dateend.ymd6h}/P[date:yymdh]',
                             kind           = 'guess',
                             model          = 'safran',
                             cutoff         = 'assimilation',
@@ -150,7 +152,7 @@ class Safran(Task, S2MTaskMixIn):
                         print(t.prompt, 'tb01_d =', tb01)
                         print()
 
-                    self.input_obs(t, datebegin, rundir, season)
+                    self.input_obs(t, datebegin, dateend, rundir, season)
 
             else:
 
@@ -216,7 +218,8 @@ class Safran(Task, S2MTaskMixIn):
                             self.sh.title('Toolbox input tb01 - ' + dateend.ymdh)
                             tb01_c = toolbox.input(
                                 role           = 'Ebauche',
-                                local          = '{0:d}/p{2:s}.tar'.format(rundir, next_season),
+                                #local          = '{0:d}/p{2:s}.tar'.format(rundir, next_season),
+                                local          = f'{datebegin.ymd6h}_{dateend::ymd6h}/p{next_season}.tar',
                                 remote         = '/home/vernaym/s2m/[geometry]/{0:s}/p{1:s}.tar'.format(
                                     self.conf.guess_block, next_season),
                                 hostname       = 'hendrix.meteo.fr',
@@ -270,7 +273,8 @@ class Safran(Task, S2MTaskMixIn):
                         self.sh.title('Toolbox input tb01 - ' + datebegin.ymdh)
                         tb01 = toolbox.input(
                             role           = 'Ebauche',
-                            local          = '{0:s}/p{1:s}.tar'.format(rundir, season),
+                            #local          = '{0:s}/p{1:s}.tar'.format(rundir, season),
+                            local          = f'{datebegin.ymd6h}_{dateend.ymd6h}/p{season}.tar',
                             remote         = '/home/vernaym/s2m/[geometry]/{0:s}/p{1:s}.tar'.format(
                                 self.conf.guess_block, season),
                             hostname       = 'hendrix.meteo.fr',
@@ -288,7 +292,7 @@ class Safran(Task, S2MTaskMixIn):
                         print(t.prompt, 'tb01 =', tb01)
                         print()
 
-                self.input_obs(t, datebegin, rundir, season)
+                self.input_obs(t, datebegin, dateend, rundir, season)
 
             self.sh.title('Toolbox input tb07')
             tb07 = toolbox.input(
@@ -740,7 +744,7 @@ class Safran(Task, S2MTaskMixIn):
 #                               END OF THE TASK
 #########################################################################################
 
-    def input_obs(self, t, datebegin, rundir, season):
+    def input_obs(self, t, datebegin, dateend, rundir, season):
 
         # TODO : Gérer le fait de ne pas prendre le fichier 2 de 6h le 01/08
         self.sh.title('Toolbox input tb02 - ' + datebegin.ymdh)
@@ -751,7 +755,8 @@ class Safran(Task, S2MTaskMixIn):
             kind           = 'observations',
             nativefmt      = 'ascii',
             unknownflow    = True,
-            local          = '{0:s}/rs{1:s}.tar'.format(rundir, season),
+            local          = '{0:s}_{1:s}/rs{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
+            #local          = '{0:s}/rs{1:s}.tar'.format(rundir, season),
             remote         = '/home/vernaym/s2m/[geometry]/obs/rs{0:s}.tar'.format(season),
             hostname       = 'hendrix.meteo.fr',
             tube           = 'ftp',
@@ -769,7 +774,8 @@ class Safran(Task, S2MTaskMixIn):
             kind           = 'observations',
             nativefmt      = 'ascii',
             unknownflow    = True,
-            local          = '{0:s}/n{1:s}.tar'.format(rundir, season),
+            local          = '{0:s}_{1:s}/rs{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
+            #local          = '{0:s}/n{1:s}.tar'.format(rundir, season),
             remote         = '/home/vernaym/s2m/[geometry]/obs/n{0:s}.tar'.format(season),
             hostname       = 'hendrix.meteo.fr',
             tube           = 'ftp',
