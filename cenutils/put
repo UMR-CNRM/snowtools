@@ -264,7 +264,7 @@ then
       --exclude-glob examples/ \
       --exclude-glob sphinx/ \
       --exclude STRATO \
-      --exclude-glob NO_TRANSFER* \
+      --exclude-glob NO_TRANSFER*/ \
       $folder_orig $folder_dest"
     retcode=$?
     set -e
