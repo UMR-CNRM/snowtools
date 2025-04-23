@@ -40,7 +40,7 @@ class Safran(Task, S2MTaskMixIn):
         if len(list_dates) > 40:
             raise ExecutionError("Too many years")
 
-        if 'early-fetch' in self.steps or 'fetch' in self.steps:
+        if 'early-fetch' in self.steps:
 
             if 'guess_path' in self.conf:
                 for rundate in list_dates:
@@ -537,6 +537,10 @@ class Safran(Task, S2MTaskMixIn):
             print()
 
             executables = self.executables(t)
+
+        if 'fetch' in self.steps:
+
+            pass
 
         if 'compute' in self.steps:
 
