@@ -184,7 +184,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                         role           = 'SnowpackInit',
                         local          = 'PREP.nc',
                         block          = 'prep',
-                        experiment     = self.conf.xpid,
+                        experiment     = self.conf.prepid,
                         geometry       = self.conf.geometry,
                         datevalidity   = datebegin,
                         date           = rundate_prep,
@@ -207,7 +207,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             alternate      = 'SnowpackInit',
                             local          = 'PREP.nc',
                             block          = 'prep',
-                            experiment     = self.conf.xpid,
+                            experiment     = self.conf.prepid,
                             geometry       = self.conf.geometry,
                             datevalidity   = datebegin,
                             date           = alternate_prep[0],
@@ -230,7 +230,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             role           = 'SnowpackInit',
                             local          = 'mb[member]/PREP.nc',
                             block          = 'prep',
-                            experiment     = self.conf.xpid,
+                            experiment     = self.conf.prepid,
                             geometry       = self.conf.geometry,
                             datevalidity   = datebegin,
                             date           = rundate_prep,
@@ -253,7 +253,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                                 alternate      = 'SnowpackInit',
                                 local          = 'mb[member]/PREP.nc',
                                 block          = 'prep',
-                                experiment     = self.conf.xpid,
+                                experiment     = self.conf.prepid,
                                 geometry       = self.conf.geometry,
                                 datevalidity   = datebegin,
                                 date           = alternate_prep[0],
@@ -276,7 +276,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                         role           = 'SnowpackInit',
                         local          = 'mb[member]/PREP.nc',
                         block          = 'prep',
-                        experiment     = self.conf.xpid,
+                        experiment     = self.conf.prepid,
                         geometry       = self.conf.geometry,
                         datevalidity   = datebegin,
                         date           = rundate_prep,
@@ -302,7 +302,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             alternate      = 'SnowpackInit',
                             local          = 'mb[member]/PREP.nc',
                             block          = 'prep',
-                            experiment     = self.conf.xpid,
+                            experiment     = self.conf.prepid,
                             geometry       = self.conf.geometry,
                             datevalidity   = datebegin,
                             date           = alternate_prep[0],
@@ -326,7 +326,7 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                             role           = 'SnowpackInitSecours',
                             local          = 'PREP.nc',
                             block          = 'prep',
-                            experiment     = self.conf.xpid,
+                            experiment     = self.conf.prepid,
                             geometry       = self.conf.geometry,
                             datevalidity   = datebegin,
                             date           = rundate_prep,
@@ -492,8 +492,6 @@ class Ensemble_Surfex_Task(S2MTaskMixIn, Task):
                 print(t.prompt, 'tb11 =', tb11)
                 print()
 
-        if 'late-backup' in self.steps:
-            if True:  # In order to have an indentation and facilitate the comparison with IGA Task
                 if source_safran != 's2m' or exceptional_save_forcing:
                     self.sh.title('Toolbox output tb10')
                     tb10 = toolbox.output(
