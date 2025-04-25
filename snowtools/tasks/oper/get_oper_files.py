@@ -12,6 +12,7 @@ from collections import defaultdict
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 from bronx.stdtypes.date import Date, daterange, tomorrow, today
+
 from snowtools.utils.dates import check_and_convert_date
 import footprints
 
@@ -23,7 +24,7 @@ class configdev(object):
     rundate = Date(2018, 10, 26, 3)    # Run date can be at 3TU, 6TU, 9TU
     previ = False  # False for analysis, True for forecast
     xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
-    list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']  # List of extracted geometries
+    list_geometry = ['alp', 'pyr', 'cor']  # List of extracted geometries
 
     list_members = footprints.util.rangex(0, 36)  # 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
     firstday = False
@@ -78,17 +79,18 @@ def parse_options(arguments):
                       action="store_true", dest="snow", default=False,
                       help="Extract snowpack model output files")
 
+    parser.add_option("--hydro",
+                      action="store_true", dest="hydro", default=False,
+                      help="Extract hydrological post-processing")
+
     (options, args) = parser.parse_args(arguments)  # @UnusedVariable
 
     return options
 
 
-class configcommand(config):
+class _configcommand(object):
 
     def __init__(self, options):
-        if options.dev:
-            for key, var in vars(configdev()).items():
-                setattr(self, key, var)
 
         self.rundate = check_and_convert_date(options.datebegin)
 
@@ -103,13 +105,16 @@ class configcommand(config):
 
         self.meteo = options.meteo
         self.snow = options.snow
+        self.hydro = options.hydro
         self.previ = options.previ
 
 
-class configcommanddev(configdev):
+class configcommand(_configcommand, config):
+    pass
 
-    def __init__(self):
-        self.rundate = check_and_convert_date(options.datebegin)
+
+class configcommanddev(_configcommand, configdev):
+    pass
 
 
 class S2MExtractor(S2MTaskMixIn):
@@ -145,8 +150,12 @@ class S2MExtractor(S2MTaskMixIn):
             snow_outputs = self.get_snow()
         else:
             snow_outputs = None
+        if self.conf.hydro:
+            hydro_outputs = self.get_hydro()
+        else:
+            hydro_outputs = None
 
-        return meteo_outputs, snow_outputs
+        return meteo_outputs, snow_outputs, hydro_outputs
 
     def get_meteo(self):
 
@@ -375,12 +384,40 @@ class FutureS2MExtractor(S2MExtractor):
 
         return self.get_std(tb02)
 
+    def get_hydro(self):
+        import cen
+
+        tb03 = toolbox.input(
+            role           = 'hydro',
+            vapp           = 's2m',
+            vconf          = '[geometry::area]',
+            local          = '[geometry::area]/[date:ymdh]/HYDRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment     = self.conf.xpid,
+            block          = 'hydro',
+            geometry       = self.conf.list_geometry,
+            date           = self.conf.rundate,
+            datebegin      = self.datebegin if self.conf.previ else '[dateend]/-PT24H',
+            dateend        = self.dateend if self.conf.previ else list(daterange(tomorrow(base=self.datebegin), self.dateend)),
+            nativefmt      = 'netcdf',
+            kind           = 'SnowpackSimulation',
+            model          = 'postproc',
+            namespace      = 'vortex.multi.fr',
+            cutoff         = 'production' if self.conf.previ else 'assimilation',
+            intent         = 'in',
+            fatal          = False
+
+        )
+
+        return self.get_std(tb03)
+
 
 if __name__ == "__main__":
 
     options = parse_options(sys.argv)
 
-    S2ME = FutureS2MExtractor(conf=configcommand(options))
+    config_from_command = configcommanddev(options) if options.dev else configcommand(options)
+
+    S2ME = FutureS2MExtractor(conf=config_from_command)
 
     datebegin = check_and_convert_date(options.datebegin)
     dateend = check_and_convert_date(options.dateend)
@@ -391,5 +428,6 @@ if __name__ == "__main__":
         S2ME.set_rundate(currentdate)
 
         import pprint
+
         pprint.pprint(S2ME.get())
         currentdate = tomorrow(currentdate)
