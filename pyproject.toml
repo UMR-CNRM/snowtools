@@ -6,9 +6,9 @@ requires = ['meson-python','numpy>=1.24.4', 'ninja', 'wheel']
 name = "snowtools"
 version = "2.0.2"
 dependencies = [
-    'matplotlib',
+    'matplotlib<3.10', # with matplotlib 3.10 there is an error removing an AnnotationBbox (cartopy maps)
     'netCDF4',
-    'numpy>=1.8',
+    'numpy>=1.8, <2.0', # less recent matplotlib versions like 3.5 do not work with numpy>=2.0
     'scipy',
     'python-dateutil',
     'pyproj',
@@ -20,7 +20,8 @@ dependencies = [
     'cartopy',
     'bronx',
     'footprints',
-    'epygram'
+    'epygram',
+    'packaging'
 ]
 requires-python = ">=3.6"
 readme = "README.md"
@@ -54,3 +55,11 @@ Repository = "https://github.com/UMR-CNRM/snowtools"
 s2m = 'snowtools.tasks.s2m_command:main'
 proplotter = 'snowtools.plots.stratiprofile.proplotter:main'
 procompare = 'snowtools.plots.stratiprofile.procompare:main'
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+testpaths = [
+    "tests",
+]

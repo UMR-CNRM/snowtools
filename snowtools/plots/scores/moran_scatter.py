@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib
 from matplotlib import cm
 import matplotlib.pyplot as plt
+from packaging.version import Version
 from snowtools.plots.abstracts.figures import Mplfigure
 
 
@@ -23,15 +24,21 @@ def get_moran_palette():
     :rtype: matplotlib.colors.LinearSegmentedColormap
     """
     try:
-        mypalette = cm.get_cmap('moran_colors')
+        if Version(matplotlib.__version__) < Version("3.6"):
+            mypalette = matplotlib.cm.get_cmap('moran_colors')
+        else:
+            mypalette = plt.get_cmap('moran_colors')
     except ValueError:
-        palette = plt.get_cmap('Paired').copy()
+        if Version(matplotlib.__version__) < Version("3.6"):
+            palette = matplotlib.cm.get_cmap('Paired')
+        else:
+            palette = plt.get_cmap('Paired').copy()
         mypalette = matplotlib.colors.LinearSegmentedColormap.from_list('moran_colors',
                                                                         colors=['lightgrey'] + [palette.colors[i] for i in [5, 0, 1, 4]],
                                                                         N=5)
         # mypalette.set_under(color='lightgrey')
-        if matplotlib.__version__ >= '3.5':
-            matplotlib.colormap.register(cmap=mypalette) # for matplotlib >= 3.5
+        if Version(matplotlib.__version__) >= Version("3.5"):
+            matplotlib.colormaps.register(cmap=mypalette) # for matplotlib >= 3.5
         else:
             cm.register_cmap(cmap=mypalette) # for matplotlib 3.4
 
