@@ -772,13 +772,13 @@ class Safran(Task, S2MTaskMixIn):
 
         self.sh.title('Toolbox input tb03 - ' + datebegin.ymdh)
         tb03 = toolbox.input(
-            role           = 'Observations',
+            role           = 'Nebulosite',
             part           = 'all',
             geometry       = self.conf.vconf,
             kind           = 'observations',
             nativefmt      = 'ascii',
             unknownflow    = True,
-            local          = '{0:s}_{1:s}/rs{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
+            local          = '{0:s}_{1:s}/n{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
             #local          = '{0:s}/n{1:s}.tar'.format(rundir, season),
             remote         = '/home/vernaym/s2m/[geometry]/obs/n{0:s}.tar'.format(season),
             hostname       = 'hendrix.meteo.fr',
