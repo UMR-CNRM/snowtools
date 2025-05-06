@@ -44,7 +44,7 @@ class PerfDiag(Mplfigure):
        :align: center
 
     """
-    default_colors = cm.get_cmap('Paired')  #: default colors for the different experiments
+    default_colors = plt.get_cmap('Paired')  #: default colors for the different experiments
 
     def __init__(self, figsize=(9, 8), csi_cmap='Purples', title="Performance diagram"):
         """
