@@ -277,6 +277,7 @@ You may need to run
 
 .. code-block:: bash
 
+    eval `ssh-agent -s`
     ssh-add ~/.ssh/github
 
 on your computer in order to define the key location on your computer.
