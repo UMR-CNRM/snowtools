@@ -919,6 +919,8 @@ class _Map_massifs(Mplfigure):
         """
         Remove tables, text and optionally the infobox and the colorbar from the map.
 
+        Note that with matplotlib >=3.10 there is an error removing an AnnotationBbox (infobox)
+
         :param rmcbar: if True, colorbar is removed.
         :param rminfobox: if True, the infobox is removed.
         """
@@ -1473,6 +1475,8 @@ class _MultiMap(_Map_massifs):
     def reset_massifs(self, rmcbar=True, rminfobox=True, **kwargs):
         """
         Remove tables, text and optionally the infobox and the colorbar from the maps.
+
+        Note that with matplotlib >=3.10 there is an error removing an AnnotationBbox (infobox)
 
         :param rmcbar: if True, colorbar is removed.
         :param rminfobox: if True, the infobox is removed.
