@@ -2,7 +2,7 @@
 ##
 
 # You can set these variables from the command line.
-SPHINXOPTS    =
+SPHINXOPTS    = -W
 SPHINXBUILD   = python3 -m sphinx
 SOURCEDIR     = source
 BUILDDIR      = build
@@ -71,19 +71,19 @@ s2mresearch: $(SCRIPTHELPSRCDIR)/tasks/s2m_command.py
 #	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 html: scripthelp s2mresearch  ## Generate HTML documentation
-	$(SPHINXBUILD) -b html $(SPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/html
+	$(SPHINXBUILD) -b html $(SOURCEDIR) $(BUILDDIR)/html $(SPHINXOPTS)
 	@echo "Build done in $(BUILDDIR)/html"
 
 pdf: scripthelp s2mresearch   ## Generate a PDF documentation (with pdflatex)
-	$(SPHINXBUILD) -M latexpdf $(SPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/pdf
+	$(SPHINXBUILD) -M latexpdf $(SOURCEDIR) $(BUILDDIR)/pdf $(SPHINXOPTS)
 	@echo "Build done in $(BUILDDIR)/pdf"
 
 latex: scripthelp s2mresearch ## Generate a latex documentation (do not compile it)
-	$(SPHINXBUILD) -b latex $(SPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/latex
+	$(SPHINXBUILD) -b latex $(SOURCEDIR) $(BUILDDIR)/latex $(SPHINXOPTS)
 	@echo "Build done in $(BUILDDIR)/latex"
 
 man: scripthelp s2mresearch   ## Generate a unix man format documentation
-	$(SPHINXBUILD) -b man $(SPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/man
+	$(SPHINXBUILD) -b man $(SOURCEDIR) $(BUILDDIR)/man $(SPHINXOPTS)
 	@echo "Build done in $(BUILDDIR)/man"
 
 #######################################################################

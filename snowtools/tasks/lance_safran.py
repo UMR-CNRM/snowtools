@@ -11,9 +11,13 @@ import os
 import sys
 import argparse
 
-from snowtools.tasks.vortex_kitchen import vortex_kitchen
+from snowtools.tasks.vortex_kitchen import Vortex_conf_file
 from snowtools.tasks.s2m_launcher import _S2M_command
 from snowtools.utils.dates import check_and_convert_date
+from snowtools.tools.execute import callSystemOrDie
+from snowtools.utils.resources import InstallException
+
+from snowtools.DATA import SNOWTOOLS_DIR
 
 
 cutoff_map = dict(
@@ -51,7 +55,7 @@ class Safran_command(_S2M_command):
         parser.add_argument('--safran', help='Launch safran task', action='store_true', default=True)
         parser.add_argument('--prepsaf', help='Launch prepsaf task', action='store_true', default=False)
         parser.add_argument('--ensemble', help='Explicitly specify an ensemble simulation', action='store_true')
-        parser.add_argument('--ntasks', help='Explicitly specify the number of tasks by node (not used in general)', default=None)
+        parser.add_argument('--ntasks', help='Explicitly specify the number of tasks by node (not used in general)', default=80)
 
         args = parser.parse_args()
 
@@ -77,10 +81,64 @@ class Safran_command(_S2M_command):
 
         if 'workdir' not in self.options:
             if 'WORKDIR' in list(os.environ.keys()):
-                self.options.workdir = os.environ['WORKDIR']
+                self.options.workdir = os.path.join(os.environ['WORKDIR'], self.options.xpid, 'safran',
+                        self.options.region)
             else:
-                self.options.workdir = "."
-        vortex_kitchen(self.options)
+                self.options.workdir = os.path.join(self.options.xpid, 'safran', self.options.region)
+
+        # vortex_kitchen(self.options)
+        self.create_env()
+        self.init_job_task_safran()
+        self.make_conf_file()
+        mkjob = self.mkjob_command()
+        print("Run command: " + mkjob + "\n")
+        callSystemOrDie(mkjob)
+
+    def create_env(self):
+
+        if not os.path.isdir(self.options.workdir):
+            os.makedirs(self.options.workdir)
+        os.chdir(self.options.workdir)
+
+        if not os.path.islink("snowtools"):
+            os.symlink(SNOWTOOLS_DIR, "snowtools")
+
+        if not os.path.islink("tasks"):
+            os.symlink(SNOWTOOLS_DIR + "/tasks/research/safran", "tasks")
+
+        for directory in ["conf", "jobs"]:
+            if not os.path.isdir(directory):
+                os.mkdir(directory)
+
+        if not os.path.islink("vortex"):
+            if "VORTEX" not in list(os.environ.keys()):
+                raise InstallException("VORTEX environment variable must be defined towards a valid vortex install.")
+            else:
+                os.symlink(os.environ["VORTEX"], "vortex")
+
+    def init_job_task_safran(self):
+        self.jobname = "ana_saf"
+        self.reftask = "safran_analysis"
+        self.period = " rundate=" + self.options.datedeb.strftime("%Y%m%d") + \
+            " datebegin=" + self.options.datedeb.strftime("%Y%m%d") + \
+            " dateend=" + self.options.datefin.strftime("%Y%m%d")
+        self.options.nnodes = 1
+        self.confcomplement = ""
+
+    def make_conf_file(self):
+        confdir = os.path.join(self.options.workdir, 'conf')
+        self.options.vconf = self.options.region
+        fullname = os.path.join(confdir, f'safran_{self.options.vconf}.ini')
+        self.conf_file = Vortex_conf_file(self.options, None, fullname)
+        self.conf_file.create_conf(jobname=self.jobname)
+        self.conf_file.write_file()
+        self.conf_file.close()
+
+    def mkjob_command(self):
+
+        return "vortex/bin/mkjob.py -j name=" + self.jobname + " task=" + self.reftask + \
+               " profile=rd-belenos-mt jobassistant=cen " + self.period +\
+               " time=" + self.options.walltime + " nnodes=" + str(self.options.nnodes) + self.confcomplement
 
 
 if __name__ == "__main__":

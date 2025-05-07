@@ -465,6 +465,11 @@ class StandardCROCUS(_StandardNC):
                                                             self.soil_long_names(varname)
 
 
+class StandardHYDRO(_StandardNC):
+    def get_coord(self):
+        pass
+
+
 class LCCProjectionType(object):
 
     """
@@ -603,7 +608,7 @@ class LCCProjectionType(object):
         kwargs_geom['dimensions'] = dimensions
         kwargs_geom['vcoordinate'] = vcoordinate
         geometry = geometryclass(**kwargs_geom)
-        
+
         return geometry
 
 

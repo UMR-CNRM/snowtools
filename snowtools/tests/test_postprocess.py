@@ -26,10 +26,7 @@ class TestEnsPP(TestWithTempFolderWithLog):
 
     @unittest.skipIf(SKIP, 'Test files not available')
     def test_ens_pp_algo(self):
-        ens = EnsemblePostproc(Ensemble(), ['SWE_1DY_ISBA'], self.filelist,
-                               Date('2017122906'),
-                               Date('2018010606'),
-                               outdir = self.diroutput)
+        ens = EnsemblePostproc(['SWE_1DY_ISBA'], self.filelist, outdir = self.diroutput)
         # do postprocessing
         ens.postprocess()
 
