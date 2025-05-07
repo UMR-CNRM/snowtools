@@ -24,7 +24,7 @@ python_sources = [
     'test_s2m.py',
     'test_script_compareSimuPostObs.py',
     'test_script_create_forcing.py',
-    'test_spatial_scores.py',
+    'future_test_spatial_scores.py',
 ]
 
 py.install_sources(
