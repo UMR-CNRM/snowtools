@@ -186,7 +186,11 @@ editable install with ``pip``.
 
 
 1. Clone the git repository on your computer.
+"""""""""""""""""""""""""""""""""""""""""""""
+(see method 1)
+
 2. create or choose a virtual environment.
+"""""""""""""""""""""""""""""""""""""""""""
 To create a virtual environment you can run:
 
 .. code-block:: bash
@@ -207,29 +211,36 @@ Or create a virtual environment within the PyCharm IDE:
 
     Next to the Interpreter line clic "add interpreter" -> "add local interpreter"
 
-    choose "virtuelenv environment" from the left-hand list,
-    on the right-hand side of the dialog
+    choose
+    environment: new environment
+    type: "virtuelenv"
+    python base:
     choose the location and a base interpreter
     (typically the system python install /usr/bin/python3.XX)
+    location: choose the location and name of your environment
 
-    Hint: tick the "inherit global site-packages" check box
+    Hint: tick the "inherit packages from base interpreter" check box
     for the --system-site-packages option.
 
     clic the "Ok" button.
 
 3. source the virtual environment
+"""""""""""""""""""""""""""""""""
 
 .. code-block:: bash
+
     source ./<pathtovenv>/nameofmyenv/bin/activate
 
 now the commandline prompt should start with ``(nameofmyenv)``
 and thus look like ``(nameofmyenv) username@host:~$`` for example.
 
-4. install build dependencies ``meson-python``, ``meson`` and ``ninja`` inside the virtual environment.
+4. install build dependencies
+""""""""""""""""""""""""""""""
+``numpy>=1.24.4``, ``meson-python`` and ``ninja`` inside the virtual environment.
 
 .. code-block:: bash
 
-        pip install meson-python meson ninja
+        pip install numpy>=1.24.4 meson-python ninja
 
 .. note::
 
@@ -243,7 +254,9 @@ and thus look like ``(nameofmyenv) username@host:~$`` for example.
     the extension module at the next import in a new interpreter instance.
     https://mesonbuild.com/meson-python/how-to-guides/editable-installs.html
 
-5. install snowtools: inside the snowtools directory do:
+5. install snowtools:
+"""""""""""""""""""""""
+inside the snowtools directory do:
 
 .. code-block:: bash
 
