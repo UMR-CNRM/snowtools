@@ -39,3 +39,4 @@ Classes or functions
    Classes to plot maps <plots-maps>
    Temporal plots and comparison tools <plots-temporal>
    Functions to plot snow stratigraphy <plots-strati>
+   Classes to plot score diagrams <plots-scores.rst>

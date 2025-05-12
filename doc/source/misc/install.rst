@@ -20,6 +20,7 @@ The whole project requires at least python 3.6 and the following packages:
 * ``python-dateutil``
 * ``pyproj``
 * ``shapely``
+* ``pyshp``
 
 Some specific parts of the code (including test) require to have also:
 
@@ -31,6 +32,10 @@ Some specific parts of the code (including test) require to have also:
 * ``GDAL``
 * ``rpy2``
 * ``cartopy``
+* ``bronx``
+* ``footprints``
+* ``epygram``
+* ``packaging``
 * The vortex toolbox for run on Meteo-France super-computers
 
 The detailed list of dependencies could be find in the file ``requirements.txt``.
@@ -38,31 +43,25 @@ The detailed list of dependencies could be find in the file ``requirements.txt``
 .. note::
    On Meteo-France computers, you do not have take care of dependecies that are already on your professional computer.
 
-Install dependencies
-^^^^^^^^^^^^^^^^^^^^
-We encourage you to install dependencies through system packages, for instance with the following command line on Debian or Ubuntu 22.04 system:
 
-.. code-block:: bash
-   
-   sudo apt install python3-numpy python3-netcdf4 \
-                    python3-matplotlib python3-dateutil python3-pyproj \
-                    python3-shapely python3-willow python3-scipy \
-                    python3-psycopg2 python3-pandas python3-xarray \
-                    libgdal-dev python3-gdal python3-rpy2
-
-Install ``bronx`` package with ``pip install bronx`` (no distribution package for this python package).
-
-Install with pip
-^^^^^^^^^^^^^^^^
+Install dependencies with pip
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Most of the packages can easily be installed in a virtual environment with ``pip`` (for instance with ``pip install -r requirements.txt``). This is useless if you plan to then install snowtools with  ``pip``.
 
 Only GDAL python binding need to be installed manually to be installed consistently with your installed ``libgdal-dev`` version. Please install before the system packages ``ligdal`` and ``libgdal-dev`` (or similar) and run: ``pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="$(gdal-config --cflags)"``.
 
+.. _sec-install_users:
+
 Snowtools install for users
 ---------------------------
 
-If you are only a user of snowtools, download the data with git: ``git clone https://github.com/UMR-CNRM/snowtools.git``.
-To install, you can simply go into the snowtools directory and then run  ``pip install -e .`` (possibly in a python virtual environment).
+If you are only a user of snowtools, you can download the data with git: ``git clone https://github.com/UMR-CNRM/snowtools.git``. Then go into the snowtools directory and run
+
+.. code-block::
+
+    pip install .
+
+(possibly in a python virtual environment).
 
 
 .. _sec-install_dev:
@@ -70,13 +69,38 @@ To install, you can simply go into the snowtools directory and then run  ``pip i
 Snowtools install for developers
 --------------------------------
 
+Method 1
+^^^^^^^^
+
+Install dependencies
+""""""""""""""""""""
+
+We encourage you to install dependencies through system packages, for instance with the following command line on Debian or Ubuntu 22.04 system:
+
+.. code-block:: bash
+
+   sudo apt install python3-numpy python3-netcdf4 \
+                    python3-matplotlib python3-dateutil python3-pyproj \
+                    python3-shapely python3-willow python3-scipy \
+                    python3-psycopg2 python3-pandas python3-xarray \
+                    libgdal-dev python3-gdal python3-rpy2
+
+Install ``bronx``, ``footprints`` and ``epygram`` packages with ``pip install bronx`` etc.
+(no distribution package for this python packages).
+
+
+Clone the git repository on your computer.
+"""""""""""""""""""""""""""""""""""""""""""
+
 Make sure you have a github account, linked to snowtools repository (send a mail to crocus at meteo dot fr) and that you have a SSH key attached to your github account [#footnote1]_. You can then clone the git repository on your computer with :
 
 .. code-block:: bash
 
    git clone git@github.com:UMR-CNRM/snowtools.git
 
-To install, you have to add the install folder to your ``PYTHONPATH``. This can be done by adding these tho following lines to your ``.profile`` (or ``.bash-profile`` if the first one does not exist):
+
+You have to add the install folder to your ``PYTHONPATH``. This can be done by adding these tho following lines to your ``.bashrc`` or ``.bash-profile``:
+
 
 .. code-block:: bash
 
@@ -92,6 +116,121 @@ It is also recommended to create useful aliases for s2m command and proreader gr
    alias procompare="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/procompare.py"
    alias put="$SNOWTOOLS_CEN/cenutils/put"
 
+Install compiled extension for crps calculation
+""""""""""""""""""""""""""""""""""""""""""""""""""
+change to the snowtools/scores directory
+run
+
+.. code-block:: bash
+
+    make ubuntu
+
+for local machines and servers with access to PyPI.
+
+run
+
+.. code-block:: bash
+
+    make belenos
+
+if used on supercomputers.
+
+
+Method 2
+^^^^^^^^
+
+editable install with ``pip``.
+
+.. note::
+
+    If using this method make sure **not** to have
+    your snowtools directory in your PYTHONPATH.
+    So do not mix with method 1.
+
+
+1. Clone the git repository on your computer.
+"""""""""""""""""""""""""""""""""""""""""""""
+(see method 1)
+
+2. create or choose a virtual environment.
+"""""""""""""""""""""""""""""""""""""""""""
+To create a virtual environment you can run:
+
+.. code-block:: bash
+
+    python -m venv nameofmyenv --system-site-packages
+
+where ``nameofmyenv`` is a freely chosen name for the environment
+and --system-site-packages makes the packages already installed on
+the system available inside the virtual environment.
+
+Or create a virtual environment within the PyCharm IDE:
+
+
+    File -> Settings
+
+    In settings go to
+    Project -> Python Interpreter
+
+    Next to the Interpreter line clic "add interpreter" -> "add local interpreter"
+
+    choose
+    environment: new environment
+    type: "virtuelenv"
+    python base:
+    choose the location and a base interpreter
+    (typically the system python install /usr/bin/python3.XX)
+    location: choose the location and name of your environment
+
+    Hint: tick the "inherit packages from base interpreter" check box
+    for the --system-site-packages option.
+
+    clic the "Ok" button.
+
+3. source the virtual environment
+"""""""""""""""""""""""""""""""""
+
+.. code-block:: bash
+
+    source ./<pathtovenv>/nameofmyenv/bin/activate
+
+now the commandline prompt should start with ``(nameofmyenv)``
+and thus look like ``(nameofmyenv) username@host:~$`` for example.
+
+4. install build dependencies
+""""""""""""""""""""""""""""""
+``numpy>=1.24.4``, ``meson-python`` and ``ninja`` inside the virtual environment.
+
+.. code-block:: bash
+
+        pip install numpy>=1.24.4 meson-python ninja
+
+.. note::
+
+    Snowtools contains a compiled extension module written in Fortran.
+    In order to render compiled extension modules editable similarly to ordinary python code,
+    they are compiled at import time in an editable install rather than during
+    installation in case of a classical install (:ref:`sec-install_users`).
+    This means that the build dependencies have to be available at runtime in
+    the virtual environment and not just temporarily during the install.
+    The advantage is, that edits in the Fortran code trigger the (partial) re-compilation of
+    the extension module at the next import in a new interpreter instance.
+    https://mesonbuild.com/meson-python/how-to-guides/editable-installs.html
+
+5. install snowtools:
+"""""""""""""""""""""""
+inside the snowtools directory do:
+
+.. code-block:: bash
+
+    pip install --no-build-isolation -e .
+
+.. note::
+
+    ``--no-build-isolation`` disables build isolation.
+    Disabling build isolation is necessary in order to be able to re-build extensions
+    at import time in editable installs. For ordinary installs build isolation is a desired feature.
+
 Optional installations
 ----------------------
 
@@ -102,7 +241,7 @@ Vortex package
 Only Météo-France users who need to either extract operational S2M files either to run their own experiments on the HPC system need to install the vortex package by following this link :ref:`install-vortex`
 
 
-Spatial interploator for SAFRAN
+Spatial interpolator for SAFRAN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **On Meteo-France super-computers**, a precompiled binary is provided in the CEN uenv environment. Therefore, this step is not required unless you need to modify the interpolation software.
@@ -130,6 +269,16 @@ Do absolutely never load netcdf module before running the code as this would loa
    ln -s Makefile_pc Makefile
    make
 
-At CEN, Netcdf with parallel support must be installed in /opt/netcdf4-parallel (ask Romain if not available)
+At CEN, Netcdf with parallel support must be installed in /opt/netcdf4-parallel
+(ask Cyril if not available)
 
 .. [#footnote1] To generate a new ssh key, go to your ``~/.ssh`` folder (create if it does not exist) and run ``ssh-keygen -t rsa -b 4096 -f github``. You will be asked for an optional password to protect your key. Once created, go to your `github account, section SSH keys <https://github.com/settings/keys>`_, click on "add a SSH key" and copy the content of the file ``~/.ssh/github.pub`` in the "key" field.
+You may need to run
+
+.. code-block:: bash
+
+    eval `ssh-agent -s`
+    ssh-add ~/.ssh/github
+
+on your computer in order to define the key location on your computer.
+

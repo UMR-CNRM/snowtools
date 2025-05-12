@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-'''
-Created on 8 march 2024
+"""
+Created on 8 March 2024
 
 @author: Vernay, Haddjeri
 
 Collection of functions to clusterize data.
-'''
+"""
 
 import xarray as xr
 import numpy as np
@@ -37,19 +37,20 @@ label_map = dict(
 
 def per_alt(data, ls_alt, mnt):
     """
-      Groups data into slices based on altitude ranges.
+    Groups data into slices based on altitude ranges.
 
-      Args:
-          data: The input dataset containing the data to be grouped.
-          ls_alt: A list of altitude values defining the boundaries of each slice.
+    :param data: The input dataset containing the data to be grouped.
+    :type data: xarray dataset
+    :param ls_alt: A list of altitude values defining the boundaries of each slice.
                   Values should be in ascending order.
-          mnt: The datavariable containing elevation values
+    :param mnt: The data variable containing elevation values
+    :type mnt: xarray data array
 
-      Returns:
-          A new dataset with the same variables as the input data, but with an
+    :returns: A new dataset with the same variables as the input data, but with an
           additional dimension 'middle_slices_ZS' corresponding to the mean altitude
           slices. Each element along this dimension represents data within a
           specific altitude range.
+    :rtype: xarray dataset
     """
     data_per_alt = []
     for i in range(0, len(ls_alt) - 1):
@@ -93,29 +94,31 @@ def by_slices(data, criterion, thresholds):
 
 def per_landform_types(data, landform, test_coords=False):
     """
-    Groups data into landform types as defined by https://doi.org/10.1016/j.geomorph.2012.11.005
+    Groups data into landform types as defined by https://doi.org/10.1016/j.geomorph.2012.11.00
 
-    Args:
-        data: The input dataset containing the data to be grouped.
-        landform: The DEM landform data array. SHOULD BE ON THE SAME GRID AS DATA AND COMPUTED BEFORE
+    :param data: The input dataset containing the data to be grouped.
+    :type data: xarray dataset
+    :param landform: The DEM landform data array. SHOULD BE ON THE SAME GRID AS DATA AND COMPUTED BEFORE
             (doc : http://intra.cnrm.meteo.fr/cen/snowtools/extra_documentation/Masks.html#geomorphons-masks)
-        test_coords: The grouping fail if landform and data are not on the same grid (does not share coordinates).
+    :type landform: xarray data array
+    :param test_coords: The grouping fail if landform and data are not on the same grid (does not share coordinates).
             This option test if common values exist between the two inputs.
+    :type test_coords: bool
 
-    Returns:
-        A new dataset with the same variables as the input data, but with an additional dimension and
+    :returns: A new dataset with the same variables as the input data, but with an additional dimension and
         coordinate named 'landforms' with value corresponding to each pixels respective landform type.
+    :rtype: xarray dataset
     """
-    if (test_coords):
+    if test_coords:
         print('Testing coordinates')
         for k in data.coords.keys():
             for m in landform.coords.keys():
                 try:
                     np.intersect1d(landform[m], data[k])
                 except:  # TODO : Precise which Exceptions are concerned ?
-                    print('No common coordinate between {m} and {k}')
+                    print('No common coordinate between '+str(m)+' and '+str(k))
                 else:
-                    print('Common coordinate found between {m} and {k}')
+                    print('Common coordinate found between '+str(m)+' and '+str(k))
 
     ii = 0
     for i in np.unique(landform.values)[~np.isnan(np.unique(landform.values))]:

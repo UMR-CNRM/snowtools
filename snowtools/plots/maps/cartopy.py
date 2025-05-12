@@ -20,6 +20,10 @@ Which cartopy version is based on which matplotlib version? (according to docume
 * cartopy 0.14 -> matplotlib 1.5.1
 * cartopy 0.13 -> matplotlib 1.4.3
 
+Other apparently working combinations:
+
+* cartopy 0.22.0 and matplotlib 3.6.3
+
 Usage :
 example :
 create a Map instance for the Alps. ``Map_alpes`` can take optional kwargs.
@@ -74,6 +78,7 @@ from cartopy import config
 # from shapely.geometry import Point
 
 from snowtools.plots.abstracts.figures import Mplfigure
+from snowtools.plots.scores.moran_scatter import get_moran_palette
 from snowtools.utils.infomassifs import infomassifs
 from snowtools.DATA import SNOWTOOLS_DIR, CARTOPY_DIR, LUSTRE_NOSAVE_USER_DIR
 
@@ -182,6 +187,41 @@ class MyCRS(ccrs.CRS):
                                                       projdict['lat_2']), globe=globe)
         else:
             pass
+
+
+class Map2DGrid(Mplfigure):
+
+    def __init__(self, projection, width=9, height=9, *args, **kwargs):
+        """
+        :param x: vector of x coordinates
+        :param y: vector of y coordinates
+        :param projection: map projection
+        :type projection: cartopy.crs
+        :param args:
+        :param kwargs:
+        """
+        self.height = height
+        self.width = width
+        self.fig = plt.figure(figsize=(self.width, self.height))
+        self.map = plt.axes(projection=projection)
+
+    def add_gridlines(self, crs):
+        """
+        add gridlines to the map
+        :param crs: map projection for the grid lines
+        :type crs: cartopy.crs
+        """
+        self.map.gridlines(crs=crs, draw_labels=True)
+
+
+class MoranMap(Map2DGrid):
+    @property
+    def palette(self):
+        return get_moran_palette()
+
+    @property
+    def norm(self):
+        return matplotlib.colors.Normalize(vmax=4, vmin=1)
 
 
 class _Map_massifs(Mplfigure):
@@ -879,6 +919,8 @@ class _Map_massifs(Mplfigure):
         """
         Remove tables, text and optionally the infobox and the colorbar from the map.
 
+        Note that with matplotlib >=3.10 there is an error removing an AnnotationBbox (infobox)
+
         :param rmcbar: if True, colorbar is removed.
         :param rminfobox: if True, the infobox is removed.
         """
@@ -1433,6 +1475,8 @@ class _MultiMap(_Map_massifs):
     def reset_massifs(self, rmcbar=True, rminfobox=True, **kwargs):
         """
         Remove tables, text and optionally the infobox and the colorbar from the maps.
+
+        Note that with matplotlib >=3.10 there is an error removing an AnnotationBbox (infobox)
 
         :param rmcbar: if True, colorbar is removed.
         :param rminfobox: if True, the infobox is removed.

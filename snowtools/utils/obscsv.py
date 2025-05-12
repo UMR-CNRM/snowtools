@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 
-'''
+"""
 Created on 29 oct. 2012
 
 @author: lafaysse
-'''
+"""
 
 import os
 import csv
@@ -19,21 +19,30 @@ from snowtools.utils.FileException import FileOpenException, FileNameException
 
 class multiplecsv(object):
     def __init__(self, listpath):
+        """
+        class for multiple csv files
+        :param listpath: list of paths to csv files
+        :type listpath: list
+        """
 
         self.__listpath = listpath
+        self._data = {}
         self.listcsv = []
         for path in listpath:
             self.listcsv.append(obscsv(path))
 
     def read(self):
+        """
+        read csv files
+        :return:
+        """
 
-        self._data = {}
         for csvobj in self.listcsv:
             csvfile = csvobj.theFile
             try:
                 cr = csv.reader(csvfile, delimiter=";")
             except Exception:
-                raise BaseException("cant't read correctly the file " + self.__path)
+                raise Exception("cant't read correctly the file " + csvobj.path)
 
             for row in cr:
 
@@ -49,13 +58,14 @@ class multiplecsv(object):
                         self._data[row[0]]["SNOWSWE"] = []
 
                     listdate = row[1].split("-")
-                    date = datetime.datetime(int(listdate[0]), int(listdate[1]), int(listdate[2]), int(listdate[3]), int(listdate[4]))
+                    date = datetime.datetime(int(listdate[0]), int(listdate[1]), int(listdate[2]),
+                                             int(listdate[3]), int(listdate[4]))
                     self._data[row[0]]["time"].append(date)
                     self._data[row[0]]["SNOWDEPTH"].append(float(row[2].replace(",", ".")))
                     if len(row) >= 4:
                         self._data[row[0]]["SNOWSWE"].append(float(row[3].replace(",", ".")))
                 else:
-                    print ("station ignorée :" + row[0])
+                    print("station ignorée :" + row[0])
 
         return True
 
@@ -64,9 +74,9 @@ class multiplecsv(object):
             if varname in self._data[station].keys():
                 return np.array(self._data[station][varname])
             else:
-                raise BaseException(varname + "is not a valid observed variable")
+                raise Exception(varname + "is not a valid observed variable")
         else:
-            raise BaseException(station + "is not a valid station")
+            raise Exception(station + "is not a valid station")
 
     def getListStations(self):
         #        return self._data.keys()
@@ -80,24 +90,32 @@ class multiplecsv(object):
 
 class obscsv(object):
     def __init__(self, path):
+        """
+        class for observation data in csv format
+        :param path: path to observation file
+        """
+        self.path = path
         # Vérification du nom du fichier
         if os.path.isfile(path):
             try:
                 self.theFile = open(path, "r")
-                self.__path = path
             except IOError:
                 raise FileOpenException(path)
         else:
             raise FileNameException(path)
+        self._data = {}
 
     def read(self, keysfromheader=False):
+        """
+
+        :param keysfromheader:
+        :return:
+        """
 
         try:
             cr = csv.reader(self.theFile, delimiter=";")
         except Exception:
-            raise BaseException("cant't read correctly the file " + self.__path)
-
-        self._data = {}
+            raise Exception("cant't read correctly the file " + self.path)
 
         firstline = True
         for row in cr:
@@ -123,7 +141,8 @@ class obscsv(object):
                         self._data[row[0]]["SNOWSWE"] = []
 
                 listdate = row[1].split("-")
-                date = datetime.datetime(int(listdate[0]), int(listdate[1]), int(listdate[2]), int(listdate[3]), int(listdate[4]))
+                date = datetime.datetime(int(listdate[0]), int(listdate[1]), int(listdate[2]),
+                                         int(listdate[3]), int(listdate[4]))
                 self._data[row[0]]["time"].append(date)
                 if keysfromheader:
                     for h, header in enumerate(headers[2:]):
@@ -133,7 +152,7 @@ class obscsv(object):
                     if len(row) >= 4:
                         self._data[row[0]]["SNOWSWE"].append(float(row[3].replace(",", ".")))
             else:
-                print ("station ignorée :" + row[0])
+                print("station ignorée :" + row[0])
 
         for station in self._data.keys():
             for varname in self._data[station].keys():
@@ -141,17 +160,26 @@ class obscsv(object):
         return True
 
     def get(self, station, varname):
+        """
+        get the data for a specific station and variable name
+        :param station: station number
+        :param varname: variable name
+        :return: data array for the given station and variable
+        """
         if station in self._data.keys():
             if varname in self._data[station].keys():
                 return self._data[station][varname]
             else:
-                raise BaseException(varname + "is not a valid observed variable")
+                raise Exception(varname + "is not a valid observed variable")
         else:
-            raise BaseException(station + "is not a valid station")
+            raise Exception(station + "is not a valid station")
 
     def getListStations(self):
         #        return self._data.keys()
         return sorted(self._data)
 
     def close(self):
+        """
+        close the file
+        """
         self.theFile.close()

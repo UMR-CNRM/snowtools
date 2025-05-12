@@ -202,6 +202,7 @@ then
         --exclude .git \
         --exclude .idea \
         --exclude .settings \
+        --exclude build \
         --exclude fail_test --exclude Manual_tests \
         --exclude /exe \
         --exclude "venv*" \
@@ -209,6 +210,7 @@ then
         --exclude ".*.swp" --exclude "*~" \
         --exclude "*.egg-info" --exclude "*.o" --exclude "*.bin" --exclude "*.exe" \
         --exclude "interpolation/*.mod" \
+        --exclude "interpolation/output1980" \
         --exclude "interpolation/interpol_*" \
         --exclude "src/dir_obj*" --exclude "exe_*" \
         --exclude 'profile_surfex' --exclude 'profile_surfex-LX*' \
@@ -280,5 +282,6 @@ if [ $retcode -eq 0 ]
 then
     echo -e "${GREEN}OK${STOPC}: Transfer successful."
 else
-    echo -e "${RED}ERROR${STOPC}: An error occured during code synchronization. Please refer to output log above. (Return code $retcode)"
+    echo -e "${RED}ERROR${STOPC}: An error occured during code synchronization.
+    Please refer to output log above. (Return code $retcode)"
 fi

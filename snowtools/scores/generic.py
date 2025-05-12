@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 Created on 19 juin 2018
 
 @author: cluzetb, adapted from R. Champavier Talagrand_rank class
-'''
+"""
 
 import random
 
@@ -11,7 +11,7 @@ import numpy as np
 
 
 def rankDiagram(ens, observations, isSorted = False, nbins = 36, printrank=False, param=None, titreFig=None, pathFig=None):
-    """"
+    """
     @author : B. Cluzet, june 2018
     generic CRPS computation from Cluzet first version, Lafaysse and Champavier talagrand function
     Champavier code would be a good source of inspiration for optimisation through pandas (avoiding the for loop)

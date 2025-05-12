@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 30 Aug. 2017
 
 :Authord:
     M. Lafaysse
 
 This module contains all file manipulations.
-'''
+"""
 
 import os
 import shutil
@@ -21,7 +21,7 @@ from snowtools.DATA import SNOWTOOLS_DIR, SNOWTOOLS_CEN
 
 def absolute_path(pathin):
     """
-    Convert a local path in a absolute path.
+    Convert a local path in an absolute path.
 
     The input may be a list of coma-separated paths
     """

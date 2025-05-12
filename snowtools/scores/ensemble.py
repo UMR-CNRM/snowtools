@@ -1,41 +1,60 @@
 # -*- coding: utf-8 -*-
-'''
-Created on 20 mars 2018
+"""
+Created on 20 March 2018
 
 @author: lafaysse
-'''
+"""
 
 import numpy as np
 from snowtools.utils.prosimu import prosimu
 
-ESMSnowMIP_dicvarnames = dict(snowdepth="snd_auto", snowswe="snw_auto", snowdepthman="snd_man", snowsweman="snw_man", tsurf="ts", albedo="albs")
+ESMSnowMIP_dicvarnames = dict(snowdepth="snd_auto", snowswe="snw_auto", snowdepthman="snd_man",
+                              snowsweman="snw_man", tsurf="ts", albedo="albs")
+"""
+dict mapping common variable names to ESMSnowMIP variable names
+"""
 ESMSnowMIP_alternate_varnames = dict(snd_auto="snd_can_auto")
+"""
+dict mapping ESMSnowMIP_alternate_varnames
+"""
 
-SURFEX_dicvarnames = dict(snowdepth="DSN_T_ISBA", snowswe="WSN_T_ISBA", snowdepthman="DSN_T_ISBA", snowsweman="WSN_T_ISBA", tsurf="TS_ISBA", albedo="ASN_ISBA")
+SURFEX_dicvarnames = dict(snowdepth="DSN_T_ISBA", snowswe="WSN_T_ISBA", snowdepthman="DSN_T_ISBA",
+                          snowsweman="WSN_T_ISBA", tsurf="TS_ISBA", albedo="ASN_ISBA")
+"""
+dict mapping common variable names to surfex variable names
+"""
 
 
 class EnsembleScores(object):
-    '''
+    """
     Ensemble scores
-    '''
+    """
 
     startwinter = 10
     endwinter = 6
 
     def __init__(self, timeObs, timeSim, obs, ensemble):
-        '''
-        Constructor
-        '''
+        """
+
+        :param timeObs:
+        :param timeSim:
+        :param obs: array of observations dimension : time
+        :param ensemble: array of forecasts dimensions (member, time)
+        """
         self.obsCommon = obs
         self.ensCommon = ensemble
 
     def CRPS(self):
-        # CRPS is computed from
-        # https://pypi.python.org/pypi/properscoring#downloads
+        """
+        CRPS is computed from
+        https://pypi.python.org/pypi/properscoring#downloads
+        :return: mean CRPS over the data period
+        :rtype: float
+        """
 
         # for each date, sort members (increasingly)
         # one line is not anymore one single member
-        ensCommon = np.sort(self.ensCommon, axis = 0)
+        ens_common = np.sort(self.ensCommon, axis=0)
         evenement = 0
         # compute the integral for each obs
         CRPSVector = np.ones(len(self.obsCommon))
@@ -49,10 +68,10 @@ class EnsembleScores(object):
             n = 0
 
             # Number of valid members at this date
-            valid = np.ma.masked_invalid(ensCommon[:, evenement])
+            valid = np.ma.masked_invalid(ens_common[:, evenement])
 
-            NValid = np.ma.count(valid)
-            if NValid > 0:
+            n_valid = np.ma.count(valid)
+            if n_valid > 0:
                 for prevision in valid.compressed():
                     """
                     if np.isnan(prevision):
@@ -74,7 +93,7 @@ class EnsembleScores(object):
                     else:
                         integrale += ((prevision - precPrevision) * (ensembleCDF - obsCDF) ** 2)
                     # add 1/Ndate to CDF ensemble
-                    ensembleCDF += 1. / float(NValid)
+                    ensembleCDF += 1. / float(n_valid)
                     precPrevision = prevision
                     n += 1
                 # if obs > all forecasts
@@ -92,12 +111,16 @@ class EnsembleScores(object):
         return CRPS
 
     def CRPS_decomp(self):
-        # BC implementing the Hersbach et al. formulation for decomposition.
-        # inspired on https://github.com/brankart/ensdam/blob/master/src/EnsScores/score_crps.F90
-        # aggregated assuming that realizations are independant.
-        ensCommon = np.sort(self.ensCommon, axis = 0)
+        """
+        BC implementing the Hersbach et al. formulation for decomposition.
+        inspired on https://github.com/brankart/ensdam/blob/master/src/EnsScores/score_crps.F90
+        aggregated assuming that realizations are independant.
+        :return: CRPS, Reliability, potential CRPS
+        """
 
-        nbmb = np.shape(ensCommon)[0]
+        ens_common = np.sort(self.ensCommon, axis=0)
+
+        nbmb = np.shape(ens_common)[0]
 
         ai = np.zeros((nbmb + 1,))
         bi = np.zeros((nbmb + 1,))
@@ -108,11 +131,11 @@ class EnsembleScores(object):
         for obs in self.obsCommon:
             if not np.ma.is_masked(obs):
                 # Number of valid members at this date
-                valid = np.ma.masked_invalid(ensCommon[:, evenement])
+                valid = np.ma.masked_invalid(ens_common[:, evenement])
                 ens = valid.compressed()
-                NValid = np.ma.count(valid)
+                n_valid = np.ma.count(valid)
 
-                if NValid > 0:
+                if n_valid > 0:
                     # obs smaller than all
                     if obs < ens[0]:
                         ai[0] += 0.
@@ -156,36 +179,55 @@ class EnsembleScores(object):
             gi_avg[nbmb] = ai_avg[nbmb] / (1. - oi_avg[nbmb])
         CRPS = np.nansum(ai_avg * pi ** 2 + bi_avg * (1. - pi)**2)
         Reli = np.nansum(gi_avg * (oi_avg - pi)**2)
-        Resol = np.nansum(gi_avg * oi_avg * (1. - oi_avg))
+        CRPS_pot = np.nansum(gi_avg * oi_avg * (1. - oi_avg))
 
-        return (CRPS, Reli, Resol)
+        return CRPS, Reli, CRPS_pot
 
+    @property
     def meanEnsemble(self):
-            # deal with only some members valid
-
+        """
+        ensemble mean, dealing with only some members valid
+        :return: ensemble mean for every date
+        """
         return np.ma.masked_invalid(self.ensCommon).mean(axis=0)
 
     def dispersionEnsemble(self):
         """
-        spread over all dates
+        calculate ensemble spread, the RMSE of the ensemble mean and the spread/skill relationship
+        :return: spread, RMSE of ensemble mean, spread/skill
         """
-        NbMembres = self.ensCommon.shape[0]
-
-        meanCommon = self.meanEnsemble()
-
         # bc 21/10/19 code optim
-        disp = np.sqrt(np.mean([np.mean((np.ma.masked_invalid(m) - meanCommon)**2) for m in self.ensCommon]))
-        rmseMean = np.sqrt(np.mean(np.square(meanCommon - self.obsCommon)))
+        disp = np.sqrt(np.mean([np.mean((np.ma.masked_invalid(m) - self.meanEnsemble)**2) for m in self.ensCommon]))
+        rmse_mean = np.sqrt(np.mean(np.square(self.meanEnsemble - self.obsCommon)))
 
-        return disp, rmseMean, disp / rmseMean
+        return disp, rmse_mean, disp / rmse_mean
 
 
 class ESCROC_EnsembleScores(EnsembleScores):
 
     def __init__(self, profiles, obsfile, varname):
+        """
+
+        :param profiles: list of simulation files (one per ensemble member
+        :param obsfile: observation file (netCDF format)
+        :param varname: variable name
+        """
         self.read(profiles, obsfile, varname)
 
     def read_var_ifpresent(self, dataNc, varname, convert1d=False):
+        """
+        read a variable if present in file else return an empty numpy array.
+
+        convert degrees C to Kelvin if the variable name is Ts and convert1d=False.
+        :param dataNc: dataset
+        :type dataNc: prosimu
+        :param varname: variable name
+        :type varname: str
+        :param convert1d:
+        :type convert1d: bool
+        :return: data array
+        :rtype: np.array
+        """
 
         if varname not in dataNc.listvar():
             if varname in list(ESMSnowMIP_alternate_varnames.keys()):
@@ -193,7 +235,7 @@ class ESCROC_EnsembleScores(EnsembleScores):
 
         if varname in dataNc.listvar():
             if convert1d:
-                array = dataNc.read1d(varname)
+                array = dataNc.read(varname, selectpoint=0)
                 if varname == "ts":
                     array = np.where(array > 273.16, np.nan, array)
                 return array
@@ -204,57 +246,88 @@ class ESCROC_EnsembleScores(EnsembleScores):
                     delta = 0
                 return dataNc.read(varname) + delta
         else:
-            ntimeNc = dataNc.getlendim("time")
-            emptyvar = np.empty(ntimeNc, "float")
+            ntime_nc = dataNc.getlendim("time")
+            emptyvar = np.empty(ntime_nc, "float")
             emptyvar[:] = np.nan
             return emptyvar
 
     def read_sim_ifpresent(self, dataNc, varname):
+        """
+        read a variable from simulation file
+        :param dataNc: dataset
+        :type dataNc: prosimu
+        :param varname: variable name to read
+        :type varname: str
+        :return:
+        """
         return self.read_var_ifpresent(dataNc, varname, convert1d=True)
 
     def varsimname(self, varname):
+        """
+        convert variable name to variable name in SURFEX output
+        :param varname: variable name
+        :type varname: str
+        :return: corresponding value from `SURFEX_dicvarnames`
+        :rtype: str
+        """
         return SURFEX_dicvarnames[varname]
 
     def varobsname(self, varname):
+        """
+        convert variable name to ESMSnowMIP variable name
+        :param varname: variable name
+        :type varname: str
+        :return: corresponding value from `ESMSnowMIP_dicvarnames`
+        :rtype: str
+        """
         return ESMSnowMIP_dicvarnames[varname]
 
     def read(self, profiles, obsfile, varname):
+        """
+        read simulation files and observation file and extract dates with available observations in winter.
+        sets self.obsCommon and self.ensCommon
+        :param profiles: list of simulation files (one per ensemble member, netCDF format)
+        :type profiles: list of path-likes
+        :param obsfile: observation file in NetCDF format
+        :type obsfile: pathlike
+        :param varname: variable to be read
+        """
 
         for p, profile in enumerate(profiles):
             print("open file " + profile)
-            dataSim = prosimu(profile)
+            data_sim = prosimu(profile)
             if p == 0:
-                timeSim = dataSim.readtime()
-                ensemble = np.empty((len(profiles), len(timeSim)), "float")
+                time_sim = data_sim.readtime()
+                ensemble = np.empty((len(profiles), len(time_sim)), "float")
 
-            varSim = self.read_sim_ifpresent(dataSim, self.varsimname(varname))
-            ensemble[p, :] = varSim
+            var_sim = self.read_sim_ifpresent(data_sim, self.varsimname(varname))
+            ensemble[p, :] = var_sim
             print("close file")
-            dataSim.close()
+            data_sim.close()
 
         print("open obs")
-        dataObs = prosimu(obsfile)
-        timeObs = dataObs.readtime()
-        varObs = self.read_var_ifpresent(dataObs, self.varobsname(varname))
-        dataObs.close()
+        data_obs = prosimu(obsfile)
+        time_obs = data_obs.readtime()
+        var_obs = self.read_var_ifpresent(data_obs, self.varobsname(varname))
+        data_obs.close()
         print("close obs")
-        print(varObs.shape)
+        print(var_obs.shape)
 
         '''Extract common date between observations and simulations'''
         # Identify winter period
-        winter = np.empty_like(timeObs, 'bool')
-        for i, t in enumerate(timeObs):
+        winter = np.empty_like(time_obs, 'bool')
+        for i, t in enumerate(time_obs):
             winter[i] = t.month >= self.startwinter or t.month <= self.endwinter
 
         # First reduce observation vector to available observations and winter
-        indObs_ok = np.invert(np.isnan(varObs)) & winter
+        ind_obs_ok = np.invert(np.isnan(var_obs)) & winter
         print("number of valid obs in winter")
-        print(np.sum(indObs_ok))
-        timeObs_ok = timeObs[indObs_ok]
-        obs_ok = varObs[indObs_ok]
+        print(np.sum(ind_obs_ok))
+        time_obs_ok = time_obs[ind_obs_ok]
+        obs_ok = var_obs[ind_obs_ok]
 
-        maskSim = np.in1d(timeSim, timeObs_ok)
-        maskObs = np.in1d(timeObs_ok, timeSim)
+        mask_sim = np.in1d(time_sim, time_obs_ok)
+        mask_obs = np.in1d(time_obs_ok, time_sim)
 
-        self.obsCommon = obs_ok[maskObs]
-        self.ensCommon = ensemble[:, maskSim]
+        self.obsCommon = obs_ok[mask_obs]
+        self.ensCommon = ensemble[:, mask_sim]

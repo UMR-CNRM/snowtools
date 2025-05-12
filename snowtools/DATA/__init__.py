@@ -40,5 +40,9 @@ except OSError:
     # os.getlogin not defined in a vortex job but we don't care because this variable is for sxcen.
     LUSTRE_NOSAVE_USER_DIR = None
 
-CARTOPY_DIR = '/rd/cenfic3/cenmod/home/radanovicss/CartopyData'
-# CARTOPY_DIR = os.path.join(LUSTRE_NOSAVE_USER_DIR, 'CartopyData')  # for sxcen
+if os.path.isdir('/rd/cenfic3/cenmod/home/radanovicss/CartopyData'):
+    CARTOPY_DIR = '/rd/cenfic3/cenmod/home/radanovicss/CartopyData'
+elif os.path.isdir(os.path.join(LUSTRE_NOSAVE_USER_DIR, 'CartopyData')):
+    CARTOPY_DIR = os.path.join(LUSTRE_NOSAVE_USER_DIR, 'CartopyData')  # for sxcen
+else:
+    CARTOPY_DIR = None
