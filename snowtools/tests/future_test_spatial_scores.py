@@ -15,7 +15,7 @@ from snowtools.scores.list_scores import SpatialScoreFile
 from snowtools.scores.ensemble import EnsembleScores
 from snowtools.plots.scores.perfdiag import PerfDiag, FuzzyScoreDiagram
 from snowtools.plots.scores.moran_scatter import MoranScatter
-from snowtools.utils.S2M_standard_file import LCCProjectionType
+from snowtools.utils.projections import LCCProjectionType
 from snowtools.tests.tempfolder import TestWithTempFolderWithLog
 from snowtools.DATA import TESTBASE_DIR
 import snowtools
@@ -24,7 +24,7 @@ import snowtools
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 TEST_SIM_DIR = os.path.join(TESTBASE_DIR, "PRO")
 TIME_CRPS = False
-PROJ_avail = False
+PROJ_avail = True
 
 # class TestInstall(unittest.TestCase):
 #
