@@ -32,6 +32,11 @@ DIRDATADEM = '/rd/cenfic3/cenmod/dem_cen/definitive/'
 Path to the 30m and 250m Digital Elevation Model folders on cenfic3
 """
 
+REANALYSIS_DIR = '/rd/cenfic3/cenmod/era40/vortex/s2m/postes/reanalysis/pro'
+"""
+Path to S2M reanalysis at stations.
+"""
+
 LUSTRE_NOSAVE_DIR = '/cnrm/mrns/users/NO_SAVE'
 
 try:

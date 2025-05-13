@@ -23,6 +23,7 @@ from snowtools.utils.infomassifs import infomassifs
 from snowtools.plots.temporal.chrono import temporalplotObsMultipleSims
 from snowtools.plots.boxplots.boxplots import boxplots_bydepartment, boxplots_byelevation, boxplots_byyear
 from snowtools.scores.deterministic import DeterministicScores_Heterogeneous
+from snowtools.DATA import REANALYSIS_DIR
 matplotlib.use('Agg')
 
 
@@ -30,8 +31,7 @@ usage = ("CompareSimuPosteObsCsv.py [--scores] [--plot] -b YYYYMMDD -e YYYYMMDD 
          "dirsim2 --labels=label1,labe2 --dirplot=dirplot --format=pdf,png,eps --yearly")
 
 default = dict(fileobs="/rd/cenfic3/cenmod/home/vernaym/extraction_obs_htn/OBS_ref.csv",
-               dirsim='/rd/cenfic3/cenmod/era40/vortex/s2m/postes/reanalysis/pro,'
-                      '/rd/cenfic3/cenmod/era40/vortex/s2m/postes/reanalysis/pro')
+               dirsim=REANALYSIS_DIR+","+REANALYSIS_DIR)
 
 IM = infomassifs()
 
