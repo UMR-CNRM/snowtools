@@ -9,20 +9,16 @@ Created on 20 août 2019
 import datetime
 import os
 import sys
-import epygram
 
 import netCDF4
 import configparser
 import numpy as np
-import pyproj
-# import cartopy.crs as ccrs # TODO: reactivate here when test server is working with proj
 
 from snowtools.utils.FileException import VarNameException, UnknownGridTypeException, FileNameException,\
     TimeUnitsException
 from snowtools.utils.infomassifs import infomassifs
 from snowtools.utils.git import get_summary_git
 from snowtools.DATA import SNOWTOOLS_DIR, SNOWTOOLS_CEN
-from snowtools.interpolation.shapefile2NetCDF_2D import conversion_to_L93_if_lat_lon
 
 
 class _StandardNC(netCDF4.Dataset):
