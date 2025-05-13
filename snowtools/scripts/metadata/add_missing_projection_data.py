@@ -4,7 +4,7 @@
 import argparse
 import xarray as xr
 
-from snowtools.utils.S2M_standard_file import LCCProjectionType
+from snowtools.utils.projections import LCCProjectionType
 
 parser = argparse.ArgumentParser(description="""
 Add missing Lambert93 projection information to netcdf file.
@@ -48,7 +48,7 @@ if __name__ == "__main__":
                     ds[projvar] = xr.DataArray(None, dims=None, coords=None, attrs=llc.__dict__)
                 # print(llc.__dict__)
             else:
-                raise Exception("variable with grid_mapping found, but no projection_x_coordinate or "
+                raise ValueError("variable with grid_mapping found, but no projection_x_coordinate or "
                                 "projection_y_coordinate. You might consider specifying xname and yname options.")
         ds.to_netcdf(args.outputnc)
 
