@@ -111,6 +111,7 @@ def check_and_convert_options(options):
     * put the simulation directory in a list if this is not the case
     * creates the plot directory
     * converts dates in datetime objects
+
     :param options: options parsed from commandline by argparse parser
     :return: converted options
     """
@@ -136,6 +137,7 @@ def check_and_convert_options(options):
 def build_title(station):
     """
     constructs a plot title containing the station name and its altitude.
+
     :param station: station number
     :type station: int
     :return: plot title
@@ -150,6 +152,7 @@ def build_title_with_scores(station, bias, rmse):
     """
     construct a plot title containing the station name, station altitude,
     the bias and the RMSE of the plotted simulation.
+
     :param station: station number
     :type station: int
     :param bias:
@@ -318,6 +321,7 @@ def fullplots(datebegin, dateend, data_obs):
     """
     calculate scores and makes boxplots if the scores option is True
     makes time series plots for stations if the plot option is True
+
     :param datebegin: start date of analysis and plots
     :type datebegin: `bronx.stdtypes.date.Date`
     :param dateend: end date of analysis and plots
@@ -366,6 +370,7 @@ def fullplots(datebegin, dateend, data_obs):
 def fullplotsSIM2(datebegin, dateend, data_obs):
     """
     Do boxplots of scores and time series plots for simulations from the SIM2 system.
+
     :param datebegin: start date of analysis
     :type datebegin: `bronx.stdtypes.date.Date`
     :param dateend: end date of analysis
@@ -527,6 +532,7 @@ class ComparisonSimObs(object):
     def plot(self, datemin=None, datemax=None):
         """
         plot time series
+
         :param datemin: start date of the plot
         :param datemax: end date of the plot
 
@@ -593,6 +599,7 @@ class ComparisonSimObs(object):
     def scores(self, datemin=None, datemax=None):
         """
         compute bias, RMSE and mean snow depth for all available simulations and stations
+
         :param datemin: start date of analysis period
         :type datemin: `bronx.stdtypes.date.Date`
         :param datemax: end date of analysis period
@@ -688,6 +695,7 @@ class ComparisonSimObs(object):
     def read_sim(self, pro):
         """
         read a simulation file.
+
         :param pro: file name for simulation output file in netcdf format
         """
 
@@ -710,6 +718,7 @@ class ComparisonSimObs(object):
     def boxplots_scores(self, stations, elevations, list_scores, label, **kwargs):
         """
         do boxplots of a given score by department and by elevation.
+
         :param stations: array of station numbers
         :param elevations: array of station altitudes
         :param list_scores: array of score values for each simulation and station dimensions (simulation index, station)
@@ -782,6 +791,7 @@ class ComparisonSimObsSIM2(ComparisonSimObs):
     def __init__(self, data_obs):
         """
         Class to compare observations with data from the SIM2 system.
+
         :param data_obs:
         """
         self.dataSim = []
@@ -790,6 +800,7 @@ class ComparisonSimObsSIM2(ComparisonSimObs):
     def read_sim(self, listpro):
         """
         read simulations
+
         :param listpro: list of file names
         """
 
