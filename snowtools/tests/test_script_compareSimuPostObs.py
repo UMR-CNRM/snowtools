@@ -14,6 +14,7 @@ import numpy as np
 from snowtools.tests.tempfolder import TestWithTempFolderWithLog
 from snowtools.DATA import SNOWTOOLS_DIR
 from snowtools.DATA import TESTBASE_DIR
+from snowtools.DATA import REANALYSIS_DIR
 from snowtools.scores.list_scores import ESCROC_list_scores, scores_file, ensemble_scores_file
 from snowtools.scores.deterministic import SURFEX_dicvarnames
 from snowtools.scores.ensemble import ESCROC_EnsembleScores
@@ -35,7 +36,7 @@ class ScorePlotTest(TestWithTempFolderWithLog):
         super(ScorePlotTest, self).setUp()
 
     @unittest.skipIf(SKIP, "input file not available")
-    @unittest.skipIf(not os.path.isdir("/rd/cenfic3/cenmod/era40/vortex/s2m/postes/reanalysis/pro"),
+    @unittest.skipIf(not os.path.isdir(REANALYSIS_DIR),
                      "input directory not available")
     def test_fullplots(self):
         """
