@@ -7,22 +7,7 @@ Created on 29 march 2021
     radanovics
 
 Module for map plots with massifs.
-This module might be sensitive to the combination of versions of matplotlib and cartopy.
 Developed with matplotlib 3.4.0/3.2.1 and cartopy 0.18.
-
-Which cartopy version is based on which matplotlib version? (according to documentation)
-
-* cartopy 0.19 -> matplotlib 3.4.1
-* cartopy 0.18 -> matplotlib 3.2.1
-* cartopy 0.17 -> matplotlib 3.0.2
-* cartopy 0.16 -> matplotlib 2.1.2
-* cartopy 0.15 -> matplotlib 2.0.0
-* cartopy 0.14 -> matplotlib 1.5.1
-* cartopy 0.13 -> matplotlib 1.4.3
-
-Other apparently working combinations:
-
-* cartopy 0.22.0 and matplotlib 3.6.3
 
 Usage :
 example :
