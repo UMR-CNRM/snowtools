@@ -42,7 +42,8 @@ class multiplecsv(object):
             try:
                 cr = csv.reader(csvfile, delimiter=";")
             except Exception:
-                raise Exception("cant't read correctly the file " + csvobj.path)
+                print("Cant't read correctly the file " + csvobj.path)
+                raise
 
             for row in cr:
 
@@ -74,9 +75,9 @@ class multiplecsv(object):
             if varname in self._data[station].keys():
                 return np.array(self._data[station][varname])
             else:
-                raise Exception(varname + "is not a valid observed variable")
+                raise ValueError(varname + "is not a valid observed variable")
         else:
-            raise Exception(station + "is not a valid station")
+            raise ValueError(station + "is not a valid station")
 
     def getListStations(self):
         #        return self._data.keys()
@@ -115,7 +116,8 @@ class obscsv(object):
         try:
             cr = csv.reader(self.theFile, delimiter=";")
         except Exception:
-            raise Exception("cant't read correctly the file " + self.path)
+            print("cant't read correctly the file " + self.path)
+            raise
 
         firstline = True
         for row in cr:
@@ -170,9 +172,9 @@ class obscsv(object):
             if varname in self._data[station].keys():
                 return self._data[station][varname]
             else:
-                raise Exception(varname + "is not a valid observed variable")
+                raise ValueError(varname + "is not a valid observed variable")
         else:
-            raise Exception(station + "is not a valid station")
+            raise ValueError(station + "is not a valid station")
 
     def getListStations(self):
         #        return self._data.keys()
