@@ -636,7 +636,7 @@ class ProVsPleiade(SpatialScores):
     """
 
     def __init__(self, fc_filenames, list_of_experiments, obs_filename, varname, list_of_kernels, list_of_thresholds,
-                 list_of_threshold_increments, per_zone=None, score_file=True, score_file_name="spatial_scores.nc",
+                 list_of_threshold_increments, per_zone=None, score_file=True, score_file_name="spatialscores.nc",
                  perf_plot=True, perf_plot_file="perfdiag.png"):
         super(ProVsPleiade, self).__init__(fc_filenames, list_of_experiments, obs_filename,
                                            varname, list_of_kernels, list_of_thresholds,
