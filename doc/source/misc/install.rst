@@ -123,7 +123,7 @@ run
 
 .. code-block:: bash
 
-    make ubuntu
+    ./install_ubuntu.sh
 
 for local machines and servers with access to PyPI.
 
@@ -131,7 +131,7 @@ run
 
 .. code-block:: bash
 
-    make belenos
+    ./install_belenos.sh
 
 if used on supercomputers.
 
