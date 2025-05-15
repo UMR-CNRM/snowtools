@@ -56,8 +56,8 @@ class LocalMoranData:
             :param field: field to analyse
             :type field: xarray.DataArray
             :param neighbors: size of the neighborhood to consider for the local moran calculation.
-            Total number of cells in one direction. Exemple: neighbors=3 will calculate the local moran Is
-            for neighborhood of 3x3 grid cells.
+             Total number of cells in one direction. Exemple: neighbors=3 will calculate the local moran Is
+             for neighborhood of 3x3 grid cells.
             :type neighbors: int (odd >=3)
         """
         # check number of neighbors
@@ -297,9 +297,9 @@ def call_crps(fc_in, obs_in):
 def mincoverage_small(fc, obs, kl, threshold_lower, threshold_increment, perzone=None):
     """
     Calculate POD (probability of detection), FAR (false alarm ratio), TS (threat score),
-     ETS (equitable threat score), HK (Hanssen & Kuipper’s Skill Score, True Skill
-      Statistic (TSS) or Pierce’s Skill Score),
-      ACC (accuracy), PAG (post agreement) between two fields using a given neighborhood size kl, and
+    ETS (equitable threat score), HK (Hanssen & Kuipper’s Skill Score, True Skill
+    Statistic (TSS) or Pierce’s Skill Score),
+    ACC (accuracy), PAG (post agreement) between two fields using a given neighborhood size kl, and
     a given threshold and threshold increment to define an event.
 
     :param fc: forecast field

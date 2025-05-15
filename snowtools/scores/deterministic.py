@@ -116,6 +116,7 @@ class DeterminsticScores(object):
         read a given variable from a netcdf file if it is present in the file.
         If the variable is not present under the given variable name, check if it
         is present under an alternate name from ESMSnowMIP.
+
         :param data_nc: dataset to read in
         :type data_nc: prosimu
         :param varname: variable name
@@ -205,6 +206,7 @@ class DeterministicScores_CommonObs(DeterminsticScores):
         """
         Constructor for observations and simulations covering different periods,
          observations and simulation masks provided
+
         :param obs_common: observations
         :param mask_sim: mask for simulation data
         :param sim: simulations data

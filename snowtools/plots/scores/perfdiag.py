@@ -135,22 +135,24 @@ class PerfDiag(Mplfigure):
         :param pod: list or 1d array of Probability of detection values
         :param far: list or 1d array of False Alarm Ratio
         :param list_colors: colors for the different points. List of length 1
-        (all points will be plotted with the same color)
+         (all points will be plotted with the same color)
          or same length as pod and far. If None, default colours `self.default_colors` will be used.
         :type list_colors: list
         :param list_markers: Markers for the different points. List of length 1
-        (all points will be plotted with the same marker) or same length as pod and far. If None, all points will
-        be plotted with the '*' marker
+         (all points will be plotted with the same marker) or same length as pod and far. If None, all points will
+         be plotted with the '*' marker
         :type list_markers: list
         :param list_labels: List of the same length as pod and far with labels to put on the legend.
-        If None, the labels will be "experiment 1", "experiment 2 etc.
+         If None, the labels will be "experiment 1", "experiment 2 etc.
         :type list_labels: list
         :param list_markersizes: Marker sizes for the different points. List of length 1
-        (all points will be plotted with the same marker size) or same length as pod and far. If None, all points will
-        be plotted with a marker size of 10.
+         (all points will be plotted with the same marker size) or same length as pod and far. If None, all points will
+         be plotted with a marker size of 10.
         :type list_markersizes: list
         :return:
+
         """
+
         try:
             assert len(pod) == len(far)
         except AssertionError:

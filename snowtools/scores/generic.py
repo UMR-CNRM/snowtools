@@ -15,6 +15,7 @@ def rankDiagram(ens, observations, isSorted = False, nbins = 36, printrank=False
     @author : B. Cluzet, june 2018
     generic CRPS computation from Cluzet first version, Lafaysse and Champavier talagrand function
     Champavier code would be a good source of inspiration for optimisation through pandas (avoiding the for loop)
+
     @params : ens : Nens x NDate matrix (np.array)
               obs : NDate vector
     /!\
