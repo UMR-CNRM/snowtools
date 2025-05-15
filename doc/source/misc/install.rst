@@ -123,7 +123,7 @@ run
 
 .. code-block:: bash
 
-    make ubuntu
+    ./install_ubuntu.sh
 
 for local machines and servers with access to PyPI.
 
@@ -131,7 +131,7 @@ run
 
 .. code-block:: bash
 
-    make belenos
+    ./install_belenos.sh
 
 if used on supercomputers.
 
@@ -273,7 +273,7 @@ At CEN, Netcdf with parallel support must be installed in /opt/netcdf4-parallel
 (ask Cyril if not available)
 
 .. [#footnote1] To generate a new ssh key, go to your ``~/.ssh`` folder (create if it does not exist) and run ``ssh-keygen -t rsa -b 4096 -f github``. You will be asked for an optional password to protect your key. Once created, go to your `github account, section SSH keys <https://github.com/settings/keys>`_, click on "add a SSH key" and copy the content of the file ``~/.ssh/github.pub`` in the "key" field.
-You may need to run
+    You may need to run
 
 .. code-block:: bash
 
