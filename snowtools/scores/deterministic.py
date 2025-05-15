@@ -224,6 +224,7 @@ class DeterministicScores_Heterogeneous(DeterministicScores_Mask):
     def __init__(self, time_obs, time_sim, obs, sim):
         """
         Constructor for observations and simulations covering different periods, times provided
+
         :param time_obs: array of observation times
         :param time_sim: array of simulation times
         :param obs: array of observation values
