@@ -239,6 +239,7 @@ then
       --exclude .git/ \
       --exclude .idea/ \
       --exclude .settings/ \
+      --exclude build \
       --exclude fail_test  \
       --exclude Manual_tests  \
       --exclude exe/ \
