@@ -371,8 +371,6 @@ class SpatialScores(ABC):
                  perf_plot=True, perf_plot_file="perfdiag.png"):
         self.obs_data = self.get_obs_data(obs_filename, varname)
         self.fc_data = self.get_fc_data(fc_filenames, list_of_experiments, varname)
-        self.score_ds = SpatialScoreFile(list_of_experiments, list_of_kernels, list_of_thresholds,
-                                         list_of_threshold_increments)
         self.experiments = list_of_experiments
         self.kernels = list_of_kernels
         self.thresholds = list_of_thresholds
@@ -431,10 +429,12 @@ class SpatialScores(ABC):
         """
         pass
 
-    def make_fuzzy_scores(self):
+    def make_fuzzy_scores(self, score_ds):
         """
         calculate POD, FAR, TS, ETS, HK for different forecast experiments.
 
+        :param score_ds: an open file to write scores
+        :type score_ds: SpatialScoreFile
         :param fc_experiments: dict of forecast fields where dict keys are experiment names
          and values the corresponding fields. (2d np.array)
         :type fc_experiments: dict
@@ -458,33 +458,33 @@ class SpatialScores(ABC):
                 for ithres, (thres, thres_inc) in enumerate(zip(self.thresholds, self.threshold_incs)):
                     # print(self.fc_data[exp].data.shape)
                     # print(self.obs_data.data.shape)
-                    self.score_ds["POD"].data[iexp, ik, ithres], \
-                        self.score_ds["FAR"].data[iexp, ik, ithres], \
-                        self.score_ds["CSI"].data[iexp, ik, ithres], \
-                        self.score_ds["ETS"].data[iexp, ik, ithres], \
-                        self.score_ds["HK"].data[iexp, ik, ithres], \
-                        self.score_ds["ACC"].data[iexp, ik, ithres], \
-                        self.score_ds["PAG"].data[iexp, ik, ithres] = mincoverage_small(self.fc_data[exp],
+                    score_ds.variables["POD"][iexp, ik, ithres], \
+                        score_ds.variables["FAR"][iexp, ik, ithres], \
+                        score_ds.variables["CSI"][iexp, ik, ithres], \
+                        score_ds.variables["ETS"][iexp, ik, ithres], \
+                        score_ds.variables["HK"][iexp, ik, ithres], \
+                        score_ds.variables["ACC"][iexp, ik, ithres], \
+                        score_ds.variables["PAG"][iexp, ik, ithres] = mincoverage_small(self.fc_data[exp],
                                                                                         self.obs_data, kernel,
                                                                                         thres, thres_inc,
                                                                                         self.per_zone)
 
-    def make_spatial_probability_score(self):
+    def make_spatial_probability_score(self, score_ds):
         """
         calculate spatial probability score (spatial CRPS) and write it in a new variable in self.score_ds
         """
-        self.score_ds['SPS'] = xr.DataArray(np.empty((len(self.experiments))),
-                                   dims=('experiment'),
-                                   attrs={'long_name': 'Spatial Probability Score'})
-        self.score_ds['SPS'].data.fill(np.nan)
+        score_ds.createVariable('SPS', 'f8', dimensions=('experiment'),
+                                     fill_value=np.nan)
+        score_ds.variables['SPS'].setncatts({'long_name': 'Spatial Probability Score'})
         for iexp, exp in enumerate(self.experiments):
-            self.score_ds['SPS'].data[iexp] = call_crps(self.fc_data[exp].data, self.obs_data.data)
+            score_ds.variables['SPS'][iexp] = call_crps(self.fc_data[exp].data, self.obs_data.data)
 
     def process(self):
-        self.make_fuzzy_scores()
-        self.make_spatial_probability_score()
-        if self.score_file:
-            self.score_ds.to_netcdf(self.score_file_name)
+        score_ds = SpatialScoreFile(self.experiments, self.kernels, self.thresholds,
+                                    self.threshold_incs, self.score_file_name)
+        self.make_fuzzy_scores(score_ds)
+        self.make_spatial_probability_score(score_ds)
+        score_ds.close()
 
 
 class ProVsPleiade(SpatialScores):
@@ -493,7 +493,7 @@ class ProVsPleiade(SpatialScores):
     """
 
     def __init__(self, fc_filenames, list_of_experiments, obs_filename, varname, list_of_kernels, list_of_thresholds,
-                 list_of_threshold_increments, per_zone=None, score_file=True, score_file_name="spatial_scores.nc",
+                 list_of_threshold_increments, per_zone=None, score_file=True, score_file_name="spatialscores.nc",
                  perf_plot=True, perf_plot_file="perfdiag.png"):
         super(ProVsPleiade, self).__init__(fc_filenames, list_of_experiments, obs_filename,
                                            varname, list_of_kernels, list_of_thresholds,
