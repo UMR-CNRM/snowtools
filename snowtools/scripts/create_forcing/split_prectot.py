@@ -66,8 +66,7 @@ def qair2rh(qair: np.array, tair: np.array, psurf: np.array = 1013.25):
 def splitting_prectot(
     prectot: np.array, tair: np.array, rh: np.array, alpha: float = 22, beta: float = -2.7, gamma: float = -0.2
 ):
-    """
-    Function used to partition total precipitation into liquid and solid part
+    """Function used to partition total precipitation into liquid and solid part
     using air temperature and relative humidity.
     Alpha, beta and gamma are parameters of logistic values that can be adjusted
     depending on the site considered following Froidurot et al., (2014) method
@@ -77,18 +76,16 @@ def splitting_prectot(
     :type prectot: np.array
     :param tair: air temperature (°C)
     :type tair: np.array
-    :param rh: near surface relative humidity (%)
+    :param rh:  near surface relative humidity (%)
     :type rh: np.array
-    :param alpha: parameters or logistic function
-    :type alpha: float
-    :param beta: parameters or logistic function
-    :type beta: float
-    :param gamma: parameters or logistic function
-    :type gamma: float
-    :return precliq: liquid precipitation (units in is unit out)
-    :rtype precliq: np.array
-    :return precsol: solid precipitation (units in is unit out)
-    :rtype precsol: np.array
+    :param alpha: parameters or logistic function, defaults to 22
+    :type alpha: float, optional
+    :param beta: parameters or logistic function, defaults to -2.7
+    :type beta: float, optional
+    :param gamma: parameters or logistic function, defaults to -0.2
+    :type gamma: float, optional
+    :return: Tuple of precliq and precsol
+    :rtype: Tuple of np.array
     """
 
     # Compute probability of rain and snow using air temperature and relative humidity
