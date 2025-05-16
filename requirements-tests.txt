@@ -2,7 +2,7 @@
 bronx
 matplotlib<3.10 # with matplotlib 3.10 there is an error removing an AnnotationBbox (cartopy maps)
 netCDF4
-numpy>=1.8, <2.0 # less recent matplotlib versions like 3.5 do not work with numpy>=2.0
+numpy>=1.8
 scipy
 python-dateutil
 pyproj>=2.0.0
@@ -44,3 +44,17 @@ git+https://github.com/VACUMM/sphinx-fortran.git
 # Due to all these limitations, GDAL is not listed here as a requirement.
 
 pytest
+
+# numpy versions:
+# import matplotlib.pyplot fails for matplotlib 3.5.1 with numpy>=2.0 ImportError: numpy.core.multiarray failed to import
+# further information from the error message:
+#
+# A module that was compiled using NumPy 1.x cannot be run in
+# NumPy 2.0.0 as it may crash. To support both 1.x and 2.x
+# versions of NumPy, modules must be compiled with NumPy 2.0.
+# Some module may need to rebuild instead e.g. with 'pybind11>=2.12'.
+
+# If you are a user of the module, the easiest solution will be to
+# downgrade to 'numpy<2' or try to upgrade the affected module.
+# We expect that some modules will need time to support NumPy 2.
+
