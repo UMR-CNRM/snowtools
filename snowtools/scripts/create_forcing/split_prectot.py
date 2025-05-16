@@ -147,7 +147,10 @@ def main_splitprectot(infile: str, prectot: List[str], outfile: str):
     ds["Rainf"] = Rainf
     ds["Snowf"] = Snowf
 
-    ds.to_netcdf(outfile, mode="a", format=DEFAULT_NETCDF_FORMAT)
+    if infile == outfile:
+        ds.to_netcdf(outfile, mode="a", format=DEFAULT_NETCDF_FORMAT)
+    else:
+        ds.to_netcdf(outfile, mode="w", format=DEFAULT_NETCDF_FORMAT)
 
 
 if __name__ == "__main__":
