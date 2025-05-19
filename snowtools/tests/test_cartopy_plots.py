@@ -7,7 +7,7 @@ import os
 import numpy as np
 from netCDF4 import Dataset
 from snowtools.utils.prosimu import prosimu
-from snowtools.plots.maps import cartopy
+from snowtools.plots.maps import cartopy_massifs
 from snowtools.DATA import TESTBASE_DIR
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -43,7 +43,7 @@ class TestCartopyFrance(unittest.TestCase):
 
     def test_colormesh(self):
 
-        self.m = cartopy.MapFrance(geofeatures=False, bgimage=True)
+        self.m = cartopy_massifs.MapFrance(geofeatures=False, bgimage=True)
         self.m.init_massifs(**self.mix.attributes['SD_1DY_ISBA'])
         self.m.draw_mesh(self.lons, self.lats, self.snow,
                          **self.mix.attributes['SD_1DY_ISBA'])
@@ -60,7 +60,7 @@ class TestCartopyFrance(unittest.TestCase):
 
 class TestZoomMassifError(unittest.TestCase):
     def test_zoom_42(self):
-        self.assertRaises(ValueError, cartopy.Zoom_massif, 42)
+        self.assertRaises(ValueError, cartopy_massifs.Zoom_massif, 42)
 
 
 @unittest.skipIf(not os.path.isfile(os.path.join(TEST_DATA_DIR, "postproc", "Cor",
@@ -82,7 +82,7 @@ class TestCartopyCor(unittest.TestCase):
 
     def test_highlight(self):
         self.assertEqual(self.snow.shape, (6, 2, 9), "should be 9 deciles of 24 massifs over 6 time steps")
-        self.m = cartopy.Map_corse(bgimage=True)
+        self.m = cartopy_massifs.Map_corse(bgimage=True)
         self.m.init_massifs(**self.mix.attributes['SD_1DY_ISBA'])
         self.m.highlight_massif(self.massifs[0], **self.mix.attributes['SD_1DY_ISBA'])
         self.m.plot_center_massif(self.massifs, self.snow[5, :, 4], self.snow[5, :, 8],
@@ -95,7 +95,7 @@ class TestCartopyCor(unittest.TestCase):
         self.m.close()
 
     def test_zoom_41(self):
-        self.m = cartopy.Zoom_massif(41)
+        self.m = cartopy_massifs.Zoom_massif(41)
         self.m.draw_massifs(self.massifs, self.snow[5, :, 8], **self.mix.attributes['SD_1DY_ISBA'])
         self.m.add_north_south_info()
         centre = [shape.centroid.coords[0] for shape in self.m.llshape]
@@ -108,7 +108,7 @@ class TestCartopyCor(unittest.TestCase):
         self.m.close()
 
     def test_annotate(self):
-        self.m = cartopy.MultiMap_Cor(nrow=3, ncol=3, bgimage=False)
+        self.m = cartopy_massifs.MultiMap_Cor(nrow=3, ncol=3, bgimage=False)
         self.m.init_massifs(**self.mix.attributes['SD_1DY_ISBA'])
         centre = [shape.centroid.coords[0] for shape in self.m.llshape]
         self.m.addpoints(*list(zip(*centre)), color='magenta', marker="o")
@@ -144,7 +144,7 @@ class TestCartopyPyr(unittest.TestCase):
         cls.massifs = cls.ps.read('massif_num', selectpoint=cls.points_nord)
 
     def test_pyr_tables(self):
-        self.m = cartopy.Map_pyrenees(geofeatures=True)
+        self.m = cartopy_massifs.Map_pyrenees(geofeatures=True)
         self.m.init_massifs(**self.mix.attributes['SD_1DY_ISBA'])
         self.m.add_north_south_info()
         self.m.rectangle_massif(self.massifs, [self.snow_sud[1, :, 1], self.snow_sud[1, :, 4],
@@ -160,7 +160,7 @@ class TestCartopyPyr(unittest.TestCase):
         self.m.reset_massifs()
 
     def test_zoom_70(self):
-        self.m = cartopy.Zoom_massif(70)
+        self.m = cartopy_massifs.Zoom_massif(70)
         self.m.init_massifs(palette='YlGnBu', seuiltext=50., ticks=['A', 'B', 'C', 'D'],
                             label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm', ncolors=3)
         self.m.draw_massifs(self.massifs, self.snow_nord[1, :, 8], palette='YlGnBu', seuiltext=50.,
@@ -179,7 +179,7 @@ class TestCartopyPyr(unittest.TestCase):
 
     def test_multi_map_pyr_tables(self):
         print()
-        self.m = cartopy.MultiMap_Pyr(nrow=3, ncol=3, geofeatures=True)
+        self.m = cartopy_massifs.MultiMap_Pyr(nrow=3, ncol=3, geofeatures=True)
         self.m.init_massifs(**self.mix.attributes['SD_1DY_ISBA'])
         self.m.add_north_south_info()
         titles = self.ps.readtime()
@@ -223,7 +223,7 @@ class TestCartopyAlp(unittest.TestCase):
 
     def test_with_geo_features(self):
         self.assertEqual(self.snow.shape, (6, 24, 9), "should be 9 deciles of 24 massifs over 6 time steps")
-        self.m = cartopy.Map_alpes(geofeatures=True)
+        self.m = cartopy_massifs.Map_alpes(geofeatures=True)
         self.m.init_massifs(**self.mix.attributes['SD_1DY_ISBA'])
         self.m.draw_massifs(self.massifs, self.snow[5, :, 8], **self.mix.attributes['SD_1DY_ISBA'])
         self.m.plot_center_massif(self.massifs, self.snow[5, :, 0], self.snow[5, :, 4], self.snow[5, :, 8],
@@ -236,7 +236,7 @@ class TestCartopyAlp(unittest.TestCase):
         self.m.close()
 
     def test_zoom_10(self):
-        self.m = cartopy.Zoom_massif(10)
+        self.m = cartopy_massifs.Zoom_massif(10)
         self.m.draw_massifs(self.massifs, self.snow[5, :, 8], **self.mix.attributes['SD_1DY_ISBA'])
         self.m.add_north_south_info(english=True)
         self.m.addlogo()
@@ -247,7 +247,7 @@ class TestCartopyAlp(unittest.TestCase):
         self.m.close()
 
     def test_multi_map_alps(self):
-        self.lo = cartopy.MultiMap_Alps(nrow=3, ncol=3, geofeatures=False)
+        self.lo = cartopy_massifs.MultiMap_Alps(nrow=3, ncol=3, geofeatures=False)
         self.lo.init_massifs(**self.mix.attributes['SD_1DY_ISBA'])
         self.lo.draw_massifs(self.massifs, self.snow[5, :, :], axis=1, **self.mix.attributes['SD_1DY_ISBA'])
         self.lo.highlight_massif(10, **self.mix.attributes['SD_1DY_ISBA'])
@@ -287,7 +287,7 @@ class TestCartopyMac(unittest.TestCase):
 
     def test_swemap(self):
         self.assertEqual(self.swe.shape, (32, 11), "should be 11 massifs over 32 time steps")
-        self.m = cartopy.Map_central()
+        self.m = cartopy_massifs.Map_central()
         self.m.init_massifs(**self.mix.attributes['SWE_3DY_ISBA'])
         # print("swe", self.swe[1:11, :])
         # print("massifs type", type(self.massifs), "massifs shape", self.massifs.shape)
@@ -320,7 +320,7 @@ class TestCartopyJura(unittest.TestCase):
         pass
 
     def test_juramap(self):
-        self.m = cartopy.Map_jura(geofeatures=True)
+        self.m = cartopy_massifs.Map_jura(geofeatures=True)
         self.m.init_massifs()
         self.m.plot_center_massif(np.array(self.m.num), np.array(self.m.num), textcolor='green')
         self.m.add_north_south_info(english=False)
@@ -346,7 +346,7 @@ class TestCartopyVosges(unittest.TestCase):
         pass
 
     def test_vosgesmap(self):
-        self.m = cartopy.Map_vosges()
+        self.m = cartopy_massifs.Map_vosges()
         self.m.init_massifs()
         self.m.plot_center_massif(np.array(self.m.num), np.array(self.m.name), textcolor='orange', format='%s')
         self.m.add_north_south_info(english=True)

@@ -25,6 +25,8 @@ python_sources = [
     'test_script_compareSimuPostObs.py',
     'test_script_create_forcing.py',
     'future_test_spatial_scores.py',
+    'test_hydro.py',
+    'test_scd.py'
 ]
 
 py.install_sources(

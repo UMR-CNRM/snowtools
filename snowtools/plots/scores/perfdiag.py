@@ -157,7 +157,7 @@ class PerfDiag(Mplfigure):
             assert len(pod) == len(far)
         except AssertionError:
             raise AssertionError("POD and FAR lists have to be same length")
-        if list_colors:
+        if list_colors is not None:
             if len(list_colors) == 1:
                 colors = np.repeat(list_colors[0], len(pod))
             else:
@@ -165,7 +165,7 @@ class PerfDiag(Mplfigure):
                 colors = list_colors
         else:
             colors = self.default_colors.colors[:len(pod)]
-        if list_markers:
+        if list_markers is not None:
             if len(list_markers) == 1:
                 markers = np.repeat(list_markers[0], len(pod))
             else:
@@ -173,7 +173,7 @@ class PerfDiag(Mplfigure):
                 markers = list_markers
         else:
             markers = np.repeat('*', len(pod))
-        if list_labels:
+        if list_labels is not None:
             if len(list_labels) == 1:
                 labels = np.repeat(list_labels[0], len(pod))
             else:
@@ -181,7 +181,7 @@ class PerfDiag(Mplfigure):
                 labels = list_labels
         else:
             labels = ['experiment {0}'.format(i) for i in range(1, len(pod)+1)]
-        if list_markersizes:
+        if list_markersizes is not None:
             if len(list_markersizes) == 1:
                 markersizes = np.repeat(list_markersizes[0], len(pod))
             else:
@@ -255,4 +255,15 @@ class FuzzyScoreDiagram(Mplfigure):
         self.set_title(title, fontsize=14)
 
     def draw(self, data, xlabels, ylabels):
-        self.plot.pcolormesh(data, cmap=self.cmap)
+        # (xl, yl) = np.meshgrid(xlabels, ylabels)
+        # print(xl)
+        mesh = self.plot.pcolormesh(data, cmap=self.cmap)
+        #xt = self.plot.get_xticks()
+        #print(xlabels)
+        self.plot.set_xticks(np.arange(0, len(xlabels), 1))
+        self.plot.set_xticklabels(xlabels)
+        self.plot.set_yticks(np.arange(0.5, len(ylabels), 1))
+        self.plot.set_yticklabels(ylabels)
+        self.plot.set_xlabel(self.xlabel)
+        self.plot.set_ylabel(self.ylabel)
+        self.cbar = plt.colorbar(mesh)
