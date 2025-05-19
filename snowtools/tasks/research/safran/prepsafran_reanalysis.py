@@ -48,7 +48,7 @@ class PrepSafran(Task, S2MTaskMixIn):
             rundate = self.conf.datebegin
             while rundate <= self.conf.dateend:
 
-                if rundate < Date(2023, 7, 31, 6):
+                if rundate <= Date(2024, 8, 1, 6):
                     # Pour les dates les plus anciennes aucun archivage sur hendrix n'est disponible
                     # Il faut alors extraire les champs des guess depuis la BDPE avec le script
                     # Extraction_bdap.py sur soprano
@@ -74,7 +74,7 @@ class PrepSafran(Task, S2MTaskMixIn):
                     print(t.prompt, 'tb02 =', [str(rh.container.basename) for rh in tbarp])
                     print()
 
-                    interp = ''
+                    #interp = ''
 
                 else:
 
