@@ -7,7 +7,7 @@ import os
 import numpy as np
 from netCDF4 import Dataset
 from snowtools.utils.prosimu import prosimu
-from snowtools.plots.maps import cartopy
+from snowtools.plots.maps import cartopy_massifs
 from snowtools.DATA import TESTBASE_DIR
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))

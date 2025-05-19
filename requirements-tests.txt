@@ -46,7 +46,7 @@ git+https://github.com/VACUMM/sphinx-fortran.git
 pytest
 
 # numpy versions:
-# import matplotlib.pyplot fails for matplotlib 3.5.1 with numpy>=2.0 ImportError: numpy.core.multiarray failed to import
+# import matplotlib.pyplot fails for matplotlib 3.5.1 (ubuntu 22.04) with numpy>=2.0 ImportError: numpy.core.multiarray failed to import
 # further information from the error message:
 #
 # A module that was compiled using NumPy 1.x cannot be run in
