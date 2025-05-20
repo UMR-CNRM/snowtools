@@ -7,6 +7,7 @@ Created on 18 mars 2024
 from vortex.layout.nodes import Task
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
+from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 
 
 class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task and CEN-specific methods
@@ -46,25 +47,32 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         """
         Main method definig the task's sequence of actions
         """
+
+        self.get_list_dates()
+
         # TODO : passer toute la conf en kw ?
         # Les variables de conf suivante sont automatiquement passées à footprint :
         # model, date, cutoff, geometry, cycle et namespace
         self.common_kw   = dict(
-            datebegin = self.conf.datebegin,
-            dateend   = self.conf.dateend,
-            uenv      = self.conf.uenv,
-            vapp      = self.conf.vapp,
-            xpid      = self.conf.xpid,
-            geometry  = self.conf.geometry,
+            datebegin      = self.list_dates_begin,
+            dateend        = self.dict_dates_end,
+            date           = '[dateend]',  # WARNING : research only !
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            vapp           = self.conf.vapp,
+            vconf          = '[geometry:tag]',
+            model          = self.conf.model,
+            namespace      = 'vortex.multi.fr',
+            namebuild      = 'flat@cen',  # WARNING : research only !
+            nativefmt      = 'netcdf',
         )
 
-        toolbox.defaults.update(
-            dict(
-                model = 's2m',
-            )
-        )
+        toolbox.defaults.update(**self.common_kw)
 
-        if 'early-fetch' in self.steps:  # Executed on a TRANSFERT NODE to fetch inputs from a remote
+        if hasattr(self.conf, 'member') and self.conf.member is not None:
+            toolbox.defaults.update(member=self.conf.member)
+
+        if 'early-fetch' in self.steps:  # Executed on a TRANSFERT NODE to fetch inputs from a remote cache
             self.get_remote_inputs()
 
         if 'fetch' in self.steps:  # Executed on a COMPUTE NODE to fetch resources already in the local cache
@@ -107,7 +115,6 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         You can either use standard Vortex input toolboxes or the CEN-specific `vortexIO` tool.
         """
         # self.get_remote_inputs()  # TODO : check if really necessary / good practice
-        pass
 
     def algo(self):
         """
@@ -122,7 +129,6 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         You can either use standard Vortex input toolboxes or the CEN-specific `vortexIO` tool.
         """
         # self.put_remote_outputs()  # TODO : check if really necessary / good practice
-        pass
 
     def put_remote_outputs(self):
         """
@@ -130,3 +136,11 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         You can either use standard Vortex input toolboxes or the CEN-specific `vortexIO` tool.
         """
         raise NotImplementedError()
+
+    def get_list_dates(self):
+        """
+        Get lists of datebegin / dateend from actual datebegin / dateend conf arguments of the task
+        """
+        self.list_dates_begin, list_dates_end, _, _  = get_list_dates_files(self.conf.datebegin, self.conf.dateend,
+                'yearly')
+        self.dict_dates_end = get_dic_dateend(self.list_dates_begin, list_dates_end)
