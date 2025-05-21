@@ -10,10 +10,10 @@ import snowtools.algo  # Mandatory import, do not remove !
 
 def setup(t, **kw):
     return Driver(
-        tag='extract_massifs',
+        tag='extract_forcing',
         ticket=t,
         nodes=[
-            Extract_massifs(tag='extract_massifs', ticket=t, **kw),
+            Extract_massifs(tag='extract_forcing', ticket=t, **kw),
         ],
         options=kw
     )
@@ -50,6 +50,9 @@ class Extract_massifs(_VortexTask):
         algo = toolbox.algo(
             kind         = 'ExtractMassifs',
             massifs      = self.conf.massifs,
+            slopes       = self.conf.slopes,
+            elevations   = self.conf.elevations,
+            aspects      = self.conf.aspects,
             role_members = 'Forcing',
             engine       = 'algo',
         )

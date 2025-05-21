@@ -13,7 +13,7 @@ from snowtools.tools.execute import callSystemOrDie
 
 def parse_command_line():
 
-    description = "Extract a subset of massifs from a FORCING file \n" \
+    description = "Extract a subset of points from a S2M-like FORCING file (massif, aspect, elevation, slope) \n" \
                   "EXAMPLE: \n" \
                   "extract_massif.py -b 2000080106 -e 2001080106 --vapp=adamont --geometry=massif_40 --massifs=40 " \
                   "--geometry_in=cor_flat --model=adamont " \
@@ -58,8 +58,20 @@ def parse_command_line():
                         help="*model* footprint of the FORCING file \n"
                              " ")
 
-    parser.add_argument("--massifs", nargs="+", type=int, dest="massifs", required=True,
+    parser.add_argument("--massifs", nargs="+", type=int, dest="massifs", default=None,
                         help="(List of) massifs numbers to extract. \n"
+                             " ")
+
+    parser.add_argument("--elevations", nargs="+", type=int, dest="elevations", default=None,
+                        help="(List of) elevations to extract. \n"
+                             " ")
+
+    parser.add_argument("--aspects", nargs="+", type=int, dest="aspects", default=None,
+                        help="(List of) aspects to extract. \n"
+                             " ")
+
+    parser.add_argument("--slopes", nargs="+", type=int, dest="slopes", default=None,
+                        help="(List of) slopes to extract. \n"
                              " ")
 
     parser.add_argument("--member", type=str, dest="member", default=None, required=False,
@@ -187,8 +199,8 @@ if __name__ == "__main__":
     dateend = args.pop('dateend')
 
     # Task-specific variables
-    jobname  = 'extract_massifs'
-    taskname = 'extract_massifs'
+    jobname  = 'extract_forcing'
+    taskname = 'extract_forcing'
 
     # 1 job per xpid, // over the dates
     for xpid in args.pop('xpid'):
