@@ -5,14 +5,14 @@ Algo Components for FORCING generation.
 """
 from bronx.fancies import loggers
 from snowtools.algo.ensemble import _CENTaylorRun, _CENTaylorVortexWorker
-from snowtools.scripts.create_forcing import extract_massifs
+from snowtools.scripts.create_forcing import extract_forcing
 
 import footprints
 
 logger = loggers.getLogger(__name__)
 
 
-class ExtractMassifs(_CENTaylorRun):
+class ExtractForcing(_CENTaylorRun):
     """
     Algo component to extract a list of massifs from a set of FORCING files
     """
@@ -24,8 +24,24 @@ class ExtractMassifs(_CENTaylorRun):
                 values     = ['ExtractMassifs'],
             ),
             massifs = dict(
-                info    = 'List of massifs to be extracted',
-                type    = footprints.FPList,
+                info     = 'List of massifs to be extracted',
+                type     = footprints.FPList,
+                optional = True,
+            ),
+            elevations = dict(
+                info     = 'List of elevations to be extracted',
+                type     = footprints.FPList,
+                optional = True,
+            ),
+            slopes = dict(
+                info     = 'List of slopes to be extracted',
+                type     = footprints.FPList,
+                optional = True,
+            ),
+            aspects = dict(
+                info     = 'List of aspects to be extracted',
+                type     = footprints.FPList,
+                optional = True,
             ),
             role_members = dict(
                 info     = "Role of RH inputs to use for members definition",
@@ -46,8 +62,24 @@ class ExtractMassifsWorker(_CENTaylorVortexWorker):
                 values = ['ExtractMassifs']
             ),
             massifs = dict(
-                info    = 'List of massifs to be extracted',
-                type    = footprints.FPList,
+                info     = 'List of massifs to be extracted',
+                type     = footprints.FPList,
+                optional = True,
+            ),
+            elevations = dict(
+                info     = 'List of elevations to be extracted',
+                type     = footprints.FPList,
+                optional = True,
+            ),
+            slopes = dict(
+                info     = 'List of slopes to be extracted',
+                type     = footprints.FPList,
+                optional = True,
+            ),
+            aspects = dict(
+                info     = 'List of aspects to be extracted',
+                type     = footprints.FPList,
+                optional = True,
             ),
         )
     )
@@ -56,4 +88,4 @@ class ExtractMassifsWorker(_CENTaylorVortexWorker):
         """
         Method called by the main **vortex_task** method of the **_S2MWorkerMixIn** class
         """
-        extract_massifs.extract(self.massifs)
+        extract_forcing.extract(massif_number=self.massifs, ZS=self.elevations, aspect=self.aspects, slope=self.slopes)
