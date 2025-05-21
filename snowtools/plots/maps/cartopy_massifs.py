@@ -816,7 +816,7 @@ class _Map_massifs(Mplfigure):
         #     variable = field[:]
         print(variable[0].max())
         self.map.pcolormesh(lons, lats, variable[0], transform=ccrs.PlateCarree(),
-                            cmap=self.palette, vmin=self.vmin, vmax=self.vmax)
+                            cmap=self.palette, vmin=self.vmin, vmax=self.vmax, shading='auto')
         # prepare colorbar
         self.prepare_colorbar(variable[0], **kwargs)
 
