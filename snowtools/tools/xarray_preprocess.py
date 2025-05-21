@@ -1,34 +1,42 @@
 
 import xarray
 
-# TODO : Use xarray's accessors instead ?
-# --> https://docs.xarray.dev/en/stable/internals/extending-xarray.html
-
-# Use "pipe" function ?
-# https://docs.xarray.dev/en/v0.8.2/generated/xarray.Dataset.pipe.html
-
-# Use backends ?
-# https://docs.xarray.dev/en/v0.8.2/generated/xarray.Dataset.pipe.html
-
+# The following dictionnaries are used to control default variable and dimension names mapping
 dimension_map = {'x': 'xx', 'y': 'yy', 'lat': 'yy', 'latitude': 'yy', 'lon': 'xx', 'longitude': 'xx'}
 variables_map = {'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf', 'band_data': 'ZS'}
 
 
-def preprocess(ds, mapping=dict()):
+def preprocess(ds, mapping=dict(), decode_time=True, transpose=False):
     """
-    * ds: xarray.Dataset or Dataarray
-    * decode_time: Need to decode time manually
-    * mapping: User-defined variable re-naming
+    :param ds: xarray object to preprocess
+    :param ds: xarray Dataset or Dataarray
+    :param mapping: User-defined dictionnary to map variable or dimension names (it will be used as a complement to
+                    the default mapping dictionnaries).
+    :type mapping: dict
+    :param decode_time: Manually decode the time variable when xarray fails to do it properly (SURFEX outputs)
+    :type decode_time: bool
+    :param transpose: Put time dimension as first dimension in case of data processing through numpy arrays
+    :type transpose: bool
     """
-    # if decode_time:
-    #     ds = decode_time_dimension(ds)
+    if decode_time:
+        ds = decode_time_dimension(ds)
     ds = update_varname(ds, mapping)
     ds = update_dimname(ds, mapping)
-    ds = transpose(ds)
+    if transpose:
+        ds = transpose(ds)
     return ds
 
 
 def update_varname(ds, mapping):
+    """
+    Map variable names if necessary / possible
+
+    :param ds: xarray object to preprocess
+    :param ds: xarray Dataset or Dataarray
+    :param mapping: User-defined dictionnary to map variable or dimension names (it will be used as a complement to
+                    the default mapping dictionnaries).
+    :type mapping: dict
+    """
     # Do not directly modify *variables_map* in case several calls to "preprocess" are made from
     # the same session
     tmpmap = variables_map.copy()
@@ -43,6 +51,15 @@ def update_varname(ds, mapping):
 
 
 def update_dimname(ds, mapping):
+    """
+    Map dimension names if necessary / possible
+
+    :param ds: xarray object to preprocess
+    :param ds: xarray Dataset or Dataarray
+    :param mapping: User-defined dictionnary to map variable or dimension names (it will be used as a complement to
+                    the default mapping dictionnaries).
+    :type mapping: dict
+    """
     # Do not directly modify *dimensions_map* in case several calls to "preprocess" are made from
     # the same session
     tmpmap = dimension_map.copy()
@@ -54,7 +71,11 @@ def update_dimname(ds, mapping):
 
 def decode_time_dimension(ds):
     """
-    Manually decode time variable if other variables can not be decoded automatically
+    Manually decode time variable when xarray fails to do it properly (SURFEX outputs)
+
+    :param ds: xarray object to preprocess
+    :param ds: xarray Dataset or Dataarray
+
     """
     if 'time' in list(ds.coords):
         time = xarray.Dataset({"time": ds.time})
@@ -64,6 +85,13 @@ def decode_time_dimension(ds):
 
 
 def transpose(ds):
+    """
+    Put time dimension as first dimension in case of data processing through numpy arrays
+
+    :param ds: xarray object to preprocess
+    :param ds: xarray Dataset or Dataarray
+    """
+
     if 'time' in ds.dims:
         return ds.transpose('time', ...)
     else:
@@ -71,9 +99,18 @@ def transpose(ds):
 
 
 def proj_array(ds, crs_in="EPSG:4326", crs_out="EPSG:2154"):
+    """
+    Projection of an xarray dataset or dataarray into a new CRS.
+
+    :param ds: xarray object to preprocess
+    :param ds: xarray Dataset or Dataarray
+    :param crs_in: CRS of the input object
+    :type crs_in: str
+    :param crs_out: CRS of the output object
+    :type crs_out: str
+    """
     # WARNING : rioxarray not available on HPC yet
     # TODO : check crs_in ?
     ds.rio.write_crs(crs_in, inplace=True)
-    ds  = ds.rename({'longitude': 'xx', 'latitude': 'yy'})
     out = ds.rio.reproject(crs_out)
     return out
