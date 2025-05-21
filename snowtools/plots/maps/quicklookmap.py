@@ -16,9 +16,9 @@ import argparse
 
 from bronx.syntax.parsing import str2dict
 from bronx.syntax.pretty import smooth_string
+from bronx.stdtypes.date import Date
 
 import pyproj
-from datetime import datetime
 import epygram
 from epygram import epylog, epygramError
 from epygram.args_catalog import (add_arg_to_parser,
@@ -489,9 +489,9 @@ if __name__ == '__main__':
         raise epygramError("Need to specify a field (-f) or two wind fields (--wU/--wV).")
 
     if args.date is None:
-        raise ValueError("Need to specify a date (--date YYYYmmddHH:MM).")
+        raise ValueError("Need to specify a date (--date).")
     else:
-        date = datetime.strptime(args.date, "%Y%m%d%H:%M")
+        date = Date(args.date)
 
     # 3. Main
     #########
