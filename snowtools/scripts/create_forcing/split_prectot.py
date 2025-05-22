@@ -92,7 +92,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "-p",
         "--prectot",
-        type=int,
+        type=str,
+        nargs='+',
         default=["Rainf", "Snowf"],
         help="List of variable names (string) to be sum to get prectot",
     )
