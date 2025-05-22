@@ -39,6 +39,7 @@ class Extract_massifs(_VortexTask):
             cutoff         = 'assimilation',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_IN.nc',
             block          = 'meteo',
+            geometry       = self.conf.geometry_in,
             intent         = 'in',
         ),
         print(self.ticket.prompt, 'Input forcing =', forcing_in)
