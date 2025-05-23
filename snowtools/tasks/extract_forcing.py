@@ -89,6 +89,11 @@ def parse_command_line():
                         help="*source_conf* footprint of the FORCING file \n"
                              " ")
 
+    parser.add_argument("--debug", action='store_true', dest="debug", default=False,
+                        help="Make the task crash at the end even if the execution went well in order \n"
+                             "to keep the working directory in the 'abort' folder \n"
+                             " ")
+
     args = parser.parse_args()
     return vars(args)
 
