@@ -19,10 +19,11 @@ def preprocess(ds, mapping=dict(), decode_time=True, transpose=False):
     :param transpose: Put time dimension as first dimension in case of data processing through numpy arrays
     :type transpose: bool
     """
-    if decode_time:
-        ds = decode_time_dimension(ds)
     ds = update_varname(ds, mapping)
     ds = update_dimname(ds, mapping)
+    ds = check_encoding(ds)
+    if decode_time:
+        ds = decode_time_dimension(ds)
     if transpose:
         ds = transpose(ds)
     return ds
@@ -67,6 +68,23 @@ def update_dimname(ds, mapping):
     tmpmap.update(mapping)
     update_dict = {key: tmpmap[key] for key in list(ds.dims) if key in tmpmap.keys()}
     ds = ds.rename(update_dict)
+    return ds
+
+
+def check_encoding(ds):
+    """
+    Ensure that "missing_value" and "_FillValue" attributes do not differ to avoid crashing when trying to write data.
+
+    See snowtools ticket #282 or xarray ticket #7722 (https://github.com/pydata/xarray/issues/7722) for more
+    information.
+
+    :param ds: xarray object to preprocess
+    :param ds: xarray Dataset or Dataarray
+    """
+    if isinstance(ds, xarray.core.dataarray.Dataset):
+        for var in ds.keys():
+            if 'missing_value' in ds[var].encoding.keys():
+                ds[var].encoding['missing_value'] = ds[var].encoding['_FillValue']
     return ds
 
 
