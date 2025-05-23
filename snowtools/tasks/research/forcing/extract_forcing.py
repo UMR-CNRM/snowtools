@@ -79,3 +79,8 @@ class Extract_massifs(_VortexTask):
         ),
         print(self.ticket.prompt, 'Output forcing =', forcing_out)
         print()
+
+        if self.conf.debug:
+            print('==================================================================================================')
+            print('==================================================================================================')
+            raise Exception('INFO :The execution went well, do not take into account the following error')
