@@ -87,10 +87,10 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         if 'late-backup' in self.steps:  # Executed on a TRANSFERT NODE to save outputs to a remote destination
             self.put_remote_outputs()
 
-            # Un-comment these lines to save the working directory after the execution
-#            print('==================================================================================================')
-#            print('==================================================================================================')
-#            raise Exception('INFO :The execution went well, do not take into account the following error')
+        if self.conf.debug:
+            print('==================================================================================================')
+            print('==================================================================================================')
+            raise Exception('INFO :The execution went well, do not take into account the following error')
 
     def get_remote_inputs(self):
         """
@@ -144,3 +144,4 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         self.list_dates_begin, list_dates_end, _, _  = get_list_dates_files(self.conf.datebegin, self.conf.dateend,
                 'yearly')
         self.dict_dates_end = get_dic_dateend(self.list_dates_begin, list_dates_end)
+

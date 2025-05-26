@@ -145,6 +145,11 @@ class Edelweiss_command(object):
                             help="Application name (if not 'edelweiss')\n"
                                  " ")
 
+        parser.add_argument("--debug", action='store_true', dest="debug", default=False,
+                            help="Make the task crash at the end even if the execution went well in order \n"
+                                 "to keep the working directory in the 'abort' folder \n"
+                                 " ")
+
         conf_parser = parser.add_argument_group("Optional arguments not bounded to a specific task :\n"
                                                "-----------------------------------------------------\n"
                                                " ")
