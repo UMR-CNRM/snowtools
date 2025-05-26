@@ -17,7 +17,7 @@ import sys
 import xarray as xr
 import argparse
 
-import snowtools.tools.xarray_backend  # Ignore "import not used" error --> load `CENBackendEntrypoint` api
+from snowtools.tools.SnowCoverDuration import lcscd
 
 
 def parse_command_line():

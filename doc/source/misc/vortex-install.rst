@@ -62,9 +62,11 @@ Basically, installing requires to download the git repo. and add a few vortex pa
 
 First, add the following items to your .bash_profile (and run it):
 
-export VORTEX=<your_path_to_vortex>
-export PYTHONPATH=$PYTHONPATH:$VORTEX/site:$VORTEX/src:$VORTEX/project
-export MTOOLDIR=$WORKDIR
+.. code-block:: bash
+
+   export VORTEX=<your_path_to_vortex>
+   export PYTHONPATH=$PYTHONPATH:$VORTEX/site:$VORTEX/src:$VORTEX/project
+   export MTOOLDIR=$WORKDIR
 
 Attention: for a local installation WORKDIR and therefore MTOOLDIR might be undefined. In this case MTOOLDIR has to be set before executing a task that fetches data.
 

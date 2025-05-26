@@ -39,13 +39,6 @@ def printandcallSystemOrDie(commande, errorcode=None):
     callSystemOrDie(commande, errorcode=errorcode)
 
 
-def printandcallSystemOrDie(commande, errorcode=None):
-    """Method to print and execute a system command and kill the current program if it fails."""
-
-    print(commande)
-    callSystemOrDie(commande, errorcode=errorcode)
-
-
 def callSurfexOrDie(commande, moderun="NORMAL", nproc=1, errorcode=None):
     """Method to execute a SURFEX binary and kill the current program if it fails.
     Include the setting of MPI and OpenMP tasks, and the extension of stack memory.

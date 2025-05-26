@@ -95,7 +95,7 @@ def by_slices(data, criterion, thresholds):
 
 def per_landform_types(data, landform, test_coords=False):
     """
-    Groups data into landform types as defined by https://doi.org/10.1016/j.geomorph.2012.11.005
+    Groups data into landform types as defined by https://doi.org/10.1016/j.geomorph.2012.11.00
 
     :param data: The input dataset containing the data to be grouped.
     :type data: xarray dataset
@@ -117,9 +117,9 @@ def per_landform_types(data, landform, test_coords=False):
                 try:
                     np.intersect1d(landform[m], data[k])
                 except:  # TODO : Precise which Exceptions are concerned ?
-                    print('No common coordinate between {m} and {k}')
+                    print('No common coordinate between '+str(m)+' and '+str(k))
                 else:
-                    print('Common coordinate found between {m} and {k}')
+                    print('Common coordinate found between '+str(m)+' and '+str(k))
 
     ii = 0
     for i in np.unique(landform.values)[~np.isnan(np.unique(landform.values))]:

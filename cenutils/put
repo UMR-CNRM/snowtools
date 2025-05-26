@@ -203,12 +203,13 @@ then
         --exclude .idea \
         --exclude .settings \
         --exclude build \
+        --exclude fail_test --exclude Manual_tests \
+        --exclude /exe \
         --exclude "venv*" \
         --exclude "*.pyc" --exclude "*.bak" --exclude "*.sav" --exclude "*.backup" \
         --exclude ".*.swp" --exclude "*~" \
         --exclude "*.egg-info" --exclude "*.o" --exclude "*.bin" --exclude "*.exe" \
-        --exclude fail_test --exclude Manual_tests --exclude "interpolation/*.mod" \
-        --exclude "interpolation/output1980" \
+        --exclude "interpolation/*.mod" \
         --exclude "interpolation/interpol_*" \
         --exclude "src/dir_obj*" --exclude "exe_*" \
         --exclude 'profile_surfex' --exclude 'profile_surfex-LX*' \
@@ -262,10 +263,10 @@ then
       --exclude-glob 'profile_surfex-LX*' \
       --exclude-glob src/LIB/grib_api-*-Source/ \
       --exclude-glob src/LIB/eccodes* \
-      --exclude-glob NO_TRANSFER*/ \
+      --exclude-glob examples/ \
+      --exclude-glob sphinx/ \
       --exclude STRATO \
-      --exclude sphinx \
-      --exclude examples \
+      --exclude-glob NO_TRANSFER*/ \
       $folder_orig $folder_dest"
     retcode=$?
     set -e

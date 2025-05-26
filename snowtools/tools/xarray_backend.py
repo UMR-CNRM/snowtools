@@ -20,6 +20,7 @@ def guess_engine(store_spec):
 
 # WARNING : the following line changes the default behavior of ALL subsequent xarray `open_*`
 # by forcing the use of the custom `CENBackendEntrypoint` entry point.
+# This may be a bad idea to mess with the default engine
 # import xarray.backends.plugins as plugins
 # plugins.guess_engine = guess_engine
 
@@ -125,8 +126,6 @@ class CENBackendEntrypoint(BackendEntrypoint):
         """
         guess_can_open is used to identify the proper engine to open your data file automatically in case
         the engine is not specified explicitly.
-
-        WARNING : This may be a bad idea to mess with the default engine
         """
         return True
 
