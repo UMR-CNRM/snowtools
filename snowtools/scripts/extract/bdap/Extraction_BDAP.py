@@ -6,9 +6,11 @@
 import os
 import sys
 import argparse
-from bronx.stdtypes.date import Date, Period
 import numpy as np
 import xarray as xr
+import time
+
+from bronx.stdtypes.date import Date, Period
 
 """
 Outil d'extraction de données de la BDAP. Les données sont extraites sous forme de fichiers grib
@@ -357,6 +359,19 @@ def clean():
         os.remove(fic)
 
 
+def speedtest(function):
+    def wrapper(*args, **kw):
+        t0 = time.time()
+        result = function(*args, **kw)
+        t1 = time.time()
+        monitoring = f'monitoring_{model}_{parameter}_{level_type}_{grid}_{datebegin.ymdh}_{dateend.ymdh}.txt'
+        extraction_time = (t1 - t0) / 60
+        with open(monitoring, 'w') as f:
+            f.write(f"Extraction time : {extraction_time} minutes \n")
+        return result
+    return wrapper
+
+
 class GeometryError(Exception):
     """
     Exception when the required extraction grid does not exists for the given model
@@ -424,7 +439,7 @@ class LeadTimeError(Exception):
 class ExtractBDAP(object):
 
     def __init__(self, model: str, date: str or list, ech: str or list, parameter: str, level_type: str,
-            levels: list, grid: str, domain: str, dlat=None, dlon=None, interpolation=False, test=False):
+            levels: list, grid: str, domain: str, dlat=None, dlon=None, interpolation=False, test=False, member=None):
 
         self.model          = model
         self.date           = date
@@ -434,11 +449,20 @@ class ExtractBDAP(object):
         self.levels         = levels
         self.grid           = grid.upper()
         self.domain         = domain
-        self.gribname       = f'{level_type}_{date.ymdh}_{ech}.grib'
+        if member is None:
+            self.gribname       = f'{level_type}_{date.ymdh}_{ech}.grib'
+        else:
+            self.gribname       = f'{level_type}_{date.ymdh}_{ech}_mb{member:03d}.grib'
         self.dlat           = dlat
         self.dlon           = dlon
         self.test           = test
         self.interpolation  = interpolation
+        if self.model == 'PEAROME':
+            self.MOD = f'PEAROME{member:03d}'
+        elif self.model == 'ASPEAROME':
+            self.MOD = f'PG1PEAROM{member:03d}'
+        else:
+            self.MOD = self.model
 
     def requete(self, cmd='dap3_dev'):
         """
@@ -453,12 +477,7 @@ class ExtractBDAP(object):
         f = open(self.rqst, "w")
         f.write('#RQST\n')
         f.write(f'#NFIC {self.gribname}\n')  # Output file name
-        if self.model == 'PEAROME':
-            f.write('#MOD ' + ' '.join(['PEAROME{0:03d}'.format(member) for member in range(1, 17)]) + '\n')
-        elif self.model == 'ASPEAROME':
-            f.write('#MOD ' + ' '.join(['PG1PEAROM{0:03d}'.format(member) for member in range(1, 17)]) + '\n')
-        else:
-            f.write(f'#MOD {self.model}\n')  # BDAP model name (see doc)
+        f.write(f'#MOD {self.MOD}\n')  # BDAP model name (see doc)
         f.write(f'#PARAM {self.parameter}\n')  # paramater
         f.write(f'#Z_REF {self.grid}\n')  # BDAP grib name (see doc)
         if self.interpolation:
@@ -531,7 +550,6 @@ class ExtractBDAP(object):
         """
         Check geometry consistency
         """
-
         if self.grid not in valid_geometries[self.model]:
             raise GeometryError(self.model, self.grid)
 
@@ -599,6 +617,45 @@ class ExtractBDAP(object):
         self.i2 = int(1 + np.round(lonmax - i0, 2) / maille)
 
 
+@speedtest
+def execute():
+    extractedfiles = list()
+    date = datebegin
+    # Loop over dates and lead times
+    while date <= dateend:
+        for ech in echeances:
+            # Launch extraction
+            if model in ['PEAROME', 'ASPEAROME']:
+                for mb in range(1, 17):
+                    extraction = ExtractBDAP(model, date, ech, parameter, level_type, levels, grid, domain,
+                            dlat=args.dlat, dlon=args.dlon, interpolation=args.interpolation, test=args.test, member=mb)
+                    grib = extraction.run()
+                    if grib is not None:
+                        extractedfiles.append(grib)
+            else:
+                extraction = ExtractBDAP(model, date, ech, parameter, level_type, levels, grid, domain, dlat=args.dlat,
+                        dlon=args.dlon, interpolation=args.interpolation, test=args.test)
+                grib = extraction.run()
+                if grib is not None:
+                    extractedfiles.append(grib)
+        date = date + Period(hours=max(dt, 1))  # Avoid infinite loops
+
+    # Open all extracted files with xarray
+    if len(extractedfiles) > 0:
+        print('Opening grib files with xarray...')
+        ds  = xr.open_mfdataset(extractedfiles, concat_dim='valid_time', combine='nested', engine='cfgrib')
+        # TODO : set proper variable names, check/set attributes,...
+        print('Dataset created')
+        ds.to_netcdf(outname)
+    else:
+        if args.test:
+            print(f'Request created : {os.path.join(workdir, extraction.rqst)}')
+        else:
+            print('No extracted file to open')
+
+    clean()
+
+
 if __name__ == "__main__":
     args = parse_command_line()
     datebegin  = args.datebegin
@@ -635,33 +692,7 @@ if __name__ == "__main__":
     else:  # The extraction is associated to a date
         outname = f'{model}_{parameter}_{level_type}_{grid}_{datebegin.ymdh}.nc'
     if not os.path.exists(outname):
-        extractedfiles = list()
-        date = datebegin
-        # Loop over dates and lead times
-        while date <= dateend:
-            for ech in echeances:
-                # Launch extraction
-                extractor = ExtractBDAP(model, date, ech, parameter, level_type, levels, grid, domain, dlat=args.dlat,
-                        dlon=args.dlon, interpolation=args.interpolation, test=args.test)
-                grib = extractor.run()
-                if grib is not None:
-                    extractedfiles.append(grib)
-            date = date + Period(hours=max(dt, 1))  # Avoid infinite loops
-
-        # Open all extracted files with xarray
-        if len(extractedfiles) > 0:
-            print('Opening grib files with xarray...')
-            ds  = xr.open_mfdataset(extractedfiles, concat_dim='valid_time', combine='nested', engine='cfgrib')
-            # TODO : set proper variable names, check/set attributes,...
-            print('Dataset created')
-            ds.to_netcdf(outname)
-        else:
-            if args.test:
-                print(f'Request created : {os.path.join(workdir, extractor.rqst)}')
-            else:
-                print('No extracted file to open')
-
-    clean()
+        execute()
 
     ############################################
     # Everything beyond this point is optional #
