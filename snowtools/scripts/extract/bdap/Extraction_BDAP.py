@@ -10,6 +10,8 @@ import numpy as np
 import xarray as xr
 import time
 
+from vortex import toolbox
+
 from bronx.stdtypes.date import Date, Period
 
 """
@@ -93,12 +95,12 @@ model_map = dict(
     PEAROME      = dict(vapp='arome', vconf='pearome'),  # Prévision d'ensemble AROME
     PAA          = dict(vapp='arpege', vconf='4dvarfr'),  # Analyse ARPEGE
     PA           = dict(vapp='arpege', vconf='4dvarfr'),  # Analyse ARPEGE
-    ANTILOPE     = dict(vapp=None, vconf=None),
-    ANTILOPEJP1  = dict(vapp=None, vconf=None),
-    ANTILOPEH    = dict(vapp=None, vconf=None),
-    ANTILOPEJP1H = dict(vapp=None, vconf=None),
-    ANTILOPEQ    = dict(vapp=None, vconf=None),
-    ANTILOPEJP1Q = dict(vapp=None, vconf=None),
+    ANTILOPE     = dict(vapp='antilope', vconf='raw'),
+    ANTILOPEJP1  = dict(vapp='antilope', vconf='rawJP1'),
+    ANTILOPEH    = dict(vapp='antilope', vconf='Hourly'),
+    ANTILOPEJP1H = dict(vapp='antilope', vconf='HourlyJP1'),
+    ANTILOPEQ    = dict(vapp='antilope', vconf='Daily'),
+    ANTILOPEJP1Q = dict(vapp='antilope', vconf='DailyJP1'),
 )
 
 default_levels = dict(
@@ -321,6 +323,9 @@ def parse_command_line():
 
     parser.add_argument('-a', '--archive', action="store_true", default=False,
                         help="Archive output file with Vortex")
+
+    parser.add_argument('-k', '--kind',
+                        help="Kind of the output resource in case it is archived with Vortex")
 
     parser.add_argument('--interpolation', action='store_true', default=False,
                         help='Extraction on the user-defined subdomain (slower)')
@@ -666,6 +671,7 @@ if __name__ == "__main__":
     grid       = args.grid
     domain     = args.domain
     parameter  = args.parameter
+    kind       = args.kind
     if args.levels is None:
         levels = [str(lvl) for lvl in default_levels[level_type]]
     else:
@@ -704,24 +710,31 @@ if __name__ == "__main__":
 
         t = vortex.ticket()
 
-        if level_type.startswith('ISO_'):
-            kind = level_type
-        elif level_type == 'HAUTEUR':
-            kind = parameter
-        else:
-            print('Kind not yet defined for this extraxction')
-            raise NotImplementedError
-        out = io.put_meteo(
+        if kind is None:
+            if level_type.startswith('ISO_'):
+                kind = level_type
+            elif level_type == 'HAUTEUR':
+                kind = parameter
+            else:
+                print('FOOTPRINT ERROR: Missing *kind* footprint (see -k / --king argument)')
+                raise NotImplementedError
+
+        # out = io.put_meteo(
+        out = toolbox.output(
             kind           = kind,
-            vapp           = 'edelweiss',
-            vconf          = domain,
-            source_app     = model_map[model]['vapp'],
-            source_conf    = model_map[model]['vconf'],
+            vapp           = model_map[model]['vapp'],
+            vconf          = model_map[model]['vconf'],
+            # source_app     = model_map[model]['vapp'],
+            # source_conf    = model_map[model]['vconf'],
             geometry       = grid,
             experiment     = f'oper@{os.environ["USER"]}',
             datebegin      = args.datebegin,
             dateend        = args.dateend,
+            date           = '[dateend]',
             filename       = outname,
+            block          = 'meteo',
+            namebuild      = 'flat@cen',
+            namespace      = 'vortex.multi.fr',
         )
         out[0].quickview()
         print(t.prompt, 'Output location =', out[0].location())
