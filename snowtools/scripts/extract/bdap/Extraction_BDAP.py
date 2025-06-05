@@ -303,12 +303,12 @@ def parse_command_line():
     parser.add_argument('-g', '--grid', required=True, choices=known_grids.keys(),
                         help='BDAP grid name from which to extract data')
 
-    parser.add_argument('-d', '--domain', type=str, choices=known_domains.keys(),
+    parser.add_argument('-d', '--domain', type=str, required=True,
                         help='Extraction domain')
 
-    parser.add_argument('-c', '--coordinates', nargs=4, type=str,
+    parser.add_argument('-c', '--coordinates', nargs=4, type=float, default=None,
                         help='list of min/max coordinates to extract, format:'
-                        '[latmax, latmin, lonmin, lonmax] (unit: 1/1000°)')
+                        '[latmax, latmin, lonmin, lonmax] (unit: °)')
 
     parser.add_argument('-l', '--levels', nargs='+', default=None,
                         help='Level(s) of the parameter to extract')
@@ -444,7 +444,8 @@ class LeadTimeError(Exception):
 class ExtractBDAP(object):
 
     def __init__(self, model: str, date: str or list, ech: str or list, parameter: str, level_type: str,
-            levels: list, grid: str, domain: str, dlat=None, dlon=None, interpolation=False, test=False, member=None):
+            levels: list, grid: str, coordinates: tuple, dlat=None, dlon=None, interpolation=False, test=False,
+            member=None):
 
         self.model          = model
         self.date           = date
@@ -453,7 +454,7 @@ class ExtractBDAP(object):
         self.level_type     = level_type
         self.levels         = levels
         self.grid           = grid.upper()
-        self.domain         = domain
+        self.coordinates    = coordinates
         if member is None:
             self.gribname       = f'{level_type}_{date.ymdh}_{ech}.grib'
         else:
@@ -488,7 +489,7 @@ class ExtractBDAP(object):
         if self.interpolation:
             f.write("#Z_EXTR INTERPOLATION\n")  # Interpolation on a user-defined grid
             # Coordonées de la grille de sortie (N S WA E) :
-            f.write('#Z_GEO ' + ' '.join(known_domains[self.domain]) + '\n')
+            f.write('#Z_GEO ' + ' '.join(self.coordinates) + '\n')
             # f.write('#Z_STP ' + ' '.join(dl[self.grid]) + '\n')  # Pas en lat/lon de la grille de sortie
             f.write(f'#Z_STP {self.dlat} {self.dlon} \n')  # Pas en lat/lon de la grille de sortie (TODO : check order)
         else:
@@ -505,7 +506,7 @@ class ExtractBDAP(object):
 
         f.write('#L_LST ' + ' '.join(self.levels) + '\n')  # List de niveaux
         f.write(f'#L_TYP {self.level_type}\n')  # Type de niveau (SOL, ISOBARE, HAUTEUR, MER, ISO*,...)
-        f.write('#FORM GRIB2\n')  # Format de sortie
+        f.write('#FORM GRIB2_C_MAX\n')  # Format de sortie
 
     def extract_from_bdap(self, cmd='dap3_dev'):
         """
@@ -612,10 +613,14 @@ class ExtractBDAP(object):
         i0 = known_grids[self.grid]['lonmin']
         j0 = known_grids[self.grid]['latmax']
         maille = known_grids[self.grid]['maille']
-        latmax = int(known_domains[self.domain][0]) / 1000
-        latmin = int(known_domains[self.domain][1]) / 1000
-        lonmin = int(known_domains[self.domain][2]) / 1000
-        lonmax = int(known_domains[self.domain][3]) / 1000
+#        latmax = int(known_domains[self.domain][0]) / 1000
+#        latmin = int(known_domains[self.domain][1]) / 1000
+#        lonmin = int(known_domains[self.domain][2]) / 1000
+#        lonmax = int(known_domains[self.domain][3]) / 1000
+        latmax = self.coordinates[0] / 1000
+        latmin = self.coordinates[1] / 1000
+        lonmin = self.coordinates[2] / 1000
+        lonmax = self.coordinates[3] / 1000
         self.j1 = int(1 + np.round(j0 - latmin, 2) / maille)
         self.j2 = int(1 + np.round(j0 - latmax, 2) / maille)
         self.i1 = int(1 + np.round(lonmin - i0, 2) / maille)
@@ -632,14 +637,14 @@ def execute():
             # Launch extraction
             if model in ['PEAROME', 'ASPEAROME']:
                 for mb in range(1, 17):
-                    extraction = ExtractBDAP(model, date, ech, parameter, level_type, levels, grid, domain,
+                    extraction = ExtractBDAP(model, date, ech, parameter, level_type, levels, grid, coordinates,
                             dlat=args.dlat, dlon=args.dlon, interpolation=args.interpolation, test=args.test, member=mb)
                     grib = extraction.run()
                     if grib is not None:
                         extractedfiles.append(grib)
             else:
-                extraction = ExtractBDAP(model, date, ech, parameter, level_type, levels, grid, domain, dlat=args.dlat,
-                        dlon=args.dlon, interpolation=args.interpolation, test=args.test)
+                extraction = ExtractBDAP(model, date, ech, parameter, level_type, levels, grid, coordinates,
+                        dlat=args.dlat, dlon=args.dlon, interpolation=args.interpolation, test=args.test)
                 grib = extraction.run()
                 if grib is not None:
                     extractedfiles.append(grib)
@@ -663,14 +668,21 @@ def execute():
 
 if __name__ == "__main__":
     args = parse_command_line()
-    datebegin  = args.datebegin
-    dateend    = args.dateend
-    parameter  = args.parameter
-    level_type = args.level_type
-    model      = args.model
-    grid       = args.grid
-    domain     = args.domain
-    parameter  = args.parameter
+    datebegin   = args.datebegin
+    dateend     = args.dateend
+    parameter   = args.parameter
+    level_type  = args.level_type
+    model       = args.model
+    grid        = args.grid
+    domain      = args.domain
+    if args.coordinates is not None:
+        coordinates = [int(x * 1000) for x in args.coordinates]
+    else:
+        if domain in known_domains.keys():
+            coordinates = [int(x) for x in known_domains[domain]]
+        else:
+            raise KeyError(f'Domain {domain} unknown, please provide associated coordinates')
+    parameter   = args.parameter
     kind       = args.kind
     if args.levels is None:
         levels = [str(lvl) for lvl in default_levels[level_type]]
@@ -685,6 +697,8 @@ if __name__ == "__main__":
         # The default beahvior to try to get hourly outputs
         # --> extract all N=H1-H0 echeances from H0 execution to cover H0 --> H1
         dt = max(echeances)
+    else:
+        dt = args.pdt
 
     if args.workdir is None:
         workdir = os.path.join(os.environ['HOME'], 'workdir', f'extraction_{model.upper()}', domain, parameter)
