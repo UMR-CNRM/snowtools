@@ -12,6 +12,7 @@ import matplotlib.dates as mdates
 
 from snowtools.tools import xarray_backend
 from snowtools.utils.infomassifs import infomassifs
+from snowtools.plots.stratiprofile.profilPlot import dateProfil
 
 from bronx.stdtypes.date import Date, Period
 
@@ -39,6 +40,9 @@ def parse_command_line():
     parser.add_argument('-e', '--dateend', type=str, required=True,
                         help="End date of the time serie")
 
+    parser.add_argument('-t', '--time', type=str,
+                        help="Time of the plot for snapshot plots")
+
     parser.add_argument('-x', '--xpid', type=str, default='oper',
                         help="XPID(s) of the simulation(s) format XP_NAME@username")
 
@@ -46,13 +50,13 @@ def parse_command_line():
                         help="Massif(s) to plot")
 
     parser.add_argument('-z', '--elevation', nargs='+', required='--humidification' in sys.argv, type=float,
-                        default=1800, help="Elevation(s) to plot")
+                        default=None, help="Elevation(s) to plot")
 
     parser.add_argument('-a', '--aspect', nargs='+', required='--humidification' in sys.argv, type=float,
-                        default=-1, help="Aspect(s) to plot")
+                        default=None, help="Aspect(s) to plot")
 
     parser.add_argument('-s', '--slope', nargs='+', required='--humidification' in sys.argv, type=float,
-                        default=0, help="Slope(s) to plot")
+                        default=None, help="Slope(s) to plot")
 
     parser.add_argument('-w', '--workdir', type=str,
                         default=f'/cnrm/cen/users/NO_SAVE/{os.environ["USER"]}/workdir/plot_synopsis',
@@ -67,10 +71,15 @@ def parse_command_line():
     parser.add_argument('--meteogram', action='store_true',
                         help='Plot iso-0°, precipitation and rain-sno limit over time')
 
+    parser.add_argument('--profiles', action='store_true',
+                        help='Plot vertical snow profiles for all aspects at a given elevation')
+
     args = parser.parse_args()
 
     args.datebegin = Date(args.datebegin)
     args.dateend   = Date(args.dateend)
+    if args.time is not None:
+        args.time = Date(args.time)
     if not os.path.exists(args.workdir):
         os.makedirs(args.workdir)
     os.chdir(args.workdir)
@@ -260,13 +269,13 @@ def plot_meteogram(s2m, arpege, title, filename, elevation=1800, aspect=-1):
 def humidification(args):
     get_s2m(args.datebegin, args.dateend, args.xpid, args.geometry, kind='SnowpackSimulation')
     massifs_infos = infomassifs()
+    ds = xr.open_mfdataset('PRO*.nc', engine='cen')
+    ds = ds.sel(time=slice(args.datebegin.strftime('%Y-%m-%d %H'), args.dateend.strftime('%Y-%m-%d %H')))
+    ds = ds.compute()
     for massif in args.massif:
         massif_name = massifs_infos.getMassifName(massif)
         for elevation in args.elevation:
             for slope in args.slope:
-                ds = xr.open_mfdataset('PRO*.nc', engine='cen')
-                ds = ds.sel(time=slice(args.datebegin.strftime('%Y-%m-%d %H'), args.dateend.strftime('%Y-%m-%d %H')))
-                ds = ds.compute()
                 # ds = xr.open_mfdataset('PRO*.nc', engine='cen', join='right', concat_dim='time', combine='nested')
                 # ds = ds.drop_duplicates('time').sel(time=slice(args.datebegin.ymdh, args.dateend.ymdh)).compute()
                 reduced_ds = ds.where((ds.massif_num == massif) & (ds.ZS == elevation) & (ds.slope == slope) &
@@ -295,7 +304,98 @@ def meteogram(args):
 
         title = f'Massif: {massif_name}'
         savename = f'Meteogram_{massif}_{args.datebegin.ymdh}_{args.dateend.ymdh}.pdf'
-        plot_meteogram(reduced_ds, iso0, title, savename, elevation=args.elevation, aspect=args.aspect)
+        plot_meteogram(reduced_ds, iso0, title, savename)
+
+
+def profiles(args):
+    get_s2m(args.datebegin, args.dateend, args.xpid, args.geometry, kind='SnowpackSimulation')
+    massifs_infos = infomassifs()
+    ds = xr.open_mfdataset('PRO*.nc', engine='cen')
+    ds = ds.sel(time=args.time)
+    ds = ds.compute()
+    for massif in args.massif:
+        massif_name = massifs_infos.getMassifName(massif)
+
+        if args.elevation is not None:
+            # Plot profiles for all aspects for a given elevation
+            for elevation in args.elevation:
+                reduced_ds = ds.where((ds.massif_num == massif) & (ds.ZS == elevation) & (ds.slope.isin([0, 40])),
+                        drop=True)
+                title = f'Massif: {massif_name} - Elevation: {elevation}m'
+                savename = f'Profiles_{massif}_{elevation}_{args.time.ymdh}.pdf'
+                plot_profiles_elevation(reduced_ds, title, savename)
+
+        elif args.aspect is not None:
+            # Plot profiles for all elevations for a given aspect
+            for aspect in args.aspect:
+                if aspect == -1:
+                    slope = 0
+                else:
+                    slope = 40
+                reduced_ds = ds.where((ds.massif_num == massif) & (ds.aspect == aspect) & (ds.slope == slope),
+                        drop=True)
+                title = f'Massif: {massif_name} - Aspect: {aspect}m'
+                savename = f'Profiles_{massif}_{aspect}_{args.time.ymdh}.pdf'
+                plot_profiles_aspect(reduced_ds, title, savename)
+
+
+def plot_profiles_elevation(ds, title, savename):
+
+    aspects = {315: 'nord-ouest', 0: 'nord', 45: 'nord-est', 270: 'ouest', -1: 'plat',
+            90: 'est', 225: 'sud-ouest', 180: 'sud', 135: 'sud-est'}
+    fig, axes = plt.subplots(3, 3, figsize=(16, 12), layout='constrained')
+    i = 0
+    j = 0
+    htnmax = ds.DSN_T_ISBA.max()
+    for aspect, orientation in aspects.items():
+        tmp = ds.where((ds.aspect == aspect), drop=True)
+        tmp.SNOWTEMP.data = tmp.SNOWTEMP.data - 273.16
+        tmp = tmp.squeeze().fillna(0)
+        ax = axes[i, j]
+        plot_profile(tmp, ax, htnmax)
+        ax.set_title(orientation, y=1.08, fontweight="bold")
+        ax.grid()
+        if j == 0:
+            ax.set_ylabel('Hauteur de neige (m)')
+        j = j + 1
+        if j == 3:
+            j = 0
+            i = i + 1
+
+    fig.savefig(savename, format='pdf')
+
+
+def plot_profiles_aspect(ds, title, savename):
+
+    fig, axes = plt.subplots(2, 5, figsize=(16, 10), layout='constrained')
+    i = 1
+    j = 0
+    htnmax = ds.DSN_T_ISBA.max()
+    for elevation in range(1200, 4200, 300):
+        if elevation in ds.ZS.data:
+            tmp = ds.where((ds.ZS == elevation), drop=True)
+            tmp.SNOWTEMP.data = tmp.SNOWTEMP.data - 273.16
+            tmp = tmp.squeeze().fillna(0)
+            ax = axes[i, j]
+            plot_profile(tmp, ax, htnmax)
+            ax.set_title(elevation, y=1.08, fontweight="bold")
+            ax.grid()
+        if j == 0:
+            ax.set_ylabel('Hauteur de neige (m)')
+        j = j + 1
+        if j == 5:
+            j = 0
+            i = i - 1
+
+    fig.savefig(savename, format='pdf')
+
+
+def plot_profile(ds, ax, ylimit):
+    ax2 = ax.twiny()
+    dateProfil(ax, ax2, ds.SNOWTEMP.data, ds.SNOWDZ.data, value_grain=ds.SNOWTYPE.data,
+            value_ram=ds.SNOWRAM.data, legend='Temperature (°C)', xlimit=(-30, 0), ylimit=ylimit * 1.1)
+    ax2.set_xlabel('RAM (kg/m²)', loc='right')
+    ax2.set_xlim(60, 0)
 
 
 if __name__ == '__main__':
@@ -306,5 +406,8 @@ if __name__ == '__main__':
 
     if args.meteogram:
         meteogram(args)
+
+    if args.profiles:
+        profiles(args)
 
     clean()
