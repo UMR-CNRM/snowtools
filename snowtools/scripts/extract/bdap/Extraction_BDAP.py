@@ -69,9 +69,9 @@ Exemples :
 # TODO : assurer que les points de grilles du sous domaines (coordonnées + pas lat/lon) sont
 # bien confondus aves les points de la grille native pour éviter une interpolation
 known_domains = dict(
-    alp = ['46800', '43700', '5000', '7600'],
+    alp = ['46900', '43000', '4500', '8000'],
     pyr = ['43500', '42000', '-2000', '3500'],
-    cor = ['43000', '41000', '8000', '11500'],
+    cor = ['43000', '41000', '8000', '10500'],
     GrandesRousses = ['45640', '44590', '5610', '7100'],  # includes 0.2° margin
 )
 
@@ -90,17 +90,17 @@ known_grids = dict(
 
 
 model_map = dict(
-    PAAROME      = dict(vapp='arome', vconf='3dvarfr'),  # Analyse AROME
-    PAROME       = dict(vapp='arome', vconf='3dvarfr'),  # Prévision AROME
-    PEAROME      = dict(vapp='arome', vconf='pearome'),  # Prévision d'ensemble AROME
-    PAA          = dict(vapp='arpege', vconf='4dvarfr'),  # Analyse ARPEGE
-    PA           = dict(vapp='arpege', vconf='4dvarfr'),  # Analyse ARPEGE
-    ANTILOPE     = dict(vapp='antilope', vconf='raw'),
-    ANTILOPEJP1  = dict(vapp='antilope', vconf='rawJP1'),
-    ANTILOPEH    = dict(vapp='antilope', vconf='Hourly'),
-    ANTILOPEJP1H = dict(vapp='antilope', vconf='HourlyJP1'),
-    ANTILOPEQ    = dict(vapp='antilope', vconf='Daily'),
-    ANTILOPEJP1Q = dict(vapp='antilope', vconf='DailyJP1'),
+    PAAROME      = dict(vapp='arome', vconf='3dvarfr', block='meteo'),  # Analyse AROME
+    PAROME       = dict(vapp='arome', vconf='3dvarfr', block='meteo'),  # Prévision AROME
+    PEAROME      = dict(vapp='arome', vconf='pearome', block='meteo'),  # Prévision d'ensemble AROME
+    PAA          = dict(vapp='arpege', vconf='4dvarfr', block='meteo'),  # Analyse ARPEGE
+    PA           = dict(vapp='arpege', vconf='4dvarfr', block='meteo'),  # Analyse ARPEGE
+    ANTILOPE     = dict(vapp='antilope', vconf='[geometry:area]', block='raw'),
+    ANTILOPEJP1  = dict(vapp='antilope', vconf='[geometry:area]', block='rawJP1'),
+    ANTILOPEH    = dict(vapp='antilope', vconf='[geometry:area]', block='Hourly'),
+    ANTILOPEJP1H = dict(vapp='antilope', vconf='[geometry:area]', block='HourlyJP1'),
+    ANTILOPEQ    = dict(vapp='antilope', vconf='[geometry:area]', block='Daily'),
+    ANTILOPEJP1Q = dict(vapp='antilope', vconf='[geometry:area]', block='DailyJP1'),
 )
 
 default_levels = dict(
@@ -653,8 +653,12 @@ def execute():
     # Open all extracted files with xarray
     if len(extractedfiles) > 0:
         print('Opening grib files with xarray...')
-        ds  = xr.open_mfdataset(extractedfiles, concat_dim='valid_time', combine='nested', engine='cfgrib')
+        ds  = xr.open_mfdataset(extractedfiles, concat_dim='time', combine='nested', engine='cfgrib')
+
         # TODO : set proper variable names, check/set attributes,...
+        # ds = ds.drop('time').rename({'valid_time': 'time'})
+        ds = ds.assign_coords(longitude=ds.longitude.data.round(2), latitude=ds.latitude.round(2))
+
         print('Dataset created')
         ds.to_netcdf(outname)
     else:
@@ -740,13 +744,14 @@ if __name__ == "__main__":
             vconf          = model_map[model]['vconf'],
             # source_app     = model_map[model]['vapp'],
             # source_conf    = model_map[model]['vconf'],
-            geometry       = grid,
+            geometry       = domain,
             experiment     = f'oper@{os.environ["USER"]}',
             datebegin      = args.datebegin,
+            # TODO : avancer dateend de pdt (?) dans le cas de variables non instantallées (ex: précipitations)
             dateend        = args.dateend,
             date           = '[dateend]',
             filename       = outname,
-            block          = 'meteo',
+            block          = model_map[model]['block'],
             namebuild      = 'flat@cen',
             namespace      = 'vortex.multi.fr',
         )
