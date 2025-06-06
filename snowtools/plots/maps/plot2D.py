@@ -21,7 +21,7 @@ domain_coords = {
     'GrandesRousses': dict(latmax=45.240, latmin=44.990, lonmin=6.010, lonmax = 6.490),
     'Lautaret area (Pleiades 2018)': [(6.385, 45.177), (6.490, 45.150), (6.490, 44.990), (6.3167, 44.990)],
     # Pleiades2019   = [(6.076, 45.195), (6.201, 45.195), (6.202, 45.023), (6.069, 45.024)],
-    #'Huez area (Pleiades 2022)': [(6.065, 45.020), (6.068, 45.200), (6.324, 45.198), (6.317, 45.017)],
+    # Huez area (Pleiades 2022)': [(6.065, 45.020), (6.068, 45.200), (6.324, 45.198), (6.317, 45.017)],
     'Domaine Pleiades': [(6.065, 45.020), (6.068, 45.200), (6.324, 45.198), (6.317, 45.017)],
 }
 
@@ -43,6 +43,9 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
     else:
         newfig = False
 
+    if isinstance(cmap, str):
+        cmap = matplotlib.colormaps[cmap]
+
     if slices is not None:
         cmaplist = [cmap(i) for i in range(cmap.N)]
         # create the new map
@@ -57,17 +60,18 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
 
     # Plot Nan values in grey
     cmap.set_bad('grey', 1)
-    if dem is not None:
-        if shade:
-            add_relief_shading(dem, ax=ax, extent=[field.xx.min(), field.xx.max(), field.yy.min(), field.yy.max()])
-            alpha = 0.8
-            # Plot Nan values transparent
-            cmap.set_bad(alpha=0)
+    if dem is None:
+        dem = get_dem()
+    if shade:
+        add_relief_shading(dem, ax=ax, extent=[field.xx.min(), field.xx.max(), field.yy.min(), field.yy.max()])
+        alpha = 0.8
+        # Plot Nan values transparent
+        cmap.set_bad(alpha=0)
+    else:
+        if isolevels is not None:
+            add_iso_elevation(dem, ax=ax, levels=isolevels)
         else:
-            if isolevels is not None:
-                add_iso_elevation(dem, ax=ax, levels=isolevels)
-            else:
-                add_iso_elevation(dem, ax=ax)
+            add_iso_elevation(dem, ax=ax)
 
     # Set defailt vmin/vmax values from field if necessary
     if vmax is None:
@@ -115,6 +119,23 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
         return cml, ax
     else:
         return cml
+
+
+def get_dem(genv='uenv:dem.2@vernaym', gvar='RELIEF_GRANDESROUSSES250M_L93'):
+    from vortex import toolbox
+    import rioxarray
+    import snowtools.tools.xarray_preprocess as xrp
+
+    toolbox.input(
+        genv   = genv,
+        gvar   = gvar,
+        filename='TARGET_RELIEF.tif',
+        unknown=True
+    )
+    dem = rioxarray.open_rasterio('TARGET_RELIEF.tif')
+    dem = xrp.preprocess(dem)
+    dem = dem.squeeze()
+    return dem
 
 
 def add_iso_elevation(dem, ax=None, levels=[1500, 2000, 2500, 3000, 3500]):
