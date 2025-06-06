@@ -655,10 +655,10 @@ def execute():
     # Open all extracted files with xarray
     if len(extractedfiles) > 0:
         print('Opening grib files with xarray...')
-        ds  = xr.open_mfdataset(extractedfiles, concat_dim='valid_time', combine='nested', engine='cfgrib')
+        ds  = xr.open_mfdataset(extractedfiles, concat_dim='time', combine='nested', engine='cfgrib')
 
         # TODO : set proper variable names, check/set attributes,...
-        ds = ds.drop('time').rename({'valid_time': 'time'})
+        # ds = ds.drop('time').rename({'valid_time': 'time'})
         ds = ds.assign_coords(longitude=ds.longitude.data.round(2), latitude=ds.latitude.round(2))
 
         print('Dataset created')
