@@ -9,13 +9,27 @@ Created on 18 march 2024
 Collection of functions to plot 2D fields.
 '''
 
+import os
 import numpy as np
+import xarray as xr
+import pandas as pd
+import shapefile
+import glob
+import shutil
+
+import cartopy.crs as ccrs
+
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib import ticker
 
-matplotlib.rcParams.update({'font.size': 22})
+import snowtools.tools.xarray_preprocess as xrp
+
+from vortex import toolbox
+
+toolbox.active_now = True
+# matplotlib.rcParams.update({'font.size': 22})
 
 domain_coords = {
     'GrandesRousses': dict(latmax=45.240, latmin=44.990, lonmin=6.010, lonmax = 6.490),
@@ -27,7 +41,8 @@ domain_coords = {
 
 
 def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoint=None, alpha=1., dem=None,
-        shade=False, isolevels=None, slices=None, add_colorbar=True, transform=None):
+        shade=False, isolevels=None, slices=None, add_colorbar=True, transform=None, boundaries=False,
+        massifs=False, cities=False):
     """
     field:: xarray DataArray containing the 2D data to plot.
     :kwargs dem: Digital elevation model (xarray.DataArray)
@@ -37,7 +52,7 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
     (format : '{long_name} [{units}]'). In other cases the *field* name is used.
     """
     if ax is None:
-        plt.figure(figsize=(12 * len(field.xx) / len(field.yy), 10))
+        plt.figure(figsize=(12 * len(field.xx) / len(field.yy), 10), subplot_kw=dict(projection=ccrs.PlateCarree()))
         ax = plt.gca()
         newfig = True
     else:
@@ -72,6 +87,17 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
             add_iso_elevation(dem, ax=ax, levels=isolevels)
         else:
             add_iso_elevation(dem, ax=ax)
+
+    if boundaries:
+        add_boundaries(ax)
+    if massifs:
+        add_massifs(ax)
+    if cities:
+        latmin = float(field.yy.min())
+        latmax = float(field.yy.max())
+        lonmin = float(field.xx.min())
+        lonmax = float(field.xx.max())
+        add_cities(ax, latmin, latmax, lonmin, lonmax)
 
     # Set defailt vmin/vmax values from field if necessary
     if vmax is None:
@@ -121,10 +147,7 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
         return cml
 
 
-def get_dem(genv='uenv:dem.2@vernaym', gvar='RELIEF_GRANDESROUSSES250M_L93'):
-    from vortex import toolbox
-    import rioxarray
-    import snowtools.tools.xarray_preprocess as xrp
+def get_dem(genv='uenv:dem.2@vernaym', gvar='DEM_ALP1KM_EPSG4326'):
 
     toolbox.input(
         genv   = genv,
@@ -132,22 +155,24 @@ def get_dem(genv='uenv:dem.2@vernaym', gvar='RELIEF_GRANDESROUSSES250M_L93'):
         filename='TARGET_RELIEF.tif',
         unknown=True
     )
-    dem = rioxarray.open_rasterio('TARGET_RELIEF.tif')
+    # dem = rioxarray.open_rasterio('TARGET_RELIEF.tif')
+    ds = xr.open_dataset('TARGET_RELIEF.tif')
+    dem = ds['elevation']
     dem = xrp.preprocess(dem)
     dem = dem.squeeze()
     return dem
 
 
-def add_iso_elevation(dem, ax=None, levels=[1500, 2000, 2500, 3000, 3500]):
+def add_iso_elevation(dem, ax=None, levels=[1000, 2000, 3000, 4000]):
     """
     Add iso-elevation bands to show the relief
     """
     if ax is not None:
-        c = ax.contour(dem.xx, dem.yy, dem.data, colors='k', levels=levels, alpha=0.5,)
-        ax.clabel(c, inline=1, fontsize=14)
+        c = ax.contour(dem.xx, dem.yy, dem.data, colors='gray', levels=levels, alpha=0.3, linewidths=0.5)
+        ax.clabel(c, inline=1, fontsize=6)
     else:
-        c = plt.contour(dem.xx, dem.yy, dem.data, colors='k', levels=levels, alpha=0.5,)
-        plt.clabel(c, inline=1, fontsize=14)
+        c = plt.contour(dem.xx, dem.yy, dem.data, colors='gray', levels=levels, alpha=0.3, linewidths=0.5)
+        plt.clabel(c, inline=1, fontsize=6)
 
 
 def add_relief_shading(dem, ax=None, extent=None):
@@ -235,3 +260,70 @@ def plot_ensemble(ensemble, vmin=0, vmax=1, cmap=plt.cm.Blues, dem=None, isoleve
     cb.set_label(ensemble.name, size=24)
 
     return fig
+
+
+def add_boundaries(ax):
+
+    tarname = 'world-administrative-boundaries.tar'
+    toolbox.input(
+        genv     = 'uenv:shapefiles.1@vernaym',
+        gvar     = 'WORLD_BOUNDARIES',
+        filename = tarname,
+        unknown  = True,
+    )
+
+    filename = 'world-administrative-boundaries.shp'
+    borders = shapefile.Reader(filename)
+    for shape in borders.shapeRecords():
+        x = [i[0] for i in shape.shape.points[:]]
+        y = [i[1] for i in shape.shape.points[:]]
+        ax.plot(x, y, color='k', linestyle=':', transform=ccrs.PlateCarree())
+
+    for f in glob.glob('world-administrative-boundaries*'):
+        if os.path.isfile(f):
+            os.remove(f)
+        else:
+            shutil.rmtree(f)
+
+
+def add_massifs(ax):
+
+    tarname = "massifs_safran.tar"
+    toolbox.input(
+        genv     = 'uenv:shapefiles.1@vernaym',
+        gvar     = 'MASSIFS_SAFRAN',
+        filename = tarname,
+        unknown  = True,
+    )
+
+    filename = "massifs_safran.shp"
+    massifs = shapefile.Reader(filename)
+    for shape in massifs.shapeRecords():
+        x = [i[0] for i in shape.shape.points[:]]
+        y = [i[1] for i in shape.shape.points[:]]
+        ax.plot(x, y, color='k', alpha=0.3, transform=ccrs.PlateCarree(), linewidth=1)
+
+    for f in glob.glob('massifs_safran*'):
+        if os.path.isfile(f):
+            os.remove(f)
+        else:
+            shutil.rmtree(f)
+
+
+def add_cities(ax, latmin, latmax, lonmin, lonmax):
+
+    filename = "french_cities.csv"
+    toolbox.input(
+        genv     = 'uenv:shapefiles.1@vernaym',
+        gvar     = 'FRENCH_CITIES',
+        filename = filename,
+        unknown  = True,
+    )
+    cities = pd.read_csv(filename, sep=',')
+    tmp = cities[cities.population > 100000]
+    tmp = tmp[(cities.lat >= latmin) & (cities.lat <= latmax) & (cities.lng >= lonmin) & (cities.lng <= lonmax)]
+    ax.plot(tmp.lng.to_numpy(), tmp.lat.to_numpy(), marker='.', color='k', linestyle='', transform=ccrs.PlateCarree())
+    for idx in tmp.index:
+        ax.text(tmp.lng[idx], tmp.lat[idx], tmp.city[idx], alpha=0.5, fontsize=8)
+
+    os.remove('french_cities.csv')
