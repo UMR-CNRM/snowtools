@@ -288,6 +288,24 @@ class GeometryException(Exception):
         return tuple(red)
 
 
+class MassifGeometryException(Exception):
+    """
+    Exception when a file is not in the massif geometry
+
+    :param filename: Name of the file
+    """
+    def __init__(self, filename):
+        self.filename = filename
+
+    def __str__(self):
+        return f"The provided forcing file {self.filename} is not in the S2M massif geometry."
+
+    def __reduce__(self):
+        red = list(super(GeometryException, self).__reduce__())
+        red[1] = (self.filename)  # Les arguments qui seront passes a __init__
+        return tuple(red)
+
+
 class UnknownGridTypeException(Exception):
     def __init__(self, gridtype, projtype):
         self.gridtype = gridtype

@@ -22,6 +22,8 @@ class HydroTest(TestWithTempFolderWithLog):
         self.pro = os.path.join(TESTBASE_DIR, "PRO", "pro_testhydro_alp_oper_2025031906_2025032306.nc")
         self.rasterbasin = os.path.join(TESTBASE_DIR, 'hydro', 'BNBV_SCHAPI_FRANCE250m.nc')
         self.areas = os.path.join(TESTBASE_DIR, "hydro", "areas_alp27_allslopes.nc")
+        self._old_cwd = os.getcwd()
+        os.chdir(self.diroutput)
 
     def test_areas(self):
         # Compute the areas of basins in rasterbasin corresponding to the geometry of the pro file
@@ -35,6 +37,10 @@ class HydroTest(TestWithTempFolderWithLog):
             h.integration(['Tair', 'Rainf', 'Snowf',
                            'SNOMLT_ISBA', 'WSN_T_ISBA', 'DSN_T_ISBA'], var_sca='WSN_T_ISBA')
         assert os.path.isfile('HYDRO.nc')
+
+    def tearDown(self):
+        super().tearDown()
+        os.chdir(self._old_cwd)
 
 
 if __name__ == "__main__":

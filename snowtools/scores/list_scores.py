@@ -7,7 +7,7 @@ Created on 21 March 2018
 
 import numpy as np
 import netCDF4
-import xarray as xr
+import os
 
 from snowtools.scores.deterministic import ESMSnowMIP_DeterministicScores_Heterogeneous, \
         ESMSnowMIP_DeterministicScores_Time, S2M_DeterministicScores_CommonObs
@@ -102,6 +102,7 @@ class ESCROC_list_scores(object):
     def compute_scores_allmembers(self, list_pro, obsfile, list_scores, list_var):
         """
         compute scores for every ensemble member
+
         :param list_pro: list of simulation files
         :param obsfile: observation file
         :param list_scores: list of scores
@@ -125,6 +126,7 @@ class scores_file(netCDF4.Dataset):
     def __init__(self, *args, **kwargs):
         """
         open a netcdf dataset and create dimensions.
+
         :param args: passed to netCDF4.Dataset
         :param kwargs:  passed to netCDF4.Dataset
         """
@@ -132,6 +134,9 @@ class scores_file(netCDF4.Dataset):
         self.cree_dims()
 
     def cree_dims(self):
+        """
+        create member, variable and stat dimensions
+        """
         self.createDimension("member", None)
         self.createDimension("variable", None)
         self.createDimension("stat", None)
@@ -165,59 +170,74 @@ class ensemble_scores_file(netCDF4.Dataset):
         self.variables[scorename][:] = scoretab[:]
 
 
-class SpatialScoreFile(xr.Dataset):
+class SpatialScoreFile(netCDF4.Dataset):
     """
     Class for writing spatial scores.
     """
 
-    def __init__(self, list_of_experiments, list_of_kernels, list_of_thresholds, list_of_threshold_increments):
+    def __init__(self, list_of_experiments, list_of_kernels, list_of_thresholds,
+                 list_of_threshold_increments, filename="spatialscores.nc"):
         """
 
         :param list_of_experiments:
         :param list_of_kernels:
         :param list_of_thresholds:
         :param list_of_threshold_increments:
+        :param filename:
         """
-        super().__init__()
-        self.coords['experiment'] = list_of_experiments
-        self.coords['kernel'] = list_of_kernels
-        self.coords['threshold'] = list_of_thresholds
-        self['threshold_increment'] = xr.DataArray(list_of_threshold_increments, dims='threshold')
-        self['POD'] = xr.DataArray(np.empty((len(list_of_experiments), len(list_of_kernels), len(list_of_thresholds))),
-                                   dims=('experiment', 'kernel', 'threshold'),
-                                   attrs={'long_name': 'probability of detection'})
-        self['POD'].data.fill(np.nan)
-        self['FAR'] = xr.DataArray(np.empty((len(list_of_experiments), len(list_of_kernels), len(list_of_thresholds))),
-                                   dims=('experiment', 'kernel', 'threshold'),
-                                   attrs={'long_name': 'false alarm ratio'})
-        self['FAR'].data.fill(np.nan)
-        self['CSI'] = xr.DataArray(np.empty((len(list_of_experiments), len(list_of_kernels), len(list_of_thresholds))),
-                                   dims=('experiment', 'kernel', 'threshold'),
-                                   attrs={'long_name': 'critical success index'})
-        self['CSI'].data.fill(np.nan)
-        self['ETS'] = xr.DataArray(np.empty((len(list_of_experiments), len(list_of_kernels), len(list_of_thresholds))),
-                                   dims=('experiment', 'kernel', 'threshold'),
-                                   attrs={'long_name': 'equitable threat score'})
-        self['ETS'].data.fill(np.nan)
-        self['HK'] = xr.DataArray(np.empty((len(list_of_experiments), len(list_of_kernels), len(list_of_thresholds))),
-                                  dims=('experiment', 'kernel', 'threshold'),
-                                  attrs={'long_name': 'Hanssen and Kuippers skill score or True Skill Statistic'})
-        self['HK'].data.fill(np.nan)
-        self['ACC'] = xr.DataArray(np.empty((len(list_of_experiments), len(list_of_kernels), len(list_of_thresholds))),
-                                   dims=('experiment', 'kernel', 'threshold'),
-                                   attrs={'long_name': 'Accuracy'})
-        self['ACC'].data.fill(np.nan)
-        self['PAG'] = xr.DataArray(np.empty((len(list_of_experiments), len(list_of_kernels), len(list_of_thresholds))),
-                                   dims=('experiment', 'kernel', 'threshold'),
-                                   attrs={'long_name': 'Post Agreement'})
-        self['PAG'].data.fill(np.nan)
+        super(SpatialScoreFile, self).__init__(filename, "w", format="NETCDF4")
 
-    # def to_netcdf(self, **kwargs):
-    #     """
-    #     write dataset to netcdf file
-    #     :param filename: filename (with path)
-    #     :type filename: pathlike
-    #     """
-    #     super().to_netcdf(**kwargs)
+        self.create_dims(list_of_experiments, list_of_kernels, list_of_thresholds)
+        self.create_vars(list_of_threshold_increments)
+
+    def create_dims(self, list_of_experiments, list_of_kernels, list_of_thresholds):
+        """
+        create experiment, kernel and threshold dimensions
+
+        :param list_of_experiments:
+        :param list_of_kernels:
+        :param list_of_thresholds:
+        """
+        self.createDimension('experiment', len(list_of_experiments))
+        exparray = np.array(list_of_experiments, dtype=object)
+        self.createVariable('experiment', str, 'experiment')
+        self.variables['experiment'][:] = exparray
+        self.createDimension('kernel', len(list_of_kernels))
+        self.createVariable('kernel', 'i4', 'kernel')
+        self.variables['kernel'][:] = list_of_kernels
+        self.createDimension('threshold', len(list_of_thresholds))
+        self.createVariable('threshold', 'f8', 'threshold')
+        self.variables['threshold'][:] = list_of_thresholds
+
+    def create_vars(self, list_of_threshold_increments):
+        """
+        Create threshold_increment and fuzzy score variables
+
+        :param list_of_threshold_increments:
+        """
+        self.createVariable('threshold_increment', 'f8', 'threshold')
+        self.variables['threshold_increment'][:] = list_of_threshold_increments
+        self.createVariable('POD', 'f8', dimensions=('experiment', 'kernel', 'threshold'),
+                            fill_value=np.nan)
+        self.variables['POD'].setncatts({'long_name': 'probability of detection'})
+        self.createVariable('FAR', 'f8', dimensions=('experiment', 'kernel', 'threshold'),
+                            fill_value=np.nan)
+        self.variables['FAR'].setncatts({'long_name': 'false alarm ratio'})
+        self.createVariable('CSI', 'f8', dimensions=('experiment', 'kernel', 'threshold'),
+                            fill_value=np.nan)
+        self.variables['CSI'].setncatts({'long_name': 'critical success index'})
+        self.createVariable('ETS', 'f8', dimensions=('experiment', 'kernel', 'threshold'),
+                            fill_value=np.nan)
+        self.variables['ETS'].setncatts({'long_name': 'equitable threat score'})
+        self.createVariable('HK', 'f8', dimensions=('experiment', 'kernel', 'threshold'),
+                            fill_value=np.nan)
+        self.variables['HK'].setncatts({'long_name': 'Hanssen and Kuippers skill score or True Skill Statistic'})
+        self.createVariable('ACC', 'f8', dimensions=('experiment', 'kernel', 'threshold'),
+                            fill_value=np.nan)
+        self.variables['ACC'].setncatts({'long_name': 'Accuracy'})
+        self.createVariable('PAG', 'f8', dimensions=('experiment', 'kernel', 'threshold'),
+                            fill_value=np.nan)
+        self.variables['PAG'].setncatts({'long_name': 'Post Agreement'})
+
 
 

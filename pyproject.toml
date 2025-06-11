@@ -55,11 +55,3 @@ Repository = "https://github.com/UMR-CNRM/snowtools"
 s2m = 'snowtools.tasks.s2m_command:main'
 proplotter = 'snowtools.plots.stratiprofile.proplotter:main'
 procompare = 'snowtools.plots.stratiprofile.procompare:main'
-
-[tool.pytest.ini_options]
-addopts = [
-    "--import-mode=importlib",
-]
-testpaths = [
-    "snowtools/tests",
-]

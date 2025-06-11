@@ -210,7 +210,6 @@ then
         --exclude ".*.swp" --exclude "*~" \
         --exclude "*.egg-info" --exclude "*.o" --exclude "*.bin" --exclude "*.exe" \
         --exclude "interpolation/*.mod" \
-        --exclude "interpolation/output1980" \
         --exclude "interpolation/interpol_*" \
         --exclude "src/dir_obj*" --exclude "exe_*" \
         --exclude 'profile_surfex' --exclude 'profile_surfex-LX*' \
@@ -241,6 +240,7 @@ then
       --exclude .git/ \
       --exclude .idea/ \
       --exclude .settings/ \
+      --exclude build \
       --exclude fail_test  \
       --exclude Manual_tests  \
       --exclude exe/ \

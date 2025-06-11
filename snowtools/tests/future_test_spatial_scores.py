@@ -5,6 +5,7 @@ import unittest
 import os
 
 import matplotlib.pyplot as plt
+import netCDF4
 import numpy as np
 import timeit
 
@@ -13,15 +14,15 @@ from snowtools.scores.spatial import ProVsPleiade, call_crps, LocalMoranData
 from snowtools.scores.ensemble import EnsembleScores
 from snowtools.plots.scores.perfdiag import PerfDiag, FuzzyScoreDiagram
 from snowtools.plots.scores.moran_scatter import MoranScatter
-from snowtools.utils.S2M_standard_file import LCCProjectionType
-from snowtools.tests.tempfolder import TestWithTempFolderWithLog
+from snowtools.utils.projections import LCCProjectionType
+from snowtools.tests.tempfolder import TestWithTempFolderWithLog, TestWithTempFolder
 from snowtools.DATA import TESTBASE_DIR
 
 
 THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 TEST_SIM_DIR = os.path.join(TESTBASE_DIR, "PRO")
 TIME_CRPS = False
-PROJ_avail = False
+PROJ_avail = True
 
 # class TestInstall(unittest.TestCase):
 #
@@ -37,18 +38,22 @@ PROJ_avail = False
 #         raise Warning(str)
 
 
-class TestSpatialFile(unittest.TestCase):
+class TestSpatialFile(TestWithTempFolder):
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.myscores = ProVsPleiade([os.path.join(TESTBASE_DIR, 'PRO', 'PRO_2019051300_2019051400.nc'),
                                      os.path.join(TESTBASE_DIR, 'PRO', 'PRO_2019051300_2019051400.nc')],
                                     ['bli', 'bla'], os.path.join(TESTBASE_DIR, 'P250_GR_13_05_19_attr.nc'),
-                                    'DSN_T_ISBA', [1, 3, 5], [2.], [1.])
+                                    'DSN_T_ISBA', [1, 3, 5], [2.],
+                                    [1.], score_file_name="pleiade_scores.nc")
         cls.myscores.apply_mask(maskfile=os.path.join(TESTBASE_DIR, "masque_glacier2017_foret_ville_riviere.nc"))
 
+
     def test_create_file(self):
-        sf = SpatialScoreFile(['bli', 'bla'], [1, 3, 5], [2.], [1.])
-        # print(sf.POD)
+        sf = SpatialScoreFile(['bli', 'bla'], [1, 3, 5], [2.],
+                              [1.])
+        sf.close()
 
     @unittest.skipIf(not TIME_CRPS, "No crps timing required")
     def test_time_crps_methods(self):
@@ -94,24 +99,27 @@ class TestSpatialFile(unittest.TestCase):
 
     def test_calc_spatial_scores(self):
         self.myscores.process()
-        self.assertAlmostEqual(self.myscores.score_ds['SPS'].data[0], 0.05011011529)
-        self.assertAlmostEqual(self.myscores.score_ds["POD"].data[0, 1, 0], 0.76595744680)
-        self.assertAlmostEqual(self.myscores.score_ds["FAR"].data[0, 1, 0], 0.22)
-        self.assertAlmostEqual(self.myscores.score_ds["CSI"].data[0, 1, 0], 0.62987886944)
-        self.assertAlmostEqual(self.myscores.score_ds["ETS"].data[0, 1, 0], 0.54658958515)
-        self.assertAlmostEqual(self.myscores.score_ds["HK"].data[0, 1, 0], 336.0)
-        self.assertAlmostEqual(self.myscores.score_ds["ACC"].data[0, 1, 0], 3157.180032733)
-        self.assertAlmostEqual(self.myscores.score_ds["PAG"].data[0, 1, 0], 0.78)
+        score_ds = netCDF4.Dataset(self.myscores.score_file_name, "r")
+        self.assertAlmostEqual(score_ds.variables['SPS'][0], 0.05011011529)
+        self.assertAlmostEqual(score_ds.variables["POD"][0, 1, 0], 0.76595744680)
+        self.assertAlmostEqual(score_ds.variables["FAR"][0, 1, 0], 0.22)
+        self.assertAlmostEqual(score_ds.variables["CSI"][0, 1, 0], 0.62987886944)
+        self.assertAlmostEqual(score_ds.variables["ETS"][0, 1, 0], 0.54658958515)
+        self.assertAlmostEqual(score_ds.variables["HK"][0, 1, 0], 336.0)
+        self.assertAlmostEqual(score_ds.variables["ACC"][0, 1, 0], 3157.180032733)
+        self.assertAlmostEqual(score_ds.variables["PAG"][0, 1, 0], 0.78)
+        score_ds.close()
 
     def test_local_moran(self):
         local_moran = LocalMoranData(self.myscores.fc_data['bli'].data)
         self.assertAlmostEqual(local_moran.moran_I, 0.876794444)
 
-class TestMoranDiags(TestWithTempFolderWithLog, TestSpatialFile):
+class TestMoranDiags(TestSpatialFile):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         cls.local_moran = LocalMoranData(cls.myscores.fc_data['bli'].data)
+
 
     def test_moran_scatter_colored(self):
         self.local_moran.plot_moran_scatter_colored('snow height',

@@ -14,7 +14,16 @@ Forcing edition
 .. automodule:: tools.change_forcing
    :member-order: bysource
    :members:
-   
+
+
+Meteorological functions
+------------------------
+
+.. automodule:: tools.meteo
+   :member-order: bysource
+   :members:
+
+
 Namelist edition
 ----------------
 
