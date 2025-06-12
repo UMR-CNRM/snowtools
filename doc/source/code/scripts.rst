@@ -16,6 +16,7 @@ Research scripts
    scripts-extract-obs.rst
    scripts-snowmip.rst
    script_create_forcing.rst
+   scripts-metadata.rst
 
 
 Operational scripts

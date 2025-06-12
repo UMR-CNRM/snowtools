@@ -23,6 +23,14 @@ When running tests, your environment must:
      * Either be at CEN
      * Or have a copy of the testbase locally and define ``SNOWTOOLS_TESTBASE`` environment variable to point to this local folder.
 
+Test server at CEN
+^^^^^^^^^^^^^^^^^^
+automatic tests are run on the test server http://cenmanto6.cen.meteo.fr:8080
+for each commit on master or dev branch.
+
+Branches can be manually tested (internal access only)
+(Build > Builders > manual-tests > Force Build).
+
 
 Adding a test
 -------------

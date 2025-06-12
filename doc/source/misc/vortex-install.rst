@@ -27,7 +27,7 @@ On belenos:
 
 .. code-block:: bash
 
-   export VORTEX=/home/cnrm_other/cen/mrns/lafaysse/common/vortex/vortex-cen
+   export VORTEX=~verolive/vortex/vortex-cen
    export PYTHONPATH=$PYTHONPATH:$VORTEX/site:$VORTEX/src:$VORTEX/project
    export MTOOLDIR=$WORKDIR
 
@@ -35,9 +35,17 @@ On sxcen:
 
 .. code-block:: bash
 
-   export VORTEX=/home/lafaysse/common/vortex/vortex-cen
+   export VORTEX=~verolive/vortex/vortex-cen
    export PYTHONPATH=$PYTHONPATH:$VORTEX/site:$VORTEX/src:$VORTEX/project
    export MTOOLDIR=/cnrm/cen/users/NO_SAVE/<login>
+ 
+ On other CNRM machines: 
+ 
+ .. code-block:: bash
+ 
+    export VORTEX=/d0/sync/vortex/vortex-cen
+    export PYTHONPATH=$PYTHONPATH:$VORTEX/site:$VORTEX/src:$VORTEX/project
+    export MTOOLDIR=/cnrm/cen/users/NO_SAVE/<login>
 
 Note: Make sure that the folder ``/cnrm/cen/users/NO_SAVE/<login>`` exist for sxcen.
 

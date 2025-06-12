@@ -34,9 +34,13 @@ from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR
 from bronx.stdtypes.date import today
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 
-echecker = ExternalCodeImportChecker('plots.maps.cartopy')
+echecker = ExternalCodeImportChecker('cartopy')
 with echecker:
-    from snowtools.plots.maps.cartopy import Map_alpes, Map_pyrenees, Map_corse, Map_vosges, Map_jura, Map_central
+    import cartopy
+echecker_pyproj = ExternalCodeImportChecker('pyproj')
+with echecker_pyproj as echecker_register:
+    import pyproj
+    echecker_register.update(version=pyproj.__version__)
 
 if 'fast' in matplotlib.style.available:
     matplotlib.style.use('fast')
@@ -151,8 +155,12 @@ class Ensemble(object):
     def __init__(self):
         """
         """
-        self.spatialdim = "Number_of_points"  #: spatial dimension
         self.ensemble = {}  #: data dict with variable names as keys and np.arrays as values
+
+    @property
+    def spatialdim(self):
+        """Name of spatial dimension"""
+        return  "Number_of_points"
 
     def open(self, listmembers):
         """
@@ -230,6 +238,9 @@ class Ensemble(object):
         """
 
         self.ensemble[varname] = np.empty([self.nech, self.npoints, self.nmembers])
+
+        kwargs = dict()
+
         for m, member in enumerate(self.simufiles):
             print("read " + varname + " for member" + str(m))
             import datetime
@@ -238,11 +249,13 @@ class Ensemble(object):
             if type(self.indpoints) is tuple:
                 sections = []
                 for indpoints in self.indpoints:
-                    sections.append(member.read_var(varname, Number_of_points=indpoints))
+                    kwargs[self.spatialdim] = indpoints
+                    sections.append(member.read_var(varname, **kwargs))
 
                 self.ensemble[varname][:, :, m] = np.concatenate(tuple(sections), axis=1)
             else:
-                self.ensemble[varname][:, :, m] = member.read_var(varname, Number_of_points=self.indpoints)
+                kwargs[self.spatialdim] = self.indpoints
+                self.ensemble[varname][:, :, m] = member.read_var(varname, **kwargs)
 
             after = datetime.datetime.today()
             print(after - before)
@@ -263,11 +276,13 @@ class Ensemble(object):
         if type(self.indpoints) is tuple:
             sections = []
             for indpoints in self.indpoints:
-                sections.append(self.simufiles[0].read_var(varname, Number_of_points=indpoints))
+                kwargs[self.spatialdim] = indpoints
+                sections.append(self.simufiles[0].read_var(varname, **kwargs))
 
             return np.concatenate(tuple(sections))
         else:
-            return self.simufiles[0].read_var(varname, Number_of_points=self.indpoints)
+            kwargs[self.spatialdim] = self.indpoints
+            return self.simufiles[0].read_var(varname, **kwargs)
 
     def probability(self, varname, seuilinf=-999999999, seuilsup=999999999):
         """
@@ -542,6 +557,7 @@ class EnsembleMassifPoint(_EnsembleMassif):
         return self.simufiles[0].get_points(massif_num= self.massif_num, aspect=self.aspect, slope=self.slope,
                                             ZS=self.alti)
 
+
 class EnsembleStation(Ensemble):
     """
     Class for ensemble simulations at station locations.
@@ -651,6 +667,7 @@ class EnsembleDiags(Ensemble):
         self.quantiles.clear()
 
 
+@echecker_pyproj.disabled_if_unavailable(version='2.0.0')
 class EnsembleOperDiags(EnsembleDiags):
     """
     Class for operationally used plots.
@@ -684,6 +701,10 @@ class EnsembleOperDiags(EnsembleDiags):
     )
     #: list of quantiles
     list_q = [20, 50, 80]
+
+    def __init__(self):
+        from snowtools.plots.maps.cartopy import Map_alpes, Map_pyrenees, Map_corse, Map_vosges, Map_jura, Map_central
+        super(self, EnsembleOperDiags).__init__()
 
     def alldiags(self):
         """
@@ -811,6 +832,7 @@ class EnsembleOperDiags(EnsembleDiags):
 
 
 @echecker.disabled_if_unavailable
+@echecker_pyproj.disabled_if_unavailable(version='2.0.0')
 class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
     """
     Class for operationally plotting maps and spaghetti plots for ensembles with massif geometry and for the zero slope case.
@@ -894,6 +916,7 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
 
 
 @echecker.disabled_if_unavailable
+@echecker_pyproj.disabled_if_unavailable(version='2.0.0')
 class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMassif):
     """
     Class for operationally plot maps and spaghetti plots distinguishing between northern and southern orientation
@@ -1023,7 +1046,8 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
                     m.reset_massifs(rmcbar=False, rminfobox=False)
             m.reset_massifs()
 
-
+@echecker.disabled_if_unavailable
+@echecker_pyproj.disabled_if_unavailable(version='2.0.0')
 class EnsembleOperDiagsStations(EnsembleOperDiags, EnsembleStation):
     """
     Class for operationally plotting spaghetti plots for station based simulations.
@@ -1038,33 +1062,31 @@ class EnsemblePostproc(_EnsembleMassif):
     """
     Class for ensemble post-processing.
     """
-
-    def __init__(self, ensemble, variables, inputfiles, datebegin, dateend, decile=range(10, 100, 10), outdir='.'):
+    def __init__(self, variables, inputfiles, decile=range(10, 100, 10), outdir='.'):
         """
-        :param ensemble: object to hold the ensemble data
-        :type ensemble: instance of :py:class:`.Ensemble` or inheriting from :py:class:`.Ensemble`
         :param variables: list of variables to process
         :param inputfiles: list of input files
-        :param datebegin: start date
-        :type datebegin: :py:class:`~.bronx.stdtypes.date.Date`
-        :param dateend: end date
-        :type dateend: :py:class:`~.bronx.stdtypes.date.Date`
         :param decile: list of percentiles
         :param outdir: Output directory
         :type outdir: str
         """
         print(inputfiles)
         super(EnsemblePostproc, self).__init__()
-        self.ensemble = ensemble  #: ensemble data
+        # self.ensemble = self  #: ensemble data
         self.variables = variables  #: list of variables
-        self.ensemble.open(inputfiles)
+        #self.ensemble.open(inputfiles)
+        self.open(inputfiles)
+
         #: output filename
-        self.outfile = os.path.join(outdir, 'PRO_post_{0}_{1}.nc'.format(datebegin.ymdh, dateend.ymdh))
-        #: variables always written to the output file
-        #: ['time', 'ZS', 'aspect', 'slope', 'massif_num', 'longitude', 'latitude']
-        self.standardvars = ['time', 'ZS', 'aspect', 'slope', 'massif_num', 'longitude', 'latitude']
+        self.outfile = os.path.join(outdir, 'PRO_post.nc')
+        # self.outfile = os.path.join(outdir, 'PRO_post_{0}_{1}.nc'.format(datebegin.ymdh, dateend.ymdh))
         #: list of percentiles
         self.decile = decile
+
+    @property
+    def standardvars(self):
+        """variables always written to the output file"""
+        return ['time', 'ZS', 'aspect', 'slope', 'massif_num', 'longitude', 'latitude']
 
     def create_outfile(self):
         """
@@ -1083,25 +1105,25 @@ class EnsemblePostproc(_EnsembleMassif):
         Copy global attributes, dimensions and standard variables from the first simulation file to the output file.
         """
         # copy global attributes all at once via dictionary
-        self.outdataset.dataset.setncatts(self.ensemble.simufiles[0].dataset.__dict__)
+        self.outdataset.dataset.setncatts(self.simufiles[0].dataset.__dict__)
         # copy dimensions
-        for name, dimension in self.ensemble.simufiles[0].dataset.dimensions.items():
+        for name, dimension in self.simufiles[0].dataset.dimensions.items():
             self.outdataset.dataset.createDimension(
                 name, (len(dimension) if not dimension.isunlimited() else None))
         print(self.outdataset.listdim())
 
         # copy standard variables
-        for name, variable in self.ensemble.simufiles[0].dataset.variables.items():
+        for name, variable in self.simufiles[0].dataset.variables.items():
             if name in self.standardvars:
-                fillval = self.ensemble.simufiles[0].getfillvalue(name)
+                fillval = self.simufiles[0].getfillvalue(name)
                 x = self.outdataset.dataset.createVariable(name, variable.datatype, variable.dimensions,
                                                            fill_value=fillval)
                 # copy variable attributes without _FillValue since this causes an error
-                for att in self.ensemble.simufiles[0].listattr(name):
+                for att in self.simufiles[0].listattr(name):
                     if att != '_FillValue':
-                        print(self.ensemble.simufiles[0].getattr(name, att))
-                        self.outdataset.dataset[name].setncatts({att: self.ensemble.simufiles[0].getattr(name, att)})
-                self.outdataset.dataset[name][:] = self.ensemble.simufiles[0].dataset[name][:]
+                        print(self.simufiles[0].getattr(name, att))
+                        self.outdataset.dataset[name].setncatts({att: self.simufiles[0].getattr(name, att)})
+                self.outdataset.dataset[name][:] = self.simufiles[0].dataset[name][:]
                 print('data copied')
         print(self.outdataset.listvar())
 
@@ -1125,7 +1147,7 @@ class EnsemblePostproc(_EnsembleMassif):
         # print('median done')
         self.deciles()
         self.outdataset.close()
-        self.ensemble.close()
+        self.close()
 
     def deciles(self):
         """
@@ -1139,17 +1161,17 @@ class EnsemblePostproc(_EnsembleMassif):
         self.outdataset.dataset['decile'][:] = self.decile[:]
         atts = {'long_name': "Percentiles of the ensemble forecast"}
         self.outdataset.dataset['decile'].setncatts(atts)
-        for name, variable in self.ensemble.simufiles[0].dataset.variables.items():
+        for name, variable in self.simufiles[0].dataset.variables.items():
             if name in self.variables:
                 # calculate deciles
-                vardecile = self.ensemble.quantile(name, self.decile)
+                vardecile = self.quantile(name, self.decile)
                 # get decile axis in the right place
                 vardecile = np.moveaxis(vardecile, 0, -1)
-                fillval = self.ensemble.simufiles[0].getfillvalue(name)
+                fillval = self.simufiles[0].getfillvalue(name)
                 x = self.outdataset.dataset.createVariable(name, variable.datatype, variable.dimensions + ('decile',),
                                                            fill_value=fillval)
                 # copy variable attributes all at once via dictionary, but without _FillValue
-                attdict = self.ensemble.simufiles[0].dataset[name].__dict__
+                attdict = self.simufiles[0].dataset[name].__dict__
                 attdict.pop('_FillValue', None)
                 self.outdataset.dataset[name].setncatts(attdict)
                 print(vardecile.shape)
@@ -1161,20 +1183,37 @@ class EnsemblePostproc(_EnsembleMassif):
         to the output data set including the corresponding attributes.
         """
         print('entered median')
-        for name, variable in self.ensemble.simufiles[0].dataset.variables.items():
+        for name, variable in self.simufiles[0].dataset.variables.items():
             if name in self.variables:
-                median = self.ensemble.quantile(name, 50)
-                fillval = self.ensemble.simufiles[0].getfillvalue(name)
+                median = self.quantile(name, 50)
+                fillval = self.simufiles[0].getfillvalue(name)
                 x = self.outdataset.dataset.createVariable(name, variable.datatype, variable.dimensions,
                                                            fill_value=fillval)
                 # copy variable attributes all at once via dictionary, but without _FillValue
-                attdict = self.ensemble.simufiles[0].dataset[name].__dict__
+                attdict = self.simufiles[0].dataset[name].__dict__
                 attdict.pop('_FillValue', None)
                 self.outdataset.dataset[name].setncatts(attdict)
                 print(self.outdataset.dataset[name][:].size)
                 print(median.size)
                 self.outdataset.dataset[name][:] = median[:]
 
+
+class EnsembleHydro(EnsemblePostproc):
+    """
+    Class to provide a synthesis of ensemble hydrological diagnostics of S2M
+    """
+
+    @property
+    def spatialdim(self):
+        return 'basin'
+
+    @property
+    def standardvars(self):
+        return ['time', 'basin']
+
+
+@echecker.disabled_if_unavailable
+@echecker_pyproj.disabled_if_unavailable(version='2.0.0')
 def main(c):
     """
     :param c: config
@@ -1253,6 +1292,7 @@ def main(c):
 
         E.close()
         del E
+
 
 if __name__ == "__main__":
     c = config()

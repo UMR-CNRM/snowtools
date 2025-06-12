@@ -11,6 +11,9 @@ psycopg2
 pyshp
 pandas
 cartopy
+footprints
+epygram
+packaging
 
 # Other requirements
 # xarray is a requirement for plots/compare.py and utils/proximu.py in case of use of NETCDF-4 file format
@@ -21,6 +24,11 @@ xarray
 # Requirements for generating the documentation
 #sphinx>=4.3
 #git+https://github.com/VACUMM/sphinx-fortran.git
+
+# requirements for editable installs
+# meson-python
+# meson
+# ninja
 
 # GDAL:
 #

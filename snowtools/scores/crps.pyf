@@ -1,0 +1,14 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+subroutine crps(forecast,observation,nfcmember,nobsmember,crpsout) ! in crps.f90
+    real(kind=8) dimension(nfcmember),intent(in) :: forecast
+    real(kind=8) dimension(nobsmember),intent(in) :: observation
+    integer, optional,intent(in),check(shape(forecast, 0) == nfcmember),depend(forecast) :: nfcmember=shape(forecast, 0)
+    integer, optional,intent(in),check(shape(observation, 0) == nobsmember),depend(observation) :: nobsmember=shape(observation, 0)
+    real(kind=8) intent(out) :: crpsout
+end subroutine crps
+
+! This file was auto-generated with f2py (version:1.24.3).
+! See:
+! https://web.archive.org/web/20140822061353/http://cens.ioc.ee/projects/f2py2e
