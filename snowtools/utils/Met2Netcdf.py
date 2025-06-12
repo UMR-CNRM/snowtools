@@ -69,7 +69,7 @@ from bronx.meteo.constants import T0
 # MUST CHANGE EACH YEAR:
 #
 # year of last MET file
-annee_last_MET = 2023
+annee_last_MET = 2024
 #
 # END OF CHANGE
 ###############
@@ -77,6 +77,7 @@ annee_last_MET = 2023
 #
 # CDP60mn starting day
 annee_last_cdp60mn = str(annee_last_MET) + '080100'
+annee_last_cdp60mn = '2023080100'
 path_safran = '/rd/cenfic3/cenmod/era40/vortex/s2m/postes/reanalysis/meteo'
 path_met = '/rd/cenfic3/cenobs/mesure_data/col_de_porte/met/'
 pas_par_defaut = 3600
@@ -185,6 +186,7 @@ def recup_cdp(date_time_deb, date_time_fin):
     # Structure des bases: cdp60mn pour l'année en cours et un peu plus. Ensuite, mis dans cdp9293, cdp9394 etc... jusqu'à cdp1415
     # A partir de la saison 15-16, chgt de nom de base cdp60mn_1516 et changement de nom des variables
     date_change_2015 = check_and_convert_date(str(2015080100))  # EN DUR et fixe
+    date_change_nomvent = check_and_convert_date(str(2023052214))  # EN DUR et fixe
     date_change_base60mn = check_and_convert_date(annee_last_cdp60mn)
 
     ###############################################################################################
@@ -210,10 +212,16 @@ def recup_cdp(date_time_deb, date_time_fin):
         nom_var = 'baro,dvent'
     elif (date_time_fin > date_1er_aout) and date_time_fin.year <= date_change_base60mn.year:
         nom_base = 'cdp60mn_' + str(date_time_fin.year - 1)[2:4] + str(date_time_fin.year)[2:4]
-        nom_var = 'p_ptb330_v1,dd_meca_10mn_10m'
+        if date_time_fin.year <= date_change_nomvent:
+            nom_var = 'p_ptb330_v1,dd_meca_10mn_10m'
+        else:
+            nom_var = 'p_ptb330_v1,dd_us_10mn_10m'
     else:
         nom_base = 'cdp60mn'
-        nom_var = 'p_ptb330_v1,dd_meca_10mn_10m'
+        if date_time_fin.year <= date_change_nomvent:
+            nom_var = 'p_ptb330_v1,dd_meca_10mn_10m'
+        else:
+            nom_var = 'p_ptb330_v1,dd_us_10mn_10m'
 
     # command est une requete SQL (en string)
     command = "select dat," + nom_var + " from bdniv." + nom_base + " where dat between '{0}' and '{1}' \
