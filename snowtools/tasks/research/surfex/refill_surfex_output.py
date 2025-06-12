@@ -65,7 +65,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         if not hasattr(self.conf, "simu2D"):
             self.conf.simu2D = False
         if hasattr(self.conf, "simu2D"):
-            self.conf.genv2D = 'uenv:pgd.002@SURFEX_CEN'
+            self.conf.genv2D = 'uenv:pgd.003@SURFEX_CEN'
 
         if 'early-fetch' in self.steps:
 
