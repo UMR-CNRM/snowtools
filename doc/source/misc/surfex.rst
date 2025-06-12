@@ -108,7 +108,6 @@ Here you can find long name for a part of these variables (alphabetical order fo
 - SD_5DY_ISBA = Accumulated snow thickness for past 5 days (m)
 - SD_7DY_ISBA = Accumulated snow thickness for past 7 days (m)
 - SNOWDZ = Thickness (m)
-- SNOWHEAT = Snow Enthalpy (J/m2)
 - SNOWLIQ = Snow Liquid Water Content (kg/m3)
 - SNOMLT_ISBA = Snow melting rate (kg/m2)
 - SNOWRAM = RAM Resistance (daN)
