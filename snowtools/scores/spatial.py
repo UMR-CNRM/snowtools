@@ -22,7 +22,6 @@ from abc import ABC, abstractmethod
 from snowtools.scores.list_scores import SpatialScoreFile
 from snowtools.utils.prosimu import prosimu_auto
 from snowtools.plots.scores.moran_scatter import MoranScatter, MoranScatterColored, get_moran_palette
-# from snowtools.plots.maps.cartopy import MoranMap
 
 try:
     from snowtools.scores import crps
