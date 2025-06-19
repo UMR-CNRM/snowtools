@@ -15,4 +15,5 @@ scripts/extract/obs/extract_obs_allhtn.py
 scripts/create_forcing/Template_creation_FORCING.py
 scripts/metadata/add_missing_projection_data.py
 scripts/metadata/gen_metadata_massif_file.py
+scripts/create_forcing/split_prectot.py
 interpolation/Netcdf_add_massif_info.py

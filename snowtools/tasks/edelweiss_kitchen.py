@@ -11,7 +11,6 @@ import shutil
 import re
 
 from snowtools.tasks.vortex_kitchen import vortex_kitchen, UserEnv
-from snowtools.utils.resources import InstallException
 from snowtools.tools.execute import callSystemOrDie
 from snowtools.DATA import SNOWTOOLS_DIR
 from bronx.stdtypes.date import Date
@@ -42,12 +41,6 @@ class Edelweiss_kitchen(vortex_kitchen):
             # Actual execution
             self.set_class_variables()
             self.execute()
-
-    @staticmethod
-    def check_vortex_install():
-
-        if "VORTEX" not in list(os.environ.keys()):
-            raise InstallException("VORTEX environment variable must be defined towards a valid vortex install.")
 
     def tasksinfo(self):
 
