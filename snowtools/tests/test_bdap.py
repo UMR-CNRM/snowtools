@@ -6,14 +6,19 @@ import unittest
 import glob
 
 from snowtools.tests.tempfolder import TestWithTempFolderWithChdir
-from snowtools.scripts.extract.bdap.Extraction_BDAP import ExtractBDAP
-from snowtools.scripts.extract.bdap.Extraction_BDAP import GeometryError, RunTimeError, LeadTimeError
 from snowtools.DATA import TESTBASE_DIR
 
 from bronx.stdtypes.date import Date
 
+try:
+    import vortex
+    vortex_avail = True
+except Exception:
+    vortex_avail = False
+
 
 @unittest.skipIf(not os.path.isdir(TESTBASE_DIR), "input files not available")
+@unittest.skipIf(not vortex_avail, "Vortex not available")
 class BDAPTest(TestWithTempFolderWithChdir):
 
     def setUp(self):
@@ -23,7 +28,11 @@ class BDAPTest(TestWithTempFolderWithChdir):
             os.symlink(reference, os.path.basename(reference))
 
     def test_antilope(self):
-        # Extraction_BDAP.py -b 2025052806 -e 2025052806 -d alp -p PRECIP -m ANTILOPEH -t 1 -g FRANXL1S100 -v SOL
+        """
+        Test equivalent to
+        Extraction_BDAP.py -b 2025052806 -e 2025052806 -d alp -p PRECIP -m ANTILOPEH -t 1 -g FRANXL1S100 -v SOL
+        """
+        from snowtools.scripts.extract.bdap.Extraction_BDAP import ExtractBDAP
         refname = 'reference_BDAP_request_ANTILOPEH.txt'
         request = ExtractBDAP(
             model       = 'ANTILOPEH',
@@ -42,7 +51,10 @@ class BDAPTest(TestWithTempFolderWithChdir):
         assert reference.readlines() == output.readlines()
 
     def test_wbt_arome(self):
-        # Extraction_BDAP.py -b 2025052506 -e 2025052506 -d alp -p WETBT -v HAUTEUR -l 2 10 20 -g EURW1S40 -m PAROME
+        """
+        Extraction_BDAP.py -b 2025052506 -e 2025052506 -d alp -p WETBT -v HAUTEUR -l 2 10 20 -g EURW1S40 -m PAROME
+        """
+        from snowtools.scripts.extract.bdap.Extraction_BDAP import ExtractBDAP
         refname = 'reference_BDAP_request_WBT_AROME.txt'
         request = ExtractBDAP(
             model       = 'PAROME',
@@ -61,8 +73,11 @@ class BDAPTest(TestWithTempFolderWithChdir):
         assert reference.readlines() == output.readlines()
 
     def test_pearome(self):
-        # Extraction_BDAP.py -b 2025052803 -e 2025052803 -d alp -p THETAPW -v ISOBARE -l 1000 850 700 500 -g EURW1S40
-        # -m PEAROME
+        """
+        Extraction_BDAP.py -b 2025052803 -e 2025052803 -d alp -p THETAPW -v ISOBARE -l 1000 850 700 500 -g EURW1S40
+        -m PEAROME
+        """
+        from snowtools.scripts.extract.bdap.Extraction_BDAP import ExtractBDAP
         refname = 'reference_BDAP_request_THETAPW_PEAROME.txt'
         request = ExtractBDAP(
             model       = 'PEAROME',
@@ -82,6 +97,8 @@ class BDAPTest(TestWithTempFolderWithChdir):
         assert reference.readlines() == output.readlines()
 
     def test_GeometryError(self):
+        from snowtools.scripts.extract.bdap.Extraction_BDAP import ExtractBDAP
+        from snowtools.scripts.extract.bdap.Extraction_BDAP import GeometryError
         request = ExtractBDAP(
             model       = 'ANTILOPEH',
             date        = Date('2025052806'),
@@ -97,6 +114,8 @@ class BDAPTest(TestWithTempFolderWithChdir):
             request.run()
 
     def test_RunTimeError(self):
+        from snowtools.scripts.extract.bdap.Extraction_BDAP import ExtractBDAP
+        from snowtools.scripts.extract.bdap.Extraction_BDAP import RunTimeError
         request = ExtractBDAP(
             model       = 'ANTILOPEH',
             date        = Date('20250528061500'),
@@ -112,6 +131,8 @@ class BDAPTest(TestWithTempFolderWithChdir):
             request.run()
 
     def test_LeadTimeError(self):
+        from snowtools.scripts.extract.bdap.Extraction_BDAP import ExtractBDAP
+        from snowtools.scripts.extract.bdap.Extraction_BDAP import LeadTimeError
         request = ExtractBDAP(
             model       = 'ANTILOPEH',
             date        = Date('20250528060000'),
