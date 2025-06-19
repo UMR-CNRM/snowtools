@@ -150,7 +150,7 @@ We imagine here the simpliest way for a first try, following an existing diagnos
 Files to modify (a minima) :
 
 - modd_diag_misc_isban.F90
-- diag_isba_initn.F90
+- diag_misc_isba_initn.F90
 - snow3L_isba.F90
 - snowcro_diag.F90
 - write_diag_misc_isban.F90
