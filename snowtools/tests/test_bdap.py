@@ -5,7 +5,7 @@ import os
 import unittest
 import glob
 
-from snowtools.tests.tempfolder import TestWithTempFolderWithLog
+from snowtools.tests.tempfolder import TestWithTempFolderWithChdir
 from snowtools.scripts.extract.bdap.Extraction_BDAP import ExtractBDAP
 from snowtools.scripts.extract.bdap.Extraction_BDAP import GeometryError, RunTimeError, LeadTimeError
 from snowtools.DATA import TESTBASE_DIR
@@ -14,12 +14,11 @@ from bronx.stdtypes.date import Date
 
 
 @unittest.skipIf(not os.path.isdir(TESTBASE_DIR), "input files not available")
-class BDAPTest(TestWithTempFolderWithLog):
+class BDAPTest(TestWithTempFolderWithChdir):
 
     def setUp(self):
         super(BDAPTest, self).setUp()
         refdir = os.path.join(TESTBASE_DIR, "bdap")
-        os.chdir(self.diroutput)
         for reference in glob.glob(os.path.join(refdir, '*')):
             os.symlink(reference, os.path.basename(reference))
 

@@ -8,13 +8,13 @@ Created on 19 March 2025
 import unittest
 import os
 
-from snowtools.tests.tempfolder import TestWithTempFolderWithLog
+from snowtools.tests.tempfolder import TestWithTempFolderWithChdir
 from snowtools.DATA import TESTBASE_DIR
 from snowtools.tools.hydro import basin_areas_file, hydro
 
 
 @unittest.skipIf(not os.path.isdir(os.path.join(TESTBASE_DIR, "hydro")), "input files not available")
-class HydroTest(TestWithTempFolderWithLog):
+class HydroTest(TestWithTempFolderWithChdir):
     def setUp(self):
         super(HydroTest, self).setUp()
         self.dem = os.path.join(TESTBASE_DIR, 'hydro', 'DEM_FRANCE_L93_250m_bilinear.nc')
@@ -22,8 +22,6 @@ class HydroTest(TestWithTempFolderWithLog):
         self.pro = os.path.join(TESTBASE_DIR, "PRO", "pro_testhydro_alp_oper_2025031906_2025032306.nc")
         self.rasterbasin = os.path.join(TESTBASE_DIR, 'hydro', 'BNBV_SCHAPI_FRANCE250m.nc')
         self.areas = os.path.join(TESTBASE_DIR, "hydro", "areas_alp27_allslopes.nc")
-        self._old_cwd = os.getcwd()
-        os.chdir(self.diroutput)
 
     def test_areas(self):
         # Compute the areas of basins in rasterbasin corresponding to the geometry of the pro file
@@ -37,10 +35,6 @@ class HydroTest(TestWithTempFolderWithLog):
             h.integration(['Tair', 'Rainf', 'Snowf',
                            'SNOMLT_ISBA', 'WSN_T_ISBA', 'DSN_T_ISBA'], var_sca='WSN_T_ISBA')
         assert os.path.isfile('HYDRO.nc')
-
-    def tearDown(self):
-        super().tearDown()
-        os.chdir(self._old_cwd)
 
 
 if __name__ == "__main__":

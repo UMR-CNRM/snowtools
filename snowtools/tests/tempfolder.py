@@ -10,6 +10,7 @@ import shutil
 import tempfile
 import datetime
 import sys
+import logging
 
 _here = os.path.dirname(os.path.realpath(__file__))
 
@@ -21,19 +22,16 @@ class TestWithTempFolder(unittest.TestCase):
     fails.
 
     Defines a ``setUp`` and ``tearDown`` class methods that create the temporary
-    folder in ``snowtools/tests/fail_test`` folder and provide the path to
-    temporary folder in ``diroutput`` attribute.
+    folder and provide the path to temporary folder in ``diroutput`` attribute.
+
+    Warning: Does not go into the output directory, if you need so, have a look to TestWithTempFolderWithChdir.
     """
     def setUp(self):
         """
         Create the temporary folder before starting the test
         """
-        basediroutput = os.path.join(_here, "fail_test")
-        if not os.path.isdir(basediroutput):
-            os.makedirs(basediroutput)
-        self._basediroutput = basediroutput
-        prefix = "output" + datetime.datetime.today().strftime("%Y%m%d%H%M%S%f-")
-        self.diroutput = tempfile.mkdtemp(prefix=prefix, dir=basediroutput)
+        prefix = "snowtools_tests_output_" + datetime.datetime.today().strftime("%Y%m%d%H%M%S-")
+        self.diroutput = tempfile.mkdtemp(prefix=prefix)
         self.test_pass = None
         self.errors = {}
 
@@ -60,13 +58,27 @@ class TestWithTempFolder(unittest.TestCase):
         if ok:
             # Delete temporary folder for passing test
             shutil.rmtree(self.diroutput)
-            # Also delete fail_test folder if all tests passed (ie empty folder)
-            if os.listdir(self._basediroutput) == []:
-                os.rmdir(self._basediroutput)
 
     def list2reason(self, exc_list):
         if exc_list and exc_list[-1][0] is self:
             return exc_list[-1][1]
+
+
+class TestWithTempFolderWithChdir(TestWithTempFolder):
+    """
+    Same as TestWithTempFolder but position current directory to the
+    created temporary directory.
+    """
+    def setUp(self):
+        self._oldpwd = None
+        self._oldpwd = os.getcwd()
+        super().setUp()
+        os.chdir(self.diroutput)
+
+    def tearDown(self):
+        if self._oldpwd is not None:
+            os.chdir(self._oldpwd)
+
 
 class TestWithTempFolderWithLog(TestWithTempFolder):
     """
@@ -79,7 +91,7 @@ class TestWithTempFolderWithLog(TestWithTempFolder):
         super(TestWithTempFolderWithLog, self).setUp()
         self.logfile = os.path.join(self.diroutput, 'output.log')
         with open(self.logfile, 'w') as f:
-            f.write('Log for test {} executed on {}'.format(__file__, datetime.datetime.now()))
+            f.write('Log for test {} executed on {}\n'.format(type(self), datetime.datetime.now()))
 
     def tearDown(self):
         """
@@ -88,6 +100,34 @@ class TestWithTempFolderWithLog(TestWithTempFolder):
         """
         super(TestWithTempFolderWithLog, self).tearDown()
         if not self.test_pass:
+            logging.error('Test failed for {}. Details are available in {}'.format(type(self), self.diroutput))
             with open(self.logfile, 'r') as f:
+                sys.stderr.write('Log folder: {}\n'.format(self.diroutput))
                 sys.stderr.write(f.read())
 
+    def run_and_log(self, *args, **kwargs):
+        """
+        Use subprocess.run and redirect output to the log file
+        For python processes, please have a look to export_output.
+        """
+        import subprocess
+        s = subprocess.run(*args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **kwargs)
+        with open(self.logfile, 'a') as ff:
+            ff.write(s.stdout.decode(encoding='utf-8', errors='replace'))
+        return s
+
+
+class TestWithTempFolderWithLogWithChdir(TestWithTempFolderWithLog):
+    """
+    Same as TestWithTempFolderWithLog but position current directory to the
+    created temporary directory.
+    """
+    def setUp(self):
+        self._oldpwd = None
+        self._oldpwd = os.getcwd()
+        super().setUp()
+        os.chdir(self.diroutput)
+
+    def tearDown(self):
+        if self._oldpwd is not None:
+            os.chdir(self._oldpwd)
