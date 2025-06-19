@@ -23,6 +23,7 @@ import cartopy.feature as cf
 from snowtools.plots.maps.quicklookmap import read_and_preprocess, wind_map, difference_map, scalar_map
 
 CFEATURES = [f for f in dir(cf) if all([c.isupper() for c in f])]
+"""Cartopy features"""
 
 def main(filename,
          fid=None,
@@ -98,6 +99,7 @@ def main(filename,
         Only for plot_method = 'scatter'.
 
     Cartography:
+
     :param meridians and parallels: enable to fine-tune the choice of lines to
         plot, with either:
         - 'auto': automatic scaling to the map extents
@@ -127,6 +129,7 @@ def main(filename,
         including format as extension.
     :param figures_dpi: quality of saved figures.
     """
+
     # 0/ checks, determine mode, initializations
     # checks
     assert not all([f is None for f in (fid, Ufid, Vfid)]), "Mandatory arguments: *fid* OR *Ufid/Vfid*."
@@ -229,7 +232,7 @@ if __name__ == '__main__':
     add_arg_to_parser(parser, fields_management['windfieldU'])
     add_arg_to_parser(parser, fields_management['windfieldV'])
     add_arg_to_parser(parser, ['--date', dict(type=str, dest='date',
-                                             help="Selected date in the format as string with format YYYYMMDDHH",
+                                             help="Selected date in a bronx.Date compatible string format",
                                              required=True)])
 
     diffmodes = parser.add_mutually_exclusive_group()
