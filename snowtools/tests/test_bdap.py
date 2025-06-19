@@ -10,15 +10,8 @@ from snowtools.DATA import TESTBASE_DIR
 
 from bronx.stdtypes.date import Date
 
-try:
-    import vortex
-    vortex_avail = True
-except Exception:
-    vortex_avail = False
-
 
 @unittest.skipIf(not os.path.isdir(TESTBASE_DIR), "input files not available")
-@unittest.skipIf(not vortex_avail, "Vortex not available")
 class BDAPTest(TestWithTempFolderWithChdir):
 
     def setUp(self):

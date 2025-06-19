@@ -10,8 +10,6 @@ import numpy as np
 import xarray as xr
 import time
 
-from vortex import toolbox
-
 from bronx.stdtypes.date import Date, Period
 
 """
@@ -724,7 +722,7 @@ if __name__ == "__main__":
 
     if args.archive:
         import vortex
-        from snowtools.scripts.extract.vortex import vortexIO as io
+        from vortex import toolbox
 
         t = vortex.ticket()
 
