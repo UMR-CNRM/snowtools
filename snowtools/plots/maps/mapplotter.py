@@ -14,10 +14,10 @@ from bronx.syntax.parsing import str2dict
 from bronx.stdtypes.date import Date
 import epygram
 from epygram import epylog, epygramError
-from epygram.args_catalog import (add_arg_to_parser,
-                                  files_management, fields_management,
-                                  misc_options, output_options,
-                                  runtime_options, graphical_options)
+from epygram.cli.args_catalog import (add_arg_to_parser,
+                                      files_args, fields_args,
+                                      misc_args, output_args,
+                                      runtime_args, graphical_args)
 import matplotlib.pyplot as plt
 import cartopy.feature as cf
 from snowtools.plots.maps.quicklookmap import read_and_preprocess, wind_map, difference_map, scalar_map
@@ -227,48 +227,48 @@ if __name__ == '__main__':
                                                  ' fields from a resource file.',
                                      epilog='End of help for: %(prog)s (EPyGrAM v' + epygram.__version__ + ')')
 
-    add_arg_to_parser(parser, files_management['principal_file'])
-    add_arg_to_parser(parser, fields_management['field'])
-    add_arg_to_parser(parser, fields_management['windfieldU'])
-    add_arg_to_parser(parser, fields_management['windfieldV'])
+    add_arg_to_parser(parser, files_args['principal_file'])
+    add_arg_to_parser(parser, fields_args['field'])
+    add_arg_to_parser(parser, fields_args['windfieldU'])
+    add_arg_to_parser(parser, fields_args['windfieldV'])
     add_arg_to_parser(parser, ['--date', dict(type=str, dest='date',
                                              help="Selected date in a bronx.Date compatible string format",
                                              required=True)])
 
     diffmodes = parser.add_mutually_exclusive_group()
-    add_arg_to_parser(diffmodes, files_management['file_to_refer_in_diff'])
+    add_arg_to_parser(diffmodes, files_args['file_to_refer_in_diff'])
 
-    add_arg_to_parser(parser, misc_options['operation_on_field'])
-    add_arg_to_parser(parser, misc_options['mask_threshold'])
-    add_arg_to_parser(parser, misc_options['wind_components_are_projected_on'])
-    add_arg_to_parser(parser, misc_options['map_factor_correction'])
+    add_arg_to_parser(parser, misc_args['operation_on_field'])
+    add_arg_to_parser(parser, misc_args['mask_threshold'])
+    add_arg_to_parser(parser, misc_args['wind_components_are_projected_on'])
+    add_arg_to_parser(parser, misc_args['map_factor_correction'])
 
     # graphics
-    add_arg_to_parser(parser, graphical_options['plot_method'])
-    add_arg_to_parser(parser, graphical_options['minmax'])
-    add_arg_to_parser(parser, graphical_options['levels_number'])
-    add_arg_to_parser(parser, graphical_options['colormap'], default='YlGnBu')
-    add_arg_to_parser(parser, graphical_options['center_cmap_on_0'])
-    add_arg_to_parser(parser, graphical_options['title'])
-    add_arg_to_parser(parser, graphical_options['cartopy_features'],
+    add_arg_to_parser(parser, graphical_args['plot_method'])
+    add_arg_to_parser(parser, graphical_args['minmax'])
+    add_arg_to_parser(parser, graphical_args['levels_number'])
+    add_arg_to_parser(parser, graphical_args['colormap'], default='YlGnBu')
+    add_arg_to_parser(parser, graphical_args['center_cmap_on_0'])
+    add_arg_to_parser(parser, graphical_args['title'])
+    add_arg_to_parser(parser, graphical_args['cartopy_features'],
                       help="cartopy features (cartopy.feature.*), separated by comma " +
                       str(CFEATURES))
-    add_arg_to_parser(parser, graphical_options['french_departments'])
-    add_arg_to_parser(parser, graphical_options['parallels'])
-    add_arg_to_parser(parser, graphical_options['meridians'])
-    add_arg_to_parser(parser, graphical_options['vectors_subsampling'])
-    add_arg_to_parser(parser, graphical_options['scatter_kw'])
-    add_arg_to_parser(parser, graphical_options['lonlat_zoom'])
-    add_arg_to_parser(parser, graphical_options['vector_plot_method'])
-    add_arg_to_parser(parser, graphical_options['quiverkey'])
-    add_arg_to_parser(parser, graphical_options['figures_dpi'])
-    add_arg_to_parser(parser, graphical_options['global_shift_center'])
+    add_arg_to_parser(parser, graphical_args['french_departments'])
+    add_arg_to_parser(parser, graphical_args['parallels'])
+    add_arg_to_parser(parser, graphical_args['meridians'])
+    add_arg_to_parser(parser, graphical_args['vectors_subsampling'])
+    add_arg_to_parser(parser, graphical_args['scatter_kw'])
+    add_arg_to_parser(parser, graphical_args['lonlat_zoom'])
+    add_arg_to_parser(parser, graphical_args['vector_plot_method'])
+    add_arg_to_parser(parser, graphical_args['quiverkey'])
+    add_arg_to_parser(parser, graphical_args['figures_dpi'])
+    add_arg_to_parser(parser, graphical_args['global_shift_center'])
     # diff
-    add_arg_to_parser(parser, graphical_options['diffcolormap'], default='RdBu_r')
-    add_arg_to_parser(parser, graphical_options['diff_center_cmap_on_0'])
+    add_arg_to_parser(parser, graphical_args['diffcolormap'], default='RdBu_r')
+    add_arg_to_parser(parser, graphical_args['diff_center_cmap_on_0'])
     # output
-    add_arg_to_parser(parser, output_options['outputfilename'], default=None)
-    add_arg_to_parser(parser, runtime_options['verbose'])
+    add_arg_to_parser(parser, output_args['outputfilename'], default=None)
+    add_arg_to_parser(parser, runtime_args['verbose'])
 
     args = parser.parse_args()
 
