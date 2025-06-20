@@ -6,9 +6,11 @@
 import os
 import sys
 import argparse
-from bronx.stdtypes.date import Date, Period
 import numpy as np
 import xarray as xr
+import time
+
+from bronx.stdtypes.date import Date, Period
 
 """
 Outil d'extraction de données de la BDAP. Les données sont extraites sous forme de fichiers grib
@@ -65,9 +67,9 @@ Exemples :
 # TODO : assurer que les points de grilles du sous domaines (coordonnées + pas lat/lon) sont
 # bien confondus aves les points de la grille native pour éviter une interpolation
 known_domains = dict(
-    alp = ['46800', '43700', '5000', '7600'],
+    alp = ['46900', '43000', '4500', '8000'],
     pyr = ['43500', '42000', '-2000', '3500'],
-    cor = ['43000', '41000', '8000', '11500'],
+    cor = ['43000', '41000', '8000', '10500'],
     GrandesRousses = ['45640', '44590', '5610', '7100'],  # includes 0.2° margin
 )
 
@@ -86,17 +88,17 @@ known_grids = dict(
 
 
 model_map = dict(
-    PAAROME      = dict(vapp='arome', vconf='3dvarfr'),  # Analyse AROME
-    PAROME       = dict(vapp='arome', vconf='3dvarfr'),  # Prévision AROME
-    PEAROME      = dict(vapp='arome', vconf='pearome'),  # Prévision d'ensemble AROME
-    PAA          = dict(vapp='arpege', vconf='4dvarfr'),  # Analyse ARPEGE
-    PA           = dict(vapp='arpege', vconf='4dvarfr'),  # Analyse ARPEGE
-    ANTILOPE     = dict(vapp=None, vconf=None),
-    ANTILOPEJP1  = dict(vapp=None, vconf=None),
-    ANTILOPEH    = dict(vapp=None, vconf=None),
-    ANTILOPEJP1H = dict(vapp=None, vconf=None),
-    ANTILOPEQ    = dict(vapp=None, vconf=None),
-    ANTILOPEJP1Q = dict(vapp=None, vconf=None),
+    PAAROME      = dict(vapp='arome', vconf='3dvarfr', block='meteo'),  # Analyse AROME
+    PAROME       = dict(vapp='arome', vconf='3dvarfr', block='meteo'),  # Prévision AROME
+    PEAROME      = dict(vapp='arome', vconf='pearome', block='meteo'),  # Prévision d'ensemble AROME
+    PAA          = dict(vapp='arpege', vconf='4dvarfr', block='meteo'),  # Analyse ARPEGE
+    PA           = dict(vapp='arpege', vconf='4dvarfr', block='meteo'),  # Analyse ARPEGE
+    ANTILOPE     = dict(vapp='antilope', vconf='[geometry:area]', block='raw'),
+    ANTILOPEJP1  = dict(vapp='antilope', vconf='[geometry:area]', block='rawJP1'),
+    ANTILOPEH    = dict(vapp='antilope', vconf='[geometry:area]', block='Hourly'),
+    ANTILOPEJP1H = dict(vapp='antilope', vconf='[geometry:area]', block='HourlyJP1'),
+    ANTILOPEQ    = dict(vapp='antilope', vconf='[geometry:area]', block='Daily'),
+    ANTILOPEJP1Q = dict(vapp='antilope', vconf='[geometry:area]', block='DailyJP1'),
 )
 
 default_levels = dict(
@@ -299,12 +301,12 @@ def parse_command_line():
     parser.add_argument('-g', '--grid', required=True, choices=known_grids.keys(),
                         help='BDAP grid name from which to extract data')
 
-    parser.add_argument('-d', '--domain', type=str, choices=known_domains.keys(),
+    parser.add_argument('-d', '--domain', type=str, required=True,
                         help='Extraction domain')
 
-    parser.add_argument('-c', '--coordinates', nargs=4, type=str,
+    parser.add_argument('-c', '--coordinates', nargs=4, type=float, default=None,
                         help='list of min/max coordinates to extract, format:'
-                        '[latmax, latmin, lonmin, lonmax] (unit: 1/1000°)')
+                        '[latmax, latmin, lonmin, lonmax] (unit: °)')
 
     parser.add_argument('-l', '--levels', nargs='+', default=None,
                         help='Level(s) of the parameter to extract')
@@ -319,6 +321,9 @@ def parse_command_line():
 
     parser.add_argument('-a', '--archive', action="store_true", default=False,
                         help="Archive output file with Vortex")
+
+    parser.add_argument('-k', '--kind',
+                        help="Kind of the output resource in case it is archived with Vortex")
 
     parser.add_argument('--interpolation', action='store_true', default=False,
                         help='Extraction on the user-defined subdomain (slower)')
@@ -355,6 +360,19 @@ def clean():
     import glob
     for fic in glob.glob('*.idx') + glob.glob('*.grib'):
         os.remove(fic)
+
+
+def speedtest(function):
+    def wrapper(*args, **kw):
+        t0 = time.time()
+        result = function(*args, **kw)
+        t1 = time.time()
+        monitoring = f'monitoring_{model}_{parameter}_{level_type}_{grid}_{datebegin.ymdh}_{dateend.ymdh}.txt'
+        extraction_time = (t1 - t0) / 60
+        with open(monitoring, 'w') as f:
+            f.write(f"Extraction time : {extraction_time} minutes \n")
+        return result
+    return wrapper
 
 
 class GeometryError(Exception):
@@ -424,7 +442,8 @@ class LeadTimeError(Exception):
 class ExtractBDAP(object):
 
     def __init__(self, model: str, date: str or list, ech: str or list, parameter: str, level_type: str,
-            levels: list, grid: str, domain: str, dlat=None, dlon=None, interpolation=False, test=False):
+            levels: list, grid: str, coordinates: tuple, dlat=None, dlon=None, interpolation=False, test=False,
+            member=None):
 
         self.model          = model
         self.date           = date
@@ -433,12 +452,21 @@ class ExtractBDAP(object):
         self.level_type     = level_type
         self.levels         = levels
         self.grid           = grid.upper()
-        self.domain         = domain
-        self.gribname       = f'{level_type}_{date.ymdh}_{ech}.grib'
+        self.coordinates    = coordinates
+        if member is None:
+            self.gribname       = f'{level_type}_{date.ymdh}_{ech}.grib'
+        else:
+            self.gribname       = f'{level_type}_{date.ymdh}_{ech}_mb{member:03d}.grib'
         self.dlat           = dlat
         self.dlon           = dlon
         self.test           = test
         self.interpolation  = interpolation
+        if self.model == 'PEAROME':
+            self.MOD = f'PEAROME{member:03d}'
+        elif self.model == 'ASPEAROME':
+            self.MOD = f'PG1PEAROM{member:03d}'
+        else:
+            self.MOD = self.model
 
     def requete(self, cmd='dap3_dev'):
         """
@@ -453,18 +481,13 @@ class ExtractBDAP(object):
         f = open(self.rqst, "w")
         f.write('#RQST\n')
         f.write(f'#NFIC {self.gribname}\n')  # Output file name
-        if self.model == 'PEAROME':
-            f.write('#MOD ' + ' '.join(['PEAROME{0:03d}'.format(member) for member in range(1, 17)]) + '\n')
-        elif self.model == 'ASPEAROME':
-            f.write('#MOD ' + ' '.join(['PG1PEAROM{0:03d}'.format(member) for member in range(1, 17)]) + '\n')
-        else:
-            f.write(f'#MOD {self.model}\n')  # BDAP model name (see doc)
+        f.write(f'#MOD {self.MOD}\n')  # BDAP model name (see doc)
         f.write(f'#PARAM {self.parameter}\n')  # paramater
         f.write(f'#Z_REF {self.grid}\n')  # BDAP grib name (see doc)
         if self.interpolation:
             f.write("#Z_EXTR INTERPOLATION\n")  # Interpolation on a user-defined grid
             # Coordonées de la grille de sortie (N S WA E) :
-            f.write('#Z_GEO ' + ' '.join(known_domains[self.domain]) + '\n')
+            f.write('#Z_GEO ' + ' '.join(self.coordinates) + '\n')
             # f.write('#Z_STP ' + ' '.join(dl[self.grid]) + '\n')  # Pas en lat/lon de la grille de sortie
             f.write(f'#Z_STP {self.dlat} {self.dlon} \n')  # Pas en lat/lon de la grille de sortie (TODO : check order)
         else:
@@ -481,7 +504,7 @@ class ExtractBDAP(object):
 
         f.write('#L_LST ' + ' '.join(self.levels) + '\n')  # List de niveaux
         f.write(f'#L_TYP {self.level_type}\n')  # Type de niveau (SOL, ISOBARE, HAUTEUR, MER, ISO*,...)
-        f.write('#FORM GRIB2\n')  # Format de sortie
+        f.write('#FORM GRIB2_C_MAX\n')  # Format de sortie
 
     def extract_from_bdap(self, cmd='dap3_dev'):
         """
@@ -531,7 +554,6 @@ class ExtractBDAP(object):
         """
         Check geometry consistency
         """
-
         if self.grid not in valid_geometries[self.model]:
             raise GeometryError(self.model, self.grid)
 
@@ -589,26 +611,81 @@ class ExtractBDAP(object):
         i0 = known_grids[self.grid]['lonmin']
         j0 = known_grids[self.grid]['latmax']
         maille = known_grids[self.grid]['maille']
-        latmax = int(known_domains[self.domain][0]) / 1000
-        latmin = int(known_domains[self.domain][1]) / 1000
-        lonmin = int(known_domains[self.domain][2]) / 1000
-        lonmax = int(known_domains[self.domain][3]) / 1000
+#        latmax = int(known_domains[self.domain][0]) / 1000
+#        latmin = int(known_domains[self.domain][1]) / 1000
+#        lonmin = int(known_domains[self.domain][2]) / 1000
+#        lonmax = int(known_domains[self.domain][3]) / 1000
+        latmax = self.coordinates[0] / 1000
+        latmin = self.coordinates[1] / 1000
+        lonmin = self.coordinates[2] / 1000
+        lonmax = self.coordinates[3] / 1000
         self.j1 = int(1 + np.round(j0 - latmin, 2) / maille)
         self.j2 = int(1 + np.round(j0 - latmax, 2) / maille)
         self.i1 = int(1 + np.round(lonmin - i0, 2) / maille)
         self.i2 = int(1 + np.round(lonmax - i0, 2) / maille)
 
 
+@speedtest
+def execute():
+    extractedfiles = list()
+    date = datebegin
+    # Loop over dates and lead times
+    while date <= dateend:
+        for ech in echeances:
+            # Launch extraction
+            if model in ['PEAROME', 'ASPEAROME']:
+                for mb in range(1, 17):
+                    extraction = ExtractBDAP(model, date, ech, parameter, level_type, levels, grid, coordinates,
+                            dlat=args.dlat, dlon=args.dlon, interpolation=args.interpolation, test=args.test, member=mb)
+                    grib = extraction.run()
+                    if grib is not None:
+                        extractedfiles.append(grib)
+            else:
+                extraction = ExtractBDAP(model, date, ech, parameter, level_type, levels, grid, coordinates,
+                        dlat=args.dlat, dlon=args.dlon, interpolation=args.interpolation, test=args.test)
+                grib = extraction.run()
+                if grib is not None:
+                    extractedfiles.append(grib)
+        date = date + Period(hours=max(dt, 1))  # Avoid infinite loops
+
+    # Open all extracted files with xarray
+    if len(extractedfiles) > 0:
+        print('Opening grib files with xarray...')
+        ds  = xr.open_mfdataset(extractedfiles, concat_dim='time', combine='nested', engine='cfgrib')
+
+        # TODO : set proper variable names, check/set attributes,...
+        # ds = ds.drop('time').rename({'valid_time': 'time'})
+        ds = ds.assign_coords(longitude=ds.longitude.data.round(2), latitude=ds.latitude.round(2))
+
+        print('Dataset created')
+        ds.to_netcdf(outname)
+    else:
+        if args.test:
+            print(f'Request created : {os.path.join(workdir, extraction.rqst)}')
+        else:
+            print('No extracted file to open')
+
+    clean()
+
+
 if __name__ == "__main__":
     args = parse_command_line()
-    datebegin  = args.datebegin
-    dateend    = args.dateend
-    parameter  = args.parameter
-    level_type = args.level_type
-    model      = args.model
-    grid       = args.grid
-    domain     = args.domain
-    parameter  = args.parameter
+    datebegin   = args.datebegin
+    dateend     = args.dateend
+    parameter   = args.parameter
+    level_type  = args.level_type
+    model       = args.model
+    grid        = args.grid
+    domain      = args.domain
+    if args.coordinates is not None:
+        coordinates = [int(x * 1000) for x in args.coordinates]
+    else:
+        if domain in known_domains.keys():
+            coordinates = [int(x) for x in known_domains[domain]]
+        else:
+            raise KeyError(f'Domain {domain} unknown, please provide associated coordinates')
+    parameter   = args.parameter
+    kind       = args.kind
     if args.levels is None:
         levels = [str(lvl) for lvl in default_levels[level_type]]
     else:
@@ -622,6 +699,8 @@ if __name__ == "__main__":
         # The default beahvior to try to get hourly outputs
         # --> extract all N=H1-H0 echeances from H0 execution to cover H0 --> H1
         dt = max(echeances)
+    else:
+        dt = args.pdt
 
     if args.workdir is None:
         workdir = os.path.join(os.environ['HOME'], 'workdir', f'extraction_{model.upper()}', domain, parameter)
@@ -635,33 +714,7 @@ if __name__ == "__main__":
     else:  # The extraction is associated to a date
         outname = f'{model}_{parameter}_{level_type}_{grid}_{datebegin.ymdh}.nc'
     if not os.path.exists(outname):
-        extractedfiles = list()
-        date = datebegin
-        # Loop over dates and lead times
-        while date <= dateend:
-            for ech in echeances:
-                # Launch extraction
-                extractor = ExtractBDAP(model, date, ech, parameter, level_type, levels, grid, domain, dlat=args.dlat,
-                        dlon=args.dlon, interpolation=args.interpolation, test=args.test)
-                grib = extractor.run()
-                if grib is not None:
-                    extractedfiles.append(grib)
-            date = date + Period(hours=max(dt, 1))  # Avoid infinite loops
-
-        # Open all extracted files with xarray
-        if len(extractedfiles) > 0:
-            print('Opening grib files with xarray...')
-            ds  = xr.open_mfdataset(extractedfiles, concat_dim='valid_time', combine='nested', engine='cfgrib')
-            # TODO : set proper variable names, check/set attributes,...
-            print('Dataset created')
-            ds.to_netcdf(outname)
-        else:
-            if args.test:
-                print(f'Request created : {os.path.join(workdir, extractor.rqst)}')
-            else:
-                print('No extracted file to open')
-
-    clean()
+        execute()
 
     ############################################
     # Everything beyond this point is optional #
@@ -669,28 +722,36 @@ if __name__ == "__main__":
 
     if args.archive:
         import vortex
-        from snowtools.scripts.extract.vortex import vortexIO as io
+        from vortex import toolbox
 
         t = vortex.ticket()
 
-        if level_type.startswith('ISO_'):
-            kind = level_type
-        elif level_type == 'HAUTEUR':
-            kind = parameter
-        else:
-            print('Kind not yet defined for this extraxction')
-            raise NotImplementedError
-        out = io.put_meteo(
+        if kind is None:
+            if level_type.startswith('ISO_'):
+                kind = level_type
+            elif level_type == 'HAUTEUR':
+                kind = parameter
+            else:
+                print('FOOTPRINT ERROR: Missing *kind* footprint (see -k / --king argument)')
+                raise NotImplementedError
+
+        # out = io.put_meteo(
+        out = toolbox.output(
             kind           = kind,
-            vapp           = 'edelweiss',
-            vconf          = domain,
-            source_app     = model_map[model]['vapp'],
-            source_conf    = model_map[model]['vconf'],
-            geometry       = grid,
+            vapp           = model_map[model]['vapp'],
+            vconf          = model_map[model]['vconf'],
+            # source_app     = model_map[model]['vapp'],
+            # source_conf    = model_map[model]['vconf'],
+            geometry       = domain,
             experiment     = f'oper@{os.environ["USER"]}',
             datebegin      = args.datebegin,
+            # TODO : avancer dateend de pdt (?) dans le cas de variables non instantallées (ex: précipitations)
             dateend        = args.dateend,
+            date           = '[dateend]',
             filename       = outname,
+            block          = model_map[model]['block'],
+            namebuild      = 'flat@cen',
+            namespace      = 'vortex.multi.fr',
         )
         out[0].quickview()
         print(t.prompt, 'Output location =', out[0].location())

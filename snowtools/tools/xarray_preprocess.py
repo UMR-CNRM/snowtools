@@ -3,8 +3,9 @@ import xarray
 
 # The following dictionnaries are used to control default variable and dimension names mapping
 dimension_map = {'x': 'xx', 'y': 'yy', 'lat': 'yy', 'latitude': 'yy', 'lon': 'xx', 'longitude': 'xx',
-        'location': 'Number_of_points', 'Number_of_patches': 'tile'}
-variables_map = {'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf', 'band_data': 'ZS'}
+        'location': 'Number_of_points', 'Number_of_patches': 'tile', 'valid_time': 'time'}
+variables_map = {'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf', 'band_data': 'ZS', 'prec': 'Precipitation',
+        'rr': 'Precipitation'}
 
 
 def preprocess(ds, mapping=dict(), decode_time=True, transpose=False):
@@ -55,6 +56,8 @@ def update_varname(ds, mapping):
 def update_dimname(ds, mapping):
     """
     Map dimension names if necessary / possible
+
+    # TODO : gérer les cas où le nom cible existe déjà
 
     :param ds: xarray object to preprocess
     :param ds: xarray Dataset or Dataarray
