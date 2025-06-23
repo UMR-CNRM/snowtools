@@ -79,14 +79,13 @@ The CSELECT options
 -------------------
 
 In the namelist, CSELECT allows you to choose output. For example, in the standard namelist, you have:
-``CSELECT='time','ZS','aspect','slope','massif_num','station','TG1','WG1','WGI1','TG4','ASN_VEG'...``
+``CSELECT='time','ZS','aspect','slope','massif_num','station','TG1','WG1','WGI1','TG4',...``
 
 Core model options
 ^^^^^^^^^^^^^^^^^^
 
 Here you can find long name for a part of these variables (alphabetical order for shortname):
 
-- ASN_VEG = Snow albedo
 - DRAIN_ISBA = Subsurface_runoff_flux (kg/m2)
 - DSN_T_ISBA = Thickness_of_snowfall_amount (m)
 - EVAP_ISBA = Surface_water_evaporation_flux (kg/m2)
@@ -95,14 +94,11 @@ Here you can find long name for a part of these variables (alphabetical order fo
 - LE_ISBA = Surface_upward_latent_heat_flux (W/m2)
 - LWD_ISBA = Surface_downwelling_longwave_flux_in_air (W/m2)
 - LWU_ISBA = Surface_upwelling_longwave_flux_in_air (W/m2)
-- MMP_VEG = Cumulative water consumption for snowmaking (kg/m2)
 - RAINF_ISBA = Rainfall_flux (kg/m2)
 - RAMSOND_ISBA = Penetration of ram resistance sensor (m)
 - REFRZTH_ISBA = Thickness of refrozen snow at the top of the snowpack (m)
 - RN_ISBA = Surface_net_downward_radiative_flux (W/m2)
-- RSN_VEG = Snow Density (kg/m3)
 - RUNOFF_ISBA = Surface_runoff_flux (kg/m2)
-- SAG_VEG = Snow Age (days)
 - SD_1DY_ISBA = Accumulated snow thickness for past 1 days (m)
 - SD_3DY_ISBA = Accumulated snow thickness for past 3 days (m)
 - SD_5DY_ISBA = Accumulated snow thickness for past 5 days (m)
@@ -132,7 +128,6 @@ Here you can find long name for a part of these variables (alphabetical order fo
 - WG1 = Liquid water content of soil layer 1(depth 0.0050 m) (kg/m2)
 - WGI1 = Solid water content of soil layer 1(depth 0.0050 m) (kg/m2)
 - WSN_T_ISBA = Surface_snow_amount = Total_snow_reservoir (kg/m2)
-- WSN_VEG = Snow Water Equivalent (kg/m2)
 
 SNOWPAPPUS
 ^^^^^^^^^^
