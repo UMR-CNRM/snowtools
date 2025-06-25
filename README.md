@@ -6,11 +6,9 @@
 
 Note that this package is only useful for people interested in using numerical codes of snowpack modelling on a Linux environment. The package does not include any meteorological or snow data.
 
-The structure of snowtools code base is available [here](doc/source/misc/orga.rst).
-
 ## Installation
 
-For installation of this package, please refer to [Install documentation](doc/source/misc/install.rst)
+For installation of this package, please refer to [Install documentation](https://umr-cnrm.github.io/snowtools-doc/misc/install.html)
 
 ## SURFEX
 
@@ -20,11 +18,8 @@ General informations about snowpack modelling with SURFEX-Crocus can be found he
 
 Users interested by snow modeling with SURFEX/Crocus model must follow detailed instructions below:
 
-* [Installation of SURFEX](doc/source/misc/surfex-install.rst)
-* [Run a SURFEX-Crocus simulation](doc/source/misc/surfex-run.rst)
-* [Few informations on SURFEX-Crocus simulations](doc/source/misc/surfex.rst)
-* [Information for SURFEX developers](doc/source/misc/surfex-dev.rst)
-* [Information for snowtools developers](doc/source/misc/contribute.rst)
+* [Installation of SURFEX](https://umr-cnrm.github.io/snowtools-doc/misc/surfex-install.html)
+* [Run a SURFEX-Crocus simulation](https://umr-cnrm.github.io/snowtools-doc/misc/surfex-run.html)
 
 ### First test
 If you correctly installed the snowtools and SURFEX projects, you must be able to run successfully the following test case:
@@ -51,9 +46,7 @@ These two softwares are installed with the snowtools repository.
 
 ## Full documentation
 
-The full documentation is available directly for Meteo-France members on <http://intra.cnrm.meteo.fr/cen/snowtools>.
-
-Otherwise, full snowtools documentation could be generated from `doc` folder by simply running ``make html``.
+The full documentation of the packageis available at [https://umr-cnrm.github.io/snowtools-doc/](https://umr-cnrm.github.io/snowtools-doc/)
 
 ## Assistance
 
