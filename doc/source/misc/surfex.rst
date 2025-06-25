@@ -83,8 +83,8 @@ In the namelist, CSELECT allows you to choose output. For example, in the standa
 
 Core model options
 ^^^^^^^^^^^^^^^^^^
-
-Here you can find long name for a part of these variables (alphabetical order for shortname):
+Here you can find long name for a part of these variables (alphabetical order for shortname).
+RQ: If short name ends by _VEG, it means that this is a prognostic variable also used in PREP files
 
 - ASN_VEG = Snow albedo
 - DRAIN_ISBA = Subsurface_runoff_flux (kg/m2)
