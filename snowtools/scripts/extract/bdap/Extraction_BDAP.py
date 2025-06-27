@@ -158,11 +158,11 @@ valid_run_times = dict(
     ),
     ANTILOPE = dict(
         hour   = range(0, 24, 1),
-        minute = [5, 15, 60],
+        minute = [0, 5, 15, 60],
     ),
     ANTILOPEJP1 = dict(
         hour   = range(0, 24, 1),
-        minute = [5, 15, 60],
+        minute = [0, 5, 15, 60],
     ),
     ANTILOPEH = dict(
         hour   = range(0, 24, 1),
@@ -254,10 +254,10 @@ valid_lead_times = dict(
         EURAT1S20 = {str(key): range(0, 7) for key in ['0', '6', '12', '18']},
     ),
     ANTILOPE = dict(
-        FRANXL1S100 = {str(key): [1, 5, 15] for key in range(0, 24)},
+        FRANXL1S100 = {str(key): [5, 15, 60] for key in range(0, 24)},
     ),
     ANTILOPEJP1 = dict(
-        FRANXL1S100 = {str(key): [1, 5, 15] for key in range(0, 24)},
+        FRANXL1S100 = {str(key): [5, 15, 60] for key in range(0, 24)},
     ),
     ANTILOPEH = dict(
         FRANXL1S100 = {str(key): [1] for key in range(0, 24)},
@@ -290,8 +290,7 @@ def parse_command_line():
 
     # WARNING : the 'parameters' and 'level-type' arguments depend on each other.
     # TODO : find a way (a very complex dict ?) ton ensure consistency
-    parser.add_argument('-p', '--parameter', help='Parameter to extract', required=True,
-                        choices=['PRECIP', 'WETBT', 'ALTITUDE', 'TPW', 'THETAPW'])
+    parser.add_argument('-p', '--parameter', help='Parameter to extract', required=True)
 
     parser.add_argument('-v', '--level_type', required=True,
                         choices=['ISO_WETBT', 'SOL', 'HAUTEUR', 'ISOBARE', 'ISO_T', 'ISO_TPW'],
@@ -429,14 +428,15 @@ class LeadTimeError(Exception):
     def __init__(self, model, date, geometry, ech):
         self.model = model
         self.date = date
-        self.geomerty = geometry
+        self.geometry = geometry
         self.ech = ech
 
     def __str__(self):
-        return f"Lead time {self.ech} does not exists for model {self.model}, grid {self.geometry}\n" \
-               f"and run time {self.date}.\n" \
-               "Valid lead times for this configuration are:\n" \
-               ",".join(valid_run_times[self.model][self.geometry][self.date.hour])
+        outstr = f"Lead time {self.ech} does not exists for model {self.model}, grid {self.geometry} " \
+            f"and run time {self.date.h}.\nValid lead times for this configuration are:\n" + ", ".join(
+                [str(x) for x in valid_lead_times[self.model][self.geometry][self.date.h]])
+
+        return outstr
 
 
 class ExtractBDAP(object):
