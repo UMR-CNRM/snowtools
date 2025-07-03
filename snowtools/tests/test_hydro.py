@@ -8,13 +8,13 @@ Created on 19 March 2025
 import unittest
 import os
 
-from snowtools.tests.tempfolder import TestWithTempFolderWithLog
+from snowtools.tests.tempfolder import TestWithTempFolderWithChdir
 from snowtools.DATA import TESTBASE_DIR
 from snowtools.tools.hydro import basin_areas_file, hydro
 
 
 @unittest.skipIf(not os.path.isdir(os.path.join(TESTBASE_DIR, "hydro")), "input files not available")
-class HydroTest(TestWithTempFolderWithLog):
+class HydroTest(TestWithTempFolderWithChdir):
     def setUp(self):
         super(HydroTest, self).setUp()
         self.dem = os.path.join(TESTBASE_DIR, 'hydro', 'DEM_FRANCE_L93_250m_bilinear.nc')

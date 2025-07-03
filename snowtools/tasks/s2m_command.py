@@ -76,14 +76,14 @@ class Surfex_command(_S2M_command):
             self.set_path(vortex)
             self.set_geo(vortex)
 
-        # Check and convert hydrological options
-        if self.options.hydro:
-            if self.options.hydrovar:
-                self.options.hydrovar = self.options.hydrovar.split(',')
-            else:
-                raise UnsupportedOptionException('hydrovar option is mandatory if hydro option is provided')
-        elif self.options.hydrovar:
-            raise UnsupportedOptionException('hydro option is mandatory if hydrovar option is provided')
+            # Check and convert hydrological options
+            if self.options.hydro:
+                if self.options.hydrovar:
+                    self.options.hydrovar = self.options.hydrovar.split(',')
+                else:
+                    raise UnsupportedOptionException('hydrovar option is mandatory if hydro option is provided')
+            elif self.options.hydrovar:
+                raise UnsupportedOptionException('hydro option is mandatory if hydrovar option is provided')
 
     def set_geo(self, vortex):
 
