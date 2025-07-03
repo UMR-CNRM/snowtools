@@ -85,6 +85,7 @@ Core model options
 ^^^^^^^^^^^^^^^^^^
 Here you can find long name for a part of these variables (alphabetical order for shortname).
 RQ: If short name ends by _VEG, it means that this is a prognostic variable also used in PREP files
+In order to give easier names, SNOWAGE and SNOWHEAT are not "real" SURFEX variables but copy from SAG_VEG and HSN_VEG.
 
 - ASN_VEG = Snow albedo
 - DRAIN_ISBA = Subsurface_runoff_flux (kg/m2)
@@ -92,6 +93,7 @@ RQ: If short name ends by _VEG, it means that this is a prognostic variable also
 - EVAP_ISBA = Surface_water_evaporation_flux (kg/m2)
 - GFLUX_ISBA = Total surface heat flux (W/m2)
 - H_ISBA = Surface_upward_sensible_heat_flux (W/m2)
+- HSN_VEG = Snow Enthalpy (J/m2)
 - LE_ISBA = Surface_upward_latent_heat_flux (W/m2)
 - LWD_ISBA = Surface_downwelling_longwave_flux_in_air (W/m2)
 - LWU_ISBA = Surface_upwelling_longwave_flux_in_air (W/m2)
@@ -107,7 +109,9 @@ RQ: If short name ends by _VEG, it means that this is a prognostic variable also
 - SD_3DY_ISBA = Accumulated snow thickness for past 3 days (m)
 - SD_5DY_ISBA = Accumulated snow thickness for past 5 days (m)
 - SD_7DY_ISBA = Accumulated snow thickness for past 7 days (m)
+- SNOWAGE = Snow Age (days)
 - SNOWDZ = Thickness (m)
+- SNOWHEAT = Snow Enthalpy (J/m2)
 - SNOWLIQ = Snow Liquid Water Content (kg/m3)
 - SNOMLT_ISBA = Snow melting rate (kg/m2)
 - SNOWRAM = RAM Resistance (daN)
