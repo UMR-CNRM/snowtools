@@ -58,6 +58,7 @@ Standard usage:
 
 code-block:: python
 
+    import xarray as xr
     from snowtools.tools import xarray_snowtools_backend
 
     ds = xr.open_dataset(filename, engine='snowtools')
@@ -69,6 +70,7 @@ HPC usage (until next xarray update from version 0.16.0) :
 
 code-block:: python
 
+    import xarray as xr
     from snowtools.tools.xarray_snowtools_backend import preprocess
 
     ds = xr.open_dataset('INPUT.nc', decode_times=False)
@@ -153,11 +155,6 @@ def preprocess(ds, mapping=dict(), decode_time=True, transpose=False):
 
     3. Decode time dimension properly if necessary (i.e ensure that the associated coordinates are datetime objects)
 
-    4. Ensure that the time dimension is in the first one for numpy-based tools backward compatibility
-
-    5. Drop dimensions with only 1 coordinate (ex : Number_of_patches / Number_of_tiles)
-
-
     Direct usage example:
     ^^^^^^^^^^^^^^^^^^^^^
 
@@ -197,9 +194,6 @@ def preprocess(ds, mapping=dict(), decode_time=True, transpose=False):
     if transpose:
         ds = transpose(ds)
 
-    # Drop dimensions with only 1 coordinate (ex : Number_of_patches / Number_of_tiles)
-    ds = ds.squeeze()
-
     return ds
 
 
@@ -215,14 +209,20 @@ def update_varname(ds, mapping):
     """
     # Do not directly modify *variables_map* in case several calls to "preprocess" are made from
     # the same session
-    tmpmap = variables_map.copy()
-    tmpmap.update(mapping)
     if isinstance(ds, xarray.core.dataarray.DataArray):
-        if ds.name in tmpmap:
-            ds = ds.rename(tmpmap[ds.name])
+        if ds.name in variables_map:
+            ds = ds.rename(variables_map[ds.name])
+        if ds.name in mapping:
+            # Update name with user-defined dictionnary
+            ds = ds.rename(mapping[ds.name])
     else:
-        update_dict = {key: tmpmap[key] for key in list(ds.keys()) if key in tmpmap.keys()}
+        update_dict = {key: variables_map[key] for key in list(ds.keys()) if key in variables_map.keys()}
         ds = ds.rename(update_dict)
+
+        # Update variable names with user-defined dictionnary
+        user_mapping = {key: mapping[key] for key in list(ds.keys()) if key in mapping.keys()}
+        ds = ds.rename(user_mapping)
+
     return ds
 
 
@@ -240,10 +240,13 @@ def update_dimname(ds, mapping):
     """
     # Do not directly modify *dimensions_map* in case several calls to "preprocess" are made from
     # the same session
-    tmpmap = dimension_map.copy()
-    tmpmap.update(mapping)
-    update_dict = {key: tmpmap[key] for key in list(ds.dims) if key in tmpmap.keys()}
+    update_dict = {key: dimension_map[key] for key in list(ds.dims) if key in dimension_map.keys()}
     ds = ds.rename(update_dict)
+
+    # Update variable names with user-defined dictionnary
+    user_mapping = {key: mapping[key] for key in list(ds.dims) if key in mapping.keys()}
+    ds = ds.rename(user_mapping)
+
     return ds
 
 
@@ -261,6 +264,11 @@ def check_encoding(ds):
         for var in ds.keys():
             if 'missing_value' in ds[var].encoding.keys():
                 ds[var].encoding['missing_value'] = ds[var].encoding['_FillValue']
+
+    elif isinstance(ds, xarray.core.dataarray.DataArray):
+        if 'missing_value' in ds[var].encoding.keys():
+            ds.encoding['missing_value'] = ds.encoding['_FillValue']
+
     return ds
 
 
@@ -277,20 +285,6 @@ def decode_time_dimension(ds):
         time = xarray.decode_cf(time)
         ds['time'] = time.time
     return ds
-
-
-def transpose(ds):
-    """
-    Put time dimension as first dimension in case of data processing through numpy arrays
-
-    :param ds: xarray object to preprocess
-    :param ds: xarray Dataset or Dataarray
-    """
-
-    if 'time' in ds.dims:
-        return ds.transpose('time', ...)
-    else:
-        return ds
 
 
 class SnowtoolsBackendEntrypoint(BackendEntrypoint):
@@ -319,53 +313,39 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
 
     available = True  # Necessary before v.2024.04.0
 
-    def open_dataset(self, filename_or_obj, *, drop_variables=None, mapping=dict(), **kw):
+    def open_dataset(self, filename_or_obj, *, mapping=dict(), **kw):
         """
         Snowtools-specific version of the xarray's "open_dataset" method, which calls the native method
         and carries out a preprocessing of the data before returning the dataset object.
 
         :param filename_or_obj: Path of the file to read (similar to the the argument in native method)
         :type filename_or_obj: str, Path, file_like or DataStore
-        :param drop_variables: A variable or list of variables to exclude from being parsed from the dataset.
-                               This may be useful to drop variables with problems or inconsistent values.
-                               Similar to the argument in the native method.
-        :type drop_variables: str or iterable of str
         :mapping: User-defined dictionnary to map variable or dimension names. It can be used as a complement to
                   the default mapping dictionnary in case of a code based on variable / dimension names different than
                   the standard ones (for example a code written after a SURFEX update).
                   This is a snowtools-specific argument.
         :type mapping: dict
 
-        NB :
-        ----
-        *drop_variables* argument is mandatory (bug ?)
         """
-        ds = xarray.open_dataset(filename_or_obj, drop_variables=drop_variables,
+        ds = xarray.open_dataset(filename_or_obj,
                 engine='netcdf4', decode_times=False, **kw).pipe(preprocess, mapping=mapping)
         return ds
 
-    open_dataset_parameters = ["filename_or_obj", "drop_variables"]
+    open_dataset_parameters = ["filename_or_obj"]
 
-    def open_dataarray(self, filename_or_obj, *, drop_variables=None, mapping=dict(), **kw):
+    def open_dataarray(self, filename_or_obj, *, mapping=dict(), **kw):
         """
         Snowtools-specific version of the xarray's "open_dataarray" method, which calls the native method
         and carries out a preprocessing of the data before returning the dataarray object.
 
         :param filename_or_obj: Path of the file to read (similar to the the argument in native method)
         :type filename_or_obj: str, Path, file_like or DataStore
-        :param drop_variables: A variable or list of variables to exclude from being parsed from the dataset.
-                               This may be useful to drop variables with problems or inconsistent values.
-                               Similar to the argument in the native method.
-        :type drop_variables: str or iterable of str
         :mapping: User-defined dictionnary to map variable or dimension names. It can be used as a complement to
                   the default mapping dictionnary in case of a code based on variable / dimension names different than
                   the standard ones (for example a code written after a SURFEX update).
                   This is a snowtools-specific argument.
         :type mapping: dict
 
-        NB :
-        ----
-        *drop_variables* argument is mandatory (bug ?)
         """
 
         da = xarray.open_dataarray(filename_or_obj, engine='netcdf4', decode_times=False,
@@ -379,24 +359,18 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
 
         :param paths: List of paths of the files to read (similar to the the argument in native method)
         :type paths: str, Path, nested sequence of paths
-        :param drop_variables: A variable or list of variables to exclude from being parsed from the dataset.
-                               This may be useful to drop variables with problems or inconsistent values.
-                               Similar to the argument in the native method.
-        :type drop_variables: str or iterable of str
         :mapping: User-defined dictionnary to map variable or dimension names. It can be used as a complement to
                   the default mapping dictionnary in case of a code based on variable / dimension names different than
                   the standard ones (for example a code written after a SURFEX update).
                   This is a snowtools-specific argument.
         :type mapping: dict
 
-        NB :
-        ----
-        *drop_variables* argument is mandatory (bug ?)
         """
         from functools import partial
         partial_func = partial(preprocess, mapping=mapping)
-        ds = xarray.open_mfdataset(paths, drop_variables=drop_variables,
+        ds = xarray.open_mfdataset(paths,
                 engine='netcdf4', decode_times=False, preprocess=partial_func, **kw)
+
         return ds
 
     def guess_can_open(self):

@@ -2,15 +2,6 @@
 import numpy as np
 import xarray as xr
 
-from xarray.core.types import Self
-
-from collections.abc import (
-    Iterable,
-    Mapping,
-)
-
-from typing import Any
-
 """
 
 Introduction:
@@ -40,19 +31,25 @@ code-block:: python
 
 code-block:: python
 
-    ds.s2m.get_points(massif_num=3, ZS=[900, 1800, 2700, 3600], slope=40)
+    ds.semidistributed.get_points(massif_num=3, ZS=[900, 1800, 2700, 3600], slope=40)
 
 2. Project gridded data from Lambert-93 to lat/lon :
 
 code-block:: python
 
-    ds.edelweiss.proj(crs_in="EPSG:2154", crs_out="EPSG:4326")
+    ds.distributed.proj(crs_in="EPSG:2154", crs_out="EPSG:4326")
 
 3. Interpret time-like variable or dimension as datetime :
 
 code-block:: python
 
     ds.surfex.decode_time_variable(varname)
+
+4. Compute 24-hour precipitation accumulations from 6h J to 6h J+1 from hourly precipitation dataset :
+
+code-block:: python
+
+    ds.Precipitation.meteo.daily_accumulation()
 
 
 New features integration rules:
@@ -78,43 +75,58 @@ class SnowtoolsAccessor:
     def __init__(self, xarray_obj):
         self.ds = xarray_obj
 
-    # def sel(self, indexers=None, method=None, tolerance=None, drop=False, **indexers_kwargs):
-    def sel(
-        self,
-        indexers: Mapping[Any, Any] | None = None,
-        method: str | None = None,
-        tolerance: int | float | Iterable[int | float] | None = None,
-        drop: bool = False,
-        **indexers_kwargs: Any,
-    ) -> Self:
+    def transpose(self):
         """
-        xarray "sel" method wrapper to reduce dependency to changes in the native method.
+        Put time dimension as first dimension in case of data processing through numpy arrays
 
-        This custom method is to be used systematically within snowtools:
+        """
 
-        use
+        if 'time' in self.ds.dims:
+            return self.ds.transpose('time', ...)
+        else:
+            return self.ds
+
+    def squeeze(self):
+        """
+        Drop dimensions with only 1 coordinate (ex : Number_of_patches / Number_of_tiles)
+        """
+        return self.ds.squeeze()
+
+    def daily_accumulation(self, start_hour=6):
+        """
+        Compute 24-hour accumulation starting at *strat_hour*, with an output label set at the end of the
+        accumulation period.
+
+        Usage example:
+        ^^^^^^^^^^^^^^
+
+        Compute 24-hour precipitation accumulations from 6h J to 6h J+1 from hourly precipitation dataset,
+        so that the new index 'YYYY-MM-DD O6' contains the sum of all indices between
+        'YYYY-MM-{DD-1} 07' and 'YYYY-MM-DD 06' (corresponding to precipitation accumulations between
+        'YYYY-MM-{DD-1} 06' and 'YYYY-MM-DD 06')
 
         code-block:: python
 
-            ds.snowtools.sel(time=slice('2025-06-12 00', '2025-06-14 12'), xx=slice(6.5, 8.), yy=slice(43., 45.))
+            tmp = ds.snowtools.daily_accumulation()
+            out = tmp.sel(time='2021-12-05 06')
 
-        instead of
+        is equivalent to :
 
         code-block:: python
 
-            ds.sel(time=slice('2025-06-12 00', '2025-06-14 12'), xx=slice(6.5, 8.), yy=slice(43., 45.))
+            out = ds.sel({'time': slice('2021-12-04 07', '2021-12-05 06')}).sum('time')
 
-        See xarray's documentation for more information on the arguments:
-        https://docs.xarray.dev/en/stable/generated/xarray.DataArray.sel.html
+        :param start_hour: Hour of the day from which the 24-hour accumulation is to be computed
+        :param start_hour: int
+
         """
+        return self.ds.resample(time='D', offset=f'{start_hour}h', closed='right', label='right').sum()
 
-        return self.ds.sel(indexers=indexers, method=method, tolerance=tolerance, drop=drop, **indexers_kwargs)
 
-
-@xr.register_dataset_accessor("s2m")
-class S2MAccessor(SnowtoolsAccessor):
+@xr.register_dataset_accessor("meteo")
+class MeteoAccessor(SnowtoolsAccessor):
     """
-    S2M-specific additionnal methods for xarray
+    Accessor designed to deal with meteorological files.
 
     Usage example:
 
@@ -125,61 +137,9 @@ class S2MAccessor(SnowtoolsAccessor):
          from snowtools.tools import xarray_snowtools_backend
          from snowtools.tools import xarray_snowtools_accessor
 
-         ds = xr.open_dataset('INPUT.nc', engine='snowtools')
-         ds.s2m.get_points(massif_num=3, ZS=[900, 1800, 2700, 3600], slope=40)
+         ds = xr.open_dataset('FORCING.nc', engine='meteo')
+         ds.meteo.[...]
     """
-
-    def get_points(self, massif_num=None, ZS=None, slope=None, aspect=None):
-
-        sel_dict = dict()
-        for var in ['massif_num', 'ZS', 'slope', 'aspect']:
-            if eval(var) is None:
-                sel_dict[var] = np.unique(self.ds[var].data)
-            elif not isinstance(eval(var), list):
-                sel_dict[var] = [eval(var)]
-            else:
-                sel_dict[var] = eval(var)
-
-        out = self.ds.where((self.ds.massif_num.isin(sel_dict['massif_num'])) & (self.ds.ZS.isin(sel_dict['ZS'])) &
-                (self.ds.slope.isin(sel_dict['slope'])) & (self.ds.aspect.isin(sel_dict['aspect'])), drop=True)
-
-        return out
-
-
-@xr.register_dataset_accessor("edelweiss")
-class EDELWEISSAccessor(SnowtoolsAccessor):
-    """
-    EDELWEISS-specific additionnal methods for xarray
-
-    Usage example:
-
-    code-block:: python
-
-         import xarray as xr
-
-         from snowtools.tools import xarray_snowtools_backend
-         from snowtools.tools import xarray_snowtools_accessor
-
-         ds = xr.open_dataset('INPUT.nc', engine='snowtools')
-         ds.edelweiss.proj("EPSG:4326", "EPSG:2154")
-    """
-
-    def proj(self, crs_in="EPSG:4326", crs_out="EPSG:2154"):
-        """
-        Projection of an xarray dataset or dataarray into a new CRS.
-
-        :param ds: xarray object to preprocess
-        :param ds: xarray Dataset or Dataarray
-        :param crs_in: CRS of the input object
-        :type crs_in: str
-        :param crs_out: CRS of the output object
-        :type crs_out: str
-        """
-        # WARNING : rioxarray not available on HPC yet
-        # TODO : check crs_in ?
-        self.ds.rio.write_crs(crs_in, inplace=True)
-        out = self.ds.rio.reproject(crs_out)
-        return out
 
 
 @xr.register_dataset_accessor("surfex")
@@ -211,3 +171,88 @@ class SurfexAccessor(SnowtoolsAccessor):
         timevar = xr.Dataset({varname: self.ds[varname]})
         timevar = xr.decode_cf(timevar)
         self.ds[varname] = timevar[varname]
+
+
+@xr.register_dataset_accessor("semidistributed")
+class SemiDistributedAccessor(SurfexAccessor):
+    """
+    Additionnal methods in semi-distributed geometry (ex: S2M simulaitions)
+
+    Usage example:
+
+    code-block:: python
+
+         import xarray as xr
+
+         from snowtools.tools import xarray_snowtools_backend
+         from snowtools.tools import xarray_snowtools_accessor
+
+         ds = xr.open_dataset('INPUT.nc', engine='snowtools')
+         ds.semidistributed.sel_points(massif_num=3, ZS=[900, 1800, 2700, 3600], slope=40)
+    """
+
+    def sel_points(self, massif_num=None, ZS=None, slope=None, aspect=None):
+
+        sel_dict = dict()
+        for var in ['massif_num', 'ZS', 'slope', 'aspect']:
+            if eval(var) is None:
+                sel_dict[var] = np.unique(self.ds[var].data)
+            elif not isinstance(eval(var), list):
+                sel_dict[var] = [eval(var)]
+            else:
+                sel_dict[var] = eval(var)
+
+        out = self.ds.where((self.ds.massif_num.isin(sel_dict['massif_num'])) & (self.ds.ZS.isin(sel_dict['ZS'])) &
+                (self.ds.slope.isin(sel_dict['slope'])) & (self.ds.aspect.isin(sel_dict['aspect'])), drop=True)
+
+        return out
+
+
+@xr.register_dataset_accessor("distributed")
+class DistributedAccessor(SurfexAccessor):
+    """
+    Additionnal methods in distributed geometry (ex: EDELWEISS)
+
+    Usage example:
+
+    code-block:: python
+
+         import xarray as xr
+
+         from snowtools.tools import xarray_snowtools_backend
+         from snowtools.tools import xarray_snowtools_accessor
+
+         ds = xr.open_dataset('INPUT.nc', engine='snowtools')
+         ds.distributed.proj("EPSG:4326", "EPSG:2154")
+    """
+
+    def proj(self, crs_in="EPSG:4326", crs_out="EPSG:2154"):
+        """
+        Projection of an xarray dataset or dataarray into a new CRS.
+
+        :param ds: xarray object to preprocess
+        :param ds: xarray Dataset or Dataarray
+        :param crs_in: CRS of the input object
+        :type crs_in: str
+        :param crs_out: CRS of the output object
+        :type crs_out: str
+        """
+        # WARNING : rioxarray not available on HPC yet
+        # TODO : check crs_in ?
+        self.ds.rio.write_crs(crs_in, inplace=True)
+        out = self.ds.rio.reproject(crs_out)
+        return out
+
+    def drop_tile_dimension(self, tile=0):
+        """
+        Select a single value for "tile" dimension (or equivalent) and squeeze the dataset to drop the dimension.
+
+        :param tile: Value of the "tile" dimension to select
+        :param tile: int
+        """
+
+        for drop_dim in ['Number_of_patches', 'tile', 'Number_of_Tile']:
+            if drop_dim in self.ds.dims:
+                self.ds = self.ds.sel(drop_dim=tile).squeeze()
+
+        return self.ds
