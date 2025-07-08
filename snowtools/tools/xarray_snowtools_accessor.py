@@ -1,5 +1,4 @@
 
-import numpy as np
 import xarray as xr
 
 """
@@ -67,6 +66,7 @@ public API?")
 
 
 @xr.register_dataset_accessor("snowtools")
+@xr.register_dataarray_accessor("snowtools")
 class SnowtoolsAccessor:
     """
     Common snowtools-specific additionnal methods for xarray
@@ -96,6 +96,20 @@ class SnowtoolsAccessor:
         """
         Compute 24-hour accumulation starting at *strat_hour*, with an output label set at the end of the
         accumulation period.
+        This method will return the sum of all values between "start_hour" at day J and "start_hour" at day J+1
+        whatever the available frequency in the original dataset.
+
+        It is important to use dask when calling the resample function for huge dataset to optimise computation time.
+        Since the operations are carried out along the time dimension by slices of 24 hours, chunk sizes are
+        automatically set to 24 over the time dimension and the dimension's length over all other dimensions.
+
+        Execution time for a file over the Grandes Rousses at 25m resolution (~1M of points, total file size ~ 177 Go)
+            * 1000 hourly time steps : < 30s
+            * 2000 hourly time steps : ~ 2 minutes
+            * 4000 hourly time steps (~6 months)    : ~ 6 minutes
+            * 1 full year (8760 hourly timte steps) : crash
+
+        For comparison, covering the French Alps at 250m resolution takes about 2M points.
 
         Usage example:
         ^^^^^^^^^^^^^^
@@ -120,10 +134,18 @@ class SnowtoolsAccessor:
         :param start_hour: int
 
         """
+
+        self.ds = self.ds.squeeze()
+        chunks = {'time': 24}
+        for dim in list(self.ds.dims):
+            chunks[dim] = self.ds.sizes[dim]
+        self.ds = self.ds.chunk(chunks)
+
         return self.ds.resample(time='D', offset=f'{start_hour}h', closed='right', label='right').sum()
 
 
 @xr.register_dataset_accessor("meteo")
+@xr.register_dataarray_accessor("meteo")
 class MeteoAccessor(SnowtoolsAccessor):
     """
     Accessor designed to deal with meteorological files.
@@ -143,6 +165,7 @@ class MeteoAccessor(SnowtoolsAccessor):
 
 
 @xr.register_dataset_accessor("surfex")
+@xr.register_dataarray_accessor("surfex")
 class SurfexAccessor(SnowtoolsAccessor):
     """
     Accessor designed to deal with SURFEX output files.
@@ -174,6 +197,7 @@ class SurfexAccessor(SnowtoolsAccessor):
 
 
 @xr.register_dataset_accessor("semidistributed")
+@xr.register_dataarray_accessor("semidistributed")
 class SemiDistributedAccessor(SurfexAccessor):
     """
     Additionnal methods in semi-distributed geometry (ex: S2M simulaitions)
@@ -188,27 +212,44 @@ class SemiDistributedAccessor(SurfexAccessor):
          from snowtools.tools import xarray_snowtools_accessor
 
          ds = xr.open_dataset('INPUT.nc', engine='snowtools')
-         ds.semidistributed.sel_points(massif_num=3, ZS=[900, 1800, 2700, 3600], slope=40)
+         ds.semidistributed.sel_massifs_points(massif_num=3, ZS=[900, 1800, 2700, 3600], slope=40)
     """
 
-    def sel_points(self, massif_num=None, ZS=None, slope=None, aspect=None):
+    def sel_massif_points(self, massif_num=None, ZS=None, slope=None, aspect=None):
+        """
+        Method used to select a user-defined list of points in semi-distributed geometry (SAFRAN massifs geometry)
+        from their elevation (ZS), massif number (massif_num), slope and aspect.
 
-        sel_dict = dict()
+        NB :
+        ----
+        More advanced indexing (for example to select all elevations above 1800m or use a slice as argument), use the
+        native xarray "where" method directly.
+        """
+
+        indexer = None
         for var in ['massif_num', 'ZS', 'slope', 'aspect']:
-            if eval(var) is None:
-                sel_dict[var] = np.unique(self.ds[var].data)
-            elif not isinstance(eval(var), list):
-                sel_dict[var] = [eval(var)]
-            else:
-                sel_dict[var] = eval(var)
+            if eval(var) is not None:
+                if var not in list(self.ds.keys()):
+                    raise ValueError(f'Variable "{var}" does not exist')
+                else:
+                    if isinstance(eval(var), list):
+                        if indexer is None:
+                            indexer = self.ds[var].compute().isin(eval(var))
+                        else:
+                            indexer = indexer & self.ds[var].compute().isin(eval(var))
+                    elif isinstance(eval(var), int):
+                        if indexer is None:
+                            indexer = self.ds[var].compute() == eval(var)
+                        else:
+                            indexer = indexer & (self.ds[var].compute() == eval(var))
 
-        out = self.ds.where((self.ds.massif_num.isin(sel_dict['massif_num'])) & (self.ds.ZS.isin(sel_dict['ZS'])) &
-                (self.ds.slope.isin(sel_dict['slope'])) & (self.ds.aspect.isin(sel_dict['aspect'])), drop=True)
+        out = self.ds.where(indexer, drop=True)
 
         return out
 
 
 @xr.register_dataset_accessor("distributed")
+@xr.register_dataarray_accessor("distributed")
 class DistributedAccessor(SurfexAccessor):
     """
     Additionnal methods in distributed geometry (ex: EDELWEISS)
