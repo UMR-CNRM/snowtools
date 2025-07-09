@@ -67,15 +67,13 @@ If you are implementing new developments or if you meet unexpected troubles duri
 Always compile SURFEX with the DEBUG option. Once the development is finished, recompile with O2 optimization level before running your long experiments.
 
 For problems occurring inside the snow scheme, it is helpful to use a special debugging mode for Crocus, please read the following documentation:
-http://www.cnrm.meteo.fr/surfex-lab/IMG/pdf/doc_crodebug.pdf
+https://www.umr-cnrm.fr/surfex/IMG/pdf/doc_crodebug.pdf
 
 On Meteo-France supercomputers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 To understand unexpected crashes during belenos runs, two options are possible:
 
 For complex bugs, it is highly recommended to use use the ddt debugger from ARM-FORGE.
-
-Full documentation available here: http://intradsi.meteo.fr/spip.php?article2007
 
 Install debugger
 """"""""""""""""
