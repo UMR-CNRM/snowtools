@@ -54,22 +54,12 @@ def parse_command_line():
     return args
 
 
-def decode_time(pro):
-    """
-    Manually decode time variable since other variables can not be decoded automatically
-    """
-    ds = xr.Dataset({"time": pro.time})
-    ds = xr.decode_cf(ds)
-    pro['time'] = ds.time
-    return pro
-
-
 def execute(subdir='', threshold=0.2):
     """
     Main method to compute Sentinel2-like diagnostics from a SURFEX simulation
     """
     proname = os.path.join(subdir, 'PRO.nc')
-    pro = xr.open_dataset(proname, decode_times=False, engine='snowtools')
+    pro = xr.open_dataset(proname, engine='snowtools')
     diag = lcscd(pro.DSN_T_ISBA.resample(time='1D').mean(), threshold)
 
     # Add 'ZS' (DEM) variable
