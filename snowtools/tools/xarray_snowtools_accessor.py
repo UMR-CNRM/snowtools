@@ -103,13 +103,14 @@ class SnowtoolsAccessor:
         Since the operations are carried out along the time dimension by slices of 24 hours, chunk sizes are
         automatically set to 24 over the time dimension and the dimension's length over all other dimensions.
 
-        Execution time for a file over the Grandes Rousses at 25m resolution (~1M of points, total file size ~ 177 Go)
+        Execution time for a file over the Grandes Rousses at 25m resolution (~1M of points, total file size ~177 Go)
             * 1000 hourly time steps : < 30s
             * 2000 hourly time steps : ~ 2 minutes
             * 4000 hourly time steps (~6 months)    : ~ 6 minutes
             * 1 full year (8760 hourly timte steps) : crash
 
-        For comparison, covering the French Alps at 250m resolution takes about 2M points.
+        Execution time for a file over the French Alps at 250m resolution (~2.5M of points, total file size 13 Go) over
+        1 month (721 hourly time steps) : ~ 20s
 
         Usage example:
         ^^^^^^^^^^^^^^
@@ -212,7 +213,7 @@ class SemiDistributedAccessor(SurfexAccessor):
          from snowtools.tools import xarray_snowtools_accessor
 
          ds = xr.open_dataset('INPUT.nc', engine='snowtools')
-         ds.semidistributed.sel_massifs_points(massif_num=3, ZS=[900, 1800, 2700, 3600], slope=40)
+         ds.semidistributed.sel_points(massif_num=3, ZS=[900, 1800, 2700, 3600], slope=40)
     """
 
     def sel_massif_points(self, massif_num=None, ZS=None, slope=None, aspect=None):
@@ -224,6 +225,16 @@ class SemiDistributedAccessor(SurfexAccessor):
         ----
         More advanced indexing (for example to select all elevations above 1800m or use a slice as argument), use the
         native xarray "where" method directly.
+
+        :param massif_num: Massif number(s) of points to select
+        :param massif_num: list or int
+        :param ZS: Elevation(s) of points to select
+        :param ZS: list or int
+        :param slope: Slope(s) of points to select
+        :param slope: list or int
+        :param aspect: Aspects(s) of points to select
+        :param aspect: list or int
+
         """
 
         indexer = None
@@ -234,17 +245,21 @@ class SemiDistributedAccessor(SurfexAccessor):
                 else:
                     if isinstance(eval(var), list):
                         if indexer is None:
-                            indexer = self.ds[var].compute().isin(eval(var))
+                            indexer = self.ds[var].isin(eval(var))
                         else:
-                            indexer = indexer & self.ds[var].compute().isin(eval(var))
+                            indexer = indexer & self.ds[var].isin(eval(var))
                     elif isinstance(eval(var), int):
                         if indexer is None:
-                            indexer = self.ds[var].compute() == eval(var)
+                            indexer = self.ds[var] == eval(var)
                         else:
-                            indexer = indexer & (self.ds[var].compute() == eval(var))
+                            indexer = indexer & (self.ds[var] == eval(var))
 
-        out = self.ds.where(indexer, drop=True)
-
+        if indexer is not None:
+            indexer = indexer.compute()
+            out = self.ds.where(indexer, drop=True)
+        else:
+            print("WARNING : arguments where empty or could not be interpreted, nothing changed.")
+            out = self.ds
         return out
 
 
