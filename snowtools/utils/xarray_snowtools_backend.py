@@ -1,17 +1,13 @@
-
-import xarray
-from xarray.backends import BackendEntrypoint
-from xarray.backends.common import BACKEND_ENTRYPOINTS
-
+# -*- coding: utf-8 -*-
 
 """
 
-Introduction
-^^^^^^^^^^^^
+Introduction to xarray_snowtools_backend:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This module contains all elements defining the xarray entry points for SURFEX Input / Outputs in NetCDF format (methods
-`open_dataset`, `open_dataarray` and `open_mfdataset`, responsible for reading files and returning an xarray DataArray
-or Dataset Object) to be used within the snowtools package.
+The xarray_snowtools_backend module contains all elements defining the xarray entry points for SURFEX Input / Outputs
+in NetCDF format (methods `open_dataset`, `open_dataarray` and `open_mfdataset`, responsible for reading files and
+returning an xarray DataArray or Dataset Object) to be used within the snowtools package.
 
 These entry points are defined in the ``SnowtoolsBackendEntrypoint`` class inheriting from the xarray-native
 ``BackendEntrypoint`` class (https://docs.xarray.dev/en/stable/internals/how-to-add-new-backend.html).
@@ -56,29 +52,29 @@ simply be called with the keyword argument "engine='snowtools'" (see the "Standa
 Standard usage:
 ^^^^^^^^^^^^^^^
 
-code-block:: python
+.. code-block:: python
 
     import xarray as xr
-    from snowtools.tools import xarray_snowtools_backend
+    from snowtools.utils import xarray_snowtools_backend
 
     ds = xr.open_dataset(filename, engine='snowtools')
     ds = xr.open_mfdataset(list_of_files, engine='snowtools')
 
 
-HPC usage (until next xarray update from version 0.16.0) :
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+HPC usage (until next xarray update from version 0.16.0):
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-code-block:: python
+.. code-block:: python
 
     import xarray as xr
-    from snowtools.tools.xarray_snowtools_backend import preprocess
+    from snowtools.utils.xarray_snowtools_backend import preprocess
 
     ds = xr.open_dataset('INPUT.nc', decode_times=False)
     ds = preprocess(ds)
 
 
-Additionnal features
-^^^^^^^^^^^^^^^^^^^^
+Additionnal features:
+^^^^^^^^^^^^^^^^^^^^^
 
 The subsequent use of xarray directly enables the following functionalities of the former prosimu tool:
 
@@ -87,7 +83,7 @@ The subsequent use of xarray directly enables the following functionalities of t
 
       examples:
 
-      code-block:: python
+      .. code-block:: python
 
           ds.sel(time=slice('2025-06-12 00', '2025-06-14 12', xx=slice(6.5, 8.), yy=slice(43., 45.))
           ds.where((ds.massif_num == 3) & (ds.ZS.isin([900, 1800, 2700, 3600])) &
@@ -117,15 +113,19 @@ It also enables new functionalities not covered (or only partially) by prosimu :
 
 See xarray documentation (https://xarray.dev/) for more information, in particular :
 
-- xarray philosophy : https://docs.xarray.dev/en/stable/roadmap.html#roadmap
+    * xarray philosophy : https://docs.xarray.dev/en/stable/roadmap.html#roadmap
 
-- xarray internal design :
-https://docs.xarray.dev/en/stable/internals/internal-design.html#internal-design-lazy-indexing
+    * xarray internal design :
+      https://docs.xarray.dev/en/stable/internals/internal-design.html#internal-design-lazy-indexing
 
-- IO management with xarray : https://docs.xarray.dev/en/stable/user-guide/io.html
+    * IO management with xarray : https://docs.xarray.dev/en/stable/user-guide/io.html
 
 
 """
+
+import xarray
+from xarray.backends import BackendEntrypoint
+from xarray.backends.common import BACKEND_ENTRYPOINTS
 
 # WARNING : the following line changes the default behavior of ALL subsequent xarray `open_*`
 # by forcing the use of the custom `SnowtoolsBackendEntrypoint` entry point.
@@ -158,11 +158,11 @@ def preprocess(ds, mapping=dict(), decode_time=True, transpose=False):
     Direct usage example:
     ^^^^^^^^^^^^^^^^^^^^^
 
-    code-block:: python
+    .. code-block:: python
 
         import xarray as xr
 
-        from snowtools.tools.xarray_snowtools_backend import preprocess
+        from snowtools.utils.xarray_snowtools_backend import preprocess
 
         ds = xr.open_dataset('INPUT.nc', decode_times=False)
         ds = preprocess(ds)
@@ -297,12 +297,12 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
     This is done by applying a preprocess (see the "preprocess" method) to the
     data before returning the xarray dataset or dataarray object.
 
-    Usage :
+    Usage:
     ^^^^^^
 
-    code-block:: python
+    .. code-block:: python
 
-        from snowtools.tools import xarray_snowtools_backend
+        from snowtools.utils import xarray_snowtools_backend
 
         ds = xr.open_dataset(filename, engine='snowtools')
 

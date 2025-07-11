@@ -1,11 +1,10 @@
-
-import xarray as xr
+# -*- coding: utf-8 -*-
 
 """
 
-Introduction:
-^^^^^^^^^^^^^
-This module aims at wrapping and extending the xarray module for snowtools-specific usage. The wrapping of
+Introduction to xarray_snowtools_accessor:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The module xarray_snowtools_accessor aims at wrapping and extending the xarray module for snowtools-specific usage. The wrapping of
 existing methods is designed to reduce dependency to native xarray method changes (in order to
 centralise required adaptations).
 
@@ -16,40 +15,65 @@ https://tutorial.xarray.dev/advanced/accessors/01_accessor_examples.html
 Usage examples:
 ^^^^^^^^^^^^^^^
 
-code-block:: python
+.. code-block:: python
 
      import xarray as xr
 
-     from snowtools.tools import xarray_snowtools_backend
-     from snowtools.tools import xarray_snowtools_accessor
+     from snowtools.utils import xarray_snowtools_backend
+     from snowtools.utils import xarray_snowtools_accessor
 
      ds = xr.open_dataset('INPUT.nc', engine='snowtools')
 
 1. Select subset of points from a S2M file in the massif geometry, based on the massif number,
    elevation, slope and aspect
 
-code-block:: python
+.. code-block:: python
 
-    ds.semidistributed.get_points(massif_num=3, ZS=[900, 1800, 2700, 3600], slope=40)
+    ds.semidistributed.sel_points(massif_num=3, ZS=[900, 1800, 2700, 3600], slope=40)
 
 2. Project gridded data from Lambert-93 to lat/lon :
 
-code-block:: python
+.. code-block:: python
 
     ds.distributed.proj(crs_in="EPSG:2154", crs_out="EPSG:4326")
 
 3. Interpret time-like variable or dimension as datetime :
 
-code-block:: python
+.. code-block:: python
 
     ds.surfex.decode_time_variable(varname)
 
-4. Compute 24-hour precipitation accumulations from 6h J to 6h J+1 from hourly precipitation dataset :
+4. Compute 24-hour precipitation accumulations from 6h J to 6h J+1 from hourly precipitation dataset:
 
-code-block:: python
+.. code-block:: python
 
     ds.Precipitation.meteo.daily_accumulation()
 
+5. Example of groupby with the first-test PRO file:
+
+.. code-block:: python
+
+     import xarray as xr
+     import matplotlib.pyplot as plt
+     from snowtools.utils import xarray_snowtools_backend
+     from snowtools.utils import xarray_snowtools_accessor
+     ds = xr.open_dataset('PRO_2010080106_2011080106.nc', engine='snowtools')
+     dszs = ds.semidistributed.sel_points(ZS=2400)
+     meanmonthgroup = dszs.groupby("time.month").mean() # mean the variables on a monthly base
+     meanmonthgroup.TG1.plot() # choose one variable to plot
+     plt.show()
+
+6. Example of resample with the first-test PRO file:
+
+.. code-block:: python
+
+     import xarray as xr
+     from snowtools.utils import xarray_snowtools_backend
+     from snowtools.utils import xarray_snowtools_accessor
+     ds = xr.open_dataset('PRO_2010080106_2011080106.nc', engine='snowtools')
+     dszs = ds.semidistributed.sel_points(ZS=2400)
+     dszs.resample(time='12H').mean() # time resampling to 12h timestep
+     
 
 New features integration rules:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -63,7 +87,7 @@ public API?")
 - https://docs.xarray.dev/en/v2023.09.0/api.html#api
 
 """
-
+import xarray as xr
 
 @xr.register_dataset_accessor("snowtools")
 @xr.register_dataarray_accessor("snowtools")
@@ -120,14 +144,14 @@ class SnowtoolsAccessor:
         'YYYY-MM-{DD-1} 07' and 'YYYY-MM-DD 06' (corresponding to precipitation accumulations between
         'YYYY-MM-{DD-1} 06' and 'YYYY-MM-DD 06')
 
-        code-block:: python
+        .. code-block:: python
 
             tmp = ds.snowtools.daily_accumulation()
             out = tmp.sel(time='2021-12-05 06')
 
         is equivalent to :
 
-        code-block:: python
+        .. code-block:: python
 
             out = ds.sel({'time': slice('2021-12-04 07', '2021-12-05 06')}).sum('time')
 
@@ -153,12 +177,12 @@ class MeteoAccessor(SnowtoolsAccessor):
 
     Usage example:
 
-    code-block:: python
+    .. code-block:: python
 
          import xarray as xr
 
-         from snowtools.tools import xarray_snowtools_backend
-         from snowtools.tools import xarray_snowtools_accessor
+         from snowtools.utils import xarray_snowtools_backend
+         from snowtools.utils import xarray_snowtools_accessor
 
          ds = xr.open_dataset('FORCING.nc', engine='meteo')
          ds.meteo.[...]
@@ -173,12 +197,12 @@ class SurfexAccessor(SnowtoolsAccessor):
 
     Usage example:
 
-    code-block:: python
+    .. code-block:: python
 
          import xarray as xr
 
-         from snowtools.tools import xarray_snowtools_backend
-         from snowtools.tools import xarray_snowtools_accessor
+         from snowtools.utils import xarray_snowtools_backend
+         from snowtools.utils import xarray_snowtools_accessor
 
          ds = xr.open_dataset('PRO.nc', engine='snowtools')
          ds.surfex.decode_time_variable('time')
@@ -205,24 +229,23 @@ class SemiDistributedAccessor(SurfexAccessor):
 
     Usage example:
 
-    code-block:: python
+    .. code-block:: python
 
          import xarray as xr
 
-         from snowtools.tools import xarray_snowtools_backend
-         from snowtools.tools import xarray_snowtools_accessor
+         from snowtools.utils import xarray_snowtools_backend
+         from snowtools.utils import xarray_snowtools_accessor
 
          ds = xr.open_dataset('INPUT.nc', engine='snowtools')
          ds.semidistributed.sel_points(massif_num=3, ZS=[900, 1800, 2700, 3600], slope=40)
     """
 
-    def sel_massif_points(self, massif_num=None, ZS=None, slope=None, aspect=None):
+    def sel_points(self, massif_num=None, ZS=None, slope=None, aspect=None):
         """
         Method used to select a user-defined list of points in semi-distributed geometry (SAFRAN massifs geometry)
         from their elevation (ZS), massif number (massif_num), slope and aspect.
 
-        NB :
-        ----
+        **NB :**
         More advanced indexing (for example to select all elevations above 1800m or use a slice as argument), use the
         native xarray "where" method directly.
 
@@ -271,12 +294,12 @@ class DistributedAccessor(SurfexAccessor):
 
     Usage example:
 
-    code-block:: python
+    .. code-block:: python
 
          import xarray as xr
 
-         from snowtools.tools import xarray_snowtools_backend
-         from snowtools.tools import xarray_snowtools_accessor
+         from snowtools.utils import xarray_snowtools_backend
+         from snowtools.utils import xarray_snowtools_accessor
 
          ds = xr.open_dataset('INPUT.nc', engine='snowtools')
          ds.distributed.proj("EPSG:4326", "EPSG:2154")

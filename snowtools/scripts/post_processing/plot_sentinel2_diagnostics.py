@@ -27,7 +27,7 @@ from snowtools.scores import clusters
 from snowtools.plots.maps import plot2D
 from snowtools.plots.boxplots import violinplot
 from snowtools.tools import common_tools as ct
-from snowtools.tools import xarray_snowtools_backend
+from snowtools.utils import xarray_snowtools_backend
 
 members_map = dict(
     safran         = None,

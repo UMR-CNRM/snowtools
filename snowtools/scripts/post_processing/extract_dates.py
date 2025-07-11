@@ -16,7 +16,7 @@ import xarray as xr
 import pandas as pd
 import argparse
 
-from snowtools.tools import xarray_snowtools_backend
+from snowtools.utils import xarray_snowtools_backend
 from snowtools.utils.dates import get_standad_nivology_season
 from bronx.stdtypes.date import Date
 try:

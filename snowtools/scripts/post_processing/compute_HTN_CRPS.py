@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import xskillscore  # Requires an installation : pip install xskillscore
 # https://xskillscore.readthedocs.io/en/stable/api/xskillscore.crps_ensemble.html
 
-from snowtools.tools import xarray_snowtools_backend
+from snowtools.utils import xarray_snowtools_backend
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.plots.maps import plot2D
 from snowtools.scores import clusters
