@@ -185,7 +185,11 @@ class SnowtoolsAccessor:
                 chunks[dim] = self.ds.sizes[dim]
             self.ds = self.ds.chunk(chunks)
 
-        return self.ds.resample(time='D', offset=f'{start_hour}h', closed='right', label='right').sum()
+        if xr.__version__ <= 'v2022.03.0':
+            return self.ds.resample(indexer={'time': 'D'}, base=start_hour, loffset=f'{start_hour}h', closed='right',
+                    label='right').sum()
+        else:
+            return self.ds.resample(time='D', offset=f'{start_hour}h', closed='right', label='right').sum()
 
 
 @xr.register_dataset_accessor("meteo")
