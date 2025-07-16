@@ -317,9 +317,12 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
         """
         Snowtools-specific version of the xarray's "open_dataset" method, which calls the native method
         and carries out a preprocessing of the data before returning the dataset object.
+        If a list of paths is provided, the files are automatically opened with "open_mfdataset".
+        WARNING : the direct use of *open_mfdataset* is recomended whenever you are sure to deal with more
+        than one file.
 
-        :param filename_or_obj: Path of the file to read (similar to the the argument in native method)
-        :type filename_or_obj: str, Path, file_like or DataStore
+        :param filename_or_obj: Pathi or list of paths of the file(s) to read
+        :type filename_or_obj: str, Path, file_like, DataStore or nested sequence of paths
         :mapping: User-defined dictionnary to map variable or dimension names. It can be used as a complement to
                   the default mapping dictionnary in case of a code based on variable / dimension names different than
                   the standard ones (for example a code written after a SURFEX update).
@@ -327,9 +330,12 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
         :type mapping: dict
 
         """
-        ds = xarray.open_dataset(filename_or_obj,
-                engine='netcdf4', decode_times=False, **kw).pipe(preprocess, mapping=mapping)
-        return ds
+        if isinstance(filename_or_obj, list):
+            return self.open_mfdataset(filename_or_obj, mapping=mapping, **kw)
+        else:
+            ds = xarray.open_dataset(filename_or_obj,
+                    engine='netcdf4', decode_times=False, **kw).pipe(preprocess, mapping=mapping)
+            return ds
 
     open_dataset_parameters = ["filename_or_obj"]
 

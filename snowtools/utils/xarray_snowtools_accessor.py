@@ -4,8 +4,8 @@
 
 Introduction to xarray_snowtools_accessor:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The module xarray_snowtools_accessor aims at wrapping and extending the xarray module for snowtools-specific usage. The wrapping of
-existing methods is designed to reduce dependency to native xarray method changes (in order to
+The module xarray_snowtools_accessor aims at wrapping and extending the xarray module for snowtools-specific usage.
+The wrapping of existing methods is designed to reduce dependency to native xarray method changes (in order to
 centralise required adaptations).
 
 Following the xarray project's recomandations, it is based on the use of accessor :
@@ -73,7 +73,20 @@ Usage examples:
      ds = xr.open_dataset('PRO_2010080106_2011080106.nc', engine='snowtools')
      dszs = ds.semidistributed.sel_points(ZS=2400)
      dszs.resample(time='12H').mean() # time resampling to 12h timestep
-     
+
+7. Use of custom "daily_accumulation" method
+
+Resample Rainf variable from hourly values to daily accumulations, starting at 03:00 :
+
+.. code-block:: python
+
+     import xarray as xr
+     from snowtools.utils import xarray_snowtools_backend
+     from snowtools.utils import xarray_snowtools_accessor
+
+     ds_hourly = xr.open_dataset('FORCING_test_2d.nc', engine='snowtools')
+     ds_daily = ds_hourly.Rainf.snowtools.daily_accumulation(start_hour=3)
+
 
 New features integration rules:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -88,6 +101,7 @@ public API?")
 
 """
 import xarray as xr
+
 
 @xr.register_dataset_accessor("snowtools")
 @xr.register_dataarray_accessor("snowtools")
@@ -160,11 +174,16 @@ class SnowtoolsAccessor:
 
         """
 
-        self.ds = self.ds.squeeze()
-        chunks = {'time': 24}
-        for dim in list(self.ds.dims):
-            chunks[dim] = self.ds.sizes[dim]
-        self.ds = self.ds.chunk(chunks)
+        # Re-chunking a dataset is expensive, so only if the gain in computation time is worth it
+        nbpoints = 1
+        for dim in self.ds.dims:
+            nbpoints = nbpoints * self.ds.sizes[dim]
+        if (nbpoints > 1000000000):
+            self.ds = self.ds.squeeze()
+            chunks = {'time': 24}
+            for dim in list(self.ds.dims):
+                chunks[dim] = self.ds.sizes[dim]
+            self.ds = self.ds.chunk(chunks)
 
         return self.ds.resample(time='D', offset=f'{start_hour}h', closed='right', label='right').sum()
 
