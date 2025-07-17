@@ -17,6 +17,7 @@ dependencies = [
     'pyshp',
     'pandas',
     'xarray',
+    'rioxarray',
     'cartopy',
     'bronx',
     'footprints',

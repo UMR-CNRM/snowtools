@@ -173,7 +173,7 @@ def preprocess(ds, mapping=dict(), decode_time=True, transpose=False):
 
 
     :param ds: xarray object to preprocess
-    :param ds: xarray Dataset or Dataarray
+    :type ds: xarray Dataset or Dataarray
     :param mapping: User-defined dictionnary to map variable or dimension names (it will be used as a complement to
                     the default mapping dictionnaries).
     :type mapping: dict
@@ -206,7 +206,7 @@ def update_varname(ds, mapping):
     Map variable names if necessary / possible
 
     :param ds: xarray object to preprocess
-    :param ds: xarray Dataset or Dataarray
+    :type ds: xarray Dataset or Dataarray
     :param mapping: User-defined dictionnary to map variable or dimension names (it will be used as a complement to
                     the default mapping dictionnaries).
     :type mapping: dict
@@ -237,7 +237,7 @@ def update_dimname(ds, mapping):
     # TODO : gérer les cas où le nom cible existe déjà
 
     :param ds: xarray object to preprocess
-    :param ds: xarray Dataset or Dataarray
+    :type ds: xarray Dataset or Dataarray
     :param mapping: User-defined dictionnary to map variable or dimension names (it will be used as a complement to
                     the default mapping dictionnaries).
     :type mapping: dict
@@ -262,7 +262,7 @@ def check_encoding(ds):
     information.
 
     :param ds: xarray object to preprocess
-    :param ds: xarray Dataset or Dataarray
+    :type ds: xarray Dataset or Dataarray
     """
     if isinstance(ds, xarray.core.dataarray.Dataset):
         for var in ds.keys():
@@ -281,7 +281,7 @@ def decode_time_dimension(ds):
     Manually decode time variable when xarray fails to do it properly (SURFEX outputs)
 
     :param ds: xarray object to preprocess
-    :param ds: xarray Dataset or Dataarray
+    :type ds: xarray Dataset or Dataarray
 
     """
     if 'time' in list(ds.coords):

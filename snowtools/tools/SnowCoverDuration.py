@@ -147,7 +147,11 @@ def lcscd(data, threshold):
         try:
             cs = gp.cumsum(dim='time')
         except AttributeError:
-            cs = gp.apply(lambda x: x.cumsum(dim='time'))
+            # cs = gp.apply(lambda x: x.cumsum(dim='time')) -> return a PendingDeprecationWarning
+            # replace with gp.map as below
+            def cumsumtime(c):
+                return c.cumsum(dim='time')
+            cs = gp.map(cumsumtime)
         # cs --> array([1, 1, 2, 3, 4, 4, 5, 6]) (numpy syntax : data.cumsum())
         # Apply custom "xr_ffill" function that does not depend on bottleneck
         npfill = xr_ffill(cs.where(data.values == 0), fillna=True)
@@ -156,7 +160,13 @@ def lcscd(data, threshold):
     # Compute longest snow cover duration for each group/season as the maximum value along the time dimension
     scd = cumul.groupby('startseason').max(dim='time').rename('scd_concurent')
     # Compute the snow melt out date for each group/season as the index of the maximum value along the time dimension
-    mod = (cumul.groupby('startseason').apply(lambda c: c.argmax(dim="time")) + 1).rename('mod')
+    # mod = (cumul.groupby('startseason').apply(lambda c: c.argmax(dim="time")) + 1).rename('mod')
+    # -> return a PendingDeprecationWarning
+    # replace with groupby.map as below
+    def argmaxtime(c):
+        return c.argmax(dim='time')
+    mod = (cumul.groupby('startseason').map(argmaxtime) + 1).rename('mod')
+    
     # Return Nan when snow cover duration is 0 (no day with snow depth above threshold)
     mod = xr.where(scd.data == 0, np.nan, mod)
     # scd = (cumul.max(dim = 'time')).rename('scd_concurent')

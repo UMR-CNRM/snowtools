@@ -72,7 +72,7 @@ Usage examples:
      from snowtools.utils import xarray_snowtools_accessor
      ds = xr.open_dataset('PRO_2010080106_2011080106.nc', engine='snowtools')
      dszs = ds.semidistributed.sel_points(ZS=2400)
-     dszs.resample(time='12H').mean() # time resampling to 12h timestep
+     dszs.resample(time='12h').mean() # time resampling to 12h timestep
 
 7. Use of custom "daily_accumulation" method
 
@@ -178,7 +178,7 @@ class SnowtoolsAccessor:
             out = ds.sel({'time': slice('2021-12-04 07', '2021-12-05 06')}).sum('time')
 
         :param start_hour: Hour of the day from which the 24-hour accumulation is to be computed
-        :param start_hour: int
+        :type start_hour: int
 
         """
 
@@ -193,7 +193,7 @@ class SnowtoolsAccessor:
                 chunks[dim] = self.ds.sizes[dim]
             self.ds = self.ds.chunk(chunks)
 
-        if xr.__version__ <= 'v2022.03.0':
+        if xr.__version__ <= '2022.03.0':
             return self.ds.resample(indexer={'time': 'D'}, base=start_hour, loffset=f'{start_hour}h', closed='right',
                     label='right').sum()
         else:
@@ -244,7 +244,7 @@ class SurfexAccessor(SnowtoolsAccessor):
         Manually decode any time-like variable from a SURFEX output
 
         :param varname: Name of the variable to decode
-        :param ds: str
+        :type varname: str
         """
 
         timevar = xr.Dataset({varname: self.ds[varname]})
@@ -281,13 +281,13 @@ class SemiDistributedAccessor(SurfexAccessor):
         native xarray "where" method directly.
 
         :param massif_num: Massif number(s) of points to select
-        :param massif_num: list or int
+        :type massif_num: list or int
         :param ZS: Elevation(s) of points to select
-        :param ZS: list or int
+        :type ZS: list or int
         :param slope: Slope(s) of points to select
-        :param slope: list or int
+        :type slope: list or int
         :param aspect: Aspects(s) of points to select
-        :param aspect: list or int
+        :type aspect: list or int
 
         """
 
@@ -340,9 +340,10 @@ class DistributedAccessor(SurfexAccessor):
     def proj(self, crs_in="EPSG:4326", crs_out="EPSG:2154"):
         """
         Projection of an xarray dataset or dataarray into a new CRS.
+        This method implies a dependency to rioxarray.
 
         :param ds: xarray object to preprocess
-        :param ds: xarray Dataset or Dataarray
+        :type ds: xarray Dataset or Dataarray
         :param crs_in: CRS of the input object
         :type crs_in: str
         :param crs_out: CRS of the output object
@@ -360,7 +361,7 @@ class DistributedAccessor(SurfexAccessor):
         Select a single value for "tile" dimension (or equivalent) and squeeze the dataset to drop the dimension.
 
         :param tile: Value of the "tile" dimension to select
-        :param tile: int
+        :type tile: int
         """
 
         for drop_dim in ['Number_of_patches', 'tile', 'Number_of_Tile']:
