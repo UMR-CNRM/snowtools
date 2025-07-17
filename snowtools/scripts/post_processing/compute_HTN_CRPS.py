@@ -31,6 +31,8 @@ from snowtools.plots.maps import plot2D
 from snowtools.scores import clusters
 from snowtools.plots.boxplots import violinplot
 
+__all__ = ('xarray_snowtools_backend',)  # Ignore F401 PEP8 syntax error
+
 
 members_map = dict(
     RS27_pappus     = [mb for mb in range(17)],

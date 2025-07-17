@@ -102,6 +102,14 @@ public API?")
 """
 import xarray as xr
 
+from bronx.syntax.externalcode import ExternalCodeImportChecker
+
+rio_checker = ExternalCodeImportChecker('rioxarray')
+with rio_checker:
+    import rioxarray
+
+__all__ = ('rioxarray',)  # Ignore F401 PEP8 syntax error
+
 
 @xr.register_dataset_accessor("snowtools")
 @xr.register_dataarray_accessor("snowtools")
@@ -328,6 +336,7 @@ class DistributedAccessor(SurfexAccessor):
          ds.distributed.proj("EPSG:4326", "EPSG:2154")
     """
 
+    @rio_checker.disabled_if_unavailable
     def proj(self, crs_in="EPSG:4326", crs_out="EPSG:2154"):
         """
         Projection of an xarray dataset or dataarray into a new CRS.
@@ -339,10 +348,11 @@ class DistributedAccessor(SurfexAccessor):
         :param crs_out: CRS of the output object
         :type crs_out: str
         """
-        # WARNING : rioxarray not available on HPC yet
         # TODO : check crs_in ?
+        self.ds.rio.set_spatial_dims(x_dim='xx', y_dim='yy', inplace=True)
         self.ds.rio.write_crs(crs_in, inplace=True)
-        out = self.ds.rio.reproject(crs_out)
+        out = self.ds.rio.reproject(crs_out).rename(x='xx', y='yy')
+
         return out
 
     def drop_tile_dimension(self, tile=0):
