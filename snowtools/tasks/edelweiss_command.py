@@ -322,7 +322,8 @@ class Edelweiss_command(object):
 
     def execute(self):
         # Check option values and convert them in types suited for defining a run configuration
-        self.check_and_convert_options()
+        if not self.options.tasksinfo:
+            self.check_and_convert_options()
         # Build vortex task
         Edelweiss_kitchen(self.options)
 

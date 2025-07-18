@@ -7,6 +7,7 @@ Created on 18 mars 2024
 from vortex.layout.nodes import Task
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
+from bronx.stdtypes.date import Date
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 
 
@@ -141,7 +142,7 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         """
         Get lists of datebegin / dateend from actual datebegin / dateend conf arguments of the task
         """
-        self.list_dates_begin, list_dates_end, _, _  = get_list_dates_files(self.conf.datebegin, self.conf.dateend,
-                'yearly')
+        self.list_dates_begin, list_dates_end, _, _  = get_list_dates_files(Date(self.conf.datebegin), 
+                Date(self.conf.dateend), 'yearly')
         self.dict_dates_end = get_dic_dateend(self.list_dates_begin, list_dates_end)
 

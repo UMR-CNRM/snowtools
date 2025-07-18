@@ -84,11 +84,11 @@ class Edelweiss_kitchen(vortex_kitchen):
             # Standard case
             self.taskname = self.options.task
             self.create_driver = False
-        self.jobname  = self.taskname
 
         self.nnodes = self.options.nnodes
 
     def define_ntasks(self, machine):
+        # Should be in a job-level class common for all tasks
         if self.options.ntasks is None:
             if ('taranis' in machine or 'belenos' in machine):
                 # optimum constaté pour la réanalyse Alpes avec léger dépeuplement parmi les 128 coeurs.
@@ -108,6 +108,7 @@ class Edelweiss_kitchen(vortex_kitchen):
         self.run()
 
     def init_conf_file(self):
+        # Should be in a driver-level class
 
         self.conffilename = os.path.join(self.confdir, f'{self.vapp}_{self.vconf}.ini')
 
@@ -122,7 +123,7 @@ class Edelweiss_kitchen(vortex_kitchen):
 
         self.iniparser = GenericConfigParser(inifile=self.conffilename, defaultinifile=user_conf)
 
-        self.set_task_conf(self.taskname)
+        # self.set_task_conf(self.taskname)
 
     def create_env(self):
         """Prepare environment"""
@@ -218,10 +219,10 @@ class Edelweiss_kitchen(vortex_kitchen):
 
         # TODO : load template
         nodes = []
-        for task in self.options.task:
-            # TODO : gérer les cas particulier (if Offline in task --> refillprep)
-            nodes.append(f"            {task}(tag='{task.lower()}', ticket=t, **kw),")
-            self.set_task_conf(task.lower())
+        #for task in self.options.task:
+        #    # TODO : gérer les cas particulier (if Offline in task --> refillprep)
+        #    nodes.append(f"            {task}(tag='{task.lower()}', ticket=t, **kw),")
+        #    self.set_task_conf(task.lower())
 
         fill['nodes'] = '\n'.join(nodes)
         # Fill template and conver it into a string object
@@ -237,16 +238,16 @@ class Edelweiss_kitchen(vortex_kitchen):
             # Create the section if it is not already in the dafault conf file
             self.iniparser.add_section(taskname)
 
-    def set_job_conf(self, options):
+    def set_job_conf(self, jobname, options):
         """
-        Fill the "self.jobname" section in the configuration file that will contain
+        Fill the "jobname" section in the configuration file that will contain
         job-specific configuration variables.
-        Variables in the default "self.jobname" are used to fill variables not
+        Variables in the default "jobname" are used to fill variables not
         provided by the user.
         """
         # Ensure that a default section for this job exists (even if empty)
-        if not self.iniparser.has_section(self.jobname):
-            self.iniparser.add_section(self.jobname)
+        if not self.iniparser.has_section(jobname):
+            self.iniparser.add_section(jobname)
 
         default = self.iniparser.as_dict(merged=False)  # Merge=False preserves the "DEFAULT" section
 
@@ -254,13 +255,13 @@ class Edelweiss_kitchen(vortex_kitchen):
         for key, value in options.items():
             # Overwrite defaults values with user's command line arguments
             # Update an existing default value only if the new value is not None
-            if not (value is None and (key in list(default['defaults']) + list(default[self.jobname]))):
+            if not (value is None and (key in list(default['defaults']) + list(default[jobname]))):
                 if isinstance(value, list):
                     # Ensure that the variable is interpreted as list
                     string = ','.join(value)
-                    self.iniparser.set(self.jobname, key, f'list({string})')
+                    self.iniparser.set(jobname, key, f'list({string})')
                 else:
-                    self.iniparser.set(self.jobname, key, str(value))
+                    self.iniparser.set(jobname, key, str(value))
 
     def write_conf_file(self):
 
@@ -269,14 +270,14 @@ class Edelweiss_kitchen(vortex_kitchen):
         with open(self.conffilename, 'w') as configfile:
             self.iniparser.write(configfile)
 
-    def mkjob_command(self, jobname):
+    def mkjob_command(self, jobname, taskname):
 
         mkjob = "../vortex/bin/mkjob.py"
-        cmd = f"{mkjob} -j name={jobname} task={self.taskname} profile={self.profile} jobassistant=cen"
+        cmd = f"{mkjob} -j name={jobname} task={taskname} profile={self.profile} jobassistant=cen"
 
         return cmd
 
-    def mkjob_list_commands(self):
+    def mkjob_list_commands(self, jobname=None, njobs=None, mb0=None, taskname=None):
         """
         Method to construct the actual list of job creation commands.
 
@@ -299,6 +300,30 @@ class Edelweiss_kitchen(vortex_kitchen):
         http://intra.cnrm.meteo.fr/algopy/trainings/vortex_dev2022_1/presentation/beamer/vortex_dev_jobs2_presentation.pdf
 
         """
+        if jobname is None:
+            jobname  = self.taskname
+
+        if taskname is None:
+            taskname = jobname
+
+        mkjob_list = []
+        options = vars(self.options)  # convert 'Namespace' object to 'dictionnary'
+        if njobs == 1:
+            options['members_forcing'] = None
+            self.set_job_conf(jobname, options)
+            mkjob_list.append(self.mkjob_command(jobname=jobname, taskname=taskname))
+        else:
+            options.pop('members_forcing')
+            for job_number in range(mb0, mb0 + njobs - 1):
+                options['members_forcing'] = str(job_number)
+                self.set_job_conf(jobname, options)
+                mkjob_list.append(self.mkjob_command(jobname=f'{jobname}_mb{str(job_number)}', taskname=taskname))
+
+        return mkjob_list
+
+    def run(self):
+
+        os.chdir(self.jobdir)
 
         # Retrieve the number of FORCING files and launch 1 job per file
         # Each job is associated to 1 specific member so the *members_forcing* list
@@ -306,38 +331,81 @@ class Edelweiss_kitchen(vortex_kitchen):
         # At this stage, *options/members_forcing* is a string returned by the "convert_members"
         # method with a fixed format : "rangex(start:${first} end:${last})"
         if self.options.members_forcing is None:
-            nforcings = 1
+            nmembers = 1
             first = None
         else:
             members = re.search('rangex.start:(.*) end:(.*).', self.options.members_forcing)
             first   = int(members.group(1))
             last    = int(members.group(2))
-            nforcings = last - first + 1
-        self.njobs = nforcings
+            nmembers = last - first + 1
 
-        mkjob_list = []
-        options = vars(self.options)  # convert 'Namespace' object to 'dictionnary'
-        if self.njobs == 1:
-            options['members_forcing'] = first
-            self.set_job_conf(options)
-            mkjob_list.append(self.mkjob_command(jobname=self.jobname))
+        if self.options.task == 'croco':
+            self.croco_run(nmembers)
         else:
-            options.pop('members_forcing')
-            for job_number in range(first, last):
-                options['members_forcing'] = str(job_number)
-                jobname = f'{self.jobname}_mb{str(job_number)}'
-                self.set_job_conf(options)
-                mkjob_list.append(self.mkjob_command(jobname=jobname))
+            mkjob_list = self.mkjob_list_commands(njobs=nmembers, mb0=first)
+            self.write_conf_file()  # The configuration file is now complete, time to write it
+            for mkjob in mkjob_list:
+                print("Run command: " + mkjob + "\n")
+                callSystemOrDie(mkjob)
 
-        self.write_conf_file()  # The configuration file is now complete, time to write it
+    def croco_run(self, nmembers):
 
-        return mkjob_list
+        import time
+        from bronx.stdtypes.date import Date, Time
+        from vortex import toolbox
 
-    def run(self):
+        datebegin = self.options.datebegin
+        for date in self.options.assimdates:
+            dateend = date
+            offline_list = self.mkjob_list_commands(jobname='offline_mpi', njobs=nmembers, mb0=0)
+            self.iniparser.set('offlinempi', 'datebegin', datebegin)
+            self.iniparser.set('offlinempi', 'dateend', dateend)
+            self.iniparser.set('soda', 'datebegin', datebegin)
+            self.iniparser.set('soda', 'dateend', dateend)
+            self.write_conf_file()
 
-        mkjob_list = self.mkjob_list_commands()
+            for mkjob in offline_list:
+                print("Run command: " + mkjob + "\n")
+                callSystemOrDie(mkjob)
 
-        os.chdir(self.jobdir)
-        for mkjob in mkjob_list:
+            time.sleep(10)
+            launch_soda = False
+            walltime = Time(self.iniparser.as_dict()['soda']['time'])
+            start = Date.now()
+            timer = Date.now()
+            while (timer - start < walltime) and not launch_soda:
+                prep = toolbox.rload(
+                    kind           = 'PREP',
+                    date           = dateend,
+                    experiment     = self.options.xpid,
+                    geometry       = self.options.geometry,
+                    member         = [mb for mb in range(nmembers)],
+                    namebuild      = 'flat@cen',
+                    block          = 'bg',
+                    stage          = '_bg',
+                    model          = 'surfex',
+                    namespace      = 'vortex.cache.fr',
+                    nativefmt      = 'netcdf',
+                    local          = 'PREP.nc',
+                )
+                if prep:
+                    launch_soda = True
+                else:
+                    time.sleep(10)
+                timer = Date.now()
+
+            soda = self.mkjob_list_commands(jobname='soda', njobs=1)
+            for mkjob in soda:
+                print("Run command: " + mkjob + "\n")
+                callSystemOrDie(mkjob)
+            datebegin = date
+
+        dateend = self.options.dateend
+        self.iniparser.set('offlinempi', 'datebegin', datebegin)
+        self.iniparser.set('offlinempi', 'dateend', dateend)
+        self.write_conf_file()
+
+        offline_list = self.mkjob_list_commands(jobname='offline_mpi', njobs=nmembers, mb0=0)
+        for mkjob in offline_list:
             print("Run command: " + mkjob + "\n")
             callSystemOrDie(mkjob)
