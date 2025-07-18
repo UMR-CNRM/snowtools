@@ -11,16 +11,16 @@ centralise required adaptations).
 Following the xarray project's recomandations, it is based on the use of accessor :
 https://tutorial.xarray.dev/advanced/accessors/01_accessor_examples.html
 
+This accessor is automatically made available when the snowtools package is imported.
+
 
 Usage examples:
 ^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
+     import snowtools
      import xarray as xr
-
-     from snowtools.utils import xarray_snowtools_backend
-     from snowtools.utils import xarray_snowtools_accessor
 
      ds = xr.open_dataset('INPUT.nc', engine='snowtools')
 
@@ -53,10 +53,9 @@ Usage examples:
 
 .. code-block:: python
 
+     import snowtools
      import xarray as xr
      import matplotlib.pyplot as plt
-     from snowtools.utils import xarray_snowtools_backend
-     from snowtools.utils import xarray_snowtools_accessor
      ds = xr.open_dataset('PRO_2010080106_2011080106.nc', engine='snowtools')
      dszs = ds.semidistributed.sel_points(ZS=2400)
      meanmonthgroup = dszs.groupby("time.month").mean() # mean the variables on a monthly base
@@ -67,9 +66,8 @@ Usage examples:
 
 .. code-block:: python
 
+     import snowtools
      import xarray as xr
-     from snowtools.utils import xarray_snowtools_backend
-     from snowtools.utils import xarray_snowtools_accessor
      ds = xr.open_dataset('PRO_2010080106_2011080106.nc', engine='snowtools')
      dszs = ds.semidistributed.sel_points(ZS=2400)
      dszs.resample(time='12h').mean() # time resampling to 12h timestep
@@ -80,9 +78,8 @@ Resample Rainf variable from hourly values to daily accumulations, starting at 0
 
 .. code-block:: python
 
+     import snowtools
      import xarray as xr
-     from snowtools.utils import xarray_snowtools_backend
-     from snowtools.utils import xarray_snowtools_accessor
 
      ds_hourly = xr.open_dataset('FORCING_test_2d.nc', engine='snowtools')
      ds_daily = ds_hourly.Rainf.snowtools.daily_accumulation(start_hour=3)
@@ -210,10 +207,8 @@ class MeteoAccessor(SnowtoolsAccessor):
 
     .. code-block:: python
 
+         import snowtools
          import xarray as xr
-
-         from snowtools.utils import xarray_snowtools_backend
-         from snowtools.utils import xarray_snowtools_accessor
 
          ds = xr.open_dataset('FORCING.nc', engine='meteo')
          ds.meteo.[...]
@@ -230,10 +225,8 @@ class SurfexAccessor(SnowtoolsAccessor):
 
     .. code-block:: python
 
+         import snowtools
          import xarray as xr
-
-         from snowtools.utils import xarray_snowtools_backend
-         from snowtools.utils import xarray_snowtools_accessor
 
          ds = xr.open_dataset('PRO.nc', engine='snowtools')
          ds.surfex.decode_time_variable('time')
@@ -262,10 +255,8 @@ class SemiDistributedAccessor(SurfexAccessor):
 
     .. code-block:: python
 
+         import snowtools
          import xarray as xr
-
-         from snowtools.utils import xarray_snowtools_backend
-         from snowtools.utils import xarray_snowtools_accessor
 
          ds = xr.open_dataset('INPUT.nc', engine='snowtools')
          ds.semidistributed.sel_points(massif_num=3, ZS=[900, 1800, 2700, 3600], slope=40)
@@ -281,15 +272,18 @@ class SemiDistributedAccessor(SurfexAccessor):
         native xarray "where" method directly.
 
         :param massif_num: Massif number(s) of points to select
-        :type massif_num: list or int
+        :param massif_num: list, range or int
         :param ZS: Elevation(s) of points to select
-        :type ZS: list or int
+        :param ZS: list, range or int
         :param slope: Slope(s) of points to select
-        :type slope: list or int
+        :param slope: list, range or int
         :param aspect: Aspects(s) of points to select
-        :type aspect: list or int
+        :param aspect: list, range or int
 
         """
+
+        if isinstance(self.ds, xr.DataArray):
+            raise TypeError("This method only applies to Dataset objects")
 
         indexer = None
         for var in ['massif_num', 'ZS', 'slope', 'aspect']:
@@ -298,19 +292,29 @@ class SemiDistributedAccessor(SurfexAccessor):
                     raise ValueError(f'Variable "{var}" does not exist')
                 else:
                     if isinstance(eval(var), list):
-                        if indexer is None:
-                            indexer = self.ds[var].isin(eval(var))
-                        else:
-                            indexer = indexer & self.ds[var].isin(eval(var))
+                        tmp = self.ds[var].isin(eval(var))
+                    elif isinstance(eval(var), range):
+                        tmp = self.ds[var].isin([x for x in eval(var)])
                     elif isinstance(eval(var), int):
-                        if indexer is None:
-                            indexer = self.ds[var] == eval(var)
-                        else:
-                            indexer = indexer & (self.ds[var] == eval(var))
+                        tmp = self.ds[var] == eval(var)
+                    else:
+                        raise TypeError(f"{var} should be a list, range or int")
+
+                    if indexer is None:
+                        indexer = tmp
+                    else:
+                        indexer = indexer & tmp
 
         if indexer is not None:
             indexer = indexer.compute()
-            out = self.ds.where(indexer, drop=True)
+            # When all elements of the indexer are "False", calling "where" raises the following error:
+            # IndexError: The indexing operation you are attempting to perform is not valid on netCDF4.Variable object.
+            # Try loading your data into memory first by calling .load().
+            if any(indexer):
+                out = self.ds.where(indexer, drop=True)
+            else:
+                print("WARNING : No entry found with the given arguments, returning an empty Dataset")
+                return xr.Dataset()
         else:
             print("WARNING : arguments where empty or could not be interpreted, nothing changed.")
             out = self.ds
@@ -327,10 +331,8 @@ class DistributedAccessor(SurfexAccessor):
 
     .. code-block:: python
 
+         import snowtools
          import xarray as xr
-
-         from snowtools.utils import xarray_snowtools_backend
-         from snowtools.utils import xarray_snowtools_accessor
 
          ds = xr.open_dataset('INPUT.nc', engine='snowtools')
          ds.distributed.proj("EPSG:4326", "EPSG:2154")
@@ -349,6 +351,10 @@ class DistributedAccessor(SurfexAccessor):
         :param crs_out: CRS of the output object
         :type crs_out: str
         """
+        # TODO extract from rioxarray documentation :
+        # "If you use one of xarray’s open methods such as xarray.open_dataset to load netCDF files with the default
+        # engine, it is recommended to use decode_coords="all". This will load the grid mapping variable into
+        # coordinates for compatibility with rioxarray."
         # TODO : check crs_in ?
         self.ds.rio.set_spatial_dims(x_dim='xx', y_dim='yy', inplace=True)
         self.ds.rio.write_crs(crs_in, inplace=True)

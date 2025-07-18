@@ -5,21 +5,22 @@
 import unittest
 import os
 
-from snowtools.utils import xarray_snowtools_backend  # Ignore "imported but unused" error
-from snowtools.utils import xarray_snowtools_accessor
+import snowtools
 from snowtools.DATA import TESTBASE_DIR
 
 import xarray as xr
+
+__all__ = (snowtools)
 
 if not os.path.isdir(TESTBASE_DIR):
     SKIP = True
 else:
     SKIP = False
 
+
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'pro_2018080306_2018080406.nc')),
                  "input file not available")
-
 class TestXarray_semidistributed(unittest.TestCase):
 
     @classmethod
@@ -28,18 +29,26 @@ class TestXarray_semidistributed(unittest.TestCase):
         path_pro18 = os.path.join(TESTBASE_DIR, "PRO", 'pro_2018080306_2018080406.nc')
         cls.ds18 = xr.open_dataset(path_pro18, engine='snowtools')
 
-    def test_sel_points_intargs(self):
-        points = self.ds18.semidistributed.sel_points(ZS = 2100, slope = 20, massif_num = 5)
-        self.assertEqual(len(points.Number_of_points), 8, "Expect: 8 orientations (alti, massif slope fixed)")
+    def test_get_points_intargs(self):
+        points = self.ds18.semidistributed.sel_points(ZS=2100, slope=20, massif_num=5)
+        self.assertEqual(len(points.Number_of_points), 8, "alti, massif, pente fixes on attend 8 orientations")
 
-    def test_sel_points_listargs(self):
-        points = self.ds18.semidistributed.sel_points(ZS = 2100, slope = [20, 40], massif_num = [5])
-        self.assertEqual(len(points.Number_of_points), 16, "Expect: 16 points")
+    def test_get_points_listargs(self):
+        points = self.ds18.semidistributed.sel_points(ZS=[1800, 2100], slope=0, aspect=-1, massif_num=1)
+        self.assertEqual(len(points.Number_of_points), 2, "2 points attendus")
 
-    def test_read_var_with_sel_points_get_time(self):
-        point = self.ds18.semidistributed.sel_points(ZS = 3000, slope = 20, massif_num = 3, aspect = 0)
-        timesel = point.sel(time='2018-8-4 00').squeeze()
-        self.assertEqual(timesel.SNOWTEMP.shape, (50,), "Expect: 50 layers")
+    def test_get_points_rangeargs(self):
+        points = self.ds18.semidistributed.sel_points(ZS=1800, slope=40, aspect=0, massif_num=range(1, 5))
+        self.assertEqual(len(points.Number_of_points), 4, "4 points attendus")
+
+    def test_empty_selection(self):
+        points = self.ds18.semidistributed.sel_points(ZS=1700)
+        self.assertEqual(len(points), 0, "Empty Dataset expected")
+
+    def test_read_var_with_get_point_get_time(self):
+        snowtemp = self.ds18.sel(time='2018-8-4 00').semidistributed.sel_points(ZS=4500, slope=20,
+                massif_num=3, aspect=0).SNOWTEMP.squeeze()
+        self.assertEqual(snowtemp.shape, (50,))
 
     def test_read_var_intargs(self):
         snowtemp = self.ds18.SNOWTEMP.isel(time=0).squeeze()
@@ -73,7 +82,6 @@ class TestXarray_semidistributed(unittest.TestCase):
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'PRO_2010080106_2011080106.nc')),
                  "input file not available")
-                 
 class TestXarray_first_test(unittest.TestCase):
 
     @classmethod
@@ -119,14 +127,13 @@ class TestXarray_first_test(unittest.TestCase):
     def tearDownClass(cls):
         cls.ds_first.close()
 
+
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'PRO_WJF_2014-2015.nc')),
                  "input file not available")
-
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'PRO_WJF_2015-2016.nc')),
                  "input file not available")
-                 
 class TestXarray_multifile(unittest.TestCase):
 
     @classmethod
@@ -152,10 +159,10 @@ class TestXarray_multifile(unittest.TestCase):
         cls.ds_multi.close()
         cls.ds_multi2.close()
 
+
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'PRO_first_2014080106_2015080106.nc')),
                  "input file not available")
-                 
 class TestXarray_distributed(unittest.TestCase):
 
     @classmethod
@@ -191,6 +198,7 @@ class TestXarray_distributed(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.ds_2D.close()
+
 
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'old_PRO_20180807032000_002400.nc')),

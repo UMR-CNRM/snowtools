@@ -49,13 +49,15 @@ These entry points are designed to deal with the following requirements :
 To use these entry points, the native xarray methods `open_dataset`, `open_dataarray` and `open_mfdataset` should
 simply be called with the keyword argument "engine='snowtools'" (see the "Standard usage" section of this doc).
 
+The "snowtools" backend is automatically made available when the snowtools package is imported.
+
 Standard usage:
 ^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
+    import snowtools
     import xarray as xr
-    from snowtools.utils import xarray_snowtools_backend
 
     ds = xr.open_dataset(filename, engine='snowtools')
     ds = xr.open_mfdataset(list_of_files, engine='snowtools')
@@ -306,7 +308,8 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
 
     .. code-block:: python
 
-        from snowtools.utils import xarray_snowtools_backend
+        import snowtools
+        import xarray
 
         ds = xr.open_dataset(filename, engine='snowtools')
 

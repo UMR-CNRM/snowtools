@@ -22,8 +22,8 @@ For example, to compute the maximum of snow depth over time for one specific poi
 
 code-block:: python
 
+    import snowtools
     import xarray as xr
-    from snowtools.tools import xarray_snowtools_backend
 
     ds = xr.open_dataset(filename, engine='snowtools')
     htn = ds.DSN_T_ISBA
@@ -34,8 +34,8 @@ instead of :
 
 code-block:: python
 
+    import snowtools
     import xarray as xr
-    from snowtools.tools import xarray_snowtools_backend
 
     ds = xr.open_dataset(filename, engine='snowtools')
     htn = ds.DSN_T_ISBA
