@@ -17,7 +17,7 @@ import sys
 import xarray as xr
 import argparse
 
-from snowtools.utils import xarray_snowtools_backend
+import snowtools  # noqa
 from snowtools.tools.SnowCoverDuration import lcscd
 
 

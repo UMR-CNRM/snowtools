@@ -10,14 +10,14 @@ import argparse
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-from snowtools.tools import xarray_backend
+import snowtools  # noqa
 from snowtools.utils.infomassifs import infomassifs
 from snowtools.plots.stratiprofile.profilPlot import dateProfil
 
 from bronx.stdtypes.date import Date, Period
 
 from vortex import toolbox
-import cen
+from vortex import cen  # noqa
 
 toolbox.active_now = True
 

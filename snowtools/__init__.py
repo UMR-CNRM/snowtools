@@ -1,4 +1,3 @@
 
-from . import utils
-
-__all__ = (utils)
+from . import utils  # noqa
+from . import algo  # noqa
