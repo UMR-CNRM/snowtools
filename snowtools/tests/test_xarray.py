@@ -24,6 +24,9 @@ else:
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'PRO_WJF_2010-2016.nc')),
                  "input file not available")
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
+                                                 'old_PRO_20180807032000_002400.nc')),
+                 "input file not available")
 class Test_snowtools_accessor(unittest.TestCase):
 
     @classmethod
@@ -37,6 +40,8 @@ class Test_snowtools_accessor(unittest.TestCase):
         cls.ds_forcing    = xr.open_dataset(path_ds_forcing, engine='snowtools')
         path_pro_2D       = os.path.join(TESTBASE_DIR, "PRO", "PRO_first_2014080106_2015080106.nc")
         cls.ds_2D         = xr.open_dataset(path_pro_2D, engine='snowtools')
+        path_old          = os.path.join(TESTBASE_DIR, "PRO", 'old_PRO_20180807032000_002400.nc')
+        cls.ds_old        = xr.open_dataset(path_old, engine='snowtools')
 
     def test_transpose(self):
         # Mix dimensions in a "random" order
@@ -62,12 +67,17 @@ class Test_snowtools_accessor(unittest.TestCase):
         self.assertTrue(np.array_equal(stats.sod.data.flatten(), np.array([68., 95., 89., 66., 51., 81.])))
         self.assertTrue(np.array_equal(stats.sd.data.flatten(), np.array([204, 240, 199, 212, 232, 210])))
 
+    def test_backtrack_preprocess(self):
+        original = self.ds_old.snowtools.backtrack_preprocess()
+        self.assertTrue('location' in original.dims)
+
     @classmethod
     def tearDownClass(cls):
         cls.ds_2D.close()
         cls.ds18.close()
         cls.ds_multi_year.close()
         cls.ds_forcing.close()
+        cls.ds_old.close()
 
 
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",

@@ -216,6 +216,8 @@ def update_varname(ds, mapping):
     # Do not directly modify *variables_map* in case several calls to "preprocess" are made from
     # the same session
     if isinstance(ds, xarray.core.dataarray.DataArray):
+        # Set orginal Array name as attribute for backtracking
+        ds.assign_attrs(original_name=ds.name)
         if ds.name in variables_map:
             ds = ds.rename(variables_map[ds.name])
         if ds.name in mapping:
@@ -228,6 +230,12 @@ def update_varname(ds, mapping):
         # Update variable names with user-defined dictionnary
         user_mapping = {key: mapping[key] for key in list(ds.keys()) if key in mapping.keys()}
         ds = ds.rename(user_mapping)
+
+        # Set orginal dimension names as attribute for backtracking
+        update_dict.update(user_mapping)
+        if len(update_dict) > 0:
+            reverse_map = {v: k for k, v in update_dict.items()}
+            ds = ds.assign_attrs(original_variable_name=reverse_map)
 
     return ds
 
@@ -252,6 +260,12 @@ def update_dimname(ds, mapping):
     # Update variable names with user-defined dictionnary
     user_mapping = {key: mapping[key] for key in list(ds.dims) if key in mapping.keys()}
     ds = ds.rename(user_mapping)
+
+    # Set orginal dimension names as attribute for backtracking
+    update_dict.update(user_mapping)
+    if len(update_dict) > 0:
+        reverse_map = {v: k for k, v in update_dict.items()}
+        ds = ds.assign_attrs(original_dimension_name=reverse_map)
 
     return ds
 

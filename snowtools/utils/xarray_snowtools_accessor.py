@@ -103,9 +103,7 @@ from bronx.syntax.externalcode import ExternalCodeImportChecker
 
 rio_checker = ExternalCodeImportChecker('rioxarray')
 with rio_checker:
-    import rioxarray
-
-__all__ = ('rioxarray',)  # Ignore F401 PEP8 syntax error
+    import rioxarray  # noqa
 
 
 @xr.register_dataset_accessor("snowtools")
@@ -231,6 +229,38 @@ class SnowtoolsAccessor:
             htn = self.ds
 
         return lcscd(htn, threshold=snow_depth_threshold)
+
+    def backtrack_preprocess(self):
+        """
+        Method to undo the changes done in the preprocess step if the dataset was opened with the "snowtools" backend.
+        Initial variable / dimension names come from the 'original_variable_name', 'original_dimension_name' or
+        'original_name' attribute created during the preprocess step.
+
+        Usage example:
+        ^^^^^^^^^^^^^^
+
+        .. code-block:: python
+
+            import snowtools
+            import xarray as xr
+            ds=xr.open_dataset('old_PRO_20180807032000_002400.nc', engine='snowtools')
+            original=ds.backtrack_preprocess()
+
+        """
+        if isinstance(self.ds, xr.Dataset):
+            if 'original_variable_name' in self.ds.attrs.keys():
+                mapping = {k: v for k, v in self.ds.attrs['original_variable_name'].items()
+                        if k in list(self.ds.keys())}
+                self.ds = self.ds.rename(mapping)
+            if 'original_dimension_name' in self.ds.attrs.keys():
+                mapping = {k: v for k, v in self.ds.attrs['original_dimension_name'].items()
+                        if k in list(self.ds.dims)}
+                self.ds = self.ds.rename(mapping)
+        else:
+            if 'original_name' in self.ds.attrs.keys():
+                self.ds = self.ds.rename(self.ds.attrs['original_name'])
+
+        return self.ds
 
 
 @xr.register_dataset_accessor("meteo")
