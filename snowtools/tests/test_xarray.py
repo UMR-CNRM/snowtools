@@ -4,13 +4,13 @@
 
 import unittest
 import os
-
-import snowtools
-from snowtools.DATA import TESTBASE_DIR
+import numpy as np
 
 import xarray as xr
 
-__all__ = (snowtools)
+import snowtools  # noqa
+from snowtools.DATA import TESTBASE_DIR
+
 
 if not os.path.isdir(TESTBASE_DIR):
     SKIP = True
@@ -21,7 +21,59 @@ else:
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'pro_2018080306_2018080406.nc')),
                  "input file not available")
-class TestXarray_semidistributed(unittest.TestCase):
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
+                                                 'PRO_WJF_2010-2016.nc')),
+                 "input file not available")
+class Test_snowtools_accessor(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # fichier au nouveau format de la chaîne
+        path_pro18        = os.path.join(TESTBASE_DIR, "PRO", 'pro_2018080306_2018080406.nc')
+        cls.ds18          = xr.open_dataset(path_pro18, engine='snowtools')
+        path_multi_year   = os.path.join(TESTBASE_DIR, "PRO", 'PRO_WJF_2010-2016.nc')
+        cls.ds_multi_year = xr.open_dataset(path_multi_year, engine='snowtools')
+        path_ds_forcing   = os.path.join(TESTBASE_DIR, 'FORCING', 'FORCING_test_base.nc')
+        cls.ds_forcing    = xr.open_dataset(path_ds_forcing, engine='snowtools')
+        path_pro_2D       = os.path.join(TESTBASE_DIR, "PRO", "PRO_first_2014080106_2015080106.nc")
+        cls.ds_2D         = xr.open_dataset(path_pro_2D, engine='snowtools')
+
+    def test_transpose(self):
+        # Mix dimensions in a "random" order
+        tmp = self.ds_2D.SNOWTEMP.transpose('xx', 'yy', 'Number_of_Patches', 'time', 'snow_layer')
+        # Ensure that the "transpose" method put the time dimension back at first place
+        out = tmp.snowtools.transpose()
+        self.assertTrue(out.dims[0] == 'time')
+
+    def test_squeeze(self):
+        snowtemp = self.ds_2D.SNOWTEMP.snowtools.squeeze()
+        # The len 1 dimension 'Number_of_Patches' should have been dropped --> only 4 dimensions left
+        self.assertTrue(len(snowtemp.shape) == 4)
+
+    def test_daily_accumulation(self):
+        daily = self.ds_forcing.Rainf.snowtools.daily_accumulation()
+        self.assertTrue(np.array_equal(daily.isel(time=2).data,
+            np.array([0.006235555551118321, 0.006593332870139016])))
+
+    def test_snow_cover_stats(self):
+        stats = self.ds_multi_year.snowtools.snow_cover_stats()
+        self.assertTrue(np.array_equal(stats.scd_concurent.data.flatten(), np.array([194, 207, 199, 205, 232, 206])))
+        self.assertTrue(np.array_equal(stats.mod.data.flatten(), np.array([262., 302., 288., 271., 283., 287.])))
+        self.assertTrue(np.array_equal(stats.sod.data.flatten(), np.array([68., 95., 89., 66., 51., 81.])))
+        self.assertTrue(np.array_equal(stats.sd.data.flatten(), np.array([204, 240, 199, 212, 232, 210])))
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.ds_2D.close()
+        cls.ds18.close()
+        cls.ds_multi_year.close()
+        cls.ds_forcing.close()
+
+
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
+                                                 'pro_2018080306_2018080406.nc')),
+                 "input file not available")
+class Test_semidistributed_accessor(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -58,25 +110,36 @@ class TestXarray_semidistributed(unittest.TestCase):
         snowtemp = self.ds18.SNOWTEMP.isel(time=1).sel(Number_of_points=slice(600, 690, 2)).squeeze()
         self.assertEqual(snowtemp.shape, (50, 45), "Expect: 50 layers, 45 points")
 
-    def test_transpose(self):
-        snowtemp = self.ds18.SNOWTEMP.semidistributed.transpose()
-        self.assertEqual(snowtemp.shape, (4, 1, 50, 4471), "Expect: 4 timesteps, 1 patch, 50 layers, 4471 points")
+    @classmethod
+    def tearDownClass(cls):
+        cls.ds18.close()
 
-    def test_squeeze(self):
-        snowtemp = self.ds18.SNOWTEMP.surfex.squeeze()
-        self.assertEqual(snowtemp.shape, (4, 50, 4471), "Expect: 4 timesteps, 50 layers, 4471 points")
 
-    def test_daily_accumulation(self):
-        self.ds18.SNOWTEMP.snowtools.daily_accumulation()
-        self.assertEqual(len(self.ds18.Number_of_points), 4471, "Expect: 4471 points")
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
+                                                 'pro_2018080306_2018080406.nc')),
+                 "input file not available")
+class Test_SURFEX_accessor(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # fichier au nouveau format de la chaîne
+        path_pro18  = os.path.join(TESTBASE_DIR, "PRO", 'pro_2018080306_2018080406.nc')
+        cls.ds18    = xr.open_dataset(path_pro18, engine='snowtools')
+        path_pro_2D = os.path.join(TESTBASE_DIR, "PRO", "PRO_first_2014080106_2015080106.nc")
+        cls.ds_2D   = xr.open_dataset(path_pro_2D, engine='snowtools')
+
+    def test_drop_tile_dimension(self):
+        self.ds_2D.surfex.drop_tile_dimension()
+        self.assertEqual(len(self.ds_2D.xx), 5, "Expect: 5 points in xx direction")
 
     def test_decode_time_variable(self):
-        self.ds18.semidistributed.decode_time_variable('time')
-        self.assertEqual(len(self.ds18.Number_of_points), 4471, "Expect: 4471 points")
+        self.ds_2D.surfex.decode_time_variable('time')
+        self.assertEqual(len(self.ds_2D.xx), 5, "Expect: 5 points in xx direction")
 
     @classmethod
     def tearDownClass(cls):
         cls.ds18.close()
+        cls.ds_2D.close()
 
 
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
@@ -106,22 +169,6 @@ class TestXarray_first_test(unittest.TestCase):
     def test_read_var_intargs(self):
         snowtemp = self.ds_first.SNOWTEMP.isel(time=0).squeeze()
         self.assertEqual(snowtemp.shape, (50, 2), "Expect: 50 layers, 2 points")
-
-    def test_transpose(self):
-        snowtemp = self.ds_first.SNOWTEMP.snowtools.transpose()
-        self.assertEqual(snowtemp.shape, (1460, 1, 50, 2), "Expect: 1460 timesteps, 1 patch, 50 layers, 2 points")
-
-    def test_squeeze(self):
-        snowtemp = self.ds_first.SNOWTEMP.snowtools.squeeze()
-        self.assertEqual(snowtemp.shape, (1460, 50, 2), "Expect: 1460 timesteps, 50 layers, 2 points")
-
-    def test_daily_accumulation(self):
-        self.ds_first.snowtools.daily_accumulation(start_hour=3)
-        self.assertEqual(len(self.ds_first.Number_of_points), 2, "Expect: 2 points")
-
-    def test_decode_time_variable(self):
-        self.ds_first.surfex.decode_time_variable('time')
-        self.assertEqual(len(self.ds_first.Number_of_points), 2, "Expect: 2 points")
 
     @classmethod
     def tearDownClass(cls):
@@ -163,7 +210,7 @@ class TestXarray_multifile(unittest.TestCase):
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'PRO_first_2014080106_2015080106.nc')),
                  "input file not available")
-class TestXarray_distributed(unittest.TestCase):
+class Test_distributed_accessor(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -171,29 +218,9 @@ class TestXarray_distributed(unittest.TestCase):
         path_pro_2D = os.path.join(TESTBASE_DIR, "PRO", "PRO_first_2014080106_2015080106.nc")
         cls.ds_2D = xr.open_dataset(path_pro_2D, engine='snowtools')
 
-    def test_transpose(self):
-        snowtemp = self.ds_2D.SNOWTEMP.snowtools.transpose()
-        self.assertEqual(snowtemp.shape, (1460, 1, 12, 3, 5), "Expect: 1460 timesteps, 1 patch, 12 layers, 3x5 points")
-
-    def test_squeeze(self):
-        snowtemp = self.ds_2D.SNOWTEMP.snowtools.squeeze()
-        self.assertEqual(snowtemp.shape, (1460, 12, 3, 5), "Expect: 1460 timesteps, 12 layers, 3x5 points")
-
-    def test_daily_accumulation(self):
-        self.ds_2D.surfex.daily_accumulation(start_hour=3)
-        self.assertEqual(len(self.ds_2D.xx), 5, "Expect: 5 points in xx direction")
-
-    def test_decode_time_variable(self):
-        self.ds_2D.distributed.decode_time_variable('time')
-        self.assertEqual(len(self.ds_2D.xx), 5, "Expect: 5 points in xx direction")
-
-    '''def test_proj(self):
-        self.ds_2D.rename({'xx':'x', 'yy':'y'}).distributed.proj()
-        self.assertEqual(len(self.ds_2D.xx), 5, "Expect: 5 points in xx direction")'''
-
-    def test_drop_tile_dimension(self):
-        self.ds_2D.distributed.drop_tile_dimension()
-        self.assertEqual(len(self.ds_2D.xx), 5, "Expect: 5 points in xx direction")
+    def test_proj(self):
+        out = self.ds_2D.DSN_T_ISBA.distributed.proj(crs_in=2154, crs_out=4326)
+        self.assertEqual(out.rio.crs.to_string(), 'EPSG:4326')
 
     @classmethod
     def tearDownClass(cls):

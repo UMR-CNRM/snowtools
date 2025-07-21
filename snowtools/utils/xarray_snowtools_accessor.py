@@ -196,6 +196,42 @@ class SnowtoolsAccessor:
         else:
             return self.ds.resample(time='D', offset=f'{start_hour}h', closed='right', label='right').sum()
 
+    def snow_cover_stats(self, snow_depth_variable='DSN_T_ISBA', snow_depth_threshold=0.2):
+        """
+        Compute snow cover statistics from a snow depth time serie.
+        Returned stats are :
+        - LCSCD  : Longest Concurent Snow Cover Duration period
+        - LCSMOD : Snow Melt Out Date of the Longest Concurent snow cover period
+        - LCSOD  : Snow Cover Onset date of the Longest Concurent snow cover period
+        - SD     : Snow duration : total number of snow coverage
+
+        This method calls the "lcscd" function defined in snowtools/tools/SnowCoverDuration.py, see the associated
+        documentation for more information.
+
+        Usage example:
+        ^^^^^^^^^^^^^^
+
+        .. code-block:: python
+
+            import snowtools
+            import xarray as xr
+            ds=xr.open_dataset('PRO_WJF_2010-2016.nc', engine='snowtools')
+            stats=ds.snowtools.snow_cover_stats()
+
+        :param snow_depth_variable: Name of the variable containing the snow depth (default value for SURFEX outpus)
+        :type start_hour: str
+        :param threshold: Snow depth threshold to consider a given point / day as "snow covered"
+        :type start_hour: float
+        """
+
+        from snowtools.tools.SnowCoverDuration import lcscd
+        if isinstance(self.ds, xr.Dataset) and snow_depth_variable in (self.ds.keys()):
+            htn = self.ds[snow_depth_variable]
+        elif isinstance(self.ds, xr.DatArray):
+            htn = self.ds
+
+        return lcscd(htn, threshold=snow_depth_threshold)
+
 
 @xr.register_dataset_accessor("meteo")
 @xr.register_dataarray_accessor("meteo")
@@ -244,10 +280,24 @@ class SurfexAccessor(SnowtoolsAccessor):
         timevar = xr.decode_cf(timevar)
         self.ds[varname] = timevar[varname]
 
+    def drop_tile_dimension(self, tile=0):
+        """
+        Select a single value for "tile" dimension (or equivalent) and squeeze the dataset to drop the dimension.
+
+        :param tile: Value of the "tile" dimension to select
+        :type tile: int
+        """
+
+        for drop_dim in ['Number_of_patches', 'tile', 'Number_of_Tile']:
+            if drop_dim in self.ds.dims:
+                self.ds = self.ds.sel(drop_dim=tile).squeeze()
+
+        return self.ds
+
 
 @xr.register_dataset_accessor("semidistributed")
 @xr.register_dataarray_accessor("semidistributed")
-class SemiDistributedAccessor(SurfexAccessor):
+class SemiDistributedAccessor(SnowtoolsAccessor):
     """
     Additionnal methods in semi-distributed geometry (ex: S2M simulaitions)
 
@@ -323,7 +373,7 @@ class SemiDistributedAccessor(SurfexAccessor):
 
 @xr.register_dataset_accessor("distributed")
 @xr.register_dataarray_accessor("distributed")
-class DistributedAccessor(SurfexAccessor):
+class DistributedAccessor(SnowtoolsAccessor):
     """
     Additionnal methods in distributed geometry (ex: EDELWEISS)
 
@@ -361,17 +411,3 @@ class DistributedAccessor(SurfexAccessor):
         out = self.ds.rio.reproject(crs_out).rename(x='xx', y='yy')
 
         return out
-
-    def drop_tile_dimension(self, tile=0):
-        """
-        Select a single value for "tile" dimension (or equivalent) and squeeze the dataset to drop the dimension.
-
-        :param tile: Value of the "tile" dimension to select
-        :type tile: int
-        """
-
-        for drop_dim in ['Number_of_patches', 'tile', 'Number_of_Tile']:
-            if drop_dim in self.ds.dims:
-                self.ds = self.ds.sel(drop_dim=tile).squeeze()
-
-        return self.ds
