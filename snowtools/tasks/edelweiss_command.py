@@ -249,7 +249,7 @@ class Edelweiss_command(object):
                                        " * dateend   (str) : If different from '-e' argument (format YYYYMMDDHH)\n"
                                        " ")
 
-        parser_input.add_argument("--prep", dest="prep", action=ParseKwargs, nargs='*',
+        parser_input.add_argument("--prep_in", dest="prep_in", action=ParseKwargs, nargs='*',
                                   type=str, default=None,
                                   # TODO : what if already in the user conf file ? --> overwrite ?
                                   help="Definition (footprint-like dict) of the default forcing variables input.\n"
@@ -259,6 +259,20 @@ class Edelweiss_command(object):
                                        " * geometry  (str) : Experiment geometry\n"
                                        " * vapp      (str) : Application that produced the FORCING (s2m/edelweiss)\n"
                                        " * date      (str) : Validity date (default = *datebegin*)\n"
+                                       " * block     (str) : Block\n"
+                                       " ")
+
+        parser_input.add_argument("--prep_out", dest="prep_out", action=ParseKwargs, nargs='*',
+                                  type=str, default=None,
+                                  # TODO : what if already in the user conf file ? --> overwrite ?
+                                  help="Definition (footprint-like dict) of the default forcing variables input.\n"
+                                       "Format : --prep key1=var1 key2=var2 ...\n"
+                                       "Known dictionary keys :\n"
+                                       " * xpid      (str) : Experiment identifier (Format : {xpid}@{username})\n"
+                                       " * geometry  (str) : Experiment geometry\n"
+                                       " * vapp      (str) : Application that produced the FORCING (s2m/edelweiss)\n"
+                                       " * date      (str) : Validity date (default = *datebegin*)\n"
+                                       " * block     (str) : Block\n"
                                        " ")
 
         parser_input.add_argument("--precipitation", dest="precipitation", action=ParseKwargs, nargs='*',
@@ -329,6 +343,8 @@ class Edelweiss_command(object):
 
     def check_and_convert_options(self):
 
+        self.options.date = self.options.dateend
+
         # Convert *members* argument into a rangex object
         if self.options.members is not None:
             self.options.members = self.convert_members(self.options.members)
@@ -338,7 +354,7 @@ class Edelweiss_command(object):
 
         args_to_dict = vars(self.options)  # Convert self.options *Namepace* object to a *dictionnary* object
         # Convert *dictionary* arguments to proper configuration variables
-        for specific_input in ['forcing', 'precipitation', 'wind', 'prep', 'pro', 'lpn']:
+        for specific_input in ['forcing', 'precipitation', 'wind', 'prep_in', 'prep_out', 'pro', 'lpn']:
 
             # TODO : return a footprint-like dictionnary to be used directly !
 
@@ -352,9 +368,9 @@ class Edelweiss_command(object):
             # Ensure that all "optional" conf variables are set
             # Keys not provided by the user are set to the task's one
             # The FORCING's 'member' variable is managed separately (depending on the type of execution)
-            if specific_input == 'prep':
+            if 'prep' in specific_input:
                 # PREP files only need a validity *date*
-                optional_keys = ['xpid', 'geometry', 'vapp', 'date']
+                optional_keys = ['xpid', 'geometry', 'vapp', 'date', 'members']
             else:
                 # All other files cover a period
                 # TODO : members_forcing ne devrait pas être optionnel puisqu'il est utilisé pour définir le nombre

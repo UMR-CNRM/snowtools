@@ -138,7 +138,7 @@ class Edelweiss_kitchen(vortex_kitchen):
             # Set default working directory
             workdir = os.path.join('/scratch', 'work', self.user)
 
-        self.workingdir = os.path.join(workdir, self.options.xpid, self.vapp, self.vconf)
+        self.workingdir = os.path.join(workdir, self.options.task, self.options.xpid, self.vapp, self.vconf)
         self.confdir    = os.path.join(self.workingdir, 'conf')
         self.jobdir     = os.path.join(self.workingdir, "jobs")
 
@@ -219,10 +219,10 @@ class Edelweiss_kitchen(vortex_kitchen):
 
         # TODO : load template
         nodes = []
-        #for task in self.options.task:
-        #    # TODO : gérer les cas particulier (if Offline in task --> refillprep)
-        #    nodes.append(f"            {task}(tag='{task.lower()}', ticket=t, **kw),")
-        #    self.set_task_conf(task.lower())
+        for task in self.options.task:
+            # TODO : gérer les cas particulier (if Offline in task --> refillprep)
+            nodes.append(f"            {task}(tag='{task.lower()}', ticket=t, **kw),")
+            self.set_task_conf(task.lower())
 
         fill['nodes'] = '\n'.join(nodes)
         # Fill template and conver it into a string object
@@ -314,7 +314,7 @@ class Edelweiss_kitchen(vortex_kitchen):
             mkjob_list.append(self.mkjob_command(jobname=jobname, taskname=taskname))
         else:
             options.pop('members_forcing')
-            for job_number in range(mb0, mb0 + njobs - 1):
+            for job_number in range(mb0, mb0 + njobs):
                 options['members_forcing'] = str(job_number)
                 self.set_job_conf(jobname, options)
                 mkjob_list.append(self.mkjob_command(jobname=f'{jobname}_mb{str(job_number)}', taskname=taskname))
@@ -353,59 +353,86 @@ class Edelweiss_kitchen(vortex_kitchen):
         import time
         from bronx.stdtypes.date import Date, Time
         from vortex import toolbox
+        import cen  # noqa
 
-        datebegin = self.options.datebegin
-        for date in self.options.assimdates:
-            dateend = date
-            offline_list = self.mkjob_list_commands(jobname='offline_mpi', njobs=nmembers, mb0=0)
-            self.iniparser.set('offlinempi', 'datebegin', datebegin)
-            self.iniparser.set('offlinempi', 'dateend', dateend)
-            self.iniparser.set('soda', 'datebegin', datebegin)
-            self.iniparser.set('soda', 'dateend', dateend)
-            self.write_conf_file()
-
-            for mkjob in offline_list:
-                print("Run command: " + mkjob + "\n")
-                callSystemOrDie(mkjob)
-
-            time.sleep(10)
-            launch_soda = False
-            walltime = Time(self.iniparser.as_dict()['soda']['time'])
+        def wait_mandatory_input(task, block, rundate):
+            # TODO : gérer les jobs restant en "PENDING" pendant longtemps
+            walltime = Time(self.iniparser.as_dict()[task]['time'])
+            launch = False
             start = Date.now()
             timer = Date.now()
-            while (timer - start < walltime) and not launch_soda:
-                prep = toolbox.rload(
-                    kind           = 'PREP',
-                    date           = dateend,
-                    experiment     = self.options.xpid,
-                    geometry       = self.options.geometry,
-                    member         = [mb for mb in range(nmembers)],
-                    namebuild      = 'flat@cen',
-                    block          = 'bg',
-                    stage          = '_bg',
-                    model          = 'surfex',
-                    namespace      = 'vortex.cache.fr',
-                    nativefmt      = 'netcdf',
-                    local          = 'PREP.nc',
-                )
-                if prep:
-                    launch_soda = True
+            prep = toolbox.rload(
+                kind           = 'PREP',
+                vapp           = self.options.vapp,
+                vconf          = '[geometry:tag]',
+                date           = rundate,
+                experiment     = self.options.xpid,
+                geometry       = self.options.geometry,
+                member         = [mb for mb in range(nmembers)],
+                namebuild      = 'flat@cen',
+                block          = f'prep/{block}',
+                # stage          = '_bg' if task == 'soda' else '_an',
+                model          = 'surfex',
+                namespace      = 'vortex.cache.fr',
+                nativefmt      = 'netcdf',
+                local          = 'PREP.nc',
+            )
+            for fic in prep:
+                fic.delete()
+            time.sleep(10)
+            while (timer - start < walltime) and not launch:
+                if all([fic.get() for fic in prep]):
+                    launch = True
                 else:
                     time.sleep(10)
-                timer = Date.now()
+                    timer = Date.now()
+            return launch
 
-            soda = self.mkjob_list_commands(jobname='soda', njobs=1)
-            for mkjob in soda:
-                print("Run command: " + mkjob + "\n")
-                callSystemOrDie(mkjob)
+        datebegin = self.options.datebegin
+        first_run = True
+        for date in self.options.assimdates:
+            dateend = date
+            if first_run or wait_mandatory_input('offlinempi', block='an', rundate=datebegin):
+                offline_list = self.mkjob_list_commands(jobname='offline_mpi', njobs=nmembers, mb0=0)
+                self.iniparser.set('offlinempi', 'datebegin', datebegin)
+                self.iniparser.set('offlinempi', 'dateend', dateend)
+                if first_run:
+                    self.iniparser.set('offlinempi', 'block_prep_in', 'prep')
+                    self.iniparser.set('offlinempi', 'xpid_prep_in', self.options.xpid_prep_in)
+                self.iniparser.set('offlinempi', 'block_prep_out', 'prep/bg')
+
+                # The configuration file is now complete, time to write it
+                self.write_conf_file()
+
+                for mkjob in offline_list:
+                    print("Run command: " + mkjob + "\n")
+                    callSystemOrDie(mkjob)
+
+            self.iniparser.set('offlinempi', 'date_prep_in', date)
+            if first_run:
+                self.iniparser.remove_option('offlinempi', 'member_prep_in')
+                self.iniparser.remove_option('offline_mpi', 'member_prep_in')
+                self.iniparser.set('offlinempi', 'block_prep_in', 'prep/an')
+                self.iniparser.set('offlinempi', 'xpid_prep_in', self.options.xpid)
+                first_run = False
+
+            if wait_mandatory_input('soda', block='bg', rundate=date):
+                soda = self.mkjob_list_commands(jobname='soda', njobs=1)
+                self.iniparser.set('soda', 'date', date)
+                self.write_conf_file()
+                for mkjob in soda:
+                    print("Run command: " + mkjob + "\n")
+                    callSystemOrDie(mkjob)
+
             datebegin = date
 
         dateend = self.options.dateend
-        self.iniparser.set('offlinempi', 'datebegin', datebegin)
-        self.iniparser.set('offlinempi', 'dateend', dateend)
-        self.write_conf_file()
+        if wait_mandatory_input('offlinempi', block='an', rundate=datebegin):
+            offline_list = self.mkjob_list_commands(jobname='offline_mpi', njobs=nmembers, mb0=0)
+            self.iniparser.set('offlinempi', 'datebegin', datebegin)
+            self.iniparser.set('offlinempi', 'dateend', dateend)
 
-        offline_list = self.mkjob_list_commands(jobname='offline_mpi', njobs=nmembers, mb0=0)
-        for mkjob in offline_list:
-            print("Run command: " + mkjob + "\n")
-            callSystemOrDie(mkjob)
+            self.write_conf_file()
+            for mkjob in offline_list:
+                print("Run command: " + mkjob + "\n")
+                callSystemOrDie(mkjob)

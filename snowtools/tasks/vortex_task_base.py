@@ -70,8 +70,8 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
 
         toolbox.defaults.update(**self.common_kw)
 
-        if hasattr(self.conf, 'member') and self.conf.member is not None:
-            toolbox.defaults.update(member=self.conf.member)
+        #if hasattr(self.conf, 'member') and self.conf.member is not None:
+        #    toolbox.defaults.update(member=self.conf.member)
 
         if 'early-fetch' in self.steps:  # Executed on a TRANSFERT NODE to fetch inputs from a remote cache
             self.get_remote_inputs()
@@ -142,7 +142,10 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         """
         Get lists of datebegin / dateend from actual datebegin / dateend conf arguments of the task
         """
-        self.list_dates_begin, list_dates_end, _, _  = get_list_dates_files(Date(self.conf.datebegin), 
-                Date(self.conf.dateend), 'yearly')
-        self.dict_dates_end = get_dic_dateend(self.list_dates_begin, list_dates_end)
-
+        if 'datebegin' in self.conf and 'dateend' in self.conf:
+            self.list_dates_begin, list_dates_end, _, _  = get_list_dates_files(Date(self.conf.datebegin),
+                    Date(self.conf.dateend), 'yearly')
+            self.dict_dates_end = get_dic_dateend(self.list_dates_begin, list_dates_end)
+        elif 'date' in self.conf:
+            self.list_dates_begin = [self.conf.date]
+            self.dict_dates_end   = {self.conf.date: self.conf.date}

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from vortex.layout.nodes import Driver
-from snowtools.tasks.research.crocO.crocO_soda import Soda_Task
+from snowtools.tasks.research.edelweiss.surfex import PreprocessSodaNamelist, SodaTask
 
 
 def setup(t, **kw):
@@ -9,7 +9,8 @@ def setup(t, **kw):
         tag='SODA',
         ticket=t,
         nodes=[
-            Soda_Task(tag='soda', ticket=t, **kw)
+            PreprocessSodaNamelist(tag='soda_preprocess', ticket=t, **kw),
+            SodaTask(tag='soda', ticket=t, **kw),
         ],
         options=kw
     )
