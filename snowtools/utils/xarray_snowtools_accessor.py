@@ -97,6 +97,9 @@ Informations on the list of xarray function/method considered public API can be 
 - https://docs.xarray.dev/en/v2023.09.0/api.html#api
 
 """
+from typing import (
+    Literal,
+)
 import xarray as xr
 
 from bronx.syntax.externalcode import ExternalCodeImportChecker
@@ -439,3 +442,102 @@ class DistributedAccessor(SnowtoolsAccessor):
         out = self.ds.rio.reproject(crs_out).rename(x='xx', y='yy')
 
         return out
+
+    def plot_ensemble(self, variable=None, vmin=None, vmax=None, cmap=None, dem=None, isolevels=None,
+            members: (Literal["all", "mean"] | int) = 'all', projection=None):
+        """
+        Plot field(s) from an ensemble. To control the members of the ensemble to be plotted, use the "members"
+        argument.
+        The dataset must have a 'member' dimension, and the spatial dimensions ('xx', 'yy'). This implies that
+        the selection of the time step must be done before calling the method.
+
+        :param variable: Variable name to plot (Dataset only)
+        :type variable: str
+        :param vmin: Min colorbar value.
+        :type vmin: float
+        :param vmax: Max colorbar value.
+        :type vmax: float
+        :param cmap: Matplotlib colormap
+        :type cmap: str
+        :param dem: Digital Elevation Model covering the dataset area.
+        :type dem: DataArray
+        :param isolevels: List of iso-levels to plot
+        :type isolevels: list
+        :param members: How to plot the ensemble data\n
+        - 'all': Plot all ensemble members on the same figure
+        - 'mean': Plot the mean ensemble field
+        - int: Plot the given ensemble member only
+        :type members: str or int
+        """
+
+        if isinstance(self.ds, xr.Dataset):
+            if variable is None:
+                raise ValueError("A variable name should be provided")
+            elif variable not in list(self.ds.keys()):
+                raise ValueError(f"Variable {variable} not in Dataset")
+            else:
+                ensemble = self.ds[variable]
+        else:
+            ensemble = self.ds
+
+        if 'member' not in self.ds.dims:
+            raise AttributeError("The 'member' dimension is missing")
+
+        if not set(list(self.ds.dims)) == set(['xx', 'yy', 'member']):
+            raise AttributeError("The dimensions of the dataset must be exactly ('xx', 'yy', 'member')")
+        else:
+            import matplotlib.pyplot as plt
+            from snowtools.plots.maps import plot2D
+
+            if members == 'all':
+                ensemble.load()
+                if vmin is None:
+                    vmin = ensemble.min().data
+                if vmax is None:
+                    vmax = ensemble.max().data
+                # Assume ensemble size = 16
+                # TODO : Add check on ensemble size
+                fig, ax = plt.subplots(nrows=4, ncols=4, figsize=(22, 15))
+                i = 0
+                j = 0
+                for mb in ensemble.member.data[1:]:
+                    tmp = ensemble.sel({'member': mb})
+                    im = plot2D.plot_field(tmp, ax=ax[i, j], vmin=vmin, vmax=vmax, cmap=cmap, dem=dem,
+                            isolevels=isolevels, add_colorbar=False)
+                    j = j + 1
+                    if j == 4:
+                        j = 0
+                        i = i + 1
+                for axis in ax.flatten():
+                    axis.margins(0.02)
+                    axis.set_title('')
+                    axis.set_xticks([])
+                    axis.set_yticks([])
+                    axis.set_xlabel('')
+                    axis.set_ylabel('')
+                fig.subplots_adjust(left=0.01, top=0.99, bottom=0.01, right=0.85, wspace=0.02, hspace=0.02)
+                cax = fig.add_axes([0.86, 0.02, 0.05, 0.96])
+                cb = fig.colorbar(im, cax=cax)
+                # cb.ax.tick_params(labelsize=20)
+
+                cb.set_label(ensemble.name, size=24)
+
+                return fig
+
+            else:
+                if members == 'mean':
+                    field = ensemble.mean(dim='member')
+                elif isinstance(members, int):
+                    field = ensemble.sel(member=members)
+
+                field.load()
+
+                if vmin is None:
+                    vmin = field.min().data
+                if vmax is None:
+                    vmax = field.max().data
+                gridlines = projection is not None
+                im = plot2D.plot_field(field, vmin=vmin, vmax=vmax, cmap=cmap, dem=dem,
+                              isolevels=isolevels, gridlines=gridlines, projection=projection)
+
+                return im
