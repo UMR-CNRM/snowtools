@@ -11,15 +11,13 @@ import subprocess
 import unittest
 
 import numpy as np
-from snowtools.tests.tempfolder import TestWithTempFolderWithLog
+from snowtools.tests.tempfolder import TestWithTempFolderWithLogWithChdir
 from snowtools.DATA import SNOWTOOLS_DIR
 from snowtools.DATA import TESTBASE_DIR
 from snowtools.DATA import REANALYSIS_DIR
 from snowtools.scores.list_scores import ESCROC_list_scores, scores_file, ensemble_scores_file
-from snowtools.scores.deterministic import SURFEX_dicvarnames
 from snowtools.scores.ensemble import ESCROC_EnsembleScores
 from snowtools.scores.generic import rankDiagram
-from snowtools.utils.obscsv import obscsv
 
 if not os.path.isdir(TESTBASE_DIR):
     SKIP = True
@@ -27,7 +25,7 @@ else:
     SKIP = False
 
 
-class ScorePlotTest(TestWithTempFolderWithLog):
+class ScorePlotTest(TestWithTempFolderWithLogWithChdir):
     """
     test the creation of score plots
     """
@@ -49,7 +47,7 @@ class ScorePlotTest(TestWithTempFolderWithLog):
                             '--fileobs={0}'.format(os.path.join(TESTBASE_DIR, "OBS_htn_2017122806_2018010606.csv"))])
 
 
-class ScoreCalcTest(TestWithTempFolderWithLog):
+class ScoreCalcTest(TestWithTempFolderWithLogWithChdir):
     """
     Test score calculation
     """
