@@ -236,6 +236,7 @@ CROUGH = "Z01D"
                        CFORCING_FILETYPE =    'NETCDF'   ,
                        CSURF_FILETYPE =       'NC '   ,
                        CTIMESERIES_FILETYPE = 'NETCDF'   ,
+                       NOUTPUT_NETCDF = 4 ,
                        LRESTART = .TRUE.                     ,
                        XTSTEP_OUTPUT = 10800.            ,
                        XTSTEP_SURF = 900.                ,
