@@ -20,7 +20,7 @@ dependencies = [
     'cartopy',
     'bronx',
     'footprints',
-    'epygram',
+    'epygram>=2.0',
     'packaging'
 ]
 requires-python = ">=3.6"

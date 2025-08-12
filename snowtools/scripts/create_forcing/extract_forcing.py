@@ -1,7 +1,7 @@
 
 import xarray as xr
 
-from snowtools.tools import xarray_preprocess as xrp
+from snowtools.tools import xarray_snowtools_backend
 from snowtools.utils.FileException import MassifGeometryException
 
 
@@ -35,8 +35,7 @@ def extract(forcing_in='FORCING_IN.nc', forcing_out='FORCING_OUT.nc', **kw):
     """
 
     # Chunk input forcing over `Number_of_points` for optimal performance.
-    ds = xr.open_dataset(forcing_in, engine='netcdf4', chunks={'Number_of_points': 1})
-    ds = xrp.preprocess(ds, decode_time=False)
+    ds = xr.open_dataset(forcing_in, engine='snowtools', chunks={'Number_of_points': 1})
 
     check_geometry(ds, forcing_in)
 

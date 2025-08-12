@@ -12,7 +12,7 @@ pyshp
 pandas
 cartopy
 footprints
-epygram
+epygram>=2.0
 packaging
 
 # Other requirements

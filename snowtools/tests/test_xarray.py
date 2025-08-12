@@ -5,7 +5,7 @@
 import unittest
 import os
 
-from snowtools.tools.xarray_backend import CENBackendEntrypoint  # Ignore "imported but unused" error
+from snowtools.tools import xarray_snowtools_backend  # Ignore "imported but unused" error
 from snowtools.DATA import TESTBASE_DIR
 
 import xarray as xr
@@ -25,7 +25,7 @@ class TestXarray(unittest.TestCase):
     def setUpClass(cls):
         # fichier au nouveau format de la chaîne
         path_new = os.path.join(TESTBASE_DIR, "PRO", 'pro_2018080306_2018080406.nc')
-        cls.ds = xr.open_dataset(path_new, engine='cen')
+        cls.ds = xr.open_dataset(path_new, engine='snowtools')
 
     def test_get_points_intargs(self):
         points = self.ds.where((self.ds.ZS == 2100) & (self.ds.slope == 20) & (self.ds.massif_num == 5), drop=True)
@@ -67,7 +67,7 @@ class TestOldPRO(unittest.TestCase):
     def setUpClass(cls):
         # fichier au nouveau format de la chaîne
         path_old = os.path.join(TESTBASE_DIR, "PRO", 'old_PRO_20180807032000_002400.nc')
-        cls.ds = xr.open_dataset(path_old, engine='cen')
+        cls.ds = xr.open_dataset(path_old, engine='snowtools')
 
     def test_get_points_intargs(self):
         points = self.ds.where((self.ds.ZS == 2100) & (self.ds.slope == 20) & (self.ds.massif_number == 5), drop=True)

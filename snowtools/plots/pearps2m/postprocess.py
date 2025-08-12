@@ -703,7 +703,7 @@ class EnsembleOperDiags(EnsembleDiags):
     list_q = [20, 50, 80]
 
     def __init__(self):
-        from snowtools.plots.maps.cartopy import Map_alpes, Map_pyrenees, Map_corse, Map_vosges, Map_jura, Map_central
+        from snowtools.plots.maps.cartopy_massifs import Map_alpes, Map_pyrenees, Map_corse, Map_vosges, Map_jura, Map_central
         super(self, EnsembleOperDiags).__init__()
 
     def alldiags(self):

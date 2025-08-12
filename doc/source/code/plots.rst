@@ -21,6 +21,7 @@ A new script, called ``proplotter`` allow to easily and quickly plot Crocus outp
    :maxdepth: 2
 
    plots-proplotter
+   plots-mapplotter
 
 Script for plotting results from operational simulations (s2m based on PEARP)
 -----------------------------------------------------------------------------
@@ -36,7 +37,8 @@ Classes or functions
 .. toctree::
    :maxdepth: 1
 
-   Classes to plot maps <plots-maps>
+   Classes to plot maps from data on Massif scale <plots-maps>
+   Functions to plot maps of gridded data <plots-maps-grid>
    Temporal plots and comparison tools <plots-temporal>
    Functions to plot snow stratigraphy <plots-strati>
    Classes to plot score diagrams <plots-scores.rst>
