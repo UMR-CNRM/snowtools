@@ -35,7 +35,7 @@ class Ensemble_Surfex_Reforecast(S2MTaskMixIn, Task):
     def process(self):
 
         if not hasattr(self.conf, "genv"):
-            self.conf.genv = 'uenv:cen.10@CONST_CEN'
+            self.conf.genv = 'uenv:cen.14@CONST_CEN'
         t = self.ticket
 
         if 'reforecast_2023' in self.conf.forcingid  or 'reforecast_2023' in self.conf.xpid:
