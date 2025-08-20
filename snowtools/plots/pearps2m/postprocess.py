@@ -242,7 +242,7 @@ class Ensemble(object):
         kwargs = dict()
 
         for m, member in enumerate(self.simufiles):
-            print("read " + varname + " for member" + str(m))
+            # print("read " + varname + " for member" + str(m))
             import datetime
             before = datetime.datetime.today()
 
@@ -258,7 +258,7 @@ class Ensemble(object):
                 self.ensemble[varname][:, :, m] = member.read_var(varname, **kwargs)
 
             after = datetime.datetime.today()
-            print(after - before)
+            # print(after - before)
 
         # Verrues (à éviter)
         if varname == 'NAT_LEV':
@@ -273,6 +273,8 @@ class Ensemble(object):
         :return: data read
         :rtype: numpy array
         """
+
+        kwargs = dict()
         if type(self.indpoints) is tuple:
             sections = []
             for indpoints in self.indpoints:
@@ -646,6 +648,7 @@ class EnsembleDiags(Ensemble):
         :param list_seuils: list of thresholds for each variable
         :type list_seuils: dict of iterables with variable names as keys
         """
+        print(list_var)
         for var in list_var:
             if var in list_seuils.keys():
                 for seuil in list_seuils[var]:
@@ -703,8 +706,7 @@ class EnsembleOperDiags(EnsembleDiags):
     list_q = [20, 50, 80]
 
     def __init__(self):
-        from snowtools.plots.maps.cartopy_massifs import Map_alpes, Map_pyrenees, Map_corse, Map_vosges, Map_jura, Map_central
-        super(self, EnsembleOperDiags).__init__()
+        super(EnsembleOperDiags, self).__init__()
 
     def alldiags(self):
         """
@@ -864,6 +866,9 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
         :param diroutput: output directory to save the maps
         """
 
+        from snowtools.plots.maps.cartopy_massifs import Map_alpes, Map_pyrenees, Map_corse, Map_vosges, Map_jura, \
+            Map_central
+
         map_generic = dict(alp=Map_alpes, pyr=Map_pyrenees, cor=Map_corse, jur=Map_jura, mac=Map_central,
                            vog=Map_vosges)
 
@@ -995,6 +1000,8 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
         :param diroutput: output directory to save the maps
         """
 
+        from snowtools.plots.maps.cartopy_massifs import Map_alpes, Map_pyrenees, Map_corse, Map_vosges, Map_jura, \
+            Map_central
         map_generic = dict(alp=Map_alpes, pyr=Map_pyrenees, cor=Map_corse, jur=Map_jura, vog=Map_vosges,
                            mac=Map_central)
 
@@ -1110,7 +1117,7 @@ class EnsemblePostproc(_EnsembleMassif):
         for name, dimension in self.simufiles[0].dataset.dimensions.items():
             self.outdataset.dataset.createDimension(
                 name, (len(dimension) if not dimension.isunlimited() else None))
-        print(self.outdataset.listdim())
+        # print(self.outdataset.listdim())
 
         # copy standard variables
         for name, variable in self.simufiles[0].dataset.variables.items():
@@ -1121,11 +1128,11 @@ class EnsemblePostproc(_EnsembleMassif):
                 # copy variable attributes without _FillValue since this causes an error
                 for att in self.simufiles[0].listattr(name):
                     if att != '_FillValue':
-                        print(self.simufiles[0].getattr(name, att))
+                        # print(self.simufiles[0].getattr(name, att))
                         self.outdataset.dataset[name].setncatts({att: self.simufiles[0].getattr(name, att)})
                 self.outdataset.dataset[name][:] = self.simufiles[0].dataset[name][:]
                 print('data copied')
-        print(self.outdataset.listvar())
+        # print(self.outdataset.listvar())
 
     def postprocess(self):
         """
@@ -1174,7 +1181,7 @@ class EnsemblePostproc(_EnsembleMassif):
                 attdict = self.simufiles[0].dataset[name].__dict__
                 attdict.pop('_FillValue', None)
                 self.outdataset.dataset[name].setncatts(attdict)
-                print(vardecile.shape)
+                # print(vardecile.shape)
                 self.outdataset.dataset[name][:] = vardecile[:]
 
     def median(self):
@@ -1185,6 +1192,7 @@ class EnsemblePostproc(_EnsembleMassif):
         print('entered median')
         for name, variable in self.simufiles[0].dataset.variables.items():
             if name in self.variables:
+                # print(name)
                 median = self.quantile(name, 50)
                 fillval = self.simufiles[0].getfillvalue(name)
                 x = self.outdataset.dataset.createVariable(name, variable.datatype, variable.dimensions,
