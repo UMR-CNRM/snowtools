@@ -4,9 +4,10 @@
 import unittest
 import os
 
-from snowtools.DATA import TESTBASE_DIR
+from snowtools.DATA import TESTBASE_DIR, SNOWTOOLS_DATA
 from snowtools.plots.pearps2m.postprocess import (EnsemblePostproc, EnsembleOperDiagsFlatMassif, EnsembleMassifPoint,
                                                   EnsembleStation)
+from snowtools.tools.emosCSG import postprocess_massif
 from snowtools.tests.tempfolder import TestWithTempFolderWithLog
 from bronx.stdtypes.date import Date
 
@@ -82,6 +83,15 @@ class TestEnsPP(TestWithTempFolderWithLog):
         assert ens.get_metadata()[0][0] == '73150401'
         ens.close()
 
+    @unittest.skipIf(SKIP, 'Test files not available')
+    def test_emosCSG(self):
+        ens = postprocess_massif()
+        ens.newsnow_var_name = 'DSN_T_ISBA'
+        ens.read_emos_param(filename=os.path.join(SNOWTOOLS_DATA, 'EMOS_HN.Rdata'))
+        ens.open(self.filelist)
+        ppfile = os.path.join(self.diroutput, "PP_emosCSG.nc")
+        ens.create_pp_file(ppfile)
+        ens.close()
 
     @classmethod
     def tearDownClass(cls):
