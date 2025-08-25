@@ -81,13 +81,10 @@ def lcscd(data, threshold):
       --> a custom "xr_ffill" method based on numpy only is used in this case
       TODO : compare the performances of both methods
 
-    * The "cumsum" method as be added to xarray objects after the current version 2023.3.0 installed by default
-     --> This script requires an upgrade of xarray (or the developpement of an alternative numpy-based solution)
-
-     NB :
-     ----
+    NB :
+    ----
     The use of xarray.DataArray object instead of numpy arrays is motivated by several reasons :
-    * The "resample" method used to resample hourly HTN values to daily one has not equivalent in prosimu / numpy
+    * The "resample" method used to resample hourly HTN values to daily ones has not equivalent in prosimu / numpy
     * The multi-season situation is managed using the "groupby" method that does not exist in numpy
     * The "cumsum" method exists in numpy (with the same core than the xarray's one), but with xarray
       the dimension order management is explicit (parsing a dimension name instead of an index number that can vary
@@ -97,6 +94,8 @@ def lcscd(data, threshold):
       (a bit of) formatting with numpy
     """
 
+    # Resample dataset into mean daily snow depth values
+    data = data.resample(time='1D').mean()
     # Select snow covered pixels
     data = xr.where(data > threshold, True, False)
     # Add "startseason" information
@@ -147,7 +146,11 @@ def lcscd(data, threshold):
         try:
             cs = gp.cumsum(dim='time')
         except AttributeError:
-            cs = gp.apply(lambda x: x.cumsum(dim='time'))
+            # cs = gp.apply(lambda x: x.cumsum(dim='time')) -> return a PendingDeprecationWarning
+            # replace with gp.map as below
+            def cumsumtime(c):
+                return c.cumsum(dim='time')
+            cs = gp.map(cumsumtime)
         # cs --> array([1, 1, 2, 3, 4, 4, 5, 6]) (numpy syntax : data.cumsum())
         # Apply custom "xr_ffill" function that does not depend on bottleneck
         npfill = xr_ffill(cs.where(data.values == 0), fillna=True)
@@ -155,12 +158,19 @@ def lcscd(data, threshold):
 
     # Compute longest snow cover duration for each group/season as the maximum value along the time dimension
     scd = cumul.groupby('startseason').max(dim='time').rename('scd_concurent')
+
     # Compute the snow melt out date for each group/season as the index of the maximum value along the time dimension
-    mod = (cumul.groupby('startseason').apply(lambda c: c.argmax(dim="time")) + 1).rename('mod')
+    # mod = (cumul.groupby('startseason').apply(lambda c: c.argmax(dim="time")) + 1).rename('mod')
+    # -> return a PendingDeprecationWarning
+    # replace with groupby.map as below
+    def argmaxtime(c):
+        return c.argmax(dim='time')
+    mod = (cumul.groupby('startseason').map(argmaxtime) + 1).rename('mod')
+
     # Return Nan when snow cover duration is 0 (no day with snow depth above threshold)
     mod = xr.where(scd.data == 0, np.nan, mod)
     # scd = (cumul.max(dim = 'time')).rename('scd_concurent')
     # mod = (cumul.argmax(dim = 'time') + 1).rename('mod')
     sod = (mod - scd).rename('sod')
-    sd  = data.where(data, np.nan).count(dim = 'time').rename('sd')
+    sd  = data.where(data, np.nan).groupby('startseason').count(dim='time').rename('sd')
     return xr.merge([scd, mod, sod, sd])

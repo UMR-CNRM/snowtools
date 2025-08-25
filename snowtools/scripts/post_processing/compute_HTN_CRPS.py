@@ -25,11 +25,13 @@ import matplotlib.pyplot as plt
 import xskillscore  # Requires an installation : pip install xskillscore
 # https://xskillscore.readthedocs.io/en/stable/api/xskillscore.crps_ensemble.html
 
-from snowtools.tools import xarray_snowtools_backend
+import snowtools  # noqa
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.plots.maps import plot2D
 from snowtools.scores import clusters
 from snowtools.plots.boxplots import violinplot
+
+__all__ = ('xarray_snowtools_backend',)  # Ignore F401 PEP8 syntax error
 
 
 members_map = dict(

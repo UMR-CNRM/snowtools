@@ -7,7 +7,7 @@ Tools for reading simulations : the ``utils`` module
 .. toctree::
    :maxdepth: 1
 
-   utils-prosimu.rst
+   utils-xarray.rst
    utils-massifs.rst
    utils-resources.rst
    utils-exceptions.rst
@@ -15,6 +15,7 @@ Tools for reading simulations : the ``utils`` module
    utils-s2mstandardfile.rst
    utils-git.rst
    utils-readsnowpack.rst
+   utils-prosimu.rst
 
 Other tools
 -----------

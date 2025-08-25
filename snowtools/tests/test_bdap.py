@@ -31,7 +31,7 @@ class BDAPTest(TestWithTempFolderWithChdir):
             model       = 'ANTILOPEH',
             date        = Date('2025052806'),
             ech         = '1',
-            parameter   = 'PRECIP',
+            parameter   = ['PRECIP'],
             level_type  = 'SOL',
             levels      = ['SOL'],
             grid        = 'FRANXL1S100',
@@ -53,7 +53,7 @@ class BDAPTest(TestWithTempFolderWithChdir):
             model       = 'PAROME',
             date        = Date('2025052806'),
             ech         = 1,
-            parameter   = 'WETBT',
+            parameter   = ['WETBT'],
             level_type  = 'HAUTEUR',
             levels      = ['2', '10', '20'],
             grid        = 'EURW1S100',
@@ -64,6 +64,29 @@ class BDAPTest(TestWithTempFolderWithChdir):
         reference = open(refname, 'r')
         output = open(request.rqst, 'r')
         assert reference.readlines() == output.readlines()
+
+#TODO : à décommenter quand le fichier 'reference_BDAP_request_multi_param.txt' aura été ajouté à la base de tests
+#    def test_multi_param(self):
+#        """
+#        Extraction_BDAP.py -b 2025052506 -e 2025052506 -d alp -p T WETBT -v HAUTEUR -l 2 10 20 -g EURW1S40 -m PAROME
+#        """
+#        from snowtools.scripts.extract.bdap.Extraction_BDAP import ExtractBDAP
+#        refname = 'reference_BDAP_request_multi_param.txt'
+#        request = ExtractBDAP(
+#            model       = 'PAROME',
+#            date        = Date('2025052806'),
+#            ech         = 1,
+#            parameter   = ['T', 'WETBT'],
+#            level_type  = 'HAUTEUR',
+#            levels      = ['2', '10', '20'],
+#            grid        = 'EURW1S100',
+#            coordinates = [46800, 43700, 5000, 7600],
+#            test        = True,
+#        )
+#        request.run()
+#        reference = open(refname, 'r')
+#        output = open(request.rqst, 'r')
+#        assert reference.readlines() == output.readlines()
 
     def test_pearome(self):
         """
@@ -76,7 +99,7 @@ class BDAPTest(TestWithTempFolderWithChdir):
             model       = 'PEAROME',
             date        = Date('2025052803'),
             ech         = 1,
-            parameter   = 'THETAPW',
+            parameter   = ['THETAPW'],
             level_type  = 'ISOBARE',
             levels      = ['1000', '850', '700', '500'],
             grid        = 'EURW1S40',
@@ -96,7 +119,7 @@ class BDAPTest(TestWithTempFolderWithChdir):
             model       = 'ANTILOPEH',
             date        = Date('2025052806'),
             ech         = '1',
-            parameter   = 'PRECIP',
+            parameter   = ['PRECIP'],
             level_type  = 'SOL',
             levels      = ['SOL'],
             grid        = 'EURAT01',
@@ -113,7 +136,7 @@ class BDAPTest(TestWithTempFolderWithChdir):
             model       = 'ANTILOPEH',
             date        = Date('20250528061500'),
             ech         = '1',
-            parameter   = 'PRECIP',
+            parameter   = ['PRECIP'],
             level_type  = 'SOL',
             levels      = ['SOL'],
             grid        = 'FRANXL1S100',
@@ -130,7 +153,7 @@ class BDAPTest(TestWithTempFolderWithChdir):
             model       = 'ANTILOPEH',
             date        = Date('20250528060000'),
             ech         = '15',
-            parameter   = 'PRECIP',
+            parameter   = ['PRECIP'],
             level_type  = 'SOL',
             levels      = ['SOL'],
             grid        = 'FRANXL1S100',

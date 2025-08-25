@@ -1,17 +1,13 @@
-
-import xarray
-from xarray.backends import BackendEntrypoint
-from xarray.backends.common import BACKEND_ENTRYPOINTS
-
+# -*- coding: utf-8 -*-
 
 """
 
-Introduction
-^^^^^^^^^^^^
+Introduction to xarray_snowtools_backend:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This module contains all elements defining the xarray entry points for SURFEX Input / Outputs in NetCDF format (methods
-`open_dataset`, `open_dataarray` and `open_mfdataset`, responsible for reading files and returning an xarray DataArray
-or Dataset Object) to be used within the snowtools package.
+The xarray_snowtools_backend module contains all elements defining the xarray entry points for SURFEX Input / Outputs
+in NetCDF format (methods `open_dataset`, `open_dataarray` and `open_mfdataset`, responsible for reading files and
+returning an xarray DataArray or Dataset Object) to be used within the snowtools package.
 
 These entry points are defined in the ``SnowtoolsBackendEntrypoint`` class inheriting from the xarray-native
 ``BackendEntrypoint`` class (https://docs.xarray.dev/en/stable/internals/how-to-add-new-backend.html).
@@ -53,32 +49,34 @@ These entry points are designed to deal with the following requirements :
 To use these entry points, the native xarray methods `open_dataset`, `open_dataarray` and `open_mfdataset` should
 simply be called with the keyword argument "engine='snowtools'" (see the "Standard usage" section of this doc).
 
+The "snowtools" backend is automatically made available when the snowtools package is imported.
+
 Standard usage:
 ^^^^^^^^^^^^^^^
 
-code-block:: python
+.. code-block:: python
 
+    import snowtools
     import xarray as xr
-    from snowtools.tools import xarray_snowtools_backend
 
     ds = xr.open_dataset(filename, engine='snowtools')
     ds = xr.open_mfdataset(list_of_files, engine='snowtools')
 
 
-HPC usage (until next xarray update from version 0.16.0) :
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+HPC usage (until next xarray update from version 0.16.0):
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-code-block:: python
+.. code-block:: python
 
     import xarray as xr
-    from snowtools.tools.xarray_snowtools_backend import preprocess
+    from snowtools.utils.xarray_snowtools_backend import preprocess
 
     ds = xr.open_dataset('INPUT.nc', decode_times=False)
     ds = preprocess(ds)
 
 
-Additionnal features
-^^^^^^^^^^^^^^^^^^^^
+Additionnal features:
+^^^^^^^^^^^^^^^^^^^^^
 
 The subsequent use of xarray directly enables the following functionalities of the former prosimu tool:
 
@@ -87,7 +85,7 @@ The subsequent use of xarray directly enables the following functionalities of t
 
       examples:
 
-      code-block:: python
+      .. code-block:: python
 
           ds.sel(time=slice('2025-06-12 00', '2025-06-14 12', xx=slice(6.5, 8.), yy=slice(43., 45.))
           ds.where((ds.massif_num == 3) & (ds.ZS.isin([900, 1800, 2700, 3600])) &
@@ -117,15 +115,23 @@ It also enables new functionalities not covered (or only partially) by prosimu :
 
 See xarray documentation (https://xarray.dev/) for more information, in particular :
 
-- xarray philosophy : https://docs.xarray.dev/en/stable/roadmap.html#roadmap
+    * xarray philosophy : https://docs.xarray.dev/en/stable/roadmap.html#roadmap
 
-- xarray internal design :
-https://docs.xarray.dev/en/stable/internals/internal-design.html#internal-design-lazy-indexing
+    * xarray internal design :
+      https://docs.xarray.dev/en/stable/internals/internal-design.html#internal-design-lazy-indexing
 
-- IO management with xarray : https://docs.xarray.dev/en/stable/user-guide/io.html
+    * IO management with xarray : https://docs.xarray.dev/en/stable/user-guide/io.html
 
 
 """
+
+from typing import (
+    Literal,
+)
+
+import xarray
+from xarray.backends import BackendEntrypoint
+from xarray.backends.common import BACKEND_ENTRYPOINTS
 
 # WARNING : the following line changes the default behavior of ALL subsequent xarray `open_*`
 # by forcing the use of the custom `SnowtoolsBackendEntrypoint` entry point.
@@ -158,18 +164,18 @@ def preprocess(ds, mapping=dict(), decode_time=True, transpose=False):
     Direct usage example:
     ^^^^^^^^^^^^^^^^^^^^^
 
-    code-block:: python
+    .. code-block:: python
 
         import xarray as xr
 
-        from snowtools.tools.xarray_snowtools_backend import preprocess
+        from snowtools.utils.xarray_snowtools_backend import preprocess
 
         ds = xr.open_dataset('INPUT.nc', decode_times=False)
         ds = preprocess(ds)
 
 
     :param ds: xarray object to preprocess
-    :param ds: xarray Dataset or Dataarray
+    :type ds: xarray Dataset or Dataarray
     :param mapping: User-defined dictionnary to map variable or dimension names (it will be used as a complement to
                     the default mapping dictionnaries).
     :type mapping: dict
@@ -202,7 +208,7 @@ def update_varname(ds, mapping):
     Map variable names if necessary / possible
 
     :param ds: xarray object to preprocess
-    :param ds: xarray Dataset or Dataarray
+    :type ds: xarray Dataset or Dataarray
     :param mapping: User-defined dictionnary to map variable or dimension names (it will be used as a complement to
                     the default mapping dictionnaries).
     :type mapping: dict
@@ -210,6 +216,8 @@ def update_varname(ds, mapping):
     # Do not directly modify *variables_map* in case several calls to "preprocess" are made from
     # the same session
     if isinstance(ds, xarray.core.dataarray.DataArray):
+        # Set orginal Array name as attribute for backtracking
+        ds.assign_attrs(original_name=ds.name)
         if ds.name in variables_map:
             ds = ds.rename(variables_map[ds.name])
         if ds.name in mapping:
@@ -223,6 +231,12 @@ def update_varname(ds, mapping):
         user_mapping = {key: mapping[key] for key in list(ds.keys()) if key in mapping.keys()}
         ds = ds.rename(user_mapping)
 
+        # Set orginal dimension names as attribute for backtracking
+        update_dict.update(user_mapping)
+        if len(update_dict) > 0:
+            reverse_map = {v: k for k, v in update_dict.items()}
+            ds = ds.assign_attrs(original_variable_name=reverse_map)
+
     return ds
 
 
@@ -233,7 +247,7 @@ def update_dimname(ds, mapping):
     # TODO : gérer les cas où le nom cible existe déjà
 
     :param ds: xarray object to preprocess
-    :param ds: xarray Dataset or Dataarray
+    :type ds: xarray Dataset or Dataarray
     :param mapping: User-defined dictionnary to map variable or dimension names (it will be used as a complement to
                     the default mapping dictionnaries).
     :type mapping: dict
@@ -247,6 +261,12 @@ def update_dimname(ds, mapping):
     user_mapping = {key: mapping[key] for key in list(ds.dims) if key in mapping.keys()}
     ds = ds.rename(user_mapping)
 
+    # Set orginal dimension names as attribute for backtracking
+    update_dict.update(user_mapping)
+    if len(update_dict) > 0:
+        reverse_map = {v: k for k, v in update_dict.items()}
+        ds = ds.assign_attrs(original_dimension_name=reverse_map)
+
     return ds
 
 
@@ -258,7 +278,7 @@ def check_encoding(ds):
     information.
 
     :param ds: xarray object to preprocess
-    :param ds: xarray Dataset or Dataarray
+    :type ds: xarray Dataset or Dataarray
     """
     if isinstance(ds, xarray.core.dataarray.Dataset):
         for var in ds.keys():
@@ -277,7 +297,7 @@ def decode_time_dimension(ds):
     Manually decode time variable when xarray fails to do it properly (SURFEX outputs)
 
     :param ds: xarray object to preprocess
-    :param ds: xarray Dataset or Dataarray
+    :type ds: xarray Dataset or Dataarray
 
     """
     if 'time' in list(ds.coords):
@@ -297,12 +317,13 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
     This is done by applying a preprocess (see the "preprocess" method) to the
     data before returning the xarray dataset or dataarray object.
 
-    Usage :
+    Usage:
     ^^^^^^
 
-    code-block:: python
+    .. code-block:: python
 
-        from snowtools.tools import xarray_snowtools_backend
+        import snowtools
+        import xarray
 
         ds = xr.open_dataset(filename, engine='snowtools')
 
@@ -317,9 +338,12 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
         """
         Snowtools-specific version of the xarray's "open_dataset" method, which calls the native method
         and carries out a preprocessing of the data before returning the dataset object.
+        If a list of paths is provided, the files are automatically opened with "open_mfdataset".
+        WARNING : the direct use of *open_mfdataset* is recomended whenever you are sure to deal with more
+        than one file.
 
-        :param filename_or_obj: Path of the file to read (similar to the the argument in native method)
-        :type filename_or_obj: str, Path, file_like or DataStore
+        :param filename_or_obj: Pathi or list of paths of the file(s) to read
+        :type filename_or_obj: str, Path, file_like, DataStore or nested sequence of paths
         :mapping: User-defined dictionnary to map variable or dimension names. It can be used as a complement to
                   the default mapping dictionnary in case of a code based on variable / dimension names different than
                   the standard ones (for example a code written after a SURFEX update).
@@ -327,9 +351,12 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
         :type mapping: dict
 
         """
-        ds = xarray.open_dataset(filename_or_obj,
-                engine='netcdf4', decode_times=False, **kw).pipe(preprocess, mapping=mapping)
-        return ds
+        if isinstance(filename_or_obj, list):
+            return self.open_mfdataset(filename_or_obj, mapping=mapping, **kw)
+        else:
+            ds = xarray.open_dataset(filename_or_obj,
+                    engine='netcdf4', decode_times=False, **kw).pipe(preprocess, mapping=mapping)
+            return ds
 
     open_dataset_parameters = ["filename_or_obj"]
 
@@ -352,24 +379,47 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
                 **kw).pipe(preprocess, mapping=mapping)
         return da
 
-    def open_mfdataset(self, paths, *, drop_variables=None, mapping=dict(), **kw):
+    def open_mfdataset(self, paths, mapping=dict(),
+            drop_duplicates: (str | Literal["all"] | None) = None, **kw):
         """
         Snowtools-specific version of the xarray's "open_mfdataset" method, which calls the native method
         and carries out a preprocessing of the data before returning the dataset object.
 
         :param paths: List of paths of the files to read (similar to the the argument in native method)
         :type paths: str, Path, nested sequence of paths
-        :mapping: User-defined dictionnary to map variable or dimension names. It can be used as a complement to
+        :param mapping: User-defined dictionnary to map variable or dimension names. It can be used as a complement to
                   the default mapping dictionnary in case of a code based on variable / dimension names different than
                   the standard ones (for example a code written after a SURFEX update).
                   This is a snowtools-specific argument.
         :type mapping: dict
+        :param drop_duplicates: drop duplicate values along a given dimension (in this case, "drop_duplicates" should
+                  be a valid dimension name) or all dimensions at once (drop_duplicates="all"), keeping only the
+                  first value (default behavior of the native "drop_duplicates" method). Default=None does
+                  nothing (standard "open_mfdataset" behavior).
+        :type drop_duplicates: str or Sequence(str) or None
 
         """
         from functools import partial
         partial_func = partial(preprocess, mapping=mapping)
+
+        # TODO : change default of "data_vars" kw to 'minimal' to avoid the addition of time dimension to
+        # time-independent variables ?
+        # UPDATE : This will be the default value in the future versions of xarray :
+        # https://github.com/pydata/xarray/issues/8778
+
         ds = xarray.open_mfdataset(paths,
                 engine='netcdf4', decode_times=False, preprocess=partial_func, **kw)
+
+        if drop_duplicates is not None:
+            # Remove duplicate dimension values that were created when the datasets were concatenated
+            if drop_duplicates == 'all':
+                # Remove all existing duplicate dimension values
+                ds = ds.drop_duplicates(...)
+            else:
+                if drop_duplicates in list(ds.dims):
+                    ds = ds.drop_duplicates(drop_duplicates)
+                else:
+                    print(f"WARNING : dimension {drop_duplicates} does not exists")
 
         return ds
 

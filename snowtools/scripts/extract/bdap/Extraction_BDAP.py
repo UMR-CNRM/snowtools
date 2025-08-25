@@ -290,7 +290,7 @@ def parse_command_line():
 
     # WARNING : the 'parameters' and 'level-type' arguments depend on each other.
     # TODO : find a way (a very complex dict ?) ton ensure consistency
-    parser.add_argument('-p', '--parameter', help='Parameter to extract', required=True)
+    parser.add_argument('-p', '--parameter', help='Parameter to extract', nargs='+', required=True)
 
     parser.add_argument('-v', '--level_type', required=True,
                         choices=['ISO_WETBT', 'SOL', 'HAUTEUR', 'ISOBARE', 'ISO_T', 'ISO_TPW'],
@@ -301,7 +301,7 @@ def parse_command_line():
                         help='BDAP grid name from which to extract data')
 
     parser.add_argument('-d', '--domain', type=str, required=True,
-                        help='Extraction domain')
+                        help='Name of the extraction domain')
 
     parser.add_argument('-c', '--coordinates', nargs=4, type=float, default=None,
                         help='list of min/max coordinates to extract, format:'
@@ -366,7 +366,8 @@ def speedtest(function):
         t0 = time.time()
         result = function(*args, **kw)
         t1 = time.time()
-        monitoring = f'monitoring_{model}_{parameter}_{level_type}_{grid}_{datebegin.ymdh}_{dateend.ymdh}.txt'
+        param_str = "_".join(parameter)
+        monitoring = f'monitoring_{model}_{param_str}_{level_type}_{grid}_{datebegin.ymdh}_{dateend.ymdh}.txt'
         extraction_time = (t1 - t0) / 60
         with open(monitoring, 'w') as f:
             f.write(f"Extraction time : {extraction_time} minutes \n")
@@ -441,14 +442,14 @@ class LeadTimeError(Exception):
 
 class ExtractBDAP(object):
 
-    def __init__(self, model: str, date: str or list, ech: str or list, parameter: str, level_type: str,
-            levels: list, grid: str, coordinates: tuple, dlat=None, dlon=None, interpolation=False, test=False,
+    def __init__(self, model: str, date: str or list, ech: str or list, parameter: list, level_type: str,
+            levels: list, grid: str, coordinates: tuple | None, dlat=None, dlon=None, interpolation=False, test=False,
             member=None):
 
         self.model          = model
         self.date           = date
         self.ech            = ech
-        self.parameter      = parameter
+        self.parameter      = ' '.join(parameter)
         self.level_type     = level_type
         self.levels         = levels
         self.grid           = grid.upper()
@@ -484,16 +485,20 @@ class ExtractBDAP(object):
         f.write(f'#MOD {self.MOD}\n')  # BDAP model name (see doc)
         f.write(f'#PARAM {self.parameter}\n')  # paramater
         f.write(f'#Z_REF {self.grid}\n')  # BDAP grib name (see doc)
-        if self.interpolation:
-            f.write("#Z_EXTR INTERPOLATION\n")  # Interpolation on a user-defined grid
-            # Coordonées de la grille de sortie (N S WA E) :
-            f.write('#Z_GEO ' + ' '.join(self.coordinates) + '\n')
-            # f.write('#Z_STP ' + ' '.join(dl[self.grid]) + '\n')  # Pas en lat/lon de la grille de sortie
-            f.write(f'#Z_STP {self.dlat} {self.dlon} \n')  # Pas en lat/lon de la grille de sortie (TODO : check order)
+        if self.coordinates is None:
+            # Extraction d'une grille complète
+            f.write("#Z_EXTR GRILLE\n")
         else:
-            f.write("#Z_EXTR SOUS_GRILLE\n")
-            f.write(f'#Z_GEO {self.j1} {self.j2} {self.i1} {self.i2}\n')
-            f.write('#Z_STP 1 1\n')
+            if self.interpolation:
+                f.write("#Z_EXTR INTERPOLATION\n")  # Interpolation on a user-defined grid
+                # Coordonées de la grille de sortie (N S WA E) :
+                f.write('#Z_GEO ' + ' '.join([str(x) for x in self.coordinates]) + '\n')
+                # f.write('#Z_STP ' + ' '.join(dl[self.grid]) + '\n')  # Pas en lat/lon de la grille de sortie
+                f.write(f'#Z_STP {self.dlat} {self.dlon} \n')  # Pas en lat/lon de la grille de sortie
+            else:
+                f.write("#Z_EXTR SOUS_GRILLE\n")
+                f.write(f'#Z_GEO {self.j1} {self.j2} {self.i1} {self.i2}\n')
+                f.write('#Z_STP 1 1\n')
         # Use a list of dates / ech
         # WARNING : there is a limit on the number of fields that can be extracted with one command.
         # The BDAP documentation recommends to rather loop over dates and lead times ("ech")
@@ -592,7 +597,8 @@ class ExtractBDAP(object):
                 print('Removing empty file {0:s}'.format(self.gribname))
                 os.remove(self.gribname)
 
-        self.get_subgrid()
+        if not self.interpolation:
+            self.get_subgrid()
         result = self.extract_from_bdap()
 
         if result:
@@ -680,8 +686,11 @@ if __name__ == "__main__":
     if args.coordinates is not None:
         coordinates = [int(x * 1000) for x in args.coordinates]
     else:
+        # TODO : gérer le cas ou "domain" est une grille complète
         if domain in known_domains.keys():
             coordinates = [int(x) for x in known_domains[domain]]
+        elif domain in known_grids.keys():
+            coordinates = None
         else:
             raise KeyError(f'Domain {domain} unknown, please provide associated coordinates')
     parameter   = args.parameter
@@ -702,17 +711,19 @@ if __name__ == "__main__":
     else:
         dt = args.pdt
 
+    param_str = '_'.join(parameter)
+
     if args.workdir is None:
-        workdir = os.path.join(os.environ['HOME'], 'workdir', f'extraction_{model.upper()}', domain, parameter)
+        workdir = os.path.join(os.environ['HOME'], 'workdir', f'extraction_{model.upper()}', domain, param_str)
     else:
         workdir = args.workdir
     print("Workdir = ", workdir)
     goto(workdir)
 
     if dateend != datebegin:  # The extraction covers a period
-        outname = f'{model}_{parameter}_{level_type}_{grid}_{datebegin.ymdh}_{dateend.ymdh}.nc'
+        outname = f'{model}_{param_str}_{level_type}_{grid}_{datebegin.ymdh}_{dateend.ymdh}.nc'
     else:  # The extraction is associated to a date
-        outname = f'{model}_{parameter}_{level_type}_{grid}_{datebegin.ymdh}.nc'
+        outname = f'{model}_{param_str}_{level_type}_{grid}_{datebegin.ymdh}.nc'
     if not os.path.exists(outname):
         execute()
 
@@ -729,8 +740,6 @@ if __name__ == "__main__":
         if kind is None:
             if level_type.startswith('ISO_'):
                 kind = level_type
-            elif level_type == 'HAUTEUR':
-                kind = parameter
             else:
                 print('FOOTPRINT ERROR: Missing *kind* footprint (see -k / --king argument)')
                 raise NotImplementedError

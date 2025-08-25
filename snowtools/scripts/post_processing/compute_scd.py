@@ -17,7 +17,7 @@ import sys
 import xarray as xr
 import argparse
 
-from snowtools.tools import xarray_snowtools_backend
+import snowtools  # noqa
 from snowtools.tools.SnowCoverDuration import lcscd
 
 
@@ -60,7 +60,7 @@ def execute(subdir='', threshold=0.2):
     """
     proname = os.path.join(subdir, 'PRO.nc')
     pro = xr.open_dataset(proname, engine='snowtools')
-    diag = lcscd(pro.DSN_T_ISBA.resample(time='1D').mean(), threshold)
+    diag = lcscd(pro.DSN_T_ISBA, threshold)
 
     # Add 'ZS' (DEM) variable
     if 'ZS' in pro.keys():

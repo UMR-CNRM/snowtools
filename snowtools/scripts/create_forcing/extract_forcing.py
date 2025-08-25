@@ -1,7 +1,7 @@
 
 import xarray as xr
 
-from snowtools.tools import xarray_snowtools_backend
+import snowtools  # noqa
 from snowtools.utils.FileException import MassifGeometryException
 
 
