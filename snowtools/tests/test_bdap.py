@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+"""
+Tests for BDAP esxtraction.
+Do not test the actual extraction of the data but only the preparation of the
+text file that is submitted for the extraction.
+"""
+
 import os
 import unittest
 import glob
