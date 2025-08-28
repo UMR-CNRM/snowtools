@@ -31,7 +31,7 @@ class surfexrun(object):
     addmask = False
 
     def __init__(self, datebegin, dateend, forcingpath, diroutput,
-                 namelist=os.path.join(SNOWTOOLS_DIR, 'DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam'),
+                 namelist=os.path.join(SNOWTOOLS_DIR, 'DATA/OPTIONS_V9_reference.nam'),
                  execdir=".", onlyextractforcing = False,
                  threshold=-999, workdir=None, datespinup=None, geolist=[], addmask=None, s2mcommand=None):
 

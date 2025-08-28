@@ -12,6 +12,7 @@ from snowtools.tests.s2m_instance import s2mTest
 from snowtools.DATA import SNOWTOOLS_DATA
 from snowtools.DATA import TESTBASE_DIR
 
+_here = os.path.dirname(os.path.realpath(__file__))
 
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "FORCING",
                                                  "FORCING_test_massif.nc")),
@@ -42,7 +43,7 @@ class s2m2DTest(s2mTest):
 
         super(s2m2DTest, self).setUp()
         forcingtest = os.path.join(TESTBASE_DIR, "FORCING", "FORCING_test_2d.nc")
-        namelist = os.path.join(SNOWTOOLS_DATA, "OPTIONS_test_2d.nam")
+        namelist = os.path.join(_here, 'namelists/OPTIONS_test_2d.nam')
         # If the test is run at CEN, it can run PGD with available databases.
         # Otherwise, we do not test the PGD step and only take a PGD test file.
         if not self.runatcen:

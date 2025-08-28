@@ -212,21 +212,14 @@
                    NDAY   = 01,
                    XTIME  = 21600. 
 /
-&NAM_PREP_ISBA
-                   XUNIF_HUG_SOIL(1) = 0.1,
-                   XUNIF_HUG_SOIL(2) = 0.1,
-                   XUNIF_HUG_SOIL(3) = 0.1,
-                   XUNIF_HUGI_SOIL(1) = 0.001,
-                   XUNIF_HUGI_SOIL(2) = 0.001,
-                   XUNIF_HUGI_SOIL(3) = 0.001,
-                   NINFILES=3,
+&NAM_PREP_ISBA     XUNIF_HUG_SOIL = 0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10
                    CFILE_TG="init_TG.nc",
-                   CTYPE_TG="NETCDF"
+                   CTYPE_TG="NETCDF",
+                   NINFILES=20
 /
 &NAM_PREP_ISBA_SNOW    CSNOW = 'CRO',
                        NSNOW_LAYER = 50, 
                        LSNOW_FRAC_TOT = .TRUE.
-
 /
 &NAM_IO_OFFLINE        LPRINT  = .TRUE.,                       
                        CFORCING_FILETYPE =    'NETCDF'   ,
@@ -234,7 +227,7 @@
                        CTIMESERIES_FILETYPE = 'NETCDF'   ,
                        NOUTPUT_NETCDF = 4 ,
                        LRESTART = .TRUE.                     ,
-                       XTSTEP_OUTPUT = 21600.            ,
+                       XTSTEP_OUTPUT = 86400.            ,
                        XTSTEP_SURF = 900.                ,
                        LWRITE_COORD = .TRUE.
 /
@@ -261,12 +254,11 @@
                        LSLOPE = .TRUE.
 /
 &NAM_ISBA_SNOWn
-  CSNOWDRIFT='NONE'
+  CSNOWDRIFT='VI13'
   LSNOWDRIFT_SUBLIM= .FALSE.
   LSNOW_ABS_ZENITH= .FALSE.
   CSNOWMETAMO='B21'
   CSNOWRAD='B92'
-  LSNOWPAPPUS=.TRUE.
 /
 &NAM_SURF_SNOW_CSTS
   XALBICE1=0.38
@@ -276,6 +268,7 @@
   XZ0ICEZ0SNOW=10.
   XVAGING_GLACIER=900.
   XVAGING_NOGLACIER=60.
+  X_RI_MAX=0.026
 /
 &NAM_WRITE_SURF_ATM
   LSPLIT_PATCH = .FALSE.
@@ -285,5 +278,12 @@
   LSNOWDIMNC = .TRUE.
   LRESETCUMUL = .TRUE.
   LSELECT= .TRUE.
-  CSELECT='time','ZS','aspect','slope','massif_num','station','TG1'
+  CSELECT='time','ZS','aspect','slope','massif_num','station','TG1','WG1','WGI1','TG4',
+'RAINF_ISBA','DRAIN_ISBA','RUNOFF_ISBA','TALB_ISBA','TS_ISBA',
+'WSN_T_ISBA','DSN_T_ISBA','EVAP_ISBA','SNOMLT_ISBA',
+'SD_1DY_ISBA','SD_3DY_ISBA','SD_5DY_ISBA','SD_7DY_ISBA','SWE_1DY_ISBA','SWE_3DY_ISBA','SWE_5DY_ISBA','SWE_7DY_ISBA',
+'RAMSOND_ISBA','WET_TH_ISBA','REFRZTH_ISBA',
+'RN_ISBA','LE_ISBA','H_ISBA','GFLUX_ISBA',
+'SWD_ISBA','SWU_ISBA','LWD_ISBA','LWU_ISBA',
+'NAT_LEV','AVA_TYP','ACC_LEV','DEP_HIG','DEP_MOD'
 /

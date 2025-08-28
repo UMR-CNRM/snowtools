@@ -34,6 +34,7 @@ EXAMPLES OF USE
    python3 Met2Netcdf.py -b 2000080106 -e 2001080106
    python3 Met2Netcdf.py -b 1993080106 -e 2023080106 -o MAJ_MetInsitu.nc
    python3 Met2Netcdf.py -b 2000080106 -e 2001080106 --one_file -p partial_MET.txt
+   python3 Met2Netcdf.py -b 2023080106 -e 2024080106 -c --one_file -p /rd/cenfic3/cenobs/mesure_data/col_de_porte/met/MET_2023_2024_fmt
 
 Options:
 
@@ -68,7 +69,7 @@ from bronx.meteo.constants import T0
 # MUST CHANGE EACH YEAR:
 #
 # year of last MET file
-annee_last_MET = 2023
+annee_last_MET = 2024
 #
 # END OF CHANGE
 ###############
@@ -76,6 +77,7 @@ annee_last_MET = 2023
 #
 # CDP60mn starting day
 annee_last_cdp60mn = str(annee_last_MET) + '080100'
+annee_last_cdp60mn = '2023080100'
 path_safran = '/rd/cenfic3/cenmod/era40/vortex/s2m/postes/reanalysis/meteo'
 path_met = '/rd/cenfic3/cenobs/mesure_data/col_de_porte/met/'
 pas_par_defaut = 3600
@@ -184,6 +186,7 @@ def recup_cdp(date_time_deb, date_time_fin):
     # Structure des bases: cdp60mn pour l'année en cours et un peu plus. Ensuite, mis dans cdp9293, cdp9394 etc... jusqu'à cdp1415
     # A partir de la saison 15-16, chgt de nom de base cdp60mn_1516 et changement de nom des variables
     date_change_2015 = check_and_convert_date(str(2015080100))  # EN DUR et fixe
+    date_change_nomvent = check_and_convert_date(str(2023052214))  # EN DUR et fixe
     date_change_base60mn = check_and_convert_date(annee_last_cdp60mn)
 
     ###############################################################################################
@@ -209,10 +212,16 @@ def recup_cdp(date_time_deb, date_time_fin):
         nom_var = 'baro,dvent'
     elif (date_time_fin > date_1er_aout) and date_time_fin.year <= date_change_base60mn.year:
         nom_base = 'cdp60mn_' + str(date_time_fin.year - 1)[2:4] + str(date_time_fin.year)[2:4]
-        nom_var = 'p_ptb330_v1,dd_meca_10mn_10m'
+        if date_time_fin.year <= date_change_nomvent:
+            nom_var = 'p_ptb330_v1,dd_meca_10mn_10m'
+        else:
+            nom_var = 'p_ptb330_v1,dd_us_10mn_10m'
     else:
         nom_base = 'cdp60mn'
-        nom_var = 'p_ptb330_v1,dd_meca_10mn_10m'
+        if date_time_fin.year <= date_change_nomvent:
+            nom_var = 'p_ptb330_v1,dd_meca_10mn_10m'
+        else:
+            nom_var = 'p_ptb330_v1,dd_us_10mn_10m'
 
     # command est une requete SQL (en string)
     command = "select dat," + nom_var + " from bdniv." + nom_base + " where dat between '{0}' and '{1}' \
@@ -604,6 +613,7 @@ def create_netcdf(output, xr, Tableau_valeurs_nbpoint):
                                    'Near Surface Air Temperature', 'Wind Speed', 'Wind Direction']
 
     Liste_nom_nbpoint = ['LAT', 'LON', 'UREF', 'ZREF', 'ZS', 'aspect', 'slope', 'station']
+    Liste_type_nbpoint = ['f', 'f', 'f', 'f', 'f', 'f', 'f', 'i4']
     Liste_unite_nbpoint = ['degrees_north', 'degrees_east', 'm', 'm', 'm', 'degrees from north',
                            'degrees from horizontal', '']
     Liste_longname_nbpoint = ['latitude', 'longitude', 'Reference_Height_for_Wind', 'Reference_Height', 'altitude',
@@ -617,7 +627,7 @@ def create_netcdf(output, xr, Tableau_valeurs_nbpoint):
         fic_nc[:] = xr.data[:,i]
 
     for i in range(len(Liste_nom_nbpoint)):
-        fic_nc = fic_forcing.createVariable(Liste_nom_nbpoint[i], 'f', ('Number_of_points',), fill_value=-9999999)
+        fic_nc = fic_forcing.createVariable(Liste_nom_nbpoint[i], Liste_type_nbpoint[i], ('Number_of_points',), fill_value=-9999999)
         fic_nc.units = Liste_unite_nbpoint[i]
         fic_nc.long_name = Liste_longname_nbpoint[i]
         fic_nc[:] = Tableau_valeurs_nbpoint[i]
@@ -658,9 +668,9 @@ if __name__ == '__main__':
     Tab_point, name = recup_donnees_site(site)
     message_accueil(option_recup, name)
     if args.one_file:
+        xr, date_beg, date_end = open_met_file_and_create_xr(args.path_MET, option_recup, site)
         if pathout == 'out_met2netcdf.nc':
             pathout = 'FORCING_'+ date_beg.ymdh + '_' + date_end.ymdh + '.nc'
-        xr, date_beg, date_end = open_met_file_and_create_xr(args.path_MET, option_recup, site)
         create_netcdf(pathout, xr, Tab_point)
     else:
         xr_compil = compilation_ttes_periodes(date_entree_debut, date_entree_fin, site, option_recup)

@@ -191,7 +191,7 @@ class Surfex_command(_S2M_command):
 
         parser_research_main.add_argument("-n", "--namelist",
                                           type=str, dest="namelist",
-                                          default=SNOWTOOLS_DIR + '/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC.nam',
+                                          default=SNOWTOOLS_DIR + '/DATA/OPTIONS_V9_reference.nam',
                                           help="Path of the mother namelist")
 
         parser_research_init = parser_research.add_argument_group('Initialization set up')

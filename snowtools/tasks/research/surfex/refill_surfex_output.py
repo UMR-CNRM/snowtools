@@ -40,9 +40,6 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
 
         t = self.ticket
 
-        if not hasattr(self.conf, "genv"):
-            self.conf.genv = 'uenv:cen.10@CONST_CEN'
-
         # Definition of geometries, safran xpid/block and list of dates from S2MTaskMixIn methods
         list_geometry = self.get_list_geometry(meteo=self.conf.meteo)
         source_safran, block_safran = self.get_source_safran(meteo=self.conf.meteo)
@@ -64,8 +61,6 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             self.conf.dailyprep = False
         if not hasattr(self.conf, "simu2D"):
             self.conf.simu2D = False
-        if hasattr(self.conf, "simu2D"):
-            self.conf.genv2D = 'uenv:pgd.002@SURFEX_CEN'
 
         if 'early-fetch' in self.steps:
 
