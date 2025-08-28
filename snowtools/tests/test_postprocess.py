@@ -4,6 +4,8 @@
 import unittest
 import os
 
+import numpy as np
+
 from snowtools.DATA import TESTBASE_DIR, SNOWTOOLS_DATA
 from snowtools.plots.pearps2m.postprocess import (EnsemblePostproc, EnsembleOperDiagsFlatMassif, EnsembleMassifPoint,
                                                   EnsembleStation)
@@ -32,6 +34,26 @@ class TestEnsPP(TestWithTempFolderWithLog):
         ens = EnsemblePostproc(['SWE_1DY_ISBA'], self.filelist, outdir = self.diroutput)
         # do postprocessing
         ens.postprocess()
+        # assert False
+
+    @unittest.skipIf(SKIP, 'Test files not available')
+    def test_ens_pp_algo_emos_csg_nonorm(self):
+        ens = EnsemblePostproc(['SWE_1DY_ISBA'], self.filelist, outdir= self.diroutput,
+                               outfilename='PRO_pp_csg.nc',
+                               emosmethod=EnsemblePostproc.emos_csg_nonorm_allstations_newsnow)
+        # print(ens.emosmethod)
+        # ens.postprocess()
+        ens.create_outfile()
+        ens.init_outfile()
+        ens.deciles()
+        print(ens.outdataset.dataset['SWE_1DY_ISBA'][:])
+        self.assertAlmostEqual(ens.outdataset.dataset['SWE_1DY_ISBA'][1, 0, 8],0.00312186 )
+        self.assertEqual(ens.outdataset.dataset['SWE_1DY_ISBA'][1, 0, 6], 0.)
+
+        ens.outdataset.close()
+        ens.close()
+
+        # assert False
 
     @unittest.skipIf(SKIP, 'Test files not available')
     def test_ens_pp_stats(self):

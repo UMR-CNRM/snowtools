@@ -16,6 +16,7 @@ usage: python postprocess.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]
 import sys
 import locale
 import os
+import datetime
 from optparse import OptionParser
 from collections import Counter, defaultdict
 
@@ -23,13 +24,15 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.style
+import rpy2.robjects as robjects
+from scipy.stats import gamma
 
 from snowtools.utils.prosimu import prosimu
 from snowtools.utils.dates import check_and_convert_date, pretty_date
 from snowtools.plots.temporal.chrono import spaghettis_with_det, spaghettis
 from snowtools.utils.infomassifs import infomassifs
 from snowtools.utils.FileException import DirNameException
-from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR
+from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR, SNOWTOOLS_DATA
 
 from bronx.stdtypes.date import today
 from bronx.syntax.externalcode import ExternalCodeImportChecker
@@ -156,6 +159,13 @@ class Ensemble(object):
         """
         """
         self.ensemble = {}  #: data dict with variable names as keys and np.arrays as values
+        self.simufiles = []  #: list of prosimu objects with simulation file
+        self.nech = None  #: number of time steps (forecast steps). type int
+        self.nmembers = None #: number of members type int
+        self.time = None #: :ivar ~.time: time variable from the first simulation file :vartype ~.time: numpy array
+        self.indpoints = [] #: :ivar indpoints: list with spatial indices :vartype indpoints: list
+        self.npoints = None #: :ivar npoints: total number of spatial points :vartype npoints: int
+
 
     @property
     def spatialdim(self):
@@ -168,23 +178,10 @@ class Ensemble(object):
 
         :param listmembers: list of ensemble members (filenames)
         :type listmembers: list
-        :ivar simufiles: list of prosimu objects with simulation file
-        :vartype simufiles: list
         :ivar inddeterministic: index of the deterministic member
         :vartype inddeterministic: int
-        :ivar nmembers:  number of members
-        :vartype nmemeber: int
-        :ivar ~.time: time variable from the first simulation file
-        :vartype ~.time: numpy array
-        :ivar indpoints: list with spatial indices
-        :vartype indpoints: list
-        :ivar npoints: total number of spatial points
-        :vartype npoints: int
-        :ivar nech: number of time steps (forecast steps)
-        :vartype nech: int
         """
         print(listmembers)
-        self.simufiles = []
         for m, member in enumerate(listmembers):
             p = prosimu(member)
             if m == 0:
@@ -198,7 +195,6 @@ class Ensemble(object):
         self.nmembers = len(self.simufiles)
         print(self.nmembers)
         self.time = self.simufiles[0].readtime()
-
         self.indpoints = self.select_points()
         self.npoints = self.get_npoints()
 
@@ -286,7 +282,7 @@ class Ensemble(object):
             kwargs[self.spatialdim] = self.indpoints
             return self.simufiles[0].read_var(varname, **kwargs)
 
-    def probability(self, varname, seuilinf=-999999999, seuilsup=999999999):
+    def probability(self, varname, seuilinf=-999999999., seuilsup=999999999.):
         """
         Calculates probability as the proportion of ensemble members with values larger than :py:attr:`seuilinf`
         and smaller than :py:attr:`seuilsup`.
@@ -308,6 +304,161 @@ class Ensemble(object):
         return np.where(np.isnan(self.ensemble[varname][:, :, 0]), np.nan, probability)
         # On renvoit des nan quand ensemble n'est pas défini
 
+    def emos_csg_nonorm_allstations_newsnow(self, varname, level):
+        """
+        Applies Censored Shifted Gamma (CSG) EMOS trained for 24h new snow variable and all stations in the Alps without
+        normalisation (internship Benoit Gacon 2024)
+        to variable "varname" and returns the quantiles given in "levels" of the CSG distribution.
+
+        :param varname: variable name
+        :type varname: str
+        :param level: quantiles (range 0 to 100)
+        :type level: array
+        :return: quantiles of predictive distribution
+        :rtype: np.array
+        """
+
+        if varname not in self.ensemble.keys():
+            self.read(varname)
+
+        csgmean, csgstd, csgdelta = self.get_csg_predictive_dist_nonorm_allstations(varname)
+
+        level=level/100.
+        quantile = self.quantiles_CSGD(csgmean, csgstd, csgdelta, level)
+
+        return quantile
+
+    def get_csg_predictive_dist_nonorm_allstations(self, varname):
+        """
+        get the censored shifted gamma regression coefficients and climatological
+        paramters for each lead time and apply them to the ensemble forecast
+        and return the parameters mu, sigma and delta of the predictive censored shifted gamma distribution.
+
+        :param varname: variable name
+        :return: mu, sigma, delta of the predictive CSG distribution
+        """
+
+        filename = os.path.join(SNOWTOOLS_DATA, "emos_2000_2022_212_par_nonorm.Rdata")
+        robj = robjects.r.load(filename)  # pylint: disable=possibly-unused-variable
+        reg_coef = np.array(robjects.r[robj[0]])
+        clim_par = np.array(robjects.r[robj[1]])
+        ndays_leadtime = 4
+
+        ntime = len(self.time)
+        list_indtime = []
+
+        delta = self.time - self.time[0].replace(hour=6)
+
+        for day_leadtime in range(1, ndays_leadtime + 1):
+            list_indtime.append(np.where(
+                (delta <= datetime.timedelta(days=day_leadtime)) &
+                (delta > datetime.timedelta(days=day_leadtime - 1)))[0])
+
+        # Extract regression parameters
+        a1, a2, a3, a4, b1 = np.empty((5, ntime, self.npoints))
+        a1.fill(np.nan)
+        a2.fill(np.nan)
+        a3.fill(np.nan)
+        a4.fill(np.nan)
+        b1.fill(np.nan)
+        muclim, sigmaclim, deltaclim = np.empty((3, ntime, self.npoints))
+        muclim.fill(np.nan)
+        sigmaclim.fill(np.nan)
+        deltaclim.fill(np.nan)
+
+
+        for leadtime in range(0, ndays_leadtime):
+            cst_a1, cst_a2, cst_a3, cst_a4, cst_b1 = reg_coef[leadtime, 0, 1, 0:5]
+            cst_muclim, cst_sigmaclim, cst_deltaclim = clim_par[leadtime, 0, 1, :]
+
+            begin = list_indtime[leadtime][0]
+            end = list_indtime[leadtime][-1]
+
+            a1[slice(begin, end + 1), :] = cst_a1
+            a2[slice(begin, end + 1), :] = cst_a2
+            a3[slice(begin, end + 1), :] = cst_a3
+            a4[slice(begin, end + 1), :] = cst_a4
+            b1[slice(begin, end + 1), :] = cst_b1
+
+            muclim[slice(begin, end + 1), :] = cst_muclim
+            sigmaclim[slice(begin, end + 1), :] = cst_sigmaclim
+            deltaclim[slice(begin, end + 1), :] = cst_deltaclim
+
+        # Extract raw ensemble predictors
+        ensmean = self.mean(varname)
+        ensPOP = self.probability(varname, seuilinf=1.E-6)
+
+        # Compute CSGD parameters with regression laws
+        csgmean = self.csg_mean_nonorm(a1, a2, a3, a4, ensmean, ensPOP)
+        csgstd = self.csg_std_nonorm(b1, muclim, sigmaclim, csgmean)
+        csgdelta = deltaclim
+
+        return csgmean, csgstd, csgdelta
+
+    def csg_mean_nonorm(self, a1, a2, a3, a4, ensmean, ensPOP):
+        """
+        Calculate mu of predictive censored shifted gamma distribution from regression coefficients alpha 1 to
+        alpha 4, ensemble mean and probability of non-zero values of the ensemble.
+
+        :param a1: regression coefficient alpha 1
+        :type a1: float
+        :param a2: regression coefficient alpha 2
+        :type a2: float
+        :param a3: regression coefficient alpha 3
+        :type a3: float
+        :param a4: regression coefficient alpha 4
+        :type a4: float
+        :param ensmean: ensemble mean
+        :type ensmean: float
+        :param ensPOP: probability of non-zero values of the ensemble [0., 1.]
+        :type ensPOP: float
+        :return: mu of predictive censored shifted gamma distribution
+        :rtype: float
+        """
+        return np.log1p(np.expm1(a1) * (a2 + a3 * ensPOP + a4 * ensmean)) / a1
+
+    def csg_std_nonorm(self, b1, muclim, sigmaclim, csgmean):
+        """
+        Calculate sigma of predictive censored shifted gamma distribution from regression coefficients
+        beta 1, climatological mu and sigma and csg mu parameter.
+
+        :param b1: regression coefficient beta 1
+        :type b1: float
+        :param muclim: climatological mu
+        :type muclim: float
+        :param sigmaclim: climatological sigma
+        :type sigmaclim: float
+        :param csgmean: csg mu parameter
+        :type csgmean: float
+        :return: sigma of predictive censored shifted gamma distribution
+        :rtype: float
+        """
+        return b1 * sigmaclim * np.sqrt(csgmean / muclim)
+
+    def quantiles_CSGD(self, csgmean, csgstd, csgdelta, quantiles):
+        """
+        get quantiles of the censored shifted gamma (CSG) distribution with given mu, sigma and delta.
+
+        :param csgmean: mu parameter of CSG
+        :type csgmean: array
+        :param csgstd: sigma parameter of CSG
+        :type csgstd: array
+        :param csgdelta: delta parameter of CSG
+        :type csgdelta: array
+        :param quantiles: quantiles wanted
+        :type quantiles: array of floats
+        :return: array of quantiles
+        :rtype: array of same length as quantiles.
+        """
+
+        vectorppf = np.vectorize(gamma.ppf, signature='(),(),()->(n)', excluded='q')
+
+        tmp = vectorppf(q=quantiles, a=(csgmean / csgstd) ** 2, scale=(csgstd ** 2) / csgmean, loc=csgdelta)
+        # print(tmp)
+
+        # return np.where(tmp >= 0, tmp, 0)
+        return np.where(tmp < 0., 0., tmp)
+
     def quantile(self, varname, level):
         """
         Calculates ensemble percentiles for a given variable and given percentile levels.
@@ -325,6 +476,7 @@ class Ensemble(object):
 
         quantile = np.where(np.isnan(self.ensemble[varname][:, :, 0]), np.nan,
                             np.percentile(self.ensemble[varname], level, axis=2))
+        # print('quantileshape', quantile.shape)
         return quantile
 
     def mean(self, varname):
@@ -1069,12 +1221,15 @@ class EnsemblePostproc(_EnsembleMassif):
     """
     Class for ensemble post-processing.
     """
-    def __init__(self, variables, inputfiles, decile=range(10, 100, 10), outdir='.'):
+    def __init__(self, variables, inputfiles, decile=np.arange(10, 100, 10), outdir='.',
+                 outfilename='PRO_post.nc', emosmethod=None):
         """
         :param variables: list of variables to process
         :param inputfiles: list of input files
         :param decile: list of percentiles
         :param outdir: Output directory
+        :param outfilename: output file name
+        :param emosmethod: emos method to use. The method is supposed to take a variable name and the wanted quantiles as arguments.
         :type outdir: str
         """
         print(inputfiles)
@@ -1085,10 +1240,17 @@ class EnsemblePostproc(_EnsembleMassif):
         self.open(inputfiles)
 
         #: output filename
-        self.outfile = os.path.join(outdir, 'PRO_post.nc')
+        self.outfile = os.path.join(outdir, outfilename)
         # self.outfile = os.path.join(outdir, 'PRO_post_{0}_{1}.nc'.format(datebegin.ymdh, dateend.ymdh))
         #: list of percentiles
         self.decile = decile
+        if emosmethod:
+            self.emosmethod = emosmethod
+            self.flipaxis = False
+        else:
+            self.emosmethod = Ensemble.quantile
+            self.flipaxis = True
+
 
     @property
     def standardvars(self):
@@ -1131,7 +1293,7 @@ class EnsemblePostproc(_EnsembleMassif):
                         # print(self.simufiles[0].getattr(name, att))
                         self.outdataset.dataset[name].setncatts({att: self.simufiles[0].getattr(name, att)})
                 self.outdataset.dataset[name][:] = self.simufiles[0].dataset[name][:]
-                print('data copied')
+                # print('data copied')
         # print(self.outdataset.listvar())
 
     def postprocess(self):
@@ -1159,7 +1321,8 @@ class EnsemblePostproc(_EnsembleMassif):
     def deciles(self):
         """
         Calculates percentiles given in :py:attr:`.decile` for variables in :py:attr:`.variables` and adds them
-        to the output data set including the corresponding dimension, coordinate variable and attributes.
+        to the output data set including the corresponding dimension, coordinate variable and attributes applying the
+        method in :py:attr:`.emosmethod` to obtain the percentiles.
         """
         # create decile dimension
         self.outdataset.dataset.createDimension('decile', len(self.decile))
@@ -1171,15 +1334,17 @@ class EnsemblePostproc(_EnsembleMassif):
         for name, variable in self.simufiles[0].dataset.variables.items():
             if name in self.variables:
                 # calculate deciles
-                vardecile = self.quantile(name, self.decile)
-                # get decile axis in the right place
-                vardecile = np.moveaxis(vardecile, 0, -1)
+                vardecile = self.emosmethod(self, varname=name, level=self.decile)
+                if self.flipaxis:
+                    # get decile axis in the right place
+                    vardecile = np.moveaxis(vardecile, 0, -1)
                 fillval = self.simufiles[0].getfillvalue(name)
                 x = self.outdataset.dataset.createVariable(name, variable.datatype, variable.dimensions + ('decile',),
                                                            fill_value=fillval)
                 # copy variable attributes all at once via dictionary, but without _FillValue
                 attdict = self.simufiles[0].dataset[name].__dict__
                 attdict.pop('_FillValue', None)
+                attdict['emos_method'] = str(self.emosmethod).split()[1]
                 self.outdataset.dataset[name].setncatts(attdict)
                 # print(vardecile.shape)
                 self.outdataset.dataset[name][:] = vardecile[:]
@@ -1204,6 +1369,17 @@ class EnsemblePostproc(_EnsembleMassif):
                 print(self.outdataset.dataset[name][:].size)
                 print(median.size)
                 self.outdataset.dataset[name][:] = median[:]
+
+
+class EnsemblePostprocStation(EnsemblePostproc):
+    """
+    Class for ensemble postprocessing at station locations.
+    """
+
+    @property
+    def standardvars(self):
+        """variables always written to the output file"""
+        return ['time', 'ZS', 'aspect', 'slope', 'station', 'longitude', 'latitude']
 
 
 class EnsembleHydro(EnsemblePostproc):

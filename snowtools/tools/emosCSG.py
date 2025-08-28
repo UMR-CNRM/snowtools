@@ -190,7 +190,7 @@ class postprocess_ensemble(Ensemble):
         :type muclim: float
         :param sigmaclim: climatological sigma
         :type sigmaclim: float
-        :param emosmean: ensemble mean
+        :param emosmean: csg mu parameter
         :type emosmean: float
         :param ensspread: ensemble spread
         :type ensspread: float
