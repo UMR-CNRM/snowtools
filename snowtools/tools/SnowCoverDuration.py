@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 import numpy as np
 import xarray as xr
@@ -40,58 +42,62 @@ def lcscd(data, threshold):
     :type threshold: class:`int`
 
     Output :
-    --------
-    * xarray.Dataset/DataArray containing the following variables :
+    
+    xarray.Dataset/DataArray containing the following variables :
+    
     - LCSCD  : Longest Concurent Snow Cover Duration period
     - LCSMOD : Snow Melt Out Date of the Longest Concurent snow cover period
     - LCSOD  : Snow Cover Onset date of the Longest Concurent snow cover period
     - SD     : Snow duration : total number of snow coverage
 
     Method :
-    --------
-
+    
     1. Classify each date/day as "snow covered" or "snow free" using the prescribed threshold
 
     2. Associate to each time/day of *data* the starting date of the corresponding season (the previous 1 septembre)
-        - Get indices of all dates corresponding to september 1st
-        - "forward fill" (see warning below) these values to associate each date to its season's starting date
-        - Remove dates before the first 1st september and force all 1 september as snow free dates to match Sentinel2
-          convention
+    
+    - Get indices of all dates corresponding to september 1st
+    - "forward fill" (see warning below) these values to associate each date to its season's starting date
+    - Remove dates before 1st of september: force all 1 september as snow free dates to match Sentinel2 convention
 
     3. Use the xarray "groupby" method to compute the diagnostics for each season
-        - Create a time serie containing the number of snow covered dates since the begining of the seaon with
-          the xarray's "cumsum" method (see warning below)
-        - Create a time serie containing the number of snow free days since the begining of the season after
-          each snow cover period
-        --> the difference between these 2 time series is a time serie containing the number of days since the
-            apparition of snow for each snow covered period of the season
+    
+    - Create a time serie containing the number of snow covered dates since the begining of the seaon with
+      the xarray's "cumsum" method (see warning below)
+    - Create a time serie containing the number of snow free days since the begining of the season after
+      each snow cover period
+    - -> the difference between these 2 time series is a time serie containing the number of days since the
+      apparition of snow for each snow covered period of the season
 
-    4. Comute all diagnotics from the time serie obtained in step 3
-        - SCD = maximum value (higher number of concurent snow covered days)
-        - MOD = index (number of days since 1 september) of the SCD value
-        - SOD = MOD - SCD (retract the number of snow days to get the index of the begining of the period)
-        - SD  = Total number of days counted as snow covered
+    4. Compute all diagnotics from the time serie obtained in step 3
+    
+    - SCD = maximum value (higher number of concurent snow covered days)
+    - MOD = index (number of days since 1 september) of the SCD value
+    - SOD = MOD - SCD (retract the number of snow days to get the index of the begining of the period)
+    - SD  = Total number of days counted as snow covered
 
-
-    WARNINGs :
-    ----------
-
-    * The standard solution to compute the longest continuous snow cover duration relies on the use of the
-      xarray "ffill" method that uses the "bottleneck" module which is not available on MF's HPC.
-      --> a custom "xr_ffill" method based on numpy only is used in this case
-      TODO : compare the performances of both methods
+    WARNING :
+    
+    The standard solution to compute the longest continuous snow cover duration relies on the use of the
+    xarray "ffill" method that uses the "bottleneck" module which is not available on MF's HPC.
+    
+    --> a custom "xr_ffill" method based on numpy only is used in this case
+    
+    TODO : compare the performances of both methods
 
     NB :
-    ----
+    
     The use of xarray.DataArray object instead of numpy arrays is motivated by several reasons :
-    * The "resample" method used to resample hourly HTN values to daily ones has not equivalent in prosimu / numpy
-    * The multi-season situation is managed using the "groupby" method that does not exist in numpy
-    * The "cumsum" method exists in numpy (with the same core than the xarray's one), but with xarray
+    
+    - The "resample" method used to resample hourly HTN values to daily ones has not equivalent in prosimu / numpy
+    - The multi-season situation is managed using the "groupby" method that does not exist in numpy
+    - The "cumsum" method exists in numpy (with the same core than the xarray's one), but with xarray
       the dimension order management is explicit (parsing a dimension name instead of an index number that can vary
       between numpy arrays)
-    * The "ffill" method has no equivalent in numpy
-    * The final goal is to write a netcdf file, which is straightforward with a DataArray but requires
+    - The "ffill" method has no equivalent in numpy
+    - The final goal is to write a netcdf file, which is straightforward with a DataArray but requires
       (a bit of) formatting with numpy
+      
     """
 
     # Resample dataset into mean daily snow depth values
