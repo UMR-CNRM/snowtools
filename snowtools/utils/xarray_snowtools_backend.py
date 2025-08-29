@@ -1,9 +1,9 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
 
 Introduction to xarray_snowtools_backend:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The xarray_snowtools_backend module contains all elements defining the xarray entry points for SURFEX Input / Outputs
 in NetCDF format (methods `open_dataset`, `open_dataarray` and `open_mfdataset`, responsible for reading files and
@@ -16,7 +16,7 @@ WARNING : xarray ``BackendEntrypoint`` class is not implemented on xarray 0.16.0
 
 These entry points are designed to deal with the following requirements :
 
-    * ensure that the coordinates associated to the time dimension are datetime objects. By default xarray try to
+    - Ensure that the coordinates associated to the time dimension are datetime objects. By default xarray try to
       decode time variables as datetime objects based on their "unit" attribute. However, some SURFEX variables,
       such as "SNOWAGE", have an unit attribute that can not be interpreted by the default cftime tool,
       raising the following error:
@@ -28,22 +28,22 @@ These entry points are designed to deal with the following requirements :
       The solution here is to switch off the decoding of time variables when reading data ("decode_times=False")
       and doing so manually afterward for the dime dimension alone (see "decode_time_dimension" method)
 
-    * Ensure that variable and dimension names are standard names for backward compatibility of SURFEX versions
+    - Ensure that variable and dimension names are standard names for backward compatibility of SURFEX versions
       and to deal with data coming from different sources (this replaces the former prosimu functionality
       designed to reduce dependency to variable and dimension names of SURFEX outputs).
       This is done by mapping the possible names of a variable / dimension (when different names coexist) to the a
       standard name through the "dimension_map" and "variables_map" dictionnaries (see "update_varname" and
       "update_dimname" methods).
 
-    * Remove len 1 dimensions (the replaces the former prosimu functionality designed to remove
+    - Remove len 1 dimensions (the replaces the former prosimu functionality designed to remove
       Number_of_patches / Number_of_tiles dimensions from SURFEX outputs).
       This is done by calling the native xarray "squeeze" method on the target DataArray / Dataset.
 
-    * Ensure that the time dimension is in the first one for numpy-based tools backward compatibility ((this replaces
+    - Ensure that the time dimension is in the first one for numpy-based tools backward compatibility ((this replaces
       the former prosimu functionality designe to reduce the dependency to the dimensions order of SURFEX outputs).
       This is done by calling the xarray native "transpose" method.
 
-    * Ensure that 'missing_value' and "_FillValue" attributes do not differ to avoid crashing when trying to write data
+    - Ensure that 'missing_value' and "_FillValue" attributes do not differ to avoid crashing when trying to write data
       (see "check_encoding" method for more information)
 
 To use these entry points, the native xarray methods `open_dataset`, `open_dataarray` and `open_mfdataset` should
@@ -52,7 +52,7 @@ simply be called with the keyword argument "engine='snowtools'" (see the "Standa
 The "snowtools" backend is automatically made available when the snowtools package is imported.
 
 Standard usage:
-^^^^^^^^^^^^^^^
+---------------
 
 .. code-block:: python
 
@@ -64,7 +64,7 @@ Standard usage:
 
 
 HPC usage (until next xarray update from version 0.16.0):
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------------------------------
 
 .. code-block:: python
 
@@ -76,11 +76,11 @@ HPC usage (until next xarray update from version 0.16.0):
 
 
 Additionnal features:
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
 The subsequent use of xarray directly enables the following functionalities of the former prosimu tool:
 
-    * Extract points according to spatial properties (through native xarray indexing methods "sel", "loc","where",...)
+    - Extract points according to spatial properties (through native xarray indexing methods "sel", "loc","where",...)
       xarray related documentation : https://docs.xarray.dev/en/stable/user-guide/indexing.html
 
       examples:
@@ -91,36 +91,36 @@ The subsequent use of xarray directly enables the following functionalities of t
           ds.where((ds.massif_num == 3) & (ds.ZS.isin([900, 1800, 2700, 3600])) &
                         (ds.slope == 40) & (ds.aspect.isin([0, 180])), drop=True)
 
-    * Temporal integration of a diagnostic (native xarray "resample" method)
+    - Temporal integration of a diagnostic (native xarray "resample" method)
 
-    * Data concatenation along 1 dimension of a set of files (method `open_mfdataset`)
+    - Data concatenation along 1 dimension of a set of files (method `open_mfdataset`)
 
-    * Optimisation of data reanding and prossessing through the use of xarray-compatible dask tools
+    - Optimisation of data reanding and prossessing through the use of xarray-compatible dask tools
       (https://docs.xarray.dev/en/stable/user-guide/dask.html)
 
-    * Dealing with missing values
+    - Dealing with missing values
 
 It also enables new functionalities not covered (or only partially) by prosimu :
 
-    * Integration of xarray-based codes into snowtools, benefiting from advanced xarray functionalities (ex: "groupby")
+    - Integration of xarray-based codes into snowtools, benefiting from advanced xarray functionalities (ex: "groupby")
       and related projects (ex : https://docs.xarray.dev/en/stable/user-guide/ecosystem.html#ecosystem)
 
-    * Easy exploration / processing of 2D, ensemble data (interpolation, maps, scores,...)
+    - Easy exploration / processing of 2D, ensemble data (interpolation, maps, scores,...)
 
-    * Direct compatibility with any new dimension (ex : "member")
+    - Direct compatibility with any new dimension (ex : "member")
 
-    * Propagation of the attributes along all process steps
+    - Propagation of the attributes along all process steps
 
-    * Process different input file formats (grib, tif,...) with the same tools by using native or custom xarray engines
+    - Process different input file formats (grib, tif,...) with the same tools by using native or custom xarray engines
 
 See xarray documentation (https://xarray.dev/) for more information, in particular :
 
-    * xarray philosophy : https://docs.xarray.dev/en/stable/roadmap.html#roadmap
+    - xarray philosophy : https://docs.xarray.dev/en/stable/roadmap.html#roadmap
 
-    * xarray internal design :
+    - xarray internal design :
       https://docs.xarray.dev/en/stable/internals/internal-design.html#internal-design-lazy-indexing
 
-    * IO management with xarray : https://docs.xarray.dev/en/stable/user-guide/io.html
+    - IO management with xarray : https://docs.xarray.dev/en/stable/user-guide/io.html
 
 
 """
@@ -162,7 +162,6 @@ def preprocess(ds, mapping=dict(), decode_time=True, transpose=False):
     3. Decode time dimension properly if necessary (i.e ensure that the associated coordinates are datetime objects)
 
     Direct usage example:
-    ^^^^^^^^^^^^^^^^^^^^^
 
     .. code-block:: python
 
@@ -318,7 +317,6 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
     data before returning the xarray dataset or dataarray object.
 
     Usage:
-    ^^^^^^
 
     .. code-block:: python
 
@@ -328,7 +326,7 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
         ds = xr.open_dataset(filename, engine='snowtools')
 
     External documentation :
-    ------------------------
+    
     https://docs.xarray.dev/en/stable/internals/how-to-add-new-backend.html
     """
 

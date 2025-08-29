@@ -1,9 +1,9 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
 
 Introduction to xarray_snowtools_accessor:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The module xarray_snowtools_accessor aims at wrapping and extending the xarray module for snowtools-specific usage.
 The wrapping of existing methods is designed to reduce dependency to native xarray method changes (in order to
 centralise required adaptations).
@@ -15,7 +15,7 @@ This accessor is automatically made available when the snowtools package is impo
 
 
 Usage examples:
-^^^^^^^^^^^^^^^
+---------------
 
 .. code-block:: python
 
@@ -86,14 +86,14 @@ Resample Rainf variable from hourly values to daily accumulations, starting at 0
 
 
 New features integration rules:
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Any native xarray function/method NOT part of xarray’s public API can be overwritten in these accessors in order to
 centralise required adaptations in case of any change of behavior of the native method.
 
 Informations on the list of xarray function/method considered public API can be found in the xarray documentation :
+
 - https://docs.xarray.dev/en/v2023.09.0/getting-started-guide/faq.html (section "What parts of xarray are considered
-public API?")
+  public API?")
 - https://docs.xarray.dev/en/v2023.09.0/api.html#api
 
 """
@@ -145,16 +145,15 @@ class SnowtoolsAccessor:
         automatically set to 24 over the time dimension and the dimension's length over all other dimensions.
 
         Execution time for a file over the Grandes Rousses at 25m resolution (~1M of points, total file size ~177 Go)
-            * 1000 hourly time steps : < 30s
-            * 2000 hourly time steps : ~ 2 minutes
-            * 4000 hourly time steps (~6 months)    : ~ 6 minutes
-            * 1 full year (8760 hourly timte steps) : crash
+            - 1000 hourly time steps : < 30s
+            - 2000 hourly time steps : ~ 2 minutes
+            - 4000 hourly time steps (~6 months)    : ~ 6 minutes
+            - 1 full year (8760 hourly timte steps) : crash
 
         Execution time for a file over the French Alps at 250m resolution (~2.5M of points, total file size 13 Go) over
         1 month (721 hourly time steps) : ~ 20s
 
         Usage example:
-        ^^^^^^^^^^^^^^
 
         Compute 24-hour precipitation accumulations from 6h J to 6h J+1 from hourly precipitation dataset,
         so that the new index 'YYYY-MM-DD O6' contains the sum of all indices between
@@ -197,7 +196,8 @@ class SnowtoolsAccessor:
     def snow_cover_stats(self, snow_depth_variable='DSN_T_ISBA', snow_depth_threshold=0.2):
         """
         Compute snow cover statistics from a snow depth time serie.
-        Returned stats are :
+        Returned stats are:
+        
         - LCSCD  : Longest Concurent Snow Cover Duration period
         - LCSMOD : Snow Melt Out Date of the Longest Concurent snow cover period
         - LCSOD  : Snow Cover Onset date of the Longest Concurent snow cover period
@@ -207,7 +207,6 @@ class SnowtoolsAccessor:
         documentation for more information.
 
         Usage example:
-        ^^^^^^^^^^^^^^
 
         .. code-block:: python
 
@@ -237,7 +236,6 @@ class SnowtoolsAccessor:
         'original_name' attribute created during the preprocess step.
 
         Usage example:
-        ^^^^^^^^^^^^^^
 
         .. code-block:: python
 

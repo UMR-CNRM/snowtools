@@ -56,6 +56,11 @@ Hydrological diagnostics
    :member-order: bysource
    :members:
 
+Calculus of Snow Cover Duration
+-------------------------------
+
+.. automodule:: tools.SnowCoverDuration
+   :members:
 
 Simulation execution helpers
 ----------------------------
