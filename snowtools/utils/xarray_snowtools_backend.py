@@ -125,9 +125,13 @@ See xarray documentation (https://xarray.dev/) for more information, in particul
 
 """
 
-from typing import (
-    Literal,
-)
+try:
+    from typing import (
+        Literal,
+        Union,
+    )
+except ImportError:
+    from typing_extensions import Literal, Union
 
 import xarray
 from xarray.backends import BackendEntrypoint
@@ -326,7 +330,7 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
         ds = xr.open_dataset(filename, engine='snowtools')
 
     External documentation :
-    
+
     https://docs.xarray.dev/en/stable/internals/how-to-add-new-backend.html
     """
 
@@ -378,7 +382,7 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
         return da
 
     def open_mfdataset(self, paths, mapping=dict(),
-            drop_duplicates: (str | Literal["all"] | None) = None, **kw):
+            drop_duplicates: Union[str, Literal["all"], None] = None, **kw):
         """
         Snowtools-specific version of the xarray's "open_mfdataset" method, which calls the native method
         and carries out a preprocessing of the data before returning the dataset object.
