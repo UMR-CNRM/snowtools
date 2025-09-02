@@ -34,7 +34,7 @@ Changes in namelist
 
    &NAM_ISBA_SNOWn
        CSNOWRAD = 'B92', 'T17' option for absorption of solar radiation, default : B92
-       CSNOWMETAMO = 'B21','C13','F06','T07','S-C','S-F'  option for metamorphism, default : B21
+       CSNOWMETAMO = 'B21','F06','T07','S-B','S-F'  option for metamorphism, default : B21
        CSNOWFALL = 'V12','S02','A76','P75','NZE' option for falling snow density, default : V12
        CSNOWCOMP = 'B92', 'S14', 'T11'  option for compaction, default : B92
        CSNOWCOND = 'Y81', 'I02','C11' option for snow thermal conductivity, default : Y81
@@ -56,10 +56,9 @@ Full Description
 **CSNOWMETAMO** : snow metamorphism
 
 * 'B92' obsolete option which will be removed in a next version : empirical evolution of dendricity, sphericity and size from Brun et al 1992
-* 'C13' Translation of B92 option in terms of Optical Diameter and Sphericity
-* 'B21' Correction of C13 option for some limit case (default)
+* 'B21' Translation of B92 option in terms of Optical Diameter and Sphericity (default). NB: this is a correction of C13 option which is not supported now
 * 'F06' Evolution law of the optical diameter from Flanner and Zender (2006), which fits the model outputs of a snow microstructure model representing the diffusive vapour fluxes among the grains.
-* 'S-C' Experimental evolution law of Optical Diameter from Schleef et al, 2014 for the first 48 hours after snowfall, then C13 option
+* 'S-B' Experimental evolution law of Optical Diameter from Schleef et al, 2014 for the first 48 hours after snowfall, then B21 option
 * 'S-F' Experimental evolution law of Optical Diameter from Schleef et al, 2014 for the first 48 hours after snowfall, then F06 option
 * 'T07' Experimental evolution law of Optical Diameter from Taillandier et al, 2007
 
