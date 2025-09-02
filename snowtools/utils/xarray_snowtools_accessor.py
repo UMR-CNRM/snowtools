@@ -97,15 +97,9 @@ Informations on the list of xarray function/method considered public API can be 
 - https://docs.xarray.dev/en/v2023.09.0/api.html#api
 
 """
-
-try:
-    from typing import (
-        Literal,
-        Union,
-    )
-except ImportError:
-    from typing_extensions import Literal, Union
-
+from typing import (
+    Literal,
+)
 import xarray as xr
 
 from bronx.syntax.externalcode import ExternalCodeImportChecker
@@ -206,7 +200,7 @@ class SnowtoolsAccessor:
         """
         Compute snow cover statistics from a snow depth time serie.
         Returned stats are:
-
+        
         - LCSCD  : Longest Concurent Snow Cover Duration period
         - LCSMOD : Snow Melt Out Date of the Longest Concurent snow cover period
         - LCSOD  : Snow Cover Onset date of the Longest Concurent snow cover period
@@ -450,7 +444,7 @@ class DistributedAccessor(SnowtoolsAccessor):
         return out
 
     def plot_ensemble(self, variable=None, vmin=None, vmax=None, cmap=None, dem=None, isolevels=None,
-            members: Union[Literal["all", "mean"], int] = 'all', projection=None):
+            members: (Literal["all", "mean"] | int) = 'all', projection=None):
         """
         Plot field(s) from an ensemble. To control the members of the ensemble to be plotted, use the "members"
         argument.
