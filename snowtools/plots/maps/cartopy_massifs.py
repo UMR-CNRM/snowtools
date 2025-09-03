@@ -161,7 +161,8 @@ def getTextColor(var, **kwargs):
 
 
 class MyCRS(ccrs.CRS):
-    """ dummy class in order to be able to create an ccrs.CRS instance from a proj4/fiona.crs dictionary
+    """
+    dummy class in order to be able to create an ccrs.CRS instance from a proj4/fiona.crs dictionary
     If the 'proj' is 'lcc' in projdict, an LambertConformal projection is initialized.
     """
 

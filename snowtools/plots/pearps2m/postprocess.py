@@ -13,13 +13,12 @@ usage: python postprocess.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]
     #) Creates spaghetti plots for all massifs and stations
 """
 
-import sys
+import argparse
 import locale
 import os
 import datetime
 from optparse import OptionParser
 from collections import Counter, defaultdict
-
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
@@ -53,43 +52,43 @@ matplotlib.rcParams['axes.ymargin'] = 0
 # matplotlib.rcParams["figure.dpi"] = 75
 
 
-usage = "usage: python postprocess.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]"
+USAGE = "usage: python postprocess.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]"
+
+PARSER = argparse.ArgumentParser(description="Postprocess new snow heights: "
+                                             "1) extracts operational simulation results,"
+                                             "2) Plots maps for the Alps, the Pyrenees the Corse,"
+                                             "3) Creates spaghetti plots "
+                                             "for all massifs and stations")
+
+PARSER.add_argument("-b", action="store", type=str, dest="datebegin", default=today().ymd,
+                    help="First year of extraction")
+PARSER.add_argument("-e", action="store", type=str, dest="dateend", default=today().ymd,
+                    help="Last year of extraction")
+PARSER.add_argument("-o", action="store", type=str, dest="diroutput",
+                    default=os.path.join(LUSTRE_NOSAVE_USER_DIR, "PEARPS2M"),
+                    help="Output directory")
+PARSER.add_argument("--dev", action="store_true", dest="dev", default=False)
+PARSER.add_argument("--reforecast", action="store_true", dest="reforecast", default=False)
+PARSER.add_argument("--dble", action="store_true", dest="dble", default=False)
+OPTIONS = PARSER.parse_args()  # @UnusedVariable
 
 
-def parse_options(arguments):
+def build_filename(massif, alti):
     """
-    Treat options passed to the script.
+    Construct a filename from massif and altitude information.
 
-    :param arguments: arguments from calling the script
-    :return: options
+    :param massif: a massif number
+    :param alti: an altitude level
+    :return: filename
+    :rtype: str
     """
-    parser = OptionParser(usage)
-
-    parser.add_option("-b",
-                      action="store", type="string", dest="datebegin", default=today().ymd,
-                      help="First year of extraction")
-
-    parser.add_option("-e",
-                      action="store", type="string", dest="dateend", default=today().ymd,
-                      help="Last year of extraction")
-
-    parser.add_option("-o",
-                      action="store", type="string", dest="diroutput",
-                      default=os.path.join(LUSTRE_NOSAVE_USER_DIR, "PEARPS2M"),
-                      help="Output directory")
-
-    parser.add_option("--dev",
-                      action="store_true", dest="dev", default=False)
-    parser.add_option("--dble", action="store_true", dest="dble", default=False)
-
-    parser.add_option("--reforecast", action="store_true", dest="reforecast", default=False)
-
-    (options, args) = parser.parse_args(arguments)  # @UnusedVariable
-
-    return options
+    filename = str(massif)
+    if alti:
+        filename += "_{:d}".format(int(alti))
+    return filename
 
 
-class config(object):
+class Config:
     """
     Configuration passed to S2MExtractor and to be used in vortex toolboxes.
 
@@ -98,6 +97,7 @@ class config(object):
     xpid = "oper"  #: Operational chain
     alternate_xpid = ["OPER@lafaysse"]  #: Alternative experiment id
     # alternate_xpid = ["oper"]
+    #: List of geometries
     list_geometry = ['alp', 'pyr', 'cor', 'jur', 'mac', 'vog', 'postes']
     # list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes'] #: List of geometries
     # list_geometry = ['alp', 'pyr', 'cor', 'postes']
@@ -107,22 +107,24 @@ class config(object):
     # Development chain
     # xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
     # list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
-
-    list_members = list(range(0, 36))  #: 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+    #: 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+    list_members = list(range(0, 36))
 
     def __init__(self):
         """
         #) checks and converts dates
         #) creates output directories if they don't exist.
-
         """
-        options = parse_options(sys.argv)
-        options.datebegin, options.dateend = [check_and_convert_date(dat) for dat in [options.datebegin, options.dateend]]
-        if options.datebegin.hour == 0:
-            self.rundate = options.datebegin.replace(hour=6)  #: Date of model run  class:`bronx.stdtypes.date.Date`
+        OPTIONS.datebegin, OPTIONS.dateend = [check_and_convert_date(dat)
+                                              for dat in [OPTIONS.datebegin, OPTIONS.dateend]]
+        if OPTIONS.datebegin.hour == 0:
+            #: Date of model run  class:`bronx.stdtypes.date.Date`
+            self.rundate = OPTIONS.datebegin.replace(hour=6)
         else:
-            self.rundate = options.datebegin  #: Date of model run  :class:`bronx.stdtypes.date.Date`
-        self.diroutput = options.diroutput + "/" + self.rundate.strftime("%Y%m%d%H")  #: output directory
+            #: Date of model run  :class:`bronx.stdtypes.date.Date`
+            self.rundate = OPTIONS.datebegin
+        #: output directory
+        self.diroutput = OPTIONS.diroutput + "/" + self.rundate.strftime("%Y%m%d%H")
         self.diroutput_maps = self.diroutput + "/maps"  #: output directory for maps
         self.diroutput_plots = self.diroutput + "/plots"  #: output directory for other plots
 
@@ -130,26 +132,26 @@ class config(object):
             if not os.path.isdir(required_directory):
                 os.mkdir(required_directory)
 
-        self.dev = options.dev
-        if options.dev:
+        self.dev = OPTIONS.dev
+        if OPTIONS.dev:
             self.xpid = "nouveaux_guess@lafaysse"
-            delattr(config, 'alternate_xpid')
+            delattr(Config, 'alternate_xpid')
             self.list_geometry = ['jur', 'mac', 'vog', 'cor', 'alp', 'pyr', 'postes']
-        self.dble = options.dble
-        if options.dble:
+        self.dble = OPTIONS.dble
+        if OPTIONS.dble:
             self.xpid = "dble"
-            delattr(config, 'alternate_xpid')
+            delattr(Config, 'alternate_xpid')
             self.list_geometry = ['alp', 'pyr', 'cor', 'jur', 'mac', 'vog', 'postes']
-        self.reforecast = options.reforecast
-        if options.reforecast:
+        self.reforecast = OPTIONS.reforecast
+        if OPTIONS.reforecast:
             self.xpid = "reforecast_double2021@vernaym"
-            delattr(config, 'alternate_xpid')
+            delattr(Config, 'alternate_xpid')
             self.list_geometry = ['jur4_allslopes_reforecast', 'mac11_allslopes_reforecast',
                                   'vog3_allslopes_reforecast', 'alp27_allslopes',
                                   'pyr24_allslopes', 'cor2_allslopes']
 
 
-class Ensemble(object):
+class Ensemble:
     """
     Describes an ensemble of simulations
 
@@ -200,7 +202,8 @@ class Ensemble(object):
 
     def select_points(self):
         """
-        Get a list of spatial indices from the spatial dimension length in the first simulation file.
+        Get a list of spatial indices from the spatial dimension
+        length in the first simulation file.
 
         :return: list of spatial points (indices)
         :rtype: list
@@ -215,7 +218,7 @@ class Ensemble(object):
         :return: total number of spatial points
         :rtype: int
         """
-        if type(self.indpoints) is tuple:
+        if isinstance(self.indpoints, tuple):
             npoints = 0
             for indpoints in self.indpoints:
                 npoints += len(indpoints)
@@ -228,9 +231,9 @@ class Ensemble(object):
         """
         Read a variable and store it in :py:attr:`~.ensemble`
 
-        :param varname: name of the variable to be read (corresponds to the variable name of the simulation NetCDF files)
+        :param varname: name of the variable to be read
+            (corresponds to the variable name of the simulation NetCDF files)
         :type varname: str
-
         """
 
         self.ensemble[varname] = np.empty([self.nech, self.npoints, self.nmembers])
@@ -242,7 +245,7 @@ class Ensemble(object):
             import datetime
             before = datetime.datetime.today()
 
-            if type(self.indpoints) is tuple:
+            if isinstance(self.indpoints, tuple):
                 sections = []
                 for indpoints in self.indpoints:
                     kwargs[self.spatialdim] = indpoints
@@ -258,7 +261,8 @@ class Ensemble(object):
 
         # Verrues (à éviter)
         if varname == 'NAT_LEV':
-            self.ensemble[varname][:, :, :] = np.where(self.ensemble[varname] == 6., 0., self.ensemble[varname])
+            self.ensemble[varname][:, :, :] = np.where(self.ensemble[varname] == 6.,
+                                                       0., self.ensemble[varname])
 
     def read_geovar(self, varname):
         """
@@ -271,7 +275,7 @@ class Ensemble(object):
         """
 
         kwargs = dict()
-        if type(self.indpoints) is tuple:
+        if isinstance(self.indpoints, tuple):
             sections = []
             for indpoints in self.indpoints:
                 kwargs[self.spatialdim] = indpoints
@@ -284,7 +288,8 @@ class Ensemble(object):
 
     def probability(self, varname, seuilinf=-999999999., seuilsup=999999999.):
         """
-        Calculates probability as the proportion of ensemble members with values larger than :py:attr:`seuilinf`
+        Calculates probability as the proportion of ensemble members with
+        values larger than :py:attr:`seuilinf`
         and smaller than :py:attr:`seuilsup`.
 
         :param varname: name of the variable for which to calculate the probability
@@ -476,7 +481,6 @@ class Ensemble(object):
 
         quantile = np.where(np.isnan(self.ensemble[varname][:, :, 0]), np.nan,
                             np.percentile(self.ensemble[varname], level, axis=2))
-        # print('quantileshape', quantile.shape)
         return quantile
 
     def mean(self, varname):
@@ -609,7 +613,8 @@ class _EnsembleMassif(Ensemble):
 
     def get_metadata(self, nolevel=False):
         """
-        Construct filenames and plot titles from massif and altitude variables in the first simulation file.
+        Construct filenames and plot titles from massif and altitude
+        variables in the first simulation file.
 
         :param nolevel: if True the altitude is not included in the filenames and titles.
         :return: a list of filenames and a list of titles
@@ -651,19 +656,21 @@ class _EnsembleMassif(Ensemble):
         """
         title = self.InfoMassifs.getMassifName(massif)  # type unicode
         if alti:
-            title += u" %d m" % int(alti)
+            title += "{:d}m".format(int(alti))
         return title  # matplotlib needs unicode
 
 
 class EnsembleFlatMassif(_EnsembleMassif):
     """
-    Class for ensemble simulations on a massif geometry (SAFRAN like) where all data points are considered
+    Class for ensemble simulations on a massif geometry (SAFRAN like)
+    where all data points are considered
     on flat terrain (zero slope and no orientation information).
     """
 
     def select_points(self):
         """
-        Select spatial indices from the first simulation file where aspect=-1 (zero slope, no orientation information).
+        Select spatial indices from the first simulation file
+        where aspect=-1 (zero slope, no orientation information).
 
         :return: spatial indices to be read from simulation files
         :rtype: numpy boolean array
@@ -673,16 +680,19 @@ class EnsembleFlatMassif(_EnsembleMassif):
 
 class EnsembleNorthSouthMassif(_EnsembleMassif):
     """
-    Class for ensemble simulations on a massif geometry (SAFRAN like) where data points are considered at a
+    Class for ensemble simulations on a massif geometry (SAFRAN like)
+    where data points are considered at a
     slope of 40 degrees and two orientations: North and South.
     """
 
     def select_points(self):
         """
-        Select spatial indices from the first simulation file where slope=40 and aspect either 0 or 180.
+        Select spatial indices from the first simulation file
+        where slope=40 and aspect either 0 or 180.
 
         :return: spatial indices to be read from simulation files
-        :rtype: a tuple of numpy boolean array, where the first component corresponds to the Northern orientation
+        :rtype: a tuple of numpy boolean array, where the first
+                component corresponds to the Northern orientation
                 and the second to the Southern one.
         """
         # return np.sort(np.concatenate((self.simufiles[0].get_points(aspect = 0, slope = 40),
@@ -708,7 +718,8 @@ class EnsembleMassifPoint(_EnsembleMassif):
     def select_points(self):
         """Select index of the corresponding point"""
 
-        return self.simufiles[0].get_points(massif_num= self.massif_num, aspect=self.aspect, slope=self.slope,
+        return self.simufiles[0].get_points(massif_num=self.massif_num,
+                                            aspect=self.aspect, slope=self.slope,
                                             ZS=self.alti)
 
 
@@ -748,6 +759,7 @@ class EnsembleStation(Ensemble):
         """
         alti = self.simufiles[0].read_var("ZS", Number_of_points=self.indpoints)
         station = self.get_station()
+        # print('alti type: ', type(alti), 'station type: ', type(station))
         return [self.build_filename(stat, alt) for stat, alt in zip(station, alti)], \
                [self.build_title(stat, alt) for stat, alt in zip(station, alti)]
 
@@ -790,8 +802,10 @@ class EnsembleDiags(Ensemble):
 
     def diags(self, list_var, list_quantiles, list_seuils):
         """
-        Calculate quantiles and exceedance probabilities for a list of variables, quantiles and thresholds.
-        The quantiles are stored in :py:attr:`~.quantiles` and the probabilities in :py:attr:`~.proba`
+        Calculate quantiles and exceedance probabilities
+        for a list of variables, quantiles and thresholds.
+        The quantiles are stored in :py:attr:`~.quantiles`
+        and the probabilities in :py:attr:`~.proba`
 
         :param list_var: list of variables
         :type list_var: iterable
@@ -800,7 +814,6 @@ class EnsembleDiags(Ensemble):
         :param list_seuils: list of thresholds for each variable
         :type list_seuils: dict of iterables with variable names as keys
         """
-        print(list_var)
         for var in list_var:
             if var in list_seuils.keys():
                 for seuil in list_seuils[var]:
@@ -814,7 +827,8 @@ class EnsembleDiags(Ensemble):
 
     def close(self):
         """
-        Close simulation files and remove data from :py:attr:`~.plots.pearps2m.postprocess.Ensemble.ensemble`,
+        Close simulation files and remove data from
+        :py:attr:`~.plots.pearps2m.postprocess.Ensemble.ensemble`,
         :py:attr:`.proba` and :py:attr:`.quantiles`
         """
         super(EnsembleDiags, self).close()
@@ -831,27 +845,38 @@ class EnsembleOperDiags(EnsembleDiags):
     formatplot = 'png'
     #: dict of plot attributes for each variable
     attributes = dict(
-        PP_SD_1DY_ISBA=dict(convert_unit=1., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        PP_SD_1DY_ISBA=dict(convert_unit=1., forcemin=0., forcemax=60.,
+                            palette='YlGnBu', seuiltext=50.,
                             label=u'Epaisseur de neige fraîche en 24h (cm)'),
-        SD_1DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        SD_1DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60.,
+                         palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur de neige fraîche en 24h (cm)'),
-        SD_3DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        SD_3DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60.,
+                         palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur de neige fraîche en 72h (cm)'),
-        RAMSOND_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        RAMSOND_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60.,
+                          palette='YlGnBu', seuiltext=50.,
                           label=u'Epaisseur mobilisable (cm)'),
-        NAT_LEV=dict(forcemin=-0.5, forcemax=5.5, palette='YlOrRd', ncolors=6, label=u'Risque naturel',
-                     ticks=[u'Très faible', u'Faible', u'Mod. A', u'Mod. D', u'Fort', u'Très fort']),
-        naturalIndex=dict(forcemin=0., forcemax=8., palette='YlOrRd', label=u'Indice de risque naturel', format='%.1f',
+        NAT_LEV=dict(forcemin=-0.5, forcemax=5.5, palette='YlOrRd',
+                     ncolors=6, label=u'Risque naturel',
+                     ticks=[u'Très faible', u'Faible', u'Mod. A',
+                            u'Mod. D', u'Fort', u'Très fort']),
+        naturalIndex=dict(forcemin=0., forcemax=8., palette='YlOrRd',
+                          label=u'Indice de risque naturel', format='%.1f',
                           nolevel=True),
         DSN_T_ISBA=dict(convert_unit=100., label=u'Hauteur de neige (cm)'),
         WSN_T_ISBA=dict(label=u'Equivalent en eau (kg/m2)'),
-        SNOMLT_ISBA=dict(convert_unit=3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        SNOMLT_ISBA=dict(convert_unit=3. * 3600., forcemin=0.,
+                         forcemax=60., palette='YlGnBu', seuiltext=50.,
                          label=u'Ecoulement en 3h (kg/m2/3h)'),
-        WET_TH_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        WET_TH_ISBA=dict(convert_unit=100., forcemin=0.,
+                         forcemax=60., palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur humide (cm)'),
-        REFRZTH_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        REFRZTH_ISBA=dict(convert_unit=100., forcemin=0.,
+                          forcemax=60., palette='YlGnBu', seuiltext=50.,
                           label=u'Epaisseur regelée (cm)'),
-        RAINF_ISBA=dict(convert_unit=3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        RAINF_ISBA=dict(convert_unit=3. * 3600., forcemin=0.,
+                        forcemax=60., palette='YlGnBu', seuiltext=50.,
                         label=u'Pluie en 3h (kg/m2/3h)'),
     )
     #: list of quantiles
@@ -895,7 +920,8 @@ class EnsembleOperDiags(EnsembleDiags):
 
             for point in range(0, npoints):
                 if 'convert_unit' in self.attributes[var].keys():
-                    allmembers = self.ensemble[var][:, point, :] * self.attributes[var]['convert_unit']
+                    allmembers = self.ensemble[var][:, point, :] \
+                                 * self.attributes[var]['convert_unit']
                     qmin = self.quantiles[var][0][:, point] * self.attributes[var]['convert_unit']
                     qmed = self.quantiles[var][1][:, point] * self.attributes[var]['convert_unit']
                     qmax = self.quantiles[var][2][:, point] * self.attributes[var]['convert_unit']
@@ -955,10 +981,14 @@ class EnsembleOperDiags(EnsembleDiags):
             for pair in list_pairs:
                 for p, point in enumerate(pair):
                     if 'convert_unit' in self.attributes[var].keys():
-                        allmembers = self.ensemble[var][:, point, :] * self.attributes[var]['convert_unit']
-                        qmin = self.quantiles[var][0][:, point] * self.attributes[var]['convert_unit']
-                        qmed = self.quantiles[var][1][:, point] * self.attributes[var]['convert_unit']
-                        qmax = self.quantiles[var][2][:, point] * self.attributes[var]['convert_unit']
+                        allmembers = self.ensemble[var][:, point, :] \
+                                     * self.attributes[var]['convert_unit']
+                        qmin = self.quantiles[var][0][:, point] \
+                            * self.attributes[var]['convert_unit']
+                        qmed = self.quantiles[var][1][:, point] \
+                            * self.attributes[var]['convert_unit']
+                        qmax = self.quantiles[var][2][:, point] \
+                            * self.attributes[var]['convert_unit']
                     else:
                         allmembers = self.ensemble[var][:, point, :]
                         qmin = self.quantiles[var][0][:, point]
@@ -989,7 +1019,8 @@ class EnsembleOperDiags(EnsembleDiags):
 @echecker_pyproj.disabled_if_unavailable(version='2.0.0')
 class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
     """
-    Class for operationally plotting maps and spaghetti plots for ensembles with massif geometry and for the zero slope case.
+    Class for operationally plotting maps and spaghetti plots for
+    ensembles with massif geometry and for the zero slope case.
     """
     #: maximum height level to be treated
     levelmax = 3900
@@ -1003,12 +1034,14 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
 
     def pack_maps(self, domain, suptitle, diroutput="."):
         """
-        Produce maps for the variables given in :py:attr:`list_var_map` over the regions given in :py:attr:`domain`
+        Produce maps for the variables given in :py:attr:`list_var_map`
+        over the regions given in :py:attr:`domain`
         for each available altitude level and time step.
 
         Each massif is colored corresponding to the second percentile value defined in
         :py:attr:`.list_q` and
-        the color map defined in :py:attr:`.attributes`. At the center of each massif the values corresponding to
+        the color map defined in :py:attr:`.attributes`.
+        At the center of each massif the values corresponding to
         the first three
         percentiles in :py:attr:`.list_q` are marked.
 
@@ -1076,7 +1109,8 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
 @echecker_pyproj.disabled_if_unavailable(version='2.0.0')
 class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMassif):
     """
-    Class for operationally plot maps and spaghetti plots distinguishing between northern and southern orientation
+    Class for operationally plot maps and spaghetti plots
+    distinguishing between northern and southern orientation
     at each massif.
     """
     #: maximum height level to plot
@@ -1103,8 +1137,8 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
 
     def get_pairs_ns(self):
         """
-        Get for each massif and altitude the pair of indices corresponding to values for the northern and southern
-        slopes.
+        Get for each massif and altitude the pair of indices corresponding to
+        values for the northern and southern slopes.
 
         :return: indices corresponding to northern and southern slopes
         :rtype: list of lists
@@ -1139,12 +1173,13 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
 
     def pack_maps(self, domain, suptitle, diroutput):
         """
-        Produce maps for the variables given in :py:attr:`.list_var_map` over the regions given in :py:attr:`.domain`
+        Produce maps for the variables given in :py:attr:`.list_var_map`
+        over the regions given in :py:attr:`.domain`
         for each available altitude level and time step.
 
-        For each massif a table with background colors and values corresponding to the percentiles in
-        :py:attr:`.list_q` and
-        the color map defined in :py:attr:`.attributes` is plotted near the center of each massif.
+        For each massif a table with background colors and values corresponding to the
+        percentiles in :py:attr:`.list_q` and the color map defined in
+        :py:attr:`.attributes` is plotted near the center of each massif.
 
         :param domain: list of region identifiers (e.g., "alp", "pyr", "cor")
         :param suptitle: common suptitle for all plots
@@ -1214,7 +1249,8 @@ class EnsembleOperDiagsStations(EnsembleOperDiags, EnsembleStation):
     #: list of variables to plot maps for
     list_var_map = []
     #: list of variables to plot spaghetti plots for.
-    list_var_spag = ['DSN_T_ISBA', 'WSN_T_ISBA', 'RAMSOND_ISBA', 'WET_TH_ISBA', 'REFRZTH_ISBA', 'SNOMLT_ISBA']
+    list_var_spag = ['DSN_T_ISBA', 'WSN_T_ISBA', 'RAMSOND_ISBA',
+                     'WET_TH_ISBA', 'REFRZTH_ISBA', 'SNOMLT_ISBA']
 
 
 class EnsemblePostproc(_EnsembleMassif):
@@ -1275,7 +1311,8 @@ class EnsemblePostproc(_EnsembleMassif):
 
     def init_outfile(self):
         """
-        Copy global attributes, dimensions and standard variables from the first simulation file to the output file.
+        Copy global attributes, dimensions and standard variables from the
+        first simulation file to the output file.
         """
         # copy global attributes all at once via dictionary
         self.outdataset.dataset.setncatts(self.simufiles[0].dataset.__dict__)
@@ -1309,9 +1346,8 @@ class EnsemblePostproc(_EnsembleMassif):
         #) calculate deciles for the data variables and put them to the output file
         #) close all input and output data sets.
 
-        Calls :py:meth:`.create_outfile`, :py:meth:`.init_outfile`, :py:meth:`.deciles` and close methods for
-        all data sets.
-
+        Calls :py:meth:`.create_outfile`, :py:meth:`.init_outfile`,
+        :py:meth:`.deciles` and close methods for all data sets.
         """
         self.create_outfile()
         self.init_outfile()
@@ -1483,5 +1519,5 @@ def main(c):
 
 
 if __name__ == "__main__":
-    c = config()
+    c = Config()
     main(c)

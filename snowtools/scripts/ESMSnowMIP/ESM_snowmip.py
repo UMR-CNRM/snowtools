@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 20 mars 2018
 
 @author: lafaysse
-'''
+"""
 import os
 import sys
 import shutil

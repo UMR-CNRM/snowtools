@@ -120,7 +120,7 @@ def check_and_convert_options(options):
     [options.fileobs, options.dirsim, options.dirplot] = \
         list(map(absolute_path, [options.fileobs, options.dirsim, options.dirplot]))
 
-    if type(options.dirsim) is not list:
+    if not isinstance(options.dirsim, list):
         options.dirsim = [options.dirsim]
 
     # Create plot directory
@@ -128,7 +128,8 @@ def check_and_convert_options(options):
         os.makedirs(options.dirplot)
 
     # Conversions of dates in datetime objects
-    [options.datebegin, options.dateend] = list(map(check_and_convert_date, [options.datebegin, options.dateend]))
+    [options.datebegin, options.dateend] = list(map(check_and_convert_date,
+                                                    [options.datebegin, options.dateend]))
     checkdateafter(options.dateend, options.datebegin)
 
     return options
@@ -154,12 +155,12 @@ def build_title_with_scores(station, bias, rmse):
     the bias and the RMSE of the plotted simulation.
 
     :param station: station number
-    :type station: int
-    :param bias:
+    :type station: str
+    :param bias: bias score for the given station
     :type bias: float
-    :param rmse:
+    :param rmse: RMSE score for the given station
     :type rmse: float
-    :return: plot title
+    :return: title string
     :rtype: str
     """
     return build_title(station) + " Bias = " + '%.1f' % bias + " RMSE = " + '%.1f' % rmse
@@ -167,11 +168,15 @@ def build_title_with_scores(station, bias, rmse):
 
 def yearlyplots(datebegin, dateend, data_obs):
     """
+    create time series plots for each year and yearly boxplots for scores
+    (if the --scores option was given)
 
-    :param datebegin:
-    :param dateend:
-    :param data_obs:
-    :return:
+    :param datebegin: start date
+    :type datebegin: `bronx.stdtypes.date.Date` object
+    :param dateend: end date
+    :type dateend: `bronx.stdtypes.date.Date` object
+    :param dataObs: observation data
+    :type dataObs: `snowtools.utils.obscsv.obscsv` object
     """
     datepro = datebegin
 
@@ -215,13 +220,16 @@ def yearlyplots(datebegin, dateend, data_obs):
 
 def decadeplots(datebegin, dateend, data_obs):
     """
+    score plots by decade.
 
-    :param datebegin:
-    :param dateend:
-    :param data_obs:
-    :return:
+    :param datebegin: start date
+    :type datebegin: `bronx.stdtypes.date.Date` object
+    :param dateend: end date
+    :type dateend: `bronx.stdtypes.date.Date` object
+    :param dataObs: observation data
+    :type dataObs: `snowtools.utils.obscsv.obscsv` object
     """
-    # Il y a un problème avec les 'xticks' en python 3 : seul le 1er élément de la liste s'affiche...
+
     init = time.time()
 
     yearly_nvalues = []
@@ -275,46 +283,45 @@ def decadeplots(datebegin, dateend, data_obs):
 
 def boxplots_yearly(list_years, list_nvalues, list_scores, list_colors, list_labels, label, **kwargs):
     """
+    do boxplots by year.
 
-    :param list_years:
-    :param list_nvalues:
-    :param list_scores:
-    :param list_colors:
-    :param list_labels:
-    :param label:
-    :param kwargs:
-    :return:
+    :param list_years: list of years
+    :param list_nvalues: ?
+    :param list_scores: score values to plot
+    :param list_colors: fill color for each simulation
+    :param list_labels: list of labels used for the legend
+    :param label: some string used in the plot filename.
+    :param kwargs: keyword arguments passed to the boxplots draw method and finalize method
     """
 
-    # nyears = len(list_years)
     (nsim, nstations) = list_nvalues[0].shape
 
     list_valid = []
 
-    for y, year in enumerate(list_years):
-        valid = list_nvalues[y][0, :] == list_nvalues[y][0, :]
+    for y_i in range(len(list_years)):
+        valid = list_nvalues[y_i][0, :] == list_nvalues[y_i][0, :]
         for sim in range(0, nsim):
-            valid = list_nvalues[y][sim, :] > 5 & valid
+            valid = list_nvalues[y_i][sim, :] > 5 & valid
         list_valid.append(valid)
 
-    b = boxplots_byyear()
+    b_p = boxplots_byyear()
     for sim in range(0, nsim):
         list_scores_valid = []
-        for y, year in enumerate(list_years):
-            list_scores_valid.append(list_scores[y][sim, list_valid[y]])
+        for y_i in range(len(list_years)):
+            list_scores_valid.append(list_scores[y_i][sim, list_valid[y_i]])
 
         kwargs['fillcolor'] = list_colors[sim]
 
-        b.draw(list_years, list_scores_valid, nsimu=nsim, **kwargs)
+        b_p.draw(list_years, list_scores_valid, nsimu=nsim, **kwargs)
 
     kwargs['label'] = list_labels
-    b.finalize(nsimu=nsim, **kwargs)
+    b_p.finalize(nsimu=nsim, **kwargs)
 
     plotfilename = options.dirplot + "/" + label + "_years." + options.format
     print('plot ' + plotfilename)
-    b.save(plotfilename, formatout=options.format)
+    b_p.save(plotfilename, formatout=options.format)
 
-    b.close()
+    b_p.close()
 
 
 def fullplots(datebegin, dateend, data_obs):
@@ -415,7 +422,10 @@ def fullplotsSIM2(datebegin, dateend, data_obs):
         c.plot()
 
 
-class ComparisonSimObs(object):
+class ComparisonSimObs:
+    """Class for comparing Simulations to observations by calculating
+    deterministic scores (bias, rmse)
+    and plotting timeseries plots and boxplots of scores"""
 
     def __init__(self, data_obs):
         """
@@ -749,7 +759,7 @@ class ComparisonSimObs(object):
                 kwargs['fillcolor'] = ['red']*5 + ['blue']*3 + ['grey']
                 kwargs['label'] = self.list_labels_massifs
             else:
-                kwargs['fillcolor'] = self.list_colors[indSim] 
+                kwargs['fillcolor'] = self.list_colors[indSim]
                 kwargs['label'] = self.list_labels
 
             b1.draw(stations[valid], list_scores[indSim, valid], nsimu=self.nsim, **kwargs)
@@ -843,3 +853,4 @@ if __name__ == "__main__":
     else:
         print("full comparison")
         fullplots(options.datebegin, options.dateend, dataObs)
+

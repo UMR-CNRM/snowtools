@@ -112,10 +112,11 @@ class temporalplot_abstract(Mplfigure):
 
 
 class temporalplot(temporalplot_abstract):
+    """Class for timeseries plot"""
 
     figsize = (5, 4)
 
-    def __init__(self,  *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(temporalplot, self).__init__(**kwargs)
         self.fig = plt.figure(figsize=self.figsize)
         self.plot = plt.subplot(111)
