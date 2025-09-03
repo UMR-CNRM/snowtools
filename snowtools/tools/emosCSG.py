@@ -245,7 +245,16 @@ class postprocess_ensemble(Ensemble):
 
         # Extract regression parameters
         a1, a2, a3, a4, b1, b2 = np.empty((6, ntime, self.npoints))
+        a1.fill(np.nan)
+        a2.fill(np.nan)
+        a3.fill(np.nan)
+        a4.fill(np.nan)
+        b1.fill(np.nan)
+        b2.fill(np.nan)
         muclim, sigmaclim, deltaclim = np.empty((3, self.npoints))
+        muclim.fill(np.nan)
+        sigmaclim.fill(np.nan)
+        deltaclim.fill(np.nan)
 
         for massif in list_massifs:
 

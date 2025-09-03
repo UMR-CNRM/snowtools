@@ -1250,6 +1250,10 @@ class EnsemblePostproc(_EnsembleMassif):
         else:
             self.emosmethod = Ensemble.quantile
             self.flipaxis = True
+            # TODO: to test postprocessing with CSG EMOS inside the vortex Four_Seasons_Task (s2m_postproc algo)
+            #  without changes in vortex, comment the two lines above and uncomment the two lines below.
+            # self.emosmethod = Ensemble.emos_csg_nonorm_allstations_newsnow
+            # self.flipaxis = False
 
 
     @property
