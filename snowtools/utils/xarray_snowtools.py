@@ -2,6 +2,9 @@
 
 """
 """
+from bronx.syntax.externalcode import ExternalCodeImportChecker
 
-from snowtools.utils import xarray_snowtools_backend as xsb  # noqa
+echecker = ExternalCodeImportChecker('backend')
+with echecker:
+    from snowtools.utils import xarray_snowtools_backend as xsb  # noqa
 from snowtools.utils import xarray_snowtools_accessor as xsa  # noqa
