@@ -20,9 +20,9 @@ Good practices
 
 For example, to compute the maximum of snow depth over time for one specific point (lon, lat), do :
 
-code-block:: python
+.. code-block:: python
 
-    import snowtools
+    from snowtools.utils import xarray_snowtools
     import xarray as xr
 
     ds = xr.open_dataset(filename, engine='snowtools')
@@ -32,9 +32,9 @@ code-block:: python
 
 instead of :
 
-code-block:: python
+.. code-block:: python
 
-    import snowtools
+    from snowtools.utils import xarray_snowtools
     import xarray as xr
 
     ds = xr.open_dataset(filename, engine='snowtools')

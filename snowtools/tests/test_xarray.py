@@ -8,7 +8,7 @@ import numpy as np
 
 import xarray as xr
 
-import snowtools  # noqa
+from snowtools.utils import xarray_snowtools  # noqa
 from snowtools.DATA import TESTBASE_DIR
 
 

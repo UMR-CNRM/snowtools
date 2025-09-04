@@ -19,7 +19,7 @@ Usage examples:
 
 .. code-block:: python
 
-     import snowtools
+     from snowtools.utils import xarray_snowtools
      import xarray as xr
 
      ds = xr.open_dataset('INPUT.nc', engine='snowtools')
@@ -53,7 +53,7 @@ Usage examples:
 
 .. code-block:: python
 
-     import snowtools
+     from snowtools.utils import xarray_snowtools
      import xarray as xr
      import matplotlib.pyplot as plt
      ds = xr.open_dataset('PRO_2010080106_2011080106.nc', engine='snowtools')
@@ -66,7 +66,7 @@ Usage examples:
 
 .. code-block:: python
 
-     import snowtools
+     from snowtools.utils import xarray_snowtools
      import xarray as xr
      ds = xr.open_dataset('PRO_2010080106_2011080106.nc', engine='snowtools')
      dszs = ds.semidistributed.sel_points(ZS=2400)
@@ -78,7 +78,7 @@ Resample Rainf variable from hourly values to daily accumulations, starting at 0
 
 .. code-block:: python
 
-     import snowtools
+     from snowtools.utils import xarray_snowtools
      import xarray as xr
 
      ds_hourly = xr.open_dataset('FORCING_test_2d.nc', engine='snowtools')
@@ -98,12 +98,6 @@ Informations on the list of xarray function/method considered public API can be 
 
 """
 import xarray as xr
-
-from bronx.syntax.externalcode import ExternalCodeImportChecker
-
-rio_checker = ExternalCodeImportChecker('rioxarray')
-with rio_checker:
-    import rioxarray  # noqa
 
 
 @xr.register_dataset_accessor("snowtools")
@@ -210,7 +204,7 @@ class SnowtoolsAccessor:
 
         .. code-block:: python
 
-            import snowtools
+            from snowtools.utils import xarray_snowtools
             import xarray as xr
             ds=xr.open_dataset('PRO_WJF_2010-2016.nc', engine='snowtools')
             stats=ds.snowtools.snow_cover_stats()
@@ -239,7 +233,7 @@ class SnowtoolsAccessor:
 
         .. code-block:: python
 
-            import snowtools
+            from snowtools.utils import xarray_snowtools
             import xarray as xr
             ds=xr.open_dataset('old_PRO_20180807032000_002400.nc', engine='snowtools')
             original=ds.backtrack_preprocess()
@@ -271,7 +265,7 @@ class MeteoAccessor(SnowtoolsAccessor):
 
     .. code-block:: python
 
-         import snowtools
+         from snowtools.utils import xarray_snowtools
          import xarray as xr
 
          ds = xr.open_dataset('FORCING.nc', engine='meteo')
@@ -289,7 +283,7 @@ class SurfexAccessor(SnowtoolsAccessor):
 
     .. code-block:: python
 
-         import snowtools
+         from snowtools.utils import xarray_snowtools
          import xarray as xr
 
          ds = xr.open_dataset('PRO.nc', engine='snowtools')
@@ -333,7 +327,7 @@ class SemiDistributedAccessor(SnowtoolsAccessor):
 
     .. code-block:: python
 
-         import snowtools
+         from snowtools.utils import xarray_snowtools
          import xarray as xr
 
          ds = xr.open_dataset('INPUT.nc', engine='snowtools')
@@ -409,14 +403,13 @@ class DistributedAccessor(SnowtoolsAccessor):
 
     .. code-block:: python
 
-         import snowtools
+         from snowtools.utils import xarray_snowtools
          import xarray as xr
 
          ds = xr.open_dataset('INPUT.nc', engine='snowtools')
          ds.distributed.proj("EPSG:4326", "EPSG:2154")
     """
 
-    @rio_checker.disabled_if_unavailable
     def proj(self, crs_in="EPSG:4326", crs_out="EPSG:2154"):
         """
         Projection of an xarray dataset or dataarray into a new CRS.
@@ -429,6 +422,8 @@ class DistributedAccessor(SnowtoolsAccessor):
         :param crs_out: CRS of the output object
         :type crs_out: str
         """
+        import rioxarray  # noqa
+
         # TODO extract from rioxarray documentation :
         # "If you use one of xarray’s open methods such as xarray.open_dataset to load netCDF files with the default
         # engine, it is recommended to use decode_coords="all". This will load the grid mapping variable into
