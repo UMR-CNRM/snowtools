@@ -4,22 +4,10 @@ Created on 7 mars 2024
 @author: Vernay.M
 '''
 
-from vortex.layout.nodes import Driver
 from vortex import toolbox
 from snowtools.tasks.vortex_task_base import _VortexTask
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.scripts.extract.vortex import vortex_get
-
-
-def setup(t, **kw):
-    return Driver(
-        tag='forcing',
-        ticket=t,
-        nodes=[
-            Forcing(tag='forcing', ticket=t, **kw),
-        ],
-        options=kw
-    )
 
 
 class Precipitation(_VortexTask):
@@ -359,3 +347,121 @@ class PerturbPrecipitation(_PertubForcing):
 #        print('==================================================================================================')
 #        print('==================================================================================================')
 #        raise Exception('INFO :The execution went well, do not take into account the following error')
+
+
+class PerturbForcing(_VortexTask):
+    """
+    """
+
+    def get_remote_inputs(self):
+
+        t = self.ticket
+
+        # TODO : always store "deterministic" forcings under mb000 ?
+
+        # Try to find a forcing covering the full simulation period
+        self.sh.title('Toolbox input forcing (entire period)')
+        forcing_a = toolbox.input(
+            role           = 'Forcing',
+            kind           = 'MeteorologicalForcing',
+            vapp           = self.conf.vapp_forcing,
+            vconf          = '[geometry:tag]',
+            cutoff         = 'assimilation',
+            local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment     = self.conf.xpid_forcing,
+            block          = 'meteo',
+            geometry       = self.conf.geometry_forcing,
+            nativefmt      = 'netcdf',
+            datebegin      = self.conf.datebegin,
+            dateend        = self.conf.dateend,
+            namespace      = 'vortex.multi.fr',
+            namebuild      = 'flat@cen',
+            fatal          = False,
+        ),
+        print(t.prompt, 'forcing_a =', forcing_a)
+        print()
+
+        # Look for yearly forcing files
+        self.sh.title('Toolbox input forcing (yearly)')
+        forcing_b = toolbox.input(
+            alternate      = 'Forcing',
+            kind           = 'MeteorologicalForcing',
+            vapp           = self.conf.vapp_forcing,
+            vconf          = '[geometry:tag]',
+            cutoff         = 'assimilation',
+            local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment     = self.conf.xpid_forcing,
+            block          = 'meteo',
+            geometry       = self.conf.geometry_forcing,
+            nativefmt      = 'netcdf',
+            datebegin      = self.list_dates_begin,
+            dateend        = self.dict_dates_end,
+            namespace      = 'vortex.multi.fr',
+            namebuild      = 'flat@cen',
+        ),
+        print(t.prompt, 'forcing_b =', forcing_b)
+        print()
+
+    def algo(self):
+
+        t = self.ticket
+
+        self.sh.title('Toolbox algo')
+        algo = toolbox.algo(
+            engine       = 's2m',
+            kind         = 'perturbforcing',
+            members      = self.conf.members,
+            datebegin    = self.conf.datebegin,
+            dateend      = self.conf.dateend,
+            ntasks       = len(self.conf.members),
+            geometry_in  = self.conf.geometry,
+        )
+        print(t.prompt, 'algo =', algo)
+        print()
+        algo.run()
+
+    def put_remote_outputs(self):
+
+        t = self.ticket
+
+        # TODO : supprimer si le membre 0 devient systématique pour les forçages déterministes
+        self.sh.title('Output : reference forcing')
+        forcing_ref = toolbox.output(
+            alternate      = 'Forcing',
+            kind           = 'MeteorologicalForcing',
+            vapp           = self.conf.vapp,
+            vconf          = '[geometry:tag]',
+            cutoff         = 'assimilation',
+            local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment     = self.conf.xpid,
+            member         = 0,
+            block          = 'meteo',
+            geometry       = self.conf.geometry,
+            nativefmt      = 'netcdf',
+            datebegin      = self.list_dates_begin,
+            dateend        = self.dict_dates_end,
+            namespace      = 'vortex.multi.fr',
+            namebuild      = 'flat@cen',
+        ),
+        print(t.prompt, 'forcing_ref =', forcing_ref)
+        print()
+
+        self.sh.title('Output : perturbed forcings')
+        forcing_perturb = toolbox.output(
+            role           = 'Forcing',
+            local          = 'mb[member%04d]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+            vapp           = self.conf.vapp,
+            experiment     = self.conf.xpid,
+            member         = self.conf.members,
+            geometry       = self.conf.geometry,
+            datebegin      = self.list_dates_begin,
+            dateend        = self.dict_dates_end,
+            nativefmt      = 'netcdf',
+            kind           = 'MeteorologicalForcing',
+            model          = 'safran',
+            namespace      = 'vortex.multi.fr',
+            namebuild      = 'flat@cen',
+            block          = 'meteo'
+        ),
+        print(t.prompt, 'forcing_perturb =', forcing_perturb)
+        print()

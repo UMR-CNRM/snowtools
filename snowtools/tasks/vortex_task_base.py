@@ -8,6 +8,9 @@ from vortex.layout.nodes import Task
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 from bronx.stdtypes.date import Date
+from footprints.stdtypes import FPDict
+from vortex.syntax.stdattrs import Namespace
+
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 
 
@@ -44,6 +47,33 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
 
     '''
 
+    def defaults(self, extras):
+        """
+        Set toolbox defaults, extended with actual arguments ``extras``.
+        """
+        t = self.ticket
+        print('DBUG', t.glove.vapp)
+        toolbox.defaults(
+            model      = t.glove.vapp,
+            namespace  = self.conf.get('namespace', Namespace('vortex.multi.fr')),
+            gnamespace = self.conf.get('gnamespace', Namespace('gco.multi.fr')),
+        )
+        if 'rundate' in self.conf:
+            toolbox.defaults['date'] = self.conf.rundate
+        elif 'dateend' in self.conf:
+            toolbox.defaults['date'] = self.conf.dateend
+
+        for optk in ('cutoff', 'geometry', 'cycle', 'vortex_set_aside'):
+            if optk in self.conf:
+                value = self.conf.get(optk)
+                if isinstance(value, dict):
+                    value = FPDict(value)
+                toolbox.defaults[optk] = value
+
+        toolbox.defaults(**extras)
+        self.header('Toolbox defaults')
+        toolbox.defaults.show()
+
     def process(self):
         """
         Main method definig the task's sequence of actions
@@ -62,16 +92,17 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
             geometry       = self.conf.geometry,
             vapp           = self.conf.vapp,
             vconf          = '[geometry:tag]',
-            model          = self.conf.model,
+            # model          = self.conf.model,
             namespace      = 'vortex.multi.fr',
             namebuild      = 'flat@cen',  # WARNING : research only !
             nativefmt      = 'netcdf',
         )
 
+        # TODO : Use the "defaults" method of the Task/Node class instead ?
         toolbox.defaults.update(**self.common_kw)
 
-        #if hasattr(self.conf, 'member') and self.conf.member is not None:
-        #    toolbox.defaults.update(member=self.conf.member)
+        # if hasattr(self.conf, 'member') and self.conf.member is not None:
+        #     toolbox.defaults.update(member=self.conf.member)
 
         if 'early-fetch' in self.steps:  # Executed on a TRANSFERT NODE to fetch inputs from a remote cache
             self.get_remote_inputs()
