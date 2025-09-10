@@ -25,7 +25,7 @@ When running tests, your environment must:
 
 Test server at CEN
 ^^^^^^^^^^^^^^^^^^
-automatic tests are run on the test server http://cenmanto6.cen.meteo.fr:8080
+automatic tests are run on the test server http://cenmodobs.cen.meteo.fr:8080
 for each commit on master or dev branch.
 
 Branches can be manually tested (internal access only)
