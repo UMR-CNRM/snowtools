@@ -397,8 +397,8 @@ class Edelweiss_kitchen(vortex_kitchen):
                 self.iniparser.set('offlinempi', 'datebegin', datebegin)
                 self.iniparser.set('offlinempi', 'dateend', dateend)
                 if first_run:
-                    self.iniparser.set('offlinempi', 'block_prep_in', 'prep')
-                    self.iniparser.set('offlinempi', 'xpid_prep_in', self.options.xpid_prep_in)
+                    self.iniparser.set('offlinempi', 'block_prep', 'prep')
+                    self.iniparser.set('offlinempi', 'xpid_prep', self.options.xpid_prep)
                 self.iniparser.set('offlinempi', 'block_prep_out', 'prep/bg')
 
                 # The configuration file is now complete, time to write it
@@ -408,12 +408,12 @@ class Edelweiss_kitchen(vortex_kitchen):
                     print("Run command: " + mkjob + "\n")
                     callSystemOrDie(mkjob)
 
-            self.iniparser.set('offlinempi', 'date_prep_in', date)
+            self.iniparser.set('offlinempi', 'date_prep', date)
             if first_run:
-                self.iniparser.remove_option('offlinempi', 'member_prep_in')
-                self.iniparser.remove_option('offline_mpi', 'member_prep_in')
-                self.iniparser.set('offlinempi', 'block_prep_in', 'prep/an')
-                self.iniparser.set('offlinempi', 'xpid_prep_in', self.options.xpid)
+                self.iniparser.remove_option('offlinempi', 'member_prep')
+                self.iniparser.remove_option('offline_mpi', 'member_prep')
+                self.iniparser.set('offlinempi', 'block_prep', 'prep/an')
+                self.iniparser.set('offlinempi', 'xpid_prep', self.options.xpid)
                 first_run = False
 
             if wait_mandatory_input('soda', block='bg', rundate=date):

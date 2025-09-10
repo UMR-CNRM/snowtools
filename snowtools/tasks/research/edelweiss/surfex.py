@@ -105,21 +105,21 @@ class _SURFEXTask(_VortexTask):
         The PREP file will be modified during the execution so a copy must be made
         instead of a symbolic link (--> intent='inout').
         """
-        if 'member_prep_in' in self.conf:
-            member = self.conf.member_prep_in
+        if 'member_prep' in self.conf:
+            member = self.conf.member_prep
         else:
             member = self.conf.member
         self.sh.title('PREP')
         self.prep = toolbox.input(
             role         = "SnowpackInit",
             kind         = 'PREP',
-            experiment   = self.conf.xpid_prep_in,
+            experiment   = self.conf.xpid_prep,
             local        = 'PREP.nc',
-            geometry     = self.conf.geometry_prep_in,
-            date         = self.conf.date_prep_in,
+            geometry     = self.conf.geometry_prep,
+            date         = self.conf.date_prep,
             intent       = 'inout',
-            vapp         = self.conf.vapp_prep_in,
-            block        = self.conf.block_prep_in,
+            vapp         = self.conf.vapp_prep,
+            block        = self.conf.block_prep,
             model        = 'surfex',
             member       = member,
         )
@@ -254,7 +254,7 @@ class OfflineMPI(_SURFEXTask):
             kind           = 'deterministic',
             datebegin      = self.conf.datebegin,
             dateend        = self.conf.dateend,
-            dateinit       = self.conf.date_prep_in,
+            dateinit       = self.conf.date_prep,
             ntasks         = self.conf.ntasks,
             verbose        = True,
         )

@@ -249,7 +249,7 @@ class Edelweiss_command(object):
                                        " * dateend   (str) : If different from '-e' argument (format YYYYMMDDHH)\n"
                                        " ")
 
-        parser_input.add_argument("--prep_in", dest="prep_in", action=ParseKwargs, nargs='*',
+        parser_input.add_argument("--prep_in", '--prep', dest="prep", action=ParseKwargs, nargs='*',
                                   type=str, default=None,
                                   # TODO : what if already in the user conf file ? --> overwrite ?
                                   help="Definition (footprint-like dict) of the default forcing variables input.\n"
@@ -266,7 +266,7 @@ class Edelweiss_command(object):
                                   type=str, default=None,
                                   # TODO : what if already in the user conf file ? --> overwrite ?
                                   help="Definition (footprint-like dict) of the default forcing variables input.\n"
-                                       "Format : --prep key1=var1 key2=var2 ...\n"
+                                       "Format : --prep_out key1=var1 key2=var2 ...\n"
                                        "Known dictionary keys :\n"
                                        " * xpid      (str) : Experiment identifier (Format : {xpid}@{username})\n"
                                        " * geometry  (str) : Experiment geometry\n"
@@ -354,7 +354,7 @@ class Edelweiss_command(object):
 
         args_to_dict = vars(self.options)  # Convert self.options *Namepace* object to a *dictionnary* object
         # Convert *dictionary* arguments to proper configuration variables
-        for specific_input in ['forcing', 'precipitation', 'wind', 'prep_in', 'prep_out', 'pro', 'lpn']:
+        for specific_input in ['forcing', 'precipitation', 'wind', 'prep', 'prep_out', 'pro', 'lpn']:
 
             # TODO : return a footprint-like dictionnary to be used directly !
 
@@ -370,7 +370,7 @@ class Edelweiss_command(object):
             # The FORCING's 'member' variable is managed separately (depending on the type of execution)
             if 'prep' in specific_input:
                 # PREP files only need a validity *date*
-                optional_keys = ['xpid', 'geometry', 'vapp', 'date', 'members']
+                optional_keys = ['xpid', 'geometry', 'vapp', 'date', 'members', 'block']
             else:
                 # All other files cover a period
                 # TODO : members_forcing ne devrait pas être optionnel puisqu'il est utilisé pour définir le nombre
@@ -385,7 +385,7 @@ class Edelweiss_command(object):
                     elif key == 'members':
                         # If no *members* attribute is given
                         setattr(self.options, f'{key}_{specific_input}', None)
-                    elif key == 'kind':
+                    elif key in ['kind', 'block']:
                         setattr(self.options, f'{key}_{specific_input}', specific_input)
                     else:
                         setattr(self.options, f'{key}_{specific_input}', args_to_dict[key])
