@@ -8,16 +8,17 @@ import numpy as np
 
 import xarray as xr
 
-from snowtools.utils import xarray_snowtools  # noqa
+from snowtools.utils import xarray_snowtools  # noqa: F401
 from snowtools.DATA import TESTBASE_DIR
 
 
-if not os.path.isdir(TESTBASE_DIR):
-    SKIP = True
+if 'snowtools' not in xr.backends.list_engines():
+    SKIP_ARRAY_BACKEND = True
 else:
-    SKIP = False
+    SKIP_ARRAY_BACKEND = False
 
 
+@unittest.skipIf(SKIP_ARRAY_BACKEND, 'Snowtools backend not available')
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'pro_2018080306_2018080406.nc')),
                  "input file not available")
@@ -26,6 +27,12 @@ else:
                  "input file not available")
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'old_PRO_20180807032000_002400.nc')),
+                 "input file not available")
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
+                                                 "PRO_first_2014080106_2015080106.nc")),
+                 "input file not available")
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "FORCING",
+                                                 'FORCING_test_base.nc')),
                  "input file not available")
 class Test_snowtools_accessor(unittest.TestCase):
 
@@ -80,6 +87,7 @@ class Test_snowtools_accessor(unittest.TestCase):
         cls.ds_old.close()
 
 
+@unittest.skipIf(SKIP_ARRAY_BACKEND, 'Snowtools backend not available')
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'pro_2018080306_2018080406.nc')),
                  "input file not available")
@@ -125,6 +133,7 @@ class Test_semidistributed_accessor(unittest.TestCase):
         cls.ds18.close()
 
 
+@unittest.skipIf(SKIP_ARRAY_BACKEND, 'Snowtools backend not available')
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'pro_2018080306_2018080406.nc')),
                  "input file not available")
@@ -152,6 +161,7 @@ class Test_SURFEX_accessor(unittest.TestCase):
         cls.ds_2D.close()
 
 
+@unittest.skipIf(SKIP_ARRAY_BACKEND, 'Snowtools backend not available')
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'PRO_2010080106_2011080106.nc')),
                  "input file not available")
@@ -185,6 +195,7 @@ class TestXarray_first_test(unittest.TestCase):
         cls.ds_first.close()
 
 
+@unittest.skipIf(SKIP_ARRAY_BACKEND, 'Snowtools backend not available')
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'PRO_WJF_2014-2015.nc')),
                  "input file not available")
@@ -193,30 +204,27 @@ class TestXarray_first_test(unittest.TestCase):
                  "input file not available")
 class TestXarray_multifile(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls):
-        # fichier au nouveau format de la chaîne
-        path_pro_multifirst = os.path.join(TESTBASE_DIR, "PRO", "PRO_WJF_2014-2015.nc")
-        cls.ds_multifirst = xr.open_dataset(path_pro_multifirst, engine='snowtools')
-        path_pro_multisec = os.path.join(TESTBASE_DIR, "PRO", "PRO_WJF_2015-2016.nc")
-        cls.ds_multisec = xr.open_dataset(path_pro_multisec, engine='snowtools')
-        cls.ds_multi = xr.open_dataset([path_pro_multifirst, path_pro_multisec], engine='snowtools')
-        cls.ds_multi2 = xr.open_mfdataset([path_pro_multifirst, path_pro_multisec], engine='snowtools')
-
     def test_multiopen(self):
-        self.assertEqual(len(self.ds_multifirst.time), 2921, "Expect: 2921 timesteps")
-        self.assertEqual(len(self.ds_multisec.time), 2928, "Expect: 2928 timesteps")
-        self.assertEqual(len(self.ds_multi.time), 5849, "Expect: 5849 timesteps")
-        self.assertEqual(len(self.ds_multi2.time), 5849, "Expect: 5849 timesteps")
+        path_pro_multifirst = os.path.join(TESTBASE_DIR, "PRO", "PRO_WJF_2014-2015.nc")
+        path_pro_multisec = os.path.join(TESTBASE_DIR, "PRO", "PRO_WJF_2015-2016.nc")
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.ds_multifirst.close()
-        cls.ds_multisec.close()
-        cls.ds_multi.close()
-        cls.ds_multi2.close()
+        ds_multifirst = xr.open_dataset(path_pro_multifirst, engine='snowtools')
+        self.assertEqual(len(ds_multifirst.time), 2921, "Expect: 2921 timesteps")
+        ds_multifirst.close()
+
+        ds_multisec = xr.open_dataset(path_pro_multisec, engine='snowtools')
+        self.assertEqual(len(ds_multisec.time), 2928, "Expect: 2928 timesteps")
+        ds_multisec.close()
+
+        ds_multi = xr.open_dataset([path_pro_multifirst, path_pro_multisec], engine='snowtools')
+        self.assertEqual(len(ds_multi.time), 5849, "Expect: 5849 timesteps")
+        ds_multi.close()
+
+        ds_multi2 = xr.open_mfdataset([path_pro_multifirst, path_pro_multisec], engine='snowtools')
+        self.assertEqual(len(ds_multi2.time), 5849, "Expect: 5849 timesteps")
 
 
+@unittest.skipIf(SKIP_ARRAY_BACKEND, 'Snowtools backend not available')
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'PRO_first_2014080106_2015080106.nc')),
                  "input file not available")
@@ -237,6 +245,7 @@ class Test_distributed_accessor(unittest.TestCase):
         cls.ds_2D.close()
 
 
+@unittest.skipIf(SKIP_ARRAY_BACKEND, 'Snowtools backend not available')
 @unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
                                                  'old_PRO_20180807032000_002400.nc')),
                  "input file not available")
@@ -276,6 +285,24 @@ class TestOldPRO(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.ds.close()
+
+
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
+                                                 'pro_2018080306_2018080406.nc')),
+                 "input file not available")
+@unittest.skipIf(not os.path.isfile(os.path.join(TESTBASE_DIR, "PRO",
+                                                 'PRO_WJF_2010-2016.nc')),
+                 "input file not available")
+class Test_snowtools_preprocess(unittest.TestCase):
+    @classmethod
+    def test_snowtools_preprocess(cls):
+        # fichier au nouveau format de la chaîne
+        path_pro18 = os.path.join(TESTBASE_DIR, "PRO", 'pro_2018080306_2018080406.nc')
+        ds18 = xr.open_dataset(path_pro18, decode_times=False)
+        xarray_snowtools.preprocess(ds18)
+        path_multi_year = os.path.join(TESTBASE_DIR, "PRO", 'PRO_WJF_2010-2016.nc')
+        ds_multi_year = xr.open_dataset(path_multi_year, decode_times=False)
+        xarray_snowtools.preprocess(ds_multi_year)
 
 
 if __name__ == "__main__":

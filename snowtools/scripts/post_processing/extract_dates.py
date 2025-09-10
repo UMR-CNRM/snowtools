@@ -16,7 +16,7 @@ import xarray as xr
 import pandas as pd
 import argparse
 
-import snowtools  # noqa
+from snowtools.utils import xarray_snowtools
 from snowtools.utils.dates import get_standad_nivology_season
 from bronx.stdtypes.date import Date
 try:
@@ -89,7 +89,8 @@ def execute(subdir, dates):
     Main method
     """
     proname = os.path.join(subdir, 'PRO.nc')
-    pro     = xr.open_dataset(proname, engine='snowtools')
+    pro     = xr.open_dataset(proname, decode_times=False)
+    pro = xarray_snowtools.preprocess(pro)
     if 'ZS' in pro.keys():
         pro     = pro[['DSN_T_ISBA', 'ZS']]
     else:

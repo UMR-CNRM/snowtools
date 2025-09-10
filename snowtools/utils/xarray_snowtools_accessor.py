@@ -1,9 +1,10 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
 
-Introduction to xarray_snowtools_accessor:
+Functions (accessors) provided by snowtools adaptation of xarray
+----------------------------------------------------------------
+
 The module xarray_snowtools_accessor aims at wrapping and extending the xarray module for snowtools-specific usage.
 The wrapping of existing methods is designed to reduce dependency to native xarray method changes (in order to
 centralise required adaptations).
@@ -11,18 +12,19 @@ centralise required adaptations).
 Following the xarray project's recomandations, it is based on the use of accessor :
 https://tutorial.xarray.dev/advanced/accessors/01_accessor_examples.html
 
-This accessor is automatically made available when the snowtools package is imported.
+This accessor is automatically made available when you import ``snowtools.utils.xarray_snowtools``.
 
 
-Usage examples:
----------------
+Usage examples
+^^^^^^^^^^^^^^
 
 .. code-block:: python
 
      from snowtools.utils import xarray_snowtools
      import xarray as xr
 
-     ds = xr.open_dataset('INPUT.nc', engine='snowtools')
+     ds = xr.open_dataset('INPUT.nc', decode_times=False)
+     ds = xarray_snowtools.preprocess(ds)
 
 1. Select subset of points from a S2M file in the massif geometry, based on the massif number,
    elevation, slope and aspect
@@ -56,7 +58,8 @@ Usage examples:
      from snowtools.utils import xarray_snowtools
      import xarray as xr
      import matplotlib.pyplot as plt
-     ds = xr.open_dataset('PRO_2010080106_2011080106.nc', engine='snowtools')
+     ds = xr.open_dataset('PRO_2010080106_2011080106.nc', decode_times=False)
+     ds = xarray_snowtools.preprocess(ds)
      dszs = ds.semidistributed.sel_points(ZS=2400)
      meanmonthgroup = dszs.groupby("time.month").mean() # mean the variables on a monthly base
      meanmonthgroup.TG1.plot() # choose one variable to plot
@@ -68,7 +71,8 @@ Usage examples:
 
      from snowtools.utils import xarray_snowtools
      import xarray as xr
-     ds = xr.open_dataset('PRO_2010080106_2011080106.nc', engine='snowtools')
+     ds = xr.open_dataset('PRO_2010080106_2011080106.nc', decode_times=False)
+     ds = xarray_snowtools.preprocess(ds)
      dszs = ds.semidistributed.sel_points(ZS=2400)
      dszs.resample(time='12h').mean() # time resampling to 12h timestep
 
@@ -81,7 +85,8 @@ Resample Rainf variable from hourly values to daily accumulations, starting at 0
      from snowtools.utils import xarray_snowtools
      import xarray as xr
 
-     ds_hourly = xr.open_dataset('FORCING_test_2d.nc', engine='snowtools')
+     ds_hourly = xr.open_dataset('FORCING_test_2d.nc', decode_times=False)
+     ds = xarray_snowtools.preprocess(ds)
      ds_daily = ds_hourly.Rainf.snowtools.daily_accumulation(start_hour=3)
 
 
@@ -99,10 +104,6 @@ Informations on the list of xarray function/method considered public API can be 
 """
 
 from typing import Union
-try:
-    from typing import Literal
-except ImportError:
-    from typing_extensions import Literal
 
 import xarray as xr
 
@@ -213,7 +214,8 @@ class SnowtoolsAccessor:
 
             from snowtools.utils import xarray_snowtools
             import xarray as xr
-            ds=xr.open_dataset('PRO_WJF_2010-2016.nc', engine='snowtools')
+            ds=xr.open_dataset('PRO_WJF_2010-2016.nc', decode_times=False)
+            ds = xarray_snowtools.preprocess(ds)
             stats=ds.snowtools.snow_cover_stats()
 
         :param snow_depth_variable: Name of the variable containing the snow depth (default value for SURFEX outpus)
@@ -242,8 +244,9 @@ class SnowtoolsAccessor:
 
             from snowtools.utils import xarray_snowtools
             import xarray as xr
-            ds=xr.open_dataset('old_PRO_20180807032000_002400.nc', engine='snowtools')
-            original=ds.backtrack_preprocess()
+            ds = xr.open_dataset('old_PRO_20180807032000_002400.nc', decode_times=False)
+            ds = xarray_snowtools.preprocess(ds)
+            original = ds.backtrack_preprocess()
 
         """
         if isinstance(self.ds, xr.Dataset):
@@ -275,7 +278,8 @@ class MeteoAccessor(SnowtoolsAccessor):
          from snowtools.utils import xarray_snowtools
          import xarray as xr
 
-         ds = xr.open_dataset('FORCING.nc', engine='meteo')
+         ds = xr.open_dataset('FORCING.nc', decode_times=False)
+         ds = xarray_snowtools.preprocess(ds)
          ds.meteo.[...]
     """
 
@@ -293,7 +297,8 @@ class SurfexAccessor(SnowtoolsAccessor):
          from snowtools.utils import xarray_snowtools
          import xarray as xr
 
-         ds = xr.open_dataset('PRO.nc', engine='snowtools')
+         ds = xr.open_dataset('PRO.nc', decode_times=False)
+         ds = xarray_snowtools.preprocess(ds)
          ds.surfex.decode_time_variable('time')
     """
 
@@ -337,7 +342,8 @@ class SemiDistributedAccessor(SnowtoolsAccessor):
          from snowtools.utils import xarray_snowtools
          import xarray as xr
 
-         ds = xr.open_dataset('INPUT.nc', engine='snowtools')
+         ds = xr.open_dataset('INPUT.nc', decode_times=False)
+         ds = xarray_snowtools.preprocess(ds)
          ds.semidistributed.sel_points(massif_num=3, ZS=[900, 1800, 2700, 3600], slope=40)
     """
 
@@ -413,7 +419,8 @@ class DistributedAccessor(SnowtoolsAccessor):
          from snowtools.utils import xarray_snowtools
          import xarray as xr
 
-         ds = xr.open_dataset('INPUT.nc', engine='snowtools')
+         ds = xr.open_dataset('INPUT.nc', decode_times=False)
+         ds = xarray_snowtools.preprocess(ds)
          ds.distributed.proj("EPSG:4326", "EPSG:2154")
     """
 
@@ -443,7 +450,7 @@ class DistributedAccessor(SnowtoolsAccessor):
         return out
 
     def plot_ensemble(self, variable=None, vmin=None, vmax=None, cmap=None, dem=None, isolevels=None,
-            members: Union[Literal["all", "mean"], int] = 'all', projection=None):
+                      members: Union[str, int] = 'all', projection=None):
         """
         Plot field(s) from an ensemble. To control the members of the ensemble to be plotted, use the "members"
         argument.
@@ -462,10 +469,10 @@ class DistributedAccessor(SnowtoolsAccessor):
         :type dem: DataArray
         :param isolevels: List of iso-levels to plot
         :type isolevels: list
-        :param members: How to plot the ensemble data\n
-        - 'all': Plot all ensemble members on the same figure
-        - 'mean': Plot the mean ensemble field
-        - int: Plot the given ensemble member only
+        :param members: How to plot the ensemble data:
+                        'all': Plot all ensemble members on the same figure;
+                        'mean': Plot the mean ensemble field;
+                        int: Plot the given ensemble member only.
         :type members: str or int
         """
 
@@ -523,11 +530,13 @@ class DistributedAccessor(SnowtoolsAccessor):
 
                 return fig
 
+            elif members == 'mean':
+                field = ensemble.mean(dim='member')
+            elif isinstance(members, int):
+                field = ensemble.sel(member=members)
             else:
-                if members == 'mean':
-                    field = ensemble.mean(dim='member')
-                elif isinstance(members, int):
-                    field = ensemble.sel(member=members)
+                raise ValueError(f'Could not interpret argument members ({members}). '
+                                 'Should be an interger, "mean" or "all".')
 
                 field.load()
 

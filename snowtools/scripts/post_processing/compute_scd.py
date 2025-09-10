@@ -17,7 +17,7 @@ import sys
 import xarray as xr
 import argparse
 
-import snowtools  # noqa
+from snowtools.utils import xarray_snowtools
 from snowtools.tools.SnowCoverDuration import lcscd
 
 
@@ -59,7 +59,8 @@ def execute(subdir='', threshold=0.2):
     Main method to compute Sentinel2-like diagnostics from a SURFEX simulation
     """
     proname = os.path.join(subdir, 'PRO.nc')
-    pro = xr.open_dataset(proname, engine='snowtools')
+    pro = xr.open_dataset(proname, decode_times=False)
+    pro = xarray_snowtools.preprocess(pro)
     diag = lcscd(pro.DSN_T_ISBA, threshold)
 
     # Add 'ZS' (DEM) variable

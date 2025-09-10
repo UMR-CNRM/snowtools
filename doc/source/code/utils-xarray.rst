@@ -1,14 +1,14 @@
 
 Xarray with snowtools
-=================================
+=====================
 
 In order to deal with NetCDF files in general, xarray is a well known tool.
 The interaction with snowtools is made this way (to allows compatibility with old SURFEX simulation for example)
 
-.. automodule:: utils.xarray_snowtools_accessor
+.. automodule:: utils.xarray_snowtools_backend
    :members:
 
-.. automodule:: utils.xarray_snowtools_backend
+.. automodule:: utils.xarray_snowtools_accessor
    :members:
 
 
@@ -25,7 +25,8 @@ For example, to compute the maximum of snow depth over time for one specific poi
     from snowtools.utils import xarray_snowtools
     import xarray as xr
 
-    ds = xr.open_dataset(filename, engine='snowtools')
+    ds = xr.open_dataset(filename, decode_times=False)
+    ds = xarray_snowtools.preprocess(ds)
     htn = ds.DSN_T_ISBA
     subdata = htn.sel(xx=lon, yy=lat)
     out = subdata.max('time')
@@ -37,7 +38,8 @@ instead of :
     from snowtools.utils import xarray_snowtools
     import xarray as xr
 
-    ds = xr.open_dataset(filename, engine='snowtools')
+    ds = xr.open_dataset(filename, decode_times=False)
+    ds = xarray_snowtools.preprocess(ds)
     htn = ds.DSN_T_ISBA
     maxhtn = hnt.max('time')
     out = maxhtn.sel(xx=lon, yy=lat)

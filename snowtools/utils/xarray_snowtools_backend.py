@@ -1,9 +1,9 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
 
-Introduction to xarray_snowtools_backend:
+Opening a netCDF file with xarray
+---------------------------------
 
 The xarray_snowtools_backend module contains all elements defining the xarray entry points for SURFEX Input / Outputs
 in NetCDF format (methods `open_dataset`, `open_dataarray` and `open_mfdataset`, responsible for reading files and
@@ -11,8 +11,7 @@ returning an xarray DataArray or Dataset Object) to be used within the snowtools
 
 These entry points are defined in the ``SnowtoolsBackendEntrypoint`` class inheriting from the xarray-native
 ``BackendEntrypoint`` class (https://docs.xarray.dev/en/stable/internals/how-to-add-new-backend.html).
-WARNING : xarray ``BackendEntrypoint`` class is not implemented on xarray 0.16.0 (default HPC install)
---> call *preprocess* (under snowtools/utils/xarray_preprocess.py) directly for HPC usage.
+WARNING : xarray ``BackendEntrypoint`` class is not implemented on xarray before 0.18 (default Meteo-France install)
 
 These entry points are designed to deal with the following requirements :
 
@@ -47,12 +46,22 @@ These entry points are designed to deal with the following requirements :
       (see "check_encoding" method for more information)
 
 To use these entry points, the native xarray methods `open_dataset`, `open_dataarray` and `open_mfdataset` should
-simply be called with the keyword argument "engine='snowtools'" (see the "Standard usage" section of this doc).
+simply be called with the keyword argument "engine='snowtools'" except if you have an older xarray version (see below).
 
-The "snowtools" backend is automatically made available when the snowtools package is imported.
+Meteo-France usage (until next xarray update from version 0.16.0)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Standard usage:
----------------
+.. code-block:: python
+
+    import xarray as xr
+    from snowtools.utils import xarray_snowtools
+
+    ds = xr.open_dataset('INPUT.nc', decode_times=False)
+    ds = xarray_snowtools.preprocess(ds)
+
+
+Usage with xarray > 0.18
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
@@ -63,64 +72,66 @@ Standard usage:
     ds = xr.open_mfdataset(list_of_files, engine='snowtools')
 
 
-HPC usage (until next xarray update from version 0.16.0):
----------------------------------------------------------
+Use with statements!
+^^^^^^^^^^^^^^^^^^^^
+
+We encourage you to use with statements as soon as possible to ensure that the files are correctly closed:
 
 .. code-block:: python
 
+    from snowtools.utils import xarray_snowtools
     import xarray as xr
-    from snowtools.utils.xarray_snowtools_preprocess import preprocess
 
-    ds = xr.open_dataset('INPUT.nc', decode_times=False)
-    ds = preprocess(ds)
+    with xr.open_dataset(filename, decode_times=False) as ds:
+        ds = xarray_snowtools.preprocess(ds)
+        ...  # Do what you want with the data inside of these files.
 
+..
+   Additionnal features
+   ^^^^^^^^^^^^^^^^^^^^
 
-Additionnal features:
----------------------
+   The subsequent use of xarray directly enables the following functionalities of the former prosimu tool:
 
-The subsequent use of xarray directly enables the following functionalities of the former prosimu tool:
+       - Extract points according to spatial properties (through native xarray indexing methods "sel", "loc","where"...)
+         xarray related documentation : https://docs.xarray.dev/en/stable/user-guide/indexing.html
 
-    - Extract points according to spatial properties (through native xarray indexing methods "sel", "loc","where",...)
-      xarray related documentation : https://docs.xarray.dev/en/stable/user-guide/indexing.html
+         examples:
 
-      examples:
+         .. code-block:: python
 
-      .. code-block:: python
+             ds.sel(time=slice('2025-06-12 00', '2025-06-14 12', xx=slice(6.5, 8.), yy=slice(43., 45.))
+             ds.where((ds.massif_num == 3) & (ds.ZS.isin([900, 1800, 2700, 3600])) &
+                           (ds.slope == 40) & (ds.aspect.isin([0, 180])), drop=True)
 
-          ds.sel(time=slice('2025-06-12 00', '2025-06-14 12', xx=slice(6.5, 8.), yy=slice(43., 45.))
-          ds.where((ds.massif_num == 3) & (ds.ZS.isin([900, 1800, 2700, 3600])) &
-                        (ds.slope == 40) & (ds.aspect.isin([0, 180])), drop=True)
+       - Temporal integration of a diagnostic (native xarray "resample" method)
 
-    - Temporal integration of a diagnostic (native xarray "resample" method)
+       - Data concatenation along 1 dimension of a set of files (method `open_mfdataset`)
 
-    - Data concatenation along 1 dimension of a set of files (method `open_mfdataset`)
+       - Optimisation of data reanding and prossessing through the use of xarray-compatible dask tools
+         (https://docs.xarray.dev/en/stable/user-guide/dask.html)
 
-    - Optimisation of data reanding and prossessing through the use of xarray-compatible dask tools
-      (https://docs.xarray.dev/en/stable/user-guide/dask.html)
+       - Dealing with missing values
 
-    - Dealing with missing values
+   It also enables new functionalities not covered (or only partially) by prosimu :
 
-It also enables new functionalities not covered (or only partially) by prosimu :
+       - Integration of xarray-based codes into snowtools, benefiting from advanced xarray functionalities
+         (eg: "groupby") and related projects (ex : https://docs.xarray.dev/en/stable/user-guide/ecosystem.html)
 
-    - Integration of xarray-based codes into snowtools, benefiting from advanced xarray functionalities (ex: "groupby")
-      and related projects (ex : https://docs.xarray.dev/en/stable/user-guide/ecosystem.html#ecosystem)
+       - Easy exploration / processing of 2D, ensemble data (interpolation, maps, scores,...)
 
-    - Easy exploration / processing of 2D, ensemble data (interpolation, maps, scores,...)
+       - Direct compatibility with any new dimension (ex : "member")
 
-    - Direct compatibility with any new dimension (ex : "member")
+       - Propagation of the attributes along all process steps
 
-    - Propagation of the attributes along all process steps
+       - Process different input file formats (grib, tif,...) with the same tools by using native or
+         custom xarray engines
 
-    - Process different input file formats (grib, tif,...) with the same tools by using native or custom xarray engines
+   See xarray documentation (https://xarray.dev/) for more information, in particular :
 
-See xarray documentation (https://xarray.dev/) for more information, in particular :
+       - xarray philosophy : https://docs.xarray.dev/en/stable/roadmap.html#roadmap
 
-    - xarray philosophy : https://docs.xarray.dev/en/stable/roadmap.html#roadmap
-
-    - xarray internal design :
-      https://docs.xarray.dev/en/stable/internals/internal-design.html#internal-design-lazy-indexing
-
-    - IO management with xarray : https://docs.xarray.dev/en/stable/user-guide/io.html
+       - xarray internal design :
+         https://docs.xarray.dev/en/stable/internals/internal-design.html#internal-design-lazy-indexing
 
 
 """

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import xarray
@@ -29,7 +28,7 @@ def preprocess(ds, mapping=dict(), decode_time=True, transpose=False):
 
         import xarray as xr
 
-        from snowtools.utils.xarray_snowtools_backend import preprocess
+        from snowtools.utils.xarray_snowtools import preprocess
 
         ds = xr.open_dataset('INPUT.nc', decode_times=False)
         ds = preprocess(ds)
