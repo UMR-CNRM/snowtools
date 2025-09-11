@@ -1444,7 +1444,7 @@ def main(c):
     """
     # The following class has a vortex-dependence
     # Should not import than above to avoid problems when importing the module from vortex
-    from snowtools.tasks.oper.get_oper_files import S2MExtractor, FutureS2MExtractor
+    from snowtools.tasks.oper.get_oper_files import FutureS2MExtractor
 
     os.chdir(c.diroutput)
     # if c.dev:

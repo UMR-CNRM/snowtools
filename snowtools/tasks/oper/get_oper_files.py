@@ -17,7 +17,7 @@ from snowtools.utils.dates import check_and_convert_date
 import footprints
 
 usage = "usage: get_oper_files.py [-b YYYYMMDD]  [-e YYYYMMDD] [--previ] [--dev] [--deterministic] \
-        [--geometry=domain] [--firstday] [--meteo] [--snow]"
+        [--geometry=domain] [--firstday] [--meteo] [--snow] [--hydro] [--ppquantiles]"
 
 
 class configdev(object):
@@ -83,6 +83,9 @@ def parse_options(arguments):
                       action="store_true", dest="hydro", default=False,
                       help="Extract hydrological post-processing")
 
+    parser.add_option("--ppquantiles", action="store_true", dest="pp_quantiles", default=False,
+                      help="Extract, potentially emos postprocessed, quantiles (fresh snow)")
+
     (options, args) = parser.parse_args(arguments)  # @UnusedVariable
 
     return options
@@ -107,6 +110,7 @@ class _configcommand(object):
         self.snow = options.snow
         self.hydro = options.hydro
         self.previ = options.previ
+        self.pp_quantiles = options.pp_quantiles
 
 
 class configcommand(_configcommand, config):
@@ -150,12 +154,8 @@ class S2MExtractor(S2MTaskMixIn):
             snow_outputs = self.get_snow()
         else:
             snow_outputs = None
-        if self.conf.hydro:
-            hydro_outputs = self.get_hydro()
-        else:
-            hydro_outputs = None
 
-        return meteo_outputs, snow_outputs, hydro_outputs
+        return meteo_outputs, snow_outputs
 
     def get_meteo(self):
 
@@ -277,6 +277,21 @@ class S2MExtractor(S2MTaskMixIn):
 
 
 class FutureS2MExtractor(S2MExtractor):
+
+
+    def get(self):
+        meteo_outputs, snow_outputs = super().get()
+        if self.conf.hydro:
+            hydro_outputs = self.get_hydro()
+        else:
+            hydro_outputs = None
+        if self.conf.pp_quantiles:
+            pp_outputs = self.get_pp_quantiles()
+        else:
+            pp_outputs = None
+
+        return meteo_outputs, snow_outputs, hydro_outputs, pp_outputs
+
 
     def get_meteo(self):
 
@@ -411,7 +426,35 @@ class FutureS2MExtractor(S2MExtractor):
         return self.get_std(tb03)
 
 
+    def get_pp_quantiles(self):
+        import cen
+
+        tb_pp = toolbox.input(
+            role        = 'Postproc_output',
+            intent      = 'in',
+            vapp        = 's2m',
+            vconf       = '[geometry::area]',
+            local       = '[geometry::area]/[date:ymdh]/PRO_post_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment  = self.conf.xpid,
+            block       = 'postproc',
+            geometry    = self.conf.list_geometry,
+            date        = self.conf.rundate,
+            datebegin   = self.datebegin if self.conf.previ else '[dateend]/-PT24H',
+            dateend     = self.dateend if self.conf.previ else list(daterange(tomorrow(base=self.datebegin), self.dateend)),
+            nativefmt   = 'netcdf',
+            kind        = 'SnowpackSimulation',
+            model       = 'postproc',
+            namespace   = 'vortex.multi.fr',
+            cutoff      = 'production',
+            fatal       = False
+        ),
+
+        return self.get_std(tb_pp)
+
+
 if __name__ == "__main__":
+
+    print("hi from main")
 
     options = parse_options(sys.argv)
 
