@@ -1,8 +1,18 @@
 # -*- coding: utf-8 -*-
 
 """
+Import all tools relatex to the use of xarray inside snowtools and
+around SURFEX simulations.
 """
+
+import logging
+
 from bronx.syntax.externalcode import ExternalCodeImportChecker
+from bronx.fancies.loggers import getLogger
+
+# Prevent from showing the error log in case of unavailability of external code
+# (the unavailabilty is still mentionned at WARNING level)
+getLogger('bronx.syntax.externalcode').setLevel(logging.WARNING)
 
 echecker = ExternalCodeImportChecker('backend')
 with echecker:
