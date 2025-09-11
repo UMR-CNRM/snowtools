@@ -136,8 +136,6 @@ We encourage you to use with statements as soon as possible to ensure that the f
 
 """
 
-from typing import Union
-
 import xarray
 
 from snowtools.utils.xarray_snowtools_preprocess import preprocess
@@ -198,76 +196,16 @@ class SnowtoolsBackendEntrypoint(BackendEntrypoint):
 
         """
         if isinstance(filename_or_obj, list):
-            return self.open_mfdataset(filename_or_obj, mapping=mapping, **kw)
+            return xarray.open_mfdataset(filename_or_obj, engine='snowtools', mapping=mapping, **kw)
         else:
-            ds = xarray.open_dataset(filename_or_obj,
-                    engine='netcdf4', decode_times=False, **kw).pipe(preprocess, mapping=mapping)
+            ds = xarray.open_dataset(filename_or_obj, engine='netcdf4', decode_times=False, **kw)
+            close = ds._close
+            ds = preprocess(ds, mapping=mapping)
+            ds.set_close(close)
+
             return ds
 
     open_dataset_parameters = ["filename_or_obj"]
-
-    def open_dataarray(self, filename_or_obj, *, mapping=dict(), **kw):
-        """
-        Snowtools-specific version of the xarray's "open_dataarray" method, which calls the native method
-        and carries out a preprocessing of the data before returning the dataarray object.
-
-        :param filename_or_obj: Path of the file to read (similar to the the argument in native method)
-        :type filename_or_obj: str, Path, file_like or DataStore
-        :mapping: User-defined dictionnary to map variable or dimension names. It can be used as a complement to
-                  the default mapping dictionnary in case of a code based on variable / dimension names different than
-                  the standard ones (for example a code written after a SURFEX update).
-                  This is a snowtools-specific argument.
-        :type mapping: dict
-
-        """
-
-        da = xarray.open_dataarray(filename_or_obj, engine='netcdf4', decode_times=False,
-                **kw).pipe(preprocess, mapping=mapping)
-        return da
-
-    def open_mfdataset(self, paths, mapping=dict(),
-            drop_duplicates: Union[str, None] = None, **kw):
-        """
-        Snowtools-specific version of the xarray's "open_mfdataset" method, which calls the native method
-        and carries out a preprocessing of the data before returning the dataset object.
-
-        :param paths: List of paths of the files to read (similar to the the argument in native method)
-        :type paths: str, Path, nested sequence of paths
-        :param mapping: User-defined dictionnary to map variable or dimension names. It can be used as a complement to
-                  the default mapping dictionnary in case of a code based on variable / dimension names different than
-                  the standard ones (for example a code written after a SURFEX update).
-                  This is a snowtools-specific argument.
-        :type mapping: dict
-        :param drop_duplicates: drop duplicate values along a given dimension (in this case, "drop_duplicates" should
-                  be a valid dimension name) or all dimensions at once (special case drop_duplicates="all"),
-                  keeping only the first value (default behavior of the native "drop_duplicates" method).
-                  Default=None does nothing (standard "open_mfdataset" behavior).
-        :type drop_duplicates: str or Sequence(str) or None
-
-        """
-        from functools import partial
-        partial_func = partial(preprocess, mapping=mapping)
-
-        # TODO : change default of "data_vars" kw to 'minimal' to avoid the addition of time dimension to
-        # time-independent variables ?
-        # UPDATE : This will be the default value in the future versions of xarray :
-        # https://github.com/pydata/xarray/issues/8778
-
-        ds = xarray.open_mfdataset(paths,
-                engine='netcdf4', decode_times=False, preprocess=partial_func, **kw)
-
-        if drop_duplicates is not None:
-            # Remove duplicate dimension values that were created when the datasets were concatenated
-            if drop_duplicates == 'all':
-                # Remove all existing duplicate dimension values
-                ds = ds.drop_duplicates(...)
-            else:
-                if drop_duplicates in list(ds.dims):
-                    ds = ds.drop_duplicates(drop_duplicates)
-                else:
-                    print(f"WARNING : dimension {drop_duplicates} does not exists")
-
-        return ds
 
     def guess_can_open(self):
         """

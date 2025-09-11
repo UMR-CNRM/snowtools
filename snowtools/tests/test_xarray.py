@@ -220,8 +220,8 @@ class TestXarray_multifile(unittest.TestCase):
         self.assertEqual(len(ds_multi.time), 5849, "Expect: 5849 timesteps")
         ds_multi.close()
 
-        ds_multi2 = xr.open_mfdataset([path_pro_multifirst, path_pro_multisec], engine='snowtools')
-        self.assertEqual(len(ds_multi2.time), 5849, "Expect: 5849 timesteps")
+        with xr.open_mfdataset([path_pro_multifirst, path_pro_multisec], engine='snowtools') as ds_multi2:
+            self.assertEqual(len(ds_multi2.time), 5849, "Expect: 5849 timesteps")
 
 
 @unittest.skipIf(SKIP_ARRAY_BACKEND, 'Snowtools backend not available')
