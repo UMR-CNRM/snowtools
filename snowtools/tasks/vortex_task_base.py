@@ -54,7 +54,6 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         t = self.ticket
         print('DBUG', t.glove.vapp)
         toolbox.defaults(
-            model      = t.glove.vapp,
             namespace  = self.conf.get('namespace', Namespace('vortex.multi.fr')),
             gnamespace = self.conf.get('gnamespace', Namespace('gco.multi.fr')),
         )
