@@ -55,12 +55,12 @@ You should see ``SODA ENDS CORRECTLY`` at the end.
 Manual tests for s2m with vortex
 --------------------------------
 
-The success of the following commands must be checked before a new code release :
+The success of the following commands (including no errors in jobs execution and full availability of output files) must be checked before a new code release :
 
 .. code-block:: bash
 
     # Reanalysis test case:
-    s2m research -r alp_allslopes -b 20220801 -e 20230801 -m safran -f reanalysis2020.2 -o reanalysis_test -n /home/cnrm_other/cen/mrns/lafaysse/PycharmProjects/snowtools_git/snowtools/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam
+    s2m research -r alp_allslopes -b 20220801 -e 20230801 -m safran -f reanalysis2020.2 -o reanalysis_test -n $SNOWTOOLS_CEN/snowtools/DATA/OPTIONS_V9_reanalysis.nam
 
     # ESCROC test case:
     s2m research -r cdp -b 1994100101 -e 2014100100 -x 2014100100 -m ESM-SnowMIP -f obs@lafaysse -o E2_test --task=escroc --escroc=E2
@@ -68,18 +68,18 @@ The success of the following commands must be checked before a new code release 
     # Stochastic perturbation test case:
     s2m research -r cor_flat -b 20200801 -e 20210801 -m s2m -f reanalysis2020.2 -o perturb --task='croco_perturb' --nmembers=80
 
-    # Croco openloop test case:
+    # Croco openloop test case (before running this test case, please define postes_12_csv geometry in $HOME/.vortexrc/geometries.ini as in ~lafaysse/.vortexrc/geometries.ini ) :
     s2m research -r postes_12_csv -b 2013080106 -e 2014063006 -x 20160801 -m safran -f forcing_20132014B_31D_11_t1500_160@fructusm -o testopenloop -n ~lafaysse/croco/OPTIONS_MOTHER_DEP.nam --task='croco' --croco='openloop' --escroc=E1notartes --nmembers=35 --nforcing=35 --conf=/home/lafaysse/croco/conf.ini -s ~lafaysse/SURFEX/cen/exe_mpi
 
     # Croco test case with assim of real observations:
     s2m research -r postes_12_csv -b 2013080106 -e 2014063006 -x 20160801 -m safran -f forcing_20132014B_31D_11_t1500_160@fructusm -o test0l -n ~lafaysse/croco/OPTIONS_MOTHER_DEP.nam --task='croco' --croco='real' --escroc=E1notartes --nmembers=35 --nforcing=35 --conf=/home/lafaysse/croco/conf.ini -s ~lafaysse/SURFEX/cen/exe_mpi --obsxpid=obs@lafaysse --sensor=bdclim
 
-    # Operational analysis and forecast:
-    s2m oper -b YYYYMMDD03 -r alp
-    s2m oper -b YYYYMMDD03 -r alp --task='forecast'
+    # Replay operational analysis and forecast:
+    s2m oper -b 2025091503 -r alp --dev
+    s2m oper -b 2025091503 -r alp --task='forecast' --dev
 
     # Building of reforecast initial conditions test case:
-    s2m research -r vog3_allslopes -b 20000801 -e 20010801 -a 400 -m s2m -f reanalysis_era5.2023 -p reanalysis_era5.2023 -o initialconditions_test -n snowtools_git/snowtools/DATA/OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis_forprep.nam
+    s2m research -r vog3_allslopes -b 20000801 -e 20010801 -a 400 -m s2m -f reanalysis_era5.2023 -p reanalysis_era5.2025.2 -o initialconditions_test -n $SNOWTOOLS_CEN/snowtools/DATA/OPTIONS_V9_reanalysis_forprep.nam --task='surfex_dailyprep' --walltime='00:45:00'
 
     # Reforecast test case
-    s2m research -b 20000302 -e 20000327 -r vog3_allslopes -n /home/cnrm_other/cen/mrns/lafaysse/PycharmProjects/snowtools_git/snowtools/DATA/OPTIONS_reforecast.nam --task='reforecast' -m safran -f reforecast_2023 --nmembers=11 -p initdaily_era5.2023@lafaysse -o reforecast_test
+    s2m research -b 20000302 -e 20000327 -r vog3_allslopes -n /home/cnrm_other/cen/mrns/lafaysse/PycharmProjects/snowtools_git/snowtools/DATA/OPTIONS_reforecast.nam --task='reforecast' -m safran -f reforecast_2023 --nmembers=11 -p initdaily_era5.2025.2@lafaysse -o reforecast_test

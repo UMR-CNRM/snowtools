@@ -670,7 +670,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                                  cor2_flat=18,
                                  mac11_flat=66,
                                  jur4_flat=24,
-                                 vog3_flat=15)
+                                 vog3_flat=15,
+                                 cdp=1)
 
             if self.conf.geometry.tag in small_domains.keys():
                 # Specific number of threads must be provided for domains
