@@ -7,6 +7,10 @@ Created on 18 mars 2024
 from vortex.layout.nodes import Task
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
+from bronx.stdtypes.date import Date
+from footprints.stdtypes import FPDict
+from vortex.syntax.stdattrs import Namespace
+
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 
 
@@ -43,34 +47,48 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
 
     '''
 
-    def process(self):
+    def defaults(self, extras):
         """
-        Main method definig the task's sequence of actions
+        Set toolbox defaults, extended with actual arguments ``extras``.
         """
-
         self.get_list_dates()
-
-        # TODO : passer toute la conf en kw ?
-        # Les variables de conf suivante sont automatiquement passées à footprint :
-        # model, date, cutoff, geometry, cycle et namespace
-        self.common_kw   = dict(
+        toolbox.defaults(
+            namespace      = self.conf.get('namespace', Namespace('vortex.multi.fr')),
+            gnamespace     = self.conf.get('gnamespace', Namespace('gco.multi.fr')),
             datebegin      = self.list_dates_begin,
             dateend        = self.dict_dates_end,
-            date           = '[dateend]',  # WARNING : research only !
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
             vapp           = self.conf.vapp,
             vconf          = '[geometry:tag]',
-            model          = self.conf.model,
             namespace      = 'vortex.multi.fr',
             namebuild      = 'flat@cen',  # WARNING : research only !
             nativefmt      = 'netcdf',
         )
+        if 'date' not in self.conf:
+            if 'rundate' in self.conf:
+                toolbox.defaults['date'] = self.conf.rundate
+            else:
+                toolbox.defaults['date'] = '[dateend]',  # WARNING : research only !
 
-        toolbox.defaults.update(**self.common_kw)
+        for optk in ('cutoff', 'cycle', 'vortex_set_aside'):
+            if optk in self.conf:
+                value = self.conf.get(optk)
+                if isinstance(value, dict):
+                    value = FPDict(value)
+                toolbox.defaults[optk] = value
 
-        if hasattr(self.conf, 'member') and self.conf.member is not None:
+        if 'member' in self.conf and self.conf.member is not None:
             toolbox.defaults.update(member=self.conf.member)
+
+        toolbox.defaults(**extras)
+        self.header('Toolbox defaults')
+        toolbox.defaults.show()
+
+    def process(self):
+        """
+        Main method definig the task's sequence of actions
+        """
 
         if 'early-fetch' in self.steps:  # Executed on a TRANSFERT NODE to fetch inputs from a remote cache
             self.get_remote_inputs()
@@ -87,25 +105,15 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         if 'late-backup' in self.steps:  # Executed on a TRANSFERT NODE to save outputs to a remote destination
             self.put_remote_outputs()
 
-            # Un-comment these lines to save the working directory after the execution
-#            print('==================================================================================================')
-#            print('==================================================================================================')
-#            raise Exception('INFO :The execution went well, do not take into account the following error')
+        if self.conf.debug:
+            print('==================================================================================================')
+            print('==================================================================================================')
+            raise Exception('INFO :The execution went well, do not take into account the following error')
 
     def get_remote_inputs(self):
         """
         Implement this method in your task to fetch all resources stored remotely (on Hendrix, sxcen,...).
         You can either use standard Vortex input toolboxes or the CEN-specific `vortexIO` tool.
-
-        With vortexIO imported as `io`, the call sequence of this methods should look like::
-
-            io.get_forcing(self.conf.datebegin, self.conf.dateend, self.conf.xpid_forcing, self.conf.geometry)
-
-            io.get_prep(self.conf.datebegin, self.conf.dateend, self.conf.xpid_prep, self.conf.geometry)
-
-            io.get_pgd()
-
-            io.get_namelist()
         """
         raise NotImplementedError()
 
@@ -114,7 +122,7 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         Implement this method in your task to fetch all resources already stored on the local (HPC) cache.
         You can either use standard Vortex input toolboxes or the CEN-specific `vortexIO` tool.
         """
-        # self.get_remote_inputs()  # TODO : check if really necessary / good practice
+        self.get_remote_inputs()  # TODO : check if really necessary / good practice
 
     def algo(self):
         """
@@ -128,7 +136,7 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         Implement this method in your task to save resources on the local (HPC) cache.
         You can either use standard Vortex input toolboxes or the CEN-specific `vortexIO` tool.
         """
-        # self.put_remote_outputs()  # TODO : check if really necessary / good practice
+        self.put_remote_outputs()  # TODO : check if really necessary / good practice
 
     def put_remote_outputs(self):
         """
@@ -141,6 +149,10 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         """
         Get lists of datebegin / dateend from actual datebegin / dateend conf arguments of the task
         """
-        self.list_dates_begin, list_dates_end, _, _  = get_list_dates_files(self.conf.datebegin, self.conf.dateend,
-                'yearly')
-        self.dict_dates_end = get_dic_dateend(self.list_dates_begin, list_dates_end)
+        if 'datebegin' in self.conf and 'dateend' in self.conf:
+            self.list_dates_begin, list_dates_end, _, _  = get_list_dates_files(Date(self.conf.datebegin),
+                    Date(self.conf.dateend), 'yearly')
+            self.dict_dates_end = get_dic_dateend(self.list_dates_begin, list_dates_end)
+        elif 'date' in self.conf:
+            self.list_dates_begin = [self.conf.date]
+            self.dict_dates_end   = {self.conf.date: self.conf.date}
