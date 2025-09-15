@@ -302,5 +302,5 @@ CROUGH = "Z01D"
   LSNOWDIMNC = .TRUE.
   LRESETCUMUL = .TRUE.
   LSELECT= .TRUE.
-  CSELECT= 'time','ZS','aspect','slope','massif_num','TG1'
+  CSELECT= 'time','ZS','aspect','slope','massif_num','TG1','SNOWIMP1','SNOWIMP2'
 /
