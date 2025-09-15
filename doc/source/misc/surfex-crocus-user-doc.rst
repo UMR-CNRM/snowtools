@@ -34,7 +34,7 @@ Changes in namelist
 
    &NAM_ISBA_SNOWn
        CSNOWRAD = 'B92', 'T17' option for absorption of solar radiation, default : B92
-       CSNOWMETAMO = 'B21','C13','F06','T07','S-C','S-F'  option for metamorphism, default : B21
+       CSNOWMETAMO = 'B21','F06','T07','S-B','S-F'  option for metamorphism, default : B21
        CSNOWFALL = 'V12','S02','A76','P75','NZE' option for falling snow density, default : V12
        CSNOWCOMP = 'B92', 'S14', 'T11'  option for compaction, default : B92
        CSNOWCOND = 'Y81', 'I02','C11' option for snow thermal conductivity, default : Y81
@@ -56,10 +56,9 @@ Full Description
 **CSNOWMETAMO** : snow metamorphism
 
 * 'B92' obsolete option which will be removed in a next version : empirical evolution of dendricity, sphericity and size from Brun et al 1992
-* 'C13' Translation of B92 option in terms of Optical Diameter and Sphericity
-* 'B21' Correction of C13 option for some limit case (default)
+* 'B21' Translation of B92 option in terms of Optical Diameter and Sphericity (default). NB: this is a correction of C13 option which is not supported now
 * 'F06' Evolution law of the optical diameter from Flanner and Zender (2006), which fits the model outputs of a snow microstructure model representing the diffusive vapour fluxes among the grains.
-* 'S-C' Experimental evolution law of Optical Diameter from Schleef et al, 2014 for the first 48 hours after snowfall, then C13 option
+* 'S-B' Experimental evolution law of Optical Diameter from Schleef et al, 2014 for the first 48 hours after snowfall, then B21 option
 * 'S-F' Experimental evolution law of Optical Diameter from Schleef et al, 2014 for the first 48 hours after snowfall, then F06 option
 * 'T07' Experimental evolution law of Optical Diameter from Taillandier et al, 2007
 
@@ -596,7 +595,8 @@ In Crocus without SnowPappus :
   metamorphism; 'VI13': falling snow microstructure as described in Vion-
   net et al. 2013, wind-induced snow metamorphism as described in Vionnet
   et al. 2012; 'DFLT'(default) : not described here; 'GA01' : not described
-  here.
+  here; 'PAPP' : using pappus threshold wind speed to compute the mobility
+  index ( see Vionnet et al. 2012 for more details ).
 
   'CSNOWMOB': gives the option for threshold wind speed. Threshold
   wind speed is computed in the SNOWCRO routine.
@@ -625,14 +625,6 @@ wind-induced snow metamorphism option and snowfall properties
   dritic snow ( beware: this option is also used for Crocus alone or Sytron.
   Only 'GM98' and 'VI12' work in these cases )
 
-  'CDRIFTPAPPUS' : 'NON' (default): no wind-induced snow metamor-
-  phism (WISM) in snowpappus, 'CRO' : WISM with its own threshold
-  wind speed computed with the same code as in SNOWCRO routine. This
-  threshold wind speed does not apply to the computation of fluxes, 'CRM':
-  WISM. with it's own thr wind speed applying to all snowpappus (over-
-  passing HSNOWMOB');'PAP' : ”” using pappus threshold wind speed to
-  compute the mobility index ( see Vionnet et al. 2012 for more details ).
-
 **other options**
 
 .. code-block:: bash
@@ -655,8 +647,8 @@ wind-induced snow metamorphism option and snowfall properties
   scription paper
 
   'CPAPPUSSUBLI' : 'NONE' : no sublimation in pappus transport scheme,
-  'SBSM': SBSM sublimation parametrisation, 'B9810': Bintanja 1998 with
-  10m wind , 'B9803' : Bintanja 1998 with 3m wind, 'GR06' : Gordon 2006
+  'SBSM': SBSM sublimation parametrisation, 'BJ10': Bintanja 1998 with
+  10m wind , 'BJ03' : Bintanja 1998 with 3m wind, 'GR06' : Gordon 2006
   sublimation parameterization.
 
   'OPAPPULIMTFLUX' : Boolean. If True = snow transport flux limitation
@@ -779,3 +771,52 @@ the one at the model time step which equals the output time ) or ”cumulated”
 References
 ^^^^^^^^^^
 Baron M., Haddjeri A et al. , SnowPappus v1.0, a blowing-snow model for large-scale applications of the Crocus snow scheme, 2024, https://doi.org/10.5194/gmd-17-1297-2024
+
+8-MEB-Crocus coupling for snow-vegetation interactions
+--------------------------------------------------------
+
+Basic information
+^^^^^^^^^^^^^^^^^
+
+* **Developer name** : Axel Bouchet - Aaron Boone
+* **Status of the development** : [Finished]
+* **Date of start of development** : 02/2022
+* **Date of end of development** : 09/2022
+* **Commit of development** : 676f9308
+* **Branches on which the developpment is present** : [cen/cen_dev]
+* **Evaluated against SURFEX test database ?** : [Yes]
+* **New test added to database ?** :  [Yes]
+
+Description of the development
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This configuration was developed in order to better describe snow-vegetation interactions in temperate midlatitude climates.
+
+It was initially produced in order to improve snow amount simulations (height and SWE) at the Col de Porte experimental site.
+You can try this parameterization for any other site, even in cold climates like boreal forests (but we need more validations to be sure it makes no major degradation in this kind of vegetation).
+
+Changes in namelist
+^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   &NAM_ISBA
+       LMEB = .TRUE.
+
+   &NAM_MEB_ISBA
+       LMEB_TALL_VEG       = .TRUE.
+       LMEB_INT_PHASE_LUN  = .TRUE.
+       LMEB_INT_UNLOAD_LUN = .TRUE.
+       LMEB_INT_UNLOAD_SFC = .TRUE.
+
+Full Description
+^^^^^^^^^^^^^^^^^
+
+**LMEB_TALL_VEG** : enable this key to use vegetation height as a major variable to calculate maximum snow load on trees and turbulent fluxes. It will mainly increase evaporation and sublimation mass loss on tree branches.
+
+**LMEB_INT_PHASE_LUN** : enable this key if you want to use the [Lundquist et al., 2021] intercepted snow melt formulation. When you set this key at True, the snow intercepted by the trees (= the snow which is ON the tree branches) melts faster (4kg.m^-2.K^-1.jour^-1) than using the classical config.
+
+**LMEB_INT_UNLOAD_LUN** : enable this key if you want to use the snow unloading scheme of [Lundquist et al., 2021] (calibration of the [Roesh et al., 2001] scheme). This scheme is globally slowing the solid unloading, which favors snowmelt and sublimation of the intercepted snow as it stays a bit longer on the branches.
+
+**LMEB_INT_UNLOAD_SFC** : enable this key in order to separate snow unloading from snowfalls in Crocus fresh snow incorporation. When the key is set at True, snow unloading will be included into the Crocus snowpack as “old” snow, with properties of melt forms and a density of 200kg.m^-2 .
+

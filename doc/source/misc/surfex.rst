@@ -84,7 +84,9 @@ In the namelist, CSELECT allows you to choose output. For example, in the standa
 Core model options
 ^^^^^^^^^^^^^^^^^^
 
-Here you can find long name for a part of these variables (alphabetical order for shortname):
+Here you can find long name for a part of these variables (alphabetical order for shortname).
+
+NB: If short name ends by _VEG, it means that this is a prognostic variable also used in PREP files
 
 - ASN_VEG = Snow albedo
 - DRAIN_ISBA = Subsurface_runoff_flux (kg/m2)
@@ -108,7 +110,6 @@ Here you can find long name for a part of these variables (alphabetical order fo
 - SD_5DY_ISBA = Accumulated snow thickness for past 5 days (m)
 - SD_7DY_ISBA = Accumulated snow thickness for past 7 days (m)
 - SNOWDZ = Thickness (m)
-- SNOWHEAT = Snow Enthalpy (J/m2)
 - SNOWLIQ = Snow Liquid Water Content (kg/m3)
 - SNOMLT_ISBA = Snow melting rate (kg/m2)
 - SNOWRAM = RAM Resistance (daN)
@@ -181,8 +182,8 @@ stress/strength stability index :
 
 Expert risks :
 
-* NAT_LEV : MEPRA natural risk (range 0-5, 6 means undefined)
-* ACC_LEV : MERPA accidental risk (range 0-3, 4 means undefined)
+* NAT_LEV : MEPRA natural risk (range 0-5, from low to high, 6 means undefined and is used when there is no snow on ground)
+* ACC_LEV : MERPA accidental risk (range 0-3, from very low to high, 4 means undefined)
 * AVA_TYP : MEPRA avalanche type (0: new snow dry, 1:new snow wet, 3: new snow mix, 4: surface melt, 5:depth melt, 6:undefined)
 
 Depth of identified avalanche problems:
@@ -194,6 +195,8 @@ Mechanical properties :
 
 * SNOWRAM : RAM Resistance (daN)
 * SNOWSHEAR : Shear Resistance (kPa)
+
+An aggregated natural index is computed in the variable ``naturalIndex``. Range from 0 to 8. The indicator is the maximum for all aspects of the mean of natural risk for all elevations with a weighting of the 6 levels of risk (higher risk have a higher importance) and weighting of elevations used (more importance to middle elevations typical of avalanche areas across the Alps).
 
 Full documentation
 ^^^^^^^^^^^^^^^^^^

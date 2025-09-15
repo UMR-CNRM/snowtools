@@ -7,18 +7,7 @@ Created on 29 march 2021
     radanovics
 
 Module for map plots with massifs.
-This module might be sensitive to the combination of versions of matplotlib and cartopy.
 Developed with matplotlib 3.4.0/3.2.1 and cartopy 0.18.
-
-Which cartopy version is based on which matplotlib version? (according to documentation)
-
-* cartopy 0.19 -> matplotlib 3.4.1
-* cartopy 0.18 -> matplotlib 3.2.1
-* cartopy 0.17 -> matplotlib 3.0.2
-* cartopy 0.16 -> matplotlib 2.1.2
-* cartopy 0.15 -> matplotlib 2.0.0
-* cartopy 0.14 -> matplotlib 1.5.1
-* cartopy 0.13 -> matplotlib 1.4.3
 
 Usage :
 example :
@@ -51,11 +40,16 @@ Files containing borders are then stored in
 files containing land, ocean river and lake features are stored in
 ``$data_dir/shapefiles/natural_earth/physical/``
 
-m = MapFrance(bgimage=True)
+.. code-block:: python
+
+    m = MapFrance(bgimage=True)
+    m.init_massifs(palette='Reds')
+
+
 with bgimage=True a background image from Natural Earth is added showing the relief.
 Can not be used if geofeatures=True.
 
-m.init_massifs(palette='Reds')
+
 
 
 """
@@ -74,12 +68,13 @@ from cartopy import config
 # from shapely.geometry import Point
 
 from snowtools.plots.abstracts.figures import Mplfigure
+from snowtools.plots.scores.moran_scatter import get_moran_palette
 from snowtools.utils.infomassifs import infomassifs
 from snowtools.DATA import SNOWTOOLS_DIR, CARTOPY_DIR, LUSTRE_NOSAVE_USER_DIR
 
 # Tell cartopy where to find Natural Earth features
 # config['data_dir'] = os.path.join(SNOWTOOLS_DIR, 'CartopyData')
-if os.path.isdir(CARTOPY_DIR):
+if CARTOPY_DIR is not None and os.path.isdir(CARTOPY_DIR):
     config['data_dir'] = CARTOPY_DIR
 # config['data_dir'] = os.path.join(LUSTRE_NOSAVE_USER_DIR, 'CartopyData')  # for sxcen
 # until proper git annex solution
@@ -182,6 +177,41 @@ class MyCRS(ccrs.CRS):
                                                       projdict['lat_2']), globe=globe)
         else:
             pass
+
+
+class Map2DGrid(Mplfigure):
+
+    def __init__(self, projection, width=9, height=9, *args, **kwargs):
+        """
+        :param x: vector of x coordinates
+        :param y: vector of y coordinates
+        :param projection: map projection
+        :type projection: cartopy.crs
+        :param args:
+        :param kwargs:
+        """
+        self.height = height
+        self.width = width
+        self.fig = plt.figure(figsize=(self.width, self.height))
+        self.map = plt.axes(projection=projection)
+
+    def add_gridlines(self, crs):
+        """
+        add gridlines to the map
+        :param crs: map projection for the grid lines
+        :type crs: cartopy.crs
+        """
+        self.map.gridlines(crs=crs, draw_labels=True)
+
+
+class MoranMap(Map2DGrid):
+    @property
+    def palette(self):
+        return get_moran_palette()
+
+    @property
+    def norm(self):
+        return matplotlib.colors.Normalize(vmax=4, vmin=1)
 
 
 class _Map_massifs(Mplfigure):
@@ -791,7 +821,7 @@ class _Map_massifs(Mplfigure):
         #     variable = field[:]
         print(variable[0].max())
         self.map.pcolormesh(lons, lats, variable[0], transform=ccrs.PlateCarree(),
-                            cmap=self.palette, vmin=self.vmin, vmax=self.vmax)
+                            cmap=self.palette, vmin=self.vmin, vmax=self.vmax, shading='auto')
         # prepare colorbar
         self.prepare_colorbar(variable[0], **kwargs)
 
@@ -878,6 +908,8 @@ class _Map_massifs(Mplfigure):
     def reset_massifs(self, rmcbar=True, rminfobox=True, **kwargs):
         """
         Remove tables, text and optionally the infobox and the colorbar from the map.
+
+        Note that with matplotlib >=3.10 there is an error removing an AnnotationBbox (infobox)
 
         :param rmcbar: if True, colorbar is removed.
         :param rminfobox: if True, the infobox is removed.
@@ -1107,16 +1139,18 @@ class Map_alpes(_Map_massifs):
 
      .. code-block:: python
 
+        import os
         from snowtools.utils.prosimu import prosimu
-        from snowtools.plots.maps import cartopy
+        from snowtools.plots.maps import cartopy_massifs
+        from snowtools.DATA import TESTBASE_DIR
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/postproc/Alp/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu(os.path.join(TESTBASE_DIR, 'PRO/postproc/Alp/postproc_2021041006_2021041112.nc')) as ff:
             points = ff.get_points(ZS=2100, aspect=-1)
             snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points)
 
-        m = cartopy.Map_alpes(geofeatures=True)
+        m = cartopy_massifs.Map_alpes(geofeatures=True)
         m.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
         m.draw_massifs(massifs, snow[5, :, 8], convert_unit=100., forcemin=0., forcemax=50.,
@@ -1434,6 +1468,8 @@ class _MultiMap(_Map_massifs):
         """
         Remove tables, text and optionally the infobox and the colorbar from the maps.
 
+        Note that with matplotlib >=3.10 there is an error removing an AnnotationBbox (infobox)
+
         :param rmcbar: if True, colorbar is removed.
         :param rminfobox: if True, the infobox is removed.
         """
@@ -1541,16 +1577,18 @@ class MultiMap_Alps(Map_alpes, _MultiMap):
 
      .. code-block:: python
 
+        import os
         from snowtools.utils.prosimu import prosimu
-        from snowtools.plots.maps import cartopy
+        from snowtools.plots.maps import cartopy_massifs
+        from snowtools.DATA import TESTBASE_DIR
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/postproc/Alp/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu(os.path.join(TESTBASE_DIR, 'PRO/postproc/Alp/postproc_2021041006_2021041112.nc')) as ff:
             points = ff.get_points(ZS=2100, aspect=-1)
             snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points)
 
-        lo = cartopy.MultiMap_Alps(nrow=3, ncol=3, geofeatures=False)
+        lo = cartopy_massifs.MultiMap_Alps(nrow=3, ncol=3, geofeatures=False)
         lo.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
         lo.draw_massifs(massifs, snow[5, :, :], axis=1, convert_unit=100., forcemin=0., forcemax=50.,
@@ -1602,18 +1640,20 @@ class Map_pyrenees(_Map_massifs):
 
      .. code-block:: python
 
+        import os
         from snowtools.utils.prosimu import prosimu
-        from snowtools.plots.maps import cartopy
+        from snowtools.plots.maps import cartopy_massifs
+        from snowtools.DATA import TESTBASE_DIR
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu(os.path.join(TESTBASE_DIR, 'PRO/postproc/Pyr/postproc_2021041006_2021041112.nc')) as ff:
             points_nord = ff.get_points(aspect=0, ZS=2100, slope=40)
             points_sud = ff.get_points(aspect=180, ZS=2100, slope=40)
             snow_nord = ff.read('SD_1DY_ISBA', selectpoint=points_nord, hasDecile=True)
             snow_sud = ff.read('SD_1DY_ISBA', selectpoint=points_sud, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points_nord)
 
-        m = cartopy.Map_pyrenees(geofeatures=True)
+        m = cartopy_massifs.Map_pyrenees(geofeatures=True)
         m.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
         m.add_north_south_info()
@@ -1670,16 +1710,18 @@ class MapFrance(_Map_massifs):
 
      .. code-block:: python
 
+        import os
         from netCDF4 import Dataset
-        from snowtools.plots.maps import cartopy
+        from snowtools.plots.maps import cartopy_massifs
+        from snowtools.DATA import TESTBASE_DIR
         import matplotlib.pyplot as plt
 
-        with Dataset('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/postproc/grid_postproc_2021041112.nc') as ff:
+        with Dataset(os.path.join(TESTBASE_DIR, 'PRO/postproc/grid_postproc_2021041112.nc')) as ff:
             lats = ff.variables['LAT'][:]
             lons = ff.variables['LON'][:]
             snow = ff.variables['SD_1DY_ISBA'][0, :, :, 8]
 
-        m = cartopy.MapFrance(geofeatures=False, bgimage=True)
+        m = cartopy_massifs.MapFrance(geofeatures=False, bgimage=True)
         m.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
         m.draw_mesh(lons, lats, snow,convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu',
@@ -1732,18 +1774,20 @@ class MultiMap_Pyr(Map_pyrenees, _MultiMap):
 
     .. code-block:: python
 
+        import os
         from snowtools.utils.prosimu import prosimu
-        from snowtools.plots.maps import cartopy
+        from snowtools.plots.maps import cartopy_massifs
+        from snowtools.DATA import TESTBASE_DIR
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu(os.path.join(TESTBASE_DIR, 'PRO/postproc/Pyr/postproc_2021041006_2021041112.nc')) as ff:
             points_nord = ff.get_points(aspect=0, ZS=2100, slope=40)
             points_sud = ff.get_points(aspect=180, ZS=2100, slope=40)
             snow_nord = ff.read('SD_1DY_ISBA', selectpoint=points_nord, hasDecile=True)
             snow_sud = ff.read('SD_1DY_ISBA', selectpoint=points_sud, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points_nord)
 
-        m = cartopy.MultiMap_Pyr(nrow=3, ncol=3, geofeatures=True)
+        m = cartopy_massifs.MultiMap_Pyr(nrow=3, ncol=3, geofeatures=True)
         m.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
         m.add_north_south_info()
@@ -1795,16 +1839,18 @@ class Map_corse(_Map_massifs):
 
      .. code-block:: python
 
+        import os
         from snowtools.utils.prosimu import prosimu
-        from snowtools.plots.maps import cartopy
+        from snowtools.plots.maps import cartopy_massifs
+        from snowtools.DATA import TESTBASE_DIR
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/postproc/Cor/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu(os.path.join(TESTBASE_DIR, 'PRO/postproc/Cor/postproc_2021041006_2021041112.nc')) as ff:
             points = ff.get_points(ZS=2100, aspect=-1)
             snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points)
 
-        m = cartopy.Map_corse(bgimage=True)
+        m = cartopy_massifs.Map_corse(bgimage=True)
         m.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
         m.highlight_massif(massifs[0], convert_unit=100., forcemin=0., forcemax=50.,
@@ -1857,16 +1903,18 @@ class MultiMap_Cor(_MultiMap, Map_corse):
 
      .. code-block:: python
 
+        import os
         from snowtools.utils.prosimu import prosimu
-        from snowtools.plots.maps import cartopy
+        from snowtools.plots.maps import cartopy_massifs
+        from snowtools.DATA import TESTBASE_DIR
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/postproc/Cor/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu(os.path.join(TESTBASE_DIR, 'PRO/postproc/Cor/postproc_2021041006_2021041112.nc')) as ff:
             points = ff.get_points(ZS=2100, aspect=-1)
             snow = ff.read('SD_1DY_ISBA', selectpoint=points, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points)
 
-        m = cartopy.MultiMap_Cor(nrow=3, ncol=3, bgimage=True)
+        m = cartopy_masssifs.MultiMap_Cor(nrow=3, ncol=3, bgimage=True)
         m.init_massifs(convert_unit=100., forcemin=0., forcemax=50., palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm')
         centre = [shape.centroid.coords[0] for shape in m.llshape]
@@ -1910,16 +1958,18 @@ class Zoom_massif(_Map_massifs):
 
      .. code-block:: python
 
+        import os
         from snowtools.utils.prosimu import prosimu
-        from snowtools.plots.maps import cartopy
+        from snowtools.plots.maps import cartopy_massifs
+        from snowtools.DATA import TESTBASE_DIR
         import matplotlib.pyplot as plt
 
-        with prosimu('/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/postproc/Pyr/postproc_2021041006_2021041112.nc') as ff:
+        with prosimu(os.path.join(TESTBASE_DIR, 'PRO/postproc/Pyr/postproc_2021041006_2021041112.nc')) as ff:
             points_nord = ff.get_points(aspect=0, ZS=2100, slope=40)
             snow_nord = ff.read('SD_1DY_ISBA', selectpoint=points_nord, hasDecile=True)
             massifs = ff.read('massif_num', selectpoint=points_nord)
 
-        m = cartopy.Zoom_massif(70)
+        m = cartopy_massifs.Zoom_massif(70)
         m.init_massifs(palette='YlGnBu', seuiltext=50., ticks=['A', 'B', 'C', 'D'],
                             label=u'Epaisseur de neige fraîche en 24h (cm)', unit='cm', ncolors=3)
         m.draw_massifs(massifs, snow_nord[1, :, 8], palette='YlGnBu', seuiltext=50.,

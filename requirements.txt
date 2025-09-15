@@ -11,16 +11,26 @@ psycopg2
 pyshp
 pandas
 cartopy
+footprints
+epygram>=2.0
+packaging
 
 # Other requirements
 # xarray is a requirement for plots/compare.py and utils/proximu.py in case of use of NETCDF-4 file format
 xarray
+# rioxarray is an xarray extension for raster files
+rioxarray
 # rpy2 is a requirement for tools/emosCSG.py
 # rpy2
 
 # Requirements for generating the documentation
 #sphinx>=4.3
 #git+https://github.com/VACUMM/sphinx-fortran.git
+
+# requirements for editable installs
+# meson-python
+# meson
+# ninja
 
 # GDAL:
 #

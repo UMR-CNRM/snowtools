@@ -25,11 +25,13 @@ import matplotlib.pyplot as plt
 import xskillscore  # Requires an installation : pip install xskillscore
 # https://xskillscore.readthedocs.io/en/stable/api/xskillscore.crps_ensemble.html
 
-import snowtools.tools.xarray_preprocess as xrp
+from snowtools.utils import xarray_snowtools
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.plots.maps import plot2D
 from snowtools.scores import clusters
 from snowtools.plots.boxplots import violinplot
+
+__all__ = ('xarray_snowtools_backend',)  # Ignore F401 PEP8 syntax error
 
 
 members_map = dict(
@@ -102,24 +104,29 @@ def execute():
     obsname = f'PLEIADES_{date}.nc'
     io.get_snow_obs_date(xpid='CesarDB_AngeH', geometry=obs_geometry, date=date, vapp='Pleiades', filename=obsname)
     # Open observation file as DataArray
-    obs = xr.open_dataset(obsname)
-    obs = xrp.preprocess(obs, decode_time=False)
+    obs = xr.open_dataset(obsname, decode_times=False)
+    obs = xarray_snowtools.preprocess(obs)
 
     if clustering == 'elevation':
         # Get Domain's DEM in case ZS not in simulation file
         io.get_const(uenv, 'relief', geometry, filename='TARGET_RELIEF.nc', gvar='RELIEF_GRANDESROUSSES250M_L93')
-        mnt = xr.open_dataset('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
-        mnt = xrp.preprocess(mnt, decode_time=False)
+        mnt = xr.open_dataset('TARGET_RELIEF.nc', decode_times=False)  # Target domain's Digital Elevation Model
+        mnt = xarray_snowtools.preprocess(mnt)
         mask = mnt.ZS
     elif clustering == 'uncertainty':
-        ds = xr.open_dataset('/home/vernaym/workdir/ASSIMILATION/mask/GrandesRousses/Observation_error_L93.nc')
-        ds = xrp.preprocess(ds, decode_time=False)
+        ds = xr.open_dataset(
+            '/home/vernaym/workdir/ASSIMILATION/mask/GrandesRousses/Observation_error_L93.nc',
+            decode_times=False)
+        ds = xarray_snowtools.preprocess(ds)
         mask = ds.Uncertainty
     elif clustering == 'landforms':
         # Get Domain's DEM in case ZS not in simulation file
         io.get_const(uenv=uenv, kind='geomorph', geometry=geometry, filename='GEOMORPH.nc')
-        geomorph = xr.open_dataset('GEOMORPH.nc')  # Target domain's Geomorphons mask
-        mask = xrp.preprocess(geomorph.Band1, decode_time=False)
+        geomorph = xr.open_dataset(
+            'GEOMORPH.nc', decode_times=False,
+            mapping={'Band1': 'geomorph'})  # Target domain's Geomorphons mask
+        geomorph = xarray_snowtools.preprocess(geomorph)
+        mask = geomorph.geomorph
     mask = mask.interp({'xx': obs.xx, 'yy': obs.yy}, method='nearest')
     mask = mask.rename(clustering)
 
@@ -183,8 +190,9 @@ def read_simu(xpid, members, date):
         listfiles.append(f'{proname}')
 
     # Open all simulation PRO files at once
-    simu = xr.open_mfdataset(listfiles, concat_dim='member', combine='nested').compute()
-    simu = xrp.preprocess(simu, decode_time=False)
+    simu = xr.open_mfdataset(listfiles, concat_dim='member', combine='nested', decode_times=False)
+    simu = xarray_snowtools.preprocess(simu)
+    simu.compute()
     # <xarray.Dataset>
     # Dimensions:     (time: 3, xx: 143, yy: 101, member: 16)
     # Coordinates:

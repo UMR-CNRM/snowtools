@@ -15,10 +15,12 @@ snowtools/interpolation/interpol_MPIAUTO
 snowtools/interpolation/interpol
 *.o
 *.mod
+*.so
 
 GUI_selfcontain.zip
 
 build/
+dist/
 
 .coverage
 newvenevsnowtools

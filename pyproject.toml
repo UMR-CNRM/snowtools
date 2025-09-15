@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
+build-backend = 'mesonpy'
+requires = ['meson-python','numpy>=1.24.4', 'ninja', 'wheel']
 
 [project]
 name = "snowtools"
-version = "2.0.2"
+version = "2.0.3"
 dependencies = [
     'matplotlib',
     'netCDF4',
@@ -17,8 +17,12 @@ dependencies = [
     'pyshp',
     'pandas',
     'xarray',
+    'rioxarray',
     'cartopy',
     'bronx',
+    'footprints',
+    'epygram>=2.0',
+    'packaging'
 ]
 requires-python = ">=3.6"
 readme = "README.md"
@@ -48,12 +52,13 @@ maintainers = [
 Homepage = "https://github.com/UMR-CNRM/snowtools"
 Repository = "https://github.com/UMR-CNRM/snowtools"
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["snowtools*", "cenutils*"]
-namespaces = true  # to disable scanning PEP 420 namespaces (true by default)
-
 [project.scripts]
 s2m = 'snowtools.tasks.s2m_command:main'
 proplotter = 'snowtools.plots.stratiprofile.proplotter:main'
 procompare = 'snowtools.plots.stratiprofile.procompare:main'
+
+[project.entry-points."xarray.backends"]
+snowtools = "snowtools.utils.xarray_snowtools_backend:SnowtoolsBackendEntrypoint"
+
+
+

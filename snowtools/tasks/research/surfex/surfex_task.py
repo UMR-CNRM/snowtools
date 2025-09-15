@@ -35,7 +35,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         t = self.ticket
 
         if not hasattr(self.conf, "genv"):
-            self.conf.genv = 'uenv:cen.12@CONST_CEN'
+            self.conf.genv = 'uenv:cen.14@CONST_CEN'
 
         # Definition of geometries, safran xpid/block and list of dates from S2MTaskMixIn methods
         list_geometry = self.get_list_geometry(meteo=self.conf.meteo)
@@ -59,7 +59,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         if not hasattr(self.conf, "simu2D"):
             self.conf.simu2D = False
         if hasattr(self.conf, "simu2D"):
-            self.conf.genv2D = 'uenv:pgd.002@SURFEX_CEN'
+            self.conf.genv2D = 'uenv:pgd.003@SURFEX_CEN'
 
         #######################################################################
         #                             Fetch steps                             #
@@ -318,7 +318,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     genv           = self.conf.genv2D,
                     model          = 'surfex',
                     kind           = 'sand',  # 'database'
-                    local          = 'sand_DB.02.tgz',
+                    local          = 'sand_DB.tgz',
                     source         = 'sand_DB',
                     gvar           = 'sand_DB',
                 )
@@ -333,7 +333,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     genv           = self.conf.genv2D,
                     model          = 'surfex',
                     kind           = 'clay',
-                    local          = 'clay_DB.02.tgz',
+                    local          = 'clay_DB.tgz',
                     source         = 'clay_DB',
                     gvar           = 'clay_DB',
                 )
@@ -348,7 +348,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                     genv           = self.conf.genv2D,
                     model          = 'surfex',
                     kind           = 'coverparams',
-                    local          = 'ECOCLIMAP_II_EUROP.02.tgz',
+                    local          = 'ECOCLIMAP_II_EUROP.tgz',
                     source         = 'ecoclimap2',
                     gvar           = 'ECOCLIMAP_II_EUROP',
                 )
@@ -545,7 +545,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             if self.conf.meteo == "safran":
                 # Forcing files need to be converted from flat to slopes geometry
                 # Parallelization on the years but limited for memory issues on alp_allslopes and pyr_allslopes domains
-                if self.conf.geometry.tag in ["alp_allslopes", "pyr_allslopes", "alp27_allslopes", "pyr23_allslopes"]:
+                if self.conf.geometry.tag in ["alp_allslopes", "pyr_allslopes", "alp27_allslopes", "pyr24_allslopes"]:
                     ntasks = min(5, len(list_dates_begin_forc))
                 else:
                     ntasks = min(40, len(list_dates_begin_forc))
@@ -670,7 +670,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                                  cor2_flat=18,
                                  mac11_flat=66,
                                  jur4_flat=24,
-                                 vog3_flat=15)
+                                 vog3_flat=15,
+                                 cdp=1)
 
             if self.conf.geometry.tag in small_domains.keys():
                 # Specific number of threads must be provided for domains

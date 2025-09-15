@@ -22,12 +22,12 @@ import xarray as xr
 import argparse
 import matplotlib.pyplot as plt
 
+import snowtools  # noqa
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.scores import clusters
 from snowtools.plots.maps import plot2D
 from snowtools.plots.boxplots import violinplot
 from snowtools.tools import common_tools as ct
-import snowtools.tools.xarray_preprocess as xrp
 
 members_map = dict(
     safran         = None,
@@ -146,10 +146,10 @@ def main():
     for var in ['scd_concurent', 'mod']:
         # open Sentinel2 data
         if var == 'mod':
-            obs = xr.open_dataset('/home/vernaym/These/DATA/Sentinel2/SMOD_20210901.nc')
+            obs = xr.open_dataset('/home/vernaym/These/DATA/Sentinel2/SMOD_20210901.nc', engine='snowtools')
         elif var == 'scd_concurent':
-            obs = xr.open_dataset('/home/vernaym/These/DATA/Sentinel2/SCD_20210901.nc')
-        obs = xrp.preprocess(obs.Band1, decode_time=False)
+            obs = xr.open_dataset('/home/vernaym/These/DATA/Sentinel2/SCD_20210901.nc', engine='snowtools')
+        obs = obs.Band1
         cluster = cluster.interp({'xx': obs.xx, 'yy': obs.yy}, method='nearest')
 
         if mask:
@@ -177,18 +177,17 @@ def cluster_criterion(clustering):
     if clustering == 'elevation':
         # Get Domain's DEM in case ZS not in simulation file
         io.get_const(uenv, 'relief', geometry, filename='TARGET_RELIEF.nc', gvar='RELIEF_GRANDESROUSSES250M_L93')
-        mnt = xr.open_dataset('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
-        mnt = xrp.preprocess(mnt, decode_time=False)
+        mnt = xr.open_dataset('TARGET_RELIEF.nc', engine='snowtools')  # Target domain's Digital Elevation Model
         mask = mnt.ZS
     elif clustering == 'uncertainty':
-        ds = xr.open_dataset('/home/vernaym/workdir/ASSIMILATION/mask/GrandesRousses/Observation_error_L93.nc')
-        ds = xrp.preprocess(ds, decode_time=False)
+        ds = xr.open_dataset('/home/vernaym/workdir/ASSIMILATION/mask/GrandesRousses/Observation_error_L93.nc',
+                engine='snowtools')
         mask = ds.Uncertainty
     elif clustering == 'landforms':
         # Get Domain's DEM in case ZS not in simulation file
         io.get_const(uenv=uenv, kind='geomorph', geometry=geometry, filename='GEOMORPH.nc')
-        geomorph = xr.open_dataset('GEOMORPH.nc')  # Target domain's Geomorphons mask
-        mask = xrp.preprocess(geomorph.Band1, decode_time=False)
+        geomorph = xr.open_dataset('GEOMORPH.nc', engine='snowtools')  # Target domain's Geomorphons mask
+        mask = geomorph.Band1
     mask = mask.rename(clustering)
 
     return mask
@@ -212,11 +211,10 @@ def plot_all_fields(xpids, obs, var, member=None):
             # Verrue : trouver une solution standard plus propre
             if member == 1:
                 # "Deterministic" member=0 by default (WARNING : different from the current 's2m oper' convention)
-                simu = xr.open_dataset(f'DIAG_{shortid}.nc', decode_times=False)
+                simu = xr.open_dataset(f'DIAG_{shortid}.nc', engine='snowtools')
             else:
                 simu = xr.open_mfdataset([f'mb{mb:03d}/DIAG_{shortid}.nc' for mb in range(member)],
-                                         combine='nested', concat_dim='member', decode_times=False)
-        simu = xrp.preprocess(simu, decode_time=False)
+                                         combine='nested', concat_dim='member', engine='snowtools')
         simu.squeeze(drop=True)
 
         if 'startseason' in simu.dims:
@@ -272,8 +270,7 @@ def violin_plot(xpids, obs, var, mask, member=None):
 
 def filter_simu(xpid, subdir, mask, var):
     diagname = os.path.join(subdir, f'DIAG_{xpid}.nc')
-    simu = xr.open_dataset(diagname, decode_times=False)
-    simu = xrp.preprocess(simu[var], decode_time=False)
+    simu = xr.open_dataset(diagname, engine='snowtools')
     simu.squeeze(drop=True)  # Remove len(1) dimensions
     if 'startseason' in simu.dims:
         simu = simu.drop('startseason').squeeze()

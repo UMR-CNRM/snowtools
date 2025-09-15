@@ -40,6 +40,7 @@
    LSHADOWS_SLOPE=.TRUE.,
    LSHADOWS_OTHER=.TRUE.,
    CSURF_FILETYPE='NC ',
+   NOUTPUT_NETCDF=4,
    CTIMESERIES_FILETYPE='NETCDF',
    LRESTART=.TRUE.,
    XTSTEP_OUTPUT=21600.,
@@ -87,12 +88,16 @@
    CWATER='NONE',
  /
  &NAM_PREP_ISBA
-   XHUG_SURF=0.1,
-   XHUG_ROOT=0.1,
-   XHUG_DEEP=0.1,
-   XTG_SURF=273.16,
-   XTG_ROOT=273.16,
-   XTG_DEEP=273.16,
+                   XUNIF_HUG_SOIL(1) = 0.1,
+                   XUNIF_HUG_SOIL(2) = 0.1,
+                   XUNIF_HUG_SOIL(3) = 0.1,
+                   XUNIF_HUGI_SOIL(1) = 0.001,
+                   XUNIF_HUGI_SOIL(2) = 0.001,
+                   XUNIF_HUGI_SOIL(3) = 0.001,
+                   XUNIF_TG_SOIL(1) = 273.16,
+                   XUNIF_TG_SOIL(2) = 273.16,
+                   XUNIF_TG_SOIL(3) = 273.16,
+                   NINFILES=3
  /
  &NAM_PREP_ISBA_SNOW
    CSNOW='CRO',
@@ -124,7 +129,7 @@
    LPROVAR_TO_DIAG=.TRUE.,
    LSNOWDIMNC=.TRUE.,
    LSELECT=.TRUE.,
-   CSELECT='time','TG1','TG10','SNOWHEAT','SNOWTEMP','TALB_ISBA','TS_ISBA','WSN_T_ISBA','DSN_T_ISBA','SNOWLIQ','SNOWDZ','SNOWTYPE','SNOWTEMP','SNOWSWE','SNOMLT_ISBA','RAINF_ISBA','SNOWF_ISBA',
+   CSELECT='time','TG1'
 /
  &NAM_WRITE_SURF_ATM
    LSPLIT_PATCH=.FALSE.,

@@ -14,7 +14,16 @@ Forcing edition
 .. automodule:: tools.change_forcing
    :member-order: bysource
    :members:
-   
+
+
+Meteorological functions
+------------------------
+
+.. automodule:: tools.meteo
+   :member-order: bysource
+   :members:
+
+
 Namelist edition
 ----------------
 
@@ -34,13 +43,23 @@ Prep edition
 .. automodule:: tools.change_prep
    :members:
 
-Diagnostics
------------
+Massif-scale diagnostics
+------------------------
 
 .. automodule:: tools.massif_diags
    :members:
 
-.. automodule:: tools.special_diags
+Hydrological diagnostics
+------------------------
+
+.. automodule:: tools.hydro
+   :member-order: bysource
+   :members:
+
+Calculus of Snow Cover Duration
+-------------------------------
+
+.. automodule:: tools.SnowCoverDuration
    :members:
 
 Simulation execution helpers

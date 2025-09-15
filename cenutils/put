@@ -202,6 +202,7 @@ then
         --exclude .git \
         --exclude .idea \
         --exclude .settings \
+        --exclude build \
         --exclude fail_test --exclude Manual_tests \
         --exclude /exe \
         --exclude "venv*" \
@@ -214,6 +215,8 @@ then
         --exclude 'profile_surfex' --exclude 'profile_surfex-LX*' \
         --exclude "src/LIB/grib_api-*-Source" --exclude "src/LIB/eccodes*" --exclude STRATO \
         --exclude "NO_TRANSFER*" \
+        --exclude sphinx \
+        --exclude examples \
         $folder_orig $SERVER:$folder_dest
     retcode=$?
     set -e
@@ -237,6 +240,7 @@ then
       --exclude .git/ \
       --exclude .idea/ \
       --exclude .settings/ \
+      --exclude build \
       --exclude fail_test  \
       --exclude Manual_tests  \
       --exclude exe/ \
@@ -259,8 +263,10 @@ then
       --exclude-glob 'profile_surfex-LX*' \
       --exclude-glob src/LIB/grib_api-*-Source/ \
       --exclude-glob src/LIB/eccodes* \
+      --exclude-glob examples/ \
+      --exclude-glob sphinx/ \
       --exclude STRATO \
-      --exclude-glob NO_TRANSFER* \
+      --exclude-glob NO_TRANSFER*/ \
       $folder_orig $folder_dest"
     retcode=$?
     set -e
@@ -276,5 +282,6 @@ if [ $retcode -eq 0 ]
 then
     echo -e "${GREEN}OK${STOPC}: Transfer successful."
 else
-    echo -e "${RED}ERROR${STOPC}: An error occured during code synchronization. Please refer to output log above. (Return code $retcode)"
+    echo -e "${RED}ERROR${STOPC}: An error occured during code synchronization.
+    Please refer to output log above. (Return code $retcode)"
 fi

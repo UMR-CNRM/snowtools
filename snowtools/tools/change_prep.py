@@ -94,6 +94,22 @@ class prep_tomodify(object):
         if closefile:
             self.close()
 
+    def fix_version(self, iversion, ibug, closefile=False):
+        """Modify surfex version in PREP files that were built with an incorrect numbering
+        :param iversion: fixed version number
+        :type iversion: int
+        :param ibug: fixed subversion number
+        :type ibug: int
+        :param closefile: close file after modification (default False)
+        :type closefile: bool
+        """
+
+        self.prepfile.variables['VERSION'] = iversion
+        self.prepfile.variables['BUG'] = ibug
+
+        if closefile:
+            self.close()
+
     def close(self):
         """Close the PREP file"""
         self.prepfile.close()

@@ -1,6 +1,6 @@
 &NAM_ISBA              XUNIF_CLAY    = 0.30          ,
                        XUNIF_SAND    = 0.60          ,
-	               XUNIF_RUNOFFB = 0.5           ,
+                       XUNIF_RUNOFFB = 0.5           ,
                        CISBA         = 'DIF'         ,
                        CPHOTO        = 'NON'         ,
                        NPATCH        = 1             ,
@@ -11,8 +11,6 @@
                        CSOILFRZ     = 'LWT'	,
                        CDIFSFCOND   = 'DEF '	,
                        CSNOWRES     = 'RIL'	,
-                       CALBEDO      = 'MEAN'	,
-                       CROUGH       = 'Z01D'	,
                        CCPSURF      = 'DRY'  ,
                        XCVHEATF     = 0.6                             
 /
@@ -92,12 +90,78 @@
                        XUNIF_RGL(1)         =  30.,
                        XUNIF_CV(1)          = 0.00002,
                        XUNIF_Z0_O_Z0H(1)    = 10.,
-                       XUNIF_ALBNIR_VEG(1)  = 0.2,
-                       XUNIF_ALBVIS_VEG(1)  = 0.2,
-                       XUNIF_ALBUV_VEG(1)   = 0.2,
-                       XUNIF_ALBNIR_SOIL(1) = 0.2,
-                       XUNIF_ALBVIS_SOIL(1) = 0.2,
-                       XUNIF_ALBUV_SOIL(1)  = 0.2,
+                       XUNIF_ALBNIR_VEG(1,1)  = 0.2,
+                       XUNIF_ALBNIR_VEG(1,2)  = 0.2,
+                       XUNIF_ALBNIR_VEG(1,3)  = 0.2,
+                       XUNIF_ALBNIR_VEG(1,4)  = 0.2,
+                       XUNIF_ALBNIR_VEG(1,5)  = 0.2,
+                       XUNIF_ALBNIR_VEG(1,6)  = 0.2,
+                       XUNIF_ALBNIR_VEG(1,7)  = 0.2,
+                       XUNIF_ALBNIR_VEG(1,8)  = 0.2,
+                       XUNIF_ALBNIR_VEG(1,9)  = 0.2,
+                       XUNIF_ALBNIR_VEG(1,10)  = 0.2,
+                       XUNIF_ALBNIR_VEG(1,11)  = 0.2,
+                       XUNIF_ALBNIR_VEG(1,12)  = 0.2,
+                       XUNIF_ALBVIS_VEG(1,1)  = 0.2,
+                       XUNIF_ALBVIS_VEG(1,2)  = 0.2,
+                       XUNIF_ALBVIS_VEG(1,3)  = 0.2,
+                       XUNIF_ALBVIS_VEG(1,4)  = 0.2,
+                       XUNIF_ALBVIS_VEG(1,5)  = 0.2,
+                       XUNIF_ALBVIS_VEG(1,6)  = 0.2,
+                       XUNIF_ALBVIS_VEG(1,7)  = 0.2,
+                       XUNIF_ALBVIS_VEG(1,8)  = 0.2,
+                       XUNIF_ALBVIS_VEG(1,9)  = 0.2,
+                       XUNIF_ALBVIS_VEG(1,10)  = 0.2,
+                       XUNIF_ALBVIS_VEG(1,11)  = 0.2,
+                       XUNIF_ALBVIS_VEG(1,12)  = 0.2,
+                       XUNIF_ALBUV_VEG(1,1)   = 0.2,
+                       XUNIF_ALBUV_VEG(1,2)   = 0.2,
+                       XUNIF_ALBUV_VEG(1,3)   = 0.2,
+                       XUNIF_ALBUV_VEG(1,4)   = 0.2,
+                       XUNIF_ALBUV_VEG(1,5)   = 0.2,
+                       XUNIF_ALBUV_VEG(1,6)   = 0.2,
+                       XUNIF_ALBUV_VEG(1,7)   = 0.2,
+                       XUNIF_ALBUV_VEG(1,8)   = 0.2,
+                       XUNIF_ALBUV_VEG(1,9)   = 0.2,
+                       XUNIF_ALBUV_VEG(1,10)   = 0.2,
+                       XUNIF_ALBUV_VEG(1,11)   = 0.2,
+                       XUNIF_ALBUV_VEG(1,12)   = 0.2,
+                       XUNIF_ALBNIR_SOIL(1,1) = 0.2,
+                       XUNIF_ALBNIR_SOIL(1,2) = 0.2,
+                       XUNIF_ALBNIR_SOIL(1,3) = 0.2,
+                       XUNIF_ALBNIR_SOIL(1,4) = 0.2,
+                       XUNIF_ALBNIR_SOIL(1,5) = 0.2,
+                       XUNIF_ALBNIR_SOIL(1,6) = 0.2,
+                       XUNIF_ALBNIR_SOIL(1,7) = 0.2,
+                       XUNIF_ALBNIR_SOIL(1,8) = 0.2,
+                       XUNIF_ALBNIR_SOIL(1,9) = 0.2,
+                       XUNIF_ALBNIR_SOIL(1,10) = 0.2,
+                       XUNIF_ALBNIR_SOIL(1,11) = 0.2,
+                       XUNIF_ALBNIR_SOIL(1,12) = 0.2,
+                       XUNIF_ALBVIS_SOIL(1,1) = 0.2,
+                       XUNIF_ALBVIS_SOIL(1,2) = 0.2,
+                       XUNIF_ALBVIS_SOIL(1,3) = 0.2,
+                       XUNIF_ALBVIS_SOIL(1,4) = 0.2,
+                       XUNIF_ALBVIS_SOIL(1,5) = 0.2,
+                       XUNIF_ALBVIS_SOIL(1,6) = 0.2,
+                       XUNIF_ALBVIS_SOIL(1,7) = 0.2,
+                       XUNIF_ALBVIS_SOIL(1,8) = 0.2,
+                       XUNIF_ALBVIS_SOIL(1,9) = 0.2,
+                       XUNIF_ALBVIS_SOIL(1,10) = 0.2,
+                       XUNIF_ALBVIS_SOIL(1,11) = 0.2,
+                       XUNIF_ALBVIS_SOIL(1,12) = 0.2,
+                       XUNIF_ALBUV_SOIL(1,1)  = 0.2,
+                       XUNIF_ALBUV_SOIL(1,2)  = 0.2,
+                       XUNIF_ALBUV_SOIL(1,3)  = 0.2,
+                       XUNIF_ALBUV_SOIL(1,4)  = 0.2,
+                       XUNIF_ALBUV_SOIL(1,5)  = 0.2,
+                       XUNIF_ALBUV_SOIL(1,6)  = 0.2,
+                       XUNIF_ALBUV_SOIL(1,7)  = 0.2,
+                       XUNIF_ALBUV_SOIL(1,8)  = 0.2,
+                       XUNIF_ALBUV_SOIL(1,9)  = 0.2,
+                       XUNIF_ALBUV_SOIL(1,10)  = 0.2,
+                       XUNIF_ALBUV_SOIL(1,11)  = 0.2,
+                       XUNIF_ALBUV_SOIL(1,12)  = 0.2,
                        XUNIF_GMES(1)        = 0.001,
                        XUNIF_RE25(1)        = 0.00000018,
                        XUNIF_BSLAI(1)       = 0.08,
@@ -148,11 +212,10 @@
                    NDAY   = 01,
                    XTIME  = 21600. 
 /
-&NAM_PREP_ISBA     XHUG_SURF = 0.10,
-                   XHUG_ROOT = 0.10,
-                   XHUG_DEEP = 0.10,
+&NAM_PREP_ISBA     XUNIF_HUG_SOIL = 0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10
                    CFILE_TG="init_TG.nc",
-                   CTYPE_TG="NETCDF"
+                   CTYPE_TG="NETCDF",
+                   NINFILES=20
 /
 &NAM_PREP_ISBA_SNOW    CSNOW = 'CRO',
                        NSNOW_LAYER = 50, 
@@ -162,8 +225,9 @@
                        CFORCING_FILETYPE =    'NETCDF'   ,
                        CSURF_FILETYPE =       'NC '   ,
                        CTIMESERIES_FILETYPE = 'NETCDF'   ,
+                       NOUTPUT_NETCDF = 4 ,
                        LRESTART = .TRUE.                     ,
-                       XTSTEP_OUTPUT = 21600.            ,
+                       XTSTEP_OUTPUT = 86400.            ,
                        XTSTEP_SURF = 900.                ,
                        LWRITE_COORD = .TRUE.
 /
@@ -193,7 +257,7 @@
   CSNOWDRIFT='VI13'
   LSNOWDRIFT_SUBLIM= .FALSE.
   LSNOW_ABS_ZENITH= .FALSE.
-  CSNOWMETAMO='C13'
+  CSNOWMETAMO='B21'
   CSNOWRAD='B92'
 /
 &NAM_SURF_SNOW_CSTS
@@ -204,20 +268,22 @@
   XZ0ICEZ0SNOW=10.
   XVAGING_GLACIER=900.
   XVAGING_NOGLACIER=60.
+  X_RI_MAX=0.026
 /
-
+&NAM_WRITE_SURF_ATM
+  LSPLIT_PATCH = .FALSE.
+/
 &NAM_WRITE_DIAG_SURFn
   LPROVAR_TO_DIAG = .TRUE.
   LSNOWDIMNC = .TRUE.
   LRESETCUMUL = .TRUE.
   LSELECT= .TRUE.
-  CSELECT='time','ZS','aspect','slope','massif_num','TG1','WG1','WGI1','TG4','ASNOW_VEG',
-'WSN_VEG','SNOWRO','SNOWHEAT','SNOWAGE','SNOWTEMP','SNOWGRAN1','SNOWGRAN2','SNOWHIST',
-'RN_ISBA','H_ISBA','LE_ISBA','GFLUX_ISBA','DRAIN_ISBA','RUNOFF_ISBA','TALB_ISBA','TS_ISBA',
+  CSELECT='time','ZS','aspect','slope','massif_num','station','TG1','WG1','WGI1','TG4',
+'RAINF_ISBA','DRAIN_ISBA','RUNOFF_ISBA','TALB_ISBA','TS_ISBA',
 'WSN_T_ISBA','DSN_T_ISBA','EVAP_ISBA','SNOMLT_ISBA',
-'SNOWDZ','SNOWDEND','SNOWSPHER','SNOWSIZE','SNOWSSA','SNOWTYPE','SNOWRAM','SNOWSHEAR','SNOWTEMP','SNOWLIQ',
-'SD_1DAYS','SD_3DAYS','SD_5DAYS','SD_7DAYS','SWE_1DAYS','SWE_3DAYS','SWE_5DAYS','SWE_7DAYS',
-'RAM_SONDE','WET_TH','REFROZ_TH',
+'SD_1DY_ISBA','SD_3DY_ISBA','SD_5DY_ISBA','SD_7DY_ISBA','SWE_1DY_ISBA','SWE_3DY_ISBA','SWE_5DY_ISBA','SWE_7DY_ISBA',
+'RAMSOND_ISBA','WET_TH_ISBA','REFRZTH_ISBA',
 'RN_ISBA','LE_ISBA','H_ISBA','GFLUX_ISBA',
-'SWD_ISBA','SWU_ISBA','LWD_ISBA','LWU_ISBA'
+'SWD_ISBA','SWU_ISBA','LWD_ISBA','LWU_ISBA',
+'NAT_LEV','AVA_TYP','ACC_LEV','DEP_HIG','DEP_MOD'
 /
