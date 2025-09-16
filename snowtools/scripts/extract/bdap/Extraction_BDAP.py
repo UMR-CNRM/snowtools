@@ -12,6 +12,7 @@ import time
 
 from bronx.stdtypes.date import Date, Period
 
+
 """
 Outil d'extraction de données de la BDAP. Les données sont extraites sous forme de fichiers grib
 et converties en un unique fichier netcdf par xarray.
@@ -95,10 +96,10 @@ model_map = dict(
     PA           = dict(vapp='arpege', vconf='4dvarfr', block='meteo'),  # Analyse ARPEGE
     ANTILOPE     = dict(vapp='antilope', vconf='[geometry:area]', block='raw'),
     ANTILOPEJP1  = dict(vapp='antilope', vconf='[geometry:area]', block='rawJP1'),
-    ANTILOPEH    = dict(vapp='antilope', vconf='[geometry:area]', block='Hourly'),
-    ANTILOPEJP1H = dict(vapp='antilope', vconf='[geometry:area]', block='HourlyJP1'),
-    ANTILOPEQ    = dict(vapp='antilope', vconf='[geometry:area]', block='Daily'),
-    ANTILOPEJP1Q = dict(vapp='antilope', vconf='[geometry:area]', block='DailyJP1'),
+    ANTILOPEH    = dict(vapp='antilope', vconf='[geometry:area]', block='hourly'),
+    ANTILOPEJP1H = dict(vapp='antilope', vconf='[geometry:area]', block='hourlyJP1'),
+    ANTILOPEQ    = dict(vapp='antilope', vconf='[geometry:area]', block='daily'),
+    ANTILOPEJP1Q = dict(vapp='antilope', vconf='[geometry:area]', block='dailyJP1'),
 )
 
 default_levels = dict(
@@ -336,6 +337,9 @@ def parse_command_line():
     parser.add_argument('--test', action='store_true', default=False,
                         help='Switch to test mode : write the request but do not try to execute it')
 
+    parser.add_argument('--clean_grib', action='store_true', default=False,
+                        help='Remove extracted grib files after the NetCDF has been created.')
+
     args = parser.parse_args()
     args.datebegin  = Date(args.datebegin)
     if args.dateend is not None:
@@ -355,9 +359,9 @@ def goto(path):
     os.chdir(path)
 
 
-def clean():
+def clean(listfiles):
     import glob
-    for fic in glob.glob('*.idx') + glob.glob('*.grib'):
+    for fic in glob.glob(listfiles):
         os.remove(fic)
 
 
@@ -468,6 +472,7 @@ class ExtractBDAP(object):
             self.MOD = f'PG1PEAROM{member:03d}'
         else:
             self.MOD = self.model
+        self.rqst = None
 
     def requete(self, cmd='dap3_dev'):
         """
@@ -478,7 +483,7 @@ class ExtractBDAP(object):
         :param cmd: dap3 command (values : dap3_dev, dap3_dev_echeance, dap3_dev_date_ech)
         :type cmd: str
         """
-        self.rqst = 'requete.tmp'
+        self.rqst = f'requete_{self.date.ymdh}.tmp'
         f = open(self.rqst, "w")
         f.write('#RQST\n')
         f.write(f'#NFIC {self.gribname}\n')  # Output file name
@@ -606,6 +611,10 @@ class ExtractBDAP(object):
         else:
             return None
 
+    def clean_request(self):
+        if self.rqst is not None:
+            os.remove(self.rqst)
+
     def get_subgrid(self):
         """
         Compute sub_grid indices from min/max coordinates of the extraction domain
@@ -617,10 +626,6 @@ class ExtractBDAP(object):
         i0 = known_grids[self.grid]['lonmin']
         j0 = known_grids[self.grid]['latmax']
         maille = known_grids[self.grid]['maille']
-#        latmax = int(known_domains[self.domain][0]) / 1000
-#        latmin = int(known_domains[self.domain][1]) / 1000
-#        lonmin = int(known_domains[self.domain][2]) / 1000
-#        lonmax = int(known_domains[self.domain][3]) / 1000
         latmax = self.coordinates[0] / 1000
         latmin = self.coordinates[1] / 1000
         lonmin = self.coordinates[2] / 1000
@@ -652,6 +657,7 @@ def execute():
                 grib = extraction.run()
                 if grib is not None:
                     extractedfiles.append(grib)
+        extraction.clean_reqest()
         date = date + Period(hours=max(dt, 1))  # Avoid infinite loops
 
     # Open all extracted files with xarray
@@ -671,7 +677,7 @@ def execute():
         else:
             print('No extracted file to open')
 
-    clean()
+    return extractedfiles
 
 
 if __name__ == "__main__":
@@ -683,6 +689,7 @@ if __name__ == "__main__":
     model       = args.model
     grid        = args.grid
     domain      = args.domain
+    clean_grib  = args.clean_grib
     if args.coordinates is not None:
         coordinates = [int(x * 1000) for x in args.coordinates]
     else:
@@ -725,7 +732,7 @@ if __name__ == "__main__":
     else:  # The extraction is associated to a date
         outname = f'{model}_{param_str}_{level_type}_{grid}_{datebegin.ymdh}.nc'
     if not os.path.exists(outname):
-        execute()
+        extractedfiles = execute()
 
     ############################################
     # Everything beyond this point is optional #
@@ -734,6 +741,7 @@ if __name__ == "__main__":
     if args.archive:
         import vortex
         from vortex import toolbox
+        import cen  # noqa
 
         t = vortex.ticket()
 
@@ -748,7 +756,8 @@ if __name__ == "__main__":
         out = toolbox.output(
             kind           = kind,
             vapp           = model_map[model]['vapp'],
-            vconf          = model_map[model]['vconf'],
+            # vconf          = model_map[model]['vconf'],
+            vconf          = '[geometry:tag]',
             # source_app     = model_map[model]['vapp'],
             # source_conf    = model_map[model]['vconf'],
             geometry       = domain,
@@ -765,3 +774,6 @@ if __name__ == "__main__":
         out[0].quickview()
         print(t.prompt, 'Output location =', out[0].location())
         print()
+
+    if clean_grib:
+        clean(extractedfiles)
