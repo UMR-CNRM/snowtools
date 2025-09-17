@@ -364,6 +364,10 @@ class Surfex_command(_S2M_command):
                                             action="store", type=str, dest="prep_xpid", default=None,
                                             help="xpid in wich are the PREP files to be used")
 
+        parser_research_vortex.add_argument("--forceprep",
+                                            action="store_true", dest="forceprep", default=False,
+                                            help="If True, force the generation of new initial conditions")
+
         parser_research_vortex.add_argument("--obsxpid",
                                             action="store", type=str, dest="obsxpid", default=None,
                                             help="xpid of the obs you want to assimilate")

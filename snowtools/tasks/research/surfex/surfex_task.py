@@ -54,6 +54,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             self.conf.interpol = False
         if not hasattr(self.conf, "climground"):
             self.conf.climground = False
+        if not hasattr(self.conf, "forceprep"):
+            self.conf.forceprep = False
         if not hasattr(self.conf, "dailyprep"):
             self.conf.dailyprep = False
         if not hasattr(self.conf, "simu2D"):
@@ -165,68 +167,76 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print(t.prompt, 'tb02b =', tb02b)
             print()
 
-            # Look for a PREP file if already available for this xpid, geometry, and initial date
-            self.sh.title('Toolbox input PREP (a)')
-            prep_a = toolbox.input(
-                role           = 'SnowpackInit',
-                local          = 'PREP.nc',
-                experiment     = self.conf.xpid if not hasattr(self.conf, 'prep_xpid') else self.conf.prep_xpid,
-                geometry       = self.conf.geometry,
-                date           = self.conf.datespinup,
-                intent         = 'inout',
-                nativefmt      = 'netcdf',
-                kind           = 'PREP',
-                model          = 'surfex',
-                namespace      = 'vortex.multi.fr',
-                namebuild      = 'flat@cen',
-                block          = 'prep',
-                fatal          = False if not hasattr(self.conf, 'prep_xpid') else True,
-            ),
-            print(t.prompt, 'PREP (a) =', prep_a)
-            print()
+            if not self.conf.forceprep:
+                # Look for a PREP file if already available for this xpid, geometry, and initial date
+                self.sh.title('Toolbox input PREP (a)')
+                prep_a = toolbox.input(
+                    role           = 'SnowpackInit',
+                    local          = 'PREP.nc',
+                    experiment     = self.conf.xpid if not hasattr(self.conf, 'prep_xpid') else self.conf.prep_xpid,
+                    geometry       = self.conf.geometry,
+                    date           = self.conf.datespinup,
+                    intent         = 'inout',
+                    nativefmt      = 'netcdf',
+                    kind           = 'PREP',
+                    model          = 'surfex',
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'prep',
+                    fatal          = False if not hasattr(self.conf, 'prep_xpid') else True,
+                ),
+                print(t.prompt, 'PREP (a) =', prep_a)
+                print()
 
-            # 1st alternate : look for a PREP file if already available for this geometry,
-            # and initial date for the "spinup" xpid
-            self.sh.title('Toolbox input PREP (b)')
-            prep_b = toolbox.input(
-                alternate      = 'SnowpackInit',
-                local          = 'PREP.nc',
-                experiment     = 'spinup@' + t.env.getvar("USER"),
-                geometry       = self.conf.geometry,
-                date           = self.conf.datespinup,
-                intent         = 'inout',
-                nativefmt      = 'netcdf',
-                kind           = 'PREP',
-                model          = 'surfex',
-                namespace      = 'vortex.multi.fr',
-                namebuild      = 'flat@cen',
-                block          = 'prep',
-                fatal          = False,
-            ),
-            print(t.prompt, 'PREP (b) =', prep_b)
-            print()
+                # 1st alternate : look for a PREP file if already available for this geometry,
+                # and initial date for the "spinup" xpid
+                self.sh.title('Toolbox input PREP (b)')
+                prep_b = toolbox.input(
+                    alternate      = 'SnowpackInit',
+                    local          = 'PREP.nc',
+                    experiment     = 'spinup@' + t.env.getvar("USER"),
+                    geometry       = self.conf.geometry,
+                    date           = self.conf.datespinup,
+                    intent         = 'inout',
+                    nativefmt      = 'netcdf',
+                    kind           = 'PREP',
+                    model          = 'surfex',
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'prep',
+                    fatal          = False,
+                ),
+                print(t.prompt, 'PREP (b) =', prep_b)
+                print()
 
-            # 2nd alternate : look for a PREP file if already available for this geometry,
-            # and initial date for the "reanalysis" xpid
-            # If not available, do not fail because the PREP file will be automatically built.
-            self.sh.title('Toolbox input PREP (c)')
-            prep_c = toolbox.input(
-                alternate      = 'SnowpackInit',
-                local          = 'PREP.nc',
-                experiment     = self.ref_reanalysis,
-                geometry       = self.conf.geometry,
-                date           = self.conf.datespinup,
-                intent         = 'inout',
-                nativefmt      = 'netcdf',
-                kind           = 'PREP',
-                model          = 'surfex',
-                namespace      = 'vortex.multi.fr',
-                namebuild      = 'flat@cen',
-                block          = 'prep',
-                fatal          = False,
-            ),
-            print(t.prompt, 'PREP (c) =', prep_c)
-            print()
+                # 2nd alternate : look for a PREP file if already available for this geometry,
+                # and initial date for the "reanalysis" xpid
+                # If not available, do not fail because the PREP file will be automatically built.
+                self.sh.title('Toolbox input PREP (c)')
+                prep_c = toolbox.input(
+                    alternate      = 'SnowpackInit',
+                    local          = 'PREP.nc',
+                    experiment     = self.ref_reanalysis,
+                    geometry       = self.conf.geometry,
+                    date           = self.conf.datespinup,
+                    intent         = 'inout',
+                    nativefmt      = 'netcdf',
+                    kind           = 'PREP',
+                    model          = 'surfex',
+                    namespace      = 'vortex.multi.fr',
+                    namebuild      = 'flat@cen',
+                    block          = 'prep',
+                    fatal          = False,
+                ),
+                print(t.prompt, 'PREP (c) =', prep_c)
+                print()
+            else:
+                prep_a = list()
+                prep_a.append(False)
+                prep_b = list()
+                prep_b.append(False)
+                prep_c = list()
+                prep_c.append(False)
 
             if not prep_a[0] and not prep_b[0] and not prep_c[0] and not self.conf.climground:
                 # not self.conf.climground means that the user does not allow the climatological file
@@ -542,8 +552,16 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
 
             print(self.conf.meteo, self.conf.interpol, self.conf.addmask)
 
-            if self.conf.meteo == "safran":
-                # Forcing files need to be converted from flat to slopes geometry
+            if self.conf.meteo == "safran" or (hasattr(self.conf, "geoin") and "allslopes" in self.conf.geometry.tag):
+                # Forcing files need to be converted through prepareforcing algorithm.
+                # This step is necessary to extend slopes of forcing file (from flat to slopes geometry)
+                # This is the case if the user prescribes an input and output geometry with 'allslopes' in the name of
+                # the output geometry (second condition above). We assume in that case that geoin corresponds to a flat
+                # geometry.
+                # This is also always the case when input forcing comes from a safran run and not from an s2m run
+                # (first condition above) even if geoin not specified by the user, notably because SAFRAN outputs
+                # are not ready-to-use for SURFEX runs.
+                #
                 # Parallelization on the years but limited for memory issues on alp_allslopes and pyr_allslopes domains
                 if self.conf.geometry.tag in ["alp_allslopes", "pyr_allslopes", "alp27_allslopes", "pyr24_allslopes"]:
                     ntasks = min(5, len(list_dates_begin_forc))
@@ -951,7 +969,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print()
 
             # Save the forcing files only if they have been converted towards a new geometry.
-            if self.conf.meteo == 'safran' or self.conf.interpol:
+            if (self.conf.meteo == 'safran' or self.conf.interpol or
+                    (hasattr(self.conf, "geoin") and "allslopes" in self.conf.geometry.tag)):
                 self.sh.title('Toolbox output tb19')
                 tb19 = toolbox.output(
                     local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',

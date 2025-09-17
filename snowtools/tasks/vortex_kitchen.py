@@ -572,6 +572,9 @@ class Vortex_conf_file(object):
         if self.options.ground:
             self.set_field("DEFAULT", 'climground', self.options.ground)
 
+        if self.options.forceprep:
+            self.set_field("DEFAULT", 'forceprep', self.options.forceprep)
+
         if self.options.task == 'surfex_dailyprep':
             self.set_field("DEFAULT", 'dailyprep', True)
 
