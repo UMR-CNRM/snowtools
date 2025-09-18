@@ -380,7 +380,7 @@ class Edelweiss_kitchen(vortex_kitchen):
             for fic in prep:
                 fic.delete()
             time.sleep(10)
-            while (timer - start < walltime) and not launch:
+            while (timer - start < walltime * 1.1) and not launch:
                 if all([fic.get() for fic in prep]):
                     launch = True
                 else:
@@ -409,11 +409,12 @@ class Edelweiss_kitchen(vortex_kitchen):
                     callSystemOrDie(mkjob)
 
             self.iniparser.set('offlinempi', 'date_prep', date)
+            self.iniparser.remove_option('offlinempi', 'member_prep')
+            self.iniparser.remove_option('offline_mpi', 'member_prep')
             if first_run:
-                self.iniparser.remove_option('offlinempi', 'member_prep')
-                self.iniparser.remove_option('offline_mpi', 'member_prep')
                 self.iniparser.set('offlinempi', 'block_prep', 'prep/an')
                 self.iniparser.set('offlinempi', 'xpid_prep', self.options.xpid)
+                self.iniparser.set('offlinempi', 'vapp_prep', self.options.vapp)
                 first_run = False
 
             if wait_mandatory_input('soda', block='bg', rundate=date):
@@ -428,7 +429,10 @@ class Edelweiss_kitchen(vortex_kitchen):
 
         dateend = self.options.dateend
         if wait_mandatory_input('offlinempi', block='an', rundate=datebegin):
+            self.iniparser.remove_option('offline_mpi', 'member_prep')
             offline_list = self.mkjob_list_commands(jobname='offline_mpi', njobs=nmembers, mb0=0)
+            self.iniparser.remove_option('offlinempi', 'member_prep')
+            self.iniparser.remove_option('offline_mpi', 'member_prep')
             self.iniparser.set('offlinempi', 'datebegin', datebegin)
             self.iniparser.set('offlinempi', 'dateend', dateend)
 

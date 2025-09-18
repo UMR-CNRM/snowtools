@@ -109,6 +109,7 @@ class _SURFEXTask(_VortexTask):
             member = self.conf.member_prep
         else:
             member = self.conf.member
+
         self.sh.title('PREP')
         self.prep = toolbox.input(
             role         = "SnowpackInit",
@@ -400,7 +401,7 @@ class SodaTask(_SURFEXTask):
 
     def get_local_inputs(self):
 
-        self.sh.title('Soda-preprocessed namelist)')
+        self.sh.title('Soda-preprocessed namelist')
         nam_soda = toolbox.input(
             role            = 'Nam_surfex',
             kind            = 'namelist',
@@ -428,7 +429,7 @@ class SodaTask(_SURFEXTask):
         print()
         self.component_runner(algo, self.soda, mpiopts=dict(nnodes=1, nprocs=1, ntasks=1))
 
-    def put_local_outputs(self):
+    def put_remote_outputs(self):
 
         self.sh.title('Output PREP')
         prep_out = toolbox.output(
@@ -492,7 +493,7 @@ class PreprocessSodaNamelist(_SURFEXTask):
 
     def put_local_outputs(self):
 
-        self.sh.title('Soda-preprocessed namelist)')
+        self.sh.title('Soda-preprocessed namelist')
         nam_out = toolbox.output(
             role            = 'Nam_surfex',
             kind            = 'namelist',
@@ -505,3 +506,6 @@ class PreprocessSodaNamelist(_SURFEXTask):
         )
         print('preprocessed namelist =', nam_out)
         print()
+
+    def put_remote_outputs(self):
+        pass
