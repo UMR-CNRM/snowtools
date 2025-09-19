@@ -271,7 +271,7 @@ class Edelweiss_kitchen(vortex_kitchen):
             self.iniparser.write(configfile)
 
     def mkjob_command(self, jobname, taskname):
-
+        # TODO : ajouter la période pour éviter d'avoir à mettre datebegin / dateend dans le fichier de conf
         mkjob = "../vortex/bin/mkjob.py"
         cmd = f"{mkjob} -j name={jobname} task={taskname} profile={self.profile} jobassistant=cen"
 
@@ -330,6 +330,7 @@ class Edelweiss_kitchen(vortex_kitchen):
         # attribute will be replaced by an integer (different for each job)
         # At this stage, *options/members_forcing* is a string returned by the "convert_members"
         # method with a fixed format : "rangex(start:${first} end:${last})"
+        # TODO : Use a specific variable to define the number of jobs
         if self.options.members_forcing is None:
             nmembers = 1
             first = None

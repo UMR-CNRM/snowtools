@@ -19,7 +19,7 @@ import shutil
 import xarray as xr
 import argparse
 
-import snowtools.tools.xarray_preprocess as xrp
+from snowtools.utils import xarray_snowtools
 
 DEFAULT_NETCDF_FORMAT = 'NETCDF4_CLASSIC'
 
@@ -61,10 +61,10 @@ def compute_phase_from_iso_wetbt1(subdir=None):
     """
     try:
         precipitation = xr.open_dataarray(os.path.join(subdir or '', 'PRECIPITATION.nc'))  # Hourly precipitation
-        precipitation = xrp.preprocess(precipitation, decode_time=False)
+        precipitation = xarray_snowtools.preprocess(precipitation, decode_time=False)
     except ValueError:
         precipitation = xr.open_dataset(os.path.join(subdir or '', 'PRECIPITATION.nc'))
-        precipitation = xrp.preprocess(precipitation, decode_time=False)
+        precipitation = xarray_snowtools.preprocess(precipitation, decode_time=False)
         precipitation = precipitation.Precipitation
     # Fill potentially missing dates from the BDAP with 0
     precipitation = precipitation.fillna(0)
@@ -73,7 +73,7 @@ def compute_phase_from_iso_wetbt1(subdir=None):
     isowetbt  = xr.open_dataset('ISO_TPW.nc')
     if 'valid_time' in isowetbt.keys():
         isowetbt = isowetbt.drop('time').rename({'valid_time': 'time'})
-    isowetbt = xrp.preprocess(isowetbt, decode_time=False)
+    isowetbt = xarray_snowtools.preprocess(isowetbt, decode_time=False)
     # Fill missing dates with nearest value :
     isowetbt  = isowetbt.reindex({'time': precipitation.time}, method='nearest')
     isowetbt1 = isowetbt.sel({'ISO_TPW': 27415.})  # Wet-bulb temperature iso-1°C
@@ -83,7 +83,7 @@ def compute_phase_from_iso_wetbt1(subdir=None):
     # iso_elevation = isowetbt1.sro + source_relief
     iso_elevation = isowetbt1.sro
     target_relief = xr.open_dataarray('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
-    target_relief = xrp.preprocess(target_relief, decode_time=False)
+    target_relief = xarray_snowtools.preprocess(target_relief, decode_time=False)
 
     # Interpolation of all data to the target geometry
     iso250m = iso_elevation.interp({'yy': target_relief.yy, 'xx': target_relief.xx})

@@ -27,7 +27,7 @@ import numpy as np
 import pandas as pd
 import argparse
 
-import snowtools.tools.xarray_preprocess as xrp
+from snowtools.utils import xarray_snowtools
 
 # DEFAULT_NETCDF_FORMAT = 'NETCDF3_CLASSIC'  # WARNING : to_netcdf command very slow (>15')
 DEFAULT_NETCDF_FORMAT = 'NETCDF4_CLASSIC'
@@ -70,11 +70,12 @@ def update_wind(forcing):
     print('Update wind')
     # 1 Open wind produced by HM with LLT method
     wind = open_dataset('WIND.nc')
+    wind = xarray_snowtools.preprocess(wind)
     dates = np.intersect1d(forcing.time, wind.time)
     forcing = forcing.sel({'time': dates})
     wind = wind.sel({'time': dates})
     forcing['Wind'].data = wind['Wind'].data
-    forcing['Wind_DIR'].data = wind['Wind_dir'].data
+    forcing['Wind_DIR'].data = wind['Wind_DIR'].data
     wind.close()
 
     return forcing
@@ -96,7 +97,7 @@ def update_precipitation(forcing, subdir=None):
     forcing.time.encoding['units'] = f'hours since {forcing.time.data[0]}'
 
     precipitation = precipitation.sel({'time': dates})
-    precipitation = xrp.preprocess(precipitation)
+    precipitation = xarray_snowtools.preprocess(precipitation)
 
     forcing['Rainf'].data = precipitation['Rainf'].data / 3600.
     forcing['Snowf'].data = precipitation['Snowf'].data / 3600.

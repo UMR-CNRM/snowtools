@@ -21,41 +21,79 @@ class Precipitation(_VortexTask):
         """
         Main method to fetch all input files
         """
+
+        t = self.ticket
+
         # Hourly total precipitation at 1km resolution --> use get_meteo since it is not FORCING-ready
         self.sh.title('Toolbox input Precipitation 1km')
-        kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
-        # Update default vapp with specific conf values
-        kw.update(dict(
-            kind     = 'Precipitation',
-            geometry = self.conf.geometry_precipitation,
-            xpid     = self.conf.xpid_precipitation,
-            block    = 'hourly',
-            member   = self.conf.members,
-            vapp     = self.conf.vapp_precipitation,
-        ))
-        io.get_meteo(**kw)
+        self.precipitation = toolbox.input(
+            role        = 'Precipitation',
+            kind        = 'Precipitation',
+            datebegin   = self.conf.datebegin_precipitation,
+            dateend     = self.conf.dateend_precipitation,
+            date        = '[dateend]',
+            geometry    = self.conf.geometry_precipitation,
+            experiment  = self.conf.xpid_precipitation,
+            block       = 'hourly',
+            member      = self.conf.members_precipitation,
+            vapp        = self.conf.vapp_precipitation,
+            local       = 'mb[member]/PRECIPITATION.nc',
+            namebuild   = 'flat@cen',
+        )
+        print(t.prompt, 'Precipitation =', self.precipitation)
+        print()
 
-        # Hourly iso Wet-bulb temperatures 0°C, 1°C [, 1.5°C] --> use get_meteo (not FORCING-ready)
-        self.sh.title('Toolbox input ISO WETBT/TPW')
-        kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
-        # Update default vapp with specific conf values
         if self.conf.dateend == '2022080106':
-            kw.update(dict(datebegin=self.conf.datebegin_lpn, kind=self.conf.kind_lpn, geometry=self.conf.geometry_lpn,
-                xpid=self.conf.xpid_lpn, source_app='arome', source_conf='3dvarfr',
-                filename='ISO_TPW.nc'))  # TODO : modifier le filename
-        else:
-            kw.update(dict(datebegin=self.conf.datebegin_lpn, kind=self.conf.kind_lpn, geometry=self.conf.geometry_lpn,
-                xpid=self.conf.xpid_lpn, filename='ISO_TPW.nc'))  # TODO : modifier le filename
-        io.get_meteo(**kw)
 
-        # Iso-TPW's grid relief
-        # self.sh.title('Toolbox input ISO WETBT/TPW RELIEF')
-        # io.get_const(self.conf.uenv, 'relief', self.conf.geometry_tpw, filename='SOURCE_RELIEF.nc')
+            # Hourly iso Wet-bulb temperatures 0°C, 1°C [, 1.5°C] --> use get_meteo (not FORCING-ready)
+            self.sh.title('Toolbox input ISO WETBT/TPW')
+            iso_wtbt = toolbox.input(
+                datebegin   = self.conf.datebegin_lpn,
+                dateend     = self.conf.dateend_lpn,
+                date        = '[dateend]',
+                kind        = self.conf.kind_lpn,
+                geometry    = self.conf.geometry_lpn,
+                experiment  = self.conf.xpid_lpn,
+                block       = self.conf.kind_lpn.lower(),
+                # source_app  = 'arome',
+                # source_conf = '3dvarfr',
+                local       = 'ISO_TPW.nc',
+                namebuild   = 'flat@cen',
+                source_app  = 'arome',
+                source_conf = '3dvarfr'
+            )
+            print(t.prompt, 'iso_wtbt =', iso_wtbt)
+            print()
+
+        else:
+
+            # Hourly iso Wet-bulb temperatures 0°C, 1°C [, 1.5°C] --> use get_meteo (not FORCING-ready)
+            self.sh.title('Toolbox input ISO WETBT/TPW')
+            iso_wtbt = toolbox.input(
+                datebegin   = self.conf.datebegin_lpn,
+                dateend     = self.conf.dateend_lpn,
+                date        = '[dateend]',
+                kind        = self.conf.kind_lpn,
+                geometry    = self.conf.geometry_lpn,
+                experiment  = self.conf.xpid_lpn,
+                block       = self.conf.kind_lpn.lower(),
+                # source_app  = 'arome',
+                # source_conf = '3dvarfr',
+                local       = 'ISO_TPW.nc',
+                namebuild   = 'flat@cen',
+            )
+            print(t.prompt, 'iso_wtbt =', iso_wtbt)
+            print()
 
         # Domain's DEM
         self.sh.title('Toolbox input TARGET RELIEF')
-        io.get_const(self.conf.uenv, 'relief', self.conf.geometry, filename='TARGET_RELIEF.nc',
-                gvar='RELIEF_[geometry:tag]_4326')
+        toolbox.input(
+            kind        = 'relief',
+            genv        = self.conf.uenv,
+            geometry    = self.conf.geometry,
+            local       = 'TARGET_RELIEF.nc',
+            gvar        = 'RELIEF_[geometry:tag:upper]_4326',
+        )
 
     def algo(self):
         """
@@ -80,10 +118,24 @@ class Precipitation(_VortexTask):
         """
         Main method to save an OFFLINE execution outputs
         """
+        t = self.ticket
+
         self.sh.title('Precipitation output')
-        # TODO : Do not archive on Hendrix !
-        io.put_precipitation(member=self.conf.members, filename='PRECIPITATION_OUT.nc',
-                **self.common_kw)
+        precipitation = toolbox.output(
+            kind         = 'Precipitation',
+            datebegin   = self.conf.datebegin,
+            dateend     = self.conf.dateend,
+            date        = '[dateend]',
+            geometry    = self.conf.geometry,
+            experiment  = self.conf.xpid,
+            block       = 'hourly',
+            member      = self.conf.members,
+            vapp        = self.conf.vapp,
+            local       = 'mb[member]/PRECIPITATION_OUT.nc',
+            namebuild   = 'flat@cen',
+        )
+        print(t.prompt, 'Precipitation =', precipitation)
+        print()
 
 
 class Forcing(_VortexTask):
@@ -101,17 +153,31 @@ class Forcing(_VortexTask):
         Main method to fetch all input files
         """
 
+        t = self.ticket
+
         # Meteorological variables that are not yet processed in EDELWEISS system
         # come from SAFRAN reanalysis.
         # It is also possible to start with an already modified FORCING file. In this case the user
         # must at least provide the xpid and optionally (if different from the task's ones) the geometry
         # and vapp of the FORCING files
-        kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
-        # Update default vapp with specific conf values
-        kw.update(dict(vapp=self.conf.vapp_forcing, filename='FORCING_IN.nc', datebegin=self.conf.datebegin_forcing,
-            dateend=self.conf.dateend_forcing, xpid=self.conf.xpid_forcing, geometry=self.conf.geometry_forcing))
+
         self.sh.title('FORCING input')
-        self.forcing = io.get_forcing(**kw)
+        self.forcing = toolbox.input(
+            role        = 'MeteorologicalForcing',
+            kind        = 'MeteorologicalForcing',
+            local       = 'mb[member]/FORCING_IN.nc',
+            vapp        = self.conf.vapp_forcing,
+            datebegin   = self.conf.datebegin_forcing,
+            dateend     = self.conf.dateend_forcing,
+            date        = '[dateend]',
+            experiment  = self.conf.xpid_forcing,
+            geometry    = self.conf.geometry_forcing,
+            member      = self.conf.members,
+            block       = 'meteo',
+            namebuild   = 'flat@cen',
+        )
+        print(t.prompt, 'forcing =', self.forcing)
+        print()
 
         # TODO : Cette verrue montre que le source_conf est inutile
         # A retirer dans les toolbox de Sabine
@@ -129,19 +195,34 @@ class Forcing(_VortexTask):
 
         # Update Rainf/Snowf variables
         if self.conf.precipitation is not None:
-            # Update default vapp with specific conf values
-            kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
-            kw.update(dict(vapp=self.conf.vapp_precipitation, member=self.conf.members, source_conf=source_conf,
-                xpid=self.conf.xpid_precipitation, geometry=self.conf.geometry_precipitation))
+
             self.sh.title('Precipitation input')
-            self.precipitation = io.get_precipitation(**kw)
+            self.precipitation = toolbox.input(
+                role        = 'Precipitation',
+                kind        = 'Precipitation',
+                datebegin   = self.conf.datebegin_precipitation,
+                dateend     = self.conf.dateend_precipitation,
+                date        = '[dateend]',
+                geometry    = self.conf.geometry_precipitation,
+                experiment  = self.conf.xpid_precipitation,
+                block       = 'hourly',
+                member      = self.conf.members_precipitation,
+                vapp        = self.conf.vapp_precipitation,
+                local       = 'mb[member]/PRECIPITATION.nc',
+                namebuild   = 'flat@cen',
+                source_conf = source_conf,
+            )
+            print(t.prompt, 'Precipitation =', self.precipitation)
+            print()
+
         else:
+
             self.precipitation = False
 
         # Update Wind / Wind_DIR variables
         if self.conf.wind is not None:
             self.sh.title('Wind input')
-            toolbox.input(
+            wind = toolbox.input(
                 vapp           = self.conf.vapp_wind,
                 experiment     = self.conf.xpid_wind,
                 geometry       = self.conf.geometry_wind,
@@ -157,6 +238,8 @@ class Forcing(_VortexTask):
                 source_app     = 'arome',
                 source_conf    = 'devine',
             )
+            print(t.prompt, 'wind =', wind)
+            print()
 
     def algo(self):
         """
@@ -186,8 +269,25 @@ class Forcing(_VortexTask):
         """
         Main method to save an OFFLINE execution outputs
         """
+
+        t = self.ticket
+
         self.sh.title('FORCING output')
-        io.put_forcing(filename='FORCING_OUT.nc', member=self.conf.members, **self.common_kw)
+        forcing = toolbox.output(
+            kind        = 'MeteorologicalForcing',
+            local       = 'mb[member]/FORCING_OUT.nc',
+            vapp        = self.conf.vapp,
+            datebegin   = self.conf.datebegin,
+            dateend     = self.conf.dateend,
+            date        = '[dateend]',
+            experiment  = self.conf.xpid,
+            geometry    = self.conf.geometry,
+            member      = self.conf.members,
+            block       = 'meteo',
+            namebuild   = 'flat@cen',
+        )
+        print(t.prompt, 'forcing =', forcing)
+        print()
 
 
 class CombineForcings(_VortexTask):

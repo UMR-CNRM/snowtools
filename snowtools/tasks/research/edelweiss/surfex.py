@@ -49,6 +49,11 @@ class _SURFEXTask(_VortexTask):
             member         = self.conf.member,
             datebegin      = self.conf.datebegin,
             dateend        = self.conf.dateend,
+            date           = '[dateend]',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            namebuild      = 'flat@cen',
+
         )
 
         self.sh.title('Output PREP')
@@ -60,6 +65,9 @@ class _SURFEXTask(_VortexTask):
             model          = 'surfex',
             block          = self.conf.block_prep_out,
             member         = self.conf.member,
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            namebuild      = 'flat@cen',
         ),
         print()
 
@@ -67,15 +75,25 @@ class _SURFEXTask(_VortexTask):
         """
         Main method to fetch a single or an ensemble of FORCING files
         """
-        kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
-        # Update default vapp with specific conf values
-        # Verrue pour gérer les FORCINGs 2021/2022 qui commencent à 7h !
-        kw.update(dict(vapp=self.conf.vapp_forcing, filename=f'FORCING_{self.conf.datebegin}_[dateend:ymdh].nc',
-        # kw.update(dict(vapp=self.conf.vapp_forcing, filename='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-            datebegin=self.conf.datebegin_forcing, dateend=self.conf.dateend_forcing, member=self.conf.member,
-            xpid=self.conf.xpid_forcing, geometry=self.conf.geometry_forcing))
-        self.sh.title('FORCING')
-        self.forcing = io.get_forcing(**kw)
+        t = self.ticket
+
+        self.sh.title('FORCING input')
+        self.forcing = toolbox.input(
+            role        = 'MeteorologicalForcing',
+            kind        = 'MeteorologicalForcing',
+            local       = f'FORCING_{self.conf.datebegin}_[dateend:ymdh].nc',
+            vapp        = self.conf.vapp_forcing,
+            datebegin   = self.conf.datebegin_forcing,
+            dateend     = self.conf.dateend_forcing,
+            date        = '[dateend]',
+            experiment  = self.conf.xpid_forcing,
+            geometry    = self.conf.geometry_forcing,
+            member      = self.conf.member,
+            block       = 'meteo',
+            namebuild   = 'flat@cen',
+        )
+        print(t.prompt, 'forcing =', self.forcing)
+        print()
 
     def get_surfex_namelist(self, source='OPTIONS_OFFLINE.nam'):
         """
@@ -123,14 +141,9 @@ class _SURFEXTask(_VortexTask):
             block        = self.conf.block_prep,
             model        = 'surfex',
             member       = member,
+            namebuild    = 'flat@cen',
         )
         print()
-
-        #kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
-        # Update default vapp with specific conf values
-        #kw.update(dict(xpid=self.conf.xpid_prep, geometry=self.conf.geometry_prep, date=self.conf.date_prep,
-        #    alternate_xpid=self.ref_reanalysis, intent='inout', vapp=self.conf.vapp_prep))
-        #self.prep = io.get_prep(**kw)
 
     def get_pgd(self):
         """
@@ -161,6 +174,8 @@ class _SURFEXTask(_VortexTask):
             filename   = 'PGD.nc',
             block      = 'pgd',
             experiment = 'spinup@' + t.env.getvar("USER"),
+            namebuild  = 'flat@cen',
+            geometry   = self.conf.geometry,
             fatal      = True,
         )
         print('PGD (a) = ', pgd_b)

@@ -199,7 +199,7 @@ def execute():
             kind       = 'SnowpackSimulation',
             experiment = xpid,
             geometry   = geometry,
-            filename   = f'PRO_{shortid}.nc',
+            filename   = f'mb[member]/PRO_{shortid}.nc',
             member     = member,
             datebegin  = deb,
             dateend    = dateend,

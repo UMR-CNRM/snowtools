@@ -52,15 +52,27 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         Set toolbox defaults, extended with actual arguments ``extras``.
         """
         t = self.ticket
-        print('DBUG', t.glove.vapp)
+        self.get_list_dates()
         toolbox.defaults(
-            namespace  = self.conf.get('namespace', Namespace('vortex.multi.fr')),
-            gnamespace = self.conf.get('gnamespace', Namespace('gco.multi.fr')),
+            #namespace      = self.conf.get('namespace', Namespace('vortex.multi.fr')),
+            namespace      = Namespace('vortex.multi.fr'),
+            gnamespace     = self.conf.get('gnamespace', Namespace('gco.multi.fr')),
+            datebegin      = self.list_dates_begin,
+            dateend        = self.dict_dates_end,
+            # date           = '[dateend]',  # WARNING : research only !
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            vapp           = self.conf.vapp,
+            vconf          = '[geometry:tag]',
+            # model          = self.conf.model,
+            # namebuild      = 'flat@cen',  # WARNING : research only !
+            nativefmt      = 'netcdf',
         )
-        if 'rundate' in self.conf:
-            toolbox.defaults['date'] = self.conf.rundate
-        elif 'dateend' in self.conf:
-            toolbox.defaults['date'] = self.conf.dateend
+        if 'date' not in self.conf:
+            if 'rundate' in self.conf:
+                toolbox.defaults['date'] = self.conf.rundate
+            elif 'dateend' in self.conf:
+                toolbox.defaults['date'] = self.conf.dateend
 
         for optk in ('cutoff', 'geometry', 'cycle', 'vortex_set_aside'):
             if optk in self.conf:
@@ -77,31 +89,6 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         """
         Main method definig the task's sequence of actions
         """
-
-        self.get_list_dates()
-
-        # TODO : passer toute la conf en kw ?
-        # Les variables de conf suivante sont automatiquement passées à footprint :
-        # model, date, cutoff, geometry, cycle et namespace
-        self.common_kw   = dict(
-            datebegin      = self.list_dates_begin,
-            dateend        = self.dict_dates_end,
-            date           = '[dateend]',  # WARNING : research only !
-            experiment     = self.conf.xpid,
-            geometry       = self.conf.geometry,
-            vapp           = self.conf.vapp,
-            vconf          = '[geometry:tag]',
-            # model          = self.conf.model,
-            namespace      = 'vortex.multi.fr',
-            namebuild      = 'flat@cen',  # WARNING : research only !
-            nativefmt      = 'netcdf',
-        )
-
-        # TODO : Use the "defaults" method of the Task/Node class instead ?
-        toolbox.defaults.update(**self.common_kw)
-
-        # if hasattr(self.conf, 'member') and self.conf.member is not None:
-        #     toolbox.defaults.update(member=self.conf.member)
 
         if 'early-fetch' in self.steps:  # Executed on a TRANSFERT NODE to fetch inputs from a remote cache
             self.get_remote_inputs()
@@ -146,6 +133,7 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         You can either use standard Vortex input toolboxes or the CEN-specific `vortexIO` tool.
         """
         # self.get_remote_inputs()  # TODO : check if really necessary / good practice
+        pass
 
     def algo(self):
         """
@@ -160,6 +148,7 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
         You can either use standard Vortex input toolboxes or the CEN-specific `vortexIO` tool.
         """
         # self.put_remote_outputs()  # TODO : check if really necessary / good practice
+        pass
 
     def put_remote_outputs(self):
         """

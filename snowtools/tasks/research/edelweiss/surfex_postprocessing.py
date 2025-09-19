@@ -65,11 +65,22 @@ class ExtractDates(_VortexTask):
         """
 
         self.sh.title('Toolbox input PRO')
-        kw = self.common_kw.copy()  # Create a copy to set resource-specific entries
-        # Update default vapp with specific conf values
-        kw.update(dict(vapp=self.conf.vapp_pro, datebegin=self.conf.datebegin_pro, dateend=self.conf.dateend_pro,
-            xpid=self.conf.xpid_pro, geometry=self.conf.geometry_pro, member=self.conf.members))
-        self.pro = io.get_pro(**kw)
+        self.pro = toolbox.input(
+            role        = 'SnowpackSimulation',
+            kind        = 'SnowpackSimulation',
+            vapp        = self.conf.vapp_pro,
+            datebegin   = self.conf.datebegin_pro,
+            dateend     = self.conf.dateend_pro,
+            date        = self.conf.dateend,
+            model       = 'surfex',
+            block       = 'pro',
+            xpid        = self.conf.xpid_pro,
+            geometry    = self.conf.geometry_pro,
+            member      = self.conf.members,
+            namebuild   = 'flat@cen',
+            filename    = 'mb[member]/PRO.nc',
+            cutoff      = 'assimilation',
+        )
 
     def algo(self):
         """
@@ -94,26 +105,29 @@ class ExtractDates(_VortexTask):
         """
         TODO
         """
+        t = self.ticket
+
         self.sh.title('Toolbox output PRO')
         # TODO : How to archive that resource ?
         # Actuellement, elle est archivée sous "date=dateend" (car "namebuild=None")
         # --> ca ne semble pas très pertinent
         suffix = '_'.join(self.conf.extraction_dates)
-        toolbox.output(
+        pro_out = toolbox.output(
             kind       = 'SnowpackSimulation',
             experiment = self.conf.xpid,
             geometry   = self.conf.geometry,
-            filename   = f'PRO_{suffix}.nc',
+            filename   = f'mb[member]/PRO_{suffix}.nc',
             member     = self.conf.members,
             datebegin  = self.conf.datebegin,
             dateend    = self.conf.dateend,
             date       = self.conf.dateend,
             model      = 'surfex',
             block      = 'pro',
-            namespace  = 'vortex.archive.fr',
-            storage    = 'sxcen.cnrm.meteo.fr',
-            nambuild   = 'date@cen',
+            cutoff     = 'assimilation',
+            namespace  = 'vortex.archive.fr',  # TODO
         )
+        print(t.prompt, 'PRO =', pro_out)
+        print()
 
         # To put the file on sxcen only :
         # WARNING : the default cache on sxcen is under */home* (defined by the *storeroot* footprint with a
