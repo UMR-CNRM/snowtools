@@ -99,8 +99,21 @@ class ExtractDates(_VortexTask):
         # Actuellement, elle est archivée sous "date=dateend" (car "namebuild=None")
         # --> ca ne semble pas très pertinent
         suffix = '_'.join(self.conf.extraction_dates)
-        self.diag = io.put_pro(member=self.conf.members, filename=f'PRO_{suffix}.nc',
-                namebuild=None, **self.common_kw,)
+        toolbox.output(
+            kind       = 'SnowpackSimulation',
+            experiment = self.conf.xpid,
+            geometry   = self.conf.geometry,
+            filename   = f'PRO_{suffix}.nc',
+            member     = self.conf.members,
+            datebegin  = self.conf.datebegin,
+            dateend    = self.conf.dateend,
+            date       = self.conf.dateend,
+            model      = 'surfex',
+            block      = 'pro',
+            namespace  = 'vortex.archive.fr',
+            storage    = 'sxcen.cnrm.meteo.fr',
+            nambuild   = 'date@cen',
+        )
 
         # To put the file on sxcen only :
         # WARNING : the default cache on sxcen is under */home* (defined by the *storeroot* footprint with a

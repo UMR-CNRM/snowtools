@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import xskillscore  # Requires an installation : pip install xskillscore
 # https://xskillscore.readthedocs.io/en/stable/api/xskillscore.crps_ensemble.html
 
-import snowtools.tools.xarray_backend  # Ignore "import not used" error --> load `CENBackendEntrypoint` api
+from snowtools.utils import xarray_snowtools  # noqa
 from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.plots.maps import plot2D
 from snowtools.scores import clusters
@@ -33,6 +33,8 @@ from snowtools.plots.boxplots import violinplot
 from snowtools.scripts.post_processing import common_dict
 from snowtools.tools import common_tools as ct
 from snowtools.plots.scatterplots import scatterplots
+
+from vortex import toolbox
 
 members_map = common_dict.members_map
 product_map = common_dict.product_map
@@ -193,9 +195,21 @@ def execute():
             deb = '2021080106'
         else:
             deb = datebegin  # 2021080207
-        kw = dict(datebegin=deb, dateend=dateend, vapp=vapp, member=member, namebuild=None,
-                filename=f'PRO_{shortid}.nc', xpid=xpid, geometry=geometry)
-        io.get_pro(**kw)
+        toolbox.input(
+            kind       = 'SnowpackSimulation',
+            experiment = xpid,
+            geometry   = geometry,
+            filename   = f'PRO_{shortid}.nc',
+            member     = member,
+            datebegin  = deb,
+            dateend    = dateend,
+            date       = dateend,
+            model      = 'surfex',
+            block      = 'pro',
+            namespace  = 'vortex.archive.fr',
+            storage    = 'sxcen.cnrm.meteo.fr',
+            nambuild   = 'date@cen',
+        )
 
         simu = read_simu(xpid, member, date)
 
