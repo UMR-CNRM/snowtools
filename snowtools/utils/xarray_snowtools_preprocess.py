@@ -77,7 +77,7 @@ def update_varname(ds, mapping):
     # the same session
     if isinstance(ds, xarray.core.dataarray.DataArray):
         # Set orginal Array name as attribute for backtracking
-        ds.assign_attrs(original_name=ds.name)
+        #ds.assign_attrs(original_name=ds.name)
         if ds.name in variables_map:
             ds = ds.rename(variables_map[ds.name])
         if ds.name in mapping:
@@ -95,7 +95,7 @@ def update_varname(ds, mapping):
         update_dict.update(user_mapping)
         if len(update_dict) > 0:
             reverse_map = {v: k for k, v in update_dict.items()}
-            ds = ds.assign_attrs(original_variable_name=reverse_map)
+            #ds = ds.assign_attrs(original_variable_name=reverse_map)
 
     return ds
 
@@ -125,7 +125,7 @@ def update_dimname(ds, mapping):
     update_dict.update(user_mapping)
     if len(update_dict) > 0:
         reverse_map = {v: k for k, v in update_dict.items()}
-        ds = ds.assign_attrs(original_dimension_name=reverse_map)
+        #ds = ds.assign_attrs(original_dimension_name=reverse_map)
 
     return ds
 
