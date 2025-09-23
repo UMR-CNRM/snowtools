@@ -242,14 +242,14 @@ def execute():
             pearson[shortid], crps = compute_scores(simu, obs, shortid, date, plot_HTN, dem=mnt, deterministic=True)
             vmax = vmax_map[date]  # set colobar extend in CRPS/Error plot
             vmin = -vmax
-            xmax = vmax + 2  # xlim in violinplot (Add margin for legend)
+            xmax = vmax + 1  # xlim in violinplot (Add margin for legend)
             cmap = plt.cm.RdBu
             label = 'Error (m)'
         else:
             pearson[shortid], crps = compute_scores(simu, obs, shortid, date, plot_HTN, dem=mnt)
             vmin = 0
             vmax = vmax_map[date]
-            xmax = vmax + 2  # xlim in violinplot (Add margin for legend)
+            xmax = vmax + 1  # xlim in violinplot (Add margin for legend)
             cmap = plt.cm.Reds
             label = 'CRPS (m)'
         crps = crps.rename(label)

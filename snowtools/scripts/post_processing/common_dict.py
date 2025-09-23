@@ -65,11 +65,11 @@ xpid_map = {
 }
 
 vmax_map = {
-    '2018012312': 3,
-    '2018031612': 4,
-    '2019051312': 3,
-    '2022022612': 3,
-    '2022050112': 2,
+    '2018012312': 1,
+    '2018031612': 1,
+    '2019051312': 1,
+    '2022022612': 1,
+    '2022050112': 1,
 }
 
 # Colors from "Paired" color palette
@@ -77,8 +77,8 @@ colors_map = dict(
     obs = "silver",
     SAFRAN                = "#1f78b4",
     SAFRAN_assim          = "#1f78b4",
-    ALPAGA                = "#33a02c",
-    ALPAGA_assim          = "#33a02c",
+    ALPAGA                = "red",
+    ALPAGA_assim          = "red",
     #SAFRAN_perturb        = "#1f78b4",
     SAFRAN_perturb        = "red",
     SAFRAN_perturb_assim  = "#1f78b4",
