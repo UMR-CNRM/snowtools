@@ -114,10 +114,10 @@ def execute():
     # Open observation file as DataArray
     try:
         obs = xr.open_dataarray(obsname)
-        #obs = xrp.preprocess(obs, decode_time=False)
+        obs = xarray_snowtools.preprocess(obs, decode_time=False)
     except ValueError:
         obs = xr.open_dataset(obsname)
-        #obs = xrp.preprocess(obs, decode_time=False, mapping={'Band1': 'HTN', 'DEP': 'HTN', 'DSN_T_ISBA': 'HTN'})
+        obs = xarray_snowtools.preprocess(obs, decode_time=False, mapping={'Band1': 'HTN', 'DEP': 'HTN', 'DSN_T_ISBA': 'HTN'})
         obs = obs['HTN']
 
     # b) DEM
@@ -129,7 +129,7 @@ def execute():
 
     # Get Domain's DEM in case ZS not in simulation file
     mnt = xr.open_dataset('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
-    #mnt = xrp.preprocess(mnt, decode_time=False)
+    mnt = xarray_snowtools.preprocess(mnt, decode_time=False)
     mnt = mnt['ZS']
 
     if clustering == 'elevation':
@@ -139,21 +139,21 @@ def execute():
                 gvar='ANTILOPE_ERROR_ALP1KM_RS27')
         ds = xr.open_dataset('Estimated_error.nc')
         ds = ct.proj_array(ds)
-        #ds = xrp.preprocess(ds, decode_time=False)
+        ds = xarray_snowtools.preprocess(ds, decode_time=False)
         mask = ds.Uncertainty
     elif clustering == 'ratio':
         io.get_const(uenv=uenv, kind='geomorph', geometry=geometry, filename='Estimated_ratio.nc',
                 gvar='ANTILOPE_RATIO_ALP1KM_RS27')
         ds = xr.open_dataset('Estimated_ratio.nc')
         ds = ct.proj_array(ds)
-        #ds = xrp.preprocess(ds, decode_time=False)
+        ds = xarray_snowtools.preprocess(ds, decode_time=False)
         mask = ds.Ratio
     elif clustering == 'landforms':
         # Get Domain's DEM in case ZS not in simulation file
         io.get_const(uenv=uenv, kind='geomorph', geometry=geometry, filename='GEOMORPH.nc')
         geomorph = xr.open_dataset('GEOMORPH.nc')  # Target domain's Geomorphons mask
         mask = geomorph.Band1
-        #mask = xrp.preprocess(geomorph.Band1, decode_time=False)
+        mask = xarray_snowtools.preprocess(geomorph.Band1, decode_time=False)
     mask = mask.interp({'xx': obs.xx, 'yy': obs.yy}, method='nearest')
     mask = mask.rename(clustering)
 
@@ -191,12 +191,14 @@ def execute():
         name = product_map(shortid)
 
         # VERRUE pour gérer le décallage d'un jour en attendant de combler les données
-        if (shortid.split('_')[0] in ['SAFRAN', 'ANTILOPE', 'KRIGING', 'AROME']) and datebegin == '2021080207':
+        if (shortid.split('_')[0] in ['SAFRAN', 'ANTILOPE', 'KRIGING', 'AROME']) and (datebegin in ['2021080206', '2021080207']):
             deb = '2021080106'
         else:
             deb = datebegin  # 2021080207
         toolbox.input(
             kind       = 'SnowpackSimulation',
+            vapp       = 'edelweiss',
+            vconf      = '[geometry:tag]',
             experiment = xpid,
             geometry   = geometry,
             filename   = f'mb[member]/PRO_{shortid}.nc',
@@ -206,9 +208,9 @@ def execute():
             date       = dateend,
             model      = 'surfex',
             block      = 'pro',
-            namespace  = 'vortex.archive.fr',
-            storage    = 'sxcen.cnrm.meteo.fr',
-            nambuild   = 'date@cen',
+            namespace  = 'vortex.multi.fr',
+            nambuild   = 'flat@cen',
+            cutoff     = 'assimilation',
         )
 
         simu = read_simu(xpid, member, date)
@@ -327,7 +329,7 @@ def read_simu(xpid, members, date):
 
     # Open all simulation PRO files at once
     simu = xr.open_mfdataset(listfiles, concat_dim='member', combine='nested').compute()
-    #simu = xrp.preprocess(simu, decode_time=False)
+    simu = xarray_snowtools.preprocess(simu, decode_time=False)
     # <xarray.Dataset>
     # Dimensions:     (time: 3, xx: 143, yy: 101, member: 16)
     # Coordinates:

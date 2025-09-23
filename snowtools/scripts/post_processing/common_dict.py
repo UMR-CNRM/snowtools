@@ -4,7 +4,10 @@
 
 def members_map(xpid):
     if 'assim' in xpid or 'full_feedback' in xpid:
-        return [mb for mb in range(1, 18)]
+        if xpid in ['SAFRAN_full_perturb_assim', 'ALPAGA_assim']:
+            return [mb for mb in range(17)]
+        else:
+            return [mb for mb in range(1, 18)]
     elif xpid in ['RS27_LHR', 'RS27_ISO']:
         return [0]
     else:
@@ -43,11 +46,14 @@ def product_map(xpid):
         RS27_sorted_full_feedback     = 'SRS_full_feedback',
         RS27_sorted_feedback_extended = 'SRS_feedback_extended',
         RS47_nearest                  = 'SRS47_nearest',
+        SAFRAN_full_perturb       = 'SAFRAN',
+        SAFRAN_full_perturb_assim = 'SAFRAN_assim',
     )
     if xpid in mapping.keys():
         return mapping[xpid]
     else:
-        return f'S{xpid}'
+        #return f'S{xpid}'
+        return xpid
 
 
 xpid_map = {
@@ -70,7 +76,11 @@ vmax_map = {
 colors_map = dict(
     obs = "silver",
     SAFRAN                = "#1f78b4",
-    SAFRAN_perturb        = "#1f78b4",
+    SAFRAN_assim          = "#1f78b4",
+    ALPAGA                = "#33a02c",
+    ALPAGA_assim          = "#33a02c",
+    #SAFRAN_perturb        = "#1f78b4",
+    SAFRAN_perturb        = "red",
     SAFRAN_perturb_assim  = "#1f78b4",
     KRIGING               = "#e31a1c",
     KRIGING_perturb       = "#e31a1c",

@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib import ticker
 
-import snowtools.tools.xarray_preprocess as xrp
+from snowtools.utils import xarray_snowtools
 
 from vortex import toolbox
 
@@ -52,7 +52,8 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=plt.cm.YlGnBu, addpoin
     (format : '{long_name} [{units}]'). In other cases the *field* name is used.
     """
     if ax is None:
-        plt.figure(figsize=(12 * len(field.xx) / len(field.yy), 10), subplot_kw=dict(projection=ccrs.PlateCarree()))
+        #plt.subplots(figsize=(12 * len(field.xx) / len(field.yy), 10), subplot_kw=dict(projection=ccrs.PlateCarree()))
+        plt.figure(figsize=(12 * len(field.xx) / len(field.yy), 10))
         ax = plt.gca()
         newfig = True
     else:
@@ -158,7 +159,7 @@ def get_dem(genv='uenv:dem.2@vernaym', gvar='DEM_ALP1KM_EPSG4326'):
     # dem = rioxarray.open_rasterio('TARGET_RELIEF.tif')
     ds = xr.open_dataset('TARGET_RELIEF.tif')
     dem = ds['elevation']
-    dem = xrp.preprocess(dem)
+    dem = xarray_snowtools.preprocess(dem)
     dem = dem.squeeze()
     return dem
 
