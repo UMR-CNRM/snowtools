@@ -17,10 +17,11 @@ import argparse
 import locale
 import os
 import datetime
-from optparse import OptionParser
 from collections import Counter, defaultdict
+
 import numpy as np
 import matplotlib
+# import matplotlib.pyplot as plt
 matplotlib.use('Agg')
 import matplotlib.style
 import rpy2.robjects as robjects
@@ -89,7 +90,7 @@ class Config:
     #: 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
     list_members = list(range(0, 36))
 
-    def __init__(self):
+    def __init__(self, OPTIONS):
         """
         #) checks and converts dates
         #) creates output directories if they don't exist.
@@ -103,9 +104,9 @@ class Config:
             #: Date of model run  :class:`bronx.stdtypes.date.Date`
             self.rundate = OPTIONS.datebegin
         #: output directory
-        self.diroutput = OPTIONS.diroutput + "/" + self.rundate.strftime("%Y%m%d%H")
-        self.diroutput_maps = self.diroutput + "/maps"  #: output directory for maps
-        self.diroutput_plots = self.diroutput + "/plots"  #: output directory for other plots
+        self.diroutput = os.path.join(OPTIONS.diroutput, self.rundate.strftime("%Y%m%d%H"))
+        self.diroutput_maps = os.path.join(self.diroutput, 'maps') #: output directory for maps
+        self.diroutput_plots = os.path.join(self.diroutput, "plots")  #: output directory for other plots
 
         for required_directory in [self.diroutput, self.diroutput_maps, self.diroutput_plots]:
             if not os.path.isdir(required_directory):
@@ -635,7 +636,7 @@ class _EnsembleMassif(Ensemble):
         """
         title = self.InfoMassifs.getMassifName(massif)  # type unicode
         if alti:
-            title += "{:d}m".format(int(alti))
+            title += " {:d}m".format(int(alti))
         return title  # matplotlib needs unicode
 
 
@@ -1415,6 +1416,171 @@ class EnsembleHydro(EnsemblePostproc):
         return ['time', 'basin']
 
 
+class PPQuantiles:
+    """
+    Class for handling files containing postprocessed (quantile) forecasts.
+    """
+    #: maximum height level to be treated
+    levelmax = 3900
+    #: minimum heigth level to be treated
+    levelmin = 0
+    #: list of variables to plot maps for
+    list_var_map = ['SD_1DY_ISBA', 'SD_12H_ISBA']
+    #: list of variables to do spaghetti plots for
+    list_var_spag = ['SD_1DY_ISBA', 'SD_12H_ISBA']
+    attributes = dict(
+        SD_12H_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60.,
+                            palette='YlGnBu', seuiltext=50.,
+                            label=u'Epaisseur de neige fraîche en 12h (cm)'),
+        SD_1DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60.,
+                         palette='YlGnBu', seuiltext=50.,
+                         label=u'Epaisseur de neige fraîche en 24h (cm)'))
+
+
+    def __init__(self, filename):
+        self.ps = prosimu(filename)
+        self.nech = self.ps.getlendim("time")
+        self.points = self.ps.get_points(aspect=-1)
+        self.massifs = self.ps.read('massif_num', selectpoint=self.points)
+        self.alti = self.ps.read('ZS', selectpoint=self.points)
+        self.formatplot = 'png'
+        self.deciles = self.ps.read('decile')
+        self.time = self.ps.readtime()
+
+    def quantilemaps(self, domain, suptitle, diroutput,
+                     mapindex=np.array([False, True, False, False, True, False, False, True, False])):
+        """
+        Plots maps of quantile forecasts. For example EMOS postprocessed quantiles.
+
+        :param domain: domain (region) string to determine which map class to use
+        :param suptitle: Plot title highest level
+        :param diroutput: Output directory for the plots
+        :param mapindex: array of bool indicating for with indices of the quantile dimension (last dimension of the
+            data array) maps should be drawn.
+        """
+        from snowtools.plots.maps.cartopy_massifs import MultiMap_Alps, MultiMap_Pyr, MultiMap_Cor
+
+        map_generic = dict(alp=MultiMap_Alps, pyr=MultiMap_Pyr, cor=MultiMap_Cor)
+
+        if domain[0:3] == "pyr":
+            mm = map_generic[domain[0:3]](nrow=3, ncol=1, geofeatures=False, width=13, height=10)
+            mm.legendpos = [0.9, 0.13, 0.02, 0.6]
+        elif domain[0:3] == "cor":
+            mm = map_generic[domain[0:3]](nrow=1, ncol=3, geofeatures=False, width=15, height=7.5)
+            mm.legendpos = [0.9, 0.15, 0.03, 0.6]
+        else:
+            mm = map_generic[domain[0:3]](nrow=1, ncol=3, geofeatures=False, height=7.5)
+        titles = ["Percentile {0}".format(i) for i in self.deciles[mapindex]]
+        for var in self.list_var_map:
+            var_data = self.ps.read(var, selectpoint=self.points)
+            mm.init_massifs(**self.attributes[var])
+            mm.addlogo()
+            list_alti = list(set(self.alti))
+            list_loop_alti = list_alti[:]
+            for level in list_loop_alti:
+                if level < self.levelmin or level > self.levelmax:
+                    list_loop_alti.remove(level)
+            for level in list_loop_alti:
+                indalti = self.alti == level
+
+                for t in range(0, self.nech):
+                    mm.draw_massifs(self.massifs[indalti], var_data[t, indalti, :][:, mapindex], axis=1, **self.attributes[var])
+                    mm.set_maptitle(titles)
+                    mm.plot_center_massif(self.massifs[indalti], var_data[t, indalti, :][:, mapindex], axis=1,
+                                          **self.attributes[var])
+                    mysuptitle = suptitle + "\n pour le " + pretty_date(self.time[t]) + " - Altitude : " + str(int(level)) + "m"
+                    mm.set_suptitle(mysuptitle)
+                    ech = self.time[t] - self.time[0] + self.time[1] - self.time[0]
+                    ech_str = '+%02d' % (ech.days * 24 + ech.seconds / 3600)
+                    plotname = diroutput + "/pp_quantiles_" + domain[0:3] + "_" + var + "_" + str(
+                        int(level)) + "_" + ech_str + "." + self.formatplot
+                    mm.save(plotname, formatout=self.formatplot)
+                    print(plotname + " is available.")
+                    mm.reset_massifs(rmcbar=False)
+                mm.empty_massifs()
+            mm.reset_massifs()
+
+
+    def spaghetti_plots(self, suptitle, diroutput = "."):
+        """
+        Produce spaghetti plots for all variables in :py:attr:`list_var_spag`.
+
+        :param suptitle: Suptitle for all plots.
+        :type suptitle: unicode string
+        :param diroutput: directory to save the plots
+        """
+
+        list_filenames = [_EnsembleMassif.build_filename(_EnsembleMassif(), mas, alt) for mas, alt in
+                          zip(self.massifs, self.alti)]
+        list_titles = [_EnsembleMassif.build_title(_EnsembleMassif(), mas, alt) for mas, alt in
+                       zip(self.massifs, self.alti)]
+
+        for var in self.list_var_spag:
+
+            s = spaghettis(self.time)
+            settings = self.attributes[var].copy()
+            if 'label' in self.attributes[var].keys():
+                settings['ylabel'] = self.attributes[var]['label']
+            var_data = self.ps.read(var, selectpoint=self.points)
+            if 'convert_unit' in self.attributes[var].keys():
+                var_data = var_data * self.attributes[var]['convert_unit']
+            npoints = var_data.shape[1]
+
+            for point in range(0, npoints):
+
+                s.draw(self.time, var_data[:, point, :], var_data[:, point, 1], var_data[:, point, 4],
+                       var_data[:, point, 7], **settings)
+
+                s.set_title(list_titles[point])
+                s.set_suptitle(suptitle)
+                s.addlogo()
+                plotname = os.path.join(diroutput, var + "_" + list_filenames[point] + "." + self.formatplot)
+                # plt.show()
+                s.save(plotname, formatout=self.formatplot)
+                print(plotname + " is available.")
+
+            s.close()
+
+
+
+@echecker.disabled_if_unavailable
+@echecker_pyproj.disabled_if_unavailable(version='2.0.0')
+def pp_plots(c):
+    """
+    downloads files with postprocessed quantiles and plots maps and spaghetti plots of them
+
+    :param c: config
+    """
+    from snowtools.tasks.oper.get_oper_files import FutureS2MExtractor
+
+    os.chdir(c.diroutput)
+    S2ME = FutureS2MExtractor(c)
+    pp_files, pp_xpid = S2ME.get_pp_quantiles()
+
+    dict_chaine = defaultdict(str)
+    dict_chaine['OPER'] = ' (oper)'
+    dict_chaine['DBLE'] = ' (double)'
+    dict_chaine['MIRR'] = ' (miroir)'
+    dict_chaine['OPER@lafaysse'] = ' (dev)'
+    dict_chaine['nouveaux_guess@lafaysse'] = ' (dev)'
+
+    locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
+
+    list_domains = pp_files.keys()
+    print(list_domains)
+
+    for domain in ['alp', 'pyr', 'cor']: # list_domains:  # ['alp_allslopes']: #
+        suptitle = u'Prévisions PEARP-S2M du ' + pretty_date(S2ME.conf.rundate)
+        # Identify the prevailing xpid in the obtained resources and adapt the title
+        count = Counter(pp_xpid[domain])
+        prevailing_xpid = count.most_common(1)[0][0]
+        suffixe_suptitle = dict_chaine[prevailing_xpid]
+        suptitle += suffixe_suptitle
+        data = PPQuantiles(pp_files[domain])
+        data.quantilemaps(domain, suptitle, diroutput=c.diroutput_maps)
+        data.spaghetti_plots(suptitle, diroutput=c.diroutput_plots)
+
+
 @echecker.disabled_if_unavailable
 @echecker_pyproj.disabled_if_unavailable(version='2.0.0')
 def main(c):
@@ -1435,7 +1601,6 @@ def main(c):
     # else:
     S2ME = FutureS2MExtractor(c)
     snow_members, snow_xpid = S2ME.get_snow()
-
 
     dict_chaine = defaultdict(str)
     dict_chaine['OPER'] = ' (oper)'
@@ -1517,5 +1682,5 @@ if __name__ == "__main__":
     PARSER.add_argument("--reforecast", action="store_true", dest="reforecast", default=False)
     PARSER.add_argument("--dble", action="store_true", dest="dble", default=False)
     OPTIONS = PARSER.parse_args()  # @UnusedVariable
-    c = Config()
+    c = Config(OPTIONS)
     main(c)

@@ -406,7 +406,7 @@ class FutureS2MExtractor(S2MExtractor):
 if __name__ == "__main__":
 
     USAGE = "usage: get_oper_files.py [-b YYYYMMDD]  [-e YYYYMMDD] [--previ] [--dev] [--deterministic] \
-            [--geometry=domain] [--firstday] [--meteo] [--snow] [--hydro]"
+            [--geometry=domain] [--firstday] [--meteo] [--snow] [--hydro] [--ppquantiles]"
 
     PARSER = argparse.ArgumentParser(description="get output from operational or dev simulations")
     PARSER.add_argument("-b",
