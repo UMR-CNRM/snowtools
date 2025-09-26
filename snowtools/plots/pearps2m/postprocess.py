@@ -114,7 +114,7 @@ class Config:
 
         self.dev = OPTIONS.dev
         if OPTIONS.dev:
-            self.xpid = "nouveaux_guess@lafaysse"
+            self.xpid = "OPER@lafaysse"
             delattr(Config, 'alternate_xpid')
             self.list_geometry = ['jur', 'mac', 'vog', 'cor', 'alp', 'pyr', 'postes']
         self.dble = OPTIONS.dble
@@ -1493,7 +1493,7 @@ class PPQuantiles:
                     ech = self.time[t] - self.time[0] + self.time[1] - self.time[0]
                     ech_str = '+%02d' % (ech.days * 24 + ech.seconds / 3600)
                     plotname = diroutput + "/pp_quantiles_" + domain[0:3] + "_" + var + "_" + str(
-                        int(level)) + "_" + ech_str + "." + self.formatplot
+                        int(level)) + ech_str + "." + self.formatplot
                     mm.save(plotname, formatout=self.formatplot)
                     print(plotname + " is available.")
                     mm.reset_massifs(rmcbar=False)
@@ -1534,7 +1534,7 @@ class PPQuantiles:
                 s.set_title(list_titles[point])
                 s.set_suptitle(suptitle)
                 s.addlogo()
-                plotname = os.path.join(diroutput, var + "_" + list_filenames[point] + "." + self.formatplot)
+                plotname = os.path.join(diroutput, "pp_quantiles_" + var + "_" + list_filenames[point] + "." + self.formatplot)
                 # plt.show()
                 s.save(plotname, formatout=self.formatplot)
                 print(plotname + " is available.")
@@ -1684,3 +1684,5 @@ if __name__ == "__main__":
     OPTIONS = PARSER.parse_args()  # @UnusedVariable
     c = Config(OPTIONS)
     main(c)
+    if OPTIONS.dev:
+        pp_plots(c)

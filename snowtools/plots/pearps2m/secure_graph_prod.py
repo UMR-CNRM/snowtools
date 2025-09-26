@@ -40,3 +40,5 @@ else:
     import snowtools.plots.pearps2m.postprocess as pp
 
     pp.main(c)
+    if OPTIONS.dev:
+        pp.pp_plots(c)
