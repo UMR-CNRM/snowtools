@@ -14,6 +14,7 @@ from vortex import toolbox
 
 from bronx.stdtypes.date import Date, Period
 
+
 """
 Outil d'extraction de données de la BDAP. Les données sont extraites sous forme de fichiers grib
 et converties en un unique fichier netcdf par xarray.
@@ -510,7 +511,7 @@ class ExtractBDAP(object):
         f.write(f'#L_TYP {self.level_type}\n')  # Type de niveau (SOL, ISOBARE, HAUTEUR, MER, ISO*,...)
         f.write('#FORM GRIB2_C_MAX\n')  # Format de sortie
 
-    def extract_from_bdap(self, grid, cmd='dap3_dev'):
+    def extract_from_bdap(self, cmd='dap3_dev'):
         """
         Prepare extraction environement (check arguments, export date_pivot,...)
         and return extraction result
@@ -669,7 +670,7 @@ def execute():
         else:
             print('No extracted file to open')
 
-    clean()
+    clean(extractedfiles)
 
 
 if __name__ == "__main__":
@@ -726,7 +727,7 @@ if __name__ == "__main__":
 
     if args.archive:
         import vortex
-        from snowtools.scripts.extract.vortex import vortex_get as io
+        import cen  # noqa
 
         t = vortex.ticket()
 
@@ -743,7 +744,8 @@ if __name__ == "__main__":
         out = toolbox.output(
             kind           = kind,
             vapp           = model_map[model]['vapp'],
-            vconf          = model_map[model]['vconf'],
+            # vconf          = model_map[model]['vconf'],
+            vconf          = '[geometry:tag]',
             # source_app     = model_map[model]['vapp'],
             # source_conf    = model_map[model]['vconf'],
             geometry       = domain,
