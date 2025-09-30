@@ -30,10 +30,10 @@ if __name__ == "__main__":
     begin = Date(datedeb)
     end = Date(datefin)
 
-    latmin = dict(alp=44.1, pyr=41.5)
-    latmax = dict(alp=46.45, pyr=44.0)
-    lonmin = dict(alp=5.4, pyr=-2.5)
-    lonmax = dict(alp=7.2, pyr=4.0)
+    latmin = dict(alp=43, pyr=41.5)
+    latmax = dict(alp=46.9, pyr=44.0)
+    lonmin = dict(alp=4.5, pyr=-2.5)
+    lonmax = dict(alp=8, pyr=4.0)
 
 # 1. RR horaires
 #-----------------
