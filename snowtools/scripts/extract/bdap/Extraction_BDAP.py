@@ -100,10 +100,10 @@ model_map = dict(
     PA           = dict(vapp='arpege', vconf='4dvarfr', block='meteo'),  # Analyse ARPEGE
     ANTILOPE     = dict(vapp='antilope', vconf='[geometry:area]', block='raw'),
     ANTILOPEJP1  = dict(vapp='antilope', vconf='[geometry:area]', block='rawJP1'),
-    ANTILOPEH    = dict(vapp='antilope', vconf='[geometry:area]', block='Hourly'),
-    ANTILOPEJP1H = dict(vapp='antilope', vconf='[geometry:area]', block='HourlyJP1'),
-    ANTILOPEQ    = dict(vapp='antilope', vconf='[geometry:area]', block='Daily'),
-    ANTILOPEJP1Q = dict(vapp='antilope', vconf='[geometry:area]', block='DailyJP1'),
+    ANTILOPEH    = dict(vapp='antilope', vconf='[geometry:area]', block='hourly'),
+    ANTILOPEJP1H = dict(vapp='antilope', vconf='[geometry:area]', block='hourlyJP1'),
+    ANTILOPEQ    = dict(vapp='antilope', vconf='[geometry:area]', block='daily'),
+    ANTILOPEJP1Q = dict(vapp='antilope', vconf='[geometry:area]', block='dailyJP1'),
 )
 
 default_levels = dict(
