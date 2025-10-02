@@ -9,7 +9,7 @@ variables_map = {'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf', 'band_data': 'ZS', 'p
         'rr': 'Precipitation'}
 
 
-def preprocess(ds, mapping=dict(), decode_time=True, transpose=False):
+def preprocess(ds, mapping=dict(), decode_time=True, transpose=False, sort_dims=True):
     """
 
     This is the main method to call when opening a SURFEX IO NetCDF file.
@@ -59,6 +59,9 @@ def preprocess(ds, mapping=dict(), decode_time=True, transpose=False):
     # Ensure that the time dimension is in the first one for numpy-based tools backward compatibility
     if transpose:
         ds = transpose(ds)
+
+    if sort_dims:
+        ds = sort_dimensions(ds)
 
     return ds
 
@@ -164,4 +167,16 @@ def decode_time_dimension(ds):
         time = xarray.Dataset({"time": ds.time})
         time = xarray.decode_cf(time)
         ds['time'] = time.time
+    return ds
+
+
+def sort_dimensions(ds):
+    """
+    Sort dimension values.
+
+    :param ds: xarray object to preprocess
+    :type ds: xarray Dataset or Dataarray
+
+    """
+    ds = ds.sortby(list(ds.dims))
     return ds
