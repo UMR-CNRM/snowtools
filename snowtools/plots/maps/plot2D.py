@@ -45,7 +45,7 @@ know_cmaps = dict(
 
 def plot_field(field, ax=None, vmin=None, vmax=None, cmap=None, addpoint=None, alpha=1., dem=None,
         shade=False, isolevels=None, categories=None, add_colorbar=True, transform=None, boundaries=False,
-        massifs=False, cities=False, gridlines=False, projection=None):
+        massifs=False, cities=False, gridlines=False, projection=None, xmin=None, xmax=None, ymin=None, ymax=None):
     """
     field:: xarray DataArray containing the 2D data to plot.
     :kwargs dem: Digital elevation model (xarray.DataArray)
@@ -54,6 +54,16 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=None, addpoint=None, a
     If *field* has 'long_name' and 'units' attributes, thos ware used for the colorbar label
     (format : '{long_name} [{units}]'). In other cases the *field* name is used.
     """
+
+    if xmin is not None:
+        field = field.where(field.xx >= xmin, drop=True)
+    if xmax is not None:
+        field = field.where(field.xx <= xmax, drop=True)
+    if ymin is not None:
+        field = field.where(field.yy >= ymin, drop=True)
+    if ymax is not None:
+        field = field.where(field.yy <= ymax, drop=True)
+
     if ax is None:
         if projection is not None:
             fig, ax = plt.subplots(figsize=(12 * len(field.xx) / len(field.yy), 10),
