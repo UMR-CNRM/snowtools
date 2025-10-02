@@ -46,7 +46,7 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=None, addpoint=None, a
     """
     field:: xarray DataArray containing the 2D data to plot.
     :kwargs dem: Digital elevation model (xarray.DataArray)
-    slices:: (int) cluster data (and colorbar) into *slices* slices
+    categories:: (int) cluster data (and colorbar) into *categories* categories
 
     If *field* has 'long_name' and 'units' attributes, thos ware used for the colorbar label
     (format : '{long_name} [{units}]'). In other cases the *field* name is used.
@@ -72,14 +72,14 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=None, addpoint=None, a
     if isinstance(cmap, str):
         cmap = matplotlib.colormaps[cmap]
 
-    if slices is not None:
+    if categories is not None:
         cmaplist = [cmap(i) for i in range(cmap.N)]
         # create the new map
         cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
             'Custom cmap', cmaplist, cmap.N)
 
         # define the bins and normalize
-        bounds = np.linspace(vmin, vmax, slices + 1)
+        bounds = np.linspace(vmin, vmax, categories + 1)
         norm = matplotlib.colors.BoundaryNorm(bounds, cmap.N)
     else:
         norm = None
@@ -121,9 +121,10 @@ def plot_field(field, ax=None, vmin=None, vmax=None, cmap=None, addpoint=None, a
     # The workaround is to use "contourf" instead.
     # WARNING : this can "hide" some varibility in *filed*
     if alpha < 1:
+        nlevels = categories if categories is not None else 50
         cml = ax.contourf(
             field.xx, field.yy, field.data,
-            levels      = np.linspace(vmin, vmax, slices) if slices is not None else np.linspace(vmin, vmax, 50),
+            levels      = np.linspace(vmin, vmax, nlevels),
             cmap        = cmap,
             vmin        = vmin,
             vmax        = vmax,
