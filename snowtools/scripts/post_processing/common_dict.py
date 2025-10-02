@@ -4,7 +4,7 @@
 
 def members_map(xpid):
     if 'assim' in xpid or 'full_feedback' in xpid:
-        if xpid in ['SAFRAN_full_perturb_assim', 'ALPAGA_assim']:
+        if xpid in ['SAFRAN_full_perturb_assim', 'ALPAGA_assim', 'ALPAGA_V0_assim']:
             return [mb for mb in range(17)]
         else:
             return [mb for mb in range(1, 18)]
@@ -79,6 +79,8 @@ colors_map = dict(
     SAFRAN_assim          = "#1f78b4",
     ALPAGA                = "red",
     ALPAGA_assim          = "red",
+    ALPAGA_V0             = "green",
+    ALPAGA_V0_assim       = "green",
     #SAFRAN_perturb        = "#1f78b4",
     SAFRAN_perturb        = "red",
     SAFRAN_perturb_assim  = "#1f78b4",
