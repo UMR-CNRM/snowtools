@@ -176,11 +176,28 @@ class _SURFEXTask(_VortexTask):
             experiment = 'spinup@' + t.env.getvar("USER"),
             namebuild  = 'flat@cen',
             geometry   = self.conf.geometry,
-            fatal      = True,
+            fatal      = False,
         )
         print('PGD (a) = ', pgd_b)
         print()
         # self.pgd = io.get_pgd(**self.common_kw)
+
+        # 3. 2nd Alternate : look for a PGD file if already available for this geometry with the "spinup" xpid, in the
+        # "s2m" vapp
+        pgd_b = toolbox.input(
+            alternate  = 'SurfexClim',
+            kind       = 'pgdnc',  # TODO : à modifier, la classe common.data.surfex.PGDNC est obsolète !
+            vapp       = 's2m',  # TODO : à modifier
+            model      = 'surfex',
+            filename   = 'PGD.nc',
+            block      = 'pgd',
+            experiment = 'spinup@' + t.env.getvar("USER"),
+            namebuild  = 'flat@cen',
+            geometry   = self.conf.geometry,
+            fatal      = True,
+        )
+        print('PGD (a) = ', pgd_b)
+        print()
 
     def get_const_surfex(self):
         """
