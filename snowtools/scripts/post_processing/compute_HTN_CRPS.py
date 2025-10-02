@@ -161,7 +161,7 @@ def execute():
     # c) Simulations
     pearson = dict()
 
-    if (clustering in 'elevation') and (members is None):
+    if (clustering in 'elevation') and (members is None or len(members) == 1 or members == 'mean'):
         safran_elevations = [z for z in reversed(range(1800, 3000, 300))]
         fig0, ax0 = plt.subplots(len(safran_elevations), 1, figsize=(14, 14))
         # im = list()  # List of products for common legend
