@@ -147,9 +147,9 @@ def plot_ange(dataplot, var, figname=None, xmin=0, xmax=7, yaxis='Elevation Band
     # dy = 1 / (nexperiments + 1)
     # for idx, pixels in enumerate(subensemble_size):
     for idx, pixels in enumerate(np.unique(npixels.values)):
-        txt = f'n={pixels:d}'
+        txt = f'N={pixels:d}'
         # plt.text(xmax * 0.5, (idx + np.floor(idx / nexperiments) - 1) * dy, txt, fontsize='small')
-        plt.text(xmax * 0.75, idx, txt, fontsize='small')
+        plt.text(xmax * 0.8, idx, txt, fontsize='medium')
 
     if figname is None:
         figname = f'{var}.pdf'
