@@ -6,7 +6,9 @@ Created on 25 march 2024
 
 @author: Vernay
 
-Script designed to produce 'Rainf' and 'Snowf' variables from a precipitation analysis and AROME
+Script designed to produce downsale a precipitation variable onto a target grid.
+
+It can also produce 'Rainf' and 'Snowf' variables from a precipitation analysis and AROME
 Wet-bulb's iso 1°C (or 0°C alternatively).
 
 WARNING :
@@ -37,14 +39,14 @@ def parse_command_line():
                         help="Number of members associated to the experiment")
     parser.add_argument('-p', '--precipitation', type=str, required=True,
                         help="XPID (format xpid@username) OR abspath of the file containing  precipitation variables")
-    parser.add_argument('-i', '--iso_wetbt', type=str, default='ExtractionBDAP@vernaym',
+    parser.add_argument('-i', '--iso_wetbt', type=str, required=False, default=None,
                         help="XPID (format xpid@username)/abspath of the file containing iso wet-buld temperatures")
     parser.add_argument('-u', '--uenv', type=str, default="uenv:edelweiss.1@vernaym",
                         help="User environment for static resources (format 'uenv:name@user')")
     parser.add_argument('-w', '--workdir', type=str, help="Working directory",
                         default=os.path.join(home, 'EDELWEISS', 'meteo'))
-    parser.add_argument('-g', '--iso_grid', type=str, help="Grid of the iso_wetbt file",
-                        default='FRANGP0025', choices=['FRANGP0025', 'EURW1S40'])
+    parser.add_argument('-g', '--iso_grid', type=str, help="Grid of the iso_wetbt file", required=False, default=None,
+                        choices=['FRANGP0025', 'EURW1S40'])
     args = parser.parse_args()
     return args
 
@@ -55,20 +57,18 @@ def goto(path):
     os.chdir(path)
 
 
-def compute_phase_from_iso_wetbt1(subdir=None):
+def read_target_relief():
+
+    target_relief = xr.open_dataarray('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
+    target_relief = xarray_snowtools.preprocess(target_relief, decode_time=False)
+
+    return target_relief
+
+
+def compute_phase_from_iso_wetbt1(precipitation, target_relief=None, subdir=None):
     """
     Compute Rainf and Snowf variables from the iso-wetbt (or iso-tpw before 7/12/2019) elevation.
     """
-    try:
-        precipitation = xr.open_dataarray(os.path.join(subdir or '', 'PRECIPITATION.nc'))  # Hourly precipitation
-        precipitation = xarray_snowtools.preprocess(precipitation, decode_time=False)
-    except ValueError:
-        precipitation = xr.open_dataset(os.path.join(subdir or '', 'PRECIPITATION.nc'))
-        precipitation = xarray_snowtools.preprocess(precipitation, decode_time=False)
-        precipitation = precipitation.Precipitation
-    # Fill potentially missing dates from the BDAP with 0
-    precipitation = precipitation.fillna(0)
-
     # Open  Wet-bulb temperature iso-0/1°C dataset, and rename time as in the 'precipitation' ds
     isowetbt  = xr.open_dataset('ISO_TPW.nc')
     if 'valid_time' in isowetbt.keys():
@@ -82,23 +82,41 @@ def compute_phase_from_iso_wetbt1(subdir=None):
     # TODO : do it at the netcdf generation (in the Extraction_BDAP.py script)
     # iso_elevation = isowetbt1.sro + source_relief
     iso_elevation = isowetbt1.sro
-    target_relief = xr.open_dataarray('TARGET_RELIEF.nc')  # Target domain's Digital Elevation Model
-    target_relief = xarray_snowtools.preprocess(target_relief, decode_time=False)
 
     # Interpolation of all data to the target geometry
-    iso250m = iso_elevation.interp({'yy': target_relief.yy, 'xx': target_relief.xx})
-    # Default interpolation method = 'linear', low impact on HTN scores (RS47 / RS47_nearest)
-    precipitation250m = precipitation.interp({'yy': target_relief.yy, 'xx': target_relief.xx})
+    iso = iso_elevation.interp({'yy': precipitation.yy, 'xx': precipitation.xx})
 
-    # Remove small precipitation to avoid problems in Crocus
-    precipitation250m = precipitation250m.where(precipitation250m > 0.01, 0)
+    if target_relief is None and 'ZS' not in precipitation.keys():
+
+        precipitation['ZS'] = read_target_relief()
 
     # Creation of the Rainf / Snowf variables
-    rain = precipitation250m.where(iso250m > target_relief, 0)
-    snow = precipitation250m.where(iso250m <= target_relief, 0)
-    rain = rain.rename('Rainf')
-    snow = snow.rename('Snowf')
-    output = rain.to_dataset().merge(snow).drop(['step', 'ISO_TPW'])
+    precipitation['Rainf'] = precipitation.where(iso > precipitation.ZS, 0)
+    precipitation['Snowf'] = precipitation.where(iso <= precipitation.ZS, 0)
+
+    return precipitation
+
+
+def downscale_precipitation(subdir=None):
+    """
+    Downscale precipitation data with a linear interpolation on the target grid
+    """
+    precipitation = xr.open_dataset(os.path.join(subdir or '', 'PRECIPITATION.nc'))
+    precipitation = xarray_snowtools.preprocess(precipitation, decode_time=False)
+    precipitation = precipitation[['Precipitation']]
+    # Fill potentially missing dates from the BDAP with 0
+    precipitation = precipitation.fillna(0)
+
+    target_relief = read_target_relief()
+
+    # Interpolation to the target geometry
+    # Default interpolation method = 'linear'
+    output = precipitation.interp({'yy': target_relief.yy, 'xx': target_relief.xx})
+
+    # Remove small precipitation to avoid problems in Crocus
+    output = output.where(output > 0.01, 0)
+
+    output['ZS'] = target_relief
 
     return output
 
@@ -111,7 +129,7 @@ def write(ds, outname):
     return datedeb, dateend
 
 
-def compute_precipitation_phase(members):
+def execute(members=None, downscale=True, compute_phase=False):
     """
     Main function to be called in "script mode"
     """
@@ -120,11 +138,17 @@ def compute_precipitation_phase(members):
         for member in range(members):
             print(f'Member {member}')
             subdir = f'mb{member:03d}'
-            output = compute_phase_from_iso_wetbt1(subdir=subdir)
+            if downscale:
+                output = downscale_precipitation(subdir=subdir)
+            if compute_phase:
+                output = compute_phase_from_iso_wetbt1(subdir=subdir)
             datedeb, dateend = write(output, os.path.join(subdir, outname))
 
     else:
-        output = compute_phase_from_iso_wetbt1()
+        if downscale:
+            output = downscale_precipitation()
+        if compute_phase:
+            output = compute_phase_from_iso_wetbt1()
         datedeb, dateend = write(output, outname)
 
     return datedeb, dateend
@@ -169,8 +193,9 @@ if __name__ == '__main__':
             block    = 'hourly',
             **period
         )
-        # Hourly iso Wet-bulb temperatures 0°C, 1°C [, 1.5°C] --> use get_meteo (not FORCING-ready)
-        io.get_meteo(kind='ISO_TPW', geometry=iso_grid, xpid=iso_wetbt, **period)
+        if iso_wetbt is not None:
+            # Hourly iso Wet-bulb temperatures 0°C, 1°C [, 1.5°C] --> use get_meteo (not FORCING-ready)
+            io.get_meteo(kind='ISO_TPW', geometry=iso_grid, xpid=iso_wetbt, **period)
         # Iso-TPW's grid relief
         # io.get_const(uenv, 'relief', 'FRANGP0025', filename='SOURCE_RELIEF.nc')
         # Domain's DEM
@@ -184,7 +209,7 @@ if __name__ == '__main__':
             os.symlink(f'{precipitation}/mb{member:03d}/PRECIPITATION.nc', f'mb{member:03d}/PRECIPITATION.nc')
 
     # Call main function
-    datedeb, datefin = compute_precipitation_phase(members)
+    datedeb, datefin = execute(members, compute_phase=iso_wetbt is not None)
 
     if datedeb != datebegin:
         print(f'WARNING : begin date of the produced FORCING {datedeb} does not match the one prescribed {datebegin}')

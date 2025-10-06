@@ -83,7 +83,38 @@ def update_wind(forcing):
 
 def update_precipitation(forcing, subdir=None):
     """
-    Replace Rainf and Snowf variables in a FORCING file by the ones coming from a precipitation analysis
+    Replace Rainf and Snowf variables in a FORCING file by precipitation coming from an independent analysis.
+    The difference with the update_RainfSnowf method is that here the precipitation phase comes from the initial
+    FORCING file.
+    """
+
+    precipitation = xr.open_dataset('PRECIPITATION.nc', drop_variables=['snowfrac_ds', 'z_snowlim_ds'],
+                                    chunks='auto')
+
+    # Output file on common dates only
+    dates = np.intersect1d(forcing.time, precipitation.time)
+    forcing = forcing.sel({'time': dates})
+    # Set time variable attributes
+    forcing.time.encoding['units'] = f'hours since {forcing.time.data[0]}'
+
+    precipitation = precipitation.sel({'time': dates})
+    precipitation = xarray_snowtools.preprocess(precipitation)
+
+    # Preserve the initial FORCING's snow fraction when available, else (if no precipitation in the initial forcing
+    # file) set all precipitation as snow below 1°C and as rain above this threshold.
+    snow_fraction = xr.where((forcing.Rainf == 0) & (forcing.Snowf == 0), 1 * forcing.Tair < 274.15,
+            forcing.Snowf / (forcing.Rainf + forcing.Snowf))
+
+    forcing['Rainf'].data = (1 - snow_fraction.data) * precipitation.Precipitation.data / 3600.
+    forcing['Snowf'].data = snow_fraction.data * precipitation.Precipitation.data / 3600.
+
+    return forcing
+
+
+def update_RainfSnowf(forcing, subdir=None):
+    """
+    Replace Rainf and Snowf variables in a FORCING file by the ones coming from a precipitation analysis (with
+    the precipitation phase already available).
     The subdir keyword argument is used when the FORCING file is part of an ensemble.
     """
 
@@ -156,7 +187,7 @@ def check_date(datebegin_file, datebegin_arg, dateend_file, dateend_arg):
               '{dateend_arg}')
 
 
-def update(forcing, members, datebegin, dateend, wind=True, precipitation=True):
+def update(forcing, members, datebegin, dateend, wind=True, precipitation=True, lpn=True):
     outname = 'FORCING_OUT.nc'
     if wind:
         forcing = update_wind(forcing)
@@ -166,11 +197,17 @@ def update(forcing, members, datebegin, dateend, wind=True, precipitation=True):
             for member in range(members):
                 print(f'Member {member}')
                 subdir = f'mb{member}'
-                forcing = update_precipitation(forcing, subdir=subdir)
+                if lpn:
+                    forcing = update_precipitation(forcing, subdir=subdir)
+                else:
+                    forcing = update_RainfSnowf(forcing, subdir=subdir)
                 datedeb, datefin = write(forcing, outname)
                 check_date(datedeb, datebegin, datefin, dateend)
         else:
-            forcing = update_precipitation(forcing)
+            if lpn:
+                forcing = update_precipitation(forcing)
+            else:
+                forcing = update_RainfSnowf(forcing)
             datebegin, dateend = write(forcing, outname)
             check_date(datedeb, datebegin, datefin, dateend)
     elif precipitation is None and members is not None:

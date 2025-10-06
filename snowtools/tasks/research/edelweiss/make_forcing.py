@@ -10,9 +10,9 @@ from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.scripts.extract.vortex import vortex_get
 
 
-class Precipitation(_VortexTask):
+class _Precipitation(_VortexTask):
     '''
-    Task for the generation of FORCING-ready Snowf/Rainf variables.
+    Abstract task to deal with precipitation variable
     WARNING : TASK IN DEVELOPMENT
     This task will evolve in line with ongoing EDELWEISS developments.
     '''
@@ -42,6 +42,79 @@ class Precipitation(_VortexTask):
         )
         print(t.prompt, 'Precipitation =', self.precipitation)
         print()
+
+    def put_remote_outputs(self):
+        """
+        """
+        t = self.ticket
+
+        self.sh.title('Precipitation output')
+        precipitation = toolbox.output(
+            kind         = 'Precipitation',
+            datebegin   = self.conf.datebegin,
+            dateend     = self.conf.dateend,
+            date        = '[dateend]',
+            geometry    = self.conf.geometry,
+            experiment  = self.conf.xpid,
+            block       = 'hourly',
+            member      = self.conf.members,
+            vapp        = self.conf.vapp,
+            local       = 'mb[member]/PRECIPITATION_OUT.nc',
+            namebuild   = 'flat@cen',
+        )
+        print(t.prompt, 'Precipitation =', precipitation)
+        print()
+
+
+class DownscalePrecipitation(_Precipitation):
+    """
+    Task for the downscaling of total precipitation.
+    """
+
+    def get_remote_inputs(self):
+
+        super().get_remote_inputs()
+
+        # Domain's DEM
+        self.sh.title('Toolbox input TARGET RELIEF')
+        toolbox.input(
+            kind        = 'relief',
+            genv        = self.conf.uenv,
+            geometry    = self.conf.geometry,
+            local       = 'TARGET_RELIEF.nc',
+            gvar        = 'RELIEF_[geometry:tag:upper]_4326',
+        )
+
+    def algo(self):
+        """
+        Algo component
+        """
+        t = self.ticket
+        self.sh.title('Toolbox algo Precipitation downscaling')
+        tbalgo = toolbox.algo(
+            kind         = 'DownscalePrecipitation',
+            datebegin    = self.conf.datebegin,
+            dateend      = self.conf.dateend,
+            engine       = 'algo',  # `_CENTaylorRun` algo components familly
+            members      = self.conf.members,
+            ntasks       = self.conf.ntasks,
+            role_members = 'Precipitation',
+        )
+        print(t.prompt, 'tbalgo =', tbalgo)
+        print()
+        tbalgo.run()
+
+
+class RainSnowLimit(_Precipitation):
+    """
+    Task for the generation of FORCING-ready Snowf/Rainf variables.
+    """
+
+    def get_remote_inputs(self):
+
+        t = self.ticket
+
+        super().get_remote_inputs()
 
         if self.conf.dateend == '2022080106':
 
@@ -85,24 +158,14 @@ class Precipitation(_VortexTask):
             print(t.prompt, 'iso_wtbt =', iso_wtbt)
             print()
 
-        # Domain's DEM
-        self.sh.title('Toolbox input TARGET RELIEF')
-        toolbox.input(
-            kind        = 'relief',
-            genv        = self.conf.uenv,
-            geometry    = self.conf.geometry,
-            local       = 'TARGET_RELIEF.nc',
-            gvar        = 'RELIEF_[geometry:tag:upper]_4326',
-        )
-
     def algo(self):
         """
         Algo component
         """
         t = self.ticket
-        self.sh.title('Toolbox algo Precipitation generator')
+        self.sh.title('Toolbox algo phase separation')
         tbalgo = toolbox.algo(
-            kind         = 'PrecipitationConstructor',
+            kind         = 'AddPhase',
             datebegin    = self.conf.datebegin,
             dateend      = self.conf.dateend,
             engine       = 'algo',  # `_CENTaylorRun` algo components familly
@@ -113,29 +176,6 @@ class Precipitation(_VortexTask):
         print(t.prompt, 'tbalgo =', tbalgo)
         print()
         tbalgo.run()
-
-    def put_remote_outputs(self):
-        """
-        Main method to save an OFFLINE execution outputs
-        """
-        t = self.ticket
-
-        self.sh.title('Precipitation output')
-        precipitation = toolbox.output(
-            kind         = 'Precipitation',
-            datebegin   = self.conf.datebegin,
-            dateend     = self.conf.dateend,
-            date        = '[dateend]',
-            geometry    = self.conf.geometry,
-            experiment  = self.conf.xpid,
-            block       = 'hourly',
-            member      = self.conf.members,
-            vapp        = self.conf.vapp,
-            local       = 'mb[member]/PRECIPITATION_OUT.nc',
-            namebuild   = 'flat@cen',
-        )
-        print(t.prompt, 'Precipitation =', precipitation)
-        print()
 
 
 class Forcing(_VortexTask):
