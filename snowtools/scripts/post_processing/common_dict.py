@@ -4,7 +4,7 @@
 
 def members_map(xpid):
     if 'assim' in xpid or 'full_feedback' in xpid:
-        if xpid in ['SAFRAN_full_perturb_assim', 'ALPAGA_assim', 'ALPAGA_V0_assim']:
+        if xpid in ['SAFRAN_full_perturb_assim', 'SAFRAN_perturb_assim', 'ALPAGA_assim', 'ALPAGA_V0_assim']:
             return [mb for mb in range(17)]
         else:
             return [mb for mb in range(1, 18)]

@@ -50,7 +50,7 @@ from snowtools.scripts.extract.vortex import vortexIO as io
 from snowtools.scripts.extract.vortex import vortex_get
 from snowtools.plots.maps import plot2D
 from snowtools.tools import common_tools as ct
-import snowtools.tools.xarray_backend  # Ignore "import not used" error --> load `CENBackendEntrypoint` api
+from snowtools.utils import xarray_snowtools  # noqa
 
 
 label_map = dict(
@@ -125,6 +125,7 @@ reference_point = dict(
 assim_xpid_map = dict(
     RS27_sorted = 'RS27_sorted_pappus_assim',
     SAFRAN      = 'SAFRAN_perturb_assim',
+    ALPAGA      = 'ALPAGA_assim',
 )
 
 
@@ -310,7 +311,7 @@ def plot_var(ds, variables, xpid, date=None, dateassim=None, mask=True):
 
         # Add relief
         # dem = xr.open_dataset('TARGET_RELIEF.tif', engine='rasterio')  # Target domain's Digital Elevation Model
-        dem = xr.open_dataset('TARGET_RELIEF.tif')  # Target domain's Digital Elevation Model
+        dem = xr.open_dataset('TARGET_RELIEF.tif', engine='snowtools', )  # Target domain's Digital Elevation Model
         # dem = xrp.preprocess(dem, decode_time=False)
         dem = dem.squeeze()
 
@@ -467,7 +468,8 @@ if __name__ == '__main__':
                 block          = 'soda',
                 namebuild      = 'flat@cen',
                 namespace      = 'vortex.multi.fr',
-                vapp           = 's2m',
+                #vapp           = 's2m',
+                vapp           = 'edelweiss',
                 vconf          = '[geometry:tag]',
                 date           = dateassim,
                 dateassim      = dateassim,
@@ -479,11 +481,11 @@ if __name__ == '__main__':
 
         if ensemble in ['mean', 'spread', 'all']:
             ds = xr.open_mfdataset([f'mb{member:03d}/{filename}' for member in range(17)],
-                    concat_dim='member', combine='nested', chunks='auto')
+                    concat_dim='member', combine='nested', chunks='auto', engine='snowtools')
         elif ensemble is None:
-            ds = xr.open_dataset(filename)
+            ds = xr.open_dataset(filename, engine='snowtools')
         else:
-            ds = xr.open_dataset(f'mb{int(ensemble):03d}/{filename}')
+            ds = xr.open_dataset(f'mb{int(ensemble):04d}/{filename}', engine='snowtools')
         #ds = xrp.preprocess(ds)
 
         if domain is not None:
