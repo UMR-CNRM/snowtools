@@ -498,6 +498,7 @@ class SodaTask(_SURFEXTask):
             namespace      = 'vortex.multi.fr',
             # storage        = storage,
             # enforcesync    = enforcesync,
+            nativefmt      = 'ascii',
             fatal          = True,
             dateassim      = self.conf.date,
             experiment     = self.conf.xpid,
