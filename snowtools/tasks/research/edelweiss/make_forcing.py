@@ -203,7 +203,7 @@ class Forcing(_VortexTask):
 
         self.sh.title('FORCING input')
         self.forcing = toolbox.input(
-            role        = 'MeteorologicalForcing',
+            role        = 'Forcing',
             kind        = 'MeteorologicalForcing',
             local       = 'mb[member]/FORCING_IN.nc',
             vapp        = self.conf.vapp_forcing,
@@ -297,9 +297,9 @@ class Forcing(_VortexTask):
             # '80 task per node' (one random worker does nothing). Maybe something to do with the fact that ntasks
             # is not a multiple of the actual number of workers ?
             # Update 5/04 : Le BUG se produit aussi avec ntasks=nworkers ...
-            ntasks       = len(self.conf.members) if self.conf.members is not None else 1,
+            ntasks       = len(self.forcing) * 2,
             # ntasks       = len(self.precipitation),
-            role_members = 'Precipitation' if self.precipitation else None,
+            role_members = 'Forcing',
         )
         print(t.prompt, 'tbalgo =', tbalgo)
         print()
