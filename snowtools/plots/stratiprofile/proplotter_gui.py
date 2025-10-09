@@ -88,7 +88,7 @@ class ProPlotterApplication(tk.Frame):
 
         # Graphical elements
         self.menu = ProPlotterMenu(self)
-        self.openbar = ProPlotterOpenBar(self)
+        self.openbar = gui_elements.ProPlotterOpenBar(self)
         self.choices = gui_elements.ProPlotterChoicesBar(self)
         self.controls = gui_elements.ProPlotterControlsBar(self)
         self.main = gui_elements.ProPlotterMain(self)
@@ -168,7 +168,7 @@ class ProPlotterApplication(tk.Frame):
         Reset then launch Controller and Choices Bar Parameter for standard graph
         """
         self.to_graph_reset()
-        self.choices.params_w = ProPlotterChoicesBarParamsStandard(self, self.choices.params)
+        self.choices.params_w = gui_elements.ProPlotterChoicesBarParamsStandard(self, self.choices.params)
         self.controller = ProPlotterControllerStandard(self)
 
     def to_graph_multiple_profil(self):
@@ -176,7 +176,7 @@ class ProPlotterApplication(tk.Frame):
         Reset then launch Controller and Choices Bar Parameter for multiple graph with profil on the right
         """
         self.to_graph_reset()
-        self.choices.params_w = ProPlotterChoicesBarParamsMultiple(self, self.choices.params)
+        self.choices.params_w = gui_elements.ProPlotterChoicesBarParamsMultiple(self, self.choices.params)
         self.controller = ProPlotterControllerMultipleProfil(self)
 
     def to_graph_multiple_saison(self):
@@ -184,7 +184,7 @@ class ProPlotterApplication(tk.Frame):
         Reset then launch Controller and Choices Bar Parameter for multiple graph with seasonal graph on the right
         """
         self.to_graph_reset()
-        self.choices.params_w = ProPlotterChoicesBarParamsMultiple(self, self.choices.params)
+        self.choices.params_w = gui_elements.ProPlotterChoicesBarParamsMultiple(self, self.choices.params)
         self.controller = ProPlotterControllerMultipleSaison(self)
 
     def to_graph_height(self):
@@ -192,7 +192,7 @@ class ProPlotterApplication(tk.Frame):
         Reset then launch Controller and Choices Bar Parameter for height graph
         """
         self.to_graph_reset()
-        self.choices.params_w = ProPlotterChoicesBarParamsHeight(self, self.choices.params)
+        self.choices.params_w = gui_elements.ProPlotterChoicesBarParamsHeight(self, self.choices.params)
         self.controller = ProPlotterControllerHeight(self)
 
     def to_graph_escroc_profil(self):
@@ -200,7 +200,7 @@ class ProPlotterApplication(tk.Frame):
         Reset then launch Controller and Choices Bar Parameter for Meteo France ensemble graph with profil on the right
         """
         self.to_graph_reset()
-        self.choices.params_w = ProPlotterChoicesBarParamsEscroc(self, self.choices.params)
+        self.choices.params_w = gui_elements.ProPlotterChoicesBarParamsEscroc(self, self.choices.params)
         self.controller = ProPlotterControllerEscrocProfil(self)
 
     def to_graph_escroc_saison(self):
@@ -209,7 +209,7 @@ class ProPlotterApplication(tk.Frame):
         the right
         """
         self.to_graph_reset()
-        self.choices.params_w = ProPlotterChoicesBarParamsEscroc(self, self.choices.params)
+        self.choices.params_w = gui_elements.ProPlotterChoicesBarParamsEscroc(self, self.choices.params)
         self.controller = ProPlotterControllerEscrocSaison(self)
 
     def open(self, *args, **kwargs):
@@ -288,8 +288,8 @@ class ProPlotterMenu(tk.Menu):
         super().__init__(master)
         # Menu 0
         self.filemenu = tk.Menu(self, tearoff=0)
-        self.filemenu.add_command(label='Open', command=self.master.open)
-        self.filemenu.add_command(label='Quit', command=self.master.close_window)
+        self.filemenu.add_command(label='Open', command=self.master.open, accelerator="Ctrl+O")
+        self.filemenu.add_command(label='Quit', command=self.master.close_window, accelerator="ESC")
         self.add_cascade(label='File', menu=self.filemenu)
         # Menu 1
         self.typemenu = tk.Menu(self, tearoff=0)
@@ -307,163 +307,6 @@ class ProPlotterMenu(tk.Menu):
         self.add_cascade(label='Help', menu=self.infomenu)
         # Config
         self.master.master.config(menu=self)
-
-
-class ProPlotterOpenBar(tk.Frame):
-    """The Frame for open button and file path"""
-
-    def __init__(self, master):
-        """Initialize open bar """
-        self.master = master
-        super().__init__(master, height=100)
-        self.pack(fill=tk.X)
-
-        self.openbutton = tk.Button(self, text="Open File", command=self.open)
-        self.openbutton.pack(side=tk.LEFT, padx=5)
-
-        filename = self.master.fileobj.get_filename() if self.master.fileobj is not None else '--'
-        self.filename = tk.Label(self, text=filename)
-        self.filename.pack(side=tk.LEFT)
-
-    def open(self):
-        """
-        If the Open button is clicked, launch the Open application
-        """
-        self.master.open()
-
-    def update_filename(self, filename):
-        """Get the name of opened file"""
-        self.filename.configure(text=filename)
-
-
-class ProPlotterChoicesBarParams(abc.ABC):
-    """Abstract Class for the Choices for the Parameters. The standard case is described"""
-    def __init__(self, master, frame):
-        self.master = master
-        self.frame = frame
-
-        self.label = tk.Label(self.frame, text='Graph specific options', relief=tk.RAISED)
-        self.label.pack(pady=5)
-
-    def clean_frame(self):
-        if self.frame is not None:
-            for widgets in self.frame.winfo_children():
-                widgets.destroy()
-
-
-class ProPlotterChoicesBarParamsStandard(ProPlotterChoicesBarParams):
-    """Standard case, nothing to add"""
-    def __init__(self, master, frame):
-        super().__init__(master, frame)
-        self.update()
-
-    def update(self):
-        pass
-
-
-class ProPlotterChoicesBarParamsHeight(ProPlotterChoicesBarParams):
-    """
-     Specific choices for direction and height. Add the specific combobox and variables
-     """
-    def __init__(self, master, frame):
-        super().__init__(master, frame)
-        self._direction = None
-        self._height = 8.3
-        self.label = None
-        self.label1 = None
-        self.label2 = None
-        self.choice_direction = None
-        self.choice_height = None
-        self.update()
-
-    def update(self):
-        """Specific choices for variables in Height Graph case"""
-        self.clean_frame()
-        self.label = tk.Label(self.frame, text='Choice of direction and height', relief=tk.RAISED)
-        self.label.pack()
-        if self.master.fileobj is not None:
-            direction_list = ['from ground to top of snow layer', 'from top of snow layer to ground']
-            self.label1 = tk.Label(self.frame, text='Direction:')
-            self.label1.pack()
-            self.choice_direction = ttk.Combobox(self.frame, state='readonly', values=direction_list,
-                                                 width=self.master.choices.WIDTH, )
-            self.choice_direction.bind('<<ComboboxSelected>>', self.update_direction)
-            self.choice_direction.pack()
-
-            self.label2 = tk.Label(self.frame, text='Height in cm (default = 8.3 cm):')
-            self.label2.pack()
-            height = tk.DoubleVar()
-            self.choice_height = ttk.Entry(self.frame, textvariable=height, width=self.master.choices.WIDTH)
-            self.choice_height.pack()
-
-    def update_direction(self, *args):
-        """Update the value of the direction choice (from ground to top of snow layer or the contrary)"""
-        value = self.choice_direction.get()
-        if value == 'from ground to top of snow layer':
-            self._direction = 'up'
-        elif value == 'from top of snow layer to ground':
-            self._direction = 'down'
-
-    def update_height(self):
-        """Update the value of the cut in the snow pack (8.3cm) from the direction"""
-        if self.choice_height is None:
-            value = 8.3
-        else:
-            value = self.choice_height.get()
-        if value is not None:
-            self._height = float(value)
-
-    @property
-    def var_direction(self):
-        return self._direction
-
-    @property
-    def var_height(self):
-        return self._height
-
-
-class ProPlotterChoicesBarParamsDateSlicer(ProPlotterChoicesBarParams):
-    """
-     Specific choice via adding a Date Slicer (for Multiple Plots or Meteo France ensemble Plots for example)
-     """
-    def __init__(self, master, frame):
-        super().__init__(master, frame)
-        self._dateslice = None
-        self.label = None
-        self.scale_date = None
-        self.update()
-
-    def update(self):
-        self.clean_frame()
-        self.label = tk.Label(self.frame, text='Choice for Date', relief=tk.RAISED)
-        self.label.pack()
-        if self.master.fileobj is not None:
-            self.scale_date = tk.Scale(self.frame, orient='horizontal', state='disabled',
-                                       label='Use the slicer to choose the date')
-            self.scale_date.config(from_=0, to=(len(self.master.fileobj.get_time()) - 1), state='normal', showvalue=0,
-                                   command=self.update_slice_date, variable=tk.IntVar)
-            self.scale_date.pack(expand=1, fill=tk.BOTH)
-
-    def update_slice_date(self, *args):
-        value = self.scale_date.get()
-        if value != self._dateslice:
-            self._dateslice = value
-
-    @property
-    def var_dateslice(self):
-        return self._dateslice
-
-
-class ProPlotterChoicesBarParamsEscroc(ProPlotterChoicesBarParamsDateSlicer):
-    def __init__(self, master, frame):
-        super().__init__(master, frame)
-        self.update()
-
-
-class ProPlotterChoicesBarParamsMultiple(ProPlotterChoicesBarParamsDateSlicer):
-    def __init__(self, master, frame):
-        super().__init__(master, frame)
-        self.update()
 
 
 class ProPlotterController(abc.ABC):
@@ -782,9 +625,10 @@ class ProPlotterControllerEscroc(ProPlotterControllerSlider):
         Update the date scaler after opening a file.
         """
         if self.master.fileobj is not None:
-            self.master.choices.params_w.scale_date.config(from_=0, to=(len(self.master.fileobj.get_time()) - 1),
-                                                           state='normal', showvalue=0, variable=tk.IntVar,
-                                                           command=self.update_slice_date)
+            self.master.choices.params_w.scale_date.config(
+                from_=0, to=(len(self.master.fileobj.get_time()) - 1),
+                state='normal', showvalue=0, variable=tk.IntVar,
+                command=lambda _: (self.master.choices.params_w.update_slice_date(), self.update_slice_date()))
 
     def give_master_args(self):
         """
@@ -865,9 +709,10 @@ class ProPlotterControllerMultiple(ProPlotterControllerSlider):
         Update the date scaler after opening a file.
         """
         if self.master.fileobj is not None:
-            self.master.choices.params_w.scale_date.config(from_=0, to=(len(self.master.fileobj.get_time()) - 1),
-                                                           state='normal', showvalue=0, variable=tk.IntVar,
-                                                           command=self.update_slice_date)
+            self.master.choices.params_w.scale_date.config(
+                from_=0, to=(len(self.master.fileobj.get_time()) - 1),
+                state='normal', showvalue=0, variable=tk.IntVar,
+                command=lambda _: (self.master.choices.params_w.update_slice_date(), self.update_slice_date()))
 
     def give_master_args(self):
         """

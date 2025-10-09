@@ -32,7 +32,7 @@ def create_axis_for_figure(fig, nb_graph, same_y=False, ratio=None, same_x=False
         return {'ax1': ax1}
     else:
         # give equal ratio to all graphs if ratio is not defined
-        # Check that len(ratio) == nb_graph ? 
+        # Check that len(ratio) == nb_graph ?
         if ratio is None:
             ratio = [1] * nb_graph
         ax1 = fig.add_subplot(1, sum(ratio), (1, ratio[0]))
@@ -42,42 +42,46 @@ def create_axis_for_figure(fig, nb_graph, same_y=False, ratio=None, same_x=False
             add_params['sharey'] = ax1
         if same_x:
             add_params['sharex'] = ax1
-        
+
         # In add_subplot: use of (1, sum(ratio), (index_begin, index_end))
         # where index_begin is 1, 1+ratio1, 1+ratio1+ratio2, 1+ratio1+ratio2+ratio3,...
         # where index_end is ratio1, ratio1+ratio2, ratio1+ratio2+ratio3, ratio1+ratio2+ratio3+ratio4,...
         # in add_subplot, we want (1, ratio1 + ratio2, (1, ratio1)) then (1, ratio1 + ratio2, (ratio1 + 1, ratio1+ratio2))
-        ind_begin = [1] + (np.cumsum(ratio)+1).tolist()[:-1]
+        ind_begin = [1] + (np.cumsum(ratio) + 1).tolist()[:-1]
         ind_end = np.cumsum(ratio).tolist()
         for i in range(1, nb_graph):
             ii = i + 1
             axs['ax{}'.format(ii)] = fig.add_subplot(1, sum(ratio), (ind_begin[i], ind_end[i]), **add_params)
             if same_y:
                 axs['ax{}'.format(ii)].tick_params('y', labelleft=False)
-            
+
         # Because figure was initially thought for two graph with two axes on second graph
         if third_axis:
             # instantiate a third axes that shares the same y-axis
             # For profil plot: ax3 is the Resistance-Snowgrain part of the plot
             axs['ax3'] = axs['ax2'].twiny()
         return axs
-        
 
-def get_data(fileobj, point, var_master, var_react=None, direction_cut=None, height_cut=None, additional_options=None):
+
+def get_data(fileobj, point, var_master, var_react=None, direction_cut=None, height_cut=None, additional_options=None,
+             begin=None, end=None):
     """
     Collecting datas for figures, before returning them
     """
     data = {}
-    data['dataplot_master'] = fileobj.get_data(var_master, point, additional_options=additional_options)
+    data['dataplot_master'] = fileobj.get_data(var_master, point, additional_options=additional_options,
+                                               begin=begin, end=end)
     if var_react is not None:
-        data['dataplot_react'] = fileobj.get_data(var_react, point, additional_options=additional_options)
+        data['dataplot_react'] = fileobj.get_data(var_react, point, additional_options=additional_options,
+                                                  begin=begin, end=end)
         data['limitplot_react'] = fileobj.limits_variable(var_react)
 
     else:
         data['dataplot_react'] = None
         data['limitplot_react'] = None
-    data['dztoplot'] = fileobj.get_data(fileobj.variable_dz, point, fillnan=0., additional_options=additional_options)
-    data['timeplot'] = fileobj.get_time()
+    data['dztoplot'] = fileobj.get_data(fileobj.variable_dz, point, fillnan=0., additional_options=additional_options,
+                                        begin=begin, end=end)
+    data['timeplot'] = fileobj.get_time(begin=begin, end=end)
     data['colormap'] = fileobj.colorbar_variable(var_master)
     data['ymax_react'] = np.max(np.nansum(data['dztoplot'], axis=1))
     data['var_master_has_snl'] = fileobj.variable_desc(var_master)['has_snl']
@@ -85,12 +89,14 @@ def get_data(fileobj, point, var_master, var_react=None, direction_cut=None, hei
     # useful for motion
     if fileobj.variable_grain in fileobj.variables_t:
         data['grain'] = fileobj.get_data(fileobj.variable_grain, point, fillnan=0.,
-                                         additional_options=additional_options)
+                                         additional_options=additional_options,
+                                         begin=begin, end=end)
     else:
         data['grain'] = None
     if fileobj.variable_ram in fileobj.variables_t:
         data['ram'] = fileobj.get_data(fileobj.variable_ram, point, fillnan=0.,
-                                       additional_options=additional_options)
+                                       additional_options=additional_options,
+                                       begin=begin, end=end)
     else:
         data['ram'] = None
     if var_react is not None and var_react in fileobj.variables_log:

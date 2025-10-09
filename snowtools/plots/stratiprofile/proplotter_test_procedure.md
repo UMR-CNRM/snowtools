@@ -50,6 +50,8 @@ The GUI proplotter have to be manually tested before any commit. Here is a possi
 17. Plot
     - Plot button
     - Use the slicer to go to 2019-12-24
+    - Check the slicer correctly print date
+    - Go to the next timestep, next day and next month and come back to 2019-12-24
     - Check right graph
     - Right click to stop animation
     - Right click again should restore the animation
