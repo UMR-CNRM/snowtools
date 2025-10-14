@@ -365,7 +365,7 @@ class Edelweiss_command(object):
 
         args_to_dict = vars(self.options)  # Convert self.options *Namepace* object to a *dictionnary* object
         # Convert *dictionary* arguments to proper configuration variables
-        for specific_input in ['forcing', 'precipitation', 'wind', 'prep', 'prep_out', 'pro', 'lpn']:
+        for specific_input in ['forcing', 'precipitation', 'wind', 'prep', 'prep_out', 'pro', 'lpn', 'obs']:
 
             # TODO : return a footprint-like dictionnary to be used directly !
 
