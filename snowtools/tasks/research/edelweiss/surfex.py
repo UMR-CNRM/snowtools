@@ -389,14 +389,15 @@ class SodaTask(_SURFEXTask):
         # TODO : Ensure that the observation is in the simulation's geometry !
         # TODO : Put the Observation input in the common input to crash immediately
         # if the observation file is missing instead of waiting for soda to be called
+        # TODO : à modifier
         self.sh.title('Toolbox input tobs (obs)')
         self.obs = toolbox.input(
+            kind       = 'SnowObservations',
             filename   = 'OBSERVATIONS_[date:ymdHh].nc',
             date       = self.conf.date,
-            vapp       = 'Pleiades',
-            experiment = 'CesarDB@vernaym',
+            vapp       = self.conf.vapp_obs,
+            experiment = self.conf.xpid_obs,
             geometry   = self.conf.geometry,
-            kind       = 'SnowObservations',
             model      = 'surfex',
             block      = '',
             namespace  = 'vortex.multi.fr',

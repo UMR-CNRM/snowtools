@@ -330,6 +330,17 @@ class Edelweiss_command(object):
                                        " * dateend   (str) : If different from '-e' argument (format YYYYMMDDHH)\n"
                                        " ")
 
+        parser_input.add_argument("--obs", dest="obs", action=ParseKwargs, nargs='*',
+                                  type=str, default=None,
+                                  help="Definition (footprint-like dict) of the PRO file input.\n"
+                                       "Format : --pro key1=var1 key2=var2 ...\n"
+                                       "Known dictionary keys :\n"
+                                       " * xpid      (str) : Experiment identifier (Format : {xpid}@{username})\n"
+                                       " * geometry  (str) : Experiment geometry"
+                                       " * vapp      (str) : Application that produced the FORCING (s2m/edelweiss)\n"
+                                       " * date      (str) : If different from '-a' argument (format YYYYMMDDHH)\n"
+                                       " ")
+
         options  = parser.parse_args(arguments)
 
         return options  # Return a dictionnary object
