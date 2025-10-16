@@ -15,10 +15,10 @@ logger = footprints.loggers.getLogger(__name__)
 
 def setup(t, **kw):
     return Driver(
-        tag='safran_reana',
+        tag='safran_reana_era5',
         ticket=t,
         nodes=[
-            Safran(tag='safran_reana', ticket=t, **kw),
+            Safran(tag='safran_reana_era5', ticket=t, **kw),
         ],
         options=kw,
     )
@@ -30,6 +30,14 @@ class Safran(Task, S2MTaskMixIn):
 
     def process(self):
         """Safran analysis"""
+
+        def untar_hook(t, rh):
+            sh = t.sh
+            target = rh.container.localpath()
+            with sh.cdcontext(sh.path.dirname(target)):
+                tarname = sh.path.basename(target)
+                if sh.is_tarfile(tarname):
+                    sh.untar(tarname)
 
         t = self.ticket
 
@@ -45,11 +53,12 @@ class Safran(Task, S2MTaskMixIn):
                 dateend = rundate.replace(year = rundate.year + 1)
 #                dateend = rundate + Period(years=1)
                 season = datebegin.nivologyseason
-                next_season = dateend.nivologyseason
                 y1 = datebegin.year
                 y2 = dateend.year
 
-                self.sh.title(f'Toolbox input tb01 - {y1}/{y2}')
+                tarname = f'guess_era5_{datebegin.ymdh}_{dateend.ymdh}_{self.conf.vconf}.tar'
+
+                self.sh.title(f'Toolbox input tb01 - {y1:d}/{y2:d}')
                 tb01 = toolbox.input(
                     role           = 'Ebauche',
                     kind           = 'packedguess',
@@ -71,56 +80,79 @@ class Safran(Task, S2MTaskMixIn):
 
                 if self.conf.assim:
 
-                    # TODO : Gérer le fait de ne pas prendre le fichier 2 de 6h le 01/08
-                    self.sh.title(f'Toolbox input tb02 - {y1}/{y2}')
+                    self.sh.title(f'Toolbox input tb02 - {y1:d}/{y2:d}')
                     tb02 = toolbox.input(
                         role           = 'Observations',
-                        part           = 'all',
+                        # part           = 'all',
                         geometry       = self.conf.geometry[self.conf.vconf],
                         kind           = 'packedobs',
-                        #nativefmt      = 'tar',
-                        #unknownflow    = True,
                         local          = '{0:s}_{1:s}/rs{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
-                        namespace      = 's2m.archive.fr',
-                        #remote         = '/home/vernaym/s2m/[geometry]/obs/rs{0:s}.tar'.format(season),
-                        #hostname       = 'hendrix.meteo.fr',
+                        experiment     = self.conf.xpid_obs,
+                        namespace      = 'vortex.archive.fr',
                         date           = dateend.ymdh,
                         datebegin      = datebegin.ymdh,
                         dateend        = dateend.ymdh,
-                        #tube           = 'ftp',
-                        model          = self.conf.model,
+                        model          = 'safran',
                         source         = 'surfaceobs',
+                        namebuild      = 'flat@cen',
+                        block          = 'observations',
+                        nativefmt      = 'tar',
                         now            = True,
+                        # Untar is not automatic for resrouces from the "ArchiveStore", unlike
+                        # for resources coming from the "Finder" store
+                        hook_autohook1 = (untar_hook, ),
                     )
                     print(t.prompt, 'tb02 =', tb02)
                     print()
-
-                if datebegin >= Date(1991, 8, 1, 6) and dateend <= Date(2018, 8, 1, 6) and self.conf.vconf in ['alp', 'pyr', 'cor']:
-
-                    self.sh.title('Toolbox input tb03 - ' + datebegin.ymdh)
-                    tb03 = toolbox.input(
-                        role           = 'Nebul',
-                        part           = 'all',
-                        geometry       = self.conf.geometry[self.conf.vconf],
-                        kind           = 'packedobs',
-                        #nativefmt      = 'tar',
-                        #unknownflow    = True,
-                        local          = '{0:s}_{1:s}/n{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
-                        namespace      = 's2m.archive.fr',
-                        #remote         = '/home/vernaym/s2m/[geometry]/obs/n{0:s}.tar'.format(season),
-                        #hostname       = 'hendrix.meteo.fr',
-                        date           = dateend.ymdh,
-                        datebegin      = datebegin.ymdh,
-                        dateend        = dateend.ymdh,
-                        source         = 'neb',
-                        #tube           = 'ftp',
-                        model          = self.conf.model,
-                        now            = True,
-                        fatal          = False,
-                    )
-                    print(t.prompt, 'tb03 =', tb03)
-                    print()
-
+#                    # TODO : Gérer le fait de ne pas prendre le fichier 2 de 6h le 01/08
+#                    self.sh.title(f'Toolbox input tb02 - {y1:d}/{y2:d}')
+#                    tb02 = toolbox.input(
+#                        role           = 'Observations',
+#                        part           = 'all',
+#                        geometry       = self.conf.geometry[self.conf.vconf],
+#                        kind           = 'packedobs',
+#                        #nativefmt      = 'tar',
+#                        #unknownflow    = True,
+#                        local          = '{0:s}_{1:s}/rs{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
+#                        namespace      = 's2m.archive.fr',
+#                        #remote         = '/home/vernaym/s2m/[geometry]/obs/rs{0:s}.tar'.format(season),
+#                        #hostname       = 'hendrix.meteo.fr',
+#                        date           = dateend.ymdh,
+#                        datebegin      = datebegin.ymdh,
+#                        dateend        = dateend.ymdh,
+#                        #tube           = 'ftp',
+#                        model          = self.conf.model,
+#                        source         = 'surfaceobs',
+#                        now            = True,
+#                    )
+#                    print(t.prompt, 'tb02 =', tb02)
+#                    print()
+#
+#                if datebegin >= Date(1991, 8, 1, 6) and dateend <= Date(2018, 8, 1, 6) and self.conf.vconf in ['alp', 'pyr', 'cor']:
+#
+#                    self.sh.title('Toolbox input tb03 - ' + datebegin.ymdh)
+#                    tb03 = toolbox.input(
+#                        role           = 'Nebul',
+#                        part           = 'all',
+#                        geometry       = self.conf.geometry[self.conf.vconf],
+#                        kind           = 'packedobs',
+#                        #nativefmt      = 'tar',
+#                        #unknownflow    = True,
+#                        local          = '{0:s}_{1:s}/n{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
+#                        namespace      = 's2m.archive.fr',
+#                        #remote         = '/home/vernaym/s2m/[geometry]/obs/n{0:s}.tar'.format(season),
+#                        #hostname       = 'hendrix.meteo.fr',
+#                        date           = dateend.ymdh,
+#                        datebegin      = datebegin.ymdh,
+#                        dateend        = dateend.ymdh,
+#                        source         = 'neb',
+#                        #tube           = 'ftp',
+#                        model          = self.conf.model,
+#                        now            = True,
+#                        fatal          = False,
+#                    )
+#                    print(t.prompt, 'tb03 =', tb03)
+#                    print()
 
             self.sh.title('Toolbox input tb07')
             tb07 = toolbox.input(
@@ -355,6 +387,20 @@ class Safran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb16 =', tb16)
             print()
 
+            self.sh.title('Toolbox input OBSERVA')
+            tb16 = toolbox.input(
+                role            = 'Nam_observa',
+                source          = 'namelist_observa',
+                geometry        = self.conf.geometry[self.conf.vconf],
+                genv            = self.conf.cycle,
+                kind            = 'namelist',
+                model           = self.conf.model,
+                local           = 'OBSERVA',
+                fatal           = False,
+            )
+            print(t.prompt, 'tb16 =', tb16)
+            print()
+
             self.sh.title('Toolbox input tb16')
             tb16 = toolbox.input(
                 role            = 'Nam_ebauche',
@@ -403,38 +449,53 @@ class Safran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb18 =', tbx2)
             print()
 
-            self.sh.title('Toolbox executable tb18_b = tbx3')
-            tb18_b = tbx3 = toolbox.executable(
-                role           = 'Binary',
-                genv           = self.conf.cycle,
-                kind           = 'sypluie',
-                local          = 'sypluie',
-                model          = self.conf.model,
-            )
-            print(t.prompt, 'tb18_b =', tb18_b)
-            print()
+            if self.conf.assim:
 
-            self.sh.title('Toolbox executable tb19 = tbx4')
-            tb19 = tbx4 = toolbox.executable(
-                role           = 'Binary',
-                genv           = self.conf.cycle,
-                kind           = 'syvapr',
-                local          = 'syvapr',
-                model          = self.conf.model,
-            )
-            print(t.prompt, 'tb19 =', tb19)
-            print()
+                self.sh.title('Toolbox executable tb18_b = tbx3')
+                tb18_b = tbx3 = toolbox.executable(
+                    role           = 'Binary',
+                    genv           = self.conf.cycle,
+                    kind           = 'sypluie',
+                    local          = 'sypluie',
+                    model          = self.conf.model,
+                )
+                print(t.prompt, 'tb18_b =', tb18_b)
+                print()
 
-            self.sh.title('Toolbox executable tb20 = tbx5')
-            tb20 = tbx5 = toolbox.executable(
-                role           = 'Binary',
-                genv           = self.conf.cycle,
-                kind           = 'syvafi',
-                local          = 'syvafi',
-                model          = self.conf.model,
-            )
-            print(t.prompt, 'tb20 =', tb20)
-            print()
+                self.sh.title('Toolbox executable tb19 = tbx4')
+                tb19 = tbx4 = toolbox.executable(
+                    role           = 'Binary',
+                    genv           = self.conf.cycle,
+                    kind           = 'syvapr',
+                    local          = 'syvapr',
+                    model          = self.conf.model,
+                )
+                print(t.prompt, 'tb19 =', tb19)
+                print()
+
+                self.sh.title('Toolbox executable tb20 = tbx5')
+                tb20 = tbx5 = toolbox.executable(
+                    role           = 'Binary',
+                    genv           = self.conf.cycle,
+                    kind           = 'syvafi',
+                    local          = 'syvafi',
+                    model          = self.conf.model,
+                )
+                print(t.prompt, 'tb20 =', tb20)
+                print()
+
+#            else:
+#
+#                self.sh.title('Toolbox executable syrmRR')
+#                tb13 = tbx3 = toolbox.executable(
+#                    role           = 'Binary',
+#                    genv           = self.conf.cycle,
+#                    kind           = 'syrmrr',
+#                    local          = 'syrmRR',
+#                    model          = self.conf.model,
+#                )
+#                print(t.prompt, 'tb13 =', tb13)
+#                print()
 
             self.sh.title('Toolbox executable tb21 = tbx6')
             tb21 = tbx6 = toolbox.executable(
@@ -480,35 +541,20 @@ class Safran(Task, S2MTaskMixIn):
 
             self.component_runner(tbalgo1, tbx1)
 
-            if self.conf.execution == 'analysis':
+#            if self.conf.execution == 'analysis':
 
-                # Cas d'une execution où l'on veut utiliser les rr ARPEGE comme guess
-                # A lancer avec un job_name=with_rr_arpege (cf fichier de conf)
-                # WARNING : si execution="analysis" l'algo component définit les
-                # observations comme des fichiers "communs", ce qui n'est pas le
-                # cas.
-                # Les obs sont néanmoins bien assimilées car si les fichiers d'obs ne sont pas 
-                # au chemin indiqué dans les fichiers OP* (ce qui dépend de la variable "execution"),
-                # SAFRAN les cherche dans le répertoire courrant.
-                self.sh.title('Toolbox algo tb23 = SYRPLUIE')
-                tb23 = tbalgo2 = toolbox.algo(
-                    engine         = 'blind',
-                    kind           = 'syrpluie',
-                    datebegin      = self.conf.datebegin.ymd6h,
-                    dateend        = self.conf.dateend.ymd6h,
-                    # members        = footprints.util.rangex(self.conf.members),
-                    ntasks         = self.conf.ntasks,
-                    execution      = self.conf.execution,
-                )
-                print(t.prompt, 'tb23 =', tb23)
-                print()
-
-                self.component_runner(tbalgo2, tbx2)
-
-            self.sh.title('Toolbox algo tb23_b = SYPLUIE')
-            tb23 = tbalgo3 = toolbox.algo(
+            # Cas d'une execution où l'on veut utiliser les rr ARPEGE comme guess
+            # A lancer avec un job_name=with_rr_arpege (cf fichier de conf)
+            # WARNING : si execution="analysis" l'algo component définit les
+            # observations comme des fichiers "communs", ce qui n'est pas le
+            # cas.
+            # Les obs sont néanmoins bien assimilées car si les fichiers d'obs ne sont pas 
+            # au chemin indiqué dans les fichiers OP* (ce qui dépend de la variable "execution"),
+            # SAFRAN les cherche dans le répertoire courrant.
+            self.sh.title('Toolbox algo tb23 = SYRPLUIE')
+            tb23 = tbalgo2 = toolbox.algo(
                 engine         = 'blind',
-                kind           = 'sypluie',
+                kind           = 'syrpluie',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
                 # members        = footprints.util.rangex(self.conf.members),
@@ -518,37 +564,70 @@ class Safran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb23 =', tb23)
             print()
 
-            self.component_runner(tbalgo3, tbx3)
+            self.component_runner(tbalgo2, tbx2)
 
-            self.sh.title('Toolbox algo tb24 = SYVAPR')
-            tb24 = tbalgo4 = toolbox.algo(
-                engine         = 'blind',
-                kind           = 'syvapr',
-                datebegin      = self.conf.datebegin.ymd6h,
-                dateend        = self.conf.dateend.ymd6h,
-                # members        = footprints.util.rangex(self.conf.members),
-                ntasks         = self.conf.ntasks,
-                execution      = self.conf.execution,
-            )
-            print(t.prompt, 'tb24 =', tb24)
-            print()
+            if self.conf.assim:
 
-            self.component_runner(tbalgo4, tbx4)
+                self.sh.title('Toolbox algo tb23_b = SYPLUIE')
+                tb23 = tbalgo3 = toolbox.algo(
+                    engine         = 'blind',
+                    kind           = 'sypluie',
+                    datebegin      = self.conf.datebegin.ymd6h,
+                    dateend        = self.conf.dateend.ymd6h,
+                    # members        = footprints.util.rangex(self.conf.members),
+                    ntasks         = self.conf.ntasks,
+                    execution      = self.conf.execution,
+                )
+                print(t.prompt, 'tb23 =', tb23)
+                print()
 
-            self.sh.title('Toolbox algo tb25 = SYVAFI')
-            tb25 = tbalgo5 = toolbox.algo(
-                engine         = 'blind',
-                kind           = 'syvafi',
-                datebegin      = self.conf.datebegin.ymd6h,
-                dateend        = self.conf.dateend.ymd6h,
-                # members        = footprints.util.rangex(self.conf.members),
-                ntasks         = self.conf.ntasks,
-                execution      = self.conf.execution,
-            )
-            print(t.prompt, 'tb25 =', tb25)
-            print()
+                self.component_runner(tbalgo3, tbx3)
 
-            self.component_runner(tbalgo5, tbx5)
+                self.sh.title('Toolbox algo tb24 = SYVAPR')
+                tb24 = tbalgo4 = toolbox.algo(
+                    engine         = 'blind',
+                    kind           = 'syvapr',
+                    datebegin      = self.conf.datebegin.ymd6h,
+                    dateend        = self.conf.dateend.ymd6h,
+                    # members        = footprints.util.rangex(self.conf.members),
+                    ntasks         = self.conf.ntasks,
+                    execution      = self.conf.execution,
+                )
+                print(t.prompt, 'tb24 =', tb24)
+                print()
+
+                self.component_runner(tbalgo4, tbx4)
+
+                self.sh.title('Toolbox algo tb25 = SYVAFI')
+                tb25 = tbalgo5 = toolbox.algo(
+                    engine         = 'blind',
+                    kind           = 'syvafi',
+                    datebegin      = self.conf.datebegin.ymd6h,
+                    dateend        = self.conf.dateend.ymd6h,
+                    # members        = footprints.util.rangex(self.conf.members),
+                    ntasks         = self.conf.ntasks,
+                    execution      = self.conf.execution,
+                )
+                print(t.prompt, 'tb25 =', tb25)
+                print()
+
+                self.component_runner(tbalgo5, tbx5)
+
+#            else:
+#
+#                self.sh.title('Toolbox algo SYRMRR')
+#                tb17 = tbalgo3 = toolbox.algo(
+#                    engine         = 'blind',
+#                    kind           = 'syrmrr',
+#                    datebegin      = self.conf.datebegin.ymd6h,
+#                    dateend        = self.conf.dateend.ymd6h,
+#                    ntasks         = self.conf.ntasks,
+#                    execution      = self.conf.execution,
+#                )
+#                print(t.prompt, 'tb17 =', tb17)
+#                print()
+#
+#                self.component_runner(tbalgo3, tbx3)
 
             self.sh.title('Toolbox algo tb26 = SYTIST')
             tb26 = tbalgo6 = toolbox.algo(
@@ -573,7 +652,7 @@ class Safran(Task, S2MTaskMixIn):
                 dateend = min(datebegin.replace(year=datebegin.year + 1), self.conf.dateend)
                 season = datebegin.nivologyseason
 
-                if rundate >= Date(2021, 8, 1):
+                if rundate >= Date(2023, 8, 1):
                     source_app = 'arpege'
                     source_conf = '4dvarfr'
                 else:
