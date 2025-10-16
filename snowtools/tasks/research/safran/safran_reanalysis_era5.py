@@ -87,7 +87,7 @@ class Safran(Task, S2MTaskMixIn):
                         geometry       = self.conf.geometry[self.conf.vconf],
                         kind           = 'packedobs',
                         local          = '{0:s}_{1:s}/rs{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
-                        experiment     = self.conf.xpid,
+                        experiment     = self.conf.xpid_obs,
                         namespace      = 'vortex.archive.fr',
                         date           = dateend.ymdh,
                         datebegin      = datebegin.ymdh,
