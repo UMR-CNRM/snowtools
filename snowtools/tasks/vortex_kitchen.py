@@ -144,6 +144,8 @@ class vortex_kitchen(object):
             reftask = dict(
                 analysis = "ensemble_surfex_tasks_analysis",
                 forecast = "ensemble_surfex_tasks_forecast",
+                hydroanalysis = "hydro_task_analysis_replay",
+                hydroforecast = "hydro_task_forecast_replay",
                 monthlyreanalysis = "monthly_surfex_reanalysis",
                 monthlyreanalysissytron = "monthly_surfex_reanalysis_sytron",
             )
@@ -152,6 +154,8 @@ class vortex_kitchen(object):
             defaultjobname = dict(
                 analysis = "anasurf_s2m" + self.options.vconf[:3],
                 forecast = "prvsurf_s2m" + self.options.vconf[:3],
+                hydroanalysis = "anahydro_s2m" + self.options.vconf[:3],
+                hydroforecast = "prvhydro_s2m" + self.options.vconf[:3],
                 monthlyreanalysis = "monthlyanasurf_s2m" + self.options.vconf[:3],
                 monthlyreanalysissytron = "monthlysytronanasurf_s2m" + self.options.vconf[:3],
             )
