@@ -206,6 +206,9 @@ class infomassifs():
             d[region] = self.getListMassif_of_region(region)
         return d
 
+    def ismassif(self, massif):
+        return massif in [m for liste in self.opermassifs.values() for m in liste]
+
     @property
     def operregionofmassifs(self):
         d = dict()

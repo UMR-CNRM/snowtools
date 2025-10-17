@@ -87,7 +87,7 @@ On SXCEN:
 
 import os
 import argparse
-import subprocess
+import shutil
 import sys
 import logging  # Import pour les log
 
@@ -103,6 +103,7 @@ import pyproj
 from snowtools.utils.infomassifs import infomassifs
 from snowtools.DATA import SNOWTOOLS_DIR
 from snowtools.DATA import DIRDATADEM
+from snowtools.tools.execute import printandcallSystemOrDie
 
 ################################################################
 # DEFAULT VALUES (but can change with options):
@@ -111,8 +112,20 @@ from snowtools.DATA import DIRDATADEM
 NetCDF_out = 'NetCDF2D_from_shapefile.nc'
 
 # PATH_MNT
-path_MNT_alti_30m = DIRDATADEM + 'france_30m/DEM_FRANCE_L93_30m_bilinear.tif'
-path_MNT_alti_250m = DIRDATADEM + 'france_250m/DEM_FRANCE_L93_250m_bilinear.tif'
+path_MNT_30m = dict(alti=DIRDATADEM + 'france_30m/DEM_FRANCE_L93_30m_bilinear.tif',
+                    aspect=DIRDATADEM + 'france_30m/ASP_FRANCE_L93_30m_bilinear.tif',
+                    slope=DIRDATADEM + 'france_30m/SLP_FRANCE_L93_30m_bilinear.tif',
+                    massif=DIRDATADEM + 'france_30m/MSF_FRANCE_L93_30m_bilinear.tif')
+
+path_MNT_250m = dict(alti=DIRDATADEM + 'france_250m/DEM_FRANCE_L93_250m_bilinear.tif',
+                    aspect=DIRDATADEM + 'france_250m/ASP_FRANCE_L93_250m_bilinear.tif',
+                    slope=DIRDATADEM + 'france_250m/SLP_FRANCE_L93_250m_bilinear.tif',
+                    massif=DIRDATADEM + 'france_250m/MSF_FRANCE_L93_250m_bilinear.tif')
+
+vartopo_out = dict(alti="ZS", aspect="aspect", slope="slope", massif="massif_num")
+vartopo_longname = dict(alti="Elevation", aspect="Aspect angle", slope="Slope angle", massif="Massif number")
+vartopo_units = dict(alti="m", aspect="degrees", slope="degrees", massif="-")
+vartopo_typegdal = dict(alti="Float32", aspect="Float32", slope="Float32", massif="Int32")
 
 ################################################################
 # Infos shapefile massif, normally stable and durable
@@ -143,8 +156,8 @@ def convert_kml2shp(path_shape_kml):
     :return: a string: the path to the .shp file after conversion from the .kml file.
     """
     path_shape_shp = path_shape_kml[:-3] + 'shp'
-    cmd = ['ogr2ogr', '-f', 'ESRI Shapefile', path_shape_shp, path_shape_kml]
-    subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
+    cmd = f'ogr2ogr -f ESRI Shapefile {path_shape_shp} {path_shape_kml}'
+    printandcallSystemOrDie(cmd)
     return path_shape_shp
 
 
@@ -206,11 +219,14 @@ def clean_the_mess(path_shape_shp, clean_all):
     if clean_all:
         for suffixe in ['shp', 'prj', 'shx', 'dbf']:
             path_shape_rm = path_shape_shp[:-3] + suffixe
-            cmd = ['rm', '-f', path_shape_rm]
-            subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-    cmd = 'rm -f step1.tif'
-    subprocess.call(cmd.split(), stdout=sys.stdout, stderr=sys.stderr)
+            if os.path.isfile(path_shape_rm):
+                os.remove(path_shape_rm)
 
+    for vartopo in vartopo_out.keys():
+        if os.path.isfile(f'{vartopo}.tif'):
+            os.remove(f'{vartopo}.tif')
+        if os.path.isfile(f'{vartopo}.nc'):
+            os.remove(f'{vartopo}.nc')
 
 ################################################################
 #   STEP 4: create grid (250m * 250m)
@@ -257,19 +273,22 @@ def create_MNT_tif(dict_info, path_MNT_given=None):
     :return: In a pythonic point of view, nothing. A .tif file is created.
     """
     if abs(dict_info['resol_x'] - 250) < 10 and abs(dict_info['resol_y'] - 250) < 10:
-        path_MNT = path_MNT_alti_250m
+        path_MNT = path_MNT_250m
     elif abs(dict_info['resol_x'] - 30) < 10 and abs(dict_info['resol_y'] - 30) < 10:
-        path_MNT = path_MNT_alti_30m
+        path_MNT = path_MNT_30m
     elif path_MNT_given is not None:
         path_MNT = path_MNT_given
     else:
         print('PB: no MNT provided with this resolution, please have a look to the code')
         pass
-    cmd = ['gdalwarp', '-te', str(dict_info['XLL']), str(dict_info['YLL']), str(dict_info['XUR']),
-           str(dict_info['YUR']), '-tap', '-tr', str(dict_info['resol_x']), str(dict_info['resol_y']), '-te_srs',
-           'EPSG:2154', '-s_srs', 'EPSG:2154', path_MNT, 'step1.tif']
-    subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
 
+    for vartopo in vartopo_out.keys():
+
+        cmd = (f"gdalwarp -te {str(dict_info['XLL'])} {str(dict_info['YLL'])} {str(dict_info['XUR'])}"
+               f" {str(dict_info['YUR'])} -tap -tr {str(dict_info['resol_x'])} {str(dict_info['resol_y'])}"
+               f" -te_srs EPSG:2154 -s_srs EPSG:2154 {path_MNT[vartopo]} {vartopo}.tif")
+
+        printandcallSystemOrDie(cmd)
 
 ################################################################
 #   STEP 5: most common massif
@@ -332,7 +351,7 @@ def find_most_common_massif(dict_info):
 ################################################################
 #   STEP 6: constraint altitudes between min and max of massif
 ################################################################
-def create_netcdf(massif_number, file_out=NetCDF_out):
+def create_netcdf(massif_method, massif_number, file_out=NetCDF_out):
     """
     Creation of the 2D_NetCDF with 2 values: 'ZS' for the altitude and 'Massif number' for the massif number.
 
@@ -341,47 +360,85 @@ def create_netcdf(massif_number, file_out=NetCDF_out):
     :type file_out: str
     :return: In a pythonic point of view, nothing. A .nc file is created.
     """
-    cmd = ['gdal_translate', '-of', 'netCDF', '-co', 'FORMAT=NC4', 'step1.tif', 'step1.nc']
-    subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stderr)
-    if type(massif_number) == int:
-        alt_min_massif = infomassifs().getAltMinMax(massif_number)[0]
-        alt_max_massif = infomassifs().getAltMinMax(massif_number)[1]
-    """else:
-        size_x = massif_number.shape[0]
-        size_y = massif_number.shape[1]
-        print(size_x)
-        print(size_y)
-        alt_min_massif = np.zeros(( size_x, size_y))
-        alt_max_massif = np.zeros(( size_x, size_y))
-        for i in range(size_x):
-            print(i)
-            for j in range(size_y):
-                alt_min_massif[i,j] = infomassifs().getAltMinMax(massif_number[i,j])[0]
-                alt_max_massif[i,j] = infomassifs().getAltMinMax(massif_number[i,j])[1]"""
+
+    # Convert all extracted tif in netcdf files with correct variable names and create one single file with
+    # all variables
+    listvartopo = list(vartopo_out.keys())
+    if massif_method in ['one', 'force']:
+        listvartopo.remove('massif')
+
+    for vartopo in listvartopo:
+        cmd = f'gdal_translate -of netCDF -co FORMAT=NC4 -ot {vartopo_typegdal[vartopo]} {vartopo}.tif {vartopo}.nc'
+        printandcallSystemOrDie(cmd)
+        cmd = f'ncrename -v Band1,{vartopo_out[vartopo]} {vartopo}.nc'
+        printandcallSystemOrDie(cmd)
+        cmd = (f'ncatted -a long_name,{vartopo_out[vartopo]},o,c,"{vartopo_longname[vartopo]}" '
+               f'-a units,"{vartopo_out[vartopo]}",o,c,{vartopo_units[vartopo]} {vartopo}.nc')
+        printandcallSystemOrDie(cmd)
+
+        if not os.path.isfile('step1.nc'):
+            shutil.copy(f'{vartopo}.nc', 'step1.nc')
+        else:
+            cmd = f'ncks -v {vartopo_out[vartopo]} -A {vartopo}.nc step1.nc'
+            printandcallSystemOrDie(cmd)
+
+    # Open final file
     NetCDF_file = Dataset('step1.nc', 'r+')
-    NetCDF_file.renameVariable('Band1', 'ZS')
-    ZS = NetCDF_file.variables['ZS'][:]
-    ZS = np.ma.filled(ZS, np.nan)
-    if type(massif_number) == int:
-        ZS = np.where(ZS > alt_min_massif, ZS, alt_min_massif)
-        ZS = np.where(ZS < alt_max_massif, ZS, alt_max_massif)
-    NetCDF_file.variables['ZS'][:] = ZS
-    massif_num_nc = NetCDF_file.createVariable('massif_num', 'int', NetCDF_file.variables['ZS'].dimensions,
-                                               fill_value=-9999999)
-    massif_num_nc.long_name = 'Massif number'
-    if type(massif_number) == int:
-        massif_num_nc[:, :] = massif_number
-    else:
+
+    if massif_method in ['one', 'force']:
+        # Create massif variable and force to prescribed or prevailing value
+        massif_num_nc = NetCDF_file.createVariable('massif_num', 'int',
+                                                   NetCDF_file.variables['ZS'].dimensions, fill_value=-9999999)
+        massif_num_nc.long_name = 'Massif number'
         massif_num_nc[:, :] = massif_number
 
+    elif massif_method in ['mapfill']:
+        # Take massif number for preexisting gridded file but replace 0 by prevailing value
+        massif_num_nc = NetCDF_file.variables['massif_num'][:]
+
+        indzeros = np.where(massif_num_nc == 0)
+        nzeros = np.shape(indzeros)[-1]
+        print(f'{nzeros} pixels outside massifs boundaries filled with massif number {massif_number}')
+        massif_num_nc[:, :] = np.where(massif_num_nc == 0, massif_number, massif_num_nc)
+        NetCDF_file.variables['massif_num'][:, :] = massif_num_nc
+
+    elif massif_method in ['map']:
+        # Take massif number for preexisting gridded file
+        massif_num_nc = NetCDF_file.variables['massif_num']
+    else:
+        raise Exception("Massif method unknown")
+
+    # Check and if necessary correct consistency between pixel elevation
+    # and massif extreme elevations for all massifs of the domain
+    ZS = NetCDF_file.variables['ZS'][:, :]
+
+    nbelow = 0
+    nabove = 0
+
+    Info = infomassifs()
+    for massif_number in np.unique(massif_num_nc):
+        if Info.ismassif(massif_number):
+            alt_min_massif, alt_max_massif = Info.getAltMinMax(massif_number)
+            indbelow = np.where((massif_num_nc == massif_number) & (ZS < alt_min_massif))
+            indabove = np.where((massif_num_nc == massif_number) & (ZS > alt_max_massif))
+            nbelow += np.shape(indbelow)[-1]
+            nabove += np.shape(indabove)[-1]
+            ZS = np.where((massif_num_nc == massif_number) & (ZS < alt_min_massif), alt_min_massif, ZS)
+            ZS = np.where((massif_num_nc == massif_number) & (ZS > alt_max_massif), alt_max_massif, ZS)
+        else:
+            print(f"WARNING: massif number {massif_number} is unknown")
+
+    if nbelow > 0 or nabove > 0:
+        print (f'Elevation corrected for {nbelow} pixels below minimum elevation '
+               f'and {nabove} pixels above maximum elevation')
+        NetCDF_file.variables['ZS'][:, :] = ZS
 
     print('NETCDF dimension:')
     print(NetCDF_file.variables['ZS'].shape)
 
     NetCDF_file.close()
 
-    cmd = 'mv step1.nc ' + file_out
-    subprocess.call(cmd.split(), stdout=sys.stdout, stderr=sys.stderr)
+    os.rename('step1.nc', file_out)
 
 
 ################################################################
@@ -430,7 +487,10 @@ def parseArguments(args):
     parser.add_argument("-rlat", "--resol_lat", help="Latitude Resolution for 2D grid (250 or 30)", type=int,
                         default=250)
     parser.add_argument("--MNT_alt", help="Path for MNT altitude", type=str, default=None)
-    parser.add_argument("-m", "--massif_number", help="Massif number if you want to choose the massif that will be applied to your zone", type=int, default=None)
+    parser.add_argument("-m", "--massif_method", help="Method to assign massif number", type=str,
+                        default='map', choices=['map', 'one', 'mapfill', 'force'])
+    parser.add_argument("-n", "--massif_number", help="Massif number to assign if --massif_method=force",
+                        type=int, default=None)
 
     args = parser.parse_args(args)
     return args
@@ -464,13 +524,12 @@ def main(args=None):
         bounds = conversion_to_L93_if_lat_lon(bounds)
         dict_info = create_dict_all_infos(bounds, resol_x, resol_y)
         create_MNT_tif(dict_info, path_MNT_alti)
-        if massif is not None:
+        if args.massif_method == 'force':
             massif_num = massif
-        else:
+        elif args.massif_method in 'one, mapfill':
             massif_num = find_most_common_massif(dict_info)
 
-        #massif_num = find_most_common_massif(dict_info)
-        create_netcdf(massif_num, output_name)
+        create_netcdf(args.massif_method, massif_num, output_name)
         clean_the_mess(path_shapefile, clean_all)
         print_for_namelist(dict_info, output_name)
 
