@@ -5,294 +5,171 @@ Created on 15 oct. 2025
 @author: lafaysse
 """
 from bronx.stdtypes.date import yesterday, Date
-from vortex.layout.nodes import Driver, Task
+from vortex.layout.nodes import Task
 from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 import footprints
 
 
-def setup(t, **kw):
-    return Driver(
-        tag='S2M_Hydro',
-        ticket=t,
-        nodes=[
-                Hydro_Task_Analysis_Replay(tag='S2M_Hydro_Task', ticket=t, **kw,
-                                           delay_component_errors=True, on_error='delayed_fail')],
-        options=kw
-    )
-
-
 class _Hydro_Task(S2MTaskMixIn, Task):
+    """
+    Base class for hydrological post-processing tasks.
 
-    @property
-    def geometry_areas(self):
-        return self.conf.geometry
+    Workflow:
+    =========
 
-    @property
-    def rundate_forcing(self):
-        return self.get_rundate_forcing()
+    Inputs :
+    --------
+    - Meteorological forcing file(s) --> method "get_forcing"
+    - Snowpack simulation (PRO) file(s) --> method "get_pro"
+    - A NetCDF file describing the output hygrological units --> method "get_const"
 
-    def get_dates(self):
+    Outputs :
+    ---------
+    - HYDRO diagnostic(s) --> method "put_diagnostic"
+
+    """
+
+    def pre_process(self):
+
+        # Verrue pour gérer l'équivalence entre les variables "previ" et "cutoff"
+        self.conf.previ = self.conf.cutoff == 'production'
+
         self.datebegin, self.dateend = self.get_period()
-
-    @property
-    def xpid_inputhydro(self):
-        return self.conf.xpid
-
-    def get_const(self):
-        if 'early-fetch' in self.steps or 'fetch' in self.steps:
-            if True:  # In order to have an indentation and facilitate the comparison with IGA Task
-
-                self.sh.title('Toolbox input tb01')
-                tb01 = toolbox.input(
-                    role='HydroAreas',
-                    local='areas.nc',
-                    geometry=self.geometry_areas,
-                    nativefmt='netcdf',
-                    kind='surfhydro',
-                    model='surfex',
-                    genv=self.conf.cycle,
-                    gvar='[kind]_[geometry::tag]',
-                    fatal=True
-                ),
-
-                print(self.ticket.prompt, 'tb01 =', tb01)
-                print()
-
-    def get_input(self):
-        if 'fetch' in self.steps:
-            self.get_forcing()
-            self.get_pro()
-
-    def get_forcing(self):
-        pass
-
-    def get_pro(self):
-        pass
-
-    def get_algo(self):
-        pass
-
-    def save_output(self):
-        pass
+        self.datebegin_forcing = self.get_datebegin_forcing()
+        self.datebegin_pro = self.get_datebegin_pro()
+        self.members = footprints.util.rangex(self.conf.members)
 
     def process(self):
 
-        # Get dates
-        self.get_dates()
+        self.pre_process()
 
-        # Get constant files
-        self.get_const()
+        if True:  # with OpInputReportContext:
 
-        # Get input
-        self.get_input()
+            if 'early-fetch' in self.steps:  # Executed on a TRANSFERT NODE to fetch inputs from a remote cache
+                self.get_remote_inputs()
 
-        # Get algo and run
-        self.get_algo()
+            if 'fetch' in self.steps:  # Executed on a COMPUTE NODE to fetch resources already in the local cache
+                self.get_local_inputs()
 
-        # Save output
-        self.save_output()
+        if 'compute' in self.steps:  # Algo component (1 per task) executed on the compute node
+            self.algo()
 
+        if True:  # with OpOutputReportContext:
 
-class Hydro_Task_Analysis(_Hydro_Task):
+            if 'backup' in self.steps:  # Execute on the COMPUTE NODE to save outputs on the local cache
+                self.put_local_outputs()
 
-    def get_forcing(self):
-        if True:  # In order to have an indentation and facilitate the comparison with IGA Task
+            if 'late-backup' in self.steps:  # Executed on a TRANSFERT NODE to save outputs to a remote destination
+                self.put_remote_outputs()
 
-            self.sh.title('Toolbox input tb02')
-            tb02 = toolbox.input(
-                role='SafranForecast',
-                local='mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                experiment=self.xpid_inputhydro,
-                block='meteo',
-                geometry=self.conf.geometry,
-                date=self.rundate_forcing,
-                datebegin=self.datebegin,
-                dateend=self.dateend,
-                member=[35],
-                nativefmt='netcdf',
-                kind='MeteorologicalForcing',
-                model='s2m',
-                namespace=self.conf.namespace_in,
-                cutoff='assimilation',
-                fatal=False
-            ),
-            print(self.ticket.prompt, 'tb02 =', tb02)
-            print()
+    def get_const(self):
+        """
+        Get the NetCDF file describing the output hygrological units from a UserEnvironment.
+        """
 
-    def get_pro(self):
-        if True:
-
-            self.sh.title('Toolbox input tb03')
-            tb03 = toolbox.input(
-                role='CrocusForecast',
-                local='mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-                experiment=self.xpid_inputhydro,
-                block='pro',
-                geometry=self.conf.geometry,
-                date=self.conf.rundate,
-                datebegin=yesterday(self.dateend),
-                dateend=self.dateend,
-                member=[35],
-                nativefmt='netcdf',
-                kind='SnowpackSimulation',
-                model='surfex',
-                namespace=self.conf.namespace_in,
-                cutoff='assimilation',
-                fatal=False
-            ),
-            print(self.ticket.prompt, 'tb03 =', tb03)
-            print()
-
-    def get_algo(self):
-
-        if 'compute' in self.steps:
-            self.sh.title('Toolbox algo tb02 = Postprocessing')
-
-            tbalgo1 = toolbox.algo(
-                kind        = 's2m_hydro_deter',
-                varnames    = ['Tair', 'Rainf', 'Snowf', 'SNOMLT_ISBA', 'WSN_T_ISBA', 'DSN_T_ISBA'],
-                dateinit    = self.datebegin,
-                engine      = 's2m',
-                members     = footprints.util.rangex([35]),
-            ),
-            print(self.ticket.prompt, 'tbalgo1 =', tbalgo1)
-            print()
-
-            self.component_runner(tbalgo1[0])
-
-    def save_output(self):
-        if 'late-backup' in self.steps:
-            if True:
-
-                self.sh.title('Toolbox output tb04')
-                tb04 = toolbox.output(
-                    role='Postproc_output',
-                    intent='out',
-                    local='mb[member]/HYDRO.nc',
-                    experiment=self.conf.xpid,
-                    block='hydro',
-                    geometry=self.conf.geometry,
-                    date=self.conf.rundate,
-                    datebegin=yesterday(self.dateend),
-                    dateend=self.dateend,
-                    member=[35],
-                    nativefmt='netcdf',
-                    kind='SnowpackSimulation',
-                    model='postproc',
-                    namespace=self.conf.namespace_out,
-                    cutoff='assimilation',
-                    fatal=True
-                ),
-                print(self.ticket.prompt, 'tb04 =', tb04)
-                print()
-
-
-class Hydro_Task_Forecast(_Hydro_Task):
-
-    @property
-    def members(self):
-        pearpmembers, members = self.get_list_members(sytron=False)
-        return members
-
-    @property
-    def datebegin_forcing(self):
-        return self.datebegin if self.conf.rundate.hour == self.nightruntime.hour else yesterday(self.datebegin)
+        self.sh.title('Toolbox input hydro areas')
+        self.hydro_areas = toolbox.input(
+            role        = 'HydroAreas',
+            local       = 'areas.nc',
+            geometry    = self.geometry_areas,
+            nativefmt   = 'netcdf',
+            kind        = 'surfhydro',
+            model       = 'surfex',
+            genv        = self.conf.cycle,
+            gvar        = '[kind]_[geometry::tag]',
+            fatal       = True
+        ),
+        print(self.ticket.prompt, 'hydro_areas =', self.hydro_areas)
+        print()
 
     def get_forcing(self):
-        if True:  # In order to have an indentation and facilitate the comparison with IGA Task
-
-            self.sh.title('Toolbox input tb02')
-            tb02 = toolbox.input(
-                role='SafranForecast',
-                local='mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                experiment=self.xpid_inputhydro,
-                block='meteo',
-                geometry=self.conf.geometry,
-                date=self.rundate_forcing,
-                datebegin=self.datebegin_forcing,
-                dateend=self.dateend,
-                member=self.members,
-                nativefmt='netcdf',
-                kind='MeteorologicalForcing',
-                model='s2m',
-                namespace=self.conf.namespace_in,
-                cutoff='production',
-                fatal=False
-            ),
-            print(self.ticket.prompt, 'tb02 =', tb02)
-            print()
+        """
+        Get the Meteorological FORCING file(s).
+        """
+        self.sh.title('Toolbox input FORCING')
+        self.forcing = toolbox.input(
+            role          = 'SafranForecast',
+            local         = 'mb[member]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment    = self.conf.xpid_inputhydro,
+            block         = 'meteo',
+            geometry      = self.conf.geometry,
+            date          = self.rundate_forcing,
+            datebegin     = self.datebegin_forcing,
+            dateend       = self.dateend,
+            member        = self.members,
+            nativefmt     = 'netcdf',
+            kind          = 'MeteorologicalForcing',
+            model         = 's2m',
+            namespace     = self.conf.namespace_in,
+            cutoff        = self.conf.cutoff,
+            fatal         = False
+        ),
+        print(self.ticket.prompt, 'FORCING input =', self.forcing)
+        print()
 
     def get_pro(self):
-        if True:  # In order to have an indentation and facilitate the comparison with IGA Task
+        """
+        Get the snowpack simulation file(s)
+        """
 
-            self.sh.title('Toolbox input tb03')
-            tb03 = toolbox.input(
-                role='CrocusForecast',
-                local='mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-                experiment=self.xpid_inputhydro,
-                block='pro',
-                geometry=self.conf.geometry,
-                date=self.conf.rundate,
-                datebegin=self.datebegin,
-                dateend=self.dateend,
-                member=self.members,
-                nativefmt='netcdf',
-                kind='SnowpackSimulation',
-                model='surfex',
-                namespace=self.conf.namespace_in,
-                cutoff='production',
-                fatal=False
-            ),
-            print(self.ticket.prompt, 'tb03 =', tb03)
-            print()
+        self.sh.title('Toolbox input PRO')
+        self.pro = toolbox.input(
+            role         = 'CrocusForecast',
+            local        = 'mb[member]/PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment   = self.conf.xpid_inputhydro,
+            block        = 'pro',
+            geometry     = self.conf.geometry,
+            date         =self.conf.rundate,
+            datebegin    = self.datebegin_pro,
+            dateend      = self.dateend,
+            member       = self.members,
+            nativefmt    = 'netcdf',
+            kind         = 'SnowpackSimulation',
+            model        = 'surfex',
+            namespace    = self.conf.namespace_in,
+            cutoff       = self.conf.cutoff,
+            fatal        = False
+        ),
+        print(self.ticket.prompt, 'PRO input =', self.pro)
+        print()
 
-    def get_algo(self):
+    def algo(self):
+        """
+        Implement this method for each actual task inherinting from this abstract class
+        """
 
-        if 'compute' in self.steps:
-            self.sh.title('Toolbox algo tb02 = Postprocessing')
+    def put_diagnostic(self):
+        """
+        Save the produced diagnostic file(s)
+        """
 
-            tbalgo1 = toolbox.algo(
-                kind        = 's2m_hydro_ensemble',
-                varnames    = ['Tair', 'Rainf', 'Snowf', 'SNOMLT_ISBA', 'WSN_T_ISBA', 'DSN_T_ISBA'],
-                dateinit    = self.datebegin,
-                engine      = 's2m',
-                members     = footprints.util.rangex(self.members),
-            ),
-            print(self.ticket.prompt, 'tbalgo1 =', tbalgo1)
-            print()
-
-            self.component_runner(tbalgo1[0])
-
-    def save_output(self):
-        if 'late-backup' in self.steps:
-            if True:
-                self.sh.title('Toolbox output tb04')
-                tb04 = toolbox.output(
-                    role='Postproc_output',
-                    intent='out',
-                    local='HYDRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-                    experiment=self.conf.xpid,
-                    block='hydro',
-                    geometry=self.conf.geometry,
-                    date=self.conf.rundate,
-                    datebegin=self.datebegin,
-                    dateend=self.dateend,
-                    nativefmt='netcdf',
-                    kind='SnowpackSimulation',
-                    model='postproc',
-                    namespace=self.conf.namespace_out,
-                    cutoff='production',
-                    fatal=True
-                ),
-                print(self.ticket.prompt, 'tb04 =', tb04)
-                print()
-
-
-class _Hydro_Task_Replay(_Hydro_Task):
+        self.sh.title('Toolbox output HYDRO')
+        self.hydro = toolbox.output(
+            role         = 'Postproc_output',
+            intent       = 'out',
+            local        = 'HYDRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment   = self.conf.xpid,
+            block        = 'hydro',
+            geometry     = self.conf.geometry,
+            date         = self.conf.rundate,
+            datebegin    = self.datebegin_pro,
+            dateend      = self.dateend,
+            nativefmt    = 'netcdf',
+            kind         = 'SnowpackSimulation',
+            model        = 'postproc',
+            namespace    = self.conf.namespace_out,
+            cutoff       = self.conf.cutoff,
+            fatal        = True,
+        ),
+        print(self.ticket.prompt, 'Hydro diags =', self.hydro)
+        print()
 
     @property
     def geometry_areas(self):
+        """
+        Mapping between old S2M geometries (before 22/10/2022) and new ones.
+        """
         oldgeometries = dict(alp27_allslopes='alp_allslopes', pyr24_allslopes='pyr_allslopes')
         if self.datebegin < Date(2022, 10, 22):
             return oldgeometries[self.conf.geometry.tag]
@@ -300,10 +177,151 @@ class _Hydro_Task_Replay(_Hydro_Task):
             return self.conf.geometry
 
     @property
-    def xpid_inputhydro(self):
-        return self.conf.xpid_inputhydro
+    def rundate_forcing(self):
+        return self.get_rundate_forcing()
 
-    def get_input(self):
-        if 'early-fetch' in self.steps or 'fetch' in self.steps:
-            self.get_forcing()
-            self.get_pro()
+
+class Hydro_Task_Analysis(_Hydro_Task):
+    """
+    OPERATIONNAL TASK
+
+    Application of the hydrogical post-processing in an operationnal analysis context.
+
+    The diagnostics are computed for the deterministic member alone.
+
+    "Flow" resources come from a previous execution of SURFEX and are present on the local cache
+    """
+
+    def get_remote_inputs(self):
+        pass
+
+    def get_local_inputs(self):
+
+        self.get_const()
+        self.get_forcing()
+        self.get_pro()
+
+    def get_algo(self):
+
+        self.sh.title('Toolbox algo htdro analysis')
+        self.algo = toolbox.algo(
+            kind        = 's2m_hydro_deter',
+            varnames    = ['Tair', 'Rainf', 'Snowf', 'SNOMLT_ISBA', 'WSN_T_ISBA', 'DSN_T_ISBA'],
+            dateinit    = self.datebegin,
+            engine      = 's2m',
+            members     = self.members,
+        ),
+        print(self.ticket.prompt, 'algo =', self.algo)
+        print()
+        self.component_runner(self.algo)
+
+    def put_local_inputs(self):
+        self.put_diagnostic()
+
+    def put_remote_inputs(self):
+        self.put_diagnostic()
+
+    def get_datebegin_forcing(self):
+        return self.datebegin
+
+    def get_datebegin_pro(self):
+        return self.datebegin
+
+
+class Hydro_Task_Forecast(_Hydro_Task):
+    """
+    OPERATIONNAL TASK
+
+    Application of the hydrogical post-processing in an operationnal forecast context.
+
+    The diagnostics are computed for all 36 ensemble members.
+
+    "Flow" resources come from a previous execution of SURFEX and are present on the local cache
+    """
+
+    def get_remote_inputs(self):
+        pass
+
+    def get_local_inputs(self):
+
+        self.get_const()
+        self.get_forcing()
+        self.get_pro()
+
+    def get_algo(self):
+
+        self.sh.title('Toolbox algo hydro forecast')
+        self.algo = toolbox.algo(
+            kind        = 's2m_hydro_ensemble',
+            varnames    = ['Tair', 'Rainf', 'Snowf', 'SNOMLT_ISBA', 'WSN_T_ISBA', 'DSN_T_ISBA'],
+            dateinit    = self.datebegin,
+            engine      = 's2m',
+            members     = self.members,
+        ),
+        print(self.ticket.prompt, 'algo =', self.algo)
+        print()
+
+        self.component_runner(self.algo)
+
+    def put_local_inputs(self):
+        self.put_diagnostic()
+
+    def put_remote_inputs(self):
+        self.put_diagnostic()
+
+    def get_datebegin_forcing(self):
+        return self.datebegin if self.conf.rundate.hour == self.nightruntime.hour else yesterday(self.datebegin)
+
+    def get_datebegin_pro(self):
+        return self.datebegin
+
+
+class Hydro_Task_Analysis_Replay(Hydro_Task_Analysis):
+    """
+    RESEARCH TASK
+
+    Replay of the hydrogical post-processing in an analysis context for past situations.
+
+    "Flow" resources may not be present on the local cache, they must be retrieved from the archive store.
+
+    """
+
+    def get_remote_inputs(self):
+        self.get_forcing()
+        self.get_pro()
+
+    def get_local_inputs(self):
+        self.get_const()
+        self.get_forcing()
+        self.get_pro()
+
+    def put_local_inputs(self):
+        self.put_diagnostic()
+
+    def put_remote_inputs(self):
+        self.put_diagnostic()
+
+
+class Hydro_Task_Forecast_Replay(Hydro_Task_Forecast):
+    """
+    RESEARCH TASK
+
+    Replay of the hydrogical post-processing in a forecast context for past situations.
+
+    "Flow" resources may not be present on the local cache, they must be retrieved from the archive store.
+    """
+
+    def get_remote_inputs(self):
+        self.get_forcing()
+        self.get_pro()
+
+    def get_local_inputs(self):
+        self.get_const()
+        self.get_forcing()
+        self.get_pro()
+
+    def put_local_inputs(self):
+        self.put_diagnostic()
+
+    def put_remote_inputs(self):
+        self.put_diagnostic()

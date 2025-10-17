@@ -5,7 +5,7 @@ Created on 15 oct. 2025
 @author: lafaysse
 """
 from vortex.layout.nodes import Driver
-from .hydro_task import _Hydro_Task_Replay, Hydro_Task_Forecast
+from .hydro_task import Hydro_Task_Forecast_Replay
 
 
 def setup(t, **kw):
@@ -13,11 +13,6 @@ def setup(t, **kw):
         tag='S2M_Hydro',
         ticket=t,
         nodes=[
-                Hydro_Task_Forecast_Replay(tag='S2M_Hydro_Task', ticket=t, **kw,
-                                           delay_component_errors=True, on_error='delayed_fail')],
+            Hydro_Task_Forecast_Replay(tag='hydro_task_forecast', ticket=t, **kw,)],
         options=kw
     )
-
-
-class Hydro_Task_Forecast_Replay(Hydro_Task_Forecast, _Hydro_Task_Replay):
-    pass
