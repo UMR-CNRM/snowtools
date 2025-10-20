@@ -463,6 +463,12 @@ class Vortex_conf_file(object):
         if hasattr(self.options, 'interpol_blocks'):
             self.set_field("DEFAULT", 'interpol_blocks', self.options.interpol_blocks)
 
+        if hasattr(self.options, 'pro_xpid'):
+            if self.options.pro_xpid:
+                self.set_field("DEFAULT", 'pro_xpid', self.options.pro_xpid)
+            else:
+                self.set_field("DEFAULT", 'pro_xpid', self.options.forcing)
+
     def create_conf_surfex(self):
         if self.options.task in ['interpol']:
             self.create_conf_interpol()
@@ -496,6 +502,11 @@ class Vortex_conf_file(object):
                 if '@' not in self.options.prep_xpid:
                     self.options.prep_xpid = self.options.prep_xpid + '@' + os.getlogin()
                 self.set_field("DEFAULT", 'prep_xpid', self.options.prep_xpid)
+        if hasattr(self.options, 'pro_xpid'):
+            if self.options.pro_xpid:
+                if '@' not in self.options.pro_xpid:
+                    self.options.pro_xpid = self.options.pro_xpid + '@' + os.getlogin()
+                self.set_field("DEFAULT", 'pro_xpid', self.options.pro_xpid)
         if hasattr(self.options, 'uenv'):
             if self.options.uenv is not None:
                 self.set_field("DEFAULT", 'uenv', self.options.uenv)
