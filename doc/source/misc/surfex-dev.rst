@@ -47,6 +47,14 @@ Implement a new test in order to secure your new developments providing a nameli
 If sufficient to test your implementation, prefer using the reference FORCING file for the First Test.
 Otherwise, FORCING files must not be added to the snowtools repository but provided in the ``snowtools.DATA.TESTBASE_DIR`` folder.
 
+It is also mandatory to check whether external version of Crocus can still be compiled and run:
+
+.. code-block:: bash
+
+   cd $EXESURFEX/../src/EXT_CROCUS
+   make
+   ./prog
+
 CHECK NUMERICAL EFFICIENCY
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 New developments are not allowed to increase the reference computing time of each routine. This has to be checked by CEN team:
