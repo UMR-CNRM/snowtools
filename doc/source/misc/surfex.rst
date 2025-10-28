@@ -81,8 +81,9 @@ The CSELECT options
 In the namelist, CSELECT allows you to choose output. For example, in the standard namelist, you have:
 ``CSELECT='time','ZS','aspect','slope','massif_num','station','TG1','WG1','WGI1','TG4','ASN_VEG'...``
 
-Core model options
-^^^^^^^^^^^^^^^^^^
+Available diagnostics
+^^^^^^^^^^^^^^^^^^^^^
+.. _avail_diagnostics:
 
 Here you can find long name for a part of these variables (alphabetical order for shortname).
 
