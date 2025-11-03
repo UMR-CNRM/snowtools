@@ -387,26 +387,47 @@ class FutureS2MExtractor(S2MExtractor):
     def get_hydro(self):
         import cen
 
-        tb03 = toolbox.input(
-            role           = 'hydro',
-            vapp           = 's2m',
-            vconf          = '[geometry::area]',
-            local          = '[geometry::area]/[date:ymdh]/HYDRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-            experiment     = self.conf.xpid,
-            block          = 'hydro',
-            geometry       = self.conf.list_geometry,
-            date           = self.conf.rundate,
-            datebegin      = self.datebegin if self.conf.previ else '[dateend]/-PT24H',
-            dateend        = self.dateend if self.conf.previ else list(daterange(tomorrow(base=self.datebegin), self.dateend)),
-            nativefmt      = 'netcdf',
-            kind           = 'SnowpackSimulation',
-            model          = 'postproc',
-            namespace      = 'vortex.multi.fr',
-            cutoff         = 'production' if self.conf.previ else 'assimilation',
-            intent         = 'in',
-            fatal          = False
-
-        )
+        if self.conf.previ:
+            tb03 = toolbox.input(
+                role           = 'hydro',
+                vapp           = 's2m',
+                vconf          = '[geometry::area]',
+                local          = '[geometry::area]/[date:ymdh]/HYDRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                experiment     = self.conf.xpid,
+                block          = 'hydro',
+                geometry       = self.conf.list_geometry,
+                date           = self.conf.rundate,
+                datebegin      = self.datebegin if self.conf.previ else '[dateend]/-PT24H',
+                dateend        = self.dateend if self.conf.previ else list(daterange(tomorrow(base=self.datebegin), self.dateend)),
+                nativefmt      = 'netcdf',
+                kind           = 'SnowpackSimulation',
+                model          = 'postproc',
+                namespace      = 'vortex.multi.fr',
+                cutoff         = 'production',
+                intent         = 'in',
+                fatal          = False,
+            )
+        else:
+            tb03 = toolbox.input(
+                role = 'hydro',
+                vapp = 's2m',
+                vconf = '[geometry::area]',
+                local = '[geometry::area]/[date:ymdh]/HYDRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+                experiment = self.conf.xpid,
+                block = 'hydro',
+                geometry = self.conf.list_geometry,
+                date = self.conf.rundate,
+                datebegin = self.datebegin if self.conf.previ else '[dateend]/-PT24H',
+                dateend = self.dateend if self.conf.previ else list(daterange(tomorrow(base=self.datebegin), self.dateend)),
+                nativefmt = 'netcdf',
+                kind = 'SnowpackSimulation',
+                model = 'postproc',
+                member = 35,
+                namespace = 'vortex.multi.fr',
+                cutoff = 'assimilation',
+                intent = 'in',
+                fatal = False,
+            )
 
         return self.get_std(tb03)
 

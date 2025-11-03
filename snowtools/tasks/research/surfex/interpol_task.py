@@ -46,9 +46,11 @@ class Interpol_Task(Task, S2MTaskMixIn):
         dickind = dict(meteo='MeteorologicalForcing', pro='SnowpackSimulation')
         diclocal = dict(meteo='FORCING', pro='PRO')
         dicmodel = dict(meteo=self.conf.meteo, pro='surfex')
+        dicxpid = dict(meteo=self.conf.forcingid, pro=self.conf.pro_xpid)
 
         if type(self.conf.interpol_blocks) is not list:
             self.conf.interpol_blocks = [self.conf.interpol_blocks]
+
         #######################################################################
         #                             Fetch steps                             #
         #######################################################################
@@ -63,7 +65,7 @@ class Interpol_Task(Task, S2MTaskMixIn):
                         vapp=self.conf.meteo,
                         vconf='[geometry:tag]',
                         local=diclocal[block] + '_[datebegin:ymdh]_[dateend:ymdh].nc',
-                        experiment=self.conf.forcingid,
+                        experiment=dicxpid[block],
                         block=block,
                         geometry=self.conf.geoin,
                         nativefmt='netcdf',
@@ -90,7 +92,7 @@ class Interpol_Task(Task, S2MTaskMixIn):
                         vapp           = self.conf.meteo,
                         vconf          = '[geometry:tag]',
                         local          = diclocal[block] + '_[datebegin:ymdh]_[dateend:ymdh].nc',
-                        experiment     = self.conf.forcingid,
+                        experiment     = dicxpid[block],
                         block          = block,
                         geometry       = self.conf.geoin,
                         nativefmt      = 'netcdf',
@@ -116,7 +118,7 @@ class Interpol_Task(Task, S2MTaskMixIn):
                             vapp           = self.conf.meteo,
                             vconf          = '[geometry:tag]',
                             local          = diclocal[block] + '_[datebegin:ymdh]_[dateend:ymdh].nc',
-                            experiment     = self.conf.forcingid,
+                            experiment     = dicxpid[block],
                             block          = block,
                             geometry       = self.conf.geoin,
                             nativefmt      = 'netcdf',
