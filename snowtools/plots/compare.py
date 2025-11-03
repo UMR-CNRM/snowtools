@@ -11,7 +11,7 @@ import xarray as xr
 import numpy as np
 
 from snowtools.utils.prosimu import prosimu
-from snowtools.plots import proReader_mini
+from snowtools.plots.stratiprofile import proreader
 
 logger = logging.getLogger()
 logger.setLevel(logging.WARNING)
@@ -80,8 +80,8 @@ def make_double_graph(path_pro1, path_pro2, variable, titre1, titre2, date_begin
     """
     fig, (ax1, ax2) = plt.subplots(1, 2, sharey=True)
     fig.suptitle('Compare ' + titre1 + ' and ' + titre2)
-    pro1 = proReader_mini.ProReader_standard(ncfile = path_pro1, var = variable, point = int(point))
-    pro2 = proReader_mini.ProReader_standard(ncfile = path_pro2, var = variable, point = int(point))
+    pro1 = proreader(ncfile = path_pro1, var = variable, point = int(point))
+    pro2 = proreader(ncfile = path_pro2, var = variable, point = int(point))
     if bool_snow_layer:
         pro1.plot(ax1, variable, date_begin, date_end, real_layers = True, legend = variable)
         pro2.plot(ax2, variable, date_begin, date_end, real_layers = True, legend = variable)

@@ -92,5 +92,6 @@ Of course, all comments in the code, documentation and commit message have to be
 SURFEX specific rules
 ---------------------
 
-SURFEX developements must follow the specific coding rules of this project: http://www.cnrm.meteo.fr/surfex-lab/spip.php?rubrique93
+SURFEX developements must follow the specific coding rules of this project:
+https://www.umr-cnrm.fr/surfex/spip.php?rubrique93
 Contributions will not be accepted if they do not follow these requirements.

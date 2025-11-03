@@ -13,10 +13,6 @@ If you are reading these lines, you may have found the documentation. Anyway, sn
 * Get pre-generated documentation
 * Generated through code source
 
-Documentation access
-^^^^^^^^^^^^^^^^^^^^
-If you are at Meteo-France, Pre-generated documentation is accessible on http://intra.cnrm.meteo.fr/cen/snowtools/.
-
 Generate documentation
 ^^^^^^^^^^^^^^^^^^^^^^
 Documentation can be generated directly from source repository. It could be generated in two formats : HTML and PDF.

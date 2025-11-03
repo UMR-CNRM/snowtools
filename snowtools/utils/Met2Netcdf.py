@@ -69,7 +69,7 @@ from bronx.meteo.constants import T0
 # MUST CHANGE EACH YEAR:
 #
 # year of last MET file
-annee_last_MET = 2024
+annee_last_MET = 2025
 #
 # END OF CHANGE
 ###############
