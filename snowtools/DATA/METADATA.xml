@@ -296,7 +296,16 @@
 		<altMax>2100</altMax>
 		<altRealMin>111</altRealMin>
 		<altRealMax>2091</altRealMax>
-	</Massif>
+        </Massif>
+        <Massif>
+                <name> Diablerets </name>
+                <nameRed> diabler </nameRed>
+                <number> 30 </number>
+                <latCenter> 46.39 </latCenter>
+                <lonCenter> 7.3025 </lonCenter>
+                <altMin> 500 </altMin>
+                <altMax> 3000 </altMax>
+        </Massif>
 	<Massif>
 		<name>Cinto Rotondo</name>
 		<nameRed>Cinto</nameRed>
