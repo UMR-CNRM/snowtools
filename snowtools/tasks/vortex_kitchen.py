@@ -36,9 +36,11 @@ class vortex_kitchen(object):
         self.snowtools_command = snowtools_command
 
         # Initialization of vortex variables
-        self.vapp = 's2m'
+        self.vapp = 's2m'  # MV : valeur en dur --> pas de flexibilité
         self.split_geo()
 
+        ######################################################################################################
+        # MV : Utiliser plutot un argument "xpid" pour simplifier ?
         if self.options.command == 'oper':
             if self.options.dev:
                 self.options.xpid = 'dev'
@@ -46,6 +48,7 @@ class vortex_kitchen(object):
                 self.options.xpid = 'oper'
         else:
             self.options.xpid = self.options.diroutput  # diroutput is now always defined in research cases
+        ######################################################################################################
 
         self.workingdir = "/".join([self.options.workdir, self.options.xpid, self.vapp, self.options.vconf])
         self.confdir    = "/".join([self.workingdir, 'conf'])
@@ -61,6 +64,8 @@ class vortex_kitchen(object):
         self.execute()
 
     def define_ntasks(self, machine):
+        #########################################################################################################
+        # MV : cela semble être une manière bien compliquée de définir la valeur par défaut de ntask à 80...
         if hasattr(self.options, 'ntasks'):
             define_ntasks = not self.options.ntasks
         else:
@@ -69,6 +74,7 @@ class vortex_kitchen(object):
             if 'taranis' in machine or 'belenos' in machine:
                 self.options.ntasks = 80
                 # optimum constaté pour la réanalyse Alpes avec léger dépeuplement parmi les 128 coeurs.
+        #########################################################################################################
 
     def execute(self):
         self.create_env()
@@ -84,16 +90,29 @@ class vortex_kitchen(object):
 
     def create_env(self):
         """Prepare environment"""
+        ##########################################################################################################
+        # MV : Deux exécutions avec le même xpid (et même vconf) lancées simultanément sur des periodes différentes
+        # travaillent dans le même workdir et la 2nde exécution écrase la configuration de la première en cours
+        # de route. Le plantage peut alors être difficile à traçer.
+        # --> c'est un problème de fond qui découle du choix de s'appuyer sur une ligne de commande pour écrire
+        # le fichier de configuration
         if not os.path.isdir(self.workingdir):
             os.makedirs(self.workingdir)
         os.chdir(self.workingdir)
+        ##########################################################################################################
 
+        # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        # MV : devient inutile en Vortex2 à priori
         if not os.path.islink("vortex"):
             os.symlink(os.environ["VORTEX"], "vortex")
+        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
         if not os.path.islink("snowtools"):
             os.symlink(SNOWTOOLS_DIR, "snowtools")
 
+        # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        # MV : Tout cela pourrait être évité en ré-organisant mieux le code autour des notions de
+        # vapp et vconf pour bien différencier les cas d'usage.
         if not os.path.islink("tasks"):
             if self.options.command == 'oper':
                 os.symlink(SNOWTOOLS_DIR + "/tasks/oper", "tasks")
@@ -109,7 +128,11 @@ class vortex_kitchen(object):
         for directory in ["conf", "jobs"]:
             if not os.path.isdir(directory):
                 os.mkdir(directory)
+        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+        # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        # MV : Grosse verrue
+        # L'usage de uenv devrait néanmoins devenir central pour assurer la reproductibilité de nos expériences.
         if hasattr(self.options, 'uenv') and self.options.uenv is not None:
             if self.options.uenv.startswith('uenv'):
                 # The user already created a uenv and parsed the formatted uenv name
@@ -131,14 +154,25 @@ class vortex_kitchen(object):
                                                     for key, value in uenv_entries.items()]) + ')'
             # ex : self.options.udata = dict('FILE_NAME_EXTENSION':'my.file_name.extension',...)
             # ==> gvar='FILE_NAME_EXTENSION', local='my.file_name.extension'
+        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
     def init_job_task(self, jobname=None):
+        # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        # La variable "surfex" est mise à True en dur dans la commande s2m...
         if self.options.surfex:
             self.init_job_task_surfex(jobname=jobname)
         else:
             self.init_job_task_safran()
+        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    # MV : méthode ultra confuse
+    # Le fait d'avoir besoin de passer par là suggère très fortement que ces différents cas d'usage
+    # devraient être traités indépendamment...
+    # Il semblerait plus logique de demander à l'utilisateur de lancer directement un "jobname" associé une
+    # "reftask" donnée pour éviter d'avoir à deviner ce qu'il veut faire dans le code.
     def init_job_task_surfex(self, jobname=None):
+
         if self.options.command == 'oper':
 
             reftask = dict(
@@ -149,6 +183,7 @@ class vortex_kitchen(object):
             )
 
             # Note that the jobname is used to discriminate self.conf.previ in vortex task
+            # MV : ... et cela ne devrait pas être le cas !
             defaultjobname = dict(
                 analysis = "anasurf_s2m" + self.options.vconf[:3],
                 forecast = "prvsurf_s2m" + self.options.vconf[:3],
@@ -158,11 +193,13 @@ class vortex_kitchen(object):
 
             self.nnodes = 1
             self.period = "rundate=" + self.options.datedeb.strftime("%Y%m%d%H%M")
+            # MV : on retrouve ici le double usage itrompeur de l'argument "datedeb"
             self.confcomplement = ''
         else:  # research tasks
             self.period = " rundate=" + self.options.datedeb.strftime("%Y%m%d%H%M") + " datebegin=" + \
                           self.options.datedeb.strftime("%Y%m%d%H%M") + " dateend=" + \
                           self.options.datefin.strftime("%Y%m%d%H%M")
+            # MV : la notion de "rundate" doit être supprimée de nos expériences recherche (problème Vortex)
 
             reftask = dict(
                 surfex = "surfex_task",
@@ -208,7 +245,10 @@ class vortex_kitchen(object):
             self.jobname = jobname
         else:
             self.jobname = defaultjobname[self.options.task]
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    # MV : inutilisé puisque dans la commande s2m la variable "safran" est mise à False en dur
     def init_job_task_safran(self):
         if self.options.command == 'oper':
             pass
@@ -220,7 +260,12 @@ class vortex_kitchen(object):
                 " dateend=" + self.options.datefin.strftime("%Y%m%d")
         self.nnodes = 1
         self.confcomplement = ""
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    # MV : Encore un bout de code bien compliqué pour écrire les arguments de la commande s2m dans un fichier
+    # de configuration.
+    # Pourquoi ne pas faire comme pour l'opérationnel et fournir directement le fichier de configuration ?
     def set_conf_file(self):
 
         conffilename = None
@@ -278,15 +323,24 @@ class vortex_kitchen(object):
         if not self.options.command == 'oper':
             self.conf_file.write_file()
             self.conf_file.close()
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    # MV : On passe par une première ligne de commande pour en arriver à lancer une seconde ligne de commande.
+    # Qu'est ce qui empêche de lancer directement la commande suivante après avoir écrit le  fichier de
+    # configuration correspondant ?
     def mkjob_command(self, jobname):
 
         return "../vortex/bin/mkjob.py -j name=" + jobname + " task=" + self.reftask + " profile=" + \
                self.profile + " jobassistant=cen " + self.period +\
             " time=" + self.walltime() + " nnodes=" + str(self.nnodes) + self.confcomplement
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
     def mkjob_list_commands(self):
 
+        # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        # MV : cette sur-couche devrait pouvoir être gérée clairement au cas par cas par l'utilisateur, ce n'est
+        # pas au code de deviner ce qu'il veut faire.
         if not self.options.safran and (self.options.task in ['escroc', 'croco', 'croco_perturb',
                                                               'reforecast'] and self.options.nnodes > 1):
             mkjob_list = []
@@ -318,6 +372,7 @@ class vortex_kitchen(object):
         else:
             self.write_conf_file()  # The configuration file is now complete, time to write it
             return [self.mkjob_command(jobname=self.jobname)]
+        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
     def run(self):
 
@@ -328,6 +383,10 @@ class vortex_kitchen(object):
             print("Run command: " + mkjob + "\n")
             callSystemOrDie(mkjob)
 
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    # MV : Le walltime doit être déterminé au cas par cas par l'utilisateur et pas deviné dans le code.
+    # La définition de valeurs par défaut pour les principaux cas d'usage doit être clarifiée et rendue
+    # indépendante du domaine (et de la période comme c'est déjà le cas ici).
     def walltime(self):
 
         if self.options.walltime:
@@ -391,7 +450,10 @@ class vortex_kitchen(object):
                 raise WallTimeException(estimation.hms)
             else:
                 return estimation.hms
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    # MV : Inutile avec un lançeur "interpol" séparé
     def split_geo(self):
         if ':' in self.options.region:
             splitregion = self.options.region.split(':')
@@ -403,8 +465,12 @@ class vortex_kitchen(object):
         else:
             self.options.interpol = False
             self.options.vconf = self.options.region.lower()
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# MV : Il est possible de se passer de cette classe extrêmement confuse en écrivant directement le fichier
+# de configuration, plutot que de passer par une ligne de commande qui oblige à faire ce "mapping".
 class Vortex_conf_file(object):
     def __init__(self, options, snowtools_command, filename, mode='w'):
         self.name = filename
@@ -495,7 +561,7 @@ class Vortex_conf_file(object):
         self.set_field("DEFAULT", 'nprocs', self.options.ntasks * self.options.nnodes)
         self.set_field("DEFAULT", 'openmp', 1)
         self.set_field("DEFAULT", 'geometry', self.options.vconf)
-        if hasattr(self.options, 'addmask'):
+        if hasattr(self.options, 'addmask'):  # Inutile (une valeur "False" est donnée par défaut dans le parser)
             self.set_field("DEFAULT", 'addmask', self.options.addmask)
         if hasattr(self.options, 'prep_xpid'):
             if self.options.prep_xpid:
@@ -589,7 +655,7 @@ class Vortex_conf_file(object):
         if self.options.task == 'surfex_dailyprep':
             self.set_field("DEFAULT", 'dailyprep', True)
 
-        if self.options.geotype == 'grid':
+        if self.options.geotype == 'grid':  # --> utiliser directement une option "simu2D"
             self.set_field("DEFAULT", 'simu2D', True)
 
         if self.options.interpol:
@@ -695,7 +761,7 @@ class Vortex_conf_file(object):
 
         # BC 01/04/20: this rangeX will cause us some trouble...
         self.set_field('DEFAULT', 'members', 'rangex(start:1 end:' + str(self.options.nmembers) + ')')
-        if 'E1' in self.options.escroc:
+        if 'E1' in self.options.escroc:  # Pas de garantie que escroc soit dans sel.options à ce stade !
             if hasattr(confObj, 'members_id'):
                 members_id = np.array(list(map(int, confObj.members_id)))
 
@@ -798,8 +864,11 @@ class Vortex_conf_file(object):
             meteo_draw = np.random.choice(list(range(1, int(self.options.nforcing) + 1)))
         print('mto draw', meteo_draw)
         return meteo_draw
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+# MV : Usage à repenser entièrement
 class UserEnv(object):
     """
     Class to manage a Vortex-like user environment (UEnv) in a transparent way for the user.
@@ -1058,3 +1127,4 @@ class UserEnv(object):
     def infos(self):
         print(f'Uenv {self.envname} is stored under {self.envfile}.{self.version}')
         print(f'Corresponding data are store in {self.datadir}')
+# >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

@@ -55,6 +55,8 @@ class _S2M_command(object):
         pass
 
     def check_mandatory_arguments(self, **kw):
+        # Redondant dans les cas ou l'option "required" de argparse est à True
+        # Utile uniquement lorsque une valeur "None" est définie par défaut dans la parser (ex : --forcing)
         missing_options = list()
         self.mandatory_arguments.update(**kw)
 

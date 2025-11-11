@@ -35,7 +35,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         t = self.ticket
 
         if not hasattr(self.conf, "genv"):
-            self.conf.genv = 'uenv:cen.14@CONST_CEN'
+            self.conf.genv = 'uenv:cen.14@CONST_CEN'  # MV : Code en dur ! A déplaçer dans un fichier de conf
 
         # Definition of geometries, safran xpid/block and list of dates from S2MTaskMixIn methods
         list_geometry = self.get_list_geometry(meteo=self.conf.meteo)
@@ -61,7 +61,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         if not hasattr(self.conf, "simu2D"):
             self.conf.simu2D = False
         if hasattr(self.conf, "simu2D"):
-            self.conf.genv2D = 'uenv:pgd.003@SURFEX_CEN'
+            self.conf.genv2D = 'uenv:pgd.003@SURFEX_CEN'  # MV : Code en dur ! A déplaçer dans un fichier de conf
 
         #######################################################################
         #                             Fetch steps                             #
@@ -231,6 +231,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
                 print(t.prompt, 'PREP (c) =', prep_c)
                 print()
             else:
+                # MV : No comment ...
                 prep_a = list()
                 prep_a.append(False)
                 prep_b = list()
@@ -408,6 +409,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print()
 
             if hasattr(self.conf, "uenv"):
+                # MV : Grosse verrue
+                # --> à gérer dans une tâche distincte
                 # TODO : find a "Vortex" way to avoid this loop
                 for gvar, filename in self.conf.udata.items():
                     self.sh.title('Toolbox input user environment')
@@ -550,6 +553,8 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
         #######################################################################
         if 'compute' in self.steps:
 
+            # MV : chaque algo component doit correspondre à une tâche unitaire.
+
             print(self.conf.meteo, self.conf.interpol, self.conf.addmask)
 
             if self.conf.meteo == "safran" or (hasattr(self.conf, "geoin") and "allslopes" in self.conf.geometry.tag):
@@ -684,6 +689,7 @@ class Surfex_Vortex_Task(Task, S2MTaskMixIn):
             print(t.prompt, 'tb11 =', tb11)
             print()
 
+            # MV : code en dur --> à mettre dans un fichier de configuration
             small_domains = dict(cor_flat=18,
                                  cor2_flat=18,
                                  mac11_flat=66,
