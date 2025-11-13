@@ -324,11 +324,17 @@ class sun():
         Cosinus of solar zenith angle
         (detailed explaination in function slope_aspect_correction)
 
-        :param tab_time_date: time
-        :param lat: latitude
-        :param lon: longitude
-        :param slope: slope (degrees)
-        :param aspect: aspect (degrees)
+        Take a certain amount of times (Nt) and points (Np described by lat, lon, slope, aspect)
+        and return for each time and point the cosinus of zenith angle of sun (shape Nt, Np).
+
+        :param tab_time_date: time values, numpy array of size Nt of python datetime.datetime elements
+                              (or other type with timetuple function available)
+        :param lat: latitude, numpy array (floats), length Np
+        :param lon: longitude, numpy array (floats), length Np
+        :param slope: slope (degrees), numpy array (floats), length Np
+        :param aspect: aspect (degrees), numpy array (floats), length Np
+        :returns: Cosinus of zenith angle
+        :rtype: numpy array of shape (Nt, Np)
         """
         julian_days = np.ones(tab_time_date.shape, 'f')
         decimal_hours = np.ones(tab_time_date.shape, 'f')
@@ -338,7 +344,7 @@ class sun():
             julian_days[i] = timetup[7]  # extract Julian day (integer)
             # L. Roussel: fix to decimal hour instead of integer hour
             decimal_hours[i] = timetup[3] + timetup[4] / 60 + timetup[5] / 3600  # extrac time in hour
-            
+
         j = self.upscale_tab_time(julian_days, (tab_time_date.shape[0], 1))
         h = self.upscale_tab_time(decimal_hours, (tab_time_date.shape[0], 1))
 
@@ -452,4 +458,3 @@ class sun():
     #       print hour, coszenith[ndays * 24 + hour - 1], ratio[ndays * 24 + hour - 1], SWdir[ndays * 24 + hour - 1], SWdif[ndays * 24 + hour - 1], SWglo[ndays * 24 + hour - 1]
 
         return SWdir, SWdif
-    
