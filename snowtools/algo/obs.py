@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+
+"""
+Algo Components for FORCING generation.
+"""
+from bronx.fancies import loggers
+from snowtools.algo.ensemble import _CENTaylorRun, _CENTaylorVortexWorker
+from snowtools.scripts.observations.create_new_SAFRAN_observations import replace_obs_tar
+
+logger = loggers.getLogger(__name__)
+
+
+class ReconstructObservations(_CENTaylorRun):
+    """
+    TODO
+    """
+
+    _footprint = dict(
+        info = 'TODO',
+        attr = dict(
+            kind  = dict(
+                values     = ['reconstruct_observations'],
+            ),
+            role_members = dict(
+                info     = "Role of RH inputs to use for members definition",
+                values   = ['Observations'],
+            ),
+        ),
+    )
+
+
+class ReconstructObservationsWorker(_CENTaylorVortexWorker):
+    """
+    TODO
+    """
+
+    _footprint = dict(
+        attr = dict(
+            kind    = dict(
+                values = ['reconstruct_observations']
+            ),
+            role_members = dict(
+                info     = "Role of RH inputs to use for members definition",
+                values   = ['Observations'],
+            ),
+        )
+    )
+
+    def _commons(self, rundir, thisdir, rdict, **kwargs):
+        """
+        Method called by the main **vortex_task** method of the **_S2MWorkerMixIn** class
+        """
+        common_inputs = ['predictors.json', 'reconstructed_data_GRIN.pkl',
+                'bdclim_SAFRAN_t_table_H_1950-2024_metadata.nc']
+        for fic in common_inputs:
+            self.system.symlink(self.system.path.join(rundir, fic), fic)
+
+        replace_obs_tar('INPUT_OBSERVATIONS.tar')
