@@ -61,7 +61,7 @@ class _VortexTask(Task, S2MTaskMixIn):  # Inherits from the standard Vortex Task
             geometry       = self.conf.geometry,
             vapp           = self.conf.vapp,
             vconf          = '[geometry:tag]',
-            model          = self.conf.model,
+            # model          = self.conf.model,
             namespace      = 'vortex.multi.fr',
             namebuild      = 'flat@cen',  # WARNING : research only !
             nativefmt      = 'netcdf',
