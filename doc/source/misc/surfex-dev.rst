@@ -63,7 +63,7 @@ On belenos:
 
 .. code-block:: bash
 
-   s2m research -b 20230801 -e 20240801 -n $SNOWTOOLS_CEN/DATA/OPTIONS_V9_reanalysis_forprep.nam -s $HOME/SURFEX/cen/exe --drhook -f reanalysis2025.1@lafaysse -m s2m -o reanalysis2025.drhook -r alp_allslopes
+   s2m research -b 20230801 -e 20240801 -n $SNOWTOOLS_CEN/snowtools/DATA/OPTIONS_V9_reanalysis_forprep.nam -s $HOME/SURFEX/cen/exe --drhook -f reanalysis2025.1@lafaysse -m s2m -o reanalysis2025.drhook -r alp_allslopes
 
 Get drhook outputs on a laptop or server and run:
 
