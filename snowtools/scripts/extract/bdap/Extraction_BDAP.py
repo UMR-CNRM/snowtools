@@ -75,11 +75,11 @@ known_domains = dict(
 )
 
 known_grids = dict(
-    FRANXL0025  = dict(latmax=51.5, lonmin=-6, maille=0.25),
-    FRANGP0025  = dict(latmax=53, lonmin=-8, maille=0.25),
+    FRANXL0025  = dict(latmax=51.5, lonmin=-6, maille=0.025),
+    FRANGP0025  = dict(latmax=53, lonmin=-8, maille=0.025),
     FRANXL1S100 = dict(latmax=51.5, lonmin=-6, maille=0.01),
-    EUROC25     = dict(latmax=61, lonmin=-15, maille=0.25),
-    GLOB025     = dict(latmax=90, lonmin=0, maille=0.25),
+    EUROC25     = dict(latmax=61, lonmin=-15, maille=0.025),
+    GLOB025     = dict(latmax=90, lonmin=0, maille=0.025),
     EURW1S10    = dict(latmax=55.4, lonmin=-12, maille=0.1),
     EURW1S40    = dict(latmax=55.4, lonmin=-12, maille=0.025),
     EURW1S100   = dict(latmax=55.4, lonmin=-12, maille=0.01),
@@ -117,7 +117,7 @@ default_levels = dict(
 )
 
 valid_geometries = dict(
-    PAAROME      = ['EURW1S40', 'EURW1S100'],
+    PAAROME      = ['EURW1S40', 'EURW1S100', 'FRANGP0025'],
     PAROME       = ['EURW1S40', 'EURW1S100'],
     PEAROME      = ['EURW1S40'],
     ASPEAROME    = ['FRANXL0025'],
@@ -462,9 +462,15 @@ class ExtractBDAP(object):
             self.gribname       = f'{level_type}_{date.ymdh}_{ech}.grib'
         else:
             self.gribname       = f'{level_type}_{date.ymdh}_{ech}_mb{member:03d}.grib'
-        self.dlat           = dlat
-        self.dlon           = dlon
-        self.test           = test
+        if dlat is None:
+            self.dlat = known_grids[self.grid]['maille'] * 1000
+        else:
+            self.dlat = dlat
+        if dlon is None:
+            self.dlon = known_grids[self.grid]['maille'] * 1000
+        else:
+            self.dlon = dlon
+        self.test = test
         self.interpolation  = interpolation
         if self.model == 'PEAROME':
             self.MOD = f'PEAROME{member:03d}'
@@ -503,7 +509,8 @@ class ExtractBDAP(object):
             else:
                 f.write("#Z_EXTR SOUS_GRILLE\n")
                 f.write(f'#Z_GEO {self.j1} {self.j2} {self.i1} {self.i2}\n')
-                f.write('#Z_STP 1 1\n')
+                f.write('#Z_STP 1 1\n')  # Extraction de tous les points
+                # f.write('#Z_STP 2 2\n')  # Extraction de un point sur deux
         # Use a list of dates / ech
         # WARNING : there is a limit on the number of fields that can be extracted with one command.
         # The BDAP documentation recommends to rather loop over dates and lead times ("ech")
@@ -602,7 +609,7 @@ class ExtractBDAP(object):
                 print('Removing empty file {0:s}'.format(self.gribname))
                 os.remove(self.gribname)
 
-        if not self.interpolation:
+        if not self.interpolation and self.coordinates is not None:
             self.get_subgrid()
         result = self.extract_from_bdap()
 
@@ -657,7 +664,7 @@ def execute():
                 grib = extraction.run()
                 if grib is not None:
                     extractedfiles.append(grib)
-        extraction.clean_reqest()
+        extraction.clean_request()
         date = date + Period(hours=max(dt, 1))  # Avoid infinite loops
 
     # Open all extracted files with xarray
