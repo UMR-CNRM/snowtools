@@ -58,6 +58,9 @@
    CPHOTO='NON',
    NPATCH=1,
    CALBEDO='MEAN',
+   NGROUND_LAYER = 20,
+   XSOILGRID= 0.01,0.03,0.06,0.10,0.20,0.30,0.45,0.60,0.80,1.00,1.25,1.50,2.00,2.50,3.00,4.00,5.00,6.50,8.00,10.0
+
  /
  &NAM_ISBAN
    CSCOND='PL98',
@@ -88,17 +91,10 @@
    CTOWN='NONE ',
    CWATER='NONE',
  /
- &NAM_PREP_ISBA
-                   XUNIF_HUG_SOIL(1) = 0.1,
-                   XUNIF_HUG_SOIL(2) = 0.1,
-                   XUNIF_HUG_SOIL(3) = 0.1,
-                   XUNIF_HUGI_SOIL(1) = 0.001,
-                   XUNIF_HUGI_SOIL(2) = 0.001,
-                   XUNIF_HUGI_SOIL(3) = 0.001,
-                   XUNIF_TG_SOIL(1) = 273.16,
-                   XUNIF_TG_SOIL(2) = 273.16,
-                   XUNIF_TG_SOIL(3) = 273.16,
-                   NINFILES=3
+&NAM_PREP_ISBA     XUNIF_HUG_SOIL = 0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10
+                   CFILE_TG="init_TG.nc",
+                   CTYPE_TG="NETCDF",
+                   NINFILES=20
  /
  &NAM_PREP_ISBA_SNOW
    CSNOW='CRO',

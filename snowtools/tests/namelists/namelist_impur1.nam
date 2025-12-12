@@ -216,16 +216,10 @@ CROUGH = "Z01D"
     NDAY = 1
     XTIME = 21600.0
 /
-&NAM_PREP_ISBA
-                   XUNIF_HUG_SOIL(1) = 0.1,
-                   XUNIF_HUG_SOIL(2) = 0.1,
-                   XUNIF_HUG_SOIL(3) = 0.1,
-                   XUNIF_HUGI_SOIL(1) = 0.001,
-                   XUNIF_HUGI_SOIL(2) = 0.001,
-                   XUNIF_HUGI_SOIL(3) = 0.001,
-                   NINFILES=3,
+&NAM_PREP_ISBA     XUNIF_HUG_SOIL = 0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10,0.10
                    CFILE_TG="init_TG.nc",
-                   CTYPE_TG="NETCDF"
+                   CTYPE_TG="NETCDF",
+                   NINFILES=20
 /
 &NAM_PREP_ISBA_SNOW    CSNOW = 'CRO',
                        NSNOW_LAYER = 50, 
