@@ -69,7 +69,6 @@ class Reconstruct_SAFRAN_Obs(_VortexTask):
         for rundate in list_dates:
             datebegin = rundate
             dateend = rundate.replace(year = rundate.year + 1)
-#                dateend = rundate + Period(years=1)
 
             # TODO : Gérer le fait de ne pas prendre le fichier 2 de 6h le 01/08
             self.sh.title(f'Raw Observations {datebegin.ymdh}-{dateend.ymdh}')
@@ -78,7 +77,7 @@ class Reconstruct_SAFRAN_Obs(_VortexTask):
                 part           = 'all',
                 geometry       = self.conf.geometry,
                 kind           = 'packedobs',
-                local          = f'{datebegin.ymd6h}_{dateend.ymd6h}/INPUT_OBSERVATIONS.tar',
+                local          = f'{datebegin.ymd6h}_{dateend.ymd6h}/OBSERVATIONS.tar',
                 namespace      = 's2m.archive.fr',
                 date           = dateend.ymdh,
                 datebegin      = datebegin.ymdh,
@@ -114,9 +113,9 @@ class Reconstruct_SAFRAN_Obs(_VortexTask):
         for rundate in list_dates:
             datebegin = rundate
             dateend = rundate.replace(year = rundate.year + 1)
-            season = datebegin.nivologyseason
 
-            toolbox.output(
+            self.sh.title(f'Reconstructed Observations {datebegin.ymdh}-{dateend.ymdh}')
+            out = toolbox.output(
                 kind           = 'packedobs',
                 datebegin      = datebegin.ymdh,
                 dateend        = dateend.ymdh,
@@ -125,7 +124,7 @@ class Reconstruct_SAFRAN_Obs(_VortexTask):
                 geometry       = self.conf.geometry,
                 vapp           = 'safran',
                 vconf          = self.conf.vconf,
-                local          = f'rs{season}.tar',
+                local          = f'{datebegin.ymd6h}_{dateend.ymd6h}/OBSERVATIONS.tar',
                 namespace      = 'vortex.archive.fr',
                 model          = 'safran',
                 source         = 'surfaceobs',
@@ -135,6 +134,9 @@ class Reconstruct_SAFRAN_Obs(_VortexTask):
                 cutoff         = 'assimilation',
                 now            = True,
             )
+            print(self.ticket.prompt, 'Output observations =', out)
+            print()
+
             datebegin = dateend
 
         if self.conf.debug:
