@@ -1,15 +1,13 @@
+import argparse
 import json
 import os
 import pickle
 import tarfile
 import warnings
 
-import argparse
-
 import numpy as np
 import pandas as pd
 import xarray as xr
-
 from bronx.stdtypes.date import Date, Period
 
 warnings.filterwarnings("ignore")
@@ -124,6 +122,7 @@ def replace_obs_tar(tar_name):
 
     for file_type in ls_file_type:
         for date in ls_file[file_type]:
+            print(date)
             # Define century (here because of 1999-2000)
             if int(date[0:2]) < 30:
                 century = "20"
@@ -131,11 +130,9 @@ def replace_obs_tar(tar_name):
                 century = "19"
 
             # Load and read correctly obs file
-            column_widths = [6, 6, 6, 10, 10, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1, 8, 1, 1, 1, 3, 1, 3, 1, 3, 1, 2,
-                    1, 2, 1, 6, 1, 1, 1, 1, 3]
+            column_widths = [6, 6, 6, 10, 10, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 1, 8, 1, 1, 1, 3, 1, 3, 1, 3, 1, 2, 1, 2, 1, 6, 1, 1, 1, 1, 3]
             df = pd.read_fwf(rep_name + "/" + file_type + date, header=None, widths=column_widths, converters={18: str})
-            df = df.rename(columns={0: "type_poste_actuel", 1: "lat", 2: "lon", 3: "Station_Name",
-                4: "num_poste", 6: "Temperature", 9: "ZS", 18: "time"})
+            df = df.rename(columns={0: "type_poste_actuel", 1: "lat", 2: "lon", 3: "Station_Name", 4: "num_poste", 6: "Temperature", 9: "ZS", 18: "time"})
 
             # Transform and recup only reconstituted ds at the time
             # Select right date in reconstituted obs
@@ -143,15 +140,13 @@ def replace_obs_tar(tar_name):
                 begin = pd.to_datetime(century + date[0:2] + date[2:6] + "T" + date[6:8]).strftime("%Y%m%dT%H")
                 # Transform it in the right format
                 reconstituted_obs_i = reconstructed_data.sel(time=begin)
-                timestep = [pd.to_datetime(date).strftime("%Y%m%d%H")[2:]
-                        for date in [reconstituted_obs_i["time"].values]]
+                timestep = [pd.to_datetime(date).strftime("%Y%m%d%H")[2:] for date in [reconstituted_obs_i["time"].values]]
             elif file_type == "T":
-                begin = (Date(century + date[0:2] + date[2:6] + "T07") -
-                        Period(days=1)).strftime("%Y%m%dT%H")
+                begin = (Date(century + date[0:2] + date[2:6] + "T07") - Period(days=1)).strftime("%Y%m%dT%H")
                 end = pd.to_datetime(century + date[0:2] + date[2:6] + "T06").strftime("%Y%m%dT%H")
                 # Transform it in the right format
                 reconstituted_obs_i = reconstructed_data.sel(time=slice(begin, end))
-                timestep = [Date(date).ymdh[2:] for date in reconstituted_obs_i["time"].values]
+                timestep = [Date(pd.to_datetime(date)).ymdh[2:] for date in reconstituted_obs_i["time"].values]
 
             reconstituted_obs_i["time"] = timestep
             reconstituted_obs_i["t"] = (reconstituted_obs_i["t"] * 100).fillna(999999).astype(int)
@@ -165,9 +160,9 @@ def replace_obs_tar(tar_name):
             obs_present = obs_present.T.to_series().fillna(99999)
 
             # Replace df by the obs present if not present at that time at first (prioritize real obs)
-            df['time'] = [pd.Timestamp(pd.to_datetime(date, format='%y%m%d%H')) for date in df['time'].values]
+            df["time"] = [Date(pd.to_datetime(date, format="%y%m%d%H")).ymdh[2:] for date in df["time"].values]
             df_replace = df.set_index(["num_poste", "time"])
-            #df_replace.index = df_replace.index.set_levels([df_replace.index.levels[0],
+            # df_replace.index = df_replace.index.set_levels([df_replace.index.levels[0],
             #    pd.to_datetime(df_replace.index.levels[1], format='%y%m%d%H')])
             df_replace["Temperature"] = obs_present.combine_first(df_replace["Temperature"])
             df_replace["type_poste_actuel"] = df_replace["type_poste_actuel"].astype("Int64").fillna(9)
@@ -178,15 +173,14 @@ def replace_obs_tar(tar_name):
             if file_type == "S":
                 obs_added["time"] = date
                 obs_added = obs_added.reset_index().set_index(["num_poste", "time"])
-            obs_added = obs_added[["t", "type_poste_actuel", "Station_Name", "lat", "lon", "ZS"]].rename(
-                columns={"t": "Temperature"})
+            obs_added = obs_added[["t", "type_poste_actuel", "Station_Name", "lat", "lon", "ZS"]].rename(columns={"t": "Temperature"})
             obs_added["lat"] = (obs_added["lat"] * 100).astype(int)
             obs_added["lon"] = (obs_added["lon"] * 100).astype(int)
             obs_added["type_poste_actuel"] = obs_added["type_poste_actuel"].fillna(9)
             obs_added = obs_added.fillna(999999)
 
             # Complete obs
-            df_replace = pd.concat([df_replace, obs_added]).reset_index(names=["num_poste", "time"])
+            df_replace = pd.concat([df_replace, obs_added]).reset_index(level=["num_poste", "time"])
 
             # Fill missing values or empty character by space
             list_columns = [17, 19, 20, 21, 23, 25, 27, 29, 31, 33, 34, 35, 36]
@@ -213,5 +207,5 @@ def replace_obs_tar(tar_name):
     tar.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     replace_obs_tar(options.tar_name)
