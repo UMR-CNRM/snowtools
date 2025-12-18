@@ -6,8 +6,7 @@ from snowtools.tasks.vortex_task_base import _VortexTask
 from vortex.layout.nodes import Driver
 from vortex import toolbox
 
-from snowtools.algo import obs  # noqa
-
+import snowtools.algo  # noqa
 
 
 def setup(t, **kw):
