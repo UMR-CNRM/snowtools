@@ -55,4 +55,4 @@ class ReconstructObservationsWorker(_CENTaylorVortexWorker):
         for fic in common_inputs:
             self.system.symlink(self.system.path.join(rundir, fic), fic)
 
-        replace_obs_tar('INPUT_OBSERVATIONS.tar')
+        replace_obs_tar('OBSERVATIONS.tar')
