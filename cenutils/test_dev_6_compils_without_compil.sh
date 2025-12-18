@@ -93,6 +93,12 @@ ln -s PREP-LXgfortran-SFX-V9-0-0-NOMPI-OMP-O2-X0 PREP
 ln -s PGD-LXgfortran-SFX-V9-0-0-NOMPI-OMP-O2-X0 PGD
 ln -s SODA-LXgfortran-SFX-V9-0-0-NOMPI-OMP-O2-X0 SODA
 
+#######################################
+# Faire le test EXT_CROCUS
+#######################################
+cd $EXESURFEX/../src/EXT_CROCUS
+make
+./prog
 
 
 

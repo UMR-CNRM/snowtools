@@ -15,6 +15,8 @@ from snowtools.DATA import TESTBASE_DIR
 
 _here = os.path.dirname(os.path.realpath(__file__))
 
+SKIP_TEST_SNAVA = False if os.getenv('SNOWTOOLS_TEST_SNAVA', False) else True
+
 class s2mTestBase(s2mTest):
     def setUp(self):
         super(s2mTestBase, self).setUp()
@@ -54,38 +56,38 @@ class s2mTestForcageBase(s2mTestBase):
     def test_multiphy2(self):
         print("test multiphy 2:")
         # NAM_ISBA_SNOW:   CSNOWMETAMO = 'T07', CSNOWFALL = 'NZE', CSNOWCOMP = 'S14', CSNOWCOND = 'C11', CSNOWHOLD = 'B02'
-        # NAM_ISBA: CSNOWRES = 'DEF',  XCVHEATF     = 0.4
+        # NAM_ISBA: CSNOWRES = 'DEF',  XCVHEATF = 0.4
         shutil.copy(self.path_namelist + "namelist_multiphy2.nam", self.namelist)
         self.full_run("s2m research -b 20101215 -e 20110115")
 
     def test_multiphy3(self):
         print("test multiphy 3:")
         # NAM_ISBA_SNOW:   CSNOWMETAMO = 'S-F', CSNOWFALL = 'P75', CSNOWCOMP = 'T11', CSNOWCOND = 'Y81', CSNOWHOLD = 'SPK'
-        # NAM_ISBA: CSNOWRES = 'RIL',  XCVHEATF     = 0.5
+        # NAM_ISBA: CSNOWRES = 'RIL',  XCVHEATF = 0.5
         shutil.copy(self.path_namelist + "namelist_multiphy3.nam", self.namelist)
         self.full_run("s2m research -b 20101215 -e 20110115")
 
     def test_snowdrift1(self):
         print("test snowdrift 1:")
-        # NAM_ISBA_SNOW: CSNOWDRIFT='GA01',  LSNOWDRIFT_SUBLIM= .FALSE.,   LSNOWSYTRON = .TRUE.
+        # NAM_ISBA_SNOW: CSNOWDRIFT = 'GA01',  LSNOWDRIFT_SUBLIM = .FALSE.,   LSNOWSYTRON = .TRUE.
         #                CSNOWMETAMO = 'S-C', CSNOWFALL = 'A76', CSNOWCOMP = 'S14', CSNOWCOND = 'I02', CSNOWHOLD = 'O04'
-        # NAM_ISBA: CSNOWRES = 'DEF',  XCVHEATF     = 0.5
+        # NAM_ISBA: CSNOWRES = 'DEF',  XCVHEATF = 0.5
         shutil.copy(self.path_namelist + "namelist_snowdrift1.nam", self.namelist)
         self.full_run("s2m research -b 20101215 -e 20110115")
 
     def test_snowdrift2(self):
         print("test snowdrift 2:")
-        # NAM_ISBA_SNOW: CSNOWDRIFT='DFLT',  LSNOWDRIFT_SUBLIM= .FALSE.,   LSNOWSYTRON = .TRUE.
+        # NAM_ISBA_SNOW: CSNOWDRIFT ='DFLT',  LSNOWDRIFT_SUBLIM = .FALSE.,   LSNOWSYTRON = .TRUE.
         #                CSNOWMETAMO = 'F06', CSNOWFALL = 'S02', CSNOWCOMP = 'B92', CSNOWCOND = 'C11', CSNOWHOLD = 'B02'
-        # NAM_ISBA: CSNOWRES = 'RIL',  XCVHEATF     = 0.4
+        # NAM_ISBA: CSNOWRES = 'RIL',  XCVHEATF = 0.4
         shutil.copy(self.path_namelist + "namelist_snowdrift2.nam", self.namelist)
         self.full_run("s2m research -b 20101215 -e 20110115")
 
     def test_snowdrift3(self):
         print("test snowdrift 3:")
-        # NAM_ISBA_SNOW: CSNOWDRIFT='NONE',  LSNOWDRIFT_SUBLIM= .FALSE.,   LSNOWSYTRON = .TRUE.
+        # NAM_ISBA_SNOW: CSNOWDRIFT = 'NONE',  LSNOWDRIFT_SUBLIM = .FALSE.,   LSNOWSYTRON = .TRUE.
         #                CSNOWMETAMO = 'S-C', CSNOWFALL = 'V12', CSNOWCOMP = 'S14', CSNOWCOND = 'C11', CSNOWHOLD = 'B92'
-        # NAM_ISBA: CSNOWRES = 'M98',  XCVHEATF     = 0.4
+        # NAM_ISBA: CSNOWRES = 'M98',  XCVHEATF = 0.4
         shutil.copy(self.path_namelist + "namelist_snowdrift3.nam", self.namelist)
         self.full_run("s2m research -b 20101215 -e 20110115")
 
@@ -94,6 +96,15 @@ class s2mTestForcageBase(s2mTestBase):
         # NAM_ISBA_SNOW:  LSNOWCOMPACT_BOOL = T, LSNOWTILLER = T, LSNOWMAK_BOOL = T, LSNOWMAK_PROP = T, LSELF_PROD = T
         # NAM_SURF_SNOW_CSTS  XPSR_SNOWMAK = 0.002, XRHO_SNOWMAK = 600, XPTA_SEUIL = 268.15, XPROD_SCHEME = 0,0,0,0,0, XSM_END = 4,30,4,30, XFREQ_GRO = 1
         shutil.copy(self.path_namelist + "namelist_resort1.nam", self.namelist)
+        self.full_run("s2m research -b 20101215 -e 20110115")
+
+    @unittest.skipIf(SKIP_TEST_SNAVA,
+                     'Work of Snow Avalanches Diagnostics not yet implemented in SURFEX cen branch.'
+                     'Please use SNOWTOOLS_TEST_SNAVA env variable to force test')
+    def test_snava1(self):
+        print("test snava 1:")
+        # NAM_ISBA_SNOW:  CSNAVA_DIAG = 'SNSAT', CSNOWDRIFT = 'NONE', CSNOWFPAPPUS = 'VI13', CSNOWMOB = 'VI12',  LSNOWPAPPUS = .TRUE.,
+        shutil.copy(self.path_namelist + "namelist_snava1.nam", self.namelist)
         self.full_run("s2m research -b 20101215 -e 20110115")
 
 
