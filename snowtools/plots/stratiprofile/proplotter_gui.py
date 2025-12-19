@@ -373,10 +373,11 @@ class ProPlotterController(abc.ABC):
             error_msg = 'Please choose a variable to plot'
             messagebox.showerror(title='Missing variable', message=error_msg)
             return None
-        if self.vartoplot_react_desc is None:
-            error_msg = 'Please choose a variable for profil plot'
-            messagebox.showerror(title='Missing variable', message=error_msg)
-            return None
+        # If we want a 2nd variable to be always filled
+        # if self.vartoplot_react_desc is None:
+        #     error_msg = 'Please choose a variable for profil plot'
+        #     messagebox.showerror(title='Missing variable', message=error_msg)
+        #     return None
 
         return 'OK'
 
@@ -424,6 +425,8 @@ class ProPlotterController(abc.ABC):
         # Animation (or not) of the servant graph depending on the position of
         # the mouse in master graph
         def motion(event):
+            if self.vartoplot_react_desc is None:
+                return
             if self.stop_right_click:
                 return
             if event.inaxes == self.master.main.ax['ax1']:

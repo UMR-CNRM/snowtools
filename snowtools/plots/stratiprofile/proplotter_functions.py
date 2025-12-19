@@ -79,12 +79,16 @@ def get_data(fileobj, point, var_master, var_react=None, direction_cut=None, hei
     else:
         data['dataplot_react'] = None
         data['limitplot_react'] = None
-    data['dztoplot'] = fileobj.get_data(fileobj.variable_dz, point, fillnan=0., additional_options=additional_options,
-                                        begin=begin, end=end)
+    data['var_master_has_snl'] = fileobj.variable_desc(var_master)['has_snl']
+    if fileobj.variable_dz is not None:
+        data['dztoplot'] = fileobj.get_data(fileobj.variable_dz, point, fillnan=0., additional_options=additional_options,
+                                            begin=begin, end=end)
+        data['ymax_react'] = np.max(np.nansum(data['dztoplot'], axis=1))
+    else:
+        data['dztoplot'] = None
+        data['ymax_react'] = 1
     data['timeplot'] = fileobj.get_time(begin=begin, end=end)
     data['colormap'] = fileobj.colorbar_variable(var_master)
-    data['ymax_react'] = np.max(np.nansum(data['dztoplot'], axis=1))
-    data['var_master_has_snl'] = fileobj.variable_desc(var_master)['has_snl']
 
     # useful for motion
     if fileobj.variable_grain in fileobj.variables_t:
