@@ -254,6 +254,12 @@ class SnowtoolsAccessor:
             self.ds = self.ds.rename(mapping)
         return self.ds
 
+    # TODO : prévoir une méthode pour retirer les attributs 'original_variable_name' et 'original_dimension_name'
+    # dans le cas où on veut écrire le dataset dans un fichier NetCDF pour éviter les erreurs du type :
+    # TypeError: Invalid value for attr 'original_variable_name': {'massif_num': 'massif_number'}.
+    # For serialization to netCDF files, its value must be of one of the following types:
+    # str, Number, ndarray, number, list, tuple
+
 
 @xr.register_dataset_accessor("meteo")
 @xr.register_dataarray_accessor("meteo")
@@ -347,13 +353,13 @@ class SemiDistributedAccessor(SnowtoolsAccessor):
         native xarray "where" method directly.
 
         :param massif_num: Massif number(s) of points to select
-        :param massif_num: list, range or int
+        :param massif_num: list, range, int or float
         :param ZS: Elevation(s) of points to select
-        :param ZS: list, range or int
+        :param ZS: list, range, int or float
         :param slope: Slope(s) of points to select
-        :param slope: list, range or int
+        :param slope: list, range, int or float
         :param aspect: Aspects(s) of points to select
-        :param aspect: list, range or int
+        :param aspect: list, range, int or float
 
         """
 
@@ -367,10 +373,10 @@ class SemiDistributedAccessor(SnowtoolsAccessor):
                     raise ValueError(f'Variable "{var}" does not exist')
                 else:
                     if isinstance(eval(var), list):
-                        tmp = self.ds[var].isin(eval(var))
+                        tmp = self.ds[var].isin([float(x) for x in eval(var)])
                     elif isinstance(eval(var), range):
-                        tmp = self.ds[var].isin([x for x in eval(var)])
-                    elif isinstance(eval(var), int):
+                        tmp = self.ds[var].isin([float(x) for x in eval(var)])
+                    elif isinstance(eval(var), int) or isinstance(eval(var), float):
                         tmp = self.ds[var] == eval(var)
                     else:
                         raise TypeError(f"{var} should be a list, range or int")
@@ -389,6 +395,9 @@ class SemiDistributedAccessor(SnowtoolsAccessor):
                 out = self.ds.where(indexer, drop=True)
             else:
                 print("WARNING : No entry found with the given arguments, returning an empty Dataset")
+                print('Arguments :')
+                for var in ['massif_num', 'ZS', 'slope', 'aspect']:
+                    print(var, eval(var))
                 return xr.Dataset()
         else:
             print("WARNING : arguments where empty or could not be interpreted, nothing changed.")

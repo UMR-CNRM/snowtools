@@ -1,7 +1,7 @@
 
 import xarray as xr
 
-from snowtools.utils import xarray_snowtools
+from snowtools.utils import xarray_snowtools  # noqa
 from snowtools.utils.FileException import MassifGeometryException
 
 
@@ -24,8 +24,8 @@ def extract(forcing_in='FORCING_IN.nc', forcing_out='FORCING_OUT.nc', **kw):
     :type forcing_out: str
 
     Optional keyword arguments expected in kw :
-    :param massif_number: List of massif numbers to extract
-    :type massif_number: list or None
+    :param massif_num: List of massif numbers to extract
+    :type massif_num: list or None
     :param ZS: List of elevations to extract
     :type ZS: list or None
     :param slopes: List of slopes to extract
@@ -35,21 +35,27 @@ def extract(forcing_in='FORCING_IN.nc', forcing_out='FORCING_OUT.nc', **kw):
     """
 
     # Chunk input forcing over `Number_of_points` for optimal performance.
-    ds = xr.open_dataset(forcing_in, decode_times=False, chunks={'Number_of_points': 1})
-    ds = xarray_snowtools.preprocess(ds)
+    ds = xr.open_dataset(forcing_in, chunks={'Number_of_points': 1}, engine='snowtools')
+    # ds = xarray_snowtools.preprocess(ds)
 
     check_geometry(ds, forcing_in)
 
-    # Select points
-    for key, value in kw.items():
-        ds = ds.where(ds[key].isin(value), drop=True)
+#    # Select points
+#    for key, value in kw.items():
+#        if value is not None:
+#            ds = ds.where(ds[key].isin(value), drop=True)
+#
+#    # Delete added 'missing_value' attribute to avoid conflicts with existing '_FillValue' attribute
+#    # See https://github.com/pydata/xarray/issues/7722
+#    if 'missing_value' in ds.massif_num.encoding.keys():
+#        ds.massif_num.encoding.pop('missing_value')
 
-    # Delete added 'missing_value' attribute to avoid conflicts with existing '_FillValue' attribute
-    # See https://github.com/pydata/xarray/issues/7722
-    if 'missing_value' in ds.massif_number.encoding.keys():
-        ds.massif_number.encoding.pop('missing_value')
+    out = ds.semidistributed.sel_points(**kw)
 
-    ds.to_netcdf(forcing_out)
+    # Set back original dimension/variable names
+    out = out.snowtools.backtrack_preprocess()
+
+    out.to_netcdf(forcing_out)
 
 
 def check_geometry(dataset, filename):
@@ -61,5 +67,5 @@ def check_geometry(dataset, filename):
     :param filename: Name of the input file
     :type filename: str
     """
-    if not set(['massif_number', 'ZS', 'aspect', 'slope']).issubset(list(dataset.keys())):
+    if not set(['massif_num', 'ZS', 'aspect', 'slope']).issubset(list(dataset.keys())):
         raise MassifGeometryException(filename)
