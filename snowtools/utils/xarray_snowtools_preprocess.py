@@ -46,8 +46,7 @@ def preprocess(ds, mapping=dict(), decode_time=True, transpose=False, sort_dims=
     """
 
     # Update variable and dimension names to ensure that standard names can be used from now on
-    ds = update_varname(ds, mapping)
-    ds = update_dimname(ds, mapping)
+    ds = update_names(ds, mapping)
 
     # Ensure that 'missing_value' and "_FillValue" attributes do not differ to avoid crashing when trying to write data
     ds = check_encoding(ds)
@@ -66,9 +65,9 @@ def preprocess(ds, mapping=dict(), decode_time=True, transpose=False, sort_dims=
     return ds
 
 
-def update_varname(ds, mapping):
+def update_names(ds, mapping):
     """
-    Map variable names if necessary / possible
+    Map variable and dimension names to snowtools-standard ones.
 
     :param ds: xarray object to preprocess
     :type ds: xarray Dataset or Dataarray
@@ -78,57 +77,26 @@ def update_varname(ds, mapping):
     """
     # Do not directly modify *variables_map* in case several calls to "preprocess" are made from
     # the same session
+    default_map = variables_map.copy()
+    default_map.update(dimension_map)
+
     if isinstance(ds, xarray.core.dataarray.DataArray):
-        # Set orginal Array name as attribute for backtracking
-        ds.assign_attrs(original_name=ds.name)
-        if ds.name in variables_map:
-            ds = ds.rename(variables_map[ds.name])
-        if ds.name in mapping:
-            # Update name with user-defined dictionnary
-            ds = ds.rename(mapping[ds.name])
+        list_entries = list(ds.dims)
     else:
-        update_dict = {key: variables_map[key] for key in list(ds.keys()) if key in variables_map.keys()}
-        ds = ds.rename(update_dict)
+        list_entries = list(ds.keys()) + list(ds.dims)
 
-        # Update variable names with user-defined dictionnary
-        user_mapping = {key: mapping[key] for key in list(ds.keys()) if key in mapping.keys()}
-        ds = ds.rename(user_mapping)
+    update_dict = {key: default_map[key] for key in list_entries if key in default_map.keys()}
+    # The optionnal user-defined mapping dictionnary overwrites the default renaming
+    user_mapping = {key: mapping[key] for key in list_entries if key in mapping.keys()}
 
-        # Set orginal dimension names as attribute for backtracking
-        update_dict.update(user_mapping)
-        if len(update_dict) > 0:
-            reverse_map = {v: k for k, v in update_dict.items()}
-            ds = ds.assign_attrs(original_variable_name=reverse_map)
+    update_dict.update(user_mapping)
 
-    return ds
-
-
-def update_dimname(ds, mapping):
-    """
-    Map dimension names if necessary / possible
-
-    # TODO : gérer les cas où le nom cible existe déjà
-
-    :param ds: xarray object to preprocess
-    :type ds: xarray Dataset or Dataarray
-    :param mapping: User-defined dictionnary to map variable or dimension names (it will be used as a complement to
-                    the default mapping dictionnaries).
-    :type mapping: dict
-    """
-    # Do not directly modify *dimensions_map* in case several calls to "preprocess" are made from
-    # the same session
-    update_dict = {key: dimension_map[key] for key in list(ds.dims) if key in dimension_map.keys()}
     ds = ds.rename(update_dict)
 
-    # Update variable names with user-defined dictionnary
-    user_mapping = {key: mapping[key] for key in list(ds.dims) if key in mapping.keys()}
-    ds = ds.rename(user_mapping)
-
-    # Set orginal dimension names as attribute for backtracking
-    update_dict.update(user_mapping)
+    # Set orginal names as attribute for backtracking
     if len(update_dict) > 0:
-        reverse_map = {v: k for k, v in update_dict.items()}
-        ds = ds.assign_attrs(original_dimension_name=reverse_map)
+        backtrack = ', '.join([f'{value}: {key}' for key, value in update_dict.items()])
+        ds = ds.assign_attrs(original_name=backtrack)
 
     return ds
 
