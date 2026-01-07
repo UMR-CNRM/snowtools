@@ -63,31 +63,29 @@ class Reconstruct_SAFRAN_Obs(_VortexTask):
         print()
 
         # Get yearly observation packed files
-        rundate = self.conf.datebegin
-        list_dates = self.get_list_seasons(self.conf.datebegin, self.conf.dateend)
-        for rundate in list_dates:
-            datebegin = rundate
-            dateend = rundate.replace(year = rundate.year + 1)
-
-            # TODO : Gérer le fait de ne pas prendre le fichier 2 de 6h le 01/08
-            self.sh.title(f'Raw Observations {datebegin.ymdh}-{dateend.ymdh}')
-            obs = toolbox.input(
-                role           = 'Observations',
-                part           = 'all',
-                geometry       = self.conf.geometry,
-                kind           = 'packedobs',
-                local          = f'{datebegin.ymd6h}_{dateend.ymd6h}/OBSERVATIONS.tar',
-                namespace      = 's2m.archive.fr',
-                date           = dateend.ymdh,
-                datebegin      = datebegin.ymdh,
-                dateend        = dateend.ymdh,
-                model          = 'safran',
-                source         = 'surfaceobs',
-                nativefmt      = 'tar',
-                now            = True,
-            )
-            print(t.prompt, f'Obs {datebegin.ymd6h}-{dateend.ymd6h} = ', obs)
-            print()
+#        rundate = self.conf.datebegin
+#        list_dates = self.get_list_seasons(self.conf.datebegin, self.conf.dateend)
+#        for rundate in list_dates:
+#            datebegin = rundate
+#            dateend = rundate.replace(year = rundate.year + 1)
+        self.sh.title('Raw Observations')
+        self.obs = toolbox.input(
+            role           = 'Observations',
+            part           = 'all',
+            geometry       = self.conf.geometry,
+            kind           = 'packedobs',
+            local          = '[datebegin:ymdh]_[dateend:ymdh]/OBSERVATIONS.tar',
+            namespace      = 's2m.archive.fr',
+            date           = self.conf.dateend.ymdh,
+            datebegin      = self.list_dates_begin,
+            dateend        = self.dict_dates_end,
+            model          = 'safran',
+            source         = 'surfaceobs',
+            nativefmt      = 'tar',
+            now            = True,
+        )
+        print(t.prompt, 'Raw Obs = ', self.obs)
+        print()
 
     def get_local_inputs(self):
 
@@ -100,6 +98,7 @@ class Reconstruct_SAFRAN_Obs(_VortexTask):
             kind         = 'reconstruct_observations',
             role_members = 'Observations',
             engine       = 'algo',
+            ntasks       = len(self.obs),
         )
         print(self.ticket.prompt, 'algo =', algo)
         print()
