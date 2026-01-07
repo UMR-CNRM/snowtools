@@ -239,7 +239,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             self.list_dates_begin = [self.conf.date]
             self.dict_dates_end   = {self.conf.date: self.conf.date}
 
-    def get_forcing(self, localname):
+    def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', alternate=True):
         """
         Method to get meteorological forcing file(s) covering the simulation period.
         First, check if an existing forcing file covers the full simulation period.
@@ -248,42 +248,45 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         Arguments:
         :param localname: *local* footprint (how to name the file in the working directory).
                           This is an algo/task-specific argument.
+                          Default name depends on the actual datebegin/dateend of each file.
+                          WARNING : in case a unique value is provided the user should ensure that a single
+                          file will be retrieved (for example set the alternate argument to False)
         :type localname: str
+        :param alternate: Allow to search for alternative files covering sub-periods.
+        :type alternate: bool
 
         Mandatory configuration variables:
 
         :param forcing_datebegin: *datebegin* footprint, default self.conf.datebegin
-        :type forcing_datebegin: str
+        :type forcing_datebegin: str; footprints.stdtypes.FPList
         :param forcing_dateend: *dateend* footprint, default self.conf.dateend
-        :type forcing_dateend: str
+        :type forcing_dateend: str, footprints.stdtypes.FPList
         :param forcing_xpid: *experiment footprint (format "experiment_name@user"), default self.conf.xpid
         :type forcing_xpid: str
         :param forcing_geometry: *geometry* footprint, default self.conf.geometry
-        :type forcing_geometry: str
+        :type forcing_geometry: str, footprints.stdtypes.FPList
         :param forcing_vapp: *vapp* footprint, default self.conf.vapp
         :type forcing_vapp: str
         :param forcing_vconf: *vconf* footprint, default self.conf.vconf
         :type forcing_vconf: str
+        :param forcing_block: *block* footprint, default "meteo"
+        :type forcing_vconf: str
+        :param forcing_namespace: *namespace* footprint, default "vortex.multi.fr"
+        :type forcing_namespace: str
 
         Optionnal configuration variables:
 
-        :param forcing_block: *block* footprint, default "meteo"
-        :type forcing_vconf: str
         :param forcing_member: *member* footprint, default None
         :type forcing_vconf: int, footprints.stdtypes.FPList
-        :param forcing_namespace: *namespace* footprint, default "vortex.multi.fr"
-        :type forcing_namespace: str
         :param forcing_namebuild: *namebuild* footprint, default "flat@cen" (will change soon)
         :type forcing_namebuild: str
         :param forcing_intent: *intent* footprint (local file permissions), default "in"
                                Possible values : "in" (read-only), "inout" (read-write)
         :type forcing_intent: str
-        :param forcing_namebuild: *namebuild* footprint, default "flat@cen" (will change soon)
-        :type forcing_namebuild: str
         :param forcing_source_app: *source_app* footprint, default None
-        :type forcing_source_app: str
+        :type forcing_source_app: str, footprints.stdtypes.FPList
         :param forcing_source_conf: *source_conf* footprint, default None
-        :type forcing_source_conf: str
+        :type forcing_source_conf: str, footprints.stdtypes.FPList
         :param forcing_source: Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
                                Possible values : 'era5', 'era40'
         :type forcing_source: str
@@ -291,6 +294,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         :type forcing_model: str
         :param forcing_cutoff: *cutoff* footprint (to be made optional for SurfaceIO objects), default None
         :type forcing_cutoff: str
+        :param forcing_date: *date* footprint (unsed with the research namebuilders), default to [dateend]
+        :type forcing_date: str
         :param io_duration: Argument similar to the one of the `get_list_dates_files` method (snowtools/utils/dates.py).
                             Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
                             Possible values : "yearly", "monthly" or "full"
@@ -351,43 +356,45 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         print(t.prompt, 'FORCING =', forcing)
         print()
 
-        # Sécurité si *forcing_datebegin* != *datebegin* ou *forcing_dateend* != *dateend*
-        if 'io_duration' in self.conf:
-            duration = self.conf.io_duration
-        else:
-            duration = 'yearly'
-        list_dates_begin, list_dates_end, _, _ = get_list_dates_files(Date(forcing_datebegin),
-                Date(forcing_dateend), duration)
-        dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)
+        if alternate:
 
-        # Verrue pour gérer les footprints *source_app* et *source_conf* de la réanalyse S2M
-        if 'forcing_source' in self.conf:
-            forcing_source_app, forcing_source_conf = \
-                self.get_safran_sources(list_dates_begin, era5=self.conf.forcing_source == 'era5')
+            # Sécurité si *forcing_datebegin* != *datebegin* ou *forcing_dateend* != *dateend*
+            if 'io_duration' in self.conf:
+                duration = self.conf.io_duration
+            else:
+                duration = 'yearly'
+            list_dates_begin, list_dates_end, _, _ = get_list_dates_files(Date(forcing_datebegin),
+                    Date(forcing_dateend), duration)
+            dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)
 
-        self.sh.title('Toolbox input forcing (sub-periods)')
-        forcing = toolbox.input(
-            alternate      = 'Forcing',
-            kind           = 'MeteorologicalForcing',
-            nativefmt      = 'netcdf',
-            datebegin      = list_dates_begin,
-            dateend        = dict_dates_end,
-            experiment     = forcing_xpid,  # default : self.conf.xpid
-            geometry       = forcing_geometry,  # default : self.conf.geometry
-            local          = localname,
-            vapp           = forcing_vapp,  # default : self.conf.vapp
-            vconf          = forcing_vconf,  # default : self.conf.vconf
-            block          = forcing_block,  # default : 'meteo' ?
-            member         = forcing_member,  # default : None
-            intent         = forcing_intent,  # default : 'in' ?
-            namespace      = forcing_namespace,  # default : 'vortex.multi.fr',
-            namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
-            date           = '[dateend]',  # TODO : à supprimer dans le cas recherche
-            source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
-            source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
-            cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
-            model          = forcing_model,  # TODO : à supprimer
-            fatal          = True,  # This is the last try, crash in case of failure
-        ),
-        print(t.prompt, 'FORCING (alternate) =', forcing)
-        print()
+            # Verrue pour gérer les footprints *source_app* et *source_conf* de la réanalyse S2M
+            if 'forcing_source' in self.conf:
+                forcing_source_app, forcing_source_conf = \
+                    self.get_safran_sources(list_dates_begin, era5=self.conf.forcing_source == 'era5')
+
+            self.sh.title('Toolbox input forcing (sub-periods)')
+            forcing = toolbox.input(
+                alternate      = 'Forcing',
+                kind           = 'MeteorologicalForcing',
+                nativefmt      = 'netcdf',
+                datebegin      = list_dates_begin,
+                dateend        = dict_dates_end,
+                experiment     = forcing_xpid,  # default : self.conf.xpid
+                geometry       = forcing_geometry,  # default : self.conf.geometry
+                local          = localname,
+                vapp           = forcing_vapp,  # default : self.conf.vapp
+                vconf          = forcing_vconf,  # default : self.conf.vconf
+                block          = forcing_block,  # default : 'meteo' ?
+                member         = forcing_member,  # default : None
+                intent         = forcing_intent,  # default : 'in' ?
+                namespace      = forcing_namespace,  # default : 'vortex.multi.fr',
+                namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
+                date           = '[dateend]',  # TODO : à supprimer dans le cas recherche
+                source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
+                source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
+                cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
+                model          = forcing_model,  # TODO : à supprimer
+                fatal          = True,  # This is the last try, crash in case of failure
+            ),
+            print(t.prompt, 'FORCING (alternate) =', forcing)
+            print()
