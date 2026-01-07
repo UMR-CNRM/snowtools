@@ -46,7 +46,7 @@ class ExtractS2MForcing(_CenResearchTask):
         """
 
         # TODO : ajouter unesécurité pour ne pas risque d'écraser le fichier d'origine
-        self.sh.title('Toolbox input FORCING')
+        self.sh.title('Toolbox output FORCING')
         forcing_out = toolbox.output(
             role           = 'Forcing',
             kind           = 'MeteorologicalForcing',

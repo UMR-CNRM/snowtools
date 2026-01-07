@@ -9,9 +9,9 @@ from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 from bronx.stdtypes.date import Date
 from footprints.stdtypes import FPDict
-from vortex.syntax.stdattrs import Namespace
+# from vortex.syntax.stdattrs import Namespace
 
-from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
+from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext, TestReportContext
 
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 
@@ -61,19 +61,23 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
         toolbox.defaults(
             # namespace      = self.conf.get('namespace', Namespace('vortex.multi.fr')),
-            namespace      = Namespace('vortex.multi.fr'),
+            # namespace      = Namespace('vortex.multi.fr'),
             # date           = '[dateend]',  # WARNING : research only
             # TODO : the 'date' footprint is to be removed for research applications
-            experiment     = self.conf.xpid,
-            geometry       = self.conf.geometry,
-            vapp           = self.conf.vapp,
-            vconf          = '[geometry:tag]',  # TODO : à modifier après changement de convention
+            # experiment     = self.conf.xpid,
+            # geometry       = self.conf.geometry,
+            # vapp           = self.conf.vapp,
+            # vconf          = '[geometry:tag]',  # TODO : à modifier après changement de convention
             # model          = self.conf.model,
             # namebuild      = 'flat@cen',  # WARNING : research only !
-            nativefmt      = 'netcdf',
+            # nativefmt      = 'netcdf',
         )
 
-        if 'date' not in self.conf:
+        # Temporary security to avoid the *date* footprint to be mandatory for SurfaceIO resources.
+        # This will be useless once the date footprint will be properly set as optional for research applications
+        if 'date' in self.conf:
+            toolbox.defaults['date'] = self.conf.date
+        else:
             if 'rundate' in self.conf:
                 toolbox.defaults['date'] = self.conf.rundate
             elif 'dateend' in self.conf:
@@ -149,6 +153,10 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             with OutputReportContext(self, t):
                 self.put_remote_outputs()
 
+            if 'unittest' in self.conf:
+                with TestReportContext(self, t):
+                    self.unittest()
+
         # Debug mode : make the job crash at the end topreserve the working directory
         if 'late-backup' in self.steps and self.debug:
             print('=====================================================================================')
@@ -188,6 +196,13 @@ class _CenResearchTask(Task, S2MTaskMixIn):
     def put_remote_outputs(self):
         """
         Implement this method in your task to save resources remotely (on Hendrix, sxcen,...) from a transfer node.
+        """
+        # raise NotImplementedError()
+        pass
+
+    def unittest(self):
+        """
+        Implement this method in unittest tasks to monitor the test results.
         """
         # raise NotImplementedError()
         pass
@@ -268,69 +283,54 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
         t = self.ticket
 
-        if 'forcing_datebegin' not in self.conf:
-            self.conf.forcing_datebegin = self.conf.datebegin
-        if 'forcing_dateend' not in self.conf:
-            self.conf.forcing_dateend = self.conf.dateend
-        if 'forcing_xpid' not in self.conf:
-            self.conf.forcing_xpid = self.conf.xpid
-        if 'forcing_geometry' not in self.conf:
-            self.conf.forcing_geometry = self.conf.geometry
-        if 'forcing_vapp' not in self.conf:
-            self.conf.forcing_vapp = self.conf.vapp
-        if 'forcing_vconf' not in self.conf:
-            self.conf.forcing_vconf = self.conf.vconf
-        if 'forcing_block' not in self.conf:
-            self.conf.forcing_block = 'meteo'
-        if 'forcing_member' not in self.conf:
-            self.conf.forcing_member = None
-        if 'forcing_namespace' not in self.conf:
-            self.conf.forcing_namespace = 'vortex.multi.fr'
+        forcing_datebegin = self.conf.get('forcing_datebegin', self.conf.datebegin)
+        forcing_dateend   = self.conf.get('forcing_dateend', self.conf.dateend)
+        forcing_xpid      = self.conf.get('forcing_xpid', self.conf.xpid)
+        forcing_geometry  = self.conf.get('forcing_geometry', self.conf.geometry)
+        forcing_vapp      = self.conf.get('forcing_vapp', self.conf.vapp)
+        forcing_vconf     = self.conf.get('forcing_vconf', self.conf.vconf)
+        forcing_block     = self.conf.get('forcing_block', 'meteo')
+        forcing_member    = self.conf.get('forcing_member', None)
+        forcing_namespace = self.conf.get('forcing_namespace', 'vortex.multi.fr')
         # TODO : modifier le namebuilder par defaut lorsque le nouveau incluant la
         # géométrie sera disponible
-        if 'forcing_namebuild' not in self.conf:
-            self.conf.forcing_namebuild = 'flat@cen'
-        if 'forcing_intent' not in self.conf:
-            self.conf.forcing_intent = 'in'
+        forcing_namebuild = self.conf.get('forcing_namebuild', 'flat@cen')
+        forcing_intent    = self.conf.get('forcing_intent', 'in')
         # TODO : ne pas utiliser de source_app / source_conf à l'avenir
-        if 'forcing_source_app' not in self.conf:
-            self.conf.forcing_source_app = None
-        if 'forcing_source_conf' not in self.conf:
-            self.conf.forcing_source_conf = None
+        forcing_source_app  = self.conf.get('forcing_source_app', None)
+        forcing_source_conf = self.conf.get('forcing_source_conf', None)
         # Verrue pour gérer les footprints *source_app* et *source_conf* de la réanalyse S2M
         if 'forcing_source' in self.conf:
             self.conf.forcing_source_app, self.conf.forcing_source_conf = \
                 self.get_safran_sources([self.conf.forcing_datebegin], era5=self.conf.forcing_source == 'era5')
         # TODO : à supprimer après suppression de ce footprint dans les objets "SurfaceIO"
-        if 'forcing_model' not in self.conf:
-            self.conf.forcing_model = 'safran'
+        forcing_model = self.conf.get('forcing_model', 'safran')
         # TODO : à supprimer après suppression de ce footprint dans les objets "SurfaceIO"
-        if 'forcing_cutoff' not in self.conf:
-            self.conf.forcing_cutoff = None
+        forcing_cutoff = self.conf.get('forcing_cutoff', None)
 
         self.sh.title('Toolbox input forcing (full simulation period)')
         forcing = toolbox.input(
             role           = 'Forcing',  # Used for parallelisation and alternates only
             kind           = 'MeteorologicalForcing',
             nativefmt      = 'netcdf',
-            datebegin      = self.conf.forcing_datebegin,  # default : self.conf.datebegin
-            dateend        = self.conf.forcing_dateend,  # default : self.conf.dateend
-            experiment     = self.conf.forcing_xpid,  # default : self.conf.xpid
-            geometry       = self.conf.forcing_geometry,  # default : self.conf.geometry
+            datebegin      = forcing_datebegin,  # default : self.conf.datebegin
+            dateend        = forcing_dateend,  # default : self.conf.dateend
+            experiment     = forcing_xpid,  # default : self.conf.xpid
+            geometry       = forcing_geometry,  # default : self.conf.geometry
             local          = localname,
-            vapp           = self.conf.forcing_vapp,  # default : self.conf.vapp
-            vconf          = self.conf.forcing_vconf,  # default : self.conf.vconf
-            block          = self.conf.forcing_block,  # default : 'meteo' ?
-            member         = self.conf.forcing_member,  # default : None
-            intent         = self.conf.forcing_intent,  # default : 'in' ?
-            namespace      = self.conf.forcing_namespace,  # default : 'vortex.multi.fr',
-            namebuild      = self.conf.forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
-            date           = '[dateend]',  # TODO : à supprimer dans le cas recherche
-            source_app     = self.conf.forcing_source_app,  # default = None (ne pas refaire l'erreur)
-            source_conf    = self.conf.forcing_source_conf,  # default = None (ne pas refaire l'erreur)
-            cutoff         = self.conf.forcing_cutoff,  # TODO : à supprimer dans le cas recherche
-            model          = self.conf.forcing_model,  # TODO : à supprimer
-            fatal          = False,
+            vapp           = forcing_vapp,  # default : self.conf.vapp
+            vconf          = forcing_vconf,  # default : self.conf.vconf
+            block          = forcing_block,  # default : 'meteo' ?
+            member         = forcing_member,  # default : None
+            intent         = forcing_intent,  # default : 'in' ?
+            namespace      = forcing_namespace,  # default : 'vortex.multi.fr',
+            namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
+            date           = '[dateend]',  # TODO : à supprimer (cas recherche uniquement)
+            source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
+            source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
+            cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
+            model          = forcing_model,  # TODO : à supprimer
+            fatal          = False,  # Do not crash now, there is an alternative
         ),
         print(t.prompt, 'FORCING =', forcing)
         print()
@@ -340,13 +340,13 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             duration = self.conf.io_duration
         else:
             duration = 'yearly'
-        list_dates_begin, list_dates_end, _, _ = get_list_dates_files(Date(self.conf.forcing_datebegin),
-                Date(self.conf.forcing_dateend), duration)
+        list_dates_begin, list_dates_end, _, _ = get_list_dates_files(Date(forcing_datebegin),
+                Date(forcing_dateend), duration)
         dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)
 
         # Verrue pour gérer les footprints *source_app* et *source_conf* de la réanalyse S2M
         if 'forcing_source' in self.conf:
-            self.conf.forcing_source_app, self.conf.forcing_source_conf = \
+            forcing_source_app, forcing_source_conf = \
                 self.get_safran_sources(list_dates_begin, era5=self.conf.forcing_source == 'era5')
 
         self.sh.title('Toolbox input forcing (sub-periods)')
@@ -356,22 +356,22 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             nativefmt      = 'netcdf',
             datebegin      = list_dates_begin,
             dateend        = dict_dates_end,
-            experiment     = self.conf.forcing_xpid,  # default : self.conf.xpid
-            geometry       = self.conf.forcing_geometry,  # default : self.conf.geometry
+            experiment     = forcing_xpid,  # default : self.conf.xpid
+            geometry       = forcing_geometry,  # default : self.conf.geometry
             local          = localname,
-            vapp           = self.conf.forcing_vapp,  # default : self.conf.vapp
-            vconf          = self.conf.forcing_vconf,  # default : self.conf.vconf
-            block          = self.conf.forcing_block,  # default : 'meteo' ?
-            member         = self.conf.forcing_member,  # default : None
-            intent         = self.conf.forcing_intent,  # default : 'in' ?
-            namespace      = self.conf.forcing_namespace,  # default : 'vortex.multi.fr',
-            namebuild      = self.conf.forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
+            vapp           = forcing_vapp,  # default : self.conf.vapp
+            vconf          = forcing_vconf,  # default : self.conf.vconf
+            block          = forcing_block,  # default : 'meteo' ?
+            member         = forcing_member,  # default : None
+            intent         = forcing_intent,  # default : 'in' ?
+            namespace      = forcing_namespace,  # default : 'vortex.multi.fr',
+            namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
             date           = '[dateend]',  # TODO : à supprimer dans le cas recherche
-            source_app     = self.conf.forcing_source_app,  # default = None (ne pas refaire l'erreur)
-            source_conf    = self.conf.forcing_source_conf,  # default = None (ne pas refaire l'erreur)
-            cutoff         = self.conf.forcing_cutoff,  # TODO : à supprimer dans le cas recherche
-            model          = self.conf.forcing_model,  # TODO : à supprimer
-            fatal          = True,
+            source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
+            source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
+            cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
+            model          = forcing_model,  # TODO : à supprimer
+            fatal          = True,  # This is the last try, crash in case of failure
         ),
         print(t.prompt, 'FORCING (alternate) =', forcing)
         print()

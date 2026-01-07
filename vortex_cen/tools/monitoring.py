@@ -56,3 +56,14 @@ class OutputReportContext(_ReportContext):
             t.sh.header('Output informations: everything is ok')
         else:
             t.sh.header('Output informations: one of the output failed')
+
+
+class TestReportContext(_ReportContext):
+    """Context manager that prints a report on tests results."""
+
+    def _report(self, t, try_ok=True, **kw):
+        """Report status of the session (test review)."""
+        if try_ok:
+            t.sh.header('Test informations: everything is ok')
+        else:
+            t.sh.header('Test informations: the test failed')
