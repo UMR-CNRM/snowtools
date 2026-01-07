@@ -181,7 +181,7 @@ In this module, the name of ISBA_Diagnostic is DMI. The way to access to an attr
 
 If your diagnostic dimension is (number of points, number of layers), you can follow ACC_RAT for the declaration of your new diagnostic
 
-**diag_isba_initn.F90**:
+**diag_misc_isba_initn.F90**:
 
 In this module, this is the initialisation of ISBA_Diagnostic, named DMA.
 
@@ -226,3 +226,63 @@ This is the script for writing in PRO file. (you can follow ACC_RAT)
 Now, you have to compile SURFEX and to test it (do not forget to add your diagnostic in the CSELECT of the namelist).
 
 Finally, please also add some infos in this documentation (:ref:`Available diagnostics<avail_diagnostics>`).
+
+Add an option and/or a flag for option activation in SURFEX-Crocus
+------------------------------------------------------------------
+
+You can calculate your new diagnostic only if a key is activated in the namelist, usually in NAM_ISBA_SNOW for us.
+It is also possible that your new diagnostic depends on a physical parametrization, so you want to add an option.  
+Your option has to start with C (for Character). Your flag has to start with L (for Logical).
+In the code, flags and options belong to IO object.
+So, you'll implement LNEWFLAG, CNEWOPTION, IO%LNEWFLAG or IO%CNEWOPTION depending on where you are in the code.
+
+Files to modify (a minima) :
+
+- modn_isban.F90
+- modd_isba_optionsn.F90
+- read_namelist_isban.F90
+- init_isban.F90
+- init_teb_veg_optionsn.F90
+- snow3L_isba.F90
+- default_crocus.F90
+- snowcro.F90
+
+**modn_isban.F90**:
+
+This module contains the declaration of namelist, it details in which part of namelist your flag and/or option is (probably NAM_ISBA_SNOW).
+In that case, you have also to implement INIT_NAM_ISBA_SNOW and UPDATE_NAM_ISBA_SNOW
+
+**modd_isba_optionsn.F90**:
+
+This module is the declaration of the IO object -> you have to add your flag and option (probably in the snow model option).
+You have also to declare the default value.
+
+**read_namelist_isban.F90**:
+
+You have to add your flag/option in DEFAULT_CROCUS part
+
+**init_isban.F90**
+
+You have to add your flag/option in the CALL of DEFAULT_CROCUS
+
+**init_teb_veg_optionsn.F90**
+
+TEB is a TOWN scheme. But there are some garden and greenroof in town so it needs two times a call to vegetation.
+You have to add your flag/option in the two CALL of DEFAULT_CROCUS
+
+**snow3L_isba.F90**
+
+Your flag/option is used in snowcro in order to calculate something.
+So, your flag/option has to appear in the call of SNOWCRO in snow3L_isba.F90
+
+**default_crocus.F90**
+
+This is the defautt value for your flag (True or False) and/or for your option (which scheme you want by default).
+
+NB: in there, the flag/option is local. So the flag starts with O and the option starts with H: ONEWFLAG and HNEWOPTION
+
+**snowcro.F90**
+
+This is where the science is made. It's up to you to know what you want to modify.
+
+NB: as in default_crocus, ONEWFLAG and HNEWOPTION
