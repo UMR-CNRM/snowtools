@@ -4,7 +4,6 @@
 
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex import toolbox
-import vortex_cen  # noqa
 
 
 class ExtractS2MForcing(_CenResearchTask):
