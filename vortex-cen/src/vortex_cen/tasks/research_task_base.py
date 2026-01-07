@@ -115,8 +115,9 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
         Associated (optional) configuration variables :
 
-        :param io_duration: Argument similar to the one of the `get_list_dates_files` method (snowtools/utils/dates.py).
-                            Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
+        :param io_duration: Argument similar to the one of the `get_list_dates_files` method in
+                            snowtools/utils/dates.py. It is used to retrieve the list of *datebegin* and
+                            *dateend* footprints for IO covering sub-periods.
                             Possible values : "yearly", "monthly" or "full"
         :type io_duration: str
         """
@@ -134,31 +135,46 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
         self.preprocess()
 
-        if 'early-fetch' in self.steps:  # Executed on a TRANSFERT NODE to fetch inputs from a remote cache
+        if 'early-fetch' in self.steps or 'fetch' in self.steps:
+            # In a multi step job (MTOOL, ...), this step will be run on a TRANSFER NODE.
+            # Consequently, data that may be missing from the local cache must be fetched here.
+            # e.g. GCO's genv, data from the mass archive system, ...
+            # Note: most of the data should be retrieved here since the use of transfer node is costless.
             with InputReportContext(self, t):
                 self.get_remote_inputs()
 
-        if 'fetch' in self.steps:  # Executed on a COMPUTE NODE to fetch resources already in the local cache
-            with InputReportContext(self, t):
-                self.get_local_inputs()
+        if 'fetch' in self.steps:
+            # In a multi step job (MTOOL, ...), this step will be run, on a COMPUTE NODE,
+            # just before the beginning of computations. It is the appropriate place to fetch data produced
+            # by a previous task (the so-called previous task will have to use the 'backup' step
+            # in order to make such data available in the local cache).
+            self.get_local_inputs()
 
-        if 'compute' in self.steps:  # Algo component (1 per task) executed on the compute node
+        if 'compute' in self.steps:
+            # The actual computations... (usually a call to the run method of an AlgoComponent)
+            # This is executed on a COMPUTE NODE.
             self.algo()
 
-        if 'backup' in self.steps:  # Execute on the COMPUTE NODE to save outputs on the local cache
-            with OutputReportContext(self, t):
-                self.put_local_outputs()
-
-        if 'late-backup' in self.steps:  # Executed on a TRANSFERT NODE to save outputs to a remote destination
-            with OutputReportContext(self, t):
-                self.put_remote_outputs()
+        if 'backup' in self.steps or 'late-backup' in self.steps:
+            # In a multi step job (MTOOL, ...), this step will be run, on a COMPUTE NODE,
+            # just after the computations. It is the appropriate place to put data in the local cache
+            # in order to make it available to a subsequent step.
+            self.put_local_outputs()
 
             if 'unittest' in self.conf:
+                # In test cases, some diff with reference output could be necessary.
+                # In this case, implement the in the "unittest" method.
                 with TestReportContext(self, t):
                     self.unittest()
 
-        # Debug mode : make the job crash at the end topreserve the working directory
+        if 'late-backup' in self.steps:
+            # In a multi step job (MTOOL, ...), this step will be run on a TRANSFER NODE.
+            # Consequently, most of the data should be archived here.
+            with OutputReportContext(self, t):
+                self.put_remote_outputs()
+
         if 'late-backup' in self.steps and self.debug:
+            # Debug mode : make the job crash at the end to preserve the working directory
             print('=====================================================================================')
             print('=====================================================================================')
             raise Exception('INFO :The execution went well, do not take into account the following error')
