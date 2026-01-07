@@ -31,7 +31,7 @@ For information, SAFRAN are stored in the following directories:
 
 If you have to create your own forcing files, please have a look to the ``FORCING_test_base.nc`` file provided in the ``snowtools/DATA`` folder and follow the same structure (same variable names and ranks, same dimensions). All variables are mandatory. CO2air and Wind_DIR have no impact in the case of snow and can be fixed to a constant value. If you do not have distinct data for diffuse and direct solar radiations, you can put everything in the direct radiation for applications not sensitive to this separation (with Crocus, only TARTES and MEB options are sensitive but they are not activated by default).
 
-If you have datas from an observation site in .csv or in .txt format and if you want to create only one or a few FORCING files, then have a look to ``snowtools/scripts/create_forcing/Template_creation_FORCING.py``.
+If you have datas from an observation site in .csv or in .txt format and if you want to create only one or a few FORCING files, then have a look to ``snowtools/scripts/create_forcing/Template_creation_FORCING.py``. If your datas are available only every 3h for example, you have to set the variable FORC_TIME_STP to 10800 instead of 3600 in the FORCING file.
 
 Other files
 -----------
