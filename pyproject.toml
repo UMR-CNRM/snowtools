@@ -1,27 +1,24 @@
 [build-system]
 build-backend = 'mesonpy'
-requires = ['meson-python','numpy>=1.24.4', 'ninja', 'wheel']
+requires = ['meson-python', 'numpy>=1.21.6', 'ninja', 'wheel']
 
 [project]
 name = "snowtools"
 version = "2.0.3"
 dependencies = [
-    'matplotlib',
     'netCDF4',
     'numpy>=1.8',
     'scipy',
     'python-dateutil',
     'pyproj',
     'shapely',
-    'psycopg2',
     'pyshp',
     'pandas',
-    'xarray',
+    'xarray>=0.18.0',
     'rioxarray',
-    'cartopy',
     'bronx',
     'footprints',
-    'epygram>=2.0',
+    'epygram',
     'packaging'
 ]
 requires-python = ">=3.6"
@@ -46,6 +43,23 @@ authors = [
 ]
 maintainers = [
     {name = "Snowtools team, leaded by Matthieu Lafaysse, Meteo-France"}
+]
+
+[project.optional-dependencies]
+sql = [
+    'psycopg2',
+]
+plot = [
+    'matplotlib',
+    'cartopy',
+    'epygram>=2.0',
+]
+
+all = [
+    'psycopg2',
+    'matplotlib',
+    'cartopy',
+    'epygram>=2.0',
 ]
 
 [project.urls]
