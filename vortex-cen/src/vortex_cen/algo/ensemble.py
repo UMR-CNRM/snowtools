@@ -142,8 +142,8 @@ class _CenTaylorVortexWorker(_CenWorkerMixIn, TaylorVortexWorker):
 
     _abstract = True
     _footprint = dict(
-        info = 'Worker designed to run a specific member of an ensemble of simulations NOT associated to any executable'
-               'with MPI parallelization.',
+        info = 'Worker designed to run a specific member of an ensemble of simulations NOT associated'
+               'to any executable with MPI parallelization.',
         attr = dict(
             subdir = dict(
                 info = 'work in this particular subdirectory',
@@ -222,9 +222,16 @@ class _CenTaylorRun(TaylorRun):
         self._default_pre_execute(rh, opts)
         # Update the common instructions
         common_i = self._default_common_instructions(rh, opts)
-        subdirs = self.get_subdirs(rh, opts)
-        self._add_instructions(common_i, dict(subdir=subdirs))
+        self._add_instructions(common_i, dict(subdir=self.subdirs))
         self._default_post_execute(rh, opts)
+
+    def _default_pre_execute(self, rh, opts):
+        """Various initialisations. In particular it creates the task scheduler (Boss)."""
+        self.subdirs = self.get_subdirs(rh, opts)
+        # WARNING : this overwrites the *ntasks* footprint value and may have side effects.
+        # TODO : add a security to ensure that this value is lower than the number of thread available
+        self.ntasks = len(self.subdirs)
+        super()._default_pre_execute(rh, opts)
 
     def get_subdirs(self, rh, opts):
         """
