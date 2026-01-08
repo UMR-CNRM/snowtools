@@ -8,17 +8,51 @@ from vortex import toolbox
 
 class ExtractS2MForcing(_CenResearchTask):
     '''
-    Extract a list of massifs from a forcing file
-    TODO
+    Extract a list of points from an ensemble of FORCING file(s) covering different time periods
+    in the "massif" geometry according to their massif number, elevation, slope and aspect.
+
+    Inputs :
+    --------
+    - SAFRAN-generated FORCING file(s) in the "massif" geometry.
+
+    Outputs :
+    ---------
+    - FORCING file(s) with extracted points
+
     '''
 
     def get_remote_inputs(self):
+        """
+        Get FORCING file as "FORCING_IN.nc" in the different working sub-directories.
+        """
 
         self.get_forcing(localname='[datebegin:ymdh]_[dateend:ymdh]/FORCING_IN.nc')
 
     def algo(self):
         """
-        TODO
+        Returns an "ExtractMassif" with the appropriate arguments.
+
+        If the input consists of several FORCING files, they will be processed in parallel.
+        The output FORCING files(s) are named "FORCING_OUT.nc".
+
+
+        Working tree :
+        rootdir
+        |-- datebegin1_dateend1
+            |--FORCING_IN.nc
+        |-- datebegin2_dateend2
+            |--FORCING_IN.nc
+        ...
+
+        Arguments:
+        :param massifs: Massif number(s) to be extracted
+        :type massifs: int, list
+        :param slopes: Slope(s) to be extracted
+        :type slopes: int, list
+        :param elevations: Elevations(s) to be extracted
+        :type elevations: int, list
+        :param aspects: Aspects(s) to be extracted
+        :type aspects: int, list
         """
 
         for footprint in ['massifs', 'slopes', 'elevations', 'aspects']:
@@ -37,26 +71,56 @@ class ExtractS2MForcing(_CenResearchTask):
         )
         print(self.ticket.prompt, 'algo =', algo)
         print()
-        algo.run()
+        return algo
 
     def put_remote_outputs(self):
         """
-        TODO
+        Save the output FORCING file(s) in the new geometry.
+        WARNING : the output geometry must be in a valid "geometries.ini" file.
+
+        Arguments:
+        :param out_geometry: Geometry of the output file(s)
+        :type out_geometry: str
+        :param xpid: Experiment identifier (format "experiment_name@user")
+        :type xpid: str
         """
 
-        # TODO : ajouter unesécurité pour ne pas risque d'écraser le fichier d'origine
-        self.sh.title('Toolbox output FORCING')
-        forcing_out = toolbox.output(
-            role           = 'Forcing',
+        # Security to avoid overwriting the original FORCING file(s)
+        if self.conf.out_geometry == self.conf.geometry:
+            raise ValueError("The 'out_geometry' can not be the same as the input one.\n"
+                             "Please provide a different 'out_geometry' configuration variable")
+        else:
+            self.sh.title('Toolbox output FORCING')
+            forcing_out = toolbox.output(
+                kind           = 'MeteorologicalForcing',
+                datebegin      = self.list_dates_begin,
+                dateend        = self.dict_dates_end,
+                geometry       = self.conf.out_geometry,
+                experiment     = self.conf.xpid,
+                namebuild      = 'flat@cen',
+                local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
+                block          = 'meteo',
+                model          = 'safran',
+            ),
+            print(self.ticket.prompt, 'Output forcing =', forcing_out)
+            print()
+
+    def unittest(self):
+        """
+        Reproductibility test : compare output to reference.
+        """
+
+        self.sh.title('Toolbox diff FORCING')
+        forcing_diff = toolbox.diff(
             kind           = 'MeteorologicalForcing',
             datebegin      = self.list_dates_begin,
             dateend        = self.dict_dates_end,
-            geometry       = self.conf.geometry,
-            experiment     = self.conf.xpid,
+            geometry       = self.conf.out_geometry,
+            experiment     = 'reference@vernaym',
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
             block          = 'meteo',
             model          = 'safran',
         ),
-        print(self.ticket.prompt, 'Output forcing =', forcing_out)
+        print(self.ticket.prompt, 'diff forcing =', forcing_diff)
         print()

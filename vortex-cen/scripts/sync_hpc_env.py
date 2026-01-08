@@ -23,9 +23,6 @@ parser.add_argument("-s", "--snowtools",
 parser.add_argument("-v", "--vortex",
         help="Path to a specific vortex repository (Vortex-1 only)", required=False)
 
-parser.add_argument("-o", "--overwrite", action='store_true', default=False,
-        help="Overwrite existing configuration")
-
 args = parser.parse_args()
 
 if args.rootdir is not None:
@@ -66,10 +63,10 @@ if os.path.exists('snowtools'):
     os.remove('snowtools')
 os.symlink(snowtools, "snowtools")
 
-if not os.path.exists('conf') or args.overwrite:
+if os.path.exists('conf'):
     shutil.rmtree('conf')
-    src = os.path.join(SNOWTOOLS_CEN, 'vortex-cen', args.vapp, args.vconf, 'conf')
-    shutil.copytree(src, 'conf')
+src = os.path.join(SNOWTOOLS_CEN, 'vortex-cen', args.vapp, args.vconf, 'conf')
+shutil.copytree(src, 'conf')
 
 
 print(f'The following rootdir has been created / updated : {os.getcwd()}')

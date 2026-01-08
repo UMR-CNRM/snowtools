@@ -7,6 +7,6 @@ pip install meson-python
 pip install fiona --upgrade
 pip install cligj --upgrade
 cd $SNOWTOOLS_DIR
-pip install .
+python -m pip install --no-build-isolation --editable .
 
 

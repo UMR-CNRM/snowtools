@@ -9,6 +9,7 @@ from cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 from bronx.stdtypes.date import Date
 from footprints.stdtypes import FPDict
+from vortex.tools.env import Environment
 # from vortex.syntax.stdattrs import Namespace
 
 from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext, TestReportContext
@@ -72,6 +73,9 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             # namebuild      = 'flat@cen',  # WARNING : research only !
             # nativefmt      = 'netcdf',
         )
+        if '@' not in self.conf.xpid:
+            username = Environment()['logname']
+            self.conf.xpid = f'{self.conf.xpid}@{username}'
 
         # Temporary security to avoid the *date* footprint to be mandatory for SurfaceIO resources.
         # This will be useless once the date footprint will be properly set as optional for research applications
@@ -135,7 +139,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
         self.preprocess()
 
-        if 'early-fetch' in self.steps or 'fetch' in self.steps:
+        if 'early-fetch' in self.steps:
             # In a multi step job (MTOOL, ...), this step will be run on a TRANSFER NODE.
             # Consequently, data that may be missing from the local cache must be fetched here.
             # e.g. GCO's genv, data from the mass archive system, ...
@@ -153,25 +157,27 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         if 'compute' in self.steps:
             # The actual computations... (usually a call to the run method of an AlgoComponent)
             # This is executed on a COMPUTE NODE.
-            self.algo()
+            algo = self.algo()
+            if 'localtest' not in self.conf:
+                self.launch_algo(algo)
 
-        if 'backup' in self.steps or 'late-backup' in self.steps:
+        if 'backup' in self.steps:
             # In a multi step job (MTOOL, ...), this step will be run, on a COMPUTE NODE,
             # just after the computations. It is the appropriate place to put data in the local cache
             # in order to make it available to a subsequent step.
             self.put_local_outputs()
-
-            if 'unittest' in self.conf:
-                # In test cases, some diff with reference output could be necessary.
-                # In this case, implement the in the "unittest" method.
-                with TestReportContext(self, t):
-                    self.unittest()
 
         if 'late-backup' in self.steps:
             # In a multi step job (MTOOL, ...), this step will be run on a TRANSFER NODE.
             # Consequently, most of the data should be archived here.
             with OutputReportContext(self, t):
                 self.put_remote_outputs()
+
+            if 'test' in self.conf and 'localtest' not in self.conf:
+                # In test cases, some diff with reference output could be necessary.
+                # In this case, implement the in the "unittest" method.
+                with TestReportContext(self, t):
+                    self.unittest()
 
         if 'late-backup' in self.steps and self.debug:
             # Debug mode : make the job crash at the end to preserve the working directory
@@ -192,22 +198,28 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         Implement this method in your task to fetch all resources already stored on the local (HPC) cache from a
         compute node.
         """
-        # self.get_remote_inputs()  # TODO : check if really necessary / good practice
-        pass
+        self.get_remote_inputs()  # TODO : check if really necessary / good practice
 
     def algo(self):
         """
         Implement this method to call your task's algo component.
+        This method should return a valid AlgoComponent object.
         """
         # raise NotImplementedError()
-        pass
+        return None
+
+    def launch_algo(self, algo, **kw):
+        """
+        Run your task's algo component.
+        """
+        if algo is not None:
+            algo.run()
 
     def put_local_outputs(self):
         """
         Implement this method in your task to save resources on the local (HPC) cache from a compute node.
         """
-        # self.put_remote_outputs()  # TODO : check if really necessary / good practice
-        pass
+        self.put_remote_outputs()  # TODO : check if really necessary / good practice
 
     def put_remote_outputs(self):
         """
@@ -245,6 +257,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         First, check if an existing forcing file covers the full simulation period.
         If no such file exists, check for files covering standard sub-periods (yearly or monthly files).
 
+
         Arguments:
         :param localname: *local* footprint (how to name the file in the working directory).
                           This is an algo/task-specific argument.
@@ -258,10 +271,10 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         Mandatory configuration variables:
 
         :param forcing_datebegin: *datebegin* footprint, default self.conf.datebegin
-        :type forcing_datebegin: str; footprints.stdtypes.FPList
+        :type forcing_datebegin: str, footprints.stdtypes.FPList
         :param forcing_dateend: *dateend* footprint, default self.conf.dateend
         :type forcing_dateend: str, footprints.stdtypes.FPList
-        :param forcing_xpid: *experiment footprint (format "experiment_name@user"), default self.conf.xpid
+        :param forcing_xpid: Experiment identifier (format "experiment_name@user"), default self.conf.xpid
         :type forcing_xpid: str
         :param forcing_geometry: *geometry* footprint, default self.conf.geometry
         :type forcing_geometry: str, footprints.stdtypes.FPList
@@ -274,10 +287,15 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         :param forcing_namespace: *namespace* footprint, default "vortex.multi.fr"
         :type forcing_namespace: str
 
+        :param forcing_date: *date* footprint (unsed with the research namebuilders), default to [dateend]
+        :type forcing_date: str
+        :param forcing_model: *model* footprint (to be made optional for SurfaceIO objects), default "safran"
+        :type forcing_model: str
+
         Optionnal configuration variables:
 
         :param forcing_member: *member* footprint, default None
-        :type forcing_vconf: int, footprints.stdtypes.FPList
+        :type forcing_member: int, footprints.stdtypes.FPList
         :param forcing_namebuild: *namebuild* footprint, default "flat@cen" (will change soon)
         :type forcing_namebuild: str
         :param forcing_intent: *intent* footprint (local file permissions), default "in"
@@ -290,16 +308,17 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         :param forcing_source: Retrieve *source_app* and *source_conf* footrprints dictionnaries for S2M reanalysis
                                Possible values : 'era5', 'era40'
         :type forcing_source: str
-        :param forcing_model: *model* footprint (to be made optional for SurfaceIO objects), default "safran"
-        :type forcing_model: str
         :param forcing_cutoff: *cutoff* footprint (to be made optional for SurfaceIO objects), default None
         :type forcing_cutoff: str
-        :param forcing_date: *date* footprint (unsed with the research namebuilders), default to [dateend]
-        :type forcing_date: str
-        :param io_duration: Argument similar to the one of the `get_list_dates_files` method (snowtools/utils/dates.py).
+        :param io_duration: Argument similar to the one of the `get_list_dates_files` method in
+                            snowtools/utils/dates.py.
                             Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
                             Possible values : "yearly", "monthly" or "full"
         :type io_duration: str
+
+        TODO : prévoir un mécanisme pour rendre des déclarer les arguments obligatoires / optionnels pour
+        chaque tâche (ex: member)
+
         """
 
         t = self.ticket
@@ -312,6 +331,10 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         forcing_vconf     = self.conf.get('forcing_vconf', self.conf.vconf)
         forcing_block     = self.conf.get('forcing_block', 'meteo')
         forcing_member    = self.conf.get('forcing_member', None)
+        # Security : in case of an ensemble of forcing files, get the FORCING of each member in a
+        # separate directory to avoid overwrinting files.
+        if forcing_member is not None and '[member]' not in localname:
+            localname = f'mb[member]/{localname}'
         forcing_namespace = self.conf.get('forcing_namespace', 'vortex.multi.fr')
         # TODO : modifier le namebuilder par defaut lorsque le nouveau incluant la
         # géométrie sera disponible

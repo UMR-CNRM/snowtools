@@ -214,6 +214,13 @@ class _CenTaylorRun(TaylorRun):
                 info     = "Role of RH inputs to use for members definition",
                 type     = str,
             ),
+            ntasks = dict(
+                info        = 'The maximum number of parallel tasks',
+                type        = int,
+                access      = 'rwx',  # Make footprint writable
+                default     = None,
+                optional    = True
+            ),
         )
     )
 
@@ -229,7 +236,7 @@ class _CenTaylorRun(TaylorRun):
         """Various initialisations. In particular it creates the task scheduler (Boss)."""
         self.subdirs = self.get_subdirs(rh, opts)
         # WARNING : this overwrites the *ntasks* footprint value and may have side effects.
-        # TODO : add a security to ensure that this value is lower than the number of thread available
+        # TODO : add a security to ensure that this value is lower than the number of thread available ?
         self.ntasks = len(self.subdirs)
         super()._default_pre_execute(rh, opts)
 
