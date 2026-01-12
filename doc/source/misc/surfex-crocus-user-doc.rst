@@ -820,3 +820,417 @@ Full Description
 
 **LMEB_INT_UNLOAD_SFC** : enable this key in order to separate snow unloading from snowfalls in Crocus fresh snow incorporation. When the key is set at True, snow unloading will be included into the Crocus snowpack as “old” snow, with properties of melt forms and a density of 200kg.m^-2 .
 
+
+9-SNAVA (development for SNow AVAlanche risk assessment)
+--------------------------------------------------------
+
+Basic information
+^^^^^^^^^^^^^^^^^
+
+* **Developer name** : D Monteiro
+* **Status of the development** : [Evaluation]
+* **Date of start of development** : 10/2024
+* **Date of end of development** : 
+* **Commit of development** : fa387a1b0cd08058afb3fdbb9a1e000628162604
+* **Branches on which the developpment is present** : [cen_dev]
+* **Evaluated against SURFEX test database ?** : [Yes]
+* **New test added to database ?** :  [Yes]
+
+Description of the development
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Miscellaneous options**
+
+- ``XSNAVA_SLOPE``
+- ``CSNAVA_DIAG``
+
+
+**Computation of diagnostics for snow avalanche risk assessment purposes [SNAVA]**
+
+- ``SNAVA_WET_SNOW``
+  Wet-snow indicators
+
+- ``SNAVA_SSI``
+  Structural Stability Index
+  (Schweizer et al., 2006)
+
+- ``SNAVA_AC``
+  Critical crack length
+  (Heierli et al., 2008; Schweizer et al., 2011; Reuter et al., 2015)
+
+- ``SNAVA_ACG``
+  Critical crack length
+  (Gaume et al., 2017)
+
+
+**Algorithm for avalanche type problems identification [SNSAT]**
+
+Derived from Reuter et al. (2022).
+
+- ``SNAVA_SAT``
+
+**Implementation details**
+
+Most of the developments presented here are gathered in the module
+``mode_snow_ava.F90`` and divided into subroutines and functions called
+within ``snowcro_diag.F90``.
+
+
+Scientific details
+^^^^^^^^^^^^^^^^^^
+
+Publication in preparation.
+
+Changes in namelist
+^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+   &NAM_SURF_SNOW_CSTS
+       XSNAVA_SLOPE = 0-90 change slope angle used only for mechanics snow avalanche diagnostics computation, default : -1 (disable)
+
+   &NAM_ISBA_SNOWn
+       CSNAVA_DIAG = 'NONE ', 'MEPRA', 'SNAVA', 'SNSAT'  enable/disable the computation of some diagnostics within SNOWCRO_DIAG.F90, default : 'MEPRA'
+
+Miscellaneous options
+^^^^^^^^^^^^^^^^^^^^^
+
+**XSNAVA_SLOPE** : slope angle for mechanic diagnostic computations
+
+* '0-99' slope angle in degrees, values outside range is not considered (i.e. disable the option)
+* NOTE : The characteristics of the snowpack, including its thickness and all properties such as the surface
+  energy balance leading to it usually affected by the slope are not accounted for. This option is only applied
+  to the computation of mechanical properties.
+  Further dev would be to indicate this value is True in pro files.
+
+**CSNAVA_DIAG** : enable/disable the computation of some diagnostics within SNOWCRO_DIAG.F90 routine
+
+* 'NONE ' Disable the computation of most diagnostics usually computed in snowcro_diag. Only, MEPRA snow grain type remains calculated
+* 'MEPRA' 'NONE '+ Enable the computation of all diagnostics used to run MEPRA, including cumulated new snow (thickness and water equivalent). It is the default setting.
+* 'SNAVA' 'MEPRA' + Enable the computation of SNAVA diagnostics (2024-2025 developpments), which are complementary wet-snow indicators, structural stability index and critical crack length. All are described in the following documentation.
+* 'SNSAT' : 'SNAVA' + Enable the algorithm to determine avalanche type problems
+
+Wet-snow indicators and SSI
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Thickness of isothermal snow**
+
+*(`mode_snow_ava.F90 / SNAVA_WET_SNOW / SNAVA_IH`)*
+
+The thickness of isothermal snow is defined as the integrated height of all snow layers with a temperature at or above the melting point (273.15 K).
+
+
+**Age since last isothermal state**
+
+*(`mode_snow_ava.F90 / SNAVA_WET_SNOW / SNAVA_HUDAT`)*
+
+The age since last isothermal state of the snowpack is the time (in days) since the snowpack was isothermal at or above a fraction of its total height (set here to 0.9).
+The default value is ``XUNDEF`` or ``NaN``. This variable is present in the PREP as it requires previous time step state to be updated.
+If the snowpack falls below the threshold fraction, the counter is reset to ``XUNDEF``.
+
+
+**Volumic ratio of liquid water content**
+
+*(`mode_snow_ava.F90 / SNAVA_WET_SNOW / SNAVA_LWCTV`)*
+
+Volumic ratio of the liquid water content of the snowpack (``m³/m³``).
+The default value is ``XUNDEF`` or ``NaN``. This variable is present in the PREP as it requires the previous time step for the SNSAT algorithm computation.
+
+**Structural stability index**
+
+*(`mode_snow_ava.F90 / SNAVA_SSI / SNAVA_SSI`)*
+
+This diagnostic is computed as the skier stability index Sk38 (``ACC_RAT``) to which 1 or 2 is added in the case of a structurally homogeneous stratigraphy.
+For each layer (except the top one), the absolute differences in hand hardness (:math:`\Delta R`) and grain size (:math:`\Delta E`) are calculated in comparison with the upper adjacent layer.
+
+Then, the SSI is defined as:
+
+.. math::
+
+   SSI = SK38 + D
+
+with
+
+.. math::
+
+   D =
+   \begin{cases}
+     0 & \text{if } \Delta R \geq 1.5 \text{ and } \Delta E \geq 0.5\,\text{mm} \\
+     1 & \text{if } \Delta R < 1.5 \text{ or } \Delta E < 0.5\,\text{mm} \\
+     2 & \text{if } \Delta R < 1.5 \text{ and } \Delta E < 0.5\,\text{mm}
+   \end{cases}
+
+
+Critical crack length
+^^^^^^^^^^^^^^^^^^^^^
+The critical crack length is intended to represent the propagation of cracks in an avalanche. It gives a theoretical length (m) from which an initial crack in the weak layer will propagate further.**
+Multiple models of it exist; two of them are implemented and described below.
+
+**Anticrack model (SNAVA_AC)**
+
+*(`mode_snow_ava.F90 / SNAVA_AC / SNAVA_AC`)*
+
+In this model, the characteristics of an equivalent slab are represented by a Timoshenko beam fixed on its left side, deforming only on its unsupported part. 
+The mechanical behavior of the weak layer, including its deformation, is not taken into account. The weak layer fracture energy is the only property of the weak layer, to which the deformation energy of the slab is compared.
+
+This approach allows expressing and relating the weak layer fracture energy :math:`W_f` to the critical crack length :math:`a_c` and to the characteristics of the slab–weak layer system: slab height :math:`H`, slab Young modulus :math:`E`, and the normal (:math:`\sigma`) and shear (:math:`\tau`) stresses due to the weight of the slab over the weak layer:
+
+.. math::
+   W_f = \frac{H}{2E}
+   \left[
+     w_0
+     + w_1 \frac{a_c}{H}
+     + w_2 \left(\frac{a_c}{H}\right)^2
+     + w_3 \left(\frac{a_c}{H}\right)^3
+     + w_4 \left(\frac{a_c}{H}\right)^4
+   \right]
+
+with
+
+.. math::
+
+   \begin{cases}
+     w_0 = \frac{3\eta^2}{4}\tau^2 \\
+     w_1 = (\pi\gamma + \frac{3\eta}{2})\tau^2 + 3\eta^2\tau\sigma + \pi\gamma\sigma^2 \\
+     w_2 = \tau^2 + \frac{9\eta}{2}\tau\sigma + 3\eta^2\sigma^2 \\
+     w_3 = 3\eta\sigma^2 \\
+     w_4 = 3\sigma^2
+   \end{cases}
+
+In this formulation,
+
+:math:`\eta = \sqrt{\frac{4(1+\nu)}{5}}`, where :math:`\nu` is the Poisson’s ratio, set to 0.2 according to Gaume et al., (2017) and Richter et al., (2019), and :math:`\gamma` is the elastic mismatch parameter, set to 1.
+
+The weight of the slab is decomposed into a shear stress
+
+.. math::
+
+   \tau = \rho g H \sin{\alpha}
+
+and a normal stress
+
+.. math::
+
+   \sigma = -\rho g H \cos{\alpha}.
+
+The slab height is defined as the sum of the thicknesses of all layers :math:`h_i` above the weak layer:
+
+.. math::
+
+   H = \sum_i h_i
+
+and the slab density is computed as the thickness-weighted arithmetic mean of the layer densities:
+
+.. math::
+
+   \rho = \frac{\sum_i \rho_i h_i}{\sum_i h_i}.
+
+The Young modulus of each layer :math:`E_{i}` is determined using the density parameterization of Gerling et al., (2017):
+
+.. math::
+
+   E_i = 6.5 \times 10^9 \left(\frac{\rho_i}{\rho_{\text{ice}}}\right)^{5.13}.
+
+**Equivalent Young modulus of the slab**
+
+The equivalent Young modulus of the slab is computed using solutions from the theory of laminate plates (cf. Eqs. 8c and 9b in Weisgraeber and Rosendahl, 2023). 
+It is noted on page 1489 of this paper that the :math:`D_{11}` coefficient used here (mode I) characterizes the bending stiffness and allows representing the bridging effect of a snowpack configuration.
+
+.. math::
+   E_{eq} = 4 \cdot \frac{\sum_i E_i \left(z_{it}^3 - z_{ib}^3\right)}{H^3}
+
+with :math:`z_{it}` and :math:`z_{ib}` respectively the top and bottom height of the layer i.
+Considering only mode II, the equivalent Young modulus becomes:
+
+.. math::
+   E_{eq} = \frac{\sum_i E_i h_i}{H}
+
+Both formulations assume that variations in the Poisson ratio between layers are negligible.
+
+In the following, :math:`E_{eq}` is computed using mode I only.
+
+**Weak layer fracture energy parameterization : solution from Heierli**
+
+The weak layer fracture energy :math:`W_f` is a property of the weak layer, theoretically dependent on its material and geometric characteristics, for which no direct parameterization applicable to macroscopic snow models is available in the literature.
+
+In this application, :math:`W_f` is linearly related to the min-cut (Hagenmuller et al., 2014), itself parameterized as a function of the weak layer density :math:`\rho`, with a scaling factor depending on the specific surface area (SSA) :math:`G` and the sphericity :math:`S` of the weak layer. 
+This allows discriminating between different grain-type behaviors (see Monteiro et al., in preparation, for further details).
+
+.. math::
+
+   W_f = \alpha_{w_f} \, f_{mincut}(\rho, G, S)
+
+with :math:`\alpha_{w_f} = 13.7` and
+
+.. math::
+   f_{mincut} =
+   \frac{1}{1 + \exp\left(-\alpha_0 - \alpha_S S - \alpha_G G - \alpha_{SG} S G\right)}
+   \left(\frac{\phi - \phi_t}{1 - \phi_t}\right)^m
+
+where the calibrated parameters are
+:math:`\alpha_0 = -2.85`,
+:math:`\alpha_S = 4.54`,
+:math:`\alpha_G = 0.13`,
+:math:`\alpha_{SG} = -0.28`,
+:math:`\phi_t = 0.05`,
+and :math:`m = 2.11`.
+
+Finally, determining the critical crack length :math:`a_c` reduces to finding the roots of the fourth-degree polynomial equation, which has real and strictly positive coefficients.
+In practice, the roots are computed using a fourth-order polynomial solver ``R_QUARTIC`` implemented in the module ``mode_polyroots.F90``.
+
+
+**Gaume et al., (2017) model (SNAVA_ACG)**
+*(`mode_snow_ava.F90 / SNAVA_ACG / SNAVA_ACG`)*
+
+The algorithm is implemented as described in Gaume et al., (2017). Please refer to this publication for full methodological details.
+
+Avalanche problems determination algorithm (SNSAT)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+*(`mode_snow_ava.F90 / SNSAT / SNSAT`)*
+
+**Weak layer identification**
+
+This step identifies potential weak layers according to grain types and slab characteristics.
+The algorithm iterates through each snow layer and tags layers fulfilling the following conditions:
+
+- Slab thickness > 0.18 m
+- Slab density > 100 kg m⁻³
+
+A tagged layer is classified as a persistent weak layer (PWL) if the grain type is one of (FC, DH, FC+DH), and as a non-persistent weak layer (NPWL) if the grain type is one of (PP, DF, PP+DF, PPgp, DF+FC).
+
+The table of tagged weak layers is not an output of the algorithm.
+
+*Non implemented:* NPWLs are no longer considered after 48 hours without new
+snowfall or snow transport  
+(i.e. AGE > 2 days and NEWSNOW48h == 0).  
+PWLs become APWLs if :math:`a_c < 0.6\,\text{m}` and :math:`S > 2`.
+
+
+**Layer tracking**
+
+The algorithm attempts to match snow layers between times :math:`t` and :math:`t-1` using their ages. The matching process starts from the top of the snowpack and iterates over the combined number of layers:
+
+.. math::
+
+   N_{\text{snow layers}}(t) + N_{\text{snow layers}}(t-1)
+
+A parallel traversal of both layer tables is performed, as layer ages are sorted in ascending order. When a match is found, both tables advance.
+Otherwise, the next layer in the table with the smallest age is selected.
+The indices of matching layers at :math:`t-1` are stored in the variable ``SNSAT_IPRE`` with dimensions (Nb_layers, Nb_points, time).
+
+*Note:* although layer merges are not explicitly handled, they can be inferred from jumps in the index matrix at time :math:`t`.
+
+
+**Failure initiation**
+
+This step assesses whether identified weak layers are prone to failure initiation.
+
+For natural hazard:
+
+- Natural stability :math:`S_n < 2.5`
+- Expected time to failure :math:`t_f < 27` h
+
+For triggered hazard (e.g. skier):
+
+- Skier stability index :math:`S_k < 1`
+
+Boolean (0, 1) arrays with dimensions (Nb_layers, Nb_points, time) are stored in ``SNSAT_NINIT`` for natural hazard and ``SNSAT_AINIT`` for triggered hazard.
+
+**Crack propagation**
+
+This step evaluates whether an initiated failure is likely to propagate.
+For both natural and triggered hazard, propagation is assumed if:
+
+- Critical crack length :math:`a_c < 0.3`
+
+A boolean (0, 1) array (Nb_layers, Nb_points, time) indicating layers fulfilling propagation conditions is stored in ``SNSAT_PROP``.
+
+**Avalanche problems (AP) determination**
+
+For each snow profile presenting a potential avalanche hazard, the avalanche problem types are determined as follows.
+
+*Wet-snow avalanche*
+
+This is the only avalanche problem that does not rely on initiation or propagation criteria. It requires that at least one persistent or non-persistent weak layer has been identified.
+
+The onset of the wet-snow avalanche period is defined by:
+
+- Liquid water content (:math:`LWC`) ≥ critical liquid water content (:math:`LWC_{crit}`), set here to 1 %
+
+After onset, a wet-snow avalanche risk is assumed if:
+
+- Days since isothermal state < 4 days
+- :math:`LWC(t) > LWC(t-1)` and :math:`LWC(t) > LWC_{crit}`
+
+A table with values (XUNDEF, 1, 2) and dimensions (Nb_points, time) is stored in ``SNSAT_WET``:
+
+- XUNDEF: no avalanche problem
+- 1: onset conditions fulfilled
+- 2: onset conditions fulfilled and increasing LWC
+
+*New snow*
+
+This avalanche type is related to fresh snow accumulation at the top of the snowpack.
+
+It is considered if accumulated snowfall exceeds 5 cm per 24 h and if a non-persistent weak layer has been identified. Natural and/or triggered hazard is retained if the corresponding initiation and propagation indicators are critical.
+
+Boolean (XUNDEF, 1) tables (Nb_points, time) are stored in ``SNSAT_NNEW`` for natural hazard and ``SNSAT_ANEW`` for triggered hazard.
+
+*Drifting snow*
+
+This avalanche type is associated with wind slab formation.
+
+It is considered if the transported snow mass exceeds 0.2 kg cm⁻¹ per 24 h and if a non-persistent weak layer has been identified. Natural and/or triggered hazard is retained if the corresponding initiation and propagation indicators are critical.
+
+Boolean (XUNDEF, 1) tables (Nb_points, time) are stored in ``SNSAT_NDRIFT`` for natural hazard and ``SNSAT_ADRIFT`` for triggered hazard.
+
+*Note:* at each time step, several variables from SNOWPAPPUS are available in snow3Lisba. Without divergence activated (1D and 2D possible), the following quantities can be accessed: ``DEK%XQT_TOT(JJ)``, saltation transport ``DMK%XQ_OUT_SALT(JJ)``, and suspension ``DMK%XQ_OUT_SUSP(JJ)`` (kg m⁻¹ s⁻¹). 
+Here, only the saltation transport rate is used, converted to kg cm⁻¹ per 24 h. Since ``Snowcrodiag`` is called once per hour, transport fluxes are assumed stationary between output time steps.
+
+*Persistent weak layer*
+
+This avalanche type is associated with the presence of a buried persistent weak layer.
+
+It is considered if new snow or drifting snow thresholds are exceeded and if a persistent weak layer has been identified. Natural and/or triggered hazard is retained if the corresponding initiation and propagation indicators are critical.
+
+Boolean (XUNDEF, 1) tables (Nb_points, time) are stored in ``SNSAT_NPWL`` for natural hazard and ``SNSAT_APWL`` for triggered hazard.
+
+References
+^^^^^^^^^^
+
+Gaume, J., van Herwijnen, A., Chambon, G., Wever, N., & Schweizer, J. (2017).
+Snow fracture in relation to slab avalanche release: Critical state for the onset of crack propagation.
+The Cryosphere, 11(1), 217–228. https://doi.org/10.5194/tc-11-217-2017
+
+Gerling, B., Löwe, H., & van Herwijnen, A. (2017).
+Measuring the elastic modulus of snow.
+Geophysical Research Letters, 44(21). https://doi.org/10.1002/2017GL075110
+
+Hagenmuller, P., Calonne, N., Chambon, G., Flin, F., Geindreau, C., & Naaim, M. (2014).
+Characterization of the snow microstructural bonding system through the minimum cut density.
+Cold Regions Science and Technology, 108, 72–79.
+
+Heierli, J., Gumbsch, P., & Zaiser, M. (2008).
+Anticrack nucleation as triggering mechanism for snow slab avalanches.
+Science, 321(5886), 240–243. https://doi.org/10.1126/science.1153948
+
+Reuter, B., Schweizer, J., & van Herwijnen, A. (2015).
+A process-based approach to estimate point snow instability.
+The Cryosphere, 9(3), 837–847. https://doi.org/10.5194/tc-9-837-2015
+
+Richter, B., Schweizer, J., Rotach, M. W., & van Herwijnen, A. (2019).
+Validating modeled critical crack length for crack propagation in the snow cover model SNOWPACK.
+The Cryosphere, 13(12), 3353–3366. https://doi.org/10.5194/tc-13-3353-2019
+
+Schweizer, J., Bellaire, S., Fierz, C., Lehning, M., & Pielmeier, C. (2006).
+Evaluating and improving the stability predictions of the snow cover model SNOWPACK.
+Cold Regions Science and Technology, 46(1), 52–59. https://doi.org/10.1016/j.coldregions.2006.05.007
+
+Schweizer, J., van Herwijnen, A., & Reuter, B. (2011).
+Measurements of weak layer fracture energy.
+Cold Regions Science and Technology, 69(2–3), 139–144. https://doi.org/10.1016/j.coldregions.2011.06.004
+
+Weissgraeber, P., & Rosendahl, P. L. (2023).
+A closed-form model for layered snow slabs.
+The Cryosphere, 17(4), 1475–1496. https://doi.org/10.5194/tc-17-1475-2023
