@@ -1,0 +1,46 @@
+# Pour tester une Tâche {task} dans le fichier {file} sous le répertoire {dir}
+#
+# 1. Sous tests/testhpc/drivers, création d'un nouveau driver (fichier {driver_name}.py) :
+
+from vortex.layout.nodes import Driver
+from vortex_cen.tasks.{dir}.{file} import {task}
+
+
+def setup(t, **kw):
+    return Driver(
+        tag='UnTagAuChoix',
+        ticket=t,
+        nodes=[
+            {Task}(tag={Task.lower()}, ticket=t, **kw),
+        ],
+        options=kw,
+    )
+
+# 2. Modification du fichier de configuration tests/testhpc/conf/tests_testhpc.ini :
+
+# a) Configuration de la tâche elle même :
+
+[{Task.lower()}]
+# Toute les variables "obligatoires" de la tâche doivent être renseignées ici ou dans [DEAFULT]
+var1=
+var2=
+...
+
+# b) Configuration du job associé :
+# --> choix (arbitraire) d'un {jobname}
+
+[jobname]
+# Le bloc peut rester vide, les variables suivantes sont à titre d'exemple
+time=
+nnodes=
+ntasks=
+nproc=
+openmp=
+partition=
+
+# 3. Ajout d'un ligne au fichier tests/testhpc/jobs/create_job :
+
+name={jobname} package=drivers task={driver_name} profile=rd-belenos-mt jobassistant=cen datebegin=2022080106 dateend=2023080106 geometry=cor xpid={UnIdentifiantArbitraire}
+
+
+
