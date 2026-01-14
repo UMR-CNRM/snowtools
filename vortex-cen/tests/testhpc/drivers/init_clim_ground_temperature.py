@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
-
 from vortex.layout.nodes import Driver
-from vortex_cen.tasks.regrid.extract_s2m_points import ExtractS2MForcing
+from vortex_cen.tasks.surfex.init_clim_ground_temperature import \
+    InitClimGroundTemperature
 
 
 def setup(t, **kw):
@@ -12,10 +11,10 @@ def setup(t, **kw):
     else:
         iniconf = None
     return Driver(
-        tag='extracts2m',
+        tag='initClimGT',
         ticket=t,
         nodes=[
-            ExtractS2MForcing(tag='extracts2mforcing', ticket=t, **kw),
+            InitClimGroundTemperature(tag='initClimGroundTemperature', ticket=t, **kw),
         ],
         options=kw,
         iniconf = iniconf
