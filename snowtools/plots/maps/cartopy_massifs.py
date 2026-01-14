@@ -1047,6 +1047,7 @@ class Map_vosges(_Map_massifs):
      Class for plotting a map over the Vosges.
     """
     area = 'vosges'  #: area tag = 'vosges'
+    massif_numbers = [45, 46, 47] #: Massif numbers
     width = 12  #: figure width = 12
     height = 10  #: figure height = 10
     latmin = 47.65  #: southern map border = 43.9
@@ -1632,6 +1633,33 @@ class MultiMap_Alps(Map_alpes, _MultiMap):
         self.set_figsize(self.width, self.height)
         self.init_maps(**kw)
 
+class MultiMap_Vos(Map_vosges, _MultiMap):
+    """
+    class for plotting multiple massif plots for the Vosges.
+    """
+    legendpos = [0.9, 0.15, 0.03, 0.6]  #: legend position on the plot = [0.85, 0.15, 0.03, 0.6]
+
+    def __init__(self, *args, nrow=1, ncol=1, width=18, height=15, **kw):
+        """
+
+        :param nrow: number of rows of plots
+        :param ncol: number of columns of plots
+        :param args: arguments passed to superclass init and :py:meth:`init_maps`
+        :param kw: keyword arguments passed to superclass init and :py:meth:`init_maps`
+        """
+        kw['getmap'] = False
+        self.nrow = nrow
+        self.ncol = ncol
+        self.nsubplots = nrow * ncol
+        self.width = width
+        self.height = height
+        kw['nrow'] = self.nrow
+        kw['ncol'] = self.ncol
+        kw['nsubplots'] = self.nsubplots
+        super(MultiMap_Vos, self).__init__(*args, **kw)
+        self.titlepad = 5
+        self.set_figsize(self.width, self.height)
+        self.init_maps(**kw)
 
 class Map_pyrenees(_Map_massifs):
     """
