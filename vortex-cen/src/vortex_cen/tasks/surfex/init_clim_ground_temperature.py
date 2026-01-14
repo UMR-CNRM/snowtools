@@ -1,35 +1,37 @@
 from vortex import toolbox
+from vortex.algo.components import AlgoComponent
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 
 class InitClimGroundTemperature(_CenResearchTask):
     """
-    Initialize Surfex ground temperature by taking the climatological (i.e. the mean on all time steps) of the input forcing.
+    Initialize Surfex ground temperature (GT) by taking the climatological mean of the input forcing air temperature.
 
-        Inputs :
+    Inputs :
     --------
-    -
+    - FORCING file(s) on simulation grid points
 
     Outputs :
     ---------
-    -
+    - Ground Temperature initialization file on simulation grid points
     """
 
     def get_remote_inputs(self):
-        """ """
-
-        self.get_forcing(localname="[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
-
-    def algo(self):
+        """
+        Get FORCING file as "FORCING_[datebegin:ymdh]_[dateend:ymdh].nc" in the different working sub-directories.
         """
 
+        self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
+
+    def algo(self) -> AlgoComponent:
+        """
+        Return an InitClimGroundTemperatureAlgo with the appropriate arguments.
 
 
         Working tree :
         rootdir
-
-
-        Arguments:
+        |-- FORCING_datebegin1_dateend1.nc
+        |-- FORCING_datebegin2_dateend2.nc
 
         """
 
@@ -44,10 +46,12 @@ class InitClimGroundTemperature(_CenResearchTask):
 
     def put_remote_outputs(self):
         """
-
+        Save the output Ground temperature (GT) initialization based on the climatological mean file in the simulation geometry.
         Arguments:
-        :param out_geometry:
-
+        :param geometry:
+        type geometry: simulation geometry
+        :param xpid: Experiment identifier (format "experiment_name@user")
+        :type xpid: str
         """
 
         self.sh.title("Toolbox output for initial values of ground temperature")

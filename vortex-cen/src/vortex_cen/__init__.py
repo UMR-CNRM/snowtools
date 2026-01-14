@@ -3,8 +3,10 @@ The DESR/CNRM/CEN VORTEX extension package.
 """
 
 # Recursive inclusion of packages with potential FootprintBase classes
-from . import data as data  # noqa
 from . import algo as algo  # noqa
+
+# TODO: to uncomment when data module will be implemented
+# from . import data as data  # noqa
 
 #: No automatic export
 __all__ = []
