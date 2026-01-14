@@ -20,7 +20,7 @@ class ExtractS2MForcing(_CenResearchTask):
     - FORCING file(s) with extracted points
 
     '''
-
+    
     def get_remote_inputs(self):
         """
         Get FORCING file as "FORCING_IN.nc" in the different working sub-directories.
