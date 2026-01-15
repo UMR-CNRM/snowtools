@@ -381,6 +381,10 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
         if alternate:
 
+            # TODO : ne plus faire d'alternate, prescrire obligatoirement le duration (plus rapide)
+            # 2 cas : 'Yearly', + exception pour 1er / dernier fichiers
+            # NB : eviter les alternates dans les tâches
+
             # Sécurité si *forcing_datebegin* != *datebegin* ou *forcing_dateend* != *dateend*
             if 'io_duration' in self.conf:
                 duration = self.conf.io_duration
