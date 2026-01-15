@@ -55,11 +55,16 @@ plot = [
     'epygram>=2.0',
 ]
 
+vortex = [
+    'vortex-nwp'
+]
+
 all = [
     'psycopg2',
     'matplotlib',
     'cartopy',
     'epygram>=2.0',
+    'vortex-nwp',
 ]
 
 [project.urls]
@@ -73,6 +78,10 @@ procompare = 'snowtools.plots.stratiprofile.procompare:main'
 
 [project.entry-points."xarray.backends"]
 snowtools = "snowtools.utils.xarray_snowtools_backend:SnowtoolsBackendEntrypoint"
+
+[project.entry-points.vtx]
+cen = "vortex_cen.src.vortex_cen"
+
 
 
 

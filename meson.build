@@ -49,3 +49,4 @@ py.extension_module(
 
 
 subdir('snowtools')
+subdir('vortex_cen/src/vortex_cen')
