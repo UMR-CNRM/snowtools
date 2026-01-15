@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vortex-cen"
+version = "1.0.0"
+requires-python = ">=3.7"
+
+dependencies = [
+    "vortex-nwp",
+    "snowtools",
+]
+
+[project.entry-points.vtx]
+cen = "vortex_cen"
+
+[tool.setuptools.packages.find]
+where = ["src"]
