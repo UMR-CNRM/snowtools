@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from vortex.layout.nodes import Driver
-from vortex_cen.tasks.forcing.extract_s2m_points import ExtractS2MForcing
+from vortex_cen.tasks.forcing.shadows import Shadows
 
 
 def setup(t, **kw):
     return Driver(
-        tag='extracts2m',
+        tag='shadows',
         ticket=t,
         nodes=[
-            ExtractS2MForcing(tag='extracts2mforcing', ticket=t, **kw),
+            Shadows(tag='shadows', ticket=t, **kw),
         ],
         options=kw,
     )
