@@ -230,7 +230,8 @@
                        LRESTART = .TRUE.                     ,
                        XTSTEP_OUTPUT = 21600.            ,
                        XTSTEP_SURF = 900.                ,
-                       LWRITE_COORD = .TRUE.
+                       LWRITE_COORD = .TRUE.,
+                       NB_READ_FORC = 1,
 /
 &NAM_DIAG_SURFn        LSURF_BUDGET = .TRUE. ,
                        LRAD_BUDGET  = .TRUE. , 
