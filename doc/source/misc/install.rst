@@ -34,12 +34,31 @@ If you are only a user of snowtools, you can install the package easily with pip
 1. Download the source code: ``git clone https://github.com/UMR-CNRM/snowtools.git``
 2. Create a virtual environment : ``python3 -m venv --system-site-packages <name_of_your_virtual_env>``
 3. Enter in the virtual environment:  ``source <name_of_your_virtual_env>/bin/activate``
-4. Ensure you are at the root of the snowtools repository and install the package by running:
+4. Ensure you are at the root of the snowtools repository.
+   a. If you want the minimal install, run:
 
 .. code-block::
 
     pip install .
 
+
+   b. If you want to use graphic tools, run:
+
+.. code-block::
+
+    pip install .[plot]
+
+   c. If yout want to use sql tools (MF-only), run:
+
+.. code-block::
+
+    pip install .[plot]
+
+   d. If you want to install all extensions, run:
+
+.. code-block::
+
+    pip install .[all]
 
 
 .. _sec-install_dev:
@@ -102,104 +121,167 @@ It is also recommended to create useful aliases for s2m command and proreader gr
    alias put="$SNOWTOOLS_CEN/cenutils/put"
 
 
-..
-   Method 2
-   ^^^^^^^^
+Method 2: editable install with ``pip``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   editable install with ``pip``.
+.. note::
 
-   .. note::
+   If using this method make sure **not** to have
+   your snowtools directory in your PYTHONPATH.
+   So do not mix with method 1.
 
-       If using this method make sure **not** to have
-       your snowtools directory in your PYTHONPATH.
-       So do not mix with method 1.
+   There are two different possibilities:
+    - make an editable install for ongoing developments
+    - make a standard install for stable applications (real-time simulations, reanalyses, ...)
 
-
-   1. Clone the git repository on your computer.
-   """""""""""""""""""""""""""""""""""""""""""""
-   (see method 1)
-
-   2. create or choose a virtual environment.
-   """""""""""""""""""""""""""""""""""""""""""
-   To create a virtual environment you can run:
-
-   .. code-block:: bash
-
-       python -m venv nameofmyenv --system-site-packages
-
-   where ``nameofmyenv`` is a freely chosen name for the environment
-   and --system-site-packages makes the packages already installed on
-   the system available inside the virtual environment.
-
-   Or create a virtual environment within the PyCharm IDE:
+   Depending on your use case, follow the corresponding instructions, as well as server-specific instructions.
 
 
-       File -> Settings
+1. Clone the git repository on your computer.
+"""""""""""""""""""""""""""""""""""""""""""""
+(see method 1)
 
-       In settings go to
-       Project -> Python Interpreter
+If yout want to install snowtools on a remote server, sync your snowtools repository on this server:
 
-       Next to the Interpreter line clic "add interpreter" -> "add local interpreter"
+.. code-block:: bash
 
-       choose
-       environment: new environment
-       type: "virtuelenv"
-       python base:
-       choose the location and a base interpreter
-       (typically the system python install /usr/bin/python3.XX)
-       location: choose the location and name of your environment
+    $SNOWTOOLS_CEN/cenutils/put snowtools {server}
 
-       Hint: tick the "inherit packages from base interpreter" check box
-       for the --system-site-packages option.
+and follow the next steps on the remote server.
 
-       clic the "Ok" button.
+3. create or choose a virtual environment.
+"""""""""""""""""""""""""""""""""""""""""""
 
-   3. source the virtual environment
-   """""""""""""""""""""""""""""""""
+<b>On MF HPC:</b>
 
-   .. code-block:: bash
+For an <b>editable install</b>, you must load python version 3.10.12 and the gcc compiler:
 
-       source ./<pathtovenv>/nameofmyenv/bin/activate
+.. code-block::bash
 
-   now the commandline prompt should start with ``(nameofmyenv)``
-   and thus look like ``(nameofmyenv) username@host:~$`` for example.
+    module load python/3.10.12 gcc
 
-   4. install build dependencies
-   """"""""""""""""""""""""""""""
-   ``numpy>=1.24.4``, ``meson-python`` and ``ninja`` inside the virtual environment.
+For a <b>standard install</b>, you can choose between available python versions "3.7.6nomkl" and 3.10.12:
 
-   .. code-block:: bash
+.. code-block::bash
 
-           pip install numpy>=1.24.4 meson-python ninja
+    module load python/{version} gcc
 
-   .. note::
+<b>On sxcen:</b>
 
-       Snowtools contains a compiled extension module written in Fortran.
-       In order to render compiled extension modules editable similarly to ordinary python code,
-       they are compiled at import time in an editable install rather than during
-       installation in case of a classical install (:ref:`sec-install_users`).
-       This means that the build dependencies have to be available at runtime in
-       the virtual environment and not just temporarily during the install.
-       The advantage is, that edits in the Fortran code trigger the (partial) re-compilation of
-       the extension module at the next import in a new interpreter instance.
-       https://mesonbuild.com/meson-python/how-to-guides/editable-installs.html
+You must specify which python version you will use. Available version are 3.8 and 3.12.
+To use the latest available python version, simply choose "python3":
 
-   5. install snowtools:
-   """""""""""""""""""""""
-   inside the snowtools directory do:
+.. code-block::bash
 
-   .. code-block:: bash
+    alias python="python3"
 
-       pip install --no-build-isolation -e .
+<b>On all servers:</b>
 
-   .. note::
+To create a virtual environment you can run:
 
-       ``--no-build-isolation`` disables build isolation.
-       Disabling build isolation is necessary in order to be able to re-build extensions
-       at import time in editable installs. For ordinary installs build isolation is a desired feature.
+.. code-block:: bash
 
-Optional installations
-----------------------
+   python -m venv nameofmyenv --system-site-packages
+
+where ``nameofmyenv`` is a freely chosen name for the environment
+and --system-site-packages makes the packages already installed on
+the system available inside the virtual environment.
+
+Or create a virtual environment within the PyCharm IDE:
+
+
+   File -> Settings
+
+   In settings go to
+   Project -> Python Interpreter
+
+   Next to the Interpreter line clic "add interpreter" -> "add local interpreter"
+
+   choose
+   environment: new environment
+   type: "virtuelenv"
+   python base:
+   choose the location and a base interpreter
+   (typically the system python install /usr/bin/python3.XX)
+   location: choose the location and name of your environment
+
+   Hint: tick the "inherit packages from base interpreter" check box
+   for the --system-site-packages option.
+
+   clic the "Ok" button.
+
+4. source the virtual environment
+"""""""""""""""""""""""""""""""""
+
+.. code-block:: bash
+
+   source ./<pathtovenv>/nameofmyenv/bin/activate
+
+now the commandline prompt should start with ``(nameofmyenv)``
+and thus look like ``(nameofmyenv) username@host:~$`` for example.
+
+For an install on <b>MF HPC</b>, you may have to update pip:
+
+.. code-block::bash
+
+    pip install --upgrade pip
+
+5. install build dependencies (<b>editable install only</b>)
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+``numpy>=1.21.6``, ``meson-python`` and ``ninja`` inside the virtual environment.
+
+.. code-block:: bash
+
+       pip install --upgrade numpy meson-python ninja
+
+.. note::
+
+   Snowtools contains a compiled extension module written in Fortran.
+   In order to render compiled extension modules editable similarly to ordinary python code,
+   they are compiled at import time in an editable install rather than during
+   installation in case of a classical install (:ref:`sec-install_users`).
+   This means that the build dependencies have to be available at runtime in
+   the virtual environment and not just temporarily during the install.
+   The advantage is, that edits in the Fortran code trigger the (partial) re-compilation of
+   the extension module at the next import in a new interpreter instance.
+   https://mesonbuild.com/meson-python/how-to-guides/editable-installs.html
+
+
+6. install snowtools
+""""""""""""""""""""
+For an <b>editable install</b> on <b>MF HPC</b>, force version 1.4.3 of rasterio and 1.24 of numpy to avoid dependency issues:
+
+.. code-block:: bash
+
+   pip install rasterio==1.4.3 numpy==1.24
+
+<b>On all servers:</b>
+
+Finally, go to the snowtools root directory and install snowtools:
+
+* for an <b>editable install</b> do:
+
+.. code-block:: bash
+
+   pip install --no-build-isolation -e .
+
+.. note::
+
+   ``--no-build-isolation`` disables build isolation.
+   Disabling build isolation is necessary in order to be able to re-build extensions
+   at import time in editable installs. For ordinary installs build isolation is a desired feature.
+
+* for a <b>standard install</b> do:
+
+.. code-block:: bash
+
+   pip install .
+
+.. note::
+
+  In both cases, optional dependencies can be installed by following
+  the instructions given in step 4 of the "Snowtools install for users" section
 
 
 Vortex package

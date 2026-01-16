@@ -14,7 +14,7 @@ dependencies = [
     'shapely',
     'pyshp',
     'pandas',
-    'xarray>=0.18.0',
+    'xarray>=0.18.0',  # Enable the use of snowtools xarray plugin
     'rioxarray',
     'bronx',
     'footprints',
@@ -46,15 +46,19 @@ maintainers = [
 ]
 
 [project.optional-dependencies]
+# To enable the use of MF's databases extraction tools
 sql = [
     'psycopg2',
 ]
+
+# To enable the use of graphic tools
 plot = [
     'matplotlib',
     'cartopy',
     'epygram>=2.0',
 ]
 
+# For a full installation
 all = [
     'psycopg2',
     'matplotlib',
