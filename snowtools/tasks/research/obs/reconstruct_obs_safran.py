@@ -5,6 +5,7 @@
 from snowtools.tasks.vortex_task_base import _VortexTask
 from vortex.layout.nodes import Driver
 from vortex import toolbox
+from vortex.tools.env import Environment
 
 import snowtools.algo  # noqa
 
@@ -106,36 +107,34 @@ class Reconstruct_SAFRAN_Obs(_VortexTask):
 
     def put_remote_outputs(self):
 
-        rundate = self.conf.datebegin
-        list_dates = self.get_list_seasons(self.conf.datebegin, self.conf.dateend)
-        for rundate in list_dates:
-            datebegin = rundate
-            dateend = rundate.replace(year = rundate.year + 1)
+        if '@' not in self.conf.xpid:
+            user = Environment()['logname']
+            experiment = f'{self.conf.xpid}@{user}'
+        else:
+            experiment = self.conf.xpid
 
-            self.sh.title(f'Reconstructed Observations {datebegin.ymdh}-{dateend.ymdh}')
-            out = toolbox.output(
-                kind           = 'packedobs',
-                datebegin      = datebegin.ymdh,
-                dateend        = dateend.ymdh,
-                date           = dateend.ymdh,
-                experiment     = self.conf.xpid,
-                geometry       = self.conf.geometry,
-                vapp           = 'safran',
-                vconf          = self.conf.vconf,
-                local          = f'{datebegin.ymd6h}_{dateend.ymd6h}/OBSERVATIONS.tar',
-                namespace      = 'vortex.archive.fr',
-                model          = 'safran',
-                source         = 'surfaceobs',
-                namebuild      = 'flat@cen',
-                block          = 'observations',
-                nativefmt      = 'tar',
-                cutoff         = 'assimilation',
-                now            = True,
-            )
-            print(self.ticket.prompt, 'Output observations =', out)
-            print()
-
-            datebegin = dateend
+        self.sh.title('Reconstructed Observations')
+        out = toolbox.output(
+            kind           = 'packedobs',
+            datebegin      = self.list_dates_begin,
+            dateend        = self.dict_dates_end,
+            date           = '[dateend.ymdh]',
+            experiment     = experiment,
+            geometry       = self.conf.geometry,
+            vapp           = 'safran',
+            vconf          = self.conf.vconf,
+            local          = '[datebegin:ymd6h]_[dateend:ymd6h]/OBSERVATIONS.tar',
+            namespace      = 'vortex.archive.fr',
+            model          = 'safran',
+            source         = 'surfaceobs',
+            namebuild      = 'flat@cen',
+            block          = 'observations',
+            nativefmt      = 'tar',
+            cutoff         = 'assimilation',
+            now            = True,
+        )
+        print(self.ticket.prompt, 'Output observations =', out)
+        print()
 
         if self.conf.debug:
             print('==================================================================================================')
