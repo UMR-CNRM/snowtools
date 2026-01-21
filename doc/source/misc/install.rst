@@ -220,7 +220,7 @@ Or create a virtual environment within the PyCharm IDE:
 now the commandline prompt should start with ``(nameofmyenv)``
 and thus look like ``(nameofmyenv) username@host:~$`` for example.
 
-For an install on <b>MF HPC</b>, you may have to update pip:
+Update pip to ensure that the following steps work well:
 
 .. code-block::bash
 
