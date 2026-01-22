@@ -8,6 +8,7 @@ from vortex import toolbox
 from vortex.tools.env import Environment
 
 import snowtools.algo  # noqa
+import snowtools.data.obs  # noqa
 
 
 def setup(t, **kw):
@@ -31,36 +32,24 @@ class Reconstruct_SAFRAN_Obs(_VortexTask):
 
         t = self.ticket
 
-        self.sh.title('METADATA')
-        metadata = toolbox.input(
-            role        = 'Metadata',
-            local       = 'bdclim_SAFRAN_t_table_H_1950-2024_metadata.nc',
-            genv        = self.conf.cycle,
-            gvar        = 'METADATA',
-            unknown     = True,
-        )
-        print(t.prompt, 'METADATA = ', metadata)
-        print()
-
-        self.sh.title('Predictors')
-        metadata = toolbox.input(
-            local       = 'predictors.json',
-            genv        = self.conf.cycle,
-            gvar        = 'PREDICTORS',
-            unknown     = True,
-        )
-        print(t.prompt, 'METADATA = ', metadata)
-        print()
-
-        # TODO : this should be yearly flow ressources
         self.sh.title('Reconstructed Observations')
         new_obs = toolbox.input(
-            local       = 'reconstructed_data_GRIN.pkl',
-            genv        = self.conf.cycle,
-            gvar        = 'RECONSTRUCTED_OBS',
-            unknown     = True,
+            kind='SurfaceObservation',
+            nativefmt   = 'netcdf',
+            model       = 'safran',
+            datebegin   = self.list_dates_begin,
+            dateend     = self.dict_dates_end,
+            date        = '[dateend]',
+            geometry    = 'SinglePoint',
+            vapp        = 'safran',
+            vconf       = 'france',
+            experiment  = 'reconstructed_observations_v1@vernaym',
+            block       = '',
+            filename    = '[datebegin:ymdh]_[dateend:ymdh]/NEW_OBSERVATIONS.nc',
+            namespace   = 'vortex.multi.fr',
+            namebuild   = 'flat@cen'
         )
-        print(t.prompt, 'New observations = ', new_obs)
+        print(t.prompt, 'New Obs = ', new_obs)
         print()
 
         # Get yearly observation packed files

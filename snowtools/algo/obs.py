@@ -50,9 +50,4 @@ class ReconstructObservationsWorker(_CENTaylorVortexWorker):
         """
         Method called by the main **vortex_task** method of the **_S2MWorkerMixIn** class
         """
-        common_inputs = ['predictors.json', 'reconstructed_data_GRIN.pkl',
-                'bdclim_SAFRAN_t_table_H_1950-2024_metadata.nc']
-        for fic in common_inputs:
-            self.system.symlink(self.system.path.join(rundir, fic), fic)
-
         replace_obs_tar('OBSERVATIONS.tar')
