@@ -235,8 +235,7 @@ class SnowtoolsAccessor:
     def backtrack_preprocess(self):
         """
         Method to undo the changes done in the preprocess step if the dataset was opened with the "snowtools" backend.
-        Initial variable / dimension names come from the 'original_variable_name', 'original_dimension_name' or
-        'original_name' attribute created during the preprocess step.
+        Initial variable / dimension names come from the 'original_name' attribute created during the preprocess step.
 
         Usage example:
 
@@ -249,19 +248,10 @@ class SnowtoolsAccessor:
             original = ds.backtrack_preprocess()
 
         """
-        if isinstance(self.ds, xr.Dataset):
-            if 'original_variable_name' in self.ds.attrs.keys():
-                mapping = {k: v for k, v in self.ds.attrs['original_variable_name'].items()
-                        if k in list(self.ds.keys())}
-                self.ds = self.ds.rename(mapping)
-            if 'original_dimension_name' in self.ds.attrs.keys():
-                mapping = {k: v for k, v in self.ds.attrs['original_dimension_name'].items()
-                        if k in list(self.ds.dims)}
-                self.ds = self.ds.rename(mapping)
-        else:
-            if 'original_name' in self.ds.attrs.keys():
-                self.ds = self.ds.rename(self.ds.attrs['original_name'])
-
+        if 'original_name' in self.ds.attrs.keys():
+            backtrack = self.ds.attrs['original_name']
+            mapping = {k.strip(): v.strip() for k, v in [item.split(':') for item in backtrack.split(',')]}
+            self.ds = self.ds.rename(mapping)
         return self.ds
 
 

@@ -258,12 +258,12 @@ class TestOldPRO(unittest.TestCase):
         cls.ds = xr.open_dataset(path_old, engine='snowtools')
 
     def test_get_points_intargs(self):
-        points = self.ds.where((self.ds.ZS == 2100) & (self.ds.slope == 20) & (self.ds.massif_number == 5), drop=True)
+        points = self.ds.where((self.ds.ZS == 2100) & (self.ds.slope == 20) & (self.ds.massif_num == 5), drop=True)
         self.assertEqual(len(points.Number_of_points), 8, "Expect: 8 aspects")
 
     def test_get_points_listargs(self):
         points = self.ds.where((self.ds.ZS == 2100) & (self.ds.slope.isin([20, 40])) &
-                (self.ds.massif_number.isin([4])), drop=True)
+                (self.ds.massif_num.isin([4])), drop=True)
         self.assertEqual(len(points.Number_of_points), 16, "Expect: 16 points")
 
     def test_get_points_(self):
@@ -271,7 +271,7 @@ class TestOldPRO(unittest.TestCase):
 
     def test_read_var_with_get_point_get_time(self):
         snowtemp = self.ds.SNOWTEMP.isel(time=0).where((self.ds.ZS == 2100) & (self.ds.slope == 20) &
-                (self.ds.massif_number == 3) & (self.ds.aspect == 0), drop=True).squeeze()
+                (self.ds.massif_num == 3) & (self.ds.aspect == 0), drop=True).squeeze()
         self.assertEqual(snowtemp.shape, (50,), "Expect: 50 layers")
 
     def test_read_var_intargs(self):
