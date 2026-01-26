@@ -1,0 +1,18 @@
+Etapes pour créer un User Environment à partir de rien.
+
+1. Déposer le(s) fichier(s) à mettre dans le uenv sous $HOME/.vortexrc/hack/uget/{user}/data avec un nom arbitraire et versionné, ex:
+UnPremierFichier.0
+UnSecondFichier.1
+
+
+2. Créer un fichier texte du nom du UEnv sous $HOME/.vortexrc/hack/uget/{user}/env, ex:
+UnUenv.0
+
+3. Dans ce fichier texte, associer une clé à chaque fichier, ex:
+LA_CLE_DE_MON_PREMIER_FICHIER="uenv:UnPremierFichier.0@{username}"
+LA_CLE_DE_MON_SECOND_FICHIER="uenv:UnSecondFichier.1@{username}"
+
+4. Le Uenv est prêt, accéder aux fichiers avec :
+toolbox.input(genv='uenv:UnUenv.0@{user}', gvar='LA_CLE_DE_MON_PREMIER_FICHIER', unknown=True, filename='...')
+toolbox.input(genv='uenv:UnUenv.0@{user}', gvar='LA_CLE_DE_MON_SECOND_FICHIER', unknown=True, filename='...')
+
