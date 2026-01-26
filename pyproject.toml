@@ -15,7 +15,6 @@ dependencies = [
     'pyshp',
     'pandas',
     'xarray>=0.18.0',  # Enable the use of snowtools xarray plugin
-    'rioxarray',
     'bronx',
     'footprints',
     'packaging'
