@@ -48,14 +48,14 @@ class Abstract_Preprocess_Task( _CenResearchTask):
         print()
         return preprocess_tba
             
-    def put_remote_outputs(self):
+    def put_local_outputs(self):
         """
-        Save the changed namelist
+        Save the changed namelist in cache -> put_LOCAL_output
         """
         #######################################################################
         #                               Backup                                #
         #######################################################################
-        self.sh.title('Toolbox Namelist Output (Preprocess)')
+        self.sh.title('Toolbox Namelist Local Output after modification')
         namelist_tbo = toolbox.output(
             role         = 'Nam_surfex',
             kind         = 'namelist',
@@ -91,6 +91,7 @@ class Preprocess_Task_Uenv_Namelist(Abstract_Preprocess_Task):
             pass
         else:
             # If not provided, standard namelist taken from the uenv
+            self.sh.title('Toolbox input Namelist before modification')
             namelist_tbi = toolbox.input(
                 role     = 'Nam_surfex',
                 source   = 'OPTIONS_default.nam',
@@ -117,7 +118,7 @@ class Preprocess_Task_Local_Namelist(Abstract_Preprocess_Task):
         #                             Fetch steps                             #
         #######################################################################
         # Use the path provided in the configuration file for the SURFEX namelist
-        self.sh.title('Toolbox input tb05')
+        self.sh.title('Toolbox input Namelist before modification')
         namelist_tbi = toolbox.input(
             role     = 'Nam_surfex',
             remote   = self.conf.namelist,

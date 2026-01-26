@@ -81,12 +81,12 @@ class Abstract_Prep_Construct_Task(_CenResearchTask):
         print()
 
 
-def get_local_inputs(self):
+    def get_local_inputs(self):
         """
         Get OPTIONS.nam which is always in cache
         """
         # Namelist mandatory to run PREP and taken from the cache
-        self.sh.title('Toolbox input Namelist')
+        self.sh.title('Toolbox input Namelist after modification')
         namelist_tbi = toolbox.input(
             role         = 'Nam_surfex',
             kind         = 'namelist',
