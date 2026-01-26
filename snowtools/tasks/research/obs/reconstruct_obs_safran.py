@@ -107,7 +107,7 @@ class Reconstruct_SAFRAN_Obs(_VortexTask):
             kind           = 'packedobs',
             datebegin      = self.list_dates_begin,
             dateend        = self.dict_dates_end,
-            date           = '[dateend.ymdh]',
+            date           = '[dateend:ymdh]',
             experiment     = experiment,
             geometry       = self.conf.geometry,
             vapp           = 'safran',
@@ -125,7 +125,7 @@ class Reconstruct_SAFRAN_Obs(_VortexTask):
         print(self.ticket.prompt, 'Output observations =', out)
         print()
 
-        if self.conf.debug:
+        if 'debug' in self.conf and self.conf.debug:
             print('==================================================================================================')
             print('==================================================================================================')
             raise Exception('INFO :The execution went well, do not take into account the following error')
