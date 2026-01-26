@@ -86,6 +86,9 @@ class ExtractS2MForcing(_CenResearchTask):
         :type xpid: str
         """
 
+        # TODO : Changer *out_geometry* --> geometry (par convention)
+        # geometry = forcing_geometry
+
         # Security to avoid overwriting the original FORCING file(s)
         if self.conf.out_geometry == self.conf.geometry:
             raise ValueError("The 'out_geometry' can not be the same as the input one.\n"
