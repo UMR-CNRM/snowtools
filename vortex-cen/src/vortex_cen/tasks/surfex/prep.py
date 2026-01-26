@@ -16,7 +16,7 @@ class Abstract_Prep_Construct_Task(_CenResearchTask):
     def get_remote_inputs(self):
         """
         Get ecoclimapI_covers_param.bin, ecoclimapII_eu_covers_param.bin,
-        Get drdt_bst_fit_60.nc, OPTIONS.nam, PGD.nc
+        Get drdt_bst_fit_60.nc, PGD.nc
         Do not get init_TG.nc because there are 2 possibilities
         """
         # Binary ECOCLIMAP I files are mandatory to run PREP and taken from the uenv
@@ -62,6 +62,29 @@ class Abstract_Prep_Construct_Task(_CenResearchTask):
         print(self.ticket.prompt, 'drdt_bst_fit_60 =', drdt_bst_fit_tbi)
         print()
 
+        # PGD.nc mandatory to run PREP and taken from the cache ?
+        self.sh.title('Toolbox input PGD.nc')
+        pgd_tbi = toolbox.input(
+            role           = 'SurfexClim',
+            kind           = 'pgdnc',
+            nativefmt      = 'netcdf',
+            local          = 'PGD.nc',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            model          = 'surfex',
+            namespace      = 'vortex.multi.fr',
+            namebuild      = 'flat@cen',
+            block          = 'pgd',
+            member         = self.conf.member if hasattr(self.conf, 'member') else None,
+        ),
+        print(self.ticket.prompt, 'pgd =', pgd_tbi)
+        print()
+
+
+def get_local_inputs(self):
+        """
+        Get OPTIONS.nam which is always in cache
+        """
         # Namelist mandatory to run PREP and taken from the cache
         self.sh.title('Toolbox input Namelist')
         namelist_tbi = toolbox.input(
@@ -75,24 +98,6 @@ class Abstract_Prep_Construct_Task(_CenResearchTask):
             nativefmt    = 'nam',
         ),
         print(self.ticket.prompt, 'namelist =', namelist_tbi)
-        print()
-
-        # PGD.nc mandatory to run PREP and taken from the cache ?
-        self.sh.title('Toolbox input PGD.nc')
-        pgd_tbi = toolbox.input(
-            role           = 'SurfexClim',
-            kind           = 'pgdnc',
-            nativefmt      = 'netcdf',
-            local          = 'PGD.nc',
-            experiment     = self.conf.xpid,
-            geometry       = self.conf.geometry,
-            model          = 'surfex',
-            namespace      = 'vortex.multi.fr', # 'vortex.cache.fr' ????
-            namebuild      = 'flat@cen',
-            block          = 'pgd',
-            member         = self.conf.member if hasattr(self.conf, 'member') else None,
-        ),
-        print(self.ticket.prompt, 'pgd =', pgd_tbi)
         print()
 
 
@@ -162,7 +167,6 @@ class Prep_Task_Uenv_TG_Uenv_Prep(Abstract_Prep_Construct_Task):
             genv           = self.conf.genv,
             gvar           = 'climtg_[geometry::tag]',
             model          = 'surfex',
-            fatal          = False
         ),
         print(self.ticket.prompt, 'initTG_tbi =', initTG_tbi)
         print()
