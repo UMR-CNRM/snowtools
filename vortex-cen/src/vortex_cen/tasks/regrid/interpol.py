@@ -45,7 +45,7 @@ class InterpolateS2MForcing(_CenResearchTask):
         get forcing files in the "massif" geometry, output grid file and interpolation binary.
 
         """
-        self.get_forcing(forcing_geometry=self.conf.geoin, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+        self.get_forcing(forcing_geometry=self.conf.geometry_in, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
 
         # Target grid file for interpolation
         # the path must be provided in the configuration file
