@@ -2,7 +2,7 @@ from vortex import toolbox
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 
-class InitClimGroundTemperature(_CenResearchTask):
+class InitClimatologicalGroundTemperature(_CenResearchTask):
     """
     Initialize Surfex ground temperature by taking the climatological (i.e. the mean on all time steps) of the input forcing.
 
@@ -22,9 +22,6 @@ class InitClimGroundTemperature(_CenResearchTask):
 
     def algo(self):
         """
-
-
-
         Working tree :
         rootdir
 
@@ -51,7 +48,7 @@ class InitClimGroundTemperature(_CenResearchTask):
         """
 
         self.sh.title("Toolbox output for initial values of ground temperature")
-        init_ground_temperature_out = (
+        clim_tg_tbO = (
             toolbox.output(
                 role="initial values of ground temperature",
                 kind="climTG",
@@ -65,7 +62,7 @@ class InitClimGroundTemperature(_CenResearchTask):
                 block="prep",
             ),
         )
-        print(self.ticket.prompt, "Output init ground temperature =", init_ground_temperature_out)
+        print(self.ticket.prompt, "Output init ground temperature =", clim_tg_tbO)
         print()
 
     def unittest(self):
@@ -73,8 +70,8 @@ class InitClimGroundTemperature(_CenResearchTask):
         Reproductibility test : compare output to reference.
         """
 
-        self.sh.title("Toolbox ")
-        forcing_diff = (
+        self.sh.title("Toolbox diff climatological ground temperature")
+        clim_tg_diff_tbt = (
             toolbox.diff(
                 role="initial values of ground temperature",
                 kind="climTG",
@@ -88,5 +85,5 @@ class InitClimGroundTemperature(_CenResearchTask):
                 block="prep",
             ),
         )
-        print(self.ticket.prompt, "diff forcing =", forcing_diff)
+        print(self.ticket.prompt, "diff forcing =", clim_tg_diff_tbt)
         print()
