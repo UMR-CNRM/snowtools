@@ -210,6 +210,12 @@ Or create a virtual environment within the PyCharm IDE:
 
    clic the "Ok" button.
 
+.. note::
+
+   For an editable install, create your virtual environment OUTSIDE
+   the snowtools root directory.
+
+
 4. source the virtual environment
 """""""""""""""""""""""""""""""""
 
