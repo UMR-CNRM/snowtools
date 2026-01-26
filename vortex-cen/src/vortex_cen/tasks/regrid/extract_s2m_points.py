@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-'''
-'''
+"""
+"""
 
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex import toolbox
 
 
 class ExtractS2MForcing(_CenResearchTask):
-    '''
+    """
     Extract a list of points from an ensemble of FORCING file(s) covering different time periods
     in the "massif" geometry according to their massif number, elevation, slope and aspect.
 
@@ -19,7 +19,7 @@ class ExtractS2MForcing(_CenResearchTask):
     ---------
     - FORCING file(s) with extracted points
 
-    '''
+    """
 
     def get_remote_inputs(self):
         """
@@ -44,7 +44,8 @@ class ExtractS2MForcing(_CenResearchTask):
             |--FORCING_IN.nc
         ...
 
-        Arguments:
+        Configuration variables:
+
         :param massifs: Massif number(s) to be extracted
         :type massifs: int, list
         :param slopes: Slope(s) to be extracted
