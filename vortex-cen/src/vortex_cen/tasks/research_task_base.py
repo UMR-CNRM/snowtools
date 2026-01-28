@@ -348,8 +348,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         forcing_source_conf = self.conf.get('forcing_source_conf', None)
         # Verrue pour gérer les footprints *source_app* et *source_conf* de la réanalyse S2M
         if 'forcing_source' in self.conf:
-            self.conf.forcing_source_app, self.conf.forcing_source_conf = \
-                self.get_safran_sources([self.conf.forcing_datebegin], era5=self.conf.forcing_source == 'era5')
+            forcing_source_app, forcing_source_conf = \
+                self.get_safran_sources([forcing_datebegin], era5=self.conf.forcing_source == 'era5')
         # TODO : à supprimer après suppression de ce footprint dans les objets "SurfaceIO"
         forcing_model = self.conf.get('forcing_model', 'safran')
         # TODO : à supprimer après suppression de ce footprint dans les objets "SurfaceIO"
