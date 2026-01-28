@@ -11,6 +11,13 @@ Currently useful branches for SURFEX-Crocus developers:
 - cen_dev: branch for new developments (recommended for all developers)
 
 New branches must be named ``cen_dev_<project>`` with ``<project>`` being the name of the project or clearly describe the goal of the branch and originating from ``cen_dev``.
+When you end your developments:
+
+- test your code (see below)
+- merge the cen_dev branch in your code
+- rebase your dev
+- make a pull request for adding your devs to cen_dev branch
+
 
 Rules coding for SURFEX-Crocus
 ------------------------------
