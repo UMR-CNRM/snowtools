@@ -131,13 +131,15 @@ class Preprocess_Task_Uenv_Namelist(Abstract_Preprocess_Task):
         self.sh.title('Toolbox input Namelist')
         namelist_tbi = toolbox.input(
             role     = 'Nam_surfex',
-            source   = self.conf.source,  # OPTIONS_default.nam
             # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
             # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
+            source   = self.conf.source,  # ex : OPTIONS_default.nam
             genv     = self.conf.uenv,
             kind     = 'namelist',
             model    = 'surfex',
             local    = 'OPTIONS.nam',
+            # MV : la nameliste va être modifiée, il faut s'assurer du droit d'écriture (<==> intent='inout')
+            intent   = 'inout',
         )
         print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
         print()
@@ -178,6 +180,8 @@ class Preprocess_Task_Local_Namelist(Abstract_Preprocess_Task):
             kind     = 'namelist',
             model    = 'surfex',
             local    = 'OPTIONS.nam',
+            # MV : la nameliste va être modifiée, il faut s'assurer du droit d'écriture (<==> intent='inout')
+            intent   = 'inout',
         )
         print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
         print()
