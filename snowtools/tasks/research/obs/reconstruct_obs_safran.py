@@ -44,7 +44,7 @@ class Reconstruct_SAFRAN_Obs(_VortexTask):
             vapp        = 'safran',
             vconf       = 'france',
             experiment  = 'reconstructed_observations_v1@vernaym',
-            block       = '',
+            block       = 'observations',
             filename    = '[datebegin:ymdh]_[dateend:ymdh]/NEW_OBSERVATIONS.nc',
             namespace   = 'vortex.multi.fr',
             namebuild   = 'flat@cen'
