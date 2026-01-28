@@ -60,6 +60,9 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         Set toolbox defaults, extended with actual arguments ``extras``.
         """
 
+        if 'localtest' in self.conf:
+            toolbox.active_now = False
+
         toolbox.defaults(
             # namespace      = self.conf.get('namespace', Namespace('vortex.multi.fr')),
             # namespace      = Namespace('vortex.multi.fr'),
