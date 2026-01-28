@@ -103,6 +103,10 @@ class Abstract_Offline_MPI(_CenResearchTask):
             # MV : pour permettre de récupérer le PGD depuis une expérience indépendante
             # --> possibilité de renseigner 'pgd_xpid' dans le fichier de conf
             experiment     = self.conf.get('pgd_xpid', self.conf.xpid),
+            # MV : Pour prévoir les cas où le PGD vient d'un vapp / vconf différent
+            # de ceux de la tâche
+            vapp           = self.conf.get('pgd_vapp', self.conf.vapp),
+            vconf          = self.conf.get('pgd_vconf', self.conf.vconf),
             geometry       = self.conf.geometry,
             nativefmt      = 'netcdf',
             kind           = 'pgdnc',
@@ -123,6 +127,13 @@ class Abstract_Offline_MPI(_CenResearchTask):
             # MV : pour permettre de récupérer le PREP depuis une expérience indépendante
             # --> possibilité de renseigner 'prep_xpid' dans le fichier de conf
             experiment     = self.conf.get('prep_xpid', self.conf.xpid),
+            # MV : il faut définir la date de validité du fichier PREP qui par défaut
+            # est la *datebegin* de simulation mais peut être arbitraire si 'date_prep' est renseigné
+            date           = self.conf.get('prep_date', self.conf.datebegin),
+            # MV : Pour prévoir les cas où le PREP vient d'un vapp / vconf différent
+            # de ceux de la tâche
+            vapp           = self.conf.get('prep_vapp', self.conf.vapp),
+            vconf          = self.conf.get('prep_vconf', self.conf.vconf),
             geometry       = self.conf.geometry,
             nativefmt      = 'netcdf',
             kind           = 'PREP',
@@ -137,6 +148,7 @@ class Abstract_Offline_MPI(_CenResearchTask):
             #   suivantes dépendent des membres sélectionnés par SODA.
             # Le cas ensembliste doit être traité dans une tâche spécifique
             member         = self.conf.get('prep_member', None),
+            intent         = 'inout',
         ),
         print(self.ticket.prompt, 'prep_tbi =', prep_tbi)
         print()
@@ -177,15 +189,14 @@ class Abstract_Offline_MPI(_CenResearchTask):
             kind           = 'deterministic',
             datebegin      = self.conf.datebegin,
             dateend        = self.conf.dateend,
-            # MV : A priori on veut pouvoir passer une *datespinup* différente de *datebegin*,
-            # mais le caspar défaut est dateinit=*datebegin*
-            dateinit       = self.conf.get('datespinup', self.conf.datebegin),
+            # MV : *dateinit* correspond à la date de validité du fichier PREP
+            dateinit       = self.ticket.context.sequence.effective_inputs(role='SnowpackInit')[0].rh.resource.date,
             # MV : la valeur par défaut de "threshold" dans la commande s2m est -999
             # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
             threshold      = self.conf.get('threshold', -999),
             # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
             # et faire une tâche spécifique à ces cas là.
-            daily          = self.conf.dailyprep,
+            #daily          = self.conf.dailyprep,
             # MV la valeur par défaut de 'drhook' dans la commande s2m est False
             # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
             drhookprof     = self.conf.get('drhook', False),
@@ -202,16 +213,16 @@ class Abstract_Offline_MPI(_CenResearchTask):
         Run OFFLINE MPI algo component.
         """
         # MV : J'ajoute cette méthode qui est automatiquement appelée dans la classe mère _CenResearchTask
-        # Pour un exécution de binaire, il faut donner le nom de l'exécutable dans le workdir (ici "OFFLINE")
-        # Il est possible de récupérer ce nom avec la ligne suivante pour être certain de donner le nom de l'exécutable
-        # qui a effectivement été récupéré par la commande toolbox.executable(...)
-        executable = self.ticket.context.sequence.executables()[0].rh.container.basename
+        # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
+        # toolbox.executable(...))
+        # Il est possible de récupérer cet objet avec la ligne suivante :
+        executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
 
-        # MV : Il faut également fournir le nombre de process et le nombre de tâches via le fichier de conf
+        # MV : Il faudra également pouvoir fournir le nombre de process et le nombre de tâches via le fichier de conf
         # TODO : réfléchir à la procédure pour définir des valeurs par défaut en fonction du domaine comme c'est
         # le cas actuellement
-        self.component_runner(algo, executable,
-                mpiopts=dict(nnodes=1, nprocs=self.conf.nprocs, ntasks=self.conf.ntasks))
+        self.component_runner(algo, executable)
+        #        mpiopts=dict(nnodes=1, nprocs=self.conf.nprocs, ntasks=self.conf.ntasks))
 
     def put_remote_outputs(self):
         """
@@ -231,8 +242,8 @@ class Abstract_Offline_MPI(_CenResearchTask):
 #            if hasattr(self.conf, 'save_pro') and self.conf.save_pro in ['cache', 'archive', 'multi']:
 #                namespace = 'vortex.' + self.conf.save_pro + '.fr'
 
-        _, _, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(self.conf.datebegin,
-                self.conf.dateend, self.conf.get('io_duration', 'yearly'))
+        _, _, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(Date(self.conf.datebegin),
+                Date(self.conf.dateend), self.conf.get('io_duration', 'yearly'))
         dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
 
         # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
@@ -369,11 +380,21 @@ class Offline_MPI_Uenv(Abstract_Offline_MPI):
     ---------------------------------------------------------------------
     :param pgd_xpid: Experiment Identifier of the PGD file, if different from the task's XPID
     :type pgd_xpid: str
+    :param pgd_vapp: *vapp* of the PGD file, if different from the task's *vapp*
+    :type pgd_vapp: str
+    :param pgd_vconf: *vconf* of the PGD file, if different from the task's *vconf*
+    :type pgd_vconf: str
     :param prep_xpid: Experiment Identifier of the PREP file, if different from the task's XPID
     :type prep_xpid: str
     :param prep_member: Member associated to the PREP file if it comes from an ensemble (after a SODA run)
                         NB : This is a deterministic task, only one single member value can be provided
     :type prep_member: int
+    :param prep_vapp: *vapp* of the PREP file, if different from the task's *vapp*
+    :type prep_vapp: str
+    :param prep_vconf: *vconf* of the PREP file, if different from the task's *vconf*
+    :type prep_vconf: str
+    :param prep_date: Validity date of the PREP file (if different from *datebegin*)
+    :type prep_date: str
     :param datespinup: Date of validity of the spinup file (default: *datebegin*)
     :type datespinup: str, footprints.stdtypes.FPList
     :param threshold: Threshold to apply to the snow water equivalent (in kg/m2) each 1st August (default: -999)
@@ -448,11 +469,21 @@ class Offline_MPI_Local(Abstract_Offline_MPI):
     ---------------------------------------------------------------------
     :param pgd_xpid: Experiment Identifier of the PGD file, if different from the task's XPID
     :type pgd_xpid: str
+    :param pgd_vapp: *vapp* of the PGD file, if different from the task's *vapp*
+    :type pgd_vapp: str
+    :param pgd_vconf: *vconf* of the PGD file, if different from the task's *vconf*
+    :type pgd_vconf: str
     :param prep_xpid: Experiment Identifier of the PREP file, if different from the task's XPID
     :type prep_xpid: str
     :param prep_member: Member associated to the PREP file if it comes from an ensemble (after a SODA run)
                         NB : This is a deterministic task, only one single member value can be provided
     :type prep_member: int
+    :param prep_vapp: *vapp* of the PREP file, if different from the task's *vapp*
+    :type prep_vapp: str
+    :param prep_vconf: *vconf* of the PREP file, if different from the task's *vconf*
+    :type prep_vconf: str
+    :param prep_date: Validity date of the PREP file (if different from *datebegin*)
+    :type prep_date: str
     :param datespinup: Date of validity of the spinup file (default: *datebegin*)
     :type datespinup: str, footprints.stdtypes.FPList
     :param threshold: Threshold to apply to the snow water equivalent (in kg/m2) each 1st August (default: -999)
