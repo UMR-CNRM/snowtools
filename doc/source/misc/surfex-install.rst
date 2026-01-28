@@ -16,38 +16,21 @@ Simple users at Meteo-France do not need to install SURFEX, but rather should po
 
 Note: If you need to work with more recent branch (``cen_dev`` for instance) or other compile options (``MPI``) have a look to available binaries in the previously pointed ``SURFEX`` folder where other compiled binaries are available.
 
-Requirements for users outside of Meteo-France
-----------------------------------------------
-
-For a first install, check the SURFEX requirements and the basics: http://www.cnrm.meteo.fr/surfex-lab/spip.php?article302
 
 Get the code
 ------------
 
-Rather than installing from an « export » archive, it is better to immediately get started from the most recent version of the git repository. Crocus users should in the general case install the ``cen`` branch. This is the most recent stable release of Crocus snowpack model which often includes new developments not already merged in the master SURFEX branch. Specific instructions on how to use git for SURFEX are provided in : http://www.umr-cnrm.fr/surfex/spip.php?article415
+Download the source code: ``git clone https://github.com/UMR-CNRM/SURFEX_CEN.git``
 
-Access the code by registering on this website (top right of the window): https://opensource.umr-cnrm.fr/. Please always fill in the "comments" field asking for an access to SURFEX project. If you have never been in contact with the Crocus team before your request, please explain briefly your interest in this model. Once you have received a confirmation of your account creation, you will have to send a public ssh key to operator at meteo dot fr. This ssh key have to be created with ``ssh-keygen -t rsa``. If you are not familiar with SSH keys, let the default key name (id_rsa), and do not provide any passphrase. The public key is available under ~/.ssh/id_rsa.pub.
-
-For users which need scientific advices about the relevance of using Crocus for their application, please contact crocus at meteo.fr
-
-.. warning::
-   Caution: the directory where you are going to install SURFEX and all parent directories MUST NOT contain dots (.) in their names.
-
-If you plan to launch simulation only (ie not for developer), download the cen branch with the folowwing command:
-
-.. code-block:: bash
-
-   git clone -b cen ssh://reader097@git.umr-cnrm.fr/git/Surfex_Git2.git
    
-If you are a developer, you may prefer download the cen_dev branch with the folowwing command:
+You need some packages which are not in the git repository (has to be fixed). So please copy from your old repo
 
 .. code-block:: bash
 
-   git clone -b cen_dev ssh://admin097@git.umr-cnrm.fr/git/Surfex_Git2.git
+   cp /home/your_name/.../your_old_repo/src/LIB/SPARTACUS_SURFACE_0.6.1.tar.gz /home/your_name/.../SURFEX_CEN/src/LIB/.
+   cp /home/your_name/.../your_old_repo/src/LIB/XIOS-GMGEC-2152.tar /home/your_name/.../SURFEX_CEN/src/LIB/.
 
-If a password is requested, it means that your ssh keys have not been registered, please contact ``operator at meteo dot fr``
-
-This will download a number of folder and files. The SURFEX sources are in the src directory.
+Please read the infos for developper: https://umr-cnrm.github.io/snowtools-doc/misc/surfex-dev.html
 
 Compile the code
 ----------------
@@ -188,5 +171,3 @@ If you correctly installed the snowtools and SURFEX projects, you must be able t
 .. code-block:: bash
 
    s2m research -f $SNOWTOOLS_CEN/snowtools/DATA/FORCING_test_base.nc -b 20100801 -e 20110801 -o output -g -s ...yoursurfexdirectory.../exe
-
-
