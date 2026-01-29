@@ -1068,12 +1068,12 @@ with :math:`\alpha_{w_f} = 13.7` and
    \left(\frac{\phi - \phi_t}{1 - \phi_t}\right)^m
 
 where the calibrated parameters are
-:math:`\alpha_0 = -2.85`,
-:math:`\alpha_S = 4.54`,
-:math:`\alpha_G = 0.13`,
-:math:`\alpha_{SG} = -0.28`,
-:math:`\phi_t = 0.05`,
-and :math:`m = 2.11`.
+:math:`\alpha_0 = -2.56`,
+:math:`\alpha_S = 4.95`,
+:math:`\alpha_G = 0.14`,
+:math:`\alpha_{SG} = -0.30`,
+:math:`\phi_t = 0.04`,
+and :math:`m = 2.46`.
 
 Finally, determining the critical crack length :math:`a_c` reduces to finding the roots of the fourth-degree polynomial equation, which has real and strictly positive coefficients.
 In practice, the roots are computed using a fourth-order polynomial solver ``R_QUARTIC`` implemented in the module ``mode_polyroots.F90``.
