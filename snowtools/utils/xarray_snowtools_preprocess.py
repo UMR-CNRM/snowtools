@@ -3,6 +3,7 @@
 import xarray
 
 # The following dictionnaries are used to control default variable and dimension names mapping
+# TODO : Réfléchir à un mapping plus cohérent nettoyer les dicts actuels (cf ticket #295)
 dimension_map = {'x': 'xx', 'y': 'yy', 'lat': 'yy', 'latitude': 'yy', 'lon': 'xx', 'longitude': 'xx',
         'location': 'Number_of_points', 'Number_of_patches': 'tile', 'valid_time': 'time'}
 variables_map = {'Rainf_ds': 'Rainf', 'Snowf_ds': 'Snowf', 'band_data': 'ZS', 'prec': 'Precipitation',
