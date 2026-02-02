@@ -185,3 +185,52 @@ class Preprocess_Task_Local_Namelist(Abstract_Preprocess_Task):
         )
         print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
         print()
+
+
+class SODA_namelist_preprocess(_CenResearchTask):
+    """
+    Pre-processing of SODA namelist to add informations such as the date of the run.
+    """
+
+    def get_remote_inputs(self):
+
+        self.get_forcings()
+
+        self.sh.title('Input namelist')
+        namelist_tbi = toolbox.input(
+            role    = 'Namelist_soda',
+            genv    = self.conf.uenv,
+            gvar    = 'surfex_namelist',
+            kind    = 'namelist',
+            model   = 'surfex',
+            local   = 'OPTIONS.nam',
+        )
+        print(self.ticket.prompt, 'Namelist =', namelist_tbi)
+        print()
+
+    def algo(self):
+
+        self.sh.title('Algo : soda namelist preprocess')
+        algo = toolbox.algo(
+            kind    = 'soda_preprocess',
+            members = self.conf.members,
+        )
+        print(self.ticket.prompt, 'Algo =', algo)
+        print()
+        return algo
+
+    def put_local_outputs(self):
+
+        self.sh.title('Output namelist')
+        namelist_tbo = toolbox.output(
+            role            = 'Nam_surfex',
+            kind            = 'namelist',
+            model           = 'surfex',
+            local           = 'OPTIONS.nam',
+            experiment      = self.conf.xpid,
+            namespace       = 'vortex.cache.fr',
+            block           = 'namelist',
+            nativefmt       = 'nam',
+        )
+        print(self.ticket.prompt, 'Namelist =', namelist_tbo)
+        print()
