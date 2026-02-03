@@ -9,6 +9,8 @@ from bronx.stdtypes.date import Date
 
 from snowtools.data import obs  # noqa
 
+toolbox.active_now = True
+
 description = "Archive reconstructed observation dataset for SAFRAN reanalysis"
 parser = argparse.ArgumentParser(description=description)
 parser.add_argument("-b", "--begin_year", type=str,
@@ -45,7 +47,7 @@ toolbox.output(
     vconf      = 'france',
     experiment = xpid,
     block      = 'observations',
-    filename   = f'{args.path}/RECOBS_[datebegin:subPT24H::strftime("%Y%m%dT%H")]-[dateend:stdvortex].nc',
+    filename   = f'{args.path}/RECOBS_[datebegin:subPT24H:ymd]T[datebegin:subPT24H:hh]-[dateend:ymd]T[dateend:hh].nc',
     namespace  = 'vortex.multi.fr',
     namebuild  = 'flat@cen'
 )
