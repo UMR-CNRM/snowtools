@@ -9,9 +9,51 @@ Created on 7 nov. 2017
 from vortex import toolbox
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 
-class Abstract_Prep_Construct_Task(_CenResearchTask):
+class _Prep_Construct(_CenResearchTask):
     '''
-    Abstract task for prep step.
+    Abstract task for PREP step.
+
+   Inputs:
+    -------
+    - OPTIONS.nam ready-to-use SURFEX namelist (coming from an execution of a "Preprocess_Task")
+    - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
+    - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
+    - PGD.nc (Ground physiography coming from the cache ?)
+ 
+    Outputs:
+    --------
+    - PREP.nc (initial conditions)
+
+    Mandatory configuration variables:
+    ----------------------------------
+    :param geometry: *geometry* of the forcing file(s)
+    :type geometry: str, footprints.stdtypes.FPList
+    :param xpid: Experiment identifier (format "{experiment_name}@{user}")
+    :type xpid: str
+    :param genv: User Environment in which the following resources are to be retrieved :
+                 - ecoclimapI_covers_param.bin
+                 - ecoclimapII_eu_covers_param.bin
+                 - drdt_bst_fit_60.nc
+                 - OFFLINE executable
+                 Format : uenv:{uenv_name}@{user}
+    :type genv: str
+    :param nprocs: Number of process to allocate to the execution of the MPI binary
+    :type nprocs: int
+    :param ntasks: Number of tasks to allocate to the execution of the MPI binary
+    :type nprocs: int
+
+    Optionnal configuration variables (other than forcing-specific ones):
+    ---------------------------------------------------------------------
+    :param pgd_xpid: Experiment Identifier of the PGD file, if different from the task's XPID
+    :type pgd_xpid: str
+    :param pgd_vapp: *vapp* of the PGD file, if different from the task's *vapp*
+    :type pgd_vapp: str
+    :param pgd_vconf: *vconf* of the PGD file, if different from the task's *vconf*
+    :type pgd_vconf: str
+    :param dailyprep: TODO :comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
+    :type dailyprep: bool
+    :param namespace_out: Force specific namespace for output files (default: 'vortex.multi.fr')
+    :type namespace_out: str
     '''
     def get_remote_inputs(self):
         """
@@ -62,24 +104,24 @@ class Abstract_Prep_Construct_Task(_CenResearchTask):
         print(self.ticket.prompt, 'drdt_bst_fit_60 =', drdt_bst_fit_tbi)
         print()
 
-        # PGD.nc mandatory to run PREP and taken from the cache ?
-        self.sh.title('Toolbox input PGD.nc')
+        # PGD.nc mandatory to run PREP
+        self.sh.title('Toolbox input PGD')
         pgd_tbi = toolbox.input(
-            role           = 'SurfexClim',
-            kind           = 'pgdnc',
-            nativefmt      = 'netcdf',
             local          = 'PGD.nc',
-            experiment     = self.conf.xpid,
+            role           = 'SurfexClim',
+            experiment     = self.conf.get('pgd_xpid', self.conf.xpid),
+            vapp           = self.conf.get('pgd_vapp', self.conf.vapp),
+            vconf          = self.conf.get('pgd_vconf', self.conf.vconf),
             geometry       = self.conf.geometry,
+            nativefmt      = 'netcdf',
+            kind           = 'pgdnc',
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
             namebuild      = 'flat@cen',
             block          = 'pgd',
-            member         = self.conf.member if hasattr(self.conf, 'member') else None,
         ),
         print(self.ticket.prompt, 'pgd =', pgd_tbi)
         print()
-
 
     def get_local_inputs(self):
         """
@@ -100,7 +142,6 @@ class Abstract_Prep_Construct_Task(_CenResearchTask):
         print(self.ticket.prompt, 'namelist =', namelist_tbi)
         print()
 
-
     def algo(self):
         """
         Algo component to produce the PREP file if not found in the inputs
@@ -114,10 +155,16 @@ class Abstract_Prep_Construct_Task(_CenResearchTask):
         )
         print(self.ticket.prompt, 'Toolbox algo prep=', PREP_tba)
         print()
-        #self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
-        # ntasks = 1 !!!! WTF !!!
         return PREP_tba
 
+    def launch_algo(self, algo, **kw):
+        """
+        Run PREP algo component.
+        """
+        executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
+        self.component_runner(algo, executable)
+        #self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
+        # ntasks = 1 !!!! WTF !!!
             
     def put_remote_outputs(self):
         """
@@ -145,7 +192,7 @@ class Abstract_Prep_Construct_Task(_CenResearchTask):
         print()
 
 
-class Prep_Task_Uenv_TG_Uenv_Prep(Abstract_Prep_Construct_Task):
+class Prep_Uenv_TG_Uenv_Prep(_Prep_Construct):
     '''
     Get init_TG.nc and PREP executable both from Uenv
     '''
@@ -184,7 +231,7 @@ class Prep_Task_Uenv_TG_Uenv_Prep(Abstract_Prep_Construct_Task):
         print()
 
 
-class Prep_Task_Local_TG_Uenv_Prep(Abstract_Prep_Construct_Task):
+class Prep_Local_TG_Uenv_Prep(_Prep_Construct):
     '''
      Get init_TG.nc locally and PREP executable from Uenv
     '''
@@ -225,7 +272,7 @@ class Prep_Task_Local_TG_Uenv_Prep(Abstract_Prep_Construct_Task):
         print()
 
 
-class Prep_Task_Uenv_TG_Local_Prep(Abstract_Prep_Construct_Task):
+class Prep_Uenv_TG_Local_Prep(_Prep_Construct):
     '''
     Get init_TG.nc from Uenv and PREP executable locally
     '''
@@ -265,7 +312,7 @@ class Prep_Task_Uenv_TG_Local_Prep(Abstract_Prep_Construct_Task):
         print()
 
 
-class Prep_Task_Local_TG_Local_Prep(Abstract_Prep_Construct_Task):
+class Prep_Local_TG_Local_Prep(_Prep_Construct):
     '''
     Get init_TG.nc and PREP executable both locally
     '''

@@ -6,10 +6,7 @@ from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex.util.helpers import InputCheckerError
 
 
-# MV : Pas de soucis pour moi pour laisser "Abstract" dans le nome de la classe,
-# mais la convention python dans ce cas est plutot de nommer la classe avec un "_"
-# initial pour faire plus court 'ex : "_Preprocess_Task"
-class Abstract_Preprocess_Task(_CenResearchTask):
+class _Preprocess(_CenResearchTask):
     '''
     Abstract task for pre-processing namelist:
     add infos like points and dates from forcing to namelist.
@@ -35,11 +32,10 @@ class Abstract_Preprocess_Task(_CenResearchTask):
         """
         Change the namelist when forcings and namelist are here
         """
-        t = self.ticket
         #######################################################################
         #                            Compute step                             #
         #######################################################################
-        avail_forcings = t.context.sequence.effective_inputs(role='Forcing')
+        avail_forcings = self.ticket.context.sequence.effective_inputs(role='Forcing')
         if len(avail_forcings) > 0:
             firstforcing = avail_forcings[0]
         else:
@@ -80,7 +76,7 @@ class Abstract_Preprocess_Task(_CenResearchTask):
         print()
 
 
-class Preprocess_Task_Uenv_Namelist(Abstract_Preprocess_Task):
+class Preprocess_Uenv_Namelist(_Preprocess):
     '''
     Task for pre-processing a namelist coming from a User Environment.
 
@@ -112,22 +108,6 @@ class Preprocess_Task_Uenv_Namelist(Abstract_Preprocess_Task):
         #######################################################################
         #                             Fetch steps                             #
         #######################################################################
-
-        # MV : Pour cette tâche le user DOIT dire dans quel uenv prendre la nameliste pour
-        # assurer le reproductibilité.
-        # La possibilité de récupérer la namelist dans un Environnement par défaut peut être laissée
-        # dans la tâche "Preprocess_Task_Local_Namelist" (ne garatissant pas la reproductibilité)
-        # si besoin.
-
-        #if not hasattr(self.conf, "genv"):
-        #    self.conf.genv = 'uenv:cen.14@CONST_CEN'
-
-        #if hasattr(self.conf, "uenv") and 'OPTIONS.nam' in self.conf.udata.items():
-        #    # The OPTION.nam namelist will be retrived by the 'tbuenv' toolbox
-        #    pass
-        #else:
-            # If not provided, standard namelist taken from the uenv
-
         self.sh.title('Toolbox input Namelist')
         namelist_tbi = toolbox.input(
             role     = 'Nam_surfex',
@@ -145,7 +125,7 @@ class Preprocess_Task_Uenv_Namelist(Abstract_Preprocess_Task):
         print()
 
 
-class Preprocess_Task_Local_Namelist(Abstract_Preprocess_Task):
+class Preprocess_Local_Namelist(_Preprocess):
     '''
     Task for pre-processing a namelist coming from any user-defined absolute path.
 
