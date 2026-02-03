@@ -1,5 +1,6 @@
 
 import argparse
+import os
 
 from vortex import toolbox
 
@@ -15,7 +16,7 @@ parser.add_argument("-b", "--begin_year", type=str,
 parser.add_argument("-e", "--end_year", type=str,
         help="Last of the period covered by the obseravtions (format YYYY)")
 parser.add_argument("-x", "--xpid", type=str,
-        help="Experiment identifier, format {xpid}@{user}")
+        help="Experiment identifier")
 parser.add_argument("-p", "--path", type=str,
         help="Absolute path to the data to archive")
 
@@ -25,6 +26,12 @@ datebegin = f'{args.begin_year}080106'
 dateend = f'{args.end_year}080106'
 list_dates_begin, list_dates_end, _, _ = get_list_dates_files(Date(datebegin), Date(dateend), 'yearly')
 dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)
+
+if '@' in args.xpid:
+    xpid = args.xpid
+else:
+    user = os.environ['USER']
+    xpid = args.xpid + '@' + user
 
 toolbox.output(
     kind       = 'SurfaceObservation',
@@ -36,7 +43,7 @@ toolbox.output(
     geometry   = 'SinglePoint',
     vapp       = 'safran',
     vconf      = 'france',
-    experiment = args.xpid,
+    experiment = xpid,
     block      = 'observations',
     filename   = f'{args.path}/RECOBS_[datebegin:subPT24H::strftime("%Y%m%dT%H")]-[dateend:stdvortex].nc',
     namespace  = 'vortex.multi.fr',
