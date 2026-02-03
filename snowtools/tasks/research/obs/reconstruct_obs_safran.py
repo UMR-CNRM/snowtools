@@ -43,7 +43,7 @@ class Reconstruct_SAFRAN_Obs(_VortexTask):
             geometry    = 'SinglePoint',
             vapp        = 'safran',
             vconf       = 'france',
-            experiment  = 'reconstructed_observations_v1@vernaym',
+            experiment  = self.conf.xpid,
             block       = 'observations',
             filename    = '[datebegin:ymdh]_[dateend:ymdh]/NEW_OBSERVATIONS.nc',
             namespace   = 'vortex.multi.fr',
