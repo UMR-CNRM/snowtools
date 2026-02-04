@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 '''
-Created on 7 nov. 2017
-
-@author: lafaysse
 '''
 
-#from vortex.layout.nodes import Task
 from vortex import toolbox
 from vortex.util.helpers import InputCheckerError
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 
+
 class _Pgd_Construct(_CenResearchTask):
     '''
-    Abstract task for PGD step.
+    Abstract task for the generation of ground physiography (PGD.nc file).
 
    Inputs:
     -------
@@ -101,8 +98,6 @@ class _Pgd_Construct(_CenResearchTask):
         print(self.ticket.prompt, 'drdt_bst_fit_60 =', drdt_bst_fit_tbi)
         print()
 
-        
-
     def get_local_inputs(self):
         """
         Get OPTIONS.nam which is always in cache
@@ -138,7 +133,8 @@ class _Pgd_Construct(_CenResearchTask):
         self.sh.title('Toolbox algo PGD')
         PGD_tba = toolbox.algo(
             kind         = 'pgd_from_forcing',
-            forcingname  = firstforcing,
+            # Le nom local de la ressource est fourni par le "container"
+            forcingname  = firstforcing.rh.container.basename,
         )
         print(self.ticket.prompt, 'Toolbox algo pgd=', PGD_tba)
         print()
@@ -152,7 +148,7 @@ class _Pgd_Construct(_CenResearchTask):
         self.component_runner(algo, executable)
         #self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
         # ntasks = 1 !!!! WTF !!!
-            
+
     def put_remote_outputs(self):
         """
         Save the PGD file
@@ -170,12 +166,14 @@ class _Pgd_Construct(_CenResearchTask):
             kind       = 'pgdnc',
             model      = 'surfex',
             namespace  = 'vortex.multi.fr',
-            namebuild  = 'flat@cen',
+            namebuild  = 'flat@cen',  # TODO : passer en variable de configuration
             block      = 'pgd',
         ),
         # MF: in surfex_task.py:       member = self.conf.member if hasattr(self.conf, 'member') else None,
+        # MV : c'était un bug introduit par mon commit #21915d5748ec0f80095edced4fc7ee6790a8faa4
         print(self.ticket.prompt, 'pgd_tbo =', pgd_tbo)
         print()
+
 
 class _Pgd2D_Construct(_Pgd_Construct):
     '''
@@ -240,6 +238,7 @@ class _Pgd2D_Construct(_Pgd_Construct):
         print(self.ticket.prompt, 'ecoclimap2_europ_tbi =', ecoclimap2_europ_tbi)
         print()
 
+
 class Pgd_Uenv_Pgd(_Pgd_Construct):
     '''
     Get PGD executable from Uenv
@@ -268,6 +267,11 @@ class Pgd_Uenv_Pgd(_Pgd_Construct):
 class Pgd_Local_Pgd(_Pgd_Construct):
     '''
     Get PGD executable locally
+
+    Supplementary mandatory configuration variables:
+    ------------------------------------------------
+    :param exesurfex: Absolute path pointing the a local directory containing the target PGD executable
+    :type exesurfex: str
     '''
     def get_remote_inputs(self):
         """
@@ -287,6 +291,7 @@ class Pgd_Local_Pgd(_Pgd_Construct):
         )
         print(self.ticket.prompt, 'PGD_tbx =', PGD_tbx)
         print()
+
 
 class Pgd2D_Uenv_Pgd(_Pgd2D_Construct):
     '''

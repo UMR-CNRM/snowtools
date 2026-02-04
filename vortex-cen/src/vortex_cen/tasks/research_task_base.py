@@ -345,7 +345,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         forcing_namespace = self.conf.get('forcing_namespace', 'vortex.multi.fr')
         # TODO : modifier le namebuilder par defaut lorsque le nouveau incluant la
         # géométrie sera disponible
-        forcing_namebuild = self.conf.get('forcing_namebuild', 'flat@cen')
+        forcing_namebuild = self.conf.get('forcing_namebuild', self.conf.get('namebuild', 'flat@cen'))
         forcing_intent    = self.conf.get('forcing_intent', 'in')
         # TODO : ne pas utiliser de source_app / source_conf à l'avenir
         forcing_source_app  = self.conf.get('forcing_source_app', None)

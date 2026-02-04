@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 '''
-Created on 7 nov. 2017
-
-@author: lafaysse
 '''
 
 #from vortex.layout.nodes import Task
 from vortex import toolbox
 from vortex_cen.tasks.research_task_base import _CenResearchTask
+
 
 class _Prep_Construct(_CenResearchTask):
     '''
@@ -19,7 +17,7 @@ class _Prep_Construct(_CenResearchTask):
     - ecoclimapI_covers_param.bin and ecoclimapII_eu_covers_param.bin (binaries for vegetation generation)
     - drdt_bst_fit_60.nc (Crocus metamorphism parameters)
     - PGD.nc (Ground physiography coming from the cache ?)
- 
+
     Outputs:
     --------
     - PREP.nc (initial conditions)
@@ -117,7 +115,7 @@ class _Prep_Construct(_CenResearchTask):
             kind           = 'pgdnc',
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
-            namebuild      = 'flat@cen',
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'pgd',
         ),
         print(self.ticket.prompt, 'pgd =', pgd_tbi)
@@ -165,7 +163,7 @@ class _Prep_Construct(_CenResearchTask):
         self.component_runner(algo, executable)
         #self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
         # ntasks = 1 !!!! WTF !!!
-            
+
     def put_remote_outputs(self):
         """
         Save the PREP file
@@ -184,7 +182,7 @@ class _Prep_Construct(_CenResearchTask):
             kind       = 'PREP',
             model      = 'surfex',
             namespace  = 'vortex.multi.fr',
-            namebuild  = 'flat@cen',
+            namebuild  = 'flat@cen',  # TODO : passer en variable de configuration
             block      = 'prep',
             member     = self.conf.member if hasattr(self.conf, 'member') else None,
         ),
@@ -211,6 +209,9 @@ class Prep_Uenv_TG_Uenv_Prep(_Prep_Construct):
             nativefmt      = 'netcdf',
             local          = 'init_TG.nc',
             geometry       = self.conf.geometry,
+            # MV : Il faudra peut être utiliser une variable de conf différente de *genv* à terme pour permettre
+            # de récupérer les autres "constantes" dans un genv commun et le binaire dans un environement géré par
+            # le user
             genv           = self.conf.genv,
             gvar           = 'climtg_[geometry::tag]',
             model          = 'surfex',
@@ -224,6 +225,9 @@ class Prep_Uenv_TG_Uenv_Prep(_Prep_Construct):
             kind           = 'prep',
             local          = 'PREP',
             model          = 'surfex',
+            # MV : Il faudra peut être utiliser une variable de conf différente de *genv* à terme pour permettre
+            # de récupérer les autres "constantes" dans un genv commun et le binaire dans un environement géré par
+            # le user
             genv           = self.conf.genv,
             gvar           = 'master_prep_mpi',
         )
@@ -243,6 +247,13 @@ class Prep_Local_TG_Uenv_Prep(_Prep_Construct):
         #######################################################################
         #                             Fetch steps                             #
         #######################################################################
+
+        # MV : Comme discuté avec MF, il serait peut être plus pertinent de faire une tâche
+        # spécifique pour la génération de init_TG qui check si un 'init_TG.nc' existe déjà pour
+        # cet xpid et géométrie et le mette dans le cache local ou en génère un dans le cas contraire.
+        # --> cela permettrait de simplifier les tâches de génération du PREP en allant systématiquement
+        # chercher le fichier init_TG sur le cache
+
         self.sh.title('Toolbox input init_TG from local')
         initTG_tbi = toolbox.input(
             alternate      = 'initial values of ground temperature',
@@ -253,7 +264,7 @@ class Prep_Local_TG_Uenv_Prep(_Prep_Construct):
             geometry       = self.conf.geometry,
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
-            namebuild      = 'flat@cen',
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'prep',
         ),
         print(self.ticket.prompt, 'initTG_tbi =', initTG_tbi)
@@ -275,6 +286,11 @@ class Prep_Local_TG_Uenv_Prep(_Prep_Construct):
 class Prep_Uenv_TG_Local_Prep(_Prep_Construct):
     '''
     Get init_TG.nc from Uenv and PREP executable locally
+
+    Supplementary mandatory configuration variables:
+    ------------------------------------------------
+    :param exesurfex: Absolute path pointing the a local directory containing the target PREP executable
+    :type exesurfex: str
     '''
     def get_remote_inputs(self):
         """
@@ -284,6 +300,7 @@ class Prep_Uenv_TG_Local_Prep(_Prep_Construct):
         #######################################################################
         #                             Fetch steps                             #
         #######################################################################
+
         self.sh.title('Toolbox input init_TG from local')
         initTG_tbi = toolbox.input(
             alternate      = 'initial values of ground temperature',
@@ -294,7 +311,7 @@ class Prep_Uenv_TG_Local_Prep(_Prep_Construct):
             geometry       = self.conf.geometry,
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
-            namebuild      = 'flat@cen',
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'prep',
         ),
         print(self.ticket.prompt, 'initTG_tbi =', initTG_tbi)
@@ -315,6 +332,11 @@ class Prep_Uenv_TG_Local_Prep(_Prep_Construct):
 class Prep_Local_TG_Local_Prep(_Prep_Construct):
     '''
     Get init_TG.nc and PREP executable both locally
+
+    Supplementary mandatory configuration variables:
+    ------------------------------------------------
+    :param exesurfex: Absolute path pointing the a local directory containing the target PREP executable
+    :type exesurfex: str
     '''
     def get_remote_inputs(self):
         """
@@ -334,7 +356,7 @@ class Prep_Local_TG_Local_Prep(_Prep_Construct):
             geometry       = self.conf.geometry,
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
-            namebuild      = 'flat@cen',
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'prep',
         ),
         print(self.ticket.prompt, 'initTG_tbi =', initTG_tbi)

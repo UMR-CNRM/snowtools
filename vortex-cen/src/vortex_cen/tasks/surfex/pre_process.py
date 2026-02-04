@@ -20,6 +20,16 @@ class _Preprocess(_CenResearchTask):
     --------
     - Modified and ready-to-use SURFEX namelist
 
+    Mandatory configuration variables:
+    ----------------------------------
+    :param datebegin: *datebegin* of the forcing file(s)
+    :type datebegin: str, footprints.stdtypes.FPList
+    :param dateend: *dateend* of the forcing files(s)
+    :type dateend: str, footprints.stdtypes.FPList
+    :param geometry: *geometry* of the forcing file(s)
+    :type geometry: str, footprints.stdtypes.FPList
+    :param xpid: Experiment identifier (format "experiment_name@user")
+    :type xpid: str
     '''
     def get_remote_inputs(self):
         """
@@ -82,16 +92,8 @@ class Preprocess_Uenv_Namelist(_Preprocess):
 
     NB : This is the task to use to guarantee the simulation's reproductibility
 
-    Mandatory configuration variables:
-    ----------------------------------
-    :param datebegin: *datebegin* of the forcing file(s)
-    :type datebegin: str, footprints.stdtypes.FPList
-    :param dateend: *dateend* of the forcing files(s)
-    :type dateend: str, footprints.stdtypes.FPList
-    :param geometry: *geometry* of the forcing file(s)
-    :type geometry: str, footprints.stdtypes.FPList
-    :param xpid: Experiment identifier (format "experiment_name@user")
-    :type xpid: str
+    Supplementary mandatory configuration variables:
+    ------------------------------------------------
     :param uenv: User Environment in which the namelist is to be retrieved.
                  Format : uenv:{uenv_name}@{user}
     :type uenv: str
@@ -131,16 +133,8 @@ class Preprocess_Local_Namelist(_Preprocess):
 
     WARNING : The simulation's reproductibility can not be guaranteed with this task !
 
-    Mandatory configuration variables:
-    ----------------------------------
-    :param datebegin: *datebegin* of the forcing file(s)
-    :type datebegin: str, footprints.stdtypes.FPList
-    :param dateend: *dateend* of the forcing files(s)
-    :type dateend: str, footprints.stdtypes.FPList
-    :param geometry: *geometry* of the forcing file(s)
-    :type geometry: str, footprints.stdtypes.FPList
-    :param xpid: Experiment identifier (format "experiment_name@user")
-    :type xpid: str
+    Supplementary mandatory configuration variables:
+    ------------------------------------------------
     :param namelist: Absolute path pointing to the namelist to be used.
     :type namelist: str
     '''

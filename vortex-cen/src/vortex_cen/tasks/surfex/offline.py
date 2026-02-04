@@ -5,10 +5,10 @@
 from vortex import toolbox
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
-from bronx.stdtypes.date import Date #, daterange, tomorrow
+from bronx.stdtypes.date import Date  # , daterange, tomorrow
 
 # MV :
-# Il faudra réfléchir au traitement des cas ensemblistes (parallélisation sur les membres de simulation uniquement):
+# TODO Il faudra réfléchir au traitement des cas ensemblistes (parallélisation sur les membres de simulation uniquement):
 # - soit tout le monde hérite d'une classe "OFFLINE" abstraite dans laquelle et il faut gérer dans chaque cas le fait que la notion de *membre* est obligatoire ou optionnelle
 # - soit on fait 2 classes abstraites distinctes (1 pour chaque algo) avec duplication des inputs communs
 class _Offline_MPI(_CenResearchTask):
@@ -57,6 +57,9 @@ class _Offline_MPI(_CenResearchTask):
 
     Optionnal configuration variables (other than forcing-specific ones):
     ---------------------------------------------------------------------
+    :param member: Simulation member.
+                   NB : This is a deterministic task, only one single member value can be provided
+    :type member: int
     :param pgd_xpid: Experiment Identifier of the PGD file, if different from the task's XPID
     :type pgd_xpid: str
     :param pgd_vapp: *vapp* of the PGD file, if different from the task's *vapp*
@@ -155,7 +158,7 @@ class _Offline_MPI(_CenResearchTask):
             kind           = 'pgdnc',
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
-            namebuild      = 'flat@cen',
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'pgd',
             # MV : La notion de "membre" n'a pasde sens pour le PGD
         ),
@@ -182,15 +185,16 @@ class _Offline_MPI(_CenResearchTask):
             kind           = 'PREP',
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
-            namebuild      = 'flat@cen',
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'prep',
             # MV : La notion de "membre" pour le PREP est particulière dans le cas déterministe
             # - dans le cas général, le PREP n'est associé à aucun *membre*
             # - dans une simulation avec assimilation: la première initialisation est faite
             #   avec un unique fichier PREP pour tous les membres de simulation et les initialisations
             #   suivantes dépendent des membres sélectionnés par SODA.
-            # Le cas ensembliste doit être traité dans une tâche spécifique
-            member         = self.conf.get('prep_member', None),
+            # Le cas ensembliste (parralélisation sur les membres, 1 PREP / membre)
+            # doit être traité dans une tâche spécifique
+            member         = self.conf.get('prep_member', self.conf.get('member', None)),
             intent         = 'inout',
         ),
         print(self.ticket.prompt, 'prep_tbi =', prep_tbi)
@@ -200,7 +204,7 @@ class _Offline_MPI(_CenResearchTask):
 
     def get_local_inputs(self):
         """
-        Get OPTIONS.nam which is always in cache beacause it comes from
+        Get OPTIONS.nam which is always in cache because it comes from
         a previous execution of a "pre_process" task.
         """
         # Namelist mandatory to run OFFLINE and taken from the cache
@@ -299,10 +303,9 @@ class _Offline_MPI(_CenResearchTask):
             kind           = 'SnowpackSimulation',
             model          = 'surfex',
             namespace      = namespace_out,
-            namebuild      = 'flat@cen',
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'cumul',
-            # MV : Faire une tache spécifique pour gérer les cas ensemblistes (algo différent)
-            # member         = self.conf.member if hasattr(self.conf, 'member') else None,
+            member         = self.conf.get('member', None),
             fatal          = False,
         ),
         print(self.ticket.prompt, 'cumul_tbo =', cumul_tbo)
@@ -324,10 +327,9 @@ class _Offline_MPI(_CenResearchTask):
             kind           = 'SnowpackSimulation',
             model          = 'surfex',
             namespace      = namespace_out,
-            namebuild      = 'flat@cen',
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'diag',
-            # MV : Faire une tache spécifique pour gérer les cas ensemblistes (algo différent)
-            # member         = self.conf.member if hasattr(self.conf, 'member') else None,
+            member         = self.conf.get('member', None),
             fatal          = False,
         ),
         print(self.ticket.prompt, 'diag_tbo =', diag_tbo)
@@ -348,10 +350,9 @@ class _Offline_MPI(_CenResearchTask):
             kind           = 'PREP',
             model          = 'surfex',
             namespace      = namespace_out,
-            namebuild      = 'flat@cen',
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'prep',
-            # MV : Faire une tache spécifique pour gérer les cas ensemblistes (algo différent)
-            # member         = self.conf.member if hasattr(self.conf, 'member') else None,
+            member         = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
         print()
@@ -372,10 +373,9 @@ class _Offline_MPI(_CenResearchTask):
             kind           = 'SnowpackSimulation',
             model          = 'surfex',
             namespace      = namespace_out,
-            namebuild      = 'flat@cen',
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'pro',
-            # MV : Faire une tache spécifique pour gérer les cas ensemblistes (algo différent)
-            # member         = self.conf.member if hasattr(self.conf, 'member') else None,
+            member         = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'pro_tbo =', pro_tbo)
         print()
@@ -402,6 +402,9 @@ class Offline_MPI_Uenv(_Offline_MPI):
             kind           = 'offline',
             local          = 'OFFLINE',
             model          = 'surfex',
+            # MV : Il faudra peut être utiliser une variable de conf différente de *genv* à terme pour permettre
+            # de récupérer les autres "constantes" dans un genv commun et le binaire dans un environement géré par
+            # le user
             genv           = self.conf.genv,
             gvar           = 'master_surfex_offline_mpi',
         )
