@@ -127,6 +127,7 @@ Method 1: install with ``pip`` (recommended)
 
 1. Ensure that your"snowtools" directory points to the version / commit that you want to install
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
 If necessary, clone the snowtools git repository (see method 1) and checkout to the target commit.
 
 If yout want to install snowtools on a remote server, sync your snowtools repository on this server:
@@ -135,27 +136,23 @@ If yout want to install snowtools on a remote server, sync your snowtools reposi
 
     $SNOWTOOLS_CEN/cenutils/put snowtools {server}
 
-and follow the next steps on the remote server.
+and follow the next step on the remote server.
 
-2. Create or choose a virtual environment.
-"""""""""""""""""""""""""""""""""""""""""""
 
-.. note::
-
-   For an editable install, it is necessary to create your virtual environment OUTSIDE
-   the snowtools root directory.
+2. Choose the python version to be used
+"""""""""""""""""""""""""""""""""""""""
 
 <b>On MF HPC:</b>
-
-Load python and the gcc compiler:
-
-.. code-block::bash
-
-   module load python/{version} gcc
 
 For an <b>editable install</b>, you must load python version 3.10.12 or 3.12.12.
 
 For a <b>standard install</b>, you can choose between available python versions 3.7.6nomkl, 3.10.12 or 3.12.12:
+
+You also need to load the gcc compiler:
+
+.. code-block::bash
+
+   module load python/{version} gcc
 
 <b>On sxcen:</b>
 
@@ -166,82 +163,26 @@ To use the latest available python version, simply choose "python3":
 
     alias python=python3
 
-<b>On all servers:</b>
 
-Create a virtual environment with a freely chosen name {nameofmyenv}:
+2. Install snowtools in a virtual environment
+"""""""""""""""""""""""""""""""""""""""""""""
 
-.. code-block:: bash
+Use the snowtools installation script snowtools/cenutils/install_snowtools.py.
 
-   python -m venv {nameofmyenv}
-
-.. note::
-
-   In case you also want to include packages installed by default on the server, add "--system-site-packages" to the previous command:
-   python -m venv {nameofmyenv} --system-site-packages
-
-
-Or create a virtual environment within the PyCharm IDE:
-
-
-   File -> Settings
-
-   In settings go to
-   Project -> Python Interpreter
-
-   Next to the Interpreter line clic "add interpreter" -> "add local interpreter"
-
-   choose
-   environment: new environment
-   type: "virtuelenv"
-   python base:
-   choose the location and a base interpreter
-   (typically the system python install /usr/bin/python3.XX)
-   location: choose the location and name of your environment
-
-   Hint: tick the "inherit packages from base interpreter" check box
-   for the --system-site-packages option.
-
-   clic the "Ok" button.
-
-
-3. Source the virtual environment
-"""""""""""""""""""""""""""""""""
-
-.. code-block:: bash
-
-   source ./{pathtovenv}/{nameofmyenv}/bin/activate
-
-now the commandline prompt should start with ``(nameofmyenv)``
-and thus look like ``(nameofmyenv) username@host:~$`` for example.
-
-.. note::
-
-   You may have to update pip to ensure that the following steps work well:
-   pip install --upgrade pip
-
-
-4. Install snowtools
-""""""""""""""""""""
-
-Launch the installation script snowtools/cenutils/install_snowtools.py (or simply "install_snowtools" if you use an alias):
+You can either create and activate a virtual environment by following the instructions given in the section "creation of a virtual environment" before launching the installation script,
+or use the -v/-venv option.
 
 For a <b>standard install</b> (stable applications):
 
 .. code-block:: bash
 
-   python3 $SNOWTOOLS_CEN/cenutils/install_snowtools.py
+   python $SNOWTOOLS_CEN/cenutils/install_snowtools.py [-v <path_to_your_virtual_env>]
 
-or simply:
-
-.. code-block:: bash
-
-   install_snowtools
-
-For an <b>editable install</b> (ongoing developments):
+For an <b>editable install</b> (ongoing developments), use the option -e:
 
 .. code-block:: bash
 
-   install_snowtools -e
+   python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e [-v <path_to_your_virtual_env>]
 
 In both cases, you can install optional dependencies with the "-o" argument:
 
@@ -249,80 +190,20 @@ In both cases, you can install optional dependencies with the "-o" argument:
 
 .. code-block::
 
-    install_snowtools -o plot [-e]
+    install_snowtools -o plot [-e] [-v <path_to_your_virtual_env>]
 
 2. If yout want to use sql tools, run:
 
 .. code-block::
 
-    install_snowtools -o sql [-e]
+    install_snowtools -o sql [-e] [-v <path_to_your_virtual_env>]
 
 3. If you want to install all dependencies, run:
 
 .. code-block::
 
-    install_snowtools -o all [-e]
+    install_snowtools -o all [-e] [-v <path_to_your_virtual_env>]
 
-
-..
-    5. install build dependencies (<b>editable install only</b>)
-    """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
-    ``numpy>=1.21.6``, ``meson-python`` and ``ninja`` inside the virtual environment.
-
-    .. code-block:: bash
-
-           pip install numpy>=1.21.6 meson-python ninja
-
-    .. note::
-
-       Snowtools contains a compiled extension module written in Fortran.
-       In order to render compiled extension modules editable similarly to ordinary python code,
-       they are compiled at import time in an editable install rather than during
-       installation in case of a classical install (:ref:`sec-install_users`).
-       This means that the build dependencies have to be available at runtime in
-       the virtual environment and not just temporarily during the install.
-       The advantage is, that edits in the Fortran code trigger the (partial) re-compilation of
-       the extension module at the next import in a new interpreter instance.
-       https://mesonbuild.com/meson-python/how-to-guides/editable-installs.html
-
-
-    6. install snowtools
-    """"""""""""""""""""
-
-    Go to your snowtools root directory.
-
-    If a "build" directory is present, remove it :
-
-    .. code-block:: bash
-
-       rm -rf build
-
-    Finally, install snowtools:
-
-    * for an <b>editable install</b> do:
-
-    .. code-block:: bash
-
-       pip install --no-build-isolation -e .
-
-    .. note::
-
-       ``--no-build-isolation`` disables build isolation.
-       Disabling build isolation is necessary in order to be able to re-build extensions
-       at import time in editable installs. For ordinary installs build isolation is a desired feature.
-
-    * for a <b>standard install</b> do:
-
-    .. code-block:: bash
-
-       pip install .
-
-    .. note::
-
-      In both cases, optional dependencies can be installed by following
-      the instructions given in step 4 of the "Snowtools install for users" section
-..
 
 Method 2: local install with PYTHONPATH (not recommended)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
