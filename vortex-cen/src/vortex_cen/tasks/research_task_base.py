@@ -297,7 +297,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
         Optionnal configuration variables:
 
-        :param forcing_member: *member* footprint, default None
+        :param forcing_member: *member* footprint, default None (or *member* if provided)
         :type forcing_member: int, footprints.stdtypes.FPList
         :param forcing_namebuild: *namebuild* footprint, default "flat@cen" (will change soon)
         :type forcing_namebuild: str
@@ -333,10 +333,10 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         forcing_vapp      = self.conf.get('forcing_vapp', self.conf.vapp)
         forcing_vconf     = self.conf.get('forcing_vconf', self.conf.vconf)
         forcing_block     = self.conf.get('forcing_block', 'meteo')
-        forcing_member    = self.conf.get('forcing_member', None)
+        forcing_member    = self.conf.get('forcing_member', self.conf.get('member', None))
         # Security : in case of an ensemble of forcing files, get the FORCING of each member in a
         # separate directory to avoid overwrinting files.
-        if forcing_member is not None and '[member]' not in localname:
+        if (isinstance(forcing_member, list) and len(forcing_member) > 1 and '[member]' not in localname):
             localname = f'mb[member]/{localname}'
         forcing_namespace = self.conf.get('forcing_namespace', 'vortex.multi.fr')
         # TODO : modifier le namebuilder par defaut lorsque le nouveau incluant la
