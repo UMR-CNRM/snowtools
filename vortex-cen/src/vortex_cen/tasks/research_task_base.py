@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 '''
-Created on 18 mars 2024
-@author: Vernay.M
 '''
 
 from vortex.layout.nodes import Task
-from cen.layout.nodes import S2MTaskMixIn
+from vortex.cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 from bronx.stdtypes.date import Date
 from footprints.stdtypes import FPDict
 from vortex.tools.env import Environment
 # from vortex.syntax.stdattrs import Namespace
 
-from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext, TestReportContext
+from vortex.cen.tools.monitoring import InputReportContext, OutputReportContext, TestReportContext
 
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 
