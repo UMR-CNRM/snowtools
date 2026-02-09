@@ -77,6 +77,19 @@ class Reconstruct_SAFRAN_Obs(_VortexTask):
         print(t.prompt, 'Raw Obs = ', self.obs)
         print()
 
+        self.sh.title('Toolbox input listeo')
+        listeo = toolbox.input(
+            role            = 'ListePost',
+            genv            = self.conf.cycle,
+            gdomain         = '[geometry]',
+            geometry        = self.conf.geometry,
+            kind            = 'listeo',
+            model           = 'safran',
+            local           = 'listeo_reanalyse',
+        )
+        print(t.prompt, 'listeo =', listeo)
+        print()
+
     def get_local_inputs(self):
 
         pass
