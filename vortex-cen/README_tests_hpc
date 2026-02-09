@@ -1,11 +1,11 @@
 
 # 1. Synchroniser la configuration test dans un répertoire de travail :
-python $SNOWTOOLS/vortex-cen/scripts/sync_hpc_env.py -a testshpc -c unittest
+python $SNOWTOOLS_CEN/vortex-cen/scripts/sync_hpc_env.py -a tests -c testhpc
 # --> renvoie le lien vers le workdir créé : /scratch/work/{username}/tests/testhpc
 
 # 2. Sous /scratch/work/{username}/tests/testhpc/jobs :
-# Lancer tous les tests avec :
-mkjob.py -f create_job
-
 # Lancer uniquement un job :
-mkjob -j {la ligne à tester dans le fichier "create_job"}
+../vortex/bin/mkjob.py -j {la ligne à tester dans le fichier "create_job"}
+
+# Exemple:
+../vortex/bin/mkjob.py -j name=preprocess_unev_namelist_job package=drivers task=pre_process profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=preprocess_unev_namelist

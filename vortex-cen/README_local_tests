@@ -6,3 +6,7 @@ python $SNOWTOOLS/vortex-cen/scripts/localtest.py -t {class_name} -m {file_name}
 
 # ex:
 python $SNOWTOOLS/vortex-cen/scripts/localtest.py -t ExtractS2MForcing -m extract_s2m_points -d forcing -c $SNOWTOOLS/vortex-cen/tests/testhpc/conf/tests_testhpc.ini
+
+# exemple pour Mathieu qui est un peu lent
+export PYTHONPATH=$PYTHONPATH:$SNOWTOOLS_CEN/vortex-cen/src
+python $SNOWTOOLS_CEN/vortex-cen/scripts/localtest.py -t Preprocess_Uenv_Namelist -m pre_process -d surfex -c $SNOWTOOLS_CEN/vortex-cen/tests/testhpc/conf/tests_testhpc.ini
