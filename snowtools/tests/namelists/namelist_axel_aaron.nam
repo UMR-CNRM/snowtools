@@ -295,7 +295,8 @@
                        NOUTPUT_NETCDF           = 4             ,
                        LRESTART 		= .TRUE.     	,
                        XTSTEP_OUTPUT 		= 3600.         ,
-                       XTSTEP_SURF 		= 900.
+                       XTSTEP_SURF 		= 900.,
+                       NB_READ_FORC = 1,
 /
 &NAM_DIAG_SURFn        LSURF_BUDGET = .TRUE. , 
                        LRAD_BUDGET=   .TRUE. ,

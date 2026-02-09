@@ -237,8 +237,8 @@ CROUGH = "Z01D"
                        LSPECSNOW = .TRUE.                  ,
                        LFORCIMP = .TRUE.                ,
                        LWRITE_COORD = .TRUE.            ,
-                       NIMPUROF=2
-                      
+                       NIMPUROF=2,
+                       NB_READ_FORC = 1,
 /
 &NAM_DIAG_SURFn        LSURF_BUDGET = .TRUE. ,
                        LRAD_BUDGET  = .TRUE. , 

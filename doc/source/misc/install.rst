@@ -32,14 +32,33 @@ Snowtools install for users
 If you are only a user of snowtools, you can install the package easily with pip in a virtual environment:
 
 1. Download the source code: ``git clone https://github.com/UMR-CNRM/snowtools.git``
-2. Create a virtual environment : ``python3 -m venv --system-site-packages <name_of_your_virtual_env>``
+2. Create a virtual environment : ``python3 -m venv <name_of_your_virtual_env>`` or ``python3 -m venv --system-site-packages <name_of_your_virtual_env>``
 3. Enter in the virtual environment:  ``source <name_of_your_virtual_env>/bin/activate``
-4. Ensure you are at the root of the snowtools repository and install the package by running:
+4. Ensure you are at the root of the snowtools repository.
+   a. If you want the minimal install, run:
 
 .. code-block::
 
     pip install .
 
+
+   b. If you want to use graphic tools, run:
+
+.. code-block::
+
+    pip install .[plot]
+
+   c. If yout want to use sql tools (MF-only), run:
+
+.. code-block::
+
+    pip install .[sql]
+
+   d. If you want to install all extensions, run:
+
+.. code-block::
+
+    pip install .[all]
 
 
 .. _sec-install_dev:
@@ -70,29 +89,14 @@ Make sure you have a github account, linked to snowtools repository (send a mail
 
    git clone git@github.com:UMR-CNRM/snowtools.git
 
-
-You have to add the install folder to your ``PYTHONPATH``. This can be done by adding these tho following lines to your ``.bashrc`` or ``.bash-profile``:
-
+Set an environment variable pointing to the snowtools repository in your ``~/.bashrc`` file:
 
 .. code-block:: bash
 
-   export SNOWTOOLS_CEN=/yourpath/snowtools
-   export PYTHONPATH=$PYTHONPATH:$SNOWTOOLS_CEN
-
-It is also recommended to create useful aliases for s2m command and proreader graphical user interface in the ``~/.bashrc`` file:
-
-.. code-block:: bash
+   export SNOWTOOLS_CEN=/{path_to_snowtools_repository}/snowtools
 
 
-You have to add the install folder to your ``PYTHONPATH``. This can be done by adding these tho following lines to your ``.bashrc`` or ``.bash-profile``:
-
-
-.. code-block:: bash
-
-   export SNOWTOOLS_CEN=/yourpath/snowtools
-   export PYTHONPATH=$PYTHONPATH:$SNOWTOOLS_CEN
-
-It is also recommended to create useful aliases for s2m command and proreader graphical user interface in the ``~/.bashrc`` file:
+It is also recommended to create useful aliases for the installation, the use of the s2m command and proreader graphical interface in the ``~/.bashrc`` file:
 
 .. code-block:: bash
 
@@ -100,106 +104,118 @@ It is also recommended to create useful aliases for s2m command and proreader gr
    alias proplotter="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/proplotter.py"
    alias procompare="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/procompare.py"
    alias put="$SNOWTOOLS_CEN/cenutils/put"
+   alias install_snowtools="python3 $SNOWTOOLS_CEN/cenutils/install_snowtools.py"
 
 
-..
-   Method 2
-   ^^^^^^^^
+Method 1: install with ``pip`` (recommended)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   editable install with ``pip``.
+.. note::
 
-   .. note::
+   To ensure a reproductible installation, you must **not** have any package installed locally (under your $HOME/.local).
+   If this is the case, re-install the locally installed packages in a proper virtual environment and remove your $HOME/.local directory.
 
-       If using this method make sure **not** to have
-       your snowtools directory in your PYTHONPATH.
-       So do not mix with method 1.
+   You also need to make sure **not** to have your snowtools directory in your PYTHONPATH.
+   So do not mix with method 2.
 
+   There are two different possibilities:
+    - make an editable install for ongoing developments
+    - make a standard install for stable applications (real-time applications, reanalyses, ...)
 
-   1. Clone the git repository on your computer.
-   """""""""""""""""""""""""""""""""""""""""""""
-   (see method 1)
-
-   2. create or choose a virtual environment.
-   """""""""""""""""""""""""""""""""""""""""""
-   To create a virtual environment you can run:
-
-   .. code-block:: bash
-
-       python -m venv nameofmyenv --system-site-packages
-
-   where ``nameofmyenv`` is a freely chosen name for the environment
-   and --system-site-packages makes the packages already installed on
-   the system available inside the virtual environment.
-
-   Or create a virtual environment within the PyCharm IDE:
+..   Depending on your use case, follow the corresponding instructions, as well as server-specific instructions.
 
 
-       File -> Settings
+1. Ensure that your"snowtools" directory points to the version / commit that you want to install
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-       In settings go to
-       Project -> Python Interpreter
+If necessary, clone the snowtools git repository (see method 1) and checkout to the target commit.
 
-       Next to the Interpreter line clic "add interpreter" -> "add local interpreter"
+If yout want to install snowtools on a remote server, sync your snowtools repository on this server:
 
-       choose
-       environment: new environment
-       type: "virtuelenv"
-       python base:
-       choose the location and a base interpreter
-       (typically the system python install /usr/bin/python3.XX)
-       location: choose the location and name of your environment
+.. code-block:: bash
 
-       Hint: tick the "inherit packages from base interpreter" check box
-       for the --system-site-packages option.
+    $SNOWTOOLS_CEN/cenutils/put snowtools {server}
 
-       clic the "Ok" button.
+and follow the next step on the remote server.
 
-   3. source the virtual environment
-   """""""""""""""""""""""""""""""""
 
-   .. code-block:: bash
+2. Choose the python version to be used
+"""""""""""""""""""""""""""""""""""""""
 
-       source ./<pathtovenv>/nameofmyenv/bin/activate
+<b>On MF HPC:</b>
 
-   now the commandline prompt should start with ``(nameofmyenv)``
-   and thus look like ``(nameofmyenv) username@host:~$`` for example.
+For an <b>editable install</b>, you must load python version 3.10.12 or 3.12.12.
 
-   4. install build dependencies
-   """"""""""""""""""""""""""""""
-   ``numpy>=1.24.4``, ``meson-python`` and ``ninja`` inside the virtual environment.
+For a <b>standard install</b>, you can choose between available python versions 3.7.6nomkl, 3.10.12 or 3.12.12:
 
-   .. code-block:: bash
+You also need to load the gcc compiler:
 
-           pip install numpy>=1.24.4 meson-python ninja
+.. code-block::bash
 
-   .. note::
+   module load python/{version} gcc
 
-       Snowtools contains a compiled extension module written in Fortran.
-       In order to render compiled extension modules editable similarly to ordinary python code,
-       they are compiled at import time in an editable install rather than during
-       installation in case of a classical install (:ref:`sec-install_users`).
-       This means that the build dependencies have to be available at runtime in
-       the virtual environment and not just temporarily during the install.
-       The advantage is, that edits in the Fortran code trigger the (partial) re-compilation of
-       the extension module at the next import in a new interpreter instance.
-       https://mesonbuild.com/meson-python/how-to-guides/editable-installs.html
+<b>On sxcen:</b>
 
-   5. install snowtools:
-   """""""""""""""""""""""
-   inside the snowtools directory do:
+You must specify which python version you will use. Available version are 3.8 and 3.12.
+To use the latest available python version, simply choose "python3":
 
-   .. code-block:: bash
+.. code-block::bash
 
-       pip install --no-build-isolation -e .
+    alias python=python3
 
-   .. note::
 
-       ``--no-build-isolation`` disables build isolation.
-       Disabling build isolation is necessary in order to be able to re-build extensions
-       at import time in editable installs. For ordinary installs build isolation is a desired feature.
+2. Install snowtools in a virtual environment
+"""""""""""""""""""""""""""""""""""""""""""""
 
-Optional installations
-----------------------
+Use the snowtools installation script snowtools/cenutils/install_snowtools.py.
+
+You can either create and activate a virtual environment by following the instructions given in the section "creation of a virtual environment" before launching the installation script,
+or use the -v/-venv option.
+
+For a <b>standard install</b> (stable applications):
+
+.. code-block:: bash
+
+   python $SNOWTOOLS_CEN/cenutils/install_snowtools.py [-v <path_to_your_virtual_env>]
+
+For an <b>editable install</b> (ongoing developments), use the option -e:
+
+.. code-block:: bash
+
+   python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e [-v <path_to_your_virtual_env>]
+
+In both cases, you can install optional dependencies with the "-o" argument:
+
+1. If you want to use graphic tools, run:
+
+.. code-block::
+
+    install_snowtools -o plot [-e] [-v <path_to_your_virtual_env>]
+
+2. If yout want to use sql tools, run:
+
+.. code-block::
+
+    install_snowtools -o sql [-e] [-v <path_to_your_virtual_env>]
+
+3. If you want to install all dependencies, run:
+
+.. code-block::
+
+    install_snowtools -o all [-e] [-v <path_to_your_virtual_env>]
+
+
+Method 2: local install with PYTHONPATH (not recommended)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Alternatively, you can add the snowtools root directory to your ``PYTHONPATH``.
+This can be done by adding these tho following lines to your ``.bashrc`` or ``.bash-profile``:
+
+
+.. code-block:: bash
+
+   export SNOWTOOLS_CEN=/{path_to_snowtools_repository}/snowtools
+   export PYTHONPATH=$PYTHONPATH:$SNOWTOOLS_CEN
 
 
 Vortex package
@@ -255,3 +271,58 @@ If you need to use CRPS scoring tools, which parts are written in Fortran, you n
 
 For CRPS scores, go to the ``snowtools/scores``, and run ``./install_ubuntu.sh`` (or ``./install_belenos.sh`` if you are on a Meteo-France super computer).
 
+
+Creation of a virtual environment
+"""""""""""""""""""""""""""""""""
+
+.. note::
+
+   For an editable install, it is necessary to create your virtual environment OUTSIDE
+   the snowtools root directory.
+
+<b>On all servers:</b>
+
+Create a virtual environment with a freely chosen name {nameofmyenv}:
+
+.. code-block:: bash
+
+   python -m venv {nameofmyenv}
+
+.. note::
+
+   In case you also want to include packages installed by default on the server, add "--system-site-packages" to the previous command:
+   python -m venv {nameofmyenv} --system-site-packages
+
+
+Or create a virtual environment within the PyCharm IDE:
+
+
+   File -> Settings
+
+   In settings go to
+   Project -> Python Interpreter
+
+   Next to the Interpreter line clic "add interpreter" -> "add local interpreter"
+
+   choose
+   environment: new environment
+   type: "virtuelenv"
+   python base:
+   choose the location and a base interpreter
+   (typically the system python install /usr/bin/python3.XX)
+   location: choose the location and name of your environment
+
+   Hint: tick the "inherit packages from base interpreter" check box
+   for the --system-site-packages option.
+
+   clic the "Ok" button.
+
+
+Finaly, activate the virtual environment with:
+
+.. code-block:: bash
+
+   source ./{pathtovenv}/{nameofmyenv}/bin/activate
+
+now the commandline prompt should start with ``(nameofmyenv)``
+and thus look like ``(nameofmyenv) username@host:~$`` for example.
