@@ -9,8 +9,8 @@ from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
 from vortex.algo.components import Parallel, AlgoComponent, TaylorRun
 from vortex.syntax.stdattrs import a_date
-from cen.algo.ensemble import PrepareForcingWorker
-from cen.algo.ensemble import _CENTaylorRun, _CENTaylorVortexWorker
+from vortex_cen.algo.ensemble import PrepareForcingWorker
+from vortex_cen.algo.ensemble import _CENTaylorRun, _CENTaylorVortexWorker
 
 logger = loggers.getLogger(__name__)
 

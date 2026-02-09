@@ -9,14 +9,15 @@ from footprints.stdtypes import FPList
 
 from vortex.algo.components import AlgoComponent, TaylorRun
 from vortex.tools.parallelism import TaylorVortexWorker
-from cen.algo.ensemble import _CENTaylorRun, _CENTaylorVortexWorker
 from vortex.syntax.stdattrs import a_date
+
+from vortex_cen.algo.ensemble import _CENTaylorRun, _CENTaylorVortexWorker
 
 logger = loggers.getLogger(__name__)
 
 echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
-    from snowtools.plots.pearps2m.postprocess import EnsemblePostproc, EnsembleHydro
+    from snowtools.tools.postprocess import EnsemblePostproc, EnsembleHydro
     from snowtools.tools.hydro import hydro
     from snowtools.scripts.post_processing import extract_dates
     from snowtools.scripts.post_processing import compute_scd as scd

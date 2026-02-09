@@ -4,9 +4,9 @@ S2M executions flow resources.
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Time
-from cen.syntax.stdattrs import cendateperiod_deco
-from common.data.modelstates import InitialCondition
-from common.data.obs import ObsRaw
+from vortex_cen.syntax.stdattrs import cendateperiod_deco
+from vortex.nwp.data.modelstates import InitialCondition
+from vortex.nwp.data.obs import ObsRaw
 import footprints
 from footprints.util import rangex
 from vortex.data.flow import GeoFlowResource

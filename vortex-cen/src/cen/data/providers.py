@@ -2,6 +2,8 @@
 Specific CEN providers.
 """
 
+import importlib
+
 from bronx.fancies import loggers
 
 from vortex.util.config import GenericConfigParser
@@ -14,6 +16,9 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 map_suffix = {'alp': '_al', 'pyr': '_py', 'cor': '_co', 'mac': '_mc', 'jur': '_ju', 'vog': '_vo'}
+
+_config_path = 'vortex_cen.data.cen_stores_configs'
+_config_file = 'cen-map-resources.ini'
 
 
 class CenCfgParser(GenericConfigParser):
@@ -30,6 +35,14 @@ class CenCfgParser(GenericConfigParser):
 
 
 class S2MReanalysisProvider(Provider):
+
+    #: Path to the uget Store configuration file
+    _config = CenCfgParser(
+        importlib.resources.open_text(
+            _config_path,
+            _config_file,
+        )
+    )
 
     _footprint = [
         namespacefp,
@@ -50,11 +63,6 @@ class S2MReanalysisProvider(Provider):
                     values   = ['ftp'],
                     default  = 'ftp'
                 ),
-                config = dict(
-                    type     = CenCfgParser,
-                    optional = True,
-                    default  = CenCfgParser('@cen-map-resources.ini')
-                )
             )
         )
     ]
@@ -74,7 +82,7 @@ class S2MReanalysisProvider(Provider):
     def pathname(self, resource):
         """
         The actual pathname is the directly obtained from the templated ini file
-        provided through the ``config`` footprint attribute.
+        provided through the ``_config`` class variable.
         """
         info = self.pathinfo(resource)
         info['level_one'] = self.vconf.split('@')[0]
@@ -97,11 +105,18 @@ class S2MReanalysisProvider(Provider):
         elif resource.realkind == 'packedobs':
             info['level_two'] = 'obs'
 
-        self.config.setall(info)
-        return self.config.resolvedpath(resource, self.vapp, self.vconf, self.realkind)
+        self._config.setall(info)
+        return self._config.resolvedpath(resource, self.vapp, self.vconf, self.realkind)
 
 
 class CenSopranoDevProvider(Provider):
+
+    _config = CenCfgParser(
+        importlib.resources.open_text(
+            _config_path,
+            _config_file,
+        )
+    )
 
     _footprint = [
         namespacefp,
@@ -120,11 +135,6 @@ class CenSopranoDevProvider(Provider):
                     values   = ['scp', 'ftp'],
                     default  = 'ftp'
                 ),
-                config = dict(
-                    type     = CenCfgParser,
-                    optional = True,
-                    default  = CenCfgParser('@cen-map-resources.ini')
-                )
             )
         )
     ]
@@ -168,5 +178,6 @@ class CenSopranoDevProvider(Provider):
             info['level_two'] = 'prep' + season + suffix
 
         logger.debug('sopranodevprovider::pathname info %s', info)
-        self.config.setall(info)
-        return self.config.resolvedpath(resource, self.vapp, self.vconf, self.storage)
+
+        self._config.setall(info)
+        return self._config.resolvedpath(resource, self.vapp, self.vconf, self.storage)

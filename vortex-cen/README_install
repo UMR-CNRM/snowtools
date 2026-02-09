@@ -1,0 +1,41 @@
+
+python -m venv --system-site-packages $HOME/venv/vortex2
+source $HOME/venv/vortex2/bin/activate
+
+# I. Installation de snowtools
+module load gcc/14.1.0
+install_snowtools -e
+#install_snowtools -v {path_to_venv}
+#source {path_to_venv}/bin/activate
+
+
+# II. Installation manuelle des dépendances internes (mkjob, vortrex-gco, vortex-olive)
+# Ces packages sont disponibles sur Nexus qui n'est actuellemnt (10/02/2026) pas accessible depuis belenos
+# Une demande de décloisonnement a été faite par Thibault.L
+# En attendant, suivre les étapes suivantes :
+
+# 1. Configurer gitlab si besoin : http://confluence.meteo.fr/display/~thomas.carrel-billiard@meteo.fr/Configurer+GitLab
+
+# 2. Cloner les dépots :
+cd {any_path}
+git clone git@gitlab.meteo.fr:cnrm-gmap/mkjob.git
+git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-gco.git
+git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-olive.git
+
+# 3. Installer les dépots :
+cd mkjob
+pip install mkjob vortex-gco vortex-olive
+
+
+# III. Installation de vortex-cen
+#pip install vortex-nwp
+pip install --upgrade setuptools
+#pip install --upgrade packaging
+cd $SNOWTOOLS_CEN/vortex-cen
+#pip install .
+pip install --no-build-isolation -e .
+
+# III. Configuration de vortex
+mkdir $HOME/.vortex.d/
+cd $HOME/.vortex.d/
+ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_{server}.toml vortex.toml

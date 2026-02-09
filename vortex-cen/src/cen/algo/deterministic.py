@@ -8,7 +8,7 @@ from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
 
 from vortex.algo.components import Parallel, AlgoComponent
-from common.tools.drhook import DrHookDecoMixin
+from vortex.nwp.tools.drhook import DrHookDecoMixin
 
 logger = loggers.getLogger(__name__)
 

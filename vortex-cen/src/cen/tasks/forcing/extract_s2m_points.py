@@ -2,7 +2,7 @@
 '''
 '''
 
-from vortex.cen.tasks.research_task_base import _CenResearchTask
+from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex import toolbox
 
 

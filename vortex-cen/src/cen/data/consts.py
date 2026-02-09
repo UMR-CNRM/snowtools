@@ -4,8 +4,8 @@ Specific CEN "genv" resources.
 
 from bronx.fancies import loggers
 
-from common.data.consts import GenvModelGeoResource, GenvModelResource
-from gco.syntax.stdattrs import gdomain
+from vortex.nwp.data.consts import GenvModelGeoResource, GenvModelResource
+from vortex.nwp.syntax.stdattrs import gdomain
 
 #: No automatic export
 __all__ = []

@@ -4,9 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vortex-cen"
-version = "1.0.0"
+version = "0.0.1"
 requires-python = ">=3.7"
-
+description = "CEN-specific vortex objects"
+readme = "README.md"
 dependencies = [
     "vortex-nwp",
     "snowtools",
@@ -15,5 +16,8 @@ dependencies = [
 [project.entry-points.vtx]
 cen = "vortex_cen"
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.setuptools.package-dir]
+vortex_cen = "src/cen"
+
+[tool.setuptools.package-data]
+"vortex_cen.data.cen_stores_configs" = ["cen-map-resources.ini"]

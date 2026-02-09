@@ -2,15 +2,15 @@
 '''
 '''
 
-from vortex.layout.nodes import Task
-from vortex.cen.layout.nodes import S2MTaskMixIn
+from mkjob.nodes import Task
+from vortex_cen.layout.nodes import S2MTaskMixIn
 from vortex import toolbox
 from bronx.stdtypes.date import Date
 from footprints.stdtypes import FPDict
 from vortex.tools.env import Environment
 # from vortex.syntax.stdattrs import Namespace
 
-from vortex.cen.tools.monitoring import InputReportContext, OutputReportContext, TestReportContext
+from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext, TestReportContext
 
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 
@@ -74,9 +74,13 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             # namebuild      = 'flat@cen',  # WARNING : research only !
             # nativefmt      = 'netcdf',
         )
-        if '@' not in self.conf.xpid:
-            username = Environment()['logname']
-            self.conf.xpid = f'{self.conf.xpid}@{username}'
+
+        self.username = Environment()['logname']
+
+        # Vortex.1 only
+        #if '@' not in self.conf.xpid:
+        #    username = Environment()['logname']
+        #    self.conf.xpid = f'{self.conf.xpid}@{username}'
 
         # Temporary security to avoid the *date* footprint to be mandatory for SurfaceIO resources.
         # This will be useless once the date footprint will be properly set as optional for research applications
@@ -275,7 +279,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         :type forcing_datebegin: str, footprints.stdtypes.FPList
         :param forcing_dateend: *dateend* footprint, default self.conf.dateend
         :type forcing_dateend: str, footprints.stdtypes.FPList
-        :param forcing_xpid: Experiment identifier (format "experiment_name@user"), default self.conf.xpid
+        :param forcing_xpid: Experiment identifier, default self.conf.xpid
         :type forcing_xpid: str
         :param forcing_geometry: *geometry* footprint, default self.conf.geometry
         :type forcing_geometry: str, footprints.stdtypes.FPList
@@ -327,6 +331,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         forcing_datebegin = self.conf.get('forcing_datebegin', self.conf.datebegin)
         forcing_dateend   = self.conf.get('forcing_dateend', self.conf.dateend)
         forcing_xpid      = self.conf.get('forcing_xpid', self.conf.xpid)
+        forcing_user      = self.conf.get('forcing_user', None)
         forcing_geometry  = self.conf.get('forcing_geometry', self.conf.geometry)
         forcing_vapp      = self.conf.get('forcing_vapp', self.conf.vapp)
         forcing_vconf     = self.conf.get('forcing_vconf', self.conf.vconf)
@@ -361,6 +366,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             datebegin      = forcing_datebegin,  # default : self.conf.datebegin
             dateend        = forcing_dateend,  # default : self.conf.dateend
             experiment     = forcing_xpid,  # default : self.conf.xpid
+            username       = forcing_user,
             geometry       = forcing_geometry,  # default : self.conf.geometry
             local          = localname,
             vapp           = forcing_vapp,  # default : self.conf.vapp
@@ -408,6 +414,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                 datebegin      = list_dates_begin,
                 dateend        = dict_dates_end,
                 experiment     = forcing_xpid,  # default : self.conf.xpid
+                username       = forcing_user,
                 geometry       = forcing_geometry,  # default : self.conf.geometry
                 local          = localname,
                 vapp           = forcing_vapp,  # default : self.conf.vapp
