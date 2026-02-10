@@ -3,7 +3,9 @@
 """
 Algo Components for FORCING generation.
 """
+
 from bronx.fancies import loggers
+
 from snowtools.algo.ensemble import _CENTaylorRun, _CENTaylorVortexWorker
 from snowtools.scripts.observations.create_new_SAFRAN_observations import replace_obs_tar
 
@@ -16,14 +18,14 @@ class ReconstructObservations(_CENTaylorRun):
     """
 
     _footprint = dict(
-        info = 'TODO',
-        attr = dict(
-            kind  = dict(
-                values     = ['reconstruct_observations'],
+        info="TODO",
+        attr=dict(
+            kind=dict(
+                values=["reconstruct_observations"],
             ),
-            role_members = dict(
-                info     = "Role of RH inputs to use for members definition",
-                values   = ['Observations'],
+            role_members=dict(
+                info="Role of RH inputs to use for members definition",
+                values=["Observations"],
             ),
         ),
     )
@@ -35,13 +37,11 @@ class ReconstructObservationsWorker(_CENTaylorVortexWorker):
     """
 
     _footprint = dict(
-        attr = dict(
-            kind    = dict(
-                values = ['reconstruct_observations']
-            ),
-            role_members = dict(
-                info     = "Role of RH inputs to use for members definition",
-                values   = ['Observations'],
+        attr=dict(
+            kind=dict(values=["reconstruct_observations"]),
+            role_members=dict(
+                info="Role of RH inputs to use for members definition",
+                values=["Observations"],
             ),
         )
     )
@@ -50,5 +50,5 @@ class ReconstructObservationsWorker(_CENTaylorVortexWorker):
         """
         Method called by the main **vortex_task** method of the **_S2MWorkerMixIn** class
         """
-        self.link_in('../listeo_reanalyse', 'listeo_reanalyse')
-        replace_obs_tar('OBSERVATIONS.tar')
+        self.link_in("../listeo_reanalyse", "listeo_reanalyse")
+        replace_obs_tar("OBSERVATIONS_out.tar")

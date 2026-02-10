@@ -144,8 +144,7 @@ def replace_obs_tar(tar_name):
                 write_fixed_width_file(df_replace, col_widths, obs_file)
 
     # Création de la nouvelle archive
-    new_tar_name = tar_name[0:6] + ".tar"
-    tar = tarfile.open(new_tar_name, "w")
+    tar = tarfile.open(tar_name, "w")
     tarfiles = glob.glob("[RSTA]????????")
     for file in tarfiles:
         tar.add(file)
