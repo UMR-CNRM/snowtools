@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from vortex.layout.nodes import Driver
-from vortex_cen.tasks.forcing.extract_s2m_points import ExtractS2MForcing
+from vortex_cen.tasks.regrid.extract_s2m_points import ExtractS2MForcing
 
 
 def setup(t, **kw):
