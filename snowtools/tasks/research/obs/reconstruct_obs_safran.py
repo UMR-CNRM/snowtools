@@ -86,6 +86,7 @@ class Reconstruct_SAFRAN_Obs(_VortexTask):
             kind            = 'listeo',
             model           = 'safran',
             local           = 'listeo_reanalyse',
+            nativefmt       = 'ascii',
         )
         print(t.prompt, 'listeo =', listeo)
         print()
