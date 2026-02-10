@@ -81,7 +81,7 @@ class Reconstruct_SAFRAN_Obs(_VortexTask):
         listeo = toolbox.input(
             role            = 'ListePost',
             genv            = self.conf.cycle,
-            gdomain         = '[geometry]',
+            gdomain         = '[geometry:tag]',
             geometry        = self.conf.geometry,
             kind            = 'listeo',
             model           = 'safran',
