@@ -22,6 +22,9 @@ cd /scratch/work/fructusm/tests/testhpc/jobs
 ../vortex/bin/mkjob.py -j name=pgd_job package=drivers task=pgd profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=pgd
 
 cd /scratch/work/fructusm/tests/testhpc/jobs
+../vortex/bin/mkjob.py -j name=pgd2d_job package=drivers task=pgd2d profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=pgd2d
+
+cd /scratch/work/fructusm/tests/testhpc/jobs
 ../vortex/bin/mkjob.py -j name=prep_job package=drivers task=prep profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=prep
 
 cd /scratch/work/fructusm/tests/testhpc/jobs

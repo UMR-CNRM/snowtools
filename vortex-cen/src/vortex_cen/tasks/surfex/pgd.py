@@ -37,14 +37,6 @@ class _Pgd_Construct(_CenResearchTask):
                  - OFFLINE executable
                  Format : uenv:{uenv_name}@{user}
     :type genv: str
-    :param genv2D: 2D Environment in which the following resources are to be retrieved :
-                 - Sand_DB.bin and Sand_DB.hdr
-                 - Clay_DB.bin and Clay_DB.hdr
-                 - ECOCLIMAP_II_EUROP.dir and ECOCLIMAP_II_EUROP.hdr
-
-        # MF: in surfex_task.py, self.conf.genv2D = uenv:pgd.003@SURFEX_CEN
-    
-    :type genv2D: str
     :param nprocs: Number of process to allocate to the execution of the MPI binary
     :type nprocs: int
     :param ntasks: Number of tasks to allocate to the execution of the MPI binary
@@ -109,52 +101,7 @@ class _Pgd_Construct(_CenResearchTask):
         print(self.ticket.prompt, 'drdt_bst_fit_60 =', drdt_bst_fit_tbi)
         print()
 
-        # For the 2d-simulation on Belenos: avoiding the PGD copy
-        if self.conf.simu2D:
-            # Binary Sand files are mandatory to run SURFEX for PGD construction in simu2D
-            self.sh.title('Toolbox input sand')
-            sand_tbi = toolbox.input(
-                role           = 'SandDB',
-                format         = 'dir/hdr',
-                genv           = self.conf.genv2D,
-                model          = 'surfex',
-                kind           = 'sand',  # 'database'
-                local          = 'sand_DB.tgz',
-                source         = 'sand_DB',
-                gvar           = 'sand_DB',
-            )
-            print(self.ticket.prompt, 'sand_tbi =', sand_tbi)
-            print()
-
-            # Binary Clay files are mandatory to run SURFEX for PGD construction in simu2D
-            self.sh.title('Toolbox input clay')
-            clay_tbi = toolbox.input(
-                role           = 'ClayDB',
-                format         = 'dir/hdr',
-                genv           = self.conf.genv2D,
-                model          = 'surfex',
-                kind           = 'clay',
-                local          = 'clay_DB.tgz',
-                source         = 'clay_DB',
-                gvar           = 'clay_DB',
-            )
-            print(self.ticket.prompt, 'clay_tbi =', clay_tbi)
-            print()
-
-            # EcoclimapII_europ files are mandatory to run SURFEX for PGD construction in simu2D
-            self.sh.title('Toolbox input ecoclimap2_europ')
-            ecoclimap2_europ_tbi = toolbox.input(
-                role           = 'EcoclimapIIEurop',
-                format         = 'dir/hdr',
-                genv           = self.conf.genv2D,
-                model          = 'surfex',
-                kind           = 'coverparams',
-                local          = 'ECOCLIMAP_II_EUROP.tgz',
-                source         = 'ecoclimap2',
-                gvar           = 'ECOCLIMAP_II_EUROP',
-            )
-            print(self.ticket.prompt, 'ecoclimap2_europ_tbi =', ecoclimap2_europ_tbi)
-            print()
+        
 
     def get_local_inputs(self):
         """
@@ -230,6 +177,68 @@ class _Pgd_Construct(_CenResearchTask):
         print(self.ticket.prompt, 'pgd_tbo =', pgd_tbo)
         print()
 
+class _Pgd2D_Construct(_Pgd_Construct):
+    '''
+    Abstract task for 2D PGD step.
+
+   Inputs:
+   :param genv2D: 2D Environment in which the following resources are to be retrieved :
+        - Sand_DB.bin and Sand_DB.hdr
+        - Clay_DB.bin and Clay_DB.hdr
+        - ECOCLIMAP_II_EUROP.dir and ECOCLIMAP_II_EUROP.hdr
+
+    # MF: in surfex_task.py, self.conf.genv2D = uenv:pgd.003@SURFEX_CEN
+    :type genv2D: str
+    '''
+    def get_remote_inputs(self):
+        """
+        Get PGD executable from Uenv
+        """
+        super().get_remote_inputs()
+        # Binary Sand files are mandatory to run SURFEX for PGD construction in simu2D
+        self.sh.title('Toolbox input sand')
+        sand_tbi = toolbox.input(
+            role           = 'SandDB',
+            format         = 'dir/hdr',
+            genv           = self.conf.genv2D,
+            model          = 'surfex',
+            kind           = 'sand',  # 'database'
+            local          = 'sand_DB.tgz',
+            source         = 'sand_DB',
+            gvar           = 'sand_DB',
+        )
+        print(self.ticket.prompt, 'sand_tbi =', sand_tbi)
+        print()
+
+        # Binary Clay files are mandatory to run SURFEX for PGD construction in simu2D
+        self.sh.title('Toolbox input clay')
+        clay_tbi = toolbox.input(
+            role           = 'ClayDB',
+            format         = 'dir/hdr',
+            genv           = self.conf.genv2D,
+            model          = 'surfex',
+            kind           = 'clay',
+            local          = 'clay_DB.tgz',
+            source         = 'clay_DB',
+            gvar           = 'clay_DB',
+        )
+        print(self.ticket.prompt, 'clay_tbi =', clay_tbi)
+        print()
+
+        # EcoclimapII_europ files are mandatory to run SURFEX for PGD construction in simu2D
+        self.sh.title('Toolbox input ecoclimap2_europ')
+        ecoclimap2_europ_tbi = toolbox.input(
+            role           = 'EcoclimapIIEurop',
+            format         = 'dir/hdr',
+            genv           = self.conf.genv2D,
+            model          = 'surfex',
+            kind           = 'coverparams',
+            local          = 'ECOCLIMAP_II_EUROP.tgz',
+            source         = 'ecoclimap2',
+            gvar           = 'ECOCLIMAP_II_EUROP',
+        )
+        print(self.ticket.prompt, 'ecoclimap2_europ_tbi =', ecoclimap2_europ_tbi)
+        print()
 
 class Pgd_Uenv_Pgd(_Pgd_Construct):
     '''
@@ -257,6 +266,54 @@ class Pgd_Uenv_Pgd(_Pgd_Construct):
 
 
 class Pgd_Local_Pgd(_Pgd_Construct):
+    '''
+    Get PGD executable locally
+    '''
+    def get_remote_inputs(self):
+        """
+        Get PGD executable locally
+        """
+        super().get_remote_inputs()
+        #######################################################################
+        #                             Fetch steps                             #
+        #######################################################################
+        self.sh.title('Toolbox input PGD executable from local')
+        PGD_tbx = toolbox.executable(
+            role           = 'Binary',
+            kind           = 'buildpgd',
+            local          = 'PGD',
+            model          = 'surfex',
+            remote         = self.conf.exesurfex + "/PGD"
+        )
+        print(self.ticket.prompt, 'PGD_tbx =', PGD_tbx)
+        print()
+
+class Pgd2D_Uenv_Pgd(_Pgd2D_Construct):
+    '''
+    Get PGD executable from Uenv
+    '''
+    def get_remote_inputs(self):
+        """
+        Get PGD executable from Uenv
+        """
+        super().get_remote_inputs()
+        #######################################################################
+        #                             Fetch steps                             #
+        #######################################################################
+        self.sh.title('Toolbox input PGD executable from uenv')
+        PGD_tbx = toolbox.executable(
+            role           = 'Binary',
+            kind           = 'buildpgd',
+            local          = 'PGD',
+            model          = 'surfex',
+            genv           = self.conf.genv,
+            gvar           = 'master_pgd_mpi',
+        )
+        print(self.ticket.prompt, 'PGD_tbx =', PGD_tbx)
+        print()
+
+
+class Pgd2D_Local_Pgd(_Pgd2D_Construct):
     '''
     Get PGD executable locally
     '''
