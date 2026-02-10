@@ -50,4 +50,5 @@ class ReconstructObservationsWorker(_CENTaylorVortexWorker):
         """
         Method called by the main **vortex_task** method of the **_S2MWorkerMixIn** class
         """
+        self.link_in('../listeo_reanalyse', 'listeo_reanalyse')
         replace_obs_tar('OBSERVATIONS.tar')
