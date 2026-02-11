@@ -105,6 +105,7 @@ else:
                         "An editable install is not possible in this case.\n"
                         "Please create your virtual environement elsewhere or install snowtools as non-editable")
 
+    venv = sys.prefix
     pip = 'pip'
 
 if args.optional is None or 'hpc' in HOSTNAME:
