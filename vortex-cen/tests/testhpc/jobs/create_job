@@ -1,3 +1,3 @@
-name=get_forcing_job package=drivers task=get_forcing profile=rd-belenos-mt jobassistant=cen datebegin=2022080106 dateend=2023080106 geometry=cor xpid=get_forcing -c ../conf/tests_testhpc.ini
-name=extract_s2m_job package=drivers task=extract_s2m profile=rd-belenos-mt jobassistant=cen datebegin=2022080106 dateend=2023080106 geometry=cor xpid=extract_s2m -c ../conf/tests_testhpc.ini
-name=shadows_job package=drivers task=shadows profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=shadows -c ../conf/tests_testhpc.ini
+name=get_forcing_job package=drivers task=get_forcing profile=rd-belenos-mt jobassistant=cen datebegin=2022080106 dateend=2023080106 geometry=cor xpid=get_forcing
+name=extract_s2m_job package=drivers task=extract_s2m profile=rd-belenos-mt jobassistant=cen datebegin=2022080106 dateend=2023080106 geometry=cor xpid=extract_s2m
+name=shadows_job package=drivers task=shadows profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=shadows

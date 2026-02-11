@@ -2,8 +2,8 @@
 '''
 '''
 
-from vortex.cen.tasks.research_task_base import _CenResearchTask
-from vortex import toolbox
+import vortex
+from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 
 class Shadows(_CenResearchTask):
@@ -56,8 +56,8 @@ class Shadows(_CenResearchTask):
 
         avail_forcings = t.context.sequence.effective_inputs(role='Forcing')
 
-        self.sh.title('Toolbox algo')
-        algo = toolbox.algo(
+        self.sh.title('Algo')
+        algo = vortex.task(
             engine       = 's2m',
             kind         = 'shadowsforcing',
             datebegin    = [tbinput.rh.resource.datebegin for tbinput in avail_forcings],
@@ -82,8 +82,8 @@ class Shadows(_CenResearchTask):
         :type xpid: str
         """
 
-        self.sh.title('Toolbox output FORCING')
-        forcing_out = toolbox.output(
+        self.sh.title('Output FORCING')
+        forcing_out = vortex.output(
             kind           = 'MeteorologicalForcing',
             datebegin      = self.list_dates_begin,
             dateend        = self.dict_dates_end,
@@ -102,13 +102,14 @@ class Shadows(_CenResearchTask):
         Reproductibility test : compare output to reference.
         """
 
-        self.sh.title('Toolbox diff FORCING')
-        forcing_diff = toolbox.diff(
+        self.sh.title('Diff FORCING')
+        forcing_diff = vortex.diff(
             kind           = 'MeteorologicalForcing',
             datebegin      = self.list_dates_begin,
             dateend        = self.dict_dates_end,
             geometry       = self.conf.geometry,
-            experiment     = 'reference@vernaym',
+            experiment     = 'reference',
+            username       = 'vernaym',
             namebuild      = 'flat@cen',
             local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
             block          = 'shadows',

@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 '''
 '''
-
+import vortex
 from mkjob.nodes import Task
 from vortex_cen.layout.nodes import S2MTaskMixIn
-from vortex import toolbox
 from bronx.stdtypes.date import Date
 from footprints.stdtypes import FPDict
 from vortex.tools.env import Environment
@@ -59,9 +58,9 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         """
 
         if 'localtest' in self.conf:
-            toolbox.active_now = False
+            vortex.active_now = False
 
-        toolbox.defaults(
+        vortex.defaults(
             # namespace      = self.conf.get('namespace', Namespace('vortex.multi.fr')),
             # namespace      = Namespace('vortex.multi.fr'),
             # date           = '[dateend]',  # WARNING : research only
@@ -75,7 +74,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             # nativefmt      = 'netcdf',
         )
 
-        self.username = Environment()['logname']
+        # self.username = Environment()['logname']
 
         # Vortex.1 only
         #if '@' not in self.conf.xpid:
@@ -85,23 +84,23 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         # Temporary security to avoid the *date* footprint to be mandatory for SurfaceIO resources.
         # This will be useless once the date footprint will be properly set as optional for research applications
         if 'date' in self.conf:
-            toolbox.defaults['date'] = self.conf.date
+            vortex.defaults['date'] = self.conf.date
         else:
             if 'rundate' in self.conf:
-                toolbox.defaults['date'] = self.conf.rundate
+                vortex.defaults['date'] = self.conf.rundate
             elif 'dateend' in self.conf:
-                toolbox.defaults['date'] = self.conf.dateend
+                vortex.defaults['date'] = self.conf.dateend
 
         for optk in ('cutoff', 'geometry', 'cycle', 'vortex_set_aside'):
             if optk in self.conf:
                 value = self.conf.get(optk)
                 if isinstance(value, dict):
                     value = FPDict(value)
-                toolbox.defaults[optk] = value
+                vortex.defaults[optk] = value
 
-        toolbox.defaults(**extras)
+        vortex.defaults(**extras)
         self.header('Toolbox defaults')
-        toolbox.defaults.show()
+        vortex.defaults.show()
 
     @property
     def debug(self):
@@ -358,8 +357,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         # TODO : à supprimer après suppression de ce footprint dans les objets "SurfaceIO"
         forcing_cutoff = self.conf.get('forcing_cutoff', None)
 
-        self.sh.title('Toolbox input forcing (full simulation period)')
-        forcing = toolbox.input(
+        self.sh.title('Input forcing (full simulation period)')
+        forcing = vortex.input(
             role           = 'Forcing',  # Used for parallelisation and alternates only
             kind           = 'MeteorologicalForcing',
             nativefmt      = 'netcdf',
@@ -406,8 +405,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                 forcing_source_app, forcing_source_conf = \
                     self.get_safran_sources(list_dates_begin, era5=self.conf.forcing_source == 'era5')
 
-            self.sh.title('Toolbox input forcing (sub-periods)')
-            forcing = toolbox.input(
+            self.sh.title('Input forcing (sub-periods)')
+            forcing = vortex.input(
                 alternate      = 'Forcing',
                 kind           = 'MeteorologicalForcing',
                 nativefmt      = 'netcdf',

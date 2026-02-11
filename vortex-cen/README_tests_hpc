@@ -1,12 +1,12 @@
 
-# 1. Synchroniser la configuration test dans un répertoire de travail :
-python $SNOWTOOLS/vortex-cen/scripts/sync_hpc_env.py -a testshpc -c unittest
-# --> renvoie le lien vers le workdir créé : /scratch/work/{username}/tests/testhpc
+# 1. Aller dans le répertoire test:
+cd $SNOWTOOLS_CEN/vortex-cen/tests/testhpc
 
-# 2. Sous /scratch/work/{username}/tests/testhpc/jobs :
-# Lancer tous les tests avec :
-mkjob.py -f create_job
+# 2. Lancer tous les tests avec :
+mkjob.py -f jobs/create_job -c conf/tests_testhpc.ini
 
-# Lancer uniquement un job :
-mkjob -j {la ligne à tester dans le fichier "create_job"}
+# 3. Lancer un test spécifique avec :
+mkjob -n {nom du job à tester dans le fichier "create_job"} -c conf/tests_testhpc.ini
+ou
+mkjob -j {la ligne à tester dans le fichier "create_job"} -c conf/tests_testhpc.ini
 
