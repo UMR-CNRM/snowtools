@@ -2,7 +2,6 @@
 
 __all__ = []
 
-from bronx.stdtypes.date import Date
 from vortex_cen.layout.nodes import S2MTaskMixIn
 import footprints
 from vortex import toolbox
@@ -51,16 +50,16 @@ class Safran(Task, S2MTaskMixIn):
                     kind           = 'packedguess',
                     local          = '{0:s}_{1:s}/guess{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
                     namespace      = 's2m.archive.fr',
-                    geometry       = self.conf.geometry[self.conf.vconf],
+                    geometry       = self.conf.geometry,
                     cumul          = self.conf.cumul,
                     nativefmt      = 'tar',
                     model          = 'safran',
                     source         = 'arpege' if y1 > 2020 else 'era5',
-                    now            = True,
-                    fatal          = False,
                     date           = dateend.ymdh,
                     datebegin      = datebegin.ymdh,
                     dateend        = dateend.ymdh,
+                    now            = True,
+                    fatal          = True,
                 ),
                 print(t.prompt, 'tb01 =', tb01)
                 print()
@@ -71,11 +70,13 @@ class Safran(Task, S2MTaskMixIn):
                     tb02 = toolbox.input(
                         role           = 'Observations',
                         # part           = 'all',
-                        vconf          = self.conf.vconf_obs,
-                        geometry       = self.conf.geometry[self.conf.vconf],
+                        vapp          = self.conf.get("obs_vapp", self.conf.vapp),
+                        vconf          = self.conf.get("obs_vconf", self.conf.vconf),
+                        geometry       = self.conf.geometry,
                         kind           = 'packedobs',
                         local          = '{0:s}_{1:s}/rs{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
-                        experiment     = self.conf.xpid_obs,
+                        experiment     = self.conf.obs_xpid,
+                        username       = self.conf.obs_user,
                         namespace      = 'vortex.multi.fr',
                         date           = dateend.ymdh,
                         datebegin      = datebegin.ymdh,
@@ -86,6 +87,7 @@ class Safran(Task, S2MTaskMixIn):
                         block          = 'observations',
                         nativefmt      = 'tar',
                         now            = True,
+                        fatal          = True,
                         # Untar is not automatic for resrouces from the "ArchiveStore", unlike
                         # for resources coming from the "Finder" store
                         hook_autohook1 = (untar_hook, ),
@@ -97,7 +99,7 @@ class Safran(Task, S2MTaskMixIn):
 #                    tb02 = toolbox.input(
 #                        role           = 'Observations',
 #                        part           = 'all',
-#                        geometry       = self.conf.geometry[self.conf.vconf],
+#                        geometry       = self.conf.geometry,
 #                        kind           = 'packedobs',
 #                        #nativefmt      = 'tar',
 #                        #unknownflow    = True,
@@ -123,7 +125,7 @@ class Safran(Task, S2MTaskMixIn):
 #                    tb03 = toolbox.input(
 #                        role           = 'Nebul',
 #                        part           = 'all',
-#                        geometry       = self.conf.geometry[self.conf.vconf],
+#                        geometry       = self.conf.geometry,
 #                        kind           = 'packedobs',
 #                        #nativefmt      = 'tar',
 #                        #unknownflow    = True,
@@ -147,8 +149,8 @@ class Safran(Task, S2MTaskMixIn):
             tb07 = toolbox.input(
                 role            = 'ListeMassif',
                 genv            = self.conf.cycle,
-                gdomain         = self.conf.vconf,
-                geometry        = self.conf.geometry[self.conf.vconf],
+                gdomain         = '[geometry:area]',
+                geometry        = self.conf.geometry,
                 kind            = 'listem',
                 model           = self.conf.model,
                 local           = 'listem',
@@ -160,8 +162,8 @@ class Safran(Task, S2MTaskMixIn):
             tb08 = toolbox.input(
                 role            = 'ListeLimitesMassif',
                 genv            = self.conf.cycle,
-                gdomain         = self.conf.vconf,
-                geometry        = self.conf.geometry[self.conf.vconf],
+                gdomain         = '[geometry:area]',
+                geometry        = self.conf.geometry,
                 kind            = 'listeml',
                 model           = self.conf.model,
                 local           = 'listeml',
@@ -173,8 +175,8 @@ class Safran(Task, S2MTaskMixIn):
 #             tb08 = toolbox.input(
 #                 role            = 'NormalesClim',
 #                 genv            = self.conf.cycle,
-#                 gdomain         = self.conf.vconf,
-#                 geometry        = '[gdomain]',
+#                 gdomain         = '[geometry:area]',
+#                 geometry        = self.conf.geometry,
 #                 kind            = 'NORELm',
 #                 model           = self.conf.model,
 #                 local           = 'NORELm',
@@ -186,8 +188,8 @@ class Safran(Task, S2MTaskMixIn):
             tb09 = toolbox.input(
                 role            = 'ListePost',
                 genv            = self.conf.cycle,
-                gdomain         = self.conf.vconf,
-                geometry        = self.conf.geometry[self.conf.vconf],
+                gdomain         = '[geometry:area]',
+                geometry        = self.conf.geometry,
                 kind            = 'listeo',
                 model           = self.conf.model,
                 local           = 'listeo',
@@ -195,27 +197,26 @@ class Safran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb09 =', tb09)
             print()
 
-            if self.conf.vconf in ['alp', 'pyr']:
-
-                self.sh.title('Toolbox input tb09')
-                tb09 = toolbox.input(
-                    role            = 'MoyennesMensuellesRR',
-                    genv            = self.conf.cycle,
-                    gdomain         = self.conf.vconf,
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                    kind            = 'NORELot',
-                    model           = self.conf.model,
-                    local           = 'NORELot',
-                )
-                print(t.prompt, 'tb09 =', tb09)
-                print()
+            self.sh.title('Toolbox input tb09')
+            tb09 = toolbox.input(
+                role            = 'MoyennesMensuellesRR',
+                genv            = self.conf.cycle,
+                gdomain         = '[geometry:area]',
+                geometry        = self.conf.geometry,
+                kind            = 'NORELot',
+                model           = self.conf.model,
+                local           = 'NORELot',
+                fatal           = False,
+            )
+            print(t.prompt, 'tb09 =', tb09)
+            print()
 
             self.sh.title('Toolbox input tb09')
             tb09 = toolbox.input(
                 role            = 'SurfZ',
                 genv            = self.conf.cycle,
-                gdomain         = self.conf.vconf,
-                geometry        = self.conf.geometry[self.conf.vconf],
+                gdomain         = '[geometry:area]',
+                geometry        = self.conf.geometry,
                 kind            = 'surfz',
                 model           = self.conf.model,
                 local           = 'surfz',
@@ -228,8 +229,8 @@ class Safran(Task, S2MTaskMixIn):
 #             tb09 = toolbox.input(
 #                 role            = 'MoyennesMensuellesRR_TT',
 #                 genv            = self.conf.cycle,
-#                 gdomain         = self.conf.vconf,
-#                 geometry        = '[gdomain]',
+#                 gdomain         = '[geometry:area]',
+#                 geometry        = self.conf.geometry,
 #                 kind            = 'NORELo',
 #                 model           = self.conf.model,
 #                 local           = 'NORELo',
@@ -241,8 +242,8 @@ class Safran(Task, S2MTaskMixIn):
             tb09 = toolbox.input(
                 role            = 'carac_post',
                 genv            = self.conf.cycle,
-                gdomain         = self.conf.vconf,
-                geometry        = self.conf.geometry[self.conf.vconf],
+                gdomain         = '[geometry:area]',
+                geometry        = self.conf.geometry,
                 kind            = 'carpost',
                 model           = self.conf.model,
                 local           = 'carpost.tar',
@@ -250,41 +251,40 @@ class Safran(Task, S2MTaskMixIn):
             print(t.prompt, 'tb09 =', tb09)
             print()
 
-            if self.conf.vconf in ['alp', 'pyr']:
+            self.sh.title('Toolbox input tb12')
+            tb12 = toolbox.input(
+                role            = 'BlackList',
+                genv            = self.conf.cycle,
+                gdomain         = '[geometry:area]',
+                geometry        = self.conf.geometry,
+                kind            = 'blacklist',
+                model           = self.conf.model,
+                local           = 'BLACK',
+                fatal           = False,
+            )
+            print(t.prompt, 'tb12 =', tb12)
+            print()
 
-                self.sh.title('Toolbox input tb12')
-                tb12 = toolbox.input(
-                    role            = 'BlackList',
-                    genv            = self.conf.cycle,
-                    gdomain         = self.conf.vconf,
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                    kind            = 'blacklist',
-                    model           = self.conf.model,
-                    local           = 'BLACK',
-                    fatal           = False,
-                )
-                print(t.prompt, 'tb12 =', tb12)
-                print()
-
-                self.sh.title('Toolbox input tb08')
-                tb08 = toolbox.input(
-                    role            = 'NormalesClimTT',
-                    genv            = self.conf.cycle,
-                    gdomain         = self.conf.vconf,
-                    geometry        = self.conf.geometry[self.conf.vconf],
-                    kind            = 'NORELmt',
-                    model           = self.conf.model,
-                    local           = 'NORELmt',
-                )
-                print(t.prompt, 'tb08 =', tb08)
-                print()
+            self.sh.title('Toolbox input tb08')
+            tb08 = toolbox.input(
+                role            = 'NormalesClimTT',
+                genv            = self.conf.cycle,
+                gdomain         = '[geometry:area]',
+                geometry        = self.conf.geometry,
+                kind            = 'NORELmt',
+                model           = self.conf.model,
+                local           = 'NORELmt',
+                fatal           = False,
+            )
+            print(t.prompt, 'tb08 =', tb08)
+            print()
 
             self.sh.title('Toolbox input tb11')
             tb11 = toolbox.input(
                 role            = 'Clim',
                 genv            = self.conf.cycle,
-                gdomain         = self.conf.vconf,
-                geometry        = self.conf.geometry[self.conf.vconf],
+                gdomain         = '[geometry:area]',
+                geometry        = self.conf.geometry,
                 kind            = 'rsclim',
                 model           = self.conf.model,
                 local           = 'rsclim.don',
@@ -297,8 +297,8 @@ class Safran(Task, S2MTaskMixIn):
             tb12 = toolbox.input(
                 role            = 'Clim',
                 genv            = self.conf.cycle,
-                gdomain         = self.conf.vconf,
-                geometry        = self.conf.geometry[self.conf.vconf],
+                gdomain         = '[geometry:area]',
+                geometry        = self.conf.geometry,
                 kind            = 'icrccm',
                 model           = self.conf.model,
                 local           = 'icrccm.don',
@@ -311,7 +311,7 @@ class Safran(Task, S2MTaskMixIn):
             tb13 = toolbox.input(
                 role            = 'Nam_sorties',
                 source          = 'namelist_sorties_[geometry:area]',
-                geometry        = self.conf.geometry[self.conf.vconf],
+                geometry        = self.conf.geometry,
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -325,7 +325,7 @@ class Safran(Task, S2MTaskMixIn):
             tb13 = toolbox.input(
                 role            = 'Nam_analyse',
                 source          = 'namelist_analyse_[geometry:area]',
-                geometry        = self.conf.geometry[self.conf.vconf],
+                geometry        = self.conf.geometry,
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -339,7 +339,7 @@ class Safran(Task, S2MTaskMixIn):
             tb14 = toolbox.input(
                 role            = 'Nam_adapt',
                 source          = 'namelist_adapt',
-                geometry        = self.conf.geometry[self.conf.vconf],
+                geometry        = self.conf.geometry,
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -352,7 +352,7 @@ class Safran(Task, S2MTaskMixIn):
             tb14 = toolbox.input(
                 role            = 'Nam_melange',
                 source          = 'namelist_melange_[geometry:area]',
-                geometry        = self.conf.geometry[self.conf.vconf],
+                geometry        = self.conf.geometry,
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -366,7 +366,7 @@ class Safran(Task, S2MTaskMixIn):
             tb16 = toolbox.input(
                 role            = 'Nam_observr',
                 source          = 'namelist_observr_[geometry:area]',
-                geometry        = self.conf.geometry[self.conf.vconf],
+                geometry        = self.conf.geometry,
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -380,7 +380,7 @@ class Safran(Task, S2MTaskMixIn):
             tb16 = toolbox.input(
                 role            = 'Nam_observa',
                 source          = 'namelist_observa',
-                geometry        = self.conf.geometry[self.conf.vconf],
+                geometry        = self.conf.geometry,
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -394,7 +394,7 @@ class Safran(Task, S2MTaskMixIn):
             tb16 = toolbox.input(
                 role            = 'Nam_ebauche',
                 source          = 'namelist_ebauche_[geometry:area]',
-                geometry        = self.conf.geometry[self.conf.vconf],
+                geometry        = self.conf.geometry,
                 genv            = self.conf.cycle,
                 kind            = 'namelist',
                 model           = self.conf.model,
@@ -538,7 +538,6 @@ class Safran(Task, S2MTaskMixIn):
             )
             print(t.prompt, 'tb23 =', tb23)
             print()
-
             self.component_runner(tbalgo2, tbx2)
 
             if self.conf.assim:
@@ -629,30 +628,17 @@ class Safran(Task, S2MTaskMixIn):
             for rundate in list_dates:
                 datebegin = rundate
                 dateend = min(datebegin.replace(year=datebegin.year + 1), self.conf.dateend)
-                season = datebegin.nivologyseason
-
-                if rundate >= Date(2023, 8, 1):
-                    source_app = 'arpege'
-                    source_conf = '4dvarfr'
-                else:
-                    source_app = 'ifs'
-                    source_conf = 'era5'
-
-                y1 = datebegin.year
-                y2 = y1 + 1
 
                 self.sh.title('Toolbox output tb27')
                 tb27 = toolbox.output(
                     role           = 'Ana_massifs',
                     kind           = 'MeteorologicalForcing',
-                    source_app     = source_app,
-                    source_conf    = source_conf,
                     cutoff         = 'assimilation',
                     local          = '[datebegin::ymd6h]_[dateend::ymd6h]/'
                                      'FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = self.conf.xpid,
                     block          = 'massifs',
-                    geometry       = self.conf.geometry[self.conf.vconf],
+                    geometry       = self.conf.geometry,
                     nativefmt      = 'netcdf',
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
@@ -668,14 +654,12 @@ class Safran(Task, S2MTaskMixIn):
                 tb27 = toolbox.output(
                     role           = 'Ana_postes',
                     kind           = 'MeteorologicalForcing',
-                    source_app     = source_app,
-                    source_conf    = source_conf,
                     cutoff         = 'assimilation',
                     local          = '[datebegin::ymd6h]_[dateend::ymd6h]/'
                                      'FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = self.conf.xpid,
                     block          = 'postes',
-                    geometry       = self.conf.geometry[self.conf.vconf],
+                    geometry       = self.conf.geometry,
                     nativefmt      = 'netcdf',
                     model          = self.conf.model,
                     datebegin      = datebegin.ymd6h,
@@ -692,7 +676,7 @@ class Safran(Task, S2MTaskMixIn):
                     role           = 'Liste_obs',
                     block          = 'liste_obs',
                     experiment     = self.conf.xpid,
-                    geometry       = self.conf.geometry[self.conf.vconf],
+                    geometry       = self.conf.geometry,
                     cutoff         = 'assimilation',
                     nativefmt      = 'tar',
                     model          = self.conf.model,

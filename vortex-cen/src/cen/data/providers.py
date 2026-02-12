@@ -85,7 +85,7 @@ class S2MReanalysisProvider(Provider):
         provided through the ``_config`` class variable.
         """
         info = self.pathinfo(resource)
-        info['level_one'] = self.vconf.split('@')[0]
+        info['level_one'] = resource.geometry.area
         info['level_two'] = ''
         suffix = map_suffix[info['level_one']]
         season = resource.date.nivologyseason
