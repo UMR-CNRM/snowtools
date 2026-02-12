@@ -16,7 +16,6 @@ logger = loggers.getLogger(__name__)
 
 
 @namebuilding_delete('src')
-@namebuilding_delete('geo')
 class SurfaceIO(GeoFlowResource):
 
     _abstract = True
@@ -54,3 +53,22 @@ class SurfaceIO(GeoFlowResource):
     @property
     def realkind(self):
         return self.kind
+
+
+@namebuilding_delete('src')
+@namebuilding_delete('geo')
+class SurfaceIOVortex1(SurfaceIO):
+
+    _abstract = True
+    _footprint = [
+        dict(
+            info = 'SURFEX input or output file',
+            attr = dict(
+                vortex1 = dict(
+                    type = bool,
+                    optional=False,
+                    values=[True, ]
+                ),
+            )
+        )
+    ]
