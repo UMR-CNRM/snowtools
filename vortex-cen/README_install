@@ -35,7 +35,7 @@ cd $SNOWTOOLS_CEN/vortex-cen
 #pip install .
 pip install --no-build-isolation -e .
 
-# V. Configuration de vortex
+# V. Configuration de vortex (1ère fois uniquement)
 mkdir $HOME/.vortex.d/
 cd $HOME/.vortex.d/
 ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_{server}.toml vortex.toml
