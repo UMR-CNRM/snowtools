@@ -24,8 +24,7 @@ git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-gco.git
 git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-olive.git
 
 # 3. Installer les dépots :
-cd mkjob
-pip install mkjob vortex-gco vortex-olive
+pip install mkjob/ vortex-gco/ vortex-olive/
 
 
 # IV Installation de vortex-cen
@@ -36,7 +35,7 @@ cd $SNOWTOOLS_CEN/vortex-cen
 #pip install .
 pip install --no-build-isolation -e .
 
-# V. Configuration de vortex
+# V. Configuration de vortex (1ère fois uniquement)
 mkdir $HOME/.vortex.d/
 cd $HOME/.vortex.d/
 ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_{server}.toml vortex.toml
