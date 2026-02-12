@@ -8,7 +8,7 @@ from vortex.data.flow import GeoFlowResource
 from vortex.data.geometries import UnstructuredGeometry
 from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert
 from vortex.nwp.data.obs import ObsRaw
-from vortex_cen.data.flow import CenPackedFiles
+from vortex_cen.data.packedfiles import CenPackedFiles
 import footprints
 
 
