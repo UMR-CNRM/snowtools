@@ -13,12 +13,12 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class List(GenvModelGeoResource):
+class SAFRANList(GenvModelGeoResource):
 
     _footprint = [
         gdomain,
         dict(
-            info = 'Config file used by  S2M models.',
+            info = 'Config file used by the SAFRAN model.',
             attr = dict(
                 kind = dict(
                     values = ['listem', 'lystem', 'listeo', 'lysteo', 'listeml', 'lysteml',
