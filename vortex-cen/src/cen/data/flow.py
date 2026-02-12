@@ -44,6 +44,9 @@ class SurfaceIO(GeoFlowResource):
                 cutoff = dict(
                     optional = True,
                 ),
+                date = dict(
+                    optional = True,
+                ),
             )
         )
     ]
