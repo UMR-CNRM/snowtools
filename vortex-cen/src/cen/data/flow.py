@@ -540,14 +540,14 @@ class SafranPackedFiles(CenPackedFiles):
         the reanalysis also use this type of resources.
         """
         if self.source == 'arpege':
-            return 'p' + self.datebegin.yy + self.dateend.yy + '.' + self.nativefmt
+            return 'p' + self.datebegin.strftime('%y') + self.dateend.strftime('%y') + '.' + self.nativefmt
         elif self.source == 'cep':
-            return 'cep_' + self.datebegin.yy + self.dateend.yy
+            return 'cep_' + self.datebegin.strftime('%y') + self.dateend.strftime('%y')
         elif self.source == 'era5':
-            return 'e' + self.datebegin.yy + self.dateend.yy + '.' + self.nativefmt
+            return 'e' + self.datebegin.strftime('%y') + self.dateend.strftime('%y') + '.' + self.nativefmt
         elif self.source == 'surfaceobs':
-            return 'rs' + self.datebegin.yy + self.dateend.yy + '.' + self.nativefmt
+            return 'rs' + self.datebegin.strftime('%y') + self.dateend.strftime('%y') + '.' + self.nativefmt
         elif self.source == 'neb':
-            return 'n' + self.datebegin.yy + self.dateend.yy + '.' + self.nativefmt
+            return 'n' + self.datebegin.strftime('%y') + self.dateend.strftime('%y') + '.' + self.nativefmt
         else:
             print('ERROR : Missing "source" information to build resource file name')
