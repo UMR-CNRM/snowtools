@@ -610,12 +610,14 @@ class SypluieWorker(_SafranWorker):
         # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
         with open('sapdat', 'w') as d:
             d.write(thisdate.strftime('%y,%m,%d,%H,') + str(nech) + '\n')
-            # In reanalysis execution the RR guess comes from a "weather types" analysis
-            # Except for more recent years for which ARPEGE rr guess are available
-            if self.execution == 'reanalysis' and self.datebegin < Date(2017, 8, 1, 0):
-                d.write('0,0,1\n')
-            else:
-                d.write('0,0,3\n')
+            # i1=0 pour lecture fichier P ou E
+            # i2=0 pour obs rr dans fichier R
+            # i3:
+            # =0 Ebauche par moyenne mensuelle
+            # =1 Ebauche par type de temps
+            # =2 Ebauche clim constante (à éviter)
+            # =3 pour lecture fichier produit par syrpluie
+            d.write('0,0,3\n')
             d.write('3,1,3,3\n')
 
 
@@ -661,12 +663,21 @@ class SyrpluieWorker(_SafranWorker):
         # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
         with open('sapdat', 'w') as d:
             d.write(thisdate.strftime('%y,%m,%d,%H,') + str(nech) + '\n')
-            # In reanalysis execution the RR guess comes from a "weather types" analysis
+            # RR guess are not available with ERA-40, the guess comes from a "weather types" analysis
             # Except for more recent years for which ARPEGE rr guess are available
-            if self.execution == 'reanalysis' and self.datebegin < Date(2017, 8, 1, 0):
-                d.write('0,0,1\n')
-            else:
-                d.write('0,0,3\n')
+            # if self.execution == 'reanalysis' and self.datebegin < Date(2017, 8, 1, 0):
+            #     d.write('0,0,1\n')
+            # else:
+            #     d.write('0,0,3\n')
+            # Update 13/02/2026 : RR guess are now available with ERA-5, we use them !
+            # i1=0 --> lecture guess dans fichier P ou E
+            # i2 inutilisé
+            # i3:
+            # =0 --> répartition verticale par moyenne mensuelle
+            # =1 --> répartition verticale par type de temps
+            # =2 --> répartition verticale par gradient standard
+            # =3 --> répartition verticale déduit du modèle
+            d.write('0,0,3\n')
             d.write('3,1,3,3\n')
 
 
