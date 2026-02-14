@@ -58,7 +58,6 @@ class SurfaceIO(GeoFlowResource):
         return self.kind
 
 
-@namebuilding_delete('src')
 @namebuilding_delete('geo')
 class SurfaceIOVortex1(SurfaceIO):
 
