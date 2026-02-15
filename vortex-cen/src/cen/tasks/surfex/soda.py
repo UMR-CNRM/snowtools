@@ -230,11 +230,9 @@ class Soda(_CenResearchTask):
         print(t.prompt, 'SODA analysis =', prep)
         print()
 
-        diags_kind = ['PART', 'BG_CORR', 'IMASK', 'ALPHA']
-
         self.sh.title('Toolbox output SODA diagnostics')
         diags = toolbox.output(
-            kind           = diags_kind,
+            kind           = ['PART', 'BG_CORR', 'IMASK', 'ALPHA'],
             model          = 'soda',
             block          = 'soda',
             namebuild      = 'flat@cen',
