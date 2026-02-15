@@ -1,15 +1,15 @@
 # -*- coding:Utf-8 -*-
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.safran.reanalysis import Safran
+from vortex_cen.tasks.surfex.offline import Offline_MPI_Uenv
 
 
 def setup(t, **kw):
     return Driver(
-        tag='safran_reanalysis',
+        tag='surfex',
         ticket=t,
         nodes=[
-            Safran(tag='safran_reanalysis', ticket=t, **kw),
+            Offline_MPI_Uenv(tag='offline', ticket=t, **kw),
         ],
         options=kw,
     )

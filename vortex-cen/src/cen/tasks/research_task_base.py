@@ -331,7 +331,14 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         forcing_dateend   = self.conf.get('forcing_dateend', self.conf.dateend)
         forcing_xpid      = self.conf.get('forcing_xpid', self.conf.xpid)
         forcing_user      = self.conf.get('forcing_user', None)
-        forcing_geometry  = self.conf.get('forcing_geometry', self.conf.geometry)
+        # forcing_geometry value may depend on the task's output 'geometry' value
+        if 'forcing_geometry' in self.conf:
+            if isinstance(self.conf.forcing_geometry, dict):
+                forcing_geometry = self.conf.forcing_geometry[self.cong.geometry]
+            else:
+                forcing_geometry = self.conf.forcing_geometry
+        else:
+            forcing_geometry = self.conf.geometry
         forcing_vapp      = self.conf.get('forcing_vapp', self.conf.vapp)
         forcing_vconf     = self.conf.get('forcing_vconf', self.conf.vconf)
         forcing_block     = self.conf.get('forcing_block', 'meteo')
