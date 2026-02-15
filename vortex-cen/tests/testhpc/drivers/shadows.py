@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.forcing.shadows import Shadows
+from vortex_cen.tasks.regrid.shadows import Shadows
 
 
 def setup(t, **kw):
