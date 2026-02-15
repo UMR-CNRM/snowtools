@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from vortex.layout.nodes import Driver
+from mkjob.nodes import Driver
 from vortex_cen.tasks.forcing.shadows import Shadows
 
 
