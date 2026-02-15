@@ -4,17 +4,21 @@ Created on 18 mars 2024
 @author: Vernay.M
 '''
 
-from vortex.layout.nodes import Task
-from cen.layout.nodes import S2MTaskMixIn
-from vortex import toolbox
 from bronx.stdtypes.date import Date
+from cen.layout.nodes import S2MTaskMixIn
 from footprints.stdtypes import FPDict
+from vortex import toolbox
+from vortex.layout.nodes import Task
 from vortex.tools.env import Environment
+from vortex_cen.tools.monitoring import (InputReportContext,
+                                         OutputReportContext,
+                                         TestReportContext)
+
+from snowtools.utils.dates import get_dic_dateend, get_list_dates_files
+
 # from vortex.syntax.stdattrs import Namespace
 
-from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext, TestReportContext
 
-from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 
 
 class _CenResearchTask(Task, S2MTaskMixIn):
@@ -341,7 +345,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         forcing_namespace = self.conf.get('forcing_namespace', 'vortex.multi.fr')
         # TODO : modifier le namebuilder par defaut lorsque le nouveau incluant la
         # géométrie sera disponible
-        forcing_namebuild = self.conf.get('forcing_namebuild', 'flat@cen')
+        forcing_namebuild = self.conf.get('forcing_namebuild', self.conf.get('namebuild', 'flat@cen'))
         forcing_intent    = self.conf.get('forcing_intent', 'in')
         # TODO : ne pas utiliser de source_app / source_conf à l'avenir
         forcing_source_app  = self.conf.get('forcing_source_app', None)

@@ -20,7 +20,6 @@ class ExtractS2MForcing(_CenResearchTask):
     - FORCING file(s) with extracted points
 
     '''
-
     def get_remote_inputs(self):
         """
         Get FORCING file as "FORCING_IN.nc" in the different working sub-directories.
@@ -84,9 +83,6 @@ class ExtractS2MForcing(_CenResearchTask):
         :param xpid: Experiment identifier (format "experiment_name@user")
         :type xpid: str
         """
-
-        # TODO : Changer *out_geometry* --> geometry (par convention)
-        # geometry = forcing_geometry
 
         # Security to avoid overwriting the original FORCING file(s)
         if self.conf.out_geometry == self.conf.geometry:

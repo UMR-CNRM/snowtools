@@ -1,3 +1,9 @@
 name=get_forcing_job package=drivers task=get_forcing profile=rd-belenos-mt jobassistant=cen datebegin=2022080106 dateend=2023080106 geometry=cor xpid=get_forcing
 name=extract_s2m_job package=drivers task=extract_s2m profile=rd-belenos-mt jobassistant=cen datebegin=2022080106 dateend=2023080106 geometry=cor xpid=extract_s2m
+name=init_clim_ground_temperature_job package=drivers task=init_clim_ground_temperature profile=rd-belenos-mt jobassistant=cen datebegin=2022080106 dateend=2023080106 geometry=cor xpid=extract_s2m
 name=shadows_job package=drivers task=shadows profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=shadows
+name=preprocess_namelist_job package=drivers task=pre_process profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=pre_process_namelist
+name=pgd_job package=drivers task=pgd profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=pgd
+name=pgd2d_job package=drivers task=pgd profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=pgd2d
+name=prep_job package=drivers task=prep profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=prep
+name=offline_job package=drivers task=offline profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=offline

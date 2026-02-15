@@ -1,11 +1,31 @@
 
 # 1. Synchroniser la configuration test dans un répertoire de travail :
-python $SNOWTOOLS/vortex-cen/scripts/sync_hpc_env.py -a testshpc -c unittest
+module load python/3.7.6nomkl
+python $SNOWTOOLS_CEN/vortex-cen/scripts/sync_hpc_env.py -a tests -c testhpc
 # --> renvoie le lien vers le workdir créé : /scratch/work/{username}/tests/testhpc
 
 # 2. Sous /scratch/work/{username}/tests/testhpc/jobs :
-# Lancer tous les tests avec :
-mkjob.py -f create_job
-
 # Lancer uniquement un job :
-mkjob -j {la ligne à tester dans le fichier "create_job"}
+../vortex/bin/mkjob.py -j {la ligne à tester dans le fichier "create_job"}
+
+# Exemple:
+cd /scratch/work/fructusm/tests/testhpc/jobs
+../vortex/bin/mkjob.py -j name=preprocess_unev_namelist_job package=drivers task=pre_process profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=preprocess_unev_namelist
+
+cd /scratch/work/fructusm/tests/testhpc/jobs
+../vortex/bin/mkjob.py -j name=preprocess_local_namelist_job package=drivers task=pre_process profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=preprocess_local_namelist
+
+cd /scratch/work/fructusm/tests/testhpc/jobs
+../vortex/bin/mkjob.py -j name=preprocess_namelist_job package=drivers task=pre_process profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=preprocess_namelist
+
+cd /scratch/work/fructusm/tests/testhpc/jobs
+../vortex/bin/mkjob.py -j name=pgd_job package=drivers task=pgd profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=pgd
+
+cd /scratch/work/fructusm/tests/testhpc/jobs
+../vortex/bin/mkjob.py -j name=pgd2d_job package=drivers task=pgd2d profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=pgd2d
+
+cd /scratch/work/fructusm/tests/testhpc/jobs
+../vortex/bin/mkjob.py -j name=prep_job package=drivers task=prep profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=prep
+
+cd /scratch/work/fructusm/tests/testhpc/jobs
+../vortex/bin/mkjob.py -j name=offline_job package=drivers task=offline profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=offline
