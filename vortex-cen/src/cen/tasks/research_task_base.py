@@ -334,7 +334,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         # forcing_geometry value may depend on the task's output 'geometry' value
         if 'forcing_geometry' in self.conf:
             if isinstance(self.conf.forcing_geometry, dict):
-                forcing_geometry = self.conf.forcing_geometry[self.cong.geometry]
+                forcing_geometry = self.conf.forcing_geometry[self.conf.geometry.tag]
             else:
                 forcing_geometry = self.conf.forcing_geometry
         else:

@@ -6,17 +6,17 @@ import vortex
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 
-class Shadows(_CenResearchTask):
+class AddSlopes(_CenResearchTask):
     '''
-    Add relief-induced solar masks to a FORCING file in a "station" geometry.
+    Add slopes to forcing file in a "flat" geometry.
 
     Inputs :
     --------
-    - SAFRAN-generated FORCING file in the "station" geometry.
+    - SAFRAN-generated FORCING file in a "flat" geometry.
 
     Outputs :
     ---------
-    - FORCING file with extracted solar masks added.
+    - FORCING file wih slopes and aspects.
 
     Mandatory configuration variables:
     ----------------------------------
@@ -63,7 +63,7 @@ class Shadows(_CenResearchTask):
         self.sh.title('Algo')
         algo = vortex.task(
             engine       = 'algo',
-            kind         = 'shadowsforcing',
+            kind         = 'prepareforcing',
             datebegin    = [tbinput.rh.resource.datebegin for tbinput in avail_forcings],
             dateend      = [tbinput.rh.resource.dateend for tbinput in avail_forcings],
             ntasks       = min(40, len(avail_forcings)),  # TODO : ne pas mettre ça en dur dans le code !
@@ -96,7 +96,7 @@ class Shadows(_CenResearchTask):
             experiment     = self.conf.xpid,
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING.nc',
-            block          = 'shadows',
+            block          = 'meteo',
             model          = 'safran',
         ),
         print(self.ticket.prompt, 'Output forcing =', forcing_out)
