@@ -12,14 +12,25 @@ pyshp
 pandas
 cartopy
 footprints
-epygram>=2.0
+epygram
 packaging
+xarray>=0.18.0
+rioxarray
+
+# Optionnal requirements
+# "sql" extension
+psycopg2
+# "plot" extension
+matplotlib
+cartopy
+epygram>=2.0
+# "all" extension
+psycopg2
+matplotlib
+cartopy
+epygram>=2.0
 
 # Other requirements
-# xarray is a requirement for plots/compare.py and utils/proximu.py in case of use of NETCDF-4 file format
-xarray
-# rioxarray is an xarray extension for raster files
-rioxarray
 # rpy2 is a requirement for tools/emosCSG.py
 # rpy2
 

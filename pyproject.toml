@@ -14,11 +14,9 @@ dependencies = [
     'shapely',
     'pyshp',
     'pandas',
-    'xarray>=0.18.0',
-    'rioxarray',
+    'xarray>=0.18.0',  # Enable the use of snowtools xarray plugin
     'bronx',
     'footprints',
-    'epygram',
     'packaging'
 ]
 requires-python = ">=3.6"
@@ -46,20 +44,30 @@ maintainers = [
 ]
 
 [project.optional-dependencies]
+# To enable the use of MF's databases extraction tools
 sql = [
-    'psycopg2',
+    'psycopg2',  # psycopg2 not available on MF's HPC because there is not pg_config executable
+# Error message :
+# If you prefer to avoid building psycopg2 from source, please install the PyPI
+# 'psycopg2-binary' package instead.
+#    'psycopg2-binary',
 ]
+
+# To enable the use of graphic tools
 plot = [
     'matplotlib',
     'cartopy',
     'epygram>=2.0',
+    'rioxarray',
 ]
 
+# For a full installation
 all = [
     'psycopg2',
     'matplotlib',
     'cartopy',
     'epygram>=2.0',
+    'rioxarray',
 ]
 
 [project.urls]
@@ -74,5 +82,8 @@ procompare = 'snowtools.plots.stratiprofile.procompare:main'
 [project.entry-points."xarray.backends"]
 snowtools = "snowtools.utils.xarray_snowtools_backend:SnowtoolsBackendEntrypoint"
 
-
-
+[tool.setuptools.packages.find]
+# Explicitely exclude the "cenutils" repository from the setuptool automatic package discovery
+# The editable installation on soprano crashes without this statement:
+# `error: Multiple top-level packages discovered in a flat-layout: ['bronx', 'cenutils', 'snowtools'].`
+exclude = ["cenutils"]

@@ -1,3 +1,9 @@
+
+Doc UEnv :
+==========
+http://intra.cnrm.meteo.fr/algopy/sphinx/vortex/current/technical/uget.html
+--> Liste des commandes utiles en bas de page
+
 Create an User Environment from scratch.
 ========================================
 
@@ -5,15 +11,73 @@ Create an User Environment from scratch.
 UnPremierFichier.0
 UnSecondFichier.1
 
-
-2. Créer un fichier texte du nom du UEnv sous $HOME/.vortexrc/hack/uget/{user}/env, ex:
+2. Créer un fichier texte du nom du UEnv sous $HOME/.vortexrc/hack/uget/{you}/env, ex:
 UnUenv.0
 
 3. Dans ce fichier texte, associer une clé à chaque fichier, ex:
-LA_CLE_DE_MON_PREMIER_FICHIER="uenv:UnPremierFichier.0@{username}"
-LA_CLE_DE_MON_SECOND_FICHIER="uenv:UnSecondFichier.1@{username}"
+LA_CLE_DE_MON_PREMIER_FICHIER="uenv:UnPremierFichier.0@{you}"
+LA_CLE_DE_MON_SECOND_FICHIER="uenv:UnSecondFichier.1@{you}"
 
 4. Le Uenv est prêt, accéder aux fichiers avec :
-toolbox.input(genv='uenv:UnUenv.0@{user}', gvar='LA_CLE_DE_MON_PREMIER_FICHIER', unknown=True, filename='...')
-toolbox.input(genv='uenv:UnUenv.0@{user}', gvar='LA_CLE_DE_MON_SECOND_FICHIER', unknown=True, filename='...')
+toolbox.input(genv='uenv:UnUenv.0@{you}', gvar='LA_CLE_DE_MON_PREMIER_FICHIER', unknown=True, filename='...')
+toolbox.input(genv='uenv:UnUenv.0@{you}', gvar='LA_CLE_DE_MON_SECOND_FICHIER', unknown=True, filename='...')
+
+5. Pour archiver / partager le UEnv (en vortex1) :
+$VORTEX/bin/uget.py push env UnUenv.0@{you}
+
+
+Pour modifier un UEnv existant
+==============================
+
+1. Créer une copie du UEnv existant :
+$VORTEX/bin/uget.py hack env {nom_du_UEnv}@{the_user_who_own_the_uenv} into UnNouveauUenv.0@{you}
+ex:
+$VORTEX/bin/uget.py hack env cen.14@CONST_CEN into UnNouveauUenv.0@vernaym
+
+--> Le fichier "UnNouveauUenv.0" est créé sous $HOME/.vortexrc/hack/uget/{you}/env
+
+2. Modifier le nouveau UEnv "UnNouveauUenv.0"
+
+    a. Modification d'une ressource déjà présente dans le UEnv
+        --> Identifier la ressource et sa clé associée dans le fichier "UnNouveauUenv.0" (ex: SSA_PARAMS="uget:drdt_bst_fit_60.nc@CONST_CEN")
+        --> Placer la nouvelle ressource sous $HOME/.vortexrc/hack/uget/{you}/data (ex : drdt_bst_fit_60.nc_NEW)
+        --> Modifier la ligne correspondante du fichier "UnNouveauUenv.0" (ex : SSA_PARAMS="uenv:drdt_bst_fit_60.nc_NEW@{you}")
+
+    b. Ajout d'une nouvelle ressource "UnNouveauFichier.0"
+        --> Placer cette ressource sous $HOME/.vortexrc/hack/uget/{you}/data
+        --> Ajouter une ligne au fichier "UnNouveauUenv.0" (ex : NOUVELLE_CLE="uenv:UnNouveauFichier.0@{you}")
+
+
+Pour concaténer 2 UEnv existants
+================================
+
+1. Récupérer les UEnv à concaténer
+$VORTEX/bin/uget.py hack env UEnv1@{the_user_who_own_the_uenv} into UEnv1_copy@{you}
+$VORTEX/bin/uget.py hack env UEnv2@{maybe_another_user} into UEnv2_copy@{you}
+
+--> Les fichiers "UEnv1_copy" et "UEnv2_copy" ont été crés sous $HOME/.vortexrc/hack/uget/{you}/env
+
+2. Concaténer le contenu de ces 2 fichiers dans un nouveau UEnv "UEnv1_UEnv2"
+cat UEnv1_copy UEnv2_copy > UEnv1_UEnv2
+
+NB : il est bien sur possible de concaténer uniquement les lignes pertinentes de chaque fichier
+
+
+Pour utiliser un UEnv "TargetUEnv.X" 'appartenant' à un autre user
+================================================================
+
+1. Explorer "TargetUEnv.X":
+$VORTEX/bin/uget.py check env TargetUEnv.X@{a_super_colleague}
+
+2. Récupérer le fichier correspondant à une clé 'AnyKey_from_TargetUEnv.X' existante:
+toolbox.input(genv='uenv:TargetUEnv.X@{a_super_colleague}', gvar='AnyKey_from_TargetUEnv.X', unknown=True, filename='...')
+
+
+
+
+
+
+
+
+
 
