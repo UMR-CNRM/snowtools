@@ -1,4 +1,5 @@
-Etapes pour créer un User Environment à partir de rien.
+Create an User Environment from scratch.
+========================================
 
 1. Déposer le(s) fichier(s) à mettre dans le uenv sous $HOME/.vortexrc/hack/uget/{user}/data avec un nom arbitraire et versionné, ex:
 UnPremierFichier.0

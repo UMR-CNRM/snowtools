@@ -52,9 +52,10 @@ class InterpolateS2MForcing(_CenResearchTask):
         self.sh.title('Toolbox input output grid definition')
         grid_tbi = toolbox.input(
             role='gridout',
-            remote=self.conf.gridout,
             kind='interpolgrid',
             model='surfex',
+            genv=self.conf.genv,
+            gvar='DEM',
             local='GRID.nc',
         )
         print(self.ticket.prompt, 'toolbox input grid definition file =', grid_tbi)
