@@ -1,8 +1,8 @@
 # Configuration initiale
-export PYTHONPATH=$PYTHONPATH:$SNOWTOOLS/vortex-cen/src
+export PYTHONPATH=$PYTHONPATH:$SNOWTOOLS_CEN/vortex-cen/src
 
 # Pour tester une Tache {class_name} dans un fichier {file_name}, sous le répertoire {directory_name} :
-python $SNOWTOOLS/vortex-cen/scripts/localtest.py -t {class_name} -m {file_name} -d {directory_name} -c $SNOWTOOLS/vortex-cen/tests/testhpc/conf/tests_testhpc.ini
+python $SNOWTOOLS_CEN/vortex-cen/scripts/localtest.py -t {class_name} -m {file_name} -d {directory_name} -c $SNOWTOOLS_CEN/vortex-cen/tests/testhpc/conf/tests_testhpc.ini
 
 # ex:
-python $SNOWTOOLS/vortex-cen/scripts/localtest.py -t ExtractS2MForcing -m extract_s2m_points -d forcing -c $SNOWTOOLS/vortex-cen/tests/testhpc/conf/tests_testhpc.ini
+python $SNOWTOOLS_CEN/vortex-cen/scripts/localtest.py -t ExtractS2MForcing -m extract_s2m_points -d forcing -c $SNOWTOOLS_CEN/vortex-cen/tests/testhpc/conf/tests_testhpc.ini
