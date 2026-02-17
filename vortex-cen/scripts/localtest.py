@@ -5,7 +5,7 @@ import vortex
 import argparse
 import importlib
 
-from vortex.layout.nodes import Driver
+from mkjob.nodes import Driver
 
 parser = argparse.ArgumentParser(description='Test the toolbw call of a given task locally.')
 

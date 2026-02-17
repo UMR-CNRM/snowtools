@@ -1,10 +1,11 @@
 """
-The DESR/CNRM/CEN VORTEX extension package.
+The CEN VORTEX extension package.
 """
 
 # Recursive inclusion of packages with potential FootprintBase classes
-from . import data as data  # noqa
-from . import algo as algo  # noqa
+from . import algo as algo
+from . import data as data
+from . import tools as tools
 
 #: No automatic export
 __all__ = []

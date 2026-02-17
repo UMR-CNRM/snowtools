@@ -164,6 +164,9 @@ class _CENParaBlindRun(ParaBlindRun):
     _footprint = dict(
         info = 'AlgoComponent that runs several executions of a CEN model in parallel.',
         attr = dict(
+            kind = dict(
+                values   = [None],
+            ),
             engine = dict(
                 # TODO : modification majeure, à discuter avec Matthieu
                 # Engine should stay 'blind' to indicate that the core of the algo component is
@@ -204,6 +207,9 @@ class _CENTaylorRun(TaylorRun):
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
+            kind = dict(
+                values   = [None],
+            ),
             engine = dict(
                 info     = 'The way the executable should be run.',
                 values   = ['algo', ],

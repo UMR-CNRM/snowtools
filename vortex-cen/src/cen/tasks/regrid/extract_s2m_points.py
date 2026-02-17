@@ -3,7 +3,7 @@
 '''
 
 from vortex_cen.tasks.research_task_base import _CenResearchTask
-from vortex import toolbox
+import vortex
 
 
 class ExtractS2MForcing(_CenResearchTask):
@@ -59,8 +59,8 @@ class ExtractS2MForcing(_CenResearchTask):
             if footprint not in self.conf:
                 self.conf[footprint] = None
 
-        self.sh.title('Toolbox algo')
-        algo = toolbox.algo(
+        self.sh.title('Algo')
+        algo = vortex.task(
             kind         = 'ExtractMassifs',
             massifs      = self.conf.massifs,
             slopes       = self.conf.slopes,
@@ -93,8 +93,8 @@ class ExtractS2MForcing(_CenResearchTask):
             raise ValueError("The 'out_geometry' can not be the same as the input one.\n"
                              "Please provide a different 'out_geometry' configuration variable")
         else:
-            self.sh.title('Toolbox output FORCING')
-            forcing_out = toolbox.output(
+            self.sh.title('Output FORCING')
+            forcing_out = vortex.output(
                 kind           = 'MeteorologicalForcing',
                 datebegin      = self.list_dates_begin,
                 dateend        = self.dict_dates_end,
@@ -113,13 +113,14 @@ class ExtractS2MForcing(_CenResearchTask):
         Reproductibility test : compare output to reference.
         """
 
-        self.sh.title('Toolbox diff FORCING')
-        forcing_diff = toolbox.diff(
+        self.sh.title('Diff FORCING')
+        forcing_diff = vortex.diff(
             kind           = 'MeteorologicalForcing',
             datebegin      = self.list_dates_begin,
             dateend        = self.dict_dates_end,
             geometry       = self.conf.out_geometry,
-            experiment     = 'reference@vernaym',
+            experiment     = 'reference',
+            username       = 'vernaym',
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
             block          = 'meteo',

@@ -2,7 +2,7 @@
 Specific CEN AlgoComponents.
 """
 
-from . import ensemble, forcing  # noqa
+from . import assim, deterministic, ensemble, forcing, postprocessing, scores
 
 #: No automatic export
 __all__ = []
