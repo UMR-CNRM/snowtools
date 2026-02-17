@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from vortex.layout.nodes import Driver
-from vortex_cen.tasks.surfex.climatological_ground_temperaure import InitClimGroundTemperature
+from vortex_cen.tasks.surfex.climatological_ground_temperature import InitClimGroundTemperature
 
 
 def setup(t, **kw):
@@ -15,7 +15,7 @@ def setup(t, **kw):
         tag="init_clim_ground_temperature_driver",
         ticket=t,
         nodes=[
-            InitClimGroundTemperature(tag="init_clim_ground_temperature_task", ticket=t, **kw),
+            InitClimGroundTemperature(tag="init_clim_ground_temperature", ticket=t, **kw),
         ],
         options=kw,
         iniconf=iniconf,

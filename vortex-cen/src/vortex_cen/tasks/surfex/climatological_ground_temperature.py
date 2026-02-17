@@ -2,7 +2,7 @@ from vortex import toolbox
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 
-class InitClimatologicalGroundTemperature(_CenResearchTask):
+class InitClimGroundTemperature(_CenResearchTask):
     """
     Initialize Surfex ground temperature by taking the climatological (i.e. the mean on all time steps) of the input forcing.
 
@@ -18,7 +18,7 @@ class InitClimatologicalGroundTemperature(_CenResearchTask):
     def get_remote_inputs(self):
         """ """
 
-        self.get_forcing(localname="[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
+        self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
 
     def algo(self):
         """
