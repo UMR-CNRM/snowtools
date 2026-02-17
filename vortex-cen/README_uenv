@@ -29,6 +29,8 @@ $VORTEX/bin/uget.py push env UnUenv.0@{you}
 Pour modifier un UEnv existant
 ==============================
 
+ftp connection to hendrix must be possible. Verify login credentials in .netrc file or ftmotpasse.
+
 1. Créer une copie du UEnv existant :
 $VORTEX/bin/uget.py hack env {nom_du_UEnv}@{the_user_who_own_the_uenv} into UnNouveauUenv.0@{you}
 ex:
@@ -71,6 +73,15 @@ $VORTEX/bin/uget.py check env TargetUEnv.X@{a_super_colleague}
 
 2. Récupérer le fichier correspondant à une clé 'AnyKey_from_TargetUEnv.X' existante:
 toolbox.input(genv='uenv:TargetUEnv.X@{a_super_colleague}', gvar='AnyKey_from_TargetUEnv.X', unknown=True, filename='...')
+
+Share UEnv with colleagues
+==========================
+
+check if all files exist:
+uget.py check env myuenv.02@{you}
+
+put your env on hendrix:
+uget.py push env myuenv.02@{you}
 
 
 

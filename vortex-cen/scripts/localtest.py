@@ -58,8 +58,7 @@ def setup(t, **kw):
 # - Transformer en script avec la task et la step à tester en arguments
 
 user = os.environ['USER']
-default_args = dict(xpid=f'test@{user}', datebegin='2022080106', dateend='2023080106', geometry='cor',
-        vapp='testshpc', vconf='unittest', localtest=True)
+default_args = dict(localtest=True)
 driver = setup(t, steps=args.steps, **default_args)
 driver.setup()
 driver.run()

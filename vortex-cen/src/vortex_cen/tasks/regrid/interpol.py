@@ -45,7 +45,7 @@ class InterpolateS2MForcing(_CenResearchTask):
         get forcing files in the "massif" geometry, output grid file and interpolation binary.
 
         """
-        self.get_forcing(forcing_geometry=self.conf.geometry_in, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+        self.get_forcing(forcing_geometry=self.conf.forcing_geometry, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
 
         # Target grid file for interpolation
         # the path must be provided in the configuration file
@@ -94,9 +94,10 @@ class InterpolateS2MForcing(_CenResearchTask):
         """
 
         """
-        if self.conf.geometry_in == self.conf.geometry:
-            raise ValueError("The 'out_geometry' can not be the same as the input one.\n"
-                             "Please provide a different 'out_geometry' configuration variable")
+        if self.conf.forcing_geometry == self.conf.geometry:
+            print(self.conf.forcing_geometry, self.conf.geometry)
+            raise ValueError("The 'geometry' (== output geometry) can not be the same as the input one (forcing_geometry).\n"
+                             "Please provide a different 'geometry' or 'forcing_geometry' configuration variable")
         else:
             self.sh.title('Toolbox output interpolated forcing file')
             forcing_tbo = toolbox.output(
@@ -111,7 +112,8 @@ class InterpolateS2MForcing(_CenResearchTask):
                 namespace=self.conf.namespace_out,
                 namebuild='flat@cen',
                 block='meteo',
-                member=self.conf.member if hasattr(self.conf, 'member') else None,
+                member=self.conf.member if hasattr(self.conf, 'member') else None
             ),
             print(self.ticket.prompt, 'interpolated forcing file toolbox =', forcing_tbo)
             print()
+
