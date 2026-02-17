@@ -191,8 +191,8 @@ class _StandardNC(netCDF4.Dataset):
         else:
             massifnumber = self.variables['massif_number']
 
-        lat = np.empty(massifnumber.shape, np.float)
-        lon = np.empty(massifnumber.shape, np.float)
+        lat = np.empty(massifnumber.shape, np.float64)
+        lon = np.empty(massifnumber.shape, np.float64)
 
         dimension = self.variables['ZS'].dimensions
         varFillValue = -9999999.
@@ -202,11 +202,11 @@ class _StandardNC(netCDF4.Dataset):
             lat[point] = lonlat[1]
             lon[point] = lonlat[0]
 
-        var = self.createVariable("LAT", np.float, dimension, fill_value=varFillValue)
+        var = self.createVariable("LAT", np.float64, dimension, fill_value=varFillValue)
         setattr(var, 'long_name', 'latitude')
         setattr(var, 'units', 'degrees_north')
         var[:] = lat
-        var = self.createVariable("LON", np.float, dimension, fill_value=varFillValue)
+        var = self.createVariable("LON", np.float64, dimension, fill_value=varFillValue)
         setattr(var, 'long_name', 'longitude')
         setattr(var, 'units', 'degrees_east')
         var[:] = lon
@@ -335,17 +335,17 @@ class StandardPROSNOW(StandardSAFRAN):
         '''Routine to add coordinates in the forcing file for the SAFRAN massifs'''
         massifnumber = self.variables['massif_number']
 
-        lat = np.empty(massifnumber.shape, np.float)
-        lon = np.empty(massifnumber.shape, np.float)
+        lat = np.empty(massifnumber.shape, np.float64)
+        lon = np.empty(massifnumber.shape, np.float64)
 
         dimension = self.variables['ZS'].dimensions
         varFillValue = -9999999.
 
-        var = self.createVariable("LAT", np.float, dimension, fill_value=varFillValue)
+        var = self.createVariable("LAT", np.float64, dimension, fill_value=varFillValue)
         setattr(var, 'long_name', 'latitude')
         setattr(var, 'units', 'degrees_north')
         var[:] = lat
-        var = self.createVariable("LON", np.float, dimension, fill_value=varFillValue)
+        var = self.createVariable("LON", np.float64, dimension, fill_value=varFillValue)
         setattr(var, 'long_name', 'longitude')
         setattr(var, 'units', 'degrees_east')
         var[:] = lon

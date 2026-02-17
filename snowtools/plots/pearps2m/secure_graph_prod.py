@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import os
 
-from snowtools.plots.pearps2m.postprocess import config
+from snowtools.plots.pearps2m.postprocess_plot import config
 
 usage = "usage: python secure_graph_prod.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]"
 
@@ -16,6 +16,6 @@ if len(os.listdir(c.diroutput_maps)) > 0 and len(os.listdir(c.diroutput_plots)) 
 else:
     print("no output plots. retry...")
     # import postprocess as pp
-    import snowtools.plots.pearps2m.postprocess as pp
+    import snowtools.plots.pearps2m.postprocess_plot as pp
 
     pp.main(c)

@@ -84,11 +84,12 @@ class Safran(Task, S2MTaskMixIn):
                     tb02 = toolbox.input(
                         role           = 'Observations',
                         # part           = 'all',
+                        vconf          = self.conf.vconf_obs,
                         geometry       = self.conf.geometry[self.conf.vconf],
                         kind           = 'packedobs',
                         local          = '{0:s}_{1:s}/rs{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
                         experiment     = self.conf.xpid_obs,
-                        namespace      = 'vortex.archive.fr',
+                        namespace      = 'vortex.multi.fr',
                         date           = dateend.ymdh,
                         datebegin      = datebegin.ymdh,
                         dateend        = dateend.ymdh,
@@ -529,7 +530,8 @@ class Safran(Task, S2MTaskMixIn):
             # NB : La date des executions est fixée à J-1 car l'analyse SAFRAN va de J-1 6h à J 6H
             self.sh.title('Toolbox algo tb22 = SAFRANE')
             tb22 = tbalgo1 = toolbox.algo(
-                engine         = 'blind',
+                #engine         = 'blind',  # vortex2
+                engine         = 's2m',  # vortex1
                 kind           = 'safrane',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
@@ -553,7 +555,8 @@ class Safran(Task, S2MTaskMixIn):
             # SAFRAN les cherche dans le répertoire courrant.
             self.sh.title('Toolbox algo tb23 = SYRPLUIE')
             tb23 = tbalgo2 = toolbox.algo(
-                engine         = 'blind',
+                #engine         = 'blind',  # vortex2
+                engine         = 's2m',  # vortex1
                 kind           = 'syrpluie',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,
@@ -570,7 +573,8 @@ class Safran(Task, S2MTaskMixIn):
 
                 self.sh.title('Toolbox algo tb23_b = SYPLUIE')
                 tb23 = tbalgo3 = toolbox.algo(
-                    engine         = 'blind',
+                    #engine         = 'blind',  # vortex2
+                    engine         = 's2m',  # vortex1
                     kind           = 'sypluie',
                     datebegin      = self.conf.datebegin.ymd6h,
                     dateend        = self.conf.dateend.ymd6h,
@@ -585,7 +589,8 @@ class Safran(Task, S2MTaskMixIn):
 
                 self.sh.title('Toolbox algo tb24 = SYVAPR')
                 tb24 = tbalgo4 = toolbox.algo(
-                    engine         = 'blind',
+                    #engine         = 'blind',  # vortex2
+                    engine         = 's2m',  # vortex1
                     kind           = 'syvapr',
                     datebegin      = self.conf.datebegin.ymd6h,
                     dateend        = self.conf.dateend.ymd6h,
@@ -600,7 +605,8 @@ class Safran(Task, S2MTaskMixIn):
 
                 self.sh.title('Toolbox algo tb25 = SYVAFI')
                 tb25 = tbalgo5 = toolbox.algo(
-                    engine         = 'blind',
+                    #engine         = 'blind',  # vortex2
+                    engine         = 's2m',  # vortex1
                     kind           = 'syvafi',
                     datebegin      = self.conf.datebegin.ymd6h,
                     dateend        = self.conf.dateend.ymd6h,
@@ -631,7 +637,8 @@ class Safran(Task, S2MTaskMixIn):
 
             self.sh.title('Toolbox algo tb26 = SYTIST')
             tb26 = tbalgo6 = toolbox.algo(
-                engine         = 'blind',
+                #engine         = 'blind',  # vortex2
+                engine         = 's2m',  # vortex1
                 kind           = 'sytist',
                 datebegin      = self.conf.datebegin.ymd6h,
                 dateend        = self.conf.dateend.ymd6h,

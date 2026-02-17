@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 '''
-Created on 18 mars 2024
-@author: Vernay.M
 '''
-
+import vortex
+from mkjob.nodes import Task
+from vortex_cen.layout.nodes import S2MTaskMixIn
 from bronx.stdtypes.date import Date
-from cen.layout.nodes import S2MTaskMixIn
 from footprints.stdtypes import FPDict
-from vortex import toolbox
-from vortex.layout.nodes import Task
 from vortex.tools.env import Environment
 from vortex_cen.tools.monitoring import (InputReportContext,
                                          OutputReportContext,
@@ -65,9 +62,9 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         """
 
         if 'localtest' in self.conf:
-            toolbox.active_now = False
+            vortex.active_now = False
 
-        toolbox.defaults(
+        vortex.defaults(
             # namespace      = self.conf.get('namespace', Namespace('vortex.multi.fr')),
             # namespace      = Namespace('vortex.multi.fr'),
             # date           = '[dateend]',  # WARNING : research only
@@ -80,30 +77,34 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             # namebuild      = 'flat@cen',  # WARNING : research only !
             # nativefmt      = 'netcdf',
         )
-        if '@' not in self.conf.xpid:
-            username = Environment()['logname']
-            self.conf.xpid = f'{self.conf.xpid}@{username}'
+
+        # self.username = Environment()['logname']
+
+        # Vortex.1 only
+        #if '@' not in self.conf.xpid:
+        #    username = Environment()['logname']
+        #    self.conf.xpid = f'{self.conf.xpid}@{username}'
 
         # Temporary security to avoid the *date* footprint to be mandatory for SurfaceIO resources.
         # This will be useless once the date footprint will be properly set as optional for research applications
         if 'date' in self.conf:
-            toolbox.defaults['date'] = self.conf.date
+            vortex.defaults['date'] = self.conf.date
         else:
             if 'rundate' in self.conf:
-                toolbox.defaults['date'] = self.conf.rundate
+                vortex.defaults['date'] = self.conf.rundate
             elif 'dateend' in self.conf:
-                toolbox.defaults['date'] = self.conf.dateend
+                vortex.defaults['date'] = self.conf.dateend
 
         for optk in ('cutoff', 'geometry', 'cycle', 'vortex_set_aside'):
             if optk in self.conf:
                 value = self.conf.get(optk)
                 if isinstance(value, dict):
                     value = FPDict(value)
-                toolbox.defaults[optk] = value
+                vortex.defaults[optk] = value
 
-        toolbox.defaults(**extras)
+        vortex.defaults(**extras)
         self.header('Toolbox defaults')
-        toolbox.defaults.show()
+        vortex.defaults.show()
 
     @property
     def debug(self):
@@ -281,7 +282,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         :type forcing_datebegin: str, footprints.stdtypes.FPList
         :param forcing_dateend: *dateend* footprint, default self.conf.dateend
         :type forcing_dateend: str, footprints.stdtypes.FPList
-        :param forcing_xpid: Experiment identifier (format "experiment_name@user"), default self.conf.xpid
+        :param forcing_xpid: Experiment identifier, default self.conf.xpid
         :type forcing_xpid: str
         :param forcing_geometry: *geometry* footprint, default self.conf.geometry
         :type forcing_geometry: str, footprints.stdtypes.FPList
@@ -333,6 +334,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         forcing_datebegin = self.conf.get('forcing_datebegin', self.conf.datebegin)
         forcing_dateend   = self.conf.get('forcing_dateend', self.conf.dateend)
         forcing_xpid      = self.conf.get('forcing_xpid', self.conf.xpid)
+        forcing_user      = self.conf.get('forcing_user', None)
         forcing_geometry  = self.conf.get('forcing_geometry', self.conf.geometry)
         forcing_vapp      = self.conf.get('forcing_vapp', self.conf.vapp)
         forcing_vconf     = self.conf.get('forcing_vconf', self.conf.vconf)
@@ -359,14 +361,15 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         # TODO : à supprimer après suppression de ce footprint dans les objets "SurfaceIO"
         forcing_cutoff = self.conf.get('forcing_cutoff', None)
 
-        self.sh.title('Toolbox input forcing (full simulation period)')
-        forcing = toolbox.input(
+        self.sh.title('Input forcing (full simulation period)')
+        forcing = vortex.input(
             role           = 'Forcing',  # Used for parallelisation and alternates only
             kind           = 'MeteorologicalForcing',
             nativefmt      = 'netcdf',
             datebegin      = forcing_datebegin,  # default : self.conf.datebegin
             dateend        = forcing_dateend,  # default : self.conf.dateend
             experiment     = forcing_xpid,  # default : self.conf.xpid
+            username       = forcing_user,
             geometry       = forcing_geometry,  # default : self.conf.geometry
             local          = localname,
             vapp           = forcing_vapp,  # default : self.conf.vapp
@@ -406,14 +409,15 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                 forcing_source_app, forcing_source_conf = \
                     self.get_safran_sources(list_dates_begin, era5=self.conf.forcing_source == 'era5')
 
-            self.sh.title('Toolbox input forcing (sub-periods)')
-            forcing = toolbox.input(
+            self.sh.title('Input forcing (sub-periods)')
+            forcing = vortex.input(
                 alternate      = 'Forcing',
                 kind           = 'MeteorologicalForcing',
                 nativefmt      = 'netcdf',
                 datebegin      = list_dates_begin,
                 dateend        = dict_dates_end,
                 experiment     = forcing_xpid,  # default : self.conf.xpid
+                username       = forcing_user,
                 geometry       = forcing_geometry,  # default : self.conf.geometry
                 local          = localname,
                 vapp           = forcing_vapp,  # default : self.conf.vapp

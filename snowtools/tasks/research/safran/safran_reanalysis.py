@@ -9,11 +9,7 @@ from vortex import toolbox
 from vortex.layout.nodes import Driver, Task
 from vortex.tools.systems import ExecutionError
 
-
 logger = footprints.loggers.getLogger(__name__)
-
-
-
 
 
 def setup(t, **kw):

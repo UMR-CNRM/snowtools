@@ -1,0 +1,15 @@
+
+# Installation mkjob (dans un environment virtuel)
+# mkjob est disponible sur Nexus qui n'est actuellemnt (10/02/2026) pas accessible depuis belenos
+# Une demande de décloisonnement a été faite par Thibault.L
+# En attendant, suivre les étapes suivantes :
+
+# 1. Configurer gitlab si besoin : http://confluence.meteo.fr/display/~thomas.carrel-billiard@meteo.fr/Configurer+GitLab
+
+# 2. Cloner le dépot mkjob :
+git clone git@gitlab.meteo.fr:cnrm-gmap/mkjob.git
+
+# 3. Installer le dépot local dans un environnement virtuel
+cd mkjob
+source <path_to_venv>/bin/activate
+pip install .
