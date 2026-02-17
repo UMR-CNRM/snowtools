@@ -343,7 +343,7 @@ class Offline_MPI_Uenv(_Offline_MPI):
         #######################################################################
         #                               Backup                                #
         #######################################################################
-        _, _, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(
+        _, _, _, list_dates_end_pro = get_list_dates_files(
                 Date(self.conf.datebegin),
                 Date(self.conf.dateend),
                 self.conf.get('io_duration', 'yearly'))
@@ -411,7 +411,7 @@ class Offline_MPI_Local(_Offline_MPI):
         #######################################################################
         #                               Backup                                #
         #######################################################################
-        _, _, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(
+        _, _, _, list_dates_end_pro = get_list_dates_files(
                 Date(self.conf.datebegin),
                 Date(self.conf.dateend),
                 self.conf.get('io_duration', 'yearly'))
