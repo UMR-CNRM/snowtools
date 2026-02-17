@@ -41,7 +41,7 @@ class _Offline_MPI(_CenResearchTask):
     :type dateend: str, footprints.stdtypes.FPList
     :param geometry: *geometry* of the forcing file(s)
     :type geometry: str, footprints.stdtypes.FPList
-    :param xpid: Experiment identifier (format "{experiment_name}@{user}")
+    :param xpid: User-defined Experiment identifier
     :type xpid: str
     :param genv: User Environment in which the following resources are to be retrieved :
                  - ecoclimapI_covers_param.bin
@@ -62,12 +62,16 @@ class _Offline_MPI(_CenResearchTask):
     :type member: int
     :param pgd_xpid: Experiment Identifier of the PGD file, if different from the task's XPID
     :type pgd_xpid: str
+    :param pgd_user: User who produced the target PGD file.
+    :type pgd_user: str
     :param pgd_vapp: *vapp* of the PGD file, if different from the task's *vapp*
     :type pgd_vapp: str
     :param pgd_vconf: *vconf* of the PGD file, if different from the task's *vconf*
     :type pgd_vconf: str
     :param prep_xpid: Experiment Identifier of the PREP file, if different from the task's XPID
     :type prep_xpid: str
+    :param prep_user: User who produced the target PREP file.
+    :type prep_user: str
     :param prep_member: Member associated to the PREP file if it comes from an ensemble (after a SODA run)
                         NB : This is a deterministic task, only one single member value can be provided
     :type prep_member: int
@@ -77,6 +81,8 @@ class _Offline_MPI(_CenResearchTask):
     :type prep_vconf: str
     :param prep_date: Validity date of the PREP file (if different from *datebegin*)
     :type prep_date: str
+    :param prep_vortex1: Boolean to identify resources produced with vortex1 (filename without geometry)
+    :type prep_vortex1: bool
     :param datespinup: Date of validity of the spinup file (default: *datebegin*)
     :type datespinup: str, footprints.stdtypes.FPList
     :param threshold: Threshold to apply to the snow water equivalent (in kg/m2) each 1st August (default: -999)
@@ -149,6 +155,7 @@ class _Offline_MPI(_CenResearchTask):
             # MV : pour permettre de récupérer le PGD depuis une expérience indépendante
             # --> possibilité de renseigner 'pgd_xpid' dans le fichier de conf
             experiment     = self.conf.get('pgd_xpid', self.conf.xpid),
+            username       = self.conf.get('pgd_user', None),
             # MV : Pour prévoir les cas où le PGD vient d'un vapp / vconf différent
             # de ceux de la tâche
             vapp           = self.conf.get('pgd_vapp', self.conf.vapp),
@@ -160,6 +167,7 @@ class _Offline_MPI(_CenResearchTask):
             namespace      = 'vortex.multi.fr',
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'pgd',
+            vortex1        = self.conf.get('pgd_vortex1', False),
             # MV : La notion de "membre" n'a pasde sens pour le PGD
         ),
         print(self.ticket.prompt, 'pgd =', pgd_tbi)
@@ -173,6 +181,7 @@ class _Offline_MPI(_CenResearchTask):
             # MV : pour permettre de récupérer le PREP depuis une expérience indépendante
             # --> possibilité de renseigner 'prep_xpid' dans le fichier de conf
             experiment     = self.conf.get('prep_xpid', self.conf.xpid),
+            username       = self.conf.get('prep_user', None),
             # MV : il faut définir la date de validité du fichier PREP qui par défaut
             # est la *datebegin* de simulation mais peut être arbitraire si 'date_prep' est renseigné
             date           = self.conf.get('prep_date', self.conf.datebegin),
@@ -185,6 +194,7 @@ class _Offline_MPI(_CenResearchTask):
             kind           = 'PREP',
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
+            vortex1        = self.conf.get('prep_vortex1', False),
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'prep',
             # MV : La notion de "membre" pour le PREP est particulière dans le cas déterministe

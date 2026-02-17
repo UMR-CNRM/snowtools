@@ -273,6 +273,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         :type alternate: bool
 
         Mandatory configuration variables:
+        ----------------------------------
 
         :param forcing_datebegin: *datebegin* footprint, default self.conf.datebegin
         :type forcing_datebegin: str, footprints.stdtypes.FPList
@@ -297,6 +298,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         :type forcing_model: str
 
         Optionnal configuration variables:
+        ----------------------------------
 
         :param forcing_member: *member* footprint, default None (or *member* if provided)
         :type forcing_member: int, footprints.stdtypes.FPList
@@ -319,6 +321,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                             Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
                             Possible values : "yearly", "monthly" or "full"
         :type io_duration: str
+        :param prep_vortex1: Boolean to identify resources produced with vortex1 (filename without geometry)
+        :type prep_vortex1: bool
 
         TODO : prévoir un mécanisme pour rendre des déclarer les arguments obligatoires / optionnels pour
         chaque tâche (ex: member)
@@ -363,6 +367,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         forcing_model = self.conf.get('forcing_model', 'safran')
         # TODO : à supprimer après suppression de ce footprint dans les objets "SurfaceIO"
         forcing_cutoff = self.conf.get('forcing_cutoff', None)
+        vortex1        = self.conf.get('forcing_vortex1', False),
 
         self.sh.title('Input forcing (full simulation period)')
         forcing = vortex.input(
@@ -382,6 +387,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             intent         = forcing_intent,  # default : 'in' ?
             namespace      = forcing_namespace,  # default : 'vortex.multi.fr',
             namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
+            vortex1        = vortex1,
             date           = '[dateend]',  # TODO : à supprimer (cas recherche uniquement)
             source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
             source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
@@ -430,6 +436,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                 intent         = forcing_intent,  # default : 'in' ?
                 namespace      = forcing_namespace,  # default : 'vortex.multi.fr',
                 namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
+                vortex1        = vortex1,
                 date           = '[dateend]',  # TODO : à supprimer dans le cas recherche
                 source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
                 source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
