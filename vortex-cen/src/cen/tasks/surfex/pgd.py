@@ -169,8 +169,7 @@ class _Pgd_Construct(_CenResearchTask):
             namebuild  = 'flat@cen',  # TODO : passer en variable de configuration
             block      = 'pgd',
         ),
-        # MF: in surfex_task.py:       member = self.conf.member if hasattr(self.conf, 'member') else None,
-        # MV : c'était un bug introduit par mon commit #21915d5748ec0f80095edced4fc7ee6790a8faa4
+
         print(self.ticket.prompt, 'pgd_tbo =', pgd_tbo)
         print()
 

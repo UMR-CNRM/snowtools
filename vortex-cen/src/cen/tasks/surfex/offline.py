@@ -5,7 +5,7 @@
 from vortex import toolbox
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
-from bronx.stdtypes.date import Date  # , daterange, tomorrow
+from bronx.stdtypes.date import Date, daterange, tomorrow
 
 # MV :
 # TODO Il faudra réfléchir au traitement des cas ensemblistes (parallélisation sur les membres de simulation uniquement):
@@ -30,8 +30,9 @@ class _Offline_MPI(_CenResearchTask):
     --------
     - PRO.nc Snowpack simulations covering the entire simulation period
     - PREP.nc SURFEX/Crocus model state variables at the end of the simulation
-    - CUMUL.nc TODO   Compléter et CHECKER la doc
-    - DIAG.nc TODO    Compléter et CHECKER la doc
+    - CUMUL.nc (with Full_Diag class) Others diagnostics in specific cases
+    - DIAG.nc (with Full_Diag class) Others diagnostics in specific cases
+    - PREP.nc (with Dailyprep class) SURFEX/Crocus model state variables each day of the simulation
 
     Mandatory configuration variables:
     ----------------------------------
@@ -241,9 +242,7 @@ class _Offline_MPI(_CenResearchTask):
             # MV : la valeur par défaut de "threshold" dans la commande s2m est -999
             # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
             threshold      = self.conf.get('threshold', -999),
-            # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
-            # et faire une tâche spécifique à ces cas là.
-            #daily          = self.conf.dailyprep,
+            daily          = self.conf.dailyprep,
             # MV la valeur par défaut de 'drhook' dans la commande s2m est False
             # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
             drhookprof     = self.conf.get('drhook', False),
@@ -272,7 +271,7 @@ class _Offline_MPI(_CenResearchTask):
 
     def put_remote_outputs(self):
         """
-        Save the CUMUL, DIAG, PREP and PRO files (yearly only)
+        Save the PRO files (yearly only)
         """
         #######################################################################
         #                               Backup                                #
@@ -287,86 +286,11 @@ class _Offline_MPI(_CenResearchTask):
         # configuration variable if provided by the user or 'vortex.multi.fr' by default
         namespace_out = self.conf.get('namespace_out', 'vortex.multi.fr')
 
-        self.sh.title('Toolbox output CUMUL')
-        cumul_tbo = toolbox.output(
-            local          = 'CUMUL_[datebegin:ymdh]_[dateend:ymdh].nc',
-            experiment     = self.conf.xpid,
-            geometry       = self.conf.geometry,
-            # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
-            # et faire une tâche spécifique à ces cas là.
-#            datebegin      = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
-#            dateend        = dict_dates_end_pro if not self.conf.dailyprep else
-#                                list(daterange(tomorrow(base=datebegin), dateend)),
-            datebegin      = list_dates_begin_pro,
-            dateend        = dict_dates_end_pro,
-            nativefmt      = 'netcdf',
-            kind           = 'SnowpackSimulation',
-            model          = 'surfex',
-            namespace      = namespace_out,
-            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'cumul',
-            member         = self.conf.get('member', None),
-            fatal          = False,
-        ),
-        print(self.ticket.prompt, 'cumul_tbo =', cumul_tbo)
-        print()
-
-        self.sh.title('Toolbox output DIAG')
-        diag_tbo = toolbox.output(
-            local          = 'DIAG_[datebegin:ymdh]_[dateend:ymdh].nc',
-            experiment     = self.conf.xpid,
-            geometry       = self.conf.geometry,
-            # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
-            # et faire une tâche spécifique à ces cas là.
-#            datebegin      = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
-#            dateend        = dict_dates_end_pro if not self.conf.dailyprep else
-#                                list(daterange(tomorrow(base=datebegin), dateend)),
-            datebegin      = list_dates_begin_pro,
-            dateend        = dict_dates_end_pro,
-            nativefmt      = 'netcdf',
-            kind           = 'SnowpackSimulation',
-            model          = 'surfex',
-            namespace      = namespace_out,
-            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'diag',
-            member         = self.conf.get('member', None),
-            fatal          = False,
-        ),
-        print(self.ticket.prompt, 'diag_tbo =', diag_tbo)
-        print()
-
-        self.sh.title('Toolbox output PREP')
-        prep_tbo = toolbox.output(
-            local          = 'PREP_[date:ymdh].nc',
-            role           = 'SnowpackInit',
-            experiment     = self.conf.xpid,
-            geometry       = self.conf.geometry,
-            # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
-            # et faire une tâche spécifique à ces cas là.
-#            date           = list_dates_end_pro if not self.conf.dailyprep else
-#                                list(daterange(tomorrow(base=datebegin), dateend)),
-            date           = list_dates_end_pro,
-            nativefmt      = 'netcdf',
-            kind           = 'PREP',
-            model          = 'surfex',
-            namespace      = namespace_out,
-            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'prep',
-            member         = self.conf.get('member', None),
-        ),
-        print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
-        print()
-
         self.sh.title('Toolbox output PRO')
         pro_tbo = toolbox.output(
             local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
-            # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
-            # et faire une tâche spécifique à ces cas là.
-#            datebegin      = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
-#            dateend        = dict_dates_end_pro if not self.conf.dailyprep else
-#                                list(daterange(tomorrow(base=datebegin), dateend)),
             datebegin      = list_dates_begin_pro,
             dateend        = dict_dates_end_pro,
             nativefmt      = 'netcdf',
@@ -411,6 +335,41 @@ class Offline_MPI_Uenv(_Offline_MPI):
         print(self.ticket.prompt, 'OFFLINE_tbx =', OFFLINE_tbx)
         print()
 
+    def put_remote_outputs(self):
+        """
+        Save the PREP files (yearly only)
+        """
+        super().put_remote_outputs()
+        #######################################################################
+        #                               Backup                                #
+        #######################################################################
+        _, _, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(
+                Date(self.conf.datebegin),
+                Date(self.conf.dateend),
+                self.conf.get('io_duration', 'yearly'))
+
+        # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
+        # configuration variable if provided by the user or 'vortex.multi.fr' by default
+        namespace_out = self.conf.get('namespace_out', 'vortex.multi.fr')
+
+        self.sh.title('Toolbox output PREP')
+        prep_tbo = toolbox.output(
+            local          = 'PREP_[date:ymdh].nc',
+            role           = 'SnowpackInit',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            date           = list_dates_end_pro,
+            nativefmt      = 'netcdf',
+            kind           = 'PREP',
+            model          = 'surfex',
+            namespace      = namespace_out,
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            block          = 'prep',
+            member         = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
+        print()
+
 
 class Offline_MPI_Local(_Offline_MPI):
     '''
@@ -442,4 +401,375 @@ class Offline_MPI_Local(_Offline_MPI):
             remote         = self.conf.exesurfex + "/OFFLINE"
         )
         print(self.ticket.prompt, 'OFFLINE_tbx =', OFFLINE_tbx)
+        print()
+
+    def put_remote_outputs(self):
+        """
+        Save the PREP files (yearly only)
+        """
+        super().put_remote_outputs()
+        #######################################################################
+        #                               Backup                                #
+        #######################################################################
+        _, _, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(
+                Date(self.conf.datebegin),
+                Date(self.conf.dateend),
+                self.conf.get('io_duration', 'yearly'))
+
+        # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
+        # configuration variable if provided by the user or 'vortex.multi.fr' by default
+        namespace_out = self.conf.get('namespace_out', 'vortex.multi.fr')
+
+        self.sh.title('Toolbox output PREP')
+        prep_tbo = toolbox.output(
+            local          = 'PREP_[date:ymdh].nc',
+            role           = 'SnowpackInit',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            date           = list_dates_end_pro,
+            nativefmt      = 'netcdf',
+            kind           = 'PREP',
+            model          = 'surfex',
+            namespace      = namespace_out,
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            block          = 'prep',
+            member         = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
+        print()
+
+
+class Offline_MPI_Uenv_Full_Diag(_Offline_MPI):
+    '''
+    Get OFFLINE executable from a User Environment.
+
+    NB : This is the task to use to guarantee the simulation's reproductibility
+    '''
+
+    def get_remote_inputs(self):
+        """
+        Get OFFLINE executable from Uenv
+        """
+        super().get_remote_inputs()
+        #######################################################################
+        #                             Fetch steps                             #
+        #######################################################################
+        self.sh.title('Toolbox input OFFLINE executable from uenv')
+        OFFLINE_tbx = toolbox.executable(
+            role           = 'Binary',
+            kind           = 'offline',
+            local          = 'OFFLINE',
+            model          = 'surfex',
+            # MV : Il faudra peut être utiliser une variable de conf différente de *genv* à terme pour permettre
+            # de récupérer les autres "constantes" dans un genv commun et le binaire dans un environement géré par
+            # le user
+            genv           = self.conf.genv,
+            gvar           = 'master_surfex_offline_mpi',
+        )
+        print(self.ticket.prompt, 'OFFLINE_tbx =', OFFLINE_tbx)
+        print()
+
+    def put_remote_outputs(self):
+        """
+        Save the CUMUL and DIAG files (yearly only)
+        """
+        super().put_remote_outputs()
+        #######################################################################
+        #                               Backup                                #
+        #######################################################################
+        _, _, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(
+                Date(self.conf.datebegin),
+                Date(self.conf.dateend),
+                self.conf.get('io_duration', 'yearly'))
+        dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
+
+        # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
+        # configuration variable if provided by the user or 'vortex.multi.fr' by default
+        namespace_out = self.conf.get('namespace_out', 'vortex.multi.fr')
+
+        self.sh.title('Toolbox output PREP')
+        prep_tbo = toolbox.output(
+            local          = 'PREP_[date:ymdh].nc',
+            role           = 'SnowpackInit',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            date           = list_dates_end_pro,
+            nativefmt      = 'netcdf',
+            kind           = 'PREP',
+            model          = 'surfex',
+            namespace      = namespace_out,
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            block          = 'prep',
+            member         = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
+        print()
+
+        self.sh.title('Toolbox output CUMUL')
+        cumul_tbo = toolbox.output(
+            local          = 'CUMUL_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            datebegin      = list_dates_begin_pro,
+            dateend        = dict_dates_end_pro,
+            nativefmt      = 'netcdf',
+            kind           = 'SnowpackSimulation',
+            model          = 'surfex',
+            namespace      = namespace_out,
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            block          = 'cumul',
+            member         = self.conf.get('member', None),
+            fatal          = False,
+        ),
+        print(self.ticket.prompt, 'cumul_tbo =', cumul_tbo)
+        print()
+
+        self.sh.title('Toolbox output DIAG')
+        diag_tbo = toolbox.output(
+            local          = 'DIAG_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            datebegin      = list_dates_begin_pro,
+            dateend        = dict_dates_end_pro,
+            nativefmt      = 'netcdf',
+            kind           = 'SnowpackSimulation',
+            model          = 'surfex',
+            namespace      = namespace_out,
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            block          = 'diag',
+            member         = self.conf.get('member', None),
+            fatal          = False,
+        ),
+        print(self.ticket.prompt, 'diag_tbo =', diag_tbo)
+        print()
+
+
+class Offline_MPI_Local_Full_Diag(_Offline_MPI):
+    '''
+    Get an OFFLINE executable from any user-defined absolute path locally.
+
+    WARNING : The simulation's reproductibility can not be guaranteed with this task !
+
+    Supplementary mandatory configuration variables:
+    ------------------------------------------------
+    :param exesurfex: Absolute path pointing the a local directory containing the target OFFLINE executable
+    :type exesurfex: str
+    '''
+    # MV : dans ce cas le binaire doit être présent localement sur HPC,
+    # pas besoin de le récupérer sur un noeud de transfert
+    def get_local_inputs(self):
+        """
+        Get OFFLINE executable locally
+        """
+        super().get_local_inputs()
+        #######################################################################
+        #                             Fetch steps                             #
+        #######################################################################
+        self.sh.title('Toolbox input OFFLINE executable from local')
+        OFFLINE_tbx = toolbox.executable(
+            role           = 'Binary',
+            kind           = 'offline',
+            local          = 'OFFLINE',
+            model          = 'surfex',
+            remote         = self.conf.exesurfex + "/OFFLINE"
+        )
+        print(self.ticket.prompt, 'OFFLINE_tbx =', OFFLINE_tbx)
+        print()
+
+    def put_remote_outputs(self):
+        """
+        Save the CUMUL and DIAG files (yearly only)
+        """
+        super().put_remote_outputs()
+        #######################################################################
+        #                               Backup                                #
+        #######################################################################
+        _, _, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(
+                Date(self.conf.datebegin),
+                Date(self.conf.dateend),
+                self.conf.get('io_duration', 'yearly'))
+        dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
+
+        # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
+        # configuration variable if provided by the user or 'vortex.multi.fr' by default
+        namespace_out = self.conf.get('namespace_out', 'vortex.multi.fr')
+
+        self.sh.title('Toolbox output PREP')
+        prep_tbo = toolbox.output(
+            local          = 'PREP_[date:ymdh].nc',
+            role           = 'SnowpackInit',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            date           = list_dates_end_pro,
+            nativefmt      = 'netcdf',
+            kind           = 'PREP',
+            model          = 'surfex',
+            namespace      = namespace_out,
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            block          = 'prep',
+            member         = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
+        print()
+
+        self.sh.title('Toolbox output CUMUL')
+        cumul_tbo = toolbox.output(
+            local          = 'CUMUL_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            datebegin      = list_dates_begin_pro,
+            dateend        = dict_dates_end_pro,
+            nativefmt      = 'netcdf',
+            kind           = 'SnowpackSimulation',
+            model          = 'surfex',
+            namespace      = namespace_out,
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            block          = 'cumul',
+            member         = self.conf.get('member', None),
+            fatal          = False,
+        ),
+        print(self.ticket.prompt, 'cumul_tbo =', cumul_tbo)
+        print()
+
+        self.sh.title('Toolbox output DIAG')
+        diag_tbo = toolbox.output(
+            local          = 'DIAG_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            datebegin      = list_dates_begin_pro,
+            dateend        = dict_dates_end_pro,
+            nativefmt      = 'netcdf',
+            kind           = 'SnowpackSimulation',
+            model          = 'surfex',
+            namespace      = namespace_out,
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            block          = 'diag',
+            member         = self.conf.get('member', None),
+            fatal          = False,
+        ),
+        print(self.ticket.prompt, 'diag_tbo =', diag_tbo)
+        print()
+
+
+class Offline_MPI_Uenv_Dailyprep(_Offline_MPI):
+    '''
+    Get OFFLINE executable from a User Environment.
+
+    NB : This is the task to use to guarantee the simulation's reproductibility
+    '''
+
+    def get_remote_inputs(self):
+        """
+        Get OFFLINE executable from Uenv
+        """
+        super().get_remote_inputs()
+        #######################################################################
+        #                             Fetch steps                             #
+        #######################################################################
+        self.sh.title('Toolbox input OFFLINE executable from uenv')
+        OFFLINE_tbx = toolbox.executable(
+            role           = 'Binary',
+            kind           = 'offline',
+            local          = 'OFFLINE',
+            model          = 'surfex',
+            # MV : Il faudra peut être utiliser une variable de conf différente de *genv* à terme pour permettre
+            # de récupérer les autres "constantes" dans un genv commun et le binaire dans un environement géré par
+            # le user
+            genv           = self.conf.genv,
+            gvar           = 'master_surfex_offline_mpi',
+        )
+        print(self.ticket.prompt, 'OFFLINE_tbx =', OFFLINE_tbx)
+        print()
+
+    def put_remote_outputs(self):
+        """
+        Save the PREP files every day
+        """
+        super().put_remote_outputs()
+        #######################################################################
+        #                               Backup                                #
+        #######################################################################
+        # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
+        # configuration variable if provided by the user or 'vortex.multi.fr' by default
+        namespace_out = self.conf.get('namespace_out', 'vortex.multi.fr')
+
+        self.sh.title('Toolbox output PREP')
+        prep_tbo = toolbox.output(
+            local          = 'PREP_[date:ymdh].nc',
+            role           = 'SnowpackInit',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            date           = list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
+            nativefmt      = 'netcdf',
+            kind           = 'PREP',
+            model          = 'surfex',
+            namespace      = namespace_out,
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            block          = 'prep',
+            member         = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
+        print()
+
+
+class Offline_MPI_Local_Dailyprep(_Offline_MPI):
+    '''
+    Get an OFFLINE executable from any user-defined absolute path locally.
+
+    WARNING : The simulation's reproductibility can not be guaranteed with this task !
+
+    Supplementary mandatory configuration variables:
+    ------------------------------------------------
+    :param exesurfex: Absolute path pointing the a local directory containing the target OFFLINE executable
+    :type exesurfex: str
+    '''
+    # MV : dans ce cas le binaire doit être présent localement sur HPC,
+    # pas besoin de le récupérer sur un noeud de transfert
+    def get_local_inputs(self):
+        """
+        Get OFFLINE executable locally
+        """
+        super().get_local_inputs()
+        #######################################################################
+        #                             Fetch steps                             #
+        #######################################################################
+        self.sh.title('Toolbox input OFFLINE executable from local')
+        OFFLINE_tbx = toolbox.executable(
+            role           = 'Binary',
+            kind           = 'offline',
+            local          = 'OFFLINE',
+            model          = 'surfex',
+            remote         = self.conf.exesurfex + "/OFFLINE"
+        )
+        print(self.ticket.prompt, 'OFFLINE_tbx =', OFFLINE_tbx)
+        print()
+
+    def put_remote_outputs(self):
+        """
+        Save the PREP files every day
+        """
+        super().put_remote_outputs()
+        #######################################################################
+        #                               Backup                                #
+        #######################################################################
+        # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
+        # configuration variable if provided by the user or 'vortex.multi.fr' by default
+        namespace_out = self.conf.get('namespace_out', 'vortex.multi.fr')
+
+        self.sh.title('Toolbox output PREP')
+        prep_tbo = toolbox.output(
+            local          = 'PREP_[date:ymdh].nc',
+            role           = 'SnowpackInit',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            date           = list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
+            nativefmt      = 'netcdf',
+            kind           = 'PREP',
+            model          = 'surfex',
+            namespace      = namespace_out,
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            block          = 'prep',
+            member         = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
         print()
