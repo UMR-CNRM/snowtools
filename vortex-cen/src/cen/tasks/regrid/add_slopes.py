@@ -38,7 +38,13 @@ class AddSlopes(_CenResearchTask):
         Get FORCING file as "FORCING.nc" in the different working sub-directories.
         """
 
-        self.get_forcing(localname='[datebegin:ymdh]_[dateend:ymdh]/FORCING.nc')
+        # TODO : cela devrait être géré proprement dans l'algo à partir des "effective_inputs" !
+        if isinstance(self.conf.forcing_geometry, list) and len(self.conf.forcing_geometry) > 1:
+            forcingname = '[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
+        else:
+            forcingname = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
+
+        self.get_forcing(localname=forcingname)
 
     def algo(self):
         """
@@ -48,10 +54,19 @@ class AddSlopes(_CenResearchTask):
 
         Working tree :
         rootdir
-        |-- datebegin1_dateend1
-            |--FORCING.nc
-        |-- datebegin2_dateend2
-            |--FORCING.nc
+        |FORCING_datebegin1_dateend1.nc
+        |FORCING_datebegin2_dateend2.nc
+        ...
+
+        or
+
+        rootdir
+        |geometry1
+            |-- FORCING_datebegin1_dateend1.nc
+            |-- FORCING_datebegin2_dateend2.nc
+        |geometry2
+            |-- FORCING_datebegin1_dateend1.nc
+            |-- FORCING_datebegin2_dateend2.nc
         ...
 
         """
@@ -59,14 +74,20 @@ class AddSlopes(_CenResearchTask):
         t = self.ticket
 
         avail_forcings = t.context.sequence.effective_inputs(role='Forcing')
+        if isinstance(self.conf.forcing_geometry, list):
+            list_geometry = self.conf.forcing_geometry
+        else:
+            list_geometry = [self.conf.forcing_geometry]
 
         self.sh.title('Algo')
         algo = vortex.task(
             engine       = 'algo',
             kind         = 'prepareforcing',
-            datebegin    = [tbinput.rh.resource.datebegin for tbinput in avail_forcings],
-            dateend      = [tbinput.rh.resource.dateend for tbinput in avail_forcings],
+            datebegin    = list(set([tbinput.rh.resource.datebegin for tbinput in avail_forcings])),
+            dateend      = list(set([tbinput.rh.resource.dateend for tbinput in avail_forcings])),
             ntasks       = min(40, len(avail_forcings)),  # TODO : ne pas mettre ça en dur dans le code !
+            geometry_in  = list_geometry,
+            geometry_out = self.conf.geometry,
             role_members = 'Forcing',
             # reprod_info  = self.get_reprod_info,
         )

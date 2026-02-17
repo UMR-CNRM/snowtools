@@ -98,6 +98,10 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                     value = FPDict(value)
                 vortex.defaults[optk] = value
 
+        # forcing_geometry value may depend on the task's output 'geometry' value
+        if 'forcing_geometry' in self.conf and isinstance(self.conf.forcing_geometry, dict):
+            self.conf.forcing_geometry = self.conf.forcing_geometry[self.conf.geometry.tag]
+
         vortex.defaults(**extras)
         self.header('Toolbox defaults')
         vortex.defaults.show()
@@ -255,7 +259,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             self.list_dates_begin = [self.conf.date]
             self.dict_dates_end   = {self.conf.date: self.conf.date}
 
-    def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', alternate=True):
+    def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', alternate=True,
+            namespace='vortex.multi.fr'):
         """
         Method to get meteorological forcing file(s) covering the simulation period.
         First, check if an existing forcing file covers the full simulation period.
@@ -289,7 +294,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         :type forcing_vconf: str
         :param forcing_block: *block* footprint, default "meteo"
         :type forcing_vconf: str
-        :param forcing_namespace: *namespace* footprint, default "vortex.multi.fr"
+        :param forcing_namespace: *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
         :type forcing_namespace: str
 
         :param forcing_date: *date* footprint (unsed with the research namebuilders), default to [dateend]
@@ -335,14 +340,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         forcing_dateend   = self.conf.get('forcing_dateend', self.conf.dateend)
         forcing_xpid      = self.conf.get('forcing_xpid', self.conf.xpid)
         forcing_user      = self.conf.get('forcing_user', None)
-        # forcing_geometry value may depend on the task's output 'geometry' value
-        if 'forcing_geometry' in self.conf:
-            if isinstance(self.conf.forcing_geometry, dict):
-                forcing_geometry = self.conf.forcing_geometry[self.conf.geometry.tag]
-            else:
-                forcing_geometry = self.conf.forcing_geometry
-        else:
-            forcing_geometry = self.conf.geometry
+        forcing_geometry  = self.conf.get('forcing_geometry', self.conf.geometry)
         forcing_vapp      = self.conf.get('forcing_vapp', self.conf.vapp)
         forcing_vconf     = self.conf.get('forcing_vconf', self.conf.vconf)
         forcing_block     = self.conf.get('forcing_block', 'meteo')
@@ -351,7 +349,6 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         # separate directory to avoid overwrinting files.
         if (isinstance(forcing_member, list) and len(forcing_member) > 1 and '[member]' not in localname):
             localname = f'mb[member]/{localname}'
-        forcing_namespace = self.conf.get('forcing_namespace', 'vortex.multi.fr')
         # TODO : modifier le namebuilder par defaut lorsque le nouveau incluant la
         # géométrie sera disponible
         forcing_namebuild = self.conf.get('forcing_namebuild', 'flat@cen')
@@ -385,7 +382,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             block          = forcing_block,  # default : 'meteo' ?
             member         = forcing_member,  # default : None
             intent         = forcing_intent,  # default : 'in' ?
-            namespace      = forcing_namespace,  # default : 'vortex.multi.fr',
+            namespace      = namespace,  # default : 'vortex.multi.fr',
             namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
             vortex1        = vortex1,
             date           = '[dateend]',  # TODO : à supprimer (cas recherche uniquement)
@@ -434,7 +431,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                 block          = forcing_block,  # default : 'meteo' ?
                 member         = forcing_member,  # default : None
                 intent         = forcing_intent,  # default : 'in' ?
-                namespace      = forcing_namespace,  # default : 'vortex.multi.fr',
+                namespace      = namespace,  # default : 'vortex.multi.fr',
                 namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
                 vortex1        = vortex1,
                 date           = '[dateend]',  # TODO : à supprimer dans le cas recherche

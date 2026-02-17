@@ -99,7 +99,8 @@ class _Offline_MPI(_CenResearchTask):
                         Possible values : "yearly", "monthly" or "full"
     :type io_duration: str
     '''
-    def get_remote_inputs(self):
+
+    def get_ecoclimap(self):
         """
         Get ecoclimapI_covers_param.bin, ecoclimapII_eu_covers_param.bin,
         Get drdt_bst_fit_60.nc, PGD.nc, PREP.nc, FORCING.nc
@@ -134,6 +135,8 @@ class _Offline_MPI(_CenResearchTask):
         print(self.ticket.prompt, 'ecoclimap2 =', ecoclimap2_tbi)
         print()
 
+    def get_drdt_bst_fit(self):
+
         # Crocus metamorphism parameters mandatory to run OFFLINE and taken from the uenv
         self.sh.title('Toolbox input drdt_bst_fit_60')
         drdt_bst_fit_tbi = toolbox.input(
@@ -147,7 +150,13 @@ class _Offline_MPI(_CenResearchTask):
         print(self.ticket.prompt, 'drdt_bst_fit_60 =', drdt_bst_fit_tbi)
         print()
 
-        # PGD.nc mandatory to run OFFLINE
+    def get_pgd(self):
+        """
+        A PGD.nc file is mandatory to run OFFLINE.
+        In the general research case, the PGD comes from the vortex cache.
+        For "stable" configurations such as the reanalysis, it comes from a UEnv/GEnv.
+        """
+
         self.sh.title('Toolbox input PGD')
         pgd_tbi = toolbox.input(
             local          = 'PGD.nc',
@@ -172,6 +181,8 @@ class _Offline_MPI(_CenResearchTask):
         ),
         print(self.ticket.prompt, 'pgd =', pgd_tbi)
         print()
+
+    def get_prep(self):
 
         # PREP.nc mandatory to run OFFLINE
         self.sh.title('Toolbox input PREP')
@@ -210,11 +221,9 @@ class _Offline_MPI(_CenResearchTask):
         print(self.ticket.prompt, 'prep_tbi =', prep_tbi)
         print()
 
-        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
-
-    def get_local_inputs(self):
+    def get_namelist(self):
         """
-        Get OPTIONS.nam which is always in cache because it comes from
+        OPTIONS.nam always comes from the local cache because it comes from
         a previous execution of a "pre_process" task.
         """
         # Namelist mandatory to run OFFLINE and taken from the cache
@@ -231,6 +240,25 @@ class _Offline_MPI(_CenResearchTask):
         ),
         print(self.ticket.prompt, 'namelist =', namelist_tbi)
         print()
+
+    def get_executable(self):
+        """
+        Get OFFLINE executable, either from a UEnv/GEnv or from a path depending on the task
+        """
+        pass
+
+    def get_remote_inputs(self):
+
+        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+        self.get_ecoclimap()
+        self.get_drdt_bst_fit()
+        self.get_pgd()
+        self.get_prep()
+        self.get_executable()
+
+    def get_local_inputs(self):
+        self.get_remote_inputs()
+        self.get_namelist()
 
     def algo(self):
         """
@@ -398,11 +426,10 @@ class Offline_MPI_Uenv(_Offline_MPI):
     NB : This is the task to use to guarantee the simulation's reproductibility
     '''
 
-    def get_remote_inputs(self):
+    def get_executable(self):
         """
         Get OFFLINE executable from Uenv
         """
-        super().get_remote_inputs()
         #######################################################################
         #                             Fetch steps                             #
         #######################################################################
@@ -435,11 +462,10 @@ class Offline_MPI_Local(_Offline_MPI):
     '''
     # MV : dans ce cas le binaire doit être présent localement sur HPC,
     # pas besoin de le récupérer sur un noeud de transfert
-    def get_local_inputs(self):
+    def get_executable(self):
         """
         Get OFFLINE executable locally
         """
-        super().get_local_inputs()
         #######################################################################
         #                             Fetch steps                             #
         #######################################################################

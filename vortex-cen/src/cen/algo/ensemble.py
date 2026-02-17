@@ -1222,7 +1222,7 @@ class SurfexWorker(_CENWorkerBlindRun):
 
 
 @echecker.disabled_if_unavailable
-class PrepareForcingWorker(TaylorVortexWorker):
+class PrepareForcingWorker(_S2MWorkerMixIn, TaylorVortexWorker):
     """This algo component is designed to prepare a SURFEX Forcing file (change of geometry)."""
 
     _footprint = dict(
@@ -1256,20 +1256,6 @@ class PrepareForcingWorker(TaylorVortexWorker):
         )
     )
 
-    def vortex_task(self, **kwargs):
-        rdict = dict(rc=True)
-        rundir = self.system.getcwd()
-        if self.subdir is not self.system.path.dirname(rundir):
-            thisdir = self.system.path.join(rundir, self.subdir)
-            with self.system.cdcontext(self.subdir, create=True):
-                rdict = self._commons(rundir, thisdir, rdict, **kwargs)
-
-        else:
-            thisdir = rundir
-            rdict = self._commons(rundir, thisdir, rdict, **kwargs)
-
-        return rdict
-
     def _commons(self, rundir, thisdir, rdict, **kwargs):
 
         rdict = self._prepare_forcing_task(rundir, thisdir, rdict)
@@ -1291,7 +1277,7 @@ class PrepareForcingWorker(TaylorVortexWorker):
 
             if need_other_forcing:
 
-                forcingdir = self.forcingdir(rundir, thisdir)
+                forcingdir = self.forcingdir
 
                 if len(self.geometry_in) > 1:
                     print("FORCING AGGREGATION")
@@ -1994,6 +1980,14 @@ class PrepareForcingComponent(_CENTaylorRun):
         attr = dict(
             kind = dict(
                 values = ['prepareforcing', 'extractforcing', 'shadowsforcing']
+            ),
+            datebegin = dict(
+                info = "The list of begin dates of the forcing files",
+                type = footprints.stdtypes.FPList,
+            ),
+            dateend = dict(
+                info = "The list of begin dates of the forcing files",
+                type = footprints.stdtypes.FPList,
             ),
             geometry_in = dict(
                 info = "Area information in case of an execution on a massif geometry",
