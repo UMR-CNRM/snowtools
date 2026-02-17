@@ -1,4 +1,4 @@
-from vortex import toolbox
+import vortex
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 
@@ -31,7 +31,7 @@ class InitClimGroundTemperature(_CenResearchTask):
         """
 
         self.sh.title("Toolbox algo")
-        algo = toolbox.algo(
+        algo = vortex.task(
             engine="s2m",
             kind="clim",
         )
@@ -49,12 +49,13 @@ class InitClimGroundTemperature(_CenResearchTask):
 
         self.sh.title("Toolbox output for initial values of ground temperature")
         clim_tg_tbO = (
-            toolbox.output(
+            vortex.output(
                 role="initial values of ground temperature",
                 kind="climTG",
                 nativefmt="netcdf",
                 local="init_TG.nc",
                 experiment=self.conf.xpid,
+                username=self.conf.username,
                 geometry=self.conf.geometry,
                 model="surfex",
                 namespace="vortex.multi.fr",
@@ -72,7 +73,7 @@ class InitClimGroundTemperature(_CenResearchTask):
 
         self.sh.title("Toolbox diff climatological ground temperature")
         clim_tg_diff_tbt = (
-            toolbox.diff(
+            vortex.diff(
                 role="initial values of ground temperature",
                 kind="climTG",
                 nativefmt="netcdf",

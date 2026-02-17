@@ -2,7 +2,7 @@
 #
 # 1. Sous tests/testhpc/drivers, création d'un nouveau driver (fichier {driver_name}.py) :
 
-from vortex.layout.nodes import Driver
+from mkjob.nodes import Driver
 from vortex_cen.tasks.{dir}.{file} import {task}
 
 
