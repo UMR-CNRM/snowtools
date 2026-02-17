@@ -60,6 +60,9 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         Set toolbox defaults, extended with actual arguments ``extras``.
         """
 
+        if 'localtest' in self.conf:
+            toolbox.active_now = False
+
         toolbox.defaults(
             # namespace      = self.conf.get('namespace', Namespace('vortex.multi.fr')),
             # namespace      = Namespace('vortex.multi.fr'),
@@ -294,7 +297,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
         Optionnal configuration variables:
 
-        :param forcing_member: *member* footprint, default None
+        :param forcing_member: *member* footprint, default None (or *member* if provided)
         :type forcing_member: int, footprints.stdtypes.FPList
         :param forcing_namebuild: *namebuild* footprint, default "flat@cen" (will change soon)
         :type forcing_namebuild: str
@@ -330,10 +333,10 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         forcing_vapp      = self.conf.get('forcing_vapp', self.conf.vapp)
         forcing_vconf     = self.conf.get('forcing_vconf', self.conf.vconf)
         forcing_block     = self.conf.get('forcing_block', 'meteo')
-        forcing_member    = self.conf.get('forcing_member', None)
+        forcing_member    = self.conf.get('forcing_member', self.conf.get('member', None))
         # Security : in case of an ensemble of forcing files, get the FORCING of each member in a
         # separate directory to avoid overwrinting files.
-        if forcing_member is not None and '[member]' not in localname:
+        if (isinstance(forcing_member, list) and len(forcing_member) > 1 and '[member]' not in localname):
             localname = f'mb[member]/{localname}'
         forcing_namespace = self.conf.get('forcing_namespace', 'vortex.multi.fr')
         # TODO : modifier le namebuilder par defaut lorsque le nouveau incluant la
@@ -345,8 +348,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         forcing_source_conf = self.conf.get('forcing_source_conf', None)
         # Verrue pour gérer les footprints *source_app* et *source_conf* de la réanalyse S2M
         if 'forcing_source' in self.conf:
-            self.conf.forcing_source_app, self.conf.forcing_source_conf = \
-                self.get_safran_sources([self.conf.forcing_datebegin], era5=self.conf.forcing_source == 'era5')
+            forcing_source_app, forcing_source_conf = \
+                self.get_safran_sources([forcing_datebegin], era5=self.conf.forcing_source == 'era5')
         # TODO : à supprimer après suppression de ce footprint dans les objets "SurfaceIO"
         forcing_model = self.conf.get('forcing_model', 'safran')
         # TODO : à supprimer après suppression de ce footprint dans les objets "SurfaceIO"
