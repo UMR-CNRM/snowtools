@@ -26,7 +26,7 @@ class ExtractS2MForcing(_CenResearchTask):
         Get FORCING file as "FORCING_IN.nc" in the different working sub-directories.
         """
 
-        self.get_forcing(localname='[datebegin:ymdh]_[dateend:ymdh]/FORCING_IN.nc')
+        self.get_forcing(forcing_geometry=self.conf.forcing_geometry, localname='[datebegin:ymdh]_[dateend:ymdh]/FORCING_IN.nc')
 
     def algo(self):
         """

@@ -1,6 +1,6 @@
 
 # 1. Synchroniser la configuration test dans un répertoire de travail :
-python $SNOWTOOLS/vortex-cen/scripts/sync_hpc_env.py -a testshpc -c unittest
+python $SNOWTOOLS/vortex-cen/scripts/sync_hpc_env.py -a tests -c testshpc
 # --> renvoie le lien vers le workdir créé : /scratch/work/{username}/tests/testhpc
 
 # 2. Sous /scratch/work/{username}/tests/testhpc/jobs :

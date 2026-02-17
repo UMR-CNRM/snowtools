@@ -40,7 +40,7 @@ partition=
 
 # 3. Ajout d'un ligne au fichier tests/testhpc/jobs/create_job :
 
-name={jobname} package=drivers task={driver_name} profile=rd-belenos-mt jobassistant=cen datebegin=2022080106 dateend=2023080106 geometry=cor xpid={UnIdentifiantArbitraire}
+name={jobname} package=drivers task={driver_name} profile = rd-belenos-mt
 
 
 
