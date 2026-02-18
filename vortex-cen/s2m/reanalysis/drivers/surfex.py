@@ -4,6 +4,7 @@ from mkjob.nodes import Driver
 import vortex
 from vortex_cen.tasks.regrid.add_slopes import AddSlopes
 from vortex_cen.tasks.surfex.offline import Offline_MPI_Uenv
+from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist
 
 
 def setup(t, **kw):
@@ -12,6 +13,7 @@ def setup(t, **kw):
         ticket=t,
         nodes=[
             AddSlopes(tag='addslopes', ticket=t, **kw),
+            Preprocess_Uenv_Namelist(tag='preprocess', ticket=t, **kw),
             Offline_reanalysis(tag='offline', ticket=t, **kw),
         ],
         options=kw,

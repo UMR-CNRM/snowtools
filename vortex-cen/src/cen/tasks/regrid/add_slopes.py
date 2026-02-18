@@ -39,12 +39,13 @@ class AddSlopes(_CenResearchTask):
         """
 
         # TODO : cela devrait être géré proprement dans l'algo à partir des "effective_inputs" !
-        if isinstance(self.conf.forcing_geometry, list) and len(self.conf.forcing_geometry) > 1:
-            forcingname = '[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
-        else:
-            forcingname = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc'
+        #if isinstance(self.conf.forcing_geometry, list) and len(self.conf.forcing_geometry) > 1:
+        #    forcingname = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_[geometry::tag].nc'
+        #else:
+        #    forcingname = '[datebegin:ymdh]_[dateend:ymdh]/FORCING.nc'
+        self.forcingname = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_[geometry::tag].nc'
 
-        self.get_forcing(localname=forcingname)
+        self.get_forcing(localname=self.forcingname)
 
     def algo(self):
         """
@@ -74,10 +75,11 @@ class AddSlopes(_CenResearchTask):
         t = self.ticket
 
         avail_forcings = t.context.sequence.effective_inputs(role='Forcing')
+        # TODO : Passer directement les objets "geometry" !
         if isinstance(self.conf.forcing_geometry, list):
-            list_geometry = self.conf.forcing_geometry
+            list_geometry = self.conf.forcing_geometry.tag
         else:
-            list_geometry = [self.conf.forcing_geometry]
+            list_geometry = [self.conf.forcing_geometry.tag]
 
         self.sh.title('Algo')
         algo = vortex.task(
@@ -87,7 +89,7 @@ class AddSlopes(_CenResearchTask):
             dateend      = list(set([tbinput.rh.resource.dateend for tbinput in avail_forcings])),
             ntasks       = min(40, len(avail_forcings)),  # TODO : ne pas mettre ça en dur dans le code !
             geometry_in  = list_geometry,
-            geometry_out = self.conf.geometry,
+            geometry_out = self.conf.geometry.tag,
             role_members = 'Forcing',
             # reprod_info  = self.get_reprod_info,
         )
@@ -116,7 +118,7 @@ class AddSlopes(_CenResearchTask):
             geometry       = self.conf.geometry,
             experiment     = self.conf.xpid,
             namebuild      = 'flat@cen',
-            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING.nc',
+            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
             block          = 'meteo',
             model          = 'safran',
         ),
@@ -137,7 +139,7 @@ class AddSlopes(_CenResearchTask):
             experiment     = 'reference',
             username       = 'vernaym',
             namebuild      = 'flat@cen',
-            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING.nc',
+            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
             block          = 'shadows',
             model          = 'safran',
         ),

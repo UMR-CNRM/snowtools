@@ -93,6 +93,12 @@ class _Offline_MPI(_CenResearchTask):
     :type drhook: bool
     :param namespace_out: Force specific namespace for output files (default: 'vortex.multi.fr')
     :type namespace_out: str
+    :param nnodes: Number of available nodes for MPI parallelisation
+    :type nnodes: int
+    :param nprocs: Number of available processors for MPI parallelisation
+    :type nprocs: int
+    :param ntasks: Number of MPI tasks
+    :type ntasks: int
     :param io_duration: Argument similar to the one of the `get_list_dates_files` method in
                         snowtools/utils/dates.py.
                         Used to retrieve the list of *datebegin* and *dateend* for IO covering sub-periods.
@@ -305,8 +311,8 @@ class _Offline_MPI(_CenResearchTask):
         # MV : Il faudra également pouvoir fournir le nombre de process et le nombre de tâches via le fichier de conf
         # TODO : réfléchir à la procédure pour définir des valeurs par défaut en fonction du domaine comme c'est
         # le cas actuellement
-        self.component_runner(algo, executable)
-        #        mpiopts=dict(nnodes=1, nprocs=self.conf.nprocs, ntasks=self.conf.ntasks))
+        self.component_runner(algo, executable,
+                mpiopts=dict(nnodes=self.conf.nnodes, nprocs=self.conf.nprocs, ntasks=self.conf.ntasks))
 
     def put_remote_outputs(self):
         """
@@ -316,9 +322,9 @@ class _Offline_MPI(_CenResearchTask):
         #                               Backup                                #
         #######################################################################
         _, _, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(
-                Date(self.conf.datebegin),
-                Date(self.conf.dateend),
-                self.conf.get('io_duration', 'yearly'))
+            Date(self.conf.datebegin),
+            Date(self.conf.dateend),
+            self.conf.get('io_duration', 'yearly'))
         dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
 
         # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
