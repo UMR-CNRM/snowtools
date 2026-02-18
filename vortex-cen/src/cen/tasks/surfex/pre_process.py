@@ -94,9 +94,9 @@ class Preprocess_Uenv_Namelist(_Preprocess):
 
     Supplementary mandatory configuration variables:
     ------------------------------------------------
-    :param uenv: User Environment in which the namelist is to be retrieved.
+    :param genv: User Environment in which the namelist is to be retrieved.
                  Format : uenv:{uenv_name}@{user}
-    :type uenv: str
+    :type genv: str
     :param source: The name of the specific namelist to retrieve from the namelist
                    ".tar" archive containing all available namelists.
     :type source: str
@@ -116,7 +116,7 @@ class Preprocess_Uenv_Namelist(_Preprocess):
             # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
             # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
             source   = self.conf.source,  # ex : OPTIONS_default.nam
-            genv     = self.conf.uenv,
+            genv     = self.conf.genv,
             kind     = 'namelist',
             model    = 'surfex',
             local    = 'OPTIONS.nam',

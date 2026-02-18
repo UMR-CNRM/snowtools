@@ -35,9 +35,9 @@ class Soda(_CenResearchTask):
     :type xpid: str
     :param observation_xpid: Experiment identifier (format "{experiment_name}@{user}") of the observation file
     :type observation_xpid: str
-    :param uenv: User Environment in which the following resources are to be retrieved :
+    :param genv: User Environment in which the following resources are to be retrieved :
                  Format : uenv:{uenv_name}@{user}
-    :type uenv: str
+    :type genv: str
     :param sensor: Sensor used for the observation (ex: MODIS, PLEIADES, VIIRS)
     :type sensor: str
     :param members: Ensemble members
@@ -83,7 +83,7 @@ class Soda(_CenResearchTask):
             nativefmt  = 'bin',
             local      = 'ecoclimapI_covers_param.bin',
             geometry   = self.conf.geometry,
-            genv       = self.conf.uenv,
+            genv       = self.conf.genv,
             source     = 'ecoclimap1',
             model      = 'surfex',
         ),
@@ -98,7 +98,7 @@ class Soda(_CenResearchTask):
             nativefmt  = 'bin',
             local      = 'ecoclimapII_eu_covers_param.bin',
             geometry   = self.conf.geometry,
-            genv       = self.conf.uenv,
+            genv       = self.conf.genv,
             source     = 'ecoclimap2',
             model      = 'surfex',
         ),
@@ -109,7 +109,7 @@ class Soda(_CenResearchTask):
         self.sh.title('Input drdt_bst_fit_60.nc (Parameters F06 metamorphism)')
         ssa  = toolbox.input(
             kind       = 'ssa_params',
-            genv       = self.conf.uenv,
+            genv       = self.conf.genv,
             nativefmt  = 'netcdf',
             local      = 'drdt_bst_fit_60.nc',
             model      = 'surfex',
