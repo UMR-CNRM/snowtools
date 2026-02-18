@@ -250,8 +250,49 @@ class _Offline_MPI(_CenResearchTask):
     def get_executable(self):
         """
         Get OFFLINE executable, either from a UEnv/GEnv or from a path depending on the task
+        Either call get_executable_from_uenv or get_executable_from_path methods
         """
         pass
+
+    def get_executable_from_uenv(self):
+        """
+        Get OFFLINE executable from Uenv
+        """
+        #######################################################################
+        #                             Fetch steps                             #
+        #######################################################################
+        self.sh.title('Toolbox input OFFLINE executable from uenv')
+        OFFLINE_tbx = toolbox.executable(
+            role           = 'Binary',
+            kind           = 'offline',
+            local          = 'OFFLINE',
+            model          = 'surfex',
+            # MV : Il faudra peut être utiliser une variable de conf différente de *genv* à terme pour permettre
+            # de récupérer les autres "constantes" dans un genv commun et le binaire dans un environement géré par
+            # le user
+            genv           = self.conf.genv,
+            gvar           = 'master_surfex_offline_mpi',
+        )
+        print(self.ticket.prompt, 'OFFLINE_tbx =', OFFLINE_tbx)
+        print()
+
+    def get_executable_from_path(self):
+        """
+        Get OFFLINE executable locally
+        """
+        #######################################################################
+        #                             Fetch steps                             #
+        #######################################################################
+        self.sh.title('Toolbox input OFFLINE executable from local')
+        OFFLINE_tbx = toolbox.executable(
+            role           = 'Binary',
+            kind           = 'offline',
+            local          = 'OFFLINE',
+            model          = 'surfex',
+            remote         = self.conf.exesurfex + "/OFFLINE"
+        )
+        print(self.ticket.prompt, 'OFFLINE_tbx =', OFFLINE_tbx)
+        print()
 
     def get_remote_inputs(self):
 
@@ -302,7 +343,6 @@ class _Offline_MPI(_CenResearchTask):
         """
         Run OFFLINE MPI algo component.
         """
-        # MV : J'ajoute cette méthode qui est automatiquement appelée dans la classe mère _CenResearchTask
         # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
         # toolbox.executable(...))
         # Il est possible de récupérer cet objet avec la ligne suivante :
@@ -433,26 +473,8 @@ class Offline_MPI_Uenv(_Offline_MPI):
     '''
 
     def get_executable(self):
-        """
-        Get OFFLINE executable from Uenv
-        """
-        #######################################################################
-        #                             Fetch steps                             #
-        #######################################################################
-        self.sh.title('Toolbox input OFFLINE executable from uenv')
-        OFFLINE_tbx = toolbox.executable(
-            role           = 'Binary',
-            kind           = 'offline',
-            local          = 'OFFLINE',
-            model          = 'surfex',
-            # MV : Il faudra peut être utiliser une variable de conf différente de *genv* à terme pour permettre
-            # de récupérer les autres "constantes" dans un genv commun et le binaire dans un environement géré par
-            # le user
-            genv           = self.conf.genv,
-            gvar           = 'master_surfex_offline_mpi',
-        )
-        print(self.ticket.prompt, 'OFFLINE_tbx =', OFFLINE_tbx)
-        print()
+        self.get_executable_from_uenv()
+
 
 
 class Offline_MPI_Local(_Offline_MPI):
@@ -469,19 +491,4 @@ class Offline_MPI_Local(_Offline_MPI):
     # MV : dans ce cas le binaire doit être présent localement sur HPC,
     # pas besoin de le récupérer sur un noeud de transfert
     def get_executable(self):
-        """
-        Get OFFLINE executable locally
-        """
-        #######################################################################
-        #                             Fetch steps                             #
-        #######################################################################
-        self.sh.title('Toolbox input OFFLINE executable from local')
-        OFFLINE_tbx = toolbox.executable(
-            role           = 'Binary',
-            kind           = 'offline',
-            local          = 'OFFLINE',
-            model          = 'surfex',
-            remote         = self.conf.exesurfex + "/OFFLINE"
-        )
-        print(self.ticket.prompt, 'OFFLINE_tbx =', OFFLINE_tbx)
-        print()
+        self.get_executable_from_path()
