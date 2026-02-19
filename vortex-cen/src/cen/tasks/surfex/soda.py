@@ -57,65 +57,65 @@ class Soda(_CenResearchTask):
         """
         t = self.ticket
 
-        # TODO : check if necessary
-        self.sh.title('Input PGD')
-        pgd = toolbox.input(
-            alternate  = 'SurfexClim',
-            kind       = 'pgdnc',
-            nativefmt  = 'netcdf',
-            local      = 'PGD.nc',
-            experiment = self.conf.get('pgd_xpid', self.conf.xpid),
-            geometry   = self.conf.geometry,
-            model      = 'surfex',
-            namespace  = 'vortex.multi.fr',
-            namebuild  = 'flat@cen',
-            block      = 'pgd',
-            fatal      = True,
-        ),
-        print(t.prompt, 'PGD =', pgd)
-        print()
-
-        # TODO : check if necessary
-        self.sh.title('Input ecoclimapI')
-        ecoclimapI = toolbox.input(
-            role       = 'Surfex cover parameters',
-            kind       = 'coverparams',
-            nativefmt  = 'bin',
-            local      = 'ecoclimapI_covers_param.bin',
-            geometry   = self.conf.geometry,
-            genv       = self.conf.genv,
-            source     = 'ecoclimap1',
-            model      = 'surfex',
-        ),
-        print(t.prompt, 'ecoclimapI =', ecoclimapI)
-        print()
-
-        # TODO : check if necessary
-        self.sh.title('Input ecoclimapII')
-        ecoclimapII = toolbox.input(
-            role       = 'Surfex cover parameters',
-            kind       = 'coverparams',
-            nativefmt  = 'bin',
-            local      = 'ecoclimapII_eu_covers_param.bin',
-            geometry   = self.conf.geometry,
-            genv       = self.conf.genv,
-            source     = 'ecoclimap2',
-            model      = 'surfex',
-        ),
-        print(t.prompt, 'ecoclimapII =', ecoclimapII)
-        print()
-
-        # TODO : check if necessary
-        self.sh.title('Input drdt_bst_fit_60.nc (Parameters F06 metamorphism)')
-        ssa  = toolbox.input(
-            kind       = 'ssa_params',
-            genv       = self.conf.genv,
-            nativefmt  = 'netcdf',
-            local      = 'drdt_bst_fit_60.nc',
-            model      = 'surfex',
-        )
-        print(t.prompt, 'SSA parameters =', ssa)
-        print()
+#        # TODO : check if necessary
+#        self.sh.title('Input PGD')
+#        pgd = toolbox.input(
+#            alternate  = 'SurfexClim',
+#            kind       = 'pgdnc',
+#            nativefmt  = 'netcdf',
+#            local      = 'PGD.nc',
+#            experiment = self.conf.get('pgd_xpid', self.conf.xpid),
+#            geometry   = self.conf.geometry,
+#            model      = 'surfex',
+#            namespace  = 'vortex.multi.fr',
+#            namebuild  = 'flat@cen',
+#            block      = 'pgd',
+#            fatal      = True,
+#        ),
+#        print(t.prompt, 'PGD =', pgd)
+#        print()
+#
+#        # TODO : check if necessary
+#        self.sh.title('Input ecoclimapI')
+#        ecoclimapI = toolbox.input(
+#            role       = 'Surfex cover parameters',
+#            kind       = 'coverparams',
+#            nativefmt  = 'bin',
+#            local      = 'ecoclimapI_covers_param.bin',
+#            geometry   = self.conf.geometry,
+#            genv       = self.conf.genv,
+#            source     = 'ecoclimap1',
+#            model      = 'surfex',
+#        ),
+#        print(t.prompt, 'ecoclimapI =', ecoclimapI)
+#        print()
+#
+#        # TODO : check if necessary
+#        self.sh.title('Input ecoclimapII')
+#        ecoclimapII = toolbox.input(
+#            role       = 'Surfex cover parameters',
+#            kind       = 'coverparams',
+#            nativefmt  = 'bin',
+#            local      = 'ecoclimapII_eu_covers_param.bin',
+#            geometry   = self.conf.geometry,
+#            genv       = self.conf.genv,
+#            source     = 'ecoclimap2',
+#            model      = 'surfex',
+#        ),
+#        print(t.prompt, 'ecoclimapII =', ecoclimapII)
+#        print()
+#
+#        # TODO : check if necessary
+#        self.sh.title('Input drdt_bst_fit_60.nc (Parameters F06 metamorphism)')
+#        ssa  = toolbox.input(
+#            kind       = 'ssa_params',
+#            genv       = self.conf.genv,
+#            nativefmt  = 'netcdf',
+#            local      = 'drdt_bst_fit_60.nc',
+#            model      = 'surfex',
+#        )
+#        print(t.prompt, 'SSA parameters =', ssa)
+#        print()
 
         self.sh.title('Input SODA namelist')
         namelist = toolbox.input(
@@ -143,6 +143,7 @@ class Soda(_CenResearchTask):
             namespace       = 'vortex.multi.fr',
             namebuild       = 'flat@cen',
             experiment      = self.conf.observation_xpid,
+            username        = self.conf.observation_user,
             local           = 'OBSERVATIONS_[datevalidity:ymdHh].nc',
             fatal           = True
         )
@@ -150,15 +151,15 @@ class Soda(_CenResearchTask):
         print()
 
         self.sh.title('Input SODA executable')
-        executable = toolbox.executable(
-            role      = 'Binary',
-            kind      = 'soda',
-            local     = 'SODA',
-            model     = 'surfex',
-            # TODO : UEnv
-            remote    = self.conf.exesurfex + "/SODA"
+        soda = toolbox.executable(
+            role           = 'Binary',
+            kind           = 'soda',
+            local          = 'SODA',
+            model          = 'surfex',
+            genv           = self.conf.genv,
+            gvar           = 'master_soda_offline_mpi',
         )
-        print(t.prompt, 'Executable =', executable)
+        print(self.ticket.prompt, 'SODA =', soda)
         print()
 
         self.sh.title('Input SODA background PREPs')
@@ -167,6 +168,7 @@ class Soda(_CenResearchTask):
             member         = self.conf.members,
             local          = 'mb[member]/PREP_[date:ymdh].nc',
             experiment     = self.conf.xpid,
+            username       = self.conf.prep_user,
             geometry       = self.conf.geometry,
             date           = self.conf.date,
             nativefmt      = 'netcdf',
