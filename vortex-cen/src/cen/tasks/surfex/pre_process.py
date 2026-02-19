@@ -31,12 +31,6 @@ class _Preprocess(_CenResearchTask):
     :param xpid: Experiment identifier (format "experiment_name@user")
     :type xpid: str
 
-    Optional configuration variables:
-    ---------------------------------
-    :param max_ntasks: The maximum number of parallel tasks
-    :type max_ntasks: int
-
-
     '''
     def get_remote_inputs(self):
         """
@@ -66,7 +60,6 @@ class _Preprocess(_CenResearchTask):
             dateend      = self.conf.dateend,
             # Le nom local de la ressource est fourni par le "container"
             forcingname  = firstforcing.rh.container.basename,
-            ntasks       = self.conf.get('max_ntasks', 120),
         )
         print(self.ticket.prompt, 'Toolbox algo preprocess =', preprocess_tba)
         print()

@@ -31,6 +31,11 @@ class AddSlopes(_CenResearchTask):
     :param xpid: Experiment identifier (format "{experiment_name}@{user}")
     :type xpid: str
 
+    Optional configuration variables:
+    ---------------------------------
+    :param max_ntasks: The maximum number of parallel tasks (in case of huge memory usage)
+    :type max_ntasks: int
+
     '''
 
     def get_remote_inputs(self):
@@ -87,7 +92,7 @@ class AddSlopes(_CenResearchTask):
             kind         = 'prepareforcing',
             datebegin    = list(set([tbinput.rh.resource.datebegin for tbinput in avail_forcings])),
             dateend      = list(set([tbinput.rh.resource.dateend for tbinput in avail_forcings])),
-            ntasks       = min(40, len(avail_forcings)),  # TODO : ne pas mettre ça en dur dans le code !
+            ntasks       = self.conf.get('max_ntasks', len(avail_forcings)),
             geometry_in  = list_geometry,
             geometry_out = self.conf.geometry.tag,
             role_members = 'Forcing',
