@@ -7,3 +7,4 @@ name=pgd_job package=drivers task=pgd profile=rd-belenos-mt jobassistant=cen dat
 name=pgd2d_job package=drivers task=pgd profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=pgd2d
 name=prep_job package=drivers task=prep profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=prep
 name=offline_job package=drivers task=offline profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=offline
+name=soda_job package=drivers task=soda profile=rd-belenos-mt jobassistant=cen date=2022022612 geometry=GrandesRousses250m xpid=assim

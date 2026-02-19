@@ -160,3 +160,74 @@ class Preprocess_Local_Namelist(_Preprocess):
         )
         print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
         print()
+
+
+class Soda_Namelist_Preprocess(_CenResearchTask):
+    '''
+    Pre-process SURFEX namelist for SODA executable
+
+    Inputs:
+    -------
+    - SODA namelist (OPTIONS.nam)
+
+    Outputs:
+    --------
+    - SODA namelist (OPTIONS.nam)
+
+    Mandatory configuration variables
+    ---------------------------------
+    :param genv: User Environment in which the namelist is to be retrieved
+    :type genv: str
+    :param source: Name of the namelist in the user environment
+    :type source: str
+    :param nmembers: Number of ensemble members in the background state
+    :type nmembers: int
+    :param xpid: Experiment Identifier
+    :type xpid: str
+    '''
+
+    def get_remote_inputs(self):
+
+        self.sh.title('Input Namelist')
+        namelist_tbi = toolbox.input(
+            role     = 'Nam_surfex',
+            # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
+            # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
+            source   = self.conf.source,  # ex : OPTIONS_default.nam
+            genv     = self.conf.genv,
+            kind     = 'namelist',
+            model    = 'surfex',
+            local    = 'OPTIONS.nam',
+            # MV : la nameliste va être modifiée, il faut s'assurer du droit d'écriture (<==> intent='inout')
+            intent   = 'inout',
+        )
+        print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
+        print()
+
+    def algo(self):
+
+        self.sh.title('Algo soda preprocess')
+        algo = toolbox.algo(
+            kind         = 'soda_preprocess',
+            nmembers      = self.conf.nmembers,
+        )
+        print(self.ticket.prompt, 'Algo soda preprocess =', algo)
+        print()
+
+        return algo
+
+    def put_remote_outputs(self):
+
+        self.sh.title('Output namelist')
+        namelist = toolbox.output(
+            role            = 'Nam_surfex',
+            kind            = 'namelist',
+            model           = 'surfex',
+            local           = 'OPTIONS.nam',
+            experiment      = self.conf.xpid,
+            namespace       = 'vortex.cache.fr',
+            block           = 'namelist',
+            nativefmt       = 'nam',
+        )
+        print(self.ticket.prompt, 'Namelist = ', namelist)
+        print()
