@@ -7,9 +7,7 @@ from footprints.stdtypes import FPDict
 from mkjob.nodes import Task
 from vortex.tools.env import Environment
 from vortex_cen.layout.nodes import S2MTaskMixIn
-from vortex_cen.tools.monitoring import (InputReportContext,
-                                         OutputReportContext,
-                                         TestReportContext)
+from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext, TestReportContext
 
 from snowtools.utils.dates import get_dic_dateend, get_list_dates_files
 
@@ -360,8 +358,10 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         forcing_model = self.conf.get('forcing_model', 'safran')
         # TODO : à supprimer après suppression de ce footprint dans les objets "SurfaceIO"
         forcing_cutoff = self.conf.get('forcing_cutoff', None)
+        forcing_vortex_1 = self.conf.get('forcing_vortex1', None)
 
         self.sh.title('Input forcing (full simulation period)')
+
         forcing = vortex.input(
             role           = 'Forcing',  # Used for parallelisation and alternates only
             kind           = 'MeteorologicalForcing',
@@ -385,7 +385,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
             model          = forcing_model,  # TODO : à supprimer
             fatal          = False,  # Do not crash now, there is an alternative
-            vortex1        = self.conf.vortex1,
+            vortex1        = forcing_vortex_1,
         ),
         print(t.prompt, 'FORCING =', forcing)
         print()
@@ -434,7 +434,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                 cutoff         = forcing_cutoff,  # TODO : à supprimer dans le cas recherche
                 model          = forcing_model,  # TODO : à supprimer
                 fatal          = True,  # This is the last try, crash in case of failure
-                vortex1        = self.conf.vortex1,
+                vortex1        = forcing_vortex_1,
             ),
             print(t.prompt, 'FORCING (alternate) =', forcing)
             print()

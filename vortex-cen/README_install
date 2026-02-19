@@ -1,11 +1,13 @@
 
 # I. Création d'un environnement virtuel AVEC les packages systems
+module load python/3.12.12 # ou n'importe quelle version >= 3.10
 python -m venv --system-site-packages $HOME/venv/vortex2
 source $HOME/venv/vortex2/bin/activate
 
 # II. Installation de snowtools
 module load gcc/14.1.0
-install_snowtools -e
+cd $SNOWTOOLS_CEN/cenutils
+python install_snowtools.py -e
 #install_snowtools -v {path_to_venv}
 #source {path_to_venv}/bin/activate
 
@@ -19,13 +21,16 @@ install_snowtools -e
 
 # 2. Cloner les dépots :
 cd {any_path}
-git clone git@gitlab.meteo.fr:cnrm-gmap/mkjob.git
+git clone git@gitlab.meteo.fr:cnrm-gmap/mkjob.git 
 git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-gco.git
 git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-olive.git
+
+# 2.bis changer de branche mv_bugfix_target_appbase pour le projet mkjob
 
 # 3. Installer les dépots :
 pip install mkjob/ vortex-gco/ vortex-olive/
 
+# Si problèmes avec pip install, commenter son $HOME/.config/pip/pip.conf/
 
 # IV Installation de vortex-cen
 #pip install vortex-nwp

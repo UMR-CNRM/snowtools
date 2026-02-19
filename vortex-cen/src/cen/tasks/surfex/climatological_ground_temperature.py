@@ -55,7 +55,7 @@ class InitClimGroundTemperature(_CenResearchTask):
                 nativefmt="netcdf",
                 local="init_TG.nc",
                 experiment=self.conf.xpid,
-                username=self.conf.username,
+                username=self.conf.forcing_user,
                 geometry=self.conf.geometry,
                 model="surfex",
                 namespace="vortex.multi.fr",

@@ -3,7 +3,7 @@
 cd $SNOWTOOLS_CEN/vortex-cen/tests/testhpc
 
 # 2. Lancer tous les tests avec :
-mkjob.py -f jobs/create_job -c conf/tests_testhpc.ini
+mkjob -f jobs/create_job -c conf/tests_testhpc.ini
 
 # 3. Lancer un test spécifique avec :
 mkjob -n {nom du job à tester dans le fichier "create_job"} -c conf/tests_testhpc.ini
