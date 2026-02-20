@@ -82,7 +82,7 @@ class Soda(_CenResearchTask):
 
         self.sh.title('Input PGD')
         pgd = toolbox.input(
-            alternate  = 'SurfexClim',
+            role       = 'SurfexClim',
             kind       = 'pgdnc',
             nativefmt  = 'netcdf',
             local      = 'PGD.nc',

@@ -81,6 +81,8 @@ class _Offline_MPI(_CenResearchTask):
     :type prep_vconf: str
     :param prep_date: Validity date of the PREP file (if different from *datebegin*)
     :type prep_date: str
+    :param prep_block: *block* of the PREP file (default 'prep', but can be different after an assimilation step)
+    :type prep_block: str
     :param prep_vortex1: Boolean to identify resources produced with vortex1 (filename without geometry)
     :type prep_vortex1: bool
     :param datespinup: Date of validity of the spinup file (default: *datebegin*)
@@ -213,7 +215,7 @@ class _Offline_MPI(_CenResearchTask):
             namespace      = 'vortex.multi.fr',
             vortex1        = self.conf.get('prep_vortex1', False),
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'prep',
+            block          = self.conf.get('prep_block', 'prep'),
             # MV : La notion de "membre" pour le PREP est particulière dans le cas déterministe
             # - dans le cas général, le PREP n'est associé à aucun *membre*
             # - dans une simulation avec assimilation: la première initialisation est faite

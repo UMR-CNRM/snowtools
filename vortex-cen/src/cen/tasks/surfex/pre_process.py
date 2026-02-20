@@ -98,9 +98,9 @@ class Preprocess_Uenv_Namelist(_Preprocess):
     :param genv: User Environment in which the namelist is to be retrieved.
                  Format : uenv:{uenv_name}@{user}
     :type genv: str
-    :param source: The name of the specific namelist to retrieve from the namelist
+    :param namelist_source: The name of the specific namelist to retrieve from the namelist
                    ".tar" archive containing all available namelists.
-    :type source: str
+    :type namelist_source: str
 
     '''
     def get_remote_inputs(self):
@@ -116,7 +116,7 @@ class Preprocess_Uenv_Namelist(_Preprocess):
             role     = 'Nam_surfex',
             # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
             # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
-            source   = self.conf.source,  # ex : OPTIONS_default.nam
+            source   = self.conf.namelist_source,  # ex : OPTIONS_default.nam
             genv     = self.conf.genv,
             kind     = 'namelist',
             model    = 'surfex',
@@ -178,8 +178,8 @@ class Soda_Namelist_Preprocess(_CenResearchTask):
     ---------------------------------
     :param genv: User Environment in which the namelist is to be retrieved
     :type genv: str
-    :param source: Name of the namelist in the user environment
-    :type source: str
+    :param namelist_source: Name of the namelist in the user environment
+    :type namelist_source: str
     :param nmembers: Number of ensemble members in the background state
     :type nmembers: int
     :param xpid: Experiment Identifier
@@ -193,7 +193,7 @@ class Soda_Namelist_Preprocess(_CenResearchTask):
             role     = 'Nam_surfex',
             # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
             # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
-            source   = self.conf.source,  # ex : OPTIONS_default.nam
+            source   = self.conf.namelist_source,  # ex : OPTIONS_default.nam
             genv     = self.conf.genv,
             kind     = 'namelist',
             model    = 'surfex',
