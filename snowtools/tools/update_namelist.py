@@ -13,7 +13,7 @@ from snowtools.utils.prosimu import prosimu_base
 from snowtools.utils.dates import checkdateafter
 from snowtools.utils.FileException import FileNameException, VarDimensionException
 
-from bronx.datagrip.namelist import NamelistParser
+from bronx.datagrip.namelist import NamelistParser, FIRST_ORDER_SORTING
 
 
 def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam",
@@ -55,7 +55,13 @@ def update_surfex_namelist_file(datebegin, namelistfile="OPTIONS.nam",
         N = n.parse(namelistfile)
         update_namelist_object_nmembers(N, nmembers)
     namSURFEX = open(namelistfile, 'w')
-    namSURFEX.write(N.dumps())
+    # Try to write the namelist by alphabetical order (by block and inside each block)
+    # Except can occurs when things like (:,1) are in namelist
+    # in that case, alphabetical order just for block and not inside each block
+    try:
+        namSURFEX.write(N.dumps(sorting=FIRST_ORDER_SORTING))
+    except NotImplementedError:
+        namSURFEX.write(N.dumps())
     namSURFEX.close()
 
 
