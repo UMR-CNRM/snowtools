@@ -17,7 +17,7 @@ logger = loggers.getLogger(__name__)
 
 echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
-    from snowtools.tools.postprocess import EnsemblePostproc, EnsembleHydro
+    from snowtools.plots.pearps2m.postprocess import EnsemblePostproc, EnsembleHydro
     from snowtools.tools.hydro import hydro
     from snowtools.scripts.post_processing import extract_dates
     from snowtools.scripts.post_processing import compute_scd as scd
