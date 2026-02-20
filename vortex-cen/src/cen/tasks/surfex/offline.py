@@ -41,7 +41,7 @@ class _Offline_MPI(_CenResearchTask):
     :type dateend: str, footprints.stdtypes.FPList
     :param geometry: *geometry* of the forcing file(s)
     :type geometry: str, footprints.stdtypes.FPList
-    :param xpid: User-defined Experiment identifier
+    :param xpid: User-defined Experiment identifier (WARNING : 4-digit strings prohibited)
     :type xpid: str
     :param genv: User Environment in which the following resources are to be retrieved :
                  - ecoclimapI_covers_param.bin
