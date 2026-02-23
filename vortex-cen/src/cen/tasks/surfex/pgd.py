@@ -149,7 +149,7 @@ class _Pgd_Construct(_CenResearchTask):
         #self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
         # ntasks = 1 !!!! WTF !!!
 
-    def put_remote_outputs(self):
+    def put_outputs(self):
         """
         Save the PGD file
         """

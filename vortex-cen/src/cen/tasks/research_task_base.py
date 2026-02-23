@@ -38,8 +38,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
     * get_remote_inputs
     * get_local_inputs
     * algo
-    * put_local_outputs
-    * put_remote_inputs
+    * put_outputs
 
     See their respective documentation for more details.
 
@@ -173,17 +172,11 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             if 'localtest' not in self.conf:
                 self.launch_algo(algo)
 
-        if 'backup' in self.steps:
-            # In a multi step job (MTOOL, ...), this step will be run, on a COMPUTE NODE,
-            # just after the computations. It is the appropriate place to put data in the local cache
-            # in order to make it available to a subsequent step.
-            self.put_local_outputs()
-
-        if 'late-backup' in self.steps:
+        if 'backup' in self.steps or 'late-backup' in self.steps:
             # In a multi step job (MTOOL, ...), this step will be run on a TRANSFER NODE.
             # Consequently, most of the data should be archived here.
             with OutputReportContext(self, t):
-                self.put_remote_outputs()
+                self.put_outputs()
 
             if 'test' in self.conf and 'localtest' not in self.conf:
                 # In test cases, some diff with reference output could be necessary.
@@ -227,13 +220,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         if algo is not None:
             algo.run()
 
-    def put_local_outputs(self):
-        """
-        Implement this method in your task to save resources on the local (HPC) cache from a compute node.
-        """
-        self.put_remote_outputs()  # TODO : check if really necessary / good practice
-
-    def put_remote_outputs(self):
+    def put_outputs(self):
         """
         Implement this method in your task to save resources remotely (on Hendrix, sxcen,...) from a transfer node.
         """

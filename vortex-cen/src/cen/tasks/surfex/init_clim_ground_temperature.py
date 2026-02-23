@@ -44,7 +44,7 @@ class InitClimGroundTemperature(_CenResearchTask):
         print()
         return algo
 
-    def put_remote_outputs(self):
+    def put_outputs(self):
         """
         Save the output Ground temperature (GT) initialization based on the climatological mean file in the simulation geometry.
         Arguments:

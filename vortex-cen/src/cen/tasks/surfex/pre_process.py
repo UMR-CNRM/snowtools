@@ -65,9 +65,9 @@ class _Preprocess(_CenResearchTask):
         print()
         return preprocess_tba
 
-    def put_local_outputs(self):
+    def put_outputs(self):
         """
-        Save the changed namelist in cache -> put_LOCAL_output
+        Save the changed namelist in cache -> namespace = 'vortex.CACHE.fr'
         """
         #######################################################################
         #                               Backup                                #
@@ -216,7 +216,7 @@ class Soda_Namelist_Preprocess(_CenResearchTask):
 
         return algo
 
-    def put_remote_outputs(self):
+    def put_outputs(self):
 
         self.sh.title('Output namelist')
         namelist = toolbox.output(

@@ -103,7 +103,7 @@ class AddSlopes(_CenResearchTask):
 
         return algo
 
-    def put_remote_outputs(self):
+    def put_outputs(self):
         """
         Save the output FORCING file(s) in the new geometry.
         WARNING : the output geometry must be in a valid "geometries.ini" file.

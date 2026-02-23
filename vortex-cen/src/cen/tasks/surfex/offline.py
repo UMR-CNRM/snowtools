@@ -378,7 +378,7 @@ class _Offline_MPI(_CenResearchTask):
         self.component_runner(algo, executable,
                 mpiopts=dict(nnodes=self.conf.nnodes, nprocs=self.conf.nprocs, ntasks=self.conf.ntasks))
 
-    def put_remote_outputs(self):
+    def put_outputs(self):
         """
         Save SURFEX/OFFLINE relevant output files
         """

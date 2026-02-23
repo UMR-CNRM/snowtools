@@ -266,7 +266,7 @@ class _Offline_MPI(_CenResearchTask):
         self.component_runner(algo, executable)
         #        mpiopts=dict(nnodes=1, nprocs=self.conf.nprocs, ntasks=self.conf.ntasks))
 
-    def put_remote_outputs(self):
+    def put_outputs(self):
         """
         Save the CUMUL, DIAG, PREP and PRO files (yearly only)
         """

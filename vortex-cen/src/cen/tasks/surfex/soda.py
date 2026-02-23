@@ -238,7 +238,7 @@ class Soda(_CenResearchTask):
             )
         )
 
-    def put_remote_outputs(self):
+    def put_outputs(self):
 
         t = self.ticket
 
