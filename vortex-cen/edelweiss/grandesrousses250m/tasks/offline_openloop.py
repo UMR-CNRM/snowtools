@@ -2,6 +2,7 @@
 
 from mkjob.nodes import Driver
 import vortex
+from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist
 from vortex_cen.tasks.surfex.offline import Offline_MPI_Uenv
 
 
@@ -10,8 +11,7 @@ def setup(t, **kw):
         tag='offline_openloop',
         ticket=t,
         nodes=[
-            # No need for preprocess since the nameilst pre-processing is already include
-            # in the "Surfex_Parallel" algo component
+            Preprocess_Uenv_Namelist(tag='preprocess', ticket=t, **kw),
             Offline_openloop(tag='offline_openloop', ticket=t, **kw),
         ],
         options=kw,
@@ -31,7 +31,10 @@ class Offline_openloop(Offline_MPI_Uenv):
         self.get_pgd()
         self.get_prep()
         self.get_executable_from_uenv()
-        self.get_namelist_from_uenv()
+
+    def get_local_inputs(self):
+
+        self.get_namelist_from_cache()
 
     def get_prep(self):
         """
