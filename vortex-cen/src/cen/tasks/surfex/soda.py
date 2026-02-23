@@ -189,7 +189,7 @@ class Soda(_CenResearchTask):
             model          = 'surfex',
             namespace      = self.conf.get('prep_namespace', 'vortex.multi.fr'),
             namebuild      = 'flat@cen',
-            block          = 'prep/bg',
+            block          = 'prep/background',
             vortex1        = self.conf.get('prep_vortex1', None),
             fatal          = True,
         ),
@@ -255,7 +255,7 @@ class Soda(_CenResearchTask):
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
             namebuild      = 'flat@cen',
-            block          = 'prep/an',
+            block          = 'prep/analysis',
             fatal          = True
         ),
         print(t.prompt, 'SODA analysis =', prep)
