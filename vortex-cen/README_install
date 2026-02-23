@@ -1,6 +1,7 @@
 
 # I. Création d'un environnement virtuel AVEC les packages systems
-python -m venv --system-site-packages $HOME/venv/vortex2
+# WARNING : do not use --system-site-packages, this can lead to issues with pyproj because it is natively installed with conda:
+python -m venv $HOME/venv/vortex2
 source $HOME/venv/vortex2/bin/activate
 
 # II. Installation de snowtools
