@@ -200,6 +200,6 @@ if __name__ == '__main__':
             if wait_mandatory_input(block='background', assimdate=date, nmembers=nmembers, walltime=walltime):
                 soda = mkjob_command(jobname='soda_job', taskname='soda', date=date)
                 print("Run command: " + soda + "\n")
-                callSystemOrDie(mkjob)
+                callSystemOrDie(soda)
                 walltime = Time(iniparser.get('soda_job', 'time'))
                 datebegin = date
