@@ -20,10 +20,8 @@ def setup(t, **kw):
 
 class Offline_openloop(Offline_MPI_Uenv):
     '''
-    OFFLINE reanalysis task :
-    Get all constant inputs from a User Environment.
-    Get forcing file during the compute step (step.02) only because it comes from the
-    output of a previous execution of "AddSlopes" task.
+    This is the task for an OFFLINE-MPI execution before any data assimilation.
+    All members are initialised by the same PREP file, not associated to any member.
     '''
     def get_remote_inputs(self):
 
@@ -32,32 +30,18 @@ class Offline_openloop(Offline_MPI_Uenv):
         self.get_drdt_bst_fit()
         self.get_pgd()
         self.get_prep()
-        self.get_executable()
-        self.get_namelist()
-
-    def get_namelist(self):
-        """
-        Get nameilst from UEnv
-        """
-        self.sh.title('Toolbox input Namelist')
-        namelist_tbi = vortex.input(
-            role     = 'Nam_surfex',
-            # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
-            # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
-            source   = self.conf.namelist_source,  # ex : OPTIONS_default.nam
-            genv     = self.conf.genv,
-            kind     = 'namelist',
-            model    = 'surfex',
-            local    = 'OPTIONS.nam',
-            # MV : la nameliste va être modifiée, il faut s'assurer du droit d'écriture (<==> intent='inout')
-            intent   = 'inout',
-        )
-        print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
-        print()
+        self.get_executable_from_uenv()
+        self.get_namelist_from_uenv()
 
     def get_prep(self):
+        """
+        All members are initialised by the same PREP file, not associated to any member.
+        --> This method differs from the one in the main _Offline_MPI class because it is
+        explicitely NOT associated to any member.
 
-        self.sh.title('Toolbox input PREP')
+        """
+
+        self.sh.title('Input PREP')
         prep_tbi = vortex.input(
             local          = 'PREP.nc',
             role           = 'SnowpackInit',
@@ -72,9 +56,36 @@ class Offline_openloop(Offline_MPI_Uenv):
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
             vortex1        = self.conf.get('prep_vortex1', False),
-            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration ?
             block          = self.conf.get('prep_block', 'prep'),
             intent         = 'inout',
         ),
         print(self.ticket.prompt, 'prep_tbi =', prep_tbi)
+        print()
+
+    def put_prep(self):
+        """
+        Archive PREP files as "background" state --> force block value to "prep/bg"
+        """
+
+        self.sh.title('Output PREP')
+        prep_tbo = vortex.output(
+            local          = 'PREP_[date:ymdh].nc',
+            role           = 'SnowpackInit',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
+            # et faire une tâche spécifique à ces cas là.
+#            date           = list_dates_end_pro if not self.conf.dailyprep else
+#                                list(daterange(tomorrow(base=datebegin), dateend)),
+            date           = self.list_dates_end_pro,
+            nativefmt      = 'netcdf',
+            kind           = 'PREP',
+            model          = 'surfex',
+            namespace      = self.namespace_out,
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            block          = 'prep/bg',
+            member         = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
         print()

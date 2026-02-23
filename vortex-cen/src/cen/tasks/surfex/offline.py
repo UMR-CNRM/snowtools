@@ -2,7 +2,7 @@
 '''
 '''
 
-from vortex import toolbox
+import vortex
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 from bronx.stdtypes.date import Date  # , daterange, tomorrow
@@ -114,8 +114,8 @@ class _Offline_MPI(_CenResearchTask):
         Get drdt_bst_fit_60.nc, PGD.nc, PREP.nc, FORCING.nc
         """
         # Binary ECOCLIMAP I files are mandatory to run OFFLINE and taken from the uenv
-        self.sh.title('Toolbox input ecoclimap1')
-        ecoclimap1_tbi = toolbox.input(
+        self.sh.title('Input ecoclimap1')
+        ecoclimap1_tbi = vortex.input(
             role           = 'Surfex cover parameters',
             kind           = 'coverparams',
             nativefmt      = 'bin',
@@ -129,8 +129,8 @@ class _Offline_MPI(_CenResearchTask):
         print()
 
         # Binary ECOCLIMAP II files are mandatory to run OFFLINE and taken from the uenv
-        self.sh.title('Toolbox input ecoclimap2')
-        ecoclimap2_tbi = toolbox.input(
+        self.sh.title('Input ecoclimap2')
+        ecoclimap2_tbi = vortex.input(
             role           = 'Surfex cover parameters',
             kind           = 'coverparams',
             nativefmt      = 'bin',
@@ -146,8 +146,8 @@ class _Offline_MPI(_CenResearchTask):
     def get_drdt_bst_fit(self):
 
         # Crocus metamorphism parameters mandatory to run OFFLINE and taken from the uenv
-        self.sh.title('Toolbox input drdt_bst_fit_60')
-        drdt_bst_fit_tbi = toolbox.input(
+        self.sh.title('Input drdt_bst_fit_60')
+        drdt_bst_fit_tbi = vortex.input(
             role            = 'Parameters for F06 metamorphism',
             kind            = 'ssa_params',
             genv            = self.conf.genv,
@@ -165,8 +165,8 @@ class _Offline_MPI(_CenResearchTask):
         For "stable" configurations such as the reanalysis, it comes from a UEnv/GEnv.
         """
 
-        self.sh.title('Toolbox input PGD')
-        pgd_tbi = toolbox.input(
+        self.sh.title('Input PGD')
+        pgd_tbi = vortex.input(
             local          = 'PGD.nc',
             role           = 'SurfexClim',
             # MV : pour permettre de récupérer le PGD depuis une expérience indépendante
@@ -193,8 +193,8 @@ class _Offline_MPI(_CenResearchTask):
     def get_prep(self):
 
         # PREP.nc mandatory to run OFFLINE
-        self.sh.title('Toolbox input PREP')
-        prep_tbi = toolbox.input(
+        self.sh.title('Input PREP')
+        prep_tbi = vortex.input(
             local          = 'PREP.nc',
             role           = 'SnowpackInit',
             # MV : pour permettre de récupérer le PREP depuis une expérience indépendante
@@ -230,13 +230,16 @@ class _Offline_MPI(_CenResearchTask):
         print()
 
     def get_namelist(self):
+        pass
+
+    def get_namelist_from_cache(self):
         """
         OPTIONS.nam always comes from the local cache because it comes from
         a previous execution of a "pre_process" task.
         """
         # Namelist mandatory to run OFFLINE and taken from the cache
-        self.sh.title('Toolbox input SURFEX-ready namelist')
-        namelist_tbi = toolbox.input(
+        self.sh.title('Input SURFEX-ready namelist')
+        namelist_tbi = vortex.input(
             role         = 'Nam_surfex',
             kind         = 'namelist',
             model        = 'surfex',
@@ -247,6 +250,26 @@ class _Offline_MPI(_CenResearchTask):
             nativefmt    = 'nam',
         ),
         print(self.ticket.prompt, 'namelist =', namelist_tbi)
+        print()
+
+    def get_namelist_from_uenv(self):
+        """
+        Get nameilst from UEnv
+        """
+        self.sh.title('Input Namelist')
+        namelist_tbi = vortex.input(
+            role     = 'Nam_surfex',
+            # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
+            # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
+            source   = self.conf.namelist_source,  # ex : OPTIONS_default.nam
+            genv     = self.conf.genv,
+            kind     = 'namelist',
+            model    = 'surfex',
+            local    = 'OPTIONS.nam',
+            # MV : la nameliste va être modifiée, il faut s'assurer du droit d'écriture (<==> intent='inout')
+            intent   = 'inout',
+        )
+        print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
         print()
 
     def get_executable(self):
@@ -263,8 +286,8 @@ class _Offline_MPI(_CenResearchTask):
         #######################################################################
         #                             Fetch steps                             #
         #######################################################################
-        self.sh.title('Toolbox input OFFLINE executable from uenv')
-        OFFLINE_tbx = toolbox.executable(
+        self.sh.title('Input OFFLINE executable from uenv')
+        OFFLINE_tbx = vortex.executable(
             role           = 'Binary',
             kind           = 'offline',
             local          = 'OFFLINE',
@@ -285,8 +308,8 @@ class _Offline_MPI(_CenResearchTask):
         #######################################################################
         #                             Fetch steps                             #
         #######################################################################
-        self.sh.title('Toolbox input OFFLINE executable from local')
-        OFFLINE_tbx = toolbox.executable(
+        self.sh.title('Input OFFLINE executable from local')
+        OFFLINE_tbx = vortex.executable(
             role           = 'Binary',
             kind           = 'offline',
             local          = 'OFFLINE',
@@ -306,7 +329,6 @@ class _Offline_MPI(_CenResearchTask):
         self.get_executable()
 
     def get_local_inputs(self):
-        self.get_remote_inputs()
         self.get_namelist()
 
     def algo(self):
@@ -316,8 +338,8 @@ class _Offline_MPI(_CenResearchTask):
         #######################################################################
         #                            Compute step                             #
         #######################################################################
-        self.sh.title('Toolbox algo OFFLINE')
-        offline_tba = toolbox.algo(
+        self.sh.title('Algo OFFLINE-MPI')
+        offline_tba = vortex.task(
             engine         = 'parallel',
             binary         = 'OFFLINE',
             kind           = 'deterministic',
@@ -346,7 +368,7 @@ class _Offline_MPI(_CenResearchTask):
         Run OFFLINE MPI algo component.
         """
         # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
-        # toolbox.executable(...))
+        # vortex.executable(...))
         # Il est possible de récupérer cet objet avec la ligne suivante :
         executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
 
@@ -358,23 +380,15 @@ class _Offline_MPI(_CenResearchTask):
 
     def put_remote_outputs(self):
         """
-        Save the CUMUL, DIAG, PREP and PRO files (yearly only)
+        Save SURFEX/OFFLINE relevant output files
         """
-        #######################################################################
-        #                               Backup                                #
-        #######################################################################
-        _, _, list_dates_begin_pro, list_dates_end_pro = get_list_dates_files(
-            Date(self.conf.datebegin),
-            Date(self.conf.dateend),
-            self.conf.get('io_duration', 'yearly'))
-        dict_dates_end_pro = get_dic_dateend(list_dates_begin_pro, list_dates_end_pro)
+        self.put_pro()
+        self.put_prep()
 
-        # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
-        # configuration variable if provided by the user or 'vortex.multi.fr' by default
-        namespace_out = self.conf.get('namespace_out', 'vortex.multi.fr')
+    def put_cumul(self):
 
-        self.sh.title('Toolbox output CUMUL')
-        cumul_tbo = toolbox.output(
+        self.sh.title('Output CUMUL')
+        cumul_tbo = vortex.output(
             local          = 'CUMUL_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
@@ -383,12 +397,12 @@ class _Offline_MPI(_CenResearchTask):
 #            datebegin      = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
 #            dateend        = dict_dates_end_pro if not self.conf.dailyprep else
 #                                list(daterange(tomorrow(base=datebegin), dateend)),
-            datebegin      = list_dates_begin_pro,
-            dateend        = dict_dates_end_pro,
+            datebegin      = self.list_dates_begin_pro,
+            dateend        = self.dict_dates_end_pro,
             nativefmt      = 'netcdf',
             kind           = 'SnowpackSimulation',
             model          = 'surfex',
-            namespace      = namespace_out,
+            namespace      = self.namespace_out,
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'cumul',
             member         = self.conf.get('member', None),
@@ -397,8 +411,10 @@ class _Offline_MPI(_CenResearchTask):
         print(self.ticket.prompt, 'cumul_tbo =', cumul_tbo)
         print()
 
-        self.sh.title('Toolbox output DIAG')
-        diag_tbo = toolbox.output(
+    def put_diag(self):
+
+        self.sh.title('Output DIAG')
+        diag_tbo = vortex.output(
             local          = 'DIAG_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
@@ -407,12 +423,12 @@ class _Offline_MPI(_CenResearchTask):
 #            datebegin      = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
 #            dateend        = dict_dates_end_pro if not self.conf.dailyprep else
 #                                list(daterange(tomorrow(base=datebegin), dateend)),
-            datebegin      = list_dates_begin_pro,
-            dateend        = dict_dates_end_pro,
+            datebegin      = self.list_dates_begin_pro,
+            dateend        = self.dict_dates_end_pro,
             nativefmt      = 'netcdf',
             kind           = 'SnowpackSimulation',
             model          = 'surfex',
-            namespace      = namespace_out,
+            namespace      = self.namespace_out,
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'diag',
             member         = self.conf.get('member', None),
@@ -421,8 +437,10 @@ class _Offline_MPI(_CenResearchTask):
         print(self.ticket.prompt, 'diag_tbo =', diag_tbo)
         print()
 
-        self.sh.title('Toolbox output PREP')
-        prep_tbo = toolbox.output(
+    def put_prep(self):
+
+        self.sh.title('Output PREP')
+        prep_tbo = vortex.output(
             local          = 'PREP_[date:ymdh].nc',
             role           = 'SnowpackInit',
             experiment     = self.conf.xpid,
@@ -431,11 +449,11 @@ class _Offline_MPI(_CenResearchTask):
             # et faire une tâche spécifique à ces cas là.
 #            date           = list_dates_end_pro if not self.conf.dailyprep else
 #                                list(daterange(tomorrow(base=datebegin), dateend)),
-            date           = list_dates_end_pro,
+            date           = self.list_dates_end_pro,
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',
-            namespace      = namespace_out,
+            namespace      = self.namespace_out,
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'prep',
             member         = self.conf.get('member', None),
@@ -443,8 +461,10 @@ class _Offline_MPI(_CenResearchTask):
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
         print()
 
-        self.sh.title('Toolbox output PRO')
-        pro_tbo = toolbox.output(
+    def put_pro(self):
+
+        self.sh.title('Output PRO')
+        pro_tbo = vortex.output(
             local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
@@ -453,12 +473,12 @@ class _Offline_MPI(_CenResearchTask):
 #            datebegin      = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
 #            dateend        = dict_dates_end_pro if not self.conf.dailyprep else
 #                                list(daterange(tomorrow(base=datebegin), dateend)),
-            datebegin      = list_dates_begin_pro,
-            dateend        = dict_dates_end_pro,
+            datebegin      = self.list_dates_begin_pro,
+            dateend        = self.dict_dates_end_pro,
             nativefmt      = 'netcdf',
             kind           = 'SnowpackSimulation',
             model          = 'surfex',
-            namespace      = namespace_out,
+            namespace      = self.namespace_out,
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = 'pro',
             member         = self.conf.get('member', None),
@@ -476,7 +496,6 @@ class Offline_MPI_Uenv(_Offline_MPI):
 
     def get_executable(self):
         self.get_executable_from_uenv()
-
 
 
 class Offline_MPI_Local(_Offline_MPI):

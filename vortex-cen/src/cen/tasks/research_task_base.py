@@ -102,6 +102,10 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         if 'forcing_geometry' in self.conf and isinstance(self.conf.forcing_geometry, dict):
             self.conf.forcing_geometry = self.conf.forcing_geometry[self.conf.geometry.tag]
 
+        # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
+        # configuration variable if provided by the user or 'vortex.multi.fr' by default
+        self.namespace_out = self.conf.get('namespace_out', 'vortex.multi.fr')
+
         vortex.defaults(**extras)
         self.header('Toolbox defaults')
         vortex.defaults.show()
@@ -252,9 +256,11 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
         """
         if 'datebegin' in self.conf and 'dateend' in self.conf:
-            self.list_dates_begin, list_dates_end, _, _  = get_list_dates_files(Date(self.conf.datebegin),
-                    Date(self.conf.dateend), duration)
+            # Get FORCING input dates
+            self.list_dates_begin, list_dates_end, self.list_dates_begin_pro, self.list_dates_end_pro  = \
+                get_list_dates_files(Date(self.conf.datebegin), Date(self.conf.dateend), duration)
             self.dict_dates_end = get_dic_dateend(self.list_dates_begin, list_dates_end)
+            self.dict_dates_end_pro = get_dic_dateend(self.list_dates_begin_pro, self.list_dates_end_pro)
         elif 'date' in self.conf:  # Real-time only --> make a specific default class ?
             self.list_dates_begin = [self.conf.date]
             self.dict_dates_end   = {self.conf.date: self.conf.date}
