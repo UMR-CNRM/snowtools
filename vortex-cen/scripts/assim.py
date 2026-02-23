@@ -11,12 +11,20 @@ from vortex.util.config import GenericConfigParser
 
 def parse_command_line():
 
-    parser = argparse.ArgumentParser(description='Launch a SURFEX/Crocus experiment with snow data assimilation. \n'
-            'Such an experiment is loop over the following sequence of actions over a set of assimilation dates:\n'
-            '1. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation until '
-            'an assimilation date\n'
-            '2. Assimilate an available snow observation at the assimilation date with a Particle Filter '
-            '(SODA executable)\n')
+    parser = argparse.ArgumentParser(
+        description='Launch a SURFEX/Crocus experiment with snow data assimilation. \n'
+        'Such an experiment is loop over the following sequence of actions over a set of assimilation dates:\n'
+        '1. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation until '
+        'an assimilation date. All simulation members are initialised with the same initial conditions (PREP file).\n'
+        '--> Associated task : "offline_openloop"\n'
+        '2. Assimilate an available snow observation at the assimilation date with a Particle Filter '
+        '(SODA executable)\n'
+        '3. Run an ensemble of SURFEX/Crocus simulations (OFFLINE executable) with an MPI parallelisation from '
+        'the last assimilation date, until the next assimilaiton date (or the date of end simiulation).\n'
+        'The difference with the execution of step 1 is that this time, each simuaiton member is initialised by'
+        'specific initial conditions (PREP file) coming from step 2 (SODA analysis).\n'
+        '--> Associated task : "offline_assim"\n'
+    )
 
     parser.add_argument('-b', '--datebegin', type=str,
                         help="Date of the beginning of the simulation.")
