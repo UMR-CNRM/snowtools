@@ -56,7 +56,7 @@ class Offline_assim(Offline_MPI_Uenv):
             namespace      = 'vortex.multi.fr',
             vortex1        = self.conf.get('prep_vortex1', False),
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration ?
-            block          = 'prep/an',
+            block          = 'prep/analysis',
             member         = self.conf.member,
             intent         = 'inout',
         ),

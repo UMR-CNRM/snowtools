@@ -84,7 +84,7 @@ class Offline_openloop(Offline_MPI_Uenv):
             model          = 'surfex',
             namespace      = self.namespace_out,
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'prep/bg',
+            block          = 'prep/background',
             member         = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)

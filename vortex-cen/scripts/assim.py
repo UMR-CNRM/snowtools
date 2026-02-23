@@ -44,6 +44,10 @@ def parse_command_line():
     parser.add_argument("-a", "--assimdates", nargs="+",
             help="List of assimilation dates", type=str, required=False)
 
+    # Temporary argument for script debuging
+    parser.add_argument("--keep_existing_prep", action='store_true', default=False,
+            help="Do not remove existing PREP files to avoid waiting (DBUG mode only)", required=False)
+
 #    parser.add_argument("-x", "--xpid",
 #            help="Experiment identifier", type=str, required=False)
 #
@@ -82,13 +86,18 @@ def wait_mandatory_input(block, assimdate, nmembers, walltime):
         local          = 'PREP.nc',
         now            = False,
     )
-    for fic in prep:
-        fic.delete()
-    time.sleep(10)
+    if not args.keep_existing_prep:
+        for fic in prep:
+            fic.delete()
+    time.sleep(1)
     while (timer - start < walltime * 1.1) and not launch:
         if all([fic.get() for fic in prep]):
+            print('==================================================================')
+            print(f'{block} PREP files present, launching the next simulation step.')
+            print('==================================================================')
             launch = True
         else:
+            print(f'Waiting for {block} PREP files')
             time.sleep(10)
             timer = Date.now()
     # TODO : gérer proprement les "timeouts"
@@ -176,7 +185,7 @@ if __name__ == '__main__':
             # launch a set of offline_MPI tasks with a single PREP file as initial conditions
             offline = mkjob_list_commands('offline_openloop', datebegin=datebegin, dateend=dateend)
             first_run = False
-        elif wait_mandatory_input(block='an', assimdate=datebegin, nmembers=nmembers, walltime=walltime):
+        elif wait_mandatory_input(block='analysis', assimdate=datebegin, nmembers=nmembers, walltime=walltime):
             # This is a run after an assimilation step:
             # aunch a set of offline_MPI tasks with an ensemble of PREP files as initial conditions
             offline = mkjob_list_commands('offline_assim', datebegin=datebegin, dateend=dateend)
@@ -188,10 +197,9 @@ if __name__ == '__main__':
 
         # 2. Launch a SODA assimilation (except if end of simulation reached)
         if dateend != args.dateend:
-            if wait_mandatory_input(block='bg', assimdate=date, nmembers=nmembers, walltime=walltime):
-                soda = mkjob_command(jobname='soda_job', taskname='soda', date=dateend)
-                for mkjob in soda:
-                    print("Run command: " + mkjob + "\n")
-                    callSystemOrDie(mkjob)
-
-        walltime = Time(iniparser.get('soda_job', 'time'))
+            if wait_mandatory_input(block='background', assimdate=date, nmembers=nmembers, walltime=walltime):
+                soda = mkjob_command(jobname='soda_job', taskname='soda', date=date)
+                print("Run command: " + soda + "\n")
+                callSystemOrDie(mkjob)
+                walltime = Time(iniparser.get('soda_job', 'time'))
+                datebegin = date
