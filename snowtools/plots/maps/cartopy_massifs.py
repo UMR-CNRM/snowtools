@@ -1047,6 +1047,7 @@ class Map_vosges(_Map_massifs):
      Class for plotting a map over the Vosges.
     """
     area = 'vosges'  #: area tag = 'vosges'
+    massif_numbers = [45, 46, 47] #: Massif numbers
     width = 12  #: figure width = 12
     height = 10  #: figure height = 10
     latmin = 47.65  #: southern map border = 43.9
@@ -1311,9 +1312,7 @@ class _MultiMap(_Map_massifs):
                   self.nsubplots, ". Plotting first ", self.nsubplots, " out of ", leng, ".")
             leng = self.nsubplots
         print('var shape', variable.shape)
-        # myvalues = np.array([variable[massifref == i][0] if i in massifref else np.nan for i in self.num], dtype=object)
-        myvalues = np.array([variable[massifref == i][0] for i in self.num if i in massifref])
-        print(myvalues.shape)
+        myvalues = np.array([variable[massifref == i][0] if i in massifref else np.empty((leng)) * np.nan for i in self.num])
         for j in range(leng):
             for i, myvalue in enumerate(myvalues.take(indices=j, axis=axis)):
                 self.massif_features[j][i]['feature']._kwargs['facecolor'] = self.palette(self.norm(myvalue))
@@ -1612,7 +1611,7 @@ class MultiMap_Alps(Map_alpes, _MultiMap):
     """
     legendpos = [0.9, 0.15, 0.03, 0.6]  #: legend position on the plot = [0.85, 0.15, 0.03, 0.6]
 
-    def __init__(self, *args, nrow=1, ncol=1, **kw):
+    def __init__(self, *args, nrow=1, ncol=1, width=18, height=15, **kw):
         """
 
         :param nrow: number of rows of plots
@@ -1624,14 +1623,43 @@ class MultiMap_Alps(Map_alpes, _MultiMap):
         self.nrow = nrow
         self.ncol = ncol
         self.nsubplots = nrow*ncol
+        self.width = width
+        self.height = height
         kw['nrow'] = self.nrow
         kw['ncol'] = self.ncol
         kw['nsubplots'] = self.nsubplots
         super(MultiMap_Alps, self).__init__(*args, **kw)
         self.titlepad = 5
-        self.set_figsize(18, 15)
+        self.set_figsize(self.width, self.height)
         self.init_maps(**kw)
 
+class MultiMap_Vos(Map_vosges, _MultiMap):
+    """
+    class for plotting multiple massif plots for the Vosges.
+    """
+    legendpos = [0.9, 0.15, 0.03, 0.6]  #: legend position on the plot = [0.85, 0.15, 0.03, 0.6]
+
+    def __init__(self, *args, nrow=1, ncol=1, width=18, height=15, **kw):
+        """
+
+        :param nrow: number of rows of plots
+        :param ncol: number of columns of plots
+        :param args: arguments passed to superclass init and :py:meth:`init_maps`
+        :param kw: keyword arguments passed to superclass init and :py:meth:`init_maps`
+        """
+        kw['getmap'] = False
+        self.nrow = nrow
+        self.ncol = ncol
+        self.nsubplots = nrow * ncol
+        self.width = width
+        self.height = height
+        kw['nrow'] = self.nrow
+        kw['ncol'] = self.ncol
+        kw['nsubplots'] = self.nsubplots
+        super(MultiMap_Vos, self).__init__(*args, **kw)
+        self.titlepad = 5
+        self.set_figsize(self.width, self.height)
+        self.init_maps(**kw)
 
 class Map_pyrenees(_Map_massifs):
     """
@@ -1810,7 +1838,7 @@ class MultiMap_Pyr(Map_pyrenees, _MultiMap):
     legendpos = [0.94, 0.13, 0.02, 0.6]  #: legend position on the figure = [0.89, 0.1, 0.03, 0.7]
     mappos = [0.05, 0.06, 0.95, 0.8]  #: map position on the figure = [0.05, 0.06, 0.85, 0.8]
 
-    def __init__(self, *args, nrow=1, ncol=1, **kw):
+    def __init__(self, *args, nrow=1, ncol=1, width=30, height=9, **kw):
         """
 
         :param nrow: number of rows of maps
@@ -1823,12 +1851,14 @@ class MultiMap_Pyr(Map_pyrenees, _MultiMap):
         self.nrow = nrow
         self.ncol = ncol
         self.nsubplots = nrow*ncol
+        self.width = width
+        self.height = height
         kw['nrow'] = self.nrow
         kw['ncol'] = self.ncol
         kw['nsubplots'] = self.nsubplots
         super(MultiMap_Pyr, self).__init__(*args, **kw)
         self.titlepad = 5
-        self.set_figsize(30, 9)
+        self.set_figsize(self.width, self.height)
         self.init_maps(**kw)
 
 
@@ -1930,7 +1960,7 @@ class MultiMap_Cor(_MultiMap, Map_corse):
        :align: center
     """
 
-    def __init__(self, *args, nrow=1, ncol=1, **kw):
+    def __init__(self, *args, nrow=1, ncol=1, width=10, height=10, **kw):
         """
 
         :param nrow: number of rows of maps
@@ -1942,11 +1972,14 @@ class MultiMap_Cor(_MultiMap, Map_corse):
         self.nrow = nrow
         self.ncol = ncol
         self.nsubplots = nrow*ncol
+        self.width = width
+        self.height = height
         kw['nrow'] = self.nrow
         kw['ncol'] = self.ncol
         kw['nsubplots'] = self.nsubplots
         super(MultiMap_Cor, self).__init__(*args, **kw)
         self.titlepad = 5
+        self.set_figsize(self.width, self.height)
         self.init_maps(**kw)
         self.legendpos = [0.85, 0.15, 0.03, 0.6]
 

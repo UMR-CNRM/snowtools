@@ -122,3 +122,26 @@ class TestEnsPP(TestWithTempFolderWithLog):
 
 if __name__ == "__main__":
     unittest.main()
+    # import argparse
+    # PARSER = argparse.ArgumentParser(description="Postprocess new snow heights: "
+    #                                              "1) extracts operational simulation results,"
+    #                                              "2) Plots maps for the Alps, the Pyrenees the Corse,"
+    #                                              "3) Creates spaghetti plots "
+    #                                              "for all massifs and stations")
+    #
+    # PARSER.add_argument("-b", action="store", type=str, dest="datebegin", default='20250921',
+    #                     help="First year of extraction")
+    # PARSER.add_argument("-e", action="store", type=str, dest="dateend", default='20250921',
+    #                     help="Last year of extraction")
+    # PARSER.add_argument("-o", action="store", type=str, dest="diroutput",
+    #                     default='/tmp',
+    #                     help="Output directory")
+    # PARSER.add_argument("--dev", action="store_true", dest="dev", default=False)
+    # PARSER.add_argument("--reforecast", action="store_true", dest="reforecast", default=False)
+    # PARSER.add_argument("--dble", action="store_true", dest="dble", default=False)
+    # OPTIONS = PARSER.parse_args()  # @UnusedVariable
+    # from snowtools.plots.pearps2m.postprocess import Config
+    # c = Config(OPTIONS)
+    # import snowtools.plots.pearps2m.postprocess as pp
+    #
+    # pp.pp_plots(c)
