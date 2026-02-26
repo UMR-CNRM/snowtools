@@ -6,7 +6,7 @@ Created the 14 January 2026
 
 
 from vortex_cen.tasks.research_task_base import _CenResearchTask
-from vortex import toolbox
+import vortex
 
 
 class InterpolateS2MForcing(_CenResearchTask):
@@ -50,7 +50,7 @@ class InterpolateS2MForcing(_CenResearchTask):
         # Target grid file for interpolation
         # the path must be provided in the configuration file
         self.sh.title('Toolbox input output grid definition')
-        grid_tbi = toolbox.input(
+        grid_tbi = vortex.input(
             role='gridout',
             kind='interpolgrid',
             model='surfex',
@@ -62,7 +62,7 @@ class InterpolateS2MForcing(_CenResearchTask):
         print()
 
         # take the interpolation binary from the uenv
-        bin_interpol_tbx = toolbox.executable(
+        bin_interpol_tbx = vortex.executable(
             role='Binary',
             kind='offline',
             local='INTERPOL',
@@ -80,7 +80,7 @@ class InterpolateS2MForcing(_CenResearchTask):
         """
         # Algo component for interpolation of the forcing on a regular grid
         self.sh.title('Toolbox algo interpolation')
-        interpolation_tba = toolbox.algo(
+        interpolation_tba = vortex.task(
             engine='parallel',
             binary='INTERPOL',
             kind='deterministic'
@@ -100,9 +100,10 @@ class InterpolateS2MForcing(_CenResearchTask):
                              "Please provide a different 'geometry' or 'forcing_geometry' configuration variable")
         else:
             self.sh.title('Toolbox output interpolated forcing file')
-            forcing_tbo = toolbox.output(
+            forcing_tbo = vortex.output(
                 local='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                 experiment=self.conf.xpid,
+                username=self.conf.username,
                 geometry=self.conf.geometry,
                 datebegin=self.list_dates_begin,
                 dateend=self.dict_dates_end,
