@@ -24,7 +24,8 @@ import matplotlib
 # import matplotlib.pyplot as plt
 matplotlib.use('Agg')
 import matplotlib.style
-import rpy2.robjects as robjects
+#import rpy2.robjects as robjects
+import pandas as pd
 from scipy.stats import gamma
 
 from snowtools.utils.prosimu import prosimu
@@ -323,10 +324,13 @@ class Ensemble:
         :return: mu, sigma, delta of the predictive CSG distribution
         """
 
-        filename = os.path.join(SNOWTOOLS_DATA, "emos_2000_2022_212_par_nonorm.Rdata")
-        robj = robjects.r.load(filename)  # pylint: disable=possibly-unused-variable
-        reg_coef = np.array(robjects.r[robj[0]])
-        clim_par = np.array(robjects.r[robj[1]])
+        # filename = os.path.join(SNOWTOOLS_DATA, "emos_2000_2022_212_par_nonorm.Rdata")
+        # robj = robjects.r.load(filename)  # pylint: disable=possibly-unused-variable
+        # reg_coef = np.array(robjects.r[robj[0]])
+        # clim_par = np.array(robjects.r[robj[1]])
+        reg_coef = pd.read_csv(os.path.join(SNOWTOOLS_DATA, "matEmosPars.csv"), index_col=0).values
+        clim_par = pd.read_csv(os.path.join(SNOWTOOLS_DATA, "matEmosParsClim.csv"), index_col=0).values
+
         ndays_leadtime = 4
 
         ntime = len(self.time)
@@ -353,8 +357,10 @@ class Ensemble:
 
 
         for leadtime in range(0, ndays_leadtime):
-            cst_a1, cst_a2, cst_a3, cst_a4, cst_b1 = reg_coef[leadtime, 0, 1, 0:5]
-            cst_muclim, cst_sigmaclim, cst_deltaclim = clim_par[leadtime, 0, 1, :]
+            #cst_a1, cst_a2, cst_a3, cst_a4, cst_b1 = reg_coef[leadtime, 0, 1, 0:5]
+            #cst_muclim, cst_sigmaclim, cst_deltaclim = clim_par[leadtime, 0, 1, :]
+            cst_a1, cst_a2, cst_a3, cst_a4, cst_b1 = reg_coef[leadtime, 0:5]
+            cst_muclim, cst_sigmaclim, cst_deltaclim = clim_par[leadtime, :]
 
             begin = list_indtime[leadtime][0]
             end = list_indtime[leadtime][-1]
