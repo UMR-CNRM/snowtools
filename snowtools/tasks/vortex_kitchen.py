@@ -153,7 +153,7 @@ class vortex_kitchen(object):
             defaultjobname = dict(
                 analysis = "anasurf_s2m" + self.options.vconf[:3],
                 forecast = "prvsurf_s2m" + self.options.vconf[:3],
-                postprocess="postprocess_s2m" + self.options.vconf[:3],
+                postprocess="prvsurf_s2m" + self.options.vconf[:3], # same for same conf
                 monthlyreanalysis = "monthlyanasurf_s2m" + self.options.vconf[:3],
                 monthlyreanalysissytron = "monthlysytronanasurf_s2m" + self.options.vconf[:3],
             )
