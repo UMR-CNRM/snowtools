@@ -1,19 +1,19 @@
 [build-system]
 build-backend = 'mesonpy'
-requires = ['meson-python', 'numpy>=1.21.6', 'ninja', 'wheel']
+requires = ['meson-python', 'numpy>=1.21.6',  'ninja', 'wheel']
 
 [project]
 name = "snowtools"
 version = "2.0.3"
 dependencies = [
     'netCDF4',
-    'numpy>=1.8',
+    'numpy',
     'scipy',
     'python-dateutil',
     'pyproj',
     'shapely',
     'pyshp',
-    'pandas',
+    'pandas<2.3.3',
     'xarray>=0.18.0',  # Enable the use of snowtools xarray plugin
     'bronx',
     'footprints',
