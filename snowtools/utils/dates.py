@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 30 Aug. 2017
 
 @author: lafaysse
-'''
+"""
 
 import re
 

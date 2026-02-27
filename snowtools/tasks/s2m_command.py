@@ -477,7 +477,7 @@ class Surfex_command(_S2M_command):
 
         parser_oper.add_argument("--task",
                                  dest="task", type=str, default='analysis',
-                                 choices=["analysis", "forecast", "monthlyreanalysis", "monthlyreanalysissytron"],
+                                 choices=["analysis", "forecast", "postprocess", "monthlyreanalysis", "monthlyreanalysissytron"],
                                  help="")
 
         parser_oper.add_argument("--walltime",
