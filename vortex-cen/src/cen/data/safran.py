@@ -3,10 +3,11 @@ SAFRAN-specific flow resources.
 """
 
 from bronx.stdtypes.date import Time
+from vortex.syntax.stdattrs import a_date
 from footprints.util import rangex
 from vortex.data.flow import GeoFlowResource
 from vortex.data.geometries import UnstructuredGeometry
-from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert
+from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert, namebuilding_append
 from vortex.nwp.data.obs import ObsRaw
 from vortex_cen.data.packedfiles import CenPackedFiles
 import footprints
@@ -167,3 +168,62 @@ class SafranPackedFiles(CenPackedFiles):
             return 'n' + self.datebegin.strftime('%y') + self.dateend.strftime('%y') + '.' + self.nativefmt
         else:
             print('ERROR : Missing "source" information to build resource file name')
+
+
+@namebuilding_append('cen_period', lambda self: [{'begindate': self.datebegin},
+                                                 {'enddate': self.dateend}])
+class SafranPackedFilesVortex1(GeoFlowResource):
+    """
+    Class for SAFRAN archives.
+    """
+
+    _footprint = [
+        dict(
+            info='SAFRAN packed files covering a given period',
+            attr = dict(
+                kind = dict(
+                    values=['packedobs', 'listobs', 'packedguess', 'packedlisting'],
+                ),
+                model = dict(
+                    values=['safran'],
+                ),
+                source=dict(
+                    values=['arpege', 'cep', 'era5', 'surfaceobs', 'neb'],
+                    default=None,
+                    optional=True,
+                ),
+                nativefmt = dict(
+                    values = ['tar', 'tar.gz'],
+                    default = 'tar'
+                ),
+                datebegin = a_date,
+                dateend   = a_date,
+                vortex1   = dict(
+                    type = bool,
+                    optional=False,
+                    values=[True, ]
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return self.kind
+
+    def reanalysis_basename(self):
+        """
+        Basename of input files for SAFRAN reanalysis.
+        Since v1.8.3 and the introduction of SafranPackedFiles resources,
+        the reanalysis also use this type of resources.
+        """
+        if self.source == 'arpege':
+            return 'p' + self.datebegin.yy + self.dateend.yy + '.' + self.nativefmt
+        elif self.source == 'cep':
+            return 'cep_' + self.datebegin.yy + self.dateend.yy
+        elif self.source == 'era5':
+            return 'e' + self.datebegin.yy + self.dateend.yy + '.' + self.nativefmt
+        elif self.source == 'surfaceobs':
+            return 'rs' + self.datebegin.yy + self.dateend.yy + '.' + self.nativefmt
+        elif self.source == 'neb':
+            return 'n' + self.datebegin.yy + self.dateend.yy + '.' + self.nativefmt
