@@ -24,7 +24,7 @@ parser.add_argument('-v', '--venv', type=str, required=False, default=None,
                          "If this script is already called from a virtual environment,"
                          "this argument is ignored.")
 
-parser.add_argument('-o', '--optional', action='store', choices=['plot', 'sql', 'all'], nargs='+', default=None,
+parser.add_argument('-o', '--optional', action='store', choices=['plot', 'sql', 'all'], nargs='+', default='all',
                     help="Install optional dependencies (this option is ignored on MF's HPC):\n" +
                          "* 'plot' install graphical tools\n" +
                          "* 'sql' install sql extraction tools\n" +
@@ -164,6 +164,12 @@ if args.editable:
 print("Running command:")
 print(f"{pip} install {' '.join(pip_options)} .{optional}")
 subprocess.run([pip, 'install'] + pip_options + [f'.{optional}'])
+
+# Install vortex-cen plugin
+os.chdir('vortex-cen')
+print("Running command:")
+print(f"{pip} install .")
+subprocess.run([pip, 'install', '.'])
 
 # Write latest snowtools commit number into the virtual environment to keep a track of what has just been installed
 if os.path.isdir('.git'):
