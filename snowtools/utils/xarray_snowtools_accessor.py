@@ -391,7 +391,7 @@ class SemiDistributedAccessor(SnowtoolsAccessor):
             # When all elements of the indexer are "False", calling "where" raises the following error:
             # IndexError: The indexing operation you are attempting to perform is not valid on netCDF4.Variable object.
             # Try loading your data into memory first by calling .load().
-            if any(indexer):
+            if any(indexer.data.flatten()):
                 out = self.ds.where(indexer, drop=True)
             else:
                 print("WARNING : No entry found with the given arguments, returning an empty Dataset")
