@@ -66,6 +66,8 @@ class vortex_kitchen(object):
     def define_ntasks(self, machine):
         #########################################################################################################
         # MV : cela semble être une manière bien compliquée de définir la valeur par défaut de ntask à 80...
+        # D'autant plus que cette valeur par défaut est ensuite écrasée pour les "petites" géométries en dur
+        # dans surfex_task...
         if hasattr(self.options, 'ntasks'):
             define_ntasks = not self.options.ntasks
         else:
