@@ -10,6 +10,8 @@ import subprocess
 # TODO : Use a proper API of the venv package
 # see https://docs.python.org/3/library/venv.html
 
+# TODO : Fix script avec python3.12.12 sur HPC
+
 
 description = "Snowtools installation script for MF developpers"
 parser = argparse.ArgumentParser(description=description)
@@ -166,7 +168,7 @@ subprocess.run([pip, 'install'] + pip_options + [f'.{optional}'])
 # Write latest snowtools commit number into the virtual environment to keep a track of what has just been installed
 if os.path.isdir('.git'):
     commit = subprocess.check_output('git show --pretty=format:"%H" --no-patch', shell=True, encoding='utf-8')
-    with open(os.path.join(venv, '.snowtools_info'), 'a') as f:
+    with open(os.path.join(venv, '.snowtools_info'), 'w') as f:
         f.write(commit)
 elif os.path.exists('.git_info'):
     shutil.copyfile('.git_info', os.path.join(venv, '.snowtools_info'))
