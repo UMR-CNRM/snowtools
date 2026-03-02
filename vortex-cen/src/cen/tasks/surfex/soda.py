@@ -82,7 +82,7 @@ class Soda(_CenResearchTask):
 
         self.sh.title('Input PGD')
         pgd = toolbox.input(
-            alternate  = 'SurfexClim',
+            role       = 'SurfexClim',
             kind       = 'pgdnc',
             nativefmt  = 'netcdf',
             local      = 'PGD.nc',
@@ -189,7 +189,7 @@ class Soda(_CenResearchTask):
             model          = 'surfex',
             namespace      = self.conf.get('prep_namespace', 'vortex.multi.fr'),
             namebuild      = 'flat@cen',
-            block          = 'prep/bg',
+            block          = 'prep/background',
             vortex1        = self.conf.get('prep_vortex1', None),
             fatal          = True,
         ),
@@ -238,7 +238,7 @@ class Soda(_CenResearchTask):
             )
         )
 
-    def put_remote_outputs(self):
+    def put_outputs(self):
 
         t = self.ticket
 
@@ -255,7 +255,7 @@ class Soda(_CenResearchTask):
             model          = 'surfex',
             namespace      = 'vortex.multi.fr',
             namebuild      = 'flat@cen',
-            block          = 'prep/an',
+            block          = 'prep/analysis',
             fatal          = True
         ),
         print(t.prompt, 'SODA analysis =', prep)
