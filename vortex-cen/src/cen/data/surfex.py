@@ -20,6 +20,8 @@ class Pro(SurfaceIO):
                 ),
                 model = dict(
                     values = ['surfex'],
+                    default = 'surfex',
+                    optional = True,
                 ),
             )
         )
@@ -94,6 +96,8 @@ class ProVortex1(SurfaceIOVortex1):
                 ),
                 model = dict(
                     values = ['surfex'],
+                    default = 'surfex',
+                    optional = True,
                 ),
             )
         )
