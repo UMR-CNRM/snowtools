@@ -6,6 +6,9 @@ address="hendrix.meteo.fr"
 protocol="ftp"
 rootdir="~%usr%/vortex"
 
+[ftserv]
+hostname_patterns="hendrix.meteo.fr"
+
 [nwp-tools]
 lfi = "/home/mf/dp/marp/verolive/public/lfi-tools/default"
 

@@ -7,3 +7,7 @@ address="hendrix.meteo.fr"
 protocol="ftp"
 rootdir="~%usr%/vortex"
 op_rootdir="/chaine/mxpt/mxpt001/vortex"
+
+[ftserv]
+hostname_patterns="hendrix.meteo.fr"
+
