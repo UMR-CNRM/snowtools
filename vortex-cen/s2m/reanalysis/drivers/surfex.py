@@ -12,7 +12,7 @@ def setup(t, **kw):
         ticket=t,
         nodes=[
             AddSlopes(tag='addslopes', ticket=t, **kw),
-            # No need for preprocess since the nameilst pre-processing is already include
+            # No need for preprocess since the namelist pre-processing is already included
             # in the "Surfex_Parallel" algo component
             Offline_reanalysis(tag='offline', ticket=t, **kw),
         ],
@@ -23,9 +23,9 @@ def setup(t, **kw):
 class Offline_reanalysis(Offline_MPI_Uenv):
     '''
     OFFLINE reanalysis task :
-    Get all constant inputs from a User Environment.
-    Get forcing file during the compute step (step.02) only because it comes from the
-    output of a previous execution of "AddSlopes" task.
+    - Get all constant inputs (including the PGD file) from a User Environment.
+    - Get forcing file(s) on a compute node (step.02) because it comes from the
+      output of a previous execution of "AddSlopes" task.
     '''
     def get_remote_inputs(self):
 
