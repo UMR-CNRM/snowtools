@@ -36,7 +36,7 @@ class s2mTestForcageBase(s2mTestBase):
     def test_snowpappus(self):
         print("test snowpappus:")
         # NAM_ISBA_SNOW: LSNOWPAPPUS = TRUE
-        shutil.copy(self.path_namelist + "namelist_pappus_1.nam", self.namelist)
+        shutil.copy(self.path_namelist + "namelist_pappus1.nam", self.namelist)
         self.full_run("s2m research -b 20101215 -e 20110115")
 
     def test_axel_aaron(self):
@@ -147,7 +147,7 @@ class s2m2DTest(s2mTestBase):
     def setUp(self):
         super(s2m2DTest, self).setUp()
         self.forcingtest = os.path.join(TESTBASE_DIR, "FORCING", "FORCING_test_2d.nc")
-        self.namelist = os.path.join(_here, 'namelists/OPTIONS_test_2d.nam')
+        self.namelist = os.path.join(_here, 'namelists/namelist_2d_base1.nam')
         # If the test is run at CEN, it can run PGD with available databases.
         # Otherwise, we do not test the PGD step and only take a PGD test file.
         if not self.runatcen:
@@ -170,7 +170,7 @@ class s2m2DTest_pappus(s2mTestBase):
     def setUp(self):
         super(s2m2DTest_pappus, self).setUp()
         self.forcingtest = os.path.join(TESTBASE_DIR, "FORCING", "FORCING_test_2d.nc")
-        self.namelist = os.path.join(_here, 'namelists/OPTIONS_test_2d_pappus.nam')
+        self.namelist = os.path.join(_here, 'namelists/namelist_2d_pappus1.nam')
         # If the test is run at CEN, it can run PGD with available databases.
         # Otherwise, we do not test the PGD step and only take a PGD test file.
         if not self.runatcen:

@@ -1,0 +1,19 @@
+# -*- coding: utf-8 -*-
+
+from vortex.layout.nodes import Driver
+from vortex_cen.tasks.surfex.pre_process import Preprocess_Local_Namelist #Preprocess_Uenv_Namelist 
+from vortex_cen.tasks.surfex.pgd import Pgd2D_Local_Pgd #Pgd2D_Uenv_Pgd 
+
+
+def setup(t, **kw):
+    return Driver(
+        tag='pgd2d',
+        ticket=t,
+        nodes=[
+                Preprocess_Local_Namelist(tag='preprocess_local_namelist2d', ticket=t, **kw),
+                Pgd2D_Local_Pgd(tag='pgd2d_local_pgd', ticket=t, **kw),
+                #Preprocess_Uenv_Namelist(tag='preprocess_uenv_namelist2d', ticket=t, **kw),
+                #Pgd2D_Uenv_Pgd(tag='pgd2d_uenv_pgd', ticket=t, **kw),
+        ],
+        options=kw,
+    )

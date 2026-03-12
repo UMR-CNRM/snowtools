@@ -175,6 +175,20 @@ class _StandardNC(netCDF4.Dataset):
         else:
             raise UnknownGridTypeException(gridtype, "")
 
+        # WARNING : The pyproj documentation raises the following warning :
+        # """
+        # Avoid using pip install with a conda environment.
+        # """
+        # See : https://pyproj4.github.io/pyproj/3.3.0/installation.html
+        # ==> Installing pyproj with pip on MF's HPC can lead to the following crash :
+        # Exception type: <class 'pyproj.exceptions.CRSError'>
+        # Exception info: Invalid projection: epsg:2154: (Internal Proj Error: proj_create:
+        # no database context specified)
+        # This seems to be caused by pyproj referencing an incorrect crs data directory :
+        # https://gis.stackexchange.com/questions/383883/pyproj-invalid-projection-init-epsg25832/431688#431688
+        # For more information, see the following related issues :
+        # https://github.com/geopandas/geopandas/issues/2270
+        # https://github.com/geopandas/geopandas/issues/1887
         transformer = Transformer.from_crs(epsg, 'epsg:4326')
 
         XX, YY = np.meshgrid(np.array(x), np.array(y))

@@ -10,6 +10,8 @@ import subprocess
 # TODO : Use a proper API of the venv package
 # see https://docs.python.org/3/library/venv.html
 
+# TODO : Fix script avec python3.12.12 sur HPC
+
 
 description = "Snowtools installation script for MF developpers"
 parser = argparse.ArgumentParser(description=description)
@@ -22,7 +24,7 @@ parser.add_argument('-v', '--venv', type=str, required=False, default=None,
                          "If this script is already called from a virtual environment,"
                          "this argument is ignored.")
 
-parser.add_argument('-o', '--optional', action='store', choices=['plot', 'sql', 'all'], nargs='+', default=None,
+parser.add_argument('-o', '--optional', action='store', choices=['plot', 'sql', 'all'], nargs='+', default='all',
                     help="Install optional dependencies (this option is ignored on MF's HPC):\n" +
                          "* 'plot' install graphical tools\n" +
                          "* 'sql' install sql extraction tools\n" +
@@ -163,10 +165,16 @@ print("Running command:")
 print(f"{pip} install {' '.join(pip_options)} .{optional}")
 subprocess.run([pip, 'install'] + pip_options + [f'.{optional}'])
 
+# Install vortex-cen plugin
+os.chdir('vortex-cen')
+print("Running command:")
+print(f"{pip} install .")
+subprocess.run([pip, 'install', '.'])
+
 # Write latest snowtools commit number into the virtual environment to keep a track of what has just been installed
 if os.path.isdir('.git'):
     commit = subprocess.check_output('git show --pretty=format:"%H" --no-patch', shell=True, encoding='utf-8')
-    with open(os.path.join(venv, '.snowtools_info'), 'a') as f:
+    with open(os.path.join(venv, '.snowtools_info'), 'w') as f:
         f.write(commit)
 elif os.path.exists('.git_info'):
     shutil.copyfile('.git_info', os.path.join(venv, '.snowtools_info'))

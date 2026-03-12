@@ -18,6 +18,19 @@ class Shadows(_CenResearchTask):
     ---------
     - FORCING file with extracted solar masks added.
 
+    Mandatory configuration variables:
+    ----------------------------------
+    :param datebegin: *datebegin* of the forcing file(s)
+    :type datebegin: str, footprints.stdtypes.FPList
+    :param dateend: *dateend* of the forcing files(s)
+    :type dateend: str, footprints.stdtypes.FPList
+    :param forcing_geometry: *geometry* of the input forcing file(s)
+    :type forcing_geometry: str, footprints.stdtypes.FPList
+    :param geometry: *geometry* of the output forcing file(s)
+    :type geometry: str, footprints.stdtypes.FPList
+    :param xpid: Experiment identifier (format "{experiment_name}@{user}")
+    :type xpid: str
+
     '''
 
     def get_remote_inputs(self):
@@ -25,31 +38,22 @@ class Shadows(_CenResearchTask):
         Get FORCING file as "FORCING.nc" in the different working sub-directories.
         """
 
-        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+        self.get_forcing(localname='[datebegin:ymdh]_[dateend:ymdh]/FORCING.nc')
 
     def algo(self):
         """
         Returns a "PrepareForcingComponent" algo component with the appropriate arguments.
 
-        If the input consists of several FORCING files in the same working directory,
-        they will be processed in parallel.
-
+        If the input consists of several FORCING files, they will be processed in parallel.
 
         Working tree :
         rootdir
-        |FORCING_datebegin1_dateend1.nc
-        |FORCING_datebegin2_dateend2.nc
+        |-- datebegin1_dateend1
+            |--FORCING.nc
+        |-- datebegin2_dateend2
+            |--FORCING.nc
         ...
 
-        Arguments:
-        :param da: Massif number(s) to be extracted
-        :type massifs: int, list
-        :param slopes: Slope(s) to be extracted
-        :type slopes: int, list
-        :param elevations: Elevations(s) to be extracted
-        :type elevations: int, list
-        :param aspects: Aspects(s) to be extracted
-        :type aspects: int, list
         """
 
         t = self.ticket
@@ -58,11 +62,12 @@ class Shadows(_CenResearchTask):
 
         self.sh.title('Algo')
         algo = vortex.task(
-            engine       = 's2m',
+            engine       = 'algo',
             kind         = 'shadowsforcing',
             datebegin    = [tbinput.rh.resource.datebegin for tbinput in avail_forcings],
             dateend      = [tbinput.rh.resource.dateend for tbinput in avail_forcings],
-            ntasks       = min(40, len(avail_forcings)),
+            ntasks       = min(40, len(avail_forcings)),  # TODO : ne pas mettre ça en dur dans le code !
+            role_members = 'Forcing',
             # reprod_info  = self.get_reprod_info,
         )
         print(t.prompt, 'algo =', algo)
@@ -70,7 +75,7 @@ class Shadows(_CenResearchTask):
 
         return algo
 
-    def put_remote_outputs(self):
+    def put_outputs(self):
         """
         Save the output FORCING file(s) in the new geometry.
         WARNING : the output geometry must be in a valid "geometries.ini" file.
@@ -90,7 +95,7 @@ class Shadows(_CenResearchTask):
             geometry       = self.conf.geometry,
             experiment     = self.conf.xpid,
             namebuild      = 'flat@cen',
-            local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING.nc',
             block          = 'shadows',
             model          = 'safran',
         ),
@@ -111,7 +116,7 @@ class Shadows(_CenResearchTask):
             experiment     = 'reference',
             username       = 'vernaym',
             namebuild      = 'flat@cen',
-            local          = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING.nc',
             block          = 'shadows',
             model          = 'safran',
         ),

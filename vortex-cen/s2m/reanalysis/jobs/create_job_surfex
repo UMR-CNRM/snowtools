@@ -1,0 +1,6 @@
+name=surfex_reanalysis_alp package=drivers task=surfex profile=rd-belenos-mt jobassistant=cen datebegin=1958080106 dateend=2020080106 geometry=alp27_allslopes xpid=GRIN_2700E_1940-2024_SELECT
+name=surfex_reanalysis_pyr package=drivers task=surfex profile=rd-belenos-mt jobassistant=cen datebegin=1958080106 dateend=2020080106 geometry=pyr24_allslopes xpid=GRIN_2700E_1940-2024_SELECT
+name=surfex_reanalysis_cor package=drivers task=surfex profile=rd-belenos-mt jobassistant=cen datebegin=1958080106 dateend=2020080106 geometry=cor2_allslopes xpid=GRIN_2700E_1940-2024_SELECT
+name=surfex_reanalysis_mac package=drivers task=surfex profile=rd-belenos-mt jobassistant=cen datebegin=1958080106 dateend=2020080106 geometry=mac11_allslopes xpid=GRIN_2700E_1940-2024_SELECT
+name=surfex_reanalysis_jur package=drivers task=surfex profile=rd-belenos-mt jobassistant=cen datebegin=1958080106 dateend=2020080106 geometry=jur4_allslopes xpid=GRIN_2700E_1940-2024_SELECT
+name=surfex_reanalysis_vog package=drivers task=surfex profile=rd-belenos-mt jobassistant=cen datebegin=1958080106 dateend=2020080106 geometry=vog3_allslopes xpid=GRIN_2700E_1940-2024_SELECT

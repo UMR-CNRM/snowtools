@@ -99,9 +99,9 @@ class SodaPreProcess(AlgoComponent):
                 optional     = True,
                 default   = 'algo'
             ),
-            members=dict(
-                info="The members that will be processed",
-                type=footprints.FPList,
+            nmembers=dict(
+                info="The number of members that will be processed",
+                type=int,
             ),
         )
     )
@@ -123,7 +123,7 @@ class SodaPreProcess(AlgoComponent):
             # Location taken in the FORCING file.
             newcontent = update_namelist_object_nmembers(
                 namelist.contents,
-                nmembers=len(self.members)
+                nmembers=self.nmembers
             )
             newnam = footprints.proxy.container(filename=namelist.container.basename)
             newcontent.rewrite(newnam)

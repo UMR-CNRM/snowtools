@@ -54,6 +54,8 @@ class _S2MWorkerMixIn(object):
                and the main Algo Component will exit).
         """
 
+        logger.info(f"STARTING WORKER {self.subdir}")
+
         rdict = dict(rc=True)
         rundir = self.system.getcwd()
         if self.subdir is not self.system.path.dirname(rundir):
@@ -1222,14 +1224,12 @@ class SurfexWorker(_CENWorkerBlindRun):
 
 
 @echecker.disabled_if_unavailable
-class PrepareForcingWorker(TaylorVortexWorker):
+class PrepareForcingWorker(_S2MWorkerMixIn, TaylorVortexWorker):
     """This algo component is designed to prepare a SURFEX Forcing file (change of geometry)."""
 
     _footprint = dict(
         info = 'AlgoComponent designed to run a SURFEX experiment without MPI parallelization.',
         attr = dict(
-            datebegin = a_date,
-            dateend   = a_date,
             kind = dict(
                 values = ['prepareforcing'],
             ),
@@ -1239,11 +1239,14 @@ class PrepareForcingWorker(TaylorVortexWorker):
             ),
             geometry_in = dict(
                 info = "Area information in case of an execution on a massif geometry",
+                # WARNING : geometry_in contient la liste des TAGs des géométries, et pas de objets
+                # "geometry"
                 type = footprints.stdtypes.FPList,
                 optional = True,
                 default = None
             ),
             geometry_out = dict(
+                # WARNING : geometry_ est le TAG de l'objet geometry
                 info = "The resource's massif geometry.",
                 type = str,
             ),
@@ -1255,20 +1258,6 @@ class PrepareForcingWorker(TaylorVortexWorker):
             )
         )
     )
-
-    def vortex_task(self, **kwargs):
-        rdict = dict(rc=True)
-        rundir = self.system.getcwd()
-        if self.subdir is not self.system.path.dirname(rundir):
-            thisdir = self.system.path.join(rundir, self.subdir)
-            with self.system.cdcontext(self.subdir, create=True):
-                rdict = self._commons(rundir, thisdir, rdict, **kwargs)
-
-        else:
-            thisdir = rundir
-            rdict = self._commons(rundir, thisdir, rdict, **kwargs)
-
-        return rdict
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
 
@@ -1282,61 +1271,24 @@ class PrepareForcingWorker(TaylorVortexWorker):
 
     def _prepare_forcing_task(self, rundir, thisdir, rdict):
 
-        need_other_run = True
-        need_other_forcing = True
-        need_save_forcing = False
-        datebegin_this_run = self.datebegin
+        if len(self.geometry_in) > 1:
+            logger.info("FORCING AGGREGATION")
+            forcinglist = []
+            for massif in self.geometry_in:
+                forcingname = "FORCING_" + massif + ".nc"
+                forcinglist.append(forcingname)
 
-        while need_other_run:
-
-            if need_other_forcing:
-
-                forcingdir = self.forcingdir(rundir, thisdir)
-
-                if len(self.geometry_in) > 1:
-                    print("FORCING AGGREGATION")
-                    forcinglist = []
-                    for massif in self.geometry_in:
-                        dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir + "/" + massif,
-                                                                     datebegin_this_run, self.dateend)
-                        forcingname = "FORCING_" + massif + ".nc"
-                        self.system.mv("FORCING.nc", forcingname)
-                        forcinglist.append(forcingname)
-
-                    forcinput_applymask(forcinglist, "FORCING.nc", **self.reprod_info)
-                    need_save_forcing = True
-                else:
-                    # Get the first file covering part of the whole simulation period
-                    print("LOOK FOR FORCING")
-                    dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir,
-                                                                 datebegin_this_run, self.dateend)
-                    print("FORCING FOUND")
-
-                    print("flat" in self.geometry_in[0])
-                    print("allslopes" in self.geometry_out)
-
-                    print(self.geometry_in[0], self.geometry_out)
-
-                    if "flat" in self.geometry_in[0] and "allslopes" in self.geometry_out:
-
-                        list_slopes = ["0", "20", "40"]
-
-                        print("FORCING EXTENSION")
-                        liste_massifs = infomassifs().dicArea[self.geometry_in[0]]
-                        liste_aspect = infomassifs().get_list_aspect(8, list_slopes)
-                        self.system.mv("FORCING.nc", "FORCING_OLD.nc")
-                        forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs,
-                                         0, 5000, list_slopes, liste_aspect, **self.reprod_info)
-                        need_save_forcing = True
-
-            dateend_this_run = min(self.dateend, dateforcend)
-
-            # Prepare next iteration if needed
-            datebegin_this_run = dateend_this_run
-            need_other_run = dateend_this_run < self.dateend
-
-            if need_save_forcing and not (need_other_run and not need_other_forcing):
-                save_file_period(forcingdir, "FORCING", dateforcbegin, dateforcend)
+            logger.info("FORCING EXTENSION")
+            forcinput_applymask(forcinglist, "FORCING_OUT.nc", **self.reprod_info)
+        else:
+            logger.info("FORCING EXTENSION")
+            geoin = self.geometry_in[0]
+            if "flat" in geoin and "allslopes" in self.geometry_out:
+                list_slopes = ["0", "20", "40"]
+                liste_massifs = infomassifs().dicArea[self.geometry_in[0]]
+                liste_aspect = infomassifs().get_list_aspect(8, list_slopes)
+                forcinput_select(f'FORCING_{geoin}.nc', 'FORCING_OUT.nc', liste_massifs,
+                                 0, 5000, list_slopes, liste_aspect, **self.reprod_info)
 
         return rdict
 
@@ -1995,6 +1947,16 @@ class PrepareForcingComponent(_CENTaylorRun):
             kind = dict(
                 values = ['prepareforcing', 'extractforcing', 'shadowsforcing']
             ),
+#            # Inutile (parallélisation sur les années) ?
+#            datebegin = dict(
+#                info = "The list of begin dates of the forcing files",
+#                type = footprints.stdtypes.FPList,
+#            ),
+#            # Inutile (parallélisation sur les années) ?
+#            dateend = dict(
+#                info = "The list of begin dates of the forcing files",
+#                type = footprints.stdtypes.FPList,
+#            ),
             geometry_in = dict(
                 info = "Area information in case of an execution on a massif geometry",
                 type = footprints.stdtypes.FPList,
@@ -2024,14 +1986,8 @@ class PrepareForcingComponent(_CENTaylorRun):
         # Note: The number of members and the name of the subdirectories could be
         # auto-detected using the sequence
         subdirs = self.get_subdirs(rh, opts)
-        self._add_instructions(common_i, dict(subdir=subdirs,
-                                              datebegin=self.datebegin,
-                                              dateend=self.dateend))
+        self._add_instructions(common_i, dict(subdir=subdirs))
         self._default_post_execute(rh, opts)
-
-    def get_subdirs(self, rh, opts):
-
-        return [begin.year for begin in self.datebegin]
 
 
 @echecker.disabled_if_unavailable

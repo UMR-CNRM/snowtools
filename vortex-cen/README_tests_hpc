@@ -1,12 +1,35 @@
 
+# Installer snowtools et vortex-cen dans un environnement virtuel (cf README_install)
+#
 # 1. Aller dans le répertoire test:
 cd $SNOWTOOLS_CEN/vortex-cen/tests/testhpc
 
 # 2. Lancer tous les tests avec :
-mkjob.py -f jobs/create_job -c conf/tests_testhpc.ini
+mkjob -f jobs/create_job -c conf/tests_testhpc.ini
+>>>>>>> dev_hpc_vortex_mathieu
 
-# 3. Lancer un test spécifique avec :
+# Lancer un test spécifique avec :
 mkjob -n {nom du job à tester dans le fichier "create_job"} -c conf/tests_testhpc.ini
 ou
 mkjob -j {la ligne à tester dans le fichier "create_job"} -c conf/tests_testhpc.ini
+# Exemple:
+cd /scratch/work/fructusm/tests/testhpc
+mkjob -j name=preprocess_unev_namelist_job package=drivers task=pre_process profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=preprocess_unev_namelist -c conf/tests_testhpc.ini
 
+cd /scratch/work/fructusm/tests/testhpc
+mkjob -j name=preprocess_local_namelist_job package=drivers task=pre_process profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=preprocess_local_namelist -c conf/tests_testhpc.ini
+
+cd /scratch/work/fructusm/tests/testhpc
+mkjob -j name=preprocess_namelist_job package=drivers task=pre_process profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=preprocess_namelist -c conf/tests_testhpc.ini
+
+cd /scratch/work/fructusm/tests/testhpc
+mkjob -j name=pgd_job package=drivers task=pgd profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=pgd -c conf/tests_testhpc.ini
+
+cd /scratch/work/fructusm/tests/testhpc
+mkjob -j name=pgd2d_job package=drivers task=pgd2d profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=pgd2d -c conf/tests_testhpc.ini
+
+cd /scratch/work/fructusm/tests/testhpc
+mkjob -j name=prep_job package=drivers task=prep profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=prep -c conf/tests_testhpc.ini
+
+cd /scratch/work/fructusm/tests/testhpc
+mkjob -j name=offline_job package=drivers task=offline profile=rd-belenos-mt jobassistant=cen datebegin=2020080106 dateend=2023080106 geometry=cor xpid=offline -c conf/tests_testhpc.ini

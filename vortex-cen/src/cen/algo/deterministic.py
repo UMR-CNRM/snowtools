@@ -211,7 +211,7 @@ class Surfex_Parallel(Parallel, DrHookDecoMixin):
                 dateend_this_run = min(self.dateend, dateforcend)
 
             # Run surfex offline
-            super().execute(rh, opts)
+            self.execute_single(rh, opts)
 
             # Copy the SURFOUT file for next iteration
             self.system.cp("SURFOUT.nc", "PREP.nc")

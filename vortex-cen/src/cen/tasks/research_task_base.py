@@ -40,8 +40,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
     * get_remote_inputs
     * get_local_inputs
     * algo
-    * put_local_outputs
-    * put_remote_inputs
+    * put_outputs
 
     See their respective documentation for more details.
 
@@ -99,6 +98,14 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                 if isinstance(value, dict):
                     value = FPDict(value)
                 vortex.defaults[optk] = value
+
+        # forcing_geometry value may depend on the task's output 'geometry' value
+        if 'forcing_geometry' in self.conf and isinstance(self.conf.forcing_geometry, dict):
+            self.conf.forcing_geometry = self.conf.forcing_geometry[self.conf.geometry.tag]
+
+        # Define a namespace_out variable to apply to all outputs set as the *namespace_out*
+        # configuration variable if provided by the user or 'vortex.multi.fr' by default
+        self.namespace_out = self.conf.get('namespace_out', 'vortex.multi.fr')
 
         vortex.defaults(**extras)
         self.header('Toolbox defaults')
@@ -167,17 +174,11 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             if 'localtest' not in self.conf:
                 self.launch_algo(algo)
 
-        if 'backup' in self.steps:
-            # In a multi step job (MTOOL, ...), this step will be run, on a COMPUTE NODE,
-            # just after the computations. It is the appropriate place to put data in the local cache
-            # in order to make it available to a subsequent step.
-            self.put_local_outputs()
-
-        if 'late-backup' in self.steps:
+        if 'backup' in self.steps or 'late-backup' in self.steps:
             # In a multi step job (MTOOL, ...), this step will be run on a TRANSFER NODE.
             # Consequently, most of the data should be archived here.
             with OutputReportContext(self, t):
-                self.put_remote_outputs()
+                self.put_outputs()
 
             if 'test' in self.conf and 'localtest' not in self.conf:
                 # In test cases, some diff with reference output could be necessary.
@@ -221,13 +222,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         if algo is not None:
             algo.run()
 
-    def put_local_outputs(self):
-        """
-        Implement this method in your task to save resources on the local (HPC) cache from a compute node.
-        """
-        self.put_remote_outputs()  # TODO : check if really necessary / good practice
-
-    def put_remote_outputs(self):
+    def put_outputs(self):
         """
         Implement this method in your task to save resources remotely (on Hendrix, sxcen,...) from a transfer node.
         """
@@ -250,14 +245,17 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
         """
         if 'datebegin' in self.conf and 'dateend' in self.conf:
-            self.list_dates_begin, list_dates_end, _, _  = get_list_dates_files(Date(self.conf.datebegin),
-                    Date(self.conf.dateend), duration)
+            # Get FORCING input dates
+            self.list_dates_begin, list_dates_end, self.list_dates_begin_pro, self.list_dates_end_pro  = \
+                get_list_dates_files(Date(self.conf.datebegin), Date(self.conf.dateend), duration)
             self.dict_dates_end = get_dic_dateend(self.list_dates_begin, list_dates_end)
+            self.dict_dates_end_pro = get_dic_dateend(self.list_dates_begin_pro, self.list_dates_end_pro)
         elif 'date' in self.conf:  # Real-time only --> make a specific default class ?
             self.list_dates_begin = [self.conf.date]
             self.dict_dates_end   = {self.conf.date: self.conf.date}
 
-    def get_forcing(self, localname, forcing_geometry=None, alternate=True):
+    def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', alternate=True,
+            forcing_geometry=None, namespace='vortex.multi.fr'):
         """
         Method to get meteorological forcing file(s) covering the simulation period.
         First, check if an existing forcing file covers the full simulation period.
@@ -277,6 +275,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         :type alternate: bool
 
         Mandatory configuration variables:
+        ----------------------------------
 
         :param forcing_datebegin: *datebegin* footprint, default self.conf.datebegin
         :type forcing_datebegin: str, footprints.stdtypes.FPList
@@ -292,7 +291,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         :type forcing_vconf: str
         :param forcing_block: *block* footprint, default "meteo"
         :type forcing_vconf: str
-        :param forcing_namespace: *namespace* footprint, default "vortex.multi.fr"
+        :param forcing_namespace: *namespace* footprint, default "vortex.multi.fr" (hendrix + local cache)
         :type forcing_namespace: str
 
         :param forcing_date: *date* footprint (unsed with the research namebuilders), default to [dateend]
@@ -301,6 +300,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         :type forcing_model: str
 
         Optionnal configuration variables:
+        ----------------------------------
 
         :param forcing_member: *member* footprint, default None (or *member* if provided)
         :type forcing_member: int, footprints.stdtypes.FPList
@@ -323,6 +323,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                             Used to retrieve the list of *datebegin* and *dateend* for inputs covering sub-periods.
                             Possible values : "yearly", "monthly" or "full"
         :type io_duration: str
+        :param prep_vortex1: Boolean to identify resources produced with vortex1 (filename without geometry)
+        :type prep_vortex1: bool
 
         TODO : prévoir un mécanisme pour rendre des déclarer les arguments obligatoires / optionnels pour
         chaque tâche (ex: member)
@@ -345,7 +347,6 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         # separate directory to avoid overwrinting files.
         if (isinstance(forcing_member, list) and len(forcing_member) > 1 and '[member]' not in localname):
             localname = f'mb[member]/{localname}'
-        forcing_namespace = self.conf.get('forcing_namespace', 'vortex.multi.fr')
         # TODO : modifier le namebuilder par defaut lorsque le nouveau incluant la
         # géométrie sera disponible
         forcing_namebuild = self.conf.get('forcing_namebuild', 'flat@cen')
@@ -361,6 +362,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         forcing_model = self.conf.get('forcing_model', 'safran')
         # TODO : à supprimer après suppression de ce footprint dans les objets "SurfaceIO"
         forcing_cutoff = self.conf.get('forcing_cutoff', None)
+        vortex1        = self.conf.get('forcing_vortex1', False),
 
         self.sh.title('Input forcing (full simulation period)')
         forcing = vortex.input(
@@ -378,8 +380,9 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             block          = forcing_block,  # default : 'meteo' ?
             member         = forcing_member,  # default : None
             intent         = forcing_intent,  # default : 'in' ?
-            namespace      = forcing_namespace,  # default : 'vortex.multi.fr',
+            namespace      = namespace,  # default : 'vortex.multi.fr',
             namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
+            vortex1        = vortex1,
             date           = '[dateend]',  # TODO : à supprimer (cas recherche uniquement)
             source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
             source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
@@ -426,8 +429,9 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                 block          = forcing_block,  # default : 'meteo' ?
                 member         = forcing_member,  # default : None
                 intent         = forcing_intent,  # default : 'in' ?
-                namespace      = forcing_namespace,  # default : 'vortex.multi.fr',
+                namespace      = namespace,  # default : 'vortex.multi.fr',
                 namebuild      = forcing_namebuild,  # default recherche : 'flat@cen', defaut oper : None
+                vortex1        = vortex1,
                 date           = '[dateend]',  # TODO : à supprimer dans le cas recherche
                 source_app     = forcing_source_app,  # default = None (ne pas refaire l'erreur)
                 source_conf    = forcing_source_conf,  # default = None (ne pas refaire l'erreur)
