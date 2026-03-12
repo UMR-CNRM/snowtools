@@ -1,3 +1,5 @@
+# 0. switch on python 3.10
+module load python/3.10.12
 
 # I. Création d'un environnement virtuel AVEC les packages systems
 python -m venv --system-site-packages $HOME/venv/vortex2
@@ -5,7 +7,7 @@ source $HOME/venv/vortex2/bin/activate
 
 # II. Installation de snowtools
 module load gcc/14.1.0
-install_snowtools -e
+install_snowtools -e   # the -e option does not work with python 3.7
 #install_snowtools -v {path_to_venv}
 #source {path_to_venv}/bin/activate
 
@@ -39,3 +41,6 @@ pip install --no-build-isolation -e .
 mkdir $HOME/.vortex.d/
 cd $HOME/.vortex.d/
 ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_{server}.toml vortex.toml
+
+cd $HOME/.vortexrc
+ln -s $SNOWTOOLS_CEN/snowtools/conf/geometries.ini .
