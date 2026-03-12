@@ -57,7 +57,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     date           = self.conf.rundate.ymdh,
                     datebegin      = '{0:s}/-PT24H'.format(datebegin.ymd6h) if self.conf.rundate.hour == 12 else datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
-                    local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:area].tar',
+                    local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:domain].tar',
                     model          = 'safran',
                     fatal          = False,
                     namespace      = 'bdpe.archive.fr',
@@ -79,7 +79,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     date           = self.conf.rundate.ymdh,
                     datebegin      = '{0:s}/-PT24H'.format(datebegin.ymd6h),
                     dateend        = dateend.ymd6h,
-                    local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:area].tar',
+                    local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:domain].tar',
                     model          = 'safran',
                     cutoff         = 'assimilation',
                     namespace      = self.conf.namespace_out,
@@ -121,7 +121,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     date           = self.conf.rundate.ymdh,
                     datebegin      = '{0:s}/-PT24H'.format(datebegin.ymd6h) if self.conf.rundate.hour == 12 else datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
-                    local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:area].tar',
+                    local          = 'RST_[datebegin::ymdh]_[dateend::ymdh]_[geometry:domain].tar',
                     model          = 'safran',
                     suite          = self.conf.suite,
                     cutoff         = 'assimilation',
@@ -137,7 +137,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 tb03 = toolbox.input(
                     role            = 'ListeMassif',
                     genv            = self.conf.cycle,
-                    gdomain         = '[geometry:area]',
+                    gdomain         = '[geometry:domain]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     kind            = 'listem',
                     model           = self.conf.model,
@@ -150,7 +150,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 tb04 = toolbox.input(
                     role            = 'ListeLimitesMassif',
                     genv            = self.conf.cycle,
-                    gdomain         = '[geometry:area]',
+                    gdomain         = '[geometry:domain]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     kind            = 'listeml',
                     model           = self.conf.model,
@@ -163,7 +163,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 tb05 = toolbox.input(
                     role            = 'ListePost',
                     genv            = self.conf.cycle,
-                    gdomain         = '[geometry:area]',
+                    gdomain         = '[geometry:domain]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     kind            = 'listeo',
                     model           = self.conf.model,
@@ -177,7 +177,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 tb06 = toolbox.input(
                     role            = 'carac_post',
                     genv            = self.conf.cycle,
-                    gdomain         = '[geometry:area]',
+                    gdomain         = '[geometry:domain]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     kind            = 'carpost',
                     model           = self.conf.model,
@@ -218,7 +218,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 self.sh.title('Toolbox input namelist sorties')
                 tb11 = toolbox.input(
                     role            = 'Nam_sorties',
-                    source          = 'namelist_sorties_[geometry:area]',
+                    source          = 'namelist_sorties_[geometry:domain]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
@@ -232,7 +232,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 self.sh.title('Toolbox input namelist analyse')
                 tb12 = toolbox.input(
                     role            = 'Nam_analyse',
-                    source          = 'namelist_analyse_[geometry:area]',
+                    source          = 'namelist_analyse_[geometry:domain]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
@@ -246,7 +246,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 self.sh.title('Toolbox input namelist melange')
                 tb13 = toolbox.input(
                     role            = 'Nam_melange',
-                    source          = 'namelist_melange_[geometry:area]',
+                    source          = 'namelist_melange_[geometry:domain]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
@@ -276,7 +276,7 @@ class Safran(OpTask, S2MTaskMixIn):
                     self.sh.title('Toolbox input namelist observr')
                     tb15 = toolbox.input(
                         role            = 'Nam_observr',
-                        source          = 'namelist_observr_[geometry:area]',
+                        source          = 'namelist_observr_[geometry:domain]',
                         geometry        = self.conf.geometry[self.conf.vconf],
                         genv            = self.conf.cycle,
                         kind            = 'namelist',
@@ -290,7 +290,7 @@ class Safran(OpTask, S2MTaskMixIn):
                 self.sh.title('Toolbox input namelist ebauche')
                 tb16 = toolbox.input(
                     role            = 'Nam_ebauche',
-                    source          = 'namelist_ebauche_[geometry:area]',
+                    source          = 'namelist_ebauche_[geometry:domain]',
                     geometry        = self.conf.geometry[self.conf.vconf],
                     genv            = self.conf.cycle,
                     kind            = 'namelist',
