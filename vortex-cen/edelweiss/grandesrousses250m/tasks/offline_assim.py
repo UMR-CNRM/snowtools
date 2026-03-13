@@ -11,8 +11,7 @@ def setup(t, **kw):
         tag="offline_assim",
         ticket=t,
         nodes=[
-            # No need for preprocess since the nameilst pre-processing is already include
-            # in the "Surfex_Parallel" algo component
+            Preprocess_Uenv_Namelist(tag="preprocess", ticket=t, **kw),
             Offline_assim(tag="offline_assim", ticket=t, **kw),
         ],
         options=kw,
