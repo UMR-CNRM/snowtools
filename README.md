@@ -18,17 +18,8 @@ General informations about snowpack modelling with SURFEX-Crocus can be found he
 
 Users interested by snow modeling with SURFEX/Crocus model must follow detailed instructions below:
 
-* [Installation of SURFEX](https://umr-cnrm.github.io/snowtools-doc/misc/surfex-install.html)
-* [Run a SURFEX-Crocus simulation](https://umr-cnrm.github.io/snowtools-doc/misc/surfex-run.html)
-
-### First test
-If you correctly installed the snowtools and SURFEX projects, you must be able to run successfully the following test case:
-
-```bash
-s2m research -f $SNOWTOOLS_CEN/snowtools/DATA/FORCING_test_base.nc -b 20100801 -e 20110801 -o output -g -s ...yoursurfexdirectory.../exe
-```
-
-:warning: If you installed SURFEX with MPIAUTO option, you have to set the environment variable NOFFLINE to 1 to make this test work (because this test have only one simulation point).
+* [Installation of SURFEX](https://umr-cnrm.github.io/snowtools-doc/surfex/surfex-install.html)
+* [Run a SURFEX-Crocus simulation](https://umr-cnrm.github.io/snowtools-doc/surfex/surfex-run.html)
 
 ## Plot tools
 

@@ -1,5 +1,29 @@
 Common files around snow cover simulations
 ===========================================
+Namelist
+--------
+The namelist is a text file describing the main characteristics of the simulation.
+There are infos on the soil and vegetation (for example in NAM_DATA_ISBA and NAM_ISBA), there are some choices for physical options (NAM_ISBA_SNOWN), etc.
+
+You should not try to create a namelist from scratch but use and modify an existing namelist.
+There are some namelists in ``snowtools/snowtools/DATA`` or in ``snowtools/snowtools/tests/namelists``.
+
+It is interesting to sort your namelist in order to compare it to others. You can use ``namelist_sort.py`` which is in ``snowtools/cenutils``.
+The command is
+
+.. code-block:: bash
+
+   python namelist_sort.py OPTIONS.nam -o OPTIONS_SORT.nam
+
+The NAM_IO_OFFLINE options in namelist
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``XTSTEP_OUTPUT`` defines the timestep (in seconds) of the outputs. ``XTSTEP_OUTPUT=21600`` means that you'll have diagnostics every 6 hours in your PRO file.
+
+It is possible to compress the netcdf PRO file: ``NOUTPUT_NETCDF = 4`` (the output file is a NetCDF4-classic format, the default is NetCDF3 format) and ``NCOMPRESS_NETCDF = 1`` (the level of compression is 1, this is the default).
+
+By default, the FORCING file is read every timestep. In order to decrease the I/O time, you can choose to read all forcing datas in one time by setting ``NB_READ_FORC = 1``.
+
 
 Forcing files
 -------------
