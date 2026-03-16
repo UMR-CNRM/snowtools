@@ -27,17 +27,16 @@ You need some packages which are not in the git repository (has to be fixed). So
 
 .. code-block:: bash
 
-   cp /home/your_name/.../your_old_repo/src/LIB/SPARTACUS_SURFACE_0.6.1.tar.gz /home/your_name/.../SURFEX_CEN/src/LIB/.
    cp /home/your_name/.../your_old_repo/src/LIB/XIOS-GMGEC-2152.tar /home/your_name/.../SURFEX_CEN/src/LIB/.
 
-Please read the infos for developper: https://umr-cnrm.github.io/snowtools-doc/misc/surfex-dev.html
+Please read the infos for developper: https://umr-cnrm.github.io/snowtools-doc/surfex/surfex-dev.html
 
 Compile the code
 ----------------
 
 Then you need to compile the code following these instructions.
 
-Note that all the followings commands must be typed in the **same terminal**. Once finnished, you have to open a **new terminal** before running any simulation.
+Note that all the followings commands must be typed in the **same terminal**. Once finished, you have to open a **new terminal** before running any simulation.
 
 Preparation on a Linux PC
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -164,10 +163,13 @@ Please check carefully the full names of your binaries (depending on SURFEX vers
    ln -s $EXESURFEX/PGD-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/PGD
    ln -s $EXESURFEX/SODA-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/SODA
 
-Test your snowtools and SURFEX install
---------------------------------------
+FIRST TEST: test your snowtools and SURFEX install
+--------------------------------------------------
 If you correctly installed the snowtools and SURFEX projects, you must be able to run successfully the following test case:
 
 .. code-block:: bash
 
+   export NOFFLINE=1 # necessary if you haven't done export VER_MPI=NOMPI
    s2m research -f $SNOWTOOLS_CEN/snowtools/DATA/FORCING_test_base.nc -b 20100801 -e 20110801 -o output -g -s ...yoursurfexdirectory.../exe
+
+:warning: If you installed SURFEX with MPIAUTO option, you have to set the environment variable NOFFLINE to 1 or 2 to make this test work (because this test have two simulation points).

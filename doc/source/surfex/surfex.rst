@@ -74,15 +74,6 @@ However, these directories can contain useful informations to understand the ori
 - **workSurfex**:
     This directory is used for all the main computations of the simulation. It can be used to identify all input files used in an aborted or suspicous execution, as well as some log files produced by SURFEX useful to investigate bugs. Note that during the execution process, the files initially provided with dates (for PREP and FORCING) are renamed PREP.nc and FORCING.nc with symbolic links as OFFLINE execution only opens 'PGD.nc', 'PREP.nc' and 'FORCING.nc'
 
-The NAM_IO_OFFLINE options in namelist
---------------------------------------
-
-``XTSTEP_OUTPUT`` defines the timestep (in seconds) of the outputs. ``XTSTEP_OUTPUT=21600`` means that you'll have diagnostics every 6 hours in your PRO file.
-
-It is possible to compress the netcdf PRO file: ``NOUTPUT_NETCDF = 4`` (the output file is a NetCDF4-classic format, the default is NetCDF3 format) and ``NCOMPRESS_NETCDF = 1`` (the level of compression is 1, this is the default).
-
-By default, the FORCING file is read every timestep. In order to decrease the I/O time, you can choose to read all forcing datas in one time by setting ``NB_READ_FORC = 1``.
-
 The CSELECT options
 -------------------
 
