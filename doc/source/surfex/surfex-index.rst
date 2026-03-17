@@ -14,8 +14,8 @@ SURFEX informations
    :maxdepth: 1
 
    Installation of SURFEX <surfex-install.rst>
-   Run a SURFEX-Crocus simulation <surfex-run.rst>
-   Running SURFEX on Meteo-France HPC <surfex-hpc.rst>
+   Run a SURFEX-Crocus PC simulation <surfex-run.rst>
+   Run a SURFEX-Crocus HPC simulation <surfex-hpc.rst>
    Common files around SURFEX simulations <surfex-files.rst>
    Few informations on SURFEX-Crocus simulations <surfex.rst>
    Information for developpers <surfex-dev.rst>

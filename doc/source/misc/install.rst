@@ -57,11 +57,9 @@ Cleaning of old snowtools configuration (PC, HPC, server), go to :ref:`MF-PC-cle
 
 Meteo-France PC, go to :ref:`MF-PC-install`.
 
-Meteo-France HPC, go to :ref:`MF-HPC-install`.
+Meteo-France HPC or Server (SXCEN), go to :ref:`MF-HPC-server-install`.
 
-Meteo-France server (SXCEN for example), go to :ref:`MF-server-install`.
-
-Other computers, go to :ref:`exterior-install`.
+External users out of Meteo-France system, go to :ref:`exterior-install`.
 
 
 .. _MF-PC-cleaning:
@@ -80,6 +78,15 @@ In your ``~/.bashrc`` file, you must **delete** the line
 Please check your ``~/.bash_profile`` and ``~/.profile`` files in they exist.
 
 You have to be sure this line is **deleted.**
+
+You can check the deletion with
+
+.. code-block:: bash
+    
+     source ~/.bashrc # or ~/.bash_profile or ~/.profile depending on where the PYTHONPATH was
+     echo $PYTHONPATH
+
+You must not see snowtools inside the result of the ``echo`` command,
 
 USER environment (PC, server)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -147,6 +154,7 @@ Now, source your ``.bashrc`` file in order to take these aliases into account.
 
 Install
 ^^^^^^^
+
 .. code-block:: bash
  
     cd $SNOWTOOLS_CEN
@@ -158,44 +166,78 @@ Install
 
 And that's it. Now, you have snowtools installed in your git repository ``~/all_git_repo/snowtools`` and a virtual environment associated ``~/my_envs/snowtools_env``
 
-.. _MF-HPC-install:
+In order to launch a simulation, you'll do the following step:
 
-Install Snowtools on Meteo France HPC
--------------------------------------
-Sync Snowtools
-^^^^^^^^^^^^^^
-In order to install snowtools on Belenos, run this command **on your PC** to synchronise your snowtools repository:
+* activate the virtual environment spectific to snowtools
+* use the ``s2m`` command
+* deactivate the virtual environment
+
+All this is explained in the page :ref:`surfex_PC_simu`
+
+.. _MF-HPC-server-install:
+
+Install Snowtools on Meteo France HPC Belenos or Server (SXCEN)
+---------------------------------------------------------------
+Sync Snowtools on Belenos or SXCEN
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In order to install snowtools on a distant server (SXCEN or Belenos), run this command **on your PC** to synchronise your snowtools repository:
 
 .. code-block:: bash
-    
+
+    # For Belenos
     $SNOWTOOLS_CEN/cenutils/put snowtools belenos
 
-Environment
-^^^^^^^^^^^
-As in the personal computer case, set an environment variable pointing to the snowtools repository in your Belenos ``~/.bashrc`` file:
+    # For SXCEN
+    $SNOWTOOLS_CEN/cenutils/put snowtools sxcen
+
+**FOR BELENOS ONLY:** Environment and start installation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+As in the personal computer case, set an environment variable pointing to the snowtools repository in **Belenos** ``~/.bashrc`` file
 
 .. code-block:: bash
 
-   export SNOWTOOLS_CEN=/{path_to_snowtools_repository}/snowtools
+    export SNOWTOOLS_CEN=~/all_git_repo/snowtools
 
-And source this
+**NB:** if you have choosen to install your git repository in other place, you must set ``export SNOWTOOLS_CEN=/{path_to_snowtools_repository}/snowtools``
+
+Source the ``~/.bashrc`` file and start installation
 
 .. code-block:: bash
 
-   source ~/.bashrc
+    source ~/.bashrc
+    cd $SNOWTOOLS_CEN
+    module load python 3.10.12
 
-Start installation on Belenos
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**FOR SXCEN ONLY:** Environment and start installation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+As in the personal computer case, set an environment variable pointing to the snowtools repository in **SXCEN** ``~/.bashrc`` file
+
+.. code-block:: bash
+
+    export SNOWTOOLS_CEN=~/all_git_repo/snowtools
+    alias python=python3
+    # it allows SXCEN to always use the last version of python
+
+**NB:** if you have choosen to install your git repository in other place, you must set ``export SNOWTOOLS_CEN=/{path_to_snowtools_repository}/snowtools``
+
+Source the ``~/.bashrc`` file and start installation
+
+.. code-block:: bash
+
+    source ~/.bashrc
+    cd $SNOWTOOLS_CEN
+
+Continue installation for Belenos and SXCEN
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. code-block:: bash
  
-    cd $SNOWTOOLS_CEN
-    module load python 3.12.12
     python -m venv --system-site-packages ~/my_envs/snowtools_env
     source ~/my_envs/snowtools_env/bin/activate
     python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e
 
-Temporary step
-^^^^^^^^^^^^^^
+Temporary step for Belenos and SXCEN
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Configure gitlab for HPC via SSH using the documentation (in french):
 
 http://confluence.meteo.fr/display/~thomas.carrel-billiard@meteo.fr/Configurer+GitLab
@@ -210,13 +252,13 @@ Then clone the following repositories
     git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-olive.git
 
 Install the repositories
+
 .. code-block:: bash
 
     pip install mkjob/ vortex-gco/ vortex-olive/
 
-Package installation
-^^^^^^^^^^^^^^^^^^^^
 Install vortex-cen
+
 .. code-block:: bash
 
     pip install --upgrade setuptools
@@ -224,73 +266,139 @@ Install vortex-cen
     pip install --no-build-isolation -e .
 
 Vortex Configuration
-^^^^^^^^^^^^^^^^^^^^
+
 .. code-block:: bash
 
     mkdir ~/.vortex.d/
     cd ~/.vortex.d/
-    ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_{server}.toml vortex.toml
 
-.. note::
-    What do we do of: you must load python version 3.10.12 or 3.12.12. (just for simulation launch, in .bashrc ?)
-    Référence to installation of Vortex ? obsolete ?
-    Add deactivate to finish (we activate and deactivate in each simulation)
+    # For Belenos
+    ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_belenos.toml vortex.toml
 
-That's it, now snowtools is installed on Meteo France HPC belenos.
+    # For SXCEN
+    ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_sxcen.toml vortex.toml
 
-.. _MF-server-install:
-
-Install Snowtools on Meteo France server SXCEN
-----------------------------------------------
-In order to install snowtools on a remote server, sync your snowtools repository on this server:
+Deactivate virtual environment
 
 .. code-block:: bash
 
-    $SNOWTOOLS_CEN/cenutils/put snowtools sxcen
+    deactivate
 
-In order to always use the last version of python in SXCEN, add to your ``.bashrc`` file:
+That's it, now snowtools is installed on Meteo France HPC belenos or on Meteo France server SXCEN.
 
-.. code-block::bash
-
-    alias python=python3
-
-Start installation on sxcen
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. code-block:: bash
- 
-    cd ~/all_git_repo/snowtools
-    python -m venv --system-site-packages ~/my_envs/snowtools_env
-    source ~/my_envs/snowtools_env/bin/activate
-    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e
-
-.. note::
-    How do the rest of the installation follow ?
-    Total copy of belenos installation ? 
-
-
+In order to launch a simulation, just follow :ref:`surfex_HPC_simu`
 
 .. _exterior-install:
 
-Install Snowtools out of Meteo France system
---------------------------------------------
+Install Snowtools for external users
+------------------------------------
 
 Dependencies
 ^^^^^^^^^^^^
-The whole project requires at least python 3.6 and classical scientific packages (``numpy``, ``netCDF4``...). Some specific parts of the code (especially tests, scores, documentation generation require an extended set of dependencies that are fully described in ``requirements.txt``. The vortex toolbox is also needed for run on Meteo-France super-computers.
+The whole project requires at least python 3.6 and classical scientific packages (``numpy``, ``netCDF4``...).
+Some specific parts of the code (especially tests, scores, documentation generation require an extended set of dependencies that are fully described in ``requirements.txt``.
+The installation is based on pip embedded in an internal tool.
 
+Clone the git repository
+^^^^^^^^^^^^^^^^^^^^^^^^
+We recommand to create a specific folder for all your git repositories:
 
-Install dependencies with pip
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Most of the packages can easily be installed in a virtual environment with ``pip`` (for instance with ``pip install -r requirements.txt``). This is useless if you plan to then install snowtools with  ``pip``.
+.. code-block:: bash
 
-Only GDAL python binding need to be installed manually to be installed consistently with your installed ``libgdal-dev`` version. Please install before the system packages ``ligdal`` and ``libgdal-dev`` (or similar) and run: ``pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="$(gdal-config --cflags)"``.
+    mkdir ~/all_git_repo
+    cd ~/all_git_repo
 
-.. note::
-    How do the rest of the installation follow ?
-    More or less copy of Meteo France PC installation ? 
+Then you can clone snowtools
+
+.. code-block:: bash
+
+   git clone git@github.com:UMR-CNRM/snowtools.git
+
+Environment and aliases
+^^^^^^^^^^^^^^^^^^^^^^^
+Set an environment variable pointing to the snowtools repository in your ``~/.bashrc`` file:
+
+.. code-block:: bash
+
+   export SNOWTOOLS_CEN=~/all_git_repo/snowtools
+
+**NB:** Of course, if you have choosen to install your git repository in other place, you must set ``export SNOWTOOLS_CEN=/{path_to_snowtools_repository}/snowtools``
+
+It is also recommended to create useful aliases in the ``~/.bashrc`` file:
+
+.. code-block:: bash
+
+   alias s2m="python $SNOWTOOLS_CEN/snowtools/tasks/s2m_command.py"
+   alias proplotter="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/proplotter.py"
+   alias procompare="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/procompare.py"
+   alias put="$SNOWTOOLS_CEN/cenutils/put"
+   alias install_snowtools="python3 $SNOWTOOLS_CEN/cenutils/install_snowtools.py"
+
+Now, source your ``.bashrc`` file in order to take these aliases into account.
+
+.. code-block:: bash
+
+   source ~/.bashrc
+
+Install
+^^^^^^^
+
+.. code-block:: bash
+ 
+    cd $SNOWTOOLS_CEN
+    git checkout dev
+    python -m venv ~/my_envs/snowtools_env
+    source ~/my_envs/snowtools_env/bin/activate
+    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -o all -e
+    deactivate
+
+And that's it. Now, you have snowtools installed in your git repository ``~/all_git_repo/snowtools`` and a virtual environment associated ``~/my_envs/snowtools_env``
+
+In order to launch a simulation, you'll do the following step:
+
+* activate the virtual environment spectific to snowtools
+* use the ``s2m`` command
+* deactivate the virtual environment
+
+All this is explained in the page :ref:`surfex_PC_simu`
 
 
 .. _virtual_env:
 
 Few infos on virtual environments
 ---------------------------------
+When you are using specific Python libraries in a project, you can have dependencies between some versions of different libraries.
+When, like in snowtools package, your project is growing, it is interesting to trace and freeze which version of each library you're using.
+Furthermore, in order to avoid interaction with the global Python installation of the user, virtual environment is a way to create and use an environment only for this specific project.
+
+The creation of a virtual environment is made by the command
+
+.. code-block:: bash
+ 
+    python -m venv [name_of_env_folder]
+
+You activate the environment with
+
+.. code-block:: bash
+ 
+    source  [name_of_env_folder]/bin/activate
+
+You can install a specific Python library in your virtual environment
+
+.. code-block:: bash
+ 
+    pip install [name_of_package] # After the activation of the virtual environment
+
+:warning: you don't need to do this for snowtools. Only the necessary packages are installed (with the optimal version). If you don't install other packages, you ensure the reproductibility of your work.
+
+You deactivate the environment with
+
+.. code-block:: bash
+ 
+    deactivate
+
+And that's all. Activate before using your project and deactivate after, in this way, you ensure reproductibility and stability.
+
+More infos on https://docs.python.org/3/tutorial/venv.html
+
+If you want to go back to snowtools installation, please follow :ref:`installation_choice`

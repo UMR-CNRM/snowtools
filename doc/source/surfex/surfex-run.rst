@@ -1,6 +1,18 @@
-Run a SURFEX-Crocus simulation
-==============================
+.. _surfex_PC_simu:
 
- Running a SURFEX-Crocus simulation is done with the ``s2m`` command installed with ``snowtools`` python package. Please run ``s2m research --help`` for more details.
+Run a SURFEX-Crocus PC simulation
+=================================
 
- Note that some functions may only be available on supercomputers through the Meteo-France internal vortex toolbox. These functions are clearly identified in the help.
+Running a SURFEX-Crocus simulation ono PC is done with the ``s2m`` command installed with ``snowtools`` python package.
+
+For more details on the ``s2m`` command, please do:
+ 
+.. code-block:: bash
+ 
+    source ~/my_envs/snowtools_env/bin/activate
+    s2m research --help
+    deactivate
+
+**Example of use** in :ref:`surfex-install-first-test`
+
+Note that some functions may only be available on supercomputers through the Meteo-France internal vortex toolbox. These functions are clearly identified in the help.

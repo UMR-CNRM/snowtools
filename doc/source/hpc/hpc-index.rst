@@ -1,15 +1,7 @@
 Meteo France HPC environment
 ============================
 
-In order to work in Meteo France HPC system, you have to install vortex
-
-VORTEX
-------
-
-.. toctree::
-   :maxdepth: 1
-
-   Installation of VORTEX <vortex-install.rst>
+Few infos on how to work in Meteo France HPC system
 
 File Transferts
 ---------------
