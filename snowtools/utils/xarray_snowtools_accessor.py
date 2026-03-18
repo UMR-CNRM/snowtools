@@ -23,8 +23,7 @@ Usage examples
      from snowtools.utils import xarray_snowtools
      import xarray as xr
 
-     ds = xr.open_dataset('INPUT.nc', decode_times=False)
-     ds = xarray_snowtools.preprocess(ds)
+     ds = xr.open_dataset('INPUT.nc', engine='snowtools')
 
 1. Select subset of points from a S2M file in the massif geometry, based on the massif number,
    elevation, slope and aspect
@@ -58,8 +57,7 @@ Usage examples
      from snowtools.utils import xarray_snowtools
      import xarray as xr
      import matplotlib.pyplot as plt
-     ds = xr.open_dataset('PRO_2010080106_2011080106.nc', decode_times=False)
-     ds = xarray_snowtools.preprocess(ds)
+     ds = xr.open_dataset('PRO_2010080106_2011080106.nc', engine='snowtools')
      dszs = ds.semidistributed.sel_points(ZS=2400)
      meanmonthgroup = dszs.groupby("time.month").mean() # mean the variables on a monthly base
      meanmonthgroup.TG1.plot() # choose one variable to plot
@@ -71,8 +69,7 @@ Usage examples
 
      from snowtools.utils import xarray_snowtools
      import xarray as xr
-     ds = xr.open_dataset('PRO_2010080106_2011080106.nc', decode_times=False)
-     ds = xarray_snowtools.preprocess(ds)
+     ds = xr.open_dataset('PRO_2010080106_2011080106.nc', engine='snowtools')
      dszs = ds.semidistributed.sel_points(ZS=2400)
      dszs.resample(time='12h').mean() # time resampling to 12h timestep
 
@@ -85,8 +82,7 @@ Resample Rainf variable from hourly values to daily accumulations, starting at 0
      from snowtools.utils import xarray_snowtools
      import xarray as xr
 
-     ds_hourly = xr.open_dataset('FORCING_test_2d.nc', decode_times=False)
-     ds = xarray_snowtools.preprocess(ds)
+     ds_hourly = xr.open_dataset('FORCING_test_2d.nc', engine='snowtools')
      ds_daily = ds_hourly.Rainf.snowtools.daily_accumulation(start_hour=3)
 
 
@@ -214,8 +210,7 @@ class SnowtoolsAccessor:
 
             from snowtools.utils import xarray_snowtools
             import xarray as xr
-            ds=xr.open_dataset('PRO_WJF_2010-2016.nc', decode_times=False)
-            ds = xarray_snowtools.preprocess(ds)
+            ds=xr.open_dataset('PRO_WJF_2010-2016.nc', engine='snowtools')
             stats=ds.snowtools.snow_cover_stats()
 
         :param snow_depth_variable: Name of the variable containing the snow depth (default value for SURFEX outpus)
@@ -243,8 +238,7 @@ class SnowtoolsAccessor:
 
             from snowtools.utils import xarray_snowtools
             import xarray as xr
-            ds = xr.open_dataset('old_PRO_20180807032000_002400.nc', decode_times=False)
-            ds = xarray_snowtools.preprocess(ds)
+            ds = xr.open_dataset('old_PRO_20180807032000_002400.nc', engine='snowtools')
             original = ds.backtrack_preprocess()
 
         """
@@ -268,8 +262,7 @@ class MeteoAccessor(SnowtoolsAccessor):
          from snowtools.utils import xarray_snowtools
          import xarray as xr
 
-         ds = xr.open_dataset('FORCING.nc', decode_times=False)
-         ds = xarray_snowtools.preprocess(ds)
+         ds = xr.open_dataset('FORCING.nc', engine='snowtools')
          ds.meteo.[...]
     """
 
@@ -287,8 +280,7 @@ class SurfexAccessor(SnowtoolsAccessor):
          from snowtools.utils import xarray_snowtools
          import xarray as xr
 
-         ds = xr.open_dataset('PRO.nc', decode_times=False)
-         ds = xarray_snowtools.preprocess(ds)
+         ds = xr.open_dataset('PRO.nc', engine='snowtools')
          ds.surfex.decode_time_variable('time')
     """
 
@@ -332,8 +324,7 @@ class SemiDistributedAccessor(SnowtoolsAccessor):
          from snowtools.utils import xarray_snowtools
          import xarray as xr
 
-         ds = xr.open_dataset('INPUT.nc', decode_times=False)
-         ds = xarray_snowtools.preprocess(ds)
+         ds = xr.open_dataset('INPUT.nc', engine='snowtools')
          ds.semidistributed.sel_points(massif_num=3, ZS=[900, 1800, 2700, 3600], slope=40)
     """
 
@@ -402,22 +393,22 @@ class DistributedAccessor(SnowtoolsAccessor):
     """
     Additionnal methods in distributed geometry (ex: EDELWEISS)
 
-    Usage example:
-
-    .. code-block:: python
-
-         from snowtools.utils import xarray_snowtools
-         import xarray as xr
-
-         ds = xr.open_dataset('INPUT.nc', decode_times=False)
-         ds = xarray_snowtools.preprocess(ds)
-         ds.distributed.proj("EPSG:4326", "EPSG:2154")
     """
 
     def proj(self, crs_in="EPSG:4326", crs_out="EPSG:2154"):
         """
         Projection of an xarray dataset or dataarray into a new CRS.
         This method implies a dependency to rioxarray.
+
+        Usage example:
+
+        .. code-block:: python
+
+             from snowtools.utils import xarray_snowtools
+             import xarray as xr
+
+             ds = xr.open_dataset('INPUT.nc', engine='snowtools')
+             ds.distributed.proj("EPSG:4326", "EPSG:2154")
 
         :param ds: xarray object to preprocess
         :type ds: xarray Dataset or Dataarray
@@ -436,6 +427,49 @@ class DistributedAccessor(SnowtoolsAccessor):
         self.ds.rio.set_spatial_dims(x_dim='xx', y_dim='yy', inplace=True)
         self.ds.rio.write_crs(crs_in, inplace=True)
         out = self.ds.rio.reproject(crs_out).rename(x='xx', y='yy')
+
+        return out
+
+    def sel_stations(self, lons, lats, station_numbers=None, x_dim='longitude', y_dim='latitude', method='nearest'):
+        """
+        Method used to select a list of points defined by their coordinates from a dataset in a distributed geometry.
+        By default, the extracted value comes from the nearest pixel. This default behavior can be modified with
+        the 'method' arguments, equivalent to the one in the xarray native 'sel' method.
+
+        .. code-block:: python
+            from snowtools.utils import xarray_snowtools
+            import xarray as xr
+
+            df = pd.read_csv('liste_stations.txt')
+            ds = xr.open_dataset('INPUT_2D.nc', engine='snowtools')
+            ds.distributed.sel_stations(df.lons.values, df.lats.values, station_numbers=df.num_poste.values)
+
+        :param lons: List of longitudes of the points to be extracted
+        :param lons: array_like
+        :param lats: List of latitudes of the points to be extracted
+        :param lats: array_like
+        :param station_numbers: List of station numbers to use as new coordinate
+        :param station_numbers: array_like
+        :param x_dim: Name of the 'X' dimension in the dataset
+        :param x_dim: str
+        :param y_dim: Name of the 'Y' dimension in the dataset
+        :param y_dim: str
+        :param method: Method to use for inexact matches (see xarray 'sel' method)
+        :param method: str
+
+        """
+        import numpy as np
+
+        out = self.ds.sel(
+            {
+                x_dim: xr.DataArray(np.array(lons), dims='station'),
+                y_dim: xr.DataArray(np.array(lats), dims='station'),
+            },
+            method = method,
+        )
+
+        if station_numbers is not None:
+            out['station'] = station_numbers
 
         return out
 
