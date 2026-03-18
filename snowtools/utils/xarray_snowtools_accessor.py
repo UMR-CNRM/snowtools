@@ -101,6 +101,7 @@ Informations on the list of xarray function/method considered public API can be 
 
 from typing import Union
 
+import numpy as np
 import xarray as xr
 
 
@@ -458,7 +459,6 @@ class DistributedAccessor(SnowtoolsAccessor):
         :param method: str
 
         """
-        import numpy as np
 
         out = self.ds.sel(
             {
@@ -562,14 +562,14 @@ class DistributedAccessor(SnowtoolsAccessor):
                 raise ValueError(f'Could not interpret argument members ({members}). '
                                  'Should be an interger, "mean" or "all".')
 
-                field.load()
+            field.load()
 
-                if vmin is None:
-                    vmin = field.min().data
-                if vmax is None:
-                    vmax = field.max().data
-                gridlines = projection is not None
-                im = plot2D.plot_field(field, vmin=vmin, vmax=vmax, cmap=cmap, dem=dem,
-                              isolevels=isolevels, gridlines=gridlines, projection=projection)
+            if vmin is None:
+                vmin = field.min().data
+            if vmax is None:
+                vmax = field.max().data
+            gridlines = projection is not None
+            im = plot2D.plot_field(field, vmin=vmin, vmax=vmax, cmap=cmap, dem=dem,
+                          isolevels=isolevels, gridlines=gridlines, projection=projection)
 
-                return im
+            return im
