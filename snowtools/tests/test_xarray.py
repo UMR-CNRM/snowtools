@@ -240,6 +240,12 @@ class Test_distributed_accessor(unittest.TestCase):
         out = self.ds_2D.DSN_T_ISBA.distributed.proj(crs_in=2154, crs_out=4326)
         self.assertEqual(out.rio.crs.to_string(), 'EPSG:4326')
 
+    def test_sel_stations(self):
+        out = self.ds_2D.distributed.sel_stations(lons=[569700, 570000], lats=[6187000, 6187200],
+                x_dim='xx', y_dim='yy')
+        # Test if the "station" dimension has been created and its length is 2.
+        self.assertEqual(len(out.station), 2)
+
     @classmethod
     def tearDownClass(cls):
         cls.ds_2D.close()
