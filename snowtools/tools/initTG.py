@@ -17,9 +17,9 @@ import netCDF4
 from snowtools.utils.prosimu import prosimu_auto
 from snowtools.utils.resources import get_file_period, save_file_const
 from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask
-from snowtools.utils.FileException import DirFileException
+from snowtools.utils.FileException import DirFileException, FileNameException
 from snowtools.tools.execute import callSurfexOrDie
-from snowtools.DATA import SNOWTOOLS_DIR
+from snowtools.DATA import SNOWTOOLS_DIR, INTERPOL_BIN_CEN
 
 
 def create_env(diroutput):
@@ -79,7 +79,18 @@ def get_meteo_for_clim(forcingpath, datebegin, dateend, geolist, list_forcing=[]
             os.rename("FORCING.nc", "input.nc")
             if not os.path.islink('GRID.nc'):
                 os.symlink(geolist[0], "GRID.nc")
-            callSurfexOrDie(SNOWTOOLS_DIR + "/interpolation/interpol", moderun='MPIRUN', nproc=4)
+            elif os.getenv('SNOWTOOLS_INTERPOL') is not None and os.path.isfile(os.getenv('SNOWTOOLS_INTERPOL')):
+                bin_interpol = os.getenv('SNOWTOOLS_INTERPOL')
+            elif os.path.isfile(INTERPOL_BIN_CEN):
+                bin_interpol = INTERPOL_BIN_CEN
+            elif os.path.isfile(os.path.join(SNOWTOOLS_DIR, 'interpolation', 'interpol')):
+                bin_interpol = os.path.join(SNOWTOOLS_DIR, 'interpolation', 'interpol')
+            else:
+                raise FileNameException(
+                    'interpol binary not found in current directory '
+                    'nor defined with SNOWTOOLS_INTERPOL environment variable. '
+                    'Please check you have compiled interpol binary.')
+            callSurfexOrDie(bin_interpol, moderun='MPIRUN', nproc=4)
             os.rename("output.nc", "FORCING.nc")
         else:
             os.rename("FORCING.nc", "FORCING_base.nc")
