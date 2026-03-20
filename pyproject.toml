@@ -55,6 +55,7 @@ Repository = "https://github.com/UMR-CNRM/snowtools"
 [project.scripts]
 s2m = 'snowtools.tasks.s2m_command:main'
 proplotter = 'snowtools.plots.stratiprofile.proplotter:main'
+mapplotter = 'snowtools.plots.maps.mapplotter:main'
 procompare = 'snowtools.plots.stratiprofile.procompare:main'
 
 [project.entry-points."xarray.backends"]

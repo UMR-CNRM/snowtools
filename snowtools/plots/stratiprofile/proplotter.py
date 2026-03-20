@@ -5,6 +5,8 @@ import logging
 import argparse
 import textwrap
 
+from snowtools.utils.dates import check_and_convert_date
+
 TYPES_GRAPH = ['standard', 'multiple profil', 'multiple saison', 'height', 'member profil', 'member saison', 'compare']
 
 version = '1.0'
@@ -67,6 +69,13 @@ def main(version=version):
 # Argument interpretation
     arguments = {'type': args.type, }
 
+    begin = None
+    if args.begin is not None:
+        begin = check_and_convert_date(args.begin)
+    end = None
+    if args.end is not None:
+        end = check_and_convert_date(args.end)
+
     if len(args.filename) > 0:
         from snowtools.plots.stratiprofile import proreader
         fileobj = proreader.read_file(args.filename)
@@ -120,7 +129,8 @@ def main(version=version):
         fig = plt.Figure()
         axs = proplotter_functions.create_axis_for_figure(fig, 1)
         # TODO: Implement additional options argument (tile)  <06-02-24, Léo Viallon-Galinier> #
-        data = proplotter_functions.get_data(fileobj, point, variable['name'])  # additional_options=additional_options)
+        data = proplotter_functions.get_data(fileobj, point, variable['name'], begin=begin, end=end)
+        # additional_options=additional_options)
         args_plot = proplotter_functions.give_master_args_std(axs['ax1'], data)
         proplotter_functions.masterfig(**args_plot)
         fig.savefig(args.output)

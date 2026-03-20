@@ -11,7 +11,7 @@ The GUI proplotter have to be manually tested before any commit. Here is a possi
     - Click OK
     - Check the filename if well indicated in the status bar and next to the open button
 3. Select variable SSA and Temperature
-    - Check the plot button become red
+    - Check the plot button become red as soon as one variable is changed
 4. Select point
     - Select elevation 2400m
     - Click Plot: should have an error "too much points".
@@ -50,6 +50,8 @@ The GUI proplotter have to be manually tested before any commit. Here is a possi
 17. Plot
     - Plot button
     - Use the slicer to go to 2019-12-24
+    - Check the slicer correctly print date
+    - Go to the next timestep, next day and next month and come back to 2019-12-24
     - Check right graph
     - Right click to stop animation
     - Right click again should restore the animation
