@@ -11,7 +11,7 @@ The GUI proplotter have to be manually tested before any commit. Here is a possi
     - Click OK
     - Check the filename if well indicated in the status bar and next to the open button
 3. Select variable SSA and Temperature
-    - Check the plot button become red
+    - Check the plot button become red as soon as one variable is changed
 4. Select point
     - Select elevation 2400m
     - Click Plot: should have an error "too much points".

@@ -29,7 +29,7 @@ from snowtools.plots.maps.quicklookmap import read_and_preprocess, wind_map, dif
 CFEATURES = [f for f in dir(cf) if all([c.isupper() for c in f])]
 """Cartopy features"""
 
-def main(filename,
+def main_cli(filename,
          fid=None,
          Ufid=None,
          Vfid=None,
@@ -222,8 +222,7 @@ def main(filename,
 # end of main() ###############################################################
 
 
-if __name__ == '__main__':
-
+def main():
     # 1. Parse arguments
     ####################
     parser = argparse.ArgumentParser(
@@ -404,7 +403,7 @@ if __name__ == '__main__':
 
     # 3. Main
     #########
-    main(args.filename,
+    main_cli(args.filename,
          fid=args.field,
          Ufid=args.Ucomponentofwind,
          Vfid=args.Vcomponentofwind,
@@ -441,3 +440,5 @@ if __name__ == '__main__':
          outputfilename=args.outputfilename)
 
 
+if __name__ == '__main__':
+    main()

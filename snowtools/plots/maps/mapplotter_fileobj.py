@@ -306,7 +306,7 @@ class proreader(reader):
         """
         return {k: {'name': k,
                     'type': 'int',
-                    'limits': [0, v['len']],
+                    'limits': [0, v['len'] - 1],
                     'default_value': 0}
                 for k, v in self._additional_choices.items()}
         # return {'tile': {'name': 'Patch (tile)',
