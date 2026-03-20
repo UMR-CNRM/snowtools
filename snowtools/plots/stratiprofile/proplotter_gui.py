@@ -756,7 +756,10 @@ class ProPlotterControllerSlider(ProPlotterController):
         if 'ax3' in self.master.main.ax and self.master.main.ax['ax3'] is not None:
             self.master.main.ax['ax3'].clear()
 
-        proplotter_functions.masterfig(**self.give_master_args())
+        if self.data == {}:
+            pass
+        else:
+            proplotter_functions.masterfig(**self.give_master_args())
 
         self.master.main.update()
 

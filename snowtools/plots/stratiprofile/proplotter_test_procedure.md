@@ -71,3 +71,32 @@ The GUI proplotter have to be manually tested before any commit. Here is a possi
     - Should open point 128
 2. Check right and left graphs
 3. Quit using ESC key
+
+## Test 3 : Escroc plot
+
+1. Open a file
+    - `proplotter -v SNOWSSA -p SNOWTEMP /rd/cenfic3/cenmod/home/viallonl/testbase/PRO/ensemble/mb0002/pro/PRO_2016080106_2017080106.nc`
+2. Choose Point nr to be at 0 (it should fill the latitude and longitude values)
+3. Change Graph type to be Escroc Profil
+4. Plot (the plot is empty)
+5. Move the date slicer around the middle of the bar
+6. Check left and right graphs
+7. Test freezing graph with right click
+7. Change Graph type to Escroc Season (the plot disappear)
+8. Plot (nothing on the left, right graph = season profil)
+9. Check that if you move on the left (slowly), the graph season is changing in the right
+10. Move the slicer in order to have something on the left graph
+11. Check that if you change bar in the left graph, the right graph is changing (beware to the lag)
+12. Test zoom then Quit
+
+## Test 4 : Mapplotter plot
+
+1. Open mapplotter with `python mapplotter.py`
+2. Choose file `/rd/cenfic3/cenmod/home/viallonl/testbase/PRO/PRO_2014080106_2015010106_grille2d.nc`
+3. Choose snow layer specific surface area for Variable
+4. Choose first Number_of_Patches ans third snow_layer
+5. Move the slicer nearly at the end (december the 19th)
+6. Plot
+7. Check the Day and Month functionalities of the slicer (add a day, change one timestep with + ou -)
+8. Plot after each change of date
+9. Change variable (Total_snow_depth) and Plot then Quit
