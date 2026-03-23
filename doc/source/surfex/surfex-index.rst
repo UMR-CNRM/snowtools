@@ -16,7 +16,7 @@ SURFEX informations
    Installation of SURFEX <surfex-install.rst>
    Run a SURFEX-Crocus simulation <surfex-run.rst>
    Running SURFEX on Meteo-France HPC <surfex-hpc.rst>
-   Common files around SURFEX simulations <surfex-files.rst>
+   Common files around SURFEX simulations (Namelist, Forcing) <surfex-files.rst>
    Few informations on SURFEX-Crocus simulations <surfex.rst>
    Information for developpers <surfex-dev.rst>
 

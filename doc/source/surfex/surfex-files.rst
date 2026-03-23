@@ -1,5 +1,5 @@
-Common files around snow cover simulations
-===========================================
+Infos on Namelist and Forcing:
+==============================
 Namelist
 --------
 The namelist is a text file describing the main characteristics of the simulation.
@@ -53,9 +53,21 @@ For information, SAFRAN are stored in the following directories:
 - ``/home/lafaysse/vortex/s2m/DOM_flat/reanalysis/meteo`` contains SAFRAN reanalysis for all massifs over flat area
 - ``/home/lafaysse/vortex/s2m/postes/reanalysis/meteo`` contains SAFRAN reanalysis for all stations (include topographic corrections of radiations)
 
-If you have to create your own forcing files, please have a look to the ``FORCING_test_base.nc`` file provided in the ``snowtools/DATA`` folder and follow the same structure (same variable names and ranks, same dimensions). All variables are mandatory. CO2air and Wind_DIR have no impact in the case of snow and can be fixed to a constant value. If you do not have distinct data for diffuse and direct solar radiations, you can put everything in the direct radiation for applications not sensitive to this separation (with Crocus, only TARTES and MEB options are sensitive but they are not activated by default).
+Creation of FORCING files:
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you have datas from an observation site in .csv or in .txt format and if you want to create only one or a few FORCING files, then have a look to ``snowtools/scripts/create_forcing/Template_creation_FORCING.py``. If your datas are available only every 3h for example, you have to set the variable FORC_TIME_STP to 10800 instead of 3600 in the FORCING file.
+If you have to create your own forcing files, there are several possibilities depending on your situation:
+
+* You can create one FORCING files from datas from an observation site in .csv or in .txt: look to ``snowtools/scripts/create_forcing/Template_creation_FORCING.py``
+* You can interpolate the SAFRAN reanalysis for point simulations or for 2D simulations: look to :ref:`interpolation`.
+* (Not recommanded) you can create a FORCING file from scratch:
+    - you must follow the same structure (same variable names and ranks, same dimensions) as an example file
+    - all variables are mandatory (CO2air and Wind_DIR have no impact in the case of snow and can be fixed to a constant value)
+    - if you do not have distinct data for diffuse and direct solar radiations, you can put everything in the direct radiation for applications not sensitive to this separation (with Crocus, only TARTES and MEB options are sensitive but they are not activated by default).
+    - example for point simulations: ``FORCING_test_base.nc`` file provided in the ``snowtools/DATA`` folder
+    - example for 2D simulations: ``FORCING_test_2D.nc`` available in Meteo France system in ``/rd/cenfic3/cenmod/home/viallonl/testbase/FORCING`` folder
+
+NB: If your datas are available only every 3h for example, you have to set the variable FORC_TIME_STP to 10800 instead of 3600 in the FORCING file.
 
 Other files
 -----------

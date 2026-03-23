@@ -438,6 +438,7 @@ class DistributedAccessor(SnowtoolsAccessor):
         the 'method' arguments, equivalent to the one in the xarray native 'sel' method.
 
         .. code-block:: python
+
             from snowtools.utils import xarray_snowtools
             import xarray as xr
 
