@@ -211,47 +211,43 @@ Only Météo-France users who need to either extract operational S2M files eithe
 Spatial interpolator for SAFRAN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**On Meteo-France super-computers**, a precompiled binary is provided in the CEN uenv environment. Therefore, this step is not required unless you need to modify the interpolation software.
-If you want to use your own version :
+- **On Meteo-France super-computers**, a precompiled binary is provided in the CEN uenv environment.
+- **On your PC at CEN**, a pre-compiled binary is also provided on shared filesystems.
+- **Otherwise** (or if you want to use a custom version, e.g. for development) you will need to compile the ``interpol`` binaty and set the environment variable ``SNOWTOOLS_INTERPOL`` to point to the location of the interpol compiled binary. To do so, the procedure is detailed below.
+
+To compile the interpol binary:
+
+1. go into the ``snowtools/interpolation`` folder
+2. On Meteo-France HPC only, load the necessary modules :
 
 .. code-block:: bash
 
-   cd $SNOWTOOLS_CEN/snowtools/interpolation/
    module purge
-   module load intel
+   moudle load intel
    module load intelmpi
 
-   ln -sf Makefile_belenos Makefile
-   make
+3. On external PC only (outside of Meteo-France), you need to have a Fortran90 compiler, a MPI compiler, openmpi, netcdf-parallel and netcdff libraries with headers availables. On Ubuntu, it means installing the following packages : ``build-essential libopenmpi-dev libnetcdf-mpi-dev libnetcdff-dev``.
 
-Running the code does not require any module load command. It is much safer to purge all modules before running.
-Do never add module load commands in your .bashrc or .bash_profile files to avoid very tricky bugs.
-Do absolutely never load netcdf module before running the code as this would load conflictual library versions with the ones used for compilation
+4. Remove Makefile if defined with ``rm Makefile`` and then link to the correct one depending on your situation:
 
-**On your PC**, if you need the interpolation software of SAFRAN meteorological fields on list of points or regular grids, you need to compile the corresponding Fortran application even if you do not modify the code:
+   - On Meteo-France HPC : ``ln -s Makefile_belenos Makefile``
+   - On Meteo-France PC : ``ln -s Makefile_pc_mf Makefile``
+   - On external PC : ``ln -s Makefile_pc_nomf Makefile``
 
-.. code-block:: bash
+5. You just have to run ``make``. That's all. You now have an ``interpol`` binary in the current folder.
 
-   cd $SNOWTOOLS_CEN/snowtools/interpolation/
-   ln -s Makefile_pc Makefile
-   make
-
-At CEN, Netcdf with parallel support must be installed in /opt/netcdf4-parallel
-(ask Cyril if not available)
-
-.. [#footnote1] To generate a new ssh key, go to your ``~/.ssh`` folder (create if it does not exist) and run ``ssh-keygen -t rsa -b 4096 -f github``. You will be asked for an optional password to protect your key. Once created, go to your `github account, section SSH keys <https://github.com/settings/keys>`_, click on "add a SSH key" and copy the content of the file ``~/.ssh/github.pub`` in the "key" field.
-    You may need to run
-
-.. code-block:: bash
-
-    eval `ssh-agent -s`
-    ssh-add ~/.ssh/github
-
-on your computer in order to define the key location on your computer.
 
 CRPS scores
 ^^^^^^^^^^^
 If you need to use CRPS scoring tools, which parts are written in Fortran, you need to compile them.
 
 For CRPS scores, go to the ``snowtools/scores``, and run ``./install_ubuntu.sh`` (or ``./install_belenos.sh`` if you are on a Meteo-France super computer).
+
+.. [#footnote1] To generate a new ssh key, go to your ``~/.ssh`` folder (create if it does not exist) and run ``ssh-keygen -t rsa -b 4096 -f github``. You will be asked for an optional password to protect your key. Once created, go to your `github account, section SSH keys <https://github.com/settings/keys>`_, click on "add a SSH key" and copy the content of the file ``~/.ssh/github.pub`` in the "key" field.
+    You may had to add to your ``.ssh/config`` the following lines:
+
+    .. code-block::
+
+        Host github.com
+            IdentityFile ~/.ssh/github
 
