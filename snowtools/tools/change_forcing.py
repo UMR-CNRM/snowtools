@@ -187,7 +187,10 @@ class forcinput_applymask(forcinput_tomerge):
 
     def compute_solar_radiations(self, time, savevar, i):
         if "station" + str(i) in list(savevar.keys()):
-            INFO = infomassifs()
+            if os.path.isfile('SKYLINE.xml'):
+                INFO = infomassifs('SKYLINE.xml')
+            else:
+                INFO = infomassifs()
             list_list_azim = []
             list_list_mask = []
             print("ACCOUNT FOR SURROUNDING MASKS FOR THE FOLLOWING STATIONS:")

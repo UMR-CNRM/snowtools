@@ -335,7 +335,7 @@ class interpolrun(surfexrun):
         if not os.path.islink('GRID.nc'):
             os.symlink(args[0], "GRID.nc")
         # found interpol binary
-        elif os.getenv('SNOWTOOLS_INTERPOL') is not None and os.path.isfile(os.getenv('SNOWTOOLS_INTERPOL')):
+        if os.getenv('SNOWTOOLS_INTERPOL') is not None and os.path.isfile(os.getenv('SNOWTOOLS_INTERPOL')):
             bin_interpol = os.getenv('SNOWTOOLS_INTERPOL')
         elif os.path.isfile(INTERPOL_BIN_CEN):
             bin_interpol = INTERPOL_BIN_CEN

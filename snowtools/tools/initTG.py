@@ -79,7 +79,7 @@ def get_meteo_for_clim(forcingpath, datebegin, dateend, geolist, list_forcing=[]
             os.rename("FORCING.nc", "input.nc")
             if not os.path.islink('GRID.nc'):
                 os.symlink(geolist[0], "GRID.nc")
-            elif os.getenv('SNOWTOOLS_INTERPOL') is not None and os.path.isfile(os.getenv('SNOWTOOLS_INTERPOL')):
+            if os.getenv('SNOWTOOLS_INTERPOL') is not None and os.path.isfile(os.getenv('SNOWTOOLS_INTERPOL')):
                 bin_interpol = os.getenv('SNOWTOOLS_INTERPOL')
             elif os.path.isfile(INTERPOL_BIN_CEN):
                 bin_interpol = INTERPOL_BIN_CEN
