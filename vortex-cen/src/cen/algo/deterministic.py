@@ -320,10 +320,13 @@ class Interpol_Forcing(Parallel):
         list_forcings = [x.rh for x in self.context.sequence.effective_inputs(role='Forcing')]
 
         self.algoassert(len(list_forcings) >= 1)
+        print([forcing.container.filename for forcing in list_forcings])
 
         for forcing in list_forcings:
+            print(forcing.container.filename)
             self.system.mv(forcing.container.filename, 'input.nc')
             super().execute(rh, opts)
+            print(forcing.container.filename)
             self.system.mv('output.nc', forcing.container.filename)
 
 

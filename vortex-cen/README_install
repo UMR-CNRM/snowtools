@@ -30,6 +30,9 @@ install_snowtools -e # the -e option does not work with python 3.7
 # 2. Cloner les dépots :
 cd {any_path}
 git clone git@gitlab.meteo.fr:cnrm-gmap/mkjob.git
+cd mkjob
+git checkout mv-bugfix-target_appbase
+cd ..
 git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-gco.git
 git clone git@gitlab.meteo.fr:cnrm-gmap/vortex-olive.git
 

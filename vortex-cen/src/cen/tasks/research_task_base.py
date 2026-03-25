@@ -197,30 +197,68 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         Implement this method in your task to fetch all resources stored remotely (on Hendrix, sxcen,...) from
         a transfer node.
         """
-        # raise NotImplementedError()
-        pass
+        raise NotImplementedError()
+
 
     def get_local_inputs(self):
         """
         Implement this method in your task to fetch all resources already stored on the local (HPC) cache from a
         compute node.
         """
-        self.get_remote_inputs()  # TODO : check if really necessary / good practice
+        # self.get_remote_inputs()  # TODO : check if really necessary / good practice
+        # TODO: comment SR: definitely a problem: the same file appears twice in the effective input list
+        raise NotImplementedError()
 
     def algo(self):
         """
         Implement this method to call your task's algo component.
         This method should return a valid AlgoComponent object.
         """
-        # raise NotImplementedError()
-        return None
+        raise NotImplementedError("method 'algo' returning a valid AlgoComponent object should be implemented in child class.")
 
     def launch_algo(self, algo, **kw):
         """
-        Run your task's algo component.
+        Implement this method in your task's algo component.
+        The implementation should define how to run the algo component, or call one of the standard
+        methods: `launch_MPI_executable()`, `launch_python_algo()`
+        :param algo: AlgoComponent object
+        :param kw:
+        """
+        raise NotImplementedError("the method 'launch_algo' should be implemented in child class and might call "
+                                  "'launch_MPI_executable()' or 'launch_python_algo()' if appropriate.")
+
+    def launch_MPI_executable(self, algo, mpiopts=None):
+        """
+        Run executable with MPI.
+
+        :param algo: AlgoComponent object
+        :param mpiopts: dict with MPI options nnodes=..., nprocs=..., ntasks=...
+        """
+        # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
+        # vortex.executable(...))
+        # Il est possible de récupérer cet objet avec la ligne suivante :
+        executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
+
+        # MV : Il faudra également pouvoir fournir le nombre de process et le nombre de tâches via le fichier de conf
+        # TODO : réfléchir à la procédure pour définir des valeurs par défaut en fonction du domaine comme c'est
+        # le cas actuellement
+        self.component_runner(algo, executable, mpiopts=mpiopts)
+
+    def launch_executable(self, algo):
+        """
+        run executable without MPI.
+
+        :param algo: AlgoComponent object
+        """
+        executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
+        self.component_runner(algo, executable)
+
+    def launch_python_algo(self, algo, **kw):
+        """
+        Run your task's algo component. For algo components consisting of python code.
         """
         if algo is not None:
-            algo.run()
+            algo.run(**kw)
 
     def put_outputs(self):
         """

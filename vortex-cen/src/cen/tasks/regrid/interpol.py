@@ -45,7 +45,8 @@ class InterpolateS2MForcing(_CenResearchTask):
         get forcing files in the "massif" geometry, output grid file and interpolation binary.
 
         """
-        self.get_forcing(forcing_geometry=self.conf.forcing_geometry, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+        self.get_forcing(forcing_geometry=self.conf.forcing_geometry, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                         alternate=False)
 
         # Target grid file for interpolation
         # the path must be provided in the configuration file
@@ -74,21 +75,35 @@ class InterpolateS2MForcing(_CenResearchTask):
         print(self.ticket.prompt, 'interpolation binary =', bin_interpol_tbx)
         print()
 
+    def get_local_inputs(self):
+        pass
+
     def algo(self):
         """
-
+        Algo component for interpolation of the forcing on a regular grid
         """
-        # Algo component for interpolation of the forcing on a regular grid
         self.sh.title('Toolbox algo interpolation')
         interpolation_tba = vortex.task(
             engine='parallel',
             binary='INTERPOL',
-            kind='deterministic'
+            kind='deterministic',
+            reprod_info=dict(genv=self.conf.genv),
         )
         print(self.ticket.prompt, 'interpolation algo component =', interpolation_tba)
         print()
 
         return interpolation_tba
+
+    def launch_algo(self, algo):
+        """
+        launch the algo component.
+
+        :param algo: Algorithm to be launched.
+        :type algo: AlgoComponent
+        """
+        # mpiopts = dict(nnodes=self.conf.nnodes, nprocs=self.conf.nprocs, ntasks=self.conf.ntasks)
+        # self.launch_MPI_executable(algo, mpiopts=mpiopts)
+        self.launch_executable(algo=algo)
 
     def put_remote_outputs(self):
         """

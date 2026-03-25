@@ -67,3 +67,20 @@ I_MPI_PLATFORM = "uniform"
 I_MPI_SCALABLE_OPTIMIZATION = "0"
 I_MPI_SHM_SPIN_COUNT = "10"
 I_MPI_SPIN_COUNT = "10"
+
+[env]
+stackmult = 16
+omp_stacksize = "4G"
+mpisepselect = 3
+ec_profile_heap = 0
+ec_mpi_atexit = 0
+kmp_blocktime = 12
+omp_wait_policy = "ACTIVE"
+tbb_malloc_use_huge_pages = 1
+mkl_cbwr = "AUTO,STRICT"
+mkl_debug_cpu_type = 5
+mkl_num_threads = 1
+fort_blocksize = 1048576
+fort_buffered = "true"
+malloc_mmap_max_ = 0
+malloc_trim_threshold_ = -1
