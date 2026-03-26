@@ -51,7 +51,7 @@ class Monthly_Surfex_Reanalysis_Sytron(S2MTaskMixIn, Task):
                 role           = 'Forcing',
                 local          = '[geometry::tag]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc' if len(list_geometry) > 1 else 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
                 vapp           = self.conf.vapp,
-                vconf          = '[geometry:area]',
+                vconf          = '[geometry:domain]',
                 block          = block_safran,
                 source_app     = 'arpege' if source_safran == 'safran' else None,
                 source_conf    = '4dvarfr' if source_safran == 'safran' else None,
