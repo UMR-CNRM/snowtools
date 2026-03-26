@@ -1,4 +1,4 @@
-from vortex.layout.nodes import Driver
+from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.init_clim_ground_temperature import \
     InitClimGroundTemperature
 
