@@ -23,7 +23,10 @@ class InitClimGroundTemperature(_CenResearchTask):
 
         self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
 
-    def algo(self) -> AlgoComponent:
+    def get_local_inputs(self):
+        pass
+
+    def algo(self):
         """
         Return an InitClimGroundTemperatureAlgo with the appropriate arguments.
 
@@ -43,6 +46,13 @@ class InitClimGroundTemperature(_CenResearchTask):
         print(self.ticket.prompt, "algo =", algo)
         print()
         return algo
+
+    def launch_algo(self, algo):
+        """
+        Launch an algo component.
+        :param algo: algo component
+        """
+        self.launch_python_algo(algo=algo)
 
     def put_outputs(self):
         """

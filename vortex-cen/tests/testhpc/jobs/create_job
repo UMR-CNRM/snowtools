@@ -1,7 +1,7 @@
 name=init_clim_ground_temperature_job package=drivers task=init_clim_ground_temperature profile=rd-belenos-mt
 name=preprocess_namelist_job package=drivers task=pre_process profile=rd-belenos-mt datebegin=2020080106 dateend=2023080106 xpid=pre_process_namelist
 name=pgd_job package=drivers task=pgd profile=rd-belenos-mt datebegin=2020080106 dateend=2023080106 xpid=pgd
-name=pgd2d_job package=drivers task=pgd profile=rd-belenos-mt datebegin=2020080106 dateend=2023080106 xpid=pgd2d
+name=pgd2d_job package=drivers task=pgd2d profile=rd-belenos-mt datebegin=2020080106 dateend=2023080106 xpid=pgd2d
 name=prep_job package=drivers task=prep profile=rd-belenos-mt datebegin=2020080106 dateend=2023080106 xpid=prep
 name=offline_job package=drivers task=offline profile=rd-belenos-mt datebegin=2020080106 dateend=2023080106 xpid=offline
 name=soda_job package=drivers task=soda profile=rd-belenos-mt date=2022022612 geometry=GrandesRousses250m xpid=assim

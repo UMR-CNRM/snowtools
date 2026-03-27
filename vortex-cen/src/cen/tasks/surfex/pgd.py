@@ -140,12 +140,13 @@ class _Pgd_Construct(_CenResearchTask):
         print()
         return PGD_tba
 
-    def launch_algo(self, algo, **kw):
+    def launch_algo(self, algo):
         """
         Run PGD algo component.
         """
-        executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
-        self.component_runner(algo, executable)
+        self.launch_executable(algo)
+        # executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
+        # self.component_runner(algo, executable)
         #self.component_runner(tbalgo3, tbx2, mpiopts = dict(nnodes=1, nprocs=1, ntasks=1))
         # ntasks = 1 !!!! WTF !!!
 

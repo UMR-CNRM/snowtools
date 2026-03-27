@@ -323,10 +323,8 @@ class Interpol_Forcing(Parallel):
         print([forcing.container.filename for forcing in list_forcings])
 
         for forcing in list_forcings:
-            print(forcing.container.filename)
             self.system.mv(forcing.container.filename, 'input.nc')
             super().execute(rh, opts)
-            print(forcing.container.filename)
             self.system.mv('output.nc', forcing.container.filename)
 
 

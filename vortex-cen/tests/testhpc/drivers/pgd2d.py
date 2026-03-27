@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from vortex.layout.nodes import Driver
+from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.pre_process import Preprocess_Local_Namelist #Preprocess_Uenv_Namelist 
 from vortex_cen.tasks.surfex.pgd import Pgd2D_Local_Pgd #Pgd2D_Uenv_Pgd 
 

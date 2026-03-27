@@ -39,6 +39,9 @@ class _Preprocess(_CenResearchTask):
 
         self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
 
+    def get_local_inputs(self):
+        pass
+
     def algo(self):
         """
         Change the namelist when forcings and namelist are here
@@ -64,6 +67,13 @@ class _Preprocess(_CenResearchTask):
         print(self.ticket.prompt, 'Toolbox algo preprocess =', preprocess_tba)
         print()
         return preprocess_tba
+
+    def launch_algo(self, algo):
+        """
+        Launch an algo component.
+        :param algo: algo component
+        """
+        self.launch_python_algo(algo=algo)
 
     def put_outputs(self):
         """
