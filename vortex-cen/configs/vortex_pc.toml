@@ -1,0 +1,9 @@
+[data-tree]
+rootdir = "/cnrm/cen/users/NO_SAVE/%usr%/"
+op_rootdir = "/chaine/mxpt001/vortex/mtool/cache"
+
+[storage]
+address="hendrix.meteo.fr"
+protocol="ftp"
+rootdir="~%usr%/vortex"
+op_rootdir="/chaine/mxpt/mxpt001/vortex"
