@@ -83,7 +83,7 @@ class InitClimGroundTemperature(_CenResearchTask):
                 role="initial values of ground temperature",
                 kind="climTG",
                 nativefmt="netcdf",
-                local="init_TG.nc",
+                local="init_TG_reference.nc",
                 experiment="reference",
                 username="vernaym",
                 geometry=self.conf.geometry,
