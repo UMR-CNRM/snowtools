@@ -1,4 +1,5 @@
-from vortex import toolbox
+# from vortex import toolbox
+import vortex
 from vortex.algo.components import AlgoComponent
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 
@@ -23,6 +24,25 @@ class InitClimGroundTemperature(_CenResearchTask):
 
         self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
 
+        if 'test' in self.conf and 'localtest' not in self.conf:
+
+            self.sh.title("Toolbox Reference File")
+            reference_file = vortex.input(
+                role="initial values of ground temperature",
+                kind="climTG",
+                nativefmt="netcdf",
+                local="init_TG_ref.nc",
+                experiment="reference",
+                username="vernaym",
+                geometry=self.conf.geometry,
+                model="surfex",
+                namespace="vortex.multi.fr",
+                namebuild="flat@cen",
+                block="prep",
+            ),
+            print(self.ticket.prompt, "reference file =", reference_file)
+            print()
+
     def get_local_inputs(self):
         pass
 
@@ -39,7 +59,7 @@ class InitClimGroundTemperature(_CenResearchTask):
         """
 
         self.sh.title("Toolbox algo")
-        algo = toolbox.algo(
+        algo = vortex.task(
             engine="s2m",
             kind="clim",
         )
@@ -65,8 +85,7 @@ class InitClimGroundTemperature(_CenResearchTask):
         """
 
         self.sh.title("Toolbox output for initial values of ground temperature")
-        init_ground_temperature_out = (
-            toolbox.output(
+        init_ground_temperature_out = vortex.output(
                 role="initial values of ground temperature",
                 kind="climTG",
                 nativefmt="netcdf",
@@ -77,8 +96,7 @@ class InitClimGroundTemperature(_CenResearchTask):
                 namespace="vortex.multi.fr",
                 namebuild="flat@cen",
                 block="prep",
-            ),
-        )
+            )
         print(self.ticket.prompt, "Output init ground temperature =", init_ground_temperature_out)
         print()
 
@@ -87,9 +105,8 @@ class InitClimGroundTemperature(_CenResearchTask):
         Reproductibility test : compare output to reference.
         """
 
-        self.sh.title("Toolbox ")
-        forcing_diff = (
-            toolbox.diff(
+        self.sh.title("Toolbox Reference File")
+        forcing_diff = vortex.diff(
                 role="initial values of ground temperature",
                 kind="climTG",
                 nativefmt="netcdf",
@@ -101,7 +118,6 @@ class InitClimGroundTemperature(_CenResearchTask):
                 namespace="vortex.multi.fr",
                 namebuild="flat@cen",
                 block="prep",
-            ),
-        )
+            )
         print(self.ticket.prompt, "diff forcing =", forcing_diff)
         print()

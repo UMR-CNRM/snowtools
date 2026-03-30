@@ -183,6 +183,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             if 'test' in self.conf and 'localtest' not in self.conf:
                 # In test cases, some diff with reference output could be necessary.
                 # In this case, implement the in the "unittest" method.
+                # import netCDF4
                 with TestReportContext(self, t):
                     self.unittest()
 
