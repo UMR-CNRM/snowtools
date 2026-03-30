@@ -1267,7 +1267,12 @@ class EnsemblePostproc(_EnsembleMassif):
         #: list of percentiles
         self.decile = decile
         if emosmethod:
-            self.emosmethod = emosmethod
+            if emosmethod == 'emos':
+                self.emosmethod = Ensemble.emos_csg_nonorm_allstations_newsnow
+            elif emosmethod == 'quantiles':
+                self.emosmethod = Ensemble.quantile
+            else:
+                raise Exception('EMOS method ' + emosmethod + ' not available')
             self.flipaxis = False
         else:
             self.emosmethod = Ensemble.quantile
