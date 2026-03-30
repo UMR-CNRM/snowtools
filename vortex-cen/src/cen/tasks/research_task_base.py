@@ -178,11 +178,12 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             with OutputReportContext(self, t):
                 self.put_outputs()
 
-            if 'test' in self.conf and 'localtest' not in self.conf:
-                # In test cases, some diff with reference output could be necessary.
-                # In this case, implement the in the "unittest" method.
-                with TestReportContext(self, t):
-                    self.unittest()
+        if 'late-backup' in self.steps and 'test' in self.conf and 'localtest' not in self.conf:
+            # In test cases, some diff with reference output could be necessary (this explains why the following
+            # line are called from a transfer node only)
+            # In this case, implement them in the "unittest".
+            with TestReportContext(self, t):
+                self.unittest()
 
         if 'late-backup' in self.steps and self.debug:
             # Debug mode : make the job crash at the end to preserve the working directory
