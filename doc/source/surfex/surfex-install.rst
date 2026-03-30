@@ -20,15 +20,15 @@ Note: If you need to work with more recent branch (``cen_dev`` for instance) or 
 Get the code
 ------------
 
+To get the source code from the private github repository SURFEX_CEN, please ask for access by email to crocus at meteo dot fr.
 
-If you will develop in SURFEX_CEN, you must clone with SSH. First create a SSH key and associate it to your github account : follow the corresponding section of the `github documentation <https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key>`_). Then you can get the code with :
+If you plan to develop in SURFEX_CEN, you must clone with SSH. First create a SSH key and associate it to your github account : follow the corresponding section of the `github documentation <https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key>`_). Then you can get the code with :
 
 .. code-block:: bash
 
    git clone git@github.com:UMR-CNRM/SURFEX_CEN.git
 
 If you are a simple user (outside of Meteo-France where pre-compiled binaries are available) you can get the code by running ``git clone https://github.com/UMR-CNRM/SURFEX_CEN.git``.
-
 
 You will need some additional packages that are provided by the SURFEX project. for the moment, these packages are not publicly available.
 
