@@ -20,24 +20,28 @@ Note: If you need to work with more recent branch (``cen_dev`` for instance) or 
 Get the code
 ------------
 
-Download the source code: ``git clone https://github.com/UMR-CNRM/SURFEX_CEN.git``
 
-   
-You need some packages which are not in the git repository (has to be fixed). So please copy from your old repo
+If you will develop in SURFEX_CEN, you must clone with SSH. First create a SSH key and associate it to your github account : follow the corresponding section of the `github documentation <https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key>`_). Then you can get the code with :
 
 .. code-block:: bash
 
-   cp /home/your_name/.../your_old_repo/src/LIB/SPARTACUS_SURFACE_0.6.1.tar.gz /home/your_name/.../SURFEX_CEN/src/LIB/.
-   cp /home/your_name/.../your_old_repo/src/LIB/XIOS-GMGEC-2152.tar /home/your_name/.../SURFEX_CEN/src/LIB/.
+   git clone git@github.com:UMR-CNRM/SURFEX_CEN.git
 
-Please read the infos for developper: https://umr-cnrm.github.io/snowtools-doc/misc/surfex-dev.html
+If you are a simple user (outside of Meteo-France where pre-compiled binaries are available) you can get the code by running ``git clone https://github.com/UMR-CNRM/SURFEX_CEN.git``.
+
+
+You will need some additional packages that are provided by the SURFEX project. for the moment, these packages are not publicly available.
+
+- At Meteo-France/CEN, these files can be copied from ``/rd/cenfic3/cenmod/home/common/SURFEX_LIB``. Copy all the content of this folder into ``src/LIB`` folder of the cloned repository.
+- If you are not at CEN, please ask your contact person to transfer these libraries to you and then copy the files into the ``src/LIB`` directory.
+
 
 Compile the code
 ----------------
 
 Then you need to compile the code following these instructions.
 
-Note that all the followings commands must be typed in the **same terminal**. Once finnished, you have to open a **new terminal** before running any simulation.
+Note that all the followings commands must be typed in the **same terminal**. Once finished, you have to open a **new terminal** before running any simulation.
 
 Preparation on a Linux PC
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -82,12 +86,7 @@ You first need to load the compilers :
 The next step of the configuration depends on your application:
 
 * For MPI parallel applications (big domains, deterministic application) : let ``VER_MPI`` and ``VER_CDF`` options to default.
-* For sequential ensemble applications associed with a ParaBlindRun AlgoComponent (one member per core through vortex), and only in this case, export the following variables:
-
-.. code-block:: bash
-
-    export VER_MPI=NOMPI
-    export VER_CDF=CDF2020
+* For sequential ensemble applications associed with a ParaBlindRun AlgoComponent (one member per core through vortex), and only in this case, export the following variables: ``export VER_MPI=NOMPI`` and ``export VER_CDF=CDF2020``.
 
 You will also need to install :ref:`install-vortex`.
 
@@ -122,7 +121,7 @@ Then, execute the profile file for this master version of surfex:
    source ../conf/profile_surfex-LXgfortran-SFX-V8-1-1-NOMPI-OMP-O2-X0
 
 
-(or equivalent name depending on compiler, SURFEX version and compilation options)
+(or equivalent name depending on compiler, SURFEX version and compilation options, the exact name is provided at the end of the ``configure`` execution)
 
 Compilation
 ^^^^^^^^^^^
@@ -164,10 +163,12 @@ Please check carefully the full names of your binaries (depending on SURFEX vers
    ln -s $EXESURFEX/PGD-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/PGD
    ln -s $EXESURFEX/SODA-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/SODA
 
-Test your snowtools and SURFEX install
---------------------------------------
+FIRST TEST: test your snowtools and SURFEX install
+--------------------------------------------------
 If you correctly installed the snowtools and SURFEX projects, you must be able to run successfully the following test case:
 
 .. code-block:: bash
 
    s2m research -f $SNOWTOOLS_CEN/snowtools/DATA/FORCING_test_base.nc -b 20100801 -e 20110801 -o output -g -s ...yoursurfexdirectory.../exe
+
+:warning: If you installed SURFEX with MPIAUTO option, you have to set the environment variable NOFFLINE to 1 or 2 to make this test work (because this test have two simulation points).

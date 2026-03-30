@@ -1,7 +1,7 @@
-SURFEX-Crocus user documentation for ``cen`` branch
-===================================================
+SURFEX-Crocus user documentation for ``cen_dev`` branch
+=======================================================
 
-This page describe the SURFEX-Crocus model as it is present in ``cen`` branch of the SURFEX repository.
+This page describe the SURFEX-Crocus model as it is present in ``cen_dev`` branch of the SURFEX_CEN repository.
 
 
 1-Multiphysics

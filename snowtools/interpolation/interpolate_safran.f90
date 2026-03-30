@@ -396,11 +396,6 @@ CONTAINS
     !
     CALL CHECK(NF90_GET_VAR(IDFICNC,IDVARGSLOPE,PSLOPEIN), "Cannot read "//HSLOPE)
     !
-    IF (MAXVAL(PSLOPEIN) > 1.) THEN
-      WRITE(*,*) "WARNING: Input file contains non-zero slopes. Only zero slopes will be interpolated"
-      ! STOP "INPUT FORCING FILE MUST PROVIDE HORIZONTAL RADIATIONS AND MUST NEVER HAVE BEEN PROJECTED ON SLOPES."
-    END IF
-    !
   END SUBROUTINE READ_NC
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   SUBROUTINE INDICES2D(PZSOUT,KMASSIFOUT,PASPECTOUT,PSLOPEOUT,KZSIN,KMASSIFIN,&

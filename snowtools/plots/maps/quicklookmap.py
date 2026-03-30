@@ -13,13 +13,16 @@ Created on 24 Mai 2025
 import pyproj
 import epygram
 
+import numpy as np
+
 
 def read_and_preprocess(resource,
                         fid,
                         date,
                         operation=None,
                         global_shift_center=None,
-                        zoom=None):
+                        zoom=None,
+                        additional_selection_options={}):
     """
     Read field in resource, and preprocess if requested.
 
@@ -42,7 +45,7 @@ def read_and_preprocess(resource,
     :rtype: epygram.field
     """
 
-    field = resource.readfield(fid)
+    field = resource.readfield(fid, only=additional_selection_options)
     assert isinstance(field, (epygram.fields.H2DField, epygram.fields.H2DVectorField)), \
         ' '.join(['Oops ! Looks like {} is not known as a horizontal 2D Field by epygram.',
                   'Add it to ~/.epygram/user_Field_Dict_{}.csv ?']).format(fid, resource.format)
@@ -62,6 +65,7 @@ def read_and_preprocess(resource,
             field.geometry.geoid['a'] = geoid.a
             field.geometry.geoid['b'] = geoid.b
     return field
+
 
 def wind_map(field, title, map_factor_correction=False, vectors_subsampling=50,
              wind_components_are_projected_on=None,
@@ -105,6 +109,7 @@ def wind_map(field, title, map_factor_correction=False, vectors_subsampling=50,
                              **plot_kwargs)
     return takeover
 
+
 def difference_map(field, ref_field, title, plot_kwargs={}):
     """
     Plot a difference map between two fields.
@@ -128,7 +133,8 @@ def difference_map(field, ref_field, title, plot_kwargs={}):
                                        **plot_kwargs)
     return takeover
 
-def scalar_map(field, title, plot_kwargs):
+
+def scalar_map(field, title=None, plot_kwargs={}):
     """
     Plot a map.
 
@@ -143,6 +149,16 @@ def scalar_map(field, title, plot_kwargs):
     .. figure:: /images/20190513T10_snowheight.png
        :align: center
     """
+    # Ensure no bug when the data is full of nan and/or fully masked
+    if 'minmax' not in plot_kwargs:
+        if isinstance(field.data, np.ma.MaskedArray) and field.data.mask.all():
+            plot_kwargs['minmax'] = [0, 1]  # All data is masked
+            plot_kwargs['minmax_along_colorbar'] = False
+            plot_kwargs['colorbar_legend'] = 'All data is NaN/masked'
+        elif np.isnan(field.data).all():
+            plot_kwargs['minmax'] = [0, 1]  # All data is NaN
+            plot_kwargs['minmax_along_colorbar'] = False
+            plot_kwargs['colorbar_legend'] = 'All data is NaN'
 
     if isinstance(field, epygram.fields.H2DVectorField):
         # Scalar field in a vector field is a true color image

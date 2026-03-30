@@ -53,33 +53,21 @@ Other things gathered by snowtools
 
    Data <code/data.rst>
 
-SURFEX Information
-------------------
-
-.. toctree::
-   :maxdepth: 1
-
-   Installation of SURFEX <misc/surfex-install.rst>
-   Run a SURFEX-Crocus simulation <misc/surfex-run.rst>
-   Running SURFEX on Meteo-France HPC <misc/surfex-hpc.rst>
-   Common files around SURFEX simulations <misc/surfex-files.rst>
-   Few informations on SURFEX-Crocus simulations <misc/surfex.rst>
-   Information for developpers <misc/surfex-dev.rst>
-
-SURFEX-Crocus user documentation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SURFEX
+------
 
 .. toctree::
    :maxdepth: 2
 
-   misc/surfex-crocus-user-doc
+   SURFEX code and infos <surfex/surfex-index.rst>
 
-Developments not yet merged into the ``cen`` branch are documented here :
+Meteo France HPC
+----------------
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
-   Development in progress <misc/surfex-dev-in-progress.rst>
+   Specific for Meteo France system <hpc/hpc-index.rst>
 
 Other documentations
 --------------------
@@ -88,8 +76,6 @@ Other documentations
    :maxdepth: 2
 
    extra_documentation/these_ange/these_ange_index.rst
-
-
 
 Help improving this documentation !
 -----------------------------------

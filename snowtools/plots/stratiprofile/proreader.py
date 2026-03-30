@@ -814,7 +814,18 @@ class proreader(reader):
         :returns: the time dimension axis values
         :rtype: numpy.array
         """
-        return self._time
+        # Date filtering
+        if isinstance(begin, int) or isinstance(end, int):
+            select = slice(begin, end)
+        elif begin is not None and end is not None:
+            select = (self._time >= begin) * (self._time <= end)
+        elif begin is not None:
+            select = self._time >= begin
+        elif end is not None:
+            select = self._time <= end
+        else:
+            select = ...
+        return self._time[select]
 
     def _get_data(self, filename, varname: str, point: typing.Union[int, list],
                   additional_options: dict = None, fillnan=False, begin=None, end=None):
