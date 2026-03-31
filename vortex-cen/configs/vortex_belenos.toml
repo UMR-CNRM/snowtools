@@ -5,6 +5,7 @@ rootdir = "/scratch/mtool/%usr%/cache/vortex"
 address="hendrix.meteo.fr"
 protocol="ftp"
 rootdir="~%usr%/vortex"
+op_rootdir="~%usr%/vortex"
 
 [ftserv]
 hostname_patterns="hendrix.meteo.fr"

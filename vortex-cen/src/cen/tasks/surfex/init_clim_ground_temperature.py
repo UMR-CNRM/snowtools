@@ -104,13 +104,12 @@ class InitClimGroundTemperature(_CenResearchTask):
         """
         Reproductibility test : compare output to reference.
         """
-
         self.sh.title("Toolbox Reference File")
         forcing_diff = vortex.diff(
                 role="initial values of ground temperature",
                 kind="climTG",
                 nativefmt="netcdf",
-                local="init_TG_reference.nc",
+                local="init_TG.nc",
                 experiment="reference",
                 username="vernaym",
                 geometry=self.conf.geometry,
