@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from mkjob.nodes import Driver
-from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist, Preprocess_Local_Namelist
+from vortex_cen.tasks.surfex.pre_process import Preprocess_Uenv_Namelist
 
 
 def setup(t, **kw):
@@ -10,7 +10,6 @@ def setup(t, **kw):
         ticket=t,
         nodes=[
             Preprocess_Uenv_Namelist(tag='preprocess_uenv_namelist', ticket=t, **kw),
-            Preprocess_Local_Namelist(tag='preprocess_local_namelist', ticket=t, **kw),
         ],
         options=kw,
     )
