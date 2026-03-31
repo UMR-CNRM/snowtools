@@ -40,7 +40,7 @@ class TestEnsPP(TestWithTempFolderWithLog):
     def test_ens_pp_algo_emos_csg_nonorm(self):
         ens = EnsemblePostproc(['SWE_1DY_ISBA'], self.filelist, outdir= self.diroutput,
                                outfilename='PRO_pp_csg.nc',
-                               emosmethod=EnsemblePostproc.emos_csg_nonorm_allstations_newsnow)
+                               emosmethod='emos')
         # print(ens.emosmethod)
         # ens.postprocess()
         ens.create_outfile()
