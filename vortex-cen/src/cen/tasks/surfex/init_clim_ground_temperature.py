@@ -24,25 +24,6 @@ class InitClimGroundTemperature(_CenResearchTask):
 
         self.get_forcing(localname="FORCING_[datebegin:ymdh]_[dateend:ymdh].nc")
 
-        if 'test' in self.conf and 'localtest' not in self.conf:
-
-            self.sh.title("Toolbox Reference File")
-            reference_file = vortex.input(
-                role="initial values of ground temperature",
-                kind="climTG",
-                nativefmt="netcdf",
-                local="init_TG_ref.nc",
-                experiment="reference",
-                username="vernaym",
-                geometry=self.conf.geometry,
-                model="surfex",
-                namespace="vortex.multi.fr",
-                namebuild="flat@cen",
-                block="prep",
-            ),
-            print(self.ticket.prompt, "reference file =", reference_file)
-            print()
-
     def get_local_inputs(self):
         pass
 
@@ -86,7 +67,7 @@ class InitClimGroundTemperature(_CenResearchTask):
 
         self.sh.title("Toolbox output for initial values of ground temperature")
         init_ground_temperature_out = vortex.output(
-                role="initial values of ground temperature",
+                role="InitialValuesOfGroundTemperature",
                 kind="climTG",
                 nativefmt="netcdf",
                 local="init_TG.nc",
@@ -106,7 +87,7 @@ class InitClimGroundTemperature(_CenResearchTask):
         """
         self.sh.title("Toolbox Reference File")
         forcing_diff = vortex.diff(
-                role="initial values of ground temperature",
+                role="InitialValuesOfGroundTemperature",
                 kind="climTG",
                 nativefmt="netcdf",
                 local="init_TG.nc",
@@ -120,3 +101,120 @@ class InitClimGroundTemperature(_CenResearchTask):
             )
         print(self.ticket.prompt, "diff forcing =", forcing_diff)
         print()
+
+
+class GetClimGroundTemperature(InitClimGroundTemperature):
+    """
+    If InitTG is available in cache or archive for the current experiment fetch it.
+    If not, try to get it from an uenv.
+    If not either, generate it by calling the methods from the mother class.
+
+    Configuration Parameters:
+    -------------------------
+
+    * ``xpid_tg`` experiment id the init_TG.nc file should be fetched from.
+    * ``geometry`` geometry of the init_TG. Logically the same as for the rest of the simulation
+
+    Optional Configuration Parameters:
+    ----------------------------------
+
+    * ``genv_tg`` uenv to look for the init_TG.nc file in case the file should come from an uenv.
+    * ``gvar_tg`` key to look up the init_TG.nc file in the uenv if the file should come from there.
+    * ``forcing_source_app`` in case the init_TG needs to be calculated
+        and the forcing comes from the S2M reanalysis
+        (example: arpege)
+    * ``forcing_source_conf`` in case the init_TG needs to be calculated
+        and the forcing comes from the S2M reanalysis
+        (example: 4dvarfr)
+    * ``forcing_localname`` in case the init_TG needs to be calculated
+        and the forcing comes from the S2M reanalysis
+        (example: [datebegin:ymdh]_[dateend:ymdh]/FORCING_IN.nc)
+    """
+
+    def get_remote_inputs(self):
+        # try to get init_TG from cache or archive
+        self.sh.title('Toolbox input init_TG from cache')
+        initTG_cache_tbi = vortex.input(
+            role="InitialValuesOfGroundTemperature",
+            kind='climTG',
+            nativefmt='netcdf',
+            local='init_TG.nc',
+            experiment=self.conf.xpid_tg,
+            geometry=self.conf.geometry,
+            model='surfex',
+            namespace='vortex.multi.fr',
+            namebuild='flat@cen',  # TODO : passer en variable de configuration
+            block='prep',
+            fatal=False,
+        ),
+        print(self.ticket.prompt, 'initTG_cache_tbi =', initTG_cache_tbi)
+        print()
+
+        # try to get init_TG from uenv
+        if not initTG_cache_tbi[0] and hasattr(self.conf, 'genv_tg') and hasattr(self.conf, 'gvar_tg'):
+            self.sh.title('Toolbox input init_TG from uenv')
+            initTG_uenv_tbi = vortex.input(
+                role="InitialValuesOfGroundTemperature",
+                kind='climTG',
+                nativefmt='netcdf',
+                local='init_TG.nc',
+                geometry=self.conf.geometry,
+                genv=self.conf.genv_tg,
+                gvar=self.conf.get('gvar_tg', 'climtg_[geometry::tag]'), # TODO: I'm not sure about the "tag" @vernaym: should it be there or not?
+                model='surfex',
+                fatal=False,
+            ),
+            print(self.ticket.prompt, 'initTG_uenv_tbi =', initTG_uenv_tbi)
+            print()
+
+        if len(self.ctx.sequence.effective_inputs(role="InitialValuesOfGroundTemperature")) == 0:
+                super().get_remote_inputs()
+
+    def algo(self):
+        print(self.ctx.sequence.effective_inputs()[0].role)
+        if len(self.ctx.sequence.effective_inputs(role="InitialValuesOfGroundTemperature")) > 0:
+            pass
+        else:
+            myalgo = super().algo()
+            return myalgo
+
+    def launch_algo(self, algo):
+        print('input sequence length: ',
+              len(self.ctx.sequence.effective_inputs(role="InitialValuesOfGroundTemperature")))
+        if len(self.ctx.sequence.effective_inputs(role="InitialValuesOfGroundTemperature")) > 0:
+            pass
+        else:
+            super().launch_algo(algo)
+
+    def put_outputs(self):
+        """
+        Put the init_TG.nc file in the vortex cache.
+        """
+
+        print('effective inputs:', self.ctx.sequence.effective_inputs())
+        print('input sequence length: ', len(self.ctx.sequence.effective_inputs(role="InitialValuesOfGroundTemperature")))
+
+        self.sh.title("Toolbox output for initial values of ground temperature")
+        init_ground_temperature_out = vortex.output(
+            role="InitialValuesOfGroundTemperature",
+            kind="climTG",
+            nativefmt="netcdf",
+            local="init_TG.nc",
+            experiment=self.conf.xpid_tg,
+            geometry=self.conf.geometry,
+            model="surfex",
+            namespace="vortex.cache.fr",
+            namebuild="flat@cen",
+            block="prep",
+        )
+        print(self.ticket.prompt, "Output init ground temperature =", init_ground_temperature_out)
+        print()
+
+        print('effective outputs:', self.ctx.sequence.effective_outputs()[0].role)
+
+
+    def unittest(self):
+        pass
+
+
+

@@ -4,6 +4,7 @@
 
 #from vortex.layout.nodes import Task
 from vortex import toolbox
+from vortex.layout.dataflow import SectionFatalError
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 
@@ -123,7 +124,8 @@ class _Prep_Construct(_CenResearchTask):
 
     def get_local_inputs(self):
         """
-        Get OPTIONS.nam which is always in cache
+        Get OPTIONS.nam which is always in cache and
+        init_TG.nc that should be in cache as well at this point.
         """
         # Namelist mandatory to run PREP and taken from the cache
         self.sh.title('Toolbox input Namelist after modification')
@@ -139,6 +141,32 @@ class _Prep_Construct(_CenResearchTask):
         ),
         print(self.ticket.prompt, 'namelist =', namelist_tbi)
         print()
+
+        try:
+            self.sh.title('Toolbox input init_TG from Cache')
+            initTG_cache_tbi = toolbox.input(
+                role="InitialValuesOfGroundTemperature",
+                kind='climTG',
+                nativefmt='netcdf',
+                local='init_TG.nc',
+                experiment=self.conf.xpid_tg,
+                geometry=self.conf.geometry,
+                model='surfex',
+                namespace='vortex.cache.fr',
+                namebuild='flat@cen',  # TODO : passer en variable de configuration
+                block='prep',
+                fatal=True,
+            ),
+            print(self.ticket.prompt, 'initTG_tbi =', initTG_cache_tbi)
+            print()
+        except SectionFatalError as e:
+            print('Unable to get init_TG.nc from cache. Make sure that your driver '
+                  'has a node corresponding to the GetClimGroundTemperature task '
+                  'before executing the Prep task and that the xpid_tg values in the '
+                  'corresponding configuration sections match. '
+                  'Or that the InitClimGroundTemperature task '
+                  'has been run recently for the given experiment (xpid_tg).')
+            raise e
 
     def algo(self):
         """
@@ -202,22 +230,22 @@ class Prep_Uenv_TG_Uenv_Prep(_Prep_Construct):
         #######################################################################
         #                             Fetch steps                             #
         #######################################################################
-        self.sh.title('Toolbox input init_TG from uenv')
-        initTG_tbi = toolbox.input(
-            role           = 'initial values of ground temperature',
-            kind           = 'climTG',
-            nativefmt      = 'netcdf',
-            local          = 'init_TG.nc',
-            geometry       = self.conf.geometry,
-            # MV : Il faudra peut être utiliser une variable de conf différente de *genv* à terme pour permettre
-            # de récupérer les autres "constantes" dans un genv commun et le binaire dans un environement géré par
-            # le user
-            genv           = self.conf.genv,
-            gvar           = 'climtg_[geometry::tag]',
-            model          = 'surfex',
-        ),
-        print(self.ticket.prompt, 'initTG_tbi =', initTG_tbi)
-        print()
+        # self.sh.title('Toolbox input init_TG from uenv')
+        # initTG_tbi = toolbox.input(
+        #     role           = 'initial values of ground temperature',
+        #     kind           = 'climTG',
+        #     nativefmt      = 'netcdf',
+        #     local          = 'init_TG.nc',
+        #     geometry       = self.conf.geometry,
+        #     # MV : Il faudra peut être utiliser une variable de conf différente de *genv* à terme pour permettre
+        #     # de récupérer les autres "constantes" dans un genv commun et le binaire dans un environement géré par
+        #     # le user
+        #     genv           = self.conf.genv,
+        #     gvar           = 'climtg_[geometry::tag]',
+        #     model          = 'surfex',
+        # ),
+        # print(self.ticket.prompt, 'initTG_tbi =', initTG_tbi)
+        # print()
 
         self.sh.title('Toolbox input PREP executable from uenv')
         PREP_tbx = toolbox.executable(
@@ -254,21 +282,21 @@ class Prep_Local_TG_Uenv_Prep(_Prep_Construct):
         # --> cela permettrait de simplifier les tâches de génération du PREP en allant systématiquement
         # chercher le fichier init_TG sur le cache
 
-        self.sh.title('Toolbox input init_TG from local')
-        initTG_tbi = toolbox.input(
-            alternate      = 'initial values of ground temperature',
-            kind           = 'climTG',
-            nativefmt      = 'netcdf',
-            local          = 'init_TG.nc',
-            experiment     = self.conf.xpid,
-            geometry       = self.conf.geometry,
-            model          = 'surfex',
-            namespace      = 'vortex.multi.fr',
-            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'prep',
-        ),
-        print(self.ticket.prompt, 'initTG_tbi =', initTG_tbi)
-        print()
+        # self.sh.title('Toolbox input init_TG from local')
+        # initTG_tbi = toolbox.input(
+        #     alternate      = 'initial values of ground temperature',
+        #     kind           = 'climTG',
+        #     nativefmt      = 'netcdf',
+        #     local          = 'init_TG.nc',
+        #     experiment     = self.conf.xpid,
+        #     geometry       = self.conf.geometry,
+        #     model          = 'surfex',
+        #     namespace      = 'vortex.multi.fr',
+        #     namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+        #     block          = 'prep',
+        # ),
+        # print(self.ticket.prompt, 'initTG_tbi =', initTG_tbi)
+        # print()
 
         self.sh.title('Toolbox input PREP executable from uenv')
         PREP_tbx = toolbox.executable(
@@ -301,21 +329,21 @@ class Prep_Uenv_TG_Local_Prep(_Prep_Construct):
         #                             Fetch steps                             #
         #######################################################################
 
-        self.sh.title('Toolbox input init_TG from local')
-        initTG_tbi = toolbox.input(
-            alternate      = 'initial values of ground temperature',
-            kind           = 'climTG',
-            nativefmt      = 'netcdf',
-            local          = 'init_TG.nc',
-            experiment     = self.conf.xpid,
-            geometry       = self.conf.geometry,
-            model          = 'surfex',
-            namespace      = 'vortex.multi.fr',
-            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'prep',
-        ),
-        print(self.ticket.prompt, 'initTG_tbi =', initTG_tbi)
-        print()
+        # self.sh.title('Toolbox input init_TG from local')
+        # initTG_tbi = toolbox.input(
+        #     alternate      = 'initial values of ground temperature',
+        #     kind           = 'climTG',
+        #     nativefmt      = 'netcdf',
+        #     local          = 'init_TG.nc',
+        #     experiment     = self.conf.xpid,
+        #     geometry       = self.conf.geometry,
+        #     model          = 'surfex',
+        #     namespace      = 'vortex.multi.fr',
+        #     namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+        #     block          = 'prep',
+        # ),
+        # print(self.ticket.prompt, 'initTG_tbi =', initTG_tbi)
+        # print()
 
         self.sh.title('Toolbox input PREP executable from local')
         PREP_tbx = toolbox.executable(
@@ -346,21 +374,21 @@ class Prep_Local_TG_Local_Prep(_Prep_Construct):
         #######################################################################
         #                             Fetch steps                             #
         #######################################################################
-        self.sh.title('Toolbox input init_TG from local')
-        initTG_tbi = toolbox.input(
-            alternate      = 'initial values of ground temperature',
-            kind           = 'climTG',
-            nativefmt      = 'netcdf',
-            local          = 'init_TG.nc',
-            experiment     = self.conf.xpid,
-            geometry       = self.conf.geometry,
-            model          = 'surfex',
-            namespace      = 'vortex.multi.fr',
-            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'prep',
-        ),
-        print(self.ticket.prompt, 'initTG_tbi =', initTG_tbi)
-        print()
+        # self.sh.title('Toolbox input init_TG from local')
+        # initTG_tbi = toolbox.input(
+        #     alternate      = 'initial values of ground temperature',
+        #     kind           = 'climTG',
+        #     nativefmt      = 'netcdf',
+        #     local          = 'init_TG.nc',
+        #     experiment     = self.conf.xpid,
+        #     geometry       = self.conf.geometry,
+        #     model          = 'surfex',
+        #     namespace      = 'vortex.multi.fr',
+        #     namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+        #     block          = 'prep',
+        # ),
+        # print(self.ticket.prompt, 'initTG_tbi =', initTG_tbi)
+        # print()
 
         self.sh.title('Toolbox input PREP executable from local')
         PREP_tbx = toolbox.executable(

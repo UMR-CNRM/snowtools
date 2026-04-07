@@ -52,8 +52,7 @@ class _Pgd_Construct(_CenResearchTask):
 
         """
         Get ecoclimapI_covers_param.bin, ecoclimapII_eu_covers_param.bin,
-        Get drdt_bst_fit_60.nc, PGD.nc
-        Do not get init_TG.nc because there are 2 possibilities
+        Get drdt_bst_fit_60.nc
         """
         # Binary ECOCLIMAP I files are mandatory to run PGD and taken from the uenv
         self.sh.title('Toolbox input ecoclimap1')

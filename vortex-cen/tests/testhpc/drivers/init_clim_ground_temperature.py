@@ -1,6 +1,6 @@
 from mkjob.nodes import Driver
 from vortex_cen.tasks.surfex.init_clim_ground_temperature import \
-    InitClimGroundTemperature
+    InitClimGroundTemperature, GetClimGroundTemperature
 
 
 def setup(t, **kw):
@@ -15,6 +15,7 @@ def setup(t, **kw):
         ticket=t,
         nodes=[
             InitClimGroundTemperature(tag='initClimGroundTemperature', ticket=t, **kw),
+            # GetClimGroundTemperature(tag='getClimGroundTemperature', ticket=t, **kw),
         ],
         options=kw,
         iniconf = iniconf
