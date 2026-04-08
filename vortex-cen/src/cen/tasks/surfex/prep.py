@@ -3,7 +3,7 @@
 '''
 
 #from vortex.layout.nodes import Task
-from vortex import toolbox
+import vortex
 from vortex.layout.dataflow import SectionFatalError
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 
@@ -62,7 +62,7 @@ class _Prep_Construct(_CenResearchTask):
         """
         # Binary ECOCLIMAP I files are mandatory to run PREP and taken from the uenv
         self.sh.title('Toolbox input ecoclimap1')
-        ecoclimap1_tbi = toolbox.input(
+        ecoclimap1_tbi = vortex.input(
             role           = 'Surfex cover parameters',
             kind           = 'coverparams',
             nativefmt      = 'bin',
@@ -77,7 +77,7 @@ class _Prep_Construct(_CenResearchTask):
 
         # Binary ECOCLIMAP II files are mandatory to run PREP and taken from the uenv
         self.sh.title('Toolbox input ecoclimap2')
-        ecoclimap2_tbi = toolbox.input(
+        ecoclimap2_tbi = vortex.input(
             role           = 'Surfex cover parameters',
             kind           = 'coverparams',
             nativefmt      = 'bin',
@@ -92,7 +92,7 @@ class _Prep_Construct(_CenResearchTask):
 
         # Crocus metamorphism parameters mandatory to run PREP and taken from the uenv
         self.sh.title('Toolbox input drdt_bst_fit_60')
-        drdt_bst_fit_tbi = toolbox.input(
+        drdt_bst_fit_tbi = vortex.input(
             role            = 'Parameters for F06 metamorphism',
             kind            = 'ssa_params',
             genv            = self.conf.genv,
@@ -105,7 +105,7 @@ class _Prep_Construct(_CenResearchTask):
 
         # PGD.nc mandatory to run PREP
         self.sh.title('Toolbox input PGD')
-        pgd_tbi = toolbox.input(
+        pgd_tbi = vortex.input(
             local          = 'PGD.nc',
             role           = 'SurfexClim',
             experiment     = self.conf.get('pgd_xpid', self.conf.xpid),
@@ -129,7 +129,7 @@ class _Prep_Construct(_CenResearchTask):
         """
         # Namelist mandatory to run PREP and taken from the cache
         self.sh.title('Toolbox input Namelist after modification')
-        namelist_tbi = toolbox.input(
+        namelist_tbi = vortex.input(
             role         = 'Nam_surfex',
             kind         = 'namelist',
             model        = 'surfex',
@@ -144,7 +144,7 @@ class _Prep_Construct(_CenResearchTask):
 
         try:
             self.sh.title('Toolbox input init_TG from Cache')
-            initTG_cache_tbi = toolbox.input(
+            initTG_cache_tbi = vortex.input(
                 role="InitialValuesOfGroundTemperature",
                 kind='climTG',
                 nativefmt='netcdf',
@@ -176,7 +176,7 @@ class _Prep_Construct(_CenResearchTask):
         #                            Compute step                             #
         #######################################################################
         self.sh.title('Toolbox algo PREP')
-        PREP_tba = toolbox.algo(
+        PREP_tba = vortex.task(
             engine     = 'parallel',
         )
         print(self.ticket.prompt, 'Toolbox algo prep=', PREP_tba)
@@ -200,12 +200,12 @@ class _Prep_Construct(_CenResearchTask):
         #                               Backup                                #
         #######################################################################
         self.sh.title('Toolbox Output PREP')
-        prep_tbo = toolbox.output(
-            local      = 'PREP_[date:ymdh].nc',
+        prep_tbo = vortex.output(
+            local      = 'PREP.nc',
             role       = 'SnowpackInit',
             experiment = self.conf.xpid,
             geometry   = self.conf.geometry,
-            date       = self.conf.date,
+            date       = self.conf.get('date', self.conf.datebegin),
             nativefmt  = 'netcdf',
             kind       = 'PREP',
             model      = 'surfex',
@@ -248,7 +248,7 @@ class Prep_Uenv_TG_Uenv_Prep(_Prep_Construct):
         # print()
 
         self.sh.title('Toolbox input PREP executable from uenv')
-        PREP_tbx = toolbox.executable(
+        PREP_tbx = vortex.executable(
             role           = 'Binary',
             kind           = 'prep',
             local          = 'PREP',
@@ -299,7 +299,7 @@ class Prep_Local_TG_Uenv_Prep(_Prep_Construct):
         # print()
 
         self.sh.title('Toolbox input PREP executable from uenv')
-        PREP_tbx = toolbox.executable(
+        PREP_tbx = vortex.executable(
             role           = 'Binary',
             kind           = 'prep',
             local          = 'PREP',
@@ -346,7 +346,7 @@ class Prep_Uenv_TG_Local_Prep(_Prep_Construct):
         # print()
 
         self.sh.title('Toolbox input PREP executable from local')
-        PREP_tbx = toolbox.executable(
+        PREP_tbx = vortex.executable(
             role           = 'Binary',
             kind           = 'prep',
             local          = 'PREP',
@@ -391,7 +391,7 @@ class Prep_Local_TG_Local_Prep(_Prep_Construct):
         # print()
 
         self.sh.title('Toolbox input PREP executable from local')
-        PREP_tbx = toolbox.executable(
+        PREP_tbx = vortex.executable(
             role           = 'Binary',
             kind           = 'prep',
             local          = 'PREP',
