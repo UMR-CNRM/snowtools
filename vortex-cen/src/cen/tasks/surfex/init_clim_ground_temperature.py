@@ -151,7 +151,7 @@ class GetClimGroundTemperature(InitClimGroundTemperature):
         print()
 
         # try to get init_TG from uenv
-        if not initTG_cache_tbi[0] and hasattr(self.conf, 'genv_tg') and hasattr(self.conf, 'gvar_tg'):
+        if not initTG_cache_tbi[0] and hasattr(self.conf, 'genv_tg'):
             self.sh.title('Toolbox input init_TG from uenv')
             initTG_uenv_tbi = vortex.input(
                 role="InitialValuesOfGroundTemperature",
@@ -160,7 +160,8 @@ class GetClimGroundTemperature(InitClimGroundTemperature):
                 local='init_TG.nc',
                 geometry=self.conf.geometry,
                 genv=self.conf.genv_tg,
-                gvar=self.conf.get('gvar_tg', 'climtg_[geometry::tag]'), # TODO: I'm not sure about the "tag" @vernaym: should it be there or not?
+                gvar=self.conf.get('gvar_tg', 'climtg_[geometry::area]'), # TODO: I'm not sure about the "area". It used to be "tag"
+                # but "tag" does not exist in geometries_vortex2.ini @vernaym: should it be area, tag or nothing?
                 model='surfex',
                 fatal=False,
             ),

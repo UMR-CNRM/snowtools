@@ -103,24 +103,6 @@ class _Prep_Construct(_CenResearchTask):
         print(self.ticket.prompt, 'drdt_bst_fit_60 =', drdt_bst_fit_tbi)
         print()
 
-        # PGD.nc mandatory to run PREP
-        self.sh.title('Toolbox input PGD')
-        pgd_tbi = vortex.input(
-            local          = 'PGD.nc',
-            role           = 'SurfexClim',
-            experiment     = self.conf.get('pgd_xpid', self.conf.xpid),
-            vapp           = self.conf.get('pgd_vapp', self.conf.vapp),
-            vconf          = self.conf.get('pgd_vconf', self.conf.vconf),
-            geometry       = self.conf.geometry,
-            nativefmt      = 'netcdf',
-            kind           = 'pgdnc',
-            model          = 'surfex',
-            namespace      = 'vortex.multi.fr',
-            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'pgd',
-        ),
-        print(self.ticket.prompt, 'pgd =', pgd_tbi)
-        print()
 
     def get_local_inputs(self):
         """
@@ -166,6 +148,35 @@ class _Prep_Construct(_CenResearchTask):
                   'corresponding configuration sections match. '
                   'Or that the InitClimGroundTemperature task '
                   'has been run recently for the given experiment (xpid_tg).')
+            raise e
+
+            # PGD.nc mandatory to run PREP
+        try:
+            self.sh.title('Toolbox input PGD from cache')
+            pgd_tbi = vortex.input(
+                local='PGD.nc',
+                role='SurfexClim',
+                experiment=self.conf.get('pgd_xpid', self.conf.xpid),
+                vapp=self.conf.get('pgd_vapp', self.conf.vapp),
+                vconf=self.conf.get('pgd_vconf', self.conf.vconf),
+                geometry=self.conf.geometry,
+                nativefmt='netcdf',
+                kind='pgdnc',
+                model='surfex',
+                namespace='vortex.cache.fr',
+                namebuild='flat@cen',  # TODO : passer en variable de configuration
+                block='pgd',
+                fatal=True,
+            ),
+            print(self.ticket.prompt, 'pgd =', pgd_tbi)
+            print()
+        except SectionFatalError as e:
+            print('Unable to get PGD.nc from cache. Make sure that your driver '
+                  'has a node corresponding to the GetPgd1D task '
+                  'before executing the Prep task and that the pgd_xpid values in the '
+                  'corresponding configuration sections match. '
+                  'Or that the Pgd_Uenv_Pgd or Pgd_Local_Pgd task '
+                  'has been run recently for the given experiment (pgd_xpid).')
             raise e
 
     def algo(self):

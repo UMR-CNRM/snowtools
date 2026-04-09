@@ -2,7 +2,7 @@
 '''
 '''
 
-from vortex import toolbox
+import vortex
 from vortex.util.helpers import InputCheckerError
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 
@@ -56,7 +56,7 @@ class _Pgd_Construct(_CenResearchTask):
         """
         # Binary ECOCLIMAP I files are mandatory to run PGD and taken from the uenv
         self.sh.title('Toolbox input ecoclimap1')
-        ecoclimap1_tbi = toolbox.input(
+        ecoclimap1_tbi = vortex.input(
             role           = 'Surfex cover parameters',
             kind           = 'coverparams',
             nativefmt      = 'bin',
@@ -71,7 +71,7 @@ class _Pgd_Construct(_CenResearchTask):
 
         # Binary ECOCLIMAP II files are mandatory to run PGD and taken from the uenv
         self.sh.title('Toolbox input ecoclimap2')
-        ecoclimap2_tbi = toolbox.input(
+        ecoclimap2_tbi = vortex.input(
             role           = 'Surfex cover parameters',
             kind           = 'coverparams',
             nativefmt      = 'bin',
@@ -86,7 +86,7 @@ class _Pgd_Construct(_CenResearchTask):
 
         # Crocus metamorphism parameters mandatory to run PGD and taken from the uenv
         self.sh.title('Toolbox input drdt_bst_fit_60')
-        drdt_bst_fit_tbi = toolbox.input(
+        drdt_bst_fit_tbi = vortex.input(
             role            = 'Parameters for F06 metamorphism',
             kind            = 'ssa_params',
             genv            = self.conf.genv,
@@ -103,7 +103,7 @@ class _Pgd_Construct(_CenResearchTask):
         """
         # Namelist mandatory to run PGD and taken from the cache
         self.sh.title('Toolbox input Namelist after modification')
-        namelist_tbi = toolbox.input(
+        namelist_tbi = vortex.input(
             role         = 'Nam_surfex',
             kind         = 'namelist',
             model        = 'surfex',
@@ -130,7 +130,7 @@ class _Pgd_Construct(_CenResearchTask):
             raise InputCheckerError('No FORCING file present, the task can not run properly')
 
         self.sh.title('Toolbox algo PGD')
-        PGD_tba = toolbox.algo(
+        PGD_tba = vortex.task(
             kind         = 'pgd_from_forcing',
             # Le nom local de la ressource est fourni par le "container"
             forcingname  = firstforcing.rh.container.basename,
@@ -157,7 +157,7 @@ class _Pgd_Construct(_CenResearchTask):
         #                               Backup                                #
         #######################################################################
         self.sh.title('Toolbox Output PGD')
-        pgd_tbo = toolbox.output(
+        pgd_tbo = vortex.output(
             local      = 'PGD.nc',
             role       = 'SurfexClim',
             experiment = self.conf.xpid,
@@ -195,7 +195,7 @@ class _Pgd2D_Construct(_Pgd_Construct):
         super().get_remote_inputs()
         # Binary Sand files are mandatory to run SURFEX for PGD construction in simu2D
         self.sh.title('Toolbox input sand')
-        sand_tbi = toolbox.input(
+        sand_tbi = vortex.input(
             role           = 'SandDB',
             format         = 'dir/hdr',
             genv           = self.conf.genv2D,
@@ -210,7 +210,7 @@ class _Pgd2D_Construct(_Pgd_Construct):
 
         # Binary Clay files are mandatory to run SURFEX for PGD construction in simu2D
         self.sh.title('Toolbox input clay')
-        clay_tbi = toolbox.input(
+        clay_tbi = vortex.input(
             role           = 'ClayDB',
             format         = 'dir/hdr',
             genv           = self.conf.genv2D,
@@ -225,7 +225,7 @@ class _Pgd2D_Construct(_Pgd_Construct):
 
         # EcoclimapII_europ files are mandatory to run SURFEX for PGD construction in simu2D
         self.sh.title('Toolbox input ecoclimap2_europ')
-        ecoclimap2_europ_tbi = toolbox.input(
+        ecoclimap2_europ_tbi = vortex.input(
             role           = 'EcoclimapIIEurop',
             format         = 'dir/hdr',
             genv           = self.conf.genv2D,
@@ -252,7 +252,7 @@ class Pgd_Uenv_Pgd(_Pgd_Construct):
         #                             Fetch steps                             #
         #######################################################################
         self.sh.title('Toolbox input PGD executable from uenv')
-        PGD_tbx = toolbox.executable(
+        PGD_tbx = vortex.executable(
             role           = 'Binary',
             kind           = 'buildpgd',
             local          = 'PGD',
@@ -282,7 +282,7 @@ class Pgd_Local_Pgd(_Pgd_Construct):
         #                             Fetch steps                             #
         #######################################################################
         self.sh.title('Toolbox input PGD executable from local')
-        PGD_tbx = toolbox.executable(
+        PGD_tbx = vortex.executable(
             role           = 'Binary',
             kind           = 'buildpgd',
             local          = 'PGD',
@@ -306,7 +306,7 @@ class Pgd2D_Uenv_Pgd(_Pgd2D_Construct):
         #                             Fetch steps                             #
         #######################################################################
         self.sh.title('Toolbox input PGD executable from uenv')
-        PGD_tbx = toolbox.executable(
+        PGD_tbx = vortex.executable(
             role           = 'Binary',
             kind           = 'buildpgd',
             local          = 'PGD',
@@ -331,7 +331,7 @@ class Pgd2D_Local_Pgd(_Pgd2D_Construct):
         #                             Fetch steps                             #
         #######################################################################
         self.sh.title('Toolbox input PGD executable from local')
-        PGD_tbx = toolbox.executable(
+        PGD_tbx = vortex.executable(
             role           = 'Binary',
             kind           = 'buildpgd',
             local          = 'PGD',
@@ -340,3 +340,159 @@ class Pgd2D_Local_Pgd(_Pgd2D_Construct):
         )
         print(self.ticket.prompt, 'PGD_tbx =', PGD_tbx)
         print()
+
+
+class GetPgd1D(_Pgd_Construct):
+    """
+    If PGD.nc is available in cache or archive for the current experiment fetch it.
+    If not, try to get it from an uenv.
+    If not either, generate it by calling the methods from the mother class.
+
+    Configuration Parameters:
+    -------------------------
+
+    * ``xpid`` experiment id. !!! Do not use ids with 4 letters !!!
+    * ``vapp`` application name !!! Implicit, depends on the driver tree !!!
+    * ``vconf`` application configuration. !!! Implicit, depends on the driver tree !!!
+    * ``geometry`` geometry of the PGD.nc file. Logically the same as for the rest of the simulation.
+
+     Optional Configuration Parameters:
+    ----------------------------------
+
+    * ``pgd_xpid`` experiment id the PGD.nc file should be fetched from. Defaults to ``xpid``.
+    * ``pgd_vapp`` vapp the PGD.nc file should be fetched from. Defaults to ``vapp``.
+    * ``pgd_vconf`` vconf the PGD.nc file should be fetched from. Defaults to ``vconf``.
+    * ``genv_pgd`` uenv to look for the PGD.nc file if the PGD.nc file should come from an uenv.
+    * ``gvar_pgd`` key to look up the PGD.nc file in the uenv if the file should come from there.
+        Defaults to 'pgd_[geometry::area]'.
+    * ``genv`` uenv to look for the ecoclimap Surfex cover parameters, Crocus metamorphism parameters
+        and PGD executable in case the PGD.nc needs to be calculated.
+    * ``forcing_source_app`` in case the PGD.nc needs to be calculated
+        and the forcing comes from the S2M reanalysis
+        (example: arpege)
+    * ``forcing_source_conf`` in case the PGD.nc needs to be calculated
+        and the forcing comes from the S2M reanalysis
+        (example: 4dvarfr)
+    * ``forcing_source`` in case the PGD.nc needs to be calculated
+        and the forcing comes from the S2M reanalysis (yearly sub-periods)
+        (example: era5)
+    * ``forcing_localname`` in case the PGD.nc needs to be calculated
+        and the forcing comes from the S2M reanalysis
+        (example: [datebegin:ymdh]_[dateend:ymdh]/FORCING_IN.nc)
+    * ``exesurfex`` path to the surfex executable in case the PGD.nc needs to be calculated and the executable comes
+        from a local directory.
+    * ``nnodes`` number of nodes to use to run the PGD executable with MPI if the PGD.nc needs to be calculated. (normally  1)
+    * ``nprocs`` number of processors to be used to run the PGD executable with MPI if the PGD.nc needs to be calculated.
+    (example: 60, might be 80 for bigger simulations)
+    * ``ntasks`` number of tasks per node to use to run the PGD executable with MPI if the PGD.nc needs to be calculated.
+    (in general equals the ``nprocs`` since we are not doing multithreading, 60 in our example)
+    * ``openmp`` number of openmp threads to use to run the PGD executable with MPI if the PGD.nc needs to be calculated.
+    (normally 1, since we are not doing multithreading)
+
+    """
+    def get_remote_inputs(self):
+        # try to get PGD.nc from cache or archive
+        self.sh.title('Toolbox input PGD from cache or archive')
+        pgd_cache_tbi = vortex.input(
+            local='PGD.nc',
+            role='SurfexClim',
+            experiment=self.conf.get('pgd_xpid', self.conf.xpid),
+            vapp=self.conf.get('pgd_vapp', self.conf.vapp),
+            vconf=self.conf.get('pgd_vconf', self.conf.vconf),
+            geometry=self.conf.geometry,
+            nativefmt='netcdf',
+            kind='pgdnc',
+            model='surfex',
+            namespace='vortex.multi.fr',
+            namebuild='flat@cen',  # TODO : passer en variable de configuration
+            block='pgd',
+            fatal=False,
+        ),
+        print(self.ticket.prompt, 'pgd cache or archive =', pgd_cache_tbi)
+        print()
+
+        # try to get PGD.nc from uenv
+        if not pgd_cache_tbi[0] and hasattr(self.conf, 'genv_pgd'):
+            self.sh.title('Toolbox input PGD from uenv')
+            pgd_uenv_tbi = vortex.input(
+                local='PGD.nc',
+                role='SurfexClim',
+                geometry=self.conf.geometry,
+                nativefmt='netcdf',
+                kind='pgdnc',
+                model='surfex',
+                genv=self.conf.genv_pgd,
+                gvar=self.conf.get('gvar_pgd', 'pgd_[geometry::tag]'),  # TODO: I'm not sure about the "area". It used to be "tag"
+                # but "tag" does not exist in geometries_vortex2.ini @vernaym: should it be area, tag or nothing?
+                fatal=False,
+            ),
+            print(self.ticket.prompt, 'pgd uenv =', pgd_uenv_tbi)
+            print()
+
+        if len(self.ctx.sequence.effective_inputs(role="SurfexClim")) == 0:
+                super().get_remote_inputs()
+                if hasattr(self.conf, 'exesurfex'):
+                    self.sh.title('Toolbox input PGD executable from local')
+                    PGD_local_tbx = vortex.executable(
+                        role='Binary',
+                        kind='buildpgd',
+                        local='PGD',
+                        model='surfex',
+                        remote=self.conf.exesurfex + "/PGD"
+                    )
+                    print(self.ticket.prompt, 'PGD_tbx =', PGD_local_tbx)
+                    print()
+
+                else:
+                    self.sh.title('Toolbox input PGD executable from uenv')
+                    PGD_uenv_tbx = vortex.executable(
+                        role='Binary',
+                        kind='buildpgd',
+                        local='PGD',
+                        model='surfex',
+                        genv=self.conf.genv,
+                        gvar='master_pgd_mpi',
+                    )
+                    print(self.ticket.prompt, 'PGD_uenv_tbx =', PGD_uenv_tbx)
+                    print()
+
+    def get_local_inputs(self):
+        if len(self.ctx.sequence.effective_inputs(role="SurfexClim")) > 0:
+            pass
+        else:
+            super().get_local_inputs()
+
+    def algo(self):
+        if len(self.ctx.sequence.effective_inputs(role="SurfexClim")) > 0:
+            pass
+        else:
+            myalgo = super().algo()
+            return myalgo
+
+    def launch_algo(self, algo):
+        if len(self.ctx.sequence.effective_inputs(role="SurfexClim")) > 0:
+            pass
+        else:
+            super().launch_algo(algo)
+
+
+    def put_outputs(self):
+        self.sh.title('Toolbox Output PGD')
+        pgd_tbo = vortex.output(
+            local='PGD.nc',
+            role='SurfexClim',
+            experiment=self.conf.get('pgd_xpid', self.conf.xpid),
+            geometry=self.conf.geometry,
+            nativefmt='netcdf',
+            kind='pgdnc',
+            model='surfex',
+            namespace='vortex.cache.fr',
+            namebuild='flat@cen',  # TODO : passer en variable de configuration
+            block='pgd',
+        ),
+        print(self.ticket.prompt, 'pgd_tbo =', pgd_tbo)
+        print()
+
+
+
+
