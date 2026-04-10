@@ -1,6 +1,5 @@
 # from vortex import toolbox
 import vortex
-from vortex.algo.components import AlgoComponent
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 
@@ -58,11 +57,11 @@ class InitClimGroundTemperature(_CenResearchTask):
     def put_outputs(self):
         """
         Save the output Ground temperature (GT) initialization based on the climatological mean file in the simulation geometry.
-        Arguments:
-        :param geometry:
-        type geometry: simulation geometry
-        :param xpid: Experiment identifier (format "experiment_name@user")
-        :type xpid: str
+
+        Configuration parameters used:
+        ------------------------------
+        * ``geometry`` simulation geometry
+        * ``xpid`` Experiment identifier (format "experiment_name@user")
         """
 
         self.sh.title("Toolbox output for initial values of ground temperature")
@@ -134,7 +133,7 @@ class GetClimGroundTemperature(InitClimGroundTemperature):
     def get_remote_inputs(self):
         # try to get init_TG from cache or archive
         self.sh.title('Toolbox input init_TG from cache')
-        initTG_cache_tbi = vortex.input(
+        init_tg_cache_tbi = vortex.input(
             role="InitialValuesOfGroundTemperature",
             kind='climTG',
             nativefmt='netcdf',
@@ -147,13 +146,13 @@ class GetClimGroundTemperature(InitClimGroundTemperature):
             block='prep',
             fatal=False,
         ),
-        print(self.ticket.prompt, 'initTG_cache_tbi =', initTG_cache_tbi)
+        print(self.ticket.prompt, 'initTG_cache_tbi =', init_tg_cache_tbi)
         print()
 
         # try to get init_TG from uenv
         if not initTG_cache_tbi[0] and hasattr(self.conf, 'genv_tg'):
             self.sh.title('Toolbox input init_TG from uenv')
-            initTG_uenv_tbi = vortex.input(
+            init_tg_uenv_tbi = vortex.input(
                 role="InitialValuesOfGroundTemperature",
                 kind='climTG',
                 nativefmt='netcdf',
@@ -165,7 +164,7 @@ class GetClimGroundTemperature(InitClimGroundTemperature):
                 model='surfex',
                 fatal=False,
             ),
-            print(self.ticket.prompt, 'initTG_uenv_tbi =', initTG_uenv_tbi)
+            print(self.ticket.prompt, 'initTG_uenv_tbi =', init_tg_uenv_tbi)
             print()
 
         if len(self.ctx.sequence.effective_inputs(role="InitialValuesOfGroundTemperature")) == 0:
