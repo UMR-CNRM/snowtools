@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
-'''
-'''
-from vortex import toolbox
+"""
+"""
+import vortex
+# from vortex import toolbox
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex.util.helpers import InputCheckerError
 
 
 class _Preprocess(_CenResearchTask):
-    '''
+    """
     Abstract task for pre-processing namelist:
     add infos like points and dates from forcing to namelist.
 
@@ -22,16 +23,16 @@ class _Preprocess(_CenResearchTask):
 
     Mandatory configuration variables:
     ----------------------------------
-    :param datebegin: *datebegin* of the forcing file(s)
-    :type datebegin: str, footprints.stdtypes.FPList
-    :param dateend: *dateend* of the forcing files(s)
-    :type dateend: str, footprints.stdtypes.FPList
-    :param geometry: *geometry* of the forcing file(s)
-    :type geometry: str, footprints.stdtypes.FPList
-    :param xpid: Experiment identifier (format "experiment_name@user")
-    :type xpid: str
+    * ``datebegin`` *datebegin* of the forcing file(s)
+      type: str, footprints.stdtypes.FPList
+    * ``dateend`` *dateend* of the forcing files(s)
+     type: str, footprints.stdtypes.FPList
+    * ``geometry`` *geometry* of the forcing file(s)
+     type: str, footprints.stdtypes.FPList
+    * ``xpid`` Experiment identifier (format "experiment_name@user")
+     type: str, length should not equal 4!
 
-    '''
+    """
     def get_remote_inputs(self):
         """
         Get forcing file(s) and namelist in order to transform the namelist
@@ -57,7 +58,7 @@ class _Preprocess(_CenResearchTask):
 
         # Algo component to preprocess the namelist (adjust dates, etc.)
         self.sh.title('Toolbox algo preprocess')
-        preprocess_tba = toolbox.algo(
+        preprocess_tba = vortex.task(
             kind         = 'surfex_preprocess',
             datebegin    = self.conf.datebegin,
             dateend      = self.conf.dateend,
@@ -83,7 +84,7 @@ class _Preprocess(_CenResearchTask):
         #                               Backup                                #
         #######################################################################
         self.sh.title('Toolbox output Namelist after modification (local cache only)')
-        namelist_tbo = toolbox.output(
+        namelist_tbo = vortex.output(
             role         = 'Nam_surfex',
             kind         = 'namelist',
             model        = 'surfex',
@@ -98,21 +99,21 @@ class _Preprocess(_CenResearchTask):
 
 
 class Preprocess_Uenv_Namelist(_Preprocess):
-    '''
+    """
     Task for pre-processing a namelist coming from a User Environment.
 
     NB : This is the task to use to guarantee the simulation's reproductibility
 
     Supplementary mandatory configuration variables:
     ------------------------------------------------
-    :param genv: User Environment in which the namelist is to be retrieved.
+    * ``genv`` User Environment in which the namelist is to be retrieved.
                  Format : uenv:{uenv_name}@{user}
-    :type genv: str
-    :param namelist_source: The name of the specific namelist to retrieve from the namelist
+     type: str
+    * ``namelist_source`` The name of the specific namelist to retrieve from the namelist
                    ".tar" archive containing all available namelists.
-    :type namelist_source: str
+      type: str
 
-    '''
+    """
     def get_remote_inputs(self):
         """
         Get namelist from a User Environment.
@@ -122,7 +123,7 @@ class Preprocess_Uenv_Namelist(_Preprocess):
         #                             Fetch steps                             #
         #######################################################################
         self.sh.title('Toolbox input Namelist')
-        namelist_tbi = toolbox.input(
+        namelist_tbi = vortex.input(
             role     = 'Nam_surfex',
             # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
             # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
@@ -139,16 +140,16 @@ class Preprocess_Uenv_Namelist(_Preprocess):
 
 
 class Preprocess_Local_Namelist(_Preprocess):
-    '''
+    """
     Task for pre-processing a namelist coming from any user-defined absolute path.
 
     WARNING : The simulation's reproductibility can not be guaranteed with this task !
 
     Supplementary mandatory configuration variables:
     ------------------------------------------------
-    :param namelist: Absolute path pointing to the namelist to be used.
-    :type namelist: str
-    '''
+    * ``namelist`` Absolute path pointing to the namelist to be used.
+     type: str
+    """
     def get_remote_inputs(self):
         """
         Get namelist from a user-provided absolute path.
@@ -159,7 +160,7 @@ class Preprocess_Local_Namelist(_Preprocess):
         #######################################################################
         # Use the path provided in the configuration file for the SURFEX namelist
         self.sh.title('Toolbox input Namelist')
-        namelist_tbi = toolbox.input(
+        namelist_tbi = vortex.input(
             role     = 'Nam_surfex',
             remote   = self.conf.namelist,
             kind     = 'namelist',
@@ -173,7 +174,7 @@ class Preprocess_Local_Namelist(_Preprocess):
 
 
 class Soda_Namelist_Preprocess(_CenResearchTask):
-    '''
+    """
     Pre-process SURFEX namelist for SODA executable
 
     Inputs:
@@ -186,20 +187,20 @@ class Soda_Namelist_Preprocess(_CenResearchTask):
 
     Mandatory configuration variables
     ---------------------------------
-    :param genv: User Environment in which the namelist is to be retrieved
-    :type genv: str
-    :param namelist_source: Name of the namelist in the user environment
-    :type namelist_source: str
-    :param nmembers: Number of ensemble members in the background state
-    :type nmembers: int
-    :param xpid: Experiment Identifier
-    :type xpid: str
-    '''
+    * ``genv`` User Environment in which the namelist is to be retrieved
+     type: str
+    * ``namelist_source`` Name of the namelist in the user environment
+     type: str
+    * ``nmembers`` Number of ensemble members in the background state
+     type: int
+    * ``xpid`` Experiment Identifier
+      type: str
+    """
 
     def get_remote_inputs(self):
 
         self.sh.title('Input Namelist')
-        namelist_tbi = toolbox.input(
+        namelist_tbi = vortex.input(
             role     = 'Nam_surfex',
             # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
             # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
@@ -217,7 +218,7 @@ class Soda_Namelist_Preprocess(_CenResearchTask):
     def algo(self):
 
         self.sh.title('Algo soda preprocess')
-        algo = toolbox.algo(
+        algo = vortex.task(
             kind         = 'soda_preprocess',
             nmembers      = self.conf.nmembers,
         )
@@ -229,7 +230,7 @@ class Soda_Namelist_Preprocess(_CenResearchTask):
     def put_outputs(self):
 
         self.sh.title('Output namelist')
-        namelist = toolbox.output(
+        namelist = vortex.output(
             role            = 'Nam_surfex',
             kind            = 'namelist',
             model           = 'surfex',

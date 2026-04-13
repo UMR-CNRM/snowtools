@@ -150,7 +150,7 @@ class GetClimGroundTemperature(InitClimGroundTemperature):
         print()
 
         # try to get init_TG from uenv
-        if not initTG_cache_tbi[0] and hasattr(self.conf, 'genv_tg'):
+        if not init_tg_cache_tbi[0] and hasattr(self.conf, 'genv_tg'):
             self.sh.title('Toolbox input init_TG from uenv')
             init_tg_uenv_tbi = vortex.input(
                 role="InitialValuesOfGroundTemperature",

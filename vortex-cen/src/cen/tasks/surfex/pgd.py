@@ -5,9 +5,10 @@
 import vortex
 from vortex.util.helpers import InputCheckerError
 from vortex_cen.tasks.research_task_base import _CenResearchTask
+from vortex_cen.tasks.surfex.params import SurfexParamsMixin
 
 
-class _Pgd_Construct(_CenResearchTask):
+class _Pgd_Construct(SurfexParamsMixin, _CenResearchTask):
     """
     Abstract task for the generation of ground physiography (PGD.nc file).
 
@@ -55,48 +56,8 @@ class _Pgd_Construct(_CenResearchTask):
         Get ecoclimapI_covers_param.bin, ecoclimapII_eu_covers_param.bin,
         Get drdt_bst_fit_60.nc
         """
-        # Binary ECOCLIMAP I files are mandatory to run PGD and taken from the uenv
-        self.sh.title('Toolbox input ecoclimap1')
-        ecoclimap1_tbi = vortex.input(
-            role           = 'Surfex cover parameters',
-            kind           = 'coverparams',
-            nativefmt      = 'bin',
-            local          = 'ecoclimapI_covers_param.bin',
-            geometry       = self.conf.geometry,
-            genv           = self.conf.genv,
-            source         = 'ecoclimap1',
-            model          = 'surfex',
-        ),
-        print(self.ticket.prompt, 'ecoclimap1 =', ecoclimap1_tbi)
-        print()
-
-        # Binary ECOCLIMAP II files are mandatory to run PGD and taken from the uenv
-        self.sh.title('Toolbox input ecoclimap2')
-        ecoclimap2_tbi = vortex.input(
-            role           = 'Surfex cover parameters',
-            kind           = 'coverparams',
-            nativefmt      = 'bin',
-            local          = 'ecoclimapII_eu_covers_param.bin',
-            geometry       = self.conf.geometry,
-            genv           = self.conf.genv,
-            source         = 'ecoclimap2',
-            model          = 'surfex',
-        ),
-        print(self.ticket.prompt, 'ecoclimap2 =', ecoclimap2_tbi)
-        print()
-
-        # Crocus metamorphism parameters mandatory to run PGD and taken from the uenv
-        self.sh.title('Toolbox input drdt_bst_fit_60')
-        drdt_bst_fit_tbi = vortex.input(
-            role            = 'Parameters for F06 metamorphism',
-            kind            = 'ssa_params',
-            genv            = self.conf.genv,
-            nativefmt       = 'netcdf',
-            local           = 'drdt_bst_fit_60.nc',
-            model           = 'surfex',
-        )
-        print(self.ticket.prompt, 'drdt_bst_fit_60 =', drdt_bst_fit_tbi)
-        print()
+        self.get_ecoclimap()
+        self.get_drdt_bst_fit()
 
     def get_local_inputs(self):
         """

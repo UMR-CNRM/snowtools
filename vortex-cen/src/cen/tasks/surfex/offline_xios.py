@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-'''
-'''
+"""
+"""
 
 from vortex import toolbox
 from vortex_cen.tasks.research_task_base import _CenResearchTask
@@ -12,7 +12,7 @@ from bronx.stdtypes.date import Date #, daterange, tomorrow
 # - soit tout le monde hérite d'une classe "OFFLINE" abstraite dans laquelle et il faut gérer dans chaque cas le fait que la notion de *membre* est obligatoire ou optionnelle
 # - soit on fait 2 classes abstraites distinctes (1 pour chaque algo) avec duplication des inputs communs
 class _Offline_MPI(_CenResearchTask):
-    '''
+    """
     Abstract task for OFFLINE binary execution.
 
     SURFEX/OFFLINE documentation : https://umr-cnrm.github.io/snowtools-doc/misc/surfex.html
@@ -89,7 +89,7 @@ class _Offline_MPI(_CenResearchTask):
                         Used to retrieve the list of *datebegin* and *dateend* for IO covering sub-periods.
                         Possible values : "yearly", "monthly" or "full"
     :type io_duration: str
-    '''
+    """
     def get_remote_inputs(self):
         """
         Get ecoclimapI_covers_param.bin, ecoclimapII_eu_covers_param.bin,
@@ -410,7 +410,7 @@ class Offline_MPI_Uenv(_Offline_MPI):
 
 
 class Offline_MPI_Local(_Offline_MPI):
-    '''
+    """
     Get an OFFLINE executable from any user-defined absolute path locally.
 
     WARNING : The simulation's reproductibility can not be guaranteed with this task !
@@ -419,7 +419,7 @@ class Offline_MPI_Local(_Offline_MPI):
     ------------------------------------------------
     :param exesurfex: Absolute path pointing the a local directory containing the target OFFLINE executable
     :type exesurfex: str
-    '''
+    """
     # MV : dans ce cas le binaire doit être présent localement sur HPC,
     # pas besoin de le récupérer sur un noeud de transfert
     def get_local_inputs(self):
@@ -443,11 +443,11 @@ class Offline_MPI_Local(_Offline_MPI):
 
 
 class Offline_MPI_Uenv_XIOS(_Offline_MPI):
-    '''
+    """
     Get OFFLINE executable from a User Environment, compilation with XIOS option
 
     XIOS impose to have one more executable + 2 xml files: iodef.xml and surfex.xml (this name can change)
-    '''
+    """
     # MF: juste pour commencer à créer une structure adéquate en ayant en tête une demande à venir
     def get_remote_inputs(self):
         """

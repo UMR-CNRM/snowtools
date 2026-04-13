@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 8 march 2024
 
 @author: Vernay
@@ -109,7 +109,7 @@ TODO :
     - Uniformiser la gestion du "role" (fixé pour chaque ressource ou modifiable en argument ?)
     - ajouter des exemples avec alternate (PREP)
 
-'''
+"""
 
 import os
 import vortex
