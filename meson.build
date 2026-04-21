@@ -1,5 +1,5 @@
 project('snowtools', 'c',
-   version: '2.0.3',
+   version: '2.0.4',
    default_options: [
     'c_std=c99'
   ],

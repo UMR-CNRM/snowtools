@@ -1,7 +1,7 @@
 Snowtools's |version| documentation
 ===================================
 
-Documentation of Snowtools |version| generated on |today| from release: |release|.
+Documentation of Snowtools |release| generated on |today|.
 
 The code is available at https://github.com/UMR-CNRM/snowtools
 
