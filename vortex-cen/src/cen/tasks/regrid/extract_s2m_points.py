@@ -54,17 +54,13 @@ class ExtractS2MForcing(_CenResearchTask):
         :type aspects: int, list
         """
 
-        for footprint in ['massifs', 'slopes', 'elevations', 'aspects']:
-            if footprint not in self.conf:
-                self.conf[footprint] = None
-
         self.sh.title('Algo')
         algo = vortex.task(
             kind         = 'ExtractMassifs',
-            massifs      = self.conf.massifs,
-            slopes       = self.conf.slopes,
-            elevations   = self.conf.elevations,
-            aspects      = self.conf.aspects,
+            massifs      = self.conf.get('massifs', None),
+            slopes       = self.conf.get('slopes', None),
+            elevations   = self.conf.get('elevations', None),
+            aspects      = self.conf.get('aspects', None),
             role_members = 'Forcing',
             engine       = 'algo',
         )
