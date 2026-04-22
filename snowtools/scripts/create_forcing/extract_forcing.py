@@ -34,21 +34,9 @@ def extract(forcing_in='FORCING_IN.nc', forcing_out='FORCING_OUT.nc', **kw):
     :type aspects: list or None
     """
 
-    # Chunk input forcing over `Number_of_points` for optimal performance.
-    ds = xr.open_dataset(forcing_in, chunks={'Number_of_points': 1}, engine='snowtools')
-    # ds = xarray_snowtools.preprocess(ds)
+    ds = xr.open_dataset(forcing_in, engine='snowtools')
 
     check_geometry(ds, forcing_in)
-
-#    # Select points
-#    for key, value in kw.items():
-#        if value is not None:
-#            ds = ds.where(ds[key].isin(value), drop=True)
-#
-#    # Delete added 'missing_value' attribute to avoid conflicts with existing '_FillValue' attribute
-#    # See https://github.com/pydata/xarray/issues/7722
-#    if 'missing_value' in ds.massif_num.encoding.keys():
-#        ds.massif_num.encoding.pop('missing_value')
 
     out = ds.semidistributed.sel_points(**kw)
 

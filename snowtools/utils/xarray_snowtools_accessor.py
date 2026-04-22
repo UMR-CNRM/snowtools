@@ -372,12 +372,14 @@ class SemiDistributedAccessor(SnowtoolsAccessor):
                 if var not in list(self.ds.keys()):
                     raise ValueError(f'Variable "{var}" does not exist')
                 else:
-                    if isinstance(eval(var), list):
-                        tmp = self.ds[var].isin([float(x) for x in eval(var)])
-                    elif isinstance(eval(var), range):
-                        tmp = self.ds[var].isin([float(x) for x in eval(var)])
-                    elif isinstance(eval(var), int) or isinstance(eval(var), float):
-                        tmp = self.ds[var] == eval(var)
+                    value = eval(var)
+                    if isinstance(value, str):
+                        value = eval(value)
+
+                    if isinstance(value, list) or isinstance(value, range):
+                        tmp = self.ds[var].isin([float(x) for x in value])
+                    elif isinstance(value, int) or isinstance(value, float):
+                        tmp = self.ds[var] == value
                     else:
                         raise TypeError(f"{var} should be a list, range or int")
 
@@ -397,7 +399,7 @@ class SemiDistributedAccessor(SnowtoolsAccessor):
                 print("WARNING : No entry found with the given arguments, returning an empty Dataset")
                 print('Arguments :')
                 for var in ['massif_num', 'ZS', 'slope', 'aspect']:
-                    print(var, eval(var))
+                    print(var, '=', eval(var))
                 return xr.Dataset()
         else:
             print("WARNING : arguments where empty or could not be interpreted, nothing changed.")

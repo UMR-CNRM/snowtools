@@ -7,8 +7,6 @@ from bronx.fancies import loggers
 from vortex_cen.algo.ensemble import _CENTaylorRun, _CENTaylorVortexWorker
 from snowtools.scripts.create_forcing import extract_forcing
 
-import footprints
-
 logger = loggers.getLogger(__name__)
 
 
@@ -25,22 +23,18 @@ class ExtractForcing(_CENTaylorRun):
             ),
             massifs = dict(
                 info     = 'List of massifs to be extracted',
-                type     = footprints.FPList,
                 optional = True,
             ),
             elevations = dict(
                 info     = 'List of elevations to be extracted',
-                type     = footprints.FPList,
                 optional = True,
             ),
             slopes = dict(
                 info     = 'List of slopes to be extracted',
-                type     = footprints.FPList,
                 optional = True,
             ),
             aspects = dict(
                 info     = 'List of aspects to be extracted',
-                type     = footprints.FPList,
                 optional = True,
             ),
             role_members = dict(
@@ -63,22 +57,18 @@ class ExtractMassifsWorker(_CENTaylorVortexWorker):
             ),
             massifs = dict(
                 info     = 'List of massifs to be extracted',
-                type     = footprints.FPList,
                 optional = True,
             ),
             elevations = dict(
                 info     = 'List of elevations to be extracted',
-                type     = footprints.FPList,
                 optional = True,
             ),
             slopes = dict(
                 info     = 'List of slopes to be extracted',
-                type     = footprints.FPList,
                 optional = True,
             ),
             aspects = dict(
                 info     = 'List of aspects to be extracted',
-                type     = footprints.FPList,
                 optional = True,
             ),
         )
