@@ -43,6 +43,18 @@ def read_and_preprocess(resource,
     :type zoom: dict
     :return: field
     :rtype: epygram.field
+
+    Usage example (for getting total snow depth field of a 2D PRO file ``filename`` on a given date):
+
+    .. code-block:: python
+
+       import epygram
+
+       from snowtools.maps import quicklookmap
+
+       resource = epygram.formats.resource(filename, openmode='r')
+       field = quicklookmap.read_and_preprocess(resource, 'DSN_T_ISBA', '2021-12-01')
+
     """
 
     field = resource.readfield(fid, only=additional_selection_options)
@@ -90,7 +102,9 @@ def wind_map(field, title, map_factor_correction=False, vectors_subsampling=50,
     :param quiverkey: options to be passed to plotfield to activate a quiver key
         (cf. pyplot.quiverkey).
     :param plot_kwargs: every other argument that can be passed to the cartoplot method of an epygram H2D field.
-    :return: dict with plot elements: 'fig', 'ax', potentially 'colorbar' etc.
+                        Details can be found at:
+                        https://umr-cnrm.github.io/EPyGrAM-doc/library/H2DField.html#epygram.fields.H2DField.H2DField.cartoplot
+    :return: dict with plot elements: 'fig', 'ax', potentially 'colorbar'.
     :rtype: dict
 
     .. figure:: /images/20150405T06_pseudo_wind_map.png
@@ -143,8 +157,20 @@ def scalar_map(field, title=None, plot_kwargs={}):
     :param title: plot title
     :type title: str
     :param plot_kwargs: every other argument that can be passed to the cartoplot method of an epygram H2D field.
+                        Details can be found at:
+                        https://umr-cnrm.github.io/EPyGrAM-doc/library/H2DField.html#epygram.fields.H2DField.H2DField.cartoplot
     :return: dict with plot elements: 'fig', 'ax', potentially 'colorbar' etc.
     :rtype: dict
+
+    .. code-block:: python
+
+       import maptplotlib.pyplot as plt
+
+       from snowtools.maps import quicklookmap
+
+       quicklookmap.scalar_map(field)
+
+       plt.show()
 
     .. figure:: /images/20190513T10_snowheight.png
        :align: center
