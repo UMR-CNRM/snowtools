@@ -54,7 +54,7 @@ class Safran(Task, S2MTaskMixIn):
                     cumul          = self.conf.cumul,
                     nativefmt      = 'tar',
                     model          = 'safran',
-                    source         = 'arpege' if y1 > 2020 else 'era5',
+                    source         = 'era5',
                     date           = dateend.ymdh,
                     datebegin      = datebegin.ymdh,
                     dateend        = dateend.ymdh,
