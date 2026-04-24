@@ -25,7 +25,9 @@ import tkinter as tk
 import tkinter.filedialog
 from tkinter import messagebox
 
+import numpy as np
 import matplotlib
+import pyproj
 
 from snowtools.plots.stratiprofile import proplotter_functions
 
@@ -335,6 +337,7 @@ class MapPlotterMain(tk.Frame):
         self.Canevas = FigureCanvasTkAgg(self.fig1, self)
         self.toolbar = NavigationToolbar2Tk(self.Canevas, self)
         self.toolbar.update()
+        self.Canevas.mpl_connect('button_press_event', self.button_press)
 
         self.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         self.update()
@@ -378,6 +381,30 @@ class MapPlotterMain(tk.Frame):
         self.clear()
         self.ax1 = plt.axes(projection=ccrs.PlateCarree())
         self.toolbar.update()
+
+    def button_press(self, event):
+        if event.button > 1:
+            if event.xdata is None:
+                return
+            lat = event.ydata
+            lon = event.xdata
+            t = pyproj.Transformer.from_crs('EPSG:4326', 'EPSG:2154')
+            xlambert, ylambert = t.transform(lat, lon)
+            xx = None
+            yy = None
+            xxyy = None
+            if self.master.fileobj is not None:
+                try:
+                    g = self.master.fileobj.resource.readfield('DSN_T_ISBA').geometry.get_lonlat_grid()
+                    _d = (g[0] - lon) ** 2 + (g[1] - lat) ** 2
+                    xxyy = np.argmin(_d)
+                    xx, yy = xxyy // g[0].shape[1], xxyy % g[0].shape[1]
+                except Exception:
+                    pass
+            messagebox.showinfo(
+                title = 'Coordinates',
+                message = f"""lat: {lat}\nlon: {lon}\nxlambert: {xlambert}\nylambert: {ylambert}\n"""
+                f"""#xx: {xx}\n#yy: {yy}\n##: {xxyy}""")
 
     def update(self):
         """
