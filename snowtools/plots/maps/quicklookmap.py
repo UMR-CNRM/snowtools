@@ -50,7 +50,7 @@ def read_and_preprocess(resource,
 
        import epygram
 
-       from snowtools.maps import quicklookmap
+       from snowtools.plots.maps import quicklookmap
 
        resource = epygram.formats.resource(filename, openmode='r')
        field = quicklookmap.read_and_preprocess(resource, 'DSN_T_ISBA', '2021-12-01')
@@ -166,7 +166,7 @@ def scalar_map(field, title=None, plot_kwargs={}):
 
        import maptplotlib.pyplot as plt
 
-       from snowtools.maps import quicklookmap
+       from snowtools.plots.maps import quicklookmap
 
        quicklookmap.scalar_map(field)
 

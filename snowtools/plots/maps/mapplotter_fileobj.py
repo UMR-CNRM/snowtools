@@ -229,7 +229,7 @@ class proreader(reader):
             dimensions = {x: n for x, n in v_i['dimensions'].items()}
             attributes = v_i['metadata']
             if len(dimensions) < 2:
-                pass
+                continue
             t_dims = set(dimensions).intersection(
                 set(epygram.config.netCDF_usualnames_for_standard_dimensions['T_dimension']))
             if len(t_dims) > 0:
@@ -238,13 +238,13 @@ class proreader(reader):
                 set(epygram.config.netCDF_usualnames_for_standard_dimensions['X_dimension']))
             y_dims = set(dimensions).intersection(
                 set(epygram.config.netCDF_usualnames_for_standard_dimensions['Y_dimension']))
-            if y_dims == 0 or x_dims == 0:
+            if len(y_dims) == 0 or len(x_dims) == 0:
                 continue
             for add_dim in set(dimensions).difference(x_dims, y_dims, t_dims):
                 if add_dim not in self._additional_choices:
                     self._additional_choices[add_dim] = {'len': dimensions[add_dim]}
 
-            fullname = attributes[self._name_attribute_full_name] if self._name_attribute_full_name in attributes else v
+            fullname = attributes[self._name_attribute_full_name] + f' ({v})' if self._name_attribute_full_name in attributes else v
             self._association_names[fullname] = v
             self._variables[v] = {
                 'full_name': fullname,

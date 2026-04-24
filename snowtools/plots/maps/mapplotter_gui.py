@@ -45,7 +45,6 @@ FILETYPES = [('PRO files', '.nc'), ('all files', '.*')]
 STD_MAP_ARGS = {
     'parallels': 'auto',
     'meridians': 'auto',
-    'epygram_departments': False,
     'cartopy_features': []
 }
 
@@ -271,7 +270,7 @@ class MapPlotterController(abc.ABC):
             'fig': fig,
             'colormap': colormap,
             'plot_method': 'pcolormesh',
-            'epygram_departments': True if self.master.parameters['show_depts'].get() == 1 else False,
+            'epygram_departments': self.master.parameters['show_depts'].get() == 1,
             **STD_MAP_ARGS
         })
 
@@ -310,8 +309,6 @@ class MapPlotterController(abc.ABC):
         """
         Reset the selection (and plot)
         """
-        for widget in self.master.choices.point_w.lselectors:
-            widget.set('')
         self.master.choices.variables_w.choice_var_master.set('')
         self.master.main.clear()
 
