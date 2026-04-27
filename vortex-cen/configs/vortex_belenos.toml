@@ -1,69 +1,26 @@
 [data-tree]
+op_rootdir = "/chaine/mxpt001/vortex/mtool/cache/vortex"
 rootdir = "/scratch/mtool/%usr%/cache/vortex"
 
 [storage]
-address="hendrix.meteo.fr"
-protocol="ftp"
-rootdir="~%usr%/vortex"
+address = "hendrix.meteo.fr"
+protocol = "ftp"
+rootdir = "~%usr%/vortex"
+op_rootdir = "/home/m/mxpt/mxpt001/vortex"
+
+[gco]
+genvpath = "/home/mf/dp/marp/gco/public/bin/genv"
+ggetpath = "/home/mf/dp/marp/gco/public/bin/gget"
 
 [ftserv]
-hostname_patterns="hendrix.meteo.fr"
+hostname_patterns = ["(belenos|taranis)transfert\\d.\\1hpc.meteo.fr"]
 
-[nwp-tools]
-lfi = "/home/mf/dp/marp/verolive/public/lfi-tools/default"
-
-[rawftshell]
-lfi = "/usr/local/bin/ft_regroupement_concat_falfi.sh"
-
-[mpitool]
-mpiname = "mpiauto"
-mpilauncher = "/home/mf/dp/marp/verolive/public/mpi-tools/mpiauto/mpiauto"
-mpiopts = "--wrap --wrap-stdeo --wrap-stdeo-pack --verbose"
-sublauncher = "libspecific"
-
-[mpienv]
-DAPL_ACK_RETRY = "7"
-DAPL_ACK_TIMER = "20"
-DAPL_IB_SL = "0"
-DAPL_MAX_INLINE = "64"
-DAPL_RNR_RETRY = "10"
-DAPL_RNR_TIMER = "12"
-DAPL_UCM_CQ_SIZE = "8192"
-DAPL_UCM_QP_SIZE = "8192"
-DAPL_UCM_REP_TIME = "10000"
-DAPL_UCM_RETRY = "7"
-DAPL_UCM_RTU_TIME = "8000"
-DAPL_UCM_TX_BURST = "100"
-I_MPI_CHECK_DAPL_PROVIDER_COMPATIBILITY = "0"
-I_MPI_CHECK_DAPL_PROVIDER_MISMATCH = "none"
-I_MPI_DAPL_SCALABLE_PROGRESS = "1"
-I_MPI_DAPL_TRANSLATION_CACHE = "1"
-I_MPI_DAPL_UD_ACK_RECV_POOL_SIZE = "8704"
-I_MPI_DAPL_UD_ACK_SEND_POOL_SIZE = "8704"
-I_MPI_DAPL_UD_DIRECT_COPY_THRESHOLD = "65536"
-I_MPI_DAPL_UD = "on"
-I_MPI_DAPL_UD_PROVIDER = "ofa-v2-mlx5_0-1u"
-I_MPI_DAPL_UD_RDMA_MIXED = "1"
-I_MPI_DAPL_UD_RECV_BUFFER_NUM = "8208"
-I_MPI_DAPL_UD_REQUEST_QUEUE_SIZE = "80"
-I_MPI_DAPL_UD_RNDV_EP_NUM = "4"
-I_MPI_DAPL_UD_SEND_BUFFER_NUM = "8208"
-I_MPI_DEBUG = "1"
-I_MPI_DYNAMIC_CONNECTION = "1"
-I_MPI_EXTRA_FILESYSTEM_LIST = "lustre"
-I_MPI_EXTRA_FILESYSTEM = "on"
-I_MPI_FABRICS = "shm:dapl"
-I_MPI_FALLBACK = "0"
-I_MPI_FALLBACK_DEVICE = "disable"
-I_MPI_FAST_COLLECTIVES = "1"
-I_MPI_HARD_FINALIZE = "1"
-I_MPI_HYDRA_BOOTSTRAP = "slurm"
-I_MPI_HYDRA_IFACE = "ib0"
-I_MPI_HYDRA_PMI_CONNECT = "alltoall"
-I_MPI_LARGE_SCALE_THRESHOLD = "8192"
-I_MPI_LIBRARY_KIND = "release_mt"
-I_MPI_PLATFORM_CHECK = "0"
-I_MPI_PLATFORM = "uniform"
-I_MPI_SCALABLE_OPTIMIZATION = "0"
-I_MPI_SHM_SPIN_COUNT = "10"
-I_MPI_SPIN_COUNT = "10"
+[ftserv.shell]
+lfi = "falfi"
+grib = "basic"
+odb = "tar"
+ddhpack = "tar"
+obslocationpack = "tar"
+obsfirepack = "tar"
+rawfiles = "tar"
+filespack = "tar"
