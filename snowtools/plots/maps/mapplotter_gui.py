@@ -33,6 +33,7 @@ from snowtools.plots.stratiprofile import proplotter_functions
 
 from snowtools.plots.stratiprofile import gui_elements
 from snowtools.plots.maps import quicklookmap
+from snowtools.plots.maps import map_helpers
 from snowtools.plots.maps import mapplotter_fileobj
 
 matplotlib.use('TkAgg')
@@ -48,6 +49,11 @@ STD_MAP_ARGS = {
     'parallels': 'auto',
     'meridians': 'auto',
     'cartopy_features': []
+}
+
+PROJECTIONS = {
+    0: ccrs.PlateCarree(),
+    1: ccrs.epsg(9794),
 }
 
 
@@ -92,7 +98,11 @@ class MapPlotterApplication(gui_elements.Application):
         self.master = master
         self.fileobj = fileobj
         self.pack(fill=tk.BOTH, expand=True)
-        self.parameters = {'show_depts': tkinter.IntVar()}
+        self.parameters = {
+            'show_depts': tkinter.IntVar(),
+            'show_hillshade': tkinter.IntVar(),
+            'projection': tkinter.IntVar(),
+        }
 
         # Controls
         self.controller = MapPlotterController(self)
@@ -174,6 +184,13 @@ class MapPlotterMenu(tk.Menu):
         self.optionsmenu = tk.Menu(self, tearoff=0)
         self.optionsmenu.add_checkbutton(label="Show French Departments", onvalue=1, offvalue=0,
                                          variable=self.master.parameters['show_depts'])
+        self.optionsmenu.add_checkbutton(label="Show Hillshade", onvalue=1, offvalue=0,
+                                         variable=self.master.parameters['show_hillshade'])
+        self.optionsmenu.add_separator()
+        self.optionsmenu.add_radiobutton(label="Pseudo-Mercator projection", value=0,
+                                         variable=self.master.parameters['projection'])
+        self.optionsmenu.add_radiobutton(label="Lambert 93 projection", value=1,
+                                         variable=self.master.parameters['projection'])
         self.add_cascade(label='Options', menu=self.optionsmenu)
 
         self.master.master.config(menu=self)
@@ -257,7 +274,9 @@ class MapPlotterController(abc.ABC):
         self.master.main.clear()
 
         # Prepare fig and axis
-        self.master.main.ready_to_plot(nb_graph=1, same_y=True, same_x=True, third_axis=False)
+        self.master.main.ready_to_plot(
+            nb_graph=1, same_y=True, same_x=True, third_axis=False,
+            projection=PROJECTIONS[self.master.parameters['projection'].get()])
         fig = self.master.main.fig1
         ax = self.master.main.ax1
 
@@ -275,6 +294,9 @@ class MapPlotterController(abc.ABC):
             'epygram_departments': self.master.parameters['show_depts'].get() == 1,
             **STD_MAP_ARGS
         })
+
+        if self.master.parameters['show_hillshade'].get() == 1:
+            map_helpers.add_IGN_hillshade(ax)
 
         # Apply previous zoom if relevant and store zoom information
         if self.master_xlim is not None and self.master_ylim is not None:
@@ -338,6 +360,7 @@ class MapPlotterMain(tk.Frame):
         self.toolbar = NavigationToolbar2Tk(self.Canevas, self)
         self.toolbar.update()
         self.Canevas.mpl_connect('button_press_event', self.button_press)
+        self.projection = None
 
         self.Canevas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
         self.update()
@@ -357,7 +380,7 @@ class MapPlotterMain(tk.Frame):
         self.ax1 = None
         self.update()
 
-    def ready_to_plot(self, same_y, nb_graph, ratio=None, same_x=False, third_axis=True):
+    def ready_to_plot(self, same_y, nb_graph, ratio=None, same_x=False, third_axis=True, projection=None):
         """
         Prepare the main frame for a new figure.
         This function include refreshing of surrounding dependent bricks
@@ -379,23 +402,28 @@ class MapPlotterMain(tk.Frame):
             * same_x false and same_y false if you want to plot albedo and see what happen on temperature for example
         """
         self.clear()
-        self.ax1 = plt.axes(projection=ccrs.PlateCarree())
+        self.projection = ccrs.PlateCarree() if projection is None else projection
+        self.ax1 = plt.axes(projection=self.projection)
         self.toolbar.update()
 
     def button_press(self, event):
+        projection = ccrs.PlateCarree() if self.projection is None else self.projection
         if event.button > 1:
             if event.xdata is None:
                 return
-            lat = event.ydata
-            lon = event.xdata
-            t = pyproj.Transformer.from_crs('EPSG:4326', 'EPSG:2154')
-            xlambert, ylambert = t.transform(lat, lon)
+            y = event.ydata
+            x = event.xdata
+            t = pyproj.Transformer.from_crs(projection, 'EPSG:4326')
+            lat, lon = t.transform(x, y)
+            t = pyproj.Transformer.from_crs(projection, 'EPSG:2154')
+            xlambert, ylambert = t.transform(x, y)
             xx = None
             yy = None
             xxyy = None
             if self.master.fileobj is not None:
                 try:
-                    g = self.master.fileobj.resource.readfield('DSN_T_ISBA').geometry.get_lonlat_grid()
+                    vn = self.master.fileobj.variable_default()
+                    g = self.master.fileobj.resource.readfield(vn).geometry.get_lonlat_grid()
                     _d = (g[0] - lon) ** 2 + (g[1] - lat) ** 2
                     xxyy = np.argmin(_d)
                     xx, yy = xxyy // g[0].shape[1], xxyy % g[0].shape[1]
