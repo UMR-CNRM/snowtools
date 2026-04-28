@@ -2,40 +2,28 @@
 # -*- coding: utf-8 -*-
 
 """
-Created on 6 déc. 2018
-
-@author: lafaysse
-
-usage: python postprocess_plot.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]
-
-    #) extracts operational simulation results
-    #) Plots maps for the Alps, the Pyrenees the Corse, Vosges, Massif Central, Jura
-    #) Creates spaghetti plots for all massifs and stations
 """
 
-import sys
 import locale
 import os
-from optparse import OptionParser
 from collections import Counter, defaultdict
 
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')
 import matplotlib.style
 
+from snowtools.utils.prosimu import prosimu
 from snowtools.utils.dates import check_and_convert_date, pretty_date
 from snowtools.plots.temporal.chrono import spaghettis_with_det, spaghettis
-from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR
-from snowtools.tools.postprocess import EnsembleFlatMassif, EnsembleNorthSouthMassif
-from snowtools.tools.postprocess import EnsembleStation, EnsembleDiags
+#from snowtools.plots.pearps2m.postprocess import _EnsembleMassif
+#from snowtools.plots.pearps2m.postprocess import EnsembleFlatMassif, EnsembleNorthSouthMassif
+#from snowtools.plots.pearps2m.postprocess import EnsembleStation, EnsembleDiags
 
-from bronx.stdtypes.date import today
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 
 echecker = ExternalCodeImportChecker('cartopy')
 with echecker:
-    import cartopy
+    import cartopy  # noqa
 echecker_pyproj = ExternalCodeImportChecker('pyproj')
 with echecker_pyproj as echecker_register:
     import pyproj
@@ -47,45 +35,10 @@ matplotlib.rcParams['agg.path.chunksize'] = 100
 matplotlib.rcParams['axes.xmargin'] = 0
 matplotlib.rcParams['axes.ymargin'] = 0
 # matplotlib.rcParams["figure.dpi"] = 75
+matplotlib.use('Agg')
 
 
-usage = "usage: python postprocess.py [-b YYYYMMDD] [-e YYYYMMDD] [-o diroutput]"
-
-
-def parse_options(arguments):
-    """
-    Treat options passed to the script.
-
-    :param arguments: arguments from calling the script
-    :return: options
-    """
-    parser = OptionParser(usage)
-
-    parser.add_option("-b",
-                      action="store", type="string", dest="datebegin", default=today().ymd,
-                      help="First year of extraction")
-
-    parser.add_option("-e",
-                      action="store", type="string", dest="dateend", default=today().ymd,
-                      help="Last year of extraction")
-
-    parser.add_option("-o",
-                      action="store", type="string", dest="diroutput",
-                      default=os.path.join(LUSTRE_NOSAVE_USER_DIR, "PEARPS2M"),
-                      help="Output directory")
-
-    parser.add_option("--dev",
-                      action="store_true", dest="dev", default=False)
-    parser.add_option("--dble", action="store_true", dest="dble", default=False)
-
-    parser.add_option("--reforecast", action="store_true", dest="reforecast", default=False)
-
-    (options, args) = parser.parse_args(arguments)  # @UnusedVariable
-
-    return options
-
-
-class config(object):
+class Config:
     """
     Configuration passed to S2MExtractor and to be used in vortex toolboxes.
 
@@ -94,6 +47,7 @@ class config(object):
     xpid = "oper"  #: Operational chain
     alternate_xpid = ["OPER@lafaysse"]  #: Alternative experiment id
     # alternate_xpid = ["oper"]
+    #: List of geometries
     list_geometry = ['alp', 'pyr', 'cor', 'jur', 'mac', 'vog', 'postes']
     # list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes'] #: List of geometries
     # list_geometry = ['alp', 'pyr', 'cor', 'postes']
@@ -103,43 +57,45 @@ class config(object):
     # Development chain
     # xpid = "OPER@lafaysse"  # To be changed with IGA account when operational
     # list_geometry = ['alp_allslopes', 'pyr_allslopes', 'cor_allslopes', 'postes']
+    #: 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
+    list_members = list(range(0, 36))
 
-    list_members = list(range(0, 36))  #: 35 for determinstic member, 36 for sytron, 0-34 for PEARP members
-
-    def __init__(self):
+    def __init__(self, OPTIONS):
         """
         #) checks and converts dates
         #) creates output directories if they don't exist.
-
         """
-        options = parse_options(sys.argv)
-        options.datebegin, options.dateend = [check_and_convert_date(dat) for dat in [options.datebegin, options.dateend]]
-        if options.datebegin.hour == 0:
-            self.rundate = options.datebegin.replace(hour=6)  #: Date of model run  class:`bronx.stdtypes.date.Date`
+        OPTIONS.datebegin, OPTIONS.dateend = [check_and_convert_date(dat)
+                                              for dat in [OPTIONS.datebegin, OPTIONS.dateend]]
+        if OPTIONS.datebegin.hour == 0:
+            #: Date of model run  class:`bronx.stdtypes.date.Date`
+            self.rundate = OPTIONS.datebegin.replace(hour=6)
         else:
-            self.rundate = options.datebegin  #: Date of model run  :class:`bronx.stdtypes.date.Date`
-        self.diroutput = options.diroutput + "/" + self.rundate.strftime("%Y%m%d%H")  #: output directory
-        self.diroutput_maps = self.diroutput + "/maps"  #: output directory for maps
-        self.diroutput_plots = self.diroutput + "/plots"  #: output directory for other plots
+            #: Date of model run  :class:`bronx.stdtypes.date.Date`
+            self.rundate = OPTIONS.datebegin
+        #: output directory
+        self.diroutput = os.path.join(OPTIONS.diroutput, self.rundate.strftime("%Y%m%d%H"))
+        self.diroutput_maps = os.path.join(self.diroutput, 'maps')  #: output directory for maps
+        self.diroutput_plots = os.path.join(self.diroutput, "plots")  #: output directory for other plots
 
         for required_directory in [self.diroutput, self.diroutput_maps, self.diroutput_plots]:
             if not os.path.isdir(required_directory):
                 os.mkdir(required_directory)
 
-        self.dev = options.dev
-        if options.dev:
-            self.xpid = "nouveaux_guess@lafaysse"
-            delattr(config, 'alternate_xpid')
+        self.dev = OPTIONS.dev
+        if OPTIONS.dev:
+            self.xpid = "OPER@lafaysse"
+            delattr(Config, 'alternate_xpid')
             self.list_geometry = ['jur', 'mac', 'vog', 'cor', 'alp', 'pyr', 'postes']
-        self.dble = options.dble
-        if options.dble:
+        self.dble = OPTIONS.dble
+        if OPTIONS.dble:
             self.xpid = "dble"
-            delattr(config, 'alternate_xpid')
+            delattr(Config, 'alternate_xpid')
             self.list_geometry = ['alp', 'pyr', 'cor', 'jur', 'mac', 'vog', 'postes']
-        self.reforecast = options.reforecast
-        if options.reforecast:
+        self.reforecast = OPTIONS.reforecast
+        if OPTIONS.reforecast:
             self.xpid = "reforecast_double2021@vernaym"
-            delattr(config, 'alternate_xpid')
+            delattr(Config, 'alternate_xpid')
             self.list_geometry = ['jur4_allslopes_reforecast', 'mac11_allslopes_reforecast',
                                   'vog3_allslopes_reforecast', 'alp27_allslopes',
                                   'pyr24_allslopes', 'cor2_allslopes']
@@ -154,35 +110,45 @@ class EnsembleOperDiags(EnsembleDiags):
     formatplot = 'png'
     #: dict of plot attributes for each variable
     attributes = dict(
-        PP_SD_1DY_ISBA=dict(convert_unit=1., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        PP_SD_1DY_ISBA=dict(convert_unit=1., forcemin=0., forcemax=60.,
+                            palette='YlGnBu', seuiltext=50.,
                             label=u'Epaisseur de neige fraîche en 24h (cm)'),
-        SD_1DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        SD_1DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60.,
+                         palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur de neige fraîche en 24h (cm)'),
-        SD_3DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        SD_3DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60.,
+                         palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur de neige fraîche en 72h (cm)'),
-        RAMSOND_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        RAMSOND_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60.,
+                          palette='YlGnBu', seuiltext=50.,
                           label=u'Epaisseur mobilisable (cm)'),
-        NAT_LEV=dict(forcemin=-0.5, forcemax=5.5, palette='YlOrRd', ncolors=6, label=u'Risque naturel',
-                     ticks=[u'Très faible', u'Faible', u'Mod. A', u'Mod. D', u'Fort', u'Très fort']),
-        naturalIndex=dict(forcemin=0., forcemax=8., palette='YlOrRd', label=u'Indice de risque naturel', format='%.1f',
+        NAT_LEV=dict(forcemin=-0.5, forcemax=5.5, palette='YlOrRd',
+                     ncolors=6, label=u'Risque naturel',
+                     ticks=[u'Très faible', u'Faible', u'Mod. A',
+                            u'Mod. D', u'Fort', u'Très fort']),
+        naturalIndex=dict(forcemin=0., forcemax=8., palette='YlOrRd',
+                          label=u'Indice de risque naturel', format='%.1f',
                           nolevel=True),
         DSN_T_ISBA=dict(convert_unit=100., label=u'Hauteur de neige (cm)'),
         WSN_T_ISBA=dict(label=u'Equivalent en eau (kg/m2)'),
-        SNOMLT_ISBA=dict(convert_unit=3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        SNOMLT_ISBA=dict(convert_unit=3. * 3600., forcemin=0.,
+                         forcemax=60., palette='YlGnBu', seuiltext=50.,
                          label=u'Ecoulement en 3h (kg/m2/3h)'),
-        WET_TH_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        WET_TH_ISBA=dict(convert_unit=100., forcemin=0.,
+                         forcemax=60., palette='YlGnBu', seuiltext=50.,
                          label=u'Epaisseur humide (cm)'),
-        REFRZTH_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        REFRZTH_ISBA=dict(convert_unit=100., forcemin=0.,
+                          forcemax=60., palette='YlGnBu', seuiltext=50.,
                           label=u'Epaisseur regelée (cm)'),
-        RAINF_ISBA=dict(convert_unit=3. * 3600., forcemin=0., forcemax=60., palette='YlGnBu', seuiltext=50.,
+        RAINF_ISBA=dict(convert_unit=3. * 3600., forcemin=0.,
+                        forcemax=60., palette='YlGnBu', seuiltext=50.,
                         label=u'Pluie en 3h (kg/m2/3h)'),
     )
     #: list of quantiles
     list_q = [20, 50, 80]
 
     def __init__(self):
-        from snowtools.plots.maps.cartopy_massifs import Map_alpes, Map_pyrenees, Map_corse, Map_vosges, Map_jura, Map_central
-        super(self, EnsembleOperDiags).__init__()
+        super(EnsembleOperDiags, self).__init__()
 
     def alldiags(self):
         """
@@ -219,7 +185,8 @@ class EnsembleOperDiags(EnsembleDiags):
 
             for point in range(0, npoints):
                 if 'convert_unit' in self.attributes[var].keys():
-                    allmembers = self.ensemble[var][:, point, :] * self.attributes[var]['convert_unit']
+                    allmembers = self.ensemble[var][:, point, :] \
+                                 * self.attributes[var]['convert_unit']
                     qmin = self.quantiles[var][0][:, point] * self.attributes[var]['convert_unit']
                     qmed = self.quantiles[var][1][:, point] * self.attributes[var]['convert_unit']
                     qmax = self.quantiles[var][2][:, point] * self.attributes[var]['convert_unit']
@@ -279,10 +246,14 @@ class EnsembleOperDiags(EnsembleDiags):
             for pair in list_pairs:
                 for p, point in enumerate(pair):
                     if 'convert_unit' in self.attributes[var].keys():
-                        allmembers = self.ensemble[var][:, point, :] * self.attributes[var]['convert_unit']
-                        qmin = self.quantiles[var][0][:, point] * self.attributes[var]['convert_unit']
-                        qmed = self.quantiles[var][1][:, point] * self.attributes[var]['convert_unit']
-                        qmax = self.quantiles[var][2][:, point] * self.attributes[var]['convert_unit']
+                        allmembers = self.ensemble[var][:, point, :] \
+                            * self.attributes[var]['convert_unit']
+                        qmin = self.quantiles[var][0][:, point] \
+                            * self.attributes[var]['convert_unit']
+                        qmed = self.quantiles[var][1][:, point] \
+                            * self.attributes[var]['convert_unit']
+                        qmax = self.quantiles[var][2][:, point] \
+                            * self.attributes[var]['convert_unit']
                     else:
                         allmembers = self.ensemble[var][:, point, :]
                         qmin = self.quantiles[var][0][:, point]
@@ -313,7 +284,8 @@ class EnsembleOperDiags(EnsembleDiags):
 @echecker_pyproj.disabled_if_unavailable(version='2.0.0')
 class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
     """
-    Class for operationally plotting maps and spaghetti plots for ensembles with massif geometry and for the zero slope case.
+    Class for operationally plotting maps and spaghetti plots for
+    ensembles with massif geometry and for the zero slope case.
     """
     #: maximum height level to be treated
     levelmax = 3900
@@ -327,12 +299,14 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
 
     def pack_maps(self, domain, suptitle, diroutput="."):
         """
-        Produce maps for the variables given in :py:attr:`list_var_map` over the regions given in :py:attr:`domain`
+        Produce maps for the variables given in :py:attr:`list_var_map`
+        over the regions given in :py:attr:`domain`
         for each available altitude level and time step.
 
         Each massif is colored corresponding to the second percentile value defined in
         :py:attr:`.list_q` and
-        the color map defined in :py:attr:`.attributes`. At the center of each massif the values corresponding to
+        the color map defined in :py:attr:`.attributes`.
+        At the center of each massif the values corresponding to
         the first three
         percentiles in :py:attr:`.list_q` are marked.
 
@@ -341,6 +315,9 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
         :type suptitle: str
         :param diroutput: output directory to save the maps
         """
+
+        from snowtools.plots.maps.cartopy_massifs import Map_alpes, Map_pyrenees, Map_corse, Map_vosges, Map_jura, \
+            Map_central
 
         map_generic = dict(alp=Map_alpes, pyr=Map_pyrenees, cor=Map_corse, jur=Map_jura, mac=Map_central,
                            vog=Map_vosges)
@@ -397,7 +374,8 @@ class EnsembleOperDiagsFlatMassif(EnsembleOperDiags, EnsembleFlatMassif):
 @echecker_pyproj.disabled_if_unavailable(version='2.0.0')
 class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMassif):
     """
-    Class for operationally plot maps and spaghetti plots distinguishing between northern and southern orientation
+    Class for operationally plot maps and spaghetti plots
+    distinguishing between northern and southern orientation
     at each massif.
     """
     #: maximum height level to plot
@@ -424,8 +402,8 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
 
     def get_pairs_ns(self):
         """
-        Get for each massif and altitude the pair of indices corresponding to values for the northern and southern
-        slopes.
+        Get for each massif and altitude the pair of indices corresponding to
+        values for the northern and southern slopes.
 
         :return: indices corresponding to northern and southern slopes
         :rtype: list of lists
@@ -460,12 +438,13 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
 
     def pack_maps(self, domain, suptitle, diroutput):
         """
-        Produce maps for the variables given in :py:attr:`.list_var_map` over the regions given in :py:attr:`.domain`
+        Produce maps for the variables given in :py:attr:`.list_var_map`
+        over the regions given in :py:attr:`.domain`
         for each available altitude level and time step.
 
-        For each massif a table with background colors and values corresponding to the percentiles in
-        :py:attr:`.list_q` and
-        the color map defined in :py:attr:`.attributes` is plotted near the center of each massif.
+        For each massif a table with background colors and values corresponding to the
+        percentiles in :py:attr:`.list_q` and the color map defined in
+        :py:attr:`.attributes` is plotted near the center of each massif.
 
         :param domain: list of region identifiers (e.g., "alp", "pyr", "cor")
         :param suptitle: common suptitle for all plots
@@ -473,6 +452,8 @@ class EnsembleOperDiagsNorthSouthMassif(EnsembleOperDiags, EnsembleNorthSouthMas
         :param diroutput: output directory to save the maps
         """
 
+        from snowtools.plots.maps.cartopy_massifs import Map_alpes, Map_pyrenees, Map_corse, Map_vosges, Map_jura, \
+            Map_central
         map_generic = dict(alp=Map_alpes, pyr=Map_pyrenees, cor=Map_corse, jur=Map_jura, vog=Map_vosges,
                            mac=Map_central)
 
@@ -534,7 +515,170 @@ class EnsembleOperDiagsStations(EnsembleOperDiags, EnsembleStation):
     #: list of variables to plot maps for
     list_var_map = []
     #: list of variables to plot spaghetti plots for.
-    list_var_spag = ['DSN_T_ISBA', 'WSN_T_ISBA', 'RAMSOND_ISBA', 'WET_TH_ISBA', 'REFRZTH_ISBA', 'SNOMLT_ISBA']
+    list_var_spag = ['DSN_T_ISBA', 'WSN_T_ISBA', 'RAMSOND_ISBA',
+                     'WET_TH_ISBA', 'REFRZTH_ISBA', 'SNOMLT_ISBA']
+
+
+class PPQuantiles:
+    """
+    Class for handling files containing postprocessed (quantile) forecasts.
+    """
+    #: maximum height level to be treated
+    levelmax = 3900
+    #: minimum heigth level to be treated
+    levelmin = 0
+    #: list of variables to plot maps for
+    list_var_map = ['SD_1DY_ISBA', 'SD_12H_ISBA']
+    #: list of variables to do spaghetti plots for
+    list_var_spag = ['SD_1DY_ISBA', 'SD_12H_ISBA']
+    attributes = dict(
+        SD_12H_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60.,
+                            palette='YlGnBu', seuiltext=50.,
+                            label=u'Epaisseur de neige fraîche en 12h (cm)'),
+        SD_1DY_ISBA=dict(convert_unit=100., forcemin=0., forcemax=60.,
+                         palette='YlGnBu', seuiltext=50.,
+                         label=u'Epaisseur de neige fraîche en 24h (cm)'))
+
+    def __init__(self, filename):
+        self.ps = prosimu(filename)
+        self.nech = self.ps.getlendim("time")
+        self.points = self.ps.get_points(aspect=-1)
+        self.massifs = self.ps.read('massif_num', selectpoint=self.points)
+        self.alti = self.ps.read('ZS', selectpoint=self.points)
+        self.formatplot = 'png'
+        self.deciles = self.ps.read('decile')
+        self.time = self.ps.readtime()
+
+    def quantilemaps(self, domain, suptitle, diroutput,
+                     mapindex=np.array([False, True, False, False, True, False, False, True, False])):
+        """
+        Plots maps of quantile forecasts. For example EMOS postprocessed quantiles.
+
+        :param domain: domain (region) string to determine which map class to use
+        :param suptitle: Plot title highest level
+        :param diroutput: Output directory for the plots
+        :param mapindex: array of bool indicating for with indices of the quantile dimension (last dimension of the
+            data array) maps should be drawn.
+        """
+        from snowtools.plots.maps.cartopy_massifs import MultiMap_Alps, MultiMap_Pyr, MultiMap_Cor
+
+        map_generic = dict(alp=MultiMap_Alps, pyr=MultiMap_Pyr, cor=MultiMap_Cor)
+
+        if domain[0:3] == "pyr":
+            mm = map_generic[domain[0:3]](nrow=3, ncol=1, geofeatures=False, width=13, height=10)
+            mm.legendpos = [0.9, 0.13, 0.02, 0.6]
+        elif domain[0:3] == "cor":
+            mm = map_generic[domain[0:3]](nrow=1, ncol=3, geofeatures=False, width=15, height=7.5)
+            mm.legendpos = [0.9, 0.15, 0.03, 0.6]
+        else:
+            mm = map_generic[domain[0:3]](nrow=1, ncol=3, geofeatures=False, height=7.5)
+        titles = ["Percentile {0}".format(i) for i in self.deciles[mapindex]]
+        for var in self.list_var_map:
+            var_data = self.ps.read(var, selectpoint=self.points)
+            mm.init_massifs(**self.attributes[var])
+            mm.addlogo()
+            list_alti = list(set(self.alti))
+            list_loop_alti = list_alti[:]
+            for level in list_loop_alti:
+                if level < self.levelmin or level > self.levelmax:
+                    list_loop_alti.remove(level)
+            for level in list_loop_alti:
+                indalti = self.alti == level
+
+                for t in range(0, self.nech):
+                    mm.draw_massifs(self.massifs[indalti], var_data[t, indalti, :][:, mapindex], axis=1, **self.attributes[var])
+                    mm.set_maptitle(titles)
+                    mm.plot_center_massif(self.massifs[indalti], var_data[t, indalti, :][:, mapindex], axis=1,
+                                          **self.attributes[var])
+                    mysuptitle = suptitle + "\n pour le " + pretty_date(self.time[t]) + " - Altitude : " + str(int(level)) + "m"
+                    mm.set_suptitle(mysuptitle)
+                    ech = self.time[t] - self.time[0] + self.time[1] - self.time[0]
+                    ech_str = '+%02d' % (ech.days * 24 + ech.seconds / 3600)
+                    plotname = diroutput + "/pp_quantiles_" + domain[0:3] + "_" + var + "_" + str(
+                        int(level)) + ech_str + "." + self.formatplot
+                    mm.save(plotname, formatout=self.formatplot)
+                    print(plotname + " is available.")
+                    mm.reset_massifs(rmcbar=False)
+                mm.empty_massifs()
+            mm.reset_massifs()
+
+    def spaghetti_plots(self, suptitle, diroutput = "."):
+        """
+        Produce spaghetti plots for all variables in :py:attr:`list_var_spag`.
+
+        :param suptitle: Suptitle for all plots.
+        :type suptitle: unicode string
+        :param diroutput: directory to save the plots
+        """
+
+        list_filenames = [_EnsembleMassif.build_filename(_EnsembleMassif(), mas, alt) for mas, alt in
+                          zip(self.massifs, self.alti)]
+        list_titles = [_EnsembleMassif.build_title(_EnsembleMassif(), mas, alt) for mas, alt in
+                       zip(self.massifs, self.alti)]
+
+        for var in self.list_var_spag:
+
+            s = spaghettis(self.time)
+            settings = self.attributes[var].copy()
+            if 'label' in self.attributes[var].keys():
+                settings['ylabel'] = self.attributes[var]['label']
+            var_data = self.ps.read(var, selectpoint=self.points)
+            if 'convert_unit' in self.attributes[var].keys():
+                var_data = var_data * self.attributes[var]['convert_unit']
+            npoints = var_data.shape[1]
+
+            for point in range(0, npoints):
+
+                s.draw(self.time, var_data[:, point, :], var_data[:, point, 1], var_data[:, point, 4],
+                       var_data[:, point, 7], **settings)
+
+                s.set_title(list_titles[point])
+                s.set_suptitle(suptitle)
+                s.addlogo()
+                plotname = os.path.join(diroutput, "pp_quantiles_" + var + "_" + list_filenames[point] + "." + self.formatplot)
+                # plt.show()
+                s.save(plotname, formatout=self.formatplot)
+                print(plotname + " is available.")
+
+            s.close()
+
+
+@echecker.disabled_if_unavailable
+@echecker_pyproj.disabled_if_unavailable(version='2.0.0')
+def pp_plots(c):
+    """
+    downloads files with postprocessed quantiles and plots maps and spaghetti plots of them
+
+    :param c: config
+    """
+    from snowtools.tasks.oper.get_oper_files import FutureS2MExtractor
+
+    os.chdir(c.diroutput)
+    S2ME = FutureS2MExtractor(c)
+    pp_files, pp_xpid = S2ME.get_pp_quantiles()
+
+    dict_chaine = defaultdict(str)
+    dict_chaine['OPER'] = ' (oper)'
+    dict_chaine['DBLE'] = ' (double)'
+    dict_chaine['MIRR'] = ' (miroir)'
+    dict_chaine['OPER@lafaysse'] = ' (dev)'
+    dict_chaine['nouveaux_guess@lafaysse'] = ' (dev)'
+
+    locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')
+
+    list_domains = pp_files.keys()
+    print(list_domains)
+
+    for domain in ['alp', 'pyr', 'cor']:  # list_domains:  # ['alp_allslopes']:
+        suptitle = u'Prévisions PEARP-S2M du ' + pretty_date(S2ME.conf.rundate)
+        # Identify the prevailing xpid in the obtained resources and adapt the title
+        count = Counter(pp_xpid[domain])
+        prevailing_xpid = count.most_common(1)[0][0]
+        suffixe_suptitle = dict_chaine[prevailing_xpid]
+        suptitle += suffixe_suptitle
+        data = PPQuantiles(pp_files[domain])
+        data.quantilemaps(domain, suptitle, diroutput=c.diroutput_maps)
+        data.spaghetti_plots(suptitle, diroutput=c.diroutput_plots)
 
 
 @echecker.disabled_if_unavailable
@@ -545,7 +689,7 @@ def main(c):
     """
     # The following class has a vortex-dependence
     # Should not import than above to avoid problems when importing the module from vortex
-    from snowtools.tasks.oper.get_oper_files import S2MExtractor, FutureS2MExtractor
+    from snowtools.tasks.oper.get_oper_files import FutureS2MExtractor
 
     os.chdir(c.diroutput)
     # if c.dev:
@@ -557,7 +701,6 @@ def main(c):
     # else:
     S2ME = FutureS2MExtractor(c)
     snow_members, snow_xpid = S2ME.get_snow()
-
 
     dict_chaine = defaultdict(str)
     dict_chaine['OPER'] = ' (oper)'
@@ -617,8 +760,3 @@ def main(c):
 
         E.close()
         del E
-
-
-if __name__ == "__main__":
-    c = config()
-    main(c)
