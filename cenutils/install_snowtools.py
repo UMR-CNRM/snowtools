@@ -24,11 +24,11 @@ parser.add_argument('-v', '--venv', type=str, required=False, default=None,
                          "If this script is already called from a virtual environment,"
                          "this argument is ignored.")
 
-parser.add_argument('-o', '--optional', action='store', choices=['plot', 'sql', 'all'], nargs='+', default='all',
+parser.add_argument('-o', '--optional', choices=['plot', 'sql', 'all'], nargs='*', default=['all'],
                     help="Install optional dependencies (this option is ignored on MF's HPC):\n" +
                          "* 'plot' install graphical tools\n" +
                          "* 'sql' install sql extraction tools\n" +
-                         "* 'all' install all optionnal dependencies")
+                         "* 'all' install all optional dependencies")
 
 args = parser.parse_args()
 
