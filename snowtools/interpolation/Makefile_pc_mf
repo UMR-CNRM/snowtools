@@ -1,19 +1,9 @@
-export VER_MPI=MPIAUTO
-export ARCH=LXgfortran
-.SUFFIXES:
-
-ifeq "$(VER_MPI)" "NOMPI"
-F90= gfortran -pg
-CC = gcc
-EXEC1 =interpol_NOMPI
-else
 F90 = mpif90
 CC  = mpicc
 EXEC1 =interpol_MPIAUTO
-endif
 
-OPT = -O2 -g 
-CFLAGS = -c  
+OPT = -O2 -g
+CFLAGS = -c
 LINK = interpol
 
 
@@ -47,6 +37,7 @@ clean:
 
 mrproper: clean
 	rm -f $(EXEC1)
+	rm -f $(LINK)
 
 %.o : %.f90
 	$(F90) $(CFLAGS) $(OPT) $< -o $@ $(LDFLAGS)

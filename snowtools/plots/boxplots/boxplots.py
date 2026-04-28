@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 6 févr. 2019
 
 @author: lafaysse
-'''
+"""
 
 import numpy as np
 
@@ -15,6 +15,7 @@ from snowtools.plots.abstracts.figures import Mplfigure
 
 class boxplots(Mplfigure):
     """
+    class for common boxplot features.
     """
     figsize = (10, 8)
 
@@ -107,7 +108,7 @@ class boxplots_bydepartment(boxplots):
         for dep in list_dep_uniq:
             if ',' in dep:
                 deps = dep.split(',')
-                inddep = np.array(list_dep) == -999
+                inddep = np.array(list_dep) == '-999'
                 for d in deps:
                     inddep = (np.array(list_dep) == d.strip()) | inddep
             else:
@@ -157,25 +158,25 @@ class boxplots_byyear(boxplots):
     def draw(self, list_years, list_scores, nsimu = 1, **kwargs):
 
         nyears = len(list_years)
-        stepticks = nyears / 15 + 1
+        stepticks = nyears // 15 + 1
         list_years_str = map(str, list_years)
 
         list_labels = []
-        for y, year in enumerate(list_years_str):
-            if y % stepticks == 0:
+        for y_i, year in enumerate(list_years_str):
+            if y_i % stepticks == 0:
                 list_labels.append(year)
             else:
                 list_labels.append("")
 
-        print (list_labels)
+        print(list_labels)
 
         kwargs['labels'] = list_labels
 
         kwargs['positions'] = range(self.indsimu, 1 + len(list_labels) * nsimu, nsimu)
 
-        print ('debug')
-        print (nsimu)
-        print (kwargs['positions'])
+        print('debug')
+        print(nsimu)
+        print(kwargs['positions'])
 
         self.plot.set_xlabel(u'Year', fontsize=18)
         super(boxplots_byyear, self).draw(list_scores, **kwargs)

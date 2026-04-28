@@ -1,0 +1,36 @@
+# Requires the following packages on ubuntu (tested on Ubuntu 24.04):
+# build-essential (install the compilers)
+# libopenmpi-dev
+# libnetcdff-dev
+# libnetcdf-mpi-dev
+
+F90 = mpif90
+CC  = mpicc
+EXEC1 = interpol
+
+OPT = -O2 -g
+CFLAGS = -c
+
+
+LDFLAGS= -I/usr/include -lnetcdff -lnetcdf_mpi
+SOURCES = interpolate_safran.f90 modd_interpol_safran.f90 modn_interpol_safran.f90
+
+all:  $(EXEC1)
+
+$(EXEC1): $(subst .f90,.o,$(SOURCES)) #interpolate_safran.o
+	$(F90) $(OPT) $^ -o $@ $(LDFLAGS)
+
+clean:
+	rm -f *.o *.mod *.MOD
+	rm -f *~
+
+mrproper: clean
+	rm -f $(EXEC1)
+
+%.o : %.f90
+	$(F90) $(CFLAGS) $(OPT) $< -o $@ $(LDFLAGS)
+	@touch $@
+
+
+interpolate_safran.o : modn_interpol_safran.o
+modn_interpol_safran.o : modd_interpol_safran.o

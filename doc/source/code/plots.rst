@@ -27,7 +27,7 @@ Script for plotting results from operational simulations (s2m based on PEARP)
 -----------------------------------------------------------------------------
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    The script postprocess.py <plots-pearps2m>
 

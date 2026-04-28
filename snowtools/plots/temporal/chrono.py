@@ -11,6 +11,7 @@ order to adapt to simulation temporal extent.
 
 from matplotlib import pyplot as plt
 from matplotlib.dates import HourLocator, DayLocator, MonthLocator, YearLocator, DateFormatter
+from matplotlib.ticker import NullLocator
 
 from snowtools.plots.abstracts.figures import Mplfigure
 
@@ -23,12 +24,18 @@ class temporalplot_abstract(Mplfigure):
         self.plot = None
         #self.draw = None
 
-    def finalize(self, timeOut, **kwargs):
+    def finalize(self, timeOut, xformatting=True, yformatting=True, displaylegend=True, **kwargs):
+        print(xformatting)
+        if xformatting:
+            self.set_xaxis(timeOut)
+        else:
+            self.plot.xaxis.set_major_locator(NullLocator())
+        if yformatting:
+            self.set_yaxis(**kwargs)
 
-        self.set_xaxis(timeOut)
-        self.set_yaxis(**kwargs)
-        kwargs.setdefault("fontsize", "x-small")
-        self.plot.legend(loc="upper left", fontsize=kwargs["fontsize"])
+        if displaylegend:
+            kwargs.setdefault("fontsize", "x-small")
+            self.plot.legend(loc="upper left", fontsize=kwargs["fontsize"])
 
     def set_yaxis(self, **kwargs):
 
@@ -59,7 +66,7 @@ class temporalplot_abstract(Mplfigure):
         self.plot.plot_date(timeOut, varOut, **linesargs)
 
     def add_points(self, timeOut, varOut, **kwargs):
-        self.set_default("fmt", "s", kwargs)
+        #self.set_default("fmt", "s", kwargs)
         self.set_default("color", "black", kwargs)
         self.set_default("markersize", 3, kwargs)
         self.add_line(timeOut, varOut, **kwargs)
@@ -96,11 +103,11 @@ class temporalplot_abstract(Mplfigure):
             self.plot.xaxis.set_major_locator(MonthLocator(range(1, 13, interval), 1))
             formatDate = '%d %b\n%Y'
         elif ndays >= (30 * 365):
-            interval = int(ndays / 365) + 1
+            interval = int((int(ndays / 365) + 1) / 6)
             self.plot.xaxis.set_major_locator(YearLocator(interval))
             formatDate = '%Y'
         else:
-            interval = int(ndays / 365) + 1
+            interval = 1
             self.plot.xaxis.set_major_locator(YearLocator(interval))
             formatDate = '%Y'
 
@@ -112,10 +119,11 @@ class temporalplot_abstract(Mplfigure):
 
 
 class temporalplot(temporalplot_abstract):
+    """Class for timeseries plot"""
 
     figsize = (5, 4)
 
-    def __init__(self,  *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(temporalplot, self).__init__(**kwargs)
         self.fig = plt.figure(figsize=self.figsize)
         self.plot = plt.subplot(111)
@@ -128,7 +136,7 @@ class temporalsubplot(temporalplot_abstract):
             if len(subplots.shape) == 2:
                 self.plot = subplots[i, j]
             elif len(subplots.shape) == 1:
-                self.plot = subplots[i * j]
+                self.plot = subplots[i]
             else:
                 raise Exception
         else:

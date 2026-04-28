@@ -189,11 +189,11 @@ class DeterministicScores_Mask(DeterminsticScores):
         t1 = time.time()
         self.obsCommon = obs[self.obsMask]
         t2 = time.time()
-        print('Extract obs array {0:f}'.format(t2-t1))
+        # print('Extract obs array {0:f}'.format(t2-t1))
 
         self.simCommon = sim[self.modelMask]
         t3 = time.time()
-        print('Extract sim array {0:f}'.format(t3-t2))
+        # print('Extract sim array {0:f}'.format(t3-t2))
         # self.extract_common_vectors(mask_obs, mask_sim, obs, sim)
 
     def extract_common_vectors(self, mask_obs, mask_sim, obs, sim):
@@ -269,7 +269,7 @@ class DeterministicScores_Heterogeneous(DeterministicScores_Mask):
         mask_sim = np.in1d(time_sim_unique, time_obs_unique)
         mask_obs = np.in1d(time_obs_unique, time_sim_unique)
         t2 = time.time()
-        print('Compute masks in {0:f}s'.format(t2-t1))
+        # print('Compute masks in {0:f}s'.format(t2-t1))
 
         return mask_obs, mask_sim, obs_unique, sim_unique
 

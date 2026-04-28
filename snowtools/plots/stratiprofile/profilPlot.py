@@ -252,6 +252,7 @@ def saisonProfil(ax, dz, value, time, colormap='viridis', value_min=None, value_
     if ylimit is not None:
         ax.set_ylim(0, ylimit)
 
+    return rect
 
 def saison1d(ax, value, time, legend=None, color='b.', title=None, ylimit=None):
     """

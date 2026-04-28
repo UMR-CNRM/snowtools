@@ -1,17 +1,29 @@
 [data-tree]
+op_rootdir = "/chaine/mxpt001/vortex/mtool/cache/vortex"
 rootdir = "/scratch/mtool/%usr%/cache/vortex"
 
 [storage]
-address="hendrix.meteo.fr"
-protocol="ftp"
-rootdir="~%usr%/vortex"
-op_rootdir="vortex"
+address = "hendrix.meteo.fr"
+protocol = "ftp"
+rootdir = "~%usr%/vortex"
+op_rootdir = "/home/m/mxpt/mxpt001/vortex"
+
+[gco]
+genvpath = "/home/mf/dp/marp/gco/public/bin/genv"
+ggetpath = "/home/mf/dp/marp/gco/public/bin/gget"
 
 [ftserv]
-hostname_patterns="hendrix.meteo.fr"
+hostname_patterns = ["(belenos|taranis)transfert\\d.\\1hpc.meteo.fr"]
 
-[nwp-tools]
-lfi = "/home/mf/dp/marp/verolive/public/lfi-tools/default"
+[ftserv.shell]
+lfi = "falfi"
+grib = "basic"
+odb = "tar"
+ddhpack = "tar"
+obslocationpack = "tar"
+obsfirepack = "tar"
+rawfiles = "tar"
+filespack = "tar"
 
 [rawftshell]
 lfi = "/usr/local/bin/ft_regroupement_concat_falfi.sh"

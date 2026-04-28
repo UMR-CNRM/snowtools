@@ -1,18 +1,21 @@
+.. _interpolation:
 
 Interpolation tools
 ===================
 
-.. todo:
-   
-   Document the interpolation tools better ?
+The SAFRAN reanalysis gives FORCING files for SURFEX-Crocus simulations in the semi-distributed geometry since 1958.
 
-Netcdf_add_massif_info script
------------------------------
+You can interpol this reanalysis in order to generate:
 
-.. include:: ./autoscripts/interpolation--Netcdf_add_massif_info.rst
+* FORCING files and solar mask for isolated points (simulation `postes`)
+* FORCING files for a 2D simulation on a regular grid
 
-shapefile2NetCDF tool
----------------------
+You need a shapefile which define your geometry and then use the interpolation tools.
+
+How to create FORCING files for isolated points ?
+-------------------------------------------------
+You can use the script `shapefile2NetCDF.py` which use a shapefile of isolated points.
+The documentation is below and you can read it in the header of the python script.
 
 .. automodule:: interpolation.shapefile2NetCDF
    :members:
@@ -21,8 +24,10 @@ This module is also an executable script:
 
 .. include:: ./autoscripts/interpolation--shapefile2NetCDF.rst
 
-shapefile2NetCDF_2D tool
-------------------------
+How to create FORCING files for 2D simulation ?
+-----------------------------------------------
+You can use the script `shapefile2NetCDF_2D.py` which use a shapefile around the area of interest.
+The documentation is below and you can read it in the header of the python script.
 
 .. automodule:: interpolation.shapefile2NetCDF_2D
    :members:
@@ -30,6 +35,11 @@ shapefile2NetCDF_2D tool
 This module is also an executable script:
 
 .. include:: ./autoscripts/interpolation--shapefile2NetCDF_2D.rst
+
+Netcdf_add_massif_info script
+-----------------------------
+
+.. include:: ./autoscripts/interpolation--Netcdf_add_massif_info.rst
 
 The interpolation tool
 ----------------------

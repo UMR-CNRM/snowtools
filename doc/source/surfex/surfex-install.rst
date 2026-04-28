@@ -16,18 +16,25 @@ Simple users at Meteo-France do not need to install SURFEX, but rather should po
 
 Note: If you need to work with more recent branch (``cen_dev`` for instance) or other compile options (``MPI``) have a look to available binaries in the previously pointed ``SURFEX`` folder where other compiled binaries are available.
 
+
 Get the code
 ------------
 
-Download the source code: ``git clone https://github.com/UMR-CNRM/SURFEX_CEN.git``
-   
-You need some packages which are not in the git repository (has to be fixed). So please copy from your old repo
+To get the source code from the private github repository SURFEX_CEN, please ask for access by email to crocus at meteo dot fr.
+
+If you plan to develop in SURFEX_CEN, you must clone with SSH. First create a SSH key and associate it to your github account : follow the corresponding section of the `github documentation <https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#generating-a-new-ssh-key>`_). Then you can get the code with :
 
 .. code-block:: bash
 
-   cp /home/your_name/.../your_old_repo/src/LIB/XIOS-GMGEC-2152.tar /home/your_name/.../SURFEX_CEN/src/LIB/.
+   git clone git@github.com:UMR-CNRM/SURFEX_CEN.git
 
-Please read the infos for developper: https://umr-cnrm.github.io/snowtools-doc/surfex/surfex-dev.html
+If you are a simple user (outside of Meteo-France where pre-compiled binaries are available) you can get the code by running ``git clone https://github.com/UMR-CNRM/SURFEX_CEN.git``.
+
+You will need some additional packages that are provided by the SURFEX project. for the moment, these packages are not publicly available.
+
+- At Meteo-France/CEN, these files can be copied from ``/rd/cenfic3/cenmod/home/common/SURFEX_LIB``. Copy all the content of this folder into ``src/LIB`` folder of the cloned repository.
+- If you are not at CEN, please ask your contact person to transfer these libraries to you and then copy the files into the ``src/LIB`` directory.
+
 
 Compile the code
 ----------------
@@ -42,11 +49,13 @@ Preparation on a Linux PC
 .. note::
    If you run on Meteo-France supercomputer, read next section.
 
+
 If you do not want to compile SURFEX with a MPI-support for parallel runs (recommended for local simulations):
 
 .. code-block:: bash
 
-    export VER_MPI=NOMPI
+   export VER_MPI=NOMPI
+
 
 Do not type this command in the following cases :
 
@@ -70,19 +79,14 @@ You first need to load the compilers :
 
 .. code-block:: bash
 
-    module load intel
-    module load intelmpi
-    module load curl
+   module load intel
+   module load intelmpi
+   module load curl
 
 The next step of the configuration depends on your application:
 
 * For MPI parallel applications (big domains, deterministic application) : let ``VER_MPI`` and ``VER_CDF`` options to default.
-* For sequential ensemble applications associed with a ParaBlindRun AlgoComponent (one member per core through vortex), and only in this case, export the following variables:
-
-.. code-block:: bash
-
-    export VER_MPI=NOMPI
-    export VER_CDF=CDF2020
+* For sequential ensemble applications associed with a ParaBlindRun AlgoComponent (one member per core through vortex), and only in this case, export the following variables: ``export VER_MPI=NOMPI`` and ``export VER_CDF=CDF2020``.
 
 Common configuration
 ^^^^^^^^^^^^^^^^^^^^
@@ -90,9 +94,10 @@ At this step, it is also possible to modify the optimization level by :
 
 .. code-block:: bash
 
-    export OPTLEVEL=DEBUG
-    # or
-    export OPTLEVEL=O2
+   export OPTLEVEL=DEBUG
+   # or
+   export OPTLEVEL=O2
+
 
 Optimization level “O2” is recommended in the general case (significant decrease of running time). In case of bugs or for the first local run after a new development, the optimization level may be changed to "DEBUG" to generate better error messages.
 
@@ -100,19 +105,21 @@ Optimization level “O2” is recommended in the general case (significant decr
 
    Long runs must never be run in DEBUG mode.
 
+
 Initialize environment variables needed for surfex: go into ``src`` directory and run
 
 .. code-block:: bash
 
-    ./configure
+   ./configure
 
 Then, execute the profile file for this master version of surfex:
 
 .. code-block:: bash
 
-    source ../conf/profile_surfex-LXgfortran-SFX-V8-1-1-NOMPI-OMP-O2-X0
+   source ../conf/profile_surfex-LXgfortran-SFX-V8-1-1-NOMPI-OMP-O2-X0
 
-(or equivalent name depending on compiler, SURFEX version and compilation options)
+
+(or equivalent name depending on compiler, SURFEX version and compilation options, the exact name is provided at the end of the ``configure`` execution)
 
 Compilation
 ^^^^^^^^^^^
@@ -120,12 +127,15 @@ Compilation
 Compile the master version of the code:
 in the src directory and in the same terminal, run
 
+
 .. code-block:: bash
 
-    make
-    make installmaster
+   make
+   make installmaster
+
 
 Master executables are created in directory exe. If everything goes well until this step, then surfex has been successfully installed on you computer.
+
 
 Then follow the paragraphs "configuration" and "Compilation" from normal computers.
 
@@ -136,7 +146,7 @@ Setting specifically the SURFEX binaries to be used by s2m is done by exporting 
 
 .. code-block:: bash
 
-    export EXESURFEX=/home/...yoursurfexdirectory../exe
+   export EXESURFEX=/home/...yoursurfexdirectory../exe
 
 
 You can add this line to your $HOME/.bash_profile file if you are installing the SURFEX version you want to use by default.
@@ -146,15 +156,15 @@ Please check carefully the full names of your binaries (depending on SURFEX vers
 
 .. code-block:: bash
 
-    ln -s $EXESURFEX/OFFLINE-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/OFFLINE
-    ln -s $EXESURFEX/PREP-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/PREP
-    ln -s $EXESURFEX/PGD-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/PGD
-    ln -s $EXESURFEX/SODA-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/SODA
+   ln -s $EXESURFEX/OFFLINE-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/OFFLINE
+   ln -s $EXESURFEX/PREP-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/PREP
+   ln -s $EXESURFEX/PGD-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/PGD
+   ln -s $EXESURFEX/SODA-LXgfortran-SFX-V8-1-1-NOMPI-O2-X0 $EXESURFEX/SODA
 
 .. _surfex-install-first-test:
 
-FIRST TEST of your snowtools and SURFEX install
------------------------------------------------
+FIRST TEST: test your snowtools and SURFEX install
+--------------------------------------------------
 If you correctly installed the snowtools and SURFEX projects, you must be able to run successfully the following test case:
 
 .. code-block:: bash

@@ -26,7 +26,9 @@ python_sources = [
     'test_script_create_forcing.py',
     'future_test_spatial_scores.py',
     'test_hydro.py',
-    'test_scd.py'
+    'test_scd.py',
+    'test_bdap.py',
+    'test_xarray.py'
 ]
 
 py.install_sources(

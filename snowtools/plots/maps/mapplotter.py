@@ -9,9 +9,13 @@ Created on 17 June 2025
     largely copied from epygram epy_cartoplot.py
 
 """
+import sys
 import argparse
+import textwrap
+
 from bronx.syntax.parsing import str2dict
 from bronx.stdtypes.date import Date
+
 import epygram
 from epygram import epylog, epygramError
 from epygram.cli.args_catalog import (add_arg_to_parser,
@@ -25,7 +29,7 @@ from snowtools.plots.maps.quicklookmap import read_and_preprocess, wind_map, dif
 CFEATURES = [f for f in dir(cf) if all([c.isupper() for c in f])]
 """Cartopy features"""
 
-def main(filename,
+def main_cli(filename,
          fid=None,
          Ufid=None,
          Vfid=None,
@@ -207,7 +211,7 @@ def main(filename,
                 title = "\n".join([str(fid), str(field.validity.get())])
             takeover = scalar_map(field, title, plot_kwargs)
             fig = takeover['fig']
-            
+
     # 3/ output
     if savefig:
         epylog.info("save plot...")
@@ -218,22 +222,37 @@ def main(filename,
 # end of main() ###############################################################
 
 
-if __name__ == '__main__':
-
+def main():
     # 1. Parse arguments
     ####################
-    parser = argparse.ArgumentParser(description='An EPyGrAM based tool for simple plots\
-                                                  of meteorological or snow cover related 2D'
-                                                 ' fields from a resource file.',
-                                     epilog='End of help for: %(prog)s (EPyGrAM v' + epygram.__version__ + ')')
+    parser = argparse.ArgumentParser(
+        description=textwrap.dedent("""
+        Tool to plot maps of meteorological or snow cover related 2D
+        fields. Provide either a graphical user interface (GUI) or
+        do plots based on command line arguments.
 
-    add_arg_to_parser(parser, files_args['principal_file'])
+        To use the Graphical interface, just run this script without
+        argument or by providing only filename, and optionnally
+        field name and date.
+
+        To do directly a plot without graphical interaction, you can
+        use all arguments below. Make sure to use --directplot or
+        --outputfilename flag.
+        """),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog='(Use EPyGrAM v' + epygram.__version__ + ')')
+
+    add_arg_to_parser(
+        parser,
+        ['filename',
+         dict(type=str, nargs='?',
+              help='name of the file to be processed.')])
     add_arg_to_parser(parser, fields_args['field'])
     add_arg_to_parser(parser, fields_args['windfieldU'])
     add_arg_to_parser(parser, fields_args['windfieldV'])
-    add_arg_to_parser(parser, ['--date', dict(type=str, dest='date',
-                                             help="Selected date in a bronx.Date compatible string format",
-                                             required=True)])
+    add_arg_to_parser(parser, ['--date',
+                               dict(type=str, dest='date',
+                                    help="Selected date in a bronx.Date compatible string format", )])
 
     diffmodes = parser.add_mutually_exclusive_group()
     add_arg_to_parser(diffmodes, files_args['file_to_refer_in_diff'])
@@ -244,6 +263,11 @@ if __name__ == '__main__':
     add_arg_to_parser(parser, misc_args['map_factor_correction'])
 
     # graphics
+    add_arg_to_parser(parser, [
+        "--directplot",
+        dict(
+            action="store_true", default=False,
+            help="Do a non-interactive plot taking into account all options rather than using the GUI.")])
     add_arg_to_parser(parser, graphical_args['plot_method'])
     add_arg_to_parser(parser, graphical_args['minmax'])
     add_arg_to_parser(parser, graphical_args['levels_number'])
@@ -279,6 +303,23 @@ if __name__ == '__main__':
     epylog.setLevel('WARNING')
     if args.verbose:
         epylog.setLevel('INFO')
+
+    # 2.0.1 GUI
+    if not args.directplot and args.outputfilename is None:
+        from snowtools.plots.maps.mapplotter_gui import main as main_gui
+        if args.filename is not None:
+            from snowtools.plots.maps.mapplotter_fileobj import read_file
+            fileobj = read_file(args.filename)
+        else:
+            fileobj = None
+        arguments = {}
+        if args.field is not None:
+            variable = fileobj.variable_desc(args.field)
+            if variable is not None:
+                arguments['variable'] = variable['full_name']
+        main_gui(fileobj=fileobj, arguments=arguments)
+        sys.exit(0)
+
 
     # 2.1 options
     refname = args.refname
@@ -362,7 +403,7 @@ if __name__ == '__main__':
 
     # 3. Main
     #########
-    main(args.filename,
+    main_cli(args.filename,
          fid=args.field,
          Ufid=args.Ucomponentofwind,
          Vfid=args.Vcomponentofwind,
@@ -399,3 +440,5 @@ if __name__ == '__main__':
          outputfilename=args.outputfilename)
 
 
+if __name__ == '__main__':
+    main()

@@ -25,8 +25,21 @@ Options :
    * -rlon Longitude Resolution for 2D grid (250 or 30)
    * -rlat Latitude Resolution for 2D grid (250 or 30)
    * --MNT_alt Path for MNT altitude
-   * -m Massif number if you want to choose the massif that will be applied to your zone
-        (Massif number can be found in snowtools/DATA/METADATA.xml)
+   * -m massif method in order to assign massif number ('map', 'one', 'mapfill', 'force')
+   * -n massif number if you have choosen the 'force' method
+
+The options for massif method are:
+
+.. code-block:: text
+
+   * 'map': each point gets the massif number it should have (0 if outside all massif)
+   * 'one': each point gets the most common massif number
+   * 'mapfill': like map, with points outside all massif getting the most common massif number
+   * 'force': each point gets the massif number you choose 
+   
+
+RQ: Massif number can be found in file `snowtools/DATA/METADATA.xml`
+
 
 
 EXAMPLES OF USE (script launch)

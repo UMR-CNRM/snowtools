@@ -21,9 +21,9 @@ from snowtools.tools.hydro import hydro
 from snowtools.utils.resources import get_file_period, get_file_date, get_file_const, save_file_period, \
         save_file_date, save_file_const, get_file_const_or_crash, ldd
 from snowtools.utils.prosimu import prosimu
-from snowtools.utils.FileException import DirFileException
+from snowtools.utils.FileException import DirFileException, FileNameException
 from snowtools.utils.git import get_summary_git
-from snowtools.DATA import SNOWTOOLS_DIR, DIRDATAPGD
+from snowtools.DATA import SNOWTOOLS_DIR, DIRDATAPGD, INTERPOL_BIN_CEN
 
 
 class surfexrun(object):
@@ -86,13 +86,8 @@ class surfexrun(object):
                     self.moderun = moderun
             else:
                 self.moderun = moderun
-            if os.path.islink(os.path.join(SNOWTOOLS_DIR, "interpolation/interpol")):
-                if "MPIAUTO" in os.readlink(os.path.join(SNOWTOOLS_DIR, "interpolation/interpol")):
-                    self.modeinterpol = "MPIRUN"
-                else:
-                    self.modeinterpol = moderun
-            else:
-                self.modeinterpol = "NOTCOMPILED"
+
+            self.modeinterpol = "MPIRUN"
 
             if self.moderun == "MPIRUN":
                 if "NOFFLINE" in list(os.environ.keys()):
@@ -339,7 +334,21 @@ class interpolrun(surfexrun):
         print(args)
         if not os.path.islink('GRID.nc'):
             os.symlink(args[0], "GRID.nc")
-        callSurfexOrDie(os.path.join(SNOWTOOLS_DIR, "interpolation/interpol"), moderun=self.modeinterpol, nproc=self.ninterpol)
+        # found interpol binary
+        if os.getenv('SNOWTOOLS_INTERPOL') is not None and os.path.isfile(os.getenv('SNOWTOOLS_INTERPOL')):
+            bin_interpol = os.getenv('SNOWTOOLS_INTERPOL')
+        elif os.path.isfile(INTERPOL_BIN_CEN):
+            bin_interpol = INTERPOL_BIN_CEN
+        elif os.path.isfile(os.path.join(SNOWTOOLS_DIR, 'interpolation', 'interpol')):
+            bin_interpol = os.path.join(SNOWTOOLS_DIR, 'interpolation', 'interpol')
+        else:
+            raise FileNameException(
+                'interpol binary not found in current directory '
+                'nor defined with SNOWTOOLS_INTERPOL environment variable. '
+                'Please check you have compiled interpol binary.')
+        # Run
+        print(f'Run interpolation with binary found at {bin_interpol}.')
+        callSurfexOrDie(bin_interpol, moderun=self.modeinterpol, nproc=self.ninterpol)
         self.rename_output()
 
     def save_output(self):

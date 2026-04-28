@@ -161,7 +161,7 @@ class SafranPackedFiles(CenPackedFiles):
         elif self.source == 'cep':
             return 'cep_' + self.datebegin.strftime('%y') + self.dateend.strftime('%y')
         elif self.source == 'era5':
-            return 'e' + self.datebegin.strftime('%y') + self.dateend.strftime('%y') + '.' + self.nativefmt
+            return f'guess_era5_{self.datebegin.ymdh}_{self.dateend.ymdh}_{self.geometry.domain}.tar'
         elif self.source == 'surfaceobs':
             return 'rs' + self.datebegin.strftime('%y') + self.dateend.strftime('%y') + '.' + self.nativefmt
         elif self.source == 'neb':

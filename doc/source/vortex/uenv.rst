@@ -3,6 +3,13 @@ A general documentation (in french) can be found in:
 
 There is a list of useful commands at the end
 
+Install the vortex-gco plugin
+=============================
+
+.. code-block:: bash
+
+   pip install vortex-gco
+
 Create a User Environment from scratch
 ======================================
 1. Put the file(s) you need in your UEnv in ``$HOME/.vortexrc/hack/uget/your_username/data``
@@ -31,6 +38,8 @@ Your file(s) should have a name and a number: ``AFirstFile.0``, ``ASecondFile.1`
 
    $VORTEX/bin/uget.py push env MyFirstUenv.0@your_username
 
+**NB:** On HPC this can only be done from a TRANSFERT node
+
 Modifying an existing UEnv
 ==========================
 1. Create a copy of existing UEnv:
@@ -40,11 +49,13 @@ Modifying an existing UEnv
 
    $VORTEX/bin/uget.py hack env Existing_UEnv.0@username_uenv_owner into MyNewUenv.0@your_username
 
+**NB:** On HPC this can only be done from a TRANSFERT node
+
 Example:
 
 .. code-block:: bash
 
-   $VORTEX/bin/uget.py hack env cen.14@CONST_CEN into MyNewUenv.0@vernaym
+   $VORTEX/bin/uget.py hack env cen.14@CONST_CEN into MyNewUenv.0@your_yousername
 
 **NB:** you can also upgrade your uenv with
 
@@ -128,3 +139,17 @@ Shapefiles availables in "uenv:shapefiles.1@vernaym"::
 Uenv to reproduce simulations from M.Vernay PhD : "edelweiss_gr250_pappus.2@vernaym"
 
 Uenv for latest version of the ANTILOPE post-processing algorithm : "edelweiss.3@vernaym"
+
+FAQ - Frequent issues
+=====================
+
+* On HPC, fetch/save data from a TRANSFERT node because the uget tool is based on ftget/ftput commands, which are unavailable on login/compute nodes and raise the following error:
+
+.. code-block:: bash
+
+    # [2026/04/21-12:40:16][vortex.tools.systems][spawn:1120][CRITICAL]: Could not call ['ftput', '-o', 'mkdir', '-q', '-h', 'hendrix.meteo.fr', '-u', 'vernaym', 'myuenv', 'uget/env/6/myuenv']
+    Traceback (most recent call last):
+    [...]
+    FileNotFoundError: [Errno 2] No such file or directory: 'ftput'
+
+* Team UEnv (@CONST_CEN, @SAFRAN_CEN and @SURFEX_CEN) are no longer possible with Vortex2 (see snowtools ticket #306 or https://gitlab.meteo.fr/cnrm-gmap/vortex-gco/-/work_items/4#note_93731 for more information)

@@ -14,69 +14,35 @@ The NetCDF file is necessary to launch Surfex-Crocus simulations.
 It allows to interpolate FORCING values from SAFRAN reanalysis to your shapefile points.
 It also allows to take into account the solar mask from mountains around.
 
-Precisely, this script writes skylines in snowtools/DATA/METADATA.xml file.
+Precisely, this script writes skylines in SKYLINE.xml file.
 These skylines are necessary for the --addmask option in SURFEX Crocus simulations.
 This script also allows to keep the skyline views if you want to check them.
 
-WHAT IS PROJECT NUMBER ?
-^^^^^^^^^^^^^^^^^^^^^^^^
+Reminder: if the points in your project are planned to last long, copy them in snowtools/DATA/METADATA.xml
 
-Because we add some points in METADATA.xml file, we want to avoid getting several points with same station code
-During the script conception, we tought that:
-
-- each project gets less than 10000 points
-- there will be less than 100 projects with the necessity to keep the points (and station code) in METADATA.xml
-
-If you don't push METADATA.xml, you don't need to think too much about that
-
-The aim of Project Number is to avoid to get twice the same station code (8 numbers as OMM codes). The idea is:
-
-- numbers between 10000001 and 10009999 are for project 0
-- numbers between 10010001 and 10019999 are for project 1
-- etc
-
-RECORD FOR PROJECT NUMBER
-^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* ORCHAMP = project 0 = orchamp geometry in vortex/conf/geometries.ini  (164 points)
-* projet 1 used without references ? (15 points)
-* TOP_CBNA = project 2 = orchamp geometry in vortex/conf/geometries.ini (169 points)
-* ORCHAMP_MAJ_2022 = project 3 = orchamp geometry in vortex/conf/geometries.ini (26 points)
-
-Reminder: if your project doesn't need to stay a longtime, don't push METADATA.xml
-
-EXAMPLES OF USE (script launch)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+EXAMPLES OF USE
+^^^^^^^^^^^^^^^
 
 .. code-block::
 
-   python3 shapefile2NetCDF.py path_shapefile station_name_in_shapefile station_id_in_shapefile project_number
+   python3 shapefile2NetCDF.py path_shapefile station_name_in_shapefile station_id_in_shapefile
            [--name_alt alti_name_in_shapefile] [-o path_name_of_NetCDF_output] [--MNT_alt path_of_MNT_altitude]
-           [--confirm_overwrite] [--list_skyline all or 1 5 6 if you want skyline for your id_station number 1, 5 and 6]
+           [--list_skyline all or 1 5 6 if you want skyline for your id_station number 1, 5 and 6]
    
-   python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti
+   python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot --name_alt alti
    
-   python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti
+   python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot --name_alt alti
            --confirm_overwrite (if you have already work on this project)
            
-   python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot 0 --name_alt alti
+   python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2020/plots codeplot idplot --name_alt alti
            --list_skyline 1 34 47 (in folder output, you'll have skylines for stations 1, 34 and 47)
            
-   python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2021/PlotsMaJ2021 codeplot idplot 0
-           --confirm_overwrite
+   python3 shapefile2NetCDF.py /home/fructusm/Téléchargements/Plots2021/PlotsMaJ2021 codeplot idplot 
 
-TOP_CBNA:
-
-.. code-block:: bash
-
-   python3 shapefile2NetCDF.py /home/fructusm/Bureau/Shapefile_simu/cn_maille_points/cn_maille_points cd50m ORIG_FID 1
-
-MAJ Orchamp_2022
-
-.. code-block:: bash
+   python3 shapefile2NetCDF.py /home/fructusm/Bureau/Shapefile_simu/cn_maille_points/cn_maille_points cd50m ORIG_FID
 
    python3 shapefile2NetCDF.py /home/fructusm/Travail_Orchamp/Orchamp_nouveaux_sites_2022/Plots_new_2022 codeplot
-           idplot 3
+           idplot
 
 EXAMPLES OF USE OF THE NETCDF FILE IN LOCAL SIMULATION
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -114,16 +80,6 @@ EXAMPLES OF USE OF THE NETCDF FILE IN HPC SIMULATION
                 -r alp_flat:orchamp:/home/cnrm_other/cen/mrns/fructusm/NetCDF_from_shapefile.nc
                 -o TEST1 -n OPTIONS_V8.1_NEW_OUTPUTS_NC_reanalysis.nam -g --addmask -a 400
 
-Options:
-
-* -m model
-* -f forcing files -> -f reanalysis in order to get the forcing from reanalysis
-* -r région: add geometry in vortex/conf/geometries.ini
-* -n namelist (get the same options than reanalysis)
-* -g if you don't have a prep -> a spinup has to be made
-* --addmask in order to use the masks created at the same time than the NetCDF file
-* -a 400 In order to limit Snow Water Equivalent to 400kg/m3 at the end of the year (1rst of august)
-* --ntasks 8 if you have only 8 points -> otherwise crash
 
 HPC SIMULATION: CLIMATE SIMULATIONS
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -150,16 +106,10 @@ On SXCEN:
    python3 get_reanalysis.py --geometry=orchamp --snow --xpid=TEST_Raphaelle@fructusm
                              --byear=2010 --eyear=2099
 
-DO NOT FORGET
-^^^^^^^^^^^^^
-
-* SPINUP
-* SEND METADATA.xml ON BELENOS IN ORDER TO USE THE MASKS
-* CHANGE THE NAMELIST: in CSELECT, you can't have station AND massif_num AT THE SAME TIME
-* REMOVE IN NAMELIST AVALANCHES DIAG IN CSELECT (in that case, massif_num is necessary)
-
-In Surfex-Crocus code (normally OK now but in order to remember):
-/SURFEX/src/OFFLINE  init_output_oln.F90 (line 130) and ol_write_coord.F90
+.. warning::
+   DO NOT FORGET THE SPINUP
+   DO NOT FORGET THE XML FILE IN ORDER TO USE THE MASKS
+   REMOVE AVALANCHES DIAG IN CSELECT OF THE NAMELIST  (in that case, massif_num is necessary)
 
 """
 import os
@@ -183,7 +133,6 @@ from shapely.ops import transform
 from functools import partial
 import pyproj
 
-from snowtools.utils.infomassifs import infomassifs
 from snowtools.DATA import SNOWTOOLS_DIR
 from snowtools.DATA import DIRDATADEM
 
@@ -231,7 +180,7 @@ logger.addHandler(console_handler)
 # Creation of data lists
 ################################################################
 def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, nom_slop, path_MNT_alt, path_MNT_asp,
-                   path_MNT_slop, add_for_METADATA):
+                   path_MNT_slop):
     """
     Create a dictionary of lists from datas in shapefile and data in MNT
 
@@ -253,8 +202,6 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
     :type path_MNT_asp: str
     :param path_MNT_slop: MNT path for slopes
     :type path_MNT_slop: str
-    :param add_for_METADATA: integer (8 figures) for station code in METADATA.xml file
-    :type add_for_METADATA: int
 
     :returns: dictionary of lists:{ 'lat': list_latitude, 'lon':list_longitude,
                                     'alt': list_altitude, 'asp': list_aspect,
@@ -378,7 +325,7 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
 
     liste_altitude_MNT_arrondie = [int(round(liste_altitude_MNT[i])) for i in range(len(liste_altitude_MNT))]
     liste_aspect_MNT_arrondie = [int(round(liste_aspect_MNT[i])) % 360 for i in range(len(liste_aspect_MNT))]
-    liste_slope_MNT_arrondie = [int(min(40, round(liste_slope_MNT[i]))) for i in range(len(liste_slope_MNT))]
+    liste_slope_MNT_arrondie = [int(min(60, round(liste_slope_MNT[i]))) for i in range(len(liste_slope_MNT))]
 
     ################################################################
     # Creation lof massif list
@@ -398,8 +345,8 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
     # Creation latitude list:
     liste_latitude = [round(list_shape_WGS84[i].y, 6) for i in range(len(list_shape_WGS84))]
     # Creation "id station" list made with field number from shapefile
-    # 8 figures because infomassifs.py code is using OMM convention
-    liste_id_station = ['%08d' % (int(geomet[i].record[indice_record_id_station]) + int(add_for_METADATA))
+    # 8 figures because SURFEX is using OMM convention
+    liste_id_station = ['%08d' % (int(geomet[i].record[indice_record_id_station]) + 10000000)
                         for i in range(len(shapes))]
     # Creation "name station" list made with field name from shapefile
     liste_nom_station = [geomet[i].record[indice_record_nom_station] for i in range(len(shapes))]
@@ -436,35 +383,6 @@ def make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, no
             'alt': liste_altitude, 'asp': liste_aspect,
             'm': liste_massif, 'slop': liste_slope,
             'id': liste_id_station, 'nom': liste_nom_station}
-
-
-def check_id_station_in_Metadata(all_lists):
-    """
-    Check that id from stations (creation via make_dict_list) are not in METADATA.xml.
-    Skip this verification if confirm_overwrite is set to True.
-
-    :param all_lists: Dictionary of lists in order to get id_station list
-    :returns: nothing (in a pythonic way)
-        Screen printings if id stations in METADATA.xml.
-        Othewise: nothing happens
-    """
-    # chemin d ecriture du fichier XML
-    chemxml = SNOWTOOLS_DIR + "/DATA"
-    # ouverture  du fichier en mode "lecture"/"ecriture"
-    metadata = open(chemxml + "/METADATA.xml", 'r')
-    # lire le fichier
-    readfile = metadata.read()
-
-    for station in all_lists['id']:
-        if station in readfile:
-            print(station, ' is in METADATA.xml')
-            print('it means you are working with points with existing ID')
-            print('IF you are REALLY sure of what you are doing:')
-            print('you can avoid this message by using the option --confirm_overwrite')
-            print('It is also possible that you are using an existing number project')
-            sys.exit(10)
-
-    metadata.close()
 
 
 ################################################################
@@ -537,30 +455,18 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
     #######################################################
     #  ADD NEW SITES IN XML FILE, Part I
     #######################################################
-    # Sites existants:
-    SitesExistants = infomassifs().getListSites()
 
-    # chemin d ecriture du fichier XML
-    chemxml = SNOWTOOLS_DIR + "/DATA"
     # ouverture  du fichier en mode "lecture"/"ecriture"
-    metadata = open(chemxml + "/METADATA.xml", 'r')
-    metadataout = open(chemxml + "/METADATA_out.xml", 'w')
+    metadata = open("SKYLINE.xml", 'w+')
 
     # faire la chaine de caractère des azimuts pour ecriture dans XML file
     azimut_str = ','.join(map(str, range(0, 360, 5)))
 
-    while True:
-        line = metadata.readline()
-        metadataout.write(line)
-        if '<Sites>' in line:
-            break
-    #####################
-    #  END Part I
-    #####################
+    metadata.write('\t<Sites>\n')
 
     # output folder for skyline graph (if asked via options)
-    if not os.path.isdir("output"):
-        os.mkdir("output")
+    if not os.path.isdir("graph_skyline") and list_skyline is not None:
+        os.mkdir("graph_skyline")
 
     viewmax = 20000  # 20 km
 
@@ -642,93 +548,34 @@ def create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline):
             a.set_title(str(in_stat[3]) + ' alt mnt:' + str(round(value_c, 1)) + ' m alt poste:' + str(in_stat[1]))
             a.set_theta_zero_location('N')
             a.set_theta_direction(-1)
-            plt.savefig('output/' + str(in_stat[0]) + '_skyline.png')
+            plt.savefig('graph_skyline/' + str(in_stat[0]) + '_skyline.png')
             # show()
             plt.close()
 
         ########################################################
         #  ADD NEW SITES IN XML FILE, Part II
         ########################################################
-        if str(all_lists['id'][k]) not in SitesExistants:
-            print("ajout du site : ", all_lists['nom'][k])
+        print("ajout du site : ", all_lists['nom'][k])
 
-            metadataout.write('\t<Site>\n')
-            metadataout.write('\t\t<name> ' + str(all_lists['nom'][k]) + ' </name>\n')
-            metadataout.write('\t\t<nameRed> ' + str(all_lists['nom'][k]) + ' </nameRed>\n')
-            metadataout.write('\t\t<number> ' + str(all_lists['id'][k]) + ' </number>\n')
-            metadataout.write('\t\t<lat> ' + str(all_lists['lat'][k]) + ' </lat>\n')
-            metadataout.write('\t\t<lon> ' + str(all_lists['lon'][k]) + ' </lon>\n')
-            metadataout.write('\t\t<altitude> ' + str(all_lists['alt'][k]) + ' </altitude>\n')
-            metadataout.write('\t\t<aspect> ' + str(all_lists['asp'][k]) + ' </aspect>\n')
-            metadataout.write('\t\t<slope> ' + str(all_lists['slop'][k]) + ' </slope>\n')
-            metadataout.write('\t\t<massif> ' + str(all_lists['m'][k]) + ' </massif>\n')
-            metadataout.write('\t\t<zref> ' + "1.5" + ' </zref>\n')
-            metadataout.write('\t\t<uref> ' + "10.0" + ' </uref>\n')
-            metadataout.write('\t\t<azimut> ' + azimut_str.rstrip() + ' </azimut>\n')
-            metadataout.write('\t\t<mask> ' + angle_str.rstrip() + ' </mask>\n')
-            metadataout.write('\t\t<source_mask> ' + 'IGN' + ' </source_mask>\n')
-            metadataout.write('\t</Site>\n')
+        metadata.write('\t<Site>\n')
+        metadata.write('\t\t<name> ' + str(all_lists['nom'][k]) + ' </name>\n')
+        metadata.write('\t\t<nameRed> ' + str(all_lists['nom'][k]) + ' </nameRed>\n')
+        metadata.write('\t\t<number> ' + str(all_lists['id'][k]) + ' </number>\n')
+        metadata.write('\t\t<lat> ' + str(all_lists['lat'][k]) + ' </lat>\n')
+        metadata.write('\t\t<lon> ' + str(all_lists['lon'][k]) + ' </lon>\n')
+        metadata.write('\t\t<altitude> ' + str(all_lists['alt'][k]) + ' </altitude>\n')
+        metadata.write('\t\t<aspect> ' + str(all_lists['asp'][k]) + ' </aspect>\n')
+        metadata.write('\t\t<slope> ' + str(all_lists['slop'][k]) + ' </slope>\n')
+        metadata.write('\t\t<massif> ' + str(all_lists['m'][k]) + ' </massif>\n')
+        metadata.write('\t\t<zref> ' + "1.5" + ' </zref>\n')
+        metadata.write('\t\t<uref> ' + "10.0" + ' </uref>\n')
+        metadata.write('\t\t<azimut> ' + azimut_str.rstrip() + ' </azimut>\n')
+        metadata.write('\t\t<mask> ' + angle_str.rstrip() + ' </mask>\n')
+        metadata.write('\t\t<source_mask> ' + 'IGN' + ' </source_mask>\n')
+        metadata.write('\t</Site>\n')
 
-        else:
-            lati_base, longi_base, alti_base = infomassifs().infoposte(str(all_lists['id'][k]))
-            expo_base, slope_base = infomassifs().exposlopeposte(str(all_lists['id'][k]))
-            try:
-                # Ce truc va planter s'il n'y a pas encore de champ massif
-                massif_base = infomassifs().massifposte(str(all_lists['id'][k]))
-            except Exception:
-                massif_base = -1
-
-            if all_lists['alt'][k] != alti_base:
-                print("WARNING ALTITUDE : " + all_lists['id'][k])
-                print(all_lists['alt'][k], alti_base)
-
-            if all_lists['asp'][k] != expo_base:
-                print("WARNING ASPECT : " + all_lists['id'][k])
-                print(all_lists['asp'][k], expo_base)
-
-            if all_lists['slop'][k] != slope_base:
-                print("WARNING SLOPE : " + all_lists['id'][k])
-                print(all_lists['slop'][k], slope_base)
-
-            if all_lists['lat'][k] != lati_base:
-                print("WARNING LATITUDE : " + all_lists['id'][k])
-                print(all_lists['lat'][k], lati_base)
-
-            if all_lists['lon'][k] != longi_base:
-                print("WARNING LONGITUDE : " + all_lists['id'][k])
-                print(all_lists['lon'][k], longi_base)
-
-            if all_lists['m'][k] != massif_base:
-                print("UPDATE MASSIF NUMBER : " + all_lists['id'][k])
-                metadataout.write('\t<Site>\n')
-                metadataout.write('\t\t<name> ' + all_lists['nom'][k] + ' </name>\n')
-                metadataout.write('\t\t<nameRed> ' + all_lists['nom'][k] + ' </nameRed>\n')
-                metadataout.write('\t\t<number> ' + str(all_lists['id'][k]) + ' </number>\n')
-                metadataout.write('\t\t<lat> ' + str(all_lists['lat'][k]) + ' </lat>\n')
-                metadataout.write('\t\t<lon> ' + str(all_lists['lon'][k]) + ' </lon>\n')
-                metadataout.write('\t\t<altitude> ' + str(all_lists['alt'][k]) + ' </altitude>\n')
-                metadataout.write('\t\t<aspect> ' + str(all_lists['asp'][k]) + ' </aspect>\n')
-                metadataout.write('\t\t<slope> ' + str(all_lists['slop'][k]) + ' </slope>\n')
-                metadataout.write('\t\t<massif> ' + str(all_lists['m'][k]) + ' </massif>\n')
-                metadataout.write('\t\t<zref> ' + "1.5" + ' </zref>\n')
-                metadataout.write('\t\t<uref> ' + "10.0" + ' </uref>\n')
-                metadataout.write('\t\t<azimut> ' + azimut_str.rstrip() + ' </azimut>\n')
-                metadataout.write('\t\t<mask> ' + angle_str.rstrip() + ' </mask>\n')
-                metadataout.write('\t\t<source_mask> ' + 'IGN' + ' </source_mask>\n')
-                metadataout.write('\t</Site>\n')
-
-    # On écrit la fin du fichier
-    for line in metadata.readlines():
-        metadataout.write(line)
-
-        if "<number>" in line:
-            if re.match("^.*(\d{8}).*$", line):
-                codestation = re.split("^.*(\d{8}).*$", line)[1]
-                if codestation == all_lists['id'][k]:
-                    metadataout.write('\t\t<massif> ' + str(all_lists['m'][k]) + ' </massif>\n')
-
+    metadata.write('\t</Sites>\n')
     metadata.close()
-    os.rename(chemxml + '/METADATA_out.xml', chemxml + '/METADATA.xml')
     print("done in", time.time() - start_time, "seconds")
 
 
@@ -744,7 +591,6 @@ def parseArguments(args):
     parser.add_argument("path_shape", help="Path to shapefile", type=str)
     parser.add_argument("name_station", help="Shapefile Field Name containing a unique reference for points", type=str)
     parser.add_argument("id_station", help="Shapefile Field Number containing a unique reference for points", type=str)
-    parser.add_argument("project_number", help="Project Number in order to get unique reference in METADATA", type=int)
 
     # Optional argument
     parser.add_argument("--name_alt", help="Shapefile Field Name containing altitude, if it exists", type=str)
@@ -755,7 +601,6 @@ def parseArguments(args):
     parser.add_argument("--MNT_asp", help="Path for MNT altitude", type=str, default=path_MNT_aspect_defaut)
     parser.add_argument("--MNT_slop", help="Path for MNT altitude", type=str, default=path_MNT_slope_defaut)
     parser.add_argument("--list_skyline", nargs='*', help="The skyline plot you want", default=None)
-    parser.add_argument("--confirm_overwrite", help="Confirm you want to overwrite", action="store_true")
 
     args = parser.parse_args(args)
     return args
@@ -773,7 +618,6 @@ def main(args=None):
         path_shapefile = args.path_shape
         nom_station = args.name_station
         id_station = args.id_station
-        Project_number = args.project_number
         nom_alt = args.name_alt
         nom_asp = args.name_asp
         nom_slop = args.name_slop
@@ -782,7 +626,6 @@ def main(args=None):
         path_MNT_slop = args.MNT_slop
         output_name = args.output
         list_skyline = args.list_skyline
-        confirm_overwrite = args.confirm_overwrite
 
         # Check if mandatory path for shapefile is OK
         if not os.path.isfile(path_shapefile + '.shp'):
@@ -798,22 +641,15 @@ def main(args=None):
             logger.critical('Field {} does not exist in {}'.format(id_station, path_shapefile))
             sys.exit(3)
 
-        # Check if mandatory project number
-        if Project_number > 99:
-            logger.critical('Project Number should be between 0 and 99. Use your favorite editor to read the code '
-                            'shapefile2NetCDF.py')
-            sys.exit(1)
-
         # Launch the app:
         all_lists = make_dict_list(path_shapefile, id_station, nom_station, nom_alt, nom_asp, nom_slop, path_MNT_alt,
-                                   path_MNT_asp, path_MNT_slop, 10000000 + 10000 * Project_number)
-        if not confirm_overwrite:
-            check_id_station_in_Metadata(all_lists)
+                                   path_MNT_asp, path_MNT_slop)
+        
         create_NetCDF(all_lists, output_name)
         if list_skyline == ['all'] or list_skyline == ['All'] or list_skyline == ['ALL']:
             list_skyline = [all_lists['id'][k] for k in range(len(all_lists['id']))]
         elif list_skyline is not None:
-            list_skyline = ['%08d' % (10000000 + 10000 * Project_number + int(list_skyline[i]))
+            list_skyline = ['%08d' % (10000000 + int(list_skyline[i]))
                             for i in range(len(list_skyline))]
         create_skyline(all_lists, path_MNT_alt, path_shapefile, list_skyline)
 

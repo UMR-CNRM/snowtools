@@ -1,7 +1,7 @@
 Snowtools's |version| documentation
 ===================================
 
-Documentation of Snowtools |version| generated on |today| from release: |release|.
+Documentation of Snowtools |release| generated on |today|.
 
 The code is available at https://github.com/UMR-CNRM/snowtools
 
@@ -61,13 +61,22 @@ SURFEX
 
    SURFEX code and infos <surfex/surfex-index.rst>
 
+Vortex
+------
+
+.. toctree::
+   :maxdepth: 2
+
+   The vortex-cen plugin <vortex/vortex-index.rst>
+
 Meteo France HPC
 ----------------
 
 .. toctree::
    :maxdepth: 2
 
-   Specific for Meteo France system <hpc/hpc-index.rst>
+   Specific for Meteo France HPC <hpc/hpc-index.rst>
+
 
 Other documentations
 --------------------

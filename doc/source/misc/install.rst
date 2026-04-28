@@ -51,24 +51,24 @@ If you want few more infos on virtual environments, please follow :ref:`virtual_
 WHICH INSTALLATION FOR SNOWTOOLS ?
 ----------------------------------
 
-Cleaning of old snowtools configuration (PC, HPC, server), go to :ref:`MF-PC-cleaning`.
+Cleaning of old snowtools configuration (PC, HPC, team server), go to :ref:`MF-PC-cleaning`.
 
 **For new users of after cleaning:**
 
 Meteo-France PC, go to :ref:`MF-PC-install`.
 
-Meteo-France HPC or Server (SXCEN), go to :ref:`MF-HPC-server-install`.
+Meteo-France HPC or team Server (SXCEN), go to :ref:`MF-HPC-server-install`.
 
 External users out of Meteo-France system, go to :ref:`exterior-install`.
 
 
 .. _MF-PC-cleaning:
 
-Cleaning old snowtools installation (PC, server, HPC)
------------------------------------------------------
+Cleaning old snowtools installation (PC, team server, HPC)
+----------------------------------------------------------
 
-CLEAN PYTHONPATH (PC, server, HPC)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+CLEAN PYTHONPATH (PC, team server, HPC)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 In your ``~/.bashrc`` file, you must **delete** the line
 
 .. code-block:: bash
@@ -88,8 +88,8 @@ You can check the deletion with
 
 You must not see snowtools inside the result of the ``echo`` command,
 
-USER environment (PC, server)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+USER environment (PC, team server)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 To ensure a reproductible installation, you must **not** have any package installed locally (under your ``~/.local``).
 
 In order to check this, you can see if the folder ``~/.local/lib`` is not empty.
@@ -159,10 +159,29 @@ Install
  
     cd $SNOWTOOLS_CEN
     git checkout dev
-    python -m venv --system-site-packages ~/my_envs/snowtools_env
+    python -m venv ~/my_envs/snowtools_env
     source ~/my_envs/snowtools_env/bin/activate
     python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e
     deactivate
+
+Configure Vortex and install UEnv tools
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Vortex Configuration :
+
+.. code-block:: bash
+
+    mkdir ~/.vortex.d/
+    cd ~/.vortex.d/
+
+    ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_pc.toml vortex.toml
+
+Install UEnv tools :
+
+.. code-block:: bash
+
+    pip install vortex-gco
+
 
 And that's it. Now, you have snowtools installed in your git repository ``~/all_git_repo/snowtools`` and a virtual environment associated ``~/my_envs/snowtools_env``
 
@@ -176,8 +195,8 @@ All this is explained in the page :ref:`surfex_PC_simu`
 
 .. _MF-HPC-server-install:
 
-Install Snowtools on Meteo France HPC Belenos or Server (SXCEN)
----------------------------------------------------------------
+Install Snowtools on Meteo France HPC (Belenos) or team server (SXCEN)
+----------------------------------------------------------------------
 Sync Snowtools on Belenos or SXCEN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 In order to install snowtools on a distant server (SXCEN or Belenos), run this command **on your PC** to synchronise your snowtools repository:
@@ -192,6 +211,18 @@ In order to install snowtools on a distant server (SXCEN or Belenos), run this c
 
 **FOR BELENOS ONLY:** Environment and start installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. warning::
+
+    As of 2026-04-23, DSI/ICI/CC recently made changes to internet access
+    from Belenos. To install Python packages from pypi.org with Pip,
+    you'll need to export the following environment variable:
+
+.. code-block:: bash
+
+    export CURL_CA_BUNDLE=/opt/softs/certificats/proxy1_1.pem
+
+
 As in the personal computer case, set an environment variable pointing to the snowtools repository in **Belenos** ``~/.bashrc`` file
 
 .. code-block:: bash
@@ -206,7 +237,8 @@ Source the ``~/.bashrc`` file and start installation
 
     source ~/.bashrc
     cd $SNOWTOOLS_CEN
-    module load python 3.10.12
+    module load python 3.12.12
+    module load gcc/15.2.0
 
 **FOR SXCEN ONLY:** Environment and start installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -227,17 +259,29 @@ Source the ``~/.bashrc`` file and start installation
     source ~/.bashrc
     cd $SNOWTOOLS_CEN
 
+
+By default, Pip fetches package distributions from the global Python package registry, pypi.org. To install internal vortex plugins, configure Pip so that it can reach MF’s internal Nexus package registry. To do so, add the following lines to ~/.config/pip/pip.ini:
+
+.. code-block:: ini
+
+    [global]
+    index = https://nexus-sidev.meteo.fr/repository/pypi-group/pypi
+    index-url = https://nexus-sidev.meteo.fr/repository/pypi-group/simple
+    extra-index-url = https://nexus.meteo.fr/pypi-vortex-releases/simple
+
+
 Continue installation for Belenos and SXCEN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
  
-    python -m venv --system-site-packages ~/my_envs/snowtools_env
+    python -m venv ~/my_envs/snowtools_env
     source ~/my_envs/snowtools_env/bin/activate
     python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e
 
 Temporary step for Belenos and SXCEN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Configure gitlab for HPC via SSH using the documentation (in french):
 
 http://confluence.meteo.fr/display/~thomas.carrel-billiard@meteo.fr/Configurer+GitLab
@@ -257,13 +301,8 @@ Install the repositories
 
     pip install mkjob/ vortex-gco/ vortex-olive/
 
-Install vortex-cen
-
-.. code-block:: bash
-
-    pip install --upgrade setuptools
-    cd $SNOWTOOLS_CEN/vortex-cen
-    pip install --no-build-isolation -e .
+Configure Vortex
+^^^^^^^^^^^^^^^^
 
 Vortex Configuration
 
@@ -402,3 +441,42 @@ And that's all. Activate before using your project and deactivate after, in this
 More infos on https://docs.python.org/3/tutorial/venv.html
 
 If you want to go back to snowtools installation, please follow :ref:`installation_choice`
+
+
+Optional installations
+----------------------
+
+Spatial interpolator for SAFRAN
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- **On Meteo-France super-computers**, a precompiled binary is provided in the CEN uenv environment.
+- **On your PC at CEN**, a pre-compiled binary is also provided on shared filesystems.
+- **Otherwise** (or if you want to use a custom version, e.g. for development) you will need to compile the ``interpol`` binaty and set the environment variable ``SNOWTOOLS_INTERPOL`` to point to the location of the interpol compiled binary. To do so, the procedure is detailed below.
+
+To compile the interpol binary:
+
+1. go into the ``snowtools/interpolation`` folder
+2. On Meteo-France HPC only, load the necessary modules :
+
+.. code-block:: bash
+
+   module purge
+   moudle load intel
+   module load intelmpi
+
+3. On external PC only (outside of Meteo-France), you need to have a Fortran90 compiler, a MPI compiler, openmpi, netcdf-parallel and netcdff libraries with headers availables. On Ubuntu, it means installing the following packages : ``build-essential libopenmpi-dev libnetcdf-mpi-dev libnetcdff-dev``.
+
+4. Remove Makefile if defined with ``rm Makefile`` and then link to the correct one depending on your situation:
+
+   - On Meteo-France HPC : ``ln -s Makefile_belenos Makefile``
+   - On Meteo-France PC : ``ln -s Makefile_pc_mf Makefile``
+   - On external PC : ``ln -s Makefile_pc_nomf Makefile``
+
+5. You just have to run ``make``. That's all. You now have an ``interpol`` binary in the current folder.
+
+
+CRPS scores
+^^^^^^^^^^^
+If you need to use CRPS scoring tools, which parts are written in Fortran, you need to compile them.
+
+For CRPS scores, go to the ``snowtools/scores``, and run ``./install_ubuntu.sh`` (or ``./install_belenos.sh`` if you are on a Meteo-France super computer).

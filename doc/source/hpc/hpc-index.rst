@@ -1,20 +1,25 @@
-Meteo France HPC environment
-============================
+HPC simulations
+===============
 
-Few infos on how to work in Meteo France HPC system
+Few informations on how to work on MF HPC.
 
-File Transferts
----------------
+HPC essentials
+--------------
 
-.. toctree::
-   :maxdepth: 1
-
-   Communications with Hendrix <file-transfert.rst>
-
-UENV documentation
-------------------
+The full documentation of MF's HPC is available here : http://diagnostix.meteo.fr/Bull/DOC/doc_utilisateur_belenos_taranis_v3.pdf
+This section contains only the essential informations to properly work on MF HPC.
 
 .. toctree::
    :maxdepth: 1
 
-   Few tips on UENV on HPC <uenv.rst>
+   Essential documentation to work on MF HPC : <hpc-essentials.rst>
+
+Launching simulations on HPC
+----------------------------
+
+This section contains all necessary information to launch simulations on HPC.
+
+.. toctree::
+   :maxdepth: 1
+
+   Launching simulations on MF HPC : <hpc-simulations.rst>

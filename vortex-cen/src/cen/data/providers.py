@@ -101,7 +101,7 @@ class S2MReanalysisProvider(Provider):
             else:
                 info['level_two'] = 'guess/p' + season + suffix
         elif resource.realkind == 'packedguess':
-            info['level_two'] = 'guess'
+            info['level_two'] = 'guess/era5'
         elif resource.realkind == 'packedobs':
             info['level_two'] = 'obs'
 
