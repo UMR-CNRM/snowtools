@@ -441,3 +441,42 @@ And that's all. Activate before using your project and deactivate after, in this
 More infos on https://docs.python.org/3/tutorial/venv.html
 
 If you want to go back to snowtools installation, please follow :ref:`installation_choice`
+
+
+Optional installations
+----------------------
+
+Spatial interpolator for SAFRAN
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- **On Meteo-France super-computers**, a precompiled binary is provided in the CEN uenv environment.
+- **On your PC at CEN**, a pre-compiled binary is also provided on shared filesystems.
+- **Otherwise** (or if you want to use a custom version, e.g. for development) you will need to compile the ``interpol`` binaty and set the environment variable ``SNOWTOOLS_INTERPOL`` to point to the location of the interpol compiled binary. To do so, the procedure is detailed below.
+
+To compile the interpol binary:
+
+1. go into the ``snowtools/interpolation`` folder
+2. On Meteo-France HPC only, load the necessary modules :
+
+.. code-block:: bash
+
+   module purge
+   moudle load intel
+   module load intelmpi
+
+3. On external PC only (outside of Meteo-France), you need to have a Fortran90 compiler, a MPI compiler, openmpi, netcdf-parallel and netcdff libraries with headers availables. On Ubuntu, it means installing the following packages : ``build-essential libopenmpi-dev libnetcdf-mpi-dev libnetcdff-dev``.
+
+4. Remove Makefile if defined with ``rm Makefile`` and then link to the correct one depending on your situation:
+
+   - On Meteo-France HPC : ``ln -s Makefile_belenos Makefile``
+   - On Meteo-France PC : ``ln -s Makefile_pc_mf Makefile``
+   - On external PC : ``ln -s Makefile_pc_nomf Makefile``
+
+5. You just have to run ``make``. That's all. You now have an ``interpol`` binary in the current folder.
+
+
+CRPS scores
+^^^^^^^^^^^
+If you need to use CRPS scoring tools, which parts are written in Fortran, you need to compile them.
+
+For CRPS scores, go to the ``snowtools/scores``, and run ``./install_ubuntu.sh`` (or ``./install_belenos.sh`` if you are on a Meteo-France super computer).

@@ -174,7 +174,7 @@ class ProCompareMenu(tk.Menu):
         super().__init__(master)
         # Menu 0
         self.filemenu = tk.Menu(self, tearoff=0)
-        self.filemenu.add_command(label='Quit', command=self.master.close_window)
+        self.filemenu.add_command(label='Quit', command=self.master.close_window, accelerator="ESC")
         self.add_cascade(label='File', menu=self.filemenu)
 
 

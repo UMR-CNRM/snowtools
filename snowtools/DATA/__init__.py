@@ -39,6 +39,9 @@ Path to S2M reanalysis at stations.
 
 LUSTRE_NOSAVE_DIR = '/cnrm/mrns/users/NO_SAVE'
 
+INTERPOL_BIN_CEN = '/rd/cenfic3/cenmod/home/lafaysse/common/interpolation/interpol'
+"""Common binary for interpolation (at CEN only)"""
+
 try:
     LUSTRE_NOSAVE_USER_DIR = os.path.join('/cnrm/mrns/users/NO_SAVE', os.getlogin())
 except OSError:

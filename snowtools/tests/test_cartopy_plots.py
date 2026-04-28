@@ -357,6 +357,21 @@ class TestCartopyVosges(unittest.TestCase):
         self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
         self.m.close()
 
+    def test_vosgesmultimap(self):
+        self.m = cartopy_massifs.MultiMap_Vos(nrow=3, ncol=3)
+        self.m.init_massifs()
+        mnames = [self.m.name[self.m.num.index(id)] for id in self.m.massif_numbers]
+        self.m.plot_center_massif(np.array(self.m.massif_numbers),
+                                 np.array([[name + str(i) for name in mnames] for i in range(1,10)]),
+                                  axis=0, textcolor='orange', format='%s')
+        self.m.add_north_south_info(english=True)
+        self.m.addlogo()
+        self.m.set_maptitle(["Vosges"])
+        self.m.set_figtitle("Names")
+        self.outfilename = "vosges_names_multi.png"
+        self.m.save(os.path.join(self.diroutput, self.outfilename), formatout="png")
+        self.m.close()
+
 
 class CartopyTestMixIn(object):
     """

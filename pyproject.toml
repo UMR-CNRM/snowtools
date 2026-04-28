@@ -4,7 +4,7 @@ requires = ['meson-python', 'numpy>=1.21.6', 'ninja', 'wheel']
 
 [project]
 name = "snowtools"
-version = "2.0.3"
+version = "2.0.4"
 dependencies = [
     'netCDF4',
     'numpy>=1.8',
@@ -79,6 +79,7 @@ Repository = "https://github.com/UMR-CNRM/snowtools"
 [project.scripts]
 s2m = 'snowtools.tasks.s2m_command:main'
 proplotter = 'snowtools.plots.stratiprofile.proplotter:main'
+mapplotter = 'snowtools.plots.maps.mapplotter:main'
 procompare = 'snowtools.plots.stratiprofile.procompare:main'
 
 [project.entry-points."xarray.backends"]

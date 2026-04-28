@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Created on 20 mars 2018
 
 @author: lafaysse
-'''
+"""
 import os
 import sys
 import shutil
@@ -15,16 +15,19 @@ from snowtools.tools.change_forcing import forcinput_ESMSnowMIP
 from snowtools.scripts.ESMSnowMIP.post_snowmip import ESMSnowMIP_output
 from snowtools.DATA import SNOWTOOLS_DIR
 
-dirsnowmip = os.environ['HOME'] + "/data/ESM-SnowMIP/"
+# dirsnowmip = os.environ['HOME'] + "/data/ESM-SnowMIP/"
+dirsnowmip = "/rd/cenfic3/cenmod/simul_surfex_rech/lafaysse/ESM-SnowMIP/"
 #dirnamelist = dirsnowmip + "namelists_8.0/"
 #direxe = os.environ['HOME'] + "/SURFEX/8_0/exe"
 
 list_sites = ["cdp", "oas", "obs", "ojp", "rme", "sap", "snb", "sod", "swa", "wfj"]
 
 
-dirnamelist = dirsnowmip + "namelists_open/"
-direxe = os.environ['HOME'] + "/SURFEX/lafaysse_fromV8trunk_withmeb/exe"
+#dirnamelist = dirsnowmip + "namelists_open/"
+dirnamelist = dirsnowmip + "namelists_crocus3.0.1/"
 
+#direxe = os.environ['HOME'] + "/SURFEX/lafaysse_fromV8trunk_withmeb/exe"
+direxe = os.environ['HOME'] + "/SURFEX/SURFEX_CEN/exe"
 
 bdate = dict(cdp="1994100101",
              oas="1997100107",
@@ -88,7 +91,7 @@ if __name__ == '__main__':
     list_sites = options.site.split(",")
 
     for site in list_sites:
-
+        print(site)
         if options.source == "insitu":
             begindate = bdate[site]
             enddate = edate[site]
@@ -96,8 +99,9 @@ if __name__ == '__main__':
             begindate = "1980100100"
             enddate = "2010093023"
 
+        dirforcing = dirsnowmip + "/" + site + "/" + options.source
+
         if "forcing" in options.action:
-            dirforcing = dirsnowmip + "/" + site + "/" + options.source
             if not os.path.isdir(dirforcing):
                 os.mkdir(dirforcing)
             forcing = dirforcing + "/FORCING_" + begindate + "_" + enddate + ".nc"
@@ -106,7 +110,7 @@ if __name__ == '__main__':
             forcinput_ESMSnowMIP(met, forcing)
 
         if "spinup" in options.action:
-            commande = SNOWTOOLS_DIR + "/tasks/s2m_command.py -g -o " + dirsnowmip + "SPINUP_" + site + "_" + options.source + options.suffix + " -f " + dirforcing + " -b " + begindate + " -e " + enddate + " -n " + dirnamelist + "/OPTIONS_" + site + ".nam -s " + direxe
+            commande = SNOWTOOLS_DIR + "/tasks/s2m_command.py research -g -o " + dirsnowmip + "SPINUP_" + site + "_" + options.source + options.suffix + " -f " + dirforcing + " -b " + begindate + " -e " + enddate + " -n " + dirnamelist + "/OPTIONS_" + site + ".nam -s " + direxe
             print(commande)
             os.system(commande)
 
@@ -117,7 +121,7 @@ if __name__ == '__main__':
                 os.makedirs(dirprep)
             for fichier in ["PGD.nc", "PREP_" + enddate + ".nc"]:
                 shutil.copy(dirprepspinup + fichier, dirprep + fichier)
-            commande = SNOWTOOLS_DIR + "/tasks/s2m_command.py -o  " + dirsnowmip + "Crocus_" + site + "_" + options.source + options.suffix  + " -f " + dirforcing + " -x " + enddate + " -b " + begindate + " -e " + enddate + " -n " + dirnamelist + "/OPTIONS_" + site + ".nam -s " + direxe
+            commande = SNOWTOOLS_DIR + "/tasks/s2m_command.py research -o  " + dirsnowmip + "Crocus_" + site + "_" + options.source + options.suffix  + " -f " + dirforcing + " -x " + enddate + " -b " + begindate + " -e " + enddate + " -n " + dirnamelist + "/OPTIONS_" + site + ".nam -s " + direxe
             print(commande)
             os.system(commande)
         elif options.action == "runbeaufix":
@@ -153,9 +157,6 @@ if __name__ == '__main__':
 
         else:
             print("No run to do.")
-            sys.exit(0)
-            print(commande)
-            os.system(commande)
 
         if "post" in options.action:
             pro = dirsnowmip + "Crocus_" + site + "_" + options.source + "/pro/PRO_" + begindate + "_" + enddate + ".nc"

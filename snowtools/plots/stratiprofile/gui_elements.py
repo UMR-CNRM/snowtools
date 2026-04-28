@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import textwrap
+import abc
+import datetime
 
 import tkinter as tk
 import tkinter.filedialog
@@ -59,7 +61,7 @@ class ProPlotterChoicesBar(tk.Frame):
     WIDTH = 40
     WIDTH_TXT = WIDTH
 
-    def __init__(self, master, n_variables=2):
+    def __init__(self, master, n_variables=2, point_selection=True):
         """Initialization of left bar for selecting parameters specific to representation,
         variables and point of interest for plotting"""
         super().__init__(master, borderwidth=1, relief=tk.RAISED)
@@ -82,8 +84,10 @@ class ProPlotterChoicesBar(tk.Frame):
         self.params = tk.Frame(self.canvas)
         self.params.pack(fill=tk.X)
 
-        self.variables_w = ProPlotterChoicesBarVariables(self, self.variables, n_variables=n_variables)
-        self.point_w = ProPlotterChoicesBarPoint(self, self.point)
+        if n_variables > 0:
+            self.variables_w = ProPlotterChoicesBarVariables(self, self.variables, n_variables=n_variables)
+        if point_selection:
+            self.point_w = ProPlotterChoicesBarPoint(self, self.point)
         self.addparams_w = ProPlotterchoicesBarAdditionalParams(self, self.addparams)
         self.params_w = None
 
@@ -118,8 +122,6 @@ class ProPlotterChoicesBarVariables:
         if self.master.master.fileobj is not None:
             self.variables_info = self.master.master.fileobj.variables_desc
             variables_list = [v['full_name'] if 'full_name' in v else k for k, v in self.variables_info.items()]
-            list_bool = [v['has_snl'] if 'full_name' in v else k for k, v in self.variables_info.items()]
-            variables_with_snl = [variables_list[i] for i in range(len(variables_list)) if list_bool[i]]
 
             self.label1 = tk.Label(self.frame, text='Variable:')
             self.label1.pack()
@@ -130,6 +132,9 @@ class ProPlotterChoicesBarVariables:
 
             # only for plotter application
             if self.n_variables >= 2:
+                list_bool = [v['has_snl'] if 'full_name' in v else k for k, v in self.variables_info.items()]
+                variables_with_snl = [variables_list[i] for i in range(len(variables_list)) if list_bool[i]]
+
                 self.label2 = tk.Label(self.frame, text='Variable profil:')
                 self.label2.pack()
                 self.choice_var_react = ttk.Combobox(self.frame, state='readonly', values=variables_with_snl,
@@ -482,7 +487,7 @@ class ProPlotterMain(tk.Frame):
         :type same_x: bool
         :param third_axis: Create a third axis on the second subplot.
         :type third_axis: bool
-        
+
         .. note for developpers::
             * same_x and same_y are true when you want to compare two graph of same variable/different simulation
             * same_x false and same_y true when you want to plot on one simulation two variables with snowlayer dimension
@@ -574,3 +579,217 @@ class ProPlotterControlsBar(tk.Frame):
         self.infos.configure(text=text)
 
 
+class ProPlotterOpenBar(tk.Frame):
+    """The Frame for open button and file path"""
+
+    def __init__(self, master):
+        """Initialize open bar """
+        self.master = master
+        super().__init__(master, height=100)
+        self.pack(fill=tk.X)
+
+        self.openbutton = tk.Button(self, text="Open File", command=self.open)
+        self.openbutton.pack(side=tk.LEFT, padx=5)
+
+        filename = self.master.fileobj.get_filename() if self.master.fileobj is not None else '--'
+        self.filename = tk.Label(self, text=filename)
+        self.filename.pack(side=tk.LEFT)
+
+    def open(self):
+        """
+        If the Open button is clicked, launch the Open application
+        """
+        self.master.open()
+
+    def update_filename(self, filename):
+        """Get the name of opened file"""
+        self.filename.configure(text=filename)
+
+
+class ProPlotterChoicesBarParams(abc.ABC):
+    """Abstract Class for the Choices for the Parameters. The standard case is described"""
+    def __init__(self, master, frame):
+        self.master = master
+        self.frame = frame
+
+        self.label = tk.Label(self.frame, text='Graph specific options', relief=tk.RAISED)
+        self.label.pack(pady=5)
+
+    def clean_frame(self):
+        if self.frame is not None:
+            for widgets in self.frame.winfo_children():
+                widgets.destroy()
+
+    def update(self):
+        pass
+
+
+class ProPlotterChoicesBarParamsStandard(ProPlotterChoicesBarParams):
+    """Standard case, nothing to add"""
+    def __init__(self, master, frame):
+        super().__init__(master, frame)
+        self.update()
+
+
+class ProPlotterChoicesBarParamsHeight(ProPlotterChoicesBarParams):
+    """
+     Specific choices for direction and height. Add the specific combobox and variables
+     """
+    def __init__(self, master, frame):
+        super().__init__(master, frame)
+        self._direction = None
+        self._height = 8.3
+        self.label = None
+        self.label1 = None
+        self.label2 = None
+        self.choice_direction = None
+        self.choice_height = None
+        self.update()
+
+    def update(self):
+        """Specific choices for variables in Height Graph case"""
+        self.clean_frame()
+        self.label = tk.Label(self.frame, text='Choice of direction and height', relief=tk.RAISED)
+        self.label.pack()
+        if self.master.fileobj is not None:
+            direction_list = ['from ground to top of snow layer', 'from top of snow layer to ground']
+            self.label1 = tk.Label(self.frame, text='Direction:')
+            self.label1.pack()
+            self.choice_direction = ttk.Combobox(self.frame, state='readonly', values=direction_list,
+                                                 width=self.master.choices.WIDTH, )
+            self.choice_direction.bind('<<ComboboxSelected>>', self.update_direction)
+            self.choice_direction.pack()
+
+            self.label2 = tk.Label(self.frame, text='Height in cm (default = 8.3 cm):')
+            self.label2.pack()
+            height = tk.DoubleVar()
+            self.choice_height = ttk.Entry(self.frame, textvariable=height, width=self.master.choices.WIDTH)
+            self.choice_height.pack()
+
+    def update_direction(self, *args):
+        """Update the value of the direction choice (from ground to top of snow layer or the contrary)"""
+        value = self.choice_direction.get()
+        if value == 'from ground to top of snow layer':
+            self._direction = 'up'
+        elif value == 'from top of snow layer to ground':
+            self._direction = 'down'
+
+    def update_height(self):
+        """Update the value of the cut in the snow pack (8.3cm) from the direction"""
+        if self.choice_height is None:
+            value = 8.3
+        else:
+            value = self.choice_height.get()
+        if value is not None:
+            self._height = float(value)
+
+    @property
+    def var_direction(self):
+        return self._direction
+
+    @property
+    def var_height(self):
+        return self._height
+
+
+class ProPlotterChoicesBarParamsDateSlicer(ProPlotterChoicesBarParams):
+    """
+     Specific choice via adding a Date Slicer (for Multiple Plots or Meteo France ensemble Plots for example)
+     """
+    def __init__(self, master, frame):
+        super().__init__(master, frame)
+        self._dateslice = None
+        self.label = None
+        self.date_label = None
+        self.scale_date = None
+        self.update()
+
+    def update(self):
+        self.clean_frame()
+        self.label = tk.Label(self.frame, text='Choice for Date', relief=tk.RAISED)
+        self.label.pack()
+        if self.master.fileobj is not None:
+            self.scale_date = tk.Scale(self.frame, orient='horizontal', state='disabled',
+                                       label='Use the slicer to choose the date')
+            self.scale_date.config(from_=0, to=(len(self.master.fileobj.get_time()) - 1), state='normal', showvalue=0,
+                                   command=self.update_slice_date, variable=tk.IntVar)
+            self.scale_date.pack(expand=1, fill=tk.BOTH)
+        self.button_minusm = tk.Button(self.frame, text="M", command=lambda: self.move('month-'),
+                                       width=2, height=1, padx=1, pady=1)
+        self.button_minusm.pack(side=tk.LEFT, padx=0)
+        self.button_minusd = tk.Button(self.frame, text="D", command=lambda: self.move('day-'),
+                                       width=2, height=1, padx=1, pady=1)
+        self.button_minusd.pack(side=tk.LEFT, padx=0)
+        self.button_minus = tk.Button(self.frame, text="-", command=lambda: self.move('-'),
+                                      width=2, height=1, padx=1, pady=1)
+        self.button_minus.pack(side=tk.LEFT, padx=0)
+        self.date_label = tk.Label(self.frame, text='-', anchor='w')
+        self.date_label.pack(side=tk.LEFT, fill='both', padx=2)
+        self.button_plus = tk.Button(self.frame, text="M", command=lambda: self.move('month+'),
+                                     width=2, height=1, padx=1, pady=1)
+        self.button_plus.pack(side=tk.RIGHT, padx=0)
+        self.button_plusd = tk.Button(self.frame, text="D", command=lambda: self.move('day+'),
+                                      width=2, height=1, padx=1, pady=1)
+        self.button_plusd.pack(side=tk.RIGHT, padx=0)
+        self.button_plusm = tk.Button(self.frame, text="+", command=lambda: self.move('+'),
+                                      width=2, height=1, padx=1, pady=1)
+        self.button_plusm.pack(side=tk.RIGHT, padx=0)
+
+    def update_slice_date(self, *args):
+        value = self.scale_date.get()
+        if value != self._dateslice:
+            self._dateslice = value
+            self.date_label.configure(text=str(self.get_date()))
+            self.master.controls.plot_mark()
+
+    def move(self, step):
+        if self.master.fileobj is None:
+            return
+        if self.scale_date is None:
+            return
+        dt_list = {
+            'month-': -datetime.timedelta(days=30),
+            'month+': datetime.timedelta(days=30),
+            'day-': -datetime.timedelta(days=1),
+            'day+': datetime.timedelta(days=1),
+        }
+        if step not in ['+', '-'] + list(dt_list.keys()):
+            return
+        time = self.master.fileobj.get_time()
+        if time is None or len(time) == 0:
+            return
+        current = self._dateslice if self._dateslice is not None else 0
+        _max = len(time) - 1
+
+        if step == '+':
+            new_step = min(_max, current + 1)
+        elif step == '-':
+            new_step = max(0, current - 1)
+        else:
+            dt_f = time[1] - time[0]
+            new_step = max(0, min(_max, current + int(dt_list[step] / dt_f)))
+        self.scale_date.set(new_step)
+
+    @property
+    def var_dateslice(self):
+        return self._dateslice
+
+    def get_date(self):
+        if self._dateslice is not None \
+           and self._dateslice >= 0\
+           and self._dateslice < len(self.master.fileobj.get_time()):
+            return self.master.fileobj.get_time()[self._dateslice]
+        else:
+            return self.master.fileobj.get_time()[0]
+
+
+class ProPlotterChoicesBarParamsEscroc(ProPlotterChoicesBarParamsDateSlicer):
+    def __init__(self, master, frame):
+        super().__init__(master, frame)
+        self.update()
+
+
+class ProPlotterChoicesBarParamsMultiple(ProPlotterChoicesBarParamsDateSlicer):
+    def __init__(self, master, frame):
+        super().__init__(master, frame)
+        self.update()

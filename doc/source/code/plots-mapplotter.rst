@@ -1,6 +1,15 @@
 The mapplotter script
 =====================
 
+GUI to visualize maps of simulation outputs
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Launching the ``mapplotter`` script without any argument (or with only a filename) opens a GUI that alow browsing the content of a PRO file (browsing across variables, dates and potential other dimensions such as tiles, layers if needed).
+
+
+.. figure:: /images/mapplotter.png
+   :align: center
+
 Command line use
 ^^^^^^^^^^^^^^^^
 

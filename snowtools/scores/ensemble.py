@@ -25,7 +25,7 @@ dict mapping common variable names to surfex variable names
 """
 
 
-class EnsembleScores(object):
+class EnsembleScores:
     """
     Ensemble scores
     """
@@ -57,15 +57,15 @@ class EnsembleScores(object):
         ens_common = np.sort(self.ensCommon, axis=0)
         evenement = 0
         # compute the integral for each obs
-        CRPSVector = np.ones(len(self.obsCommon))
+        CRPS_vector = np.ones(len(self.obsCommon))
         for obs in self.obsCommon:
             # cumulated distribution function
             # Heaviside function for obs
-            obsCDF = 0
-            ensembleCDF = 0
-            precPrevision = 0
+            obs_CDF = 0
+            ensemble_CDF = 0
+            prec_forecast = 0
             integrale = 0
-            n = 0
+            n_m = 0
 
             # Number of valid members at this date
             valid = np.ma.masked_invalid(ens_common[:, evenement])
@@ -81,33 +81,33 @@ class EnsembleScores(object):
                         if  n==0:
                             integral=np.nan
                         #otherwise
-                        prevision = precPrevision
+                        prevision = prec_forecast
                         break
                     """
                     # immediately after obs
-                    if obsCDF == 0 and obs < prevision:
-                        integrale += (obs - precPrevision) * (ensembleCDF ** 2)
-                        integrale += (prevision - obs) * (ensembleCDF - 1) ** 2
-                        obsCDF = 1.
+                    if obs_CDF == 0 and obs < prevision:
+                        integrale += (obs - prec_forecast) * (ensemble_CDF ** 2)
+                        integrale += (prevision - obs) * (ensemble_CDF - 1) ** 2
+                        obs_CDF = 1.
                     # otherwise
                     else:
-                        integrale += ((prevision - precPrevision) * (ensembleCDF - obsCDF) ** 2)
+                        integrale += ((prevision - prec_forecast) * (ensemble_CDF - obs_CDF) ** 2)
                     # add 1/Ndate to CDF ensemble
-                    ensembleCDF += 1. / float(n_valid)
-                    precPrevision = prevision
-                    n += 1
+                    ensemble_CDF += 1. / float(n_valid)
+                    prec_forecast = prevision
+                    n_m += 1
                 # if obs > all forecasts
-                if obsCDF == 0:
+                if obs_CDF == 0:
                     integrale += obs - prevision
 
-                CRPSVector[evenement] = integrale
+                CRPS_vector[evenement] = integrale
 
             # if no simulations for this obs
             else:
-                CRPSVector[evenement] = np.nan
+                CRPS_vector[evenement] = np.nan
             evenement += 1
 
-        CRPS = np.mean(np.ma.masked_invalid(CRPSVector))
+        CRPS = np.mean(np.ma.masked_invalid(CRPS_vector))
         return CRPS
 
     def CRPS_decomp(self):
@@ -122,9 +122,9 @@ class EnsembleScores(object):
 
         nbmb = np.shape(ens_common)[0]
 
-        ai = np.zeros((nbmb + 1,))
-        bi = np.zeros((nbmb + 1,))
-        pi = np.arange(0, nbmb + 1.) / nbmb
+        a_i = np.zeros((nbmb + 1,))
+        b_i = np.zeros((nbmb + 1,))
+        p_i = np.arange(0, nbmb + 1.) / nbmb
         oi_0 = 0.
         oi_nbmb = len(self.obsCommon)
         evenement = 0
@@ -138,32 +138,32 @@ class EnsembleScores(object):
                 if n_valid > 0:
                     # obs smaller than all
                     if obs < ens[0]:
-                        ai[0] += 0.
-                        bi[0] += ens[0] - obs
+                        a_i[0] += 0.
+                        b_i[0] += ens[0] - obs
                         oi_0 += 1.
                     # obs bigger than all
                     elif obs > ens[nbmb - 1]:
-                        ai[nbmb] += obs - ens[nbmb - 1]
-                        bi[nbmb] += 0.
+                        a_i[nbmb] += obs - ens[nbmb - 1]
+                        b_i[nbmb] += 0.
                         oi_nbmb -= 1.
                     # obs within
                     for i in range(1, nbmb):
                         if obs >= ens[i]:
-                            ai[i] += ens[i] - ens[i - 1]
-                            bi[i] += 0.
-                        elif (ens[i] > obs) and (obs >= ens[i - 1]):
-                            ai[i] += obs - ens[i - 1]
-                            bi[i] += ens[i] - obs
+                            a_i[i] += ens[i] - ens[i - 1]
+                            b_i[i] += 0.
+                        elif ens[i] > obs >= ens[i - 1]:
+                            a_i[i] += obs - ens[i - 1]
+                            b_i[i] += ens[i] - obs
                         elif obs < ens[i - 1]:
-                            ai[i] += 0.
-                            bi[i] += ens[i] - ens[i - 1]
+                            a_i[i] += 0.
+                            b_i[i] += ens[i] - ens[i - 1]
                         else:
                             raise Exception
                 else:
                     raise Exception
             evenement += 1
-        ai_avg = ai / len(self.obsCommon)
-        bi_avg = bi / len(self.obsCommon)
+        ai_avg = a_i / len(self.obsCommon)
+        bi_avg = b_i / len(self.obsCommon)
         gi_avg = np.zeros(np.shape(ai_avg))
         oi_avg = np.zeros(np.shape(ai_avg))
         for i in range(1, nbmb):
@@ -177,11 +177,11 @@ class EnsembleScores(object):
             gi_avg[0] = bi_avg[0] / oi_avg[0]
         if oi_avg[nbmb] < 1:
             gi_avg[nbmb] = ai_avg[nbmb] / (1. - oi_avg[nbmb])
-        CRPS = np.nansum(ai_avg * pi ** 2 + bi_avg * (1. - pi)**2)
-        Reli = np.nansum(gi_avg * (oi_avg - pi)**2)
-        CRPS_pot = np.nansum(gi_avg * oi_avg * (1. - oi_avg))
+        CRPS = np.nansum(ai_avg * p_i ** 2 + bi_avg * (1. - p_i)**2)
+        reli = np.nansum(gi_avg * (oi_avg - p_i)**2)
+        resol = np.nansum(gi_avg * oi_avg * (1. - oi_avg))
 
-        return CRPS, Reli, CRPS_pot
+        return CRPS, reli, resol
 
     @property
     def meanEnsemble(self):
@@ -204,14 +204,20 @@ class EnsembleScores(object):
 
 
 class ESCROC_EnsembleScores(EnsembleScores):
+    """
+    Ensemble scores for ESCROC ensemble
+
+    used by vortex/src/cen/algo/scores.py
+    """
 
     def __init__(self, profiles, obsfile, varname):
         """
-
-        :param profiles: list of simulation files (one per ensemble member
-        :param obsfile: observation file (netCDF format)
-        :param varname: variable name
+        :param profiles: list of netcdf filenames for the different ensemble members
+        :param obsfile: observation filename (netcdf format)
+        :param varname: variable name to read
         """
+        # be careful with calling the superclass constructor:
+        # self.obsCommon and self.ensCommon are defined at the end of the self.read method
         self.read(profiles, obsfile, varname)
 
     def read_var_ifpresent(self, dataNc, varname, convert1d=False):
@@ -254,7 +260,8 @@ class ESCROC_EnsembleScores(EnsembleScores):
     def read_sim_ifpresent(self, dataNc, varname):
         """
         read a variable from simulation file
-        :param dataNc: dataset
+
+        :param dataNc: dataset, simulation data
         :type dataNc: prosimu
         :param varname: variable name to read
         :type varname: str
@@ -313,7 +320,7 @@ class ESCROC_EnsembleScores(EnsembleScores):
         print("close obs")
         print(var_obs.shape)
 
-        '''Extract common date between observations and simulations'''
+        # Extract common date between observations and simulations
         # Identify winter period
         winter = np.empty_like(time_obs, 'bool')
         for i, t in enumerate(time_obs):
