@@ -19,6 +19,21 @@ class ExtractS2MForcing(_CenResearchTask):
     ---------
     - FORCING file(s) with extracted points
 
+    Configuration variables:
+    ------------------------
+
+    * ``massifs`` Massif number(s) to be extracted
+      type: int, list
+    * ``slopes`` Slope(s) to be extracted
+      type: int, list
+    * ``elevations`` Elevations(s) to be extracted
+      type: int, list
+    * ``aspects`` Aspects(s) to be extracted
+      type: int, list
+    *``geometry`` Geometry of the output file(s)
+      type: str
+    * ``xpid`` Experiment identifier (format "experiment_name@user")
+      type: str
     """
 
     def get_remote_inputs(self):
@@ -27,6 +42,9 @@ class ExtractS2MForcing(_CenResearchTask):
         """
 
         self.get_forcing(forcing_geometry=self.conf.forcing_geometry, localname='[datebegin:ymdh]_[dateend:ymdh]/FORCING_IN.nc')
+
+    def get_local_inputs(self):
+        pass
 
     def algo(self):
         """
@@ -44,16 +62,6 @@ class ExtractS2MForcing(_CenResearchTask):
             |--FORCING_IN.nc
         ...
 
-        Configuration variables:
-
-        :param massifs: Massif number(s) to be extracted
-        :type massifs: int, list
-        :param slopes: Slope(s) to be extracted
-        :type slopes: int, list
-        :param elevations: Elevations(s) to be extracted
-        :type elevations: int, list
-        :param aspects: Aspects(s) to be extracted
-        :type aspects: int, list
         """
 
         for footprint in ['massifs', 'slopes', 'elevations', 'aspects']:
@@ -74,6 +82,9 @@ class ExtractS2MForcing(_CenResearchTask):
         print()
         return algo
 
+    def launch_algo(self, algo, **kw):
+        self.launch_python_algo(algo, **kw)
+
     def put_outputs(self):
         """
         Save the output FORCING file(s) in the new geometry.
@@ -90,16 +101,16 @@ class ExtractS2MForcing(_CenResearchTask):
         # geometry = forcing_geometry
 
         # Security to avoid overwriting the original FORCING file(s)
-        if self.conf.out_geometry == self.conf.geometry:
-            raise ValueError("The 'out_geometry' can not be the same as the input one.\n"
-                             "Please provide a different 'out_geometry' configuration variable")
+        if self.conf.geometry == self.conf.forcing_geometry:
+            raise ValueError("The output 'geometry' can not be the same as the input 'forcing_geometry' one.\n"
+                             "Please provide a different 'geometry' configuration variable")
         else:
             self.sh.title('Output FORCING')
             forcing_out = vortex.output(
                 kind           = 'MeteorologicalForcing',
                 datebegin      = self.list_dates_begin,
                 dateend        = self.dict_dates_end,
-                geometry       = self.conf.out_geometry,
+                geometry       = self.conf.geometry,
                 experiment     = self.conf.xpid,
                 namebuild      = 'flat@cen',
                 local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
@@ -119,7 +130,7 @@ class ExtractS2MForcing(_CenResearchTask):
             kind           = 'MeteorologicalForcing',
             datebegin      = self.list_dates_begin,
             dateend        = self.dict_dates_end,
-            geometry       = self.conf.out_geometry,
+            geometry       = self.conf.geometry,
             experiment     = 'reference',
             username       = 'vernaym',
             namebuild      = 'flat@cen',

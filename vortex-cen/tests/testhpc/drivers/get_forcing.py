@@ -21,3 +21,13 @@ class GetForcing(_CenResearchTask):
     def get_remote_inputs(self):
 
         self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+
+    def get_local_inputs(self):
+        pass
+
+    def algo(self):
+        pass
+
+    def launch_algo(self, algo, **kw):
+        pass
+
