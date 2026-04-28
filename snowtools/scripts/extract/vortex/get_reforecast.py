@@ -11,8 +11,6 @@ import vortex
 
 import footprints
 from vortex import toolbox
-from vortex.layout.nodes import Task
-from cen.layout.nodes import S2MTaskMixIn
 
 from bronx.stdtypes.date import Date, Period
 from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR
@@ -20,7 +18,7 @@ from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR
 toolbox.active_now = True
 
 
-class ReforecastExtractor(Task, S2MTaskMixIn):
+class ReforecastExtractor():
 
     def get_list_dates(self):
 
