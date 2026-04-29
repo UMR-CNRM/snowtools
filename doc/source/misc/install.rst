@@ -53,7 +53,7 @@ WHICH INSTALLATION FOR SNOWTOOLS ?
 
 Cleaning of old snowtools configuration (PC, HPC, team server), go to :ref:`MF-PC-cleaning`.
 
-**For new users of after cleaning:**
+**For new users or after cleaning your former installation:**
 
 Meteo-France PC, go to :ref:`MF-PC-install`.
 
@@ -69,27 +69,52 @@ Cleaning old snowtools installation (PC, team server, HPC)
 
 CLEAN PYTHONPATH (PC, team server, HPC)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-In your ``~/.bashrc`` file, you must **delete** the line
+
+If the following command return something:
 
 .. code-block:: bash
-    
-     export PYTHONPATH=$PYTHONPATH:$SNOWTOOLS_CEN
 
-Please check your ``~/.bash_profile`` and ``~/.profile`` files in they exist.
+   echo $PYTHONPATH | grep snowtools
 
-You have to be sure this line is **deleted.**
-
-You can check the deletion with
+Then, look in your ``~/.bashrc``, ``~/.bash_profile`` or ``~/.profile`` files for the following lines:
 
 .. code-block:: bash
-    
+
+   export PYTHONPATH=$PYTHONPATH:$SNOWTOOLS_CEN
+
+and make sure to **delete** this line.
+
+Similarily, if the following command return something:
+
+     echo $PYTHONPATH | grep vortex
+
+remove the corresponding lines from your ``~/.bashrc``, ``~/.bash_profile`` or ``~/.profile`` files
+
+.. code-block:: bash
+
+   export PYTHONPATH=$PYTHONPATH:$VORTEX
+   or
+   export PYTHONPATH=$PYTHONPATH:[...]/vortex/...
+
+
+.. tip::
+   :collapsible: closed
+
+    If you want to preserve your old installation of snowtools, you can save your ``~/.bash_profile``, ``~/.bashrc`` and ``~/.profile`` files with different
+    names and "source" thes new files when you want to activate the old installation of snowtools.
+
+You can check the deletion with the following commands, which should now return nothing:
+
+.. code-block:: bash
+
      source ~/.bashrc # or ~/.bash_profile or ~/.profile depending on where the PYTHONPATH was
-     echo $PYTHONPATH
+     echo $PYTHONPATH | grep snowtools
+     echo $PYTHONPATH | grep vortex
 
-You must not see snowtools inside the result of the ``echo`` command,
 
 USER environment (PC, team server)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 To ensure a reproductible installation, you must **not** have any package installed locally (under your ``~/.local``).
 
 In order to check this, you can see if the folder ``~/.local/lib`` is not empty.
@@ -136,36 +161,29 @@ Set an environment variable pointing to the snowtools repository in your ``~/.ba
 
 **NB:** Of course, if you have choosen to install your git repository in other place, you must set ``export SNOWTOOLS_CEN=/{path_to_snowtools_repository}/snowtools``
 
-It is also recommended to create useful aliases in the ``~/.bashrc`` file:
-
-.. code-block:: bash
-
-   alias s2m="python $SNOWTOOLS_CEN/snowtools/tasks/s2m_command.py"
-   alias proplotter="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/proplotter.py"
-   alias procompare="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/procompare.py"
-   alias put="$SNOWTOOLS_CEN/cenutils/put"
-   alias install_snowtools="python3 $SNOWTOOLS_CEN/cenutils/install_snowtools.py"
-
-Now, source your ``.bashrc`` file in order to take these aliases into account.
-
-.. code-block:: bash
-
-   source ~/.bashrc
-
 Install
 ^^^^^^^
 
 .. code-block:: bash
- 
-    cd $SNOWTOOLS_CEN
-    git checkout dev
-    python -m venv ~/my_envs/snowtools_env
-    source ~/my_envs/snowtools_env/bin/activate
-    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e
-    deactivate
 
-Configure Vortex and install UEnv tools
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   cd $SNOWTOOLS_CEN
+   git checkout dev
+   python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e -v ~/my_envs/snowtools_env
+   deactivate
+
+.. tip::
+   :collapsible: closed
+
+   If you want a stable / non-editable installation of snowtools (not affected by local modifications of the code), you can replace the line
+
+   python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e -v ~/my_envs/snowtools_env
+
+   by:
+
+   python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -v ~/my_envs/snowtools_env_stable
+
+[Optional] Configure Vortex and install UEnv tools
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Vortex Configuration :
 
@@ -173,8 +191,15 @@ Vortex Configuration :
 
     mkdir ~/.vortex.d/
     cd ~/.vortex.d/
-
     ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_pc.toml vortex.toml
+
+Start from the default geometries file (update it with your own geometries if you already had one):
+
+.. code-block:: bash
+
+    mkdir ~/.vortexrc
+    cd ~/.vortexrc
+    cp $SNOWTOOLS_CEN/snowtools/conf/geometries_vortex2.ini geometries.ini
 
 Install UEnv tools :
 
@@ -276,10 +301,15 @@ Continue installation for Belenos and SXCEN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
- 
-    python -m venv ~/my_envs/snowtools_env
-    source ~/my_envs/snowtools_env/bin/activate
-    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e
+
+    python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -e -v ~/my_envs/snowtools_env
+
+.. tip::
+   :collapsible: closed
+
+   If you want a stable / non-editable installation of snowtools (not affected by local modifications of the code), you can replace the line above by:
+
+   python $SNOWTOOLS_CEN/cenutils/install_snowtools.py -v ~/my_envs/snowtools_env_stable
 
 Temporary step for Belenos and SXCEN
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -318,6 +348,14 @@ Vortex Configuration
 
     # For SXCEN
     ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_sxcen.toml vortex.toml
+
+Start from the default geometries file (update it with your own geometries if you already had one):
+
+.. code-block:: bash
+
+    mkdir ~/.vortexrc
+    cd ~/.vortexrc
+    cp $SNOWTOOLS_CEN/snowtools/conf/geometries_vortex2.ini geometries.ini
 
 Deactivate virtual environment
 
@@ -364,22 +402,6 @@ Set an environment variable pointing to the snowtools repository in your ``~/.ba
    export SNOWTOOLS_CEN=~/all_git_repo/snowtools
 
 **NB:** Of course, if you have choosen to install your git repository in other place, you must set ``export SNOWTOOLS_CEN=/{path_to_snowtools_repository}/snowtools``
-
-It is also recommended to create useful aliases in the ``~/.bashrc`` file:
-
-.. code-block:: bash
-
-   alias s2m="python $SNOWTOOLS_CEN/snowtools/tasks/s2m_command.py"
-   alias proplotter="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/proplotter.py"
-   alias procompare="python3 $SNOWTOOLS_CEN/snowtools/plots/stratiprofile/procompare.py"
-   alias put="$SNOWTOOLS_CEN/cenutils/put"
-   alias install_snowtools="python3 $SNOWTOOLS_CEN/cenutils/install_snowtools.py"
-
-Now, source your ``.bashrc`` file in order to take these aliases into account.
-
-.. code-block:: bash
-
-   source ~/.bashrc
 
 Install
 ^^^^^^^

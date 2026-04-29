@@ -1,5 +1,5 @@
-File transfers with Vortex
---------------------------
+File transfers with Vortex at MF
+--------------------------------
 
 The Vortex tool allows to transfer files between PC, servers and archives in a transparent and optimal way (see https://vortex-nwp.readthedocs.io/en/latest/tutorial/fetch.html for more information).
 To allow Vortex to use the ftserv tool designed to transfer data between MF's servers, it is necessary to register your password by running the following command :

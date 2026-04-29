@@ -49,21 +49,23 @@ Modifying an existing UEnv
 
    $VORTEX/bin/uget.py hack env Existing_UEnv.0@username_uenv_owner into MyNewUenv.0@your_username
 
+Now, A text file ``MyNewUenv.0`` has been creates in ``$HOME/.vortexrc/hack/uget/your_username/env``
+
 **NB:** On HPC this can only be done from a TRANSFERT node
 
 Example:
 
 .. code-block:: bash
 
-   $VORTEX/bin/uget.py hack env cen.14@CONST_CEN into MyNewUenv.0@your_yousername
+   ssh belenostransfert
+   source path/to/venv/with/vortex-gco/bin/activate
+   $VORTEX/bin/uget.py hack env Existing_UEnv.0@username_uenv_owner into MyNewUenv.0@your_yousername
 
-**NB:** you can also upgrade your uenv with
+.. note::
 
-.. code-block:: bash
+    A copy of an existing UEnv should always have a different name than the original one to avoid overwriting it.
+    The good practice is to increment a version number or give a new explicit name.
 
-   $VORTEX/bin/uget.py hack env Existing_UEnv.0@your_username into Existing_UEnv.1@your_username
-
-Now, A text file ``MyNewUenv.0`` is create in ``$HOME/.vortexrc/hack/uget/your_username/env``
 
 2. Modify new UEnv ``MyNewUenv.0``:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
