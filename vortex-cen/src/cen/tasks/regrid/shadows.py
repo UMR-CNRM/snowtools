@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-'''
-'''
+"""
+"""
 
 import vortex
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 
 
 class Shadows(_CenResearchTask):
-    '''
+    """
     Add relief-induced solar masks to a FORCING file in a "station" geometry.
 
     Inputs :
@@ -20,18 +20,18 @@ class Shadows(_CenResearchTask):
 
     Mandatory configuration variables:
     ----------------------------------
-    :param datebegin: *datebegin* of the forcing file(s)
-    :type datebegin: str, footprints.stdtypes.FPList
-    :param dateend: *dateend* of the forcing files(s)
-    :type dateend: str, footprints.stdtypes.FPList
-    :param forcing_geometry: *geometry* of the input forcing file(s)
-    :type forcing_geometry: str, footprints.stdtypes.FPList
-    :param geometry: *geometry* of the output forcing file(s)
-    :type geometry: str, footprints.stdtypes.FPList
-    :param xpid: Experiment identifier (format "{experiment_name}@{user}")
-    :type xpid: str
+    * `datebegin` *datebegin* of the forcing file(s)
+        type: str, footprints.stdtypes.FPList
+    * `dateend` *dateend* of the forcing files(s)
+        type: str, footprints.stdtypes.FPList
+    * `forcing_geometry` *geometry* of the input forcing file(s)
+        type: str, footprints.stdtypes.FPList
+    * `geometry` *geometry* of the output forcing file(s)
+        type: str, footprints.stdtypes.FPList
+    * `xpid` Experiment identifier (format "{experiment_name}@{user}")
+        type: str
 
-    '''
+    """
 
     def get_remote_inputs(self):
         """
@@ -39,6 +39,9 @@ class Shadows(_CenResearchTask):
         """
 
         self.get_forcing(localname='[datebegin:ymdh]_[dateend:ymdh]/FORCING.nc')
+
+    def get_local_inputs(self):
+        pass
 
     def algo(self):
         """
@@ -75,6 +78,13 @@ class Shadows(_CenResearchTask):
 
         return algo
 
+    def launch_algo(self, algo):
+        """
+        launch python algo component.
+        :param algo: algorithm to launch
+        """
+        self.launch_python_algo(algo=algo)
+
     def put_outputs(self):
         """
         Save the output FORCING file(s) in the new geometry.
@@ -95,7 +105,7 @@ class Shadows(_CenResearchTask):
             geometry       = self.conf.geometry,
             experiment     = self.conf.xpid,
             namebuild      = 'flat@cen',
-            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING.nc',
+            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
             block          = 'shadows',
             model          = 'safran',
         ),
@@ -116,7 +126,7 @@ class Shadows(_CenResearchTask):
             experiment     = 'reference',
             username       = 'vernaym',
             namebuild      = 'flat@cen',
-            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING.nc',
+            local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
             block          = 'shadows',
             model          = 'safran',
         ),

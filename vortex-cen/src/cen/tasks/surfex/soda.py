@@ -189,7 +189,7 @@ class Soda(_CenResearchTask):
             model          = 'surfex',
             namespace      = self.conf.get('prep_namespace', 'vortex.multi.fr'),
             namebuild      = 'flat@cen',
-            block          = 'prep/background',
+            block          = 'prep/bg',
             vortex1        = self.conf.get('prep_vortex1', None),
             fatal          = True,
         ),

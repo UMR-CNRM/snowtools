@@ -1947,16 +1947,16 @@ class PrepareForcingComponent(_CENTaylorRun):
             kind = dict(
                 values = ['prepareforcing', 'extractforcing', 'shadowsforcing']
             ),
-#            # Inutile (parallélisation sur les années) ?
-#            datebegin = dict(
-#                info = "The list of begin dates of the forcing files",
-#                type = footprints.stdtypes.FPList,
-#            ),
-#            # Inutile (parallélisation sur les années) ?
-#            dateend = dict(
-#                info = "The list of begin dates of the forcing files",
-#                type = footprints.stdtypes.FPList,
-#            ),
+           # Inutile (parallélisation sur les années) ?
+           datebegin = dict(
+               info = "The list of begin dates of the forcing files",
+               type = footprints.stdtypes.FPList,
+           ),
+           # Inutile (parallélisation sur les années) ?
+           dateend = dict(
+               info = "The list of begin dates of the forcing files",
+               type = footprints.stdtypes.FPList,
+           ),
             geometry_in = dict(
                 info = "Area information in case of an execution on a massif geometry",
                 type = footprints.stdtypes.FPList,
@@ -1986,7 +1986,8 @@ class PrepareForcingComponent(_CENTaylorRun):
         # Note: The number of members and the name of the subdirectories could be
         # auto-detected using the sequence
         subdirs = self.get_subdirs(rh, opts)
-        self._add_instructions(common_i, dict(subdir=subdirs))
+        self._add_instructions(common_i, dict(subdir=subdirs, datebegin=self.datebegin,
+                                              dateend=self.dateend))
         self._default_post_execute(rh, opts)
 
 
@@ -2211,32 +2212,17 @@ class ShadowsForcingWorker(PrepareForcingWorker):
                 type=str,
                 optional = True,
                 default = None
-            )
+            ),
+            datebegin=a_date,
+            dateend=a_date,
         )
     )
 
     def _prepare_forcing_task(self, rundir, thisdir, rdict):
 
-        need_other_forcing = True
-        datebegin_this_run = self.datebegin
+        self.system.mv("FORCING.nc", "FORCING_OLD.nc")
+        forcinput_applymask(["FORCING_OLD.nc"], "FORCING.nc")
 
-        while need_other_forcing:
-
-            forcingdir = self.forcingdir(rundir, thisdir)
-
-            # Get the first file covering part of the whole simulation period
-            dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir,
-                                                         datebegin_this_run, self.dateend)
-
-            self.system.mv("FORCING.nc", "FORCING_OLD.nc")
-            forcinput_applymask(["FORCING_OLD.nc"], "FORCING.nc")
-
-            dateend_this_run = min(self.dateend, dateforcend)
-
-            # Prepare next iteration if needed
-            datebegin_this_run = dateend_this_run
-            need_other_forcing = dateend_this_run < self.dateend
-
-            save_file_period(forcingdir, "FORCING", dateforcbegin, dateforcend)
+        save_file_period(thisdir, "FORCING", self.datebegin, self.dateend)
 
         return rdict

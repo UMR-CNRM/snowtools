@@ -5,11 +5,6 @@
 Extracts operational simulation results and compute post-processing diags
 """
 
-<<<<<<< HEAD
-import os
-
-import numpy as np
-=======
 import argparse
 import locale
 import os
@@ -18,19 +13,19 @@ from collections import Counter, defaultdict
 
 import numpy as np
 import matplotlib
+
 # import matplotlib.pyplot as plt
 matplotlib.use('Agg')
 import matplotlib.style
 #import rpy2.robjects as robjects
 import pandas as pd
 from scipy.stats import gamma
->>>>>>> dev
 
 from snowtools.utils.prosimu import prosimu
 from snowtools.utils.infomassifs import infomassifs
-<<<<<<< HEAD
-=======
-from snowtools.utils.FileException import DirNameException
+from snowtools.utils.dates import check_and_convert_date, pretty_date
+from snowtools.plots.temporal.chrono import spaghettis_with_det, spaghettis
+
 from snowtools.DATA import LUSTRE_NOSAVE_USER_DIR, SNOWTOOLS_DATA
 
 from bronx.stdtypes.date import today
@@ -128,7 +123,6 @@ class Config:
             self.list_geometry = ['jur4_allslopes_reforecast', 'mac11_allslopes_reforecast',
                                   'vog3_allslopes_reforecast', 'alp27_allslopes',
                                   'pyr24_allslopes', 'cor2_allslopes']
->>>>>>> dev
 
 
 class Ensemble:
@@ -211,13 +205,8 @@ class Ensemble:
         """
         Read a variable and store it in :py:attr:`~.ensemble`
 
-<<<<<<< HEAD
         :param varname: name of the variable to be read (corresponds to the variable name of the simulation
                         NetCDF files)
-=======
-        :param varname: name of the variable to be read
-            (corresponds to the variable name of the simulation NetCDF files)
->>>>>>> dev
         :type varname: str
         """
 
@@ -827,8 +816,7 @@ class EnsembleDiags(Ensemble):
         self.quantiles.clear()
 
 
-<<<<<<< HEAD
-=======
+
 @echecker_pyproj.disabled_if_unavailable(version='2.0.0')
 class EnsembleOperDiags(EnsembleDiags):
     """
@@ -1246,7 +1234,7 @@ class EnsembleOperDiagsStations(EnsembleOperDiags, EnsembleStation):
                      'WET_TH_ISBA', 'REFRZTH_ISBA', 'SNOMLT_ISBA']
 
 
->>>>>>> dev
+
 class EnsemblePostproc(_EnsembleMassif):
     """
     Class for ensemble post-processing.
@@ -1433,8 +1421,6 @@ class EnsembleHydro(EnsemblePostproc):
     @property
     def standardvars(self):
         return ['time', 'basin']
-<<<<<<< HEAD
-=======
 
 
 class PPQuantiles:
@@ -1707,4 +1693,3 @@ if __name__ == "__main__":
     main(c)
     if OPTIONS.dev:
         pp_plots(c)
->>>>>>> dev

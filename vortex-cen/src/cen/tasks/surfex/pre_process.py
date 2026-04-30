@@ -215,6 +215,9 @@ class Soda_Namelist_Preprocess(_CenResearchTask):
         print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
         print()
 
+    def get_local_inputs(self):
+        pass
+
     def algo(self):
 
         self.sh.title('Algo soda preprocess')
@@ -226,6 +229,13 @@ class Soda_Namelist_Preprocess(_CenResearchTask):
         print()
 
         return algo
+
+    def launch_algo(self, algo):
+        """
+        Launch a soda namelist preprocess algorithm.
+        :param algo: algorithm to launch
+        """
+        self.launch_python_algo(algo=algo)
 
     def put_outputs(self):
 
