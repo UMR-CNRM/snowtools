@@ -23,7 +23,8 @@ try:
     # Retrieve input files with Vortex
     from snowtools.scripts.extract.vortex import vortexIO as io
 except ImportError:
-    print('Vortex not available, input files must be defined by their absolute path')
+    # print('Vortex not available, input files must be defined by their absolute path')
+    pass
 
 
 def parse_command_line():
