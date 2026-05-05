@@ -263,15 +263,16 @@ class Soda(_CenResearchTask):
 
         self.sh.title('Toolbox output SODA diagnostics')
         diags = toolbox.output(
-            kind           = ['PART', 'BG_CORR', 'IMASK', 'ALPHA'],
+            kind           = ['PART', 'BG_CORR', 'IMASK', 'ALPHA', 'SNOWLINE'],
             model          = 'soda',
             block          = 'soda',
             namebuild      = 'flat@cen',
+            geometry       = self.conf.geometry,
             namespace      = 'vortex.multi.fr',
             dateassim      = self.conf.date,  # TODO : Use *date* footprint instead
             experiment     = self.conf.xpid,
-            local          = '[kind]_[dateassim:ymdh].txt',
-            fatal          = False,
+            local          = '[kind]',
+            fatal          = self.conf.soda_diags_fatal,
         )
         print(t.prompt, 'SODA diags =', diags)
         print()

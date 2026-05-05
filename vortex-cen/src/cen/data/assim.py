@@ -22,7 +22,7 @@ class PfSample(GeoFlowResource):
                     optional = True
                 ),
                 kind = dict(
-                    values = ['PART', 'BG_CORR', 'IMASK', 'ALPHA']
+                    values = ['PART', 'BG_CORR', 'IMASK', 'ALPHA', 'SNOWLINE']
                 ),
                 nativefmt=dict(
                     values=['ascii', 'netcdf', 'nc'],
