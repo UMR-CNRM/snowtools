@@ -134,8 +134,8 @@ subprocess.run([pip, 'install'] + pip_options + ['--upgrade', 'pip'])
 
 os.chdir(snowtools_dir)
 # Security : an existing "build" directory from a former installation may cause trouble
-shutil.rmtree('build', ignore_errors=True)
-shutil.rmtree('.mesonpy*', ignore_errors=True)
+#shutil.rmtree('build', ignore_errors=True)
+#shutil.rmtree('.mesonpy*', ignore_errors=True)
 
 if args.editable:
 
@@ -178,6 +178,10 @@ if os.path.isdir('.git'):
         f.write(commit)
 elif os.path.exists('.git_info'):
     shutil.copyfile('.git_info', os.path.join(venv, '.snowtools_info'))
+
+# TODO : DBUG non-editable install on HPC
+
+# TODO : Crash if any subprces crashed
 
 print(outstr)
 print()
