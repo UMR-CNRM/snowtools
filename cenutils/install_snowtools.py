@@ -70,7 +70,7 @@ if sys.base_prefix == sys.prefix:
         if not os.path.isfile(os.path.join(venv, 'bin', 'pip')):
             # Create the virtual environment if it does not exist already
             from venv import create
-            create(venv, with_pip=True)
+            create(venv, with_pip=True, system_site_packages=True)
             # TODO : ajouter un message pour dire comment activer l'environnement virtuel créé ?
             outstr = outstr + "Snowtools has been installed in a new virtual environment.\n" \
                 "To activate it, run :\n" \

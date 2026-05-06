@@ -237,8 +237,10 @@ Source the ``~/.bashrc`` file and start installation
 
     source ~/.bashrc
     cd $SNOWTOOLS_CEN
-    module load python 3.12.12
+    module load python/3.10.12
     module load gcc/15.2.0
+
+**NB** The installation should also work with python/3.12.12, but the installation fails in some cases.
 
 **FOR SXCEN ONLY:** Environment and start installation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
