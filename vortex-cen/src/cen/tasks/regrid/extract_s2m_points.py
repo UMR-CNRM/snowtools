@@ -32,7 +32,7 @@ class ExtractS2MForcing(_CenResearchTask):
       type: int, list
     *``geometry`` Geometry of the output file(s)
       type: str
-    * ``xpid`` Experiment identifier (format "experiment_name@user")
+    * ``xpid`` Experiment identifier
       type: str
     """
 
@@ -41,7 +41,7 @@ class ExtractS2MForcing(_CenResearchTask):
         Get FORCING file as "FORCING_IN.nc" in the different working sub-directories.
         """
 
-        self.get_forcing(forcing_geometry=self.conf.forcing_geometry, localname='[datebegin:ymdh]_[dateend:ymdh]/FORCING_IN.nc')
+        self.get_forcing(localname='[datebegin:ymdh]_[dateend:ymdh]/FORCING_IN.nc')
 
     def get_local_inputs(self):
         pass
@@ -87,14 +87,11 @@ class ExtractS2MForcing(_CenResearchTask):
         WARNING : the output geometry must be in a valid "geometries.ini" file.
 
         Arguments:
-        :param out_geometry: Geometry of the output file(s)
-        :type out_geometry: str
-        :param xpid: Experiment identifier (format "experiment_name@user")
+        :param geometry: Geometry of the output file(s)
+        :type geometry: str
+        :param xpid: Experiment identifier
         :type xpid: str
         """
-
-        # TODO : Changer *out_geometry* --> geometry (par convention)
-        # geometry = forcing_geometry
 
         # Security to avoid overwriting the original FORCING file(s)
         if self.conf.geometry == self.conf.forcing_geometry:

@@ -28,8 +28,9 @@ class Shadows(_CenResearchTask):
         type: str, footprints.stdtypes.FPList
     * `geometry` *geometry* of the output forcing file(s)
         type: str, footprints.stdtypes.FPList
-    * `xpid` Experiment identifier (format "{experiment_name}@{user}")
+    * `xpid` Experiment identifier
         type: str
+
 
     """
 
@@ -91,9 +92,9 @@ class Shadows(_CenResearchTask):
         WARNING : the output geometry must be in a valid "geometries.ini" file.
 
         Arguments:
-        :param out_geometry: Geometry of the output file(s)
-        :type out_geometry: str
-        :param xpid: Experiment identifier (format "experiment_name@user")
+        :param geometry: Geometry of the output file(s)
+        :type geometry: str
+        :param xpid: Experiment identifier
         :type xpid: str
         """
 

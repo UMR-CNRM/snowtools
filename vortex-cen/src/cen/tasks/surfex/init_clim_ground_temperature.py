@@ -61,7 +61,7 @@ class InitClimGroundTemperature(_CenResearchTask):
         Configuration parameters used:
         ------------------------------
         * ``geometry`` simulation geometry
-        * ``xpid`` Experiment identifier (format "experiment_name@user")
+        * ``xpid`` Experiment identifier
         """
 
         self.sh.title("Toolbox output for initial values of ground temperature")

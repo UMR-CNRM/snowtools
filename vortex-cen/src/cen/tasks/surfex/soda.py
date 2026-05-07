@@ -30,10 +30,8 @@ class Soda(_CenResearchTask):
     :type date: str, Date
     :param geometry: *geometry* of the PREP files
     :type geometry: str, footprints.stdtypes.FPList
-    :param xpid: Experiment identifier (format "{experiment_name}@{user}")
+    :param xpid: Experiment identifier
     :type xpid: str
-    :param observation_xpid: Experiment identifier (format "{experiment_name}@{user}") of the observation file
-    :type observation_xpid: str
     :param genv: User Environment in which the following resources are to be retrieved :
                  Format : uenv:{uenv_name}@{user}
     :type genv: str
@@ -153,7 +151,7 @@ class Soda(_CenResearchTask):
             scope           = self.conf.get('scope', None),
             namespace       = 'vortex.multi.fr',
             namebuild       = 'flat@cen',
-            experiment      = self.conf.observation_xpid,
+            experiment      = self.conf.get('observation_xpid', self.conf.xpid),
             username        = self.conf.get('observation_user', None),
             local           = 'OBSERVATIONS_[datevalidity:ymdHh].nc',
             fatal           = True

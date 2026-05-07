@@ -25,12 +25,12 @@ class InterpolateS2MForcing(_CenResearchTask):
 
     Configuration variables:
 
-    :param geoin: geometry of input file
-    :type geoin: str, footprints.stdtypes.FPList
+    :param forcing_geometry: geometry of input file
+    :type forcing_geometry: str, footprints.stdtypes.FPList
     :param gridout: path to output grid file
     :type gridout: str, pathlike
     :param genv: environment containing the interpolation executable
-    :param xpid: Experiment identifier (format "experiment_name@user")
+    :param xpid: Experiment identifier
     :type xpid: str
     :param geometry: Geometry of the output file(s)
     :type geometry: str
@@ -39,13 +39,12 @@ class InterpolateS2MForcing(_CenResearchTask):
     :param namespace_out: namespace of output files
     """
 
-
     def get_remote_inputs(self):
         """
         get forcing files in the "massif" geometry, output grid file and interpolation binary.
 
         """
-        self.get_forcing(forcing_geometry=self.conf.forcing_geometry, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
 
         # Target grid file for interpolation
         # the path must be provided in the configuration file
@@ -110,25 +109,23 @@ class InterpolateS2MForcing(_CenResearchTask):
         """
         if self.conf.forcing_geometry == self.conf.geometry:
             print(self.conf.forcing_geometry, self.conf.geometry)
-            raise ValueError("The 'geometry' (== output geometry) can not be the same as the input one (forcing_geometry).\n"
-                             "Please provide a different 'geometry' or 'forcing_geometry' configuration variable")
+            raise ValueError("The output 'geometry' can not be the same as the input one.\n"
+                             "Please provide two different 'geometry' and 'forcing_geometry' configuration variables")
         else:
             self.sh.title('Toolbox output interpolated forcing file')
             forcing_tbo = vortex.output(
-                local='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
-                experiment=self.conf.xpid,
-                username=self.conf.username,
-                geometry=self.conf.geometry,
-                datebegin=self.list_dates_begin,
-                dateend=self.dict_dates_end,
-                nativefmt='netcdf',
-                kind='MeteorologicalForcing',
-                model='s2m',
-                namespace=self.conf.namespace_out,
-                namebuild='flat@cen',
-                block='meteo',
-                member=self.conf.member if hasattr(self.conf, 'member') else None
+                local       = 'FORCING_[datebegin:ymdh]_[dateend:ymdh].nc',
+                experiment  = self.conf.xpid,
+                geometry    = self.conf.geometry,
+                datebegin   = self.list_dates_begin,
+                dateend     = self.dict_dates_end,
+                nativefmt   = 'netcdf',
+                kind        = 'MeteorologicalForcing',
+                model       = 's2m',
+                namespace   = self.conf.namespace_out,
+                namebuild   = 'flat@cen',
+                block       = 'meteo',
+                member      = self.conf.get('member', None),
             ),
             print(self.ticket.prompt, 'interpolated forcing file toolbox =', forcing_tbo)
             print()
-

@@ -76,13 +76,6 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             # nativefmt      = 'netcdf',
         )
 
-        # self.username = Environment()['logname']
-
-        # Vortex.1 only
-        #if '@' not in self.conf.xpid:
-        #    username = Environment()['logname']
-        #    self.conf.xpid = f'{self.conf.xpid}@{username}'
-
         # Temporary security to avoid the *date* footprint to be mandatory for SurfaceIO resources.
         # This will be useless once the date footprint will be properly set as optional for research applications
         if 'date' in self.conf:
@@ -295,7 +288,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             self.dict_dates_end   = {self.conf.date: self.conf.date}
 
     def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', alternate=True,
-            forcing_geometry=None, namespace='vortex.multi.fr'):
+            namespace='vortex.multi.fr'):
         """
         Method to get meteorological forcing file(s) covering the simulation period.
         First, check if an existing forcing file covers the full simulation period.
@@ -309,8 +302,6 @@ class _CenResearchTask(Task, S2MTaskMixIn):
                           WARNING : in case a unique value is provided the user should ensure that a single
                           file will be retrieved (for example set the alternate argument to False)
         :type localname: str
-        :param forcing_geometry: input geometry
-        :type forcing_geometry: str, footprints.stdtypes.FPList
         :param alternate: Allow to search for alternative files covering sub-periods.
         :type alternate: bool
 
@@ -381,8 +372,7 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         forcing_vconf     = self.conf.get('forcing_vconf', self.conf.vconf)
         forcing_block     = self.conf.get('forcing_block', 'meteo')
         forcing_member    = self.conf.get('forcing_member', self.conf.get('member', None))
-        if forcing_geometry is None:
-            forcing_geometry = self.conf.get('forcing_geometry', self.conf.geometry)
+        forcing_geometry = self.conf.get('forcing_geometry', self.conf.geometry)
         # Security : in case of an ensemble of forcing files, get the FORCING of each member in a
         # separate directory to avoid overwrinting files.
         if (isinstance(forcing_member, list) and len(forcing_member) > 1 and '[member]' not in localname):

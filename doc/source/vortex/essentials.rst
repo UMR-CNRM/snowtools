@@ -197,6 +197,11 @@ The *username* footprint
 """"""""""""""""""""""""
 
 To access files from another user, simply set the *username* footprint (type string) to this user's login name.
+If no *username* is given (or it set to None), then your own username is used.
+
+.. note::
+
+    The *username* footprint is useless in the case of a toolbox.output(...)
 
 The *role* footprint
 """"""""""""""""""""

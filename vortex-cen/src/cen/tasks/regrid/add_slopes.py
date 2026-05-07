@@ -28,7 +28,7 @@ class AddSlopes(_CenResearchTask):
     :type forcing_geometry: str, footprints.stdtypes.FPList
     :param geometry: *geometry* of the output forcing file(s)
     :type geometry: str, footprints.stdtypes.FPList
-    :param xpid: Experiment identifier (format "{experiment_name}@{user}")
+    :param xpid: Experiment identifier
     :type xpid: str
 
     Optional configuration variables:
@@ -43,11 +43,6 @@ class AddSlopes(_CenResearchTask):
         Get FORCING file as "FORCING.nc" in the different working sub-directories.
         """
 
-        # TODO : cela devrait être géré proprement dans l'algo à partir des "effective_inputs" !
-        #if isinstance(self.conf.forcing_geometry, list) and len(self.conf.forcing_geometry) > 1:
-        #    forcingname = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_[geometry::tag].nc'
-        #else:
-        #    forcingname = '[datebegin:ymdh]_[dateend:ymdh]/FORCING.nc'
         self.forcingname = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_[geometry::tag].nc'
 
         self.get_forcing(localname=self.forcingname)
@@ -109,9 +104,9 @@ class AddSlopes(_CenResearchTask):
         WARNING : the output geometry must be in a valid "geometries.ini" file.
 
         Arguments:
-        :param out_geometry: Geometry of the output file(s)
-        :type out_geometry: str
-        :param xpid: Experiment identifier (format "experiment_name@user")
+        :param geometry: Geometry of the output file(s)
+        :type geometry: str
+        :param xpid: Experiment identifier
         :type xpid: str
         """
 

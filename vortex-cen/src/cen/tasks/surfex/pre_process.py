@@ -29,8 +29,8 @@ class _Preprocess(_CenResearchTask):
      type: str, footprints.stdtypes.FPList
     * ``geometry`` *geometry* of the forcing file(s)
      type: str, footprints.stdtypes.FPList
-    * ``xpid`` Experiment identifier (format "experiment_name@user")
-     type: str, length should not equal 4!
+    * ``xpid`` Experiment identifier
+     type: str
 
     """
     def get_remote_inputs(self):
