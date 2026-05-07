@@ -31,8 +31,6 @@ class Safran(Task, S2MTaskMixIn):
 
         rundate = self.conf.datebegin
         list_dates = self.get_list_seasons(self.conf.datebegin, self.conf.dateend)
-        if len(list_dates) > 120:
-            raise ExecutionError("Too many years")
 
         if 'early-fetch' in self.steps or 'fetch' in self.steps:
 
@@ -637,7 +635,7 @@ class Safran(Task, S2MTaskMixIn):
                     local          = '[datebegin::ymd6h]_[dateend::ymd6h]/'
                                      'FORCING_massif_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = self.conf.xpid,
-                    block          = 'massifs',
+                    block          = 'safran/massifs',
                     geometry       = self.conf.geometry,
                     nativefmt      = 'netcdf',
                     model          = self.conf.model,
@@ -658,7 +656,7 @@ class Safran(Task, S2MTaskMixIn):
                     local          = '[datebegin::ymd6h]_[dateend::ymd6h]/'
                                      'FORCING_postes_[datebegin::ymd6h]_[dateend::ymd6h].nc',
                     experiment     = self.conf.xpid,
-                    block          = 'postes',
+                    block          = 'safran/postes',
                     geometry       = self.conf.geometry,
                     nativefmt      = 'netcdf',
                     model          = self.conf.model,
@@ -674,7 +672,7 @@ class Safran(Task, S2MTaskMixIn):
                 self.sh.title('Toolbox output tb32')
                 tb29 = toolbox.output(
                     role           = 'Liste_obs',
-                    block          = 'liste_obs',
+                    block          = 'safran/liste_obs',
                     experiment     = self.conf.xpid,
                     geometry       = self.conf.geometry,
                     cutoff         = 'assimilation',
@@ -692,25 +690,25 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb32 =', tb29)
                 print()
 
-#                self.sh.title('Toolbox output listings execution')
-#                tb31 = toolbox.output(
-#                    role           = 'Listing',
-#                    block          = 'listing',
-#                    experiment     = self.conf.xpid,
-#                    cutoff         = 'assimilation',
-#                    geometry        = self.conf.geometry[self.conf.vconf],
-#                    kind           = 'packedlisting',
-#                    datebegin      = datebegin.ymd6h,
-#                    dateend        = dateend.ymd6h,
-#                    date           = dateend.ymd6h,
-#                    local          = '[datebegin::ymd6h]_[dateend::ymd6h]/'
-#                                     'listings_safran_[datebegin::ymdh]_[dateend::ymdh].tar.gz',
-#                    nativefmt      = 'tar',
-#                    model          = 'safran',
-#                    namespace      = self.conf.namespace,
-#                    namebuild      = 'flat@cen',
-#                )
-#                print(t.prompt, 'tb31 =', tb31)
-#                print()
+                self.sh.title('Toolbox output listings execution')
+                tb31 = toolbox.output(
+                    role           = 'Listing',
+                    block          = 'safran/listing',
+                    experiment     = self.conf.xpid,
+                    cutoff         = 'assimilation',
+                    geometry        = self.conf.geometry[self.conf.vconf],
+                    kind           = 'packedlisting',
+                    datebegin      = datebegin.ymd6h,
+                    dateend        = dateend.ymd6h,
+                    date           = dateend.ymd6h,
+                    local          = '[datebegin::ymd6h]_[dateend::ymd6h]/'
+                                     'listings_safran_[datebegin::ymdh]_[dateend::ymdh].tar.gz',
+                    nativefmt      = 'tar',
+                    model          = 'safran',
+                    namespace      = self.conf.namespace,
+                    namebuild      = 'flat@cen',
+                )
+                print(t.prompt, 'tb31 =', tb31)
+                print()
 
-            raise ExecutionError('')
+#            raise ExecutionError('')
