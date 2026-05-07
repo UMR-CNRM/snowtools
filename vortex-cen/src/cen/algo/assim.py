@@ -10,7 +10,7 @@ import footprints
 from vortex.algo.components import Parallel, AlgoComponent, TaylorRun
 from vortex.syntax.stdattrs import a_date
 from vortex_cen.algo.ensemble import PrepareForcingWorker
-from vortex_cen.algo.ensemble import _CENTaylorRun, _CENTaylorVortexWorker
+from vortex_cen.algo.components import _CenTaylorRun, _CenTaylorVortexWorker
 
 logger = loggers.getLogger(__name__)
 
@@ -244,7 +244,7 @@ class PerturbForcingComponent(TaylorRun):
 
 
 @echecker.disabled_if_unavailable
-class CrocOPostProcess(_CENTaylorRun):
+class CrocOPostProcess(_CenTaylorRun):
 
     _footprint = dict(
         info = 'AlgoComponent for SODA post_processing (merge PRO files)',
@@ -263,7 +263,7 @@ class CrocOPostProcess(_CENTaylorRun):
 
 
 @echecker.disabled_if_unavailable
-class CrocOPostProcess_Worker(_CENTaylorVortexWorker):
+class CrocOPostProcess_Worker(_CenTaylorVortexWorker):
     """
     Worker associated to the `SodaPostProcess` algo component.
     Each worker concatenate the different PRO files covering the subperiods between assimilation dates

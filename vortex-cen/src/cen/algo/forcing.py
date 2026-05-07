@@ -4,13 +4,13 @@
 Algo Components generating a FORCING file.
 """
 from bronx.fancies import loggers
-from vortex_cen.algo.ensemble import _CENTaylorRun, _CENTaylorVortexWorker
+from vortex_cen.algo.components import _CenTaylorRun, _CenTaylorVortexWorker
 from snowtools.scripts.create_forcing import extract_forcing
 
 logger = loggers.getLogger(__name__)
 
 
-class ExtractForcing(_CENTaylorRun):
+class ExtractForcing(_CenTaylorRun):
     """
     Algo component to extract a list of points from a set of S2M FORCING files in the "massif" geometry.
     """
@@ -45,7 +45,7 @@ class ExtractForcing(_CENTaylorRun):
     )
 
 
-class ExtractMassifsWorker(_CENTaylorVortexWorker):
+class ExtractMassifsWorker(_CenTaylorVortexWorker):
     """
     Worker to extract a list of points from a given S2M FORCING file in the "massif" geometry.
     """

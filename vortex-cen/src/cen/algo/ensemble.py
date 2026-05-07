@@ -7,9 +7,10 @@ from bronx.stdtypes.date import Date, Period, tomorrow
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 from collections import defaultdict
 import footprints
-from vortex.algo.components import ParaBlindRun, ParaExpresso, TaylorRun, DelayedAlgoComponentError
+from vortex.algo.components import ParaExpresso, DelayedAlgoComponentError
+from vortex_cen.algo.components import _CenParaBlindRun, _CenWorkerBlindRun, _CenTaylorRun
 from vortex.syntax.stdattrs import a_date
-from vortex.tools.parallelism import VortexWorkerBlindRun, TaylorVortexWorker
+from vortex.tools.parallelism import TaylorVortexWorker
 from vortex.tools.systems import ExecutionError
 from vortex.util.helpers import InputCheckerError
 
@@ -116,66 +117,7 @@ class _S2MWorkerMixIn(object):
         self.system.subtitle('{:s} : directory listing (post-run)'.format(self.kind))
 
 
-class _CENWorkerBlindRun(_S2MWorkerMixIn, VortexWorkerBlindRun):
-    """
-    This abstract worker is designed to drive the launch of any S2M executable
-    without MPI parallelization (deterministic or ensemble-like simulations) in
-    association with an Algo Component inheriting from an :class:`_CENParaBlindRun`
-    or :class:`Guess` Algo Component.
-
-    A single worker is thus a deterministic execution of a given binary with a
-    specific environment that can be run in parallel with other workers
-    (executions of the same binary with different environments).
-    """
-
-    _abstract = True
-    _footprint = dict(
-        info = 'Worker designed to run a specific member of S2M ensemble experiment associated to an executable'
-               'without MPI parallelization.',
-        attr = dict(
-            subdir = dict(
-                info = 'work in this particular subdirectory',
-                optional = True
-            ),
-            deterministic = dict(
-                type     = bool,
-                default  = True,
-                optional = True,
-            ),
-            reprod_info = dict(
-                info     = "Informations that must be stored in output files for reproductibility",
-                type     = dict,
-                optional = True,
-                default  = dict(),
-            ),
-        )
-    )
-
-
-class _CENTaylorVortexWorker(_S2MWorkerMixIn, TaylorVortexWorker):
-    """
-    This abstract worker is designed to drive the launch of any S2M task not associated
-    to an executable with MPI parallelization (deterministic or ensemble-like simulations) in
-    association with an Algo Component inheriting from an :class:`_CENTaylorRun`
-
-    A single worker is thus a deterministic execution of a list of python commands in a
-    specific environment that can be run in parallel with other workers.
-    """
-
-    _abstract = True
-    _footprint = dict(
-        info = 'Worker designed to run a specific member of S2M ensemble experiment NOT associated to an executable'
-               'with MPI parallelization.',
-        attr = dict(
-            subdir = dict(
-                info = 'work in this particular subdirectory',
-                optional = False
-            ),
-        )
-    )
-
-
-class GuessWorker(_CENWorkerBlindRun):
+class GuessWorker(_CenWorkerBlindRun):
     """TODO: Class documentation."""
 
     _footprint = dict(
@@ -241,7 +183,7 @@ class GuessWorker(_CENWorkerBlindRun):
         return ebauche
 
 
-class _SafranWorker(_CENWorkerBlindRun):
+class _SafranWorker(_CenWorkerBlindRun):
     """TODO: Class documentation."""
 
     _abstract = True
@@ -925,7 +867,7 @@ class S2MMissingDeterministicError(DelayedAlgoComponentError):
 
 
 @echecker.disabled_if_unavailable
-class SurfexWorker(_CENWorkerBlindRun):
+class SurfexWorker(_CenWorkerBlindRun):
     """
     This algo component is designed to run a SURFEX experiment without
     MPI parallelization.
@@ -1381,49 +1323,7 @@ class Guess(ParaExpresso):
         pass
 
 
-class _CENParaBlindRun(ParaBlindRun):
-    """
-    This abstract algo component defines common methods for all CEN ensemble simulations
-    with a parallelisation over ensemble members and no MPI parallelization.
-    Algo components deriving from ParaBlindRun (and thus from this class) are associated to an executable.
-    """
-
-    _abstract = True
-    _footprint = dict(
-        info = 'AlgoComponent that runs several executions of a CEN model in parallel.',
-        attr = dict(
-            engine = dict(
-                # TODO : modification majeure, à discuter avec Matthieu
-                # Engine should stay 'blind' to indicate that the core of the algo component is
-                # an executable (thus the Vortex object is 'blind' to the execution)
-                # This footprint should be used to chose between *_CENParaBlindRun* algo components
-                # and *_CENTaylorRun* algo components
-                values   = ['blind', 's2m']  # s2m for backward compatibility
-            ),
-            metadata = dict(
-                values   = ['StandardSAFRAN', 'StandardPROSNOW'],
-                optional = True,
-            ),
-        )
-    )
-
-    def prepare(self, rh, opts):
-        """Set some variables according to target definition."""
-        super().prepare(rh, opts)
-        self.env.DR_HOOK_NOT_MPI = 1
-
-    def _default_common_instructions(self, rh, opts):
-        """Create a common instruction dictionary that will be used by the workers."""
-        ddict = super()._default_common_instructions(rh, opts)
-        for attribute in self.footprint_attributes:
-            ddict[attribute] = getattr(self, attribute)
-        return ddict
-
-    def postfix(self, rh, opts):
-        pass
-
-
-class S2MComponent(_CENParaBlindRun):
+class S2MComponent(_CenParaBlindRun):
     """
     This Algo Component is designed to manage any S2M task without MPI
     parallelization (deterministic or ensemble-like simulations).
@@ -1436,7 +1336,7 @@ class S2MComponent(_CENParaBlindRun):
     The different members of an ensemble simulation are identified by an input
     resource that differ between the members (defined by the method
     **role_ref_namebuilder** that can be overloaded). For each identified
-    member, a worker object (whose class inherits from :class:`_CENWorkerBlindRun`)
+    member, a worker object (whose class inherits from :class:`_CenWorkerBlindRun`)
     is generated and the different workers run in parallel.
 
     The :class:`S2MComponent` class (that relies on the :mod:`taylorism`
@@ -1446,7 +1346,7 @@ class S2MComponent(_CENParaBlindRun):
     * analyses their feedbacks to look for execution errors
       (thanks to the inherited :meth:`~ParaBlindRun._default_post_execute`
       method): should the `rc` entry of the dictionary returned by the
-      worker's :meth:`_CENWorkerBlindRun.vortex_task` method be an Exception, it is
+      worker's :meth:`_CenWorkerBlindRun.vortex_task` method be an Exception, it is
       captured and stored.
 
     When the execution of all members finishes, the captured exceptions (see
@@ -1863,80 +1763,7 @@ class SurfexComponent(S2MComponent):
 
 
 @echecker.disabled_if_unavailable
-class _CENTaylorRun(TaylorRun):
-    """
-    TaylorRun derived algo components are not (necessarily) associated to an executable and can simply launch
-    a piece of python code.
-    """
-
-    _footprint = dict(
-        info = 'AlgoComponent that runs several executions in parallel.',
-        attr = dict(
-            engine = dict(
-                info     = 'The way the executable should be run.',
-                values   = ['algo', ],
-                default  = 'algo',
-            ),
-            # TODO : find a more explicit name for role_member ?
-            role_members = dict(
-                info     = "Role of RH inputs to use for members definition",
-                type     = str,
-            ),
-        )
-    )
-
-    def execute(self, rh, opts):
-        """Loop on the various initial conditions provided."""
-        self._default_pre_execute(rh, opts)
-        # Update the common instructions
-        common_i = self._default_common_instructions(rh, opts)
-        subdirs = self.get_subdirs(rh, opts)
-        self._add_instructions(common_i, dict(subdir=subdirs))
-        self._default_post_execute(rh, opts)
-
-    def get_subdirs(self, rh, opts):
-        """
-        Get the different member's subdirectories.
-
-        One member is associated to each 'effective input' (inputs that where
-        actually retrieved during the fetch step) Section with a role matching
-        the one defined by the **role_members** footprint.
-
-        WARNING : the use of a footprint attribute instead of a class method to define
-        the role to use for members identification is a significant difference with other
-        "_CENTaylorRun" derived algo components.
-        """
-        avail_members = self.context.sequence.effective_inputs(role=self.role_members)
-
-        if len(avail_members) > 0:
-            subdirs = list()
-            # Retrive the subdirectory asociated to each identified RH
-            for am in avail_members:
-                if am.rh.container.dirname not in subdirs:
-                    subdirs.append(am.rh.container.dirname)
-        else:
-            subdirs = ['.']
-
-        return subdirs
-
-    def prepare(self, rh, opts):
-        """Set some variables according to target definition."""
-        super().prepare(rh, opts)
-        self.env.DR_HOOK_NOT_MPI = 1
-
-    def _default_common_instructions(self, rh, opts):
-        """Create a common instruction dictionary that will be used by the workers."""
-        ddict = super()._default_common_instructions(rh, opts)
-        for attribute in self.footprint_attributes:
-            ddict[attribute] = getattr(self, attribute)
-        return ddict
-
-    def postfix(self, rh, opts):
-        pass
-
-
-@echecker.disabled_if_unavailable
-class PrepareForcingComponent(_CENTaylorRun):
+class PrepareForcingComponent(_CenTaylorRun):
     """
     AlgoComponent that prepares several forcing files in parallel (changes of geometry).
     """

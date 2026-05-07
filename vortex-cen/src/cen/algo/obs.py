@@ -4,13 +4,13 @@
 Algo Components for FORCING generation.
 """
 from bronx.fancies import loggers
-from vortex_cen.algo.ensemble import _CENTaylorRun, _CENTaylorVortexWorker
+from vortex_cen.algo.components import _CenTaylorRun, _CenTaylorVortexWorker
 from snowtools.scripts.observations.create_new_SAFRAN_observations import replace_obs_tar
 
 logger = loggers.getLogger(__name__)
 
 
-class ReconstructObservations(_CENTaylorRun):
+class ReconstructObservations(_CenTaylorRun):
     """
     TODO
     """
@@ -29,7 +29,7 @@ class ReconstructObservations(_CENTaylorRun):
     )
 
 
-class ReconstructObservationsWorker(_CENTaylorVortexWorker):
+class ReconstructObservationsWorker(_CenTaylorVortexWorker):
     """
     TODO
     """

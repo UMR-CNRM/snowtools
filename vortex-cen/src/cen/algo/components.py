@@ -1,5 +1,39 @@
 """
-Abstract algo components classes for ensemble of snow-related simulations.
+Abstract algo components classes for multiprocessing simulations with an external parallelisation (i.e not MPI).
+The parallelization is typically over the simulation members or independent sub-periods.
+All processes share the same executable (if any) but at least partially different IO environments or
+script arguments.
+
+These algo components rely on the `taylorism` package. The main process (the `Boss`) acts as a task scheduler to
+to allocate tasks to a set of independent processes (the `Workers`) working simultaneously.
+
+Two abstract "Boss" classes are defined here are:
+
+    * :class:`_CenParaBlindRun`: to launch an executable multiple times in parallel
+    * :class:`_CenTaylorRun`: to launch a piece of Python code in parallel on several processes
+
+A third abstract "Boss" class is available in the main vortex-nwp package:
+
+    * :class:`ParaExpresso`: to launch a script multiple times in parallel
+
+These abstract classes provide high-level tools such as the identification of the list of workers through
+the list of sub-directories (via the "role" of the main input resource varying from one simulation to another).
+
+Each "Boss" is associated to a "Worker", providing the instructions for each individual task / process.
+Each "Worker" works in its specific sub-directory, which must be filled with the appropriate IOs (when fetching the
+inputs at the "Task" level).
+Some IOs can be shared by several or all workers. These IOs must be stored in the main working directory, and a link
+to these files can be created in the Worker's working directory by the Worker itself.
+
+Two abstract "Worker" classes are defined here are:
+
+    * :class:`_CenWorkerBlindRun`: launch an executable without MPI parallelization
+    * :class:`_CenTaylorRun`: launch a piece of Python code
+
+A third abstract "Worker" class is available in the main vortex-nwp package:
+
+    * :class:`VortexWorkerBlindRun`: to launch a script multiple times in parallel
+
 """
 
 from bronx.fancies import loggers
@@ -12,6 +46,7 @@ logger = loggers.getLogger(__name__)
 class _CenWorkerMixIn(object):
 
     def vortex_task(self, **kwargs):
+        # TODO : find a better name for this method ?
         """
         Main method, the first that is executed at the initialization of the
         worker.
@@ -47,6 +82,7 @@ class _CenWorkerMixIn(object):
         return rdict
 
     def _commons(self, rundir, thisdir, rdict):
+        # TODO : find a better name for this method ? At least remove the "_"...
         """
         Abstract method called by the main **vortex_task** method to set up the
         worker's environment (links to common files, name of execution listings,
@@ -96,20 +132,19 @@ class _CenWorkerMixIn(object):
 
 class _CenWorkerBlindRun(_CenWorkerMixIn, VortexWorkerBlindRun):
     """
-    This abstract worker is designed to drive the launch of any executable
+    This abstract worker is designed to drive the launch of any script or executable
     without MPI parallelization (deterministic or ensemble-like simulations) in
     association with an Algo Component inheriting from an :class:`_CenParaBlindRun`
-    or :class:`Guess` Algo Component.
+    or :class:`ParaExpresso` Algo Component.
 
-    A single worker is thus a deterministic execution of a given binary with a
-    specific environment that can be run in parallel with other workers
-    (executions of the same binary with different IO environments).
+    A single worker is thus a deterministic execution of a given binary or script with a
+    specific IO environment and/or a specific set of argument.
     """
 
     _abstract = True
     _footprint = dict(
-        info = 'Worker designed to run a specific member of an ensemble of simulations associated to an executable'
-               'without MPI parallelization.',
+        info = 'Worker designed to run a specific member of an ensemble of simulations associated to a script or'
+               'an executable without MPI parallelization.',
         attr = dict(
             subdir = dict(
                 info = 'work in this particular subdirectory',
@@ -132,9 +167,9 @@ class _CenWorkerBlindRun(_CenWorkerMixIn, VortexWorkerBlindRun):
 
 class _CenTaylorVortexWorker(_CenWorkerMixIn, TaylorVortexWorker):
     """
-    This abstract worker is designed to drive the launch of any  not associated
-    to an executable with MPI parallelization (deterministic or ensemble-like simulations) in
-    association with an Algo Component inheriting from an :class:`_CenTaylorRun`
+    This abstract worker is designed to drive the launch a python program.
+    The parallelisation is typically over the simulation members or
+    independent sub-periods.
 
     A single worker is thus a deterministic execution of a list of python commands in a
     specific environment that can be run in parallel with other workers.
@@ -143,7 +178,7 @@ class _CenTaylorVortexWorker(_CenWorkerMixIn, TaylorVortexWorker):
     _abstract = True
     _footprint = dict(
         info = 'Worker designed to run a specific member of an ensemble of simulations NOT associated'
-               'to any executable with MPI parallelization.',
+               'to an executable',
         attr = dict(
             subdir = dict(
                 info = 'work in this particular subdirectory',
@@ -155,14 +190,15 @@ class _CenTaylorVortexWorker(_CenWorkerMixIn, TaylorVortexWorker):
 
 class _CenParaBlindRun(ParaBlindRun):
     """
-    This abstract algo component defines common methods for all CEN ensemble simulations
-    with a parallelisation over ensemble members and no MPI parallelization.
-    Algo components deriving from ParaBlindRun (and thus from this class) are associated to an executable.
+    This abstract algo component defines common methods for simulations based on an executable without
+    MPI parallelization.
+    The parallelization is typically over the simulation members or independent sub-periods, and all processes
+    share the same executable but different IO environments.
     """
 
     _abstract = True
     _footprint = dict(
-        info = 'AlgoComponent that runs several executions of a CEN model in parallel.',
+        info = 'AlgoComponent that runs several executions of an executable in parallel.',
         attr = dict(
             engine = dict(
                 # TODO : modification majeure, à discuter avec Matthieu
@@ -170,7 +206,7 @@ class _CenParaBlindRun(ParaBlindRun):
                 # an executable (thus the Vortex object is 'blind' to the execution)
                 # This footprint should be used to chose between *_CenParaBlindRun* algo components
                 # and *_CenTaylorRun* algo components
-                values   = ['blind', 's2m']  # s2m for backward compatibility
+                values   = ['blind', 's2m']  # s2m for backward compatibility. TODO : remove the 's2m' engine
             ),
             metadata = dict(
                 values   = ['StandardSAFRAN', 'StandardPROSNOW'],

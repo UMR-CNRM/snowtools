@@ -11,7 +11,7 @@ from vortex.algo.components import AlgoComponent, TaylorRun
 from vortex.tools.parallelism import TaylorVortexWorker
 from vortex.syntax.stdattrs import a_date
 
-from vortex_cen.algo.ensemble import _CENTaylorRun, _CENTaylorVortexWorker
+from vortex_cen.algo.components import _CenTaylorRun, _CenTaylorVortexWorker
 
 logger = loggers.getLogger(__name__)
 
@@ -199,7 +199,7 @@ class HydroComponent(TaylorRun):
 
 
 @echecker.disabled_if_unavailable
-class ExtractDates(_CENTaylorRun):
+class ExtractDates(_CenTaylorRun):
 
     _footprint = dict(
         info = 'AlgoComponent to extract a list of dates from an ensemble of PRO files',
@@ -222,7 +222,7 @@ class ExtractDates(_CENTaylorRun):
 
 
 @echecker.disabled_if_unavailable
-class ExtractDates_Worker(_CENTaylorVortexWorker):
+class ExtractDates_Worker(_CenTaylorVortexWorker):
     """
     """
 
@@ -251,7 +251,7 @@ class ExtractDates_Worker(_CENTaylorVortexWorker):
 
 
 @echecker.disabled_if_unavailable
-class SnowCoverDuration(_CENTaylorRun):
+class SnowCoverDuration(_CenTaylorRun):
 
     _footprint = dict(
         info = 'AlgoComponent for snow cover duration diagnotics computation from SURFEX-Crocus simulations',
@@ -270,7 +270,7 @@ class SnowCoverDuration(_CENTaylorRun):
 
 
 @echecker.disabled_if_unavailable
-class SnowCoverDuration_Worker(_CENTaylorVortexWorker):
+class SnowCoverDuration_Worker(_CenTaylorVortexWorker):
     """
     Worker associated to the `SnowCoverDuration` algo component and calling various
     snowtools methods to compute snow cover duration diagnostics of SURFEX-Crocus simulations :
