@@ -48,8 +48,8 @@ These entry points are designed to deal with the following requirements :
 To use these entry points, the native xarray methods `open_dataset`, `open_dataarray` and `open_mfdataset` should
 simply be called with the keyword argument "engine='snowtools'" except if you have an older xarray version (see below).
 
-Meteo-France usage (until next xarray update from version 0.16.0)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Usage with xarray < 0.18
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
@@ -60,8 +60,8 @@ Meteo-France usage (until next xarray update from version 0.16.0)
     ds = xarray_snowtools.preprocess(ds)
 
 
-Usage with xarray > 0.18
-^^^^^^^^^^^^^^^^^^^^^^^^
+Usage with xarray >= 0.18
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
