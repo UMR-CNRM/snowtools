@@ -1,0 +1,17 @@
+args:
+  # FORCING-specific footprints in research case
+  kind: "MeteorologicalForcing"
+  nativefmt: "netcdf"
+  namespace: "vortex.archive.fr"
+  namebuild: "flat@cen"
+  # Extraction-specific footprints
+  vapp: 
+  vconf: 
+  experiment: 
+  user: 
+  geometry: 
+  datebegin: 
+  dateend: 
+  block: 
+  # Name to be given to the extracted file
+  local: 

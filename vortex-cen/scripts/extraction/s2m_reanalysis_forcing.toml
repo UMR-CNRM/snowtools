@@ -1,0 +1,16 @@
+args:
+  # FORCING-specific footprints in research case
+  kind: "MeteorologicalForcing"
+  nativefmt: "netcdf"
+  namespace: "vortex.archive.fr"
+  namebuild: "flat@cen"
+  vapp: "s2m"
+  vconf: "reanalysis"
+  experiment: "release_2026.2"
+  # Extraction-specific footprints
+  geometry: "alp27_flat"
+  datebegin: "2019080106"
+  dateend: "2020080106"
+  block: "massifs"
+  # Name to be given to the extracted file
+  local: "FORCING.nc"
