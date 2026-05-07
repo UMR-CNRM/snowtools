@@ -1,6 +1,5 @@
 [data-tree]
-rootdir = "/cnrm/cen/users/NO_SAVE/%usr%/"
-op_rootdir = "/chaine/mxpt001/vortex/mtool/cache"
+rootdir = "/home/%usr%/NO_SAVE/cache/vortex"
 
 [storage]
 address="hendrix.meteo.fr"

@@ -348,6 +348,11 @@ Vortex Configuration
 
     # For SXCEN
     ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_sxcen.toml vortex.toml
+    mkdir -p /cnrm/cen/users/NO_SAVE/$USER/cache
+
+    # For PC
+    ln -s $SNOWTOOLS_CEN/vortex-cen/configs/vortex_pc.toml vortex.toml
+    mkdir -p $HOME/NO_SAVE/cache/vortex
 
 Start from the default geometries file (update it with your own geometries if you already had one):
 

@@ -1,5 +1,5 @@
 [data-tree]
-rootdir = "/cnrm/cen/users/NO_SAVE/%usr%/"
+rootdir = "/cnrm/cen/users/NO_SAVE/%usr%/cache"
 op_rootdir = "/chaine/mxpt001/vortex/mtool/cache"
 
 [storage]
