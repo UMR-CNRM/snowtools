@@ -2,11 +2,11 @@
 '''
 '''
 
-from vortex import toolbox
-from mkjob.nodes import Task
+from vortex_cen.tasks.research_task_base import _CenResearchTask
+import vortex
 
 
-class Reconstruct_SAFRAN_Obs(Task):
+class Reconstruct_SAFRAN_Obs(_CenResearchTask):
     '''
     Task to build SAFRAN-compatible hourly observations files from reconstructed
     observation series.
@@ -17,7 +17,7 @@ class Reconstruct_SAFRAN_Obs(Task):
         t = self.ticket
 
         self.sh.title('Reconstructed Observations')
-        new_obs = toolbox.input(
+        new_obs = vortex.input(
             kind='SurfaceObservation',
             nativefmt   = 'netcdf',
             model       = 'safran',
@@ -44,7 +44,7 @@ class Reconstruct_SAFRAN_Obs(Task):
 #            datebegin = rundate
 #            dateend = rundate.replace(year = rundate.year + 1)
         self.sh.title('Raw Observations')
-        self.obs = toolbox.input(
+        self.obs = vortex.input(
             role           = 'Observations',
             part           = 'all',
             geometry       = self.conf.geometry,
@@ -62,8 +62,8 @@ class Reconstruct_SAFRAN_Obs(Task):
         print(t.prompt, 'Raw Obs = ', self.obs)
         print()
 
-        self.sh.title('Toolbox input listeo')
-        listeo = toolbox.input(
+        self.sh.title('Input listeo')
+        listeo = vortex.input(
             role            = 'ListePost',
             genv            = self.conf.cycle,
             gdomain         = '[geometry:tag]',
@@ -82,8 +82,8 @@ class Reconstruct_SAFRAN_Obs(Task):
 
     def algo(self):
 
-        self.sh.title('Toolbox algo')
-        algo = toolbox.algo(
+        self.sh.title('Algo')
+        algo = vortex.algo(
             kind         = 'reconstruct_observations',
             role_members = 'Observations',
             engine       = 'algo',
@@ -93,10 +93,10 @@ class Reconstruct_SAFRAN_Obs(Task):
         print()
         algo.run()
 
-    def put_remote_outputs(self):
+    def put_outputs(self):
 
         self.sh.title('Reconstructed Observations')
-        out = toolbox.output(
+        out = vortex.output(
             kind           = 'packedobs',
             datebegin      = self.list_dates_begin,
             dateend        = self.dict_dates_end,

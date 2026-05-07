@@ -237,6 +237,7 @@ class _CenTaylorRun(TaylorRun):
     a piece of python code.
     """
 
+    _abstract = True
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(

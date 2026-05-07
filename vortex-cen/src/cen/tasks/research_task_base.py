@@ -76,16 +76,6 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             # nativefmt      = 'netcdf',
         )
 
-        # Temporary security to avoid the *date* footprint to be mandatory for SurfaceIO resources.
-        # This will be useless once the date footprint will be properly set as optional for research applications
-        if 'date' in self.conf:
-            vortex.defaults['date'] = self.conf.date
-        else:
-            if 'rundate' in self.conf:
-                vortex.defaults['date'] = self.conf.rundate
-            elif 'dateend' in self.conf:
-                vortex.defaults['date'] = self.conf.dateend
-
         for optk in ('cutoff', 'geometry', 'cycle', 'vortex_set_aside'):
             if optk in self.conf:
                 value = self.conf.get(optk)
@@ -194,7 +184,6 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         """
         raise NotImplementedError()
 
-
     def get_local_inputs(self):
         """
         Implement this method in your task to fetch all resources already stored on the local (HPC) cache from a
@@ -209,7 +198,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         Implement this method to call your task's algo component.
         This method should return a valid AlgoComponent object.
         """
-        raise NotImplementedError("method 'algo' returning a valid AlgoComponent object should be implemented in child class.")
+        raise NotImplementedError("method 'algo' returning a valid AlgoComponent object should be"
+                "implemented in child class.")
 
     def launch_algo(self, algo, **kw):
         """

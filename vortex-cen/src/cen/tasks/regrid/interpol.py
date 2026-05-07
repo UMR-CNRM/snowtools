@@ -103,7 +103,7 @@ class InterpolateS2MForcing(_CenResearchTask):
         # self.launch_MPI_executable(algo, mpiopts=mpiopts)
         self.launch_executable(algo=algo)
 
-    def put_remote_outputs(self):
+    def put_outputs(self):
         """
 
         """
