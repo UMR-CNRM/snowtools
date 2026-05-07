@@ -711,4 +711,7 @@ class Safran(Task, S2MTaskMixIn):
                 print(t.prompt, 'tb31 =', tb31)
                 print()
 
-#            raise ExecutionError('')
+                if 'debug' in self.conf and self.conf.debug:
+                    print('=====================================================================================')
+                    print('=====================================================================================')
+                    raise Exception('INFO :The execution went well, do not take into account the following error')
