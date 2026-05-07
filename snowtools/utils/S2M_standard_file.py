@@ -57,9 +57,11 @@ class _StandardNC(netCDF4.Dataset):
             self.date_created = datetime.datetime.today().replace(hour=12, minute=0, second=0,
                                                                   microsecond=0).isoformat()
 
-        contributors = ['Matthieu Vernay', 'Matthieu Lafaysse', 'Mathieu Fructus', 'Léo Viallon-Galinier',
-                        'Sabine Radanovics']
-        roles = ['Matthieu Vernay collected the input data and develops the SAFRAN reanalysis',
+        contributors = ['Diego Monteiro', 'Bénédicte Branchet', 'Matthieu Vernay', 'Matthieu Lafaysse',
+                        'Mathieu Fructus', 'Léo Viallon-Galinier', 'Sabine Radanovics']
+        roles = ['Diego Monteiro produced the observation inputs and the evaluation of the dataset',
+                 'Bénédicte Branchet downloaded the ERA5 data used as guess',
+                 'Matthieu Vernay collected the input data and develops the SAFRAN reanalysis',
                  'Matthieu Lafaysse leads the team and developments around the SURFEX-ISBA/Crocus simulations',
                  'Mathieu Fructus contributes to the SURFEX-ISBA/Crocus development',
                  'Léo Viallon-Galinier supervises the snowtools development',
