@@ -85,7 +85,7 @@ class ForcingSpatialConcatenation(_CenResearchTask):
             experiment     = self.conf.xpid,
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
-            block          = 'forcing_concatenate',
+            block          = self.conf.get('block', 'meteo'),
         ),
         print(self.ticket.prompt, 'Output forcing =', forcing_out)
         print()

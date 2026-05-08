@@ -4,6 +4,7 @@ from mkjob.nodes import Driver
 import vortex
 from vortex_cen.tasks.regrid.add_slopes import AddSlopes
 from vortex_cen.tasks.surfex.offline import Offline_MPI_Uenv
+from vortex_cen.tasks.surfex.prep import GetPrep
 
 
 def setup(t, **kw):
@@ -14,6 +15,7 @@ def setup(t, **kw):
             AddSlopes(tag='addslopes', ticket=t, **kw),
             # No need for preprocess since the namelist pre-processing is already included
             # in the "Surfex_Parallel" algo component
+            GetPrep(tag='prep', ticket=t, **kw),
             Offline_reanalysis(tag='offline', ticket=t, **kw),
         ],
         options=kw,
@@ -32,11 +34,11 @@ class Offline_reanalysis(Offline_MPI_Uenv):
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
         self.get_pgd()
-        self.get_prep()
         self.get_executable()
         self.get_namelist_from_uenv()
 
     def get_local_inputs(self):
+        self.get_prep()
         self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
 
     def get_pgd(self):

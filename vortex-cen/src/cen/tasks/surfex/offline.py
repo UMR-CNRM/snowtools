@@ -113,7 +113,7 @@ class _Offline_MPI(SurfexParamsMixin, _CenResearchTask):
      type: str
     """
 
-    def get_prep_from_cache(self):
+    def get_prep(self):
 
         try:
             # PREP.nc mandatory to run OFFLINE
@@ -261,7 +261,7 @@ class _Offline_MPI(SurfexParamsMixin, _CenResearchTask):
     def get_local_inputs(self):
         self.get_namelist_from_cache()
         self.get_pgd_from_cache()
-        self.get_prep_from_cache()
+        self.get_prep()
 
     def algo(self):
         """
@@ -299,18 +299,23 @@ class _Offline_MPI(SurfexParamsMixin, _CenResearchTask):
         """
         Run OFFLINE MPI algo component.
         """
-        self.launch_executable(algo)
         # # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
         # # vortex.executable(...))
         # # Il est possible de récupérer cet objet avec la ligne suivante :
-        # executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
+        executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
         #
         # # MV : Il faudra également pouvoir fournir le nombre de process et le nombre de tâches via le fichier de conf
         # # TODO : réfléchir à la procédure pour définir des valeurs par défaut en fonction du domaine comme c'est
         # # le cas actuellement
-        # self.component_runner(algo, executable,
-        #         mpiopts=dict(nnodes=self.conf.nnodes, nprocs=self.conf.nprocs, ntasks=self.conf.ntasks,
-        #                      openmp=self.conf.openmp))
+        self.component_runner(
+            algo,
+            executable,
+            mpiopts=dict(
+                nnodes=self.conf.nnodes,
+                nprocs=self.conf.nprocs[self.conf.geometry.tag],
+                ntasks=self.conf.ntasks[self.conf.geometry.tag],
+            )
+        )
 
     def put_outputs(self):
         """
