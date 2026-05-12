@@ -38,8 +38,7 @@ If you are only a user of snowtools, you can install the package easily with pip
 
 .. code-block::
 
-    pip install .
-
+    pip install .[all]
 
 
 .. _sec-install_dev:
@@ -239,9 +238,11 @@ To compile the interpol binary:
 
 CRPS scores
 ^^^^^^^^^^^
-If you need to use CRPS scoring tools, which parts are written in Fortran, you need to compile them.
+CRPS score is now as an independent package available at https://github.com/UMR-CNRM/snowtools-crps
 
-For CRPS scores, go to the ``snowtools/scores``, and run ``./install_ubuntu.sh`` (or ``./install_belenos.sh`` if you are on a Meteo-France super computer).
+To install it along with snowtools, just install the optional dependency ``snowtools[scores]`` (by running ``pip install .[all,scores]`` instead of ``pip install .[all]``).
+Note that you may need to upgrade pip to version above 23.0 to install scores dependency due to a bug in previous pip versions.
+
 
 .. [#footnote1] To generate a new ssh key, go to your ``~/.ssh`` folder (create if it does not exist) and run ``ssh-keygen -t rsa -b 4096 -f github``. You will be asked for an optional password to protect your key. Once created, go to your `github account, section SSH keys <https://github.com/settings/keys>`_, click on "add a SSH key" and copy the content of the file ``~/.ssh/github.pub`` in the "key" field.
     You may had to add to your ``.ssh/config`` the following lines:
