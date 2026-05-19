@@ -266,8 +266,8 @@ class DeterministicScores_Heterogeneous(DeterministicScores_Mask):
         time_sim_unique, ind_sim_unique = np.unique(time_sim_ok, return_index=True)
         sim_unique = sim_ok[ind_sim_unique]
 
-        mask_sim = np.in1d(time_sim_unique, time_obs_unique)
-        mask_obs = np.in1d(time_obs_unique, time_sim_unique)
+        mask_sim = np.isin(time_sim_unique, time_obs_unique)
+        mask_obs = np.isin(time_obs_unique, time_sim_unique)
         t2 = time.time()
         # print('Compute masks in {0:f}s'.format(t2-t1))
 

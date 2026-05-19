@@ -504,7 +504,7 @@ class forcinput_select(forcinput_tomodify):
 
         if self.massifvarname() in listvar:
             init_massif_nb_sop = init_forcing_file.read(self.massifvarname(), keepfillvalue=True)
-            b_points_massif = np.in1d(init_massif_nb_sop, list_massif_number)
+            b_points_massif = np.isin(init_massif_nb_sop, list_massif_number)
             if np.sum(b_points_massif) == 0:
                 raise MassifException(list_massif_number, list(set(init_massif_nb_sop)))
         else:
@@ -542,20 +542,20 @@ class forcinput_select(forcinput_tomodify):
 
         if extendaspects:
             # Indexes of points to extract: only flat values if create new aspects
-            b_points_slope = np.in1d(init_slopes, [0])
-            b_points_aspect = np.in1d(init_exp, [-1])
+            b_points_slope = np.isin(init_slopes, [0])
+            b_points_aspect = np.isin(init_exp, [-1])
 
         else:
             # Indexes of points to extract: can be a subset of available slopes or the whole available slopes
-            b_points_slope = np.in1d(init_slopes, liste_pentes_int)
-            b_points_aspect = np.in1d(init_exp, list_exp_degres)
+            b_points_slope = np.isin(init_slopes, liste_pentes_int)
+            b_points_aspect = np.isin(init_exp, list_exp_degres)
 
         # Identify points to extract
         index_points = np.where(b_points_massif * b_points_alt * b_points_slope * b_points_aspect)[0]
 
         if extendslopes:
             # Points to duplicate correspond to all indexes but -1 aspect
-            points_to_duplicate = np.invert(np.in1d(init_exp[index_points], [-1]))
+            points_to_duplicate = np.invert(np.isin(init_exp[index_points], [-1]))
 
         if extendaspects or extendslopes:
             # In these cases, we remove flat cases of output slopes list because it is dealt in a specific way
@@ -575,7 +575,7 @@ class forcinput_select(forcinput_tomodify):
 
         if massif_dim_name in init_forcing_file_dimensions and massif_dim_name in init_forcing_file.listvar():
             init_massif = init_forcing_file.read(massif_dim_name, keepfillvalue=True)
-            index_massif = np.where(np.in1d(init_massif, list_massif_number))[0]
+            index_massif = np.where(np.isin(init_massif, list_massif_number))[0]
             len_dim = len(index_massif)
 
             if len_dim == 0:
@@ -1045,7 +1045,7 @@ class forcinput_extract(forcinput_tomodify):
 
         if massif_dim_name in init_forcing_file_dimensions:
             init_massif = init_forcing_file.read("massif", keepfillvalue=True)
-            index_massif = np.where(np.in1d(init_massif, list_massif_number))[0]
+            index_massif = np.where(np.isin(init_massif, list_massif_number))[0]
             len_dim = len(index_massif)
             new_forcing_file.createDimension(massif_dim_name, len_dim)
             del init_forcing_file_dimensions[massif_dim_name]

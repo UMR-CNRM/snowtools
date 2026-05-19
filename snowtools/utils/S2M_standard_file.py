@@ -177,7 +177,7 @@ class _StandardNC(netCDF4.Dataset):
 
         transformer = Transformer.from_crs(epsg, 'epsg:4326')
 
-        XX, YY = np.meshgrid(np.array(x), np.array(y))
+        XX, YY = np.meshgrid(np.asarray(x), np.asarray(y))
         lon, lat = transformer.transform(XX, YY)
 
         return lat, lon
