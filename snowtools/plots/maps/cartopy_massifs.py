@@ -8,6 +8,8 @@ Created on 29 march 2021
 
 Module for map plots with massifs.
 Developed with matplotlib 3.4.0/3.2.1 and cartopy 0.18.
+Working combination: matplotlib 3.5.1 + cartopy 0.20.2 python 3.10
+matplotlib 3.6.3 + cartopy 0.22.0 with deprecation warning
 
 Usage :
 example :
@@ -700,7 +702,10 @@ class _Map_massifs(Mplfigure):
         """
         myvalues = [variable[massifref == i][0] if i in massifref else np.nan for i in self.num]
         for i, myvalue in enumerate(myvalues):
-            self.massif_features[i]['feature']._kwargs['facecolor'] = self.palette(self.norm(myvalue))
+            if cartopy.__version__ >= '0.23.0':
+                self.massif_features[i]['feature'].set_facecolor(self.palette(self.norm(myvalue)))
+            else:
+                self.massif_features[i]['feature']._kwargs['facecolor'] = self.palette(self.norm(myvalue))
         return myvalues
 
     def empty_massifs(self, **kwargs):
@@ -710,7 +715,10 @@ class _Map_massifs(Mplfigure):
         :param kwargs:
         """
         for feature in self.massif_features:
-            feature['feature']._kwargs['facecolor'] = 'white'
+            if cartopy.__version__ >= '0.23.0':
+                feature['feature'].set_facecolor('white')
+            else:
+                feature['feature']._kwargs['facecolor'] = 'white'
 
     def addpoints(self, lon, lat, labels=None, color='black', marker=None):
         """
@@ -762,7 +770,10 @@ class _Map_massifs(Mplfigure):
         for i, massif in enumerate(self.records):
             if massif.attributes['code'] in massifs:
                 self.massif_features[i]['feature'].set_zorder(2)  # Pour tracer le massif en dernier
-                self.massif_features[i]['feature']._kwargs['edgecolor'] = 'red'
+                if cartopy.__version__ >= '0.23.0':
+                    self.massif_features[i]['feature'].set(edgecolor='red')
+                else:
+                    self.massif_features[i]['feature']._kwargs['edgecolor'] = 'red'
 
     def legend(self, polygons, **kwargs):
         """
@@ -916,7 +927,6 @@ class _Map_massifs(Mplfigure):
         :param rminfobox: if True, the infobox is removed.
         """
         # self.legendok = False
-
         # remove tables
         for prop in self.map.properties()['children']:
             if isinstance(prop, matplotlib.table.Table):
@@ -931,6 +941,7 @@ class _Map_massifs(Mplfigure):
         if hasattr(self, 'infos') & rminfobox:
             for elm in self.infos:
                 elm.remove()
+
         # remove colorbar
         if hasattr(self, 'cbar') & rmcbar:
             try:
@@ -1253,6 +1264,7 @@ class _MultiMap(_Map_massifs):
         """
         for iax in range(self.nsubplots):
             kw['iax'] = iax
+            self.maps.flat[iax].remove()
             self.maps.flat[iax] = self.getmap(**kw)
             self.maps.flat[iax].coastlines(resolution='10m', linewidth=1)
             self.gl = self.maps.flat[iax].gridlines(draw_labels=True)
@@ -1315,7 +1327,10 @@ class _MultiMap(_Map_massifs):
         myvalues = np.array([variable[massifref == i][0] if i in massifref else np.empty((leng)) * np.nan for i in self.num])
         for j in range(leng):
             for i, myvalue in enumerate(myvalues.take(indices=j, axis=axis)):
-                self.massif_features[j][i]['feature']._kwargs['facecolor'] = self.palette(self.norm(myvalue))
+                if cartopy.__version__ >= '0.23.0':
+                    self.massif_features[j][i]['feature'].set_facecolor(self.palette(self.norm(myvalue)))
+                else:
+                    self.massif_features[j][i]['feature']._kwargs['facecolor'] = self.palette(self.norm(myvalue))
         return myvalues
 
     def red_edge(self, massifs):
@@ -1329,7 +1344,10 @@ class _MultiMap(_Map_massifs):
             if massif.attributes['code'] in massifs:
                 for j in range(self.nsubplots):
                     self.massif_features[j][i]['feature'].set_zorder(2)  # Pour tracer le massif en dernier
-                    self.massif_features[j][i]['feature']._kwargs['edgecolor'] = 'red'
+                    if cartopy.__version__ >= '0.23.0':
+                        self.massif_features[j][i]['feature'].set(edgecolor = 'red')
+                    else:
+                        self.massif_features[j][i]['feature']._kwargs['edgecolor'] = 'red'
 
     def empty_massifs(self, **kwargs):
         """
@@ -1339,7 +1357,10 @@ class _MultiMap(_Map_massifs):
         """
         for features in self.massif_features:
             for feature in features:
-                feature['feature']._kwargs['facecolor'] = 'white'
+                if cartopy.__version__ >= '0.23.0':
+                    feature['feature'].set_facecolor('white')
+                else:
+                    feature['feature']._kwargs['facecolor'] = 'white'
 
     def addpoints(self, lon, lat, labels=None, color='black', marker=None):
         """
