@@ -2,21 +2,21 @@
 
 import vortex
 from mkjob.nodes import Driver
-from vortex_cen.tasks.regrid.extract_s2m_points import ExtractS2MForcing
+from vortex_cen.tasks.regrid.add_slopes import AddSlopes
 
 
 def setup(t, **kw):
     return Driver(
-        tag='extracts2m',
+        tag='addslopes',
         ticket=t,
         nodes=[
-            TestExtractS2MForcing(tag='extracts2mforcing', ticket=t, **kw),
+            TestAddSlopes(tag='addslopes', ticket=t, **kw),
         ],
         options=kw,
     )
 
 
-class TestExtractS2MForcing(ExtractS2MForcing):
+class TestAddSlopes(AddSlopes):
 
     def unittest(self):
         """
@@ -33,7 +33,7 @@ class TestExtractS2MForcing(ExtractS2MForcing):
             username       = 'vernaym',
             namebuild      = 'flat@cen',
             local          = '[datebegin:ymdh]_[dateend:ymdh]/FORCING_OUT.nc',
-            block          = 'meteo',
+            block          = 'addslopes',
             model          = 'safran',
         ),
         print(self.ticket.prompt, 'diff forcing =', forcing_diff)

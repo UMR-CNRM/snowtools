@@ -5,9 +5,10 @@ import vortex
 # from vortex import toolbox
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex.util.helpers import InputCheckerError
+from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
 
-class _Preprocess(_CenResearchTask):
+class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
     """
     Abstract task for pre-processing namelist:
     add infos like points and dates from forcing to namelist.
@@ -119,24 +120,7 @@ class Preprocess_Uenv_Namelist(_Preprocess):
         Get namelist from a User Environment.
         """
         super().get_remote_inputs()
-        #######################################################################
-        #                             Fetch steps                             #
-        #######################################################################
-        self.sh.title('Toolbox input Namelist')
-        namelist_tbi = vortex.input(
-            role     = 'Nam_surfex',
-            # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
-            # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
-            source   = self.conf.namelist_source,  # ex : OPTIONS_default.nam
-            genv     = self.conf.genv,
-            kind     = 'namelist',
-            model    = 'surfex',
-            local    = 'OPTIONS.nam',
-            # MV : la nameliste va être modifiée, il faut s'assurer du droit d'écriture (<==> intent='inout')
-            intent   = 'inout',
-        )
-        print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
-        print()
+        self.get_namelist_from_uenv()
 
 
 class Preprocess_Local_Namelist(_Preprocess):
@@ -155,25 +139,10 @@ class Preprocess_Local_Namelist(_Preprocess):
         Get namelist from a user-provided absolute path.
         """
         super().get_remote_inputs()
-        #######################################################################
-        #                             Fetch steps                             #
-        #######################################################################
-        # Use the path provided in the configuration file for the SURFEX namelist
-        self.sh.title('Toolbox input Namelist')
-        namelist_tbi = vortex.input(
-            role     = 'Nam_surfex',
-            remote   = self.conf.namelist,
-            kind     = 'namelist',
-            model    = 'surfex',
-            local    = 'OPTIONS.nam',
-            # MV : la nameliste va être modifiée, il faut s'assurer du droit d'écriture (<==> intent='inout')
-            intent   = 'inout',
-        )
-        print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
-        print()
+        self.get_namelist_from_path()
 
 
-class Soda_Namelist_Preprocess(_CenResearchTask):
+class Soda_Namelist_Preprocess(SurfexCommonsMixin, _CenResearchTask):
     """
     Pre-process SURFEX namelist for SODA executable
 
@@ -199,21 +168,7 @@ class Soda_Namelist_Preprocess(_CenResearchTask):
 
     def get_remote_inputs(self):
 
-        self.sh.title('Input Namelist')
-        namelist_tbi = vortex.input(
-            role     = 'Nam_surfex',
-            # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
-            # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
-            source   = self.conf.namelist_source,  # ex : OPTIONS_default.nam
-            genv     = self.conf.genv,
-            kind     = 'namelist',
-            model    = 'surfex',
-            local    = 'OPTIONS.nam',
-            # MV : la nameliste va être modifiée, il faut s'assurer du droit d'écriture (<==> intent='inout')
-            intent   = 'inout',
-        )
-        print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
-        print()
+        self.get_namelist_from_uenv()
 
     def get_local_inputs(self):
         pass

@@ -4,15 +4,14 @@ Created on 18 March 2024
 @author: Vernay.M
 """
 import vortex
-from vortex.layout.dataflow import SectionFatalError
 from mkjob.nodes import Task
 from vortex_cen.layout.nodes import S2MTaskMixIn
 from bronx.stdtypes.date import Date
 from footprints.stdtypes import FPDict
-from vortex.tools.env import Environment
 # from vortex.syntax.stdattrs import Namespace
 
-from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext, TestReportContext
+from vortex_cen.tools.monitoring import InputReportContext, OutputReportContext
+from vortex_cen.tools.monitoring import AlgoReportContext, TestReportContext
 
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
 
@@ -154,9 +153,10 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         if 'compute' in self.steps:
             # The actual computations... (usually a call to the run method of an AlgoComponent)
             # This is executed on a COMPUTE NODE.
-            algo = self.algo()
-            if 'localtest' not in self.conf:
-                self.launch_algo(algo)
+            with AlgoReportContext(self, t):
+                algo = self.algo()
+                if 'localtest' not in self.conf:
+                    self.launch_algo(algo)
 
         if 'backup' in self.steps or 'late-backup' in self.steps:
             # In a multi step job (MTOOL, ...), this step will be run on a TRANSFER NODE.
@@ -461,39 +461,3 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             ),
             print(t.prompt, 'FORCING (alternate) =', forcing)
             print()
-
-    def get_pgd_from_cache(self):
-        """
-        A PGD.nc file is mandatory to run OFFLINE.
-        In the general research case, the PGD comes from the vortex cache.
-        For "stable" configurations such as the reanalysis, it comes from a UEnv/GEnv.
-        """
-        try:
-            self.sh.title('Toolbox input PGD from cache')
-            pgd_tbi = vortex.input(
-                local='PGD.nc',
-                role='SurfexClim',
-                experiment=self.conf.get('pgd_xpid', self.conf.xpid),
-                vapp=self.conf.get('pgd_vapp', self.conf.vapp),
-                vconf=self.conf.get('pgd_vconf', self.conf.vconf),
-                geometry=self.conf.geometry,
-                nativefmt='netcdf',
-                kind='pgdnc',
-                model='surfex',
-                namespace='vortex.cache.fr',
-                namebuild='flat@cen',  # TODO : passer en variable de configuration
-                block='pgd',
-                vortex1=self.conf.get('pgd_vortex1', False),
-                fatal=True,
-            ),
-            print(self.ticket.prompt, 'pgd =', pgd_tbi)
-            print()
-        except SectionFatalError as e:
-            print('Unable to get PGD.nc from cache. Make sure that your driver '
-                  'has a node corresponding to the GetPgd1D task '
-                  'before executing the Prep task and that the pgd_xpid values in the '
-                  'corresponding configuration sections match. '
-                  'Or that the Pgd_Uenv_Pgd or Pgd_Local_Pgd task '
-                  'has been run recently for the given experiment (pgd_xpid).')
-            raise e
-

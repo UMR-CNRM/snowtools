@@ -56,6 +56,10 @@ class Params(GenvModelGeoResource):
             gvar = dict(
                 default = '[kind]',
             ),
+            model = dict(
+                optional = True,
+                default = 'surfex',
+            ),
         )
     )
 
@@ -81,6 +85,10 @@ class climTG(GenvModelGeoResource):
             ),
             gvar = dict(
                 default = '[kind]',
+            ),
+            model = dict(
+                optional = True,
+                default = 'surfex',
             ),
         )
     )
@@ -121,6 +129,10 @@ class GridTarget(GenvModelGeoResource):
                 ),
                 gvar = dict(
                     default = '[kind]_[gdomain]',
+                ),
+                model = dict(
+                    optional = True,
+                    default = 'surfex',
                 ),
             )
         )

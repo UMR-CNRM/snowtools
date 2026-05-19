@@ -8,5 +8,6 @@ name=soda_job task=soda profile=rd-belenos-mt date=2022022612 geometry=GrandesRo
 name=get_forcing_job task=get_forcing profile=rd-belenos-mt xpid=forcing
 name=extract_s2m_job task=extract_s2m profile=rd-belenos-mt xpid=extract
 name=shadows_job task=shadows profile=rd-belenos-mt xpid=shadows
-name=interpolate_s2m_job task=interpol_forcing profile=rd-belenos-mt
+name=interpolate_s2m_job task=interpol_forcing profile=rd-belenos-mt xpid=interpol_forcing
 name=concatenate_forcings_job task=concatenate_forcings profile=rd-belenos-mt xpid=concat
+name=add_slopes_job task=addslopes profile=rd-belenos-mt xpid=addslopes

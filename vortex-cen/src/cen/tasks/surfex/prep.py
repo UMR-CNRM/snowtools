@@ -3,12 +3,44 @@
 """
 
 import vortex
-from vortex.layout.dataflow import SectionFatalError
 from vortex_cen.tasks.research_task_base import _CenResearchTask
-from vortex_cen.tasks.surfex.params import SurfexParamsMixin
+from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
 
-class _Prep_Construct(SurfexParamsMixin, _CenResearchTask):
+class PrepCommonsMixin(SurfexCommonsMixin):
+
+    def get_prep_exe_from_uenv(self):
+
+        self.sh.title('Toolbox input PREP executable from uenv')
+        PREP_tbx = vortex.executable(
+            role           = 'Binary',
+            kind           = 'prep',
+            local          = 'PREP',
+            model          = 'surfex',
+            # MV : Il faudra peut être utiliser une variable de conf différente de *genv* à terme pour permettre
+            # de récupérer les autres "constantes" dans un genv commun et le binaire dans un environement géré par
+            # le user
+            genv           = self.conf.genv,
+            gvar           = 'master_prep_mpi',
+        )
+        print(self.ticket.prompt, 'PREP_tbx =', PREP_tbx)
+        print()
+
+    def get_prep_exe_from_path(self):
+
+        self.sh.title('Toolbox input PREP executable from local path')
+        prep_tbx = vortex.executable(
+            role           = 'Binary',
+            kind           = 'prep',
+            local          = 'PREP',
+            model          = 'surfex',
+            remote         = self.conf.exesurfex + "/PREP"
+        )
+        print(self.ticket.prompt, 'PREP_tbx =', prep_tbx)
+        print()
+
+
+class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
     """
     Abstract task for PREP step.
 
@@ -20,7 +52,6 @@ class _Prep_Construct(SurfexParamsMixin, _CenResearchTask):
     * ``drdt_bst_fit_60.nc`` (Crocus metamorphism parameters)
     * ``Init_TG.nc`` Initial values of ground temperature coming from the cache
       (put there by an execution of an InitClimGroundTemperature or GetClimGroundTemperature task)
-    * ``PGD.nc`` Ground physiography coming from the cache (put ther by an execution of a Pgd* task or GetPgd1D task
 
     Outputs:
     --------
@@ -46,14 +77,6 @@ class _Prep_Construct(SurfexParamsMixin, _CenResearchTask):
 
     Optionnal configuration variables:
     ---------------------------------------------------------------------
-    * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID
-      type: str
-    * ``pgd_user`` Name of the user who produced the PGD file
-      type: str
-    * ``pgd_vapp`` *vapp* of the PGD file, if different from the task's *vapp*
-      type: str
-    * ``pgd_vconf`` *vconf* of the PGD file, if different from the task's *vconf*
-      type: str
     * ``dailyprep`` TODO :comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
       type: bool
     * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
@@ -62,7 +85,7 @@ class _Prep_Construct(SurfexParamsMixin, _CenResearchTask):
     def get_remote_inputs(self):
         """
         Get ecoclimapI_covers_param.bin, ecoclimapII_eu_covers_param.bin,
-        Get drdt_bst_fit_60.nc, PGD.nc
+        Get drdt_bst_fit_60.nc
         """
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
@@ -72,50 +95,21 @@ class _Prep_Construct(SurfexParamsMixin, _CenResearchTask):
         Get OPTIONS.nam which is always in cache and
         init_TG.nc that should be in cache as well at this point.
         """
-        # Namelist mandatory to run PREP and taken from the cache
-        self.sh.title('Toolbox input Namelist after modification')
-        namelist_tbi = vortex.input(
-            role         = 'Nam_surfex',
-            kind         = 'namelist',
-            model        = 'surfex',
-            local        = 'OPTIONS.nam',
-            experiment   = self.conf.xpid,
-            namespace    = 'vortex.cache.fr',
-            block        = 'namelist',
-            nativefmt    = 'nam',
-        ),
-        print(self.ticket.prompt, 'namelist =', namelist_tbi)
-        print()
+        self.get_namelist()
+        self.get_init_TG_from_cache()
+        self.get_prep_executable()
 
-        try:
-            self.sh.title('Toolbox input init_TG from Cache')
-            init_tg_cache_tbi = vortex.input(
-                role       = "InitialValuesOfGroundTemperature",
-                kind       = 'climTG',
-                nativefmt  = 'netcdf',
-                local      = 'init_TG.nc',
-                experiment = self.conf.tg_xpid,
-                username   = self.conf.tg_user,
-                geometry   = self.conf.geometry,
-                model      = 'surfex',
-                namespace  = 'vortex.cache.fr',
-                namebuild  = 'flat@cen',  # TODO : passer en variable de configuration
-                block      = 'prep',
-                fatal      = True,
-            ),
-            print(self.ticket.prompt, 'initTG_tbi =', init_tg_cache_tbi)
-            print()
-        except SectionFatalError as e:
-            print('Unable to get init_TG.nc from cache. Make sure that your driver '
-                  'has a node corresponding to the GetClimGroundTemperature task '
-                  'before executing the Prep task and that the tg_xpid values in the '
-                  'corresponding configuration sections match. '
-                  'Or that the InitClimGroundTemperature task '
-                  'has been run recently for the given experiment (tg_xpid).')
-            raise e
+    def get_namelist(self):
+        """
+        Call either "get_namelist_from_cache" or "get_namelist_from_uenv" method.
+        """
+        pass
 
-        # PGD.nc mandatory to run PREP
-        self.get_pgd_from_cache()
+    def get_prep_executable(self):
+        """
+        Call either "get_prep_exe_from_path" or "get_prep_exe_from_uenv" method.
+        """
+        pass
 
     def algo(self):
         """
@@ -164,70 +158,12 @@ class _Prep_Construct(SurfexParamsMixin, _CenResearchTask):
         print()
 
 
-class PrepUenvPrep(_Prep_Construct):
-    """
-    Get init_TG.nc and PREP executable both from Uenv
-    """
-    def get_remote_inputs(self):
-        """
-        Get init_TG.nc and PREP executable both from Uenv
-        """
-        super().get_remote_inputs()
-        #######################################################################
-        #                             Fetch steps                             #
-        #######################################################################
-
-        self.sh.title('Toolbox input PREP executable from uenv')
-        PREP_tbx = vortex.executable(
-            role           = 'Binary',
-            kind           = 'prep',
-            local          = 'PREP',
-            model          = 'surfex',
-            # MV : Il faudra peut être utiliser une variable de conf différente de *genv* à terme pour permettre
-            # de récupérer les autres "constantes" dans un genv commun et le binaire dans un environement géré par
-            # le user
-            genv           = self.conf.genv,
-            gvar           = 'master_prep_mpi',
-        )
-        print(self.ticket.prompt, 'PREP_tbx =', PREP_tbx)
-        print()
-
-
-class PrepLocalPrep(_Prep_Construct):
-    """
-    Get init_TG.nc from Uenv and PREP executable locally
-
-    Supplementary mandatory configuration variables:
-    ------------------------------------------------
-
-    * ``exesurfex`` Absolute path pointing the a local directory containing the target PREP executable
-        type: str
-    """
-    def get_remote_inputs(self):
-        """
-        Get init_TG.nc from Uenv and PREP executable locally
-        """
-        super().get_remote_inputs()
-        #######################################################################
-        #                             Fetch steps                             #
-        #######################################################################
-
-        self.sh.title('Toolbox input PREP executable from local')
-        prep_tbx = vortex.executable(
-            role           = 'Binary',
-            kind           = 'prep',
-            local          = 'PREP',
-            model          = 'surfex',
-            remote         = self.conf.exesurfex + "/PREP"
-        )
-        print(self.ticket.prompt, 'PREP_tbx =', prep_tbx)
-        print()
-
-
 class GetPrep(_Prep_Construct):
     """
     Look if the requested PREP.nc file is available in the cache or archive. If not,
     calculate it.
+
+    WARNING : The simulation's reproductibility can not be guaranteed with this task !
 
     Mandatory configuration variables:
     ----------------------------------
@@ -268,80 +204,21 @@ class GetPrep(_Prep_Construct):
       not in an uenv.
     * ``tg_xpid`` Experiment id the init_TG.nc file comes from, if different from ``xpid``.
     * ``tg_user`` Name of the user who produced the init_TG file.
-    * ``pgd_xpid`` Experiment id the PGD.nc file comes from, if different from ``xpid``.
-    * ``pgd_vapp`` Application name to search the PGD.nc file. In case the PREP.nc is calculated. Default is ``vapp``.
-    * ``pgd_vconf`` Configuration name to search the PGD.nc file. In case the PREP.nc is calculated.
-                    Default is ``vconf``.
     """
-    def get_prep_exe(self):
+    def get_prep_executable(self):
         """
-        get PGD executable from uenv or local path
+        get PREP executable either from local path or from a UEnv
         """
         if hasattr(self.conf, 'exesurfex'):
-            self.sh.title('Toolbox input PREP executable from local')
-            prep_local_tbx = vortex.executable(
-                role='Binary',
-                kind='prep',
-                local='PREP',
-                model='surfex',
-                remote=self.conf.exesurfex + "/PREP"
-            )
-            print(self.ticket.prompt, 'PREP_local_tbx =', prep_local_tbx)
-            print()
-
+            self.get_prep_exe_from_path()
         else:
-            self.sh.title('Toolbox input PREP executable from uenv')
-            prep_uenv_tbx = vortex.executable(
-                role='Binary',
-                kind='prep',
-                local='PREP',
-                model='surfex',
-                genv=self.conf.genv,
-                gvar='master_prep_mpi',
-            )
-            print(self.ticket.prompt, 'PREP_uenv_tbx =', prep_uenv_tbx)
-            print()
+            self.get_prep_exe_from_uenv()
 
     def get_remote_inputs(self):
 
-        self.sh.title('Get PREP from cache or archive')
-        prep_tbi = vortex.input(
-            local      = 'PREP.nc',
-            role       = 'SnowpackInit',
-            experiment = self.conf.get('prep_xpid', self.conf.xpid),
-            username   = self.conf.get('prep_user', None),
-            # MV : il faut définir la date de validité du fichier PREP qui par défaut
-            # est la *datebegin* de simulation mais peut être arbitraire si 'prep_date' est renseigné
-            date       = self.conf.get('prep_date', self.conf.datebegin),
-            # MV : Pour prévoir les cas où le PREP vient d'un vapp / vconf différent
-            # de ceux de la tâche
-            vapp       = self.conf.get('prep_vapp', self.conf.vapp),
-            vconf      = self.conf.get('prep_vconf', self.conf.vconf),
-            geometry   = self.conf.geometry,
-            nativefmt  = 'netcdf',
-            kind       = 'PREP',
-            model      = 'surfex',
-            namespace  = 'vortex.multi.fr',
-            vortex1    = self.conf.get('prep_vortex1', False),
-            namebuild  = 'flat@cen',  # TODO : passer en variable de configuration
-            block      = self.conf.get('prep_block', 'prep'),
-            # MV : La notion de "membre" pour le PREP est particulière dans le cas déterministe
-            # - dans le cas général, le PREP n'est associé à aucun *membre*
-            # - dans une simulation avec assimilation: la première initialisation est faite
-            #   avec un unique fichier PREP pour tous les membres de simulation et les initialisations
-            #   suivantes dépendent des membres sélectionnés par SODA.
-            # Le cas ensembliste (parralélisation sur les membres, 1 PREP / membre)
-            # doit être traité dans une tâche spécifique
-            member     = self.conf.get('prep_member', self.conf.get('member', None)),
-            intent     = 'inout',
-            fatal      = False,
-        ),
-        print(self.ticket.prompt, 'prep_tbi =', prep_tbi)
-        print()
-
+        prep_tbi = self.get_prep(fatal=False)
         if not prep_tbi[0]:
             super().get_remote_inputs()
-            self.get_prep_exe()
 
     def get_local_inputs(self):
         if len(self.ctx.sequence.effective_inputs(role="SnowpackInit")) > 0:

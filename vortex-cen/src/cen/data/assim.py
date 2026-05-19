@@ -32,14 +32,13 @@ class PfSample(GeoFlowResource):
                 model = dict(
                     values = ['soda']
                 ),
-                # This seems redundant with the *date* footrprint
                 dateassim = dict(
                     info = "date of the analysis",
                     type = Date,
-                    default='[date]',
                 ),
                 date = dict(
                     optional = True,
+                    default = '[dateassim]',
                 ),
             )
         )

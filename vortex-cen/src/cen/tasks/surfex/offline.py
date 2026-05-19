@@ -5,18 +5,60 @@
 import vortex
 from vortex.layout.dataflow import SectionFatalError
 from vortex_cen.tasks.research_task_base import _CenResearchTask
-from vortex_cen.tasks.surfex.params import SurfexParamsMixin
-from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
-from bronx.stdtypes.date import Date  # , daterange, tomorrow
+from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
 # MV :
-# TODO Il faudra réfléchir au traitement des cas ensemblistes (parallélisation sur les membres de simulation uniquement):
+# TODO Il faudra réfléchir au traitement des cas ensemblistes (parallélisation sur les membres de simulation
+# uniquement):
 # - soit tout le monde hérite d'une classe "OFFLINE" abstraite dans laquelle et il faut gérer dans chaque cas le
 #   fait que la notion de *membre* est obligatoire ou optionnelle
 # - soit on fait 2 classes abstraites distinctes (1 pour chaque algo) avec duplication des inputs communs
 
 
-class _Offline_MPI(SurfexParamsMixin, _CenResearchTask):
+class OfflineCommonsMixin(SurfexCommonsMixin):
+
+    def get_executable_from_uenv(self):
+        """
+        Get OFFLINE executable from Uenv
+        """
+        #######################################################################
+        #                             Fetch steps                             #
+        #######################################################################
+        self.sh.title('Input OFFLINE executable from uenv')
+        OFFLINE_tbx = vortex.executable(
+            role           = 'Binary',
+            kind           = 'offline',
+            local          = 'OFFLINE',
+            model          = 'surfex',
+            # MV : Il faudra peut être utiliser une variable de conf différente de *genv* à terme pour permettre
+            # de récupérer les autres "constantes" dans un genv commun et le binaire dans un environement géré par
+            # le user
+            genv           = self.conf.genv,
+            gvar           = 'master_surfex_offline_mpi',
+        )
+        print(self.ticket.prompt, 'OFFLINE_tbx =', OFFLINE_tbx)
+        print()
+
+    def get_executable_from_path(self):
+        """
+        Get OFFLINE executable locally
+        """
+        #######################################################################
+        #                             Fetch steps                             #
+        #######################################################################
+        self.sh.title('Input OFFLINE executable from local')
+        OFFLINE_tbx = vortex.executable(
+            role           = 'Binary',
+            kind           = 'offline',
+            local          = 'OFFLINE',
+            model          = 'surfex',
+            remote         = self.conf.exesurfex + "/OFFLINE"
+        )
+        print(self.ticket.prompt, 'OFFLINE_tbx =', OFFLINE_tbx)
+        print()
+
+
+class _Offline_MPI(OfflineCommonsMixin, _CenResearchTask):
     """
     Abstract task for OFFLINE binary execution.
 
@@ -113,96 +155,8 @@ class _Offline_MPI(SurfexParamsMixin, _CenResearchTask):
      type: str
     """
 
-    def get_prep(self):
-
-        try:
-            # PREP.nc mandatory to run OFFLINE
-            self.sh.title('Input PREP')
-            prep_tbi = vortex.input(
-                local          = 'PREP.nc',
-                role           = 'SnowpackInit',
-                # MV : pour permettre de récupérer le PREP depuis une expérience indépendante
-                # --> possibilité de renseigner 'prep_xpid' dans le fichier de conf
-                experiment     = self.conf.get('prep_xpid', self.conf.xpid),
-                username       = self.conf.get('prep_user', None),
-                # MV : il faut définir la date de validité du fichier PREP qui par défaut
-                # est la *datebegin* de simulation mais peut être arbitraire si 'date_prep' est renseigné
-                date           = self.conf.get('prep_date', self.conf.datebegin),
-                # MV : Pour prévoir les cas où le PREP vient d'un vapp / vconf différent
-                # de ceux de la tâche
-                vapp           = self.conf.get('prep_vapp', self.conf.vapp),
-                vconf          = self.conf.get('prep_vconf', self.conf.vconf),
-                geometry       = self.conf.geometry,
-                nativefmt      = 'netcdf',
-                kind           = 'PREP',
-                model          = 'surfex',
-                namespace      = 'vortex.cache.fr',
-                vortex1        = self.conf.get('prep_vortex1', False),
-                namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-                block          = self.conf.get('prep_block', 'prep'),
-                # MV : La notion de "membre" pour le PREP est particulière dans le cas déterministe
-                # - dans le cas général, le PREP n'est associé à aucun *membre*
-                # - dans une simulation avec assimilation: la première initialisation est faite
-                #   avec un unique fichier PREP pour tous les membres de simulation et les initialisations
-                #   suivantes dépendent des membres sélectionnés par SODA.
-                # Le cas ensembliste (parralélisation sur les membres, 1 PREP / membre)
-                # doit être traité dans une tâche spécifique
-                member         = self.conf.get('prep_member', self.conf.get('member', None)),
-                intent         = 'inout',
-            ),
-            print(self.ticket.prompt, 'prep_tbi =', prep_tbi)
-            print()
-        except SectionFatalError as e:
-            print('Unable to get PREP.nc from cache. Make sure that your driver '
-                  'has a node corresponding to the GetPrep task '
-                  'before executing the offline task and that the prep_xpid values in the '
-                  'corresponding configuration sections match. '
-                  'Or that the PrepUenvPrep or PrepLocalPrep task '
-                  'has been run recently for the given experiment (prep_xpid).')
-            raise e
-
     def get_namelist(self):
         raise NotImplementedError()
-
-    def get_namelist_from_cache(self):
-        """
-        OPTIONS.nam always comes from the local cache because it comes from
-        a previous execution of a "pre_process" task.
-        """
-        # Namelist mandatory to run OFFLINE and taken from the cache
-        self.sh.title('Input SURFEX-ready namelist')
-        namelist_tbi = vortex.input(
-            role         = 'Nam_surfex',
-            kind         = 'namelist',
-            model        = 'surfex',
-            local        = 'OPTIONS.nam',
-            experiment   = self.conf.xpid,
-            namespace    = 'vortex.cache.fr',
-            block        = 'namelist',
-            nativefmt    = 'nam',
-        ),
-        print(self.ticket.prompt, 'namelist =', namelist_tbi)
-        print()
-
-    def get_namelist_from_uenv(self):
-        """
-        Get namelist from UEnv
-        """
-        self.sh.title('Input Namelist')
-        namelist_tbi = vortex.input(
-            role     = 'Nam_surfex',
-            # Dans un UEnv, plusieurs namelistes peuvent être stockées dans une archive ".tar",
-            # le footprint *source* permet de définir le nom exact de la nameliste à récupérer.
-            source   = self.conf.namelist_source,  # ex : OPTIONS_default.nam
-            genv     = self.conf.genv,
-            kind     = 'namelist',
-            model    = 'surfex',
-            local    = 'OPTIONS.nam',
-            # MV : la nameliste va être modifiée, il faut s'assurer du droit d'écriture (<==> intent='inout')
-            intent   = 'inout',
-        )
-        print(self.ticket.prompt, 'namelist_tbi =', namelist_tbi)
-        print()
 
     def get_executable(self):
         """
@@ -210,46 +164,6 @@ class _Offline_MPI(SurfexParamsMixin, _CenResearchTask):
         Either call get_executable_from_uenv or get_executable_from_path methods
         """
         raise NotImplementedError
-
-    def get_executable_from_uenv(self):
-        """
-        Get OFFLINE executable from Uenv
-        """
-        #######################################################################
-        #                             Fetch steps                             #
-        #######################################################################
-        self.sh.title('Input OFFLINE executable from uenv')
-        OFFLINE_tbx = vortex.executable(
-            role           = 'Binary',
-            kind           = 'offline',
-            local          = 'OFFLINE',
-            model          = 'surfex',
-            # MV : Il faudra peut être utiliser une variable de conf différente de *genv* à terme pour permettre
-            # de récupérer les autres "constantes" dans un genv commun et le binaire dans un environement géré par
-            # le user
-            genv           = self.conf.genv,
-            gvar           = 'master_surfex_offline_mpi',
-        )
-        print(self.ticket.prompt, 'OFFLINE_tbx =', OFFLINE_tbx)
-        print()
-
-    def get_executable_from_path(self):
-        """
-        Get OFFLINE executable locally
-        """
-        #######################################################################
-        #                             Fetch steps                             #
-        #######################################################################
-        self.sh.title('Input OFFLINE executable from local')
-        OFFLINE_tbx = vortex.executable(
-            role           = 'Binary',
-            kind           = 'offline',
-            local          = 'OFFLINE',
-            model          = 'surfex',
-            remote         = self.conf.exesurfex + "/OFFLINE"
-        )
-        print(self.ticket.prompt, 'OFFLINE_tbx =', OFFLINE_tbx)
-        print()
 
     def get_remote_inputs(self):
 
@@ -259,9 +173,18 @@ class _Offline_MPI(SurfexParamsMixin, _CenResearchTask):
         self.get_executable()
 
     def get_local_inputs(self):
+        try:
+            self.get_prep()
+        except SectionFatalError as e:
+            print('Unable to get PREP.nc from cache. Make sure that your driver '
+                  'has a node corresponding to the GetPrep task '
+                  'before executing the offline task and that the prep_xpid values in the '
+                  'corresponding configuration sections match. '
+                  'Or that the PrepUenvPrep or PrepLocalPrep task '
+                  'has been run recently for the given experiment (prep_xpid).')
+            raise e
         self.get_namelist_from_cache()
         self.get_pgd_from_cache()
-        self.get_prep()
 
     def algo(self):
         """
@@ -284,12 +207,12 @@ class _Offline_MPI(SurfexParamsMixin, _CenResearchTask):
             threshold      = self.conf.get('threshold', -999),
             # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
             # et faire une tâche spécifique à ces cas là.
-            #daily          = self.conf.dailyprep,
+            # daily          = self.conf.dailyprep,
             # MV la valeur par défaut de 'drhook' dans la commande s2m est False
             # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
             drhookprof     = self.conf.get('drhook', False),
             # MV : on traitera les question de reproductibilité dans un 2nd temps.
-            #reprod_info    = self.get_reprod_info,
+            # reprod_info    = self.get_reprod_info,
         )
         print(self.ticket.prompt, 'offline_tba =', offline_tba)
         print()
@@ -324,6 +247,49 @@ class _Offline_MPI(SurfexParamsMixin, _CenResearchTask):
         self.put_pro()
         self.put_prep()
 
+    def put_prep(self):
+
+        self.sh.title('Output PREP')
+        prep_tbo = vortex.output(
+            local          = 'PREP_[date:ymdh].nc',
+            role           = 'SnowpackInit',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            # TODO : faire une tâche spécifique "reforecast" pour la production de PREP quotidiens
+            # date           = list_dates_end_pro if not self.conf.dailyprep else
+            #                       list(daterange(tomorrow(base=datebegin), dateend)),
+            date           = self.list_dates_end_pro,
+            nativefmt      = 'netcdf',
+            kind           = 'PREP',
+            model          = 'surfex',
+            namespace      = self.namespace_out,
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            block          = 'prep',
+            member         = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
+        print()
+
+    def put_pro(self):
+
+        self.sh.title('Output PRO')
+        pro_tbo = vortex.output(
+            local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment     = self.conf.xpid,
+            geometry       = self.conf.geometry,
+            datebegin      = self.list_dates_begin_pro,
+            dateend        = self.dict_dates_end_pro,
+            nativefmt      = 'netcdf',
+            kind           = 'SnowpackSimulation',
+            model          = 'surfex',
+            namespace      = self.namespace_out,
+            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
+            block          = 'pro',
+            member         = self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'pro_tbo =', pro_tbo)
+        print()
+
     def put_cumul(self):
 
         self.sh.title('Output CUMUL')
@@ -331,11 +297,6 @@ class _Offline_MPI(SurfexParamsMixin, _CenResearchTask):
             local          = 'CUMUL_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
-            # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
-            # et faire une tâche spécifique à ces cas là.
-#            datebegin      = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
-#            dateend        = dict_dates_end_pro if not self.conf.dailyprep else
-#                                list(daterange(tomorrow(base=datebegin), dateend)),
             datebegin      = self.list_dates_begin_pro,
             dateend        = self.dict_dates_end_pro,
             nativefmt      = 'netcdf',
@@ -357,11 +318,6 @@ class _Offline_MPI(SurfexParamsMixin, _CenResearchTask):
             local          = 'DIAG_[datebegin:ymdh]_[dateend:ymdh].nc',
             experiment     = self.conf.xpid,
             geometry       = self.conf.geometry,
-            # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
-            # et faire une tâche spécifique à ces cas là.
-#            datebegin      = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
-#            dateend        = dict_dates_end_pro if not self.conf.dailyprep else
-#                                list(daterange(tomorrow(base=datebegin), dateend)),
             datebegin      = self.list_dates_begin_pro,
             dateend        = self.dict_dates_end_pro,
             nativefmt      = 'netcdf',
@@ -374,55 +330,6 @@ class _Offline_MPI(SurfexParamsMixin, _CenResearchTask):
             fatal          = False,
         ),
         print(self.ticket.prompt, 'diag_tbo =', diag_tbo)
-        print()
-
-    def put_prep(self):
-
-        self.sh.title('Output PREP')
-        prep_tbo = vortex.output(
-            local          = 'PREP_[date:ymdh].nc',
-            role           = 'SnowpackInit',
-            experiment     = self.conf.xpid,
-            geometry       = self.conf.geometry,
-            # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
-            # et faire une tâche spécifique à ces cas là.
-#            date           = list_dates_end_pro if not self.conf.dailyprep else
-#                                list(daterange(tomorrow(base=datebegin), dateend)),
-            date           = self.list_dates_end_pro,
-            nativefmt      = 'netcdf',
-            kind           = 'PREP',
-            model          = 'surfex',
-            namespace      = self.namespace_out,
-            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'prep',
-            member         = self.conf.get('member', None),
-        ),
-        print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
-        print()
-
-    def put_pro(self):
-
-        self.sh.title('Output PRO')
-        pro_tbo = vortex.output(
-            local          = 'PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
-            experiment     = self.conf.xpid,
-            geometry       = self.conf.geometry,
-            # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
-            # et faire une tâche spécifique à ces cas là.
-#            datebegin      = list_dates_begin_pro if not self.conf.dailyprep else '[dateend]/-PT24H',
-#            dateend        = dict_dates_end_pro if not self.conf.dailyprep else
-#                                list(daterange(tomorrow(base=datebegin), dateend)),
-            datebegin      = self.list_dates_begin_pro,
-            dateend        = self.dict_dates_end_pro,
-            nativefmt      = 'netcdf',
-            kind           = 'SnowpackSimulation',
-            model          = 'surfex',
-            namespace      = self.namespace_out,
-            namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
-            block          = 'pro',
-            member         = self.conf.get('member', None),
-        ),
-        print(self.ticket.prompt, 'pro_tbo =', pro_tbo)
         print()
 
 

@@ -91,6 +91,9 @@ class SnowObsOneDate(SnowObs):
                     # TODO : use an alias for retro-compatibility ?
                     optional = True,  # No need to set a default otherwise
                 ),
+                date = dict(
+                    optional = True,
+                ),
             )
         )
     ]
