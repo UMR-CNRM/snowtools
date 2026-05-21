@@ -132,7 +132,7 @@ class ESCROC_subensembles(dict):
         """
         self.snowflist = ['V12', 'S02', 'A76']
         self.metamlist = ['B21', 'F06', 'S-F']
-        self.radlist = ['B60']
+        self.radlist = ['B60', 'B10']
         self.turblist = ['RIL', 'RI1', 'RI2', 'M98']
         self.condlist = ['Y81', 'I02']
         self.holdlist = ['B92', 'SPK', 'B02']
@@ -392,6 +392,7 @@ class ESCROC_subensembles(dict):
         :meta private:
         """
         if randomDraw:
+            np.random.seed(42)  
             memberslist = 1 + np.random.choice(self.size, len(members), replace = False)
         else:
             memberslist = members
