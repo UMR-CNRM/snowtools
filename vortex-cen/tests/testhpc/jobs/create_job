@@ -11,3 +11,4 @@ name=shadows_job task=shadows profile=rd-belenos-mt xpid=shadows
 name=interpolate_s2m_job task=interpol_forcing profile=rd-belenos-mt xpid=interpol_forcing
 name=concatenate_forcings_job task=concatenate_forcings profile=rd-belenos-mt xpid=concat
 name=add_slopes_job task=addslopes profile=rd-belenos-mt xpid=addslopes
+name=escroc_job task=escroc profile=rd-belenos-mt xpid=escroc

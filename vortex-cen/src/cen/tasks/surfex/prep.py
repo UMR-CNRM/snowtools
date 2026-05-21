@@ -52,6 +52,7 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
     * ``drdt_bst_fit_60.nc`` (Crocus metamorphism parameters)
     * ``Init_TG.nc`` Initial values of ground temperature coming from the cache
       (put there by an execution of an InitClimGroundTemperature or GetClimGroundTemperature task)
+    * ``PGD.nc`` Ground physiography
 
     Outputs:
     --------
@@ -77,6 +78,13 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
 
     Optionnal configuration variables:
     ---------------------------------------------------------------------
+    * ``pgd_xpid`` Experiment Identifier of the PGD file, if different from the task's XPID
+     type: str
+    * ``pgd_user`` User who produced the target PGD file.
+     type: str
+    * ``pgd_vapp`` *vapp* of the PGD file, if different from the task's *vapp*
+     type: str
+    * ``pgd_vconf`` *vconf* of the PGD file, if different from the task's *vconf*
     * ``dailyprep`` TODO :comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
       type: bool
     * ``namespace_out`` Force specific namespace for output files (default: 'vortex.multi.fr')
@@ -89,6 +97,21 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
         """
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
+        self.get_prep_executable()
+        self.get_pgd()
+        self.get_init_TG()
+
+    def get_init_TG(self):
+        """
+        By default, look for a file in a UEnv for a reproductible task.
+        """
+        self.get_init_TG_from_uenv()
+
+    def get_pgd(self):
+        """
+        By default, look for a PGD in a UEnv for a reproductible task.
+        """
+        self.get_pgd_from_uenv()
 
     def get_local_inputs(self):
         """
@@ -96,14 +119,12 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
         init_TG.nc that should be in cache as well at this point.
         """
         self.get_namelist()
-        self.get_init_TG_from_cache()
-        self.get_prep_executable()
 
     def get_namelist(self):
         """
         Call either "get_namelist_from_cache" or "get_namelist_from_uenv" method.
         """
-        pass
+        raise NotImplementedError("A namelist is expected to launch the PREP executable")
 
     def get_prep_executable(self):
         """
@@ -213,6 +234,16 @@ class GetPrep(_Prep_Construct):
             self.get_prep_exe_from_path()
         else:
             self.get_prep_exe_from_uenv()
+
+    def get_namelist(self):
+        # This task must be launched after a namelist pre-process task
+        self.get_namelist_from_cache()
+
+    def get_init_TG(self):
+        self.get_init_TG_from_cache_or_archive()
+
+    def get_pgd(self):
+        self.get_pgd_from_cache_or_archive()
 
     def get_remote_inputs(self):
 

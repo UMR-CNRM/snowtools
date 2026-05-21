@@ -218,7 +218,7 @@ class SurfexCommonsMixin:
             nativefmt      = 'netcdf',
             kind           = 'PREP',
             model          = 'surfex',
-            namespace      = 'vortex.cache.fr',
+            namespace      = 'vortex.multi.fr',
             vortex1        = self.conf.get('prep_vortex1', False),
             namebuild      = 'flat@cen',  # TODO : passer en variable de configuration
             block          = self.conf.get('prep_block', 'prep'),

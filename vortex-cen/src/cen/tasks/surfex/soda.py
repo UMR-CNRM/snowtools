@@ -76,7 +76,8 @@ class SodaCommonsMixin(SurfexCommonsMixin):
 class Soda(SodaCommonsMixin, _CenResearchTask):
     '''
     SODA Particle Filter assimilation task.
-    Reference : Cluzet et al., 2021 (https://gmd.copernicus.org/articles/14/1595/2021/)
+
+    Cluzet et al. (2021): https://gmd.copernicus.org/articles/14/1595/2021/
 
     Inputs:
     -------

@@ -148,7 +148,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
             # just before the beginning of computations. It is the appropriate place to fetch data produced
             # by a previous task (the so-called previous task will have to use the 'backup' step
             # in order to make such data available in the local cache).
-            self.get_local_inputs()
+            with InputReportContext(self, t):
+                self.get_local_inputs()
 
         if 'compute' in self.steps:
             # The actual computations... (usually a call to the run method of an AlgoComponent)
@@ -413,17 +414,14 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         print(t.prompt, 'FORCING =', forcing)
         print()
 
-        if alternate:
+        if not forcing[0] and alternate:
 
             # TODO : ne plus faire d'alternate, prescrire obligatoirement le duration (plus rapide)
             # 2 cas : 'Yearly', + exception pour 1er / dernier fichiers
             # NB : eviter les alternates dans les tâches
 
             # Sécurité si *forcing_datebegin* != *datebegin* ou *forcing_dateend* != *dateend*
-            if 'io_duration' in self.conf:
-                duration = self.conf.io_duration
-            else:
-                duration = 'yearly'
+            duration = self.conf.get('io_duration', 'yearly')
             list_dates_begin, list_dates_end, _, _ = get_list_dates_files(Date(forcing_datebegin),
                     Date(forcing_dateend), duration)
             dict_dates_end = get_dic_dateend(list_dates_begin, list_dates_end)

@@ -186,14 +186,14 @@ class _Pgd_Construct(PgdCommonsMixin, _CenResearchTask):
         # TODO : réfléchir à la procédure pour définir des valeurs par défaut en fonction du domaine comme c'est
         # le cas actuellement
         # TODO : S'assurer que ce qui suit fonctionne avec un executable compilé sans MPI,
-        # ou prévoir un sxitch MPI / NOMPI
+        # ou prévoir un switch MPI / NOMPI
         self.component_runner(
             algo,
             executable,
             mpiopts=dict(
                 nnodes=self.conf.get('nnodes', 1),
                 nprocs=self.conf.get('nprocs', 1),
-                ntasks=self.conf.get('ntasks', 1)
+                ntasks=self.conf.get('ntasks', 1),
             )
         )
 

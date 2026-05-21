@@ -882,6 +882,9 @@ class SurfexWorker(_CenWorkerBlindRun):
             kind = dict(
                 values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteonodet', 'ensmeteo+sytron', 'ensmeteo+escroc',
                           'croco'],
+                # Les cas "escroc" et "croco" s
+                # * escroc = 1 FORCING (no subdirs) / N physiques Crocus
+                # * croco = N FORCINGs (--> N subdirs) / N physiques Crocus
             ),
             threshold = dict(
                 info = "Threshold to initialise snowdepth",
@@ -993,6 +996,7 @@ class SurfexWorker(_CenWorkerBlindRun):
         # is done in the offline algo in all these cases
         # Determinstic cases : the namelist is prepared in the preprocess algo component in order to allow
         # to build PGD and PREP
+        # MV : Cela justifierai de faire des algos distincts...
         namelist_ready = self.kind == 'deterministic'
         need_other_run = True
         need_other_forcing = True
@@ -1000,9 +1004,9 @@ class SurfexWorker(_CenWorkerBlindRun):
         updateloc = True
         datebegin_this_run = self.datebegin
 
-        sytron = self.kind == "ensmeteo+sytron" and self.subdir == "mb036"
+        sytron = self.kind == "ensmeteo+sytron" and self.subdir == "mb036"  # MV : A sortir de l'algo (S2M-specific)
 
-        changenamelistdaily = self.daily and (len(self.dailynamelist) > 1)
+        changenamelistdaily = self.daily and (len(self.dailynamelist) > 1)  # MV : Faire un aglo spécifique
 
         while need_other_run:
 
@@ -1011,22 +1015,29 @@ class SurfexWorker(_CenWorkerBlindRun):
 
             if need_other_forcing:
 
-                if self.kind == "escroc":
+                # MV : L'unique différence entre "escroc" et "croco" est la valeur de "forcingdir"
+                # TODO : externalise les lignes suivantes de la boucle "need_other_run"
+                # TODO : gérer le  cas "SYTRON" plus proprement (algo / footprint spécifique pour remplaçer)
+                # la valeur en dur"/mb035"
+                # TODO : Utiliser les "available_inputs" pour définir "forcingdir"
+                if self.kind == "escroc":  # MV : Faire un algo spécifqique
                     # ESCROC only: the forcing files are in the father directory (same forcing for all members)
                     forcingdir = rundir
-                elif sytron:
+                elif sytron:  # MV : S2M-spécifique, faire un algo distinct
                     # ensmeteo+sytron: the forcing files are supposed to be in the subdirectories
                     # of each member except for the sytron member
                     forcingdir = rundir + "/mb035"
-                else:
+                else:  # MV : Faire des algos distincts pour chaque cas
                     # ensmeteo or ensmeteo+escroc or croco: the forcing files are supposed to be in the subdirectories
                     # of each member
                     # determinstic case: the forcing file(s) is/are in the only directory
                     forcingdir = thisdir
 
-                if len(self.geometry_in) > 1:
+                if len(self.geometry_in) > 1:  # MV : A remplacer par la tâche d'aggrégation de forçages
                     print("FORCING AGGREGATION")
                     forcinglist = []
+                    # MV: La boucle qui suit semble très S2M-spécifique et devrait être externalisée
+                    # --> utiliser la tâche d'aggrégation
                     for massif in self.geometry_in:
                         try:
                             dateforcbegin, dateforcend = get_file_period(
@@ -1056,6 +1067,14 @@ class SurfexWorker(_CenWorkerBlindRun):
                     need_save_forcing = True
                 else:
                     # Get the first file covering part of the whole simulation period
+                    # MV : Et pour une période de simulation correspondant à une sous-période
+                    # d'un forçage ?
+                    # La stratégie d'essayer de deviner les FORCINGs présent à partir de périodes pré-définies
+                    # ne semble pas optimale: à ce stade on connait précisément les FORCINGs présents.
+                    # On peut donc:
+                    # 1. Récupérer la liste des datebegin/dateend des FORCINGs présents
+                    # 2. Construire la liste des itérations nécéssaires pour couvrir la période de simulation
+                    # 3. Boucler sur cette liste
                     print("LOOK FOR FORCING")
                     try:
                         dateforcbegin, dateforcend = get_file_period(
@@ -1064,13 +1083,15 @@ class SurfexWorker(_CenWorkerBlindRun):
                             datebegin_this_run,
                             self.dateend)
                     except FileNameException:
-                        deterministic = self.subdir == "mb035"
+                        deterministic = self.subdir == "mb035"  # MV : S2M-spécifique, à externaliser
                         rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir,
                                                         deterministic, self.subdir, datebegin_this_run,
                                                         self.dateend)
                         return rdict
                     print("FORCING FOUND")
 
+                    # MV : S2M-spécifique, à externaliser
+                    # --> utiliser la tâche "AddSlopes"
                     if "flat" in self.geometry_in[0] and "allslopes" in self.geometry_out:
                         print("FORCING EXTENSION")
                         liste_massifs = infomassifs().dicArea[self.geometry_in[0]]
@@ -1080,7 +1101,7 @@ class SurfexWorker(_CenWorkerBlindRun):
                                          ["0", "20", "40"], liste_aspect, **self.reprod_info)
                         need_save_forcing = True
 
-            if self.daily:
+            if self.daily:  # MV : reforecast-spécifique, faire un algo dédié
                 dateend_this_run = min(tomorrow(base=datebegin_this_run), min(self.dateend, dateforcend))
                 need_other_forcing = False
             else:
@@ -1661,6 +1682,11 @@ class SurfexComponent(S2MComponent):
                 values = ['escroc', 'ensmeteo', 'ensmeteonodet', 'ensmeteo+sytron', 'croco', 'ensmeteo+escroc',
                           'prepareforcing']
             ),
+            # Usages:
+            # * ensmeteo: S2M oper and prosnow
+            # * ensmeteonodet: S2M reforecast and prosnow
+            # * ensmeteo+sytron: S2M oper
+            # * ensmeteo+escroc seems unsued
             dateinit = dict(
                 info = "The initialization date if different from the starting date.",
                 type = Date,
@@ -1668,7 +1694,7 @@ class SurfexComponent(S2MComponent):
                 default = '[datebegin]',
             ),
             threshold = dict(
-                info = "The initialization date if different from the starting date.",
+                info = "Threshold to apply to the snow water equivalent (in kg/m2) each 1st August",
                 type = int,
                 optional = True,
                 default = -999
@@ -1676,7 +1702,9 @@ class SurfexComponent(S2MComponent):
             members = dict(
                 info = "The members that will be processed",
                 type = footprints.stdtypes.FPList,
-                optional = True,
+                optional = True,  # WARNING : mandatory if kind in ['escroc', 'croco']
+                # TODO : faires des algos distincts pour gérer proprement l'aspect non-optionel pour les
+                # algos croco et escroc
             ),
             subensemble = dict(
                 info = "Name of the escroc subensemble (define which physical options are used)",
@@ -1687,10 +1715,12 @@ class SurfexComponent(S2MComponent):
             geometry_in=dict(
                 info="Area information in case of an execution on a massif geometry",
                 type=footprints.stdtypes.FPList,
+                # S2M (SAFRAN) specific
             ),
             geometry_out=dict(
                 info="The resource's massif geometry.",
                 type=str,
+                # S2M (SAFRAN) specific
             ),
             daily = dict(
                 info = "If True, split simulations in daily runs",
@@ -1703,6 +1733,7 @@ class SurfexComponent(S2MComponent):
                 type = list,
                 optional = True,
                 default = [],
+                # Used in prosnow only
             ),
             multidates = dict(
                 info = "If True, several dates allowed",
@@ -1710,13 +1741,18 @@ class SurfexComponent(S2MComponent):
                 optional = True,
                 default = False,
                 values = [False]
+                # Reforecast-specific
             ),
-            startmbnode = dict(
-                info = 'first member rep of the node for example 1,41,81 etc.',
-                type = int,
-                optional = True,
-                default = 1,
-            ),
+            # startmbnode = dict(
+            #     info = 'first member rep of the node for example 1,41,81 etc.',
+            #     type = int,
+            #     optional = True,
+            #     default = 1,
+            #     # Croco-specific
+            #     # Cet argument est utilisé uniquement pour trouver les "membres" des simulations
+            #     # dans la méthode 'get_subdirs'.
+            #     # --> A remplacer par une méthode plus robuste
+            # ),
         )
     )
 
@@ -1740,10 +1776,14 @@ class SurfexComponent(S2MComponent):
         self._default_post_execute(rh, opts)
 
     def get_subdirs(self, rh, opts):
-        if self.kind == "escroc":
+        if self.kind in ["escroc", "croco"]:
             subdirs = ['mb{:04d}'.format(m) for m in self.members]
-        elif self.kind == 'croco':
-            subdirs = ['mb{:04d}'.format(m) for m in range(self.startmbnode, self.startmbnode + len(self.members))]
+        # elif self.kind == 'croco':
+            # La ligne qui suit est un moyen bien compliqué de renvoyer la liste des "subdirs" des membres à traiter
+            # lorsque cette liste diffère de self.conf.members (cas d'un tirage aléatoire de membres)
+            # --> A remplaçer par une méthode plus robuste (par exemple en assurant en amont que les membres tirés
+            # aléatoirement sont rangés dans des répertoires 1 à N).
+            # subdirs = ['mb{:04d}'.format(m) for m in range(self.startmbnode, self.startmbnode + len(self.members))]
         else:
             subdirs = super().get_subdirs(rh, opts)
 
@@ -1774,16 +1814,16 @@ class PrepareForcingComponent(_CenTaylorRun):
             kind = dict(
                 values = ['prepareforcing', 'extractforcing', 'shadowsforcing']
             ),
-           # Inutile (parallélisation sur les années) ?
-           datebegin = dict(
-               info = "The list of begin dates of the forcing files",
-               type = footprints.stdtypes.FPList,
-           ),
-           # Inutile (parallélisation sur les années) ?
-           dateend = dict(
-               info = "The list of begin dates of the forcing files",
-               type = footprints.stdtypes.FPList,
-           ),
+            # Inutile (parallélisation sur les années) ?
+            datebegin = dict(
+                info = "The list of begin dates of the forcing files",
+                type = footprints.stdtypes.FPList,
+            ),
+            # Inutile (parallélisation sur les années) ?
+            dateend = dict(
+                info = "The list of begin dates of the forcing files",
+                type = footprints.stdtypes.FPList,
+            ),
             geometry_in = dict(
                 info = "Area information in case of an execution on a massif geometry",
                 type = footprints.stdtypes.FPList,

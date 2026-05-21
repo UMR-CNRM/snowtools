@@ -7,23 +7,17 @@ from vortex.layout.dataflow import SectionFatalError
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.commons import SurfexCommonsMixin
 
-# MV :
-# TODO Il faudra réfléchir au traitement des cas ensemblistes (parallélisation sur les membres de simulation
-# uniquement):
-# - soit tout le monde hérite d'une classe "OFFLINE" abstraite dans laquelle et il faut gérer dans chaque cas le
-#   fait que la notion de *membre* est obligatoire ou optionnelle
-# - soit on fait 2 classes abstraites distinctes (1 pour chaque algo) avec duplication des inputs communs
-
 
 class OfflineCommonsMixin(SurfexCommonsMixin):
 
-    def get_executable_from_uenv(self):
+    def get_executable_from_uenv(self, mpi=True):
         """
         Get OFFLINE executable from Uenv
         """
-        #######################################################################
-        #                             Fetch steps                             #
-        #######################################################################
+        if mpi:
+            gvar = 'master_surfex_offline_mpi'
+        else:
+            gvar = 'master_surfex_offline_nompi'
         self.sh.title('Input OFFLINE executable from uenv')
         OFFLINE_tbx = vortex.executable(
             role           = 'Binary',
@@ -34,7 +28,7 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
             # de récupérer les autres "constantes" dans un genv commun et le binaire dans un environement géré par
             # le user
             genv           = self.conf.genv,
-            gvar           = 'master_surfex_offline_mpi',
+            gvar           = gvar,
         )
         print(self.ticket.prompt, 'OFFLINE_tbx =', OFFLINE_tbx)
         print()
@@ -43,9 +37,6 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
         """
         Get OFFLINE executable locally
         """
-        #######################################################################
-        #                             Fetch steps                             #
-        #######################################################################
         self.sh.title('Input OFFLINE executable from local')
         OFFLINE_tbx = vortex.executable(
             role           = 'Binary',
@@ -58,7 +49,7 @@ class OfflineCommonsMixin(SurfexCommonsMixin):
         print()
 
 
-class _Offline_MPI(OfflineCommonsMixin, _CenResearchTask):
+class _Offline(OfflineCommonsMixin, _CenResearchTask):
     """
     Abstract task for OFFLINE binary execution.
 
@@ -97,9 +88,7 @@ class _Offline_MPI(OfflineCommonsMixin, _CenResearchTask):
                  - OFFLINE executable
                  Format : uenv:{uenv_name}@{user}
       type: str
-    * ``nprocs`` Number of process to allocate to the execution of the MPI binary
-      type: int
-    * ``ntasks`` Number of tasks to allocate to the execution of the MPI binary
+    * ``ntasks`` Number of parallel tasks to allocate to the execution
       type: int
 
     Optionnal configuration variables (other than forcing-specific ones):
@@ -132,9 +121,7 @@ class _Offline_MPI(OfflineCommonsMixin, _CenResearchTask):
      type: str
     * ``prep_vortex1`` Boolean to identify resources produced with vortex1 (filename without geometry)
      type: bool
-    * ``datespinup`` Date of validity of the spinup file (default: *datebegin*)
-     type: str, footprints.stdtypes.FPList
-    * ``threshold`` Threshold to apply to the snow water equivalent (in kg/m2) each 1st August (default: -999)
+    * ``august_threshold`` Threshold to apply to the snow water equivalent (in kg/m2) each 1st August (default: -999)
      type: int
     * ``dailyprep`` TODO :comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
      type: bool
@@ -144,10 +131,6 @@ class _Offline_MPI(OfflineCommonsMixin, _CenResearchTask):
      type: str
     * ``nnodes`` Number of available nodes for MPI parallelisation
      type: int
-    * ``nprocs`` Number of available processors for MPI parallelisation
-     type: int
-    * ``ntasks`` Number of MPI tasks
-     type: int
     * ``io_duration`` Argument similar to the one of the `get_list_dates_files` method in
                         snowtools/utils/dates.py.
                         Used to retrieve the list of *datebegin* and *dateend* for IO covering sub-periods.
@@ -156,14 +139,14 @@ class _Offline_MPI(OfflineCommonsMixin, _CenResearchTask):
     """
 
     def get_namelist(self):
-        raise NotImplementedError()
+        raise NotImplementedError("A namelist is exepected for to launch an OFFLINE executable")
 
     def get_executable(self):
         """
         Get OFFLINE executable, either from a UEnv/GEnv or from a path depending on the task
         Either call get_executable_from_uenv or get_executable_from_path methods
         """
-        raise NotImplementedError
+        raise NotImplementedError("An OFFLINE executable is exepected")
 
     def get_remote_inputs(self):
 
@@ -171,74 +154,26 @@ class _Offline_MPI(OfflineCommonsMixin, _CenResearchTask):
         self.get_ecoclimap()
         self.get_drdt_bst_fit()
         self.get_executable()
-
-    def get_local_inputs(self):
         try:
             self.get_prep()
         except SectionFatalError as e:
-            print('Unable to get PREP.nc from cache. Make sure that your driver '
-                  'has a node corresponding to the GetPrep task '
-                  'before executing the offline task and that the prep_xpid values in the '
-                  'corresponding configuration sections match. '
-                  'Or that the PrepUenvPrep or PrepLocalPrep task '
-                  'has been run recently for the given experiment (prep_xpid).')
+            print('Unable to get PREP.nc.')
+            # MV : la tâche 'GetPrep' est une tâche de secours, on ne doit pas
+            # compter dessus par defaut mais plutot chercher un PREP existant
+            #      'Make sure that your driver '
+            #      'has a node corresponding to the GetPrep task '
+            #      'before executing the offline task and that the prep_xpid values in the '
+            #      'corresponding configuration sections match. '
+            #      'Or that the PrepUenvPrep or PrepLocalPrep task '
+            #      'has been run recently for the given experiment (prep_xpid).')
             raise e
+        self.get_pgd()
+
+    def get_local_inputs(self):
         self.get_namelist_from_cache()
-        self.get_pgd_from_cache()
 
-    def algo(self):
-        """
-        Algo component to execute OFFLINE
-        """
-        #######################################################################
-        #                            Compute step                             #
-        #######################################################################
-        self.sh.title('Algo OFFLINE-MPI')
-        offline_tba = vortex.task(
-            engine         = 'parallel',
-            binary         = 'OFFLINE',
-            kind           = 'deterministic',
-            datebegin      = self.conf.datebegin,
-            dateend        = self.conf.dateend,
-            # MV : *dateinit* correspond à la date de validité du fichier PREP
-            dateinit       = self.ticket.context.sequence.effective_inputs(role='SnowpackInit')[0].rh.resource.date,
-            # MV : la valeur par défaut de "threshold" dans la commande s2m est -999
-            # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
-            threshold      = self.conf.get('threshold', -999),
-            # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
-            # et faire une tâche spécifique à ces cas là.
-            # daily          = self.conf.dailyprep,
-            # MV la valeur par défaut de 'drhook' dans la commande s2m est False
-            # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
-            drhookprof     = self.conf.get('drhook', False),
-            # MV : on traitera les question de reproductibilité dans un 2nd temps.
-            # reprod_info    = self.get_reprod_info,
-        )
-        print(self.ticket.prompt, 'offline_tba =', offline_tba)
-        print()
-        return offline_tba
-
-    def launch_algo(self, algo, **kw):
-        """
-        Run OFFLINE MPI algo component.
-        """
-        # # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
-        # # vortex.executable(...))
-        # # Il est possible de récupérer cet objet avec la ligne suivante :
-        executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
-        #
-        # # MV : Il faudra également pouvoir fournir le nombre de process et le nombre de tâches via le fichier de conf
-        # # TODO : réfléchir à la procédure pour définir des valeurs par défaut en fonction du domaine comme c'est
-        # # le cas actuellement
-        self.component_runner(
-            algo,
-            executable,
-            mpiopts=dict(
-                nnodes=self.conf.nnodes,
-                nprocs=self.conf.nprocs[self.conf.geometry.tag],
-                ntasks=self.conf.ntasks[self.conf.geometry.tag],
-            )
-        )
+    def get_pgd(self):
+        self.get_pgd_from_cache_or_archive()
 
     def put_outputs(self):
         """
@@ -333,6 +268,71 @@ class _Offline_MPI(OfflineCommonsMixin, _CenResearchTask):
         print()
 
 
+class _Offline_MPI(_Offline):
+    """
+    Abstract task for the execution of OFFLINE binary with MPI parallelisation.
+
+    Additional mandatory configuration variables:
+    ---------------------------------------------
+    * ``nprocs`` Number of process to allocate to the execution of the MPI binary
+      type: int
+    * ``ntasks`` Number of tasks to allocate to the execution of the MPI binary
+      type: int
+    """
+
+    def algo(self):
+        """
+        Algo component to execute OFFLINE with MPI parallelisation
+        """
+
+        self.sh.title('Algo OFFLINE-MPI')
+        algo = vortex.task(
+            engine         = 'parallel',
+            binary         = 'OFFLINE',
+            kind           = 'deterministic',
+            datebegin      = self.conf.datebegin,
+            dateend        = self.conf.dateend,
+            # MV : *dateinit* correspond à la date de validité du fichier PREP
+            dateinit       = self.ticket.context.sequence.effective_inputs(role='SnowpackInit')[0].rh.resource.date,
+            # MV : la valeur par défaut de "threshold" dans la commande s2m est -999
+            # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
+            threshold      = self.conf.get('august_threshold', -999),
+            # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
+            # et faire une tâche spécifique à ces cas là.
+            # daily          = self.conf.dailyprep,
+            # MV la valeur par défaut de 'drhook' dans la commande s2m est False
+            # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
+            drhookprof     = self.conf.get('drhook', False),
+            # MV : on traitera les question de reproductibilité dans un 2nd temps.
+            # reprod_info    = self.get_reprod_info,
+        )
+        print(self.ticket.prompt, 'Algo =', algo)
+        print()
+        return algo
+
+    def launch_algo(self, algo, **kw):
+        """
+        Run OFFLINE MPI algo component.
+        """
+        # # Pour un exécution de binaire, il faut donner l'objet "exécutable" associé (récupéré par la commande
+        # # vortex.executable(...))
+        # # Il est possible de récupérer cet objet avec la ligne suivante :
+        executable = [tbx.rh for tbx in self.ticket.context.sequence.executables()]
+        #
+        # # MV : Il faudra également pouvoir fournir le nombre de process et le nombre de tâches via le fichier de conf
+        # # TODO : réfléchir à la procédure pour définir des valeurs par défaut en fonction du domaine comme c'est
+        # # le cas actuellement
+        self.component_runner(
+            algo,
+            executable,
+            mpiopts=dict(
+                nnodes=self.conf.nnodes,
+                nprocs=self.conf.nprocs[self.conf.geometry.tag],
+                ntasks=self.conf.ntasks[self.conf.geometry.tag],
+            )
+        )
+
+
 class Offline_MPI_Uenv(_Offline_MPI):
     """
     Get OFFLINE executable from a User Environment.
@@ -341,7 +341,7 @@ class Offline_MPI_Uenv(_Offline_MPI):
     """
 
     def get_executable(self):
-        self.get_executable_from_uenv()
+        self.get_executable_from_uenv(mpi=True)
 
 
 class Offline_MPI_Local(_Offline_MPI):
