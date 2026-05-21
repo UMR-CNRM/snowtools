@@ -7,6 +7,7 @@ Vortex task performing up to 40 offline runs in parallel on a single node
 
 '''
 import os
+import sys
 
 from vortex import toolbox
 from snowtools.tasks.research.crocO.crocO_common import _CrocO_Task
@@ -162,6 +163,25 @@ class Soda_Task(_CrocO_Task):
                     dateassim      = assDate,
                     experiment     = self.conf.xpid,
                     local          = '[kind]_[dateassim:ymdh].txt',
+                )
+                print(t.prompt, 'tb242 =', tb242)
+                print()
+
+                # Modification temporaire pour éviter de recoder l.83 dans algo vortex (assim.py)
+                # WARNING: Pour eviter trop de modif nous sortons les snowlines dans un fichier nommé BG_CORR
+                self.sh.title('Toolbox output CHECK_XF')
+                tb242 = toolbox.output(
+                    kind           = 'BG_CORR',
+                    model          = 'soda',
+                    block          = 'soda',
+                    namebuild      = 'flat@cen',
+                    namespace      = 'vortex.multi.fr',
+                    storage        = storage,
+                    enforcesync    = enforcesync,
+                    fatal          = True,
+                    dateassim      = assDate,
+                    experiment     = self.conf.xpid,
+                    local          = 'CHECK_XF',
                 )
                 print(t.prompt, 'tb242 =', tb242)
                 print()
