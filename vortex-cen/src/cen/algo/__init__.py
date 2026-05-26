@@ -9,6 +9,7 @@ from . import scores
 from . import postprocessing
 from . import forcing
 from . import obs
+from . import prep
 
 #: No automatic export
 __all__ = []

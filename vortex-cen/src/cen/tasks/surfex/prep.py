@@ -61,6 +61,8 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
     Mandatory configuration variables:
     ----------------------------------
 
+    * ``date`` Date of validity of the PREP.nc file to generate
+      type: str, Date
     * ``geometry`` *geometry* of the forcing file(s)
       type: str, footprints.stdtypes.FPList
     * ``xpid`` Experiment identifier
@@ -136,12 +138,11 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
         """
         Algo component to produce the PREP file if not found in the inputs
         """
-        #######################################################################
-        #                            Compute step                             #
-        #######################################################################
         self.sh.title('Toolbox algo PREP')
         PREP_tba = vortex.task(
+            kind       = 'make_prep',
             engine     = 'parallel',
+            date       = self.conf.get('date', self.conf.get('datebegin', None)),
         )
         print(self.ticket.prompt, 'Toolbox algo prep=', PREP_tba)
         print()
@@ -157,23 +158,22 @@ class _Prep_Construct(PrepCommonsMixin, _CenResearchTask):
         """
         Save the PREP file
         """
-        #######################################################################
-        #                               Backup                                #
-        #######################################################################
-        self.sh.title('Toolbox Output PREP')
+        self.sh.title('Output PREP')
         prep_tbo = vortex.output(
-            local      = 'PREP.nc',
-            role       = 'SnowpackInit',
-            experiment = self.conf.xpid,
-            geometry   = self.conf.geometry,
-            date       = self.conf.get('date', self.conf.datebegin),
-            nativefmt  = 'netcdf',
-            kind       = 'PREP',
-            model      = 'surfex',
-            namespace  = 'vortex.multi.fr',
-            namebuild  = 'flat@cen',  # TODO : passer en variable de configuration
-            block      = 'prep',
-            member     = self.conf.get('member', None),
+            local       = 'PREP.nc',
+            role        = 'SnowpackInit',
+            experiment  = self.conf.xpid,
+            date        = self.conf.get('date', self.conf.get('datebegin', None)),
+            vapp        = self.conf.vapp,
+            vconf       = self.conf.vconf,
+            geometry    = self.conf.geometry,
+            nativefmt   = 'netcdf',
+            kind        = 'PREP',
+            model       = 'surfex',
+            namespace   = 'vortex.multi.fr',
+            namebuild   = 'flat@cen',  # TODO : passer en variable de configuration
+            block       = 'prep',
+            member      = self.conf.get('member', None),
         ),
         print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
         print()
@@ -243,7 +243,7 @@ class GetPrep(_Prep_Construct):
         self.get_init_TG_from_cache_or_archive()
 
     def get_pgd(self):
-        self.get_pgd_from_cache_or_archive()
+        self.get_pgd_from_cache_or_archive(fatal=False)
 
     def get_remote_inputs(self):
 
@@ -269,25 +269,3 @@ class GetPrep(_Prep_Construct):
             pass
         else:
             super().launch_algo(algo, **kwargs)
-
-    def put_outputs(self):
-
-        self.sh.title('Put PREP to cache')
-        prep_tbo = vortex.output(
-            local       = 'PREP.nc',
-            role        = 'SnowpackInit',
-            experiment  = self.conf.xpid,
-            date        = self.conf.get('prep_date', self.conf.datebegin),
-            vapp        = self.conf.get('prep_vapp', self.conf.vapp),
-            vconf       = self.conf.get('prep_vconf', self.conf.vconf),
-            geometry    = self.conf.geometry,
-            nativefmt   = 'netcdf',
-            kind        = 'PREP',
-            model       = 'surfex',
-            namespace   = 'vortex.cache.fr',
-            namebuild   = 'flat@cen',  # TODO : passer en variable de configuration
-            block       = self.conf.get('prep_block', 'prep'),
-            member      = self.conf.get('prep_member', self.conf.get('member', None)),
-        ),
-        print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
-        print()

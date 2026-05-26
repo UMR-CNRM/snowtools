@@ -4,8 +4,9 @@ from mkjob.nodes import Driver
 import vortex
 from vortex_cen.tasks.regrid.shadows import Shadows
 from vortex_cen.tasks.surfex.offline import Offline_MPI_Uenv
-from vortex_cen.tasks.surfex.prep import GetPrep
 from vortex_cen.tasks.regrid.concatenate import ForcingSpatialConcatenation
+from vortex_cen.tasks.surfex.pre_process import _Preprocess
+from vortex_cen.tasks.surfex.pgd import GetPgd1D
 
 
 def setup(t, **kw):
@@ -15,13 +16,21 @@ def setup(t, **kw):
         nodes=[
             ForcingSpatialConcatenation(tag='concatenation', ticket=t, **kw),
             Shadows(tag='shadows', ticket=t, **kw),
-            # No need for preprocess since the namelist pre-processing is already included
-            # in the "Surfex_Parallel" algo component
-            GetPrep(tag='prep', ticket=t, **kw),
+            PreProcess(tag='preprocess', ticket=t, **kw),
+            GetPgd1D(tag='pgd', ticket=t, **kw),
             Offline_reanalysis_postes(tag='offline', ticket=t, **kw),
         ],
         options=kw,
     )
+
+
+class PreProcess(_Preprocess):
+
+    def get_remote_inputs(self):
+        self.get_namelist_from_uenv()
+
+    def get_local_inputs(self):
+        self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
 
 
 class Offline_reanalysis_postes(Offline_MPI_Uenv):
@@ -37,11 +46,11 @@ class Offline_reanalysis_postes(Offline_MPI_Uenv):
         self.get_drdt_bst_fit()
         self.get_pgd()
         self.get_executable()
-        self.get_namelist_from_uenv()
+        self.get_prep()
 
     def get_local_inputs(self):
-        self.get_prep()
         self.get_forcing(localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc')
+        self.get_namelist_from_cache()
 
     def get_pgd(self):
         """

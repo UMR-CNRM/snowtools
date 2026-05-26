@@ -56,8 +56,8 @@ class AlgoReportContext(_ReportContext):
 
     def _report(self, t, try_ok=True, **kw):
         """Report status of the session (test review)."""
-        outdir = self._task.conf.test_report_dir
         if not try_ok and 'test' in self._task.conf:
+            outdir = self._task.conf.test_report_dir
             with open(t.sh.path.join(outdir, 'FailTests.txt'), 'a') as f:
                 f.write(f'Test informations: the algo step of test "{self._task._tag}" failed\n')
 

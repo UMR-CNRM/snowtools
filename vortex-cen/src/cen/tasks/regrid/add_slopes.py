@@ -84,7 +84,7 @@ class AddSlopes(_CenResearchTask):
         else:
             list_geometry = [self.conf.forcing_geometry.tag]
 
-        self.sh.title('Algo')
+        self.sh.title('Algo AddSlopes')
         algo = vortex.task(
             engine       = 'algo',
             kind         = 'prepareforcing',

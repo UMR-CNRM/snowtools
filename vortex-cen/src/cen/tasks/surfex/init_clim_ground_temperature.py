@@ -11,6 +11,7 @@ class InitClimGroundTemperature(SurfexCommonsMixin, _CenResearchTask):
     Inputs :
     --------
     - FORCING file(s) on simulation grid points
+    - Init_TG file (initial values of ground temperature)
 
     Outputs :
     ---------

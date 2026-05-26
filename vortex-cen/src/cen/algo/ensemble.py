@@ -1019,7 +1019,7 @@ class SurfexWorker(_CenWorkerBlindRun):
                 # TODO : externalise les lignes suivantes de la boucle "need_other_run"
                 # TODO : gérer le  cas "SYTRON" plus proprement (algo / footprint spécifique pour remplaçer)
                 # la valeur en dur"/mb035"
-                # TODO : Utiliser les "available_inputs" pour définir "forcingdir"
+                # TODO : Utiliser les "effective_inputs" pour définir "forcingdir"
                 if self.kind == "escroc":  # MV : Faire un algo spécifqique
                     # ESCROC only: the forcing files are in the father directory (same forcing for all members)
                     forcingdir = rundir
@@ -1234,6 +1234,9 @@ class PrepareForcingWorker(_S2MWorkerMixIn, TaylorVortexWorker):
 
     def _prepare_forcing_task(self, rundir, thisdir, rdict):
 
+        # TODO (MV) : séparer en 2 algo
+        # 1. Concatenate_forcings
+        # 2. AddSlopes
         if len(self.geometry_in) > 1:
             logger.info("FORCING AGGREGATION")
             forcinglist = []
@@ -1743,16 +1746,16 @@ class SurfexComponent(S2MComponent):
                 values = [False]
                 # Reforecast-specific
             ),
-            # startmbnode = dict(
-            #     info = 'first member rep of the node for example 1,41,81 etc.',
-            #     type = int,
-            #     optional = True,
-            #     default = 1,
-            #     # Croco-specific
-            #     # Cet argument est utilisé uniquement pour trouver les "membres" des simulations
-            #     # dans la méthode 'get_subdirs'.
-            #     # --> A remplacer par une méthode plus robuste
-            # ),
+            startmbnode = dict(
+                info = 'first member rep of the node for example 1,41,81 etc.',
+                type = int,
+                optional = True,
+                default = 1,
+                # Croco-specific
+                # Cet argument est utilisé uniquement pour trouver les "membres" des simulations
+                # dans la méthode 'get_subdirs'.
+                # --> A remplacer par une méthode plus robuste
+            ),
         )
     )
 
@@ -1776,14 +1779,14 @@ class SurfexComponent(S2MComponent):
         self._default_post_execute(rh, opts)
 
     def get_subdirs(self, rh, opts):
-        if self.kind in ["escroc", "croco"]:
+        if self.kind == "escroc":
             subdirs = ['mb{:04d}'.format(m) for m in self.members]
-        # elif self.kind == 'croco':
+        elif self.kind == 'croco':
             # La ligne qui suit est un moyen bien compliqué de renvoyer la liste des "subdirs" des membres à traiter
             # lorsque cette liste diffère de self.conf.members (cas d'un tirage aléatoire de membres)
             # --> A remplaçer par une méthode plus robuste (par exemple en assurant en amont que les membres tirés
             # aléatoirement sont rangés dans des répertoires 1 à N).
-            # subdirs = ['mb{:04d}'.format(m) for m in range(self.startmbnode, self.startmbnode + len(self.members))]
+            subdirs = ['mb{:04d}'.format(m) for m in range(self.startmbnode, self.startmbnode + len(self.members))]
         else:
             subdirs = super().get_subdirs(rh, opts)
 

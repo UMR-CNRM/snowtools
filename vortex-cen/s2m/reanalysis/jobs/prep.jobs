@@ -1,0 +1,7 @@
+name=prep_alp task=prep profile=rd-belenos-mt jobassistant=cen date=1940080106 geometry=alp27_allslopes
+name=prep_pyr task=prep profile=rd-belenos-mt jobassistant=cen date=1940080106 geometry=pyr24_allslopes
+name=prep_cor task=prep profile=rd-belenos-mt jobassistant=cen date=1940080106 geometry=cor2_allslopes
+name=prep_mac task=prep profile=rd-belenos-mt jobassistant=cen date=1940080106 geometry=mac11_allslopes
+name=prep_jur task=prep profile=rd-belenos-mt jobassistant=cen date=1940080106 geometry=jur4_allslopes
+name=prep_vog task=prep profile=rd-belenos-mt jobassistant=cen date=1940080106 geometry=vog3_allslopes
+name=prep_postes task=prep profile=rd-belenos-mt jobassistant=cen date=1940080106 geometry=postes

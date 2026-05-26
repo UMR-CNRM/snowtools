@@ -48,9 +48,6 @@ class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
         """
         Change the namelist when forcings and namelist are here
         """
-        #######################################################################
-        #                            Compute step                             #
-        #######################################################################
         avail_forcings = self.ticket.context.sequence.effective_inputs(role='Forcing')
         if len(avail_forcings) > 0:
             firstforcing = avail_forcings[0]
@@ -81,9 +78,6 @@ class _Preprocess(SurfexCommonsMixin, _CenResearchTask):
         """
         Save the changed namelist in cache -> namespace = 'vortex.CACHE.fr'
         """
-        #######################################################################
-        #                               Backup                                #
-        #######################################################################
         self.sh.title('Toolbox output Namelist after modification (local cache only)')
         namelist_tbo = vortex.output(
             role         = 'Nam_surfex',
@@ -199,7 +193,7 @@ class Soda_Namelist_Preprocess(SurfexCommonsMixin, _CenResearchTask):
             role            = 'Nam_surfex',
             kind            = 'namelist',
             model           = 'surfex',
-            local           = 'OPTIONS.nam',
+            local           = 'OPTIONS_OUT.nam',
             experiment      = self.conf.xpid,
             namespace       = 'vortex.cache.fr',
             block           = 'namelist',

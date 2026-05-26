@@ -22,7 +22,7 @@ with echecker:
     from snowtools.scripts.post_processing import croco_postprocess as cpp
 
 
-class SodaWorker(Parallel):
+class Soda(Parallel):
     """
     worker for a SODA run (designed for Particle filtering for snow)
     @author: B. Cluzet 2018-05-24
