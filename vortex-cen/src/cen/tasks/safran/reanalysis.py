@@ -49,7 +49,7 @@ class Safran(Task, S2MTaskMixIn):
                     local          = '{0:s}_{1:s}/guess{2:s}.tar'.format(datebegin.ymd6h, dateend.ymd6h, season),
                     namespace      = 's2m.archive.fr',
                     geometry       = self.conf.guess_geometry[self.conf.geometry.area],
-                    cumul          = self.conf.cumul,
+                    cumul          = self.conf.get('cumul', 6),
                     nativefmt      = 'tar',
                     model          = 'safran',
                     source         = 'era5',
