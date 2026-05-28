@@ -7,7 +7,7 @@ from vortex.layout.dataflow import SectionFatalError
 from vortex_cen.tasks.research_task_base import _CenResearchTask
 from vortex_cen.tasks.surfex.params import SurfexParamsMixin
 from snowtools.utils.dates import get_list_dates_files, get_dic_dateend
-from bronx.stdtypes.date import Date  # , daterange, tomorrow
+from bronx.stdtypes.date import daterange, tomorrow
 
 # MV :
 # TODO Il faudra réfléchir au traitement des cas ensemblistes (parallélisation sur les membres de simulation uniquement):
@@ -180,6 +180,7 @@ class _Offline_MPI(SurfexParamsMixin, _CenResearchTask):
             namespace    = 'vortex.cache.fr',
             block        = 'namelist',
             nativefmt    = 'nam',
+            intent = 'inout',
         ),
         print(self.ticket.prompt, 'namelist =', namelist_tbi)
         print()
@@ -323,6 +324,8 @@ class _Offline_MPI(SurfexParamsMixin, _CenResearchTask):
         """
         self.put_pro()
         self.put_prep()
+        self.put_cumul()
+        self.put_diag()
 
     def put_cumul(self):
 
@@ -445,10 +448,128 @@ class Offline_MPI_Local(_Offline_MPI):
 
     Supplementary mandatory configuration variables:
     ------------------------------------------------
-    * ``exesurfex`` Absolute path pointing the a local directory containing the target OFFLINE executable
+    * ``exesurfex`` Absolute path pointing a local directory containing the target OFFLINE executable
      type: str
     """
     # MV : dans ce cas le binaire doit être présent localement sur HPC,
     # pas besoin de le récupérer sur un noeud de transfert
     def get_executable(self):
         self.get_executable_from_path()
+
+
+class OfflineMPIDailyPrep(_Offline_MPI):
+    """
+    Do a surfex simulation with daily prep file output
+    """
+    def get_executable(self):
+        self.get_executable_from_uenv()
+
+    def algo(self):
+        """
+        Algo component to execute OFFLINE with daily prep output
+        """
+        #######################################################################
+        #                            Compute step                             #
+        #######################################################################
+        self.sh.title('Algo OFFLINE-MPI')
+        offline_tba = vortex.task(
+            engine         = 'parallel',
+            binary         = 'OFFLINE',
+            kind           = 'deterministic',
+            datebegin      = self.conf.datebegin,
+            dateend        = self.conf.dateend,
+            # MV : *dateinit* correspond à la date de validité du fichier PREP
+            dateinit       = self.ticket.context.sequence.effective_inputs(role='SnowpackInit')[0].rh.resource.date,
+            # MV : la valeur par défaut de "threshold" dans la commande s2m est -999
+            # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
+            threshold      = self.conf.get('threshold', -999),
+            daily          = True,
+            # MV la valeur par défaut de 'drhook' dans la commande s2m est False
+            # TODO : cette valeur par défaut pourrait être codée directement dans l'algo
+            drhookprof     = self.conf.get('drhook', False),
+            # MV : on traitera les question de reproductibilité dans un 2nd temps.
+            #reprod_info    = self.get_reprod_info,
+        )
+        print(self.ticket.prompt, 'offline_tba =', offline_tba)
+        print()
+        return offline_tba
+
+    def put_cumul(self):
+        self.sh.title('Output CUMUL')
+        cumul_tbo = vortex.output(
+            local='CUMUL_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment=self.conf.xpid,
+            geometry=self.conf.geometry,
+            # MV : comprendre avec Matthieu L les cas d'usages avec "dailyprep" (reforecast ?)
+            # et faire une tâche spécifique à ces cas là.
+            datebegin      = '[dateend]/-PT24H',
+            dateend        = list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
+            nativefmt='netcdf',
+            kind='SnowpackSimulation',
+            model='surfex',
+            namespace=self.namespace_out,
+            namebuild='flat@cen',  # TODO : passer en variable de configuration
+            block='cumul',
+            member=self.conf.get('member', None),
+            fatal=False,
+        ),
+        print(self.ticket.prompt, 'cumul_tbo =', cumul_tbo)
+        print()
+
+    def put_diag(self):
+        self.sh.title('Output DIAG')
+        diag_tbo = vortex.output(
+            local='DIAG_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment=self.conf.xpid,
+            geometry=self.conf.geometry,
+            datebegin = '[dateend]/-PT24H',
+            dateend = list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
+            nativefmt='netcdf',
+            kind='SnowpackSimulation',
+            model='surfex',
+            namespace=self.namespace_out,
+            namebuild='flat@cen',  # TODO : passer en variable de configuration
+            block='diag',
+            member=self.conf.get('member', None),
+            fatal=False,
+        ),
+        print(self.ticket.prompt, 'diag_tbo =', diag_tbo)
+        print()
+
+    def put_prep(self):
+        self.sh.title('Output PREP')
+        prep_tbo = vortex.output(
+            local='PREP_[date:ymdh].nc',
+            role='SnowpackInit',
+            experiment=self.conf.xpid,
+            geometry=self.conf.geometry,
+            date = list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
+            nativefmt='netcdf',
+            kind='PREP',
+            model='surfex',
+            namespace=self.namespace_out,
+            namebuild='flat@cen',  # TODO : passer en variable de configuration
+            block='prep',
+            member=self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'prep_tbo =', prep_tbo)
+        print()
+
+    def put_pro(self):
+        self.sh.title('Output PRO')
+        pro_tbo = vortex.output(
+            local='PRO_[datebegin:ymdh]_[dateend:ymdh].nc',
+            experiment=self.conf.xpid,
+            geometry=self.conf.geometry,
+            datebegin = '[dateend]/-PT24H',
+            dateend = list(daterange(tomorrow(base=self.conf.datebegin), self.conf.dateend)),
+            nativefmt='netcdf',
+            kind='SnowpackSimulation',
+            model='surfex',
+            namespace=self.namespace_out,
+            namebuild='flat@cen',  # TODO : passer en variable de configuration
+            block='pro',
+            member=self.conf.get('member', None),
+        ),
+        print(self.ticket.prompt, 'pro_tbo =', pro_tbo)
+        print()
