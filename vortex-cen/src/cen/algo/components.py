@@ -274,7 +274,8 @@ class _CenTaylorRun(TaylorRun):
         self.subdirs = self.get_subdirs(rh, opts)
         # WARNING : overwriting the *ntasks* footprint value can have side effects.
         # TODO : add a security to ensure that this value is lower than the number of thread available ?
-        # self.ntasks = len(self.subdirs)
+        if self.ntasks is None:
+            self.ntasks = len(self.subdirs)
         super()._default_pre_execute(rh, opts)
 
     def get_subdirs(self, rh, opts):

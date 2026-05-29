@@ -90,7 +90,7 @@ class AddSlopes(_CenResearchTask):
             kind         = 'prepareforcing',
             datebegin    = list(set([tbinput.rh.resource.datebegin for tbinput in avail_forcings])),
             dateend      = list(set([tbinput.rh.resource.dateend for tbinput in avail_forcings])),
-            ntasks       = self.conf.get('max_ntasks', len(avail_forcings)),
+            ntasks       = self.conf.get('max_ntasks', self.conf.ntasks),
             geometry_in  = list_geometry,
             geometry_out = self.conf.geometry.tag,
             role_members = 'Forcing',

@@ -21,7 +21,8 @@ class ForcingSpatialConcatenation(_CenResearchTask):
     ---------
     - Single FORCING file
 
-    Configuration variables:
+    Mandatory Configuration variables:
+    ----------------------------------
 
     :param forcing_geometry: List of geometries of the FORCING files to concatenate
     :type forcing_geometry: footprints.stdtypes.FPList
@@ -32,6 +33,13 @@ class ForcingSpatialConcatenation(_CenResearchTask):
     :param datebegin: begin date(s) of files
     :param dateend: end date(s) of files
     :param namespace_out: namespace of output files
+
+    Optional configuration variables:
+    ---------------------------------
+    :param max_ntasks: The maximum number of parallel tasks (in case of huge memory usage)
+    :type max_ntasks: int
+    :param block: Output block of the concatenated FORCING files
+    :type block: str
     """
 
     def get_remote_inputs(self):
@@ -57,6 +65,8 @@ class ForcingSpatialConcatenation(_CenResearchTask):
             engine       = 'algo',
             kind         = 'ConcatForcings',
             role_members = 'Forcing',
+            concat_dim   = 'Number_of_points',
+            ntasks       = self.conf.get('max_ntasks', self.conf.ntasks),
         )
         print(self.ticket.prompt, 'algo =', algo)
         print()

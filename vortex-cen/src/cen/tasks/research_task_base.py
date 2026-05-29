@@ -277,6 +277,9 @@ class _CenResearchTask(Task, S2MTaskMixIn):
         elif 'date' in self.conf:  # Real-time only --> make a specific default class ?
             self.list_dates_begin = [self.conf.date]
             self.dict_dates_end   = {self.conf.date: self.conf.date}
+        else:
+            # TODO
+            pass
 
     def get_forcing(self, localname='FORCING_[datebegin:ymdh]_[dateend:ymdh].nc', alternate=True,
             namespace='vortex.multi.fr'):
@@ -355,8 +358,8 @@ class _CenResearchTask(Task, S2MTaskMixIn):
 
         t = self.ticket
 
-        forcing_datebegin = self.conf.get('forcing_datebegin', self.conf.datebegin)
-        forcing_dateend   = self.conf.get('forcing_dateend', self.conf.dateend)
+        forcing_datebegin = self.conf.get('forcing_datebegin', self.conf.get('datebegin', None))
+        forcing_dateend   = self.conf.get('forcing_dateend', self.conf.get('dateend', None))
         forcing_xpid      = self.conf.get('forcing_xpid', self.conf.xpid)
         forcing_user      = self.conf.get('forcing_user', None)
         forcing_vapp      = self.conf.get('forcing_vapp', self.conf.vapp)

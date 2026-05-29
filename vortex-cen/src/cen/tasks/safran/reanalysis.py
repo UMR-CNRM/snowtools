@@ -696,7 +696,7 @@ class Safran(Task, S2MTaskMixIn):
                     block          = 'safran/listing',
                     experiment     = self.conf.xpid,
                     cutoff         = 'assimilation',
-                    geometry        = self.conf.geometry[self.conf.vconf],
+                    geometry        = self.conf.geometry,
                     kind           = 'packedlisting',
                     datebegin      = datebegin.ymd6h,
                     dateend        = dateend.ymd6h,
